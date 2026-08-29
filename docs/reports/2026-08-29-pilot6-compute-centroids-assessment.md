@@ -80,6 +80,87 @@ plan's own Fold C/D corrections.
 
 ---
 
+## §2. PH-3 — Intent Ledger over the corpus (commit 2, G3)
+
+> **16 total commits (7 `fix(`, 6 `feat(`, 2 `chore(`, 1 unprefixed origin), all adjudicated — Spec 123 §2's
+> PH-3 restriction ("top-right quadrant + fence density > 0") is satisfied trivially here: G2's
+> churn×complexity instrument doesn't exist (same gap as pilots 1–5), so per Spec 123 §2 note this pilot
+> adjudicates the full small corpus rather than a filtered subset — 16 commits is smaller than several
+> single-fence subsets in prior pilots. Every disposition below is PROPOSED by this pass (agent, 2026-08-29),
+> grounded in a direct `git show <sha> -- scripts/compute-centroids.js` re-diff this commit (not transcribed
+> from the plan's own findings list) — per Spec 124 §4.2's discoverer≠adjudicator split, stands until a
+> human operator ratifies or overturns at commit 7. Closed disposition vocabulary only (Fold D correction):
+> `preserved-in-runner \| preserved-in-validator \| preserved-in-compute \| encoded-as-descriptor-field \|
+> encoded-as-deviation \| knowingly-retired`. `INCIDENTAL` never appears as a disposition (Rule 13).
+
+| Commit | Date | Construct | Live today? | Proposed disposition | Ground |
+|---|---|---|---|---|---|
+| `ed12787a` (origin) | 2026-02-25 | File creation — arithmetic-mean `computeCentroid()`, bare `new Pool()`, `main()` + `pool.end()` | Superseded — 0 lines of the origin form survive verbatim (every seam listed has been rewritten by a later commit) | **knowingly-retired** — superseded by `0ef23550`'s SDK migration; the ONE construct that DOES survive to today, `computeCentroid()`'s arithmetic-mean algorithm (`:25-56`), is JS-fallback-only and is itself retired whole by A-1(a) at commit 7 | direct diff this commit |
+| `8287291e` (fix) | 2026-03-06 | First `PIPELINE_SUMMARY:` console.log line | Superseded — `0ef23550` replaced the raw console.log with `pipeline.emitSummary()` | **knowingly-retired** — superseded, the underlying CONCEPT (a structured completion summary) survives as `pipeline.emitSummary`/commit-7's `checks`+`counters`, not this literal line | direct diff this commit |
+| `6d20c449` (feat) | 2026-03-07 | First `PIPELINE_META:` console.log line — `{reads:{parcels:[id,geometry]}, writes:{parcels:[centroid_lat,centroid_lng]}}` | Superseded in FORM (`pipeline.emitMeta` today, `:219-222`) but the DECLARED READS/WRITES SET is unchanged since this commit | **encoded-as-descriptor-field** — the exact reads/writes pair becomes `inputs.reads.tables`/`outputs.writes[].columns` at commit 7, unchanged since this commit (16 commits, 0 column additions/removals to this pair) | `:219-222` current file; direct diff this commit |
+| `e4765619` (fix) | 2026-03-07 | `records_total`/`records_new`/`records_updated` accounting fix — was `{records_total:processed, records_new:computed, records_updated:0}` (WRONG: computed rows are UPDATES to existing parcels, not new rows), corrected to `{records_total:computed, records_new:0, records_updated:computed}` | ✓ the CORRECTED shape is exactly what `:202-205` emits today (only the field name `processed`→`computed` for `records_total` was later reverted by `8b9b0f91`, see below — the `records_new:0`/`records_updated:computed` split from THIS commit is what survives) | **preserved-in-compute** — the corrected new-vs-updated accounting is verbatim-ported to `compute.js` at commit 7 (`counters.records_new.source`/`records_updated.source`) | `:202-205` current file |
+| `0ef23550` (refactor) | 2026-03-09 | Whole-file SDK migration: `new Pool()`→`pipeline.run()`, raw `console.log`→structured, per-row `UPDATE`→batched `withTransaction` | The RUNNER-OWNED lifecycle (`pipeline.run`, advisory lock, `withTransaction`) this commit introduced is exactly what commit 7 RETIRES — `pipeline.run(...)` is deleted, replaced by the frozen shape's own runner (`scripts/lib/step/index.js`) | **knowingly-retired** — superseded by the Spec 122 §5.1 frozen shape; this commit's own historical role (bringing the step onto shared SDK infra) is exactly what THIS pilot repeats one level up (SDK→step-library) | direct diff this commit |
+| `8b9b0f91` (feat) | 2026-03-26 | First `audit_table` — `phase:22` (later renumbered), `compute_rate >= 90%` WARN threshold (later tightened to 98%) | Superseded twice (phase 22→5 by `5baaed5a`, threshold 90%→98% by `d32612bb`) but the AUDIT-ROW SHAPE (`parcels_processed`/`centroids_computed`/`failed_geometries`/`compute_rate`, all 4 metrics) is unchanged since this commit | **encoded-as-descriptor-field** — the 4-metric audit row shape becomes the T1/T2 declared `checks[]` at commit 7, structurally unchanged since introduction | `:194-199` current file |
+| `d32612bb` (feat) | 2026-03-26 | **T2's own provenance**: `compute_rate` WARN threshold **deliberately tightened 90%→98%** ("tighten compute_rate from 90% to 98%", commit message verbatim) + SKIPPED-path audit_table enrichment | ✓ `98` is the literal in force TODAY (`:198`,`:200`) | **encoded-as-descriptor-field** — T2's proposed default (98) is NOT an arbitrary literal; it traces to a deliberate business-accuracy tightening in this commit, which the P4 tunable inventory's `why` at commit 7 must cite by SHA rather than treat as unexplained | `:198`,`:200` current file; commit message |
+| `5baaed5a` (fix) | 2026-03-26 | Phase renumbering 22→5 (avoid collision with assert-data-bounds' 14-15) + SKIPPED-path 2nd audit row (`reason`) | ✓ `phase:5` and the 2-row SKIPPED shape are both current (`:76`,`:80-81`) | **encoded-as-descriptor-field** — `phase` is retired as a compute literal ENTIRELY by the library: `scripts/lib/step/verdict.js:293` sources `phase` from `descriptor.sharing.varies_by_chain.phase`, confirmed 0 hits of a `phase:` literal in any converted step's compute module (`link-parcel-addresses.js`, `link-massing.js`) — this commit's phase VALUE (5) carries forward as a declared field, its literal FORM does not | `verdict.js:293`, converted computes re-grepped this commit |
+| `98910817` (fix) | 2026-04-02 | try/catch around the JS-fallback's `JSON.parse(row.geometry)` — malformed geometry skips the row with a WARN log instead of crashing the batch | Retired WITH the JS fallback (A-1(a)) — the try/catch has no PostGIS-branch analogue (Cross-read Adversary finding 1, Fold D) | **knowingly-retired** — the guard's PURPOSE (never let one malformed row crash the whole run) survives structurally in the PostGIS path's own `failed` counter (`:110-115`, a COUNT query, not a per-row try/catch — a different mechanism achieving the same non-crashing guarantee) | `:139-148` current file (fallback-only) |
+| `2b6eb35a` (fix) | 2026-04-02 | `processed++` added before `continue` in the JSON.parse catch block — fixes an undercount that inflated `compute_rate` | Retired WITH the JS fallback (A-1(a)) | **knowingly-retired** — same fate as `98910817`; the accounting PRINCIPLE (a skipped row still counts toward the denominator) survives in the PostGIS path's own `processed = computed + failed` (`:109,115`) | `:145-147` current file (fallback-only) |
+| **`80ac3469` (feat)** | **2026-03-15** | **THE load-bearing fence** — cursor pagination (`id > lastId`) replaces a naive `centroid_lat IS NULL` re-scan; commit message verbatim: *"Fix infinite loop: cursor pagination replaces `centroid_lat IS NULL` filter which refetched malformed geometries forever."* Also: bulk-`unnest` UPDATE (was per-row), `console.log`→`pipeline.log` | Retired WITH the JS fallback (A-1(a), ACCEPTED at Fold D Cross-read Adversary item 1: *"the PostGIS branch is ONE `UPDATE ... RETURNING id` with no loop; the fence protected ONLY the JS fallback — it has no PostGIS-branch analogue to preserve"*) | **knowingly-retired — `CC-D1`, opened this commit** (below). The evidence trail (commit message + this ledger row) is preserved as documentation in `notes.json`/`checks[].why` at commit 7, never as live code | direct diff this commit; Fold D Cross-read Adversary item 1 |
+| `7c75e92e` (feat) | 2026-04-02 | PostGIS spatial offload — the ENTIRE current PostGIS fast path (`:98-115`) is introduced whole in this commit, unchanged since | ✓ `:98-115` is this commit's code verbatim, 0 subsequent edits to the PostGIS branch itself | **preserved-in-compute** — the fast-path SQL (`UPDATE parcels SET centroid_lat=ST_Y(ST_Centroid(geom)),...`) is verbatim-ported to `compute.js` at commit 7 per G2's "Spec 123 §7 step 7 requirement" | `:98-115` current file, unchanged since `7c75e92e` |
+| `3c3e6f84` (fix) | 2026-04-16 | Advisory lock retrofit — `ADVISORY_LOCK_ID=99` + `withAdvisoryLock` wrap | Superseded structurally (the lock ID itself, `99`, carries forward into `identity.lock` at commit 7; the WRAPPING mechanism — `pipeline.withAdvisoryLock` — is retired with `pipeline.run` per `0ef23550`'s row above) | **encoded-as-descriptor-field** — `99` becomes `identity.lock` (Spec 47 §A.5 registry row unchanged: "Maintenance wave", "Writes Timestamps? NO"); confirmed unique this session (`grep ADVISORY_LOCK_ID.*=.*99` across `scripts/` → exactly this one file) | `:58` current file |
+| `90e3d0f8` (fix) | 2026-04-17 | `parseInt`/`parseFloat` → `safeParsePositiveInt`/`safeParseFloat` (B1 safe-math migration) | ✓ both call sites current (`:67`, `:198`, `:200` — Fold D cited `:193`/`:198`, minor line drift since; re-derived, not re-cited, this commit) | **preserved-in-compute** — the safe-math guards are verbatim-ported to `compute.js` at commit 7; Fold D's own G3-vocabulary ruling for this exact commit (item 5) confirmed | `:67,198,200` current file |
+| `f69b561d` (chore) | 2026-04-21 | SPEC LINK header — **introduces** the wrong citation: `docs/specs/28_data_quality_dashboard.md` → `docs/specs/pipeline/41_chain_permits.md` (NOT merely a re-path of a pre-existing wrong value — `28_data_quality_dashboard.md` was the CORRECT-at-the-time citation before this restructure sweep; this commit's mapping is the error's origin, contradicting the plan's "survived two prior repair commits" framing — corrected here) | Superseded by `da6db77a` (below), itself still wrong | **knowingly-retired — fixed at commit 7** (finding 6). Correct citation: `43_chain_sources.md` §Step Breakdown row 9 | direct diff this commit — corrects the plan's provenance framing |
+| `da6db77a` (chore) | 2026-04-22 | SPEC LINK header — mechanical re-path of the ALREADY-WRONG string: `docs/specs/pipeline/41_chain_permits.md` → `docs/specs/01-pipeline/41_chain_permits.md` (a directory-restructure sweep across 192 files, not a content review — this specific string was never re-verified against the manifest) | ✓ this is the CURRENT (wrong) header, `:16` | **knowingly-retired — fixed at commit 7** (finding 6), same as `f69b561d` | `:16` current file |
+
+**Approver for every disposition above:** this pilot's PH-3 pass (agent, 2026-08-29), grounded in direct
+`git show`/`git blame` re-verification this commit — per Spec 124 §4.2's discoverer≠adjudicator split,
+PROPOSED here, stands until a human operator ratifies or overturns at commit 7.
+
+### `CC-D1` — the cursor-pagination fence, KNOWN-DEFECT-adjacent PIN (opened this commit)
+
+**Classification (Spec 123 §3, the four questions):** (1) Observed? Yes — the fence exists specifically
+because a naive `centroid_lat IS NULL` re-scan (pre-`80ac3469`) infinite-loops on a permanently-malformed
+geometry. (2) Spec/invariant conflict? No — this is a CORRECTNESS fence, not a defect; the current code
+already avoids the bug. (3) Load-bearing? **Yes — this pilot's #1 Regression Guardian fence.** (4) Cost of
+carrying vs. diverging: **N/A — this is not a DEFECT to PIN-and-carry.** Fold D's Cross-read Adversary (item
+1, 2026-08-29) resolved the disposition question directly: the fence protects ONLY the JS fallback
+(`:116-185`), which A-1(a) retires in full. The PostGIS branch (`:98-115`, the ONLY branch that survives to
+commit 7) is a single `UPDATE ... RETURNING id` with no loop — it has no cursor-pagination analogue to
+preserve, and none is needed (a single server-side `UPDATE ... WHERE ...` cannot infinite-loop on a
+malformed row the way a client-side re-scan can; a row that fails the `geom IS NOT NULL` cast is excluded by
+the WHERE clause itself, not re-fetched). **Disposition: `knowingly-retired`.** The fence is deleted WITH the
+branch it protects, not preserved as dead code — per the `link_massing` A-8 precedent (Fold C S-1), keeping
+70 lines of unexercised, unverifiable-in-CI fallback code alive on an inference is less honest than a
+declared `guards.requires: postgis` / `on_missing: fail` HALT. **Status: PIN (knowingly-retired), evidence
+trail preserved in `notes.json`'s `fences[]` + `checks[].why` at commit 7** (Rule 4 — a rule kept out of live
+code must still be written down). Closes at commit 7.
+
+### `CC-D2` — the 3,130/276 neighbour-parcel mis-attribution finding, PIN (opened this commit)
+
+**Classification:** (1) Observed? Yes — `link-parcels.js:411-426`'s Tier-3 nearest-centroid join reads
+`parcels.centroid_lat/lng` as a distance-based fallback key. (2) Spec/invariant conflict? **No spec asserts
+centroids must fall inside their own polygon** — Spec 59 R2.5 explicitly rules the opposite for concave
+lots ("functional behavior is correct"). Not a DEFECT in `compute_centroids` itself — `ST_Centroid` is
+computing exactly what it is asked to compute. (3) Load-bearing? **Yes, indirectly** — R-1 (Reality-Check,
+Fold C) measured that of the 3,626 out-of-polygon centroids, 3,130 land inside a DIFFERENT parcel, and of
+494 `spatial`-tier `permit_parcels` links pointing at a drifted parcel, 276 have the permit's own point
+actually inside another specific parcel — a genuine mis-attribution SIGNATURE in a DOWNSTREAM consumer
+(`link-parcels.js`), not in this step. (4) Cost of carrying vs. diverging: **carrying it through this
+pilot's zero-behaviour-change conversion costs nothing** (this step's own output — the centroid value itself
+— is unchanged and correct per its own contract; only a DIFFERENT step's join strategy is exposed as
+fragile by this data). **Classification: CONTRACT-adjacent — this step's output is correct; the finding is
+a defect surface in a DOWNSTREAM consumer, not in `compute_centroids`.** **RULING: PIN for this pilot**
+(zero-behaviour-change scope; the 276-link exposure predates migration 245 and is not this pilot's defect
+to fix) **+ HIGH followup filed against `link_parcels.js`** ("Tier-3 nearest-centroid join should use
+`ST_PointOnSurface` or a containment check; 276 candidate mis-links measured 2026-08-29" — already filed at
+Fold C, re-confirmed here, not re-filed). **Status: PIN.** The golden `invariants.json` (commit 5) pins
+`centroid_in_neighbour_parcel_count=3130` (re-measured this session via the materialized-CTE+LATERAL form,
+§0.4-adjacent — see commit 5) as an OBSERVABILITY row on THIS step's own invariant set, naming the exposure
+in a comment, without asserting this step must change to close it. Closes at commit 4 (classification, no
+code change required from this pilot).
+
+---
+
 ## §0. PH-0 seed — measured boundary table (2026-08-29 planning session)
 
 ### 0.1 Governing specs, read in order (Spec 124 §7 Step 0 / Spec 123 §6 G0)
