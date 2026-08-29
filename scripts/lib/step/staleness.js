@@ -362,6 +362,70 @@ async function measureTrigger(pool, descriptor, trigger) {
 }
 
 /**
+ * R-B'S RUNTIME READER (LW-D20 / LG-19, closed 2026-08-29) — "recovery must be
+ * TRUE, not decorative." R-B's DECLARATION half (`recovery.interrupted`,
+ * `recovery.before_image`) shipped at pilot 3/4; this is the RUNTIME half that
+ * was ⚠ OPEN through pilot 5 (link_parcel_addresses's own `notes.json`: "R-B's
+ * reader stays a genuine future obligation for a step whose FULL mode is
+ * behaviourally distinct from incremental"). The measured defect this exists
+ * to make undeclarable: a `link_massing` forced FULL killed mid-rebuild left
+ * `parcel_buildings` at 29,330/520,492 rows, and the NEXT run's gate read
+ * "unchanged" (incremental) — the hole persisted silently forever.
+ *
+ * Scope: ONLY steps that declare `recovery.interrupted: "force_full_on_next_run"`
+ * — a step with no destructive retraction to protect (`"none"`+why) has nothing
+ * for this reader to recover. Detects a `running` or `crashed` `pipeline_runs`
+ * row for THIS PRODUCER (own slugs — `deriveLedgerSlugs`, never upstream) more
+ * recent than the last `completed` row. "No new column, table, or marker" (R-B's
+ * own text) — the `running` row is already committed OUTSIDE the write
+ * transaction by the ledger-open step, so a killed process leaves it exactly
+ * where this query looks; no new write path is needed to detect it.
+ *
+ * @param {import('pg').Pool} pool
+ * @param {object} descriptor
+ * @returns {Promise<{interrupted: boolean, row: {id: number, pipeline: string, status: string, started_at: string}|null}>}
+ */
+async function detectInterruptedRetraction(pool, descriptor, { ownRunId = null } = {}) {
+  const recovery = descriptor.recovery;
+  if (!recovery || recovery === NONE || recovery.interrupted !== 'force_full_on_next_run') {
+    return { interrupted: false, row: null };
+  }
+  const { own } = deriveLedgerSlugs(descriptor);
+  // ⚠️ MEASURED LIVE 2026-08-29, building this exact mechanism: without excluding
+  // `ownRunId`, THIS INVOCATION'S OWN just-opened `running` row (openLedgerRow
+  // already ran before selectMode is ever called — see scripts/lib/step/index.js)
+  // satisfies this query on EVERY SINGLE RUN, because finalizeLedgerRow has not
+  // stamped it 'completed' yet. That reads every run as "interrupted" and forces
+  // FULL forever, permanently defeating the gated-skip/incremental path — caught
+  // by a live kill-and-rerun proof against link_wsib before it shipped, not by
+  // reasoning about the code. `ownRunId` is `openLedgerRow`'s own returned id,
+  // threaded through by the caller (`runCascadePhase`/`runLinkPhase`) — the ONE
+  // row this predicate must never be allowed to see is the row IT ITSELF opened.
+  const res = await pool.query(
+    `WITH own_last_completed AS (
+       SELECT started_at FROM pipeline_runs
+        WHERE pipeline = ANY($1::text[]) AND status = 'completed'
+        ORDER BY started_at DESC LIMIT 1
+     )
+     SELECT p.id, p.pipeline, p.status, p.started_at
+       FROM pipeline_runs p
+      WHERE p.pipeline = ANY($1::text[])
+        AND p.status IN ('running', 'crashed')
+        AND p.started_at > COALESCE((SELECT started_at FROM own_last_completed), '-infinity'::timestamptz)
+        AND ($2::integer IS NULL OR p.id <> $2::integer)
+      ORDER BY p.started_at DESC
+      LIMIT 1`,
+    [own, ownRunId],
+  );
+  const row = res.rows[0];
+  if (!row) return { interrupted: false, row: null };
+  return {
+    interrupted: true,
+    row: { id: row.id, pipeline: row.pipeline, status: row.status, started_at: row.started_at },
+  };
+}
+
+/**
  * THE MODE-SELECTING GATE (LG-7 / A-1(a), `mode_select: "tri_state"`).
  *
  * §1.5 named this step's gate as the mechanism that forced `staleness` into three axes:
@@ -387,7 +451,7 @@ async function measureTrigger(pool, descriptor, trigger) {
  * @returns {Promise<{mode: 'full'|'incremental', reason: string, changed: boolean,
  *   explicit_full: boolean, forced: boolean, signals: object[]}>}
  */
-async function selectMode({ descriptor, pool, prior, argv, env }) {
+async function selectMode({ descriptor, pool, prior, argv, env, ownRunId = null }) {
   const declared = descriptor.staleness && descriptor.staleness.mode_select;
   if (declared !== MODE_SELECT_TRI_STATE) {
     throw new Error(`[${descriptor.identity.name}] selectMode answers "full or incremental", and this descriptor `
@@ -421,11 +485,30 @@ async function selectMode({ descriptor, pool, prior, argv, env }) {
     }
   }
 
+  // R-B's runtime reader (LW-D20 / LG-19) — checked LAST, wins UNCONDITIONALLY.
+  // "mode resolves FULL regardless of code/data signals" (R-B's own words): a
+  // step with a crashed/stuck-running prior retraction attempt for THIS
+  // producer must rebuild, even if forced/explicitFull/changed all say
+  // otherwise. signals/changed/reason above are still returned for visibility
+  // (what ALSO would have driven the decision), never suppressed.
+  const interruptedRetraction = await detectInterruptedRetraction(pool, descriptor, { ownRunId });
+  if (interruptedRetraction.interrupted) {
+    return {
+      mode: 'full',
+      reason: 'recover_interrupted_retraction',
+      changed,
+      explicit_full: explicitFull,
+      forced,
+      signals,
+      interrupted_retraction: interruptedRetraction.row,
+    };
+  }
+
   const mode = forced || (explicitFull && changed) ? 'full' : 'incremental';
   const modeReason = forced
     ? 'force_full_env'
     : (explicitFull && changed ? `gate:${reason}` : (explicitFull ? `incremental:gate_${reason}` : 'incremental:no_full_arg'));
-  return { mode, reason: modeReason, changed, explicit_full: explicitFull, forced, signals };
+  return { mode, reason: modeReason, changed, explicit_full: explicitFull, forced, signals, interrupted_retraction: null };
 }
 
 /**
@@ -583,4 +666,5 @@ module.exports = {
   ledgerGatedSkip,
   gateRecordsMeta,
   dryRunArgPresent,
+  detectInterruptedRetraction,
 };

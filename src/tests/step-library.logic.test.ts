@@ -2093,3 +2093,142 @@ describe('LW-D17 — write.writeBeforeImage / buildBeforeImageSelectSql (R-M / L
     expect(fs.readFileSync(absPath, 'utf8')).toBe('');
   });
 });
+
+// ---------------------------------------------------------------------------
+// R-B runtime reader (LW-D20 / LG-19, closed 2026-08-29) — FAST fake-pool lock,
+// no DB required. The `.db.test.ts` sibling
+// (src/tests/db/staleness-interrupted-retraction.db.test.ts) proves the real SQL
+// against real Postgres, including a live kill-and-rerun proof against
+// link_wsib (10.5 min real forced-full repair, 548 rows relinked, before-image
+// written, verdict PASS — see the pilot 4 assessment report SS R for the full
+// record); THIS block locks the two bugs that live proof actually found, fast
+// enough to run on every commit:
+//   1. a step's OWN just-opened `running` row must never self-trigger (ownRunId)
+//   2. the interrupted-retraction check must be reachable even when the ledger
+//      gated-skip would otherwise return BEFORE selectMode ever runs
+// ---------------------------------------------------------------------------
+describe('R-B (LW-D20 / LG-19) — interrupted-retraction reader, fake-pool lock', () => {
+  const INTERRUPTED_QUERY_MARK = "status IN ('running', 'crashed')";
+
+  function poolWithInterruptedRow(row: { id: number; pipeline: string; status: string; started_at: string } | null) {
+    return dryRunFakePool((text: string) => {
+      if (text.includes(INTERRUPTED_QUERY_MARK)) return { rows: row ? [row] : [] };
+      if (text.startsWith('INSERT INTO pipeline_runs')) return { rows: [{ id: 9001 }] };
+      return undefined;
+    });
+  }
+
+  const STUCK_ROW = { id: 555, pipeline: 'link_wsib', status: 'running', started_at: '2026-08-29T19:00:00.000Z' };
+
+  it('detectInterruptedRetraction: SCOPE GATE — recovery.interrupted !== "force_full_on_next_run" never queries the DB at all', async () => {
+    const pool = poolWithInterruptedRow(STUCK_ROW);
+    const descriptor = { identity: { name: 'x' }, recovery: { interrupted: 'none' }, execution: { invocation: 'none' }, inputs: { reads: { steps: [] } } };
+    const result = await stalenessLib.detectInterruptedRetraction(pool, descriptor);
+    expect(result).toEqual({ interrupted: false, row: null });
+    expect(pool.sql.some((s: string) => s.includes(INTERRUPTED_QUERY_MARK)), 'a step with nothing to recover must not even issue the query').toBe(false);
+  });
+
+  it('detectInterruptedRetraction: a stuck row IS surfaced when found', async () => {
+    const pool = poolWithInterruptedRow(STUCK_ROW);
+    const descriptor = { identity: { name: 'link_wsib' }, recovery: { interrupted: 'force_full_on_next_run' }, execution: { invocation: 'none' }, inputs: { reads: { steps: [] } } };
+    const result = await stalenessLib.detectInterruptedRetraction(pool, descriptor);
+    expect(result.interrupted).toBe(true);
+    expect(result.row).toEqual(STUCK_ROW);
+  });
+
+  it('REGRESSION (found by the live kill-and-rerun proof, 2026-08-29) — ownRunId is bound as a real query parameter, excluding the caller\'s own row', async () => {
+    const pool = poolWithInterruptedRow(STUCK_ROW);
+    const descriptor = { identity: { name: 'link_wsib' }, recovery: { interrupted: 'force_full_on_next_run' }, execution: { invocation: 'none' }, inputs: { reads: { steps: [] } } };
+    await stalenessLib.detectInterruptedRetraction(pool, descriptor, { ownRunId: 555 });
+    const call = pool.params.find((_p: unknown[], i: number) => pool.sql[i]?.includes(INTERRUPTED_QUERY_MARK));
+    expect(call, 'the query must be issued').toBeDefined();
+    expect(call).toContain(555);
+  });
+
+  it('selectMode: an interrupted retraction resolves mode "full" UNCONDITIONALLY — forced=false, explicit_full=false, no trigger changed', async () => {
+    const pool = poolWithInterruptedRow(STUCK_ROW);
+    const descriptor = {
+      identity: { name: 'link_wsib' },
+      staleness: { mode_select: 'tri_state', trigger: 'none' },
+      recovery: { interrupted: 'force_full_on_next_run' },
+      execution: { invocation: 'none' },
+      inputs: { reads: { steps: [] } },
+    };
+    const result = await stalenessLib.selectMode({ descriptor, pool, prior: { some_key: 'unchanged' }, argv: [], env: {} });
+    expect(result.mode).toBe('full');
+    expect(result.reason).toBe('recover_interrupted_retraction');
+    expect(result.forced).toBe(false);
+    expect(result.explicit_full).toBe(false);
+    expect(result.interrupted_retraction).toEqual(STUCK_ROW);
+  });
+
+  it('selectMode: NOT interrupted resolves the ordinary incremental/full logic, and interrupted_retraction is null', async () => {
+    const pool = poolWithInterruptedRow(null);
+    const descriptor = {
+      identity: { name: 'link_wsib' },
+      staleness: { mode_select: 'tri_state', trigger: 'none' },
+      recovery: { interrupted: 'force_full_on_next_run' },
+      execution: { invocation: 'none' },
+      inputs: { reads: { steps: [] } },
+    };
+    const result = await stalenessLib.selectMode({ descriptor, pool, prior: null, argv: [], env: {} });
+    expect(result.reason).not.toBe('recover_interrupted_retraction');
+    expect(result.interrupted_retraction).toBeNull();
+  });
+
+  it('REGRESSION (found by the live kill-and-rerun proof, 2026-08-29) — runCascadePhase folds the interrupted check into `bypassed`, BEFORE the ledger gated-skip, so it cannot be skipped past', async () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports -- the real descriptor, not a fixture copy
+    const descriptor = clone(require(join(process.cwd(), 'scripts/link-wsib.descriptor.json')));
+    descriptor.guards.requires = [];
+    descriptor.staleness.trigger = 'none'; // orthogonal to this claim — same simplification the dry-run sibling test uses
+    descriptor.override.dry_run = '--dry-run'; // keeps this fake-pool run from needing real write-statement answers — orthogonal to the claim under test
+    // Same tierSql/compute shape the KNOWN-WORKING "runCascadePhase (link_wsib, cloned)"
+    // dry-run test above uses — runCascadePhase always calls these regardless of mode.
+    const tierSql = {
+      wsib_count_sql: 'STUB_LW_TIER_COUNT', wsib_count_params: [],
+      entities_flag_count_sql: 'STUB_LW_FLAG_COUNT', entities_flag_count_params: [],
+      entities_contacts_count_sql: 'STUB_LW_CONTACTS_COUNT', entities_contacts_count_params: [],
+      wsib_update_sql: 'UPDATE wsib_registry SET linked_entity_id = 1', wsib_update_params: [],
+      entities_flag_scope_params: [],
+      entities_contacts_sql: 'UPDATE entities SET primary_phone = 1', entities_contacts_params: [],
+    };
+    const compute = {
+      buildRetractionScopeParams: () => [0.6],
+      buildEntitiesUnflagSql: () => 'UPDATE entities SET is_wsib_registered = false',
+      buildContactsReverseClearSql: () => 'UPDATE entities SET primary_phone = NULL',
+      buildTierSql: () => tierSql,
+      exactTierConfidences: () => [0.95, 0.9],
+      buildEntitiesUnflagCorrectionCountSql: () => 'STUB_LW_UNFLAG_COUNT',
+      buildCumulativeSql: () => 'STUB_LW_CUMULATIVE',
+    };
+    const pool = dryRunFakePool((text: string) => {
+      if (text.includes(INTERRUPTED_QUERY_MARK)) return { rows: [STUCK_ROW] };
+      if (text.startsWith('INSERT INTO pipeline_runs')) return { rows: [{ id: 9002 }] };
+      // The ledger-gate's own "own_last"/"upstream_since" query would normally
+      // decide skip/run from real activity; if it is ever REACHED with bypassed
+      // correctly forced true, ledgerGatedSkip returns {skip:false} regardless of
+      // what this answers — so answering it as "definitely skip" is the sharpest
+      // possible proof: if the OLD (buggy) placement let this fire, the test would
+      // observe a SKIP terminal instead of a mode gate log, and fail loudly.
+      if (text.includes('own_last') && text.includes('upstream_since')) {
+        return { rows: [{ own_started: '2026-08-29T00:00:00Z', own_completed: '2026-08-29T00:00:00Z', own_last_records_meta: {}, non_completed: '0', completed_with_changes: '0', stale_running: '0' }] };
+      }
+      if (/unlinked_start/i.test(text)) return { rows: [{ unlinked_start: '5', entities_count: '3' }] };
+      if (text === 'STUB_LW_TIER_COUNT') return { rows: [{ n: 2 }] };
+      if (text === 'STUB_LW_FLAG_COUNT') return { rows: [{ n: 1 }] };
+      if (text === 'STUB_LW_CONTACTS_COUNT') return { rows: [{ n: 0 }] };
+      if (text === 'STUB_LW_CUMULATIVE') return { rows: [{ linked: 1, total: 1 }] };
+      if (text === 'STUB_LW_UNFLAG_COUNT') return { rows: [{ n: 4 }] };
+      return undefined;
+    });
+    const logs: string[] = [];
+    const result = await withDryRunArgv<{ skipped?: boolean; gate?: { reason?: string } }>(() => stepLib.runCascadePhase({
+      descriptor, pool, compute, config: {}, chainId: null,
+      log: { info: (_tag: string, msg: string) => logs.push(msg), warn: () => {}, error: () => {} },
+      tag: '[link_wsib]', clockNow: new Date('2026-08-29T20:00:00Z'),
+    }));
+    expect(result.skipped, 'an interrupted retraction must never resolve to a SKIP, even though the gate itself was fed a definite-skip answer').toBeFalsy();
+    expect(result.gate?.reason).toBe('recover_interrupted_retraction');
+    expect(logs.some((l) => l.includes('recover_interrupted_retraction')), 'the cascade mode gate log line must name the real reason').toBe(true);
+  });
+});

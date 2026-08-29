@@ -615,6 +615,14 @@ Filed to `docs/reports/review_followups.md`: a MED follow-up naming every residu
 
 **This pilot's own defect count:** 10 `LW-D*` rows opened (`LW-D1`–`LW-D10`); all 10 CLOSED as of commit 9 — the two found DURING commit 8/8b's live execution (`LW-D9`, `LW-D10`) were found by ACTUALLY RUNNING the forced-FULL repair rather than by static review, the same "execute, don't just read" discipline that found `#165`'s harness bug at peel 8b and the assert-schema.js false-positive while widening the P4 battery's regex. Every defect this pilot closed was closed by measurement, not by argument.
 
+**Addendum (2026-08-29, `LW-D20`/`LG-19`) — R-B's runtime reader is now CLOSED, by the same "execute, don't just read" discipline this section names.** The Recurring table's own R-M row above states the OPEN half plainly: *"R-B's `recovery.interrupted` only declares the CRASH-RECOVERY posture, nothing declared the AUDIT TRAIL"* — and separately, R-B's own text (Spec 122) named the runtime mechanism ("the staleness gate's prior-run reader is widened to also detect a crashed or stuck-`running` `pipeline_runs` row... mode resolves FULL") as still ⚠ OPEN through this pilot's own cutover. `scripts/lib/step/staleness.js detectInterruptedRetraction` + `selectMode`'s new unconditional branch close it, wired into `runCascadePhase`/`runLinkPhase`.
+
+Two REAL bugs were found by a **live kill-and-rerun proof against this exact step** (`link_wsib`, standalone, local dev DB) — neither would have been caught by reasoning about the code, matching this section's own thesis:
+1. **Self-detection.** The first working version detected a step's OWN just-opened `running` row (inserted by `openLedgerRow` before `selectMode` ever runs) as "interrupted," on EVERY run, forever — the very first live invocation printed `cascade mode gate: FULL (recover_interrupted_retraction)` before any real work could possibly have been interrupted. Fixed by threading `ownRunId` (the caller's own `openLedgerRow` return value) through to `detectInterruptedRetraction`, which now excludes it by id.
+2. **Unreachable placement.** With (1) fixed, a second live run took the `ledgerGatedSkip` SKIP path and never reached `selectMode` at all — the interrupted-retraction check was dead code whenever nothing else had changed, which is the COMMON case, not the exception. Fixed by checking `detectInterruptedRetraction` BEFORE `ledgerGatedSkip` in `runCascadePhase` and folding it into the same `bypassed` flag `dry_run`/`force_full` already use.
+
+**The live proof, real numbers, this DB:** killed a genuine `LINK_WSIB_FORCE_FULL=1` run 5s into a real forced-full repair (`pipeline_runs` id 1737 left `status:'running'`, no `completed_at`); the very next plain invocation (no force env, no `--full`) printed `cascade mode gate: FULL (recover_interrupted_retraction)`, `gated_skip:false` (confirming the bypass fix), ran the real tier-3 repair to completion in 631.5s, converged in 2 iterations, relinked 548 rows, wrote a real before-image (`docs/reports/golden/link_wsib/before-image/2026-08-29T20-09-18.848Z-wsib_registry.jsonl`, 548 rows, R-M), and finished `verdict:PASS`, `checks_failed:0`. Post-state verified consistent: `wsib_registry` 121,116 rows total, `entities.is_wsib_registered=true` 301, `link_rate_pct` 7.6241 — no data loss, no corruption. Locked both by a fast fake-pool suite (`src/tests/step-library.logic.test.ts`, 6 tests, no DB) and a real-Postgres suite (`src/tests/db/staleness-interrupted-retraction.db.test.ts`, 11 tests, including both bugs as named regression cases). Spec 122 R-B and Spec 124 Rule 12 / §5 R-B updated to CLOSED.
+
 ---
 
 ## Validation scorecard (generated)
@@ -632,7 +640,7 @@ Filed to `docs/reports/review_followups.md`: a MED follow-up naming every residu
 | G3 | 1 | 2 | table rows=18 vocab-hit rows=17 |
 | G4 | 0 | 2 | risk-class row with chance+impact found=false |
 | G5 | 1 | 1 | db=true clock=true network=true argv/env=true |
-| G6 | 0 | 3 | 19 ledger row(s), 4 without CLOSED/PIN (LW-D1, LW-D2, LW-D3, LW-D6) |
+| G6 | 0 | 3 | 20 ledger row(s), 5 without CLOSED/PIN (LW-D1, LW-D2, LW-D3, LW-D6, LW-D20) |
 | G7 | 3 | 3 | file=true fences=5 it-count=78 RED-evidence=true |
 | G8 | 0 | 3 | missing-invocations=0 stale-fingerprints=0 unexplained-diffs=52 |
 | G9 (binary) | PASS | — | heading=true low-confidence-table=true recurring-table=true |

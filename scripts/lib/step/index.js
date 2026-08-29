@@ -603,7 +603,7 @@ async function runIngestPhase({ descriptor, pool, compute, config, fetchImpl, ch
  *
  * @returns {Promise<object>} `{mode, gate, matched, cumulative, written, prior, overrides}`
  */
-async function runLinkPhase({ descriptor, pool, compute, config, chainId, log, tag, clockNow, preWriteGate }) {
+async function runLinkPhase({ descriptor, pool, compute, config, chainId, log, tag, clockNow, preWriteGate, ownRunId }) {
   const requirements = await assertRequirements(pool, descriptor, { log, tag });
   const prior = await staleness.readPriorEmit(pool, ledgerPipelineName(descriptor, chainId), null);
   const overrides = staleness.resolveOverrides(descriptor);
@@ -612,7 +612,7 @@ async function runLinkPhase({ descriptor, pool, compute, config, chainId, log, t
   // suppression below is the generic mechanism every LINK/MATCHER descriptor gets the
   // moment it declares a dry-run flag — never a per-step branch).
   const dryRun = overrides.dry_run;
-  const gate = await staleness.selectMode({ descriptor, pool, prior });
+  const gate = await staleness.selectMode({ descriptor, pool, prior, ownRunId });
   const privilege = await write.assertWritePrivileges(pool, descriptor, { log, tag });
   log.info(tag, `mode gate: explicit_full=${gate.explicit_full} forced=${gate.forced} `
     + `changed=${gate.changed} → ${gate.mode.toUpperCase()} (${gate.reason})`);
@@ -848,14 +848,23 @@ async function runTierToConvergence(runOnePass, loops, maxIterations) {
  *
  * @returns {Promise<object>} `{mode, gate, matched, cumulative, written, prior, overrides, skipped, gatedSkip}`
  */
-async function runCascadePhase({ descriptor, pool, compute, config, chainId, log, tag, clockNow, preWriteGate }) {
+async function runCascadePhase({ descriptor, pool, compute, config, chainId, log, tag, clockNow, preWriteGate, ownRunId }) {
   const requirements = await assertRequirements(pool, descriptor, { log, tag });
   // LW-D15 — `overrides.dry_run` is now the single source (staleness.resolveOverrides
   // itself calls dryRunArgPresent internally); `dryRun` below is a local alias, not a
   // second read.
   const overrides = staleness.resolveOverrides(descriptor);
   const dryRun = overrides.dry_run;
-  const bypassed = dryRun || overrides.force_full === true;
+  // R-B (LW-D20/LG-19) — MEASURED LIVE 2026-08-29: a live kill-and-rerun proof against
+  // link_wsib found the interrupted-retraction check placed ONLY inside selectMode was
+  // unreachable dead code, because ledgerGatedSkip's SKIP branch returns BEFORE
+  // selectMode is ever called — "mode resolves FULL regardless of code/data signals"
+  // (R-B's own text) cannot be true if the gate skips past the check entirely. Checked
+  // HERE, before the gate, and folded into `bypassed` so an interrupted retraction
+  // structurally cannot be skipped past — mirrors dry_run/force_full's own bypass shape,
+  // never a second code path.
+  const interruptedRetraction = await staleness.detectInterruptedRetraction(pool, descriptor, { ownRunId });
+  const bypassed = dryRun || overrides.force_full === true || interruptedRetraction.interrupted;
 
   // ── LG-15 — THE LEDGER GATED SKIP, generalizing link_wsib's own pre-existing B3 gate ──
   const gatedSkip = await staleness.ledgerGatedSkip(pool, descriptor, { now: clockNow, bypassed });
@@ -877,7 +886,7 @@ async function runCascadePhase({ descriptor, pool, compute, config, chainId, log
   const prior = gatedSkip.gate
     ? gatedSkip.gate.ownLastRecordsMeta
     : await staleness.readPriorEmit(pool, ledgerPipelineName(descriptor, chainId), null);
-  const gate = await staleness.selectMode({ descriptor, pool, prior });
+  const gate = await staleness.selectMode({ descriptor, pool, prior, ownRunId });
   const configTrigger = staleness.triggersAt(descriptor, 'pre_compute').find((t) => t.signal === 'config_version');
   const configVersionUpdatedAt = configTrigger ? (await staleness.measureTrigger(pool, descriptor, configTrigger)).current : null;
   const privilege = await write.assertWritePrivileges(pool, descriptor, { log, tag });
@@ -1557,7 +1566,7 @@ async function runWithPool(runnable, pool, ctx) {
       if (isLinkStep(descriptor)) {
         link = await runLinkPhase({
           descriptor, pool, compute: runnable.compute, config: configValues,
-          chainId, log: pipeline.log, tag: `[${slug}]`, clockNow,
+          chainId, log: pipeline.log, tag: `[${slug}]`, clockNow, ownRunId: runId,
           preWriteGate: makePreWriteGate({ descriptor, chainId, stepCtx, compute: runnable.compute, config: configValues }),
         });
         stepCtx.matched = link.matched;
@@ -1599,7 +1608,7 @@ async function runWithPool(runnable, pool, ctx) {
       } else if (isCascadeStep(descriptor)) {
         cascade = await runCascadePhase({
           descriptor, pool, compute: runnable.compute, config: configValues,
-          chainId, log: pipeline.log, tag: `[${slug}]`, clockNow,
+          chainId, log: pipeline.log, tag: `[${slug}]`, clockNow, ownRunId: runId,
           preWriteGate: makePreWriteGate({ descriptor, chainId, stepCtx, compute: runnable.compute, config: configValues }),
         });
         stepCtx.matched = cascade.matched;
