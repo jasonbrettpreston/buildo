@@ -156,6 +156,57 @@ low-cost correction (not a KNOWN-DEFECT pin — the code is not wrong, the comme
 
 ---
 
+## §3. PH-5 — Seam map (commit 3, G5)
+
+> Every place `scripts/link-parcel-addresses.js` (393 lines) touches something outside pure computation — DB,
+> clock, network, argv/env — re-derived by direct read this commit, not copied from §0/G5's preliminary pass.
+
+### DB seam
+- `pool` — supplied by `pipeline.run('link-parcel-addresses', main)` (`:390`), never a local `new Pool()`.
+- **2 `pool.query`** sites, BOTH outside any transaction: the pre-run stats read (`:123-130`, parcel/AP geom
+  counts + existing link count) and the post-run stats read (`:222-233`, final link/coverage counts) — pure
+  reporting queries, no write side effect.
+- **1 `client.query`** site (`:160-183`) — the ONE write statement, inside `pipeline.withTransaction(pool,
+  async (client) => {...})` (`:154`). **Genuinely different transaction shape from every pilot so far**:
+  `withTransaction` is called ONCE PER BATCH, inside a `while(true)` loop (`:152-218`) — pilot 4's `link_wsib`
+  opens ONE transaction for all 3 tiers (`:343-462`); this step opens up to ~487 independent transactions (one
+  per 1,000-parcel batch), each committing before the next begins. This is the write-discipline table's own
+  `txn_scope: batch` field, re-confirmed here as a genuine seam distinct from `runLinkPhase`'s single-write-plan
+  shape (Fold A finding 3) — `runMaterializePhase` must reproduce a PER-BATCH transaction loop, not one
+  transaction wrapping a single write plan.
+- `pipeline.withAdvisoryLock(pool, ADVISORY_LOCK_ID, async () => {...})` (`:74`) wraps the ENTIRE gate + batch
+  loop — lock 115, kept textually (already declared in `identity`, §5.4 precedent).
+- **0 session-scoped `SET`/`RESET` GUC calls** — unlike `link_wsib`'s `pg_trgm.similarity_threshold` pairing,
+  this step has no session-config dependency. Simplest DB seam of any pilot to date on this axis.
+
+### Clock seam
+- `pipeline.getDbTimestamp(pool)` → `RUN_AT` (`:81`) — the ONE DB-clock read, captured BEFORE the batch loop
+  starts, threaded as a bound param (`$3::timestamptz`) into every batch's INSERT (`:171`, `:183`).
+- `Date.now()` — **2 sites** (`:75` `t0`, `:220` elapsed) — both elapsed-time-only (`durationMs`/`elapsedMs`),
+  never written to the DB as a timestamp; legal per the lesson's explicit carve-out.
+- **0 `new Date(`** anywhere — cleaner than `link_wsib`'s 1 read-side-normalization site; this step has no
+  read-value-to-ISO-string conversion at all.
+
+### Network seam
+- **0 `fetch(` calls** — no external network dependency, same as `link_wsib`.
+
+### argv/env seam
+- **1 read, already has a declared home:**
+  - `process.env[FORCE_FULL_ENV]` (`:88`, `FORCE_FULL_ENV = 'LINK_PARCEL_ADDRESSES_FORCE_FULL'`) →
+    `override.force_full` (E1, the box already exists per pilots 3/4's own E1 finding) — §2's G3 disposition
+    (`a81c6a7c`) already named this the encoded-as-descriptor-field target.
+- **0 `process.argv` reads** — no invisible-to-lint argv read exists (finding 5, re-confirmed: 0 hits).
+
+### Seam-map verdict (G5)
+No PARTIAL seams remain unresolved for this pilot — DB/Clock/Network/argv-env are all either
+already-declared-field-bound (E1) or structurally clean (Clock's read/write split; Network's absence; 0 GUC
+pairs). The ONE open library question is not a seam gap but the PHASE-SHAPE gap (A-1, RULED Fold A —
+`runMaterializePhase`), and this commit's DB-seam finding sharpens exactly why: the per-batch transaction
+loop (up to ~487 independent commits) is a shape `runLinkPhase`'s single-write-plan model cannot express
+without breaking G2's verbatim guarantee, consistent with Fold A/Integration finding 3.
+
+---
+
 ## §0. PH-0 seed — measured boundary table (2026-08-29 planning session)
 
 > Executed against the local dev DB (`current_database() = postgres`, port 5432 — **not** the
