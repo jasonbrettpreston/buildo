@@ -3066,3 +3066,41 @@ The permits chain crept from ~55 to 78+ min and was step-timeout-killed mid `com
 ### C1 Pilot 5 (`link_parcel_addresses`) — WF3-D, deferred (2026-08-29)
 
 - **[LOW · declared observation, no gate, `scripts/lib/compute/link-parcel-addresses.js`] `unlinked_address_points_within_2m_of_parcel` (an INFO count of unlinked address points that sit within 2 metres of SOME parcel, geography-cast) was coordinator-scoped into WF3-B "if trivial, else skip and file" — measured NOT trivial and skipped this commit.** Attempted live: `SELECT count(*) FROM address_points ap WHERE ap.geom IS NOT NULL AND NOT EXISTS(...pap...) AND EXISTS (SELECT 1 FROM parcels p WHERE p.geom IS NOT NULL AND ST_DWithin(ap.geom::geography, p.geom::geography, 2))` — killed after >15 minutes with no result (`127.0.0.1:54322/postgres`, 242 migrations), against `address_points_with_no_parcel` measuring only 14,122 unlinked rows total (2.69%, well within normal bounds — `address_points_with_no_parcel_pct` already covers this population's SIZE). Root cause not fully diagnosed but plausible: `ST_DWithin(::geography, ::geography, 2)` cannot use either table's existing `geometry`-typed GiST index directly (a geography cast forces either a sequential scan or an on-the-fly index build per outer row), so the correlated `EXISTS` degrades toward a nested-loop over 14,122 × up to 486,530 parcels. RECOMMEND, if this metric is wanted: (a) bound the parcel side with a `&&` bbox prefilter using `ST_Expand(ap.geom, 2/78000.0)` in DEGREES first (the exact `nearestDegSpan` pattern `link-massing.js` already uses and documents, `tasks/lessons.md`), THEN the precise `ST_DWithin` geography check only on the bbox-prefiltered candidates; or (b) a functional/expression GiST index on `address_points.geom`/`parcels.geom` cast to geography if this becomes a standing check. Not built — filed for a future WF3, not folded into WF3-B per the coordinator's own fallback instruction.
+
+### R-R backfill (`step:validate --all --write`, 2026-08-29) — 4 pilots score below the 14/17 ship bar, honestly, not massaged
+
+`node scripts/analysis/step-validate.mjs --all --write` (Spec 123 §6/R-R, WF1 "Spec 123 integrated validation")
+backfilled the G0–G9 scorecard into all five pilot reports for the first time. Per the task's own instruction —
+"report each /17 honestly, expect some < 14, do NOT massage" — four of five score below the ship bar. Only
+`link_parcel_addresses` (pilot 5) was fixed in the same commit, because its two causes were genuine
+DOCUMENTATION gaps (see the pilot 5 report's two addenda, 2026-08-29): 8/17 → 14/17, hard-stop cleared. The
+other four are real, historical gaps in pilots that shipped before this scorecard existed; filing them here
+rather than silently regenerating a rosier number.
+
+- **[MED · scorecard, `assert_schema` pilot 1] 6/17, hard-stop=true.** G2=0 (`ASSESSMENT-INCOMPLETE` claimed
+  without a stated why nearby), G4=0 (no risk-class row with both chance/impact factors — none of pilots 1–3
+  have one), G5=0 (the PH-5 section predates the `### DB seam`/`Clock seam`/`Network seam`/`argv/env seam`
+  sub-heading convention pilots 4–5 introduced), G6=0 (7 of 14 `AS-D*` ledger rows are plain `OPEN`, never
+  `CLOSED`/`PIN` — `AS-D1b`, `AS-D2`, `AS-D4`, `AS-D10`, `AS-D11`, `AS-D12`, `AS-D13`), G8=0 (134 unexplained
+  golden-capture diffs vs `pre/`), G9=FAIL (R-F's Reflection gate starts at pilot 4, predates this report).
+- **[MED · scorecard, `load_ravines` pilot 2] 6/17, hard-stop=true.** Same class as pilot 1 (G9 predates R-F;
+  G4/G5 predate the later conventions); G6/G8 not yet audited row-by-row.
+- **[MED · scorecard, `link_massing` pilot 3] 6/17, hard-stop=true.** G2=0, G4=0, G5=0 (network seam present,
+  DB/clock/argv-env not, per the older PH-5 format), G6=0 (4 of 16 `LM-D*` rows — `LM-D4`, `LM-D6`, `LM-D11`,
+  `LM-D14` — not `CLOSED`/`PIN`), G8=0 (150 unexplained diffs), G9=FAIL (pilot 3's own §R is explicitly a
+  placeholder pointer, not the two required closed tables — matches R-F's own text: "Pilot 3's own §R is a
+  placeholder pointer to this block").
+- **[MED · scorecard, `link_wsib` pilot 4] 8/17, hard-stop=true.** G4=0 (no risk-class row), G6=0 (4 of 19
+  `LW-D*` rows — `LW-D1`, `LW-D2`, `LW-D3`, `LW-D6` — not `CLOSED`/`PIN`), G8=0 (52 unexplained diffs, likely
+  the same class as `link_parcel_addresses`'s — later WF3 fixes on this branch changing `records_meta` shape
+  without a report addendum). G9 PASSES (pilot 4 is where R-F's Reflection gate starts).
+
+RECOMMEND: a future WF3 (or WF2, one per pilot, per the WF3 per-finding cadence) normalizes each pilot's
+non-`CLOSED`/`PIN` ledger rows to the closed vocabulary (mirroring this commit's `LPA-D2` fix — most are
+probably genuinely still open and should read `OPEN · PIN`, not silently flipped to `CLOSED`), adds the missing
+risk-class rows (G4, all five pilots — none has one; this may be a genuine, estate-wide G4 gap worth a spec
+amendment rather than five separate fixes), and re-explains each pilot's unexplained golden-capture diffs the
+same way `link_parcel_addresses`'s were (name the later commit that changed the shape, in the report). Pilots
+1–3's G9 FAILs and G5 format gaps are NOT recommended for retroactive fixing — R-F is explicitly binding
+"starting pilot 4," and rewriting pilots 1–3's PH-5 sections to match a later convention they predate would be
+exactly the kind of retroactive massaging Spec 123 §3's PIN-vs-FIX discipline warns against.

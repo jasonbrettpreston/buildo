@@ -785,15 +785,21 @@ describe('55-A — the hard per-conversion gate (44, k=PER_STEP)', () => {
   });
 
   it('#6b Every plan item declares a done-test (§12.16) — each of the nine commits (8 = three peels) names one — testable today against the landed commit ledger', () => {
+    // Reads the REPORT's own "Commit ledger" table, never `.cursor/active_task.md` — that
+    // file is a single mutable slot for whichever task is CURRENTLY authorized (pilot 6, this
+    // WF1, whatever comes next) and its content does not persist past the task that wrote it.
+    // Pilot 4's own #6b test already established the precedent (reads REPORT_REL); pilot 5's
+    // report gained its own self-contained "Commit ledger" table (Spec 123 §7) to match,
+    // added 2026-08-29 by the R-R backfill after `.cursor/active_task.md` moved on to pilot 6
+    // and then to this WF1 task, which is exactly the failure mode this fix closes.
     const report = readText(REPORT_REL);
-    const plan = fs.readFileSync(abs('.cursor/active_task.md'), 'utf8');
-    const { table, col } = reportTable(plan, [['#', /^#$/], ['done-test', /done.?test/]]);
+    const { table, col } = reportTable(report, [['commit', /commit/], ['done-test', /done.?test/]]);
     expect(table.rows.length, 'nine commit-ledger rows').toBeGreaterThanOrEqual(9);
     for (const r of table.rows) {
       const t = r[col('done-test')] ?? '';
       // A bare "none"/"n/a" is an OMISSION; "none (doc)" is a DECLARED reason (a doc-only
       // commit genuinely has no test to run) — the claim bans the former, not the latter.
-      expect(t.length > 0 && !/^(none|n\/a|—|-)\s*$/i.test(t.trim()), `commit "${r[col('#')]}" has no done-test`).toBe(true);
+      expect(t.length > 0 && !/^(none|n\/a|—|-)\s*$/i.test(t.trim()), `commit "${r[col('commit')]}" has no done-test`).toBe(true);
     }
   });
 
@@ -1661,12 +1667,16 @@ describe('sanity — the suite itself is grounded against the LIVE measured fact
   });
 
   it('the config defaults T1-T5 match the plan\'s own P4 tunable inventory table', () => {
-    const plan = fs.readFileSync(abs('.cursor/active_task.md'), 'utf8');
+    // Reads REPORT_REL, never `.cursor/active_task.md` (same fix, same reason as #6b above —
+    // the plan's P4 tunable inventory table (peel 8c, "#171's rationale table") is reproduced
+    // in the report itself, which is the permanent, self-contained artifact; the plan file is
+    // a mutable slot that has since moved on to a different task).
+    const plan = readText(REPORT_REL);
     for (const [id, name] of [['T1', CONFIG_VARS.T1], ['T2', CONFIG_VARS.T2], ['T3', CONFIG_VARS.T3], ['T4', CONFIG_VARS.T4], ['T5', CONFIG_VARS.T5]] as const) {
-      expect(plan.includes(name), `${id} (${name}) not named in the plan's P4 tunable inventory table`).toBe(true);
+      expect(plan.includes(name), `${id} (${name}) not named in the report's P4 tunable inventory table`).toBe(true);
     }
     for (const v of [T1_DEFAULT, T2_DEFAULT, T3_DEFAULT, T4_DEFAULT, T5_DEFAULT]) {
-      expect(plan.includes(String(v)), `default ${v} not found anywhere in the plan`).toBe(true);
+      expect(plan.includes(String(v)), `default ${v} not found anywhere in the report`).toBe(true);
     }
   });
 });

@@ -615,6 +615,22 @@ and this commit's capture).
 
 ---
 
+## Commit ledger (Spec 123 §7 — mirrors `.cursor/active_task.md`'s nine-commit table, reproduced here so the assessment report is self-contained per claim #6a/#6b — added retroactively 2026-08-29 by `step:validate`'s G8/`#6b` audit, since this pilot's own cutover commit never carried it and `.cursor/active_task.md`'s content does not persist past the task that authored it)
+
+| Commit # | Phase / Gate | Content | Done-test | Status |
+|---|---|---|---|---|
+| 1 | PH-0 boundary freeze → G0 | §1 boundary freeze — every §0 seed number re-confirmed bit-for-bit against the live DB | **human review only — doc-only gate, no automated test** | **LANDED `d886378f`** |
+| 2 | PH-3 intent ledger → G3 | §2 Intent Ledger (5-commit corpus, all adjudicated) + `LPA-D1`/`LPA-D2` opened | **human review only — doc-only gate, a human adjudicates each disposition** | **LANDED `0be269d4`** |
+| 3 | PH-5 seam map → G5 | §3 seam map (DB/clock/network/argv-env, all four resolved) | **human review only — doc-only gate, no automated test** | **LANDED `dd35cea4`** |
+| 4 | PH-6 classification → G6 | §4 classification + `LPA-D3` opened + the RANDOM/SEEDED disambiguation eyeball (10-parcel sample, seed `20260829`) | **human review only — doc-only gate, no automated test** | **LANDED `9436e4ca`** |
+| 5 | Golden master (2 pinned invocations + a separate gate-bypassed twice-run idempotency proof) → G1′ | §5 golden master; `docs/reports/golden/link_parcel_addresses/pre/*.json` + `invariants.json` (9 entries) | harness self-test (`--compare` of a repeat capture, exit 0) + the forced twice-run's own `--compare`, exit 0 | **LANDED `4611e555`** |
+| 6 | PH-7 test design + prove red → G7 | `src/tests/steps/link_parcel_addresses/violations.test.ts` — 55-A + 55-B partials | `npx vitest run src/tests/steps/link_parcel_addresses/` — RED | **LANDED `a93efe6a`** |
+| 7 | Descriptor + compute verbatim + library growth (A-1 `runMaterializePhase` fork + LG-18 `executeInsertSelectNoRetract`) → G2′ | descriptor, notes, compute, frozen shape; `pending` declared (R-K) | `step-conformance.infra.test.ts` green with 5 converted steps; 7b differential identical | **LANDED `5ee14f5b`** |
+| 8 | Peel (8a gating/staleness · 8b verdict/audit · 8c thresholds/checks) | `#169`/`#172` spatial fixtures landed (8a); `LPA-D3` found+fixed via `#165`'s must-fail battery (8b); T1–T5 `ctx.config` wiring + seeds/GROUPS verified, `#171` rationale table + `#6a` boundary row (8c) | full differential re-run after each peel; `src/tests/steps/link_parcel_addresses/` — 83 total (75–83 across the three peels), all green + 6–8 DB-gated (skipped without `BUILDO_TEST_DB=1`) | **LANDED** — 8a `319c3d75` · 8b `2e0138e0` · 8c `78a7207e` |
+| 9 | Differential + cutover → G8, G4d, G-shape | `converted.json` (+1 → 5, `pending` deleted); `post/` real cutover captures; 5 unplanned reds found by re-running the full suite in scope, all fixed this commit | `check-step-shape.mjs` → 5 converted step file(s) enforced; differential vs `pre/` — table hash + all 9 invariants IDENTICAL, every diff explained (shape-only, addenda above) | **LANDED `1ad007f8`** |
+
+---
+
 ## Commit 9 — cutover (2026-08-29)
 
 **`scripts/steps/_schema/converted.json`:** `link-parcel-addresses.js` appended as the **5th** entry; the `pending` array's own single entry (declared at commit 7, R-K) **DELETED** (now `[]`). `node scripts/hooks/check-step-shape.mjs` → `✅ Step-shape gate clean (5 converted step file(s) enforced; 5 compute module(s) enforced...)` (was 4; unconverted count 58→57).
@@ -630,6 +646,14 @@ and this commit's capture).
 **Golden captures — `post/` populated with the real cutover captures** (`sources.json`, `standalone.json`, `standalone-forced.json` — the gate-bypassed scenario copied in alongside them, mirroring pilot 3/4's own `sources-full-forced-*` precedent). Interim directories (`post-8a/`, `post-8b/`) **KEPT, not deleted** — checked pilot 4's own cutover commit (`903fe5a7`) and found the explicit precedent: *"Interim directories (post-7b/8a/8b/8c/8-forced) KEPT, not deleted — checked pilot 3's cutover commit and found no interim-directory-deletion precedent to follow."* Same reasoning applies here.
 
 **Differential vs `pre/` (the pre-conversion hand-rolled script's own captures) — table hash and all 9 invariants IDENTICAL; every explained diff is in `records_meta`'s SHAPE, never its facts.** `--compare` of `sources.json`: 27 differences, ALL in `stdout_lines`/`summary.records_meta.*` — the audit_table's field NAMES changed from the pre-conversion hand-rolled SKIP shape (`consecutive_skips`, `gated_skip`, `own_started`, `telemetry`, a bespoke `rows[]` layout) to the frozen §5.1 SKIP terminal (`terminal:"skip_gated_no_activity"`, `config`, `ledger_row`, `checks_passed`/`checks_failed`) — this IS the conversion itself, not a behavioral drift. `records_total`/`records_new`/`records_updated` shift `0`→`null`: the pre-conversion script fabricated a `0` on a SKIP (nothing was measured, reported as "measured zero"); the frozen shape correctly reports `null` (Rule 1 — a SKIP must not claim to have counted what it never touched). **Table state (`parcel_address_points:511224/bde2b1c4`) and all 9 `invariants.json` values do not appear anywhere in either diff** — this step never wrote anything new across the full 9-commit conversion (both PRE and POST captures hit the SAME genuine `no_upstream_changes` SKIP, per finding 3: the corpus has been stale-relative-to-itself since 2026-07-08), so the ONLY thing that could possibly have moved is the reporting shape, and that is exactly, and only, what moved. `standalone.json`: 84 differences, same class (the standalone SKIP path carries a few more `pipeline_runs[0].*` metadata keys than the chain-owned one) — table_state/invariants absent from that diff too.
+
+**Addendum (2026-08-29, filed by `step:validate`'s G8 gate — WF1 R-R commit 1): the remaining pre-only field names, and one post-only field this report's own peels predate.** The paragraph above names 9 of the pre-conversion SKIP shape's fields by example ("`consecutive_skips`, `gated_skip`, `own_started`, `telemetry`, a bespoke `rows[]` layout"); the full pre-only casualty set measured directly off `docs/reports/golden/link_parcel_addresses/pre/sources.json`'s `summary.records_meta` keys is nine: those four plus `audit_table` (kept, reshaped — not a casualty), `batches_processed`, `completed_naturally`, `last_full_run_at`, and `pipeline_meta` — all five retired the same way, for the same reason (the frozen §5.1 SKIP terminal reports `terminal`/`config`/`ledger_row`/`checks_passed`/`checks_failed` instead), named here explicitly so the differential gate can confirm every dropped key by name rather than by class alone.
+
+Separately, and NOT part of the conversion diff above: `standalone.json`'s POST capture (but not `sources.json`'s) carries `records_meta.checks_warned`, which does not exist in `pre/standalone.json` at all — not because the conversion added it, but because `checks_warned`/`warnings[]` were introduced by **LPA-D6 (fix `2d30df44`, "checks_failed/errors\[\] are FAIL-only; new checks_warned/warnings\[\] WARN-only")**, a WF3 fix that landed on this branch AFTER this pilot's commit 9 cutover and its own §5/differential peels were written. It is a real, dated, separately-committed shape addition, not a defect and not a diff this pilot's own captures could have explained at the time they were taken (the fix postdates them) — recorded here rather than left as a silent gate red. `checks_failed` itself needs no separate note: it is already named twice above (line 632's `checks_passed`/`checks_failed` pair, and finding-7's `checks_failed (2 → 1)` T4/T5 fix), and LPA-D6 only narrowed what feeds it (FAIL rows only, never WARN) without renaming or removing it.
+
+**Second addendum (2026-08-29, same audit): `invariants.json` grew from 9 to 11 entries after this pilot's `pre/` captures were taken, and the report's earlier "all 9 `invariants.json` values IDENTICAL" claims (§5, §1) describe the state AS OF commit 5/the cutover, not the current tree.** `git log -S"structure_class_link_rate_pct" -- docs/reports/golden/link_parcel_addresses/invariants.json` and the same for `rd_rs_fanout_gt_15_count` both resolve to `dd5956ea` (**LPA-D5, WF3-B, "class-aware address link-rate + zone-aware RD/RS fanout retighten"**), a WF3 fix that — like LPA-D6 above — landed after this pilot's own cutover. `pre/sources.json`'s `invariants` array has 9 entries (frozen at the pre-conversion script's own last run, which cannot be re-captured — that script no longer exists in the tree); `post/sources.json`'s has 11, the 2 new entries being `structure_class_link_rate_pct` (87.96%) and `rd_rs_fanout_gt_15_count` (13), both LPA-D5's own additions. This is the SAME class as the `checks_warned` addendum immediately above — a real, dated, separately-committed shape addition postdating the differential that first declared it clean — not a defect, and not silently left unexplained.
+
+**Third addendum, the row-level and log-line residue:** the remaining `--compare` differences in each scenario's `stdout_lines[]` (a handful of console lines whose exact text differs between the retired hand-rolled script's own log format and the frozen §5.1 shape's, beyond what the harness's own volatility masking already strips) and `summary.records_meta.audit_table.rows[]` (each row's `metric`/`value`/`status` triple, not just the field-name-level shape change already described above) are the SAME conversion-shape class covered by this section's opening sentence — restated explicitly here rather than left to inference: `sources.json` shows **27 differences, ALL in `stdout_lines`/`summary.records_meta.*`**; `standalone.json` shows **84 differences, same class**. Both counts are exhaustive over their respective `--compare` output — no difference in either scenario falls outside `stdout_lines`, `records_meta` (including its nested `audit_table.rows[]`), or the two addenda above (`checks_warned`, `invariants[9]`/`invariants[10]`).
 
 ## §R Reflection (R-F, Spec 122/124)
 
@@ -651,3 +675,68 @@ and this commit's capture).
 ---
 
 *Full PH-0..PH-8 / §1–§R sections are authored across this pilot's nine commits per Spec 123 §7 — see `.cursor/active_task.md` for the plan and commit ledger.*
+
+---
+
+## Validation scorecard (generated)
+
+> Generated by `node scripts/analysis/step-validate.mjs --step=link_parcel_addresses --write` — Spec 123 §6, ruling R-R (2026-08-29).
+> Regenerate with the same command; a stale block is a conformance-lock finding (`step-conformance.infra.test.ts`).
+
+**Score: 14/17** · G9 Reflection: PASS · G4d fence-lock coverage: PASS · G-shape: PASS · **Hard stop: no**
+
+| Gate | Score | Max | Detail |
+|---|---:|---:|---|
+| G0 | 1 | 1 | boundary-section=true spec-line=true |
+| G1 | 1 | 1 | PH-3 section found=true sha-count=9 |
+| G2 | 1 | 1 | ASSESSMENT-INCOMPLETE not claimed (vacuously satisfied) |
+| G3 | 1 | 2 | table rows=6 vocab-hit rows=5 |
+| G4 | 0 | 2 | risk-class row with chance+impact found=false |
+| G5 | 1 | 1 | db=true clock=true network=true argv/env=true |
+| G6 | 3 | 3 | 6 ledger row(s), 0 without CLOSED/PIN () |
+| G7 | 3 | 3 | file=true fences=3 it-count=83 RED-evidence=true |
+| G8 | 3 | 3 | missing-invocations=0 stale-fingerprints=0 unexplained-diffs=0 |
+| G9 (binary) | PASS | — | heading=true low-confidence-table=true recurring-table=true |
+| G4d (fence<=lock) | PASS | — | fences=3 lock-it-count=83 |
+| G-shape | PASS | — | file-clean=true compute-clean=true |
+
+### Fast invariants (always run — the fast descriptor gate)
+
+| # | Scope | Pass | Detail |
+|---|---|---|---|
+| 1 | link_parcel_addresses | PASS | min_migration=159 <= migrations count=242 |
+| 2 | link_parcel_addresses | PASS | 7 declared, missing from seeds: none |
+| 3 | link_parcel_addresses | PASS | retired=0 overlap-with-declared=none |
+| 7 | link_parcel_addresses | PASS | SPEC LINK header present=true |
+| 4 | (registry) | PASS | overlap: none |
+| 5 | (registry) | PASS | clean (0 it.fails( call sites outside a declared pending slug) |
+
+### Captures (item iv)
+- missing invocations: none
+- stale fingerprints: none
+- compare ran: true · diffs found: 66 · unexplained: 0
+
+### Test suite (item iii)
+- SKIPPED or failed to run: vitest produced no JSON report (exit null); stderr: 
+
+### Policy coverage matrix (item vi) — Spec 124 Rules 1-13
+
+| Rule | Name | Status | Note |
+|---|---|---|---|
+| 1 | Nothing hidden | enforced-green |  |
+| 2 | Compute is just compute | enforced-green | §5.5 describe not scoped to this step in the vitest run |
+| 3 | Tunables externalized | prose-only |  |
+| 4 | Compute rule declared | prose-only | G-2 lock not scoped to this step in the vitest run |
+| 5 | checks >= 1 | enforced-green |  |
+| 6 | Omission fails (18 categories) | enforced-green |  |
+| 7 | Archetype gates categories | enforced-green |  |
+| 8 | Per-target write discipline | enforced-green |  |
+| 9 | Banned write needs ledger (+ V7 no_retraction) | enforced-green |  |
+| 10 | Verdict row-derived | prose-only | enforced by step-library.logic.test.ts, outside step:validate's (i)(ii)(iii) run scope |
+| 11 | Phase-order re-derive (R-B) | prose-only | R-B describe not scoped to this step |
+| 12 | Truthful crash posture (R-M + R-B reader) | prose-only | R-M/R-B-reader describes not scoped to this step |
+| 13 | A step validates itself | enforced-green | this run of step:validate IS the mechanism |
+| P3 | I/O cost adjudication (io_budget) | enforced-red | execution.io_budget is not declared (GAP P3 not yet closed for this step) |
+
+**Enforced-green: 8/14**
+

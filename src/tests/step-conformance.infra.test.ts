@@ -1494,3 +1494,106 @@ describe('database.min_migration — COUNT floor, never a filename number (LW-D8
     });
   }
 });
+
+// ---------------------------------------------------------------------------
+// R-R (2026-08-29) / Rule 13 — "a step validates itself": the generated
+// scorecard block committed in each assessment report must not be stale.
+//
+// ⚠️ WHY THIS SPAWNS `step:validate --fast`, NEVER THE FULL (non-fast) MODE.
+// The full mode spawns `npx vitest run src/tests/step-conformance.infra.test.ts
+// ...` — this VERY FILE. Calling that from INSIDE a describe block that is
+// itself running as part of an outer `npx vitest run` of this same file is an
+// unbounded recursion (the nested process re-executes this describe block,
+// which spawns another nested process, forever) — measured, not theoretical:
+// the first draft of this lock did exactly that. `--fast` never touches
+// vitest, so it cannot recurse.
+//
+// SCOPE, stated precisely rather than pretended away: G0-G8's scores, G9,
+// G4d, G-shape, and the Fast Invariants + Captures sections are proven
+// vitest-INDEPENDENT (every scoring function reads the report/ledger/notes/
+// captures/descriptor, never a vitest result) — `--fast` output for THOSE
+// sections is asserted byte-identical to the committed block. The "Test
+// suite" line and the "Policy coverage matrix" table DO depend on real
+// vitest results (Rules 2/3/11/12) and are deliberately NOT compared here —
+// their currency is `--all --write`'s job (Spec 123 §7 commit 9), not a
+// vitest-internal lock that would have to recurse into itself to check them.
+describe('R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections)', () => {
+  const STEP_VALIDATE = path.join(REPO_ROOT, 'scripts/analysis/step-validate.mjs');
+  const MARKER = '## Validation scorecard (generated)';
+  const TEST_SUITE_HEADING = '### Test suite (item iii)';
+
+  /** The vitest-independent slice: from the marker up to (not including) the Test-suite section. */
+  function vitestIndependentSlice(block: string): string {
+    const idx = block.indexOf(TEST_SUITE_HEADING);
+    return idx === -1 ? block : block.slice(0, idx);
+  }
+
+  function reportPathFor(slug: string): string | null {
+    const dashSlug = slug.replace(/_/g, '-');
+    const dir = path.join(REPO_ROOT, 'docs/reports');
+    const hit = fs
+      .readdirSync(dir)
+      .find((f) => /^\d{4}-\d{2}-\d{2}-pilot\d+-.*-assessment\.md$/.test(f) && f.includes(`-${dashSlug}-assessment.md`));
+    return hit ? path.join(dir, hit) : null;
+  }
+
+  it('CONVERTED is non-empty (else this whole lock is a vacuous pass)', () => {
+    expect(CONVERTED.length).toBeGreaterThan(0);
+  });
+
+  for (const relFile of CONVERTED) {
+    const slug = slugFor(relFile);
+    if (!slug) continue;
+
+    describe(`${relFile} (slug "${slug}")`, () => {
+      const reportPath = reportPathFor(slug);
+
+      it('has an assessment report', () => {
+        expect(reportPath, `no docs/reports/*-${slug.replace(/_/g, '-')}-assessment.md found`).not.toBeNull();
+      });
+
+      it('report carries exactly one generated scorecard block', () => {
+        if (!reportPath) return;
+        const text = fs.readFileSync(reportPath, 'utf8');
+        const count = text.split(MARKER).length - 1;
+        expect(count, `${slug}: expected exactly one "${MARKER}" block, found ${count}`).toBe(1);
+      });
+
+      it('the committed block\'s vitest-independent sections equal a fresh `step:validate --fast` run', () => {
+        if (!reportPath) return;
+        const committed = fs.readFileSync(reportPath, 'utf8');
+        const committedIdx = committed.indexOf(MARKER);
+        expect(committedIdx, `${slug}: no "${MARKER}" block found`).toBeGreaterThanOrEqual(0);
+        const committedBlock = committed.slice(committedIdx);
+
+        const run = spawnSync('node', [STEP_VALIDATE, `--step=${slug}`, '--fast'], {
+          cwd: REPO_ROOT,
+          encoding: 'utf8',
+          timeout: 60_000,
+          maxBuffer: 16 * 1024 * 1024,
+        });
+        const stdout = run.stdout || '';
+        const freshIdx = stdout.indexOf(MARKER);
+        expect(freshIdx, `${slug}: step:validate --fast produced no scorecard block; stderr=${run.stderr}`).toBeGreaterThanOrEqual(0);
+        const freshBlock = stdout.slice(freshIdx);
+
+        expect(
+          vitestIndependentSlice(freshBlock).trim(),
+          `${slug}: the committed scorecard's vitest-independent sections (score, G0-G8, G9/G4d/G-shape, ` +
+            `fast invariants, captures) drifted from a fresh --fast run — regenerate with ` +
+            `\`node scripts/analysis/step-validate.mjs --step=${slug} --write\``,
+        ).toBe(vitestIndependentSlice(committedBlock).trim());
+      });
+
+      it('the committed block also carries a Test-suite line and a 14-row Policy coverage matrix (presence only — content is `--all --write`\'s job, not this lock\'s)', () => {
+        if (!reportPath) return;
+        const committed = fs.readFileSync(reportPath, 'utf8');
+        expect(committed).toContain(TEST_SUITE_HEADING);
+        expect(committed).toContain('### Policy coverage matrix (item vi)');
+        const matrixSection = committed.slice(committed.indexOf('### Policy coverage matrix (item vi)'));
+        const rows = matrixSection.split('\n').filter((l) => /^\|\s*(?:\d+|P3)\s*\|/.test(l.trim()));
+        expect(rows.length, `${slug}: expected 14 policy-matrix rows (Rules 1-13 + P3), found ${rows.length}`).toBe(14);
+      });
+    });
+  }
+});

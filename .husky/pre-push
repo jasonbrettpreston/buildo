@@ -1,0 +1,11 @@
+#!/bin/sh
+# Spec 123 R-R (2026-08-29): re-runs step:validate + typecheck at push time so a
+# committer who used `git commit --no-verify` cannot ALSO push without them —
+# defeats the "skip once, push anyway" bypass a pre-commit-only gate leaves open.
+# `--staged` reads the last commit's changed files (via `git diff --cached`,
+# which pre-push's own worktree state reflects post-commit) — same scoping
+# rationale as pre-commit: gate what THIS push actually touches, never the
+# entire historical fleet (see step-validate.mjs's own `filterToStaged` doc).
+# Direct `node` invocation (not `npm run`) — measured 2026-08-29: npm's own CLI
+# wrapper adds real overhead on top of the script's own <1s budget.
+node scripts/analysis/step-validate.mjs --staged --fast && npm run typecheck

@@ -1,12 +1,15 @@
 # SPEC 122 — Pipeline Step Optimization (in-place standardization)
 
-> ## ⛔ UNRATIFIED DRAFT — NOT REGISTERED
+> ## ✅ Status: ACTIVE — ratified by operator 2026-08-29 after pilots 1–5
 >
-> **No human has approved this document.** It is not in `docs/specs/00_system_map.md` and has no governance force. `npm run system-map` has deliberately not been run.
->
-> This banner is deliberate. Specs 120 and 121 were both promoted to numbered specs by an automated agent without authorization, and one of them additionally carried a **false attestation of human ratification** for a period. That is the failure this banner exists to not repeat.
+> Promoted from the prior `⛔ UNRATIFIED DRAFT — NOT REGISTERED` banner by explicit operator ruling (2026-08-29, R-R,
+> the same commit that ratifies Spec 123): five conversion pilots (`assert_schema`, `load_ravines`, `link_massing`,
+> `link_wsib`, `link_parcel_addresses`) have shipped against this spec's shape, and the operator's own words —
+> *"it should be standard and enforced"* — are the ratification. Registered in `docs/specs/00_system_map.md`
+> (confirmed present since `d455383b`). The Specs 120/121 false-ratification incident this banner used to guard
+> against is now closed by measured evidence (5 shipped pilots), not merely asserted.
 
-**Status:** UNRATIFIED DRAFT · **Scope:** the `sources` chain's 27 steps first, then the estate's 64
+**Status:** ACTIVE · **Scope:** the `sources` chain's 27 steps first, then the estate's 64
 **Relationship to Spec 120:** 122 **keeps Spec 120's design and replaces its packaging.** Where they conflict on *design*, 120 governs. Where they conflict on *where code lives*, 122 governs.
 **Relationship to Spec 121:** unchanged and fully inherited. 121's method — claim register, Violation Suite, enforcement tiers, ratchet, incident replay — is architecture-independent by construction (121 §1) and applies here verbatim.
 **Relationship to Spec 119:** 119 owns backend verification doctrine and **governs on any conflict.**
@@ -60,7 +63,7 @@ Notation-only duplicates (`identity.contract_version` · `inputs.expect_nonempty
 
 ---
 
-## Operator rulings R-A..R-O (2026-08-28/29, post pilot 3 cutover `68b8e361`; R-K..R-O post pilot 4 cutover `903fe5a7`) — ✅ ACCEPTED
+## Operator rulings R-A..R-R (2026-08-28/29, post pilot 3 cutover `68b8e361`; R-K..R-O post pilot 4 cutover `903fe5a7`; R-R post pilot 5, WF1 "Spec 123 integrated validation") — ✅ ACCEPTED
 
 Policy frame: §1.2a "nothing hidden" + McDonald's standardization — declare everything, fail loudly, externalize tunables, closed vocabularies, one place per concept, machine-checkable. **These amend the sections named; where older text in this spec conflicts, these govern.**
 
@@ -81,6 +84,7 @@ Policy frame: §1.2a "nothing hidden" + McDonald's standardization — declare e
 | **R-M** | **Destructive retractions require a declared before-image.** New `recovery.before_image` (`generated`\|`none`+`before_image_why`), mirroring R-B's shape but recording the AUDIT TRAIL rather than the crash-recovery posture — the library mirrors the write plan's own scope/keys/columns as a read-only SELECT, written before the retraction on the same transaction client, unwrapped by try/catch. **Full text: Spec 124 §5** | Rule 12 (`recovery`) |
 | **R-N** | **T2 link-rate denominator is the entity population, not the source-row count.** `link_rate_warn` moved from `wsib_registry` ROWS to `entities.is_wsib_registered=true`/total entities — a single magnet's rows no longer inflate a row-based ratio; the floor value is unchanged, now validated against measured entity-level truth. **Full text: Spec 124 §5** | Rule 3 worked example |
 | **R-O** | **A matcher's accuracy is a sampled precision/recall number against a before-image, never a predicate's self-agreement or a link rate.** `tier3_token_overlap_pass_pct` at 100.00% coexisted with a 60-row sample measuring up to 46.7% genuine precision (pilot 4 §8d) — resolved by hardening the declared stopword/token mechanism, not a new bypass tunable. **Full text: Spec 124 §5** | Rule 10; MATCHER accuracy doctrine |
+| **R-R** | **Validation is integrated and enforced, never a separate track.** `scripts/analysis/step-validate.mjs` (`npm run step:validate`) is the ONE command that runs validateDescriptor, the shape gate, the per-step vitest suites, the golden-capture/fingerprint check, and computes the Spec 123 §6 G0–G9 scorecard plus the Spec 124 policy coverage matrix — from artifacts, never hand-typed. Wired into `.husky/pre-commit` (`--fast`) and `.husky/pre-push`, asserted by `step-conformance.infra.test.ts` (a stale or missing scorecard block is red), and is Spec 124's new **Rule 13**. **Full text: Spec 124 §5** | Spec 123 §6/§7; Spec 124 §2 Rule 13 |
 
 ---
 
