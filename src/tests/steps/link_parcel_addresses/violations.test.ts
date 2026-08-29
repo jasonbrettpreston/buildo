@@ -867,7 +867,7 @@ describe('55-A — the hard per-conversion gate (44, k=PER_STEP)', () => {
     expect(/scripts\//.test(pkg.scripts.test ?? ''), 'npm test must not point at production scripts').toBe(false);
   });
 
-  it.fails('#165 Every declared check has a must-fail fixture (WARN/FAIL: healthy PASS -> sabotaged its own severity; INFO: INFO both ways) — the LG-18 write-executor lock is written first (flips at: commit 7)', async () => {
+  it('#165 Every declared check has a must-fail fixture (WARN/FAIL: healthy PASS -> sabotaged its own severity; INFO: INFO both ways) — the LG-18 write-executor lock is written first (flipped: peel 8b) — INCLUDING the standing-WARN checks (R-H): parcel_fanout_outliers\' healthy fixture carries the REAL live count (130 > the T4 default 20, WARN by design) and its sabotage proves the DEGENERATE direction (0 outliers must read PASS, not stuck-WARN)', async () => {
     const d = loadDescriptor();
     // LG-18 write-executor lock, written first per the plan's explicit instruction.
     const t = writeTarget(d);
@@ -875,13 +875,37 @@ describe('55-A — the hard per-conversion gate (44, k=PER_STEP)', () => {
     const compute = loadCompute();
     const missing = d.checks.filter((c) => c.severity !== 'INFO' && !sabotageFor(c)).map((c) => c.id);
     expect(missing, 'declared WARN/FAIL checks with no sabotage in the must-fail matrix').toEqual([]);
+    // R-H: parcel_fanout_outliers' HEALTHY fixture is deliberately the standing (non-clean)
+    // live state (130 > the T4 default 20 fires WARN today, by design — a metric expected to
+    // be permanently non-zero is WARN, never silently PASSed away by a fixture pretending the
+    // corpus is cleaner than it is). Its own sabotage instead proves the DEGENERATE direction:
+    // a genuinely-clean (0-outlier) population must read PASS, not a check permanently stuck
+    // WARN regardless of input.
+    const STANDING_WARN_HEALTHY: Record<string, { healthy: string; sabotaged: string }> = {
+      [CHECK_IDS.fanoutOutliersNoncondo]: { healthy: 'WARN', sabotaged: 'PASS' },
+    };
     for (const c of d.checks) {
       if (c.severity === 'INFO') {
         const healthy = await runCompute(compute, d, healthyWorld());
-        expect(healthy[c.id], `INFO check ${c.id}: reported and rendered INFO`).toBe('INFO');
+        expect(healthy[c.id], `INFO check ${c.id}: reported and rendered INFO on the healthy fixture`).toBe('INFO');
+        // "INFO both ways" — an INFO check must never escalate to WARN/FAIL no matter how
+        // elevated the underlying number is (INFO reports a fact, it never gates on value).
+        const mutate = sabotageFor(c);
+        if (mutate) {
+          const w = healthyWorld();
+          mutate(w);
+          const elevated = await runCompute(compute, d, w);
+          expect(elevated[c.id], `INFO check ${c.id}: must stay INFO even on an elevated/perturbed input`).toBe('INFO');
+        }
         continue;
       }
+      const roles = STANDING_WARN_HEALTHY[c.id];
       const { healthy, sabotaged } = await mustFailPair(compute, d, c);
+      if (roles) {
+        expect(healthy, `check ${c.id}: R-H standing-WARN — the healthy fixture carries today's REAL live state`).toBe(roles.healthy);
+        expect(sabotaged, `check ${c.id}: R-H standing-WARN — its sabotage proves the degenerate (clean) direction`).toBe(roles.sabotaged);
+        continue;
+      }
       expect(healthy, `check ${c.id}: healthy fixture should PASS`).toBe('PASS');
       expect(sabotaged, `check ${c.id}: its negative fixture PASSES — the check never looked`).toBe(c.severity);
     }
@@ -1112,12 +1136,17 @@ const SABOTAGE_BY_VAR: Record<string, (w: World) => void> = {
   [CONFIG_VARS.T2]: (w) => { w.matched = { ...w.matched, parcels_with_links: Math.round(w.matched.parcels_with_geom * 0.40) }; }, // 60% no-address vs the 50% T2 ceiling
   [CONFIG_VARS.T3]: (w) => { w.matched = { ...w.matched, address_points_with_no_parcel: Math.round(w.matched.address_points_with_geom * 0.10) }; }, // 10% vs the 5% T3 ceiling
   [CONFIG_VARS.T4]: (w) => { w.matched = { ...w.matched, fanout_noncondo_gt_threshold: 0 }; }, // the degenerate PASS direction: 0 outliers must read PASS, not stuck-WARN
-  [CONFIG_VARS.T5]: (w) => { w.matched = { ...w.matched, fanout_condo_gt_threshold: 5, fanout_condo_max: 500 }; }, // a CONDO parcel over the 400 default
+  [CONFIG_VARS.T5]: (w) => { w.matched = { ...w.matched, fanout_condo_gt_threshold: 401, fanout_condo_max: 500 }; }, // LPA-D3: the bound is `viol <= 400` (a COUNT of outlier CONDO parcels, the same config var doing double duty as both the per-parcel fanout ceiling AND the tolerable outlier-count ceiling) — the sabotage must exceed 400 itself, not merely be nonzero
 };
 const SABOTAGE_BY_ID: Array<[RegExp, (w: World) => void]> = [
   [/address_points_with_null_geom/i, (w) => { w.matched.address_points_with_null_geom = 5000; }], // Phase 2a backfill regressed
   [/final_link_count/i, (w) => { w.matched.final_link_count = 0; }], // the structural zero-coverage gate — PostGIS/GIST regression
   [/^errors$/i, (w) => { w.matched.errors = 3; }], // a batch loop crashed
+  // Peel 8b (#165 "INFO both ways") — LPA-D1's two observability INFO checks must stay INFO
+  // even on an elevated/nonzero input; INFO never gates on value (Rule 1: nothing hidden,
+  // never a threshold).
+  [/^parcel_address_points_stale_st_within_count$/i, (w) => { w.matched.stale_st_within_count = 42; }],
+  [/^parcel_address_points_missed_link_count$/i, (w) => { w.matched.missed_link_count = 7; }],
 ];
 
 function sabotageFor(c: Check): ((w: World) => void) | undefined {
