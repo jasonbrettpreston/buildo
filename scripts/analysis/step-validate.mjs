@@ -361,6 +361,25 @@ function checkShapeBatch(rows) {
   return out;
 }
 
+/**
+ * The vitest entry point, resolved WITHOUT a shell and WITHOUT the npm-generated
+ * .cmd shim.
+ *
+ * ⚠️ `spawnSync('npx.cmd'|'npx', …)` fails EINVAL on Node 20+/Windows (the
+ * shell-less .cmd restriction from CVE-2024-27980) — the exact gotcha already
+ * documented in `scripts/hooks/check-step-shape.mjs`'s `astGrepBinary()` for
+ * ast-grep, reproduced here because this file spawned `npx.cmd` independently.
+ * `vitest`'s package.json `bin` points at a real `.mjs` entry (`vitest.mjs`),
+ * so run that directly under the current `node` — no shell, no shim, works
+ * identically on win32/posix. Filed: docs/reports/review_followups.md (vitest
+ * spawn EINVAL, 2026-08-29).
+ */
+function vitestEntry() {
+  const entry = path.join(REPO_ROOT, 'node_modules', 'vitest', 'vitest.mjs');
+  if (!existsSync(entry)) throw new Error(`vitest entry not found at ${entry} — run npm ci`);
+  return entry;
+}
+
 // ---------------------------------------------------------------------------
 // (iii) vitest — one spawn for the whole run, not one per step (the shared
 // suites already loop over converted.json internally).
@@ -369,8 +388,8 @@ function runVitest() {
   const outFile = path.join(os.tmpdir(), `step-validate-vitest-${process.pid}.json`);
   const targets = ['src/tests/step-conformance.infra.test.ts', 'src/tests/golden-fingerprint.infra.test.ts', 'src/tests/steps/'];
   const run = spawnSync(
-    process.platform === 'win32' ? 'npx.cmd' : 'npx',
-    ['vitest', 'run', ...targets, '--reporter=json', `--outputFile=${outFile}`],
+    process.execPath,
+    [vitestEntry(), 'run', ...targets, '--reporter=json', `--outputFile=${outFile}`],
     { cwd: REPO_ROOT, encoding: 'utf8', timeout: 600_000, maxBuffer: 256 * 1024 * 1024 },
   );
   if (!existsSync(outFile)) {
