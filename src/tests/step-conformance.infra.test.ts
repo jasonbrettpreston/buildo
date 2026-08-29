@@ -86,18 +86,30 @@ const CONVERTED: string[] = Array.isArray(convertedRaw.converted)
   : [];
 
 /**
- * `pending` (Spec 123 §3.1 pin-then-add ordering): a file that has already landed
- * the frozen shape (§5.1) but registers in `converted` only at its cutover commit.
+ * `pending` (Spec 123 §3.1 pin-then-add ordering; R-K.1, 2026-08-29): a file staged
+ * out of the "must violate the shape rule" corpus ahead of its cutover commit.
  * Declared data, not a code skip — "nothing hidden" (Spec 122/123 policy) means the
  * stage gap is named in the fixture the tests read, not silently exempted in test
- * logic. Each entry is `{file, registers_at, reason, declared}` — all strings.
+ * logic. Each entry is `{file, registers_at, reason, declared, stage}` — all
+ * strings, `stage` closed-vocabulary `"red_suite" | "shape_clean"` (R-K.1): a
+ * `red_suite` entry's per-step `violations.test.ts` (with `it.fails()` call sites)
+ * has landed but the sibling `<slug>.descriptor.json` does NOT exist yet — the file
+ * MAY still be shape-dirty; a `shape_clean` entry's descriptor exists and the file
+ * genuinely passes `conformanceFindings()`. R-K.1's own worked example: pilot 6
+ * (`compute_centroids`) declares `red_suite` at ITS commit 6 (the red-suite landing
+ * commit, not commit 7 as pilots 4/5 did before `step-validate.mjs`'s fast
+ * invariant #5 existed — that invariant requires every `it.fails(` call site to sit
+ * under a DECLARED pending slug, of either stage, so the declaration must be
+ * contemporaneous with the red suite, not deferred past it).
  */
 interface PendingEntry {
   file: string;
   registers_at: string;
   reason: string;
   declared: string;
+  stage: 'red_suite' | 'shape_clean';
 }
+const PENDING_STAGES = ['red_suite', 'shape_clean'] as const;
 const PENDING_RAW: unknown[] = Array.isArray(convertedRaw.pending) ? (convertedRaw.pending as unknown[]) : [];
 const PENDING: PendingEntry[] = PENDING_RAW as PendingEntry[];
 const PENDING_FILES: string[] = PENDING.map((p) => String(p?.file ?? '').replace(/\\/g, '/'));
@@ -266,9 +278,9 @@ describe('converted.json — the A2/§5.2 enforcement scope', () => {
 // ---------------------------------------------------------------------------
 
 describe('converted.json — `pending` (declared data, not a code skip)', () => {
-  const REQUIRED_KEYS = ['file', 'registers_at', 'reason', 'declared'] as const;
+  const REQUIRED_KEYS = ['file', 'registers_at', 'reason', 'declared', 'stage'] as const;
 
-  it('every pending entry is well-formed: exactly the 4 required string keys, no extras', () => {
+  it('every pending entry is well-formed: exactly the 5 required string keys, no extras, `stage` is closed-vocabulary (R-K.1)', () => {
     for (const raw of PENDING_RAW) {
       const entry = raw as Record<string, unknown>;
       const keys = Object.keys(entry).sort();
@@ -277,6 +289,10 @@ describe('converted.json — `pending` (declared data, not a code skip)', () => 
         expect(typeof entry[k], `pending entry ${JSON.stringify(raw)}.${k} must be a non-empty string`).toBe('string');
         expect((entry[k] as string).length, `pending entry ${JSON.stringify(raw)}.${k} is empty`).toBeGreaterThan(0);
       }
+      expect(
+        PENDING_STAGES as readonly string[],
+        `pending entry ${entry.file}.stage "${String(entry.stage)}" is not in the closed vocabulary (red_suite | shape_clean)`,
+      ).toContain(entry.stage);
     }
   });
 
@@ -285,11 +301,26 @@ describe('converted.json — `pending` (declared data, not a code skip)', () => 
     expect(overlap, 'a file in both `pending` and `converted` is either a stale pending entry or a double-registration').toEqual([]);
   });
 
-  it('every pending file is shape-clean AND not yet registered (a dirty or already-registered pending entry is a stale declaration)', () => {
-    for (const f of PENDING_FILES) {
-      expect(CONVERTED, `pending file ${f} is already in converted.json — the pending entry is stale and must be deleted`).not.toContain(f);
-      const findings = conformanceFindings(f);
-      expect(findings, `pending file ${f} is declared shape-clean but conformanceFindings() disagrees (stale pending entry)`).toEqual([]);
+  it('a `red_suite` pending file has NOT yet landed its sibling descriptor — a descriptor appearing while stage stays "red_suite" is a stale, un-advanced stage (R-K.1)', () => {
+    for (const p of PENDING) {
+      if (p.stage !== 'red_suite') continue;
+      expect(CONVERTED, `pending file ${p.file} is already in converted.json — the pending entry is stale and must be deleted`).not.toContain(p.file);
+      const descriptorRel = `${p.file.slice(0, -3)}.descriptor.json`;
+      expect(
+        fs.existsSync(path.join(REPO_ROOT, descriptorRel)),
+        `pending file ${p.file} is stage "red_suite" but its descriptor ${descriptorRel} already exists — ` +
+          'the stage must advance to "shape_clean" in the same commit that lands the descriptor (R-K.1); ' +
+          '"stage not advanced" is itself a defect this lock exists to catch',
+      ).toBe(false);
+    }
+  });
+
+  it('a `shape_clean` pending file is genuinely shape-clean AND not yet registered (a dirty or already-registered pending entry is a stale declaration)', () => {
+    for (const p of PENDING) {
+      if (p.stage !== 'shape_clean') continue;
+      expect(CONVERTED, `pending file ${p.file} is already in converted.json — the pending entry is stale and must be deleted`).not.toContain(p.file);
+      const findings = conformanceFindings(p.file);
+      expect(findings, `pending file ${p.file} is declared shape-clean but conformanceFindings() disagrees (stale pending entry)`).toEqual([]);
     }
   });
 });
@@ -635,7 +666,14 @@ const ts = require('typescript') as typeof import('typescript');
  * step's..."), which breaks any regex/brace-counting approach that does not fully
  * tokenize strings; the compiler's own tokenizer does not have that failure mode.
  */
-function ctxBuilderKeys(source: string): string[] {
+/**
+ * Returns `null` (not a throw) when no `const ctx = { ... }` initializer exists —
+ * R-K.1 (2026-08-29): a per-step test file with no ctx-builder is LEGAL. Not every
+ * archetype's must-fail battery needs a synthetic ctx object (a BACKFILL with one
+ * conditional UPDATE and no per-row/per-tier compute dispatch may have nothing to
+ * build); the lock asserts key-fidelity ONLY when a builder actually exists.
+ */
+function ctxBuilderKeys(source: string): string[] | null {
   const sf = ts.createSourceFile('ctx-builder.ts', source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
   let found: string[] | null = null;
   const visit = (node: import('typescript').Node): void => {
@@ -659,8 +697,7 @@ function ctxBuilderKeys(source: string): string[] {
     ts.forEachChild(node, visit);
   };
   visit(sf);
-  if (!found) throw new Error('no "const ctx = { ... }" object-literal initializer found');
-  return found;
+  return found; // null is a legal, no-op result (R-K.1) — the caller decides what that means
 }
 
 describe('LW-D11 — harness-fidelity lock: a runCompute ctx-builder may only set real stepCtx keys', () => {
@@ -676,9 +713,14 @@ describe('LW-D11 — harness-fidelity lock: a runCompute ctx-builder may only se
       }
     `;
     const keys = ctxBuilderKeys(fake);
+    expect(keys, 'the synthetic fixture genuinely has a ctx-builder — null would mean the extractor itself is broken').not.toBeNull();
     expect(keys).toContain('fanin');
-    const bogus = keys.filter((k) => !STEP_CTX_KEYS.includes(k));
+    const bogus = (keys as string[]).filter((k) => !STEP_CTX_KEYS.includes(k));
     expect(bogus, 'the synthetic fixture is supposed to trip the checker').toEqual(['fanin']);
+  });
+
+  it('R-K.1 GREEN half — absence is legal: a file with NO ctx-builder returns null, not a throw', () => {
+    expect(ctxBuilderKeys('function noCtxHere() { return 1; }')).toBeNull();
   });
 
   it('sanity: STEP_CTX_KEYS is non-empty and names the keys every violations.test.ts ctx-builder is known to use', () => {
@@ -700,9 +742,10 @@ describe('LW-D11 — harness-fidelity lock: a runCompute ctx-builder may only se
   });
 
   for (const relFile of VIOLATION_FILES) {
-    it(`${relFile} — ctx-builder sets only STEP_CTX_KEYS`, () => {
+    it(`${relFile} — ctx-builder sets only STEP_CTX_KEYS, or has none (R-K.1: absence is legal — assert only when a builder exists)`, () => {
       const source = fs.readFileSync(path.join(REPO_ROOT, relFile), 'utf8');
       const keys = ctxBuilderKeys(source);
+      if (keys === null) return; // no `const ctx = {...}` in this file — nothing to assert (R-K.1)
       const bogus = keys.filter((k) => !STEP_CTX_KEYS.includes(k));
       expect(
         bogus,
@@ -1480,6 +1523,9 @@ describe('database.min_migration — COUNT floor, never a filename number (LW-D8
   for (const relFile of IN_SCOPE) {
     it(`${relFile} — database.min_migration <= migrations/ file count (${MIGRATION_FILE_COUNT})`, () => {
       const descriptorRel = `${relFile.slice(0, -3)}.descriptor.json`;
+      // R-K.1: a `red_suite`-stage pending file has no descriptor yet by design —
+      // nothing to check here until the stage advances to `shape_clean`.
+      if (!fs.existsSync(path.join(REPO_ROOT, descriptorRel))) return;
       const descriptor = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, descriptorRel), 'utf8')) as {
         database?: 'none' | { min_migration?: number | 'none' };
       };

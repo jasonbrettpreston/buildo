@@ -448,6 +448,177 @@ fixture built, none needed) — `migration-245-centroid-invalidation.db.test.ts`
 
 ---
 
+## §6. PH-7 — test design + prove RED (commit 6, G7)
+
+> `src/tests/steps/compute_centroids/violations.test.ts` — **52 tests**, adapted from the generic 55-A
+> checklist (`node scripts/violations/plan-claims.mjs --checklist`) to this BACKFILL's own artifacts/paths
+> (1 write target, no tiers, no matcher fuzzy logic — the simplest write shape of any pilot to date), plus
+> this pilot's own G4d fence lock (CC-D1), the 11 claims this pilot's own task explicitly named, and a
+> reversion-sentinel `describe` block proving every detector fires against the CURRENT (unconverted) file
+> for the right reason. Modeled on `link_parcel_addresses`'s precedent
+> (`src/tests/steps/link_parcel_addresses/violations.test.ts`) and its commit-6 mechanism (R-K): **24
+> `it.fails()`** (genuinely red pre-conversion — no descriptor/compute/library growth exists yet, each with
+> a "flips at: commit N" comment) **+ 28 plain `it()`** (testable today: N/A-by-subject claims,
+> reversion-detection against the CURRENT script's own text, or facts already landed in commits 1–5's report
+> sections). **All 52 GREEN this commit** — every `it.fails()` genuinely fails internally, every plain `it()`
+> genuinely passes:
+> ```
+> ✓ src/tests/steps/compute_centroids/violations.test.ts (52 tests) 891ms
+> Test Files  1 passed (1)
+>      Tests  52 passed (52)
+> ```
+
+### The 3 fence locks this pilot's task named, both directions
+
+1. **CC-D1's cursor-pagination fence, retirement-by-branch-deletion** — `detectDestructiveTokens`/the
+   reversion-sentinel `describe` block proves (a) the CURRENT script genuinely carries the `id > $1`
+   cursor-pagination shape in its JS fallback TODAY (real evidence the fence exists), and (b) the FUTURE
+   `compute.js` (it.fails) must carry NEITHER a `while(true)` batch loop NOR a `lastId` cursor variable — the
+   fence is retired WHOLE, with its branch, not preserved as unreachable code.
+2. **`guards.requires: postgis` / `on_missing: fail` declared** — an it.fails() proves the FUTURE descriptor
+   names `postgis` in `guards.requires` with `on_missing:"fail"` (A-1(a), the `link_massing` A-8 precedent).
+3. **UPDATE-only, no INSERT/DELETE token** — `detectDestructiveTokens()` is proven NON-VACUOUS by running it
+   against the CURRENT script's own real PostGIS `UPDATE ... RETURNING id` statement TODAY (plain `it()`,
+   passes — the current statement is genuinely UPDATE-only), then re-applied to the FUTURE `compute.js` text
+   (it.fails, commit 7) — the SAME detector function proves both directions.
+
+### The 11 task-named claims — where each lives in the test file
+
+| # | Claim | Test | Shape |
+|---|---|---|---|
+| 1 | PostGIS single-statement verbatim | "Generator correctness is tested per branch" (`#176`) | plain `it()` — proven against the CURRENT script's real SQL text today |
+| 2 | No JS fallback | the G4d "FUTURE PROOF" block | `it.fails()` — asserts `compute.js` carries neither `lastId` nor `while(true)` |
+| 3 | `guards.requires` postgis fail-loud | the G4d "FUTURE PROOF" block + the "descriptor exists..." test | `it.fails()` |
+| 4 | `guard:"none"` by scope | "descriptor exists, validates, and carries the ruled shape" | `it.fails()` — `guard:"none"`, Rule-9 grandfathered |
+| 5 | UPDATE-only, no INSERT/DELETE | "compute exists, exports `checks`..." | `it.fails()` via `detectDestructiveTokens` |
+| 6 | Rule 10 row-derived verdict replaces `hasWarns` | `#199` + `#199-reversion` | `it.fails()` (future) + plain `it()` (reversion proof: `hasWarns` genuinely present today) |
+| 7 | `outputs.invalidates` declared | "descriptor exists..." (B-3 assertion) | `it.fails()` — `minItems:1` |
+| 8 | T1/T2 thresholds as logic variables | "T1/T2's literals genuinely exist as bare numbers today, zero logic_variables rows" | plain `it()` — proves the PRESENT-day gap (Rule 3 violation) is real |
+| 9 | Wrong SPEC LINK chain fixed | "the wrong SPEC LINK chain citation is fixed" + its reversion proof | `it.fails()` (future) + plain `it()` (current header genuinely wrong) |
+| 10 | R-P N/A stated | "notes.json is real... R-P stated N/A" | `it.fails()` — notes.json must state R-P is N/A (no `skip_gated` terminal) |
+| 11 | `recovery` none+why | "descriptor exists..." (`recovery.interrupted`/`interrupted_why` assertions) | `it.fails()` |
+
+### Literal RED excerpt
+
+Per Rule 13's pre-staging requirement, one representative `it.fails()` claim was temporarily un-wrapped to a
+plain `it()` (NOT committed in this form — reverted immediately after capture) to prove the underlying
+assertion genuinely throws, not merely that `it.fails()` reports green by construction:
+
+```
+✗ the three files, one slug (Spec 122 §4.1 / §5.1 / §5.2) + the BACKFILL library growth
+  > descriptor exists, validates, and carries the ruled shape: ... (flips at: commit 7)
+  AssertionError: MISSING ARTIFACT scripts/compute-centroids.descriptor.json (not yet produced
+  by the pilot-6 commit sequence — commit 7 lands it): expected false to be true // Object.is equality
+  - Expected: true
+  + Received: false
+    ❯ artifact src/tests/steps/compute_centroids/violations.test.ts:221:5
+    ❯ readText src/tests/steps/compute_centroids/violations.test.ts:225:65
+    ❯ loadDescriptor src/tests/steps/compute_centroids/violations.test.ts:228:24
+  Test Files  1 failed (1)
+       Tests  1 failed | 51 passed (52)
+```
+
+**RED — confirmed genuine, for the right reason (a missing artifact, not a TypeScript/import error).** The
+file was restored to its `it.fails()`-wrapped form immediately after this capture; the committed file has
+zero real (un-inverted) failures — `52/52` green, as shown above.
+
+### `converted.json.pending` — RULING R-K.1 (orchestrator, 2026-08-29): declared at commit 6, mechanism amended
+
+**Superseded mid-commit.** This section originally recorded "deferred to commit 7" — the first attempt to
+land this commit found that stance genuinely blocked by a real, previously-unexercised contradiction: `step-
+validate.mjs`'s fast invariant #5 requires every `it.fails(` call site to sit under a `pending`-declared
+slug, while `step-conformance.infra.test.ts`'s own `pending` describe block required any declared entry to
+already be shape-clean (sibling descriptor exists, `conformanceFindings()===[]`) — and the descriptor is a
+commit-7 artifact. Neither side could be satisfied first; `it.fails()` was structurally unusable for any
+not-yet-converted step's commit 6 under the CURRENT tooling. Root cause: `step-validate.mjs` (R-R, built the
+same day, 2026-08-29 15:00) was backfilled only against pilots 1–5, all of which were ALREADY fully converted
+by then (their `it.fails()` calls had already flipped to plain `it()` at cutover) — invariant #5 had
+literally never been exercised against a genuine, in-flight, pre-descriptor commit-6 file until this pilot
+hit it live, 07:33 → 15:00 being the exact window pilot 5's own commit 6 predates the invariant's existence.
+
+**RULING R-K.1 (orchestrator):** the `pending` entry is declared AT commit 6, not commit 7, and the
+mechanism itself is amended (minimal, red-first) to make that legal:
+1. **`pending` entries gain a required `stage` field**, closed vocabulary `"red_suite" | "shape_clean"`.
+   `red_suite` = the red suite (`it.fails()` call sites) has landed but the sibling descriptor does NOT
+   exist yet — the file MAY still be shape-dirty. `shape_clean` = the descriptor exists and
+   `conformanceFindings()` returns `[]`. `scripts/steps/_schema/converted.json`'s `$comment` documents the
+   split; the entry for `compute-centroids.js` is `stage:"red_suite"`, `registers_at:"C1 pilot 6 commit 9
+   (cutover)"`.
+2. **`step-conformance.infra.test.ts`'s pending describe block splits accordingly:** a `red_suite` entry
+   asserts its descriptor does NOT exist (a descriptor appearing while stage stays `red_suite` is itself RED
+   — "stage not advanced"); a `shape_clean` entry keeps the ORIGINAL assertion (descriptor exists,
+   `conformanceFindings()===[]`). Proven both directions live this commit: a synthetic
+   `compute-centroids.descriptor.json` was written, the new lock fired (`expected true to be false`,
+   captured below), the fixture deleted, the lock passed again.
+3. **`step-validate.mjs`'s fast invariant #5 required NO code change** — `loadConverted()` already extracts
+   `.file` generically from each pending object regardless of any other key present, so a slug from EITHER
+   stage is already picked up. Re-verified: `#5` reads `PASS | clean (0 it.fails( call sites outside a
+   declared pending slug)` once the entry lands.
+4. **`LW-D11`'s harness-fidelity lock amended in the same commit** — a per-step test file with no
+   `const ctx = {...}` builder now returns `null` (legal, nothing asserted) instead of throwing.
+   `compute_centroids/violations.test.ts` genuinely has none (a BACKFILL with one conditional `UPDATE`, no
+   per-row/per-tier compute dispatch, needed no ctx-builder for its must-fail-fixture coverage) — the FIRST
+   pilot to hit this, since every prior pilot (LINK/MATCHER/MATERIALIZER) built one.
+5. **Backfilled:** `docs/specs/01-pipeline/124_step_standard_policy.md` §5 register gains `R-K.1`;
+   `tasks/lessons.md` gains "A same-day gate must be exercised on the path it gates."
+
+**RED-first excerpt, mechanism change (1)/(2) — the new "stage not advanced" lock, fired live:**
+```
+× converted.json — `pending` (declared data, not a code skip) > a `red_suite` pending file has NOT yet
+  landed its sibling descriptor — a descriptor appearing while stage stays "red_suite" is a stale,
+  un-advanced stage (R-K.1)
+  → pending file scripts/compute-centroids.js is stage "red_suite" but its descriptor
+    scripts/compute-centroids.descriptor.json already exists — the stage must advance to "shape_clean"
+    in the same commit that lands the descriptor (R-K.1); "stage not advanced" is itself a defect this
+    lock exists to catch: expected true to be false
+  Tests  1 failed | 153 skipped (154)
+```
+(a synthetic `scripts/compute-centroids.descriptor.json` was written to fire this, then deleted — the real
+descriptor does not exist and will not until commit 7, at which point `stage` advances to `"shape_clean"`
+in the same commit.)
+
+**RED-first excerpt, mechanism change (4) — `LW-D11`, BEFORE the fix (captured on the first, blocked attempt
+at this commit):**
+```
+× LW-D11 — harness-fidelity lock: a runCompute ctx-builder may only set real stepCtx keys >
+  src\tests\steps\compute_centroids\violations.test.ts — ctx-builder sets only STEP_CTX_KEYS
+  Error: no "const ctx = { ... }" object-literal initializer found
+```
+**GREEN after the fix** — `ctxBuilderKeys()` now returns `null` for this file, and the per-file test returns
+early rather than asserting; a new canary (`R-K.1 GREEN half — absence is legal`) locks the `null` return
+both directions alongside the pre-existing `RED half` canary (a synthetic ctx block with a bogus key still
+fires).
+
+### `npm run step:validate -- --step=compute_centroids`, re-run after R-K.1's mechanism amendment (Rule 13)
+
+**No longer errors — the pending entry makes the step a real (if low-scoring) registry row.** Recorded
+faithfully, not massaged (expected low, per the ruling):
+```
+[step-validate] compute_centroids (pending) — 11/17, hard-stop=true
+```
+Full detail: G0 1/1, G1 1/1, G2 1/1, G3 1/2, **G4 0/2** (no risk-class row with chance+impact in the report
+yet — §1's G4 pass used prose, not the table shape this generator scans for), G5 1/1, G6 3/3, G7 3/3
+(file=true, fences=0 — `notes.json` doesn't exist yet so the generator can't count fence entries from it,
+distinct from this report's own count of 1 genuine fence, CC-D1), **G8 0/3** (2 missing invocations —
+`post/{sources,standalone}.json` don't exist until commit 9, correctly), fast invariants #4/#5 both PASS.
+Policy matrix: 2/14 enforced-green (Rules 2, 3 partially) — everything gated on the descriptor's existence
+reads `enforced-red` or `no descriptor`, exactly as expected for a pending-not-shape-clean step. This is the
+correct, informative RED state through commit 6 — a real signal (not a generic tool error), and it will
+climb sharply at commit 7 once the descriptor/compute/notes land and `stage` advances to `shape_clean`.
+
+### G7 verdict
+
+**CLOSED this commit.** `violations.test.ts` lands with 52 tests, 24 `it.fails()` genuinely red internally
+(24 ≥ the 1 fence this pilot's Intent Ledger found load-bearing, CC-D1 — lock-count ≥ fence-count satisfied),
+28 plain `it()` genuinely passing today. The literal RED excerpt above proves the mechanism is not vacuous.
+**RULING R-K.1** lands the `pending` entry AT this commit (amending R-K's own mechanism, minimal and
+red-first, per the orchestrator) rather than deferring to commit 7 — the deferral this section originally
+recorded was itself refuted by a genuine, previously-unexercised tooling contradiction, documented above with
+both mechanism changes' RED-first excerpts. `step:validate` now returns a real, low, faithfully-recorded
+scorecard (`11/17`) instead of erroring.
+
+---
+
 ## §0. PH-0 seed — measured boundary table (2026-08-29 planning session)
 
 ### 0.1 Governing specs, read in order (Spec 124 §7 Step 0 / Spec 123 §6 G0)

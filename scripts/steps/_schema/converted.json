@@ -14,7 +14,19 @@
     "",
     "Paths are repo-root-relative and MUST each be a manifest.chains[*] step file.",
     "The conformance suite enforces converted ⊆ manifest files, no duplicates, and",
-    "loaded.length === converted.length (the silent-import-death guard, Spec 122 §5.2)."
+    "loaded.length === converted.length (the silent-import-death guard, Spec 122 §5.2).",
+    "",
+    "PENDING ENTRIES (R-K.1, 2026-08-29): each entry is {file, registers_at, reason,",
+    "declared, stage}. stage is closed-vocabulary: \"red_suite\" | \"shape_clean\".",
+    "red_suite = the per-step violations.test.ts (with it.fails() call sites) has",
+    "landed but the sibling <slug>.descriptor.json does NOT exist yet — the file MAY",
+    "still be shape-dirty (still calls pipeline.run()). shape_clean = the descriptor",
+    "exists and scripts/lib/step/validate.js's conformanceFindings() returns [] for",
+    "it, but converted.json registration is deferred to the cutover commit. A pending",
+    "entry whose descriptor exists while stage is still \"red_suite\" is RED (\"stage",
+    "not advanced\") — src/tests/step-conformance.infra.test.ts enforces both halves.",
+    "step-validate.mjs's fast invariant #5 (it.fails( call sites must sit under a",
+    "declared pending slug) keys on EITHER stage."
   ],
   "contract_version": 1,
   "converted": [
@@ -24,5 +36,13 @@
     "scripts/link-wsib.js",
     "scripts/link-parcel-addresses.js"
   ],
-  "pending": []
+  "pending": [
+    {
+      "file": "scripts/compute-centroids.js",
+      "registers_at": "C1 pilot 6 commit 9 (cutover)",
+      "reason": "PH-7 red suite landed commit 6 (src/tests/steps/compute_centroids/violations.test.ts, 24 it.fails() call sites); descriptor/compute/library growth land commit 7, advancing stage to shape_clean",
+      "declared": "2026-08-29",
+      "stage": "red_suite"
+    }
+  ]
 }
