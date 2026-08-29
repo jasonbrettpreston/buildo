@@ -1359,6 +1359,66 @@ describe('R-M / LG-17 — a scope-bearing destructive retraction target requires
 });
 
 // ---------------------------------------------------------------------------
+// LPA-D4 (2026-08-29) — a step whose staleness can gated-skip must say WHY it skipped.
+// `runCascadePhase`/`runMaterializePhase` (scripts/lib/step/index.js) narrow
+// `stepCtx.checks` to `when:"pre"` ids only on a gated SKIP (LG-15) — a descriptor with
+// no `when:"pre"` check at all narrows to ZERO rows, and `gatedSkip.reason` was only
+// `log.info`'d, never persisted. "Can gated-skip" is a descriptor-level FACT, not an
+// archetype guess: a converted step declares it by carrying a `terminals[]` entry of
+// kind `"skip_gated"` (`link_wsib`/`link_parcel_addresses` both do; `link_massing` does
+// NOT — LINK drives `selectMode`'s tri-state full/incremental decision, which never
+// skips, and correctly carries no such terminal).
+// ---------------------------------------------------------------------------
+
+interface GateDecisionDescriptor {
+  identity: { name: string };
+  checks: Array<{ id: string; when: string }>;
+  terminals: Array<{ id: string; kind: string }>;
+}
+
+function gateDecisionFor(relFile: string): { hasSkipGatedTerminal: boolean; preCheckCount: number } {
+  const d = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, `${relFile.slice(0, -3)}.descriptor.json`), 'utf8')) as GateDecisionDescriptor;
+  const hasSkipGatedTerminal = (d.terminals || []).some((t) => t.kind === 'skip_gated');
+  const preCheckCount = (d.checks || []).filter((c) => c.when === 'pre').length;
+  return { hasSkipGatedTerminal, preCheckCount };
+}
+
+/** The LPA-D4 finding, as a pure predicate over {hasSkipGatedTerminal, preCheckCount} (RED canary parameters, below). */
+function gateDecisionFindings(relFile: string, subject: { hasSkipGatedTerminal: boolean; preCheckCount: number }): string[] {
+  if (!subject.hasSkipGatedTerminal) return [];
+  if (subject.preCheckCount === 0) {
+    return [
+      `${relFile}: declares a terminals[] entry of kind "skip_gated" but zero checks[].when === "pre" — a gated ` +
+        'SKIP narrows the audit table to sys_* rows only, and the skip reason is never persisted (LPA-D4)',
+    ];
+  }
+  return [];
+}
+
+describe('LPA-D4 — any step that can gated-skip declares at least one when:"pre" check', () => {
+  it('at least one converted step declares a skip_gated terminal (else the battery is vacuous)', () => {
+    const any = CONVERTED.some((f) => gateDecisionFor(f).hasSkipGatedTerminal);
+    expect(any, 'no converted step declares a terminals[] "skip_gated" entry — the battery below would be vacuous').toBe(true);
+  });
+
+  for (const relFile of CONVERTED) {
+    it(`${relFile} — declares >=1 when:"pre" check if it can gated-skip`, () => {
+      const findings = gateDecisionFindings(relFile, gateDecisionFor(relFile));
+      expect(findings, findings.join('\n')).toEqual([]);
+    });
+  }
+
+  const WITH_SKIP_GATED = CONVERTED.filter((f) => gateDecisionFor(f).hasSkipGatedTerminal);
+
+  for (const relFile of WITH_SKIP_GATED) {
+    it(`RED — ${relFile}: zero when:"pre" checks reddens against its skip_gated terminal`, () => {
+      const findings = gateDecisionFindings(relFile, { hasSkipGatedTerminal: true, preCheckCount: 0 });
+      expect(findings.some((f) => f.includes('zero checks[].when === "pre"')), findings.join('\n')).toBe(true);
+    });
+  }
+});
+
+// ---------------------------------------------------------------------------
 // 6. The real loop — empty today, one entry per landed pilot
 // ---------------------------------------------------------------------------
 

@@ -144,6 +144,12 @@
 
   "checks": [
     {
+      "id": "gate_decision", "kind": "freshness",
+      "expect": { "reports": "the resolved mode and the ledger gated-skip decision" },
+      "limit": "viol == 0", "severity": "INFO", "blocking": false, "when": "pre", "chains": "all", "accept_until": "none",
+      "why": { "text": "LPA-D4 (2026-08-29): LG-15's gated-skip decision, on the record — visible even on a gated skip (mirrors link_wsib's gate_decision row exactly). Every real invocation of runMaterializePhase calls staleness.ledgerGatedSkip unconditionally regardless of this descriptor's own staleness.trigger/mode_select (both \"none\" — those fields govern the ADDITIONAL config_version/upstream_ledger signals link_wsib layers on top of the base gate, not the base ledger gate itself, which every MATERIALIZER/MATCHER phase always runs). Declaring this when:\"pre\" is what makes a gated SKIP still say WHY: before this fix a SKIP's audit_table narrowed (index.js:1596's onlyChecks) to 2 sys_* rows only, and gatedSkip.reason ('no_upstream_changes') was only log.info'd (index.js:1159), never persisted — a broken always-unchanged gate was indistinguishable from a healthy quiet run (live: pipeline_runs ids 1709/1710/1714/1717).", "liveness": { "kind": "file", "ref": "scripts/lib/step/staleness.js" } }
+    },
+    {
       "id": "parcels_with_geom_pre_run", "kind": "field_coverage",
       "expect": { "reports": "the pre-run count of parcels with a non-NULL geom — the evaluation scope's own denominator" },
       "limit": "viol == 0", "severity": "INFO", "blocking": false, "when": "post", "chains": "all", "accept_until": "none",

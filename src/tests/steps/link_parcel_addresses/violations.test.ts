@@ -276,7 +276,7 @@ interface World {
     errors: number;
   };
   written: { privilege: { bypassrls: boolean; policies: number; rls_enabled: boolean } };
-  gate: { mode: 'incremental' | 'full'; reason: string; skipped: boolean };
+  gate: { mode: 'incremental' | 'full' | null; reason: string; skipped: boolean };
   overrides: { force_full: boolean };
   elapsed_ms: number;
 }
@@ -588,6 +588,21 @@ function detectFanoutWarnFiresFence(subject: { noncondoGtThreshold: number; thre
   const findings: string[] = [];
   if (subject.noncondoGtThreshold <= subject.threshold) findings.push(`noncondoGtThreshold (${subject.noncondoGtThreshold}) does not exceed threshold (${subject.threshold}) — the WARN should fire on today's live data (measured 130 > 20)`);
   if (subject.severity !== 'WARN') findings.push('a standing non-zero population must be WARN, never FAIL or INFO-by-taste (R-H, Spec 48 §4.9)');
+  return findings;
+}
+
+/**
+ * LPA-D4 (2026-08-29) — a step declaring a `terminals[]` entry of kind `"skip_gated"`
+ * must declare >=1 `checks[].when === "pre"`: `runMaterializePhase`'s `onlyChecks`
+ * narrowing (scripts/lib/step/index.js:1596) reduces `stepCtx.checks` to the `when:"pre"`
+ * set on a gated SKIP, and zero such checks means the SKIP's audit_table has nothing of
+ * the step's own to say WHY — only the 2 always-present sys_* rows.
+ */
+function detectPreCheckOnGatedSkipFence(subject: { hasSkipGatedTerminal: boolean; preCheckCount: number }): string[] {
+  const findings: string[] = [];
+  if (subject.hasSkipGatedTerminal && subject.preCheckCount === 0) {
+    findings.push('descriptor declares a terminals[] entry of kind "skip_gated" but zero checks[].when === "pre" — a gated SKIP narrows the audit table to sys_* rows only, and the skip reason is never persisted (LPA-D4)');
+  }
   return findings;
 }
 
@@ -1179,7 +1194,13 @@ function resolvedDescriptor(d: Descriptor, config: Readonly<Record<string, numbe
   return { ...d, checks };
 }
 
-async function runCompute(compute: ComputeFn, d: Descriptor, w: World): Promise<Record<string, string>> {
+/**
+ * `checkIds` defaults to every declared check (the pre-LPA-D4 shape every other caller
+ * relies on); LPA-D4's gated-skip locks pass the NARROWED set the runner itself would
+ * compute (`stepCtx.checks` filtered to `when:"pre"` ids on a SKIP, index.js:1596) so the
+ * fixture proves the SAME shape the real runner produces, not merely "the check exists".
+ */
+async function runComputeDetailed(compute: ComputeFn, d: Descriptor, w: World, checkIds?: string[]): Promise<{ observations: Record<string, unknown>; statuses: Record<string, string> }> {
   const observations: Record<string, unknown> = Object.create(null) as Record<string, unknown>;
   const declared = new Set(d.checks.map((c) => c.id));
   const config = configProjection(d);
@@ -1189,7 +1210,7 @@ async function runCompute(compute: ComputeFn, d: Descriptor, w: World): Promise<
     chainId: null,
     runId: null,
     descriptor: resolved,
-    checks: resolved.checks.map((c) => c.id),
+    checks: checkIds ?? resolved.checks.map((c) => c.id),
     fetch: () => { throw new Error('the compute must not fetch — this step has an EMPTY network seam (G5)'); },
     clock: () => Date.parse(`${FIXTURE_REVIEWED}T00:00:00Z`),
     config,
@@ -1206,9 +1227,13 @@ async function runCompute(compute: ComputeFn, d: Descriptor, w: World): Promise<
   };
   await compute(ctx);
   const built = buildAuditTable(resolved, null, observations);
-  const out: Record<string, string> = {};
-  for (const r of built.rows) out[r.metric] = r.status;
-  return out;
+  const statuses: Record<string, string> = {};
+  for (const r of built.rows) statuses[r.metric] = r.status;
+  return { observations, statuses };
+}
+
+async function runCompute(compute: ComputeFn, d: Descriptor, w: World): Promise<Record<string, string>> {
+  return (await runComputeDetailed(compute, d, w)).statuses;
 }
 
 async function mustFailPair(compute: ComputeFn, d: Descriptor, c: Check): Promise<{ healthy: string; sabotaged: string }> {
@@ -1479,6 +1504,79 @@ describe('G4d fence locks — the named locks (LG-18, grandfathering, ledgerGate
     expect(belowThreshold.some((f) => /does not exceed threshold/.test(f)), 'a count at/below threshold going WARN anyway (a stuck-WARN bug) went undetected').toBe(true);
     const wrongSeverity = detectFanoutWarnFiresFence({ noncondoGtThreshold: LIVE_NONCONDO_GT_20, threshold: T4_DEFAULT, severity: 'FAIL' });
     expect(wrongSeverity.some((f) => /must be WARN, never FAIL/.test(f)), 'FAIL severity on a standing non-zero population went undetected (R-H)').toBe(true);
+  });
+
+  it('Pre-check-on-gated-skip lock (LPA-D4) — present: the descriptor declares a when:"pre" gate_decision check, mirroring link_wsib\'s exactly', () => {
+    const d = loadDescriptor();
+    const c = checkById(d, 'gate_decision');
+    expect(c.when).toBe('pre');
+    expect(c.severity).toBe('INFO');
+    expect(c.blocking).toBe(false);
+    const findings = detectPreCheckOnGatedSkipFence({ hasSkipGatedTerminal: d.terminals.some((t) => t.kind === 'skip_gated'), preCheckCount: d.checks.filter((x) => x.when === 'pre').length });
+    expect(findings, findings.join('; ')).toEqual([]);
+    const mod = loadComputeModule();
+    expect(typeof mod.checks?.gate_decision, 'the compute dispatch table has no gate_decision function').toBe('function');
+  });
+
+  it('Pre-check-on-gated-skip lock — reversion is detectable: a skip_gated terminal with zero when:"pre" checks makes the lock fire — GROUNDED against the ACTUAL pre-fix commit (this is the real defect, not a hypothetical)', () => {
+    const bad = detectPreCheckOnGatedSkipFence({ hasSkipGatedTerminal: true, preCheckCount: 0 });
+    expect(bad.some((f) => /zero checks\[\]\.when === "pre"/.test(f)), 'a skip_gated terminal with zero pre checks went undetected').toBe(true);
+    // link_massing carries NO skip_gated terminal (selectMode's tri-state never skips) — the
+    // predicate must stay silent for it, proving the detector is scoped by the real field,
+    // not merely "every step needs a pre check".
+    const linkMassing = JSON.parse(fs.readFileSync(abs('scripts/link-massing.descriptor.json'), 'utf8')) as Descriptor;
+    const lmHasSkipGated = linkMassing.terminals.some((t: { kind: string }) => t.kind === 'skip_gated');
+    expect(lmHasSkipGated, 'link_massing must NOT carry a skip_gated terminal — LINK drives selectMode, never a skip').toBe(false);
+    expect(detectPreCheckOnGatedSkipFence({ hasSkipGatedTerminal: lmHasSkipGated, preCheckCount: 0 })).toEqual([]);
+  });
+
+  it('gate_decision row (LPA-D4) — a gated SKIP capture still reports the reason (index.js\'s onlyChecks narrows ctx.checks to when:"pre" ids on a skip, so gate_decision must be one of them)', async () => {
+    const d = loadDescriptor();
+    const compute = loadCompute();
+    const preIds = d.checks.filter((c) => c.when === 'pre').map((c) => c.id);
+    expect(preIds, 'no when:"pre" checks declared at all — a gated skip would narrow to zero rows (LPA-D4\'s exact live defect: pipeline_runs 1709/1710/1714/1717)').toContain('gate_decision');
+    const w = healthyWorld();
+    w.gate = { mode: null, reason: 'no_upstream_changes', skipped: true };
+    const { observations } = await runComputeDetailed(compute, d, w, preIds);
+    const row = observations.gate_decision as { violations: number; detail?: { mode: unknown; reason: unknown; gated_skip: unknown } } | undefined;
+    expect(row, 'gate_decision did not report under the SKIP-narrowed (pre-only) check set').toBeDefined();
+    expect(row?.detail?.reason, 'the skip reason must be readable straight off the reported detail').toBe('no_upstream_changes');
+    expect(row?.detail?.gated_skip).toBe(true);
+    expect(row?.detail?.mode).toBe(null);
+  });
+
+  it('gate_decision row (LPA-D4) — a normal (non-skip) WRITE capture also carries it, both directions', async () => {
+    const d = loadDescriptor();
+    const compute = loadCompute();
+    const allIds = d.checks.map((c) => c.id);
+    const w = healthyWorld();
+    w.gate = { mode: 'incremental', reason: 'upstream_changed', skipped: false };
+    const { observations } = await runComputeDetailed(compute, d, w, allIds);
+    const row = observations.gate_decision as { detail?: { mode: unknown; reason: unknown; gated_skip: unknown } } | undefined;
+    expect(row, 'gate_decision did not report on a full (non-skip) check set').toBeDefined();
+    expect(row?.detail?.reason).toBe('upstream_changed');
+    expect(row?.detail?.gated_skip).toBe(false);
+    expect(row?.detail?.mode).toBe('incremental');
+  });
+
+  it('records_meta.gate (LPA-D4, library rung (d)) — staleness.gateRecordsMeta produces the closed shape and index.js merges it for cascade/materialize/ingest, never link', () => {
+    const staleness = loadLib('scripts/lib/step/staleness.js') as { gateRecordsMeta: (d: unknown, gate: unknown, gatedSkip: unknown) => Record<string, unknown> };
+    expect(typeof staleness.gateRecordsMeta, 'staleness.js has no gateRecordsMeta export').toBe('function');
+    const d = loadDescriptor();
+    const skipGate = staleness.gateRecordsMeta(d, { mode: null, reason: 'no_upstream_changes', skipped: true }, null);
+    expect(skipGate).toEqual({ reason: 'no_upstream_changes', gated_skip: true });
+    const withLedger = staleness.gateRecordsMeta(d, { mode: 'incremental', reason: 'upstream_changed', skipped: false }, {
+      gate: { ownCompleted: '2026-08-29T00:00:00Z', nonCompleted: 0, completedWithChanges: 1, staleRunningUpstream: 0 },
+    });
+    expect(withLedger.reason).toBe('upstream_changed');
+    expect(withLedger.gated_skip).toBe(false);
+    expect(Array.isArray(withLedger.own_slugs) && (withLedger.own_slugs as string[]).length > 0, 'own_slugs must be derived, never empty for a step with a declared invocation').toBe(true);
+    expect(Array.isArray(withLedger.upstream_slugs) && (withLedger.upstream_slugs as string[]).length > 0, 'upstream_slugs must be derived from inputs.reads.steps').toBe(true);
+    const indexSrc = stripComments(fs.readFileSync(abs(INDEX_REL), 'utf8'));
+    expect(/staleness\.gateRecordsMeta\(/.test(indexSrc), 'index.js does not call staleness.gateRecordsMeta at all').toBe(true);
+    // The merge must be reachable for ingest/cascade/materialize and NOT unconditional
+    // (link is deliberately excluded — selectMode never skips).
+    expect(/ingest \|\| cascade \|\| materialize/.test(indexSrc), 'the gateRecordsMeta merge is not conditioned on ingest/cascade/materialize').toBe(true);
   });
 });
 

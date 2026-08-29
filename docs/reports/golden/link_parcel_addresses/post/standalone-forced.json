@@ -3,7 +3,7 @@
   "spec": "docs/specs/01-pipeline/122_pipeline_step_optimization.md §5.3",
   "step": "scripts/link-parcel-addresses.js",
   "chain": "none",
-  "git_head": "78a7207e49d6bbe578a9a16413f752bb685298b1",
+  "git_head": "1ad007f8e48759b719ecd71c1511669b685a6bff",
   "exit_code": 0,
   "signal": null,
   "summary": {
@@ -11,9 +11,13 @@
     "records_new": 0,
     "records_updated": 0,
     "records_meta": {
-      "duration_ms": 43639,
+      "duration_ms": 74920,
       "batches_processed": 487,
       "completed_naturally": true,
+      "gate": {
+        "reason": "bypassed",
+        "gated_skip": false
+      },
       "config": {
         "link_parcel_addresses_batch_size": 1000,
         "link_parcel_addresses_no_address_warn_pct": 50,
@@ -32,6 +36,16 @@
         "name": "Parcel ↔ Address Points Spatial Bridge",
         "verdict": "WARN",
         "rows": [
+          {
+            "metric": "gate_decision",
+            "value": {
+              "mode": "incremental",
+              "reason": "bypassed",
+              "gated_skip": false
+            },
+            "threshold": "viol == 0",
+            "status": "INFO"
+          },
           {
             "metric": "parcels_with_geom_pre_run",
             "value": 486530,
@@ -128,13 +142,13 @@
           },
           {
             "metric": "sys_velocity_rows_sec",
-            "value": 11148.46,
+            "value": 6493.65,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "sys_duration_ms",
-            "value": 43641,
+            "value": 74924,
             "threshold": null,
             "status": "INFO"
           }
@@ -169,20 +183,24 @@
   "ledger_status": [
     "completed_with_warnings"
   ],
-  "stdout": "{\"level\":\"INFO\",\"tag\":\"[link_parcel_addresses]\",\"msg\":\"[link_parcel_addresses] target: link_parcel_addresses (descriptor.database) → database=postgres user=postgres migrations=242 (floor 159)\"}\n{\"level\":\"INFO\",\"tag\":\"[link_parcel_addresses]\",\"msg\":\"materialize gate: RUN (bypassed)\"}\nPIPELINE_SUMMARY:{\"records_total\":486530,\"records_new\":0,\"records_updated\":0,\"records_meta\":{\"duration_ms\":43639,\"batches_processed\":487,\"completed_naturally\":true,\"config\":{\"link_parcel_addresses_batch_size\":1000,\"link_parcel_addresses_no_address_warn_pct\":50,\"link_parcel_addresses_no_parcel_warn_pct\":5,\"link_parcel_addresses_fanout_warn_noncondo\":20,\"link_parcel_addresses_fanout_warn_condo\":400},\"terminal\":\"materialized_with_warnings\",\"ledger_row\":\"owned\",\"checks_failed\":1,\"errors\":[\"parcel_fanout_outliers: 130\"],\"audit_table\":{\"phase\":54,\"name\":\"Parcel ↔ Address Points Spatial Bridge\",\"verdict\":\"WARN\",\"rows\":[{\"metric\":\"parcels_with_geom_pre_run\",\"value\":486530,\"threshold\":\"viol == 0\",\"status\":\"INFO\"},{\"metric\":\"address_points_with_geom_pre_run\",\"value\":525346,\"threshold\":\"viol == 0\",\"status\":\"INFO\"},{\"metric\":\"address_points_with_null_geom\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\"},{\"metric\":\"new_links_written\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\"},{\"metric\":\"final_link_count\",\"value\":511224,\"threshold\":\"viol == 0\",\"status\":\"PASS\"},{\"metric\":\"parcels_with_links\",\"value\":467786,\"threshold\":\"viol == 0\",\"status\":\"INFO\"},{\"metric\":\"parcel_link_rate_pct\",\"value\":\"96.15%\",\"threshold\":\"viol == 0\",\"status\":\"INFO\"},{\"metric\":\"parcels_with_no_address_pct\",\"value\":\"3.85%\",\"threshold\":\"pct <= 50\",\"status\":\"PASS\"},{\"metric\":\"address_points_with_no_parcel_pct\",\"value\":\"2.69%\",\"threshold\":\"pct <= 5\",\"status\":\"PASS\"},{\"metric\":\"errors\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\"},{\"metric\":\"parcel_fanout_outliers\",\"value\":130,\"threshold\":\"viol <= 20\",\"status\":\"WARN\"},{\"metric\":\"parcel_fanout_condo_outliers\",\"value\":0,\"threshold\":\"viol <= 400\",\"status\":\"PASS\"},{\"metric\":\"parcel_fanout_distribution\",\"value\":{\"condo_max\":346,\"noncondo_max\":155,\"noncondo_gt_threshold\":130},\"threshold\":\"viol == 0\",\"status\":\"INFO\"},{\"metric\":\"parcel_address_points_stale_st_within_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\"},{\"metric\":\"parcel_address_points_missed_link_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":11148.46,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":43641,\"threshold\":null,\"status\":\"INFO\"}]}}}\nPIPELINE_META:{\"reads\":{\"parcels\":[\"id\",\"geom\"],\"address_points\":[\"address_point_id\",\"geom\"]},\"writes\":{\"parcel_address_points\":[\"parcel_id\",\"address_point_id\",\"computed_at\"]}}\n\n[link_parcel_addresses] completed in 43.6s\n",
+  "stdout": "{\"level\":\"INFO\",\"tag\":\"[link_parcel_addresses]\",\"msg\":\"[link_parcel_addresses] target: link_parcel_addresses (descriptor.database) → database=postgres user=postgres migrations=242 (floor 159)\"}\n{\"level\":\"INFO\",\"tag\":\"[link_parcel_addresses]\",\"msg\":\"materialize gate: RUN (bypassed)\"}\nPIPELINE_SUMMARY:{\"records_total\":486530,\"records_new\":0,\"records_updated\":0,\"records_meta\":{\"duration_ms\":74920,\"batches_processed\":487,\"completed_naturally\":true,\"gate\":{\"reason\":\"bypassed\",\"gated_skip\":false},\"config\":{\"link_parcel_addresses_batch_size\":1000,\"link_parcel_addresses_no_address_warn_pct\":50,\"link_parcel_addresses_no_parcel_warn_pct\":5,\"link_parcel_addresses_fanout_warn_noncondo\":20,\"link_parcel_addresses_fanout_warn_condo\":400},\"terminal\":\"materialized_with_warnings\",\"ledger_row\":\"owned\",\"checks_failed\":1,\"errors\":[\"parcel_fanout_outliers: 130\"],\"audit_table\":{\"phase\":54,\"name\":\"Parcel ↔ Address Points Spatial Bridge\",\"verdict\":\"WARN\",\"rows\":[{\"metric\":\"gate_decision\",\"value\":{\"mode\":\"incremental\",\"reason\":\"bypassed\",\"gated_skip\":false},\"threshold\":\"viol == 0\",\"status\":\"INFO\"},{\"metric\":\"parcels_with_geom_pre_run\",\"value\":486530,\"threshold\":\"viol == 0\",\"status\":\"INFO\"},{\"metric\":\"address_points_with_geom_pre_run\",\"value\":525346,\"threshold\":\"viol == 0\",\"status\":\"INFO\"},{\"metric\":\"address_points_with_null_geom\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\"},{\"metric\":\"new_links_written\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\"},{\"metric\":\"final_link_count\",\"value\":511224,\"threshold\":\"viol == 0\",\"status\":\"PASS\"},{\"metric\":\"parcels_with_links\",\"value\":467786,\"threshold\":\"viol == 0\",\"status\":\"INFO\"},{\"metric\":\"parcel_link_rate_pct\",\"value\":\"96.15%\",\"threshold\":\"viol == 0\",\"status\":\"INFO\"},{\"metric\":\"parcels_with_no_address_pct\",\"value\":\"3.85%\",\"threshold\":\"pct <= 50\",\"status\":\"PASS\"},{\"metric\":\"address_points_with_no_parcel_pct\",\"value\":\"2.69%\",\"threshold\":\"pct <= 5\",\"status\":\"PASS\"},{\"metric\":\"errors\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\"},{\"metric\":\"parcel_fanout_outliers\",\"value\":130,\"threshold\":\"viol <= 20\",\"status\":\"WARN\"},{\"metric\":\"parcel_fanout_condo_outliers\",\"value\":0,\"threshold\":\"viol <= 400\",\"status\":\"PASS\"},{\"metric\":\"parcel_fanout_distribution\",\"value\":{\"condo_max\":346,\"noncondo_max\":155,\"noncondo_gt_threshold\":130},\"threshold\":\"viol == 0\",\"status\":\"INFO\"},{\"metric\":\"parcel_address_points_stale_st_within_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\"},{\"metric\":\"parcel_address_points_missed_link_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":6493.65,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":74924,\"threshold\":null,\"status\":\"INFO\"}]}}}\nPIPELINE_META:{\"reads\":{\"parcels\":[\"id\",\"geom\"],\"address_points\":[\"address_point_id\",\"geom\"]},\"writes\":{\"parcel_address_points\":[\"parcel_id\",\"address_point_id\",\"computed_at\"]}}\n\n[link_parcel_addresses] completed in 74.9s\n",
   "stderr": "",
   "pipeline_runs": [
     {
-      "id": 1718,
+      "id": 1725,
       "pipeline": "link_parcel_addresses",
       "status": "completed_with_warnings",
-      "started_at": "2026-08-29T13:21:49.869Z",
-      "completed_at": "2026-08-29T13:22:33.484Z",
-      "duration_ms": 43643,
+      "started_at": "2026-08-29T14:21:48.050Z",
+      "completed_at": "2026-08-29T14:23:02.945Z",
+      "duration_ms": 74925,
       "records_total": 486530,
       "records_new": 0,
       "records_updated": 0,
       "records_meta": {
+        "gate": {
+          "reason": "bypassed",
+          "gated_skip": false
+        },
         "config": {
           "link_parcel_addresses_batch_size": 1000,
           "link_parcel_addresses_fanout_warn_condo": 400,
@@ -198,6 +216,16 @@
         "audit_table": {
           "name": "Parcel ↔ Address Points Spatial Bridge",
           "rows": [
+            {
+              "value": {
+                "mode": "incremental",
+                "reason": "bypassed",
+                "gated_skip": false
+              },
+              "metric": "gate_decision",
+              "status": "INFO",
+              "threshold": "viol == 0"
+            },
             {
               "value": 486530,
               "metric": "parcels_with_geom_pre_run",
@@ -293,13 +321,13 @@
               "threshold": "viol == 0"
             },
             {
-              "value": 11148.46,
+              "value": 6493.65,
               "metric": "sys_velocity_rows_sec",
               "status": "INFO",
               "threshold": null
             },
             {
-              "value": 43641,
+              "value": 74924,
               "metric": "sys_duration_ms",
               "status": "INFO",
               "threshold": null
@@ -308,7 +336,7 @@
           "phase": 54,
           "verdict": "WARN"
         },
-        "duration_ms": 43639,
+        "duration_ms": 74920,
         "checks_failed": 1,
         "batches_processed": 487,
         "completed_naturally": true
@@ -316,7 +344,7 @@
       "error_message": null
     }
   ],
-  "pipeline_runs_max_id_before": 1717,
+  "pipeline_runs_max_id_before": 1724,
   "table_state": [
     {
       "table": "parcel_address_points",
@@ -337,7 +365,7 @@
   "tables_source": "descriptor",
   "table_row_ceiling": 100000,
   "table_timing": {
-    "parcel_address_points": 253
+    "parcel_address_points": 281
   },
   "table_specs": {
     "parcel_address_points": {
@@ -416,6 +444,16 @@
           "name": "Parcel ↔ Address Points Spatial Bridge",
           "phase": 54,
           "rows": [
+            {
+              "metric": "gate_decision",
+              "status": "INFO",
+              "threshold": "viol == 0",
+              "value": {
+                "gated_skip": false,
+                "mode": "incremental",
+                "reason": "bypassed"
+              }
+            },
             {
               "metric": "parcels_with_geom_pre_run",
               "status": "INFO",
@@ -526,6 +564,10 @@
         "errors": [
           "parcel_fanout_outliers: 130"
         ],
+        "gate": {
+          "gated_skip": false,
+          "reason": "bypassed"
+        },
         "ledger_row": "owned",
         "terminal": "materialized_with_warnings"
       },
@@ -565,6 +607,16 @@
             "name": "Parcel ↔ Address Points Spatial Bridge",
             "phase": 54,
             "rows": [
+              {
+                "metric": "gate_decision",
+                "status": "INFO",
+                "threshold": "viol == 0",
+                "value": {
+                  "gated_skip": false,
+                  "mode": "incremental",
+                  "reason": "bypassed"
+                }
+              },
               {
                 "metric": "parcels_with_geom_pre_run",
                 "status": "INFO",
@@ -675,6 +727,10 @@
           "errors": [
             "parcel_fanout_outliers: 130"
           ],
+          "gate": {
+            "gated_skip": false,
+            "reason": "bypassed"
+          },
           "ledger_row": "owned",
           "terminal": "materialized_with_warnings"
         },
@@ -745,7 +801,7 @@
       }
     ]
   },
-  "source_fingerprint": "f51a84a7ed0a1b7ef4d084787445fee864b84369985e43daef1c4e06eefa9802",
+  "source_fingerprint": "87c62eb659b17483534444a5066310176a3a53e611b1e5a42500f9e9d5d78977",
   "fingerprint_files": [
     "scripts/lib/compute/link-parcel-addresses.js",
     "scripts/link-parcel-addresses.descriptor.json",

@@ -511,6 +511,50 @@ async function ledgerGatedSkip(pool, descriptor, { now = null, bypassed = false 
   };
 }
 
+/**
+ * THE CLOSED `records_meta.gate` SHAPE (LPA-D4, 2026-08-29). `ledgerGatedSkip`'s decision
+ * reasoned about WHY a run skipped or ran — own/upstream slugs compared, the upstream
+ * ledger window's activity counts, own last-completed baseline — but that reasoning only
+ * ever reached `log.info` (`runCascadePhase`/`runMaterializePhase`, scripts/lib/step/
+ * index.js), never `records_meta`. A broken always-unchanged gate (a bug that makes
+ * `no_upstream_changes` fire on EVERY run) was therefore indistinguishable from a healthy
+ * quiet one from the persisted record alone — the descriptor-level `gate_decision`
+ * `when:"pre"` check (Rule 1 rung (b)) is the PRIMARY fix; this is the belt-and-suspenders
+ * library one (rung (d)), so the reason is ALSO queryable straight off `records_meta`
+ * without parsing `audit_table` rows, for every archetype whose gate can genuinely skip.
+ *
+ * ONE shape, built here, merged onto `records_meta.gate` at every call site that reaches
+ * `ledgerGatedSkip` (`runCascadePhase`, `runMaterializePhase`) plus INGESTOR's own,
+ * structurally different, `preAcquisitionDecision` gate (thinner: no ledger slugs/
+ * timestamps exist for that mechanism, so `gatedSkip` is omitted there and the shape
+ * degrades to `{reason, gated_skip}` only). `runLinkPhase` (LINK archetype, e.g.
+ * `link_massing`) is DELIBERATELY OUT OF SCOPE: it drives `selectMode`'s tri-state
+ * full/incremental decision, never a skip — it has no `terminals[].kind === "skip_gated"`
+ * entry in any converted descriptor, and stamping a `gated_skip` field for a mechanism
+ * that cannot skip would misrepresent the axis.
+ *
+ * @param {object} descriptor
+ * @param {{mode: string|null, reason: string, skipped: boolean}|null} gate - `stepCtx.gate`
+ * @param {object|null} gatedSkip - the return of `ledgerGatedSkip`, when the caller has one
+ */
+function gateRecordsMeta(descriptor, gate, gatedSkip) {
+  const base = {
+    reason: gate ? gate.reason : null,
+    gated_skip: Boolean(gate && gate.skipped),
+  };
+  if (!gatedSkip || !gatedSkip.gate) return base;
+  const slugs = deriveLedgerSlugs(descriptor);
+  return {
+    ...base,
+    own_slugs: slugs.own,
+    upstream_slugs: slugs.upstream,
+    own_last_completed_at: gatedSkip.gate.ownCompleted,
+    upstream_non_completed: gatedSkip.gate.nonCompleted,
+    upstream_completed_with_changes: gatedSkip.gate.completedWithChanges,
+    upstream_stale_running: gatedSkip.gate.staleRunningUpstream,
+  };
+}
+
 module.exports = {
   OVERRIDE_ON,
   FULL_ARG,
@@ -537,5 +581,6 @@ module.exports = {
   skipCheckDecision,
   deriveLedgerSlugs,
   ledgerGatedSkip,
+  gateRecordsMeta,
   dryRunArgPresent,
 };

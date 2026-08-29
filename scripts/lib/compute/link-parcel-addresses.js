@@ -177,6 +177,15 @@ function buildMaterializeSql(descriptor, config) {
 // Checks — one function per declared check, in descriptor order, name === id
 // ===========================================================================
 
+/** LPA-D4 — the ledger-gated-skip decision, on the record even on a SKIP (mirrors link_wsib's gate_decision exactly). */
+function gate_decision(ctx) {
+  const g = ctx.gate || {};
+  ctx.report('gate_decision', {
+    violations: 0,
+    detail: { mode: g.mode, reason: g.reason, gated_skip: Boolean(g.skipped) },
+  });
+}
+
 function parcels_with_geom_pre_run(ctx) {
   const n = (ctx.matched && ctx.matched.parcels_with_geom) || 0;
   ctx.report('parcels_with_geom_pre_run', { violations: 0, detail: n });
@@ -311,6 +320,7 @@ function buildMaterializeMeta(ctx) {
 
 /** §5.5 (1) — keys are exactly the descriptor's check ids, in declaration order. */
 const CHECKS = {
+  gate_decision,
   parcels_with_geom_pre_run,
   address_points_with_geom_pre_run,
   address_points_with_null_geom,

@@ -1740,6 +1740,21 @@ async function runWithPool(runnable, pool, ctx) {
         ...(materialize && materialize.skipped && materialize.prior && typeof materialize.prior === 'object'
           ? Object.fromEntries(Object.entries(materialize.prior).filter(([k]) => /_updated_at$/.test(k)))
           : {}),
+        // LPA-D4 — the ledger-gated-skip decision's WHY, ALSO on records_meta (rung (d),
+        // belt-and-suspenders to the descriptor-level gate_decision check, rung (b)): every
+        // archetype whose gate can genuinely skip (ingest's preAcquisitionDecision, cascade/
+        // materialize's ledgerGatedSkip) gets one `staleness.gateRecordsMeta` call, ONE site
+        // regardless of which archetype ran. `link` is excluded — `runLinkPhase` drives
+        // `selectMode`'s tri-state full/incremental decision, never a skip.
+        ...(ingest || cascade || materialize
+          ? {
+            gate: staleness.gateRecordsMeta(
+              descriptor,
+              stepCtx.gate,
+              (cascade && cascade.gatedSkip) || (materialize && materialize.gatedSkip) || null,
+            ),
+          }
+          : {}),
         // §1.2a P4 — "the value in force is observable in the run's records_meta".
         // Absent entirely for a `config: "none"` step, so the byte cost is paid only
         // by steps that actually consume a tunable (§1.2a P3).
