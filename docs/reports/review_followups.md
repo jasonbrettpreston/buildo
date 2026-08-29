@@ -3104,3 +3104,7 @@ same way `link_parcel_addresses`'s were (name the later commit that changed the 
 1–3's G9 FAILs and G5 format gaps are NOT recommended for retroactive fixing — R-F is explicitly binding
 "starting pilot 4," and rewriting pilots 1–3's PH-5 sections to match a later convention they predate would be
 exactly the kind of retroactive massaging Spec 123 §3's PIN-vs-FIX discipline warns against.
+
+### V7 no_retraction closure (2026-08-29) — `unscoped_set_based` still unenforced, filed not built
+
+- **[LOW · schema enforcement gap, `scripts/lib/step/validate.js`] V7's third named predicate rule, `unscoped_set_based` (`x-banned-for-new.rules[]` in `step.schema.json`), has no consumer — same "metadata with no enforcer" shape `no_retraction` was in until this commit.** `banned_when: "write_discipline.class is a set-based mechanic AND write_discipline.scope == 'none'"`. Not built this commit (scope was specifically "V7 no_retraction," per the task); measured against the 5 real converted descriptors, none currently trip it (`link_massing`'s `set_based_scoped` target has a real scope string, not `"none"`; same for `link_wsib`'s three `set_based_*` targets) — so closing it would find 0 live violations today, unlike `no_retraction` which found a real, already-adjudicated case. RECOMMEND a follow-up WF3 mirroring `assertNoRetraction`'s exact shape (a new `assertNoUnscopedSetBased` function, grandfathered via `rules: ["unscoped_set_based"]`) when a step is next found needing it, or as a standalone hardening pass.

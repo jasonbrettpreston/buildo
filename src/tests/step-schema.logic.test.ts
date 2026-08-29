@@ -242,6 +242,56 @@ describe('step.schema.json — the canonical vocabulary (Spec 122 S1)', () => {
     });
   });
 
+  describe('V7 no_retraction is ENFORCED (Spec 124 GAP V7 no_retraction closure, 2026-08-29)', () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports -- the real CJS library
+    const { validateDescriptor, loadGrandfathered, assertNoRetraction } = require(path.join(REPO_ROOT, 'scripts/lib/step/validate.js')) as {
+      validateDescriptor: (d: unknown) => unknown;
+      loadGrandfathered: () => { steps: Record<string, { rules?: string[] }> };
+      assertNoRetraction: (d: unknown, findings: string[]) => void;
+    };
+    const NR_ALLOWED = path.join(FIXTURES, 'valid', 'no-retraction-allowed.descriptor.json');
+    const NR_REFUSED = path.join(FIXTURES, 'invalid', 'no-retraction-not-grandfathered.json');
+
+    it('the two fixtures differ by IDENTITY ONLY — so a difference in outcome can only be the allowlist', () => {
+      const a = readJson(NR_ALLOWED);
+      const b = readJson(NR_REFUSED);
+      expect(JSON.stringify(b.outputs)).toBe(JSON.stringify(a.outputs));
+      expect((b.identity as { name: string }).name).not.toBe((a.identity as { name: string }).name);
+    });
+
+    it('AJV ALONE accepts the un-allowlisted descriptor — which IS the gap this closes', () => {
+      expect(validate(readJson(NR_REFUSED)), 'if AJV rejected it, the enforcer below would be proving nothing').toBe(true);
+    });
+
+    it('GREEN — a rules:["no_retraction"]-allowlisted step keeps its insert-only-no-retraction write', () => {
+      expect(() => validateDescriptor(readJson(NR_ALLOWED))).not.toThrow();
+      const entry = loadGrandfathered().steps[(readJson(NR_ALLOWED).identity as { name: string }).name];
+      expect(entry, 'the green direction must be green BECAUSE of an allowlist entry').toBeDefined();
+      expect(entry?.rules).toContain('no_retraction');
+    });
+
+    it('RED — the same write is REFUSED when the step is not on the rules[] allowlist', () => {
+      expect(() => validateDescriptor(readJson(NR_REFUSED))).toThrow(/no_retraction/);
+      expect(() => validateDescriptor(readJson(NR_REFUSED))).toThrow(/grandfathered/);
+    });
+
+    it('RED — removing the rules[] entry reddens the green fixture too (the rule is the allowlist, not the name)', () => {
+      const d = readJson(NR_ALLOWED) as { identity: { name: string } };
+      d.identity = { ...d.identity, name: 'fixture_name_no_rules_allowlist_will_ever_have' };
+      expect(() => validateDescriptor(d)).toThrow(/no_retraction/);
+    });
+
+    it('a write target that genuinely retracts elsewhere is NOT banned, even under the same class name (the predicate spans class AND retract)', () => {
+      const d = readJson(NR_REFUSED) as { outputs: { writes: Array<{ retract: string }> } };
+      const write = d.outputs.writes[0];
+      expect(write, 'fixture must declare at least one write target').toBeDefined();
+      (write as { retract: string }).retract = 'departed';
+      const findings: string[] = [];
+      assertNoRetraction(d, findings);
+      expect(findings, 'a genuinely-retracting write must not trip the no_retraction predicate').toEqual([]);
+    });
+  });
+
   it('the #54 lock is proven in BOTH directions', () => {
     // Same descriptor, one array populated. If the positive control also failed,
     // the negative would be firing for some unrelated reason.

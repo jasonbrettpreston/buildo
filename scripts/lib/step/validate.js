@@ -186,6 +186,56 @@ function assertGrandfathered(descriptor, findings) {
 }
 
 /**
+ * THE V7 `no_retraction` ENFORCER (Spec 122 V7; Spec 124 GAP V7 no_retraction).
+ *
+ * `x-banned-for-new.rules` already NAMES three predicates (`no_retraction`,
+ * `unscoped_set_based`, `unguarded_write`) as of the V7 decoupling, but until this
+ * function only `unguarded_write` had a consumer (`assertGrandfathered`, keyed on
+ * the `guard` axis) — `no_retraction` sat in the schema exactly as `unguarded_write`
+ * once did: metadata with no enforcer, so a new step could carry the banned shape,
+ * satisfy every AJV requirement, and ship. This closes that half.
+ *
+ * The `no_retraction` rule's own `banned_when` text: "write_discipline.class is an
+ * insert-only mechanic AND retract == 'none'". The class enum still carries the old
+ * fused D-class identity as a literal value (`insert_only_no_retraction`) rather than
+ * a separately-named mechanic, so the mechanic half of the predicate is exactly that
+ * one enum value — the retract-axis half is still checked independently, matching the
+ * rule's own stated shape (a class that later gains a genuine retraction path is no
+ * longer banned, even under the same class name).
+ *
+ * Grandfathering uses the SAME allowlist file as `assertGrandfathered`, but a
+ * different shape: `grandfathered.json`'s per-step entry gains an optional
+ * `rules: string[]` array (rule ids from `x-banned-for-new.rules[].id`), read
+ * independently of `paths` — `no_retraction` has no single `path→value` pair to
+ * grandfather (the predicate spans two fields), so it is named as a RULE, not a path.
+ */
+const NO_RETRACTION_CLASSES = new Set(['insert_only_no_retraction']);
+
+function assertNoRetraction(descriptor, findings) {
+  const outputs = descriptor.outputs;
+  if (!outputs || outputs === 'none' || !Array.isArray(outputs.writes)) return;
+  const rules = (loadSchema()['x-banned-for-new'] || {}).rules || [];
+  const rule = rules.find((r) => r.id === 'no_retraction');
+  if (!rule) return; // the schema stopped naming this rule — nothing to enforce against
+  const slug = descriptor.identity && descriptor.identity.name;
+  const entry = (loadGrandfathered().steps || {})[slug];
+  const allowed = !!(entry && Array.isArray(entry.rules) && entry.rules.includes('no_retraction'));
+  outputs.writes.forEach((w, i) => {
+    const wd = w.write_discipline || {};
+    if (!NO_RETRACTION_CLASSES.has(wd.class)) return;
+    if (w.retract !== 'none') return; // genuinely retracts elsewhere — not the banned shape
+    if (allowed) return;
+    findings.push(
+      `  /outputs/writes/${i}: write_discipline.class "${wd.class}" with retract:"none" is `
+      + `x-banned-for-new rule "no_retraction" (${rule.why}), and "${slug}" has no `
+      + 'rules:["no_retraction"] entry in scripts/steps/_schema/grandfathered.json. A write_discipline.why '
+      + 'alone does not grandfather a banned shape — the allowlist entry (step, rule id, why, commit) is the '
+      + 'adjudication, and it is a reviewed diff rather than something a descriptor can grant itself.',
+    );
+  });
+}
+
+/**
  * The SEMANTIC rules — everything true of a descriptor that JSON Schema cannot say
  * because it needs a cross-reference between two fields, or a shorthand expanded first.
  * Run AFTER AJV, so a structurally broken descriptor reports its shape errors rather
@@ -195,6 +245,7 @@ function semanticFindings(descriptor) {
   const findings = [];
   assertNoRunClockGuard(descriptor, findings);
   assertGrandfathered(descriptor, findings);
+  assertNoRetraction(descriptor, findings);
   return findings;
 }
 
@@ -239,6 +290,7 @@ module.exports = {
   compileStepSchema,
   collectExtensionKeywords,
   effectiveGuardColumns,
+  assertNoRetraction,
   semanticFindings,
   validateDescriptor,
 };

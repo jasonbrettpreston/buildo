@@ -19,7 +19,13 @@
     "ADDING AN ENTRY IS THE EXPENSIVE PATH ON PURPOSE. It is a committed, reviewed diff that",
     "names a SHA; it is not something a descriptor can grant itself. Removing one is free.",
     "",
-    "Keys are `identity.name`. `paths` maps a descriptor path to the banned value it carries."
+    "Keys are `identity.name`. `paths` maps a descriptor path to the banned value it carries.",
+    "",
+    "`rules` (added 2026-08-29, V7 GAP `no_retraction` closure) names x-banned-for-new `rules[].id`",
+    "values grandfathered for this step — used for a predicate that spans more than one field (e.g.",
+    "`no_retraction`: write_discipline.class AND retract together), which has no single `path→value`",
+    "pair to grandfather the way `paths` does. Enforced by `scripts/lib/step/validate.js",
+    "assertNoRetraction`, same construction-time refusal as `assertGrandfathered`."
   ],
   "contract_version": 1,
   "steps": {
@@ -37,11 +43,20 @@
       "paths": {
         "outputs.writes[].write_discipline.guard": "none"
       },
-      "why": "outputs.writes[0] is the sole INSERT INTO parcel_address_points ... SELECT ... JOIN ST_Within ... ON CONFLICT (parcel_id, address_point_id) DO NOTHING (LG-18, class insert_only_no_retraction). No column on this write target is ever updated after insert — computed_at is a write-once RUN_AT stamp. A change guard would compare a row against itself and always pass; the genuine gap is retraction (LPA-D1, pinned per Spec 123 §3.1 as a KNOWN-DEFECT with zero measured live exposure), not a missing guard. Mirrors link_massing's E1 precedent exactly (keyed on .guard, never .class, per assertGrandfathered's GUARD_PATH).",
+      "rules": ["no_retraction"],
+      "why": "outputs.writes[0] is the sole INSERT INTO parcel_address_points ... SELECT ... JOIN ST_Within ... ON CONFLICT (parcel_id, address_point_id) DO NOTHING (LG-18, class insert_only_no_retraction, retract:\"none\"). No column on this write target is ever updated after insert — computed_at is a write-once RUN_AT stamp. A change guard would compare a row against itself and always pass; the genuine gap IS the banned no_retraction shape itself (LPA-D1, pinned per Spec 123 §3.1 as a KNOWN-DEFECT with zero measured live exposure: an upstream geom UPDATE on parcels/address_points can leave a stale row with no repair mechanism). Both the guard axis and the retraction axis are grandfathered together here — same defect, same commit, same adjudication — mirroring link_massing's E1 precedent for the guard half (keyed on .guard, never .class, per assertGrandfathered's GUARD_PATH) and naming the rule id directly for the retraction half (per assertNoRetraction's rules[] shape, V7 GAP closure 2026-08-29).",
       "commit": "d44b4458",
       "adjudicated_by": "operator ruling 2026-08-29 (pilot 5 Fold A, A-2)",
       "date": "2026-08-29",
       "lock_test": "src/tests/steps/link_parcel_addresses/violations.test.ts"
+    },
+    "fixture_no_retraction_allowed": {
+      "rules": ["no_retraction"],
+      "why": "The schema's own exemplar for the V7 grandfathered no_retraction shape — a FIXTURE, never a runnable step, exercising the rule in isolation from the guard axis (guard here is is_distinct_from, not the banned \"none\", so a difference in outcome between this fixture and its un-allowlisted twin can only be the rules[] allowlist). Exists so src/tests/step-schema.logic.test.ts can prove assertNoRetraction's GREEN direction is real, mirroring fixture_grandfathered_snapshot's role for assertGrandfathered.",
+      "commit": "PENDING_COMMIT_SHA",
+      "adjudicated_by": "Spec 124 GAP V7 no_retraction closure (schema fixture, not a manifest step)",
+      "date": "2026-08-29",
+      "lock_test": "src/tests/step-schema.logic.test.ts"
     },
     "fixture_grandfathered_snapshot": {
       "paths": {
