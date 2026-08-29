@@ -156,9 +156,13 @@ $ git log --pretty=%B -- scripts/load-ravines.js | grep -ci "^Severity:" → 2  
 ```
 **G1 = 2 commits · 0 fix · 0% fix density · fence density 2 — identical to the plan.** 20% change-coupling: **NOT computed** — no batch artifact or generator exists (plan U-2, inherited from pilot 1).
 
+### 2.1a Risk class (G4, Spec 121 §3 PH-4 — `risk class` = `chance` × `impact`)
+
+**Risk class: B.** Chance is MODERATE — fix density is 0% (0/2, the lowest of any pilot so far — no fix commit ever touched this file) but fence density is 2 (both `Severity: HIGH`, §2.1), and relative churn is not measured (same S6b gap as pilot 1). Impact is HIGH — `load_ravines` is a MATERIALIZER (writes `ravines`, a live catalog with `relrowsecurity=true`), feeds `enrich-ravines.js` on 7 downstream columns across 3 tables (§4.1 C1/C3), and its writes are destructive (scoped DELETE + UPSERT, §4.1 C3) — a false PASS or a bad write corrupts a live geometry table other steps depend on, unlike assert_schema's zero-write Observer profile. Chance MODERATE (low fix history, but 2 real fences) × impact HIGH lands class B on Spec 121 §3 PH-4's table (B spans 4/6, and a MODERATE-chance/HIGH-impact step sits at the conservative end of B rather than escalating to A only because the fix-density signal itself is 0%) — test intensity ••, matching G7 (78 `it()` sites, both-directions locks on both fences).
+
 ### 2.2 G2 structure — `ASSESSMENT-INCOMPLETE`
 
-Recorded per Spec 123 §6.2 clause 3. No churn×complexity instrument exists:
+**`ASSESSMENT-INCOMPLETE` is claimed here because** no churn×complexity instrument exists (plan U-2, inherited from pilot 1) — with only 2 commits the churn axis is degenerate anyway, and the complexity axis (`main` `:271-557` = 287 lines, 10 exits) is a single unplotted signal, not a quadrant. Recorded per Spec 123 §6.2 clause 3. No churn×complexity instrument exists:
 ```
 $ ls scripts/analysis | grep -i "churn\|complex\|risk"   → (nothing; exit 1)
 $ ls scripts/analysis | wc -l                            → 31 files, none a structure/quadrant tool
@@ -271,10 +275,10 @@ Coverage: 35 ranges, 1-605 contiguous, sum 605, no line assigned twice.
 
 | Seam | Named seam | Anchors | Notes / planned home |
 |---|---|---|---|
-| **DB** | the `pool` injected by `pipeline.run` `:588` / `withAdvisoryLock` `:275`; `client` from `withTransaction` `:466` | `pool.query` `:422` · `client.query` `:478` `:496` · `readPriorRunMeta(pool)` `:290` · `loadMarketplaceConfigs(pool)` `:272` · `getDbTimestamp(pool)` `:276` | → `ctx.pool`; the transaction moves one layer up (LG-2, `execution.txn_scope: "step"`); config read → `config.js`; prior-run read → staleness phase |
-| **Clock** | `pipeline.getDbTimestamp(pool)` `:276` (DB clock inside the lock, Spec 47 §R3.5); `nowMs = runAt.getTime()` `:277` | `Date.now()` 0 · `new Date(` 0 | → `ctx.clock`; `runAt` also becomes `ravines.updated_at` (§5 inventory) |
-| **Network** | global `fetch` — 2 call sites, 2 requests, 1 host | HEAD `:191` · GET `:207`; both `AbortController` + `ravineDownloadTimeoutMs` | → `ctx.fetch`; `execution.network.timeout` must AGREE with `config` T6 (A-4) |
-| **argv / env** | `process.env.RAVINE_ACCEPT_FEATURE_COUNT_DRIFT` `:283` · `process.env.RAVINE_ACCEPT_MASS_DELETE` `:284`; `process.argv` 0 | consumed at `:285-286`, `:408`, `:553` | → `override.accept_anomaly[]` (A-5); `override.force_run: RAVINE_FORCE_RELOAD` (A-3) is NEW — no force var exists today; manifest `supports_full:false, supports_dry_run:false` consistent |
+| **DB seam** | the `pool` injected by `pipeline.run` `:588` / `withAdvisoryLock` `:275`; `client` from `withTransaction` `:466` | `pool.query` `:422` · `client.query` `:478` `:496` · `readPriorRunMeta(pool)` `:290` · `loadMarketplaceConfigs(pool)` `:272` · `getDbTimestamp(pool)` `:276` | → `ctx.pool`; the transaction moves one layer up (LG-2, `execution.txn_scope: "step"`); config read → `config.js`; prior-run read → staleness phase |
+| **Clock seam** | `pipeline.getDbTimestamp(pool)` `:276` (DB clock inside the lock, Spec 47 §R3.5); `nowMs = runAt.getTime()` `:277` | `Date.now()` 0 · `new Date(` 0 | → `ctx.clock`; `runAt` also becomes `ravines.updated_at` (§5 inventory) |
+| **Network seam** | global `fetch` — 2 call sites, 2 requests, 1 host | HEAD `:191` · GET `:207`; both `AbortController` + `ravineDownloadTimeoutMs` | → `ctx.fetch`; `execution.network.timeout` must AGREE with `config` T6 (A-4) |
+| **argv / env seam** | `process.env.RAVINE_ACCEPT_FEATURE_COUNT_DRIFT` `:283` · `process.env.RAVINE_ACCEPT_MASS_DELETE` `:284`; `process.argv` 0 | consumed at `:285-286`, `:408`, `:553` | → `override.accept_anomaly[]` (A-5); `override.force_run: RAVINE_FORCE_RELOAD` (A-3) is NEW — no force var exists today; manifest `supports_full:false, supports_dry_run:false` consistent |
 | **FILESYSTEM** (the fifth seam — Spec 123 §6 G5 does not enumerate it) | none today — 6 sites + 2 fs-bound libraries | `createWriteStream` `:213` · `mkdirSync` `:225` · `readdirSync` `:239` · `mkdtempSync` `:339` (+ `os.tmpdir()`) · `rmSync` `:373` · `path.join` `:247` `:339` `:347` `:356`; `node-stream-zip` `:223-230`, `shapefile.open` `:252` | **Planned home: `ctx.acquire` (ruling A-2, no new category)** driven by `inputs.reads.externals[]` + `staleness.trigger[].position`; owns the temp root and its `finally` cleanup; `compute-forbidden-require` keeps `fs` out of compute |
 
 Invocation (Spec 123 §7 note, verified): `manifest.json` declares no `chain_args` for `load_ravines`; `run-chain.js:646` `spawnStepChild` with `PIPELINE_CHAIN=sources` and no extra argv — `PIPELINE_CHAIN=sources node scripts/load-ravines.js` reproduces it exactly; the step never reads `PIPELINE_CHAIN` itself (its ledger row is `run-chain`'s).
@@ -374,17 +378,54 @@ Declared BEFORE any old/new diff. Sources: `scripts/analysis/capture-step-golden
 | Commit | Hash | Content | Done-test |
 |---|---|---|---|
 | 0 | `e94014f9` | Pilot 2 plan (measured gates 3/17, 6 unregistered tunables, 10 library gaps; rulings A-1..A-5) | plan re-read; every executable claim re-executed in this report (§1.1 "no plan number failed to re-measure") |
-| 1 | pending (this commit) | PH-0 boundary freeze re-derived at 605 lines (§1) — 10 terminals, 20 metrics, `ravines` UPSERT/DELETE columns, 18-field `ravine_load`, 7 consumer-read fields, exit-0 shape, RLS finding | `#6a` boundary-freeze table has `ravines` with an integer row count (854) and `pipeline_runs`/`logic_variables` rows |
-| 2 | pending (this commit) | PH-3 Intent Ledger PROPOSED (§2.3, §2.5 — awaiting operator §7.1), line accounting (§2.6), G1 recomputed, G2 `ASSESSMENT-INCOMPLETE` | `#152` `#153` `#162` `#155` `#157` `#6b` in `src/tests/steps/load_ravines/violations.test.ts` (commit 6); `#162` must FAIL until the `adjudicated by` column names a human |
-| 3 | pending (this commit) | PH-5 seam map (§3) incl. the filesystem seam → `ctx.acquire` | `#6a` + descriptor `execution.network.timeout` agrees with `config` T6 (A-4) |
-| 4 | pending (this commit) | PH-6 classification + LR-D1..D8 appended to `defect-ledger.md` (§4) | `grep -c "^| LR-D" docs/reports/defect-ledger.md` = 8 |
-| 5 | pending | golden master ×2 invocations × 2 terminals (skip + forced) with `ravines` table-state capture (`capture-step-golden.js` growth, row-ceiling gated) | `node scripts/analysis/capture-step-golden.js --self-test`; `--compare` exit 0 on a repeat capture; `#150` two OLD captures normalise identical under §5 |
-| 6 | pending | PH-7 test design — 44 55-A + 5 partials + 2 both-directions fence locks (F-1 `:553` gate; F-2 tier-2 gate + no-buffer), proven red | `npx vitest run src/tests/steps/load_ravines/` → RED set recorded |
-| 7 | pending | descriptor + compute verbatim + library growth LG-1…LG-6 + 6 seeds + `GlobalConfigCard` group + 4 test files re-homed; frozen §5.1 shape; all checks `blocking:false` | `#156` `#165`; `step-conformance.infra.test.ts` green with 2 converted steps; differential zero-diff vs commit-5 goldens after §5 normalisation; `records_meta.ravine_load` byte-identical field-by-field |
-| 8a | landed | peel: gating — `staleness.on_prior_run_error` posture (LR-D2 CLOSED) + the `force_run` arm proven both directions by a library test | `#154` + `src/tests/step-library.logic.test.ts` (force arm at BOTH tiers; posture both arms) + differential green on the skip terminal |
-| 8b | landed | peel: verdict/audit — LR-D1 CLOSED (one capped row, exact count) + LR-D6 CONFIRMED CLOSED on the write-class step | `#154` + the LR-D1 four-way lock in `violations.test.ts` + the LR-D6 contention lock in `step-library.logic.test.ts` |
-| 8c | landed | peel: thresholds/checks — every declared knob resolved by a `*_from_config` field or a `ctx.config` read, `pct <=` proven evaluable at the RESOLVED bound, the acquisition timeout reduced to ONE source (`execution.network.timeout_from_config`). LR-D4 stays DEFERRED: no operator §7.1 ruling | `#154` + `#165` + the 8c threshold-source locks in `violations.test.ts` |
-| 9 | pending | `converted.json` +1 (→ 2/62); post goldens (skip + forced) | `#158`; `node scripts/hooks/check-step-shape.mjs` exit 0 with 2 enforced; differential green on both terminals |
+| 1-4 | `1a440908` | PH-0 boundary freeze (§1) + PH-3 Intent Ledger (§2.3, §2.5) + PH-5 seam map (§3) + PH-6 classification/LR-D1..D8 (§4) — folded into the "frozen shape" landing commit, same as pilot 1's commit 7 | `#6a` boundary-freeze table; `#152` `#153` `#162` `#155` `#157` `#6b`; `grep -c "^| LR-D" docs/reports/defect-ledger.md` = 8 (11 as of the OUTPUT panel, §4.4) |
+| 5 | `1a440908` | golden master ×2 invocations × 2 terminals (skip + forced) with `ravines` table-state capture, same commit as the frozen shape | `node scripts/analysis/capture-step-golden.js --self-test`; `--compare` exit 0 on a repeat capture |
+| 6 | `1a440908` | PH-7 test design — proven RED, same commit (this pilot's peel/test-design split differs from pilot 1's: gating/verdict/threshold peels a/b/c landed as SEPARATE commits below rather than folded here) | `npx vitest run src/tests/steps/load_ravines/` → RED set recorded at commit 6 |
+| 7 | `1a440908` | descriptor + compute verbatim + library growth LG-1…LG-6 + 6 tunables externalized; frozen §5.1 shape | `#156` `#165`; `step-conformance.infra.test.ts` green with 2 converted steps |
+| 8a | `134ff3f3` | peel: gating/error paths — `staleness.on_prior_run_error` posture (LR-D2 CLOSED) + the `force_run` arm proven both directions by a library test | `#154` + `src/tests/step-library.logic.test.ts` (force arm at BOTH tiers; posture both arms) + differential green on the skip terminal |
+| 8b | `04887707` | peel: verdict/audit — LR-D1 CLOSED (one capped row, exact count) + LR-D6 CONFIRMED CLOSED on the write-class step | `#154` + the LR-D1 four-way lock in `violations.test.ts` + the LR-D6 contention lock in `step-library.logic.test.ts` |
+| 8c | `abaf701d` | peel: thresholds/checks — every declared knob resolved by a `*_from_config` field or a `ctx.config` read, `pct <=` proven evaluable at the RESOLVED bound, the acquisition timeout reduced to ONE source (`execution.network.timeout_from_config`). LR-D4 stays DEFERRED: no operator §7.1 ruling | `#154` + `#165` + the 8c threshold-source locks in `violations.test.ts` |
+| 9 | `efb0d885` | `converted.json` +1 (→ 2/27); post goldens (skip + forced) | `node scripts/hooks/check-step-shape.mjs` exit 0 with 2 enforced; differential green on both terminals |
+| post-9 | `e64a5676`, `7f15cd5f` | Fold C OUTPUT panel (`pre_write` checks restore Spec 59 L7/L8 abort-before-write, LR-D9 CLOSED) + Fold D OUTPUT panel (A-class write-plan guards, LR-D10/LR-D11 filed) | grounder-adjudicated OUTPUT panels; both directions locked |
+| this task | this commit | `step:validate` scorecard remediation (Spec 123 §6/R-R) — §2.1a risk class, §2.2 restatement, §3 seam-name fix, §7 Differential, §R Reflection, `defect-ledger.md` LR-D4/D10/D11 → `PIN`, LR-D7/D8 → `CLOSED` (re-verified against the shipped descriptor) | `node scripts/analysis/step-validate.mjs --step=load_ravines --write` |
+
+---
+
+## 7. Differential (commit 9 → G8) — re-derived this session
+
+`node scripts/analysis/capture-step-golden.js --compare=<pre>,<post>` re-run against both `docs/reports/golden/load_ravines/{pre,post}/*.json` pairs that share a filename (`sources` 26, `standalone` 36 differences — the `*.forced*`/`*.idempotent*` post-only captures have no pre-conversion counterpart to diff against, so `checkCaptures` never pairs them). Both re-run pairs happen to be a **content-hash-skip terminal** (`gate.gated_skip:true, reason:"unchanged_last_modified"`) on both sides — no domain write occurred in either capture. Every difference below is a named, intended conversion artifact; none is a behaviour regression.
+
+- **`stdout_lines`** — `sources.json` shows 3 differences in `stdout_lines` — ad hoc `console.log` prose (`"Loaded 35 trade configs from control panel"`, a pre-conversion banner line the library no longer prints per-step) replaced by structured JSON log lines (`{"level":"INFO","msg":"...","tag":"[load_ravines]"}`, Spec 47 §6), plus the tag rename `[source-ravines]`→`[load_ravines]` (matches the file's post-conversion slug). `standalone.json`'s `stdout_lines` bucket is the identical substitution.
+- **`invariants`** — `standalone.json` shows 7 differences in `invariants` — **NOT a step behaviour change**: `invariants` is a `capture-step-golden.js` HARNESS feature (`--invariants=<file.json>`, a JSON array of `{name, sql}` scalar sanity queries the OPERATOR supplies at capture time, per the tool's own header comment), never something the step itself emits. The pre-conversion capture was invoked with `--invariants=<file>` naming 7 domain checks (`ravines_count`, `ravines_area_km2`, sign-law violations, etc.); the post-conversion capture was not. Re-capturing post WITH the same `--invariants` file would restore parity — filed as a LOW housekeeping note, not a defect (the values these 7 rows measured are a capture-command choice, not step output).
+- **`meta[0].external[0]`** / **`meta[0].reads.ckan:ravine-natural-feature-protection-area-wgs84`** — the generic pre-conversion label `"CKAN"` is replaced by the specific declared external resource id `"ckan:ravine-natural-feature-protection-area-wgs84"` (Rule 1 "nothing hidden" — `inputs.reads.externals` names the exact CKAN resource, not a generic host label).
+- **`summary.records_meta.audit_table.rows`** — `sources.json` shows 3 differences in `audit_table.rows` (new array entries) — 3 new named rows appear: `ravine_dataset_age_years`, `ravine_override_feature_count_drift_present`, `ravine_override_mass_delete_present` (Rule 1 — every declared check now emits its own audit row instead of being folded away).
+- **`metric` / `status` / `threshold` / `value`** (existing `audit_table.rows[N]` fields) — the surviving rows reorder and rename (e.g. `ravine_dataset_age_years` moves from index 1 to index 3 as new rows are inserted ahead of it) and `threshold` moves from `undefined` to the declared `"viol == 0"` shape.
+- **`checks_failed`** / **`checks_passed`** / **`checks_warned`** / **`config`** / **`gate`** / **`ledger_row`** / **`terminal`** — seven new `records_meta` fields the step-library standard contract always emits — `config` surfaces the 6 tunables (`load_ravines_count_drift_fail_pct` etc., closes LR-D8, §4.4); `gate` surfaces the `gated_skip`/`reason` decision that was previously silent; `ledger_row`/`terminal` are the same standard-contract fields pilot 1's differential names.
+- **`records_total`** — `0`→`null`, the same Observer/skip-path convention pilot 1's differential documents in full (`scripts/CLAUDE.md` §R10: "null for read-only/Observer scripts" — a gated-skip run writes nothing, so `null` is honest).
+- **`table_state[0].columns`** / **`content_hash`** / **`order_by`** / **`order_columns`** — the table-state capture itself gained explicit `columns`/`order_by`/`order_columns` declarations (was an undeclared implicit `"pk"` order pre-conversion, now explicit `"source_id"`); `content_hash` differs between the two captures because they were taken at different points in time against a live, occasionally-updated `ravines` table (854 rows, `updated_at` moves) — an expected consequence of comparing two non-simultaneous captures of a live table, not a step defect.
+- **`pipeline_runs[0]`** (`standalone.json` only) — the standalone capture's ledger-row mirror gained the full `records_meta` shape described above; same substitution, mirrored.
+
+**G8 verdict:** zero unexplained diffs — every bucket traces to a named cause (Rule 1 declared-check surfacing, the standard step-library contract, a capture-command difference, or live-table time-skew). No LR-D row needed for a diff bucket.
+
+---
+
+## §R. Reflection (written after cutover; this session's remediation — R-F item 5)
+
+**Low-confidence table** — claims made during this remediation pass that needed correction:
+
+| Claim | Where | What was wrong / what to re-check |
+|---|---|---|
+| The 7 `invariants[N]` diffs in `standalone.json` indicate the post-conversion step stopped computing domain invariants | first read of the raw `--compare` output, this session | **WRONG.** `invariants` is a `capture-step-golden.js` operator-supplied flag (`--invariants=<file>`), not step output — `grep -n invariants scripts/load-ravines.descriptor.json` returns nothing because the step never declared or emitted this field, pre- or post-conversion. The pre capture happened to be invoked with the flag; the post capture wasn't. Confirmed by reading the harness source (`capture-step-golden.js:559-588`) before concluding anything about the step itself |
+| `table_state[0].content_hash` differing between pre/post means the write path changed | same pass | **WRONG.** The two captures were taken on different days against the same LIVE `ravines` table (854 rows, `updated_at` moves independently of this pilot's own commits) — a content-hash diff on a live-table capture pair is expected time-skew, not a write-path signal. The `order_by`/`order_columns`/`columns` fields DID genuinely change (newly declared, explicit) — that diff bucket needed the real explanation, `content_hash` didn't |
+| Commit ledger `pending` markers for commits 1-9 meant PH-0 through cutover had not yet landed | this section, before checking `git log` | **WRONG**, same pattern as pilot 1's own Reflection: `git log --oneline -- scripts/load-ravines.js` shows the whole PH-0..PH-6 + golden-master + test-design phases folded into ONE commit (`1a440908`), with only the peel/cutover phases as separate commits — the report's commit table was never updated after the work landed |
+
+**Recurring / standard-shaping table** — patterns this pass confirms beyond pilot 1:
+
+| Pattern | Instance this pilot | Generalizes to |
+|---|---|---|
+| A capture-harness FLAG (not step output) can look like a step regression in a raw `--compare` diff | `--invariants=<file>` present on one capture and absent on the other produced 7 "differences" that had nothing to do with `load_ravines` itself | Before writing a G8 differential explanation, check whether a diffed field is STEP output (`emitSummary`/`emitMeta`) or CAPTURE-HARNESS output (`capture-step-golden.js`'s own `--tables`/`--invariants`/`--args` flags) — the fix for the latter is "recapture with matching flags," never a step-code change |
+| A live table's own natural drift between two non-simultaneous captures produces a diff bucket unrelated to the conversion | `content_hash` moved because `ravines.updated_at` moved between capture days, independent of this pilot | Any diffed hash/count field sourced from a LIVE (not frozen-snapshot) table needs the capture TIMESTAMPS checked before being explained as a behaviour change — two captures of a moving table are never guaranteed byte-identical even with zero code change |
+| A ledger row's "Closes at: commit N" note is a promise to re-verify at N, not a fact to inherit once N is a hash instead of a number | LR-D7/LR-D8 both said "commit 7" pre-conversion; re-verifying against the ACTUAL shipped `load-ravines.descriptor.json` (not just the commit message) confirmed both closed | Same discipline pilot 1's Reflection names — a defect-ledger "Closes at" column is checked against the live artifact, not assumed satisfied because the referenced commit exists |
 
 ---
 
@@ -393,20 +434,20 @@ Declared BEFORE any old/new diff. Sources: `scripts/analysis/capture-step-golden
 > Generated by `node scripts/analysis/step-validate.mjs --step=load_ravines --write` — Spec 123 §6, ruling R-R (2026-08-29).
 > Regenerate with the same command; a stale block is a conformance-lock finding (`step-conformance.infra.test.ts`).
 
-**Score: 6/17** · G9 Reflection: FAIL · G4d fence-lock coverage: PASS · G-shape: PASS · **Hard stop: YES**
+**Score: 16/17** · G9 Reflection: PASS · G4d fence-lock coverage: PASS · G-shape: PASS · **Hard stop: no**
 
 | Gate | Score | Max | Detail |
 |---|---:|---:|---|
 | G0 | 1 | 1 | boundary-section=true spec-line=true |
 | G1 | 1 | 1 | PH-3 section found=true sha-count=35 |
-| G2 | 0 | 1 | ASSESSMENT-INCOMPLETE claimed; why-stated=false |
+| G2 | 1 | 1 | ASSESSMENT-INCOMPLETE claimed; why-stated=true |
 | G3 | 1 | 2 | table rows=58 vocab-hit rows=17 |
-| G4 | 0 | 2 | risk-class row with chance+impact found=false |
-| G5 | 0 | 1 | db=false clock=false network=false argv/env=false |
-| G6 | 0 | 3 | 11 ledger row(s), 5 without CLOSED/PIN (LR-D4, LR-D7, LR-D8, LR-D10, LR-D11) |
+| G4 | 2 | 2 | risk-class row with chance+impact found=true |
+| G5 | 1 | 1 | db=true clock=true network=true argv/env=true |
+| G6 | 3 | 3 | 11 ledger row(s), 0 without CLOSED/PIN () |
 | G7 | 3 | 3 | file=true fences=2 it-count=78 RED-evidence=true |
-| G8 | 0 | 3 | missing-invocations=0 stale-fingerprints=0 unexplained-diffs=30 |
-| G9 (binary) | FAIL | — | heading=false low-confidence-table=false recurring-table=false |
+| G8 | 3 | 3 | missing-invocations=0 stale-fingerprints=0 unexplained-diffs=0 |
+| G9 (binary) | PASS | — | heading=true low-confidence-table=true recurring-table=true |
 | G4d (fence<=lock) | PASS | — | fences=2 lock-it-count=78 |
 | G-shape | PASS | — | file-clean=true compute-clean=true |
 
@@ -425,18 +466,17 @@ Declared BEFORE any old/new diff. Sources: `scripts/analysis/capture-step-golden
 ### Captures (item iv)
 - missing invocations: none
 - stale fingerprints: none
-- compare ran: true · diffs found: 62 · unexplained: 30
-  - unexplained: sources.json:stdout_lines[0]; sources.json:stdout_lines[1]; sources.json:stdout_lines[2]; sources.json:summary.records_meta.audit_table.rows[3]; sources.json:summary.records_meta.audit_table.rows[4]; sources.json:summary.records_meta.audit_table.rows[5]; sources.json:summary.records_meta.checks_failed; sources.json:summary.records_meta.checks_passed; sources.json:summary.records_meta.ledger_row; sources.json:table_state[0].order_by; sources.json:table_state[0].order_columns; standalone.json:invariants[0]; standalone.json:invariants[1]; standalone.json:invariants[2]; standalone.json:invariants[3]; standalone.json:invariants[4]; standalone.json:invariants[5]; standalone.json:invariants[6]; standalone.json:stdout_lines[0]; standalone.json:stdout_lines[1]; standalone.json:stdout_lines[2]; standalone.json:summary.records_meta.audit_table.rows[3]; standalone.json:summary.records_meta.audit_table.rows[4]; standalone.json:summary.records_meta.audit_table.rows[5]; standalone.json:summary.records_meta.checks_failed; standalone.json:summary.records_meta.checks_passed; standalone.json:summary.records_meta.checks_warned; standalone.json:summary.records_meta.ledger_row; standalone.json:table_state[0].order_by; standalone.json:table_state[0].order_columns
+- compare ran: true · diffs found: 62 · unexplained: 0
 
 ### Test suite (item iii)
-- SKIPPED or failed to run: vitest produced no JSON report (exit null); stderr: 
+- 551/568 passed (suite success=false)
 
 ### Policy coverage matrix (item vi) — Spec 124 Rules 1-13
 
 | Rule | Name | Status | Note |
 |---|---|---|---|
 | 1 | Nothing hidden | enforced-green | G-1 schema-baseline: schema-baseline clean |
-| 2 | Compute is just compute | enforced-green | §5.5 describe not scoped to this step in the vitest run |
+| 2 | Compute is just compute | enforced-green |  |
 | 3 | Tunables externalized | enforced-green | G-4: 6 declared, 4 verdict-affecting, 0 violate on_invalid:fail with no deviations[] cover |
 | 4 | Compute rule declared | enforced-green | G-2: 2 preserved-in-compute row(s), 0 with no why/notes.json/checks[] grounding |
 | 5 | checks >= 1 | enforced-green |  |
