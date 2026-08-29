@@ -1253,7 +1253,7 @@
         {
           "type": "object",
           "additionalProperties": false,
-          "required": ["reset", "resume", "force", "rollback", "verify_clean", "cascades", "interrupted"],
+          "required": ["reset", "resume", "force", "rollback", "verify_clean", "cascades", "interrupted", "before_image"],
           "properties": {
             "reset": { "anyOf": [{ "enum": ["generated", "none"], "x-frozen": true }, { "type": "string", "minLength": 8 }] },
             "resume": { "enum": ["checkpoint", "none"], "x-frozen": true },
@@ -1266,12 +1266,22 @@
               "enum": ["force_full_on_next_run", "none"],
               "x-frozen": true
             },
-            "interrupted_why": { "$ref": "#/definitions/why" }
+            "interrupted_why": { "$ref": "#/definitions/why" },
+            "before_image": {
+              "description": "OPERATOR RULING R-M (2026-08-28, LG-17). Any write target that RETRACTS (write_discipline.class \"set_based_null_retract\", or retract \"all\"/\"departed\") writes the rows it is about to retract (key columns + the columns it nulls/deletes) to a dated JSONL file (docs/reports/golden/<slug>/before-image/<RUN_AT ISO>-<target>.jsonl) INSIDE the same run, BEFORE the retraction statement — a destructive repair with no row-level before-image cannot be audited. `\"generated\"` means the runner writes this file automatically (scripts/lib/step/write.js writeBeforeImage, called from the runner before executeSetBasedClear/executeRetraction); on a write failure the run FAILS before retracting (fail loud, never a silent skip). `\"none\"` is legal only with `before_image_why` and is a WARN in conformance — every destructive-retraction target REQUIRES `before_image: \"generated\"` (step-conformance.infra.test.ts), same enforcement shape as `interrupted` above.",
+              "enum": ["generated", "none"],
+              "x-frozen": true
+            },
+            "before_image_why": { "$ref": "#/definitions/why" }
           },
           "allOf": [
             {
               "if": { "properties": { "interrupted": { "const": "none" } }, "required": ["interrupted"] },
               "then": { "required": ["interrupted_why"] }
+            },
+            {
+              "if": { "properties": { "before_image": { "const": "none" } }, "required": ["before_image"] },
+              "then": { "required": ["before_image_why"] }
             }
           ]
         }

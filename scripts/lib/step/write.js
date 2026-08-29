@@ -39,6 +39,8 @@
 'use strict';
 
 const pipeline = require('../pipeline');
+const fs = require('fs');
+const path = require('path');
 
 /** Columns whose value the STEP supplies; anything else is declared-but-not-written. */
 const WRITTEN_BY_STEP = 'step';
@@ -530,6 +532,60 @@ async function executeWrite(pool, {
  * returns the counters that become `written.e<N>`.
  */
 
+/**
+ * R-M / LG-17 (2026-08-28) — the SELECT mirror of a destructive retraction's scope, so
+ * the rows about to be retracted can be read (and archived) BEFORE the retraction
+ * statement fires. `plan.scope` is the SAME predicate string `clear_sql`/`delete_sql`
+ * bind — for `set_based_null_retract` the columns to carry are `plan.step_columns`
+ * (the columns the retraction nulls); for a `retract:"all"` DELETE the whole row is
+ * removed, so the step-declared columns are the generic, declared-domain stand-in for
+ * "the columns it nulls/deletes" (never the full physical row — geometry/defaulted
+ * columns are not this step's write contract). Returns `null` when there is no scope
+ * to mirror generically (e.g. a future `retract:"departed"` target, keyed by an array
+ * of surviving ids rather than a WHERE predicate) — a declared limitation, not silently
+ * skipped: the caller decides what "before_image: none" means for that shape.
+ */
+function buildBeforeImageSelectSql(plan) {
+  if (!plan.scope) return null;
+  const columns = [...new Set([...(plan.keys || []), ...(plan.step_columns || [])])];
+  return { sql: `SELECT ${columns.join(', ')} FROM ${plan.table} WHERE ${plan.scope}`, columns };
+}
+
+/**
+ * R-M / LG-17 — writes the rows a destructive retraction is ABOUT TO remove/null to a
+ * dated JSONL file, INSIDE the same run, BEFORE the retraction statement: "a
+ * destructive repair with no row-level before-image cannot be audited." The read is a
+ * plain SELECT (safe to run on `client` inside the same transaction as the retraction
+ * that follows, or on `pool` standalone) and the params are the SAME ones the
+ * retraction itself binds (there is exactly one scope, read twice).
+ *
+ * ⚠️ FAIL LOUD, ON PURPOSE. Neither `fs.mkdirSync` nor `fs.writeFileSync` is wrapped in
+ * a try/catch here — a write failure (disk full, permissions, a missing repo checkout)
+ * must abort the run BEFORE the retraction executes, never silently skip the audit
+ * trail and retract anyway. The caller is required to call this BEFORE the retraction
+ * executor, in strict sequence, so an uncaught throw here naturally prevents it.
+ *
+ * @param {import('pg').PoolClient|import('pg').Pool} client
+ * @param {object} plan - a write plan (buildWritePlan) whose retraction is about to fire
+ * @param {unknown[]} scopeParams - the exact params the retraction statement itself binds
+ * @param {string} slug - descriptor.identity.name
+ * @param {Date} runAt - Spec 47 §R3.5 DB clock, the SAME capture the retraction uses
+ * @returns {Promise<{written: false}|{written: true, path: string, rows: number}>}
+ */
+async function writeBeforeImage(client, plan, scopeParams, slug, runAt) {
+  const select = buildBeforeImageSelectSql(plan);
+  if (!select) return { written: false };
+  const { rows } = await client.query(select.sql, scopeParams || []);
+  const repoRoot = path.join(__dirname, '..', '..', '..');
+  const dir = path.join(repoRoot, 'docs', 'reports', 'golden', slug, 'before-image');
+  fs.mkdirSync(dir, { recursive: true });
+  const stamp = runAt.toISOString().replace(/:/g, '-');
+  const filePath = path.join(dir, `${stamp}-${plan.table}.jsonl`);
+  const body = rows.map((r) => JSON.stringify(r)).join('\n') + (rows.length > 0 ? '\n' : '');
+  fs.writeFileSync(filePath, body, 'utf8');
+  return { written: true, path: path.relative(repoRoot, filePath).replace(/\\/g, '/'), rows: rows.length };
+}
+
 /** `set_based_scoped` — the declared constants over the declared scope. Returns rows touched. */
 async function executeSetBasedClear(client, plan, scopeParams) {
   const result = await client.query(plan.clear_sql, scopeParams || []);
@@ -596,6 +652,8 @@ module.exports = {
   targetKey,
   sqlLiteral,
   retractionFires,
+  buildBeforeImageSelectSql,
+  writeBeforeImage,
   executeSetBasedClear,
   executeUpsertBatch,
   executeRetraction,

@@ -19,7 +19,7 @@
 //   4. `checks[].chains` selects per chain; `assert_schema` is shared ×3 and a
 //      pilot that ran permit checks under `sources` would be a false green.
 //   5. `crashed` is not writable in-process — it belongs to the A3 reaper.
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { execFileSync } from 'child_process';
 import { createHash } from 'node:crypto';
 import { join } from 'node:path';
@@ -1987,5 +1987,81 @@ describe('LW-D16 — staleness.ledgerGatedSkip behavioral locks (fake pool)', ()
       pool.sql.some((s: string) => s.includes('own_last')),
       'the throw must land BEFORE the ledger gate is ever consulted — SKIP-eligibility must not matter',
     ).toBe(false);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// LW-D17 — R-M / LG-17: write.writeBeforeImage / buildBeforeImageSelectSql (fake pool
+// for the DB read, a REAL scratch subtree under docs/reports/golden/ — the function's
+// declared write location per the schema — standing in for the "tmp dir" the mechanism
+// itself has no way to be pointed away from; deleted in `finally` every time).
+// ---------------------------------------------------------------------------
+
+describe('LW-D17 — write.writeBeforeImage / buildBeforeImageSelectSql (R-M / LG-17)', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports -- exercising the real CJS library
+  const writeLib = require(join(process.cwd(), 'scripts/lib/step/write.js'));
+  // eslint-disable-next-line @typescript-eslint/no-require-imports -- fs/os for the scratch-dir cleanup
+  const fs = require('fs');
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const os = require('os');
+
+  const SLUG = '_wf3g_test_before_image';
+  const SCRATCH_DIR = join(process.cwd(), 'docs', 'reports', 'golden', SLUG);
+
+  afterEach(() => {
+    fs.rmSync(SCRATCH_DIR, { recursive: true, force: true });
+  });
+
+  it('buildBeforeImageSelectSql mirrors the plan\'s own scope/keys/step_columns (no query, pure)', () => {
+    const plan = { table: 'wsib_registry', keys: ['id'], step_columns: ['linked_entity_id', 'match_confidence', 'matched_at'], scope: 'match_confidence = $1' };
+    const select = writeLib.buildBeforeImageSelectSql(plan);
+    expect(select.sql).toBe('SELECT id, linked_entity_id, match_confidence, matched_at FROM wsib_registry WHERE match_confidence = $1');
+    expect(select.columns).toEqual(['id', 'linked_entity_id', 'match_confidence', 'matched_at']);
+  });
+
+  it('buildBeforeImageSelectSql returns null when the plan has no scope (e.g. a departed-class target) — a declared limitation, not a crash', () => {
+    const plan = { table: 'ravines', keys: ['id'], step_columns: ['geom'], scope: null };
+    expect(writeLib.buildBeforeImageSelectSql(plan)).toBeNull();
+  });
+
+  it('writeBeforeImage reads via the mirror SQL and writes a JSONL file BEFORE any retraction would run, then reports {written, path, rows}', async () => {
+    const rows = [{ id: 1, linked_entity_id: 10, match_confidence: 0.6, matched_at: '2026-08-01T00:00:00Z' }, { id: 2, linked_entity_id: 11, match_confidence: 0.6, matched_at: '2026-08-01T00:00:00Z' }];
+    let queried: { sql: string; params: unknown[] } | null = null;
+    const client = { query: async (sql: string, params: unknown[]) => { queried = { sql, params }; return { rows }; } };
+    const plan = { table: 'wsib_registry', keys: ['id'], step_columns: ['linked_entity_id', 'match_confidence', 'matched_at'], scope: 'match_confidence = $1' };
+    const runAt = new Date('2026-08-28T12:34:56.789Z');
+
+    const result = await writeLib.writeBeforeImage(client, plan, [0.6], SLUG, runAt);
+
+    expect(queried, 'the mirror SELECT must actually be issued').not.toBeNull();
+    expect(queried!.params).toEqual([0.6]);
+    expect(result.written).toBe(true);
+    expect(result.rows).toBe(2);
+    expect(result.path).toBe(`docs/reports/golden/${SLUG}/before-image/2026-08-28T12-34-56.789Z-wsib_registry.jsonl`);
+
+    const absPath = join(process.cwd(), result.path);
+    expect(fs.existsSync(absPath), 'the file must exist on disk, written before any retraction call').toBe(true);
+    const lines = fs.readFileSync(absPath, 'utf8').trim().split('\n').map((l: string) => JSON.parse(l));
+    expect(lines).toEqual(rows);
+  });
+
+  it('writeBeforeImage writes ZERO files and returns {written:false} when the plan has no scope to mirror (never a silent partial write)', async () => {
+    let queryCalled = false;
+    const client = { query: async () => { queryCalled = true; return { rows: [] }; } };
+    const plan = { table: 'ravines', keys: ['id'], step_columns: ['geom'], scope: null };
+    const result = await writeLib.writeBeforeImage(client, plan, [], SLUG, new Date());
+    expect(result).toEqual({ written: false });
+    expect(queryCalled, 'no scope to mirror means no query either — nothing to read').toBe(false);
+    expect(fs.existsSync(SCRATCH_DIR), 'no directory should even be created').toBe(false);
+  });
+
+  it('writeBeforeImage writes an empty JSONL file (not a missing one) when the scope matches zero rows', async () => {
+    const client = { query: async () => ({ rows: [] }) };
+    const plan = { table: 'wsib_registry', keys: ['id'], step_columns: ['linked_entity_id'], scope: 'match_confidence = $1' };
+    const result = await writeLib.writeBeforeImage(client, plan, [0.6], SLUG, new Date('2026-08-28T00:00:00.000Z'));
+    expect(result.rows).toBe(0);
+    const absPath = join(process.cwd(), result.path);
+    expect(fs.existsSync(absPath)).toBe(true);
+    expect(fs.readFileSync(absPath, 'utf8')).toBe('');
   });
 });

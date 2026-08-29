@@ -606,6 +606,11 @@
     "interrupted_why": {
       "text": "ADVERSARY DELTA R-B (2026-08-28): the rule (retract_when full_only or retract \"all\" REQUIRES force_full_on_next_run) does not apply here — load_ravines' only write target declares retract \"departed\", a scoped departure DELETE that always fires and is not a full destructive retraction gated on mode. A kill mid-run leaves the guarded upsert + departure delete exactly where the transaction boundary left them (write_discipline.txn_scope), never a half-cleared table an incremental gate would misread as complete — the failure mode R-B measured on link_massing's retract:\"all\" target does not exist here.",
       "liveness": "none"
+    },
+    "before_image": "none",
+    "before_image_why": {
+      "text": "OPERATOR RULING R-M / LG-17 (2026-08-28): the generic before-image mechanism (scripts/lib/step/write.js writeBeforeImage) mirrors a retraction's write_discipline.scope predicate as a SELECT — it structurally requires a scope. load_ravines' only write target declares retract \"departed\" with write_discipline.scope \"none\": the departure DELETE is keyed by an array of the ids the same run's upsert just wrote (<key> <> ALL($1::type[])), not a WHERE-clause predicate, so there is nothing for the generic mechanism to mirror today. Genuinely out of this WF3's scope (declared for link_wsib + link_massing only, both scope-bearing retractions) — extending the mechanism to a departed-class array key is a real, separately-scoped follow-up, not silently fixed or silently ignored here.",
+      "liveness": { "kind": "file", "ref": "scripts/lib/step/write.js" }
     }
   },
 

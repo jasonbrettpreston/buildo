@@ -1281,6 +1281,75 @@ describe('R-B — a destructive full retraction target requires a truthful crash
 });
 
 // ---------------------------------------------------------------------------
+// R-M / LG-17 — a destructive retraction target the generic before-image mechanism
+// CAN cover (write_discipline.scope truthy) requires recovery.before_image:"generated".
+// Narrower than R-B's `hasDestructiveRetraction`: a scope-less retraction (e.g.
+// load_ravines' retract:"departed", keyed by a surviving-ids array rather than a WHERE
+// predicate) is a declared, out-of-mechanism limitation — "none"+why is legal there,
+// same shape R-B itself already allows for a non-destructive target.
+// ---------------------------------------------------------------------------
+
+interface BeforeImageWriteTarget { table: string; retract: string; retract_when?: string; write_discipline: { class: string; scope: string } }
+
+/** Does at least one write target retract destructively AND carry a scope the generic before-image mechanism can mirror? */
+function hasBeforeImageableRetraction(writes: BeforeImageWriteTarget[]): boolean {
+  return writes.some((w) =>
+    (w.write_discipline.class === 'set_based_null_retract' || w.retract === 'all' || w.retract === 'departed') &&
+    w.write_discipline.scope !== 'none');
+}
+
+/** Every R-M finding for one step. `writes`/`beforeImage` are PARAMETERS for the RED canary below. */
+function beforeImageFindings(relFile: string, writes: BeforeImageWriteTarget[], beforeImage: string | undefined): string[] {
+  if (!hasBeforeImageableRetraction(writes)) return [];
+  if (beforeImage !== 'generated') {
+    return [
+      `${relFile}: a scope-bearing destructive retraction target (set_based_null_retract, or retract "all"/"departed" ` +
+        `with write_discipline.scope declared) requires recovery.before_image = "generated" (R-M), got ${JSON.stringify(beforeImage ?? null)}`,
+    ];
+  }
+  return [];
+}
+
+function beforeImageRecoveryFor(relFile: string): { writes: BeforeImageWriteTarget[]; beforeImage: string | undefined } {
+  const d = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, `${relFile.slice(0, -3)}.descriptor.json`), 'utf8')) as
+    { identity: { name: string }; outputs: 'none' | { writes: BeforeImageWriteTarget[] }; recovery: 'none' | { before_image?: string } };
+  const writes = d.outputs === 'none' ? [] : d.outputs.writes;
+  const beforeImage = d.recovery === 'none' ? undefined : d.recovery.before_image;
+  return { writes, beforeImage };
+}
+
+describe('R-M / LG-17 — a scope-bearing destructive retraction target requires a generated before-image', () => {
+  it('at least one converted step has a scope-bearing destructive retraction target (else the battery is vacuous)', () => {
+    const any = CONVERTED.some((f) => hasBeforeImageableRetraction(beforeImageRecoveryFor(f).writes));
+    expect(any, 'no converted step declares a scope-bearing destructive retraction target — the battery below would be vacuous').toBe(true);
+  });
+
+  for (const relFile of CONVERTED) {
+    it(`${relFile} — recovery.before_image is truthfully declared for any scope-bearing destructive retraction target`, () => {
+      const { writes, beforeImage } = beforeImageRecoveryFor(relFile);
+      const findings = beforeImageFindings(relFile, writes, beforeImage);
+      expect(findings, findings.join('\n')).toEqual([]);
+    });
+  }
+
+  const WITH_BEFORE_IMAGEABLE = CONVERTED.filter((f) => hasBeforeImageableRetraction(beforeImageRecoveryFor(f).writes));
+
+  for (const relFile of WITH_BEFORE_IMAGEABLE) {
+    it(`RED — ${relFile}: recovery.before_image "none" reddens against its scope-bearing destructive retraction target`, () => {
+      const { writes } = beforeImageRecoveryFor(relFile);
+      const findings = beforeImageFindings(relFile, writes, 'none');
+      expect(findings.some((f) => f.includes('requires recovery.before_image')), findings.join('\n')).toBe(true);
+    });
+
+    it(`RED — ${relFile}: a MISSING recovery.before_image (undefined) reddens too`, () => {
+      const { writes } = beforeImageRecoveryFor(relFile);
+      const findings = beforeImageFindings(relFile, writes, undefined);
+      expect(findings.some((f) => f.includes('requires recovery.before_image')), findings.join('\n')).toBe(true);
+    });
+  }
+});
+
+// ---------------------------------------------------------------------------
 // 6. The real loop — empty today, one entry per landed pilot
 // ---------------------------------------------------------------------------
 

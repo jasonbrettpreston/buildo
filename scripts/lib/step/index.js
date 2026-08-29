@@ -605,6 +605,9 @@ async function runLinkPhase({ descriptor, pool, compute, config, chainId, log, t
   }
   written.privilege = privilege[plans[plans.length - 1].table] || null;
   written.requirements = requirements;
+  // R-M / LG-17 — one entry per destructive-retraction target this run actually wrote
+  // a before-image for (W1, below); surfaces as `before_image_written` audit rows.
+  const beforeImage = [];
 
   const match = compute.buildMatchSql(descriptor, config, gate.mode);
   const eligible = await pool.query(match.eligible_count_sql);
@@ -658,7 +661,14 @@ async function runLinkPhase({ descriptor, pool, compute, config, chainId, log, t
   for (let i = 0; i < plans.length; i++) {
     const plan = plans[i];
     if (dryRun || !write.retractionFires(plan, gate.mode)) continue;
-    const removed = await pipeline.withTransaction(pool, (client) => write.executeRetraction(client, plan));
+    const removed = await pipeline.withTransaction(pool, async (client) => {
+      // R-M / LG-17 — the before-image read+write happens on the SAME client, inside
+      // the SAME transaction, strictly BEFORE the retraction call below: a throw here
+      // (disk full, permissions) aborts the transaction and the retraction never runs.
+      const bi = await write.writeBeforeImage(client, plan, [], descriptor.identity.name, clockNow);
+      if (bi.written) beforeImage.push({ ...bi, table: plan.table });
+      return write.executeRetraction(client, plan);
+    });
     written[write.targetKey(i)].retracted = removed;
     written[write.targetKey(i)].deleted = removed;
     log.info(tag, `${plan.table}: retracted ${removed.toLocaleString()} row(s) for re-evaluation `
@@ -727,6 +737,7 @@ async function runLinkPhase({ descriptor, pool, compute, config, chainId, log, t
     prior,
     overrides,
     writeSkipped: false,
+    beforeImage,
   };
 }
 
@@ -865,6 +876,10 @@ async function runCascadePhase({ descriptor, pool, compute, config, chainId, log
   }
   written.privilege = privilege[specs[specs.length - 1].table] || null;
   written.requirements = requirements;
+  // R-M / LG-17 — one entry per destructive-retraction target this run actually wrote
+  // a before-image for (the LG-16 mode="full" repair, below); surfaces as
+  // `before_image_written` audit rows.
+  const beforeImage = [];
 
   const tiers = descriptor.execution.tiers;
   if (!Array.isArray(tiers) || tiers.length === 0) {
@@ -927,6 +942,13 @@ async function runCascadePhase({ descriptor, pool, compute, config, chainId, log
         // is exact.
         tier3Full = { retracted: priorContacts.rows.length, contacts_cleared: 0 };
       } else {
+        // R-M / LG-17 — the before-image read+write happens on the SAME client, inside
+        // the SAME transaction, strictly BEFORE the retraction call below: a throw here
+        // aborts the transaction and the retraction never runs. Separate from
+        // `priorContacts` above (that read serves copyContacts' reverse-clear; this one
+        // is the declared key-columns + nulled-columns audit trail, LG-16's own scope).
+        const bi = await write.writeBeforeImage(client, nullRetractPlan, scopeParams, descriptor.identity.name, runAt);
+        if (bi.written) beforeImage.push({ ...bi, table: nullRetractPlan.table });
         const retracted = await write.executeSetBasedClear(client, nullRetractPlan, scopeParams);
         const nullRetractIdx = specs.indexOf(nullRetractSpec);
         written[write.targetKey(nullRetractIdx)].retracted = retracted;
@@ -1030,6 +1052,7 @@ async function runCascadePhase({ descriptor, pool, compute, config, chainId, log
     overrides,
     writeSkipped: false,
     gatedSkip,
+    beforeImage,
   };
 }
 
@@ -1149,6 +1172,16 @@ function skipRecordsMeta(descriptor, reason) {
       verdict: deriveVerdict(rows),
       rows,
     },
+  };
+}
+
+/** R-M / LG-17 — the INFO audit row per destructive-retraction target a before-image was written for. */
+function beforeImageRow(bi) {
+  return {
+    metric: `before_image_written:${bi.table}`,
+    value: { path: bi.path, rows: bi.rows },
+    threshold: null,
+    status: 'INFO',
   };
 }
 
@@ -1390,6 +1423,9 @@ async function runWithPool(runnable, pool, ctx) {
         // LW-D15 — the declared dry-run posture, on every run that had one, INFO (never a
         // reason to fail — it is the point of the flag, not a defect it found).
         ...(stepCtx.overrides && stepCtx.overrides.dry_run ? [dryRunRow()] : []),
+        // R-M / LG-17 — one row per destructive-retraction target this run actually
+        // wrote a before-image for (link.beforeImage / cascade.beforeImage).
+        ...((link && link.beforeImage) || (cascade && cascade.beforeImage) || []).map(beforeImageRow),
       ];
       const built = buildAuditTable(descriptor, chainId, observations, extraRows, configValues, onlyChecks);
       // The counter SCOPE, per phase. §11's Counter Semantic Contract is a scoping

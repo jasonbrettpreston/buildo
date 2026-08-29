@@ -686,7 +686,8 @@
     "rollback": "none",
     "verify_clean": "generated",
     "cascades": "derived",
-    "interrupted": "force_full_on_next_run"
+    "interrupted": "force_full_on_next_run",
+    "before_image": "generated"
   },
 
   "database": {

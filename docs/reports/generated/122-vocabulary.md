@@ -2,7 +2,7 @@
 <!-- Source of truth: scripts/steps/_schema/step.schema.json (operator ruling R2). -->
 <!-- Regenerate: node scripts/violations/schema-to-vocab.mjs docs/reports/generated/122-vocabulary.md -->
 
-# The step contract — 18 categories, 343 declarable fields
+# The step contract — 18 categories, 349 declarable fields
 
 **Contract version 1 · status `v0-unfrozen-until-C3`.** The schema is canonical; this document is generated from it. Editing this file changes nothing.
 
@@ -26,7 +26,7 @@
 | 10 | `deviations` | 8 | 1 | 0 |
 | 11 | `limitations` | 3 | 0 | 0 |
 | 12 | `interpretation` | 2 | 0 | 0 |
-| 13 | `recovery` | 12 | 6 | 0 |
+| 13 | `recovery` | 18 | 8 | 0 |
 | 14 | `database` | 3 | 1 | 0 |
 | 15 | `counters` | 9 | 0 | 0 |
 | 16 | `config` | 22 | 4 | 0 |
@@ -491,6 +491,12 @@ Grandfathered, never legal for a new step: an existing step must be able to decl
 | `interrupted_why.liveness` | `none` \| object {kind, ref} | † |
 | `interrupted_why.liveness.kind` | `check` · `file` · `table` · `column` · `external` · `spec` | † ! |
 | `interrupted_why.liveness.ref` | string | † |
+| `before_image` | `generated` · `none` | † ! |
+| `before_image_why` | object {text, liveness} | — |
+| `before_image_why.text` | string | † |
+| `before_image_why.liveness` | `none` \| object {kind, ref} | † |
+| `before_image_why.liveness.kind` | `check` · `file` · `table` · `column` · `external` · `spec` | † ! |
+| `before_image_why.liveness.ref` | string | † |
 
 ### database
 
