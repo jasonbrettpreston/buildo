@@ -30,10 +30,13 @@
  *   · ctx.matched     — what the cascade produced this run: the pre-run unlinked count,
  *                       per-tier link counts, the fan-in max, and (mode full only) the
  *                       retraction counts
- *   · ctx.cumulative  — the cumulative link-rate numerator/denominator, over ALL of
- *                       wsib_registry (never run-scoped — most WSIB entries have no
- *                       matching entity in the ~3.9K builder pool, so a run-scoped rate
- *                       reads near-zero on every healthy incremental run)
+ *   · ctx.cumulative  — the runner's generic cumulative-rate field (link_massing still
+ *                       reads it); link_wsib's `link_rate_warn` no longer does (LW-D18,
+ *                       2026-08-29) — the rate is now entities-with-a-link over total
+ *                       entities (`ctx.matched.entities_with_link_count` /
+ *                       `ctx.matched.entities_count`), not wsib_registry rows, because a
+ *                       single magnet entity absorbing hundreds of rows inflated the old
+ *                       row-based ratio without representing hundreds of covered builders
  *   · ctx.written     — PER DECLARED TARGET (written.e1..e4)
  *   · ctx.gate        — the tri-state mode decision + the ledger gated-skip decision
  *   · ctx.prior       — the prior COMPLETED run's declared emit (self-consumed baseline)
@@ -72,12 +75,13 @@ const TOKEN_OVERLAP_CHECK_ID = 'tier3_token_overlap';
  * happen to be, say, "* CONTRACTING". This is the magnet-entity fan-in contamination's
  * root cause (LW-D11).
  *
- * The rule: tokenize both names on whitespace, strip the declared stopwords AND purely
- * numeric tokens (a numbered-company legal name contributes nothing to a match), and
- * require the two token sets to share AT LEAST ONE survivor. `stopwords` is read from
- * the descriptor (Rule 1) — never hardcoded here — and rendered as a SQL array literal
- * (single quotes doubled, the standard SQL-literal escape) so the predicate is one
- * self-contained expression, not a second query round-trip.
+ * The rule: strip `-`/`.`/`'`/`&`/`+` (LW-D18 — punctuation/concatenation-only variants,
+ * e.g. "T.T.S." vs "TTS", must tokenize identically), tokenize both names on whitespace,
+ * strip the declared stopwords AND purely numeric tokens (a numbered-company legal name
+ * contributes nothing to a match), and require the two token sets to share AT LEAST ONE
+ * survivor. `stopwords` is read from the descriptor (Rule 1) — never hardcoded here — and
+ * rendered as a SQL array literal (single quotes doubled, the standard SQL-literal escape)
+ * so the predicate is one self-contained expression, not a second query round-trip.
  *
  * @param {string[]} stopwords - `descriptor.checks[].expect.stopwords` for TOKEN_OVERLAP_CHECK_ID
  * @param {string} leftExpr - a SQL column/expression, e.g. `w.trade_name_normalized`
@@ -86,7 +90,8 @@ const TOKEN_OVERLAP_CHECK_ID = 'tier3_token_overlap';
  */
 function tokenOverlapClause(stopwords, leftExpr, rightExpr) {
   const arraySql = `ARRAY[${stopwords.map((w) => `'${String(w).replace(/'/g, "''")}'`).join(',')}]::text[]`;
-  const tokensOf = (expr) => `(SELECT array_agg(t) FROM unnest(regexp_split_to_array(${expr}, '\\s+')) t WHERE t <> ALL(${arraySql}) AND t !~ '^[0-9]+$')`;
+  const stripped = (expr) => `regexp_replace(${expr}, '[-.''&+]', '', 'g')`;
+  const tokensOf = (expr) => `(SELECT array_agg(t) FROM unnest(regexp_split_to_array(${stripped(expr)}, '\\s+')) t WHERE t <> ALL(${arraySql}) AND t !~ '^[0-9]+$')`;
   return `${tokensOf(leftExpr)} && ${tokensOf(rightExpr)}`;
 }
 
@@ -478,6 +483,7 @@ function buildCumulativeSql(descriptor) {
      FROM wsib_registry) AS tier_confidence_split,
   (SELECT COUNT(*) FROM entities e WHERE e.is_wsib_registered = true
      AND NOT EXISTS (SELECT 1 FROM wsib_registry w WHERE w.linked_entity_id = e.id)) AS registered_entities_with_zero_links,
+  (SELECT COUNT(*) FROM entities WHERE is_wsib_registered = true) AS entities_with_link_count,
   (SELECT COALESCE(MAX(n), 0) FROM (SELECT COUNT(*) AS n FROM wsib_registry WHERE linked_entity_id IS NOT NULL GROUP BY linked_entity_id) f) AS entity_fanin_max,
   (SELECT COUNT(*) FROM (SELECT COUNT(*) AS n FROM wsib_registry WHERE linked_entity_id IS NOT NULL GROUP BY linked_entity_id HAVING COUNT(*) >= 10) m) AS magnet_entities_fanin_ge_10,
   (SELECT round(100.0 * count(*) FILTER (WHERE
@@ -524,11 +530,22 @@ function no_match(ctx) {
  * compare the WRONG direction (`pct <= 5` reads "unlinked must stay under 5%", which is
  * backwards for a 4.55-11.53% clean/cumulative rate). `pct >= <n>` (verdict.js, this
  * pilot) is the correctly-shaped floor form.
+ *
+ * LW-D18 (2026-08-29) — denominator re-ruled from ROWS to ENTITIES. The old
+ * linked-wsib-rows-over-total-wsib-rows ratio double-counted every magnet (a single
+ * contaminated entity absorbing hundreds of wsib_registry rows inflated the numerator
+ * without representing hundreds of genuinely-covered builders) and undercounted the
+ * thing an operator actually cares about — "what share of our builder pool has a WSIB
+ * record at all?" Now `entities.is_wsib_registered = true` count (ctx.matched.
+ * entities_with_link_count, the SAME generic post-write-observation mechanism every
+ * other cumulative check here uses) over `ctx.matched.entities_count` (the runner's
+ * own pre-write entity-corpus snapshot — entities are never inserted/deleted by this
+ * step, so pre- and post-write counts are identical).
  */
 function link_rate_warn(ctx) {
-  const c = ctx.cumulative || {};
-  const total = c.total || 0;
-  const linked = c.linked || 0;
+  const m = ctx.matched || {};
+  const total = m.entities_count || 0;
+  const linked = m.entities_with_link_count || 0;
   const rate = total > 0 ? (linked / total) * 100 : 0;
   ctx.report('link_rate_warn', {
     value: round(rate),

@@ -417,6 +417,60 @@ R-M/LW-D17's before-image mechanism produced link_wsib's own FIRST genuine befor
 
 ---
 
+## §8d. WF3-H — LW-D18 tier-3 precision hardening (2026-08-29)
+
+A 60-row precision sample of the LW-D14-fixed tier-3 population (`S/lwd14_precision_recall.md`, evidence produced by a parallel review agent) measured only 15.0%–25.0% genuine precision — `similarity()`+token-overlap alone was not enough. 80% of the confirmed-DIFFERENT failures shared one of 15 industry-generic words the declared stopword list didn't cover (GENERAL, RENOVATION(S), MANAGEMENT, DESIGN, BUILD, CUSTOM, HOME, IMPROVEMENT(S), BUILDING, ASSOCIATES, TOP, ALL, QUALITY), and a punctuation-only variant (e.g. "T.T.S." vs "TTS") never tokenized identically since the tokenizer split on whitespace only.
+
+**Fix, same declared mechanism as LW-D14 (Spec 124 §7 rung (e), no new tunable):**
+1. Widened `link-wsib.descriptor.json`'s `tier3_token_overlap` `expect.stopwords` with the 15 words above (31 total, up from 16).
+2. `tokenOverlapClause` (`scripts/lib/compute/link-wsib.js`) now strips `-`/`.`/`'`/`&`/`+` (`regexp_replace(expr, '[-.''&+]', '', 'g')`) before `regexp_split_to_array`, so a punctuation-only variant tokenizes identically (verified live: WSIB #120167 "R.L. URBAN INNOVATIONS" ↔ entity "RL URBAN INNOVATIONS" — the T.T.S.-class fix's first real-world hit).
+3. Red-first locks: `src/tests/db/link-wsib-token-overlap.db.test.ts` (new, 26 tests) — one negative-control fixture PER LW-D18 word class (a synthetic pair sharing ONLY that word, ± an already-declared stopword, mirroring the real evidence pairs), each proven to (a) NOT overlap under the current (fixed) list and (b) DID falsely overlap under the frozen pre-LW-D18 list — both directions locked permanently, not just proven red during development. Plus a T.T.S. positive control (overlaps after the strip) and its own pre-strip negative control, and a direct `regexp_replace` probe.
+4. **T2 (`link_rate_warn`) re-ruled**: denominator moved from wsib_registry ROWS to ENTITIES (`entities.is_wsib_registered = true` count / total entities) — the old row-based ratio let a single magnet's hundreds of contaminated rows inflate the numerator without representing hundreds of genuinely-covered builders. New `buildCumulativeSql` column `entities_with_link_count`; `link_rate_warn` reads `ctx.matched.entities_with_link_count`/`ctx.matched.entities_count` (the SAME generic post-write-observation + pre-write-snapshot mechanisms every other check here uses), no longer `ctx.cumulative`. Default kept at 5 — see the measured entity-level truth in the before/after table below (well above the floor, genuine WARN headroom). `why` text, seed description, and `World`/`SABOTAGE_BY_VAR[T2]` fixtures in `violations.test.ts` all updated to match.
+5. Spec 60 (`docs/specs/01-pipeline/60_shared_steps.md`, "### Link WSIB") amended again — NOT Spec 46 (same citation correction as WF3-F: Spec 46 §3 documents `enrich-wsib.js`'s Serper pre-flight generic-name blocklist, a DIFFERENT list for a DIFFERENT script; re-verified before writing, per CLAUDE.md PD #10).
+
+**Self-found diagnostic bug (same pattern as WF3-F's COALESCE bug, caught before trusting the first capture):** `docs/reports/golden/link_wsib/invariants.json`'s `wsib_tier3_token_overlap_pass_pct` SQL is a hand-duplicated copy of `tokenOverlapClause`'s logic (Rule 1 — the descriptor is compute's source of truth, but the golden-capture harness's invariants file is a SEPARATE, independently-authored SQL string, not generated from the descriptor). It still had the pre-LW-D18 16-word list and no punctuation strip. First forced-FULL capture measured 97.99% where the real predicate (independently re-verified via `tokenOverlapClause` itself, 0/548 rows disagreeing) guaranteed 100%. Regenerated the invariant's SQL programmatically FROM the real `tokenOverlapClause`/`tokenOverlapStopwords` functions (never hand-retyped) and re-ran the capture — confirmed 100.00%.
+
+**Live repair, fired twice (idempotent), foreground, no background polling.** Run 1 (313.1s) retracted 993 LW-D14-era tier-3 links and relinked 548 clean ones (2 iterations, not exhausted) — but its capture used the stale invariant SQL above (97.99%), so its `sources-full-forced-1.json` is kept as `sources-full-forced-1-stale-invariant.json`, a diagnostic record, not the authoritative one. Run 2 (304.6s), after the invariant fix, retracted the SAME 548 and relinked the SAME 548 — a second idempotency proof (WF3-F's run-2 already proved this once; LW-D18 confirms it generalizes past a single peel). `wsib_registry` (121,116) and `entities` (3,948) row counts unchanged both times — the safety condition ("if the FULL does not converge or any row-count change appears → STOP") never triggered.
+
+| Metric | Before (post-WF3-F, `ff06adf1`) | After (post-WF3-H) |
+|---|---|---|
+| `wsib_registry` total rows | 121,116 | 121,116 (unchanged) |
+| Tier-3 (0.60) linked | 993 | 548 |
+| Cumulative linked (all tiers) | 1,317 | 871 (75+249+548) |
+| `entities.is_wsib_registered` (entity link count) | 587 | 551 |
+| `entity_fanin_max` | 69 | 16 |
+| Magnets (fan-in ≥ 10) | 20 | 7 |
+| `tier3_token_overlap_pass_pct` (widened-list formula) | 53.88%¹ | 100.00% |
+| `link_rate_warn` (T2, entity-based, new definition) | n/a (old row-based definition) | 13.96% (551/3,948) — PASS vs the 5% floor |
+| `entity_fanin_warn` (T6) verdict | WARN (69 > 20) | **PASS** (16 ≤ 20) — first time this check has ever passed live |
+
+¹ Measured against the `ff06adf1` 993-row corpus using the NEW (post-widening) formula, before the repair ran — shows the widened rule alone would already reject ~46% of the old tier-3 population even without a re-run; the repair makes that real.
+
+**Fresh 60-row precision sample (tier-3 population 548, seed `20260828002`, same mulberry32/Fisher–Yates methodology as the evidence file, same adjudication rule):**
+
+**SAME: 19 (31.7%). UNSURE: 9 (15.0%). DIFFERENT: 32 (53.3%).** (Up to 46.7% counting UNSURE as SAME — roughly double the pre-fix 15.0–25.0%.)
+
+| Outcome | wsib id(s) | Representative pair | Why |
+|---|---|---|---|
+| SAME | 6834, 9112, 115509, 120167 | RED DESIGN + BUILD ↔ RED DESIGN BUILD; R.L. URBAN INNOVATIONS ↔ RL URBAN INNOVATIONS | Punctuation-only variants — the LW-D18 tokenizer fix's direct hits |
+| SAME | 4893, 111232 | ELITE RENOVATIONS / ELITE CONSTRUCTION ↔ ELITE CONSTRUCTION & RENOVATIONS (same entity 583, both registrations) | Distinctive brand token (ELITE) repeated across 2 independent WSIB rows into the same entity |
+| SAME | 6935, 15958, 21802, 30134, 31418, 119160, 120981 | ALAIR HOMES HURON ↔ ALAIR HOMES; MAXWELL DAVID HOLMES CONTRACTING/MDH ↔ MAXWELL CONTRACTING; COLE GENERAL CONTRACTING/WAYNE B COLE ↔ COLE CONTRACTING; BLACK & MCDONALD ↔ BLACK AND MCDONALD; WSP ACCOUNT 1/WSP CANADA ↔ WSP CANADA GROUP | Distinctive, low-collision-risk brand or owner-surname token, several with real-world corroboration (WAYNE B **COLE** ↔ **COLE** Contracting; MDH initials ↔ **MAXWELL**) |
+| SAME | 7247, 30286, 69118, 90558, 92874, 116318 | 4K RENOVATIONS/4K AUTHENTIC CRAFTMANSHIP ↔ 4K AUTHENTIC CRAFTSMANSHIP; KEVIN MOORE ↔ KEVIN MOOTE; CHRISTOPHER MURRAY ↔ CHRISTOPHER PATRICK MURRAY; DEVON ANDERSON ↔ DEZON ANDERSON; WILLIAM G. THOMPSON ↔ WILLIAM LEONARD THOMPSON | Exact or near-exact full name / spelling-variant match, strong owner-identity corroboration |
+| UNSURE | 15674, 24098, 25828, 29593, 45035, 53168, 71230, 110288, 116488 | BLUE BUILDING ↔ BLUE LION BUILDING; PCR CONSTRUCTORS ↔ PCL CONSTRUCTORS CANADA; ROB/ROBERT MCDONALD ↔ ROBIN MCDONALD; JORGE MARTINEZ ↔ JORGE MARTINS; UNIVERSAL CONSTRUCTION ↔ UNIVERSAL BUILDING CONSTRUCTION (same pair the evidence file already rated UNSURE) | Same-first-name/surname-variant or generic-descriptor-only overlap — genuinely ambiguous, not miscoded |
+| DIFFERENT (magnet clusters via a residual generic word NOT on the LW-D18 list) | 9251, 21808, 27267, 91389 (entity 770, shares "AND") | ART A CONSTRUCTION AND RENOVATION ↔ ATOZ CONSTRUCTION AND HOME RENOVATIONS | "AND" is not a declared stopword — the SAME entity 770 the evidence file already flagged as a magnet is still reachable via this one filler word |
+| DIFFERENT (residual generic words not on the 15-word list) | 3611, 25426, 26233, 53369 ("RESTORATION"/"PROPERTIES"/"STRUCTURES"); 59971, 59996, 60997 ("MECHANICAL SERVICES", entity 1958); 74520, 75121 ("FIRE PROTECTION", entity 774); 76742, 77086 ("ENGINEERING", entity 1118); 92366 ("DRYWALL"); 104267 ("CARPENTRY"); 120979 ("WESTERN") | APG RESTORATION ↔ ALTO RESTORATION; B & B / BAM / BSG MECHANICAL SERVICES ↔ BRADLEY MECHANICAL SERVICES; WRIGHT CONSTRUCTION WESTERN ↔ WESTERN CONSTRUCTION & DESIGNS; etc. | Same shape as the fixed 15 words, but NOT in the coordinator's named list — a genuine, filed residual, not silently expanded into scope |
+| DIFFERENT (single-letter token collision, a side effect of punctuation-stripping around initials) | 13769, 40195, 88245 (all entity 523 "D C HAMMER CONSTRUCTION") | D & D CONSTRUCTION ↔ D C HAMMER CONSTRUCTION | "D & D" → tokens `{D, D, CONSTRUCTION}`; stripping CONSTRUCTION leaves the bare initial "D", which trivially overlaps entity "D C HAMMER"'s own "D" token — pre-existing since LW-D14 (whitespace-splitting already isolated "D" either side of "&"), not newly introduced by LW-D18, but not fixed here (out of the named 15-word/punctuation scope) |
+| DIFFERENT (first-name-only, no surname corroboration) | 2998, 18127, 38630, 39576, 39585, 43176, 90602, 105004, 119684 | JEFFREY LEE ↔ JEFFREY LEM; MIKE'S ACCOUSTICS/MICHAEL PERRY ↔ MICHAEL PERGER (the exact row the evidence file already rated DIFFERENT) | Consistent with the evidence file's own "same first name, different surname" residual — no token rule fixes this without a second signal (phone/address/permit co-occurrence) |
+| DIFFERENT (residual singular-stopword gap, evidence item 2) | 20527, 21405 | LONDON DEVELOPMENT ↔ LONDONBERRY DEVELOPMENT | Only the plural "DEVELOPMENTS" is a declared stopword; the evidence file named this exact gap and it was explicitly left out of WF3-H's scope |
+
+Filed to `docs/reports/review_followups.md`: a MED follow-up naming every residual generic word found in this sample (AND, RESTORATION, PROPERTIES, STRUCTURES, MECHANICAL, ENGINEERING, DRYWALL, CARPENTRY, FIRE, PROTECTION, CONSTRUCTORS, DEVELOPMENT-singular) plus the single-letter-initial token-collision class, for a future WF3 pass — not fixed here, per the coordinator's explicit "simplest closed form" scope (the 15 named words + the punctuation strip only).
+
+`violations.test.ts` (71/71) + `golden-fingerprint.infra.test.ts` (17/17) + `step-library.logic.test.ts` (117/117) + `step-conformance.infra.test.ts` (103/103) + the new `link-wsib-token-overlap.db.test.ts` (26/26, `BUILDO_TEST_DB=1`) green after the fix.
+
+**Defect ledger:** `LW-D18` CLOSED — see `docs/reports/defect-ledger.md`.
+
+---
+
 ## §0. PH-0 seed — measured boundary table (2026-08-28 planning session)
 
 > Executed against `127.0.0.1:54322/postgres` (schema_migrations row count 242, max applied filename `245_parcels_centroid_geom_invalidation.sql`) and the working tree at HEAD, branch `wf2/deep-scrapes-restore-l0`. This is a SEED for commit 1's full PH-0 pass, not the pass itself — commit 1 must re-execute every row below, not copy it.

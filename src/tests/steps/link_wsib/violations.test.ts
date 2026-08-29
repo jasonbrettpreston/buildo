@@ -241,6 +241,7 @@ interface World {
     dead_bucket_050_060_count: number;
     registered_entities_with_zero_links: number;
     entities_count: number;
+    entities_with_link_count: number;
     tier3_full: { exhausted: boolean; contacts_cleared?: number } | null;
     entity_fanin_max: number;
     magnet_entities_fanin_ge_10: number;
@@ -1098,12 +1099,13 @@ function healthyWorld(): World {
       dead_bucket_050_060_count: 0,
       registered_entities_with_zero_links: 0,
       entities_count: LIVE_ENTITIES_TOTAL,
+      entities_with_link_count: 500, // LW-D18: healthy — 500/3,948 ≈ 12.7%, comfortably >= the T2 5% floor
       tier3_full: null, // mode never resolves full in this fixture set — T7/A-7 is commit 8's budgeted act
       entity_fanin_max: 12, // healthy: below the T6 default (20)
       magnet_entities_fanin_ge_10: 0,
       tier3_token_overlap_pass_pct: 100, // LW-D14: healthy post-fix — buildFuzzyMatchSql requires overlap at write time
     },
-    cumulative: { total: LIVE_WSIB_TOTAL, linked: LIVE_WSIB_LINKED }, // 11.53% >= the T2 5% floor
+    cumulative: { total: LIVE_WSIB_TOTAL, linked: LIVE_WSIB_LINKED }, // legacy field, no longer read by link_rate_warn (LW-D18) — kept for other ctx shape consumers
     written: { privilege: { bypassrls: true, policies: 0, rls_enabled: true } },
     gate: { mode: 'incremental', reason: 'unchanged', skipped: false, configVersionUpdatedAt: '2026-08-28T00:00:00Z' },
     overrides: { force_full: false },
@@ -1113,7 +1115,7 @@ function healthyWorld(): World {
 
 /** One sabotage mutator per non-INFO check — by the P4 variable first (T2/T6), then by id. */
 const SABOTAGE_BY_VAR: Record<string, (w: World) => void> = {
-  [CONFIG_VARS.T2]: (w) => { w.cumulative = { total: 1_000_000, linked: 1 }; }, // ~0.0001% link rate vs the 5% floor
+  [CONFIG_VARS.T2]: (w) => { w.matched = { ...w.matched, entities_with_link_count: 1 }; }, // LW-D18: 1/3,948 ≈ 0.025% entity link rate vs the 5% floor
   [CONFIG_VARS.T6]: (w) => { w.matched = { ...w.matched, entity_fanin_max: LIVE_FANIN_MAX, magnet_entities_fanin_ge_10: LIVE_MAGNET_COUNT }; }, // 2,118 vs the 20 default
   [CONFIG_VARS.T8]: (w) => { w.matched = { ...w.matched, tier3_token_overlap_pass_pct: 10.49 }; }, // LW-D14: live pre-fix measurement, 840/8,009 vs the 50% floor
 };

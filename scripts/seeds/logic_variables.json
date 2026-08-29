@@ -793,7 +793,7 @@
   "link_wsib_link_rate_warn_pct": {
     "default": 5,
     "type": "number",
-    "description": "Minimum cumulative link rate (%) — linked wsib_registry rows over all rows — below which link_wsib's link_rate_warn check WARNs. CONSUMED by link_wsib via checks[].limit_from_config (a pct >= floor form). Pre-externalization this was the bare literal 5 in `linkRate >= 5 ? PASS : WARN`, with zero registered variables (LW-D1, the P4 violation C1 pilot 4 closes).",
+    "description": "Minimum entity-level link rate (%) — entities with >=1 linked wsib_registry row (entities.is_wsib_registered=true) over total entities — below which link_wsib's link_rate_warn check WARNs. CONSUMED by link_wsib via checks[].limit_from_config (a pct >= floor form). Pre-externalization this was the bare literal 5 in `linkRate >= 5 ? PASS : WARN`, with zero registered variables (LW-D1, the P4 violation C1 pilot 4 closes). LW-D18 (2026-08-29) re-ruled the denominator from wsib_registry ROWS to ENTITIES (a magnet entity's hundreds of contaminated rows no longer inflate the ratio); default kept at 5 — measured entity-level truth post-LW-D18 sits well above the floor, giving genuine WARN headroom (see docs/reports/defect-ledger.md LW-D18 for the exact measured figure).",
     "min": 0,
     "max": 100
   },

@@ -3,21 +3,21 @@
   "spec": "docs/specs/01-pipeline/122_pipeline_step_optimization.md §5.3",
   "step": "scripts/link-wsib.js",
   "chain": "sources",
-  "git_head": "d07529af3595db7fb6cca895d10bc1775b1684e0",
+  "git_head": "ff06adf16ecf8ffca58e01b55bdc21fb5978d486",
   "exit_code": 0,
   "signal": null,
   "summary": {
     "records_total": 119799,
-    "records_new": 993,
-    "records_updated": 993,
+    "records_new": 548,
+    "records_updated": 548,
     "records_meta": {
-      "duration_ms": 298045,
+      "duration_ms": 313121,
       "unlinked_start": 119799,
-      "run_matched": 993,
+      "run_matched": 548,
       "matches_tier_1_trade": 0,
       "matches_tier_2_legal": 0,
-      "matches_tier_3_fuzzy": 993,
-      "no_match_count": 118806,
+      "matches_tier_3_fuzzy": 548,
+      "no_match_count": 119251,
       "threshold_updated_at": "2026-06-10T14:01:54.545Z",
       "config": {
         "wsib_fuzzy_match_threshold": 0.6,
@@ -29,17 +29,14 @@
         "link_wsib_tier3_full_max_iterations": 20,
         "link_wsib_tier3_token_overlap_fail_pct": 50
       },
-      "terminal": "linked_with_warnings",
+      "terminal": "linked_incremental",
       "ledger_row": "chain_owned",
-      "checks_failed": 2,
-      "errors": [
-        "link_rate_warn: {\"link_rate_pct\":1.0874,\"linked\":1317,\"total\":121116,\"unlinked_pct\":98.9126}",
-        "entity_fanin_warn: {\"entity_fanin_max\":69,\"magnets_fanin_ge_10\":20}"
-      ],
+      "checks_passed": "all",
+      "checks_failed": 0,
       "audit_table": {
         "phase": 19,
         "name": "WSIB Registry Matching",
-        "verdict": "WARN",
+        "verdict": "PASS",
         "rows": [
           {
             "metric": "gate_decision",
@@ -86,35 +83,35 @@
           },
           {
             "metric": "tier_3_fuzzy_matches",
-            "value": 993,
+            "value": 548,
             "threshold": "viol == 0",
             "status": "INFO"
           },
           {
             "metric": "no_match",
-            "value": 118806,
+            "value": 119251,
             "threshold": "viol == 0",
             "status": "INFO"
           },
           {
             "metric": "link_rate_warn",
             "value": {
-              "link_rate_pct": 1.0874,
-              "unlinked_pct": 98.9126,
-              "linked": 1317,
-              "total": 121116
+              "link_rate_pct": 13.9564,
+              "unlinked_pct": 86.0436,
+              "linked": 551,
+              "total": 3948
             },
             "threshold": "pct >= 5",
-            "status": "WARN"
+            "status": "PASS"
           },
           {
             "metric": "entity_fanin_warn",
             "value": {
-              "entity_fanin_max": 69,
-              "magnets_fanin_ge_10": 20
+              "entity_fanin_max": 16,
+              "magnets_fanin_ge_10": 7
             },
             "threshold": "viol <= 20",
-            "status": "WARN"
+            "status": "PASS"
           },
           {
             "metric": "tier3_token_overlap",
@@ -154,7 +151,7 @@
               "retracted": 993,
               "contacts_cleared": 0,
               "iterations": 2,
-              "relinked_total": 993,
+              "relinked_total": 548,
               "exhausted": false
             },
             "threshold": "viol == 0",
@@ -164,7 +161,7 @@
             "metric": "tier3_full_iterations",
             "value": {
               "iterations": 2,
-              "relinked_total": 993
+              "relinked_total": 548
             },
             "threshold": "viol == 0",
             "status": "INFO"
@@ -184,7 +181,7 @@
           {
             "metric": "before_image_written:wsib_registry",
             "value": {
-              "path": "docs/reports/golden/link_wsib/before-image/2026-08-29T02-00-45.432Z-wsib_registry.jsonl",
+              "path": "docs/reports/golden/link_wsib/before-image/2026-08-29T02-43-17.195Z-wsib_registry.jsonl",
               "rows": 993
             },
             "threshold": null,
@@ -192,13 +189,13 @@
           },
           {
             "metric": "sys_velocity_rows_sec",
-            "value": 401.94,
+            "value": 382.59,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "sys_duration_ms",
-            "value": 298049,
+            "value": 313124,
             "threshold": null,
             "status": "INFO"
           }
@@ -247,17 +244,17 @@
     }
   ],
   "parse_errors": [],
-  "verdict": "WARN",
+  "verdict": "PASS",
   "ledger_status": [],
-  "stdout": "{\"level\":\"INFO\",\"tag\":\"[link_wsib]\",\"msg\":\"[link_wsib] target: link_wsib (descriptor.database) → database=postgres user=postgres migrations=242 (floor 240)\"}\n{\"level\":\"INFO\",\"tag\":\"[link_wsib]\",\"msg\":\"cascade mode gate: FULL (force_full_env)\"}\nPIPELINE_SUMMARY:{\"records_total\":119799,\"records_new\":993,\"records_updated\":993,\"records_meta\":{\"duration_ms\":298045,\"unlinked_start\":119799,\"run_matched\":993,\"matches_tier_1_trade\":0,\"matches_tier_2_legal\":0,\"matches_tier_3_fuzzy\":993,\"no_match_count\":118806,\"threshold_updated_at\":\"2026-06-10T14:01:54.545Z\",\"config\":{\"wsib_fuzzy_match_threshold\":0.6,\"link_wsib_link_rate_warn_pct\":5,\"link_wsib_tier1_confidence\":0.95,\"link_wsib_tier2_confidence\":0.9,\"link_wsib_tier3_confidence\":0.6,\"link_wsib_entity_fanin_warn\":20,\"link_wsib_tier3_full_max_iterations\":20,\"link_wsib_tier3_token_overlap_fail_pct\":50},\"terminal\":\"linked_with_warnings\",\"ledger_row\":\"chain_owned\",\"checks_failed\":2,\"errors\":[\"link_rate_warn: {\\\"link_rate_pct\\\":1.0874,\\\"linked\\\":1317,\\\"total\\\":121116,\\\"unlinked_pct\\\":98.9126}\",\"entity_fanin_warn: {\\\"entity_fanin_max\\\":69,\\\"magnets_fanin_ge_10\\\":20}\"],\"audit_table\":{\"phase\":19,\"name\":\"WSIB Registry Matching\",\"verdict\":\"WARN\",\"rows\":[{\"metric\":\"gate_decision\",\"value\":{\"mode\":\"full\",\"reason\":\"force_full_env\",\"gated_skip\":false},\"threshold\":\"viol == 0\",\"status\":\"INFO\"},{\"metric\":\"override_force_full_present\",\"value\":true,\"threshold\":\"viol == 0\",\"status\":\"INFO\"},{\"metric\":\"full_repair_empty_source_guard\",\"value\":{\"mode\":\"full\",\"entities_count\":3948},\"threshold\":\"viol == 0\",\"status\":\"PASS\"},{\"metric\":\"unlinked_start\",\"value\":119799,\"threshold\":\"viol == 0\",\"status\":\"INFO\"},{\"metric\":\"tier_1_trade_matches\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\"},{\"metric\":\"tier_2_legal_matches\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\"},{\"metric\":\"tier_3_fuzzy_matches\",\"value\":993,\"threshold\":\"viol == 0\",\"status\":\"INFO\"},{\"metric\":\"no_match\",\"value\":118806,\"threshold\":\"viol == 0\",\"status\":\"INFO\"},{\"metric\":\"link_rate_warn\",\"value\":{\"link_rate_pct\":1.0874,\"unlinked_pct\":98.9126,\"linked\":1317,\"total\":121116},\"threshold\":\"pct >= 5\",\"status\":\"WARN\"},{\"metric\":\"entity_fanin_warn\",\"value\":{\"entity_fanin_max\":69,\"magnets_fanin_ge_10\":20},\"threshold\":\"viol <= 20\",\"status\":\"WARN\"},{\"metric\":\"tier3_token_overlap\",\"value\":{\"tier3_token_overlap_pass_pct\":100},\"threshold\":\"pct >= 50\",\"status\":\"PASS\"},{\"metric\":\"orphan_linked_entity_id\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\"},{\"metric\":\"confidence_outside_closed_set\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\"},{\"metric\":\"dead_bucket_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\"},{\"metric\":\"registered_entities_with_zero_links\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\"},{\"metric\":\"tier3_full_not_converged\",\"value\":{\"retracted\":993,\"contacts_cleared\":0,\"iterations\":2,\"relinked_total\":993,\"exhausted\":false},\"threshold\":\"viol == 0\",\"status\":\"PASS\"},{\"metric\":\"tier3_full_iterations\",\"value\":{\"iterations\":2,\"relinked_total\":993},\"threshold\":\"viol == 0\",\"status\":\"INFO\"},{\"metric\":\"contacts_cleared_on_retraction\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\"},{\"metric\":\"write_privilege\",\"value\":\"bypassrls=true policies=0\",\"threshold\":\"viol == 0\",\"status\":\"PASS\"},{\"metric\":\"before_image_written:wsib_registry\",\"value\":{\"path\":\"docs/reports/golden/link_wsib/before-image/2026-08-29T02-00-45.432Z-wsib_registry.jsonl\",\"rows\":993},\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":401.94,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":298049,\"threshold\":null,\"status\":\"INFO\"}]}}}\nPIPELINE_META:{\"reads\":{\"wsib_registry\":[\"id\",\"trade_name_normalized\",\"legal_name_normalized\",\"linked_entity_id\",\"match_confidence\",\"matched_at\",\"primary_phone\",\"primary_email\",\"website\"],\"entities\":[\"id\",\"name_normalized\",\"permit_count\",\"is_wsib_registered\",\"primary_phone\",\"primary_email\",\"website\"]},\"writes\":{\"wsib_registry\":[\"linked_entity_id\",\"match_confidence\",\"matched_at\"],\"entities\":[\"is_wsib_registered\",\"primary_phone\",\"primary_email\",\"website\"]}}\n\n[link_wsib] completed in 298.1s\n",
+  "stdout": "{\"level\":\"INFO\",\"tag\":\"[link_wsib]\",\"msg\":\"[link_wsib] target: link_wsib (descriptor.database) → database=postgres user=postgres migrations=242 (floor 240)\"}\n{\"level\":\"INFO\",\"tag\":\"[link_wsib]\",\"msg\":\"cascade mode gate: FULL (force_full_env)\"}\nPIPELINE_SUMMARY:{\"records_total\":119799,\"records_new\":548,\"records_updated\":548,\"records_meta\":{\"duration_ms\":313121,\"unlinked_start\":119799,\"run_matched\":548,\"matches_tier_1_trade\":0,\"matches_tier_2_legal\":0,\"matches_tier_3_fuzzy\":548,\"no_match_count\":119251,\"threshold_updated_at\":\"2026-06-10T14:01:54.545Z\",\"config\":{\"wsib_fuzzy_match_threshold\":0.6,\"link_wsib_link_rate_warn_pct\":5,\"link_wsib_tier1_confidence\":0.95,\"link_wsib_tier2_confidence\":0.9,\"link_wsib_tier3_confidence\":0.6,\"link_wsib_entity_fanin_warn\":20,\"link_wsib_tier3_full_max_iterations\":20,\"link_wsib_tier3_token_overlap_fail_pct\":50},\"terminal\":\"linked_incremental\",\"ledger_row\":\"chain_owned\",\"checks_passed\":\"all\",\"checks_failed\":0,\"audit_table\":{\"phase\":19,\"name\":\"WSIB Registry Matching\",\"verdict\":\"PASS\",\"rows\":[{\"metric\":\"gate_decision\",\"value\":{\"mode\":\"full\",\"reason\":\"force_full_env\",\"gated_skip\":false},\"threshold\":\"viol == 0\",\"status\":\"INFO\"},{\"metric\":\"override_force_full_present\",\"value\":true,\"threshold\":\"viol == 0\",\"status\":\"INFO\"},{\"metric\":\"full_repair_empty_source_guard\",\"value\":{\"mode\":\"full\",\"entities_count\":3948},\"threshold\":\"viol == 0\",\"status\":\"PASS\"},{\"metric\":\"unlinked_start\",\"value\":119799,\"threshold\":\"viol == 0\",\"status\":\"INFO\"},{\"metric\":\"tier_1_trade_matches\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\"},{\"metric\":\"tier_2_legal_matches\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\"},{\"metric\":\"tier_3_fuzzy_matches\",\"value\":548,\"threshold\":\"viol == 0\",\"status\":\"INFO\"},{\"metric\":\"no_match\",\"value\":119251,\"threshold\":\"viol == 0\",\"status\":\"INFO\"},{\"metric\":\"link_rate_warn\",\"value\":{\"link_rate_pct\":13.9564,\"unlinked_pct\":86.0436,\"linked\":551,\"total\":3948},\"threshold\":\"pct >= 5\",\"status\":\"PASS\"},{\"metric\":\"entity_fanin_warn\",\"value\":{\"entity_fanin_max\":16,\"magnets_fanin_ge_10\":7},\"threshold\":\"viol <= 20\",\"status\":\"PASS\"},{\"metric\":\"tier3_token_overlap\",\"value\":{\"tier3_token_overlap_pass_pct\":100},\"threshold\":\"pct >= 50\",\"status\":\"PASS\"},{\"metric\":\"orphan_linked_entity_id\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\"},{\"metric\":\"confidence_outside_closed_set\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\"},{\"metric\":\"dead_bucket_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\"},{\"metric\":\"registered_entities_with_zero_links\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\"},{\"metric\":\"tier3_full_not_converged\",\"value\":{\"retracted\":993,\"contacts_cleared\":0,\"iterations\":2,\"relinked_total\":548,\"exhausted\":false},\"threshold\":\"viol == 0\",\"status\":\"PASS\"},{\"metric\":\"tier3_full_iterations\",\"value\":{\"iterations\":2,\"relinked_total\":548},\"threshold\":\"viol == 0\",\"status\":\"INFO\"},{\"metric\":\"contacts_cleared_on_retraction\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\"},{\"metric\":\"write_privilege\",\"value\":\"bypassrls=true policies=0\",\"threshold\":\"viol == 0\",\"status\":\"PASS\"},{\"metric\":\"before_image_written:wsib_registry\",\"value\":{\"path\":\"docs/reports/golden/link_wsib/before-image/2026-08-29T02-43-17.195Z-wsib_registry.jsonl\",\"rows\":993},\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":382.59,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":313124,\"threshold\":null,\"status\":\"INFO\"}]}}}\nPIPELINE_META:{\"reads\":{\"wsib_registry\":[\"id\",\"trade_name_normalized\",\"legal_name_normalized\",\"linked_entity_id\",\"match_confidence\",\"matched_at\",\"primary_phone\",\"primary_email\",\"website\"],\"entities\":[\"id\",\"name_normalized\",\"permit_count\",\"is_wsib_registered\",\"primary_phone\",\"primary_email\",\"website\"]},\"writes\":{\"wsib_registry\":[\"linked_entity_id\",\"match_confidence\",\"matched_at\"],\"entities\":[\"is_wsib_registered\",\"primary_phone\",\"primary_email\",\"website\"]}}\n\n[link_wsib] completed in 313.1s\n",
   "stderr": "",
   "pipeline_runs": [],
-  "pipeline_runs_max_id_before": 1703,
+  "pipeline_runs_max_id_before": 1704,
   "table_state": [
     {
       "table": "entities",
       "row_count": 3948,
-      "content_hash": "37d345db38f2c4877ecb23fe513f418f",
+      "content_hash": "f686491b5c715bdd1795c43ee3ba3935",
       "order_by": "explicit",
       "order_columns": [
         "id"
@@ -274,7 +271,7 @@
       "table": "wsib_registry",
       "row_count": 121116,
       "ceiling_bypassed": "projected",
-      "content_hash": "f0deb0f6f4566284098ce152ca297190",
+      "content_hash": "7fd442c1db585b8260527b3f6bf007a2",
       "order_by": "explicit",
       "order_columns": [
         "id"
@@ -290,8 +287,8 @@
   "tables_source": "descriptor",
   "table_row_ceiling": 100000,
   "table_timing": {
-    "entities": 6,
-    "wsib_registry": 84
+    "entities": 5,
+    "wsib_registry": 100
   },
   "table_specs": {
     "entities": {
@@ -329,19 +326,19 @@
     },
     {
       "name": "wsib_tier3_token_overlap_pass_pct",
-      "value": "100.00"
+      "value": "97.99"
     },
     {
       "name": "wsib_entity_fanin_max",
-      "value": "69"
-    },
-    {
-      "name": "wsib_entity_fanin_p99",
       "value": "16"
     },
     {
+      "name": "wsib_entity_fanin_p99",
+      "value": "10"
+    },
+    {
       "name": "wsib_magnet_entities_fanin_ge_10",
-      "value": "20"
+      "value": "7"
     },
     {
       "name": "wsib_orphan_linked_entity_id",
@@ -365,7 +362,7 @@
     },
     {
       "name": "wsib_cumulative_link_rate_pct",
-      "value": "1.09"
+      "value": "0.72"
     },
     {
       "name": "wsib_registry_total_rows",
@@ -373,11 +370,11 @@
     },
     {
       "name": "entities_wsib_registered_count",
-      "value": "587"
+      "value": "551"
     },
     {
       "name": "wsib_tier_confidence_split",
-      "value": "0.60:993,0.90:249,0.95:75"
+      "value": "0.60:548,0.90:249,0.95:75"
     }
   ],
   "invariants_file": "docs/reports/golden/link_wsib/invariants.json",
@@ -450,32 +447,32 @@
               "metric": "tier_3_fuzzy_matches",
               "status": "INFO",
               "threshold": "viol == 0",
-              "value": 993
+              "value": 548
             },
             {
               "metric": "no_match",
               "status": "INFO",
               "threshold": "viol == 0",
-              "value": 118806
+              "value": 119251
             },
             {
               "metric": "link_rate_warn",
-              "status": "WARN",
+              "status": "PASS",
               "threshold": "pct >= 5",
               "value": {
-                "link_rate_pct": 1.0874,
-                "linked": 1317,
-                "total": 121116,
-                "unlinked_pct": 98.9126
+                "link_rate_pct": 13.9564,
+                "linked": 551,
+                "total": 3948,
+                "unlinked_pct": 86.0436
               }
             },
             {
               "metric": "entity_fanin_warn",
-              "status": "WARN",
+              "status": "PASS",
               "threshold": "viol <= 20",
               "value": {
-                "entity_fanin_max": 69,
-                "magnets_fanin_ge_10": 20
+                "entity_fanin_max": 16,
+                "magnets_fanin_ge_10": 7
               }
             },
             {
@@ -518,7 +515,7 @@
                 "contacts_cleared": 0,
                 "exhausted": false,
                 "iterations": 2,
-                "relinked_total": 993,
+                "relinked_total": 548,
                 "retracted": 993
               }
             },
@@ -528,7 +525,7 @@
               "threshold": "viol == 0",
               "value": {
                 "iterations": 2,
-                "relinked_total": 993
+                "relinked_total": 548
               }
             },
             {
@@ -548,14 +545,15 @@
               "status": "INFO",
               "threshold": null,
               "value": {
-                "path": "docs/reports/golden/link_wsib/before-image/2026-08-29T02-00-45.432Z-wsib_registry.jsonl",
+                "path": "docs/reports/golden/link_wsib/before-image/2026-08-29T02-43-17.195Z-wsib_registry.jsonl",
                 "rows": 993
               }
             }
           ],
-          "verdict": "WARN"
+          "verdict": "PASS"
         },
-        "checks_failed": 2,
+        "checks_failed": 0,
+        "checks_passed": "all",
         "config": {
           "link_wsib_entity_fanin_warn": 20,
           "link_wsib_link_rate_warn_pct": 5,
@@ -566,23 +564,19 @@
           "link_wsib_tier3_token_overlap_fail_pct": 50,
           "wsib_fuzzy_match_threshold": 0.6
         },
-        "errors": [
-          "link_rate_warn: {\"link_rate_pct\":1.0874,\"linked\":1317,\"total\":121116,\"unlinked_pct\":98.9126}",
-          "entity_fanin_warn: {\"entity_fanin_max\":69,\"magnets_fanin_ge_10\":20}"
-        ],
         "ledger_row": "chain_owned",
         "matches_tier_1_trade": 0,
         "matches_tier_2_legal": 0,
-        "matches_tier_3_fuzzy": 993,
-        "no_match_count": 118806,
-        "run_matched": 993,
-        "terminal": "linked_with_warnings",
+        "matches_tier_3_fuzzy": 548,
+        "no_match_count": 119251,
+        "run_matched": 548,
+        "terminal": "linked_incremental",
         "threshold_updated_at": "<TS>",
         "unlinked_start": 119799
       },
-      "records_new": 993,
+      "records_new": 548,
       "records_total": 119799,
-      "records_updated": 993
+      "records_updated": 548
     },
     "summary_count": 1,
     "meta": [
@@ -640,7 +634,7 @@
           "primary_email",
           "website"
         ],
-        "content_hash": "37d345db38f2c4877ecb23fe513f418f",
+        "content_hash": "f686491b5c715bdd1795c43ee3ba3935",
         "order_by": "explicit",
         "order_columns": [
           "id"
@@ -656,7 +650,7 @@
           "match_confidence",
           "matched_at"
         ],
-        "content_hash": "f0deb0f6f4566284098ce152ca297190",
+        "content_hash": "7fd442c1db585b8260527b3f6bf007a2",
         "order_by": "explicit",
         "order_columns": [
           "id"
@@ -672,19 +666,19 @@
       },
       {
         "name": "wsib_tier3_token_overlap_pass_pct",
-        "value": "100.00"
+        "value": "97.99"
       },
       {
         "name": "wsib_entity_fanin_max",
-        "value": "69"
-      },
-      {
-        "name": "wsib_entity_fanin_p99",
         "value": "16"
       },
       {
+        "name": "wsib_entity_fanin_p99",
+        "value": "10"
+      },
+      {
         "name": "wsib_magnet_entities_fanin_ge_10",
-        "value": "20"
+        "value": "7"
       },
       {
         "name": "wsib_orphan_linked_entity_id",
@@ -708,7 +702,7 @@
       },
       {
         "name": "wsib_cumulative_link_rate_pct",
-        "value": "1.09"
+        "value": "0.72"
       },
       {
         "name": "wsib_registry_total_rows",
@@ -716,15 +710,15 @@
       },
       {
         "name": "entities_wsib_registered_count",
-        "value": "587"
+        "value": "551"
       },
       {
         "name": "wsib_tier_confidence_split",
-        "value": "0.60:993,0.90:249,0.95:75"
+        "value": "0.60:548,0.90:249,0.95:75"
       }
     ]
   },
-  "source_fingerprint": "8155c092b3c2adc8b7b5d9ddeb311cc8bc213fa6c1f3e4c02dfbd14265ca78ae",
+  "source_fingerprint": "2cb93cea40027cc3eb3a0fdd33557efcb41535ab48899971bd1513b1e62dd1a1",
   "fingerprint_files": [
     "scripts/lib/compute/link-wsib.js",
     "scripts/link-wsib.descriptor.json",
