@@ -57,7 +57,9 @@
  *   Rule 3  (tunables externalized) -> (ii) compute-no-literal-* ast-grep rules + describes
  *                                       /§1\.2a P4/i, /LW-D10/i, /R-A —/i (scoped to slug/file where present)
  *                                       + Rule 4-closing G-4 lock (on_invalid:fail binding — validate.js).
- *   Rule 4  (compute rule declared) -> G-2 lock: describe /G-2 — preserved-in-compute/i, scoped to slug.
+ *   Rule 4  (compute rule declared) -> G-2: checkPreservedInComputeHasWhy(report) — every
+ *                                       preserved-in-compute Intent Ledger row names where the
+ *                                       rule is written down (why/notes.json/checks[] in the same row).
  *   Rule 5  (checks != "none")      -> (i) AJV `checks` minItems:1.
  *   Rule 6  (omission fails)        -> (i) AJV top-level `required` (18 categories).
  *   Rule 7  (archetype gates categories) -> (i) AJV allOf archetype profiles.
@@ -701,6 +703,36 @@ function scoreG3(report) {
   const score = rows.length > 0 && vocabHitRows.length > 0 ? (vocabHitRows.length === rows.length ? 2 : 1) : phSection ? 1 : 0;
   return { max: 2, score, detail: `table rows=${rows.length} vocab-hit rows=${vocabHitRows.length}` };
 }
+/**
+ * G-2 (Spec 124 §2 Rule 4, GAP G-2) — "no test asserts that a preserved-in-compute
+ * disposition has a corresponding checks[].why. A future disposition could mark
+ * something preserved-in-compute and simply not write the rule down anywhere."
+ *
+ * A disposition and a specific check's `why` text are two different artifacts
+ * (a markdown table row in a report; a JSON string in a descriptor) with no
+ * shared id to join on — there is no way to mechanically prove row N's rule is
+ * THE SAME rule as check id X's why without semantic understanding this tool
+ * does not have. What IS mechanically checkable, and matches the report
+ * culture's own existing practice (pilot 3's own Intent Ledger: "preserved-
+ * in-compute (buildMatchSql, A-2) with the predicate ... DECLARED in
+ * notes.json + a shape lock"): every `preserved-in-compute` row must itself
+ * NAME where the rule was written down — "why", "notes.json", or "checks[]"
+ * appearing in the SAME row. A row that says only the disposition, with no
+ * grounding of where the rule lives, is exactly the failure mode G-2 names.
+ */
+function checkPreservedInComputeHasWhy(report) {
+  const phSection = section(report, /##\s*.{0,10}\d*\.?\s*PH-3[^\n]*\n/i);
+  if (!phSection) return { pass: true, detail: 'no PH-3 section — vacuously nothing to check', violations: [] };
+  const rows = phSection.split('\n').filter((l) => l.trim().startsWith('|') && !/^\|[-\s|]+\|$/.test(l.trim()));
+  const preservedRows = rows.filter((r) => r.toLowerCase().includes('preserved-in-compute'));
+  const violations = preservedRows.filter((r) => !/\bwhy\b|notes\.json|checks\[\]/i.test(r));
+  return {
+    pass: violations.length === 0,
+    detail: `${preservedRows.length} preserved-in-compute row(s), ${violations.length} with no why/notes.json/checks[] grounding`,
+    violations,
+  };
+}
+
 function scoreG4(report) {
   const hit = /risk class[\s\S]{0,400}?\bchance\b[\s\S]{0,200}?\bimpact\b/i.test(report) || /\bchance\b[\s\S]{0,100}?\bimpact\b[\s\S]{0,200}?risk class/i.test(report);
   return { max: 2, score: hit ? 2 : 0, detail: `risk-class row with chance+impact found=${hit}` };
@@ -800,7 +832,7 @@ function ruleStatus(matched) {
   return matched.every((t) => t.status === 'passed') ? 'enforced-green' : 'enforced-red';
 }
 
-function computePolicyMatrix(row, descriptorInfo, shape, vitestResult, ioBudget) {
+function computePolicyMatrix(row, descriptorInfo, shape, vitestResult, ioBudget, report) {
   const tests = vitestResult.ranOk ? vitestResult.tests : [];
   const slugToken = row.slug;
   const computeToken = harness.computePathFor(row.relFile) || '';
@@ -829,8 +861,8 @@ function computePolicyMatrix(row, descriptorInfo, shape, vitestResult, ioBudget)
     push(3, 'Tunables externalized', m.length > 0 ? ruleStatus(m) : 'prose-only', '');
   }
   {
-    const m = vitestResult.ranOk ? matchTests(tests, /G-2 — preserved-in-compute/i, slugToken) : [];
-    push(4, 'Compute rule declared', m.length > 0 ? ruleStatus(m) : 'prose-only', m.length === 0 ? 'G-2 lock not scoped to this step in the vitest run' : '');
+    const g2 = checkPreservedInComputeHasWhy(report || '');
+    push(4, 'Compute rule declared', g2.pass ? 'enforced-green' : 'enforced-red', `G-2: ${g2.detail}`);
   }
   push(5, 'checks >= 1', descriptorInfo.ok ? 'enforced-green' : 'enforced-red', '');
   push(6, 'Omission fails (18 categories)', descriptorInfo.ok ? 'enforced-green' : 'enforced-red', '');
@@ -1012,6 +1044,13 @@ function selfTest() {
   if (!ioGood.pass || ioBad.pass) {
     throw new Error(`self-test FAILED: checkIoBudget did not discriminate good/bad fixtures (good=${ioGood.pass}, bad=${ioBad.pass})`);
   }
+  const g2GoodReport = '## §2. PH-3\n| c | note |\n|---|---|\n| `abc1234` | preserved-in-compute, the rule is DECLARED in notes.json |\n';
+  const g2BadReport = '## §2. PH-3\n| c | note |\n|---|---|\n| `abc1234` | preserved-in-compute, nothing more said |\n';
+  const g2Good = checkPreservedInComputeHasWhy(g2GoodReport);
+  const g2Bad = checkPreservedInComputeHasWhy(g2BadReport);
+  if (!g2Good.pass || g2Bad.pass) {
+    throw new Error(`self-test FAILED: checkPreservedInComputeHasWhy did not discriminate good/bad fixtures (good=${g2Good.pass}, bad=${g2Bad.pass})`);
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -1059,7 +1098,7 @@ function main() {
     const captureFindings = checkCaptures(row, descriptorInfo, computePath, report);
     const ioBudget = checkIoBudget(descriptorInfo.descriptor);
     const sc = computeScorecard(row, report, descriptorInfo, shape, captureFindings, invariantResults);
-    const matrix = computePolicyMatrix(row, descriptorInfo, shape, vitestResult, ioBudget);
+    const matrix = computePolicyMatrix(row, descriptorInfo, shape, vitestResult, ioBudget, report);
     const block = renderScorecard(row, sc, matrix, captureFindings, vitestResult, invariantResults);
 
     console.log(`\n\`\`\`\n[step-validate] ${row.slug} (${row.stage}) — ${sc.total}/${sc.maxTotal}, hard-stop=${sc.hardStop}\n\`\`\`\n`);
