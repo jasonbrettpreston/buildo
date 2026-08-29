@@ -249,7 +249,19 @@ function deriveVerdict(rows) {
 /**
  * Build the audit_table for a set of checks + observations.
  *
- * @returns {{audit_table:object, rows:object[], blockingFailures:string[], errors:string[]}}
+ * LPA-D6 (WF3-C, 2026-08-29) — `errors[]` and `warnings[]` are SEVERITY-SEPARATED,
+ * never one conflated array: a FAIL row renders into `errors[]`, a WARN row renders
+ * into `warnings[]`. Before this fix a single `errors[]` array held BOTH, and the
+ * caller's `checks_failed: built.errors.length` therefore counted WARN rows as
+ * failures — measured live (`link_parcel_addresses` forced-FULL, 2026-08-29):
+ * `checks_failed: 1` on a run whose verdict was WARN with ZERO FAIL rows
+ * (`parcel_fanout_outliers: 130`, severity WARN). `scripts/quality/assert-data-bounds.js`
+ * (still hand-rolled, never converted) already emits exactly this split
+ * (`errors`/`warnings`, `checks_failed`/`checks_warned`) — this brings the generic
+ * library's shape to parity with that established, un-converted precedent rather
+ * than inventing a new one.
+ *
+ * @returns {{audit_table:object, rows:object[], blockingFailures:string[], errors:string[], warnings:string[]}}
  */
 function buildAuditTable(descriptor, chainId, observations, extraRows = [], config = null, only = null) {
   const onCheckError = (descriptor.execution && descriptor.execution.on_check_error) || 'fail_step';
@@ -261,11 +273,14 @@ function buildAuditTable(descriptor, chainId, observations, extraRows = [], conf
   const rows = [];
   const blockingFailures = [];
   const errors = [];
+  const warnings = [];
   for (const check of selected) {
     const row = checkRow(check, observations ? observations[check.id] : undefined, onCheckError, config);
     if (!row) continue;
     rows.push(row);
-    if (row.status === 'FAIL' || row.status === 'WARN') errors.push(`${check.id}: ${renderValue(row.value)}`);
+    // LPA-D6 — severity-separated, never one conflated array (see the header note).
+    if (row.status === 'FAIL') errors.push(`${check.id}: ${renderValue(row.value)}`);
+    else if (row.status === 'WARN') warnings.push(`${check.id}: ${renderValue(row.value)}`);
     if (row.status === 'FAIL' && check.blocking === true) blockingFailures.push(check.id);
   }
   rows.push(...extraRows);
@@ -273,6 +288,7 @@ function buildAuditTable(descriptor, chainId, observations, extraRows = [], conf
     rows,
     blockingFailures,
     errors,
+    warnings,
     audit_table: {
       phase: resolvePhase(descriptor, chainId),
       name: descriptor.identity.display_name,

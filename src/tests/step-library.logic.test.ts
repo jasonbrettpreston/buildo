@@ -244,36 +244,54 @@ describe('the verdict is ROW-DERIVED, and all three values are reachable (§7.1,
     expect(meta.reason).toBe('advisory_lock_held_elsewhere');
   });
 
-  // LM-D16 — `errors[]` interpolated `row.value` directly, so an object-valued
-  // `detail` (9 sites across scripts/lib/compute/*.js report one) rendered as the
-  // literal string "[object Object]" — captured live in
+  // LM-D16 — `errors[]`/`warnings[]` interpolate `row.value` directly, so an
+  // object-valued `detail` (9 sites across scripts/lib/compute/*.js report one)
+  // rendered as the literal string "[object Object]" — captured live in
   // docs/reports/golden/link_massing/post/sources-full-forced-1.json
   // summary.records_meta.errors, and shown verbatim to operators by
   // FreshnessTimeline.tsx. `renderValue` must stringify deterministically
   // (sorted keys) rather than losing the value.
+  //
+  // LPA-D6 (WF3-C, 2026-08-29) — `errors[]`/`warnings[]` are now severity-separated
+  // (a WARN row renders into `warnings[]`, never `errors[]`); these fixtures declare
+  // `severity: 'WARN'`, so they read `.warnings[0]`, not `.errors[0]`.
   it('LM-D16 — an object-valued check detail renders as stable sorted JSON, not [object Object]', () => {
     const d = withChecks([{ severity: 'WARN' }]);
     const built = build(d, { c0: { violations: 1, detail: { ratio: 1, scanned: 10, changed: 10 } } });
     expect(built.rows[0].status).toBe('WARN');
-    // The audit row itself keeps the real object — only errors[] is a rendered string.
+    // The audit row itself keeps the real object — only warnings[] is a rendered string.
     expect(built.rows[0].value).toEqual({ ratio: 1, scanned: 10, changed: 10 });
-    expect(built.errors[0]).toBe('c0: {"changed":10,"ratio":1,"scanned":10}');
+    expect(built.errors).toEqual([]);
+    expect(built.warnings[0]).toBe('c0: {"changed":10,"ratio":1,"scanned":10}');
   });
 
   it('LM-D16 — a primitive check value renders unchanged, no stringify', () => {
     const d = withChecks([{ severity: 'WARN' }]);
-    expect(build(d, { c0: { violations: 1, detail: 42 } }).errors[0]).toBe('c0: 42');
-    expect(build(d, { c0: { violations: 1, detail: 'bypassrls=true policies=0' } }).errors[0])
+    expect(build(d, { c0: { violations: 1, detail: 42 } }).warnings[0]).toBe('c0: 42');
+    expect(build(d, { c0: { violations: 1, detail: 'bypassrls=true policies=0' } }).warnings[0])
       .toBe('c0: bypassrls=true policies=0');
   });
 
-  it('LM-D16 — a large rendered value is capped, so errors[] stays bounded', () => {
+  it('LM-D16 — a large rendered value is capped, so warnings[] stays bounded', () => {
     const d = withChecks([{ severity: 'WARN' }]);
     const bigDetail = { items: Array.from({ length: 100 }, (_, i) => `item-${i}`) };
     const built = build(d, { c0: { violations: 1, detail: bigDetail } });
-    const rendered = built.errors[0].slice('c0: '.length);
+    const rendered = built.warnings[0].slice('c0: '.length);
     expect(rendered.length).toBeLessThanOrEqual(301);
     expect(rendered.endsWith('…')).toBe(true);
+  });
+
+  // LPA-D6 (WF3-C) — the FAIL side of the split, proving errors[] is genuinely
+  // FAIL-only (not merely "warnings[] moved, errors[] still conflated").
+  it('LPA-D6 — a FAIL row renders into errors[], never warnings[]; a WARN row renders into warnings[], never errors[] (both directions, mixed severities in one build)', () => {
+    const d = withChecks([{ severity: 'FAIL' }, { severity: 'WARN' }]);
+    const built = build(d, {
+      c0: { violations: 1, detail: 'fail-detail' },
+      c1: { violations: 1, detail: 'warn-detail' },
+    });
+    expect(built.rows.map((r: Row) => r.status)).toEqual(['FAIL', 'WARN']);
+    expect(built.errors).toEqual(['c0: fail-detail']);
+    expect(built.warnings).toEqual(['c1: warn-detail']);
   });
 });
 

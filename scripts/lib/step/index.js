@@ -1765,9 +1765,16 @@ async function runWithPool(runnable, pool, ctx) {
         // LW-D15 — declared, never inferred: a downstream reader must not have to guess
         // "were these counts real?" from the presence/absence of other fields.
         ...(stepCtx.overrides && stepCtx.overrides.dry_run ? { dry_run: true } : {}),
-        checks_passed: built.errors.length === 0 ? 'all' : undefined,
+        // LPA-D6 (WF3-C) — `checks_failed`/`errors[]` are FAIL-only; `checks_warned`/
+        // `warnings[]` are WARN-only (verdict.js's buildAuditTable now severity-separates
+        // them, mirroring the un-converted scripts/quality/assert-data-bounds.js's own
+        // established shape). `checks_passed: 'all'` requires BOTH empty — a WARN-only run
+        // is not "all passed" (assert-data-bounds.js's `allMessages.length === 0` parity).
+        checks_passed: (built.errors.length === 0 && built.warnings.length === 0) ? 'all' : undefined,
         checks_failed: built.errors.length,
+        checks_warned: built.warnings.length,
         errors: built.errors.length > 0 ? built.errors : undefined,
+        warnings: built.warnings.length > 0 ? built.warnings : undefined,
         audit_table: built.audit_table,
       };
 
