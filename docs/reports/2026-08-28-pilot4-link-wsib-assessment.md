@@ -647,6 +647,7 @@ Filed to `docs/reports/review_followups.md`: a MED follow-up naming every residu
 | 2 | link_wsib | PASS | 8 declared, missing from seeds: none |
 | 3 | link_wsib | PASS | retired=0 overlap-with-declared=none |
 | 7 | link_wsib | PASS | SPEC LINK header present=true |
+| 8 | link_wsib | PASS | G-4: 8 declared, 3 verdict-affecting, 0 violate on_invalid:fail with no deviations[] cover |
 | 4 | (registry) | PASS | overlap: none |
 | 5 | (registry) | PASS | clean (0 it.fails( call sites outside a declared pending slug) |
 
@@ -663,10 +664,10 @@ Filed to `docs/reports/review_followups.md`: a MED follow-up naming every residu
 
 | Rule | Name | Status | Note |
 |---|---|---|---|
-| 1 | Nothing hidden | enforced-green |  |
+| 1 | Nothing hidden | enforced-green | G-1 schema-baseline: schema-baseline clean |
 | 2 | Compute is just compute | enforced-green | §5.5 describe not scoped to this step in the vitest run |
-| 3 | Tunables externalized | prose-only |  |
-| 4 | Compute rule declared | prose-only | G-2 lock not scoped to this step in the vitest run |
+| 3 | Tunables externalized | enforced-green | G-4: 8 declared, 3 verdict-affecting, 0 violate on_invalid:fail with no deviations[] cover |
+| 4 | Compute rule declared | enforced-red | G-2: 8 preserved-in-compute row(s), 4 with no why/notes.json/checks[] grounding |
 | 5 | checks >= 1 | enforced-green |  |
 | 6 | Omission fails (18 categories) | enforced-green |  |
 | 7 | Archetype gates categories | enforced-green |  |
@@ -678,5 +679,5 @@ Filed to `docs/reports/review_followups.md`: a MED follow-up naming every residu
 | 13 | A step validates itself | enforced-green | this run of step:validate IS the mechanism |
 | P3 | I/O cost adjudication (io_budget) | enforced-red | execution.io_budget is not declared (GAP P3 not yet closed for this step) |
 
-**Enforced-green: 8/14**
+**Enforced-green: 9/14**
 

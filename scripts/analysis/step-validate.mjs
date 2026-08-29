@@ -27,6 +27,9 @@
  *      that is in converted.json's `pending` list AND carries a "flips at" comment
  *   6. golden-fingerprint currency (shares its result with item iv/G8)
  *   7. the step file carries a `SPEC LINK:` header comment
+ *   8. G-4 (Rule 3) — a verdict-affecting logic variable (named by some check's
+ *      `limit_from_config`) has `on_invalid:"fail"`, unless `deviations[]` names a
+ *      reviewed, dated exception (the `load_ravines` cloud-seed-timing precedent)
  *
  * SPEC LINK: docs/specs/01-pipeline/123_step_opt_assessment_validation.md SS6 (gates),
  *            SS5.2 (per-step checklist), SS4.4 (checker self-test doctrine, SS12b.6)
@@ -567,6 +570,11 @@ function fastInvariants(rows, converted, pending) {
     const stepAbs = path.join(REPO_ROOT, row.relFile);
     const hasSpecLink = existsSync(stepAbs) && /SPEC LINK:/.test(readFileSync(stepAbs, 'utf8'));
     results.push({ id: 7, slug: row.slug, pass: hasSpecLink, detail: `SPEC LINK header present=${hasSpecLink}` });
+
+    // 8. G-4 (Rule 3) — a verdict-affecting logic variable's on_invalid must be "fail",
+    // unless a deviations[] entry names a reviewed, dated exception (load_ravines precedent).
+    const g4 = checkOnInvalidFail(descriptor);
+    results.push({ id: 8, slug: row.slug, pass: g4.pass, detail: `G-4: ${g4.detail}` });
   }
 
   // 4. converted INTERSECT pending === empty (whole-registry, one row).
@@ -627,6 +635,49 @@ function checkSchemaBaseline() {
 // validator's role is PRESENCE + a plausibility bound against needs_disk_mb,
 // never a live measurement (that stays a golden-capture concern).
 // ---------------------------------------------------------------------------
+/**
+ * G-4 (Spec 124 §2 Rule 3, GAP G-4) — "no check ties on_invalid:'fail' to
+ * 'verdict- or write-affecting'; applied by author judgment, reviewed narratively."
+ *
+ * VERDICT-affecting is mechanically decidable: a `config.logic_variables[]`
+ * entry is verdict-affecting iff SOME `checks[].limit_from_config` in the same
+ * descriptor names it — that is exactly the schema's own established mechanism
+ * for "this config value moves a check's PASS/WARN/FAIL boundary" (already the
+ * P4 battery's own `limit_from_config` cross-reference). WRITE-affecting has no
+ * equivalent named field anywhere in the schema today and is left PROSE-ONLY —
+ * narrowing honestly rather than inventing a shape nothing else in the schema
+ * uses (matching G-2's own narrowing precedent).
+ *
+ * Real descriptors ALREADY carry a legitimate, ratified exception to the naive
+ * rule: `load_ravines`'s 6 variables are ALL `on_invalid:"default"` despite 3
+ * being verdict-affecting, because `deviations[]` records a dated, adjudicated
+ * why (the mig-099 cloud-seed timing hole — `fail` would halt the sources
+ * chain on every un-seeded database before the seed runs). A mechanical check
+ * that flagged this as a violation would be WRONG, not merely strict — so a
+ * verdict-affecting variable with `on_invalid !== "fail"` is a G-4 violation
+ * UNLESS the descriptor's `deviations[]` has an entry whose `from` text
+ * mentions both "on_invalid" and "fail" (the same rung-(a) descriptor
+ * mechanism Rule 1 already prefers for a declared exception).
+ */
+function checkOnInvalidFail(descriptor) {
+  if (!descriptor) return { pass: true, detail: 'no descriptor', violations: [] };
+  const cfg = descriptor.config;
+  const vars = cfg && cfg !== 'none' && Array.isArray(cfg.logic_variables) ? cfg.logic_variables : [];
+  if (vars.length === 0) return { pass: true, detail: 'no declared logic_variables', violations: [] };
+  const limitRefs = new Set((descriptor.checks || []).map((c) => c && c.limit_from_config).filter(Boolean));
+  const deviations = Array.isArray(descriptor.deviations) ? descriptor.deviations : [];
+  const hasOnInvalidDeviation = deviations.some((d) => {
+    const from = (d && d.from) || '';
+    return /on_invalid/i.test(from) && /fail/i.test(from);
+  });
+  const violations = vars.filter((v) => limitRefs.has(v.name) && v.on_invalid !== 'fail' && !hasOnInvalidDeviation).map((v) => v.name);
+  return {
+    pass: violations.length === 0,
+    detail: `${vars.length} declared, ${limitRefs.size ? [...limitRefs].length : 0} verdict-affecting, ${violations.length} violate on_invalid:fail with no deviations[] cover`,
+    violations,
+  };
+}
+
 function checkIoBudget(descriptor) {
   if (!descriptor) return { pass: false, detail: 'no descriptor' };
   const exec = descriptor.execution;
@@ -856,9 +907,11 @@ function computePolicyMatrix(row, descriptorInfo, shape, vitestResult, ioBudget,
       ...matchTests(tests, /§1\.2a P4/i, slugToken),
       ...matchTests(tests, /LW-D10/i, slugToken),
       ...matchTests(tests, /R-A —/i, slugToken),
-      ...matchTests(tests, /G-4 —/i, slugToken),
     ] : [];
-    push(3, 'Tunables externalized', m.length > 0 ? ruleStatus(m) : 'prose-only', '');
+    const g4 = checkOnInvalidFail(descriptorInfo.descriptor);
+    const vitestOk = m.length === 0 || ruleStatus(m) === 'enforced-green';
+    const status = g4.pass && vitestOk ? 'enforced-green' : 'enforced-red';
+    push(3, 'Tunables externalized', status, `G-4: ${g4.detail}`);
   }
   {
     const g2 = checkPreservedInComputeHasWhy(report || '');
@@ -1050,6 +1103,17 @@ function selfTest() {
   const g2Bad = checkPreservedInComputeHasWhy(g2BadReport);
   if (!g2Good.pass || g2Bad.pass) {
     throw new Error(`self-test FAILED: checkPreservedInComputeHasWhy did not discriminate good/bad fixtures (good=${g2Good.pass}, bad=${g2Bad.pass})`);
+  }
+  const g4Descriptor = {
+    config: { logic_variables: [{ name: 'x_warn_pct', on_invalid: 'default' }] },
+    checks: [{ id: 'c1', limit_from_config: 'x_warn_pct' }],
+    deviations: [],
+  };
+  const g4Bad = checkOnInvalidFail(g4Descriptor);
+  const g4Covered = checkOnInvalidFail({ ...g4Descriptor, deviations: [{ from: 'on_invalid: "fail" for a declared logic variable', why: 'fixture' }] });
+  const g4Good = checkOnInvalidFail({ ...g4Descriptor, config: { logic_variables: [{ name: 'x_warn_pct', on_invalid: 'fail' }] } });
+  if (g4Bad.pass || !g4Covered.pass || !g4Good.pass) {
+    throw new Error(`self-test FAILED: checkOnInvalidFail did not discriminate fixtures (bad=${g4Bad.pass}, covered=${g4Covered.pass}, good=${g4Good.pass})`);
   }
 }
 
