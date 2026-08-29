@@ -234,6 +234,105 @@ contradict) A-4's ruling: a BACKFILL with no argv/env seam at all is exactly the
 
 ---
 
+## §4. PH-6 — Classification (commit 4, G6)
+
+> Every finding from the plan's "six findings" list (§0.6) + this pilot's own PH-3 archaeology (§2),
+> classified per Spec 123 §3's three-way split: **CONTRACT** (a downstream consumer depends on it, even if
+> ugly) / **INCIDENTAL** (nothing observes it — do not assert on it) / **DEFECT** (a spec or invariant
+> asserts the opposite). `INCIDENTAL` is a legitimate G6 classification value (Spec 123 §3 Q1) — distinct
+> from the G3 Intent Ledger's closed disposition vocabulary, which bans it (Fold D, §2 above).
+
+| Candidate | Ledger ID | Classification | Ground |
+|---|---|---|---|
+| Finding 1 — the historical DEFECT (missing invalidation) is already CLOSED | *(no CC-D — historical, not live)* | **CLOSED, was never this pilot's to pin** | migration 245 (applied, red-first proven); re-confirmed commit 1: 0/486,530 backlog |
+| Finding 2 — JS fallback dead weight | CC-D1 | **CONTRACT-adjacent (a bug-fix fence), retired as a unit with its branch** | opened commit 2; A-1(a) RULED at Fold C — the fence's own PostGIS-branch analogue doesn't exist (Cross-read Adversary item 1), so retiring the branch retires the fence honestly, not by omission |
+| Finding 3 — 20 runs, 1 real-work, 8 zero-work since 2026-06-10 | *(no CC-D — a corpus-state fact, not a defect)* | **INCIDENTAL to correctness; an observability fact for the golden capture (commit 5)** | re-confirmed commit 1: `pipeline_runs` query, Fold D's 8-not-7 correction holds |
+| Finding 4 — 2 undeclared literal tunables | *(no CC-D — resolved by T1/T2 at commit 7, not a ledger-tracked defect)* | **DEFECT (Spec 124 Rule 3)** | `failed_geometries==0` (`:197`) and `compute_rate>=98%` (`:198`,`:200`) are bare literals; T2's default (98) traces to `d32612bb`'s deliberate tightening (§2) |
+| Finding 5 — the cursor-pagination fence | CC-D1 | *(same row as Finding 2 — the fence and the fallback it protects are one adjudication)* | — |
+| Finding 6 — stale SPEC LINK header | *(no CC-D — doc-only, fixed at commit 7)* | **DEFECT in the description, not the behavior** — same class as pilot 5's LPA-D2 | §2: `f69b561d` INTRODUCED the wrong citation (not merely "survived" a repair, correcting the plan's framing); `da6db77a` re-pathed the already-wrong string |
+| Fold C R-1 / this report's CC-D2 — 3,130/276 neighbour-parcel mis-attribution | CC-D2 | **CONTRACT-adjacent — this step's output is correct; the exposure is in a DOWNSTREAM consumer's join strategy** | opened commit 2; re-confirmed §2; HIGH followup already filed against `link_parcels.js` |
+
+### Finding 7 (NEW, this commit) — algorithm-drift population, measured live, not in the plan or Fold C/D
+
+**Discovered during the seeded eyeball below.** A random sample of outside-polygon centroids showed
+non-trivial (0.9–27m) distances between the STORED `centroid_lat`/`centroid_lng` and a FRESHLY-computed
+`ST_Y(ST_Centroid(geom))`/`ST_X(ST_Centroid(geom))` on the SAME, unchanged `geom` — the exact PostGIS
+expression this step's own UPDATE writes today. Measured over the full corpus:
+
+| Query | Result | Time |
+|---|---|---|
+| `ST_DistanceSphere(stored_point, ST_Centroid(geom)) > 1.0` | **292,587 / 486,530 (60.1%)** | 1,486 ms |
+| `> 0.01` (1cm — beyond `NUMERIC(10,7)`'s own ~1cm rounding floor, ruling out column-precision as the cause) | **381,240 (78.4%)** | 1,888 ms |
+| Distribution of the `>1m` population | avg **6.61 m**, median **4.12 m**, max **1,476.84 m** | — |
+
+**Root cause (measured, not fully provable without a `computed_at` column — Spec 47 §A.5's own registry row
+for this step reads "Writes Timestamps? NO", so no per-row provenance timestamp exists):** only **530** of
+486,530 parcels' centroids were EVER written by a run this pilot can see in `pipeline_runs` (the sole
+real-work run, 2026-03-10 — §0.6 finding 3, §1) — and that run PREDATES the PostGIS offload (`7c75e92e`,
+2026-04-02), so it used the JS **arithmetic-mean** algorithm (`computeCentroid()`, simple mean of ring
+vertices), not PostGIS's **area-weighted** `ST_Centroid`. The remaining ~486K rows' centroid values predate
+`pipeline_runs` ledger visibility entirely — most plausibly populated by a one-time bulk seed/restore outside
+the tracked pipeline (`ruled out`: neither `load-parcels.js` nor any other script but `compute-centroids.js`
+itself writes `parcels.centroid_lat/lng` — `grep -rln "centroid_lat\s*="` across `scripts/` returns exactly
+`compute-centroids.js` + migration 245 + `load-massing.js` (`building_footprints.centroid_lat`, a DIFFERENT
+table, confirmed by direct read — a false-alarm ruled out this commit). The distribution (median 4m, not a
+uniform large offset) is consistent with arithmetic-mean-vs-area-weighted drift on irregular polygons, not a
+coordinate-system bug.
+
+**Classification: DEFECT-adjacent, same PIN posture as CC-D2 — zero behaviour change for this pilot.** This
+step's own G1 guarantee ("fills centroid for every parcel with a geometry and no centroid yet") never
+promised WHICH formula, and the scope predicate (`centroid_lat IS NULL`) makes an already-filled row
+PERMANENTLY out of this step's own reach regardless of which algorithm filled it — by design, not by
+oversight (finding 1's own guarantee G3: this step never revisits a filled row; only migration 245's trigger
+does, and only on a genuine geometry change). The frozen-shape conversion does not alter the scope predicate
+or add a recompute/revisit mechanism — carrying this population through the conversion costs nothing beyond
+what already exists. **`CC-D3` opened below.**
+
+### The RANDOM/SEEDED disambiguation eyeball (10 outside-polygon centroids, seed `20260829004`)
+
+Executed live this commit against `127.0.0.1:54322/postgres`: `SELECT setseed(0.20260829004)` on a held
+client, then `ORDER BY random() LIMIT 10` over the 3,626-row outside-polygon population (R-1/CC-D2's own
+population), joined against `feature_type`/`lot_size_sqm`/`zoning_class` + the fresh-vs-stored distance that
+surfaced Finding 7:
+
+| `id` | `feature_type` | `lot_size_sqm` | `zoning_class` | stored-vs-fresh-centroid distance (m) | `ST_NPoints(geom)` |
+|---:|---|---:|---|---:|---:|
+| 471429 | COMMON | 1018.50 | *(null)* | 4.68 | 38 |
+| 369639 | COMMON | 438.46 | ON | 2.34 | 12 |
+| 269589 | COMMON | 26.23 | RD | 7.67 | 54 |
+| 30413 | COMMON | 153.34 | RM | 0.89 | 12 |
+| 23507 | COMMON | 5985.73 | ON | 26.51 | 17 |
+| 56938 | COMMON | 56.36 | RA | 26.72 | 81 |
+| 405384 | COMMON | 47.36 | R | 5.98 | 18 |
+| 317618 | COMMON | 1847.60 | E | 17.24 | 12 |
+| 152725 | COMMON | 913.26 | ON | 3.26 | 35 |
+| 67264 | COMMON | 16.47 | RD | 3.46 | 51 |
+
+**Eyeball:** all 10 sampled parcels are `feature_type='COMMON'` (unsurprising — `COMMON`/`CONDO` parcels
+dominate the 3,626-row concave-polygon population per Spec 59 R2.5's own documented pattern) with vertex
+counts (`ST_NPoints`) from 12 to 81 — every sample is a genuinely non-trivial polygon, not a degenerate
+2-3-point sliver. All 10 show a non-zero stored-vs-fresh distance (0.89–26.72m), independently confirming
+Finding 7's population is real and not an artifact of the sampling. No new defect class found beyond
+Findings 1–7 above and R-1/CC-D2's own mis-attribution signature — no cross-street contamination, no
+implausible lot-size/zoning combination, no degenerate geometry.
+
+### One LOW/MED followup filed this commit (`docs/reports/review_followups.md`)
+
+Finding 7 (algorithm-drift population, 292,587/486,530 rows) — filed **MED** (below CC-D2's HIGH: no
+measured downstream mis-link count exists for this finding the way R-1 measured 276 for CC-D2; the
+consumer exposure is plausible but unquantified, matching R-2's own "unmeasured exposure" posture for
+`link-coa-to-parcels.js`). Scoped as a candidate for a FUTURE one-time backfill WF3 (recompute every
+`centroid_lat`/`centroid_lng` under today's PostGIS algorithm, outside `compute_centroids`'s own
+NULL-only scope) — explicitly NOT this pilot's fix.
+
+### G6 verdict
+
+**CLOSED this commit.** Every finding from the plan + this pilot's own archaeology is classified. Two new
+ledger rows this pilot (`CC-D1`, `CC-D2`) both reach PIN status; a third (`CC-D3`, Finding 7) opens this
+commit with the same PIN disposition. No BLOCKING classification conflict found.
+
+---
+
 ## §0. PH-0 seed — measured boundary table (2026-08-29 planning session)
 
 ### 0.1 Governing specs, read in order (Spec 124 §7 Step 0 / Spec 123 §6 G0)
