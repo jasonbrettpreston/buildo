@@ -161,6 +161,79 @@ code change required from this pilot).
 
 ---
 
+## §3. PH-5 — Seam map (commit 3, G5)
+
+> Every place `scripts/compute-centroids.js` (226 lines) touches something outside pure computation — DB,
+> clock, network, argv/env — re-derived by direct read this commit, not copied from the plan's preliminary
+> pass. Cleanest seam map of any pilot to date per the plan's own §0.7/G5 note — confirmed, not merely
+> repeated, below. Citations mark which seams RETIRE with the JS fallback (A-1(a), commit 7) vs. which
+> survive into `compute.js`.
+
+### DB seam
+- `pool` — supplied by `pipeline.run('compute-centroids', main)` (`:60`), never a local `new Pool()`.
+- `pipeline.withAdvisoryLock(pool, ADVISORY_LOCK_ID, ...)` (`:61`, closes `:223`) wraps the ENTIRE body —
+  lock 99, single concurrent runner, kept textually (`identity.lock`, §1's precedent).
+- **4 `pool.query` sites SURVIVE into `compute.js` (the PostGIS-only shape after A-1(a)):**
+  1. `:64` — pre-run count (`SELECT COUNT(*) FROM parcels WHERE geometry IS NOT NULL AND centroid_lat IS
+     NULL`), outside any transaction, pure read.
+  2. `:91` — the PostGIS-presence check (`SELECT 1 FROM pg_extension WHERE extname='postgis'`). ⚠️ **This
+     query itself is RETIRED, not merely its `else` branch** — `guards.requires: postgis` (A-1(a)) moves
+     this check to the RUNNER's precondition-guard mechanism (asserted once, before compute runs, per the
+     `link_massing` A-8 precedent), not re-run as a compute-time query on every invocation. Compute no
+     longer branches on `hasPostGIS` at all — it assumes PostGIS is present (the guard already refused the
+     run otherwise).
+  3. `:101` — **the ONE write statement**, `UPDATE parcels SET centroid_lat=ST_Y(...), centroid_lng=ST_X(...)
+     WHERE geom IS NOT NULL AND centroid_lat IS NULL RETURNING id`. A single bare `pool.query`, **no
+     `withTransaction` wrapper** — this is the `txn_scope: "statement"` finding (A-3, resolved Fold C): one
+     server-side statement IS the transaction (implicit auto-commit), not an explicit BEGIN/COMMIT the JS
+     fallback's per-batch loop needed.
+  4. `:111` — the post-write failed-count query (`SELECT COUNT(*) FROM parcels WHERE geometry IS NOT NULL
+     AND geom IS NULL AND centroid_lat IS NULL`), pure read, outside any transaction.
+- **2 sites RETIRE WITH the JS fallback (A-1(a), commit 7):** `:122` (the fallback's own cursor-paginated
+  `SELECT`) and `:165-166` (`pipeline.withTransaction(pool, client => client.query(...))`, the bulk-unnest
+  batch UPDATE) — the LAST `client.query`/transaction-wrapped write in this file; after A-1(a) the step has
+  **zero `client.query` sites and zero explicit transactions**, the simplest DB seam of any pilot converted
+  so far on this specific axis (contrast `link_parcel_addresses`'s ~487 independent per-batch transactions).
+- **0 session-scoped `SET`/`RESET` GUC calls** — no session-config dependency, same as `link_parcel_addresses`
+  and `link_wsib`.
+
+### Clock seam
+- `Date.now()` — **2 sites** (`:62` `startTime`, `:187` `durationMs`), both elapsed-time-only, never written
+  to the DB as a timestamp — legal per `tasks/lessons.md`'s explicit carve-out.
+- **0 `new Date(`** anywhere.
+- **0 DB-clock reads** (`pipeline.getDbTimestamp`) — confirmed again this commit: this write target has NO
+  timestamp column at all (`centroid_lat`/`centroid_lng` are plain floats, no `computed_at`-equivalent
+  companion column). Spec 47 §A.5's own registry row for this step reads *"Writes Timestamps? NO"* — the
+  R3.5 DB-clock rule is structurally N/A here, not merely satisfied by an empty seam. **Cleanest clock seam
+  of any pilot converted to date** — no read/write split to reconcile at all, unlike `link_wsib`'s 1
+  read-side ISO-normalization site or `link_parcel_addresses`'s `RUN_AT`-threaded batch INSERTs.
+
+### Network seam
+- **0 `fetch(` calls** — no external network dependency, same as every converted `sources`-chain step so far.
+
+### argv/env seam
+- **0 `process.env` reads, 0 `process.argv` reads** — re-confirmed by direct grep this commit (matches §0.2's
+  original measurement and commit 1's re-derivation). `manifest.json`'s `supports_full:false`/
+  `supports_dry_run:false` are both TRUE-to-the-code — a genuinely clean node on this axis, the cleanest
+  argv/env seam of any pilot to date (`link_parcel_addresses` had 1 env read for its force-full override;
+  this step has none — BACKFILL's "run once, fill what's NULL" shape has no forced-mode concept at all,
+  consistent with `manifest.json`'s own `supports_full:false`).
+
+### Seam-map verdict (G5)
+
+**CLOSED this commit.** No PARTIAL seams remain. DB: 4 surviving reads/1 write, fully characterized,
+`txn_scope: "statement"` confirmed structurally (no wrapper around the single UPDATE). Clock: cleanest of
+any pilot — no timestamp column exists to reconcile. Network: absent. argv/env: absent — the one seam every
+prior pilot had to declare an `override.force_full` box for (`link_massing`/`link_wsib`/
+`link_parcel_addresses` all read SOME env or argv signal for a forced-FULL path) is genuinely empty here,
+consistent with `write_once_backfill` having no "FULL" mode to force (the scope predicate —
+`centroid_lat IS NULL` — already recomputes to a correct, monotone answer on every invocation; there is
+nothing a `--full` flag could mean for this step that the scope doesn't already do). This sharpens (does not
+contradict) A-4's ruling: a BACKFILL with no argv/env seam at all is exactly the shape that needs no
+`override` box, matching the plan's `override:"none"` disposition.
+
+---
+
 ## §0. PH-0 seed — measured boundary table (2026-08-29 planning session)
 
 ### 0.1 Governing specs, read in order (Spec 124 §7 Step 0 / Spec 123 §6 G0)
