@@ -1,0 +1,278 @@
+{
+  "harness": "scripts/analysis/capture-step-golden.js",
+  "spec": "docs/specs/01-pipeline/122_pipeline_step_optimization.md §5.3",
+  "step": "scripts/link-parcel-addresses.js",
+  "chain": "sources",
+  "git_head": "5ee14f5b2984bc4564f3185bf48b2ac190698ada",
+  "exit_code": 0,
+  "signal": null,
+  "summary": {
+    "records_total": null,
+    "records_new": null,
+    "records_updated": null,
+    "records_meta": {
+      "config": {
+        "link_parcel_addresses_batch_size": 1000,
+        "link_parcel_addresses_no_address_warn_pct": 50,
+        "link_parcel_addresses_no_parcel_warn_pct": 5,
+        "link_parcel_addresses_fanout_warn_noncondo": 20,
+        "link_parcel_addresses_fanout_warn_condo": 400
+      },
+      "terminal": "skip_gated_no_activity",
+      "ledger_row": "chain_owned",
+      "checks_passed": "all",
+      "checks_failed": 0,
+      "audit_table": {
+        "phase": 54,
+        "name": "Parcel ↔ Address Points Spatial Bridge",
+        "verdict": "PASS",
+        "rows": [
+          {
+            "metric": "sys_velocity_rows_sec",
+            "value": 0,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "sys_duration_ms",
+            "value": 78,
+            "threshold": null,
+            "status": "INFO"
+          }
+        ]
+      }
+    }
+  },
+  "summary_count": 1,
+  "meta": [
+    {
+      "reads": {
+        "parcels": [
+          "id",
+          "geom"
+        ],
+        "address_points": [
+          "address_point_id",
+          "geom"
+        ]
+      },
+      "writes": {
+        "parcel_address_points": [
+          "parcel_id",
+          "address_point_id",
+          "computed_at"
+        ]
+      }
+    }
+  ],
+  "parse_errors": [],
+  "verdict": "PASS",
+  "ledger_status": [],
+  "stdout": "{\"level\":\"INFO\",\"tag\":\"[link_parcel_addresses]\",\"msg\":\"[link_parcel_addresses] target: link_parcel_addresses (descriptor.database) → database=postgres user=postgres migrations=242 (floor 159)\"}\n{\"level\":\"INFO\",\"tag\":\"[link_parcel_addresses]\",\"msg\":\"materialize ledger gate: SKIP (no_upstream_changes)\"}\nPIPELINE_SUMMARY:{\"records_total\":null,\"records_new\":null,\"records_updated\":null,\"records_meta\":{\"config\":{\"link_parcel_addresses_batch_size\":1000,\"link_parcel_addresses_no_address_warn_pct\":50,\"link_parcel_addresses_no_parcel_warn_pct\":5,\"link_parcel_addresses_fanout_warn_noncondo\":20,\"link_parcel_addresses_fanout_warn_condo\":400},\"terminal\":\"skip_gated_no_activity\",\"ledger_row\":\"chain_owned\",\"checks_passed\":\"all\",\"checks_failed\":0,\"audit_table\":{\"phase\":54,\"name\":\"Parcel ↔ Address Points Spatial Bridge\",\"verdict\":\"PASS\",\"rows\":[{\"metric\":\"sys_velocity_rows_sec\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":78,\"threshold\":null,\"status\":\"INFO\"}]}}}\nPIPELINE_META:{\"reads\":{\"parcels\":[\"id\",\"geom\"],\"address_points\":[\"address_point_id\",\"geom\"]},\"writes\":{\"parcel_address_points\":[\"parcel_id\",\"address_point_id\",\"computed_at\"]}}\n\n[link_parcel_addresses] completed in 0.1s\n",
+  "stderr": "",
+  "pipeline_runs": [],
+  "pipeline_runs_max_id_before": 1709,
+  "table_state": [
+    {
+      "table": "parcel_address_points",
+      "row_count": 511224,
+      "ceiling_bypassed": "projected",
+      "content_hash": "bde2b1c4c8fb9ced192d393ed7654d52",
+      "order_by": "explicit",
+      "order_columns": [
+        "parcel_id",
+        "address_point_id"
+      ],
+      "columns": [
+        "parcel_id",
+        "address_point_id"
+      ]
+    }
+  ],
+  "tables_source": "descriptor",
+  "table_row_ceiling": 100000,
+  "table_timing": {
+    "parcel_address_points": 244
+  },
+  "table_specs": {
+    "parcel_address_points": {
+      "columns": [
+        "parcel_id",
+        "address_point_id"
+      ],
+      "columns_source": "arg",
+      "order": [
+        "parcel_id",
+        "address_point_id"
+      ],
+      "order_source": "arg"
+    }
+  },
+  "invariants": [
+    {
+      "name": "rows",
+      "value": "511224"
+    },
+    {
+      "name": "stale_st_within_count",
+      "value": "0"
+    },
+    {
+      "name": "missed_link_count",
+      "value": "0"
+    },
+    {
+      "name": "multi_parcel_address_count",
+      "value": "0"
+    },
+    {
+      "name": "dup_count",
+      "value": "0"
+    },
+    {
+      "name": "fanout_max_condo",
+      "value": "346"
+    },
+    {
+      "name": "fanout_max_noncondo",
+      "value": "155"
+    },
+    {
+      "name": "noncondo_gt_20_count",
+      "value": "130"
+    },
+    {
+      "name": "land_entrance_count",
+      "value": "449"
+    }
+  ],
+  "invariants_file": "docs/reports/golden/link_parcel_addresses/invariants.json",
+  "db_target": "postgresql://postgres:***@127.0.0.1:54322/postgres",
+  "runtime": "node",
+  "args": [],
+  "nondeterminism": [
+    "pattern:duration_literal",
+    "row:sys_duration_ms",
+    "row:sys_velocity_rows_sec"
+  ],
+  "normalised": {
+    "step": "scripts/link-parcel-addresses.js",
+    "chain": "sources",
+    "exit_code": 0,
+    "summary": {
+      "records_meta": {
+        "audit_table": {
+          "name": "Parcel ↔ Address Points Spatial Bridge",
+          "phase": 54,
+          "rows": [],
+          "verdict": "PASS"
+        },
+        "checks_failed": 0,
+        "checks_passed": "all",
+        "config": {
+          "link_parcel_addresses_batch_size": 1000,
+          "link_parcel_addresses_fanout_warn_condo": 400,
+          "link_parcel_addresses_fanout_warn_noncondo": 20,
+          "link_parcel_addresses_no_address_warn_pct": 50,
+          "link_parcel_addresses_no_parcel_warn_pct": 5
+        },
+        "ledger_row": "chain_owned",
+        "terminal": "skip_gated_no_activity"
+      },
+      "records_new": null,
+      "records_total": null,
+      "records_updated": null
+    },
+    "summary_count": 1,
+    "meta": [
+      {
+        "reads": {
+          "address_points": [
+            "address_point_id",
+            "geom"
+          ],
+          "parcels": [
+            "id",
+            "geom"
+          ]
+        },
+        "writes": {
+          "parcel_address_points": [
+            "parcel_id",
+            "address_point_id",
+            "computed_at"
+          ]
+        }
+      }
+    ],
+    "parse_errors": [],
+    "pipeline_runs": [],
+    "stdout_lines": [
+      "{\"level\":\"INFO\",\"msg\":\"[link_parcel_addresses] target: link_parcel_addresses (descriptor.database) → database=postgres user=postgres migrations=242 (floor 159)\",\"tag\":\"[link_parcel_addresses]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"materialize ledger gate: SKIP (no_upstream_changes)\",\"tag\":\"[link_parcel_addresses]\"}",
+      "[link_parcel_addresses] completed in <DUR>"
+    ],
+    "table_state": [
+      {
+        "ceiling_bypassed": "projected",
+        "columns": [
+          "parcel_id",
+          "address_point_id"
+        ],
+        "content_hash": "bde2b1c4c8fb9ced192d393ed7654d52",
+        "order_by": "explicit",
+        "order_columns": [
+          "parcel_id",
+          "address_point_id"
+        ],
+        "row_count": 511224,
+        "table": "parcel_address_points"
+      }
+    ],
+    "invariants": [
+      {
+        "name": "rows",
+        "value": "511224"
+      },
+      {
+        "name": "stale_st_within_count",
+        "value": "0"
+      },
+      {
+        "name": "missed_link_count",
+        "value": "0"
+      },
+      {
+        "name": "multi_parcel_address_count",
+        "value": "0"
+      },
+      {
+        "name": "dup_count",
+        "value": "0"
+      },
+      {
+        "name": "fanout_max_condo",
+        "value": "346"
+      },
+      {
+        "name": "fanout_max_noncondo",
+        "value": "155"
+      },
+      {
+        "name": "noncondo_gt_20_count",
+        "value": "130"
+      },
+      {
+        "name": "land_entrance_count",
+        "value": "449"
+      }
+    ]
+  },
+  "source_fingerprint": "ced45f9d236c2737b17dd5b2528751b2633a9163d0f8ba08fc55f2b50c3fe3d7",
+  "fingerprint_files": [
+    "scripts/lib/compute/link-parcel-addresses.js",
+    "scripts/link-parcel-addresses.descriptor.json",
+    "scripts/link-parcel-addresses.js",
+    "scripts/link-parcel-addresses.notes.json"
+  ]
+}

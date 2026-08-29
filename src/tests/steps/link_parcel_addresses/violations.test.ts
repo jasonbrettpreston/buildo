@@ -897,8 +897,10 @@ describe('55-A — the hard per-conversion gate (44, k=PER_STEP)', () => {
     expect(/pg_stat_activity|pg_locks/i.test(own), 'this suite directly asserts lock/transaction internals').toBe(false);
   });
 
-  it.fails('#169 Rung 1 inline-WKT is non-negotiable for every azimuth / KNN / area step — this IS a spatial containment step (ST_Within), needing a rung-1 inline-WKT fixture (flips at: a peel this pilot schedules, not necessarily commit 7)', () => {
-    const src = stripComments(fs.readFileSync(abs(STEP_REL), 'utf8'));
+  it('#169 Rung 1 inline-WKT is non-negotiable for every azimuth / KNN / area step — this IS a spatial containment step (ST_Within), needing a rung-1 inline-WKT fixture (flipped: peel 8a, src/tests/steps/link_parcel_addresses/rung1-inline-wkt.test.ts)', () => {
+    // Post-commit-7 the spatial predicate lives in the compute (G2's "verbatim" guarantee,
+    // Rule 2 compute-owns-SQL) — the frozen STEP_REL wrapper (§5.1) has no SQL text at all.
+    const src = stripComments(computeSource());
     expect(/\bST_\w+/i.test(src), 'the compute IS spatial (ST_Within containment predicate)').toBe(true);
     expect(stepTestDirFiles().some((f) => /rung1|inline-wkt/i.test(f)), 'a spatial compute with no rung-1 inline-WKT test under the step dir').toBe(true);
   });
@@ -916,8 +918,8 @@ describe('55-A — the hard per-conversion gate (44, k=PER_STEP)', () => {
     }
   });
 
-  it.fails('#172 Metamorphic invariants hold — a spatial compute ships a metamorphic suite (a parcel translated +1000/+1000 with its address points must link identically; ST_Within is scale-invariant under uniform translation) (flips at: a peel this pilot schedules, not necessarily commit 7)', () => {
-    const src = stripComments(fs.readFileSync(abs(STEP_REL), 'utf8'));
+  it('#172 Metamorphic invariants hold — a spatial compute ships a metamorphic suite (a parcel translated +1000/+1000 with its address points must link identically; ST_Within is scale-invariant under uniform translation) (flipped: peel 8a, src/tests/steps/link_parcel_addresses/metamorphic.test.ts)', () => {
+    const src = stripComments(computeSource());
     expect(/\bST_Within\b/i.test(src)).toBe(true);
     expect(stepTestDirFiles().some((f) => /metamorphic/i.test(f)), 'a spatial compute with no metamorphic suite').toBe(true);
   });

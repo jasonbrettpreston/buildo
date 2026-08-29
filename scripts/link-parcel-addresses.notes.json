@@ -46,6 +46,14 @@
     },
     {
       "note": "R-B/R-F item 1 (2026-08-29): this pilot's write has no destructive retraction target (class D, retract:\"none\"), so it does NOT exercise or close R-B's crashed/stuck-running reader gap — carried forward again to whichever future pilot first ships a genuine retract_when:\"full_only\" target. R-M's before_image and recovery.interrupted both ship \"none\"+why for the same reason: there is nothing to image or to interrupt."
+    },
+    {
+      "note": "Peel 8a (2026-08-29): R-B's carry is stated plainly as NOT EXERCISABLE HERE, not merely deferred by inconvenience — this step genuinely has no FULL mode to auto-force. runMaterializePhase (scripts/lib/step/index.js:1263-1272) returns a hardcoded mode:\"incremental\" on every RUN branch; staleness.fingerprint_inputs/mode_select:\"none\" (descriptor) means LINK_PARCEL_ADDRESSES_FORCE_FULL only bypasses staleness.ledgerGatedSkip's SKIP decision (bypassed flag, :1154) — it does not switch the batch loop onto a different code path, because the loop always re-scans the full parcels population from id > -1 regardless (LPA-D2: idempotent-not-resumable). A crashed/stuck-running auto-FULL reader has nothing to force this step INTO that a plain re-run does not already do. R-B's reader stays a genuine future obligation for a step whose FULL mode is behaviourally distinct from incremental (e.g. a retract_when:\"full_only\" target) — never satisfied by this pilot's shape.",
+      "measured": {
+        "value": "runMaterializePhase's only `mode:` literal is \"incremental\" (2 return sites, both hardcoded); staleness.mode_select = \"none\" (descriptor)",
+        "date": "2026-08-29",
+        "query": "grep -n \"mode: 'incremental'\\|mode: null\" scripts/lib/step/index.js (within runMaterializePhase's line range)"
+      }
     }
   ],
   "counts": { "open_blind_spots": 1, "unpromoted_suspicious_if": 0 },

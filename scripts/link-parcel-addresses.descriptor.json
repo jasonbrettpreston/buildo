@@ -271,7 +271,7 @@
     }
   ],
 
-  "interpretation": { "file": "link-parcel-addresses.notes.json", "entries": 8 },
+  "interpretation": { "file": "link-parcel-addresses.notes.json", "entries": 9 },
 
   "recovery": {
     "reset": "No TRUNCATE/rebuild mechanism exists. A re-run (LINK_PARCEL_ADDRESSES_FORCE_FULL=1 bypasses the ledger gate) re-scans the full parcels population from id > -1; ON CONFLICT DO NOTHING makes this idempotent, which is the only available reset today — declare-only per the A-1 ruling, no destructive rebuild path built this pilot.",
