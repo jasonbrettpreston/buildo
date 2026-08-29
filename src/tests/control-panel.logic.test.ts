@@ -182,6 +182,16 @@ const EXPECTED_LOGIC_VAR_KEYS = [
   'link_wsib_entity_fanin_warn',
   'link_wsib_tier3_full_max_iterations',
   'link_wsib_tier3_token_overlap_fail_pct',
+  // C1 pilot 5 (link_parcel_addresses, MATERIALIZER, 2026-08-29) — T1-T5. T1 is the
+  // batch-size pacing knob (not verdict-affecting); T2/T3 are the coverage-gap WARN
+  // ceilings (pct <=, limit_from_config); T4/T5 are the non-CONDO/CONDO fan-out WARN
+  // ceilings (Fold B's honest aggregate). Seeded via scripts/seeds/logic_variables.json,
+  // rendered under GROUPS "Parcel-Address Bridge".
+  'link_parcel_addresses_batch_size',
+  'link_parcel_addresses_no_address_warn_pct',
+  'link_parcel_addresses_no_parcel_warn_pct',
+  'link_parcel_addresses_fanout_warn_noncondo',
+  'link_parcel_addresses_fanout_warn_condo',
   'calibration_default_median_days',  // E21
   'calibration_default_p25_days',     // E21
   'calibration_default_p75_days',     // E21

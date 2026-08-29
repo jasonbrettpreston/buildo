@@ -132,6 +132,19 @@ export const GROUPS: Array<{ label: string; keys: string[] }> = [
     ],
   },
   {
+    // Spec 122 §1.2a P4 (C1 pilot 5, MATERIALIZER) — link_parcel_addresses' five
+    // externalized knobs. Own group (not "Spatial & Massing" or "WSIB Matching" —
+    // both archetype-specific to their own steps).
+    label: 'Parcel-Address Bridge',
+    keys: [
+      'link_parcel_addresses_batch_size',
+      'link_parcel_addresses_no_address_warn_pct',
+      'link_parcel_addresses_no_parcel_warn_pct',
+      'link_parcel_addresses_fanout_warn_noncondo',
+      'link_parcel_addresses_fanout_warn_condo',
+    ],
+  },
+  {
     label: 'Data Quality Thresholds',
     keys: [
       'cost_outlier_ceiling_cad',

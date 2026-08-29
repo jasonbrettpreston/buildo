@@ -1,0 +1,375 @@
+{
+  "identity": {
+    "name": "link_parcel_addresses",
+    "display_name": "Parcel ↔ Address Points Spatial Bridge",
+    "owner": "data",
+    "description": "Populates parcel_address_points, the spatial bridge table Phase 2d link-parcels.js Strategy 1a (0.97 confidence) and Phase 2e link-coa-to-parcels.js Tier 1a (0.95 confidence) both consume as their top-of-cascade address match: for every parcel with a non-NULL geom, ONE server-side INSERT...SELECT...JOIN ST_Within(address_point, parcel)...ON CONFLICT DO NOTHING statement per keyset batch, no retraction, no primary/fallback split.",
+    "lock": 115,
+    "why_lock": {
+      "text": "Lock 115 is not the spec number (54) — spec 54's slot is already taken by load-address-points.js (lock 96), and spec 55's slot is taken by load-parcels.js. Free-range ID, registered in src/tests/pipeline-advisory-lock.infra.test.ts LOCK_ID_REGISTRY. Kept textually per §5.4 so that registry stays green across the conversion.",
+      "liveness": { "kind": "file", "ref": "src/tests/pipeline-advisory-lock.infra.test.ts" }
+    },
+    "spec": "54",
+    "spec_version": "2.0",
+    "archetype": "MATERIALIZER",
+    "contract_version": 1,
+    "gate_exempt": false
+  },
+
+  "inputs": {
+    "reads": {
+      "steps": [
+        { "step": "address_points", "version_pin": "gte" },
+        { "step": "load_address_points", "version_pin": "gte" },
+        { "step": "parcels", "version_pin": "gte" },
+        { "step": "load_parcels", "version_pin": "gte" }
+      ],
+      "tables": [
+        { "table": "parcels", "columns": ["id", "geom"] },
+        { "table": "address_points", "columns": ["address_point_id", "geom"] }
+      ],
+      "externals": []
+    },
+    "expect_nonempty": true,
+    "on_missing": "warn"
+  },
+
+  "outputs": {
+    "writes": [
+      {
+        "table": "parcel_address_points",
+        "key": ["parcel_id", "address_point_id"],
+        "columns": [
+          { "name": "parcel_id", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "address_point_id", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "computed_at", "vocabulary": "none", "written": "step", "bind": "value", "source": "run_at" }
+        ],
+        "write_discipline": {
+          "class": "insert_only_no_retraction",
+          "guard": "none",
+          "guard_why": {
+            "text": "No column on this write target is ever updated after insert — computed_at is a write-once RUN_AT stamp, never revisited. A change guard would compare a row against itself and always pass; the genuine gap is retraction (LPA-D1), not a missing guard. Grandfathered in scripts/steps/_schema/grandfathered.json (Rule 9: an existing step must be able to declare its truth), keyed on write_discipline.guard, not .class.",
+            "liveness": { "kind": "table", "ref": "parcel_address_points" }
+          },
+          "guard_columns": "all_declared",
+          "guard_columns_why": {
+            "text": "LG-9 escape hatch. \"all_declared\" expands over computed_at, a columns[].source \"run_at\" column — normally banned (a run-clock column is DISTINCT FROM its stored value on every run, so guarding on it would rewrite every row every run). Moot here: guard is \"none\", so guard_columns is never consulted to build an IS DISTINCT FROM clause — there is no OTHER non-key column to name, since parcel_id/address_point_id are the key and computed_at is the only non-key column, which is exactly why the guard is genuinely \"none\" (guard_why above).",
+            "liveness": { "kind": "file", "ref": "scripts/lib/step/write.js" }
+          },
+          "scope": "unscoped INSERT — the batch loop re-scans the FULL parcels WHERE geom IS NOT NULL population every run (LPA-D2: idempotent via ON CONFLICT DO NOTHING, not resumable — no batch-position checkpoint is persisted), filtered per-batch by id > lastId",
+          "expected_change_ratio": "none",
+          "idempotent_rerun": "zero_writes",
+          "txn_scope": "batch",
+          "why": {
+            "text": "LG-18 (this pilot). LPA-D1: the W3 retraction breach is a genuine DEFECT (a parcel/address-point geom correction can silently invalidate an already-written row, and nothing here ever re-evaluates or removes it) with ZERO measured live exposure today (0 of 511,224 rows fail ST_Within, this session). Per Spec 123 §3.1: pin the non-retraction as-is, convert, prove bit-identical output, decide the fix as a separate ruling — not bundled into this conversion commit. retract:\"none\" below is the truthful, pinned declaration; parcel_address_points_stale_st_within_count (checks[]) makes the live exposure OBSERVABLE every run so the pin is never silent.",
+            "liveness": { "kind": "check", "ref": "parcel_address_points_stale_st_within_count" }
+          }
+        },
+        "retract": "none",
+        "replay": "idempotent_upsert",
+        "source_key_policy": { "unique": true, "on_collision": "not_applicable", "key_space_migration": "none" }
+      }
+    ],
+    "cascades": "none",
+    "invalidates": [],
+    "publish": "direct",
+    "write_inventory": {
+      "statements": 1,
+      "why": {
+        "text": "One write target, one write statement per batch — the single INSERT...SELECT...JOIN ST_Within...ON CONFLICT DO NOTHING (LG-18's executeInsertSelectNoRetract), repeated once per keyset-paginated batch (measured ~487 batches at BATCH_SIZE 1000 over 486,530 parcels).",
+        "liveness": { "kind": "file", "ref": "scripts/lib/compute/link-parcel-addresses.js" }
+      }
+    }
+  },
+
+  "staleness": {
+    "scope": "all",
+    "trigger": "none",
+    "mode_select": "none",
+    "checkpoint": "none",
+    "interval": "none",
+    "fingerprint": "derived",
+    "fingerprint_inputs": ["scripts/lib/compute/link-parcel-addresses.js", "parcels:count", "address_points:count"],
+    "logic_version": "v1-st-within-parcel-batch",
+    "on_fingerprint_change": "run"
+  },
+
+  "guards": {
+    "requires": [
+      {
+        "kind": "index", "name": "idx_parcels_geom_gist", "on_missing": "fail",
+        "why": { "text": "The GIST index the batch join's ST_Within(ap.geom, pb.geom) predicate seeks on the parcel side. Without it every batch degrades to a sequential scan — the same class of failure tasks/lessons.md records for link_massing's spatial GiST indexes.", "liveness": { "kind": "table", "ref": "parcels" } }
+      },
+      {
+        "kind": "index", "name": "idx_address_points_geom_gist", "on_missing": "fail",
+        "why": { "text": "The GIST index (migration 162) the batch join seeks on the address_points side. Without it the join is unbounded on a 525,346-row table.", "liveness": { "kind": "table", "ref": "address_points" } }
+      },
+      {
+        "kind": "rls_bypass_or_policy", "name": "parcel_address_points", "on_missing": "fail",
+        "why": { "text": "Measured live: relrowsecurity=true, 0 policies. Under any role that does not bypass RLS the INSERT affects 0 rows with NO error — indistinguishable from an unchanged corpus.", "liveness": { "kind": "table", "ref": "parcel_address_points" } }
+      }
+    ],
+    "srid": "none",
+    "empty_source": "none",
+    "schema_drift": "none"
+  },
+
+  "execution": {
+    "shape": "materialize",
+    "budget": "10m",
+    "txn_scope": "batch",
+    "txn_budget": "10m",
+    "chunked": true,
+    "statement_timeout": "none",
+    "step_timeout": "15m",
+    "batch": "none",
+    "needs_disk_mb": "none",
+    "partial_fill": "batched",
+    "on_row_error": "fail_fast",
+    "on_batch_error": "fail_step",
+    "on_check_error": "fail_step",
+    "on_check_error_why": {
+      "text": "Every check reads a value the library already measured — a check that throws is a library defect, not an upstream condition. It must redden the run, not drop its row.",
+      "liveness": { "kind": "file", "ref": "scripts/lib/compute/link-parcel-addresses.js" }
+    },
+    "on_degrade": "none",
+    "criticality": "required",
+    "network": "none",
+    "invocation": {
+      "sources": { "argv": [], "env": {} }
+    },
+    "maintenance": "none"
+  },
+
+  "checks": [
+    {
+      "id": "parcels_with_geom_pre_run", "kind": "field_coverage",
+      "expect": { "reports": "the pre-run count of parcels with a non-NULL geom — the evaluation scope's own denominator" },
+      "limit": "viol == 0", "severity": "INFO", "blocking": false, "when": "post", "chains": "all", "accept_until": "none",
+      "why": { "text": "records_total's own source (§11 Counter Semantic Contract) — the full evaluation scope, measured before the batch loop, ported by name from the pre-conversion script's own parcelsWithGeom.", "liveness": { "kind": "table", "ref": "parcels" } }
+    },
+    {
+      "id": "address_points_with_geom_pre_run", "kind": "field_coverage",
+      "expect": { "reports": "the pre-run count of address points with a non-NULL geom" },
+      "limit": "viol == 0", "severity": "INFO", "blocking": false, "when": "post", "chains": "all", "accept_until": "none",
+      "why": { "text": "Ported by name from the pre-conversion script's own apWithGeom.", "liveness": { "kind": "table", "ref": "address_points" } }
+    },
+    {
+      "id": "address_points_with_null_geom", "kind": "field_coverage",
+      "expect": { "of": "address points whose geom is NULL — skipped by every batch's JOIN predicate" },
+      "limit": "viol == 0", "severity": "WARN", "blocking": false, "when": "post", "chains": "all", "accept_until": "none",
+      "why": { "text": "WARN, not FAIL — Phase 2a backfill may be incomplete or intentionally skipped (NULL lat/lng, cannot be geom-backfilled). The bridge keeps working for the rows that do have geom. Ported verbatim from the pre-conversion script's own gate.", "liveness": { "kind": "column", "ref": "address_points.geom" } }
+    },
+    {
+      "id": "new_links_written", "kind": "field_coverage",
+      "expect": { "reports": "new (parcel_id, address_point_id) rows written this run, summed across every batch" },
+      "limit": "viol == 0", "severity": "INFO", "blocking": false, "when": "post", "chains": "all", "accept_until": "none",
+      "why": { "text": "records_new's own source. On a stable corpus this is 0 on 7 of the 8 recorded live runs (the origin run wrote all 511,224 — Fold B correction).", "liveness": { "kind": "table", "ref": "parcel_address_points" } }
+    },
+    {
+      "id": "final_link_count", "kind": "invariant",
+      "expect": { "invariant": "at least one link must exist, or the bridge produced literally nothing" },
+      "limit": "viol == 0", "severity": "FAIL", "blocking": false, "when": "post", "chains": "all", "accept_until": "none",
+      "why": { "text": "G10 — the zero-coverage gate. The bridge is the SOLE data path for link-parcels.js Strategy 1a and link-coa-to-parcels.js Tier 1a. A complete failure (PostGIS extension absent, GIST index dropped, SRID mismatch) silently produces final_link_count = 0 and the chain proceeds to unlink every permit downstream. Ported verbatim from the pre-conversion script's own hard-fail gate (Observability IMPL F3 fold). blocking:false because §439's schema rule ties blocking:true to when:\"pre\" only, and this is necessarily a post-write structural fact — report loudly, do not halt.", "liveness": { "kind": "table", "ref": "parcel_address_points" } }
+    },
+    {
+      "id": "parcels_with_links", "kind": "field_coverage",
+      "expect": { "reports": "distinct parcels with at least one bridge row" },
+      "limit": "viol == 0", "severity": "INFO", "blocking": false, "when": "post", "chains": "all", "accept_until": "none",
+      "why": { "text": "Ported by name from the pre-conversion script's own parcelsWithLinks.", "liveness": { "kind": "table", "ref": "parcel_address_points" } }
+    },
+    {
+      "id": "parcel_link_rate_pct", "kind": "field_coverage",
+      "expect": { "of": "parcels with >= 1 address point / parcels with geom — the headline coverage figure" },
+      "limit": "viol == 0", "severity": "INFO", "blocking": false, "when": "post", "chains": "all", "accept_until": "none",
+      "why": { "text": "Spec 43 §6.7-A link-rate telemetry. Complements the WARN-gated parcels_with_no_address_pct below with the positive framing (~96.15% measured live). INFO — the WARN threshold lives on the complement row so the gate is not double-counted. Ported verbatim from commit 1f8ca38a.", "liveness": { "kind": "table", "ref": "parcel_address_points" } }
+    },
+    {
+      "id": "parcels_with_no_address_pct", "kind": "bound",
+      "expect": { "of": "parcels with a geom but zero bridge rows / parcels with geom" },
+      "limit": "pct <= 50", "limit_from_config": "link_parcel_addresses_no_address_warn_pct",
+      "severity": "WARN", "blocking": false, "when": "post", "chains": "all", "accept_until": "none",
+      "why": { "text": "T2. PI-2's Poisson-like distribution implies ~37% of parcels legitimately have zero address points (vacant land, road allowance, easement, internal subdivision lots) — measured live 3.85%. Default 50 (recalibrated from an original 10% ceiling, Independent IMPL I1 fold, which would WARN on every clean run). A sudden jump above the ceiling indicates a spatial-join regression (PostGIS removed, SRID mismatch, index drop).", "liveness": { "kind": "table", "ref": "parcels" } }
+    },
+    {
+      "id": "address_points_with_no_parcel_pct", "kind": "bound",
+      "expect": { "of": "address points with a geom but zero bridge rows / address points with geom" },
+      "limit": "pct <= 5", "limit_from_config": "link_parcel_addresses_no_parcel_warn_pct",
+      "severity": "WARN", "blocking": false, "when": "post", "chains": "all", "accept_until": "none",
+      "why": { "text": "T3. Address points outside the parcel boundary layer (e.g. points on a road allowance not covered by a parcel polygon) are normal — measured live 2.69%. Default 5 (ported verbatim). > 5% suggests parcel coverage gaps.", "liveness": { "kind": "table", "ref": "address_points" } }
+    },
+    {
+      "id": "errors", "kind": "invariant",
+      "expect": { "invariant": "the batch loop must complete with zero caught errors" },
+      "limit": "viol == 0", "severity": "FAIL", "blocking": false, "when": "post", "chains": "all", "accept_until": "none",
+      "why": { "text": "Ported verbatim from the pre-conversion script's own error counter (:153-217).", "liveness": { "kind": "file", "ref": "scripts/lib/step/index.js" } }
+    },
+    {
+      "id": "parcel_fanout_outliers", "kind": "bound",
+      "expect": { "of": "non-CONDO parcels whose linked-address-point fan-out exceeds the declared per-parcel ceiling", "stopwords": "none" },
+      "limit": "viol == 0", "limit_from_config": "link_parcel_addresses_fanout_warn_noncondo",
+      "severity": "WARN", "blocking": false, "when": "post", "chains": "all", "accept_until": "none",
+      "why": { "text": "T4 (Fold B, Cross-read Adversary AMEND, 2026-08-29) — replaces the DROPPED 5-id allow-list Fold A first proposed (the 5 named ids were merely top-5 of a 4,296-parcel non-CONDO tail with no measured discontinuity vs ranks 6-10, and \"registered as COMMON\" was uncorroborated). Default 20 — measured live 130 non-CONDO parcels exceed it TODAY, which fires this WARN by construction. R-H (Spec 124 Rule 10 addendum): a metric expected to be permanently non-zero is WARN with a declared, machine-observable retighten condition, never FAIL, never silently PASSed by an allow-list. RETIGHTEN CONDITION: if the count materially drops from 130 without any code change (a parcel-boundary correction, not a threshold edit), review lowering the default toward the observed floor.", "liveness": { "kind": "table", "ref": "parcel_address_points" } }
+    },
+    {
+      "id": "parcel_fanout_condo_outliers", "kind": "bound",
+      "expect": { "of": "CONDO parcels whose linked-address-point fan-out exceeds the declared per-parcel ceiling" },
+      "limit": "viol == 0", "limit_from_config": "link_parcel_addresses_fanout_warn_condo",
+      "severity": "WARN", "blocking": false, "when": "post", "chains": "all", "accept_until": "none",
+      "why": { "text": "T5 (Fold B). A large condo complex's common-elements parcel legitimately contains many unit entrances (measured live max 346, ~26.6-acre parcel 469748, address_number range 1-98 — plausible per this pilot's Reality-Check pass). Default 400, comfortably above the measured p99 (80) and max (346) — fires only on a genuine outlier, unlike T4's standing-population shape.", "liveness": { "kind": "table", "ref": "parcel_address_points" } }
+    },
+    {
+      "id": "parcel_fanout_distribution", "kind": "distribution",
+      "expect": { "reports": "condo_max, noncondo_max, noncondo_gt_threshold — the raw fan-out shape behind T4/T5" },
+      "limit": "viol == 0", "severity": "INFO", "blocking": false, "when": "post", "chains": "all", "accept_until": "none",
+      "why": { "text": "The un-thresholded companion to parcel_fanout_outliers/parcel_fanout_condo_outliers — always reported so an operator can see the shape moving even when neither WARN's boundary is crossed.", "liveness": { "kind": "table", "ref": "parcel_address_points" } }
+    },
+    {
+      "id": "parcel_address_points_stale_st_within_count", "kind": "invariant",
+      "expect": { "invariant": "every written (parcel_id, address_point_id) pair currently satisfies ST_Within(ap.geom, p.geom)" },
+      "limit": "viol == 0", "severity": "INFO", "blocking": false, "when": "post", "chains": "all", "accept_until": "none",
+      "why": { "text": "LPA-D1 — the W3 retraction breach, PINNED per Spec 123 §3.1. A parcel boundary correction or address-point coordinate correction can silently invalidate an already-written row, and this step has NO mechanism that ever re-evaluates or removes it (0 DELETE anywhere). Measured live exposure TODAY: 0 of 511,224 rows. INFO (not WARN/FAIL) — this is a structural fact to surface every run (Rule 1: nothing hidden), never a threshold to gate on until a separate ruling decides to build the retraction mechanism.", "liveness": { "kind": "table", "ref": "parcel_address_points" } }
+    },
+    {
+      "id": "parcel_address_points_missed_link_count", "kind": "invariant",
+      "expect": { "invariant": "every address point genuinely inside a parcel (ST_Within) has a bridge row — distinct from address_points_with_no_parcel_pct's genuinely-unparented complement" },
+      "limit": "viol == 0", "severity": "INFO", "blocking": false, "when": "post", "chains": "all", "accept_until": "none",
+      "why": { "text": "Fold A, Reality-Check item b. Any nonzero count would mean the batch/predicate is silently DROPPING in-parcel address points, not merely leaving genuinely unparented ones unlinked — a distinct failure mode from address_points_with_no_parcel_pct. Measured live 0 today.", "liveness": { "kind": "table", "ref": "parcel_address_points" } }
+    }
+  ],
+
+  "override": {
+    "force_full": "LINK_PARCEL_ADDRESSES_FORCE_FULL",
+    "force_run": "none",
+    "dry_run": "none"
+  },
+
+  "emits": "none",
+
+  "deviations": [
+    {
+      "from": "the pre-conversion script's own header comment (:32-34, 'Resumable: each batch commits independently; operator Ctrl-C leaves the DB in a consistent partial state and a re-run picks up where we left off.')",
+      "why": {
+        "text": "LPA-D2 (2026-08-29). Measured: lastParcelId was a LOCAL variable, initialized to -1, never persisted to any table or file (:148) — every invocation, including one immediately after a Ctrl-C, restarts the batch loop from id > -1, i.e. the FULL parcel population. ON CONFLICT DO NOTHING makes this idempotent (safe: no duplicate rows) but it is NOT resumable in the claimed sense (efficient re-entry, skipping already-completed batches). The code was already correct-and-safe; only the header's PROSE claimed a capability the code never had. Corrected here and in link-parcel-addresses.notes.json's read_this_way block — the code itself needed no behavior change.",
+        "liveness": { "kind": "file", "ref": "scripts/lib/compute/link-parcel-addresses.js" }
+      },
+      "adjudicated_by": "measured this pilot (§1 PH-0 boundary freeze / §2 PH-3 intent ledger, finding 2), 2026-08-29",
+      "date": "2026-08-29"
+    }
+  ],
+
+  "limitations": [
+    {
+      "what": "LPA-D1: the W3 retraction breach. parcel_address_points guarantees the AP geom is inside the parcel AT WRITE TIME (link-parcels.js:282's own in-file comment states the reliance), but a later upstream geom edit (load-parcels.js / load-address-points.js both UPDATE geom on ON CONFLICT for an existing row) can make that stale with ZERO mechanism to detect or repair it. PINNED per Spec 123 §3.1 — convert first, decide the retraction fix as a separate ruling.",
+      "measured": "0 of 511,224 rows fail ST_Within(ap.geom, p.geom) today (2026-08-29 session)",
+      "check_id": "parcel_address_points_stale_st_within_count"
+    },
+    {
+      "what": "computed_at is a SINGLE timestamp shared across all 511,224 rows written by the origin run, not a per-row per-invocation audit trail — a future reset/rebuild mechanism must not rely on computed_at to distinguish rows by run.",
+      "measured": "1 distinct computed_at value across the live table (Fold A, Reality-Check note, 2026-08-29)",
+      "check_id": "none"
+    }
+  ],
+
+  "interpretation": { "file": "link-parcel-addresses.notes.json", "entries": 8 },
+
+  "recovery": {
+    "reset": "No TRUNCATE/rebuild mechanism exists. A re-run (LINK_PARCEL_ADDRESSES_FORCE_FULL=1 bypasses the ledger gate) re-scans the full parcels population from id > -1; ON CONFLICT DO NOTHING makes this idempotent, which is the only available reset today — declare-only per the A-1 ruling, no destructive rebuild path built this pilot.",
+    "resume": "none",
+    "force": "LINK_PARCEL_ADDRESSES_FORCE_FULL",
+    "rollback": "none",
+    "verify_clean": "none",
+    "cascades": "derived",
+    "interrupted": "none",
+    "interrupted_why": {
+      "text": "No destructive retraction target exists on this step (class D, retract:\"none\", LPA-D1 pinned) — there is nothing for an interrupted run to leave half-retracted. R-F item 1 (2026-08-29): this pilot does NOT itself exercise or close R-B's crashed/stuck-running reader gap; it stays carried forward to whichever future pilot first ships a genuine retract_when:\"full_only\" target.",
+      "liveness": { "kind": "check", "ref": "parcel_address_points_stale_st_within_count" }
+    },
+    "before_image": "none",
+    "before_image_why": {
+      "text": "R-M / LG-17's before-image mechanism applies to a destructive retraction; this step has none (class D, retract:\"none\"). Each batch's INSERT is additive and reversible-by-DELETE-of-the-batch's-own-new-rows if ever needed, which is not the same hazard class a before-image protects against.",
+      "liveness": { "kind": "file", "ref": "scripts/lib/step/write.js" }
+    }
+  },
+
+  "database": {
+    "class": "primary",
+    "min_migration": 159,
+    "assert_current_database": "postgres"
+  },
+
+  "counters": {
+    "records_total": { "source": "matched.parcels_with_geom", "scoped_by": "step" },
+    "records_new": { "source": "matched.new_links_written", "scoped_by": ["parcel_id", "address_point_id"] },
+    "records_updated": { "source": "written.e1.updated", "scoped_by": ["parcel_id", "address_point_id"] }
+  },
+
+  "config": {
+    "logic_variables": [
+      { "name": "link_parcel_addresses_batch_size", "min": 100, "max": 10000, "on_invalid": "clamp" },
+      { "name": "link_parcel_addresses_no_address_warn_pct", "min": 0, "max": 100, "on_invalid": "fail" },
+      { "name": "link_parcel_addresses_no_parcel_warn_pct", "min": 0, "max": 100, "on_invalid": "fail" },
+      { "name": "link_parcel_addresses_fanout_warn_noncondo", "min": 1, "max": 1000, "on_invalid": "fail" },
+      { "name": "link_parcel_addresses_fanout_warn_condo", "min": 1, "max": 1000, "on_invalid": "fail" }
+    ],
+    "validation": "strict",
+    "hoisted_above_gate": true,
+    "retired": []
+  },
+
+  "sharing": {
+    "chains": "derived",
+    "shared": "derived",
+    "slug_forms": "derived",
+    "varies_by_chain": {
+      "checks": "none",
+      "phase": { "sources": 54 },
+      "audit_table": "one",
+      "scope": "none"
+    },
+    "on_contention": "self_skip"
+  },
+
+  "terminals": [
+    {
+      "id": "materialized_incremental", "kind": "success", "status": "completed",
+      "records_meta": { "duration_ms": "int", "batches_processed": "int", "completed_naturally": "bool", "audit_table": "object", "terminal": "string" },
+      "why": { "text": "The normal outcome: the ledger gate did not skip, the batch loop ran to natural completion.", "liveness": { "kind": "check", "ref": "final_link_count" } }
+    },
+    {
+      "id": "materialized_with_warnings", "kind": "success", "status": "completed_with_warnings",
+      "records_meta": { "audit_table": "object", "terminal": "string" },
+      "why": { "text": "A WARN row stands (parcels_with_no_address_pct, address_points_with_no_parcel_pct, parcel_fanout_outliers, or parcel_fanout_condo_outliers) and nothing FAILED. The run completed and wrote; the warning is in the table.", "liveness": { "kind": "check", "ref": "parcel_fanout_outliers" } }
+    },
+    {
+      "id": "skip_gated_no_activity", "kind": "skip_gated", "status": "completed",
+      "records_meta": { "audit_table": "object", "terminal": "string" },
+      "why": { "text": "LG-15: no upstream parcels/address_points activity since this step's own last completed run — generalizes the pre-existing B3 SKIP.", "liveness": { "kind": "file", "ref": "scripts/lib/step/staleness.js" } }
+    },
+    {
+      "id": "lock_held_elsewhere", "kind": "skip_lock_contention", "status": "self_skipped",
+      "records_meta": { "skipped": "bool", "reason": "string" },
+      "why": { "text": "Advisory lock 115 is held by another process — a row-derived SKIP summary, never a bare SDK skip with no audit_table.", "liveness": { "kind": "file", "ref": "scripts/lib/step/index.js" } }
+    },
+    {
+      "id": "failed_final_link_count", "kind": "fail_check", "status": "failed",
+      "records_meta": { "audit_table": "object", "terminal": "string" },
+      "why": { "text": "final_link_count measured 0 — the bridge produced literally nothing (G10's structural FAIL).", "liveness": { "kind": "check", "ref": "final_link_count" } }
+    },
+    {
+      "id": "failed_errors", "kind": "fail_check", "status": "failed",
+      "records_meta": { "audit_table": "object", "terminal": "string" },
+      "why": { "text": "The batch loop caught at least one error — the errors check's structural FAIL.", "liveness": { "kind": "check", "ref": "errors" } }
+    },
+    {
+      "id": "failed_missing_precondition", "kind": "fail_error", "status": "failed",
+      "records_meta": { "audit_table": "object", "terminal": "string" },
+      "why": { "text": "A guards.requires precondition with on_missing:\"fail\" is absent (a GIST index, or an RLS policy). Refuses before reading anything.", "liveness": { "kind": "file", "ref": "scripts/lib/step/index.js" } }
+    },
+    {
+      "id": "failed_config_out_of_bounds", "kind": "fail_error", "status": "failed",
+      "records_meta": { "audit_table": "object", "terminal": "string" },
+      "why": { "text": "A declared logic variable (T1-T5) resolved outside its bounds under on_invalid:\"fail\". hoisted_above_gate puts this refusal ABOVE the advisory lock and the ledger gate.", "liveness": { "kind": "file", "ref": "scripts/lib/step/config.js" } }
+    }
+  ]
+}

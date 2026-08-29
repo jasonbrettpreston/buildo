@@ -74,6 +74,18 @@ const SET_BASED_CLASSES = new Set(['set_based_scoped', 'set_based_unscoped', 'se
  */
 const JOIN_UPDATE_CLASS = 'set_based_join_update';
 
+/**
+ * `write_discipline.class` value for LG-18 (MATERIALIZER pilot 2026-08-29) — a single
+ * server-side `INSERT INTO <table> (...) SELECT ... FROM ... JOIN ... ON <spatial
+ * predicate> ON CONFLICT (<key>) DO NOTHING`, no `DO UPDATE` branch, no retraction. The
+ * SELECT's join predicate is AUTHORED BY THE COMPUTE (`buildMaterializeSql`, mirroring
+ * `buildTierSql`'s split) — the domain join is not expressible as declared `columns[]`
+ * the way a guarded upsert's row values are. `buildWritePlan` for this class returns a
+ * DESCRIPTIVE plan only; the executable SQL text is handed to
+ * `executeInsertSelectNoRetract` directly by the runner, per batch.
+ */
+const INSERT_ONLY_NO_RETRACT_CLASS = 'insert_only_no_retraction';
+
 /** `retract_when` — the LINK-pilot qualifier on the frozen `retract` enum. Absent means "always". */
 const RETRACT_ALWAYS = 'always';
 const RETRACT_FULL_ONLY = 'full_only';
@@ -321,6 +333,34 @@ function buildWritePlan(writeSpec, descriptor) {
       mechanic: JOIN_UPDATE_CLASS,
       step_columns: stepColumnNames,
       update_columns: updateColumns,
+      guard_columns: guardColumns,
+      key_sql_type: keyType,
+      scope,
+      retract,
+      retract_when: retractWhen,
+      clear_sql: null,
+      upsert_sql: null,
+      delete_sql: null,
+      generated_by: 'compute',
+    };
+  }
+
+  // ── insert_only_no_retraction (LG-18, MATERIALIZER pilot 2026-08-29) — DESCRIPTIVE
+  // ONLY. No statement is generated here: the whole INSERT...SELECT...JOIN...ON
+  // CONFLICT DO NOTHING statement is authored by the compute (buildMaterializeSql),
+  // exactly the same split JOIN_UPDATE_CLASS uses above. What the descriptor still
+  // buys: the declared columns/scope are what the fence-lock detectors and the
+  // conformance suite check the compute's AUTHORED text against, and buildWritePlan's
+  // callers (write.assertWritePrivileges, the RLS preflight) still work off
+  // `table`/`keys` alone.
+  if (writeSpec.write_discipline.class === INSERT_ONLY_NO_RETRACT_CLASS) {
+    return {
+      table,
+      keys,
+      srid,
+      mechanic: INSERT_ONLY_NO_RETRACT_CLASS,
+      step_columns: stepColumnNames,
+      update_columns: [],
       guard_columns: guardColumns,
       key_sql_type: keyType,
       scope,
@@ -646,6 +686,47 @@ async function executeSetBasedJoinUpdate(client, sql, params) {
   return result.rowCount || 0;
 }
 
+/** SQL text an `insert_only_no_retraction` target must never contain (LG-18's structural half — mirrors LG-11's JOIN_UPDATE_FORBIDDEN_RE). */
+const INSERT_ONLY_FORBIDDEN_RE = /\bUPDATE\b|\bDELETE\b/i;
+
+/**
+ * LG-18 (MATERIALIZER pilot 2026-08-29) — execute one `insert_only_no_retraction`
+ * statement: a single server-side `INSERT INTO ... SELECT ... JOIN ... ON CONFLICT (...)
+ * DO NOTHING`, no per-row VALUES insert and no retraction.
+ *
+ * ⚠️ THE ONE PLACE "NEVER TOUCHES AN EXISTING ROW" IS ENFORCED, not merely declared.
+ * `sql` is authored by the COMPUTE (`buildMaterializeSql`) — a single statement, never a
+ * SELECT-then-batched-INSERT split (that split would break G2's "verbatim SQL"
+ * guarantee, Fold A Integration finding 3). This executor refuses to run any statement
+ * that could ever UPDATE or DELETE an existing row, checked on the ACTUAL text about to
+ * run — LPA-D1 pins the non-retraction as-is; a silent UPDATE/DELETE creeping into the
+ * compute's generated text would fix that KNOWN-DEFECT without a ruling.
+ *
+ * @param {import('pg').ClientBase} client
+ * @param {string} sql - a complete `INSERT INTO ... SELECT ... ON CONFLICT (...) DO NOTHING` statement
+ * @param {unknown[]} [params]
+ * @returns {Promise<Record<string, unknown>>} the statement's own single result row
+ *   (e.g. `{new_links, max_parcel_id, parcels_in_batch}`) — the CALLER interprets the
+ *   shape; this executor only enforces the structural insert-only boundary.
+ */
+async function executeInsertSelectNoRetract(client, sql, params) {
+  if (INSERT_ONLY_FORBIDDEN_RE.test(sql)) {
+    throw new Error(
+      `[write.js] executeInsertSelectNoRetract (insert_only_no_retraction / LG-18): the statement contains `
+      + 'an UPDATE or DELETE token, which this executor structurally refuses — an insert_only_no_retraction '
+      + `target may never touch an existing row. Statement: ${sql.slice(0, 200)}${sql.length > 200 ? '…' : ''}`,
+    );
+  }
+  if (!/INSERT\s+INTO/i.test(sql) || !/ON\s+CONFLICT/i.test(sql)) {
+    throw new Error(
+      '[write.js] executeInsertSelectNoRetract (insert_only_no_retraction / LG-18): the statement must be an '
+      + `INSERT ... ON CONFLICT ... DO NOTHING — got: ${sql.slice(0, 200)}${sql.length > 200 ? '…' : ''}`,
+    );
+  }
+  const result = await client.query(sql, params || []);
+  return result.rows[0] || {};
+}
+
 module.exports = {
   buildWritePlan,
   generateWriteSql,
@@ -658,8 +739,11 @@ module.exports = {
   executeUpsertBatch,
   executeRetraction,
   executeSetBasedJoinUpdate,
+  executeInsertSelectNoRetract,
   JOIN_UPDATE_CLASS,
   JOIN_UPDATE_FORBIDDEN_RE,
+  INSERT_ONLY_NO_RETRACT_CLASS,
+  INSERT_ONLY_FORBIDDEN_RE,
   SET_BASED_CLASSES,
   RETRACT_ALWAYS,
   RETRACT_FULL_ONLY,

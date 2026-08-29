@@ -783,6 +783,41 @@
     "min": 0,
     "max": 1
   },
+  "link_parcel_addresses_batch_size": {
+    "default": 1000,
+    "type": "number",
+    "description": "The keyset-paginated batch size for the parcel <-> address_points spatial bridge's INSERT...SELECT...JOIN ST_Within batch loop. CONSUMED by link_parcel_addresses (scripts/lib/step/index.js runMaterializePhase). Pre-externalization this was the bare literal BATCH_SIZE = 1000. Not verdict-affecting (on_invalid: clamp) — a bad value changes pacing, never correctness.",
+    "min": 100,
+    "max": 10000
+  },
+  "link_parcel_addresses_no_address_warn_pct": {
+    "default": 50,
+    "type": "number",
+    "description": "Maximum fraction (%) of geom-bearing parcels with zero linked address points before link_parcel_addresses's parcels_with_no_address_pct check WARNs. CONSUMED via checks[].limit_from_config (a pct <= ceiling form). Pre-externalization this was the bare literal 0.50 in `noAddressFraction >= 0.50 ? WARN : PASS` (Independent IMPL I1 fold recalibrated it from an original 10% ceiling that would WARN on every clean run — PI-2's Poisson-like distribution implies ~37% of parcels legitimately have zero address points). Measured live 3.85%, well under the ceiling.",
+    "min": 0,
+    "max": 100
+  },
+  "link_parcel_addresses_no_parcel_warn_pct": {
+    "default": 5,
+    "type": "number",
+    "description": "Maximum fraction (%) of geom-bearing address points with zero linked parcel before link_parcel_addresses's address_points_with_no_parcel_pct check WARNs. CONSUMED via checks[].limit_from_config. Pre-externalization this was the bare literal 0.05. Measured live 2.69%, under the ceiling.",
+    "min": 0,
+    "max": 100
+  },
+  "link_parcel_addresses_fanout_warn_noncondo": {
+    "default": 20,
+    "type": "number",
+    "description": "Per-parcel address-point fan-out ceiling for non-CONDO parcels; link_parcel_addresses's parcel_fanout_outliers check WARNs on the count of non-CONDO parcels exceeding it. CONSUMED via checks[].limit_from_config. NEW this pilot (Fold B, Cross-read Adversary AMEND, 2026-08-29) — replaces a dropped 5-id allow-list with an honest aggregate. Measured live 130 non-CONDO parcels exceed the default TODAY, so the WARN fires by construction (R-H: a standing non-zero population is WARN, never FAIL, never silently PASSed).",
+    "min": 1,
+    "max": 1000
+  },
+  "link_parcel_addresses_fanout_warn_condo": {
+    "default": 400,
+    "type": "number",
+    "description": "Per-parcel address-point fan-out ceiling for CONDO parcels (a large condo complex's common-elements parcel legitimately contains many unit entrances); link_parcel_addresses's parcel_fanout_condo_outliers check WARNs on the count of CONDO parcels exceeding it. CONSUMED via checks[].limit_from_config. NEW this pilot. Measured live max fan-out 346 (p99 80), comfortably under the default.",
+    "min": 1,
+    "max": 1000
+  },
   "wsib_fuzzy_match_threshold": {
     "default": 0.6,
     "type": "number",

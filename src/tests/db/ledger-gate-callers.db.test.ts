@@ -1,8 +1,18 @@
 // SPEC LINK: docs/specs/00-architecture/115_scheduling.md §2.2
 // SPEC LINK: docs/specs/01-pipeline/48_pipeline_observability.md §3.9
 //
-// Phase B B3 — the run-ledger gate WIRED INTO its two remaining hand-rolled callers
-// (link-parcel-addresses.js, compute-parcel-cost-estimates.js), live-DB.
+// Phase B B3 — the run-ledger gate WIRED INTO its one remaining hand-rolled caller
+// (compute-parcel-cost-estimates.js), live-DB.
+//
+// LPA-D-class (2026-08-29, C1 pilot 5 commit 7) — link-parcel-addresses.js's portion
+// (the G5 / B-R1 cases below) is RE-HOMED, not deleted: the frozen shape carries no
+// gate.skip block at all any more (staleness.ledgerGatedSkip is generic library code,
+// scripts/lib/step/index.js runMaterializePhase). The equivalent guarantee (a gated
+// skip re-emits a row-derived summary, never a hardcoded 'PASS') is now asserted
+// against the DESCRIPTOR/library shape in
+// src/tests/steps/link_parcel_addresses/violations.test.ts (the ledgerGatedSkip-wired
+// fence lock) rather than by calling the old script's exported main(pool) directly —
+// the same treatment link_wsib got at pilot 4 (LW-D16, below this comment).
 //
 // LW-D16 (2026-08-28, WF3-E) — CORRECTED CLAIM. link-wsib.js's portion was declared
 // "RE-HOMED, not deleted (A-5, C1 pilot 4 commit 7)" to
@@ -33,7 +43,7 @@
 // `wsib_fuzzy_match_threshold` throws before the gate is ever reached, SKIP-eligible
 // or not (config.hoisted_above_gate, §1.2a P4). Case IDs below mirror the B3
 // grounding fold's red-first table:
-//   G5 skip-emits-summary/DS4 (ⓔ child) — for each of the three callers, calling
+//   G5 skip-emits-summary/DS4 (ⓔ child) — for the one remaining caller, calling
 //     their exported `main(pool)` directly (no child-process spawn needed: main
 //     takes an injected pool per the compute-parcel-cost-estimates.js precedent,
 //     so this is a REAL run against a REAL testcontainer DB, just without the
@@ -59,13 +69,6 @@ import type { Pool } from 'pg';
 import { dbAvailable, getTestPool } from './setup-testcontainer';
 import { detectDurationAnomalies } from '@/lib/quality/types';
 
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const linkParcelAddresses = require('../../../scripts/link-parcel-addresses.js') as {
-  main: (pool: Pool) => Promise<void>;
-  OWN_SLUGS: string[];
-  UPSTREAM_SLUGS: string[];
-  FORCE_FULL_ENV: string;
-};
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const costEstimates = require('../../../scripts/compute-parcel-cost-estimates.js') as {
   main: (pool: Pool, opts?: { dryRun?: boolean; rowLimit?: number | null }) => Promise<void>;
@@ -105,51 +108,8 @@ describe.skipIf(!dbAvailable())('Phase B B3 — run-ledger gate callers (live DB
   });
 
   afterEach(async () => {
-    await cleanup(linkParcelAddresses.OWN_SLUGS);
     await cleanup(costEstimates.OWN_SLUGS);
   });
-
-  // ---------------------------------------------------------------------
-  // G5 — link-parcel-addresses.js
-  // ---------------------------------------------------------------------
-  it('G5 (link-parcel-addresses): vacuous SKIP emits a COMPLETED-shaped summary (DS4)', async () => {
-    await pool.query(
-      `INSERT INTO pipeline_runs (pipeline, status, started_at, completed_at)
-       VALUES ($1, 'completed', NOW() - interval '10 minutes', NOW() - interval '9 minutes')`,
-      [linkParcelAddresses.OWN_SLUGS[0]],
-    );
-    const { summary, sawMeta } = await captureEmitted(() => linkParcelAddresses.main(pool));
-    expect(summary).toMatchObject({ records_total: 0, records_new: 0, records_updated: 0 });
-    const rows = (summary?.records_meta as { audit_table?: { rows?: Array<{ metric: string; value: unknown }> } })
-      ?.audit_table?.rows ?? [];
-    expect(rows.some((r) => r.metric === 'status' && r.value === 'SKIPPED')).toBe(true);
-    expect(sawMeta).toBe(true);
-  });
-
-  // ---------------------------------------------------------------------
-  // Commit B — link-parcel-addresses.js skip-path audit rows (B-R1).
-  // ---------------------------------------------------------------------
-  it('B-R1 (link-parcel-addresses): the skip row carries address_points_with_no_parcel_pct + a FAIL errors gate, and the verdict cascades to FAIL', async () => {
-    const priorMeta = {
-      audit_table: {
-        rows: [
-          { metric: 'address_points_with_no_parcel_pct', value: '2.1%', threshold: '< 5%', status: 'PASS' },
-          { metric: 'errors', value: 1, threshold: '== 0', status: 'FAIL' },
-        ],
-      },
-    };
-    await pool.query(
-      `INSERT INTO pipeline_runs (pipeline, status, started_at, completed_at, records_meta)
-       VALUES ($1, 'completed', NOW() - interval '10 minutes', NOW() - interval '9 minutes', $2::jsonb)`,
-      [linkParcelAddresses.OWN_SLUGS[0], JSON.stringify(priorMeta)],
-    );
-    const { summary } = await captureEmitted(() => linkParcelAddresses.main(pool));
-    const meta = summary?.records_meta as { audit_table?: { verdict?: string; rows?: Array<{ metric: string }> } };
-    expect(meta.audit_table?.rows?.some((r) => r.metric === 'address_points_with_no_parcel_pct')).toBe(true);
-    expect(meta.audit_table?.rows?.some((r) => r.metric === 'errors')).toBe(true);
-    // the carried FAIL row must propagate — never a bare hardcoded PASS.
-    expect(meta.audit_table?.verdict).toBe('FAIL');
-  }, 30000);
 
   // ---------------------------------------------------------------------
   // G5 + C1 — compute-parcel-cost-estimates.js (needs matching rate/index
@@ -292,33 +252,20 @@ describe.skipIf(!dbAvailable())('Phase B B3 — run-ledger gate callers (live DB
   // half is covered by the fake-pool "bypassed:true never SKIPs" lock in
   // step-library.logic.test.ts's "LW-D16" describe block; a live-DB equivalent
   // stays blocked on the assert_current_database-vs-buildo_test MED followup.
-
-  it('D#4: LINK_PARCEL_ADDRESSES_FORCE_FULL bypasses the gate even when SKIP-eligible', async () => {
-    await pool.query(
-      `INSERT INTO pipeline_runs (pipeline, status, started_at, completed_at)
-       VALUES ($1, 'completed', NOW() - interval '10 minutes', NOW() - interval '9 minutes')`,
-      [linkParcelAddresses.OWN_SLUGS[0]],
-    );
-    const original = process.env[linkParcelAddresses.FORCE_FULL_ENV];
-    process.env[linkParcelAddresses.FORCE_FULL_ENV] = '1';
-    try {
-      const { summary } = await captureEmitted(() => linkParcelAddresses.main(pool));
-      const rows = (summary?.records_meta as { audit_table?: { rows?: Array<{ metric: string; value: unknown }> } })
-        ?.audit_table?.rows ?? [];
-      // The SKIP shape's first row is status:'SKIPPED' — a real run never emits it.
-      expect(rows.some((r) => r.metric === 'status' && r.value === 'SKIPPED')).toBe(false);
-      expect(rows.some((r) => r.metric === 'parcel_link_rate_pct')).toBe(true); // real-run-only metric
-    } finally {
-      if (original === undefined) delete process.env[linkParcelAddresses.FORCE_FULL_ENV];
-      else process.env[linkParcelAddresses.FORCE_FULL_ENV] = original;
-    }
-  }, 60000);
-
-  it('D#6: UPSTREAM_SLUGS for compute-parcel-cost-estimates includes sources:parcels/load-parcels (lot_size_sqm is a direct cost-engine input)', () => {
-    expect(costEstimates.UPSTREAM_SLUGS).toEqual(
-      expect.arrayContaining(['sources:parcels', 'parcels', 'load-parcels']),
-    );
-  });
+  //
+  // D#4 (link-parcel-addresses) — SAME treatment, C1 pilot 5 commit 7, 2026-08-29. The
+  // frozen shape carries no exported `main(pool)`/OWN_SLUGS/FORCE_FULL_ENV any more
+  // (pipeline.step()'s `run({pool, chainId})` shape only), so this live-DB call site was
+  // never re-buildable either. LINK_PARCEL_ADDRESSES_FORCE_FULL's bypass is the SAME
+  // generic `staleness.ledgerGatedSkip({bypassed})` path every converted LINK/CASCADE/
+  // MATERIALIZE step shares — covered by the fake-pool lock in
+  // step-library.logic.test.ts and the step's own descriptor assertion
+  // (`d.override.force_full === "LINK_PARCEL_ADDRESSES_FORCE_FULL"`,
+  // src/tests/steps/link_parcel_addresses/violations.test.ts).
+  //
+  // D#6 — UPSTREAM_SLUGS no longer exists as a module export on link-parcel-addresses.js
+  // either; the equivalent coverage (deriveLedgerSlugs against the real descriptor) lives
+  // in src/tests/link-parcel-addresses-ledger-gate.logic.test.ts.
 
   // ---------------------------------------------------------------------
   // W2 — wsib partial index (migration 243) landed.

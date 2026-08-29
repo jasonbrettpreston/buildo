@@ -271,6 +271,27 @@ function isCascadeStep(descriptor) {
   return Boolean(descriptor.execution && descriptor.execution.shape === 'cascade');
 }
 
+/**
+ * Is this a MATERIALIZER — ONE unconditional bulk INSERT, no retraction, no
+ * primary/fallback split, no tiers? (Ruling A-1, MATERIALIZER pilot 2026-08-29.)
+ *
+ * ⚠️ FORKED FROM `runCascadePhase`'s PHASE-ORDER SHAPE, NOT AN EXTENSION OF
+ * `runLinkPhase`. Measured at commit 7: `runLinkPhase`'s write path is SELECT → JS rows
+ * → `executeUpsertBatch` (a per-row batched upsert) — `link_parcel_addresses`'s real
+ * write is ONE server-side `INSERT ... SELECT ... JOIN ST_Within ... ON CONFLICT DO
+ * NOTHING` statement; fitting it into `runLinkPhase` would split that statement into a
+ * SELECT plus a batched INSERT, breaking the G2 "verbatim SQL" guarantee. `runCascadePhase`
+ * is the closer sibling (guards → LG-15 gated-skip → RUN_AT → pre_write gate → write →
+ * post checks) but still wrong to extend: it has no per-batch pagination and dispatches
+ * MULTIPLE write targets per tier, where a MATERIALIZER has exactly one target and
+ * batches over a keyset cursor. `execution.shape` is still the ONE declared field
+ * selecting the runner branch (§4.1a); this predicate mirrors `isCascadeStep`'s shape,
+ * not its mechanism.
+ */
+function isMaterializeStep(descriptor) {
+  return Boolean(descriptor.execution && descriptor.execution.shape === 'materialize');
+}
+
 /** One requirement kind → the catalog probe that answers "is it there?". */
 const REQUIREMENT_PROBES = {
   extension: { sql: 'SELECT 1 FROM pg_extension WHERE extname = $1', args: (r) => [r.name] },
@@ -1097,6 +1118,161 @@ async function runCascadePhase({ descriptor, pool, compute, config, chainId, log
 }
 
 /**
+ * THE MATERIALIZE PHASE (ruling A-1, MATERIALIZER pilot 2026-08-29).
+ *
+ * Forked from `runCascadePhase`'s phase-order shape (see `isMaterializeStep`'s header)
+ * rather than an extension of `runLinkPhase`: ONE write target, ONE server-side
+ * `INSERT ... SELECT ... JOIN <spatial predicate> ... ON CONFLICT (...) DO NOTHING`
+ * statement (LG-18's `executeInsertSelectNoRetract`), no retraction, no per-row
+ * classification — the join and the ON CONFLICT short-circuit ARE the match/no-match
+ * decision. The write is keyset-paginated over the target's own declared key column
+ * (mirroring `link-parcel-addresses.js`'s pre-conversion `id > lastId` cursor,
+ * §1.4-derivation `txn_scope: "batch"`: each batch commits independently) — the ONE
+ * structural difference from `runCascadePhase`'s single unpaginated step-scoped
+ * transaction.
+ *
+ * PHASE ORDER, mirroring `runCascadePhase`:
+ *   guards.requires            preconditions before the first read
+ *   LEDGER GATED SKIP           LG-15 — `staleness.ledgerGatedSkip`, reused, not
+ *                              re-hand-rolled a third time (Fold A SHOULD-FIX 5)
+ *   RUN_AT                      the DB clock, captured once, before any write
+ *   RLS preflight                refuse a write that would affect 0 rows
+ *   PRE_WRITE GATE               scored before the batch loop, same contract as the
+ *                              other two phases (this step declares no `pre_write`
+ *                              check today — `makePreWriteGate` returns null and this
+ *                              is a no-op, kept for shape parity and future-proofing)
+ *   the keyset-paginated batch loop  each batch is its OWN transaction
+ *                              (LG-18's `executeInsertSelectNoRetract`, compute-
+ *                              authored SQL, batch size from `ctx.config`)
+ *   post checks                  over the post-run counts + invariants query, once
+ *
+ * @returns {Promise<object>} `{mode, gate, matched, written, prior, overrides, skipped, gatedSkip}`
+ */
+async function runMaterializePhase({ descriptor, pool, compute, config, chainId, log, tag, clockNow, preWriteGate }) {
+  const requirements = await assertRequirements(pool, descriptor, { log, tag });
+  const overrides = staleness.resolveOverrides(descriptor);
+  const bypassed = overrides.force_full === true;
+
+  // ── LG-15 — THE LEDGER GATED SKIP, generalizing this step's own pre-existing B3 gate ──
+  const gatedSkip = await staleness.ledgerGatedSkip(pool, descriptor, { now: clockNow, bypassed });
+  if (gatedSkip.skip) {
+    log.info(tag, `materialize ledger gate: SKIP (${gatedSkip.reason})`);
+    return {
+      mode: null,
+      gate: { mode: null, reason: gatedSkip.reason, skipped: true },
+      matched: null,
+      written: null,
+      prior: gatedSkip.gate ? gatedSkip.gate.ownLastRecordsMeta : null,
+      overrides,
+      skipped: true,
+      gatedSkip,
+    };
+  }
+
+  const prior = gatedSkip.gate
+    ? gatedSkip.gate.ownLastRecordsMeta
+    : await staleness.readPriorEmit(pool, ledgerPipelineName(descriptor, chainId), null);
+  const privilege = await write.assertWritePrivileges(pool, descriptor, { log, tag });
+  log.info(tag, `materialize gate: RUN (${gatedSkip.reason})`);
+
+  const specs = descriptor.outputs.writes;
+  const spec = specs[0];
+  const plan = write.buildWritePlan(spec, descriptor);
+  const written = {};
+  written[write.targetKey(0)] = { scanned: 0, inserted: 0, updated: 0, deleted: 0, retracted: 0, rows_changed: 0 };
+  written.privilege = privilege[plan.table] || null;
+  written.requirements = requirements;
+
+  const sql = compute.buildMaterializeSql(descriptor, config);
+
+  // ── THE PRE-WRITE GATE, before the batch loop ────────────────────────────────
+  const gateForPreWrite = { mode: 'incremental', reason: gatedSkip.reason, skipped: false };
+  const decision = preWriteGate
+    ? await preWriteGate({ matched: null, gate: gateForPreWrite, prior, overrides, written: null })
+    : { abort: false, failed: [] };
+  if (decision.abort) {
+    log.error(tag, `pre_write check(s) FAILED with no standing override — no write was issued and `
+      + `${plan.table} is untouched: ${decision.failed.join(', ')}`);
+    return {
+      mode: 'incremental',
+      gate: gateForPreWrite,
+      matched: null,
+      written: { ...written, write_skipped_pre_write_fail: true },
+      prior,
+      overrides,
+      writeSkipped: true,
+      failedPreWrite: decision.failed,
+      gatedSkip,
+    };
+  }
+
+  const pre = await pool.query(sql.pre_sql);
+  const preRow = pre.rows[0] || {};
+
+  // ── THE KEYSET-PAGINATED BATCH LOOP — each batch its OWN transaction ─────────
+  const batchSize = config[sql.batch_size_config_key] || 1000;
+  let lastId = -1;
+  let batchesProcessed = 0;
+  let newLinksTotal = 0;
+  let errors = 0;
+  let completedNaturally = false;
+  for (;;) {
+    let row;
+    try {
+      row = await pipeline.withTransaction(pool, async (client) => {
+        const result = await write.executeInsertSelectNoRetract(client, sql.batch_sql, [lastId, batchSize, clockNow]);
+        return result;
+      });
+    } catch (err) {
+      errors += 1;
+      log.error(tag, err, { batch: batchesProcessed + 1, lastId });
+      break;
+    }
+    const newLinks = Number(row.new_links) || 0;
+    const maxId = row.max_id === null || row.max_id === undefined ? null : Number(row.max_id);
+    const rowsInBatch = Number(row.rows_in_batch) || 0;
+    if (rowsInBatch === 0) {
+      completedNaturally = true;
+      break;
+    }
+    batchesProcessed += 1;
+    newLinksTotal += newLinks;
+    written[write.targetKey(0)].scanned += rowsInBatch;
+    written[write.targetKey(0)].inserted += newLinks;
+    written[write.targetKey(0)].rows_changed += newLinks;
+    lastId = maxId ?? lastId;
+  }
+
+  const post = await pool.query(sql.post_sql);
+  const postRow = post.rows[0] || {};
+  const invariantsResult = await pool.query(sql.invariants_sql, sql.invariants_params || []);
+  const invariantsRow = invariantsResult.rows[0] || {};
+
+  const matched = {};
+  for (const row of [preRow, postRow, invariantsRow]) {
+    for (const k of Object.keys(row)) {
+      const v = row[k];
+      matched[k] = v !== null && typeof v === 'object' ? v : Number(v);
+    }
+  }
+  matched.new_links_written = newLinksTotal;
+  matched.errors = errors;
+  matched.batches_processed = batchesProcessed;
+  matched.completed_naturally = completedNaturally;
+
+  return {
+    mode: 'incremental',
+    gate: gateForPreWrite,
+    matched,
+    written,
+    prior,
+    overrides,
+    writeSkipped: false,
+    gatedSkip,
+  };
+}
+
+/**
  * `outputs.writes[]` EXECUTED IN DECLARATION ORDER, in ONE transaction (§1.4: "Order is
  * declared and the runner executes it in order").
  *
@@ -1369,8 +1545,9 @@ async function runWithPool(runnable, pool, ctx) {
       let ingest = null;
       let link = null;
       let cascade = null;
+      let materialize = null;
       let onlyChecks = null;
-      const drivesWrites = isIngestStep(descriptor) || isLinkStep(descriptor) || isCascadeStep(descriptor);
+      const drivesWrites = isIngestStep(descriptor) || isLinkStep(descriptor) || isCascadeStep(descriptor) || isMaterializeStep(descriptor);
       // Spec 47 §R3.5 / B-11 — the DB clock, captured ONCE, inside the lock, for
       // WHICHEVER phase drives the write. One capture is not a tidiness preference: it is
       // what makes the written timestamp a single watermark, so two batches of one run
@@ -1440,6 +1617,25 @@ async function runWithPool(runnable, pool, ctx) {
           onlyChecks = new Set(descriptor.checks.filter((c) => positions.includes(c.when)).map((c) => c.id));
           stepCtx.checks = stepCtx.checks.filter((id) => onlyChecks.has(id));
         }
+      } else if (isMaterializeStep(descriptor)) {
+        materialize = await runMaterializePhase({
+          descriptor, pool, compute: runnable.compute, config: configValues,
+          chainId, log: pipeline.log, tag: `[${slug}]`, clockNow,
+          preWriteGate: makePreWriteGate({ descriptor, chainId, stepCtx, compute: runnable.compute, config: configValues }),
+        });
+        stepCtx.matched = materialize.matched;
+        stepCtx.written = materialize.written;
+        stepCtx.prior = materialize.prior;
+        stepCtx.overrides = materialize.overrides;
+        stepCtx.gate = materialize.gate;
+        stepCtx.elapsed_ms = Date.now() - startMs;
+        if (materialize.skipped || materialize.writeSkipped) {
+          // Same reasoning as isCascadeStep's own gated skip / pre_write-fail narrowing
+          // above — a MATERIALIZER shares the identical two failure-to-reach shapes.
+          const positions = materialize.skipped ? ['pre'] : ['pre', 'pre_write'];
+          onlyChecks = new Set(descriptor.checks.filter((c) => positions.includes(c.when)).map((c) => c.id));
+          stepCtx.checks = stepCtx.checks.filter((id) => onlyChecks.has(id));
+        }
       }
 
       // §5.5 (2) — `ctx.report()` is the ONLY observation path. A returned
@@ -1476,8 +1672,10 @@ async function runWithPool(runnable, pool, ctx) {
         ? { matched: link.matched, cumulative: link.cumulative, written: link.written, gate: link.gate }
         : (cascade
           ? { matched: cascade.matched, cumulative: cascade.cumulative, written: cascade.written, gate: cascade.gate }
-          : (ingest ? { acquired: ingest.acquired, written: ingest.written } : null));
-      counters = (ingest && ingest.skipped) || (cascade && cascade.skipped)
+          : (materialize
+            ? { matched: materialize.matched, written: materialize.written, gate: materialize.gate }
+            : (ingest ? { acquired: ingest.acquired, written: ingest.written } : null)));
+      counters = (ingest && ingest.skipped) || (cascade && cascade.skipped) || (materialize && materialize.skipped)
         ? { records_total: null, records_new: null, records_updated: null }
         : deriveCounters(descriptor, computeResult, counterScope);
 
@@ -1497,6 +1695,10 @@ async function runWithPool(runnable, pool, ctx) {
       } else if (cascade && cascade.skipped) {
         // LG-15 — the SAME shape as an ingest gated skip: a green `completed` row a
         // downstream HALT gate can read (DS4), never a bare SKIPPED with no audit_table.
+        status = RUN_STATUS.COMPLETED;
+        terminal = selectTerminal(descriptor, { kind: 'skip_gated', status, discriminator: 'skip' });
+      } else if (materialize && materialize.skipped) {
+        // LG-15 — same shape as the cascade gated skip, above.
         status = RUN_STATUS.COMPLETED;
         terminal = selectTerminal(descriptor, { kind: 'skip_gated', status, discriminator: 'skip' });
       } else if (verdict === 'FAIL' && unaccepted.length === 0 && failedIds.size > 0) {
@@ -1534,6 +1736,9 @@ async function runWithPool(runnable, pool, ctx) {
         // still has a baseline to compare against — never silently dropped on a skip.
         ...(cascade && cascade.skipped && cascade.prior && typeof cascade.prior === 'object'
           ? Object.fromEntries(Object.entries(cascade.prior).filter(([k]) => /_updated_at$/.test(k)))
+          : {}),
+        ...(materialize && materialize.skipped && materialize.prior && typeof materialize.prior === 'object'
+          ? Object.fromEntries(Object.entries(materialize.prior).filter(([k]) => /_updated_at$/.test(k)))
           : {}),
         // §1.2a P4 — "the value in force is observable in the run's records_meta".
         // Absent entirely for a `config: "none"` step, so the byte cost is paid only
@@ -1674,12 +1879,14 @@ module.exports = {
   isIngestStep,
   isLinkStep,
   isCascadeStep,
+  isMaterializeStep,
   assertRequirements,
   REQUIREMENT_PROBES,
   ledgerPipelineName,
   runIngestPhase,
   runLinkPhase,
   runCascadePhase,
+  runMaterializePhase,
   runTierToConvergence,
   executeOrderedWrites,
   acceptedCheckIds,

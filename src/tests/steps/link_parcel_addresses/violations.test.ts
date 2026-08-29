@@ -594,7 +594,7 @@ function detectFanoutWarnFiresFence(subject: { noncondoGtThreshold: number; thre
 describe('55-A — the hard per-conversion gate (44, k=PER_STEP)', () => {
   // ── A.3 Interpretation (§3.4-§3.4b) — the notes.json seven ──
 
-  it.fails('#30 Cap of 12 prose entries — add a 13th → build fails (flips at: commit 7)', () => {
+  it('#30 Cap of 12 prose entries — add a 13th → build fails (flips at: commit 7)', () => {
     const d = loadDescriptor();
     const notes = loadNotes();
     expect(d.interpretation, 'interpretation must be the {file, entries} object, not "none"').not.toBe('none');
@@ -605,7 +605,7 @@ describe('55-A — the hard per-conversion gate (44, k=PER_STEP)', () => {
     expect(() => validateDescriptor({ ...d, interpretation: { ...interp, entries: NOTES_CAP + 1 } })).toThrow(/interpretation/);
   });
 
-  it.fails('#31 Exactly two legal resolutions — promote or delete; no overflow file (flips at: commit 7)', () => {
+  it('#31 Exactly two legal resolutions — promote or delete; no overflow file (flips at: commit 7)', () => {
     const d = loadDescriptor();
     loadNotes();
     expect((d.interpretation as { file: string }).file).toBe(path.basename(NOTES_REL));
@@ -615,7 +615,7 @@ describe('55-A — the hard per-conversion gate (44, k=PER_STEP)', () => {
     expect(Object.keys(loadNotes()).some((k) => /overflow/i.test(k)), 'an overflow block inside notes.json').toBe(false);
   });
 
-  it.fails('#33 `blind_spots[].detected_by` names a check that exists (flips at: commit 7)', () => {
+  it('#33 `blind_spots[].detected_by` names a check that exists (flips at: commit 7)', () => {
     const d = loadDescriptor();
     const notes = loadNotes();
     const ids = new Set(d.checks.map((c) => c.id));
@@ -628,7 +628,7 @@ describe('55-A — the hard per-conversion gate (44, k=PER_STEP)', () => {
     expect(ids.has('no_such_check'), 'negative control').toBe(false);
   });
 
-  it.fails('#34 `detected_by:"none"` is permitted but counted (flips at: commit 7)', () => {
+  it('#34 `detected_by:"none"` is permitted but counted (flips at: commit 7)', () => {
     const notes = loadNotes();
     const blind = (notes.blind_spots as NotesEntry[] | undefined) ?? [];
     const open = blind.filter((b) => isNone(b.detected_by)).length;
@@ -637,7 +637,7 @@ describe('55-A — the hard per-conversion gate (44, k=PER_STEP)', () => {
     expect(plusOne).toBe(open + 1);
   });
 
-  it.fails('#35 Every prose entry carries `measured{value,date,query}` (flips at: commit 7)', () => {
+  it('#35 Every prose entry carries `measured{value,date,query}` (flips at: commit 7)', () => {
     const notes = loadNotes();
     const entries = notesEntries(notes);
     expect(entries.length, 'a notes file with zero prose entries proves nothing').toBeGreaterThan(0);
@@ -651,7 +651,7 @@ describe('55-A — the hard per-conversion gate (44, k=PER_STEP)', () => {
     }
   });
 
-  it.fails('#37 Unpromoted `suspicious_if` entries are counted (flips at: commit 7)', () => {
+  it('#37 Unpromoted `suspicious_if` entries are counted (flips at: commit 7)', () => {
     const notes = loadNotes();
     const d = loadDescriptor();
     const ids = new Set(d.checks.map((c) => c.id));
@@ -672,7 +672,7 @@ describe('55-A — the hard per-conversion gate (44, k=PER_STEP)', () => {
 
   // ── A.12 Conversion workflow (§14) ─────────────────────────────────────────
 
-  it.fails('#148 `deviations[]` and `fences[]` are required; empty must be an explicit `[]` — and the 2 adjudicated fix-commits are fenced (flips at: commit 7)', () => {
+  it('#148 `deviations[]` and `fences[]` are required; empty must be an explicit `[]` — and the 2 adjudicated fix-commits are fenced (flips at: commit 7)', () => {
     const d = loadDescriptor();
     const notes = loadNotes();
     expect(Array.isArray(d.deviations), 'descriptor.deviations must be an explicit array').toBe(true);
@@ -687,7 +687,7 @@ describe('55-A — the hard per-conversion gate (44, k=PER_STEP)', () => {
     }
   });
 
-  it.fails('#149 Gate 0 — the frozen shape conversion adds zero new bespoke runner paths (no link_parcel_addresses / parcel_address_points branch in scripts/lib/step or pipeline.js — LG-18/runMaterializePhase are GENERIC library code) (flips at: commit 7)', () => {
+  it('#149 Gate 0 — the frozen shape conversion adds zero new bespoke runner paths (no link_parcel_addresses / parcel_address_points branch in scripts/lib/step or pipeline.js — LG-18/runMaterializePhase are GENERIC library code) (flips at: commit 7)', () => {
     computeSource();
     for (const rel of [WRITE_REL, INDEX_REL]) artifact(rel, 'LG-18/runMaterializePhase growth is generic library code, not link_parcel_addresses-specific');
     const lib = fs.readdirSync(abs('scripts/lib/step')).filter((f) => f.endsWith('.js')).map((f) => `scripts/lib/step/${f}`);
@@ -698,7 +698,7 @@ describe('55-A — the hard per-conversion gate (44, k=PER_STEP)', () => {
     }
   });
 
-  it.fails('#150 Gate 1 — reproducible against itself: both PRE captures (commit 5, SKIP path — no corpus change since 2026-07-08) hash-identical; the POST pair hash-identical too, and matches PRE (no forced-FULL/reset scenario belongs in the diffed set, A-1 declare-only ruling — a clean cutover with an unchanged corpus is a genuine zero-diff, not a repair) (flips at: commit 9)', () => {
+  it('#150 Gate 1 — reproducible against itself: both PRE captures (commit 5, SKIP path — no corpus change since 2026-07-08) hash-identical; the POST pair hash-identical too, and matches PRE (no forced-FULL/reset scenario belongs in the diffed set, A-1 declare-only ruling — a clean cutover with an unchanged corpus is a genuine zero-diff, not a repair) (flips at: commit 9)', () => {
     const docs = goldenDocs();
     for (const inv of INVOCATIONS) artifact(`${GOLDEN_DIR_REL}/pre/${inv.name}.json`, `PRE capture for ${inv.name} (commit 5, LANDED)`);
     const preHashes = new Set<string | null>();
@@ -802,7 +802,7 @@ describe('55-A — the hard per-conversion gate (44, k=PER_STEP)', () => {
     expect(/Approver for every disposition above/.test(report), 'no approver statement found for §2\'s dispositions').toBe(true);
   });
 
-  it.fails('#154 Gate 3 — a peel commit contains only that peel (flips at: commit 8, when 8a/8b/8c land)', () => {
+  it('#154 Gate 3 — a peel commit contains only that peel (flips at: commit 8, when 8a/8b/8c land)', () => {
     for (const rel of [DESCRIPTOR_REL, COMPUTE_REL]) artifact(rel, 'peels 8a/8b/8c have not landed — commits 7-9 are out of this pilot\'s scope through commit 6');
   });
 
@@ -830,7 +830,7 @@ describe('55-A — the hard per-conversion gate (44, k=PER_STEP)', () => {
     expect(converted.includes(STEP_REL), `${CONVERTED_REL} does not list ${STEP_REL} — commit 9 has not landed`).toBe(true);
   });
 
-  it.fails('#159 Idempotence-successor run is a supplement, never the sole gate (old/new pair per invocation ×2) (flips at: commit 9)', () => {
+  it('#159 Idempotence-successor run is a supplement, never the sole gate (old/new pair per invocation ×2) (flips at: commit 9)', () => {
     const docs = goldenDocs();
     for (const inv of INVOCATIONS) {
       const pre = docsFor(docs, inv).filter(isOld).filter((d) => !isForced(d));
@@ -845,7 +845,7 @@ describe('55-A — the hard per-conversion gate (44, k=PER_STEP)', () => {
     expect(/discoverer.?.?adjudicator|PROPOSED by this pass.{0,120}ADJUDICATION is a separate/i.test(report), 'no discoverer!=adjudicator statement found for the Intent Ledger (§2)').toBe(true);
   });
 
-  it.fails('#163 Tie-breaker 1 — a step test that survives swapping its compute is a runner test in the wrong place (flips at: commit 7)', async () => {
+  it('#163 Tie-breaker 1 — a step test that survives swapping its compute is a runner test in the wrong place (flips at: commit 7)', async () => {
     const d = loadDescriptor();
     const stub = loadComputeStub();
     for (const c of d.checks.filter((x) => x.severity !== 'INFO')) {
@@ -922,7 +922,7 @@ describe('55-A — the hard per-conversion gate (44, k=PER_STEP)', () => {
     expect(stepTestDirFiles().some((f) => /metamorphic/i.test(f)), 'a spatial compute with no metamorphic suite').toBe(true);
   });
 
-  it.fails('#173 Every golden snapshot query has an explicit `ORDER BY` — incl. the projected parcel_address_points hash ordered by (parcel_id, address_point_id) (flips at: commit 9, when post/*.json also carries source_fingerprint)', () => {
+  it('#173 Every golden snapshot query has an explicit `ORDER BY` — incl. the projected parcel_address_points hash ordered by (parcel_id, address_point_id) (flips at: commit 9, when post/*.json also carries source_fingerprint)', () => {
     const docs = goldenDocs();
     expect(docs.length, 'at least the 2 PRE captures').toBeGreaterThanOrEqual(2);
     for (const d of docs) {
@@ -943,7 +943,7 @@ describe('55-A — the hard per-conversion gate (44, k=PER_STEP)', () => {
     }
   });
 
-  it.fails('#176 Generator correctness is tested per branch — the insert-only join (LG-18) over the SQL write.js generates (flips at: commit 7)', () => {
+  it('#176 Generator correctness is tested per branch — the insert-only join (LG-18) over the SQL write.js generates (flips at: commit 7)', () => {
     artifact(WRITE_REL, 'LG-18 executor lands at commit 7');
     const d = loadDescriptor();
     const t = writeTarget(d);
@@ -970,12 +970,12 @@ describe('55-A — the hard per-conversion gate (44, k=PER_STEP)', () => {
     expect(dir.includes(STEP_DIR_REL), 'fixtures directory is not co-located with the step\'s own test dir').toBe(true);
   });
 
-  it.fails('#199 No step defines its own `verdictCascade` — link_parcel_addresses\'s row-derived verdict must route through the shared deriveVerdict (flips at: commit 7)', () => {
+  it('#199 No step defines its own `verdictCascade` — link_parcel_addresses\'s row-derived verdict must route through the shared deriveVerdict (flips at: commit 7)', () => {
     const compute = stripComments(computeSource());
     expect(/verdictCascade|\.some\(\s*r\s*=>\s*r\.status/i.test(compute), 'the compute defines a hand-rolled cascade instead of routing through deriveVerdict').toBe(false);
   });
 
-  it.fails('#200 The §11 Counter Semantic Contract — records_total/new/updated sourced from the same semantic as today\'s script (records_total = parcelsWithGeom, "the full evaluation scope", records_new = totalNewLinks) (flips at: commit 7)', () => {
+  it('#200 The §11 Counter Semantic Contract — records_total/new/updated sourced from the same semantic as today\'s script (records_total = parcelsWithGeom, "the full evaluation scope", records_new = totalNewLinks) (flips at: commit 7)', () => {
     const d = loadDescriptor();
     expect(d.counters, 'counters must not be "none" for a MATERIALIZER').not.toBe('none');
     const c = d.counters as Exclude<Descriptor['counters'], 'none'>;
@@ -983,7 +983,7 @@ describe('55-A — the hard per-conversion gate (44, k=PER_STEP)', () => {
     expect(/parcels.?with.?geom/i.test(c.records_total.source), 'records_total is not sourced from the current script\'s own parcelsWithGeom semantic (:355)').toBe(true);
   });
 
-  it.fails('#201 The write target never touches a column owned by an upstream loader — link_parcel_addresses\'s ONE write target declares ONLY parcel_id/address_point_id/computed_at, never geom or any parcels/address_points-owned column (flips at: commit 7)', () => {
+  it('#201 The write target never touches a column owned by an upstream loader — link_parcel_addresses\'s ONE write target declares ONLY parcel_id/address_point_id/computed_at, never geom or any parcels/address_points-owned column (flips at: commit 7)', () => {
     const d = loadDescriptor();
     const t = writeTarget(d);
     const cols = t.columns.map((c) => c.name);
@@ -993,7 +993,7 @@ describe('55-A — the hard per-conversion gate (44, k=PER_STEP)', () => {
     }
   });
 
-  it.fails('#202 The name freeze — none of T1-T5 exist as registered logic_variables today (all 5 are NEW this pilot, confirmed 0 rows live, finding 4) — this claim\'s own shape here is "declare, do not collide with an existing name" (flips at: commit 7)', () => {
+  it('#202 The name freeze — none of T1-T5 exist as registered logic_variables today (all 5 are NEW this pilot, confirmed 0 rows live, finding 4) — this claim\'s own shape here is "declare, do not collide with an existing name" (flips at: commit 7)', () => {
     const d = loadDescriptor();
     expect(d.config, 'config must declare the tunables').not.toBe('none');
     const cfg = d.config as Exclude<Descriptor['config'], 'none'>;
@@ -1002,12 +1002,12 @@ describe('55-A — the hard per-conversion gate (44, k=PER_STEP)', () => {
     }
   });
 
-  it.fails('#203 Frozen `records_meta` producer/consumer blocks — no self-consumed emits contract exists for this step (N/A by measurement: unlike link_wsib\'s threshold_updated_at, link_parcel_addresses has 0 config_version-style self-consumption today) — declared emits:"none" is the truthful claim (flips at: commit 7, when the descriptor states it explicitly rather than this being inferred)', () => {
+  it('#203 Frozen `records_meta` producer/consumer blocks — no self-consumed emits contract exists for this step (N/A by measurement: unlike link_wsib\'s threshold_updated_at, link_parcel_addresses has 0 config_version-style self-consumption today) — declared emits:"none" is the truthful claim (flips at: commit 7, when the descriptor states it explicitly rather than this being inferred)', () => {
     const d = loadDescriptor();
     expect(d.emits, 'emits must be an explicit declaration, "none" or an array — never omitted').toBeDefined();
   });
 
-  it.fails('#204 `RUN_AT` captured once — the midnight-cross fence (DB clock, library-owned, before any write; zero clock reads in the compute) (flips at: commit 7)', () => {
+  it('#204 `RUN_AT` captured once — the midnight-cross fence (DB clock, library-owned, before any write; zero clock reads in the compute) (flips at: commit 7)', () => {
     const compute = stripComments(computeSource());
     expect(/new Date\(\)/.test(compute), 'compute reads the wall clock directly — RUN_AT must be library-owned').toBe(false);
     artifact(INDEX_REL, 'the pre_compute RUN_AT capture lands with runMaterializePhase, commit 7');
@@ -1043,7 +1043,7 @@ describe('55-B — monotone partials (5, k=MIXED)', () => {
     expect(fresh.length, 'a fresh entry must not flag stale').toBe(0);
   });
 
-  it.fails('#175 [PARTIAL] All generated statements PREPARE/EXPLAIN cleanly — the converted subset (LG-18\'s insert-only join) is syntactically well-formed (flips at: commit 7)', () => {
+  it('#175 [PARTIAL] All generated statements PREPARE/EXPLAIN cleanly — the converted subset (LG-18\'s insert-only join) is syntactically well-formed (flips at: commit 7)', () => {
     // write.js already exists (LG-11/LG-16 landed at pilot 4) — the claim is genuinely red
     // on the NEW executor's NAME, not on the file's mere existence.
     const src = fs.readFileSync(abs(WRITE_REL), 'utf8');
@@ -1061,7 +1061,7 @@ describe('55-B — monotone partials (5, k=MIXED)', () => {
     expect(ageDays, `this file's inline fixtures were reviewed ${FIXTURE_REVIEWED} — re-review before ${FIXTURE_MAX_AGE_DAYS} days elapse`).toBeLessThan(FIXTURE_MAX_AGE_DAYS);
   });
 
-  it.fails('#206 [PARTIAL] `records_meta` merge collisions are detected — link_parcel_addresses\'s keys vs the 4 already-converted producers (assert_schema, load_ravines, link_massing, link_wsib) (flips at: commit 7)', () => {
+  it('#206 [PARTIAL] `records_meta` merge collisions are detected — link_parcel_addresses\'s keys vs the 4 already-converted producers (assert_schema, load_ravines, link_massing, link_wsib) (flips at: commit 7)', () => {
     const converted = fs.existsSync(abs(CONVERTED_REL)) ? (JSON.parse(fs.readFileSync(abs(CONVERTED_REL), 'utf8')) as { converted: string[] }).converted : [];
     expect(converted.length, 'at least 4 already-converted producers exist for a two-producer collision fixture').toBeGreaterThanOrEqual(4);
     artifact(DESCRIPTOR_REL, 'this step\'s own emits[] keys land at commit 7');
@@ -1191,7 +1191,7 @@ async function mustFailPair(compute: ComputeFn, d: Descriptor, c: Check): Promis
 }
 
 describe('the three files, one slug (Spec 122 §4.1 / §5.1 / §5.2) + the MATERIALIZER library growth', () => {
-  it.fails('descriptor exists, validates, and carries the ruled shape: MATERIALIZER archetype, execution.shape:"materialize", 1 write target (class D, insert_only_no_retraction), T1-T5, override E1, staleness gated-skip, sharing.slug_forms:"derived", lock 115, min_migration 159 (COUNT floor, LW-D8 pattern) (flips at: commit 7)', () => {
+  it('descriptor exists, validates, and carries the ruled shape: MATERIALIZER archetype, execution.shape:"materialize", 1 write target (class D, insert_only_no_retraction), T1-T5, override E1, staleness gated-skip, sharing.slug_forms:"derived", lock 115, min_migration 159 (COUNT floor, LW-D8 pattern) (flips at: commit 7)', () => {
     const d = loadDescriptor();
     expect(d.identity.lock).toBe(LOCK_ID);
     expect(d.identity.archetype, 'MATERIALIZER (Spec 122 §1.10, forced by having exactly 1 member)').toMatch(/materializer/i);
@@ -1216,13 +1216,13 @@ describe('the three files, one slug (Spec 122 §4.1 / §5.1 / §5.2) + the MATER
     expect(recovery.interrupted_why, 'recovery.interrupted:"none" requires interrupted_why').toBeDefined();
   });
 
-  it.fails('notes.json is real (<=12 entries, fences for the 2 adjudicated fix-commits, LPA-D2\'s resumability correction stated in prose) (flips at: commit 7)', () => {
+  it('notes.json is real (<=12 entries, fences for the 2 adjudicated fix-commits, LPA-D2\'s resumability correction stated in prose) (flips at: commit 7)', () => {
     const notes = loadNotes();
     expect(Array.isArray(notes.fences), 'notes.fences missing').toBe(true);
     expect((notes.fences ?? []).length).toBeGreaterThanOrEqual(FENCE_COMMITS.length);
   });
 
-  it.fails('compute exists, exports `checks` (dispatch === descriptor ids, in order); no fs/pg/pipeline/argv/env; opens no pool (flips at: commit 7)', () => {
+  it('compute exists, exports `checks` (dispatch === descriptor ids, in order); no fs/pg/pipeline/argv/env; opens no pool (flips at: commit 7)', () => {
     const d = loadDescriptor();
     const mod = loadComputeModule();
     expect(typeof mod.compute).toBe('function');
@@ -1234,7 +1234,7 @@ describe('the three files, one slug (Spec 122 §4.1 / §5.1 / §5.2) + the MATER
     expect(p.pools, 'requiring the compute module must open zero pg.Pool instances').toBe(0);
   });
 
-  it.fails('the step file is the §5.1 frozen shape (no pipeline.run body, no argv/env/fetch/fs in the frozen wrapper), SPEC LINK kept, lock 115 textual (flips at: commit 7)', () => {
+  it('the step file is the §5.1 frozen shape (no pipeline.run body, no argv/env/fetch/fs in the frozen wrapper), SPEC LINK kept, lock 115 textual (flips at: commit 7)', () => {
     const src = fs.readFileSync(artifact(STEP_REL), 'utf8');
     expect(src.includes('SPEC LINK'), 'the frozen shape must keep a SPEC LINK header').toBe(true);
     expect(src.includes(String(LOCK_ID)), 'lock 115 must remain textual in the frozen shape').toBe(true);
@@ -1248,21 +1248,21 @@ describe('the three files, one slug (Spec 122 §4.1 / §5.1 / §5.2) + the MATER
     expect(converted.includes(STEP_REL)).toBe(true);
   });
 
-  it.fails('grandfathered.json — a 3rd entry, keyed link_parcel_addresses, path outputs.writes[].write_discipline.guard, value "none" (Fold A Integration finding 1 — the key is .guard, never .class) (flips at: commit 7)', () => {
+  it('grandfathered.json — a 3rd entry, keyed link_parcel_addresses, path outputs.writes[].write_discipline.guard, value "none" (Fold A Integration finding 1 — the key is .guard, never .class) (flips at: commit 7)', () => {
     const g = JSON.parse(fs.readFileSync(abs(GRANDFATHERED_REL), 'utf8')) as { steps: Record<string, { paths?: Record<string, unknown> }> };
     expect(typeof g.steps, 'grandfathered.json must carry a `steps` object keyed by identity.name').toBe('object');
     const findings = detectGrandfatheringOnGuardFence(g.steps.link_parcel_addresses);
     expect(findings, findings.join('; ')).toEqual([]);
   });
 
-  it.fails('write.js — LG-18 (executeInsertSelectNoRetract, INSERT-only, UPDATE/DELETE structurally forbidden) exists — checked by NAME + CLASS STRING, not merely "the file requires" (flips at: commit 7)', () => {
+  it('write.js — LG-18 (executeInsertSelectNoRetract, INSERT-only, UPDATE/DELETE structurally forbidden) exists — checked by NAME + CLASS STRING, not merely "the file requires" (flips at: commit 7)', () => {
     loadLib(WRITE_REL);
     const src = stripComments(fs.readFileSync(abs(WRITE_REL), 'utf8'));
     expect(src.includes(NO_RETRACT_EXECUTOR), `write.js does not yet export "${NO_RETRACT_EXECUTOR}" (LG-18) — genuinely absent today`).toBe(true);
     expect(src.includes(WRITE_CLASS), `write.js does not yet dispatch on "${WRITE_CLASS}" for the new executor — genuinely absent today (this class value ALREADY exists in the frozen taxonomy, only the codegen branch is new)`).toBe(true);
   });
 
-  it.fails('index.js — a gated-skip path exists for isMaterializeStep (runMaterializePhase wires staleness.ledgerGatedSkip in explicitly, A-1 RULING — mirroring runCascadePhase, NOT runLinkPhase) (flips at: commit 7)', () => {
+  it('index.js — a gated-skip path exists for isMaterializeStep (runMaterializePhase wires staleness.ledgerGatedSkip in explicitly, A-1 RULING — mirroring runCascadePhase, NOT runLinkPhase) (flips at: commit 7)', () => {
     const lib = loadLib(INDEX_REL) as Record<string, unknown>;
     expect(typeof lib.isMaterializeStep, 'index.js has no isMaterializeStep export').toBe('function');
     const src = stripComments(fs.readFileSync(abs(INDEX_REL), 'utf8'));
@@ -1290,7 +1290,7 @@ describe('the three files, one slug (Spec 122 §4.1 / §5.1 / §5.2) + the MATER
 });
 
 describe('G4d fence locks — the named locks (LG-18, grandfathering, ledgerGatedSkip, header, slug-derivation, stale-invariant, fan-out WARN)', () => {
-  it.fails('LG-18 write-executor lock — present in the converted step: INSERT...SELECT verbatim, ON CONFLICT (parcel_id, address_point_id) DO NOTHING, class insert_only_no_retraction (flips at: commit 7)', () => {
+  it('LG-18 write-executor lock — present in the converted step: INSERT...SELECT verbatim, ON CONFLICT (parcel_id, address_point_id) DO NOTHING, class insert_only_no_retraction (flips at: commit 7)', () => {
     const d = loadDescriptor();
     const t = writeTarget(d);
     expect(t.write_discipline.class).toBe(WRITE_CLASS);
@@ -1312,7 +1312,7 @@ describe('G4d fence locks — the named locks (LG-18, grandfathering, ledgerGate
     expect(detectInsertSelectNoRetractFence(valuesOnly).some((f) => /no SELECT clause/.test(f)), 'a per-row VALUES insert (no SELECT) went undetected').toBe(true);
   });
 
-  it.fails('Grandfathering-on-guard lock — present: grandfathered.json keys on .guard (not .class), value "none" (flips at: commit 7)', () => {
+  it('Grandfathering-on-guard lock — present: grandfathered.json keys on .guard (not .class), value "none" (flips at: commit 7)', () => {
     const g = JSON.parse(fs.readFileSync(abs(GRANDFATHERED_REL), 'utf8')) as { steps: Record<string, { paths?: Record<string, unknown> }> };
     const findings = detectGrandfatheringOnGuardFence(g.steps.link_parcel_addresses);
     expect(findings, findings.join('; ')).toEqual([]);
@@ -1331,48 +1331,59 @@ describe('G4d fence locks — the named locks (LG-18, grandfathering, ledgerGate
     expect(detectGrandfatheringOnGuardFence(linkMassing.steps.link_massing), 'link_massing\'s own E1 entry must already pass this detector').toEqual([]);
   });
 
-  it.fails('ledgerGatedSkip-wired lock — present: runMaterializePhase calls staleness.ledgerGatedSkip and branches on gatedSkip.skip (LG-15 reused, not re-hand-rolled a 3rd time) (flips at: commit 7)', () => {
+  it('ledgerGatedSkip-wired lock — present: runMaterializePhase calls staleness.ledgerGatedSkip and branches on gatedSkip.skip (LG-15 reused, not re-hand-rolled a 3rd time) (flips at: commit 7)', () => {
     const src = stripComments(fs.readFileSync(abs(INDEX_REL), 'utf8'));
     const sigMatch = /async function runMaterializePhase\([^)]*\)\s*\{/.exec(src);
     expect(sigMatch, 'index.js has no runMaterializePhase function').toBeTruthy();
   });
 
-  it('ledgerGatedSkip-wired lock — reversion is detectable: a materialize phase with no staleness.ledgerGatedSkip call, or no gatedSkip.skip branch, makes the lock fire (proves today\'s real gap: link_parcel_addresses.js hand-rolls its OWN copy, :91-95, rather than calling a shared library gate)', () => {
+  it('ledgerGatedSkip-wired lock — reversion is detectable: a materialize phase with no staleness.ledgerGatedSkip call, or no gatedSkip.skip branch, makes the lock fire (commit 7 landed: the frozen step file hand-rolls NOTHING — the gate call lives in the generic runner, scripts/lib/step/index.js)', () => {
     const good = { callsLedgerGatedSkip: true, branchesOnSkip: true };
     expect(detectLedgerGatedSkipWiredFence(good), 'the lock fires on the un-reverted subject').toEqual([]);
     const noCalls = { callsLedgerGatedSkip: false, branchesOnSkip: false };
     const f = detectLedgerGatedSkipWiredFence(noCalls);
-    expect(f.some((x) => /does not call staleness\.ledgerGatedSkip/.test(x)), 'a hand-rolled gate went undetected — this is TODAY\'s real shape (runLedgerGateDecision, not staleness.ledgerGatedSkip)').toBe(true);
-    // Confirmed against the CURRENT (pre-conversion) script: it calls sourceVersion.runLedgerGateDecision, never staleness.ledgerGatedSkip.
+    expect(f.some((x) => /does not call staleness\.ledgerGatedSkip/.test(x)), 'a hand-rolled gate went undetected — this was the PRE-CONVERSION shape (runLedgerGateDecision, not staleness.ledgerGatedSkip)').toBe(true);
+    // Commit 7 landed: the frozen step file carries NO gate code at all — neither the OLD
+    // hand-rolled sourceVersion.runLedgerGateDecision NOR a direct staleness.ledgerGatedSkip
+    // call. The gate lives in scripts/lib/step/index.js's runMaterializePhase (generic
+    // library code, Gate 0 / claim #149), never in the step file itself.
     const currentSrc = stripComments(fs.readFileSync(abs(STEP_REL), 'utf8'));
-    expect(/sourceVersion\.runLedgerGateDecision/.test(currentSrc), 'today\'s script uses the OLD hand-rolled gate, confirming this fence is genuinely red pre-conversion').toBe(true);
-    expect(/staleness\.ledgerGatedSkip/.test(currentSrc), 'today\'s script must NOT already call the library gate (that would mean commit 7 already landed)').toBe(false);
+    expect(/sourceVersion\.runLedgerGateDecision/.test(currentSrc), 'the frozen step file must not hand-roll the OLD gate').toBe(false);
+    expect(/staleness\.ledgerGatedSkip/.test(currentSrc), 'the frozen step file must not call the gate directly either — that lives in the generic runner').toBe(false);
+    const indexSrc = stripComments(fs.readFileSync(abs(INDEX_REL), 'utf8'));
+    expect(/staleness\.ledgerGatedSkip/.test(indexSrc), 'scripts/lib/step/index.js must call the gate (runMaterializePhase)').toBe(true);
   });
 
-  it('Header-resumable-lie lock — reversion is detectable: the CURRENT header still carries the false "picks up where we left off" claim — this lock is RED against today\'s file BY DESIGN (LPA-D2, fix scheduled commit 7)', () => {
-    const currentHeader = fs.readFileSync(abs(STEP_REL), 'utf8').slice(0, 3000);
-    const findings = detectHeaderResumableLieFence(currentHeader);
-    expect(findings.some((f) => /still claims/.test(f)), 'the CURRENT header no longer claims resumability — either LPA-D2 already shipped (unexpected before commit 7) or the detector is broken').toBe(true);
+  it('Header-resumable-lie lock — reversion is detectable: the OLD pre-conversion header carried the false "picks up where we left off" claim, and the fixed text passes the detector (commit 7 landed: LPA-D2\'s correction now lives in notes.json/deviations[], never in the frozen step file, which carries no header prose at all)', () => {
+    const oldHeader = 'Resumable: each batch commits independently; operator Ctrl-C leaves the DB in a consistent partial state and a re-run picks up where we left off.';
+    const findings = detectHeaderResumableLieFence(oldHeader);
+    expect(findings.some((f) => /still claims/.test(f)), 'the OLD pre-conversion header text must still be caught by the detector').toBe(true);
     const fixed = 'Idempotent: each batch commits independently via ON CONFLICT DO NOTHING; a re-run re-scans the FULL population (idempotent, not resumable — no batch-position checkpoint is persisted).';
     expect(detectHeaderResumableLieFence(fixed), 'the fixed header text must pass the detector').toEqual([]);
+    // Commit 7 landed: the frozen step file carries no header prose to lie in at all —
+    // LPA-D2's correction lives in the descriptor's deviations[] and notes.json instead
+    // (asserted by the sibling it.fails-flipped "present" lock, below).
+    const currentSrc = fs.readFileSync(abs(STEP_REL), 'utf8');
+    expect(currentSrc, 'the frozen step file must not carry the old resumability claim').not.toMatch(/re-run picks up where we left off/i);
   });
 
-  it.fails('Header-resumable-lie lock — present: the notes.json / descriptor prose states the truth (idempotent, not resumable) (flips at: commit 7)', () => {
+  it('Header-resumable-lie lock — present: the notes.json / descriptor prose states the truth (idempotent, not resumable) (flips at: commit 7)', () => {
     const notes = loadNotes();
     const allText = JSON.stringify(notes);
     const findings = detectHeaderResumableLieFence(allText);
     expect(findings, findings.join('; ')).toEqual([]);
   });
 
-  it('B3-gate-slugs-derived lock — present today: LG-15\'s deriveLedgerSlugs (already built, pilot 4) reconstructs the SAME 3 own-slug forms + 6 upstream-slug forms the current script hand-maintains, from a SYNTHETIC descriptor matching this pilot\'s ruled shape', () => {
+  it('B3-gate-slugs-derived lock — present: LG-15\'s deriveLedgerSlugs (already built, pilot 4) reconstructs the SAME 3 own-slug forms + 6 upstream-slug forms the PRE-CONVERSION script hand-maintained, from a SYNTHETIC descriptor matching this pilot\'s ruled shape (commit 7 landed: the frozen step file no longer carries OWN_SLUGS/UPSTREAM_SLUGS at all — the arrays below are ported verbatim from the pre-conversion script, commits d44b4458..74653a8f, so this lock does not silently go vacuous the moment the source text it used to grep disappears)', () => {
     const derive = loadLib('scripts/lib/step/staleness.js').deriveLedgerSlugs as (d: unknown) => { own: string[]; upstream: string[] };
     expect(typeof derive, 'staleness.js has no deriveLedgerSlugs export').toBe('function');
-    // Today's UPSTREAM_SLUGS (:61-64) is the union of TWO name bases per upstream producer —
-    // the table/chain-slug name ('address_points'/'parcels', giving the chain-prefixed +
-    // bare forms) and the LOADER SCRIPT name ('load_address_points'/'load_parcels', giving
-    // the hyphenated form) — so a descriptor expressing the same coverage declares BOTH as
-    // separate inputs.reads.steps[] entries; deriveLedgerSlugs's per-name forms() union
-    // covers the real script's 6-form array as a superset.
+    // The PRE-CONVERSION script's UPSTREAM_SLUGS (:61-64) was the union of TWO name bases
+    // per upstream producer — the table/chain-slug name ('address_points'/'parcels', giving
+    // the chain-prefixed + bare forms) and the LOADER SCRIPT name ('load_address_points'/
+    // 'load_parcels', giving the hyphenated form) — so a descriptor expressing the same
+    // coverage declares BOTH as separate inputs.reads.steps[] entries; deriveLedgerSlugs's
+    // per-name forms() union covers the real (pre-conversion) script's 6-form array as a
+    // superset.
     const synthetic = {
       identity: { name: 'link_parcel_addresses' },
       execution: { invocation: { sources: { argv: [] } } },
@@ -1382,25 +1393,26 @@ describe('G4d fence locks — the named locks (LG-18, grandfathering, ledgerGate
       ] } },
     };
     const derived = derive(synthetic);
-    const currentSrc = fs.readFileSync(abs(STEP_REL), 'utf8');
-    const ownMatch = /OWN_SLUGS = \[([^\]]*)\]/.exec(currentSrc);
-    const upstreamMatch = /UPSTREAM_SLUGS = \[([^\]]*)\]/.exec(currentSrc);
-    expect(ownMatch, 'today\'s script has no OWN_SLUGS array to compare against').toBeTruthy();
-    expect(upstreamMatch, 'today\'s script has no UPSTREAM_SLUGS array to compare against').toBeTruthy();
-    const expectedOwn = [...(ownMatch?.[1] ?? '').matchAll(/'([^']*)'/g)].map((m) => m[1] as string);
-    const expectedUpstream = [...(upstreamMatch?.[1] ?? '').matchAll(/'([^']*)'/g)].map((m) => m[1] as string);
-    expect(expectedOwn.length, 'today\'s OWN_SLUGS must have >=3 forms').toBeGreaterThanOrEqual(3);
-    expect(expectedUpstream.length, 'today\'s UPSTREAM_SLUGS must have >=6 forms').toBeGreaterThanOrEqual(6);
+    // Ported verbatim from the pre-conversion script's own OWN_SLUGS/UPSTREAM_SLUGS module
+    // constants (git history, commits d44b4458..74653a8f) — never re-derived from the
+    // frozen file, which carries neither array any more.
+    const expectedOwn = ['sources:link_parcel_addresses', 'link_parcel_addresses', 'link-parcel-addresses'];
+    const expectedUpstream = [
+      'sources:address_points', 'address_points', 'load-address-points',
+      'sources:parcels', 'parcels', 'load-parcels',
+    ];
+    expect(expectedOwn.length, 'the pre-conversion OWN_SLUGS had >=3 forms').toBeGreaterThanOrEqual(3);
+    expect(expectedUpstream.length, 'the pre-conversion UPSTREAM_SLUGS had >=6 forms').toBeGreaterThanOrEqual(6);
     const findings = detectSlugsDerivedFence(derived, expectedOwn, expectedUpstream);
     expect(findings, findings.join('; ')).toEqual([]);
   });
 
-  it.fails('B3-gate-slugs-derived lock — present in the real future descriptor: sharing.slug_forms:"derived" (flips at: commit 7)', () => {
+  it('B3-gate-slugs-derived lock — present in the real future descriptor: sharing.slug_forms:"derived" (flips at: commit 7)', () => {
     const d = loadDescriptor();
     expect(d.sharing.slug_forms).toBe('derived');
   });
 
-  it.fails('Stale-invariant-observable lock (LPA-D1) — present: a declared INFO check surfaces stale_st_within_count every run, never merely in invariants.json (flips at: commit 7)', () => {
+  it('Stale-invariant-observable lock (LPA-D1) — present: a declared INFO check surfaces stale_st_within_count every run, never merely in invariants.json (flips at: commit 7)', () => {
     const d = loadDescriptor();
     const c = checkById(d, CHECK_IDS.staleLinkCount);
     const observed = detectStaleInvariantObservableFence({ hasCheck: true, severity: c.severity, alwaysReported: true });
@@ -1417,7 +1429,7 @@ describe('G4d fence locks — the named locks (LG-18, grandfathering, ledgerGate
     expect(currentSrc.includes('stale_st_within'), 'today\'s script must NOT already surface stale_st_within — this fence is genuinely red pre-conversion').toBe(false);
   });
 
-  it.fails('Fan-out-WARN-fires lock — present: parcel_fanout_outliers fires WARN on today\'s live data (130 non-CONDO parcels over the T4 default 20) (flips at: commit 7)', () => {
+  it('Fan-out-WARN-fires lock — present: parcel_fanout_outliers fires WARN on today\'s live data (130 non-CONDO parcels over the T4 default 20) (flips at: commit 7)', () => {
     const d = loadDescriptor();
     const c = checkById(d, CHECK_IDS.fanoutOutliersNoncondo);
     const findings = detectFanoutWarnFiresFence({ noncondoGtThreshold: LIVE_NONCONDO_GT_20, threshold: T4_DEFAULT, severity: c.severity });

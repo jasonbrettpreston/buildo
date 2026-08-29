@@ -33,6 +33,16 @@
       "date": "2026-08-27",
       "lock_test": "src/tests/steps/link_massing/violations.test.ts"
     },
+    "link_parcel_addresses": {
+      "paths": {
+        "outputs.writes[].write_discipline.guard": "none"
+      },
+      "why": "outputs.writes[0] is the sole INSERT INTO parcel_address_points ... SELECT ... JOIN ST_Within ... ON CONFLICT (parcel_id, address_point_id) DO NOTHING (LG-18, class insert_only_no_retraction). No column on this write target is ever updated after insert — computed_at is a write-once RUN_AT stamp. A change guard would compare a row against itself and always pass; the genuine gap is retraction (LPA-D1, pinned per Spec 123 §3.1 as a KNOWN-DEFECT with zero measured live exposure), not a missing guard. Mirrors link_massing's E1 precedent exactly (keyed on .guard, never .class, per assertGrandfathered's GUARD_PATH).",
+      "commit": "d44b4458",
+      "adjudicated_by": "operator ruling 2026-08-29 (pilot 5 Fold A, A-2)",
+      "date": "2026-08-29",
+      "lock_test": "src/tests/steps/link_parcel_addresses/violations.test.ts"
+    },
     "fixture_grandfathered_snapshot": {
       "paths": {
         "outputs.writes[].write_discipline.guard": "none"

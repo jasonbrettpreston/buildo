@@ -1,0 +1,81 @@
+{
+  "$comment": [
+    "Spec 120 §3.4-§3.4b — the INTERPRETATION file for link_parcel_addresses, capped at 12",
+    "prose entries. Everything here lived ONLY as a source comment (or a git commit",
+    "message) before this conversion, and would have been deleted with the 393 lines it",
+    "was attached to."
+  ],
+  "contract_version": 1,
+  "read_this_way": [
+    {
+      "note": "LPA-D2 (2026-08-29): the pre-conversion header claimed batch-position resume-after-Ctrl-C — FALSE. lastParcelId was a local variable, never persisted. The TRUE property: idempotent, not resumable — ON CONFLICT DO NOTHING makes a re-run safe (no duplicate writes, no corruption), but every invocation re-scans the FULL parcels population from id > -1, whether the prior run got through 1 batch or 486. A full re-scan of 486,530 parcels costs the entire ~200s every time.",
+      "measured": {
+        "value": "lastParcelId initialized to -1, local variable, never written to a table or file (:148 pre-conversion)",
+        "date": "2026-08-29",
+        "query": "grep -n \"lastParcelId\" scripts/link-parcel-addresses.js (pre-conversion, git show HEAD~1)"
+      }
+    }
+  ],
+  "known_normal": [
+    {
+      "note": "7 of the 8 recorded pipeline_runs show records_new: 0 (idempotent re-runs over a stable corpus). The 8th (origin, 2026-06-10) wrote all 511,224 rows — it is not a re-run.",
+      "measured": { "value": "7/8 completed runs records_new=0; origin run records_new=511224", "date": "2026-08-29", "query": "SELECT status, started_at, (records_meta->>'records_new') FROM pipeline_runs WHERE pipeline LIKE '%link_parcel_addresses%' OR pipeline LIKE '%link-parcel-addresses%' ORDER BY started_at" }
+    },
+    {
+      "note": "address_class_desc carries a 4th value beyond Structure/Structure Entrance/Land: 'Land Entrance' (449 rows) — tier 4 by Spec 54 §3's own disambiguation ordering. This step writes ALL contained pairs; the disambiguation hierarchy is a CONSUMER-side rule (link-parcels.js), not performed here.",
+      "measured": { "value": "449 rows with address_class_desc = 'Land Entrance'", "date": "2026-08-29", "query": "SELECT count(*) FROM address_points WHERE address_class_desc = 'Land Entrance'" }
+    }
+  ],
+  "blind_spots": [
+    {
+      "what": "The standing scripts/analysis/parcel-sanity-audit.js has ZERO checks over parcel_address_points — this bridge is health-checked ONLY by this step's own golden harness (commit 5) and its own runtime checks[], not by the estate-wide sanity audit. A regression in a DIFFERENT step that also touches this table would be invisible to the standing audit.",
+      "detected_by": "none",
+      "measured": { "value": "0 bridge-table checks found in scripts/analysis/parcel-sanity-audit.js", "date": "2026-08-29", "query": "grep -c parcel_address_points scripts/analysis/parcel-sanity-audit.js" }
+    }
+  ],
+  "suspicious_if": [
+    {
+      "signal": "parcel_address_points_stale_st_within_count reads nonzero — LPA-D1's live exposure moving off 0 is the trigger condition for a future ruling to build the retraction mechanism this pilot deliberately does not build.",
+      "check": "parcel_address_points_stale_st_within_count",
+      "measured": { "value": "0 today (golden invariant, commit 5)", "date": "2026-08-29", "query": "SELECT COUNT(*) FROM parcel_address_points pap JOIN parcels p ON p.id=pap.parcel_id JOIN address_points ap ON ap.address_point_id=pap.address_point_id WHERE NOT ST_Within(ap.geom, p.geom)" }
+    }
+  ],
+  "decisions": [
+    {
+      "note": "A-1 RULING (Fold A, orchestrator, 2026-08-29, within the pre-authorized plan): a new runMaterializePhase (a FORK of runCascadePhase's phase-order shape, NOT an extension of runLinkPhase — runLinkPhase's SELECT-then-batched-executeUpsertBatch write path would split this step's single server-side statement, breaking G2's verbatim guarantee) + LG-18 (executeInsertSelectNoRetract, INSERT-only structurally enforced). recovery.reset ships declare-only (no new destructive rebuild mechanism this pilot)."
+    },
+    {
+      "note": "R-B/R-F item 1 (2026-08-29): this pilot's write has no destructive retraction target (class D, retract:\"none\"), so it does NOT exercise or close R-B's crashed/stuck-running reader gap — carried forward again to whichever future pilot first ships a genuine retract_when:\"full_only\" target. R-M's before_image and recovery.interrupted both ship \"none\"+why for the same reason: there is nothing to image or to interrupt."
+    }
+  ],
+  "counts": { "open_blind_spots": 1, "unpromoted_suspicious_if": 0 },
+  "fences": [
+    {
+      "const": "FORCE_FULL_ENV escape hatch bypasses the run-ledger gate",
+      "value": "LINK_PARCEL_ADDRESSES_FORCE_FULL=1 forces a real run past staleness.ledgerGatedSkip even when it would otherwise SKIP",
+      "incident": "D#4 (B3 output-panel remediation) — before this commit, link-parcel-addresses.js had no operator override if the run-ledger gate misfired. Same shape as LINK_MASSING_FORCE_FULL / COMPUTE_PARCEL_COST_FORCE_FULL.",
+      "commit": "a81c6a7c",
+      "lock_test": "src/tests/steps/link_parcel_addresses/violations.test.ts"
+    },
+    {
+      "const": "the gate-SKIP branch re-emits its own address_points_with_no_parcel_pct WARN + errors FAIL gate, never a bare hardcoded 'PASS'",
+      "value": "buildSkipGateRecordsMeta's carryMetricNames carries the prior run's own audit rows forward on a SKIP",
+      "incident": "Commit B (B3 output-panel remediation) — a SKIP must not silently downgrade a standing FAIL to a hardcoded PASS. This step's LG-15 gated-skip path (runMaterializePhase) re-emits the prior run's own records_meta block via staleness.ledgerGatedSkip's ownLastRecordsMeta, carrying the same guarantee forward.",
+      "commit": "b92ad16f",
+      "lock_test": "src/tests/steps/link_parcel_addresses/violations.test.ts"
+    },
+    {
+      "const": "ADVISORY_LOCK_ID = 115, kept textually",
+      "value": "identity.lock: 115",
+      "incident": "115 is not the spec number (54) — spec 54's slot is already taken by load-address-points.js (lock 96). Renumbering it is not a tidy-up; it is a chance to collide with whatever else claimed 54 since.",
+      "commit": "d44b4458",
+      "lock_test": "src/tests/pipeline-advisory-lock.infra.test.ts"
+    }
+  ],
+  "review_notes": [
+    {
+      "note": "This step writes ONE target, ONE statement per batch — read written.e1 as the whole write surface. There is no ordered multi-target sequence to reason about (unlike link_massing's E1/E2 or link_wsib's 5 targets).",
+      "measured": { "value": "1 declared write target, 1 statement per keyset batch (~487 batches at BATCH_SIZE 1000 over 486,530 parcels)", "date": "2026-08-29", "query": "node -e \"console.log(require('./scripts/link-parcel-addresses.descriptor.json').outputs.writes.length)\"" }
+    }
+  ]
+}

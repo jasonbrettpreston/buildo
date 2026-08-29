@@ -2,133 +2,114 @@
 // 🔗 SPEC LINK: docs/specs/01-pipeline/55_source_parcels.md
 // 🔗 SPEC LINK: docs/specs/01-pipeline/47_pipeline_script_protocol.md
 // 🔗 SPEC LINK: docs/specs/01-pipeline/48_pipeline_observability.md §3.6
+// 🔗 SPEC LINK: docs/specs/01-pipeline/122_pipeline_step_optimization.md §5.1 (frozen shape)
 //
-// SQL-string + structural assertions on link-parcel-addresses.js — the
-// WF1 #parcel-address-bridge Phase 2c spatial-join populator. The script
-// MUST be:
-//   - idempotent (ON CONFLICT DO NOTHING on the composite PK)
-//   - batch-bounded (PK-ordered LIMIT N over parcels with non-NULL geom)
-//   - resumable (each batch commits independently)
-//   - NULL-geom safe (both sides filtered to geom IS NOT NULL)
-//   - GIST-index aware (ST_Within both args have GIST indexes from mig 162)
-//   - audit-emitting (Spec 48 §3.6 row-derived cascade)
-//   - advisory-locked (lock 115 — registered + collision-free)
+// ── RE-HOMED at the Spec 122 §5.1 conversion (C1 pilot 5, commit 7, 2026-08-29) ──────
+// This file used to grep scripts/link-parcel-addresses.js's SOURCE TEXT for the
+// INSERT...SELECT...ST_Within statement, the batch loop, the audit rows, RUN_AT, and
+// the manifest wiring. The frozen shape carries none of that: the SQL/checks moved to
+// scripts/lib/compute/link-parcel-addresses.js, the phase order moved to
+// scripts/lib/step/index.js's runMaterializePhase, and the declarations moved to
+// scripts/link-parcel-addresses.descriptor.json. Every guarantee below is RE-HOMED,
+// not dropped — asserted against the NEW artifacts, strictly stronger where the
+// declared shape now makes a guarantee checkable that a source-text grep could only
+// approximate (e.g. the write class, not merely "an ON CONFLICT exists somewhere").
+// Same treatment as link-wsib.infra.test.ts / link-massing.infra.test.ts at their own
+// conversions.
 
 import { describe, it, expect, beforeAll } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';
 
-describe('scripts/link-parcel-addresses.js — WF1 Phase 2c', () => {
-  let src: string;
+describe('scripts/link-parcel-addresses.{descriptor.json,js} — the frozen shape (was: WF1 Phase 2c source-text)', () => {
+  let computeSrc: string;
+  let stepSrc: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let descriptor: any;
+
   beforeAll(() => {
-    src = fs.readFileSync(
-      path.resolve(__dirname, '../../scripts/link-parcel-addresses.js'),
-      'utf-8',
-    );
+    computeSrc = fs.readFileSync(path.resolve(__dirname, '../../scripts/lib/compute/link-parcel-addresses.js'), 'utf-8');
+    stepSrc = fs.readFileSync(path.resolve(__dirname, '../../scripts/link-parcel-addresses.js'), 'utf-8');
+    descriptor = JSON.parse(fs.readFileSync(path.resolve(__dirname, '../../scripts/link-parcel-addresses.descriptor.json'), 'utf-8'));
   });
 
-  it('runs as a Spec 47 pipeline script with advisory lock', () => {
-    expect(src).toMatch(/pipeline\.run\(\s*['"]link-parcel-addresses['"]/);
-    expect(src).toMatch(/withAdvisoryLock\(/);
+  it('the frozen step file declares lock 115 textually and carries no config/query code (was: ADVISORY_LOCK_ID = 115 + withAdvisoryLock)', () => {
+    expect(stepSrc).toMatch(/ADVISORY_LOCK_ID\s*=\s*115\b/);
+    expect(descriptor.identity.lock).toBe(115);
+    expect(stepSrc).not.toMatch(/withAdvisoryLock|pool\.query|client\.query/);
   });
 
-  it('uses advisory lock 115 (the registered ID for the spatial bridge populator)', () => {
-    expect(src).toMatch(/ADVISORY_LOCK_ID\s*=\s*115\b/);
+  it('populates parcel_address_points via INSERT ... SELECT ... ST_Within (was: source-text grep on the step)', () => {
+    expect(computeSrc).toMatch(/INSERT\s+INTO\s+parcel_address_points/);
+    expect(computeSrc).toMatch(/ST_Within\s*\(\s*ap\.geom\s*,\s*pb\.geom\s*\)/);
   });
 
-  it('populates parcel_address_points via INSERT ... SELECT ... ST_Within', () => {
-    expect(src).toMatch(/INSERT\s+INTO\s+parcel_address_points/);
-    expect(src).toMatch(/ST_Within\s*\(\s*ap\.geom\s*,\s*pb\.geom\s*\)/);
-  });
-
-  it('is idempotent — ON CONFLICT (parcel_id, address_point_id) DO NOTHING', () => {
-    expect(src).toMatch(/ON\s+CONFLICT\s*\(\s*parcel_id\s*,\s*address_point_id\s*\)\s+DO\s+NOTHING/);
+  it('is idempotent — ON CONFLICT (parcel_id, address_point_id) DO NOTHING, class insert_only_no_retraction', () => {
+    expect(computeSrc).toMatch(/ON\s+CONFLICT\s*\(\s*parcel_id\s*,\s*address_point_id\s*\)\s+DO\s+NOTHING/);
+    const write = descriptor.outputs.writes[0];
+    expect(write.write_discipline.class).toBe('insert_only_no_retraction');
+    expect(write.write_discipline.idempotent_rerun).toBe('zero_writes');
   });
 
   it('NULL-geom safe on both sides (skips parcels and APs with NULL geom)', () => {
-    expect(src).toMatch(/parcels[\s\S]{0,80}geom\s+IS\s+NOT\s+NULL/);
-    expect(src).toMatch(/ap\.geom\s+IS\s+NOT\s+NULL/);
+    expect(computeSrc).toMatch(/parcels[\s\S]{0,80}geom\s+IS\s+NOT\s+NULL/);
+    expect(computeSrc).toMatch(/ap\.geom\s+IS\s+NOT\s+NULL/);
   });
 
-  it('batches via PK-ordered LIMIT (id > $1 ORDER BY id LIMIT $2)', () => {
-    expect(src).toMatch(/id\s*>\s*\$1/);
-    expect(src).toMatch(/ORDER\s+BY\s+id/);
-    expect(src).toMatch(/LIMIT\s+\$2/i);
-    expect(src).toMatch(/BATCH_SIZE\s*=\s*1000/);
+  it('batches via PK-ordered LIMIT (id > $1 ORDER BY id LIMIT $2), batch size from ctx.config (T1), not a literal', () => {
+    expect(computeSrc).toMatch(/id\s*>\s*\$1/);
+    expect(computeSrc).toMatch(/ORDER\s+BY\s+id/);
+    expect(computeSrc).toMatch(/LIMIT\s+\$2/i);
+    expect(computeSrc).not.toMatch(/BATCH_SIZE\s*=\s*1000/);
+    const t1 = descriptor.config.logic_variables.find((v: { name: string }) => v.name === 'link_parcel_addresses_batch_size');
+    expect(t1, 'batch size not declared in config.logic_variables[]').toBeDefined();
+    expect(t1.on_invalid).toBe('clamp');
   });
 
-  it('commits each batch in its own withTransaction (resumable)', () => {
-    expect(src).toMatch(/pipeline\.withTransaction/);
+  it('LPA-D2: the batch loop is idempotent, NOT resumable (was: "checkpoints via lastParcelId" — the pre-conversion claim was FALSE)', () => {
+    const notes = JSON.parse(fs.readFileSync(path.resolve(__dirname, '../../scripts/link-parcel-addresses.notes.json'), 'utf-8')) as Record<string, unknown>;
+    const allText = JSON.stringify(notes);
+    expect(allText).not.toMatch(/re-run picks up where we left off/i);
+    expect(allText).toMatch(/idempotent/i);
+    expect(descriptor.recovery.resume).toBe('none');
   });
 
-  it('terminates naturally when a batch returns 0 parcels (forward-progress guarantee)', () => {
-    expect(src).toMatch(/parcelsInBatch\s*===\s*0/);
-    expect(src).toMatch(/break;/);
+  it('audit_table includes coverage gap metrics + null-geom + errors (declared checks[], was: source-text grep)', () => {
+    const ids = new Set((descriptor.checks as Array<{ id: string }>).map((c) => c.id));
+    for (const id of [
+      'address_points_with_null_geom', 'parcels_with_no_address_pct', 'address_points_with_no_parcel_pct',
+      'new_links_written', 'final_link_count', 'errors',
+    ]) {
+      expect(ids.has(id), `descriptor declares no check "${id}"`).toBe(true);
+    }
   });
 
-  it('checkpoints via lastParcelId (resume-safe in-memory pointer)', () => {
-    expect(src).toMatch(/lastParcelId\s*=\s*-1/);
-    expect(src).toMatch(/lastParcelId\s*=\s*maxParcelId/);
+  it('runMaterializePhase captures RUN_AT once, library-owned — the compute never reads a clock (Spec 47 §14.2, claim #204)', () => {
+    expect(computeSrc).not.toMatch(/new Date\(\)/);
+    expect(computeSrc).toMatch(/\$3::timestamptz/);
   });
 
-  it('emits Spec 48 §3.6 row-derived verdict cascade (no parallel-boolean)', () => {
-    expect(src).toMatch(/auditRows\.some\(\(?r\)?\s*=>\s*r\.status\s*===\s*['"]FAIL['"]\)/);
-    expect(src).toMatch(/auditRows\.some\(\(?r\)?\s*=>\s*r\.status\s*===\s*['"]WARN['"]\)/);
-    expect(src).not.toMatch(/const\s+hasFails\s*=/);
+  it('final_link_count is FAIL-severity with a zero-coverage invariant (Phase 2d zero-coverage gate, was: threshold "> 0" source-text)', () => {
+    const check = (descriptor.checks as Array<{ id: string; severity: string; kind: string }>).find((c) => c.id === 'final_link_count');
+    expect(check, 'no final_link_count check declared').toBeDefined();
+    expect(check?.severity).toBe('FAIL');
+    expect(check?.kind).toBe('invariant');
   });
 
-  it('audit_table includes coverage gap metrics + null-geom + errors', () => {
-    expect(src).toMatch(/['"]address_points_with_null_geom['"]/);
-    expect(src).toMatch(/['"]parcels_with_no_address_pct['"]/);
-    expect(src).toMatch(/['"]address_points_with_no_parcel_pct['"]/);
-    expect(src).toMatch(/['"]new_links_written['"]/);
-    expect(src).toMatch(/['"]final_link_count['"]/);
-    expect(src).toMatch(/metric:\s*['"]errors['"]/);
+  it('parcels_with_no_address_pct WARN threshold defaults to 50% via T2 (was: a bare literal 0.50 on the step)', () => {
+    const check = (descriptor.checks as Array<{ id: string; limit_from_config?: string }>).find((c) => c.id === 'parcels_with_no_address_pct');
+    expect(check?.limit_from_config).toBe('link_parcel_addresses_no_address_warn_pct');
+    const seed = JSON.parse(fs.readFileSync(path.resolve(__dirname, '../../scripts/seeds/logic_variables.json'), 'utf-8')) as Record<string, { default: number }>;
+    expect(seed.link_parcel_addresses_no_address_warn_pct?.default).toBe(50);
   });
 
-  it('emitMeta declares reads (parcels.geom + address_points.geom) + writes (parcel_address_points)', () => {
-    expect(src).toMatch(/emitMeta\(/);
-    expect(src).toMatch(/parcels:\s*\[[^\]]*['"]geom['"]/);
-    expect(src).toMatch(/address_points:\s*\[[^\]]*['"]geom['"]/);
-    expect(src).toMatch(/parcel_address_points:\s*\[[^\]]*['"]parcel_id['"][^\]]*['"]address_point_id['"]/);
-  });
-
-  it('captures RUN_AT once at startup + passes as $3 (Spec 47 §14.2 — no NOW() in batch loop)', () => {
-    // 4-reviewer IMPL fold: NOW() inside the batch INSERT splits computed_at
-    // across midnight on long runs. RUN_AT pattern is mandatory.
-    expect(src).toMatch(/const\s+RUN_AT\s*=\s*await\s+pipeline\.getDbTimestamp\(pool\)/);
-    expect(src).toMatch(/\$3::timestamptz/);
-    expect(src).not.toMatch(/computed_at.*NOW\(\)/);
-    expect(src).not.toMatch(/,\s*NOW\(\)\s*FROM\s+parcel_batch/);
-  });
-
-  it('final_link_count has > 0 threshold + FAILs on zero (Phase 2d zero-coverage gate)', () => {
-    // Observability IMPL F3 fold: bridge zero-coverage MUST hard-fail so
-    // Phase 2d link-parcels doesn't silently unlink every permit.
-    expect(src).toMatch(/threshold:\s*['"]>\s*0['"]/);
-    expect(src).toMatch(/finalLinks\s*===\s*0\s*\?\s*['"]FAIL['"]/);
-  });
-
-  it('parcels_with_no_address_pct WARN threshold is 50% (calibrated to PI-2 avg-1.0-ap estimate)', () => {
-    // Independent IMPL I1 fold: 10% would fire on every clean run.
-    expect(src).toMatch(/threshold:\s*['"]<\s*50%['"]/);
-    expect(src).toMatch(/noAddressFraction\s*>=\s*0\.50/);
-  });
-
-  it('records_total = parcelsWithGeom (entity evaluated) per Spec 47 §11.1', () => {
-    expect(src).toMatch(/records_total:\s*parcelsWithGeom/);
-  });
-
-  it('records_new = totalNewLinks (newly written parcel_address_points rows)', () => {
-    expect(src).toMatch(/records_new:\s*totalNewLinks/);
-  });
-
-  it('logs progress every 25 batches (operator visibility on multi-minute run)', () => {
-    expect(src).toMatch(/parcelBatchesProcessed\s*%\s*25/);
+  it('records_total sourced from parcelsWithGeom-equivalent, records_new from new_links_written (§11 Counter Semantic Contract, was: bare identifiers on the step)', () => {
+    expect(descriptor.counters.records_total.source).toMatch(/parcels.?with.?geom/i);
+    expect(descriptor.counters.records_new.source).toMatch(/new_links_written/);
   });
 });
 
-describe('scripts/manifest.json — Phase 2c wiring', () => {
+describe('scripts/manifest.json — Phase 2c wiring (unchanged by the conversion)', () => {
   let manifest: { scripts: Record<string, unknown>; chains: Record<string, string[] | undefined> };
   beforeAll(() => {
     manifest = JSON.parse(

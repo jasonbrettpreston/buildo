@@ -470,8 +470,14 @@ describe('buildSkipGateRecordsMeta — skip re-emits its own coverage/threshold 
   // `scripts/lib/step/index.js`'s `skipRecordsMeta`/`deriveVerdict` routing) rather than
   // by looping this file's own source text — the same treatment link-massing.js got at
   // pilot 3 for its own run-ledger-gate-adjacent fences.
-  it('adoption-lock: the two still-unconverted B3 callers wire the run-ledger-gate skip path through buildSkipGateRecordsMeta (not a hardcoded verdict)', () => {
-    for (const f of ['link-parcel-addresses.js', 'compute-parcel-cost-estimates.js']) {
+  //
+  // LPA-D-class (2026-08-29, C1 pilot 5 commit 7): link-parcel-addresses.js is RE-HOMED
+  // out of this loop the same way — the frozen shape carries no gate.skip block; the
+  // equivalent guarantee lives in
+  // src/tests/steps/link_parcel_addresses/violations.test.ts (the ledgerGatedSkip-wired
+  // fence lock). This narrows this loop to its FINAL single remaining caller.
+  it('adoption-lock: the one still-unconverted B3 caller wires the run-ledger-gate skip path through buildSkipGateRecordsMeta (not a hardcoded verdict)', () => {
+    for (const f of ['compute-parcel-cost-estimates.js']) {
       const src = fs.readFileSync(path.resolve(__dirname, '../../scripts', f), 'utf8');
       expect(src, `${f} must call buildSkipGateRecordsMeta`).toContain('buildSkipGateRecordsMeta(');
       // The gate.skip branch itself must build its records_meta via the helper,
