@@ -2,12 +2,37 @@
 // SPEC LINK: docs/specs/01-pipeline/48_pipeline_observability.md §3.9
 //
 // Phase B B3 — the run-ledger gate WIRED INTO its two remaining hand-rolled callers
-// (link-parcel-addresses.js, compute-parcel-cost-estimates.js), live-DB. link-wsib.js's
-// portion is RE-HOMED, not deleted (A-5, C1 pilot 4 commit 7, 2026-08-28) to
-// src/tests/steps/link_wsib/ledger-gate.db.test.ts — the frozen shape has no `main(pool)`
-// export any more (pipeline.step()'s `.run({pool, chainId})` is the entry point), so the
-// direct-call pattern this file uses for its two remaining callers cannot reach it. Case
-// IDs mirror the B3 grounding fold's red-first table:
+// (link-parcel-addresses.js, compute-parcel-cost-estimates.js), live-DB.
+//
+// LW-D16 (2026-08-28, WF3-E) — CORRECTED CLAIM. link-wsib.js's portion was declared
+// "RE-HOMED, not deleted (A-5, C1 pilot 4 commit 7)" to
+// `src/tests/steps/link_wsib/ledger-gate.db.test.ts` — that file was NEVER CREATED
+// (`git log --all` on the path returns nothing; confirmed 2026-08-28). Root cause,
+// found the same day: `docs/reports/review_followups.md` (the "assert_current_database
+// vs buildo_test" MED item) — every converted step declares
+// `database.assert_current_database: "postgres"`, and `assertDbTarget` REFUSES any
+// other name, but `setup-testcontainer.ts` always provisions `POSTGRES_DB:
+// 'buildo_test'`. A live-DB test calling `pipeline.step(LINK_WSIB, compute).run({pool})`
+// against the testcontainer refuses immediately — the re-home was never actually
+// buildable, and the comment was left as an aspirational TODO instead of being
+// corrected when that was discovered. That gap is unresolved and stays a named
+// followup (the MED item above), not fixed here — a test-infrastructure change, not a
+// step conversion.
+//
+// What IS covered, this commit: `staleness.ledgerGatedSkip` — the LG-15 gate
+// `runCascadePhase` actually calls for `link_wsib` — never had a direct behavioral
+// test at all (live-DB or otherwise); it was only exercised indirectly through the
+// converted step's own `violations.test.ts` fixture matrix. Five fake-pool
+// (no live DB, no testcontainer) behavioral locks now live in
+// `src/tests/step-library.logic.test.ts`'s "LW-D16" describe block, proven red-first:
+// bypassed:true never SKIPs even against a matching baseline; a changed
+// config_version signal forces skip:false even when the ledger gate alone reads
+// skip:true; an absent baseline reads its config signal as fail-safe changed:true;
+// `gate.ownLastRecordsMeta` passes a prior run's meta (consecutive_skips, a
+// caller-shaped metric row) through unmodified; and a hoisted, out-of-bounds
+// `wsib_fuzzy_match_threshold` throws before the gate is ever reached, SKIP-eligible
+// or not (config.hoisted_above_gate, §1.2a P4). Case IDs below mirror the B3
+// grounding fold's red-first table:
 //   G5 skip-emits-summary/DS4 (ⓔ child) — for each of the three callers, calling
 //     their exported `main(pool)` directly (no child-process spawn needed: main
 //     takes an injected pool per the compute-parcel-cost-estimates.js precedent,
@@ -262,8 +287,11 @@ describe.skipIf(!dbAvailable())('Phase B B3 — run-ledger gate callers (live DB
     }
   });
 
-  // D#4 (link-wsib): LINK_WSIB_FORCE_FULL bypass — RE-HOMED to
-  // src/tests/steps/link_wsib/ledger-gate.db.test.ts (A-5).
+  // D#4 (link-wsib): LINK_WSIB_FORCE_FULL bypass — LW-D16, corrected claim: NOT
+  // re-homed (no such file was ever created — see the file header). The bypass
+  // half is covered by the fake-pool "bypassed:true never SKIPs" lock in
+  // step-library.logic.test.ts's "LW-D16" describe block; a live-DB equivalent
+  // stays blocked on the assert_current_database-vs-buildo_test MED followup.
 
   it('D#4: LINK_PARCEL_ADDRESSES_FORCE_FULL bypasses the gate even when SKIP-eligible', async () => {
     await pool.query(

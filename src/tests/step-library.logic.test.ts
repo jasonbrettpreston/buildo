@@ -1875,3 +1875,117 @@ describe('LW-D15 — --dry-run issues ZERO write statements (LINK + CASCADE/MATC
     expect(writes).toEqual(['UPDATE wsib_registry SET x = 1']);
   });
 });
+
+// ---------------------------------------------------------------------------
+// LW-D16 — staleness.ledgerGatedSkip (LG-15) behavioral locks (fake pool, no live
+// DB). Filed against src/tests/db/ledger-gate-callers.db.test.ts's FALSE claim that
+// link_wsib's ledger-gate coverage was "RE-HOMED" to
+// src/tests/steps/link_wsib/ledger-gate.db.test.ts — that file was never created
+// (git log --all on the path is empty). ledgerGatedSkip never had a direct
+// behavioral test at all; these five lock the rules its own docblock/code state.
+// ---------------------------------------------------------------------------
+
+/** The exact `link_wsib` `staleness.trigger[]` config_version entry (real descriptor). */
+const LW_CONFIG_TRIGGER = {
+  signal: 'config_version', position: 'pre_compute', emit_key: 'threshold_updated_at', variable: 'wsib_fuzzy_match_threshold',
+};
+/** A minimal descriptor carrying just what ledgerGatedSkip/deriveLedgerSlugs read. */
+function ledgerGateTestDescriptor(trigger: unknown[] = [LW_CONFIG_TRIGGER]) {
+  return {
+    identity: { name: 'link_wsib' },
+    execution: { invocation: { sources: {}, permits: {} } },
+    inputs: { reads: { steps: [{ step: 'load_wsib' }] } },
+    staleness: { trigger },
+  };
+}
+
+/** Answers the `runLedgerGateDecision` WITH-clause query with a fixed shape. */
+function ledgerGateAnswer(shape: { ownCompleted: string | null; ownLastRecordsMeta: unknown; nonCompleted?: number; completedWithChanges?: number }) {
+  return {
+    rows: [{
+      own_started: shape.ownCompleted, own_completed: shape.ownCompleted, own_last_records_meta: shape.ownLastRecordsMeta,
+      non_completed: shape.nonCompleted ?? 0, completed_with_changes: shape.completedWithChanges ?? 0, stale_running: 0,
+    }],
+  };
+}
+
+describe('LW-D16 — staleness.ledgerGatedSkip behavioral locks (fake pool)', () => {
+  it('(1) bypassed:true NEVER SKIPs, even against a baseline that would otherwise SKIP — and issues ZERO queries', async () => {
+    const descriptor = ledgerGateTestDescriptor([]); // no config trigger — isolate the bypass rule alone
+    const pool = dryRunFakePool(() => ledgerGateAnswer({ ownCompleted: '2026-08-01T00:00:00Z', ownLastRecordsMeta: {}, nonCompleted: 0, completedWithChanges: 0 }));
+    const result = await stalenessLib.ledgerGatedSkip(pool, descriptor, { now: new Date(), bypassed: true });
+    expect(result.skip, 'bypassed must never SKIP, regardless of what the ledger would say').toBe(false);
+    expect(result.reason).toBe('bypassed');
+    expect(pool.sql.length, 'a bypass must short-circuit before any query — the gate is never even consulted').toBe(0);
+  });
+
+  it('(2) a CHANGED config_version signal forces skip:false even when the ledger gate alone reads skip:true', async () => {
+    const descriptor = ledgerGateTestDescriptor();
+    const pool = dryRunFakePool((text: string) => {
+      if (text.includes('own_last')) {
+        // no_upstream_changes: a completed own-last run, zero non-completed/changed upstream -> gate.skip = true
+        return ledgerGateAnswer({ ownCompleted: '2026-08-01T00:00:00Z', ownLastRecordsMeta: { threshold_updated_at: '2026-06-10T14:01:54.545Z' } });
+      }
+      if (text.includes('updated_at FROM logic_variables')) return { rows: [{ updated_at: '2026-08-28T12:00:00.000Z' }] }; // NEWER than the baseline above -> changed
+      return undefined;
+    });
+    const result = await stalenessLib.ledgerGatedSkip(pool, descriptor, { now: new Date(), bypassed: false });
+    expect(result.gate.skip, 'sanity: the RAW ledger gate alone must read skip:true here').toBe(true);
+    expect(result.configVersionChanged).toBe(true);
+    expect(result.skip, 'a changed config_version signal overrides an otherwise-SKIP ledger gate').toBe(false);
+    expect(result.reason).toBe('config_version_changed');
+  });
+
+  it('(3) NO baseline (no prior completed own run) reads its config signal as fail-safe changed:true (never "unchanged" on an absent baseline)', async () => {
+    const descriptor = ledgerGateTestDescriptor();
+    const pool = dryRunFakePool((text: string) => {
+      if (text.includes('own_last')) return ledgerGateAnswer({ ownCompleted: null, ownLastRecordsMeta: null });
+      if (text.includes('updated_at FROM logic_variables')) return { rows: [{ updated_at: '2026-08-28T12:00:00.000Z' }] };
+      return undefined;
+    });
+    const result = await stalenessLib.ledgerGatedSkip(pool, descriptor, { now: new Date(), bypassed: false });
+    expect(result.gate.reason, 'sanity: the raw gate\'s own fail-safe fires').toBe('no_prior_completed_run');
+    expect(result.configSignals[0].changed, 'an absent baseline is fail-safe CHANGED, not "nothing to compare so unchanged"').toBe(true);
+    expect(result.skip).toBe(false);
+  });
+
+  it('(4) gate.ownLastRecordsMeta passes a prior SKIP\'s meta (consecutive_skips + a carried metric row) through UNMODIFIED', async () => {
+    const descriptor = ledgerGateTestDescriptor([]); // isolate: no config trigger noise
+    const priorMeta = {
+      consecutive_skips: 3,
+      last_full_run_at: '2026-08-01T00:00:00Z',
+      audit_table: { rows: [{ metric: 'link_rate_pct', value: 42, threshold: null, status: 'INFO' }] },
+    };
+    const pool = dryRunFakePool((text: string) => {
+      if (text.includes('own_last')) return ledgerGateAnswer({ ownCompleted: '2026-08-01T00:00:00Z', ownLastRecordsMeta: priorMeta });
+      return undefined;
+    });
+    const result = await stalenessLib.ledgerGatedSkip(pool, descriptor, { now: new Date(), bypassed: false });
+    expect(result.gate.ownLastRecordsMeta, 'a caller (e.g. cascade.prior) reads this verbatim — no field may be dropped or reshaped in transit').toEqual(priorMeta);
+  });
+
+  it('(5) a hoisted, out-of-bounds wsib_fuzzy_match_threshold THROWS before the ledger gate is ever reached — SKIP-eligible or not', async () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports -- the real descriptor, not a fixture copy
+    const descriptor = require(join(process.cwd(), 'scripts/link-wsib.descriptor.json'));
+    expect(descriptor.config.hoisted_above_gate, 'sanity: this is the fence under test').toBe(true);
+    const pool = fakePool({
+      lockAcquired: true,
+      logicVars: {
+        wsib_fuzzy_match_threshold: 5, // out of bounds: max is 1
+        link_wsib_link_rate_warn_pct: 5,
+        link_wsib_tier1_confidence: 0.95,
+        link_wsib_tier2_confidence: 0.9,
+        link_wsib_tier3_confidence: 0.6,
+        link_wsib_entity_fanin_warn: 20,
+        link_wsib_tier3_full_max_iterations: 20,
+      },
+    });
+    await expect(
+      stepLib.step(descriptor, noop).run({ pool, chainId: 'sources' }), // in-chain: owns=false, so not even openLedgerRow runs first
+    ).rejects.toThrow(/on_invalid "fail"/);
+    expect(
+      pool.sql.some((s: string) => s.includes('own_last')),
+      'the throw must land BEFORE the ledger gate is ever consulted — SKIP-eligibility must not matter',
+    ).toBe(false);
+  });
+});
