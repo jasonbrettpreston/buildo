@@ -333,6 +333,121 @@ commit with the same PIN disposition. No BLOCKING classification conflict found.
 
 ---
 
+## §5. Golden master (commit 5, G1′) — 2 invocations (this step's sole chain membership + standalone)
+
+> **Every capture below is a REAL run of the UNCONVERTED `scripts/compute-centroids.js`** via
+> `scripts/analysis/capture-step-golden.js`, run against `127.0.0.1:54322/postgres` (resolve-db, 242
+> migrations, floor 245). Files: `docs/reports/golden/compute_centroids/pre/{sources,standalone,
+> standalone-repeat}.json` + `docs/reports/golden/compute_centroids/invariants.json` (7 entries — the 5
+> task-pinned + `parcels_total` + the CC-D3 observability row). `--tables=parcels` (no descriptor exists
+> yet, so the harness's auto-derivation is unavailable — supplied explicitly), `--table-columns=parcels:
+> id,centroid_lat,centroid_lng` / `--table-order=parcels:id` (bypasses the 100,000-row ceiling via the
+> projection mechanism, `ceiling_bypassed:"projected"` — 486,530 rows exceeds the harness's default ceiling).
+
+### The 2 pinned invocations — `sources` (this step's ONLY chain membership, index 9/28) + `standalone`
+
+Both invocations are the **zero-work SKIP path** — the only shape live-observed in 5+ months (§0.6 finding
+3, re-confirmed commit 1: 0/486,530 backlog). Both `exit_code:0`, `verdict:"PASS"`, identical `table_state`
+hash (`94473cfd`), identical invariants:
+
+| Invocation | `chain` arg | `PIPELINE_CHAIN` env | `records_total` | `pipeline_runs` rows written | `table_state` hash |
+|---|---|---|---:|---:|---|
+| `sources` | `sources` | `sources` | 0 | 0 | `94473cfd` (486,530 rows, projected) |
+| `standalone` | `none` | *(unset)* | 0 | 0 | `94473cfd` (486,530 rows, projected) — **byte-identical to `sources`** |
+
+`--compare` of the two: **1 difference — the harness's own `chain` metadata field.** Every other
+normalised field (summary, meta, table_state, invariants) is identical, confirmed live:
+```
+[capture-step-golden] 1 difference(s): .../pre/sources.json vs .../pre/standalone.json
+  chain
+    - "sources"
+    + "none"
+```
+
+**`pipeline_runs` rows written: 0 for BOTH invocations — not an anomaly, a property of the UNCONVERTED
+script.** `scripts/lib/pipeline.js` (the pre-conversion SDK `compute-centroids.js` still uses) never itself
+INSERTs into `pipeline_runs` — only `scripts/run-chain.js`'s own chain-orchestration code does, when it
+spawns a step as part of an actual `chain_sources` execution (`grep -n "INSERT INTO pipeline_runs"
+scripts/*.js` → hits only in `run-chain.js`, none in `pipeline.js`). This matches the 20 existing
+`pipeline_runs` rows under `sources:compute_centroids` (§0.6 finding 3) — all written by real
+`chain_sources` runs, not by the script writing its own row. Neither `capture-step-golden.js`'s direct
+child-process spawn (with `PIPELINE_CHAIN=sources` set but no actual `run-chain.js` orchestration around
+it) nor a bare `node scripts/compute-centroids.js` (this pilot's `standalone` invocation) goes through
+`run-chain.js`, so both legitimately show `ledger=[]` — this is UNRELATED to the harness doc-comment's note
+that a converted step's `standalone` capture "exercises the step's own ledger path" (that mechanism belongs
+to the FROZEN-SHAPE runner, `scripts/lib/step/index.js`, which this pre-conversion capture does not exercise
+by construction).
+
+### The write path is proven separately — no gate-bypass exists; the proof is an EXISTING NULL-centroid
+### fixture DB test
+
+**No FULL/forced-mode override exists for this step to exercise (§3's seam-map finding, re-confirmed:
+0 `process.env` reads, 0 `process.argv` reads) — there is no `COMPUTE_CENTROIDS_FORCE_FULL`-shaped env var
+or `--full` flag the way `link_massing`/`link_wsib`/`link_parcel_addresses` each have.** BACKFILL's own
+scope (`WHERE centroid_lat IS NULL`) has no "FULL" mode to force — the predicate already recomputes
+correctly on every invocation, and today's live corpus has 0 eligible rows (§1). This pilot did **not**
+construct a synthetic NULL-centroid fixture to force a live capture of the compute PATH — that mechanism
+**already exists**, pre-dating this pilot: `src/tests/db/migration-245-centroid-invalidation.db.test.ts`'s
+case **④** ("the next `compute_centroids` run refills the invalidated centroid", `:311-346`) genuinely
+spawns the real `scripts/compute-centroids.js` (`CENTROIDS_SCRIPT`, `:66`) against a row the migration's own
+trigger has just invalidated (a real geometry UPDATE, real NULL centroid), and asserts the **refilled VALUE**
+— not merely the exit code (its own `⛔ TRAP ④` note, `:50-54`, states exactly why: *"a run that computed
+nothing at all"* would also exit 0, so the test reads the actual `centroid_lat`/`centroid_lng` post-refill).
+**This is the write-path proof for this pilot** — verified still present and unmodified this commit
+(`grep -c "CENTROIDS_SCRIPT\|describe.*refills the invalidated"` → both hit as cited). No new fixture was
+needed or built; citing an existing, already-red-first-proven mechanism is the correct rung (Spec 124 §7 —
+do not duplicate a working mechanism).
+
+### Harness self-test (Done-test requirement)
+
+Re-ran the `standalone` capture a second time (`pre/standalone-repeat.json`) and diffed via `--compare`:
+```
+[capture-step-golden] IDENTICAL (normalised): docs/reports/golden/compute_centroids/pre/standalone.json == docs/reports/golden/compute_centroids/pre/standalone-repeat.json
+```
+Exit code 0. **Harness self-test PASSES.**
+
+### Non-determinism inventory (declared BEFORE the first diff, Spec 124 §7 Step 4)
+
+Identical across both invocations, 3 entries — the SAME shape every prior pilot's zero-work SKIP capture
+declares:
+
+| Kind | What | Why |
+|---|---|---|
+| `pattern:duration_literal` | `"completed in 1.0s"`/`"completed in 2.6s"` stdout log lines | wall-clock elapsed text, masked to `<DUR>` |
+| `row:sys_duration_ms` | `records_meta.audit_table.rows[].metric==="sys_duration_ms"` | auto-injected timing (`pipeline.js:346-352`), masked by the `sys_` prefix rule |
+| `row:sys_velocity_rows_sec` | same auto-injected timing row, `records_total===0` denominator | masked by the same `sys_` prefix rule |
+
+No OTHER non-determinism found — `git_head`, `db_target`, `runtime`, `args` are all harness metadata outside
+the normalised comparison; the invariants (7 entries) and table_state hash are BOTH deterministic on
+identical data (confirmed by the harness self-test above).
+
+### Invariants pinned (`docs/reports/golden/compute_centroids/invariants.json`, 7 entries, identical across
+### both captures — measured values, live this commit)
+
+| Invariant | Value | Task-pinned? |
+|---|---:|---|
+| `parcels_total` | 486,530 | context (not task-pinned, included for scale) |
+| `centroid_null_count` | **0** | ✓ task-pinned |
+| `geom_not_null_geometry_null_count` | **0** | ✓ task-pinned |
+| `outside_polygon_count` | **3,626** | ✓ task-pinned |
+| `pointonsurface_gt_1m_count` | **298,021** | ✓ task-pinned |
+| `centroid_in_neighbour_parcel_count` | **3,130** | ✓ task-pinned (materialized CTE + LATERAL, timed 2.57s this session, §2's `CC-D2` query shape — well under the "must be seconds" requirement) |
+| `centroid_algorithm_drift_gt_1m_count` | **292,587** | CC-D3 observability row (§4 Finding 7), not in the original task list — added because it was discovered this pilot and belongs on this step's own invariant set |
+
+All 7 values match every direct-query measurement taken earlier this session (commits 1/2/4) exactly —
+**zero discrepancy between the ad-hoc `node -r dotenv/config -e ...` queries and the harness's own
+`--invariants` execution**, confirming the harness reproduces the same SQL faithfully.
+
+### G1′ verdict
+
+**CLOSED this commit.** Both pinned invocations captured, byte-identical on every normalised field except
+`chain`; harness self-test PASSES (re-run IDENTICAL); non-determinism inventory declared BEFORE any diff was
+taken (3 entries, both invocations agree); all 7 invariants pinned and cross-checked against this session's
+independent measurements; the write path's proof mechanism identified as an EXISTING db test (no new
+fixture built, none needed) — `migration-245-centroid-invalidation.db.test.ts`'s case ④.
+
+---
+
 ## §0. PH-0 seed — measured boundary table (2026-08-29 planning session)
 
 ### 0.1 Governing specs, read in order (Spec 124 §7 Step 0 / Spec 123 §6 G0)
