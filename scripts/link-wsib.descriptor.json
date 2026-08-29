@@ -321,6 +321,16 @@
       "why": { "text": "T6, new this pilot (Fold A, Reality-Check). Fires immediately on the known-bad population (171 magnet entities fan-in >= 10, worst MDK CONSTRUCTION at 2,118) — intended, not a defect (Fold B ACCEPTED ruling). A declared, machine-observable population this pilot surfaces rather than gates away. R-H (Spec 124 Rule 10 addendum): WARN with a declared, machine-observable retighten condition, never FAIL, never INFO-by-taste. RETIGHTEN CONDITION: the fan-in magnets are near-entirely tier-3 (fuzzy, 0.60-confidence) contamination — once A-7's tier-3 repair (LG-16) retracts the 61.9%-failing tier-3 links, `wsib_entity_fanin_max` should fall well below its current 2,118 (MDK CONSTRUCTION) and 1,404 (COLE CONTRACTING); at that point `link_wsib_entity_fanin_warn` (currently 20, deliberately loose so the check fires on the known-bad population rather than gating it away) should be reviewed for lowering toward a tighter bound that reflects genuinely healthy fan-in.", "liveness": { "kind": "table", "ref": "entities" } }
     },
     {
+      "id": "tier3_token_overlap", "kind": "bound",
+      "expect": {
+        "of": "the pct of Tier-3 (fuzzy, 0.60-confidence) links whose WSIB name and matched entity name share at least one non-generic (stopword-stripped, non-numeric) token",
+        "stopwords": ["CONSTRUCTION", "CONTRACTING", "BUILDERS", "HOMES", "GROUP", "INC", "LTD", "LIMITED", "CO", "COMPANY", "CORP", "ENTERPRISES", "DEVELOPMENTS", "SERVICES", "ONTARIO", "CANADA"]
+      },
+      "limit": "pct >= 50", "limit_from_config": "link_wsib_tier3_token_overlap_fail_pct",
+      "severity": "FAIL", "blocking": false, "when": "post", "chains": "all", "accept_until": "none",
+      "why": { "text": "LW-D14 (2026-08-28). `similarity() > threshold` + first-letter blocking (d704a447) is satisfiable by two UNRELATED companies that merely share a generic word (\"* CONTRACTING\", \"* CONSTRUCTION\") — the root cause of the magnet-entity fan-in contamination `entity_fanin_warn` (T6) surfaces. Measured live PRE-fix: 10.49% (840 of 8,009 tier-3 links share a genuine non-generic token; the rest share only a generic word or nothing). `buildFuzzyMatchSql`'s predicate now REQUIRES the same token-overlap rule this check measures (`tokenOverlapClause`, `scripts/lib/compute/link-wsib.js`), so a healthy corpus reads at or near 100% post-fix — FAIL (not WARN, R-H does not apply: this measures the write predicate's own correctness after the fix landed, never an expected-permanently-nonzero population), blocking:false (report loudly, do not halt — the SAME posture `link_rate_warn` uses). The stopword list is declared here (`expect.stopwords`), never a literal in compute (Rule 1) — `buildFuzzyMatchSql`/`buildCumulativeSql` both read it from this exact field via `tokenOverlapStopwords(descriptor)`.", "liveness": { "kind": "file", "ref": "scripts/lib/compute/link-wsib.js" } }
+    },
+    {
       "id": "orphan_linked_entity_id", "kind": "invariant",
       "expect": { "linked_iff_confidence_iff_matched_at": true },
       "limit": "viol == 0", "severity": "FAIL", "blocking": false, "when": "post", "chains": "all", "accept_until": "none",
@@ -484,7 +494,8 @@
       { "name": "link_wsib_tier2_confidence", "min": 0, "max": 1, "on_invalid": "fail" },
       { "name": "link_wsib_tier3_confidence", "min": 0, "max": 1, "on_invalid": "fail" },
       { "name": "link_wsib_entity_fanin_warn", "min": 2, "max": 1000, "on_invalid": "fail" },
-      { "name": "link_wsib_tier3_full_max_iterations", "min": 1, "max": 100, "on_invalid": "fail" }
+      { "name": "link_wsib_tier3_full_max_iterations", "min": 1, "max": 100, "on_invalid": "fail" },
+      { "name": "link_wsib_tier3_token_overlap_fail_pct", "min": 0, "max": 100, "on_invalid": "fail" }
     ],
     "validation": "strict",
     "hoisted_above_gate": true,

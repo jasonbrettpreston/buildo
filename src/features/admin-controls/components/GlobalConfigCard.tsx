@@ -128,6 +128,7 @@ export const GROUPS: Array<{ label: string; keys: string[] }> = [
       'link_wsib_tier3_confidence',
       'link_wsib_entity_fanin_warn',
       'link_wsib_tier3_full_max_iterations',
+      'link_wsib_tier3_token_overlap_fail_pct',
     ],
   },
   {

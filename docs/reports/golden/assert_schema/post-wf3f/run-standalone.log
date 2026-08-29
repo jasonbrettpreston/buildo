@@ -1,0 +1,57 @@
+[capture-step-golden] tables=[] (source none; ceiling 100000) invariants=(none)
+[capture-step-golden] db target: postgresql://postgres:***@127.0.0.1:54322/postgres (source env:DATABASE_URL)
+[capture-step-golden] target: postgresql://postgres:***@127.0.0.1:54322/postgres → database=postgres user=postgres migrations=242 (floor 223)
+[capture-step-golden] spawning: node scripts/quality/assert-schema.js  (PIPELINE_CHAIN=<unset>; pipeline_runs max(id) before = 1703)
+{"level":"INFO","tag":"[assert_schema]","msg":"[assert_schema] target: assert_schema (descriptor.database) → database=postgres user=postgres migrations=242 (floor 41)"}
+{"level":"INFO","tag":"[assert_schema]","msg":"=== CQA Tier 1: Schema Validation ==="}
+{"level":"INFO","tag":"[assert_schema]","msg":"Fetching metadata for Building Permits..."}
+{"level":"INFO","tag":"[assert_schema]","msg":"OK: Building Permits — all 11 expected columns present (32 total)"}
+{"level":"INFO","tag":"[assert_schema]","msg":"OK: Building Permits — EST_CONST_COST type coercion verified"}
+{"level":"INFO","tag":"[assert_schema]","msg":"Fetching metadata for CoA Active..."}
+{"level":"INFO","tag":"[assert_schema]","msg":"OK: CoA Active — all 11 expected columns present (30 total)"}
+{"level":"INFO","tag":"[assert_schema]","msg":"Fetching CSV headers for Address Points..."}
+{"level":"INFO","tag":"[assert_schema]","msg":"OK: Address Points — all 11 expected columns present (38 total)"}
+{"level":"INFO","tag":"[assert_schema]","msg":"Fetching CSV headers for Parcels..."}
+{"level":"INFO","tag":"[assert_schema]","msg":"OK: Parcels — all 4 expected columns present (6 total)"}
+{"level":"INFO","tag":"[assert_schema]","msg":"Checking URL accessibility for 3D Massing..."}
+{"level":"INFO","tag":"[assert_schema]","msg":"OK: 3D Massing — URL accessible (200)"}
+{"level":"INFO","tag":"[assert_schema]","msg":"Checking URL accessibility for Ravine Protection..."}
+{"level":"INFO","tag":"[assert_schema]","msg":"OK: Ravine Protection — URL accessible (200)"}
+{"level":"INFO","tag":"[assert_schema]","msg":"Checking URL accessibility for Heritage Register..."}
+{"level":"INFO","tag":"[assert_schema]","msg":"OK: Heritage Register — URL accessible (200)"}
+{"level":"INFO","tag":"[assert_schema]","msg":"Checking URL accessibility for Heritage Conservation Districts..."}
+{"level":"INFO","tag":"[assert_schema]","msg":"OK: Heritage Conservation Districts — URL accessible (200)"}
+{"level":"INFO","tag":"[assert_schema]","msg":"Checking URL accessibility for Toronto Centreline..."}
+{"level":"INFO","tag":"[assert_schema]","msg":"OK: Toronto Centreline — URL accessible (200)"}
+{"level":"INFO","tag":"[assert_schema]","msg":"Fetching GeoJSON properties for Neighbourhoods..."}
+{"level":"INFO","tag":"[assert_schema]","msg":"OK: Neighbourhoods — ID property found (11 total properties)"}
+{"level":"INFO","tag":"[assert_schema]","msg":"Fetching metadata for Zoning Area (base)..."}
+{"level":"INFO","tag":"[assert_schema]","msg":"OK: Zoning Area (base) — all 6 expected columns present (25 total)"}
+{"level":"INFO","tag":"[assert_schema]","msg":"Fetching metadata for Zoning Height Overlay..."}
+{"level":"INFO","tag":"[assert_schema]","msg":"OK: Zoning Height Overlay — all 3 expected columns present (5 total)"}
+{"level":"INFO","tag":"[assert_schema]","msg":"Fetching metadata for Zoning Lot Coverage Overlay..."}
+{"level":"INFO","tag":"[assert_schema]","msg":"OK: Zoning Lot Coverage Overlay — all 3 expected columns present (3 total)"}
+{"level":"INFO","tag":"[assert_schema]","msg":"Fetching metadata for Zoning Building Setback Overlay..."}
+{"level":"INFO","tag":"[assert_schema]","msg":"OK: Zoning Building Setback Overlay — all 2 expected columns present (6 total)"}
+{"level":"INFO","tag":"[assert_schema]","msg":"Fetching metadata for Zoning Policy Area Overlay..."}
+{"level":"INFO","tag":"[assert_schema]","msg":"OK: Zoning Policy Area Overlay — all 2 expected columns present (5 total)"}
+{"level":"INFO","tag":"[assert_schema]","msg":"Fetching metadata for Zoning Policy Road Overlay..."}
+{"level":"INFO","tag":"[assert_schema]","msg":"OK: Zoning Policy Road Overlay — all 2 expected columns present (3 total)"}
+{"level":"INFO","tag":"[assert_schema]","msg":"Fetching metadata for Zoning Rooming House Overlay..."}
+{"level":"INFO","tag":"[assert_schema]","msg":"OK: Zoning Rooming House Overlay — all 2 expected columns present (6 total)"}
+{"level":"INFO","tag":"[assert_schema]","msg":"Fetching metadata for Zoning Parking Zone Overlay..."}
+{"level":"INFO","tag":"[assert_schema]","msg":"OK: Zoning Parking Zone Overlay — all 2 expected columns present (4 total)"}
+{"level":"INFO","tag":"[assert_schema]","msg":"Fetching metadata for Zoning Priority Retail Street Overlay..."}
+{"level":"INFO","tag":"[assert_schema]","msg":"OK: Zoning Priority Retail Street Overlay — all 2 expected columns present (7 total)"}
+{"level":"INFO","tag":"[assert_schema]","msg":"Fetching metadata for Zoning QueenStW Eat Community Overlay..."}
+{"level":"INFO","tag":"[assert_schema]","msg":"OK: Zoning QueenStW Eat Community Overlay — all 2 expected columns present (6 total)"}
+PIPELINE_SUMMARY:{"records_total":null,"records_new":null,"records_updated":null,"records_meta":{"config":{"assert_schema_type_sample_rows":20,"assert_schema_csv_header_bytes":2048,"assert_schema_geojson_probe_bytes":8192},"terminal":"all_checks_passed","ledger_row":"owned","checks_passed":"all","checks_failed":0,"audit_table":{"phase":1,"name":"Schema Validation","verdict":"PASS","rows":[{"metric":"declared_logic_variables_present","value":{"missing":[]},"threshold":"viol == 0","status":"PASS"},{"metric":"permit_columns","value":0,"threshold":"viol == 0","status":"PASS"},{"metric":"permit_cost_type_sample","value":0,"threshold":"viol == 0","status":"PASS"},{"metric":"coa_columns","value":0,"threshold":"viol == 0","status":"PASS"},{"metric":"address_point_columns","value":0,"threshold":"viol == 0","status":"PASS"},{"metric":"address_point_coordinate_source","value":0,"threshold":"viol == 0","status":"PASS"},{"metric":"parcel_columns","value":0,"threshold":"viol == 0","status":"PASS"},{"metric":"source_archives_reachable","value":0,"threshold":"viol == 0","status":"PASS"},{"metric":"neighbourhood_id_property","value":0,"threshold":"viol == 0","status":"PASS"},{"metric":"zoning_resource_columns","value":0,"threshold":"viol == 0","status":"PASS"},{"metric":"sys_velocity_rows_sec","value":0,"threshold":null,"status":"INFO"},{"metric":"sys_duration_ms","value":3874,"threshold":null,"status":"INFO"}]}}}
+PIPELINE_META:{"reads":{"logic_variables":["variable_key"]},"writes":{},"external":["ckan_datastore_api","address_points_csv","parcels_csv","massing_zip","ravine_zip","heritage_register_zip","heritage_hcd_zip","centreline_zip","neighbourhoods_geojson"]}
+
+[assert_schema] completed in 3.9s
+[capture-step-golden] source_fingerprint=65137817846a141c0b7540bee2d1dead4dbfe54f7c92ede99f669fd7874874a1 over [scripts/lib/compute/assert-schema.js, scripts/quality/assert-schema.descriptor.json, scripts/quality/assert-schema.js, scripts/quality/assert-schema.notes.json]
+[capture-step-golden] scripts/quality/assert-schema.js chain=none exit=0 verdict=PASS ledger=[completed] summaries=1 meta=1 nondeterminism=7
+[capture-step-golden] table_state: (none)
+[capture-step-golden] invariants: (none)
+[capture-step-golden] wrote C:\Users\User\Buildo\docs\reports\golden\assert_schema\post-wf3f\standalone.json
+[capture-step-golden] nondeterminism: key:pipeline_runs[0].completed_at, key:pipeline_runs[0].duration_ms, key:pipeline_runs[0].id, key:pipeline_runs[0].started_at, pattern:duration_literal, row:sys_duration_ms, row:sys_velocity_rows_sec

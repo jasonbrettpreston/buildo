@@ -1034,7 +1034,12 @@ async function runCascadePhase({ descriptor, pool, compute, config, chainId, log
     matched.tier3_full = tier3Full;
   });
 
-  const cumulativeResult = await pool.query(compute.CUMULATIVE_SQL);
+  // LW-D14 — every cascade compute's CUMULATIVE_SQL is a function of `descriptor` (was
+  // a bare string), so a step whose invariant needs declared descriptor data (e.g.
+  // link_wsib's token-overlap stopword list) can read it the same way the write phase's
+  // own SQL builders do — a generic widening of the cascade contract, not a per-step
+  // branch here (Gate 0: link_wsib is still the only cascade compute this runs for).
+  const cumulativeResult = await pool.query(compute.buildCumulativeSql(descriptor));
   const c = cumulativeResult.rows[0];
   for (const k of Object.keys(c)) {
     if (k === 'linked' || k === 'total') continue;

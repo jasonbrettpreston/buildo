@@ -60,6 +60,45 @@ const TIER_IDS = Object.freeze({
   FUZZY: 'tier3_fuzzy',
 });
 
+/** LW-D14 — the declared check whose `expect.stopwords` is the ONLY home of the generic-token list (Spec 124 Rule 1: never a literal in compute). */
+const TOKEN_OVERLAP_CHECK_ID = 'tier3_token_overlap';
+
+/**
+ * LW-D14 (2026-08-28) — Tier 3's missing predicate half. Measured live pre-fix: 10.49%
+ * of tier-3 links (840 of 8,009) share a genuine non-generic token with their matched
+ * entity; the rest share ONLY a generic word ("CONTRACTING"/"CONSTRUCTION"/...) with
+ * their match, or nothing at all — the raw trigram similarity threshold plus
+ * first-letter blocking (d704a447) is satisfiable by two UNRELATED companies that both
+ * happen to be, say, "* CONTRACTING". This is the magnet-entity fan-in contamination's
+ * root cause (LW-D11).
+ *
+ * The rule: tokenize both names on whitespace, strip the declared stopwords AND purely
+ * numeric tokens (a numbered-company legal name contributes nothing to a match), and
+ * require the two token sets to share AT LEAST ONE survivor. `stopwords` is read from
+ * the descriptor (Rule 1) — never hardcoded here — and rendered as a SQL array literal
+ * (single quotes doubled, the standard SQL-literal escape) so the predicate is one
+ * self-contained expression, not a second query round-trip.
+ *
+ * @param {string[]} stopwords - `descriptor.checks[].expect.stopwords` for TOKEN_OVERLAP_CHECK_ID
+ * @param {string} leftExpr - a SQL column/expression, e.g. `w.trade_name_normalized`
+ * @param {string} rightExpr - e.g. `e.name_normalized`
+ * @returns {string} a boolean SQL expression (NULL, i.e. false-in-WHERE, when either side tokenizes to nothing)
+ */
+function tokenOverlapClause(stopwords, leftExpr, rightExpr) {
+  const arraySql = `ARRAY[${stopwords.map((w) => `'${String(w).replace(/'/g, "''")}'`).join(',')}]::text[]`;
+  const tokensOf = (expr) => `(SELECT array_agg(t) FROM unnest(regexp_split_to_array(${expr}, '\\s+')) t WHERE t <> ALL(${arraySql}) AND t !~ '^[0-9]+$')`;
+  return `${tokensOf(leftExpr)} && ${tokensOf(rightExpr)}`;
+}
+
+/** The declared stopword list, read from the descriptor (Rule 1 — never a literal in compute). */
+function tokenOverlapStopwords(descriptor) {
+  const check = descriptor.checks.find((c) => c.id === TOKEN_OVERLAP_CHECK_ID);
+  if (!check || !check.expect || !Array.isArray(check.expect.stopwords)) {
+    throw new Error(`[link_wsib compute] descriptor.checks has no "${TOKEN_OVERLAP_CHECK_ID}" entry with expect.stopwords[] — Tier 3's predicate cannot be built without it (LW-D14).`);
+  }
+  return check.expect.stopwords;
+}
+
 /**
  * ONE tier's full statement set, as text, derived from the descriptor + resolved config.
  *
@@ -130,11 +169,12 @@ function buildTierSql(descriptor, config, tier, runAt) {
   }
   if (tier.id === TIER_IDS.FUZZY) {
     const wsibFuzzyMatchThreshold = config.wsib_fuzzy_match_threshold;
+    const stopwords = tokenOverlapStopwords(descriptor);
     return {
-      wsib_update_sql: buildFuzzyMatchSql(),
+      wsib_update_sql: buildFuzzyMatchSql(stopwords),
       // $1 RUN_AT, $2 similarity threshold (set_config + both CTE comparisons), $3 confidence
       wsib_update_params: [runAt, wsibFuzzyMatchThreshold, confidence],
-      wsib_count_sql: buildFuzzyMatchCountSql(),
+      wsib_count_sql: buildFuzzyMatchCountSql(stopwords),
       // $1 similarity threshold only — the count variant has no SET clause to bind RUN_AT/confidence to.
       wsib_count_params: [wsibFuzzyMatchThreshold],
       entities_flag_scope_params: [confidence],
@@ -192,9 +232,14 @@ SELECT count(*)::int AS n FROM matched`;
  * later work on a pooled connection because it auto-resets at COMMIT/ROLLBACK, which a
  * forgotten manual RESET could not guarantee). `d704a447`'s article-stripping predicate
  * and `647d0935`'s trade/legal CTE split (for GIN index use, avoiding the ~394M-row
- * nested loop the OR-joined version produced) are both preserved verbatim.
+ * nested loop the OR-joined version produced) are both preserved verbatim. LW-D14
+ * (2026-08-28) adds the shared-non-generic-token requirement (`tokenOverlapClause`) to
+ * BOTH CTEs — `similarity() > threshold` + first-letter blocking alone accepted two
+ * unrelated companies that merely share a generic word ("* CONTRACTING").
+ *
+ * @param {string[]} stopwords - `tokenOverlapStopwords(descriptor)`
  */
-function buildFuzzyMatchSql() {
+function buildFuzzyMatchSql(stopwords) {
   return `WITH _cfg AS (SELECT set_config('pg_trgm.similarity_threshold', $2::text, true)),
 trade_matches AS (
   SELECT w.id AS wsib_id, e.id AS entity_id, e.permit_count,
@@ -203,6 +248,7 @@ trade_matches AS (
   JOIN entities e ON w.trade_name_normalized % e.name_normalized
     AND LEFT(REGEXP_REPLACE(w.trade_name_normalized, '^(THE|A|AN) ', ''), 1)
       = LEFT(REGEXP_REPLACE(e.name_normalized, '^(THE|A|AN) ', ''), 1)
+    AND ${tokenOverlapClause(stopwords, 'w.trade_name_normalized', 'e.name_normalized')}
   WHERE w.linked_entity_id IS NULL
     AND w.trade_name_normalized IS NOT NULL
     AND LENGTH(w.trade_name_normalized) >= ${FUZZY_LENGTH_FLOOR}
@@ -216,6 +262,7 @@ legal_matches AS (
   JOIN entities e ON w.legal_name_normalized % e.name_normalized
     AND LEFT(REGEXP_REPLACE(w.legal_name_normalized, '^(THE|A|AN) ', ''), 1)
       = LEFT(REGEXP_REPLACE(e.name_normalized, '^(THE|A|AN) ', ''), 1)
+    AND ${tokenOverlapClause(stopwords, 'w.legal_name_normalized', 'e.name_normalized')}
   WHERE w.linked_entity_id IS NULL
     AND LENGTH(w.legal_name_normalized) >= ${FUZZY_LENGTH_FLOOR}
     AND LENGTH(e.name_normalized) >= ${FUZZY_LENGTH_FLOOR}
@@ -240,8 +287,8 @@ FROM matched m
 WHERE w.id = m.wsib_id`;
 }
 
-/** LW-D15 — read-only mirror of `buildFuzzyMatchSql`'s predicate; $1 is the similarity threshold only. */
-function buildFuzzyMatchCountSql() {
+/** LW-D15 — read-only mirror of `buildFuzzyMatchSql`'s predicate; $1 is the similarity threshold only. LW-D14 — same token-overlap requirement, mirrored. */
+function buildFuzzyMatchCountSql(stopwords) {
   return `WITH _cfg AS (SELECT set_config('pg_trgm.similarity_threshold', $1::text, true)),
 trade_matches AS (
   SELECT w.id AS wsib_id, e.id AS entity_id, e.permit_count,
@@ -250,6 +297,7 @@ trade_matches AS (
   JOIN entities e ON w.trade_name_normalized % e.name_normalized
     AND LEFT(REGEXP_REPLACE(w.trade_name_normalized, '^(THE|A|AN) ', ''), 1)
       = LEFT(REGEXP_REPLACE(e.name_normalized, '^(THE|A|AN) ', ''), 1)
+    AND ${tokenOverlapClause(stopwords, 'w.trade_name_normalized', 'e.name_normalized')}
   WHERE w.linked_entity_id IS NULL
     AND w.trade_name_normalized IS NOT NULL
     AND LENGTH(w.trade_name_normalized) >= ${FUZZY_LENGTH_FLOOR}
@@ -263,6 +311,7 @@ legal_matches AS (
   JOIN entities e ON w.legal_name_normalized % e.name_normalized
     AND LEFT(REGEXP_REPLACE(w.legal_name_normalized, '^(THE|A|AN) ', ''), 1)
       = LEFT(REGEXP_REPLACE(e.name_normalized, '^(THE|A|AN) ', ''), 1)
+    AND ${tokenOverlapClause(stopwords, 'w.legal_name_normalized', 'e.name_normalized')}
   WHERE w.linked_entity_id IS NULL
     AND LENGTH(w.legal_name_normalized) >= ${FUZZY_LENGTH_FLOOR}
     AND LENGTH(e.name_normalized) >= ${FUZZY_LENGTH_FLOOR}
@@ -404,7 +453,18 @@ WHERE e.id = ANY($4::int[])
  * entity in the ~3.9K builder pool, so a run-scoped rate reads near-zero on a perfectly
  * healthy run.
  */
-const CUMULATIVE_SQL = `SELECT
+/**
+ * LW-D14 (2026-08-28) — CUMULATIVE_SQL became a FUNCTION of `descriptor` (was a bare
+ * string constant) so `tier3_token_overlap_pass_pct` can read its stopword list the
+ * same declared way `buildFuzzyMatchSql` does (Rule 1 — never a literal in compute).
+ * `runCascadePhase` (scripts/lib/step/index.js) is the ONLY caller and link_wsib the
+ * ONLY cascade compute today, so widening the generic CASCADE contract from "a string"
+ * to "a function of descriptor" costs no per-step branch (Gate 0) — it changes what
+ * EVERY cascade compute exports, uniformly, not what the runner does for one step.
+ */
+function buildCumulativeSql(descriptor) {
+  const stopwords = tokenOverlapStopwords(descriptor);
+  return `SELECT
   (SELECT COUNT(*) FROM wsib_registry) AS total,
   (SELECT COUNT(*) FROM wsib_registry WHERE linked_entity_id IS NOT NULL) AS linked,
   (SELECT COUNT(*) FROM wsib_registry WHERE linked_entity_id IS NOT NULL
@@ -419,7 +479,13 @@ const CUMULATIVE_SQL = `SELECT
   (SELECT COUNT(*) FROM entities e WHERE e.is_wsib_registered = true
      AND NOT EXISTS (SELECT 1 FROM wsib_registry w WHERE w.linked_entity_id = e.id)) AS registered_entities_with_zero_links,
   (SELECT COALESCE(MAX(n), 0) FROM (SELECT COUNT(*) AS n FROM wsib_registry WHERE linked_entity_id IS NOT NULL GROUP BY linked_entity_id) f) AS entity_fanin_max,
-  (SELECT COUNT(*) FROM (SELECT COUNT(*) AS n FROM wsib_registry WHERE linked_entity_id IS NOT NULL GROUP BY linked_entity_id HAVING COUNT(*) >= 10) m) AS magnet_entities_fanin_ge_10`;
+  (SELECT COUNT(*) FROM (SELECT COUNT(*) AS n FROM wsib_registry WHERE linked_entity_id IS NOT NULL GROUP BY linked_entity_id HAVING COUNT(*) >= 10) m) AS magnet_entities_fanin_ge_10,
+  (SELECT round(100.0 * count(*) FILTER (WHERE
+       COALESCE(${tokenOverlapClause(stopwords, 'w.trade_name_normalized', 'e.name_normalized')}, false)
+       OR COALESCE(${tokenOverlapClause(stopwords, 'w.legal_name_normalized', 'e.name_normalized')}, false)
+     ) / NULLIF(count(*), 0), 2)
+     FROM wsib_registry w JOIN entities e ON e.id = w.linked_entity_id WHERE w.match_confidence = 0.60) AS tier3_token_overlap_pass_pct`;
+}
 
 // ===========================================================================
 // Checks — one function per declared check, in descriptor order, name === id
@@ -492,6 +558,32 @@ function entity_fanin_warn(ctx) {
   const m = ctx.matched || {};
   const max = m.entity_fanin_max || 0;
   ctx.report('entity_fanin_warn', { violations: max, detail: { entity_fanin_max: max, magnets_fanin_ge_10: m.magnet_entities_fanin_ge_10 } });
+}
+
+/**
+ * LW-D14 (2026-08-28) — the SAME declared post-write-observation mechanism `link_rate_warn`
+ * uses: `runCascadePhase` runs `buildCumulativeSql(descriptor)` (whose `tier3_token_overlap_pass_pct`
+ * column embeds the SAME `tokenOverlapClause` predicate `buildFuzzyMatchSql` now enforces at
+ * write time) once, post-write, and merges it generically onto `ctx.matched` — no second query
+ * here. Measured live pre-fix: 10.49% (840 of 8,009 tier-3 links). FAIL, per Spec 124 Rule 3 —
+ * this is a verdict-affecting measurement of the write predicate's own correctness, not a
+ * standing population like `entity_fanin_warn` (R-H does not apply: post-fix this should read
+ * at or near 100%, so a low value is never "expected non-zero," it is the defect itself).
+ *
+ * Post-repair diagnostic (WF3-F, same session): a first draft of this column tokenized
+ * `COALESCE(NULLIF(w.trade_name_normalized, ''), w.legal_name_normalized)` — ONE field — against
+ * the entity name. Measured 86.2% (not ~100%) against the live post-repair corpus. Root cause:
+ * `buildFuzzyMatchSql` is a UNION of two INDEPENDENT CTEs (`trade_matches` checks trade_name
+ * overlap, `legal_matches` checks legal_name overlap) — a row written via the legal-name branch
+ * can have a non-empty `trade_name_normalized` that never overlapped anything (it wasn't the
+ * field the write predicate checked), and COALESCE always prefers a non-empty trade name over
+ * checking legal name at all. Fixed to `OR` the two fields' overlap independently, mirroring
+ * the write side's two-CTE union — verified live: 100.00% (993/993) post-fix, 0 rows disagree.
+ */
+function tier3_token_overlap(ctx) {
+  const m = ctx.matched || {};
+  const pct = typeof m.tier3_token_overlap_pass_pct === 'number' ? m.tier3_token_overlap_pass_pct : 0;
+  ctx.report('tier3_token_overlap', { value: pct, detail: { tier3_token_overlap_pass_pct: pct } });
 }
 
 function orphan_linked_entity_id(ctx) {
@@ -627,6 +719,7 @@ const CHECKS = {
   no_match,
   link_rate_warn,
   entity_fanin_warn,
+  tier3_token_overlap,
   orphan_linked_entity_id,
   confidence_outside_closed_set,
   dead_bucket_count,
@@ -666,7 +759,10 @@ module.exports.buildContactsCountSql = buildContactsCountSql;
 module.exports.buildRetractionScopeParams = buildRetractionScopeParams;
 module.exports.buildEntitiesUnflagSql = buildEntitiesUnflagSql;
 module.exports.buildContactsReverseClearSql = buildContactsReverseClearSql;
-module.exports.CUMULATIVE_SQL = CUMULATIVE_SQL;
+module.exports.buildCumulativeSql = buildCumulativeSql;
+module.exports.tokenOverlapClause = tokenOverlapClause;
+module.exports.tokenOverlapStopwords = tokenOverlapStopwords;
+module.exports.TOKEN_OVERLAP_CHECK_ID = TOKEN_OVERLAP_CHECK_ID;
 module.exports.ENTITIES_FLAG_SCOPE = ENTITIES_FLAG_SCOPE;
 module.exports.TIER_IDS = TIER_IDS;
 module.exports.EXACT_LENGTH_FLOOR = EXACT_LENGTH_FLOOR;

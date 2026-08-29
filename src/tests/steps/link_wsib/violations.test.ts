@@ -115,8 +115,9 @@ const CONFIG_VARS = {
   T5: 'link_wsib_tier3_confidence',
   T6: 'link_wsib_entity_fanin_warn',
   T7: 'link_wsib_tier3_full_max_iterations',
+  T8: 'link_wsib_tier3_token_overlap_fail_pct',
 } as const;
-const LIMIT_FROM_CONFIG_VARS: string[] = [CONFIG_VARS.T2, CONFIG_VARS.T6];
+const LIMIT_FROM_CONFIG_VARS: string[] = [CONFIG_VARS.T2, CONFIG_VARS.T6, CONFIG_VARS.T8];
 const WARN_CHECK_IDS = ['link_rate_warn', 'entity_fanin_warn'] as const;
 const INFO_CHECK_IDS = ['tier_1_trade_matches', 'tier_2_legal_matches', 'tier_3_fuzzy_matches', 'no_match'] as const;
 
@@ -243,6 +244,7 @@ interface World {
     tier3_full: { exhausted: boolean; contacts_cleared?: number } | null;
     entity_fanin_max: number;
     magnet_entities_fanin_ge_10: number;
+    tier3_token_overlap_pass_pct: number;
   };
   cumulative: { total: number; linked: number };
   written: { privilege: { bypassrls: boolean; policies: number; rls_enabled: boolean } };
@@ -1099,6 +1101,7 @@ function healthyWorld(): World {
       tier3_full: null, // mode never resolves full in this fixture set — T7/A-7 is commit 8's budgeted act
       entity_fanin_max: 12, // healthy: below the T6 default (20)
       magnet_entities_fanin_ge_10: 0,
+      tier3_token_overlap_pass_pct: 100, // LW-D14: healthy post-fix — buildFuzzyMatchSql requires overlap at write time
     },
     cumulative: { total: LIVE_WSIB_TOTAL, linked: LIVE_WSIB_LINKED }, // 11.53% >= the T2 5% floor
     written: { privilege: { bypassrls: true, policies: 0, rls_enabled: true } },
@@ -1112,6 +1115,7 @@ function healthyWorld(): World {
 const SABOTAGE_BY_VAR: Record<string, (w: World) => void> = {
   [CONFIG_VARS.T2]: (w) => { w.cumulative = { total: 1_000_000, linked: 1 }; }, // ~0.0001% link rate vs the 5% floor
   [CONFIG_VARS.T6]: (w) => { w.matched = { ...w.matched, entity_fanin_max: LIVE_FANIN_MAX, magnet_entities_fanin_ge_10: LIVE_MAGNET_COUNT }; }, // 2,118 vs the 20 default
+  [CONFIG_VARS.T8]: (w) => { w.matched = { ...w.matched, tier3_token_overlap_pass_pct: 10.49 }; }, // LW-D14: live pre-fix measurement, 840/8,009 vs the 50% floor
 };
 const SABOTAGE_BY_ID: Array<[RegExp, (w: World) => void]> = [
   [/tier3_full_not_converged|convergence/i, (w) => { w.matched.tier3_full = { exhausted: true, contacts_cleared: 0 }; }], // T7 exhaustion, WARN not FAIL (R-H)

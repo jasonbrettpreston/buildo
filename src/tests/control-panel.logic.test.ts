@@ -169,18 +169,19 @@ const EXPECTED_LOGIC_VAR_KEYS = [
   'link_massing_centroid_confidence',
   'link_massing_nearest_confidence',
   'wsib_fuzzy_match_threshold',       // E20
-  // C1 pilot 4 (link_wsib, MATCHER, 2026-08-28) — T2-T7. Same P4-externalization class
+  // C1 pilot 4 (link_wsib, MATCHER, 2026-08-28) — T2-T8. Same P4-externalization class
   // as link_massing's trio above: T2 is the verdict-bound link-rate floor (LW-D1, reached
   // through checks[].limit_from_config, pct >= form); T3-T5 are the three written
   // confidences (one per tier); T6 is the entity fan-in WARN; T7 bounds A-7's tier-3-full
-  // convergence loop. Seeded via scripts/seeds/logic_variables.json, rendered under
-  // GROUPS "WSIB Matching".
+  // convergence loop; T8 (WF3-F, LW-D14) is the tier3_token_overlap FAIL floor. Seeded via
+  // scripts/seeds/logic_variables.json, rendered under GROUPS "WSIB Matching".
   'link_wsib_link_rate_warn_pct',
   'link_wsib_tier1_confidence',
   'link_wsib_tier2_confidence',
   'link_wsib_tier3_confidence',
   'link_wsib_entity_fanin_warn',
   'link_wsib_tier3_full_max_iterations',
+  'link_wsib_tier3_token_overlap_fail_pct',
   'calibration_default_median_days',  // E21
   'calibration_default_p25_days',     // E21
   'calibration_default_p75_days',     // E21

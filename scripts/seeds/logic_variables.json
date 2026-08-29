@@ -832,6 +832,13 @@
     "min": 1,
     "max": 100
   },
+  "link_wsib_tier3_token_overlap_fail_pct": {
+    "default": 50,
+    "type": "number",
+    "description": "LW-D14 (2026-08-28). The floor for tier3_token_overlap: the pct of Tier-3 links whose WSIB name and matched entity name share at least one non-generic (stopword-stripped) token. Measured live pre-fix: 10.49% (840 of 8,009 tier-3 links share a genuine non-generic token; the other 89.51% share ONLY a generic word like CONTRACTING/CONSTRUCTION with their matched entity, or nothing at all — the magnet-entity fan-in contamination's root cause). CONSUMED by link_wsib via checks[].limit_from_config (the FAIL threshold only — the stopword list buildFuzzyMatchSql's predicate itself reads is a separate declared field, checks[].expect.stopwords). Post-fix, buildFuzzyMatchSql requires the SAME token-overlap rule to hold before a Tier-3 link is written at all, so a healthy corpus should read at or near 100%.",
+    "min": 0,
+    "max": 100
+  },
   "snowplow_buffer_days": {
     "default": 7,
     "type": "number",

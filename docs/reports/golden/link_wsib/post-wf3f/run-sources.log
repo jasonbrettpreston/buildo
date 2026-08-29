@@ -1,0 +1,20 @@
+[capture-step-golden] tables=[entities,wsib_registry] (source descriptor; ceiling 100000) invariants=14 from docs/reports/golden/link_wsib/invariants.json
+[capture-step-golden]   entities: columns=id,is_wsib_registered,primary_phone,primary_email,website (arg) order=id (arg)
+[capture-step-golden]   wsib_registry: columns=id,linked_entity_id,match_confidence,matched_at (arg) order=id (arg)
+[capture-step-golden] db target: postgresql://postgres:***@127.0.0.1:54322/postgres (source env:DATABASE_URL)
+[capture-step-golden] target: postgresql://postgres:***@127.0.0.1:54322/postgres → database=postgres user=postgres migrations=242 (floor 223)
+[capture-step-golden] spawning: node scripts/link-wsib.js --full (PIPELINE_CHAIN=sources; pipeline_runs max(id) before = 1702)
+{"level":"INFO","tag":"[link_wsib]","msg":"[link_wsib] target: link_wsib (descriptor.database) → database=postgres user=postgres migrations=242 (floor 240)"}
+{"level":"INFO","tag":"[link_wsib]","msg":"cascade ledger gate: SKIP (no_upstream_changes)"}
+PIPELINE_SUMMARY:{"records_total":null,"records_new":null,"records_updated":null,"records_meta":{"threshold_updated_at":"2026-06-10T14:01:54.545Z","config":{"wsib_fuzzy_match_threshold":0.6,"link_wsib_link_rate_warn_pct":5,"link_wsib_tier1_confidence":0.95,"link_wsib_tier2_confidence":0.9,"link_wsib_tier3_confidence":0.6,"link_wsib_entity_fanin_warn":20,"link_wsib_tier3_full_max_iterations":20,"link_wsib_tier3_token_overlap_fail_pct":50},"terminal":"skip_gated_no_activity","ledger_row":"chain_owned","checks_passed":"all","checks_failed":0,"audit_table":{"phase":19,"name":"WSIB Registry Matching","verdict":"PASS","rows":[{"metric":"gate_decision","value":{"mode":null,"reason":"no_upstream_changes","gated_skip":true},"threshold":"viol == 0","status":"INFO"},{"metric":"override_force_full_present","value":false,"threshold":"viol == 0","status":"INFO"},{"metric":"sys_velocity_rows_sec","value":0,"threshold":null,"status":"INFO"},{"metric":"sys_duration_ms","value":84,"threshold":null,"status":"INFO"}]}}}
+PIPELINE_META:{"reads":{"wsib_registry":["id","trade_name_normalized","legal_name_normalized","linked_entity_id","match_confidence","matched_at","primary_phone","primary_email","website"],"entities":["id","name_normalized","permit_count","is_wsib_registered","primary_phone","primary_email","website"]},"writes":{"wsib_registry":["linked_entity_id","match_confidence","matched_at"],"entities":["is_wsib_registered","primary_phone","primary_email","website"]}}
+
+[link_wsib] completed in 0.1s
+[capture-step-golden] hashed entities: 3948 rows in 5 ms (columns id,is_wsib_registered,primary_phone,primary_email,website; order by "id")
+[capture-step-golden] hashed wsib_registry: 121116 rows in 87 ms (columns id,linked_entity_id,match_confidence,matched_at; order by "id")
+[capture-step-golden] source_fingerprint=8155c092b3c2adc8b7b5d9ddeb311cc8bc213fa6c1f3e4c02dfbd14265ca78ae over [scripts/lib/compute/link-wsib.js, scripts/link-wsib.descriptor.json, scripts/link-wsib.js, scripts/link-wsib.notes.json]
+[capture-step-golden] scripts/link-wsib.js chain=sources exit=0 verdict=PASS ledger=[] summaries=1 meta=1 nondeterminism=4
+[capture-step-golden] table_state: entities:3948/37d345db (5 ms) wsib_registry:121116/44cf7e1d (87 ms)
+[capture-step-golden] invariants: wsib_tier3_current_predicate_pass_rate_pct=100.0 wsib_tier3_token_overlap_pass_pct=100.00 wsib_entity_fanin_max=69 wsib_entity_fanin_p99=16 wsib_magnet_entities_fanin_ge_10=20 wsib_orphan_linked_entity_id=0 wsib_linked_confidence_matched_at_inconsistent=0 wsib_confidence_outside_closed_set=0 wsib_dead_bucket_050_060_count=0 wsib_registered_entities_with_zero_links=0 wsib_cumulative_link_rate_pct=1.09 wsib_registry_total_rows=121116 entities_wsib_registered_count=587 wsib_tier_confidence_split=0.60:993,0.90:249,0.95:75
+[capture-step-golden] wrote C:\Users\User\Buildo\docs\reports\golden\link_wsib\post-wf3f\sources.json
+[capture-step-golden] nondeterminism: pattern:duration_literal, pattern:iso_timestamp, row:sys_duration_ms, row:sys_velocity_rows_sec

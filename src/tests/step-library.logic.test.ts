@@ -1840,7 +1840,10 @@ describe('LW-D15 — --dry-run issues ZERO write statements (LINK + CASCADE/MATC
       buildEntitiesUnflagSql: () => 'UPDATE entities SET is_wsib_registered = false',
       buildContactsReverseClearSql: () => 'UPDATE entities SET primary_phone = NULL',
       buildTierSql: () => tierSql,
-      CUMULATIVE_SQL: 'STUB_LW_CUMULATIVE',
+      // LW-D14: every cascade compute's CUMULATIVE_SQL is now a function of `descriptor`
+      // (was a bare string) so a step's invariant can read declared descriptor data
+      // (link_wsib's token-overlap stopword list) the way the write-side SQL builders do.
+      buildCumulativeSql: () => 'STUB_LW_CUMULATIVE',
     };
 
     await withDryRunArgv(async () => {
