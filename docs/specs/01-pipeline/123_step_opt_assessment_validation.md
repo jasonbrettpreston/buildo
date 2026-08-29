@@ -295,7 +295,7 @@ Full per-claim table: `docs/reports/generated/123-claim-plan.md`.
 
 | # | Phase | Objective exit criterion (binary) | Pts |
 |---|---|---|---|
-| **G0** | Boundary freeze | every table/column written, every audit row, exit codes, stdout — enumerated | 1 |
+| **G0** | Boundary freeze | every table/column written, every audit row, exit codes, stdout — enumerated; **the plan's Target Spec line is filled from `docs/specs/00-architecture/00_system_map.md`'s owner row for the step file FIRST, before the architecture specs (122/123/124) are added** — pilot 4's own plan draft omitted the step's own governing Spec 46/60 until a correction pass found Spec 60's Step Registry entry (`.cursor/active_task.md:9,202`) | 1 |
 | **G1** | Archaeology | churn + fix density + fence density + 20% coupling computed **(batch)** | 1 |
 | **G2** | Structure | churn×complexity plot; top-right quadrant named | 1 |
 | **G3** | Intent Ledger | 100% of top-right + fence>0 constructs have a recovered *why* or an explicit `INTENT-UNKNOWN` | 2 |
