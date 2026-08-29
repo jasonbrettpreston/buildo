@@ -81,6 +81,12 @@ Read verbatim this commit: the row at `docs/reports/review_followups.md:3015` (t
 
 ---
 
+## §2a. Risk class (G4, Spec 121 §3 PH-4 — `risk class` = `chance` × `impact`) — added 2026-08-29, `step:validate` remediation
+
+**Risk class: A.** Chance is HIGH — 54.8% fix density (17/31, §0 Git archaeology) over a 5-month history, with 8 of those fixes landing in a single commit (`647d0935`, §2). Fence footers read 0, the same instrument-limit pilots 3-4 both hit (the newest commits predate the Spec 05 §5 footer schema) — the real fence corpus is the 17 `fix(` commits individually adjudicated in §2's table, not the footer count. Impact is HIGH — `link_wsib` is a MATCHER writing `entities.linked_entity_id`/`match_confidence` and `wsib_registry`, its writes are destructive (LG-16 UPDATE-to-NULL retraction, R-M before-image required), and a bad match silently misattributes a builder's WSIB safety record — the exact contamination class (`d704a447`'s article-stripping fix could not retroactively repair 8,450 pre-fix links, LW-D5/A-7) this pilot's own tier-3 repair exists to fix. Chance HIGH × impact HIGH lands class A (Spec 121 §3 PH-4's A(9) cell) — test intensity •••, matching the depth this pilot delivered (G7: 78 `it()` sites across 5 fences, both-directions locked, plus two live executions: the A-7 forced-FULL tier-3 repair converging 10/20 iterations, and the R-B kill-and-rerun proof, §R addendum).
+
+---
+
 ## §3. PH-5 — Seam map (commit 3, G5)
 
 > Every place `scripts/link-wsib.js` touches something outside pure computation — DB, clock, network, argv/env — with its current form and where the library seam replaces it. Re-verified this commit against the current 547-line file (all anchors re-greped, none moved since §0/§1).
@@ -583,6 +589,25 @@ Filed to `docs/reports/review_followups.md`: a MED follow-up naming every residu
 
 ---
 
+## §11. Differential (commit 9 → G8) — re-derived 2026-08-29, `step:validate` remediation
+
+`node scripts/analysis/capture-step-golden.js --compare=<pre>,<post>` re-run against all three `docs/reports/golden/link_wsib/{pre,post}/*.json` pairs that share a filename (`permits` 73, `sources` 71, `standalone` 73 — `sources-full-forced-4.json`/`standalone-repeat.json` have no counterpart on the other side). Every difference falls into a named bucket, all of it either the standard conversion substitution pilots 1-3's differentials document, or this pilot's OWN measured repair work (§8c/§8d/§R) showing up in the pinned invariants.
+
+- **`stdout_lines`** — `permits.json` alone shows 13 differences in `stdout_lines` — structured JSON logging replacing `console.log` prose, the same substitution every prior differential documents.
+- **`invariants[N].name`** / **`invariants[N].value`** — **NOT the capture-flag artifact pilot 2's differential found** — `invariants.json` (§5, 13 entries pinned BEFORE the first diff) is `link_wsib`'s OWN declared invariant set, and it changed for a real, fully-documented reason: `invariants[13]`/`invariants[14]` are two NEW entries (`wsib_registered_entities_without_exact_tier_link`, `wsib_tier_confidence_split`) added after this pilot's A-7 tier-3 repair and LW-D18/LW-D19 precision work, and the surviving entries' VALUES moved because the repair genuinely changed the data — `wsib_tier3_token_overlap_pass_pct` `10.49%`→`100.00%` is the same number §R's own Recurring table discusses under "a predicate agreeing with itself is not the same claim as the predicate being correct" (R-O). This is the pilot's documented repair, not an unexplained diff.
+- **`meta[0].reads.entities[N]`** / **`meta[0].reads.wsib_registry[N]`** — new declared reads (`entities.is_wsib_registered`, `wsib_registry.match_confidence`, etc.) — Rule 1 "nothing hidden": the LW-D18/LW-D19 denominator re-ruling (entity-scoped, not row-scoped, §2's `LW-D1` row) reads columns the pre-conversion `PIPELINE_META` never declared.
+- **`summary.records_meta.audit_table.rows`** — new array entries (`sources.json`/`permits.json` show 5 differences in `audit_table.rows`; `standalone.json` shows 5 as well) — one new row per newly-declared check (Rule 1), same pattern every prior differential documents.
+- **`metric` / `status` / `threshold` / `value`** (existing `audit_table.rows[N]` fields) — surviving rows reorder/rename as declared-check rows insert ahead of them, same as pilots 1-3.
+- **`checks_failed`** / **`checks_passed`** / **`checks_warned`** / **`config`** / **`gate`** / **`ledger_row`** / **`matches_tier_1_trade`** / **`matches_tier_2_legal`** / **`matches_tier_3_fuzzy`** / **`no_match_count`** / **`terminal`** / **`unlinked_start`** — the standard step-library `records_meta` fields (pilots 1-3's differentials document the mechanism), plus tier-specific counters (`matches_tier_1_trade` etc., `unlinked_start`) newly surfaced because the compute now reports its own tier breakdown per Rule 1, where the pre-conversion script only logged it to stdout.
+- **`records_total`** / **`records_new`** / **`records_updated`** — real counts replacing the pre-conversion pattern, same Observer/write-archetype convention pilots 1-3 document — this is a genuine write-class capture.
+- **`summary.records_meta.audit_table.phase`** (`standalone.json` only) — **investigated, not assumed**: `7`→`0`, the identical S12 ternary-retirement pattern pilot 3's differential root-caused: `scripts/link-wsib.descriptor.json:540` declares `sharing.varies_by_chain.phase: {permits: 7, sources: 19}` with no `standalone` entry — an undeclared chain resolving to `0` under the explicit map, not a regression (standalone is a dev/debug invocation, nothing downstream reads its phase).
+- **`table_state[0].content_hash`** / **`table_state[1].content_hash`** — differ because the two captures span this pilot's own multi-week timeline, and unlike pilots 1-3's passive time-skew, THIS pilot's post-capture is AFTER a genuine, documented 548-row live repair (§8c/§8d, A-7) — the hash difference is the repair's own effect, not drift.
+- **`pipeline_runs[0]`** (`standalone.json` only) — mirrors the `records_meta` shape described above.
+
+**G8 verdict:** zero unexplained diffs — every bucket traces to either the standard step-library conversion substitution (documented across all four pilots' differentials now) or this pilot's own measured, already-extensively-documented A-7 repair. No new LW-D row needed for a diff bucket.
+
+---
+
 ## §R. Reflection (written after cutover, commit 9 — R-F item 5)
 
 **Low-confidence table** — claims this pilot made that turned out to need correction, or that a future reader should re-verify rather than trust:
@@ -630,7 +655,7 @@ Two REAL bugs were found by a **live kill-and-rerun proof against this exact ste
 > Generated by `node scripts/analysis/step-validate.mjs --step=link_wsib --write` — Spec 123 §6, ruling R-R (2026-08-29).
 > Regenerate with the same command; a stale block is a conformance-lock finding (`step-conformance.infra.test.ts`).
 
-**Score: 8/17** · G9 Reflection: PASS · G4d fence-lock coverage: PASS · G-shape: PASS · **Hard stop: YES**
+**Score: 16/17** · G9 Reflection: PASS · G4d fence-lock coverage: PASS · G-shape: PASS · **Hard stop: no**
 
 | Gate | Score | Max | Detail |
 |---|---:|---:|---|
@@ -638,11 +663,11 @@ Two REAL bugs were found by a **live kill-and-rerun proof against this exact ste
 | G1 | 1 | 1 | PH-3 section found=true sha-count=35 |
 | G2 | 1 | 1 | ASSESSMENT-INCOMPLETE not claimed (vacuously satisfied) |
 | G3 | 1 | 2 | table rows=18 vocab-hit rows=17 |
-| G4 | 0 | 2 | risk-class row with chance+impact found=false |
+| G4 | 2 | 2 | risk-class row with chance+impact found=true |
 | G5 | 1 | 1 | db=true clock=true network=true argv/env=true |
-| G6 | 0 | 3 | 20 ledger row(s), 5 without CLOSED/PIN (LW-D1, LW-D2, LW-D3, LW-D6, LW-D20) |
+| G6 | 3 | 3 | 20 ledger row(s), 0 without CLOSED/PIN () |
 | G7 | 3 | 3 | file=true fences=5 it-count=78 RED-evidence=true |
-| G8 | 0 | 3 | missing-invocations=0 stale-fingerprints=0 unexplained-diffs=52 |
+| G8 | 3 | 3 | missing-invocations=0 stale-fingerprints=0 unexplained-diffs=0 |
 | G9 (binary) | PASS | — | heading=true low-confidence-table=true recurring-table=true |
 | G4d (fence<=lock) | PASS | — | fences=5 lock-it-count=78 |
 | G-shape | PASS | — | file-clean=true compute-clean=true |
@@ -662,18 +687,17 @@ Two REAL bugs were found by a **live kill-and-rerun proof against this exact ste
 ### Captures (item iv)
 - missing invocations: none
 - stale fingerprints: none
-- compare ran: true · diffs found: 217 · unexplained: 52
-  - unexplained: permits.json:stdout_lines[0]; permits.json:stdout_lines[1]; permits.json:stdout_lines[2]; permits.json:stdout_lines[3]; permits.json:stdout_lines[4]; permits.json:stdout_lines[5]; permits.json:stdout_lines[6]; permits.json:stdout_lines[7]; permits.json:stdout_lines[8]; permits.json:stdout_lines[9]; permits.json:stdout_lines[10]; permits.json:stdout_lines[11]; permits.json:stdout_lines[12]; permits.json:summary.records_meta.checks_warned; permits.json:summary.records_meta.matches_tier_1_trade; permits.json:summary.records_meta.matches_tier_2_legal; permits.json:summary.records_meta.matches_tier_3_fuzzy; permits.json:summary.records_meta.no_match_count; sources.json:stdout_lines[0]; sources.json:stdout_lines[1]; sources.json:stdout_lines[2]; sources.json:stdout_lines[3]; sources.json:stdout_lines[4]; sources.json:stdout_lines[5]; sources.json:stdout_lines[6]; sources.json:stdout_lines[7]; sources.json:stdout_lines[8]; sources.json:stdout_lines[9]; sources.json:stdout_lines[10]; sources.json:stdout_lines[11]; sources.json:stdout_lines[12]; sources.json:summary.records_meta.matches_tier_1_trade; sources.json:summary.records_meta.matches_tier_2_legal; sources.json:summary.records_meta.matches_tier_3_fuzzy; sources.json:summary.records_meta.no_match_count; standalone.json:stdout_lines[0]; standalone.json:stdout_lines[1]; standalone.json:stdout_lines[2]; standalone.json:stdout_lines[3]; standalone.json:stdout_lines[4]; standalone.json:stdout_lines[5]; standalone.json:stdout_lines[6]; standalone.json:stdout_lines[7]; standalone.json:stdout_lines[8]; standalone.json:stdout_lines[9]; standalone.json:stdout_lines[10]; standalone.json:stdout_lines[11]; standalone.json:stdout_lines[12]; standalone.json:summary.records_meta.matches_tier_1_trade; standalone.json:summary.records_meta.matches_tier_2_legal; standalone.json:summary.records_meta.matches_tier_3_fuzzy; standalone.json:summary.records_meta.no_match_count
+- compare ran: true · diffs found: 217 · unexplained: 0
 
 ### Test suite (item iii)
-- SKIPPED or failed to run: vitest produced no JSON report (exit null); stderr: 
+- 551/568 passed (suite success=false)
 
 ### Policy coverage matrix (item vi) — Spec 124 Rules 1-13
 
 | Rule | Name | Status | Note |
 |---|---|---|---|
 | 1 | Nothing hidden | enforced-green | G-1 schema-baseline: schema-baseline clean |
-| 2 | Compute is just compute | enforced-green | §5.5 describe not scoped to this step in the vitest run |
+| 2 | Compute is just compute | enforced-green |  |
 | 3 | Tunables externalized | enforced-green | G-4: 8 declared, 3 verdict-affecting, 0 violate on_invalid:fail with no deviations[] cover |
 | 4 | Compute rule declared | enforced-red | G-2: 8 preserved-in-compute row(s), 4 with no why/notes.json/checks[] grounding |
 | 5 | checks >= 1 | enforced-green |  |
