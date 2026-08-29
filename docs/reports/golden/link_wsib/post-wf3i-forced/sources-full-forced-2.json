@@ -740,7 +740,7 @@
       }
     ]
   },
-  "source_fingerprint": "867949a07085f3c148ba57c2748523d31dc460af9800b309401b29dfbb656213",
+  "source_fingerprint": "291efa5475368cd2b989048b93ba0e72d0e5478e238d178fe79d377572e9393d",
   "fingerprint_files": [
     "scripts/lib/compute/link-wsib.js",
     "scripts/link-wsib.descriptor.json",

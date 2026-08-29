@@ -12,5 +12,6 @@
   { "name": "wsib_cumulative_link_rate_pct", "sql": "SELECT round(100.0 * count(*) FILTER (WHERE linked_entity_id IS NOT NULL) / NULLIF(count(*), 0), 2) FROM wsib_registry" },
   { "name": "wsib_registry_total_rows", "sql": "SELECT count(*)::int FROM wsib_registry" },
   { "name": "entities_wsib_registered_count", "sql": "SELECT count(*)::int FROM entities WHERE is_wsib_registered = true" },
+  { "name": "wsib_registered_entities_without_exact_tier_link", "sql": "SELECT count(*)::int FROM entities e WHERE e.is_wsib_registered = true AND NOT EXISTS (SELECT 1 FROM wsib_registry w WHERE w.linked_entity_id = e.id AND w.match_confidence IN (0.95, 0.90))" },
   { "name": "wsib_tier_confidence_split", "sql": "SELECT string_agg(match_confidence::text || ':' || cnt::text, ',' ORDER BY match_confidence) FROM (SELECT match_confidence, count(*) AS cnt FROM wsib_registry WHERE match_confidence IS NOT NULL GROUP BY match_confidence) s" }
 ]

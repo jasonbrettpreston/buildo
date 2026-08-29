@@ -88,6 +88,36 @@ entities affected per FULL run.
 - `wsib_registry` table: `primary_phone`, `primary_email`, `website` fields populated
 - `records_meta` includes enrichment telemetry (processed, matched, failed, skipped, field counts, size breakdown)
 
+### `entities.is_wsib_registered` scope (added 2026-08-29, LW-D19, operator ruling)
+
+`entities.is_wsib_registered` is set by `link-wsib.js` (governed in full by Spec 60 §"Link WSIB" —
+the matching/scoring behavior lives there, not here; this addendum records this pilot's own
+citation, mirroring the G-18 addition above), not by this chain's `enrich-wsib.js`. It is recorded
+here because the flag is a product-visible **registration claim**, and Spec 46 is where a reader
+looking for "what does WSIB-registered mean" would look first.
+
+`link-wsib.js` matches `wsib_registry` entries to builder `entities` via a 3-tier cascade: exact
+trade name (0.95), exact legal name (0.90), and pg_trgm fuzzy trigram similarity (0.60). Before
+2026-08-29, all three tiers set `is_wsib_registered = true` identically. A fixed-rule 60-row
+precision sample of the fuzzy tier (assessment `2026-08-28-pilot4-link-wsib-assessment.md` §8d)
+measured only 31.7%–46.7% genuine precision even after two rounds of predicate hardening — roughly
+half of tier-3's links are more likely wrong than right as a registration claim.
+
+**Ruling (LW-D19, 2026-08-29):** only the two EXACT tiers (0.95 trade, 0.90 legal; 20/20 correct in
+sample) may set `is_wsib_registered = true`. A fuzzy (tier-3, 0.60) link remains on `wsib_registry`
+(`linked_entity_id` + `match_confidence = 0.60`) as a **declared candidate signal** — never asserted
+as registration. No new `entities` column was added (`\d entities` measured only
+`is_wsib_registered` exists for this purpose); a future product surface needing the tier-3 candidate
+signal should expose `wsib_registry.match_confidence` via the existing join rather than a migration.
+The scope is self-healing: an unconditional per-run correction target recomputes
+`is_wsib_registered ≡ EXISTS an exact-tier link` every invocation (not gated to a one-off repair),
+so a row set true by pre-LW-D19 code — or by any future write outside `link-wsib.js`'s own declared
+targets — is corrected the next time the step runs. Measured live, 2026-08-29:
+`entities.is_wsib_registered` count 551 → 301 (the 250-row gap between "any tier" and "exact tier
+only"), `wsib_registry` row count and content unaffected (121,116, unchanged). See
+`scripts/link-wsib.descriptor.json` (`outputs.writes[1]`/`outputs.writes[4]`, `checks[]` id
+`is_wsib_registered_corrected`) and `docs/reports/defect-ledger.md` LW-D19 for the full record.
+
 ### Edge Cases
 - Serper API daily limit reached → script stops gracefully, remaining entries deferred to next run
 - Generic trade names (e.g., "Contracting") → skipped to avoid wasting credits

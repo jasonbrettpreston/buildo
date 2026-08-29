@@ -1429,3 +1429,76 @@ describe('sanity — the suite itself is grounded against the LIVE measured fact
     }
   });
 });
+// ---------------------------------------------------------------------------
+// LW-D19 (2026-08-29 operator ruling) — is_wsib_registered set only by exact
+// tiers (0.95 trade, 0.90 legal). The fuzzy tier (0.60, fixed-rule sample
+// measured 31.7%-46.7% precision, assessment §8d) is a candidate signal only,
+// never a product-visible registration boolean (Spec 46 §3, Spec 124 §7).
+// Red-first: every assertion below FAILS against the pre-LW-D19 code (the
+// fill-true target scoped by a single per-tier confidence, no correction target at
+// all) and PASSES against the LW-D19 fix.
+// ---------------------------------------------------------------------------
+
+describe('LW-D19 — is_wsib_registered set only by exact tiers; tier-3 fuzzy links are a candidate signal', () => {
+  it('exactTierConfidences reads the two EXACT tiers only (trade, legal), in that order — never the fuzzy tier\'s value', () => {
+    const mod = loadComputeModule() as ComputeModule & {
+      exactTierConfidences: (d: Descriptor, config: Record<string, number>) => number[];
+    };
+    const d = loadDescriptor();
+    const config = { link_wsib_tier1_confidence: 0.95, link_wsib_tier2_confidence: 0.9, link_wsib_tier3_confidence: 0.6 };
+    expect(mod.exactTierConfidences(d, config)).toEqual([0.95, 0.9]);
+  });
+
+  it('buildTierSql scopes the entities.is_wsib_registered fill-true target to the two EXACT tiers for ALL THREE tiers — the fuzzy tier\'s own pass issues the IDENTICAL params, never its own 0.60 confidence (Spec 124 §7 rung (b), no second code path)', () => {
+    const mod = loadComputeModule() as ComputeModule & {
+      buildTierSql: (d: Descriptor, config: Record<string, number>, tier: { id: string; confidence_from_config: string }, runAt: Date) => { entities_flag_scope_params: number[]; entities_flag_count_params: number[] };
+    };
+    const d = loadDescriptor();
+    const config = {
+      wsib_fuzzy_match_threshold: 0.6,
+      link_wsib_tier1_confidence: 0.95, link_wsib_tier2_confidence: 0.9, link_wsib_tier3_confidence: 0.6,
+    };
+    const runAt = new Date('2026-08-29T00:00:00Z');
+    const tiers = (d.execution as unknown as { tiers: Array<{ id: string; confidence_from_config: string }> }).tiers;
+    expect(tiers.length, 'execution.tiers must declare all 3 tiers').toBe(3);
+    for (const tier of tiers) {
+      const sql = mod.buildTierSql(d, config, tier, runAt);
+      expect(sql.entities_flag_scope_params, `tier ${tier.id}: entities_flag_scope_params must be the two exact-tier confidences, never a lone per-tier value`).toEqual([0.95, 0.9]);
+      expect(sql.entities_flag_count_params, `tier ${tier.id}: entities_flag_count_params must match`).toEqual([0.95, 0.9]);
+    }
+  });
+
+  it('ENTITIES_UNFLAG_SCOPE — the self-heal correction scope targets a currently-true entity with no exact-tier link, never an entity whose only link is exact', () => {
+    const mod = loadComputeModule() as ComputeModule & { ENTITIES_UNFLAG_SCOPE: string };
+    expect(mod.ENTITIES_UNFLAG_SCOPE, 'must scope on the currently-true flag').toContain('is_wsib_registered = true');
+    expect(mod.ENTITIES_UNFLAG_SCOPE, 'must exclude entities that DO have an exact-tier link').toContain('NOT IN');
+    expect(mod.ENTITIES_UNFLAG_SCOPE, 'the qualifying-link subquery must be closed to the two exact tiers').toContain('match_confidence IN ($1, $2)');
+  });
+
+  it('the entities.is_wsib_registered fill-true write target declares a CLOSED exact-tier scope (descriptor, Spec 124 §7 rung (a)) — never a bare $1 that could resolve to the fuzzy tier\'s own confidence', () => {
+    const d = loadDescriptor();
+    const { entitiesFlag } = writeTargets(d);
+    expect(String(entitiesFlag.write_discipline.scope), 'scope must read as a closed IN($1, $2) set').toMatch(/match_confidence IN \(\$1, \$2\)/);
+  });
+
+  it('a 5th write target declares the LW-D19 self-heal correction: entities.is_wsib_registered, set_value false, class set_based_scoped, never retracted', () => {
+    const d = loadDescriptor();
+    const w = writes(d);
+    const correction = w.find((x) => x.table === ENTITIES_TABLE && x.columns.some((c) => (c as { set_value?: unknown }).set_value === false));
+    expect(correction, 'no entities write target declares set_value:false for the LW-D19 correction').toBeDefined();
+    expect(correction!.write_discipline.class, 'must be the same set_based_scoped mechanic as the fill-true target').toBe(ENTITIES_CLASS);
+    expect(correction!.retract, 'the correction is a recompute, never a retraction').toBe('none');
+  });
+
+  it('is_wsib_registered_corrected is a declared INFO check, reporting ctx.matched.is_wsib_registered_corrected (always observable, per Rule 10)', async () => {
+    const d = loadDescriptor();
+    const check = d.checks.find((c) => c.id === 'is_wsib_registered_corrected');
+    expect(check, 'no is_wsib_registered_corrected check declared').toBeDefined();
+    expect(check!.severity).toBe('INFO');
+    const compute = loadCompute();
+    const world = healthyWorld();
+    (world.matched as unknown as { is_wsib_registered_corrected: number }).is_wsib_registered_corrected = 3;
+    const observed = await runCompute(compute, d, world);
+    expect(observed['is_wsib_registered_corrected'], 'the check must render regardless of a non-zero correction count (INFO, not gated)').toBe('INFO');
+  });
+});

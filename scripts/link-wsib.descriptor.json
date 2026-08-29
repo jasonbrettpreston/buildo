@@ -3,7 +3,7 @@
     "name": "link_wsib",
     "display_name": "WSIB Registry Matching",
     "owner": "data",
-    "description": "Matches WSIB registry entries to builder entities via a 3-tier bulk SQL cascade (exact trade name 0.95, exact legal name 0.90, pg_trgm fuzzy 0.60) and writes wsib_registry.linked_entity_id/match_confidence/matched_at plus entities.is_wsib_registered and the fill-only contact columns, per tier, in one step-scoped transaction.",
+    "description": "Matches WSIB registry entries to builder entities via a 3-tier bulk SQL cascade (exact trade name 0.95, exact legal name 0.90, pg_trgm fuzzy 0.60) and writes wsib_registry.linked_entity_id/match_confidence/matched_at plus entities.is_wsib_registered (exact tiers only, LW-D19 2026-08-29 — a tier-3/fuzzy link never confers registration) and the fill-only contact columns, per tier, plus an unconditional per-run is_wsib_registered self-heal correction, in one step-scoped transaction.",
     "lock": 94,
     "why_lock": {
       "text": "Lock 94 is not the spec number (this step's primary governing spec is 46). It was assigned by the c1ef0b73 advisory-lock retrofit and is recorded in src/tests/pipeline-advisory-lock.infra.test.ts's registry ('scripts/link-wsib.js': 94) — kept textually per §5.4 so that registry stays green across the conversion.",
@@ -77,12 +77,12 @@
           "class": "set_based_scoped",
           "guard": "is_distinct_from",
           "guard_columns": ["is_wsib_registered"],
-          "scope": "id IN (SELECT linked_entity_id FROM wsib_registry WHERE match_confidence = $1) AND is_wsib_registered = false",
+          "scope": "id IN (SELECT linked_entity_id FROM wsib_registry WHERE match_confidence IN ($1, $2)) AND is_wsib_registered = false",
           "expected_change_ratio": "<= 1.0",
           "idempotent_rerun": "zero_writes",
           "txn_scope": "step",
           "why": {
-            "text": "G-9: runs immediately after EACH tier's own wsib_registry UPDATE, scoped to $1 = that tier's resolved confidence (write.executeSetBasedClear's existing scopeParams binding, no write.js change needed) — not deferred to a single end-of-run pass over all confidences.",
+            "text": "G-9: runs immediately after EACH tier's own wsib_registry UPDATE — $1/$2 are ALWAYS the two EXACT tiers' resolved confidences (`exactTierConfidences`), never whichever tier's own pass is currently running (write.executeSetBasedClear's existing scopeParams binding, no write.js change needed). LW-D19 (2026-08-29 operator ruling): `is_wsib_registered` is a product-visible registration claim; the fuzzy tier (0.60, 32-47% precision by fixed-rule sample, assessment §8d) no longer confers it — restricting the scope to the closed 2-value exact set is Spec 124 §7 rung (a); running the SAME statement, with the SAME params, on the fuzzy tier's own pass rather than branching it out is rung (b) ('no second code path') — a fuzzy-only match is a genuine no-op here, not a skipped call.",
             "liveness": { "kind": "file", "ref": "scripts/lib/compute/link-wsib.js" }
           }
         },
@@ -156,6 +156,29 @@
         "retract_when": "full_only",
         "replay": "idempotent_upsert",
         "source_key_policy": { "unique": true, "on_collision": "not_applicable", "key_space_migration": "none" }
+      },
+      {
+        "table": "entities",
+        "key": "id",
+        "columns": [
+          { "name": "is_wsib_registered", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute", "set_value": false }
+        ],
+        "write_discipline": {
+          "class": "set_based_scoped",
+          "guard": "is_distinct_from",
+          "guard_columns": ["is_wsib_registered"],
+          "scope": "is_wsib_registered = true AND id NOT IN (SELECT linked_entity_id FROM wsib_registry WHERE match_confidence IN ($1, $2))",
+          "expected_change_ratio": "<= 1.0",
+          "idempotent_rerun": "zero_writes",
+          "txn_scope": "step",
+          "why": {
+            "text": "LW-D19 (2026-08-29 operator ruling, Spec 124 §7 rung (c)). The is_wsib_registered SELF-HEAL correction: runs ONCE per invocation, UNCONDITIONAL of mode — never gated to mode \"full\" like A-7/LG-16's retraction (writes[3]) above, because this is not a repair of wsib_registry's links, it is keeping a DERIVED entities column honest every run. The fill-true target (writes[1]) only ever transitions false→true (scope 'AND is_wsib_registered = false'); this target is the ONLY mechanism that ever transitions an entity back to false when its registration claim has no exact-tier link backing it — together they express 'is_wsib_registered ≡ EXISTS an exact-tier link', both directions, self-healing (no one-off FULL correction script needed — the simplest closed form per the operator's own framing). Same declared set_based_scoped/is_distinct_from shape as writes[1], the opposite constant and scope — a re-run over an already-corrected corpus changes 0 rows.",
+            "liveness": { "kind": "file", "ref": "scripts/lib/step/index.js" }
+          }
+        },
+        "retract": "none",
+        "replay": "idempotent_upsert",
+        "source_key_policy": { "unique": true, "on_collision": "not_applicable", "key_space_migration": "none" }
       }
     ],
     "cascades": "none",
@@ -163,14 +186,14 @@
       {
         "table": "entities",
         "column": "is_wsib_registered",
-        "when": "a wsib_registry row links to this entity for the first time (any tier), or A-7's tier-3 repair retracts the entity's only remaining link — enrich-web-search.js's last_enriched_at IS NULL gate is the plan's identified consumer (Cross-Layer Contract 1); whether that gate genuinely needs re-invalidation on THIS column is an open Ask this pilot does not resolve, filed to review_followups."
+        "when": "a wsib_registry row links to this entity via an EXACT tier (0.95/0.90) for the first time (LW-D19, 2026-08-29 — a tier-3/fuzzy-only link never sets this column), A-7's tier-3 repair retracts the entity's only remaining link, or the LW-D19 self-heal correction (writes[4]) finds an entity flagged true with no exact-tier link backing it — enrich-web-search.js's last_enriched_at IS NULL gate is the plan's identified consumer (Cross-Layer Contract 1); whether that gate genuinely needs re-invalidation on THIS column is an open Ask this pilot does not resolve, filed to review_followups."
       }
     ],
     "publish": "direct",
     "write_inventory": {
-      "statements": 9,
+      "statements": 10,
       "why": {
-        "text": "Steady-state (incremental mode): 3 tiers x 3 statements (wsib join-update, entities flag, entities contacts) = 9 statement executions / 7 distinct SQL texts (the flag statement's shape repeats identically across tiers with only its $1 binding changing) / 3 write groups on 2 tables (Fold A, Integration S1, 2026-08-28). The mode-full-only LG-16 retraction + its entities-unflag cascade + its copyContacts reverse pass add 3 MORE statement executions, but ONLY when mode resolves full — not counted in this steady-state inventory, and not exercised by this commit (A-8: mode never resolves full absent a genuine corpus/FORCE_FULL signal).",
+        "text": "Steady-state (incremental mode): 3 tiers x 3 statements (wsib join-update, entities flag, entities contacts) = 9 statement executions (the flag statement's shape repeats identically across tiers with only its $1/$2 binding — LW-D19: now ALWAYS the two exact-tier confidences, never per-tier) / 3 write groups on 2 tables (Fold A, Integration S1, 2026-08-28), PLUS ONE more — LW-D19's is_wsib_registered self-heal correction (writes[4]), unconditional, issued exactly once per invocation regardless of mode — 10 statement executions total in incremental mode. The mode-full-only LG-16 retraction + its entities-unflag cascade + its copyContacts reverse pass add 3 MORE statement executions, but ONLY when mode resolves full (13 total in a full-repair invocation) — A-8: mode never resolves full absent a genuine corpus/FORCE_FULL signal.",
         "liveness": { "kind": "file", "ref": "scripts/lib/step/index.js" }
       }
     }
@@ -311,7 +334,7 @@
       "expect": { "of": "entities with at least one linked wsib_registry row (entities.is_wsib_registered = true) / total entities" },
       "limit": "pct >= 5", "limit_from_config": "link_wsib_link_rate_warn_pct",
       "severity": "WARN", "blocking": false, "when": "post", "chains": "all", "accept_until": "none",
-      "why": { "text": "LW-D1, the P4 violation this pilot closes: pre-conversion the floor was the bare literal 5 in `linkRate >= 5 ? PASS : WARN`. Reported as the RATE itself (not the unlinked complement, unlike link_massing's link_rate — T2's config value IS the floor, so a `pct >=` form is the correctly-shaped comparison; `pct <=` would compare the wrong direction). LW-D18 (2026-08-29) RE-RULED the denominator from wsib_registry ROWS to ENTITIES: the row-based ratio let a single magnet entity's hundreds of contaminated rows inflate the numerator without representing hundreds of genuinely-covered builders — the ratio an operator actually wants is \"what share of our builder pool has a WSIB record at all,\" i.e. `entities.is_wsib_registered = true` count over total entities (the SAME flag `registered_entities_with_zero_links` already reads). Default kept at 5 under the new ratio (LW-D18 precision-sample measured entity-level truth around 9%, so 5 still gives WARN headroom below the measured population — see the LW-D18 precision table in the assessment report §8d for the exact figure). R-H (Spec 124 Rule 10 addendum): a standing non-zero population is WARN with a declared, machine-observable retighten condition, never FAIL, never INFO-by-taste. RETIGHTEN CONDITION: if the entity-level rate rises meaningfully above the ~9% LW-D18 baseline (e.g. from a corpus-wide re-repair or a further precision fix), review raising `link_wsib_link_rate_warn_pct` above 5 to keep the floor meaningful.", "liveness": { "kind": "table", "ref": "entities" } }
+      "why": { "text": "LW-D1, the P4 violation this pilot closes: pre-conversion the floor was the bare literal 5 in `linkRate >= 5 ? PASS : WARN`. Reported as the RATE itself (not the unlinked complement, unlike link_massing's link_rate — T2's config value IS the floor, so a `pct >=` form is the correctly-shaped comparison; `pct <=` would compare the wrong direction). LW-D18 (2026-08-29) RE-RULED the denominator from wsib_registry ROWS to ENTITIES: the row-based ratio let a single magnet entity's hundreds of contaminated rows inflate the numerator without representing hundreds of genuinely-covered builders — the ratio an operator actually wants is \"what share of our builder pool has a WSIB record at all,\" i.e. `entities.is_wsib_registered = true` count over total entities (the SAME flag `registered_entities_with_zero_links` already reads). LW-D19 (2026-08-29) narrowed WHAT `is_wsib_registered` means (exact tiers only, no longer any tier) without touching this check's shape: measured live post-LW-D19, entities.is_wsib_registered fell from 551 to 301 (the exact-tier-linked population) / 3,948 total = 7.62%, still comfortably above the 5% floor — see the LW-D19 correction table in the assessment report for the exact before/after. Default kept at 5. R-H (Spec 124 Rule 10 addendum): a standing non-zero population is WARN with a declared, machine-observable retighten condition, never FAIL, never INFO-by-taste. RETIGHTEN CONDITION: if the entity-level rate rises meaningfully above the ~7.6% LW-D19 baseline (e.g. from a corpus-wide re-repair or a further precision fix), review raising `link_wsib_link_rate_warn_pct` above 5 to keep the floor meaningful.", "liveness": { "kind": "table", "ref": "entities" } }
     },
     {
       "id": "entity_fanin_warn", "kind": "bound",
@@ -352,7 +375,13 @@
       "id": "registered_entities_with_zero_links", "kind": "invariant",
       "expect": { "is_wsib_registered_implies_a_link_exists": true },
       "limit": "viol == 0", "severity": "FAIL", "blocking": false, "when": "post", "chains": "all", "accept_until": "none",
-      "why": { "text": "Invariant, pinned by the golden captures. is_wsib_registered may only be true because a wsib_registry row links to this entity — a registered entity with zero links is the write ORDER breaking (G-9), or A-7's unflag cascade missing a row.", "liveness": { "kind": "table", "ref": "entities" } }
+      "why": { "text": "Invariant, pinned by the golden captures. is_wsib_registered may only be true because a wsib_registry row links to this entity — a registered entity with zero links is the write ORDER breaking (G-9), or A-7's unflag cascade missing a row. LW-D19 (2026-08-29) narrowed WHAT counts as a qualifying link (exact tiers only) WITHOUT tightening this invariant's own predicate (deliberately kept as \"a link of ANY tier\", the pre-LW-D19 shape) — the strictly stronger invariant (\"a link of an EXACT tier\") is `is_wsib_registered_corrected`, below, whose non-zero violations value on this check would never fire while that one still can (an entity with only a fuzzy link has a link, satisfying THIS check, while failing the exact-tier one) — a genuine widen-then-narrow layering, not a duplicate.", "liveness": { "kind": "table", "ref": "entities" } }
+    },
+    {
+      "id": "is_wsib_registered_corrected", "kind": "field_coverage",
+      "expect": { "reports": "entities this run's LW-D19 self-heal correction flipped from is_wsib_registered=true to false (no exact-tier link backing the claim)" },
+      "limit": "viol == 0", "severity": "INFO", "blocking": false, "when": "post", "chains": "all", "accept_until": "none",
+      "why": { "text": "LW-D19 (2026-08-29 operator ruling). The self-heal correction target's (writes[4]) own audit row, read from `ctx.matched.is_wsib_registered_corrected` — populated by `runCascadePhase`'s unconditional post-tier-loop correction pass (`scripts/lib/step/index.js`), never a literal. INFO, always present (the correction runs every real invocation, never gated to mode \"full\"). Expected: the historical gap (measured 551 → 301, the 250-row difference between `entities.is_wsib_registered = true` and `EXISTS an exact-tier link`, computed by SQL and cited BEFORE the run) is CLOSED as of this commit's live verification, but the verification run itself reported 0 here — a genuine, explained finding, not a silent gap: the verification used `LINK_WSIB_FORCE_FULL=1` (the only available gate-bypass), which resolves mode=full and therefore ALSO fires A-7/LG-16's pre-existing retraction, whose OWN unflag cascade (`buildEntitiesUnflagSql`, unconditional ‘NOT EXISTS any link’, unrelated to LW-D19) unflags every tier-3-only entity the MOMENT its link is retracted — before the tier loop relinks it and before this target's own pass ever runs. Both mechanisms reach the SAME 301 end state in mode=full, by construction, so this target's own counter reads 0 there. This target's DISTINCT, load-bearing contribution is INCREMENTAL-mode runs (the overwhelming majority in practice, A-8: full is a rare manual repair) — A-7 never fires there, so an incorrectly-true tier-3-only entity would never self-heal without this target. Proven directly and live (not mocked): a throwaway, rolled-back transaction against the real DB (this commit's WF3 session) manually set one genuinely tier-3-only entity `is_wsib_registered = true`, ran this exact target's generated SQL via the real `write.executeSetBasedClear`, and measured `rows changed = 1` (entity flips to false), while a control exact-tier-linked entity stayed `true` untouched, and a second identical pass changed 0 rows (idempotent) — then rolled back, leaving the live DB unmodified. See `docs/reports/defect-ledger.md` LW-D19 for the transcript.", "liveness": { "kind": "file", "ref": "scripts/lib/step/index.js" } }
     },
     {
       "id": "tier3_full_not_converged", "kind": "invariant",
@@ -518,12 +547,12 @@
   "terminals": [
     {
       "id": "linked_incremental", "kind": "success", "status": "completed",
-      "records_meta": { "threshold_updated_at": "string", "unlinked_start": "int", "run_matched": "int", "matches_tier_1_trade": "int", "matches_tier_2_legal": "int", "matches_tier_3_fuzzy": "int", "no_match_count": "int", "audit_table": "object", "terminal": "string" },
+      "records_meta": { "threshold_updated_at": "string", "unlinked_start": "int", "run_matched": "int", "matches_tier_1_trade": "int", "matches_tier_2_legal": "int", "matches_tier_3_fuzzy": "int", "no_match_count": "int", "is_wsib_registered_corrected": "int", "audit_table": "object", "terminal": "string" },
       "why": { "text": "The normal outcome: the ledger gate did not skip, mode resolved incremental, the cascade ran.", "liveness": { "kind": "check", "ref": "gate_decision" } }
     },
     {
       "id": "linked_full_repair", "kind": "success", "status": "completed",
-      "records_meta": { "threshold_updated_at": "string", "unlinked_start": "int", "run_matched": "int", "matches_tier_1_trade": "int", "matches_tier_2_legal": "int", "matches_tier_3_fuzzy": "int", "no_match_count": "int", "audit_table": "object", "terminal": "string" },
+      "records_meta": { "threshold_updated_at": "string", "unlinked_start": "int", "run_matched": "int", "matches_tier_1_trade": "int", "matches_tier_2_legal": "int", "matches_tier_3_fuzzy": "int", "no_match_count": "int", "is_wsib_registered_corrected": "int", "audit_table": "object", "terminal": "string" },
       "why": { "text": "Mode resolved full (A-8's corpus signal or LINK_WSIB_FORCE_FULL): LG-16's tier-3 repair ran. NOT reachable by any commit-7 invocation — commit 8's budgeted act.", "liveness": { "kind": "check", "ref": "tier3_full_not_converged" } }
     },
     {

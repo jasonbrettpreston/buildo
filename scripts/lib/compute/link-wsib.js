@@ -3,14 +3,15 @@
  * SPEC LINK: docs/specs/01-pipeline/60_shared_steps.md §2 (Step Registry row 19), §"Link WSIB"
  * SPEC LINK: docs/specs/01-pipeline/52_source_wsib.md §2-§3 (source cadence, load_wsib contract)
  * SPEC LINK: docs/specs/01-pipeline/122_pipeline_step_optimization.md §1.2a, §1.4, §4.1, §5.1, §5.5
- * SPEC LINK: docs/specs/01-pipeline/124_step_standard_policy.md (Rules 1-12)
+ * SPEC LINK: docs/specs/01-pipeline/124_step_standard_policy.md (Rules 1-12, §7 ladder)
  *
  * WSIB Registry Matching — THE DOMAIN LOGIC ONLY.
  *
  * WHAT THIS FILE IS. Under the A-1 ruling (Fold A/B, 2026-08-28), commit 7 forks
  * `runLinkPhase` rather than extending it: this step is a BULK 3-tier cascade with NO
  * batching/pagination (unlike link_massing's keyset-paginated single-pass-per-batch
- * loop) and THREE write statements per tier across TWO tables. `scripts/lib/step/index.js
+ * loop) and THREE write statements per tier across TWO tables (a FOURTH, unconditional
+ * write runs once per invocation — LW-D19, below). `scripts/lib/step/index.js
  * runCascadePhase` owns the transaction, the gated-skip, the mode gate and the ordered
  * per-tier writes[]; what is left here, exactly per Rule 2 (compute is domain logic
  * only), is:
@@ -26,10 +27,20 @@
  *      LINK_WSIB_FORCE_FULL; the budgeted live repair run is commit 8's act).
  *   3. one named observer per declared check, reading what the library measured.
  *
+ * LW-D19 (2026-08-29 operator ruling) — `entities.is_wsib_registered` is a product-visible
+ * registration CLAIM; the fuzzy tier (0.60, fixed-rule sample measured 31.7%-46.7%
+ * precision, assessment §8d) no longer confers it. Two consequences, both Spec 124 §7
+ * rung (b)/(c), NO second code path: `exactTierConfidences` scopes the EXISTING fill-true
+ * target to the two exact tiers' confidences ALWAYS (the fuzzy tier's own pass issues the
+ * identical statement, matching zero new rows); `ENTITIES_UNFLAG_SCOPE` is a NEW,
+ * unconditional (never gated to mode "full") self-heal target that corrects any entity
+ * whose registration claim outlived its exact-tier link — "is_wsib_registered ≡ EXISTS an
+ * exact-tier link", both directions, every run.
+ *
  * THE CTX CONTRACT (what the library hands a MATCHER compute):
  *   · ctx.matched     — what the cascade produced this run: the pre-run unlinked count,
- *                       per-tier link counts, the fan-in max, and (mode full only) the
- *                       retraction counts
+ *                       per-tier link counts, the fan-in max, the LW-D19 correction count,
+ *                       and (mode full only) the retraction counts
  *   · ctx.cumulative  — the runner's generic cumulative-rate field (link_massing still
  *                       reads it); link_wsib's `link_rate_warn` no longer does (LW-D18,
  *                       2026-08-29) — the rate is now entities-with-a-link over total
@@ -37,7 +48,7 @@
  *                       `ctx.matched.entities_count`), not wsib_registry rows, because a
  *                       single magnet entity absorbing hundreds of rows inflated the old
  *                       row-based ratio without representing hundreds of covered builders
- *   · ctx.written     — PER DECLARED TARGET (written.e1..e4)
+ *   · ctx.written     — PER DECLARED TARGET (written.e1..e5, LW-D19 adds e5)
  *   · ctx.gate        — the tri-state mode decision + the ledger gated-skip decision
  *   · ctx.prior       — the prior COMPLETED run's declared emit (self-consumed baseline)
  *   · ctx.overrides   — the resolved override.force_full / dry_run flags
@@ -105,6 +116,26 @@ function tokenOverlapStopwords(descriptor) {
 }
 
 /**
+ * LW-D19 (2026-08-29 operator ruling) — the two EXACT-tier resolved confidences (0.95
+ * trade, 0.90 legal), read from the SAME declared `execution.tiers[].confidence_from_config`
+ * field `buildTierSql` already uses per-tier — never the fuzzy tier's. `entities.
+ * is_wsib_registered` is a product-visible registration CLAIM; the fuzzy tier (0.60,
+ * fixed-rule sample measured 31.7%-46.7% precision, assessment §8d) no longer confers it.
+ * Shared by BOTH is_wsib_registered write targets (the fill-true target, scoped by this
+ * exact pair regardless of which tier's pass invoked it — Spec 124 §7 rung (b), "runs
+ * with the exact-tier scope" rather than a second code path — and the correction/self-heal
+ * target below), so neither can ever diverge on which two values "exact" means.
+ */
+function exactTierConfidences(descriptor, config) {
+  const tiers = descriptor.execution.tiers;
+  return [TIER_IDS.EXACT_TRADE, TIER_IDS.EXACT_LEGAL].map((id) => {
+    const t = tiers.find((tt) => tt.id === id);
+    if (!t) throw new Error(`[link_wsib compute] exactTierConfidences: descriptor.execution.tiers has no "${id}" entry (LW-D19)`);
+    return config[t.confidence_from_config];
+  });
+}
+
+/**
  * ONE tier's full statement set, as text, derived from the descriptor + resolved config.
  *
  * ⚠️ d704a447 — THE ARTICLE-STRIPPING BLOCKING PREDICATE (LW-D notes, §2 of the
@@ -139,6 +170,12 @@ function tokenOverlapStopwords(descriptor) {
  */
 function buildTierSql(descriptor, config, tier, runAt) {
   const confidence = config[tier.confidence_from_config];
+  // LW-D19 — the entities.is_wsib_registered fill-true target is ALWAYS scoped to the two
+  // EXACT tiers' confidences, regardless of which tier's own pass is currently running (the
+  // fuzzy tier's pass issues the identical statement, with the identical params, as the two
+  // exact tiers' passes — a genuine no-op for tier-3-only rows, never a branch). See
+  // `exactTierConfidences`'s doc comment.
+  const entitiesFlagParams = exactTierConfidences(descriptor, config);
   const entitiesContactsSql = buildContactsSql();
   const entitiesContactsCountSql = buildContactsCountSql();
   const entitiesFlagCountSql = buildEntitiesFlagCountSql();
@@ -148,9 +185,9 @@ function buildTierSql(descriptor, config, tier, runAt) {
       wsib_update_params: [runAt, confidence],
       wsib_count_sql: buildExactMatchCountSql('trade_name_normalized'),
       wsib_count_params: [],
-      entities_flag_scope_params: [confidence],
+      entities_flag_scope_params: entitiesFlagParams,
       entities_flag_count_sql: entitiesFlagCountSql,
-      entities_flag_count_params: [confidence],
+      entities_flag_count_params: entitiesFlagParams,
       entities_contacts_sql: entitiesContactsSql,
       entities_contacts_params: [confidence],
       entities_contacts_count_sql: entitiesContactsCountSql,
@@ -163,9 +200,9 @@ function buildTierSql(descriptor, config, tier, runAt) {
       wsib_update_params: [runAt, confidence],
       wsib_count_sql: buildExactMatchCountSql('legal_name_normalized'),
       wsib_count_params: [],
-      entities_flag_scope_params: [confidence],
+      entities_flag_scope_params: entitiesFlagParams,
       entities_flag_count_sql: entitiesFlagCountSql,
-      entities_flag_count_params: [confidence],
+      entities_flag_count_params: entitiesFlagParams,
       entities_contacts_sql: entitiesContactsSql,
       entities_contacts_params: [confidence],
       entities_contacts_count_sql: entitiesContactsCountSql,
@@ -182,9 +219,12 @@ function buildTierSql(descriptor, config, tier, runAt) {
       wsib_count_sql: buildFuzzyMatchCountSql(stopwords),
       // $1 similarity threshold only — the count variant has no SET clause to bind RUN_AT/confidence to.
       wsib_count_params: [wsibFuzzyMatchThreshold],
-      entities_flag_scope_params: [confidence],
+      // LW-D19 — the fuzzy tier's own pass NEVER confers is_wsib_registered: scoped to the
+      // two EXACT tiers' confidences (same as the exact tiers' own passes above), so this
+      // statement matches zero NEW rows off a fuzzy-only link — Spec 124 §7 rung (b).
+      entities_flag_scope_params: entitiesFlagParams,
       entities_flag_count_sql: entitiesFlagCountSql,
-      entities_flag_count_params: [confidence],
+      entities_flag_count_params: entitiesFlagParams,
       entities_contacts_sql: entitiesContactsSql,
       entities_contacts_params: [confidence],
       entities_contacts_count_sql: entitiesContactsCountSql,
@@ -338,15 +378,36 @@ SELECT count(*)::int AS n FROM matched`;
 
 /**
  * The entities.is_wsib_registered flag flip's SCOPE — declared columns[]/write_discipline
- * in the descriptor generate the statement; only the $1 (tier confidence) scope
- * parameter is per-tier. Exported so the descriptor's `write_discipline.scope` string and
- * this runtime binding cannot silently disagree (both name "$1 = the tier's confidence").
+ * in the descriptor generate the statement; the $1/$2 scope parameters are the two EXACT
+ * tiers' resolved confidences (LW-D19, `exactTierConfidences`), ALWAYS — never the fuzzy
+ * tier's, regardless of which tier's pass issues the statement. Exported so the
+ * descriptor's `write_discipline.scope` string and this runtime binding cannot silently
+ * disagree (both name "$1, $2 = the two exact-tier confidences").
  */
-const ENTITIES_FLAG_SCOPE = 'id IN (SELECT linked_entity_id FROM wsib_registry WHERE match_confidence = $1) AND is_wsib_registered = false';
+const ENTITIES_FLAG_SCOPE = 'id IN (SELECT linked_entity_id FROM wsib_registry WHERE match_confidence IN ($1, $2)) AND is_wsib_registered = false';
 
-/** LW-D15 — read-only mirror of the `entities` flag-flip's scope; same $1 = tier confidence. */
+/** LW-D15 — read-only mirror of the `entities` flag-flip's scope; same $1/$2 = the two exact-tier confidences. */
 function buildEntitiesFlagCountSql() {
   return `SELECT count(*)::int AS n FROM entities WHERE ${ENTITIES_FLAG_SCOPE}`;
+}
+
+/**
+ * LW-D19 (2026-08-29 operator ruling) — the is_wsib_registered SELF-HEAL correction scope:
+ * an entity currently flagged registered whose wsib_registry link(s) are ALL fuzzy
+ * (match_confidence 0.60) — i.e. it has no EXACT-tier link at all. Runs every invocation,
+ * unconditional of mode (unlike A-7/LG-16's retraction, never gated to mode "full"): the
+ * fill-true target above only ever transitions false→true, so this is the ONLY mechanism
+ * that ever corrects a row set true by pre-LW-D19 code, or a future edge case (e.g. an
+ * entity's only exact-tier link is itself later retracted — not currently possible, wsib_
+ * registry rows outside `retract_when: full_only`'s tier-3 scope are never retracted, but
+ * this target's scope makes that hypothetical safe too, not just today's known-bad rows).
+ * "is_wsib_registered ≡ EXISTS an exact-tier link", both directions, self-healing every run.
+ */
+const ENTITIES_UNFLAG_SCOPE = 'is_wsib_registered = true AND id NOT IN (SELECT linked_entity_id FROM wsib_registry WHERE match_confidence IN ($1, $2))';
+
+/** LW-D19 — read-only mirror of `ENTITIES_UNFLAG_SCOPE`, for a `--dry-run` invocation's would-be correction count. */
+function buildEntitiesUnflagCorrectionCountSql() {
+  return `SELECT count(*)::int AS n FROM entities WHERE ${ENTITIES_UNFLAG_SCOPE}`;
 }
 
 /**
@@ -663,6 +724,22 @@ function contacts_cleared_on_retraction(ctx) {
 }
 
 /**
+ * LW-D19 (2026-08-29 operator ruling) — the is_wsib_registered self-heal correction's own
+ * audit row: how many entities THIS run flipped back to false because their only
+ * wsib_registry link(s) were fuzzy (tier-3, 0.60). INFO, always present (the correction
+ * target runs every invocation, unconditional of mode) — expected 0 on every run after the
+ * one-time historical correction (this pilot's first live run), since the fill-true target
+ * never lets a tier-3-only row reach true in the first place (Spec 124 §7 rung (b)).
+ * A non-zero value on a later run is not itself a defect — it means an entity's is_
+ * wsib_registered was true for a reason outside this step's own writes (measured: none
+ * known) and is being corrected, visibly, not silently.
+ */
+function is_wsib_registered_corrected(ctx) {
+  const n = (ctx.matched && ctx.matched.is_wsib_registered_corrected) || 0;
+  ctx.report('is_wsib_registered_corrected', { violations: 0, detail: n });
+}
+
+/**
  * D-20-class guard for A-7's tier-3 repair (LG-16), scored `when: "pre_write"`. The
  * retraction + entities cascade is destructive; against an empty `entities` corpus it
  * would unlink everything the fuzzy tier ever matched and repair nothing. INFO on every
@@ -719,6 +796,8 @@ function buildLinkMeta(ctx) {
     matches_tier_3_fuzzy: tierCount(ctx, 'tier3_fuzzy'),
     no_match_count: Math.max(0, (m.unlinked_start || 0) - linked),
     threshold_updated_at: (ctx.gate && ctx.gate.configVersionUpdatedAt) || null,
+    // LW-D19 — always observable, per run, even when 0 (the expected steady state).
+    is_wsib_registered_corrected: m.is_wsib_registered_corrected || 0,
   };
 }
 
@@ -741,6 +820,7 @@ const CHECKS = {
   confidence_outside_closed_set,
   dead_bucket_count,
   registered_entities_with_zero_links,
+  is_wsib_registered_corrected,
   tier3_full_not_converged,
   tier3_full_iterations,
   contacts_cleared_on_retraction,
@@ -769,6 +849,9 @@ module.exports = compute;
 module.exports.compute = compute;
 module.exports.checks = CHECKS;
 module.exports.buildTierSql = buildTierSql;
+module.exports.exactTierConfidences = exactTierConfidences;
+module.exports.buildEntitiesUnflagCorrectionCountSql = buildEntitiesUnflagCorrectionCountSql;
+module.exports.ENTITIES_UNFLAG_SCOPE = ENTITIES_UNFLAG_SCOPE;
 module.exports.buildExactMatchCountSql = buildExactMatchCountSql;
 module.exports.buildFuzzyMatchCountSql = buildFuzzyMatchCountSql;
 module.exports.buildEntitiesFlagCountSql = buildEntitiesFlagCountSql;

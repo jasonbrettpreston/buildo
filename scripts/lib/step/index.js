@@ -864,17 +864,30 @@ async function runCascadePhase({ descriptor, pool, compute, config, chainId, log
 
   const specs = descriptor.outputs.writes;
   const wsibJoinPlan = specs.find((w) => w.write_discipline.class === 'set_based_join_update' && w.table === 'wsib_registry');
-  const entitiesFlagSpec = specs.find((w) => w.write_discipline.class === 'set_based_scoped');
+  // LW-D19 — TWO set_based_scoped targets now share this class (the fill-true target and
+  // the new unconditional self-heal correction), distinguished the same structural way
+  // every other spec in this file is found: a declared column property, never a string
+  // match on "is_wsib_registered" or "link_wsib" (Gate 0, zero new bespoke runner paths).
+  const entitiesFlagSpec = specs.find((w) => w.write_discipline.class === 'set_based_scoped' && w.columns.some((c) => c.set_value === true));
+  const entitiesUnflagSpec = specs.find((w) => w.write_discipline.class === 'set_based_scoped' && w.columns.some((c) => c.set_value === false));
   const entitiesContactsSpec = specs.find((w) => w.write_discipline.class === 'set_based_join_update' && w.table !== 'wsib_registry');
   const nullRetractSpec = specs.find((w) => w.write_discipline.class === 'set_based_null_retract');
   const entitiesFlagPlan = entitiesFlagSpec ? write.buildWritePlan(entitiesFlagSpec, descriptor) : null;
+  const entitiesUnflagPlan = entitiesUnflagSpec ? write.buildWritePlan(entitiesUnflagSpec, descriptor) : null;
   const nullRetractPlan = nullRetractSpec ? write.buildWritePlan(nullRetractSpec, descriptor) : null;
 
   const written = {};
   for (let i = 0; i < specs.length; i++) {
     written[write.targetKey(i)] = { scanned: 0, inserted: 0, updated: 0, deleted: 0, retracted: 0, rows_changed: 0 };
   }
-  written.privilege = privilege[specs[specs.length - 1].table] || null;
+  // LW-D19 — adding a 5th write target (the entities self-heal correction) broke the
+  // previous "last spec's table" heuristic (it silently started reading entities'
+  // RLS state instead of wsib_registry's). Anchored on nullRetractSpec.table instead —
+  // stable regardless of how many more write targets this step ever declares, since
+  // the null-retract target's table (wsib_registry) is what write_privilege's own
+  // declared `why.liveness` names. Falls back to the old heuristic if a future cascade
+  // step ever lacks a null-retract target (this function is not link_wsib-specific).
+  written.privilege = privilege[(nullRetractSpec || specs[specs.length - 1]).table] || null;
   written.requirements = requirements;
   // R-M / LG-17 — one entry per destructive-retraction target this run actually wrote
   // a before-image for (the LG-16 mode="full" repair, below); surfaces as
@@ -1032,6 +1045,28 @@ async function runCascadePhase({ descriptor, pool, compute, config, chainId, log
       }
     }
     matched.tier3_full = tier3Full;
+
+    // ── LW-D19 (2026-08-29 operator ruling) — the is_wsib_registered self-heal
+    // correction. Runs EXACTLY ONCE per invocation, UNCONDITIONAL of mode (unlike LG-16's
+    // retraction above, never gated to mode "full"): an entity currently flagged
+    // registered whose wsib_registry link(s) are all fuzzy (0.60) is corrected back to
+    // false every run — the fill-true target only ever transitions false→true, so this is
+    // the sole mechanism that closes the loop the other direction. Same declared
+    // set_based_scoped / is_distinct_from shape as the fill-true target, just the opposite
+    // constant, so a re-run over an already-corrected corpus changes 0 rows.
+    if (entitiesUnflagPlan) {
+      const correctionParams = compute.exactTierConfidences(descriptor, config);
+      if (dryRun) {
+        const r = await client.query(compute.buildEntitiesUnflagCorrectionCountSql(), correctionParams);
+        matched.is_wsib_registered_corrected = Number(r.rows[0].n);
+      } else {
+        const corrected = await write.executeSetBasedClear(client, entitiesUnflagPlan, correctionParams);
+        const unflagIdx = specs.indexOf(entitiesUnflagSpec);
+        written[write.targetKey(unflagIdx)].updated += corrected;
+        written[write.targetKey(unflagIdx)].rows_changed += corrected;
+        matched.is_wsib_registered_corrected = corrected;
+      }
+    }
   });
 
   // LW-D14 — every cascade compute's CUMULATIVE_SQL is a function of `descriptor` (was

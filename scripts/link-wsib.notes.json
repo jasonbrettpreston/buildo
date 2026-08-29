@@ -49,7 +49,7 @@
   ],
   "suspicious_if": [
     {
-      "signal": "entities.is_wsib_registered is true for an entity with zero wsib_registry rows pointing at it. The write order (G-9: flag flip immediately follows each tier's own link write, scoped to that tier's confidence) makes this impossible by construction unless A-7's unflag cascade misses a row, or a write lands out of order.",
+      "signal": "entities.is_wsib_registered is true for an entity with zero wsib_registry rows pointing at it. The write order (G-9: flag flip immediately follows each tier's own link write, scoped to that tier's confidence) makes this impossible by construction unless A-7's unflag cascade misses a row, or a write lands out of order. LW-D19 (2026-08-29 operator ruling, review_followups' filed 'Spec 46 tier-3 product question') narrowed WHAT is_wsib_registered means: the fuzzy tier no longer confers it (a fixed-rule precision sample, assessment §8d, measured it far below the exact tiers' 20/20), so the STRICTER form of this signal — true with no EXACT-tier link, even if a fuzzy one exists — is the `is_wsib_registered_corrected` check's own territory (writes[4], ENTITIES_UNFLAG_SCOPE), a self-healing correction that runs every invocation, not a one-off FULL. No entities column was added for the tier-3 candidate signal — `\\d entities` measured only is_wsib_registered exists for this purpose; wsib_registry.match_confidence via the existing join is the declared way to expose it if a product surface ever needs it.",
       "check": "registered_entities_with_zero_links",
       "measured": { "value": "0 today (golden invariant, commit 5)", "date": "2026-08-28", "query": "SELECT count(*) FROM entities e WHERE e.is_wsib_registered AND NOT EXISTS (SELECT 1 FROM wsib_registry w WHERE w.linked_entity_id = e.id)" }
     }
@@ -108,8 +108,8 @@
   ],
   "review_notes": [
     {
-      "note": "Read the 4 write targets as ordered PAIRS, not independently: writes[0] (wsib join-update) and writes[1] (entities flag) and writes[2] (entities contacts) execute per-tier, in that order, three times — the ordering IS G-9's guarantee. writes[3] (the null-retract) is a SEPARATE, mode-full-only action that precedes the tier loop entirely, never interleaved with it.",
-      "measured": { "value": "4 declared write targets, 3 executed per tier x 3 tiers = 9 statement executions in the steady state", "date": "2026-08-28", "query": "node -e \"console.log(require('./scripts/link-wsib.descriptor.json').outputs.writes.map(w=>w.write_discipline.class))\"" }
+      "note": "Read the 5 write targets as ordered GROUPS, not independently: writes[0] (wsib join-update), writes[1] (entities flag, LW-D19: scoped to the two exact tiers ALWAYS) and writes[2] (entities contacts) execute per-tier, in that order, three times — the ordering IS G-9's guarantee. writes[3] (the null-retract) is a SEPARATE, mode-full-only action that precedes the tier loop entirely, never interleaved with it. writes[4] (LW-D19's is_wsib_registered self-heal correction, 2026-08-29) runs LAST, exactly once, unconditional of mode — after the tier loop, still inside the same step-scoped transaction.",
+      "measured": { "value": "5 declared write targets, 3 executed per tier x 3 tiers = 9 statement executions PLUS writes[4]'s unconditional single execution = 10 in the steady state", "date": "2026-08-29", "query": "node -e \"console.log(require('./scripts/link-wsib.descriptor.json').outputs.writes.map(w=>w.write_discipline.class))\"" }
     }
   ]
 }

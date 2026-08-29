@@ -1840,6 +1840,10 @@ describe('LW-D15 — --dry-run issues ZERO write statements (LINK + CASCADE/MATC
       buildEntitiesUnflagSql: () => 'UPDATE entities SET is_wsib_registered = false',
       buildContactsReverseClearSql: () => 'UPDATE entities SET primary_phone = NULL',
       buildTierSql: () => tierSql,
+      // LW-D19: the is_wsib_registered fill-true scope AND the unconditional self-heal
+      // correction both read the two exact-tier confidences via this helper.
+      exactTierConfidences: () => [0.95, 0.9],
+      buildEntitiesUnflagCorrectionCountSql: () => 'STUB_LW_UNFLAG_COUNT',
       // LW-D14: every cascade compute's CUMULATIVE_SQL is now a function of `descriptor`
       // (was a bare string) so a step's invariant can read declared descriptor data
       // (link_wsib's token-overlap stopword list) the way the write-side SQL builders do.
@@ -1853,6 +1857,7 @@ describe('LW-D15 — --dry-run issues ZERO write statements (LINK + CASCADE/MATC
         if (text === 'STUB_LW_FLAG_COUNT') return { rows: [{ n: 1 }] };
         if (text === 'STUB_LW_CONTACTS_COUNT') return { rows: [{ n: 0 }] };
         if (text === 'STUB_LW_CUMULATIVE') return { rows: [{ linked: 1, total: 1 }] };
+        if (text === 'STUB_LW_UNFLAG_COUNT') return { rows: [{ n: 4 }] };
         return undefined;
       });
       const result = await stepLib.runCascadePhase({
@@ -1864,6 +1869,8 @@ describe('LW-D15 — --dry-run issues ZERO write statements (LINK + CASCADE/MATC
       const writes = pool.sql.filter((s: string) => /^\s*(UPDATE|INSERT|DELETE)\b/i.test(s));
       expect(writes, 'a --dry-run CASCADE-phase run must issue ZERO write statements').toEqual([]);
       expect(pool.sql.includes('STUB_LW_TIER_COUNT'), 'the count-mirror SELECT must still run under dry-run').toBe(true);
+      expect(pool.sql.includes('STUB_LW_UNFLAG_COUNT'), 'LW-D19: the self-heal correction count-mirror SELECT must still run under dry-run').toBe(true);
+      expect(result.matched.is_wsib_registered_corrected, 'LW-D19: the dry-run would-be correction count is the real count-mirror value, not zeroed').toBe(4);
       const tierIds = Object.keys(result.matched.tiers);
       expect(tierIds.length, 'every declared tier still reports a would-be count').toBeGreaterThan(0);
       for (const id of tierIds) {
