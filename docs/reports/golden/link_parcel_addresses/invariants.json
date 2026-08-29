@@ -1,0 +1,11 @@
+[
+  { "name": "rows", "sql": "SELECT count(*)::int FROM parcel_address_points" },
+  { "name": "stale_st_within_count", "sql": "SELECT count(*)::int FROM parcel_address_points pap JOIN parcels p ON p.id = pap.parcel_id JOIN address_points ap ON ap.address_point_id = pap.address_point_id WHERE NOT ST_Within(ap.geom, p.geom)" },
+  { "name": "missed_link_count", "sql": "SELECT count(*)::int FROM address_points ap WHERE ap.geom IS NOT NULL AND EXISTS (SELECT 1 FROM parcels p WHERE p.geom IS NOT NULL AND ST_Within(ap.geom, p.geom) AND NOT EXISTS (SELECT 1 FROM parcel_address_points pap WHERE pap.parcel_id = p.id AND pap.address_point_id = ap.address_point_id))" },
+  { "name": "multi_parcel_address_count", "sql": "SELECT count(*)::int FROM (SELECT address_point_id FROM parcel_address_points GROUP BY address_point_id HAVING count(*) > 1) d" },
+  { "name": "dup_count", "sql": "SELECT count(*)::int FROM (SELECT parcel_id, address_point_id FROM parcel_address_points GROUP BY parcel_id, address_point_id HAVING count(*) > 1) d" },
+  { "name": "fanout_max_condo", "sql": "SELECT COALESCE(max(cnt), 0)::int FROM (SELECT pap.parcel_id, count(*) AS cnt FROM parcel_address_points pap JOIN parcels p ON p.id = pap.parcel_id WHERE p.feature_type = 'CONDO' GROUP BY pap.parcel_id) s" },
+  { "name": "fanout_max_noncondo", "sql": "SELECT COALESCE(max(cnt), 0)::int FROM (SELECT pap.parcel_id, count(*) AS cnt FROM parcel_address_points pap JOIN parcels p ON p.id = pap.parcel_id WHERE p.feature_type IS DISTINCT FROM 'CONDO' GROUP BY pap.parcel_id) s" },
+  { "name": "noncondo_gt_20_count", "sql": "SELECT count(*)::int FROM (SELECT pap.parcel_id, count(*) AS cnt FROM parcel_address_points pap JOIN parcels p ON p.id = pap.parcel_id WHERE p.feature_type IS DISTINCT FROM 'CONDO' GROUP BY pap.parcel_id HAVING count(*) > 20) s" },
+  { "name": "land_entrance_count", "sql": "SELECT count(*)::int FROM parcel_address_points pap JOIN address_points ap ON ap.address_point_id = pap.address_point_id WHERE ap.address_class_desc = 'Land Entrance'" }
+]

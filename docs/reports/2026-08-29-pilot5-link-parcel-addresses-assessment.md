@@ -284,6 +284,114 @@ is a spatial containment join, not a matcher).
 
 ---
 
+## §5. Golden master (commit 5, G1′) — 2 invocations (this step's sole chain membership + standalone),
+## plus a separate gate-bypassed twice-run write-path idempotency proof
+
+> **Every capture below is a REAL run of the unconverted `scripts/link-parcel-addresses.js`** via
+> `scripts/analysis/capture-step-golden.js`, run sequentially against `172.20.0.10:5432/postgres`. Files:
+> `docs/reports/golden/link_parcel_addresses/pre/{sources,standalone,standalone-repeat,standalone-forced-1,
+> standalone-forced-2}.json` + `docs/reports/golden/link_parcel_addresses/invariants.json` (9 entries).
+> `--tables=parcel_address_points` (the step's ONE write target, per §1.4's re-derivation — `address_points`
+> is a source table, not this step's output), `--table-columns`/`--table-order` both
+> `parcel_id,address_point_id` (excludes `computed_at`, Fold A NOTE 8, precedent `link_massing`) — bypasses
+> the 100,000-row ceiling via the projection mechanism (`ceiling_bypassed: 'projected'`), since 511,224 rows
+> exceeds the harness's default 100,000 ceiling.
+
+### The 2 pinned invocations — `sources` (this step's ONLY chain membership, index 8/28) + `standalone`
+
+Both invocations **SKIPPED** (`gate.skip: true`, reason `no_upstream_changes`) — neither `parcels` nor
+`address_points` has changed since this step's own last completed run (2026-07-08), so the B3 gate correctly
+short-circuited before the batch loop ever ran. This is the expected shape per the plan's own G8 preliminary
+note ("both cheap, `records_new: 0` on a repeat run") — **not a capture-harness limitation**: the corpus is
+genuinely stale-relative-to-itself today.
+
+| Invocation | Chain | `gate.skip` | `parcel_address_points` rows/hash | Wall time |
+|---|---|---|---|---:|
+| `pre/sources.json` | `sources` | `true` (`no_upstream_changes`) | 511,224 / `bde2b1c4` | 0.1s (SKIP) |
+| `pre/standalone.json` | `none` | `true` (`no_upstream_changes`) | 511,224 / `bde2b1c4` | 0.1s (SKIP) |
+
+`--compare` of the two: **1 difference — the `chain` metadata field only** (`"sources"` vs `"none"`); every
+other normalised field (summary, table_state, invariants) is byte-identical. Both captures show `ledger=[]`
+(no NEW `pipeline_runs` row inserted by either) — this is **not** the harness docblock's aspirational "standalone
+exercises the ledger path" claim playing out: `link-parcel-addresses.js` itself never calls an
+`openLedgerRow`/`finalizeLedgerRow`-shaped function (confirmed by direct read, §1's key-files table) — its
+historical `pipeline_runs` rows (`pipeline='sources:link_parcel_addresses'`) were written externally, by
+`run-chain.js`, which `capture-step-golden.js` does not invoke (it spawns the script directly, mirroring
+`spawnStepChild` but not the ledger-row lifecycle around it). Consistent with finding 3 (zero SKIP-path
+ledger rows exist under any slug form) — noted here as a factual observation about the capture, not a defect
+in the step or the harness.
+
+### Harness self-test (Done-test requirement)
+
+Re-ran the `standalone` capture a second time (`pre/standalone-repeat.json`) and diffed via `--compare`:
+```
+[capture-step-golden] IDENTICAL (normalised): docs/reports/golden/link_parcel_addresses/pre/standalone.json == docs/reports/golden/link_parcel_addresses/pre/standalone-repeat.json
+```
+Exit code 0. **Harness self-test PASSES.**
+
+### Separate: gate-bypassed twice-run write-path idempotency proof (`LINK_PARCEL_ADDRESSES_FORCE_FULL=1`)
+
+The 2 pinned invocations above never reach the batch/write loop (both SKIP). Per the write-discipline table's
+`idempotent_rerun: "zero_writes"` claim ("to be formally proven by commit 5's twice-run acceptance test,
+Spec 122 §1.4"), the batch loop itself needed to be genuinely exercised — done here via the step's OWN
+declared escape hatch (`FORCE_FULL_ENV`, bypasses the gate, `gate=null`), run TWICE, standalone, NOT part of
+the differential's pinned invocation set (A-1's ruling: this MATERIALIZER ships `recovery.reset` declare-only,
+no forced-full/reset scenario belongs in the diffed set) — a separate proof, captured for the record.
+
+| Run | Batches | Elapsed | `new_links_written` | `final_link_count` | `parcel_address_points` hash |
+|---|---:|---:|---:|---:|---|
+| `standalone-forced-1.json` | 487 | 30.7s | 0 | 511,224 | `bde2b1c4` |
+| `standalone-forced-2.json` | 487 | 30.9s | 0 | 511,224 | `bde2b1c4` |
+
+`--compare` of the two forced runs: **IDENTICAL (normalised), exit 0.** The real `INSERT…SELECT…JOIN
+ST_Within…ON CONFLICT DO NOTHING` batch statement ran all 487 batches both times (confirmed via the real
+stdout log lines, not simulated), wrote 0 new rows both times, and left the table hash unchanged —
+`idempotent_rerun: "zero_writes"` is now **measured, not merely inferred from `pipeline_runs` history**.
+Wall time (30.7–30.9s) is far under the historical avg (~204s, finding 3) — consistent with a fully warm
+buffer cache / already-populated bridge (no new rows to write, every batch's `ins` CTE returns 0 rows), not
+a regression.
+
+### Non-determinism inventory (declared BEFORE the first diff, Spec 124 §7 Step 4)
+
+Each capture's own `nondeterminism` field (auto-detected, not hand-curated) is a 5-entry set, verified this
+commit by direct read of each JSON file. The 2 SKIP captures (`sources`, `standalone`) match:
+`key:summary.records_meta.duration_ms, pattern:duration_literal, pattern:iso_timestamp, row:sys_duration_ms,
+row:sys_velocity_rows_sec` — the `own_started`/`last_full_run_at` ISO-8601 timestamps carried into the
+skip-path audit metadata trigger `pattern:iso_timestamp`. The 2 forced captures instead show
+`key:summary.records_meta.duration_ms, pattern:duration_literal, pattern:run_id_literal, row:sys_duration_ms,
+row:sys_velocity_rows_sec` — no ISO timestamp appears in the real-run audit table (`own_started`/
+`last_full_run_at` are skip-path-only fields), but the "Batch N: ... running total: 0" stdout log lines
+trigger the harness's `run_id_literal` pattern instead. Both shapes are the SAME 5-hit class of known-volatile
+elapsed-time/timestamp noise; none touch the pinned `table_state` hash or the 9 `invariants.json` values in
+either shape.
+
+| key | disposition |
+|---|---|
+| `summary.records_meta.duration_ms` | `excluded-with-reason` — elapsed wall time, never written to a table |
+| `sys_duration_ms` | `excluded-with-reason` — same, harness-computed |
+| `sys_velocity_rows_sec` | `excluded-with-reason` — derived from duration |
+| `pattern:duration_literal` | `normalize-then-match` — any duration-shaped string is masked before comparison |
+| `pattern:iso_timestamp` | `normalize-then-match` — any ISO-8601 timestamp is masked before comparison |
+| `pattern:run_id_literal` | `normalize-then-match` — a bare `PIPELINE_SUMMARY` field name matching `run[_ -]?id` shape (forced captures only, harness auto-detection) |
+
+Every disposition drawn from the closed vocabulary (`must-match-exactly` \| `normalize-then-match` \|
+`excluded-with-reason`).
+
+### Invariants pinned (`docs/reports/golden/link_parcel_addresses/invariants.json`, 9 entries, identical across
+### all 5 captures — measured values, live this commit)
+
+`rows=511224` · `stale_st_within_count=0` · `missed_link_count=0` · `multi_parcel_address_count=0` ·
+`dup_count=0` · `fanout_max_condo=346` · `fanout_max_noncondo=155` · `noncondo_gt_20_count=130` ·
+`land_entrance_count=449`. **Every structural invariant reads 0 (clean)** — no stale spatial-containment rows
+(LPA-D1's live exposure, re-confirmed a 3rd time this pilot), no missed in-parcel address points, no
+multi-parcel address points, no duplicate `(parcel_id, address_point_id)` pairs. The 4 distribution figures
+exactly reproduce Fold B's corrected measurements (CONDO max 346, non-CONDO max 155, 130 non-CONDO parcels
+over the T4 default-20 threshold, 449 `"Land Entrance"`-class linked address points) with zero drift across 3
+independent re-measurements this pilot (§1's boundary freeze, §4's disambiguation-eyeball population check,
+and this commit's capture).
+
+---
+
 ## §0. PH-0 seed — measured boundary table (2026-08-29 planning session)
 
 > Executed against the local dev DB (`current_database() = postgres`, port 5432 — **not** the

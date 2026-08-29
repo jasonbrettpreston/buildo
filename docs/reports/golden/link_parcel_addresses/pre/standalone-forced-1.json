@@ -1,0 +1,402 @@
+{
+  "harness": "scripts/analysis/capture-step-golden.js",
+  "spec": "docs/specs/01-pipeline/122_pipeline_step_optimization.md §5.3",
+  "step": "scripts/link-parcel-addresses.js",
+  "chain": "none",
+  "git_head": "9436e4cad83614c96d1a6d5cd53401c1166c8ed5",
+  "exit_code": 0,
+  "signal": null,
+  "summary": {
+    "records_total": 486530,
+    "records_new": 0,
+    "records_updated": 0,
+    "records_meta": {
+      "duration_ms": 30704,
+      "batches_processed": 487,
+      "completed_naturally": true,
+      "audit_table": {
+        "phase": 54,
+        "name": "Parcel ↔ Address Points spatial bridge",
+        "verdict": "PASS",
+        "rows": [
+          {
+            "metric": "parcels_with_geom_pre_run",
+            "value": 486530,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "address_points_with_geom_pre_run",
+            "value": 525346,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "address_points_with_null_geom",
+            "value": 0,
+            "threshold": "== 0",
+            "status": "PASS"
+          },
+          {
+            "metric": "new_links_written",
+            "value": 0,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "final_link_count",
+            "value": 511224,
+            "threshold": "> 0",
+            "status": "INFO"
+          },
+          {
+            "metric": "parcels_with_links",
+            "value": 467786,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "parcel_link_rate_pct",
+            "value": "96.1%",
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "parcels_with_no_address_pct",
+            "value": "3.9%",
+            "threshold": "< 50%",
+            "status": "PASS"
+          },
+          {
+            "metric": "address_points_with_no_parcel_pct",
+            "value": "2.7%",
+            "threshold": "< 5%",
+            "status": "PASS"
+          },
+          {
+            "metric": "errors",
+            "value": 0,
+            "threshold": "== 0",
+            "status": "PASS"
+          },
+          {
+            "metric": "sys_velocity_rows_sec",
+            "value": 15357.64,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "sys_duration_ms",
+            "value": 31680,
+            "threshold": null,
+            "status": "INFO"
+          }
+        ]
+      }
+    }
+  },
+  "summary_count": 1,
+  "meta": [
+    {
+      "reads": {
+        "parcels": [
+          "id",
+          "geom"
+        ],
+        "address_points": [
+          "address_point_id",
+          "geom"
+        ]
+      },
+      "writes": {
+        "parcel_address_points": [
+          "parcel_id",
+          "address_point_id",
+          "computed_at"
+        ]
+      }
+    }
+  ],
+  "parse_errors": [],
+  "verdict": "PASS",
+  "ledger_status": [],
+  "stdout": "{\"level\":\"INFO\",\"tag\":\"[link-parcel-addresses]\",\"msg\":\"Starting parcel ↔ address_points spatial bridge populate\"}\n{\"level\":\"INFO\",\"tag\":\"[link-parcel-addresses]\",\"msg\":\"Pre-run: 486,530 parcels w/ geom, 525,346 address_points w/ geom, 511,224 existing links. (0 parcels + 0 APs have NULL geom and will be skipped.)\"}\n{\"level\":\"INFO\",\"tag\":\"[link-parcel-addresses]\",\"msg\":\"Batch 25: processed 1000 parcels, wrote 0 new links (running total: 0).\"}\n{\"level\":\"INFO\",\"tag\":\"[link-parcel-addresses]\",\"msg\":\"Batch 50: processed 1000 parcels, wrote 0 new links (running total: 0).\"}\n{\"level\":\"INFO\",\"tag\":\"[link-parcel-addresses]\",\"msg\":\"Batch 75: processed 1000 parcels, wrote 0 new links (running total: 0).\"}\n{\"level\":\"INFO\",\"tag\":\"[link-parcel-addresses]\",\"msg\":\"Batch 100: processed 1000 parcels, wrote 0 new links (running total: 0).\"}\n{\"level\":\"INFO\",\"tag\":\"[link-parcel-addresses]\",\"msg\":\"Batch 125: processed 1000 parcels, wrote 0 new links (running total: 0).\"}\n{\"level\":\"INFO\",\"tag\":\"[link-parcel-addresses]\",\"msg\":\"Batch 150: processed 1000 parcels, wrote 0 new links (running total: 0).\"}\n{\"level\":\"INFO\",\"tag\":\"[link-parcel-addresses]\",\"msg\":\"Batch 175: processed 1000 parcels, wrote 0 new links (running total: 0).\"}\n{\"level\":\"INFO\",\"tag\":\"[link-parcel-addresses]\",\"msg\":\"Batch 200: processed 1000 parcels, wrote 0 new links (running total: 0).\"}\n{\"level\":\"INFO\",\"tag\":\"[link-parcel-addresses]\",\"msg\":\"Batch 225: processed 1000 parcels, wrote 0 new links (running total: 0).\"}\n{\"level\":\"INFO\",\"tag\":\"[link-parcel-addresses]\",\"msg\":\"Batch 250: processed 1000 parcels, wrote 0 new links (running total: 0).\"}\n{\"level\":\"INFO\",\"tag\":\"[link-parcel-addresses]\",\"msg\":\"Batch 275: processed 1000 parcels, wrote 0 new links (running total: 0).\"}\n{\"level\":\"INFO\",\"tag\":\"[link-parcel-addresses]\",\"msg\":\"Batch 300: processed 1000 parcels, wrote 0 new links (running total: 0).\"}\n{\"level\":\"INFO\",\"tag\":\"[link-parcel-addresses]\",\"msg\":\"Batch 325: processed 1000 parcels, wrote 0 new links (running total: 0).\"}\n{\"level\":\"INFO\",\"tag\":\"[link-parcel-addresses]\",\"msg\":\"Batch 350: processed 1000 parcels, wrote 0 new links (running total: 0).\"}\n{\"level\":\"INFO\",\"tag\":\"[link-parcel-addresses]\",\"msg\":\"Batch 375: processed 1000 parcels, wrote 0 new links (running total: 0).\"}\n{\"level\":\"INFO\",\"tag\":\"[link-parcel-addresses]\",\"msg\":\"Batch 400: processed 1000 parcels, wrote 0 new links (running total: 0).\"}\n{\"level\":\"INFO\",\"tag\":\"[link-parcel-addresses]\",\"msg\":\"Batch 425: processed 1000 parcels, wrote 0 new links (running total: 0).\"}\n{\"level\":\"INFO\",\"tag\":\"[link-parcel-addresses]\",\"msg\":\"Batch 450: processed 1000 parcels, wrote 0 new links (running total: 0).\"}\n{\"level\":\"INFO\",\"tag\":\"[link-parcel-addresses]\",\"msg\":\"Batch 475: processed 1000 parcels, wrote 0 new links (running total: 0).\"}\n{\"level\":\"INFO\",\"tag\":\"[link-parcel-addresses]\",\"msg\":\"Batch 487: processed 530 parcels, wrote 0 new links (running total: 0).\"}\n{\"level\":\"INFO\",\"tag\":\"[link-parcel-addresses]\",\"msg\":\"Bridge populate complete after 487 batch(es). 0 new links written.\"}\n{\"level\":\"INFO\",\"tag\":\"[link-parcel-addresses]\",\"msg\":\"Post-run: 511,224 total links, 467,786 parcels linked, 511,224 address_points linked. Coverage gaps: 18,744 parcels w/o address (3.9%), 14,122 APs w/o parcel (2.7%). Elapsed 30704ms.\"}\nPIPELINE_SUMMARY:{\"records_total\":486530,\"records_new\":0,\"records_updated\":0,\"records_meta\":{\"duration_ms\":30704,\"batches_processed\":487,\"completed_naturally\":true,\"audit_table\":{\"phase\":54,\"name\":\"Parcel ↔ Address Points spatial bridge\",\"verdict\":\"PASS\",\"rows\":[{\"metric\":\"parcels_with_geom_pre_run\",\"value\":486530,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"address_points_with_geom_pre_run\",\"value\":525346,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"address_points_with_null_geom\",\"value\":0,\"threshold\":\"== 0\",\"status\":\"PASS\"},{\"metric\":\"new_links_written\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"final_link_count\",\"value\":511224,\"threshold\":\"> 0\",\"status\":\"INFO\"},{\"metric\":\"parcels_with_links\",\"value\":467786,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"parcel_link_rate_pct\",\"value\":\"96.1%\",\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"parcels_with_no_address_pct\",\"value\":\"3.9%\",\"threshold\":\"< 50%\",\"status\":\"PASS\"},{\"metric\":\"address_points_with_no_parcel_pct\",\"value\":\"2.7%\",\"threshold\":\"< 5%\",\"status\":\"PASS\"},{\"metric\":\"errors\",\"value\":0,\"threshold\":\"== 0\",\"status\":\"PASS\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":15357.64,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":31680,\"threshold\":null,\"status\":\"INFO\"}]}}}\nPIPELINE_META:{\"reads\":{\"parcels\":[\"id\",\"geom\"],\"address_points\":[\"address_point_id\",\"geom\"]},\"writes\":{\"parcel_address_points\":[\"parcel_id\",\"address_point_id\",\"computed_at\"]}}\n\n[link-parcel-addresses] completed in 31.7s\n",
+  "stderr": "",
+  "pipeline_runs": [],
+  "pipeline_runs_max_id_before": 1708,
+  "table_state": [
+    {
+      "table": "parcel_address_points",
+      "row_count": 511224,
+      "ceiling_bypassed": "projected",
+      "content_hash": "bde2b1c4c8fb9ced192d393ed7654d52",
+      "order_by": "explicit",
+      "order_columns": [
+        "parcel_id",
+        "address_point_id"
+      ],
+      "columns": [
+        "parcel_id",
+        "address_point_id"
+      ]
+    }
+  ],
+  "tables_source": "arg",
+  "table_row_ceiling": 100000,
+  "table_timing": {
+    "parcel_address_points": 932
+  },
+  "table_specs": {
+    "parcel_address_points": {
+      "columns": [
+        "parcel_id",
+        "address_point_id"
+      ],
+      "columns_source": "arg",
+      "order": [
+        "parcel_id",
+        "address_point_id"
+      ],
+      "order_source": "arg"
+    }
+  },
+  "invariants": [
+    {
+      "name": "rows",
+      "value": "511224"
+    },
+    {
+      "name": "stale_st_within_count",
+      "value": "0"
+    },
+    {
+      "name": "missed_link_count",
+      "value": "0"
+    },
+    {
+      "name": "multi_parcel_address_count",
+      "value": "0"
+    },
+    {
+      "name": "dup_count",
+      "value": "0"
+    },
+    {
+      "name": "fanout_max_condo",
+      "value": "346"
+    },
+    {
+      "name": "fanout_max_noncondo",
+      "value": "155"
+    },
+    {
+      "name": "noncondo_gt_20_count",
+      "value": "130"
+    },
+    {
+      "name": "land_entrance_count",
+      "value": "449"
+    }
+  ],
+  "invariants_file": "docs/reports/golden/link_parcel_addresses/invariants.json",
+  "db_target": "postgresql://postgres:***@127.0.0.1:54322/postgres",
+  "runtime": "node",
+  "args": [],
+  "nondeterminism": [
+    "key:summary.records_meta.duration_ms",
+    "pattern:duration_literal",
+    "pattern:run_id_literal",
+    "row:sys_duration_ms",
+    "row:sys_velocity_rows_sec"
+  ],
+  "normalised": {
+    "step": "scripts/link-parcel-addresses.js",
+    "chain": "none",
+    "exit_code": 0,
+    "summary": {
+      "records_meta": {
+        "audit_table": {
+          "name": "Parcel ↔ Address Points spatial bridge",
+          "phase": 54,
+          "rows": [
+            {
+              "metric": "parcels_with_geom_pre_run",
+              "status": "INFO",
+              "threshold": null,
+              "value": 486530
+            },
+            {
+              "metric": "address_points_with_geom_pre_run",
+              "status": "INFO",
+              "threshold": null,
+              "value": 525346
+            },
+            {
+              "metric": "address_points_with_null_geom",
+              "status": "PASS",
+              "threshold": "== 0",
+              "value": 0
+            },
+            {
+              "metric": "new_links_written",
+              "status": "INFO",
+              "threshold": null,
+              "value": 0
+            },
+            {
+              "metric": "final_link_count",
+              "status": "INFO",
+              "threshold": "> 0",
+              "value": 511224
+            },
+            {
+              "metric": "parcels_with_links",
+              "status": "INFO",
+              "threshold": null,
+              "value": 467786
+            },
+            {
+              "metric": "parcel_link_rate_pct",
+              "status": "INFO",
+              "threshold": null,
+              "value": "96.1%"
+            },
+            {
+              "metric": "parcels_with_no_address_pct",
+              "status": "PASS",
+              "threshold": "< 50%",
+              "value": "3.9%"
+            },
+            {
+              "metric": "address_points_with_no_parcel_pct",
+              "status": "PASS",
+              "threshold": "< 5%",
+              "value": "2.7%"
+            },
+            {
+              "metric": "errors",
+              "status": "PASS",
+              "threshold": "== 0",
+              "value": 0
+            }
+          ],
+          "verdict": "PASS"
+        },
+        "batches_processed": 487,
+        "completed_naturally": true
+      },
+      "records_new": 0,
+      "records_total": 486530,
+      "records_updated": 0
+    },
+    "summary_count": 1,
+    "meta": [
+      {
+        "reads": {
+          "address_points": [
+            "address_point_id",
+            "geom"
+          ],
+          "parcels": [
+            "id",
+            "geom"
+          ]
+        },
+        "writes": {
+          "parcel_address_points": [
+            "parcel_id",
+            "address_point_id",
+            "computed_at"
+          ]
+        }
+      }
+    ],
+    "parse_errors": [],
+    "pipeline_runs": [],
+    "stdout_lines": [
+      "{\"level\":\"INFO\",\"msg\":\"Starting parcel ↔ address_points spatial bridge populate\",\"tag\":\"[link-parcel-addresses]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"Pre-run=<RUN_ID>,530 parcels w/ geom, 525,346 address_points w/ geom, 511,224 existing links. (0 parcels + 0 APs have NULL geom and will be skipped.)\",\"tag\":\"[link-parcel-addresses]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"Batch 25: processed 1000 parcels, wrote 0 new links (running total: 0).\",\"tag\":\"[link-parcel-addresses]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"Batch 50: processed 1000 parcels, wrote 0 new links (running total: 0).\",\"tag\":\"[link-parcel-addresses]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"Batch 75: processed 1000 parcels, wrote 0 new links (running total: 0).\",\"tag\":\"[link-parcel-addresses]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"Batch 100: processed 1000 parcels, wrote 0 new links (running total: 0).\",\"tag\":\"[link-parcel-addresses]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"Batch 125: processed 1000 parcels, wrote 0 new links (running total: 0).\",\"tag\":\"[link-parcel-addresses]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"Batch 150: processed 1000 parcels, wrote 0 new links (running total: 0).\",\"tag\":\"[link-parcel-addresses]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"Batch 175: processed 1000 parcels, wrote 0 new links (running total: 0).\",\"tag\":\"[link-parcel-addresses]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"Batch 200: processed 1000 parcels, wrote 0 new links (running total: 0).\",\"tag\":\"[link-parcel-addresses]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"Batch 225: processed 1000 parcels, wrote 0 new links (running total: 0).\",\"tag\":\"[link-parcel-addresses]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"Batch 250: processed 1000 parcels, wrote 0 new links (running total: 0).\",\"tag\":\"[link-parcel-addresses]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"Batch 275: processed 1000 parcels, wrote 0 new links (running total: 0).\",\"tag\":\"[link-parcel-addresses]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"Batch 300: processed 1000 parcels, wrote 0 new links (running total: 0).\",\"tag\":\"[link-parcel-addresses]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"Batch 325: processed 1000 parcels, wrote 0 new links (running total: 0).\",\"tag\":\"[link-parcel-addresses]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"Batch 350: processed 1000 parcels, wrote 0 new links (running total: 0).\",\"tag\":\"[link-parcel-addresses]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"Batch 375: processed 1000 parcels, wrote 0 new links (running total: 0).\",\"tag\":\"[link-parcel-addresses]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"Batch 400: processed 1000 parcels, wrote 0 new links (running total: 0).\",\"tag\":\"[link-parcel-addresses]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"Batch 425: processed 1000 parcels, wrote 0 new links (running total: 0).\",\"tag\":\"[link-parcel-addresses]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"Batch 450: processed 1000 parcels, wrote 0 new links (running total: 0).\",\"tag\":\"[link-parcel-addresses]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"Batch 475: processed 1000 parcels, wrote 0 new links (running total: 0).\",\"tag\":\"[link-parcel-addresses]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"Batch 487: processed 530 parcels, wrote 0 new links (running total: 0).\",\"tag\":\"[link-parcel-addresses]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"Bridge populate complete after 487 batch(es). 0 new links written.\",\"tag\":\"[link-parcel-addresses]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"Post-run=<RUN_ID>,224 total links, 467,786 parcels linked, 511,224 address_points linked. Coverage gaps: 18,744 parcels w/o address (3.9%), 14,122 APs w/o parcel (2.7%). Elapsed <DUR>.\",\"tag\":\"[link-parcel-addresses]\"}",
+      "[link-parcel-addresses] completed in <DUR>"
+    ],
+    "table_state": [
+      {
+        "ceiling_bypassed": "projected",
+        "columns": [
+          "parcel_id",
+          "address_point_id"
+        ],
+        "content_hash": "bde2b1c4c8fb9ced192d393ed7654d52",
+        "order_by": "explicit",
+        "order_columns": [
+          "parcel_id",
+          "address_point_id"
+        ],
+        "row_count": 511224,
+        "table": "parcel_address_points"
+      }
+    ],
+    "invariants": [
+      {
+        "name": "rows",
+        "value": "511224"
+      },
+      {
+        "name": "stale_st_within_count",
+        "value": "0"
+      },
+      {
+        "name": "missed_link_count",
+        "value": "0"
+      },
+      {
+        "name": "multi_parcel_address_count",
+        "value": "0"
+      },
+      {
+        "name": "dup_count",
+        "value": "0"
+      },
+      {
+        "name": "fanout_max_condo",
+        "value": "346"
+      },
+      {
+        "name": "fanout_max_noncondo",
+        "value": "155"
+      },
+      {
+        "name": "noncondo_gt_20_count",
+        "value": "130"
+      },
+      {
+        "name": "land_entrance_count",
+        "value": "449"
+      }
+    ]
+  },
+  "source_fingerprint": null,
+  "fingerprint_files": [],
+  "fingerprint_skipped_reason": "no_descriptor_yet"
+}
