@@ -1715,3 +1715,163 @@ describe('LW-D10 — runTierToConvergence: loops while matched > 0 and iteration
     expect(result).toEqual({ iterations: 1, linked_total: 0, flagged_total: 0, contacts_total: 0, exhausted: false });
   });
 });
+
+// ---------------------------------------------------------------------------
+// LW-D15 — --dry-run must issue ZERO UPDATE/INSERT/DELETE statements, in BOTH the
+// LINK phase (runLinkPhase, link_massing) and the CASCADE/MATCHER phase
+// (runCascadePhase, link_wsib). Pre-fix, `--dry-run` bypassed the ledger gate
+// (staleness.dryRunArgPresent) but the write phase ran unconditionally — a
+// --dry-run invocation of ANY converted LINK/MATCHER step wrote for real.
+// ---------------------------------------------------------------------------
+
+/**
+ * A pool double built for the write-suppression claim specifically: every issued
+ * statement is recorded VERBATIM (so a test can assert "no UPDATE/INSERT/DELETE was
+ * ever issued" by pattern-matching the recorded text, never by trusting a return
+ * value), and `answerFn(text, values, callNumberForThisText)` lets each test supply
+ * exact answers for its own stub SQL markers. Unmatched SELECTs fall back to
+ * generic, always-present answers for the cross-cutting guards every phase runs
+ * (extension/index/fk/column existence probes, the RLS privilege probe, and any
+ * `pipeline_runs` read) so a test only has to answer the queries IT cares about.
+ */
+function dryRunFakePool(answerFn: (text: string, values: unknown, callNumber: number) => { rows: unknown[] } | undefined) {
+  const sql: string[] = [];
+  const params: unknown[][] = [];
+  const callCounts = new Map<string, number>();
+  const record = async (text: string, values?: unknown[]) => {
+    sql.push(text);
+    params.push(values ?? []);
+    const n = (callCounts.get(text) || 0) + 1;
+    callCounts.set(text, n);
+    const custom = answerFn(text, values, n);
+    if (custom !== undefined) return custom;
+    if (/pg_extension|information_schema\.columns|pg_indexes|pg_constraint|pg_proc/i.test(text)) return { rows: [{ x: 1 }] };
+    if (/relrowsecurity/i.test(text)) return { rows: [{ rls_enabled: false, policies: 0, bypassrls: true }] };
+    return { rows: [] };
+  };
+  return {
+    sql,
+    params,
+    query: record,
+    connect: async () => ({ query: record, release: () => {} }),
+  };
+}
+
+const NOOP_LOG = { info: () => {}, warn: () => {}, error: () => {} };
+
+/** Runs `fn` with `--dry-run` appended to `process.argv` (mirrors the 2633c1cb precedent), always restoring it. */
+async function withDryRunArgv<T>(fn: () => Promise<T>): Promise<T> {
+  const original = process.argv;
+  process.argv = [...original, '--dry-run'];
+  try {
+    return await fn();
+  } finally {
+    process.argv = original;
+  }
+}
+
+describe('LW-D15 — --dry-run issues ZERO write statements (LINK + CASCADE/MATCHER phases)', () => {
+  it('runLinkPhase (link_massing, cloned + override.dry_run armed) issues zero UPDATE/INSERT/DELETE under --dry-run; the match SELECTs still run', async () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports -- the real descriptor, not a fixture copy
+    const descriptor = clone(require(join(process.cwd(), 'scripts/link-massing.descriptor.json')));
+    // Neutralize guards/staleness-trigger DB probing (orthogonal to write-suppression,
+    // and this test calls runLinkPhase directly — no AJV validation gates the mutation).
+    descriptor.guards.requires = [];
+    descriptor.staleness.trigger = 'none';
+    descriptor.override.dry_run = '--dry-run';
+
+    const compute = {
+      buildMatchSql: () => ({
+        eligible_count_sql: 'STUB_LM_ELIGIBLE_COUNT',
+        eligible_batch_sql: 'STUB_LM_ELIGIBLE_BATCH',
+        primary_match_sql: 'STUB_LM_PRIMARY_MATCH',
+        fallback_match_sql: null,
+        cumulative_sql: 'STUB_LM_CUMULATIVE',
+        cumulative_params: [],
+        primary_counter: 'stub_primary',
+        fallback_counter: 'stub_fallback',
+      }),
+      classifyMatches: (rows: unknown[]) => (rows.length > 0 ? { rows: [{}], parcels: 1, matches: 1 } : { rows: [], parcels: 0, matches: 0 }),
+      classifyFallback: () => ({ rows: [], parcels: 0 }),
+    };
+
+    await withDryRunArgv(async () => {
+      const pool = dryRunFakePool((text: string, _values: unknown, n: number) => {
+        if (text === 'STUB_LM_ELIGIBLE_COUNT') return { rows: [{ total: '2' }] };
+        if (text === 'STUB_LM_ELIGIBLE_BATCH') return n === 1 ? { rows: [{ id: 1 }] } : { rows: [] };
+        if (text === 'STUB_LM_PRIMARY_MATCH') return { rows: [{ id: 1 }] };
+        if (text === 'STUB_LM_CUMULATIVE') return { rows: [{ linked: 1, total: 1 }] };
+        return undefined;
+      });
+      const result = await stepLib.runLinkPhase({
+        descriptor, pool, compute, config: {}, chainId: null,
+        log: NOOP_LOG, tag: '[link_massing]', clockNow: new Date('2026-08-28T00:00:00Z'),
+      });
+      expect(result.overrides.dry_run, 'ctx.overrides.dry_run must be exposed (LW-D15)').toBe(true);
+      const writes = pool.sql.filter((s: string) => /^\s*(UPDATE|INSERT|DELETE)\b/i.test(s));
+      expect(writes, 'a --dry-run LINK-phase run must issue ZERO write statements').toEqual([]);
+      expect(pool.sql.includes('STUB_LM_PRIMARY_MATCH'), 'the match SELECT itself must still run — dry-run simulates, it does not skip reading').toBe(true);
+      // written stays genuinely zero: nothing was written, so nothing should claim it was.
+      const targetKeys = Object.keys(result.written).filter((k) => k.startsWith('e'));
+      for (const k of targetKeys) expect(result.written[k].rows_changed, `written.${k}.rows_changed`).toBe(0);
+    });
+  });
+
+  it('runCascadePhase (link_wsib, cloned) issues zero UPDATE/INSERT/DELETE under --dry-run; the count-mirror SELECTs still run and report the real would-be counts', async () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports -- the real descriptor, not a fixture copy
+    const descriptor = clone(require(join(process.cwd(), 'scripts/link-wsib.descriptor.json')));
+    descriptor.guards.requires = [];
+    descriptor.staleness.trigger = 'none';
+    descriptor.override.dry_run = '--dry-run';
+
+    const tierSql = {
+      wsib_count_sql: 'STUB_LW_TIER_COUNT', wsib_count_params: [],
+      entities_flag_count_sql: 'STUB_LW_FLAG_COUNT', entities_flag_count_params: [],
+      entities_contacts_count_sql: 'STUB_LW_CONTACTS_COUNT', entities_contacts_count_params: [],
+      // The WRITE-side SQL a live (non-dry-run) pass would issue — included so a
+      // regression that reaches the write branch under dry-run is caught by the
+      // write-statement assertion below, not masked by a missing field.
+      wsib_update_sql: 'UPDATE wsib_registry SET linked_entity_id = 1', wsib_update_params: [],
+      entities_flag_scope_params: [],
+      entities_contacts_sql: 'UPDATE entities SET primary_phone = 1', entities_contacts_params: [],
+    };
+    const compute = {
+      buildRetractionScopeParams: () => [0.6],
+      buildEntitiesUnflagSql: () => 'UPDATE entities SET is_wsib_registered = false',
+      buildContactsReverseClearSql: () => 'UPDATE entities SET primary_phone = NULL',
+      buildTierSql: () => tierSql,
+      CUMULATIVE_SQL: 'STUB_LW_CUMULATIVE',
+    };
+
+    await withDryRunArgv(async () => {
+      const pool = dryRunFakePool((text: string) => {
+        if (/unlinked_start/i.test(text)) return { rows: [{ unlinked_start: '5', entities_count: '3' }] };
+        if (text === 'STUB_LW_TIER_COUNT') return { rows: [{ n: 2 }] };
+        if (text === 'STUB_LW_FLAG_COUNT') return { rows: [{ n: 1 }] };
+        if (text === 'STUB_LW_CONTACTS_COUNT') return { rows: [{ n: 0 }] };
+        if (text === 'STUB_LW_CUMULATIVE') return { rows: [{ linked: 1, total: 1 }] };
+        return undefined;
+      });
+      const result = await stepLib.runCascadePhase({
+        descriptor, pool, compute, config: {}, chainId: null,
+        log: NOOP_LOG, tag: '[link_wsib]', clockNow: new Date('2026-08-28T00:00:00Z'),
+      });
+      expect(result.overrides.dry_run, 'ctx.overrides.dry_run must be exposed (LW-D15)').toBe(true);
+      expect(result.skipped, 'dry-run must BYPASS the ledger gated-skip (mirrors the pre-conversion bypassGate = dryRun fix, A2) — never SKIP').toBeFalsy();
+      const writes = pool.sql.filter((s: string) => /^\s*(UPDATE|INSERT|DELETE)\b/i.test(s));
+      expect(writes, 'a --dry-run CASCADE-phase run must issue ZERO write statements').toEqual([]);
+      expect(pool.sql.includes('STUB_LW_TIER_COUNT'), 'the count-mirror SELECT must still run under dry-run').toBe(true);
+      const tierIds = Object.keys(result.matched.tiers);
+      expect(tierIds.length, 'every declared tier still reports a would-be count').toBeGreaterThan(0);
+      for (const id of tierIds) {
+        expect(result.matched.tiers[id].linked, `tiers.${id}.linked is the real count-mirror value, not zeroed`).toBe(2);
+      }
+    });
+  });
+
+  it('RED half — the write-statement filter itself fires when a write statement IS present (proves the assertion above is not vacuous)', () => {
+    const sql = ['SELECT 1', 'UPDATE wsib_registry SET x = 1', 'BEGIN', 'COMMIT'];
+    const writes = sql.filter((s) => /^\s*(UPDATE|INSERT|DELETE)\b/i.test(s));
+    expect(writes).toEqual(['UPDATE wsib_registry SET x = 1']);
+  });
+});

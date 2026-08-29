@@ -586,6 +586,11 @@ async function runLinkPhase({ descriptor, pool, compute, config, chainId, log, t
   const requirements = await assertRequirements(pool, descriptor, { log, tag });
   const prior = await staleness.readPriorEmit(pool, ledgerPipelineName(descriptor, chainId), null);
   const overrides = staleness.resolveOverrides(descriptor);
+  // LW-D15 — declared dry-run semantics for the LINK phase too (link_massing declares
+  // `override.dry_run: "none"` today, so this is currently inert for it, but the write
+  // suppression below is the generic mechanism every LINK/MATCHER descriptor gets the
+  // moment it declares a dry-run flag — never a per-step branch).
+  const dryRun = overrides.dry_run;
   const gate = await staleness.selectMode({ descriptor, pool, prior });
   const privilege = await write.assertWritePrivileges(pool, descriptor, { log, tag });
   log.info(tag, `mode gate: explicit_full=${gate.explicit_full} forced=${gate.forced} `
@@ -647,9 +652,12 @@ async function runLinkPhase({ descriptor, pool, compute, config, chainId, log, t
   }
 
   // ── W1 — the declared retraction, ONE statement, before the loop ─────────────
+  // LW-D15 — a dry-run issues ZERO write statements, including the retraction: it is
+  // as destructive as the ordered writes below and the whole point of the flag is that
+  // nothing in the run persists.
   for (let i = 0; i < plans.length; i++) {
     const plan = plans[i];
-    if (!write.retractionFires(plan, gate.mode)) continue;
+    if (dryRun || !write.retractionFires(plan, gate.mode)) continue;
     const removed = await pipeline.withTransaction(pool, (client) => write.executeRetraction(client, plan));
     written[write.targetKey(i)].retracted = removed;
     written[write.targetKey(i)].deleted = removed;
@@ -679,7 +687,12 @@ async function runLinkPhase({ descriptor, pool, compute, config, chainId, log, t
     }
 
     const rows = [...classified.rows, ...fallback.rows];
-    if (rows.length > 0) await executeOrderedWrites(pool, plans, rows, clockNow, written, specs);
+    // LW-D15 — the write is skipped entirely in dry-run; `rows.length` (the match
+    // SELECTs' own result) is the "would-write" count, same fidelity the pre-conversion
+    // `link-wsib.js` dry-run reported (read-only COUNT queries over the same match
+    // predicate, 5de41cc1) — `written` stays genuinely zero, which is correct: nothing
+    // was written.
+    if (rows.length > 0 && !dryRun) await executeOrderedWrites(pool, plans, rows, clockNow, written, specs);
 
     matched.parcels_processed += batch.rows.length;
     matched.parcels_linked += classified.parcels + fallback.parcels;
@@ -805,8 +818,11 @@ async function runTierToConvergence(runOnePass, loops, maxIterations) {
  */
 async function runCascadePhase({ descriptor, pool, compute, config, chainId, log, tag, clockNow, preWriteGate }) {
   const requirements = await assertRequirements(pool, descriptor, { log, tag });
+  // LW-D15 — `overrides.dry_run` is now the single source (staleness.resolveOverrides
+  // itself calls dryRunArgPresent internally); `dryRun` below is a local alias, not a
+  // second read.
   const overrides = staleness.resolveOverrides(descriptor);
-  const dryRun = staleness.dryRunArgPresent(descriptor);
+  const dryRun = overrides.dry_run;
   const bypassed = dryRun || overrides.force_full === true;
 
   // ── LG-15 — THE LEDGER GATED SKIP, generalizing link_wsib's own pre-existing B3 gate ──
@@ -896,25 +912,37 @@ async function runCascadePhase({ descriptor, pool, compute, config, chainId, log
     let tier3Full = null;
     if (isFullRepair) {
       const scopeParams = compute.buildRetractionScopeParams(config, tiers);
+      // The read stays live in dry-run — it is a SELECT, and its row count IS the
+      // "would retract" count LW-D15 needs (the exact predicate the retraction targets).
       const priorContacts = await client.query(
         'SELECT linked_entity_id, primary_phone, primary_email, website FROM wsib_registry WHERE match_confidence = $1 AND linked_entity_id IS NOT NULL',
         scopeParams,
       );
-      const retracted = await write.executeSetBasedClear(client, nullRetractPlan, scopeParams);
-      const nullRetractIdx = specs.indexOf(nullRetractSpec);
-      written[write.targetKey(nullRetractIdx)].retracted = retracted;
-      written[write.targetKey(nullRetractIdx)].deleted = 0;
-      await client.query(compute.buildEntitiesUnflagSql());
-      const affectedIds = [...new Set(priorContacts.rows.map((r) => r.linked_entity_id))];
-      let contactsCleared = 0;
-      if (affectedIds.length > 0) {
-        const phones = [...new Set(priorContacts.rows.map((r) => r.primary_phone).filter(Boolean))];
-        const emails = [...new Set(priorContacts.rows.map((r) => r.primary_email).filter(Boolean))];
-        const sites = [...new Set(priorContacts.rows.map((r) => r.website).filter(Boolean))];
-        const clearResult = await client.query(compute.buildContactsReverseClearSql(), [phones, emails, sites, affectedIds]);
-        contactsCleared = clearResult.rowCount || 0;
+      if (dryRun) {
+        // LW-D15 — zero UPDATE/DELETE issued. `contacts_cleared` is a DECLARED
+        // limitation in dry-run mode (limitations[], descriptor): the reverse-clear
+        // count depends on each entity's CURRENT column values, which a read-only
+        // simulation would need a second full mirror query to reproduce faithfully;
+        // the primary retraction count (the one operators check before a live repair)
+        // is exact.
+        tier3Full = { retracted: priorContacts.rows.length, contacts_cleared: 0 };
+      } else {
+        const retracted = await write.executeSetBasedClear(client, nullRetractPlan, scopeParams);
+        const nullRetractIdx = specs.indexOf(nullRetractSpec);
+        written[write.targetKey(nullRetractIdx)].retracted = retracted;
+        written[write.targetKey(nullRetractIdx)].deleted = 0;
+        await client.query(compute.buildEntitiesUnflagSql());
+        const affectedIds = [...new Set(priorContacts.rows.map((r) => r.linked_entity_id))];
+        let contactsCleared = 0;
+        if (affectedIds.length > 0) {
+          const phones = [...new Set(priorContacts.rows.map((r) => r.primary_phone).filter(Boolean))];
+          const emails = [...new Set(priorContacts.rows.map((r) => r.primary_email).filter(Boolean))];
+          const sites = [...new Set(priorContacts.rows.map((r) => r.website).filter(Boolean))];
+          const clearResult = await client.query(compute.buildContactsReverseClearSql(), [phones, emails, sites, affectedIds]);
+          contactsCleared = clearResult.rowCount || 0;
+        }
+        tier3Full = { retracted, contacts_cleared: contactsCleared };
       }
-      tier3Full = { retracted, contacts_cleared: contactsCleared };
     }
     matched.tier3_full = tier3Full;
 
@@ -925,31 +953,52 @@ async function runCascadePhase({ descriptor, pool, compute, config, chainId, log
       // bespoke runner paths"). Every other tier, and every tier in incremental mode
       // (S3's LIMIT-1000 single pass is a deliberate incremental-mode property, unchanged),
       // runs the pass exactly once — the pre-LW-D10 behaviour, byte-identical.
-      const loopsInFullMode = isFullRepair && typeof tier.max_iterations_from_config === 'string';
+      // LW-D15 — a dry-run NEVER loops: convergence depends on rows actually leaving
+      // the `linked_entity_id IS NULL` scope between passes, which cannot happen when
+      // nothing is written, so a simulated "pass 2" would just re-count pass 1's rows.
+      // Declared limitation: a full-mode dry-run reports ONE simulated pass, never
+      // `exhausted`/multi-iteration convergence.
+      const loopsInFullMode = !dryRun && isFullRepair && typeof tier.max_iterations_from_config === 'string';
       const maxIterations = loopsInFullMode ? config[tier.max_iterations_from_config] : 1;
 
       const runOnePass = async () => {
         const sql = compute.buildTierSql(descriptor, config, tier, runAt);
         const wsibIdx = specs.indexOf(wsibJoinPlan);
-        const linked = await write.executeSetBasedJoinUpdate(client, sql.wsib_update_sql, sql.wsib_update_params);
-        written[write.targetKey(wsibIdx)].scanned += linked;
-        written[write.targetKey(wsibIdx)].updated += linked;
-        written[write.targetKey(wsibIdx)].rows_changed += linked;
+        let linked;
+        if (dryRun) {
+          const r = await client.query(sql.wsib_count_sql, sql.wsib_count_params);
+          linked = Number(r.rows[0].n);
+        } else {
+          linked = await write.executeSetBasedJoinUpdate(client, sql.wsib_update_sql, sql.wsib_update_params);
+          written[write.targetKey(wsibIdx)].scanned += linked;
+          written[write.targetKey(wsibIdx)].updated += linked;
+          written[write.targetKey(wsibIdx)].rows_changed += linked;
+        }
 
         let flagged = 0;
         if (entitiesFlagPlan) {
-          flagged = await write.executeSetBasedClear(client, entitiesFlagPlan, sql.entities_flag_scope_params);
-          const flagIdx = specs.indexOf(entitiesFlagSpec);
-          written[write.targetKey(flagIdx)].updated += flagged;
-          written[write.targetKey(flagIdx)].rows_changed += flagged;
+          if (dryRun) {
+            const r = await client.query(sql.entities_flag_count_sql, sql.entities_flag_count_params);
+            flagged = Number(r.rows[0].n);
+          } else {
+            flagged = await write.executeSetBasedClear(client, entitiesFlagPlan, sql.entities_flag_scope_params);
+            const flagIdx = specs.indexOf(entitiesFlagSpec);
+            written[write.targetKey(flagIdx)].updated += flagged;
+            written[write.targetKey(flagIdx)].rows_changed += flagged;
+          }
         }
 
         let contacts = 0;
         if (entitiesContactsSpec) {
-          contacts = await write.executeSetBasedJoinUpdate(client, sql.entities_contacts_sql, sql.entities_contacts_params);
-          const contactsIdx = specs.indexOf(entitiesContactsSpec);
-          written[write.targetKey(contactsIdx)].updated += contacts;
-          written[write.targetKey(contactsIdx)].rows_changed += contacts;
+          if (dryRun) {
+            const r = await client.query(sql.entities_contacts_count_sql, sql.entities_contacts_count_params);
+            contacts = Number(r.rows[0].n);
+          } else {
+            contacts = await write.executeSetBasedJoinUpdate(client, sql.entities_contacts_sql, sql.entities_contacts_params);
+            const contactsIdx = specs.indexOf(entitiesContactsSpec);
+            written[write.targetKey(contactsIdx)].updated += contacts;
+            written[write.targetKey(contactsIdx)].rows_changed += contacts;
+          }
         }
         return { linked, flagged, contacts };
       };
@@ -1100,6 +1149,16 @@ function skipRecordsMeta(descriptor, reason) {
       verdict: deriveVerdict(rows),
       rows,
     },
+  };
+}
+
+/** LW-D15 — the INFO audit row every `--dry-run` run carries, naming the posture explicitly (Rule 1: nothing hidden). */
+function dryRunRow() {
+  return {
+    metric: 'dry_run_no_writes',
+    value: true,
+    threshold: 'dry_run implies zero write statements issued',
+    status: 'INFO',
   };
 }
 
@@ -1328,6 +1387,9 @@ async function runWithPool(runnable, pool, ctx) {
       const extraRows = [
         ...(ingest && ingest.priorError ? [staleness.priorRunErrorRow(ingest.priorError)] : []),
         ...configRetiredStatus.map(retiredVarRow),
+        // LW-D15 — the declared dry-run posture, on every run that had one, INFO (never a
+        // reason to fail — it is the point of the flag, not a defect it found).
+        ...(stepCtx.overrides && stepCtx.overrides.dry_run ? [dryRunRow()] : []),
       ];
       const built = buildAuditTable(descriptor, chainId, observations, extraRows, configValues, onlyChecks);
       // The counter SCOPE, per phase. §11's Counter Semantic Contract is a scoping
@@ -1404,6 +1466,9 @@ async function runWithPool(runnable, pool, ctx) {
         ...(terminal ? { terminal: terminal.id } : {}),
         // LW-D13 — closed enum LEDGER_ROW_VALUES, above.
         ledger_row: owns ? LEDGER_ROW_VALUES[0] : LEDGER_ROW_VALUES[1],
+        // LW-D15 — declared, never inferred: a downstream reader must not have to guess
+        // "were these counts real?" from the presence/absence of other fields.
+        ...(stepCtx.overrides && stepCtx.overrides.dry_run ? { dry_run: true } : {}),
         checks_passed: built.errors.length === 0 ? 'all' : undefined,
         checks_failed: built.errors.length,
         errors: built.errors.length > 0 ? built.errors : undefined,

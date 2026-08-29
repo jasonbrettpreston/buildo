@@ -74,31 +74,58 @@ const TIER_IDS = Object.freeze({
  * matched ONCE, ever), a fix here can never retroactively repair a link written under a
  * prior algorithm. That is LW-D5's whole root cause and A-7's whole reason to exist.
  *
+ * LW-D15 (2026-08-28) — each returned shape also carries a `*_count_sql`/`*_count_params`
+ * sibling: the SAME predicate as a plain `SELECT count(*)::int AS n`, no write. This is
+ * the declared dry-run mechanism (Spec 124 §7 rung (e)) — `runCascadePhase` issues the
+ * count variant instead of the write variant when `ctx.overrides.dry_run` is set, so a
+ * `--dry-run` invocation issues ZERO UPDATE/INSERT/DELETE statements (the old
+ * pre-conversion `link-wsib.js`, `5de41cc1`, took the identical approach: "Dry-run now
+ * simulates match counts using read-only COUNT queries with the same CTE logic" — mirrored
+ * here rather than the alternative of executing-then-ROLLBACK, which would still ISSUE the
+ * write statement text). The count SQL text is a deliberate near-duplicate of the write
+ * SQL's predicate (matching `5de41cc1`'s own precedent of hand-duplicated dry-run counts,
+ * not a shared-fragment refactor) — SQL TEXT is compute's declared domain (ruling A-2
+ * option 2), and a literal duplicate is safer here than string-surgery on the write SQL.
+ *
  * @param {object} descriptor
  * @param {Readonly<Record<string, number>>} config - ctx.config
  * @param {{id: string, confidence_from_config: string}} tier
  * @param {Date} runAt - the single DB-clock capture for this run (Spec 47 §R3.5)
- * @returns {{wsib_update_sql: string, wsib_update_params: unknown[], entities_flag_scope_params: unknown[], entities_contacts_sql: string, entities_contacts_params: unknown[]}}
+ * @returns {{wsib_update_sql: string, wsib_update_params: unknown[], wsib_count_sql: string, wsib_count_params: unknown[], entities_flag_scope_params: unknown[], entities_flag_count_sql: string, entities_flag_count_params: unknown[], entities_contacts_sql: string, entities_contacts_params: unknown[], entities_contacts_count_sql: string, entities_contacts_count_params: unknown[]}}
  */
 function buildTierSql(descriptor, config, tier, runAt) {
   const confidence = config[tier.confidence_from_config];
   const entitiesContactsSql = buildContactsSql();
+  const entitiesContactsCountSql = buildContactsCountSql();
+  const entitiesFlagCountSql = buildEntitiesFlagCountSql();
   if (tier.id === TIER_IDS.EXACT_TRADE) {
     return {
       wsib_update_sql: buildExactMatchSql('trade_name_normalized'),
       wsib_update_params: [runAt, confidence],
+      wsib_count_sql: buildExactMatchCountSql('trade_name_normalized'),
+      wsib_count_params: [],
       entities_flag_scope_params: [confidence],
+      entities_flag_count_sql: entitiesFlagCountSql,
+      entities_flag_count_params: [confidence],
       entities_contacts_sql: entitiesContactsSql,
       entities_contacts_params: [confidence],
+      entities_contacts_count_sql: entitiesContactsCountSql,
+      entities_contacts_count_params: [confidence],
     };
   }
   if (tier.id === TIER_IDS.EXACT_LEGAL) {
     return {
       wsib_update_sql: buildExactMatchSql('legal_name_normalized'),
       wsib_update_params: [runAt, confidence],
+      wsib_count_sql: buildExactMatchCountSql('legal_name_normalized'),
+      wsib_count_params: [],
       entities_flag_scope_params: [confidence],
+      entities_flag_count_sql: entitiesFlagCountSql,
+      entities_flag_count_params: [confidence],
       entities_contacts_sql: entitiesContactsSql,
       entities_contacts_params: [confidence],
+      entities_contacts_count_sql: entitiesContactsCountSql,
+      entities_contacts_count_params: [confidence],
     };
   }
   if (tier.id === TIER_IDS.FUZZY) {
@@ -107,9 +134,16 @@ function buildTierSql(descriptor, config, tier, runAt) {
       wsib_update_sql: buildFuzzyMatchSql(),
       // $1 RUN_AT, $2 similarity threshold (set_config + both CTE comparisons), $3 confidence
       wsib_update_params: [runAt, wsibFuzzyMatchThreshold, confidence],
+      wsib_count_sql: buildFuzzyMatchCountSql(),
+      // $1 similarity threshold only — the count variant has no SET clause to bind RUN_AT/confidence to.
+      wsib_count_params: [wsibFuzzyMatchThreshold],
       entities_flag_scope_params: [confidence],
+      entities_flag_count_sql: entitiesFlagCountSql,
+      entities_flag_count_params: [confidence],
       entities_contacts_sql: entitiesContactsSql,
       entities_contacts_params: [confidence],
+      entities_contacts_count_sql: entitiesContactsCountSql,
+      entities_contacts_count_params: [confidence],
     };
   }
   throw new Error(`[link_wsib compute] buildTierSql: unknown tier id "${tier.id}"`);
@@ -132,6 +166,20 @@ SET linked_entity_id = m.entity_id,
     matched_at = $1::timestamptz
 FROM matched m
 WHERE w.id = m.wsib_id`;
+}
+
+/** LW-D15 — read-only mirror of `buildExactMatchSql`'s predicate; zero params (no SET clause to bind). */
+function buildExactMatchCountSql(wsibColumn) {
+  return `WITH matched AS (
+  SELECT DISTINCT ON (w.id) w.id AS wsib_id, e.id AS entity_id
+  FROM wsib_registry w
+  JOIN entities e ON e.name_normalized = w.${wsibColumn}
+  WHERE w.linked_entity_id IS NULL
+    AND w.${wsibColumn} IS NOT NULL
+    AND LENGTH(w.${wsibColumn}) >= ${EXACT_LENGTH_FLOOR}
+  ORDER BY w.id, e.permit_count DESC
+)
+SELECT count(*)::int AS n FROM matched`;
 }
 
 /**
@@ -192,6 +240,48 @@ FROM matched m
 WHERE w.id = m.wsib_id`;
 }
 
+/** LW-D15 — read-only mirror of `buildFuzzyMatchSql`'s predicate; $1 is the similarity threshold only. */
+function buildFuzzyMatchCountSql() {
+  return `WITH _cfg AS (SELECT set_config('pg_trgm.similarity_threshold', $1::text, true)),
+trade_matches AS (
+  SELECT w.id AS wsib_id, e.id AS entity_id, e.permit_count,
+         similarity(w.trade_name_normalized, e.name_normalized) AS score
+  FROM wsib_registry w
+  JOIN entities e ON w.trade_name_normalized % e.name_normalized
+    AND LEFT(REGEXP_REPLACE(w.trade_name_normalized, '^(THE|A|AN) ', ''), 1)
+      = LEFT(REGEXP_REPLACE(e.name_normalized, '^(THE|A|AN) ', ''), 1)
+  WHERE w.linked_entity_id IS NULL
+    AND w.trade_name_normalized IS NOT NULL
+    AND LENGTH(w.trade_name_normalized) >= ${FUZZY_LENGTH_FLOOR}
+    AND LENGTH(e.name_normalized) >= ${FUZZY_LENGTH_FLOOR}
+    AND similarity(w.trade_name_normalized, e.name_normalized) > $1::float
+),
+legal_matches AS (
+  SELECT w.id AS wsib_id, e.id AS entity_id, e.permit_count,
+         similarity(w.legal_name_normalized, e.name_normalized) AS score
+  FROM wsib_registry w
+  JOIN entities e ON w.legal_name_normalized % e.name_normalized
+    AND LEFT(REGEXP_REPLACE(w.legal_name_normalized, '^(THE|A|AN) ', ''), 1)
+      = LEFT(REGEXP_REPLACE(e.name_normalized, '^(THE|A|AN) ', ''), 1)
+  WHERE w.linked_entity_id IS NULL
+    AND LENGTH(w.legal_name_normalized) >= ${FUZZY_LENGTH_FLOOR}
+    AND LENGTH(e.name_normalized) >= ${FUZZY_LENGTH_FLOOR}
+    AND similarity(w.legal_name_normalized, e.name_normalized) > $1::float
+),
+combined AS (
+  SELECT * FROM trade_matches
+  UNION ALL
+  SELECT * FROM legal_matches
+),
+matched AS (
+  SELECT DISTINCT ON (wsib_id) wsib_id, entity_id
+  FROM combined
+  ORDER BY wsib_id, score DESC, permit_count DESC
+  LIMIT ${TIER3_LIMIT}
+)
+SELECT count(*)::int AS n FROM matched`;
+}
+
 /**
  * The entities.is_wsib_registered flag flip's SCOPE — declared columns[]/write_discipline
  * in the descriptor generate the statement; only the $1 (tier confidence) scope
@@ -199,6 +289,11 @@ WHERE w.id = m.wsib_id`;
  * this runtime binding cannot silently disagree (both name "$1 = the tier's confidence").
  */
 const ENTITIES_FLAG_SCOPE = 'id IN (SELECT linked_entity_id FROM wsib_registry WHERE match_confidence = $1) AND is_wsib_registered = false';
+
+/** LW-D15 — read-only mirror of the `entities` flag-flip's scope; same $1 = tier confidence. */
+function buildEntitiesFlagCountSql() {
+  return `SELECT count(*)::int AS n FROM entities WHERE ${ENTITIES_FLAG_SCOPE}`;
+}
 
 /**
  * copyContacts — VERBATIM from the pre-conversion algorithm (647d0935's NULLIF/aggregate
@@ -226,6 +321,26 @@ WHERE w_agg.linked_entity_id = e.id
     (NULLIF(TRIM(e.primary_email), '') IS NULL AND w_agg.primary_email IS NOT NULL) OR
     (NULLIF(TRIM(e.website), '') IS NULL AND w_agg.website IS NOT NULL)
   )`;
+}
+
+/** LW-D15 — read-only mirror of `buildContactsSql`'s FROM/WHERE; same $1 = tier confidence. */
+function buildContactsCountSql() {
+  return `SELECT count(*)::int AS n
+FROM entities e
+JOIN (
+  SELECT linked_entity_id,
+         MAX(primary_phone) FILTER (WHERE primary_phone IS NOT NULL AND TRIM(primary_phone) != '') AS primary_phone,
+         MAX(primary_email) FILTER (WHERE primary_email IS NOT NULL AND TRIM(primary_email) != '') AS primary_email,
+         MAX(website) FILTER (WHERE website IS NOT NULL AND TRIM(website) != '') AS website
+  FROM wsib_registry
+  WHERE match_confidence = $1
+  GROUP BY linked_entity_id
+) w_agg ON w_agg.linked_entity_id = e.id
+WHERE (
+  (NULLIF(TRIM(e.primary_phone), '') IS NULL AND w_agg.primary_phone IS NOT NULL) OR
+  (NULLIF(TRIM(e.primary_email), '') IS NULL AND w_agg.primary_email IS NOT NULL) OR
+  (NULLIF(TRIM(e.website), '') IS NULL AND w_agg.website IS NOT NULL)
+)`;
 }
 
 // ===========================================================================
@@ -544,6 +659,10 @@ module.exports = compute;
 module.exports.compute = compute;
 module.exports.checks = CHECKS;
 module.exports.buildTierSql = buildTierSql;
+module.exports.buildExactMatchCountSql = buildExactMatchCountSql;
+module.exports.buildFuzzyMatchCountSql = buildFuzzyMatchCountSql;
+module.exports.buildEntitiesFlagCountSql = buildEntitiesFlagCountSql;
+module.exports.buildContactsCountSql = buildContactsCountSql;
 module.exports.buildRetractionScopeParams = buildRetractionScopeParams;
 module.exports.buildEntitiesUnflagSql = buildEntitiesUnflagSql;
 module.exports.buildContactsReverseClearSql = buildContactsReverseClearSql;

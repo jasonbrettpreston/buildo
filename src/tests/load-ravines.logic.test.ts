@@ -153,7 +153,9 @@ describe('staleness force_run (A-3, RAVINE_FORCE_RELOAD)', () => {
     const off = staleness.resolveOverrides(descriptor, {});
     // force_full: false — LM-D14 (pilot 3 peel 8b): resolveOverrides now returns force_full so the
     // decision and the override_force_full_present row read the SAME source; load_ravines declares "none".
-    expect(off).toEqual({ accept_feature_count_drift: false, accept_mass_delete: false, force_run: false, force_full: false });
+    // dry_run: false — LW-D15 (pilot 4 WF3-D): resolveOverrides now also returns dry_run
+    // (ctx.overrides.dry_run exposed); load_ravines declares override.dry_run "none" too.
+    expect(off).toEqual({ accept_feature_count_drift: false, accept_mass_delete: false, force_run: false, force_full: false, dry_run: false });
     const on = staleness.resolveOverrides(descriptor, { RAVINE_ACCEPT_MASS_DELETE: '1' });
     expect(on.accept_mass_delete).toBe(true);
     expect(on.accept_feature_count_drift).toBe(false);

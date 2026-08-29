@@ -416,6 +416,15 @@
       },
       "adjudicated_by": "this pilot, commit 7, 2026-08-28",
       "date": "2026-08-28"
+    },
+    {
+      "from": "the pre-conversion script's dry-run simulation (5de41cc1: read-only COUNT queries mirroring tier1/tier2/tier3's wsib_registry match predicate only)",
+      "why": {
+        "text": "LW-D15. The CONVERSION SILENTLY DROPPED dry-run write-suppression entirely (the CRITICAL bug this deviation records the fix for: the converted step's `--dry-run` bypassed the ledger gate but then wrote for real, on EVERY converted LINK/MATCHER step, until this fix) — restoring it, this pilot's dry-run simulates ALL THREE per-tier write targets (wsib_registry match, entities flag-flip, entities contacts copy) via read-only count-query mirrors of each write's exact predicate (buildTierSql's *_count_sql siblings), not just the wsib_registry match 5de41cc1 covered. In mode=full it additionally simulates the LG-16 retraction (A-7, new this pilot, did not exist pre-conversion) using the already-read `priorContacts` row count — but runs the LG-16 tier-3 convergence loop (LW-D10, also new this pilot) exactly ONCE rather than looping to convergence: a dry-run issues zero writes, so the `linked_entity_id IS NULL` scope a later pass would re-query never shrinks, and a simulated 'pass 2' would just re-count pass 1's rows under a false `exhausted` label. Declared, not silently narrowed.",
+        "liveness": { "kind": "file", "ref": "scripts/lib/step/index.js" }
+      },
+      "adjudicated_by": "operator WF3-D directive, 2026-08-28",
+      "date": "2026-08-28"
     }
   ],
 
@@ -434,6 +443,11 @@
       "what": "The [0.50, 0.60) match_confidence stats bucket boundary (a display-only artifact of the pre-conversion final-stats query) is DEAD — no code path writes a confidence in that range, since the three tiers write exactly 0.95/0.90/0.60. PINNED (Spec 123 §3.1), not fixed: nothing downstream reads or asserts on the boundary specifically.",
       "measured": "0 rows with match_confidence in [0.50, 0.60) (golden capture invariant wsib_dead_bucket_050_060_count = 0, commit 5)",
       "check_id": "dead_bucket_count"
+    },
+    {
+      "what": "LW-D15: a `--dry-run` invocation that ALSO resolves mode=full (LINK_WSIB_FORCE_FULL or the corpus signal) simulates the LG-16 tier-3 repair's convergence loop (LW-D10) as exactly ONE pass, never looping to `exhausted`/multi-iteration convergence like a real full repair would — a dry-run issues zero writes, so the scope a later simulated pass would re-query never shrinks between passes, and looping would just re-count the same rows under a false convergence label. `contacts_cleared` is also reported as 0 in this combination (the reverse-clear count depends on each entity's live column values, not cheaply derivable from a single read already taken). The PRIMARY count that matters for an operator preview — `tier3_full.retracted`, and each tier's `linked`/`flagged`/`contacts` for one simulated pass — remains exact.",
+      "measured": "by construction (read the fix, not yet exercised live in this combination — dry-run + force_full together is a rare, deliberate operator combination)",
+      "check_id": "none"
     }
   ],
 

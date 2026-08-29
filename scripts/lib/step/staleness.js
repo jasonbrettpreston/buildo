@@ -153,11 +153,20 @@ function overrideKey(envName) {
  * always correct; only the OBSERVATION was blind, which is exactly why the audit row
  * and the decision must read the same source.
  */
-function resolveOverrides(descriptor, env) {
+/**
+ * LW-D15 (2026-08-28) — `dry_run` joins `force_run`/`force_full` on `ctx.overrides`,
+ * same reasoning as the `force_full` fix above: `dryRunArgPresent` was ALREADY the
+ * single reader (staleness.js), but nothing surfaced its result here, so a compute
+ * declaring `override_dry_run_present`-shaped observability had no field to read.
+ * `argv` threads through (mirrors `env`) so a test can drive it without mutating
+ * `process.argv`; the runner passes nothing and both fall back to the real global.
+ */
+function resolveOverrides(descriptor, env, argv) {
   const out = Object.create(null);
   for (const a of acceptAnomalies(descriptor, env)) out[a.key] = a.standing;
   out.force_run = forceRunRequested(descriptor, env);
   out.force_full = forceFullRequested(descriptor, env);
+  out.dry_run = dryRunArgPresent(descriptor, argv);
   return Object.freeze(out);
 }
 
