@@ -759,7 +759,7 @@ describe('55-A — the hard per-conversion gate (44, k=PER_STEP)', () => {
     }
   });
 
-  it.fails('#6a Every claim covering a TABLE declares that table\'s row count (Appendix H) — parcel_address_points + parcels + address_points + logic_variables (flips at: commit 7, when §6 boundary tables land in the report)', () => {
+  it('#6a Every claim covering a TABLE declares that table\'s row count (Appendix H) — parcel_address_points + parcels + address_points + logic_variables (flipped: peel 8c)', () => {
     const report = readText(REPORT_REL);
     const { table, col } = reportTable(report, [['table', /^table/], ['rows', /rows?\b/]]);
     for (const t of [TABLE, 'parcels', 'address_points', 'logic_variables']) {
@@ -935,7 +935,7 @@ describe('55-A — the hard per-conversion gate (44, k=PER_STEP)', () => {
     else expect(rung2).toEqual([]);
   });
 
-  it.fails('#171 An approving commit states why each value is right — T1-T5\'s values must each carry a stated rationale (flips at: commit 7)', () => {
+  it('#171 An approving commit states why each value is right — T1-T5\'s values must each carry a stated rationale (flipped: peel 8c)', () => {
     const report = readText(REPORT_REL);
     for (const name of Object.values(CONFIG_VARS)) {
       expect(report.includes(name), `${name} is not named anywhere in the assessment report with a stated rationale`).toBe(true);
