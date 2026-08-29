@@ -53,7 +53,7 @@
     "fixture_no_retraction_allowed": {
       "rules": ["no_retraction"],
       "why": "The schema's own exemplar for the V7 grandfathered no_retraction shape — a FIXTURE, never a runnable step, exercising the rule in isolation from the guard axis (guard here is is_distinct_from, not the banned \"none\", so a difference in outcome between this fixture and its un-allowlisted twin can only be the rules[] allowlist). Exists so src/tests/step-schema.logic.test.ts can prove assertNoRetraction's GREEN direction is real, mirroring fixture_grandfathered_snapshot's role for assertGrandfathered.",
-      "commit": "PENDING_COMMIT_SHA",
+      "commit": "a51facca",
       "adjudicated_by": "Spec 124 GAP V7 no_retraction closure (schema fixture, not a manifest step)",
       "date": "2026-08-29",
       "lock_test": "src/tests/step-schema.logic.test.ts"
