@@ -242,6 +242,26 @@
       "expect": { "invariant": "every address point genuinely inside a parcel (ST_Within) has a bridge row — distinct from address_points_with_no_parcel_pct's genuinely-unparented complement" },
       "limit": "viol == 0", "severity": "INFO", "blocking": false, "when": "post", "chains": "all", "accept_until": "none",
       "why": { "text": "Fold A, Reality-Check item b. Any nonzero count would mean the batch/predicate is silently DROPPING in-parcel address points, not merely leaving genuinely unparented ones unlinked — a distinct failure mode from address_points_with_no_parcel_pct. Measured live 0 today.", "liveness": { "kind": "table", "ref": "parcel_address_points" } }
+    },
+    {
+      "id": "address_points_link_rate_by_class", "kind": "distribution",
+      "expect": { "reports": "per address_class_desc: total geom-bearing address points, linked count, link rate pct" },
+      "limit": "viol == 0", "severity": "INFO", "blocking": false, "when": "post", "chains": "all", "accept_until": "none",
+      "why": { "text": "LPA-D5 (WF3-B, 2026-08-29, Reality-Check output-altitude finding). The single `parcel_link_rate_pct`/`parcels_with_no_address_pct` figures average over FOUR structurally different populations (`address_points.address_class_desc`) whose true link rate ranges 71.5-98.0% — a class-blind average cannot distinguish 'the corpus is healthy' from 'one class quietly degraded while the others hide it'. Measured live 2026-08-29: Land 469,453/478,811 (98.05%), Structure 28,595/32,508 (87.96%), Structure Entrance 12,727/13,399 (94.98%), Land Entrance 449/628 (71.50% — the SAME `land_entrance_count` this step's own invariants.json already tracks, now given a rate alongside the raw count). INFO, un-thresholded (the un-gated companion to `structure_class_link_rate_warn` below), always reported so the shape is visible even when the WARN's boundary is not crossed — the same posture `parcel_fanout_distribution` uses for T4/T5.", "liveness": { "kind": "table", "ref": "parcel_address_points" } }
+    },
+    {
+      "id": "structure_class_link_rate_warn", "kind": "bound",
+      "expect": { "of": "Structure-class (address_class_desc = 'Structure') address points linked / total Structure-class address points with geom" },
+      "limit": "pct >= 85", "limit_from_config": "link_parcel_addresses_structure_link_rate_warn_pct",
+      "severity": "WARN", "blocking": false, "when": "post", "chains": "all", "accept_until": "none",
+      "why": { "text": "LPA-D5. `address_points_link_rate_by_class` (above) puts the 4-class distribution on the record but gates on NONE of it; 'Structure' is the one class this step's own consumers (link-parcels.js Strategy 1a, link-coa-to-parcels.js Tier 1a — both PRIMARY address matches feeding the cost model's structure identification) most depend on being genuinely linked, and it is the SECOND-lowest of the four (87.96%, only Land Entrance is lower, and Land Entrance's 628-row population is two orders of magnitude smaller — 0.13% of the corpus vs Structure's 6.8%). `pct >=` is the floor-shaped comparator form (R-N precedent, `link_wsib`'s `link_rate_warn`) — the config value IS the floor, not its complement. Default 85, measured live 87.96% — PASSES today with a real, non-trivial 2.96-point margin (not a fake pass at the boundary). R-H (Spec 124 Rule 10 addendum): a metric expected to be permanently below 100% is WARN with a declared, machine-observable retighten condition, never FAIL. RETIGHTEN CONDITION: if the Structure-class rate rises meaningfully above ~88% without a code change (a spatial-boundary correction, not a threshold edit), review raising `link_parcel_addresses_structure_link_rate_warn_pct` toward the observed floor.", "liveness": { "kind": "check", "ref": "address_points_link_rate_by_class" } }
+    },
+    {
+      "id": "parcel_fanout_rd_rs_outliers", "kind": "bound",
+      "expect": { "of": "parcels with zoning_class IN ('RD','RS') whose linked-address-point fan-out exceeds the declared per-parcel ceiling" },
+      "limit": "viol <= 0", "limit_from_config": "link_parcel_addresses_fanout_warn_rd_rs",
+      "severity": "WARN", "blocking": false, "when": "post", "chains": "all", "accept_until": "none",
+      "why": { "text": "LPA-D5. `parcel_fanout_outliers` (T4, default 20) deliberately WARNs on 130 non-CONDO parcels today (R-H standing-WARN, by design) with no zone-aware sub-bound to say WHETHER a genuinely LOW-density residential zone (detached/semi-detached, RD/RS in Toronto's zoning bylaw) is contributing to that count or is clean on its own — this check is that declared retighten target, a strictly TIGHTER ceiling (15, vs T4's 20) scoped to the two zones where a large fan-out is least architecturally expected (a single detached/semi house should carry very few address points). Measured live 2026-08-29: 13 RD/RS parcels exceed fan-out 15 (of 258,596 RD/RS-zoned parcels total; RD max fan-out 35, RS max fan-out 64) — PASSES today (`viol <= 15` after `limit_from_config` substitution, 13 <= 15), a genuinely close-to-the-margin measured value rather than a vacuous always-PASS ceiling. Same `viol <= N` double-duty shape as T4/T5 (LPA-D3: the SAME config value is both the per-parcel fan-out threshold in the SQL predicate and the tolerable outlier-COUNT ceiling on this check's own limit) — declared here explicitly per that fixed pattern, not re-derived per check.", "liveness": { "kind": "table", "ref": "parcel_address_points" } }
     }
   ],
 
@@ -317,7 +337,9 @@
       { "name": "link_parcel_addresses_no_address_warn_pct", "min": 0, "max": 100, "on_invalid": "fail" },
       { "name": "link_parcel_addresses_no_parcel_warn_pct", "min": 0, "max": 100, "on_invalid": "fail" },
       { "name": "link_parcel_addresses_fanout_warn_noncondo", "min": 1, "max": 1000, "on_invalid": "fail" },
-      { "name": "link_parcel_addresses_fanout_warn_condo", "min": 1, "max": 1000, "on_invalid": "fail" }
+      { "name": "link_parcel_addresses_fanout_warn_condo", "min": 1, "max": 1000, "on_invalid": "fail" },
+      { "name": "link_parcel_addresses_structure_link_rate_warn_pct", "min": 0, "max": 100, "on_invalid": "fail" },
+      { "name": "link_parcel_addresses_fanout_warn_rd_rs", "min": 1, "max": 1000, "on_invalid": "fail" }
     ],
     "validation": "strict",
     "hoisted_above_gate": true,

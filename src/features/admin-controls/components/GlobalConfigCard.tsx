@@ -142,6 +142,8 @@ export const GROUPS: Array<{ label: string; keys: string[] }> = [
       'link_parcel_addresses_no_parcel_warn_pct',
       'link_parcel_addresses_fanout_warn_noncondo',
       'link_parcel_addresses_fanout_warn_condo',
+      'link_parcel_addresses_structure_link_rate_warn_pct',
+      'link_parcel_addresses_fanout_warn_rd_rs',
     ],
   },
   {

@@ -192,6 +192,8 @@ const EXPECTED_LOGIC_VAR_KEYS = [
   'link_parcel_addresses_no_parcel_warn_pct',
   'link_parcel_addresses_fanout_warn_noncondo',
   'link_parcel_addresses_fanout_warn_condo',
+  'link_parcel_addresses_structure_link_rate_warn_pct', // LPA-D5 (WF3-B)
+  'link_parcel_addresses_fanout_warn_rd_rs',            // LPA-D5 (WF3-B)
   'calibration_default_median_days',  // E21
   'calibration_default_p25_days',     // E21
   'calibration_default_p75_days',     // E21

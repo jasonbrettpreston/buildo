@@ -26,6 +26,10 @@ const BATCH_SIZE_VAR = 'link_parcel_addresses_batch_size';
 const FANOUT_NONCONDO_VAR = 'link_parcel_addresses_fanout_warn_noncondo';
 /** T5 (CONDO per-parcel fan-out ceiling). */
 const FANOUT_CONDO_VAR = 'link_parcel_addresses_fanout_warn_condo';
+/** T6 (LPA-D5, WF3-B — Structure-class link-rate floor). */
+const STRUCTURE_LINK_RATE_VAR = 'link_parcel_addresses_structure_link_rate_warn_pct';
+/** T7 (LPA-D5, WF3-B — RD/RS zone-aware per-parcel fan-out ceiling, T4's declared retighten target). */
+const FANOUT_RD_RS_VAR = 'link_parcel_addresses_fanout_warn_rd_rs';
 
 const TABLE = 'parcel_address_points';
 
@@ -97,13 +101,30 @@ function buildPostSql() {
     (SELECT COUNT(*) FROM address_points ap
        WHERE ap.geom IS NOT NULL
          AND NOT EXISTS (SELECT 1 FROM parcel_address_points pap WHERE pap.address_point_id = ap.address_point_id))
-                                                                                  AS address_points_with_no_parcel`;
+                                                                                  AS address_points_with_no_parcel,
+    (SELECT json_agg(x ORDER BY x.address_class_desc) FROM (
+       SELECT ap.address_class_desc,
+         COUNT(*) AS total,
+         COUNT(*) FILTER (WHERE EXISTS (
+           SELECT 1 FROM parcel_address_points pap WHERE pap.address_point_id = ap.address_point_id
+         )) AS linked
+       FROM address_points ap
+       WHERE ap.geom IS NOT NULL
+       GROUP BY ap.address_class_desc
+     ) x)                                                                       AS link_rate_by_class,
+    (SELECT COUNT(*) FROM address_points ap
+       WHERE ap.geom IS NOT NULL AND ap.address_class_desc = 'Structure')       AS structure_class_total,
+    (SELECT COUNT(*) FROM address_points ap
+       WHERE ap.geom IS NOT NULL AND ap.address_class_desc = 'Structure'
+         AND EXISTS (SELECT 1 FROM parcel_address_points pap WHERE pap.address_point_id = ap.address_point_id))
+                                                                                  AS structure_class_linked`;
 }
 
 /**
  * LPA-D1 (stale ST_Within, PINNED) + the new missed-link / fan-out invariants (Fold A/B,
  * Reality-Check items a/b). `$1` = T4 (non-CONDO fan-out ceiling), `$2` = T5 (CONDO
- * fan-out ceiling) — both `ctx.config`-resolved, never a literal (Rule 3).
+ * fan-out ceiling), `$3` = T7 (LPA-D5, WF3-B — RD/RS zone-aware fan-out ceiling) — all
+ * `ctx.config`-resolved, never a literal (Rule 3).
  */
 function buildInvariantsSql() {
   return `SELECT
@@ -146,7 +167,13 @@ function buildInvariantsSql() {
        JOIN parcels p ON p.id = pap.parcel_id
        WHERE p.feature_type = 'CONDO'
        GROUP BY pap.parcel_id HAVING COUNT(*) > $2
-     ) c4)                                                                      AS fanout_condo_gt_threshold`;
+     ) c4)                                                                      AS fanout_condo_gt_threshold,
+    (SELECT COUNT(*) FROM (
+       SELECT pap.parcel_id, COUNT(*) AS fanout FROM parcel_address_points pap
+       JOIN parcels p ON p.id = pap.parcel_id
+       WHERE p.zoning_class IN ('RD', 'RS')
+       GROUP BY pap.parcel_id HAVING COUNT(*) > $3
+     ) c5)                                                                      AS fanout_rd_rs_gt_threshold`;
 }
 
 /**
@@ -159,7 +186,7 @@ function buildInvariantsSql() {
  * harness's own fixtures, but is no longer this function's own source of truth.
  *
  * @param {object} descriptor
- * @param {Record<string, number>} config - `ctx.config`, the resolved T1/T4/T5 values
+ * @param {Record<string, number>} config - `ctx.config`, the resolved T1/T4/T5/T7 values
  */
 function buildMaterializeSql(descriptor, config) {
   const batchSizeVar = (descriptor.execution && descriptor.execution.batch_size_from_config) || BATCH_SIZE_VAR;
@@ -168,7 +195,7 @@ function buildMaterializeSql(descriptor, config) {
     batch_sql: buildBatchSql(),
     post_sql: buildPostSql(),
     invariants_sql: buildInvariantsSql(),
-    invariants_params: [config[FANOUT_NONCONDO_VAR], config[FANOUT_CONDO_VAR]],
+    invariants_params: [config[FANOUT_NONCONDO_VAR], config[FANOUT_CONDO_VAR], config[FANOUT_RD_RS_VAR]],
     batch_size_config_key: batchSizeVar,
   };
 }
@@ -303,6 +330,37 @@ function parcel_address_points_missed_link_count(ctx) {
   ctx.report('parcel_address_points_missed_link_count', { violations: 0, detail: n });
 }
 
+/** LPA-D5 (WF3-B) — the per-address_class_desc link-rate distribution, INFO, un-thresholded (the companion `structure_class_link_rate_warn` gates only the Structure slice). */
+function address_points_link_rate_by_class(ctx) {
+  const rows = (ctx.matched && ctx.matched.link_rate_by_class) || [];
+  const detail = rows.map((r) => {
+    const total = Number(r.total) || 0;
+    const linked = Number(r.linked) || 0;
+    return {
+      class: r.address_class_desc,
+      total,
+      linked,
+      pct: total > 0 ? round((linked / total) * 100) : 0,
+    };
+  });
+  ctx.report('address_points_link_rate_by_class', { violations: 0, detail });
+}
+
+/** LPA-D5 (WF3-B) — T6, a config-driven percentage FLOOR (R-N precedent, `pct >=`) on the Structure-class link rate specifically. */
+function structure_class_link_rate_warn(ctx) {
+  const m = ctx.matched || {};
+  const total = m.structure_class_total || 0;
+  const linked = m.structure_class_linked || 0;
+  const pct = total > 0 ? round((linked / total) * 100) : 0;
+  ctx.report('structure_class_link_rate_warn', { value: pct, detail: `${pct}%` });
+}
+
+/** LPA-D5 (WF3-B) — T7, T4's declared retighten target: a strictly tighter per-parcel fan-out ceiling scoped to RD/RS-zoned parcels. */
+function parcel_fanout_rd_rs_outliers(ctx) {
+  const n = (ctx.matched && ctx.matched.fanout_rd_rs_gt_threshold) || 0;
+  ctx.report('parcel_fanout_rd_rs_outliers', { violations: n, detail: n });
+}
+
 /**
  * The step's `records_meta` block. No self-consumption exists for this step
  * (`emits: "none"`, claim #203) — this is purely descriptive.
@@ -336,6 +394,9 @@ const CHECKS = {
   parcel_fanout_distribution,
   parcel_address_points_stale_st_within_count,
   parcel_address_points_missed_link_count,
+  address_points_link_rate_by_class,
+  structure_class_link_rate_warn,
+  parcel_fanout_rd_rs_outliers,
 };
 
 /** §5.5 (2) — run the SELECTED checks, and nothing else. Errors land on their own row (never suppress siblings). */
@@ -367,4 +428,6 @@ module.exports.buildInvariantsSql = buildInvariantsSql;
 module.exports.BATCH_SIZE_VAR = BATCH_SIZE_VAR;
 module.exports.FANOUT_NONCONDO_VAR = FANOUT_NONCONDO_VAR;
 module.exports.FANOUT_CONDO_VAR = FANOUT_CONDO_VAR;
+module.exports.STRUCTURE_LINK_RATE_VAR = STRUCTURE_LINK_RATE_VAR;
+module.exports.FANOUT_RD_RS_VAR = FANOUT_RD_RS_VAR;
 module.exports.TABLE = TABLE;

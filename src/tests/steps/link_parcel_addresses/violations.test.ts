@@ -117,16 +117,19 @@ const WRITE_CLASS = 'insert_only_no_retraction';
 /** LG-18 (new) — the class-D write executor, mirroring LG-11's `executeSetBasedJoinUpdate` shape. */
 const NO_RETRACT_EXECUTOR = 'executeInsertSelectNoRetract';
 const FORCE_FULL_ENV = 'LINK_PARCEL_ADDRESSES_FORCE_FULL';
-/** T1-T5, the P4 tunable inventory (plan's "P4 tunable inventory" table). */
+/** T1-T7, the P4 tunable inventory (plan's "P4 tunable inventory" table; T6/T7 added LPA-D5/WF3-B). */
 const CONFIG_VARS = {
   T1: 'link_parcel_addresses_batch_size',
   T2: 'link_parcel_addresses_no_address_warn_pct',
   T3: 'link_parcel_addresses_no_parcel_warn_pct',
   T4: 'link_parcel_addresses_fanout_warn_noncondo',
   T5: 'link_parcel_addresses_fanout_warn_condo',
+  T6: 'link_parcel_addresses_structure_link_rate_warn_pct',
+  T7: 'link_parcel_addresses_fanout_warn_rd_rs',
 } as const;
-const LIMIT_FROM_CONFIG_VARS: string[] = [CONFIG_VARS.T2, CONFIG_VARS.T3, CONFIG_VARS.T4, CONFIG_VARS.T5];
+const LIMIT_FROM_CONFIG_VARS: string[] = [CONFIG_VARS.T2, CONFIG_VARS.T3, CONFIG_VARS.T4, CONFIG_VARS.T5, CONFIG_VARS.T6, CONFIG_VARS.T7];
 const CHECK_IDS = {
+  gateDecision: 'gate_decision',
   parcelsWithGeomPreRun: 'parcels_with_geom_pre_run',
   apWithGeomPreRun: 'address_points_with_geom_pre_run',
   apWithNullGeom: 'address_points_with_null_geom',
@@ -142,16 +145,20 @@ const CHECK_IDS = {
   fanoutDistribution: 'parcel_fanout_distribution',
   staleLinkCount: 'parcel_address_points_stale_st_within_count',
   missedLinkCount: 'parcel_address_points_missed_link_count',
+  linkRateByClass: 'address_points_link_rate_by_class',
+  structureLinkRateWarn: 'structure_class_link_rate_warn',
+  fanoutRdRsOutliers: 'parcel_fanout_rd_rs_outliers',
 } as const;
 /** The non-INFO checks — each needs a must-fail fixture (#165). */
 const WARN_FAIL_CHECK_IDS = [
   CHECK_IDS.apWithNullGeom, CHECK_IDS.parcelsWithNoAddressPct, CHECK_IDS.apWithNoParcelPct,
   CHECK_IDS.errors, CHECK_IDS.finalLinkCount, CHECK_IDS.fanoutOutliersNoncondo, CHECK_IDS.fanoutOutliersCondo,
+  CHECK_IDS.structureLinkRateWarn, CHECK_IDS.fanoutRdRsOutliers,
 ] as const;
 const INFO_CHECK_IDS = [
-  CHECK_IDS.parcelsWithGeomPreRun, CHECK_IDS.apWithGeomPreRun, CHECK_IDS.newLinksWritten,
+  CHECK_IDS.gateDecision, CHECK_IDS.parcelsWithGeomPreRun, CHECK_IDS.apWithGeomPreRun, CHECK_IDS.newLinksWritten,
   CHECK_IDS.parcelsWithLinks, CHECK_IDS.parcelLinkRatePct, CHECK_IDS.fanoutDistribution,
-  CHECK_IDS.staleLinkCount, CHECK_IDS.missedLinkCount,
+  CHECK_IDS.staleLinkCount, CHECK_IDS.missedLinkCount, CHECK_IDS.linkRateByClass,
 ] as const;
 
 /** The 2 adjudicated fix( commits this file locks — §2 of the assessment (smallest corpus of any pilot). */
@@ -190,6 +197,18 @@ const T2_DEFAULT = 50;
 const T3_DEFAULT = 5;
 const T4_DEFAULT = 20;
 const T5_DEFAULT = 400;
+const T6_DEFAULT = 85;
+const T7_DEFAULT = 15;
+/** LPA-D5 (WF3-B) — measured live 2026-08-29 (127.0.0.1:54322/postgres, 242 migrations). */
+const LIVE_CLASS_LAND_TOTAL = 478_811;
+const LIVE_CLASS_LAND_LINKED = 469_453;
+const LIVE_CLASS_LAND_ENTRANCE_TOTAL = 628;
+const LIVE_CLASS_LAND_ENTRANCE_LINKED = 449;
+const LIVE_CLASS_STRUCTURE_TOTAL = 32_508;
+const LIVE_CLASS_STRUCTURE_LINKED = 28_595;
+const LIVE_CLASS_STRUCTURE_ENTRANCE_TOTAL = 13_399;
+const LIVE_CLASS_STRUCTURE_ENTRANCE_LINKED = 12_727;
+const LIVE_RD_RS_GT_15 = 13;
 const INVOCATIONS = [
   { name: 'sources', chain: 'sources' },
   { name: 'standalone', chain: 'none' },
@@ -274,6 +293,10 @@ interface World {
     stale_st_within_count: number;
     missed_link_count: number;
     errors: number;
+    link_rate_by_class: Array<{ address_class_desc: string; total: number; linked: number }>;
+    structure_class_total: number;
+    structure_class_linked: number;
+    fanout_rd_rs_gt_threshold: number;
   };
   written: { privilege: { bypassrls: boolean; policies: number; rls_enabled: boolean } };
   gate: { mode: 'incremental' | 'full' | null; reason: string; skipped: boolean };
@@ -952,9 +975,22 @@ describe('55-A — the hard per-conversion gate (44, k=PER_STEP)', () => {
 
   it('#171 An approving commit states why each value is right — T1-T5\'s values must each carry a stated rationale (flipped: peel 8c)', () => {
     const report = readText(REPORT_REL);
-    for (const name of Object.values(CONFIG_VARS)) {
+    for (const name of [CONFIG_VARS.T1, CONFIG_VARS.T2, CONFIG_VARS.T3, CONFIG_VARS.T4, CONFIG_VARS.T5]) {
       expect(report.includes(name), `${name} is not named anywhere in the assessment report with a stated rationale`).toBe(true);
     }
+  });
+
+  it('LPA-D5 (WF3-B) — T6/T7\'s values each carry a stated rationale in the descriptor\'s own checks[].why (postdates the pilot-5 assessment report, so cited there instead of #171\'s report)', () => {
+    const d = loadDescriptor();
+    const structureCheck = checkById(d, CHECK_IDS.structureLinkRateWarn);
+    const rdRsCheck = checkById(d, CHECK_IDS.fanoutRdRsOutliers);
+    expect(structureCheck.why?.text?.length ?? 0, 'structure_class_link_rate_warn has no stated rationale').toBeGreaterThan(0);
+    expect(rdRsCheck.why?.text?.length ?? 0, 'parcel_fanout_rd_rs_outliers has no stated rationale').toBeGreaterThan(0);
+    const seed = JSON.parse(fs.readFileSync(abs(SEED_REL), 'utf8')) as Record<string, { description?: string }>;
+    expect((seed[CONFIG_VARS.T6]?.description ?? '').length, `${CONFIG_VARS.T6} seed row has no description`).toBeGreaterThan(0);
+    expect((seed[CONFIG_VARS.T7]?.description ?? '').length, `${CONFIG_VARS.T7} seed row has no description`).toBeGreaterThan(0);
+    const ledger = fs.readFileSync(abs(DEFECT_LEDGER_REL), 'utf8');
+    expect(ledger.includes('LPA-D5'), 'no LPA-D5 row in the defect ledger').toBe(true);
   });
 
   it('#172 Metamorphic invariants hold — a spatial compute ships a metamorphic suite (a parcel translated +1000/+1000 with its address points must link identically; ST_Within is scale-invariant under uniform translation) (flipped: peel 8a, src/tests/steps/link_parcel_addresses/metamorphic.test.ts)', () => {
@@ -1131,6 +1167,16 @@ function healthyWorld(): World {
       stale_st_within_count: LIVE_STALE_ST_WITHIN, // 0 — LPA-D1's live exposure today
       missed_link_count: LIVE_MISSED_LINK, // 0
       errors: 0,
+      // LPA-D5 (WF3-B) — the 4-class link-rate distribution, healthy = today's REAL live shape.
+      link_rate_by_class: [
+        { address_class_desc: 'Land', total: LIVE_CLASS_LAND_TOTAL, linked: LIVE_CLASS_LAND_LINKED },
+        { address_class_desc: 'Land Entrance', total: LIVE_CLASS_LAND_ENTRANCE_TOTAL, linked: LIVE_CLASS_LAND_ENTRANCE_LINKED },
+        { address_class_desc: 'Structure', total: LIVE_CLASS_STRUCTURE_TOTAL, linked: LIVE_CLASS_STRUCTURE_LINKED },
+        { address_class_desc: 'Structure Entrance', total: LIVE_CLASS_STRUCTURE_ENTRANCE_TOTAL, linked: LIVE_CLASS_STRUCTURE_ENTRANCE_LINKED },
+      ],
+      structure_class_total: LIVE_CLASS_STRUCTURE_TOTAL,
+      structure_class_linked: LIVE_CLASS_STRUCTURE_LINKED, // 87.96% — PASSES the T6 default (85) with a real margin
+      fanout_rd_rs_gt_threshold: LIVE_RD_RS_GT_15, // 13 — PASSES the T7 default (15), close to the margin
     },
     written: { privilege: { bypassrls: true, policies: 0, rls_enabled: true } },
     gate: { mode: 'incremental', reason: 'unchanged', skipped: false },
@@ -1152,6 +1198,11 @@ const SABOTAGE_BY_VAR: Record<string, (w: World) => void> = {
   [CONFIG_VARS.T3]: (w) => { w.matched = { ...w.matched, address_points_with_no_parcel: Math.round(w.matched.address_points_with_geom * 0.10) }; }, // 10% vs the 5% T3 ceiling
   [CONFIG_VARS.T4]: (w) => { w.matched = { ...w.matched, fanout_noncondo_gt_threshold: 0 }; }, // the degenerate PASS direction: 0 outliers must read PASS, not stuck-WARN
   [CONFIG_VARS.T5]: (w) => { w.matched = { ...w.matched, fanout_condo_gt_threshold: 401, fanout_condo_max: 500 }; }, // LPA-D3: the bound is `viol <= 400` (a COUNT of outlier CONDO parcels, the same config var doing double duty as both the per-parcel fanout ceiling AND the tolerable outlier-count ceiling) — the sabotage must exceed 400 itself, not merely be nonzero
+  // LPA-D5 (WF3-B) — T6 is a config-driven PERCENTAGE FLOOR (`pct >=`, R-N precedent): the
+  // sabotage must push the Structure-class rate BELOW the resolved 85 floor, not merely change it.
+  [CONFIG_VARS.T6]: (w) => { w.matched = { ...w.matched, structure_class_linked: Math.round(w.matched.structure_class_total * 0.5) }; }, // 50% << 85% floor
+  // T7 — same `viol <= N` double-duty shape as T4/T5: the sabotage must exceed the resolved 15 ceiling.
+  [CONFIG_VARS.T7]: (w) => { w.matched = { ...w.matched, fanout_rd_rs_gt_threshold: 16 }; },
 };
 const SABOTAGE_BY_ID: Array<[RegExp, (w: World) => void]> = [
   [/address_points_with_null_geom/i, (w) => { w.matched.address_points_with_null_geom = 5000; }], // Phase 2a backfill regressed
@@ -1162,6 +1213,10 @@ const SABOTAGE_BY_ID: Array<[RegExp, (w: World) => void]> = [
   // never a threshold).
   [/^parcel_address_points_stale_st_within_count$/i, (w) => { w.matched.stale_st_within_count = 42; }],
   [/^parcel_address_points_missed_link_count$/i, (w) => { w.matched.missed_link_count = 7; }],
+  // LPA-D4 — gate_decision must stay INFO no matter what the gate reports.
+  [/^gate_decision$/i, (w) => { w.gate = { mode: null, reason: 'no_upstream_changes', skipped: true }; }],
+  // LPA-D5 (WF3-B) — the distribution row must stay INFO even on a perturbed (all-zero-linked) shape.
+  [/^address_points_link_rate_by_class$/i, (w) => { w.matched.link_rate_by_class = w.matched.link_rate_by_class.map((r) => ({ ...r, linked: 0 })); }],
 ];
 
 function sabotageFor(c: Check): ((w: World) => void) | undefined {

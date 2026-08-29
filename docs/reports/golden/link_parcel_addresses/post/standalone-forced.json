@@ -3,7 +3,7 @@
   "spec": "docs/specs/01-pipeline/122_pipeline_step_optimization.md §5.3",
   "step": "scripts/link-parcel-addresses.js",
   "chain": "none",
-  "git_head": "1ad007f8e48759b719ecd71c1511669b685a6bff",
+  "git_head": "b01cefebe6003eb35c4bff6f803e1621657cc0be",
   "exit_code": 0,
   "signal": null,
   "summary": {
@@ -11,7 +11,7 @@
     "records_new": 0,
     "records_updated": 0,
     "records_meta": {
-      "duration_ms": 74920,
+      "duration_ms": 120202,
       "batches_processed": 487,
       "completed_naturally": true,
       "gate": {
@@ -23,7 +23,9 @@
         "link_parcel_addresses_no_address_warn_pct": 50,
         "link_parcel_addresses_no_parcel_warn_pct": 5,
         "link_parcel_addresses_fanout_warn_noncondo": 20,
-        "link_parcel_addresses_fanout_warn_condo": 400
+        "link_parcel_addresses_fanout_warn_condo": 400,
+        "link_parcel_addresses_structure_link_rate_warn_pct": 85,
+        "link_parcel_addresses_fanout_warn_rd_rs": 15
       },
       "terminal": "materialized_with_warnings",
       "ledger_row": "owned",
@@ -141,14 +143,57 @@
             "status": "INFO"
           },
           {
+            "metric": "address_points_link_rate_by_class",
+            "value": [
+              {
+                "class": "Land",
+                "total": 478811,
+                "linked": 469453,
+                "pct": 98.05
+              },
+              {
+                "class": "Land Entrance",
+                "total": 628,
+                "linked": 449,
+                "pct": 71.5
+              },
+              {
+                "class": "Structure",
+                "total": 32508,
+                "linked": 28595,
+                "pct": 87.96
+              },
+              {
+                "class": "Structure Entrance",
+                "total": 13399,
+                "linked": 12727,
+                "pct": 94.98
+              }
+            ],
+            "threshold": "viol == 0",
+            "status": "INFO"
+          },
+          {
+            "metric": "structure_class_link_rate_warn",
+            "value": "87.96%",
+            "threshold": "pct >= 85",
+            "status": "PASS"
+          },
+          {
+            "metric": "parcel_fanout_rd_rs_outliers",
+            "value": 13,
+            "threshold": "viol <= 15",
+            "status": "PASS"
+          },
+          {
             "metric": "sys_velocity_rows_sec",
-            "value": 6493.65,
+            "value": 4047.43,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "sys_duration_ms",
-            "value": 74924,
+            "value": 120207,
             "threshold": null,
             "status": "INFO"
           }
@@ -183,16 +228,16 @@
   "ledger_status": [
     "completed_with_warnings"
   ],
-  "stdout": "{\"level\":\"INFO\",\"tag\":\"[link_parcel_addresses]\",\"msg\":\"[link_parcel_addresses] target: link_parcel_addresses (descriptor.database) → database=postgres user=postgres migrations=242 (floor 159)\"}\n{\"level\":\"INFO\",\"tag\":\"[link_parcel_addresses]\",\"msg\":\"materialize gate: RUN (bypassed)\"}\nPIPELINE_SUMMARY:{\"records_total\":486530,\"records_new\":0,\"records_updated\":0,\"records_meta\":{\"duration_ms\":74920,\"batches_processed\":487,\"completed_naturally\":true,\"gate\":{\"reason\":\"bypassed\",\"gated_skip\":false},\"config\":{\"link_parcel_addresses_batch_size\":1000,\"link_parcel_addresses_no_address_warn_pct\":50,\"link_parcel_addresses_no_parcel_warn_pct\":5,\"link_parcel_addresses_fanout_warn_noncondo\":20,\"link_parcel_addresses_fanout_warn_condo\":400},\"terminal\":\"materialized_with_warnings\",\"ledger_row\":\"owned\",\"checks_failed\":1,\"errors\":[\"parcel_fanout_outliers: 130\"],\"audit_table\":{\"phase\":54,\"name\":\"Parcel ↔ Address Points Spatial Bridge\",\"verdict\":\"WARN\",\"rows\":[{\"metric\":\"gate_decision\",\"value\":{\"mode\":\"incremental\",\"reason\":\"bypassed\",\"gated_skip\":false},\"threshold\":\"viol == 0\",\"status\":\"INFO\"},{\"metric\":\"parcels_with_geom_pre_run\",\"value\":486530,\"threshold\":\"viol == 0\",\"status\":\"INFO\"},{\"metric\":\"address_points_with_geom_pre_run\",\"value\":525346,\"threshold\":\"viol == 0\",\"status\":\"INFO\"},{\"metric\":\"address_points_with_null_geom\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\"},{\"metric\":\"new_links_written\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\"},{\"metric\":\"final_link_count\",\"value\":511224,\"threshold\":\"viol == 0\",\"status\":\"PASS\"},{\"metric\":\"parcels_with_links\",\"value\":467786,\"threshold\":\"viol == 0\",\"status\":\"INFO\"},{\"metric\":\"parcel_link_rate_pct\",\"value\":\"96.15%\",\"threshold\":\"viol == 0\",\"status\":\"INFO\"},{\"metric\":\"parcels_with_no_address_pct\",\"value\":\"3.85%\",\"threshold\":\"pct <= 50\",\"status\":\"PASS\"},{\"metric\":\"address_points_with_no_parcel_pct\",\"value\":\"2.69%\",\"threshold\":\"pct <= 5\",\"status\":\"PASS\"},{\"metric\":\"errors\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\"},{\"metric\":\"parcel_fanout_outliers\",\"value\":130,\"threshold\":\"viol <= 20\",\"status\":\"WARN\"},{\"metric\":\"parcel_fanout_condo_outliers\",\"value\":0,\"threshold\":\"viol <= 400\",\"status\":\"PASS\"},{\"metric\":\"parcel_fanout_distribution\",\"value\":{\"condo_max\":346,\"noncondo_max\":155,\"noncondo_gt_threshold\":130},\"threshold\":\"viol == 0\",\"status\":\"INFO\"},{\"metric\":\"parcel_address_points_stale_st_within_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\"},{\"metric\":\"parcel_address_points_missed_link_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":6493.65,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":74924,\"threshold\":null,\"status\":\"INFO\"}]}}}\nPIPELINE_META:{\"reads\":{\"parcels\":[\"id\",\"geom\"],\"address_points\":[\"address_point_id\",\"geom\"]},\"writes\":{\"parcel_address_points\":[\"parcel_id\",\"address_point_id\",\"computed_at\"]}}\n\n[link_parcel_addresses] completed in 74.9s\n",
+  "stdout": "{\"level\":\"INFO\",\"tag\":\"[link_parcel_addresses]\",\"msg\":\"[link_parcel_addresses] target: link_parcel_addresses (descriptor.database) → database=postgres user=postgres migrations=242 (floor 159)\"}\n{\"level\":\"INFO\",\"tag\":\"[link_parcel_addresses]\",\"msg\":\"materialize gate: RUN (bypassed)\"}\nPIPELINE_SUMMARY:{\"records_total\":486530,\"records_new\":0,\"records_updated\":0,\"records_meta\":{\"duration_ms\":120202,\"batches_processed\":487,\"completed_naturally\":true,\"gate\":{\"reason\":\"bypassed\",\"gated_skip\":false},\"config\":{\"link_parcel_addresses_batch_size\":1000,\"link_parcel_addresses_no_address_warn_pct\":50,\"link_parcel_addresses_no_parcel_warn_pct\":5,\"link_parcel_addresses_fanout_warn_noncondo\":20,\"link_parcel_addresses_fanout_warn_condo\":400,\"link_parcel_addresses_structure_link_rate_warn_pct\":85,\"link_parcel_addresses_fanout_warn_rd_rs\":15},\"terminal\":\"materialized_with_warnings\",\"ledger_row\":\"owned\",\"checks_failed\":1,\"errors\":[\"parcel_fanout_outliers: 130\"],\"audit_table\":{\"phase\":54,\"name\":\"Parcel ↔ Address Points Spatial Bridge\",\"verdict\":\"WARN\",\"rows\":[{\"metric\":\"gate_decision\",\"value\":{\"mode\":\"incremental\",\"reason\":\"bypassed\",\"gated_skip\":false},\"threshold\":\"viol == 0\",\"status\":\"INFO\"},{\"metric\":\"parcels_with_geom_pre_run\",\"value\":486530,\"threshold\":\"viol == 0\",\"status\":\"INFO\"},{\"metric\":\"address_points_with_geom_pre_run\",\"value\":525346,\"threshold\":\"viol == 0\",\"status\":\"INFO\"},{\"metric\":\"address_points_with_null_geom\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\"},{\"metric\":\"new_links_written\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\"},{\"metric\":\"final_link_count\",\"value\":511224,\"threshold\":\"viol == 0\",\"status\":\"PASS\"},{\"metric\":\"parcels_with_links\",\"value\":467786,\"threshold\":\"viol == 0\",\"status\":\"INFO\"},{\"metric\":\"parcel_link_rate_pct\",\"value\":\"96.15%\",\"threshold\":\"viol == 0\",\"status\":\"INFO\"},{\"metric\":\"parcels_with_no_address_pct\",\"value\":\"3.85%\",\"threshold\":\"pct <= 50\",\"status\":\"PASS\"},{\"metric\":\"address_points_with_no_parcel_pct\",\"value\":\"2.69%\",\"threshold\":\"pct <= 5\",\"status\":\"PASS\"},{\"metric\":\"errors\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\"},{\"metric\":\"parcel_fanout_outliers\",\"value\":130,\"threshold\":\"viol <= 20\",\"status\":\"WARN\"},{\"metric\":\"parcel_fanout_condo_outliers\",\"value\":0,\"threshold\":\"viol <= 400\",\"status\":\"PASS\"},{\"metric\":\"parcel_fanout_distribution\",\"value\":{\"condo_max\":346,\"noncondo_max\":155,\"noncondo_gt_threshold\":130},\"threshold\":\"viol == 0\",\"status\":\"INFO\"},{\"metric\":\"parcel_address_points_stale_st_within_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\"},{\"metric\":\"parcel_address_points_missed_link_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\"},{\"metric\":\"address_points_link_rate_by_class\",\"value\":[{\"class\":\"Land\",\"total\":478811,\"linked\":469453,\"pct\":98.05},{\"class\":\"Land Entrance\",\"total\":628,\"linked\":449,\"pct\":71.5},{\"class\":\"Structure\",\"total\":32508,\"linked\":28595,\"pct\":87.96},{\"class\":\"Structure Entrance\",\"total\":13399,\"linked\":12727,\"pct\":94.98}],\"threshold\":\"viol == 0\",\"status\":\"INFO\"},{\"metric\":\"structure_class_link_rate_warn\",\"value\":\"87.96%\",\"threshold\":\"pct >= 85\",\"status\":\"PASS\"},{\"metric\":\"parcel_fanout_rd_rs_outliers\",\"value\":13,\"threshold\":\"viol <= 15\",\"status\":\"PASS\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":4047.43,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":120207,\"threshold\":null,\"status\":\"INFO\"}]}}}\nPIPELINE_META:{\"reads\":{\"parcels\":[\"id\",\"geom\"],\"address_points\":[\"address_point_id\",\"geom\"]},\"writes\":{\"parcel_address_points\":[\"parcel_id\",\"address_point_id\",\"computed_at\"]}}\n\n[link_parcel_addresses] completed in 120.2s\n",
   "stderr": "",
   "pipeline_runs": [
     {
-      "id": 1725,
+      "id": 1729,
       "pipeline": "link_parcel_addresses",
       "status": "completed_with_warnings",
-      "started_at": "2026-08-29T14:21:48.050Z",
-      "completed_at": "2026-08-29T14:23:02.945Z",
-      "duration_ms": 74925,
+      "started_at": "2026-08-29T14:47:37.061Z",
+      "completed_at": "2026-08-29T14:49:37.232Z",
+      "duration_ms": 120209,
       "records_total": 486530,
       "records_new": 0,
       "records_updated": 0,
@@ -204,9 +249,11 @@
         "config": {
           "link_parcel_addresses_batch_size": 1000,
           "link_parcel_addresses_fanout_warn_condo": 400,
+          "link_parcel_addresses_fanout_warn_rd_rs": 15,
           "link_parcel_addresses_no_parcel_warn_pct": 5,
           "link_parcel_addresses_no_address_warn_pct": 50,
-          "link_parcel_addresses_fanout_warn_noncondo": 20
+          "link_parcel_addresses_fanout_warn_noncondo": 20,
+          "link_parcel_addresses_structure_link_rate_warn_pct": 85
         },
         "errors": [
           "parcel_fanout_outliers: 130"
@@ -321,13 +368,56 @@
               "threshold": "viol == 0"
             },
             {
-              "value": 6493.65,
+              "value": [
+                {
+                  "pct": 98.05,
+                  "class": "Land",
+                  "total": 478811,
+                  "linked": 469453
+                },
+                {
+                  "pct": 71.5,
+                  "class": "Land Entrance",
+                  "total": 628,
+                  "linked": 449
+                },
+                {
+                  "pct": 87.96,
+                  "class": "Structure",
+                  "total": 32508,
+                  "linked": 28595
+                },
+                {
+                  "pct": 94.98,
+                  "class": "Structure Entrance",
+                  "total": 13399,
+                  "linked": 12727
+                }
+              ],
+              "metric": "address_points_link_rate_by_class",
+              "status": "INFO",
+              "threshold": "viol == 0"
+            },
+            {
+              "value": "87.96%",
+              "metric": "structure_class_link_rate_warn",
+              "status": "PASS",
+              "threshold": "pct >= 85"
+            },
+            {
+              "value": 13,
+              "metric": "parcel_fanout_rd_rs_outliers",
+              "status": "PASS",
+              "threshold": "viol <= 15"
+            },
+            {
+              "value": 4047.43,
               "metric": "sys_velocity_rows_sec",
               "status": "INFO",
               "threshold": null
             },
             {
-              "value": 74924,
+              "value": 120207,
               "metric": "sys_duration_ms",
               "status": "INFO",
               "threshold": null
@@ -336,7 +426,7 @@
           "phase": 54,
           "verdict": "WARN"
         },
-        "duration_ms": 74920,
+        "duration_ms": 120202,
         "checks_failed": 1,
         "batches_processed": 487,
         "completed_naturally": true
@@ -344,7 +434,7 @@
       "error_message": null
     }
   ],
-  "pipeline_runs_max_id_before": 1724,
+  "pipeline_runs_max_id_before": 1728,
   "table_state": [
     {
       "table": "parcel_address_points",
@@ -365,7 +455,7 @@
   "tables_source": "descriptor",
   "table_row_ceiling": 100000,
   "table_timing": {
-    "parcel_address_points": 281
+    "parcel_address_points": 448
   },
   "table_specs": {
     "parcel_address_points": {
@@ -417,6 +507,14 @@
     {
       "name": "land_entrance_count",
       "value": "449"
+    },
+    {
+      "name": "structure_class_link_rate_pct",
+      "value": "87.96"
+    },
+    {
+      "name": "rd_rs_fanout_gt_15_count",
+      "value": "13"
     }
   ],
   "invariants_file": "docs/reports/golden/link_parcel_addresses/invariants.json",
@@ -547,6 +645,49 @@
               "status": "INFO",
               "threshold": "viol == 0",
               "value": 0
+            },
+            {
+              "metric": "address_points_link_rate_by_class",
+              "status": "INFO",
+              "threshold": "viol == 0",
+              "value": [
+                {
+                  "class": "Land",
+                  "linked": 469453,
+                  "pct": 98.05,
+                  "total": 478811
+                },
+                {
+                  "class": "Land Entrance",
+                  "linked": 449,
+                  "pct": 71.5,
+                  "total": 628
+                },
+                {
+                  "class": "Structure",
+                  "linked": 28595,
+                  "pct": 87.96,
+                  "total": 32508
+                },
+                {
+                  "class": "Structure Entrance",
+                  "linked": 12727,
+                  "pct": 94.98,
+                  "total": 13399
+                }
+              ]
+            },
+            {
+              "metric": "structure_class_link_rate_warn",
+              "status": "PASS",
+              "threshold": "pct >= 85",
+              "value": "87.96%"
+            },
+            {
+              "metric": "parcel_fanout_rd_rs_outliers",
+              "status": "PASS",
+              "threshold": "viol <= 15",
+              "value": 13
             }
           ],
           "verdict": "WARN"
@@ -558,8 +699,10 @@
           "link_parcel_addresses_batch_size": 1000,
           "link_parcel_addresses_fanout_warn_condo": 400,
           "link_parcel_addresses_fanout_warn_noncondo": 20,
+          "link_parcel_addresses_fanout_warn_rd_rs": 15,
           "link_parcel_addresses_no_address_warn_pct": 50,
-          "link_parcel_addresses_no_parcel_warn_pct": 5
+          "link_parcel_addresses_no_parcel_warn_pct": 5,
+          "link_parcel_addresses_structure_link_rate_warn_pct": 85
         },
         "errors": [
           "parcel_fanout_outliers: 130"
@@ -710,6 +853,49 @@
                 "status": "INFO",
                 "threshold": "viol == 0",
                 "value": 0
+              },
+              {
+                "metric": "address_points_link_rate_by_class",
+                "status": "INFO",
+                "threshold": "viol == 0",
+                "value": [
+                  {
+                    "class": "Land",
+                    "linked": 469453,
+                    "pct": 98.05,
+                    "total": 478811
+                  },
+                  {
+                    "class": "Land Entrance",
+                    "linked": 449,
+                    "pct": 71.5,
+                    "total": 628
+                  },
+                  {
+                    "class": "Structure",
+                    "linked": 28595,
+                    "pct": 87.96,
+                    "total": 32508
+                  },
+                  {
+                    "class": "Structure Entrance",
+                    "linked": 12727,
+                    "pct": 94.98,
+                    "total": 13399
+                  }
+                ]
+              },
+              {
+                "metric": "structure_class_link_rate_warn",
+                "status": "PASS",
+                "threshold": "pct >= 85",
+                "value": "87.96%"
+              },
+              {
+                "metric": "parcel_fanout_rd_rs_outliers",
+                "status": "PASS",
+                "threshold": "viol <= 15",
+                "value": 13
               }
             ],
             "verdict": "WARN"
@@ -721,8 +907,10 @@
             "link_parcel_addresses_batch_size": 1000,
             "link_parcel_addresses_fanout_warn_condo": 400,
             "link_parcel_addresses_fanout_warn_noncondo": 20,
+            "link_parcel_addresses_fanout_warn_rd_rs": 15,
             "link_parcel_addresses_no_address_warn_pct": 50,
-            "link_parcel_addresses_no_parcel_warn_pct": 5
+            "link_parcel_addresses_no_parcel_warn_pct": 5,
+            "link_parcel_addresses_structure_link_rate_warn_pct": 85
           },
           "errors": [
             "parcel_fanout_outliers: 130"
@@ -798,10 +986,18 @@
       {
         "name": "land_entrance_count",
         "value": "449"
+      },
+      {
+        "name": "structure_class_link_rate_pct",
+        "value": "87.96"
+      },
+      {
+        "name": "rd_rs_fanout_gt_15_count",
+        "value": "13"
       }
     ]
   },
-  "source_fingerprint": "87c62eb659b17483534444a5066310176a3a53e611b1e5a42500f9e9d5d78977",
+  "source_fingerprint": "3472e2a374c94ce6e42fc00774802cc38fcc9abd940d649650ebbafb33039c01",
   "fingerprint_files": [
     "scripts/lib/compute/link-parcel-addresses.js",
     "scripts/link-parcel-addresses.descriptor.json",

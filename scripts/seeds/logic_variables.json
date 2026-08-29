@@ -818,6 +818,20 @@
     "min": 1,
     "max": 1000
   },
+  "link_parcel_addresses_structure_link_rate_warn_pct": {
+    "default": 85,
+    "type": "number",
+    "description": "Minimum fraction (%) of geom-bearing Structure-class (address_points.address_class_desc = 'Structure') address points that must be linked before link_parcel_addresses's structure_class_link_rate_warn check WARNs. CONSUMED via checks[].limit_from_config (a pct >= floor form, R-N precedent). LPA-D5 (WF3-B, 2026-08-29): the class-blind parcel_link_rate_pct average hides that the 4-class distribution ranges 71.5-98.0%; Structure is the class this step's downstream consumers (link-parcels.js Strategy 1a, link-coa-to-parcels.js Tier 1a) most depend on. Measured live 87.96%.",
+    "min": 0,
+    "max": 100
+  },
+  "link_parcel_addresses_fanout_warn_rd_rs": {
+    "default": 15,
+    "type": "number",
+    "description": "Per-parcel address-point fan-out ceiling for parcels zoned RD or RS (low-density residential — detached/semi-detached, where a large fan-out is least architecturally expected); link_parcel_addresses's parcel_fanout_rd_rs_outliers check WARNs on the count of RD/RS parcels exceeding it (same viol<=N double-duty shape as the noncondo/condo ceilings, LPA-D3). CONSUMED via checks[].limit_from_config. LPA-D5 (WF3-B, 2026-08-29) — the declared retighten target for parcel_fanout_outliers' (T4) flat, zone-blind 20 ceiling. Measured live 13 RD/RS parcels exceed fan-out 15 (of 258,596 RD/RS-zoned parcels; RD max 35, RS max 64).",
+    "min": 1,
+    "max": 1000
+  },
   "wsib_fuzzy_match_threshold": {
     "default": 0.6,
     "type": "number",
