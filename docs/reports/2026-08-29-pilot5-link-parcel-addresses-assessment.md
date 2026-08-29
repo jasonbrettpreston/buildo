@@ -93,6 +93,69 @@ No BLOCKING conflict found against Fold A/B's rulings. G0 is CLOSED this commit.
 
 ---
 
+## §2. PH-3 — Intent Ledger over the corpus (commit 2, G3)
+
+> **5 total commits (2 `fix(`, 3 `feat(`), all adjudicated — the smallest corpus of any pilot to date.** Per
+> Spec 124 §4.2 (discoverer≠adjudicator): this table is PROPOSED by this pass; final ADJUDICATION is a
+> separate operator ruling, mirroring pilots 3/4's own split. `a81c6a7c` and `b92ad16f` are the SAME two B3
+> output-fold commits pilot 4's G3 already adjudicated for `link-wsib.js` (both touch 3 files in one commit:
+> `link-wsib.js`, `link-parcel-addresses.js`, `compute-parcel-cost-estimates.js`) — re-adjudication here is for
+> THIS file's hunks specifically, verified by direct `git show <sha> -- scripts/link-parcel-addresses.js` this
+> commit, not a re-read of unfamiliar work.
+
+| Commit | Construct | Live today? | Proposed disposition | Ground |
+|---|---|---|---|---|
+| `d44b4458` (origin, 2026-05-23) | The whole script: batched `INSERT…SELECT…JOIN ST_Within…ON CONFLICT DO NOTHING`; `finalLinks===0` hard FAIL gate (`:288-300`, comment: *"A complete failure … silently produces final_link_count = 0 and the chain would proceed to unlink every permit downstream"*); NULL-geom guards both sides; `ADVISORY_LOCK_ID=115` | ✓ (all cited lines current) | **encoded-as-descriptor-field** (write target class D, the FAIL gate as a `blocking:true` check, the lock id in `identity`) | G1–G13 (Before/after guarantees table); the FAIL gate's own comment already states its Rule-4 `why` verbatim — carries forward unchanged |
+| `1f8ca38a` (feat, 2026-07-07) | `parcel_link_rate_pct` INFO audit row added (`:307-317`) — no FAIL gate touched, no other line in this file changed (verified: `git show 1f8ca38a -- scripts/link-parcel-addresses.js` is a single 11-line hunk) | ✓ (`:308-317`) | **encoded-as-descriptor-field** (a declared `checks[]` INFO row) | Spec 43 §6.7-A cited in-file; carries forward as a check with `severity:"INFO"`, no threshold |
+| `74653a8f` (feat, 2026-08-16) | The B3 run-ledger gate itself (`runLedgerGateDecision`, `gate.skip` branch, `:96-119`) | ✓ | **encoded-as-descriptor-field** (`staleness.ledgerGatedSkip`, wired into the new `runMaterializePhase` per A-1's ruling) | this is the load-bearing mechanism finding 3 measured as untested-live — preserved verbatim in the phase-shape ruling, not re-derived |
+| `b92ad16f` (fix, 2026-08-16) | `buildSkipGateRecordsMeta` skip-path audit rows replacing a bare hardcoded `verdict:'PASS'` — carries forward `address_points_with_no_parcel_pct`+`errors`, `own_started`/`last_full_run_at`, `consecutive_skips` (verified live diff this commit: `git show b92ad16f -- scripts/link-parcel-addresses.js`) | ✓ (`:97-107`, current file) | **preserved-in-runner** — the mechanism becomes the library's gated-skip shape (`staleness.ledgerGatedSkip`), same disposition pilot 4 gave the identical commit for `link-wsib.js` | same B3 remediation this pilot's own finding 3 depends on; the skip path is genuinely untested-live regardless of disposition |
+| `a81c6a7c` (fix, 2026-08-16) | `FORCE_FULL_ENV = 'LINK_PARCEL_ADDRESSES_FORCE_FULL'`; `bypassGate = process.env[FORCE_FULL_ENV]==='1'`; `gate = bypassGate ? null : await runLedgerGateDecision(...)` (verified live diff this commit) | ✓ (`:66-72`, `:88-100`, `module.exports` `:393`) | **encoded-as-descriptor-field** (`override.force_full`, R-L's `chain_args` argv-gated pattern — this step is `sources`-only so `chain_args:{sources:["--full"]}` would make `explicitFull` structurally true there, mirroring `link_massing`/`link_wsib`'s already-ratified R-L pattern) | R-L (Spec 124 register); the env var itself (not an argv flag) — R-L's pattern generalizes the TRIGGER, not the mechanism name, since this step already reads an env var rather than `process.argv` (finding 5: 0 `process.argv` reads, confirmed again this commit) |
+
+**Approver for every disposition above:** this pilot's PH-3 pass (agent, 2026-08-29), grounded in direct
+`git show`/`git blame` re-verification this commit (not transcribed from the plan's own G3 table, which named
+the commits but did not re-diff them) — per Spec 124 §4.2's discoverer≠adjudicator split, PROPOSED here,
+stands until a human operator ratifies or overturns at commit 7.
+
+### `LPA-D1` — the W3 retraction breach, KNOWN-DEFECT pin (Spec 123 §3.1)
+
+**Classification (Spec 123 §3, the four questions):** (1) Is it observed? Yes — `link-parcels.js:282`'s own
+code comment states the consumer's reliance in-file (*"parcel_address_points guarantees the AP geom is INSIDE
+the parcel"*). (2) Does a spec/invariant assert the opposite of what the code does? **Yes — DEFECT.** The
+class-D `ON CONFLICT DO NOTHING` write (`link-parcel-addresses.js:176`, `0` DELETE anywhere) never re-evaluates
+or removes a row after an upstream `geom` UPDATE (`load-parcels.js:293-294`, `load-address-points.js:215` both
+`DO UPDATE geom`), so the guarantee the consumer trusts CAN go stale with zero repair mechanism — the exact
+opposite of "guarantees." (3) Load-bearing? Yes — Strategy 1a (0.97 confidence, `link-parcels.js`) and Tier 1a
+(0.95, `link-coa-to-parcels.js`) both trust it unconditionally, both TOP-of-cascade. (4) Cost of carrying vs.
+diverging: **measured live exposure is 0/511,224 rows today** (re-confirmed commit 1, §1 above) — carrying it
+through the conversion costs nothing observable; building a retraction mechanism this pilot would be
+undefended scope-creep against a defect with zero current blast radius.
+
+**Per Spec 123 §3.1: PIN it in its current wrong form, annotated KNOWN-DEFECT with a Defect Ledger ID, keep
+the differential at zero-diff. Fix in a separate commit/WF3 after conversion is green.** `LPA-D1` opened below.
+The `checks[].why` this pilot's commit 7 descriptor must carry (Rule 4 — a rule kept in compute/undeclared-as-
+mechanism must still be written down): *"class D (`insert_only_no_retraction`) has no re-evaluation mechanism
+for an upstream geom UPDATE on `parcels`/`address_points` — a stale `parcel_address_points` row is a possible,
+zero-measured-incidence-today, KNOWN-DEFECT (LPA-D1). The staleness gate's crashed/stuck-`running` reader
+(Spec 124 R-B, still ⚠ OPEN) is unrelated — this is a data-staleness gap, not a crash-recovery gap."*
+
+### `LPA-D2` — the resumability header claim (self-description bug, not a behavior bug)
+
+**Classification:** (1) Observed? The header comment itself is the only "consumer" — no code reads or branches
+on the claim. (2) Spec/invariant conflict? The comment (`:32-34`) asserts *"a re-run picks up where we left
+off"*; the code (`lastParcelId = -1` at `:148`, never persisted) does not. **This is a DEFECT in the
+DESCRIPTION, not the BEHAVIOR** — the behavior (`ON CONFLICT DO NOTHING` makes every re-scan idempotent) is
+correct and safe; only the claim that a re-scan is skipped is false. (3) Load-bearing? No downstream consumer
+reads or depends on the resumability claim — an operator reading the comment could form a wrong expectation
+about how fast a post-Ctrl-C re-run completes, but nothing breaks. (4) Cost of carrying: zero functional cost,
+but a false operational claim in a header is worth correcting cheaply.
+
+**Resolution rung: (a) descriptor** — `notes.json`/the descriptor's own prose states the truth
+(idempotent-not-resumable, matching `docs/reports/2026-08-22-sources-chain-evidence-base.md:285`'s
+independent finding) at commit 7. No behavior change, no library growth. `LPA-D2` opened below as a tracked,
+low-cost correction (not a KNOWN-DEFECT pin — the code is not wrong, the comment is).
+
+---
+
 ## §0. PH-0 seed — measured boundary table (2026-08-29 planning session)
 
 > Executed against the local dev DB (`current_database() = postgres`, port 5432 — **not** the
