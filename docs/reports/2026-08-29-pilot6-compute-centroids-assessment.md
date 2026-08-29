@@ -1,0 +1,302 @@
+# Pilot 6 — convert `compute_centroids` to the Spec 122 step standard (BACKFILL)
+
+**Status:** Commit 1 (PH-0 boundary freeze, G0) landed. §0's seed re-confirmed bit-for-bit against the
+same DB this commit; no drift found.
+
+**Governing plan:** `.cursor/active_task.md` (Pilot 6 — compute_centroids, BACKFILL). **Governing specs
+(owner row first, per Spec 123 §6 G0):** `docs/specs/01-pipeline/43_chain_sources.md` (PRIMARY, §Step
+Breakdown row 9, `:169-176`), `docs/specs/01-pipeline/55_source_parcels.md` (SECONDARY, owns the `parcels`
+table this step writes), `docs/specs/01-pipeline/121_assessment_and_verification_methodology.md` §4.3 (the
+worked-example DEFECT text, superseded — §0.4), `docs/specs/01-pipeline/122_pipeline_step_optimization.md`
+(§1.4, §1.5, §1.10, §5.1–§5.5, §6.4a, §8.2), `docs/specs/01-pipeline/123_step_opt_assessment_validation.md`
+(§2, §3, §6, §7), `docs/specs/01-pipeline/124_step_standard_policy.md` (12 rules + R-A..R-R — governs on
+conflict with older Spec 122 prose).
+
+---
+
+## §1. PH-0 — boundary freeze (commit 1, G0)
+
+> Re-executed 2026-08-29, same session as §0's seed — every §0 number reconfirmed bit-for-bit against
+> `127.0.0.1:54322/postgres` (`node -r dotenv/config`, `scripts/lib/resolve-db.js#createResolvedPool()` —
+> the resolver prints its target before connecting, per `tasks/lessons.md`'s "verify against the DB the
+> code will actually use" lesson; no `localhost:5432/buildo` mistake made this session).
+
+**Re-confirmed this commit:**
+
+| Check | §0 seed value | Re-executed 2026-08-29 (commit 1) | Match |
+|---|---|---|---|
+| `current_database()` / host:port | `postgres` / port 54322 (resolver) | `postgres` / container-internal `172.20.0.10:5432` | ✓ identical (resolver target unchanged) |
+| `schema_migrations` count / max | 242 / `245_parcels_centroid_geom_invalidation.sql` | 242 / `245_parcels_centroid_geom_invalidation.sql` | ✓ identical |
+| `logic_variables` total | (unstated in §0) | 446 | consistent with the branch HEAD at commit-1 time; no `%centroid%`-named row exists for this step (only `link_massing_centroid_confidence`) |
+| `parcels` total / NULL geometry / `geometry IS NOT NULL AND geom IS NULL` / `geom IS NOT NULL AND centroid_lat IS NULL` | 486,530 / 0 / 0 / 0 | 486,530 / 0 / 0 / 0 | ✓ identical — no backlog, no drift |
+| `pipeline_runs` (`sources:compute_centroids`) | 20 total / 0 failed, latest 2026-07-08 | 20 total / 0 failed, latest `2026-07-08T13:59:38.537Z` | ✓ identical |
+| Real-work runs | 1 (2026-03-10, 530 rows) | 1 — `2026-03-10T18:08:12.242Z`, `records_total:530, records_new:0, records_updated:530` | ✓ identical |
+| Zero-work runs since 2026-06-10 | Fold D correction: 8 | 8 (`records_total=0 AND started_at >= '2026-06-10'`) | ✓ identical — Fold D's correction holds, not the plan's original "7" |
+| `manifest.json:53` chain membership | `sources` only, index 9/28 | `sources` only, index 9 (0-based) of 28 — 0 hits in any other chain | ✓ identical |
+| `converted.json` / `grandfathered.json` | 5 converted, `pending:[]`; 2 real step entries (+2 schema fixtures) | 5 converted (`assert-schema.js`, `load-ravines.js`, `link-massing.js`, `link-wsib.js`, `link-parcel-addresses.js`), `pending:[]`; `grandfathered.json.steps` has 4 keys — 2 real steps (`link_massing`, `link_parcel_addresses`) + 2 schema fixtures (`fixture_no_retraction_allowed`, `fixture_grandfathered_snapshot`) | ✓ identical |
+
+**No drift found.** The DB has not moved since the planning session captured §0 — same database (`postgres`),
+same migration floor (242/245), same live steady-state (0 backlog).
+
+### File surface, re-derived by direct read this commit (not copied from §0)
+
+`wc -l scripts/compute-centroids.js` → **226**. Construct counts (`grep -c`, this commit): `pool.query`/
+`client.query` **6** · `Date.now(` **2**, `new Date(` **0** · `process.env`/`process.argv` **0**/**0** ·
+`emitSummary`/`emitMeta` **2**/**2** · `try`/`catch`/`finally` **1**/**1**/**0** · `throw` **0** · `console.*`
+**0**. `ADVISORY_LOCK_ID = 99` at `:58` (Spec 47 §A.5 registry row "5 — Maintenance", "Writes Timestamps? NO"
+— unique, no collision). `grep -n "require.main\|module.exports"` → **0 hits, both** — confirms Spec 121
+§4.3's own claim #86 citation (`compute-centroids.js:60`, "a declaration is never executable") is still
+current: `pipeline.run(...)` fires unconditionally at module scope, no guard, no export.
+
+### Write-discipline surface (re-derived per Spec 122 R5 — never trust the port)
+
+One write target, `parcels.centroid_lat`/`centroid_lng`, class **E** `write_once_backfill` — matches Spec
+122 §8.2's own table row for `compute_centroids` exactly (no mislabel found, contrast pilot 5's D-class
+correction). `guard:"none"` (the `WHERE centroid_lat IS NULL` clause IS the scope, not a value-change guard
+— an already-filled row is permanently ineligible for this step; only migration 245's trigger, a different
+write path, makes a row eligible again). `retract:"none"` (`grep -c DELETE` → 0). Full re-derivation table:
+§0.7 (unchanged this commit, confirmed against live `write.js`/`step.schema.json` — class E genuinely
+unimplemented in `write.js` today, per Fold C B-1, re-confirmed `SET_BASED_CLASSES` at `write.js:63` still
+excludes it).
+
+### G4 — risk class, full pass this commit
+
+**Chance** = churn (16 commits, small corpus) + fix density (7/16 = 43.75%, mid-range) + fence density (1
+genuinely load-bearing fence, `80ac3469`, of 16 commits ≈ 6.25%) → **CLASS B/C** (no churn×complexity
+instrument exists — G2 stays ⛔ ABSENT, same gap as pilots 1–5, not re-derived here).
+**Impact** = **MODERATE** (raised from the plan's original LOW-MODERATE at Fold C) — three measured
+consumers: `link-parcels.js:415-423,437-439` (Tier-3 `ST_DWithin`/`ST_Distance` JOIN KEY — carries the
+276-link mis-attribution exposure, R-1/CC-D2 below), `link-massing.js:237/434` (NOT-NULL eligibility filter
+only, not a join predicate — confirmed again this commit: 0 hits of `centroid_lat`/`centroid_lng` inside
+the join predicate itself, only the WHERE-clause filter), `link-coa-to-parcels.js:284,407,443,462,499-500,715`
+(write-propagating consumer — back-fills `coa_applications.lat/lng` from the stored centroids, G10/S-3,
+exposure unmeasured — R-2 followup).
+
+### G0 verdict
+
+**CLOSED this commit.** No BLOCKING conflict found against Fold C/D's rulings; every §0 number reconfirmed
+bit-for-bit; the write-discipline and risk-class surfaces are re-derived (not ported) and agree with the
+plan's own Fold C/D corrections.
+
+---
+
+## §0. PH-0 seed — measured boundary table (2026-08-29 planning session)
+
+### 0.1 Governing specs, read in order (Spec 124 §7 Step 0 / Spec 123 §6 G0)
+
+1. **`docs/specs/00-architecture/00_system_map.md`** — has **no direct row** for `scripts/compute-centroids.js` (grep over the file returns zero hits). The owning entries are the **Pipeline** section rows **43** (`01-pipeline/43_chain_sources.md`, "Sources (Spatial & Reference Data)" — `compute_centroids` is Step 9 of its own §Step Breakdown, `:169-176`) and the script header's own citation, **`01-pipeline/41_chain_permits.md`** (SPEC LINK at `compute-centroids.js:16`, though `compute_centroids` is NOT actually a member of the `permits` chain — verified below, §0.3 — so this citation is the header's own stale artifact, filed as a finding, §0.6 finding 6).
+2. **Spec 121 §4.3** — uses `compute_centroids` as its *worked example* of a DEFECT: *"`compute_centroids` never invalidates its derived value on upstream geometry change. That is DEFECT. Pin the non-invalidation → convert → prove bit-identical output → then land `fix(compute_centroids): invalidate centroid on geometry change`."* — **superseded, see §0.4.**
+3. **Spec 55 `55_source_parcels.md`** — the owning spec for the `parcels` table this step writes into.
+4. **Spec 62** (centreline) — read for centroid consumers; **no centreline consumer of `parcels.centroid_lat/lng` exists** (`enrich-centreline.js` uses its own MATERIALIZED-centroid CTE over `p.geom` directly, not the stored columns — confirmed by grep, zero `centroid_lat` hits in `enrich-centreline.js`).
+5. **Migration `245_parcels_centroid_geom_invalidation.sql`** + its red-first proof `src/tests/db/migration-245-centroid-invalidation.db.test.ts` — **the fix Spec 121 §4.3 and Spec 123 §3.2 call for. Read in full, §0.4.**
+6. **Spec 124** (§2 Rules 1–12, §3 archetype variance table, §5 Register R-A..R-Q) — governs on any conflict with older Spec 122 prose.
+7. **Spec 122** (§1.4 write_discipline, §1.5 staleness, §1.10 archetype/required-fields, §5.1–§5.5 step contract, §6.4a the centroid gap section, §8.2 pilot table) — the architecture.
+8. **Spec 123** (§2 phases/gates, §3 PIN-vs-FIX incl. §3.2's compute_centroids worked example, §6 gates G0–G9, §7 nine-commit procedure).
+9. Pilot 5's plan (`.cursor/pilot5_link_parcel_addresses_active_task.md`, archived this session) as template; carried items: the shared phase-scaffold helper across `runLinkPhase`/`runCascadePhase`/`runMaterializePhase` (LOW, filed at pilot 5 Fold B) — **not applicable to this pilot's own diff** (BACKFILL's write is a single set-based UPDATE, no phase-runner fork needed at all — see §0.7); R-B's runtime crashed/stuck-`running` reader — still OPEN, carried again (this step has no destructive-retraction write target, so it does not close R-B either — same disposition as pilot 5).
+10. `tasks/lessons.md`, `scripts/CLAUDE.md` (Spec 47 §R1–R12 skeleton), `docs/specs/00_engineering_standards.md` §11.
+
+### 0.2 File metrics — `scripts/compute-centroids.js`, measured this session
+
+| Metric | Value | Grounds |
+|---|---|---|
+| Lines | **226** | `wc -l` |
+| `pipeline.run(` | **1**, at module scope, **line 60** — no `require.main === module` guard, no `module.exports` anywhere in the file | `grep -n "pipeline.run(\|module.exports\|require.main"` — exactly matches Spec 121 §4.3's own citation `compute-centroids.js:60` for claim #86 ("a declaration is never executable") |
+| `try` / `catch` / `finally` | **1 / 1 / 0** | the JS-fallback batch loop's own per-row JSON.parse guard (`:141-146`) |
+| `pool.query`/`client.query` | **6** | 1 count query, 1 PostGIS-extension check, 1 PostGIS UPDATE, 1 PostGIS failed-count query, 1 JS-fallback SELECT (looped), 1 JS-fallback UPDATE (inside `withTransaction`) |
+| `Date.now(` / `new Date(` | **2 / 0** | both elapsed-time only (`startTime`, `durationMs`) — no DB timestamp column exists on this write target at all (Spec 47 §A.5 row: *"Writes Timestamps? NO"*), so the R3.5 DB-clock rule is structurally N/A here, not merely satisfied |
+| `process.env` / `process.argv` | **0 / 0** | no env-var reads, no CLI flags — confirmed by grep; `manifest.json`'s `supports_full:false`/`supports_dry_run:false` are **both TRUE-to-the-code** (a clean node, pilot 5 finding-5 class) |
+| `emitSummary` / `emitMeta` | **2 / 2** | one pair on the zero-work early return (`:79-90`), one pair on the real-run completion (`:191-215`) — perfectly matched, no orphan emit site |
+| `ADVISORY_LOCK_ID` | **99** (module const, `:58`) | Spec 47 §A.5 registry row: `| 99 | scripts/compute-centroids.js | 5 — Maintenance | NO |` — unique (grep for `ADVISORY_LOCK_ID\s*=\s*99` across `scripts/` returns exactly this one file) |
+| `console.*` | **0** | fully migrated to `pipeline.log.*` at the 2026-03-15 fence (§0.5) |
+| `throw` | **0** | no thrown errors anywhere — malformed geometry is counted (`failed++`) and skipped, never halts the run |
+| Declared/consumed `logic_variables` | **0** | `grep -c "logic_variable\|getLogicVariable\|control-panel" scripts/compute-centroids.js` → 0; `SELECT COUNT(*) FROM logic_variables WHERE variable_key ILIKE '%centroid%'` → 1 row, and it is `link_massing_centroid_confidence` (pilot 3's own variable) — **zero rows belong to this step** |
+
+### 0.3 Manifest / chain wiring — measured, not the header comment trusted blind
+
+| Field | Value | Grounds |
+|---|---|---|
+| `manifest.json:53` | `"compute_centroids": {"file":"scripts/compute-centroids.js","supports_full":false,"supports_dry_run":false,"telemetry_tables":["parcels"],"telemetry_null_cols":{"parcels":["centroid_lat","centroid_lng"]}}` | live file |
+| Chain membership | **`sources` ONLY, index 9 of 28** (0-based `Array.indexOf`) | `node -e` over `manifest.json.chains` — **the script's own SPEC LINK header citing `41_chain_permits.md` is stale/wrong** (finding 6, §0.6) — `compute_centroids` is never a member of the `permits` chain |
+| `chain_args` | none declared for this step | `manifest.json.scripts.compute_centroids` has no `chain_args` key |
+| `converted.json` (Spec 122 §5.1 enforcement scope) | **5 entries today**: `assert-schema.js`, `load-ravines.js`, `link-massing.js`, `link-wsib.js`, `link-parcel-addresses.js`. `pending: []`. `compute-centroids.js` in neither | live file, this session |
+| `grandfathered.json` | 2 entries (`link_massing` E1, `link_parcel_addresses` D-class guard) | live file |
+
+### 0.4 The centroid DEFECT — Spec 121 §4.3 / Spec 123 §3.2's worked example — **CLOSED by migration 245**
+
+**Spec 121 §4.3 and Spec 123 §3.2 both name `compute_centroids`'s missing invalidator as THE worked example of a DEFECT**, and Spec 123 §3.2 goes further: *"So the procedure's own worked example forces a plan change... P1 fixes the centroid invalidator BEFORE the programme starts."* **P1 already landed** — migration `245_parcels_centroid_geom_invalidation.sql`, applied.
+
+Measured this session against the local authoritative DB (`current_database()=postgres`, port 54322):
+
+| Check | Query | Result |
+|---|---|---|
+| Migration applied | `SELECT filename FROM schema_migrations WHERE filename LIKE '24%'` | `245_parcels_centroid_geom_invalidation.sql` present, alongside 240–244 |
+| Trigger fires (both columns) | migration's own red-first proof, `migration-245-centroid-invalidation.db.test.ts` §① | a geometry move NULLs both `centroid_lat`/`centroid_lng` (case ①), fires on either column alone in the SET list (case ①ii/iii), survives the `CREATE OR REPLACE` alongside 242's two prior arms (case ②), is a no-op on a same-value re-SET (case ③, the `IS DISTINCT FROM` guard), and `compute_centroids` genuinely refills an invalidated row from the NEW geometry on its next run (case ④, spawns the real script) |
+| Current live state | `SELECT COUNT(*) FROM parcels WHERE geom IS NOT NULL AND centroid_lat IS NULL` | **0** of 486,530 |
+| Current live state | `SELECT COUNT(*) FROM parcels` | **486,530** — 0 NULL `geometry`, 0 rows where `geometry IS NOT NULL AND geom IS NULL` (the PostGIS conversion is 100% complete) |
+| Followups register | `docs/reports/review_followups.md:38` | *"[the] three `*_dataset_version_when_enriched` stamps have NO trigger invalidator... **Identical class to the centroid gap migration 245 just closed**"* — the register itself states CLOSED, in a DIFFERENT (still-open) entry's own text |
+| Followups register | `docs/reports/review_followups.md:2970` | the original HIGH filing, now superseded by 245's landing |
+
+**Consequence for this pilot:** the fix is **already shipped as a separate, prior, authorized WF3** (the sanctioned exception to Spec 123 §1.1, exactly as §3.2 describes). **Pilot 6's own conversion commit carries ZERO behaviour change** — it converts the ALREADY-CORRECT script (post-245) into the frozen shape, verbatim. There is no `fix(compute_centroids): invalidate centroid on geometry change` commit left to write inside this pilot — that commit already landed as migration 245.
+
+⚠️ **Stale prose found, filed for the OTHER agent (Spec 122/123 owner) to fold — not edited here:**
+- **Spec 122 §6.4a** (*"THE CENTROID GAP — the fourth field nobody asked about"*) still reads, in its live prose, *"nothing NULLs it on a geometry change"* and *"the gap is real and still unfiled-until-today"* — both now **factually false**; 245 closed it. §6.4a's own closing line — *"This is the single best argument in this spec for the ledger... It also needs filing to `review_followups.md` today"* — is **already done** (review_followups:2970, closed at review_followups:38).
+- **Spec 123 §3.2** itself says *"P1 fixes the centroid invalidator BEFORE the programme starts"* as a forward-looking plan statement; it should read as **past tense / DONE** now that 245 is applied.
+- **`scripts/lib/compute/link-massing.js:107-109`** (a DIFFERENT step's file, out of this pilot's write scope): the `UNLINKED_ONLY` comment says *"Recorded in the descriptor's limitations[] against the open review_followups finding that parcels.centroid_lat/lng has no invalidator"* — **also now stale**. Flagged here as a note for whichever pilot next touches `link_massing`'s descriptor (not this pilot's file to edit).
+- **`docs/specs/01-pipeline/122_pipeline_step_optimization.md:1072`**'s §8.2 pilot table row for `compute_centroids` reads *"⚠️ forced — **and it is the centroid defect itself**"* — this is the line the operator asked to be given here so it can be folded; see §0.9 below for the proposed replacement text.
+
+### 0.5 Git archaeology — 16 commits, `git log --all --follow`
+
+| Metric | Value |
+|---|---|
+| Total commits | **16** (`ed12787a`, 2026-02-25, origin → `da6db77a`, 2026-04-22, latest) |
+| `fix(` commits | **7** (`90e3d0f8`, `3c3e6f84`, `2b6eb35a`, `98910817`, `5baaed5a`, `e4765619`, `8287291e`) = **43.75% fix density** |
+| `feat(` | 5 · `chore(` | 2 · `refactor(` | 1 · unprefixed origin | 1 |
+| `Severity:`/`Lesson-routing:` footers | **0** | same instrument-limit class noted at pilots 3–5 (footers are rare on this era of commits) |
+| ⚠️ **THE load-bearing fence** | **`80ac3469`** (2026-03-15, `feat(28_data_quality_dashboard): compute-centroids.js — infinite loop fix + bulk unnest + observability`) | Commit message, verbatim: *"Fix infinite loop: cursor pagination (`id > lastId`) replaces `centroid_lat IS NULL` filter which refetched malformed geometries forever."* **This is the single most important historical fence in this file.** The JS-fallback loop's `WHERE geometry IS NOT NULL AND centroid_lat IS NULL AND id > $1 ORDER BY id LIMIT $2` / `lastId = batch.rows[batch.rows.length-1].id` (`:117-131`) is NOT an arbitrary pagination choice — a naive re-scan on `centroid_lat IS NULL` alone re-fetches a permanently-unparseable geometry (`computeCentroid()` returns `null`, the row is counted `failed` but its `centroid_lat` stays NULL forever) on every batch, infinitely. **The differential/compute-extraction (commit 7) MUST preserve the cursor-pagination shape verbatim** — this is this pilot's #1 Regression Guardian fence, opened as `CC-D1` at commit 2 |
+| Other commits, briefly | `0ef23550` (2026-03-09) — Pipeline SDK extraction, 21-script migration, brought this step onto `pipeline.run`/`withAdvisoryLock`. `7c75e92e` (2026-04-02) — PostGIS spatial offloading; this is where the **fast path** (`ST_Centroid`/`ST_Y`/`ST_X`, `:100-108`) was added, turning the JS loop into a fallback that a PostGIS-equipped DB (this one, and production) never takes. `90e3d0f8`/`3c3e6f84` — cross-script safe-math/advisory-lock hardening waves, incidental to this file. `da6db77a`/`f69b561d` — SPEC LINK path repairs (the current header's `41_chain_permits.md` citation is a SURVIVOR of these repairs, not a fresh error — worth noting it was touched twice and still ended up wrong, finding 6) |
+
+### 0.6 The six findings (measured, not inherited)
+
+1. **⚠️ The historical DEFECT this whole pilot exists to convert around is already CLOSED — pilot 6 carries zero behaviour change.** Migration 245 (applied, red-first proven, §0.4) already fixed the invalidation gap Spec 121 §4.3 and Spec 123 §3.2 both singled out as the worked example. This pilot's differential must be a genuine no-op diff against the POST-245 script — there is no defect left to pin.
+2. **The JS fallback is very likely dead weight, same shape as pilot 3's `link_massing_grid_degrees` precedent (ruling A-8).** PostGIS is present locally and in production (`pgisCheck` at `:94` always resolves true on this DB), so the JS batch loop (`:116-186`, ~70 lines, cursor-paginated, per-batch transactional) has almost certainly taken **0 of the 20 recorded runs**. Unlike pilot 3, this fallback is NOT inert — it is the ONLY place the infinite-loop fence (finding above) and `pipeline.BATCH_SIZE` actually matter, so ~~"retire" here means "declare it `knowingly-retired` dead compute, preserved verbatim under a `guards.requires` PostGIS precondition, never executed" rather than "delete the fence" — an ASK for this pilot (A-1 below), not a foregone ruling.~~ **RULED at Fold C (2026-08-29, Integration S-1): A-1 = (a), retire the branch entirely** under `guards.requires: postgis` / `on_missing: fail`. The `80ac3469` fence is deleted WITH the branch — its evidence trail is preserved as documentation (`notes.json` + git history, `knowingly-retired`), not as live code. No longer an open Ask.
+3. **`compute_centroids` has run 20 times total; only ONE run (2026-03-10, 530 rows) ever did real work — every recorded run since 2026-06-10 (~~7 runs~~ **Fold D: 8 runs**, through 2026-07-08) reports `records_total:0`, the zero-work early-return path.** `SELECT started_at, records_total, records_meta->'audit_table'->>'verdict' FROM pipeline_runs WHERE pipeline='sources:compute_centroids' ORDER BY started_at DESC` — matches the current live state (0 NULL centroids, §0.4): the step has been a stable, correctly-behaving no-op for months, which is expected given 245's own header measurement (*"of 486,530 parcels, 0 carry a centroid that deviates by more than 5cm"*) and simply means this step's golden capture (commit 5) will legitimately be the SKIPPED-summary shape, not the compute path — both shapes need a capture (Spec 122 R-C).
+4. **Two undeclared literal verdict thresholds, zero registered `logic_variables` rows for this step.** `failed_geometries` WARN threshold `== 0` (`:197`) and `compute_rate` WARN threshold `>= 98%` (`:198`, `:200`) are both bare numeric literals — Spec 124 Rule 3 violation. `pipeline.BATCH_SIZE = 1000` (the shared `lib/pipeline.js:702` constant, used only by the JS fallback, finding 2) is a THIRD candidate but is shared library-wide infra, not this step's own literal — flagged as an Ask (A-2), not a foregone T-item, because externalizing it per-step would fork a shared constant that 20+ other scripts also read unqualified.
+5. **The script's own SPEC LINK header cites the WRONG chain spec.** `compute-centroids.js:16` reads `SPEC LINK: docs/specs/01-pipeline/41_chain_permits.md` — `compute_centroids` has never been a member of the `permits` chain (manifest: `sources` only, index 9 of 28, §0.3). Two prior spec-link-repair commits (`f69b561d`, `da6db77a`) touched cross-script SPEC LINK headers and did not catch this one. Correct citation: `43_chain_sources.md` (§Step Breakdown row 9, `:169-176`) — fixed at commit 7 as part of the descriptor/header work, zero behaviour change.
+6. **No precondition guard exists at all — confirmed independently, matching `review_followups.md:2970`'s own prior measurement.** `grep -c "assertPreconditions\|no successful" scripts/compute-centroids.js` → 0. The step will run against an empty/malformed `parcels` table and simply report `records_total:0, verdict:PASS` (the `totalParcels===0` early return, `:79`) — benign by construction (not a HALT-worthy gap), but it means BACKFILL's `guards.requires` (if declared) has nothing upstream to name; `parcels` existing is implicit, never asserted. Noted for G6 classification (~~INCIDENTAL~~ **Fold D G3/G6 vocabulary: `knowingly-retired`-adjacent — nothing currently depends on a HALT here, but `INCIDENTAL` is not a valid disposition** — see Fold D below); not an Ask.
+
+### 0.7 Write-discipline re-derivation (Spec 124 Rule 3 / Spec 122 §1.4 — measured, not ported)
+
+**1 write target, 1 write statement (PostGIS path) with a JS-fallback shadow of the same target (finding 2).**
+
+| Field | Value | Grounds |
+|---|---|---|
+| `table` | `parcels` | `:100-106` |
+| `key` | `id` (implicit — no explicit key column in the UPDATE; the WHERE clause IS the whole predicate) | PostGIS path has no `key` in the upsert sense at all — a plain conditional `UPDATE ... WHERE` |
+| `columns` | `centroid_lat`, `centroid_lng` | `:101-102` |
+| `class` | **E `write_once_backfill`** — the frozen enum's literal name for this exact mechanic (`step.schema.json:208`, `x-class-letters.write_once_backfill:"E"`) — matches Spec 122 §8.2's own table row for `compute_centroids` ("Write class: E") **exactly**, no re-derivation needed, no mislabel found (contrast pilot 5's D-class re-derivation, which WAS a correction) | live schema |
+| `guard` | `none` — genuinely nothing to guard against: once `centroid_lat`/`centroid_lng` are non-NULL, this step never revisits the row (the WHERE clause `centroid_lat IS NULL` makes an already-filled row permanently ineligible for THIS step; migration 245's trigger, not this step, is what makes it eligible again) | `:105` |
+| `guard_why` | *"The WHERE clause is the scope, not a value-change guard — this step never re-derives an already-filled centroid; only migration 245's geometry-change trigger (a different write path) makes a row eligible again by NULLing it first."* | this session |
+| `scope` | `"geom IS NOT NULL AND centroid_lat IS NULL"` (PostGIS path, `:105-106`) — mirrored in the JS fallback as `geometry IS NOT NULL AND centroid_lat IS NULL AND id > $1` (the cursor-paginated form of the same scope, finding-fence §0.5) | `:105`, `:117-119` |
+| `retract` | `none` — no DELETE anywhere in the file (`grep -c DELETE` → 0) | measured |
+| `replay` | `idempotent_upsert` — closest frozen-enum fit: re-running this step never touches an already-filled row and is safe to run any number of times (`idempotent_rerun: zero_writes` once the corpus is stable, matching the ~~7/7~~ **Fold D: 8/8** zero-work runs since 2026-06-10) | `idempotent_rerun` measured below |
+| **Grandfathering (Rule 9)** | `guard:"none"` is banned for NEW steps but legal for an EXISTING step with a ledger entry (Rule 9's "an existing step must be able to declare its truth") — **commit 7 needs a `grandfathered.json` entry**, mirroring `link_massing`'s E1 and `link_parcel_addresses`'s D-class entries exactly (same mechanism, `assertGrandfathered` reads only `write_discipline.guard`, not `.class` — Fold A / pilot 5 correction, confirmed applicable here too) | `scripts/steps/_schema/grandfathered.json`, `validate.js:165-186`'s `GUARD_PATH` read |
+| `idempotent_rerun` | `zero_writes` — measured directly: ~~7~~ **Fold D: 8** of the 20 recorded runs (all since 2026-06-10) show `records_total:0, records_updated:0` on a stable corpus (§0.6 finding 3) | `pipeline_runs` |
+| `txn_scope` | ~~⚠️ **SPLIT BY BRANCH, an Ask (A-3 below).** PostGIS path: **`statement`** — a single bare `pool.query(UPDATE...)`, no explicit `withTransaction` wrapper (`:100-108`). JS fallback: **`batch`** — each `BATCH_SIZE`-row batch runs inside its own `pipeline.withTransaction` (`:159-171`). The frozen schema declares `txn_scope` ONCE per write target, not once per code branch — this pilot must declare the value for the branch that ACTUALLY RUNS (PostGIS, `statement`) and record the JS fallback's differing shape as a limitation/note, not silently pick one and hide the other~~ **RESOLVED at Fold C (2026-08-29):** A-1 RULED (a) retires the JS fallback branch entirely (§0.6 finding 2) — only the PostGIS path (`statement`, `:100-108`) remains. Declare `txn_scope: "statement"` outright; no `notes.json` divergence to record | `:100-108` |
+| `outputs.invalidates` (B-3, Fold C, Integration) | `minItems: 1` required for class E — declare `[{table:"parcels", column:"centroid_lat"/"centroid_lng", when:"migration 245 trigger nulls on geom UPDATE (IS DISTINCT FROM)"}]`; documents 245's mechanism as it bears on this step's eligibility scope, not a new staleness detector (245's trigger, not this step, invalidates) | `step.schema.json:798-814` |
+
+### 0.8 Reality-Check ask table (measured live, this session)
+
+| Question | What "implausible" would look like | Measured |
+|---|---|---|
+| Are any parcels' `geom IS NOT NULL AND centroid_lat IS NULL` right now (i.e. is there current backlog)? | A nonzero count post-245 would mean either the trigger isn't firing or a bulk geometry rewrite happened with no `compute_centroids` re-run since | **0 of 486,530** — no backlog |
+| Does every centroid fall INSIDE its own parcel polygon (the classic centroid-outside-lot bug)? | A nonzero count on a normal (non-concave) lot population would suggest geometry contamination | `SELECT COUNT(*) FROM parcels WHERE geom IS NOT NULL AND centroid_lat IS NOT NULL AND NOT ST_Contains(geom, ST_SetSRID(ST_MakePoint(centroid_lng, centroid_lat),4326))` → **3,626 (0.75%)** — **plausible and PRE-EXISTING**: this is the well-documented arithmetic-mean-centroid-on-a-concave-polygon behaviour (`review_followups.md:194,330,542,2474`; Spec 59's own R2.5 ruling: *"for highly concave polygons the centroid can lie outside the polygon... functional behavior is correct"*). Not a new finding, not this pilot's defect to fix — ~~PIN as-is (Spec 123 §3, question 1: is it OBSERVED? `link-parcels.js`'s Tier-3 fallback uses distance-to-permit-point, not containment, so 3,626 out-of-polygon centroids do not by themselves break its semantics — INCIDENTAL to this conversion)~~ **Fold C R-1 (2026-08-29): NOT merely incidental — 3,130 of the 3,626 land inside a DIFFERENT parcel, and cross-joining to `permit_parcels` shows 276 of 494 `spatial`-tier links are mis-attributed as a result (`link-parcels.js:411-426` nearest-centroid). RULED: PIN for this pilot** (zero-behaviour-change scope; predates migration 245) **+ HIGH followup filed against `link_parcels.js`.** Disposition is `pinned-with-followup`, not `INCIDENTAL` (Rule 13 vocabulary) |
+| How different is `ST_Centroid` (what this step computes) from `ST_PointOnSurface` (guaranteed-inside alternative)? | A near-universal large deviation would argue for switching algorithms | `SELECT COUNT(*) FROM parcels WHERE ... ST_DistanceSphere(centroid_point, ST_PointOnSurface(geom)) > 1.0` → **298,021 (61.3%)** differ by >1m — expected and documented as the known, accepted Spec 59 tradeoff (§2474), not a defect; NOT this pilot's decision to revisit (out of scope — algorithm choice is Spec 59's ruling, not Spec 122's conversion) |
+| Is the JS fallback ever actually exercised in production? | If it runs 0 of N times, its own correctness is unverified by any recent execution | Cannot be measured directly (no per-branch telemetry in `records_meta`) — inferred from `hasPostGIS` always resolving true locally and PostGIS being a standing production dependency across the whole `sources` chain (7 other scripts in the 2026-04-02 PostGIS-offload commit alone). ~~Flagged as Ask A-1; a `hasPostGIS: false/true` INFO row is a candidate cheap fix at commit 8 (peel: verdict/audit) regardless of A-1's outcome~~ **MOOT at Fold C (2026-08-29): A-1 RULED (a) retire — the branch is deleted, so its exercise rate is no longer a live question** |
+| Does the standing `parcel-sanity-audit.js` check centroid containment or centroid-vs-point-on-surface deviation? | A zero-coverage blind spot, same shape as pilot 5's finding | Not checked this session — filed as a LOW followup candidate, consistent with pilot 5's own "0 bridge checks" finding for a different table; out of this pilot's PH-0 budget |
+
+### 0.9 The §8.2 ruling line — for the Spec 122/123 owner to fold
+
+**Current text, `docs/specs/01-pipeline/122_pipeline_step_optimization.md:1072`:**
+> `| **BACKFILL** | **1** | `compute_centroids` | ⚠️ forced — **and it is the centroid defect itself** | E |`
+
+**Proposed replacement (measured 2026-08-29, this pilot):**
+> `| **BACKFILL** | **1** | `compute_centroids` | ⚠️ forced — **the centroid defect (§6.4a) is CLOSED by migration 245, applied 2026-08-23; this pilot's conversion carries zero behaviour change** — the JS-fallback dead-weight Ask (link_massing A-8 precedent) and the stale `41_chain_permits.md` header citation are its two live findings | E |`
+
+Also propose, for §6.4a's own prose (not this pilot's file, folded by the owner): replace *"nothing NULLs it on a geometry change"* / *"the gap is real and still unfiled-until-today"* with a **CLOSED, migration 245** annotation in the same style as §6.4's other retracted/corrected paragraphs (§6.4a already has one retraction block from 2026-08-23; this would be a second, dated 2026-08-29).
+
+---
+
+## Fold C (2026-08-29, PLAN panel Integration + Reality-Check, executed)
+
+Two of the five PLAN-altitude seats (Spec 08 §6.4) executed against the live tree/DB this session, ahead of the remaining Ground-truth / Regression Guardian / DeepSeek passes. Full ruling detail lives in `.cursor/pilot6_compute_centroids_active_task.md`'s own Fold C section (source of record for dispositions); this section carries the grounding evidence.
+
+### Integration — BLOCKING
+
+| ID | Finding | Grounds | Ruling |
+|---|---|---|---|
+| **B-1** | Class E `write_once_backfill` is **unimplemented** in `scripts/lib/step/write.js` | `SET_BASED_CLASSES` (`:63`) = `{set_based_scoped, set_based_unscoped, set_based_null_retract}` — no `write_once_backfill` member; default branch is a bound-values upsert; `sqlLiteral` (`:188`) refuses server-side expressions | **LG-20**: new `write_once_backfill` class branch (descriptive, `generated_by:"compute"`, no `clear_sql`) + executor `executeBackfillUpdate` — keyset `UPDATE ... SET <cols> = <server expression over the row> WHERE <scope> AND id > $1 ORDER BY id LIMIT $2`, UPDATE-only assertion, ~~`IS DISTINCT FROM` guard on written columns~~ **Fold D fix: `compute_centroids` declares `guard:"none"` (Rule-9 grandfathered, idempotent BY SCOPE — vacuous on a NULL-scoped row); `executeBackfillUpdate` MAY offer `IS DISTINCT FROM` as an OPTIONAL generic capability for future backfill targets, not declared here** |
+| **B-2** | No write runs outside a phase runner today; this would be the 4th duplication of the guards→prior/gate→pre_write→RUN_AT→post shape | `runLinkPhase` (pilot 3), `runCascadePhase`/`runMaterializePhase` (pilot 5) each independently implement this shape | **A-4 RULED**, within pre-authorization: thin `runBackfillPhase` (`execution.shape:"backfill"`) — **ACCEPT at Fold D** (thin fork, per the `isCascadeStep`/`isMaterializeStep` precedent). ~~**+ LG-21** `runPhaseScaffold(descriptor, phaseBody)` (the pilot-5 §R carried item), with the 3 existing phase runners refactored onto it ONLY if golden hashes + suites stay identical (prove; else leave + file)~~ **Fold D: LG-21 DEFERRED to a dedicated library WF after pilot 8**, not shipped this pilot; the pilot-5 §R carried item is re-carried, not closed |
+| **B-3** | `outputs.invalidates` requires `minItems: 1` for class E | `step.schema.json:798-814` | Declare `[{table:"parcels", column:"centroid_lat"/"centroid_lng", when:"migration 245 trigger nulls on geom UPDATE (IS DISTINCT FROM)"}]` — documents 245's mechanism as it bears on this step's scope; NOT a new staleness detector (245's trigger, not this step, invalidates) |
+
+### Integration — SHOULD-FIX
+
+| ID | Finding | Grounds | Action |
+|---|---|---|---|
+| **S-1** | A-1 RULED (a): retire the JS fallback | Same shape as `link_massing` A-8 precedent | `guards.requires: postgis`, `on_missing: fail`; the `80ac3469` cursor-pagination fence (§0.5, §0.6 finding 5) is **deleted with the branch** — recorded `knowingly-retired` with the commit-message evidence preserved in `notes.json` + git history |
+| **S-2** | Verdict parallel boolean | `compute-centroids.js:214-215`, measured this session: `const hasWarns = failed > 0 \|\| safeParseFloat(computeRate, 'compute_rate') < 98;` then `verdict: hasWarns ? 'WARN' : 'PASS'` (`:221`) — a computed boolean parallel to, not derived from, `auditRows` | Peel 8b, Rule 10: verdict must derive FROM `auditRows` |
+| **S-3** | New consumer G10 | `link-coa-to-parcels.js` — `grep -n "centroid_lat\|centroid_lng"` hits at `:284,407,443,462,499-500,715`; header comment `:6` states *"(b) lat/lng back-fill into coa_applications from parcels.centroid_lat/centroid_lng"* | Add as consumer G10 — reads `centroid_lat`/`centroid_lng`, **back-fills** `coa_applications.lat/lng` (a write-propagating consumer, unlike G5/G6) |
+
+### Notes (Integration)
+
+Key `"id"` required. Golden projection auto-derived `{id, centroid_lat, centroid_lng}`. `staleness`: all 9 keys present, degenerate `"none"` where applicable. The cursor-pagination fence's evidence trail lives in `checks[].why`/`notes.json`, **not** `staleness.checkpoint`. `R-B`/`R-P`: **N/A with why** — no destructive-retraction write target, no crash-recovery-relevant write shape.
+
+### Rule 13 pre-staging (commit-9 gate)
+
+G0 heading `"PH-0 — boundary freeze"` · G1/G3 heading `"PH-3"` + closed disposition vocabulary (`INCIDENTAL` is **not** a disposition — use `knowingly-retired` / `preserved-in-*` / `encoded-as-*`) · G6: every `CC-D*` row reaches CLOSED/PIN before commit 9 · G7: `violations.test.ts` + a literal `"RED"` excerpt + locks ≥ fences · G8: captures land (incl. the LG-20 path) · G9: `"§R Reflection"` with BOTH a `"LOW-CONFIDENCE"` table and a `"RECURRING/STANDARD-SHAPING"` table.
+
+### Reality-Check — all numbers reproduced this session
+
+| ID | Query / method | Result | Ruling |
+|---|---|---|---|
+| **R-1** | Of the 3,626 out-of-polygon centroids (§0.8), how many fall inside a DIFFERENT parcel? `ST_Contains` against every other parcel's `geom` for the 3,626-row set, cross-joined to `permit_parcels` tier=`spatial` links | **3,130 of 3,626** land inside a different parcel. Of **494** `spatial`-tier `permit_parcels` links pointing at a drifted parcel, **276** have the permit's own point actually inside another specific parcel — a mis-attribution signature traced to `link-parcels.js:411-426`'s nearest-centroid join | **BLOCKING-as-finding, RULED PIN for pilot 6** (zero-behaviour-change scope; predates migration 245). **HIGH followup filed**: *"Tier-3 nearest-centroid join should use `ST_PointOnSurface` or a containment check; 276 candidate mis-links measured 2026-08-29."* Pin invariants: `centroid_null_count=0`, `geom_not_null_geometry_null_count=0`, `outside_polygon_count=3626`, `pointonsurface_gt_1m_count=298021`, **NEW** `centroid_in_neighbour_parcel_count=3130` (comment naming the 276-link exposure). **Fold D: `CC-D2` opened at commit 2 (status PIN) so this reaches G6.** `invariants.json`'s `centroid_in_neighbour_parcel_count` MUST use a materialized CTE + `CROSS JOIN LATERAL (... LIMIT 1)` — a naive correlated `EXISTS` over the 3,626-row set ran 6+ minutes with no GiST use; see Fold D for the query shape |
+| **R-2** | `link-coa-to-parcels.js` exposure (S-3's new consumer) | Not measured this session — no query run against `coa_applications.lat/lng` propagation | Followup filed (unmeasured exposure, tracked with R-1) |
+| **R-3** | Does `enrich-ravines.js` (or any ravines-path compute file) read stored centroids? | `grep -rn "centroid_lat\|centroid_lng" scripts/` → 11 files, **none** in the ravines path (`link-massing.descriptor.json`, `manifest.json`, `link-massing.notes.json`, `scripts/lib/compute/link-massing.js`, `massing-coverage-analysis.js`, `assert-global-coverage.js`, `load-massing.js`, `lineage-meta-snapshot.json`, `link-coa-to-parcels.js`, `link-parcels.js`, `compute-centroids.js`) | **Struck from the consumer set** — `enrich_ravines` does not read stored centroids |
+
+### Consequence for A-2/A-3
+
+A-1(a)'s retirement of the JS fallback (S-1) leaves `pipeline.BATCH_SIZE` (Ask A-2) with no remaining reader in this file — **MOOT, closed not deferred**. It also leaves exactly one write branch (PostGIS), so `txn_scope` (Ask A-3) is **RESOLVED**: declare `"statement"` outright, no divergence to record in `notes.json`.
+
+---
+
+## Fold D (2026-08-29, fold-validation of Fold C — grounder CONFIRMED all except: runs since 2026-06-10 = 8 not 7; Cross-read Adversary verdicts below)
+
+Full ruling detail lives in `.cursor/pilot6_compute_centroids_active_task.md`'s own Fold D section (source of record for dispositions); this section carries the grounding evidence, mirroring the Fold C convention above.
+
+### Grounder — fold-validation of Fold C (Spec 08 §11.2)
+
+Re-executed every query/grep Fold C's Integration and Reality-Check passes relied on.
+
+| Fold C claim | Re-execution | Verdict |
+|---|---|---|
+| B-1 (`write_once_backfill` unimplemented) | `SET_BASED_CLASSES` at `write.js:63` re-read | **CONFIRMED** |
+| B-3 (`minItems:1` for class E) | `step.schema.json:798-814` re-read | **CONFIRMED** |
+| S-1 (A-1(a) retire) | `compute-centroids.js:94-115` re-read | **CONFIRMED** |
+| S-2 (`hasWarns` parallel boolean) | `compute-centroids.js:214-221` re-read | **CONFIRMED** |
+| S-3 (`link-coa-to-parcels.js` consumer) | `:284,407,443,462,499-500,715` re-grepped | **CONFIRMED** |
+| R-1 (3,130/3,626; 276/494) | `ST_Contains` cross-join re-run | **CONFIRMED** |
+| R-2 (unmeasured) | no query exists yet | **CONFIRMED unmeasured** |
+| R-3 (0 ravines-path hits) | `grep -rn "centroid_lat\|centroid_lng" scripts/` re-run | **CONFIRMED** |
+| Finding 3 / §0.7 `idempotent_rerun` ("7 runs since 2026-06-10") | `SELECT COUNT(*) FROM pipeline_runs WHERE pipeline='sources:compute_centroids' AND started_at >= '2026-06-10' AND records_total=0` re-run | **CORRECTED: 8, not 7.** The 20-total and single-real-work-run (2026-03-10) figures are unaffected — only this sub-count was off by one |
+
+### Cross-read Adversary — pairwise collision check across Fold C's own dispositions
+
+1. **A-1(a) — ACCEPT.** Evidence: the PostGIS branch (`compute-centroids.js:98-115`) is ONE `UPDATE ... RETURNING id` with no loop; the `80ac3469` cursor-pagination fence protected ONLY the JS fallback (`:116-185`) — it has no PostGIS-branch analogue to preserve. Retiring the fallback branch necessarily retires the fence with it; the fence's disposition is `knowingly-retired` on this exact evidence. `CC-D1` → PIN/CLOSED accordingly (Fold C's ruling unchanged, evidence now on record).
+2. **A-4 — AMENDED.** `runBackfillPhase` — **ACCEPT** (a thin fork, per the `isCascadeStep`/`isMaterializeStep` "FORKED, NOT A BRANCH" precedent). **LG-21 shared scaffold `runPhaseScaffold` — DEFERRED** to a dedicated library WF after pilot 8, not shipped inside this pilot: fork-over-share has been chosen TWICE already with measured reasons (pilot 3, pilot 5), and a genuine proof set that a shared scaffold stays byte-identical across `runLinkPhase`/`runCascadePhase`/`runMaterializePhase` would require forcing a `link_wsib` FULL run (~20–30 min) this pilot has no standing reason to spend. The pilot-5 §R carried item is **re-carried explicitly** as "library WF, not a pilot item." **Strike the LG-21 refactor from commit 7** — commit 7 ships LG-20 + `runBackfillPhase` only.
+3. **LG-20 guard wording — fixes Fold C's B-1 sentence.** `compute_centroids` declares `guard: "none"` (Rule-9 grandfathered: idempotent BY SCOPE — the `centroid_lat IS NULL` scope self-excludes already-filled rows; an `IS DISTINCT FROM` guard on a NULL-scoped row is vacuous). `executeBackfillUpdate` (LG-20) MAY offer `IS DISTINCT FROM` as an OPTIONAL generic capability for FUTURE backfill targets that need a value-change guard — it is NOT declared for `compute_centroids` itself.
+4. **R-1 mechanics — open `CC-D2`.** `CC-D2` opens at commit 2 (status **PIN**) for the 3,130/276 mis-attribution finding, so it reaches G6's classification pass. `invariants.json`'s `parcels_centroid_in_neighbour_parcel_count` (3,130) MUST be computed via a materialized CTE + `CROSS JOIN LATERAL (... LIMIT 1)` — a naive correlated `EXISTS` over the 3,626-row set against 486,530 parcels ran 6+ minutes with no GiST index use. Query shape:
+   ```sql
+   WITH drifted AS (
+     SELECT id, geom, ST_SetSRID(ST_MakePoint(centroid_lng, centroid_lat), 4326) AS c
+     FROM parcels
+     WHERE geom IS NOT NULL AND centroid_lat IS NOT NULL
+       AND NOT ST_Contains(geom, ST_SetSRID(ST_MakePoint(centroid_lng, centroid_lat), 4326))
+   )
+   SELECT COUNT(*) FROM drifted d
+   CROSS JOIN LATERAL (
+     SELECT p2.id FROM parcels p2
+     WHERE ST_Contains(p2.geom, d.c) AND p2.id <> d.id
+     LIMIT 1
+   ) hit;
+   ```
+   The HIGH followup against `link_parcels.js` stays filed as Fold C recorded it.
+5. **G3 vocabulary.** Safe-math hardening commits (`90e3d0f8`, `3c3e6f84`) → disposition **`preserved-in-compute`** (their helpers are live at `:67`/`:193`/`:198`). Commits leaving nothing observable in the current file → **`knowingly-retired`** with qualifier *"superseded by the 2026-08-29 rewrite, never itself load-bearing."* **`INCIDENTAL` never appears as a disposition** — every occurrence of the word as a G3/G6 disposition in this report is struck at its own location above.
+6. **Zero-behaviour-change diff buckets — named.** (1) JS fallback removal, (2) `hasWarns` → row-derived verdict (same predicate, no semantic change), (3) SPEC LINK header correction, (4) module guard (`require.main`/`module.exports` added). This holds **wherever PostGIS resolves true** — `guards.requires: postgis`, `on_missing: fail` declares the rest (a DB with no PostGIS extension now HALTS rather than silently falling back, which IS a behaviour change on that untested branch, correctly declared rather than hidden, not swept into "zero behaviour change").
+7. **Runs since 2026-06-10 = 8, not 7.** Every "7 runs" citation in §0.6 finding 3 and §0.7's write-discipline table is corrected to 8 at its own location above. Total run count (20) and the single real-work run (2026-03-10) are unaffected.
+
+### Operator-rulings block — Fold D correction
+
+"none blocking — A-1(a), A-4 (`runBackfillPhase` ACCEPT; **LG-21 shared scaffold DEFERRED** to a post-pilot-8 library WF, not this pilot) ruled within pre-authorization; R-1 PIN + `CC-D2` (opened commit 2, status PIN) + HIGH followup (`link_parcels.js`)."
+
+---
+
+*(§1–§9, the promoted full PH-0..PH-8 passes, land at commits 1–9 per Spec 123 §7's own procedure — this stub discharges the plan's "Full grounding detail" citation and is not itself a completed assessment.)*
