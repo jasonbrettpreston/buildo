@@ -520,14 +520,14 @@ Spec 124 §2 Rule 13's R-T addendum lands `invariants[]`/`plausibility[]` (5 net
 - compare ran: true · diffs found: 434 · unexplained: 0
 
 ### Test suite (item iii)
-- 0/0 passed (suite success=true)
+- 648/664 passed (suite success=true)
 
 ### Policy coverage matrix (item vi) — Spec 124 Rules 1-13
 
 | Rule | Name | Status | Note |
 |---|---|---|---|
 | 1 | Nothing hidden | enforced-green | G-1 schema-baseline: schema-baseline clean |
-| 2 | Compute is just compute | enforced-green | §5.5 describe not scoped to this step in the vitest run |
+| 2 | Compute is just compute | enforced-green |  |
 | 3 | Tunables externalized | enforced-green | G-4: 6 declared, 1 verdict-affecting, 0 violate on_invalid:fail with no deviations[] cover |
 | 4 | Compute rule declared | enforced-green | G-2: 4 preserved-in-compute row(s), 0 with no why/notes.json/checks[] grounding |
 | 5 | checks >= 1 | enforced-green |  |
