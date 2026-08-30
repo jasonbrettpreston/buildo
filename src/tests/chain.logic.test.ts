@@ -715,12 +715,12 @@ describe('PIPELINE_SUMMARY convention', () => {
     'classify-permits.js',
     'classify-scope.js',
     'geocode-permits.js',
-    'link-parcels.js',
     'link-neighbourhoods.js',
-    // link-massing.js / link-wsib.js / compute-centroids.js RE-HOMED (Spec 122 §5.1
-    // conversion, pilots 3 + 4 + 6) — same treatment as assert_schema at pilot 1: a
-    // converted step spells neither emit itself, and the `lib/step/index.js` entry
-    // already in the PIPELINE_META list below IS the emitter for all of them.
+    // link-massing.js / link-wsib.js / compute-centroids.js / link-parcels.js RE-HOMED
+    // (Spec 122 §5.1 conversion, pilots 3 + 4 + 6 + 7) — same treatment as assert_schema
+    // at pilot 1: a converted step spells neither emit itself, and the
+    // `lib/step/index.js` entry already in the PIPELINE_META list below IS the emitter
+    // for all of them.
     'link-similar.js',
     'link-coa.js',
     // Phase G (Spec 42 §6.11): create-pre-permits.js retired.
@@ -866,12 +866,11 @@ describe('PIPELINE_META convention', () => {
     'classify-permits.js',
     'classify-scope.js',
     'geocode-permits.js',
-    'link-parcels.js',
     'link-neighbourhoods.js',
-    // link-massing.js / link-wsib.js / compute-centroids.js RE-HOMED (Spec 122 §5.1
-    // conversion, pilots 3 + 4 + 6) — same treatment as assert_schema at pilot 1: a
-    // converted step spells neither emit itself, and the `lib/step/index.js` entry
-    // below IS the emitter for all of them.
+    // link-massing.js / link-wsib.js / compute-centroids.js / link-parcels.js RE-HOMED
+    // (Spec 122 §5.1 conversion, pilots 3 + 4 + 6 + 7) — same treatment as assert_schema
+    // at pilot 1: a converted step spells neither emit itself, and the
+    // `lib/step/index.js` entry below IS the emitter for all of them.
     'link-similar.js',
     'link-coa.js',
     // Phase G (Spec 42 §6.11): create-pre-permits.js retired.
@@ -1583,12 +1582,19 @@ describe('§11 Counter Semantic Contract — emitSummary uses primary-entity cou
   // than a source-text pattern, asserted in src/tests/steps/link_wsib/violations.test.ts
   // ("#200 The §11 Counter Semantic Contract").
 
-  it('link-parcels: records_updated uses totalLinked (permits), not dbUpserted (permit_parcels rows)', () => {
-    const content = src('link-parcels.js');
-    // Must NOT use dbUpserted (join-table row count) as records_updated
-    expect(content).not.toMatch(/records_updated\s*:\s*dbUpserted/);
-    // permit_parcels mutation count must be visible as a named audit row
-    expect(content).toContain('permit_parcels_written');
+  // link-parcels.js RE-HOMED (Spec 122 §5.1 conversion, C1 pilot 7, 2026-08-30): the
+  // records_updated semantic (52ad6527's own fix — the upsert's own row-changed count,
+  // not a raw dbUpserted variable) is now a DECLARED field
+  // (descriptor.counters.records_updated.source = "written.e1.updated") rather than a
+  // source-text pattern, same treatment link_massing/link_wsib got at pilots 3/4.
+  it('link_parcels: the permit_parcels mutation count is a NAMED audit row, and the counters declare their scope', () => {
+    const descriptor = JSON.parse(
+      fs.readFileSync(path.resolve(__dirname, '../../scripts/link-parcels.descriptor.json'), 'utf-8'),
+    ) as { checks: Array<{ id: string; severity: string }>; counters: Record<string, { source: string; scoped_by: string[] }> };
+    const ids = descriptor.checks.map((c) => c.id);
+    expect(ids, 'the permit_parcels mutation count must stay visible under this exact name').toContain('permit_parcels_written');
+    expect(descriptor.counters.records_updated!.source).toBe('written.e1.updated');
+    expect(descriptor.counters.records_updated!.scoped_by).toEqual(['permit_num', 'revision_num', 'parcel_id']);
   });
 
   it('load-neighbourhoods: records_updated is boundary count, not census characteristic rows', () => {

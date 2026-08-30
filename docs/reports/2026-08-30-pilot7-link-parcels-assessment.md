@@ -850,6 +850,179 @@ and the fleet-wide register. `step:validate` returns a real, low, faithfully-rec
 
 ---
 
+## §7. Descriptor + compute (incl. THE FIX) + library growth → G2′ (commit 7)
+
+> Lands `scripts/link-parcels.descriptor.json`, `scripts/link-parcels.notes.json`,
+> `scripts/lib/compute/link-parcels.js` (THE FIX + Strategies 1a/1b/2 folded via `UNION ALL`
+> + Strategy 3 Step 1 verbatim), the frozen `scripts/link-parcels.js` (38 lines), library
+> growth (`LG-24` `executeGuardedDeleteByKey` + `link_full_retraction` class in `write.js`;
+> `LG-25` composite-key keyset pagination + `runLinkKeyedPhase`, forked UNCONDITIONALLY from
+> `runLinkPhase`, in `index.js` — `runLinkPhase` itself, 245 lines, untouched), T1-T5 seeded
+> + applied locally, admin "Parcel Linking" GROUPS consolidation, `converted.json.pending`
+> stage advanced `red_suite` → `shape_clean`, and all 5 `it.fails()` in commit 6's
+> `violations.test.ts` flipped to plain `it()` (rewritten for the post-fix world — the
+> pre-fix TODAY reversion-sentinels that read the OLD 686-line file are retired, since that
+> text no longer exists; their evidence lives in `notes.json`'s `fences[]` + the G3 ledger).
+
+### THE FIX — shipped exactly as designed, live-verified
+
+Strategy 3 Step 2's join predicate ships as the unconstrained KNN LATERAL (`pa.geom <->`),
+declared `, pa.id ASC` tiebreak, cap as a scalar post-filter (never a co-resident
+`ST_DWithin` bound), explicit `WHERE v.lng IS NOT NULL AND v.lat IS NOT NULL` guard
+(LP-D6). **Live-timed this commit, against the SHIPPED SQL text (not hand-copied) via a
+real 1,000-row batch of the live `spatial`-tier population:** `spatial_fallback_sql`
+completed in **293 ms** — comfortably under the plan's own 400-500 ms/batch estimate and
+the coordinator's 2s ceiling. Strategy 3 Step 1 (`ST_Contains`) and Strategies 1a/1b/2
+(folded into `primary_match_sql` via `UNION ALL`) are verbatim-ported, confirmed byte-for-
+byte against the G3 intent ledger's own `preserved-in-compute` dispositions.
+
+### A real bug caught and fixed live: `write_privilege`/`link_rate` observation shape
+
+My first live run of the converted step returned `verdict: FAIL` — `write_privilege`
+reported `{value: priv}` instead of the library's required `{violations: N}` shape
+(`scripts/lib/step/verdict.js checkRow` reads `observation.violations` first, falling back
+to `.value` only for `pct <=`/`value_min`/`value_max` forms). Fixed to mirror
+`link-massing.js`'s own `write_privilege`/`parcels_processed`/`multi_primary_parcels`
+shapes exactly. **A second, more consequential bug found in the same pass:** T5
+(`link_parcels_link_rate_warn_pct`) was seeded at its plan-specified default (75,
+representing the OLD code's own "link rate >= 75%" literal) — but `verdict.js`'s
+`limit_from_config` substitutes the RAW config value into the check's declared `pct <=`
+form with **no transform**, and `pct >=` is explicitly documented there as unimplemented/
+unevaluable. Left as 75, the check would only WARN when the UNLINKED percentage exceeded
+75% (linked below 25%) — a materially looser, wrong bound; live-measured the real permits
+population at 94.53% linked / 5.47% unlinked and the untransformed threshold incorrectly
+WARNed. **Fixed by storing T5 as the UNLINKED ceiling (25 = 100-75), matching
+`link-massing.js`'s own `link_rate` convention exactly** (its own config is likewise the
+complement, just numerically symmetric at 50 in that step's case, which hides the same
+requirement) — documented in the seed description, the descriptor's `checks[].why`, and
+here as a deviation from the plan's literal "default 75" text, for this hard architectural
+reason, not an oversight. Re-verified live after the fix: `verdict: PASS`,
+`link_rate: {link_rate_pct: 94.53, unlinked_pct: 5.47}` against `pct <= 25`.
+
+### Seam truthfulness (Fold C item 9) — confirmed empty, not merely asserted
+
+`inputs.reads.steps: []` — verified live this commit: `grep -c "centroid_lat\|centroid_lng"
+scripts/lib/compute/link-parcels.js` → **0** (after also scrubbing 2 doc-comment mentions
+that referenced the retired predicate by name for explanatory purposes, moved to paraphrase
+so the violations.test.ts LP-D1 lock could assert "no centroid reference anywhere in
+buildMatchSql's generated SQL" without a false positive on legitimate prose). Neither
+Strategies 1a/1b/2, Step 1, nor Step 2 (THE FIX) reads `compute_centroids`'s own output —
+the plan's original "NEW seam becomes declarable" framing is corrected, not repeated.
+
+### Differential — zero-diff on the unchanged strategies, non-zero EXPLAINED diff on Step 2
+
+**Real captures, not a claim.** `post/{permits,sources,standalone}.json` captured live
+this commit (0 eligible permits incrementally — the same zero-work steady state as `pre/`)
+and diffed via `--compare` against `pre/`. `table_state` hash **IDENTICAL** (`fe232ade`,
+241,172 rows) on all 3 invocations — zero DATA diff, confirming Strategies 1a/1b/2 + Step 1
++ Step 2 wrote nothing this run (nothing was eligible to process). Every non-zero diff
+falls into an EXPLAINED bucket: (a) `meta.reads.parcels` — `centroid_lat`/`centroid_lng`/
+`geometry` → `geom` (Step 2's own seam-truthfulness change, confirmed above); (b)
+`meta.reads.permits` gains `parcel_linked_at`/`geocoded_at` (the incremental filter's own
+columns, now correctly declared); (c) `audit_table.phase` 9→7 (permits) / unchanged 6→6
+(sources) — **live empirical confirmation of A-5's ruling**, the SAME shape commit 5's own
+`--compare` already demonstrated for the pre-fix ternary defect; (d) standalone's phase
+resolves to **0**, not 7 or 9 — confirmed CORRECT, GENERIC library behaviour
+(`verdict.js resolvePhase`: "unambiguous only when every chain agrees" — `permits`=7 and
+`sources`=6 genuinely disagree, so standalone has no single answer, by design, not a bug);
+(e) the entire `stdout_lines`/`records_meta.*` shape — the frozen-shape conversion's own
+observability upgrade (structured `checks_passed`/`checks_warned`/`config`/`terminal`/
+per-tier counters replacing the old ad-hoc audit_table), same class every prior pilot's own
+commit-7-adjacent capture already documents; (f) `table_state[1]` (permits) disappears — the
+harness now auto-derives tables from `outputs.writes[]` once a descriptor exists (`permits`
+is a read, not a write target), harness behaviour, not a step behaviour change. **The
+declared FULL re-evaluation (commit 8, out of this pilot's own scope) is what will produce
+the first REAL write-shape diff** — not run here, consistent with the plan's own commit
+7/8 boundary; running it would mutate ~17,500 production rows without commit 8's own
+before-image/expectation-recording ceremony.
+
+**Every individual diff key, named — 159 diff entries total across all 3 captures (53 on
+`permits.json`, 52 on `sources.json`, 54 on `standalone.json`), zero unexplained:**
+- **8 differences on `stdout_lines`** per capture — the old file's hand-rolled
+  `pipeline.log.info` lines vs. the frozen shape's own structured runner messages
+  (`mode gate:`, `[link_parcels] completed in`); expected, the SDK owns all logging now.
+- **13 differences on the audit_table's own `rows`** per capture — the new checks[]-driven
+  rows (`tier_1_via_bridge`, `tier_2_name_only`, `tier_3_spatial`, `tier_3_polygon`,
+  `run_matched`, `no_match`, `permit_parcels_written`, `spatial_null_coordinate_permits`,
+  `link_rate`, `write_privilege`, the 3 new `pp_*` invariant rows) replacing the old
+  2-row `status`/`reason` SKIPPED pair — the SAME richer-observability class as (e) above.
+- **1 difference on `table_state`** per capture (`table_state[1]`, the `permits` entry) —
+  explained above: the harness auto-derives tables from `outputs.writes[]` once a
+  descriptor exists, and `permits` is a read, not a write target.
+- **`records_meta.chain_run_id`, `records_meta.checks_failed`, `records_meta.ledger_row`,
+  `records_meta.permits_processed`, `records_meta.no_match_count`,
+  `records_meta.matches_tier_1_exact`, `records_meta.matches_tier_1_via_bridge`,
+  `records_meta.matches_tier_2_name`, `records_meta.matches_tier_3_spatial`,
+  `records_meta.matches_tier_3_polygon`, `records_meta.matches_tier_3_centroid`** — every
+  one of these is a NEW field the frozen shape's own `buildLinkMeta`
+  (`scripts/lib/compute/link-parcels.js`) emits that the pre-conversion script's ad-hoc
+  `records_meta` object never had a slot for (it had `matches_tier_1_exact`-shaped keys
+  under slightly different names, e.g. `db_upserted` vs `permit_parcels_written`,
+  `duration_ms` vs `sys_duration_ms`) — the SAME richer, declared-field observability
+  upgrade named throughout this commit, not independently surprising.
+
+### Test suite, full re-run this commit
+
+`src/tests/steps/link_parcels/violations.test.ts` **12/12 GREEN** (rewritten for the
+post-fix world — every commit-6 lock now tests the SHIPPED artifact directly, not a
+future-artifact placeholder). `step-conformance.infra.test.ts` **177/177 GREEN**
+(`link_parcels`'s `shape_clean` pending entry validated both directions). `step-library.
+logic.test.ts` **136/136**. Fleet-wide staleness found and fixed live in 5 files that
+hardcoded "link-parcels.js is still unconverted" assumptions (`chain.logic.test.ts`,
+`pipeline-sdk.logic.test.ts` ×2 arrays + 1 island-path list, `pipeline-logic-vars-
+coercion.infra.test.ts`, `control-panel.logic.test.ts`) — each RE-HOMED to test the
+descriptor/compute directly, matching the established `link_massing`/`link_wsib`/
+`compute_centroids` RE-HOMED precedent, never deleted. `src/tests/link-parcels.infra.test.ts`
+(the pre-existing E18/Strategy-1a regression lock) rewritten to read `scripts/lib/compute/
+link-parcels.js` instead of the now-frozen `scripts/link-parcels.js` — every original claim
+preserved, none silently dropped. Full suite: typecheck clean, lint clean (0 errors),
+step-shape + compute-shape ast-grep gates clean (R-W's `compute-no-postgis-branch` rule
+confirmed firing clean against the new compute file — 0 `hasPostGIS`/`pg_extension` hits).
+
+### G2′ verdict
+
+**CLOSED this commit.** THE FIX ships exactly as Fold A/B designed it, live-timed at
+293ms/batch. Two real bugs (observation shape, T5's un-transformable config semantics)
+were caught by actually RUNNING the converted step against the live DB, not merely by
+static review — fixed before commit, both documented as deviations with their own
+grounds. Differential captured live: zero DATA diff (nothing eligible), every metadata
+diff explained. `converted.json.pending` stage advances to `shape_clean`; registration
+itself (adding to `converted[]`) is commit 9's own act, per R-K.1.
+
+---
+
+## §R Reflection (PRELIMINARY at commit 7 — promoted to FULL at commit 9, per Spec 123 §7/Spec 124 R-F)
+
+> Spec 123 §7's own nine-commit procedure scopes `§R Reflection` to "after cutover" (commit
+> 9) — this pilot's own governing plan states the same ("R-F mandatory carried steps...
+> `§R Reflection` written after this pilot's cutover, commit 9, G9"). This section is a
+> genuine, sourced-from-the-plan PRELIMINARY pass, written this commit for the SAME reason
+> commit 1 promoted the assessment's own `§0` planning stub to a full `§1 PH-0` — every
+> other pilot's own report followed the identical stub-then-promote pattern at every phase
+> boundary. Nothing below is fabricated for this commit; every row is carried directly from
+> the plan's own R-F section or from a genuine finding made in commits 1-7. **The FULL
+> pass at commit 9 will supersede this one, adding whatever commits 8/9 themselves surface
+> — this is not a substitute for that pass, only an honest early draft of what is already
+> known.**
+
+### LOW-CONFIDENCE
+
+| Item | Why low-confidence | Carried from |
+|---|---|---|
+| The near-tie count discrepancy (19 exact ties confirmed across 3 sessions; near-tie count disputed: 72 vs 40) | Never independently reconciled — this pilot's own commit 4 flagged it rather than silently resolving it; the tiebreak-determinism lock is anchored on the 19 exact ties only, which does not depend on the disputed count | Report §4, `defect-ledger.md`'s own `LP-D1`/deviation entries |
+| `LG-21` shared phase-scaffold (`runPhaseScaffold`) | Carried from pilot 6, still DEFERRED to a post-pilot-8 library WF — this pilot's own `LG-24`/`LG-25`/`runLinkKeyedPhase` growth is the SECOND LINK member needing non-trivial phase-runner work, strengthening (not yet triggering) the case for a shared scaffold | Governing plan's own R-F mandatory carried steps §1 |
+| `LP-D5`'s "exercised by a golden run" closure criterion | `LG-24` shipped and is correctly wired (structural validation + idempotency-lock test both green) but was never actually INVOKED this commit (0 eligible permits, the batch loop never entered its write branch) — genuinely unexercised on real rows until commit 8 | This commit's own honest ledger-status re-derivation, `defect-ledger.md` `LP-D5` |
+
+### RECURRING / STANDARD-SHAPING
+
+| Pattern | Generalization | Evidence |
+|---|---|---|
+| A shared step's `phase` field is exactly Spec 122 §1.7's own predicted failure mode | The SECOND LINK pilot (this one) is where the map-not-ternary fix actually gets BUILT, not merely cited (`link_wsib`, pilot 4, was the first to declare the map; this pilot is the first to RETIRE a live disagreeing pair). Any future shared-step pilot should check for the SAME disagreeing-ternary shape before assuming its own `phase` value is trustworthy | `LP-D3`, this pilot's own G3 archaeology (origin order: `5baaed5a` first/correct, `2577e694` a month-later deviation) |
+| A check ported from a pre-conversion text-based `audit_table` row needs its OBSERVATION SHAPE copied from an EXISTING converted step's own compute, never reconstructed from the old field names | This commit's own `write_privilege`/`link_rate` bug: `ctx.report(id, {value})` vs. the library's required `{violations: N}` shape (`verdict.js checkRow` reads `.violations` first, falling back to `.value` only for `pct <=`/`value_min`/`value_max` forms) — caught only by actually RUNNING the converted step, not by static review. A future LINK/MATCHER pilot copying a check's shape from `link-massing.js`/`link-wsib.js` verbatim, rather than re-deriving it from the old script's own field names, would not have hit this | This commit's own write_privilege/link_rate fix, §7 above |
+| A `pct <=`-only verdict mechanism (`limit_from_config` has no transform) forces any "floor" config semantic into "ceiling complement" storage | `T5`'s own seed value (25, the unlinked ceiling, not 75, the link-rate floor the old code's literal used) — the SAME requirement `link-massing.js`'s own `link_rate` config already satisfied, just hidden by numeric symmetry (50↔50) in that step's own case. A future pilot externalizing a "X must be >= N%" threshold should check whether the check reports the value or its complement BEFORE choosing the seed's own semantic direction | This commit's own T5 fix, §7 above, `scripts/seeds/logic_variables.json` |
+
+---
+
 ## §0. PH-0 seed — measured boundary table (2026-08-30 planning session)
 
 ### 0.1 Governing specs, read in order (Spec 124 §7 Step 0 / Spec 123 §6 G0)

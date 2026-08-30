@@ -1000,15 +1000,14 @@ describe('Pipeline SDK', () => {
       'classify-permits.js',
       'classify-scope.js',
       'geocode-permits.js',
-      'link-parcels.js',
       'link-neighbourhoods.js',
-      // link-massing.js / link-wsib.js / compute-centroids.js RE-HOMED (Spec 122 §5.1
-      // conversion, pilots 3 + 4 + 6): a converted step calls pipeline.step(), never
-      // pipeline.run(), and emits nothing itself — the library owns the whole
-      // lifecycle. The successor lock is src/tests/step-conformance.infra.test.ts's
-      // §5.2 conformance battery, which asserts the SAME properties (SDK imported,
-      // lifecycle owned by the SDK, summary + meta emitted) on the new mechanism for
-      // every converted step.
+      // link-massing.js / link-wsib.js / compute-centroids.js / link-parcels.js
+      // RE-HOMED (Spec 122 §5.1 conversion, pilots 3 + 4 + 6 + 7): a converted step
+      // calls pipeline.step(), never pipeline.run(), and emits nothing itself — the
+      // library owns the whole lifecycle. The successor lock is
+      // src/tests/step-conformance.infra.test.ts's §5.2 conformance battery, which
+      // asserts the SAME properties (SDK imported, lifecycle owned by the SDK, summary
+      // + meta emitted) on the new mechanism for every converted step.
       'link-coa.js',
       'extract-builders.js',
       'refresh-snapshot.js',
@@ -1083,8 +1082,11 @@ describe('Pipeline SDK', () => {
     // upsert's rowCount cannot make — is closed structurally rather than textually: the
     // descriptor NAMES the variable feeding each slot and the runner resolves it, so a
     // literal is unspellable. Asserted below against the descriptor.
+    // link-parcels.js RE-HOMED (pilot 7, 2026-08-30): same treatment as link-massing.js
+    // above — descriptor.counters.records_updated.source = "written.e1.updated" is the
+    // successor lock (src/tests/chain.logic.test.ts "link_parcels: the permit_parcels
+    // mutation count is a NAMED audit row" + this file's own §5.2 conformance battery).
     const LINKING_SCRIPTS = [
-      'link-parcels.js',
       'link-neighbourhoods.js',
       'link-coa.js',
       'link-similar.js',
@@ -1731,9 +1733,17 @@ describe('Pipeline SDK', () => {
       expect(content).toMatch(/ST_Contains/);
     });
 
-    it('link-parcels.js uses ST_Contains or ST_DWithin when PostGIS is available', () => {
-      const content = fsSpatial.readFileSync(path.join(scriptDirSpatial, 'link-parcels.js'), 'utf-8');
-      expect(content).toMatch(/ST_Contains|ST_DWithin/);
+    // RE-HOMED (pilot 7, 2026-08-30): the SQL moved to the compute's pure text builder
+    // (buildMatchSql). Strategy 3 Step 1 (containment) still uses ST_Contains, UNCHANGED
+    // by THE FIX; Step 2 (THE FIX) no longer uses ST_DWithin at all (Fold B item 1 —
+    // struck co-resident form), it uses the KNN <-> operator with a scalar post-filter
+    // cap instead — asserted by src/tests/steps/link_parcels/violations.test.ts's own
+    // SQL-shape perf lock, not duplicated here.
+    it('link_parcels Strategy 3 Step 1 uses ST_Contains — from the compute that builds the statement', () => {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const compute = require('../../scripts/lib/compute/link-parcels.js');
+      const match = compute.buildMatchSql({ guards: { srid: 4326 } }, null, 'incremental');
+      expect(match.spatial_containment_sql).toMatch(/ST_Contains/);
     });
 
     // RE-HOMED (pilot 3): the SQL moved to the compute's pure text builder (ruling A-2).
@@ -1744,16 +1754,30 @@ describe('Pipeline SDK', () => {
       expect(compute.buildMatchSql(d, null, 'full').primary_match_sql).toMatch(/ST_Contains/);
     });
 
-    it('the 2 spatial scripts still on the island path detect PostGIS availability (hasPostGIS pattern)', () => {
-      // link-massing.js / compute-centroids.js RE-HOMED below. "Detects availability" was
-      // the shape of a step that SELECTS AN ALGORITHM from the probe; a converted step has
-      // no second algorithm to select, so detection became a hard precondition — a
-      // stronger property, asserted next.
-      const scripts = ['link-neighbourhoods.js', 'link-parcels.js'];
+    it('the 1 spatial script still on the island path detects PostGIS availability (hasPostGIS pattern)', () => {
+      // link-massing.js / compute-centroids.js / link-parcels.js RE-HOMED below.
+      // "Detects availability" was the shape of a step that SELECTS AN ALGORITHM from the
+      // probe; a converted step has no second algorithm to select, so detection became a
+      // hard precondition — a stronger property, asserted next.
+      const scripts = ['link-neighbourhoods.js'];
       for (const script of scripts) {
         const content = fsSpatial.readFileSync(path.join(scriptDirSpatial, script), 'utf-8');
         expect(content).toMatch(/hasPostGIS|pg_extension.*postgis/i);
       }
+    });
+
+    it('link_parcels REQUIRES PostGIS rather than detecting it (A-1 RULED, pilot 7: third application of the link_massing A-8 / compute_centroids A-1(a) precedent, Spec 124 R-W)', () => {
+      const d = JSON.parse(fsSpatial.readFileSync(path.join(scriptDirSpatial, 'link-parcels.descriptor.json'), 'utf-8'));
+      const postgis = (d.guards.requires as Array<{ kind: string; name: string; on_missing: string }>)
+        .find((r) => r.kind === 'extension' && r.name === 'postgis');
+      expect(postgis, 'link-parcels.descriptor.json must declare guards.requires: postgis').toBeTruthy();
+      expect(postgis!.on_missing).toBe('fail');
+      // A-1 RULED: the JS (non-PostGIS) fallback is retired whole, not merely gated —
+      // confirmed by the compute-no-postgis-branch ast-grep rule (R-W) already scanning
+      // scripts/lib/compute/link-parcels.js clean (verified live, pilot 7 commit 7).
+      const compute = fsSpatial.readFileSync(path.join(scriptDirSpatial, 'lib/compute/link-parcels.js'), 'utf-8');
+      expect(compute).not.toMatch(/hasPostGIS/);
+      expect(compute).not.toMatch(/pointInGeoJSON|haversineDistance/);
     });
 
     it('link_massing REQUIRES PostGIS rather than detecting it (A-8: no degraded algorithm)', () => {

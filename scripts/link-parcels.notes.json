@@ -1,0 +1,68 @@
+{
+  "$comment": [
+    "Spec 120 §3.4-§3.4b — the INTERPRETATION file for link_parcels. Everything here lived",
+    "ONLY as a source comment, a git commit message, or this pilot's own Fold A/B/C record",
+    "before this conversion, and would have been lost with the 686 lines it was attached to."
+  ],
+  "contract_version": 1,
+
+  "read_this_way": [
+    {
+      "note": "Strategy 3 Step 2 (the KNN LATERAL, THE FIX) is fed EVERY permit Step 1 (containment) did not match — including permits with NULL lat/lng. The `WHERE v.lng IS NOT NULL AND v.lat IS NOT NULL` guard inside that SQL block is the SOLE exclusion mechanism for a NULL-coordinate permit, not a JS-level pre-filter (LP-D6, Fold B item 2) — this is deliberate: the guard must be genuinely exercised on every run, not merely declared and never hit.",
+      "measured": { "value": "4 spatial-tier permits currently link to parcel_id 439990 (Fold C blocking item 1 — corrects the plan's own 'observed: id=1' evidence, independently re-verified twice)", "date": "2026-08-30", "query": "SELECT permit_num, revision_num, parcel_id FROM permits p JOIN permit_parcels pp ON pp.permit_num=p.permit_num AND pp.revision_num=p.revision_num WHERE pp.match_type='spatial' AND p.latitude IS NULL AND p.longitude IS NULL" }
+    },
+    {
+      "note": "inputs.reads.steps[] is declared EMPTY, not [compute_centroids] — the plan's own G11 guarantee ('NEW seam becomes declarable: compute_centroids -> link_parcels') described the PRE-fix file, which genuinely read parcels.centroid_lat/centroid_lng. THE FIX deletes that read entirely; neither Strategies 1a/1b/2, Step 1, nor Step 2 (THE FIX) reads centroid_lat/centroid_lng anywhere in scripts/lib/compute/link-parcels.js.",
+      "measured": { "value": "0 hits for centroid_lat|centroid_lng in scripts/lib/compute/link-parcels.js", "date": "2026-08-30", "query": "grep -c \"centroid_lat\\|centroid_lng\" scripts/lib/compute/link-parcels.js" }
+    }
+  ],
+
+  "known_normal": [
+    {
+      "note": "Strategy 3 Step 2 only ever fires when Step 1's ST_Contains already failed to find a containing parcel for EVERY candidate — so 17,500 of 17,504 spatial-tier permit points are NOT inside their currently-linked parcel by construction. This is not a defect signature; it is the structural precondition for this fallback tier to fire at all (R-C).",
+      "measured": { "value": "17,500/17,504 (99.98%) not inside their currently-linked parcel", "date": "2026-08-30", "query": "docs/reports/2026-08-30-pilot7-link-parcels-assessment.md §4 (R-C, Fold A/B reconfirmed)" }
+    }
+  ],
+
+  "known_bad": [
+    {
+      "note": "989 (permit_num, revision_num) pairs carry 2+ permit_parcels rows — LP-D2, pre-dating the 8a1c7d25 retraction-on-relink fence, never backfilled, permanently unreachable by the incremental filter. Expected, not merely predicted, to self-heal under the declared FULL run (commit 8, out of this pilot's own scope) since enrich_permits (Spec 66 DEC-3) re-derives its dominant-parcel pick fresh on every run regardless of these duplicates' presence.",
+      "measured": { "value": "989 duplicate pairs; sample '08 159001 BLD' rev '00' carries both parcel_id 427985 (2026-02-20) and 461960 (2026-03-03)", "date": "2026-08-30", "query": "SELECT permit_num, revision_num FROM permit_parcels GROUP BY permit_num, revision_num HAVING COUNT(*) > 1" }
+    }
+  ],
+
+  "blind_spots": [
+    {
+      "what": "compute-cost-estimates.js (permits-chain step, downstream of link_parcels) independently selects a dominant parcel via its own LATERAL (ORDER BY parcel_id ASC LIMIT 1) — LP-D7, opened commit 1, widened Fold C blocking item 2. This is a DIFFERENT tiebreak than whatever enrich_permits.js uses for its own dominant-parcel selection, so the SAME ~10,616 relinks (commit 8) change TWO independent downstream derivations, not one. No declared invalidates[] entry names this second consumer — the descriptor's own invalidates[] targets permits.zoning_enriched_at (enrich_permits's own column) only.",
+      "detected_by": "none — a static grep finding, not a runtime check",
+      "measured": { "value": "scripts/compute-cost-estimates.js:161-167", "date": "2026-08-30", "query": "grep -n \"permit_parcels\" scripts/compute-cost-estimates.js" }
+    }
+  ],
+
+  "suspicious_if": [
+    {
+      "signal": "spatial_null_coordinate_permits reads a value OTHER than 4 without a corresponding change to the underlying permits.latitude/longitude population — this check counts permits EXCLUDED from Strategy 3 Step 2 by the NULL-coordinate guard, a population that can only grow (a permit losing its geocode) or shrink (a permit gaining one via geocode-permits.js), never move sideways.",
+      "check": "spatial_null_coordinate_permits",
+      "measured": { "value": "4 today (2026-08-30)", "date": "2026-08-30", "query": "SELECT count(*) FROM permits p JOIN permit_parcels pp ON pp.permit_num=p.permit_num AND pp.revision_num=p.revision_num WHERE pp.match_type='spatial' AND p.latitude IS NULL AND p.longitude IS NULL" }
+    }
+  ],
+
+  "decisions": [
+    {
+      "note": "THE FIX ships an UNCONSTRAINED KNN LATERAL (pa.geom <-> point) with the 100m cap as a SCALAR POST-FILTER, never a co-resident ST_DWithin bound predicate — Fold B item 1 measured the co-resident combination at 97.5s/batch (unviable) versus the shipped shape's 400-500ms/batch. The KNN-vs-literal-ST_Distance ruling itself (A-3) is unchanged from Fold A: the literal ST_Distance ORDER BY form did not finish a 1,000-row batch in 180s (measured twice)."
+    },
+    {
+      "note": "The tiebreak-determinism lock (commit 6) is anchored on the 19 EXACT ties (Δ=0m) only — the near-tie bucket (0<Δ<1mm) is a genuine, unresolved measurement discrepancy across three independent sessions (plan/Fold B: 72 near-ties/91 total; this pilot's own commit 4: 40 near-ties/59 total). All three sessions agree on the 19 exact ties; the qualitative conclusion (a declared `, pa.id ASC` tiebreak is required) holds under either count, so the discrepancy does not block this commit — filed for a future WF3 to reconcile the near-tie methodology difference."
+    }
+  ],
+
+  "fences": [
+    {
+      "const": "a permit's OLD parcel link is deleted when it re-matches to a DIFFERENT parcel this batch (retraction-on-relink)",
+      "value": "LG-24's delete_by_key_sql: DELETE ... WHERE ... (v.keep_parcel_id IS NULL OR pp.parcel_id != v.keep_parcel_id)",
+      "incident": "8a1c7d25 (2026-04-01, 'atomic ghost cleanup + changed-match deletion') — before this fence, a permit whose address correction moved it to a different parcel kept BOTH the old and new permit_parcels rows forever (LP-D2's own root cause: 989 pre-dating duplicate pairs). The fence is this pilot's #1 Regression Guardian defended behaviour (G3 report §2) — LG-24 must preserve it exactly, not merely the zero-match half.",
+      "commit": "8a1c7d25",
+      "lock_test": "src/tests/steps/link_parcels/violations.test.ts"
+    }
+  ]
+}

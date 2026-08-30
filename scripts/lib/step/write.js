@@ -105,6 +105,20 @@ const INSERT_ONLY_NO_RETRACT_CLASS = 'insert_only_no_retraction';
  */
 const WRITE_ONCE_BACKFILL_CLASS = 'write_once_backfill';
 
+/**
+ * `write_discipline.class` value for LG-24 (LINK pilot 7, `link_parcels`, 2026-08-30) —
+ * Spec 122 §1.4's own frozen enum letter F, "upsert + DELETE stale + DELETE
+ * zero-match" — the class named for `link_parcels` (step 10) AND `link_massing`
+ * (step 15) in the §1.4 table, but genuinely UNIMPLEMENTED before this pilot (Fold A
+ * B-1): `link_massing` never uses the enum's own mechanic, it uses
+ * `set_based_scoped`+`guarded_upsert` via an `is_primary` flag column
+ * `permit_parcels` does not have. The DELETE-by-key statement (superseded rows a
+ * batch's own upsert just relinked away from, or a permit that fell out of every
+ * match this batch) is compute-authored (mirrors `JOIN_UPDATE_CLASS`'s own split) —
+ * see `executeGuardedDeleteByKey` below.
+ */
+const LINK_FULL_RETRACTION_CLASS = 'link_full_retraction';
+
 /** `retract_when` — the LINK-pilot qualifier on the frozen `retract` enum. Absent means "always". */
 const RETRACT_ALWAYS = 'always';
 const RETRACT_FULL_ONLY = 'full_only';
@@ -426,6 +440,47 @@ function buildWritePlan(writeSpec, descriptor) {
     };
   }
 
+  // ── link_full_retraction (LG-24, LINK pilot 7, 2026-08-30) — DESCRIPTIVE ONLY.
+  // No statement is generated here: the DELETE-by-key statement (the superseded-row
+  // cleanup half of Spec 122 §1.4's frozen class F — "upsert + DELETE stale + DELETE
+  // zero-match") is authored by the compute (buildDeleteByKeySql, mirroring
+  // buildTierSql's own split), the same reason JOIN_UPDATE_CLASS/
+  // INSERT_ONLY_NO_RETRACT_CLASS/WRITE_ONCE_BACKFILL_CLASS went descriptive-only
+  // above. Class F was already a frozen enum member (Spec 122 §1.4/§8.2's own table
+  // names `link_parcels` and `link_massing` under it) but had NO executor before this
+  // pilot (Fold A B-1, 2026-08-30) — `link_massing` never actually used the enum's own
+  // upsert+DELETE-stale+DELETE-zero-match mechanic; it uses `set_based_scoped` +
+  // `guarded_upsert` via an `is_primary` flag column `permit_parcels` does not have.
+  // The UPSERT HALF of class F reuses the EXISTING `guarded_upsert` codegen below
+  // unmodified (a composite key `(permit_num, revision_num, parcel_id)` is already
+  // generically supported by `keys.join(', ')` in the ON CONFLICT clause) — this
+  // branch covers ONLY the second `outputs.writes[]` entry, the keyed DELETE of the
+  // row(s) a batch's own upsert just superseded (a changed-match relink, or a
+  // permit that fell out of every match this batch). What the descriptor still buys
+  // for THIS entry: the declared columns/scope are what the fence-lock detectors and
+  // the conformance suite check the compute's AUTHORED text against, and
+  // buildWritePlan's callers (write.assertWritePrivileges, the RLS preflight) still
+  // work off `table`/`keys` alone.
+  if (writeSpec.write_discipline.class === LINK_FULL_RETRACTION_CLASS) {
+    return {
+      table,
+      keys,
+      srid,
+      mechanic: LINK_FULL_RETRACTION_CLASS,
+      step_columns: stepColumnNames,
+      update_columns: [],
+      guard_columns: guardColumns,
+      key_sql_type: keyType,
+      scope,
+      retract,
+      retract_when: retractWhen,
+      clear_sql: null,
+      upsert_sql: null,
+      delete_sql: null,
+      generated_by: 'compute',
+    };
+  }
+
   // ── write_once_backfill (LG-20, BACKFILL pilot 6, 2026-08-29) — DESCRIPTIVE
   // ONLY. No statement is generated here: the whole conditional UPDATE...WHERE
   // <scope> statement is authored by the compute (buildBackfillSql), the same
@@ -728,7 +783,16 @@ function persistBeforeImageRows(rows, table, slug, runAt) {
   const stamp = runAt.toISOString().replace(/:/g, '-');
   const filePath = path.join(dir, `${stamp}-${table}.jsonl`);
   const body = rows.map((r) => JSON.stringify(r)).join('\n') + (rows.length > 0 ? '\n' : '');
-  fs.writeFileSync(filePath, body, 'utf8');
+  // Fold B item 5 (LINK pilot 7, LG-24) — ONE per-run file per target; a MULTI-BATCH
+  // caller (LG-24's own keyed-delete before-image, called once per batch inside the
+  // SAME run) APPENDS into it rather than overwriting the prior batch's rows.
+  // `appendFileSync` creates the file on its FIRST call within a run (identical to
+  // `writeFileSync` for every EXISTING single-shot caller — a destructive retraction's
+  // W1 before-image, called exactly once per run, so append-vs-overwrite is behaviourally
+  // identical there) and appends on every subsequent call inside the same run (the
+  // filename is keyed by `runAt`, one DB-clock capture per run, so a NEW run never
+  // collides with a stale file from a PRIOR run).
+  fs.appendFileSync(filePath, body, 'utf8');
   return { written: true, path: path.relative(repoRoot, filePath).replace(/\\/g, '/'), rows: rows.length };
 }
 
@@ -931,6 +995,48 @@ async function executeGuardedUpdate(client, sql, params) {
   return result.rows;
 }
 
+/** SQL text a `link_full_retraction` keyed DELETE (LG-24) must never contain — mirrors LG-11/LG-18/LG-20/LG-22's forbidden-token pattern. */
+const GUARDED_DELETE_BY_KEY_FORBIDDEN_RE = /\bINSERT\s+INTO\b|\bUPDATE\b|\bTRUNCATE\b/i;
+
+/**
+ * LG-24 (LINK pilot 7, `link_parcels`, 2026-08-30) — execute one batch's `link_full_retraction`
+ * (class F) keyed DELETE: the superseded-row half of Spec 122 §1.4's own "upsert + DELETE
+ * stale + DELETE zero-match" mechanic.
+ *
+ * `sql` is authored by the COMPUTE (`buildDeleteByKeySql`) — a single `DELETE FROM ...
+ * USING (SELECT unnest(...) ...) v WHERE ...` statement, the same UNNEST-batched shape
+ * `72362c44` (pre-conversion `link-parcels.js`, 2026-04-17) already used per-batch. The
+ * caller MUST invoke this INSIDE THE SAME `pipeline.withTransaction` as the batch's own
+ * `executeUpsertBatch` call, upsert FIRST (Fold B item 5's declared `writes[]` order) —
+ * this executor does not itself open a transaction.
+ *
+ * ⚠️ THE ONE PLACE "DELETE-ONLY, NEVER CREATES OR MODIFIES A ROW" IS ENFORCED, not
+ * merely declared — checked on the ACTUAL text about to run, mirroring LG-11/LG-18/
+ * LG-20/LG-22's own structural-boundary executors.
+ *
+ * @param {import('pg').ClientBase} client
+ * @param {string} sql - a complete `DELETE FROM ... USING (...) v WHERE ...` statement
+ * @param {unknown[]} [params]
+ * @returns {Promise<number>} rows deleted
+ */
+async function executeGuardedDeleteByKey(client, sql, params) {
+  if (GUARDED_DELETE_BY_KEY_FORBIDDEN_RE.test(sql)) {
+    throw new Error(
+      `[write.js] executeGuardedDeleteByKey (link_full_retraction / LG-24): the statement contains `
+      + 'an INSERT, UPDATE or TRUNCATE token, which this executor structurally refuses — a '
+      + `link_full_retraction keyed-delete target may only DELETE rows. Statement: ${sql.slice(0, 200)}${sql.length > 200 ? '…' : ''}`,
+    );
+  }
+  if (!/\bDELETE\s+FROM\b/i.test(sql)) {
+    throw new Error(
+      '[write.js] executeGuardedDeleteByKey (link_full_retraction / LG-24): the statement must be a '
+      + `DELETE FROM ... — got: ${sql.slice(0, 200)}${sql.length > 200 ? '…' : ''}`,
+    );
+  }
+  const result = await client.query(sql, params || []);
+  return result.rowCount || 0;
+}
+
 module.exports = {
   buildWritePlan,
   generateWriteSql,
@@ -947,13 +1053,16 @@ module.exports = {
   executeInsertSelectNoRetract,
   executeBackfillUpdate,
   executeGuardedUpdate,
+  executeGuardedDeleteByKey,
   GUARDED_UPDATE_FORBIDDEN_RE,
+  GUARDED_DELETE_BY_KEY_FORBIDDEN_RE,
   JOIN_UPDATE_CLASS,
   JOIN_UPDATE_FORBIDDEN_RE,
   INSERT_ONLY_NO_RETRACT_CLASS,
   INSERT_ONLY_FORBIDDEN_RE,
   WRITE_ONCE_BACKFILL_CLASS,
   BACKFILL_FORBIDDEN_RE,
+  LINK_FULL_RETRACTION_CLASS,
   SET_BASED_CLASSES,
   RETRACT_ALWAYS,
   RETRACT_FULL_ONLY,

@@ -256,6 +256,26 @@ function isLinkStep(descriptor) {
 }
 
 /**
+ * Is this a composite-key LINK — read, join, write, with a COMPOSITE-KEY keyset
+ * pagination and a compound (upsert + keyed-DELETE) write target? (Ruling A-4, LINK
+ * pilot 7, `link_parcels`, 2026-08-30, Fold B item 4.)
+ *
+ * ⚠️ FORKED FROM `isLinkStep`/`runLinkPhase` UNCONDITIONALLY, NOT A BRANCH INSIDE THEM.
+ * Measured at commit 7: `runLinkPhase`'s single-integer `id` keyset cannot page a table
+ * whose PK is `(permit_num, revision_num)` with no surrogate `id`; its ONE primary +
+ * ONE fallback pass cannot express a 4-strategy cascade; its `executeOrderedWrites`
+ * cannot express class F's compound upsert-then-keyed-DELETE (LG-24). The pilot-4 fork
+ * precedent this predicate mirrors (`isCascadeStep`, above) was never itself gated on a
+ * line-count threshold either of the two prior times it applied — this is the THIRD
+ * unconditional instance, not a fourth conditional one. `execution.shape` is still the
+ * ONE declared field selecting the runner branch (§4.1a); `runLinkPhase` (245 lines,
+ * this file) is untouched — `link_massing` keeps using it exactly as before.
+ */
+function isLinkKeyedStep(descriptor) {
+  return Boolean(descriptor.execution && descriptor.execution.shape === 'link_keyed');
+}
+
+/**
  * Is this a MATCHER — a bulk N-tier cascade over `execution.tiers[]`, with NO
  * batching/pagination and MORE THAN ONE write target per tier? (Ruling A-1, SHOULD-FIX
  * d, MATCHER pilot 2026-08-28.)
@@ -783,6 +803,272 @@ async function runLinkPhase({ descriptor, pool, compute, config, chainId, log, t
     cumulative: {
       linked_parcels: Number(row.linked),
       parcels_with_centroid: Number(row.total),
+    },
+    written,
+    prior,
+    overrides,
+    writeSkipped: false,
+    beforeImage,
+  };
+}
+
+/**
+ * THE COMPOSITE-KEY LINK PHASE (LINK pilot 7, `link_parcels`, 2026-08-30 — ruling A-4,
+ * Fold B item 4: forked from `runLinkPhase` UNCONDITIONALLY, not a branch inside it).
+ *
+ * Three reasons `runLinkPhase` cannot serve `link_parcels` unmodified (Fold A B-1/B-2/B-3):
+ *   1. `permits`' PK is a composite `(permit_num, revision_num)`, no surrogate `id` —
+ *      `runLinkPhase`'s `eligible_batch_sql` + `lastId` cursor cannot page it (LG-25).
+ *   2. FOUR match strategies (address UNION ALL primary, spatial containment, spatial
+ *      KNN fallback), not `runLinkPhase`'s ONE primary + ONE fallback pass.
+ *   3. Class F (`link_full_retraction`, LG-24) is a COMPOUND write — upsert THEN a
+ *      keyed DELETE of superseded rows, both inside ONE batch transaction (Fold B item
+ *      5's declared `writes[]` order) — `runLinkPhase`'s `executeOrderedWrites` only
+ *      knows a set-based clear or a guarded upsert, never a compute-authored keyed DELETE.
+ *
+ * PHASE ORDER (mirrors `runLinkPhase`'s own, adapted): guards.requires → prior read →
+ * overrides → tri-state mode gate → RLS preflight → the declared plans → the pre-write
+ * gate → W1 (the FULL-mode-only scoped mass retraction, `retract_when: full_only`,
+ * unchanged from `runLinkPhase`'s own generic loop) → the composite-key keyset batch
+ * loop (primary → spatial containment → spatial KNN fallback, each excluding rows the
+ * earlier pass already matched) → per-batch ordered writes (upsert, THEN LG-24's keyed
+ * delete, ONE transaction) → the cumulative post-write query → return.
+ *
+ * @returns {Promise<object>} `{mode, gate, matched, cumulative, written, prior, overrides, writeSkipped, beforeImage}`
+ */
+async function runLinkKeyedPhase({ descriptor, pool, compute, config, chainId, log, tag, clockNow, preWriteGate, ownRunId }) {
+  const requirements = await assertRequirements(pool, descriptor, { log, tag });
+  const prior = await staleness.readPriorEmit(pool, ledgerPipelineName(descriptor, chainId), null);
+  const overrides = staleness.resolveOverrides(descriptor);
+  const dryRun = overrides.dry_run;
+  const gate = await staleness.selectMode({ descriptor, pool, prior, ownRunId });
+  const privilege = await write.assertWritePrivileges(pool, descriptor, { log, tag });
+  log.info(tag, `mode gate: explicit_full=${gate.explicit_full} forced=${gate.forced} `
+    + `changed=${gate.changed} → ${gate.mode.toUpperCase()} (${gate.reason})`);
+
+  // Two declared targets: e1 = guarded_upsert (permit_parcels, composite key), e2 =
+  // link_full_retraction (LG-24's keyed DELETE, descriptive-only).
+  const specs = descriptor.outputs.writes;
+  const plans = specs.map((w) => write.buildWritePlan(w, descriptor));
+  const written = {};
+  for (let i = 0; i < plans.length; i++) {
+    written[write.targetKey(i)] = { scanned: 0, inserted: 0, updated: 0, deleted: 0, retracted: 0, rows_changed: 0 };
+  }
+  written.privilege = privilege[plans[0].table] || null;
+  written.requirements = requirements;
+  const beforeImage = [];
+
+  const match = compute.buildMatchSql(descriptor, config, gate.mode);
+  const eligible = await pool.query(match.eligible_count_sql);
+  const matched = {
+    permits_eligible: Number(eligible.rows[0].total),
+    permits_processed: 0,
+    address_points_exact: 0,
+    exact_legacy: 0,
+    name_only: 0,
+    spatial_polygon: 0,
+    spatial: 0,
+    no_match: 0,
+    null_coordinate_permits: 0,
+  };
+  for (const s of gate.signals) {
+    if (s.current === null) continue;
+    matched[s.key] = Number.isNaN(Number(s.current)) ? s.current : Number(s.current);
+  }
+
+  // ── THE PRE-WRITE GATE, BEFORE writes[0] ────────────────────────────────────
+  const decision = preWriteGate
+    ? await preWriteGate({ matched, gate, prior, overrides, written: null })
+    : { abort: false, failed: [] };
+  if (decision.abort) {
+    log.error(tag, `pre_write check(s) FAILED with no standing override — no write was issued and `
+      + `${plans[0].table} is untouched: ${decision.failed.join(', ')}`);
+    return {
+      mode: gate.mode,
+      gate,
+      matched,
+      cumulative: null,
+      written: { ...written, write_skipped_pre_write_fail: true },
+      prior,
+      overrides,
+      writeSkipped: true,
+      failedPreWrite: decision.failed,
+    };
+  }
+
+  // ── W1 — the declared FULL-mode-only scoped mass retraction, ONE statement, before
+  //    the loop (Fold A I-1: `retract:"all"`, scope `match_type='spatial'`,
+  //    `retract_when:"full_only"`) — byte-for-byte `runLinkPhase`'s own generic loop.
+  for (let i = 0; i < plans.length; i++) {
+    const plan = plans[i];
+    if (dryRun || !write.retractionFires(plan, gate.mode)) continue;
+    const removed = await pipeline.withTransaction(pool, async (client) => {
+      const bi = await write.writeBeforeImage(client, plan, [], descriptor.identity.name, clockNow);
+      if (bi.written) beforeImage.push({ ...bi, table: plan.table });
+      return write.executeRetraction(client, plan);
+    });
+    written[write.targetKey(i)].retracted = removed;
+    written[write.targetKey(i)].deleted = removed;
+    log.info(tag, `${plan.table}: retracted ${removed.toLocaleString()} row(s) for re-evaluation `
+      + `(retract "${plan.retract}", retract_when "${plan.retract_when}", mode ${gate.mode})`);
+  }
+
+  const upsertPlan = plans[0];
+  const deletePlan = plans[1];
+  // LG-24's own before-image is DESCRIPTIVE (its SQL is compute-authored, not a
+  // `buildWritePlan`-generated `delete_sql`) — a minimal scope covering every row the
+  // batch's own DELETE could touch (a superset of what actually deletes is a safe,
+  // honest audit trail; the DELETE's own `IS NULL`-vs-`!=` branching is not re-derived
+  // here).
+  const deleteBeforeImagePlan = {
+    table: deletePlan.table,
+    scope: 'permit_num = ANY($1::text[]) AND revision_num = ANY($2::text[])',
+    keys: ['permit_num', 'revision_num'],
+    step_columns: ['permit_num', 'revision_num', 'parcel_id', 'match_type', 'confidence', 'linked_at'],
+  };
+
+  // ── The composite-key keyset-paginated batch loop (LG-25) ────────────────────
+  const batchSize = descriptor.execution.batch === 'none' ? pipeline.BATCH_SIZE : descriptor.execution.batch;
+  let lastPermitNum = '';
+  let lastRevisionNum = '';
+  for (;;) {
+    const batch = await pool.query(match.eligible_batch_sql, [batchSize, lastPermitNum, lastRevisionNum]);
+    if (batch.rows.length === 0) break;
+    const lastRow = batch.rows[batch.rows.length - 1];
+    lastPermitNum = lastRow.permit_num;
+    lastRevisionNum = lastRow.revision_num;
+
+    const permitKeys = batch.rows.map((p) => ({
+      permit_num: p.permit_num,
+      revision_num: p.revision_num,
+      num: (p.street_num || '').trim().toUpperCase().replace(/^0+(?=\d)/, ''),
+      name: (p.street_name || '').trim().toUpperCase(),
+      type: (p.street_type || '').trim().toUpperCase(),
+      lat: p.latitude !== null && p.latitude !== undefined ? Number(p.latitude) : null,
+      lng: p.longitude !== null && p.longitude !== undefined ? Number(p.longitude) : null,
+    }));
+
+    const matchedByKey = new Map(); // "permit_num|revision_num" -> {parcel_id, match_type, confidence}
+
+    // Primary pass — Strategies 1a/1b/2, folded via UNION ALL (A-4 ruling).
+    const addrPermits = permitKeys.filter((p) => p.num && p.name);
+    if (addrPermits.length > 0) {
+      const primary = await pool.query(match.primary_match_sql, [
+        addrPermits.map((p) => p.permit_num),
+        addrPermits.map((p) => p.revision_num),
+        addrPermits.map((p) => p.num),
+        addrPermits.map((p) => p.name),
+        addrPermits.map((p) => p.type),
+      ]);
+      const classified = compute.classifyPrimary(primary.rows);
+      for (const r of classified.rows) {
+        matchedByKey.set(`${r.permit_num}|${r.revision_num}`, { parcel_id: r.parcel_id, match_type: r.match_type, confidence: r.confidence });
+      }
+      matched.address_points_exact += classified.addressPointsExact;
+      matched.exact_legacy += classified.exactLegacy;
+      matched.name_only += classified.nameOnly;
+    }
+
+    // Strategy 3 Step 1 — polygon containment, UNCHANGED, already geometry-correct.
+    const spatialCandidates = permitKeys.filter((p) => !matchedByKey.has(`${p.permit_num}|${p.revision_num}`) && p.lat !== null && p.lng !== null);
+    if (spatialCandidates.length > 0) {
+      const containment = await pool.query(match.spatial_containment_sql, [
+        spatialCandidates.map((p) => p.permit_num),
+        spatialCandidates.map((p) => p.revision_num),
+        spatialCandidates.map((p) => p.lng),
+        spatialCandidates.map((p) => p.lat),
+      ]);
+      const classified = compute.classifySpatialContainment(containment.rows);
+      for (const r of classified.rows) {
+        matchedByKey.set(`${r.permit_num}|${r.revision_num}`, { parcel_id: r.parcel_id, match_type: r.match_type, confidence: r.confidence });
+      }
+      matched.spatial_polygon += classified.matched;
+    }
+
+    // Strategy 3 Step 2 — THE FIX. Fed EVERY remaining permit (including NULL-
+    // coordinate ones) — the SQL's own `WHERE v.lng IS NOT NULL AND v.lat IS NOT NULL`
+    // guard (LP-D6, Fold B item 2) is the SOLE exclusion mechanism, never a JS-level
+    // pre-filter, so the guard is genuinely exercised on every run, not merely declared.
+    const fallbackCandidates = permitKeys.filter((p) => !matchedByKey.has(`${p.permit_num}|${p.revision_num}`));
+    matched.null_coordinate_permits += fallbackCandidates.filter((p) => p.lat === null || p.lng === null).length;
+    if (fallbackCandidates.length > 0) {
+      const fallback = await pool.query(match.spatial_fallback_sql, [
+        fallbackCandidates.map((p) => p.permit_num),
+        fallbackCandidates.map((p) => p.revision_num),
+        fallbackCandidates.map((p) => p.lng),
+        fallbackCandidates.map((p) => p.lat),
+        config.spatial_match_max_distance_m,
+        config.spatial_match_confidence,
+      ]);
+      const classified = compute.classifySpatialFallback(fallback.rows);
+      for (const r of classified.rows) {
+        matchedByKey.set(`${r.permit_num}|${r.revision_num}`, { parcel_id: r.parcel_id, match_type: r.match_type, confidence: r.confidence });
+      }
+      matched.spatial += classified.matched;
+    }
+
+    // ── writes[] IN ORDER: upsert THEN LG-24's keyed delete, ONE transaction
+    //    (Fold B item 5) ──────────────────────────────────────────────────────
+    if (!dryRun) {
+      const upsertRows = [];
+      const delPermitNums = [];
+      const delRevisionNums = [];
+      const delKeepParcelIds = [];
+      for (const p of permitKeys) {
+        const key = `${p.permit_num}|${p.revision_num}`;
+        const m = matchedByKey.get(key);
+        if (m) {
+          upsertRows.push({
+            permit_num: p.permit_num, revision_num: p.revision_num,
+            parcel_id: m.parcel_id, match_type: m.match_type, confidence: m.confidence,
+            linked_at: clockNow,
+          });
+        } else {
+          matched.no_match += 1;
+        }
+        delPermitNums.push(p.permit_num);
+        delRevisionNums.push(p.revision_num);
+        // NULL "keep" means "delete every existing link for this permit" — the
+        // zero-match cleanup half of LG-24's compound DELETE (see
+        // `delete_by_key_sql`'s own comment in compute/link-parcels.js).
+        delKeepParcelIds.push(m ? m.parcel_id : null);
+      }
+      await pipeline.withTransaction(pool, async (client) => {
+        if (upsertRows.length > 0) {
+          const result = await write.executeUpsertBatch(client, upsertPlan, upsertRows);
+          written.e1.scanned += upsertRows.length;
+          written.e1.inserted += result.inserted;
+          written.e1.updated += result.updated;
+          written.e1.rows_changed += result.inserted + result.updated;
+        }
+        // R-M / LG-17, extended to LG-24 (Fold A I-3) — before-image the rows THIS
+        // batch's DELETE is about to touch, BEFORE the delete, appended into the SAME
+        // per-run file every batch (Fold B item 5).
+        const bi = await write.writeBeforeImage(client, deleteBeforeImagePlan,
+          [delPermitNums, delRevisionNums], descriptor.identity.name, clockNow);
+        if (bi.written) beforeImage.push({ ...bi, table: deletePlan.table });
+        const deleted = await write.executeGuardedDeleteByKey(client, match.delete_by_key_sql,
+          [delPermitNums, delRevisionNums, delKeepParcelIds]);
+        written.e2.scanned += delPermitNums.length;
+        written.e2.deleted += deleted;
+        written.e2.rows_changed += deleted;
+      });
+    } else {
+      matched.no_match += permitKeys.filter((p) => !matchedByKey.has(`${p.permit_num}|${p.revision_num}`)).length;
+    }
+
+    matched.permits_processed += batch.rows.length;
+  }
+
+  const cumulative = await pool.query(match.cumulative_sql);
+  const row = cumulative.rows[0];
+  return {
+    mode: gate.mode,
+    gate,
+    matched,
+    cumulative: {
+      linked_parcels: Number(row.linked),
+      parcels_with_link_eligibility: Number(row.total),
     },
     written,
     prior,
@@ -1832,6 +2118,7 @@ async function runWithPool(runnable, pool, ctx) {
       // `runnable.compute` on exactly the path pilot 1 established.
       let ingest = null;
       let link = null;
+      let linkKeyed = null;
       let cascade = null;
       let materialize = null;
       let backfill = null;
@@ -1843,8 +2130,8 @@ async function runWithPool(runnable, pool, ctx) {
       // share — set alongside `onlyChecks` in every branch below. null = unrestricted
       // (score every declared `when`), matching `onlyChecks`'s own null-means-everything.
       let onlyWhen = null;
-      const drivesWrites = isIngestStep(descriptor) || isLinkStep(descriptor) || isCascadeStep(descriptor)
-        || isMaterializeStep(descriptor) || isBackfillStep(descriptor);
+      const drivesWrites = isIngestStep(descriptor) || isLinkStep(descriptor) || isLinkKeyedStep(descriptor)
+        || isCascadeStep(descriptor) || isMaterializeStep(descriptor) || isBackfillStep(descriptor);
       // Spec 47 §R3.5 / B-11 — the DB clock, captured ONCE, inside the lock, for
       // WHICHEVER phase drives the write. One capture is not a tidiness preference: it is
       // what makes the written timestamp a single watermark, so two batches of one run
@@ -1868,6 +2155,25 @@ async function runWithPool(runnable, pool, ctx) {
           // The write never happened, so the `post` checks have no subject. Scoring them
           // would turn one honest pre_write FAIL into a table of "not reported" rows at
           // their declared severities — the same reasoning as the gated-skip narrowing.
+          onlyChecks = new Set(descriptor.checks.filter((c) => c.when !== 'post').map((c) => c.id));
+          onlyWhen = ['pre', 'pre_write'];
+          stepCtx.checks = stepCtx.checks.filter((id) => onlyChecks.has(id));
+        }
+      } else if (isLinkKeyedStep(descriptor)) {
+        linkKeyed = await runLinkKeyedPhase({
+          descriptor, pool, compute: runnable.compute, config: configValues,
+          chainId, log: pipeline.log, tag: `[${slug}]`, clockNow, ownRunId: runId,
+          preWriteGate: makePreWriteGate({ descriptor, chainId, stepCtx, compute: runnable.compute, config: configValues }),
+        });
+        stepCtx.matched = linkKeyed.matched;
+        stepCtx.cumulative = linkKeyed.cumulative;
+        stepCtx.written = linkKeyed.written;
+        stepCtx.prior = linkKeyed.prior;
+        stepCtx.overrides = linkKeyed.overrides;
+        stepCtx.gate = linkKeyed.gate;
+        stepCtx.elapsed_ms = Date.now() - startMs;
+        if (linkKeyed.writeSkipped) {
+          // Same reasoning as isLinkStep's own writeSkipped narrowing, above.
           onlyChecks = new Set(descriptor.checks.filter((c) => c.when !== 'post').map((c) => c.id));
           onlyWhen = ['pre', 'pre_write'];
           stepCtx.checks = stepCtx.checks.filter((id) => onlyChecks.has(id));
@@ -2000,8 +2306,10 @@ async function runWithPool(runnable, pool, ctx) {
         // reason to fail — it is the point of the flag, not a defect it found).
         ...(stepCtx.overrides && stepCtx.overrides.dry_run ? [dryRunRow()] : []),
         // R-M / LG-17 — one row per destructive-retraction target this run actually
-        // wrote a before-image for (link.beforeImage / cascade.beforeImage).
-        ...((link && link.beforeImage) || (cascade && cascade.beforeImage) || []).map(beforeImageRow),
+        // wrote a before-image for (link.beforeImage / linkKeyed.beforeImage /
+        // cascade.beforeImage). LG-24 (link_keyed) extends this to a compound-write
+        // target's own keyed-DELETE before-image, appended per batch (Fold B item 5).
+        ...((link && link.beforeImage) || (linkKeyed && linkKeyed.beforeImage) || (cascade && cascade.beforeImage) || []).map(beforeImageRow),
       ];
       const built = buildAuditTable(descriptor, chainId, observations, extraRows, configValues, onlyChecks, synthetic);
       // The counter SCOPE, per phase. §11's Counter Semantic Contract is a scoping
@@ -2010,13 +2318,15 @@ async function runWithPool(runnable, pool, ctx) {
       // the upsert's inserts and not the clear's rewrites.
       const counterScope = link
         ? { matched: link.matched, cumulative: link.cumulative, written: link.written, gate: link.gate }
-        : (cascade
-          ? { matched: cascade.matched, cumulative: cascade.cumulative, written: cascade.written, gate: cascade.gate }
-          : (materialize
-            ? { matched: materialize.matched, written: materialize.written, gate: materialize.gate }
-            : (backfill
-              ? { matched: backfill.matched, written: backfill.written }
-              : (ingest ? { acquired: ingest.acquired, written: ingest.written } : null))));
+        : (linkKeyed
+          ? { matched: linkKeyed.matched, cumulative: linkKeyed.cumulative, written: linkKeyed.written, gate: linkKeyed.gate }
+          : (cascade
+            ? { matched: cascade.matched, cumulative: cascade.cumulative, written: cascade.written, gate: cascade.gate }
+            : (materialize
+              ? { matched: materialize.matched, written: materialize.written, gate: materialize.gate }
+              : (backfill
+                ? { matched: backfill.matched, written: backfill.written }
+                : (ingest ? { acquired: ingest.acquired, written: ingest.written } : null)))));
       counters = (ingest && ingest.skipped) || (cascade && cascade.skipped) || (materialize && materialize.skipped)
         ? { records_total: null, records_new: null, records_updated: null }
         : deriveCounters(descriptor, computeResult, counterScope);
@@ -2262,6 +2572,7 @@ module.exports = {
   selectTerminal,
   isIngestStep,
   isLinkStep,
+  isLinkKeyedStep,
   isCascadeStep,
   isMaterializeStep,
   isBackfillStep,
@@ -2270,6 +2581,7 @@ module.exports = {
   ledgerPipelineName,
   runIngestPhase,
   runLinkPhase,
+  runLinkKeyedPhase,
   runCascadePhase,
   runMaterializePhase,
   runBackfillPhase,

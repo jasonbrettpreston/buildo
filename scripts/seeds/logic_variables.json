@@ -639,16 +639,51 @@
   "spatial_match_max_distance_m": {
     "default": 100,
     "type": "number",
-    "description": "Maximum metres between a permit geocode and a parcel centroid for a spatial match (Strategy 3 in link-parcels)",
+    "description": "Maximum metres between a permit geocode and a parcel boundary for a spatial match (Strategy 3 Step 2, KNN-boundary-distance fallback, in link-parcels). Description corrected pilot 7 (2026-08-30, Finding 6) — the join predicate no longer ranks by parcel CENTROID (THE FIX, LP-D1); only this description text changes, the value and name do not.",
     "min": 1,
     "max": 1000
   },
   "spatial_match_confidence": {
     "default": 0.65,
     "type": "number",
-    "description": "Confidence score assigned to a permit→parcel spatial match (Strategy 3); upgraded to 0.90 if permit geocode falls inside the parcel polygon",
+    "description": "Confidence score assigned to a permit→parcel spatial match (Strategy 3 Step 2, KNN-boundary-distance fallback); upgraded to link_parcels_confidence_spatial_polygon (T3) if permit geocode falls inside the parcel polygon (Strategy 3 Step 1)",
     "min": 0.01,
     "max": 1
+  },
+  "link_parcels_confidence_address_points_exact": {
+    "default": 0.97,
+    "type": "number",
+    "description": "T1 (LP-D4, pilot 7, 2026-08-30) — confidence for an address_points-bridge exact match (Strategy 1a, link-parcels). Pre-externalization this was the bare literal 0.97 in the batch CTE's address_points_exact tier.",
+    "min": 0,
+    "max": 1
+  },
+  "link_parcels_confidence_exact_address": {
+    "default": 0.95,
+    "type": "number",
+    "description": "T2 (LP-D4, pilot 7, 2026-08-30) — confidence for a legacy parcels-table exact address match (Strategy 1b, link-parcels). Pre-externalization this was the bare literal 0.95 in the batch CTE's exact tier.",
+    "min": 0,
+    "max": 1
+  },
+  "link_parcels_confidence_spatial_polygon": {
+    "default": 0.90,
+    "type": "number",
+    "description": "T3 (LP-D4, pilot 7, 2026-08-30) — confidence for a spatial polygon-containment match (Strategy 3 Step 1, ST_Contains, link-parcels) — UNCHANGED, already geometry-correct, untouched by THE FIX. Pre-externalization this was the bare literal 0.90.",
+    "min": 0,
+    "max": 1
+  },
+  "link_parcels_confidence_name_only": {
+    "default": 0.80,
+    "type": "number",
+    "description": "T4 (LP-D4, pilot 7, 2026-08-30) — confidence for a name-only address match (Strategy 2, link-parcels). Pre-externalization this was the bare literal 0.80 in the batch CTE's name_only tier.",
+    "min": 0,
+    "max": 1
+  },
+  "link_parcels_link_rate_warn_pct": {
+    "default": 25,
+    "type": "number",
+    "description": "T5 (LP-D4, pilot 7, 2026-08-30) — maximum UNLINKED cumulative percentage (100 - link rate) above which link_parcels's own link_rate check WARNs. Stored as the UNLINKED ceiling (25), NOT the link-rate floor (75) the old code's own literal used — scripts/lib/step/verdict.js's `limit_from_config` substitutes the RAW config value into the check's declared `pct <=` form with NO transform, and `pct >=` is explicitly documented there as unimplemented/unevaluable, so a `pct <=` bound requires the config value itself to already be in complement terms (mirrors link-massing.js's own link_rate convention exactly — its own config is likewise the unlinked ceiling, just numerically symmetric at 50 in that step's case, which hides the same requirement). Pre-externalization this step's own literal was `parcelLinkRate >= 75 ? 'PASS' : 'WARN'` — the SAME underlying threshold (75% link rate), expressed here as its complement (100-75=25) to fit the library's mechanism. Flagged explicitly in the pilot 7 report as a deviation from the plan's own 'default 75' text, for a hard architectural reason, not an oversight.",
+    "min": 0,
+    "max": 100
   },
   "coa_unmatched_threshold_pct": {
     "default": 10,

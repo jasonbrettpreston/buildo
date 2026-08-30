@@ -29,6 +29,16 @@
   ],
   "contract_version": 1,
   "steps": {
+    "link_parcels": {
+      "paths": {
+        "outputs.writes[].write_discipline.guard": "none"
+      },
+      "why": "outputs.writes[1] (LG-24, class link_full_retraction) is the compute-authored keyed DELETE of superseded permit_parcels rows — the same E1-precedent shape link_massing's own grandfathering already covers, applied to a DELETE instead of an UPDATE. No IS DISTINCT FROM guard applies to a row REMOVAL: the guard concept exists to skip a value that already matches what would be written, and a DELETE has no 'value' to compare, only rows to remove or not. The batch-scoped keyed predicate (permit_num/revision_num in this batch, parcel_id != the batch's own upsert keep-value) IS the correct, bounded mechanic, mirroring link_massing's own 'the unguarded write is the correct mechanic, and its cost is bounded and declared' reasoning verbatim.",
+      "commit": "pilot 7 commit 7 (2026-08-30)",
+      "adjudicated_by": "Fold A B-1 (2026-08-30) + orchestrator ruling (commit 7 dispatch)",
+      "date": "2026-08-30",
+      "lock_test": "src/tests/steps/link_parcels/violations.test.ts"
+    },
     "link_massing": {
       "paths": {
         "outputs.writes[].write_discipline.guard": "none"

@@ -106,16 +106,38 @@ export const GROUPS: Array<{ label: string; keys: string[] }> = [
     ],
   },
   {
+    // Pilot 7 (2026-08-30) consolidated spatial_match_max_distance_m/
+    // spatial_match_confidence into the new "Parcel Linking" group, below — they were
+    // link_parcels's own two ALREADY-registered vars (030a7611, 2026-04-16), sharing
+    // this group with link_massing's vars only because no link_parcels-specific group
+    // existed yet. "Spatial & Massing" now holds link_massing's own vars exclusively.
     label: 'Spatial & Massing',
     keys: [
-      'spatial_match_max_distance_m',
-      'spatial_match_confidence',
       'massing_shed_threshold_sqm',
       'massing_garage_max_sqm',
       'massing_nearest_max_distance_m',
       'link_massing_link_rate_fail_pct',
       'link_massing_centroid_confidence',
       'link_massing_nearest_confidence',
+    ],
+  },
+  {
+    // Spec 122 §1.2a P4 (C1 pilot 7, LINK 2nd member) — link_parcels' seven
+    // externalized knobs. Own group, matching the "Parcel-Address Bridge"/"Centroid
+    // Computation" one-group-per-step precedent. spatial_match_max_distance_m/
+    // spatial_match_confidence are the two ALREADY-registered vars (030a7611,
+    // 2026-04-16), consolidated here rather than left in the shared "Spatial &
+    // Massing" group; T1-T5 (link_parcels_confidence_*/link_parcels_link_rate_warn_pct)
+    // are the five newly-externalized literals (Finding 6 / LP-D4, pilot 7).
+    label: 'Parcel Linking',
+    keys: [
+      'spatial_match_max_distance_m',
+      'spatial_match_confidence',
+      'link_parcels_confidence_address_points_exact',
+      'link_parcels_confidence_exact_address',
+      'link_parcels_confidence_spatial_polygon',
+      'link_parcels_confidence_name_only',
+      'link_parcels_link_rate_warn_pct',
     ],
   },
   {

@@ -1,0 +1,921 @@
+{
+  "harness": "scripts/analysis/capture-step-golden.js",
+  "spec": "docs/specs/01-pipeline/122_pipeline_step_optimization.md §5.3",
+  "step": "scripts/link-parcels.js",
+  "chain": "none",
+  "git_head": "37b15d3b14b80af425a3b4ab18294d14b0ef1774",
+  "exit_code": 0,
+  "signal": null,
+  "summary": {
+    "records_total": 0,
+    "records_new": 0,
+    "records_updated": 0,
+    "records_meta": {
+      "duration_ms": 1914,
+      "permits_processed": 0,
+      "matches_tier_1_exact": 0,
+      "matches_tier_1_via_bridge": 0,
+      "matches_tier_2_name": 0,
+      "matches_tier_3_spatial": 0,
+      "matches_tier_3_polygon": 0,
+      "matches_tier_3_centroid": 0,
+      "no_match_count": 0,
+      "null_coordinate_permits": 0,
+      "db_upserted": 0,
+      "config": {
+        "spatial_match_max_distance_m": 100,
+        "spatial_match_confidence": 0.65,
+        "link_parcels_confidence_address_points_exact": 0.97,
+        "link_parcels_confidence_exact_address": 0.95,
+        "link_parcels_confidence_spatial_polygon": 0.9,
+        "link_parcels_confidence_name_only": 0.8,
+        "link_parcels_link_rate_warn_pct": 25
+      },
+      "terminal": "linked_incremental",
+      "ledger_row": "owned",
+      "chain_run_id": null,
+      "checks_passed": "all",
+      "checks_failed": 0,
+      "checks_warned": 0,
+      "audit_table": {
+        "phase": 0,
+        "name": "Parcel Linking",
+        "verdict": "PASS",
+        "rows": [
+          {
+            "metric": "permits_processed",
+            "value": 0,
+            "threshold": "viol == 0",
+            "status": "INFO",
+            "source": "check"
+          },
+          {
+            "metric": "tier_1_exact_address",
+            "value": 0,
+            "threshold": "viol == 0",
+            "status": "INFO",
+            "source": "check"
+          },
+          {
+            "metric": "tier_1_via_bridge",
+            "value": 0,
+            "threshold": "viol == 0",
+            "status": "INFO",
+            "source": "check"
+          },
+          {
+            "metric": "tier_2_name_only",
+            "value": 0,
+            "threshold": "viol == 0",
+            "status": "INFO",
+            "source": "check"
+          },
+          {
+            "metric": "tier_3_spatial",
+            "value": 0,
+            "threshold": "viol == 0",
+            "status": "INFO",
+            "source": "check"
+          },
+          {
+            "metric": "tier_3_polygon",
+            "value": 0,
+            "threshold": "viol == 0",
+            "status": "INFO",
+            "source": "check"
+          },
+          {
+            "metric": "run_matched",
+            "value": 0,
+            "threshold": "viol == 0",
+            "status": "INFO",
+            "source": "check"
+          },
+          {
+            "metric": "no_match",
+            "value": 0,
+            "threshold": "viol == 0",
+            "status": "INFO",
+            "source": "check"
+          },
+          {
+            "metric": "permit_parcels_written",
+            "value": 0,
+            "threshold": "viol == 0",
+            "status": "INFO",
+            "source": "check"
+          },
+          {
+            "metric": "spatial_null_coordinate_permits",
+            "value": 0,
+            "threshold": "viol == 0",
+            "status": "PASS",
+            "source": "check"
+          },
+          {
+            "metric": "link_rate",
+            "value": {
+              "link_rate_pct": 94.53,
+              "unlinked_pct": 5.47,
+              "linked": 240183,
+              "total": 254082
+            },
+            "threshold": "pct <= 25",
+            "status": "PASS",
+            "source": "check"
+          },
+          {
+            "metric": "write_privilege",
+            "value": "bypassrls=true policies=0",
+            "threshold": "viol == 0",
+            "status": "PASS",
+            "source": "check"
+          },
+          {
+            "metric": "pp_unique_triple_violations",
+            "value": 0,
+            "threshold": "viol == 0",
+            "status": "PASS",
+            "source": "invariant"
+          },
+          {
+            "metric": "pp_duplicate_permit_pairs",
+            "value": 989,
+            "threshold": "value_min 0",
+            "status": "INFO",
+            "source": "invariant"
+          },
+          {
+            "metric": "pp_spatial_null_coordinate_count",
+            "value": 4,
+            "threshold": "value_min 0",
+            "status": "INFO",
+            "source": "invariant"
+          },
+          {
+            "metric": "sys_velocity_rows_sec",
+            "value": 0,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "sys_duration_ms",
+            "value": 2217,
+            "threshold": null,
+            "status": "INFO"
+          }
+        ]
+      }
+    }
+  },
+  "summary_count": 1,
+  "meta": [
+    {
+      "reads": {
+        "permits": [
+          "permit_num",
+          "revision_num",
+          "street_num",
+          "street_name",
+          "street_type",
+          "latitude",
+          "longitude",
+          "parcel_linked_at",
+          "geocoded_at"
+        ],
+        "parcels": [
+          "id",
+          "addr_num_normalized",
+          "street_name_normalized",
+          "street_type_normalized",
+          "geom"
+        ],
+        "address_points": [
+          "address_point_id",
+          "addr_num_normalized",
+          "linear_name_normalized",
+          "address_class_desc",
+          "maint_stage",
+          "address_status"
+        ],
+        "parcel_address_points": [
+          "parcel_id",
+          "address_point_id"
+        ]
+      },
+      "writes": {
+        "permit_parcels": [
+          "permit_num",
+          "revision_num",
+          "parcel_id",
+          "match_type",
+          "confidence",
+          "linked_at"
+        ]
+      }
+    }
+  ],
+  "parse_errors": [],
+  "verdict": "PASS",
+  "ledger_status": [
+    "completed"
+  ],
+  "stdout": "{\"level\":\"INFO\",\"tag\":\"[link_parcels]\",\"msg\":\"[link_parcels] target: link_parcels (descriptor.database) → database=postgres user=postgres migrations=242 (floor 12)\"}\n{\"level\":\"INFO\",\"tag\":\"[link_parcels]\",\"msg\":\"mode gate: explicit_full=false forced=false changed=false → INCREMENTAL (incremental:no_full_arg)\"}\nPIPELINE_SUMMARY:{\"records_total\":0,\"records_new\":0,\"records_updated\":0,\"records_meta\":{\"duration_ms\":1914,\"permits_processed\":0,\"matches_tier_1_exact\":0,\"matches_tier_1_via_bridge\":0,\"matches_tier_2_name\":0,\"matches_tier_3_spatial\":0,\"matches_tier_3_polygon\":0,\"matches_tier_3_centroid\":0,\"no_match_count\":0,\"null_coordinate_permits\":0,\"db_upserted\":0,\"config\":{\"spatial_match_max_distance_m\":100,\"spatial_match_confidence\":0.65,\"link_parcels_confidence_address_points_exact\":0.97,\"link_parcels_confidence_exact_address\":0.95,\"link_parcels_confidence_spatial_polygon\":0.9,\"link_parcels_confidence_name_only\":0.8,\"link_parcels_link_rate_warn_pct\":25},\"terminal\":\"linked_incremental\",\"ledger_row\":\"owned\",\"chain_run_id\":null,\"checks_passed\":\"all\",\"checks_failed\":0,\"checks_warned\":0,\"audit_table\":{\"phase\":0,\"name\":\"Parcel Linking\",\"verdict\":\"PASS\",\"rows\":[{\"metric\":\"permits_processed\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"tier_1_exact_address\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"tier_1_via_bridge\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"tier_2_name_only\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"tier_3_spatial\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"tier_3_polygon\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"run_matched\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"no_match\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"permit_parcels_written\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"spatial_null_coordinate_permits\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"link_rate\",\"value\":{\"link_rate_pct\":94.53,\"unlinked_pct\":5.47,\"linked\":240183,\"total\":254082},\"threshold\":\"pct <= 25\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"write_privilege\",\"value\":\"bypassrls=true policies=0\",\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"pp_unique_triple_violations\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"invariant\"},{\"metric\":\"pp_duplicate_permit_pairs\",\"value\":989,\"threshold\":\"value_min 0\",\"status\":\"INFO\",\"source\":\"invariant\"},{\"metric\":\"pp_spatial_null_coordinate_count\",\"value\":4,\"threshold\":\"value_min 0\",\"status\":\"INFO\",\"source\":\"invariant\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":2217,\"threshold\":null,\"status\":\"INFO\"}]}}}\nPIPELINE_META:{\"reads\":{\"permits\":[\"permit_num\",\"revision_num\",\"street_num\",\"street_name\",\"street_type\",\"latitude\",\"longitude\",\"parcel_linked_at\",\"geocoded_at\"],\"parcels\":[\"id\",\"addr_num_normalized\",\"street_name_normalized\",\"street_type_normalized\",\"geom\"],\"address_points\":[\"address_point_id\",\"addr_num_normalized\",\"linear_name_normalized\",\"address_class_desc\",\"maint_stage\",\"address_status\"],\"parcel_address_points\":[\"parcel_id\",\"address_point_id\"]},\"writes\":{\"permit_parcels\":[\"permit_num\",\"revision_num\",\"parcel_id\",\"match_type\",\"confidence\",\"linked_at\"]}}\n\n[link_parcels] completed in 2.2s\n",
+  "stderr": "",
+  "pipeline_runs": [
+    {
+      "id": 1805,
+      "pipeline": "link_parcels",
+      "status": "completed",
+      "started_at": "2026-08-30T21:05:02.926Z",
+      "completed_at": "2026-08-30T21:05:05.111Z",
+      "duration_ms": 2218,
+      "records_total": 0,
+      "records_new": 0,
+      "records_updated": 0,
+      "records_meta": {
+        "config": {
+          "spatial_match_confidence": 0.65,
+          "spatial_match_max_distance_m": 100,
+          "link_parcels_link_rate_warn_pct": 25,
+          "link_parcels_confidence_name_only": 0.8,
+          "link_parcels_confidence_exact_address": 0.95,
+          "link_parcels_confidence_spatial_polygon": 0.9,
+          "link_parcels_confidence_address_points_exact": 0.97
+        },
+        "terminal": "linked_incremental",
+        "ledger_row": "owned",
+        "audit_table": {
+          "name": "Parcel Linking",
+          "rows": [
+            {
+              "value": 0,
+              "metric": "permits_processed",
+              "source": "check",
+              "status": "INFO",
+              "threshold": "viol == 0"
+            },
+            {
+              "value": 0,
+              "metric": "tier_1_exact_address",
+              "source": "check",
+              "status": "INFO",
+              "threshold": "viol == 0"
+            },
+            {
+              "value": 0,
+              "metric": "tier_1_via_bridge",
+              "source": "check",
+              "status": "INFO",
+              "threshold": "viol == 0"
+            },
+            {
+              "value": 0,
+              "metric": "tier_2_name_only",
+              "source": "check",
+              "status": "INFO",
+              "threshold": "viol == 0"
+            },
+            {
+              "value": 0,
+              "metric": "tier_3_spatial",
+              "source": "check",
+              "status": "INFO",
+              "threshold": "viol == 0"
+            },
+            {
+              "value": 0,
+              "metric": "tier_3_polygon",
+              "source": "check",
+              "status": "INFO",
+              "threshold": "viol == 0"
+            },
+            {
+              "value": 0,
+              "metric": "run_matched",
+              "source": "check",
+              "status": "INFO",
+              "threshold": "viol == 0"
+            },
+            {
+              "value": 0,
+              "metric": "no_match",
+              "source": "check",
+              "status": "INFO",
+              "threshold": "viol == 0"
+            },
+            {
+              "value": 0,
+              "metric": "permit_parcels_written",
+              "source": "check",
+              "status": "INFO",
+              "threshold": "viol == 0"
+            },
+            {
+              "value": 0,
+              "metric": "spatial_null_coordinate_permits",
+              "source": "check",
+              "status": "PASS",
+              "threshold": "viol == 0"
+            },
+            {
+              "value": {
+                "total": 254082,
+                "linked": 240183,
+                "unlinked_pct": 5.47,
+                "link_rate_pct": 94.53
+              },
+              "metric": "link_rate",
+              "source": "check",
+              "status": "PASS",
+              "threshold": "pct <= 25"
+            },
+            {
+              "value": "bypassrls=true policies=0",
+              "metric": "write_privilege",
+              "source": "check",
+              "status": "PASS",
+              "threshold": "viol == 0"
+            },
+            {
+              "value": 0,
+              "metric": "pp_unique_triple_violations",
+              "source": "invariant",
+              "status": "PASS",
+              "threshold": "viol == 0"
+            },
+            {
+              "value": 989,
+              "metric": "pp_duplicate_permit_pairs",
+              "source": "invariant",
+              "status": "INFO",
+              "threshold": "value_min 0"
+            },
+            {
+              "value": 4,
+              "metric": "pp_spatial_null_coordinate_count",
+              "source": "invariant",
+              "status": "INFO",
+              "threshold": "value_min 0"
+            },
+            {
+              "value": 0,
+              "metric": "sys_velocity_rows_sec",
+              "status": "INFO",
+              "threshold": null
+            },
+            {
+              "value": 2217,
+              "metric": "sys_duration_ms",
+              "status": "INFO",
+              "threshold": null
+            }
+          ],
+          "phase": 0,
+          "verdict": "PASS"
+        },
+        "db_upserted": 0,
+        "duration_ms": 1914,
+        "chain_run_id": null,
+        "checks_failed": 0,
+        "checks_passed": "all",
+        "checks_warned": 0,
+        "no_match_count": 0,
+        "permits_processed": 0,
+        "matches_tier_2_name": 0,
+        "matches_tier_1_exact": 0,
+        "matches_tier_3_polygon": 0,
+        "matches_tier_3_spatial": 0,
+        "matches_tier_3_centroid": 0,
+        "null_coordinate_permits": 0,
+        "matches_tier_1_via_bridge": 0
+      },
+      "error_message": null
+    }
+  ],
+  "pipeline_runs_max_id_before": 1804,
+  "table_state": [
+    {
+      "table": "permit_parcels",
+      "row_count": 241172,
+      "ceiling_bypassed": "projected",
+      "content_hash": "fe232ade082407e579343e24bed18c90",
+      "order_by": "explicit",
+      "order_columns": [
+        "permit_num",
+        "revision_num",
+        "parcel_id"
+      ],
+      "columns": [
+        "permit_num",
+        "revision_num",
+        "parcel_id",
+        "match_type",
+        "confidence"
+      ]
+    }
+  ],
+  "tables_source": "descriptor",
+  "table_row_ceiling": 100000,
+  "table_timing": {
+    "permit_parcels": 239
+  },
+  "table_specs": {
+    "permit_parcels": {
+      "columns": [
+        "permit_num",
+        "revision_num",
+        "parcel_id",
+        "match_type",
+        "confidence"
+      ],
+      "columns_source": "arg",
+      "order": [
+        "permit_num",
+        "revision_num",
+        "parcel_id"
+      ],
+      "order_source": "arg"
+    }
+  },
+  "invariants": [
+    {
+      "name": "permit_parcels_total",
+      "value": "241172"
+    },
+    {
+      "name": "match_type_spatial_count",
+      "value": "17504"
+    },
+    {
+      "name": "duplicate_permit_pair_count",
+      "value": "989"
+    },
+    {
+      "name": "match_type_exact_address_count",
+      "value": "152975"
+    },
+    {
+      "name": "match_type_address_points_exact_count",
+      "value": "48815"
+    },
+    {
+      "name": "match_type_spatial_polygon_count",
+      "value": "17651"
+    },
+    {
+      "name": "match_type_name_only_count",
+      "value": "4227"
+    },
+    {
+      "name": "permits_total",
+      "value": "254082"
+    },
+    {
+      "name": "permits_parcel_linked_at_not_null",
+      "value": "254045"
+    }
+  ],
+  "invariants_file": "docs/reports/golden/link_parcels/invariants.json",
+  "db_target": "postgresql://postgres:***@127.0.0.1:54322/postgres",
+  "runtime": "node",
+  "args": [],
+  "nondeterminism": [
+    "key:pipeline_runs[0].completed_at",
+    "key:pipeline_runs[0].duration_ms",
+    "key:pipeline_runs[0].id",
+    "key:pipeline_runs[0].records_meta.duration_ms",
+    "key:pipeline_runs[0].started_at",
+    "key:summary.records_meta.duration_ms",
+    "pattern:duration_literal",
+    "row:sys_duration_ms",
+    "row:sys_velocity_rows_sec"
+  ],
+  "normalised": {
+    "step": "scripts/link-parcels.js",
+    "chain": "none",
+    "exit_code": 0,
+    "summary": {
+      "records_meta": {
+        "audit_table": {
+          "name": "Parcel Linking",
+          "phase": 0,
+          "rows": [
+            {
+              "metric": "permits_processed",
+              "source": "check",
+              "status": "INFO",
+              "threshold": "viol == 0",
+              "value": 0
+            },
+            {
+              "metric": "tier_1_exact_address",
+              "source": "check",
+              "status": "INFO",
+              "threshold": "viol == 0",
+              "value": 0
+            },
+            {
+              "metric": "tier_1_via_bridge",
+              "source": "check",
+              "status": "INFO",
+              "threshold": "viol == 0",
+              "value": 0
+            },
+            {
+              "metric": "tier_2_name_only",
+              "source": "check",
+              "status": "INFO",
+              "threshold": "viol == 0",
+              "value": 0
+            },
+            {
+              "metric": "tier_3_spatial",
+              "source": "check",
+              "status": "INFO",
+              "threshold": "viol == 0",
+              "value": 0
+            },
+            {
+              "metric": "tier_3_polygon",
+              "source": "check",
+              "status": "INFO",
+              "threshold": "viol == 0",
+              "value": 0
+            },
+            {
+              "metric": "run_matched",
+              "source": "check",
+              "status": "INFO",
+              "threshold": "viol == 0",
+              "value": 0
+            },
+            {
+              "metric": "no_match",
+              "source": "check",
+              "status": "INFO",
+              "threshold": "viol == 0",
+              "value": 0
+            },
+            {
+              "metric": "permit_parcels_written",
+              "source": "check",
+              "status": "INFO",
+              "threshold": "viol == 0",
+              "value": 0
+            },
+            {
+              "metric": "spatial_null_coordinate_permits",
+              "source": "check",
+              "status": "PASS",
+              "threshold": "viol == 0",
+              "value": 0
+            },
+            {
+              "metric": "link_rate",
+              "source": "check",
+              "status": "PASS",
+              "threshold": "pct <= 25",
+              "value": {
+                "link_rate_pct": 94.53,
+                "linked": 240183,
+                "total": 254082,
+                "unlinked_pct": 5.47
+              }
+            },
+            {
+              "metric": "write_privilege",
+              "source": "check",
+              "status": "PASS",
+              "threshold": "viol == 0",
+              "value": "bypassrls=true policies=0"
+            },
+            {
+              "metric": "pp_unique_triple_violations",
+              "source": "invariant",
+              "status": "PASS",
+              "threshold": "viol == 0",
+              "value": 0
+            },
+            {
+              "metric": "pp_duplicate_permit_pairs",
+              "source": "invariant",
+              "status": "INFO",
+              "threshold": "value_min 0",
+              "value": 989
+            },
+            {
+              "metric": "pp_spatial_null_coordinate_count",
+              "source": "invariant",
+              "status": "INFO",
+              "threshold": "value_min 0",
+              "value": 4
+            }
+          ],
+          "verdict": "PASS"
+        },
+        "chain_run_id": null,
+        "checks_failed": 0,
+        "checks_passed": "all",
+        "checks_warned": 0,
+        "config": {
+          "link_parcels_confidence_address_points_exact": 0.97,
+          "link_parcels_confidence_exact_address": 0.95,
+          "link_parcels_confidence_name_only": 0.8,
+          "link_parcels_confidence_spatial_polygon": 0.9,
+          "link_parcels_link_rate_warn_pct": 25,
+          "spatial_match_confidence": 0.65,
+          "spatial_match_max_distance_m": 100
+        },
+        "db_upserted": 0,
+        "ledger_row": "owned",
+        "matches_tier_1_exact": 0,
+        "matches_tier_1_via_bridge": 0,
+        "matches_tier_2_name": 0,
+        "matches_tier_3_centroid": 0,
+        "matches_tier_3_polygon": 0,
+        "matches_tier_3_spatial": 0,
+        "no_match_count": 0,
+        "null_coordinate_permits": 0,
+        "permits_processed": 0,
+        "terminal": "linked_incremental"
+      },
+      "records_new": 0,
+      "records_total": 0,
+      "records_updated": 0
+    },
+    "summary_count": 1,
+    "meta": [
+      {
+        "reads": {
+          "address_points": [
+            "address_point_id",
+            "addr_num_normalized",
+            "linear_name_normalized",
+            "address_class_desc",
+            "maint_stage",
+            "address_status"
+          ],
+          "parcel_address_points": [
+            "parcel_id",
+            "address_point_id"
+          ],
+          "parcels": [
+            "id",
+            "addr_num_normalized",
+            "street_name_normalized",
+            "street_type_normalized",
+            "geom"
+          ],
+          "permits": [
+            "permit_num",
+            "revision_num",
+            "street_num",
+            "street_name",
+            "street_type",
+            "latitude",
+            "longitude",
+            "parcel_linked_at",
+            "geocoded_at"
+          ]
+        },
+        "writes": {
+          "permit_parcels": [
+            "permit_num",
+            "revision_num",
+            "parcel_id",
+            "match_type",
+            "confidence",
+            "linked_at"
+          ]
+        }
+      }
+    ],
+    "parse_errors": [],
+    "pipeline_runs": [
+      {
+        "error_message": null,
+        "pipeline": "link_parcels",
+        "records_meta": {
+          "audit_table": {
+            "name": "Parcel Linking",
+            "phase": 0,
+            "rows": [
+              {
+                "metric": "permits_processed",
+                "source": "check",
+                "status": "INFO",
+                "threshold": "viol == 0",
+                "value": 0
+              },
+              {
+                "metric": "tier_1_exact_address",
+                "source": "check",
+                "status": "INFO",
+                "threshold": "viol == 0",
+                "value": 0
+              },
+              {
+                "metric": "tier_1_via_bridge",
+                "source": "check",
+                "status": "INFO",
+                "threshold": "viol == 0",
+                "value": 0
+              },
+              {
+                "metric": "tier_2_name_only",
+                "source": "check",
+                "status": "INFO",
+                "threshold": "viol == 0",
+                "value": 0
+              },
+              {
+                "metric": "tier_3_spatial",
+                "source": "check",
+                "status": "INFO",
+                "threshold": "viol == 0",
+                "value": 0
+              },
+              {
+                "metric": "tier_3_polygon",
+                "source": "check",
+                "status": "INFO",
+                "threshold": "viol == 0",
+                "value": 0
+              },
+              {
+                "metric": "run_matched",
+                "source": "check",
+                "status": "INFO",
+                "threshold": "viol == 0",
+                "value": 0
+              },
+              {
+                "metric": "no_match",
+                "source": "check",
+                "status": "INFO",
+                "threshold": "viol == 0",
+                "value": 0
+              },
+              {
+                "metric": "permit_parcels_written",
+                "source": "check",
+                "status": "INFO",
+                "threshold": "viol == 0",
+                "value": 0
+              },
+              {
+                "metric": "spatial_null_coordinate_permits",
+                "source": "check",
+                "status": "PASS",
+                "threshold": "viol == 0",
+                "value": 0
+              },
+              {
+                "metric": "link_rate",
+                "source": "check",
+                "status": "PASS",
+                "threshold": "pct <= 25",
+                "value": {
+                  "link_rate_pct": 94.53,
+                  "linked": 240183,
+                  "total": 254082,
+                  "unlinked_pct": 5.47
+                }
+              },
+              {
+                "metric": "write_privilege",
+                "source": "check",
+                "status": "PASS",
+                "threshold": "viol == 0",
+                "value": "bypassrls=true policies=0"
+              },
+              {
+                "metric": "pp_unique_triple_violations",
+                "source": "invariant",
+                "status": "PASS",
+                "threshold": "viol == 0",
+                "value": 0
+              },
+              {
+                "metric": "pp_duplicate_permit_pairs",
+                "source": "invariant",
+                "status": "INFO",
+                "threshold": "value_min 0",
+                "value": 989
+              },
+              {
+                "metric": "pp_spatial_null_coordinate_count",
+                "source": "invariant",
+                "status": "INFO",
+                "threshold": "value_min 0",
+                "value": 4
+              }
+            ],
+            "verdict": "PASS"
+          },
+          "chain_run_id": null,
+          "checks_failed": 0,
+          "checks_passed": "all",
+          "checks_warned": 0,
+          "config": {
+            "link_parcels_confidence_address_points_exact": 0.97,
+            "link_parcels_confidence_exact_address": 0.95,
+            "link_parcels_confidence_name_only": 0.8,
+            "link_parcels_confidence_spatial_polygon": 0.9,
+            "link_parcels_link_rate_warn_pct": 25,
+            "spatial_match_confidence": 0.65,
+            "spatial_match_max_distance_m": 100
+          },
+          "db_upserted": 0,
+          "ledger_row": "owned",
+          "matches_tier_1_exact": 0,
+          "matches_tier_1_via_bridge": 0,
+          "matches_tier_2_name": 0,
+          "matches_tier_3_centroid": 0,
+          "matches_tier_3_polygon": 0,
+          "matches_tier_3_spatial": 0,
+          "no_match_count": 0,
+          "null_coordinate_permits": 0,
+          "permits_processed": 0,
+          "terminal": "linked_incremental"
+        },
+        "records_new": 0,
+        "records_total": 0,
+        "records_updated": 0,
+        "status": "completed"
+      }
+    ],
+    "stdout_lines": [
+      "{\"level\":\"INFO\",\"msg\":\"[link_parcels] target: link_parcels (descriptor.database) → database=postgres user=postgres migrations=242 (floor 12)\",\"tag\":\"[link_parcels]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"mode gate: explicit_full=false forced=false changed=false → INCREMENTAL (incremental:no_full_arg)\",\"tag\":\"[link_parcels]\"}",
+      "[link_parcels] completed in <DUR>"
+    ],
+    "table_state": [
+      {
+        "ceiling_bypassed": "projected",
+        "columns": [
+          "permit_num",
+          "revision_num",
+          "parcel_id",
+          "match_type",
+          "confidence"
+        ],
+        "content_hash": "fe232ade082407e579343e24bed18c90",
+        "order_by": "explicit",
+        "order_columns": [
+          "permit_num",
+          "revision_num",
+          "parcel_id"
+        ],
+        "row_count": 241172,
+        "table": "permit_parcels"
+      }
+    ],
+    "invariants": [
+      {
+        "name": "permit_parcels_total",
+        "value": "241172"
+      },
+      {
+        "name": "match_type_spatial_count",
+        "value": "17504"
+      },
+      {
+        "name": "duplicate_permit_pair_count",
+        "value": "989"
+      },
+      {
+        "name": "match_type_exact_address_count",
+        "value": "152975"
+      },
+      {
+        "name": "match_type_address_points_exact_count",
+        "value": "48815"
+      },
+      {
+        "name": "match_type_spatial_polygon_count",
+        "value": "17651"
+      },
+      {
+        "name": "match_type_name_only_count",
+        "value": "4227"
+      },
+      {
+        "name": "permits_total",
+        "value": "254082"
+      },
+      {
+        "name": "permits_parcel_linked_at_not_null",
+        "value": "254045"
+      }
+    ]
+  },
+  "source_fingerprint": "83af3b08fcc99e1548f4da9d1105dbccee43813d8117f85fdd32bd995bd77824",
+  "fingerprint_files": [
+    "scripts/lib/compute/link-parcels.js",
+    "scripts/link-parcels.descriptor.json",
+    "scripts/link-parcels.js",
+    "scripts/link-parcels.notes.json"
+  ]
+}

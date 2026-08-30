@@ -147,6 +147,11 @@ const EXPECTED_LOGIC_VAR_KEYS = [
   'snapshot_coa_conf_high',
   'spatial_match_max_distance_m',  // E18
   'spatial_match_confidence',      // E18
+  'link_parcels_confidence_address_points_exact', // T1, pilot 7
+  'link_parcels_confidence_exact_address',        // T2, pilot 7
+  'link_parcels_confidence_spatial_polygon',      // T3, pilot 7
+  'link_parcels_confidence_name_only',            // T4, pilot 7
+  'link_parcels_link_rate_warn_pct',              // T5, pilot 7
   'coa_unmatched_threshold_pct',   // WF2 R5.2 — day-1 unmatched threshold for link-coa-to-parcels
   'coa_parcel_conf_tier1a',        // WF2 R5.2 — Tier 1a parcel match confidence
   'coa_parcel_conf_tier1b',        // WF2 R5.2 — Tier 1b parcel match confidence
