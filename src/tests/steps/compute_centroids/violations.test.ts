@@ -420,7 +420,7 @@ describe('55-A — the hard per-conversion gate (k=PER_STEP)', () => {
     expect([...postHashes][0], 'POST must match PRE — a zero-behaviour-change conversion with no corpus change is a genuine zero-diff').toBe([...preHashes][0]);
   });
 
-  it.fails('#151 The non-determinism inventory is declared before the first diff (git order) (flips at: commit 9)', () => {
+  it('#151 The non-determinism inventory is declared before the first diff (git order) (landed: commit 7, 7b — both PRE (commit 5) and POST (commit 7) now have real git-add history)', () => {
     const preAdd = git(['log', '--diff-filter=A', '--format=%ct', '--', `${GOLDEN_DIR_REL}/pre/sources.json`]).split(/\r?\n/)[0];
     const postAdd = git(['log', '--diff-filter=A', '--format=%ct', '--', `${GOLDEN_DIR_REL}/post/sources.json`]).split(/\r?\n/)[0];
     expect(preAdd, 'the PRE capture must exist in git history (commit 5)').toBeTruthy();
