@@ -86,6 +86,25 @@ const JOIN_UPDATE_CLASS = 'set_based_join_update';
  */
 const INSERT_ONLY_NO_RETRACT_CLASS = 'insert_only_no_retraction';
 
+/**
+ * `write_discipline.class` value for LG-20 (BACKFILL pilot 6, 2026-08-29) — a single
+ * conditional `UPDATE <table> SET <cols> = <server expression over the row> WHERE
+ * <scope> [AND <key> > $1 ORDER BY <key> LIMIT $2]`, UPDATE-only, no INSERT/DELETE
+ * token anywhere. The SET clause's right-hand sides are server-side expressions
+ * over the row itself (`compute-centroids.js`'s `ST_Y(ST_Centroid(geom))`), not
+ * bound row values the way a guarded upsert's SET clause is — the same reason
+ * `JOIN_UPDATE_CLASS`/`INSERT_ONLY_NO_RETRACT_CLASS` are descriptive-only above.
+ * `buildWritePlan` for this class returns a DESCRIPTIVE plan; the executable SQL
+ * text is authored by the compute (`buildBackfillSql`) and handed to
+ * `executeBackfillUpdate` directly by the runner (`runBackfillPhase`).
+ *
+ * Genuinely unimplemented before this pilot (Fold C B-1, 2026-08-29): `class`
+ * `write_once_backfill` (letter E) was already a frozen enum member, but
+ * `SET_BASED_CLASSES` excluded it and `sqlLiteral` refuses server-side
+ * expressions — the codegen half of the label had no consumer.
+ */
+const WRITE_ONCE_BACKFILL_CLASS = 'write_once_backfill';
+
 /** `retract_when` — the LINK-pilot qualifier on the frozen `retract` enum. Absent means "always". */
 const RETRACT_ALWAYS = 'always';
 const RETRACT_FULL_ONLY = 'full_only';
@@ -361,6 +380,34 @@ function buildWritePlan(writeSpec, descriptor) {
       mechanic: INSERT_ONLY_NO_RETRACT_CLASS,
       step_columns: stepColumnNames,
       update_columns: [],
+      guard_columns: guardColumns,
+      key_sql_type: keyType,
+      scope,
+      retract,
+      retract_when: retractWhen,
+      clear_sql: null,
+      upsert_sql: null,
+      delete_sql: null,
+      generated_by: 'compute',
+    };
+  }
+
+  // ── write_once_backfill (LG-20, BACKFILL pilot 6, 2026-08-29) — DESCRIPTIVE
+  // ONLY. No statement is generated here: the whole conditional UPDATE...WHERE
+  // <scope> statement is authored by the compute (buildBackfillSql), the same
+  // split JOIN_UPDATE_CLASS/INSERT_ONLY_NO_RETRACT_CLASS use above. What the
+  // descriptor still buys: the declared columns/scope are what the fence-lock
+  // detectors and the conformance suite check the compute's AUTHORED text
+  // against, and buildWritePlan's callers (write.assertWritePrivileges, the RLS
+  // preflight) still work off `table`/`keys` alone.
+  if (writeSpec.write_discipline.class === WRITE_ONCE_BACKFILL_CLASS) {
+    return {
+      table,
+      keys,
+      srid,
+      mechanic: WRITE_ONCE_BACKFILL_CLASS,
+      step_columns: stepColumnNames,
+      update_columns: updateColumns,
       guard_columns: guardColumns,
       key_sql_type: keyType,
       scope,
@@ -727,6 +774,55 @@ async function executeInsertSelectNoRetract(client, sql, params) {
   return result.rows[0] || {};
 }
 
+/** SQL text a `write_once_backfill` target must never contain (LG-20's structural half — mirrors LG-11/LG-18's forbidden-token pattern). */
+const BACKFILL_FORBIDDEN_RE = /\bINSERT\s+INTO\b|\bDELETE\s+FROM\b|\bTRUNCATE\b/i;
+
+/**
+ * LG-20 (BACKFILL pilot 6, 2026-08-29) — execute one `write_once_backfill`
+ * statement: a single conditional `UPDATE <table> SET ... WHERE <scope>
+ * [AND <key> > $1 ORDER BY <key> LIMIT $2]`.
+ *
+ * ⚠️ THE ONE PLACE "UPDATE-ONLY, NEVER CREATES OR REMOVES A ROW" IS ENFORCED,
+ * not merely declared. `sql` is authored by the COMPUTE (`buildBackfillSql`) — a
+ * single server-side statement, never a SELECT-then-per-row-UPDATE split. This
+ * executor refuses to run any statement that could ever INSERT, DELETE or
+ * TRUNCATE, checked on the ACTUAL text about to run — `compute_centroids`'s own
+ * CC-D1 fence (the retired JS fallback's cursor-pagination fix) depended on this
+ * exact shape staying a single conditional UPDATE with no client-side re-scan.
+ *
+ * Unlike `executeInsertSelectNoRetract` (LG-18), this executor does NOT require a
+ * keyset cursor param — `compute_centroids`'s own statement is unpaginated (the
+ * PostGIS fast path was always ONE statement, `txn_scope: "statement"`, no batch
+ * loop); a FUTURE backfill target whose scope is too large for one statement may
+ * author its own `id > $1 ORDER BY id LIMIT $2` tail and pass the params through
+ * unchanged — the executor is agnostic to whether `params` is empty or a keyset
+ * pair, it only enforces the token boundary.
+ *
+ * @param {import('pg').Pool|import('pg').ClientBase} client
+ * @param {string} sql - a complete `UPDATE ... WHERE ...` statement (RETURNING optional)
+ * @param {unknown[]} [params]
+ * @returns {Promise<Record<string, unknown>[]>} the statement's own `RETURNING` rows
+ *   (e.g. one row per updated id) — the CALLER interprets the shape; this executor
+ *   only enforces the structural update-only boundary.
+ */
+async function executeBackfillUpdate(client, sql, params) {
+  if (BACKFILL_FORBIDDEN_RE.test(sql)) {
+    throw new Error(
+      `[write.js] executeBackfillUpdate (write_once_backfill / LG-20): the statement contains `
+      + 'an INSERT, DELETE or TRUNCATE token, which this executor structurally refuses — a '
+      + `write_once_backfill target may only UPDATE existing rows. Statement: ${sql.slice(0, 200)}${sql.length > 200 ? '…' : ''}`,
+    );
+  }
+  if (!/\bUPDATE\b/i.test(sql)) {
+    throw new Error(
+      '[write.js] executeBackfillUpdate (write_once_backfill / LG-20): the statement must be an '
+      + `UPDATE ... WHERE ... — got: ${sql.slice(0, 200)}${sql.length > 200 ? '…' : ''}`,
+    );
+  }
+  const result = await client.query(sql, params || []);
+  return result.rows;
+}
+
 module.exports = {
   buildWritePlan,
   generateWriteSql,
@@ -740,10 +836,13 @@ module.exports = {
   executeRetraction,
   executeSetBasedJoinUpdate,
   executeInsertSelectNoRetract,
+  executeBackfillUpdate,
   JOIN_UPDATE_CLASS,
   JOIN_UPDATE_FORBIDDEN_RE,
   INSERT_ONLY_NO_RETRACT_CLASS,
   INSERT_ONLY_FORBIDDEN_RE,
+  WRITE_ONCE_BACKFILL_CLASS,
+  BACKFILL_FORBIDDEN_RE,
   SET_BASED_CLASSES,
   RETRACT_ALWAYS,
   RETRACT_FULL_ONLY,

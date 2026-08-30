@@ -333,7 +333,7 @@ Grandfathered, never legal for a new step: an existing step must be able to decl
 
 | Field | Menu | Markers |
 |---|---|---|
-| `shape` | `assert` · `ingest` · `link` · `cascade` · `materialize` | ! |
+| `shape` | `assert` · `ingest` · `link` · `cascade` · `materialize` · `backfill` | ! |
 | `tiers` | `none` \| list (min 1) of object {id, confidence_from_config, max_iterations_from_config} | — |
 | `tiers[].id` | string `^[a-z][a-z0-9_]*$` | † |
 | `tiers[].confidence_from_config` | string | † |

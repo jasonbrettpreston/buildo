@@ -2978,5 +2978,19 @@
     "min": 1000,
     "max": 600000,
     "description": "Spec 122 §1.2a P4 (Pilot 2, INGESTOR) — AbortController budget for BOTH CKAN calls the acquisition seam makes (the pre-acquisition HEAD and the streamed ZIP GET). 60000 = the pre-externalization literal (ravineDownloadTimeoutMs) and is ALSO the descriptor literal execution.network.timeout, which is only the fallback for an un-seeded database: execution.network.timeout_from_config names this variable and scripts/lib/step/acquire.js resolveTimeoutMs prefers the resolved value, so there is ONE source and a conformance lock asserts the two AGREE. Raise it when the CKAN edge is slow rather than letting a timeout read as an acquisition FAIL. CONSUMED by load_ravines (scripts/lib/step/acquire.js headValidators + downloadArchive, via ctx.config)."
+  },
+  "compute_centroids_failed_geometries_warn": {
+    "default": 0,
+    "type": "number",
+    "min": 0,
+    "max": 10000,
+    "description": "Spec 124 Rule 3 (T1, Pilot 6, BACKFILL) — WARN ceiling on the count of parcels whose geometry JSONB is present but the PostGIS geom cast never populated (a malformed GeoJSON payload), still uncomputed after compute_centroids's own UPDATE. 0 = the pre-externalization literal (`:197` in the pre-conversion script, `== 0`). Never FAIL — a malformed geometry is a data-quality signal to surface, never a reason to halt the run. CONSUMED by compute_centroids (scripts/lib/compute/compute-centroids.js failed_geometries, via checks[].limit_from_config)."
+  },
+  "compute_centroids_compute_rate_warn_pct": {
+    "default": 98,
+    "type": "number",
+    "min": 0,
+    "max": 100,
+    "description": "Spec 124 Rule 3 (T2, Pilot 6, BACKFILL) — WARN floor on centroids_computed / parcels_processed. 98 = the pre-externalization literal (`:198`,`:200` in the pre-conversion script) and traces to commit d32612bb's deliberate business-accuracy tightening (\"tighten compute_rate from 90% to 98%\"), not an arbitrary number. A `pct >= floor` form (R-N precedent). CONSUMED by compute_centroids (scripts/lib/compute/compute-centroids.js compute_rate, via checks[].limit_from_config)."
   }
 }

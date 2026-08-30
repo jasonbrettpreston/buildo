@@ -1,0 +1,280 @@
+{
+  "identity": {
+    "name": "compute_centroids",
+    "display_name": "Centroid Computation",
+    "owner": "data",
+    "description": "Fills parcels.centroid_lat/centroid_lng for every parcel with a geometry and no centroid yet — ONE server-side conditional UPDATE ... WHERE geom IS NOT NULL AND centroid_lat IS NULL RETURNING id (PostGIS ST_Centroid), never revisits an already-filled row. Migration 245's trigger, a SEPARATE mechanism, is what makes a row eligible again after a geometry change.",
+    "lock": 99,
+    "why_lock": {
+      "text": "Lock 99 is not the spec number — it is Spec 47 §A.5's registry id (row 5, \"Maintenance\" wave, \"Writes Timestamps? NO\"), unrelated to either owning spec's own number (43 or 55). Kept textually per §5.4 so the registry loop (src/tests/pipeline-advisory-lock.infra.test.ts) stays green across the conversion — this step has carried lock 99 since commit 3c3e6f84 (2026-04-16) and nothing about the conversion changes it.",
+      "liveness": { "kind": "file", "ref": "src/tests/pipeline-advisory-lock.infra.test.ts" }
+    },
+    "spec": "55",
+    "spec_version": "2.0",
+    "archetype": "BACKFILL",
+    "contract_version": 1,
+    "gate_exempt": false
+  },
+
+  "inputs": {
+    "reads": {
+      "steps": [
+        { "step": "parcels", "version_pin": "gte" },
+        { "step": "load_parcels", "version_pin": "gte" }
+      ],
+      "tables": [
+        { "table": "parcels", "columns": ["id", "geom", "geometry", "centroid_lat", "centroid_lng"] }
+      ],
+      "externals": []
+    },
+    "expect_nonempty": true,
+    "on_missing": "warn"
+  },
+
+  "outputs": {
+    "writes": [
+      {
+        "table": "parcels",
+        "key": "id",
+        "columns": [
+          { "name": "centroid_lat", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "centroid_lng", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" }
+        ],
+        "write_discipline": {
+          "class": "write_once_backfill",
+          "guard": "none",
+          "guard_why": {
+            "text": "The WHERE clause (`centroid_lat IS NULL`) IS the scope, not a value-change guard — an already-filled row is permanently ineligible for this step's own UPDATE regardless of which algorithm filled it; only migration 245's trigger (a different write path entirely) makes a row eligible again. An IS DISTINCT FROM guard on a NULL-scoped row is vacuous: there is nothing to compare against. Grandfathered in scripts/steps/_schema/grandfathered.json (Rule 9), keyed on write_discipline.guard, not .class.",
+            "liveness": { "kind": "table", "ref": "parcels" }
+          },
+          "guard_columns": "all_declared",
+          "guard_columns_why": {
+            "text": "LG-9 escape hatch, moot here (mirrors link_parcel_addresses' own note): guard is \"none\", so guard_columns is never consulted to build an IS DISTINCT FROM clause. Neither column declares columns[].source \"run_at\" (this write target has no timestamp column at all, Spec 47 §A.5 \"Writes Timestamps? NO\"), so the LG-9 trap this field exists to catch cannot occur here either way.",
+            "liveness": { "kind": "file", "ref": "scripts/lib/step/write.js" }
+          },
+          "scope": "geom IS NOT NULL AND centroid_lat IS NULL",
+          "expected_change_ratio": "none",
+          "idempotent_rerun": "zero_writes",
+          "txn_scope": "statement",
+          "why": {
+            "text": "LG-20 (this pilot). A single conditional UPDATE, no batching in the surviving (PostGIS-only) path after A-1(a) retires the JS fallback — the scope predicate is the entire write contract, and it self-excludes on every subsequent run (idempotent_rerun: zero_writes, proven by the twice-run acceptance test at migration-245-centroid-invalidation.db.test.ts case (4)).",
+            "liveness": { "kind": "file", "ref": "scripts/lib/compute/compute-centroids.js" }
+          }
+        },
+        "retract": "none",
+        "replay": "idempotent_upsert",
+        "source_key_policy": { "unique": true, "on_collision": "not_applicable", "key_space_migration": "none" }
+      }
+    ],
+    "cascades": "none",
+    "invalidates": [
+      { "table": "parcels", "column": "centroid_lat", "when": "migration 245's trigger NULLs this column on any geom UPDATE (IS DISTINCT FROM) — documents 245's mechanism as it bears on this step's own eligibility scope; 245's trigger, not this step, does the invalidating (G3: this step's contract stays \"fill what's NULL\")" },
+      { "table": "parcels", "column": "centroid_lng", "when": "migration 245's trigger NULLs this column on any geom UPDATE (IS DISTINCT FROM) — same mechanism as centroid_lat, declared per-column per the schema's own {table,column,when} shape" }
+    ],
+    "publish": "direct",
+    "write_inventory": {
+      "statements": 1,
+      "why": {
+        "text": "One write target, one write statement, no batching in the surviving path — the single conditional UPDATE ... WHERE geom IS NOT NULL AND centroid_lat IS NULL RETURNING id (LG-20's executeBackfillUpdate). The simplest write shape of any pilot converted to date.",
+        "liveness": { "kind": "file", "ref": "scripts/lib/compute/compute-centroids.js" }
+      }
+    }
+  },
+
+  "staleness": {
+    "scope": "geom IS NOT NULL AND centroid_lat IS NULL",
+    "trigger": "none",
+    "mode_select": "none",
+    "checkpoint": "none",
+    "interval": "none",
+    "fingerprint": "derived",
+    "fingerprint_inputs": ["scripts/lib/compute/compute-centroids.js", "parcels:count", "parcels:centroid_lat_null_count"],
+    "logic_version": "v1-postgis-st-centroid",
+    "on_fingerprint_change": "none"
+  },
+
+  "guards": {
+    "requires": [
+      {
+        "kind": "extension", "name": "postgis", "on_missing": "fail",
+        "why": {
+          "text": "A-1(a) (this pilot). The JS arithmetic-mean fallback (and the CC-D1 cursor-pagination fence it carried) is RETIRED WHOLE, not kept-declared-unreachable — a database with no PostGIS extension now HALTS rather than silently switching to a second algorithm with a different centroid formula (Finding 7, algorithm-drift: PostGIS ST_Centroid is area-weighted, the retired JS fallback was an unweighted arithmetic mean of ring vertices). Per the link_massing A-8 precedent.",
+          "liveness": { "kind": "file", "ref": "scripts/lib/compute/compute-centroids.js" }
+        }
+      }
+    ],
+    "srid": "none",
+    "empty_source": "none",
+    "schema_drift": "none"
+  },
+
+  "execution": {
+    "shape": "backfill",
+    "budget": "10m",
+    "txn_scope": "statement",
+    "txn_budget": "10m",
+    "chunked": false,
+    "statement_timeout": "none",
+    "step_timeout": "15m",
+    "batch": "none",
+    "needs_disk_mb": "none",
+    "partial_fill": "atomic",
+    "on_row_error": "skip",
+    "on_batch_error": "fail_step",
+    "on_check_error": "fail_step",
+    "on_check_error_why": {
+      "text": "Every check reads a value the library already measured — a check that throws is a library defect, not an upstream condition. It must redden the run, not drop its row.",
+      "liveness": { "kind": "file", "ref": "scripts/lib/compute/compute-centroids.js" }
+    },
+    "on_degrade": "none",
+    "criticality": "required",
+    "network": "none",
+    "invocation": {
+      "sources": { "argv": [], "env": {} }
+    },
+    "maintenance": "none"
+  },
+
+  "checks": [
+    {
+      "id": "backlog_count", "kind": "field_coverage",
+      "expect": { "reports": "the pre-run count of parcels with a geometry and no centroid yet — the eligibility scope's own denominator" },
+      "limit": "viol == 0", "severity": "INFO", "blocking": false, "when": "pre", "chains": "all", "accept_until": "none",
+      "why": { "text": "R-P's spirit (N/A — this BACKFILL declares no ledger gate to narrow checks around, so R-P itself does not apply): a data-driven zero-work completion must still persist WHY it had nothing to do, the same way a gated skip's gate_decision row does on every other archetype. Declared when:\"pre\" so it is scored even on the zero-work path.", "liveness": { "kind": "table", "ref": "parcels" } }
+    },
+    {
+      "id": "parcels_processed", "kind": "field_coverage",
+      "expect": { "reports": "computed + failed — records_total's own source (§11 Counter Semantic Contract)" },
+      "limit": "viol == 0", "severity": "INFO", "blocking": false, "when": "post", "chains": "all", "accept_until": "none",
+      "why": { "text": "Ported by name from the pre-conversion script's own `processed` counter.", "liveness": { "kind": "table", "ref": "parcels" } }
+    },
+    {
+      "id": "centroids_computed", "kind": "field_coverage",
+      "expect": { "reports": "rows the UPDATE actually touched — records_updated's own source" },
+      "limit": "viol == 0", "severity": "INFO", "blocking": false, "when": "post", "chains": "all", "accept_until": "none",
+      "why": { "text": "Ported by name from the pre-conversion script's own `computed` counter (RETURNING id row count).", "liveness": { "kind": "table", "ref": "parcels" } }
+    },
+    {
+      "id": "failed_geometries", "kind": "bound",
+      "expect": { "of": "parcels whose geometry JSONB is present but the PostGIS geom cast never populated, still uncomputed after the UPDATE" },
+      "limit": "viol == 0", "limit_from_config": "compute_centroids_failed_geometries_warn",
+      "severity": "WARN", "blocking": false, "when": "post", "chains": "all", "accept_until": "none",
+      "why": { "text": "T1 (Spec 124 Rule 3). Ported verbatim from the pre-conversion script's own literal threshold (`:197`, `== 0`, WARN not FAIL — a malformed geometry is a data-quality signal, never a reason to halt the run). Default 0, bounds 0-10000, on_invalid \"fail\" (verdict-affecting, R-G).", "liveness": { "kind": "table", "ref": "parcels" } }
+    },
+    {
+      "id": "compute_rate", "kind": "bound",
+      "expect": { "of": "centroids_computed / parcels_processed — a floor on the fraction of the eligible scope that actually computed" },
+      "limit": "pct >= 98", "limit_from_config": "compute_centroids_compute_rate_warn_pct",
+      "severity": "WARN", "blocking": false, "when": "post", "chains": "all", "accept_until": "none",
+      "why": { "text": "T2 (Spec 124 Rule 3). Ported verbatim from the pre-conversion script's own literal threshold (`:198`,`:200`, `>= 98%`). The default (98) is NOT an arbitrary literal — it traces to commit d32612bb's deliberate business-accuracy tightening (\"tighten compute_rate from 90% to 98%\"), cited by SHA rather than treated as unexplained. Bounds 0-100, on_invalid \"fail\" (verdict-affecting, R-G).", "liveness": { "kind": "table", "ref": "parcels" } }
+    }
+  ],
+
+  "override": "none",
+
+  "emits": "none",
+
+  "deviations": "none",
+
+  "limitations": [
+    {
+      "what": "CC-D2 (Reality-Check R-1, pinned): of 3,626 out-of-polygon centroids, 3,130 land inside a DIFFERENT parcel, exposing a 276-link mis-attribution signature in link-parcels.js's Tier-3 nearest-centroid join. This step's own output (the centroid value itself) is correct per its own contract (ST_Centroid computes exactly what it is asked to compute, Spec 59 R2.5 rules a concave-lot centroid outside its own polygon is correct-by-design) — the exposure is in a DOWNSTREAM consumer's join strategy, not in compute_centroids. PINNED for this pilot (zero-behaviour-change scope); HIGH followup filed against link_parcels.js.",
+      "measured": "3,626/486,530 (0.75%) outside-polygon; 3,130 land inside a neighbour parcel; 276/494 spatial-tier permit_parcels links point at a drifted parcel (2026-08-29 session)",
+      "check_id": "none"
+    },
+    {
+      "what": "CC-D3 (Finding 7, pinned): 292,587/486,530 (60.1%) of stored centroids differ >1m from a freshly-computed ST_Centroid over the SAME unchanged geom — root cause is algorithm drift (the one real-work run, 2026-03-10, predates the PostGIS offload and used the retired JS arithmetic-mean formula; the remainder predates pipeline_runs ledger visibility entirely, most plausibly a bulk seed/restore). This step's own G1 guarantee (\"fills centroid for every parcel with a geometry and no centroid yet\") never promised WHICH formula, and the scope predicate makes an already-filled row permanently out of this step's own reach by design, not by oversight. Filed MED (below CC-D2's HIGH — no measured downstream mis-link count for this finding).",
+      "measured": "292,587/486,530 (60.1%) stored-vs-fresh centroid distance > 1m; avg 6.61m, median 4.12m, max 1,476.84m (2026-08-29 session)",
+      "check_id": "none"
+    }
+  ],
+
+  "interpretation": { "file": "compute-centroids.notes.json", "entries": 9 },
+
+  "recovery": {
+    "reset": "No TRUNCATE/rebuild mechanism exists. A re-run re-scans the full geom IS NOT NULL AND centroid_lat IS NULL scope, which is already the CORRECT reset behaviour for a class-E write_once_backfill target — the scope predicate self-excludes every already-filled row, so there is no separate destructive rebuild path to declare. This IS, in effect, migration 245's own trigger: nulling centroid_lat re-admits a row to this step's scope, which is the only \"reset\" this step's own contract recognizes.",
+      "resume": "none",
+    "force": "none",
+    "rollback": "none",
+    "verify_clean": "none",
+    "cascades": "derived",
+    "interrupted": "none",
+    "interrupted_why": {
+      "text": "No destructive retraction target exists on this step (class E, retract:\"none\") — there is nothing for an interrupted run to leave half-retracted. A crashed mid-UPDATE run simply leaves whatever subset the single server-side statement had already committed (statement-level atomicity — Postgres either commits the whole UPDATE or none of it); a re-run picks up exactly where the scope leaves off. R-F item 1 (carried forward, same disposition as pilot 5): this pilot does NOT itself exercise or close R-B's crashed/stuck-running reader gap.",
+      "liveness": { "kind": "check", "ref": "backlog_count" }
+    },
+    "before_image": "none",
+    "before_image_why": {
+      "text": "R-M/LG-17's before-image mechanism applies to a destructive retraction; this step has none (class E, retract:\"none\"). The UPDATE is additive-in-place (NULL -> a computed float) and reversible by re-nulling the same two columns if ever needed, which is not the same hazard class a before-image protects against.",
+      "liveness": { "kind": "file", "ref": "scripts/lib/step/write.js" }
+    }
+  },
+
+  "database": {
+    "class": "primary",
+    "min_migration": 16,
+    "assert_current_database": "postgres"
+  },
+
+  "counters": {
+    "records_total": { "source": "matched.parcels_processed", "scoped_by": "step" },
+    "records_new": { "source": "matched.new_rows", "scoped_by": "step" },
+    "records_updated": { "source": "matched.centroids_computed", "scoped_by": "step" }
+  },
+
+  "config": {
+    "logic_variables": [
+      { "name": "compute_centroids_failed_geometries_warn", "min": 0, "max": 10000, "on_invalid": "fail" },
+      { "name": "compute_centroids_compute_rate_warn_pct", "min": 0, "max": 100, "on_invalid": "fail" }
+    ],
+    "validation": "strict",
+    "hoisted_above_gate": true,
+    "retired": []
+  },
+
+  "sharing": {
+    "chains": "derived",
+    "shared": "derived",
+    "slug_forms": "derived",
+    "varies_by_chain": {
+      "checks": "none",
+      "phase": { "sources": 5 },
+      "audit_table": "one",
+      "scope": "none"
+    },
+    "on_contention": "self_skip"
+  },
+
+  "terminals": [
+    {
+      "id": "backfilled", "kind": "success", "status": "completed",
+      "records_meta": { "duration_ms": "int", "audit_table": "object", "terminal": "string" },
+      "why": { "text": "The normal outcome: eligible rows existed (backlog_count > 0) and the UPDATE ran.", "liveness": { "kind": "check", "ref": "backlog_count" } }
+    },
+    {
+      "id": "zero_work", "kind": "success", "status": "completed",
+      "records_meta": { "audit_table": "object", "terminal": "string" },
+      "why": { "text": "The steady-state outcome measured on every recorded live run since 2026-06-10: backlog_count == 0, the UPDATE is never issued, only when:\"pre\" checks are scored. NOT a skip_gated terminal (R-P N/A) — this is a normal completion, not a ledger-gated skip.", "liveness": { "kind": "check", "ref": "backlog_count" } }
+    },
+    {
+      "id": "backfilled_with_warnings", "kind": "success", "status": "completed_with_warnings",
+      "records_meta": { "audit_table": "object", "terminal": "string" },
+      "why": { "text": "A WARN row stands (failed_geometries or compute_rate) and nothing FAILED — the run completed and wrote; the warning is in the table.", "liveness": { "kind": "check", "ref": "failed_geometries" } }
+    },
+    {
+      "id": "lock_held_elsewhere", "kind": "skip_lock_contention", "status": "self_skipped",
+      "records_meta": { "skipped": "bool", "reason": "string" },
+      "why": { "text": "Advisory lock 99 is held by another process — a row-derived SKIP summary, never a bare SDK skip with no audit_table.", "liveness": { "kind": "file", "ref": "scripts/lib/step/index.js" } }
+    },
+    {
+      "id": "failed_missing_precondition", "kind": "fail_error", "status": "failed",
+      "records_meta": { "audit_table": "object", "terminal": "string" },
+      "why": { "text": "guards.requires:postgis with on_missing:\"fail\" is absent — refuses before reading anything (A-1(a)).", "liveness": { "kind": "file", "ref": "scripts/lib/step/index.js" } }
+    },
+    {
+      "id": "failed_config_out_of_bounds", "kind": "fail_error", "status": "failed",
+      "records_meta": { "audit_table": "object", "terminal": "string" },
+      "why": { "text": "T1 or T2 resolved outside its bounds under on_invalid:\"fail\". hoisted_above_gate puts this refusal ABOVE the advisory lock.", "liveness": { "kind": "file", "ref": "scripts/lib/step/config.js" } }
+    }
+  ]
+}

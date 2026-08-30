@@ -147,6 +147,17 @@ export const GROUPS: Array<{ label: string; keys: string[] }> = [
     ],
   },
   {
+    // Spec 122 §1.2a P4 (C1 pilot 6, BACKFILL) — compute_centroids' two
+    // externalized knobs. Own group (not "Data Quality Thresholds" — this pilot's
+    // own precedent, "Parcel-Address Bridge", keeps each converted spatial step's
+    // knobs together rather than folding them into the generic bucket).
+    label: 'Centroid Computation',
+    keys: [
+      'compute_centroids_failed_geometries_warn',
+      'compute_centroids_compute_rate_warn_pct',
+    ],
+  },
+  {
     label: 'Data Quality Thresholds',
     keys: [
       'cost_outlier_ceiling_cad',

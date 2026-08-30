@@ -603,10 +603,14 @@ describe('Incremental Processing Guards', () => {
   });
 
   // All sources chain loader scripts must emit audit_table in records_meta
+  // compute-centroids.js RE-HOMED (Spec 122 §5.1 conversion, C1 pilot 6, 2026-08-29) —
+  // same treatment as link-massing.js/link-wsib.js above: a converted step spells
+  // neither `audit_table` nor `phase:` itself — scripts/lib/step/verdict.js
+  // buildAuditTable is the emitter, asserted against the live descriptor in
+  // src/tests/steps/compute_centroids/violations.test.ts instead.
   const SOURCES_LOADERS_REQUIRING_AUDIT_TABLE = [
     'load-address-points.js',
     'load-parcels.js',
-    'compute-centroids.js',
     'load-massing.js',
     'load-neighbourhoods.js',
     'load-wsib.js',
@@ -646,10 +650,20 @@ describe('Incremental Processing Guards', () => {
     expect(content).toMatch(/>=\s*110000/);
   });
 
-  it('compute-centroids.js has compute_rate >= 98% threshold', () => {
-    const scriptPath = path.resolve(__dirname, '../../scripts/compute-centroids.js');
-    const content = fs.readFileSync(scriptPath, 'utf-8');
-    expect(content).toMatch(/>= 98/);
+  // RE-HOMED (Spec 122 §5.1 conversion, C1 pilot 6, 2026-08-29): compute-centroids.js
+  // is a converted step, so the 98% compute_rate threshold is no longer a code
+  // literal — it is T2 (compute_centroids_compute_rate_warn_pct), a declared
+  // logic_variables seed the descriptor's checks[].limit_from_config resolves at
+  // runtime. The assertion follows the declaration, same treatment link-wsib.js's
+  // threshold got above.
+  it('compute-centroids has a compute_rate >= 98% WARN floor, declared not hardcoded', () => {
+    const descriptor = JSON.parse(fs.readFileSync(path.resolve(__dirname, '../../scripts/compute-centroids.descriptor.json'), 'utf-8'));
+    const check = descriptor.checks.find((c: { id: string }) => c.id === 'compute_rate');
+    expect(check).toBeDefined();
+    expect(check.limit).toBe('pct >= 98');
+    expect(check.limit_from_config).toBe('compute_centroids_compute_rate_warn_pct');
+    const seeds = JSON.parse(fs.readFileSync(path.resolve(__dirname, '../../scripts/seeds/logic_variables.json'), 'utf-8'));
+    expect(seeds.compute_centroids_compute_rate_warn_pct.default).toBe(98);
   });
 
   // link-wsib.js RE-HOMED (Spec 122 §5.1 conversion, C1 pilot 4, 2026-08-28): a converted
@@ -703,13 +717,12 @@ describe('PIPELINE_SUMMARY convention', () => {
     'geocode-permits.js',
     'link-parcels.js',
     'link-neighbourhoods.js',
-    // link-massing.js / link-wsib.js RE-HOMED (Spec 122 §5.1 conversion, pilots 3 + 4) —
-    // same treatment as assert_schema at pilot 1: a converted step spells neither emit
-    // itself, and the `lib/step/index.js` entry already in the PIPELINE_META list below
-    // IS the emitter for all of them.
+    // link-massing.js / link-wsib.js / compute-centroids.js RE-HOMED (Spec 122 §5.1
+    // conversion, pilots 3 + 4 + 6) — same treatment as assert_schema at pilot 1: a
+    // converted step spells neither emit itself, and the `lib/step/index.js` entry
+    // already in the PIPELINE_META list below IS the emitter for all of them.
     'link-similar.js',
     'link-coa.js',
-    'compute-centroids.js',
     // Phase G (Spec 42 §6.11): create-pre-permits.js retired.
     'refresh-snapshot.js',
   ];
@@ -855,12 +868,12 @@ describe('PIPELINE_META convention', () => {
     'geocode-permits.js',
     'link-parcels.js',
     'link-neighbourhoods.js',
-    // link-massing.js / link-wsib.js RE-HOMED (Spec 122 §5.1 conversion, pilots 3 + 4) —
-    // same treatment as assert_schema at pilot 1: a converted step spells neither emit
-    // itself, and the `lib/step/index.js` entry below IS the emitter for all of them.
+    // link-massing.js / link-wsib.js / compute-centroids.js RE-HOMED (Spec 122 §5.1
+    // conversion, pilots 3 + 4 + 6) — same treatment as assert_schema at pilot 1: a
+    // converted step spells neither emit itself, and the `lib/step/index.js` entry
+    // below IS the emitter for all of them.
     'link-similar.js',
     'link-coa.js',
-    'compute-centroids.js',
     // Phase G (Spec 42 §6.11): create-pre-permits.js retired.
     'refresh-snapshot.js',
     'enrich-web-search.js',

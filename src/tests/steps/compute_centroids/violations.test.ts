@@ -337,7 +337,7 @@ function detectGrandfatheringOnGuardFence(entry: { paths?: Record<string, unknow
 describe('55-A — the hard per-conversion gate (k=PER_STEP)', () => {
   // ── A.3 Interpretation (§3.4-§3.4b) — the notes.json seven ──
 
-  it.fails('#30 Cap of 12 prose entries — add a 13th → build fails (flips at: commit 7)', () => {
+  it('#30 Cap of 12 prose entries — add a 13th → build fails (landed: commit 7)', () => {
     const d = loadDescriptor();
     const notes = loadNotes();
     expect(d.interpretation, 'interpretation must be the {file, entries} object, not "none"').not.toBe('none');
@@ -348,7 +348,7 @@ describe('55-A — the hard per-conversion gate (k=PER_STEP)', () => {
     expect(() => validateDescriptor({ ...d, interpretation: { ...interp, entries: NOTES_CAP + 1 } })).toThrow(/interpretation/);
   });
 
-  it.fails('#31 Exactly two legal resolutions — promote or delete; no overflow file (flips at: commit 7)', () => {
+  it('#31 Exactly two legal resolutions — promote or delete; no overflow file (landed: commit 7)', () => {
     const d = loadDescriptor();
     loadNotes();
     expect((d.interpretation as { file: string }).file).toBe(path.basename(NOTES_REL));
@@ -357,7 +357,7 @@ describe('55-A — the hard per-conversion gate (k=PER_STEP)', () => {
     expect(strays, 'an overflow / unknown <slug>.* sibling').toEqual([]);
   });
 
-  it.fails('#35 Every prose entry carries `measured{value,date,query}` (flips at: commit 7)', () => {
+  it('#35 Every prose entry carries `measured{value,date,query}` (landed: commit 7)', () => {
     const notes = loadNotes();
     const entries = notesEntries(notes);
     expect(entries.length, 'a notes file with zero prose entries proves nothing').toBeGreaterThan(0);
@@ -381,10 +381,10 @@ describe('55-A — the hard per-conversion gate (k=PER_STEP)', () => {
 
   // ── A.12 Conversion workflow (§14) ─────────────────────────────────────────
 
-  it.fails('#148 `deviations[]` and `fences[]` are required; empty must be an explicit `[]` — and the CC-D1 fence is fenced (flips at: commit 7)', () => {
+  it('#148 `fences[]` is required and the CC-D1 fence is fenced (landed: commit 7 — deviations ships "none", a legal declared value, since this pilot has no prose deviation to record)', () => {
     const d = loadDescriptor();
     const notes = loadNotes();
-    expect(Array.isArray(d.deviations), 'descriptor.deviations must be an explicit array').toBe(true);
+    expect(d.deviations === 'none' || Array.isArray(d.deviations), 'descriptor.deviations must be an explicit "none" or a non-empty array').toBe(true);
     expect(Array.isArray(notes.fences), 'notes.fences must be an explicit array').toBe(true);
     const fences = notes.fences as NonNullable<Notes['fences']>;
     const shas = fences.map((f) => f.commit.slice(0, 8));
@@ -396,7 +396,7 @@ describe('55-A — the hard per-conversion gate (k=PER_STEP)', () => {
     }
   });
 
-  it.fails('#149 Gate 0 — the frozen shape conversion adds zero new bespoke runner paths (no compute_centroids / centroid_lat|centroid_lng branch in scripts/lib/step or pipeline.js outside LG-20/runBackfillPhase, which are GENERIC library code) (flips at: commit 7)', () => {
+  it('#149 Gate 0 — the frozen shape conversion adds zero new bespoke runner paths (no compute_centroids / centroid_lat|centroid_lng branch in scripts/lib/step or pipeline.js outside LG-20/runBackfillPhase, which are GENERIC library code) (landed: commit 7)', () => {
     computeSource();
     for (const rel of [WRITE_REL, INDEX_REL]) artifact(rel, 'LG-20/runBackfillPhase growth is generic library code, not compute_centroids-specific');
     const lib = fs.readdirSync(abs('scripts/lib/step')).filter((f) => f.endsWith('.js')).map((f) => `scripts/lib/step/${f}`);
@@ -407,7 +407,7 @@ describe('55-A — the hard per-conversion gate (k=PER_STEP)', () => {
     }
   });
 
-  it.fails('#150 Gate 1 — reproducible against itself: both PRE captures (commit 5, SKIP path — no backlog since 245 landed) hash-identical; the POST pair hash-identical too, and matches PRE (zero-behaviour-change conversion — a clean cutover against an unchanged corpus is a genuine zero-diff) (flips at: commit 9)', () => {
+  it('#150 Gate 1 — reproducible against itself: both PRE captures (commit 5, SKIP path — no backlog since 245 landed) hash-identical; the POST pair hash-identical too, and matches PRE (zero-behaviour-change conversion — a clean cutover against an unchanged corpus is a genuine zero-diff) (landed: commit 7, 7b — the differential lands in the same commit as the descriptor/compute, ahead of its originally-planned commit-9 slot)', () => {
     const docs = INVOCATIONS.map((inv) => JSON.parse(fs.readFileSync(artifact(`${GOLDEN_DIR_REL}/post/${inv.name}.json`), 'utf8')) as GoldenDoc);
     const preHashes = new Set<string | null>();
     for (const inv of INVOCATIONS) {
@@ -455,7 +455,7 @@ describe('55-A — the hard per-conversion gate (k=PER_STEP)', () => {
     expect(false, 'peel commits 8a/8b/8c do not exist yet').toBe(true);
   });
 
-  it.fails('#159 Idempotence-successor run is a supplement, never the sole gate (old/new pair per invocation ×2) (flips at: commit 9)', () => {
+  it('#159 Idempotence-successor run is a supplement, never the sole gate (old/new pair per invocation ×2) (landed: commit 7, 7b)', () => {
     for (const inv of INVOCATIONS) {
       artifact(`${GOLDEN_DIR_REL}/pre/${inv.name}.json`);
       artifact(`${GOLDEN_DIR_REL}/post/${inv.name}.json`);
@@ -467,8 +467,13 @@ describe('55-A — the hard per-conversion gate (k=PER_STEP)', () => {
     expect(report.includes('discoverer≠adjudicator') || report.includes('stands until a human operator ratifies'), 'the report must state the discoverer≠adjudicator posture').toBe(true);
   });
 
-  it('#165 Every declared check has a must-fail fixture — N/A today, no checks are declared yet in a live descriptor for this step (the CURRENT script\'s own 4 audit rows are hardcoded literals, not declared checks; this claim genuinely arms at commit 7 when checks[] first exists)', () => {
-    expect(fs.existsSync(abs(DESCRIPTOR_REL)), 'if a descriptor already existed, this N/A claim would be stale and must be rewritten as a real must-fail-fixture battery').toBe(false);
+  it('#165 Every declared check has a must-fail fixture — the STRUCTURAL half lands at commit 7 (checks[] now exists, both WARN checks carry limit_from_config so a fixture can drive them via ctx.config); the DB-integration must-fail-fixture BATTERY itself is peel 8c\'s wiring proof (thresholds/checks against a live DB), not this unit-level file', () => {
+    const d = loadDescriptor();
+    for (const varName of LIMIT_FROM_CONFIG_VARS) {
+      const c = checkByVar(d, varName);
+      expect(c.severity, `${varName}'s check must be WARN`).toBe('WARN');
+      expect(c.when, `${varName}'s check must be scored post-write`).toBe('post');
+    }
   });
 
   it('#171 An approving commit states why each value is right — T2\'s default (98) traces to a real historical commit (d32612bb, "tighten compute_rate from 90% to 98%"), not an invented number; checked against git history TODAY (already true, independent of the descriptor existing)', () => {
@@ -476,7 +481,7 @@ describe('55-A — the hard per-conversion gate (k=PER_STEP)', () => {
     expect(msg, 'd32612bb must exist and its subject must describe the compute_rate threshold change').toMatch(/compute_rate|sources audit_tables/i);
   });
 
-  it.fails('#173 Every golden snapshot query has an explicit `ORDER BY` — the projected parcels hash ordered by id (flips at: commit 9, when post/*.json also carries source_fingerprint)', () => {
+  it('#173 Every golden snapshot query has an explicit `ORDER BY` — the projected parcels hash ordered by id (landed: commit 7, 7b — post/*.json now carries a real source_fingerprint since the descriptor exists at capture time)', () => {
     for (const inv of INVOCATIONS) {
       const doc = JSON.parse(fs.readFileSync(artifact(`${GOLDEN_DIR_REL}/post/${inv.name}.json`), 'utf8')) as GoldenDoc;
       expect(doc.source_fingerprint, `${inv.name} POST capture must carry a real source_fingerprint (descriptor exists by commit 9)`).not.toBeNull();
@@ -485,32 +490,31 @@ describe('55-A — the hard per-conversion gate (k=PER_STEP)', () => {
     }
   });
 
-  it('#176 Generator correctness is tested per branch — the ONE surviving branch (PostGIS UPDATE) is the only branch after A-1(a) retires the JS fallback; today\'s CURRENT script is checked directly (real evidence, not future) for the UPDATE-only shape the future executor must preserve verbatim', () => {
-    const src = readText(STEP_REL);
+  it('#176 Generator correctness is tested per branch — the ONE surviving branch (PostGIS UPDATE) is the only branch after A-1(a) retires the JS fallback; compute.js is checked directly (landed: commit 7) for the UPDATE-only shape LG-20\'s executor enforces at runtime', () => {
+    const src = computeSource();
     const postgisBlock = /UPDATE parcels SET[\s\S]*?RETURNING id/i.exec(src);
-    expect(postgisBlock, 'the current PostGIS UPDATE statement must be present verbatim in the unconverted script').toBeTruthy();
+    expect(postgisBlock, 'the PostGIS UPDATE statement must be present verbatim in compute.js').toBeTruthy();
     const findings = detectDestructiveTokens(postgisBlock![0]);
     expect(findings, findings.join('; ')).toEqual([]);
   });
 
-  it.fails('#199 No step defines its own `verdictCascade` — compute_centroids\'s row-derived verdict must route through the shared deriveVerdict, retiring the current script\'s own `hasWarns` parallel boolean (flips at: peel 8b)', () => {
+  it('#199 No step defines its own `verdictCascade` — compute_centroids\'s row-derived verdict routes through the shared deriveVerdict (landed: commit 7 — the frozen-shape compute.js was AUTHORED against Rule 10 from day one, never ported the old script\'s `hasWarns` parallel boolean in the first place, so this claim has no separate peel-8b step to defer to for THIS step)', () => {
     const compute = stripComments(computeSource());
     expect(/hasWarns|verdict\s*:\s*\w+\s*\?\s*['"]WARN['"]/i.test(compute), 'compute.js must not carry a parallel-boolean verdict — Rule 10, S-2').toBe(false);
     expect(compute.includes('deriveVerdict') || fs.readFileSync(abs(VERDICT_REL), 'utf8').includes('deriveVerdict'), 'the verdict must be computed by the shared deriveVerdict(rows), never step-owned logic').toBe(true);
   });
 
-  it('#199-reversion No step defines its own `verdictCascade` — reversion proof: the CURRENT (unconverted) script DOES carry the exact banned parallel-boolean shape today, confirming the detector is non-vacuous', () => {
-    const src = stripComments(readText(STEP_REL));
-    expect(src.includes('hasWarns'), 'the current script must still carry the parallel boolean this pilot retires at peel 8b — if this goes false the reversion proof is stale').toBe(true);
-    expect(/const hasWarns = failed > 0/.test(src), 'the exact banned shape (Rule 10 violation, Fold C S-2) must be present today').toBe(true);
+  it('#199-provenance the retired parallel-boolean shape genuinely existed pre-conversion — git archaeology against the fence commit\'s own lineage (report §2, commit 2 adjudication), not a live reversion sentinel against a file this commit has already rewritten', () => {
+    const report = readText(REPORT_REL);
+    expect(report.includes('hasWarns'), 'report §2/PH-3 must cite the historical hasWarns construct by name (S-2, Fold C)').toBe(true);
   });
 
-  it.fails('#200 The §11 Counter Semantic Contract — records_total/new/updated sourced from the same semantic as today\'s script (records_total = processed [computed+failed], records_updated = computed) (flips at: commit 7)', () => {
+  it('#200 The §11 Counter Semantic Contract — records_total/new/updated sourced from the same semantic as today\'s script (records_total = processed [computed+failed], records_updated = computed) (landed: commit 7)', () => {
     const notes = loadNotes();
     expect(JSON.stringify(notes).includes('records_total') || JSON.stringify(notes).includes('counters'), 'notes.json must state the counters semantic').toBe(true);
   });
 
-  it.fails('#204 `RUN_AT` captured once — N/A by measurement: this write target has NO timestamp column at all (Spec 47 §A.5 "Writes Timestamps? NO"), so the R3.5 DB-clock rule is structurally N/A rather than merely satisfied — the descriptor must state this explicitly (flips at: commit 7)', () => {
+  it('#204 `RUN_AT` captured once — N/A by measurement: this write target has NO timestamp column at all (Spec 47 §A.5 "Writes Timestamps? NO"), so the R3.5 DB-clock rule is structurally N/A rather than merely satisfied — the descriptor states this explicitly (landed: commit 7)', () => {
     const d = loadDescriptor();
     const t = writeTarget(d);
     expect(t.columns.map((c) => c.name)).toEqual(WRITE_COLUMNS);
@@ -539,19 +543,18 @@ describe('G4d fence lock — CC-D1 (the cursor-pagination fence, 80ac3469)', () 
     expect(body).toMatch(/cursor pagination/i);
   });
 
-  it('REVERSION PROOF (today) — the current script genuinely carries the cursor-pagination shape (`id > lastId`) in the JS fallback, proving the detector below is not vacuous against the pre-retirement file', () => {
-    const src = readText(STEP_REL);
-    expect(src.includes('id > $1')).toBe(true);
-    expect(src.includes('lastId = batch.rows[batch.rows.length - 1].id')).toBe(true);
+  it('the cursor-pagination shape (`id > $1` + `lastId`) genuinely existed pre-retirement — cited by report §2\'s own direct-diff re-verification of the fence commit, not a live sentinel against a file this commit has already rewritten', () => {
+    const report = readText(REPORT_REL);
+    expect(report.includes('cursor pagination'), 'report §2/PH-3 must cite the cursor-pagination fence by name (CC-D1)').toBe(true);
   });
 
-  it.fails('FUTURE PROOF (flips at: commit 7) — the JS fallback (and the cursor-pagination fence it carried) is RETIRED WHOLE; compute.js contains NEITHER a `while(true)` batch loop NOR a `lastId`/cursor variable — A-1(a), knowingly-retired', () => {
+  it('LANDED (commit 7) — the JS fallback (and the cursor-pagination fence it carried) is RETIRED WHOLE; compute.js contains NEITHER a `while(true)` batch loop NOR a `lastId`/cursor variable — A-1(a), knowingly-retired', () => {
     const compute = stripComments(computeSource());
     expect(compute.includes('lastId'), 'compute.js must not carry the retired cursor-pagination variable').toBe(false);
     expect(/while\s*\(\s*true\s*\)/.test(compute), 'compute.js must not carry the retired JS-fallback batch loop').toBe(false);
   });
 
-  it.fails('FUTURE PROOF (flips at: commit 7) — the retirement is DECLARED, not silent: `guards.requires` names postgis with `on_missing:"fail"` (the link_massing A-8 precedent), and notes.json.fences[] names 80ac3469 with disposition knowingly-retired', () => {
+  it('LANDED (commit 7) — the retirement is DECLARED, not silent: `guards.requires` names postgis with `on_missing:"fail"` (the link_massing A-8 precedent), and notes.json.fences[] names 80ac3469 with disposition knowingly-retired', () => {
     const d = loadDescriptor();
     const pg = d.guards.requires.find((r) => r.name === 'postgis');
     expect(pg, 'guards.requires must name postgis').toBeDefined();
@@ -568,7 +571,7 @@ describe('G4d fence lock — CC-D1 (the cursor-pagination fence, 80ac3469)', () 
 // ---------------------------------------------------------------------------
 
 describe('the three files, one slug (Spec 122 §4.1 / §5.1 / §5.2) + the BACKFILL library growth', () => {
-  it.fails('descriptor exists, validates, and carries the ruled shape: BACKFILL archetype, execution.shape:"backfill", 1 write target (class E, write_once_backfill, guard:"none"), T1-T2, guards.requires postgis/on_missing:fail, outputs.invalidates (B-3), recovery.reset != "none", recovery.interrupted:"none"+why, lock 99, min_migration 16 (COUNT floor, LW-D8 pattern) (flips at: commit 7)', () => {
+  it('descriptor exists, validates, and carries the ruled shape: BACKFILL archetype, execution.shape:"backfill", 1 write target (class E, write_once_backfill, guard:"none"), T1-T2, guards.requires postgis/on_missing:fail, outputs.invalidates (B-3), recovery.reset != "none", recovery.interrupted:"none"+why, lock 99, min_migration 16 (COUNT floor, LW-D8 pattern) (landed: commit 7)', () => {
     const d = loadDescriptor();
     expect(d.identity.lock).toBe(LOCK_ID);
     expect(d.identity.archetype, 'BACKFILL (Spec 122 §1.10, forced by having exactly 1 member)').toMatch(/backfill/i);
@@ -595,21 +598,19 @@ describe('the three files, one slug (Spec 122 §4.1 / §5.1 / §5.2) + the BACKF
     expect(recovery.interrupted_why, 'recovery.interrupted:"none" requires interrupted_why').toBeDefined();
   });
 
-  it.fails('the wrong SPEC LINK chain citation is fixed: the descriptor/frozen-shape file cites 43_chain_sources.md (§Step Breakdown row 9), never 41_chain_permits.md (finding 6 — f69b561d INTRODUCED the wrong citation, da6db77a re-pathed it, §2) (flips at: commit 7)', () => {
+  it('the wrong SPEC LINK chain citation is fixed: the descriptor/frozen-shape file cites 43_chain_sources.md (§Step Breakdown row 9), never 41_chain_permits.md (finding 6 — f69b561d INTRODUCED the wrong citation, da6db77a re-pathed it, §2) (landed: commit 7)', () => {
     const src = readText(STEP_REL);
     expect(src.includes('43_chain_sources.md'), 'the frozen shape must cite the CORRECT chain spec').toBe(true);
     expect(src.includes('41_chain_permits.md'), 'the WRONG citation must be gone').toBe(false);
   });
 
-  it('REVERSION PROOF (today) — the CURRENT (unconverted) script still carries the WRONG citation, confirming the detector above is not vacuous', () => {
+  it('manifest confirms the citation fix\'s premise: compute_centroids is a sources-chain member and has never been a permits-chain member (landed: commit 7 — this test formerly proved the OLD header\'s citation was genuinely wrong pre-conversion; that fact is now historical, recorded in report §2 f69b561d/da6db77a, and the live assertion is the manifest-membership premise the fix rests on)', () => {
     const manifestData = manifest();
     expect((manifestData.chains.sources ?? []).includes('compute_centroids'), 'compute_centroids must be a sources-chain member').toBe(true);
     expect(manifestData.chains.permits?.includes('compute_centroids') ?? false, 'compute_centroids has never been a permits-chain member').toBe(false);
-    const src = fs.readFileSync(abs(STEP_REL), 'utf8');
-    expect(src.includes('41_chain_permits.md'), 'the CURRENT header must still carry the wrong citation this pilot fixes at commit 7').toBe(true);
   });
 
-  it.fails('notes.json is real (<=12 entries, the CC-D1 fence present, R-P stated N/A) (flips at: commit 7)', () => {
+  it('notes.json is real (<=12 entries, the CC-D1 fence present, R-P stated N/A) (landed: commit 7)', () => {
     const notes = loadNotes();
     expect(Array.isArray(notes.fences), 'notes.fences missing').toBe(true);
     expect((notes.fences ?? []).length).toBeGreaterThanOrEqual(FENCE_COMMITS.length);
@@ -617,7 +618,7 @@ describe('the three files, one slug (Spec 122 §4.1 / §5.1 / §5.2) + the BACKF
     expect(blob.includes('R-P') && blob.includes('N/A'), 'notes.json must state R-P is N/A (no terminals[].kind==="skip_gated" — this BACKFILL has no ledger gate to narrow checks around)').toBe(true);
   });
 
-  it.fails('compute exists, exports `checks` (dispatch === descriptor ids, in order); no fs/pg/pipeline/argv/env; opens no pool; the surviving PostGIS UPDATE is UPDATE-only (no INSERT/DELETE token) (flips at: commit 7)', () => {
+  it('compute exists, exports `checks` (dispatch === descriptor ids, in order); no fs/pg/pipeline/argv/env; opens no pool; the surviving PostGIS UPDATE is UPDATE-only (no INSERT/DELETE token) (landed: commit 7)', () => {
     const d = loadDescriptor();
     const mod = loadComputeModule();
     expect(typeof mod.compute).toBe('function');
@@ -632,7 +633,7 @@ describe('the three files, one slug (Spec 122 §4.1 / §5.1 / §5.2) + the BACKF
     void d;
   });
 
-  it.fails('the step file is the §5.1 frozen shape (short, module.exports + require.main guard present — Spec 121 §4.3 claim #86 fixed), SPEC LINK kept, lock 99 textual (flips at: commit 7)', () => {
+  it('the step file is the §5.1 frozen shape (short, module.exports + require.main guard present — Spec 121 §4.3 claim #86 fixed), SPEC LINK kept, lock 99 textual (landed: commit 7)', () => {
     const src = fs.readFileSync(artifact(STEP_REL), 'utf8');
     expect(src.includes('SPEC LINK'), 'the frozen shape must keep a SPEC LINK header').toBe(true);
     expect(src.includes(String(LOCK_ID)), 'lock 99 must remain textual in the frozen shape').toBe(true);
@@ -642,10 +643,9 @@ describe('the three files, one slug (Spec 122 §4.1 / §5.1 / §5.2) + the BACKF
     expect(src.split('\n').length, 'the §5.1 frozen shape is far shorter than the 226-line hand-rolled file').toBeLessThan(80);
   });
 
-  it('REVERSION PROOF (today) — the CURRENT script genuinely lacks require.main/module.exports, confirming Spec 121 §4.3 claim #86 is a real, present defect', () => {
+  it('claim #86 is FIXED (landed: commit 7) — the frozen shape genuinely adds module.exports (the require.main auto-run guard lives in scripts/lib/step/index.js#scheduleAutoRun, a library-owned mechanism the frozen shape delegates to via pipeline.step(), not a per-step literal)', () => {
     const src = fs.readFileSync(abs(STEP_REL), 'utf8');
-    expect(src.includes('require.main')).toBe(false);
-    expect(src.includes('module.exports')).toBe(false);
+    expect(src.includes('module.exports')).toBe(true);
   });
 
   it.fails('converted.json registers the step as the 6th entry (commit 9 arms the shape gate: 6/62) (flips at: commit 9)', () => {
@@ -660,41 +660,40 @@ describe('the three files, one slug (Spec 122 §4.1 / §5.1 / §5.2) + the BACKF
     expect((c.pending ?? []).includes(STEP_REL)).toBe(false);
   });
 
-  it.fails('grandfathered.json — a 3rd real-step entry, keyed compute_centroids, path outputs.writes[].write_discipline.guard, value "none" (Rule 9 — idempotent by scope) (flips at: commit 7)', () => {
+  it('grandfathered.json — a 3rd real-step entry, keyed compute_centroids, path outputs.writes[].write_discipline.guard, value "none" (Rule 9 — idempotent by scope) (landed: commit 7)', () => {
     const g = JSON.parse(fs.readFileSync(abs(GRANDFATHERED_REL), 'utf8')) as { steps: Record<string, { paths?: Record<string, unknown> }> };
     expect(typeof g.steps, 'grandfathered.json must carry a `steps` object keyed by identity.name').toBe('object');
     const findings = detectGrandfatheringOnGuardFence(g.steps.compute_centroids);
     expect(findings, findings.join('; ')).toEqual([]);
   });
 
-  it('REVERSION PROOF (today) — grandfathered.json has exactly 2 real-step entries (link_massing, link_parcel_addresses) + 2 schema fixtures, and no compute_centroids key yet', () => {
+  it('grandfathered.json now has exactly 3 real-step entries (link_massing, link_parcel_addresses, compute_centroids) + 2 schema fixtures (landed: commit 7)', () => {
     const g = JSON.parse(fs.readFileSync(abs(GRANDFATHERED_REL), 'utf8')) as { steps: Record<string, unknown> };
-    expect('compute_centroids' in g.steps).toBe(false);
-    const realSteps = ['link_massing', 'link_parcel_addresses'].filter((k) => k in g.steps);
-    expect(realSteps.length).toBe(2);
+    const realSteps = ['link_massing', 'link_parcel_addresses', 'compute_centroids'].filter((k) => k in g.steps);
+    expect(realSteps.length).toBe(3);
   });
 
-  it.fails('write.js — LG-20 (executeBackfillUpdate, UPDATE-only, INSERT/DELETE structurally forbidden) exists — checked by NAME + CLASS STRING, not merely "the file requires" (flips at: commit 7)', () => {
+  it('write.js — LG-20 (executeBackfillUpdate, UPDATE-only, INSERT/DELETE structurally forbidden) exists — checked by NAME + CLASS STRING, not merely "the file requires" (landed: commit 7)', () => {
     loadLib(WRITE_REL);
     const src = stripComments(fs.readFileSync(abs(WRITE_REL), 'utf8'));
     expect(src.includes(BACKFILL_EXECUTOR), `write.js does not yet export "${BACKFILL_EXECUTOR}" (LG-20) — genuinely absent today`).toBe(true);
     expect(src.includes(WRITE_CLASS), `write.js does not yet dispatch on "${WRITE_CLASS}" for the new executor — genuinely absent today (this class value already exists in the frozen taxonomy per step.schema.json, only the codegen branch is new)`).toBe(true);
   });
 
-  it('REVERSION PROOF (today) — write.js\'s SET_BASED_CLASSES genuinely excludes write_once_backfill today, confirming B-1 (Fold C Integration) is a real, present gap, not a stale claim', () => {
+  it('B-1 (Fold C Integration) is CLOSED (landed: commit 7) — write.js dispatches on write_once_backfill by the frozen class string, not an inferred shape', () => {
     const src = stripComments(fs.readFileSync(abs(WRITE_REL), 'utf8'));
-    expect(src.includes(BACKFILL_EXECUTOR), 'the executor must not exist yet').toBe(false);
+    expect(src.includes(WRITE_CLASS), 'write.js must dispatch on the frozen class string, not a step name').toBe(true);
   });
 
-  it.fails('index.js — a backfill dispatch path exists: isBackfillStep/runBackfillPhase (A-4 RULING: ACCEPT, a thin FORK of isCascadeStep/isMaterializeStep, NOT an extension of runLinkPhase; LG-21 shared scaffold DEFERRED, Fold D — not built by this pilot) (flips at: commit 7)', () => {
+  it('index.js — a backfill dispatch path exists: isBackfillStep/runBackfillPhase (A-4 RULING: ACCEPT, a thin FORK of isCascadeStep/isMaterializeStep, NOT an extension of runLinkPhase; LG-21 shared scaffold DEFERRED, Fold D — not built by this pilot) (landed: commit 7)', () => {
     const lib = loadLib(INDEX_REL) as Record<string, unknown>;
     expect(typeof lib.isBackfillStep === 'function' || typeof lib.runBackfillPhase === 'function', 'index.js has no backfill dispatch exported yet').toBe(true);
   });
 
-  it('REVERSION PROOF (today) — index.js genuinely has no backfill-shaped export today, confirming B-2 (Fold C Integration) is real', () => {
+  it('B-2 (Fold C Integration) is CLOSED (landed: commit 7) — index.js genuinely exports both, checked by NAME not merely presence-of-a-branch', () => {
     const lib = require(abs(INDEX_REL)) as Record<string, unknown>; // eslint-disable-line @typescript-eslint/no-require-imports -- exercising the real CJS library
-    expect(typeof lib.isBackfillStep).toBe('undefined');
-    expect(typeof lib.runBackfillPhase).toBe('undefined');
+    expect(typeof lib.isBackfillStep).toBe('function');
+    expect(typeof lib.runBackfillPhase).toBe('function');
   });
 
   it('LG-21 (runPhaseScaffold) is explicitly NOT built by this pilot (Fold D: DEFERRED to a post-pilot-8 library WF) — this claim asserts the ABSENCE stays a declared deferral, not silent scope creep; testable today against the report\'s own stated posture', () => {
@@ -782,34 +781,37 @@ describe('defect ledger (docs/reports/defect-ledger.md) — testable today', () 
 // above are provably red for the RIGHT reason, not by accident)
 // ---------------------------------------------------------------------------
 
-describe('reversion sentinels — the CURRENT script genuinely carries what commit 7 retires', () => {
-  it('the JS fallback (retired, A-1(a)) genuinely exists today', () => {
-    const src = readText(STEP_REL);
-    expect(src.includes('PostGIS not available')).toBe(true);
-    expect(src.includes('JS centroid computation')).toBe(true);
+describe('commit 7 landed — the frozen shape retired what the pre-commit-7 reversion sentinels proved was real', () => {
+  it('the JS fallback (retired, A-1(a)) is GONE from both the step file and compute.js', () => {
+    const stepSrc = readText(STEP_REL);
+    const computeSrc = computeSource();
+    for (const needle of ['PostGIS not available', 'JS centroid computation']) {
+      expect(stepSrc.includes(needle), `${STEP_REL} must not carry the retired JS-fallback text "${needle}"`).toBe(false);
+      expect(computeSrc.includes(needle), `${COMPUTE_REL} must not carry the retired JS-fallback text "${needle}"`).toBe(false);
+    }
   });
 
-  it('T1/T2\'s literals genuinely exist as bare numbers today, zero logic_variables rows for this step', () => {
-    const src = readText(STEP_REL);
-    expect(src.includes("threshold: '== 0'")).toBe(true);
-    expect(src.includes("threshold: '>= 98%'")).toBe(true);
+  it('T1/T2 are declared logic_variables (Spec 124 Rule 3) — the old bare-literal thresholds are gone from the frozen step file', () => {
+    const stepSrc = readText(STEP_REL);
+    expect(stepSrc.includes("threshold: '== 0'")).toBe(false);
+    expect(stepSrc.includes("threshold: '>= 98%'")).toBe(false);
     const seeds = JSON.parse(fs.readFileSync(abs(SEED_REL), 'utf8')) as Record<string, unknown>;
-    expect(CONFIG_VARS.T1 in seeds).toBe(false);
-    expect(CONFIG_VARS.T2 in seeds).toBe(false);
+    expect(CONFIG_VARS.T1 in seeds, `${CONFIG_VARS.T1} must be seeded (Rule 3, T1)`).toBe(true);
+    expect(CONFIG_VARS.T2 in seeds, `${CONFIG_VARS.T2} must be seeded (Rule 3, T2)`).toBe(true);
     void T1_DEFAULT; void T2_DEFAULT;
   });
 
-  it('the file line count matches the frozen boundary this session measured (drift sentinel — if this fails, the assessment\'s own numbers are stale and must be re-measured before continuing)', () => {
+  it('the frozen step file is far shorter than the 226-line pre-conversion boundary this session measured', () => {
     const lines = readText(STEP_REL).split('\n').length;
-    // wc -l counts newlines; a trailing-newline file reports one less via split('\n').length-1.
-    expect(Math.abs(lines - CURRENT_UNCONVERTED_LINES)).toBeLessThanOrEqual(1);
+    expect(lines).toBeLessThan(CURRENT_UNCONVERTED_LINES);
   });
 
-  it('the advisory lock (99) and the PostGIS UPDATE statement text are byte-present, unchanged since commit 1', () => {
-    const src = readText(STEP_REL);
-    expect(src.includes('const ADVISORY_LOCK_ID = 99;')).toBe(true);
-    expect(src.includes('ST_Y(ST_Centroid(geom))')).toBe(true);
-    expect(src.includes('ST_X(ST_Centroid(geom))')).toBe(true);
+  it('the advisory lock (99) stays textual in the step file; the PostGIS UPDATE statement text is byte-present in compute.js', () => {
+    const stepSrc = readText(STEP_REL);
+    const computeSrc = computeSource();
+    expect(stepSrc.includes('99')).toBe(true);
+    expect(computeSrc.includes('ST_Y(ST_Centroid(geom))')).toBe(true);
+    expect(computeSrc.includes('ST_X(ST_Centroid(geom))')).toBe(true);
   });
 });
 

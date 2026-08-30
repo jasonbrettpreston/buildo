@@ -58,6 +58,16 @@
       "date": "2026-08-29",
       "lock_test": "src/tests/step-schema.logic.test.ts"
     },
+    "compute_centroids": {
+      "paths": {
+        "outputs.writes[].write_discipline.guard": "none"
+      },
+      "why": "outputs.writes[0] is the sole conditional `UPDATE parcels SET centroid_lat=..., centroid_lng=... WHERE geom IS NOT NULL AND centroid_lat IS NULL RETURNING id` (LG-20, class write_once_backfill, retract:\"none\"). The WHERE clause IS the scope, not a value-change guard — an already-filled row is permanently ineligible for this step's own UPDATE (only migration 245's trigger, a different write path, re-admits a row). An IS DISTINCT FROM guard on a NULL-scoped row compares against nothing and is vacuous by construction, not merely unnecessary — the genuinely unguarded write is the CORRECT mechanic here, same class of finding as link_massing's E1 precedent (guard:\"none\" is right, not merely tolerated).",
+      "commit": "C1 pilot 6 commit 7 (2026-08-29) — this descriptor's own introducing commit",
+      "adjudicated_by": "operator ruling 2026-08-29 (pilot 6 Fold C/D, B-1/S-1, Rule 9)",
+      "date": "2026-08-29",
+      "lock_test": "src/tests/steps/compute_centroids/violations.test.ts"
+    },
     "fixture_grandfathered_snapshot": {
       "paths": {
         "outputs.writes[].write_discipline.guard": "none"

@@ -1,0 +1,64 @@
+{
+  "$comment": [
+    "Spec 120 §3.4-§3.4b — the INTERPRETATION file for compute_centroids, capped at 12",
+    "prose entries. Everything here lived ONLY as a source comment (or a git commit",
+    "message, or a plan/report section) before this conversion."
+  ],
+  "contract_version": 1,
+  "read_this_way": [
+    {
+      "note": "The steady state (0 backlog) is the ONLY shape live-observed in 5+ months: 20 total recorded runs, exactly 1 (2026-03-10, 530 rows) did real work, 8 zero-work runs since 2026-06-10. Reading a run's records_meta on THIS step, expect parcels_processed/centroids_computed/failed_geometries all 0 unless migration 245's trigger just invalidated a batch of centroids.",
+      "measured": { "value": "20 total pipeline_runs under sources:compute_centroids, 0 failed, 1 real-work run, 8 zero-work runs since 2026-06-10", "date": "2026-08-29", "query": "SELECT started_at, records_meta->>'records_total' FROM pipeline_runs WHERE pipeline LIKE '%compute_centroids%' OR pipeline LIKE '%compute-centroids%' ORDER BY started_at" }
+    }
+  ],
+  "known_normal": [
+    {
+      "note": "CC-D3 (Finding 7): 292,587/486,530 (60.1%) of stored centroids differ >1m from a freshly-computed ST_Centroid over the SAME unchanged geom. Root cause: the one real-work run (2026-03-10) predates the PostGIS offload (commit 7c75e92e, 2026-04-02) and used the retired JS arithmetic-mean algorithm; the remainder predates pipeline_runs ledger visibility entirely (most plausibly a bulk seed/restore outside the tracked pipeline). This step's own scope predicate makes an already-filled row permanently out of reach regardless of which algorithm filled it — carrying this population through the conversion costs nothing beyond what already existed.",
+      "measured": { "value": "292,587/486,530 (60.1%) stored-vs-fresh centroid distance > 1m; avg 6.61m, median 4.12m, max 1,476.84m", "date": "2026-08-29", "query": "SELECT COUNT(*) FROM parcels WHERE geom IS NOT NULL AND ST_DistanceSphere(ST_SetSRID(ST_MakePoint(centroid_lng, centroid_lat), 4326), ST_Centroid(geom)) > 1.0" }
+    }
+  ],
+  "blind_spots": [
+    {
+      "what": "The standing scripts/analysis/parcel-sanity-audit.js has no direct check over centroid-vs-polygon containment or algorithm-drift — this step's own golden harness (commit 5) and runtime checks[] are the only places CC-D2/CC-D3's live exposure is measured. A future regression to either would be invisible to the standing audit.",
+      "detected_by": "none",
+      "measured": { "value": "0 centroid-containment or algorithm-drift checks found in scripts/analysis/parcel-sanity-audit.js", "date": "2026-08-29", "query": "grep -c centroid scripts/analysis/parcel-sanity-audit.js" }
+    }
+  ],
+  "suspicious_if": [
+    {
+      "signal": "backlog_count reads persistently nonzero across consecutive runs (rather than the steady-state 0) — would mean either migration 245's trigger is invalidating faster than this step refills, or this step's own UPDATE is silently failing to reach RETURNING id for eligible rows.",
+      "check": "backlog_count",
+      "measured": { "value": "0 today (golden invariant, commit 5)", "date": "2026-08-29", "query": "SELECT COUNT(*) FROM parcels WHERE geometry IS NOT NULL AND centroid_lat IS NULL" }
+    }
+  ],
+  "decisions": [
+    {
+      "note": "A-1(a) RULING (Fold C/D, orchestrator, 2026-08-29, within the pre-authorized plan): the JS arithmetic-mean fallback is RETIRED WHOLE (guards.requires: postgis, on_missing: fail — the link_massing A-8 precedent), not kept-declared-unreachable. The PostGIS branch is ONE UPDATE ... RETURNING id with no loop, so it has no cursor-pagination analogue to preserve, and none is needed — a server-side UPDATE cannot infinite-loop on a malformed row the way the retired client-side re-scan could."
+    },
+    {
+      "note": "A-4 RULING (Fold C, AMENDED Fold D, 2026-08-29): class E write_once_backfill was genuinely unimplemented in write.js (SET_BASED_CLASSES excluded it, sqlLiteral refuses server-side expressions) — ships LG-20 (executeBackfillUpdate, guard:\"none\" per Rule 9, idempotent BY SCOPE) + a thin runBackfillPhase (ACCEPT, a fork of isCascadeStep/isMaterializeStep's shape, not an extension of runLinkPhase/runMaterializePhase). LG-21's shared phase-runner scaffold is explicitly DEFERRED to a post-pilot-8 library WF, not shipped in this pilot."
+    },
+    {
+      "note": "R-1/CC-D2 RULING (Reality-Check, Fold C, PIN + HIGH followup): of 3,626 out-of-polygon centroids, 3,130 land inside a different parcel, exposing a 276-link mis-attribution signature in link-parcels.js's Tier-3 nearest-centroid join. This step's own output is correct per its own contract (Spec 59 R2.5); the exposure is a downstream consumer's join-strategy defect, PINNED for this pilot's zero-behaviour-change scope."
+    },
+    {
+      "note": "R-F item 1 (carried forward, same disposition as pilot 5): this step has no destructive retraction target (class E, retract:\"none\"), so it does NOT exercise or close R-B's crashed/stuck-running reader gap — carried to whichever future pilot first ships a genuine retract_when:\"full_only\" target. R-P is N/A: no terminals[].kind===\"skip_gated\" entry exists, because this BACKFILL's zero-work completion is DATA-driven (backlog_count == 0), never a ledger gate."
+    }
+  ],
+  "counts": { "open_blind_spots": 1, "unpromoted_suspicious_if": 0 },
+  "fences": [
+    {
+      "const": "CC-D1 — cursor-pagination infinite-loop fix, retired WITH the JS fallback it protected",
+      "value": "id > lastId keyset cursor in the (now-retired) JS fallback replaced a naive `centroid_lat IS NULL` re-scan that refetched malformed geometries forever",
+      "incident": "commit 80ac3469 (2026-03-15), commit message verbatim: \"Fix infinite loop: cursor pagination replaces `centroid_lat IS NULL` filter which refetched malformed geometries forever.\" Retired WHOLE at A-1(a): the surviving PostGIS branch is ONE UPDATE ... RETURNING id with no loop and no cursor-pagination analogue to preserve.",
+      "commit": "80ac3469",
+      "lock_test": "src/tests/steps/compute_centroids/violations.test.ts"
+    }
+  ],
+  "review_notes": [
+    {
+      "note": "This step writes ONE target, ONE statement, no batching in the surviving path — read written.e1 as the whole write surface. It is the simplest write shape of any pilot converted to date (no ordered multi-target sequence, no keyset pagination, no per-row classification).",
+      "measured": { "value": "1 declared write target, 1 UPDATE statement, no transaction wrapper (txn_scope: statement)", "date": "2026-08-29", "query": "node -e \"console.log(require('./scripts/compute-centroids.descriptor.json').outputs.writes.length)\"" }
+    }
+  ]
+}

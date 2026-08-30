@@ -7,13 +7,13 @@ bounds, numeric-vs-JSONB, description, and the pipeline scripts that consume it.
 Values are operator-tunable at runtime via the Spec 86 Control Panel; the
 defaults below are the seed / migration baselines.
 
-- **Numeric vars** (439) live in `scripts/seeds/logic_variables.json` (the parity-tested surface re-exported as `LOGIC_VAR_DEFAULTS` in `src/lib/admin/control-panel.ts`), except the 19 seeded via migrations only (last column notes the migration).
+- **Numeric vars** (441) live in `scripts/seeds/logic_variables.json` (the parity-tested surface re-exported as `LOGIC_VAR_DEFAULTS` in `src/lib/admin/control-panel.ts`), except the 19 seeded via migrations only (last column notes the migration).
 - **JSONB vars** (6) carry non-numeric values in `logic_variables.variable_value_json`; they are migration-seeded (never in the seed JSON — a JSONB value cannot live in the numeric `variable_value` column) and read directly (config-loader passes object JSON through untouched).
 - **Consuming scripts** are derived from each script's local `LOGIC_VARS_SCHEMA = z.object({...})` Zod union. A blank cell means no static consumer was found; some consumers read **computed keys** (e.g. `assert-lifecycle-phase-distribution.js` builds `lifecycle_band_${…}` at runtime) invisible to a static scan — those are named in the seed JSON's `CONSUMED by …` annotation, surfaced in the Description.
 
 **Cross-refs:** Spec 40 (`docs/specs/01-pipeline/40_pipeline_system.md`, config-loader / logicVars contract) · Spec 86 (`docs/specs/02-web-admin/86_control_panel.md`, the Control Panel that edits these).
 
-Total: **445** logic variables (439 numeric, 6 JSONB).
+Total: **447** logic variables (441 numeric, 6 JSONB).
 
 ---
 
@@ -66,6 +66,8 @@ Total: **445** logic variables (439 numeric, 6 JSONB).
 | `coa_trades_unmapped_threshold_pct` | numeric | 20 | 0 – 100 | — | seed | Day-1 threshold (percent) for CoAs with non-NULL scope_tags but zero trade matches in classify-coa-trades (Spec 42 §6.8 row 667; R5.4 R8 fold #1). Variance-only CoAs (severance, setback, minor-variance) legitimately produce zero trades, so a non-zero threshold is the correct semantic — the spec literal `== 0 FAIL` would be a permanent FAIL. Set to 20% for first burn-in; recalibrate post-prod once tag distribution is known. |
 | `coa_unmatched_threshold_pct` | numeric | 10 | 0 – 100 | `scripts/link-coa-to-parcels.js` | seed | Day-1 threshold (percent) for unmatched CoAs in link-coa-to-parcels (Spec 42 §6.5 step 9). Above this, audit_table verdict is WARN (not FAIL). Recalibrate post-burn-in. |
 | `commercial_shell_multiplier` | numeric | 0.6 | 0.1 – 2 | — | seed | Discount multiplier applied to commercial shell-and-core permits for cost estimation (Spec 86) |
+| `compute_centroids_compute_rate_warn_pct` | numeric | 98 | 0 – 100 | — | seed | Spec 124 Rule 3 (T2, Pilot 6, BACKFILL) — WARN floor on centroids_computed / parcels_processed. 98 = the pre-externalization literal (`:198`,`:200` in the pre-conversion script) and traces to commit d32612bb's deliberate business-accuracy tightening ("tighten compute_rate from 90% to 98%"), not an arbitrary number. A `pct >= floor` form (R-N precedent). CONSUMED by compute_centroids (scripts/lib/compute/compute-centroids.js compute_rate, via checks[].limit_from_config). |
+| `compute_centroids_failed_geometries_warn` | numeric | 0 | 0 – 10000 | — | seed | Spec 124 Rule 3 (T1, Pilot 6, BACKFILL) — WARN ceiling on the count of parcels whose geometry JSONB is present but the PostGIS geom cast never populated (a malformed GeoJSON payload), still uncomputed after compute_centroids's own UPDATE. 0 = the pre-externalization literal (`:197` in the pre-conversion script, `== 0`). Never FAIL — a malformed geometry is a data-quality signal to surface, never a reason to halt the run. CONSUMED by compute_centroids (scripts/lib/compute/compute-centroids.js failed_geometries, via checks[].limit_from_config). |
 | `cost_coverage_pass_pct` | numeric | 55 | 0 – 100 | `scripts/quality/assert-global-coverage.js` | seed | WF3 F4: assert-global-coverage Step-14 cost_estimates rows PASS floor. Whole-corpus cost coverage is ~62% BY DESIGN under the archetype+safe-skip model (non-residential T4 matrix-miss safe-skip, fit-blocked permissioning, MEC-only nofit are legitimately NULL) — the global 90% bar was inherited indiscriminately and was already red pre-WF2 (40%). Scoped recalibration of these ~6 non-halting observability rows only; global 90/70 untouched (don't blind other row-quality checks). 55 leaves ~7pt headroom over measured 61.8% while still FAILing on a genuine collapse. |
 | `cost_coverage_warn_pct` | numeric | 50 | 0 – 100 | `scripts/quality/assert-global-coverage.js` | seed | WF3 F4: assert-global-coverage Step-14 cost_estimates rows WARN floor (below -> FAIL). Pairs with cost_coverage_pass_pct. |
 | `cost_escalation_index` | numeric | 100.0 | — (migration-seeded) | — | migration 205 | Spec 88 §2.9: StatCan BCPI Toronto CMA index (current). escalation = MAX(1, index/base). Manually updated quarterly; its row updated_at is the index staleness clock. |
@@ -467,4 +469,4 @@ Total: **445** logic variables (439 numeric, 6 JSONB).
 
 ---
 
-*Generated from 426 seed vars + 19 migration-only vars + 99 consumer-mapped keys across 2 script dirs.*
+*Generated from 428 seed vars + 19 migration-only vars + 99 consumer-mapped keys across 2 script dirs.*

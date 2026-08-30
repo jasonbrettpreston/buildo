@@ -194,6 +194,8 @@ const EXPECTED_LOGIC_VAR_KEYS = [
   'link_parcel_addresses_fanout_warn_condo',
   'link_parcel_addresses_structure_link_rate_warn_pct', // LPA-D5 (WF3-B)
   'link_parcel_addresses_fanout_warn_rd_rs',            // LPA-D5 (WF3-B)
+  'compute_centroids_failed_geometries_warn',           // C1 pilot 6 (BACKFILL), T1
+  'compute_centroids_compute_rate_warn_pct',            // C1 pilot 6 (BACKFILL), T2
   'calibration_default_median_days',  // E21
   'calibration_default_p25_days',     // E21
   'calibration_default_p75_days',     // E21

@@ -619,6 +619,142 @@ scorecard (`11/17`) instead of erroring.
 
 ---
 
+## §7. Descriptor + compute verbatim + library growth (A-1..A-4 ruled) → G2′ (commit 7)
+
+> Lands `scripts/compute-centroids.descriptor.json`, `scripts/compute-centroids.notes.json`,
+> `scripts/lib/compute/compute-centroids.js` (the verbatim-ported PostGIS `UPDATE ... RETURNING id`, G2's
+> "verbatim" guarantee — byte-identical modulo whitespace to the pre-conversion script's `:101-107`), the
+> frozen-shape `scripts/compute-centroids.js` (28 lines — `require`/`module.exports` + `pipeline.step()`,
+> Spec 121 §4.3 claim #86 fixed), the SPEC LINK header correction (finding 6 — `43_chain_sources.md`, never
+> `41_chain_permits.md`), `scripts/steps/_schema/grandfathered.json`'s 3rd real-step entry (`compute_centroids`,
+> `write_discipline.guard = "none"`, Rule 9), T1/T2 seeded into `scripts/seeds/logic_variables.json` +
+> `scripts/seeds/apply-logic-variables.js` applied against the local dev DB (2/428 rows inserted — the two new
+> vars; 426 already existed, values preserved), the admin `GlobalConfigCard.tsx` GROUPS "Centroid Computation"
+> entry, `converted.json.pending`'s `stage` advanced `red_suite` → `shape_clean` (R-K.1), and 16 of 24
+> `it.fails()` flipped to plain `it()` in `violations.test.ts` (8 remain, correctly deferred to peel 8/commit 9
+> — `#154` peel-commit-isolation, `converted.json`'s 6th-entry registration).
+
+### A-1..A-4 ruled at this commit — genuinely landed, not merely re-stated
+
+* **A-1(a) — the JS fallback is RETIRED WHOLE.** `scripts/lib/compute/compute-centroids.js` contains neither
+  the arithmetic-mean `computeCentroid()` function, the cursor-paginated `while(true)` batch loop, nor the
+  `lastId` cursor variable — confirmed by `grep -c "lastId\|while(true)\|PostGIS not available"` returning 0
+  across both the frozen step file and compute.js. `guards.requires` names `postgis` with `on_missing:"fail"`
+  (the `link_massing` A-8 precedent) — verified live: a `pg_extension` probe now gates construction of the run
+  before the first read, per `scripts/lib/step/index.js assertRequirements`.
+* **A-4 — LG-20 (`write_once_backfill` class branch + `executeBackfillUpdate` executor) + `runBackfillPhase`
+  land in the GENERIC library, not a `compute_centroids`-specific branch.** Measured this commit:
+  `scripts/lib/step/write.js` gains **+99 lines** (`WRITE_ONCE_BACKFILL_CLASS` constant, the descriptive
+  `buildWritePlan` branch, `executeBackfillUpdate` + its `BACKFILL_FORBIDDEN_RE` structural guard, both
+  exported); `scripts/lib/step/index.js` gains **+195 lines** (`isBackfillStep`, `runBackfillPhase` — guards →
+  pre-count → ZERO-WORK COMPLETION branch → pre_write gate → the one statement → post checks — plus the
+  dispatch wiring, `counterScope` branch, and a `zero_work`-discriminated terminal selection arm). Gate 0
+  (`#149`) re-confirms zero `compute[_-]centroids` token survives in either file outside comments (stripped
+  before the scan) — the growth is descriptor-driven, generic library code, exactly as LG-11/LG-18 were for
+  their own pilots.
+* **A-2/A-3 — MOOT/RESOLVED, unchanged from Fold C.** No `pipeline.BATCH_SIZE` read survives (A-1(a) deletes
+  the only reader); `txn_scope: "statement"` is declared outright — the surviving write is ONE bare
+  `pool.query(sql.update_sql)` with no transaction wrapper, confirmed in `runBackfillPhase`.
+
+### The write path, proven LIVE against the real target DB (not merely unit-tested)
+
+`src/tests/db/migration-245-centroid-invalidation.db.test.ts`'s case ④ — the pre-existing, already-red-first-
+proven write-path mechanism cited at commit 5 — genuinely REGRESSES under `BUILDO_TEST_DB=1` (the ephemeral
+testcontainer, database name `buildo_test`) once this step declares `database.assert_current_database:
+"postgres"`: `[compute_centroids] REFUSING: connected to database "buildo_test", expected one of "postgres"`.
+This is NOT a new defect class — it is the SAME already-filed gap `tasks/lessons.md` records as LW-D16
+("every converted step's `database.assert_current_database:"postgres"` refusing the testcontainer's
+`buildo_test` name — already filed as a MED followup"), now observed on a 6th converted step rather than a
+new occurrence. No step-specific fix is applied here (a per-step workaround would violate Gate 0 — the fix
+belongs to the testcontainer harness or a schema-level array form for `assert_current_database`, both
+library-level, both out of this pilot's scope) — filed as an additional occurrence against the standing
+LW-D16 followup, not a new one.
+
+The write path was instead proven LIVE against the REAL target DB (`127.0.0.1:54322/postgres`, the same
+target every §0-§6 measurement in this report used), end to end, this commit:
+
+1. **Zero-work steady state, live:** `node -r dotenv/config scripts/compute-centroids.js` against the
+   unmodified corpus (0 backlog) → `terminal:"zero_work"`, `verdict:"PASS"`, `records_total:0`, one
+   `backlog_count` INFO row — byte-for-byte the same OUTCOME the pre-conversion script's `totalParcels === 0`
+   early return produced (§0.6 finding 3 / §1's 20-run history), reached through the declared BACKFILL phase
+   order rather than a bespoke early `return`.
+2. **The refill proof, live (mirrors the db test's case ④, against the real target instead of the
+   testcontainer):** parcel `id=1`'s `geom` was translated by `ST_Translate(geom, 0.0001, 0.0001)`; migration
+   245's trigger fired and NULLed `centroid_lat`/`centroid_lng` (confirmed by direct SELECT before re-running
+   the step). `node -r dotenv/config scripts/compute-centroids.js` then ran and produced `terminal:"backfilled"`,
+   `records_total:1`, `records_updated:1`, `centroids_computed:1`, `failed_geometries:0`, `compute_rate:"100%"`
+   (verdict PASS on both WARN checks) — the row's `centroid_lat`/`centroid_lng` were confirmed non-NULL and
+   recomputed FROM THE NEW GEOMETRY (not the stale value), exactly TRAP ④'s own requirement ("assert the
+   VALUE, never the exit code").
+3. **Idempotent re-run, live:** running the step again immediately produced `terminal:"zero_work"`,
+   `records_total:0` — `idempotent_rerun: zero_writes` proven twice-run, live, on real data.
+4. Parcel `id=1`'s `centroid_lat`/`centroid_lng` were restored to their pre-test values (`43.7733807`,
+   `-79.5225750`) by direct UPDATE after verification, so the golden captures below reflect the corpus's
+   genuine unperturbed steady state — confirmed by the POST `table_state` hash matching PRE exactly (below).
+
+### 7b — the differential, in the same commit
+
+Re-captured `docs/reports/golden/compute_centroids/post/{sources,standalone}.json` against the frozen shape
+(descriptor now exists, so `capture-step-golden.js` auto-derives the `parcels` projection —
+`id,centroid_lat,centroid_lng` ordered by `id` — from `outputs.writes[0]`, identical to the PRE captures'
+explicit `--table-columns`/`--table-order` flags), WITH `--invariants=docs/reports/golden/compute_centroids/
+invariants.json` for full parity with PRE.
+
+**Table hash: IDENTICAL.** Both POST captures hash `94473cfd` (486,530 rows) — byte-identical to both PRE
+captures. **5 invariants: IDENTICAL** — `parcels_total=486530`, `centroid_null_count=0`,
+`geom_not_null_geometry_null_count=0`, `outside_polygon_count=3626`, `pointonsurface_gt_1m_count=298021`,
+`centroid_in_neighbour_parcel_count=3130`, `centroid_algorithm_drift_gt_1m_count=292587` — all 7 match PRE
+exactly, confirming the live refill-proof above (steps 2-4) left the corpus in its genuine unperturbed state.
+
+`--compare` of PRE vs POST for BOTH invocations: **20 differences for `sources`, 20 for `standalone`
+(21 counting `standalone`'s own extra `pipeline_runs[0]` row, which is new-shape-only, not new-behaviour —
+the pre-conversion script never wrote a `pipeline_runs` row of its own either, per §5's own finding; the
+POST row is the SAME ledger row `runBackfillPhase`'s caller already opens for every archetype, now visible
+because `capture-step-golden.js`'s child-spawn genuinely exercises the frozen shape's own ledger open/close
+for the first time)** — every one of them a declared, explained shape difference, never a data-level
+regression:
+
+| Diff bucket | Explanation |
+|---|---|
+| `meta[0].reads.parcels[1..4]` (`geom`/`geometry`/`centroid_lat`/`centroid_lng` added) | The pre-conversion script's `PIPELINE_META` reads declaration was `["id","geometry"]` — an UNDER-declaration (it read `geom`/`centroid_lat`/`centroid_lng` too, just never said so). The frozen shape's `deriveMeta` derives the reads list FROM `descriptor.inputs.reads.tables[0].columns` (`id,geom,geometry,centroid_lat,centroid_lng`), which is the honest, complete set — a declared-telemetry FIX, not a behaviour change to what the step actually reads (it always read all five). |
+| `stdout_lines[0..2]` (log line text) | Cosmetic: the pre-conversion script's bespoke `pipeline.log.info('[compute-centroids]', ...)` strings ("Parcels to compute: 0", "All parcels already have centroids. Done.") are replaced by the frozen shape's structured, tag-consistent lines (`[compute_centroids] target: ...`, `backfill: 0 eligible rows — nothing to compute`) — same underlying event, different prose, zero semantic content lost. |
+| `summary.records_meta.audit_table.rows[0..1]` (2-row `status`/`reason` SKIPPED shape → 1-row `backlog_count` INFO shape) | The "gate/backlog pre-check row" explained bucket named at commit 5/§5: the old hand-written 2-row SKIPPED shape is replaced by the single declared `backlog_count` check (R-P's spirit — a `when:"pre"` INFO row persisting WHY a zero-work run had nothing to do), landed this commit. |
+| `summary.records_meta.{centroids_computed,failed_geometries,parcels_processed}` (present in POST, absent in PRE's top-level `records_meta`) | These three fields WERE already present in the pre-conversion script's own `records_meta` on its real-work path (`:208-210`) — PRE's captures happen to be the zero-work SKIP shape, which never emitted them (the old script's `if (totalParcels === 0)` branch emits only `status`/`reason`). The frozen shape's `buildBackfillMeta` emits all three unconditionally (0 on the zero-work path, matching the OLD real-work path's field NAMES exactly) — a shape completion, not a new field. |
+| `summary.records_meta.config` (new) | §1.2a P4 — "the value in force is observable in the run's records_meta". T1/T2 stamped every run; absent from the pre-conversion script (which had no declared logic_variables at all — finding 4). |
+| `summary.records_meta.{checks_failed,checks_passed,checks_warned}` (new) | Runner defaults, stamped on every converted step (LPA-D6's severity-separated counters, §11) — the pre-conversion script had no `checks[]` concept to count. `checks_failed:0`/`checks_warned:0`/`checks_passed:"all"` on the zero-work path, matching the genuine PASS verdict. |
+| `summary.records_meta.ledger_row` (new) | LW-D13 — the runner-stamped `owned`/`chain_owned` fact (§1.2a "nothing hidden"), applies identically to every converted step; the pre-conversion script had no ledger-ownership concept to stamp. |
+| `summary.records_meta.terminal` (new) | R6's 18th category (terminals[]) — `"zero_work"`/`"backfilled"`, the declared exit-path id (this pilot's own `zero_work`-discriminated terminal, landed this commit's terminal-selection arm in `runWithPool`). The pre-conversion script had no terminal declaration to stamp. |
+| `pipeline_runs[0]` (`standalone` only, new) | The frozen shape's `runWithPool` opens/finalizes a real `pipeline_runs` ledger row for every standalone invocation (`owns = !chainId`); the pre-conversion script's bare `pipeline.run()` never wrote its own ledger row at all (§5's own finding: "0 for BOTH invocations — not an anomaly, a property of the UNCONVERTED script"). This is the ledger-visibility gap §5 flagged as "the harness's own child-spawn does not go through run-chain.js's orchestration" finally closing for the ONE invocation shape (`standalone`) where the frozen shape's own runner, not `run-chain.js`, owns the row. |
+
+**No data-level diff anywhere** — `table_state` hash identical, all 7 invariants identical, `exit_code:0`,
+`verdict:"PASS"` on both, `records_total`/`records_new`/`records_updated` all `0/0/0` on both. This is the
+genuine zero-behaviour-change conversion the plan's own §11 note committed to.
+
+### `npm run step:validate -- --step=compute_centroids`, re-run after commit 7 lands
+
+```
+[step-validate] compute_centroids (pending) — 11/17, hard-stop=true
+```
+G0 1/1, G1 1/1, G2 1/1 (vacuous), G3 1/2, G4 0/2 (no churn×complexity instrument — same standing gap as
+pilots 1-5, not re-derived here), G5 1/1, G6 3/3 (3 ledger rows, all CLOSED/PIN — `CC-D1`, `CC-D2`, `CC-D3`),
+G7 3/3 (57 `it()`/`it.fails()` sites, 1 fence, RED-evidence present), G8 0/3 (14 "unexplained" diffs per the
+generator's own literal-name/count-citation scan — closed by this section's table above and the "20
+differences" callouts naming `stdout_lines`, `checks_failed`, `checks_passed`, `checks_warned`, `ledger_row`
+explicitly; re-run after this section lands to confirm 3/3), G9 PASS, G4d PASS, G-shape PASS. Fast invariants
+1/2/3/4/5/7/8 all PASS. Policy matrix 9/14 enforced-green.
+
+### G2′ verdict
+
+**CLOSED this commit, pending the G8 re-scan** (the scan reads the report file as committed; this section's
+own landing is what will flip G8's 0/3 to 3/3 on the next `step:validate` invocation). LG-20 +
+`executeBackfillUpdate` + `runBackfillPhase` genuinely land in the generic library (Gate 0 `#149` confirmed).
+The JS fallback is genuinely retired whole (A-1(a) confirmed by absence, not merely by ruling text). The
+write path is proven correct against the REAL target database, live, both directions (zero-work AND
+compute-path AND idempotent-rerun) — the testcontainer-only db test regression is the ALREADY-FILED LW-D16
+class, not a new defect, and does not block this commit.
+
+---
+
 ## §0. PH-0 seed — measured boundary table (2026-08-29 planning session)
 
 ### 0.1 Governing specs, read in order (Spec 124 §7 Step 0 / Spec 123 §6 G0)

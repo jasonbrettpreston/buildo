@@ -292,6 +292,34 @@ function isMaterializeStep(descriptor) {
   return Boolean(descriptor.execution && descriptor.execution.shape === 'materialize');
 }
 
+/**
+ * Is this a BACKFILL — ONE conditional set-based UPDATE, no retraction, no
+ * batching in the surviving path, no ledger-gated skip? (Ruling A-4, BACKFILL
+ * pilot 6, 2026-08-29.)
+ *
+ * ⚠️ ACCEPT AT FOLD D: a thin FORK of `isCascadeStep`/`isMaterializeStep`'s own
+ * shape, NOT an extension of `runLinkPhase` or `runMaterializePhase`. Measured at
+ * commit 7: `compute_centroids`'s write is a SINGLE, UNPAGINATED, unconditional
+ * `UPDATE ... WHERE <scope> RETURNING id` — `runMaterializePhase`'s keyset batch
+ * loop exists specifically because `link_parcel_addresses`'s write is MANY
+ * statements (one INSERT...SELECT per batch); fitting a one-statement BACKFILL
+ * into that loop would either fake a batch count of 1 forever or split a
+ * verbatim-ported statement that has no batches to split. `runCascadePhase`'s
+ * LG-15 ledger-gated-skip has no analogue here either: this step's own "nothing
+ * to do" completion is DATA-driven (a zero pre-run backlog count, scoped by
+ * `centroid_lat IS NULL`), never a staleness/ledger gate (R-P N/A — no
+ * `terminals[].kind === "skip_gated"` entry exists for this step). LG-21's
+ * shared phase-runner scaffold (a candidate 4th-duplication refactor of the
+ * guards→gate→RUN_AT→pre_write→write→post shape shared by all four runners) is
+ * explicitly DEFERRED to a post-pilot-8 library WF (Fold D, 2026-08-29) and not
+ * built here. `execution.shape` is still the ONE declared field selecting the
+ * runner branch (§4.1a); this predicate mirrors `isMaterializeStep`'s shape, not
+ * its mechanism.
+ */
+function isBackfillStep(descriptor) {
+  return Boolean(descriptor.execution && descriptor.execution.shape === 'backfill');
+}
+
 /** One requirement kind → the catalog probe that answers "is it there?". */
 const REQUIREMENT_PROBES = {
   extension: { sql: 'SELECT 1 FROM pg_extension WHERE extname = $1', args: (r) => [r.name] },
@@ -1282,6 +1310,135 @@ async function runMaterializePhase({ descriptor, pool, compute, config, chainId,
 }
 
 /**
+ * THE BACKFILL PHASE (ruling A-4, ACCEPT at Fold D — BACKFILL pilot 6, 2026-08-29).
+ *
+ * Forked from `runMaterializePhase`'s phase-order shape, not an extension of it —
+ * see `isBackfillStep`'s header for why the keyset batch loop does not fit a
+ * single-statement write. `compute_centroids` is the first and, as of this pilot,
+ * only backfill-shaped step.
+ *
+ * PHASE ORDER:
+ *   guards.requires        preconditions before the first read (this step's own
+ *                          `guards.requires: postgis`/`on_missing: "fail"`,
+ *                          A-1(a) — a no-PostGIS DB now HALTS rather than
+ *                          silently falling back to the retired JS algorithm)
+ *   PRE COUNT               the pre-run backlog count (`backlog_count`, a
+ *                          `when: "pre"` INFO check so a zero-work run persists
+ *                          WHY, R-P's spirit — this step declares no ledger gate)
+ *   ZERO-WORK COMPLETION    mirrors the pre-conversion script's own early return
+ *                          (`totalParcels === 0`): when the backlog is empty, the
+ *                          UPDATE statement is never issued at all (matching the
+ *                          OLD code's own shape exactly, not merely its outcome)
+ *                          and only `when: "pre"` checks are scored, same
+ *                          narrowing every other archetype's gated-skip uses —
+ *                          this is a normal `completed` success terminal, never
+ *                          a `skip_gated` one (R-P N/A: no ledger gate exists to
+ *                          skip past)
+ *   RLS preflight            no `rls_bypass_or_policy` requirement is declared
+ *                          for this step (no RLS on `parcels`); measures nothing
+ *                          and returns `{}` — kept for shape parity with the
+ *                          other three phase runners
+ *   PRE_WRITE GATE           this step declares no `pre_write` check today —
+ *                          `makePreWriteGate` returns null and this is a no-op,
+ *                          the same shape-parity note `runMaterializePhase`
+ *                          carries for its own no-`pre_write`-check case
+ *   THE ONE STATEMENT        `write.executeBackfillUpdate`, compute-authored SQL
+ *                          text (`buildBackfillSql`) — VERBATIM the pre-conversion
+ *                          script's own PostGIS `UPDATE ... RETURNING id`
+ *                          (finding 1 / Fold D bucket (1)) — UPDATE-only
+ *                          structurally enforced, no transaction wrapper (a
+ *                          single server-side statement IS the transaction,
+ *                          `txn_scope: "statement"`)
+ *   post checks              the post-run failed-geometry count, over the
+ *                          statement's own scope
+ *
+ * @returns {Promise<object>} `{matched, written, prior, overrides, writeSkipped, zeroWork}`
+ */
+async function runBackfillPhase({ descriptor, pool, compute, config, chainId, log, tag, preWriteGate }) {
+  const requirements = await assertRequirements(pool, descriptor, { log, tag });
+  const overrides = staleness.resolveOverrides(descriptor);
+  const privilege = await write.assertWritePrivileges(pool, descriptor, { log, tag });
+  const prior = await staleness.readPriorEmit(pool, ledgerPipelineName(descriptor, chainId), null);
+
+  const specs = descriptor.outputs.writes;
+  const spec = specs[0];
+  const plan = write.buildWritePlan(spec, descriptor);
+  const written = {};
+  written[write.targetKey(0)] = { scanned: 0, updated: 0, rows_changed: 0 };
+  written.privilege = privilege[plan.table] || null;
+  written.requirements = requirements;
+
+  const sql = compute.buildBackfillSql(descriptor, config);
+  const pre = await pool.query(sql.pre_sql);
+  const preRow = pre.rows[0] || {};
+  const backlogCount = Number(preRow.backlog_count) || 0;
+
+  // ── ZERO-WORK COMPLETION — mirrors the pre-conversion script's own early
+  // return (`totalParcels === 0`) VERBATIM: the UPDATE is never issued. ──────
+  if (backlogCount === 0) {
+    log.info(tag, 'backfill: 0 eligible rows — nothing to compute');
+    return {
+      matched: {
+        backlog_count: 0, parcels_processed: 0, centroids_computed: 0, failed_geometries: 0, new_rows: 0,
+      },
+      written,
+      prior,
+      overrides,
+      writeSkipped: false,
+      zeroWork: true,
+    };
+  }
+
+  // ── THE PRE-WRITE GATE, before the one statement ─────────────────────────
+  const gateForPreWrite = { mode: 'incremental', reason: 'backfill', skipped: false };
+  const decision = preWriteGate
+    ? await preWriteGate({
+      matched: { backlog_count: backlogCount }, gate: gateForPreWrite, prior, overrides, written: null,
+    })
+    : { abort: false, failed: [] };
+  if (decision.abort) {
+    log.error(tag, `pre_write check(s) FAILED with no standing override — no write was issued and `
+      + `${plan.table} is untouched: ${decision.failed.join(', ')}`);
+    return {
+      matched: { backlog_count: backlogCount },
+      written: { ...written, write_skipped_pre_write_fail: true },
+      prior,
+      overrides,
+      writeSkipped: true,
+      failedPreWrite: decision.failed,
+      zeroWork: false,
+    };
+  }
+
+  // ── THE ONE STATEMENT — no transaction wrapper, no batch loop ────────────
+  const result = await write.executeBackfillUpdate(pool, sql.update_sql, []);
+  const computed = result.length;
+  written[write.targetKey(0)].scanned = computed;
+  written[write.targetKey(0)].updated = computed;
+  written[write.targetKey(0)].rows_changed = computed;
+
+  const post = await pool.query(sql.post_sql);
+  const postRow = post.rows[0] || {};
+  const failed = Number(postRow.failed_geometries) || 0;
+  const processed = computed + failed;
+
+  return {
+    matched: {
+      backlog_count: backlogCount,
+      parcels_processed: processed,
+      centroids_computed: computed,
+      failed_geometries: failed,
+      new_rows: 0,
+    },
+    written,
+    prior,
+    overrides,
+    writeSkipped: false,
+    zeroWork: false,
+  };
+}
+
+/**
  * `outputs.writes[]` EXECUTED IN DECLARATION ORDER, in ONE transaction (§1.4: "Order is
  * declared and the runner executes it in order").
  *
@@ -1555,8 +1712,10 @@ async function runWithPool(runnable, pool, ctx) {
       let link = null;
       let cascade = null;
       let materialize = null;
+      let backfill = null;
       let onlyChecks = null;
-      const drivesWrites = isIngestStep(descriptor) || isLinkStep(descriptor) || isCascadeStep(descriptor) || isMaterializeStep(descriptor);
+      const drivesWrites = isIngestStep(descriptor) || isLinkStep(descriptor) || isCascadeStep(descriptor)
+        || isMaterializeStep(descriptor) || isBackfillStep(descriptor);
       // Spec 47 §R3.5 / B-11 — the DB clock, captured ONCE, inside the lock, for
       // WHICHEVER phase drives the write. One capture is not a tidiness preference: it is
       // what makes the written timestamp a single watermark, so two batches of one run
@@ -1645,6 +1804,27 @@ async function runWithPool(runnable, pool, ctx) {
           onlyChecks = new Set(descriptor.checks.filter((c) => positions.includes(c.when)).map((c) => c.id));
           stepCtx.checks = stepCtx.checks.filter((id) => onlyChecks.has(id));
         }
+      } else if (isBackfillStep(descriptor)) {
+        backfill = await runBackfillPhase({
+          descriptor, pool, compute: runnable.compute, config: configValues,
+          chainId, log: pipeline.log, tag: `[${slug}]`, clockNow,
+          preWriteGate: makePreWriteGate({ descriptor, chainId, stepCtx, compute: runnable.compute, config: configValues }),
+        });
+        stepCtx.matched = backfill.matched;
+        stepCtx.written = backfill.written;
+        stepCtx.prior = backfill.prior;
+        stepCtx.overrides = backfill.overrides;
+        stepCtx.elapsed_ms = Date.now() - startMs;
+        if (backfill.zeroWork || backfill.writeSkipped) {
+          // ZERO-WORK COMPLETION narrows to `pre` only (mirrors every other
+          // archetype's gated-skip narrowing) — this is NOT a skip_gated
+          // terminal (R-P N/A), just a normal completion with fewer checks to
+          // score. A pre_write-fail narrows to `pre` + `pre_write`, same
+          // reasoning as isCascadeStep/isMaterializeStep above.
+          const positions = backfill.zeroWork ? ['pre'] : ['pre', 'pre_write'];
+          onlyChecks = new Set(descriptor.checks.filter((c) => positions.includes(c.when)).map((c) => c.id));
+          stepCtx.checks = stepCtx.checks.filter((id) => onlyChecks.has(id));
+        }
       }
 
       // §5.5 (2) — `ctx.report()` is the ONLY observation path. A returned
@@ -1683,7 +1863,9 @@ async function runWithPool(runnable, pool, ctx) {
           ? { matched: cascade.matched, cumulative: cascade.cumulative, written: cascade.written, gate: cascade.gate }
           : (materialize
             ? { matched: materialize.matched, written: materialize.written, gate: materialize.gate }
-            : (ingest ? { acquired: ingest.acquired, written: ingest.written } : null)));
+            : (backfill
+              ? { matched: backfill.matched, written: backfill.written }
+              : (ingest ? { acquired: ingest.acquired, written: ingest.written } : null))));
       counters = (ingest && ingest.skipped) || (cascade && cascade.skipped) || (materialize && materialize.skipped)
         ? { records_total: null, records_new: null, records_updated: null }
         : deriveCounters(descriptor, computeResult, counterScope);
@@ -1710,6 +1892,13 @@ async function runWithPool(runnable, pool, ctx) {
         // LG-15 — same shape as the cascade gated skip, above.
         status = RUN_STATUS.COMPLETED;
         terminal = selectTerminal(descriptor, { kind: 'skip_gated', status, discriminator: 'skip' });
+      } else if (backfill && backfill.zeroWork && verdict !== 'FAIL' && verdict !== 'WARN') {
+        // ZERO-WORK COMPLETION (R-P N/A — NOT a skip_gated kind, a normal
+        // `success` completion with a distinct discriminated terminal id, so it
+        // does not collide with the `backfilled`/`backfilled_with_warnings`
+        // terminals on the same {kind, status} pair).
+        status = RUN_STATUS.COMPLETED;
+        terminal = selectTerminal(descriptor, { kind: 'success', status, discriminator: 'zero_work' });
       } else if (verdict === 'FAIL' && unaccepted.length === 0 && failedIds.size > 0) {
         status = RUN_STATUS.COMPLETED_WITH_ERRORS;
         terminal = selectTerminal(descriptor, { kind: 'success', status });
@@ -1911,6 +2100,7 @@ module.exports = {
   isLinkStep,
   isCascadeStep,
   isMaterializeStep,
+  isBackfillStep,
   assertRequirements,
   REQUIREMENT_PROBES,
   ledgerPipelineName,
@@ -1918,6 +2108,7 @@ module.exports = {
   runLinkPhase,
   runCascadePhase,
   runMaterializePhase,
+  runBackfillPhase,
   runTierToConvergence,
   executeOrderedWrites,
   acceptedCheckIds,

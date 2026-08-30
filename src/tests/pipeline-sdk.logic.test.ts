@@ -1002,16 +1002,16 @@ describe('Pipeline SDK', () => {
       'geocode-permits.js',
       'link-parcels.js',
       'link-neighbourhoods.js',
-      // link-massing.js / link-wsib.js RE-HOMED (Spec 122 §5.1 conversion, pilots 3 + 4):
-      // a converted step calls pipeline.step(), never pipeline.run(), and emits nothing
-      // itself — the library owns the whole lifecycle. The successor lock is
-      // src/tests/step-conformance.infra.test.ts's §5.2 conformance battery, which asserts
-      // the SAME properties (SDK imported, lifecycle owned by the SDK, summary + meta
-      // emitted) on the new mechanism for every converted step.
+      // link-massing.js / link-wsib.js / compute-centroids.js RE-HOMED (Spec 122 §5.1
+      // conversion, pilots 3 + 4 + 6): a converted step calls pipeline.step(), never
+      // pipeline.run(), and emits nothing itself — the library owns the whole
+      // lifecycle. The successor lock is src/tests/step-conformance.infra.test.ts's
+      // §5.2 conformance battery, which asserts the SAME properties (SDK imported,
+      // lifecycle owned by the SDK, summary + meta emitted) on the new mechanism for
+      // every converted step.
       'link-coa.js',
       'extract-builders.js',
       'refresh-snapshot.js',
-      'compute-centroids.js',
       'link-similar.js',
       // Phase G (Spec 42 §6.11): create-pre-permits.js retired.
       'enrich-web-search.js',
@@ -1684,16 +1684,12 @@ describe('Pipeline SDK', () => {
     const fsB5 = require('fs');
     const scriptDirB5 = path.resolve(__dirname, '../../scripts');
 
-    it('compute-centroids.js wraps geometry JSON.parse in try-catch', () => {
-      const content = fsB5.readFileSync(path.join(scriptDirB5, 'compute-centroids.js'), 'utf-8');
-      // The geometry parse must be inside a try block
-      const parseIdx = content.indexOf('JSON.parse(row.geometry)');
-      expect(parseIdx).toBeGreaterThan(-1);
-      // Look backward from JSON.parse for a try { within 200 chars
-      const preceding = content.slice(Math.max(0, parseIdx - 200), parseIdx);
-      expect(preceding).toMatch(/try\s*\{/);
-    });
-
+    // RE-HOMED (Spec 122 §5.1 conversion, C1 pilot 6, 2026-08-29): the JS fallback
+    // that wrapped `JSON.parse(row.geometry)` in try/catch is RETIRED WHOLE at A-1(a)
+    // — guards.requires:postgis/on_missing:"fail" now HALTS a no-PostGIS database
+    // rather than falling back to a client-side parse, so there is no JSON.parse of
+    // row geometry left to guard. See src/tests/steps/compute_centroids/violations.test.ts
+    // (G4d fence lock, CC-D1) for the retirement's both-directions proof.
     it('load-neighbourhoods.js wraps GeoJSON file parse in try-catch', () => {
       const content = fsB5.readFileSync(path.join(scriptDirB5, 'load-neighbourhoods.js'), 'utf-8');
       // The file parse section must have try-catch
@@ -1723,9 +1719,11 @@ describe('Pipeline SDK', () => {
     const fsSpatial = require('fs');
     const scriptDirSpatial = path.resolve(__dirname, '../../scripts');
 
-    it('compute-centroids.js uses ST_Centroid when PostGIS is available', () => {
-      const content = fsSpatial.readFileSync(path.join(scriptDirSpatial, 'compute-centroids.js'), 'utf-8');
-      expect(content).toMatch(/ST_Centroid/);
+    // RE-HOMED (pilot 6): the SQL moved to the compute's pure text builder (LG-20).
+    it('compute_centroids uses ST_Centroid — from the compute that builds the statement', () => {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const compute = require('../../scripts/lib/compute/compute-centroids.js');
+      expect(compute.buildUpdateSql()).toMatch(/ST_Centroid/);
     });
 
     it('link-neighbourhoods.js uses ST_Contains when PostGIS is available', () => {
@@ -1746,11 +1744,12 @@ describe('Pipeline SDK', () => {
       expect(compute.buildMatchSql(d, null, 'full').primary_match_sql).toMatch(/ST_Contains/);
     });
 
-    it('the 3 spatial scripts still on the island path detect PostGIS availability (hasPostGIS pattern)', () => {
-      // link-massing.js RE-HOMED below. "Detects availability" was the shape of a step that
-      // SELECTS AN ALGORITHM from the probe; the converted step has no second algorithm to
-      // select, so detection became a hard precondition — a stronger property, asserted next.
-      const scripts = ['compute-centroids.js', 'link-neighbourhoods.js', 'link-parcels.js'];
+    it('the 2 spatial scripts still on the island path detect PostGIS availability (hasPostGIS pattern)', () => {
+      // link-massing.js / compute-centroids.js RE-HOMED below. "Detects availability" was
+      // the shape of a step that SELECTS AN ALGORITHM from the probe; a converted step has
+      // no second algorithm to select, so detection became a hard precondition — a
+      // stronger property, asserted next.
+      const scripts = ['link-neighbourhoods.js', 'link-parcels.js'];
       for (const script of scripts) {
         const content = fsSpatial.readFileSync(path.join(scriptDirSpatial, script), 'utf-8');
         expect(content).toMatch(/hasPostGIS|pg_extension.*postgis/i);
@@ -1759,6 +1758,15 @@ describe('Pipeline SDK', () => {
 
     it('link_massing REQUIRES PostGIS rather than detecting it (A-8: no degraded algorithm)', () => {
       const d = JSON.parse(fsSpatial.readFileSync(path.join(scriptDirSpatial, 'link-massing.descriptor.json'), 'utf-8'));
+      const postgis = (d.guards.requires as Array<{ kind: string; name: string; on_missing: string; algorithm?: string }>)
+        .find((r) => r.kind === 'extension' && r.name === 'postgis');
+      expect(postgis).toBeDefined();
+      expect(postgis!.on_missing).toBe('fail');
+      expect(postgis!.algorithm, 'a degrade arm is a second code path wearing a declaration').toBeUndefined();
+    });
+
+    it('compute_centroids REQUIRES PostGIS rather than detecting it (A-1(a): the JS fallback is retired whole, same A-8 precedent)', () => {
+      const d = JSON.parse(fsSpatial.readFileSync(path.join(scriptDirSpatial, 'compute-centroids.descriptor.json'), 'utf-8'));
       const postgis = (d.guards.requires as Array<{ kind: string; name: string; on_missing: string; algorithm?: string }>)
         .find((r) => r.kind === 'extension' && r.name === 'postgis');
       expect(postgis).toBeDefined();
