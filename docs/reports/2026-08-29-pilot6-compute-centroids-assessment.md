@@ -1240,7 +1240,7 @@ Re-executed every query/grep Fold C's Integration and Reality-Check passes relie
 | 8 | compute_centroids | PASS | G-4: 2 declared, 2 verdict-affecting, 0 violate on_invalid:fail with no deviations[] cover |
 | 4 | (registry) | PASS | overlap: none |
 | 5 | (registry) | PASS | clean (0 it.fails( call sites outside a declared pending slug) |
-| 9 | (registry) | PASS | clean (0 converted slugs blocked by an unmet cutover_prereq item; blocks batching: 8) |
+| 9 | (registry) | PASS | clean (0 converted slugs blocked by an unmet cutover_prereq item; blocks batching: 7) |
 
 ### Captures (item iv)
 - missing invocations: none

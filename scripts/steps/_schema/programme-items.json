@@ -196,17 +196,17 @@
       "spec": "122 §6.1",
       "title": "ledger table edges from outputs.writes -> inputs.reads",
       "promised": "ledger should generate table edges from outputs.writes -> inputs.reads; cross-descriptor drift check (a step may not read a table written by a later step)",
-      "status": "PARTIAL",
-      "evidence": "6 converted descriptors declare inputs.reads (schema-enforced); 0 grep hits for 'manifest order'/'writer_precedes' in src/tests/step-conformance.infra.test.ts or scripts/lib/step/validate.js. Concern folded into VAL-WF2's seam-check scope (this seed); this row itself stays nice_to_have per the (B) ruling - the future validator absorbing it is the batching_prereq item, not this row",
+      "status": "BUILT",
+      "evidence": "Concern satisfied by the seam pass (VAL-3, above): scripts/lib/step/seam.js checks a producer/consumer pair's RUN ORDER (downstream started_at >= upstream completed_at), mechanically, at chain-end — a step reading a table before its producer's write completed now fails the seam check rather than going unnoticed. R-T addendum commit 5, 2026-08-30.",
       "owner": {
-        "kind": "followup",
-        "ref": "review_followups.md (2026-08-29 programme backlog filing)"
+        "kind": "wf",
+        "ref": "R-T addendum commit 5 (absorbed into VAL-WF2)"
       },
       "gate": {
         "kind": "nice_to_have",
         "blocks": []
       },
-      "last_reviewed": "2026-08-29"
+      "last_reviewed": "2026-08-30"
     },
     {
       "id": "LDG-3",
@@ -281,17 +281,17 @@
       "spec": "122 §6.5",
       "title": "descriptor reads/writes consistent with manifest.chains order",
       "promised": "ordering-consistency claim (replaces dead claim #145): descriptor reads/writes must be consistent with manifest array order",
-      "status": "NOT_STARTED",
-      "evidence": "same absence grep as LDG-2 (the same deliverable read two ways) - 0 hits in src/tests/step-conformance.infra.test.ts or scripts/lib/step/validate.js",
+      "status": "BUILT",
+      "evidence": "Same fold as LDG-2 (the same deliverable read two ways) - the seam pass (scripts/lib/step/seam.js) derives edges from inputs.reads.steps[], the declared per-descriptor dependency, and its checkSeam() function verifies the RUN-level ordering matches that declaration. R-T addendum commit 5, 2026-08-30.",
       "owner": {
-        "kind": "followup",
-        "ref": "review_followups.md (2026-08-29 programme backlog filing)"
+        "kind": "wf",
+        "ref": "R-T addendum commit 5 (absorbed into VAL-WF2)"
       },
       "gate": {
         "kind": "nice_to_have",
         "blocks": []
       },
-      "last_reviewed": "2026-08-29"
+      "last_reviewed": "2026-08-30"
     },
     {
       "id": "LDG-8",
@@ -470,17 +470,17 @@
       "spec": "79 §3a'",
       "title": "Seam-Validation Pass",
       "promised": "Seam-Validation Pass - producer/consumer contract checks across named step pairs, run after all per-step records exist",
-      "status": "NOT_STARTED",
-      "evidence": "0 code implementing this for ANY chain (grep across scripts/ and src/tests/); only 2 prose doc mentions repo-wide. Absorbed into VAL-WF2's declared scope (this seed) as 'seam checks on outputs.invalidates edges' - VAL-WF2 is the batching_prereq item; this row stays nice_to_have per the (B) ruling ('no C1 pilot currently depends on it')",
+      "status": "BUILT",
+      "evidence": "scripts/lib/step/seam.js deriveSeamPairs()/checkSeam()/runSeamChecks() — derives every producer/consumer step-pair edge from inputs.reads.steps[] (corrected from outputs.invalidates, which is {table,column,when}-shaped, not a step edge — Fold A-5), joins on records_meta.chain_run_id (R-U) with a legacy temporal fallback, runs at chain-end (scripts/analysis/chain-end-synthesis.mjs). Measured against the 6 real converted descriptors: exactly 1 live pair today (compute_centroids -> link_massing). R-T addendum commit 5, 2026-08-30.",
       "owner": {
-        "kind": "followup",
-        "ref": "review_followups.md (2026-08-29 programme backlog filing); absorbed by VAL-WF2"
+        "kind": "wf",
+        "ref": "R-T addendum commit 5 (absorbed into VAL-WF2)"
       },
       "gate": {
         "kind": "nice_to_have",
         "blocks": []
       },
-      "last_reviewed": "2026-08-29"
+      "last_reviewed": "2026-08-30"
     },
     {
       "id": "VAL-4",
@@ -889,7 +889,7 @@
       "title": "Gate G2 - Structure, churn x complexity plot",
       "promised": "churn x complexity plot, top-right quadrant named",
       "status": "PARTIAL",
-      "evidence": "step-validate.mjs:800-804 scoreG2 checks for the literal string ASSESSMENT-INCOMPLETE, not an actual churn x complexity plot; a report that never writes that string returns a vacuous 1/1 pass. Owned S6b (review_followups.md:2994), not yet executed",
+      "evidence": "scripts/analysis/step-validate.mjs scoreG2 (R-T addendum commit 6, 2026-08-30) — the vacuous-green half is FIXED: a report with no PH-2/churn x complexity section AND no ASSESSMENT-INCOMPLETE claim now scores 0 (was a fabricated 1/1); 3 of 6 real reports (link_wsib/link_parcel_addresses/compute_centroids) dropped from the false 1 to the honest 0. The churn x complexity plot itself is still not built/checked for — owned S6b (review_followups.md:2994), unchanged.",
       "owner": {
         "kind": "followup",
         "ref": "review_followups.md:2994 (S6b)"
@@ -898,7 +898,7 @@
         "kind": "nice_to_have",
         "blocks": []
       },
-      "last_reviewed": "2026-08-29"
+      "last_reviewed": "2026-08-30"
     },
     {
       "id": "G3-G5",
@@ -1165,7 +1165,7 @@
       "title": "step-validate.mjs's regex-brittle report-scraping is superseded in design by VAL-WF2's structured-artifact scorecard",
       "promised": "a step validates itself from committed artifacts (Rule 13) - today the artifact is markdown prose parsed by regex (section()/splitTableRow()); the design direction is a structured (JSON) artifact scorecard, named as part of VAL-WF2",
       "status": "SUPERSEDED",
-      "evidence": "scripts/analysis/step-validate.mjs section()/splitTableRow() (:756-780) regex-parse the assessment report's markdown tables/headings; VAL-WF2 (this seed) names the structured-artifact replacement as part of validator-v2's scope",
+      "evidence": "scripts/analysis/step-validate.mjs section()/splitTableRow() still regex-parse the assessment report's markdown for G0/G1/G3/G4/G5/G9 (filed as G-DEREGEX, below) — VAL-WF2 (now BUILT) only de-regexed the cheap slice (G2's vacuous-green + the defect-ledger/notes.json strict-row-schema parse, G6/G7/G4d, R-T addendum commit 6). Superseded-in-design status unchanged: the structured-artifact direction stands, most of the implementation does not yet.",
       "owner": {
         "kind": "none",
         "ref": ""
@@ -1174,26 +1174,24 @@
         "kind": "nice_to_have",
         "blocks": []
       },
-      "last_reviewed": "2026-08-29"
+      "last_reviewed": "2026-08-30"
     },
     {
       "id": "VAL-WF2",
       "spec": "124 §2 Rule 13",
       "title": "Validator v2 - a DATA-plausibility validator, distinct from the process scorecard",
       "promised": "invariants bounds per Spec 30 §5's bound doctrine (threshold-derived, reachable, last-measured-value beside the bound); checks[].plausibility[] per Spec 79; seam checks on outputs.invalidates edges (closes LDG-2/LDG-7/VAL-3's concern); chain-end synthesis automation; a structured-artifact scorecard (replaces REGEXSC's regex report-scraping); Rule 13 reworded per this same commit's Spec 124 addendum: 'the validator validates DATA (Spec 79/120/30 §5); the scorecard validates process, from structured artifacts'",
-      "status": "NOT_STARTED",
-      "evidence": "no code implementing seam-validation (VAL-3) anywhere; step.schema.json's checks definition has no plausibility[] field; step-validate.mjs's scorecard artifact is markdown prose, not structured JSON",
+      "status": "BUILT",
+      "evidence": "R-T addendum commits 1-6 (2026-08-30): invariants[]/plausibility[] bound doctrine landed in step.schema.json + scripts/lib/step/plausibility.js + scripts/lib/step/verdict.js (value_min/value_max branches); seam-validation pass at scripts/lib/step/seam.js; chain-end synthesis at scripts/analysis/chain-end-synthesis.mjs (the sources chain roll-up + the declared validate_only cloud trigger, Ask 6(b)); R-U chain-run correlation (records_meta.chain_run_id, scripts/run-chain.js + scripts/lib/step/index.js). Structured-artifact scorecard rewrite is PARTIAL, not full: only scoreG2 (vacuous-green) + the defect-ledger/notes.json strict-row-schema parse (G6/G7/G4d) were de-regexed (commit 6) — G0/G1/G3/G4/G5/G9 stay prose-regex, filed as G-DEREGEX below.",
       "owner": {
         "kind": "wf",
-        "ref": "wf: validator-v2"
+        "ref": "R-T addendum, \"The Step Validator, Data-First\" (2026-08-30)"
       },
       "gate": {
-        "kind": "batching_prereq",
-        "blocks": [
-          "batching"
-        ]
+        "kind": "nice_to_have",
+        "blocks": []
       },
-      "last_reviewed": "2026-08-29"
+      "last_reviewed": "2026-08-30"
     },
     {
       "id": "LG-21",
@@ -1211,6 +1209,74 @@
         "blocks": []
       },
       "last_reviewed": "2026-08-29"
+    },
+    {
+      "id": "G-DEREGEX",
+      "spec": "124 §2 Rule 13",
+      "title": "Gates G0/G1/G3/G4/G5/G9 still prose-regex-scraped, not structured artifacts",
+      "promised": "Rule 13's DATA/PROCESS split names a structured (non-markdown-regex) artifact scorecard as the eventual replacement for step-validate.mjs's current section()/splitTableRow() prose-scraping (originally the REGEXSC item's full scope)",
+      "status": "NOT_STARTED",
+      "evidence": "scripts/analysis/step-validate.mjs's scoreG0/scoreG1/scoreG3/scoreG4/scoreG5/scoreG9 (still section()-based regex scraping of the assessment report's free-form prose) are unchanged by R-T addendum commit 6 — only G2/G6/G7/G4d were de-regexed (Ask 3's own scoped default, \"file the larger lift, don't build it this WF\"). A genuinely large, separate lift: would need structured frontmatter added to every future assessment report, a format all 6 existing reports would also need migrating to.",
+      "owner": {
+        "kind": "followup",
+        "ref": "review_followups.md (R-T addendum commit 7 filing, 2026-08-30); Ask 3"
+      },
+      "gate": {
+        "kind": "nice_to_have",
+        "blocks": []
+      },
+      "last_reviewed": "2026-08-30"
+    },
+    {
+      "id": "ASSERT-HEALTH-SHAPE",
+      "spec": "124 §2",
+      "title": "assert_health[] — a closed-shape category for health/liveness checks, left dormant",
+      "promised": "Ask 4 (R-T addendum plan, 2026-08-29): a dedicated, closed-vocabulary assert_health[] descriptor category was proposed for RECORDER/ENRICHER health-liveness checks, distinct from checks[]/invariants[]/plausibility[]",
+      "status": "NOT_STARTED",
+      "evidence": "no assert_health field exists in scripts/steps/_schema/step.schema.json as of R-T addendum commit 7 (2026-08-30) — Ask 4's own default was accepted: \"left dormant, filed as an idea,\" not built this WF. No RECORDER/ENRICHER has converted yet (pilots 7/8, Spec 124 §8), so the category has no real descriptor to prove itself against today.",
+      "owner": {
+        "kind": "followup",
+        "ref": "review_followups.md (R-T addendum commit 7 filing, 2026-08-30); Ask 4"
+      },
+      "gate": {
+        "kind": "nice_to_have",
+        "blocks": []
+      },
+      "last_reviewed": "2026-08-30"
+    },
+    {
+      "id": "PSA-CHECK-IDS",
+      "spec": "124 §2 Rule 13",
+      "title": "parcel-sanity-audit.js's 42 CHECKS[] entries have no per-check id — plausibility[] SQL is duplicated, not referenced",
+      "promised": "Fold A-4d (R-T addendum plan, 2026-08-29): each plausibility[] entry migrated this WF deliberately restates a parcel-sanity-audit.js predicate in isolated standalone-SQL form (no per-check id exists on the 42 CHECKS[] entries to reference instead) — ruled ACCEPTED duplication this WF, with a followup proposing per-check ids so a future pass can de-duplicate",
+      "status": "NOT_STARTED",
+      "evidence": "scripts/lib/step/plausibility.js's runValidatorEntries() executes each invariants[]/plausibility[] entry's OWN standalone sql field; scripts/analysis/parcel-sanity-audit.js's 42-entry CHECKS[] array (29 BOUND / 13 INVARIANT, 10 zone-aware, Fold B-7 recount) has no id field per entry as of R-T addendum commit 7 (2026-08-30) — cross-checked live, 0 hits for an \"id:\" key inside CHECKS[]'s own array literal.",
+      "owner": {
+        "kind": "followup",
+        "ref": "review_followups.md (R-T addendum commit 7 filing, 2026-08-30); Fold A-4d"
+      },
+      "gate": {
+        "kind": "nice_to_have",
+        "blocks": []
+      },
+      "last_reviewed": "2026-08-30"
+    },
+    {
+      "id": "TRIPWIRE-T4T5",
+      "spec": "124 §8",
+      "title": "run-step.mjs tripwires T4/T5 stay N/A-MANUAL for both converted ingest_linkage steps",
+      "promised": "Fold A-4e (R-T addendum plan, 2026-08-29): run-step.mjs's tripwires migrate INTO descriptors' checks[]/invariants[] one step at a time as pilots convert; commit 7 must enumerate the specific still-N/A-MANUAL orphan tripwire IDs by name",
+      "status": "NOT_STARTED",
+      "evidence": "scripts/validation/run-step.mjs runTripwires() (:286-287) hardcodes T4 (\"requires join-key knowledge per step\") and T5 (\"requires LEFT JOIN context per step\") as N/A-MANUAL unconditionally, regardless of which step runs. Both link_wsib and link_massing (the 2 converted steps carrying the ingest_linkage tripwire_profile) carry T4/T5 in their profile (scripts/validation/step-config.json); neither has a migrated descriptor equivalent as of R-T addendum commit 7 (2026-08-30). assert_schema's own sole tripwire (T12) has no orphan — it is a real computed check.",
+      "owner": {
+        "kind": "followup",
+        "ref": "review_followups.md (R-T addendum commit 7 filing, 2026-08-30); Fold A-4e"
+      },
+      "gate": {
+        "kind": "nice_to_have",
+        "blocks": []
+      },
+      "last_reviewed": "2026-08-30"
     }
   ]
 }

@@ -6,18 +6,18 @@
 
 ## Counts
 
-Total items: **69**
+Total items: **73**
 
 | status | count |
 |---|---|
-| ⬜ NOT_STARTED | 14 |
-| ⚠️ PARTIAL | 21 |
-| ✅ BUILT | 32 |
+| ⬜ NOT_STARTED | 15 |
+| ⚠️ PARTIAL | 20 |
+| ✅ BUILT | 36 |
 | ⏭️ SUPERSEDED | 2 |
 
-**blocks batching: 8**
+**blocks batching: 7**
 
-## Batching prerequisite — blocks "freeze after the eighth" (Spec 122 §8.2/§10.3) (8)
+## Batching prerequisite — blocks "freeze after the eighth" (Spec 122 §8.2/§10.3) (7)
 
 | id | spec | title | status | owner | blocks | last reviewed |
 |---|---|---|---|---|---|---|
@@ -28,7 +28,6 @@ Total items: **69**
 | `PRG-3` | 122 §7.2 | pilot order rulings | ⚠️ PARTIAL | pilot: pilot 6 cutover, d9057a54 | batching | 2026-08-29 |
 | `PRG-10` | 122 §8.2 | freeze after the eighth - no formal batching mechanism (repeat of STD-8) | ⬜ NOT_STARTED | wf: wf: programme-STD-8 | batching | 2026-08-29 |
 | `WD-1` | 122 §1.4 | class-enum-without-write.js-branch lock | ⬜ NOT_STARTED | wf: wf: programme-WD1 | batching | 2026-08-29 |
-| `VAL-WF2` | 124 §2 Rule 13 | Validator v2 - a DATA-plausibility validator, distinct from the process scorecard | ⬜ NOT_STARTED | wf: wf: validator-v2 | batching | 2026-08-29 |
 
 ## Cutover prerequisite — blocks a specific pilot slug registering in converted.json (3)
 
@@ -38,7 +37,7 @@ Total items: **69**
 | `STA-3` | 120 §6b | 3 destructive-reset guards | ⬜ NOT_STARTED | wf: wf: programme-STA-2 | refresh_snapshot | 2026-08-29 |
 | `CLOUDPARITY` | 122 R-D | cloud database must run apply-logic-variables.js before any cloud cutover | ⚠️ PARTIAL | followup: review_followups.md HIGH ops entry (filed 2026-08-27, peel 8c) | cloud_deploy | 2026-08-29 |
 
-## Nice-to-have — real gap, not currently blocking (58)
+## Nice-to-have — real gap, not currently blocking (63)
 
 | id | spec | title | status | owner | blocks | last reviewed |
 |---|---|---|---|---|---|---|
@@ -50,12 +49,12 @@ Total items: **69**
 | `STD-6` | 122 §4.2 | pipeline.step() is a factory, AJV-validates before compute runs | ✅ BUILT | wf: step library | — | 2026-08-29 |
 | `STD-9` | 122 §5.4 | ADVISORY_LOCK_ID kept textually | ✅ BUILT | pilot: pilots 1-6 | — | 2026-08-29 |
 | `LDG-1` | 122 §6.0 | column-lineage generator | ✅ BUILT | wf: pre-existing infra | — | 2026-08-29 |
-| `LDG-2` | 122 §6.1 | ledger table edges from outputs.writes -> inputs.reads | ⚠️ PARTIAL | followup: review_followups.md (2026-08-29 programme backlog filing) | — | 2026-08-29 |
+| `LDG-2` | 122 §6.1 | ledger table edges from outputs.writes -> inputs.reads | ✅ BUILT | wf: R-T addendum commit 5 (absorbed into VAL-WF2) | — | 2026-08-30 |
 | `LDG-3` | 122 §6.2 | records_meta contracts HALT on violation | ✅ BUILT | wf: pre-existing infra | — | 2026-08-29 |
 | `LDG-4` | 122 §6.3 | stepUpstreams(slug) derived from the ledger | ⚠️ PARTIAL | followup: review_followups.md (2026-08-29 programme backlog filing) | — | 2026-08-29 |
 | `LDG-5` | 122 §6.4 | 4 invalidation mechanisms real today | ✅ BUILT | wf: pre-existing infra | — | 2026-08-29 |
 | `LDG-6` | 122 §6.4a | the centroid invalidation gap | ✅ BUILT | pilot: pilot6_compute_centroids | — | 2026-08-29 |
-| `LDG-7` | 122 §6.5 | descriptor reads/writes consistent with manifest.chains order | ⬜ NOT_STARTED | followup: review_followups.md (2026-08-29 programme backlog filing) | — | 2026-08-29 |
+| `LDG-7` | 122 §6.5 | descriptor reads/writes consistent with manifest.chains order | ✅ BUILT | wf: R-T addendum commit 5 (absorbed into VAL-WF2) | — | 2026-08-30 |
 | `LDG-8` | 122 §6.1 | invalidation + counters scoped by writes.key | ✅ BUILT | pilot: pilot3_link_massing, pilot4_link_wsib | — | 2026-08-29 |
 | `LDG-9` | 122 §1.7 | sharing.chains/shared/slug_forms are ~ derived | ⚠️ PARTIAL | followup: review_followups.md (2026-08-29 programme backlog filing) | — | 2026-08-29 |
 | `LC-1b` | 122 §4.1 | reap stale heartbeats -> crashed | ✅ BUILT | wf: A3, pre-session | — | 2026-08-29 |
@@ -65,7 +64,7 @@ Total items: **69**
 | `LC-4` | 122 §4.6 | generated SQL only, no string surgery | ⬜ NOT_STARTED | followup: review_followups.md (2026-08-29 programme backlog filing) | — | 2026-08-29 |
 | `VAL-1` | 120 §5 | 12 named check types as generators | ⏭️ SUPERSEDED | — | — | 2026-08-29 |
 | `VAL-2` | 79 §2 | 12-item per-step evidence checklist | ⚠️ PARTIAL | followup: review_followups.md (2026-08-29 programme backlog filing) | — | 2026-08-29 |
-| `VAL-3` | 79 §3a' | Seam-Validation Pass | ⬜ NOT_STARTED | followup: review_followups.md (2026-08-29 programme backlog filing); absorbed by VAL-WF2 | — | 2026-08-29 |
+| `VAL-3` | 79 §3a' | Seam-Validation Pass | ✅ BUILT | wf: R-T addendum commit 5 (absorbed into VAL-WF2) | — | 2026-08-30 |
 | `VAL-4` | 79 §3b | Chain-End Synthesis, 4-agent adversarial review | ✅ BUILT | wf: WF5 operator process | — | 2026-08-29 |
 | `VAL-4b` | 79 §10 | Hidden-Failure Tripwires, per-risk-class profile | ⚠️ PARTIAL | followup: review_followups.md (2026-08-29 programme backlog filing) | — | 2026-08-29 |
 | `VAL-5` | 122 §7.1 | map-concerns.mjs and map-categories.mjs | ✅ BUILT | followup: R5 ongoing triage | — | 2026-08-29 |
@@ -84,7 +83,7 @@ Total items: **69**
 | `PRG-11` | 123 §4.8 | Two CI holes closed | ✅ BUILT | wf: P0c, landed pre-session | — | 2026-08-29 |
 | `G0` | 123 §6 | Gate G0 - Boundary freeze | ✅ BUILT | wf: R-R, step:validate | — | 2026-08-29 |
 | `G1` | 123 §6 | Gate G1 - Archaeology / Intent Ledger | ⚠️ PARTIAL | followup: review_followups.md (2026-08-29 programme backlog filing) | — | 2026-08-29 |
-| `G2` | 123 §6 | Gate G2 - Structure, churn x complexity plot | ⚠️ PARTIAL | followup: review_followups.md:2994 (S6b) | — | 2026-08-29 |
+| `G2` | 123 §6 | Gate G2 - Structure, churn x complexity plot | ⚠️ PARTIAL | followup: review_followups.md:2994 (S6b) | — | 2026-08-30 |
 | `G3-G5` | 123 §6 | Gates G3-G5 - Golden master, Differential, Cutover | ✅ BUILT | wf: R-R, step:validate | — | 2026-08-29 |
 | `G6` | 123 §6 | Gate G6 - Behaviour classification | ✅ BUILT | wf: R-R, step:validate | — | 2026-08-29 |
 | `G7` | 123 §6 | Gate G7 - Test adequacy | ✅ BUILT | wf: R-R, step:validate | — | 2026-08-29 |
@@ -98,9 +97,14 @@ Total items: **69**
 | `PROSE-G1P3` | 124 §2 Rule 10 | Rule 10 step-library scope caveat + P3 disk-I/O measurement are intentionally prose-only | ✅ BUILT | wf: step-validate.mjs, by design | — | 2026-08-29 |
 | `ZWP-56` | 123 §6 G8 | the real (non-SKIP) write path is barely live-exercised for pilots 5 and 6 | ⚠️ PARTIAL | followup: review_followups.md pilot5/pilot6 entries, 2026-08-29 | — | 2026-08-29 |
 | `TCADB` | 124 §2 | database.assert_current_database is proven live once, not standing testcontainer-enforced | ⚠️ PARTIAL | followup: review_followups.md LOW entry (LW-D16 class) | — | 2026-08-29 |
-| `REGEXSC` | 124 §2 Rule 13 | step-validate.mjs's regex-brittle report-scraping is superseded in design by VAL-WF2's structured-artifact scorecard | ⏭️ SUPERSEDED | — | — | 2026-08-29 |
+| `REGEXSC` | 124 §2 Rule 13 | step-validate.mjs's regex-brittle report-scraping is superseded in design by VAL-WF2's structured-artifact scorecard | ⏭️ SUPERSEDED | — | — | 2026-08-30 |
+| `VAL-WF2` | 124 §2 Rule 13 | Validator v2 - a DATA-plausibility validator, distinct from the process scorecard | ✅ BUILT | wf: R-T addendum, "The Step Validator, Data-First" (2026-08-30) | — | 2026-08-30 |
 | `LG-21` | 122 §5.5 | runPhaseScaffold(descriptor, phaseBody) - shared phase-runner scaffold | ⬜ NOT_STARTED | library-wf: post-pilot-8 library WF (LG-21 runPhaseScaffold) | — | 2026-08-29 |
+| `G-DEREGEX` | 124 §2 Rule 13 | Gates G0/G1/G3/G4/G5/G9 still prose-regex-scraped, not structured artifacts | ⬜ NOT_STARTED | followup: review_followups.md (R-T addendum commit 7 filing, 2026-08-30); Ask 3 | — | 2026-08-30 |
+| `ASSERT-HEALTH-SHAPE` | 124 §2 | assert_health[] — a closed-shape category for health/liveness checks, left dormant | ⬜ NOT_STARTED | followup: review_followups.md (R-T addendum commit 7 filing, 2026-08-30); Ask 4 | — | 2026-08-30 |
+| `PSA-CHECK-IDS` | 124 §2 Rule 13 | parcel-sanity-audit.js's 42 CHECKS[] entries have no per-check id — plausibility[] SQL is duplicated, not referenced | ⬜ NOT_STARTED | followup: review_followups.md (R-T addendum commit 7 filing, 2026-08-30); Fold A-4d | — | 2026-08-30 |
+| `TRIPWIRE-T4T5` | 124 §8 | run-step.mjs tripwires T4/T5 stay N/A-MANUAL for both converted ingest_linkage steps | ⬜ NOT_STARTED | followup: review_followups.md (R-T addendum commit 7 filing, 2026-08-30); Fold A-4e | — | 2026-08-30 |
 
 ---
 
-*Freeze-readiness (Spec 122 §8.2/§10.3): the template may honestly "freeze after the eighth" only when the batching_prereq set above is EMPTY. Currently **8** item(s) block it.*
+*Freeze-readiness (Spec 122 §8.2/§10.3): the template may honestly "freeze after the eighth" only when the batching_prereq set above is EMPTY. Currently **7** item(s) block it.*

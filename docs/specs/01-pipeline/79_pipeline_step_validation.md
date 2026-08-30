@@ -417,3 +417,4 @@ See `docs/runbook/pipeline_step_validation_walkthrough.md` §11 for the full SQL
 - **Spec 48** §3.6 + §3.7 — validated per Spec 79 §2 C2/C3/C4/C6
 - **Spec 49** — Spec 79 §6.1 cap
 - **Spec 76** §3.5 — Lead Detail Inspector contract; §7a is the deep-dive validation protocol against it
+- **Spec 124** §2 Rule 13 (Ask 1, R-T addendum commit 7, 2026-08-30) — Rule 13's DATA half ("the validator validates DATA (Spec 79/120/30 §5.4.1); the scorecard validates process") cites this spec's own plausibility-checking territory directly; `scripts/lib/step/plausibility.js`'s `invariants[]`/`plausibility[]` executor and `scripts/analysis/chain-end-synthesis.mjs`'s `sources`-chain roll-up (writing to `docs/reports/pipeline-validation/sources/`, this spec's own §12 target directory) are the mechanized form of the manual validation this spec otherwise governs

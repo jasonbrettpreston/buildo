@@ -434,7 +434,7 @@ Declared BEFORE any old/new diff. Sources: `scripts/analysis/capture-step-golden
 | 8 | assert_schema | PASS | G-4: 3 declared, 0 verdict-affecting, 0 violate on_invalid:fail with no deviations[] cover |
 | 4 | (registry) | PASS | overlap: none |
 | 5 | (registry) | PASS | clean (0 it.fails( call sites outside a declared pending slug) |
-| 9 | (registry) | PASS | clean (0 converted slugs blocked by an unmet cutover_prereq item; blocks batching: 8) |
+| 9 | (registry) | PASS | clean (0 converted slugs blocked by an unmet cutover_prereq item; blocks batching: 7) |
 
 ### Captures (item iv)
 - missing invocations: none

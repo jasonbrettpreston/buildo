@@ -445,6 +445,10 @@ Under the runner, `reads` declares producers with version pins and health assert
 
 ### 5.0 Named check types — write the common dozen once
 
+> ⚠️ **SUPERSEDED, not built (Spec 122 programme item `VAL-1`; R-T addendum commit 7, 2026-08-30).** The 12 named-generator promise below never shipped as its own mechanism — `scripts/steps/_schema/step.schema.json`'s `checks[]` (9 named kinds + free-form SQL, Spec 122 §12.5/R6) and the R-T addendum's `invariants[]`/`plausibility[]` (Spec 124 §2 Rule 13, bound-doctrine per Spec 30 §5.4.1 — `value_min`/`value_max`/`viol`/`pct`/`pop`/`ratio` forms) cover the SAME ground (`accepted_range`≈`value_min`/`value_max`, `row_count_floor`≈`pop >= N`, `not_null`/`unique`/`freshness`≈free-form SQL under a named check id) through a different, already-built vocabulary. This section stays as the historical design record; it is not a live GAP.
+
+
+
 Our records carry free-form SQL. SQLMesh ships **~40 named built-ins**; Soda ~20; dbt-expectations 63 `[SOURCED]`. We are not adopting a vocabulary wholesale — but **the common dozen must be named**, because re-expressing the same predicate as hand-written SQL at every call site is exactly where transcription errors live. That failure has a measured instance here: `rf:2334`'s hand-built `$i+1`/`$i+2` placeholders caused **every batch to fail silently across 525K rows while the verdict read PASS** `[READ]`.
 
 | Named type | Expands to |

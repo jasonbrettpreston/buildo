@@ -244,6 +244,7 @@ home of the durable policy; this spec cites it, it does not restate it (R-J).** 
 | P4 — every tunable externalized to admin logic variables (incl. the R-A/R-D addenda below, superseded by R-G's presence/validity split). **Historical record kept here on purpose** (locked by `assert-schema-config-parity.logic.test.ts`): Pilot 1 found `assert_schema` declaring `config:"none"` while compute hard-coded `limit=20`, `Range: bytes=0-2048` and `bytes=0-8192` — remediated as a WF3 before Pilot 2 | moved to Spec 124 §2 — Rule 3 |
 | P5 — fence dispositions follow P1 | moved to Spec 124 §2 — Rule 4 |
 
+**Layer table pointer (R-T addendum commit 7, 2026-08-30):** P2's "compute is just compute" now has a concrete, code-grounded elaboration — which FILE declares a rule, which EXECUTES it, which only MEASURES — at Spec 124 §8 (the standard step as built), condensed at §5.6 below.
 **P3 stays here** — it is programme mechanics (a conversion-proposal discipline for this effort, not a
 property of a finished step), per Spec 124 §6. **P3 — Disk I/O is a balance that is ADJUDICATED with numbers,
 never assumed.** Every added box / declared check / audit row costs per step × per run (descriptor + notes
@@ -876,6 +877,23 @@ entry needed) and by `src/tests/step-conformance.infra.test.ts`; prove-red fixtu
 > **Why a shape rule and not a review checklist:** the same reason as §5.1. The moment one compute gets a
 > special case there are 27, and every one of them is invisible until something breaks in production.
 
+### 5.6 The layer table — who declares, who executes, who measures (R-T addendum commit 7, 2026-08-30)
+
+Condensed here; the full table (per-run phase order, the failure-semantics severity×blocking matrix, the
+admin intersection) lives at Spec 124 §8, regenerated alongside every pilot cutover.
+
+| Layer | File(s) | Role |
+|---|---|---|
+| Shell | `scripts/<slug>.js` | Neither — wires descriptor+compute into `pipeline.step()`, nothing else (§5.1) |
+| Descriptor | `<slug>.descriptor.json` | **DECLARES** — `checks[]`/`invariants[]`/`plausibility[]` (bound, `frequency`, `when`, `severity`, `blocking`) + `config.logic_variables[]` |
+| Notes | `<slug>.notes.json` | Interpretation only — `fences[]`/dispositions, capped, cites a check id |
+| Compute | `scripts/lib/compute/<slug>.js` | **MEASURES ONLY** (§5.5) — reports an observation via `ctx.report()`; never compares, never decides, never writes a row |
+| Library | `scripts/lib/step/{index,verdict,plausibility,staleness,write,config,ledger,seam}.js` | **EXECUTES** — evaluates the declared bound, derives the row-derived verdict, applies `frequency`/`when` gating, resolves `config`, stamps `records_meta.chain_run_id` (R-U), runs the seam pass + chain-end synthesis |
+
+This is §5.5's own P2 claim ("compute is just compute") stated as a table rather than a paragraph: a
+compute file that decides a STATUS — even one that never touches the DB — has crossed from MEASURE into
+EXECUTE, and that is what `compute-shape.yml` + the harness-fidelity battery exist to catch.
+
 ---
 ## 6. The cross-step ledger
 
@@ -1019,7 +1037,7 @@ This is a *new* obligation the runner did not carry, because under a derived DAG
 
 ## 7. The validator, baked in
 
-**Spec 120 §5 and §5.0 are inherited unchanged** — one record type plus a `kind` discriminator, the 12 named check types, `pop == 0 → INFO` as a non-configurable fence, magnitude floors rather than existence floors, the CLEAN sampler, self-retiring baselines, `freshness` distinguishing `UNKNOWN` from fresh.
+**Spec 120 §5 is inherited MOSTLY unchanged, §5.0 is SUPERSEDED, and this WF adds fields Spec 120 never had (R-T addendum commit 7, 2026-08-30).** Inherited: one record type plus a `kind` discriminator, `pop == 0 → INFO` as a non-configurable fence, magnitude floors rather than existence floors, the CLEAN sampler, self-retiring baselines, `freshness` distinguishing `UNKNOWN` from fresh. **§5.0's "12 named check types" promise never shipped as its own mechanism** — `checks[]` (9 named kinds + free-form SQL, §12.5/R6) covers the same ground through the already-built vocabulary (programme item `VAL-1`, `SUPERSEDED`; Spec 120 §5.0's own note amended to match). **New, added by this WF, absent from Spec 120 entirely:** `invariants[]`/`plausibility[]` (Spec 124 §2 Rule 13's DATA half — `frequency`/`when`/`source`-tagged bound-doctrine checks, `last_measured` with a companion `sample_n`), the seam-validation pass (§5.6/Spec 124 §8's layer table), chain-end synthesis automation, and `records_meta.chain_run_id` (R-U).
 
 ### 7.1 Why baking it into the library makes it *more* enforced
 
