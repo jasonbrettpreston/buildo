@@ -684,6 +684,172 @@ for the first time by commit 6's own `LP-D1`/`LP-D6` fixtures, not proven here.
 
 ---
 
+## §6. PH-7 — test design + prove RED (commit 6, G7)
+
+> `src/tests/steps/link_parcels/violations.test.ts` — **12 tests**, scoped to the 4 locks this
+> pilot's commit-6 task named (LP-D1 both-directions, LP-D6 NULL-coordinate, tiebreak-determinism,
+> SQL-shape perf), rather than a full 55-A generic-checklist replication — the task brief's own
+> scope. **This file is DB-FREE by convention** (verified this commit: no existing
+> `violations.test.ts` in the programme touches a live database — DB-dependent proofs live in
+> `src/tests/db/*.db.test.ts`, gated `BUILDO_TEST_DB=1`); the BEHAVIORAL plausibility evidence for
+> THE FIX (a live synthetic PostGIS fixture proving both directions, plus the N=120 stratified
+> Reality-Check sample) was independently executed and recorded in §4 this same pilot — this
+> file's own job is the STRUCTURAL lock (Spec 124 §7 Step 4), pinning the fix's shape so a future
+> regression cannot silently reintroduce the retired predicate. **5 `it.fails()`** (genuinely red
+> internally — each opens with `artifact()` against `scripts/lib/compute/link-parcels.js` or
+> `scripts/link-parcels.descriptor.json`, neither of which exists yet) **+ 7 plain `it()`**
+> (testable today: reversion-sentinel proofs against the CURRENT script's own text, and
+> pure-algorithmic proofs with no artifact dependency). **All 12 GREEN this commit:**
+> ```
+> ✓ src/tests/steps/link_parcels/violations.test.ts (12 tests) 24ms
+> Test Files  1 passed (1)
+>      Tests  12 passed (12)
+> ```
+
+### The 4 locks, both directions — TODAY (reversion-sentinel) + FUTURE (`it.fails`, flips at commit 7)
+
+1. **`LP-D1` — Strategy 3 Step 2's join predicate.** TODAY: the current script's Step-2 block
+   (isolated by its own bracketing comments, `step2Block()`) is asserted to contain
+   `centroid_lat`/`centroid_lng`/`ST_DWithin` and an `ORDER BY v.pn, v.rv, ST_Distance(...)` ranking
+   — the defect is real, not hypothetical, proven against the live file text. FUTURE: `compute.js`
+   must contain `pa.geom <->` + `pa.id ASC`, and must NOT contain `centroid_lat`/`centroid_lng`/
+   `ST_DWithin` — genuinely red today (`MISSING ARTIFACT`).
+2. **`LP-D6` — the NULL-coordinate guard.** TODAY: the current script's JS-level eligibility filter
+   (`p.lat !== null && p.lng !== null`, `:373-376`) exists, but Strategy 3 Step 2's OWN SQL block
+   has no `IS NOT NULL` guard on `v.lng`/`v.lat` — it trusts its caller entirely, a structurally
+   DIFFERENT mechanism from what THE FIX's set-based query (which no longer pre-filters in JS)
+   needs. A second TODAY test is a pure-JS reproduction of the underlying comparison hazard (a
+   naive nearest-candidate loop over an invalid/degenerate query point resolves to AN ARBITRARY
+   candidate, never null, never an error) — independent of any live DB dependency; the LIVE
+   production fact (4 real permits currently linked to `parcel_id 439990`, Fold C blocking item 1's
+   correction of the plan's own "observed: `id=1`" evidence) is cited in the test's own comments,
+   not re-queried inside this DB-free unit test. FUTURE: `compute.js` must contain
+   `v.lng IS NOT NULL AND v.lat IS NOT NULL`, and the descriptor must declare a
+   `spatial_null_coordinate_permits` WARN check — both genuinely red today.
+3. **Tiebreak-determinism.** TODAY: the current script's `ORDER BY v.pn, v.rv, ST_Distance(...)`
+   clause is text-extracted and asserted to contain no `pa.id` secondary key — the non-determinism
+   risk is real today. A second TODAY test is a pure-JS twice-run proof: a `distance ASC, id ASC`
+   sort over an EXACT-TIE dataset (24.20156933 m for both candidates — a value drawn from this
+   pilot's own independently re-verified exact-tie population, §4/Fold C item 5) returns the SAME
+   (lower) id across two runs with shuffled input order — the algorithmic property THE FIX's
+   declared tiebreak relies on, proven without any DB/artifact dependency. FUTURE: `compute.js`'s
+   KNN `ORDER BY` must carry `, pa.id ASC` immediately after the `<->` operator — genuinely red.
+4. **SQL-shape perf lock.** TODAY: the current script's Step-2 block is confirmed to use
+   `ST_DWithin` as a bound predicate (the pre-fix baseline), with live timing figures for both the
+   struck co-resident form (97.5 s/batch) and THE FIX's own shape (400-500 ms/batch; this pilot's
+   own commit-4 aggregate re-measurement: 7.18 s for the full 17,500-row eligible population)
+   recorded in the test's comments, citing §4 rather than re-timing inside this DB-free unit test.
+   FUTURE: `compute.js`'s KNN LATERAL block must NOT carry a co-resident `ST_DWithin` bound in the
+   same block (scanned via a ±400-character window around the `pa.geom <->` operator) — genuinely
+   red, guards specifically against reintroducing the measured-unviable combination.
+
+### `converted.json` — `pending` entry declared this commit (R-K.1, stage `red_suite`)
+
+```json
+{
+  "file": "scripts/link-parcels.js",
+  "registers_at": "C1 pilot 7 commit 9 (cutover)",
+  "reason": "PH-7 red suite landed commit 6 ... descriptor/compute/library growth land commit 7, advancing stage to shape_clean",
+  "declared": "2026-08-30",
+  "stage": "red_suite"
+}
+```
+No sibling descriptor exists yet (verified this commit) — `stage:"red_suite"` is the correct,
+non-stale declaration per R-K.1 (a descriptor appearing while `stage` stays `red_suite` would itself
+be RED, "stage not advanced" — `step-conformance.infra.test.ts`'s generic gate enforces this, not
+re-implemented per-step here). `src/tests/step-conformance.infra.test.ts` re-run this commit: **175/175
+green**, including the fleet silent-import-death guard and the R-R scorecard-staleness locks for
+every already-converted step — the new pending entry introduces no regression in the generic
+conformance suite.
+
+### Literal RED excerpt
+
+Per Rule 13's pre-staging requirement, the LP-D1 FUTURE claim was temporarily un-wrapped to a plain
+`it()` (NOT committed in this form — reverted immediately after capture) to prove the underlying
+assertion genuinely throws, not merely that `it.fails()` reports green by construction:
+
+```
+✗ LP-D1 — Strategy 3 Step 2 join predicate (THE FIX)
+  > FUTURE — scripts/lib/compute/link-parcels.js exists and Strategy 3 Step 2 ranks by the live
+    pa.geom KNN operator with a declared pa.id ASC tiebreak, never by centroid_lat/centroid_lng
+    (TEMP UNWRAPPED FOR RED-CAPTURE, NOT COMMITTED)
+  AssertionError: MISSING ARTIFACT scripts/lib/compute/link-parcels.js (not yet produced by the
+  pilot-7 commit sequence — commit 7 lands it): expected false to be true // Object.is equality
+  - Expected: true
+  + Received: false
+    ❯ artifact src/tests/steps/link_parcels/violations.test.ts:81:5
+    ❯ readText src/tests/steps/link_parcels/violations.test.ts:85:65
+    ❯ src/tests/steps/link_parcels/violations.test.ts:118:17
+  Test Files  1 failed (1)
+       Tests  1 failed | 11 passed (12)
+```
+
+**RED — confirmed genuine, for the right reason (a missing artifact, not a TypeScript/import
+error).** The file was restored to its `it.fails()`-wrapped form immediately after this capture;
+the committed file has zero real (un-inverted) failures — `12/12` green, as shown above.
+
+### `docs/reports/defect-ledger.md` — 7 rows registered this commit (`LP-D1`–`LP-D7`)
+
+Every ledger row this pilot has opened (`LP-D1`–`LP-D6` per the plan's G6 row + `LP-D7` widened
+from commit 1's own new finding) is now ALSO registered in the fleet-wide `defect-ledger.md`
+(matching the `CC-D1`–`CC-D3`/`LM-D11`/`LM-D13`/`LPA-D5`/`LPA-D6` precedent — a row opened only in a
+pilot's own assessment report, without the fleet ledger entry, is a gap `step:validate`'s G6 gate
+correctly flags). Re-ran `npm run step:validate -- --step=link_parcels` after adding the 7 rows:
+
+```
+[step-validate] link_parcels (pending) — 4/17, hard-stop=true
+...
+| G6 | 0 | 3 | 7 ledger row(s), 6 without CLOSED/PIN (LP-D2, LP-D3, LP-D4, LP-D5, LP-D6, LP-D7) |
+```
+
+G6 moves from "no defect-ledger rows found for prefix LP-D*" (a vacuous absence) to a real,
+non-vacuous 0/3 (7 rows found, correctly none CLOSED/PIN yet — every row's own "closes at" column
+states commit 7, 8, or 9, all out of this pilot's own commit 1–6 scope). This is the HONEST state
+at commit 6, not a gap to be closed here — matches the low, faithfully-recorded scorecard posture
+pilot 6's own commit 6 established as correct (11/17 there; 4/17 here, lower because `link_parcels`
+carries real library growth (`LP-D5`) and product-exposure (`LP-D7`) rows a BACKFILL step like
+`compute_centroids` never had).
+
+### `npm run step:validate -- --step=link_parcels`, full scorecard (Rule 13)
+
+```
+[step-validate] link_parcels (pending) — 4/17, hard-stop=true
+```
+G0 1/1, G1 1/1 (PH-3 section found, 38 SHAs counted — the git-blame trail across the ledger rows'
+own citations, not merely 18), G2 0/1 (no churn×complexity instrument — standing programme gap,
+pilots 1–6 too), G3 1/2 (table rows=19, vocab-hit rows=18 — the 18 `fix(` commits' dispositions),
+G4 0/2 (no risk-class row in the TABLE SHAPE the generator scans for — this report's own G4 pass at
+commit 1 used prose, matching pilot 6's own commit-1 gap), G5 1/1 (db/clock/network/argv-env all
+true — §3's seam map), G6 0/3 (above), G7 0/3 (`file=true fences=0 it-count=18 RED-evidence=false`
+— the generator's OWN fence-counter scans `defect-ledger.md` for `PIN`/`CLOSED` rows citing this
+step, which is correctly 0 today since every `LP-D*` row is OPEN; the real fence count this pilot's
+G3 archaeology found — `8a1c7d25`, ONE genuinely load-bearing fence — is documented in §2, not yet
+machine-countable by this generator's current heuristic, a standing gap shared with every prior
+pilot's own commit-6 state), G8 0/3 (3 missing invocations — `post/{permits,sources,standalone}.json`
+don't exist until commit 9, correctly). Fast invariants #4/#5/#9 all PASS — confirms all 5
+`it.fails()` call sites sit under this pilot's own declared `red_suite` pending slug, none orphaned.
+Policy matrix: 2/14 enforced-green (Rules 2, 3) — everything gated on
+the descriptor's existence reads `enforced-red`, exactly as expected for a `pending`-not-`shape_clean`
+step. This is the correct, informative RED state through commit 6 — a real signal, not a generic
+tool error — and it climbs sharply at commit 7 once the descriptor/compute/library growth land and
+`stage` advances to `shape_clean`.
+
+### G7 verdict
+
+**CLOSED this commit.** `violations.test.ts` lands with 12 tests, 5 `it.fails()` genuinely red
+internally (5 ≥ the 1 fence this pilot's own G3 archaeology found load-bearing, `8a1c7d25` — lock
+count ≥ fence count satisfied, matching the plan's own Rule-13 pre-staging requirement). 7 plain
+`it()` genuinely pass today. The literal RED excerpt above proves the mechanism is not vacuous.
+`converted.json.pending` gains the `stage:"red_suite"` entry this commit (matches R-K.1's own
+established mechanism exactly — declared at commit 6, not deferred to commit 7, since a genuine
+tooling contradiction pilot 6 already hit and fixed makes any deferral illegal under the CURRENT
+tooling). `step-conformance.infra.test.ts` re-run: 175/175 green, no regression. `defect-ledger.md`
+gains 7 real rows (`LP-D1`–`LP-D7`), closing the gap between this pilot's own report-local ledger
+and the fleet-wide register. `step:validate` returns a real, low, faithfully-recorded scorecard
+(`4/17`) instead of erroring.
+
+---
+
 ## §0. PH-0 seed — measured boundary table (2026-08-30 planning session)
 
 ### 0.1 Governing specs, read in order (Spec 124 §7 Step 0 / Spec 123 §6 G0)

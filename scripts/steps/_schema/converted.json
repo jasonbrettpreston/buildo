@@ -37,5 +37,13 @@
     "scripts/link-parcel-addresses.js",
     "scripts/compute-centroids.js"
   ],
-  "pending": []
+  "pending": [
+    {
+      "file": "scripts/link-parcels.js",
+      "registers_at": "C1 pilot 7 commit 9 (cutover)",
+      "reason": "PH-7 red suite landed commit 6 (src/tests/steps/link_parcels/violations.test.ts) - LP-D1/LP-D6/tiebreak-determinism/SQL-shape-perf locks; descriptor/compute/library growth (LG-24 executeGuardedDeleteByKey, LG-25 composite-key keyset pagination, runLinkKeyedPhase fork) land commit 7, advancing stage to shape_clean",
+      "declared": "2026-08-30",
+      "stage": "red_suite"
+    }
+  ]
 }
