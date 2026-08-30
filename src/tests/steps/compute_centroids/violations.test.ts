@@ -671,16 +671,16 @@ describe('the three files, one slug (Spec 122 §4.1 / §5.1 / §5.2) + the BACKF
     expect(src.includes('module.exports')).toBe(true);
   });
 
-  it.fails('converted.json registers the step as the 6th entry (commit 9 arms the shape gate: 6/62) (flips at: commit 9)', () => {
+  it('converted.json registers the step as the 6th entry (commit 9 arms the shape gate: 6/62) (LANDED: commit 9, cutover)', () => {
     const converted = (JSON.parse(fs.readFileSync(abs(CONVERTED_REL), 'utf8')) as { converted: string[] }).converted;
     expect(converted.length, 'at least 6 entries (assert-schema, load-ravines, link-massing, link-wsib, link-parcel-addresses, compute-centroids, ...)').toBeGreaterThanOrEqual(6);
     expect(converted.indexOf(STEP_REL), `${STEP_REL} must still be the 6th entry (index 5) — reordering converted.json is a declared diff, not a silent shuffle`).toBe(5);
   });
 
-  it('converted.json does NOT yet register compute_centroids, and neither converted nor pending names it — commits 1-6 land zero code, this is the CURRENT, testable-today state (mirrors the R-K "pending is declared at commit 7, not commit 6" ruling in this pilot\'s own header comment)', () => {
-    const c = JSON.parse(fs.readFileSync(abs(CONVERTED_REL), 'utf8')) as { converted: string[]; pending: string[] };
-    expect(c.converted.includes(STEP_REL)).toBe(false);
-    expect((c.pending ?? []).includes(STEP_REL)).toBe(false);
+  it('converted.json now registers compute_centroids AND its pending entry is DELETED — R-K.1: "cutover deletes the pending entry AND flips the tied it.fails calls to plain it() in the SAME commit" (LANDED: commit 9, cutover — supersedes the commit-1-6 "not yet registered" state this test asserted through peel 8c)', () => {
+    const c = JSON.parse(fs.readFileSync(abs(CONVERTED_REL), 'utf8')) as { converted: string[]; pending: Array<{ file: string }> };
+    expect(c.converted.includes(STEP_REL)).toBe(true);
+    expect((c.pending ?? []).some((p) => p.file === STEP_REL), 'R-K.1: both stages (registration + pending) retire together in the same commit').toBe(false);
   });
 
   it('grandfathered.json — a 3rd real-step entry, keyed compute_centroids, path outputs.writes[].write_discipline.guard, value "none" (Rule 9 — idempotent by scope) (landed: commit 7)', () => {

@@ -3,7 +3,7 @@
   "spec": "docs/specs/01-pipeline/122_pipeline_step_optimization.md §5.3",
   "step": "scripts/quality/assert-schema.js",
   "chain": "coa",
-  "git_head": "dd5956ea351d0f9cbd329bdcae4fa99f93d23dc1",
+  "git_head": "d9e5b34626a0b330a5fc3cb8dc637c3eb8d26315",
   "exit_code": 0,
   "signal": null,
   "summary": {
@@ -54,7 +54,7 @@
           },
           {
             "metric": "sys_duration_ms",
-            "value": 573,
+            "value": 649,
             "threshold": null,
             "status": "INFO"
           }
@@ -87,10 +87,10 @@
   "parse_errors": [],
   "verdict": "PASS",
   "ledger_status": [],
-  "stdout": "{\"level\":\"INFO\",\"tag\":\"[assert_schema]\",\"msg\":\"[assert_schema] target: assert_schema (descriptor.database) → database=postgres user=postgres migrations=242 (floor 41)\"}\n{\"level\":\"INFO\",\"tag\":\"[assert_schema]\",\"msg\":\"=== CQA Tier 1: Schema Validation ===\"}\n{\"level\":\"INFO\",\"tag\":\"[assert_schema]\",\"msg\":\"Fetching metadata for CoA Active...\"}\n{\"level\":\"INFO\",\"tag\":\"[assert_schema]\",\"msg\":\"OK: CoA Active — all 11 expected columns present (30 total)\"}\n{\"level\":\"INFO\",\"tag\":\"[assert_schema]\",\"msg\":\"Fetching CSV headers for Parcels...\"}\n{\"level\":\"INFO\",\"tag\":\"[assert_schema]\",\"msg\":\"OK: Parcels — all 4 expected columns present (6 total)\"}\nPIPELINE_SUMMARY:{\"records_total\":null,\"records_new\":null,\"records_updated\":null,\"records_meta\":{\"config\":{\"assert_schema_type_sample_rows\":20,\"assert_schema_csv_header_bytes\":2048,\"assert_schema_geojson_probe_bytes\":8192},\"terminal\":\"all_checks_passed\",\"ledger_row\":\"chain_owned\",\"checks_passed\":\"all\",\"checks_failed\":0,\"checks_warned\":0,\"audit_table\":{\"phase\":1,\"name\":\"Schema Validation\",\"verdict\":\"PASS\",\"rows\":[{\"metric\":\"declared_logic_variables_present\",\"value\":{\"missing\":[]},\"threshold\":\"viol == 0\",\"status\":\"PASS\"},{\"metric\":\"coa_columns\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\"},{\"metric\":\"parcel_columns\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":573,\"threshold\":null,\"status\":\"INFO\"}]}}}\nPIPELINE_META:{\"reads\":{\"logic_variables\":[\"variable_key\"]},\"writes\":{},\"external\":[\"ckan_datastore_api\",\"address_points_csv\",\"parcels_csv\",\"massing_zip\",\"ravine_zip\",\"heritage_register_zip\",\"heritage_hcd_zip\",\"centreline_zip\",\"neighbourhoods_geojson\"]}\n\n[assert_schema] completed in 0.6s\n",
+  "stdout": "{\"level\":\"INFO\",\"tag\":\"[assert_schema]\",\"msg\":\"[assert_schema] target: assert_schema (descriptor.database) → database=postgres user=postgres migrations=242 (floor 41)\"}\n{\"level\":\"INFO\",\"tag\":\"[assert_schema]\",\"msg\":\"=== CQA Tier 1: Schema Validation ===\"}\n{\"level\":\"INFO\",\"tag\":\"[assert_schema]\",\"msg\":\"Fetching metadata for CoA Active...\"}\n{\"level\":\"INFO\",\"tag\":\"[assert_schema]\",\"msg\":\"OK: CoA Active — all 11 expected columns present (30 total)\"}\n{\"level\":\"INFO\",\"tag\":\"[assert_schema]\",\"msg\":\"Fetching CSV headers for Parcels...\"}\n{\"level\":\"INFO\",\"tag\":\"[assert_schema]\",\"msg\":\"OK: Parcels — all 4 expected columns present (6 total)\"}\nPIPELINE_SUMMARY:{\"records_total\":null,\"records_new\":null,\"records_updated\":null,\"records_meta\":{\"config\":{\"assert_schema_type_sample_rows\":20,\"assert_schema_csv_header_bytes\":2048,\"assert_schema_geojson_probe_bytes\":8192},\"terminal\":\"all_checks_passed\",\"ledger_row\":\"chain_owned\",\"checks_passed\":\"all\",\"checks_failed\":0,\"checks_warned\":0,\"audit_table\":{\"phase\":1,\"name\":\"Schema Validation\",\"verdict\":\"PASS\",\"rows\":[{\"metric\":\"declared_logic_variables_present\",\"value\":{\"missing\":[]},\"threshold\":\"viol == 0\",\"status\":\"PASS\"},{\"metric\":\"coa_columns\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\"},{\"metric\":\"parcel_columns\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":649,\"threshold\":null,\"status\":\"INFO\"}]}}}\nPIPELINE_META:{\"reads\":{\"logic_variables\":[\"variable_key\"]},\"writes\":{},\"external\":[\"ckan_datastore_api\",\"address_points_csv\",\"parcels_csv\",\"massing_zip\",\"ravine_zip\",\"heritage_register_zip\",\"heritage_hcd_zip\",\"centreline_zip\",\"neighbourhoods_geojson\"]}\n\n[assert_schema] completed in 0.7s\n",
   "stderr": "",
   "pipeline_runs": [],
-  "pipeline_runs_max_id_before": 1730,
+  "pipeline_runs_max_id_before": 1749,
   "table_state": [],
   "tables_source": "none",
   "table_row_ceiling": 100000,
@@ -190,7 +190,7 @@
     "table_state": [],
     "invariants": []
   },
-  "source_fingerprint": "ca384020e62ea45c6553cccb056dabd7eb26746066aa5fcb700767f888de65b5",
+  "source_fingerprint": "d6d4b60c6fb2b944c5c2c398ca8df0f6feaaa2448df7b73b709bbe03bf1f6a51",
   "fingerprint_files": [
     "scripts/lib/compute/assert-schema.js",
     "scripts/quality/assert-schema.descriptor.json",

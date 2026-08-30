@@ -441,7 +441,7 @@ Declared BEFORE any old/new diff. Sources: `scripts/analysis/capture-step-golden
 - compare ran: true · diffs found: 215 · unexplained: 0
 
 ### Test suite (item iii)
-- 551/568 passed (suite success=false)
+- 641/657 passed (suite success=true)
 
 ### Policy coverage matrix (item vi) — Spec 124 Rules 1-13
 
@@ -460,7 +460,7 @@ Declared BEFORE any old/new diff. Sources: `scripts/analysis/capture-step-golden
 | 11 | Phase-order re-derive (R-B) | prose-only | R-B describe not scoped to this step |
 | 12 | Truthful crash posture (R-M + R-B reader) | prose-only | R-M/R-B-reader describes not scoped to this step |
 | 13 | A step validates itself | enforced-green | this run of step:validate IS the mechanism |
-| P3 | I/O cost adjudication (measured, not gated) | measured | descriptor=25643B notes=8992B checks=10 rows records_meta=1341B (newest post/ capture) |
+| P3 | I/O cost adjudication (measured, not gated) | measured | descriptor=25849B notes=8992B checks=10 rows records_meta=1341B (newest post/ capture) |
 
 **Enforced-green: 10/14**
 

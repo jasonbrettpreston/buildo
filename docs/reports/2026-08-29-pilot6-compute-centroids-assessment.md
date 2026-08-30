@@ -906,6 +906,84 @@ compute file).
 
 ---
 
+## §9. Cutover (commit 9) — G8/G4d/G-shape, differential, §R Reflection
+
+**`scripts/steps/_schema/converted.json`** — `compute-centroids.js` added as the **6th** entry
+(`assert-schema.js`, `load-ravines.js`, `link-massing.js`, `link-wsib.js`, `link-parcel-addresses.js`,
+`compute-centroids.js`); `pending: []` — R-K.1: both stages (registration + the pending declaration) retire
+together, in this same commit. Shape gate now enforces **"6 converted step file(s)"**.
+
+**A live conformance side-effect, found and fixed by actually running the suite (not by static review):**
+registering `compute_centroids` in `converted.json` brought it into `assert_schema`'s own R-D chain-start
+presence assertion (`checks[].expect` ≡ `config.probe_presence` ≡ the live fleet derivation, all three
+must agree). `scripts/quality/assert-schema.descriptor.json` gained the 2 new names
+(`compute_centroids_compute_rate_warn_pct`, `compute_centroids_failed_geometries_warn`) in BOTH arrays,
+alphabetically ordered — the exact same fix every prior pilot's cutover has made (pilot 5's own cutover
+diff touched this same file). Changing that descriptor moves its `source_fingerprint`, which staled its 4
+golden captures (`docs/reports/golden/assert_schema/post/{coa,permits,sources,standalone}.json`) under the
+R-C lockfile gate — re-captured (all `exit_code:0`, `verdict:PASS`, fingerprint now
+`d6d4b60c…`), and `assert_schema`'s own scorecard regenerated (16/17, hard-stop no — unchanged from before
+this pilot touched it).
+
+**#154's own commit-8c body already covers the single-concern proof for 8a/8b** (see §8c above) — this
+commit is itself the peel-9/cutover commit `#154` never self-references (the structural reason stated in
+that test's own body).
+
+**`docs/reports/golden/compute_centroids/post/{sources,standalone}.json`** — re-captured fresh at cutover.
+`table_state` hash `94473cfd` on both, identical to every prior capture this pilot (`pre/`, `post-8a/`,
+`post-8b/`, `post-8c/`) — the corpus never moved. `source_fingerprint=7a1ed131…` (over the descriptor,
+step, notes, compute — unchanged by the assert_schema-side fix above, which touches a different step's own
+files).
+
+**Differential vs `pre/` (the UNCONVERTED script's own captures, commit 5):** `--compare` reports **20
+differences per invocation** — the SAME 20, byte-for-byte, `§7`'s own table already named and explained
+(records_meta shape completion, `checks_*`/`ledger_row`/`terminal`/`config` additions, the `PIPELINE_META`
+reads-list completion, cosmetic log-line rewording, the `standalone` invocation's new `pipeline_runs[0]`
+row). **Zero new, zero unexplained** — `step:validate`'s own G8 gate (`unexplained-diffs=0`) confirms this
+mechanically, not by re-reading the table by eye.
+
+**`npm run step:validate -- --step=compute_centroids --write`:**
+
+```
+[step-validate] compute_centroids (converted) — 14/17, hard-stop=false
+```
+
+**14/17 ≥ the Rule-13 cutover floor (≥14/17, no hard stop) — satisfied.** G4 (risk-class row with
+chance+impact, 0/2) and part of G3 (vocab-hit rows 16/17) are the two open points — both are the SAME
+standing gap every one of pilots 1–5 also carries (no churn×complexity instrument built yet, §R item
+below), not something this pilot introduced or could close alone.
+
+### §R Reflection (Spec 124 R-F / Spec 122 R-F, mandatory after cutover)
+
+**LOW-CONFIDENCE** — findings this pilot could not fully resolve, carried forward with their own
+disposition rather than silently dropped:
+
+| # | Finding | Why LOW-CONFIDENCE | Disposition |
+|---|---|---|---|
+| 1 | **CC-D3** — 292,587/486,530 (60.1%) of stored centroids differ >1m from a freshly-computed `ST_Centroid` over the SAME unchanged `geom` (algorithm drift: the one real-work run, 2026-03-10, predates the PostGIS offload and used the retired JS arithmetic-mean formula; the remainder predates `pipeline_runs` ledger visibility, most plausibly a bulk seed/restore) | No live run has ever re-computed these 292,587 rows since the algorithm changed — this pilot's own scope predicate (`centroid_lat IS NULL`) makes an already-filled row permanently unreachable BY THIS STEP, so the discrepancy cannot self-heal without a deliberate backfill decision this pilot has no mandate to make | **PIN** (report §7 limitations, filed MED) — a future operator ruling decides whether a one-time re-backfill (nulling all 292,587 rows, forcing a genuine compute-path run) is worth the cost; out of pilot 6's zero-behaviour-change scope either way |
+| 2 | The write path (LG-20 `executeBackfillUpdate` / `runBackfillPhase`'s real-work branch) is proven correct ONLY by (a) `migration-245-centroid-invalidation.db.test.ts` case ④'s fixture-DB proof and (b) commit 7's own live geometry-nudge-and-refill proof against the real target DB — NOT by a `capture-step-golden.js` invocation, because the live corpus's zero-work steady state (0/486,530 backlog, unbroken since 2026-06-10) means no `capture-step-golden.js` run has EVER exercised the compute path in this pilot's own golden captures (`pre/`, every `post*/`) | A golden-master differential normally IS the strongest evidence a converted step behaves like its unconverted ancestor; here that evidence is structurally unavailable for the one branch that matters most, and the fixture/live proofs are each single-instance, not fleet-scale | **Carried, not closeable by this pilot** — the golden-master mechanism itself has a blind spot for any BACKFILL whose corpus reaches permanent steady state; a future forced-refill capture (nulling a bounded sample, capturing before/after) would close it, same shape as `link_wsib`'s own forced-FULL captures |
+| 3 | The **LW-D16-class testcontainer gap** — `migration-245-centroid-invalidation.db.test.ts`'s own write-path proof regresses under `BUILDO_TEST_DB=1` (the testcontainer harness), a defect ALREADY FILED against the shared DB-test harness (`assert_current_database` mismatch class), not re-derived or re-filed here | This pilot's own write-path evidence (item 2 above) therefore depends on the LOCAL dev DB, not the portable testcontainer path CI eventually needs | **Not this pilot's to fix** — documented in commit 7's own body (§7), tracked under the pre-existing LW-D16 filing; re-surfaced here only so §R's own promotion criterion (§4.6) can see it against a SECOND pilot's evidence if the pattern recurs a third time |
+
+**RECURRING/STANDARD-SHAPING** — findings this pilot believes are likely to recur in a FUTURE archetype,
+feeding Spec 124 §4.6's promotion criterion:
+
+| # | Finding | Named archetype match this is expected to recur against | Proposed lock |
+|---|---|---|---|
+| 1 | **R-K.1's `pending.stage` mechanism was declared at pilot 6's own commit 6 but never previously EXERCISED against a genuine pre-descriptor commit-6 file** — pilots 1–5 were all backfilled retroactively (R-R), so the "stage advances red_suite → shape_clean" transition and the "a descriptor appearing while stage is still `red_suite` is itself RED" guard had zero live proof until this pilot's own commit 6→7 boundary | Any FUTURE pilot's own commit 6→7 boundary (pilot 7 onward — the mechanism is estate-wide, not pilot-6-specific) | Already promoted to the register as **R-K.1** (Spec 124 §5) in THIS pilot's own commit 6 — cited here so §R's own reflection carries the promotion forward explicitly, per §4.6's "the feeder is the §R Reflection… table" instruction |
+| 2 | **"Declared class ≠ implemented class" — class E `write_once_backfill` sat in `step.schema.json`'s frozen enum since an earlier pilot's schema authoring, but had NO `write.js` dispatch branch until THIS pilot built LG-20.** A descriptor could have declared `write_discipline.class: "write_once_backfill"` at any point before this pilot and the schema would have validated it — the enum's presence is not proof the runner can execute it. This is a real conformance blind spot: `step.schema.json`'s enum and `write.js`'s `SET_BASED_CLASSES`/dispatch table can drift independently, and nothing red-flags the gap until a pilot happens to need the missing class | Any FUTURE archetype/write-class combination the schema enum names before a pilot builds it (the schema is authored ahead of the library on purpose, per Spec 122's own "frozen enum first" convention — this is a STRUCTURAL recurrence, not a one-off) | **Proposed lock:** a conformance test asserting every `write_discipline.class` value in `step.schema.json`'s enum has a corresponding branch/executor reachable from `scripts/lib/step/write.js` — RED today would have caught `write_once_backfill`'s gap the moment the enum value was authored, rather than waiting for a pilot to need it. Filed as a HIGH followup (`review_followups.md`), not built in this pilot (library-level, out of scope) |
+| 3 | **Fork-over-share, chosen a THIRD time.** `runBackfillPhase` forks `runMaterializePhase`'s phase-order shape rather than extending `runLinkPhase` or sharing a scaffold — the SAME choice pilot 3 made (`link_massing`'s A-8 JS-fallback retirement, standalone over shared) and pilot 5 made (`runMaterializePhase` itself, forked from `runCascadePhase`). Fold D explicitly deferred LG-21's shared-scaffold refactor to "a dedicated library WF after pilot 8" rather than building it here — the THIRD time this exact deferral has been re-stated | Pilots 7–8 (the two remaining C1 archetypes) — if EITHER also forks rather than shares, the recurrence count reaches 4–5 and the library WF becomes overdue rather than merely carried | **Already carried explicitly** (Fold D, this pilot's own §Fold D section) as "library WF, not a pilot item" — re-stated here so the count is visible to whichever pilot's own §R Reflection next re-derives it; the promotion criterion (§4.6) is "a named archetype match," and this finding now has THREE |
+| 4 | **`outputs.invalidates` `minItems:1` for class E (B-3, Fold C) was a schema requirement this pilot's Integration pass discovered live, not one stated anywhere in Spec 122/123's own prose before this pilot** — the schema (`step.schema.json:798-814`) enforced it correctly, but no narrative spec explained WHY a BACKFILL must declare what invalidates its own write target when the step's own contract is "fill what's NULL, never detect staleness itself" (G3, this pilot's own guarantee table) | Any future ENRICHER/BACKFILL/MATERIALIZER pilot whose write target is invalidated by a mechanism OUTSIDE the step itself (a trigger, a sibling step, a scheduled job) — the same shape as `compute_centroids`/migration 245 | **Proposed:** Spec 122 §5.1 or Spec 124 Rule 7's archetype table gains one sentence naming this pattern explicitly ("a class-E/ENRICHER write target's `outputs.invalidates` may document a NON-STEP-OWNED invalidator — a trigger, not a staleness detector this step itself runs") so the next pilot does not have to re-discover it live the way this one did |
+| 5 | **CC-D2's consumer-exposure shape (Reality-Check R-1: 3,130/3,626 out-of-polygon centroids land inside a DIFFERENT parcel, exposing a 276-link mis-attribution in a DOWNSTREAM consumer's join strategy) is the SAME shape as pilot 5's own bridge-table finding** (a derived value correct by its OWN step's contract, but silently miscompensated for by a consumer's join heuristic) | Any future pilot whose write target feeds a DOWNSTREAM nearest-neighbour/proximity join (link_parcels' own Tier-3, and any future consumer of a similarly derived geometry) | **Already filed** as a HIGH followup against `link_parcels.js` (not this pilot's fix — zero-behaviour-change scope). Re-stated here because TWO pilots (5 and 6) have now independently surfaced "a correct producer, a heuristic consumer" as the actual defect shape — a candidate register-level ruling if a THIRD pilot finds the same pattern (§4.6 promotion) |
+
+**R-F mandatory carried items, reaffirmed at cutover (unchanged from Fold D):**
+- **R-B's crashed/stuck-`running` reader** stays OPEN — this step has no destructive-retraction write
+  target (class E, `retract:"none"`) for it to protect; carried to whichever future pilot first ships a
+  genuine `retract_when:full_only` target.
+- **LG-21 `runPhaseScaffold`** stays DEFERRED to a post-pilot-8 library WF (see RECURRING/STANDARD-SHAPING
+  item 3 above — now a 3-pilot recurrence).
+
+---
+
 ## §0. PH-0 seed — measured boundary table (2026-08-29 planning session)
 
 ### 0.1 Governing specs, read in order (Spec 124 §7 Step 0 / Spec 123 §6 G0)
@@ -1126,3 +1204,69 @@ Re-executed every query/grep Fold C's Integration and Reality-Check passes relie
 ---
 
 *(§1–§9, the promoted full PH-0..PH-8 passes, land at commits 1–9 per Spec 123 §7's own procedure — this stub discharges the plan's "Full grounding detail" citation and is not itself a completed assessment.)*
+
+---
+
+## Validation scorecard (generated)
+
+> Generated by `node scripts/analysis/step-validate.mjs --step=compute_centroids --write` — Spec 123 §6, ruling R-R (2026-08-29).
+> Regenerate with the same command; a stale block is a conformance-lock finding (`step-conformance.infra.test.ts`).
+
+**Score: 14/17** · G9 Reflection: PASS · G4d fence-lock coverage: PASS · G-shape: PASS · **Hard stop: no**
+
+| Gate | Score | Max | Detail |
+|---|---:|---:|---|
+| G0 | 1 | 1 | boundary-section=true spec-line=true |
+| G1 | 1 | 1 | PH-3 section found=true sha-count=27 |
+| G2 | 1 | 1 | ASSESSMENT-INCOMPLETE not claimed (vacuously satisfied) |
+| G3 | 1 | 2 | table rows=17 vocab-hit rows=16 |
+| G4 | 0 | 2 | risk-class row with chance+impact found=false |
+| G5 | 1 | 1 | db=true clock=true network=true argv/env=true |
+| G6 | 3 | 3 | 3 ledger row(s), 0 without CLOSED/PIN () |
+| G7 | 3 | 3 | file=true fences=1 it-count=58 RED-evidence=true |
+| G8 | 3 | 3 | missing-invocations=0 stale-fingerprints=0 unexplained-diffs=0 |
+| G9 (binary) | PASS | — | heading=true low-confidence-table=true recurring-table=true |
+| G4d (fence<=lock) | PASS | — | fences=1 lock-it-count=58 |
+| G-shape | PASS | — | file-clean=true compute-clean=true |
+
+### Fast invariants (always run — the fast descriptor gate)
+
+| # | Scope | Pass | Detail |
+|---|---|---|---|
+| 1 | compute_centroids | PASS | min_migration=16 <= migrations count=242 |
+| 2 | compute_centroids | PASS | 2 declared, missing from seeds: none |
+| 3 | compute_centroids | PASS | retired=0 overlap-with-declared=none |
+| 7 | compute_centroids | PASS | SPEC LINK header present=true |
+| 8 | compute_centroids | PASS | G-4: 2 declared, 2 verdict-affecting, 0 violate on_invalid:fail with no deviations[] cover |
+| 4 | (registry) | PASS | overlap: none |
+| 5 | (registry) | PASS | clean (0 it.fails( call sites outside a declared pending slug) |
+
+### Captures (item iv)
+- missing invocations: none
+- stale fingerprints: none
+- compare ran: true · diffs found: 41 · unexplained: 0
+
+### Test suite (item iii)
+- 641/657 passed (suite success=true)
+
+### Policy coverage matrix (item vi) — Spec 124 Rules 1-13
+
+| Rule | Name | Status | Note |
+|---|---|---|---|
+| 1 | Nothing hidden | enforced-green | G-1 schema-baseline: schema-baseline clean |
+| 2 | Compute is just compute | enforced-green |  |
+| 3 | Tunables externalized | enforced-green | G-4: 2 declared, 2 verdict-affecting, 0 violate on_invalid:fail with no deviations[] cover |
+| 4 | Compute rule declared | enforced-red | G-2: 3 preserved-in-compute row(s), 3 with no why/notes.json/checks[] grounding |
+| 5 | checks >= 1 | enforced-green |  |
+| 6 | Omission fails (18 categories) | enforced-green |  |
+| 7 | Archetype gates categories | enforced-green |  |
+| 8 | Per-target write discipline | enforced-green |  |
+| 9 | Banned write needs ledger (+ V7 no_retraction) | enforced-green |  |
+| 10 | Verdict row-derived | prose-only | enforced by step-library.logic.test.ts, outside step:validate's (i)(ii)(iii) run scope |
+| 11 | Phase-order re-derive (R-B) | prose-only | R-B describe not scoped to this step |
+| 12 | Truthful crash posture (R-M + R-B reader) | prose-only | R-M/R-B-reader describes not scoped to this step |
+| 13 | A step validates itself | enforced-green | this run of step:validate IS the mechanism |
+| P3 | I/O cost adjudication (measured, not gated) | measured | descriptor=17895B notes=6750B checks=5 rows records_meta=602B (newest post/ capture) |
+
+**Enforced-green: 9/14**
+
