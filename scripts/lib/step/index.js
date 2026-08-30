@@ -870,6 +870,7 @@ async function runLinkKeyedPhase({ descriptor, pool, compute, config, chainId, l
     spatial: 0,
     no_match: 0,
     null_coordinate_permits: 0,
+    street_type_mismatch: 0,
   };
   for (const s of gate.signals) {
     if (s.current === null) continue;
@@ -1062,6 +1063,13 @@ async function runLinkKeyedPhase({ descriptor, pool, compute, config, chainId, l
 
   const cumulative = await pool.query(match.cumulative_sql);
   const row = cumulative.rows[0];
+  // LP-D9 (commit 8a) OBSERVABILITY — a standing whole-table audit, run every invocation
+  // (not gated on mode), same posture as cumulative_sql above: "this class must never be
+  // invisible again."
+  if (match.street_type_mismatch_sql) {
+    const mismatch = await pool.query(match.street_type_mismatch_sql);
+    matched.street_type_mismatch = Number(mismatch.rows[0].n);
+  }
   return {
     mode: gate.mode,
     gate,

@@ -94,6 +94,19 @@ function buildMatchSql(descriptor, config, mode) {
       WITH input_permits (permit_num, revision_num, addr_num, street_name, street_type) AS (
         SELECT unnest($1::text[]), unnest($2::text[]), unnest($3::text[]), unnest($4::text[]), unnest($5::text[])
       ),
+      -- LP-D9 (commit 8a, 2026-08-30): address_points carries NO street-type column of
+      -- its own (linear_name_normalized is type-less), so this CTE originally matched on
+      -- house-number + street-name ONLY -- a same-name-different-type collision (e.g. "26
+      -- MEADOWVALE RD" vs "26 MEADOWVALE DR", ~31.6km apart in the live DB) could resolve
+      -- to whichever candidate happened to win the class/area/id-ASC tiebreak below,
+      -- REGARDLESS of which type the permit itself declared. p.street_type_normalized
+      -- (via the already-joined parcels p) is the disambiguator; the JOIN clause AND the
+      -- WHERE clause below mirror Strategy 1b's (exact, below) OWN empty-type predicate
+      -- shape byte-for-byte, not a stricter or looser form -- verified live (LP-D9 lock)
+      -- that 1b's own "empty tolerance" is, in practice, NOT permissive (its JOIN's hard
+      -- equality already requires pa.street_type_normalized = '' when ip.street_type
+      -- is empty, which real parcels essentially never have -- 0/8,439 sampled), so this
+      -- CTE reproduces that SAME effectively-strict behavior, never a more lenient one.
       address_points_exact AS (
         SELECT DISTINCT ON (ip.permit_num, ip.revision_num)
           ip.permit_num, ip.revision_num, pap.parcel_id,
@@ -106,6 +119,8 @@ function buildMatchSql(descriptor, config, mode) {
          AND (ap.address_status IS NULL OR UPPER(ap.address_status) IN ('CURRENT', 'NONE'))
         JOIN parcel_address_points pap ON pap.address_point_id = ap.address_point_id
         JOIN parcels p ON p.id = pap.parcel_id
+         AND p.street_type_normalized = ip.street_type
+        WHERE (ip.street_type = '' OR p.street_type_normalized = ip.street_type)
         ORDER BY ip.permit_num, ip.revision_num,
           CASE UPPER(COALESCE(ap.address_class_desc, ''))
             WHEN 'STRUCTURE'           THEN 1
@@ -215,6 +230,24 @@ function buildMatchSql(descriptor, config, mode) {
       `SELECT
          (SELECT COUNT(DISTINCT (permit_num, revision_num)) FROM permit_parcels) AS linked,
          (SELECT COUNT(*) FROM permits) AS total;`,
+
+    // LP-D9 (commit 8a) OBSERVABILITY — a standing, whole-table audit (not merely a
+    // run-scoped counter) of every CURRENTLY-written address_points_exact link whose
+    // permit street_type conflicts with its linked parcel's own street_type_normalized.
+    // Post-fix the JOIN structurally prevents a NEW mismatch, but this check exists to
+    // (a) catch any pre-existing residual row an incremental run never revisits, and
+    // (b) stand as the permanent regression detector if the predicate is ever removed
+    // again — "this class must never be invisible again." Empty-type-tolerant rows
+    // (permit street_type '' or NULL) are correctly excluded: they were never claimed to
+    // satisfy this invariant, mirroring Strategy 1b's own empty-type disposition.
+    street_type_mismatch_sql:
+      `SELECT COUNT(*) AS n
+         FROM permit_parcels pp
+         JOIN permits p ON p.permit_num = pp.permit_num AND p.revision_num = pp.revision_num
+         JOIN parcels pa ON pa.id = pp.parcel_id
+        WHERE pp.match_type = 'address_points_exact'
+          AND p.street_type IS NOT NULL AND TRIM(p.street_type) != ''
+          AND UPPER(TRIM(p.street_type)) != pa.street_type_normalized;`,
   };
 }
 
@@ -293,6 +326,17 @@ function spatial_null_coordinate_permits(ctx) {
   ctx.report('spatial_null_coordinate_permits', { violations: n, detail: n });
 }
 
+/** LP-D9 (commit 8a) — WARN, mirrors spatial_null_coordinate_permits' own shape (a whole-table
+ * standing audit, non-zero IS the violation count, never an always-zero INFO row). Post-fix
+ * this should read 0 on every run; a non-zero value means either a not-yet-reprocessed
+ * pre-fix residual row (self-heals on the next FULL run touching that permit) or a
+ * regression in the street_type predicate itself — "this class must never be invisible
+ * again" (nothing-hidden policy). */
+function street_type_conflict(ctx) {
+  const n = ctx.matched.street_type_mismatch || 0;
+  ctx.report('street_type_conflict', { violations: n, detail: n });
+}
+
 /** T5 (LP-D4) — the link_rate verdict bound, cumulative (not run-scoped, a760e0e7's own reasoning). Reported as the UNLINKED complement (mirrors link-massing.js's own link_rate: the descriptor's limit form is an upper bound, "pct <= 25", so pct <= 25 on the complement is exactly link_rate >= 75). */
 function link_rate(ctx) {
   const linked = ctx.cumulative.linked_parcels;
@@ -327,6 +371,7 @@ const CHECKS = {
   no_match,
   permit_parcels_written,
   spatial_null_coordinate_permits,
+  street_type_conflict,
   link_rate,
   write_privilege,
 };
@@ -345,6 +390,7 @@ function buildLinkMeta(ctx) {
     matches_tier_3_centroid: m.spatial,
     no_match_count: m.no_match,
     null_coordinate_permits: m.null_coordinate_permits || 0,
+    street_type_mismatch_count: m.street_type_mismatch || 0,
     db_upserted: (w && w.rows_changed) || 0,
   };
 }

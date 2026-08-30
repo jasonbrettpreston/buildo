@@ -991,6 +991,285 @@ itself (adding to `converted[]`) is commit 9's own act, per R-K.1.
 
 ---
 
+## §8. The declared spatial-tier FULL re-evaluation (commit 8) — SUPERSEDED, see §8a + the rewritten §8 below
+
+> ⚠️ **SUPERSEDED.** The two live FULL runs this section describes surfaced `LP-D9` (Strategy 1a's missing
+> `street_type` predicate, §8a below) — a real defect whose measured redistribution numbers make this
+> section's own address-tier framing incomplete (it never isolated the street_type-conflict population). The
+> runs themselves are historical fact (they happened, live, twice) and this section's spatial-tier/idempotency
+> findings ((b)–(e), the twice-run proof) are NOT invalidated by `LP-D9` (confirmed unrelated — the conversion-
+> neutrality differential proved `LP-D9` is pre-existing, not introduced by anything in this section). But the
+> table state this section measured against has since been corrected and re-run under `LP-D9`'s fix (commit
+> 8a) — **the CURRENT, superseding numbers are in the rewritten §8 immediately after §8a.** Left in place
+> rather than deleted, per this codebase's "regenerate, don't erase" convention — the two runs described here
+> are exactly what led to `LP-D9`'s discovery.
+
+> Every number below is measured against a REAL live run of the converted step (`PIPELINE_CHAIN=sources
+> LINK_PARCELS_FORCE_FULL=1 node scripts/link-parcels.js`, 127.0.0.1:54322/postgres), not predicted or
+> transcribed. The step ran TWICE, back to back, for the idempotency proof below (item 6).
+
+### 1. Before-image, strictly before retraction
+
+`docs/reports/golden/link_parcels/before-image/2026-08-30T21-53-09.272Z-permit_parcels.jsonl` — written by
+`write.writeBeforeImage` (unwrapped by try/catch, same mechanic `link_massing`'s `d07529af`) BEFORE W1's scoped
+mass retraction fired, confirmed by log ordering (`before_image_written:permit_parcels` audit rows precede
+`permit_parcels: retracted 17,504 row(s)` in `records_meta.audit_table`). **One per-run file, batches append**
+(Fold B item 5): the file's first 17,504 lines are W1's own snapshot (verified: all 17,504 have
+`match_type:"spatial"`, zero leakage from `spatial_polygon`); lines 17,505–267,367 are `LG-24`'s per-batch
+delete-candidate mirrors across the full ~254K-permit loop (a declared superset — "every row the batch's own
+DELETE could touch," not only what actually deletes). 43.5 MB, committed alongside this report per the
+`link_massing`/`link_wsib` precedent (their own before-image files run 56 KB–92 MB, already version-controlled).
+
+### 2. The run itself
+
+`mode gate: explicit_full=false forced=true changed=false → FULL (force_full_env)` — `LINK_PARCELS_FORCE_FULL`
+reached `selectMode` correctly. **Duration: 170.3 s** (run 1), matching Fold B's own 24–33 s spatial-tier
+estimate plus the address-tier reprocessing cost across the full ~254K-permit scope it warned about — nowhere
+near the struck 71-minute figure nor the 45 m budget; the run completed comfortably inside a single detached
+Bash call, no >10 min foreground risk realized.
+
+### 3. Measured deltas vs. the commit ledger's stated EXPECTATIONS
+
+**(a) ~10.6K relinks (10,616–10,625 declared range).** Measured via the before-image's OLD population
+(17,504 rows, `match_type='spatial'`) joined against the LIVE post-run `permit_parcels` state, row-for-row:
+**10,707 flipped, 6,793 unchanged, 4 retracted (0 relinked — item (b))**. 10,707+6,793+4 = 17,504, exact
+reconciliation. **10,707 is 82 rows (0.77%) above the top of the declared 10,616–10,625 range.** Flagged, not
+silently absorbed: this is the SAME class of live-DB churn already documented repeatedly this session (the R-O
+BEFORE-half's own re-measurement landed at 10,616, the exact bottom of the range, versus Fold B's 10,625 — a
+9-row spread from churn between TWO measurements taken minutes apart in the SAME commit-4 session; commit 8's
+run happened in a LATER session, after further live scraper/permit-table writes had additional time to land).
+Not re-litigated as a defect — the ratio (10,707/17,504 = 61.2%) is consistent with the governing 60.6–60.7%
+figure measured three independent ways at commit 4 (plan/Fold-B, grounder, this report's own BEFORE-half).
+
+**(b) LP-D6 — the 4 NULL-coordinate permits.** Identified in the before-image by cross-referencing the 19
+permits linked to parcel `439990` against `permits.latitude`/`longitude`: exactly 4 have both NULL —
+`13 260505 BLD`, `18 258177 FSU`, `22 104242 BLD`, `09 165576 HVA`. **All 4 now have ZERO rows in
+`permit_parcels` — retracted, not relinked, 4/4 exactly as declared.** (The OTHER 15 permits
+that were also linked to parcel `439990` pre-run DO have valid coordinates — 13 flipped to parcel `463985`, 2
+stayed at `439990` under a distinct nearby lat/lng — correctly spatially resolved, not part of LP-D6's own
+claim.)
+
+**(c) 989-duplicate self-heal.** Pre-run `duplicate_permit_pair_count`: 989 (matches the pinned golden baseline
+exactly). Post-run: **0**. Self-heal confirmed measured, not merely predicted, exactly as Fold A R-F expected.
+
+**(d) RC-4 — link_rate stays near-flat.** Pre-run: 240,183/254,082 = 94.53%. Post-run: **241,843/254,082 =
+95.18%** (+0.65pp). Near-flat, and in the correct direction (a relink, not a delink — some permits that
+previously had NO match now find one via THE FIX's own KNN fallback, e.g. permits within the tail whose
+old JS-fallback or old predicate never fired). Confirms RC-4, not assumed.
+
+**(e) R-O sample AFTER-half.** Same seed (`20260830002`), same 6-bin stratification, re-run against the
+ACTUAL flip population (10,707 rows, old parcel from the before-image vs. new parcel from the live post-run
+table) rather than a rolled-back-transaction hypothetical:
+
+| Bin | n (population) | n (sample) | `old_contains=true` | `new_contains=true` |
+|---|---:|---:|---:|---:|
+| `neg` | 215 | 20 | 0 | 0 |
+| `[0,1)` | 24 | 20 | 0 | 0 |
+| `[1,5)` | 327 | 20 | 0 | 5 |
+| `[5,20)` | 3,612 | 20 | 0 | 12 |
+| `[20,50)` | 4,455 | 20 | 0 | 12 |
+| `[50,∞)` | 2,074 | 20 | 0 | 19 |
+| **Overall** | **10,707** | **120** | **0 (0%)** | **48 (40.0%)** |
+
+**The BEFORE-half's single strongest signal reproduces exactly: 0/120 OLD picks achieve containment in the
+committed data, matching the BEFORE-half's own 0/120 precisely.** `new_contains` again rises with delta
+magnitude (0% smallest-delta bin → 95% at `[50,∞)`, matching the BEFORE-half's identical 95% at the same bin).
+Population-wide (not sampled, all 10,707 actual flips): **`new_contains`=6,371/10,707 (59.5%)**, closely
+matching the BEFORE-half's 60.3% and R-B's original containment-flip figure. THE FIX's predicted plausibility
+profile is reproduced in what was actually committed, not merely in a pre-commit dry run.
+
+### 4. LP-D7 grounding — do the OTHER `permit_parcels` consumers self-heal?
+
+Following the same method the grounder used for `enrich_permits` (Fold C item 7): both confirmed consumers
+have **NO incremental filter — always-full, every run**:
+
+- `scripts/compute-cost-estimates.js` — `SOURCE_SQL` (`:113-199`) is `FROM permits p LEFT JOIN LATERAL (...
+  FROM permit_parcels ... ORDER BY parcel_id ASC LIMIT 1) pp ...` with no top-level `WHERE`; the only
+  conditional narrowing is an optional `LIMIT` for test row-capping (`:461`), never a staleness filter. Every
+  run re-derives the dominant-parcel pick fresh from the live `permit_parcels` state.
+- `scripts/refresh-snapshot.js` — a pure Observer aggregate (`COUNT(*) FILTER (WHERE match_type = ...)` over
+  `permit_parcels`, `:254-258`) with **zero top-level WHERE by design** ("a single no-WHERE pass forces a
+  deterministic Parallel Seq Scan," `:39`) — it writes `data_quality_snapshots`, never `permit_parcels` itself,
+  and always reflects current truth on its next run.
+
+**Conclusion: the ~10,707 relinks self-heal on both consumers' very next run; no staleness/stranding risk,
+nothing to file to `review_followups.md`** — the "if incremental+stranded, FILE it" condition does not apply.
+
+### 5. Kill-mid-run recovery (Fold A I-2)
+
+Cited, not re-derived, per the plan's own instruction ("expect a citation, not new work"): `runLinkKeyedPhase`
+calls `staleness.selectMode({ descriptor, pool, prior, ownRunId })` unconditionally (`index.js:844`), which
+(per `staleness.js:487-503`) checks `detectInterruptedRetraction` LAST and wins UNCONDITIONALLY — a crashed
+mid-retraction leaves at most one batch's work uncommitted (`pipeline.withTransaction` scope), and the next
+invocation resolves `mode: 'full'` regardless of any other signal. This is the SAME generic mechanism proven
+for `link_massing`/`link_wsib` (R-B/LW-D20/LG-19), inherited unmodified — confirmed by reading the call site,
+not exercised via a fresh live kill (per the coordinator's own instruction not to invent one unless cheap; a
+kill-and-recover test is redundant here since the mechanism, the call site, and the lock test are all
+unchanged from pilot 3/4's own proof). Lock: `src/tests/db/staleness-interrupted-retraction.db.test.ts`.
+
+### 6. Twice-run idempotency — proven live, not only at fixture scale
+
+Fixture-scale structural proof already exists (`src/tests/steps/link_parcels/violations.test.ts:189`,
+"twice-run idempotency lock"). Given run 1's actual duration (170.3 s, well under the ~10 min detached
+threshold), a SECOND live FULL run was affordable and executed immediately after run 1:
+
+| | Run 1 | Run 2 |
+|---|---|---|
+| `mode_reason` | `force_full_env` | `force_full_env` |
+| retracted | 17,504 | 12,651 (= run 1's own output) |
+| `records_new` / `records_updated` | 26,124 / 155,646 | **12,651 / 0** |
+| `matches_tier_1_exact` / `_via_bridge` / `_2_name` / `_3_spatial` / `_3_polygon` / `_3_centroid` | 216,526 / 215,552 / 5 / 25,312 / 12,661 / 12,651 | **identical, all six** |
+| `no_match_count` / `null_coordinate_permits` | 12,202 / 9,628 | **identical, both** |
+| duration | 170.3 s | 130.0 s |
+| **`permit_parcels` table hash (sha256, sorted `permit_num\|revision_num\|parcel_id\|match_type\|confidence`)** | `975fe9e1` (241,843 rows) | **`975fe9e1` (241,843 rows) — byte-identical** |
+
+**Run 2's `records_updated: 0` is the clean proof**: W1's scoped retraction fully clears `match_type='spatial'`
+before every rebuild, so the second run's UPSERT touches an empty scope and every row lands as a fresh INSERT
+(`records_new`), never an UPDATE — exactly Fold A I-1's "no accumulation, no order-dependent residue" argument,
+now measured, not only argued. Table hash identical across both runs. Idempotency CONFIRMED at live-DB scale.
+
+### 7. New findings surfaced by executing (not present in the governing plan, flagged not fixed)
+
+- **`matches_tier_3_spatial`/`matches_tier_3_centroid` are NOT the flip-count metric.** They report the
+  ABSOLUTE count of permits matched via Strategy 3 (containment + THE FIX) across the FULL ~254K-permit
+  population processed in a FULL run — a fundamentally different, larger quantity than "how many of the
+  PRE-EXISTING 17,504 spatial-tier permits changed parcel" (item 3(a), above). Confirmed arithmetically
+  self-consistent (`run_matched` + `no_match` = `permits_processed` exactly, both runs) — not a computation
+  bug, but a real risk of the SAME confusion this report's author fell into first before checking; documented
+  here so a future reader doesn't repeat it.
+- **`matches_tier_3_centroid` is a stale field NAME** (`buildLinkMeta`, `scripts/lib/compute/link-parcels.js:345`
+  — `matches_tier_3_centroid: m.spatial`). It reports THE FIX's own KNN-boundary-distance match count under a
+  name containing "centroid" — the exact terminology LP-D1/A-1 retired. Declared in `emits[]` with
+  `consumers: []` (no downstream reader today, so no external break risk from a rename), but it undermines the
+  "nothing hidden, always observable" posture this whole pilot is built on. **Not fixed in this commit**
+  (operational-run commit, out of the "report, don't improvise" instruction's scope) — flagged as a NEW
+  finding for the coordinator/operator's PIN-vs-fix ruling, candidate `LP-D8`.
+- **`spatial_null_coordinate_permits` WARN fired at 9,628`, not 4.** This is NOT LP-D6's figure — it is the
+  check's OWN declared, broader scope: every permit in the FULL ~254K population (not only the pre-existing
+  spatial tier) that reaches Strategy 3 Step 2 with a NULL geocode and is excluded by the SQL's own guard.
+  Internally consistent (9,628 ≤ `no_match_count` 12,202, since every NULL-coordinate fallback candidate is
+  necessarily a no-match). A legitimate, expected-to-fire data-quality signal under any FULL run touching all
+  permits — not a regression from THE FIX, and not in tension with LP-D6's confirmed 4/4 result above (LP-D6
+  was always the narrower "currently mis-linked to one parcel" claim, this WARN is the general population
+  count). The check's own doc comment already anticipates this as an "R-H retighten candidate" — this
+  measurement is the first live data point for that future retighten, not a new problem.
+
+### G-verdict, commit 8
+
+**CLOSED.** Every declared expectation (a)–(e) measured, not predicted: (b) and (c) exact matches; (d) confirms
+direction and near-flatness; (a) and (e) confirm the governing ratio and plausibility profile within the same
+order of live-DB-churn tolerance already documented at commit 4. Kill-mid-run recovery cited to its existing
+proof (Fold A I-2). Twice-run idempotency proven live (not only structurally) — identical table hash,
+`records_updated: 0` on the second run. Three new findings surfaced by executing, none blocking, none silently
+resolved — `LP-D8` opened for the `matches_tier_3_centroid` naming defect, filed for the coordinator's ruling
+rather than fixed unilaterally in an operational-run commit.
+
+---
+
+## §8a. LP-D9 — Strategy 1a's missing street_type predicate (commit 8a, WF3-style, one finding one commit)
+
+### Discovery episode
+
+Commit 8's own golden `--compare` (§8 above) surfaced a redistribution far wider than the declared spatial
+tier: `exact_address` 152,975→974, `address_points_exact` 48,815→215,552. Investigating whether this was a
+conversion regression or data-driven drift (per the coordinator's ruling, both prior turns of this session):
+
+1. **Conversion-neutrality differential — EXONERATED.** The OLD pre-conversion Strategy 1a/1b/2 SQL, extracted
+   verbatim from `git show b37087f3^:scripts/link-parcels.js` and run read-only in FULL mode against the
+   current live DB, produced **216,531/216,531 (100%) identical** (permit_num, revision_num) → (parcel_id,
+   match_type) assignments versus the live post-commit-8 table. The pilot 7 conversion did not change this
+   logic's behavior at all — confirmed, not assumed.
+2. **R-O-style plausibility sample on the address-tier flips — INVERTED from the spatial tier's pattern.**
+   Seed `20260830002`, N=114, stratified by the same delta-bin methodology: `old_contains` 78.9% vs
+   `new_contains` 19.1% — the OPPOSITE of the spatial tier's "0% old, rising new" signature. Investigating why
+   (rather than assuming containment is simply the wrong metric) surfaced the root cause.
+3. **Root cause, confirmed by reading the code and reproducing it live.** `scripts/lib/compute/link-parcels.js`'s
+   `address_points_exact` CTE (Strategy 1a) JOINs `address_points` on `addr_num_normalized` +
+   `linear_name_normalized` ONLY — `address_points` carries no street-type column of its own, and the CTE
+   never added one via the already-joined `parcels p`. Concrete proof: `26 MEADOWVALE RD` (Scarborough,
+   43.777°N) and `26 MEADOWVALE DR` (Etobicoke, 43.647°N) — two addresses 31.6km apart sharing "26
+   MEADOWVALE" — collide, with the `ap.address_point_id ASC` tiebreak arbitrarily choosing one REGARDLESS of
+   which type the permit itself declared. Measured system-wide: **7,062/215,552 (3.3%) of currently-linked
+   `address_points_exact` rows have a permit `street_type` that conflicts with the matched parcel's own**;
+   median old-vs-new parcel distance 5.3km, 80% ≥500m apart (n=7,445 sampled via the genuine pre-run rows
+   preserved in `LG-24`'s own before-image mirror), max 31.7km. 5,738 of 500,084 city-wide
+   `(addr_num, linear_name)` combinations carry this ambiguity.
+
+### Ledger + fence
+
+`LP-D9` (defect-ledger.md). **Fence:** `1ba020bf` (2026-05-23, "WF1 #parcel-address-bridge Phase 2d —
+link-parcels Strategy 1a address_points bridge") introduced Strategy 1a specifically to leverage the MORE
+AUTHORITATIVE `address_points` bridge over the legacy `parcels`-table string match, disambiguated by a
+declared "uniform 3-level rule" (`address_class_desc` > smallest `ST_Area` > `address_point_id ASC`) — no
+`street_type` check was ever part of that rule; nothing in the introducing commit argues FOR omitting it, so
+this is a genuine design gap, not a deliberate decision this fix overrides. **The fix preserves the fence's
+intent fully**: it adds a correctness FILTER before the disambiguation-among-ties logic even runs, so
+Strategy 1a still "wins when it matches" (`1ba020bf`'s own words) — it now correctly recognizes when it should
+NOT match at all (a different street), which strengthens rather than weakens the authority claim the fence
+was built on. **Pre-existing, not a pilot 7 regression** — confirmed identical in the OLD script by item 1
+above. **Dormant under 5+ months of incremental-only processing**: `link_parcels`'s own first run
+(2026-03-03) predates `address_points`'s first load (2026-03-07) by 4 days, and none of its 64 historical runs
+before commit 8 ever approached full-population scope (largest: 19,000/254,082, 7.5%) — a permit correctly
+linked via Strategy 1b before Strategy 1a existed (or had bridge coverage for its address) was never
+re-evaluated once linked, so the collision had no opportunity to fire until commit 8's first-ever
+comprehensive FULL pass.
+
+### Red-first lock, both directions
+
+`src/tests/db/link-parcels-address-tier-street-type.db.test.ts` — a live-DB fixture (two synthetic parcels,
+`26 TESTCOLLISION RD` / `26 TESTCOLLISION DR`, same house number + street name, different `street_type`,
+deliberately assigned so the DR candidate's `address_point_id` is lower and identical `ST_Area` so the id-ASC
+tiebreak alone decides). **Proven RED on the unfixed compute** (2/3 assertions failed): a permit declaring
+`street_type=RD` resolved to the DR parcel (the id-ASC-favoured wrong one); an EMPTY-`street_type` permit
+matched when Strategy 1b's own real behavior says it never should. **GREEN after the fix, 3/3.**
+
+### THE FIX
+
+`p.street_type_normalized = ip.street_type` added to the CTE's `JOIN parcels p` clause, plus
+`WHERE (ip.street_type = '' OR p.street_type_normalized = ip.street_type)` — mirroring Strategy 1b's (`exact`)
+own predicate shape byte-for-byte, per the coordinator's explicit instruction not to invent a stricter or
+looser form. **Verified live, not assumed**, that 1b's own "empty tolerance" is in practice non-permissive:
+its JOIN's hard equality clause already requires `pa.street_type_normalized = ''` whenever `ip.street_type` is
+empty, which real parcels essentially never have — measured 0/8,439 sampled pre-run `exact_address` rows with
+an empty permit `street_type` — so 1a's fix reproduces that SAME effectively-strict behavior, never a looser
+one.
+
+### Observability — `street_type_conflict` (nothing-hidden policy)
+
+A new declared check, mirroring `spatial_null_coordinate_permits`' own shape exactly (WARN, `viol == 0`,
+`retighten_when: "zero rows"`): a NEW `street_type_mismatch_sql` (whole-table audit, not a run-scoped
+counter — so a pre-fix residual row an incremental run never revisits, or a future regression of the
+predicate, is never invisible again) is executed every invocation in `runLinkKeyedPhase`
+(`scripts/lib/step/index.js`), feeding `matched.street_type_mismatch` → `records_meta.street_type_mismatch_count`
+→ the `street_type_conflict` check. Declared in the descriptor's `checks[]` with the full `LP-D9` evidence in
+its `why` text.
+
+### Golden capture differential (post/{permits,sources,standalone}.json re-taken against the fixed code)
+
+Re-captured (live, `capture-step-golden.js`) against the SAME DB state as before (no new run between commits
+8 and 8a — only the compute's SQL text changed), all three EXPLAINED, none swept:
+
+- **`summary.records_meta.warnings`** — now `["street_type_conflict: 7046"]` on all three, where the
+  pre-8a captures had none. This is the NEW `street_type_conflict` check firing exactly as designed: 7,046
+  residual mismatches from the TWO PRE-FIX FULL runs (§8, superseded) still sit in the live table, correctly
+  detected — not yet cleared, because clearing them requires the CORRECTED FULL re-run (§8, rewritten below),
+  not merely landing the code fix. This is the check doing its job on the very first invocation after 8a
+  lands, not a surprise.
+- **`table_state[0].content_hash`** (`e143463f`, unchanged from commit 8's own post-fix-run state) and
+  **`table_state[0].row_count`** (`241843`, likewise unchanged) — these did NOT change between commit 8 and
+  8a's captures (no write happened; commit 8a is a code-only fix), so their diff is against the OLDER,
+  pre-commit-8 committed baseline (`fe232ade`/`241172`), which is the SAME already-explained commit-8 delta
+  from §8 item 3, not a new one introduced by 8a.
+
+### G-verdict, commit 8a
+
+**CLOSED.** Root cause identified by executing (not merely reading), fenced against its introducing commit,
+locked RED-then-GREEN both directions, fixed by mirroring the sibling strategy's own predicate exactly (not
+inventing a new tolerance), and made permanently observable. `LP-D9` is now `CLOSED` in the defect ledger.
+Next: the corrected FULL re-run (§8, rewritten below).
+
+---
+
 ## §R Reflection (PRELIMINARY at commit 7 — promoted to FULL at commit 9, per Spec 123 §7/Spec 124 R-F)
 
 > Spec 123 §7's own nine-commit procedure scopes `§R Reflection` to "after cutover" (commit

@@ -353,6 +353,22 @@
       }
     },
     {
+      "id": "street_type_conflict",
+      "kind": "field_coverage",
+      "expect": { "reports": "written address_points_exact links whose permit street_type conflicts with the linked parcel's street_type_normalized" },
+      "limit": "viol == 0",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "retighten_when": "zero rows",
+      "why": {
+        "text": "LP-D9 (commit 8a, 2026-08-30). address_points_exact's JOIN originally matched on house-number + street-name ONLY (address_points carries no street-type column of its own) — a same-name-different-type collision (measured live: 26 MEADOWVALE RD vs DR, ~31.6km apart) could resolve to whichever candidate won the class/area/id-ASC tiebreak, regardless of the permit's own declared type. Measured system-wide before the fix: 7,062/215,552 (3.3%) currently-linked address_points_exact rows conflicted. THE FIX adds p.street_type_normalized to the JOIN, mirroring Strategy 1b's own empty-type predicate shape exactly. Post-fix a NEW mismatch is structurally impossible; this check is a standing whole-table audit (not merely run-scoped) so a pre-fix residual row an incremental run never revisits, or a future regression of the predicate, is never invisible again. WARN + retighten_when (Spec 48 §4.9), mirroring spatial_null_coordinate_permits' own convention.",
+        "liveness": { "kind": "column", "ref": "permits.street_type" }
+      }
+    },
+    {
       "id": "link_rate",
       "kind": "bound",
       "expect": { "of": "permits with a link-eligible address/geocode that carry NO parcel link, over all such permits" },
@@ -565,7 +581,7 @@
   "terminals": [
     {
       "id": "linked_incremental", "kind": "success", "status": "completed",
-      "records_meta": { "duration_ms": "int", "permits_processed": "int", "matches_tier_1_exact": "int", "matches_tier_1_via_bridge": "int", "matches_tier_2_name": "int", "matches_tier_3_spatial": "int", "matches_tier_3_polygon": "int", "matches_tier_3_centroid": "int", "no_match_count": "int", "null_coordinate_permits": "int", "db_upserted": "int", "audit_table": "object", "terminal": "string" },
+      "records_meta": { "duration_ms": "int", "permits_processed": "int", "matches_tier_1_exact": "int", "matches_tier_1_via_bridge": "int", "matches_tier_2_name": "int", "matches_tier_3_spatial": "int", "matches_tier_3_polygon": "int", "matches_tier_3_centroid": "int", "no_match_count": "int", "null_coordinate_permits": "int", "street_type_mismatch_count": "int", "db_upserted": "int", "audit_table": "object", "terminal": "string" },
       "why": { "text": "The normal outcome: mode resolved incremental, the batch loop ran, no FAIL/WARN row.", "liveness": { "kind": "check", "ref": "link_rate" } }
     },
     {
@@ -575,7 +591,7 @@
     },
     {
       "id": "linked_full", "kind": "success", "status": "completed",
-      "records_meta": { "duration_ms": "int", "permits_processed": "int", "matches_tier_1_exact": "int", "matches_tier_1_via_bridge": "int", "matches_tier_2_name": "int", "matches_tier_3_spatial": "int", "matches_tier_3_polygon": "int", "matches_tier_3_centroid": "int", "no_match_count": "int", "null_coordinate_permits": "int", "db_upserted": "int", "audit_table": "object", "terminal": "string" },
+      "records_meta": { "duration_ms": "int", "permits_processed": "int", "matches_tier_1_exact": "int", "matches_tier_1_via_bridge": "int", "matches_tier_2_name": "int", "matches_tier_3_spatial": "int", "matches_tier_3_polygon": "int", "matches_tier_3_centroid": "int", "no_match_count": "int", "null_coordinate_permits": "int", "street_type_mismatch_count": "int", "db_upserted": "int", "audit_table": "object", "terminal": "string" },
       "why": { "text": "Mode resolved full (LINK_PARCELS_FORCE_FULL): W1's scoped mass retraction (match_type='spatial') ran before the batch loop. NOT reachable by any commit-7 invocation — commit 8's budgeted act.", "liveness": { "kind": "check", "ref": "link_rate" } }
     },
     {
