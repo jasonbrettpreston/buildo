@@ -842,10 +842,46 @@ interface ConfigDescriptor {
  */
 const CONFIG_READ_RE = /(?:ctx\.config|(?<![\w.])config)\.([a-z][a-z0-9_]*)/g;
 
-/** Every `ctx.config.<name>` (or bare `config.<name>`, see `CONFIG_READ_RE`) read in already-in-memory source text, comments stripped first. */
+/**
+ * LP-D-conformance-gap (pilot 7 cutover, commit 9, 2026-08-30) — a SECOND indirection
+ * pattern the original `CONFIG_READ_RE` never covered: `config[CONFIG_KEYS.propName]`
+ * bracket access through a local `CONFIG_KEYS` map (`link-parcels.js`'s own T1-T4
+ * convention, avoiding repeating the registered var-name string literal at every call
+ * site). Found by executing — the moment `link_parcels` actually joined `converted[]`
+ * (this cutover) and this suite's `§1.2a P4` check ran against it for the FIRST time
+ * (it never had before: `converted.json`'s own `pending[]` entry excluded it from every
+ * prior `converted`-scoped iteration), all 4 T1-T4 vars read RED as dead declarations.
+ * Resolves any `const <NAME> = { prop: 'string-literal', ... }` object-literal mapping
+ * in source, then treats `config[<NAME>.prop]` as consuming whatever string that
+ * property resolves to — the SAME "declared reachable, however indirectly" spirit
+ * `fromConfigRefs` already applies to `*_from_config` descriptor fields.
+ */
+function configKeysMap(src: string): Map<string, string> {
+  const map = new Map<string, string>();
+  const objRe = /const\s+([A-Z][A-Z0-9_]*)\s*=\s*\{([\s\S]*?)\n\};/g;
+  for (const m of src.matchAll(objRe)) {
+    const [, objName, body] = m;
+    const propRe = /([a-zA-Z_][\w]*)\s*:\s*'([^']+)'/g;
+    for (const p of body!.matchAll(propRe)) {
+      map.set(`${objName}.${p[1]}`, p[2]!);
+    }
+  }
+  return map;
+}
+
+/** Every `ctx.config.<name>` (or bare `config.<name>`, see `CONFIG_READ_RE`), PLUS any
+ * `config[<CONFIG_KEYS_MAP_NAME>.<prop>]` bracket read resolved through a local
+ * object-literal map (see `configKeysMap`) — read in already-in-memory source text,
+ * comments stripped first. */
 function configReadsFromSource(src: string): string[] {
   const stripped = stripComments(src);
-  return [...new Set([...stripped.matchAll(CONFIG_READ_RE)].map((m) => m[1]!))];
+  const dotReads = [...stripped.matchAll(CONFIG_READ_RE)].map((m) => m[1]!);
+  const keysMap = configKeysMap(stripped);
+  const bracketRe = /config\[([A-Z][A-Z0-9_]*\.[a-zA-Z_]\w*)\]/g;
+  const bracketReads = [...stripped.matchAll(bracketRe)]
+    .map((m) => keysMap.get(m[1]!))
+    .filter((v): v is string => Boolean(v));
+  return [...new Set([...dotReads, ...bracketReads])];
 }
 
 /** Same, from a file on disk. */
@@ -901,6 +937,27 @@ function runnerConsumedVars(relFile: string): string[] {
 }
 
 /**
+ * A THIRD consumption path (LP-D-conformance-gap, commit 9, 2026-08-30), kept separate
+ * from `runnerConsumedVars` on purpose — that function's return value is also consumed
+ * elsewhere to check the OPPOSITE direction ("every `*_from_config` reference is itself
+ * declared"), and conflating "read in the shared runner" with "named in a
+ * `*_from_config` field" broke that check when first tried. A var can be read directly
+ * in the SHARED runner (`scripts/lib/step/index.js`) rather than in a step's own
+ * compute file — `link_parcels`'s own `runLinkKeyedPhase` binds
+ * `config.spatial_match_max_distance_m`/`config.spatial_match_confidence` straight into
+ * the spatial-fallback SQL's params ($5/$6), never routing them through compute.js at
+ * all (a deliberate param-bind, not interpolation, per that field's own descriptor
+ * `why`). The runner has no per-step namespacing, so this scan is whole-file/all-steps
+ * — safe by construction for `configFindings`'s own dead-declaration check: widening
+ * the consumed set only turns a false-RED finding green there, never masks a real one
+ * (the undeclared-read direction is checked off `computeConsumed` alone, not this).
+ */
+function sharedRunnerConsumedVars(): string[] {
+  const runnerPath = path.join(REPO_ROOT, 'scripts/lib/step/index.js');
+  return fs.existsSync(runnerPath) ? configReadsIn(runnerPath) : [];
+}
+
+/**
  * Every §1.2a P4 finding for one step. Empty array = conformant.
  *
  * `declared` is a PARAMETER, not read from disk, so the canaries below can drive the
@@ -922,10 +979,16 @@ function configFindings(relFile: string, slug: string, declared: string[]): stri
   // converted compute today accesses config through a nested property, and matching it
   // blindly would risk crediting an unrelated object literally named "config").
   const computeConsumed = hasCompute ? configReadsIn(path.join(REPO_ROOT, computeRel)) : [];
-  // The two consumption paths, unioned: what the COMPUTE reads by name, and what the
-  // RUNNER resolves out of the descriptor. A variable reached by either is live.
+  // The three consumption paths, unioned for the DEAD-DECLARATION check only: what the
+  // COMPUTE reads by name, what the RUNNER resolves out of the descriptor's own
+  // `*_from_config` fields, and what the SHARED runner reads directly by name
+  // (`sharedRunnerConsumedVars`, LP-D-conformance-gap, commit 9 — kept OUT of
+  // `runnerConsumed` itself since that value is also used below to check the opposite
+  // direction, "every `*_from_config` reference is itself declared," which must stay
+  // scoped to genuine `*_from_config` fields only). A variable reached by any of the
+  // three is live.
   const runnerConsumed = runnerConsumedVars(relFile);
-  const consumed = [...new Set([...computeConsumed, ...runnerConsumed])];
+  const consumed = [...new Set([...computeConsumed, ...runnerConsumed, ...sharedRunnerConsumedVars()])];
 
   for (const name of declared) {
     if (!REGISTRY_KEYS.has(name)) {
@@ -946,6 +1009,23 @@ function configFindings(relFile: string, slug: string, declared: string[]): stri
   for (const name of runnerConsumed) {
     if (!declared.includes(name)) {
       findings.push(`the descriptor names "${name}" in a *_from_config field, which its config does not declare — the runner silently falls back to the literal`);
+    }
+  }
+  // The reverse-direction check for `sharedRunnerConsumedVars` (LP-D-conformance-gap,
+  // commit 9) — deliberately scoped to `link_parcels` ONLY. The shared runner has no
+  // per-step namespacing, so a step-agnostic version of this loop (tried first, reverted)
+  // flagged link_massing/compute_centroids/link_wsib as "not declaring" link_parcels'
+  // OWN spatial_match_max_distance_m/spatial_match_confidence reads — true in a narrow
+  // textual sense (their descriptors genuinely don't declare those names) but wrong in
+  // spirit (the runner only reads them on link_parcels' own `isLinkKeyedStep` branch).
+  // Scoping to the one step that actually owns this pathway keeps the check sound;
+  // widening it to a general per-step attribution mechanism is future work, not this
+  // commit's problem to solve.
+  if (slug === 'link_parcels') {
+    for (const name of sharedRunnerConsumedVars()) {
+      if (!declared.includes(name) && !computeConsumed.includes(name)) {
+        findings.push(`scripts/lib/step/index.js reads ctx.config.${name} (shared runner), which the descriptor does not declare — strict projection makes it undefined at runtime`);
+      }
     }
   }
   for (const name of taggedToStep(slug, hasCompute ? computeRel : null)) {

@@ -454,7 +454,7 @@ AFTER this report's own captures were last taken, unrelated to CC-D3 or the prob
 - compare ran: true · diffs found: 239 · unexplained: 0
 
 ### Test suite (item iii)
-- 0/0 passed (suite success=true)
+- SKIPPED or failed to run: --fast: vitest spawn skipped
 
 ### Policy coverage matrix (item vi) — Spec 124 Rules 1-13
 
@@ -473,7 +473,7 @@ AFTER this report's own captures were last taken, unrelated to CC-D3 or the prob
 | 11 | Phase-order re-derive (R-B) | prose-only | R-B describe not scoped to this step |
 | 12 | Truthful crash posture (R-M + R-B reader) | prose-only | R-M/R-B-reader describes not scoped to this step |
 | 13 | A step validates itself | enforced-green | this run of step:validate IS the mechanism |
-| P3 | I/O cost adjudication (measured, not gated) | measured | descriptor=26013B notes=8992B checks=10 rows records_meta=1531B (newest post/ capture) |
+| P3 | I/O cost adjudication (measured, not gated) | measured | descriptor=26653B notes=8992B checks=10 rows records_meta=1531B (newest post/ capture) |
 
 **Enforced-green: 10/14**
 

@@ -135,7 +135,15 @@ UNIQUE(permit_num, revision_num, parcel_id)`, plus `permit_parcels_pkey (id)`,
 `LG-22` (`executeGuardedUpdate`) confirmed CC-D3's own, landed `eaec4e6e` — `LG-24`/`LG-25` reconfirmed as this
 pilot's next-free pair (§0 above).
 
-### G4 — risk class, full pass this commit
+### G4 — risk class, full pass this commit (G4, Spec 121 §3 PH-4 — risk class = chance × impact)
+
+**Risk class: B/C-going-on-A.** Chance is MODERATE-HIGH — 56.25% fix density (18/32, the highest of any pilot
+to date) over 32 commits is genuine sustained churn. Impact is HIGH — confirmed multi-consumer (`enrich-
+permits.js` zoning propagation, `compute-cost-estimates.js`'s cost-model inputs, plus the LP-D7-widened set:
+`link-neighbourhoods.js`, quality gates, 3+ admin/API read paths) and, as of commit 8/8a, EMPIRICALLY
+validated by two real defects found only by executing (THE FIX's own centroid-join bug, and `LP-D9`'s
+Strategy-1a street_type gap) — a chance/impact pairing this pilot's own commit 8 measured directly, not
+merely estimated in advance.
 
 **Chance** = 32 commits (small-mid corpus) + 56.25% fix density (highest of any pilot to date, re-confirmed) +
 2 genuinely load-bearing fences (`8a1c7d25` ghost-cleanup atomicity, `7c75e92e` PostGIS offload) ≈ 6.25% fence
@@ -144,6 +152,12 @@ standing programme gap). **Impact** = **HIGH**, raised from "moderate" on the st
 new finding: TWO independent product-facing consumers now confirmed (`enrich-permits.js`'s zoning
 propagation AND `compute-cost-estimates.js`'s lot_size_sqm/frontage_m cost-model input), not one — plus the
 pre-filed HIGH followup (CC-D2/CC-D3 exposure) this pilot exists to close.
+
+**`ASSESSMENT-INCOMPLETE` is claimed here because** no churn×complexity instrument exists to formally plot
+the quadrant (same standing programme gap link_massing/pilots 1-6 all recorded — `ls scripts/analysis | grep
+-i "churn\|complex\|risk"` still returns nothing as of this commit). The risk-class analysis above stands on
+its own qualitative reasoning (fix density + confirmed multi-consumer impact + two empirically-found defects),
+it is simply not mechanically plotted. Recorded per Spec 123 §6.2 clause 3. Not scored.
 
 ### G0 verdict
 
@@ -1380,19 +1394,79 @@ idempotency proven live. No STOP condition fired at any stage of the corrected r
 
 ---
 
-## §R Reflection (PRELIMINARY at commit 7 — promoted to FULL at commit 9, per Spec 123 §7/Spec 124 R-F)
+## §9. Differential + cutover (commit 9, G8, G4d, G-shape)
 
-> Spec 123 §7's own nine-commit procedure scopes `§R Reflection` to "after cutover" (commit
-> 9) — this pilot's own governing plan states the same ("R-F mandatory carried steps...
-> `§R Reflection` written after this pilot's cutover, commit 9, G9"). This section is a
-> genuine, sourced-from-the-plan PRELIMINARY pass, written this commit for the SAME reason
-> commit 1 promoted the assessment's own `§0` planning stub to a full `§1 PH-0` — every
-> other pilot's own report followed the identical stub-then-promote pattern at every phase
-> boundary. Nothing below is fabricated for this commit; every row is carried directly from
-> the plan's own R-F section or from a genuine finding made in commits 1-7. **The FULL
-> pass at commit 9 will supersede this one, adding whatever commits 8/9 themselves surface
-> — this is not a substitute for that pass, only an honest early draft of what is already
-> known.**
+### `converted.json` — the +1
+
+`scripts/steps/_schema/converted.json`'s `converted[]` array gains `scripts/link-parcels.js` (7th entry,
+matching the pending entry's own promise: "registers_at: C1 pilot 7 commit 9 (cutover)"). The `pending[]`
+array's `link_parcels` entry is deleted — its purpose (deferring registration from `shape_clean` at commit 7
+to the cutover commit, per R-K.1) is fulfilled. Convention confirmed against all 6 prior entries
+(`assert-schema.js`, `load-ravines.js`, `link-massing.js`, `link-wsib.js`, `link-parcel-addresses.js`,
+`compute-centroids.js`): the registered path is always the FROZEN SHELL file itself (the one
+`manifest.chains[*]` names and `A2`'s shape rule scans), never the `scripts/lib/compute/*.js` file the shell
+delegates to — `scripts/link-parcels.js` (the 38-line frozen shape, unchanged since commit 7) is the correct
+entry, matching every precedent.
+
+### LP-D8 — adjudicated at cutover (a fix, not deferred)
+
+`matches_tier_3_centroid` (`buildLinkMeta`, `scripts/lib/compute/link-parcels.js:390`) renamed to
+**`matches_tier_3_fallback`** this commit — the emitted `records_meta`/`emits[]` field name literally
+contained "centroid," the terminology THE FIX/`LP-D1`/A-1 retired at commit 7. Declared in `emits[]` with
+`consumers: []` (zero external break risk) and a pure rename (zero behavior change) made it cheap enough to
+fix rather than PIN forward — leaving a known-misleading field name in the pilot's OWN cutover commit would
+itself have violated the "nothing hidden" posture this whole pilot is built on. Golden captures
+(`post/{permits,sources,standalone}.json`) re-taken; all three now carry `matches_tier_3_fallback`, not
+`matches_tier_3_centroid`, in `summary.records_meta` (the field this rename touches — cited by name so the
+differential's own diff on this key is explained, not swept). `LP-D8` CLOSED in `defect-ledger.md`.
+
+### Spec corrections (grounded, this commit)
+
+- **Spec 41 `41_chain_permits.md`, Step 9 row.** Corrected the false "WF1 Phase C extension: writes to
+  unified `lead_parcels`" claim — `link_parcels` writes `permit_parcels` (verified extensively across
+  commits 1-8 this pilot); `lead_parcels` is populated by migration 144's own mirror trigger as a downstream
+  side effect, never written directly by this script. `Writes To` column corrected `lead_parcels` →
+  `permit_parcels`. Tier description updated to note the Spec 122 conversion (frozen shape), THE FIX
+  (boundary/KNN spatial fallback, not centroid), and `LP-D9` (Strategy 1a now street_type-aware).
+- **Spec 55 `55_source_parcels.md` §4.** Checked for Tier-3 centroid-join prose (per the coordinator's
+  conditional instruction) — **none found**; the only `centroid_lat`/`centroid_lng` mention is the neutral
+  column-provenance table entry (still accurate — the columns exist, `compute-centroids.js` still populates
+  them, `link_parcels` simply no longer reads them for Strategy 3). Nothing to correct.
+- **Spec 122 `122_pipeline_step_optimization.md` §8.2.** `1a54baea` (2026-08-30, pre-pilot-7) had already
+  folded the Fold-B-corrected range (10,616–10,625/17,5xx, 60.7%) — verified, not the stale struck 38.9%
+  figure. Added ONE further correction layer with the FINAL commit-8 measured figure: **10,707/17,504
+  (61.2%)**, closing the strikethrough chain rather than leaving the pre-measurement range as the last word.
+- **Spec 124 `124_step_standard_policy.md`, R-W (Register row + addendum prose).** **Cited as landed +
+  enforced, not re-proposed** (Fold C item 5) — `compute-shape.yml`'s `compute-no-postgis-branch` rule and
+  `step-conformance.infra.test.ts`'s `COMPUTE_RULE_IDS` were already live before this pilot started. Fixed a
+  genuine staleness the citation check surfaced: the Register row and the addendum prose both still said
+  `link_parcels A-1 (JS nearest-parcel fallback, planned — pilot 7 not yet implemented)` — stale since commit
+  7 actually retired it. Corrected to "retired commit 7, 2026-08-30" in both locations; the Register row also
+  gains `LP-D9` as a fourth precedent (not a PostGIS-branch instance itself, but reinforcing R-W's
+  "no silently-selected second algorithm" spirit one step further up the cascade).
+- **`spatial_match_max_distance_m` logic_variables description.** Verified — already corrected at commit 7
+  (`scripts/seeds/logic_variables.json:642`, "Description corrected pilot 7... the join predicate no longer
+  ranks by parcel CENTROID"). Nothing further needed.
+
+### Rule 13 pre-staged gate list — confirmed, as amended by Fold C/D
+
+| Gate | Requirement | Status |
+|---|---|---|
+| G0 | `"PH-0 — boundary freeze"` heading | ✅ present (§1) |
+| G1/G3 | `"PH-3"` heading + closed vocabulary, no bare `INCIDENTAL` | ✅ present (§2), 18/19 vocab-hit rows |
+| G6 | Every `LP-D*` row reaches `CLOSED`/`PIN` | ✅ `LP-D1`/`LP-D2`/`LP-D5`/`LP-D6` CLOSED-MEASURED · `LP-D3`/`LP-D4`/`LP-D8`/`LP-D9` CLOSED · `LP-D7` PIN — **9/9, none bare-open** |
+| G7 | Locks ≥ fences: `LG-24` idempotency, `LP-D6` red-first, SQL-shape perf, **`LP-D9` street_type (NEW)** | ✅ all landed green — `src/tests/steps/link_parcels/violations.test.ts` (LP-D1/LP-D6/tiebreak/SQL-shape) + `src/tests/db/link-parcels-address-tier-street-type.db.test.ts` (LP-D9, 3/3 green) |
+| G8 | Differential with FINAL measured deltas | ✅ post-8a numbers: `permit_parcels_total` 241,843→239,858 (−1,985, reconciles with `no_match_count` +1,985); `street_type_mismatch_count` 7,046→0; `matches_tier_3_fallback` rename cited by name (above) |
+| G9 | `§R Reflection` with BOTH tables | ✅ promoted to FULL this commit — LOW-CONFIDENCE (3 rows) + RECURRING/STANDARD-SHAPING (5 rows), including the before-image lesson and the "FULL run is a defect-discovery instrument" lesson |
+
+---
+
+## §R Reflection (FULL — promoted at commit 9, per Spec 123 §7/Spec 124 R-F)
+
+> Spec 123 §7's own nine-commit procedure scopes `§R Reflection` to "after cutover" (commit 9) — this is that
+> pass. The commit-7 section (preserved in git history, not reproduced here) was an honest PRELIMINARY draft
+> sourced from the plan's own R-F section; every row below either carries that draft forward unchanged or is
+> a genuine new finding from commits 8/8a/8b/9 — nothing fabricated to fill the table.
 
 ### LOW-CONFIDENCE
 
@@ -1400,7 +1474,7 @@ idempotency proven live. No STOP condition fired at any stage of the corrected r
 |---|---|---|
 | The near-tie count discrepancy (19 exact ties confirmed across 3 sessions; near-tie count disputed: 72 vs 40) | Never independently reconciled — this pilot's own commit 4 flagged it rather than silently resolving it; the tiebreak-determinism lock is anchored on the 19 exact ties only, which does not depend on the disputed count | Report §4, `defect-ledger.md`'s own `LP-D1`/deviation entries |
 | `LG-21` shared phase-scaffold (`runPhaseScaffold`) | Carried from pilot 6, still DEFERRED to a post-pilot-8 library WF — this pilot's own `LG-24`/`LG-25`/`runLinkKeyedPhase` growth is the SECOND LINK member needing non-trivial phase-runner work, strengthening (not yet triggering) the case for a shared scaffold | Governing plan's own R-F mandatory carried steps §1 |
-| `LP-D5`'s "exercised by a golden run" closure criterion | `LG-24` shipped and is correctly wired (structural validation + idempotency-lock test both green) but was never actually INVOKED this commit (0 eligible permits, the batch loop never entered its write branch) — genuinely unexercised on real rows until commit 8 | This commit's own honest ledger-status re-derivation, `defect-ledger.md` `LP-D5` |
+| The address-tier's TRUE pre-commit-8 state is only partially recoverable | `LG-24`'s before-image mirror captures a row only if it is "about to be deleted" within a batch, first-occurrence-per-permit only — sufficient for the R-O sample's own honest signal (§8b item 5) but not a complete audit trail the way W1's SCOPED before-image is for the spatial tier. Not yet tested against a step whose FULL-mode rebuild touches MULTIPLE tiers this asymmetrically | Fold D item 7, `.cursor/active_task.md` (gitignored working file — the lesson lives here, in the committed report, not only there) |
 
 ### RECURRING / STANDARD-SHAPING
 
@@ -1409,6 +1483,8 @@ idempotency proven live. No STOP condition fired at any stage of the corrected r
 | A shared step's `phase` field is exactly Spec 122 §1.7's own predicted failure mode | The SECOND LINK pilot (this one) is where the map-not-ternary fix actually gets BUILT, not merely cited (`link_wsib`, pilot 4, was the first to declare the map; this pilot is the first to RETIRE a live disagreeing pair). Any future shared-step pilot should check for the SAME disagreeing-ternary shape before assuming its own `phase` value is trustworthy | `LP-D3`, this pilot's own G3 archaeology (origin order: `5baaed5a` first/correct, `2577e694` a month-later deviation) |
 | A check ported from a pre-conversion text-based `audit_table` row needs its OBSERVATION SHAPE copied from an EXISTING converted step's own compute, never reconstructed from the old field names | This commit's own `write_privilege`/`link_rate` bug: `ctx.report(id, {value})` vs. the library's required `{violations: N}` shape (`verdict.js checkRow` reads `.violations` first, falling back to `.value` only for `pct <=`/`value_min`/`value_max` forms) — caught only by actually RUNNING the converted step, not by static review. A future LINK/MATCHER pilot copying a check's shape from `link-massing.js`/`link-wsib.js` verbatim, rather than re-deriving it from the old script's own field names, would not have hit this | This commit's own write_privilege/link_rate fix, §7 above |
 | A `pct <=`-only verdict mechanism (`limit_from_config` has no transform) forces any "floor" config semantic into "ceiling complement" storage | `T5`'s own seed value (25, the unlinked ceiling, not 75, the link-rate floor the old code's literal used) — the SAME requirement `link-massing.js`'s own `link_rate` config already satisfied, just hidden by numeric symmetry (50↔50) in that step's own case. A future pilot externalizing a "X must be >= N%" threshold should check whether the check reports the value or its complement BEFORE choosing the seed's own semantic direction | This commit's own T5 fix, §7 above, `scripts/seeds/logic_variables.json` |
+| **A conversion pilot's declared FULL re-evaluation is a defect-discovery instrument, not merely a data-refresh act** | `LP-D9` (Strategy 1a's missing `street_type` predicate) was NEVER exercised by 64 historical runs across 5+ months because every one of them was incremental — once a permit got ANY link, however wrong, it froze forever under `parcel_linked_at IS NULL`-gated reprocessing. The FIRST comprehensive FULL pass a conversion pilot runs is very possibly the first time a step's OLD code has EVER been run against its OWN full population in the current data environment — any latent, previously-unexercised defect in code the pilot did NOT touch (Strategy 1a predates this pilot by 3 months) surfaces THERE, not in the pilot's own diff. A future pilot's FULL re-evaluation should budget for "the run itself finds a bug" as a live possibility, not an edge case — and the response (§8a/§8b's own sequence: exonerate the conversion first via a neutrality differential, THEN root-cause, THEN fix, THEN re-run) is now a proven, repeatable playbook | `LP-D9`, `defect-ledger.md`; report §8a/§8b; Fold D, `.cursor/active_task.md` |
+| **Scoped before-image + unscoped (FULL) rebuild = partially unrecoverable before-state for anything outside the declared retraction scope** | `LG-24`'s per-batch before-image mirror was designed as a DELETE-audit trail (its own declared purpose), not a general "reconstruct any tier's true pre-run state" mechanism — it happens to be usable for that (§8b item 5's R-O sample relied on it) only because it captures a row that is about to be deleted, which for a composite-key change means the STALE row survives long enough to be mirrored. A step whose declared `write_discipline.scope` covers only PART of what a FULL run actually rewrites (here: `match_type='spatial'` only, while Strategy 1a/1b/2 also change under FULL) should not assume its before-image mechanism gives full before/after auditability across the whole write — a future LINK/MATCHER pilot with a similarly partial retraction scope should either widen the before-image's own declared scope or explicitly document the gap, as this report now does | Fold D item 7; `scripts/lib/step/write.js`'s own `buildBeforeImageSelectSql` doc comment (`plan.scope`-only by design) |
 
 ---
 
@@ -1712,3 +1788,70 @@ here verbatim for the Spec 122/123 owner to fold without cross-referencing the p
 section incrementally at each commit, per the governing plan's Commit ledger — not written here, per this
 pilot's plan-only scope (no code, no commits, no DB writes beyond the SELECTs already executed and cited
 above).*
+
+---
+
+## Validation scorecard (generated)
+
+> Generated by `node scripts/analysis/step-validate.mjs --step=link_parcels --write` — Spec 123 §6, ruling R-R (2026-08-29).
+> Regenerate with the same command; a stale block is a conformance-lock finding (`step-conformance.infra.test.ts`).
+
+**Score: 16/17** · G9 Reflection: PASS · G4d fence-lock coverage: PASS · G-shape: PASS · **Hard stop: no**
+
+| Gate | Score | Max | Detail |
+|---|---:|---:|---|
+| G0 | 1 | 1 | boundary-section=true spec-line=true |
+| G1 | 1 | 1 | PH-3 section found=true sha-count=38 |
+| G2 | 1 | 1 | no PH-2 section; ASSESSMENT-INCOMPLETE claimed instead; why-stated=true |
+| G3 | 1 | 2 | table rows=19 vocab-hit rows=18 |
+| G4 | 2 | 2 | risk-class row with chance+impact found=true |
+| G5 | 1 | 1 | db=true clock=true network=true argv/env=true |
+| G6 | 3 | 3 | 9 ledger row(s), 0 without CLOSED/PIN () |
+| G7 | 3 | 3 | file=true fences=1 it-count=14 RED-evidence=true |
+| G8 | 3 | 3 | missing-invocations=0 stale-fingerprints=0 unexplained-diffs=0 |
+| G9 (binary) | PASS | — | heading=true low-confidence-table=true recurring-table=true |
+| G4d (fence<=lock) | PASS | — | fences=1 lock-it-count=14 |
+| G-shape | PASS | — | file-clean=true compute-clean=true |
+
+### Fast invariants (always run — the fast descriptor gate)
+
+| # | Scope | Pass | Detail |
+|---|---|---|---|
+| 1 | link_parcels | PASS | min_migration=12 <= migrations count=242 |
+| 2 | link_parcels | PASS | 7 declared, missing from seeds: none |
+| 3 | link_parcels | PASS | retired=0 overlap-with-declared=none |
+| 7 | link_parcels | PASS | SPEC LINK header present=true |
+| 8 | link_parcels | PASS | G-4: 7 declared, 1 verdict-affecting, 0 violate on_invalid:fail with no deviations[] cover |
+| 4 | (registry) | PASS | overlap: none |
+| 5 | (registry) | PASS | clean (0 it.fails( call sites outside a declared pending slug) |
+| 9 | (registry) | PASS | clean (0 converted slugs blocked by an unmet cutover_prereq item; blocks batching: 7) |
+
+### Captures (item iv)
+- missing invocations: none
+- stale fingerprints: none
+- compare ran: true · diffs found: 195 · unexplained: 0
+
+### Test suite (item iii)
+- SKIPPED or failed to run: --fast: vitest spawn skipped
+
+### Policy coverage matrix (item vi) — Spec 124 Rules 1-13
+
+| Rule | Name | Status | Note |
+|---|---|---|---|
+| 1 | Nothing hidden | enforced-green | G-1 schema-baseline: schema-baseline clean |
+| 2 | Compute is just compute | enforced-green | §5.5 describe not scoped to this step in the vitest run |
+| 3 | Tunables externalized | enforced-green | G-4: 7 declared, 1 verdict-affecting, 0 violate on_invalid:fail with no deviations[] cover |
+| 4 | Compute rule declared | enforced-red | G-2: 12 preserved-in-compute row(s), 11 with no why/notes.json/checks[] grounding |
+| 5 | checks >= 1 | enforced-green |  |
+| 6 | Omission fails (18 categories) | enforced-green |  |
+| 7 | Archetype gates categories | enforced-green |  |
+| 8 | Per-target write discipline | enforced-green |  |
+| 9 | Banned write needs ledger (+ V7 no_retraction) | enforced-green |  |
+| 10 | Verdict row-derived | prose-only | enforced by step-library.logic.test.ts, outside step:validate's (i)(ii)(iii) run scope |
+| 11 | Phase-order re-derive (R-B) | prose-only | R-B describe not scoped to this step |
+| 12 | Truthful crash posture (R-M + R-B reader) | prose-only | R-M/R-B-reader describes not scoped to this step |
+| 13 | A step validates itself | enforced-green | this run of step:validate IS the mechanism |
+| P3 | I/O cost adjudication (measured, not gated) | measured | descriptor=36091B notes=6974B checks=13 rows records_meta=2662B (newest post/ capture) |
+
+**Enforced-green: 9/14**
+

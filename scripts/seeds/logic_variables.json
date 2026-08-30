@@ -639,14 +639,14 @@
   "spatial_match_max_distance_m": {
     "default": 100,
     "type": "number",
-    "description": "Maximum metres between a permit geocode and a parcel boundary for a spatial match (Strategy 3 Step 2, KNN-boundary-distance fallback, in link-parcels). Description corrected pilot 7 (2026-08-30, Finding 6) — the join predicate no longer ranks by parcel CENTROID (THE FIX, LP-D1); only this description text changes, the value and name do not.",
+    "description": "Maximum metres between a permit geocode and a parcel boundary for a spatial match (Strategy 3 Step 2, KNN-boundary-distance fallback, in link-parcels). Description corrected pilot 7 (2026-08-30, Finding 6) — the join predicate no longer ranks by parcel CENTROID (THE FIX, LP-D1); only this description text changes, the value and name do not. CONSUMED by scripts/link-parcels.js (bound directly into the spatial-fallback SQL's params by scripts/lib/step/index.js's runLinkKeyedPhase, not read inside the compute file itself).",
     "min": 1,
     "max": 1000
   },
   "spatial_match_confidence": {
     "default": 0.65,
     "type": "number",
-    "description": "Confidence score assigned to a permit→parcel spatial match (Strategy 3 Step 2, KNN-boundary-distance fallback); upgraded to link_parcels_confidence_spatial_polygon (T3) if permit geocode falls inside the parcel polygon (Strategy 3 Step 1)",
+    "description": "Confidence score assigned to a permit→parcel spatial match (Strategy 3 Step 2, KNN-boundary-distance fallback); upgraded to link_parcels_confidence_spatial_polygon (T3) if permit geocode falls inside the parcel polygon (Strategy 3 Step 1). CONSUMED by scripts/link-parcels.js (bound directly into the spatial-fallback SQL's params by scripts/lib/step/index.js's runLinkKeyedPhase, not read inside the compute file itself).",
     "min": 0.01,
     "max": 1
   },

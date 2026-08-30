@@ -387,7 +387,7 @@ function buildLinkMeta(ctx) {
     matches_tier_2_name: m.name_only,
     matches_tier_3_spatial: m.spatial_polygon + m.spatial,
     matches_tier_3_polygon: m.spatial_polygon,
-    matches_tier_3_centroid: m.spatial,
+    matches_tier_3_fallback: m.spatial,
     no_match_count: m.no_match,
     null_coordinate_permits: m.null_coordinate_permits || 0,
     street_type_mismatch_count: m.street_type_mismatch || 0,

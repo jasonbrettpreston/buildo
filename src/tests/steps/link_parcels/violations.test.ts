@@ -230,16 +230,15 @@ describe('SQL-shape perf lock — unconstrained KNN LATERAL, cap as scalar post-
 // step-conformance.infra.test.ts gate — not re-implementing that gate, only confirming
 // this step's own entry is well-formed)
 // ---------------------------------------------------------------------------
-describe('converted.json — link-parcels.js is a declared shape_clean pending entry', () => {
-  it('the pending entry exists, names this file, and stage is "shape_clean" (the descriptor now exists and validates — commit 9 lands the converted.json registration itself, per R-K.1)', () => {
+describe('converted.json — link-parcels.js is REGISTERED (cutover landed, commit 9, per R-K.1)', () => {
+  it('the file is in converted[], no pending entry remains, and the descriptor exists and validates', () => {
     const converted = JSON.parse(readText(CONVERTED_REL)) as {
       converted: string[];
       pending: Array<{ file: string; stage: string; declared: string }>;
     };
-    expect(converted.converted).not.toContain(STEP_REL);
+    expect(converted.converted).toContain(STEP_REL);
     const entry = converted.pending.find((p) => p.file === STEP_REL);
-    expect(entry, `no pending entry found for ${STEP_REL}`).toBeTruthy();
-    expect(entry?.stage).toBe('shape_clean');
-    expect(fs.existsSync(abs(DESCRIPTOR_REL)), 'descriptor must exist once stage is shape_clean (R-K.1)').toBe(true);
+    expect(entry, `a stale pending entry still exists for ${STEP_REL} — R-K.1 cutover should have removed it`).toBeUndefined();
+    expect(fs.existsSync(abs(DESCRIPTOR_REL)), 'descriptor must exist for a registered converted entry').toBe(true);
   });
 });

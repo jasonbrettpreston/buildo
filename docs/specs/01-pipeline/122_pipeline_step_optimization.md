@@ -1120,8 +1120,11 @@ After commit 9 (cutover) and the WF6 output panel, the pilot's assessment report
 > 2026-08-30`, superseding the previously-tentative `refresh_snapshot` (RECORDER, forced single-member)
 > placement at pilot 7. Why: pilot 6's own HIGH followup (`RT-CC3`, `defect-ledger.md` CC-D2/CC-D3, both
 > PIN) measured that ~~6,808/17,500 (38.9%)~~ ~~**10,625/17,504 (60.7%), corrected at Fold A 2026-08-30 under
-> THE FIX's own predicate**~~ **10,616–10,625 of 17,5xx (60.7%), re-measured as a range at Fold B 2026-08-30
-> (item 8, grounder) — same ratio, tighter honesty about live-DB churn** of `link_parcels`'s Tier-3 `spatial`-tier links would resolve to a
+> THE FIX's own predicate**~~ ~~**10,616–10,625 of 17,5xx (60.7%), re-measured as a range at Fold B 2026-08-30
+> (item 8, grounder) — same ratio, tighter honesty about live-DB churn**~~ **CLOSED at commit 8/9 (2026-08-30)
+> with the final measured figure: 10,707/17,504 (61.2%) flipped to a different parcel under THE FIX's own
+> live FULL re-evaluation — 82 rows above the top of the Fold-B range, live-DB churn between the estimate and
+> the actual run, not a methodology disagreement; governing ratio unchanged at ~60–61%** of `link_parcels`'s Tier-3 `spatial`-tier links would resolve to a
 > different parcel under a containment/`ST_PointOnSurface` join vs. the current nearest-centroid join — the
 > conversion pilot delivers the fix INLINE (Spec 124 §7's declared-change ladder, rung (e)), aligned with
 > Spec 55 (parcels source) and Spec 65 (whose Operating Boundaries this pilot corrects — `enrich_parcels`

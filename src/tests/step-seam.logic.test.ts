@@ -54,11 +54,14 @@ describe('deriveSeamPairs — derived from converted.json + manifest.json, never
     expect(seam.deriveSeamPairs(byName)).toEqual([]);
   });
 
-  it('the REAL 6-descriptor registry yields exactly the one live pair this commit builds for: compute_centroids -> link_massing', () => {
+  it('the REAL 7-descriptor registry (pilot 7 cutover, commit 9) still yields exactly the one live pair: compute_centroids -> link_massing', () => {
     const byName = seam.loadConvertedDescriptors();
     expect(Object.keys(byName).sort()).toEqual(
-      ['assert_schema', 'compute_centroids', 'link_massing', 'link_parcel_addresses', 'link_wsib', 'load_ravines'].sort(),
+      ['assert_schema', 'compute_centroids', 'link_massing', 'link_parcel_addresses', 'link_parcels', 'link_wsib', 'load_ravines'].sort(),
     );
+    // link_parcels declares inputs.reads.steps: [] (no cross-step read dependency on
+    // another converted step's own output) — its addition to the registry does not
+    // introduce a new seam pair.
     expect(seam.deriveSeamPairs(byName)).toEqual([{ upstream: 'compute_centroids', downstream: 'link_massing' }]);
   });
 });
