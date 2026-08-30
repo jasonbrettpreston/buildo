@@ -92,7 +92,7 @@ Total items: **73**
 | `CLAIM-1` | 123 §5.2 | claim register - plan-claims.mjs | ✅ BUILT | wf: pre-existing infra | — | 2026-08-29 |
 | `CLAIM-2` | 123 §5.2 | spec:tests harvest | ✅ BUILT | wf: pre-existing infra | — | 2026-08-29 |
 | `POLICY-MATRIX` | 124 §2 Rule 13 | Spec 124 policy coverage matrix, per-step, generated | ✅ BUILT | wf: R-R, step:validate | — | 2026-08-29 |
-| `RT-CC3` | 122 §6.4a | compute_centroids drift + link_parcels Tier-3 join exposure - corrected measurement | ⚠️ PARTIAL | followup: review_followups.md HIGH entry, filed 2026-08-29 (supersedes the pilot-6-report 276 figure) | — | 2026-08-29 |
+| `RT-CC3` | 122 §6.4a | compute_centroids drift + link_parcels Tier-3 join exposure - corrected measurement | ⚠️ PARTIAL | followup: review_followups.md HIGH entry, filed 2026-08-29 (supersedes the pilot-6-report 276 figure) — link_parcels.js join-strategy fix still OPEN, not this WF3's scope | — | 2026-08-30 |
 | `LMD-RH` | 124 §2 Rule 10 addendum | LM-D6/LM-D11 R-H WARN promise not yet reflected in the ledger | ⚠️ PARTIAL | followup: review_followups.md R-R backfill entry, 2026-08-29 | — | 2026-08-29 |
 | `PROSE-G1P3` | 124 §2 Rule 10 | Rule 10 step-library scope caveat + P3 disk-I/O measurement are intentionally prose-only | ✅ BUILT | wf: step-validate.mjs, by design | — | 2026-08-29 |
 | `ZWP-56` | 123 §6 G8 | the real (non-SKIP) write path is barely live-exercised for pilots 5 and 6 | ⚠️ PARTIAL | followup: review_followups.md pilot5/pilot6 entries, 2026-08-29 | — | 2026-08-29 |

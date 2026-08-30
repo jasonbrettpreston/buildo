@@ -13,8 +13,8 @@
   ],
   "known_normal": [
     {
-      "note": "CC-D3 (Finding 7): 292,587/486,530 (60.1%) of stored centroids differ >1m from a freshly-computed ST_Centroid over the SAME unchanged geom. Root cause: the one real-work run (2026-03-10) predates the PostGIS offload (commit 7c75e92e, 2026-04-02) and used the retired JS arithmetic-mean algorithm; the remainder predates pipeline_runs ledger visibility entirely (most plausibly a bulk seed/restore outside the tracked pipeline). This step's own scope predicate makes an already-filled row permanently out of reach regardless of which algorithm filled it — carrying this population through the conversion costs nothing beyond what already existed.",
-      "measured": { "value": "292,587/486,530 (60.1%) stored-vs-fresh centroid distance > 1m; avg 6.61m, median 4.12m, max 1,476.84m", "date": "2026-08-29", "query": "SELECT COUNT(*) FROM parcels WHERE geom IS NOT NULL AND ST_DistanceSphere(ST_SetSRID(ST_MakePoint(centroid_lng, centroid_lat), 4326), ST_Centroid(geom)) > 1.0" }
+      "note": "CC-D3 (Finding 7), REPAIRED 2026-08-30: 292,587/486,530 (60.1%) of stored centroids differed >1m from a freshly-computed ST_Centroid over the SAME unchanged geom. Root cause: the one real-work run (2026-03-10) predates the PostGIS offload (commit 7c75e92e, 2026-04-02) and used the retired JS arithmetic-mean algorithm; the remainder predates pipeline_runs ledger visibility entirely (most plausibly a bulk seed/restore outside the tracked pipeline). A ONE-OFF `COMPUTE_CENTROIDS_FORCE_FULL=1` run (the declared FULL mode, `outputs.writes[1]`, LG-22) repaired the entire population under an IS DISTINCT FROM guard, before-imaged. See this step's own limitations[] CC-D3 entry for the post-repair measurement.",
+      "measured": { "value": "292,587/486,530 (60.1%) stored-vs-fresh centroid distance > 1m BEFORE the 2026-08-30 repair; avg 6.61m, median 4.12m, max 1,476.84m", "date": "2026-08-29", "query": "SELECT COUNT(*) FROM parcels WHERE geom IS NOT NULL AND ST_DistanceSphere(ST_SetSRID(ST_MakePoint(centroid_lng, centroid_lat), 4326), ST_Centroid(geom)) > 1.0" }
     }
   ],
   "blind_spots": [
@@ -43,6 +43,12 @@
     },
     {
       "note": "R-F item 1 (carried forward, same disposition as pilot 5): this step has no destructive retraction target (class E, retract:\"none\"), so it does NOT exercise or close R-B's crashed/stuck-running reader gap — carried to whichever future pilot first ships a genuine retract_when:\"full_only\" target. R-P is N/A: no terminals[].kind===\"skip_gated\" entry exists, because this BACKFILL's zero-work completion is DATA-driven (backlog_count == 0), never a ledger gate."
+    },
+    {
+      "note": "CC-D3 FULL-mode RULING (WF3, 2026-08-30, Spec 124 §7 rung (a)+(d)): the operator authorized a one-off before-imaged centroid recompute rather than a throwaway script. A SECOND write target (`outputs.writes[1]`, class set_based_scoped/set_source:\"compute\", LG-22) declares the repair — genuinely unimplemented in write.js before this WF3 (SET_BASED_CLASSES's constant-only sqlLiteral codegen cannot express a server-side SET expression; widening sqlLiteral itself was rejected as an injection surface for every OTHER set-based target, so `set_source: \"compute\"` opts THIS target out of codegen the same way write_once_backfill/set_based_join_update/insert_only_no_retraction already do). Reachable ONLY via override.force_full (COMPUTE_CENTROIDS_FORCE_FULL) — R-L precedent: never a corpus-signal autonomous trigger, because unlike the incremental fill this write is idempotent-by-GUARD, not idempotent-by-SCOPE, a materially riskier shape to leave scheduled. R-M's before-image mechanism (previously step-scoped \"none\" — no destructive retraction existed) is GENERALIZED to a value-overwriting guarded write: an overwrite of a real prior value is not reversible by re-nulling the way the incremental fill's NULL->value write is."
+    },
+    {
+      "note": "CC-D3 LIVE REPAIR, RED-FIRST BUG (WF3, 2026-08-30): the FIRST drift_select_sql compared the stored NUMERIC(10,7) centroid against a bare, unrounded ST_Centroid double via IS DISTINCT FROM — src/tests/db/compute-centroids-full-recompute.db.test.ts case ① went red (a row stamped with its OWN correct centroid was NOT excluded by the guard), proving the guard would have rewritten the ENTIRE table on every run, defeating idempotent_rerun:\"zero_writes\". Fixed by rounding BOTH sides to the column's own precision (ROUND(...::numeric,7)) before comparing. Live run then repaired 395,085/486,530 (81.2%) parcels in 149.1s (any-magnitude guard, a strict superset of the 292,587 >1m population that discovered CC-D3); centroid_algorithm_drift_gt_1m_count 292,587 -> 0; a second forced-FULL run selected 0 rows (idempotency proven, not asserted); 60-parcel plausibility sample (setseed(0.20260830001)) measured 59/60 (98.3%) new centroids inside their own polygon. outside_polygon_count 3,626 -> 1,547 and centroid_in_neighbour_parcel_count 3,130 -> 1,344 DROPPED (Spec 59 R2.5 concave-lot residual, not eliminated — CC-D2 stays PIN)."
     }
   ],
   "counts": { "open_blind_spots": 1, "unpromoted_suspicious_if": 0 },
@@ -57,8 +63,8 @@
   ],
   "review_notes": [
     {
-      "note": "This step writes ONE target, ONE statement, no batching in the surviving path — read written.e1 as the whole write surface. It is the simplest write shape of any pilot converted to date (no ordered multi-target sequence, no keyset pagination, no per-row classification).",
-      "measured": { "value": "1 declared write target, 1 UPDATE statement, no transaction wrapper (txn_scope: statement)", "date": "2026-08-29", "query": "node -e \"console.log(require('./scripts/compute-centroids.descriptor.json').outputs.writes.length)\"" }
+      "note": "PRE-CC-D3 (2026-08-29): this step wrote ONE target, ONE statement, no batching — the simplest write shape of any pilot converted to date. AMENDED 2026-08-30: a SECOND target now exists (outputs.writes[1], LG-22) for the FULL-mode repair — read written.e1 as the incremental fill's own surface (unaffected, unchanged) and written.e2 as the CC-D3 repair's surface (zero on every incremental run; the drift SELECT + N keyset-batched guarded UPDATEs only on a force_full run).",
+      "measured": { "value": "2 declared write targets as of 2026-08-30 (was 1 through pilot 6 cutover)", "date": "2026-08-30", "query": "node -e \"console.log(require('./scripts/compute-centroids.descriptor.json').outputs.writes.length)\"" }
     }
   ]
 }

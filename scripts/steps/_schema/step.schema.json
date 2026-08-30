@@ -457,7 +457,12 @@
         },
         "idempotent_rerun_why": { "$ref": "#/definitions/why" },
         "txn_scope": { "enum": ["statement", "batch", "step", "none"], "x-frozen": true },
-        "why": { "$ref": "#/definitions/why" }
+        "why": { "$ref": "#/definitions/why" },
+        "set_source": {
+          "description": "LG-22 (BACKFILL pilot 6 follow-on WF3, CC-D3, 2026-08-30) — OPTIONAL, applies ONLY to a set-based mechanic (set_based_scoped/set_based_unscoped/set_based_null_retract). ABSENT (the default, every pre-existing set-based target) means the SET clause is `columns[].set_value`, a DECLARED CONSTANT rendered through write.js's sqlLiteral, which structurally refuses anything but boolean/number/null — the generated statement binds no row values at all. `\"compute\"` means the SET clause's right-hand sides are SERVER-SIDE EXPRESSIONS over the row itself (e.g. compute_centroids's FULL-mode repair: `ST_Y(ST_Centroid(geom))`, not a literal) — buildWritePlan returns a DESCRIPTIVE plan only (mirrors set_based_join_update/insert_only_no_retraction/write_once_backfill's own `generated_by: \"compute\"` split) and the compute authors the real statement text, executed by write.js's executeGuardedUpdate. Widening sqlLiteral itself to accept a raw SQL fragment was rejected as an injection surface for every OTHER set-based target; this field opts a target OUT of codegen only when the descriptor says so explicitly.",
+          "enum": ["compute"],
+          "x-frozen": true
+        }
       },
       "allOf": [
         {

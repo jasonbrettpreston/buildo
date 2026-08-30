@@ -1207,6 +1207,90 @@ Re-executed every query/grep Fold C's Integration and Reality-Check passes relie
 
 ---
 
+## §10. CC-D3 FULL-mode repair (WF3, 2026-08-30 — operator "yes to the recommendations")
+
+§R Reflection item 1 (above) PINNED CC-D3 as *"a future operator ruling decides whether a one-time
+re-backfill... is worth the cost."* That ruling landed 2026-08-30: build a declared FULL mode per Spec 124
+§7 rung (a)+(d), not a throwaway script, and run it once.
+
+**What shipped.** A SECOND `outputs.writes[]` target (index 1) — `write_discipline.class:
+"set_based_scoped"`, a new `set_source: "compute"` field (write.js LG-22, `executeGuardedUpdate`) because
+the SET clause is a server-side expression (`ST_Y(ST_Centroid(geom))`), the same reason `write_once_backfill`
+above is compute-authored. `guard: "is_distinct_from"` over `centroid_lat`/`centroid_lng`, `scope: "geom IS
+NOT NULL"`, `retract: "none"`. Reachable ONLY through `override.force_full`
+(`COMPUTE_CENTROIDS_FORCE_FULL`) — never scheduled (`staleness.mode_select` stays `"none"`), R-L precedent.
+`recovery.before_image` moves `"none"` → `"generated"` (R-M GENERALIZED from "before a destructive
+retraction" to "before any value-overwriting guarded write" — an overwrite of a real prior value is not
+reversible by re-nulling the way the incremental fill's NULL→value write is). Two new INFO checks
+(`recompute_rows_changed`, `recompute_max_shift_m`) and one new WARN check (`override_force_full_present`,
+link_massing precedent). One new, non-verdict-affecting logic variable
+(`compute_centroids_full_recompute_batch_size`, `on_invalid: "clamp"`, `execution.batch_size_from_config`).
+
+**A real bug found red-first, before the live run.** The FIRST version of `drift_select_sql` compared the
+stored `NUMERIC(10,7)` centroid against a bare, unrounded `ST_Y(ST_Centroid(geom))`/`ST_X(ST_Centroid(geom))`
+double-precision result via `IS DISTINCT FROM`. `src/tests/db/compute-centroids-full-recompute.db.test.ts`
+case ① (a fixture row stamped with its OWN correct centroid, expected to be EXCLUDED from the guard) failed
+red: the rounding difference at the 7th decimal place made every row read as "drifted", including one this
+exact formula had just computed — the same failure class an un-guarded set-based write produces, just
+relocated from "no guard at all" to "a guard that never actually excludes anything." Fixed by rounding BOTH
+sides to the column's own precision (`ROUND(...::numeric, 7)`) before comparing — proven green by the same
+test, plus a twice-run idempotency assertion (a second pass over the just-repaired rows selects neither).
+
+**Live run.** `COMPUTE_CENTROIDS_FORCE_FULL=1 node -r dotenv/config scripts/compute-centroids.js` against
+`127.0.0.1:54322/postgres` (245 migrations), 2026-08-30 ~16:22–16:25 UTC. `exit_code:0`, `verdict:WARN`
+(standing WARN checks — `override_force_full_present` fires by design whenever the override is standing;
+`checks_failed:0`). Wall-clock **149.1s** — the before-image SELECT (which IS the guard predicate) plus 40
+keyset-batched UPDATEs at the default batch size (10,000). Confirmed genuinely executing, not hung, via two
+live `pg_stat_activity` checks mid-run (one on the drift SELECT, one on a batched UPDATE).
+
+| Metric | Before (2026-08-29) | After (2026-08-30, live) | Note |
+|---|---:|---:|---|
+| `centroid_algorithm_drift_gt_1m_count` (plausibility) | 292,587 | **0** | the metric CC-D3 was filed against — fully retired |
+| Rows repaired (any-magnitude guard) | — | **395,085** (81.2%) | a strict superset of the >1m population — the guard repairs ALL drift, not just the >1m tail |
+| `recompute_max_shift_m` | — | 1,476.84 m | matches the pre-repair max exactly (same worst-case row) |
+| `outside_polygon_count` (invariant) | 3,626 | **1,547** | DROPPED, not eliminated — Spec 59 R2.5 concave-lot residual, CC-D2 stays PIN |
+| `pointonsurface_gt_1m_count` (invariant) | 298,021 | **134,640** | same class, DROPPED |
+| `centroid_in_neighbour_parcel_count` (invariant) | 3,130 | **1,344** | CC-D2's own downstream exposure, smaller, still open |
+| `parcels` row count | 486,530 | 486,530 | unchanged, confirmed |
+| migration 245's trigger | — | unchanged | `pg_get_triggerdef` re-verified verbatim (`BEFORE UPDATE OF geom, geometry`, same function) |
+
+**Before-image.** `docs/reports/golden/compute_centroids/before-image/2026-08-30T16-22-33.602Z-parcels.jsonl`
+— 395,085 lines, 26.7 MB, `{id, centroid_lat, centroid_lng}` per row (the PRE-repair stamp), written
+strictly before the first UPDATE batch (R-M, generalized).
+
+**Idempotency, twice-run.** A second forced-FULL run, launched through `capture-step-golden.js` itself
+(`docs/reports/golden/compute_centroids/post/sources-full-forced-1.json`) over the now-repaired corpus:
+`recompute_rows_changed:0`, before-image **0 rows** (0 bytes), `table_state` hash `a12a1a54` (unchanged
+from the live repair's own end-state) — `idempotent_rerun:"zero_writes"` PROVEN, not asserted.
+
+**Plausibility sample.** 60 random parcels, `SELECT setseed(0.20260830001)` then `ORDER BY random() LIMIT
+60` over `geom IS NOT NULL AND centroid_lat IS NOT NULL` (post-repair), checking `ST_Contains(geom,
+ST_SetSRID(ST_MakePoint(centroid_lng, centroid_lat),4326))`: **59/60 (98.3%)** new centroids land inside
+their own polygon — consistent with the standing `outside_polygon_count` base rate (1,547/486,530 ≈ 0.32%;
+the sample's single miss, parcel 202725, is within noise for that rate, not a new finding).
+
+**Re-captured golden (`post/sources.json`, `post/standalone.json`, `post/sources-full-forced-1.json`) — final, taken AFTER every content edit this WF3 makes** (an intermediate pair captured immediately after the live
+repair, before the descriptor/notes/report text below was written, went stale the moment those files
+changed — `source_fingerprint` hashes the whole descriptor/notes/compute/js text, so a later documentation
+edit invalidates an earlier capture; re-captured once more, last, to land a fingerprint-clean commit). All
+THREE now carry `table_state[0].content_hash` **`a12a1a54`** (486,530 rows) — the CURRENT, POST-repair table
+state, changed from the `pre/` baseline's `content_hash` `94473cfd` BY DESIGN (this IS the repair, the same
+`94473cfd` -> `a12a1a54` change `docs/reports/defect-ledger.md`'s own CC-D3 row records), since all three
+capture runs happened after the live repair. This is expected, not a regression: the incremental path
+(`sources.json`/`standalone.json`) and the second live FULL-mode invocation
+(`sources-full-forced-1.json`) all observe the SAME already-repaired corpus and all agree it needs zero
+further writes (`records_updated:0` on every one) — the proof that the FULL-mode addition is additive lives
+in `records_meta` (`recompute_rows_changed`/`recompute_max_shift_m` read `0`/`null` on the two incremental
+captures, exactly as before CC-D3 existed), not in a hash carried forward from a pre-repair snapshot.
+Three NEW `records_meta` fields are visible across these re-captures and are EXPLAINED here, not a
+regression: `chain_run_id` (R-U, landed on this branch AFTER pilot 6's original captures — this is the
+first re-capture to observe it, unrelated to CC-D3) and `recompute_rows_changed`/`recompute_max_shift_m`
+(this section's own two new checks — `0`/`null` on all three final captures, since none of the three found
+any remaining drift to repair; the live repair's own `395085`/`1,476.84049089` reading is recorded above,
+from the run that actually performed it, not from a `capture-step-golden.js` invocation).
+
+---
+
 ## Validation scorecard (generated)
 
 > Generated by `node scripts/analysis/step-validate.mjs --step=compute_centroids --write` — Spec 123 §6, ruling R-R (2026-08-29).
@@ -1223,10 +1307,10 @@ Re-executed every query/grep Fold C's Integration and Reality-Check passes relie
 | G4 | 0 | 2 | risk-class row with chance+impact found=false |
 | G5 | 1 | 1 | db=true clock=true network=true argv/env=true |
 | G6 | 3 | 3 | 3 ledger row(s), 0 without CLOSED/PIN () |
-| G7 | 3 | 3 | file=true fences=1 it-count=58 RED-evidence=true |
+| G7 | 3 | 3 | file=true fences=1 it-count=63 RED-evidence=true |
 | G8 | 3 | 3 | missing-invocations=0 stale-fingerprints=0 unexplained-diffs=0 |
 | G9 (binary) | PASS | — | heading=true low-confidence-table=true recurring-table=true |
-| G4d (fence<=lock) | PASS | — | fences=1 lock-it-count=58 |
+| G4d (fence<=lock) | PASS | — | fences=1 lock-it-count=63 |
 | G-shape | PASS | — | file-clean=true compute-clean=true |
 
 ### Fast invariants (always run — the fast descriptor gate)
@@ -1234,10 +1318,10 @@ Re-executed every query/grep Fold C's Integration and Reality-Check passes relie
 | # | Scope | Pass | Detail |
 |---|---|---|---|
 | 1 | compute_centroids | PASS | min_migration=16 <= migrations count=242 |
-| 2 | compute_centroids | PASS | 2 declared, missing from seeds: none |
+| 2 | compute_centroids | PASS | 3 declared, missing from seeds: none |
 | 3 | compute_centroids | PASS | retired=0 overlap-with-declared=none |
 | 7 | compute_centroids | PASS | SPEC LINK header present=true |
-| 8 | compute_centroids | PASS | G-4: 2 declared, 2 verdict-affecting, 0 violate on_invalid:fail with no deviations[] cover |
+| 8 | compute_centroids | PASS | G-4: 3 declared, 2 verdict-affecting, 0 violate on_invalid:fail with no deviations[] cover |
 | 4 | (registry) | PASS | overlap: none |
 | 5 | (registry) | PASS | clean (0 it.fails( call sites outside a declared pending slug) |
 | 9 | (registry) | PASS | clean (0 converted slugs blocked by an unmet cutover_prereq item; blocks batching: 7) |
@@ -1245,7 +1329,7 @@ Re-executed every query/grep Fold C's Integration and Reality-Check passes relie
 ### Captures (item iv)
 - missing invocations: none
 - stale fingerprints: none
-- compare ran: true · diffs found: 43 · unexplained: 0
+- compare ran: true · diffs found: 67 · unexplained: 0
 
 ### Test suite (item iii)
 - 0/0 passed (suite success=true)
@@ -1256,7 +1340,7 @@ Re-executed every query/grep Fold C's Integration and Reality-Check passes relie
 |---|---|---|---|
 | 1 | Nothing hidden | enforced-green | G-1 schema-baseline: schema-baseline clean |
 | 2 | Compute is just compute | enforced-green | §5.5 describe not scoped to this step in the vitest run |
-| 3 | Tunables externalized | enforced-green | G-4: 2 declared, 2 verdict-affecting, 0 violate on_invalid:fail with no deviations[] cover |
+| 3 | Tunables externalized | enforced-green | G-4: 3 declared, 2 verdict-affecting, 0 violate on_invalid:fail with no deviations[] cover |
 | 4 | Compute rule declared | enforced-red | G-2: 3 preserved-in-compute row(s), 3 with no why/notes.json/checks[] grounding |
 | 5 | checks >= 1 | enforced-green |  |
 | 6 | Omission fails (18 categories) | enforced-green |  |
@@ -1267,7 +1351,7 @@ Re-executed every query/grep Fold C's Integration and Reality-Check passes relie
 | 11 | Phase-order re-derive (R-B) | prose-only | R-B describe not scoped to this step |
 | 12 | Truthful crash posture (R-M + R-B reader) | prose-only | R-M/R-B-reader describes not scoped to this step |
 | 13 | A step validates itself | enforced-green | this run of step:validate IS the mechanism |
-| P3 | I/O cost adjudication (measured, not gated) | measured | descriptor=26460B notes=6750B checks=5 rows records_meta=617B (newest post/ capture) |
+| P3 | I/O cost adjudication (measured, not gated) | measured | descriptor=36279B notes=9463B checks=8 rows records_meta=2416B (newest post/ capture) |
 
 **Enforced-green: 9/14**
 

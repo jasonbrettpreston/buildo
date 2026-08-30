@@ -310,6 +310,40 @@ function buildWritePlan(writeSpec, descriptor) {
   // which is a REAL predicate — it changes 0 rows on a second run over an unchanged
   // scope, same as the guarded-upsert's own guard, just against a constant rather than a
   // bound row value.
+  // ⚠️ LG-22 (BACKFILL pilot 6 follow-on WF3, CC-D3, 2026-08-30) — `set_source:
+  // "compute"` ESCAPE HATCH, DESCRIPTIVE ONLY, mirroring JOIN_UPDATE_CLASS /
+  // INSERT_ONLY_NO_RETRACT_CLASS / WRITE_ONCE_BACKFILL_CLASS above. A set-based
+  // mechanic's SET clause is normally a DECLARED CONSTANT (`columns[].set_value`,
+  // rendered through `sqlLiteral`, which deliberately REFUSES anything but a
+  // boolean/number/null — a string constant is an injection surface). Some
+  // set-based targets need a SERVER-SIDE EXPRESSION over the row instead
+  // (`compute_centroids`'s FULL-mode repair: `ST_Y(ST_Centroid(geom))`, not a
+  // literal) — the same reason those three other classes went descriptive-only.
+  // Widening `sqlLiteral` itself to accept a raw SQL fragment was REJECTED: it
+  // would open every `set_based_scoped`/`set_based_unscoped`/`set_based_null_retract`
+  // target (not just this one) to an injection surface for a single pilot's need.
+  // `set_source: "compute"` keeps `sqlLiteral`'s lockdown intact for every
+  // existing constant-SET target and only opts a target OUT of codegen when the
+  // descriptor says so explicitly — the compute authors the real UPDATE text
+  // (`buildFullRecomputeSql`) and the runner executes it via `executeGuardedUpdate`.
+  if (SET_BASED_CLASSES.has(writeSpec.write_discipline.class) && writeSpec.write_discipline.set_source === 'compute') {
+    return {
+      table,
+      keys,
+      srid,
+      mechanic: writeSpec.write_discipline.class,
+      step_columns: stepColumnNames,
+      update_columns: updateColumns,
+      guard_columns: guardColumns,
+      key_sql_type: keyType,
+      scope,
+      retract,
+      retract_when: retractWhen,
+      clear_sql: null,
+      generated_by: 'compute',
+    };
+  }
+
   if (SET_BASED_CLASSES.has(writeSpec.write_discipline.class)) {
     const assignments = stepColumns.map((c) => `${c.name} = ${sqlLiteral(c.set_value)}`).join(', ');
     const guardClause = writeSpec.write_discipline.guard === 'is_distinct_from' && guardColumns.length > 0
@@ -663,11 +697,36 @@ async function writeBeforeImage(client, plan, scopeParams, slug, runAt) {
   const select = buildBeforeImageSelectSql(plan);
   if (!select) return { written: false };
   const { rows } = await client.query(select.sql, scopeParams || []);
+  return persistBeforeImageRows(rows, plan.table, slug, runAt);
+}
+
+/**
+ * LG-22 (BACKFILL pilot 6 follow-on WF3, CC-D3, 2026-08-30) — the FILE-WRITING HALF
+ * of R-M/LG-17's before-image mechanism, factored out of `writeBeforeImage` so a
+ * caller whose SELECT is NOT `plan.scope`-shaped (a compute-authored guard predicate
+ * over a server-side expression, e.g. `centroid_lat IS DISTINCT FROM
+ * ST_Y(ST_Centroid(geom))`, which `buildBeforeImageSelectSql` cannot express — it only
+ * knows the declared `write_discipline.scope` string) can still persist the SAME
+ * dated-JSONL artifact `writeBeforeImage` writes, byte-for-byte. `writeBeforeImage`
+ * now calls this directly; behaviour for every EXISTING caller (a destructive
+ * retraction's own before-image) is unchanged.
+ *
+ * ⚠️ FAIL LOUD, ON PURPOSE — same contract as `writeBeforeImage` (mkdir/write are not
+ * wrapped in a try/catch): the caller must persist this BEFORE issuing the write it
+ * protects, so an uncaught throw here naturally prevents that write from ever running.
+ *
+ * @param {Record<string, unknown>[]} rows - already-fetched rows, one object per row
+ * @param {string} table
+ * @param {string} slug - descriptor.identity.name
+ * @param {Date} runAt - Spec 47 §R3.5 DB clock, the SAME capture the protected write uses
+ * @returns {{written: true, path: string, rows: number}}
+ */
+function persistBeforeImageRows(rows, table, slug, runAt) {
   const repoRoot = path.join(__dirname, '..', '..', '..');
   const dir = path.join(repoRoot, 'docs', 'reports', 'golden', slug, 'before-image');
   fs.mkdirSync(dir, { recursive: true });
   const stamp = runAt.toISOString().replace(/:/g, '-');
-  const filePath = path.join(dir, `${stamp}-${plan.table}.jsonl`);
+  const filePath = path.join(dir, `${stamp}-${table}.jsonl`);
   const body = rows.map((r) => JSON.stringify(r)).join('\n') + (rows.length > 0 ? '\n' : '');
   fs.writeFileSync(filePath, body, 'utf8');
   return { written: true, path: path.relative(repoRoot, filePath).replace(/\\/g, '/'), rows: rows.length };
@@ -823,6 +882,55 @@ async function executeBackfillUpdate(client, sql, params) {
   return result.rows;
 }
 
+/** SQL text a compute-authored guarded UPDATE (`set_source: "compute"`, LG-22) must never contain — mirrors LG-20/LG-18/LG-11's forbidden-token pattern. */
+const GUARDED_UPDATE_FORBIDDEN_RE = /\bINSERT\s+INTO\b|\bDELETE\s+FROM\b|\bTRUNCATE\b/i;
+
+/**
+ * LG-22 (BACKFILL pilot 6 follow-on WF3, CC-D3, 2026-08-30) — execute one batch of a
+ * compute-authored, GUARD-SCOPED `set_based_scoped`/`set_source:"compute"` UPDATE: the
+ * SET clause's right-hand sides are server-side expressions over the row itself
+ * (`compute-centroids.js`'s `ST_Y(ST_Centroid(geom))`), the same reason
+ * `executeBackfillUpdate` (LG-20) exists — but UNLIKE `write_once_backfill` (a
+ * write-ONCE scope that never revisits an already-filled row, so a guard would be
+ * vacuous), this target OVERWRITES an existing, non-NULL value under an explicit
+ * `write_discipline.guard: "is_distinct_from"`. The caller MUST have persisted a
+ * before-image (`persistBeforeImageRows`) of the exact rows a batch is about to touch
+ * BEFORE calling this executor (R-M, generalized by this ruling from "before a
+ * destructive retraction" to "before any value-overwriting guarded write" — a
+ * fill-from-NULL is reversible by re-nulling; an overwrite of a REAL prior value is
+ * not, so it gets the same audit trail).
+ *
+ * Kept as its own function rather than an alias of `executeBackfillUpdate` so a
+ * future class-specific rule (e.g. requiring the WHERE clause to bind a keyset ID
+ * array, which THIS executor's caller always does — `runBackfillFullRecompute` chunks
+ * an already-fetched id list rather than re-deriving the guard predicate per batch,
+ * so the SAME rows that were before-imaged are the exact rows this statement touches)
+ * has its own home instead of overloading LG-20's docstring with a second class's
+ * contract.
+ *
+ * @param {import('pg').Pool|import('pg').ClientBase} client
+ * @param {string} sql - a complete `UPDATE ... WHERE id = ANY($1::int[])` statement (RETURNING optional)
+ * @param {unknown[]} [params]
+ * @returns {Promise<Record<string, unknown>[]>} the statement's own `RETURNING` rows
+ */
+async function executeGuardedUpdate(client, sql, params) {
+  if (GUARDED_UPDATE_FORBIDDEN_RE.test(sql)) {
+    throw new Error(
+      `[write.js] executeGuardedUpdate (set_based_scoped/set_source:compute / LG-22): the statement contains `
+      + 'an INSERT, DELETE or TRUNCATE token, which this executor structurally refuses — a guarded overwrite '
+      + `target may only UPDATE existing rows. Statement: ${sql.slice(0, 200)}${sql.length > 200 ? '…' : ''}`,
+    );
+  }
+  if (!/\bUPDATE\b/i.test(sql)) {
+    throw new Error(
+      '[write.js] executeGuardedUpdate (set_based_scoped/set_source:compute / LG-22): the statement must be an '
+      + `UPDATE ... WHERE ... — got: ${sql.slice(0, 200)}${sql.length > 200 ? '…' : ''}`,
+    );
+  }
+  const result = await client.query(sql, params || []);
+  return result.rows;
+}
+
 module.exports = {
   buildWritePlan,
   generateWriteSql,
@@ -831,12 +939,15 @@ module.exports = {
   retractionFires,
   buildBeforeImageSelectSql,
   writeBeforeImage,
+  persistBeforeImageRows,
   executeSetBasedClear,
   executeUpsertBatch,
   executeRetraction,
   executeSetBasedJoinUpdate,
   executeInsertSelectNoRetract,
   executeBackfillUpdate,
+  executeGuardedUpdate,
+  GUARDED_UPDATE_FORBIDDEN_RE,
   JOIN_UPDATE_CLASS,
   JOIN_UPDATE_FORBIDDEN_RE,
   INSERT_ONLY_NO_RETRACT_CLASS,

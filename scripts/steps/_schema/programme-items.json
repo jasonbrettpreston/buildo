@@ -1061,16 +1061,16 @@
       "title": "compute_centroids drift + link_parcels Tier-3 join exposure - corrected measurement",
       "promised": "CC-D2/CC-D3 (defect-ledger.md, both PIN): 292,587/486,530 stored centroids differ from a fresh recompute by >1m; a HIGH followup against link-parcels.js's Tier-3 nearest-centroid join was reported 'already filed' in the pilot 6 assessment report but never actually landed in review_followups.md until this commit",
       "status": "PARTIAL",
-      "evidence": "docs/reports/defect-ledger.md CC-D2/CC-D3 rows (PIN); docs/reports/2026-08-29-pilot6-compute-centroids-assessment.md lines 138-155 (R-1/CC-D2, the 3,130/276 estimate over 494 spatial-tier links); review_followups.md HIGH entry filed 2026-08-29 supersedes that estimate with a fuller measurement over the full spatial-tier population: 6,808/17,500 (38.9%) spatial-tier permit_parcels links would resolve to a different parcel under ST_PointOnSurface/containment vs. the current nearest-centroid join",
+      "evidence": "docs/reports/defect-ledger.md CC-D2/CC-D3 rows; docs/reports/2026-08-29-pilot6-compute-centroids-assessment.md lines 138-155 (R-1/CC-D2, the 3,130/276 estimate over 494 spatial-tier links); review_followups.md HIGH entry filed 2026-08-29 supersedes that estimate with a fuller measurement over the full spatial-tier population: 6,808/17,500 (38.9%) spatial-tier permit_parcels links would resolve to a different parcel under ST_PointOnSurface/containment vs. the current nearest-centroid join. AMENDED 2026-08-30 (WF3, CC-D3's own repair): the CC-D3 half is CLOSED-MEASURED — a declared FULL mode (override.force_full, LG-22) repaired 395,085/486,530 (81.2%) parcels live, centroid_algorithm_drift_gt_1m_count 292,587 -> 0, before-imaged, idempotency proven twice-run. Still PARTIAL, not fully CLOSED: the CC-D2 half (link_parcels.js's Tier-3 join-strategy defect the drift exposes downstream) is UNCHANGED and still OPEN — the repair shrank but did not eliminate the exposed population (outside_polygon_count 3,626 -> 1,547, centroid_in_neighbour_parcel_count 3,130 -> 1,344, both measured after the repair, defect-ledger.md CC-D2 row 'count after' note) — the HIGH followup against link-parcels.js's own join predicate remains unaddressed by this WF3, which was scoped to compute_centroids only",
       "owner": {
         "kind": "followup",
-        "ref": "review_followups.md HIGH entry, filed 2026-08-29 (supersedes the pilot-6-report 276 figure)"
+        "ref": "review_followups.md HIGH entry, filed 2026-08-29 (supersedes the pilot-6-report 276 figure) — link_parcels.js join-strategy fix still OPEN, not this WF3's scope"
       },
       "gate": {
         "kind": "nice_to_have",
         "blocks": []
       },
-      "last_reviewed": "2026-08-29"
+      "last_reviewed": "2026-08-30"
     },
     {
       "id": "LMD-RH",

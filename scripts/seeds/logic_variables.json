@@ -2993,6 +2993,13 @@
     "max": 100,
     "description": "Spec 124 Rule 3 (T2, Pilot 6, BACKFILL) — WARN floor on centroids_computed / parcels_processed. 98 = the pre-externalization literal (`:198`,`:200` in the pre-conversion script) and traces to commit d32612bb's deliberate business-accuracy tightening (\"tighten compute_rate from 90% to 98%\"), not an arbitrary number. A `pct >= floor` form (R-N precedent). CONSUMED by compute_centroids (scripts/lib/compute/compute-centroids.js compute_rate, via checks[].limit_from_config)."
   },
+  "compute_centroids_full_recompute_batch_size": {
+    "default": 10000,
+    "type": "number",
+    "min": 100,
+    "max": 50000,
+    "description": "Spec 124 Rule 3 (T3, CC-D3 WF3, 2026-08-30, BACKFILL) — NOT verdict-affecting (on_invalid \"clamp\": no checks[].limit_from_config names it, R-G/GAP-G-4). Sizes each UPDATE ... WHERE id = ANY($1::int[]) batch of the FULL-mode repair's keyset loop (LG-22, override.force_full only, never scheduled). 10000 chosen as a round, conservative default for a ~292K-row one-off repair (measured live 2026-08-30, see docs/reports/defect-ledger.md CC-D3) — not derived from a prior literal, since no batching existed on this step before this WF3. CONSUMED by compute_centroids (scripts/lib/compute/compute-centroids.js buildFullRecomputeSql, via execution.batch_size_from_config)."
+  },
   "invariants_every_run_budget_ms": {
     "default": 5000,
     "type": "number",

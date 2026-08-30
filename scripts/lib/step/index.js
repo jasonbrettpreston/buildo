@@ -1356,7 +1356,7 @@ async function runMaterializePhase({ descriptor, pool, compute, config, chainId,
  *
  * @returns {Promise<object>} `{matched, written, prior, overrides, writeSkipped, zeroWork}`
  */
-async function runBackfillPhase({ descriptor, pool, compute, config, chainId, log, tag, preWriteGate }) {
+async function runBackfillPhase({ descriptor, pool, compute, config, chainId, log, tag, preWriteGate, clockNow }) {
   const requirements = await assertRequirements(pool, descriptor, { log, tag });
   const overrides = staleness.resolveOverrides(descriptor);
   const privilege = await write.assertWritePrivileges(pool, descriptor, { log, tag });
@@ -1369,6 +1369,24 @@ async function runBackfillPhase({ descriptor, pool, compute, config, chainId, lo
   written[write.targetKey(0)] = { scanned: 0, updated: 0, rows_changed: 0 };
   written.privilege = privilege[plan.table] || null;
   written.requirements = requirements;
+
+  // ── CC-D3 (2026-08-30) — FULL mode, declared via `override.force_full` ───────
+  // Selected INSTEAD OF the incremental one-statement path below. Only reachable
+  // when the descriptor declares a SECOND write target (`set_based_scoped` /
+  // `set_source: "compute"`, LG-22) — a step that has not declared one cannot
+  // reach this branch even with the env var standing, so a misconfigured
+  // descriptor fails loud instead of silently no-op'ing a forced run.
+  if (overrides.force_full) {
+    if (specs.length < 2 || typeof compute.buildFullRecomputeSql !== 'function') {
+      throw new Error(`[${tag}] override.force_full is standing but this step declares no second write target `
+        + '(write_discipline.set_source:"compute") or compute has no buildFullRecomputeSql — refusing to run a '
+        + 'forced FULL with no declared repair target rather than silently falling back to the incremental path.');
+    }
+    const repairPlan = write.buildWritePlan(specs[1], descriptor);
+    return runBackfillFullRecompute({
+      descriptor, pool, compute, config, log, tag, written, prior, overrides, plan: repairPlan, clockNow,
+    });
+  }
 
   const sql = compute.buildBackfillSql(descriptor, config);
   const pre = await pool.query(sql.pre_sql);
@@ -1431,6 +1449,88 @@ async function runBackfillPhase({ descriptor, pool, compute, config, chainId, lo
       centroids_computed: computed,
       failed_geometries: failed,
       new_rows: 0,
+    },
+    written,
+    prior,
+    overrides,
+    writeSkipped: false,
+    zeroWork: false,
+  };
+}
+
+/**
+ * CC-D3 (2026-08-30) — the FULL-mode branch `runBackfillPhase` forks into when
+ * `override.force_full` is standing. Never scheduled (Spec 124 §7 rung (a): the
+ * descriptor's `staleness.mode_select` stays `"none"` — this mode exists ONLY
+ * through the operator's own env-var override, never a corpus-signal trigger, per
+ * R-L's precedent for a destructive-repair step's autonomous-mode gate).
+ *
+ * Shape, per Spec 124 §7 rung (a)+(d):
+ *   1. `drift_select_sql` — ONE unbatched read. It IS the guard predicate
+ *      (`centroid_lat IS DISTINCT FROM ST_Y(ST_Centroid(geom)) OR ...`) — every row
+ *      this run WILL touch, read exactly once, so the before-image and the update
+ *      can never disagree about which rows are in scope.
+ *   2. R-M, GENERALIZED (this ruling): before-image persisted from those SAME rows,
+ *      FAIL LOUD (no try/catch — `persistBeforeImageRows` throws synchronously on a
+ *      write failure, well before the loop below issues its first UPDATE).
+ *   3. A keyset batch loop over the ALREADY-FETCHED id list (not a re-derived
+ *      DB-side cursor over the guard predicate — chunking the ids the before-image
+ *      already covers is what guarantees a batch can never touch an un-imaged row).
+ *      `execution.batch_size_from_config` (T3) sizes each chunk; `executeGuardedUpdate`
+ *      (LG-22) enforces the UPDATE-only token boundary per batch, matching LG-20's
+ *      structural guarantee for the incremental path.
+ */
+async function runBackfillFullRecompute({ descriptor, pool, compute, config, log, tag, written, prior, overrides, plan, clockNow }) {
+  const sql = compute.buildFullRecomputeSql(descriptor, config);
+  // Spec 47 §R3.5 / B-11 — REUSE the caller's own single DB-clock capture
+  // (`clockNow`, taken once for whichever phase drives the write) rather than
+  // reading the clock a second time. `isBackfillStep` is already a `drivesWrites`
+  // member (scripts/lib/step/index.js), so `clockNow` is always non-null here.
+  const runAt = clockNow;
+
+  const pre = await pool.query(compute.buildPreSql());
+  const backlogCount = Number((pre.rows[0] || {}).backlog_count) || 0;
+
+  const { rows: drift } = await pool.query(sql.drift_select_sql);
+
+  // ── R-M, generalized to a value-overwriting guarded write (2026-08-30) ────────
+  // Unwrapped by any try/catch, BEFORE any UPDATE below — a write failure aborts
+  // the run before a single row is touched.
+  const beforeImageRows = drift.map((r) => ({ id: r.id, centroid_lat: r.centroid_lat, centroid_lng: r.centroid_lng }));
+  const bi = write.persistBeforeImageRows(beforeImageRows, plan.table, descriptor.identity.name, runAt);
+  log.info(tag, `full recompute: before-image written (${bi.rows.toLocaleString()} row(s)) -> ${bi.path}`);
+
+  let maxShift = null;
+  for (const r of drift) {
+    const s = r.shift_m === null || r.shift_m === undefined ? null : Number(r.shift_m);
+    if (s !== null && (maxShift === null || s > maxShift)) maxShift = s;
+  }
+
+  const ids = drift.map((r) => r.id);
+  const batchSize = Math.max(1, Number(sql.batch_size) || 10000);
+  let touched = 0;
+  for (let i = 0; i < ids.length; i += batchSize) {
+    const chunk = ids.slice(i, i + batchSize);
+    const result = await write.executeGuardedUpdate(pool, sql.update_sql, [chunk]);
+    touched += result.length;
+  }
+
+  written[write.targetKey(1)] = {
+    scanned: drift.length, updated: touched, rows_changed: touched, before_image: bi,
+  };
+
+  const post = await pool.query(compute.buildPostSql());
+  const failed = Number((post.rows[0] || {}).failed_geometries) || 0;
+
+  return {
+    matched: {
+      backlog_count: backlogCount,
+      parcels_processed: drift.length,
+      centroids_computed: touched,
+      failed_geometries: failed,
+      new_rows: 0,
+      recompute_rows_changed: touched,
+      recompute_max_shift_m: maxShift,
     },
     written,
     prior,

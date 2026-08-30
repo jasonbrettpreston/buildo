@@ -169,7 +169,7 @@ const { validateDescriptor } = require(path.join(REPO_ROOT, 'scripts/lib/step/va
 // ---------------------------------------------------------------------------
 
 interface Check { id: string; kind: string; expect: unknown; limit: unknown; limit_from_config?: string; severity: string; blocking: boolean; when: string; chains: string[] | 'all'; why?: { text?: string } }
-interface WriteDiscipline { class: string; guard: unknown; guard_columns: unknown; guard_why?: unknown; scope: unknown; expected_change_ratio: unknown; idempotent_rerun: unknown; idempotent_rerun_why?: unknown; why?: { text?: string }; txn_scope: unknown }
+interface WriteDiscipline { class: string; guard: unknown; guard_columns: unknown; guard_why?: unknown; scope: unknown; expected_change_ratio: unknown; idempotent_rerun: unknown; idempotent_rerun_why?: unknown; why?: { text?: string }; txn_scope: unknown; set_source?: string }
 interface WriteSpec { table: string; key: string | string[]; columns: Array<{ name: string; written?: string }>; write_discipline: WriteDiscipline; retract: string; retract_when?: string; replay: string }
 interface Requirement { kind: string; name: string; on_missing: string }
 interface Descriptor {
@@ -288,13 +288,28 @@ function writes(d: Descriptor): WriteSpec[] {
   return (d.outputs as { writes: WriteSpec[] }).writes;
 }
 
-/** The step's ONE write target — parcels.centroid_lat/lng, class write_once_backfill. */
+/**
+ * The step's INCREMENTAL write target (index 0) — parcels.centroid_lat/lng,
+ * class write_once_backfill. CC-D3 (2026-08-30) added a SECOND target
+ * (index 1, set_based_scoped/set_source:"compute", LG-22) for the never-
+ * scheduled FULL-mode repair — this helper still returns the incremental
+ * target (every pre-CC-D3 caller reads ITS shape), now asserting exactly 2.
+ */
 function writeTarget(d: Descriptor): WriteSpec {
   const w = writes(d);
-  expect(w.length, 'exactly 1 write target (the single conditional UPDATE)').toBe(1);
+  expect(w.length, 'exactly 2 write targets since CC-D3: incremental fill (index 0) + FULL-mode repair (index 1)').toBe(2);
   const t = w[0] as WriteSpec;
   expect(t.table).toBe(TABLE);
   expect(t.write_discipline.class, `the ${TABLE} write target must use LG-20's new backfill executor (${WRITE_CLASS})`).toBe(WRITE_CLASS);
+  return t;
+}
+
+/** The CC-D3 FULL-mode repair's write target (index 1) — set_based_scoped/set_source:"compute", LG-22. */
+function fullRecomputeTarget(d: Descriptor): WriteSpec {
+  const w = writes(d);
+  expect(w.length).toBe(2);
+  const t = w[1] as WriteSpec;
+  expect(t.table).toBe(TABLE);
   return t;
 }
 
@@ -407,7 +422,7 @@ describe('55-A — the hard per-conversion gate (k=PER_STEP)', () => {
     }
   });
 
-  it('#150 Gate 1 — reproducible against itself: both PRE captures (commit 5, SKIP path — no backlog since 245 landed) hash-identical; the POST pair hash-identical too, and matches PRE (zero-behaviour-change conversion — a clean cutover against an unchanged corpus is a genuine zero-diff) (landed: commit 7, 7b — the differential lands in the same commit as the descriptor/compute, ahead of its originally-planned commit-9 slot)', () => {
+  it('#150 Gate 1 — reproducible against itself: both PRE captures (commit 5, SKIP path — no backlog since 245 landed) hash-identical; the POST pair hash-identical too (landed: commit 7, 7b — the differential lands in the same commit as the descriptor/compute, ahead of its originally-planned commit-9 slot). AMENDED (CC-D3, WF3, 2026-08-30): PRE no longer equals POST — a LATER, separate, fully-documented data repair (never a "behaviour change" to the conversion itself, which this test still isolates) intentionally moved the table_state hash. See below.', () => {
     const docs = INVOCATIONS.map((inv) => JSON.parse(fs.readFileSync(artifact(`${GOLDEN_DIR_REL}/post/${inv.name}.json`), 'utf8')) as GoldenDoc);
     const preHashes = new Set<string | null>();
     for (const inv of INVOCATIONS) {
@@ -416,8 +431,20 @@ describe('55-A — the hard per-conversion gate (k=PER_STEP)', () => {
     }
     expect(preHashes.size, 'both PRE captures must hash-identical (genuinely zero-work, 0 backlog)').toBe(1);
     const postHashes = new Set(docs.map((d) => d.table_state?.[0]?.content_hash ?? null));
-    expect(postHashes.size, 'both POST captures must hash-identical').toBe(1);
-    expect([...postHashes][0], 'POST must match PRE — a zero-behaviour-change conversion with no corpus change is a genuine zero-diff').toBe([...preHashes][0]);
+    expect(postHashes.size, 'both POST captures must hash-identical (the incremental path, sources vs standalone, stays internally consistent even after CC-D3)').toBe(1);
+    // CC-D3 (2026-08-30, WF3): a declared, live, one-off FULL-mode repair
+    // (override.force_full, LG-22) recomputed 395,085/486,530 drifted centroids
+    // — a DATA repair, not a behaviour change to THIS conversion (the frozen
+    // shape, the incremental write target, the checks — all byte-identical;
+    // see #149/#154 above and Gate 4 below). The hash EXPECTED to change is
+    // named here, by value, so a future UNEXPLAINED drift still reddens this
+    // test rather than being silently absorbed by a loosened assertion:
+    // pre-CC-D3 `94473cfd60dd563d80d0c5ecb7edac95`, post-CC-D3
+    // `a12a1a5497c3fcbbc89442f44ee739b6` (defect-ledger.md CC-D3 row).
+    const CCD3_PRE_HASH = '94473cfd60dd563d80d0c5ecb7edac95';
+    const CCD3_POST_HASH = 'a12a1a5497c3fcbbc89442f44ee739b6';
+    expect([...preHashes][0], 'PRE must still read the ORIGINAL pilot-6-cutover hash — CC-D3 never touches pre/').toBe(CCD3_PRE_HASH);
+    expect([...postHashes][0], 'POST must read the CC-D3-repaired hash, not PRE\'s — a match here would mean the repair silently reverted').toBe(CCD3_POST_HASH);
   });
 
   it('#151 The non-determinism inventory is declared before the first diff (git order) (landed: commit 7, 7b — both PRE (commit 5) and POST (commit 7) now have real git-add history)', () => {
@@ -613,7 +640,16 @@ describe('the three files, one slug (Spec 122 §4.1 / §5.1 / §5.2) + the BACKF
     const outputs = d.outputs as { writes: WriteSpec[]; invalidates: unknown[] };
     expect(Array.isArray(outputs.invalidates) && outputs.invalidates.length >= 1, 'B-3: outputs.invalidates must be minItems:1 for class E').toBe(true);
     expect(d.database.min_migration, `min_migration is a COUNT floor (LW-D8 pattern): ${MIN_MIGRATION}, migration 016's position in migrations/`).toBe(MIN_MIGRATION);
-    expect(d.override, 'BACKFILL has no FULL mode to force — 0 process.env/argv reads, §3\'s seam-map finding').toBe('none');
+    // CC-D3 (2026-08-30) AMENDS this: the pilot-6 seam map found 0 process.env/argv
+    // reads because no FULL mode existed yet. It exists now (override.force_full,
+    // COMPUTE_CENTROIDS_FORCE_FULL, LG-22) — reachable ONLY through the override,
+    // never scheduled (staleness.mode_select stays "none", asserted below).
+    expect(d.override, 'CC-D3 declares override.force_full — no longer "none"').not.toBe('none');
+    const override = d.override as Exclude<Descriptor['override'], 'none'>;
+    expect(override.force_full).toBe('COMPUTE_CENTROIDS_FORCE_FULL');
+    expect(override.force_run).toBe('none');
+    expect(override.dry_run).toBe('none');
+    expect((d.staleness as { mode_select: string }).mode_select, 'the FULL mode is reachable ONLY via override.force_full, never a scheduled/corpus-signal trigger (R-L precedent)').toBe('none');
     expect(d.recovery, 'recovery must not be "none" for a step with a class-E target').not.toBe('none');
     const recovery = d.recovery as Exclude<Descriptor['recovery'], 'none' | undefined>;
     expect(recovery.reset, 'BACKFILL schema profile: recovery.reset may not be "none"').not.toBe('none');
@@ -726,6 +762,59 @@ describe('the three files, one slug (Spec 122 §4.1 / §5.1 / §5.2) + the BACKF
     // runPhaseScaffold without updating this note.
     expect(fs.existsSync(abs('scripts/lib/step/phase-scaffold.js')), 'runPhaseScaffold must not exist — Fold D DEFERRED it to a post-pilot-8 library WF').toBe(false);
     void report;
+  });
+});
+
+// ---------------------------------------------------------------------------
+// CC-D3 (2026-08-30 follow-on WF3) — the FULL-mode repair's declared shape
+// ---------------------------------------------------------------------------
+
+describe('CC-D3 — the FULL-mode repair target (LG-22, set_based_scoped/set_source:"compute")', () => {
+  it('the second write target declares the repair contract: class set_based_scoped, set_source:"compute", guard is_distinct_from over both centroid columns, scope "geom IS NOT NULL", retract "none"', () => {
+    const d = loadDescriptor();
+    const full = fullRecomputeTarget(d);
+    expect(full.write_discipline.class).toBe('set_based_scoped');
+    expect(full.write_discipline.set_source).toBe('compute');
+    expect(full.write_discipline.guard).toBe('is_distinct_from');
+    expect(full.write_discipline.guard_columns).toEqual(['centroid_lat', 'centroid_lng']);
+    expect(full.write_discipline.scope).toBe('geom IS NOT NULL');
+    expect(full.retract).toBe('none');
+  });
+
+  it('recovery.before_image is "generated" — R-M generalized to a value-overwriting guarded write (an overwrite of a real prior value is not reversible by re-nulling)', () => {
+    const d = loadDescriptor();
+    expect(d.recovery).not.toBe('none');
+    const recovery = d.recovery as Exclude<Descriptor['recovery'], 'none' | undefined>;
+    expect(recovery.before_image).toBe('generated');
+  });
+
+  it('the FULL-mode repair checks (override_force_full_present, recompute_rows_changed, recompute_max_shift_m) are declared', () => {
+    const d = loadDescriptor();
+    for (const id of ['override_force_full_present', 'recompute_rows_changed', 'recompute_max_shift_m']) {
+      expect(d.checks.some((c) => c.id === id), `check "${id}" must be declared`).toBe(true);
+    }
+    const forceFullCheck = d.checks.find((c) => c.id === 'override_force_full_present') as Check;
+    expect(forceFullCheck.severity).toBe('WARN');
+    expect(forceFullCheck.when).toBe('pre');
+  });
+
+  it('the batch size is externalized (Rule 3): execution.batch_size_from_config names a registered, non-verdict-affecting logic variable', () => {
+    const d = loadDescriptor();
+    const batchVar = (d.execution as { batch_size_from_config?: string }).batch_size_from_config;
+    expect(batchVar).toBe('compute_centroids_full_recompute_batch_size');
+    const cfg = d.config as Exclude<Descriptor['config'], 'none'>;
+    const entry = cfg.logic_variables.find((v) => v.name === batchVar);
+    expect(entry, `${batchVar} must be a declared logic_variables[] entry (LM-D15 presence rule)`).toBeDefined();
+    expect(entry!.on_invalid).toBe('clamp');
+    // NOT verdict-affecting (R-G/GAP-G-4): no checks[].limit_from_config names it.
+    expect(d.checks.some((c) => c.limit_from_config === batchVar)).toBe(false);
+  });
+
+  it('the compute module exports buildFullRecomputeSql alongside the incremental buildBackfillSql', () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports -- exercising the real CJS library
+    const compute = require(abs('scripts/lib/compute/compute-centroids.js'));
+    expect(typeof compute.buildFullRecomputeSql).toBe('function');
+    expect(typeof compute.buildBackfillSql).toBe('function');
   });
 });
 

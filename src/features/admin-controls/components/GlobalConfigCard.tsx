@@ -151,10 +151,14 @@ export const GROUPS: Array<{ label: string; keys: string[] }> = [
     // externalized knobs. Own group (not "Data Quality Thresholds" — this pilot's
     // own precedent, "Parcel-Address Bridge", keeps each converted spatial step's
     // knobs together rather than folding them into the generic bucket).
+    // CC-D3 (2026-08-30 follow-on WF3) adds a THIRD, non-verdict-affecting knob —
+    // the FULL-mode repair's keyset batch size (override.force_full only, never
+    // scheduled).
     label: 'Centroid Computation',
     keys: [
       'compute_centroids_failed_geometries_warn',
       'compute_centroids_compute_rate_warn_pct',
+      'compute_centroids_full_recompute_batch_size',
     ],
   },
   {

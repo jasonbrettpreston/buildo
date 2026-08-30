@@ -131,8 +131,8 @@ describe('peel 8b — the must-fail sabotage battery (T1 failed_geometries, T2 c
     expect(built.warnings[0]).toMatch(/^failed_geometries: check errored: /);
   });
 
-  it('every non-INFO check this step declares is covered by the battery above (T1, T2 — no third WARN/FAIL check exists to miss)', () => {
+  it('every non-INFO check this step declares is covered by the battery above (T1, T2) or is explicitly named as out-of-scope for it (CC-D3\'s override_force_full_present, 2026-08-30 — a structural override-observability check, not a numeric bound this sabotage battery\'s shape can exercise)', () => {
     const nonInfo = DESCRIPTOR.checks.filter((c: { severity: string }) => c.severity !== 'INFO').map((c: { id: string }) => c.id);
-    expect(nonInfo.sort()).toEqual(['compute_rate', 'failed_geometries']);
+    expect(nonInfo.sort()).toEqual(['compute_rate', 'failed_geometries', 'override_force_full_present']);
   });
 });

@@ -2,7 +2,7 @@
 <!-- Source of truth: scripts/steps/_schema/step.schema.json (operator ruling R2). -->
 <!-- Regenerate: node scripts/violations/schema-to-vocab.mjs docs/reports/generated/122-vocabulary.md -->
 
-# The step contract — 20 categories, 419 declarable fields
+# The step contract — 20 categories, 420 declarable fields
 
 **Contract version 1 · status `v0-unfrozen-until-C3`.** The schema is canonical; this document is generated from it. Editing this file changes nothing.
 
@@ -16,7 +16,7 @@
 |---:|---|---:|---:|---:|
 | 1 | `identity` | 15 | 2 | 0 |
 | 2 | `inputs` | 23 | 5 | 0 |
-| 3 | `outputs` | 92 | 24 | 2 |
+| 3 | `outputs` | 93 | 25 | 2 |
 | 4 | `staleness` | 25 | 7 | 0 |
 | 5 | `guards` | 21 | 7 | 0 |
 | 6 | `execution` | 52 | 13 | 1 |
@@ -195,7 +195,7 @@ Grandfathered, never legal for a new step: an existing step must be able to decl
 | `writes[].columns[].source` | `compute` · `run_at` | ! |
 | `writes[].columns[].set_value` | OPEN | — |
 | `writes[].key_sql_type` | string `^[A-Z][A-Z0-9 ]*$` | — |
-| `writes[].write_discipline` | object {class, guard, guard_why, scope, guard_columns, guard_columns_why, declared_drift, expected_change_ratio, idempotent_rerun, idempotent_rerun_why, txn_scope, why} | † |
+| `writes[].write_discipline` | object {class, guard, guard_why, scope, guard_columns, guard_columns_why, declared_drift, expected_change_ratio, idempotent_rerun, idempotent_rerun_why, txn_scope, why, set_source} | † |
 | `writes[].write_discipline.class` | `guarded_upsert` · `upsert_scoped_departure_delete` · `staging_full_replace` · `insert_only_no_retraction` · `write_once_backfill` · `link_full_retraction` · `set_based_scoped` · `set_based_unscoped` · `temp_materialize` · `multi_pass_defer` · `derived_recompute` · `verdict_only` · `snapshot_append` · `set_based_join_update` · `set_based_null_retract` | † ! |
 | `writes[].write_discipline.guard` | `is_distinct_from` · `none` ⛔ **banned for new:** `none` | † ! |
 | `writes[].write_discipline.guard_why` | object {text, liveness} | — |
@@ -228,6 +228,7 @@ Grandfathered, never legal for a new step: an existing step must be able to decl
 | `writes[].write_discipline.why.liveness` | `none` \| object {kind, ref} | † |
 | `writes[].write_discipline.why.liveness.kind` | `check` · `file` · `table` · `column` · `external` · `spec` | † ! |
 | `writes[].write_discipline.why.liveness.ref` | string | † |
+| `writes[].write_discipline.set_source` | `compute` | ! |
 | `writes[].retract` | `none` · `departed` · `all` | † ! |
 | `writes[].retract_when` | `always` · `full_only` | ! |
 | `writes[].replay` | `idempotent_upsert` · `full_replace` · `append_unsafe` ⛔ **banned for new:** `append_unsafe` | † ! |

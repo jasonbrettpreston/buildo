@@ -116,6 +116,12 @@ function captureEmissions() {
 const seededVars = () => ({
   [compute.FAILED_GEOMETRIES_VAR]: '0',
   [compute.COMPUTE_RATE_VAR]: '98',
+  // CC-D3 (2026-08-30) — T3, the FULL-mode repair's batch size. Not consumed
+  // by the incremental path these fixtures exercise, but LM-D15's presence
+  // check (config.js) throws for ANY declared-but-unseeded var regardless of
+  // whether the run's own branch would have read it — every fixture pool
+  // needs a row for every declared logic_variables[] entry.
+  [compute.FULL_RECOMPUTE_BATCH_VAR]: '10000',
 });
 
 describe('peel 8a — runBackfillPhase against a fake pool (no DB): the descriptor\'s gating/staleness claims, proven at runtime', () => {
@@ -176,13 +182,20 @@ describe('peel 8a — runBackfillPhase against a fake pool (no DB): the descript
     }
   });
 
-  it('recovery.interrupted / before_image are truthfully "none" — write.buildWritePlan for this write target carries no clear_sql (class E has no destructive retraction to leave half-done, R-B carried forward per the report\'s R-F item 1)', () => {
+  it('recovery.interrupted is truthfully "none" (write_once_backfill\'s own target has no clear_sql — class E has no destructive retraction to leave half-done, R-B carried forward per the report\'s R-F item 1); recovery.before_image is "generated" (CC-D3, 2026-08-30 — the SECOND target overwrites a real prior value, generalizing R-M beyond a destructive retraction)', () => {
     const spec = DESCRIPTOR.outputs.writes[0];
     const plan = writeLib.buildWritePlan(spec, DESCRIPTOR);
     expect(plan.clear_sql, 'a write_once_backfill target has no clear_sql — there is nothing an interrupted run leaves half-retracted').toBeNull();
     expect(spec.retract).toBe('none');
     expect(DESCRIPTOR.recovery.interrupted).toBe('none');
-    expect(DESCRIPTOR.recovery.before_image).toBe('none');
+    expect(DESCRIPTOR.recovery.before_image).toBe('generated');
+    // The FULL-mode target (index 1) is the one that needs it — retract:"none" too
+    // (no destructive RETRACTION either), but before_image is now step-level
+    // "generated" because Rule 12/R-M is generalized to any value-overwriting
+    // guarded write, not just a retraction.
+    const fullSpec = DESCRIPTOR.outputs.writes[1];
+    expect(fullSpec.write_discipline.class).toBe('set_based_scoped');
+    expect(fullSpec.retract).toBe('none');
   });
 
   it('staleness.fingerprint_inputs names exactly the 3 declared inputs (the compute file + the two corpus signals) — no 4th input silently added or one silently dropped', () => {

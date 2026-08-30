@@ -29,6 +29,8 @@
 const FAILED_GEOMETRIES_VAR = 'compute_centroids_failed_geometries_warn';
 /** T2 (WARN floor on the compute-rate percentage — verdict-affecting, on_invalid "fail"). T2's default (98) traces to commit `d32612bb`'s deliberate 90%->98% tightening. */
 const COMPUTE_RATE_VAR = 'compute_centroids_compute_rate_warn_pct';
+/** T3 (batch size for the FULL-mode guarded repair's keyset UPDATE loop — NOT verdict-affecting, on_invalid "clamp"). CC-D3, 2026-08-30. */
+const FULL_RECOMPUTE_BATCH_VAR = 'compute_centroids_full_recompute_batch_size';
 
 const TABLE = 'parcels';
 
@@ -88,6 +90,66 @@ function buildBackfillSql() {
   };
 }
 
+/**
+ * CC-D3 (2026-08-30) — the FULL-mode repair. `override.force_full` (env
+ * `COMPUTE_CENTROIDS_FORCE_FULL`) selects this path INSTEAD OF `buildBackfillSql`
+ * above; the incremental scope (`centroid_lat IS NULL`) is untouched either way — see
+ * the descriptor's second `outputs.writes[]` target (`write_discipline.class:
+ * "set_based_scoped"`, `set_source: "compute"`, LG-22).
+ *
+ * `drift_select_sql` is BOTH the guard predicate AND the before-image source in one
+ * statement — it reads every row whose STORED centroid differs from a freshly
+ * computed `ST_Centroid(geom)` by ANY amount (`IS DISTINCT FROM`, not `> 1.0`: the
+ * runtime plausibility check's `> 1.0` bound is an OBSERVABILITY threshold, not the
+ * repair's own scope — repairing only >1m drift would leave every sub-1m drift
+ * uncorrected and CALL it done). `shift_m` rides along so `recompute_max_shift_m`
+ * costs nothing extra to measure. The runner (`runBackfillFullRecompute`,
+ * `scripts/lib/step/index.js`) reads this ONCE (R-M: the before-image must be
+ * written from the SAME rows the update will touch), then chunks the returned ids
+ * into `update_sql`'s keyset-batched UPDATEs.
+ *
+ * `update_sql` is a plain guarded UPDATE scoped by `id = ANY($1::int[])` — the ids
+ * come from `drift_select_sql`'s own result, not a re-derived predicate, so a batch
+ * can never touch a row that was not before-imaged. `executeGuardedUpdate` (LG-22)
+ * enforces the UPDATE-only token boundary the same way `executeBackfillUpdate`
+ * (LG-20) does for the incremental path.
+ */
+function buildFullRecomputeSql(descriptor, config) {
+  const batchSizeVar = (descriptor && descriptor.execution && descriptor.execution.batch_size_from_config)
+    || FULL_RECOMPUTE_BATCH_VAR;
+  return {
+    // ⚠️ ROUND(...::numeric, 7), NOT a bare ST_Y/ST_X comparison — found live
+    // this WF3, red-first, by executing this exact query against a fixture
+    // row that was ALREADY correct. `centroid_lat`/`centroid_lng` are
+    // NUMERIC(10,7) (migration 245's own ~1.1cm quantum); ST_Centroid returns
+    // unrounded double precision. Comparing a ROUNDED stored value against an
+    // UNROUNDED fresh one via bare IS DISTINCT FROM is DISTINCT on the last
+    // decimal for nearly every row, even one this exact UPDATE just wrote —
+    // it would report the ENTIRE table as "drifted" on every run, breaking
+    // idempotent_rerun:"zero_writes" the same way an un-guarded set-based
+    // write would. Rounding BOTH sides to the column's own precision is what
+    // makes a re-run over an already-repaired row a genuine no-op.
+    drift_select_sql: `SELECT id, centroid_lat, centroid_lng,
+       ROUND(ST_Y(ST_Centroid(geom))::numeric, 7) AS new_centroid_lat,
+       ROUND(ST_X(ST_Centroid(geom))::numeric, 7) AS new_centroid_lng,
+       ST_DistanceSphere(
+         ST_SetSRID(ST_MakePoint(centroid_lng, centroid_lat), 4326),
+         ST_Centroid(geom)
+       ) AS shift_m
+    FROM parcels
+   WHERE geom IS NOT NULL
+     AND (centroid_lat IS DISTINCT FROM ROUND(ST_Y(ST_Centroid(geom))::numeric, 7)
+          OR centroid_lng IS DISTINCT FROM ROUND(ST_X(ST_Centroid(geom))::numeric, 7))
+   ORDER BY id`,
+    update_sql: `UPDATE parcels SET
+     centroid_lat = ST_Y(ST_Centroid(geom)),
+     centroid_lng = ST_X(ST_Centroid(geom))
+   WHERE id = ANY($1::int[])
+   RETURNING id`,
+    batch_size: (config && config[batchSizeVar]) || 10000,
+  };
+}
+
 // ===========================================================================
 // Checks — one function per declared check, in descriptor order, name === id
 // ===========================================================================
@@ -137,12 +199,32 @@ function compute_rate(ctx) {
   ctx.report('compute_rate', { value: pct, detail: `${pct}%` });
 }
 
+/** WARN (not FAIL) — a standing `COMPUTE_CENTROIDS_FORCE_FULL` env var must be visible on every run, forced or not (link_massing precedent, `override_force_full_present`). */
+function override_force_full_present(ctx) {
+  const standing = ctx.overrides && ctx.overrides.force_full === true;
+  ctx.report('override_force_full_present', { violations: standing ? 1 : 0, detail: standing });
+}
+
+/** INFO — CC-D3's own repair counter: rows the FULL-mode guarded UPDATE actually touched (0 on every incremental run). */
+function recompute_rows_changed(ctx) {
+  const n = (ctx.matched && ctx.matched.recompute_rows_changed) || 0;
+  ctx.report('recompute_rows_changed', { violations: 0, detail: n });
+}
+
+/** INFO — the largest single-row centroid shift the FULL-mode repair corrected, in metres (null on an incremental run — nothing to measure). */
+function recompute_max_shift_m(ctx) {
+  const m = ctx.matched || {};
+  const v = Object.prototype.hasOwnProperty.call(m, 'recompute_max_shift_m') ? m.recompute_max_shift_m : null;
+  ctx.report('recompute_max_shift_m', { violations: 0, detail: v });
+}
+
 /**
  * The step's `records_meta` block — mirrors the pre-conversion script's own
  * top-level fields (`duration_ms`, `parcels_processed`, `centroids_computed`,
  * `failed_geometries`) for maximal fidelity, even though the audit_table SHAPE
  * around them is now row-derived (Rule 10) rather than the old `hasWarns`
- * parallel boolean.
+ * parallel boolean. CC-D3 (2026-08-30) adds `recompute_rows_changed`/
+ * `recompute_max_shift_m` for the FULL-mode repair — 0/null on every incremental run.
  */
 function buildBackfillMeta(ctx) {
   const m = ctx.matched || {};
@@ -151,6 +233,8 @@ function buildBackfillMeta(ctx) {
     parcels_processed: m.parcels_processed || 0,
     centroids_computed: m.centroids_computed || 0,
     failed_geometries: m.failed_geometries || 0,
+    recompute_rows_changed: m.recompute_rows_changed || 0,
+    recompute_max_shift_m: Object.prototype.hasOwnProperty.call(m, 'recompute_max_shift_m') ? m.recompute_max_shift_m : null,
   };
 }
 
@@ -159,10 +243,13 @@ function buildBackfillMeta(ctx) {
 /** §5.5 (1) — keys are exactly the descriptor's check ids, in declaration order. */
 const CHECKS = {
   backlog_count,
+  override_force_full_present,
   parcels_processed,
   centroids_computed,
   failed_geometries,
   compute_rate,
+  recompute_rows_changed,
+  recompute_max_shift_m,
 };
 
 /** §5.5 (2) — run the SELECTED checks, and nothing else. Errors land on their own row (never suppress siblings). */
@@ -187,9 +274,11 @@ module.exports = compute;
 module.exports.compute = compute;
 module.exports.checks = CHECKS;
 module.exports.buildBackfillSql = buildBackfillSql;
+module.exports.buildFullRecomputeSql = buildFullRecomputeSql;
 module.exports.buildPreSql = buildPreSql;
 module.exports.buildUpdateSql = buildUpdateSql;
 module.exports.buildPostSql = buildPostSql;
 module.exports.FAILED_GEOMETRIES_VAR = FAILED_GEOMETRIES_VAR;
 module.exports.COMPUTE_RATE_VAR = COMPUTE_RATE_VAR;
+module.exports.FULL_RECOMPUTE_BATCH_VAR = FULL_RECOMPUTE_BATCH_VAR;
 module.exports.TABLE = TABLE;

@@ -196,6 +196,7 @@ const EXPECTED_LOGIC_VAR_KEYS = [
   'link_parcel_addresses_fanout_warn_rd_rs',            // LPA-D5 (WF3-B)
   'compute_centroids_failed_geometries_warn',           // C1 pilot 6 (BACKFILL), T1
   'compute_centroids_compute_rate_warn_pct',            // C1 pilot 6 (BACKFILL), T2
+  'compute_centroids_full_recompute_batch_size',        // CC-D3 WF3 (2026-08-30), T3
   'calibration_default_median_days',  // E21
   'calibration_default_p25_days',     // E21
   'calibration_default_p75_days',     // E21

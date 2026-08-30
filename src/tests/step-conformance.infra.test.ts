@@ -1162,13 +1162,23 @@ describe('LW-D10 — a declared tunable consumed ONLY via a library *_from_confi
 // is the SAME shape as LW-D10's own T7 fixture: "consumed ONLY via a
 // *_from_config field" is a real, provable, non-vacuous case, not merely "no
 // finding because nothing was checked."
+//
+// CC-D3 (2026-08-30 follow-on WF3) adds T3
+// (compute_centroids_full_recompute_batch_size), consumed via a DIFFERENT
+// *_from_config field (execution.batch_size_from_config, not
+// checks[].limit_from_config) — fromConfigRefs scans EVERY `*_from_config` key
+// generically, so T3 joins CC_VARS below rather than needing a second fixture.
 // ---------------------------------------------------------------------------
 
 const CC_STEP = 'scripts/compute-centroids.js';
-const CC_VARS = ['compute_centroids_failed_geometries_warn', 'compute_centroids_compute_rate_warn_pct'];
+const CC_VARS = [
+  'compute_centroids_failed_geometries_warn',
+  'compute_centroids_compute_rate_warn_pct',
+  'compute_centroids_full_recompute_batch_size',
+];
 
-describe('pilot 6 peel 8c — compute_centroids T1/T2: declared ⊆ registry, ⊆ GROUPS, consumed ≡ declared (exercised directly, not yet in converted.json)', () => {
-  it('the fixture is non-vacuous — both T1/T2 are declared, both are *_from_config-reachable (checks[].limit_from_config), and NEITHER is also read as ctx.config in compute.js (the library-only consumption path is genuinely exercised, not vacuously true)', () => {
+describe('pilot 6 peel 8c — compute_centroids T1/T2/T3: declared ⊆ registry, ⊆ GROUPS, consumed ≡ declared (exercised directly, not yet in converted.json)', () => {
+  it('the fixture is non-vacuous — all of T1/T2/T3 are declared, all are *_from_config-reachable, and NONE is also read as ctx.config in compute.js (the library-only consumption path is genuinely exercised, not vacuously true)', () => {
     const { declared } = declaredConfigVars(CC_STEP);
     expect(declared.sort()).toEqual([...CC_VARS].sort());
     const refs = runnerConsumedVars(CC_STEP);

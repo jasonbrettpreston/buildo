@@ -3,7 +3,7 @@
     "name": "compute_centroids",
     "display_name": "Centroid Computation",
     "owner": "data",
-    "description": "Fills parcels.centroid_lat/centroid_lng for every parcel with a geometry and no centroid yet — ONE server-side conditional UPDATE ... WHERE geom IS NOT NULL AND centroid_lat IS NULL RETURNING id (PostGIS ST_Centroid), never revisits an already-filled row. Migration 245's trigger, a SEPARATE mechanism, is what makes a row eligible again after a geometry change.",
+    "description": "Fills parcels.centroid_lat/centroid_lng for every parcel with a geometry and no centroid yet — ONE server-side conditional UPDATE ... WHERE geom IS NOT NULL AND centroid_lat IS NULL RETURNING id (PostGIS ST_Centroid), never revisits an already-filled row. Migration 245's trigger, a SEPARATE mechanism, is what makes a row eligible again after a geometry change. CC-D3 (2026-08-30) adds a SECOND, never-scheduled mode reachable only via override.force_full (COMPUTE_CENTROIDS_FORCE_FULL): a guarded (IS DISTINCT FROM), before-imaged, keyset-batched repair of every stored centroid that differs from a fresh ST_Centroid(geom) recomputation — the algorithm-drift population this step's own scope was structurally blind to.",
     "lock": 99,
     "why_lock": {
       "text": "Lock 99 is not the spec number — it is Spec 47 §A.5's registry id (row 5, \"Maintenance\" wave, \"Writes Timestamps? NO\"), unrelated to either owning spec's own number (43 or 55). Kept textually per §5.4 so the registry loop (src/tests/pipeline-advisory-lock.infra.test.ts) stays green across the conversion — this step has carried lock 99 since commit 3c3e6f84 (2026-04-16) and nothing about the conversion changes it.",
@@ -64,6 +64,35 @@
         "retract": "none",
         "replay": "idempotent_upsert",
         "source_key_policy": { "unique": true, "on_collision": "not_applicable", "key_space_migration": "none" }
+      },
+      {
+        "table": "parcels",
+        "key": "id",
+        "columns": [
+          { "name": "centroid_lat", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "centroid_lng", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" }
+        ],
+        "write_discipline": {
+          "class": "set_based_scoped",
+          "set_source": "compute",
+          "guard": "is_distinct_from",
+          "guard_columns": ["centroid_lat", "centroid_lng"],
+          "guard_columns_why": {
+            "text": "CC-D3 (2026-08-30). The guard is what makes this target SAFE to re-run: a row whose recomputed value already equals the stored one (nothing left to repair) is NOT rewritten. Unlike the incremental target above (guard:\"none\", scope IS the guard), this target overwrites an EXISTING non-NULL value, so an explicit IS DISTINCT FROM is required, not vacuous.",
+            "liveness": { "kind": "file", "ref": "scripts/lib/compute/compute-centroids.js" }
+          },
+          "scope": "geom IS NOT NULL",
+          "expected_change_ratio": "none",
+          "idempotent_rerun": "zero_writes",
+          "txn_scope": "batch",
+          "why": {
+            "text": "CC-D3, LG-22 (2026-08-30 follow-on WF3 to pilot 6). A DIFFERENT write contract from the incremental target above: that one FILLS a NULL (guard:\"none\", write-once by scope); this one REPAIRS an already-filled value that drifted from today's PostGIS ST_Centroid algorithm (the one real-work run, 2026-03-10, predates the PostGIS offload and used the retired JS arithmetic-mean formula; the remaining ~486K rows predate pipeline_runs ledger visibility, most plausibly a bulk seed/restore — see CC-D3, defect-ledger.md). Never scheduled (staleness.mode_select stays \"none\") — reachable ONLY through override.force_full (R-L precedent: an operator env var, never a corpus-signal autonomous trigger), because unlike the incremental fill this target's write is NOT idempotent-by-scope — it is idempotent-by-GUARD (a second run over an unchanged geom updates 0 rows), which is a materially different and riskier shape to leave on an autonomous schedule. set_source:\"compute\" (write.js LG-22) because the SET clause is a server-side expression (ST_Y(ST_Centroid(geom))), not a declared constant — the same reason write_once_backfill above is compute-authored.",
+            "liveness": { "kind": "file", "ref": "scripts/lib/compute/compute-centroids.js" }
+          }
+        },
+        "retract": "none",
+        "replay": "idempotent_upsert",
+        "source_key_policy": { "unique": true, "on_collision": "not_applicable", "key_space_migration": "none" }
       }
     ],
     "cascades": "none",
@@ -75,7 +104,7 @@
     "write_inventory": {
       "statements": 1,
       "why": {
-        "text": "One write target, one write statement, no batching in the surviving path — the single conditional UPDATE ... WHERE geom IS NOT NULL AND centroid_lat IS NULL RETURNING id (LG-20's executeBackfillUpdate). The simplest write shape of any pilot converted to date.",
+        "text": "Steady-state (incremental mode, staleness.mode_select \"none\" — the only mode this step ever resolves on its own): one write target, one write statement, no batching in the surviving path — the single conditional UPDATE ... WHERE geom IS NOT NULL AND centroid_lat IS NULL RETURNING id (LG-20's executeBackfillUpdate). CC-D3 (2026-08-30) adds a SECOND write target reachable only through override.force_full: one unbatched SELECT (drift_select_sql, both the guard predicate and the before-image source) plus N keyset-batched UPDATE statements (execution.batch_size_from_config, LG-22's executeGuardedUpdate) — N = ceil(drift_rows / batch_size). Measured on the one live forced-FULL run: see this step's own limitations[] CC-D3 entry for the exact batch count and wall-clock. Never scheduled; see the second write target's own write_discipline.why.",
         "liveness": { "kind": "file", "ref": "scripts/lib/compute/compute-centroids.js" }
       }
     }
@@ -132,7 +161,8 @@
     "invocation": {
       "sources": { "argv": [], "env": {} }
     },
-    "maintenance": "none"
+    "maintenance": "none",
+    "batch_size_from_config": "compute_centroids_full_recompute_batch_size"
   },
 
   "checks": [
@@ -141,6 +171,12 @@
       "expect": { "reports": "the pre-run count of parcels with a geometry and no centroid yet — the eligibility scope's own denominator" },
       "limit": "viol == 0", "severity": "INFO", "blocking": false, "when": "pre", "chains": "all", "accept_until": "none",
       "why": { "text": "R-P's spirit (N/A — this BACKFILL declares no ledger gate to narrow checks around, so R-P itself does not apply): a data-driven zero-work completion must still persist WHY it had nothing to do, the same way a gated skip's gate_decision row does on every other archetype. Declared when:\"pre\" so it is scored even on the zero-work path.", "liveness": { "kind": "table", "ref": "parcels" } }
+    },
+    {
+      "id": "override_force_full_present", "kind": "invariant",
+      "expect": { "standing_override": false },
+      "limit": "viol == 0", "severity": "WARN", "blocking": false, "when": "pre", "chains": "all", "accept_until": "none",
+      "why": { "text": "CC-D3 (2026-08-30), link_massing precedent (LG-8's override_force_full_present). WARN, not INFO, whenever COMPUTE_CENTROIDS_FORCE_FULL is standing — a forced FULL left set in production would re-run the guarded repair's SELECT + N batched UPDATEs on EVERY subsequent invocation (each one a genuine no-op after the first, since the guard self-excludes an already-repaired row, but still a full-table scan every run). Declared when:\"pre\" so a forced run's OWN audit row shows the override that caused it, not just the row count it produced.", "liveness": { "kind": "file", "ref": "scripts/lib/step/staleness.js" } }
     },
     {
       "id": "parcels_processed", "kind": "field_coverage",
@@ -167,6 +203,18 @@
       "limit": "pct >= 98", "limit_from_config": "compute_centroids_compute_rate_warn_pct",
       "severity": "WARN", "blocking": false, "when": "post", "chains": "all", "accept_until": "none",
       "why": { "text": "T2 (Spec 124 Rule 3). Ported verbatim from the pre-conversion script's own literal threshold (`:198`,`:200`, `>= 98%`). The default (98) is NOT an arbitrary literal — it traces to commit d32612bb's deliberate business-accuracy tightening (\"tighten compute_rate from 90% to 98%\"), cited by SHA rather than treated as unexplained. Bounds 0-100, on_invalid \"fail\" (verdict-affecting, R-G).", "liveness": { "kind": "table", "ref": "parcels" } }
+    },
+    {
+      "id": "recompute_rows_changed", "kind": "field_coverage",
+      "expect": { "reports": "rows the CC-D3 FULL-mode guarded UPDATE actually touched — 0 on every incremental run" },
+      "limit": "viol == 0", "severity": "INFO", "blocking": false, "when": "post", "chains": "all", "accept_until": "none",
+      "why": { "text": "CC-D3 (2026-08-30). The repair's own counter — distinct from centroids_computed/parcels_processed above (which report the SAME number in FULL mode, since the guarded UPDATE subsumes the incremental fill, but keep their own incremental-mode meaning on every other run). INFO: this is a repair measurement, not a threshold a run could fail.", "liveness": { "kind": "table", "ref": "parcels" } }
+    },
+    {
+      "id": "recompute_max_shift_m", "kind": "field_coverage",
+      "expect": { "reports": "the largest single-row centroid shift (metres) the CC-D3 FULL-mode repair corrected — null on an incremental run" },
+      "limit": "viol == 0", "severity": "INFO", "blocking": false, "when": "post", "chains": "all", "accept_until": "none",
+      "why": { "text": "CC-D3 (2026-08-30). Measured from the SAME drift_select_sql read the before-image uses (ST_DistanceSphere between the stored point and the freshly computed ST_Centroid) — costs nothing extra to report. INFO: an observability ceiling on the repair's own magnitude, not a pass/fail bound.", "liveness": { "kind": "table", "ref": "parcels" } }
     }
   ],
 
@@ -196,22 +244,22 @@
       "id": "outside_polygon_count", "sql": "SELECT count(*)::int FROM parcels WHERE geom IS NOT NULL AND centroid_lat IS NOT NULL AND NOT ST_Contains(geom, ST_SetSRID(ST_MakePoint(centroid_lng, centroid_lat),4326))",
       "bound": "viol == 0", "severity": "WARN", "blocking": false, "when": "post",
       "source": "invariant", "frequency": "every_run",
-      "last_measured": { "value": 3626, "at": "2026-08-30T13:17:49.000Z", "commit": "9019c3d", "cost_ms": 515, "sample_n": 3, "source_run": { "run_id": null, "chain": null, "event": "manual_timing" } },
-      "why": { "text": "R-T addendum, commit 4 (net-new). A computed centroid physically outside its own parcel's polygon (concave-lot drift, the CC-D2/CC-D3 defect class) — measured live, standing non-zero (3,626), never zero by design under this step's own scope (WHERE centroid_lat IS NULL only, never revisits a filled row per its own §1.10 profile) — WARN + effectively a standing residual, consistent with the CC-D2/CC-D3 root-cause finding filed HIGH/PIN in review_followups. Not FAIL: the same standing-non-zero-by-design rule (Spec 48 §4.9) LM-D6/LM-D11 use. 515ms median, 3 timings, single session.", "liveness": { "kind": "table", "ref": "parcels" } }
+      "last_measured": { "value": 1547, "at": "2026-08-30T16:25:29.397Z", "commit": "610dc113", "cost_ms": 515, "sample_n": 3, "source_run": { "run_id": null, "chain": "sources", "event": "cutover_backfill" } },
+      "why": { "text": "R-T addendum, commit 4 (net-new). A computed centroid physically outside its own parcel's polygon (concave-lot drift, the CC-D2/CC-D3 defect class) — measured live, standing non-zero, never zero by design under this step's own scope (WHERE centroid_lat IS NULL only, never revisits a filled row per its own §1.10 profile) — WARN + effectively a standing residual, consistent with the CC-D2/CC-D3 root-cause finding filed HIGH/PIN in review_followups. Not FAIL: the same standing-non-zero-by-design rule (Spec 48 §4.9) LM-D6/LM-D11 use. **AMENDED 2026-08-30 (CC-D3's live FULL-mode repair, WF3):** 3,626 -> 1,547 — DROPPED, not eliminated. `ST_Centroid` replacing the retired JS arithmetic-mean (and the untracked bulk seed/restore population) shrinks this Spec-59-sanctioned concave-lot residual; it does not, and structurally cannot, zero it — a concave polygon's true centroid can be outside it by construction. CC-D2 stays PIN.", "liveness": { "kind": "table", "ref": "parcels" } }
     },
     {
       "id": "pointonsurface_gt_1m_count", "sql": "SELECT count(*)::int FROM parcels WHERE geom IS NOT NULL AND centroid_lat IS NOT NULL AND ST_DistanceSphere(ST_SetSRID(ST_MakePoint(centroid_lng, centroid_lat),4326), ST_PointOnSurface(geom)) > 1.0",
       "bound": "viol == 0", "severity": "WARN", "blocking": false, "when": "post",
       "source": "invariant", "frequency": "every_run",
-      "last_measured": { "value": 298021, "at": "2026-08-30T13:17:49.000Z", "commit": "9019c3d", "cost_ms": 1066, "sample_n": 3, "source_run": { "run_id": null, "chain": null, "event": "manual_timing" } },
-      "why": { "text": "R-T addendum, commit 4 (net-new). Distance from the stored centroid to a GUARANTEED-on-polygon reference point (ST_PointOnSurface, distinct from the ST_Centroid comparison below — this one never falls off a concave lot by construction). Standing non-zero (298,021 of 486,530, 61.3%) is the same CC-D2/CC-D3 class as outside_polygon_count above — WARN, self-retires only via a future one-time recompute-FULL (filed, not this step's own scope). 1,066ms median, 3 timings, single session.", "liveness": { "kind": "table", "ref": "parcels" } }
+      "last_measured": { "value": 134640, "at": "2026-08-30T16:25:29.397Z", "commit": "610dc113", "cost_ms": 1066, "sample_n": 3, "source_run": { "run_id": null, "chain": "sources", "event": "cutover_backfill" } },
+      "why": { "text": "R-T addendum, commit 4 (net-new). Distance from the stored centroid to a GUARANTEED-on-polygon reference point (ST_PointOnSurface, distinct from the ST_Centroid comparison below — this one never falls off a concave lot by construction). The same CC-D2/CC-D3 class as outside_polygon_count above — WARN, self-retires only via a future one-time recompute-FULL. **AMENDED 2026-08-30 (CC-D3's live FULL-mode repair, WF3):** 298,021 -> 134,640 — DROPPED (55.9% reduction), consistent with CC-D3's repair replacing the stale/retired-algorithm centroids; the residual is the SAME Spec 59 R2.5 concave-lot class outside_polygon_count carries, not a new finding.", "liveness": { "kind": "table", "ref": "parcels" } }
     },
     {
       "id": "centroid_in_neighbour_parcel_count", "sql": "WITH drifted AS MATERIALIZED (SELECT id, geom, ST_SetSRID(ST_MakePoint(centroid_lng, centroid_lat), 4326) AS c FROM parcels WHERE geom IS NOT NULL AND centroid_lat IS NOT NULL AND NOT ST_Contains(geom, ST_SetSRID(ST_MakePoint(centroid_lng, centroid_lat), 4326))) SELECT COUNT(*)::int AS c FROM drifted d CROSS JOIN LATERAL (SELECT p2.id FROM parcels p2 WHERE ST_Contains(p2.geom, d.c) AND p2.id <> d.id LIMIT 1) hit",
       "bound": "viol == 0", "severity": "WARN", "blocking": false, "when": "post",
       "source": "invariant", "frequency": "every_run",
-      "last_measured": { "value": 3130, "at": "2026-08-30T13:17:49.000Z", "commit": "9019c3d", "cost_ms": 597, "sample_n": 3, "source_run": { "run_id": null, "chain": null, "event": "manual_timing" } },
-      "why": { "text": "R-T addendum, commit 4 (net-new). The SHARPEST tail of outside_polygon_count above: a drifted centroid that lands not just off its own lot but INSIDE A DIFFERENT parcel entirely — the exact class link-parcels.js's Tier-3 nearest-centroid join is exposed to (RT-CC3, filed review_followups). 3,130 of 3,626 outside-polygon centroids (86.3%) land in a neighbour. WARN, same standing-residual reasoning. 597ms median, 3 timings, single session.", "liveness": { "kind": "table", "ref": "parcels" } }
+      "last_measured": { "value": 1344, "at": "2026-08-30T16:25:29.397Z", "commit": "610dc113", "cost_ms": 597, "sample_n": 3, "source_run": { "run_id": null, "chain": "sources", "event": "cutover_backfill" } },
+      "why": { "text": "R-T addendum, commit 4 (net-new). The SHARPEST tail of outside_polygon_count above: a drifted centroid that lands not just off its own lot but INSIDE A DIFFERENT parcel entirely — the exact class link-parcels.js's Tier-3 nearest-centroid join is exposed to (RT-CC3, filed review_followups). WARN, same standing-residual reasoning. **AMENDED 2026-08-30 (CC-D3's live FULL-mode repair, WF3):** 3,130 -> 1,344 (86.9% of the now-smaller 1,547 outside-polygon population, unchanged ratio) — DROPPED, not eliminated; CC-D2's own downstream exposure (link_parcels.js's Tier-3 join) is smaller but still open, still PIN.", "liveness": { "kind": "table", "ref": "parcels" } }
     }
   ],
   "plausibility": [
@@ -219,13 +267,17 @@
       "id": "centroid_algorithm_drift_gt_1m_count", "sql": "SELECT count(*)::int FROM parcels WHERE geom IS NOT NULL AND centroid_lat IS NOT NULL AND ST_DistanceSphere(ST_SetSRID(ST_MakePoint(centroid_lng, centroid_lat),4326), ST_Centroid(geom)) > 1.0",
       "bound": "viol == 0", "severity": "WARN", "blocking": false, "when": "post",
       "source": "plausibility", "frequency": "every_run",
-      "retighten_when": "zero rows (would require a one-time recompute-FULL under today's PostGIS algorithm, filed not built — CC-D3)",
-      "last_measured": { "value": 292587, "at": "2026-08-30T13:17:49.000Z", "commit": "9019c3d", "cost_ms": 1182, "sample_n": 3, "source_run": { "run_id": null, "chain": null, "event": "manual_timing" } },
-      "why": { "text": "R-T addendum, commit 4 — this is CC-D3 (defect-ledger.md, filed 2026-08-29), the plan's own worked example for plausibility[] vs invariants[]: the bound is 'computed <= 1m from a value populated by a DIFFERENT run' (this step's own scope is WHERE centroid_lat IS NULL, so it never revisits an already-filled row — the drift is inherited, not created, by any given run), not a value this step's own write could self-correct. Measured live: 292,587/486,530 (60.1%) differ from a freshly-computed ST_Centroid(geom) by >1m on the SAME unchanged geom — matches CC-D3's own filed figure exactly. PHYSICAL-BOUND (Fold A-5): grounded in a real geometric recomputation, not a telemetry trend. WARN + retighten_when, never FAIL — self-retires only via CC-D3's own filed one-time recompute-FULL recommendation. 1,182ms median, 3 timings, single session.", "liveness": { "kind": "table", "ref": "parcels" } }
+      "retighten_when": "zero rows — BUILT and FIRED (CC-D3, WF3, 2026-08-30): a declared FULL mode (override.force_full, outputs.writes[1], LG-22) recomputed every drifted centroid live; this bound retightened to 0 the same run and is now the STEADY-STATE reading, not a standing WARN. A future genuine recurrence (a new algorithm change with no matching repair) would re-raise it — the retighten condition stays declared, not retired, per Rule 10 addendum R-H's own posture for a metric that CAN legitimately return to non-zero.",
+      "last_measured": { "value": 0, "at": "2026-08-30T16:25:29.397Z", "commit": "610dc113", "cost_ms": 1182, "sample_n": 3, "source_run": { "run_id": null, "chain": "sources", "event": "cutover_backfill" } },
+      "why": { "text": "R-T addendum, commit 4 — this is CC-D3 (defect-ledger.md, filed 2026-08-29), the plan's own worked example for plausibility[] vs invariants[]: the bound is 'computed <= 1m from a value populated by a DIFFERENT run' (this step's own scope is WHERE centroid_lat IS NULL, so it never revisits an already-filled row — the drift is inherited, not created, by any given run), not a value this step's own write could self-correct BY ITS OWN INCREMENTAL SCOPE. CLOSED-MEASURED 2026-08-30 (WF3, operator \"yes to the recommendations\"): the FULL mode this row's own retighten_when named is now built (LG-22) and was run once live — 292,587 -> 0, re-measured by the SAME query, `docs/reports/golden/compute_centroids/post/sources-full-forced-1.json`'s own invariants block. PHYSICAL-BOUND (Fold A-5): grounded in a real geometric recomputation, not a telemetry trend. Stays WARN + retighten_when (never PASS-and-forget, never FAIL) because a future algorithm/geometry change could re-raise it — the mechanism that closes it now EXISTS and is proven, which is what changed, not the bound's own severity posture.", "liveness": { "kind": "table", "ref": "parcels" } }
     }
   ],
 
-  "override": "none",
+  "override": {
+    "force_full": "COMPUTE_CENTROIDS_FORCE_FULL",
+    "force_run": "none",
+    "dry_run": "none"
+  },
 
   "emits": "none",
 
@@ -233,18 +285,18 @@
 
   "limitations": [
     {
-      "what": "CC-D2 (Reality-Check R-1, pinned): of 3,626 out-of-polygon centroids, 3,130 land inside a DIFFERENT parcel, exposing a 276-link mis-attribution signature in link-parcels.js's Tier-3 nearest-centroid join. This step's own output (the centroid value itself) is correct per its own contract (ST_Centroid computes exactly what it is asked to compute, Spec 59 R2.5 rules a concave-lot centroid outside its own polygon is correct-by-design) — the exposure is in a DOWNSTREAM consumer's join strategy, not in compute_centroids. PINNED for this pilot (zero-behaviour-change scope); HIGH followup filed against link_parcels.js.",
-      "measured": "3,626/486,530 (0.75%) outside-polygon; 3,130 land inside a neighbour parcel; 276/494 spatial-tier permit_parcels links point at a drifted parcel (2026-08-29 session)",
+      "what": "CC-D2 (Reality-Check R-1, PIN — UNCHANGED by CC-D3's repair): out-of-polygon centroids land inside a DIFFERENT parcel, exposing a mis-attribution signature in link-parcels.js's Tier-3 nearest-centroid join. This step's own output (the centroid value itself) is correct per its own contract (ST_Centroid computes exactly what it is asked to compute, Spec 59 R2.5 rules a concave-lot centroid outside its own polygon is correct-by-design) — the exposure is in a DOWNSTREAM consumer's join strategy, not in compute_centroids. PINNED for this pilot (zero-behaviour-change scope); HIGH followup filed against link_parcels.js, STILL OPEN after CC-D3's repair (2026-08-30) — the repair shrank the exposed population, it did not fix the join strategy.",
+      "measured": "PRE-repair (2026-08-29 session): 3,626/486,530 (0.75%) outside-polygon; 3,130 land inside a neighbour parcel; 276/494 spatial-tier permit_parcels links point at a drifted parcel. POST-repair (2026-08-30, CC-D3's live FULL-mode run): 1,547 outside-polygon; 1,344 land inside a neighbour parcel — DROPPED, not eliminated (defect-ledger.md CC-D2 row).",
       "check_id": "none"
     },
     {
-      "what": "CC-D3 (Finding 7, pinned): 292,587/486,530 (60.1%) of stored centroids differ >1m from a freshly-computed ST_Centroid over the SAME unchanged geom — root cause is algorithm drift (the one real-work run, 2026-03-10, predates the PostGIS offload and used the retired JS arithmetic-mean formula; the remainder predates pipeline_runs ledger visibility entirely, most plausibly a bulk seed/restore). This step's own G1 guarantee (\"fills centroid for every parcel with a geometry and no centroid yet\") never promised WHICH formula, and the scope predicate makes an already-filled row permanently out of this step's own reach by design, not by oversight. Filed MED (below CC-D2's HIGH — no measured downstream mis-link count for this finding).",
-      "measured": "292,587/486,530 (60.1%) stored-vs-fresh centroid distance > 1m; avg 6.61m, median 4.12m, max 1,476.84m (2026-08-29 session)",
-      "check_id": "none"
+      "what": "CC-D3 (Finding 7), CLOSED-MEASURED 2026-08-30 (WF3, operator \"yes to the recommendations\"): 292,587/486,530 (60.1%) of stored centroids differed >1m from a freshly-computed ST_Centroid over the SAME unchanged geom — root cause was algorithm drift (the one real-work run, 2026-03-10, predates the PostGIS offload and used the retired JS arithmetic-mean formula; the remainder predates pipeline_runs ledger visibility entirely, most plausibly a bulk seed/restore). This step's own G1 guarantee (\"fills centroid for every parcel with a geometry and no centroid yet\") never promised WHICH formula, and the scope predicate made an already-filled row permanently out of this step's own INCREMENTAL reach by design, not by oversight — closed by adding a SECOND, never-scheduled write target (outputs.writes[1], override.force_full, LG-22) rather than widening the incremental scope, per Spec 124 §7 rung (a).",
+      "measured": "PRE-repair (2026-08-29 session): 292,587/486,530 (60.1%) stored-vs-fresh centroid distance > 1m; avg 6.61m, median 4.12m, max 1,476.84m. LIVE REPAIR (2026-08-30, COMPUTE_CENTROIDS_FORCE_FULL=1): 395,085/486,530 (81.2%) rows repaired (any-magnitude guard, a strict superset of the >1m metric) in 149.1s wall-clock (40 batches of 10,000); before-image 395,085 rows/26.7MB; recompute_max_shift_m 1,476.84m (matches the pre-repair max exactly). POST-repair: centroid_algorithm_drift_gt_1m_count 292,587 -> 0; idempotency proven by a second forced-FULL run selecting 0 rows; 60-parcel plausibility sample (setseed(0.20260830001)) measured 59/60 (98.3%) new centroids inside their own polygon.",
+      "check_id": "centroid_algorithm_drift_gt_1m_count"
     }
   ],
 
-  "interpretation": { "file": "compute-centroids.notes.json", "entries": 9 },
+  "interpretation": { "file": "compute-centroids.notes.json", "entries": 11 },
 
   "recovery": {
     "reset": "No TRUNCATE/rebuild mechanism exists. A re-run re-scans the full geom IS NOT NULL AND centroid_lat IS NULL scope, which is already the CORRECT reset behaviour for a class-E write_once_backfill target — the scope predicate self-excludes every already-filled row, so there is no separate destructive rebuild path to declare. This IS, in effect, migration 245's own trigger: nulling centroid_lat re-admits a row to this step's scope, which is the only \"reset\" this step's own contract recognizes.",
@@ -255,12 +307,12 @@
     "cascades": "derived",
     "interrupted": "none",
     "interrupted_why": {
-      "text": "No destructive retraction target exists on this step (class E, retract:\"none\") — there is nothing for an interrupted run to leave half-retracted. A crashed mid-UPDATE run simply leaves whatever subset the single server-side statement had already committed (statement-level atomicity — Postgres either commits the whole UPDATE or none of it); a re-run picks up exactly where the scope leaves off. R-F item 1 (carried forward, same disposition as pilot 5): this pilot does NOT itself exercise or close R-B's crashed/stuck-running reader gap.",
+      "text": "No destructive retraction target exists on this step (retract:\"none\" on BOTH write targets) — there is nothing for an interrupted run to leave half-retracted. A crashed mid-UPDATE run simply leaves whatever subset the currently-running statement had already committed (statement-level atomicity for the incremental target; per-batch atomicity for the CC-D3 FULL-mode target — each batch is its own committed statement, txn_scope \"batch\"); a re-run of either target picks up exactly where its own scope/guard leaves off — the FULL-mode target's guard (IS DISTINCT FROM) makes a re-run over an already-repaired row a genuine no-op, so a crash mid-batch-loop is safely resumable by re-running with the SAME override standing. R-F item 1 (carried forward, same disposition as pilot 5): this pilot does NOT itself exercise or close R-B's crashed/stuck-running reader gap.",
       "liveness": { "kind": "check", "ref": "backlog_count" }
     },
-    "before_image": "none",
+    "before_image": "generated",
     "before_image_why": {
-      "text": "R-M/LG-17's before-image mechanism applies to a destructive retraction; this step has none (class E, retract:\"none\"). The UPDATE is additive-in-place (NULL -> a computed float) and reversible by re-nulling the same two columns if ever needed, which is not the same hazard class a before-image protects against.",
+      "text": "CC-D3 (2026-08-30), R-M GENERALIZED. The incremental target (write_once_backfill, guard:\"none\") still needs none of this on its own — its UPDATE is additive-in-place (NULL -> a computed float), reversible by re-nulling the same two columns, not the hazard class a before-image protects against. The SECOND target (set_based_scoped/set_source:\"compute\") is different: it OVERWRITES an existing, non-NULL value under an IS DISTINCT FROM guard — not reversible by re-nulling, so it gets the SAME before-image audit trail R-M requires of a destructive retraction (write.js persistBeforeImageRows, called from runBackfillFullRecompute strictly BEFORE the first batched UPDATE, unwrapped by any try/catch). \"generated\" is declared at the step level (recovery has one instance per step, not per write target) because it is now true for at least one target; the incremental target's own posture is documented in ITS OWN write_discipline.why instead of a second recovery block.",
       "liveness": { "kind": "file", "ref": "scripts/lib/step/write.js" }
     }
   },
@@ -280,7 +332,8 @@
   "config": {
     "logic_variables": [
       { "name": "compute_centroids_failed_geometries_warn", "min": 0, "max": 10000, "on_invalid": "fail" },
-      { "name": "compute_centroids_compute_rate_warn_pct", "min": 0, "max": 100, "on_invalid": "fail" }
+      { "name": "compute_centroids_compute_rate_warn_pct", "min": 0, "max": 100, "on_invalid": "fail" },
+      { "name": "compute_centroids_full_recompute_batch_size", "min": 100, "max": 50000, "on_invalid": "clamp" }
     ],
     "validation": "strict",
     "hoisted_above_gate": true,
