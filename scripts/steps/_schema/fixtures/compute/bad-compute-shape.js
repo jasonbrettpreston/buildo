@@ -17,8 +17,10 @@
  *   compute-no-literal-url-tunable — `&limit=20` baked into the URL (§1.2a P4)
  *   compute-no-literal-byte-window — `Range: bytes=0-2048` (§1.2a P4)
  *   compute-no-literal-threshold   — `violations > 3`, a limit the descriptor owns
+ *   compute-no-postgis-branch      — `ctx.hasPostGIS` branch (Spec 124 §2 Rule 2, R-W)
  *
  * SPEC LINK: docs/specs/01-pipeline/122_pipeline_step_optimization.md §5.5, §1.2a P4
+ * SPEC LINK: docs/specs/01-pipeline/124_step_standard_policy.md §2 Rule 2 (R-W)
  */
 'use strict';
 
@@ -32,6 +34,10 @@ async function bad_check(ctx) {
     headers: { Range: 'bytes=0-2048' },
   });
   const violations = res.ok ? 0 : 1;
+  if (ctx.hasPostGIS) {
+    ctx.report('bad_check', { violations: violations > 3 ? violations : 0, detail: started });
+    return;
+  }
   ctx.report('bad_check', { violations: violations > 3 ? violations : 0, detail: started });
 }
 

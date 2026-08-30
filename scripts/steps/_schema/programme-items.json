@@ -1277,6 +1277,40 @@
         "blocks": []
       },
       "last_reviewed": "2026-08-30"
+    },
+    {
+      "id": "R-W",
+      "spec": "124 §2 Rule 2 addendum",
+      "title": "Compute must not branch on PostGIS availability — guards.requires is the only legal form",
+      "promised": "hasPostGIS/pg_extension/postgis_version branching (or a try/catch around a PostGIS-only call) inside compute is forbidden; guards.requires: {kind: extension, name: postgis, on_missing: fail} is the only legal form — three precedents: link_massing A-8, compute_centroids A-1(a), link_parcels A-1 (planned)",
+      "status": "BUILT",
+      "evidence": "scripts/ast-grep-rules/compute-shape.yml compute-no-postgis-branch rule (this commit); wired through scripts/hooks/check-step-shape.mjs's always-blocking compute corpus with no separate wiring needed (the driver runs every rule in the file over scripts/lib/compute/**); proven RED-first on scripts/steps/_schema/fixtures/compute/bad-compute-shape.js's added ctx.hasPostGIS branch (all 9 compute-shape rules fire), GREEN on all 6 converted computes (assert-schema.js, compute-centroids.js, link-massing.js, link-parcel-addresses.js, link-wsib.js, load-ravines.js); src/tests/step-conformance.infra.test.ts COMPUTE_RULE_IDS asserts both directions (173/173 passing); Spec 124 §2 Rule 2 addendum + §5 register row R-W, Spec 122 rulings table row R-W (this commit)",
+      "owner": {
+        "kind": "wf",
+        "ref": "WF6, docs(122_step_optimization) pilot7 ruling + R-W commit, 2026-08-30"
+      },
+      "gate": {
+        "kind": "nice_to_have",
+        "blocks": []
+      },
+      "last_reviewed": "2026-08-30"
+    },
+    {
+      "id": "PILOT7-LP",
+      "spec": "122 §8.2",
+      "title": "Pilot 7 = link_parcels (LINK, 2nd member) — ruled 2026-08-30, implementation not started",
+      "promised": "§8.2 pilot ORDER: 7 link_parcels (LINK, 2nd member) — ruled 2026-08-30, superseding the previously-tentative refresh_snapshot (RECORDER, forced single-member) placement at pilot 7; refresh_snapshot shifts to pilot 8, enrich_parcels to pilot 9 — the fix (link_parcels's Tier-3 spatial-tier join, CC-D2/RT-CC3) delivered INLINE by the conversion, rung (e)",
+      "status": "PARTIAL",
+      "evidence": "docs/reports/2026-08-30-pilot7-link-parcels-assessment.md §0.9 (ruling text, verbatim-sourced) and §0.8 item 7 (R-W filing); .cursor/pilot7_link_parcels_active_task.md (nine-commit plan, Fold A + Fold B rulings A-1..A-5 RULED, commits 1-9 sequenced, NOT yet executed — no descriptor, no compute, no commit landed for link_parcels); Spec 122 §8.2 pilot ORDER paragraph amended this commit; .cursor/active_task.md operator ruling 2026-08-30 'finish everything but dont move forward with another plan' — plan locked, awaiting operator authorization to implement",
+      "owner": {
+        "kind": "pilot",
+        "ref": "pilot 7 (link_parcels)"
+      },
+      "gate": {
+        "kind": "nice_to_have",
+        "blocks": []
+      },
+      "last_reviewed": "2026-08-30"
     }
   ]
 }

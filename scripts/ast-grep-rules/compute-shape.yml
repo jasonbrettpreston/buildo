@@ -209,3 +209,45 @@ constraints:
   N:
     kind: number
     regex: '^([1-9][0-9]*|[0-9]+\.[0-9]+)$'
+
+---
+
+id: compute-no-postgis-branch
+language: JavaScript
+severity: error
+message: |
+  Compute branches on PostGIS availability (Spec 124 §2 Rule 2 addendum, R-W,
+  2026-08-30).
+
+  A compute may not decide its own algorithm by checking `hasPostGIS`,
+  `pg_extension`, or `postgis_version` (bare identifier, property access, or a
+  string/SQL fragment naming one of them) — that is a SECOND code path hidden
+  inside domain logic, the exact shape three separate pilots retired: a
+  never-run in-memory grid/haversine fallback (`link_massing` A-8), an
+  unweighted arithmetic-mean centroid fallback (`compute_centroids` A-1(a)),
+  and a JS nearest-parcel fallback (`link_parcels` A-1, planned) — each swapped
+  for a fail-loud `guards.requires: {kind: "extension", name: "postgis",
+  on_missing: "fail"}` precondition, the ONLY legal form. A `try/catch` wrapped
+  around a PostGIS-only call is the same anti-pattern with the branch moved to
+  runtime instead of a boolean — still forbidden, because it still leaves a
+  second, silently-selected algorithm inside compute.
+
+  FIX: declare `guards.requires` on the descriptor (rung (a), Spec 124 §7) and
+  let the step refuse before compute ever runs. If a database genuinely lacks
+  PostGIS, the step HALTS — it does not silently degrade to a different
+  answer.
+
+  SPEC LINK: docs/specs/01-pipeline/124_step_standard_policy.md §2 Rule 2 (R-W)
+files:
+  - 'scripts/lib/compute/**/*.js'
+  - 'scripts/steps/_schema/fixtures/compute/**/*.js'
+rule:
+  any:
+    - kind: identifier
+      regex: '^(hasPostGIS|pg_extension|postgis_version)$'
+    - kind: property_identifier
+      regex: '^(hasPostGIS|pg_extension|postgis_version)$'
+    - kind: string
+      regex: '(hasPostGIS|pg_extension|postgis_version)'
+    - kind: template_string
+      regex: '(hasPostGIS|pg_extension|postgis_version)'

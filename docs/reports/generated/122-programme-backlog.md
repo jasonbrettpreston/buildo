@@ -6,13 +6,13 @@
 
 ## Counts
 
-Total items: **73**
+Total items: **75**
 
 | status | count |
 |---|---|
 | ⬜ NOT_STARTED | 15 |
-| ⚠️ PARTIAL | 20 |
-| ✅ BUILT | 36 |
+| ⚠️ PARTIAL | 21 |
+| ✅ BUILT | 37 |
 | ⏭️ SUPERSEDED | 2 |
 
 **blocks batching: 7**
@@ -37,7 +37,7 @@ Total items: **73**
 | `STA-3` | 120 §6b | 3 destructive-reset guards | ⬜ NOT_STARTED | wf: wf: programme-STA-2 | refresh_snapshot | 2026-08-29 |
 | `CLOUDPARITY` | 122 R-D | cloud database must run apply-logic-variables.js before any cloud cutover | ⚠️ PARTIAL | followup: review_followups.md HIGH ops entry (filed 2026-08-27, peel 8c) | cloud_deploy | 2026-08-29 |
 
-## Nice-to-have — real gap, not currently blocking (63)
+## Nice-to-have — real gap, not currently blocking (65)
 
 | id | spec | title | status | owner | blocks | last reviewed |
 |---|---|---|---|---|---|---|
@@ -104,6 +104,8 @@ Total items: **73**
 | `ASSERT-HEALTH-SHAPE` | 124 §2 | assert_health[] — a closed-shape category for health/liveness checks, left dormant | ⬜ NOT_STARTED | followup: review_followups.md (R-T addendum commit 7 filing, 2026-08-30); Ask 4 | — | 2026-08-30 |
 | `PSA-CHECK-IDS` | 124 §2 Rule 13 | parcel-sanity-audit.js's 42 CHECKS[] entries have no per-check id — plausibility[] SQL is duplicated, not referenced | ⬜ NOT_STARTED | followup: review_followups.md (R-T addendum commit 7 filing, 2026-08-30); Fold A-4d | — | 2026-08-30 |
 | `TRIPWIRE-T4T5` | 124 §8 | run-step.mjs tripwires T4/T5 stay N/A-MANUAL for both converted ingest_linkage steps | ⬜ NOT_STARTED | followup: review_followups.md (R-T addendum commit 7 filing, 2026-08-30); Fold A-4e | — | 2026-08-30 |
+| `R-W` | 124 §2 Rule 2 addendum | Compute must not branch on PostGIS availability — guards.requires is the only legal form | ✅ BUILT | wf: WF6, docs(122_step_optimization) pilot7 ruling + R-W commit, 2026-08-30 | — | 2026-08-30 |
+| `PILOT7-LP` | 122 §8.2 | Pilot 7 = link_parcels (LINK, 2nd member) — ruled 2026-08-30, implementation not started | ⚠️ PARTIAL | pilot: pilot 7 (link_parcels) | — | 2026-08-30 |
 
 ---
 

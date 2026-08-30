@@ -539,6 +539,11 @@ const COMPUTE_RULE_IDS = [
   'compute-no-literal-url-tunable',
   'compute-no-literal-byte-window',
   'compute-no-literal-threshold',
+  // Spec 124 §2 Rule 2 addendum (R-W, 2026-08-30) — compute must not branch on
+  // PostGIS availability; `guards.requires` is the only legal form. Three
+  // precedents: link_massing A-8, compute_centroids A-1(a), link_parcels A-1
+  // (planned). The fixture's `ctx.hasPostGIS` branch is this rule's prove-red.
+  'compute-no-postgis-branch',
 ];
 
 interface ComputePair {
