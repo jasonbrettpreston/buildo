@@ -755,6 +755,58 @@ class, not a new defect, and does not block this commit.
 
 ---
 
+## §8a. Peel — gating/staleness (commit 8a)
+
+**Verification-only peel — no descriptor/compute/library change.** Every claim this peel covers was already
+DECLARED at commit 7 (`staleness.fingerprint_inputs`, the `backlog_count` `when:"pre"` check, `recovery.
+interrupted`/`before_image` both `"none"`+why, `staleness.mode_select:"none"`). What did not yet exist before
+this peel is a RUNTIME proof, against a fake pool (no DB), that `runBackfillPhase` genuinely behaves the way
+the descriptor claims — no prior test anywhere in the suite drove `runBackfillPhase`/`executeBackfillUpdate`
+directly; the only existing exercise of the write path was (and remains) the DB-integration fixture
+(`migration-245-centroid-invalidation.db.test.ts` case 4).
+
+New file `src/tests/steps/compute_centroids/runtime.logic.test.ts` (5 tests, fixture-only, mirrors the
+`run(ctx) — the lifecycle, against a fake pool` convention in `src/tests/step-library.logic.test.ts`, with a
+step-owned pool builder since the shared `fakePool` there has no case for `SELECT NOW()`/`pg_extension` — no
+prior converted archetype's phase runner needed both a DB-clock read and a `guards.requires: extension`
+precondition in the same run):
+
+1. **ZERO-WORK completion** (`backlog_count === 0`): `matched.backlog_count === 0` is scored (the
+   `backlog_count` row IS present, INFO, value `0`), the UPDATE is never issued, the post-run
+   `failed_geometries` query is never issued (checks correctly narrowed to `when:"pre"`), terminal id
+   `zero_work`, verdict `PASS`.
+2. **REAL-WORK completion** (`backlog_count === 5`, 5/5 computed, 0 failed — isolated from peel 8b's own
+   sabotage battery): `matched.backlog_count === 5` is scored on THIS branch too (the pre-count is present on
+   BOTH branches, not only the zero-work one, closing the one genuine gap a "declared but never proven" read
+   of the descriptor could not rule out), the UPDATE is issued exactly once, terminal is NOT `zero_work`,
+   verdict `PASS`, `records_updated:5`/`records_total:5`.
+3. **`guards.requires: postgis` / `on_missing:"fail"` HALTS before the first read** — with the extension
+   probe answering absent, `run()` rejects (`/postgis/i`) and the `backlog_count` query is never issued at
+   all (A-1(a)'s "no degraded algorithm survives" proven as an ORDER property, not merely a code-absence
+   property).
+4. **`recovery.interrupted`/`before_image` are truthfully `"none"`** — `write.buildWritePlan` for this write
+   target returns `clear_sql: null` (there is no destructive retraction shape to leave half-done; class E has
+   none by construction), `outputs.writes[0].retract === "none"`.
+5. **`staleness.fingerprint_inputs` names exactly the 3 declared inputs**, no 4th silently added or one
+   silently dropped; `staleness.mode_select === "none"` (a BACKFILL has no FULL/incremental distinction to
+   select — §3's seam-map finding, 0 argv/env reads).
+
+All 5 green. `npx vitest run src/tests/steps/compute_centroids/violations.test.ts
+src/tests/steps/compute_centroids/runtime.logic.test.ts` — 57 tests, 0 failed.
+
+**Differential:** re-captured `docs/reports/golden/compute_centroids/post-8a/{sources,standalone}.json`
+(descriptor-derived projection, `--invariants=docs/reports/golden/compute_centroids/invariants.json`).
+`table_state` hash `94473cfd` on both invocations — byte-identical to commit 7's own `post/` pair (unchanged,
+as expected: this peel added tests only, no compute/library edit). `--compare` against `post/`:
+**IDENTICAL (normalised)** for both `sources` and `standalone` — zero diffs, not merely explained ones (no
+code moved, so there is nothing new to explain).
+
+**R-B (crashed/stuck-`running` reader):** stays N/A for this step exactly as the descriptor states —
+`retract:"none"` means there is no destructive-retraction write target for R-B's reader to protect; this
+peel does not close R-B's carried-forward gap (R-F item 1, unchanged from Fold D).
+
+---
+
 ## §0. PH-0 seed — measured boundary table (2026-08-29 planning session)
 
 ### 0.1 Governing specs, read in order (Spec 124 §7 Step 0 / Spec 123 §6 G0)
