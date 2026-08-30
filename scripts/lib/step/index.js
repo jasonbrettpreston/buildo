@@ -1541,6 +1541,21 @@ function makePreWriteGate({ descriptor, chainId, stepCtx, compute, config }) {
   };
 }
 
+/**
+ * R-U (Fold B-5) — parse `process.env.CHAIN_RUN_ID` (set by run-chain.js at
+ * spawn time, `scripts/run-chain.js:638`) into a finite integer, or `null`
+ * when absent/malformed. A malformed value (never emitted by run-chain.js
+ * itself, but a defensive read for anything else that might set the env var)
+ * degrades to `null` rather than throwing — chain-run correlation is an
+ * observability nicety, not a run-blocking contract.
+ */
+function parseChainRunIdEnv() {
+  const raw = process.env.CHAIN_RUN_ID;
+  if (raw === undefined || raw === '') return null;
+  const n = Number(raw);
+  return Number.isFinite(n) ? n : null;
+}
+
 /** The SKIP terminal's records_meta — verdict row-derived like every other path (no hardcoded 'PASS'). */
 function skipRecordsMeta(descriptor, reason) {
   const rows = [
@@ -1583,6 +1598,11 @@ async function runWithPool(runnable, pool, ctx) {
   const descriptor = runnable.descriptor;
   const slug = descriptor.identity.name;
   const chainId = ctx.chainId !== undefined ? ctx.chainId : (process.env.PIPELINE_CHAIN || null);
+  // R-U (Fold B-5) — same override-then-env-fallback shape as `chainId` above.
+  // `null` both when standalone (no CHAIN_RUN_ID set, e.g. a manual
+  // run-step.mjs invocation, Fold A-4e) AND when the chain's own tracking
+  // row failed to insert (run-chain.js never emits the env var in that case).
+  const chainRunId = ctx.chainRunId !== undefined ? ctx.chainRunId : parseChainRunIdEnv();
   const startMs = Date.now();
   const owns = ownsLedgerRow(chainId);
 
@@ -1991,6 +2011,15 @@ async function runWithPool(runnable, pool, ctx) {
         ...(terminal ? { terminal: terminal.id } : {}),
         // LW-D13 — closed enum LEDGER_ROW_VALUES, above.
         ledger_row: owns ? LEDGER_ROW_VALUES[0] : LEDGER_ROW_VALUES[1],
+        // R-U (Fold B-5) — always present (never `...(chainRunId ? {...} : {})`):
+        // the seam pass and chain-end synthesis (scripts/lib/step/seam.js,
+        // scripts/analysis/chain-end-synthesis.mjs) both query
+        // `records_meta ? 'chain_run_id'` to find correlatable rows — a row
+        // that OMITS the key on a standalone run would be indistinguishable
+        // from a row this WF never touched, not one that is legitimately
+        // uncorrelated. `null` is the honest, always-observable standalone
+        // value (Rule 1: nothing hidden).
+        chain_run_id: chainRunId,
         // LW-D15 — declared, never inferred: a downstream reader must not have to guess
         // "were these counts real?" from the presence/absence of other fields.
         ...(stepCtx.overrides && stepCtx.overrides.dry_run ? { dry_run: true } : {}),
@@ -2030,7 +2059,11 @@ async function runWithPool(runnable, pool, ctx) {
       // when the advisory lock was never acquired (no ledger row was opened, but ownership
       // of the CONTEXT is still an observable fact — never left unstamped on this path
       // just because the happy path is the one that got built first).
-      recordsMeta = { ...skipRecordsMeta(descriptor, 'advisory_lock_held_elsewhere'), ledger_row: owns ? LEDGER_ROW_VALUES[0] : LEDGER_ROW_VALUES[1] };
+      // R-U (Fold B-5) — chain_run_id stamped on the contention-skip path too:
+      // a lock-held skip is still a real chain-spawned (or standalone) row,
+      // and the seam pass / chain-end synthesis must see the SAME key on
+      // every row regardless of which branch produced it.
+      recordsMeta = { ...skipRecordsMeta(descriptor, 'advisory_lock_held_elsewhere'), ledger_row: owns ? LEDGER_ROW_VALUES[0] : LEDGER_ROW_VALUES[1], chain_run_id: chainRunId };
       pipeline.emitSummary({ records_total: null, records_new: null, records_updated: null, records_meta: recordsMeta });
     }
     return { status, recordsMeta, runId, acquired: lockResult.acquired };
@@ -2105,7 +2138,7 @@ function step(descriptor, compute) {
     descriptor,
     compute,
     /**
-     * @param {{pool?: import('pg').Pool, chainId?: string|null}} [ctx]
+     * @param {{pool?: import('pg').Pool, chainId?: string|null, chainRunId?: number|null}} [ctx]
      */
     run(ctx = {}) {
       if (ctx.pool) return runWithPool(runnable, ctx.pool, ctx);

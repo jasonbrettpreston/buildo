@@ -895,6 +895,90 @@ describe('R-T addendum, commit 3 — invariants[]/plausibility[] EVERY_RUN execu
   });
 });
 
+describe('R-U (Fold B-5, commit 5) — records_meta.chain_run_id propagation', () => {
+  afterEach(() => {
+    delete process.env.CHAIN_RUN_ID;
+  });
+
+  it('RED/GREEN #1 — a chain-spawned step (ctx.chainRunId set, mirrors run-chain.js:638\'s env-var spawn) carries chain_run_id matching the parent pipeline_runs.id', async () => {
+    const pool = fakePool();
+    const cap = captureEmissions();
+    try {
+      await pipeline.step(ASSERT_SCHEMA, allClean).run({ pool, chainId: 'sources', chainRunId: 4242 });
+      expect(cap.summary().records_meta.chain_run_id).toBe(4242);
+    } finally {
+      cap.restore();
+    }
+  });
+
+  it('RED/GREEN #1b — the SAME propagation via process.env.CHAIN_RUN_ID (the real run-chain.js mechanism — ctx.chainRunId is the test-only override, the env var is what a real spawned child actually reads)', async () => {
+    process.env.CHAIN_RUN_ID = '4242';
+    const pool = fakePool();
+    const cap = captureEmissions();
+    try {
+      await pipeline.step(ASSERT_SCHEMA, allClean).run({ pool, chainId: 'sources' });
+      expect(cap.summary().records_meta.chain_run_id).toBe(4242);
+    } finally {
+      cap.restore();
+    }
+  });
+
+  it('RED/GREEN #2 — a standalone invocation (no ctx.chainRunId, no CHAIN_RUN_ID env — a manual run-step.mjs shape) carries chain_run_id: null, never fabricating a false correlation', async () => {
+    expect(process.env.CHAIN_RUN_ID).toBeUndefined();
+    const pool = fakePool();
+    const cap = captureEmissions();
+    try {
+      await pipeline.step(ASSERT_SCHEMA, allClean).run({ pool, chainId: null });
+      expect(cap.summary().records_meta.chain_run_id).toBeNull();
+    } finally {
+      cap.restore();
+    }
+  });
+
+  it('a malformed CHAIN_RUN_ID env value (never emitted by run-chain.js itself, but defensively read) degrades to null rather than NaN or a thrown error', async () => {
+    process.env.CHAIN_RUN_ID = 'not-a-number';
+    const pool = fakePool();
+    const cap = captureEmissions();
+    try {
+      await pipeline.step(ASSERT_SCHEMA, allClean).run({ pool, chainId: 'sources' });
+      expect(cap.summary().records_meta.chain_run_id).toBeNull();
+    } finally {
+      cap.restore();
+    }
+  });
+
+  it('chain_run_id is also stamped on the contention-skip (self_skipped) path — the SAME key on every row regardless of branch', async () => {
+    const pool = fakePool({ lockAcquired: false });
+    const cap = captureEmissions();
+    try {
+      await pipeline.step(ASSERT_SCHEMA, allClean).run({ pool, chainId: 'sources', chainRunId: 777 });
+      expect(cap.summary().records_meta.chain_run_id).toBe(777);
+    } finally {
+      cap.restore();
+    }
+  });
+
+  it('capture-diff shape: chain_run_id is the ONLY new key vs. the pre-R-U records_meta shape — a standalone run\'s key set gains exactly +1 member', async () => {
+    const pool = fakePool();
+    const cap = captureEmissions();
+    try {
+      await pipeline.step(ASSERT_SCHEMA, allClean).run({ pool, chainId: null });
+      const meta = cap.summary().records_meta as Record<string, unknown>;
+      // The pre-commit-5 key set, reconstructed from every OTHER commit-3/4 key this
+      // same fixture/compute combination is known to emit (ledger_row, terminal,
+      // checks_passed, checks_failed, checks_warned, audit_table) — asserting the
+      // diff is +1, not re-deriving the whole shape from scratch.
+      const preR_U_keys = new Set(Object.keys(meta).filter((k) => k !== 'chain_run_id'));
+      const postR_U_keys = new Set(Object.keys(meta));
+      expect(postR_U_keys.size - preR_U_keys.size).toBe(1);
+      expect(meta.chain_run_id).toBeNull();
+      expect(preR_U_keys.has('chain_run_id')).toBe(false);
+    } finally {
+      cap.restore();
+    }
+  });
+});
+
 // ---------------------------------------------------------------------------
 // 7. §1.2a P4 — `ctx.config`, the ONE seam a compute reaches a tunable through
 // ---------------------------------------------------------------------------

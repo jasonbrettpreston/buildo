@@ -634,8 +634,22 @@ async function run() {
     const stepTimeoutMinutes = Number(scriptEntry.step_timeout_minutes || 0);
 
     try {
-      // Merge step-specific env vars and chain-specific args from manifest
-      const stepEnv = { ...process.env, PIPELINE_CHAIN: chainId, ...(scriptEntry.env || {}) };
+      // Merge step-specific env vars and chain-specific args from manifest.
+      // R-U (Fold B-5) — CHAIN_RUN_ID carries the CHAIN row's OWN pipeline_runs
+      // id (nothing new minted — it's `chainRunId` from the INSERT above) so
+      // the step library can stamp `records_meta.chain_run_id` on every step
+      // row it emits. Conditionally spread: chainRunId can be null when the
+      // chain-row INSERT itself failed (logged warn, above) — never emit the
+      // literal string "null"/"undefined" as an env var; absent means the
+      // step library's own fallback (process.env.CHAIN_RUN_ID undefined) reads
+      // as standalone, which is the correct posture for a chain that couldn't
+      // even open its own tracking row.
+      const stepEnv = {
+        ...process.env,
+        PIPELINE_CHAIN: chainId,
+        ...(chainRunId ? { CHAIN_RUN_ID: String(chainRunId) } : {}),
+        ...(scriptEntry.env || {}),
+      };
       const extraArgs = [...(scriptEntry.chain_args?.[chainId] || [])];
       const runtime = scriptPath.endsWith('.py')
         ? (process.platform === 'win32' ? 'python' : 'python3')
@@ -949,6 +963,30 @@ async function run() {
       observerProc.unref();
     } catch (spawnErr) {
       pipeline.log.warn('[run-chain]', 'Failed to spawn observe-chain.js — observability skipped', {
+        err: spawnErr instanceof Error ? spawnErr.message : String(spawnErr),
+      });
+    }
+  }
+
+  // R-T addendum, commit 5 (Fold A-6/B-5/B-9) — chain-end synthesis, the SAME
+  // detached fire-and-forget shape as observe-chain.js above (spec 48
+  // pattern), scoped to the `sources` chain only (the seam pairs and
+  // `validate_only` invariants this WF built are meaningful only for the
+  // converted steps that chain runs — Goal text: "chain-end synthesis
+  // automation for the `sources` chain"). Also the declared cloud trigger
+  // for `validate_only`-tier invariants (Ask 6, option (b)) — this is where
+  // those queries FINALLY run on an unattended cron, not just under a
+  // manual `step:validate --write`.
+  if (process.env.CHAIN_END_SYNTHESIS_ENABLED !== '0' && chainRunId && chainId === 'sources') {
+    try {
+      const synthesisProc = spawn(
+        'node',
+        [path.join(__dirname, 'analysis/chain-end-synthesis.mjs'), chainId, String(chainRunId)],
+        { detached: true, stdio: 'ignore' },
+      );
+      synthesisProc.unref();
+    } catch (spawnErr) {
+      pipeline.log.warn('[run-chain]', 'Failed to spawn chain-end-synthesis.mjs — synthesis skipped', {
         err: spawnErr instanceof Error ? spawnErr.message : String(spawnErr),
       });
     }
