@@ -313,6 +313,10 @@ const EXPECTED_LOGIC_VAR_KEYS = [
   'load_ravines_invalid_geometry_fail_pct',
   'load_ravines_mass_delete_fail_pct',
   'load_ravines_download_timeout_ms',
+  // WF2 "Step Validator, Data-First" (Spec 124 §2 Rule 13 addendum, VAL-WF2, commit 1) —
+  // the every_run/validate_only frequency-default budget for invariants[]/plausibility[]
+  // candidates, rendered under GROUPS "Step Validator".
+  'invariants_every_run_budget_ms',
 ];
 
 describe('LOGIC_VAR_DEFAULTS — complete key set', () => {

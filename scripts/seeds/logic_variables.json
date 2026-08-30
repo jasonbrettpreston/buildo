@@ -2992,5 +2992,12 @@
     "min": 0,
     "max": 100,
     "description": "Spec 124 Rule 3 (T2, Pilot 6, BACKFILL) — WARN floor on centroids_computed / parcels_processed. 98 = the pre-externalization literal (`:198`,`:200` in the pre-conversion script) and traces to commit d32612bb's deliberate business-accuracy tightening (\"tighten compute_rate from 90% to 98%\"), not an arbitrary number. A `pct >= floor` form (R-N precedent). CONSUMED by compute_centroids (scripts/lib/compute/compute-centroids.js compute_rate, via checks[].limit_from_config)."
+  },
+  "invariants_every_run_budget_ms": {
+    "default": 5000,
+    "type": "number",
+    "min": 100,
+    "max": 60000,
+    "description": "WF2 'Step Validator, Data-First' (Spec 124 §2 Rule 13 addendum, VAL-WF2, commit 1) — the cost-adjudication default for a `checks[].invariants[]`/`plausibility[]` candidate's `frequency` field: a candidate whose measured single-query cost (grounder median, ≥5 timings across ≥2 sessions, `last_measured.cost_ms`) is below this budget defaults to `every_run` (hooked into scripts/lib/step/index.js on every pipeline execution); at or above it, `validate_only` (executed only from `step:validate --write` / chain-end synthesis). 5000 = the plan's own stated default (Fold A-1), pending re-derivation per step at commit 3/4's live re-timing. Not yet CONSUMED by any executor as of commit 1 (schema-shape only; the executor lands at commit 3)."
   }
 }

@@ -7,13 +7,13 @@ bounds, numeric-vs-JSONB, description, and the pipeline scripts that consume it.
 Values are operator-tunable at runtime via the Spec 86 Control Panel; the
 defaults below are the seed / migration baselines.
 
-- **Numeric vars** (441) live in `scripts/seeds/logic_variables.json` (the parity-tested surface re-exported as `LOGIC_VAR_DEFAULTS` in `src/lib/admin/control-panel.ts`), except the 19 seeded via migrations only (last column notes the migration).
+- **Numeric vars** (442) live in `scripts/seeds/logic_variables.json` (the parity-tested surface re-exported as `LOGIC_VAR_DEFAULTS` in `src/lib/admin/control-panel.ts`), except the 19 seeded via migrations only (last column notes the migration).
 - **JSONB vars** (6) carry non-numeric values in `logic_variables.variable_value_json`; they are migration-seeded (never in the seed JSON — a JSONB value cannot live in the numeric `variable_value` column) and read directly (config-loader passes object JSON through untouched).
 - **Consuming scripts** are derived from each script's local `LOGIC_VARS_SCHEMA = z.object({...})` Zod union. A blank cell means no static consumer was found; some consumers read **computed keys** (e.g. `assert-lifecycle-phase-distribution.js` builds `lifecycle_band_${…}` at runtime) invisible to a static scan — those are named in the seed JSON's `CONSUMED by …` annotation, surfaced in the Description.
 
 **Cross-refs:** Spec 40 (`docs/specs/01-pipeline/40_pipeline_system.md`, config-loader / logicVars contract) · Spec 86 (`docs/specs/02-web-admin/86_control_panel.md`, the Control Panel that edits these).
 
-Total: **447** logic variables (441 numeric, 6 JSONB).
+Total: **448** logic variables (442 numeric, 6 JSONB).
 
 ---
 
@@ -102,6 +102,7 @@ Total: **447** logic variables (441 numeric, 6 JSONB).
 | `income_premium_tiers` | JSONB | {"100000": 1.2, "150000": 1.5} | — (migration-seeded) | — | migration 097 | JSON map of neighbourhood median income (CAD) bracket → cost multiplier. Keys are income thresholds (lowest → highest), values are multipliers. E.g. {"100000": 1.2, "150000": 1.5} |
 | `inference_weight` | numeric | 0.5 | 0 – 1 | `scripts/compute-trade-forecasts.js` | seed | Spec 80 §5.C / P16-16E [Gemini MEDIUM pinned] — provenance weight for INFERENCE-basis trade attachments in compute-trade-forecasts.js input aggregation: an inference row's calibration sample is scaled by this factor before classifyConfidence banding (needs 1/weight x the evidence sample for the same confidence band). Ranking/serving authority stays attachment_basis (D5) — this weights, never gates. Panel-adjustable; 0.5 = the pinned default so re-activated inference never re-creates P13-3 full-weight inflation. CONSUMED by scripts/compute-trade-forecasts.js. |
 | `inspection_stall_days` | numeric | 300 | 30 – 730 | `scripts/classify-inspection-status.js` | seed | Days without inspection activity before an Active Inspection permit is reclassified as Stalled |
+| `invariants_every_run_budget_ms` | numeric | 5000 | 100 – 60000 | — | seed | WF2 'Step Validator, Data-First' (Spec 124 §2 Rule 13 addendum, VAL-WF2, commit 1) — the cost-adjudication default for a `checks[].invariants[]`/`plausibility[]` candidate's `frequency` field: a candidate whose measured single-query cost (grounder median, ≥5 timings across ≥2 sessions, `last_measured.cost_ms`) is below this budget defaults to `every_run` (hooked into scripts/lib/step/index.js on every pipeline execution); at or above it, `validate_only` (executed only from `step:validate --write` / chain-end synthesis). 5000 = the plan's own stated default (Fold A-1), pending re-derivation per step at commit 3/4's live re-timing. Not yet CONSUMED by any executor as of commit 1 (schema-shape only; the executor lands at commit 3). |
 | `laneway_suite_max_gfa_sqm` | numeric | 120 | 20 – 400 | `scripts/enrich-parcels.js` | seed | Spec 65 §7 (Phase 3) — by-law cap on a laneway suite GFA (m², ~2-storey). CONSUMED by enrich-parcels.js (max-build pass). |
 | `laneway_suite_min_lot_sqm` | numeric | 230 | 100 – 2000 | `scripts/enrich-parcels.js` | seed | Spec 65 §7 (Phase 3) — minimum lot area (m²) for a laneway suite. CONSUMED by enrich-parcels.js (max-build pass). |
 | `laneway_suite_min_rear_yard_m` | numeric | 5 | 2 – 30 | `scripts/enrich-parcels.js` | seed | Spec 65 §7 (Phase 3) — minimum usable rear-yard depth (m) for a laneway suite. CONSUMED by enrich-parcels.js (max-build pass). |
@@ -469,4 +470,4 @@ Total: **447** logic variables (441 numeric, 6 JSONB).
 
 ---
 
-*Generated from 428 seed vars + 19 migration-only vars + 99 consumer-mapped keys across 2 script dirs.*
+*Generated from 429 seed vars + 19 migration-only vars + 99 consumer-mapped keys across 2 script dirs.*

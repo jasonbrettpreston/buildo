@@ -263,6 +263,17 @@ export const GROUPS: Array<{ label: string; keys: string[] }> = [
       'lifecycle_band_coa_p2_min', 'lifecycle_band_coa_p2_max',
     ],
   },
+  {
+    // WF2 "Step Validator, Data-First" (Spec 124 §2 Rule 13 addendum, VAL-WF2) —
+    // the cost-adjudication budget that decides an invariants[]/plausibility[]
+    // candidate's frequency: every_run entries hook into scripts/lib/step/index.js
+    // on every pipeline execution, validate_only entries execute only from
+    // `step:validate --write` / chain-end synthesis.
+    label: 'Step Validator',
+    keys: [
+      'invariants_every_run_budget_ms',
+    ],
+  },
 ];
 
 /** EXPORTED for reconciliation test — keys rendered via JsonTiersEditor, not DeltaGuardInput. */

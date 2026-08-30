@@ -117,6 +117,20 @@ const INVALID_FIXTURES: Array<{
     keyword: 'additionalProperties',
     param: ['additionalProperty', 'retry_policy'],
   },
+  {
+    file: 'invariant-missing-last-measured.json',
+    rule: 'R-T addendum — an invariants[] entry with no last_measured is a blank-bound regression (Design decisions: "reachable + last_measured populated at declaration time, never left blank")',
+    path: '/invariants/0',
+    keyword: 'required',
+    param: ['missingProperty', 'last_measured'],
+  },
+  {
+    file: 'invariant-missing-frequency.json',
+    rule: 'R-T addendum — an invariants[] entry with no frequency cannot be cadence-gated (Spec 122 P3 cost-adjudication: every_run vs validate_only is declared, never inferred)',
+    path: '/invariants/0',
+    keyword: 'required',
+    param: ['missingProperty', 'frequency'],
+  },
 ];
 
 describe('step.schema.json — the canonical vocabulary (Spec 122 S1)', () => {
@@ -124,12 +138,50 @@ describe('step.schema.json — the canonical vocabulary (Spec 122 S1)', () => {
     expect(typeof validate).toBe('function');
   });
 
-  it('declares 18 categories, every one of them required', () => {
+  it('declares 18 categories, every one of them required — invariants/plausibility are DEFINED but deliberately NOT rendered categories yet (R-T addendum, orchestrator ruling 2026-08-30 option (c))', () => {
     const cats = schema['x-categories'] as string[];
     const required = schema.required as string[];
     expect(cats).toHaveLength(18);
     expect(cats).toContain('terminals');
+    // x-categories deliberately does NOT list invariants/plausibility yet — the
+    // vocabulary generator (schema-to-vocab.mjs) asserts x-categories ⊆ required
+    // as its own self-test (KB3, "omission is a build failure"), so adding them
+    // to x-categories before commit 4 would force the SAME "required" flip this
+    // ruling exists to defer.
+    expect(cats).not.toContain('invariants');
+    expect(cats).not.toContain('plausibility');
     for (const c of cats) expect(required, `${c} must be required — omission is a build failure`).toContain(c);
+  });
+
+  it('invariants/plausibility are DEFINED (schema definitions + root properties) but STAGED, not required, until commit 4 (x-schema-rollout, mirrors converted.json PENDING/R-K.1)', () => {
+    // This is the lock the orchestrator's option (c) ruling asked for: a real
+    // descriptor's bytes must NOT have to change in commit 1 (that would trip
+    // golden-fingerprint.infra.test.ts's R-C lockfile on all 6 real steps,
+    // unbudgeted). So today: definitions exist, a descriptor MAY declare them,
+    // but nothing is FORCED to — DECLARED as staged with a named target commit,
+    // never a silent default.
+    const required = schema.required as string[];
+    expect(required).not.toContain('invariants');
+    expect(required).not.toContain('plausibility');
+    const props = schema.properties as Record<string, unknown>;
+    expect(props).toHaveProperty('invariants');
+    expect(props).toHaveProperty('plausibility');
+    const defs = schema.definitions as Record<string, unknown>;
+    expect(defs).toHaveProperty('invariant');
+    expect(defs).toHaveProperty('plausibility');
+    expect(defs).toHaveProperty('bound');
+    expect(defs).toHaveProperty('lastMeasured');
+    const rollout = schema['x-schema-rollout'] as Record<string, { status: string; required_from_commit: number }>;
+    expect(rollout.invariants).toEqual({
+      status: 'defined_not_required',
+      required_from_commit: 4,
+      why: expect.any(String),
+    });
+    expect(rollout.plausibility).toEqual({
+      status: 'defined_not_required',
+      required_from_commit: 4,
+      why: expect.any(String),
+    });
   });
 
   describe('exemplars validate green', () => {

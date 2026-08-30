@@ -40,7 +40,8 @@
     "R6-source_key_policy": "NOT a category. A per-target field: outputs.writes[].source_key_policy.",
     "R6-on_missing": "guards.requires[].on_missing is fail|degrade; degrade requires why AND algorithm, because a degraded branch makes outputs.columns a fiction.",
     "V7": "DECOUPLE MECHANIC FROM GUARD (operator ruling, 2026-08-24, closing the S1 menu-completeness gap). write_discipline.class names the write MECHANIC only; guardedness is `guard` (is_distinct_from|none, none requires a why and is grandfathered-only), scope is `scope`, retraction is `retract`. The D and H bans are restated as VALIDATOR RULES over those axes — banned-for-new = (insert-only mechanic AND retract:none) and (set-based mechanic AND scope:none) — not as fused class identities.",
-    "R6-schema_drift-conditional": "guards.schema_drift may be a SCALAR or a CONDITIONAL PER-LAYER ARRAY (the load-zoning.js:405-407 shape: base layers FAIL/pause, non-base WARN/propagate). A scalar cannot express it."
+    "R6-schema_drift-conditional": "guards.schema_drift may be a SCALAR or a CONDITIONAL PER-LAYER ARRAY (the load-zoning.js:405-407 shape: base layers FAIL/pause, non-base WARN/propagate). A scalar cannot express it.",
+    "R-T-invariants-plausibility": "Spec 124 §2 Rule 13 R-T addendum (2026-08-29), WF2 'The Step Validator, Data-First'. TWO NEW CATEGORIES (19th/20th): invariants[] (single-table, single-step-scoped declarative-SQL data bounds) and plausibility[] (cross-field/zone-aware, may span tables this step does not itself write) — both executed generically by scripts/lib/step/plausibility.js, never hand-written per-check compute. Both reuse checks[].limit's grammar under the shared name `bound`, extended with value_min/value_max (Ask 2) for a raw measured value rather than a violation count/pct/ratio. `frequency: every_run|validate_only` is the Spec 122 P3 cost-adjudication response to the 48 candidate queries measured live this WF (compute_centroids/load_ravines/link_parcel_addresses run tens of seconds to minutes per query and may not fire on every pipeline run). `when` mirrors checks[].when (pre|pre_write|post, required — Fold B-2: silent on write-ordering was a real collision risk). `source` is a required, closed self-tag (check|invariant|plausibility) carried onto the synthetic audit row so a consumer can tell DATA rows (Rule 13's own charter) from PROCESS rows without re-deriving it from array membership (Fold B-3). `last_measured` (value/at/commit/cost_ms/sample_n/source_run) is EXCLUDED from the golden fingerprint (Fold B-4) and is populated at migration time from a >=5-timings/>=2-session grounder median, never a single-session number (Fold B-1) — `sample_n` and `source_run:{run_id,chain,event}` exist because a manual run-step.mjs invocation on assert_schema/link_wsib/link_massing (3 of 6 converted steps) is ALSO a writer of this field, and the scheduled sources-chain run is ruled authoritative over it (Fold A-4e). `statement_timeout` is a per-invariant DECLARED override (required, with a stated why, whenever frequency is validate_only) — Fold B-1 struck the plan's original '110s ceiling' premise (the live server's own statement_timeout is 0/no-limit), so this is a declared value with a why, never a 'raised' override. Both categories are legally \"none\" once required (most steps have zero candidates until migrated); checks[] itself is untouched. STAGED, not required, at commit 1 (see x-schema-rollout, required_from_commit: 4) — an earlier draft of this text claimed commit 1 was 'no behaviour change to any existing descriptor beyond the bare stub this addition now requires every converted descriptor to declare'; that was REFUTED: adding invariants/plausibility to `required` immediately would force a bare stub onto all 6 real converted descriptors, changing their file bytes, which trips golden-fingerprint.infra.test.ts's R-C lockfile (2026-08-28, unrelated ruling) on all 6 at once — an unbudgeted live-DB recapture this commit never accounted for. Orchestrator ruling 2026-08-30 (option (c)): definitions + root properties land now, `required` flips at commit 4 once each real descriptor's own migration commit already needs a fresh capture."
   },
   "x-banned-for-new": {
     "allowlist": "scripts/steps/_schema/grandfathered.json",
@@ -119,6 +120,19 @@
     "identity.gate_exempt": "The claim 'declaring archetype retires run-chain.js:544-550' is REFUTED — isInfraStep spans four archetypes plus name-specific exceptions. gate_exempt is the explicit field the retirement needs.",
     "counters-null-for-ASSERT": "'An ASSERT emits counters: null' is REFUTED AS DESCRIPTION (0 of 5 ASSERTs do today). It is retained as a NORMATIVE requirement per §1.10's required-field profile: the descriptor must declare counters: \"none\"."
   },
+  "x-schema-rollout": {
+    "$comment": "Staged rollout of the invariants[]/plausibility[] categories (R-T addendum, WF2 'The Step Validator, Data-First', orchestrator ruling 2026-08-30, option (c) — mirrors the converted.json PENDING staging pattern (R-K.1): a category can be DEFINED (has definitions + is a legal, schema-validating declaration) before it is REQUIRED. Commit 1's ORIGINAL ledger text claimed 'no behaviour change to existing descriptors' from this addition — that claim was REFUTED: making the two categories required immediately would force every real converted descriptor to gain a bare stub, which changes descriptor file bytes, which trips golden-fingerprint.infra.test.ts's R-C lockfile (an EXISTING, unrelated ruling, 2026-08-28) on all 6 real steps at once — an unplanned, unbudgeted live-DB recapture cost commit 1 never accounted for. Staging avoids it: invariants/plausibility become required only at commit 4, once every real descriptor's own migration commit already needs a fresh capture anyway, so the byte-change -> fingerprint consequence rides a recapture that is already budgeted rather than forcing an extra one. src/tests/step-schema.logic.test.ts locks BOTH sides: that these two are NOT in `required` today, and that this object still says required_from_commit: 4 (a test that must change at commit 4, not a silent default).",
+    "invariants": {
+      "status": "defined_not_required",
+      "required_from_commit": 4,
+      "why": "Definition + root property landed commit 1 (schema-shape only); becomes required once every real descriptor has migrated its golden invariants (commits 3-4)."
+    },
+    "plausibility": {
+      "status": "defined_not_required",
+      "required_from_commit": 4,
+      "why": "Same staging as invariants — required_from_commit: 4."
+    }
+  },
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -166,6 +180,166 @@
           ]
         }
       }
+    },
+
+    "bound": {
+      "description": "R-T addendum (Ask 2) — the closed bound grammar shared by checks[].limit AND invariants[]/plausibility[].bound, one vocabulary estate-wide rather than a parallel one. value_min/value_max compare a RAW MEASURED VALUE (e.g. a row count read as a value, not a violation count) — the two forms checks[].limit's original grammar could not express (Fold A-4b: they need real verdict.js evaluateLimit branches, added at commit 2 — pop/ratio remain unevaluable in the new synthetic-check path, a pre-existing gap this WF does not close).",
+      "anyOf": [
+        {
+          "type": "string",
+          "pattern": "^(viol (==|<=) [0-9]+|pct (<=|>=) [0-9]*\\.?[0-9]+|pop >= [0-9]+|ratio <= [0-9]*\\.?[0-9]+ x median|value_min -?[0-9]*\\.?[0-9]+|value_max -?[0-9]*\\.?[0-9]+)$"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["warn", "fail"],
+          "properties": { "warn": { "type": "number" }, "fail": { "type": "number" } }
+        }
+      ],
+      "x-frozen": true
+    },
+
+    "lastMeasured": {
+      "description": "R-T addendum, Fold A-1/A-4e/B-1. Populated at declaration time from a >=5-timings/>=2-distinct-session grounder median (never a single-session number — Fold B-1 struck the weaker '3x same-session' rule after measuring 2-2.6x cross-session variance on the SAME query) and EXCLUDED WHOLESALE from the golden fingerprint (Fold B-4): re-timing must never fail a fingerprint lock whose declared contract (bound/why/frequency/when/source) has not changed.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["value", "at", "commit", "cost_ms", "sample_n", "source_run"],
+      "properties": {
+        "value": { "description": "The measured value at declaration/re-measurement time, in whatever type the SQL returns." },
+        "at": { "type": "string", "minLength": 1, "description": "Full ISO-8601 timestamp of the measurement (not isoDate — this needs time-of-day)." },
+        "commit": { "type": "string", "minLength": 1, "description": "The git commit the measurement was taken against." },
+        "cost_ms": { "type": "number", "minimum": 0, "description": "The grounder median (Fold B-1), not a single sample." },
+        "sample_n": { "type": "integer", "minimum": 1, "description": "Fold B-1 — how many timings the median above was taken over; a single-session repeat no longer qualifies as a measurement." },
+        "source_run": {
+          "description": "Fold A-4e — WHICH run last stamped this field. A manual run-step.mjs invocation on a converted step (assert_schema/link_wsib/link_massing today) also restamps last_measured; the scheduled sources-chain run is ruled AUTHORITATIVE for drift/staleness reasoning, a manual restamp is operator-visibility-only.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["run_id", "chain", "event"],
+          "properties": {
+            "run_id": { "type": ["string", "null"], "description": "pipeline_runs.id, or null for a standalone/manual measurement with no run row." },
+            "chain": { "type": ["string", "null"], "description": "The chain slug (e.g. \"sources\"), or null when not chain-spawned." },
+            "event": { "type": "string", "minLength": 1, "description": "e.g. \"chain_run\", \"manual_run_step\", \"cutover_backfill\"." }
+          }
+        }
+      }
+    },
+
+    "invariant": {
+      "description": "R-T addendum — single-table, single-step-scoped declarative-SQL data bound over THIS step's own writes. Executed generically by scripts/lib/step/plausibility.js's runInvariants; enters buildAuditTable as a SYNTHETIC selected check (Fold A-2), not merely appended to extraRows, so a BLOCKING FAIL populates errors[]/checks_failed/errorMessage exactly like a real check.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "sql", "bound", "severity", "blocking", "why", "when", "source", "frequency", "last_measured"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" },
+        "sql": { "type": "string", "minLength": 1 },
+        "bound": { "$ref": "#/definitions/bound" },
+        "limit_from_config": {
+          "description": "Same rule as checks[].limit_from_config, extended verbatim (Design decisions, Tunable vs constant bullet): names a config.logic_variables[].name whose resolved value overrides `bound` at evaluation time. Absent = bound is a declared physical/structural constant and MUST carry a why explaining it (the entry-level `why` below).",
+          "type": "string",
+          "minLength": 1
+        },
+        "severity": { "enum": ["INFO", "WARN", "FAIL"], "x-frozen": true },
+        "blocking": { "type": "boolean" },
+        "when": {
+          "description": "Fold B-2 — mirrors checks[].when. Filters the synthetic entry through the SAME onlyChecks/gated-skip narrowing a real check gets (Fold A-3): a pre-scoped entry excluded past its write point, a post-scoped entry excluded before it.",
+          "enum": ["pre", "pre_write", "post"],
+          "x-frozen": true
+        },
+        "source": {
+          "description": "Fold B-3 — the closed self-tag this entry's synthetic row carries, declared rather than inferred from array membership.",
+          "const": "invariant"
+        },
+        "frequency": {
+          "description": "Spec 122 P3 cost-adjudication response to the 48 candidate queries measured live this WF. every_run fires at the run-end hook on every pipeline execution (budget: scripts/lib/step/plausibility.js gates it against the invariants_every_run_budget_ms logic variable, default 5000ms); validate_only fires ONLY from step:validate --write and at chain-end synthesis (Ask 6b).",
+          "enum": ["every_run", "validate_only"],
+          "x-frozen": true
+        },
+        "statement_timeout": {
+          "description": "Ask 5(b) / Fold B-1 — a DECLARED per-invariant override, required whenever frequency is validate_only. Fold B-1 struck the plan's original '110s ceiling' premise (SHOW statement_timeout on the live target returns 0/no-limit, source 'default') — this is a stated value with a why, never a 'raised' override. \"none\" means inherit the connection's own setting.",
+          "$ref": "#/definitions/duration"
+        },
+        "statement_timeout_why": { "$ref": "#/definitions/why" },
+        "retighten_when": {
+          "description": "A machine-readable STRING naming the condition that would let this bound tighten (mirrors R-H's language, e.g. \"zero rows\" or \"population < N\"). Pairs with the EXISTING <metric>_retighten companion-audit-row convention (scripts/lib/accepted-baseline.js, Spec 48 §4.9) — this is the descriptor-side declaration, the companion row is the runtime-side emission; reused, not reinvented.",
+          "type": "string",
+          "minLength": 1
+        },
+        "last_measured": { "$ref": "#/definitions/lastMeasured" },
+        "why": { "$ref": "#/definitions/why" }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "frequency": { "const": "validate_only" } }, "required": ["frequency"] },
+          "then": { "required": ["statement_timeout"] }
+        },
+        {
+          "if": {
+            "properties": { "statement_timeout": { "not": { "const": "none" } } },
+            "required": ["statement_timeout"]
+          },
+          "then": { "required": ["statement_timeout_why"] }
+        }
+      ]
+    },
+
+    "plausibility": {
+      "description": "R-T addendum — cross-field/zone-aware declarative-SQL check that MAY span tables this step does not itself write (e.g. link_massing checking parcels.centroid_lat populated by compute_centroids). Reuse target for parsing is parcel-sanity-audit.js's ENGINE (statusFor/verdictCascade, extracted to scripts/lib/step/plausibility.js), never its CHECKS[] entries — those are spliced into one folded query with no per-check id, so a plausibility[] entry structurally cannot reference one 1:1 and carries its own standalone SQL (Fold A-4d: duplication of predicate text is accepted this WF, filed as a nice_to_have for a future per-check-id pass).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "sql", "bound", "severity", "blocking", "why", "when", "source", "frequency", "last_measured"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" },
+        "sql": { "type": "string", "minLength": 1 },
+        "bound": { "$ref": "#/definitions/bound" },
+        "limit_from_config": {
+          "description": "Same rule as checks[].limit_from_config, extended verbatim.",
+          "type": "string",
+          "minLength": 1
+        },
+        "severity": { "enum": ["INFO", "WARN", "FAIL"], "x-frozen": true },
+        "blocking": { "type": "boolean" },
+        "when": {
+          "description": "Fold B-2 — mirrors checks[].when.",
+          "enum": ["pre", "pre_write", "post"],
+          "x-frozen": true
+        },
+        "source": {
+          "description": "Fold B-3 — the closed self-tag this entry's synthetic row carries.",
+          "const": "plausibility"
+        },
+        "frequency": {
+          "description": "Same cadence rule as invariants[].frequency.",
+          "enum": ["every_run", "validate_only"],
+          "x-frozen": true
+        },
+        "statement_timeout": { "$ref": "#/definitions/duration" },
+        "statement_timeout_why": { "$ref": "#/definitions/why" },
+        "retighten_when": { "type": "string", "minLength": 1 },
+        "zone_by": {
+          "description": "Optional zone-aware scoping (e.g. a zoning classification column), mirroring parcel-sanity-audit.js's own zone-scoped CHECKS[] entries (10 of 42, Fold B-7 recount). \"none\" (the default reading when absent) means the bound applies estate-wide.",
+          "anyOf": [{ "const": "none" }, { "type": "string", "minLength": 1 }]
+        },
+        "kind": {
+          "description": "Fold B-7 — \"distribution\" reuses parcel-sanity-audit.js's separate 8-entry DIST_FIELDS percentile/outlier scan (INFO-only, no pass/fail verdict) via a direct function call, never a duplicated implementation. Absent means the ordinary bound-checked row type.",
+          "enum": ["bound", "distribution"],
+          "x-frozen": true
+        },
+        "last_measured": { "$ref": "#/definitions/lastMeasured" },
+        "why": { "$ref": "#/definitions/why" }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "frequency": { "const": "validate_only" } }, "required": ["frequency"] },
+          "then": { "required": ["statement_timeout"] }
+        },
+        {
+          "if": {
+            "properties": { "statement_timeout": { "not": { "const": "none" } } },
+            "required": ["statement_timeout"]
+          },
+          "then": { "required": ["statement_timeout_why"] }
+        }
+      ]
     },
 
     "slug": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" },
@@ -463,18 +637,7 @@
         "expect": {
           "description": "OPEN — domain knowledge. No vocabulary could supply that WARD is text in the CoA Active resource and WARD_NUMBER is int4 in Closed."
         },
-        "limit": {
-          "anyOf": [
-            { "type": "string", "pattern": "^(viol (==|<=) [0-9]+|pct (<=|>=) [0-9]*\\.?[0-9]+|pop >= [0-9]+|ratio <= [0-9]*\\.?[0-9]+ x median)$" },
-            {
-              "type": "object",
-              "additionalProperties": false,
-              "required": ["warn", "fail"],
-              "properties": { "warn": { "type": "number" }, "fail": { "type": "number" } }
-            }
-          ],
-          "x-frozen": true
-        },
+        "limit": { "$ref": "#/definitions/bound" },
         "severity": {
           "enum": ["INFO", "WARN", "FAIL"],
           "x-frozen": true,
@@ -1133,6 +1296,22 @@
       "type": "array",
       "minItems": 1,
       "items": { "$ref": "#/definitions/check" }
+    },
+
+    "invariants": {
+      "description": "R-T addendum (Spec 124 §2 Rule 13, 2026-08-29) — single-table, single-step-scoped declarative-SQL data bounds over THIS step's own writes. \"none\" is legal and is every converted step's state until its own migration commit populates it (Spec 124 §9: assert_schema has 0 candidates by design — ASSERT writes nothing).",
+      "anyOf": [
+        { "const": "none" },
+        { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/invariant" } }
+      ]
+    },
+
+    "plausibility": {
+      "description": "R-T addendum — cross-field/zone-aware declarative-SQL checks that may span tables this step does not itself write. \"none\" is legal.",
+      "anyOf": [
+        { "const": "none" },
+        { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/plausibility" } }
+      ]
     },
 
     "override": {
