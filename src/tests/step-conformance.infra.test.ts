@@ -1153,6 +1153,56 @@ describe('LW-D10 — a declared tunable consumed ONLY via a library *_from_confi
 });
 
 // ---------------------------------------------------------------------------
+// Pilot 6 peel 8c (2026-08-29) — compute_centroids's T1/T2, exercised directly
+// against scripts/compute-centroids.js even though it is not yet in
+// converted.json (the same bypass-CONVERTED technique the load-ravines/LW-D10
+// blocks above already use). T1/T2 are consumed EXCLUSIVELY through
+// checks[].limit_from_config (verdict.js resolveLimit) — compute.js's check
+// functions report the raw observation only, never a ctx.config read — so this
+// is the SAME shape as LW-D10's own T7 fixture: "consumed ONLY via a
+// *_from_config field" is a real, provable, non-vacuous case, not merely "no
+// finding because nothing was checked."
+// ---------------------------------------------------------------------------
+
+const CC_STEP = 'scripts/compute-centroids.js';
+const CC_VARS = ['compute_centroids_failed_geometries_warn', 'compute_centroids_compute_rate_warn_pct'];
+
+describe('pilot 6 peel 8c — compute_centroids T1/T2: declared ⊆ registry, ⊆ GROUPS, consumed ≡ declared (exercised directly, not yet in converted.json)', () => {
+  it('the fixture is non-vacuous — both T1/T2 are declared, both are *_from_config-reachable (checks[].limit_from_config), and NEITHER is also read as ctx.config in compute.js (the library-only consumption path is genuinely exercised, not vacuously true)', () => {
+    const { declared } = declaredConfigVars(CC_STEP);
+    expect(declared.sort()).toEqual([...CC_VARS].sort());
+    const refs = runnerConsumedVars(CC_STEP);
+    for (const v of CC_VARS) expect(refs, `no *_from_config reference names ${v}`).toContain(v);
+    const computeAbs = path.join(REPO_ROOT, `${COMPUTE_DIR}/compute-centroids.js`);
+    const computeReads = configReadsIn(computeAbs);
+    for (const v of CC_VARS) {
+      expect(computeReads.includes(v), `${v} is ALSO read as ctx.config in compute.js — the "library-only" half of this fixture is untested`).toBe(false);
+    }
+  });
+
+  it('GREEN — declared ⊆ registry, ⊆ GROUPS (the "Centroid Computation" group), consumed ≡ declared', () => {
+    const { slug, declared } = declaredConfigVars(CC_STEP);
+    expect(slug).toBe('compute_centroids');
+    const findings = configFindings(CC_STEP, slug, declared);
+    expect(findings, findings.join('\n')).toEqual([]);
+  });
+
+  it('RED canary — an unregistered 3rd name added to `declared` (never mutating the committed descriptor) reddens on the registry AND GROUPS surfaces, proving the battery is not vacuously green', () => {
+    const { slug, declared } = declaredConfigVars(CC_STEP);
+    const findings = configFindings(CC_STEP, slug, [...declared, 'compute_centroids_totally_unregistered_var']);
+    expect(findings.some((f) => f.includes('is in NO registry')), findings.join('\n')).toBe(true);
+    expect(findings.some((f) => f.includes('absent from GlobalConfigCard GROUPS')), findings.join('\n')).toBe(true);
+  });
+
+  it('RED canary — dropping T2 from `declared` (never mutating the committed descriptor) reddens the "runner names it, config does not declare it" direction — proves the *_from_config-consumed direction is genuinely checked, not skipped because a compute ctx.config read already satisfied it', () => {
+    const { slug, declared } = declaredConfigVars(CC_STEP);
+    const withoutT2 = declared.filter((n) => n !== 'compute_centroids_compute_rate_warn_pct');
+    const findings = configFindings(CC_STEP, slug, withoutT2);
+    expect(findings.some((f) => f.includes('the descriptor names "compute_centroids_compute_rate_warn_pct" in a *_from_config field, which its config does not declare')), findings.join('\n')).toBe(true);
+  });
+});
+
+// ---------------------------------------------------------------------------
 // 5c. R-A (2026-08-28, ADVERSARY DELTA) — retirement of a tunable is a
 // declaration, never a live registry row: retired ∩ logic_variables = ∅, and a
 // retired name is absent from the seed, GlobalConfigCard GROUPS, and any

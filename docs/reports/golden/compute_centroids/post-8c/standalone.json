@@ -1,0 +1,371 @@
+{
+  "harness": "scripts/analysis/capture-step-golden.js",
+  "spec": "docs/specs/01-pipeline/122_pipeline_step_optimization.md §5.3",
+  "step": "scripts/compute-centroids.js",
+  "chain": "none",
+  "git_head": "0d87759bb04f8a342bbf67c3fd0ba4457fe8cafb",
+  "exit_code": 0,
+  "signal": null,
+  "summary": {
+    "records_total": 0,
+    "records_new": 0,
+    "records_updated": 0,
+    "records_meta": {
+      "duration_ms": 1024,
+      "parcels_processed": 0,
+      "centroids_computed": 0,
+      "failed_geometries": 0,
+      "config": {
+        "compute_centroids_failed_geometries_warn": 0,
+        "compute_centroids_compute_rate_warn_pct": 98
+      },
+      "terminal": "zero_work",
+      "ledger_row": "owned",
+      "checks_passed": "all",
+      "checks_failed": 0,
+      "checks_warned": 0,
+      "audit_table": {
+        "phase": 5,
+        "name": "Centroid Computation",
+        "verdict": "PASS",
+        "rows": [
+          {
+            "metric": "backlog_count",
+            "value": 0,
+            "threshold": "viol == 0",
+            "status": "INFO"
+          },
+          {
+            "metric": "sys_velocity_rows_sec",
+            "value": 0,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "sys_duration_ms",
+            "value": 1026,
+            "threshold": null,
+            "status": "INFO"
+          }
+        ]
+      }
+    }
+  },
+  "summary_count": 1,
+  "meta": [
+    {
+      "reads": {
+        "parcels": [
+          "id",
+          "geom",
+          "geometry",
+          "centroid_lat",
+          "centroid_lng"
+        ]
+      },
+      "writes": {
+        "parcels": [
+          "centroid_lat",
+          "centroid_lng"
+        ]
+      }
+    }
+  ],
+  "parse_errors": [],
+  "verdict": "PASS",
+  "ledger_status": [
+    "completed"
+  ],
+  "stdout": "{\"level\":\"INFO\",\"tag\":\"[compute_centroids]\",\"msg\":\"[compute_centroids] target: compute_centroids (descriptor.database) → database=postgres user=postgres migrations=242 (floor 16)\"}\n{\"level\":\"INFO\",\"tag\":\"[compute_centroids]\",\"msg\":\"backfill: 0 eligible rows — nothing to compute\"}\nPIPELINE_SUMMARY:{\"records_total\":0,\"records_new\":0,\"records_updated\":0,\"records_meta\":{\"duration_ms\":1024,\"parcels_processed\":0,\"centroids_computed\":0,\"failed_geometries\":0,\"config\":{\"compute_centroids_failed_geometries_warn\":0,\"compute_centroids_compute_rate_warn_pct\":98},\"terminal\":\"zero_work\",\"ledger_row\":\"owned\",\"checks_passed\":\"all\",\"checks_failed\":0,\"checks_warned\":0,\"audit_table\":{\"phase\":5,\"name\":\"Centroid Computation\",\"verdict\":\"PASS\",\"rows\":[{\"metric\":\"backlog_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":1026,\"threshold\":null,\"status\":\"INFO\"}]}}}\nPIPELINE_META:{\"reads\":{\"parcels\":[\"id\",\"geom\",\"geometry\",\"centroid_lat\",\"centroid_lng\"]},\"writes\":{\"parcels\":[\"centroid_lat\",\"centroid_lng\"]}}\n\n[compute_centroids] completed in 1.0s\n",
+  "stderr": "",
+  "pipeline_runs": [
+    {
+      "id": 1749,
+      "pipeline": "compute_centroids",
+      "status": "completed",
+      "started_at": "2026-08-30T00:50:29.011Z",
+      "completed_at": "2026-08-30T00:50:30.001Z",
+      "duration_ms": 1027,
+      "records_total": 0,
+      "records_new": 0,
+      "records_updated": 0,
+      "records_meta": {
+        "config": {
+          "compute_centroids_compute_rate_warn_pct": 98,
+          "compute_centroids_failed_geometries_warn": 0
+        },
+        "terminal": "zero_work",
+        "ledger_row": "owned",
+        "audit_table": {
+          "name": "Centroid Computation",
+          "rows": [
+            {
+              "value": 0,
+              "metric": "backlog_count",
+              "status": "INFO",
+              "threshold": "viol == 0"
+            },
+            {
+              "value": 0,
+              "metric": "sys_velocity_rows_sec",
+              "status": "INFO",
+              "threshold": null
+            },
+            {
+              "value": 1026,
+              "metric": "sys_duration_ms",
+              "status": "INFO",
+              "threshold": null
+            }
+          ],
+          "phase": 5,
+          "verdict": "PASS"
+        },
+        "duration_ms": 1024,
+        "checks_failed": 0,
+        "checks_passed": "all",
+        "checks_warned": 0,
+        "failed_geometries": 0,
+        "parcels_processed": 0,
+        "centroids_computed": 0
+      },
+      "error_message": null
+    }
+  ],
+  "pipeline_runs_max_id_before": 1748,
+  "table_state": [
+    {
+      "table": "parcels",
+      "row_count": 486530,
+      "ceiling_bypassed": "projected",
+      "content_hash": "94473cfd60dd563d80d0c5ecb7edac95",
+      "order_by": "explicit",
+      "order_columns": [
+        "id"
+      ],
+      "columns": [
+        "id",
+        "centroid_lat",
+        "centroid_lng"
+      ]
+    }
+  ],
+  "tables_source": "descriptor",
+  "table_row_ceiling": 100000,
+  "table_timing": {
+    "parcels": 3062
+  },
+  "table_specs": {
+    "parcels": {
+      "columns": [
+        "id",
+        "centroid_lat",
+        "centroid_lng"
+      ],
+      "columns_source": "descriptor",
+      "order": [
+        "id"
+      ],
+      "order_source": "descriptor"
+    }
+  },
+  "invariants": [
+    {
+      "name": "parcels_total",
+      "value": "486530"
+    },
+    {
+      "name": "centroid_null_count",
+      "value": "0"
+    },
+    {
+      "name": "geom_not_null_geometry_null_count",
+      "value": "0"
+    },
+    {
+      "name": "outside_polygon_count",
+      "value": "3626"
+    },
+    {
+      "name": "pointonsurface_gt_1m_count",
+      "value": "298021"
+    },
+    {
+      "name": "centroid_in_neighbour_parcel_count",
+      "value": "3130"
+    },
+    {
+      "name": "centroid_algorithm_drift_gt_1m_count",
+      "value": "292587"
+    }
+  ],
+  "invariants_file": "docs/reports/golden/compute_centroids/invariants.json",
+  "db_target": "postgresql://postgres:***@127.0.0.1:54322/postgres",
+  "runtime": "node",
+  "args": [],
+  "nondeterminism": [
+    "key:pipeline_runs[0].completed_at",
+    "key:pipeline_runs[0].duration_ms",
+    "key:pipeline_runs[0].id",
+    "key:pipeline_runs[0].records_meta.duration_ms",
+    "key:pipeline_runs[0].started_at",
+    "key:summary.records_meta.duration_ms",
+    "pattern:duration_literal",
+    "row:sys_duration_ms",
+    "row:sys_velocity_rows_sec"
+  ],
+  "normalised": {
+    "step": "scripts/compute-centroids.js",
+    "chain": "none",
+    "exit_code": 0,
+    "summary": {
+      "records_meta": {
+        "audit_table": {
+          "name": "Centroid Computation",
+          "phase": 5,
+          "rows": [
+            {
+              "metric": "backlog_count",
+              "status": "INFO",
+              "threshold": "viol == 0",
+              "value": 0
+            }
+          ],
+          "verdict": "PASS"
+        },
+        "centroids_computed": 0,
+        "checks_failed": 0,
+        "checks_passed": "all",
+        "checks_warned": 0,
+        "config": {
+          "compute_centroids_compute_rate_warn_pct": 98,
+          "compute_centroids_failed_geometries_warn": 0
+        },
+        "failed_geometries": 0,
+        "ledger_row": "owned",
+        "parcels_processed": 0,
+        "terminal": "zero_work"
+      },
+      "records_new": 0,
+      "records_total": 0,
+      "records_updated": 0
+    },
+    "summary_count": 1,
+    "meta": [
+      {
+        "reads": {
+          "parcels": [
+            "id",
+            "geom",
+            "geometry",
+            "centroid_lat",
+            "centroid_lng"
+          ]
+        },
+        "writes": {
+          "parcels": [
+            "centroid_lat",
+            "centroid_lng"
+          ]
+        }
+      }
+    ],
+    "parse_errors": [],
+    "pipeline_runs": [
+      {
+        "error_message": null,
+        "pipeline": "compute_centroids",
+        "records_meta": {
+          "audit_table": {
+            "name": "Centroid Computation",
+            "phase": 5,
+            "rows": [
+              {
+                "metric": "backlog_count",
+                "status": "INFO",
+                "threshold": "viol == 0",
+                "value": 0
+              }
+            ],
+            "verdict": "PASS"
+          },
+          "centroids_computed": 0,
+          "checks_failed": 0,
+          "checks_passed": "all",
+          "checks_warned": 0,
+          "config": {
+            "compute_centroids_compute_rate_warn_pct": 98,
+            "compute_centroids_failed_geometries_warn": 0
+          },
+          "failed_geometries": 0,
+          "ledger_row": "owned",
+          "parcels_processed": 0,
+          "terminal": "zero_work"
+        },
+        "records_new": 0,
+        "records_total": 0,
+        "records_updated": 0,
+        "status": "completed"
+      }
+    ],
+    "stdout_lines": [
+      "{\"level\":\"INFO\",\"msg\":\"[compute_centroids] target: compute_centroids (descriptor.database) → database=postgres user=postgres migrations=242 (floor 16)\",\"tag\":\"[compute_centroids]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"backfill: 0 eligible rows — nothing to compute\",\"tag\":\"[compute_centroids]\"}",
+      "[compute_centroids] completed in <DUR>"
+    ],
+    "table_state": [
+      {
+        "ceiling_bypassed": "projected",
+        "columns": [
+          "id",
+          "centroid_lat",
+          "centroid_lng"
+        ],
+        "content_hash": "94473cfd60dd563d80d0c5ecb7edac95",
+        "order_by": "explicit",
+        "order_columns": [
+          "id"
+        ],
+        "row_count": 486530,
+        "table": "parcels"
+      }
+    ],
+    "invariants": [
+      {
+        "name": "parcels_total",
+        "value": "486530"
+      },
+      {
+        "name": "centroid_null_count",
+        "value": "0"
+      },
+      {
+        "name": "geom_not_null_geometry_null_count",
+        "value": "0"
+      },
+      {
+        "name": "outside_polygon_count",
+        "value": "3626"
+      },
+      {
+        "name": "pointonsurface_gt_1m_count",
+        "value": "298021"
+      },
+      {
+        "name": "centroid_in_neighbour_parcel_count",
+        "value": "3130"
+      },
+      {
+        "name": "centroid_algorithm_drift_gt_1m_count",
+        "value": "292587"
+      }
+    ]
+  },
+  "source_fingerprint": "7a1ed1312a405b34d23409728ecdfb345d8c3f1ca14b4eaf794682be77857cdb",
+  "fingerprint_files": [
+    "scripts/compute-centroids.descriptor.json",
+    "scripts/compute-centroids.js",
+    "scripts/compute-centroids.notes.json",
+    "scripts/lib/compute/compute-centroids.js"
+  ]
+}

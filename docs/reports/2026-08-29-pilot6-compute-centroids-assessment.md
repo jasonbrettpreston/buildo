@@ -854,6 +854,58 @@ proof could show up in a live capture). `--compare` against `post-8a/`: **IDENTI
 
 ---
 
+## §8c. Peel — thresholds/checks (commit 8c)
+
+**Verification-only peel — no descriptor/compute/library change.** T1 (`compute_centroids_failed_geometries_warn`)
+and T2 (`compute_centroids_compute_rate_warn_pct`) were already wired via `checks[].limit_from_config` at
+commit 7 — this peel proves the wiring is genuinely CONSUMED, not merely declared, using the same
+bypass-`converted.json` technique `step-conformance.infra.test.ts`'s LW-D10 block established for
+`link_wsib`'s T7 (compute_centroids is not yet in `converted.json`, so the fleet-wide `§1.2a P4` battery's
+own `CONVERTED` loop generates no test case for it — exercising it directly is the only way "battery green"
+means "battery checked," not "battery never looked").
+
+New `describe` block in `src/tests/step-conformance.infra.test.ts` ("pilot 6 peel 8c — compute_centroids
+T1/T2", 4 tests):
+
+1. **Non-vacuous fixture** — both T1/T2 are declared, both are `*_from_config`-reachable
+   (`checks[].limit_from_config`, resolved by `verdict.js resolveLimit`), and **neither** is also a
+   `ctx.config` read inside `compute.js` — the "library-only consumption" half of the LW-D10 shape is
+   genuinely exercised here, not vacuously true (compute.js's `failed_geometries`/`compute_rate` functions
+   report the raw observation only; the config substitution happens entirely in the runner).
+2. **GREEN** — `declared ⊆ registry`, `declared ⊆ GROUPS` (the `"Centroid Computation"` admin group),
+   `consumed ≡ declared` — `configFindings('scripts/compute-centroids.js', 'compute_centroids', [T1, T2])`
+   returns `[]`.
+3. **RED canary (registry+GROUPS)** — adding an unregistered 3rd name to `declared` (parameter-level only,
+   never mutating the committed descriptor) reddens both the registry and GROUPS directions.
+4. **RED canary (runner-consumed)** — dropping T2 from `declared` reddens the "the descriptor's own
+   `*_from_config` field names a var its `config` block does not declare" direction — proving the
+   library-consumption path is genuinely checked rather than skipped because SOME path already satisfied
+   consumption.
+
+**Seeds re-applied** (`node -r dotenv/config scripts/seeds/apply-logic-variables.js`): **0/428 rows newly
+inserted, 428 already existed** (values preserved — idempotent, per LM-D15's presence rule). Live DB
+cross-check: `logic_variables` carries **448 total rows** (428 seed ∪ 20 migration-only, per the registry
+doc's own union convention); T1/T2 present with `variable_value` `0`/`98`, matching the descriptor's stated
+defaults exactly.
+
+**`#154` flipped** (`violations.test.ts`) — see that test's own body for the reasoning: a peel commit cannot
+grep its own not-yet-created SHA from inside its own pre-commit hook, so the flipped assertion checks the
+two peels that exist BY THE TIME this commit's tests run (8a `0b996148`, 8b `0d87759b`) each touch a file
+set scoped to their own declared concern with zero cross-peel test-file overlap, and neither touches the
+descriptor/compute/library. This is a stronger bar than pilot 5's own `#154` (which was quietly weakened at
+ITS commit 7 to "the artifacts exist") — this pilot's version proves the file-set-scoping claim structurally.
+
+**Differential:** re-captured `docs/reports/golden/compute_centroids/post-8c/{sources,standalone}.json`.
+`table_state` hash `94473cfd` on both — byte-identical to `post-8b/`. `--compare` against `post-8b/`:
+**IDENTICAL (normalised)** for both `sources` and `standalone` — zero diffs (expected: this peel's proof is
+entirely fixture-level against `step-conformance.infra.test.ts`, touching neither the descriptor nor the
+compute file).
+
+`npx vitest run src/tests/step-conformance.infra.test.ts src/tests/steps/compute_centroids/` — 223 tests,
+0 failed.
+
+---
+
 ## §0. PH-0 seed — measured boundary table (2026-08-29 planning session)
 
 ### 0.1 Governing specs, read in order (Spec 124 §7 Step 0 / Spec 123 §6 G0)

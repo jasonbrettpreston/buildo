@@ -446,13 +446,36 @@ describe('55-A — the hard per-conversion gate (k=PER_STEP)', () => {
     expect(report.includes('Approver for every disposition above'), 'the Intent Ledger table has no stated approver line').toBe(true);
   });
 
-  it.fails('#154 Gate 3 — a peel commit contains only that peel (flips at: commit 8, when 8a/8b/8c land)', () => {
-    for (const sha of ['peel-8a-placeholder', 'peel-8b-placeholder', 'peel-8c-placeholder']) {
-      expect(git(['log', '--all', '--grep', sha]), `no peel commits exist yet (${sha} is a placeholder, not a real search target)`).toBe('');
+  it('#154 Gate 3 — a peel commit contains only that peel (flipped: peel 8c). 8a (0b996148, gating/staleness) and 8b (0d87759b, verdict/audit) each touch a file set scoped to their own declared concern, with ZERO overlap between their new test files — proving "single concern per commit" structurally rather than by commit-message claim alone. 8c\'s own commit is not self-referenced here (a commit cannot grep its own not-yet-created SHA from inside its own pre-commit hook) — this checks the two peels that exist BY THE TIME this assertion is written, which is the honest, permanently-true bar (mirrors pilot 5\'s own #154, flipped at ITS commit 7 to a weaker "artifacts exist" form — this pilot\'s version is the stronger, scoped-file-set proof the placeholder always intended)', () => {
+    const PEEL_8A_SHA = '0b996148b7fa0d2e4cf9a723c00c2ceec73dfab6';
+    const PEEL_8B_SHA = '0d87759bb04f8a342bbf67c3fd0ba4457fe8cafb';
+    for (const sha of [PEEL_8A_SHA, PEEL_8B_SHA]) {
+      expect(git(['cat-file', '-t', sha]), `peel commit ${sha} is not in this repo`).toBe('commit');
     }
-    // Genuinely fails until commit 8 lands three real, single-concern peel commits and this
-    // assertion is rewritten against their real SHAs — placeholder-red by construction.
-    expect(false, 'peel commits 8a/8b/8c do not exist yet').toBe(true);
+    const subject8a = git(['log', '-1', '--format=%s', PEEL_8A_SHA]);
+    const subject8b = git(['log', '-1', '--format=%s', PEEL_8B_SHA]);
+    expect(subject8a).toMatch(/peel 8a - gating\/staleness/);
+    expect(subject8b).toMatch(/peel 8b - verdict\/audit/);
+    const files8a = git(['show', '--name-only', '--format=', PEEL_8A_SHA]).split(/\r?\n/).filter(Boolean);
+    const files8b = git(['show', '--name-only', '--format=', PEEL_8B_SHA]).split(/\r?\n/).filter(Boolean);
+    // Each peel's OWN new test file belongs to it alone — the single-concern proof.
+    expect(files8a).toContain('src/tests/steps/compute_centroids/runtime.logic.test.ts');
+    expect(files8a).not.toContain('src/tests/steps/compute_centroids/sabotage.logic.test.ts');
+    expect(files8b).toContain('src/tests/steps/compute_centroids/sabotage.logic.test.ts');
+    expect(files8b).not.toContain('src/tests/steps/compute_centroids/runtime.logic.test.ts');
+    // Neither peel touches the descriptor/compute/library files — both are verification-only,
+    // as their own commit bodies state (zero behaviour change carried into the peels).
+    for (const files of [files8a, files8b]) {
+      for (const f of files) {
+        expect(f, `${f} is a descriptor/compute/library edit — a peel this pilot declared verification-only must not touch it`)
+          .not.toMatch(/compute-centroids\.(descriptor|notes)\.json$|lib\/compute\/compute-centroids\.js$|lib\/step\/(write|index|verdict)\.js$/);
+      }
+    }
+    // Golden captures land in each peel's OWN post-8x/ directory, never a sibling's.
+    expect(files8a.some((f) => f.includes('golden/compute_centroids/post-8a/'))).toBe(true);
+    expect(files8a.some((f) => f.includes('golden/compute_centroids/post-8b/'))).toBe(false);
+    expect(files8b.some((f) => f.includes('golden/compute_centroids/post-8b/'))).toBe(true);
+    expect(files8b.some((f) => f.includes('golden/compute_centroids/post-8a/'))).toBe(false);
   });
 
   it('#159 Idempotence-successor run is a supplement, never the sole gate (old/new pair per invocation ×2) (landed: commit 7, 7b)', () => {
