@@ -852,15 +852,43 @@ function section(report, headingRe, stopRe = /^##\s/m) {
   return rest.slice(0, stop ? stop.index : rest.length);
 }
 
+/**
+ * R-T addendum, commit 6 — strict-row-schema parse (the SAME failure class
+ * as defect-ledger's silent column loss, below): the OLD `catch { return
+ * []; }` made an EXISTING but malformed/corrupt notes.json read exactly
+ * like "this step declares zero fences" — which made G7's `lockCoverage =
+ * fences.length === 0 || itCount >= fences.length` (`:1024` today)
+ * vacuously TRUE (0 fences === always covered) for a step whose notes file
+ * is simply broken, not empty. A missing FILE is still a legitimate "no
+ * fences declared" (most steps have no notes.json at all); a PRESENT but
+ * unparseable file, or a `fences` key declared as something other than an
+ * array, throws instead — callers (`scoreG7`/`scoreG4d`) turn that into an
+ * explicit FAIL score, never a silent pass.
+ */
+/**
+ * Pure shape check on an already-`JSON.parse()`d notes object, split out
+ * from disk I/O so `selfTest()` can exercise the strict-schema rule
+ * in-memory (Spec 121 §12b.6 — a checker never proven to fire is not
+ * evidence) without needing a fixture file on disk.
+ */
+function validateNotesFences(notes, notesRelPathForError) {
+  if (notes.fences === undefined) return [];
+  if (!Array.isArray(notes.fences)) {
+    throw new Error(`notes.json "fences" must be an array when declared: ${notesRelPathForError} (got ${typeof notes.fences})`);
+  }
+  return notes.fences;
+}
+
 function notesFencesFor(row) {
   const notesPath = path.join(REPO_ROOT, path.dirname(row.relFile), path.basename(row.relFile).replace(/\.(js|py)$/, '') + '.notes.json');
   if (!existsSync(notesPath)) return [];
+  let notes;
   try {
-    const notes = JSON.parse(readFileSync(notesPath, 'utf8'));
-    return Array.isArray(notes.fences) ? notes.fences : [];
-  } catch {
-    return [];
+    notes = JSON.parse(readFileSync(notesPath, 'utf8'));
+  } catch (err) {
+    throw new Error(`notes.json is not valid JSON: ${path.relative(REPO_ROOT, notesPath)} (${err.message})`);
   }
+  return validateNotesFences(notes, path.relative(REPO_ROOT, notesPath));
 }
 
 /** Markdown table row split that respects `\|`-escaped pipes inside a cell's prose (defect-ledger.md rows routinely quote code containing `||`/`|`). A naive `l.split('|')` shifts every later column on such a row. */
@@ -868,14 +896,43 @@ function splitTableRow(line) {
   return line.split(/(?<!\\)\|/).map((c) => c.trim());
 }
 
+// | ID | Step | Anchor | One-line | Status | Closes at | Source |
+const DEFECT_LEDGER_REQUIRED_CELLS = ['id', 'step', 'anchor', 'summary', 'status', 'closesAt', 'source'];
+
+/**
+ * R-T addendum, commit 6 — strict-row-schema parse. The OLD `{id: cells[1],
+ * status: cells[5] || ''}` silently coerced a row with a missing/shifted
+ * column into `status: ''` — indistinguishable from a genuinely empty
+ * Status cell, and (since `LEDGER_STATUS_VOCAB.test('')` is false) it would
+ * simply count as an ordinary "not CLOSED/PIN" row in `scoreG6`'s bad-row
+ * list, with NO signal that the row was actually malformed rather than
+ * legitimately open. A row missing any of the 7 declared columns — or
+ * whose `id` doesn't match the caller's own `<prefix>-D<N>` filter (a
+ * defense-in-depth re-check: an escaped `\|` earlier in the row can shift
+ * every later cell even though the raw-text prefix filter passed) — throws
+ * loudly instead.
+ */
+function parseDefectLedgerRow(line, expectedPrefix) {
+  const cells = splitTableRow(line);
+  // cells[0] and cells[cells.length-1] are the empty boundary strings a
+  // leading/trailing '|' produces on a well-formed row — the 7 declared
+  // columns live at cells[1..7].
+  const [, id, step, anchor, summary, status, closesAt, source] = cells;
+  const parsed = { id, step, anchor, summary, status, closesAt, source };
+  const missing = DEFECT_LEDGER_REQUIRED_CELLS.filter((k) => !parsed[k]);
+  if (missing.length > 0) {
+    throw new Error(`defect-ledger.md: malformed row (missing required column(s): ${missing.join(', ')}) — "${line.trim()}"`);
+  }
+  if (!new RegExp(`^${expectedPrefix}-D\\d+`).test(id)) {
+    throw new Error(`defect-ledger.md: row id "${id}" does not match the declared prefix "${expectedPrefix}-D<N>" — "${line.trim()}"`);
+  }
+  return parsed;
+}
+
 function defectLedgerRowsFor(row) {
   const text = readFileSync(DEFECT_LEDGER_PATH, 'utf8');
   const lines = text.split('\n').filter((l) => l.startsWith('| ') && l.slice(2).trim().startsWith(`${row.prefix}-D`));
-  return lines.map((l) => {
-    const cells = splitTableRow(l);
-    // | ID | Step | Anchor | One-line | Status | Closes at | Source |
-    return { id: cells[1], status: cells[5] || '' };
-  });
+  return lines.map((l) => parseDefectLedgerRow(l, row.prefix));
 }
 
 function scoreG0(report) {
@@ -888,11 +945,45 @@ function scoreG1(report) {
   const shaCount = phSection ? (phSection.match(/\b[0-9a-f]{7,10}\b/g) || []).length : 0;
   return { max: 1, score: phSection && shaCount >= 2 ? 1 : 0, detail: `PH-3 section found=${!!phSection} sha-count=${shaCount}` };
 }
+/**
+ * R-T addendum, commit 6 — the KNOWN vacuous-green fix (Spec 123 §6's own
+ * documented defect note, `123_step_opt_assessment_validation.md:313`):
+ * the OLD logic returned a full 1/1 "vacuously satisfied" for ANY report
+ * that never wrote the literal string "ASSESSMENT-INCOMPLETE" — with no
+ * churn×complexity plot (PH-2, Spec 123 §6's actual G2 criterion:
+ * "structure — churn × complexity, four quadrants... the top-right
+ * quadrant, named") EVER having been produced or checked for. `compute_
+ * centroids`'s own generated scorecard read `G2 | 1 | 1 | ASSESSMENT-
+ * INCOMPLETE not claimed (vacuously satisfied)` with zero PH-2 evidence —
+ * a lie, not a pass.
+ *
+ * The actual PH-2 BATCH artifact (the churn×complexity plot over all 27
+ * manifest steps, run ONCE, not per-pilot — operator ruling 2026-08-25
+ * decision 2, `review_followups.md:2994`) is explicitly OUT of this WF's
+ * scope (owned by the separate `S6b` build-once item). This fix is
+ * therefore scoped to what commit 6's own ledger row calls "cheap": stop
+ * the SILENT auto-pass. A report now needs EITHER (a) an actual PH-2/
+ * churn×complexity section naming a quadrant (mirrors G0/G1/G3/G5's own
+ * `section()` convention — becomes reachable once S6b ships and a report
+ * starts citing it), OR (b) an honest ASSESSMENT-INCOMPLETE self-flag with
+ * a stated reason (the pre-existing justification mechanism, unchanged —
+ * a report IS allowed to say "PH-2 not yet run" and cite why). Absent
+ * BOTH, it scores 0 — the true, current state of every report to date,
+ * not a fabricated pass.
+ */
 function scoreG2(report) {
+  const phSection = section(report, /##\s*.{0,10}\d*\.?\s*PH-2[^\n]*\n/i)
+    || section(report, /##\s*.{0,10}\d*\.?\s*(churn.{0,20}complexity)[^\n]*\n/i);
+  if (phSection) {
+    const hasQuadrant = /top-right|top-left|bottom-right|bottom-left|quadrant/i.test(phSection);
+    return { max: 1, score: hasQuadrant ? 1 : 0, detail: `PH-2/churn×complexity section found; quadrant named=${hasQuadrant}` };
+  }
   const hasIncomplete = /ASSESSMENT-INCOMPLETE/.test(report);
-  if (!hasIncomplete) return { max: 1, score: 1, detail: 'ASSESSMENT-INCOMPLETE not claimed (vacuously satisfied)' };
+  if (!hasIncomplete) {
+    return { max: 1, score: 0, detail: 'no PH-2/churn×complexity section found, and ASSESSMENT-INCOMPLETE not claimed either — was a vacuous 1/1 before the R-T fix' };
+  }
   const stated = /ASSESSMENT-INCOMPLETE[\s\S]{0,300}?(because|why|reason|time-box|saturation)/i.test(report);
-  return { max: 1, score: stated ? 1 : 0, detail: `ASSESSMENT-INCOMPLETE claimed; why-stated=${stated}` };
+  return { max: 1, score: stated ? 1 : 0, detail: `no PH-2 section; ASSESSMENT-INCOMPLETE claimed instead; why-stated=${stated}` };
 }
 function scoreG3(report) {
   const phSection = section(report, /##\s*.{0,10}\d*\.?\s*PH-3[^\n]*\n/i);
@@ -944,7 +1035,17 @@ function scoreG5(report) {
   return { max: 1, score: all ? 1 : 0, detail: `db=${has(/db seam/i)} clock=${has(/clock seam/i)} network=${has(/network seam/i)} argv/env=${has(/argv[\s/]*env seam|env seam/i)}` };
 }
 function scoreG6(row) {
-  const rows = defectLedgerRowsFor(row);
+  // R-T addendum, commit 6 — a malformed row now THROWS from the parser
+  // (parseDefectLedgerRow) rather than silently coercing into a normal-
+  // looking {status: ''} row; caught HERE and turned into an explicit
+  // FAIL for THIS step only — a corrupt defect-ledger.md row under one
+  // step's prefix must not abort `--all`'s validation of every other step.
+  let rows;
+  try {
+    rows = defectLedgerRowsFor(row);
+  } catch (err) {
+    return { max: 3, score: 0, detail: `defect-ledger.md malformed for prefix ${row.prefix}-D*: ${err.message}` };
+  }
   if (rows.length === 0) return { max: 3, score: 0, detail: `no defect-ledger rows found for prefix ${row.prefix}-D*` };
   const bad = rows.filter((r) => !LEDGER_STATUS_VOCAB.test(r.status));
   return { max: 3, score: bad.length === 0 ? 3 : 0, detail: `${rows.length} ledger row(s), ${bad.length} without CLOSED/PIN (${bad.map((b) => b.id).join(', ')})` };
@@ -952,7 +1053,17 @@ function scoreG6(row) {
 function scoreG7(row, report) {
   const violationsPath = path.join(REPO_ROOT, 'src/tests/steps', row.slug, 'violations.test.ts');
   const fileExists = existsSync(violationsPath);
-  const fences = notesFencesFor(row);
+  // R-T addendum, commit 6 — same posture as scoreG6 above: a malformed
+  // notes.json now throws from notesFencesFor; caught here as an explicit
+  // FAIL rather than letting it either crash the whole run OR (the OLD
+  // behavior) silently read as "zero fences", which made `lockCoverage`
+  // vacuously true for a step whose notes file is simply broken.
+  let fences;
+  try {
+    fences = notesFencesFor(row);
+  } catch (err) {
+    return { max: 3, score: 0, detail: `notes.json malformed: ${err.message}` };
+  }
   let itCount = 0;
   if (fileExists) {
     const text = readFileSync(violationsPath, 'utf8');
@@ -981,7 +1092,13 @@ function scoreG9(report) {
   return { pass: hasHeading && hasLow && hasRecurring, detail: `heading=${hasHeading} low-confidence-table=${hasLow} recurring-table=${hasRecurring}` };
 }
 function scoreG4d(row) {
-  const fences = notesFencesFor(row);
+  // R-T addendum, commit 6 — same catch-and-report posture as scoreG7.
+  let fences;
+  try {
+    fences = notesFencesFor(row);
+  } catch (err) {
+    return { pass: false, detail: `notes.json malformed: ${err.message}` };
+  }
   const violationsPath = path.join(REPO_ROOT, 'src/tests/steps', row.slug, 'violations.test.ts');
   let itCount = 0;
   if (existsSync(violationsPath)) {
@@ -1224,6 +1341,59 @@ function selfTest() {
   const g6bad = { status: 'OPEN · fix scheduled commit 7' };
   if (!LEDGER_STATUS_VOCAB.test(g6good.status) || LEDGER_STATUS_VOCAB.test(g6bad.status)) {
     throw new Error('self-test FAILED: LEDGER_STATUS_VOCAB did not discriminate CLOSED/PIN vs free-text OPEN');
+  }
+  // R-T addendum, commit 6 — scoreG2's vacuous-green fix (Spec 123 §6's own
+  // documented defect, `123_step_opt_assessment_validation.md:313`). RED:
+  // `goodReport` (defined above) has NO PH-2/churn×complexity section and
+  // never claims ASSESSMENT-INCOMPLETE either — the OLD code scored this
+  // 1/1 "vacuously satisfied"; the fix must score it 0. GREEN: a report
+  // that DOES carry a PH-2 section naming a quadrant scores 1.
+  {
+    const g2NoPh2 = scoreG2(goodReport);
+    if (g2NoPh2.score !== 0) {
+      throw new Error(`self-test FAILED: scoreG2 still vacuously passes a report with no PH-2 section and no ASSESSMENT-INCOMPLETE claim (score=${g2NoPh2.score})`);
+    }
+    const withPh2 = goodReport + '\n## §4. PH-2 — churn × complexity (S6b batch, commit 6)\nthe top-right quadrant is named here.\n';
+    const g2WithPh2 = scoreG2(withPh2);
+    if (g2WithPh2.score !== 1) {
+      throw new Error(`self-test FAILED: scoreG2 did not award the point for a genuine PH-2 section naming a quadrant (score=${g2WithPh2.score}, detail=${g2WithPh2.detail})`);
+    }
+  }
+  // R-T addendum, commit 6 — defect-ledger.md strict-row-schema parse. RED:
+  // a row missing a required column (Status, here) throws; GREEN: the same
+  // shape with every column present parses cleanly and round-trips the id.
+  {
+    const wellFormed = '| AS-D99 | assert_schema | `x.js:1` | a one-line summary | CLOSED · commit 9 | commit 9 | same |';
+    const parsedGood = parseDefectLedgerRow(wellFormed, 'AS');
+    if (parsedGood.id !== 'AS-D99' || parsedGood.status !== 'CLOSED · commit 9') {
+      throw new Error(`self-test FAILED: parseDefectLedgerRow did not parse a well-formed row correctly (${JSON.stringify(parsedGood)})`);
+    }
+    const missingStatus = '| AS-D99 | assert_schema | `x.js:1` | a one-line summary |  | commit 9 | same |';
+    let threwMissing = false;
+    try { parseDefectLedgerRow(missingStatus, 'AS'); } catch { threwMissing = true; }
+    if (!threwMissing) {
+      throw new Error('self-test FAILED: parseDefectLedgerRow did not reject a row with an empty required Status column');
+    }
+  }
+  // R-T addendum, commit 6 — notes.json fences strict-shape check
+  // (validateNotesFences, the pure half of notesFencesFor split out for
+  // in-memory self-testing). RED: `fences` declared as a non-array throws;
+  // GREEN: a proper array round-trips, and an absent `fences` key is the
+  // legitimate "declares nothing" case (empty array, not an error).
+  {
+    const fencesArr = validateNotesFences({ fences: [{ why: 'fixture' }] }, 'fixture.notes.json');
+    if (fencesArr.length !== 1) {
+      throw new Error(`self-test FAILED: validateNotesFences did not pass through a well-formed fences array (${JSON.stringify(fencesArr)})`);
+    }
+    const fencesAbsent = validateNotesFences({}, 'fixture.notes.json');
+    if (fencesAbsent.length !== 0) {
+      throw new Error('self-test FAILED: validateNotesFences did not treat an absent "fences" key as zero fences declared');
+    }
+    let threwBadShape = false;
+    try { validateNotesFences({ fences: 'not-an-array' }, 'fixture.notes.json'); } catch { threwBadShape = true; }
+    if (!threwBadShape) {
+      throw new Error('self-test FAILED: validateNotesFences did not reject a "fences" value that is not an array');
+    }
   }
   // Self-contamination regression lock (measured 2026-08-29): a report already
   // carrying a generated block must score IDENTICALLY to the same report with
