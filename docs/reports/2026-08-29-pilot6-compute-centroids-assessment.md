@@ -807,6 +807,53 @@ peel does not close R-B's carried-forward gap (R-F item 1, unchanged from Fold D
 
 ---
 
+## §8b. Peel — verdict/audit (commit 8b)
+
+**Verification-only peel — no descriptor/compute/library change.** Test `#199` in `violations.test.ts`
+already proved (at commit 7) that `compute.js` never ported `compute-centroids.js:214`'s retired
+`hasWarns` parallel boolean — the frozen shape reports observations via `ctx.report()` from day one and
+lets the shared `verdict.js buildAuditTable`/`deriveVerdict` compute the cascade, so there is no
+step-owned verdict logic to peel OUT of anything. What #199 could not prove is that the cascade,
+exercised against THIS step's own two non-INFO checks, is non-vacuous — that is this peel's deliverable.
+
+New file `src/tests/steps/compute_centroids/sabotage.logic.test.ts` (6 tests) drives the REAL compute
+check functions (`compute.checks.failed_geometries`/`.compute_rate`) with synthetic `matched` fixtures and
+feeds their observations into the REAL `verdict.js buildAuditTable`:
+
+1. **Healthy fixture** (0 failed, 100% compute rate) — both checks PASS, verdict PASS, `warnings: []`.
+2. **T1 sabotage** (`failed_geometries: 3`) — WARN, never FAIL (R-H: a malformed geometry is a
+   data-quality signal, not a halt reason), `warnings` contains `"failed_geometries: 3"` (LM-D16
+   rendering).
+3. **T2 sabotage** (`compute_rate: 90%`, below the 98% default) — WARN, `warnings` contains
+   `"compute_rate: 90%"`.
+4. **Both sabotaged** — verdict caps at WARN (the lattice does not escalate WARN+WARN to FAIL), both
+   `warnings[]` entries present in declaration order.
+5. **"Same predicate" claim, proven twice** — the retired `hasWarns` formula (recomputed here ONLY for
+   comparison, never in the shipped path) is run against the SAME fixtures as cases 1–2 and agrees with
+   the row-derived cascade both times (PASS/WARN).
+6. **The divergence fixture — the reason Rule 10 is not merely a restatement.** `matched = {}` (the shape
+   a thrown mid-phase query would leave `ctx.matched` in, since `runBackfillPhase`'s single-statement path
+   has no per-check try/catch of its own). The retired formula defaults `failed=0`/`computeRate=100`
+   **silently reads PASS** — exactly the "green because it never looked" class `verdict.js`'s own header
+   comment names. The row-derived cascade, told the check ERRORED (`{error: new Error(...)}`), escalates
+   to the check's DECLARED severity (WARN for T1) per `checkRow`'s "never-PASS-on-unevaluated" invariant —
+   **DIVERGENCE: OLD=PASS, NEW=WARN**, `warnings[0]` matches `/^failed_geometries: check errored: /`
+   (LM-D16 rendering the error message, capped, through the same `renderValue` path as a numeric row).
+7. **Coverage completeness** — `DESCRIPTOR.checks` has exactly 2 non-INFO checks (`failed_geometries`,
+   `compute_rate`); the battery above is not missing a third.
+
+All 6 tests green (case 7 is folded into the coverage-completeness assertion inside case 6's `describe`
+block, not a separate `it`). `npx vitest run src/tests/steps/compute_centroids/` (all 3 files) — 63 tests,
+0 failed.
+
+**Differential:** re-captured `docs/reports/golden/compute_centroids/post-8b/{sources,standalone}.json`.
+`table_state` hash `94473cfd` on both — byte-identical to `post-8a/` (expected: the live corpus's own
+zero-work steady state never reaches T1/T2's sabotaged branch, so nothing about THIS peel's fixture-only
+proof could show up in a live capture). `--compare` against `post-8a/`: **IDENTICAL (normalised)** for both
+`sources` and `standalone` — zero diffs.
+
+---
+
 ## §0. PH-0 seed — measured boundary table (2026-08-29 planning session)
 
 ### 0.1 Governing specs, read in order (Spec 124 §7 Step 0 / Spec 123 §6 G0)
