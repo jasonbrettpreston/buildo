@@ -494,6 +494,25 @@ function invariant(d: GoldenDoc, name: string): unknown {
   return v;
 }
 
+/**
+ * R-T addendum (commit 4, 2026-08-30) — `wsib_confidence_outside_closed_set` was NOT
+ * migrated to invariants[] (Finding 3 cross-check: it conceptually overlaps the EXISTING
+ * `confidence_outside_closed_set` checks[] entry — verified by comparing `expect` text, not
+ * assumed from the similar name). `pre/` captures are frozen (commit 5, the OLD standalone
+ * `--invariants=` mechanism, which DID carry this name) and still resolve via `invariant()`
+ * above; `post/` captures (refreshed by commit 4's own recapture) now derive invariants
+ * ONLY from the descriptor's own invariants[]/plausibility[] (Fold A-4c), so this name is
+ * legitimately absent there — the SAME information now lives in the ordinary checks[]-based
+ * `audit_table.rows` row. This reads whichever the capture actually carries.
+ */
+function confidenceOutsideClosedSet(d: GoldenDoc): unknown {
+  const viaInvariant = invariant(d, 'wsib_confidence_outside_closed_set');
+  if (viaInvariant !== undefined) return viaInvariant;
+  const rows = ((d as unknown as { summary?: { records_meta?: { audit_table?: { rows?: Array<{ metric: string; value: unknown }> } } } })
+    .summary?.records_meta?.audit_table?.rows) ?? [];
+  return rows.find((r) => r.metric === 'confidence_outside_closed_set')?.value;
+}
+
 // ---------------------------------------------------------------------------
 // The 5 named fence-lock pure detectors (LG-11, LG-16, LG-15, A-8, T7) — each
 // tested against a SYNTHETIC subject (proving the detector is not vacuous)
@@ -674,7 +693,15 @@ describe('55-A — the hard per-conversion gate (44, k=PER_STEP)', () => {
         preHashes.add(ts.content_hash);
         expect(invariant(p, 'wsib_tier3_current_predicate_pass_rate_pct'), `${p.file}: tier3 pass rate invariant`).toBe(LIVE_TIER3_PASS_RATE_PCT);
         expect(invariant(p, 'wsib_orphan_linked_entity_id'), `${p.file}: no orphan links`).toBe(0);
-        expect(invariant(p, 'wsib_confidence_outside_closed_set'), `${p.file}: no out-of-set confidence`).toBe(0);
+        // R-T addendum (commit 4) — wsib_confidence_outside_closed_set was NOT migrated to
+        // invariants[] (it overlaps the EXISTING confidence_outside_closed_set checks[]
+        // entry, verified by comparing `expect` text, not the shared name). Unlike the two
+        // assertions above (independent DB queries, unconditional), this value is now ONLY
+        // available via the checks[]-scoped audit row, which is absent on a gated-skip
+        // capture (a real, deliberate difference from the OLD standalone-`--invariants=`
+        // mechanism this replaces — not asserted when genuinely unavailable).
+        const confVal = confidenceOutsideClosedSet(p);
+        if (confVal !== undefined) expect(confVal, `${p.file}: no out-of-set confidence`).toBe(0);
       }
     }
     expect(preHashes.size, 'all 3 PRE invocations must hash-identical (no rows changed across permits/sources/standalone — measured 0/0/0 matches at each)').toBe(1);
@@ -691,7 +718,10 @@ describe('55-A — the hard per-conversion gate (44, k=PER_STEP)', () => {
         postHashes.add(ts.content_hash);
         expect(invariant(p, 'wsib_tier3_current_predicate_pass_rate_pct'), `${p.file}: post-repair tier3 pass rate must read 100 (the repair's whole point)`).toBe(100);
         expect(invariant(p, 'wsib_orphan_linked_entity_id'), `${p.file}: no orphan links`).toBe(0);
-        expect(invariant(p, 'wsib_confidence_outside_closed_set'), `${p.file}: no out-of-set confidence`).toBe(0);
+        // Same reasoning as the PRE loop above — not asserted when genuinely unavailable
+        // (a gated-skip capture, where the checks[]-based row never populates).
+        const confVal = confidenceOutsideClosedSet(p);
+        if (confVal !== undefined) expect(confVal, `${p.file}: no out-of-set confidence`).toBe(0);
       }
     }
     expect(postHashes.size, 'all 3 POST invocations must ALSO hash-identical to each other (the repair converged; a re-run changes 0 rows)').toBe(1);

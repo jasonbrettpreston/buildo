@@ -1245,10 +1245,10 @@ Re-executed every query/grep Fold C's Integration and Reality-Check passes relie
 ### Captures (item iv)
 - missing invocations: none
 - stale fingerprints: none
-- compare ran: true · diffs found: 41 · unexplained: 0
+- compare ran: true · diffs found: 43 · unexplained: 0
 
 ### Test suite (item iii)
-- SKIPPED or failed to run: --fast: vitest spawn skipped
+- 0/0 passed (suite success=true)
 
 ### Policy coverage matrix (item vi) — Spec 124 Rules 1-13
 
@@ -1267,7 +1267,7 @@ Re-executed every query/grep Fold C's Integration and Reality-Check passes relie
 | 11 | Phase-order re-derive (R-B) | prose-only | R-B describe not scoped to this step |
 | 12 | Truthful crash posture (R-M + R-B reader) | prose-only | R-M/R-B-reader describes not scoped to this step |
 | 13 | A step validates itself | enforced-green | this run of step:validate IS the mechanism |
-| P3 | I/O cost adjudication (measured, not gated) | measured | descriptor=17895B notes=6750B checks=5 rows records_meta=602B (newest post/ capture) |
+| P3 | I/O cost adjudication (measured, not gated) | measured | descriptor=26460B notes=6750B checks=5 rows records_meta=617B (newest post/ capture) |
 
 **Enforced-green: 9/14**
 

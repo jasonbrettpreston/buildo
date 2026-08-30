@@ -152,6 +152,8 @@
     "maintenance": "none"
   },
   "checks": "none",
+  "invariants": "none",
+  "plausibility": "none",
   "override": "none",
   "emits": [
     {

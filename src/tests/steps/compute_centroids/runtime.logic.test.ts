@@ -34,6 +34,8 @@ type PoolOpts = {
   updateReturnsIds?: number[];
   failedGeometries?: number;
   logicVars?: Record<string, unknown>;
+  /** R-T addendum (commit 4) — the descriptor's own invariants[]/plausibility[] queries. */
+  centroidQualityViolations?: number;
 };
 
 /**
@@ -68,6 +70,21 @@ function backfillPool(opts: PoolOpts = {}) {
       return { rows: (opts.updateReturnsIds ?? []).map((id) => ({ id })) };
     }
     if (text.includes(FAILED_SQL_NEEDLE)) return { rows: [{ failed_geometries: opts.failedGeometries ?? 0 }] };
+    // The REAL backlog query (buildPreSql, scripts/lib/compute/compute-centroids.js) ALSO
+    // references centroid_lat (`WHERE geometry IS NOT NULL AND centroid_lat IS NULL`) — its
+    // own column alias `AS backlog_count` is the more specific, disambiguating match, so it
+    // MUST be checked before the R-T addendum catch-all just below (which would otherwise
+    // intercept it and silently zero out matched.backlog_count — measured live: it did,
+    // turning a REAL-WORK fixture into a false ZERO-WORK one before this fix).
+    if (text.includes('AS backlog_count')) return { rows: [{ backlog_count: opts.backlogCount ?? 0 }] };
+    // R-T addendum (commit 4) — the descriptor's own invariants[]/plausibility[] queries
+    // (scripts/lib/step/plausibility.js's executor, hooked at index.js:1834) all reference
+    // centroid_lat in their WHERE clause too; checked BEFORE the generic BACKLOG_SQL_NEEDLE
+    // below (which would otherwise intercept them with the UNRELATED backlog_count value —
+    // measured live: it did, turning every REAL-WORK fixture's clean run into a spurious
+    // WARN before this fix). Clean (0) by default — a test opting into a non-zero centroid
+    // quality signal declares it explicitly via opts.centroidQualityViolations.
+    if (text.includes('centroid_lat')) return { rows: [{ count: opts.centroidQualityViolations ?? 0 }] };
     if (text.includes(BACKLOG_SQL_NEEDLE)) return { rows: [{ backlog_count: opts.backlogCount ?? 0 }] };
     return { rows: [] };
   };

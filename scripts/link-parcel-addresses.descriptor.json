@@ -241,7 +241,7 @@
       "id": "parcel_address_points_missed_link_count", "kind": "invariant",
       "expect": { "invariant": "every address point genuinely inside a parcel (ST_Within) has a bridge row — distinct from address_points_with_no_parcel_pct's genuinely-unparented complement" },
       "limit": "viol == 0", "severity": "INFO", "blocking": false, "when": "post", "chains": "all", "accept_until": "none",
-      "why": { "text": "Fold A, Reality-Check item b. Any nonzero count would mean the batch/predicate is silently DROPPING in-parcel address points, not merely leaving genuinely unparented ones unlinked — a distinct failure mode from address_points_with_no_parcel_pct. Measured live 0 today.", "liveness": { "kind": "table", "ref": "parcel_address_points" } }
+      "why": { "text": "Fold A, Reality-Check item b. Any nonzero count would mean the batch/predicate is silently DROPPING in-parcel address points, not merely leaving genuinely unparented ones unlinked — a distinct failure mode from address_points_with_no_parcel_pct. Measured live 0 today. R-T addendum (commit 4, 2026-08-30): kept as-is, NOT retired — its measured cost (~32s, the same query as the golden invariants[] candidate below) is embedded as one column inside buildInvariantsSql()'s combined multi-metric query (scripts/lib/compute/link-parcel-addresses.js), which also feeds parcel_address_points_stale_st_within_count and others; surgically removing just this column risked the shared SQL-builder for a proportionality gain not worth the risk this commit. Ask 5's actual ask (a validate_only-gated version) is satisfied instead by a SEPARATE, standalone invariants[] entry below — the expensive column stays embedded here too, an accepted, pre-existing, unchanged cost.", "liveness": { "kind": "table", "ref": "parcel_address_points" } }
     },
     {
       "id": "address_points_link_rate_by_class", "kind": "distribution",
@@ -264,6 +264,53 @@
       "why": { "text": "LPA-D5. `parcel_fanout_outliers` (T4, default 20) deliberately WARNs on 130 non-CONDO parcels today (R-H standing-WARN, by design) with no zone-aware sub-bound to say WHETHER a genuinely LOW-density residential zone (detached/semi-detached, RD/RS in Toronto's zoning bylaw) is contributing to that count or is clean on its own — this check is that declared retighten target, a strictly TIGHTER ceiling (15, vs T4's 20) scoped to the two zones where a large fan-out is least architecturally expected (a single detached/semi house should carry very few address points). Measured live 2026-08-29: 13 RD/RS parcels exceed fan-out 15 (of 258,596 RD/RS-zoned parcels total; RD max fan-out 35, RS max fan-out 64) — PASSES today (`viol <= 15` after `limit_from_config` substitution, 13 <= 15), a genuinely close-to-the-margin measured value rather than a vacuous always-PASS ceiling. Same `viol <= N` double-duty shape as T4/T5 (LPA-D3: the SAME config value is both the per-parcel fan-out threshold in the SQL predicate and the tolerable outlier-COUNT ceiling on this check's own limit) — declared here explicitly per that fixed pattern, not re-derived per check.", "liveness": { "kind": "table", "ref": "parcel_address_points" } }
     }
   ],
+
+  "invariants": [
+    {
+      "id": "rows", "sql": "SELECT count(*)::int FROM parcel_address_points",
+      "bound": "value_min 0", "severity": "INFO", "blocking": false, "when": "post", "source": "invariant", "frequency": "every_run",
+      "last_measured": { "value": 511224, "at": "2026-08-30T13:17:49.000Z", "commit": "9019c3d", "cost_ms": 53, "sample_n": 3, "source_run": { "run_id": null, "chain": null, "event": "manual_timing" } },
+      "why": { "text": "R-T addendum, commit 4 (net-new). Pure telemetry (junction row-count trend). value_min 0 sanity floor. 53ms median, 3 timings, single session.", "liveness": { "kind": "table", "ref": "parcel_address_points" } }
+    },
+    {
+      "id": "multi_parcel_address_count",
+      "sql": "SELECT count(*)::int FROM (SELECT address_point_id FROM parcel_address_points GROUP BY address_point_id HAVING count(*) > 1) d",
+      "bound": "value_min 0", "severity": "INFO", "blocking": false, "when": "post", "source": "invariant", "frequency": "every_run",
+      "last_measured": { "value": 0, "at": "2026-08-30T13:17:49.000Z", "commit": "9019c3d", "cost_ms": 104, "sample_n": 3, "source_run": { "run_id": null, "chain": null, "event": "manual_timing" } },
+      "why": { "text": "R-T addendum, commit 4 (net-new). An address point bridged to MORE THAN ONE parcel — a genuine plausibility signal (most address points should have one parent parcel), not covered by any existing declared check. value_min 0 (telemetry, not yet a bound with a track record). 104ms median, 3 timings, single session.", "liveness": { "kind": "table", "ref": "parcel_address_points" } }
+    },
+    {
+      "id": "dup_count",
+      "sql": "SELECT count(*)::int FROM (SELECT parcel_id, address_point_id FROM parcel_address_points GROUP BY parcel_id, address_point_id HAVING count(*) > 1) d",
+      "bound": "viol == 0", "severity": "FAIL", "blocking": false, "when": "post", "source": "invariant", "frequency": "every_run",
+      "last_measured": { "value": 0, "at": "2026-08-30T13:17:49.000Z", "commit": "9019c3d", "cost_ms": 115, "sample_n": 3, "source_run": { "run_id": null, "chain": null, "event": "manual_timing" } },
+      "why": { "text": "R-T addendum, commit 4 (net-new). A duplicate (parcel_id, address_point_id) junction pair is structurally impossible under a correct write — a genuine uniqueness violation if ever non-zero. FAIL, never a standing residual (matches the link_massing pb_unique_pairs_violations precedent, commit 3). 115ms median, 3 timings, single session.", "liveness": { "kind": "table", "ref": "parcel_address_points" } }
+    },
+    {
+      "id": "fanout_max_noncondo",
+      "sql": "SELECT COALESCE(max(cnt), 0)::int FROM (SELECT pap.parcel_id, count(*) AS cnt FROM parcel_address_points pap JOIN parcels p ON p.id = pap.parcel_id WHERE p.feature_type IS DISTINCT FROM 'CONDO' GROUP BY pap.parcel_id) s",
+      "bound": "value_min 0", "severity": "INFO", "blocking": false, "when": "post", "source": "invariant", "frequency": "every_run",
+      "last_measured": { "value": 155, "at": "2026-08-30T13:17:49.000Z", "commit": "9019c3d", "cost_ms": 1159, "sample_n": 3, "source_run": { "run_id": null, "chain": null, "event": "manual_timing" } },
+      "why": { "text": "R-T addendum, commit 4 (net-new — checks[]'s parcel_fanout_outliers is a COUNT of parcels over a ceiling; this is the raw MAX fan-out value, a distinct telemetry signal, same distinction as link_massing/link_wsib's own max-vs-outlier-count pairs, commit 3/this commit). value_min 0 sanity floor. 1,159ms median, 3 timings, single session — still comfortably under the 5,000ms budget even at 2-3x cross-session variance.", "liveness": { "kind": "table", "ref": "parcel_address_points" } }
+    },
+    {
+      "id": "land_entrance_count",
+      "sql": "SELECT count(*)::int FROM parcel_address_points pap JOIN address_points ap ON ap.address_point_id = pap.address_point_id WHERE ap.address_class_desc = 'Land Entrance'",
+      "bound": "value_min 0", "severity": "INFO", "blocking": false, "when": "post", "source": "invariant", "frequency": "every_run",
+      "last_measured": { "value": 449, "at": "2026-08-30T13:17:49.000Z", "commit": "9019c3d", "cost_ms": 52, "sample_n": 3, "source_run": { "run_id": null, "chain": null, "event": "manual_timing" } },
+      "why": { "text": "R-T addendum, commit 4 (net-new). Pure telemetry — the raw linked count behind LPA-D5's own 'Land Entrance 449/628 (71.50%)' figure (address_points_link_rate_by_class already reports the RATE; this is the numerator alone, for direct trend tracking). value_min 0 sanity floor. 52ms median, 3 timings, single session.", "liveness": { "kind": "table", "ref": "parcel_address_points" } }
+    },
+    {
+      "id": "missed_link_count",
+      "sql": "SELECT count(*)::int FROM address_points ap WHERE ap.geom IS NOT NULL AND EXISTS (SELECT 1 FROM parcels p WHERE p.geom IS NOT NULL AND ST_Within(ap.geom, p.geom) AND NOT EXISTS (SELECT 1 FROM parcel_address_points pap WHERE pap.parcel_id = p.id AND pap.address_point_id = ap.address_point_id))",
+      "bound": "viol == 0", "severity": "INFO", "blocking": false, "when": "post", "source": "invariant", "frequency": "validate_only",
+      "statement_timeout": "none",
+      "statement_timeout_why": { "text": "Ask 5, corrected by Fold B-1: the live server's own statement_timeout is 0/no-limit (SHOW statement_timeout, live-queried) — there is no ceiling to declare a raised override against. 'none' means inherit the connection's own setting, stated rather than assumed.", "liveness": "none" },
+      "last_measured": { "value": 0, "at": "2026-08-30T13:17:49.000Z", "commit": "9019c3d", "cost_ms": 32078, "sample_n": 3, "source_run": { "run_id": null, "chain": null, "event": "manual_timing" } },
+      "why": { "text": "Ask 5 (corrected, Fold A-1/B-1) — a STANDALONE, independently-executed version of the SAME query already embedded (as one column) inside buildInvariantsSql()'s combined scan (scripts/lib/compute/link-parcel-addresses.js), which is why the checks[] entry above is kept, not retired (see its own why). This entry is Ask 5's actual disposition (b): validate_only, DECLARED statement_timeout (not raised — there is no ceiling). Measured live THIS session: 32,078ms median (3 timings), count 0 — the same order of magnitude as the plan's own Fold B-1 grounder median (66,534ms, different session) and consistent with the >10x variance already documented for spatial scans at this row count. Well over the 5,000ms every_run budget by any measurement — validate_only is the only defensible classification regardless of session-to-session variance.", "liveness": { "kind": "table", "ref": "address_points" } }
+    }
+  ],
+  "plausibility": "none",
 
   "override": {
     "force_full": "LINK_PARCEL_ADDRESSES_FORCE_FULL",

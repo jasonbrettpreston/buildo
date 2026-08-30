@@ -14,6 +14,8 @@
     "guards",
     "execution",
     "checks",
+    "invariants",
+    "plausibility",
     "override",
     "emits",
     "deviations",
@@ -121,16 +123,18 @@
     "counters-null-for-ASSERT": "'An ASSERT emits counters: null' is REFUTED AS DESCRIPTION (0 of 5 ASSERTs do today). It is retained as a NORMATIVE requirement per §1.10's required-field profile: the descriptor must declare counters: \"none\"."
   },
   "x-schema-rollout": {
-    "$comment": "Staged rollout of the invariants[]/plausibility[] categories (R-T addendum, WF2 'The Step Validator, Data-First', orchestrator ruling 2026-08-30, option (c) — mirrors the converted.json PENDING staging pattern (R-K.1): a category can be DEFINED (has definitions + is a legal, schema-validating declaration) before it is REQUIRED. Commit 1's ORIGINAL ledger text claimed 'no behaviour change to existing descriptors' from this addition — that claim was REFUTED: making the two categories required immediately would force every real converted descriptor to gain a bare stub, which changes descriptor file bytes, which trips golden-fingerprint.infra.test.ts's R-C lockfile (an EXISTING, unrelated ruling, 2026-08-28) on all 6 real steps at once — an unplanned, unbudgeted live-DB recapture cost commit 1 never accounted for. Staging avoids it: invariants/plausibility become required only at commit 4, once every real descriptor's own migration commit already needs a fresh capture anyway, so the byte-change -> fingerprint consequence rides a recapture that is already budgeted rather than forcing an extra one. src/tests/step-schema.logic.test.ts locks BOTH sides: that these two are NOT in `required` today, and that this object still says required_from_commit: 4 (a test that must change at commit 4, not a silent default).",
+    "$comment": "Staged rollout of the invariants[]/plausibility[] categories (R-T addendum, WF2 'The Step Validator, Data-First', orchestrator ruling 2026-08-30, option (c) — mirrors the converted.json PENDING staging pattern (R-K.1). RESOLVED at commit 4 (2026-08-30): both categories are now in `required`/`x-categories` (20 total) — every real descriptor already had a migrated invariants[]/plausibility[] array or an explicit 'none' (assert_schema, ASSERT archetype, 0 candidates by design) BEFORE this flip, so the required-status change itself touches zero real descriptor bytes; the byte-change->fingerprint cost rode each step's own migration commit (3 for link_massing, 4 for the other 4 + assert_schema's stub), exactly as staged. This object is kept, historical, rather than deleted — it is the record of why the staging existed and when it closed.",
     "invariants": {
-      "status": "defined_not_required",
+      "status": "required",
       "required_from_commit": 4,
-      "why": "Definition + root property landed commit 1 (schema-shape only); becomes required once every real descriptor has migrated its golden invariants (commits 3-4)."
+      "resolved_at_commit": 4,
+      "why": "Definition + root property landed commit 1 (schema-shape only); required as of commit 4, once every real descriptor had migrated its golden invariants (link_massing commit 3; compute_centroids/link_wsib/link_parcel_addresses/load_ravines/assert_schema's 'none' stub commit 4)."
     },
     "plausibility": {
-      "status": "defined_not_required",
+      "status": "required",
       "required_from_commit": 4,
-      "why": "Same staging as invariants — required_from_commit: 4."
+      "resolved_at_commit": 4,
+      "why": "Same staging and resolution as invariants."
     }
   },
   "type": "object",
@@ -143,6 +147,8 @@
     "guards",
     "execution",
     "checks",
+    "invariants",
+    "plausibility",
     "override",
     "emits",
     "deviations",

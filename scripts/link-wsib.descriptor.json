@@ -409,6 +409,71 @@
     }
   ],
 
+  "invariants": [
+    {
+      "id": "wsib_tier3_current_predicate_pass_rate_pct",
+      "sql": "SELECT round(100.0 * count(*) FILTER (WHERE (w.trade_name_normalized IS NOT NULL AND LENGTH(w.trade_name_normalized) >= 5 AND LENGTH(e.name_normalized) >= 5 AND similarity(w.trade_name_normalized, e.name_normalized) > 0.6 AND LEFT(REGEXP_REPLACE(w.trade_name_normalized, '^(THE|A|AN) ', ''), 1) = LEFT(REGEXP_REPLACE(e.name_normalized, '^(THE|A|AN) ', ''), 1)) OR (LENGTH(w.legal_name_normalized) >= 5 AND LENGTH(e.name_normalized) >= 5 AND similarity(w.legal_name_normalized, e.name_normalized) > 0.6 AND LEFT(REGEXP_REPLACE(w.legal_name_normalized, '^(THE|A|AN) ', ''), 1) = LEFT(REGEXP_REPLACE(e.name_normalized, '^(THE|A|AN) ', ''), 1))) / NULLIF(count(*), 0), 1) FROM wsib_registry w JOIN entities e ON e.id = w.linked_entity_id WHERE w.match_confidence = 0.60",
+      "bound": "value_max 100", "severity": "INFO", "blocking": false, "when": "post", "source": "invariant", "frequency": "every_run",
+      "last_measured": { "value": 100.0, "at": "2026-08-30T13:17:49.000Z", "commit": "9019c3d", "cost_ms": 35, "sample_n": 3, "source_run": { "run_id": null, "chain": null, "event": "manual_timing" } },
+      "why": { "text": "R-T addendum, commit 4 (net-new — checks[] has tier_3_fuzzy_matches, a match COUNT, a different metric from this QUALITY confirmation rate). Telemetry: what fraction of tier-3 fuzzy links the CURRENT similarity/prefix predicate would independently re-confirm. value_max 100 sanity ceiling. 35ms median, 3 timings, single session.", "liveness": { "kind": "table", "ref": "wsib_registry" } }
+    },
+    {
+      "id": "wsib_entity_fanin_p99",
+      "sql": "SELECT round(percentile_cont(0.99) WITHIN GROUP (ORDER BY cnt))::int FROM (SELECT linked_entity_id, count(*) AS cnt FROM wsib_registry WHERE linked_entity_id IS NOT NULL GROUP BY linked_entity_id) s",
+      "bound": "value_min 0", "severity": "INFO", "blocking": false, "when": "post", "source": "invariant", "frequency": "every_run",
+      "last_measured": { "value": 10, "at": "2026-08-30T13:17:49.000Z", "commit": "9019c3d", "cost_ms": 34, "sample_n": 3, "source_run": { "run_id": null, "chain": null, "event": "manual_timing" } },
+      "why": { "text": "R-T addendum, commit 4 (net-new — checks[]'s entity_fanin_warn is the raw MAX, this is the p99 distribution tail, a distinct telemetry signal). value_min 0 sanity floor. 34ms median, 3 timings, single session.", "liveness": { "kind": "table", "ref": "wsib_registry" } }
+    },
+    {
+      "id": "wsib_magnet_entities_fanin_ge_10",
+      "sql": "SELECT count(*)::int FROM (SELECT linked_entity_id FROM wsib_registry WHERE linked_entity_id IS NOT NULL GROUP BY linked_entity_id HAVING count(*) >= 10) s",
+      "bound": "value_min 0", "severity": "INFO", "blocking": false, "when": "post", "source": "invariant", "frequency": "every_run",
+      "last_measured": { "value": 7, "at": "2026-08-30T13:17:49.000Z", "commit": "9019c3d", "cost_ms": 16, "sample_n": 3, "source_run": { "run_id": null, "chain": null, "event": "manual_timing" } },
+      "why": { "text": "R-T addendum, commit 4 (net-new). How many entities are 'magnets' (>=10 linked wsib_registry rows) — a coarser population count than entity_fanin_warn's own max-violation framing. value_min 0 sanity floor. 16ms median, 3 timings, single session.", "liveness": { "kind": "table", "ref": "wsib_registry" } }
+    },
+    {
+      "id": "wsib_orphan_linked_entity_id",
+      "sql": "SELECT count(*)::int FROM wsib_registry w WHERE w.linked_entity_id IS NOT NULL AND NOT EXISTS (SELECT 1 FROM entities e WHERE e.id = w.linked_entity_id)",
+      "bound": "viol == 0", "severity": "FAIL", "blocking": false, "when": "post", "source": "invariant", "frequency": "every_run",
+      "last_measured": { "value": 0, "at": "2026-08-30T13:17:49.000Z", "commit": "9019c3d", "cost_ms": 59, "sample_n": 3, "source_run": { "run_id": null, "chain": null, "event": "manual_timing" } },
+      "why": { "text": "R-T addendum, commit 4 (net-new — the checks[] entry ALSO named orphan_linked_entity_id checks a DIFFERENT thing: 'linked_iff_confidence_iff_matched_at' column-consistency, not FK integrity. Verified by reading its expect text, not assumed from the shared name — measured, not guessed). A genuine dangling FK (linked_entity_id pointing at a deleted entities row) is a real bug: FAIL, never a standing residual. 59ms median, 3 timings, single session.", "liveness": { "kind": "table", "ref": "wsib_registry" } }
+    },
+    {
+      "id": "wsib_registry_total_rows", "sql": "SELECT count(*)::int FROM wsib_registry",
+      "bound": "value_min 0", "severity": "INFO", "blocking": false, "when": "post", "source": "invariant", "frequency": "every_run",
+      "last_measured": { "value": 121116, "at": "2026-08-30T13:17:49.000Z", "commit": "9019c3d", "cost_ms": 11, "sample_n": 3, "source_run": { "run_id": null, "chain": null, "event": "manual_timing" } },
+      "why": { "text": "R-T addendum, commit 4 (net-new). Pure telemetry (source-table row-count trend). value_min 0 sanity floor. 11ms median, 3 timings, single session.", "liveness": { "kind": "table", "ref": "wsib_registry" } }
+    },
+    {
+      "id": "entities_wsib_registered_count", "sql": "SELECT count(*)::int FROM entities WHERE is_wsib_registered = true",
+      "bound": "value_min 0", "severity": "INFO", "blocking": false, "when": "post", "source": "invariant", "frequency": "every_run",
+      "last_measured": { "value": 301, "at": "2026-08-30T13:17:49.000Z", "commit": "9019c3d", "cost_ms": 2, "sample_n": 3, "source_run": { "run_id": null, "chain": null, "event": "manual_timing" } },
+      "why": { "text": "R-T addendum, commit 4 (net-new). Pure telemetry (denominator context for wsib_cumulative_link_rate_pct below). value_min 0 sanity floor. 2ms median, 3 timings, single session.", "liveness": { "kind": "table", "ref": "entities" } }
+    },
+    {
+      "id": "wsib_registered_entities_without_exact_tier_link",
+      "sql": "SELECT count(*)::int FROM entities e WHERE e.is_wsib_registered = true AND NOT EXISTS (SELECT 1 FROM wsib_registry w WHERE w.linked_entity_id = e.id AND w.match_confidence IN (0.95, 0.90))",
+      "bound": "viol == 0", "severity": "WARN", "blocking": false, "when": "post", "source": "invariant", "frequency": "every_run",
+      "last_measured": { "value": 0, "at": "2026-08-30T13:17:49.000Z", "commit": "9019c3d", "cost_ms": 3, "sample_n": 3, "source_run": { "run_id": null, "chain": null, "event": "manual_timing" } },
+      "why": { "text": "R-T addendum, commit 4 (net-new). An entity marked is_wsib_registered SOLELY on the strength of a fuzzy (0.60) tier link, never an exact one, is exactly the 'low-precision tier as a product-visible boolean' risk lessons.md already names for this step. Currently 0 (healthy) — WARN, not FAIL, because a fuzzy-only registration is a declared-legal state (R-O), just a quality signal worth watching. 3ms median, 3 timings, single session.", "liveness": { "kind": "table", "ref": "entities" } }
+    },
+    {
+      "id": "wsib_tier_confidence_split",
+      "sql": "SELECT string_agg(match_confidence::text || ':' || cnt::text, ',' ORDER BY match_confidence) FROM (SELECT match_confidence, count(*) AS cnt FROM wsib_registry WHERE match_confidence IS NOT NULL GROUP BY match_confidence) s",
+      "bound": "value_min 0", "severity": "INFO", "blocking": false, "when": "post", "source": "invariant", "frequency": "every_run",
+      "last_measured": { "value": "0.60:548,0.90:249,0.95:75", "at": "2026-08-30T13:17:49.000Z", "commit": "9019c3d", "cost_ms": 25, "sample_n": 3, "source_run": { "run_id": null, "chain": null, "event": "manual_timing" } },
+      "why": { "text": "R-T addendum, commit 4 (net-new). A STRING telemetry value (tier:count pairs) — no numeric bound form applies; value_min 0 is a schema-legal placeholder that reads 'unevaluable' at INFO severity every run (harmless — the same outcome as 'not reported', just declared rather than silent). The audit row's own value carries the real string for a human to read. 25ms median, 3 timings, single session.", "liveness": { "kind": "table", "ref": "wsib_registry" } }
+    },
+    {
+      "id": "wsib_cumulative_link_rate_pct",
+      "sql": "SELECT round(100.0 * count(*) FILTER (WHERE linked_entity_id IS NOT NULL) / NULLIF(count(*), 0), 2) FROM wsib_registry",
+      "bound": "value_max 100", "severity": "INFO", "blocking": false, "when": "post", "source": "invariant", "frequency": "every_run",
+      "last_measured": { "value": 0.72, "at": "2026-08-30T13:17:49.000Z", "commit": "9019c3d", "cost_ms": 22, "sample_n": 3, "source_run": { "run_id": null, "chain": null, "event": "manual_timing" } },
+      "why": { "text": "R-T addendum, commit 4 (net-new — checks[]'s link_rate_warn is scoped over ENTITIES [entities with >=1 link / total entities]; this is scoped over WSIB_REGISTRY ROWS [rows linked / total rows] — a genuinely different denominator, not a duplicate). value_max 100 sanity ceiling. 22ms median, 3 timings, single session.", "liveness": { "kind": "table", "ref": "wsib_registry" } }
+    }
+  ],
+  "plausibility": "none",
+
   "override": {
     "force_full": "LINK_WSIB_FORCE_FULL",
     "force_run": "none",

@@ -171,6 +171,8 @@
       }
     }
   ],
+  "invariants": "none",
+  "plausibility": "none",
   "override": "none",
   "emits": "none",
   "deviations": "none",
@@ -184,9 +186,15 @@
     "verify_clean": "generated",
     "cascades": "derived",
     "interrupted": "none",
-    "interrupted_why": { "text": "fixture descriptor — not a converted step; no destructive full-retraction target modeled", "liveness": "none" },
+    "interrupted_why": {
+      "text": "fixture descriptor — not a converted step; no destructive full-retraction target modeled",
+      "liveness": "none"
+    },
     "before_image": "none",
-    "before_image_why": { "text": "fixture descriptor — not a converted step; no destructive full-retraction target modeled", "liveness": "none" }
+    "before_image_why": {
+      "text": "fixture descriptor — not a converted step; no destructive full-retraction target modeled",
+      "liveness": "none"
+    }
   },
   "database": {
     "class": "primary",

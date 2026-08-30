@@ -1,9 +1,0 @@
-[
-  { "name": "parcels_total", "sql": "SELECT count(*)::int FROM parcels" },
-  { "name": "centroid_null_count", "sql": "SELECT count(*)::int FROM parcels WHERE geom IS NOT NULL AND centroid_lat IS NULL" },
-  { "name": "geom_not_null_geometry_null_count", "sql": "SELECT count(*)::int FROM parcels WHERE geometry IS NOT NULL AND geom IS NULL" },
-  { "name": "outside_polygon_count", "sql": "SELECT count(*)::int FROM parcels WHERE geom IS NOT NULL AND centroid_lat IS NOT NULL AND NOT ST_Contains(geom, ST_SetSRID(ST_MakePoint(centroid_lng, centroid_lat),4326))" },
-  { "name": "pointonsurface_gt_1m_count", "sql": "SELECT count(*)::int FROM parcels WHERE geom IS NOT NULL AND centroid_lat IS NOT NULL AND ST_DistanceSphere(ST_SetSRID(ST_MakePoint(centroid_lng, centroid_lat),4326), ST_PointOnSurface(geom)) > 1.0" },
-  { "name": "centroid_in_neighbour_parcel_count", "sql": "WITH drifted AS MATERIALIZED (SELECT id, geom, ST_SetSRID(ST_MakePoint(centroid_lng, centroid_lat), 4326) AS c FROM parcels WHERE geom IS NOT NULL AND centroid_lat IS NOT NULL AND NOT ST_Contains(geom, ST_SetSRID(ST_MakePoint(centroid_lng, centroid_lat), 4326))) SELECT COUNT(*)::int AS c FROM drifted d CROSS JOIN LATERAL (SELECT p2.id FROM parcels p2 WHERE ST_Contains(p2.geom, d.c) AND p2.id <> d.id LIMIT 1) hit" },
-  { "name": "centroid_algorithm_drift_gt_1m_count", "sql": "SELECT count(*)::int FROM parcels WHERE geom IS NOT NULL AND centroid_lat IS NOT NULL AND ST_DistanceSphere(ST_SetSRID(ST_MakePoint(centroid_lng, centroid_lat),4326), ST_Centroid(geom)) > 1.0" }
-]

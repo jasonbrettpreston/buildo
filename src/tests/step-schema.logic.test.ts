@@ -138,31 +138,26 @@ describe('step.schema.json — the canonical vocabulary (Spec 122 S1)', () => {
     expect(typeof validate).toBe('function');
   });
 
-  it('declares 18 categories, every one of them required — invariants/plausibility are DEFINED but deliberately NOT rendered categories yet (R-T addendum, orchestrator ruling 2026-08-30 option (c))', () => {
+  it('declares 20 categories, every one of them required (R-T addendum, resolved at commit 4 — invariants/plausibility flipped from staged to required)', () => {
     const cats = schema['x-categories'] as string[];
     const required = schema.required as string[];
-    expect(cats).toHaveLength(18);
+    expect(cats).toHaveLength(20);
     expect(cats).toContain('terminals');
-    // x-categories deliberately does NOT list invariants/plausibility yet — the
-    // vocabulary generator (schema-to-vocab.mjs) asserts x-categories ⊆ required
-    // as its own self-test (KB3, "omission is a build failure"), so adding them
-    // to x-categories before commit 4 would force the SAME "required" flip this
-    // ruling exists to defer.
-    expect(cats).not.toContain('invariants');
-    expect(cats).not.toContain('plausibility');
+    expect(cats).toContain('invariants');
+    expect(cats).toContain('plausibility');
     for (const c of cats) expect(required, `${c} must be required — omission is a build failure`).toContain(c);
   });
 
-  it('invariants/plausibility are DEFINED (schema definitions + root properties) but STAGED, not required, until commit 4 (x-schema-rollout, mirrors converted.json PENDING/R-K.1)', () => {
-    // This is the lock the orchestrator's option (c) ruling asked for: a real
-    // descriptor's bytes must NOT have to change in commit 1 (that would trip
-    // golden-fingerprint.infra.test.ts's R-C lockfile on all 6 real steps,
-    // unbudgeted). So today: definitions exist, a descriptor MAY declare them,
-    // but nothing is FORCED to — DECLARED as staged with a named target commit,
-    // never a silent default.
+  it('invariants/plausibility are DEFINED and now REQUIRED (x-schema-rollout resolved at commit 4, mirrors converted.json PENDING/R-K.1 resolving)', () => {
+    // Fold C-1's staging (commit 1) resolves here: every real descriptor already
+    // had a migrated invariants[]/plausibility[] array or an explicit 'none'
+    // (assert_schema, ASSERT archetype, 0 candidates by design) BEFORE this
+    // flip landed — so the required-status change itself touches zero real
+    // descriptor bytes; the byte-change->fingerprint cost rode each step's own
+    // migration commit, exactly as staged.
     const required = schema.required as string[];
-    expect(required).not.toContain('invariants');
-    expect(required).not.toContain('plausibility');
+    expect(required).toContain('invariants');
+    expect(required).toContain('plausibility');
     const props = schema.properties as Record<string, unknown>;
     expect(props).toHaveProperty('invariants');
     expect(props).toHaveProperty('plausibility');
@@ -171,15 +166,17 @@ describe('step.schema.json — the canonical vocabulary (Spec 122 S1)', () => {
     expect(defs).toHaveProperty('plausibility');
     expect(defs).toHaveProperty('bound');
     expect(defs).toHaveProperty('lastMeasured');
-    const rollout = schema['x-schema-rollout'] as Record<string, { status: string; required_from_commit: number }>;
+    const rollout = schema['x-schema-rollout'] as Record<string, { status: string; required_from_commit: number; resolved_at_commit: number }>;
     expect(rollout.invariants).toEqual({
-      status: 'defined_not_required',
+      status: 'required',
       required_from_commit: 4,
+      resolved_at_commit: 4,
       why: expect.any(String),
     });
     expect(rollout.plausibility).toEqual({
-      status: 'defined_not_required',
+      status: 'required',
       required_from_commit: 4,
+      resolved_at_commit: 4,
       why: expect.any(String),
     });
   });

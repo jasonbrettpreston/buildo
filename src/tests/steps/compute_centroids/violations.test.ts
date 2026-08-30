@@ -751,10 +751,12 @@ describe('golden capture (commit 5, LANDED) — testable today', () => {
     }
   });
 
-  it('the invariants.json file declares the materialized-CTE+LATERAL query shape for centroid_in_neighbour_parcel_count (per Fold D — a naive correlated EXISTS ran 6+ minutes; this must stay the fast form)', () => {
-    const inv = JSON.parse(fs.readFileSync(artifact(`${GOLDEN_DIR_REL}/invariants.json`), 'utf8')) as Array<{ name: string; sql: string }>;
-    const row = inv.find((r) => r.name === 'centroid_in_neighbour_parcel_count');
-    expect(row, 'invariants.json must declare centroid_in_neighbour_parcel_count').toBeDefined();
+  it('R-T addendum (commit 4) — the DESCRIPTOR (invariants.json is retired, Fold A-4c) declares the materialized-CTE+LATERAL query shape for centroid_in_neighbour_parcel_count (per Fold D — a naive correlated EXISTS ran 6+ minutes; this must stay the fast form)', () => {
+    expect(fs.existsSync(path.resolve(REPO_ROOT, `${GOLDEN_DIR_REL}/invariants.json`)), 'invariants.json must actually be deleted, not merely unread').toBe(false);
+    // eslint-disable-next-line @typescript-eslint/no-require-imports -- exercising the real descriptor
+    const descriptor = require(path.resolve(REPO_ROOT, 'scripts/compute-centroids.descriptor.json')) as { invariants: Array<{ id: string; sql: string }> };
+    const row = descriptor.invariants.find((r) => r.id === 'centroid_in_neighbour_parcel_count');
+    expect(row, 'the descriptor must declare centroid_in_neighbour_parcel_count').toBeDefined();
     expect(row!.sql.includes('MATERIALIZED')).toBe(true);
     expect(row!.sql.includes('LATERAL')).toBe(true);
   });

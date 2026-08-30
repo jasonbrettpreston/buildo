@@ -3,7 +3,7 @@
   "spec": "docs/specs/01-pipeline/122_pipeline_step_optimization.md §5.3",
   "step": "scripts/compute-centroids.js",
   "chain": "sources",
-  "git_head": "d9e5b34626a0b330a5fc3cb8dc637c3eb8d26315",
+  "git_head": "9019c3d3e9960f0fb519307a141d92786539fdc9",
   "exit_code": 0,
   "signal": null,
   "summary": {
@@ -11,7 +11,7 @@
     "records_new": 0,
     "records_updated": 0,
     "records_meta": {
-      "duration_ms": 910,
+      "duration_ms": 1038,
       "parcels_processed": 0,
       "centroids_computed": 0,
       "failed_geometries": 0,
@@ -33,7 +33,8 @@
             "metric": "backlog_count",
             "value": 0,
             "threshold": "viol == 0",
-            "status": "INFO"
+            "status": "INFO",
+            "source": "check"
           },
           {
             "metric": "sys_velocity_rows_sec",
@@ -43,7 +44,7 @@
           },
           {
             "metric": "sys_duration_ms",
-            "value": 913,
+            "value": 1040,
             "threshold": null,
             "status": "INFO"
           }
@@ -74,10 +75,10 @@
   "parse_errors": [],
   "verdict": "PASS",
   "ledger_status": [],
-  "stdout": "{\"level\":\"INFO\",\"tag\":\"[compute_centroids]\",\"msg\":\"[compute_centroids] target: compute_centroids (descriptor.database) → database=postgres user=postgres migrations=242 (floor 16)\"}\n{\"level\":\"INFO\",\"tag\":\"[compute_centroids]\",\"msg\":\"backfill: 0 eligible rows — nothing to compute\"}\nPIPELINE_SUMMARY:{\"records_total\":0,\"records_new\":0,\"records_updated\":0,\"records_meta\":{\"duration_ms\":910,\"parcels_processed\":0,\"centroids_computed\":0,\"failed_geometries\":0,\"config\":{\"compute_centroids_failed_geometries_warn\":0,\"compute_centroids_compute_rate_warn_pct\":98},\"terminal\":\"zero_work\",\"ledger_row\":\"chain_owned\",\"checks_passed\":\"all\",\"checks_failed\":0,\"checks_warned\":0,\"audit_table\":{\"phase\":5,\"name\":\"Centroid Computation\",\"verdict\":\"PASS\",\"rows\":[{\"metric\":\"backlog_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":913,\"threshold\":null,\"status\":\"INFO\"}]}}}\nPIPELINE_META:{\"reads\":{\"parcels\":[\"id\",\"geom\",\"geometry\",\"centroid_lat\",\"centroid_lng\"]},\"writes\":{\"parcels\":[\"centroid_lat\",\"centroid_lng\"]}}\n\n[compute_centroids] completed in 0.9s\n",
+  "stdout": "{\"level\":\"INFO\",\"tag\":\"[compute_centroids]\",\"msg\":\"[compute_centroids] target: compute_centroids (descriptor.database) → database=postgres user=postgres migrations=242 (floor 16)\"}\n{\"level\":\"INFO\",\"tag\":\"[compute_centroids]\",\"msg\":\"backfill: 0 eligible rows — nothing to compute\"}\nPIPELINE_SUMMARY:{\"records_total\":0,\"records_new\":0,\"records_updated\":0,\"records_meta\":{\"duration_ms\":1038,\"parcels_processed\":0,\"centroids_computed\":0,\"failed_geometries\":0,\"config\":{\"compute_centroids_failed_geometries_warn\":0,\"compute_centroids_compute_rate_warn_pct\":98},\"terminal\":\"zero_work\",\"ledger_row\":\"chain_owned\",\"checks_passed\":\"all\",\"checks_failed\":0,\"checks_warned\":0,\"audit_table\":{\"phase\":5,\"name\":\"Centroid Computation\",\"verdict\":\"PASS\",\"rows\":[{\"metric\":\"backlog_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":1040,\"threshold\":null,\"status\":\"INFO\"}]}}}\nPIPELINE_META:{\"reads\":{\"parcels\":[\"id\",\"geom\",\"geometry\",\"centroid_lat\",\"centroid_lng\"]},\"writes\":{\"parcels\":[\"centroid_lat\",\"centroid_lng\"]}}\n\n[compute_centroids] completed in 1.0s\n",
   "stderr": "",
   "pipeline_runs": [],
-  "pipeline_runs_max_id_before": 1750,
+  "pipeline_runs_max_id_before": 1755,
   "table_state": [
     {
       "table": "parcels",
@@ -98,7 +99,7 @@
   "tables_source": "descriptor",
   "table_row_ceiling": 100000,
   "table_timing": {
-    "parcels": 3164
+    "parcels": 1095
   },
   "table_specs": {
     "parcels": {
@@ -144,7 +145,7 @@
       "value": "292587"
     }
   ],
-  "invariants_file": "docs/reports/golden/compute_centroids/invariants.json",
+  "invariants_file": null,
   "db_target": "postgresql://postgres:***@127.0.0.1:54322/postgres",
   "runtime": "node",
   "args": [],
@@ -166,6 +167,7 @@
           "rows": [
             {
               "metric": "backlog_count",
+              "source": "check",
               "status": "INFO",
               "threshold": "viol == 0",
               "value": 0
@@ -265,7 +267,7 @@
       }
     ]
   },
-  "source_fingerprint": "7a1ed1312a405b34d23409728ecdfb345d8c3f1ca14b4eaf794682be77857cdb",
+  "source_fingerprint": "77a0b7771af121640d48f30941185929e62e97c2b8b881fd0e623badc47d7328",
   "fingerprint_files": [
     "scripts/compute-centroids.descriptor.json",
     "scripts/compute-centroids.js",

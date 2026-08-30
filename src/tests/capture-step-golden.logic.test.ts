@@ -279,14 +279,14 @@ describe('invariants file — validation + one-scalar result shaping', () => {
     expect(() => invariantResult('n', [])).toThrow(/expected 1 row/);
     expect(() => invariantResult('n', [{ a: 1, b: 2 }])).toThrow(/expected 1 column/);
   });
-  it('the committed load_ravines invariants file validates and names the Fold A-2 set', () => {
-    const doc = require('../../docs/reports/golden/load_ravines/invariants.json');
-    expect(validateInvariantSpec(doc).map((i: { name: string }) => i.name)).toEqual([
-      'ravines_count', 'ravines_distinct_source_dataset_version', 'ravines_area_km2',
-      'parcels_sign_law_violations', 'permits_sign_law_violations', 'coa_sign_law_violations',
-      'parcels_lineage_mismatch',
-    ]);
-    for (const inv of doc) expect(inv.sql).toMatch(/^SELECT /);
+  it('R-T addendum (Fold A-4c, commit 4) — load_ravines\', compute_centroids\', link_wsib\'s, and link_parcel_addresses\' golden invariants.json files are RETIRED (one source of truth: the descriptor)', () => {
+    for (const slug of ['load_ravines', 'compute_centroids', 'link_wsib', 'link_parcel_addresses']) {
+      expect(() => require(`../../docs/reports/golden/${slug}/invariants.json`),
+        `${slug}: the retired file must actually be deleted, not merely unread`).toThrow(/Cannot find module/);
+    }
+    // The R-C round-trip lock (Fold B-10) was run standalone this session for all 4 steps
+    // (28 entries, all matched a raw direct query for the same sql) BEFORE this deletion —
+    // this test only proves the deletion itself, not the round-trip (a live-DB concern).
   });
 
   it('R-T addendum (Fold A-4c, commit 3) — deriveInvariantSpecFromDescriptor reads BOTH invariants[] and plausibility[], null for neither', () => {
@@ -308,6 +308,36 @@ describe('invariants file — validation + one-scalar result shaping', () => {
       'nearest_share_pct', 'linked_parcel_null_centroid_count',
     ]);
     for (const inv of derived ?? []) expect(inv.sql).toMatch(/^SELECT /);
+  });
+
+  it('R-T addendum, commit 4 — the migrated compute_centroids/link_wsib/link_parcel_addresses/load_ravines descriptors derive their own declared invariant/plausibility names, each a real SELECT', () => {
+    const expected: Record<string, string[]> = {
+      'compute-centroids': [
+        'parcels_total', 'centroid_null_count', 'geom_not_null_geometry_null_count', 'outside_polygon_count',
+        'pointonsurface_gt_1m_count', 'centroid_in_neighbour_parcel_count', 'centroid_algorithm_drift_gt_1m_count',
+      ],
+      'link-wsib': [
+        'wsib_tier3_current_predicate_pass_rate_pct', 'wsib_entity_fanin_p99', 'wsib_magnet_entities_fanin_ge_10',
+        'wsib_orphan_linked_entity_id', 'wsib_registry_total_rows', 'entities_wsib_registered_count',
+        'wsib_registered_entities_without_exact_tier_link', 'wsib_tier_confidence_split', 'wsib_cumulative_link_rate_pct',
+      ],
+      'link-parcel-addresses': [
+        'rows', 'multi_parcel_address_count', 'dup_count', 'fanout_max_noncondo', 'land_entrance_count', 'missed_link_count',
+      ],
+      'load-ravines': [
+        'ravines_distinct_source_dataset_version', 'ravines_area_km2',
+        'parcels_sign_law_violations', 'permits_sign_law_violations', 'coa_sign_law_violations', 'parcels_lineage_mismatch',
+      ],
+    };
+    for (const [file, names] of Object.entries(expected)) {
+      const descriptor = require(`../../scripts/${file}.descriptor.json`);
+      const derived = deriveInvariantSpecFromDescriptor(descriptor);
+      expect(derived?.map((i: { name: string }) => i.name), file).toEqual(names);
+      // compute_centroids' centroid_in_neighbour_parcel_count is a WITH-CTE query
+      // (WITH drifted AS MATERIALIZED (...) SELECT ...), not a bare SELECT — a real
+      // SELECT statement either way, so the SELECT-anchored form permits both.
+      for (const inv of derived ?? []) expect(inv.sql, `${file}:${inv.name}`).toMatch(/^(SELECT|WITH)\b/);
+    }
   });
 });
 

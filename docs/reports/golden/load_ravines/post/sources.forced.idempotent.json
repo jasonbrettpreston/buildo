@@ -3,7 +3,7 @@
   "spec": "docs/specs/01-pipeline/122_pipeline_step_optimization.md §5.3",
   "step": "scripts/load-ravines.js",
   "chain": "sources",
-  "git_head": "9bdfc2335c433862a000cd5597a34beaa2a32315",
+  "git_head": "9019c3d3e9960f0fb519307a141d92786539fdc9",
   "exit_code": 0,
   "signal": null,
   "summary": {
@@ -31,6 +31,10 @@
         "geometry_update_pct": 0,
         "skipped_reason": null
       },
+      "gate": {
+        "reason": "loaded",
+        "gated_skip": false
+      },
       "config": {
         "load_ravines_dataset_age_warn_years": 20,
         "load_ravines_count_drift_fail_pct": 0.5,
@@ -43,6 +47,7 @@
       "ledger_row": "chain_owned",
       "checks_passed": "all",
       "checks_failed": 0,
+      "checks_warned": 0,
       "audit_table": {
         "phase": 59,
         "name": "Ravine + Natural Feature Protection",
@@ -52,125 +57,186 @@
             "metric": "dataset_source_license",
             "value": "https://open.toronto.ca/open-data-license/",
             "threshold": "viol == 0",
-            "status": "INFO"
+            "status": "INFO",
+            "source": "check"
           },
           {
             "metric": "ravine_load_skipped",
             "value": null,
             "threshold": "viol == 0",
-            "status": "INFO"
+            "status": "INFO",
+            "source": "check"
           },
           {
             "metric": "ravine_no_cache_validators",
             "value": "last-modified+etag",
             "threshold": "viol == 0",
-            "status": "PASS"
+            "status": "PASS",
+            "source": "check"
           },
           {
             "metric": "ravine_dataset_age_years",
             "value": 4,
             "threshold": "viol == 0",
-            "status": "PASS"
+            "status": "PASS",
+            "source": "check"
           },
           {
             "metric": "ravine_override_feature_count_drift_present",
             "value": false,
             "threshold": "viol == 0",
-            "status": "PASS"
+            "status": "PASS",
+            "source": "check"
           },
           {
             "metric": "ravine_override_mass_delete_present",
             "value": false,
             "threshold": "viol == 0",
-            "status": "PASS"
+            "status": "PASS",
+            "source": "check"
           },
           {
             "metric": "ravine_bad_objectid_count",
             "value": 0,
             "threshold": "viol == 0",
-            "status": "PASS"
+            "status": "PASS",
+            "source": "check"
           },
           {
             "metric": "ravine_null_geometry_count",
             "value": 0,
             "threshold": "viol == 0",
-            "status": "PASS"
+            "status": "PASS",
+            "source": "check"
           },
           {
             "metric": "ravine_duplicate_objectid_count",
             "value": 0,
             "threshold": "viol == 0",
-            "status": "PASS"
+            "status": "PASS",
+            "source": "check"
           },
           {
             "metric": "ravine_feature_count",
             "value": 854,
             "threshold": "viol == 0",
-            "status": "INFO"
+            "status": "INFO",
+            "source": "check"
           },
           {
             "metric": "ravine_count_drift_pct",
             "value": 0,
             "threshold": "pct <= 0.5",
-            "status": "PASS"
+            "status": "PASS",
+            "source": "check"
           },
           {
             "metric": "ravine_geometry_repaired_pct",
             "value": 0.076,
             "threshold": "viol == 0",
-            "status": "INFO"
+            "status": "INFO",
+            "source": "check"
           },
           {
             "metric": "ravine_geometry_collection_extracted",
             "value": 0,
             "threshold": "viol == 0",
-            "status": "INFO"
+            "status": "INFO",
+            "source": "check"
           },
           {
             "metric": "ravine_geometry_skipped_pct",
             "value": 0,
             "threshold": "pct <= 0.05",
-            "status": "PASS"
+            "status": "PASS",
+            "source": "check"
           },
           {
             "metric": "ravine_write_privilege",
             "value": "bypassrls=true policies=0",
             "threshold": "viol == 0",
-            "status": "PASS"
+            "status": "PASS",
+            "source": "check"
           },
           {
             "metric": "ravine_rows_changed_ratio",
             "value": 0,
             "threshold": "pct <= 0.5",
-            "status": "PASS"
+            "status": "PASS",
+            "source": "check"
           },
           {
             "metric": "ravine_geometry_update_pct",
             "value": 0,
             "threshold": "pct <= 0.5",
-            "status": "PASS"
+            "status": "PASS",
+            "source": "check"
           },
           {
             "metric": "ravine_mass_delete_pct",
             "value": 0,
             "threshold": "pct <= 0.5",
-            "status": "PASS"
+            "status": "PASS",
+            "source": "check"
           },
           {
             "metric": "ravine_delete_skipped_empty_guard",
             "value": false,
             "threshold": "viol == 0",
-            "status": "INFO"
+            "status": "INFO",
+            "source": "check"
+          },
+          {
+            "metric": "ravines_distinct_source_dataset_version",
+            "value": 1,
+            "threshold": "value_max 1",
+            "status": "PASS",
+            "source": "invariant"
+          },
+          {
+            "metric": "ravines_area_km2",
+            "value": 110.995,
+            "threshold": "value_min 0",
+            "status": "INFO",
+            "source": "invariant"
+          },
+          {
+            "metric": "parcels_sign_law_violations",
+            "value": 0,
+            "threshold": "viol == 0",
+            "status": "PASS",
+            "source": "plausibility"
+          },
+          {
+            "metric": "permits_sign_law_violations",
+            "value": 0,
+            "threshold": "viol == 0",
+            "status": "PASS",
+            "source": "plausibility"
+          },
+          {
+            "metric": "coa_sign_law_violations",
+            "value": 0,
+            "threshold": "viol == 0",
+            "status": "PASS",
+            "source": "plausibility"
+          },
+          {
+            "metric": "parcels_lineage_mismatch",
+            "value": 0,
+            "threshold": "viol == 0",
+            "status": "PASS",
+            "source": "plausibility"
           },
           {
             "metric": "sys_velocity_rows_sec",
-            "value": 59.01,
+            "value": 45.84,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "sys_duration_ms",
-            "value": 14472,
+            "value": 18631,
             "threshold": null,
             "status": "INFO"
           }
@@ -199,10 +265,10 @@
   "parse_errors": [],
   "verdict": "PASS",
   "ledger_status": [],
-  "stdout": "{\"level\":\"INFO\",\"tag\":\"[load_ravines]\",\"msg\":\"[load_ravines] target: load_ravines (descriptor.database) → database=postgres user=postgres migrations=242 (floor 167)\"}\n{\"level\":\"INFO\",\"tag\":\"[load_ravines]\",\"msg\":\"acquired 854 feature(s) (4490391 bytes, md5 97b4ac7f…)\"}\nPIPELINE_SUMMARY:{\"records_total\":854,\"records_new\":0,\"records_updated\":0,\"records_meta\":{\"ravine_load\":{\"spec_version\":\"1.2\",\"source_dataset_version\":\"97b4ac7fb3f9808726a106a4b67083ac\",\"last_modified\":\"Mon, 14 Mar 2022 15:25:09 GMT\",\"etag\":\"\\\"1647271509.0-4490391-1365250661\\\"\",\"content_hash\":\"97b4ac7fb3f9808726a106a4b67083ac\",\"feature_count\":854,\"polygons_inserted\":0,\"polygons_updated\":0,\"polygons_deleted\":0,\"delete_skipped_empty_guard\":false,\"mass_delete_pct\":0,\"invalid_geometry_repaired\":65,\"invalid_geometry_skipped\":0,\"geometry_collection_extracted\":0,\"drift_check_passed\":true,\"mass_delete_check_passed\":true,\"geometry_update_pct\":0,\"skipped_reason\":null},\"config\":{\"load_ravines_dataset_age_warn_years\":20,\"load_ravines_count_drift_fail_pct\":0.5,\"load_ravines_geometry_update_warn_pct\":0.5,\"load_ravines_invalid_geometry_fail_pct\":0.05,\"load_ravines_mass_delete_fail_pct\":0.5,\"load_ravines_download_timeout_ms\":60000},\"terminal\":\"loaded\",\"ledger_row\":\"chain_owned\",\"checks_passed\":\"all\",\"checks_failed\":0,\"audit_table\":{\"phase\":59,\"name\":\"Ravine + Natural Feature Protection\",\"verdict\":\"PASS\",\"rows\":[{\"metric\":\"dataset_source_license\",\"value\":\"https://open.toronto.ca/open-data-license/\",\"threshold\":\"viol == 0\",\"status\":\"INFO\"},{\"metric\":\"ravine_load_skipped\",\"value\":null,\"threshold\":\"viol == 0\",\"status\":\"INFO\"},{\"metric\":\"ravine_no_cache_validators\",\"value\":\"last-modified+etag\",\"threshold\":\"viol == 0\",\"status\":\"PASS\"},{\"metric\":\"ravine_dataset_age_years\",\"value\":4,\"threshold\":\"viol == 0\",\"status\":\"PASS\"},{\"metric\":\"ravine_override_feature_count_drift_present\",\"value\":false,\"threshold\":\"viol == 0\",\"status\":\"PASS\"},{\"metric\":\"ravine_override_mass_delete_present\",\"value\":false,\"threshold\":\"viol == 0\",\"status\":\"PASS\"},{\"metric\":\"ravine_bad_objectid_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\"},{\"metric\":\"ravine_null_geometry_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\"},{\"metric\":\"ravine_duplicate_objectid_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\"},{\"metric\":\"ravine_feature_count\",\"value\":854,\"threshold\":\"viol == 0\",\"status\":\"INFO\"},{\"metric\":\"ravine_count_drift_pct\",\"value\":0,\"threshold\":\"pct <= 0.5\",\"status\":\"PASS\"},{\"metric\":\"ravine_geometry_repaired_pct\",\"value\":0.076,\"threshold\":\"viol == 0\",\"status\":\"INFO\"},{\"metric\":\"ravine_geometry_collection_extracted\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\"},{\"metric\":\"ravine_geometry_skipped_pct\",\"value\":0,\"threshold\":\"pct <= 0.05\",\"status\":\"PASS\"},{\"metric\":\"ravine_write_privilege\",\"value\":\"bypassrls=true policies=0\",\"threshold\":\"viol == 0\",\"status\":\"PASS\"},{\"metric\":\"ravine_rows_changed_ratio\",\"value\":0,\"threshold\":\"pct <= 0.5\",\"status\":\"PASS\"},{\"metric\":\"ravine_geometry_update_pct\",\"value\":0,\"threshold\":\"pct <= 0.5\",\"status\":\"PASS\"},{\"metric\":\"ravine_mass_delete_pct\",\"value\":0,\"threshold\":\"pct <= 0.5\",\"status\":\"PASS\"},{\"metric\":\"ravine_delete_skipped_empty_guard\",\"value\":false,\"threshold\":\"viol == 0\",\"status\":\"INFO\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":59.01,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":14472,\"threshold\":null,\"status\":\"INFO\"}]}}}\nPIPELINE_META:{\"reads\":{},\"writes\":{\"ravines\":[\"source_id\",\"geom\",\"source_dataset_version\",\"created_at\",\"updated_at\"]},\"external\":[\"ckan:ravine-natural-feature-protection-area-wgs84\"]}\n\n[load_ravines] completed in 14.5s\n",
+  "stdout": "{\"level\":\"INFO\",\"tag\":\"[load_ravines]\",\"msg\":\"[load_ravines] target: load_ravines (descriptor.database) → database=postgres user=postgres migrations=242 (floor 167)\"}\n{\"level\":\"INFO\",\"tag\":\"[load_ravines]\",\"msg\":\"acquired 854 feature(s) (4490391 bytes, md5 97b4ac7f…)\"}\nPIPELINE_SUMMARY:{\"records_total\":854,\"records_new\":0,\"records_updated\":0,\"records_meta\":{\"ravine_load\":{\"spec_version\":\"1.2\",\"source_dataset_version\":\"97b4ac7fb3f9808726a106a4b67083ac\",\"last_modified\":\"Mon, 14 Mar 2022 15:25:09 GMT\",\"etag\":\"\\\"1647271509.0-4490391-1365250661\\\"\",\"content_hash\":\"97b4ac7fb3f9808726a106a4b67083ac\",\"feature_count\":854,\"polygons_inserted\":0,\"polygons_updated\":0,\"polygons_deleted\":0,\"delete_skipped_empty_guard\":false,\"mass_delete_pct\":0,\"invalid_geometry_repaired\":65,\"invalid_geometry_skipped\":0,\"geometry_collection_extracted\":0,\"drift_check_passed\":true,\"mass_delete_check_passed\":true,\"geometry_update_pct\":0,\"skipped_reason\":null},\"gate\":{\"reason\":\"loaded\",\"gated_skip\":false},\"config\":{\"load_ravines_dataset_age_warn_years\":20,\"load_ravines_count_drift_fail_pct\":0.5,\"load_ravines_geometry_update_warn_pct\":0.5,\"load_ravines_invalid_geometry_fail_pct\":0.05,\"load_ravines_mass_delete_fail_pct\":0.5,\"load_ravines_download_timeout_ms\":60000},\"terminal\":\"loaded\",\"ledger_row\":\"chain_owned\",\"checks_passed\":\"all\",\"checks_failed\":0,\"checks_warned\":0,\"audit_table\":{\"phase\":59,\"name\":\"Ravine + Natural Feature Protection\",\"verdict\":\"PASS\",\"rows\":[{\"metric\":\"dataset_source_license\",\"value\":\"https://open.toronto.ca/open-data-license/\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"ravine_load_skipped\",\"value\":null,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"ravine_no_cache_validators\",\"value\":\"last-modified+etag\",\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"ravine_dataset_age_years\",\"value\":4,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"ravine_override_feature_count_drift_present\",\"value\":false,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"ravine_override_mass_delete_present\",\"value\":false,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"ravine_bad_objectid_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"ravine_null_geometry_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"ravine_duplicate_objectid_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"ravine_feature_count\",\"value\":854,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"ravine_count_drift_pct\",\"value\":0,\"threshold\":\"pct <= 0.5\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"ravine_geometry_repaired_pct\",\"value\":0.076,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"ravine_geometry_collection_extracted\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"ravine_geometry_skipped_pct\",\"value\":0,\"threshold\":\"pct <= 0.05\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"ravine_write_privilege\",\"value\":\"bypassrls=true policies=0\",\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"ravine_rows_changed_ratio\",\"value\":0,\"threshold\":\"pct <= 0.5\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"ravine_geometry_update_pct\",\"value\":0,\"threshold\":\"pct <= 0.5\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"ravine_mass_delete_pct\",\"value\":0,\"threshold\":\"pct <= 0.5\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"ravine_delete_skipped_empty_guard\",\"value\":false,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"ravines_distinct_source_dataset_version\",\"value\":1,\"threshold\":\"value_max 1\",\"status\":\"PASS\",\"source\":\"invariant\"},{\"metric\":\"ravines_area_km2\",\"value\":110.995,\"threshold\":\"value_min 0\",\"status\":\"INFO\",\"source\":\"invariant\"},{\"metric\":\"parcels_sign_law_violations\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"plausibility\"},{\"metric\":\"permits_sign_law_violations\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"plausibility\"},{\"metric\":\"coa_sign_law_violations\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"plausibility\"},{\"metric\":\"parcels_lineage_mismatch\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"plausibility\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":45.84,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":18631,\"threshold\":null,\"status\":\"INFO\"}]}}}\nPIPELINE_META:{\"reads\":{},\"writes\":{\"ravines\":[\"source_id\",\"geom\",\"source_dataset_version\",\"created_at\",\"updated_at\"]},\"external\":[\"ckan:ravine-natural-feature-protection-area-wgs84\"]}\n\n[load_ravines] completed in 18.6s\n",
   "stderr": "",
   "pipeline_runs": [],
-  "pipeline_runs_max_id_before": 1701,
+  "pipeline_runs_max_id_before": 1760,
   "table_state": [
     {
       "table": "ravines",
@@ -223,7 +289,7 @@
   "tables_source": "descriptor",
   "table_row_ceiling": 100000,
   "table_timing": {
-    "ravines": 396
+    "ravines": 157
   },
   "table_specs": {
     "ravines": {
@@ -241,10 +307,6 @@
     }
   },
   "invariants": [
-    {
-      "name": "ravines_count",
-      "value": "854"
-    },
     {
       "name": "ravines_distinct_source_dataset_version",
       "value": "1"
@@ -270,7 +332,7 @@
       "value": "0"
     }
   ],
-  "invariants_file": "docs/reports/golden/load_ravines/invariants.json",
+  "invariants_file": null,
   "db_target": "postgresql://postgres:***@127.0.0.1:54322/postgres",
   "runtime": "node",
   "args": [],
@@ -291,123 +353,185 @@
           "rows": [
             {
               "metric": "dataset_source_license",
+              "source": "check",
               "status": "INFO",
               "threshold": "viol == 0",
               "value": "https://open.toronto.ca/open-data-license/"
             },
             {
               "metric": "ravine_load_skipped",
+              "source": "check",
               "status": "INFO",
               "threshold": "viol == 0",
               "value": null
             },
             {
               "metric": "ravine_no_cache_validators",
+              "source": "check",
               "status": "PASS",
               "threshold": "viol == 0",
               "value": "last-modified+etag"
             },
             {
               "metric": "ravine_dataset_age_years",
+              "source": "check",
               "status": "PASS",
               "threshold": "viol == 0",
               "value": 4
             },
             {
               "metric": "ravine_override_feature_count_drift_present",
+              "source": "check",
               "status": "PASS",
               "threshold": "viol == 0",
               "value": false
             },
             {
               "metric": "ravine_override_mass_delete_present",
+              "source": "check",
               "status": "PASS",
               "threshold": "viol == 0",
               "value": false
             },
             {
               "metric": "ravine_bad_objectid_count",
+              "source": "check",
               "status": "PASS",
               "threshold": "viol == 0",
               "value": 0
             },
             {
               "metric": "ravine_null_geometry_count",
+              "source": "check",
               "status": "PASS",
               "threshold": "viol == 0",
               "value": 0
             },
             {
               "metric": "ravine_duplicate_objectid_count",
+              "source": "check",
               "status": "PASS",
               "threshold": "viol == 0",
               "value": 0
             },
             {
               "metric": "ravine_feature_count",
+              "source": "check",
               "status": "INFO",
               "threshold": "viol == 0",
               "value": 854
             },
             {
               "metric": "ravine_count_drift_pct",
+              "source": "check",
               "status": "PASS",
               "threshold": "pct <= 0.5",
               "value": 0
             },
             {
               "metric": "ravine_geometry_repaired_pct",
+              "source": "check",
               "status": "INFO",
               "threshold": "viol == 0",
               "value": 0.076
             },
             {
               "metric": "ravine_geometry_collection_extracted",
+              "source": "check",
               "status": "INFO",
               "threshold": "viol == 0",
               "value": 0
             },
             {
               "metric": "ravine_geometry_skipped_pct",
+              "source": "check",
               "status": "PASS",
               "threshold": "pct <= 0.05",
               "value": 0
             },
             {
               "metric": "ravine_write_privilege",
+              "source": "check",
               "status": "PASS",
               "threshold": "viol == 0",
               "value": "bypassrls=true policies=0"
             },
             {
               "metric": "ravine_rows_changed_ratio",
+              "source": "check",
               "status": "PASS",
               "threshold": "pct <= 0.5",
               "value": 0
             },
             {
               "metric": "ravine_geometry_update_pct",
+              "source": "check",
               "status": "PASS",
               "threshold": "pct <= 0.5",
               "value": 0
             },
             {
               "metric": "ravine_mass_delete_pct",
+              "source": "check",
               "status": "PASS",
               "threshold": "pct <= 0.5",
               "value": 0
             },
             {
               "metric": "ravine_delete_skipped_empty_guard",
+              "source": "check",
               "status": "INFO",
               "threshold": "viol == 0",
               "value": false
+            },
+            {
+              "metric": "ravines_distinct_source_dataset_version",
+              "source": "invariant",
+              "status": "PASS",
+              "threshold": "value_max 1",
+              "value": 1
+            },
+            {
+              "metric": "ravines_area_km2",
+              "source": "invariant",
+              "status": "INFO",
+              "threshold": "value_min 0",
+              "value": 110.995
+            },
+            {
+              "metric": "parcels_sign_law_violations",
+              "source": "plausibility",
+              "status": "PASS",
+              "threshold": "viol == 0",
+              "value": 0
+            },
+            {
+              "metric": "permits_sign_law_violations",
+              "source": "plausibility",
+              "status": "PASS",
+              "threshold": "viol == 0",
+              "value": 0
+            },
+            {
+              "metric": "coa_sign_law_violations",
+              "source": "plausibility",
+              "status": "PASS",
+              "threshold": "viol == 0",
+              "value": 0
+            },
+            {
+              "metric": "parcels_lineage_mismatch",
+              "source": "plausibility",
+              "status": "PASS",
+              "threshold": "viol == 0",
+              "value": 0
             }
           ],
           "verdict": "PASS"
         },
         "checks_failed": 0,
         "checks_passed": "all",
+        "checks_warned": 0,
         "config": {
           "load_ravines_count_drift_fail_pct": 0.5,
           "load_ravines_dataset_age_warn_years": 20,
@@ -415,6 +539,10 @@
           "load_ravines_geometry_update_warn_pct": 0.5,
           "load_ravines_invalid_geometry_fail_pct": 0.05,
           "load_ravines_mass_delete_fail_pct": 0.5
+        },
+        "gate": {
+          "gated_skip": false,
+          "reason": "loaded"
         },
         "ledger_row": "chain_owned",
         "ravine_load": {
@@ -487,10 +615,6 @@
     ],
     "invariants": [
       {
-        "name": "ravines_count",
-        "value": "854"
-      },
-      {
         "name": "ravines_distinct_source_dataset_version",
         "value": "1"
       },
@@ -516,7 +640,7 @@
       }
     ]
   },
-  "source_fingerprint": "29093bace76d4ee0a9e00ed8d4672e947f92987518396cccffe58be13d7c05ab",
+  "source_fingerprint": "226c88f3b4a4ec66f9ece2c9fba8b927961091df190086536be1e49627838e2f",
   "fingerprint_files": [
     "scripts/lib/compute/load-ravines.js",
     "scripts/load-ravines.descriptor.json",

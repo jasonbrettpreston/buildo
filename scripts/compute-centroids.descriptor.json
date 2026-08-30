@@ -170,6 +170,61 @@
     }
   ],
 
+  "invariants": [
+    {
+      "id": "parcels_total", "sql": "SELECT count(*)::int FROM parcels",
+      "bound": "value_min 0", "severity": "INFO", "blocking": false, "when": "post",
+      "source": "invariant", "frequency": "every_run",
+      "last_measured": { "value": 486530, "at": "2026-08-30T13:17:49.000Z", "commit": "9019c3d", "cost_ms": 56, "sample_n": 3, "source_run": { "run_id": null, "chain": null, "event": "manual_timing" } },
+      "why": { "text": "R-T addendum, commit 4 (net-new, 0/7 golden entries overlap an existing declared check — compute_centroids has only 2 bound checks, neither about centroid VALUE correctness). Pure telemetry, value_min 0 sanity floor. 56ms median, 3 timings, single session.", "liveness": { "kind": "table", "ref": "parcels" } }
+    },
+    {
+      "id": "centroid_null_count", "sql": "SELECT count(*)::int FROM parcels WHERE geom IS NOT NULL AND centroid_lat IS NULL",
+      "bound": "viol == 0", "severity": "WARN", "blocking": false, "when": "post",
+      "source": "invariant", "frequency": "every_run",
+      "last_measured": { "value": 0, "at": "2026-08-30T13:17:49.000Z", "commit": "9019c3d", "cost_ms": 638, "sample_n": 3, "source_run": { "run_id": null, "chain": null, "event": "manual_timing" } },
+      "why": { "text": "R-T addendum, commit 4 (net-new). A parcel with a real polygon but no computed centroid is exactly the backlog compute_centroids exists to drain (this step's own `backlog_count`/`compute_rate` checks measure the RATE, not this residual count directly) — WARN, not FAIL, since a standing backlog tail is expected between runs, not a defect. 638ms median, 3 timings, single session.", "liveness": { "kind": "table", "ref": "parcels" } }
+    },
+    {
+      "id": "geom_not_null_geometry_null_count", "sql": "SELECT count(*)::int FROM parcels WHERE geometry IS NOT NULL AND geom IS NULL",
+      "bound": "viol == 0", "severity": "WARN", "blocking": false, "when": "post",
+      "source": "invariant", "frequency": "every_run",
+      "last_measured": { "value": 0, "at": "2026-08-30T13:17:49.000Z", "commit": "9019c3d", "cost_ms": 13, "sample_n": 3, "source_run": { "run_id": null, "chain": null, "event": "manual_timing" } },
+      "why": { "text": "R-T addendum, commit 4 (net-new). `geom` (PostGIS) is derived from `geometry` (GeoJSON) upstream of this step (migration 242's own trigger) — a non-zero count here means that derivation broke, not something this step's own scope could fix, but a genuine upstream-health signal worth carrying on this step's own audit row (this step is the first consumer of geom that would notice). WARN: visible every run, never blocks. 13ms median, 3 timings, single session.", "liveness": { "kind": "table", "ref": "parcels" } }
+    },
+    {
+      "id": "outside_polygon_count", "sql": "SELECT count(*)::int FROM parcels WHERE geom IS NOT NULL AND centroid_lat IS NOT NULL AND NOT ST_Contains(geom, ST_SetSRID(ST_MakePoint(centroid_lng, centroid_lat),4326))",
+      "bound": "viol == 0", "severity": "WARN", "blocking": false, "when": "post",
+      "source": "invariant", "frequency": "every_run",
+      "last_measured": { "value": 3626, "at": "2026-08-30T13:17:49.000Z", "commit": "9019c3d", "cost_ms": 515, "sample_n": 3, "source_run": { "run_id": null, "chain": null, "event": "manual_timing" } },
+      "why": { "text": "R-T addendum, commit 4 (net-new). A computed centroid physically outside its own parcel's polygon (concave-lot drift, the CC-D2/CC-D3 defect class) — measured live, standing non-zero (3,626), never zero by design under this step's own scope (WHERE centroid_lat IS NULL only, never revisits a filled row per its own §1.10 profile) — WARN + effectively a standing residual, consistent with the CC-D2/CC-D3 root-cause finding filed HIGH/PIN in review_followups. Not FAIL: the same standing-non-zero-by-design rule (Spec 48 §4.9) LM-D6/LM-D11 use. 515ms median, 3 timings, single session.", "liveness": { "kind": "table", "ref": "parcels" } }
+    },
+    {
+      "id": "pointonsurface_gt_1m_count", "sql": "SELECT count(*)::int FROM parcels WHERE geom IS NOT NULL AND centroid_lat IS NOT NULL AND ST_DistanceSphere(ST_SetSRID(ST_MakePoint(centroid_lng, centroid_lat),4326), ST_PointOnSurface(geom)) > 1.0",
+      "bound": "viol == 0", "severity": "WARN", "blocking": false, "when": "post",
+      "source": "invariant", "frequency": "every_run",
+      "last_measured": { "value": 298021, "at": "2026-08-30T13:17:49.000Z", "commit": "9019c3d", "cost_ms": 1066, "sample_n": 3, "source_run": { "run_id": null, "chain": null, "event": "manual_timing" } },
+      "why": { "text": "R-T addendum, commit 4 (net-new). Distance from the stored centroid to a GUARANTEED-on-polygon reference point (ST_PointOnSurface, distinct from the ST_Centroid comparison below — this one never falls off a concave lot by construction). Standing non-zero (298,021 of 486,530, 61.3%) is the same CC-D2/CC-D3 class as outside_polygon_count above — WARN, self-retires only via a future one-time recompute-FULL (filed, not this step's own scope). 1,066ms median, 3 timings, single session.", "liveness": { "kind": "table", "ref": "parcels" } }
+    },
+    {
+      "id": "centroid_in_neighbour_parcel_count", "sql": "WITH drifted AS MATERIALIZED (SELECT id, geom, ST_SetSRID(ST_MakePoint(centroid_lng, centroid_lat), 4326) AS c FROM parcels WHERE geom IS NOT NULL AND centroid_lat IS NOT NULL AND NOT ST_Contains(geom, ST_SetSRID(ST_MakePoint(centroid_lng, centroid_lat), 4326))) SELECT COUNT(*)::int AS c FROM drifted d CROSS JOIN LATERAL (SELECT p2.id FROM parcels p2 WHERE ST_Contains(p2.geom, d.c) AND p2.id <> d.id LIMIT 1) hit",
+      "bound": "viol == 0", "severity": "WARN", "blocking": false, "when": "post",
+      "source": "invariant", "frequency": "every_run",
+      "last_measured": { "value": 3130, "at": "2026-08-30T13:17:49.000Z", "commit": "9019c3d", "cost_ms": 597, "sample_n": 3, "source_run": { "run_id": null, "chain": null, "event": "manual_timing" } },
+      "why": { "text": "R-T addendum, commit 4 (net-new). The SHARPEST tail of outside_polygon_count above: a drifted centroid that lands not just off its own lot but INSIDE A DIFFERENT parcel entirely — the exact class link-parcels.js's Tier-3 nearest-centroid join is exposed to (RT-CC3, filed review_followups). 3,130 of 3,626 outside-polygon centroids (86.3%) land in a neighbour. WARN, same standing-residual reasoning. 597ms median, 3 timings, single session.", "liveness": { "kind": "table", "ref": "parcels" } }
+    }
+  ],
+  "plausibility": [
+    {
+      "id": "centroid_algorithm_drift_gt_1m_count", "sql": "SELECT count(*)::int FROM parcels WHERE geom IS NOT NULL AND centroid_lat IS NOT NULL AND ST_DistanceSphere(ST_SetSRID(ST_MakePoint(centroid_lng, centroid_lat),4326), ST_Centroid(geom)) > 1.0",
+      "bound": "viol == 0", "severity": "WARN", "blocking": false, "when": "post",
+      "source": "plausibility", "frequency": "every_run",
+      "retighten_when": "zero rows (would require a one-time recompute-FULL under today's PostGIS algorithm, filed not built — CC-D3)",
+      "last_measured": { "value": 292587, "at": "2026-08-30T13:17:49.000Z", "commit": "9019c3d", "cost_ms": 1182, "sample_n": 3, "source_run": { "run_id": null, "chain": null, "event": "manual_timing" } },
+      "why": { "text": "R-T addendum, commit 4 — this is CC-D3 (defect-ledger.md, filed 2026-08-29), the plan's own worked example for plausibility[] vs invariants[]: the bound is 'computed <= 1m from a value populated by a DIFFERENT run' (this step's own scope is WHERE centroid_lat IS NULL, so it never revisits an already-filled row — the drift is inherited, not created, by any given run), not a value this step's own write could self-correct. Measured live: 292,587/486,530 (60.1%) differ from a freshly-computed ST_Centroid(geom) by >1m on the SAME unchanged geom — matches CC-D3's own filed figure exactly. PHYSICAL-BOUND (Fold A-5): grounded in a real geometric recomputation, not a telemetry trend. WARN + retighten_when, never FAIL — self-retires only via CC-D3's own filed one-time recompute-FULL recommendation. 1,182ms median, 3 timings, single session.", "liveness": { "kind": "table", "ref": "parcels" } }
+    }
+  ],
+
   "override": "none",
 
   "emits": "none",

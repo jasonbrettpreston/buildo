@@ -2,7 +2,7 @@
 <!-- Source of truth: scripts/steps/_schema/step.schema.json (operator ruling R2). -->
 <!-- Regenerate: node scripts/violations/schema-to-vocab.mjs docs/reports/generated/122-vocabulary.md -->
 
-# The step contract — 18 categories, 351 declarable fields
+# The step contract — 20 categories, 419 declarable fields
 
 **Contract version 1 · status `v0-unfrozen-until-C3`.** The schema is canonical; this document is generated from it. Editing this file changes nothing.
 
@@ -21,17 +21,19 @@
 | 5 | `guards` | 21 | 7 | 0 |
 | 6 | `execution` | 52 | 13 | 1 |
 | 7 | `checks` | 25 | 6 | 0 |
-| 8 | `override` | 11 | 1 | 0 |
-| 9 | `emits` | 4 | 1 | 0 |
-| 10 | `deviations` | 8 | 1 | 0 |
-| 11 | `limitations` | 3 | 0 | 0 |
-| 12 | `interpretation` | 2 | 0 | 0 |
-| 13 | `recovery` | 18 | 8 | 0 |
-| 14 | `database` | 3 | 1 | 0 |
-| 15 | `counters` | 9 | 0 | 0 |
-| 16 | `config` | 22 | 4 | 0 |
-| 17 | `sharing` | 9 | 4 | 0 |
-| 18 | `terminals` | 9 | 3 | 0 |
+| 8 | `invariants` | 33 | 6 | 0 |
+| 9 | `plausibility` | 35 | 7 | 0 |
+| 10 | `override` | 11 | 1 | 0 |
+| 11 | `emits` | 4 | 1 | 0 |
+| 12 | `deviations` | 8 | 1 | 0 |
+| 13 | `limitations` | 3 | 0 | 0 |
+| 14 | `interpretation` | 2 | 0 | 0 |
+| 15 | `recovery` | 18 | 8 | 0 |
+| 16 | `database` | 3 | 1 | 0 |
+| 17 | `counters` | 9 | 0 | 0 |
+| 18 | `config` | 22 | 4 | 0 |
+| 19 | `sharing` | 9 | 4 | 0 |
+| 20 | `terminals` | 9 | 3 | 0 |
 
 ## Archetype required-field profiles
 
@@ -418,6 +420,88 @@ Grandfathered, never legal for a new step: an existing step must be able to decl
 | `[].why.liveness.kind` | `check` · `file` · `table` · `column` · `external` · `spec` | † ! |
 | `[].why.liveness.ref` | string | † |
 | `[].retighten_when` | string | — |
+
+### invariants
+
+> R-T addendum (Spec 124 §2 Rule 13, 2026-08-29) — single-table, single-step-scoped declarative-SQL data bounds over THIS step's own writes. "none" is legal and is every converted step's state until its own migration commit populates it (Spec 124 §9: assert_schema has 0 candidates by design — ASSERT writes nothing).
+
+| Field | Menu | Markers |
+|---|---|---|
+| `[].id` | string `^[a-z][a-z0-9_]*$` | † |
+| `[].sql` | string | † |
+| `[].bound` | string `^(viol (==|<=) [0-9]+|pct (<=|>=) [0-9]*\.?[0-9]+|pop >= [0-9]+|ratio <= [0-9]*\.?[0-9]+ x median|value_min -?[0-9]*\.?[0-9]+|value_max -?[0-9]*\.?[0-9]+)$` \| object {warn, fail} | † ! |
+| `[].bound.warn` | number | † |
+| `[].bound.fail` | number | † |
+| `[].limit_from_config` | string | — |
+| `[].severity` | `INFO` · `WARN` · `FAIL` | † ! |
+| `[].blocking` | `true` · `false` | † |
+| `[].when` | `pre` · `pre_write` · `post` | † ! |
+| `[].source` | `invariant` | † |
+| `[].frequency` | `every_run` · `validate_only` | † ! |
+| `[].statement_timeout` | string `^([0-9]+(ms|s|m|h))$|^none$` | — |
+| `[].statement_timeout_why` | object {text, liveness} | — |
+| `[].statement_timeout_why.text` | string | † |
+| `[].statement_timeout_why.liveness` | `none` \| object {kind, ref} | † |
+| `[].statement_timeout_why.liveness.kind` | `check` · `file` · `table` · `column` · `external` · `spec` | † ! |
+| `[].statement_timeout_why.liveness.ref` | string | † |
+| `[].retighten_when` | string | — |
+| `[].last_measured` | object {value, at, commit, cost_ms, sample_n, source_run} | † |
+| `[].last_measured.value` | **OPEN** — domain knowledge | † |
+| `[].last_measured.at` | string | † |
+| `[].last_measured.commit` | string | † |
+| `[].last_measured.cost_ms` | number >= 0 | † |
+| `[].last_measured.sample_n` | integer >= 1 | † |
+| `[].last_measured.source_run` | object {run_id, chain, event} | † |
+| `[].last_measured.source_run.run_id` | OPEN | † |
+| `[].last_measured.source_run.chain` | OPEN | † |
+| `[].last_measured.source_run.event` | string | † |
+| `[].why` | object {text, liveness} | † |
+| `[].why.text` | string | † |
+| `[].why.liveness` | `none` \| object {kind, ref} | † |
+| `[].why.liveness.kind` | `check` · `file` · `table` · `column` · `external` · `spec` | † ! |
+| `[].why.liveness.ref` | string | † |
+
+### plausibility
+
+> R-T addendum — cross-field/zone-aware declarative-SQL checks that may span tables this step does not itself write. "none" is legal.
+
+| Field | Menu | Markers |
+|---|---|---|
+| `[].id` | string `^[a-z][a-z0-9_]*$` | † |
+| `[].sql` | string | † |
+| `[].bound` | string `^(viol (==|<=) [0-9]+|pct (<=|>=) [0-9]*\.?[0-9]+|pop >= [0-9]+|ratio <= [0-9]*\.?[0-9]+ x median|value_min -?[0-9]*\.?[0-9]+|value_max -?[0-9]*\.?[0-9]+)$` \| object {warn, fail} | † ! |
+| `[].bound.warn` | number | † |
+| `[].bound.fail` | number | † |
+| `[].limit_from_config` | string | — |
+| `[].severity` | `INFO` · `WARN` · `FAIL` | † ! |
+| `[].blocking` | `true` · `false` | † |
+| `[].when` | `pre` · `pre_write` · `post` | † ! |
+| `[].source` | `plausibility` | † |
+| `[].frequency` | `every_run` · `validate_only` | † ! |
+| `[].statement_timeout` | string `^([0-9]+(ms|s|m|h))$|^none$` | — |
+| `[].statement_timeout_why` | object {text, liveness} | — |
+| `[].statement_timeout_why.text` | string | † |
+| `[].statement_timeout_why.liveness` | `none` \| object {kind, ref} | † |
+| `[].statement_timeout_why.liveness.kind` | `check` · `file` · `table` · `column` · `external` · `spec` | † ! |
+| `[].statement_timeout_why.liveness.ref` | string | † |
+| `[].retighten_when` | string | — |
+| `[].zone_by` | `none` \| string | — |
+| `[].kind` | `bound` · `distribution` | ! |
+| `[].last_measured` | object {value, at, commit, cost_ms, sample_n, source_run} | † |
+| `[].last_measured.value` | **OPEN** — domain knowledge | † |
+| `[].last_measured.at` | string | † |
+| `[].last_measured.commit` | string | † |
+| `[].last_measured.cost_ms` | number >= 0 | † |
+| `[].last_measured.sample_n` | integer >= 1 | † |
+| `[].last_measured.source_run` | object {run_id, chain, event} | † |
+| `[].last_measured.source_run.run_id` | OPEN | † |
+| `[].last_measured.source_run.chain` | OPEN | † |
+| `[].last_measured.source_run.event` | string | † |
+| `[].why` | object {text, liveness} | † |
+| `[].why.text` | string | † |
+| `[].why.liveness` | `none` \| object {kind, ref} | † |
+| `[].why.liveness.kind` | `check` · `file` · `table` · `column` · `external` · `spec` | † ! |
+| `[].why.liveness.ref` | string | † |
 
 ### override
 

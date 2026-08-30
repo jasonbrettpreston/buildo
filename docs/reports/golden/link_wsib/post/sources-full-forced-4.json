@@ -3,7 +3,7 @@
   "spec": "docs/specs/01-pipeline/122_pipeline_step_optimization.md §5.3",
   "step": "scripts/link-wsib.js",
   "chain": "sources",
-  "git_head": "d204b692d124f3427a19d5740ec94fb357fdec9b",
+  "git_head": "9019c3d3e9960f0fb519307a141d92786539fdc9",
   "exit_code": 0,
   "signal": null,
   "summary": {
@@ -11,7 +11,7 @@
     "records_new": 548,
     "records_updated": 548,
     "records_meta": {
-      "duration_ms": 324532,
+      "duration_ms": 320380,
       "unlinked_start": 120244,
       "run_matched": 548,
       "matches_tier_1_trade": 0,
@@ -20,6 +20,10 @@
       "no_match_count": 119696,
       "threshold_updated_at": "2026-06-10T14:01:54.545Z",
       "is_wsib_registered_corrected": 0,
+      "gate": {
+        "reason": "force_full_env",
+        "gated_skip": false
+      },
       "config": {
         "wsib_fuzzy_match_threshold": 0.6,
         "link_wsib_link_rate_warn_pct": 5,
@@ -34,6 +38,7 @@
       "ledger_row": "chain_owned",
       "checks_passed": "all",
       "checks_failed": 0,
+      "checks_warned": 0,
       "audit_table": {
         "phase": 19,
         "name": "WSIB Registry Matching",
@@ -47,13 +52,15 @@
               "gated_skip": false
             },
             "threshold": "viol == 0",
-            "status": "INFO"
+            "status": "INFO",
+            "source": "check"
           },
           {
             "metric": "override_force_full_present",
             "value": true,
             "threshold": "viol == 0",
-            "status": "INFO"
+            "status": "INFO",
+            "source": "check"
           },
           {
             "metric": "full_repair_empty_source_guard",
@@ -62,37 +69,43 @@
               "entities_count": 3948
             },
             "threshold": "viol == 0",
-            "status": "PASS"
+            "status": "PASS",
+            "source": "check"
           },
           {
             "metric": "unlinked_start",
             "value": 120244,
             "threshold": "viol == 0",
-            "status": "INFO"
+            "status": "INFO",
+            "source": "check"
           },
           {
             "metric": "tier_1_trade_matches",
             "value": 0,
             "threshold": "viol == 0",
-            "status": "INFO"
+            "status": "INFO",
+            "source": "check"
           },
           {
             "metric": "tier_2_legal_matches",
             "value": 0,
             "threshold": "viol == 0",
-            "status": "INFO"
+            "status": "INFO",
+            "source": "check"
           },
           {
             "metric": "tier_3_fuzzy_matches",
             "value": 548,
             "threshold": "viol == 0",
-            "status": "INFO"
+            "status": "INFO",
+            "source": "check"
           },
           {
             "metric": "no_match",
             "value": 119696,
             "threshold": "viol == 0",
-            "status": "INFO"
+            "status": "INFO",
+            "source": "check"
           },
           {
             "metric": "link_rate_warn",
@@ -103,7 +116,8 @@
               "total": 3948
             },
             "threshold": "pct >= 5",
-            "status": "PASS"
+            "status": "PASS",
+            "source": "check"
           },
           {
             "metric": "entity_fanin_warn",
@@ -112,7 +126,8 @@
               "magnets_fanin_ge_10": 7
             },
             "threshold": "viol <= 20",
-            "status": "PASS"
+            "status": "PASS",
+            "source": "check"
           },
           {
             "metric": "tier3_token_overlap",
@@ -120,37 +135,43 @@
               "tier3_token_overlap_pass_pct": 100
             },
             "threshold": "pct >= 50",
-            "status": "PASS"
+            "status": "PASS",
+            "source": "check"
           },
           {
             "metric": "orphan_linked_entity_id",
             "value": 0,
             "threshold": "viol == 0",
-            "status": "PASS"
+            "status": "PASS",
+            "source": "check"
           },
           {
             "metric": "confidence_outside_closed_set",
             "value": 0,
             "threshold": "viol == 0",
-            "status": "PASS"
+            "status": "PASS",
+            "source": "check"
           },
           {
             "metric": "dead_bucket_count",
             "value": 0,
             "threshold": "viol == 0",
-            "status": "INFO"
+            "status": "INFO",
+            "source": "check"
           },
           {
             "metric": "registered_entities_with_zero_links",
             "value": 0,
             "threshold": "viol == 0",
-            "status": "PASS"
+            "status": "PASS",
+            "source": "check"
           },
           {
             "metric": "is_wsib_registered_corrected",
             "value": 0,
             "threshold": "viol == 0",
-            "status": "INFO"
+            "status": "INFO",
+            "source": "check"
           },
           {
             "metric": "tier3_full_not_converged",
@@ -162,7 +183,8 @@
               "exhausted": false
             },
             "threshold": "viol == 0",
-            "status": "PASS"
+            "status": "PASS",
+            "source": "check"
           },
           {
             "metric": "tier3_full_iterations",
@@ -171,24 +193,90 @@
               "relinked_total": 548
             },
             "threshold": "viol == 0",
-            "status": "INFO"
+            "status": "INFO",
+            "source": "check"
           },
           {
             "metric": "contacts_cleared_on_retraction",
             "value": 0,
             "threshold": "viol == 0",
-            "status": "INFO"
+            "status": "INFO",
+            "source": "check"
           },
           {
             "metric": "write_privilege",
             "value": "bypassrls=true policies=0",
             "threshold": "viol == 0",
-            "status": "PASS"
+            "status": "PASS",
+            "source": "check"
+          },
+          {
+            "metric": "wsib_tier3_current_predicate_pass_rate_pct",
+            "value": 100,
+            "threshold": "value_max 100",
+            "status": "INFO",
+            "source": "invariant"
+          },
+          {
+            "metric": "wsib_entity_fanin_p99",
+            "value": 10,
+            "threshold": "value_min 0",
+            "status": "INFO",
+            "source": "invariant"
+          },
+          {
+            "metric": "wsib_magnet_entities_fanin_ge_10",
+            "value": 7,
+            "threshold": "value_min 0",
+            "status": "INFO",
+            "source": "invariant"
+          },
+          {
+            "metric": "wsib_orphan_linked_entity_id",
+            "value": 0,
+            "threshold": "viol == 0",
+            "status": "PASS",
+            "source": "invariant"
+          },
+          {
+            "metric": "wsib_registry_total_rows",
+            "value": 121116,
+            "threshold": "value_min 0",
+            "status": "INFO",
+            "source": "invariant"
+          },
+          {
+            "metric": "entities_wsib_registered_count",
+            "value": 301,
+            "threshold": "value_min 0",
+            "status": "INFO",
+            "source": "invariant"
+          },
+          {
+            "metric": "wsib_registered_entities_without_exact_tier_link",
+            "value": 0,
+            "threshold": "viol == 0",
+            "status": "PASS",
+            "source": "invariant"
+          },
+          {
+            "metric": "wsib_tier_confidence_split",
+            "value": "unevaluable: check reported no numeric value for value_min",
+            "threshold": "value_min 0",
+            "status": "INFO",
+            "source": "invariant"
+          },
+          {
+            "metric": "wsib_cumulative_link_rate_pct",
+            "value": 0.72,
+            "threshold": "value_max 100",
+            "status": "INFO",
+            "source": "invariant"
           },
           {
             "metric": "before_image_written:wsib_registry",
             "value": {
-              "path": "docs/reports/golden/link_wsib/before-image/2026-08-29T10-01-24.466Z-wsib_registry.jsonl",
+              "path": "docs/reports/golden/link_wsib/before-image/2026-08-30T13-32-29.884Z-wsib_registry.jsonl",
               "rows": 548
             },
             "threshold": null,
@@ -196,13 +284,13 @@
           },
           {
             "metric": "sys_velocity_rows_sec",
-            "value": 370.51,
+            "value": 375.23,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "sys_duration_ms",
-            "value": 324535,
+            "value": 320457,
             "threshold": null,
             "status": "INFO"
           }
@@ -252,11 +340,471 @@
   ],
   "parse_errors": [],
   "verdict": "PASS",
-  "ledger_status": [],
-  "stdout": "{\"level\":\"INFO\",\"tag\":\"[link_wsib]\",\"msg\":\"[link_wsib] target: link_wsib (descriptor.database) → database=postgres user=postgres migrations=242 (floor 240)\"}\n{\"level\":\"INFO\",\"tag\":\"[link_wsib]\",\"msg\":\"cascade mode gate: FULL (force_full_env)\"}\nPIPELINE_SUMMARY:{\"records_total\":120244,\"records_new\":548,\"records_updated\":548,\"records_meta\":{\"duration_ms\":324532,\"unlinked_start\":120244,\"run_matched\":548,\"matches_tier_1_trade\":0,\"matches_tier_2_legal\":0,\"matches_tier_3_fuzzy\":548,\"no_match_count\":119696,\"threshold_updated_at\":\"2026-06-10T14:01:54.545Z\",\"is_wsib_registered_corrected\":0,\"config\":{\"wsib_fuzzy_match_threshold\":0.6,\"link_wsib_link_rate_warn_pct\":5,\"link_wsib_tier1_confidence\":0.95,\"link_wsib_tier2_confidence\":0.9,\"link_wsib_tier3_confidence\":0.6,\"link_wsib_entity_fanin_warn\":20,\"link_wsib_tier3_full_max_iterations\":20,\"link_wsib_tier3_token_overlap_fail_pct\":50},\"terminal\":\"linked_incremental\",\"ledger_row\":\"chain_owned\",\"checks_passed\":\"all\",\"checks_failed\":0,\"audit_table\":{\"phase\":19,\"name\":\"WSIB Registry Matching\",\"verdict\":\"PASS\",\"rows\":[{\"metric\":\"gate_decision\",\"value\":{\"mode\":\"full\",\"reason\":\"force_full_env\",\"gated_skip\":false},\"threshold\":\"viol == 0\",\"status\":\"INFO\"},{\"metric\":\"override_force_full_present\",\"value\":true,\"threshold\":\"viol == 0\",\"status\":\"INFO\"},{\"metric\":\"full_repair_empty_source_guard\",\"value\":{\"mode\":\"full\",\"entities_count\":3948},\"threshold\":\"viol == 0\",\"status\":\"PASS\"},{\"metric\":\"unlinked_start\",\"value\":120244,\"threshold\":\"viol == 0\",\"status\":\"INFO\"},{\"metric\":\"tier_1_trade_matches\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\"},{\"metric\":\"tier_2_legal_matches\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\"},{\"metric\":\"tier_3_fuzzy_matches\",\"value\":548,\"threshold\":\"viol == 0\",\"status\":\"INFO\"},{\"metric\":\"no_match\",\"value\":119696,\"threshold\":\"viol == 0\",\"status\":\"INFO\"},{\"metric\":\"link_rate_warn\",\"value\":{\"link_rate_pct\":7.6241,\"unlinked_pct\":92.3759,\"linked\":301,\"total\":3948},\"threshold\":\"pct >= 5\",\"status\":\"PASS\"},{\"metric\":\"entity_fanin_warn\",\"value\":{\"entity_fanin_max\":16,\"magnets_fanin_ge_10\":7},\"threshold\":\"viol <= 20\",\"status\":\"PASS\"},{\"metric\":\"tier3_token_overlap\",\"value\":{\"tier3_token_overlap_pass_pct\":100},\"threshold\":\"pct >= 50\",\"status\":\"PASS\"},{\"metric\":\"orphan_linked_entity_id\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\"},{\"metric\":\"confidence_outside_closed_set\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\"},{\"metric\":\"dead_bucket_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\"},{\"metric\":\"registered_entities_with_zero_links\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\"},{\"metric\":\"is_wsib_registered_corrected\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\"},{\"metric\":\"tier3_full_not_converged\",\"value\":{\"retracted\":548,\"contacts_cleared\":0,\"iterations\":2,\"relinked_total\":548,\"exhausted\":false},\"threshold\":\"viol == 0\",\"status\":\"PASS\"},{\"metric\":\"tier3_full_iterations\",\"value\":{\"iterations\":2,\"relinked_total\":548},\"threshold\":\"viol == 0\",\"status\":\"INFO\"},{\"metric\":\"contacts_cleared_on_retraction\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\"},{\"metric\":\"write_privilege\",\"value\":\"bypassrls=true policies=0\",\"threshold\":\"viol == 0\",\"status\":\"PASS\"},{\"metric\":\"before_image_written:wsib_registry\",\"value\":{\"path\":\"docs/reports/golden/link_wsib/before-image/2026-08-29T10-01-24.466Z-wsib_registry.jsonl\",\"rows\":548},\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":370.51,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":324535,\"threshold\":null,\"status\":\"INFO\"}]}}}\nPIPELINE_META:{\"reads\":{\"wsib_registry\":[\"id\",\"trade_name_normalized\",\"legal_name_normalized\",\"linked_entity_id\",\"match_confidence\",\"matched_at\",\"primary_phone\",\"primary_email\",\"website\"],\"entities\":[\"id\",\"name_normalized\",\"permit_count\",\"is_wsib_registered\",\"primary_phone\",\"primary_email\",\"website\"]},\"writes\":{\"wsib_registry\":[\"linked_entity_id\",\"match_confidence\",\"matched_at\"],\"entities\":[\"is_wsib_registered\",\"primary_phone\",\"primary_email\",\"website\"]}}\n\n[link_wsib] completed in 324.5s\n",
+  "ledger_status": [
+    "completed",
+    "failed",
+    "completed",
+    "completed"
+  ],
+  "stdout": "{\"level\":\"INFO\",\"tag\":\"[link_wsib]\",\"msg\":\"[link_wsib] target: link_wsib (descriptor.database) → database=postgres user=postgres migrations=242 (floor 240)\"}\n{\"level\":\"INFO\",\"tag\":\"[link_wsib]\",\"msg\":\"cascade mode gate: FULL (force_full_env)\"}\nPIPELINE_SUMMARY:{\"records_total\":120244,\"records_new\":548,\"records_updated\":548,\"records_meta\":{\"duration_ms\":320380,\"unlinked_start\":120244,\"run_matched\":548,\"matches_tier_1_trade\":0,\"matches_tier_2_legal\":0,\"matches_tier_3_fuzzy\":548,\"no_match_count\":119696,\"threshold_updated_at\":\"2026-06-10T14:01:54.545Z\",\"is_wsib_registered_corrected\":0,\"gate\":{\"reason\":\"force_full_env\",\"gated_skip\":false},\"config\":{\"wsib_fuzzy_match_threshold\":0.6,\"link_wsib_link_rate_warn_pct\":5,\"link_wsib_tier1_confidence\":0.95,\"link_wsib_tier2_confidence\":0.9,\"link_wsib_tier3_confidence\":0.6,\"link_wsib_entity_fanin_warn\":20,\"link_wsib_tier3_full_max_iterations\":20,\"link_wsib_tier3_token_overlap_fail_pct\":50},\"terminal\":\"linked_incremental\",\"ledger_row\":\"chain_owned\",\"checks_passed\":\"all\",\"checks_failed\":0,\"checks_warned\":0,\"audit_table\":{\"phase\":19,\"name\":\"WSIB Registry Matching\",\"verdict\":\"PASS\",\"rows\":[{\"metric\":\"gate_decision\",\"value\":{\"mode\":\"full\",\"reason\":\"force_full_env\",\"gated_skip\":false},\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"override_force_full_present\",\"value\":true,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"full_repair_empty_source_guard\",\"value\":{\"mode\":\"full\",\"entities_count\":3948},\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"unlinked_start\",\"value\":120244,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"tier_1_trade_matches\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"tier_2_legal_matches\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"tier_3_fuzzy_matches\",\"value\":548,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"no_match\",\"value\":119696,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"link_rate_warn\",\"value\":{\"link_rate_pct\":7.6241,\"unlinked_pct\":92.3759,\"linked\":301,\"total\":3948},\"threshold\":\"pct >= 5\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"entity_fanin_warn\",\"value\":{\"entity_fanin_max\":16,\"magnets_fanin_ge_10\":7},\"threshold\":\"viol <= 20\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"tier3_token_overlap\",\"value\":{\"tier3_token_overlap_pass_pct\":100},\"threshold\":\"pct >= 50\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"orphan_linked_entity_id\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"confidence_outside_closed_set\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"dead_bucket_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"registered_entities_with_zero_links\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"is_wsib_registered_corrected\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"tier3_full_not_converged\",\"value\":{\"retracted\":548,\"contacts_cleared\":0,\"iterations\":2,\"relinked_total\":548,\"exhausted\":false},\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"tier3_full_iterations\",\"value\":{\"iterations\":2,\"relinked_total\":548},\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"contacts_cleared_on_retraction\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"write_privilege\",\"value\":\"bypassrls=true policies=0\",\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"wsib_tier3_current_predicate_pass_rate_pct\",\"value\":100,\"threshold\":\"value_max 100\",\"status\":\"INFO\",\"source\":\"invariant\"},{\"metric\":\"wsib_entity_fanin_p99\",\"value\":10,\"threshold\":\"value_min 0\",\"status\":\"INFO\",\"source\":\"invariant\"},{\"metric\":\"wsib_magnet_entities_fanin_ge_10\",\"value\":7,\"threshold\":\"value_min 0\",\"status\":\"INFO\",\"source\":\"invariant\"},{\"metric\":\"wsib_orphan_linked_entity_id\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"invariant\"},{\"metric\":\"wsib_registry_total_rows\",\"value\":121116,\"threshold\":\"value_min 0\",\"status\":\"INFO\",\"source\":\"invariant\"},{\"metric\":\"entities_wsib_registered_count\",\"value\":301,\"threshold\":\"value_min 0\",\"status\":\"INFO\",\"source\":\"invariant\"},{\"metric\":\"wsib_registered_entities_without_exact_tier_link\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"invariant\"},{\"metric\":\"wsib_tier_confidence_split\",\"value\":\"unevaluable: check reported no numeric value for value_min\",\"threshold\":\"value_min 0\",\"status\":\"INFO\",\"source\":\"invariant\"},{\"metric\":\"wsib_cumulative_link_rate_pct\",\"value\":0.72,\"threshold\":\"value_max 100\",\"status\":\"INFO\",\"source\":\"invariant\"},{\"metric\":\"before_image_written:wsib_registry\",\"value\":{\"path\":\"docs/reports/golden/link_wsib/before-image/2026-08-30T13-32-29.884Z-wsib_registry.jsonl\",\"rows\":548},\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":375.23,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":320457,\"threshold\":null,\"status\":\"INFO\"}]}}}\nPIPELINE_META:{\"reads\":{\"wsib_registry\":[\"id\",\"trade_name_normalized\",\"legal_name_normalized\",\"linked_entity_id\",\"match_confidence\",\"matched_at\",\"primary_phone\",\"primary_email\",\"website\"],\"entities\":[\"id\",\"name_normalized\",\"permit_count\",\"is_wsib_registered\",\"primary_phone\",\"primary_email\",\"website\"]},\"writes\":{\"wsib_registry\":[\"linked_entity_id\",\"match_confidence\",\"matched_at\"],\"entities\":[\"is_wsib_registered\",\"primary_phone\",\"primary_email\",\"website\"]}}\n\n[link_wsib] completed in 320.5s\n",
   "stderr": "",
-  "pipeline_runs": [],
-  "pipeline_runs_max_id_before": 1707,
+  "pipeline_runs": [
+    {
+      "id": 1758,
+      "pipeline": "link_parcel_addresses",
+      "status": "completed",
+      "started_at": "2026-08-30T13:33:49.207Z",
+      "completed_at": "2026-08-30T13:33:49.269Z",
+      "duration_ms": 104,
+      "records_total": null,
+      "records_new": null,
+      "records_updated": null,
+      "records_meta": {
+        "gate": {
+          "reason": "no_upstream_changes",
+          "own_slugs": [
+            "sources:link_parcel_addresses",
+            "link_parcel_addresses",
+            "link-parcel-addresses"
+          ],
+          "gated_skip": true,
+          "upstream_slugs": [
+            "sources:address_points",
+            "address_points",
+            "address-points",
+            "sources:load_address_points",
+            "load_address_points",
+            "load-address-points",
+            "sources:parcels",
+            "parcels",
+            "sources:load_parcels",
+            "load_parcels",
+            "load-parcels"
+          ],
+          "own_last_completed_at": "2026-08-29T15:20:13.977Z",
+          "upstream_non_completed": 0,
+          "upstream_stale_running": 0,
+          "upstream_completed_with_changes": 0
+        },
+        "config": {
+          "link_parcel_addresses_batch_size": 1000,
+          "link_parcel_addresses_fanout_warn_condo": 400,
+          "link_parcel_addresses_fanout_warn_rd_rs": 15,
+          "link_parcel_addresses_no_parcel_warn_pct": 5,
+          "link_parcel_addresses_no_address_warn_pct": 50,
+          "link_parcel_addresses_fanout_warn_noncondo": 20,
+          "link_parcel_addresses_structure_link_rate_warn_pct": 85
+        },
+        "terminal": "skip_gated_no_activity",
+        "ledger_row": "owned",
+        "audit_table": {
+          "name": "Parcel ↔ Address Points Spatial Bridge",
+          "rows": [
+            {
+              "value": {
+                "mode": null,
+                "reason": "no_upstream_changes",
+                "gated_skip": true
+              },
+              "metric": "gate_decision",
+              "source": "check",
+              "status": "INFO",
+              "threshold": "viol == 0"
+            },
+            {
+              "value": 0,
+              "metric": "sys_velocity_rows_sec",
+              "status": "INFO",
+              "threshold": null
+            },
+            {
+              "value": 102,
+              "metric": "sys_duration_ms",
+              "status": "INFO",
+              "threshold": null
+            }
+          ],
+          "phase": 54,
+          "verdict": "PASS"
+        },
+        "checks_failed": 0,
+        "checks_passed": "all",
+        "checks_warned": 0
+      },
+      "error_message": null
+    },
+    {
+      "id": 1759,
+      "pipeline": "link_parcel_addresses",
+      "status": "failed",
+      "started_at": "2026-08-30T13:34:50.165Z",
+      "completed_at": "2026-08-30T13:35:29.444Z",
+      "duration_ms": 39309,
+      "records_total": null,
+      "records_new": null,
+      "records_updated": null,
+      "records_meta": null,
+      "error_message": "could not resize shared memory segment \"/PostgreSQL.3710153366\" to 4194304 bytes: No space left on device"
+    },
+    {
+      "id": 1760,
+      "pipeline": "load_ravines",
+      "status": "completed",
+      "started_at": "2026-08-30T13:35:22.755Z",
+      "completed_at": "2026-08-30T13:35:23.112Z",
+      "duration_ms": 391,
+      "records_total": null,
+      "records_new": null,
+      "records_updated": null,
+      "records_meta": {
+        "gate": {
+          "reason": "unchanged_last_modified",
+          "gated_skip": true
+        },
+        "config": {
+          "load_ravines_download_timeout_ms": 60000,
+          "load_ravines_count_drift_fail_pct": 0.5,
+          "load_ravines_mass_delete_fail_pct": 0.5,
+          "load_ravines_dataset_age_warn_years": 20,
+          "load_ravines_geometry_update_warn_pct": 0.5,
+          "load_ravines_invalid_geometry_fail_pct": 0.05
+        },
+        "terminal": "skipped_source_validator",
+        "ledger_row": "owned",
+        "audit_table": {
+          "name": "Ravine + Natural Feature Protection",
+          "rows": [
+            {
+              "value": "https://open.toronto.ca/open-data-license/",
+              "metric": "dataset_source_license",
+              "source": "check",
+              "status": "INFO",
+              "threshold": "viol == 0"
+            },
+            {
+              "value": "unchanged_last_modified",
+              "metric": "ravine_load_skipped",
+              "source": "check",
+              "status": "INFO",
+              "threshold": "viol == 0"
+            },
+            {
+              "value": "last-modified+etag",
+              "metric": "ravine_no_cache_validators",
+              "source": "check",
+              "status": "PASS",
+              "threshold": "viol == 0"
+            },
+            {
+              "value": 4,
+              "metric": "ravine_dataset_age_years",
+              "source": "check",
+              "status": "PASS",
+              "threshold": "viol == 0"
+            },
+            {
+              "value": false,
+              "metric": "ravine_override_feature_count_drift_present",
+              "source": "check",
+              "status": "PASS",
+              "threshold": "viol == 0"
+            },
+            {
+              "value": false,
+              "metric": "ravine_override_mass_delete_present",
+              "source": "check",
+              "status": "PASS",
+              "threshold": "viol == 0"
+            },
+            {
+              "value": 0,
+              "metric": "sys_velocity_rows_sec",
+              "status": "INFO",
+              "threshold": null
+            },
+            {
+              "value": 391,
+              "metric": "sys_duration_ms",
+              "status": "INFO",
+              "threshold": null
+            }
+          ],
+          "phase": 59,
+          "verdict": "PASS"
+        },
+        "ravine_load": {
+          "etag": "\"1647271509.0-4490391-1365250661\"",
+          "content_hash": "97b4ac7fb3f9808726a106a4b67083ac",
+          "spec_version": "1.2",
+          "feature_count": 854,
+          "last_modified": "Mon, 14 Mar 2022 15:25:09 GMT",
+          "skipped_reason": "unchanged_last_modified",
+          "mass_delete_pct": 0,
+          "polygons_deleted": 0,
+          "polygons_updated": 0,
+          "polygons_inserted": 0,
+          "drift_check_passed": true,
+          "geometry_update_pct": 0,
+          "source_dataset_version": "97b4ac7fb3f9808726a106a4b67083ac",
+          "invalid_geometry_skipped": 0,
+          "mass_delete_check_passed": true,
+          "invalid_geometry_repaired": 65,
+          "delete_skipped_empty_guard": false,
+          "geometry_collection_extracted": 0
+        },
+        "checks_failed": 0,
+        "checks_passed": "all",
+        "checks_warned": 0
+      },
+      "error_message": null
+    },
+    {
+      "id": 1761,
+      "pipeline": "load_ravines",
+      "status": "completed",
+      "started_at": "2026-08-30T13:37:18.212Z",
+      "completed_at": "2026-08-30T13:37:36.896Z",
+      "duration_ms": 18727,
+      "records_total": 854,
+      "records_new": 0,
+      "records_updated": 0,
+      "records_meta": {
+        "gate": {
+          "reason": "loaded",
+          "gated_skip": false
+        },
+        "config": {
+          "load_ravines_download_timeout_ms": 60000,
+          "load_ravines_count_drift_fail_pct": 0.5,
+          "load_ravines_mass_delete_fail_pct": 0.5,
+          "load_ravines_dataset_age_warn_years": 20,
+          "load_ravines_geometry_update_warn_pct": 0.5,
+          "load_ravines_invalid_geometry_fail_pct": 0.05
+        },
+        "terminal": "loaded",
+        "ledger_row": "owned",
+        "audit_table": {
+          "name": "Ravine + Natural Feature Protection",
+          "rows": [
+            {
+              "value": "https://open.toronto.ca/open-data-license/",
+              "metric": "dataset_source_license",
+              "source": "check",
+              "status": "INFO",
+              "threshold": "viol == 0"
+            },
+            {
+              "value": null,
+              "metric": "ravine_load_skipped",
+              "source": "check",
+              "status": "INFO",
+              "threshold": "viol == 0"
+            },
+            {
+              "value": "last-modified+etag",
+              "metric": "ravine_no_cache_validators",
+              "source": "check",
+              "status": "PASS",
+              "threshold": "viol == 0"
+            },
+            {
+              "value": 4,
+              "metric": "ravine_dataset_age_years",
+              "source": "check",
+              "status": "PASS",
+              "threshold": "viol == 0"
+            },
+            {
+              "value": false,
+              "metric": "ravine_override_feature_count_drift_present",
+              "source": "check",
+              "status": "PASS",
+              "threshold": "viol == 0"
+            },
+            {
+              "value": false,
+              "metric": "ravine_override_mass_delete_present",
+              "source": "check",
+              "status": "PASS",
+              "threshold": "viol == 0"
+            },
+            {
+              "value": 0,
+              "metric": "ravine_bad_objectid_count",
+              "source": "check",
+              "status": "PASS",
+              "threshold": "viol == 0"
+            },
+            {
+              "value": 0,
+              "metric": "ravine_null_geometry_count",
+              "source": "check",
+              "status": "PASS",
+              "threshold": "viol == 0"
+            },
+            {
+              "value": 0,
+              "metric": "ravine_duplicate_objectid_count",
+              "source": "check",
+              "status": "PASS",
+              "threshold": "viol == 0"
+            },
+            {
+              "value": 854,
+              "metric": "ravine_feature_count",
+              "source": "check",
+              "status": "INFO",
+              "threshold": "viol == 0"
+            },
+            {
+              "value": 0,
+              "metric": "ravine_count_drift_pct",
+              "source": "check",
+              "status": "PASS",
+              "threshold": "pct <= 0.5"
+            },
+            {
+              "value": 0.076,
+              "metric": "ravine_geometry_repaired_pct",
+              "source": "check",
+              "status": "INFO",
+              "threshold": "viol == 0"
+            },
+            {
+              "value": 0,
+              "metric": "ravine_geometry_collection_extracted",
+              "source": "check",
+              "status": "INFO",
+              "threshold": "viol == 0"
+            },
+            {
+              "value": 0,
+              "metric": "ravine_geometry_skipped_pct",
+              "source": "check",
+              "status": "PASS",
+              "threshold": "pct <= 0.05"
+            },
+            {
+              "value": "bypassrls=true policies=0",
+              "metric": "ravine_write_privilege",
+              "source": "check",
+              "status": "PASS",
+              "threshold": "viol == 0"
+            },
+            {
+              "value": 0,
+              "metric": "ravine_rows_changed_ratio",
+              "source": "check",
+              "status": "PASS",
+              "threshold": "pct <= 0.5"
+            },
+            {
+              "value": 0,
+              "metric": "ravine_geometry_update_pct",
+              "source": "check",
+              "status": "PASS",
+              "threshold": "pct <= 0.5"
+            },
+            {
+              "value": 0,
+              "metric": "ravine_mass_delete_pct",
+              "source": "check",
+              "status": "PASS",
+              "threshold": "pct <= 0.5"
+            },
+            {
+              "value": false,
+              "metric": "ravine_delete_skipped_empty_guard",
+              "source": "check",
+              "status": "INFO",
+              "threshold": "viol == 0"
+            },
+            {
+              "value": 1,
+              "metric": "ravines_distinct_source_dataset_version",
+              "source": "invariant",
+              "status": "PASS",
+              "threshold": "value_max 1"
+            },
+            {
+              "value": 110.995,
+              "metric": "ravines_area_km2",
+              "source": "invariant",
+              "status": "INFO",
+              "threshold": "value_min 0"
+            },
+            {
+              "value": 0,
+              "metric": "parcels_sign_law_violations",
+              "source": "plausibility",
+              "status": "PASS",
+              "threshold": "viol == 0"
+            },
+            {
+              "value": 0,
+              "metric": "permits_sign_law_violations",
+              "source": "plausibility",
+              "status": "PASS",
+              "threshold": "viol == 0"
+            },
+            {
+              "value": 0,
+              "metric": "coa_sign_law_violations",
+              "source": "plausibility",
+              "status": "PASS",
+              "threshold": "viol == 0"
+            },
+            {
+              "value": 0,
+              "metric": "parcels_lineage_mismatch",
+              "source": "plausibility",
+              "status": "PASS",
+              "threshold": "viol == 0"
+            },
+            {
+              "value": 45.62,
+              "metric": "sys_velocity_rows_sec",
+              "status": "INFO",
+              "threshold": null
+            },
+            {
+              "value": 18721,
+              "metric": "sys_duration_ms",
+              "status": "INFO",
+              "threshold": null
+            }
+          ],
+          "phase": 59,
+          "verdict": "PASS"
+        },
+        "ravine_load": {
+          "etag": "\"1647271509.0-4490391-1365250661\"",
+          "content_hash": "97b4ac7fb3f9808726a106a4b67083ac",
+          "spec_version": "1.2",
+          "feature_count": 854,
+          "last_modified": "Mon, 14 Mar 2022 15:25:09 GMT",
+          "skipped_reason": null,
+          "mass_delete_pct": 0,
+          "polygons_deleted": 0,
+          "polygons_updated": 0,
+          "polygons_inserted": 0,
+          "drift_check_passed": true,
+          "geometry_update_pct": 0,
+          "source_dataset_version": "97b4ac7fb3f9808726a106a4b67083ac",
+          "invalid_geometry_skipped": 0,
+          "mass_delete_check_passed": true,
+          "invalid_geometry_repaired": 65,
+          "delete_skipped_empty_guard": false,
+          "geometry_collection_extracted": 0
+        },
+        "checks_failed": 0,
+        "checks_passed": "all",
+        "checks_warned": 0
+      },
+      "error_message": null
+    }
+  ],
+  "pipeline_runs_max_id_before": 1757,
   "table_state": [
     {
       "table": "entities",
@@ -278,7 +826,7 @@
       "table": "wsib_registry",
       "row_count": 121116,
       "ceiling_bypassed": "projected",
-      "content_hash": "2262efc7f2c7d34c471e1327654e7228",
+      "content_hash": "89c2ff3f32dde05ec3e5105eaec8321e",
       "order_by": "explicit",
       "order_columns": [
         "id"
@@ -294,8 +842,8 @@
   "tables_source": "descriptor",
   "table_row_ceiling": 100000,
   "table_timing": {
-    "entities": 5,
-    "wsib_registry": 101
+    "entities": 6,
+    "wsib_registry": 96
   },
   "table_specs": {
     "entities": {
@@ -306,11 +854,11 @@
         "primary_email",
         "website"
       ],
-      "columns_source": "arg",
+      "columns_source": "descriptor",
       "order": [
         "id"
       ],
-      "order_source": "arg"
+      "order_source": "descriptor"
     },
     "wsib_registry": {
       "columns": [
@@ -319,25 +867,17 @@
         "match_confidence",
         "matched_at"
       ],
-      "columns_source": "arg",
+      "columns_source": "descriptor",
       "order": [
         "id"
       ],
-      "order_source": "arg"
+      "order_source": "descriptor"
     }
   },
   "invariants": [
     {
       "name": "wsib_tier3_current_predicate_pass_rate_pct",
       "value": "100.0"
-    },
-    {
-      "name": "wsib_tier3_token_overlap_pass_pct",
-      "value": "100.00"
-    },
-    {
-      "name": "wsib_entity_fanin_max",
-      "value": "16"
     },
     {
       "name": "wsib_entity_fanin_p99",
@@ -350,26 +890,6 @@
     {
       "name": "wsib_orphan_linked_entity_id",
       "value": "0"
-    },
-    {
-      "name": "wsib_linked_confidence_matched_at_inconsistent",
-      "value": "0"
-    },
-    {
-      "name": "wsib_confidence_outside_closed_set",
-      "value": "0"
-    },
-    {
-      "name": "wsib_dead_bucket_050_060_count",
-      "value": "0"
-    },
-    {
-      "name": "wsib_registered_entities_with_zero_links",
-      "value": "0"
-    },
-    {
-      "name": "wsib_cumulative_link_rate_pct",
-      "value": "0.72"
     },
     {
       "name": "wsib_registry_total_rows",
@@ -386,15 +906,35 @@
     {
       "name": "wsib_tier_confidence_split",
       "value": "0.60:548,0.90:249,0.95:75"
+    },
+    {
+      "name": "wsib_cumulative_link_rate_pct",
+      "value": "0.72"
     }
   ],
-  "invariants_file": "docs/reports/golden/link_wsib/invariants.json",
+  "invariants_file": null,
   "db_target": "postgresql://postgres:***@127.0.0.1:54322/postgres",
   "runtime": "node",
   "args": [
     "--full"
   ],
   "nondeterminism": [
+    "key:pipeline_runs[0].completed_at",
+    "key:pipeline_runs[0].duration_ms",
+    "key:pipeline_runs[0].id",
+    "key:pipeline_runs[0].started_at",
+    "key:pipeline_runs[1].completed_at",
+    "key:pipeline_runs[1].duration_ms",
+    "key:pipeline_runs[1].id",
+    "key:pipeline_runs[1].started_at",
+    "key:pipeline_runs[2].completed_at",
+    "key:pipeline_runs[2].duration_ms",
+    "key:pipeline_runs[2].id",
+    "key:pipeline_runs[2].started_at",
+    "key:pipeline_runs[3].completed_at",
+    "key:pipeline_runs[3].duration_ms",
+    "key:pipeline_runs[3].id",
+    "key:pipeline_runs[3].started_at",
     "key:summary.records_meta.duration_ms",
     "pattern:duration_literal",
     "pattern:iso_timestamp",
@@ -413,6 +953,7 @@
           "rows": [
             {
               "metric": "gate_decision",
+              "source": "check",
               "status": "INFO",
               "threshold": "viol == 0",
               "value": {
@@ -423,12 +964,14 @@
             },
             {
               "metric": "override_force_full_present",
+              "source": "check",
               "status": "INFO",
               "threshold": "viol == 0",
               "value": true
             },
             {
               "metric": "full_repair_empty_source_guard",
+              "source": "check",
               "status": "PASS",
               "threshold": "viol == 0",
               "value": {
@@ -438,36 +981,42 @@
             },
             {
               "metric": "unlinked_start",
+              "source": "check",
               "status": "INFO",
               "threshold": "viol == 0",
               "value": 120244
             },
             {
               "metric": "tier_1_trade_matches",
+              "source": "check",
               "status": "INFO",
               "threshold": "viol == 0",
               "value": 0
             },
             {
               "metric": "tier_2_legal_matches",
+              "source": "check",
               "status": "INFO",
               "threshold": "viol == 0",
               "value": 0
             },
             {
               "metric": "tier_3_fuzzy_matches",
+              "source": "check",
               "status": "INFO",
               "threshold": "viol == 0",
               "value": 548
             },
             {
               "metric": "no_match",
+              "source": "check",
               "status": "INFO",
               "threshold": "viol == 0",
               "value": 119696
             },
             {
               "metric": "link_rate_warn",
+              "source": "check",
               "status": "PASS",
               "threshold": "pct >= 5",
               "value": {
@@ -479,6 +1028,7 @@
             },
             {
               "metric": "entity_fanin_warn",
+              "source": "check",
               "status": "PASS",
               "threshold": "viol <= 20",
               "value": {
@@ -488,6 +1038,7 @@
             },
             {
               "metric": "tier3_token_overlap",
+              "source": "check",
               "status": "PASS",
               "threshold": "pct >= 50",
               "value": {
@@ -496,36 +1047,42 @@
             },
             {
               "metric": "orphan_linked_entity_id",
+              "source": "check",
               "status": "PASS",
               "threshold": "viol == 0",
               "value": 0
             },
             {
               "metric": "confidence_outside_closed_set",
+              "source": "check",
               "status": "PASS",
               "threshold": "viol == 0",
               "value": 0
             },
             {
               "metric": "dead_bucket_count",
+              "source": "check",
               "status": "INFO",
               "threshold": "viol == 0",
               "value": 0
             },
             {
               "metric": "registered_entities_with_zero_links",
+              "source": "check",
               "status": "PASS",
               "threshold": "viol == 0",
               "value": 0
             },
             {
               "metric": "is_wsib_registered_corrected",
+              "source": "check",
               "status": "INFO",
               "threshold": "viol == 0",
               "value": 0
             },
             {
               "metric": "tier3_full_not_converged",
+              "source": "check",
               "status": "PASS",
               "threshold": "viol == 0",
               "value": {
@@ -538,6 +1095,7 @@
             },
             {
               "metric": "tier3_full_iterations",
+              "source": "check",
               "status": "INFO",
               "threshold": "viol == 0",
               "value": {
@@ -547,22 +1105,87 @@
             },
             {
               "metric": "contacts_cleared_on_retraction",
+              "source": "check",
               "status": "INFO",
               "threshold": "viol == 0",
               "value": 0
             },
             {
               "metric": "write_privilege",
+              "source": "check",
               "status": "PASS",
               "threshold": "viol == 0",
               "value": "bypassrls=true policies=0"
+            },
+            {
+              "metric": "wsib_tier3_current_predicate_pass_rate_pct",
+              "source": "invariant",
+              "status": "INFO",
+              "threshold": "value_max 100",
+              "value": 100
+            },
+            {
+              "metric": "wsib_entity_fanin_p99",
+              "source": "invariant",
+              "status": "INFO",
+              "threshold": "value_min 0",
+              "value": 10
+            },
+            {
+              "metric": "wsib_magnet_entities_fanin_ge_10",
+              "source": "invariant",
+              "status": "INFO",
+              "threshold": "value_min 0",
+              "value": 7
+            },
+            {
+              "metric": "wsib_orphan_linked_entity_id",
+              "source": "invariant",
+              "status": "PASS",
+              "threshold": "viol == 0",
+              "value": 0
+            },
+            {
+              "metric": "wsib_registry_total_rows",
+              "source": "invariant",
+              "status": "INFO",
+              "threshold": "value_min 0",
+              "value": 121116
+            },
+            {
+              "metric": "entities_wsib_registered_count",
+              "source": "invariant",
+              "status": "INFO",
+              "threshold": "value_min 0",
+              "value": 301
+            },
+            {
+              "metric": "wsib_registered_entities_without_exact_tier_link",
+              "source": "invariant",
+              "status": "PASS",
+              "threshold": "viol == 0",
+              "value": 0
+            },
+            {
+              "metric": "wsib_tier_confidence_split",
+              "source": "invariant",
+              "status": "INFO",
+              "threshold": "value_min 0",
+              "value": "unevaluable: check reported no numeric value for value_min"
+            },
+            {
+              "metric": "wsib_cumulative_link_rate_pct",
+              "source": "invariant",
+              "status": "INFO",
+              "threshold": "value_max 100",
+              "value": 0.72
             },
             {
               "metric": "before_image_written:wsib_registry",
               "status": "INFO",
               "threshold": null,
               "value": {
-                "path": "docs/reports/golden/link_wsib/before-image/2026-08-29T10-01-24.466Z-wsib_registry.jsonl",
+                "path": "docs/reports/golden/link_wsib/before-image/2026-08-30T13-32-29.884Z-wsib_registry.jsonl",
                 "rows": 548
               }
             }
@@ -571,6 +1194,7 @@
         },
         "checks_failed": 0,
         "checks_passed": "all",
+        "checks_warned": 0,
         "config": {
           "link_wsib_entity_fanin_warn": 20,
           "link_wsib_link_rate_warn_pct": 5,
@@ -580,6 +1204,10 @@
           "link_wsib_tier3_full_max_iterations": 20,
           "link_wsib_tier3_token_overlap_fail_pct": 50,
           "wsib_fuzzy_match_threshold": 0.6
+        },
+        "gate": {
+          "gated_skip": false,
+          "reason": "force_full_env"
         },
         "is_wsib_registered_corrected": 0,
         "ledger_row": "chain_owned",
@@ -637,7 +1265,410 @@
       }
     ],
     "parse_errors": [],
-    "pipeline_runs": [],
+    "pipeline_runs": [
+      {
+        "error_message": null,
+        "pipeline": "link_parcel_addresses",
+        "records_meta": {
+          "audit_table": {
+            "name": "Parcel ↔ Address Points Spatial Bridge",
+            "phase": 54,
+            "rows": [
+              {
+                "metric": "gate_decision",
+                "source": "check",
+                "status": "INFO",
+                "threshold": "viol == 0",
+                "value": {
+                  "gated_skip": true,
+                  "mode": null,
+                  "reason": "no_upstream_changes"
+                }
+              }
+            ],
+            "verdict": "PASS"
+          },
+          "checks_failed": 0,
+          "checks_passed": "all",
+          "checks_warned": 0,
+          "config": {
+            "link_parcel_addresses_batch_size": 1000,
+            "link_parcel_addresses_fanout_warn_condo": 400,
+            "link_parcel_addresses_fanout_warn_noncondo": 20,
+            "link_parcel_addresses_fanout_warn_rd_rs": 15,
+            "link_parcel_addresses_no_address_warn_pct": 50,
+            "link_parcel_addresses_no_parcel_warn_pct": 5,
+            "link_parcel_addresses_structure_link_rate_warn_pct": 85
+          },
+          "gate": {
+            "gated_skip": true,
+            "own_last_completed_at": "<TS>",
+            "own_slugs": [
+              "sources:link_parcel_addresses",
+              "link_parcel_addresses",
+              "link-parcel-addresses"
+            ],
+            "reason": "no_upstream_changes",
+            "upstream_completed_with_changes": 0,
+            "upstream_non_completed": 0,
+            "upstream_slugs": [
+              "sources:address_points",
+              "address_points",
+              "address-points",
+              "sources:load_address_points",
+              "load_address_points",
+              "load-address-points",
+              "sources:parcels",
+              "parcels",
+              "sources:load_parcels",
+              "load_parcels",
+              "load-parcels"
+            ],
+            "upstream_stale_running": 0
+          },
+          "ledger_row": "owned",
+          "terminal": "skip_gated_no_activity"
+        },
+        "records_new": null,
+        "records_total": null,
+        "records_updated": null,
+        "status": "completed"
+      },
+      {
+        "error_message": "could not resize shared memory segment \"/PostgreSQL.3710153366\" to 4194304 bytes: No space left on device",
+        "pipeline": "link_parcel_addresses",
+        "records_meta": null,
+        "records_new": null,
+        "records_total": null,
+        "records_updated": null,
+        "status": "failed"
+      },
+      {
+        "error_message": null,
+        "pipeline": "load_ravines",
+        "records_meta": {
+          "audit_table": {
+            "name": "Ravine + Natural Feature Protection",
+            "phase": 59,
+            "rows": [
+              {
+                "metric": "dataset_source_license",
+                "source": "check",
+                "status": "INFO",
+                "threshold": "viol == 0",
+                "value": "https://open.toronto.ca/open-data-license/"
+              },
+              {
+                "metric": "ravine_load_skipped",
+                "source": "check",
+                "status": "INFO",
+                "threshold": "viol == 0",
+                "value": "unchanged_last_modified"
+              },
+              {
+                "metric": "ravine_no_cache_validators",
+                "source": "check",
+                "status": "PASS",
+                "threshold": "viol == 0",
+                "value": "last-modified+etag"
+              },
+              {
+                "metric": "ravine_dataset_age_years",
+                "source": "check",
+                "status": "PASS",
+                "threshold": "viol == 0",
+                "value": 4
+              },
+              {
+                "metric": "ravine_override_feature_count_drift_present",
+                "source": "check",
+                "status": "PASS",
+                "threshold": "viol == 0",
+                "value": false
+              },
+              {
+                "metric": "ravine_override_mass_delete_present",
+                "source": "check",
+                "status": "PASS",
+                "threshold": "viol == 0",
+                "value": false
+              }
+            ],
+            "verdict": "PASS"
+          },
+          "checks_failed": 0,
+          "checks_passed": "all",
+          "checks_warned": 0,
+          "config": {
+            "load_ravines_count_drift_fail_pct": 0.5,
+            "load_ravines_dataset_age_warn_years": 20,
+            "load_ravines_download_timeout_ms": 60000,
+            "load_ravines_geometry_update_warn_pct": 0.5,
+            "load_ravines_invalid_geometry_fail_pct": 0.05,
+            "load_ravines_mass_delete_fail_pct": 0.5
+          },
+          "gate": {
+            "gated_skip": true,
+            "reason": "unchanged_last_modified"
+          },
+          "ledger_row": "owned",
+          "ravine_load": {
+            "content_hash": "97b4ac7fb3f9808726a106a4b67083ac",
+            "delete_skipped_empty_guard": false,
+            "drift_check_passed": true,
+            "etag": "\"1647271509.0-4490391-1365250661\"",
+            "feature_count": 854,
+            "geometry_collection_extracted": 0,
+            "geometry_update_pct": 0,
+            "invalid_geometry_repaired": 65,
+            "invalid_geometry_skipped": 0,
+            "last_modified": "Mon, 14 Mar 2022 15:25:09 GMT",
+            "mass_delete_check_passed": true,
+            "mass_delete_pct": 0,
+            "polygons_deleted": 0,
+            "polygons_inserted": 0,
+            "polygons_updated": 0,
+            "skipped_reason": "unchanged_last_modified",
+            "source_dataset_version": "97b4ac7fb3f9808726a106a4b67083ac",
+            "spec_version": "1.2"
+          },
+          "terminal": "skipped_source_validator"
+        },
+        "records_new": null,
+        "records_total": null,
+        "records_updated": null,
+        "status": "completed"
+      },
+      {
+        "error_message": null,
+        "pipeline": "load_ravines",
+        "records_meta": {
+          "audit_table": {
+            "name": "Ravine + Natural Feature Protection",
+            "phase": 59,
+            "rows": [
+              {
+                "metric": "dataset_source_license",
+                "source": "check",
+                "status": "INFO",
+                "threshold": "viol == 0",
+                "value": "https://open.toronto.ca/open-data-license/"
+              },
+              {
+                "metric": "ravine_load_skipped",
+                "source": "check",
+                "status": "INFO",
+                "threshold": "viol == 0",
+                "value": null
+              },
+              {
+                "metric": "ravine_no_cache_validators",
+                "source": "check",
+                "status": "PASS",
+                "threshold": "viol == 0",
+                "value": "last-modified+etag"
+              },
+              {
+                "metric": "ravine_dataset_age_years",
+                "source": "check",
+                "status": "PASS",
+                "threshold": "viol == 0",
+                "value": 4
+              },
+              {
+                "metric": "ravine_override_feature_count_drift_present",
+                "source": "check",
+                "status": "PASS",
+                "threshold": "viol == 0",
+                "value": false
+              },
+              {
+                "metric": "ravine_override_mass_delete_present",
+                "source": "check",
+                "status": "PASS",
+                "threshold": "viol == 0",
+                "value": false
+              },
+              {
+                "metric": "ravine_bad_objectid_count",
+                "source": "check",
+                "status": "PASS",
+                "threshold": "viol == 0",
+                "value": 0
+              },
+              {
+                "metric": "ravine_null_geometry_count",
+                "source": "check",
+                "status": "PASS",
+                "threshold": "viol == 0",
+                "value": 0
+              },
+              {
+                "metric": "ravine_duplicate_objectid_count",
+                "source": "check",
+                "status": "PASS",
+                "threshold": "viol == 0",
+                "value": 0
+              },
+              {
+                "metric": "ravine_feature_count",
+                "source": "check",
+                "status": "INFO",
+                "threshold": "viol == 0",
+                "value": 854
+              },
+              {
+                "metric": "ravine_count_drift_pct",
+                "source": "check",
+                "status": "PASS",
+                "threshold": "pct <= 0.5",
+                "value": 0
+              },
+              {
+                "metric": "ravine_geometry_repaired_pct",
+                "source": "check",
+                "status": "INFO",
+                "threshold": "viol == 0",
+                "value": 0.076
+              },
+              {
+                "metric": "ravine_geometry_collection_extracted",
+                "source": "check",
+                "status": "INFO",
+                "threshold": "viol == 0",
+                "value": 0
+              },
+              {
+                "metric": "ravine_geometry_skipped_pct",
+                "source": "check",
+                "status": "PASS",
+                "threshold": "pct <= 0.05",
+                "value": 0
+              },
+              {
+                "metric": "ravine_write_privilege",
+                "source": "check",
+                "status": "PASS",
+                "threshold": "viol == 0",
+                "value": "bypassrls=true policies=0"
+              },
+              {
+                "metric": "ravine_rows_changed_ratio",
+                "source": "check",
+                "status": "PASS",
+                "threshold": "pct <= 0.5",
+                "value": 0
+              },
+              {
+                "metric": "ravine_geometry_update_pct",
+                "source": "check",
+                "status": "PASS",
+                "threshold": "pct <= 0.5",
+                "value": 0
+              },
+              {
+                "metric": "ravine_mass_delete_pct",
+                "source": "check",
+                "status": "PASS",
+                "threshold": "pct <= 0.5",
+                "value": 0
+              },
+              {
+                "metric": "ravine_delete_skipped_empty_guard",
+                "source": "check",
+                "status": "INFO",
+                "threshold": "viol == 0",
+                "value": false
+              },
+              {
+                "metric": "ravines_distinct_source_dataset_version",
+                "source": "invariant",
+                "status": "PASS",
+                "threshold": "value_max 1",
+                "value": 1
+              },
+              {
+                "metric": "ravines_area_km2",
+                "source": "invariant",
+                "status": "INFO",
+                "threshold": "value_min 0",
+                "value": 110.995
+              },
+              {
+                "metric": "parcels_sign_law_violations",
+                "source": "plausibility",
+                "status": "PASS",
+                "threshold": "viol == 0",
+                "value": 0
+              },
+              {
+                "metric": "permits_sign_law_violations",
+                "source": "plausibility",
+                "status": "PASS",
+                "threshold": "viol == 0",
+                "value": 0
+              },
+              {
+                "metric": "coa_sign_law_violations",
+                "source": "plausibility",
+                "status": "PASS",
+                "threshold": "viol == 0",
+                "value": 0
+              },
+              {
+                "metric": "parcels_lineage_mismatch",
+                "source": "plausibility",
+                "status": "PASS",
+                "threshold": "viol == 0",
+                "value": 0
+              }
+            ],
+            "verdict": "PASS"
+          },
+          "checks_failed": 0,
+          "checks_passed": "all",
+          "checks_warned": 0,
+          "config": {
+            "load_ravines_count_drift_fail_pct": 0.5,
+            "load_ravines_dataset_age_warn_years": 20,
+            "load_ravines_download_timeout_ms": 60000,
+            "load_ravines_geometry_update_warn_pct": 0.5,
+            "load_ravines_invalid_geometry_fail_pct": 0.05,
+            "load_ravines_mass_delete_fail_pct": 0.5
+          },
+          "gate": {
+            "gated_skip": false,
+            "reason": "loaded"
+          },
+          "ledger_row": "owned",
+          "ravine_load": {
+            "content_hash": "97b4ac7fb3f9808726a106a4b67083ac",
+            "delete_skipped_empty_guard": false,
+            "drift_check_passed": true,
+            "etag": "\"1647271509.0-4490391-1365250661\"",
+            "feature_count": 854,
+            "geometry_collection_extracted": 0,
+            "geometry_update_pct": 0,
+            "invalid_geometry_repaired": 65,
+            "invalid_geometry_skipped": 0,
+            "last_modified": "Mon, 14 Mar 2022 15:25:09 GMT",
+            "mass_delete_check_passed": true,
+            "mass_delete_pct": 0,
+            "polygons_deleted": 0,
+            "polygons_inserted": 0,
+            "polygons_updated": 0,
+            "skipped_reason": null,
+            "source_dataset_version": "97b4ac7fb3f9808726a106a4b67083ac",
+            "spec_version": "1.2"
+          },
+          "terminal": "loaded"
+        },
+        "records_new": 0,
+        "records_total": 854,
+        "records_updated": 0,
+        "status": "completed"
+      }
+    ],
     "stdout_lines": [
       "{\"level\":\"INFO\",\"msg\":\"[link_wsib] target: link_wsib (descriptor.database) → database=postgres user=postgres migrations=242 (floor 240)\",\"tag\":\"[link_wsib]\"}",
       "{\"level\":\"INFO\",\"msg\":\"cascade mode gate: FULL (force_full_env)\",\"tag\":\"[link_wsib]\"}",
@@ -668,7 +1699,7 @@
           "match_confidence",
           "matched_at"
         ],
-        "content_hash": "2262efc7f2c7d34c471e1327654e7228",
+        "content_hash": "89c2ff3f32dde05ec3e5105eaec8321e",
         "order_by": "explicit",
         "order_columns": [
           "id"
@@ -683,14 +1714,6 @@
         "value": "100.0"
       },
       {
-        "name": "wsib_tier3_token_overlap_pass_pct",
-        "value": "100.00"
-      },
-      {
-        "name": "wsib_entity_fanin_max",
-        "value": "16"
-      },
-      {
         "name": "wsib_entity_fanin_p99",
         "value": "10"
       },
@@ -701,26 +1724,6 @@
       {
         "name": "wsib_orphan_linked_entity_id",
         "value": "0"
-      },
-      {
-        "name": "wsib_linked_confidence_matched_at_inconsistent",
-        "value": "0"
-      },
-      {
-        "name": "wsib_confidence_outside_closed_set",
-        "value": "0"
-      },
-      {
-        "name": "wsib_dead_bucket_050_060_count",
-        "value": "0"
-      },
-      {
-        "name": "wsib_registered_entities_with_zero_links",
-        "value": "0"
-      },
-      {
-        "name": "wsib_cumulative_link_rate_pct",
-        "value": "0.72"
       },
       {
         "name": "wsib_registry_total_rows",
@@ -737,10 +1740,14 @@
       {
         "name": "wsib_tier_confidence_split",
         "value": "0.60:548,0.90:249,0.95:75"
+      },
+      {
+        "name": "wsib_cumulative_link_rate_pct",
+        "value": "0.72"
       }
     ]
   },
-  "source_fingerprint": "867949a07085f3c148ba57c2748523d31dc460af9800b309401b29dfbb656213",
+  "source_fingerprint": "97a0c02db430b3ea3141c27be30aed7942ec6d343576ad9924e4f13541d069e5",
   "fingerprint_files": [
     "scripts/lib/compute/link-wsib.js",
     "scripts/link-wsib.descriptor.json",
