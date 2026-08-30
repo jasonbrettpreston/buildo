@@ -307,6 +307,118 @@ independently re-verified this commit, not merely copied from the grounder's own
 
 ---
 
+## §3. PH-5 — Seam map (commit 3, G5)
+
+> Every place `scripts/link-parcels.js` (686 lines) touches something outside pure computation — DB, clock,
+> network, argv/env — re-derived by direct read this commit, not copied from the plan's preliminary G5 row.
+> Resolves Ask A-5 (`sharing.varies_by_chain.phase`) — already RULED at Fold A/re-confirmed at Fold C item 8
+> (`permits`=7, against the `link_wsib` precedent `{permits:7, sources:19}`), re-confirmed here as a live-file
+> fact, not re-litigated. Citations mark which seams RETIRE with the JS fallback (A-1 RULED, commit 7) vs.
+> which survive into `compute.js`.
+
+### DB seam
+
+- `pool` — supplied by `pipeline.run('link-parcels', main)` (`:124`), never a local `new Pool()`.
+- `pipeline.withAdvisoryLock(pool, ADVISORY_LOCK_ID, ...)` (`:125`, closes `:684`) wraps the ENTIRE body —
+  lock 90, single concurrent runner, kept textually (`identity.lock`, per `c1ef0b73`'s own G3 disposition).
+- **13 `pool.query`/`client.query` sites** (corrected count, commit 1), all re-derived this commit:
+  1. `:137` — PostGIS-extension presence check (`SELECT 1 FROM pg_extension WHERE extname='postgis'`). ⚠️ **This
+     query is RETIRED, not merely its downstream branch** — A-1 RULED moves this check to the RUNNER's
+     `guards.requires: postgis` precondition (asserted once, before compute runs, per the `link_massing` A-8 /
+     `compute_centroids` A-1(a) precedent — now 3 precedents, per Spec 124 R-W). Compute no longer branches on
+     `hasPostGIS` at all once THE FIX ships.
+  2. `:164` — permits-to-process count, outside any transaction, pure read. SURVIVES.
+  3. `:172` — centroid-availability check (`SELECT COUNT(*) FROM parcels WHERE centroid_lat IS NOT NULL`).
+     **⚠️ Fold C item 9 (seam tension, flagged for commit 7): THE FIX's eligibility gate moves from
+     `centroid_lat IS NOT NULL` to `geom IS NOT NULL` (THE FIX section, "a strictly larger eligible set... but
+     removes a false dependency") — this exact query site is the one commit 7's descriptor author must rewrite
+     for the seam claim to be truthful (see below).**
+  4. `:227` — the batch-loop permit SELECT (composite-key keyset pagination, `(permit_num, revision_num) >
+     ($2,$3)`) — SURVIVES, and this EXACT shape is what `LG-25`'s composite-key keyset pagination generalizes
+     into the shared library at commit 7 (per `369341ae`'s own G3 disposition, above).
+  5. `:275` — the batch CTE (Strategies 1a/1b/2, `UNION ALL`) — SURVIVES, folds into `primary_match_sql` at
+     commit 7 (A-4 RULED).
+  6. `:388` — Strategy 3 Step 1, `ST_Contains` polygon containment — SURVIVES UNCHANGED (already
+     geometry-correct, untouched by THE FIX).
+  7. `:411` — Strategy 3 Step 2, the centroid-nearest fallback (`ST_DWithin`/`ORDER BY ST_Distance` on
+     `pa.centroid_lat/centroid_lng`) — **THIS is THE FIX's own target.** REWRITES at commit 7 to the
+     unconstrained KNN LATERAL on `pa.geom` (THE FIX section).
+  8. `:436` — the JS-fallback per-permit BBOX candidate query — **RETIRES WHOLE with the JS fallback (A-1
+     RULED)**.
+  9. `:514` — the batch upsert (`INSERT ... ON CONFLICT ... DO UPDATE ... WHERE IS DISTINCT FROM`), inside
+     `pipeline.withTransaction` #1 (`:513-527`) — SURVIVES, becomes `LG-24`'s upsert half.
+  10. `:551` — the changed-match ghost-cleanup DELETE (UNNEST-batched, `8a1c7d25`'s fence + `72362c44`'s
+      batching), inside `pipeline.withTransaction` #2 (`:533-581`) — SURVIVES, becomes `LG-24`'s
+      `executeGuardedDeleteByKey` DELETE half. **Fold A B-1: the SECOND, separate transaction (`:533-581`) this
+      site sits inside is CONSOLIDATED into transaction #1 at commit 7 — one `executeOrderedWrites` set, not
+      two `withTransaction` calls — eliminating the crash window `8a1c7d25` itself left standing.**
+  11. `:568` — the zero-match ghost-cleanup DELETE, same transaction #2 — SURVIVES, same consolidation as #10.
+  12. `:576` — the `parcel_linked_at` UPDATE, same transaction #2 — SURVIVES, same consolidation as #10.
+  13. `:614` — the final cumulative-link-rate query, outside any transaction, pure read — SURVIVES.
+- **2 explicit `pipeline.withTransaction` wraps** (`:513-527` upsert-only, `:533-581` ghost-cleanup+timestamp) —
+  **becomes 1 at commit 7** (Fold A B-1/Fold B item 5 — `LG-24` folds both into one `executeOrderedWrites` set).
+  `txn_scope: batch` becomes accurate only after this consolidation (today it understates a genuine
+  two-transaction-per-batch reality).
+- **0 session-scoped `SET`/`RESET` GUC calls** — no session-config dependency, same as every prior LINK/MATCHER
+  pilot's own clean measurement on this axis.
+
+**Fold C item 9 — seam tension flagged, resolved at commit 7 not here.** `scripts/lib/step/seam.js`'s own
+header confirms seams are derived from `inputs.reads.steps[].step` (a declared producer→consumer edge), and
+measured live this commit: **exactly ONE seam pair is live today** across all 6 converted descriptors —
+`compute_centroids → link_massing` (`link_parcels` is not yet a converted descriptor, so it cannot be either
+endpoint of a live pair today, regardless of what it reads). The plan's own G11 guarantee text ("NEW seam
+becomes declarable: `compute_centroids → link_parcels`") describes a conversion BENEFIT true of the file AS IT
+READS TODAY (Strategy 3 Step 2 genuinely reads `centroid_lat/centroid_lng`, `compute_centroids`'s own output,
+confirmed live at `:415-417`) — but THE FIX (commit 7) DELETES that read entirely, replacing it with `geom`
+(populated by the parcels SOURCE loader, Spec 55, never by `compute_centroids`). **If commit 7's descriptor
+declares `inputs.reads.steps[]` naming `compute_centroids` anyway, that declaration would be stale
+documentation of a dependency THE FIX itself removes — not a real one.** This pilot's own commit 3 (this
+section) documents the PRE-CONVERSION seam as it genuinely exists today (query site #3 above); commit 7's own
+descriptor author must declare the POST-fix reads truthfully (the eligibility-gate query at `:172` AND the
+`emitMeta` reads-list at `:199` both cite `centroid_lat/centroid_lng` today — both need to drop it if THE FIX's
+own `geom IS NOT NULL` eligibility change lands as designed) — flagged here, not resolved by this pilot's own
+commits 1–6, which touch no compute code.
+
+### Clock seam
+
+- `Date.now()` — **2 sites** (`:134` `startTime`, `:593` `durationMs = Date.now() - startTime`, corrected count
+  per commit 1), both elapsed-time-only, never written to the DB as a timestamp — legal per
+  `tasks/lessons.md`'s explicit carve-out.
+- **0 `new Date(`** anywhere.
+- **1 DB-clock read** (`pipeline.getDbTimestamp(pool)`, `:126`) → `RUN_AT`, used for every `linked_at`/
+  `parcel_linked_at` write (`:502,579`) — R3.5-compliant, confirmed live (the file's own G3 archaeology shows
+  this replaced a bare `pool.query('SELECT NOW()')` sourced by `c1ef0b73`, itself later migrated by an
+  out-of-scope `refactor(` commit).
+
+### Network seam
+
+- **0 `fetch(` calls** — no external network dependency, same as every converted `sources`/`permits`-chain
+  step so far.
+
+### argv/env seam
+
+- **2 `process.env` reads**, both `PIPELINE_CHAIN`, both feeding the disagreeing phase ternaries (`LP-D3`):
+  `:181` (`chainId` local var, zero-permits path, origin `2577e694`) and `:660` (direct read, real-run path,
+  origin `5baaed5a`). Both retire at commit 7 — replaced by `sharing.varies_by_chain.phase`'s declared map
+  (A-5 RULED: `permits`=7), read generically by the runner (`verdict.js:293`'s own `descriptor.sharing.
+  varies_by_chain.phase` pattern, per `5baaed5a`'s own G3 disposition precedent from pilot 6's citation of the
+  same mechanism).
+- **0 `process.argv` reads** — `pipeline.isFullMode()` (`:133`) is the SDK's own argv reader, not a direct
+  read in this file. `manifest.json`'s `supports_full:true`/`supports_dry_run:false` are both TRUE-to-the-code.
+
+### Seam-map verdict (G5)
+
+**CLOSED this commit.** No PARTIAL seams remain. DB: 13 query sites fully characterized (1 retires whole with
+the JS fallback, 1 is THE FIX's own target, 2 transaction wraps consolidate to 1 at commit 7, the rest
+survive verbatim or generalize into library growth). Clock: 1 DB-clock read + 2 elapsed-only `Date.now()`
+sites, both R3.5-compliant. Network: absent. argv/env: 2 disagreeing `PIPELINE_CHAIN` reads (`LP-D3`), both
+retiring into the declared `phase` map at commit 7 (A-5 RULED). **One seam TENSION flagged, not resolved by
+this pilot's own commits 1–6 (Fold C item 9):** the plan's claimed "NEW `compute_centroids → link_parcels`
+seam" benefit is true of TODAY's file, not of the POST-fix compute — commit 7's descriptor author must declare
+`inputs.reads.steps[]` against what the SHIPPED compute actually reads, not the plan's original expectation.
+
+---
+
 ## §0. PH-0 seed — measured boundary table (2026-08-30 planning session)
 
 ### 0.1 Governing specs, read in order (Spec 124 §7 Step 0 / Spec 123 §6 G0)
