@@ -1,0 +1,17 @@
+{
+  "$comment": "RED canary fixture — src/tests/programme-backlog.infra.test.ts. compute_centroids is already registered in the real converted.json; this fixture declares a cutover_prereq item naming it while NOT_STARTED, which checkCutoverPrereqs() (scripts/analysis/step-validate.mjs) must catch as an unmet prerequisite for an already-cutover slug.",
+  "contract_version": 1,
+  "items": [
+    {
+      "id": "FIXTURE-BAD-1",
+      "spec": "122 §10.3",
+      "title": "canary: an unmet cutover_prereq blocking an already-converted slug",
+      "promised": "this fixture exists only to prove checkCutoverPrereqs() fires RED",
+      "status": "NOT_STARTED",
+      "evidence": "fixture — no real evidence, deliberately",
+      "owner": { "kind": "wf", "ref": "wf: fixture" },
+      "gate": { "kind": "cutover_prereq", "blocks": ["compute_centroids"] },
+      "last_reviewed": "2026-08-29"
+    }
+  ]
+}

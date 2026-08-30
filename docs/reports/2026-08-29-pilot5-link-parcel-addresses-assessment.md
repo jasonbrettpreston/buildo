@@ -711,6 +711,7 @@ Separately, and NOT part of the conversion diff above: `standalone.json`'s POST 
 | 8 | link_parcel_addresses | PASS | G-4: 7 declared, 6 verdict-affecting, 0 violate on_invalid:fail with no deviations[] cover |
 | 4 | (registry) | PASS | overlap: none |
 | 5 | (registry) | PASS | clean (0 it.fails( call sites outside a declared pending slug) |
+| 9 | (registry) | PASS | clean (0 converted slugs blocked by an unmet cutover_prereq item; blocks batching: 8) |
 
 ### Captures (item iv)
 - missing invocations: none
@@ -718,7 +719,7 @@ Separately, and NOT part of the conversion diff above: `standalone.json`'s POST 
 - compare ran: true · diffs found: 66 · unexplained: 0
 
 ### Test suite (item iii)
-- SKIPPED or failed to run: vitest produced no JSON report (exit null); stderr: 
+- SKIPPED or failed to run: --fast: vitest spawn skipped
 
 ### Policy coverage matrix (item vi) — Spec 124 Rules 1-13
 

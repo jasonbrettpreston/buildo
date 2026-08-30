@@ -1,0 +1,1216 @@
+{
+  "$comment": [
+    "R-T (2026-08-29). Cross-cutting Spec 122/123/124 programme items NOT owned by a",
+    "single pilot's own nine-commit sequence — seeded from a full grounding pass",
+    "against HEAD d9057a54 (docs/reports/generated/122-programme-backlog.md's own",
+    "source inventory, reconciled 4-ways before this seed). Regenerated report:",
+    "docs/reports/generated/122-programme-backlog.md via",
+    "scripts/violations/generate-programme-backlog.mjs. Conformance:",
+    "src/tests/programme-backlog.infra.test.ts hard-fails on a NOT_STARTED/PARTIAL",
+    "item with owner.kind='none', on a BUILT item whose evidence does not resolve",
+    "(no commit / no file:line), and on a cutover_prereq item blocking a slug that is",
+    "not yet BUILT when that slug is added to converted.json.",
+    "",
+    "ids reuse the source inventory's own ids (STD-*, LDG-*, LC-*, VAL-*, STA-*, PRG-*,",
+    "G*/CLAIM-*/POLICY-MATRIX) so a reader can cross-reference the grounding document;",
+    "new items (not in the original inventory) mint their own id."
+  ],
+  "contract_version": 1,
+  "items": [
+    {
+      "id": "STD-1",
+      "spec": "122 §1.3",
+      "title": "18 categories, schema-canonical",
+      "promised": "18 categories, schema-canonical",
+      "status": "BUILT",
+      "evidence": "scripts/steps/_schema/step.schema.json x-categories (18 entries), confirmed 2026-08-25",
+      "owner": {
+        "kind": "wf",
+        "ref": "schema (R2), pre-existing"
+      },
+      "gate": {
+        "kind": "nice_to_have",
+        "blocks": []
+      },
+      "last_reviewed": "2026-08-29"
+    },
+    {
+      "id": "STD-2",
+      "spec": "122 §4.1",
+      "title": "descriptor is a data-only sibling JSON",
+      "promised": "descriptor is a data-only sibling JSON, never exported from .js",
+      "status": "BUILT",
+      "evidence": "scripts/link-wsib.descriptor.json + 5 other sibling descriptors, pilots 1-6",
+      "owner": {
+        "kind": "pilot",
+        "ref": "pilots 1-6"
+      },
+      "gate": {
+        "kind": "nice_to_have",
+        "blocks": []
+      },
+      "last_reviewed": "2026-08-29"
+    },
+    {
+      "id": "STD-3",
+      "spec": "122 §5.1",
+      "title": "mandatory ast-grep shape rule",
+      "promised": "mandatory ast-grep shape rule bans per-step escape hatches; frozen file shape",
+      "status": "BUILT",
+      "evidence": "scripts/hooks/check-step-shape.mjs + scripts/ast-grep-rules/step-shape.yml; scripts/link-wsib.js confirmed 41 lines, frozen shape",
+      "owner": {
+        "kind": "wf",
+        "ref": "shape gate, all pilots"
+      },
+      "gate": {
+        "kind": "nice_to_have",
+        "blocks": []
+      },
+      "last_reviewed": "2026-08-29"
+    },
+    {
+      "id": "STD-4",
+      "spec": "122 §4.1",
+      "title": "step-0 reconcile becomes a reconcile step",
+      "promised": "step-0 reconcile becomes a reconcile step at head of manifest.chains.sources",
+      "status": "BUILT",
+      "evidence": "scripts/manifest.json:57 chains.sources[0]='reconcile'; scripts/reconcile-runs.js",
+      "owner": {
+        "kind": "wf",
+        "ref": "manifest, pre-session"
+      },
+      "gate": {
+        "kind": "nice_to_have",
+        "blocks": []
+      },
+      "last_reviewed": "2026-08-29"
+    },
+    {
+      "id": "STD-5",
+      "spec": "122 §5.5",
+      "title": "the COMPUTE shape",
+      "promised": "Condition 4 - the COMPUTE shape (dispatch table, ctx.report, injected I/O seams, ctx.config)",
+      "status": "BUILT",
+      "evidence": "scripts/ast-grep-rules/compute-shape.yml + scripts/lib/compute/compute-centroids.js dispatch table",
+      "owner": {
+        "kind": "pilot",
+        "ref": "pilots 1-6"
+      },
+      "gate": {
+        "kind": "nice_to_have",
+        "blocks": []
+      },
+      "last_reviewed": "2026-08-29"
+    },
+    {
+      "id": "STD-6",
+      "spec": "122 §4.2",
+      "title": "pipeline.step() is a factory, AJV-validates before compute runs",
+      "promised": "pipeline.step() is a factory, AJV-validates descriptor before compute runs, throws",
+      "status": "BUILT",
+      "evidence": "scripts/lib/step/index.js (2116 ln), scripts/lib/step/validate.js conformanceFindings/assertGrandfathered/assertNoRetraction",
+      "owner": {
+        "kind": "wf",
+        "ref": "step library"
+      },
+      "gate": {
+        "kind": "nice_to_have",
+        "blocks": []
+      },
+      "last_reviewed": "2026-08-29"
+    },
+    {
+      "id": "STD-7",
+      "spec": "122 §1.10",
+      "title": "archetype drives required-field profile, 8 archetypes dispatched",
+      "promised": "archetype drives required-field profile; 8 archetypes dispatched",
+      "status": "PARTIAL",
+      "evidence": "scripts/lib/step/index.js header comment maps all 8 archetypes to phase runners; RECORDER/ENRICHER dispatch paths unexercised by a real conversion (pilots 7/8 not started)",
+      "owner": {
+        "kind": "pilot",
+        "ref": "pilot7_refresh_snapshot, pilot8_enrich_parcels"
+      },
+      "gate": {
+        "kind": "batching_prereq",
+        "blocks": [
+          "batching"
+        ]
+      },
+      "last_reviewed": "2026-08-29"
+    },
+    {
+      "id": "STD-8",
+      "spec": "122 §8.2",
+      "title": "freeze the template after the eighth, never the first",
+      "promised": "freeze the template after the eighth, never the first",
+      "status": "NOT_STARTED",
+      "evidence": "no script enforces 'do not modify step.schema.json/index.js shape after pilot 8'; nearest analog is LG-21's prose deferral to a post-pilot-8 library WF (pilot 6 Fold D)",
+      "owner": {
+        "kind": "wf",
+        "ref": "wf: programme-STD-8"
+      },
+      "gate": {
+        "kind": "batching_prereq",
+        "blocks": [
+          "batching"
+        ]
+      },
+      "last_reviewed": "2026-08-29"
+    },
+    {
+      "id": "STD-9",
+      "spec": "122 §5.4",
+      "title": "ADVISORY_LOCK_ID kept textually",
+      "promised": "ADVISORY_LOCK_ID kept textually, source-text loops widened to accept pipeline.step",
+      "status": "BUILT",
+      "evidence": "pilots 1-6 converted files retain the textual ADVISORY_LOCK_ID literal - scripts/compute-centroids.js:33 const ADVISORY_LOCK_ID = 99",
+      "owner": {
+        "kind": "pilot",
+        "ref": "pilots 1-6"
+      },
+      "gate": {
+        "kind": "nice_to_have",
+        "blocks": []
+      },
+      "last_reviewed": "2026-08-29"
+    },
+    {
+      "id": "LDG-1",
+      "spec": "122 §6.0",
+      "title": "column-lineage generator",
+      "promised": "column-lineage generator is the working control case, tier-2, drift-guarded",
+      "status": "BUILT",
+      "evidence": "scripts/generate-lineage-docs.mjs + src/tests/data-lineage-map.infra.test.ts, pre-existing",
+      "owner": {
+        "kind": "wf",
+        "ref": "pre-existing infra"
+      },
+      "gate": {
+        "kind": "nice_to_have",
+        "blocks": []
+      },
+      "last_reviewed": "2026-08-29"
+    },
+    {
+      "id": "LDG-2",
+      "spec": "122 §6.1",
+      "title": "ledger table edges from outputs.writes -> inputs.reads",
+      "promised": "ledger should generate table edges from outputs.writes -> inputs.reads; cross-descriptor drift check (a step may not read a table written by a later step)",
+      "status": "PARTIAL",
+      "evidence": "6 converted descriptors declare inputs.reads (schema-enforced); 0 grep hits for 'manifest order'/'writer_precedes' in src/tests/step-conformance.infra.test.ts or scripts/lib/step/validate.js. Concern folded into VAL-WF2's seam-check scope (this seed); this row itself stays nice_to_have per the (B) ruling - the future validator absorbing it is the batching_prereq item, not this row",
+      "owner": {
+        "kind": "followup",
+        "ref": "review_followups.md (2026-08-29 programme backlog filing)"
+      },
+      "gate": {
+        "kind": "nice_to_have",
+        "blocks": []
+      },
+      "last_reviewed": "2026-08-29"
+    },
+    {
+      "id": "LDG-3",
+      "spec": "122 §6.2",
+      "title": "records_meta contracts HALT on violation",
+      "promised": "records_meta contracts HALT on violation (ravine_load, heritage_load, centreline_load)",
+      "status": "BUILT",
+      "evidence": "scripts/enrich-ravines.js:42-43 throw on spec_version !== '1.2'",
+      "owner": {
+        "kind": "wf",
+        "ref": "pre-existing infra"
+      },
+      "gate": {
+        "kind": "nice_to_have",
+        "blocks": []
+      },
+      "last_reviewed": "2026-08-29"
+    },
+    {
+      "id": "LDG-4",
+      "spec": "122 §6.3",
+      "title": "stepUpstreams(slug) derived from the ledger",
+      "promised": "stepUpstreams(slug) derived from the ledger, retiring 3 hand-maintained slug arrays",
+      "status": "PARTIAL",
+      "evidence": "0 grep hits for stepUpstreams anywhere in scripts/ or src/; 2 of 3 arrays gone as a side effect of full-file conversion; scripts/compute-parcel-cost-estimates.js:85 UPSTREAM_SLUGS still hand-maintained",
+      "owner": {
+        "kind": "followup",
+        "ref": "review_followups.md (2026-08-29 programme backlog filing)"
+      },
+      "gate": {
+        "kind": "nice_to_have",
+        "blocks": []
+      },
+      "last_reviewed": "2026-08-29"
+    },
+    {
+      "id": "LDG-5",
+      "spec": "122 §6.4",
+      "title": "4 invalidation mechanisms real today",
+      "promised": "4 invalidation mechanisms real today (trigger mig 242, load-parcels.js DEC-FENCE2, enrich-permits.js, close-stale-permits.js)",
+      "status": "BUILT",
+      "evidence": "confirmed live, unchanged since original grounding - migrations/242_parcels_geom_invalidation_trigger.sql",
+      "owner": {
+        "kind": "wf",
+        "ref": "pre-existing infra"
+      },
+      "gate": {
+        "kind": "nice_to_have",
+        "blocks": []
+      },
+      "last_reviewed": "2026-08-29"
+    },
+    {
+      "id": "LDG-6",
+      "spec": "122 §6.4a",
+      "title": "the centroid invalidation gap",
+      "promised": "centroid_lat/centroid_lng have no invalidator",
+      "status": "BUILT",
+      "evidence": "migrations/245_parcels_centroid_geom_invalidation.sql applied; src/tests/db/migration-245-centroid-invalidation.db.test.ts; 0/486,530 measured this session",
+      "owner": {
+        "kind": "pilot",
+        "ref": "pilot6_compute_centroids"
+      },
+      "gate": {
+        "kind": "nice_to_have",
+        "blocks": []
+      },
+      "last_reviewed": "2026-08-29"
+    },
+    {
+      "id": "LDG-7",
+      "spec": "122 §6.5",
+      "title": "descriptor reads/writes consistent with manifest.chains order",
+      "promised": "ordering-consistency claim (replaces dead claim #145): descriptor reads/writes must be consistent with manifest array order",
+      "status": "NOT_STARTED",
+      "evidence": "same absence grep as LDG-2 (the same deliverable read two ways) - 0 hits in src/tests/step-conformance.infra.test.ts or scripts/lib/step/validate.js",
+      "owner": {
+        "kind": "followup",
+        "ref": "review_followups.md (2026-08-29 programme backlog filing)"
+      },
+      "gate": {
+        "kind": "nice_to_have",
+        "blocks": []
+      },
+      "last_reviewed": "2026-08-29"
+    },
+    {
+      "id": "LDG-8",
+      "spec": "122 §6.1",
+      "title": "invalidation + counters scoped by writes.key",
+      "promised": "invalidation + counters scoped by writes.key -> LINK/MATCHER growth wave",
+      "status": "BUILT",
+      "evidence": "scripts/lib/step/index.js:590 names the wave explicitly; counters resolved from counters[].source at :151-185; confirmed live for link_massing/link_wsib",
+      "owner": {
+        "kind": "pilot",
+        "ref": "pilot3_link_massing, pilot4_link_wsib"
+      },
+      "gate": {
+        "kind": "nice_to_have",
+        "blocks": []
+      },
+      "last_reviewed": "2026-08-29"
+    },
+    {
+      "id": "LDG-9",
+      "spec": "122 §1.7",
+      "title": "sharing.chains/shared/slug_forms are ~ derived",
+      "promised": "sharing.chains/shared/slug_forms are ~ derived, never hand-declared",
+      "status": "PARTIAL",
+      "evidence": "the sentinel string 'derived' is correctly declared in converted descriptors; 0 grep hits for 'sharing' in scripts/lib/step/validate.js or src/tests/step-conformance.infra.test.ts - no drift check against actual manifest.chains membership",
+      "owner": {
+        "kind": "followup",
+        "ref": "review_followups.md (2026-08-29 programme backlog filing)"
+      },
+      "gate": {
+        "kind": "nice_to_have",
+        "blocks": []
+      },
+      "last_reviewed": "2026-08-29"
+    },
+    {
+      "id": "LC-1",
+      "spec": "122 §4.1 (Spec 120 §4)",
+      "title": "~35 step lifecycle behaviours",
+      "promised": "~35 lifecycle behaviours (reconcile, ledger row, advisory lock+fencing, config .strict(), producer health assert, preconditions, empty-source guard, drift diff, staleness, fingerprint, txn-per-step, generated upsert, retraction, invalidation, checkpoint, quarantine, WAP publish, verdict cascade, skip_reason+count, step_error, budget/duration tripwires, declaration_tiers, OpenLineage)",
+      "status": "PARTIAL",
+      "evidence": "scripts/lib/step/{index,acquire,config,ledger,staleness,validate,verdict,write}.js implement the behaviours pilots 1-6 have exercised; OpenLineage emit, declaration_tiers badge, and RECORDER's publish-pointer/WAP path are unexercised (no phase function exists yet for RECORDER)",
+      "owner": {
+        "kind": "pilot",
+        "ref": "pilot7_refresh_snapshot"
+      },
+      "gate": {
+        "kind": "batching_prereq",
+        "blocks": [
+          "batching"
+        ]
+      },
+      "last_reviewed": "2026-08-29"
+    },
+    {
+      "id": "LC-1b",
+      "spec": "122 §4.1",
+      "title": "reap stale heartbeats -> crashed",
+      "promised": "reap stale heartbeats -> crashed; roll back unpublished batches; requeue quarantined units",
+      "status": "BUILT",
+      "evidence": "scripts/reconcile-runs.js wired as manifest.chains.sources[0]; scripts/lib/step/ledger.js:83-87 structurally forbids any other code path writing crashed",
+      "owner": {
+        "kind": "wf",
+        "ref": "A3, pre-session"
+      },
+      "gate": {
+        "kind": "nice_to_have",
+        "blocks": []
+      },
+      "last_reviewed": "2026-08-29"
+    },
+    {
+      "id": "LC-1c",
+      "spec": "122 §4.1",
+      "title": "a skip re-measures its checks live",
+      "promised": "a skip re-measures its checks live; machine-readable skip_reason",
+      "status": "PARTIAL",
+      "evidence": "skipRecordsMeta (index.js:1543) + skip_reason exist; whether a SKIP genuinely re-runs when:'pre' checks live (vs. reusing stale prior values) not independently re-verified against real data",
+      "owner": {
+        "kind": "followup",
+        "ref": "review_followups.md (2026-08-29 programme backlog filing)"
+      },
+      "gate": {
+        "kind": "nice_to_have",
+        "blocks": []
+      },
+      "last_reviewed": "2026-08-29"
+    },
+    {
+      "id": "LC-2",
+      "spec": "122 §4.1a",
+      "title": "5-part logic fingerprint",
+      "promised": "5-part logic fingerprint (normalize, widen input set, split by consequence, guards excluded, decouple detection from forced re-run)",
+      "status": "PARTIAL",
+      "evidence": "staleness.js implements fingerprint_inputs (confirmed referenced in pilot 6 plan); the data-hash/metadata-hash split and the queue-not-run decoupling not independently confirmed by grep this session",
+      "owner": {
+        "kind": "followup",
+        "ref": "review_followups.md (2026-08-29 programme backlog filing)"
+      },
+      "gate": {
+        "kind": "nice_to_have",
+        "blocks": []
+      },
+      "last_reviewed": "2026-08-29"
+    },
+    {
+      "id": "LC-3",
+      "spec": "122 §4.2b",
+      "title": "--plan mode",
+      "promised": "--plan mode (resolve every gate, print what-would-run, open no write txn)",
+      "status": "NOT_STARTED",
+      "evidence": "grep for '--plan' across run-chain.js, scripts/lib/step/index.js, scripts/lib/pipeline.js -> zero hits",
+      "owner": {
+        "kind": "followup",
+        "ref": "review_followups.md (2026-08-29 programme backlog filing)"
+      },
+      "gate": {
+        "kind": "nice_to_have",
+        "blocks": []
+      },
+      "last_reviewed": "2026-08-29"
+    },
+    {
+      "id": "LC-4",
+      "spec": "122 §4.6",
+      "title": "generated SQL only, no string surgery",
+      "promised": "generated SQL only, no string surgery (retires enrich-centreline.js:277-283's .replace() scoping bug)",
+      "status": "NOT_STARTED",
+      "evidence": "enrich_centreline is not a C1 pilot archetype representative; the .replace() bug at scripts/enrich-centreline.js:277-283 is untouched by any of pilots 1-6",
+      "owner": {
+        "kind": "followup",
+        "ref": "review_followups.md (2026-08-29 programme backlog filing)"
+      },
+      "gate": {
+        "kind": "nice_to_have",
+        "blocks": []
+      },
+      "last_reviewed": "2026-08-29"
+    },
+    {
+      "id": "VAL-1",
+      "spec": "120 §5",
+      "title": "12 named check types as generators",
+      "promised": "one record type + kind discriminator, 12 named check types as GENERATORS",
+      "status": "SUPERSEDED",
+      "evidence": "step.schema.json definitions.check.properties.kind.description states verbatim the '12' is corrected to '9 named types + plan_shape' by Spec 122 §12.5/R6; 0 grep hits for 'not_null'/'unique'/'row_count_floor' as functions in scripts/lib/step/*.js - a ratified design walk-back, not an unbuilt gap",
+      "owner": {
+        "kind": "none",
+        "ref": ""
+      },
+      "gate": {
+        "kind": "nice_to_have",
+        "blocks": []
+      },
+      "last_reviewed": "2026-08-29"
+    },
+    {
+      "id": "VAL-2",
+      "spec": "79 §2",
+      "title": "12-item per-step evidence checklist",
+      "promised": "12-item per-step evidence checklist (C1-C12), machine-checked",
+      "status": "PARTIAL",
+      "evidence": "Spec 79 §2's checklist is a manual WF5 reviewer-agent process (Spec 79 §3a), not integrated into scripts/analysis/step-validate.mjs's automated scorecard - two parallel systems",
+      "owner": {
+        "kind": "followup",
+        "ref": "review_followups.md (2026-08-29 programme backlog filing)"
+      },
+      "gate": {
+        "kind": "nice_to_have",
+        "blocks": []
+      },
+      "last_reviewed": "2026-08-29"
+    },
+    {
+      "id": "VAL-3",
+      "spec": "79 §3a'",
+      "title": "Seam-Validation Pass",
+      "promised": "Seam-Validation Pass - producer/consumer contract checks across named step pairs, run after all per-step records exist",
+      "status": "NOT_STARTED",
+      "evidence": "0 code implementing this for ANY chain (grep across scripts/ and src/tests/); only 2 prose doc mentions repo-wide. Absorbed into VAL-WF2's declared scope (this seed) as 'seam checks on outputs.invalidates edges' - VAL-WF2 is the batching_prereq item; this row stays nice_to_have per the (B) ruling ('no C1 pilot currently depends on it')",
+      "owner": {
+        "kind": "followup",
+        "ref": "review_followups.md (2026-08-29 programme backlog filing); absorbed by VAL-WF2"
+      },
+      "gate": {
+        "kind": "nice_to_have",
+        "blocks": []
+      },
+      "last_reviewed": "2026-08-29"
+    },
+    {
+      "id": "VAL-4",
+      "spec": "79 §3b",
+      "title": "Chain-End Synthesis, 4-agent adversarial review",
+      "promised": "Chain-End Synthesis with 4-agent adversarial review, Pass 1/2/2.5/3, severity rules, small-batch execution plan",
+      "status": "BUILT",
+      "evidence": "WF5 human-in-the-loop procedure, deliberately not a script per Spec 79's own design - docs/reports/pipeline-validation/SUMMARY.md",
+      "owner": {
+        "kind": "wf",
+        "ref": "WF5 operator process"
+      },
+      "gate": {
+        "kind": "nice_to_have",
+        "blocks": []
+      },
+      "last_reviewed": "2026-08-29"
+    },
+    {
+      "id": "VAL-4b",
+      "spec": "79 §10",
+      "title": "Hidden-Failure Tripwires, per-risk-class profile",
+      "promised": "12 tripwires, per-risk-class profile",
+      "status": "PARTIAL",
+      "evidence": "scripts/validation/run-step.mjs + scripts/validation/step-config.json implement risk_class/tripwireProfile (the original WF5 manual-audit harness), unreconciled with step-validate.mjs's own, differently-shaped G4 risk-class row (Spec 123 G4) - two parallel taxonomies, no cross-reference",
+      "owner": {
+        "kind": "followup",
+        "ref": "review_followups.md (2026-08-29 programme backlog filing)"
+      },
+      "gate": {
+        "kind": "nice_to_have",
+        "blocks": []
+      },
+      "last_reviewed": "2026-08-29"
+    },
+    {
+      "id": "VAL-5",
+      "spec": "122 §7.1",
+      "title": "map-concerns.mjs and map-categories.mjs",
+      "promised": "concern<->home 1:1 and claim<->category coverage, hard-fails on orphan",
+      "status": "BUILT",
+      "evidence": "scripts/violations/map-categories.mjs run 2026-08-28: exits 0, 50 orphan claims remain (down from 54, R5 triage genuinely in progress)",
+      "owner": {
+        "kind": "followup",
+        "ref": "R5 ongoing triage"
+      },
+      "gate": {
+        "kind": "nice_to_have",
+        "blocks": []
+      },
+      "last_reviewed": "2026-08-29"
+    },
+    {
+      "id": "VAL-6",
+      "spec": "122 R-R",
+      "title": "step-validate.mjs is the ONE validation command",
+      "promised": "validateDescriptor + shape gate + per-step vitest + golden/fingerprint check + Spec 123 G0-G9 scorecard + Spec 124 Rules 1-13 policy matrix, wired into husky pre-commit/pre-push",
+      "status": "BUILT",
+      "evidence": "scripts/analysis/step-validate.mjs (scoreG0..scoreG9 lines 908-920, POLICY COVERAGE MATRIX line 929/1038, self-tests good/bad fixtures); commit 179ee159",
+      "owner": {
+        "kind": "wf",
+        "ref": "R-R, landed"
+      },
+      "gate": {
+        "kind": "nice_to_have",
+        "blocks": []
+      },
+      "last_reviewed": "2026-08-29"
+    },
+    {
+      "id": "VAL-7",
+      "spec": "121 §6.4",
+      "title": "stopping rule: saturation + gate + time-box",
+      "promised": "2 consecutive assessment passes with 0 new findings (saturation) + gate >=14/17 + time-box <=30% of estimated budget",
+      "status": "NOT_STARTED",
+      "evidence": "grep for 'saturation'/time-box logic in step-validate.mjs and scripts/violations/ returns nothing; only the gate-score half is computed",
+      "owner": {
+        "kind": "followup",
+        "ref": "review_followups.md (2026-08-29 programme backlog filing)"
+      },
+      "gate": {
+        "kind": "nice_to_have",
+        "blocks": []
+      },
+      "last_reviewed": "2026-08-29"
+    },
+    {
+      "id": "VAL-8",
+      "spec": "121 §7.3",
+      "title": "method_version stamp + MAJOR-bump re-audit",
+      "promised": "method_version stamped on the assessment method; a MAJOR version bump automatically queues affected steps for re-audit, by name",
+      "status": "NOT_STARTED",
+      "evidence": "zero hits for method_version across scripts/ and docs/ outside spec prose",
+      "owner": {
+        "kind": "followup",
+        "ref": "review_followups.md (2026-08-29 programme backlog filing)"
+      },
+      "gate": {
+        "kind": "nice_to_have",
+        "blocks": []
+      },
+      "last_reviewed": "2026-08-29"
+    },
+    {
+      "id": "STA-1",
+      "spec": "120 §6",
+      "title": "4 new state tables",
+      "promised": "4 new tables at migrations 245-248: pipeline_intervals, published_batch, step_error, step_quarantine",
+      "status": "NOT_STARTED",
+      "evidence": "migrations/ 240-245 exist, but 245 is parcels_centroid_geom_invalidation.sql (pilot 6's unrelated fix); 0 hits for pipeline_intervals/published_batch/step_error/step_quarantine in any migrations/*.sql",
+      "owner": {
+        "kind": "wf",
+        "ref": "wf: programme-STA-1"
+      },
+      "gate": {
+        "kind": "batching_prereq",
+        "blocks": [
+          "batching"
+        ]
+      },
+      "last_reviewed": "2026-08-29"
+    },
+    {
+      "id": "STA-2",
+      "spec": "120 §6b",
+      "title": "reset generated per archetype",
+      "promised": "reset generated per archetype (a library mechanism that produces reset SQL from outputs/recovery.reset)",
+      "status": "NOT_STARTED",
+      "evidence": "no reset-SQL generator function anywhere in scripts/lib/step/index.js or write.js; recovery.reset is a declared field only, never derived",
+      "owner": {
+        "kind": "wf",
+        "ref": "wf: programme-STA-2"
+      },
+      "gate": {
+        "kind": "cutover_prereq",
+        "blocks": [
+          "refresh_snapshot"
+        ]
+      },
+      "last_reviewed": "2026-08-29"
+    },
+    {
+      "id": "STA-3",
+      "spec": "120 §6b",
+      "title": "3 destructive-reset guards",
+      "promised": "3 destructive-reset guards (dry-run default, explicit target confirmation, one-txn magnitude+empty-source guard)",
+      "status": "NOT_STARTED",
+      "evidence": "none of the 3 guards found in scripts/lib/step/write.js or any reset CLI entry point",
+      "owner": {
+        "kind": "wf",
+        "ref": "wf: programme-STA-2"
+      },
+      "gate": {
+        "kind": "cutover_prereq",
+        "blocks": [
+          "refresh_snapshot"
+        ]
+      },
+      "last_reviewed": "2026-08-29"
+    },
+    {
+      "id": "STA-4",
+      "spec": "120 §6c",
+      "title": "admin surface: check-list-as-data etc.",
+      "promised": "check-list-as-data, crashed distinct from failed, unpublished-table visibility, skip-reason counts, declaration-tier badge, one-click reconcile w/ dry-run",
+      "status": "PARTIAL",
+      "evidence": "GlobalConfigCard.tsx / FreshnessTimeline.tsx / FunnelPanels.tsx are pre-existing pieces; no new admin surface found built specifically for the C1 conversion (no declaration-tier badge or reconcile-with-dry-run action)",
+      "owner": {
+        "kind": "followup",
+        "ref": "review_followups.md (2026-08-29 programme backlog filing)"
+      },
+      "gate": {
+        "kind": "nice_to_have",
+        "blocks": []
+      },
+      "last_reviewed": "2026-08-29"
+    },
+    {
+      "id": "PRG-1",
+      "spec": "122 R3",
+      "title": "clean cloud chain_sources run gates C1",
+      "promised": "only C1 (first conversion) is gated on a clean cloud chain_sources run, not S1",
+      "status": "PARTIAL",
+      "evidence": "status of the green-cloud-run gate unverified this session - requires GH Actions dashboard access, out of repo-grep scope",
+      "owner": {
+        "kind": "followup",
+        "ref": "review_followups.md (2026-08-29 programme backlog filing)"
+      },
+      "gate": {
+        "kind": "nice_to_have",
+        "blocks": []
+      },
+      "last_reviewed": "2026-08-29"
+    },
+    {
+      "id": "PRG-2",
+      "spec": "122 R4",
+      "title": "S2 is a vertical slice, not a monolith",
+      "promised": "build only what pilot 1 needs, grow pilot-by-pilot",
+      "status": "BUILT",
+      "evidence": "scripts/lib/step/index.js header comment documents wave-by-wave growth (INGESTOR/LINK-MATCHER/MATERIALIZER/BACKFILL waves)",
+      "owner": {
+        "kind": "wf",
+        "ref": "ongoing"
+      },
+      "gate": {
+        "kind": "nice_to_have",
+        "blocks": []
+      },
+      "last_reviewed": "2026-08-29"
+    },
+    {
+      "id": "PRG-3",
+      "spec": "122 §7.2",
+      "title": "pilot order rulings",
+      "promised": "pilot order rulings (1-6 confirmed via git log); 7=RECORDER, 8=ENRICHER 'goes LAST'",
+      "status": "PARTIAL",
+      "evidence": "ruled+executed through pilot 6 (git log, HEAD d9057a54); no .cursor/pilot7_*/pilot8_* active-task file yet",
+      "owner": {
+        "kind": "pilot",
+        "ref": "pilot 6 cutover, d9057a54"
+      },
+      "gate": {
+        "kind": "batching_prereq",
+        "blocks": [
+          "batching"
+        ]
+      },
+      "last_reviewed": "2026-08-29"
+    },
+    {
+      "id": "PRG-4",
+      "spec": "122a §12.2",
+      "title": "6 missing P0 categories adjudicated",
+      "promised": "6 missing P0 categories go through categories-vs-fields adjudication",
+      "status": "PARTIAL",
+      "evidence": "'terminals' landed as the 18th category (R6); acquisition/maintenance/plan_shape/source_key_policy/guards.requires.on_missing not adjudicated into fields or categories by name in step.schema.json's 18 required categories",
+      "owner": {
+        "kind": "followup",
+        "ref": "review_followups.md (2026-08-29 programme backlog filing)"
+      },
+      "gate": {
+        "kind": "nice_to_have",
+        "blocks": []
+      },
+      "last_reviewed": "2026-08-29"
+    },
+    {
+      "id": "PRG-5",
+      "spec": "122a §B2",
+      "title": "54 orphan claims triaged in batches",
+      "promised": "54 orphan claims triaged in batches, pilot-archetype-touching first",
+      "status": "PARTIAL",
+      "evidence": "node scripts/violations/map-categories.mjs run 2026-08-28: 50 orphans remain (RUNNER 48, sharing 2, COMPUTE 1, METHOD 3)",
+      "owner": {
+        "kind": "followup",
+        "ref": "R5, ongoing"
+      },
+      "gate": {
+        "kind": "nice_to_have",
+        "blocks": []
+      },
+      "last_reviewed": "2026-08-29"
+    },
+    {
+      "id": "PRG-6",
+      "spec": "123 §6 G7",
+      "title": "mutation testing replaced by both-directions red-first locks",
+      "promised": "Stryker scoped to src/features/leads/lib/, 3 files, not a gate; a bounded mutation-spike over scripts/lib/compute/** filed as a followup",
+      "status": "BUILT",
+      "evidence": "stryker.config.mjs mutate array (src/features/leads/lib/cost-model.ts + distance.ts + record-lead-view.ts); confirmed NOT wired into pre-commit; the spike itself remains a filed followup",
+      "owner": {
+        "kind": "followup",
+        "ref": "review_followups.md S6b entry (2026-08-25 ruling)"
+      },
+      "gate": {
+        "kind": "nice_to_have",
+        "blocks": []
+      },
+      "last_reviewed": "2026-08-29"
+    },
+    {
+      "id": "PRG-7",
+      "spec": "122 R-D",
+      "title": "assert_schema gains declared_logic_variables_present",
+      "promised": "apply-logic-variables.js becomes a declared deploy-path step",
+      "status": "BUILT",
+      "evidence": "scripts/seeds/apply-logic-variables.js exists; pilot 6 commit history confirms live exercise (0/428 newly inserted, 448 total rows)",
+      "owner": {
+        "kind": "pilot",
+        "ref": "R-D, exercised every pilot since 4"
+      },
+      "gate": {
+        "kind": "nice_to_have",
+        "blocks": []
+      },
+      "last_reviewed": "2026-08-29"
+    },
+    {
+      "id": "PRG-8",
+      "spec": "122 R-A",
+      "title": "config.retired[] declaration mechanism",
+      "promised": "retired INTERSECT logic_variables = empty",
+      "status": "BUILT",
+      "evidence": "link_massing_grid_degrees retirement is the worked example in Spec 122 R-A; pattern reused pilots 4/5/6 - scripts/link-massing.descriptor.json",
+      "owner": {
+        "kind": "pilot",
+        "ref": "R-A, pilot 3+"
+      },
+      "gate": {
+        "kind": "nice_to_have",
+        "blocks": []
+      },
+      "last_reviewed": "2026-08-29"
+    },
+    {
+      "id": "PRG-9",
+      "spec": "122 V7",
+      "title": "grandfathered.json rules[] array",
+      "promised": "predicate-spanning bans (no_retraction), keyed by rule id not path",
+      "status": "BUILT",
+      "evidence": "scripts/steps/_schema/grandfathered.json contains link_massing + link_parcel_addresses entries + fixture_no_retraction_allowed",
+      "owner": {
+        "kind": "pilot",
+        "ref": "V7, pilots 3/5"
+      },
+      "gate": {
+        "kind": "nice_to_have",
+        "blocks": []
+      },
+      "last_reviewed": "2026-08-29"
+    },
+    {
+      "id": "PRG-10",
+      "spec": "122 §8.2",
+      "title": "freeze after the eighth - no formal batching mechanism (repeat of STD-8)",
+      "promised": "no formal batching mechanism",
+      "status": "NOT_STARTED",
+      "evidence": "same as STD-8 - the inventory's own §F duplicate of the same finding",
+      "owner": {
+        "kind": "wf",
+        "ref": "wf: programme-STD-8"
+      },
+      "gate": {
+        "kind": "batching_prereq",
+        "blocks": [
+          "batching"
+        ]
+      },
+      "last_reviewed": "2026-08-29"
+    },
+    {
+      "id": "PRG-11",
+      "spec": "123 §4.8",
+      "title": "Two CI holes closed",
+      "promised": "no workflow runs the main vitest suite; db-tests.yml has no scripts/** path filter",
+      "status": "BUILT",
+      "evidence": ".github/workflows/test.yml (hole 1) + db-tests.yml paths: includes scripts/** (hole 2); commits 1996aed8/05d6bbd2/d25c0306/054884c6/379e1722",
+      "owner": {
+        "kind": "wf",
+        "ref": "P0c, landed pre-session"
+      },
+      "gate": {
+        "kind": "nice_to_have",
+        "blocks": []
+      },
+      "last_reviewed": "2026-08-29"
+    },
+    {
+      "id": "G0",
+      "spec": "123 §6",
+      "title": "Gate G0 - Boundary freeze",
+      "promised": "owner-spec assertion first",
+      "status": "BUILT",
+      "evidence": "scripts/analysis/step-validate.mjs:908 scoreG0 reads the assessment report",
+      "owner": {
+        "kind": "wf",
+        "ref": "R-R, step:validate"
+      },
+      "gate": {
+        "kind": "nice_to_have",
+        "blocks": []
+      },
+      "last_reviewed": "2026-08-29"
+    },
+    {
+      "id": "G1",
+      "spec": "123 §6",
+      "title": "Gate G1 - Archaeology / Intent Ledger",
+      "promised": "100% dispositioned, git log -S/blame per non-obvious constant",
+      "status": "PARTIAL",
+      "evidence": "step-validate.mjs:795-799 scoreG1 checks for a PH-3 section with >=2 commit-SHA-looking tokens as a proxy; does not verify dispositions are exhaustive or correct",
+      "owner": {
+        "kind": "followup",
+        "ref": "review_followups.md (2026-08-29 programme backlog filing)"
+      },
+      "gate": {
+        "kind": "nice_to_have",
+        "blocks": []
+      },
+      "last_reviewed": "2026-08-29"
+    },
+    {
+      "id": "G2",
+      "spec": "123 §6",
+      "title": "Gate G2 - Structure, churn x complexity plot",
+      "promised": "churn x complexity plot, top-right quadrant named",
+      "status": "PARTIAL",
+      "evidence": "step-validate.mjs:800-804 scoreG2 checks for the literal string ASSESSMENT-INCOMPLETE, not an actual churn x complexity plot; a report that never writes that string returns a vacuous 1/1 pass. Owned S6b (review_followups.md:2994), not yet executed",
+      "owner": {
+        "kind": "followup",
+        "ref": "review_followups.md:2994 (S6b)"
+      },
+      "gate": {
+        "kind": "nice_to_have",
+        "blocks": []
+      },
+      "last_reviewed": "2026-08-29"
+    },
+    {
+      "id": "G3-G5",
+      "spec": "123 §6",
+      "title": "Gates G3-G5 - Golden master, Differential, Cutover",
+      "promised": "per-commit gates",
+      "status": "BUILT",
+      "evidence": "scripts/analysis/step-validate.mjs:910-913 scoreG3..scoreG5",
+      "owner": {
+        "kind": "wf",
+        "ref": "R-R, step:validate"
+      },
+      "gate": {
+        "kind": "nice_to_have",
+        "blocks": []
+      },
+      "last_reviewed": "2026-08-29"
+    },
+    {
+      "id": "G6",
+      "spec": "123 §6",
+      "title": "Gate G6 - Behaviour classification",
+      "promised": "closed disposition vocabulary, no bare INCIDENTAL",
+      "status": "BUILT",
+      "evidence": "scripts/analysis/step-validate.mjs:914; exercised in pilot 6 commit message (all CC-D* rows CLOSED/PIN)",
+      "owner": {
+        "kind": "wf",
+        "ref": "R-R, step:validate"
+      },
+      "gate": {
+        "kind": "nice_to_have",
+        "blocks": []
+      },
+      "last_reviewed": "2026-08-29"
+    },
+    {
+      "id": "G7",
+      "spec": "123 §6",
+      "title": "Gate G7 - Test adequacy",
+      "promised": "both-directions red-first locks, not mutation->=80%",
+      "status": "BUILT",
+      "evidence": "scripts/analysis/step-validate.mjs:915; see PRG-6",
+      "owner": {
+        "kind": "wf",
+        "ref": "R-R, step:validate"
+      },
+      "gate": {
+        "kind": "nice_to_have",
+        "blocks": []
+      },
+      "last_reviewed": "2026-08-29"
+    },
+    {
+      "id": "G8",
+      "spec": "123 §6",
+      "title": "Gate G8 - Golden differential",
+      "promised": "fingerprint-matched captures, zero unexplained diffs",
+      "status": "BUILT",
+      "evidence": "scripts/analysis/capture-step-golden.js + src/tests/golden-fingerprint.infra.test.ts (R-C)",
+      "owner": {
+        "kind": "wf",
+        "ref": "R-R, step:validate"
+      },
+      "gate": {
+        "kind": "nice_to_have",
+        "blocks": []
+      },
+      "last_reviewed": "2026-08-29"
+    },
+    {
+      "id": "G9",
+      "spec": "123 §6",
+      "title": "Gate G9 - Reflection",
+      "promised": "low-confidence + recurring/standard-shaping tables, required after every pilot cutover",
+      "status": "BUILT",
+      "evidence": "scripts/analysis/step-validate.mjs:886,920 scoreG9 discriminates good/bad fixtures at construction time; pilot 6's own Reflection cited THREE occurrences of the fork-over-share pattern, feeding LG-21's deferral",
+      "owner": {
+        "kind": "wf",
+        "ref": "R-R, step:validate"
+      },
+      "gate": {
+        "kind": "nice_to_have",
+        "blocks": []
+      },
+      "last_reviewed": "2026-08-29"
+    },
+    {
+      "id": "CLAIM-1",
+      "spec": "123 §5.2",
+      "title": "claim register - plan-claims.mjs",
+      "promised": "test manifest becomes the claim register (R2)",
+      "status": "BUILT",
+      "evidence": "docs/reports/generated/123-claim-plan.md + 123-per-step-checklist.md; scripts/violations/plan-claims.mjs exists",
+      "owner": {
+        "kind": "wf",
+        "ref": "pre-existing infra"
+      },
+      "gate": {
+        "kind": "nice_to_have",
+        "blocks": []
+      },
+      "last_reviewed": "2026-08-29"
+    },
+    {
+      "id": "CLAIM-2",
+      "spec": "123 §5.2",
+      "title": "spec:tests harvest",
+      "promised": "harvests tests -> specs",
+      "status": "BUILT",
+      "evidence": "package.json spec:tests -> scripts/harvest-tests.mjs",
+      "owner": {
+        "kind": "wf",
+        "ref": "pre-existing infra"
+      },
+      "gate": {
+        "kind": "nice_to_have",
+        "blocks": []
+      },
+      "last_reviewed": "2026-08-29"
+    },
+    {
+      "id": "POLICY-MATRIX",
+      "spec": "124 §2 Rule 13",
+      "title": "Spec 124 policy coverage matrix, per-step, generated",
+      "promised": "generated, not hand-typed",
+      "status": "BUILT",
+      "evidence": "scripts/analysis/step-validate.mjs:929/1038, header comment: '(vi) prints the Spec 124 POLICY COVERAGE MATRIX (Rules 1-13) for this step'",
+      "owner": {
+        "kind": "wf",
+        "ref": "R-R, step:validate"
+      },
+      "gate": {
+        "kind": "nice_to_have",
+        "blocks": []
+      },
+      "last_reviewed": "2026-08-29"
+    },
+    {
+      "id": "WD-1",
+      "spec": "122 §1.4",
+      "title": "class-enum-without-write.js-branch lock",
+      "promised": "the 13-class write_discipline.class enum (step.schema.json) names the write MECHANIC; every enum value must have an implemented, exercised write.js branch/executor, not merely be declarable",
+      "status": "NOT_STARTED",
+      "evidence": "pilot 6 Fold C B-1 found class E (write_once_backfill) genuinely UNIMPLEMENTED in write.js's SET_BASED_CLASSES before LG-20 built it, scoped to compute_centroids only; the other 12 classes have never been cross-audited against write.js's dispatch the same systematic way - the next PIN-worthy gap of this exact shape is currently invisible until a pilot happens to need that class",
+      "owner": {
+        "kind": "wf",
+        "ref": "wf: programme-WD1"
+      },
+      "gate": {
+        "kind": "batching_prereq",
+        "blocks": [
+          "batching"
+        ]
+      },
+      "last_reviewed": "2026-08-29"
+    },
+    {
+      "id": "RT-CC3",
+      "spec": "122 §6.4a",
+      "title": "compute_centroids drift + link_parcels Tier-3 join exposure - corrected measurement",
+      "promised": "CC-D2/CC-D3 (defect-ledger.md, both PIN): 292,587/486,530 stored centroids differ from a fresh recompute by >1m; a HIGH followup against link-parcels.js's Tier-3 nearest-centroid join was reported 'already filed' in the pilot 6 assessment report but never actually landed in review_followups.md until this commit",
+      "status": "PARTIAL",
+      "evidence": "docs/reports/defect-ledger.md CC-D2/CC-D3 rows (PIN); docs/reports/2026-08-29-pilot6-compute-centroids-assessment.md lines 138-155 (R-1/CC-D2, the 3,130/276 estimate over 494 spatial-tier links); review_followups.md HIGH entry filed 2026-08-29 supersedes that estimate with a fuller measurement over the full spatial-tier population: 6,808/17,500 (38.9%) spatial-tier permit_parcels links would resolve to a different parcel under ST_PointOnSurface/containment vs. the current nearest-centroid join",
+      "owner": {
+        "kind": "followup",
+        "ref": "review_followups.md HIGH entry, filed 2026-08-29 (supersedes the pilot-6-report 276 figure)"
+      },
+      "gate": {
+        "kind": "nice_to_have",
+        "blocks": []
+      },
+      "last_reviewed": "2026-08-29"
+    },
+    {
+      "id": "LMD-RH",
+      "spec": "124 §2 Rule 10 addendum",
+      "title": "LM-D6/LM-D11 R-H WARN promise not yet reflected in the ledger",
+      "promised": "R-H (2026-08-28): LM-D6/LM-D11 re-dispositioned OPEN -> WARN + declared retighten condition, carried to pilot 4",
+      "status": "PARTIAL",
+      "evidence": "review_followups.md R-R backfill entry (2026-08-29): 'link_massing pilot 3 ... G6=0 ... 4 of 16 LM-D* rows - LM-D4, LM-D6, LM-D11, LM-D14 - not CLOSED/PIN' - the ruling was made but the ledger rows were never updated to the closed vocabulary",
+      "owner": {
+        "kind": "followup",
+        "ref": "review_followups.md R-R backfill entry, 2026-08-29"
+      },
+      "gate": {
+        "kind": "nice_to_have",
+        "blocks": []
+      },
+      "last_reviewed": "2026-08-29"
+    },
+    {
+      "id": "PROSE-G1P3",
+      "spec": "124 §2 Rule 10",
+      "title": "Rule 10 step-library scope caveat + P3 disk-I/O measurement are intentionally prose-only",
+      "promised": "step-validate.mjs's policy matrix prints Rule 10 PROSE-ONLY per step (a scope caveat, not a false enforced-green claim); P3 is a MEASUREMENT, never pass/fail ('visibility wins by default; the cost is stated')",
+      "status": "BUILT",
+      "evidence": "scripts/analysis/step-validate.mjs header POLICY-COVERAGE MAP, Rule 10 entry; measureP3Footprint (:720-756) docstring states the measurement-not-gate posture explicitly",
+      "owner": {
+        "kind": "wf",
+        "ref": "step-validate.mjs, by design"
+      },
+      "gate": {
+        "kind": "nice_to_have",
+        "blocks": []
+      },
+      "last_reviewed": "2026-08-29"
+    },
+    {
+      "id": "ZWP-56",
+      "spec": "123 §6 G8",
+      "title": "the real (non-SKIP) write path is barely live-exercised for pilots 5 and 6",
+      "promised": "differential/golden captures should exercise the compute path, not only the SKIP/zero-work shape",
+      "status": "PARTIAL",
+      "evidence": "review_followups.md pilot 5 entry: 0 live SKIP-path rows under any slug since the B3 run-ledger gate landed, only a FORCE_FULL env var exercises the real write path; pilot 6 finding 3: 20 total pipeline_runs, only 1 (2026-03-10) did real work, 8 zero-work early-return runs since 2026-06-10 (Fold D correction from 7)",
+      "owner": {
+        "kind": "followup",
+        "ref": "review_followups.md pilot5/pilot6 entries, 2026-08-29"
+      },
+      "gate": {
+        "kind": "nice_to_have",
+        "blocks": []
+      },
+      "last_reviewed": "2026-08-29"
+    },
+    {
+      "id": "TCADB",
+      "spec": "124 §2",
+      "title": "database.assert_current_database is proven live once, not standing testcontainer-enforced",
+      "promised": "'the converted step REFUSES a wrong database' (database.assert_current_database, min_migration) - proven live once per step, not a standing CI-enforced testcontainer suite",
+      "status": "PARTIAL",
+      "evidence": "docs/reports/defect-ledger.md LW-D16 row (link_wsib); review_followups.md LOW runbook/Integration entry: 'the converted step REFUSES a wrong database ... where the old script silently ran against whatever pipeline.js's localhost/buildo default pointed at' - true today, but proven by one hand-run check per pilot rather than a standing testcontainer battery that would catch a future regression on ANY converted step",
+      "owner": {
+        "kind": "followup",
+        "ref": "review_followups.md LOW entry (LW-D16 class)"
+      },
+      "gate": {
+        "kind": "nice_to_have",
+        "blocks": []
+      },
+      "last_reviewed": "2026-08-29"
+    },
+    {
+      "id": "CLOUDPARITY",
+      "spec": "122 R-D",
+      "title": "cloud database must run apply-logic-variables.js before any cloud cutover",
+      "promised": "assert_schema's declared_logic_variables_present FAILs a chain naming the remedy 'node -r dotenv/config scripts/seeds/apply-logic-variables.js'; the cloud database has not been confirmed to have run it",
+      "status": "PARTIAL",
+      "evidence": "scripts/seeds/apply-logic-variables.js exists and runs locally (pilot 6: seeds applied locally 428->432, 448 total rows); no evidence found this session that it has been run against the cloud database - MEMORY resume note (2026-08-27): 'CLOUD must run scripts/seeds/apply-logic-variables.js before cutover'",
+      "owner": {
+        "kind": "followup",
+        "ref": "review_followups.md HIGH ops entry (filed 2026-08-27, peel 8c)"
+      },
+      "gate": {
+        "kind": "cutover_prereq",
+        "blocks": [
+          "cloud_deploy"
+        ]
+      },
+      "last_reviewed": "2026-08-29"
+    },
+    {
+      "id": "REGEXSC",
+      "spec": "124 §2 Rule 13",
+      "title": "step-validate.mjs's regex-brittle report-scraping is superseded in design by VAL-WF2's structured-artifact scorecard",
+      "promised": "a step validates itself from committed artifacts (Rule 13) - today the artifact is markdown prose parsed by regex (section()/splitTableRow()); the design direction is a structured (JSON) artifact scorecard, named as part of VAL-WF2",
+      "status": "SUPERSEDED",
+      "evidence": "scripts/analysis/step-validate.mjs section()/splitTableRow() (:756-780) regex-parse the assessment report's markdown tables/headings; VAL-WF2 (this seed) names the structured-artifact replacement as part of validator-v2's scope",
+      "owner": {
+        "kind": "none",
+        "ref": ""
+      },
+      "gate": {
+        "kind": "nice_to_have",
+        "blocks": []
+      },
+      "last_reviewed": "2026-08-29"
+    },
+    {
+      "id": "VAL-WF2",
+      "spec": "124 §2 Rule 13",
+      "title": "Validator v2 - a DATA-plausibility validator, distinct from the process scorecard",
+      "promised": "invariants bounds per Spec 30 §5's bound doctrine (threshold-derived, reachable, last-measured-value beside the bound); checks[].plausibility[] per Spec 79; seam checks on outputs.invalidates edges (closes LDG-2/LDG-7/VAL-3's concern); chain-end synthesis automation; a structured-artifact scorecard (replaces REGEXSC's regex report-scraping); Rule 13 reworded per this same commit's Spec 124 addendum: 'the validator validates DATA (Spec 79/120/30 §5); the scorecard validates process, from structured artifacts'",
+      "status": "NOT_STARTED",
+      "evidence": "no code implementing seam-validation (VAL-3) anywhere; step.schema.json's checks definition has no plausibility[] field; step-validate.mjs's scorecard artifact is markdown prose, not structured JSON",
+      "owner": {
+        "kind": "wf",
+        "ref": "wf: validator-v2"
+      },
+      "gate": {
+        "kind": "batching_prereq",
+        "blocks": [
+          "batching"
+        ]
+      },
+      "last_reviewed": "2026-08-29"
+    },
+    {
+      "id": "LG-21",
+      "spec": "122 §5.5",
+      "title": "runPhaseScaffold(descriptor, phaseBody) - shared phase-runner scaffold",
+      "promised": "the 4th duplication of the guards->prior->gate->pre_write->RUN_AT->post shape; fork-over-share deferred a 3rd time (pilot 3, pilot 5, pilot 6 Fold D: 'DEFERRED to a dedicated library WF after pilot 8, NOT shipped in this pilot')",
+      "status": "NOT_STARTED",
+      "evidence": "scripts/lib/step/index.js's runLinkPhase/runCascadePhase/runMaterializePhase/runBackfillPhase remain 4 independent fork implementations; pilot 6 active-task Fold D + R-F carried-steps section re-carry this explicitly as 'library WF, not a pilot item'",
+      "owner": {
+        "kind": "library-wf",
+        "ref": "post-pilot-8 library WF (LG-21 runPhaseScaffold)"
+      },
+      "gate": {
+        "kind": "nice_to_have",
+        "blocks": []
+      },
+      "last_reviewed": "2026-08-29"
+    }
+  ]
+}

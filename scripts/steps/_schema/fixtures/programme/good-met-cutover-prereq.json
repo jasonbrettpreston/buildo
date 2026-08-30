@@ -1,0 +1,17 @@
+{
+  "$comment": "GREEN canary fixture — src/tests/programme-backlog.infra.test.ts. Same shape as bad-unmet-cutover-prereq.json, differing by exactly one field (status: BUILT instead of NOT_STARTED), so a finding names the STATUS, not a fixture typo.",
+  "contract_version": 1,
+  "items": [
+    {
+      "id": "FIXTURE-GOOD-1",
+      "spec": "122 §10.3",
+      "title": "canary: a MET cutover_prereq blocking an already-converted slug — not a violation",
+      "promised": "this fixture exists only to prove checkCutoverPrereqs() stays clean when the item is BUILT",
+      "status": "BUILT",
+      "evidence": "fixture — scripts/steps/_schema/fixtures/programme/good-met-cutover-prereq.json (itself)",
+      "owner": { "kind": "wf", "ref": "wf: fixture" },
+      "gate": { "kind": "cutover_prereq", "blocks": ["compute_centroids"] },
+      "last_reviewed": "2026-08-29"
+    }
+  ]
+}

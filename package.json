@@ -32,6 +32,7 @@
     "ast-grep:leads": "bash scripts/hooks/ast-grep-leads.sh",
     "step-shape": "node scripts/hooks/check-step-shape.mjs",
     "step:validate": "node scripts/analysis/step-validate.mjs",
+    "programme-backlog": "node scripts/violations/generate-programme-backlog.mjs",
     "review:gemini": "node scripts/gemini-review.js",
     "review:deepseek": "node scripts/deepseek-review.js",
     "generate:script": "node scripts/generate-script.mjs",

@@ -237,6 +237,76 @@ function slugFor(manifest, relFile) {
   return found;
 }
 
+// ---------------------------------------------------------------------------
+// Programme backlog (R-T, 2026-08-29) — Spec 122 §10.3.
+// scripts/steps/_schema/programme-items.json is the cross-cutting items no
+// single pilot owns (batching prerequisites, per-slug cutover prerequisites,
+// nice-to-haves). This section is what makes that data ENFORCED rather than
+// merely generated: a cutover (a slug landing in converted.json) must not be
+// able to silently ignore a declared cutover_prereq item that names it.
+// ---------------------------------------------------------------------------
+// BUILDO_PROGRAMME_ITEMS_PATH is a TEST-ONLY override (same shape as
+// check-step-shape.mjs's BUILDO_COMPUTE_DIR) so the conformance suite can
+// point this at a fixture file and prove the cutover-prereq lock fires RED,
+// without importing this module (which unconditionally runs its own CLI
+// main() as a side effect of import — see the try{main()} at file end).
+const PROGRAMME_ITEMS_PATH = process.env.BUILDO_PROGRAMME_ITEMS_PATH
+  ? path.join(REPO_ROOT, process.env.BUILDO_PROGRAMME_ITEMS_PATH)
+  : path.join(REPO_ROOT, 'scripts/steps/_schema/programme-items.json');
+
+/** Every declared programme item, or [] if the file is genuinely absent (never for a partial/corrupt read — that throws). */
+function loadProgrammeItems() {
+  if (!existsSync(PROGRAMME_ITEMS_PATH)) return [];
+  const parsed = JSON.parse(readFileSync(PROGRAMME_ITEMS_PATH, 'utf8'));
+  return Array.isArray(parsed.items) ? parsed.items : [];
+}
+
+/** How many declared items block "batching" (Spec 122 §8.2 freeze-after-the-eighth). */
+function blocksBatchingCount(items) {
+  return items.filter((it) => it.gate?.blocks?.includes('batching')).length;
+}
+
+/**
+ * Every programme item whose gate.blocks names THIS slug directly — a
+ * cutover_prereq that names the step being validated. Deliberately does NOT
+ * fold in the "batching" (freeze-after-the-eighth) set: those items block
+ * the programme-wide freeze DECLARATION, not any one step's own cutover, so
+ * conflating them here would misleadingly report an already-shipped pilot
+ * (e.g. compute_centroids) as "blocked" by items that have nothing to do
+ * with its own conversion. The "batching" count is printed once, globally,
+ * by blocksBatchingCount — see main()'s top-of-run line. Exported so both
+ * the fast invariant below and src/tests/programme-backlog.infra.test.ts
+ * exercise the exact same predicate (never a re-implementation the test
+ * could drift from).
+ */
+export function blockingItemsFor(slug, items) {
+  return items.filter((it) => it.gate?.blocks?.includes(slug));
+}
+
+/**
+ * The cutover-prereq lock: for every slug already registered in
+ * converted.json, every cutover_prereq item that names it (by gate.blocks)
+ * must be status BUILT. A registered-but-still-blocked slug means a cutover
+ * commit landed while a declared precondition for it was left unmet — the
+ * exact "promise with no owner and no gate" failure this whole mechanism
+ * exists to catch. batching_prereq items are NOT checked here (they gate
+ * the programme-wide freeze declaration, not an individual slug's cutover —
+ * see STD-8/PRG-10) — only cutover_prereq.
+ */
+export function checkCutoverPrereqs(convertedSlugs, items) {
+  const violations = [];
+  for (const slug of convertedSlugs) {
+    for (const it of items) {
+      if (it.gate?.kind !== 'cutover_prereq') continue;
+      if (!it.gate.blocks?.includes(slug)) continue;
+      if (it.status !== 'BUILT') {
+        violations.push({ slug, id: it.id, status: it.status, title: it.title });
+      }
+    }
+  }
+  return violations;
+}
+
 /** The estate's initials convention (AS/LR/LM/LW/LPA) — one letter per underscore-separated word, uppercased. */
 function defectPrefixFor(slug) {
   return slug.split('_').map((w) => w[0].toUpperCase()).join('');
@@ -633,6 +703,21 @@ function fastInvariants(rows, converted, pending) {
     }
   }
   results.push({ id: 5, slug: '(registry)', pass: badCallSites.length === 0, detail: badCallSites.length ? `bad call sites: ${badCallSites.join(', ')}` : 'clean (0 it.fails( call sites outside a declared pending slug)' });
+
+  // 9. Programme backlog (R-T) — a converted slug may not carry an unmet
+  // cutover_prereq item naming it. Registry-scoped (one row for the whole
+  // fleet, mirrors items 4/5's shape) since a violation is a fleet-integrity
+  // fact, not a property of the ONE step currently being validated.
+  const programmeItems = loadProgrammeItems();
+  const cutoverViolations = checkCutoverPrereqs(converted.map((f) => slugFor(loadManifest(), f)), programmeItems);
+  results.push({
+    id: 9,
+    slug: '(registry)',
+    pass: cutoverViolations.length === 0,
+    detail: cutoverViolations.length
+      ? `unmet cutover_prereq blocking an already-converted slug: ${cutoverViolations.map((v) => `${v.slug} <- ${v.id} (${v.status})`).join('; ')}`
+      : `clean (0 converted slugs blocked by an unmet cutover_prereq item; blocks batching: ${blocksBatchingCount(programmeItems)})`,
+  });
 
   return results;
 }
@@ -1191,6 +1276,12 @@ function main() {
     return;
   }
 
+  // Programme backlog (R-T) — printed unconditionally, before any --staged
+  // early-return, so the hook fast path always surfaces it (a doc-only or
+  // non-pipeline commit still sees the freeze-readiness count).
+  const programmeItemsAll = loadProgrammeItems();
+  console.log(`[step-validate] programme: blocks batching: ${blocksBatchingCount(programmeItemsAll)} (scripts/steps/_schema/programme-items.json; npm run programme-backlog for the full table)`);
+
   const registry = buildRegistry();
   let targets;
   if (opts.staged) {
@@ -1230,6 +1321,12 @@ function main() {
 
     console.log(`\n\`\`\`\n[step-validate] ${row.slug} (${row.stage}) — ${sc.total}/${sc.maxTotal}, hard-stop=${sc.hardStop}\n\`\`\`\n`);
     console.log(block);
+
+    const blockingForRow = blockingItemsFor(row.slug, programmeItemsAll);
+    if (blockingForRow.length) {
+      console.log(`[step-validate] programme: ${row.slug} is named by ${blockingForRow.length} blocking item(s):`);
+      for (const b of blockingForRow) console.log(`  ${b.id} (${b.gate.kind}, ${b.status}): ${b.title}`);
+    }
 
     if (opts.write) {
       if (!row.report) {

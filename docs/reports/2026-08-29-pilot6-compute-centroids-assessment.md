@@ -1240,6 +1240,7 @@ Re-executed every query/grep Fold C's Integration and Reality-Check passes relie
 | 8 | compute_centroids | PASS | G-4: 2 declared, 2 verdict-affecting, 0 violate on_invalid:fail with no deviations[] cover |
 | 4 | (registry) | PASS | overlap: none |
 | 5 | (registry) | PASS | clean (0 it.fails( call sites outside a declared pending slug) |
+| 9 | (registry) | PASS | clean (0 converted slugs blocked by an unmet cutover_prereq item; blocks batching: 8) |
 
 ### Captures (item iv)
 - missing invocations: none
@@ -1247,14 +1248,14 @@ Re-executed every query/grep Fold C's Integration and Reality-Check passes relie
 - compare ran: true · diffs found: 41 · unexplained: 0
 
 ### Test suite (item iii)
-- 641/657 passed (suite success=true)
+- SKIPPED or failed to run: --fast: vitest spawn skipped
 
 ### Policy coverage matrix (item vi) — Spec 124 Rules 1-13
 
 | Rule | Name | Status | Note |
 |---|---|---|---|
 | 1 | Nothing hidden | enforced-green | G-1 schema-baseline: schema-baseline clean |
-| 2 | Compute is just compute | enforced-green |  |
+| 2 | Compute is just compute | enforced-green | §5.5 describe not scoped to this step in the vitest run |
 | 3 | Tunables externalized | enforced-green | G-4: 2 declared, 2 verdict-affecting, 0 violate on_invalid:fail with no deviations[] cover |
 | 4 | Compute rule declared | enforced-red | G-2: 3 preserved-in-compute row(s), 3 with no why/notes.json/checks[] grounding |
 | 5 | checks >= 1 | enforced-green |  |

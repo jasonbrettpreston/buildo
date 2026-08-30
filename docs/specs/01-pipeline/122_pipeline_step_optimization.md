@@ -3,11 +3,15 @@
 > ## ✅ Status: ACTIVE — ratified by operator 2026-08-29 after pilots 1–5
 >
 > Promoted from the prior `⛔ UNRATIFIED DRAFT — NOT REGISTERED` banner by explicit operator ruling (2026-08-29, R-R,
-> the same commit that ratifies Spec 123): five conversion pilots (`assert_schema`, `load_ravines`, `link_massing`,
-> `link_wsib`, `link_parcel_addresses`) have shipped against this spec's shape, and the operator's own words —
-> *"it should be standard and enforced"* — are the ratification. Registered in `docs/specs/00_system_map.md`
+> the same commit that ratifies Spec 123): five conversion pilots had shipped at ratification time, and the operator's
+> own words — *"it should be standard and enforced"* — are the ratification. Registered in `docs/specs/00_system_map.md`
 > (confirmed present since `d455383b`). The Specs 120/121 false-ratification incident this banner used to guard
-> against is now closed by measured evidence (5 shipped pilots), not merely asserted.
+> against is now closed by measured evidence (shipped pilots), not merely asserted.
+> **Updated 2026-08-29 (R-T, this same commit) — this banner was itself found stale one pilot later:** the count is
+> now **six** — `assert_schema`, `load_ravines`, `link_massing`, `link_wsib`, `link_parcel_addresses`,
+> `compute_centroids`. §10.3 below is the mechanism (`scripts/steps/_schema/programme-items.json`, generated) that
+> exists precisely so a banner like this one is regenerated, not hand-updated and left to rot the next time a pilot
+> lands.
 
 **Status:** ACTIVE · **Scope:** the `sources` chain's 27 steps first, then the estate's 64
 **Relationship to Spec 120:** 122 **keeps Spec 120's design and replaces its packaging.** Where they conflict on *design*, 120 governs. Where they conflict on *where code lives*, 122 governs.
@@ -86,6 +90,7 @@ Policy frame: §1.2a "nothing hidden" + McDonald's standardization — declare e
 | **R-N** | **T2 link-rate denominator is the entity population, not the source-row count.** `link_rate_warn` moved from `wsib_registry` ROWS to `entities.is_wsib_registered=true`/total entities — a single magnet's rows no longer inflate a row-based ratio; the floor value is unchanged, now validated against measured entity-level truth. **Full text: Spec 124 §5** | Rule 3 worked example |
 | **R-O** | **A matcher's accuracy is a sampled precision/recall number against a before-image, never a predicate's self-agreement or a link rate.** `tier3_token_overlap_pass_pct` at 100.00% coexisted with a 60-row sample measuring up to 46.7% genuine precision (pilot 4 §8d) — resolved by hardening the declared stopword/token mechanism, not a new bypass tunable. **Full text: Spec 124 §5** | Rule 10; MATCHER accuracy doctrine |
 | **R-R** | **Validation is integrated and enforced, never a separate track.** `scripts/analysis/step-validate.mjs` (`npm run step:validate`) is the ONE command that runs validateDescriptor, the shape gate, the per-step vitest suites, the golden-capture/fingerprint check, and computes the Spec 123 §6 G0–G9 scorecard plus the Spec 124 policy coverage matrix — from artifacts, never hand-typed. Wired into `.husky/pre-commit` (`--fast`) and `.husky/pre-push`, asserted by `step-conformance.infra.test.ts` (a stale or missing scorecard block is red), and is Spec 124's new **Rule 13**. **Full text: Spec 124 §5** | Spec 123 §6/§7; Spec 124 §2 Rule 13 |
+| **R-T** | **Cross-cutting programme promises are declared data, generated, and gated — never re-discovered by a manually-commissioned inventory.** Six pilots shipped their own archetype's contract, but promises owned by no single pilot (the eight-archetype coverage claim, the four Spec 120 §6 state tables, "freeze after the eighth" itself) had no owner and no gate — found only by a full grounding pass, the exact "found by noticing" failure class this programme exists to retire elsewhere. `scripts/steps/_schema/programme-items.json` (schema: `programme-items.schema.json`) declares every such item — `status`, `evidence`, `owner`, and a `gate` of `batching_prereq` \| `cutover_prereq` \| `nice_to_have` — generated to `docs/reports/generated/122-programme-backlog.md` (`npm run programme-backlog`), drift-guarded by `src/tests/programme-backlog.infra.test.ts`, and enforced: a slug already in `converted.json` may not carry an unmet `cutover_prereq` item naming it (proven both directions with a fixture), and `step:validate`'s hook fast path prints the live "blocks batching: N" count on every run. **Full text: Spec 122 §10.3; Spec 124 §5, §8, §9** | §8.2 (freeze mechanism); §10 (sequencing) |
 
 ---
 
@@ -1091,13 +1096,15 @@ After commit 9 (cutover) and the WF6 output panel, the pilot's assessment report
 | **ENRICHER** | 6 | `enrich_parcels` | **2,153 lines**, 5 passes, scope-defer, the clock-relative gate at `:1085` | J |
 
 > **Pilot ORDER — operator rulings (recorded as made; neither this spec nor Spec 123 pinned an order beyond 1→2→3).** 1 `assert_schema` (ASSERT, landed) · 2 `load_ravines` (INGESTOR, landed) · 3 `link_massing` (LINK, cutover commit 9, 2026-08-28) · **4 `link_wsib` (MATCHER) — ruled 2026-08-28.** Why 4: the nearest sibling to LINK (reuses `runLinkPhase`, ordered `writes[]`, `retract_when`, the tri-state gate), so it tests whether pilot 3's library growth GENERALIZES before anything new is built; it also carries the run-ledger gate, the A1/A2 config-hoist fence and a second dual-chain invocation divergence. Pilots 5–8 are ruled one at a time at each cutover; `enrich_parcels` (ENRICHER) goes LAST, when the library is most mature.
-> 5 `link_parcel_addresses` (MATERIALIZER) — ruled 2026-08-29.
+> 5 `link_parcel_addresses` (MATERIALIZER) — ruled 2026-08-29. · 6 `compute_centroids` (BACKFILL) — ruled 2026-08-29, cutover `d9057a54`.
 
 > **Footnote — R-A..R-F (2026-08-28, post pilot 3 cutover).** From pilot 4 (`link_wsib`) onward: descriptors declare `config.retired[]` for any retired tunable (R-A) and `recovery.interrupted` for any `retract_when: full_only`/`retract: "all"` write (R-B, mechanism lands this pilot); golden captures are re-stamped with `source_fingerprint` and matched by recorded fields, not filename (R-C); `assert_schema` gains `declared_logic_variables_present` where it runs (R-D); Gate G7 drops the mutation-≥80% clause for a both-directions red-first lock, and G9 Reflection is required after cutover (R-E, R-F — Spec 123 §6).
 
 ⚠️ **Coverage caveat, stated because it is not obvious:** eight archetypes do **not** cover the 13 write classes. `INGESTOR` alone spans A, B and C; `ENRICHER` spans G, H, I, J and K. **That is acceptable** — the classes are covered by the `write_discipline.class` **enum being ported from the measured taxonomy** (§3.0b), not by converting one of each. The archetype pilot validates the *required-field profile*; the enum validates the *write shapes*.
 
 **Freeze the template after the eighth, never the first** — and if any of the eight forces a contract change, the count is not the eight, it is however many it takes.
+
+**⚠️ The freeze mechanism itself, named (R-T, 2026-08-29).** This sentence had no artifact behind it for six pilots — the nearest thing was a prose deferral (LG-21's "a dedicated library WF after pilot 8"). The mechanism now: the template may honestly freeze only once `scripts/steps/_schema/programme-items.json`'s **`batching_prereq`** set is empty — every item there names a promise that gates the 8-archetype coverage claim itself (e.g. STD-7/LC-1: RECORDER/ENRICHER dispatch paths remain unexercised until pilots 7/8 land; STD-8/PRG-10: this very freeze needs the generated report to read zero before it can be declared true, not asserted). `npm run programme-backlog` prints the live count; §10.3 below is the full mechanism.
 
 ### 8.3 Kill criteria — pre-declared, and amended
 
@@ -1157,6 +1164,20 @@ Two entry criteria belong to the architecture, not the plan, and they bind where
 
 **A `P` token without its namespace is ambiguous. Do not write one.**
 
+### 10.3 Programme backlog (generated) — R-T, 2026-08-29
+
+**Why this exists.** Every one of pilots 1–6's own nine-commit sequences (Spec 123 §7) is gated, scored, and generated. But a battery of promises this spec and Spec 120/123/124 make are cross-cutting — owned by no single pilot's plan — and had drifted silently: a stale "five pilots" banner (§ top of file, corrected the same commit as this section), 50 residual orphan claims, three of four Spec 120 §6 state tables never scheduled, "freeze after the eighth" itself with no artifact behind it. All of these were found only by a full grounding pass commissioned for the purpose — the exact "found by noticing, not by a tool" failure mode `scripts/violations/map-categories.mjs` already exists to retire for per-claim category coverage (§7.1). This section is that same fix, one level up.
+
+**The mechanism.**
+
+1. `scripts/steps/_schema/programme-items.json` (schema: `scripts/steps/_schema/programme-items.schema.json`) declares every cross-cutting item: `id`, owning `spec` §, `title`, `promised` text, `status` (`NOT_STARTED` \| `PARTIAL` \| `BUILT` \| `SUPERSEDED`), `evidence` (a commit, a `file:line`, or a ruling id — required for every status, including `NOT_STARTED`, where it is the grep/measurement that PROVES the absence), `owner` (`{kind: pilot|wf|followup|library-wf|none, ref}` — `none` legal only for `SUPERSEDED`), and `gate` (`{kind: batching_prereq|cutover_prereq|nice_to_have, blocks: [...]}`).
+2. `npm run programme-backlog` (`scripts/violations/generate-programme-backlog.mjs`) renders `docs/reports/generated/122-programme-backlog.md` — one table per gate kind, counts by status, and the live **"blocks batching: N"** count. Never hand-edited; `src/tests/programme-backlog.infra.test.ts` asserts a fresh run is byte-identical to the committed file (drift is red, mirroring `data-lineage-map.infra.test.ts`'s own control-case pattern, LDG-1).
+3. **Enforcement, not just generation.** `src/tests/programme-backlog.infra.test.ts` asserts: (a) the file validates against its schema; (b) no `NOT_STARTED`/`PARTIAL` item has `owner.kind: "none"`; (c) every `BUILT` item's evidence resolves to a real commit or file:line; (d) `scripts/analysis/step-validate.mjs`'s `checkCutoverPrereqs` — a slug already registered in `converted.json` may not carry an unmet `cutover_prereq` item naming it — fires RED on a fixture (`scripts/steps/_schema/fixtures/programme/bad-unmet-cutover-prereq.json`) and stays clean on the real, committed data; both directions proven, per Spec 121 §12b.6's "an untested checker proves nothing."
+4. `step:validate`'s hook fast path (`.husky/pre-commit`, `.husky/pre-push`) prints `[step-validate] programme: blocks batching: N` on every invocation — unconditionally, before any `--staged`-empty early return — and, per validated step, any `cutover_prereq` item naming that step's own slug directly.
+5. **The recurrence trigger** (mirrors R-F's own per-pilot mechanism, one level up): a pilot's `§R Reflection` "RECURRING/STANDARD-SHAPING" table entry that names no single pilot as owner is a candidate `programme-items.json` addition, added in the same commit that writes the Reflection — never left to accumulate into the next manually-commissioned inventory.
+
+**Freeze-readiness reads directly off this file:** the template may honestly freeze after the eighth pilot only when the `batching_prereq` set is empty (§8.2). At seeding (2026-08-29, this commit) it is not — see the generated report for the live count and the named items.
+
 ## 11. Known Failure Modes
 
 | # | Mode | Guard |
@@ -1182,7 +1203,7 @@ Two entry criteria belong to the architecture, not the plan, and they bind where
 
 ## Operating Boundaries
 
-**Target files:** `scripts/lib/step/**` · `scripts/lib/compute/<slug>.js` · `scripts/<slug>.descriptor.json` · `scripts/<slug>.notes.json` · `scripts/ast-grep-rules/step-shape.yml` · `src/tests/step-conformance.infra.test.ts` · `scripts/violations/**` · migrations 245–248.
+**Target files:** `scripts/lib/step/**` · `scripts/lib/compute/<slug>.js` · `scripts/<slug>.descriptor.json` · `scripts/<slug>.notes.json` · `scripts/ast-grep-rules/step-shape.yml` · `src/tests/step-conformance.infra.test.ts` · `scripts/violations/**` · migrations 245–248 · (§10.3, R-T) `scripts/steps/_schema/programme-items.json`/`.schema.json` · `scripts/violations/generate-programme-backlog.mjs` · `docs/reports/generated/122-programme-backlog.md` · `src/tests/programme-backlog.infra.test.ts`.
 
 **Out-of-scope files:** `scripts/manifest.json` — unchanged · `src/tests/pipeline-advisory-lock.infra.test.ts` — one regex widening at the `withAdvisoryLock` source-text assertion only (§5.4) · `scripts/lib/pipeline.js` — extended by export; **not** the home of the step runner (SH2) · `scripts/run-chain.js` — ⚠️ **one change is required, contrary to the original framing:** ledger-row ownership must consolidate into the library (claim #39), since `run-chain.js:716-732` writes the row for in-chain steps while standalone runs write their own and 11 of 27 branch on `PIPELINE_CHAIN`. That is inside Spec 120 §2's own *"~25–30 lines at three sites"* budget.
 
