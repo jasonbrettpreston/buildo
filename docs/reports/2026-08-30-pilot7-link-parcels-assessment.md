@@ -156,6 +156,157 @@ consumer" framing did not name — filed as `LP-D7` at §4, flagged for the comm
 
 ---
 
+## §2. PH-3 — Intent Ledger over the corpus (commit 2, G3)
+
+> **18 `fix(` commits (of 32 total, `git log --follow`), all adjudicated** — re-executed via direct `git show
+> <sha> -- scripts/link-parcels.js` this commit, not transcribed from the plan's own findings list. Per Spec
+> 124 §4.2's discoverer≠adjudicator split, every disposition below is PROPOSED by this pass (agent,
+> 2026-08-30), stands until a human operator ratifies or overturns at commit 7. Closed disposition vocabulary
+> only (Rule 13): `preserved-in-runner | preserved-in-validator | preserved-in-compute |
+> encoded-as-descriptor-field | encoded-as-deviation | knowingly-retired`. `INCIDENTAL` never appears as a
+> disposition.
+
+| Commit | Date | Construct | Live today? | Proposed disposition | Ground |
+|---|---|---|---|---|---|
+| `8287291e` | 2026-03-06 | First `PIPELINE_SUMMARY:` `console.log` line | Superseded — 0 `console.*` today, replaced by structured `pipeline.emitSummary` | **knowingly-retired** — the literal console-log form is gone; the underlying CONCEPT (a structured completion summary) survives as `pipeline.emitSummary`/commit-7's `checks`+`counters` | direct diff this commit; `grep -c console\.` on current file = 0 |
+| `bd06751d` | 2026-03-07 | `records_total` redefinition: `processed` → `totalLinked` (dashboard was showing scan-pool size, not records changed) | Superseded — a LATER, out-of-scope `feat(` commit (`78518916`, not in this pilot's 18-commit `fix(` corpus) redefined `records_total` back to `processed` (today's value, confirmed at commit 1) | **knowingly-retired** — this specific redefinition did not survive verbatim; the general PRINCIPLE this fix asserted (records_total must reflect true evaluation scope, not a misleading proxy) is not violated by today's `processed` value either (processed IS the true batch-evaluation count under the CURRENT incremental-filter shape, unlike the pre-fix bug which conflated it with an unrelated scan-pool metric) — not re-litigated further, out of this pilot's own scope to resolve which of the two framings is "more correct" | direct diff this commit; `git log -p` for the reverting commit |
+| `d2050cfc` | 2026-03-10 | `records_new`/`records_updated` correction: `{new:totalLinked, updated:0}` → `{new:0, updated:totalLinked}` (this step only UPDATEs, never INSERTs new rows in the counter sense) | ✓ current file: `records_updated: totalLinked` (`:646`) — byte-identical | **preserved-in-compute** — verbatim-ported to `compute.js` at commit 7 | `:644-646` current file |
+| `5baaed5a` | 2026-03-26 | **Origin of ONE side of Finding 4's phase disagreement** — `phase: (process.env.PIPELINE_CHAIN === 'sources') ? 6 : 7` introduced at the real-run `audit_table` site (part of a 3-chain phase-renumbering sweep: "Permits: fix refresh_snapshot 5→14, link_coa 4→12...") | ✓ current file `:660`, byte-identical | **encoded-as-descriptor-field** — becomes `sharing.varies_by_chain.phase` at commit 7 (A-5 RULED: `permits`=7, matching THIS commit's own value) — this commit's `7` is the CORRECT side of Finding 4/`LP-D3`'s disagreement, not the defect | direct diff this commit |
+| `a760e0e7` | 2026-03-27 | Cumulative link rate (denominator = ALL permits, not run-scoped); renamed `total_matched`→`run_matched` | ✓ current file `:614-621,637`, byte-identical mechanism, literal `75` threshold unchanged | **preserved-in-compute** — the cumulative-rate MECHANISM is verbatim-ported; the literal `75` becomes `T5`/`link_parcels_link_rate_warn_pct` (Finding 6) at commit 7, same default value, a Rule-3 externalization not a threshold change | `:614-621` current file |
+| `369341ae` | 2026-04-01 | 4 fixes in one commit: (a) keyset cursor replacing OFFSET pagination, (b) blank-to-blank street-type exact match, (c) zero-address regex `/^0+(?=\d)/`, (d) `pointInGeoJSON` doughnut-hole (interior ring) exclusion | (a)(b)(c) ✓ current file, byte-identical (`:232`, `:329`, `:251`); (d) ✓ current file `:77-103` but JS-fallback-only | **SPLIT disposition**: (a)/(b)/(c) **preserved-in-compute** — (a) generalizes into `LG-25`'s composite-key keyset pagination at commit 7 (the SAME shape this commit pioneered, now lifted into the shared library); (b)/(c) fold into `primary_match_sql`'s `UNION ALL` verbatim. (d) **knowingly-retired** — retires WHOLE with the JS fallback (A-1 RULED); the hole-exclusion LOGIC has no PostGIS-branch analogue to preserve (`ST_Contains` already respects polygon holes natively) | direct diff this commit; current file line citations |
+| `568f5787` | 2026-04-01 | Defensive `try/catch` around JS-fallback `JSON.parse(bestGeometry)` — malformed geometry no longer crashes the batch | ✓ current file `:463-465`, the file's ONLY try/catch (1/1/0, confirmed commit 1) | **knowingly-retired** — retires WITH the JS fallback (A-1 RULED); the guard's PURPOSE (never let one malformed row crash the run) has no PostGIS-branch analogue needed — `ST_Contains`/the KNN operator on a NULL/invalid `geom` is filtered by the `WHERE geom IS NOT NULL` predicate itself, not a per-row try/catch | `:463-465` current file |
+| `a21b7b01` | 2026-04-01 | Timestamp-based incremental filter (`parcel_linked_at IS NULL OR parcel_linked_at < last_seen_at`, replacing a `NOT EXISTS` shape that infinite-looped on unmatchable permits) + ghost cleanup for ZERO-match permits only | Superseded 2 weeks later — `f0daba71` replaced `last_seen_at` with `geocoded_at` (today's actual predicate); the ZERO-match-only ghost-cleanup DELETE is superseded 0 days later by `8a1c7d25`'s changed-match extension (below) | **knowingly-retired** — neither the exact `last_seen_at` predicate nor the zero-match-only DELETE survives verbatim; the underlying MECHANISM this commit pioneered (timestamp-based incremental, not `NOT EXISTS`; a real DELETE for permits that fall out of match) is what carries forward through its own successors, preserved structurally not textually | direct diff this commit; successor commits below |
+| **`8a1c7d25`** | **2026-04-01** | **THE load-bearing fence — Finding 3's root cause.** Wraps ghost-cleanup + `parcel_linked_at` UPDATE in ONE `withTransaction` (separate from the upsert's own transaction); ADDS the changed-match retraction DELETE (`WHERE parcel_id != $3`, a permit's OLD parcel link is deleted when it re-matches a DIFFERENT parcel) — `a21b7b01` had only handled the zero-match case | ✓ the retraction-on-relink LOGIC survives to today (`:551-561`, now UNNEST-batched by `72362c44` below); the TWO-TRANSACTION shape this commit itself introduced (ghost-cleanup+timestamp in ONE txn, separate from the upsert's txn) is what `LG-24` FURTHER consolidates at commit 7 (folds into ONE txn with the upsert, eliminating the crash window this commit's own fix left standing) | **preserved-in-compute — `LP-D1`'s own #1 Regression Guardian fence, opened this commit (below).** The retraction-on-relink BEHAVIOUR is load-bearing and must survive THE FIX unchanged; the TRANSACTION BOUNDARY this commit chose (2 txns) is superseded (not violated) by `LG-24`'s tighter 1-txn shape — a strengthening, not a regression, per Fold A B-1 | direct diff this commit; Fold A B-1 |
+| `f0daba71` | 2026-04-15 | Incremental filter: `last_seen_at` → `geocoded_at` (the `last_seen_at` predicate caused a 100-min full-table re-scan every chain run; `geocoded_at` correctly captures the "address-linked, later geocoded, should re-link spatially" case) | ✓ current file `:143-161`, byte-identical including the WHY-comment | **preserved-in-compute** — verbatim-ported to `compute.js` at commit 7, this pilot's `staleness`/incremental descriptor field | `:143-161` current file |
+| `030a7611` | 2026-04-16 | Externalize `spatial_match_max_distance_m`/`spatial_match_confidence` as `logic_variables` (Rule-3 origin for THIS step's two ALREADY-compliant vars) | ✓ current file `:45-48,127-131`, byte-identical | **preserved-in-compute** — these two vars are the ALREADY-compliant baseline Finding 6/the P4 tunable inventory builds on; T1–T5 externalize the FOUR confidence literals + link_rate threshold this commit did NOT touch | `:45-48` current file |
+| `c1ef0b73` | 2026-04-16 | Advisory lock retrofit: `ADVISORY_LOCK_ID=90` + `pipeline.withAdvisoryLock` wrap + `RUN_AT` via a bare `pool.query('SELECT NOW()')` | Lock ID + wrap ✓ current file `:51,125`, byte-identical; `RUN_AT` sourcing superseded by an out-of-scope `refactor(` commit (`46275ef1`, not in this pilot's 18-`fix(` corpus) to `pipeline.getDbTimestamp(pool)` (today's form, `:126`) | **encoded-as-descriptor-field** — `90` becomes `identity.lock` at commit 7 (Spec 47 §A.5 registry row unchanged); the lock WRAP mechanism retires with `pipeline.run` per the frozen-shape conversion, same as every prior pilot's own advisory-lock disposition | `:51,125,126` current file |
+| `44aebeb7` | 2026-04-17 | **CRITICAL** — `linked_at` NULL on first INSERT (was set only in `ON CONFLICT DO UPDATE`, never in the INSERT column list) | ✓ current file `:496-503,515-522`, byte-identical, including the inline `// §47 §6.1` citation comment | **preserved-in-compute** — verbatim-ported to `compute.js` at commit 7; this is Spec 47 §6.1 compliance, explicit in the code today | `:502` current file |
+| `187f0402` | 2026-04-17 | `parseInt`/`parseFloat` → `safeParsePositiveInt`/`safeParseFloat` (B1 safe-math migration) | ✓ current file, all 7 call sites (`:168,175,254-255,452`), byte-identical | **preserved-in-compute** — verbatim-ported to `compute.js` at commit 7 | current file, safe-math import line `:43` |
+| `72362c44` | 2026-04-17 | N+1 per-permit ghost-cleanup DELETE loop → single `UNNEST`-batched DELETE (`O(matched permits)` round-trips → `O(1)`) | ✓ current file `:551-560`, byte-identical UNNEST shape | **preserved-in-compute** — this EXACT UNNEST shape generalizes into `LG-24`'s `executeGuardedDeleteByKey` generated SQL at commit 7, not merely ported but LIFTED into the shared library | `:551-560` current file |
+| `52ad6527` | 2026-04-18 | §11 counter-misuse fix: `records_updated` `dbUpserted`→`totalLinked` (a JOIN-table row count was inflating the primary-entity counter); `db_upserted` audit row renamed `permit_parcels_written` | ✓ current file `:640,646`, byte-identical | **preserved-in-compute** — verbatim-ported to `compute.js` at commit 7 | `:640,646` current file |
+| `2577e694` | 2026-04-21 | Adds an `audit_table` to the zero-permits early-return path (was a bare `emitSummary({records_total:0,...})` with no audit row at all) — **also introduces `phase: chainId === 'sources' ? 6 : 9`, THE OTHER side of Finding 4's disagreement, a MONTH after `5baaed5a`'s own `?6:7`, using a DIFFERENT non-`sources` value (9, not 7) and a DIFFERENT read idiom (`chainId` local var vs. direct `process.env` read)** | ✓ current file `:181-194`, byte-identical | **SPLIT disposition: the audit_table-on-skip SHAPE is `preserved-in-compute`** (a genuinely good contribution — the zero-permits path deserves its own audit row, same as every other converted step's SKIP terminal) — **the specific `?6:9` VALUE is `encoded-as-deviation`**: this commit is the actual ORIGIN of Finding 4/`LP-D3`'s defect half, not a symmetric pre-existing disagreement — `5baaed5a`'s `?6:7` was already established a month earlier; this commit independently reinvented the same axis with a wrong, unreconciled value. A-5 RULED `phase=7` for `permits` corrects this commit's own `9` at commit 7 | direct diff this commit; date-ordered against `5baaed5a` above |
+| `03679c94` | 2026-05-23 | Strategy 1a `address_status` filter widened to accept the literal `'None'` (Toronto's production data uses `'None'` for 100% of rows, not the assumed `CURRENT`/`RETIRED`/`PENDING`) | ✓ current file `:308`, byte-identical including the inline WF3-hotfix-#2 comment | **preserved-in-compute** — verbatim-ported to `compute.js` at commit 7, part of Strategy 1a's `UNION ALL` branch, untouched by THE FIX (Strategy 1a is out of scope — only Strategy 3 Step 2 changes) | `:308` current file |
+
+**Approver for every disposition above:** this pilot's PH-3 pass (agent, 2026-08-30), grounded in direct `git
+show`/`git log -p` re-verification this commit — per Spec 124 §4.2's discoverer≠adjudicator split, PROPOSED
+here, stands until a human operator ratifies or overturns at commit 7.
+
+### `LP-D1` — THE FIX's own defect row (opened this commit)
+
+**Classification (Spec 123 §3, the four questions):** (1) Observed? Yes — Strategy 3 Step 2's centroid-nearest
+fallback join (`:403-432`) ranks candidate parcels by `parcels.centroid_lat/centroid_lng` (materialized,
+possibly-drifted per `ST_Centroid`'s own concave-polygon behaviour, Spec 59 R2.5) rather than the parcel's own
+live `geom`. (2) Spec/invariant conflict? Yes — the file's own header comment (`:12-14`) states the intended
+contract as "nearest parcel," not "nearest stored centroid point" — these differ whenever a centroid drifts
+outside or toward a neighbour (measured: 3,626/486,530 parcels, 0.75%, land outside their own polygon per
+CC-D2). (3) Load-bearing? The CURRENT (defective) behaviour is NOT load-bearing — no spec or downstream
+consumer depends on centroid-proximity SPECIFICALLY as opposed to true nearest-parcel; `8a1c7d25`'s
+retraction-on-relink fence (above) IS load-bearing and must survive THE FIX unchanged (a genuinely different
+concern from the join predicate itself). (4) Cost of carrying vs. diverging: re-measured live this commit
+(re-executing the plan's Fold A/B query, independent of the grounder's own re-execution) — see the Reality-
+Check re-measurement below; the flip population is large enough (60%+ of the tier) that carrying the defect
+costs real downstream correctness (`enrich_permits`'s zoning propagation AND `compute-cost-estimates.js`'s
+lot-size/frontage inputs, per commit 1's `LP-D7` finding). **Status: OPEN, closes `CLOSED-MEASURED` at commit
+9** once the declared FULL re-run's before/after delta is measured against the plan's own range (out of this
+pilot's own commit 1–6 scope to close).
+
+### `LP-D2` — Finding 3's 989 duplicate-row class (opened this commit)
+
+**Classification:** (1) Observed? Yes — 989 `(permit_num, revision_num)` pairs carry 2 `permit_parcels` rows
+each (re-confirmed commit 1, byte-identical to §0). (2) Spec/invariant conflict? The schema PERMITS this
+(the UNIQUE constraint is `(permit_num, revision_num, parcel_id)`, not `(permit_num, revision_num)` alone) —
+not a constraint violation, but violates the STEP's own intent (one permit should resolve to one dominant
+parcel per the `8a1c7d25` retraction-on-relink fence). (3) Load-bearing? No — these are pre-`8a1c7d25`
+historical residue, never revisited by the incremental filter (the fence only fires going forward). (4) Cost:
+low to carry through this conversion (grounded closure, Fold C item 7: `enrich_permits` re-derives its
+dominant-parcel choice fresh on EVERY run via `scopeWhere:'TRUE'`, so these 989 duplicates do not permanently
+corrupt any cached derived state — only the current run's dominant-parcel pick, deterministically, via Spec
+66 DEC-1's own tie-break). **Status: OPEN, expected to self-heal (Fold A R-F) under the declared FULL run
+(commit 8, out of this pilot's own scope) — before/after count required to confirm, not merely predict.**
+
+### `LP-D3` — Finding 4's disagreeing phase ternaries (opened this commit)
+
+**Classification:** (1) Observed? Yes — `:186` (`chainId==='sources'?6:9`, origin `2577e694`, 2026-04-21) vs.
+`:660` (`process.env.PIPELINE_CHAIN==='sources'?6:7`, origin `5baaed5a`, 2026-03-26) — **this commit's own
+archaeology establishes the ORIGIN ORDER**: `5baaed5a`'s `?6:7` came FIRST (part of a deliberate 3-chain
+phase-renumbering sweep); `2577e694` independently reinvented the SAME axis a month later with a DIFFERENT,
+unreconciled value (`9`). (2) Spec/invariant conflict? Yes — Spec 122 §1.7 names this EXACT file as its own
+worked example for "phase is an explicit map, never a ternary" (`:302`,`:505`). (3) Load-bearing? No — neither
+value is defended by any downstream consumer requiring specifically `9` (the zero-permits path is rare and its
+own `phase` value has no measured consumer dependency beyond the audit_table's own display). (4) Cost: A-5
+RULED (Fold A, against the `link_wsib` `{permits:7, sources:19}` precedent) — `phase=7` for the `permits`
+chain is correct; `2577e694`'s `9` is the value that must change at commit 7. **Status: OPEN, closes at
+commit 7** when `sharing.varies_by_chain.phase` replaces both ternary sites with one declared map.
+
+### `LP-D4` — Finding 6's five undeclared tunables (opened this commit)
+
+**Classification:** (1) Observed? Yes — T1–T5 (four confidence literals `0.97/0.95/0.90/0.80` + the `75`
+link-rate threshold), full inventory: plan's P4 tunable inventory table. (2) Spec/invariant conflict? Yes —
+Spec 124 Rule 3 (tunable externalization) requires every verdict-affecting literal be a registered
+`logic_variables` row; these five are bare literals in SQL/JS. (3) Load-bearing? The VALUES are load-bearing
+(changing a confidence tier's number would be a real behaviour change); the LITERAL FORM is not — externalizing
+to a logic variable with the SAME default is a pure Rule-3 compliance move, not a value change. (4) Cost: zero
+to externalize (same default, `on_invalid:"fail"` since all five are verdict-affecting per R-G). **Status:
+OPEN, closes at commit 7** when T1–T5 land as registered `logic_variables` rows + the admin "Parcel Linking"
+GROUPS entry.
+
+### `LP-D5` — class F (`link_full_retraction`) has no `write.js` executor (opened this commit, per Fold A B-1)
+
+**Classification:** (1) Observed? Yes — re-confirmed commit 1: `step.schema.json:389,408` names the enum;
+`write.js:63`'s `SET_BASED_CLASSES` set excludes it; no executor exists. (2) Spec/invariant conflict? Yes —
+Spec 122 §1.4's own frozen-enum table implies class F is a real, executable write shape; it is schema-only
+today. (3) Load-bearing? The step's OWN write behaviour (upsert + ghost-cleanup DELETE, `8a1c7d25`'s fence) is
+absolutely load-bearing; the ABSENCE of a generic executor for it is a library gap, not a defect in THIS
+step's own logic. (4) Cost: real library growth required — `LG-24` (`executeGuardedDeleteByKey`) is the first
+genuine class-F executor either LINK member has shipped (Fold A B-1, renumbered Fold B item 3). **Status:
+OPEN, closes only once `LG-24` ships and is exercised by a golden run** (commit 7/8, out of this pilot's own
+commit 1–6 scope).
+
+### `LP-D6` — NULL-coordinate spatial-tier permits (opened this commit, per Fold B item 2, evidence corrected at Fold C)
+
+**Classification:** (1) Observed? Yes — 4 `spatial`-tier permits (`09 165576 HVA`, `13 260505 BLD`,
+`18 258177 FSU`, `22 104242 BLD` rev `00`) carry NULL `latitude`/`longitude`/`geocoded_at` yet
+`parcel_linked_at` IS set. **Independently re-verified this commit** (not transcribed from the plan): all 4
+currently link to **`parcel_id 439990`** (confidence 0.65, `linked_at 2026-03-03T17:18–17:20Z`) — corrects the
+plan's own "observed: parcel `id=1`" claim, itself corrected at Fold C (Ground-truth grounder, blocking item
+1) before this commit landed; the LP-D6 REQUIREMENT is unaffected by the correction. (2) Spec/invariant
+conflict? Yes — a NULL-coordinate permit should never resolve to ANY parcel via a distance-based join; today's
+naive KNN comparison against `ST_MakePoint(NULL, NULL)` silently returns an arbitrary row instead of erroring
+or excluding. (3) Load-bearing? No — no consumer depends on these 4 permits keeping their current (wrong)
+link; Spec 66's `enrich_permits` re-derives fresh every run (Fold C item 7) so no stale cache depends on this
+either. (4) Cost: a one-line `WHERE v.lng IS NOT NULL AND v.lat IS NOT NULL` guard, zero ambiguity. **Status:
+OPEN, closes at commit 9** once the FULL run's 4-row retraction (0 relinks) is measured and the
+`spatial_null_coordinate_permits` WARN check fires cleanly (out of this pilot's own commit 1–6 scope).
+
+### `LP-D7` — second CONTRACT-class `permit_parcels` consumer beyond `enrich_permits` (opened commit 1, widened this commit per Fold C blocking item 2)
+
+**Classification:** (1) Observed? Yes — `scripts/compute-cost-estimates.js:161-167` independently selects a
+dominant parcel via its own `LATERAL ... ORDER BY parcel_id ASC LIMIT 1`, feeding `lot_size_sqm`/`frontage_m`
+into the cost model; `scripts/link-neighbourhoods.js:88-96,203-211` (same `sources` chain as `link_parcels`)
+reads `permit_parcels` as a fallback geometry source for neighbourhood assignment when a permit lacks its own
+lat/lng (Fold C blocking item 2, widened this commit — lower severity, gated to a narrow input shape). (2)
+Spec/invariant conflict? No spec asserts `enrich_permits` is the sole consumer — that framing originates in
+Fold A/B's own R-E ruling, not a spec. (3) Load-bearing? Yes, for `compute-cost-estimates.js` specifically —
+its own tiebreak (`parcel_id ASC`) differs from whatever `enrich-permits.js` uses, so THE FIX's ~10,616 relinks
+change its cost-model INPUTS the same way they change `enrich_permits`'s zoning-propagation INPUT. (4) Cost:
+zero to THIS pilot (read-only exposure, no write-path change required in either consumer) — but the commit-8/9
+owner's "product exposure" statement (Fold B item 6, R-G) undercounts the blast radius by treating
+`enrich_permits` as sole. **Status: OPEN, filed for commit 8/9's own owner** (out of this pilot's own commit
+1–6 scope to rewrite the exposure statement) — `link-neighbourhoods.js` added to this row at Fold C's widening,
+not a separate ledger row (same underlying "more than one consumer" defect class).
+
+### G3 verdict
+
+**CLOSED this commit.** All 18 `fix(` commits adjudicated with closed-vocabulary dispositions (0 bare
+`INCIDENTAL`). Six ledger rows opened (`LP-D1`–`LP-D6` per the plan's own G6 row, plus `LP-D7` widened from
+commit 1's own new finding, corrected per Fold C). `LP-D3`'s archaeology newly establishes the ORIGIN ORDER of
+Finding 4's disagreement (`5baaed5a` first with the correct value 7, `2577e694` a month later with the
+incorrect value 9) — not previously stated in the plan, which only noted the two sites disagree, not which
+came first or which is the deviation. `LP-D6`'s evidence corrected per Fold C (parcel `439990`, not `id=1`) —
+independently re-verified this commit, not merely copied from the grounder's own report.
+
+---
+
 ## §0. PH-0 seed — measured boundary table (2026-08-30 planning session)
 
 ### 0.1 Governing specs, read in order (Spec 124 §7 Step 0 / Spec 123 §6 G0)
@@ -406,7 +557,9 @@ CONFIRMED every number; Cross-read Adversary verdicts below)"** section (placed 
      400–500 ms/batch, 24–33 s full population. Tiebreak `pa.id ASC` reconfirmed: 19 exact ties + 91 near-ties
      (< 1 mm).
   2. **`LP-D6` (item 2) — NEW.** 4 `spatial`-tier permits with NULL lat/lng, linked via an arbitrary parcel
-     (`id=1`) under naive KNN. THE FIX's compute adds an explicit `WHERE v.lng IS NOT NULL AND v.lat IS NOT
+     (~~`id=1`~~ **CORRECTED at Fold C, 2026-08-30, Ground-truth grounder, blocking item 1: `parcel_id 439990`
+     for all 4, independently re-verified — never `id=1`; the LP-D6 requirement itself is unaffected**) under
+     naive KNN. THE FIX's compute adds an explicit `WHERE v.lng IS NOT NULL AND v.lat IS NOT
      NULL` guard; a WARN check `spatial_null_coordinate_permits` counts them; the FULL run retracts, does not
      relink, these 4. Red-first NULL-coordinate lock required.
   3. **LG numbering (item 3) — CONFIRMED collision.** CC-D3 claimed `LG-22` first. `LG-22`→`LG-24`,
