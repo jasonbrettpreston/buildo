@@ -64,4 +64,144 @@ async function runDistributionScan(pool, fields, resScope, zoneExpr) {
   }));
 }
 
-module.exports = { statusFor, verdictCascade, buildDistributionQuery, runDistributionScan };
+// ── The invariants[]/plausibility[] executor (commit 3) ─────────────────────────
+//
+// Fold A-2 (BLOCKING correction): these rows must enter `buildAuditTable` as
+// SYNTHETIC SELECTED CHECKS — the SAME pipeline a real `checks[]` entry gets
+// (blocking/severity/errors[]/warnings[]/LM-D16 rendering) — never merely appended
+// to `extraRows`, which `verdict.js`'s `errors[]`/`checks_failed`/`errorMessage`
+// never reads. So this executor does NOT build audit rows itself: it returns
+// check-shaped objects (mapping `bound` → `limit` so `verdict.js`'s existing
+// `checkRow`/`evaluateLimit` need no per-category branch) + their `{value}`
+// observations, for the caller (index.js) to fold into `buildAuditTable`'s
+// existing selected-check loop.
+//
+// Fold B-3: every entry already carries a declared `source: "invariant"|"plausibility"`
+// — passed straight through onto the synthetic check object, so `checkRow`'s row
+// builder (verdict.js) can stamp it on the emitted row without re-deriving it.
+
+/** "30s"/"500ms"/"5m"/"none" -> ms | null. Minimal (no declared value is non-"none" as of
+ * this WF — Fold B-1: the live server's own statement_timeout is 0/no-limit, so every
+ * validate_only entry's override is a DECLARED "none", not a real ceiling to parse). */
+function parseDurationMs(v) {
+  if (!v || v === 'none') return null;
+  const m = String(v).match(/^(\d+(?:\.\d+)?)(ms|s|m)$/);
+  if (!m) return null;
+  const n = Number(m[1]);
+  return m[2] === 'ms' ? n : m[2] === 's' ? n * 1000 : n * 60000;
+}
+
+/** A `checks[].sql`-analog scalar result -> a JS number when it cleanly parses as one
+ * (pg returns NUMERIC/DECIMAL as a STRING by default — count(*)::int comes back as a
+ * real number already, but round(...)::numeric does not), else left as-is (e.g. a
+ * `string_agg` text result, which no numeric bound form can evaluate — correctly
+ * `unevaluable`, not silently coerced). */
+function coerceScalar(raw) {
+  if (raw === null || raw === undefined) return null;
+  if (typeof raw === 'number') return raw;
+  if (typeof raw === 'string' && /^-?\d+(?:\.\d+)?$/.test(raw.trim())) return Number(raw);
+  return raw;
+}
+
+/**
+ * Execute one declared `invariants[]`/`plausibility[]` entry's `sql` (a single-row,
+ * single-column scalar query, the same golden-`invariants.json` convention). A query
+ * ERROR becomes a distinct FAIL observation — bound-doctrine criterion 1 (Design
+ * decisions: "a query error is a distinct FAIL, not folded into the bound") — never
+ * swallowed, never read as a clean 0.
+ */
+async function executeEntry(pool, entry) {
+  const timeoutMs = parseDurationMs(entry.statement_timeout);
+  try {
+    let result;
+    if (timeoutMs) {
+      // Scoped to this ONE query only (Spec 122 §7.2: "gate checks must run on the
+      // same PoolClient" rule, extended — a session-level SET would leak to whatever
+      // this pooled connection runs next).
+      const client = await pool.connect();
+      try {
+        await client.query('BEGIN');
+        await client.query(`SET LOCAL statement_timeout = ${timeoutMs}`);
+        result = await client.query(entry.sql);
+        await client.query('COMMIT');
+      } catch (err) {
+        await client.query('ROLLBACK').catch(() => {});
+        throw err;
+      } finally {
+        client.release();
+      }
+    } else {
+      result = await pool.query(entry.sql);
+    }
+    const raw = result.rows[0] ? Object.values(result.rows[0])[0] : null;
+    const scalar = coerceScalar(raw);
+    // Mirror both `.value` (value_min/value_max, pct) and `.violations` (viol) —
+    // the SAME measured scalar under both names, so whichever bound form the entry
+    // declares is evaluable without this executor needing to know which one it is
+    // (verdict.js's evaluateLimit already picks the right reading per form).
+    return typeof scalar === 'number' ? { value: scalar, violations: scalar } : { value: scalar };
+  } catch (err) {
+    return { error: err };
+  }
+}
+
+/**
+ * runValidatorEntries(pool, entries, {frequency, when, config}) — the ONE executor
+ * for BOTH `invariants[]` and `plausibility[]` (same runtime shape, same rules).
+ * Filters to entries whose `frequency` matches AND whose `when` is in the allowed
+ * set (Fold B-2 — the same gated-skip narrowing a real check gets), executes each,
+ * and returns `{checks, observations}` ready for `buildAuditTable`'s existing
+ * selected-check loop (Fold A-2).
+ *
+ * @param {import('pg').Pool} pool
+ * @param {Array<object>|'none'|undefined} entries - descriptor.invariants or .plausibility
+ * `limit_from_config` resolution happens LATER, inside `buildAuditTable`'s own
+ * `checkRow` call (which already receives `config` as its own parameter) — this
+ * executor only builds the check-shaped object + runs the raw query, so it takes
+ * no `config` of its own.
+ *
+ * @param {{frequency:string, when:string[]|null}} opts
+ * @returns {Promise<{checks:object[], observations:Record<string,object>}>}
+ */
+async function runValidatorEntries(pool, entries, { frequency, when }) {
+  const list = Array.isArray(entries) ? entries : [];
+  // `when: null` (or absent) means unrestricted — score every declared `when`, the
+  // same null-means-everything convention `onlyChecks` itself uses in index.js.
+  const selected = list.filter((e) => e.frequency === frequency && (!when || when.includes(e.when || 'pre')));
+  const checks = [];
+  const observations = {};
+  for (const entry of selected) {
+    checks.push({
+      id: entry.id,
+      limit: entry.bound,
+      limit_from_config: entry.limit_from_config,
+      severity: entry.severity,
+      blocking: entry.blocking,
+      source: entry.source,
+    });
+    observations[entry.id] = await executeEntry(pool, entry);
+  }
+  return { checks, observations };
+}
+
+/** Thin, named wrapper (matches the plan's own API naming) — `descriptor.invariants` only. */
+function runInvariants(pool, descriptor, opts) {
+  return runValidatorEntries(pool, descriptor.invariants, opts);
+}
+
+/** Thin, named wrapper — `descriptor.plausibility` only. */
+function runPlausibility(pool, descriptor, opts) {
+  return runValidatorEntries(pool, descriptor.plausibility, opts);
+}
+
+module.exports = {
+  statusFor,
+  verdictCascade,
+  buildDistributionQuery,
+  runDistributionScan,
+  parseDurationMs,
+  coerceScalar,
+  runValidatorEntries,
+  runInvariants,
+  runPlausibility,
+};

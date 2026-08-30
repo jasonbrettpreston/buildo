@@ -467,21 +467,27 @@ function confidence_vocabulary(ctx) {
  * LM-D6 — the LINK-STAGE link-quality counter, added at peel 8b (A-6 ruling, C-6
  * pin-then-add).
  *
- * ⚠️ IT IS INFO, AND THAT IS A RULING, NOT TIMIDITY. 48,646 oversized primaries are a
- * property of Toronto's parcel fabric plus this step's own nearest fallback; a forced FULL
- * relink moves none of it. Declaring it WARN or FAIL would redden every production run for
- * a condition this commit did not create — the shape §1.6 calls "a check that cries wolf
- * until nobody reads the table". What it closes is the OTHER failure: until now these
- * links were produced here, shipped, and NULLed one chain-step later by enrich-parcels'
- * `footprint_exceeds_lot` guard, with nothing at the link counting them. The number is now
- * on the record at the step that makes it, by `match_type`, so a change in it is
- * attributable to the join rather than discovered as a hole in the cost model.
+ * ⚠️ R-T addendum (commit 3, 2026-08-30): ruling R-H (2026-08-28) re-dispositioned this
+ * OPEN -> WARN with a declared retighten condition, "carried to pilot 4" — re-verified
+ * 2026-08-29 as NOT delivered and filed HIGH. `violations: 0` here was WHY it was never
+ * delivered: the descriptor's severity is now WARN (link-massing.descriptor.json), but a
+ * hardcoded `violations: 0` made `evaluateLimit('viol == 0', {violations: 0})` read `ok:
+ * true` regardless of severity, so the row rendered PASS forever no matter what the
+ * descriptor said — measured live capturing this fix (2026-08-30): the row read PASS with
+ * severity WARN already flipped, until this line changed. Now reports the REAL combined
+ * count (nearest + centroid_in_parcel over-lot primaries) as `violations`, so a standing
+ * non-zero population genuinely escalates to WARN (Spec 48 §4.9's own rule: a structurally
+ * non-zero population is WARN + a self-announcing retighten condition, never FAIL, never a
+ * silent PASS). 48,646-50,790 oversized primaries are a property of Toronto's parcel fabric
+ * plus this step's own nearest fallback; a forced FULL relink moves none of it — WARN says
+ * so on every run instead of only in a report nobody reads. `detail` keeps the by-match-type
+ * breakdown for the audit row's own display.
  */
 function nearest_footprint_gt_lot_count(ctx) {
   const over = ctx.matched.footprint_exceeds_lot || {};
   const of = ctx.matched.primary_links_by_type || {};
   ctx.report('nearest_footprint_gt_lot_count', {
-    violations: 0,
+    violations: (over.nearest || 0) + (over.centroid_in_parcel || 0),
     detail: {
       nearest: over.nearest,
       centroid_in_parcel: over.centroid_in_parcel,
@@ -496,15 +502,17 @@ function nearest_footprint_gt_lot_count(ctx) {
  * LM-D11 — one building serving as the primary structure of MORE THAN ONE parcel.
  *
  * The partial unique index is the other direction (one primary per parcel), so this has
- * been neither enforced nor counted. INFO for the same reason as above: 66,807 buildings
- * across 167,329 parcels is a standing property, and a WARN here would redden every run
- * from the first one. The cost-model consequence is the filed `review_followups` WF3; what
- * belongs HERE is the count, at the step that assigns the primary.
+ * been neither enforced nor counted. R-T addendum (commit 3, 2026-08-30): same R-H
+ * disposition and same `violations: 0` -> real-count fix as `nearest_footprint_gt_lot_count`
+ * above (see its header comment for the measured "flipped severity, still read PASS" defect
+ * this closes). 65,318-66,807 shared buildings across 166,591-167,329 parcels is a standing
+ * property; WARN + retighten_when ("zero rows") says so on every run, never FAIL. The
+ * cost-model consequence stays the filed `review_followups` WF3, unaffected by this fix.
  */
 function shared_primary_buildings(ctx) {
   const s = ctx.matched.shared_primary || {};
   ctx.report('shared_primary_buildings', {
-    violations: 0,
+    violations: s.buildings || 0,
     detail: { buildings: s.buildings, parcels_affected: s.parcels },
   });
 }

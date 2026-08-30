@@ -22,6 +22,7 @@
 import { describe, it, expect } from 'vitest';
 import fs from 'fs';
 import os from 'os';
+import crypto from 'crypto';
 import path from 'path';
 
 const REPO_ROOT = path.resolve(__dirname, '../../');
@@ -40,6 +41,7 @@ const harness = require(path.join(REPO_ROOT, 'scripts/analysis/capture-step-gold
   computePathFor: (step: string) => string | null;
   notesPathFor: (descriptor: unknown, descriptorPath: string) => string | null;
   descriptorPathFor: (step: string) => string;
+  stripLastMeasuredForFingerprint: (text: string) => string;
 };
 
 interface Manifest {
@@ -219,5 +221,73 @@ describe('computeSourceFingerprint — the pure-function proof (isolates a stale
     fs.writeFileSync(file, "'use strict';\r\nconst x = 999;\r\nconst y = 2;\r\n");
     const changed = harness.computeSourceFingerprint({ step: file, descriptorPath: file, notesPath: null, computePath: null });
     expect(changed.source_fingerprint).not.toBe(lf.source_fingerprint);
+  });
+});
+
+// R-T addendum (Fold B-4, commit 3) — `last_measured` is EXPECTED to churn every re-time
+// (value/at/commit/cost_ms/sample_n/source_run); fingerprinting it would fail the golden
+// lock on every re-time even when the DECLARED contract (bound/why/frequency/when/source)
+// hasn't changed. stripLastMeasuredForFingerprint (called internally by
+// computeSourceFingerprint for the descriptor input only) makes the fingerprint a pure
+// function of the declared contract.
+describe('stripLastMeasuredForFingerprint / computeSourceFingerprint — last_measured EXCLUDED (Fold B-4, R-C)', () => {
+  function descriptorWith(invariants: Array<Record<string, unknown>>): string {
+    return JSON.stringify({ identity: { name: 'x' }, invariants, plausibility: 'none' });
+  }
+
+  it('RED-then-GREEN — re-timing ONLY last_measured (value/at/commit/cost_ms/sample_n/source_run) does NOT move the fingerprint', () => {
+    const a = descriptorWith([{
+      id: 'inv1', sql: 'SELECT 1', bound: 'value_min 0', severity: 'INFO', blocking: false, when: 'post', source: 'invariant',
+      frequency: 'every_run',
+      last_measured: { value: 1, at: '2026-08-30T00:00:00.000Z', commit: 'aaa1111', cost_ms: 10, sample_n: 5, source_run: { run_id: null, chain: null, event: 'x' } },
+    }]);
+    const b = descriptorWith([{
+      id: 'inv1', sql: 'SELECT 1', bound: 'value_min 0', severity: 'INFO', blocking: false, when: 'post', source: 'invariant',
+      frequency: 'every_run',
+      // Every last_measured field differs — a genuine re-time, days later, different commit.
+      last_measured: { value: 999, at: '2026-09-15T08:30:00.000Z', commit: 'bbb2222', cost_ms: 4321, sample_n: 12, source_run: { run_id: 'r-1', chain: 'sources', event: 'chain_run' } },
+    }]);
+    expect(harness.stripLastMeasuredForFingerprint(a)).toBe(harness.stripLastMeasuredForFingerprint(b));
+
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'golden-fp-lastmeasured-'));
+    const file = path.join(dir, 'd.json');
+    fs.writeFileSync(file, a);
+    const fpA = harness.computeSourceFingerprint({ step: file, descriptorPath: file, notesPath: null, computePath: null });
+    fs.writeFileSync(file, b);
+    const fpB = harness.computeSourceFingerprint({ step: file, descriptorPath: file, notesPath: null, computePath: null });
+    // RED (this IS the class of bug Fold B-4 exists to prevent): before the strip, fpA
+    // would have differed from fpB purely because last_measured churned — proven by
+    // comparing against the RAW (un-stripped) file hash directly.
+    const rawHashDiffers = crypto.createHash('sha256').update(a).digest('hex')
+      !== crypto.createHash('sha256').update(b).digest('hex');
+    expect(rawHashDiffers, 'sanity: the two fixtures really do differ at the byte level (last_measured only)').toBe(true);
+    // GREEN: the ACTUAL fingerprint function does not move.
+    expect(fpB.source_fingerprint).toBe(fpA.source_fingerprint);
+  });
+
+  it('a change to the DECLARED contract (bound/severity/sql/frequency/when/source) still moves the fingerprint — the exclusion is scoped to last_measured only', () => {
+    const base = { id: 'inv1', sql: 'SELECT 1', bound: 'value_min 0', severity: 'INFO', blocking: false, when: 'post', source: 'invariant', frequency: 'every_run', last_measured: { value: 1, at: 'x', commit: 'x', cost_ms: 1, sample_n: 1, source_run: { run_id: null, chain: null, event: 'x' } } };
+    const changedBound = descriptorWith([{ ...base, bound: 'value_min 5' }]);
+    const original = descriptorWith([base]);
+    expect(harness.stripLastMeasuredForFingerprint(changedBound)).not.toBe(harness.stripLastMeasuredForFingerprint(original));
+  });
+
+  it('non-JSON input (a real step.js/compute.js file) passes through UNCHANGED', () => {
+    const src = "'use strict';\nmodule.exports = { last_measured: 1 };\n";
+    expect(harness.stripLastMeasuredForFingerprint(src)).toBe(src);
+  });
+
+  it('the REAL link_massing descriptor: stripping is idempotent and the declared contract (minus last_measured) round-trips stably', () => {
+    const real = fs.readFileSync(path.join(REPO_ROOT, 'scripts/link-massing.descriptor.json'), 'utf8');
+    const stripped = harness.stripLastMeasuredForFingerprint(real);
+    const doc = JSON.parse(stripped) as { invariants: Array<Record<string, unknown>>; plausibility: Array<Record<string, unknown>> };
+    expect(Array.isArray(doc.invariants) && doc.invariants.length).toBeGreaterThan(0);
+    for (const entry of [...doc.invariants, ...doc.plausibility]) {
+      expect(entry, `${entry.id}: last_measured must be gone from the fingerprinted form`).not.toHaveProperty('last_measured');
+      expect(entry.bound, `${entry.id}: the declared contract survives the strip`).toBeDefined();
+    }
+    // Stripping twice is idempotent (no double-strip surprise if this is ever called on
+    // already-stripped input).
+    expect(harness.stripLastMeasuredForFingerprint(stripped)).toBe(stripped);
   });
 });

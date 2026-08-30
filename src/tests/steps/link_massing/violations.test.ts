@@ -215,9 +215,15 @@ const { validateDescriptor } = require(path.join(REPO_ROOT, 'scripts/lib/step/va
   validateDescriptor: (d: unknown) => unknown;
 };
 // eslint-disable-next-line @typescript-eslint/no-require-imports -- exercising the real CJS library
-const { buildAuditTable } = require(path.join(REPO_ROOT, 'scripts/lib/step/verdict.js')) as {
+const verdictLib = require(path.join(REPO_ROOT, 'scripts/lib/step/verdict.js')) as {
   buildAuditTable: (descriptor: Descriptor, chainId: string | null, observations: Record<string, unknown>) => { rows: AuditRow[]; audit_table: { verdict: string } };
+  checkRow: (
+    check: { id: string; limit: unknown; severity: string; blocking: boolean },
+    observation: { violations?: number; value?: number; detail?: unknown } | undefined,
+    onCheckError: string,
+  ) => { metric: string; value: unknown; threshold: unknown; status: string; source: string } | null;
 };
+const { buildAuditTable } = verdictLib;
 // eslint-disable-next-line @typescript-eslint/no-require-imports -- the CURRENT write.js (green half of D-5 / F2)
 const currentWrite = require(path.join(REPO_ROOT, WRITE_REL)) as {
   resolveGuardColumns: (writeSpec: { key: string | string[]; write_discipline: { guard_columns: unknown } }, stepColumns: string[]) => string[];
@@ -1385,6 +1391,18 @@ describe('55-A — the hard per-conversion gate (44, k=PER_STEP)', () => {
     expect(/scripts\//.test(pkg.scripts.test ?? ''), 'npm test must not point at production scripts').toBe(false);
   });
 
+  // R-T addendum (commit 3, 2026-08-30) — LM-D6/LM-D11 are a DIFFERENT class from every
+  // other WARN/FAIL check here: their healthy fixture (healthyWorld()'s own footprint_
+  // exceeds_lot/shared_primary values) IS the REAL, MEASURED, standing population, not a
+  // synthetic "nothing wrong" baseline — R-H (2026-08-28) + Spec 48 §4.9's own rule: "when a
+  // metric is expected to be permanently non-zero, it must be WARN with a self-announcing
+  // retighten condition — never FAIL" (and never a stuck PASS, which is the defect this
+  // whole WF closes). So for these two, "healthy" reads WARN by design, not PASS — the
+  // must-fail matrix's own SABOTAGE for them (increasing the count further) still reads
+  // WARN too (already at the severity ceiling), which is the CORRECT degenerate case: a
+  // standing-WARN check does not escalate past its own declared severity.
+  const STANDING_WARN_BY_DESIGN = new Set(['nearest_footprint_gt_lot_count', 'shared_primary_buildings']);
+
   it('#165 Every declared check has a must-fail fixture (WARN/FAIL: healthy PASS → sabotaged = severity; INFO: INFO both ways)', async () => {
     const d = loadDescriptor();
     const compute = loadCompute();
@@ -1397,7 +1415,11 @@ describe('55-A — the hard per-conversion gate (44, k=PER_STEP)', () => {
         continue;
       }
       const { healthy, sabotaged } = await mustFailPair(compute, d, c);
-      expect(healthy, `check ${c.id}: healthy fixture (the 1,395-tail incremental steady state) should PASS`).toBe('PASS');
+      if (STANDING_WARN_BY_DESIGN.has(c.id)) {
+        expect(healthy, `check ${c.id}: standing-WARN-by-design (R-H) — the healthy fixture's REAL population must already read its declared severity, not PASS`).toBe(c.severity);
+      } else {
+        expect(healthy, `check ${c.id}: healthy fixture (the 1,395-tail incremental steady state) should PASS`).toBe('PASS');
+      }
       expect(sabotaged, `check ${c.id}: its negative fixture PASSES — the check never looked`).toBe(c.severity);
     }
   });
@@ -2191,5 +2213,69 @@ describe('D-5 linked_at guard trap', () => {
     // And the downstream re-scope this guards against is real: enrich-parcels scopes on linked_at > massing_enriched_at.
     const enrich = fs.readFileSync(abs('scripts/enrich-parcels.js'), 'utf8');
     expect(/linked_at\s*>\s*p\.massing_enriched_at|pb\.linked_at\s*>/.test(enrich), 'buildMassingScopeWhere re-scopes on pb.linked_at — the blast radius of a guarded linked_at').toBe(true);
+  });
+});
+
+describe('R-T addendum, commit 3 — LM-D6/LM-D11 severity flip (R-H) actually escalates, not just relabels (2026-08-30)', () => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- exercising the real CJS compute module's exports directly
+  const mod = loadComputeModule() as any;
+
+  it('RED-then-GREEN — nearest_footprint_gt_lot_count reports the REAL combined over-lot count as `violations`, not a hardcoded 0', () => {
+    // Before this fix: `violations: 0` made evaluateLimit('viol == 0', {violations:0}) read
+    // `ok:true` regardless of the descriptor's declared severity — measured live capturing
+    // this exact fix (2026-08-30): the row read PASS with severity ALREADY flipped to WARN
+    // in the descriptor, until this compute-side change landed. That is the RED this locks.
+    let observed: { violations?: number; detail?: Record<string, unknown> } | undefined;
+    mod.checks.nearest_footprint_gt_lot_count({
+      matched: {
+        footprint_exceeds_lot: { nearest: 50790, centroid_in_parcel: 13347 },
+        primary_links_by_type: { nearest: 103530, centroid_in_parcel: 381605 },
+      },
+      report: (id: string, o: typeof observed) => { if (id === 'nearest_footprint_gt_lot_count') observed = o; },
+    });
+    expect(observed?.violations, 'RED if this is 0 — the exact defect this fix closes').toBe(50790 + 13347);
+    // `detail` still carries the by-match-type breakdown the audit row displays.
+    expect(observed?.detail).toMatchObject({ nearest: 50790, centroid_in_parcel: 13347 });
+    // A zero-population run must still report 0 violations (not silently drop the check).
+    let zeroCase: typeof observed;
+    mod.checks.nearest_footprint_gt_lot_count({
+      matched: { footprint_exceeds_lot: {}, primary_links_by_type: {} },
+      report: (id: string, o: typeof observed) => { if (id === 'nearest_footprint_gt_lot_count') zeroCase = o; },
+    });
+    expect(zeroCase?.violations).toBe(0);
+  });
+
+  it('RED-then-GREEN — shared_primary_buildings reports the REAL building count as `violations`, not a hardcoded 0', () => {
+    let observed: { violations?: number; detail?: Record<string, unknown> } | undefined;
+    mod.checks.shared_primary_buildings({
+      matched: { shared_primary: { buildings: 65318, parcels: 166591 } },
+      report: (id: string, o: typeof observed) => { if (id === 'shared_primary_buildings') observed = o; },
+    });
+    expect(observed?.violations, 'RED if this is 0 — the exact defect this fix closes').toBe(65318);
+    expect(observed?.detail).toMatchObject({ buildings: 65318, parcels_affected: 166591 });
+    let zeroCase: typeof observed;
+    mod.checks.shared_primary_buildings({
+      matched: { shared_primary: {} },
+      report: (id: string, o: typeof observed) => { if (id === 'shared_primary_buildings') zeroCase = o; },
+    });
+    expect(zeroCase?.violations).toBe(0);
+  });
+
+  it('the descriptor severity flip is real: both checks are WARN with a declared retighten_when, and the fresh runtime verdict escalates given the measured non-zero population', () => {
+    const d = loadDescriptor() as unknown as { checks: Array<Record<string, unknown>> };
+    const lmD6 = d.checks.find((c) => c.id === 'nearest_footprint_gt_lot_count');
+    const lmD11 = d.checks.find((c) => c.id === 'shared_primary_buildings');
+    expect(lmD6?.severity).toBe('WARN');
+    expect(lmD11?.severity).toBe('WARN');
+    expect(lmD6?.retighten_when).toBeTruthy();
+    expect(lmD11?.retighten_when).toBeTruthy();
+    // checkRow/evaluateLimit, exercised directly: WARN severity + a non-zero violations count
+    // (the real population, not the old hardcoded 0) must escalate to WARN, never PASS.
+    const row = verdictLib.checkRow(
+      { id: 'nearest_footprint_gt_lot_count', limit: 'viol == 0', severity: 'WARN', blocking: false },
+      { violations: 64137, detail: {} },
+      'fail_step',
+    );
+    expect(row?.status).toBe('WARN');
   });
 });

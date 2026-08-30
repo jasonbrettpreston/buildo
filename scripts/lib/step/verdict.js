@@ -187,7 +187,15 @@ function evaluateLimit(limit, observation) {
 function checkRow(check, observation, onCheckError, config = null) {
   const limit = resolveLimit(check, config);
   const threshold = typeof limit === 'string' ? limit : JSON.stringify(limit);
-  const row = (value, status) => ({ metric: check.id, value, threshold, status });
+  // Fold B-3 (R-T addendum) — every row carries a `source` tag: 'check' for an
+  // ordinary `checks[]` entry (the default — `checks[]` items declare no `source`
+  // field of their own, so a consumer never has to guess), or the entry's own
+  // declared `check|invariant|plausibility` for a synthetic invariants[]/
+  // plausibility[] row (buildAuditTable passes it through on the check-shaped
+  // object it builds). Lets a consumer reading only the emitted audit table (not
+  // the descriptor) tell DATA rows from PROCESS rows without re-deriving it from
+  // array membership.
+  const row = (value, status) => ({ metric: check.id, value, threshold, status, source: check.source || 'check' });
 
   if (observation && observation.error !== undefined && observation.error !== null) {
     const msg = observation.error instanceof Error ? observation.error.message : String(observation.error);
@@ -285,9 +293,23 @@ function deriveVerdict(rows) {
  * library's shape to parity with that established, un-converted precedent rather
  * than inventing a new one.
  *
+ * R-T addendum (Fold A-2, BLOCKING correction, commit 3) — `synthetic` carries
+ * declared `invariants[]`/`plausibility[]` entries (already narrowed by `when`/
+ * `frequency` by the caller — `scripts/lib/step/plausibility.js#runValidatorEntries`)
+ * as check-shaped objects + their observations. They run through this SAME loop,
+ * not a parallel path: `errors[]`/`warnings[]`/`blockingFailures`/`checks_failed`
+ * populate for a synthetic FAIL exactly as they do for a real `checks[]` FAIL — the
+ * bug class this correction closes is `extraRows` (LR-D2/R-A's own use, unchanged
+ * above) silently NOT reaching those arrays, the same class as LPA-D6.
+ *
+ * `only` (a checks[]-id Set) is NOT applied to `synthetic` — a synthetic entry's id
+ * lives in a different space, so re-filtering would wrongly drop every one of them
+ * whenever `only` is non-null. The caller narrows synthetic entries itself, by `when`.
+ *
+ * @param {{checks?:object[], observations?:Record<string,object>}|null} [synthetic]
  * @returns {{audit_table:object, rows:object[], blockingFailures:string[], errors:string[], warnings:string[]}}
  */
-function buildAuditTable(descriptor, chainId, observations, extraRows = [], config = null, only = null) {
+function buildAuditTable(descriptor, chainId, observations, extraRows = [], config = null, only = null, synthetic = null) {
   const onCheckError = (descriptor.execution && descriptor.execution.on_check_error) || 'fail_step';
   // `only` narrows the scored set to a LIFECYCLE-REACHABLE subset — a gated skip
   // scores the `when: "pre"` checks and nothing else, because a post-write check
@@ -303,6 +325,21 @@ function buildAuditTable(descriptor, chainId, observations, extraRows = [], conf
     if (!row) continue;
     rows.push(row);
     // LPA-D6 — severity-separated, never one conflated array (see the header note).
+    if (row.status === 'FAIL') errors.push(`${check.id}: ${renderValue(row.value)}`);
+    else if (row.status === 'WARN') warnings.push(`${check.id}: ${renderValue(row.value)}`);
+    if (row.status === 'FAIL' && check.blocking === true) blockingFailures.push(check.id);
+  }
+  const syntheticChecks = (synthetic && Array.isArray(synthetic.checks)) ? synthetic.checks : [];
+  const syntheticObservations = (synthetic && synthetic.observations) || {};
+  // Bound-doctrine criterion 1 (Design decisions: "a query error is a distinct FAIL,
+  // never folded into the bound") — `omit_row` would silently DROP a query-error row,
+  // which criterion 1 explicitly forbids for invariants[]/plausibility[] regardless of
+  // the descriptor's own checks[]-scoped `on_check_error` setting.
+  const syntheticOnCheckError = onCheckError === 'omit_row' ? 'warn_row' : onCheckError;
+  for (const check of syntheticChecks) {
+    const row = checkRow(check, syntheticObservations[check.id], syntheticOnCheckError, config);
+    if (!row) continue;
+    rows.push(row);
     if (row.status === 'FAIL') errors.push(`${check.id}: ${renderValue(row.value)}`);
     else if (row.status === 'WARN') warnings.push(`${check.id}: ${renderValue(row.value)}`);
     if (row.status === 'FAIL' && check.blocking === true) blockingFailures.push(check.id);

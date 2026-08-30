@@ -161,10 +161,43 @@ function normaliseEol(text) {
 }
 
 /**
+ * R-T addendum (Fold B-4, commit 3) — `last_measured` (value/at/commit/cost_ms/sample_n/
+ * source_run) is EXPECTED to churn every re-time; fingerprinting it would fail the golden
+ * fingerprint on every re-time even when the declared CONTRACT (bound/why/frequency/when/
+ * source) hasn't changed. Strips the whole `last_measured` object from every `invariants[]`/
+ * `plausibility[]` entry before hashing a descriptor file — pure, parse-strip-reserialize,
+ * so the fingerprint is a function of the DECLARED contract only. A non-JSON or JSON-without-
+ * invariants/plausibility file (every other fingerprinted file: step.js, notes.json,
+ * compute.js, or a descriptor with neither category populated) passes through UNCHANGED.
+ */
+function stripLastMeasuredForFingerprint(text) {
+  let doc;
+  try {
+    doc = JSON.parse(text);
+  } catch {
+    return text; // not JSON (step.js/compute.js) — hash the raw text unchanged
+  }
+  if (!doc || typeof doc !== 'object') return text;
+  let touched = false;
+  for (const cat of ['invariants', 'plausibility']) {
+    if (!Array.isArray(doc[cat])) continue;
+    doc[cat] = doc[cat].map((entry) => {
+      if (!entry || typeof entry !== 'object' || !('last_measured' in entry)) return entry;
+      touched = true;
+      const { last_measured: _omit, ...rest } = entry;
+      return rest;
+    });
+  }
+  if (!touched) return text; // no invariants/plausibility entries carried last_measured — unchanged
+  return JSON.stringify(doc);
+}
+
+/**
  * sha256 over (step file, descriptor, notes, compute module) — SORTED path order, each
  * file contributing its repo-relative path (forward slashes) then its LF-normalised
- * content. Any listed file that does not exist THROWS: a lockfile that silently skips a
- * missing input is not a lockfile.
+ * content (the descriptor's own content first passed through
+ * stripLastMeasuredForFingerprint, Fold B-4). Any listed file that does not exist THROWS:
+ * a lockfile that silently skips a missing input is not a lockfile.
  * @param {{step: string, descriptorPath: string, notesPath: string|null, computePath: string|null}} paths
  * @returns {{source_fingerprint: string, fingerprint_files: string[]}}
  */
@@ -173,12 +206,14 @@ function computeSourceFingerprint({ step, descriptorPath, notesPath, computePath
     .filter((f) => typeof f === 'string' && f.length > 0)
     .map((f) => f.split(path.sep).join('/'))
     .sort();
+  const normalisedDescriptorPath = typeof descriptorPath === 'string' ? descriptorPath.split(path.sep).join('/') : null;
   const hash = crypto.createHash('sha256');
   for (const f of files) {
     if (!fs.existsSync(f)) throw new Error(`source_fingerprint: fingerprint input ${f} does not exist`);
     hash.update(f);
     hash.update('\n');
-    hash.update(normaliseEol(fs.readFileSync(f, 'utf8')));
+    const raw = normaliseEol(fs.readFileSync(f, 'utf8'));
+    hash.update(f === normalisedDescriptorPath ? stripLastMeasuredForFingerprint(raw) : raw);
   }
   return { source_fingerprint: hash.digest('hex'), fingerprint_files: files };
 }
@@ -348,6 +383,27 @@ function validateInvariantSpec(doc) {
     seen.add(inv.name);
   });
   return doc;
+}
+
+/**
+ * R-T addendum (Fold A-4c, commit 3) — once a step migrates its golden
+ * `invariants.json` into the descriptor's own `invariants[]`/`plausibility[]`
+ * categories, THAT is the source of truth, not a separate `--invariants=`
+ * file. Derives a `{name, sql}` spec from BOTH categories (ANY declared
+ * frequency — this offline capture tool snapshots every declared value for
+ * the regression record; the every_run/validate_only split governs the LIVE
+ * run-end hook, not this harness). Returns `null` when the descriptor
+ * declares neither (or declares them as "none"), so the caller falls back
+ * to its existing `--invariants=<file>`/no-invariants behavior unchanged.
+ */
+function deriveInvariantSpecFromDescriptor(descriptor) {
+  if (!descriptor) return null;
+  const entries = [
+    ...(Array.isArray(descriptor.invariants) ? descriptor.invariants : []),
+    ...(Array.isArray(descriptor.plausibility) ? descriptor.plausibility : []),
+  ];
+  if (entries.length === 0) return null;
+  return validateInvariantSpec(entries.map((e) => ({ name: e.id, sql: e.sql })));
 }
 
 /** Shape one query result into the recorded `{name, value}` — exactly one row, one column. Pure. */
@@ -707,12 +763,19 @@ async function main() {
   for (const t of Object.keys({ ...argColumns, ...argOrder })) {
     if (!tables.includes(t)) throw new Error(`--table-columns/--table-order names ${t}, which is not a snapshotted table [${tables.join(',')}]`);
   }
+  // R-T addendum (Fold A-4c) — explicit --invariants=<file> still wins (an
+  // operator override); otherwise derive from the descriptor's OWN
+  // invariants[]/plausibility[] once a step has migrated them (one source of
+  // truth per migrated step, not two) — falls back to `null` (today's
+  // no-invariants behavior) for a step that has migrated neither.
   const invariantsFile = opts.invariants ? String(opts.invariants) : null;
+  const derivedInvariantSpec = invariantsFile ? null : deriveInvariantSpecFromDescriptor(descriptor);
   const invariantSpec = invariantsFile
     ? validateInvariantSpec(JSON.parse(fs.readFileSync(path.resolve(invariantsFile), 'utf8')))
-    : null;
+    : derivedInvariantSpec;
+  const invariantsSource = invariantsFile ? invariantsFile : (derivedInvariantSpec ? 'descriptor' : null);
   console.log(`[capture-step-golden] tables=[${tables.join(',')}] (source ${tablesSource}; ceiling ${ceiling}) ` +
-    `invariants=${invariantSpec ? `${invariantSpec.length} from ${invariantsFile}` : '(none)'}`);
+    `invariants=${invariantSpec ? `${invariantSpec.length} from ${invariantsSource}` : '(none)'}`);
   for (const t of tables) {
     const s = tableSpecs[t];
     console.log(`[capture-step-golden]   ${t}: columns=${s.columns ? s.columns.join(',') : '<all>'} (${s.columns_source}) ` +
@@ -802,8 +865,10 @@ module.exports = {
   deriveTableSpecs,
   resolveTableSpec,
   validateInvariantSpec,
+  deriveInvariantSpecFromDescriptor,
   invariantResult,
   computeSourceFingerprint,
+  stripLastMeasuredForFingerprint,
   computePathFor,
   notesPathFor,
   gitHead,

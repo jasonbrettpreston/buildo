@@ -14,6 +14,10 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import type { PoolClient, Pool } from 'pg';
 import { dbAvailable, getTestPool } from './setup-testcontainer';
+// eslint-disable-next-line @typescript-eslint/no-require-imports -- exercising the real CJS executor
+const { runInvariants, runPlausibility } = require('../../../scripts/lib/step/plausibility.js');
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const LINK_MASSING_DESCRIPTOR = require('../../../scripts/link-massing.descriptor.json');
 
 const TEST_PARCEL = 993_000_000;
 
@@ -68,5 +72,48 @@ describe.skipIf(!dbAvailable())('Spec 56 link-massing — building-centroid-in-p
 
       await c.query('ROLLBACK');
     } finally { c.release(); }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// R-C round-trip lock (Fold B-10, orchestrator ruling 2026-08-30) — proves the
+// descriptor-driven executor's computed values are IDENTICAL to a raw direct
+// query for the SAME sql, round-tripped against the SAME (real, current) DB
+// state — before link_massing's golden invariants.json is deleted. Read-only,
+// no BEGIN/ROLLBACK needed. Runs against real link_massing data, not fixture
+// rows, which is the point: this validates the EXECUTION PATH (runInvariants/
+// runPlausibility -> checkRow -> row.value), not the SQL text itself.
+describe.skipIf(!dbAvailable())('R-C round-trip lock — invariants[]/plausibility[] executor values match raw SQL (Fold B-10)', () => {
+  let pool: Pool;
+  beforeAll(() => { pool = getTestPool() as Pool; });
+
+  it('every migrated invariants[]/plausibility[] entry\'s executor-reported value equals a raw direct query for the SAME sql', async () => {
+    const entries = [
+      ...(Array.isArray(LINK_MASSING_DESCRIPTOR.invariants) ? LINK_MASSING_DESCRIPTOR.invariants : []),
+      ...(Array.isArray(LINK_MASSING_DESCRIPTOR.plausibility) ? LINK_MASSING_DESCRIPTOR.plausibility : []),
+    ];
+    expect(entries.length, 'link_massing must have migrated invariants/plausibility entries for this lock to prove anything').toBeGreaterThan(0);
+
+    const invariantsRun = await runInvariants(pool, LINK_MASSING_DESCRIPTOR, { frequency: 'every_run', when: null });
+    const plausibilityRun = await runPlausibility(pool, LINK_MASSING_DESCRIPTOR, { frequency: 'every_run', when: null });
+    const observations: Record<string, { value?: unknown; violations?: unknown; error?: unknown }> = {
+      ...invariantsRun.observations,
+      ...plausibilityRun.observations,
+    };
+
+    for (const entry of entries) {
+      const obs = observations[entry.id];
+      expect(obs, `${entry.id}: the executor did not report an observation`).toBeDefined();
+      if (!obs) continue; // narrows for TS below — the expect() above already failed the test if this were reached
+      expect(obs.error, `${entry.id}: the executor's own query errored: ${String(obs.error)}`).toBeUndefined();
+
+      const raw = await pool.query(entry.sql);
+      const rawValue = raw.rows[0] ? Object.values(raw.rows[0])[0] : null;
+      const rawNumeric = typeof rawValue === 'string' && /^-?\d+(?:\.\d+)?$/.test(rawValue.trim())
+        ? Number(rawValue)
+        : rawValue;
+
+      expect(obs.value, `${entry.id}: executor value diverges from a raw direct query for the same sql (round-trip, R-C)`).toEqual(rawNumeric);
+    }
   });
 });

@@ -208,6 +208,7 @@ describe('buildCapture + parseArgs', () => {
 const {
   resolveTables, tableStateDecision, parseRowCeiling, orderByClause, descriptorPathFor,
   validateInvariantSpec, invariantResult, DEFAULT_TABLE_ROW_CEILING,
+  deriveInvariantSpecFromDescriptor,
 } = harness;
 
 const RAVINES_STATE = { table: 'ravines', row_count: 854, content_hash: 'd136a7e999ca4f76d8e1b03e7c14beae', order_by: 'pk' };
@@ -286,6 +287,27 @@ describe('invariants file — validation + one-scalar result shaping', () => {
       'parcels_lineage_mismatch',
     ]);
     for (const inv of doc) expect(inv.sql).toMatch(/^SELECT /);
+  });
+
+  it('R-T addendum (Fold A-4c, commit 3) — deriveInvariantSpecFromDescriptor reads BOTH invariants[] and plausibility[], null for neither', () => {
+    expect(deriveInvariantSpecFromDescriptor(null)).toBeNull();
+    expect(deriveInvariantSpecFromDescriptor({})).toBeNull();
+    expect(deriveInvariantSpecFromDescriptor({ invariants: 'none', plausibility: 'none' })).toBeNull();
+    const derived = deriveInvariantSpecFromDescriptor({
+      invariants: [{ id: 'a', sql: 'SELECT 1' }, { id: 'b', sql: 'SELECT 2' }],
+      plausibility: [{ id: 'c', sql: 'SELECT 3' }],
+    });
+    expect(derived).toEqual([{ name: 'a', sql: 'SELECT 1' }, { name: 'b', sql: 'SELECT 2' }, { name: 'c', sql: 'SELECT 3' }]);
+  });
+
+  it('the migrated link_massing descriptor\'s invariants[]/plausibility[] derive to exactly the 6 R-T-addendum entries, each a real SELECT', () => {
+    const descriptor = require('../../scripts/link-massing.descriptor.json');
+    const derived = deriveInvariantSpecFromDescriptor(descriptor);
+    expect(derived?.map((i: { name: string }) => i.name)).toEqual([
+      'pb_unique_pairs_violations', 'pb_rows', 'pb_distinct_parcels', 'parcels_with_centroid',
+      'nearest_share_pct', 'linked_parcel_null_centroid_count',
+    ]);
+    for (const inv of derived ?? []) expect(inv.sql).toMatch(/^SELECT /);
   });
 });
 
@@ -437,12 +459,21 @@ describe('projection bypasses the ceiling on the UNPROJECTED count; ORDER BY pre
     const other = normalise(rawCapture({ table_state: [{ ...PB_STATE, columns: [...PB_COLUMNS, 'linked_at'] }] })).normalised;
     expect(diffNormalised(doc.normalised, other).map((d: { path: string }) => d.path)).toEqual(['table_state[0].columns[6]']);
   });
-  it('the committed link_massing invariants file validates and names the Fold B item-7 set', () => {
-    const doc = require('../../docs/reports/golden/link_massing/invariants.json');
-    expect(validateInvariantSpec(doc).map((i: { name: string }) => i.name)).toEqual([
-      'pb_unique_pairs_violations', 'pb_multi_primary_parcels', 'pb_rows', 'pb_distinct_parcels',
-      'parcels_with_centroid', 'link_rate_pct', 'confidence_values', 'nearest_share_pct',
+  it('R-T addendum (Fold A-4c, commit 3) — link_massing\'s golden invariants.json is RETIRED (one source of truth: the descriptor), not just superseded', () => {
+    // require() throwing "Cannot find module" IS the deletion proof — consistent with how
+    // every other fixture load in this file already resolves paths (createRequire above),
+    // no fs/path import needed.
+    expect(() => require('../../docs/reports/golden/link_massing/invariants.json'),
+      'the retired file must actually be deleted, not merely unread').toThrow(/Cannot find module/);
+    // The R-C round-trip lock (Fold B-10, src/tests/db/link-massing.db.test.ts) already
+    // proved the descriptor-driven executor's values match the retired file's own SQL,
+    // round-tripped against real data, BEFORE this deletion landed — this test only proves
+    // the deletion itself, not the round-trip (a live-DB concern, out of scope here).
+    const descriptor = require('../../scripts/link-massing.descriptor.json');
+    const derived = deriveInvariantSpecFromDescriptor(descriptor);
+    expect(derived?.map((i: { name: string }) => i.name)).toEqual([
+      'pb_unique_pairs_violations', 'pb_rows', 'pb_distinct_parcels', 'parcels_with_centroid',
+      'nearest_share_pct', 'linked_parcel_null_centroid_count',
     ]);
-    for (const inv of doc) expect(inv.sql).toMatch(/^SELECT /);
   });
 });

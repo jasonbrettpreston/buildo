@@ -106,6 +106,12 @@ const DEFECT_LEDGER_PATH = path.join(REPO_ROOT, 'docs/reports/defect-ledger.md')
 
 const validateLib = require(path.join(REPO_ROOT, 'scripts/lib/step/validate.js'));
 const harness = require(path.join(REPO_ROOT, 'scripts/analysis/capture-step-golden.js'));
+// R-T addendum (Spec 124 §2 Rule 13, commit 3) — the SAME invariants[]/plausibility[]
+// executor the run-end hook uses (scripts/lib/step/index.js:1834). `--write`'s cutover/
+// backfill context calls it directly for BOTH frequencies (every_run AND validate_only —
+// frequency gating is a run-end-hook-only concern; the cutover context validates the DATA,
+// not just the cheap subset). Lazily required (only when a descriptor actually declares
+// invariants/plausibility) so a plain --write scorecard-only run never pays for pg/resolve-db.
 
 const STEP_SHAPE_RULE = 'scripts/ast-grep-rules/step-shape.yml';
 const COMPUTE_SHAPE_RULE = 'scripts/ast-grep-rules/compute-shape.yml';
@@ -1268,7 +1274,54 @@ function selfTest() {
 // ---------------------------------------------------------------------------
 // Main
 // ---------------------------------------------------------------------------
-function main() {
+// R-T addendum (commit 3) — lazy shared pool, opened on first use, closed once at the end
+// of main(). Lazy so a plain `--write` run over descriptors with no declared invariants/
+// plausibility (every step except link_massing, as of this commit) never touches pg/DB at
+// all — unchanged cost for the common case.
+let dataValidatorPool = null;
+function getDataValidatorPool() {
+  if (!dataValidatorPool) {
+    const { createResolvedPool } = require(path.join(REPO_ROOT, 'scripts/lib/resolve-db.js'));
+    dataValidatorPool = createResolvedPool({ label: 'step-validate --write' });
+  }
+  return dataValidatorPool;
+}
+
+/**
+ * R-T addendum (Spec 124 §2 Rule 13, commit 3) — `--write`'s cutover/backfill context runs
+ * the SAME executor (scripts/lib/step/plausibility.js) `--full` invariants[]/plausibility[]
+ * for BOTH frequencies (unlike the run-end hook, which only fires `every_run`). No-op when
+ * the descriptor declares neither category (or declares them "none") — the common case
+ * today. Reports PASS/WARN/FAIL per entry; does not write last_measured back to the
+ * descriptor (a separate, not-yet-built backfill concern — flagged, not silently done here).
+ */
+async function runDataValidatorsForWrite(row, descriptorInfo) {
+  const d = descriptorInfo.descriptor;
+  const hasInvariants = d && Array.isArray(d.invariants) && d.invariants.length > 0;
+  const hasPlausibility = d && Array.isArray(d.plausibility) && d.plausibility.length > 0;
+  if (!hasInvariants && !hasPlausibility) return null;
+  const { runInvariants, runPlausibility } = require(path.join(REPO_ROOT, 'scripts/lib/step/plausibility.js'));
+  const pool = getDataValidatorPool();
+  const results = [];
+  for (const frequency of ['every_run', 'validate_only']) {
+    const invRun = hasInvariants ? await runInvariants(pool, d, { frequency, when: null }) : { checks: [], observations: {} };
+    const plRun = hasPlausibility ? await runPlausibility(pool, d, { frequency, when: null }) : { checks: [], observations: {} };
+    for (const check of [...invRun.checks, ...plRun.checks]) {
+      const obs = invRun.observations[check.id] ?? plRun.observations[check.id];
+      const verdict = obs && obs.error
+        ? { status: 'ERROR', detail: String(obs.error && obs.error.message || obs.error) }
+        : { status: 'ok', value: obs ? obs.value : undefined };
+      results.push({ id: check.id, source: check.source, frequency, ...verdict });
+    }
+  }
+  console.log(`[step-validate] ${row.slug}: data validator (--write, both frequencies) — ${results.length} entries executed:`);
+  for (const r of results) {
+    console.log(`  ${r.id} (${r.source}, ${r.frequency}): ${r.status === 'ERROR' ? `ERROR — ${r.detail}` : `value=${JSON.stringify(r.value)}`}`);
+  }
+  return results;
+}
+
+async function main() {
   const opts = parseArgs(process.argv.slice(2));
   selfTest();
   if (opts.selfTestOnly) {
@@ -1335,6 +1388,10 @@ function main() {
         writeScorecard(row.report, block);
         console.log(`[step-validate] wrote scorecard into ${path.relative(REPO_ROOT, row.report)}`);
       }
+      // R-T addendum (commit 3) — the cutover/backfill data-validator pass, both
+      // frequencies. No-op (returns null, logs nothing) for a descriptor with no
+      // declared invariants[]/plausibility[].
+      await runDataValidatorsForWrite(row, descriptorInfo);
     }
 
     if (!descriptorInfo.ok) console.error(`[step-validate] ${row.slug}: descriptor validation FAILED — ${descriptorInfo.error}`);
@@ -1358,15 +1415,15 @@ function main() {
     for (const r of registryFails) console.log(`  #${r.id}: ${r.detail}`);
   }
 
+  if (dataValidatorPool) await dataValidatorPool.end();
+
   if (anyHardStop) {
     console.error('\n[step-validate] HARD STOP on at least one step (G6/G7/G8 == 0, G9 FAIL, or a fast invariant FAIL). Exiting non-zero.');
     process.exit(1);
   }
 }
 
-try {
-  main();
-} catch (err) {
+main().catch((err) => {
   console.error(`[step-validate] ${err.stack || err.message}`);
   process.exit(2);
-}
+});

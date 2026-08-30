@@ -427,12 +427,18 @@ type FakePoolOpts = {
   database?: string;
   /** logic_variables rows this DB "has". Absent ⇒ zero rows ⇒ the loader's seed fallbacks. */
   logicVars?: Record<string, unknown>;
+  /** R-T addendum, commit 3 — SQL-text-matched answers for invariants[]/plausibility[]
+   * entries' own queries (checked BEFORE the fixed switch below, additive/backward
+   * compatible — no existing caller passes this). */
+  queryAnswers?: Array<{ match: (text: string) => boolean; rows: Array<Record<string, unknown>> }>;
 };
 
 function fakePool(opts: FakePoolOpts = {}) {
   const sql: string[] = [];
   const params: unknown[][] = [];
   const answer = (text: string) => {
+    const override = opts.queryAnswers?.find((qa) => qa.match(text));
+    if (override) return { rows: override.rows };
     if (text.includes('current_database()')) {
       return { rows: [{ database: opts.database ?? 'postgres', db_user: 'postgres', has_tracking: true }] };
     }
@@ -743,6 +749,149 @@ describe('run(ctx) — the lifecycle, against a fake pool', () => {
     } finally {
       cap.restore();
     }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// 6b. R-T addendum (Spec 124 §2 Rule 13, commit 3) — the invariants[]/plausibility[]
+//     EVERY_RUN executor, end to end against a fake pool.
+// ---------------------------------------------------------------------------
+
+/** A schema-valid invariants[] entry (definitions.invariant, step.schema.json). */
+function testInvariant(overrides: Record<string, unknown> = {}) {
+  return {
+    id: 'test_invariant',
+    sql: "SELECT 1 AS v -- TEST_INVARIANT_SQL",
+    bound: 'value_min 0',
+    severity: 'FAIL',
+    blocking: false,
+    when: 'pre',
+    source: 'invariant',
+    frequency: 'every_run',
+    last_measured: {
+      value: 1, at: '2026-08-30T00:00:00.000Z', commit: '0000000', cost_ms: 1, sample_n: 5,
+      source_run: { run_id: null, chain: null, event: 'fixture' },
+    },
+    why: { text: 'fixture, R-T addendum test', liveness: 'none' },
+    ...overrides,
+  };
+}
+
+/** ASSERT_SCHEMA with a declared invariants[] array — the fixture's plausibility stays absent (optional, staged). */
+function withInvariants(invariants: Array<Record<string, unknown>>) {
+  const d = clone(ASSERT_SCHEMA);
+  d.invariants = invariants;
+  return d;
+}
+
+describe('R-T addendum, commit 3 — invariants[]/plausibility[] EVERY_RUN executor (fake pool, no DB)', () => {
+  it('GREEN — a satisfied every_run invariant PASSes and carries source:"invariant" (Fold B-3)', async () => {
+    const d = withInvariants([testInvariant({ id: 'rows_ok', bound: 'value_min 0' })]);
+    const pool = fakePool({ queryAnswers: [{ match: (t) => t.includes('TEST_INVARIANT_SQL'), rows: [{ v: 42 }] }] });
+    const cap = captureEmissions();
+    try {
+      await pipeline.step(d, allClean).run({ pool, chainId: 'sources' });
+      const summary = cap.summary();
+      const row = summary.records_meta.audit_table.rows.find((r: Row) => r.metric === 'rows_ok');
+      expect(row, 'the synthetic invariant row must appear in audit_table.rows').toBeDefined();
+      expect(row.status).toBe('PASS');
+      expect(row.source, 'Fold B-3 — every synthetic row carries its declared source').toBe('invariant');
+      expect(row.value).toBe(42);
+    } finally {
+      cap.restore();
+    }
+  });
+
+  it('RED-then-GREEN — a BLOCKING invariant FAIL populates errors[]/checks_failed/errorMessage exactly like a real check (Fold A-2, the correction this commit exists to land)', async () => {
+    const d = withInvariants([testInvariant({ id: 'must_be_zero', bound: 'value_max 0', severity: 'FAIL', blocking: true })]);
+    const pool = fakePool({ queryAnswers: [{ match: (t) => t.includes('TEST_INVARIANT_SQL'), rows: [{ v: 5 }] }] });
+    const cap = captureEmissions();
+    try {
+      await expect(
+        pipeline.step(d, allClean).run({ pool, chainId: 'sources' }),
+      ).rejects.toThrow(/blocking checks failed: must_be_zero/);
+      const summary = cap.summary();
+      // Fold A-2's own BLOCKING correction: the row must reach errors[]/checks_failed —
+      // an `extraRows`-only append (the plan's original, WRONG assumption) never would.
+      expect(summary.records_meta.checks_failed).toBeGreaterThan(0);
+      expect(summary.records_meta.errors.some((e: string) => e.startsWith('must_be_zero:'))).toBe(true);
+      const row = summary.records_meta.audit_table.rows.find((r: Row) => r.metric === 'must_be_zero');
+      expect(row.status).toBe('FAIL');
+    } finally {
+      cap.restore();
+    }
+  });
+
+  it('RED-then-GREEN — a validate_only invariant does NOT fire at the run-end hook, both directions (frequency gating)', async () => {
+    const everyRun = testInvariant({ id: 'cheap_check', frequency: 'every_run' });
+    const validateOnly = testInvariant({
+      id: 'expensive_check', frequency: 'validate_only', statement_timeout: 'none', statement_timeout_why: { text: 'fixture, no ceiling to raise against', liveness: 'none' },
+    });
+    const d = withInvariants([everyRun, validateOnly]);
+    const pool = fakePool({
+      queryAnswers: [
+        { match: (t) => t.includes('TEST_INVARIANT_SQL'), rows: [{ v: 0 }] },
+      ],
+    });
+    const cap = captureEmissions();
+    try {
+      await pipeline.step(d, allClean).run({ pool, chainId: 'sources' });
+      const summary = cap.summary();
+      const metrics = summary.records_meta.audit_table.rows.map((r: Row) => r.metric);
+      // Both entries share the SAME sql text (TEST_INVARIANT_SQL), so this is a frequency
+      // assertion, not a "which query ran" one: cheap_check (every_run) must appear,
+      // expensive_check (validate_only) must NOT — it is not even a "not reported" row,
+      // because it is never SELECTED at all at run-end (unlike a real declared check).
+      expect(metrics).toContain('cheap_check');
+      expect(metrics).not.toContain('expensive_check');
+    } finally {
+      cap.restore();
+    }
+  });
+
+  it('Fold A-3/B-2 — a gated-skip (self_skipped, advisory lock contention) run fires ZERO invariant executions, even for every_run entries', async () => {
+    const d = withInvariants([testInvariant({ id: 'never_reached', when: 'pre' })]);
+    const pool = fakePool({ lockAcquired: false, queryAnswers: [{ match: (t) => t.includes('TEST_INVARIANT_SQL'), rows: [{ v: 0 }] }] });
+    const cap = captureEmissions();
+    try {
+      await pipeline.step(d, async () => {}).run({ pool, chainId: 'sources' });
+      // Self-skip never acquires the advisory lock, so it never reaches the invariants
+      // executor at all — the strongest possible proof is that the query was never
+      // issued (the skip's own records_meta, built by skipRecordsMeta(), is a FIXED
+      // {status, reason, sys_*} shape unrelated to checks[]/invariants[] entirely, so
+      // asserting against it would prove nothing about THIS mechanism specifically).
+      expect(pool.sql.some((s) => s.includes('TEST_INVARIANT_SQL'))).toBe(false);
+    } finally {
+      cap.restore();
+    }
+  });
+
+  it('Fold B-2 — a `when:"pre"` invariant DOES fire even when the run narrows to a gated-skip subset that excludes "post"', async () => {
+    // isIngestStep's own gated-skip narrowing (`ingest.skipped`) restricts onlyChecks/
+    // onlyWhen to `['pre']` only — assert_schema IS an ingest-shaped step in this
+    // library sense structurally, but its own descriptor never gates, so this proves
+    // the MECHANISM directly against buildAuditTable/runValidatorEntries instead:
+    // a `when:'pre'` entry is unaffected by an `onlyWhen: ['pre']` narrowing.
+    const verdictLibDirect = verdictLib as unknown as {
+      buildAuditTable: (
+        descriptor: unknown, chainId: string | null, observations: unknown, extraRows: unknown[],
+        config: unknown, only: Set<string> | null, synthetic: { checks: unknown[]; observations: Record<string, unknown> },
+      ) => { rows: Row[] };
+    };
+    const preCheck = { id: 'pre_entry', limit: 'value_min 0', severity: 'INFO', blocking: false, source: 'invariant' };
+    const postCheck = { id: 'post_entry', limit: 'value_min 0', severity: 'INFO', blocking: false, source: 'invariant' };
+    const built = verdictLibDirect.buildAuditTable(
+      withChecks([]), 'sources', {}, [], null, null,
+      { checks: [preCheck, postCheck], observations: { pre_entry: { value: 1 }, post_entry: { value: 1 } } },
+    );
+    const metrics = built.rows.map((r) => r.metric);
+    // buildAuditTable itself does not narrow by `when` — the CALLER (index.js) is
+    // responsible for pre-filtering via runValidatorEntries's own `when` param before
+    // ever building the `synthetic` object (proven end-to-end by the metrics.not.toContain
+    // 'expensive_check' assertion above, which exercises the REAL index.js call site).
+    // This unit-level check instead locks that buildAuditTable folds EVERYTHING it is
+    // handed, uniformly, with no category-specific branch — the actual Fold A-2 guarantee.
+    expect(metrics).toEqual(expect.arrayContaining(['pre_entry', 'post_entry']));
   });
 });
 

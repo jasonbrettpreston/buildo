@@ -464,6 +464,19 @@ Written 2026-08-28 after cutover `68b8e361` + output panel (Guardian PASS ×8; O
 
 **G8 verdict:** zero unexplained diffs. Two buckets (`audit_table.phase`, `audit_table.verdict`) needed genuine investigation rather than pattern-matching against pilots 1-2's differentials — both resolved to real, already-documented facts (S12's own ternary-retirement note; LM-D7's own retirement leaving a live seed row), not regressions. No new LM-D row needed for a diff bucket.
 
+## 7b. R-T addendum differential (WF2 "The Step Validator, Data-First", commit 3, 2026-08-30)
+
+Spec 124 §2 Rule 13's R-T addendum lands `invariants[]`/`plausibility[]` (5 net-new invariants + 1 plausibility candidate, Finding 3) into this descriptor, plus the LM-D6/LM-D11 severity fix ruling R-H had left undelivered. Re-captured all four `post/` scenarios against this commit; every new diff bucket vs. the §7 baseline is named here, per the same G8 discipline:
+
+- **`source`** (every `audit_table.rows[N]` entry) — new field (Fold B-3): `"check"` for every pre-existing `checks[]` row (a default, not a descriptor change — `checks[]` entries declare no `source` field of their own), `"invariant"`/`"plausibility"` for the 6 new R-T-addendum rows. Lets a consumer reading only the emitted audit table tell DATA rows from PROCESS rows without re-deriving it from array membership.
+- **`pb_unique_pairs_violations`, `pb_rows`, `pb_distinct_parcels`, `parcels_with_centroid`, `nearest_share_pct`, `linked_parcel_null_centroid_count`** — 6 new `audit_table.rows` entries (5 `invariants[]` + 1 `plausibility[]`, `source:"invariant"`/`"plausibility"`), all `every_run` (measured this session — single-session medians, 131ms/30ms/55ms/196ms/37ms/677ms — well under the `invariants_every_run_budget_ms` 5000ms default; a ≥2-session grounder re-confirmation is a filed followup, not yet executed). `linked_parcel_null_centroid_count` is this pilot's own worked plausibility example (Fold A-5, PHYSICAL-BOUND): grounded in `scripts/lib/compute/link-massing.js:101`'s `PARCEL_ELIGIBILITY` predicate — a primary-linked parcel with a NULL centroid is structurally impossible under normal operation, checked against `parcels` (compute_centroids' own table), not link_massing's own write.
+- **`warnings` / `checks_warned`** (newly non-empty, was `[]`/`0` on every capture in §7's baseline) — **the actual behaviour fix**, not just a relabelling: `nearest_footprint_gt_lot_count`/`shared_primary_buildings` (LM-D6/LM-D11) flip `severity: INFO → WARN` in the descriptor (ruling R-H, 2026-08-28, re-verified 2026-08-29 as undelivered and filed HIGH), AND `scripts/lib/compute/link-massing.js`'s own two compute functions change `violations: 0` (hardcoded) → the REAL combined over-lot / shared-building count. Measured live capturing this exact fix: the severity flip ALONE did nothing (the hardcoded `violations: 0` made `evaluateLimit('viol == 0', {violations:0})` read `ok:true` regardless of declared severity — the row rendered PASS with WARN severity already in force, until the compute-side change landed). Both rows now correctly read WARN on every run (a standing, non-zero population by design — Spec 48 §4.9: WARN + a self-announcing `retighten_when` ("zero rows"), never FAIL, never a silent PASS).
+- **`retighten_when`** — new, optional `checks[]` field (extended from `invariants[]`/`plausibility[]`'s own field, same grammar) — populated on LM-D6/LM-D11 only, closing R-H's standing HIGH follow-up.
+- **`table_state[0].columns`** — unchanged (still excludes `id`/`linked_at`, matching §7's own A-4/Fold-B-item-5 precedent) — re-captured with the SAME explicit `--table-columns`/`--table-order` this pilot's captures have always used; the auto-derivation `capture-step-golden.js` now supports from `outputs.writes[]` would have wrongly included `linked_at` (it is `written:"step"`, not `db_default`) had it been relied on instead of the explicit flag.
+- **`source_fingerprint`** — moves (Fold B-4: the fingerprint algorithm itself now strips `last_measured` from a descriptor's `invariants[]`/`plausibility[]` entries before hashing, so a future re-time alone will NOT move it again — this commit's move is from the real, declared-contract descriptor change, not from `last_measured` churn).
+
+**G8 verdict (R-T addendum pass):** every new diff bucket named above; `warnings`/`checks_warned`/`retighten_when`/`source` cited by name satisfies the generic-wrapper-excluded citation rule (`step-validate.mjs`'s G8 scorer). No unexplained diffs expected from this pass.
+
 ---
 
 ## Validation scorecard (generated)
@@ -482,10 +495,10 @@ Written 2026-08-28 after cutover `68b8e361` + output panel (Guardian PASS ×8; O
 | G4 | 2 | 2 | risk-class row with chance+impact found=true |
 | G5 | 1 | 1 | db=true clock=true network=true argv/env=true |
 | G6 | 3 | 3 | 16 ledger row(s), 0 without CLOSED/PIN () |
-| G7 | 3 | 3 | file=true fences=7 it-count=72 RED-evidence=true |
+| G7 | 3 | 3 | file=true fences=7 it-count=75 RED-evidence=true |
 | G8 | 3 | 3 | missing-invocations=0 stale-fingerprints=0 unexplained-diffs=0 |
 | G9 (binary) | PASS | — | heading=true low-confidence-table=true recurring-table=true |
-| G4d (fence<=lock) | PASS | — | fences=7 lock-it-count=72 |
+| G4d (fence<=lock) | PASS | — | fences=7 lock-it-count=75 |
 | G-shape | PASS | — | file-clean=true compute-clean=true |
 
 ### Fast invariants (always run — the fast descriptor gate)
@@ -504,10 +517,10 @@ Written 2026-08-28 after cutover `68b8e361` + output panel (Guardian PASS ×8; O
 ### Captures (item iv)
 - missing invocations: none
 - stale fingerprints: none
-- compare ran: true · diffs found: 331 · unexplained: 0
+- compare ran: true · diffs found: 434 · unexplained: 0
 
 ### Test suite (item iii)
-- SKIPPED or failed to run: --fast: vitest spawn skipped
+- 0/0 passed (suite success=true)
 
 ### Policy coverage matrix (item vi) — Spec 124 Rules 1-13
 
@@ -526,7 +539,7 @@ Written 2026-08-28 after cutover `68b8e361` + output panel (Guardian PASS ×8; O
 | 11 | Phase-order re-derive (R-B) | prose-only | R-B describe not scoped to this step |
 | 12 | Truthful crash posture (R-M + R-B reader) | prose-only | R-M/R-B-reader describes not scoped to this step |
 | 13 | A step validates itself | enforced-green | this run of step:validate IS the mechanism |
-| P3 | I/O cost adjudication (measured, not gated) | measured | descriptor=60389B notes=17389B checks=19 rows records_meta=3407B (newest post/ capture) |
+| P3 | I/O cost adjudication (measured, not gated) | measured | descriptor=68254B notes=17389B checks=19 rows records_meta=5045B (newest post/ capture) |
 
 **Enforced-green: 10/14**
 

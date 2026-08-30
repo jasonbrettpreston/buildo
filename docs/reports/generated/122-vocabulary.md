@@ -2,7 +2,7 @@
 <!-- Source of truth: scripts/steps/_schema/step.schema.json (operator ruling R2). -->
 <!-- Regenerate: node scripts/violations/schema-to-vocab.mjs docs/reports/generated/122-vocabulary.md -->
 
-# The step contract — 18 categories, 350 declarable fields
+# The step contract — 18 categories, 351 declarable fields
 
 **Contract version 1 · status `v0-unfrozen-until-C3`.** The schema is canonical; this document is generated from it. Editing this file changes nothing.
 
@@ -20,7 +20,7 @@
 | 4 | `staleness` | 25 | 7 | 0 |
 | 5 | `guards` | 21 | 7 | 0 |
 | 6 | `execution` | 52 | 13 | 1 |
-| 7 | `checks` | 24 | 6 | 0 |
+| 7 | `checks` | 25 | 6 | 0 |
 | 8 | `override` | 11 | 1 | 0 |
 | 9 | `emits` | 4 | 1 | 0 |
 | 10 | `deviations` | 8 | 1 | 0 |
@@ -417,6 +417,7 @@ Grandfathered, never legal for a new step: an existing step must be able to decl
 | `[].why.liveness` | `none` \| object {kind, ref} | † |
 | `[].why.liveness.kind` | `check` · `file` · `table` · `column` · `external` · `spec` | † ! |
 | `[].why.liveness.ref` | string | † |
+| `[].retighten_when` | string | — |
 
 ### override
 

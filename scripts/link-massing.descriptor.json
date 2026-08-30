@@ -503,13 +503,14 @@
       "kind": "field_coverage",
       "expect": { "reports": "primary links whose building footprint is larger than its own parcel, by match_type" },
       "limit": "viol == 0",
-      "severity": "INFO",
+      "severity": "WARN",
       "blocking": false,
       "when": "post",
       "chains": "all",
       "accept_until": "none",
+      "retighten_when": "zero rows",
       "why": {
-        "text": "LM-D6, added at peel 8b under the A-6 ruling and C-6's pin-then-add (a counter may not be smuggled into the no-op differential). Measured live 2026-08-27 AFTER the LM-D13 tiebreak relink: 50,790 of 103,530 nearest primaries (49.06%) and 13,347 of 381,605 centroid_in_parcel primaries (3.50%) carry a footprint larger than their own lot. ⚠️ THE TIEBREAK MOVED THIS NUMBER AND THAT IS DECLARED, NOT INCIDENTAL: before it the same count read 48,646 (47.0%). Resolving a distance tie in favour of the LARGER footprint mechanically puts +2,144 more primaries above their lot line, because a bigger overlapping structure is likelier to exceed the parcel. The rule was chosen for consistency with fence 5bb31faf (the centroid pass picks the largest building as primary) and for the cost model's question (on a semi or a shared driveway, the larger overlapping structure is the one being priced) — but the trade is real and is on the record here rather than discovered later as a cost. Whether a nearest tie should instead prefer the GREATEST OVERLAP AREA with the parcel (semantically the right question, and a spatial computation this peel does not add) is filed to review_followups for the operator; 58,050 parcels are flagged `existing_data_quality_flag = 'footprint_exceeds_lot'` by enrich-parcels ONE CHAIN-STEP LATER, where the whole existing-structure block is NULLed. So the bad links were produced here, shipped, and silently discarded downstream with nothing at the link counting them. It is INFO by ruling, not by timidity: the population is a standing property of Toronto's parcel fabric plus this step's bounded fallback, a forced FULL relink moves none of it, and a WARN would redden every production run for a condition this commit did not create. Scoped to `is_primary` because the primary link is the row enrich-parcels derives from. Cumulative, never run-scoped — on the 1,395-parcel steady state a run-scoped version reports 0 forever.",
+        "text": "LM-D6, added at peel 8b under the A-6 ruling and C-6's pin-then-add (a counter may not be smuggled into the no-op differential). Measured live 2026-08-27 AFTER the LM-D13 tiebreak relink: 50,790 of 103,530 nearest primaries (49.06%) and 13,347 of 381,605 centroid_in_parcel primaries (3.50%) carry a footprint larger than their own lot. ⚠️ THE TIEBREAK MOVED THIS NUMBER AND THAT IS DECLARED, NOT INCIDENTAL: before it the same count read 48,646 (47.0%). Resolving a distance tie in favour of the LARGER footprint mechanically puts +2,144 more primaries above their lot line, because a bigger overlapping structure is likelier to exceed the parcel. The rule was chosen for consistency with fence 5bb31faf (the centroid pass picks the largest building as primary) and for the cost model's question (on a semi or a shared driveway, the larger overlapping structure is the one being priced) — but the trade is real and is on the record here rather than discovered later as a cost. Whether a nearest tie should instead prefer the GREATEST OVERLAP AREA with the parcel (semantically the right question, and a spatial computation this peel does not add) is filed to review_followups for the operator; 58,050 parcels are flagged `existing_data_quality_flag = 'footprint_exceeds_lot'` by enrich-parcels ONE CHAIN-STEP LATER, where the whole existing-structure block is NULLed. So the bad links were produced here, shipped, and silently discarded downstream with nothing at the link counting them. R-T addendum (commit 3, 2026-08-30): flipped INFO -> WARN per ruling R-H (2026-08-28, 'carried to pilot 4', re-verified 2026-08-29 as NOT delivered and filed HIGH) — this WF's `retighten_when` field is the closed form that finally satisfies R-H's promise. The population is a standing property of Toronto's parcel fabric plus this step's bounded fallback (a forced FULL relink moves none of it), never a defect THIS run introduced — WARN + a self-announcing retighten condition ('zero rows') per Spec 48 §4.9's own rule for a structurally non-zero population, never FAIL. Scoped to `is_primary` because the primary link is the row enrich-parcels derives from. Cumulative, never run-scoped — on the 1,395-parcel steady state a run-scoped version reports 0 forever.",
         "liveness": { "kind": "column", "ref": "parcels.existing_data_quality_flag" }
       }
     },
@@ -518,13 +519,14 @@
       "kind": "invariant",
       "expect": { "reports": "buildings that are the primary structure of more than one parcel, and the parcels affected" },
       "limit": "viol == 0",
-      "severity": "INFO",
+      "severity": "WARN",
       "blocking": false,
       "when": "post",
       "chains": "all",
       "accept_until": "none",
+      "retighten_when": "zero rows",
       "why": {
-        "text": "LM-D11. `idx_parcel_buildings_one_primary` enforces at most one primary PER PARCEL; nothing enforces — or, until now, counted — one parcel per primary BUILDING, and one building cannot be the primary structure of two parcels in the sense the cost model uses it. Measured live 2026-08-27 after the tiebreak relink: 65,318 buildings, 166,591 parcels (34.3% of linked) — the tiebreak REDUCED this by 1,489 buildings, the mirror image of the footprint-exceeds-lot rise: preferring the larger overlapping footprint spreads primaries across fewer shared structures. ⚠️ The plan measured 66,906 / 167,443 the same day, BEFORE any forced relink, and the pre-tiebreak junction read 66,807 / 167,329 — that first drift was LM-D13's own instability (a number moving when nothing changed), which is the second reason this count belongs in the audit table rather than in a report. INFO for the same reason as the counter above: it is a standing property, and the cost-model consequence is the filed review_followups WF3, not a gate this step may impose. The affected-parcel figure is `sum(n)` over the shared buildings precisely because the partial unique index makes each parcel contribute at most one primary row.",
+        "text": "LM-D11. `idx_parcel_buildings_one_primary` enforces at most one primary PER PARCEL; nothing enforces — or, until now, counted — one parcel per primary BUILDING, and one building cannot be the primary structure of two parcels in the sense the cost model uses it. Measured live 2026-08-27 after the tiebreak relink: 65,318 buildings, 166,591 parcels (34.3% of linked) — the tiebreak REDUCED this by 1,489 buildings, the mirror image of the footprint-exceeds-lot rise: preferring the larger overlapping footprint spreads primaries across fewer shared structures. ⚠️ The plan measured 66,906 / 167,443 the same day, BEFORE any forced relink, and the pre-tiebreak junction read 66,807 / 167,329 — that first drift was LM-D13's own instability (a number moving when nothing changed), which is the second reason this count belongs in the audit table rather than in a report. R-T addendum (commit 3, 2026-08-30): flipped INFO -> WARN per ruling R-H (same disposition and citation as LM-D6 above) — it is a standing property, the cost-model consequence is the filed review_followups WF3, never a gate this step may impose, and Spec 48 §4.9's rule for a structurally non-zero population is WARN + a self-announcing retighten condition, never FAIL. The affected-parcel figure is `sum(n)` over the shared buildings precisely because the partial unique index makes each parcel contribute at most one primary row.",
         "liveness": { "kind": "table", "ref": "parcel_buildings" }
       }
     },
@@ -571,6 +573,120 @@
       "why": {
         "text": "Reports the MEASURED privilege on every run, not only the failing one: a check that exists solely in the failure branch is a check nobody ever sees working. The refusal itself is the guards.requires precondition; this row is its evidence, and it is what distinguishes 'the corpus was unchanged' from 'every statement silently affected 0 rows'.",
         "liveness": { "kind": "table", "ref": "parcel_buildings" }
+      }
+    }
+  ],
+
+  "invariants": [
+    {
+      "id": "pb_unique_pairs_violations",
+      "sql": "SELECT count(*)::int FROM (SELECT parcel_id, building_id FROM parcel_buildings GROUP BY parcel_id, building_id HAVING count(*) > 1) d",
+      "bound": "viol == 0",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "source": "invariant",
+      "frequency": "every_run",
+      "last_measured": {
+        "value": 0, "at": "2026-08-30T12:24:47.000Z", "commit": "45c690b", "cost_ms": 131, "sample_n": 5,
+        "source_run": { "run_id": null, "chain": null, "event": "manual_timing" }
+      },
+      "why": {
+        "text": "R-T addendum, commit 3 (net-new, Finding 3 — no overlap with any declared checks[] entry). A duplicate (parcel_id, building_id) pair is structurally impossible under a correct link (the write is keyed on this pair) — a real, single-session timing (131ms median, 5 timings, ONE session only — Fold B-1's cross-session confirmation is a filed followup) puts this comfortably under invariants_every_run_budget_ms (5000ms default). FAIL because a non-zero count here IS a genuine bug, never a standing telemetry number.",
+        "liveness": { "kind": "table", "ref": "parcel_buildings" }
+      }
+    },
+    {
+      "id": "pb_rows",
+      "sql": "SELECT count(*)::int FROM parcel_buildings",
+      "bound": "value_min 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "source": "invariant",
+      "frequency": "every_run",
+      "last_measured": {
+        "value": 520492, "at": "2026-08-30T12:24:47.000Z", "commit": "45c690b", "cost_ms": 30, "sample_n": 5,
+        "source_run": { "run_id": null, "chain": null, "event": "manual_timing" }
+      },
+      "why": {
+        "text": "R-T addendum, commit 3 (net-new). Pure telemetry (a row-count trend signal, not a correctness bound) — value_min 0 is the sanity floor, not a meaningful threshold. 30ms median, 5 timings, single session.",
+        "liveness": { "kind": "table", "ref": "parcel_buildings" }
+      }
+    },
+    {
+      "id": "pb_distinct_parcels",
+      "sql": "SELECT count(DISTINCT parcel_id)::int FROM parcel_buildings",
+      "bound": "value_min 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "source": "invariant",
+      "frequency": "every_run",
+      "last_measured": {
+        "value": 485135, "at": "2026-08-30T12:24:47.000Z", "commit": "45c690b", "cost_ms": 55, "sample_n": 5,
+        "source_run": { "run_id": null, "chain": null, "event": "manual_timing" }
+      },
+      "why": {
+        "text": "R-T addendum, commit 3 (net-new). Pure telemetry (link-coverage trend), value_min 0 sanity floor. 55ms median, 5 timings, single session.",
+        "liveness": { "kind": "table", "ref": "parcel_buildings" }
+      }
+    },
+    {
+      "id": "parcels_with_centroid",
+      "sql": "SELECT count(*)::int FROM parcels WHERE centroid_lat IS NOT NULL AND centroid_lng IS NOT NULL",
+      "bound": "value_min 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "source": "invariant",
+      "frequency": "every_run",
+      "last_measured": {
+        "value": 486530, "at": "2026-08-30T12:24:47.000Z", "commit": "45c690b", "cost_ms": 196, "sample_n": 5,
+        "source_run": { "run_id": null, "chain": null, "event": "manual_timing" }
+      },
+      "why": {
+        "text": "R-T addendum, commit 3 (net-new). Pure telemetry (the link-eligible population per PARCEL_ELIGIBILITY, scripts/lib/compute/link-massing.js:101). Re-measured THIS session at 196ms median (5 timings) — well under invariants_every_run_budget_ms (5000ms), so every_run; this DIFFERS from the plan's own stale Fold B-1 figure (773ms, single earlier session) but agrees on the classification (every_run either way). Cross-session confirmation is a filed followup (Fold B-1's own rule needs >=2 distinct sessions; this WF measured across one).",
+        "liveness": { "kind": "table", "ref": "parcels" }
+      }
+    },
+    {
+      "id": "nearest_share_pct",
+      "sql": "SELECT round(100.0 * count(*) FILTER (WHERE match_type = 'nearest') / NULLIF(count(*), 0), 2) FROM parcel_buildings",
+      "bound": "value_max 100",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "source": "invariant",
+      "frequency": "every_run",
+      "last_measured": {
+        "value": 19.89, "at": "2026-08-30T12:24:47.000Z", "commit": "45c690b", "cost_ms": 37, "sample_n": 5,
+        "source_run": { "run_id": null, "chain": null, "event": "manual_timing" }
+      },
+      "why": {
+        "text": "R-T addendum, commit 3 (net-new). A percentage cannot exceed 100 by construction — value_max 100 is the sanity ceiling, not a meaningful threshold; the tiebreak's own share of primaries is a trend signal (Fold LM-D13). 37ms median, 5 timings, single session.",
+        "liveness": { "kind": "table", "ref": "parcel_buildings" }
+      }
+    }
+  ],
+  "plausibility": [
+    {
+      "id": "linked_parcel_null_centroid_count",
+      "sql": "SELECT count(*)::int FROM parcel_buildings pb JOIN parcels p ON p.id = pb.parcel_id WHERE pb.is_primary AND (p.centroid_lat IS NULL OR p.centroid_lng IS NULL)",
+      "bound": "viol == 0",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "source": "plausibility",
+      "frequency": "every_run",
+      "retighten_when": "zero rows (this check is expected to already read 0 — a non-zero count is a genuine finding, not a standing residual)",
+      "last_measured": {
+        "value": 0, "at": "2026-08-30T12:24:47.000Z", "commit": "45c690b", "cost_ms": 677, "sample_n": 5,
+        "source_run": { "run_id": null, "chain": null, "event": "manual_timing" }
+      },
+      "why": {
+        "text": "R-T addendum, commit 3 — the ONE plausibility candidate this pass identifies (Archetype table: 'centroid freshness vs. compute_centroids, the 1 live seam pair'). No exact SQL was pinned anywhere in the plan text for this candidate, so this is my own construction, grounded directly in the join's own eligibility predicate: scripts/lib/compute/link-massing.js:101 declares PARCEL_ELIGIBILITY = 'centroid_lat IS NOT NULL AND centroid_lng IS NOT NULL' as a structural precondition for a parcel to be linkable at all — a PRIMARY link on a parcel with a NULL centroid is therefore impossible under normal operation, making this a genuine cross-table PHYSICAL-BOUND (Fold A-5), not TELEMETRY-ONLY: it checks an invariant relationship between link_massing's own write (parcel_buildings.is_primary) and a DIFFERENT step's column (parcels.centroid_lat/lng, written by compute_centroids), the exact shape plausibility[] exists for. Measured 0 (matches expectation). Not the formal chain_run_id-based seam-validation MECHANISM (that lands at commit 5, R-U/Fold B-5) — this is the descriptor-side plausibility declaration Fold A-5 asked commit 3 to land alongside LM-D6/LM-D11's severity fix; commit 5's seam pass is a structurally different, RUN-level freshness comparison, not a duplicate of this row-level check.",
+        "liveness": { "kind": "file", "ref": "scripts/lib/compute/link-massing.js" }
       }
     }
   ],

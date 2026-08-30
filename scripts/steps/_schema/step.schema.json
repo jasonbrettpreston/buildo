@@ -672,7 +672,12 @@
             }
           ]
         },
-        "why": { "$ref": "#/definitions/why" }
+        "why": { "$ref": "#/definitions/why" },
+        "retighten_when": {
+          "description": "R-T addendum, commit 3 (R-H, 2026-08-28 — 'carried to pilot 4', unmet until now). A machine-readable STRING naming the condition that would let this check's severity tighten (e.g. \"zero rows\" or \"population < N\") — the SAME field/grammar `invariants[]`/`plausibility[]` carry (Design decisions), extended to `checks[]` because R-H's own dispositioned checks (LM-D6/LM-D11) are pre-existing `checks[]` entries, not new declared invariants. Pairs with the EXISTING <metric>_retighten companion-audit-row convention (scripts/lib/accepted-baseline.js, Spec 48 §4.9) — this is the descriptor-side declaration, the companion row is the runtime-side emission, reused not reinvented. Optional: only a WARN-severity check with a standing non-zero population carries one.",
+          "type": "string",
+          "minLength": 1
+        }
       },
       "allOf": [
         {

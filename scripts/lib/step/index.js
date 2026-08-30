@@ -70,6 +70,8 @@ const staleness = require('./staleness');
 const acquire = require('./acquire');
 const write = require('./write');
 const { finalizeStrandedRun } = require('../ledger-window');
+// R-T addendum (Spec 124 §2 Rule 13, commit 3) — the invariants[]/plausibility[] executor.
+const { runInvariants, runPlausibility } = require('./plausibility');
 
 /** The `config: "none"` projection — one shared frozen empty object, never a fresh `{}` per run. */
 const EMPTY_CONFIG = Object.freeze(Object.create(null));
@@ -1714,6 +1716,13 @@ async function runWithPool(runnable, pool, ctx) {
       let materialize = null;
       let backfill = null;
       let onlyChecks = null;
+      // R-T addendum (Fold A-3/B-2) — the SAME gated-skip narrowing a real `checks[]`
+      // entry gets, extended to invariants[]/plausibility[]. `onlyChecks` narrows by id
+      // (checks[]-scoped, unusable for a synthetic entry whose id lives in a different
+      // space); `onlyWhen` narrows by the `when` VALUE itself, which both categories
+      // share — set alongside `onlyChecks` in every branch below. null = unrestricted
+      // (score every declared `when`), matching `onlyChecks`'s own null-means-everything.
+      let onlyWhen = null;
       const drivesWrites = isIngestStep(descriptor) || isLinkStep(descriptor) || isCascadeStep(descriptor)
         || isMaterializeStep(descriptor) || isBackfillStep(descriptor);
       // Spec 47 §R3.5 / B-11 — the DB clock, captured ONCE, inside the lock, for
@@ -1740,6 +1749,7 @@ async function runWithPool(runnable, pool, ctx) {
           // would turn one honest pre_write FAIL into a table of "not reported" rows at
           // their declared severities — the same reasoning as the gated-skip narrowing.
           onlyChecks = new Set(descriptor.checks.filter((c) => c.when !== 'post').map((c) => c.id));
+          onlyWhen = ['pre', 'pre_write'];
           stepCtx.checks = stepCtx.checks.filter((id) => onlyChecks.has(id));
         }
       } else if (isIngestStep(descriptor)) {
@@ -1762,6 +1772,7 @@ async function runWithPool(runnable, pool, ctx) {
           // the same footing: the gate fires AFTER acquisition, and a gated skip
           // never acquires, so those checks have no subject to observe either.
           onlyChecks = new Set(descriptor.checks.filter((c) => c.when === 'pre').map((c) => c.id));
+          onlyWhen = ['pre'];
           stepCtx.checks = stepCtx.checks.filter((id) => onlyChecks.has(id));
         }
       } else if (isCascadeStep(descriptor)) {
@@ -1783,6 +1794,7 @@ async function runWithPool(runnable, pool, ctx) {
           // except `post` (same reasoning as isLinkStep's writeSkipped, above).
           const positions = cascade.skipped ? ['pre'] : ['pre', 'pre_write'];
           onlyChecks = new Set(descriptor.checks.filter((c) => positions.includes(c.when)).map((c) => c.id));
+          onlyWhen = positions;
           stepCtx.checks = stepCtx.checks.filter((id) => onlyChecks.has(id));
         }
       } else if (isMaterializeStep(descriptor)) {
@@ -1802,6 +1814,7 @@ async function runWithPool(runnable, pool, ctx) {
           // above — a MATERIALIZER shares the identical two failure-to-reach shapes.
           const positions = materialize.skipped ? ['pre'] : ['pre', 'pre_write'];
           onlyChecks = new Set(descriptor.checks.filter((c) => positions.includes(c.when)).map((c) => c.id));
+          onlyWhen = positions;
           stepCtx.checks = stepCtx.checks.filter((id) => onlyChecks.has(id));
         }
       } else if (isBackfillStep(descriptor)) {
@@ -1823,6 +1836,7 @@ async function runWithPool(runnable, pool, ctx) {
           // reasoning as isCascadeStep/isMaterializeStep above.
           const positions = backfill.zeroWork ? ['pre'] : ['pre', 'pre_write'];
           onlyChecks = new Set(descriptor.checks.filter((c) => positions.includes(c.when)).map((c) => c.id));
+          onlyWhen = positions;
           stepCtx.checks = stepCtx.checks.filter((id) => onlyChecks.has(id));
         }
       }
@@ -1832,6 +1846,23 @@ async function runWithPool(runnable, pool, ctx) {
       // paths meant a compute could bypass the declared-check guard above. The
       // return value carries `records_meta` / counters only.
       const computeResult = await runnable.compute(stepCtx);
+
+      // R-T addendum (Spec 124 §2 Rule 13, commit 3) — the invariants[]/plausibility[]
+      // EVERY_RUN executor. Runs AFTER compute (every checks[] observation is already
+      // in hand) and BEFORE buildAuditTable, on the SAME pool the step already has
+      // (Spec 122 §7.2's "same PoolClient" rule, extended to invariants/plausibility).
+      // `validate_only` entries do NOT fire here — Fold A-1's own cost-adjudication
+      // measured most candidates at tens of seconds to minutes, unsafe for the
+      // run-end hook; those execute only from `step:validate --write` / chain-end
+      // synthesis (Ask 6b). `onlyWhen` is the SAME gated-skip narrowing `onlyChecks`
+      // just computed above (Fold A-3/B-2) — an `every_run` invariant must not fire
+      // on a `skip_gated`/`writeSkipped`/zero-work run any more than a real check does.
+      const invariantsRun = await runInvariants(pool, descriptor, { frequency: 'every_run', when: onlyWhen });
+      const plausibilityRun = await runPlausibility(pool, descriptor, { frequency: 'every_run', when: onlyWhen });
+      const synthetic = {
+        checks: [...invariantsRun.checks, ...plausibilityRun.checks],
+        observations: { ...invariantsRun.observations, ...plausibilityRun.observations },
+      };
 
       // `extraRows` carries exactly one thing and only on a failure path: the
       // `warn_row` posture's `prior_run_read_failed` row (LR-D2). It is NOT a declared
@@ -1852,7 +1883,7 @@ async function runWithPool(runnable, pool, ctx) {
         // wrote a before-image for (link.beforeImage / cascade.beforeImage).
         ...((link && link.beforeImage) || (cascade && cascade.beforeImage) || []).map(beforeImageRow),
       ];
-      const built = buildAuditTable(descriptor, chainId, observations, extraRows, configValues, onlyChecks);
+      const built = buildAuditTable(descriptor, chainId, observations, extraRows, configValues, onlyChecks, synthetic);
       // The counter SCOPE, per phase. §11's Counter Semantic Contract is a scoping
       // contract before it is a naming one: `written.e2.inserted` is only meaningful
       // because `written` is keyed BY DECLARED TARGET (LG-5), so "records_new" can mean
