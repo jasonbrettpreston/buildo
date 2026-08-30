@@ -419,6 +419,136 @@ seam" benefit is true of TODAY's file, not of the POST-fix compute — commit 7'
 
 ---
 
+## §4. PH-6 — Classification (commit 4, G6)
+
+> Every finding from the plan's "six findings" list (§0.6) + `LP-D7` (this pilot's own commit 1 finding) +
+> the Ground-truth grounder's Fold C corrections, classified per Spec 123 §3's three-way split: **CONTRACT**
+> (a downstream consumer depends on it, even if ugly) / **INCIDENTAL** (nothing observes it — do not assert on
+> it) / **DEFECT** (a spec or invariant asserts the opposite). `INCIDENTAL` is a legitimate G6 classification
+> value (Spec 123 §3 Q1) — distinct from the G3 Intent Ledger's closed disposition vocabulary, which bans it.
+
+| Candidate | Ledger ID | Classification | Ground |
+|---|---|---|---|
+| Finding 1 — Strategy 3 Step 2's centroid-nearest fallback | `LP-D1` | **DEFECT** — the file's own header comment states "nearest parcel" intent; the centroid-proximity join structurally diverges from it (§2 above) | opened commit 2; re-measured live this commit (below) |
+| Finding 2 — Spec 41 §Step 9 doc-rot | *(no `LP-D*` — doc-only, fixed at commit 7/a docs commit)* | **DEFECT in the description, not the behavior** — re-confirmed live this commit: `docs/specs/01-pipeline/41_chain_permits.md:53` still reads "writes to unified `lead_parcels`... instead of legacy `permit_parcels`" and its trailing column value is `lead_parcels`, both false against the live script (`:515` `INSERT INTO permit_parcels`) | `41_chain_permits.md:53`, re-grepped this commit |
+| Finding 3 — 989 duplicate-row class | `LP-D2` | **CONTRACT-adjacent** — schema-legal (composite UNIQUE permits it), but violates the step's own intent post-`8a1c7d25`; **grounded closure (Fold C item 7): `enrich_permits` re-derives fresh every run, so these do not permanently corrupt cached state, only the current dominant-parcel pick** | opened commit 2; Fold C item 7 |
+| Finding 4 — disagreeing phase ternaries | `LP-D3` | **DEFECT** — Spec 122 §1.7's own worked example; origin order established this pilot (`5baaed5a` correct value 7, `2577e694` a month-later deviation, value 9) | opened commit 2 |
+| Finding 5 — JS (non-PostGIS) fallback | *(no `LP-D*` — A-1 RULED, retirement is a declaration, not a defect-ledger row per the `link_massing` A-8/`compute_centroids` A-1(a) precedent)* | **CONTRACT-adjacent (dead-weight fallback), retired as a unit with its branch** | Fold A A-1 RULED; Spec 124 R-W (now landed, Fold C item 6 — see below) |
+| Finding 6 — 5 undeclared tunables (T1–T5) | `LP-D4` | **DEFECT (Spec 124 Rule 3)** | opened commit 2 |
+| Fold A B-1 — class F unimplemented in `write.js` | `LP-D5` | **CONTRACT-adjacent (a library gap, not a defect in this step's own logic)** | opened commit 2 |
+| Fold B item 2 — NULL-coordinate spatial-tier permits | `LP-D6` | **DEFECT** — a NULL-coordinate permit should never resolve to any parcel via a distance join; evidence corrected at Fold C (parcel `439990`, not `id=1`) | opened commit 2, evidence corrected this pilot before commit 2 landed |
+| Commit 1's new finding — second `permit_parcels` consumer | `LP-D7` | **CONTRACT** — `compute-cost-estimates.js`'s own dominant-parcel LATERAL is a genuine second product-facing derivation; `link-neighbourhoods.js` is a narrower CONTRACT-adjacent fallback exposure (Fold C blocking item 2, widened this commit) | opened commit 1, widened commit 2 |
+
+### Fold C items folded into this classification (Ground-truth grounder, 2026-08-30 — full record: `.cursor/active_task.md` "Fold C" section, gitignored working file)
+
+- **Item 6 — Spec 124 R-W is ALREADY LANDED, not a pending proposal.** Re-confirmed live this commit: Spec
+  124's Register table (`:199`) carries R-W as a numbered row; `scripts/ast-grep-rules/compute-shape.yml:215`'s
+  `compute-no-postgis-branch` rule is live, enforced by `check-step-shape.mjs` + `step-conformance.infra.test.ts`;
+  `grep -rln "hasPostGIS|pg_extension" scripts/lib/compute/` → 0 files today. Finding 5's disposition above is
+  written against the LANDED rule, not a future proposal — the plan's own Fold B item 7 "not yet folded" framing
+  is stale and is NOT repeated here.
+- **Item 7 — `enrich_permits` staleness after commit 8 is a GROUNDED CLOSURE, not an open gap.** Re-confirmed
+  this commit: `scripts/enrich-permits.js` has no incremental filter; the production call site (`:621`) passes
+  `scopeWhere:'TRUE'` explicitly; every run rebuilds the dominant-parcel derivation fresh via a live `JOIN
+  permit_parcels`. Commit 8's ~10,616 relinks (out of this pilot's own commit 1–6 scope) self-heal the next
+  time `enrich_permits` runs — no separate staleness mechanism needed or missing. Folded into `LP-D2`'s
+  classification above (the 989-duplicate self-heal claim).
+
+### Reality-Check — the fixed-rule sample (seed `20260830002`, N ≥ 100, stratified by flip-distance delta) — THE BEFORE HALF
+
+**Executed live this commit** against `127.0.0.1:54322/postgres`, inside a rolled-back transaction (read-only
+— no writes committed), re-deriving THE FIX's own predicate independently of both Fold A/B's prior
+measurement and the grounder's own re-execution:
+
+```sql
+-- unconstrained KNN LATERAL, pa.id ASC tiebreak, geom IS NOT NULL, cap as scalar post-filter,
+-- NULL-coordinate guard (LP-D6) — exact shape from "THE FIX" section of the governing plan
+CROSS JOIN LATERAL (
+  SELECT pa.id, pa.geom FROM parcels pa WHERE pa.geom IS NOT NULL
+  ORDER BY pa.geom <-> ST_SetSRID(ST_MakePoint(v.lng, v.lat), 4326), pa.id ASC LIMIT 1
+) c WHERE v.lng IS NOT NULL AND v.lat IS NOT NULL
+  AND ST_Distance(c.geom::geography, point::geography) <= 100
+```
+
+**Headline: 10,616/17,500 (60.6%) flip** — 17,504 `spatial`-tier rows minus the 4 `LP-D6` NULL-coordinate
+exclusions = 17,500 eligible, matching the grounder's own independent re-execution exactly (10,616, the
+bottom of the plan's own claimed 10,616–10,625 range — the range reflects live-DB churn between the Fold-B
+grounder's measurement and this one, not a methodology disagreement).
+
+**Delta distribution** (`old_centroid_dist_m − new_boundary_dist_m`, flipped rows only, n=10,616):
+
+| Bin | Count | % of flips |
+|---|---:|---:|
+| `neg` (new pick is farther in raw distance, but geometrically correct by boundary-distance reasoning) | 70 | 0.7% |
+| `[0,1)` m | 24 | 0.2% |
+| `[1,5)` m | 328 | 3.1% |
+| `[5,20)` m | 3,655 | 34.4% |
+| `[20,50)` m | 4,465 | 42.1% |
+| `[50,∞)` m | 2,074 | 19.5% |
+
+**Stratified sample**: `SELECT setseed(0.20260830002)`, 20 rows drawn per bin (6 bins × 20 = **120 rows**,
+exceeding the N≥100 floor), `row_number() OVER (PARTITION BY bin ORDER BY random())`. For every sampled row,
+measured: `old_contains` (does the permit's point fall inside the OLD/current parcel?), `new_contains` (does
+it fall inside the NEW/THE-FIX parcel?), and whether the new pick is closer in absolute distance than the old
+centroid.
+
+**Plausibility result:**
+
+| Bin | n | `old_contains=true` | `new_contains=true` | new pick closer (raw distance) |
+|---|---:|---:|---:|---:|
+| `neg` | 20 | 0 | 0 | 0/20 (by construction of this bin) |
+| `[0,1)` | 20 | 0 | 0 | 20/20 |
+| `[1,5)` | 20 | 0 | 2 | 20/20 |
+| `[5,20)` | 20 | 0 | 11 | 20/20 |
+| `[20,50)` | 20 | 0 | 11 | 20/20 |
+| `[50,∞)` | 20 | 0 | 19 | 20/20 |
+| **Overall** | **120** | **0** | **43 (35.8%)** | **100/120 (83.3%)** |
+
+**The single strongest plausibility signal: 0/120 sampled OLD (current, centroid-proximity) picks EVER
+achieve containment** — the current predicate is not merely sometimes-wrong, it is a candidate that is never
+observed correct-by-containment in this sample, consistent with R-C's own structural finding (Strategy 3 Step
+2 only fires when Step 1's `ST_Contains` has already failed for every candidate). **`new_contains` rate rises
+monotonically with delta magnitude** (0% at the smallest-delta bin → 95% at the largest), exactly the pattern
+expected if the delta metric tracks genuine correctness improvement, not noise. **Population-wide check
+(not sampled — computed over the FULL 10,616-row flip population, same rolled-back transaction):
+`new_contains=true` for 6,403/10,616 (60.3%)** — matches R-B's earlier containment-flip figure exactly
+(6,403/17,504, the pure-containment subset of the larger KNN-boundary-distance flip population), confirming
+internal consistency between this session's independent re-derivation and the plan's own prior measurement.
+
+**The `neg` bin (70/10,616, 0.66% of flips) — the sample's weakest evidence, eyeballed individually.** All 20
+sampled `neg`-bin rows show `old_centroid_dist_m` and `new_boundary_dist_m` within **0.6–6.5 m** of each other
+(e.g. `15 218131 B06`: 25.69 m vs 26.43 m; `03 101811 PLB`: 91.92 m vs 98.24 m, the latter the exact p99
+distance-cap boundary case) — near-ties between two plausible candidate parcels in an ambiguous gap area,
+never a wildly-wrong pick. **Neither the old nor the new choice achieves containment for any of the 20 sampled
+`neg`-bin rows** — this bin represents genuine ambiguity (the permit's geocoded point sits in a true gap
+between parcels), not evidence against THE FIX; the delta metric correctly identifies these as the LOWEST-
+confidence flips in the population, which is exactly what a plausibility-ranked metric should do.
+
+**⚠️ Tiebreak-count discrepancy, flagged not silently resolved.** Independently re-measuring the KNN top-2
+nearest-candidate distance gap over the same 17,500-row eligible population (own query, own transaction, own
+session): **19 exact ties (`Δ=0`) + 40 near-ties (`0<Δ<1mm`) = 59 total under-1mm border cases** — NOT the
+Fold B/Fold C-cited "19 exact + 72 near-ties (91 total)" figure. The exact-tie count (19) matches exactly; the
+near-tie count does not (40 vs 72, mine measured via `LIMIT 2` + exact `ST_Distance` on the top-2 KNN
+candidates per permit). Both measurements agree ties EXIST and a declared tiebreak (`pa.id ASC`) is REQUIRED —
+the qualitative conclusion is unaffected — but the exact count feeding commit 6's tiebreak-determinism fixture
+should be re-verified against a THIRD independent method before that fixture is written, rather than this
+report silently picking one of the two disagreeing numbers. **Recommendation for commit 6:** build the fixture
+around the 19 EXACT ties (100% agreement across all three measurements: plan/Fold-B, grounder, this commit) —
+exact ties are the strongest, least ambiguous proof that `pa.id ASC` is load-bearing, and do not depend on
+resolving the near-tie-count discrepancy.
+
+### G6 verdict
+
+**CLOSED this commit.** Every finding classified (`LP-D1`–`LP-D7`, 0 bare `INCIDENTAL`). Reality-Check's
+fixed-rule sample executed live (seed `20260830002`, N=120 ≥ 100, stratified by flip-distance delta) — this
+is **the BEFORE half of the R-O sample**; the AFTER half re-runs the identical query/sample logic post-fix at
+commit 8 (out of this pilot's own commit 1–6 scope). Plausibility strongly supports THE FIX: 0/120 old picks
+ever achieve containment, `new_contains` rate rises monotonically with delta magnitude, population-wide
+containment-upgrade rate (60.3%) matches the plan's own prior R-B figure exactly. One discrepancy flagged
+(tie count, non-blocking, qualitative conclusion unaffected) rather than silently resolved.
+
+---
+
 ## §0. PH-0 seed — measured boundary table (2026-08-30 planning session)
 
 ### 0.1 Governing specs, read in order (Spec 124 §7 Step 0 / Spec 123 §6 G0)
