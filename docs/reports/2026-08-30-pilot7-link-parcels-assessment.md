@@ -1000,9 +1000,9 @@ itself (adding to `converted[]`) is commit 9's own act, per R-K.1.
 > findings ((b)–(e), the twice-run proof) are NOT invalidated by `LP-D9` (confirmed unrelated — the conversion-
 > neutrality differential proved `LP-D9` is pre-existing, not introduced by anything in this section). But the
 > table state this section measured against has since been corrected and re-run under `LP-D9`'s fix (commit
-> 8a) — **the CURRENT, superseding numbers are in the rewritten §8 immediately after §8a.** Left in place
-> rather than deleted, per this codebase's "regenerate, don't erase" convention — the two runs described here
-> are exactly what led to `LP-D9`'s discovery.
+> 8a) — **the CURRENT, superseding numbers are in §8b, immediately after §8a below.** Left in place rather
+> than deleted, per this codebase's "regenerate, don't erase" convention — the two runs described here are
+> exactly what led to `LP-D9`'s discovery.
 
 > Every number below is measured against a REAL live run of the converted step (`PIPELINE_CHAIN=sources
 > LINK_PARCELS_FORCE_FULL=1 node scripts/link-parcels.js`, 127.0.0.1:54322/postgres), not predicted or
@@ -1266,7 +1266,117 @@ Re-captured (live, `capture-step-golden.js`) against the SAME DB state as before
 **CLOSED.** Root cause identified by executing (not merely reading), fenced against its introducing commit,
 locked RED-then-GREEN both directions, fixed by mirroring the sibling strategy's own predicate exactly (not
 inventing a new tolerance), and made permanently observable. `LP-D9` is now `CLOSED` in the defect ledger.
-Next: the corrected FULL re-run (§8, rewritten below).
+Next: the corrected FULL re-run (§8b, below) — this is the CURRENT, superseding record of commit 8.
+
+---
+
+## §8b. The CORRECTED FULL re-evaluation (commit 8, landed post-8a) — the CURRENT, superseding record
+
+> Everything below supersedes §8 (marked SUPERSEDED above). Same mechanics (before-image first, strictly
+> before retraction; `PIPELINE_CHAIN=sources LINK_PARCELS_FORCE_FULL=1 node scripts/link-parcels.js`,
+> 127.0.0.1:54322/postgres), run against the code AFTER `LP-D9`'s fix (commit 8a, `e9a046f0`).
+
+### 1. Before-image
+
+`docs/reports/golden/link_parcels/before-image/2026-08-30T22-55-42.396Z-permit_parcels.jsonl` — W1's own
+12,651-row spatial-tier snapshot (matching the live `match_type='spatial'` count immediately before this
+run, i.e. the state the TWO original pre-8a runs left behind), plus `LG-24`'s per-batch mirror across the
+full ~254K-permit loop (260,215 total lines).
+
+### 2. Mismatch residual — CLEARED
+
+`street_type_mismatch_count`: **0** (confirmed both by the run's own `street_type_conflict` check, which now
+reads `PASS`, and by an independent direct query against the live table). The 7,046 residual rows measured
+immediately after commit 8a landed (before this corrected run) are gone — the FULL re-evaluation reprocessed
+every affected permit under the fixed JOIN.
+
+### 3. The address-tier redistribution, re-measured — reconciled two ways
+
+| | permit_parcels_total | address_points_exact | exact_address | name_only | spatial_polygon | spatial (KNN) | no_match |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| Original baseline (pre-commit-8) | 241,172 | 48,815 | 152,975 | 4,227 | 17,651 | *(n/a — spatial not split pre-conversion)* | *(n/a)* |
+| Broken (post-original-2-runs, pre-8a) | 241,843 | 215,552 | 974 | 5 | 12,661 | 12,651 | 12,202 |
+| **Corrected (this run)** | **239,858** | **196,617** | **1,412** | **5,242** | **23,890** | **12,697** | **14,187** |
+
+**vs. the broken state (241,843 → 239,858): net −1,985, reconciles EXACTLY with `no_match_count`'s own
+increase (12,202 → 14,187 = +1,985).** Every one of the net row reductions is a permit that now correctly
+gets NO link instead of a WRONG one (its street-type-mismatched address has no OTHER valid match under
+Strategy 1b/2/3 either) — not a mystery, a direct 1:1 accounting.
+
+**vs. the ORIGINAL pre-commit-8 baseline (241,172 → 239,858): net −1,314.** `address_points_exact` is now
+196,617 (still far above the original 48,815 — the bridge table's own genuine, non-buggy coverage growth
+over 5 months, per §8a item 2's grounding, is real and legitimate) while `exact_address` recovered from the
+broken run's 974 to 1,412 (permits correctly falling back to the legacy strategy once the type-blind bridge
+match no longer wrongly claims them) — still far below the original 152,975, because MOST of those
+originally-`exact_address`-linked permits DO have genuine, correct `address_points_exact` bridge coverage
+today (confirmed by §8a item 1's conversion-neutrality differential — the SAME 216,531 matches the OLD code
+would find today) and correctly prefer it, per Strategy 1a's own designed priority over 1b.
+
+### 4. Spatial-tier expectations, re-confirmed unchanged
+
+- **LP-D6 (4 NULL-coordinate permits): still 4/4 retracted, 0/4 relinked** — re-confirmed live after this
+  SECOND full re-evaluation (the street_type fix touches Strategy 1a only; Strategy 3's NULL-coordinate guard
+  is untouched and structurally cannot be affected).
+- **Duplicate self-heal: still 0** (`pp_duplicate_permit_pairs` invariant, re-confirmed).
+- **`link_rate`: 94.40%** (239,858/254,082) — within 0.13pp of the ORIGINAL pre-commit-8 baseline (94.53%),
+  materially closer to it than the broken run's own 95.18% was. Near-flat, as RC-4 requires.
+
+### 5. R-O sample, REPEATED post-fix on the remaining address-tier flips (same seed) — decisive reversal
+
+Same seed `20260830002`, same delta-bin stratification, run against the genuine pre-corrected-run rows
+preserved in this run's own before-image (5,100 address-tier permits whose parcel_id changed this run):
+
+| Bin | n (population) | n (sample) | `old_contains=true` | `new_contains=true` |
+|---|---:|---:|---:|---:|
+| `neg` | 430 | 20 | 19 | 0 |
+| `[1,5)` | 5 | 5 | 0 | 5 |
+| `[5,20)` | 10 | 10 | 0 | 0 |
+| `[20,50)` | 8 | 8 | 0 | 8 |
+| `[50,∞)` | 4,647 | 20 | 0 | 19 |
+| **Overall** | **5,100** | **63** | **19 (30.2%)** | **32 (50.8%)** |
+
+**Population-wide (not sampled, all 5,100 flips): `old_contains`=397 (7.8%), `new_contains`=4,497 (88.2%) —
+new_contains now decisively BEATS old_contains**, a full reversal of the broken run's own 78.9%/19.1%
+(old-beats-new) result that triggered this whole investigation. Sample rows verify the mechanism directly
+(e.g. `55 LAKE SHORE DR` → `55 LAKE SHORE BLVD`, `555 INDIAN GRV` → `555 INDIAN RD`, `34 WINSTON AVE` →
+`34 WINSTON GRV` — same house number + street name root, corrected to the permit's OWN declared type,
+`new_dist_m` collapsing to 0 in most sampled rows). **STOP condition (instruction 3) does NOT fire.**
+
+**The `neg` bin (430/5,100, 8.4% of flips) is the one place `old_contains` still dominates (19/20 sampled)**
+— the SAME disposition as the original spatial-tier R-O sample's own `neg` bin (§4): these are cases where
+enforcing address correctness (the permit's declared street_type) moves the pick away from a
+coincidentally-containing wrong-address parcel toward a correctly-addressed one whose boundary the
+(imprecise) geocode doesn't happen to fall inside. Strategy 1a/1b are address-string matches, not
+containment matches — this is expected ambiguity from geocoding imprecision, not evidence the fix is wrong,
+and it is a small, minority share of the flip population.
+
+### 6. Twice-run idempotency — proven live on the corrected code
+
+Run twice back-to-back post-8a:
+
+| | Run 1 (corrected) | Run 2 (corrected) |
+|---|---|---|
+| retracted (W1) | 12,651 | 12,697 (= run 1's own output) |
+| `street_type_mismatch_count` | 0 | 0 |
+| `records_updated` | 16,095 | **0** |
+| `permit_parcels` table hash (sha256) | `8a07b229` (239,858 rows) | **`8a07b229` (239,858 rows) — byte-identical** |
+
+**Idempotency CONFIRMED on the corrected code.** Table hash identical across both runs; run 2's
+`records_updated: 0` is the same clean proof as commit 8's original pair — W1's scoped retraction fully
+clears `match_type='spatial'` before every rebuild, so run 2's UPSERT lands entirely as fresh INSERTs into an
+empty scope, never an UPDATE. `street_type_mismatch_count` stayed at 0 on both runs.
+
+### 7. LP-D8 status
+
+`matches_tier_3_centroid`'s stale field name (§8 item 7 original) is UNCHANGED by this episode — still open,
+still PIN-or-fix for the coordinator/operator's own ruling, out of `LP-D9`'s scope.
+
+### G-verdict, commit 8 (corrected)
+
+**CLOSED.** All six declared expectations measured on the CORRECTED code: mismatch residual cleared to 0;
+spatial-tier LP-D6/duplicates/link_rate all re-confirmed stable; the R-O sample's plausibility signal fully
+reversed in the correct direction (88.2% new_contains vs. 7.8% old_contains, population-wide); twice-run
+idempotency proven live. No STOP condition fired at any stage of the corrected re-run.
 
 ---
 
