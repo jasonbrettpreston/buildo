@@ -1,0 +1,363 @@
+{
+  "harness": "scripts/analysis/capture-step-golden.js",
+  "spec": "docs/specs/01-pipeline/122_pipeline_step_optimization.md §5.3",
+  "step": "scripts/link-parcels.js",
+  "chain": "permits",
+  "git_head": "c136cff76498eae6b6be79897d12fbc9501505dd",
+  "exit_code": 0,
+  "signal": null,
+  "summary": {
+    "records_total": 0,
+    "records_new": 0,
+    "records_updated": 0,
+    "records_meta": {
+      "audit_table": {
+        "phase": 9,
+        "name": "Parcel Linking",
+        "verdict": "PASS",
+        "rows": [
+          {
+            "metric": "status",
+            "value": "SKIPPED",
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "reason",
+            "value": "No unlinked permits — all already have parcel links",
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "sys_velocity_rows_sec",
+            "value": 0,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "sys_duration_ms",
+            "value": 514,
+            "threshold": null,
+            "status": "INFO"
+          }
+        ]
+      }
+    }
+  },
+  "summary_count": 1,
+  "meta": [
+    {
+      "reads": {
+        "permits": [
+          "permit_num",
+          "revision_num",
+          "street_num",
+          "street_name",
+          "street_type",
+          "latitude",
+          "longitude"
+        ],
+        "parcels": [
+          "id",
+          "addr_num_normalized",
+          "street_name_normalized",
+          "street_type_normalized",
+          "centroid_lat",
+          "centroid_lng",
+          "geometry"
+        ],
+        "address_points": [
+          "address_point_id",
+          "addr_num_normalized",
+          "linear_name_normalized",
+          "address_class_desc",
+          "maint_stage",
+          "address_status"
+        ],
+        "parcel_address_points": [
+          "parcel_id",
+          "address_point_id"
+        ]
+      },
+      "writes": {
+        "permit_parcels": [
+          "permit_num",
+          "revision_num",
+          "parcel_id",
+          "match_type",
+          "confidence",
+          "linked_at"
+        ]
+      }
+    }
+  ],
+  "parse_errors": [],
+  "verdict": "PASS",
+  "ledger_status": [],
+  "stdout": "{\"level\":\"INFO\",\"tag\":\"[link-parcels]\",\"msg\":\"Loaded 35 trade configs from control panel\"}\n{\"level\":\"INFO\",\"tag\":\"[link-parcels]\",\"msg\":\"Loaded 450 logic variables from control panel\"}\n{\"level\":\"INFO\",\"tag\":\"[link-parcels]\",\"msg\":\"PostGIS detected — spatial queries will use ST_Contains/ST_DWithin\"}\n{\"level\":\"INFO\",\"tag\":\"[link-parcels]\",\"msg\":\"Mode: INCREMENTAL (unlinked only)\"}\n{\"level\":\"INFO\",\"tag\":\"[link-parcels]\",\"msg\":\"Permits to process: 0\"}\n{\"level\":\"INFO\",\"tag\":\"[link-parcels]\",\"msg\":\"Parcels with centroids: 486,530 (Strategy 3 enabled)\"}\n{\"level\":\"INFO\",\"tag\":\"[link-parcels]\",\"msg\":\"No permits to process. Done.\"}\nPIPELINE_SUMMARY:{\"records_total\":0,\"records_new\":0,\"records_updated\":0,\"records_meta\":{\"audit_table\":{\"phase\":9,\"name\":\"Parcel Linking\",\"verdict\":\"PASS\",\"rows\":[{\"metric\":\"status\",\"value\":\"SKIPPED\",\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"reason\",\"value\":\"No unlinked permits — all already have parcel links\",\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":514,\"threshold\":null,\"status\":\"INFO\"}]}}}\nPIPELINE_META:{\"reads\":{\"permits\":[\"permit_num\",\"revision_num\",\"street_num\",\"street_name\",\"street_type\",\"latitude\",\"longitude\"],\"parcels\":[\"id\",\"addr_num_normalized\",\"street_name_normalized\",\"street_type_normalized\",\"centroid_lat\",\"centroid_lng\",\"geometry\"],\"address_points\":[\"address_point_id\",\"addr_num_normalized\",\"linear_name_normalized\",\"address_class_desc\",\"maint_stage\",\"address_status\"],\"parcel_address_points\":[\"parcel_id\",\"address_point_id\"]},\"writes\":{\"permit_parcels\":[\"permit_num\",\"revision_num\",\"parcel_id\",\"match_type\",\"confidence\",\"linked_at\"]}}\n\n[link-parcels] completed in 0.5s\n",
+  "stderr": "{\"level\":\"WARN\",\"tag\":\"[link-parcels]\",\"msg\":\"allocation_pct sum is 1.0744 (expected 1.0) — normalizing\"}\n{\"level\":\"WARN\",\"tag\":\"[link-parcels]\",\"msg\":\"logic_variables.lifecycle_seq_band_22_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[link-parcels]\",\"msg\":\"logic_variables.lifecycle_seq_band_28_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[link-parcels]\",\"msg\":\"logic_variables.lifecycle_seq_band_30_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[link-parcels]\",\"msg\":\"logic_variables.lifecycle_seq_band_34_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[link-parcels]\",\"msg\":\"logic_variables.lifecycle_seq_band_37_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[link-parcels]\",\"msg\":\"logic_variables.lifecycle_seq_band_44_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[link-parcels]\",\"msg\":\"logic_variables.lifecycle_seq_band_47_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[link-parcels]\",\"msg\":\"logic_variables.lifecycle_seq_band_48_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[link-parcels]\",\"msg\":\"logic_variables.lifecycle_seq_band_50_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[link-parcels]\",\"msg\":\"logic_variables.lifecycle_seq_band_53_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[link-parcels]\",\"msg\":\"logic_variables.lifecycle_seq_band_54_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[link-parcels]\",\"msg\":\"logic_variables.lifecycle_seq_band_55_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[link-parcels]\",\"msg\":\"logic_variables.lifecycle_seq_band_56_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[link-parcels]\",\"msg\":\"logic_variables.lifecycle_seq_band_58_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[link-parcels]\",\"msg\":\"logic_variables.lifecycle_seq_band_65_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[link-parcels]\",\"msg\":\"logic_variables.lifecycle_seq_band_66_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[link-parcels]\",\"msg\":\"logic_variables.lifecycle_seq_band_67_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[link-parcels]\",\"msg\":\"logic_variables.lifecycle_seq_band_70_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[link-parcels]\",\"msg\":\"logic_variables.lifecycle_seq_band_71_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[link-parcels]\",\"msg\":\"logic_variables.lifecycle_seq_band_74_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[link-parcels]\",\"msg\":\"logic_variables.lifecycle_seq_band_75_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[link-parcels]\",\"msg\":\"logic_variables.lifecycle_seq_band_76_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[link-parcels]\",\"msg\":\"logic_variables.lifecycle_seq_band_77_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[link-parcels]\",\"msg\":\"logic_variables.lifecycle_seq_band_78_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[link-parcels]\",\"msg\":\"logic_variables.lifecycle_seq_band_79_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[link-parcels]\",\"msg\":\"logic_variables.lifecycle_seq_band_80_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[link-parcels]\",\"msg\":\"logic_variables.lifecycle_seq_band_81_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[link-parcels]\",\"msg\":\"logic_variables.lifecycle_seq_band_82_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[link-parcels]\",\"msg\":\"logic_variables.lifecycle_seq_band_83_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[link-parcels]\",\"msg\":\"logic_variables.lifecycle_seq_band_88_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[link-parcels]\",\"msg\":\"logic_variables.lifecycle_seq_band_91_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[link-parcels]\",\"msg\":\"logic_variables.lifecycle_seq_band_94_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[link-parcels]\",\"msg\":\"logic_variables.lifecycle_seq_band_96_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n",
+  "pipeline_runs": [],
+  "pipeline_runs_max_id_before": 1804,
+  "table_state": [
+    {
+      "table": "permit_parcels",
+      "row_count": 241172,
+      "ceiling_bypassed": "projected",
+      "content_hash": "fe232ade082407e579343e24bed18c90",
+      "order_by": "explicit",
+      "order_columns": [
+        "permit_num",
+        "revision_num",
+        "parcel_id"
+      ],
+      "columns": [
+        "permit_num",
+        "revision_num",
+        "parcel_id",
+        "match_type",
+        "confidence"
+      ]
+    },
+    {
+      "table": "permits",
+      "row_count": 254082,
+      "skipped_reason": "over_ceiling",
+      "ceiling": 100000
+    }
+  ],
+  "tables_source": "arg",
+  "table_row_ceiling": 100000,
+  "table_timing": {
+    "permit_parcels": 282,
+    "permits": null
+  },
+  "table_specs": {
+    "permit_parcels": {
+      "columns": [
+        "permit_num",
+        "revision_num",
+        "parcel_id",
+        "match_type",
+        "confidence"
+      ],
+      "columns_source": "arg",
+      "order": [
+        "permit_num",
+        "revision_num",
+        "parcel_id"
+      ],
+      "order_source": "arg"
+    },
+    "permits": {
+      "columns": null,
+      "columns_source": "none",
+      "order": null,
+      "order_source": "none"
+    }
+  },
+  "invariants": [
+    {
+      "name": "permit_parcels_total",
+      "value": "241172"
+    },
+    {
+      "name": "match_type_spatial_count",
+      "value": "17504"
+    },
+    {
+      "name": "duplicate_permit_pair_count",
+      "value": "989"
+    },
+    {
+      "name": "match_type_exact_address_count",
+      "value": "152975"
+    },
+    {
+      "name": "match_type_address_points_exact_count",
+      "value": "48815"
+    },
+    {
+      "name": "match_type_spatial_polygon_count",
+      "value": "17651"
+    },
+    {
+      "name": "match_type_name_only_count",
+      "value": "4227"
+    },
+    {
+      "name": "permits_total",
+      "value": "254082"
+    },
+    {
+      "name": "permits_parcel_linked_at_not_null",
+      "value": "254045"
+    }
+  ],
+  "invariants_file": "docs/reports/golden/link_parcels/invariants.json",
+  "db_target": "postgresql://postgres:***@127.0.0.1:54322/postgres",
+  "runtime": "node",
+  "args": [],
+  "nondeterminism": [
+    "pattern:duration_literal",
+    "row:sys_duration_ms",
+    "row:sys_velocity_rows_sec"
+  ],
+  "normalised": {
+    "step": "scripts/link-parcels.js",
+    "chain": "permits",
+    "exit_code": 0,
+    "summary": {
+      "records_meta": {
+        "audit_table": {
+          "name": "Parcel Linking",
+          "phase": 9,
+          "rows": [
+            {
+              "metric": "status",
+              "status": "INFO",
+              "threshold": null,
+              "value": "SKIPPED"
+            },
+            {
+              "metric": "reason",
+              "status": "INFO",
+              "threshold": null,
+              "value": "No unlinked permits — all already have parcel links"
+            }
+          ],
+          "verdict": "PASS"
+        }
+      },
+      "records_new": 0,
+      "records_total": 0,
+      "records_updated": 0
+    },
+    "summary_count": 1,
+    "meta": [
+      {
+        "reads": {
+          "address_points": [
+            "address_point_id",
+            "addr_num_normalized",
+            "linear_name_normalized",
+            "address_class_desc",
+            "maint_stage",
+            "address_status"
+          ],
+          "parcel_address_points": [
+            "parcel_id",
+            "address_point_id"
+          ],
+          "parcels": [
+            "id",
+            "addr_num_normalized",
+            "street_name_normalized",
+            "street_type_normalized",
+            "centroid_lat",
+            "centroid_lng",
+            "geometry"
+          ],
+          "permits": [
+            "permit_num",
+            "revision_num",
+            "street_num",
+            "street_name",
+            "street_type",
+            "latitude",
+            "longitude"
+          ]
+        },
+        "writes": {
+          "permit_parcels": [
+            "permit_num",
+            "revision_num",
+            "parcel_id",
+            "match_type",
+            "confidence",
+            "linked_at"
+          ]
+        }
+      }
+    ],
+    "parse_errors": [],
+    "pipeline_runs": [],
+    "stdout_lines": [
+      "{\"level\":\"INFO\",\"msg\":\"Loaded 35 trade configs from control panel\",\"tag\":\"[link-parcels]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"Loaded 450 logic variables from control panel\",\"tag\":\"[link-parcels]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"PostGIS detected — spatial queries will use ST_Contains/ST_DWithin\",\"tag\":\"[link-parcels]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"Mode: INCREMENTAL (unlinked only)\",\"tag\":\"[link-parcels]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"Permits to process: 0\",\"tag\":\"[link-parcels]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"Parcels with centroids: 486,530 (Strategy 3 enabled)\",\"tag\":\"[link-parcels]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"No permits to process. Done.\",\"tag\":\"[link-parcels]\"}",
+      "[link-parcels] completed in <DUR>"
+    ],
+    "table_state": [
+      {
+        "ceiling_bypassed": "projected",
+        "columns": [
+          "permit_num",
+          "revision_num",
+          "parcel_id",
+          "match_type",
+          "confidence"
+        ],
+        "content_hash": "fe232ade082407e579343e24bed18c90",
+        "order_by": "explicit",
+        "order_columns": [
+          "permit_num",
+          "revision_num",
+          "parcel_id"
+        ],
+        "row_count": 241172,
+        "table": "permit_parcels"
+      },
+      {
+        "ceiling": 100000,
+        "row_count": 254082,
+        "skipped_reason": "over_ceiling",
+        "table": "permits"
+      }
+    ],
+    "invariants": [
+      {
+        "name": "permit_parcels_total",
+        "value": "241172"
+      },
+      {
+        "name": "match_type_spatial_count",
+        "value": "17504"
+      },
+      {
+        "name": "duplicate_permit_pair_count",
+        "value": "989"
+      },
+      {
+        "name": "match_type_exact_address_count",
+        "value": "152975"
+      },
+      {
+        "name": "match_type_address_points_exact_count",
+        "value": "48815"
+      },
+      {
+        "name": "match_type_spatial_polygon_count",
+        "value": "17651"
+      },
+      {
+        "name": "match_type_name_only_count",
+        "value": "4227"
+      },
+      {
+        "name": "permits_total",
+        "value": "254082"
+      },
+      {
+        "name": "permits_parcel_linked_at_not_null",
+        "value": "254045"
+      }
+    ]
+  },
+  "source_fingerprint": null,
+  "fingerprint_files": [],
+  "fingerprint_skipped_reason": "no_descriptor_yet"
+}

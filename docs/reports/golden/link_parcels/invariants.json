@@ -1,0 +1,11 @@
+[
+  { "name": "permit_parcels_total", "sql": "SELECT COUNT(*) FROM permit_parcels" },
+  { "name": "match_type_spatial_count", "sql": "SELECT COUNT(*) FROM permit_parcels WHERE match_type = 'spatial'" },
+  { "name": "duplicate_permit_pair_count", "sql": "SELECT COUNT(*) FROM (SELECT permit_num, revision_num FROM permit_parcels GROUP BY permit_num, revision_num HAVING COUNT(*) > 1) d" },
+  { "name": "match_type_exact_address_count", "sql": "SELECT COUNT(*) FROM permit_parcels WHERE match_type = 'exact_address'" },
+  { "name": "match_type_address_points_exact_count", "sql": "SELECT COUNT(*) FROM permit_parcels WHERE match_type = 'address_points_exact'" },
+  { "name": "match_type_spatial_polygon_count", "sql": "SELECT COUNT(*) FROM permit_parcels WHERE match_type = 'spatial_polygon'" },
+  { "name": "match_type_name_only_count", "sql": "SELECT COUNT(*) FROM permit_parcels WHERE match_type = 'name_only'" },
+  { "name": "permits_total", "sql": "SELECT COUNT(*) FROM permits" },
+  { "name": "permits_parcel_linked_at_not_null", "sql": "SELECT COUNT(*) FROM permits WHERE parcel_linked_at IS NOT NULL" }
+]

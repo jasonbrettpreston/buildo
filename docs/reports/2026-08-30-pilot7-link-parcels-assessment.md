@@ -549,6 +549,141 @@ containment-upgrade rate (60.3%) matches the plan's own prior R-B figure exactly
 
 ---
 
+## §5. Golden master (commit 5, G1′) — 3 live invocations (`permits` + `sources`, this step's two real chain memberships, + `standalone`)
+
+> **Every capture below is a REAL run of the UNCONVERTED `scripts/link-parcels.js`** via
+> `scripts/analysis/capture-step-golden.js`, run SEQUENTIALLY against `127.0.0.1:54322/postgres` (resolve-db,
+> 242 migrations, floor 245). Today's live DB has **0 eligible unlinked permits** (re-confirmed live this
+> commit: the incremental filter's own predicate returns 0 rows) — every capture below is the ZERO-WORK SKIP
+> path, the same shape pilot 6's own `compute_centroids` captures hit. Files:
+> `docs/reports/golden/link_parcels/pre/{permits,sources,standalone,standalone-repeat}.json` +
+> `docs/reports/golden/link_parcels/invariants.json` (9 entries — the 3 task-pinned +
+> 6 supporting/context rows). `--tables=permit_parcels,permits` (no descriptor exists yet, harness
+> auto-derivation unavailable), `--table-columns=permit_parcels:permit_num,revision_num,parcel_id,match_type,confidence`
+> / `--table-order=permit_parcels:permit_num,revision_num,parcel_id` (projects onto the write target's own
+> composite key + value columns, bypasses the 100,000-row ceiling — 241,172 rows exceeds the harness's
+> default). `permits` (254,082 rows) is over the ceiling and NOT hashed — it is a read-only input to this
+> step, not the write target, so an unhashed `permits` table state does not weaken the differential this
+> harness exists to gate.
+
+### The 3 pinned invocations — table-state hashes IDENTICAL across all three
+
+| Invocation | `chain` arg | `PIPELINE_CHAIN` env | `phase` | `records_total` | `pipeline_runs` rows written | `permit_parcels` hash |
+|---|---|---|---:|---:|---:|---|
+| `pre/permits.json` | `permits` | `permits` | **9** | 0 | 0 | `fe232ade` (241,172 rows, projected) |
+| `pre/sources.json` | `sources` | `sources` | **6** | 0 | 0 | `fe232ade` — byte-identical |
+| `pre/standalone.json` | `none` | *(unset)* | **9** | 0 | 0 | `fe232ade` — byte-identical |
+
+**`pipeline_runs` rows written: 0 for ALL THREE invocations — not an anomaly, the same property pilot 6's own
+`compute_centroids` captures documented.** `scripts/lib/pipeline.js` (the pre-conversion SDK this file still
+uses) never itself INSERTs into `pipeline_runs`; only `scripts/run-chain.js`'s own chain-orchestration code
+does, when it spawns a step as part of a REAL `chain_permits`/`chain_sources` execution. Neither
+`capture-step-golden.js`'s direct child-process spawn (with `PIPELINE_CHAIN` set but no actual `run-chain.js`
+orchestration around it) nor a bare `node scripts/link-parcels.js` (the `standalone` invocation) goes through
+`run-chain.js`, so all three legitimately show `ledger=[]` — re-confirmed live this commit via a direct
+`pipeline_runs` query (still exactly the 2 pre-existing legacy rows, ids 20/32, both 2026-03-03).
+
+### `--compare` — a LIVE empirical confirmation of `LP-D3` (Finding 4)
+
+```
+[capture-step-golden] 2 difference(s): pre/permits.json vs pre/sources.json
+  chain
+    - "permits"
+    + "sources"
+  summary.records_meta.audit_table.phase
+    - 9
+    + 6
+```
+```
+[capture-step-golden] 1 difference(s): pre/permits.json vs pre/standalone.json
+  chain
+    - "permits"
+    + "none"
+```
+`permits` and `standalone` are IDENTICAL on `phase` (both **9** — `standalone`'s `PIPELINE_CHAIN` is unset,
+so `chainId` resolves `null`, falling to the SAME else-branch as `permits`), while `sources` differs on
+`phase` alone (**6**) — a direct, live, empirical demonstration of `LP-D3`'s exact defect shape: the
+zero-permits path's phase value is genuinely wired to the `chainId==='sources'?6:9` ternary and produces the
+non-`sources` value **9** for both `permits` and standalone, not the real-run path's own established **7**
+(`5baaed5a`'s value — never exercised by this capture, since 0 permits means the zero-permits early-return
+path is what actually fires, not the real-run `emitSummary` at `:660`). This is direct evidence, not
+inference, that A-5's ruling (`phase=7` for `permits`) will genuinely CHANGE this capture's own `permits`/
+`standalone` phase value from 9 to 7 at commit 7 — a real, observable diff for the commit-9 differential to
+explain, not a cosmetic one.
+
+### The write path — no pre-existing live-write fixture found (unlike pilot 6's precedent)
+
+Unlike `compute_centroids` (whose write path was already proven by an EXISTING DB test,
+`migration-245-centroid-invalidation.db.test.ts` case ④), **no equivalent pre-existing fixture exercises
+`link-parcels.js`'s real write path against a live DB** — `src/tests/link-parcels.infra.test.ts` (162 lines)
+is a TEXT-based regression lock (source-file `grep`/`SEED` JSON assertions for the E18 tunable
+externalization), not a live spawn-and-verify DB test. Searched `src/tests/db/*.ts` and `src/tests/*.ts` for
+any `LINK_PARCELS_SCRIPT`-shaped live-spawn harness (the pattern `compute_centroids`'s citation used) — none
+found. **This is a genuine difference from pilot 6's own commit-5 posture, not glossed over:** the real write
+path (upsert + ghost-cleanup DELETE + `parcel_linked_at` UPDATE) is exercised for the FIRST time by commit 6's
+own fixture-driven tests (`LP-D1`'s drifted-centroid fixture, `LP-D6`'s NULL-coordinate fixture) — not by a
+pre-existing mechanism this commit can merely cite. Flagged for commit 6's own test-design pass, not built
+here (out of this pilot's own scope to add a live-DB write-path fixture as a SEPARATE commit-5 deliverable —
+the plan's own commit 5 Done-test is "harness self-test + `--compare` exit 0" only, both of which pass below).
+
+### Harness self-test (Done-test requirement)
+
+Re-ran the `standalone` capture a second time (`pre/standalone-repeat.json`) and diffed via `--compare`:
+```
+[capture-step-golden] IDENTICAL (normalised): docs/reports/golden/link_parcels/pre/standalone.json == docs/reports/golden/link_parcels/pre/standalone-repeat.json
+```
+Exit code 0. **Harness self-test PASSES.**
+
+### Non-determinism inventory (declared BEFORE the first diff, Spec 124 §7 Step 4)
+
+Identical across all 4 captures, 3 entries — the SAME shape every prior pilot's zero-work SKIP capture
+declares:
+
+| Kind | What | Why |
+|---|---|---|
+| `pattern:duration_literal` | `"completed in 0.5s"`/`"0.6s"`/`"0.7s"` stdout log lines | wall-clock elapsed text, masked to `<DUR>` |
+| `row:sys_duration_ms` | `records_meta.audit_table.rows[].metric==="sys_duration_ms"` | auto-injected timing (`pipeline.js`), masked by the `sys_` prefix rule |
+| `row:sys_velocity_rows_sec` | same auto-injected timing row, `records_total===0` denominator | masked by the same `sys_` prefix rule |
+
+No OTHER non-determinism found — `git_head`, `db_target`, `runtime`, `args` are all harness metadata outside
+the normalised comparison; the invariants (9 entries) and table_state hash are BOTH deterministic on
+identical data (confirmed by the harness self-test above).
+
+### Invariants pinned (`docs/reports/golden/link_parcels/invariants.json`, 9 entries, identical across all
+### 4 captures — measured values, live this commit, RE-MEASURED not copied from commit 1)
+
+| Invariant | Value | Task-pinned? |
+|---|---:|---|
+| `permit_parcels_total` | **241,172** | ✓ task-pinned |
+| `match_type_spatial_count` | **17,504** | ✓ task-pinned |
+| `duplicate_permit_pair_count` | **989** | ✓ task-pinned |
+| `match_type_exact_address_count` | 152,975 | context (full match-type distribution, not task-pinned) |
+| `match_type_address_points_exact_count` | 48,815 | context |
+| `match_type_spatial_polygon_count` | 17,651 | context |
+| `match_type_name_only_count` | 4,227 | context |
+| `permits_total` | 254,082 | context |
+| `permits_parcel_linked_at_not_null` | 254,045 | context |
+
+All 3 task-pinned values match every direct-query measurement taken at commits 1/2/4 exactly — **zero
+discrepancy between the ad-hoc SELECT queries and the harness's own `--invariants` execution**, confirming
+the harness reproduces the same SQL faithfully. These 3 values are the Finding-3/BEFORE baseline the
+declared FULL run (commit 8, out of this pilot's own commit 1–6 scope) will change — pinned here precisely so
+the after-state has a measured delta to report against (`duplicate_permit_pair_count` expected to drop toward
+0 per the 989-row self-heal; `match_type_spatial_count` expected to hold near 17,504 minus the 4 `LP-D6`
+retractions, since a relink stays `spatial`-tier, only its `parcel_id` changes).
+
+### G1′ verdict
+
+**CLOSED this commit.** All 3 pinned invocations (`permits`/`sources`/`standalone`) captured, byte-identical
+on every normalised field except `chain` and (for `sources` alone) `phase` — a live empirical confirmation of
+`LP-D3`. Harness self-test PASSES (re-run IDENTICAL). Non-determinism inventory declared BEFORE any diff was
+taken (3 entries, all 4 captures agree). All 9 invariants pinned and cross-checked against this session's
+independent measurements (commits 1/2/4). **No pre-existing write-path fixture found** (a genuine difference
+from pilot 6's own posture, recorded honestly rather than glossed over) — the real write path is exercised
+for the first time by commit 6's own `LP-D1`/`LP-D6` fixtures, not proven here.
+
+---
+
 ## §0. PH-0 seed — measured boundary table (2026-08-30 planning session)
 
 ### 0.1 Governing specs, read in order (Spec 124 §7 Step 0 / Spec 123 §6 G0)
