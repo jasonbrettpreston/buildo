@@ -229,6 +229,24 @@ describe('the verdict is ROW-DERIVED, and all three values are reachable (§7.1,
     expect(verdictLib.evaluateLimit('viol == 0', { violations: 0 })).toEqual({ ok: true });
   });
 
+  it('R-T addendum (Ask 2, Fold A-4b) — `value_min N`/`value_max N` compare a RAW measured value, never falling back through violations', () => {
+    expect(verdictLib.evaluateLimit('value_min 0', { value: 520492 })).toEqual({ ok: true });
+    expect(verdictLib.evaluateLimit('value_min 0', { value: -1 })).toEqual({ ok: false });
+    expect(verdictLib.evaluateLimit('value_max 100', { value: 100 })).toEqual({ ok: true });
+    expect(verdictLib.evaluateLimit('value_max 100', { value: 100.01 })).toEqual({ ok: false });
+    // negative bounds are declared-legal (the schema's `bound` grammar allows a leading `-`)
+    expect(verdictLib.evaluateLimit('value_min -5', { value: -5 })).toEqual({ ok: true });
+    // a violations-only observation is UNEVALUABLE for value_min/value_max — this form
+    // deliberately does not fall back through the violations-first `measured` reading
+    // every other limit form uses, because the whole point is "the raw value", not a count.
+    expect(verdictLib.evaluateLimit('value_min 0', { violations: 0 })).toEqual({
+      unevaluable: 'check reported no numeric value for value_min',
+    });
+    expect(verdictLib.evaluateLimit('value_max 0', { violations: 0 })).toEqual({
+      unevaluable: 'check reported no numeric value for value_max',
+    });
+  });
+
   it('execution.on_check_error governs an errored check — and omit_row is the DECLARED fiction', () => {
     const errored = { c0: { error: new Error('CKAN unreachable') } };
     expect(build(withChecks([{}], 'omit_row'), errored).rows).toHaveLength(0);

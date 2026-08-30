@@ -14,8 +14,13 @@ import path from 'path';
 
 const AUDIT_PATH = path.resolve(__dirname, '../../scripts/analysis/parcel-sanity-audit.js');
 const DUMP_PATH = path.resolve(__dirname, '../../scripts/analysis/parcel-field-dump.js');
+// R-T addendum, commit 2 — the distribution-scan query (incl. the id tiebreaker) is
+// extracted to scripts/lib/step/plausibility.js (Fold A-4d/B-7: "extract once, both
+// sides import"); parcel-sanity-audit.js no longer carries this SQL text itself.
+const PLAUSIBILITY_PATH = path.resolve(__dirname, '../../scripts/lib/step/plausibility.js');
 const auditSource = () => fs.readFileSync(AUDIT_PATH, 'utf-8');
 const dumpSource = () => fs.readFileSync(DUMP_PATH, 'utf-8');
+const plausibilitySource = () => fs.readFileSync(PLAUSIBILITY_PATH, 'utf-8');
 
 describe('parcel-sanity-audit.js — C6 CLI pool (DATABASE_URL-aware, target always logged)', () => {
   // ── WHY THESE THREE CHANGED (WF3 2026-08-23, Spec 122 §P0) ────────────────
@@ -71,9 +76,11 @@ describe('parcel-sanity-audit.js — C6 CLI pool (DATABASE_URL-aware, target alw
     expect(runAuditBody).not.toMatch(/new Pool\(\{\s*host/);
   });
 
-  it('distribution sample-picker carries the id tiebreaker for reproducible output', () => {
-    const source = auditSource();
-    expect(source).toMatch(/array_agg\(b\.id ORDER BY b\.f DESC, b\.id\)/);
+  it('distribution sample-picker carries the id tiebreaker for reproducible output (R-T addendum, commit 2: now in plausibility.js, not the audit CLI)', () => {
+    expect(plausibilitySource()).toMatch(/array_agg\(b\.id ORDER BY b\.f DESC, b\.id\)/);
+    // the audit CLI no longer carries this SQL text itself — it calls runDistributionScan
+    expect(auditSource()).not.toMatch(/array_agg\(b\.id ORDER BY b\.f DESC, b\.id\)/);
+    expect(auditSource()).toMatch(/runDistributionScan\(pool, DIST_FIELDS, RES, ZC\)/);
   });
 });
 

@@ -75,6 +75,15 @@ const VIOL_RE = /^viol (==|<=) (\d+)$/;
  * same substitution mechanism, same reported field (`observation.value`).
  */
 const PCT_RE = /^pct (<=|>=) ([0-9]*\.?[0-9]+)$/;
+/**
+ * R-T addendum (Ask 2, Fold A-4b) — `invariants[]`/`plausibility[]`'s two additions
+ * to `checks[].limit`'s grammar (both now shared via `definitions.bound`, checks[]
+ * included). Compare a RAW MEASURED VALUE, not a violation count/pct/ratio — needed
+ * for e.g. `pb_rows` sanity or `link_rate_pct` read as a value, not a violation
+ * count. Landed here (commit 2), not commit 1 (schema-shape only).
+ */
+const VALUE_MIN_RE = /^value_min (-?[0-9]*\.?[0-9]+)$/;
+const VALUE_MAX_RE = /^value_max (-?[0-9]*\.?[0-9]+)$/;
 /** The numeric a `limit_from_config` substitution replaces: the LAST number in the form. */
 const LIMIT_NUMBER_RE = /[0-9]*\.?[0-9]+(?=\s*(?:x median)?$)/;
 
@@ -136,6 +145,21 @@ function evaluateLimit(limit, observation) {
     if (measured === null) return { unevaluable: 'check reported no numeric ratio' };
     const bound = Number(pct[2]);
     return { ok: pct[1] === '>=' ? measured >= bound : measured <= bound };
+  }
+
+  // R-T addendum (Ask 2, Fold A-4b) — value_min/value_max read observation.value
+  // DIRECTLY, never falling back through `measured`'s violations-first preference:
+  // the whole point of this form is "the raw measured value", not a violation count.
+  const valueMin = typeof limit === 'string' ? limit.match(VALUE_MIN_RE) : null;
+  if (valueMin) {
+    if (!Number.isFinite(observation.value)) return { unevaluable: 'check reported no numeric value for value_min' };
+    return { ok: observation.value >= Number(valueMin[1]) };
+  }
+
+  const valueMax = typeof limit === 'string' ? limit.match(VALUE_MAX_RE) : null;
+  if (valueMax) {
+    if (!Number.isFinite(observation.value)) return { unevaluable: 'check reported no numeric value for value_max' };
+    return { ok: observation.value <= Number(valueMax[1]) };
   }
 
   const m = typeof limit === 'string' ? limit.match(VIOL_RE) : null;

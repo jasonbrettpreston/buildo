@@ -10,9 +10,14 @@ import * as path from 'node:path';
 
 const SCRIPT = path.resolve(__dirname, '../../scripts/quality/assert-parcel-sanity.js');
 const AUDIT = path.resolve(__dirname, '../../scripts/analysis/parcel-sanity-audit.js');
+// R-T addendum, commit 2 — statusFor/verdictCascade/the distribution scan are extracted
+// to scripts/lib/step/plausibility.js (Fold A-4d: "extract once, both sides import").
+// parcel-sanity-audit.js now RE-IMPORTS rather than defining them locally.
+const PLAUSIBILITY = path.resolve(__dirname, '../../scripts/lib/step/plausibility.js');
 const MANIFEST = path.resolve(__dirname, '../../scripts/manifest.json');
 const src = () => fs.readFileSync(SCRIPT, 'utf8');
 const audit = () => fs.readFileSync(AUDIT, 'utf8');
+const plausibility = () => fs.readFileSync(PLAUSIBILITY, 'utf8');
 
 describe('assert-parcel-sanity.js — observer contract', () => {
   it('script exists', () => { expect(fs.existsSync(SCRIPT)).toBe(true); });
@@ -43,20 +48,32 @@ describe('assert-parcel-sanity.js — observer contract', () => {
   });
 });
 
-describe('parcel-sanity-audit.js — data-driven gate mapping (Spec 48 §3.6)', () => {
-  it('statusFor derives FAIL/WARN/INFO/PASS purely from gate + sev + count + pop (no per-check-id branching)', () => {
-    const a = audit();
+describe('scripts/lib/step/plausibility.js — data-driven gate mapping (Spec 48 §3.6)', () => {
+  it('statusFor derives FAIL/WARN/INFO/PASS purely from gate + sev + count + pop (no per-check-id branching) — R-T addendum, commit 2: lives in plausibility.js, not parcel-sanity-audit.js', () => {
+    const p = plausibility();
     // WF3 Phase 1 D-E 4: signature gains `pop` — an empty population is inert-INFO, never a green PASS.
-    expect(a).toMatch(/function statusFor\(check, viol, pop\)/);
-    expect(a).toMatch(/if \(pop === 0\) return 'INFO'/);
+    expect(p).toMatch(/function statusFor\(check, viol, pop\)/);
+    expect(p).toMatch(/if \(pop === 0\) return 'INFO'/);
     // the exact data-driven mapping — gate first, then INFO, then WARN, else PASS
-    expect(a).toMatch(/check\.gate && viol > 0 \? 'FAIL'\s*:\s*check\.sev === 'INFO' \? 'INFO'\s*:\s*viol > 0 \? 'WARN' : 'PASS'/);
+    expect(p).toMatch(/check\.gate && viol > 0 \? 'FAIL'\s*:\s*check\.sev === 'INFO' \? 'INFO'\s*:\s*viol > 0 \? 'WARN' : 'PASS'/);
     // no `check.id ===` branching anywhere near the status logic (would be a parallel boolean)
-    expect(a).not.toMatch(/status[^\n]*\bcheck\.id ===/);
+    expect(p).not.toMatch(/status[^\n]*\bcheck\.id ===/);
   });
 
-  it('exports runSanity + verdictCascade + statusFor', () => {
+  it('parcel-sanity-audit.js does NOT define statusFor/verdictCascade locally — it re-imports from plausibility.js (Fold A-4d: extract once, both sides import)', () => {
+    const a = audit();
+    expect(a).not.toMatch(/function statusFor/);
+    expect(a).not.toMatch(/function verdictCascade/);
+    expect(a).toMatch(/require\(['"]\.\.\/lib\/step\/plausibility['"]\)/);
+    expect(a).toMatch(/\{\s*statusFor,\s*verdictCascade,\s*runDistributionScan\s*\}/);
+  });
+
+  it('exports runSanity + verdictCascade + statusFor (parcel-sanity-audit.js re-exports the imported names)', () => {
     expect(audit()).toMatch(/module\.exports = \{[^}]*runSanity[^}]*verdictCascade[^}]*\}/);
+  });
+
+  it('plausibility.js exports statusFor, verdictCascade, runDistributionScan for reuse (Fold B-7)', () => {
+    expect(plausibility()).toMatch(/module\.exports = \{[^}]*statusFor[^}]*verdictCascade[^}]*runDistributionScan[^}]*\}/);
   });
 
   it('the gated (zero-baseline) invariants carry gate:true', () => {

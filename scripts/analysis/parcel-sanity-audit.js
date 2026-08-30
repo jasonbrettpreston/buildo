@@ -176,22 +176,11 @@ const DIST_FIELDS = [
   { id: 'lot_size_sqm', expr: 'lot_size_sqm' },
 ];
 
-// sev/gate → audit-row status (Spec 48 §3.6, data-driven — NO per-check-id branching):
-//   inert (pop === 0) → INFO · gated + violated → FAIL · INFO check → INFO · violated → WARN · else PASS.
-// D-E 4 (WF3 Phase 1): a check whose POPULATION is empty proves nothing — it reads INFO 'inert', never
-// a green PASS (day-one customers: the vacated below-floor range, ravine_constrained pre-re-run).
-// `pop` is optional (undefined = population unknown, e.g. the unit-altitude calls) — only an explicit 0 is inert.
-function statusFor(check, viol, pop) {
-  if (pop === 0) return 'INFO';
-  return check.gate && viol > 0 ? 'FAIL' : check.sev === 'INFO' ? 'INFO' : viol > 0 ? 'WARN' : 'PASS';
-}
-
-// Row-derived verdict cascade (Spec 48 §3.6) — co-located with the sanity policy so the pipeline step
-// imports it rather than adding a 5th copy of the generic helper.
-function verdictCascade(rows) {
-  return rows.some((r) => r.status === 'FAIL') ? 'FAIL'
-    : rows.some((r) => r.status === 'WARN') ? 'WARN' : 'PASS';
-}
+// R-T addendum (Spec 124 §2 Rule 13, WF2 "The Step Validator, Data-First", commit 2) — statusFor,
+// verdictCascade, and the distribution-scan mechanism are now EXTRACTED to scripts/lib/step/
+// plausibility.js (Fold A-4d: "extract once, both sides import"). This file re-imports rather than
+// defining them locally — one copy of the gate-mapping policy, not a fork per consumer.
+const { statusFor, verdictCascade, runDistributionScan } = require('../lib/step/plausibility');
 
 // runSanity(pool) — the OPTIMIZED sweep the pipeline step consumes. ONE scan folds every BOUND/INVARIANT
 // check into `count(*) FILTER (...)` columns (was 29 sequential scans); the 8 per-zone DISTRIBUTION
@@ -221,18 +210,9 @@ async function runSanity(pool, { samples = false } = {}) {
     return { ...c, pop, viol, pct: pop ? (100 * viol / pop) : 0, samples: row[`s_${c.id}`] || [], status: statusFor(c, viol, pop), inert: pop === 0 };
   });
 
-  const distQ = (f) => `
-    WITH base AS (SELECT id, (${ZC}) AS zc, (${f.expr})::float8 AS f FROM parcels WHERE ${RES} AND (${f.expr}) IS NOT NULL),
-    stats AS (SELECT zc, percentile_cont(0.5) WITHIN GROUP (ORDER BY f) AS med,
-                     percentile_cont(0.99) WITHIN GROUP (ORDER BY f) AS p99 FROM base GROUP BY zc)
-    SELECT count(*)::int AS viol, (array_agg(b.id ORDER BY b.f DESC, b.id))[1:6] AS samples,
-           round(max(b.f)::numeric, 2) AS worst
-    FROM base b JOIN stats s ON s.zc = b.zc
-    WHERE b.f > s.p99 AND b.f > 3 * GREATEST(s.med, 0.0001)`;
-  const dist = await Promise.all(DIST_FIELDS.map(async (f) => {
-    const r = (await pool.query(distQ(f))).rows[0];
-    return { id: f.id, viol: r.viol, worst: r.worst, samples: r.samples || [] };
-  }));
+  // R-T addendum, commit 2 — the distribution scan is now scripts/lib/step/plausibility.js's
+  // runDistributionScan (extracted verbatim, RES/ZC passed explicitly rather than closed over).
+  const dist = await runDistributionScan(pool, DIST_FIELDS, RES, ZC);
 
   return { total, results, dist };
 }
