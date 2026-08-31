@@ -385,6 +385,18 @@
       "why": { "text": "LP-D10 (WF6 output-panel finding, restored commit 10). Mirrors permit_parcels_written's own shape: separates PERMITS EVALUATED (this row) from PERMIT_PARCELS ROWS CHANGED (the row above) — a permit can be evaluated with zero match-count impact (the no-match case fence a21b7b01 exists for), and this row is what makes that fact observable rather than silent. Expected to be >= permits_processed's own count minus any same-RUN_AT re-stamp the IS DISTINCT FROM guard correctly excludes (structurally ~0 in practice, since RUN_AT is a fresh clock read every run).", "liveness": { "kind": "table", "ref": "permits" } }
     },
     {
+      "id": "parcel_retraction_ratio",
+      "kind": "bound",
+      "expect": { "of": "permit_parcels rows retracted by W1's FULL-mode mass retraction (writes[0], scope match_type='spatial') and NOT rebuilt by the same run's batch-loop upsert, over rows retracted" },
+      "limit": "pct <= 0.05",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": { "text": "LP-D12 (WF6 output-panel finding, observability seat, commit 12, 2026-08-30) — mirrors link_massing's own mass_retraction_ratio (compute/link-massing.js:520-529) verbatim: 'retracted and NOT rebuilt is the shape of a broken run.' Before this check, W1's own retraction count and rebuild count were both computed (written.e1.retracted / written.e1.inserted) but never reported anywhere a verdict could see — a FULL run that retracted spatial-tier links and then failed to relink them would read PASS on every other row. A genuine FULL run retracts N and rebuilds ~N (permits re-evaluate across all tiers, not only spatial), so this ratio is 0 in the normal case; a broken predicate, empty corpus, or half-completed run shows as non-zero.", "liveness": { "kind": "check", "ref": "permit_parcels_written" } }
+    },
+    {
       "id": "spatial_null_coordinate_permits",
       "kind": "field_coverage",
       "expect": { "reports": "permits excluded from Strategy 3 Step 2 by the WHERE v.lng IS NOT NULL AND v.lat IS NOT NULL guard" },
@@ -629,7 +641,7 @@
   "terminals": [
     {
       "id": "linked_incremental", "kind": "success", "status": "completed",
-      "records_meta": { "duration_ms": "int", "permits_processed": "int", "matches_tier_1_exact": "int", "matches_tier_1_via_bridge": "int", "matches_tier_2_name": "int", "matches_tier_3_spatial": "int", "matches_tier_3_polygon": "int", "matches_tier_3_fallback": "int", "no_match_count": "int", "null_coordinate_permits": "int", "street_type_mismatch_count": "int", "permits_watermarked_count": "int", "db_upserted": "int", "audit_table": "object", "terminal": "string" },
+      "records_meta": { "duration_ms": "int", "permits_processed": "int", "matches_tier_1_exact": "int", "matches_tier_1_via_bridge": "int", "matches_tier_2_name": "int", "matches_tier_3_spatial": "int", "matches_tier_3_polygon": "int", "matches_tier_3_fallback": "int", "no_match_count": "int", "null_coordinate_permits": "int", "street_type_mismatch_count": "int", "permits_watermarked_count": "int", "db_upserted": "int", "permit_parcels_deleted_count": "int", "audit_table": "object", "terminal": "string" },
       "why": { "text": "The normal outcome: mode resolved incremental, the batch loop ran, no FAIL/WARN row.", "liveness": { "kind": "check", "ref": "link_rate" } }
     },
     {
@@ -639,13 +651,18 @@
     },
     {
       "id": "linked_full", "kind": "success", "status": "completed",
-      "records_meta": { "duration_ms": "int", "permits_processed": "int", "matches_tier_1_exact": "int", "matches_tier_1_via_bridge": "int", "matches_tier_2_name": "int", "matches_tier_3_spatial": "int", "matches_tier_3_polygon": "int", "matches_tier_3_fallback": "int", "no_match_count": "int", "null_coordinate_permits": "int", "street_type_mismatch_count": "int", "permits_watermarked_count": "int", "db_upserted": "int", "audit_table": "object", "terminal": "string" },
+      "records_meta": { "duration_ms": "int", "permits_processed": "int", "matches_tier_1_exact": "int", "matches_tier_1_via_bridge": "int", "matches_tier_2_name": "int", "matches_tier_3_spatial": "int", "matches_tier_3_polygon": "int", "matches_tier_3_fallback": "int", "no_match_count": "int", "null_coordinate_permits": "int", "street_type_mismatch_count": "int", "permits_watermarked_count": "int", "db_upserted": "int", "permit_parcels_deleted_count": "int", "audit_table": "object", "terminal": "string" },
       "why": { "text": "Mode resolved full (LINK_PARCELS_FORCE_FULL): W1's scoped mass retraction (match_type='spatial') ran before the batch loop. NOT reachable by any commit-7 invocation — commit 8's budgeted act.", "liveness": { "kind": "check", "ref": "link_rate" } }
     },
     {
       "id": "failed_write_privilege", "kind": "fail_check", "status": "failed",
       "records_meta": { "audit_table": "object", "terminal": "string" },
       "why": { "text": "WF6 output-panel finding (observability seat), corrected commit 11, 2026-08-30 — the terminal here used to be named \"pre_write_refused\", describing a when:\"pre_write\" check FAILing with no standing override. That mechanism is structurally unreachable for this step: all 14 declared checks[] are when:\"post\" (verified live, none pre_write), so makePreWriteGate returns null and the pre-write gate is a permanent no-op. Because this was the ONLY fail_check terminal, selectTerminal's own discriminator-miss fallback (narrowed=[] when no terminal id contains the failing check's own id, pool=byKind instead) silently selected it whenever ANY post-check FAILed — most plausibly write_privilege, stamping the false claim \"no write was issued, permit_parcels is untouched\" on a run whose writes DID execute (RLS-zeroed: every statement affects 0 rows with no error, the write happened, it just wrote nothing). Renamed and re-worded to match the correct, already-discriminator-matching shape link_massing.descriptor.json/link_wsib.descriptor.json both use for the SAME real failure mode: RLS is enabled on permit_parcels with zero policies and the role does not bypass it, so every statement affects 0 rows with no error. Without this the run is indistinguishable from one whose corpus had not changed.", "liveness": { "kind": "check", "ref": "write_privilege" } }
+    },
+    {
+      "id": "failed_parcel_retraction_ratio", "kind": "fail_check", "status": "failed",
+      "records_meta": { "audit_table": "object", "terminal": "string" },
+      "why": { "text": "LP-D12 (WF6 output-panel finding, observability seat, commit 12, 2026-08-30) — a FULL-mode run whose W1 mass retraction (writes[0], scope match_type='spatial') removed rows the same run's batch loop then failed to rebuild. The write already happened (both the retraction and whatever partial upsert the run managed), so this is a fail_check, not a pre_write refusal — mirrors link_massing's own failed_mass_retraction_ratio terminal (same class, same reasoning: 'the write already happened, which is why this terminal is failed rather than a pre_write refusal'). selectTerminal's discriminator (the failing check's own id, \"parcel_retraction_ratio\") correctly narrows to this terminal alone — id.includes(\"parcel_retraction_ratio\") is true here and false for failed_write_privilege, so the two fail_check terminals never collide.", "liveness": { "kind": "check", "ref": "parcel_retraction_ratio" } }
     }
   ]
 }

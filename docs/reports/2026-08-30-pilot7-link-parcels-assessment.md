@@ -969,6 +969,16 @@ before-image/expectation-recording ceremony.
 - **1 difference on `table_state`** per capture (`table_state[1]`, the `permits` entry) —
   explained above: the harness auto-derives tables from `outputs.writes[]` once a
   descriptor exists, and `permits` is a read, not a write target.
+- **6 differences on the top-level `invariants[]` array** per capture (indices 3-8, noted
+  again LP-D12/commit 12 — pre-existing since this very split, not newly introduced) — the
+  pre-conversion capture's ad-hoc 9-entry invariant list (`permit_parcels_total`,
+  `match_type_spatial_count`, `duplicate_permit_pair_count`, `match_type_exact_address_count`,
+  `match_type_address_points_exact_count`, `match_type_spatial_polygon_count`,
+  `match_type_name_only_count`, `permits_total`, `permits_parcel_linked_at_not_null`) is
+  structurally longer than the frozen shape's own descriptor-declared 3-entry `invariants[]`
+  (`pp_unique_triple_violations`, `pp_duplicate_permit_pairs`,
+  `pp_spatial_null_coordinate_count`) — indices 0-2 differ in name/value (already covered by
+  the richer-observability class above), indices 3-8 have no post-side counterpart at all.
 - **`records_meta.chain_run_id`, `records_meta.checks_failed`, `records_meta.ledger_row`,
   `records_meta.permits_processed`, `records_meta.no_match_count`,
   `records_meta.matches_tier_1_exact`, `records_meta.matches_tier_1_via_bridge`,
@@ -1460,7 +1470,7 @@ differential's own diff on this key is explained, not swept). `LP-D8` CLOSED in 
 |---|---|---|
 | G0 | `"PH-0 — boundary freeze"` heading | ✅ present (§1) |
 | G1/G3 | `"PH-3"` heading + closed vocabulary, no bare `INCIDENTAL` | ✅ present (§2), 18/19 vocab-hit rows |
-| G6 | Every `LP-D*` row reaches `CLOSED`/`PIN` | ✅ `LP-D1`/`LP-D2`/`LP-D5`/`LP-D6` CLOSED-MEASURED · `LP-D3`/`LP-D4`/`LP-D8`/`LP-D9`/`LP-D10`/`LP-D11` CLOSED · `LP-D7` PIN — **11/11, none bare-open (updated commit 11)** |
+| G6 | Every `LP-D*` row reaches `CLOSED`/`PIN` | ✅ `LP-D1`/`LP-D2`/`LP-D5`/`LP-D6` CLOSED-MEASURED · `LP-D3`/`LP-D4`/`LP-D8`/`LP-D9`/`LP-D10`/`LP-D11`/`LP-D12` CLOSED · `LP-D7` PIN — **12/12, none bare-open (updated commit 12)** |
 | G7 | Locks ≥ fences: `LG-24` idempotency, `LP-D6` red-first, SQL-shape perf, **`LP-D9` street_type (NEW)** | ✅ all landed green — `src/tests/steps/link_parcels/violations.test.ts` (LP-D1/LP-D6/tiebreak/SQL-shape) + `src/tests/db/link-parcels-address-tier-street-type.db.test.ts` (LP-D9, 3/3 green) |
 | G8 | Differential with FINAL measured deltas | ✅ post-8a numbers: `permit_parcels_total` 241,843→239,858 (−1,985, reconciles with `no_match_count` +1,985); `street_type_mismatch_count` 7,046→0; `matches_tier_3_fallback` rename cited by name (above) |
 | G9 | `§R Reflection` with BOTH tables | ✅ promoted to FULL this commit — LOW-CONFIDENCE (3 rows) + RECURRING/STANDARD-SHAPING (5 rows), including the before-image lesson and the "FULL run is a defect-discovery instrument" lesson |
@@ -1631,6 +1641,78 @@ pilots locked theirs" instruction.
 `records_meta.terminal` stamp was wrong. Grounded independently (the `selectTerminal` mechanism read and
 traced by hand, not merely trusted from the observability seat's own report), fixed by matching an
 already-correct sibling shape rather than inventing a new one, `LP-D11` CLOSED in `defect-ledger.md`.
+
+---
+
+## §12. LP-D12 — retraction/delete counts invisible in `records_meta` (commit 12, WF6-triggered, WF3 remediation)
+
+### Grounding (independently re-verified)
+
+`runLinkKeyedPhase` (`scripts/lib/step/index.js:903-915`) fires a `retract:"all"`/`retract_when:"full_only"`
+mass retraction (W1) against `permit_parcels` scoped `match_type = 'spatial'` before the batch loop, on FULL
+mode only, and sets `written.e1.retracted`/`written.e1.deleted`. Confirmed via
+`node -e "const d=require('./scripts/link-parcels.descriptor.json'); d.outputs.writes.forEach((w,i)=>console.log(i,w.table,w.retract,w.retract_when))"`:
+`writes[0]` (`permit_parcels`, `guarded_upsert`) is the ONLY entry declaring `retract:"all"`; both `writes[1]`
+(LG-24) and `writes[2]` (LP-D10 watermark) declare `retract:"none"`. `written.e1` is ALSO the batch loop's
+own upsert target (`:1041-1044`), unlike `link_massing` where e2 is upsert — so `retracted` and `inserted`
+("rebuilt") already accumulate on the SAME counter object. LG-24's own keyed DELETE (`written.e2`, `:1052-1056`:
+`scanned`, `deleted`→`rows_changed`) was likewise fully computed every run. Neither reached `buildLinkMeta`
+(`scripts/lib/compute/link-parcels.js:414-433`, pre-fix): only `written.e1.rows_changed` (as `db_upserted`)
+and `written.e3.rows_changed` (as `permits_watermarked_count`, LP-D10) were surfaced — `written.e1.retracted`
+and all of `written.e2` were computed and then discarded. `link_massing`'s own `mass_retraction_ratio`
+(`compute/link-massing.js:520-529`) is the standing, already-shipped precedent for exactly this observability
+gap: "The post-write half of D-20: retracted and NOT rebuilt is the shape of a broken run" — `link_parcels`
+never got the analogous check when its own `retract:"all"` write target landed (commit 5/7).
+
+### THE FIX
+
+New check `parcel_retraction_ratio` (`compute/link-parcels.js`), registered in `CHECKS` and declared in the
+descriptor's `checks[]` — `kind:"bound"`, `severity:"FAIL"`, `blocking:false`, `limit:"pct <= 0.05"`, mirroring
+`mass_retraction_ratio`'s own `{retracted, rebuilt, unrestored_ratio}` detail shape and formula
+(`Math.max(0, retracted - rebuilt) / retracted`) verbatim, reading `written.e1.retracted`/`written.e1.inserted`
+(same counters, different target key than `link_massing`'s e2). New terminal `failed_parcel_retraction_ratio`
+(`kind:"fail_check"`) alongside the existing `failed_write_privilege` (LP-D11) — verified discriminator-safe:
+`selectTerminal`'s `narrowed = byKind.filter(t => t.id.includes(discriminator))` correctly isolates
+`failed_parcel_retraction_ratio` when `discriminator === "parcel_retraction_ratio"` (id contains it,
+`failed_write_privilege` does not) and vice versa — the two-fail_check-terminal shape this step now has is the
+CORRECT use of the mechanism LP-D11 diagnosed as broken when there was only one. `buildLinkMeta` now also
+returns `permit_parcels_deleted_count: (w2 && w2.rows_changed) || 0`, closing the second half of the gap.
+Both `records_meta` type maps (`terminals[].records_meta`, the two success terminals) widened with
+`permit_parcels_deleted_count`.
+
+**One declared asymmetry from `link_massing`'s shape**, named in the check's own why-text: the FULL retraction
+is scoped to `match_type='spatial'` only, while `rebuilt` (`written.e1.inserted`) counts inserts across ALL
+match tiers this run — a permit retracted from the spatial tier can legitimately re-land at tier 1/2 this same
+run (its address may now resolve via the primary pass). The ratio is therefore a conservative bound
+("spatial rows retracted and not replaced by anything, of any tier"), not a tier-exact figure — a broken
+predicate or half-completed run still reads as a non-zero ratio, which is the property the check exists to
+guarantee.
+
+### Live proof (real dev DB)
+
+Golden re-capture (incremental, unchanged corpus): `parcel_retraction_ratio` reported
+`{"retracted":0,"rebuilt":0,"unrestored_ratio":0}` (PASS, correct — no FULL retraction fires on an incremental
+run) and `permit_parcels_deleted_count:0` landed in the real `PIPELINE_SUMMARY.records_meta`.
+
+A genuine `LINK_PARCELS_FORCE_FULL=1` run (mode `FULL (force_full_env)`) reported: `retracted 12,697 row(s)`
+(W1's own log line), `parcel_retraction_ratio: {"retracted":12697,"rebuilt":12697,"unrestored_ratio":0}`
+(PASS — every retracted spatial-tier row was rebuilt), `db_upserted:12697` (consistent), and
+`permit_parcels_deleted_count:0` (LG-24's delete legitimately fired 0 times this run — no permit's kept
+`parcel_id` changed). This is the FULL-mode live proof the coordinator asked for: both new fields land
+correctly in a real audit row, with a genuinely non-zero `retracted`/`rebuilt` pair.
+
+**No new test lock.** `grep -rn "mass_retraction_ratio" src/tests/` returns zero hits — `link_massing`'s own
+sibling check and its `failed_mass_retraction_ratio` terminal have no dedicated test either. Matches
+precedent, not a new gap.
+
+### G-verdict, commit 12
+
+**CLOSED.** Both counters were already computed by existing, previously-verified write-path code (LP-D10's
+own commit proved `written.e1`/`written.e2`/`written.e3` accumulate correctly); this fix is purely
+observability — reading counters that already existed and reporting them, mirroring a check `link_massing`
+has carried since its own pilot. Grounded independently against the runner code and `link_massing`'s own
+precedent (not merely trusted from the observability seat's report), live-proved with both a zero-case
+(incremental) and a genuinely non-zero case (real FULL run), `LP-D12` CLOSED in `defect-ledger.md`.
 
 ---
 
@@ -1980,7 +2062,7 @@ above).*
 | G3 | 1 | 2 | table rows=19 vocab-hit rows=18 |
 | G4 | 2 | 2 | risk-class row with chance+impact found=true |
 | G5 | 1 | 1 | db=true clock=true network=true argv/env=true |
-| G6 | 3 | 3 | 11 ledger row(s), 0 without CLOSED/PIN () |
+| G6 | 3 | 3 | 12 ledger row(s), 0 without CLOSED/PIN () |
 | G7 | 3 | 3 | file=true fences=1 it-count=14 RED-evidence=true |
 | G8 | 3 | 3 | missing-invocations=0 stale-fingerprints=0 unexplained-diffs=0 |
 | G9 (binary) | PASS | — | heading=true low-confidence-table=true recurring-table=true |
@@ -2003,7 +2085,7 @@ above).*
 ### Captures (item iv)
 - missing invocations: none
 - stale fingerprints: none
-- compare ran: true · diffs found: 222 · unexplained: 0
+- compare ran: true · diffs found: 243 · unexplained: 0
 
 ### Test suite (item iii)
 - SKIPPED or failed to run: --fast: vitest spawn skipped
@@ -2025,7 +2107,7 @@ above).*
 | 11 | Phase-order re-derive (R-B) | prose-only | R-B describe not scoped to this step |
 | 12 | Truthful crash posture (R-M + R-B reader) | prose-only | R-M/R-B-reader describes not scoped to this step |
 | 13 | A step validates itself | enforced-green | this run of step:validate IS the mechanism |
-| P3 | I/O cost adjudication (measured, not gated) | measured | descriptor=42996B notes=6974B checks=14 rows records_meta=2792B (newest post/ capture) |
+| P3 | I/O cost adjudication (measured, not gated) | measured | descriptor=45453B notes=6974B checks=15 rows records_meta=2978B (newest post/ capture) |
 
 **Enforced-green: 9/14**
 

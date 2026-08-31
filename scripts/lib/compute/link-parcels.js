@@ -354,6 +354,32 @@ function permits_watermarked(ctx) {
   ctx.report('permits_watermarked', { violations: 0, detail: (w && w.rows_changed) || 0 });
 }
 
+/** LP-D12 (WF6 output-panel finding, observability seat, commit 12, 2026-08-30) — the
+ * post-write half of the FULL-mode mass retraction (W1, writes[0]'s retract:"all" /
+ * retract_when:"full_only", scope match_type='spatial'): retracted and NOT rebuilt is the
+ * shape of a broken run, mirroring link_massing's own mass_retraction_ratio
+ * (compute/link-massing.js:520-529) verbatim, including its {retracted, rebuilt,
+ * unrestored_ratio} detail shape. e1 IS the upsert target here (unlike link_massing, where
+ * e2 is the upsert) — both `retracted` (the mass-retraction counter) and `inserted` (the
+ * batch loop's own insert counter) already accumulate on the SAME written.e1 object, so no
+ * new counter plumbing is needed, only this check reading it. One declared asymmetry from
+ * link_massing's shape: the FULL retraction is scoped to match_type='spatial' only, while
+ * `rebuilt` (inserted) counts inserts across ALL match tiers this run — a permit retracted
+ * from the spatial tier can legitimately re-land at tier 1/2 this same run. The ratio is
+ * therefore a conservative bound ("spatial rows retracted and not replaced by anything, of
+ * any tier"), not a tier-exact figure — a broken predicate or half-completed run still shows
+ * as a non-zero ratio, which is the property this check exists to guarantee. */
+function parcel_retraction_ratio(ctx) {
+  const w = ctx.written && ctx.written.e1;
+  const retracted = (w && w.retracted) || 0;
+  const rebuilt = (w && w.inserted) || 0;
+  const ratio = retracted > 0 ? Math.max(0, retracted - rebuilt) / retracted : 0;
+  ctx.report('parcel_retraction_ratio', {
+    value: ratio,
+    detail: { retracted, rebuilt, unrestored_ratio: round(ratio) },
+  });
+}
+
 /** LP-D6, Fold B item 2 — WARN, R-H retighten candidate. Evidence corrected at Fold C blocking item 1: the real observed link is parcel `439990`, never `id=1`. Non-zero IS the violation count — this check WARNs whenever NULL-coordinate permits are excluded from Strategy 3 Step 2, mirroring link-massing.js's own multi_primary_parcels shape (a count check, not an always-zero INFO row). */
 function spatial_null_coordinate_permits(ctx) {
   const n = ctx.matched.null_coordinate_permits || 0;
@@ -405,6 +431,7 @@ const CHECKS = {
   no_match,
   permit_parcels_written,
   permits_watermarked,
+  parcel_retraction_ratio,
   spatial_null_coordinate_permits,
   street_type_conflict,
   link_rate,
@@ -414,6 +441,7 @@ const CHECKS = {
 function buildLinkMeta(ctx) {
   const m = ctx.matched;
   const w = ctx.written && ctx.written.e1;
+  const w2 = ctx.written && ctx.written.e2;
   const w3 = ctx.written && ctx.written.e3;
   return {
     duration_ms: ctx.elapsed_ms,
@@ -429,6 +457,11 @@ function buildLinkMeta(ctx) {
     street_type_mismatch_count: m.street_type_mismatch || 0,
     permits_watermarked_count: (w3 && w3.rows_changed) || 0,
     db_upserted: (w && w.rows_changed) || 0,
+    // LP-D12 (WF6 output-panel finding, observability seat, commit 12) — LG-24's own
+    // keyed-DELETE stats (written.e2) were computed every run but never reached
+    // records_meta: a retraction-without-rebuild run looked identical to a clean one from
+    // the audit row alone. rows_changed IS deleted here (e2 never inserts/updates).
+    permit_parcels_deleted_count: (w2 && w2.rows_changed) || 0,
   };
 }
 
