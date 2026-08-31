@@ -3162,3 +3162,41 @@ exactly the kind of retroactive massaging Spec 123 §3's PIN-vs-FIX discipline w
   line endings before comparing, mirroring the `heritage-418` fix's own shape) to these two lock sites, closing
   the class estate-wide rather than per-incident. Not fixed this commit — filed per the coordinator's own
   instruction (code-review PASS, sub-threshold, pre-existing).
+
+### Pilot 8 (`refresh_snapshot`) — pre-commit hook `npm run test` flakiness, commits 1–5 (2026-08-31)
+
+- **[MED · test-suite reliability under the husky pre-commit hook, `npm run test` (full `vitest run`, ~500
+  files / ~10,290 tests), not scoped to any one test file] 5 of ~9 full pre-commit runs across pilot 8's
+  first 5 commits failed on a SINGLE test — a different, mutually unrelated test each time — with zero
+  code changes between the failing attempt and the immediately-following clean retry.** Doubled the
+  wall-clock cost of roughly half this pilot's commits (each full run costs ~2.5–6 min; a flake forces a
+  full second run). Measured failures, verbatim:
+  - `src/tests/admin-app-health-route-exports.logic.test.ts` — `exports ONLY canonical handler/config
+    names — no test seams or helpers` — `Test timed out in 15000ms` (×2 occurrences, different commits;
+    passed cleanly on immediate retry both times, once in 8.2s and once in 13.8s — well under the 15s
+    budget when the runner isn't resource-starved).
+  - `src/tests/run-chain-step-timeout.logic.test.ts` — `PIPELINE_SUMMARY lines emitted BEFORE the kill
+    survive on err.summaryLines` — `expected '' to match /PIPELINE_SUMMARY:/` (×2 occurrences). This test
+    spawns a REAL child process and races a `SIGKILL` against the child's stdout flush, asserting the
+    summary line was captured before the process died — inherently timing-sensitive under CPU/scheduler
+    pressure from ~500 parallel test files.
+  - `src/tests/market-metrics.logic.test.ts` — `API route exports > exports a GET handler` — `Test timed
+    out in 5000ms` (×1) — same class as the app-health flake (a dynamic Next.js route-module import/
+    transpile racing a fixed timeout under load).
+  - `src/tests/control-panel-shell.ui.test.tsx` — 2 assertions failed with
+    `getMultipleElementsFoundError` (React Testing Library) — a render-timing race, not a logic error.
+
+  None of the 4 files touch anything this pilot changed (`scripts/generate-system-map.mjs`,
+  `docs/specs/00-architecture/00_system_map.md`, `docs/specs/01-pipeline/60_shared_steps.md`,
+  `docs/reports/2026-08-31-pilot8-refresh-snapshot-assessment.md`, `docs/reports/golden/refresh_snapshot/**`)
+  — confirmed by direct inspection of each failing test's own subject (admin app-health route, run-chain
+  child-process timeout handling, market-metrics API route, the control-panel UI shell). RECOMMEND: (a) the
+  two dynamic-route-import timeout tests (`admin-app-health-route-exports`, `market-metrics`) likely need a
+  longer fixed timeout or a `vitest.config` global bump for route-import-heavy specs rather than a hardcoded
+  5–15s budget, since the failure mode is specifically "the import itself hasn't resolved yet," not a logic
+  bug; (b) `run-chain-step-timeout`'s child-process-kill race may need either a longer grace window before
+  asserting `summaryLines`, or an explicit flush-then-kill ordering in the test's own harness rather than a
+  bare `SIGKILL`; (c) `control-panel-shell.ui.test.tsx`'s multi-element query should assert on a more
+  specific selector/role rather than one that can legitimately match more than one element under a slow
+  render. Not investigated further or fixed here — filed per the coordinator's own instruction (real
+  programme friction affecting every future WF's commit cadence, not this pilot's own scope).
