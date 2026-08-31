@@ -255,6 +255,58 @@ unchanged; no eligibility-gate or query-predicate rewrite is in scope for this p
 
 ---
 
+## §4. PH-6 — Classification (commit 4, G6)
+
+> Every Finding from the plan's §0.6 list + `RS-D1`/`RS-D2` (opened commit 2) + all 16 enumerated DML
+> statements (write-discipline table, plan §), classified per Spec 123 §3's three-way split: **CONTRACT**
+> (a downstream consumer depends on it, even if ugly) / **INCIDENTAL** (nothing observes it — do not
+> assert on it) / **DEFECT** (a spec or invariant asserts the opposite). `INCIDENTAL` is a legitimate G6
+> value distinct from the G3 Intent Ledger's closed disposition vocabulary, which bans it.
+
+### Findings
+
+| Finding | Ledger ID | Classification | Ground |
+|---|---|---|---|
+| 1 — write class `snapshot_append` wrong at the source | *(no `RS-D*` — PIN, the schema's own `gaps.GAP-2` already prescribes the fix; not this step's defect, the label was)* | **DEFECT in the DECLARATION, not the behavior** — the write itself is, and always has been, the correct `guarded_upsert` mechanic; only the taxonomy label was wrong | Finding 1, §0.4; GAP-2 verbatim match confirmed Fold A |
+| 2 — 4 Spec 60 doc-rot items | *(no `RS-D*` — docs-only, fixed commit 1)* | **DEFECT in the DESCRIPTION, not the behavior** — all 4 corrected in place commit 1 | §1 above |
+| 3 — missing system-map row | *(no `RS-D*` — root-caused as a generator bug, fixed commit 1)* | **DEFECT in TOOLING** (the generator), not in this step's own declaration surface — the file was already correctly declared in Spec 60's Target Files | §1 above |
+| 4 — phase-ternary `deep_scrapes`/`permits` collision | **`RS-D1`** | **DEFECT (Rule 1, nothing hidden)** — low blast radius (2 structural test files only), but a real undeclared magic-shared-literal | opened commit 2 |
+| 5 — `costEst`/`coaFunnel` carry-forward inconsistency | **`RS-D2`** | **DEFECT** — violates the file's own declared policy (`:320-322`, origin `fd14dc53`); operator-ruled FIX (Ask 1) | opened commit 2 |
+| 6 — `compute_cost_estimates` cross-step write into `data_quality_snapshots` | *(no `RS-D*` — not this step's defect, filed against the OTHER step)* | **CONTRACT-adjacent, foreign** — `compute_cost_estimates`'s own best-effort UPDATE is a no-op on the first daily run by construction (chain-position ordering); this step's own 68-column write list correctly excludes those 2 columns and `emitMeta` correctly doesn't claim them | §0.6 Finding 6; measured live (4/10 recent rows NULL on both columns) |
+| 7 — `metrics.ts`/`route.ts` dual-path (Refresh-Now button) | *(no `RS-D*` — Cross-Domain, out of Backend/Pipeline Operating Boundary)* | **DEFECT, but not this pilot's to classify or fix** — filed `review_followups.md` HIGH per Ask 3's disposition | §0.6 Finding 7; dashboard-race risk text, Fold A addendum |
+| 8 — 3 new live seams (`link_parcels`/`link_massing`/`link_wsib`) | *(no `RS-D*` — a declaration opportunity, not a defect)* | **CONTRACT** — 3 genuine producer→consumer edges, declared commit 3 (§3 above) | §3 above |
+
+### The 16 enumerated DML statements
+
+| # | Statement | Classification | Ground |
+|---|---|---|---|
+| 1 | `BEGIN`/`COMMIT` (REPEATABLE READ READ ONLY) | **CONTRACT** — WF3 F1 point-in-time consistency guarantee | `:201,278` |
+| 2 | `SET`/`RESET enable_indexscan` | **CONTRACT** — WF3 F1 ③, defeats the stale-correlation-statistic pathology | `:229,233` |
+| 3–8 | 6 sequential SELECTs on the pinned client (8 result sets, some multi-column) | **CONTRACT** — the WF3 F1 consolidated battery, this step's own most consequential correctness fix | `:211-276` |
+| 9 | `getPrevSnapshot()` prior-snapshot SELECT | **CONTRACT** — carry-forward source for 4 (soon 6) optional blocks | `:326-328` |
+| 10–13 | 4 optional reads (massing/schema/SLA/inspections) | **CONTRACT** — each independently caught, carry-forward already correct | `:337-409` |
+| 14–15 | 2 optional reads (costEst/coaFunnel) | **CONTRACT for the read; the CATCH PATH is `RS-D2`, a DEFECT** | `:423-475` |
+| 16 | `INSERT ... ON CONFLICT (snapshot_date) DO UPDATE ...` | **CONTRACT** — the write target, `guarded_upsert` per GAP-2 | `:503-626` |
+
+Zero statements classified INCIDENTAL — every one of the 16 either serves a declared purpose a downstream
+consumer or the file's own design comment depends on, or (statements 14–15's catch path) is `RS-D2`'s own
+open DEFECT. This is consistent with the plan's own framing: RECORDER's job is to record everything it
+reads, so there is no "unobserved" query in a step whose entire purpose is observation.
+
+### G6 verdict
+
+**CLOSED this commit.** 2 DEFECTs opened and ledgered (`RS-D1`, `RS-D2`), both with a declared closing
+commit (7 and 8 respectively). 3 findings resolved as tooling/doc-only fixes already landed (commit 1). 2
+findings correctly classified CONTRACT-adjacent-but-foreign (Finding 6) or out-of-scope Cross-Domain
+(Finding 7) — neither actioned by this plan, both already filed to their correct paper trail. 1 finding
+(8) is a CONTRACT declaration opportunity, not a defect, already landed (commit 3). No PH-6 candidate
+required a Reality-Check sample: unlike `link_parcels`'s spatial-join fix (a data-transformation with a
+measurable flip population), `RS-D1`/`RS-D2` are both control-flow corrections (a literal map, a
+catch-path redirect) with no analogous "which rows changed" population to sample — their correctness is
+provable structurally (the golden-master differential, G2′, commit 7) rather than statistically.
+
+---
+
 ## §0. Grounding (executed 2026-08-31)
 
 ### §0.1 Pilot order + archetype confirmation
