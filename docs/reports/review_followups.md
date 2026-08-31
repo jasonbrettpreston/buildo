@@ -3130,3 +3130,35 @@ exactly the kind of retroactive massaging Spec 123 §3's PIN-vs-FIX discipline w
 ### Programme backlog seeding (R-T, 2026-08-29) — the link_parcels HIGH followup, actually filed
 
 - **[HIGH · `scripts/link-parcels.js` Tier-3 nearest-centroid join, R-1/CC-D2/CC-D3] the pilot 6 assessment report (`docs/reports/2026-08-29-pilot6-compute-centroids-assessment.md` §2/§4) states this followup was "already filed" against `link_parcels.js` — it was NOT: this session's grep of this file for the R-1 finding's own language found zero hits before this entry.** Filing it now, with a corrected, fuller measurement that SUPERSEDES the pilot-6-report's 276-link estimate (which was scoped only to the 494 `spatial`-tier links touching a drifted centroid): over the FULL `spatial`-tier `permit_parcels` population, **6,808 of 17,500 (38.9%)** links would resolve to a different parcel under `ST_PointOnSurface`/containment vs. the current `ST_DWithin`/`ST_Distance` nearest-centroid join (`link-parcels.js:411-426`). This is the same root cause CC-D2/CC-D3 (defect-ledger.md, both PIN, not a defect in `compute_centroids` itself — `parcels.centroid_lat/lng` is measured correctly per its own `WHERE centroid_lat IS NULL` scope) expose downstream: `ST_Centroid` can fall outside a concave polygon or drift toward a neighbour parcel, and Tier-3's join trusts centroid PROXIMITY rather than polygon CONTAINMENT. RECOMMEND a future WF3/WF2 that either (a) switches Tier-3's join predicate to `ST_Contains`/`ST_PointOnSurface`-based containment first, falling back to nearest-centroid only when no containing parcel exists, or (b) triggers a one-time `compute_centroids`-adjacent recompute-FULL pass (see the CC-D3 followup immediately above this entry) so the stored centroids themselves drift less from a fresh `ST_Centroid`/`ST_PointOnSurface` recomputation, narrowing (not eliminating) the exposure. Not built here — filed per Spec 122/123's "PIN vs FIX" discipline (zero-behaviour-change scope for pilot 6; this is a pre-existing, downstream defect in a step outside the C1 8-pilot representative list). Programme-backlog id: `RT-CC3` (`scripts/steps/_schema/programme-items.json`).
+  **CLOSED-MEASURED (pilot 7, commit 7, 2026-08-30).** Delivered INLINE with pilot 7's own conversion, not
+  deferred — Spec 124 §7's declared-change ladder resolved it at rung (e) since no descriptor field/check/
+  logic-variable alone could correct a wrong JOIN predicate. Strategy 3 Step 2 rewritten to an unconstrained
+  KNN LATERAL on `pa.geom` (live boundary distance, not centroid), `pa.id ASC` declared tiebreak, cap as a
+  scalar post-filter. Full detail: `docs/reports/2026-08-30-pilot7-link-parcels-assessment.md` §7 (THE FIX);
+  `defect-ledger.md` `LP-D1` (CLOSED-MEASURED, commit 8's live FULL re-evaluation: 10,707/17,504, 61.2%,
+  flipped).
+
+### Pilot 7 (`link_parcels`) — WF6 output-panel code-review seat, commit 10 (2026-08-30)
+
+- **[LOW · `scripts/lib/compute/link-parcels.js` exports `CONFIG_KEYS` with zero real consumers] the object
+  is exported (`module.exports.CONFIG_KEYS = CONFIG_KEYS`) but nothing `require()`s and reads it — the only
+  other file naming it, `src/tests/step-conformance.infra.test.ts`, RE-DERIVES the same mapping by
+  regex-parsing the compute file's own SOURCE TEXT for a `const CONFIG_KEYS = {...}` object literal
+  (`configKeysMap()`, added commit 9's own fleet-consistency fix), never by importing the export itself.**
+  Verified directly this commit (`grep -rn "CONFIG_KEYS" --include=*.js --include=*.ts`, 2 files: the compute's
+  own definition/export and the test's own comment + independent regex-parse). RECOMMEND either (a) drop the
+  export in a future cleanup pass (it is genuinely dead surface, not load-bearing for the conformance checker,
+  which never imports it), or (b) if a future consumer is added, keep it — do not remove reflexively without
+  re-checking. Not fixed this commit (code-review PASS, sub-threshold item, filed per the coordinator's own
+  instruction not to spend a commit on it).
+- **[LOW · CRLF-fragile self-referential locks, affects ALL 7 converted steps, pre-existing not introduced by
+  pilot 7] `src/tests/step-conformance.infra.test.ts:1777`'s scorecard mirror-lock (`committedBlock` vs a
+  fresh `--fast` run) and `src/tests/pipeline-sdk.logic.test.ts:1463`'s grandfather `existsSync` check are
+  both sensitive to a trailing `\r` on a fresh `autocrlf=true` checkout** — the SAME class of CRLF-tolerance
+  gap this repo has already fixed elsewhere (the `heritage-418`/`cost-ledger-gate` CRLF-tolerant mirror-locks,
+  peel 8b, 2026-08-27). Not this pilot's own defect (the lock mechanism predates commit 1; every one of pilot
+  7's own 10 commits happened to land clean on this checkout's own line-ending state, so the gap never fired
+  here). RECOMMEND a future hardening pass applies the SAME CRLF-tolerant comparison (normalize both sides'
+  line endings before comparing, mirroring the `heritage-418` fix's own shape) to these two lock sites, closing
+  the class estate-wide rather than per-incident. Not fixed this commit — filed per the coordinator's own
+  instruction (code-review PASS, sub-threshold, pre-existing).

@@ -102,6 +102,42 @@
           "on_collision": "not_applicable",
           "key_space_migration": "none"
         }
+      },
+      {
+        "table": "permits",
+        "key": ["permit_num", "revision_num"],
+        "columns": [
+          { "name": "parcel_linked_at", "vocabulary": "none", "written": "step", "bind": "value", "source": "run_at" }
+        ],
+        "write_discipline": {
+          "class": "set_based_scoped",
+          "set_source": "compute",
+          "guard": "none",
+          "guard_why": {
+            "text": "LG-9/D-5 (2026-08-29 rule, parcel_buildings.linked_at incident): a run-clock column (columns[].source \"run_at\") may never sit in write_discipline.guard_columns — RUN_AT is DISTINCT FROM its own stored value on every run, so an IS DISTINCT FROM guard naming it is vacuous (never excludes anything) while LOOKING like a real guard, exactly the LG-9 trap. parcel_linked_at is this target's ONLY declared column, so there is no other column left to guard on — the honest declaration is guard:\"none\", matching LG-24's own sibling target (e2) shape. The scope IS the guard (same reasoning as e2's own guard_why): a batch's own watermark UPDATE only ever touches permit keys in THAT batch. The underlying compute-authored SQL (watermark_update_sql) additionally carries its own AND parcel_linked_at IS DISTINCT FROM $3 clause — a genuine, narrow safety net against a same-transaction retry re-stamping an already-current row — but that clause lives in the SQL text, not in this descriptor's own guard_columns, so LG-9's mechanical check (which only inspects columns[].source cross-referenced against guard_columns) correctly does not see it and does not need to.",
+            "liveness": { "kind": "file", "ref": "scripts/lib/step/validate.js" }
+          },
+          "guard_columns": "all_declared",
+          "guard_columns_why": {
+            "text": "LG-9/D-5's mechanical check (parcel_buildings.linked_at incident, 2026-08-29) flags ANY run-clock column (columns[].source \"run_at\") sitting inside the EXPANDED guard_columns set, regardless of whether write_discipline.guard itself is \"none\" or \"is_distinct_from\" — this target's guard is already \"none\" (see guard_why above: parcel_linked_at is its ONLY declared column, so \"all_declared\" expands to exactly that one run-clock column, with nothing else to name instead). No guard mechanism reads guard_columns when guard:\"none\" — this field only exists here because the schema requires SOME value at this path, and \"all_declared\" is the honest one: it IS every declared column, there being only the one.",
+            "liveness": { "kind": "file", "ref": "scripts/lib/step/validate.js" }
+          },
+          "scope": "(permit_num, revision_num) IN (this batch's own keys)",
+          "expected_change_ratio": "<= 1.0",
+          "idempotent_rerun": "zero_writes",
+          "txn_scope": "batch",
+          "why": {
+            "text": "LP-D10 (WF6 output-panel finding, restored commit 10, 2026-08-30) — fence a21b7b01 (2026-04-01) RESTORED: 'Batch UPDATE parcel_linked_at = NOW() for ALL evaluated permits, regardless of match count' was dropped, nowhere-on-purpose, during commit 7's consolidation into LG-24's single transaction. This write is the WHOLE REASON the incremental filter (staleness.scope, below) can ever EXCLUDE a no-match permit — without it, an unmatchable permit is re-evaluated on every incremental run forever. Unconditional by design (every permit THIS BATCH processed, matched or not) — matching the old code's own literal unconditional overwrite exactly, not merely approximating it. writes[] declared ORDER (extends Fold B item 5): fires LAST, after the upsert (e1) and LG-24's keyed delete (e2), inside the SAME transaction — a permit's linked/unlinked state is already final before it is marked evaluated. The SQL text is compute-authored (buildMatchSql's watermark_update_sql), via the set_source:\"compute\" escape hatch (LG-22 precedent) — RUN_AT is a per-run bound value, not a declared constant, so the plain set_based_scoped codegen path (sqlLiteral) does not fit.",
+            "liveness": { "kind": "file", "ref": "scripts/lib/compute/link-parcels.js" }
+          }
+        },
+        "retract": "none",
+        "replay": "idempotent_upsert",
+        "source_key_policy": {
+          "unique": false,
+          "on_collision": "not_applicable",
+          "key_space_migration": "none"
+        }
       }
     ],
     "cascades": "none",
@@ -114,9 +150,9 @@
     ],
     "publish": "direct",
     "write_inventory": {
-      "statements": 2,
+      "statements": 3,
       "why": {
-        "text": "Exactly two write statements reach permit_parcels per batch: the guarded upsert (e1) and LG-24's keyed DELETE (e2), both inside ONE transaction. The declared FULL-mode-only scoped mass retraction (W1, retract:\"all\"/retract_when:\"full_only\" on e1) is a THIRD statement but fires at most once per run (before the batch loop), never per-batch.",
+        "text": "Three write statements per batch, ONE transaction: the guarded upsert to permit_parcels (e1), LG-24's keyed DELETE from permit_parcels (e2), and LP-D10's restored permits.parcel_linked_at watermark UPDATE (e3, commit 10) — corrected from the '2, exactly two' claim that stood here through commit 9, which undercounted by omitting the watermark this same commit restores after it was found dropped at the WF6 output panel. The declared FULL-mode-only scoped mass retraction (W1, retract:\"all\"/retract_when:\"full_only\" on e1) is a FOURTH statement but fires at most once per run (before the batch loop), never per-batch.",
         "liveness": { "kind": "file", "ref": "scripts/lib/step/write.js" }
       }
     }
@@ -335,6 +371,18 @@
       "chains": "all",
       "accept_until": "none",
       "why": { "text": "Ported by name — the row that separates ALGORITHMIC matches from DB MUTATIONS.", "liveness": { "kind": "table", "ref": "permit_parcels" } }
+    },
+    {
+      "id": "permits_watermarked",
+      "kind": "field_coverage",
+      "expect": { "reports": "permits.parcel_linked_at rows the batch watermark (e3, LP-D10, commit 10) actually stamped this run" },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": { "text": "LP-D10 (WF6 output-panel finding, restored commit 10). Mirrors permit_parcels_written's own shape: separates PERMITS EVALUATED (this row) from PERMIT_PARCELS ROWS CHANGED (the row above) — a permit can be evaluated with zero match-count impact (the no-match case fence a21b7b01 exists for), and this row is what makes that fact observable rather than silent. Expected to be >= permits_processed's own count minus any same-RUN_AT re-stamp the IS DISTINCT FROM guard correctly excludes (structurally ~0 in practice, since RUN_AT is a fresh clock read every run).", "liveness": { "kind": "table", "ref": "permits" } }
     },
     {
       "id": "spatial_null_coordinate_permits",
@@ -581,7 +629,7 @@
   "terminals": [
     {
       "id": "linked_incremental", "kind": "success", "status": "completed",
-      "records_meta": { "duration_ms": "int", "permits_processed": "int", "matches_tier_1_exact": "int", "matches_tier_1_via_bridge": "int", "matches_tier_2_name": "int", "matches_tier_3_spatial": "int", "matches_tier_3_polygon": "int", "matches_tier_3_fallback": "int", "no_match_count": "int", "null_coordinate_permits": "int", "street_type_mismatch_count": "int", "db_upserted": "int", "audit_table": "object", "terminal": "string" },
+      "records_meta": { "duration_ms": "int", "permits_processed": "int", "matches_tier_1_exact": "int", "matches_tier_1_via_bridge": "int", "matches_tier_2_name": "int", "matches_tier_3_spatial": "int", "matches_tier_3_polygon": "int", "matches_tier_3_fallback": "int", "no_match_count": "int", "null_coordinate_permits": "int", "street_type_mismatch_count": "int", "permits_watermarked_count": "int", "db_upserted": "int", "audit_table": "object", "terminal": "string" },
       "why": { "text": "The normal outcome: mode resolved incremental, the batch loop ran, no FAIL/WARN row.", "liveness": { "kind": "check", "ref": "link_rate" } }
     },
     {
@@ -591,7 +639,7 @@
     },
     {
       "id": "linked_full", "kind": "success", "status": "completed",
-      "records_meta": { "duration_ms": "int", "permits_processed": "int", "matches_tier_1_exact": "int", "matches_tier_1_via_bridge": "int", "matches_tier_2_name": "int", "matches_tier_3_spatial": "int", "matches_tier_3_polygon": "int", "matches_tier_3_fallback": "int", "no_match_count": "int", "null_coordinate_permits": "int", "street_type_mismatch_count": "int", "db_upserted": "int", "audit_table": "object", "terminal": "string" },
+      "records_meta": { "duration_ms": "int", "permits_processed": "int", "matches_tier_1_exact": "int", "matches_tier_1_via_bridge": "int", "matches_tier_2_name": "int", "matches_tier_3_spatial": "int", "matches_tier_3_polygon": "int", "matches_tier_3_fallback": "int", "no_match_count": "int", "null_coordinate_permits": "int", "street_type_mismatch_count": "int", "permits_watermarked_count": "int", "db_upserted": "int", "audit_table": "object", "terminal": "string" },
       "why": { "text": "Mode resolved full (LINK_PARCELS_FORCE_FULL): W1's scoped mass retraction (match_type='spatial') ran before the batch loop. NOT reachable by any commit-7 invocation — commit 8's budgeted act.", "liveness": { "kind": "check", "ref": "link_rate" } }
     },
     {

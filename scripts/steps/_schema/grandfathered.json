@@ -33,11 +33,11 @@
       "paths": {
         "outputs.writes[].write_discipline.guard": "none"
       },
-      "why": "outputs.writes[1] (LG-24, class link_full_retraction) is the compute-authored keyed DELETE of superseded permit_parcels rows — the same E1-precedent shape link_massing's own grandfathering already covers, applied to a DELETE instead of an UPDATE. No IS DISTINCT FROM guard applies to a row REMOVAL: the guard concept exists to skip a value that already matches what would be written, and a DELETE has no 'value' to compare, only rows to remove or not. The batch-scoped keyed predicate (permit_num/revision_num in this batch, parcel_id != the batch's own upsert keep-value) IS the correct, bounded mechanic, mirroring link_massing's own 'the unguarded write is the correct mechanic, and its cost is bounded and declared' reasoning verbatim.",
-      "commit": "pilot 7 commit 7 (2026-08-30)",
-      "adjudicated_by": "Fold A B-1 (2026-08-30) + orchestrator ruling (commit 7 dispatch)",
+      "why": "outputs.writes[1] (LG-24, class link_full_retraction) is the compute-authored keyed DELETE of superseded permit_parcels rows — the same E1-precedent shape link_massing's own grandfathering already covers, applied to a DELETE instead of an UPDATE. No IS DISTINCT FROM guard applies to a row REMOVAL: the guard concept exists to skip a value that already matches what would be written, and a DELETE has no 'value' to compare, only rows to remove or not. The batch-scoped keyed predicate (permit_num/revision_num in this batch, parcel_id != the batch's own upsert keep-value) IS the correct, bounded mechanic, mirroring link_massing's own 'the unguarded write is the correct mechanic, and its cost is bounded and declared' reasoning verbatim. outputs.writes[2] (LP-D10, restored commit 10) is a DIFFERENT reason for the SAME guard:\"none\" value: it is the permits.parcel_linked_at watermark UPDATE (fence a21b7b01, restored after being dropped in commit 7's own consolidation) — its ONLY declared column IS the run-clock column itself (columns[].source \"run_at\"), so LG-9/D-5's rule (a run-clock column may never sit in guard_columns, parcel_buildings.linked_at incident) leaves no other column to guard on. Unconditional-by-design matches the pre-conversion fence's own literal behavior ('for ALL evaluated permits regardless of match count'); the compute-authored SQL (watermark_update_sql) separately carries its own narrow IS DISTINCT FROM safety net against a same-transaction retry, which is not visible to this descriptor-level guard field and does not need to be.",
+      "commit": "pilot 7 commit 7 (2026-08-30); widened commit 10 (2026-08-30, LP-D10)",
+      "adjudicated_by": "Fold A B-1 (2026-08-30) + orchestrator ruling (commit 7 dispatch); LP-D10 widening self-adjudicated under the SAME ruling's own precedent shape (WF6 output-panel remediation, commit 10)",
       "date": "2026-08-30",
-      "lock_test": "src/tests/steps/link_parcels/violations.test.ts"
+      "lock_test": "src/tests/steps/link_parcels/violations.test.ts; src/tests/db/link-parcels-watermark.db.test.ts"
     },
     "link_massing": {
       "paths": {

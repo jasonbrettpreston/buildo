@@ -220,6 +220,31 @@ function buildMatchSql(descriptor, config, mode) {
         AND pp.revision_num = v.revision_num
         AND (v.keep_parcel_id IS NULL OR pp.parcel_id != v.keep_parcel_id);`,
 
+    // LP-D10 (WF6 output-panel finding, restored commit 10, 2026-08-30) — the
+    // "evaluated" watermark, RESTORED. Fence a21b7b01 (2026-04-01): "Batch UPDATE
+    // parcel_linked_at = NOW() for ALL evaluated permits, regardless of match
+    // count" -- dropped nowhere-on-purpose during commit 7's consolidation into
+    // LG-24's single transaction; this statement is the whole reason the
+    // incremental filter (WHERE clause above, "parcel_linked_at IS NULL OR
+    // (geocoded_at IS NOT NULL AND parcel_linked_at < geocoded_at)") can ever
+    // EXCLUDE a no-match permit -- without it, a permit that matches nothing is
+    // re-evaluated on every single incremental run forever. Unconditional by
+    // design (matches every permit THIS BATCH processed, matched or not) --
+    // guarded by IS DISTINCT FROM anyway (not "guard: none") so a permit already
+    // stamped with the EXACT same RUN_AT (a same-transaction retry) is correctly
+    // excluded, which is MORE correct than the old code's own unconditional
+    // overwrite, not merely equivalent to it. Params: $1 permit_num[], $2
+    // revision_num[], $3 RUN_AT (bound, never interpolated -- a per-run value,
+    // not a declared constant, so this ships via the set_source:"compute" escape
+    // hatch (LG-22 precedent) rather than the plain declared-constant
+    // set_based_scoped codegen path, which sqlLiteral would refuse).
+    watermark_update_sql: `
+      UPDATE permits
+      SET parcel_linked_at = $3::timestamptz
+      WHERE (permit_num, revision_num) IN (SELECT unnest($1::text[]), unnest($2::text[]))
+        AND parcel_linked_at IS DISTINCT FROM $3::timestamptz
+      RETURNING permit_num;`,
+
     // The declared FULL-mode-only scoped mass retraction (Fold A I-1) — rendered here so
     // it is visible beside the rest of the match SQL, but it is actually EXECUTED by
     // write.js's generic W1 mechanism off `outputs.writes[0].write_discipline.scope` +
@@ -320,6 +345,15 @@ function permit_parcels_written(ctx) {
   ctx.report('permit_parcels_written', { violations: 0, detail: (w && w.rows_changed) || 0 });
 }
 
+/** LP-D10 (restored commit 10) — the watermark's own audit row, mirroring permit_parcels_written's
+ * shape exactly: an always-INFO count separating "permits evaluated this run" (this check) from
+ * "permit_parcels rows actually changed" (permit_parcels_written above) — a permit can be evaluated
+ * with zero match-count impact, and this row is what makes that fact observable rather than silent. */
+function permits_watermarked(ctx) {
+  const w = ctx.written && ctx.written.e3;
+  ctx.report('permits_watermarked', { violations: 0, detail: (w && w.rows_changed) || 0 });
+}
+
 /** LP-D6, Fold B item 2 — WARN, R-H retighten candidate. Evidence corrected at Fold C blocking item 1: the real observed link is parcel `439990`, never `id=1`. Non-zero IS the violation count — this check WARNs whenever NULL-coordinate permits are excluded from Strategy 3 Step 2, mirroring link-massing.js's own multi_primary_parcels shape (a count check, not an always-zero INFO row). */
 function spatial_null_coordinate_permits(ctx) {
   const n = ctx.matched.null_coordinate_permits || 0;
@@ -370,6 +404,7 @@ const CHECKS = {
   run_matched,
   no_match,
   permit_parcels_written,
+  permits_watermarked,
   spatial_null_coordinate_permits,
   street_type_conflict,
   link_rate,
@@ -379,6 +414,7 @@ const CHECKS = {
 function buildLinkMeta(ctx) {
   const m = ctx.matched;
   const w = ctx.written && ctx.written.e1;
+  const w3 = ctx.written && ctx.written.e3;
   return {
     duration_ms: ctx.elapsed_ms,
     permits_processed: m.permits_processed,
@@ -391,6 +427,7 @@ function buildLinkMeta(ctx) {
     no_match_count: m.no_match,
     null_coordinate_permits: m.null_coordinate_permits || 0,
     street_type_mismatch_count: m.street_type_mismatch || 0,
+    permits_watermarked_count: (w3 && w3.rows_changed) || 0,
     db_upserted: (w && w.rows_changed) || 0,
   };
 }

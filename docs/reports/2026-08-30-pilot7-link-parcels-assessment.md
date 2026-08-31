@@ -367,7 +367,13 @@ independently re-verified this commit, not merely copied from the grounder's own
       site sits inside is CONSOLIDATED into transaction #1 at commit 7 — one `executeOrderedWrites` set, not
       two `withTransaction` calls — eliminating the crash window `8a1c7d25` itself left standing.**
   11. `:568` — the zero-match ghost-cleanup DELETE, same transaction #2 — SURVIVES, same consolidation as #10.
-  12. `:576` — the `parcel_linked_at` UPDATE, same transaction #2 — SURVIVES, same consolidation as #10.
+  12. `:576` — the `parcel_linked_at` UPDATE, same transaction #2 — ~~SURVIVES, same consolidation as #10~~
+      **FALSE, corrected commit 10 (`LP-D10`, WF6 output-panel finding).** This claim was never verified
+      against the landed compute/`runLinkKeyedPhase`/descriptor at the time it was written — it did NOT
+      survive: the watermark write existed nowhere in commit 7's own consolidation (fence `a21b7b01`,
+      "Prevents infinite re-evaluation of unmatchable permits," dropped silently, not knowingly retired).
+      Restored at commit 10 as a third declared write target (e3), ordered LAST in the same per-batch
+      transaction. See `defect-ledger.md` `LP-D10` and report §10 for the full restoration record.
   13. `:614` — the final cumulative-link-rate query, outside any transaction, pure read — SURVIVES.
 - **2 explicit `pipeline.withTransaction` wraps** (`:513-527` upsert-only, `:533-581` ghost-cleanup+timestamp) —
   **becomes 1 at commit 7** (Fold A B-1/Fold B item 5 — `LG-24` folds both into one `executeOrderedWrites` set).
@@ -1454,10 +1460,131 @@ differential's own diff on this key is explained, not swept). `LP-D8` CLOSED in 
 |---|---|---|
 | G0 | `"PH-0 — boundary freeze"` heading | ✅ present (§1) |
 | G1/G3 | `"PH-3"` heading + closed vocabulary, no bare `INCIDENTAL` | ✅ present (§2), 18/19 vocab-hit rows |
-| G6 | Every `LP-D*` row reaches `CLOSED`/`PIN` | ✅ `LP-D1`/`LP-D2`/`LP-D5`/`LP-D6` CLOSED-MEASURED · `LP-D3`/`LP-D4`/`LP-D8`/`LP-D9` CLOSED · `LP-D7` PIN — **9/9, none bare-open** |
+| G6 | Every `LP-D*` row reaches `CLOSED`/`PIN` | ✅ `LP-D1`/`LP-D2`/`LP-D5`/`LP-D6` CLOSED-MEASURED · `LP-D3`/`LP-D4`/`LP-D8`/`LP-D9`/`LP-D10` CLOSED · `LP-D7` PIN — **10/10, none bare-open (updated commit 10)** |
 | G7 | Locks ≥ fences: `LG-24` idempotency, `LP-D6` red-first, SQL-shape perf, **`LP-D9` street_type (NEW)** | ✅ all landed green — `src/tests/steps/link_parcels/violations.test.ts` (LP-D1/LP-D6/tiebreak/SQL-shape) + `src/tests/db/link-parcels-address-tier-street-type.db.test.ts` (LP-D9, 3/3 green) |
 | G8 | Differential with FINAL measured deltas | ✅ post-8a numbers: `permit_parcels_total` 241,843→239,858 (−1,985, reconciles with `no_match_count` +1,985); `street_type_mismatch_count` 7,046→0; `matches_tier_3_fallback` rename cited by name (above) |
 | G9 | `§R Reflection` with BOTH tables | ✅ promoted to FULL this commit — LOW-CONFIDENCE (3 rows) + RECURRING/STANDARD-SHAPING (5 rows), including the before-image lesson and the "FULL run is a defect-discovery instrument" lesson |
+
+---
+
+## §10. LP-D10 — the dropped `parcel_linked_at` watermark (commit 10, WF6-triggered, WF3 remediation)
+
+### Discovery
+
+**Not found by this pilot's own authoring or review passes across commits 1-9** — found by the WF6
+Regression Guardian seat, reading the landed diff against `git blame`/`git log -p` for every deletion, exactly
+its own charter. Item #12 of this report's own §2 PH-3 intent ledger (commit 2, this pilot) had claimed the
+old script's `:576` `parcel_linked_at` UPDATE "SURVIVES, same consolidation as #10" — a claim never verified
+against the LANDED code at the time it was written (commit 2 predates commit 7's own compute; the claim was a
+prediction about a future consolidation, never re-checked once that consolidation actually happened). Corrected
+above, struck not deleted.
+
+### Grounding (independently re-verified, not merely trusted from the Guardian's own report)
+
+`git show b37087f3^:scripts/link-parcels.js` lines 575-580, inside the fence's own introducing commit
+`a21b7b01` (2026-04-01, "fix(28_data_quality): timestamp-based incremental + ghost cleanup in link-parcels" —
+"Batch UPDATE `parcel_linked_at` = NOW() for ALL evaluated permits, regardless of match count... Prevents
+infinite re-evaluation of unmatchable permits"). `grep -n "parcel_linked_at" scripts/lib/compute/
+link-parcels.js scripts/lib/step/index.js scripts/link-parcels.descriptor.json` (pre-fix) found the column
+READ ONLY (the incremental filter's own WHERE clause) — never written anywhere. The descriptor's own
+`write_inventory.statements: 2` (pre-fix) explicitly enumerated only the guarded upsert (e1) and LG-24's
+keyed DELETE (e2) — the watermark was never even claimed, let alone written. Live-measured blast radius:
+15,849 permits currently eligible-and-unlinked; 0 of them CURRENTLY exhibit the runaway-reprocessing symptom
+only because this dev DB snapshot has had no new permit ingest since before commit 7 landed — every permit's
+historical `parcel_linked_at` predates the bug. A live production cron would begin accumulating the symptom
+on its very next genuinely-unmatchable new permit.
+
+### THE FIX — restored as a third declared write target
+
+`outputs.writes[2]`: table `permits`, class `set_based_scoped` + `set_source:"compute"` (the LG-22 escape
+hatch — `RUN_AT` is a per-run bound value, not a declared constant, so the plain codegen path's `sqlLiteral`
+does not fit). `guard:"none"`: LG-9/D-5's own mechanical rule (the `parcel_buildings.linked_at` incident)
+forbids a run-clock column (`columns[].source:"run_at"`) from sitting in `guard_columns` — `parcel_linked_at`
+is this target's ONLY declared column, leaving nothing else to guard on; `grandfathered.json`'s existing
+`link_parcels` entry (originally scoped to LG-24's own DELETE) widened to cover this second `guard:"none"`
+instance, with its own `guard_columns_why`/`guard_why` reasoning added. SQL text is compute-authored
+(`watermark_update_sql`, `scripts/lib/compute/link-parcels.js`), executed via `write.executeGuardedUpdate` —
+the SAME structural forbidden-token executor LG-22's own precedent (`compute_centroids`) uses. writes[]
+ORDER: fires LAST in the per-batch transaction, after the upsert (e1) and LG-24's keyed delete (e2) — a
+permit's linked/unlinked state is final before it is marked evaluated. The compute-authored SQL itself
+additionally carries `AND parcel_linked_at IS DISTINCT FROM $3` as a genuine, narrow safety net against a
+same-transaction retry (not visible to the descriptor's own `guard_columns`, which LG-9 checks separately —
+correctly, since that field is what the mechanical rule inspects).
+
+### Observability
+
+New standing check `permits_watermarked` (INFO, mirrors `permit_parcels_written`'s own shape exactly — an
+always-reported count, not a violation) + `records_meta.permits_watermarked_count`. Separates PERMITS
+EVALUATED (this row) from PERMIT_PARCELS ROWS CHANGED (`permit_parcels_written`) — a permit can be evaluated
+with zero match-count impact, and this row is what makes that fact observable rather than silent, matching
+the "nothing hidden" posture this whole pilot is built on.
+
+### Red-first lock, both directions, both LG-24 branches
+
+`src/tests/db/link-parcels-watermark.db.test.ts` calls `runLinkKeyedPhase` DIRECTLY rather than spawning the
+frozen shell — `pipeline.step`'s own `descriptor.database.assert_current_database:"postgres"` check
+(a real, deliberate safety mechanism) refuses the ephemeral `BUILDO_TEST_DB=1` container (always named
+`buildo_test`) by design, and that check lives in `runWithPool`, one layer OUTSIDE `runLinkKeyedPhase` itself
+— calling the phase function directly is a legitimate, narrower unit of test (same DB writes, same
+transaction, same watermark statement) without fighting a guard that exists for a different, real reason.
+
+**Proven RED on the unfixed code** (both fixtures, run against the genuine pre-fix compute/runner): a permit
+engineered to match nothing had `parcel_linked_at` stay NULL forever; a permit that DID match ALSO had
+`parcel_linked_at` stay NULL — the write was missing unconditionally, not only on the no-match path. **GREEN
+post-fix**, both directions, further extended (per the coordinator's own "if cheap" instruction) to exercise
+BOTH of LG-24's own delete branches in the same run: a pre-seeded stale link with `keep_parcel_id IS NULL`
+(zero-match cleanup) and a pre-seeded stale link to the WRONG parcel with a real match landing afterward
+(changed-match retraction) — both branches correctly fire alongside the watermark inside the same transaction.
+
+### Live proof, real dev DB (not only the fixture harness)
+
+A genuine no-match permit (`LPD10-LIVE-NOMATCH`) seeded on the live dev DB, `parcel_linked_at` confirmed NULL
+before. `PIPELINE_CHAIN=permits node scripts/link-parcels.js` (real incremental invocation, real frozen
+shell, real advisory lock): `PIPELINE_SUMMARY` reports `permits_processed:1`, `permits_watermarked_count:1`,
+`no_match_count:1`, `spatial_null_coordinate_permits: 1` (this fixture has no lat/lng either, correctly
+excluded from Strategy 3's own fallback too). Direct query after: `parcel_linked_at` stamped to the exact run
+clock value, zero `permit_parcels` rows (evaluated ≠ linked, confirmed live, not only in the fixture harness).
+Fixture permit cleaned up after verification.
+
+### FULL-mode semantics, confirmed unchanged
+
+The watermark UPDATE is unconditional with respect to `gate.mode` — it is not wrapped in any FULL-only
+branch, and W1's own FULL-only mass retraction (`retract:"all"`/`retract_when:"full_only"`) is a structurally
+separate code path this change does not touch. Confirmed live: `PIPELINE_CHAIN=sources
+LINK_PARCELS_FORCE_FULL=1 node scripts/link-parcels.js` — **`permits_watermarked_count: 254,045` exactly
+equals `permits_processed: 254,045`** (every permit the FULL run touched got its watermark stamped, no
+exceptions) — and every match-tier count (`matches_tier_1_exact` 198,029, `matches_tier_1_via_bridge`
+196,617, `matches_tier_2_name` 5,242, `matches_tier_3_spatial` 36,587, `no_match_count` 14,187,
+`permit_parcels_total` 239,858, `records_new` 12,697/`records_updated` 0) is BYTE-IDENTICAL to the pre-LP-D10
+FULL run's own numbers (§8b) — the fix added the missing watermark write with zero measurable impact on the
+matching logic itself, exactly as the "restoration, not a behavior change" framing above claims.
+
+### Golden capture differential — the NEW second table_state entry, explained
+
+Re-capturing `post/{permits,sources,standalone}.json` against the 3-target descriptor surfaces a SECOND
+`table_state` entry per capture (index 1) — the harness's own auto-derivation now also hashes `permits`,
+since `outputs.writes[2]` names it for the first time. Four field names appear in this new entry (verified
+directly against the committed JSON, not assumed): **`ceiling_bypassed: "projected"`** (the 254,082-row
+table is captured in full despite exceeding the harness's 100,000-row default ceiling, via the descriptor's
+own declared 3-column projection — `permit_num, revision_num, parcel_linked_at`, not every column),
+**`order_by: "explicit"`** and **`order_columns: ["permit_num", "revision_num"]`** (the composite key,
+matching `permit_parcels`'s own ordering convention), and **`skipped_reason`** — present in the DIFF, not in
+the current capture itself: verified directly against `docs/reports/golden/link_parcels/pre/permits.json`
+(commit 5's own pre-conversion baseline, the G8 differential's comparison reference), `permits` there carries
+`{"skipped_reason": "over_ceiling", "ceiling": 100000}` and none of the four fields above — it was, at that
+time, a read-only INPUT table (254,082 rows, over the harness's default ceiling) with no declared projection
+to hash it against, so it was skipped entirely. `skipped_reason` is absent now because `permits` is a genuine
+WRITE target as of this commit (`outputs.writes[2]`), captured in full via its own declared 3-column
+projection instead. Not a surprise — a direct, expected consequence of the new write target existing, cited
+here so the differential is explained, not swept.
+
+### G-verdict, commit 10
+
+**CLOSED.** Found by the process this session's own review discipline exists to run (WF6, not self-caught),
+grounded independently before fixing, fixed as a genuinely-restored third write target (not a workaround),
+locked both directions plus both LG-24 branches, proven live on the real dev DB in both incremental and FULL
+mode, `LP-D10` CLOSED in `defect-ledger.md`, assessment item #12's false claim corrected in place (struck, not
+deleted).
 
 ---
 
@@ -1485,6 +1612,7 @@ differential's own diff on this key is explained, not swept). `LP-D8` CLOSED in 
 | A `pct <=`-only verdict mechanism (`limit_from_config` has no transform) forces any "floor" config semantic into "ceiling complement" storage | `T5`'s own seed value (25, the unlinked ceiling, not 75, the link-rate floor the old code's literal used) — the SAME requirement `link-massing.js`'s own `link_rate` config already satisfied, just hidden by numeric symmetry (50↔50) in that step's own case. A future pilot externalizing a "X must be >= N%" threshold should check whether the check reports the value or its complement BEFORE choosing the seed's own semantic direction | This commit's own T5 fix, §7 above, `scripts/seeds/logic_variables.json` |
 | **A conversion pilot's declared FULL re-evaluation is a defect-discovery instrument, not merely a data-refresh act** | `LP-D9` (Strategy 1a's missing `street_type` predicate) was NEVER exercised by 64 historical runs across 5+ months because every one of them was incremental — once a permit got ANY link, however wrong, it froze forever under `parcel_linked_at IS NULL`-gated reprocessing. The FIRST comprehensive FULL pass a conversion pilot runs is very possibly the first time a step's OLD code has EVER been run against its OWN full population in the current data environment — any latent, previously-unexercised defect in code the pilot did NOT touch (Strategy 1a predates this pilot by 3 months) surfaces THERE, not in the pilot's own diff. A future pilot's FULL re-evaluation should budget for "the run itself finds a bug" as a live possibility, not an edge case — and the response (§8a/§8b's own sequence: exonerate the conversion first via a neutrality differential, THEN root-cause, THEN fix, THEN re-run) is now a proven, repeatable playbook | `LP-D9`, `defect-ledger.md`; report §8a/§8b; Fold D, `.cursor/active_task.md` |
 | **Scoped before-image + unscoped (FULL) rebuild = partially unrecoverable before-state for anything outside the declared retraction scope** | `LG-24`'s per-batch before-image mirror was designed as a DELETE-audit trail (its own declared purpose), not a general "reconstruct any tier's true pre-run state" mechanism — it happens to be usable for that (§8b item 5's R-O sample relied on it) only because it captures a row that is about to be deleted, which for a composite-key change means the STALE row survives long enough to be mirrored. A step whose declared `write_discipline.scope` covers only PART of what a FULL run actually rewrites (here: `match_type='spatial'` only, while Strategy 1a/1b/2 also change under FULL) should not assume its before-image mechanism gives full before/after auditability across the whole write — a future LINK/MATCHER pilot with a similarly partial retraction scope should either widen the before-image's own declared scope or explicitly document the gap, as this report now does | Fold D item 7; `scripts/lib/step/write.js`'s own `buildBeforeImageSelectSql` doc comment (`plan.scope`-only by design) |
+| **Consolidating N separate statements/transactions into ONE is exactly where a write silently drops — enumerate every statement of the old shape and tick each one off in the new, not just the ones the plan already had in mind** | `LP-D10`: the pre-conversion script ran the batch UPDATE/DELETE work across TWO separate `withTransaction` calls (insert txn, then a second txn for the zero-match DELETE + the `parcel_linked_at` watermark). Commit 7's consolidation into LG-24's single per-batch transaction carried the upsert and the DELETE forward — both were already named in the plan's own G3 intent ledger and Fold A/B's own library-growth discussion — but the THIRD statement living in that same old second transaction, never separately named as its own line item anywhere in the plan, was silently dropped. This pilot's own §2 PH-3 intent ledger even claimed (wrongly, §2 item 12, corrected §10) that it survived, without re-checking the landed code — a prediction written before the consolidation happened, never re-verified after. **The generalizable failure mode: a plan phase that inventories "the writes this consolidation must carry forward" by re-deriving from the OLD script's own `withTransaction` BOUNDARIES (2 transactions → 2 items) rather than its individual STATEMENTS (2 transactions, 3 statements → 3 items) will silently drop whichever statement shares a transaction with one already on the list.** A future pilot consolidating N transactions into fewer should build the carry-forward checklist from `git show <old-file>` statement-by-statement (every `client.query`/`await client.query` inside every `withTransaction`), not transaction-by-transaction | `LP-D10`, `defect-ledger.md`; report §2 item 12 (the false "SURVIVES" claim, corrected §10), §10 |
 
 ---
 
@@ -1806,7 +1934,7 @@ above).*
 | G3 | 1 | 2 | table rows=19 vocab-hit rows=18 |
 | G4 | 2 | 2 | risk-class row with chance+impact found=true |
 | G5 | 1 | 1 | db=true clock=true network=true argv/env=true |
-| G6 | 3 | 3 | 9 ledger row(s), 0 without CLOSED/PIN () |
+| G6 | 3 | 3 | 10 ledger row(s), 0 without CLOSED/PIN () |
 | G7 | 3 | 3 | file=true fences=1 it-count=14 RED-evidence=true |
 | G8 | 3 | 3 | missing-invocations=0 stale-fingerprints=0 unexplained-diffs=0 |
 | G9 (binary) | PASS | — | heading=true low-confidence-table=true recurring-table=true |
@@ -1829,7 +1957,7 @@ above).*
 ### Captures (item iv)
 - missing invocations: none
 - stale fingerprints: none
-- compare ran: true · diffs found: 195 · unexplained: 0
+- compare ran: true · diffs found: 222 · unexplained: 0
 
 ### Test suite (item iii)
 - SKIPPED or failed to run: --fast: vitest spawn skipped
@@ -1851,7 +1979,7 @@ above).*
 | 11 | Phase-order re-derive (R-B) | prose-only | R-B describe not scoped to this step |
 | 12 | Truthful crash posture (R-M + R-B reader) | prose-only | R-M/R-B-reader describes not scoped to this step |
 | 13 | A step validates itself | enforced-green | this run of step:validate IS the mechanism |
-| P3 | I/O cost adjudication (measured, not gated) | measured | descriptor=36091B notes=6974B checks=13 rows records_meta=2662B (newest post/ capture) |
+| P3 | I/O cost adjudication (measured, not gated) | measured | descriptor=41797B notes=6974B checks=14 rows records_meta=2792B (newest post/ capture) |
 
 **Enforced-green: 9/14**
 

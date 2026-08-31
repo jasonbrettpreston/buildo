@@ -1008,8 +1008,9 @@ async function runLinkKeyedPhase({ descriptor, pool, compute, config, chainId, l
       matched.spatial += classified.matched;
     }
 
-    // ── writes[] IN ORDER: upsert THEN LG-24's keyed delete, ONE transaction
-    //    (Fold B item 5) ──────────────────────────────────────────────────────
+    // ── writes[] IN ORDER: upsert, THEN LG-24's keyed delete, THEN LP-D10's
+    //    permits watermark, ONE transaction (Fold B item 5, extended commit 10)
+    //    ──────────────────────────────────────────────────────────────────
     if (!dryRun) {
       const upsertRows = [];
       const delPermitNums = [];
@@ -1053,6 +1054,19 @@ async function runLinkKeyedPhase({ descriptor, pool, compute, config, chainId, l
         written.e2.scanned += delPermitNums.length;
         written.e2.deleted += deleted;
         written.e2.rows_changed += deleted;
+        // LP-D10 (WF6 output-panel finding, restored commit 10) — the "evaluated"
+        // watermark, ORDERED LAST (after upsert + delete, same transaction): every
+        // permit THIS BATCH processed, matched or not, gets parcel_linked_at
+        // stamped to clockNow — fence a21b7b01's own reason to exist (the
+        // incremental filter above can only ever EXCLUDE a no-match permit
+        // because this statement ran). delPermitNums/delRevisionNums already
+        // cover the WHOLE batch (built from permitKeys before any match
+        // filtering), so no new key arrays are needed here.
+        const watermarked = await write.executeGuardedUpdate(client, match.watermark_update_sql,
+          [delPermitNums, delRevisionNums, clockNow]);
+        written.e3.scanned += delPermitNums.length;
+        written.e3.updated += watermarked.length;
+        written.e3.rows_changed += watermarked.length;
       });
     } else {
       matched.no_match += permitKeys.filter((p) => !matchedByKey.has(`${p.permit_num}|${p.revision_num}`)).length;
