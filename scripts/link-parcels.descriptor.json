@@ -496,7 +496,24 @@
       "why": { "text": "WF6 output-panel finding (observability seat, Finding C, commit 13, 2026-08-30) -- corrected: this is NOT the same measurement as spatial_null_coordinate_permits above at a different altitude. That check counts every permit EXCLUDED from Strategy 3 Step 2 this run (11,613 live-measured, a large standing population, expected non-zero). THIS invariant counts a much narrower, different query: NULL-coordinate permits that nonetheless carry a match_type='spatial' row in permit_parcels -- i.e. LP-D6's own defect signature, permits that WRONGLY resolved to a parcel despite having no coordinates, an artifact of the pre-fix unguarded code path. This population SHOULD read 0 and stay there; the check above should not.", "liveness": { "kind": "table", "ref": "permit_parcels" } }
     }
   ],
-  "plausibility": "none",
+  "plausibility": [
+    {
+      "id": "spatial_fallback_distance_within_cap",
+      "sql": "SELECT count(*)::int FROM permit_parcels pp JOIN permits p ON p.permit_num = pp.permit_num AND p.revision_num = pp.revision_num JOIN parcels pa ON pa.id = pp.parcel_id WHERE pp.match_type = 'spatial' AND ST_Distance(pa.geom::geography, ST_SetSRID(ST_MakePoint(p.longitude, p.latitude), 4326)::geography) > 100",
+      "bound": "viol == 0",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "source": "plausibility",
+      "frequency": "every_run",
+      "retighten_when": "zero rows (this check is expected to already read 0 -- a non-zero count is a genuine finding, not a standing residual)",
+      "last_measured": { "value": 0, "at": "2026-08-30T21:00:00.000Z", "commit": "pilot7-commit14", "cost_ms": 637, "sample_n": 1, "source_run": { "run_id": null, "chain": null, "event": "manual_timing" } },
+      "why": {
+        "text": "R2/R3 (WF6 output-panel, orchestrator validator run, commit 14, 2026-08-30) -- the standing form of the Fold-B 98.24m/p99 measurement, mirroring link_massing's own linked_parcel_null_centroid_count row exactly (same shape: `source:\"plausibility\"`, `retighten_when: \"zero rows\"`). A genuine cross-field PHYSICAL BOUND, not telemetry-only: it checks the relationship between this step's own write (`permit_parcels.match_type='spatial'`, the KNN LATERAL fallback tier) and the config-declared cap (`spatial_match_max_distance_m`, default 100) that the SAME write's own SQL (`buildMatchSql`'s `spatial_fallback_sql`, `:189-202`) already enforces at write time (`ST_Distance(...) <= $5`). Under normal operation this should ALWAYS read 0 -- a non-zero count means either the cap config changed AFTER a spatial-tier row was written (the row is now stale relative to a tightened cap) or the write-time predicate itself regressed, neither of which the write-time SQL can ever catch on its own once the row already exists. NOTE (bootstrap disposition, this session's own budget constraint, not yet the full R-T >=5-timings/>=2-session median): `sample_n:1` -- a single live measurement (2026-08-30, 637ms, 0 violations against the real dev DB), not yet a median across sessions. Filed for a future WF3 to accumulate the remaining timings/sessions and promote this to a proper median, the same way `link_massing`'s own `linked_parcel_null_centroid_count` row (cited above as the shape precedent) would need to accumulate beyond its own recorded `sample_n`.",
+        "liveness": { "kind": "file", "ref": "scripts/lib/compute/link-parcels.js" }
+      }
+    }
+  ],
 
   "override": {
     "force_full": "LINK_PARCELS_FORCE_FULL",
