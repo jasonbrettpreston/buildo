@@ -1556,6 +1556,22 @@ excluded from Strategy 3's own fallback too). Direct query after: `parcel_linked
 clock value, zero `permit_parcels` rows (evaluated ≠ linked, confirmed live, not only in the fixture harness).
 Fixture permit cleaned up after verification.
 
+### R1 verification hardening — a REAL, already-existing live permit (Fold E addendum, commit 15, 2026-08-30)
+
+The proof above uses a seeded fixture. Fold E's own addendum required the incremental path be proven against
+a REAL, already-existing permit too, not fixture scale alone: a genuine live permit, `21 204601 BLD` rev `00`
+(already linked to `parcel_id 226797` via `address_points_exact`, `parcel_linked_at: 2026-08-31T01:13:08.715Z`
+from an earlier run this session), had its `geocoded_at` stamped to the DB clock (`now()`,
+`2026-08-31T01:43:42.707Z`) — a legitimate re-geocode eligibility trigger, `geocoded_at > parcel_linked_at`,
+the exact incremental-filter predicate. Eligibility count confirmed `37 → 38` before the run. A real
+incremental invocation (`node scripts/link-parcels.js`, no fixture, no env override) reported
+`permits_processed: 1` (the OTHER 37 had already been swept up by this session's own prior golden
+re-captures, each a real incremental invocation) — `matches_tier_1_exact: 1`, `permits_watermarked_count: 1`,
+`terminal: "linked_incremental"`, verdict `PASS`. Direct query after: `parcel_linked_at` (`2026-08-31T01:43:51.923Z`)
+now AFTER `geocoded_at`, `permit_parcels` still resolves to the SAME `parcel_id 226797` /
+`address_points_exact` (correct — underlying address data never changed, only the geocode timestamp) — a
+genuine relink-and-watermark cycle on a real permit, not a constructed scenario.
+
 ### FULL-mode semantics, confirmed unchanged
 
 The watermark UPDATE is unconditional with respect to `gate.mode` — it is not wrapped in any FULL-only
@@ -1789,6 +1805,34 @@ Live-measured: 0 violations, 637ms. `sample_n:1` — bootstrap only, R-T's full 
 **CLOSED (both).** Neither finding required a behavior change — LP-D14 is a citation gap in already-correct
 history bookkeeping, LP-D15 is a new observability row over an already-correct write-time guarantee, live
 re-verified at 0 violations. `LP-D14`/`LP-D15` CLOSED in `defect-ledger.md`.
+
+---
+
+## §15. R7 — downstream `compute-cost-estimates.js` verification (Fold E addendum, promoted from FILED, 2026-08-30)
+
+`LP-D7` (PIN, §2/commit 8) grounded `compute-cost-estimates.js` as always-full with no incremental filter — the
+~10,707 dominant-parcel relinks from this pilot's own commit 8 FULL re-evaluation were expected to self-heal on
+its very next run, no staleness/stranding risk. This section is that verification, run live rather than merely
+re-asserted.
+
+**Run.** `node scripts/compute-cost-estimates.js` (detached, no chain arg) against the relinked table:
+`records_total: 254,082`, `records_updated: 5,023`, `records_new: 0`. Verdict `WARN` — driven entirely by
+`model_coverage_pct: 57.0%` (threshold `>= 80%`), a PRE-EXISTING, system-wide model-coverage gap unrelated to
+this pilot's relink work (out of scope per the coordinator's own "do not fix cost-model code" instruction) —
+every relink-relevant row (`permit_type_class_skipped_pct` 4.5% ≤ 14.5%, `t4_matrix_miss_pct` 59.2% ≤ 60%,
+`archetype_map_nofit_residential_pct` 13.2% ≤ 25%) reads PASS.
+
+**Bounded output-plausibility sample.** N=50, `setseed(0.20260830002)` then `ORDER BY random() LIMIT 50` over
+`cost_estimates` rows with `computed_at` in the last 10 minutes (this exact run), joined to their CURRENT
+`permit_parcels`/`parcels` (post-relink) for `lot_size_sqm`. Checked per row: `estimated_cost >= 0`,
+`cost_range_low <= estimated_cost <= cost_range_high`, `lot_size_sqm > 0` where present, no absurd magnitude
+(`> $500M`). **0 anomalies in 50.** Zone distribution over the sample (`zoning_gen_zone`): `1`×1, `4`×3, `6`×2,
+`101`×4, `202`×15, `null`×25 (the NULL half is a known, separate zoning-enrichment coverage gap, not a
+relink/cost-estimate defect). No stale pre-relink residue is possible by construction — `compute-cost-estimates`
+is always-full, so every sampled row's own `computed_at` is this exact run, never a prior one.
+
+**Verdict: SANE.** Nothing insane found; not fixed (nothing to fix). `LP-D7` remains PIN, its own self-heal
+claim now measured rather than only argued.
 
 ---
 
