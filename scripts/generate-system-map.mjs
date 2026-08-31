@@ -64,8 +64,14 @@ function parseSpec(filePath) {
   if (targetFilesSection) {
     const lines = targetFilesSection[0].split('\n');
     for (const line of lines) {
-      const fileMatch = line.match(/`(src\/[^`]+)`/);
-      if (fileMatch) {
+      // PILOT 8 FIX (2026-08-31, refresh_snapshot PH-0/Finding 3): `.match()` with no
+      // `/g` flag returns only the FIRST hit per line, so a Target Files bullet listing
+      // several `scripts/x.js`/`src/y.ts` refs on one comma-separated line (the repo's
+      // own convention, e.g. Spec 60's 3-per-line bullets) silently dropped every file
+      // after the first — `refresh-snapshot.js` was declared in Spec 60's own Target
+      // Files section the whole time but never reached the generated table. `matchAll`
+      // with `/g` is the fix; behaviour for a one-ref-per-line spec is unchanged.
+      for (const fileMatch of line.matchAll(/`(src\/[^`]+)`/g)) {
         const f = fileMatch[1];
         if (f.includes('.test.')) {
           testFiles.push(f);
@@ -74,8 +80,7 @@ function parseSpec(filePath) {
         }
       }
       // Also capture scripts/ references for pipeline specs
-      const scriptMatch = line.match(/`(scripts\/[^`]+)`/);
-      if (scriptMatch) {
+      for (const scriptMatch of line.matchAll(/`(scripts\/[^`]+)`/g)) {
         implFiles.push(scriptMatch[1]);
       }
     }
@@ -106,7 +111,11 @@ function parseSpec(filePath) {
     }
   }
 
-  return { filename, prefix, title, status, implFiles, testFiles };
+  return {
+    filename, prefix, title, status,
+    implFiles: [...new Set(implFiles)],
+    testFiles: [...new Set(testFiles)],
+  };
 }
 
 function truncateList(items, max = 3) {

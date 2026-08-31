@@ -19,7 +19,7 @@ These 8 transformation steps run in multiple chains — they can't live inside a
 | `link_wsib` | `link-wsib.js` | permits, sources | entities, wsib_registry | entities, wsib_registry |
 | `link_coa` | `link-coa.js` | permits, coa | coa_applications, permits | coa_applications, permits (back-ref + last_seen_at) |
 | `create_pre_permits` | `create-pre-permits.js` | permits, coa | coa_applications | permits (synthesized `PRE-` rows) |
-| `refresh_snapshot` | `refresh-snapshot.js` | all chains | 9 tables (parallel counts) | data_quality_snapshots |
+| `refresh_snapshot` | `refresh-snapshot.js` | all chains | 9 tables (sequential, one pinned connection — WF3 F1, `8cc99c78`) | data_quality_snapshots |
 </architecture>
 
 ---
@@ -194,9 +194,23 @@ FAIL); repaired on the next chain run via the `IS DISTINCT FROM` guard.
 ### Refresh Snapshot (`refresh-snapshot.js`)
 **Runs in ALL chains** — final infrastructure step.
 
-1. Run 9+ parallel counting queries against live DB
-2. Compute coverage rates and Data Effectiveness Score (0-100) as weighted average:
-   trades 25%, builders 20%, parcels 15%, neighbourhoods 15%, geocoding 15%, CoA 10%
+> **Corrected 2026-08-31 (Pilot 8 PH-0, Finding 2):** this section previously described a "9+
+> parallel counting queries" battery and a "Data Effectiveness Score (0-100)" weighted average.
+> Neither is current. The parallel-query shape was replaced 2026-08-15 (WF3 F1, `8cc99c78`,
+> Spec 118 §1/§7.1) after it caused a 3min→64min pathology; the script has run its stats queries
+> **sequentially on one pinned REPEATABLE READ connection** ever since. No weighted-average score
+> of any kind exists anywhere in the live file (`grep -in "score\|weighted"` returns nothing that
+> computes one) — either removed at some undocumented point in the script's 34-revision history,
+> or never actually implemented. Both corrections are prose-only; the live behaviour they now
+> describe has been true since 2026-08-15 (query shape) / is true today (no score).
+
+1. Run the counting queries against live DB — 8 sequential SELECTs on one pinned
+   `REPEATABLE READ READ ONLY` connection (WF3 F1, `8cc99c78`; replaced the pre-2026-08-15
+   9-parallel-query shape that caused a 3min→64min I/O pathology, Spec 118 §1/§7.1), plus one
+   prior-snapshot read and several independently-caught optional reads (massing, schema column
+   counts, SLA, inspections, cost estimates, CoA cost/servable funnel)
+2. Compute coverage rates per table/relationship (trades, builders, parcels, neighbourhoods,
+   geocoding, CoA, scope tags, inspections, cost estimates) — no aggregate weighted score
 3. Upsert to `data_quality_snapshots` via `ON CONFLICT (snapshot_date) DO UPDATE`
 4. Include inspection coverage metrics
 
@@ -213,9 +227,22 @@ with a stale value. Verified on the P7 rows: `coa:refresh_snapshot` (20:00) then
 `permits:refresh_snapshot` (20:39) left one 2026-07-07 row with fully-populated
 `coa_*` columns (`created_at` = the permits-run time).
 
-**Edge Cases:** `active_permits = 0` → division by zero guarded. Massing query fails → caught, defaults to 0.
+**Edge Cases:** `active_permits = 0` → division by zero guarded. Massing query fails → caught,
+**carries forward the previous snapshot's value** via `getPrevSnapshot()` (falling back to 0 only
+if no prior snapshot row exists at all) — corrected 2026-08-31 (Pilot 8 PH-0, Finding 2); the
+prior "defaults to 0" line collapsed this two-tier fallback into one. The file's own design
+comment (`:320-322`) states the intent explicitly: carry-forward, not a zero default, because a
+zero default would destroy dashboard trend lines. Four of six optional query blocks (massing,
+schema column counts, SLA, inspections) follow this; the two most recently added
+(`cost_estimates`, CoA cost/servable funnel) do not (Pilot 8 Finding 5 / `RS-D2`).
 
-**Testing:** `quality.logic.test.ts`, `quality.infra.test.ts`
+**Testing:** `refresh-snapshot.infra.test.ts`, `refresh-snapshot-query-consolidation.logic.test.ts`,
+`db/refresh-snapshot-consolidation.db.test.ts`, `quality.logic.test.ts` (its own
+`describe('refresh-snapshot.js cost/timing observability'` block),
+`coa-cost-model.regression.test.ts` (`refresh-snapshot.js still counts geometric in the
+from_model bucket`) — corrected 2026-08-31 (Pilot 8 PH-0, Finding 2); the prior line named 2
+files, one of which (`quality.infra.test.ts`) has zero hits on this script at all, while 4 real
+dedicated test files went unnamed.
 </behavior>
 
 ---
