@@ -456,6 +456,70 @@ the 170 raw diff keys traces to one of these 5 named causes, all expected, none 
 
 ---
 
+## §7. Commit 8 — the declared run (live measurement, 2026-08-31)
+
+Executed against the live local dev DB (127.0.0.1:54322/postgres, migrations=242) via
+`PIPELINE_CHAIN=<chain> node -r dotenv/config scripts/refresh-snapshot.js` — the same invocation shape
+`capture-step-golden.js` uses, run for real (no dry-run flag exists for a RECORDER; every invocation is
+a genuine write). 7 live invocations total this commit: permits ×2 (idempotency pair), coa, sources,
+deep_scrapes, standalone, plus one live `buildRow()`/check exercise (below). All 7 script invocations
+returned `verdict: PASS`, `checks_failed: 0`.
+
+**(a) Today's row upserted correctly, row_count stable.** Before commit 8: `data_quality_snapshots` had
+30 total rows, 1 for `CURRENT_DATE` (written during commit 7's golden POST captures). After all 7 live
+invocations: still 30 total rows, still exactly 1 for `CURRENT_DATE`, `duplicate_snapshot_date_count`
+invariant `0` on every run. The "30-day window" (retention/dashboard semantics) is unperturbed — this
+step only ever upserts the ONE row keyed on `snapshot_date = CURRENT_DATE`, per `write_discipline.scope`.
+
+**(b) Twice-run idempotency.** Two consecutive same-day `PIPELINE_CHAIN=permits` runs (`records_new:0,
+records_updated:1` both times — no `snapshots_created`, only `snapshots_updated`). Full 73-column row
+diffed field-by-field between the two runs: **71 of 73 columns byte-identical**; the only 2 diffs were
+`created_at` (`2026-08-31T16:00:11.267Z` → `2026-08-31T16:00:58.935Z`, the upsert's own last-write
+timestamp — expected, not a data diff) and `sla_permits_ingestion_hours` (`1075.25` → `1075.27`, a
+live `NOW() - MAX(first_seen_at)` metric that necessarily drifts by the ~47s wall-clock gap between the
+two runs — expected). No duplicate `snapshot_date` row was created by either run.
+
+**(c) Ask-1 FIX (RS-D2) proven live.** A live simulation of an actual optional-query FAILURE (revoking
+a grant, dropping a column) would be destructive against the shared dev DB mid-pilot, so instead: the
+REAL shipped `buildRow()` function (`scripts/lib/compute/refresh-snapshot.js`) was called directly with
+REAL live read results for every OTHER read, plus `results.costEst = null` / `results.coaFunnel = null`
+— exactly the shape `runRecorderPhase` (`scripts/lib/step/index.js:1983-1991`) produces when an optional
+read genuinely throws. Measured: `cost_estimates_total`/`_from_permit`/`_from_model`/`_null_cost` in the
+output row matched the live `prevRow`'s own 4 columns EXACTLY (274398 / 6952 / 162958 / 109123, all 4);
+`matched.optional_query_failed` correctly named `["costEst","coaFunnel"]`. This is the real production
+code path exercised with a crafted-but-real input, not a mock — both the shipped function AND the
+red-first unit lock (`src/tests/steps/refresh_snapshot/violations.test.ts`, 21/21 green) now corroborate
+the same claim from two independent angles.
+
+**(d) optional-query-failure WARN check visible in the audit row.** Every one of the 7 live runs' real
+`records_meta.audit_table.rows` carried an `optional_query_failed` row (`status:"PASS"`, `value:[]` —
+no live queries actually failed this session) — confirming the check is unconditionally present
+(Rule 1, nothing-hidden), not only emitted on failure. The descriptor declares
+`checks[].optional_query_failed.severity:"WARN"`, `limit:"viol == 0"` — the SAME live exercise in (c)
+above ran this exact check function against a `violations:2` scenario and got
+`{"violations":2,"detail":["costEst","coaFunnel"]}` back, which the generic verdict engine (already
+covered by `step-library.logic.test.ts`) turns into `status:"WARN"` per the declared severity — the full
+WARN-visible path is proven end-to-end across the live-run half and the triggered-check half.
+
+**(e) Spec 26 dashboard contract — column set unchanged.** `src/lib/quality/metrics.ts` and
+`src/lib/quality/types.ts` are untouched by this pilot (confirmed via `git log`). Live-diffed the DB's
+real `information_schema.columns` for `data_quality_snapshots` (73 columns) against the
+`DataQualitySnapshot` TS interface's 71 fields: **0 fields in the TS interface are missing from the live
+DB** (every dashboard-consumed field is populated). The 2 DB columns NOT in the TS interface
+(`cost_estimates_liar_gate_overrides`, `cost_estimates_zero_total_bypass`) are a pre-existing condition —
+neither the pre-conversion script nor this pilot's compute ever wrote them (verbatim-ported write list,
+confirmed by `git log -S` finding no prior reference in `refresh-snapshot.js`'s history); they belong to
+a different feature's reserved columns, not a regression. `GET /api/quality`'s `SELECT *` therefore still
+returns a superset of every field the dashboard type expects, same as before conversion.
+
+**Bonus (RS-D1 live confirmation):** the 4 chain-scoped live runs reported `audit_table.phase` = 18
+(permits), 7 (coa), 13 (sources), **4 (deep_scrapes)** — confirming the fix (deep_scrapes previously
+silently shared permits' phase 18) holds in a real run, not just the descriptor declaration.
+
+No outcome landed outside expectations across all 7 invocations — nothing to STOP on.
+
+---
+
 ## §0. Grounding (executed 2026-08-31)
 
 ### §0.1 Pilot order + archetype confirmation
