@@ -1460,7 +1460,7 @@ differential's own diff on this key is explained, not swept). `LP-D8` CLOSED in 
 |---|---|---|
 | G0 | `"PH-0 — boundary freeze"` heading | ✅ present (§1) |
 | G1/G3 | `"PH-3"` heading + closed vocabulary, no bare `INCIDENTAL` | ✅ present (§2), 18/19 vocab-hit rows |
-| G6 | Every `LP-D*` row reaches `CLOSED`/`PIN` | ✅ `LP-D1`/`LP-D2`/`LP-D5`/`LP-D6` CLOSED-MEASURED · `LP-D3`/`LP-D4`/`LP-D8`/`LP-D9`/`LP-D10` CLOSED · `LP-D7` PIN — **10/10, none bare-open (updated commit 10)** |
+| G6 | Every `LP-D*` row reaches `CLOSED`/`PIN` | ✅ `LP-D1`/`LP-D2`/`LP-D5`/`LP-D6` CLOSED-MEASURED · `LP-D3`/`LP-D4`/`LP-D8`/`LP-D9`/`LP-D10`/`LP-D11` CLOSED · `LP-D7` PIN — **11/11, none bare-open (updated commit 11)** |
 | G7 | Locks ≥ fences: `LG-24` idempotency, `LP-D6` red-first, SQL-shape perf, **`LP-D9` street_type (NEW)** | ✅ all landed green — `src/tests/steps/link_parcels/violations.test.ts` (LP-D1/LP-D6/tiebreak/SQL-shape) + `src/tests/db/link-parcels-address-tier-street-type.db.test.ts` (LP-D9, 3/3 green) |
 | G8 | Differential with FINAL measured deltas | ✅ post-8a numbers: `permit_parcels_total` 241,843→239,858 (−1,985, reconciles with `no_match_count` +1,985); `street_type_mismatch_count` 7,046→0; `matches_tier_3_fallback` rename cited by name (above) |
 | G9 | `§R Reflection` with BOTH tables | ✅ promoted to FULL this commit — LOW-CONFIDENCE (3 rows) + RECURRING/STANDARD-SHAPING (5 rows), including the before-image lesson and the "FULL run is a defect-discovery instrument" lesson |
@@ -1585,6 +1585,52 @@ grounded independently before fixing, fixed as a genuinely-restored third write 
 locked both directions plus both LG-24 branches, proven live on the real dev DB in both incremental and FULL
 mode, `LP-D10` CLOSED in `defect-ledger.md`, assessment item #12's false claim corrected in place (struck, not
 deleted).
+
+---
+
+## §11. LP-D11 — the mis-stamped fail terminal (commit 11, WF6-triggered, WF3 remediation)
+
+### Grounding (independently re-verified)
+
+`node -e` dump of `descriptor.checks.map(c => c.when)`: all 14 declared checks are `"post"` — confirmed zero
+`when:"pre_write"` checks exist. `makePreWriteGate` (`scripts/lib/step/index.js:1912-1917`) filters
+`selectChecks(...).filter(c => c.when === 'pre_write')`; with zero matches it `return`s `null`, so
+`runLinkKeyedPhase`'s own `preWriteGate` parameter is `undefined` and its no-op default
+(`{abort: false, failed: []}`) always applies — the pre-write gate is a permanent no-op for this step.
+`pre_write_refused`'s own why-text ("A `when:"pre_write"` check FAILED with no standing override") described
+a mechanism that cannot fire. `selectTerminal` (`:213-219`): `byKind = all.filter(t => t.kind === kind)`,
+`narrowed = discriminator ? byKind.filter(t => t.id.includes(discriminator)) : []`,
+`pool = narrowed.length > 0 ? narrowed : byKind` — with `pre_write_refused` the ONLY `fail_check` terminal,
+`byKind` always has exactly one member, so whenever `narrowed` comes back empty (any failing check whose id
+`pre_write_refused` doesn't contain — every real check this step has), `pool` falls back to `byKind` and
+`pre_write_refused` is selected regardless of which check actually failed. Cross-checked against
+`compute_centroids` (0 pre_write checks → correctly 0 `fail_check` terminals) and `link_parcel_addresses`
+(0 pre_write checks → 2 `fail_check` terminals, both correctly discriminator-matched to real checks) —
+confirming the established, working convention every OTHER converted step already follows.
+
+### THE FIX
+
+Renamed `pre_write_refused` → `failed_write_privilege`, matching `link-massing.descriptor.json:979-988` /
+`link-wsib.descriptor.json:648-652`'s own identical shape for the SAME real failure mode (verbatim
+cross-check: both siblings' own why-text reads "RLS is enabled ... with zero policies and the role does not
+bypass it, so every statement affects 0 rows with no error"). `failed_write_privilege`'s own id now CONTAINS
+`write_privilege`, so `selectTerminal`'s discriminator correctly narrows to it specifically the next time
+`write_privilege` fails, rather than falling back to it by elimination for ANY failing check. why-text
+rewritten to the true failure mode (the write executed, RLS zeroed every affected row — the opposite of the
+old text's "no write was issued" claim) and records this WF6 finding + the false-claim history in place.
+
+**No new test lock.** Verified neither `link_massing` nor `link_wsib` has one for their own
+`failed_write_privilege` terminal (`grep -rln "failed_write_privilege" src/tests/` → zero hits before this
+commit) — matching precedent means none is owed here either, per the coordinator's own "lock if the sibling
+pilots locked theirs" instruction.
+
+### G-verdict, commit 11
+
+**CLOSED.** A descriptor-only fix (no compute/runner code changed) — the failure mode itself
+(`write_privilege` FAILing) was always correctly DETECTED and reported in the audit table; only the
+`records_meta.terminal` stamp was wrong. Grounded independently (the `selectTerminal` mechanism read and
+traced by hand, not merely trusted from the observability seat's own report), fixed by matching an
+already-correct sibling shape rather than inventing a new one, `LP-D11` CLOSED in `defect-ledger.md`.
 
 ---
 
@@ -1934,7 +1980,7 @@ above).*
 | G3 | 1 | 2 | table rows=19 vocab-hit rows=18 |
 | G4 | 2 | 2 | risk-class row with chance+impact found=true |
 | G5 | 1 | 1 | db=true clock=true network=true argv/env=true |
-| G6 | 3 | 3 | 10 ledger row(s), 0 without CLOSED/PIN () |
+| G6 | 3 | 3 | 11 ledger row(s), 0 without CLOSED/PIN () |
 | G7 | 3 | 3 | file=true fences=1 it-count=14 RED-evidence=true |
 | G8 | 3 | 3 | missing-invocations=0 stale-fingerprints=0 unexplained-diffs=0 |
 | G9 (binary) | PASS | — | heading=true low-confidence-table=true recurring-table=true |
@@ -1979,7 +2025,7 @@ above).*
 | 11 | Phase-order re-derive (R-B) | prose-only | R-B describe not scoped to this step |
 | 12 | Truthful crash posture (R-M + R-B reader) | prose-only | R-M/R-B-reader describes not scoped to this step |
 | 13 | A step validates itself | enforced-green | this run of step:validate IS the mechanism |
-| P3 | I/O cost adjudication (measured, not gated) | measured | descriptor=41797B notes=6974B checks=14 rows records_meta=2792B (newest post/ capture) |
+| P3 | I/O cost adjudication (measured, not gated) | measured | descriptor=42996B notes=6974B checks=14 rows records_meta=2792B (newest post/ capture) |
 
 **Enforced-green: 9/14**
 

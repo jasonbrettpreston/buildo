@@ -643,9 +643,9 @@
       "why": { "text": "Mode resolved full (LINK_PARCELS_FORCE_FULL): W1's scoped mass retraction (match_type='spatial') ran before the batch loop. NOT reachable by any commit-7 invocation — commit 8's budgeted act.", "liveness": { "kind": "check", "ref": "link_rate" } }
     },
     {
-      "id": "pre_write_refused", "kind": "fail_check", "status": "failed",
+      "id": "failed_write_privilege", "kind": "fail_check", "status": "failed",
       "records_meta": { "audit_table": "object", "terminal": "string" },
-      "why": { "text": "A when:\"pre_write\" check FAILED with no standing override — no write was issued, permit_parcels is untouched.", "liveness": { "kind": "check", "ref": "write_privilege" } }
+      "why": { "text": "WF6 output-panel finding (observability seat), corrected commit 11, 2026-08-30 — the terminal here used to be named \"pre_write_refused\", describing a when:\"pre_write\" check FAILing with no standing override. That mechanism is structurally unreachable for this step: all 14 declared checks[] are when:\"post\" (verified live, none pre_write), so makePreWriteGate returns null and the pre-write gate is a permanent no-op. Because this was the ONLY fail_check terminal, selectTerminal's own discriminator-miss fallback (narrowed=[] when no terminal id contains the failing check's own id, pool=byKind instead) silently selected it whenever ANY post-check FAILed — most plausibly write_privilege, stamping the false claim \"no write was issued, permit_parcels is untouched\" on a run whose writes DID execute (RLS-zeroed: every statement affects 0 rows with no error, the write happened, it just wrote nothing). Renamed and re-worded to match the correct, already-discriminator-matching shape link_massing.descriptor.json/link_wsib.descriptor.json both use for the SAME real failure mode: RLS is enabled on permit_parcels with zero policies and the role does not bypass it, so every statement affects 0 rows with no error. Without this the run is indistinguishable from one whose corpus had not changed.", "liveness": { "kind": "check", "ref": "write_privilege" } }
     }
   ]
 }
