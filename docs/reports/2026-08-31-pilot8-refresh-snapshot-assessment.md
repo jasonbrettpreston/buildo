@@ -307,6 +307,83 @@ provable structurally (the golden-master differential, G2′, commit 7) rather t
 
 ---
 
+## §5. Golden master capture (commit 5, G1′)
+
+> Ran `scripts/refresh-snapshot.js` for real (live mode) **5× sequentially** via
+> `scripts/analysis/capture-step-golden.js` against `127.0.0.1:54322/postgres` (`resolve-db` target
+> confirmed before every invocation) — 4 chain-scoped invocations (`--chain=permits`, `--chain=coa`,
+> `--chain=sources`, `--chain=deep_scrapes`, per Spec 122 `:512`'s "every chain it appears in — up to 4")
+> **plus one standalone** (`--chain=none`), matching pilot 4's own 4-chains-were-2-plus-standalone
+> precedent widened to this step's 4 real chains. No descriptor exists yet — `--tables=
+> data_quality_snapshots` (the `--tables=` fallback path, `resolveTables()` `source:"arg"`) since the
+> descriptor-driven table derivation has nothing to read.
+
+### Live results
+
+| Invocation | Exit | Duration | Terminal | `records_new`/`records_updated` | Row count after |
+|---|---|---|---|---|---|
+| `--chain=permits` | 0 | 34.1s | PASS, `snapshots_created:1` | 1 / 0 (day's row did not exist yet) | 30 (29→30) |
+| `--chain=coa` | 0 | 22.4s | PASS, `snapshots_updated:1` | 0 / 1 | 30 |
+| `--chain=sources` | 0 | 28.7s | PASS, `snapshots_updated:1` | 0 / 1 | 30 |
+| `--chain=deep_scrapes` | 0 | 21.0s | PASS, `snapshots_updated:1` | 0 / 1 | 30 |
+| `--chain=none` (standalone) | 0 | 25.0s | PASS, `snapshots_updated:1` | 0 / 1 | 30 |
+
+The first invocation (`permits`) created today's row (2026-08-31, 29→30 rows); all four subsequent
+invocations correctly UPSERTed the SAME row (`snapshot_date` unchanged, row count stays 30) — matches the
+guarantees table's "one row per `snapshot_date`" contract exactly, live. `permits.json`'s own live
+numbers: 254,082 permits total, 191,500 active, 181,505/191,500 (94.8%) neighbourhood-matched, 33,400 CoA
+total / 33,185 linked (99.4%), 274,398 cost estimates (129,149 archetype-sourced), CoA servable funnel
+33,400→3,316→1,659→1,558→1,558. All 5 invocations report `verdict:"PASS"` (matches the "verdict is
+always PASS" guarantee) and `ledger=[]` (zero `pipeline_runs` rows written by any of the 5, INCLUDING
+the standalone one) — **not an anomaly**: matches `compute_centroids`'s own pilot-6 commit-5 finding
+verbatim ("`pipeline.js` never self-INSERTs into `pipeline_runs`, only `run-chain.js`'s orchestration
+does") — this step's `pipeline.run()` call has the identical shape, so the standalone capture legitimately
+shows the same zero as the 4 chain-scoped ones, unlike `link_wsib`'s own step (which DOES write its own
+ledger row standalone, per that pilot's different SDK usage).
+
+### Table-state hashes — 5 genuinely different, by declared non-determinism
+
+| Invocation | `data_quality_snapshots` hash |
+|---|---|
+| permits | `c15f834e3814f27f01811bf507720fdd` |
+| coa | `1655b2dd033869337432a7ab940fb8fb` |
+| sources | `f47557b0bc57f14dc648fbde06b091f2` |
+| deep_scrapes | `718ad8cb7091650a100dc7cfb8e3c091` |
+| standalone | `82f20649d6bcebd1d193105e260bdd3a` |
+
+**Non-determinism inventory, declared BEFORE any diff (Spec 122 §5.3):** all 5 hashes legitimately differ,
+by design, not by bug — every invocation re-UPSERTs the SAME row with `created_at=NOW()` (a server-side
+literal in the `DO UPDATE SET` clause, `:592`) and re-derives every one of the 68 non-key columns from the
+live-DB state at that exact moment (permit/CoA/entity counts genuinely fluctuate query-to-query on a live
+table, even with nothing else writing during this session — e.g. `last_seen_at > NOW() - INTERVAL '24
+hours'` windows shift by the wall-clock second between invocations). The harness's own per-capture
+`nondeterminism` inventory (4 entries every run: `summary.records_meta.duration_ms` + 2 `sys_*` timing
+rows + the duration literal pattern) confirms this class is already normalised OUT of the comparable form
+— the RAW table-content hash differing is expected and orthogonal to that normalisation; per the plan's
+own declared posture ("the differential comparison must be by-shape... not by raw value equality"), the
+commit-7/9 differential will compare column PRESENCE/TYPES and the `is_insert`/`is_update` xor, never the
+raw hash across pre/post.
+
+### Invariants (both clean, all 5 captures)
+
+`duplicate_snapshot_date_count = 0` and `data_quality_snapshots_row_count = 30` on every one of the 5
+captures — the `UNIQUE(snapshot_date)` constraint holds live throughout, matching INV-1's own declared
+bound.
+
+### G1′ verdict
+
+**CLOSED this commit.** 5 real live invocations (4 chains + standalone), all exit 0 / verdict PASS, the
+one-row-per-day contract holds live end to end (29→30, then 4× correctly-idempotent updates on the SAME
+row), zero `pipeline_runs` anomaly (matches `compute_centroids`'s own precedent for a `pipeline.js`-shaped
+step). 5 non-identical table-state hashes are the DECLARED, expected outcome for a step whose whole job is
+"record the live count right now," not a capture-harness defect. Captures written to
+`docs/reports/golden/refresh_snapshot/pre/{permits,coa,sources,deep_scrapes,standalone}.json`;
+`invariants.json` (2 entries) at the step's own golden directory root, both clean on all 5. Local dev DB's
+`data_quality_snapshots` table now genuinely current (2026-08-31, was stale at 2026-08-01 per §0.3) — a
+side effect of running the real script live, not pursued further.
+
+---
+
 ## §0. Grounding (executed 2026-08-31)
 
 ### §0.1 Pilot order + archetype confirmation

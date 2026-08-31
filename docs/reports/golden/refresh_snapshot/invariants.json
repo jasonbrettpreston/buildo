@@ -1,0 +1,4 @@
+[
+  { "name": "duplicate_snapshot_date_count", "sql": "SELECT count(*)::int AS c FROM (SELECT snapshot_date FROM data_quality_snapshots GROUP BY snapshot_date HAVING count(*) > 1) d" },
+  { "name": "data_quality_snapshots_row_count", "sql": "SELECT count(*)::int AS c FROM data_quality_snapshots" }
+]
