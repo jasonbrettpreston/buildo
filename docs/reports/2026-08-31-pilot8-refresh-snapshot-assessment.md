@@ -88,6 +88,75 @@ inconsistency) proceed to PH-3/PH-6 classification as already scoped.
 
 ---
 
+## §2. PH-3 — Intent Ledger over the corpus (commit 2, G3)
+
+> **15 `fix(` commits (of 34 total, `git log --follow`), all adjudicated** — re-executed via direct `git
+> show <sha> -- scripts/refresh-snapshot.js` this commit, not transcribed from the plan's own findings
+> list. Per Spec 124 §4.2's discoverer≠adjudicator split, every disposition below is PROPOSED by this
+> pass (agent, 2026-08-31), stands until a human operator ratifies or overturns at commit 7. Closed
+> disposition vocabulary only (Rule 13): `preserved-in-runner | preserved-in-validator |
+> preserved-in-compute | encoded-as-descriptor-field | encoded-as-deviation | knowingly-retired`.
+> `INCIDENTAL` never appears as a disposition.
+
+| Commit | Date | Construct | Live today? | Proposed disposition | Ground |
+|---|---|---|---|---|---|
+| `8287291e` | 2026-03-06 | Raw `console.log('PIPELINE_SUMMARY:'+JSON.stringify(...))` completion line | Superseded — 0 `console.*` today, replaced by structured `pipeline.emitSummary` | **knowingly-retired** — the literal console-log form is gone; the underlying CONCEPT (a structured completion summary) survives as `pipeline.emitSummary`/commit-7's `checks`+`counters` | `grep -c console\.` current file = 0, re-confirmed commit 1 |
+| `e4765619` | 2026-03-07 | §11 counter-scoping fix: `records_total: total_permits` (237K+, a foreign entity's own scan-pool size) → `records_total: 1` (the snapshot row itself) | ✓ current file `:645`, byte-identical (`records_total: 1`) | **preserved-in-compute** — this is the exact counter-scoping correction the Before/After guarantees table's `records_total=1, records_new/records_updated xor` invariant (INV-2) encodes; genuinely load-bearing, verbatim-ported | `:645` current file |
+| `64374bb2` | 2026-03-11 | Empty `catch {}` on massing/schema-column-count queries → `pipeline.log.warn(...)` | ✓ current file `:342-346,359-363`, the log.warn survives (later layered with carry-forward by `fd14dc53` below) | **preserved-in-compute** — the catch-and-log shape is verbatim; `fd14dc53` adds carry-forward ON TOP, doesn't replace this fix | `:342-346` current file |
+| `6c75bf83` | 2026-03-15 (09:54) | Adds `permit_inspections` coverage query to the snapshot | ✓ current file `:378-409`, byte-identical query shape (5-column FILTER aggregate) | **preserved-in-compute** — verbatim-ported to `compute.js` at commit 7 | `:378-409` current file |
+| `ba88a5fa` | 2026-03-15 (18:15) | First chain-aware phase ternary: `chainId === 'coa' ? 6 : 5` (2-way; `deep_scrapes` and `permits` share the `5` default from this commit's very first version) | Superseded 11 days later by `5baaed5a`'s 3-way ternary (below) | **knowingly-retired** — the specific `?6:5` mapping does not survive; the "chain-aware phase via `PIPELINE_CHAIN`" PATTERN this commit pioneered does, through its own successor | direct diff this commit |
+| **`5baaed5a`** | **2026-03-26** | **THE origin of Finding 4/`RS-D1`.** Widens the ternary to 3-way: `chainId === 'sources' ? 13 : chainId === 'coa' ? 7 : 14` — adds a `sources` branch but leaves `deep_scrapes` folded into the SAME default branch as `permits` (the commit's own subject line, "audit_table gaps... and phase numbering," never names `deep_scrapes` as a distinct case) | ✓ the 3-way SHAPE survives to today, `:643` (`chainId === 'sources' ? 13 : chainId === 'coa' ? 7 : 18` — default later bumped 14→18 as the permits chain grew, `df8371a9` and siblings, not re-audited line-by-line this commit) | **SPLIT disposition**: the chain-aware-phase MECHANISM is **encoded-as-descriptor-field** (`sharing.varies_by_chain.phase`, commit 7) — a real, useful pattern. The MISSING `deep_scrapes` branch is the open DEFECT, `RS-D1` (opened formally below): `deep_scrapes` existed in `manifest.json` since `5c953a61` (2026-03-11), 15 days BEFORE this commit ever ran, and was never given its own branch by this commit or any successor. Corrected (not merely preserved) at commit 7 with a declared per-chain map | direct diff this commit; `git log -p -S "deep_scrapes" -- scripts/manifest.json` for the pre-existence date |
+| `31c18da0` | 2026-03-31 | Guards `neighbourhood_count/active_permits` division by zero (`active_permits > 0 ? ... : '0.0'`) | ✓ current file `:297`, byte-identical | **preserved-in-compute** — verbatim-ported to `compute.js` at commit 7 | `:297` current file |
+| **`fd14dc53`** | **2026-04-01 (17:42)** | **THE origin of Finding 5's own declared policy.** 5 sub-fixes in one commit: (a) all queries onto one pinned `REPEATABLE READ READ ONLY` client (the WF3-F1-era single-connection shape, later hardened further by `8cc99c78`); (b) `xmax::text::int = 0` replacing bare `xmax = 0` (PG-version-safe insert/update detection); (c) **`getPrevSnapshot()` carry-forward-on-failure for massing/schema/SLA/inspections, replacing a bare zero default** — the file's own `:320-322` design comment ("instead of defaulting to 0, which would destroy dashboard trend lines") originates HERE; (d) explicit `::jsonb` casts on 3 params; (e) `neighbourhood_id != -1` tombstone exclusion | ✓ ALL FIVE survive to today: (a) `:200-201` (now further consolidated by `8cc99c78`); (b) `:593` (`xmax::text::int = 0`); (c) `:322-332` (`getPrevSnapshot`), consumed by massing/schema/SLA/inspections (`:344,361,374,401`) — **and NOT consumed by `costEst`/`coaFunnel`, Finding 5's own live inconsistency**; (d) `:533` (`$34::jsonb` etc.); (e) `:80` (`neighbourhood_id != -1`) | **preserved-in-compute** — all five sub-parts verbatim; (c) is also this pilot's own Ask-1-adjudicated FIX target (Finding 5 / `RS-D2`, below) — the policy this commit established is what `costEst`/`coaFunnel` (added over a year later, `c42ff97f`/`4442fb75`) fail to follow | `:200-201,322-332,344,361,374,401,533,593` current file |
+| `2471706f` | 2026-04-01 (17:50) | Corrects an `::jsonb` cast's position in the parameterized VALUES list (a follow-on to `fd14dc53`'s own same-day jsonb-cast fix, 8 minutes later) | ✓ current file `:533`, byte-identical to the corrected positions | **preserved-in-compute** — verbatim-ported | `:533` current file |
+| `b71774ab` | 2026-04-02 | Two bugs: (1, DIFFERENT FILE — `run-chain.js` gate-skip, not this file); (2) `refresh-snapshot.js`: hoists query-result `let` declarations to outer scope so `pipeline.withTransaction`'s callback can read them (were `const` inside the now-removed `try{}` block, throwing `ReferenceError`) | ✓ current file `:204-205` (`let permitsScalarRes, tradesRes, ... let coaRes, tagBreakdownRes, syncRes;`), same hoisting shape | **preserved-in-compute** — the outer-scope hoisting pattern is a JS-scoping necessity that survives verbatim into the ported compute function | `:204-205` current file |
+| `038dda08` | 2026-04-16 (10:07) | Adds `// SPEC LINK:` header comments (Bundle C sweep, 10 scripts) | ✓ current file `:2-4` (Specs 41/42/43) | **encoded-as-descriptor-field** — becomes `identity.spec` at commit 7; the header-comment FORM retires with the whole `pipeline.run(...)`-shaped file at cutover | `:2-4` current file |
+| `3c3e6f84` | 2026-04-16 (21:24) | Advisory lock retrofit: `ADVISORY_LOCK_ID = 40` + `pipeline.withAdvisoryLock` wrap (Bundle G Wave 5, "maintenance scripts") | ✓ current file `:19,187`, byte-identical, confirmed unique repo-wide (commit 1) | **encoded-as-descriptor-field** — `40` becomes `identity.lock` at commit 7 (Spec 47 §A.5 registry, "Maintenance" wave — matches this commit's own subject); the manual wrap retires with `pipeline.run`, same as every prior pilot's advisory-lock disposition | `:19,187` current file |
+| `67711003` | 2026-04-17 | `parseInt`/`parseFloat` → `safeParsePositiveInt`/`safeParseFloat` (B1 safe-math migration, "top 5 scripts") | ✓ current file, all call sites via the `safe-math` import (`:10`) | **preserved-in-compute** — verbatim-ported to `compute.js` at commit 7 | `:10` current file |
+| `94abd192` | 2026-05-23 | `parcelsRes.exact_matches` FILTER widened to roll up BOTH legacy `exact_address` AND new `address_points_exact` match types (F17 preservation, mirrors a parallel `metrics.ts` fix) | ✓ current file `:246-259`, byte-identical including the inline "WF1 #parcel-address-bridge" comment | **preserved-in-compute** — verbatim-ported to `compute.js` at commit 7 | `:246-259` current file |
+| `8cc99c78` | 2026-08-15 | **THE central architecture of the file's read section.** WF3 F1 (Spec 118 §1/§7.1): replaces the 9-parallel-query battery (the 3min→64min I/O pathology) with the 3-part consolidated shape (`buildPermitsScalarQuery`/`buildTagBreakdownQuery`/`buildTradeByTypeQuery` under `enable_indexscan=off`) | ✓ current file `:74-158,229-234`, byte-identical; the 3 builder functions are ALREADY `module.exports`-ed (`:683-686`) — pre-shaped for a direct compute-file port | **preserved-in-compute** — the 3 query-builder functions move to `scripts/lib/compute/refresh-snapshot.js` with no logic change, only the module boundary; this is the step's own most consequential correctness fix and its adopted shape is a hard contract for the golden-master differential (G2′) | `:74-158,229-234,683-686` current file |
+
+**Approver for every disposition above:** this pilot's PH-3 pass (agent, 2026-08-31), grounded in direct
+`git show`/`git log -p` re-verification this commit — per Spec 124 §4.2's discoverer≠adjudicator split,
+PROPOSED here, stands until a human operator ratifies or overturns at commit 7.
+
+### `RS-D1` — the phase-ternary defect (opened this commit; Finding 4)
+
+**Classification (Spec 123 §3, the four questions):** (1) Observed? Yes — `chainId === 'sources' ? 13 :
+chainId === 'coa' ? 7 : 18` (`:642-643`) gives `deep_scrapes` the identical phase number (18) as
+`permits`, with no branch of its own. (2) Spec/invariant conflict? Yes, against Rule 1 ("nothing
+hidden") — a magic shared literal where a declared, distinct value is cheap and correct; not against any
+functional contract (no admin surface currently reads `audit_table.phase` to distinguish chains, per
+Finding 4's own consumer-impact check: only 2 structural/shape test files reference it). (3) Load-bearing?
+No — the CURRENT collision is not relied upon by anything; nothing regresses by giving `deep_scrapes` its
+own number. (4) Cost of carrying vs. diverging: near-zero cost to fix (a declared per-chain map instead
+of a ternary), real (if small) benefit to observability. **Status: OPEN, closes at commit 7** with a
+declared `sharing.varies_by_chain.phase` map (`{permits:18, coa:7, sources:13, deep_scrapes:<own number>}`),
+per Spec 124 §7 ladder rung (e) — a same-mechanism, low-risk correction, in-scope for the conversion
+commit itself (not deferred).
+
+### `RS-D2` — the costEst/coaFunnel carry-forward-policy gap (opened this commit; Finding 5)
+
+**Classification:** (1) Observed? Yes — `costEst` (`:421-443`) and `coaFunnel` (`:450-494`) both catch a
+query failure, log a warning, and leave the pre-declared zero/null default in place, with no
+`getPrevSnapshot()` call, unlike the 4 other optional blocks. (2) Spec/invariant conflict? Yes, against
+the file's OWN declared policy (`:320-322`, originating at `fd14dc53` above): "carry forward previous
+snapshot values instead of defaulting to 0 (which would destroy dashboard trend lines)." (3) Load-bearing?
+No — nothing depends on a zero-on-failure default for these two blocks; the carry-forward policy is
+strictly more correct for the file's own stated purpose (dashboard trend continuity) and is what every
+sibling optional block already does. (4) Cost of carrying vs. diverging: the two exempted blocks are the
+two MOST RECENTLY ADDED (`c42ff97f`/`4442fb75`), so this is very likely an oversight (the policy
+comment already existed when they were written), not a deliberate exception with an undocumented reason —
+no `why` comment justifies the divergence anywhere in the file. **Operator ruling (Ask 1, pre-commit):
+FIX** — route both blocks' catch paths through `getPrevSnapshot()`, mirroring the other four, as a
+declared change with a red-first lock (commit 6) plus a new declared WARN check making an optional-query
+failure visible in the audit row (nothing-hidden — today a failure is only a log line, invisible to
+`records_meta`). **Status: OPEN, closes at commit 8** (peel — gating/thresholds/checks), per Spec 124 §7
+ladder rung (e), same class as `link_parcels`'s `LP-D9` precedent (a real, low-risk, same-mechanism fix
+made inline at conversion rather than pinned-and-deferred).
+
+---
+
 ## §0. Grounding (executed 2026-08-31)
 
 ### §0.1 Pilot order + archetype confirmation
