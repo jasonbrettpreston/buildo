@@ -157,6 +157,104 @@ made inline at conversion rather than pinned-and-deferred).
 
 ---
 
+## §3. PH-5 — Seam map (commit 3, G5)
+
+> Every place `scripts/refresh-snapshot.js` (687 lines) touches something outside pure computation — DB,
+> clock, network, argv/env — re-derived by direct read this commit, not copied from the plan's
+> preliminary G5 row. Mirrors the plan's own 16-row DML disposition table (§ Write-discipline
+> declaration) but organized by SEAM KIND rather than by statement, per Spec 122 §5.4.
+
+### DB seam
+
+- `pool` — supplied by `pipeline.run('refresh-snapshot', runRefreshSnapshot)` (`:678`), never a local
+  `new Pool()`.
+- `pipeline.withAdvisoryLock(pool, ADVISORY_LOCK_ID, ...)` (`:187`, closes `:668`) wraps the ENTIRE body —
+  lock 40, confirmed unique repo-wide (commit 1).
+- **20 `.query(` call sites** (re-confirmed commit 1, byte-identical to the plan's own count), by kind:
+  - **2 session-scope statements**: `SET enable_indexscan = off` / `RESET enable_indexscan` (`:229,233`,
+    WF3 F1 ③, `try/finally`-guarded) — SURVIVES verbatim, the only session-scoped GUC pair in the file
+    (every prior LINK/MATCHER/BACKFILL pilot measured 0 on this axis; this is the first to measure 2, both
+    contract).
+  - **2 transaction-boundary statements**: `BEGIN TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY` /
+    `COMMIT` (`:201,278`) on the pinned `snapClient` — SURVIVES verbatim (WF3 F1 point-in-time-consistency
+    guarantee).
+  - **8 sequential reads on the pinned client** (`permitsScalarRes`, `tradesRes`, `tradeByTypeRes`,
+    `buildersRes`, `parcelsRes`, `coaRes`, `tagBreakdownRes`, `syncRes`, `:211-276`) — SURVIVES, 3 of the 8
+    are the WF3-F1-consolidated builder functions (`buildPermitsScalarQuery`/`buildTagBreakdownQuery`/
+    `buildTradeByTypeQuery`) already exported and ready for a direct compute-file port (`8cc99c78`'s own G3
+    disposition, §2 above).
+  - **1 prior-snapshot read** (`getPrevSnapshot`, `:326-328`, outside any transaction) — SURVIVES, the
+    carry-forward source for 4 (soon 6, per `RS-D2`) optional blocks.
+  - **6 optional standalone reads** (massing `:337-339`, schema columns `:351-356`, SLA `:368-369`,
+    inspections `:381-388`, cost estimates `:423-430`, CoA funnel `:455-475`) — SURVIVES, each independently
+    caught; the last 2 are `RS-D2`'s own subject (catch-path fix, not the read itself).
+  - **1 write statement**: the `INSERT ... ON CONFLICT (snapshot_date) DO UPDATE ... RETURNING (xmax::text::
+    int = 0)` (`:503-535`), inside `pipeline.withTransaction` (`:502-636`) — THE write target, class
+    `guarded_upsert` per GAP-2 (Finding 1).
+- **1 `pipeline.withTransaction` wrap** (`:502-636`) — the pre-commit footgun hook's "2 withTransaction
+  calls" line for this file is a TEXT-MATCH artifact (it also counts the comment at `:283`, "declared in
+  outer scope so `pipeline.withTransaction` can access them"), not a second real transaction — confirmed
+  by direct `grep -n "withTransaction("` (one call site, `:502`).
+
+### Clock seam
+
+- `Date.now()` — **2 sites** (`:188` `t0`, `:638` `duration_ms = Date.now() - t0`), both elapsed-time-only,
+  never written to the DB as a timestamp — legal per `tasks/lessons.md`'s explicit carve-out.
+- **0 `new Date(`** anywhere.
+- **0 DB-clock reads** (`pipeline.getDbTimestamp(pool)`) — this step writes no `RUN_AT`-stamped column;
+  `created_at=NOW()` in the UPSERT's `DO UPDATE SET` clause (`:592`) is a server-side `NOW()` literal, not a
+  bound app-side timestamp — R3.5 governs app-side `new Date()`/timestamp binding, not a server-side SQL
+  `NOW()` literal inside a generated statement; no violation.
+
+### Network seam
+
+- **0 `fetch(` calls** — no external network dependency, same as every converted `sources`/`permits`-chain
+  step so far.
+
+### argv/env seam
+
+- **1 `process.env` read**: `PIPELINE_CHAIN` (`:642`), feeding the phase ternary — `RS-D1`'s own subject
+  (§2 above). Retires at commit 7, replaced by `sharing.varies_by_chain.phase`'s declared per-chain map
+  (the same generic mechanism `link_parcels`'s `LP-D3`/A-5 ruling and `compute_centroids`'s own precedent
+  already use).
+- **0 `process.argv` reads** — matches `manifest.json:56`'s `supports_full:false`/`supports_dry_run:false`;
+  confirmed live (`grep` for `full`/`FORCE_FULL` in the file → 0 hits outside comments, re-confirmed this
+  commit).
+
+### The 3 new live seam declarations (Finding 8 / R-V)
+
+`inputs.reads.steps[]` at commit 7 declares 3 producer→consumer edges against the 7 already-converted steps
+(`converted.json`), each re-verified this commit by reading both the read site and the producer's own
+write/header:
+
+| Producer | Read site (this file) | Producer confirmation |
+|---|---|---|
+| `link_parcels` | `parcelsRes`, `:252-259` (`permit_parcels.match_type`, `.confidence`) | `link_parcels` is `permit_parcels`'s writer (pilot 7, keyed upsert), re-confirmed `converted.json` line 39 |
+| `link_massing` | massing try-block, `:337-339` (`parcel_buildings`, `COUNT(DISTINCT parcel_id)`) | `scripts/link-massing.js:8` header comment: "write the parcel_buildings junction", re-read this commit |
+| `link_wsib` | `buildersRes`, `:236-245` (`entities.is_wsib_registered`) | `scripts/link-wsib.js:10` header comment names `entities.is_wsib_registered` as its write, re-read this commit |
+
+This triples R-V's live seam-validation surface (1 pre-existing pair, `compute_centroids → link_massing` →
+4 pairs total) — the plan's own stated purpose for this pilot's seam declaration (§0.7).
+`building_footprints` is also read (same massing try-block) but its producer (`massing`, an INGESTOR step)
+is not yet converted — no live seam there. `parcels.centroid_lat/lng` and `parcel_address_points` are NOT
+read anywhere in this file (re-confirmed by direct read, not assumed) — `compute_centroids` and
+`link_parcel_addresses` do not create seams here.
+
+### Seam-map verdict (G5)
+
+**CLOSED this commit.** No PARTIAL seams remain. DB: 20 query sites fully characterized by kind (2
+session-scope GUC, 2 txn-boundary, 8 pinned-client reads, 1 prior-snapshot read, 6 optional reads, 1
+write), 1 real transaction wrap (the footgun hook's "2" is a text-match artifact on a comment, not a
+second transaction). Clock: 2 elapsed-only `Date.now()` sites, 0 DB-clock reads (no app-side timestamp is
+ever written; `created_at=NOW()` is a server-side literal inside the generated SQL, not an R3.5 subject).
+Network: absent. argv/env: 1 `PIPELINE_CHAIN` read, retiring into the declared `phase` map at commit 7
+(`RS-D1`). 3 new live producer→consumer seams declared (`link_parcels`/`link_massing`/`link_wsib`),
+tripling R-V's live surface. No seam tension flagged (unlike pilot 7's Fold C item 9) — every read this
+step performs today is a read THE FIX (Finding 5's `costEst`/`coaFunnel` catch-path change) leaves
+unchanged; no eligibility-gate or query-predicate rewrite is in scope for this pilot.
+
+---
+
 ## §0. Grounding (executed 2026-08-31)
 
 ### §0.1 Pilot order + archetype confirmation
