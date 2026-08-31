@@ -1470,7 +1470,7 @@ differential's own diff on this key is explained, not swept). `LP-D8` CLOSED in 
 |---|---|---|
 | G0 | `"PH-0 — boundary freeze"` heading | ✅ present (§1) |
 | G1/G3 | `"PH-3"` heading + closed vocabulary, no bare `INCIDENTAL` | ✅ present (§2), 18/19 vocab-hit rows |
-| G6 | Every `LP-D*` row reaches `CLOSED`/`PIN` | ✅ `LP-D1`/`LP-D2`/`LP-D5`/`LP-D6` CLOSED-MEASURED · `LP-D3`/`LP-D4`/`LP-D8`/`LP-D9`/`LP-D10`/`LP-D11`/`LP-D12` CLOSED · `LP-D7` PIN — **12/12, none bare-open (updated commit 12)** |
+| G6 | Every `LP-D*` row reaches `CLOSED`/`PIN` | ✅ `LP-D1`/`LP-D2`/`LP-D5`/`LP-D6` CLOSED-MEASURED · `LP-D3`/`LP-D4`/`LP-D8`/`LP-D9`/`LP-D10`/`LP-D11`/`LP-D12`/`LP-D13` CLOSED · `LP-D7` PIN — **13/13, none bare-open (updated commit 13)** |
 | G7 | Locks ≥ fences: `LG-24` idempotency, `LP-D6` red-first, SQL-shape perf, **`LP-D9` street_type (NEW)** | ✅ all landed green — `src/tests/steps/link_parcels/violations.test.ts` (LP-D1/LP-D6/tiebreak/SQL-shape) + `src/tests/db/link-parcels-address-tier-street-type.db.test.ts` (LP-D9, 3/3 green) |
 | G8 | Differential with FINAL measured deltas | ✅ post-8a numbers: `permit_parcels_total` 241,843→239,858 (−1,985, reconciles with `no_match_count` +1,985); `street_type_mismatch_count` 7,046→0; `matches_tier_3_fallback` rename cited by name (above) |
 | G9 | `§R Reflection` with BOTH tables | ✅ promoted to FULL this commit — LOW-CONFIDENCE (3 rows) + RECURRING/STANDARD-SHAPING (5 rows), including the before-image lesson and the "FULL run is a defect-discovery instrument" lesson |
@@ -1713,6 +1713,51 @@ observability — reading counters that already existed and reporting them, mirr
 has carried since its own pilot. Grounded independently against the runner code and `link_massing`'s own
 precedent (not merely trusted from the observability seat's report), live-proved with both a zero-case
 (incremental) and a genuinely non-zero case (real FULL run), `LP-D12` CLOSED in `defect-ledger.md`.
+
+---
+
+## §13. LP-D13 — `spatial_null_coordinate_permits` why-text conflated two populations (commit 13, WF6-triggered, WF3 remediation)
+
+### Grounding (independently re-verified)
+
+`spatial_null_coordinate_permits`'s `expect.reports` field already correctly scopes the check ("permits
+excluded from Strategy 3 Step 2 by the `WHERE v.lng IS NOT NULL AND v.lat IS NOT NULL` guard") — the CODE was
+never wrong. Its `why.text`, however, told only the LP-D6 story: "4 spatial-tier permits carry NULL
+latitude/longitude yet were previously linked." Live-measured on the same `LINK_PARCELS_FORCE_FULL=1` run used
+for LP-D12's proof: `matched.null_coordinate_permits: 11613` (of 254,045 permits processed) — this check's own
+real live count, three orders of magnitude larger than the 4-row figure the why-text discussed. Cross-checked
+`descriptor.invariants`: a SEPARATE entry, `pp_spatial_null_coordinate_count`
+(`SELECT count(*) FROM permits p JOIN permit_parcels pp ... WHERE pp.match_type = 'spatial' AND p.latitude IS
+NULL AND p.longitude IS NULL`, `last_measured.value: 4`), IS the narrow LP-D6 population — NULL-coordinate
+permits that nonetheless carry a `match_type='spatial'` link (the defect signature itself). Its own why-text
+("mirroring `spatial_null_coordinate_permits` above at invariant altitude") actively encouraged the
+conflation the coordinator flagged, implying the two rows are the same measurement viewed from two altitudes
+when they run genuinely different SQL over genuinely different populations.
+
+### THE FIX
+
+Doc/descriptor-text only — no check semantics, no SQL, no scoping changed. `spatial_null_coordinate_permits`'s
+`why.text` rewritten to: (a) state plainly what the check counts (population A — permits excluded from the
+LATERAL join this run), (b) cite the live magnitude (11,613/254,045) so an operator has a real number to
+calibrate against, (c) clarify `retighten_when: "zero rows"` governs a REGRESSION of the guard (the count
+silently vanishing because the WHERE clause stopped filtering), never a target the count should trend toward,
+and (d) name population B (`pp_spatial_null_coordinate_count`, LP-D6's own 4-row defect signature) as a
+DIFFERENT, narrower measurement, not a duplicate. `pp_spatial_null_coordinate_count`'s own why-text rewritten
+to drop the "mirroring ... at invariant altitude" phrasing and instead name its own real, narrower query.
+
+**Invariant-vs-check split: verified correct, not re-scoped.** The two rows run genuinely different SQL over
+genuinely different WHERE clauses (Strategy-3-exclusion vs. wrongly-linked-despite-NULL) — this is the correct
+shape (two real, distinct populations each deserving their own row), not a redundant duplication needing
+consolidation. Per the coordinator's own instruction ("doc/descriptor-text only unless you find the check
+itself should be scoped differently — if so, report before changing semantics"): no semantic re-scoping was
+warranted, so none was made.
+
+### G-verdict, commit 13
+
+**CLOSED.** A pure calibration/observability-text fix — both underlying checks were already measuring the
+correct, distinct things; only the prose an operator reads to interpret them was misleading. Grounded
+independently against a live FULL run's own real numbers (11,613 vs 4), not merely trusted from the
+observability seat's report. `LP-D13` CLOSED in `defect-ledger.md`.
 
 ---
 
@@ -2062,7 +2107,7 @@ above).*
 | G3 | 1 | 2 | table rows=19 vocab-hit rows=18 |
 | G4 | 2 | 2 | risk-class row with chance+impact found=true |
 | G5 | 1 | 1 | db=true clock=true network=true argv/env=true |
-| G6 | 3 | 3 | 12 ledger row(s), 0 without CLOSED/PIN () |
+| G6 | 3 | 3 | 13 ledger row(s), 0 without CLOSED/PIN () |
 | G7 | 3 | 3 | file=true fences=1 it-count=14 RED-evidence=true |
 | G8 | 3 | 3 | missing-invocations=0 stale-fingerprints=0 unexplained-diffs=0 |
 | G9 (binary) | PASS | — | heading=true low-confidence-table=true recurring-table=true |
@@ -2107,7 +2152,7 @@ above).*
 | 11 | Phase-order re-derive (R-B) | prose-only | R-B describe not scoped to this step |
 | 12 | Truthful crash posture (R-M + R-B reader) | prose-only | R-M/R-B-reader describes not scoped to this step |
 | 13 | A step validates itself | enforced-green | this run of step:validate IS the mechanism |
-| P3 | I/O cost adjudication (measured, not gated) | measured | descriptor=45453B notes=6974B checks=15 rows records_meta=2978B (newest post/ capture) |
+| P3 | I/O cost adjudication (measured, not gated) | measured | descriptor=46834B notes=6974B checks=15 rows records_meta=2978B (newest post/ capture) |
 
 **Enforced-green: 9/14**
 
