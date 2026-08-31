@@ -202,7 +202,12 @@ describe("cost_source='geometric' remains a valid, handled enum value (P5 label-
   });
 
   it('refresh-snapshot.js still counts geometric in the from_model bucket', () => {
-    const scriptPath = path.resolve(__dirname, '../../scripts/refresh-snapshot.js');
+    // RE-HOMED (pilot 8, 2026-08-31, Spec 122 §5.1 conversion): the frozen
+    // scripts/refresh-snapshot.js shape carries no query text of its own any
+    // more — the query this lock guards lives verbatim in
+    // scripts/lib/compute/refresh-snapshot.js (buildPermitsScalarQuery). The
+    // fence is unchanged, only the file moved.
+    const scriptPath = path.resolve(__dirname, '../../scripts/lib/compute/refresh-snapshot.js');
     const content = fs.readFileSync(scriptPath, 'utf-8');
     // The cost_source IN (...) FILTER that rolls legacy geometric into from_model.
     expect(content).toMatch(/cost_source IN \([\s\S]*?'geometric'[\s\S]*?\)/);

@@ -1001,16 +1001,16 @@ describe('Pipeline SDK', () => {
       'classify-scope.js',
       'geocode-permits.js',
       'link-neighbourhoods.js',
-      // link-massing.js / link-wsib.js / compute-centroids.js / link-parcels.js
-      // RE-HOMED (Spec 122 §5.1 conversion, pilots 3 + 4 + 6 + 7): a converted step
-      // calls pipeline.step(), never pipeline.run(), and emits nothing itself — the
-      // library owns the whole lifecycle. The successor lock is
-      // src/tests/step-conformance.infra.test.ts's §5.2 conformance battery, which
-      // asserts the SAME properties (SDK imported, lifecycle owned by the SDK, summary
-      // + meta emitted) on the new mechanism for every converted step.
+      // link-massing.js / link-wsib.js / compute-centroids.js / link-parcels.js /
+      // refresh-snapshot.js RE-HOMED (Spec 122 §5.1 conversion, pilots 3 + 4 + 6 +
+      // 7 + 8): a converted step calls pipeline.step(), never pipeline.run(), and
+      // emits nothing itself — the library owns the whole lifecycle. The successor
+      // lock is src/tests/step-conformance.infra.test.ts's §5.2 conformance
+      // battery, which asserts the SAME properties (SDK imported, lifecycle owned
+      // by the SDK, summary + meta emitted) on the new mechanism for every
+      // converted step.
       'link-coa.js',
       'extract-builders.js',
-      'refresh-snapshot.js',
       'link-similar.js',
       // Phase G (Spec 42 §6.11): create-pre-permits.js retired.
       'enrich-web-search.js',
@@ -1309,9 +1309,13 @@ describe('Pipeline SDK', () => {
       expect(content).not.toMatch(/for\s*\([^)]*i\s*<\s*remaining\.rows\.length/);
     });
 
-    // Empty catch blocks — all scripts must log errors, not swallow them
-    it('refresh-snapshot.js has no empty catch blocks', () => {
-      const content = fs.readFileSync(path.join(scriptDir, 'refresh-snapshot.js'), 'utf-8');
+    // Empty catch blocks — all scripts must log errors, not swallow them.
+    // RE-HOMED (pilot 8, 2026-08-31): refresh-snapshot.js's own body is now the
+    // 25-line frozen shape (no try/catch of its own — the library owns error
+    // handling); the real logic (and any catch blocks) lives in
+    // scripts/lib/compute/refresh-snapshot.js, so the check moves there.
+    it('lib/compute/refresh-snapshot.js has no empty catch blocks', () => {
+      const content = fs.readFileSync(path.join(scriptDir, 'lib/compute/refresh-snapshot.js'), 'utf-8');
       // Match catch blocks with empty or whitespace-only bodies: catch { } or catch (e) { }
       expect(content).not.toMatch(/catch\s*(\([^)]*\))?\s*\{\s*\}/);
     });

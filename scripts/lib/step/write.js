@@ -106,6 +106,28 @@ const INSERT_ONLY_NO_RETRACT_CLASS = 'insert_only_no_retraction';
 const WRITE_ONCE_BACKFILL_CLASS = 'write_once_backfill';
 
 /**
+ * `write_discipline.class` value for LG-27 (RECORDER pilot 8, `refresh_snapshot`,
+ * 2026-08-31, Fold B RULING) — GAP-2's own prescribed class name for a keyed
+ * `INSERT ... ON CONFLICT (<key>) DO UPDATE`, `set_source: "compute"` ESCAPE HATCH
+ * (mirrors `SET_BASED_CLASSES`' own `set_source: "compute"` branch, LG-22): the
+ * write is a single non-batched statement over 68 non-key columns, several of
+ * which are derived across 8+ prior reads (JSON aggregation, a `CURRENT_DATE`
+ * literal in the key position, not a bound value) — not expressible as declared
+ * `columns[]` the way a simple guarded upsert's row values are, the SAME reason
+ * `JOIN_UPDATE_CLASS`/`INSERT_ONLY_NO_RETRACT_CLASS`/`WRITE_ONCE_BACKFILL_CLASS`/
+ * `LINK_FULL_RETRACTION_CLASS` went descriptive-only above. The DEFAULT (unnamed)
+ * codegen path below — used by `link_massing`'s own `guarded_upsert` target — binds
+ * EVERY declared column including the key as a parameterized value and unconditionally
+ * appends an `IS DISTINCT FROM` guard clause; neither fits a `CURRENT_DATE`-keyed,
+ * `guard:"none"` target, so this class is declared explicitly rather than silently
+ * falling through to codegen that would produce malformed SQL. `buildWritePlan` for
+ * this class returns a DESCRIPTIVE plan only; the executable SQL text is authored by
+ * the compute (`buildWriteSql`) and handed to `executeRecorderUpsert` directly by the
+ * runner (`runRecorderPhase`).
+ */
+const GUARDED_UPSERT_COMPUTE_CLASS = 'guarded_upsert';
+
+/**
  * `write_discipline.class` value for LG-24 (LINK pilot 7, `link_parcels`, 2026-08-30) —
  * Spec 122 §1.4's own frozen enum letter F, "upsert + DELETE stale + DELETE
  * zero-match" — the class named for `link_parcels` (step 10) AND `link_massing`
@@ -469,6 +491,34 @@ function buildWritePlan(writeSpec, descriptor) {
       mechanic: LINK_FULL_RETRACTION_CLASS,
       step_columns: stepColumnNames,
       update_columns: [],
+      guard_columns: guardColumns,
+      key_sql_type: keyType,
+      scope,
+      retract,
+      retract_when: retractWhen,
+      clear_sql: null,
+      upsert_sql: null,
+      delete_sql: null,
+      generated_by: 'compute',
+    };
+  }
+
+  // ── guarded_upsert with set_source:"compute" (LG-27, RECORDER pilot 8,
+  // 2026-08-31) — DESCRIPTIVE ONLY. No statement is generated here: the whole
+  // INSERT...ON CONFLICT...DO UPDATE statement (including the CURRENT_DATE-literal
+  // key value) is authored by the compute (buildWriteSql), the same split
+  // JOIN_UPDATE_CLASS/INSERT_ONLY_NO_RETRACT_CLASS/WRITE_ONCE_BACKFILL_CLASS use
+  // above. Checked BEFORE the default (unnamed) codegen path below, which would
+  // otherwise match "guarded_upsert" and bind the key as a parameter + always
+  // append an IS DISTINCT FROM guard — wrong on both counts for this target.
+  if (writeSpec.write_discipline.class === GUARDED_UPSERT_COMPUTE_CLASS && writeSpec.write_discipline.set_source === 'compute') {
+    return {
+      table,
+      keys,
+      srid,
+      mechanic: GUARDED_UPSERT_COMPUTE_CLASS,
+      step_columns: stepColumnNames,
+      update_columns: updateColumns,
       guard_columns: guardColumns,
       key_sql_type: keyType,
       scope,
@@ -1037,6 +1087,48 @@ async function executeGuardedDeleteByKey(client, sql, params) {
   return result.rowCount || 0;
 }
 
+/** SQL text a `guarded_upsert`/`set_source:"compute"` (LG-27) statement must never contain — mirrors LG-11/18/20/22/24's forbidden-token pattern. */
+const RECORDER_UPSERT_FORBIDDEN_RE = /\bDELETE\s+FROM\b|\bTRUNCATE\b/i;
+
+/**
+ * LG-27 (RECORDER pilot 8, `refresh_snapshot`, 2026-08-31, Fold B RULING) — execute
+ * one `guarded_upsert`/`set_source:"compute"` statement: a single, non-batched
+ * `INSERT ... ON CONFLICT (<key>) DO UPDATE SET ...` (GAP-2's own prescribed shape).
+ *
+ * `sql` is authored by the COMPUTE (`buildWriteSql`) — the key column may be a
+ * server-side literal (`CURRENT_DATE`), not a bound value, and `guard: "none"`
+ * means no `IS DISTINCT FROM` clause is present — neither shape fits the DEFAULT
+ * (unnamed) `guarded_upsert` codegen in `buildWritePlan` above, which always binds
+ * the key as a parameter and always appends a guard clause. This executor enforces
+ * the ONE thing a `guarded_upsert` target must NEVER do regardless of shape: DELETE
+ * or TRUNCATE a row — checked on the ACTUAL text about to run, mirroring every
+ * prior compute-authored executor's own structural-boundary pattern. Unlike
+ * `executeBackfillUpdate`/`executeGuardedUpdate` (UPDATE-only, INSERT forbidden),
+ * an upsert's whole point is that it MAY insert — so INSERT is required, not banned.
+ *
+ * @param {import('pg').Pool|import('pg').ClientBase} client
+ * @param {string} sql - a complete `INSERT ... ON CONFLICT (...) DO UPDATE SET ...` statement (RETURNING optional)
+ * @param {unknown[]} [params]
+ * @returns {Promise<Record<string, unknown> | null>} the statement's own single `RETURNING` row, or null if none
+ */
+async function executeRecorderUpsert(client, sql, params) {
+  if (RECORDER_UPSERT_FORBIDDEN_RE.test(sql)) {
+    throw new Error(
+      `[write.js] executeRecorderUpsert (guarded_upsert/set_source:compute / LG-27): the statement contains `
+      + 'a DELETE or TRUNCATE token, which this executor structurally refuses — a '
+      + `guarded_upsert target may only INSERT/UPDATE via an upsert. Statement: ${sql.slice(0, 200)}${sql.length > 200 ? '…' : ''}`,
+    );
+  }
+  if (!/\bINSERT\s+INTO\b/i.test(sql) || !/\bON\s+CONFLICT\b[\s\S]*\bDO\s+UPDATE\b/i.test(sql)) {
+    throw new Error(
+      '[write.js] executeRecorderUpsert (guarded_upsert/set_source:compute / LG-27): the statement must be an '
+      + `INSERT ... ON CONFLICT ... DO UPDATE — got: ${sql.slice(0, 200)}${sql.length > 200 ? '…' : ''}`,
+    );
+  }
+  const result = await client.query(sql, params || []);
+  return result.rows[0] || null;
+}
+
 module.exports = {
   buildWritePlan,
   generateWriteSql,
@@ -1054,8 +1146,11 @@ module.exports = {
   executeBackfillUpdate,
   executeGuardedUpdate,
   executeGuardedDeleteByKey,
+  executeRecorderUpsert,
   GUARDED_UPDATE_FORBIDDEN_RE,
   GUARDED_DELETE_BY_KEY_FORBIDDEN_RE,
+  RECORDER_UPSERT_FORBIDDEN_RE,
+  GUARDED_UPSERT_COMPUTE_CLASS,
   JOIN_UPDATE_CLASS,
   JOIN_UPDATE_FORBIDDEN_RE,
   INSERT_ONLY_NO_RETRACT_CLASS,

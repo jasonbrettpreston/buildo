@@ -19,8 +19,10 @@
 
 import { describe, it, expect, beforeAll, beforeEach, afterAll } from 'vitest';
 import { dbAvailable, getTestPool } from './setup-testcontainer';
+// RETARGETED pilot 8 commit 7 (2026-08-31, RECORDER conversion): the query builders
+// moved verbatim from scripts/refresh-snapshot.js to scripts/lib/compute/refresh-snapshot.js.
 // eslint-disable-next-line @typescript-eslint/no-require-imports -- exercising the real module's exports
-const snapshotMod = require('../../../scripts/refresh-snapshot.js');
+const snapshotMod = require('../../../scripts/lib/compute/refresh-snapshot.js');
 
 const FX = 'FXF1SNAP';
 const ACTIVE = snapshotMod.ACTIVE_PERMIT_STATUSES as string[];

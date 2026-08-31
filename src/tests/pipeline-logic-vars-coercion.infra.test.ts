@@ -22,21 +22,22 @@ const PIPELINE_SCRIPTS = [
   'scripts/compute-timing-calibration-v2.js',
   // Phase G (Spec 42 §6.11): scripts/create-pre-permits.js retired to DELETE shim — no logicVars.
   'scripts/link-coa.js',
-  // scripts/link-massing.js / scripts/link-wsib.js / scripts/link-parcels.js RE-HOMED,
-  // not dropped (Spec 122 §5.1 conversion, pilots 3 + 4 + 7). None declares a
-  // LOGIC_VARS_SCHEMA at all any more: the frozen file shape carries no config code, and
-  // coercion is now the LIBRARY's — scripts/lib/step/config.js resolves the DECLARED
-  // names through loadMarketplaceConfigs and bounds-checks them before the compute runs,
-  // so the z.coerce class of defect (the pg driver returning NUMERIC as a string) cannot
+  // scripts/link-massing.js / scripts/link-wsib.js / scripts/link-parcels.js /
+  // scripts/refresh-snapshot.js RE-HOMED, not dropped (Spec 122 §5.1 conversion,
+  // pilots 3 + 4 + 7 + 8). None declares a LOGIC_VARS_SCHEMA at all any more: the
+  // frozen file shape carries no config code, and coercion is now the LIBRARY's —
+  // scripts/lib/step/config.js resolves the DECLARED names through
+  // loadMarketplaceConfigs and bounds-checks them before the compute runs, so the
+  // z.coerce class of defect (the pg driver returning NUMERIC as a string) cannot
   // recur in a converted step. Each is removed from this list at ITS OWN commit 7 (the
   // code is gone then) even though it registers in converted.json only at commit 9
   // (R-K stage-gating) — this list tracks the LOGIC_VARS island-path surface, not the
   // shape-gate registration. The successor lock is the four-surface P4 battery in
   // src/tests/step-conformance.infra.test.ts plus the descriptor bounds locks in
   // src/tests/link-massing.infra.test.ts / src/tests/link-wsib.infra.test.ts /
-  // src/tests/link-parcels.infra.test.ts. Every step still on the island path keeps its
-  // entry here, and the count below shrinks by exactly one per conversion.
-  'scripts/refresh-snapshot.js',
+  // src/tests/link-parcels.infra.test.ts / src/tests/refresh-snapshot.infra.test.ts.
+  // Every step still on the island path keeps its entry here, and the count below
+  // shrinks by exactly one per conversion.
   'scripts/quality/assert-coa-freshness.js',
   'scripts/quality/assert-data-bounds.js',
   'scripts/quality/assert-global-coverage.js',
@@ -47,8 +48,8 @@ const PIPELINE_SCRIPTS = [
 ];
 
 describe('Pipeline scripts — LOGIC_VARS_SCHEMA uses z.coerce.number() (spec 47 §4)', () => {
-  it('covers all 15 pipeline scripts still on the island path (was 20; Phase G retired 2 shims, C1 converted link_massing + link_wsib + link_parcels)', () => {
-    expect(PIPELINE_SCRIPTS).toHaveLength(15);
+  it('covers all 14 pipeline scripts still on the island path (was 20; Phase G retired 2 shims, C1 converted link_massing + link_wsib + link_parcels + refresh_snapshot)', () => {
+    expect(PIPELINE_SCRIPTS).toHaveLength(14);
     // The count is a LEDGER, not a magic number: every entry must still be an unconverted
     // island, and a converted step left in this list would be asserting a schema that no
     // longer exists in it. Asserted rather than commented, so the two lists cannot drift.

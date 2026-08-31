@@ -625,14 +625,14 @@
   "coa_match_conf_medium": {
     "default": 0.5,
     "type": "number",
-    "description": "CoA→permit match confidence floor for the 'medium confidence' bucket (link-coa summary: >= this AND < high); also used as the low-confidence boundary in the CoA snapshot",
+    "description": "CoA→permit match confidence floor for the 'medium confidence' bucket (link-coa summary: >= this AND < high); also used as the low-confidence boundary in the CoA snapshot. CONSUMED by scripts/lib/compute/refresh-snapshot.js (pilot 8, 2026-08-31: RE-HOMED off scripts/refresh-snapshot.js's frozen shape — bound into the CoA confidence-bucket query by buildReads()/buildPermitsScalarQuery, not read via a script-level LOGIC_VARS_SCHEMA any more).",
     "min": 0.01,
     "max": 1
   },
   "snapshot_coa_conf_high": {
     "default": 0.8,
     "type": "number",
-    "description": "Minimum linked_confidence for a CoA application to be counted as 'high_confidence' in the refresh-snapshot dashboard metrics",
+    "description": "Minimum linked_confidence for a CoA application to be counted as 'high_confidence' in the refresh-snapshot dashboard metrics. CONSUMED by scripts/lib/compute/refresh-snapshot.js (pilot 8, 2026-08-31: RE-HOMED off scripts/refresh-snapshot.js's frozen shape, same treatment as coa_match_conf_medium above).",
     "min": 0.01,
     "max": 1
   },

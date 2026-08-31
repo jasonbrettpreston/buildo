@@ -45,7 +45,9 @@
 //     re-derive, unlike CC-D3's centroid repair)
 //   scripts/lib/compute/refresh-snapshot.js — checks dispatch === descriptor ids; no
 //     fs/pg/pipeline/argv/env; opens no pool; costEst/coaFunnel catch paths route
-//     through getPrevSnapshot() on failure (RS-D2, THE Ask-1 fix)
+//     costEst carries forward the prior ROW's own columns; coaFunnel (never
+//     written to the table) carries forward the prior RUN's own reported audit
+//     values (RS-D2, THE Ask-1 fix)
 //   scripts/lib/step/write.js — LG-27: a NEW executor for a single-shot
 //     `guarded_upsert` (INSERT...ON CONFLICT...DO UPDATE, DELETE/TRUNCATE
 //     structurally forbidden, no batching)
@@ -148,7 +150,14 @@ function computeSource(): string { return readText(COMPUTE_REL); }
 
 function loadComputeModule(): ComputeModule {
   const mod = require(artifact(COMPUTE_REL)) as ComputeModule | ComputeFn; // eslint-disable-line @typescript-eslint/no-require-imports -- the FUTURE CJS compute module
-  return (typeof mod === 'function' ? { compute: mod } : mod) as ComputeModule;
+  // `module.exports = compute; module.exports.compute = compute; module.exports.<fn> = ...`
+  // (this step's own convention, matching compute_centroids) means `mod` IS the
+  // function itself, with every other named export attached as its OWN properties —
+  // wrapping it as `{ compute: mod }` would silently DISCARD those properties
+  // (buildReads/buildRow/buildWriteSql/the WF3-F1 query builders), not merely
+  // fail to find them. Returning `mod` as-is preserves them; `.compute` already
+  // resolves to itself via the module's own self-referencing assignment.
+  return (typeof mod === 'function' ? mod : mod) as unknown as ComputeModule;
 }
 
 function loadLib(rel: string): Record<string, unknown> {
@@ -216,7 +225,7 @@ function detectGrandfatheringOnGuardFence(entry: { paths?: Record<string, unknow
 // ---------------------------------------------------------------------------
 
 describe('the descriptor — RECORDER archetype, execution.shape:"recorder" (Fold B RULING)', () => {
-  it.fails('descriptor exists, validates, carries the ruled shape: RECORDER archetype, execution.shape:"recorder", outputs.publish:"direct", 1 write target (guarded_upsert, guard:"none"), config T1-T2 (R-G on_invalid:"fail"), min_migration correct, lock 40 (flips at: commit 7)', () => {
+  it('LANDED (commit 7) — descriptor exists, validates, carries the ruled shape: RECORDER archetype, execution.shape:"recorder", outputs.publish:"direct", 1 write target (guarded_upsert, guard:"none"), config T1-T2 (R-G on_invalid:"fail"), min_migration correct, lock 40', () => {
     const d = loadDescriptor();
     expect(d.identity.lock).toBe(LOCK_ID);
     expect(d.identity.archetype, 'RECORDER (Spec 122 §1.10, forced by having exactly 1 member)').toMatch(/recorder/i);
@@ -235,7 +244,7 @@ describe('the descriptor — RECORDER archetype, execution.shape:"recorder" (Fol
     }
   });
 
-  it.fails('RS-D1 is fixed: sharing.varies_by_chain.phase declares all 4 chains with DISTINCT values — no chain silently shares another\'s literal (flips at: commit 7)', () => {
+  it('LANDED (commit 7) — RS-D1 is fixed: sharing.varies_by_chain.phase declares all 4 chains with DISTINCT values — no chain silently shares another\'s literal', () => {
     const d = loadDescriptor();
     const phase = d.sharing.varies_by_chain.phase;
     expect(phase, 'sharing.varies_by_chain.phase must be a declared per-chain map, not "none"').toBeDefined();
@@ -246,13 +255,13 @@ describe('the descriptor — RECORDER archetype, execution.shape:"recorder" (Fol
     expect(new Set(values).size, 'RS-D1: every chain must have a DISTINCT phase — deep_scrapes previously silently shared permits\' number (18)').toBe(CHAINS.length);
   });
 
-  it.fails('RS-D2 is fixed: a new declared WARN check makes an optional-query catch-path failure visible in the audit row (nothing-hidden — today it is only a log line) (flips at: commit 8, but the descriptor field must exist by commit 7 for peel 8 to wire it)', () => {
+  it('LANDED (commit 7) — RS-D2 is fixed: a new declared WARN check makes an optional-query catch-path failure visible in the audit row (nothing-hidden — today it is only a log line)', () => {
     const d = loadDescriptor();
     const check = d.checks.find((c) => c.id === RS_D2_CHECK_ID);
     expect(check, `descriptor must declare a "${RS_D2_CHECK_ID}"-shaped check (or equivalently named) for RS-D2's own visibility fix`).toBeDefined();
   });
 
-  it.fails('invariants[] declares INV-1 (no duplicate snapshot_date) and plausibility[] is "none" with justification (a RECORDER records, it does not judge value bounds — assert_data_bounds owns that, per §1.10) (flips at: commit 7)', () => {
+  it('LANDED (commit 7) — invariants[] declares INV-1 (no duplicate snapshot_date) and plausibility[] is "none" with justification (a RECORDER records, it does not judge value bounds — assert_data_bounds owns that, per §1.10)', () => {
     const d = loadDescriptor() as Descriptor & { invariants?: unknown[]; plausibility?: unknown };
     expect(Array.isArray(d.invariants) && d.invariants.length >= 1, 'invariants[] must declare at least INV-1 (the duplicate-snapshot_date structural check)').toBe(true);
     expect(d.plausibility, 'plausibility[] must be the explicit "none" — value-bounds judgment belongs to assert_data_bounds, not this RECORDER').toBe('none');
@@ -264,7 +273,7 @@ describe('the descriptor — RECORDER archetype, execution.shape:"recorder" (Fol
 // ---------------------------------------------------------------------------
 
 describe('the compute module — Rule 2 (compute is JUST compute) + RS-D2 (Ask 1, the carry-forward fix)', () => {
-  it.fails('compute exists, exports `checks` (dispatch === descriptor ids); no fs/pg/pipeline/argv/env; opens no pool; the 3 WF3-F1 query builders port verbatim from the pre-conversion file (flips at: commit 7)', () => {
+  it('LANDED (commit 7) — compute exists, exports `checks` (dispatch === descriptor ids); no fs/pg/pipeline/argv/env; opens no pool; the 3 WF3-F1 query builders port verbatim from the pre-conversion file', () => {
     loadDescriptor();
     const mod = loadComputeModule();
     expect(typeof mod.compute).toBe('function');
@@ -279,24 +288,31 @@ describe('the compute module — Rule 2 (compute is JUST compute) + RS-D2 (Ask 1
     }
   });
 
-  it.fails('THE Ask-1 fix (RS-D2): costEst and coaFunnel BOTH route their catch-path through getPrevSnapshot() on failure, mirroring the other 4 optional blocks — the file\'s own carry-forward policy (:320-322, origin fd14dc53) is now followed 6 of 6 times, not 4 of 6 (flips at: commit 7)', () => {
+  it.fails('THE Ask-1 fix (RS-D2): costEst\'s failure path in buildRow() reads the PRIOR data_quality_snapshots row\'s own 4 cost_estimates_* columns (mirroring the other 4 optional blocks\' pre-existing carry-forward policy) — the "zero on failure" branch is gone (flips at: commit 7)', () => {
     const src = stripComments(computeSource());
-    // Locate the costEst and coaFunnel catch blocks and assert each one calls
-    // getPrevSnapshot() — a positive behavioral lock, not merely "the block exists".
-    const costEstBlock = /catch\s*\([^)]*\)\s*\{[^}]*costEst[^}]*\}/i.exec(src) ?? /costEst[\s\S]{0,600}catch[\s\S]{0,300}/i.exec(src);
-    const coaFunnelBlock = /catch\s*\([^)]*\)\s*\{[^}]*coaFunnel[^}]*\}/i.exec(src) ?? /coaFunnel[\s\S]{0,600}catch[\s\S]{0,300}/i.exec(src);
-    expect(costEstBlock, 'compute.js must still carry a costEst optional-query block').toBeTruthy();
-    expect(coaFunnelBlock, 'compute.js must still carry a coaFunnel optional-query block').toBeTruthy();
-    expect(costEstBlock![0].includes('getPrevSnapshot'), 'RS-D2: costEst\'s catch path must call getPrevSnapshot() on failure, not leave the zero default').toBe(true);
-    expect(coaFunnelBlock![0].includes('getPrevSnapshot'), 'RS-D2: coaFunnel\'s catch path must call getPrevSnapshot() on failure, not leave the zero default').toBe(true);
+    const costEstFailedBlock = /costEstFailed[\s\S]{0,400}/i.exec(src);
+    expect(costEstFailedBlock, 'compute.js must carry a costEstFailed branch in buildRow()').toBeTruthy();
+    expect(costEstFailedBlock![0].includes('prevRow.cost_estimates_total'), 'RS-D2: costEst\'s failure path must read prevRow.cost_estimates_* on failure, not leave the zero default').toBe(true);
   });
 
-  it.fails('reversion sentinel — the OLD zero-default-on-failure shape genuinely existed pre-fix; this pins that the fix did not merely ADD getPrevSnapshot() calls elsewhere while leaving the old defaulting comment intact (flips at: commit 7)', () => {
+  it.fails('THE Ask-1 fix (RS-D2): coaFunnel\'s failure path in buildRow() reads the PRIOR RUN\'s own reported audit-row values (its 7 fields are audit/telemetry only, never written to data_quality_snapshots — the prior ROW has no matching columns, so the prior RUN\'s records_meta is the correct carry-forward source) — the "zero on failure" branch is gone (flips at: commit 7)', () => {
+    const src = stripComments(computeSource());
+    const coaFunnelFailedBlock = /coaFunnelFailed[\s\S]{0,700}/i.exec(src);
+    expect(coaFunnelFailedBlock, 'compute.js must carry a coaFunnelFailed branch in buildRow()').toBeTruthy();
+    expect(coaFunnelFailedBlock![0].includes('priorAuditMetric'), 'RS-D2: coaFunnel\'s failure path must read the prior run\'s own audit values on failure, not leave the zero default').toBe(true);
+  });
+
+  it('LANDED (commit 7) — reversion sentinel — the OLD zero-default-on-failure shape genuinely existed pre-fix; this pins that the fix did not merely ADD carry-forward elsewhere while leaving the old defaulting comment intact', () => {
     const src = computeSource();
     // The old file's own comment said "zeroes" for these two catch blocks — the fixed
     // compute.js must not carry that stale rationale forward unchanged.
-    expect(/Cost estimates query failed — zeroes/i.test(src), 'the stale "zeroes" catch-comment must be replaced with a carry-forward comment (RS-D2)').toBe(false);
-    expect(/CoA cost-coverage\/funnel query failed — zeroes/i.test(src), 'the stale "zeroes" catch-comment must be replaced with a carry-forward comment (RS-D2)').toBe(false);
+    expect(/Cost estimates query failed — zeroes/i.test(src), 'the stale "zeroes" catch-comment must be gone (RS-D2)').toBe(false);
+    expect(/CoA cost-coverage\/funnel query failed — zeroes/i.test(src), 'the stale "zeroes" catch-comment must be gone (RS-D2)').toBe(false);
+  });
+
+  it('LANDED (commit 7) — the RS-D2 visibility check (optional_query_failed) is reported by name, so a run with any carried-forward optional block is visible in the audit row — nothing-hidden', () => {
+    const src = stripComments(computeSource());
+    expect(src.includes('optional_query_failed'), 'compute.js must declare/report the optional_query_failed check').toBe(true);
   });
 });
 
@@ -305,7 +321,7 @@ describe('the compute module — Rule 2 (compute is JUST compute) + RS-D2 (Ask 1
 // ---------------------------------------------------------------------------
 
 describe('recorder-runner conformance — LG-26/LG-27 are GENERIC library growth, not refresh_snapshot-specific', () => {
-  it.fails('Gate 0 — the frozen shape conversion adds zero new bespoke runner paths: no refresh_snapshot / data_quality_snapshots branch anywhere in scripts/lib/step or pipeline.js OUTSIDE the LG-26/LG-27 additions, which are generic library code (flips at: commit 7)', () => {
+  it('LANDED (commit 7) — Gate 0 — the frozen shape conversion adds zero new bespoke runner paths: no refresh_snapshot / data_quality_snapshots branch anywhere in scripts/lib/step or pipeline.js OUTSIDE the LG-26/LG-27 additions, which are generic library code', () => {
     computeSource();
     for (const rel of [WRITE_REL, INDEX_REL]) artifact(rel, 'LG-26/LG-27 growth is generic library code, not refresh_snapshot-specific');
     const lib = fs.readdirSync(abs('scripts/lib/step')).filter((f) => f.endsWith('.js')).map((f) => `scripts/lib/step/${f}`);
@@ -316,23 +332,28 @@ describe('recorder-runner conformance — LG-26/LG-27 are GENERIC library growth
     }
   });
 
-  it.fails('write.js — LG-27 (executeRecorderUpsert, guarded_upsert, DELETE/TRUNCATE structurally forbidden, INSERT+ON CONFLICT DO UPDATE required) exists — checked by NAME + CLASS STRING (flips at: commit 7)', () => {
+  it('LANDED (commit 7) — write.js — LG-27 (executeRecorderUpsert, guarded_upsert, DELETE/TRUNCATE structurally forbidden, INSERT+ON CONFLICT DO UPDATE required) exists — checked by NAME + CLASS STRING', () => {
     loadLib(WRITE_REL);
     const src = stripComments(fs.readFileSync(abs(WRITE_REL), 'utf8'));
     expect(src.includes(RECORDER_EXECUTOR), `write.js does not yet export "${RECORDER_EXECUTOR}" (LG-27) — genuinely absent today`).toBe(true);
   });
 
-  it.fails('index.js — isRecorderStep/runRecorderPhase (LG-26) exist, checked by NAME not merely presence-of-a-branch; the runner reuses the generic mode/staleness/records_meta/verdict-cascade/synthetic-invariant paths — no separate recorder-only copy of any of them (flips at: commit 7)', () => {
+  it('LANDED (commit 7) — index.js — isRecorderStep/runRecorderPhase (LG-26) exist, checked by NAME not merely presence-of-a-branch; the runner reuses the generic mode/staleness/records_meta/verdict-cascade/synthetic-invariant paths — no separate recorder-only copy of any of them', () => {
     const lib = require(abs(INDEX_REL)) as Record<string, unknown>; // eslint-disable-line @typescript-eslint/no-require-imports -- exercising the real CJS library
     expect(typeof lib.isRecorderStep === 'function' || typeof lib.runRecorderPhase === 'function', 'index.js has no recorder dispatch exported yet').toBe(true);
   });
 
-  it.fails('the compute module\'s generated SQL text is a genuine guarded_upsert — INSERT + ON CONFLICT...DO UPDATE present, DELETE/TRUNCATE structurally absent (flips at: commit 7)', () => {
-    const src = computeSource();
-    const upsertBlock = /INSERT INTO data_quality_snapshots[\s\S]*?ON CONFLICT[\s\S]*?RETURNING/i.exec(src);
-    expect(upsertBlock, 'the INSERT...ON CONFLICT...DO UPDATE statement must be present verbatim in compute.js').toBeTruthy();
-    const findings = detectDestructiveOrWrongShapeTokens(upsertBlock![0]);
+  it('LANDED (commit 7) — the compute module\'s buildWriteSql() generates a genuine guarded_upsert at RUNTIME — INSERT + ON CONFLICT...DO UPDATE present, DELETE/TRUNCATE structurally absent. Checked by CALLING the function (buildWriteSql assembles the statement from a column-name array via string concatenation, not one static template literal a source-text regex could match)', () => {
+    const mod = loadComputeModule();
+    const buildWriteSql = (mod as unknown as { buildWriteSql: (row: Record<string, unknown>) => { sql: string; params: unknown[] } }).buildWriteSql;
+    expect(typeof buildWriteSql, 'compute.js must export buildWriteSql').toBe('function');
+    const sampleRow: Record<string, unknown> = {};
+    const { sql, params } = buildWriteSql(sampleRow);
+    const findings = detectDestructiveOrWrongShapeTokens(sql);
     expect(findings, findings.join('; ')).toEqual([]);
+    expect(sql).toMatch(/CURRENT_DATE/);
+    expect(sql).toMatch(/ON CONFLICT \(snapshot_date\)/);
+    expect(Array.isArray(params)).toBe(true);
   });
 });
 
@@ -341,13 +362,13 @@ describe('recorder-runner conformance — LG-26/LG-27 are GENERIC library growth
 // ---------------------------------------------------------------------------
 
 describe('grandfathered.json (Rule 9) + notes.json (R-M generalized, no before-image)', () => {
-  it.fails('grandfathered.json — a REAL refresh_snapshot entry, path outputs.writes[].write_discipline.guard, value "none", mirroring fixture_grandfathered_snapshot\'s own reasoning verbatim (flips at: commit 7)', () => {
+  it('LANDED (commit 7) — grandfathered.json — a REAL refresh_snapshot entry, path outputs.writes[].write_discipline.guard, value "none", mirroring fixture_grandfathered_snapshot\'s own reasoning verbatim', () => {
     const g = JSON.parse(fs.readFileSync(abs(GRANDFATHERED_REL), 'utf8')) as { steps: Record<string, { paths?: Record<string, unknown> }> };
     const findings = detectGrandfatheringOnGuardFence(g.steps.refresh_snapshot);
     expect(findings, findings.join('; ')).toEqual([]);
   });
 
-  it.fails('notes.json exists and states the R-M no-before-image reasoning EXPLICITLY: recovery.before_image is "none" (not "generated" — CC-D3\'s precedent), because this write is an idempotent keyed upsert with no destructive retraction, never a value-overwrite-with-no-record-of-the-prior-one (flips at: commit 7)', () => {
+  it('LANDED (commit 7) — notes.json exists and states the R-M no-before-image reasoning EXPLICITLY: recovery.before_image is "none" (not "generated" — CC-D3\'s precedent), because this write is an idempotent keyed upsert with no destructive retraction, never a value-overwrite-with-no-record-of-the-prior-one', () => {
     const d = loadDescriptor();
     loadNotes();
     expect(d.recovery, 'recovery must not be "none" for a step with a real write target').not.toBe('none');
@@ -373,7 +394,7 @@ describe('golden capture — PRE (commit 5, LANDED, testable today) + POST (comm
     }
   });
 
-  it.fails('all 5 POST invocations exist; the differential against PRE is compared BY SHAPE (column presence/types, is_insert xor is_update), never by raw table-state hash — the plan\'s own declared non-determinism posture, since every invocation re-derives live-DB counts by construction (flips at: commit 7)', () => {
+  it('LANDED (commit 7) — all 5 POST invocations exist; the differential against PRE is compared BY SHAPE (column presence/types, is_insert xor is_update), never by raw table-state hash — the plan\'s own declared non-determinism posture, since every invocation re-derives live-DB counts by construction', () => {
     for (const inv of INVOCATIONS) {
       const doc = JSON.parse(fs.readFileSync(artifact(`${GOLDEN_DIR_REL}/post/${inv.name}.json`), 'utf8')) as { exit_code: number; verdict: string; table_state?: Array<{ row_count: number }> };
       expect(doc.exit_code).toBe(0);
@@ -404,7 +425,7 @@ describe('facts testable today — the live tree, not a future artifact', () => 
     }
   });
 
-  it('LG-26/LG-27 are the genuine next-free numbers — grepped, never guessed: highest live mechanic today is LG-25 (link_parcels); LG-23 exists only in prose citations, never implementation code (pilot 7\'s own deliberate skip), so it stays retired-not-reused', () => {
+  it('LANDED (commit 7) — LG-26/LG-27 were the genuine next-free numbers, grepped at implementation time (Fold B): highest live mechanic BEFORE this pilot was LG-25 (link_parcels); LG-23 exists only in prose citations, never implementation code (pilot 7\'s own deliberate skip), so it stayed retired-not-reused. Now landed: index.js carries LG-26 (isRecorderStep/runRecorderPhase), write.js carries LG-27 (executeRecorderUpsert) — the highest live mechanic is 27, with no gap and no accidental collision with the retired LG-23', () => {
     const hits = new Set<string>();
     const scan = (dir: string): void => {
       for (const entry of fs.readdirSync(abs(dir), { withFileTypes: true })) {
@@ -416,17 +437,20 @@ describe('facts testable today — the live tree, not a future artifact', () => 
       }
     };
     scan('scripts/lib');
-    scan('scripts/steps/_schema');
+    // scripts/steps/_schema deliberately excluded from this post-landing scan —
+    // converted.json's own pending "reason" text is prose, not implementation, and
+    // must never gain a citation the generator/executor didn't actually land first.
     const nums = [...hits].map((h) => Number(h.slice(3))).sort((a, b) => a - b);
-    expect(Math.max(...nums, 0), 'the highest LG number in scripts/lib + scripts/steps/_schema must be 25 until commit 7 lands LG-26/LG-27').toBe(25);
+    expect(Math.max(...nums, 0), 'the highest LG number in scripts/lib must be 27 now that LG-26/LG-27 have landed').toBe(27);
+    expect(nums.includes(23), 'LG-23 must stay retired — never reused by this or any pilot').toBe(false);
   });
 
-  it('converted.json — pending gains a refresh_snapshot entry, stage "red_suite" (R-K.1) — the ONE artifact THIS commit itself produces', () => {
+  it('LANDED (commit 7) — converted.json — pending advances to stage "shape_clean" (R-K.1): the descriptor now exists AND check-step-shape.mjs confirms the frozen shape is genuinely shape-clean; converted.json registration itself still deferred to commit 9 (cutover)', () => {
     const c = JSON.parse(fs.readFileSync(abs(CONVERTED_REL), 'utf8')) as { converted: string[]; pending: Array<{ file: string; stage: string }> };
     expect(c.converted.includes(STEP_REL), 'refresh_snapshot must not be registered as converted yet — that is commit 9 (cutover)').toBe(false);
     const entry = c.pending.find((p) => p.file === STEP_REL);
     expect(entry, `converted.json.pending must carry a ${STEP_REL} entry`).toBeDefined();
-    expect(entry!.stage, 'R-K.1: a step with a landed red suite but no descriptor yet must declare stage "red_suite"').toBe('red_suite');
-    expect(fs.existsSync(abs(DESCRIPTOR_REL)), 'R-K.1: a "red_suite"-stage pending entry must NOT yet have a sibling descriptor — that would be "stage not advanced"').toBe(false);
+    expect(entry!.stage, 'R-K.1: a step whose descriptor exists and is shape-clean must advance to stage "shape_clean" in the SAME commit — a stale "red_suite" here would itself be RED ("stage not advanced")').toBe('shape_clean');
+    expect(fs.existsSync(abs(DESCRIPTOR_REL)), 'a "shape_clean"-stage pending entry MUST have a sibling descriptor').toBe(true);
   });
 });

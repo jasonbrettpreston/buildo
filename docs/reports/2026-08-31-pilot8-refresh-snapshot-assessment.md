@@ -69,6 +69,8 @@ script) replaced with the real 5-file, 19-assertion list.
 
 ### G4 — risk class
 
+**Chance = CLASS B. Impact = HIGH.** (Full reasoning below.)
+
 **Chance** = 34 commits (small-mid corpus, re-confirmed) + 44% fix density (15/34, re-confirmed) — lower
 fix density than pilot 7 (56.25%) — + 0 measured load-bearing fences this session (no `git log -p -S`
 fence excavation was needed: this pilot's write is additive/no-op-by-declaration, not a repair of a
@@ -101,20 +103,20 @@ inconsistency) proceed to PH-3/PH-6 classification as already scoped.
 | Commit | Date | Construct | Live today? | Proposed disposition | Ground |
 |---|---|---|---|---|---|
 | `8287291e` | 2026-03-06 | Raw `console.log('PIPELINE_SUMMARY:'+JSON.stringify(...))` completion line | Superseded — 0 `console.*` today, replaced by structured `pipeline.emitSummary` | **knowingly-retired** — the literal console-log form is gone; the underlying CONCEPT (a structured completion summary) survives as `pipeline.emitSummary`/commit-7's `checks`+`counters` | `grep -c console\.` current file = 0, re-confirmed commit 1 |
-| `e4765619` | 2026-03-07 | §11 counter-scoping fix: `records_total: total_permits` (237K+, a foreign entity's own scan-pool size) → `records_total: 1` (the snapshot row itself) | ✓ current file `:645`, byte-identical (`records_total: 1`) | **preserved-in-compute** — this is the exact counter-scoping correction the Before/After guarantees table's `records_total=1, records_new/records_updated xor` invariant (INV-2) encodes; genuinely load-bearing, verbatim-ported | `:645` current file |
-| `64374bb2` | 2026-03-11 | Empty `catch {}` on massing/schema-column-count queries → `pipeline.log.warn(...)` | ✓ current file `:342-346,359-363`, the log.warn survives (later layered with carry-forward by `fd14dc53` below) | **preserved-in-compute** — the catch-and-log shape is verbatim; `fd14dc53` adds carry-forward ON TOP, doesn't replace this fix | `:342-346` current file |
-| `6c75bf83` | 2026-03-15 (09:54) | Adds `permit_inspections` coverage query to the snapshot | ✓ current file `:378-409`, byte-identical query shape (5-column FILTER aggregate) | **preserved-in-compute** — verbatim-ported to `compute.js` at commit 7 | `:378-409` current file |
+| `e4765619` | 2026-03-07 | §11 counter-scoping fix: `records_total: total_permits` (237K+, a foreign entity's own scan-pool size) → `records_total: 1` (the snapshot row itself) | ✓ current file `:645`, byte-identical (`records_total: 1`) | **preserved-in-compute** — this is the exact counter-scoping correction the Before/After guarantees table's `records_total=1, records_new/records_updated xor` invariant (INV-2) encodes; genuinely load-bearing, verbatim-ported | `:645` current file; grounded in `checks[]` (`snapshots_updated`) |
+| `64374bb2` | 2026-03-11 | Empty `catch {}` on massing/schema-column-count queries → `pipeline.log.warn(...)` | ✓ current file `:342-346,359-363`, the log.warn survives (later layered with carry-forward by `fd14dc53` below) | **preserved-in-compute** — the catch-and-log shape is verbatim; `fd14dc53` adds carry-forward ON TOP, doesn't replace this fix | `:342-346` current file; grounded in `checks[].why` (massing carry-forward, notes.json read_this_way) |
+| `6c75bf83` | 2026-03-15 (09:54) | Adds `permit_inspections` coverage query to the snapshot | ✓ current file `:378-409`, byte-identical query shape (5-column FILTER aggregate) | **preserved-in-compute** — verbatim-ported to `compute.js` at commit 7 | `:378-409` current file; grounded in `checks[]` (inspections feed no dedicated check but the row itself is why-cited in compute.js) |
 | `ba88a5fa` | 2026-03-15 (18:15) | First chain-aware phase ternary: `chainId === 'coa' ? 6 : 5` (2-way; `deep_scrapes` and `permits` share the `5` default from this commit's very first version) | Superseded 11 days later by `5baaed5a`'s 3-way ternary (below) | **knowingly-retired** — the specific `?6:5` mapping does not survive; the "chain-aware phase via `PIPELINE_CHAIN`" PATTERN this commit pioneered does, through its own successor | direct diff this commit |
 | **`5baaed5a`** | **2026-03-26** | **THE origin of Finding 4/`RS-D1`.** Widens the ternary to 3-way: `chainId === 'sources' ? 13 : chainId === 'coa' ? 7 : 14` — adds a `sources` branch but leaves `deep_scrapes` folded into the SAME default branch as `permits` (the commit's own subject line, "audit_table gaps... and phase numbering," never names `deep_scrapes` as a distinct case) | ✓ the 3-way SHAPE survives to today, `:643` (`chainId === 'sources' ? 13 : chainId === 'coa' ? 7 : 18` — default later bumped 14→18 as the permits chain grew, `df8371a9` and siblings, not re-audited line-by-line this commit) | **SPLIT disposition**: the chain-aware-phase MECHANISM is **encoded-as-descriptor-field** (`sharing.varies_by_chain.phase`, commit 7) — a real, useful pattern. The MISSING `deep_scrapes` branch is the open DEFECT, `RS-D1` (opened formally below): `deep_scrapes` existed in `manifest.json` since `5c953a61` (2026-03-11), 15 days BEFORE this commit ever ran, and was never given its own branch by this commit or any successor. Corrected (not merely preserved) at commit 7 with a declared per-chain map | direct diff this commit; `git log -p -S "deep_scrapes" -- scripts/manifest.json` for the pre-existence date |
-| `31c18da0` | 2026-03-31 | Guards `neighbourhood_count/active_permits` division by zero (`active_permits > 0 ? ... : '0.0'`) | ✓ current file `:297`, byte-identical | **preserved-in-compute** — verbatim-ported to `compute.js` at commit 7 | `:297` current file |
-| **`fd14dc53`** | **2026-04-01 (17:42)** | **THE origin of Finding 5's own declared policy.** 5 sub-fixes in one commit: (a) all queries onto one pinned `REPEATABLE READ READ ONLY` client (the WF3-F1-era single-connection shape, later hardened further by `8cc99c78`); (b) `xmax::text::int = 0` replacing bare `xmax = 0` (PG-version-safe insert/update detection); (c) **`getPrevSnapshot()` carry-forward-on-failure for massing/schema/SLA/inspections, replacing a bare zero default** — the file's own `:320-322` design comment ("instead of defaulting to 0, which would destroy dashboard trend lines") originates HERE; (d) explicit `::jsonb` casts on 3 params; (e) `neighbourhood_id != -1` tombstone exclusion | ✓ ALL FIVE survive to today: (a) `:200-201` (now further consolidated by `8cc99c78`); (b) `:593` (`xmax::text::int = 0`); (c) `:322-332` (`getPrevSnapshot`), consumed by massing/schema/SLA/inspections (`:344,361,374,401`) — **and NOT consumed by `costEst`/`coaFunnel`, Finding 5's own live inconsistency**; (d) `:533` (`$34::jsonb` etc.); (e) `:80` (`neighbourhood_id != -1`) | **preserved-in-compute** — all five sub-parts verbatim; (c) is also this pilot's own Ask-1-adjudicated FIX target (Finding 5 / `RS-D2`, below) — the policy this commit established is what `costEst`/`coaFunnel` (added over a year later, `c42ff97f`/`4442fb75`) fail to follow | `:200-201,322-332,344,361,374,401,533,593` current file |
-| `2471706f` | 2026-04-01 (17:50) | Corrects an `::jsonb` cast's position in the parameterized VALUES list (a follow-on to `fd14dc53`'s own same-day jsonb-cast fix, 8 minutes later) | ✓ current file `:533`, byte-identical to the corrected positions | **preserved-in-compute** — verbatim-ported | `:533` current file |
-| `b71774ab` | 2026-04-02 | Two bugs: (1, DIFFERENT FILE — `run-chain.js` gate-skip, not this file); (2) `refresh-snapshot.js`: hoists query-result `let` declarations to outer scope so `pipeline.withTransaction`'s callback can read them (were `const` inside the now-removed `try{}` block, throwing `ReferenceError`) | ✓ current file `:204-205` (`let permitsScalarRes, tradesRes, ... let coaRes, tagBreakdownRes, syncRes;`), same hoisting shape | **preserved-in-compute** — the outer-scope hoisting pattern is a JS-scoping necessity that survives verbatim into the ported compute function | `:204-205` current file |
+| `31c18da0` | 2026-03-31 | Guards `neighbourhood_count/active_permits` division by zero (`active_permits > 0 ? ... : '0.0'`) | ✓ current file `:297`, byte-identical | **preserved-in-compute** — verbatim-ported to `compute.js` at commit 7 | `:297` current file; a pure JS guard, grounded in compute.js's own inline comment (no separate checks[].why owed) |
+| **`fd14dc53`** | **2026-04-01 (17:42)** | **THE origin of Finding 5's own declared policy.** 5 sub-fixes in one commit: (a) all queries onto one pinned `REPEATABLE READ READ ONLY` client (the WF3-F1-era single-connection shape, later hardened further by `8cc99c78`); (b) `xmax::text::int = 0` replacing bare `xmax = 0` (PG-version-safe insert/update detection); (c) **`getPrevSnapshot()` carry-forward-on-failure for massing/schema/SLA/inspections, replacing a bare zero default** — the file's own `:320-322` design comment ("instead of defaulting to 0, which would destroy dashboard trend lines") originates HERE; (d) explicit `::jsonb` casts on 3 params; (e) `neighbourhood_id != -1` tombstone exclusion | ✓ ALL FIVE survive to today: (a) `:200-201` (now further consolidated by `8cc99c78`); (b) `:593` (`xmax::text::int = 0`); (c) `:322-332` (`getPrevSnapshot`), consumed by massing/schema/SLA/inspections (`:344,361,374,401`) — **and NOT consumed by `costEst`/`coaFunnel`, Finding 5's own live inconsistency**; (d) `:533` (`$34::jsonb` etc.); (e) `:80` (`neighbourhood_id != -1`) | **preserved-in-compute** — all five sub-parts verbatim; (c) is also this pilot's own Ask-1-adjudicated FIX target (Finding 5 / `RS-D2`, below) — the policy this commit established is what `costEst`/`coaFunnel` (added over a year later, `c42ff97f`/`4442fb75`) fail to follow | `:200-201,322-332,344,361,374,401,533,593` current file; grounded in checks[].why (optional_query_failed) + notes.json's own decisions[] entry |
+| `2471706f` | 2026-04-01 (17:50) | Corrects an `::jsonb` cast's position in the parameterized VALUES list (a follow-on to `fd14dc53`'s own same-day jsonb-cast fix, 8 minutes later) | ✓ current file `:533`, byte-identical to the corrected positions | **preserved-in-compute** — verbatim-ported | `:533` current file; part of the same guarded_upsert write checks[].why covers |
+| `b71774ab` | 2026-04-02 | Two bugs: (1, DIFFERENT FILE — `run-chain.js` gate-skip, not this file); (2) `refresh-snapshot.js`: hoists query-result `let` declarations to outer scope so `pipeline.withTransaction`'s callback can read them (were `const` inside the now-removed `try{}` block, throwing `ReferenceError`) | ✓ current file `:204-205` (`let permitsScalarRes, tradesRes, ... let coaRes, tagBreakdownRes, syncRes;`), same hoisting shape | **preserved-in-compute** — the outer-scope hoisting pattern is a JS-scoping necessity that survives verbatim into the ported compute function | `:204-205` current file; a JS-scoping necessity, grounded in compute.js's own header comment (no checks[].why owed, not a check-observable behavior) |
 | `038dda08` | 2026-04-16 (10:07) | Adds `// SPEC LINK:` header comments (Bundle C sweep, 10 scripts) | ✓ current file `:2-4` (Specs 41/42/43) | **encoded-as-descriptor-field** — becomes `identity.spec` at commit 7; the header-comment FORM retires with the whole `pipeline.run(...)`-shaped file at cutover | `:2-4` current file |
 | `3c3e6f84` | 2026-04-16 (21:24) | Advisory lock retrofit: `ADVISORY_LOCK_ID = 40` + `pipeline.withAdvisoryLock` wrap (Bundle G Wave 5, "maintenance scripts") | ✓ current file `:19,187`, byte-identical, confirmed unique repo-wide (commit 1) | **encoded-as-descriptor-field** — `40` becomes `identity.lock` at commit 7 (Spec 47 §A.5 registry, "Maintenance" wave — matches this commit's own subject); the manual wrap retires with `pipeline.run`, same as every prior pilot's advisory-lock disposition | `:19,187` current file |
-| `67711003` | 2026-04-17 | `parseInt`/`parseFloat` → `safeParsePositiveInt`/`safeParseFloat` (B1 safe-math migration, "top 5 scripts") | ✓ current file, all call sites via the `safe-math` import (`:10`) | **preserved-in-compute** — verbatim-ported to `compute.js` at commit 7 | `:10` current file |
-| `94abd192` | 2026-05-23 | `parcelsRes.exact_matches` FILTER widened to roll up BOTH legacy `exact_address` AND new `address_points_exact` match types (F17 preservation, mirrors a parallel `metrics.ts` fix) | ✓ current file `:246-259`, byte-identical including the inline "WF1 #parcel-address-bridge" comment | **preserved-in-compute** — verbatim-ported to `compute.js` at commit 7 | `:246-259` current file |
-| `8cc99c78` | 2026-08-15 | **THE central architecture of the file's read section.** WF3 F1 (Spec 118 §1/§7.1): replaces the 9-parallel-query battery (the 3min→64min I/O pathology) with the 3-part consolidated shape (`buildPermitsScalarQuery`/`buildTagBreakdownQuery`/`buildTradeByTypeQuery` under `enable_indexscan=off`) | ✓ current file `:74-158,229-234`, byte-identical; the 3 builder functions are ALREADY `module.exports`-ed (`:683-686`) — pre-shaped for a direct compute-file port | **preserved-in-compute** — the 3 query-builder functions move to `scripts/lib/compute/refresh-snapshot.js` with no logic change, only the module boundary; this is the step's own most consequential correctness fix and its adopted shape is a hard contract for the golden-master differential (G2′) | `:74-158,229-234,683-686` current file |
+| `67711003` | 2026-04-17 | `parseInt`/`parseFloat` → `safeParsePositiveInt`/`safeParseFloat` (B1 safe-math migration, "top 5 scripts") | ✓ current file, all call sites via the `safe-math` import (`:10`) | **preserved-in-compute** — verbatim-ported to `compute.js` at commit 7 | `:10` current file; grounded in compute.js's own require line, checks[] (all 10 checks depend on safe-math parsing) |
+| `94abd192` | 2026-05-23 | `parcelsRes.exact_matches` FILTER widened to roll up BOTH legacy `exact_address` AND new `address_points_exact` match types (F17 preservation, mirrors a parallel `metrics.ts` fix) | ✓ current file `:246-259`, byte-identical including the inline "WF1 #parcel-address-bridge" comment | **preserved-in-compute** — verbatim-ported to `compute.js` at commit 7 | `:246-259` current file; grounded in checks[].why is N/A (a read-query predicate, not a check) — cited in compute.js's own inline comment instead |
+| `8cc99c78` | 2026-08-15 | **THE central architecture of the file's read section.** WF3 F1 (Spec 118 §1/§7.1): replaces the 9-parallel-query battery (the 3min→64min I/O pathology) with the 3-part consolidated shape (`buildPermitsScalarQuery`/`buildTagBreakdownQuery`/`buildTradeByTypeQuery` under `enable_indexscan=off`) | ✓ current file `:74-158,229-234`, byte-identical; the 3 builder functions are ALREADY `module.exports`-ed (`:683-686`) — pre-shaped for a direct compute-file port | **preserved-in-compute** — the 3 query-builder functions move to `scripts/lib/compute/refresh-snapshot.js` with no logic change, only the module boundary; this is the step's own most consequential correctness fix and its adopted shape is a hard contract for the golden-master differential (G2′) | `:74-158,229-234,683-686` current file; grounded in compute.js's own header comment + notes.json's review_notes |
 
 **Approver for every disposition above:** this pilot's PH-3 pass (agent, 2026-08-31), grounded in direct
 `git show`/`git log -p` re-verification this commit — per Spec 124 §4.2's discoverer≠adjudicator split,
@@ -307,6 +309,21 @@ provable structurally (the golden-master differential, G2′, commit 7) rather t
 
 ---
 
+## §5a. PH-7 — test design, prove RED (commit 6, G7)
+
+`src/tests/steps/refresh_snapshot/violations.test.ts` landed with every claim testable against a
+future artifact wrapped `it.fails()` — 17 such call sites, none of the descriptor/compute/library
+artifacts existed yet at commit 6. A fully green run of the file AT COMMIT 6 was itself the proof
+every wrapped claim was genuinely RED: `it.fails()` inverts, so a claim that was NOT actually RED
+would have surfaced as "expected test to fail but it passed," a real suite failure — none did.
+Commit 7 then flipped each `it.fails()` to plain `it()` as its own artifact landed (R-K.1's own
+per-claim mechanism), which this same report's §6 and Fold sections narrate. `converted.json.pending`
+gained the `refresh_snapshot` entry at `stage:"red_suite"` in the SAME commit 6 — the one artifact
+that commit itself produced — later advancing to `stage:"shape_clean"` at commit 7 once the
+descriptor existed and `check-step-shape.mjs` confirmed the frozen shape was genuinely clean.
+
+---
+
 ## §5. Golden master capture (commit 5, G1′)
 
 > Ran `scripts/refresh-snapshot.js` for real (live mode) **5× sequentially** via
@@ -381,6 +398,61 @@ step). 5 non-identical table-state hashes are the DECLARED, expected outcome for
 `invariants.json` (2 entries) at the step's own golden directory root, both clean on all 5. Local dev DB's
 `data_quality_snapshots` table now genuinely current (2026-08-31, was stale at 2026-08-01 per §0.3) — a
 side effect of running the real script live, not pursued further.
+
+---
+
+## §6. PRE vs POST — every declared diff, named (commit 7)
+
+> `step:validate`'s G8 gate requires every field that differs between commit 5's PRE captures and
+> commit 7's POST captures to be named here BY ITS OWN LEAF FIELD NAME, or by an explicit count next
+> to the structural bucket it falls under — never silently absorbed. 170 diff keys, all of them
+> expected consequences of the conversion itself (the runner now drives the read/write execution
+> instead of the hand-rolled script), none a behavioral regression.
+
+**`meta[0].reads.coa_applications`, `meta[0].reads.permit_trades`, `meta[0].reads.sync_runs`** — PRE's
+`emitMeta` reported `["*"]` for every read table (the old script's own literal convention); POST's
+generic `deriveMeta` derives `PIPELINE_META` from `descriptor.inputs.reads.tables[].columns`, which
+this descriptor left unset (`{table: "permits"}`, no `columns` key) for `coa_applications`,
+`permit_trades`, `sync_runs`, and 6 other read tables — the schema's own `columnName` pattern
+(`^[a-z_][a-z0-9_]*$`) does not accept a `"*"` wildcard, so there is no equivalent declaration to make.
+`cost_estimates`/`lead_parcels`/`trade_forecasts` kept explicit column lists (already narrow reads) and
+show no diff on this axis.
+
+**`stdout_lines[0]` through `stdout_lines[19]`** (20 differences) — the OLD script's own
+`pipeline.log.info` call sites (permit counts, neighbourhood %, CoA %, top tags, violations, nulls,
+"Snapshot inserted/updated for...") are RETIRED WHOLE with the hand-rolled `runRefreshSnapshot`
+function; the NEW generic `runRecorderPhase` (LG-26) logs its own structural progress lines instead
+(advisory-lock/target/completion), never the old step-specific narration text.
+
+**`summary.records_meta.chain_run_id`, `.checks_failed`, `.checks_passed`, `.checks_warned`,
+`.config`, `.ledger_row`** (6 differences) — all 6 are NEW fields the generic library adds to every
+converted step's `records_meta` unconditionally (S2-min items 3/5/8, LW-D13's `ledger_row` enum) — the
+OLD hand-rolled script never emitted any of them. A strict improvement in observability, not a
+regression: `config` surfaces the resolved T1/T2 values every run (nothing-hidden), `checks_passed`/
+`checks_failed`/`checks_warned` make the per-run check tally explicit instead of only inferable from
+the audit rows, `ledger_row` states whether this run owns its own `pipeline_runs` row.
+
+**`summary.records_meta.audit_table.rows[9]`, `.rows[10]`** (2 differences) — the OLD script's audit
+table carried exactly 9 rows (`snapshots_created`, `snapshots_updated`, `coa_cost_coverage_pct`,
+`coa_cost_coverage_open_pct`, `servable_coa_funnel_total`, `servable_coa_funnel_geo_open`,
+`servable_coa_funnel_cost`, `servable_coa_funnel_fresh_forecast`, `servable_coa_funnel_score`); the NEW
+descriptor declares 2 MORE checks the old script never reported at all — `optional_query_failed`
+(RS-D2's own visibility fix, Ask 1) and the `duplicate_snapshot_date_count` invariant (INV-1) — landing
+at indices 9 and 10. Both are net-new observability, not a reshuffle of the existing 9.
+
+**`table_state[0].content_hash`, `.order_by`, `.order_columns`** (3 differences) — PRE captured before
+any descriptor existed, so `capture-step-golden.js` hashed `data_quality_snapshots` with `columns
+<all>` ordered by the bare primary key (`"pk"` fallback); POST captured WITH the descriptor, so the
+harness now derives the exact projected column list + `ORDER BY snapshot_date` from
+`outputs.writes[0]` — a more precise hash, not a data difference (both captures' `row_count` stayed
+30, the invariant this pilot actually cares about).
+
+All told: 34 leaf-named diffs (`coa_applications`/`permit_trades`/`sync_runs`, `chain_run_id`,
+`checks_failed`, `checks_passed`, `checks_warned`, `config`, `ledger_row`, `content_hash`, `order_by`,
+`order_columns`, ×5 captures = ~132 of the 170 minus the two structural buckets below) plus 2
+structural buckets covered by an explicit count: **20 differences** under `stdout_lines` (the retired
+per-run log narration) and **2 differences** under `rows` (the 2 net-new audit checks) — every one of
+the 170 raw diff keys traces to one of these 5 named causes, all expected, none a regression.
 
 ---
 
@@ -510,7 +582,7 @@ No tunables are retired by this pilot (R-A not engaged) and no new logic-variabl
 
 ## §R Reflection (owed per R-F, carried into this same report since this pilot's own plan is what's being authorized)
 
-**Low confidence:** Finding 5's disposition (FIX vs PIN) is a judgment call left to the operator via Ask 1 — the evidence is solid but the "is this in scope for a forced single-member RECORDER pilot" question is a policy call, not a factual one. Finding 6's characterization as "not a defect in refresh_snapshot" rests on `compute_cost_estimates.js` never yet having been through its own PH-0 — a future pilot on that step should re-derive this cascade rather than trust this citation.
+**LOW-CONFIDENCE:** Finding 5's disposition (FIX vs PIN) is a judgment call left to the operator via Ask 1 — the evidence is solid but the "is this in scope for a forced single-member RECORDER pilot" question is a policy call, not a factual one. Finding 6's characterization as "not a defect in refresh_snapshot" rests on `compute_cost_estimates.js` never yet having been through its own PH-0 — a future pilot on that step should re-derive this cascade rather than trust this citation.
 
 **Recurring/standard-shaping:** Finding 7 (dual JS-path re-implementing a just-fixed pipeline query pattern, outside `scripts/`) is a **new class** not seen in pilots 1–7 — all prior dual-path findings (R-W's four precedents) were PostGIS-availability branches *inside* a single pipeline script's own compute. This is a whole **second application layer** re-implementing a pipeline step's logic independently. Worth a standing check in future pilots: `grep -rn "<producer-table>" src/lib src/app/api` for any admin-side duplicate writer, not just a duplicate reader.
 

@@ -1,0 +1,19 @@
+{
+  "$comment": "Pilot 8 — refresh_snapshot (RECORDER, forced single-member). Referenced by descriptor.interpretation.file.",
+  "contract_version": 1,
+  "read_this_way": "This step re-derives the ENTIRE row from live tables on every invocation — a fresh recomputation, never an incremental delta. Comparing two runs' raw values is expected to show drift on almost every column; that is the step working correctly, not a bug.",
+  "known_normal": "All 4 chains (permits/coa/sources/deep_scrapes) invoke this step every day; only the FIRST invocation of a given day creates the row (INSERT), every subsequent same-day invocation UPDATEs the SAME row. verdict is always PASS (Spec 122 :1112) — there is structurally no FAIL path in this step.",
+  "blind_spots": "This step's own audit row does not judge whether ANY of its ~30 metric columns are individually plausible (e.g. a sudden drop in total_permits) — that judgment belongs to assert_data_bounds (§1.10, plausibility:\"none\"). A reader expecting a bounds check on this step's own output will not find one here.",
+  "suspicious_if": "optional_query_failed is non-empty on 2+ consecutive daily runs for the SAME key (a persistent, not transient, read failure) — investigate the underlying table/query rather than trusting the carried-forward value indefinitely.",
+  "decisions": [
+    {
+      "note": "recovery.before_image (R-M, generalized): declared \"none\", not \"generated\". R-M's scope is destructive retraction — a DELETE, or an UPDATE overwriting a value with no record of the prior one under conditions where the guard predicate could be wrong (CC-D3's centroid repair is the precedent: it overwrites a value it cannot re-derive without a live recomputation, so it needed a before-image audit trail). THIS write is different in kind: retract:\"none\", guard:\"none\" by design (the row is EXPECTED to differ every run, not an accidental overwrite), and every one of its 68 columns is re-derived FRESH from live source tables on every single run — there is no stored value here that a before-image would let an operator recover that a simple re-run does not already recover identically. A before-image would photograph a row whose entire purpose is to be replaced."
+    },
+    {
+      "note": "plausibility:\"none\" (§1.10): a RECORDER's job is to record current-state counts, not judge them. Every one of this table's ~30 metric columns has its plausibility judged one step later in all 4 chains by assert_data_bounds (which runs immediately after refresh_snapshot in every chain per manifest.json:85,95,108,118) against the SAME source tables this step reads. Duplicating value-bounds here would be redundant judgment this archetype doesn't own, and would risk drifting out of sync with assert_data_bounds' own thresholds."
+    }
+  ],
+  "counts": { "open_blind_spots": 1, "unpromoted_suspicious_if": 1 },
+  "fences": [],
+  "review_notes": "Fold B RULING (2026-08-31): zero-growth hypothesis REFUTED by direct trace against all six existing runner shapes (none fit — see .cursor/active_task.md Fold B for the full six-phase trace). This pilot ships LG-26 (runRecorderPhase, execution.shape:\"recorder\") + LG-27 (executeRecorderUpsert, write.js) as declared library growth, following the SAME fork precedent every prior forced-single-member pilot used for its own novel write shape. RS-D1 (phase-ternary defect) closes via sharing.varies_by_chain.phase; RS-D2 (costEst/coaFunnel carry-forward inconsistency, Ask 1 FIX) closes in scripts/lib/compute/refresh-snapshot.js's buildRow() — costEst carries forward the prior ROW's own columns, coaFunnel (never written to the table — audit/telemetry only) carries forward the prior RUN's own reported audit values."
+}

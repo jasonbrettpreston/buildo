@@ -342,6 +342,27 @@ function isBackfillStep(descriptor) {
   return Boolean(descriptor.execution && descriptor.execution.shape === 'backfill');
 }
 
+/**
+ * Is this a RECORDER — ONE row, ONE single-statement guarded upsert, no
+ * batching, no carried-rows loop, no ledger gate? (Fold B RULING, RECORDER
+ * pilot 8, `refresh_snapshot`, 2026-08-31.)
+ *
+ * ⚠️ ZERO-GROWTH REFUTED BY DIRECT TRACE (Fold B, `.cursor/active_task.md`)
+ * before this predicate was added: every one of the six existing shapes was
+ * checked against `refresh_snapshot`'s real write and none fit —
+ * `ingest`/`link`/`link_keyed` all need an acquisition or join/carried-rows
+ * seam this step has none of; `cascade`/`materialize` both require
+ * `staleness.ledgerGatedSkip`, a gate this step (verdict always PASS, no skip
+ * path, Spec 122 `:1112`) does not have; `backfill`'s own executor
+ * (`executeBackfillUpdate`) structurally refuses any INSERT token, and this
+ * step's write IS an `INSERT ... ON CONFLICT ... DO UPDATE`. `execution.shape`
+ * is still the ONE declared field selecting the runner branch (§4.1a); this
+ * predicate mirrors `isBackfillStep`'s shape, not its mechanism.
+ */
+function isRecorderStep(descriptor) {
+  return Boolean(descriptor.execution && descriptor.execution.shape === 'recorder');
+}
+
 /** One requirement kind → the catalog probe that answers "is it there?". */
 const REQUIREMENT_PROBES = {
   extension: { sql: 'SELECT 1 FROM pg_extension WHERE extname = $1', args: (r) => [r.name] },
@@ -1849,6 +1870,172 @@ async function runBackfillFullRecompute({ descriptor, pool, compute, config, log
 }
 
 /**
+ * THE RECORDER PHASE (Fold B RULING, RECORDER pilot 8, `refresh_snapshot`,
+ * 2026-08-31 — zero-growth hypothesis REFUTED by direct trace, `.cursor/active_task.md`).
+ *
+ * The simplest runner in the library — no batching, no carried-rows loop, no
+ * ledger gate, no zero-work path (a RECORDER's whole job is to record current
+ * state every run — verdict is always PASS, Spec 122 `:1112`). Mode/staleness
+ * derivation, `chain_run_id`, `records_meta`, the verdict cascade, and synthetic
+ * invariant/plausibility execution all reuse the SAME generic paths every other
+ * archetype uses, unchanged — this phase adds no new mechanism beyond driving
+ * compute's own declared read plan and the one write statement.
+ *
+ * Forked from `runBackfillPhase`'s phase-order shape (guards -> pre-write gate ->
+ * the one statement -> post checks), NOT an extension of it: `executeBackfillUpdate`
+ * structurally refuses any INSERT token (UPDATE-only, LG-20); a RECORDER's write
+ * IS an `INSERT ... ON CONFLICT ... DO UPDATE`, a different mechanic (LG-27).
+ *
+ * PHASE ORDER:
+ *   guards.requires          preconditions before the first read (this step
+ *                          declares none — R-W is not engaged, no PostGIS)
+ *   RLS preflight             assertWritePrivileges
+ *   compute.buildReads()      compute AUTHORS the read plan (SQL text + an
+ *                          optional session-GUC bracket per "main" step) —
+ *                          Rule 2: compute never touches the pool itself, it
+ *                          only returns `{main: [{key, sql, params, guc}],
+ *                          optional: [{key, sql, params}]}`
+ *   the MAIN reads            executed by THIS runner, sequentially, on one
+ *                          pinned REPEATABLE READ READ ONLY client — mirrors
+ *                          the pre-conversion WF3-F1 shape verbatim (Spec 118
+ *                          §1/§7.1), including the `enable_indexscan` bracket
+ *   the OPTIONAL reads         executed by THIS runner via plain `pool.query`,
+ *                          each independently caught; a failure never aborts
+ *                          the run — the generic carry-forward fallback is the
+ *                          write target's own PRIOR row (fetched once,
+ *                          unconditionally, ordered by the declared key DESC),
+ *                          not a per-step-hardcoded implementation
+ *   THE PRE-WRITE GATE         before the one statement
+ *   compute.buildRow()        pure JS — assembles the write's column values
+ *                          from the collected read results + the prior row
+ *   compute.buildWriteSql()   pure JS — authors the whole `INSERT ... ON
+ *                          CONFLICT ... DO UPDATE` statement + bind params
+ *                          (`guarded_upsert`/`set_source:"compute"`, LG-27) —
+ *                          a server-side literal key (e.g. `CURRENT_DATE`) and
+ *                          a `guard:"none"` target don't fit the DEFAULT
+ *                          (unnamed) `guarded_upsert` codegen in `write.js`,
+ *                          which always binds the key and always guards
+ *   THE ONE STATEMENT          `write.executeRecorderUpsert`, inside ONE
+ *                          transaction (`pipeline.withTransaction`)
+ *   post checks                 scored by the generic `compute(ctx)` dispatch
+ *                          against `ctx.matched`, same as every other shape
+ *
+ * @returns {Promise<object>} `{matched, written, prior, overrides, writeSkipped}`
+ */
+async function runRecorderPhase({ descriptor, pool, compute, config, chainId, log, tag, preWriteGate, clockNow }) {
+  const requirements = await assertRequirements(pool, descriptor, { log, tag });
+  const overrides = staleness.resolveOverrides(descriptor);
+  const privilege = await write.assertWritePrivileges(pool, descriptor, { log, tag });
+  const prior = await staleness.readPriorEmit(pool, ledgerPipelineName(descriptor, chainId), null);
+
+  const specs = descriptor.outputs.writes;
+  const spec = specs[0];
+  const plan = write.buildWritePlan(spec, descriptor);
+  const written = {};
+  written[write.targetKey(0)] = { scanned: 0, inserted: 0, updated: 0, rows_changed: 0 };
+  written.privilege = privilege[plan.table] || null;
+  written.requirements = requirements;
+
+  // ── THE READS — compute authors the SQL text, THIS RUNNER executes it ────
+  const reads = compute.buildReads(config);
+  const results = {};
+
+  // The main reads: one pinned REPEATABLE READ READ ONLY client, sequential,
+  // an optional session-GUC bracket per step (mirrors the pre-conversion
+  // WF3-F1 shape verbatim — Spec 118 §1/§7.1, point-in-time consistency).
+  const snapClient = await pool.connect();
+  try {
+    await snapClient.query('BEGIN TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY');
+    try {
+      for (const step of (reads.main || [])) {
+        if (step.guc) await snapClient.query(step.guc.set);
+        try {
+          const r = await snapClient.query(step.sql, step.params || []);
+          results[step.key] = r.rows;
+        } finally {
+          if (step.guc) await snapClient.query(step.guc.reset);
+        }
+      }
+      await snapClient.query('COMMIT');
+    } catch (err) {
+      await snapClient.query('ROLLBACK').catch(() => {});
+      throw err;
+    }
+  } finally {
+    snapClient.release();
+  }
+
+  // The optional reads: independently caught, each via a plain pool.query — a
+  // failure never aborts the run, it carries forward the WRITE TARGET's own
+  // PRIOR row instead (declared generic, not a step-specific implementation;
+  // Finding 5/RS-D2's own policy, now a library mechanism every future
+  // RECORDER inherits for free).
+  let prevRow = null;
+  const keyCol = Array.isArray(spec.key) ? spec.key[0] : spec.key;
+  const getPrevRow = async () => {
+    if (prevRow !== null) return prevRow;
+    try {
+      const r = await pool.query(`SELECT * FROM ${plan.table} ORDER BY ${keyCol} DESC LIMIT 1`);
+      prevRow = r.rows[0] || {};
+    } catch { prevRow = {}; }
+    return prevRow;
+  };
+  for (const step of (reads.optional || [])) {
+    try {
+      const r = await pool.query(step.sql, step.params || []);
+      results[step.key] = r.rows;
+    } catch (err) {
+      log.warn(tag, `${step.key} query failed — carrying forward the previous row: ${err.message}`);
+      results[step.key] = null;
+    }
+  }
+  const prevRowResolved = await getPrevRow();
+
+  // ── THE PRE-WRITE GATE, before the one statement ─────────────────────────
+  const gateForPreWrite = { mode: 'incremental', reason: 'recorder', skipped: false };
+  const decision = preWriteGate
+    ? await preWriteGate({
+      matched: { results }, gate: gateForPreWrite, prior, overrides, written: null,
+    })
+    : { abort: false, failed: [] };
+  if (decision.abort) {
+    log.error(tag, `pre_write check(s) FAILED with no standing override — no write was issued and `
+      + `${plan.table} is untouched: ${decision.failed.join(', ')}`);
+    return {
+      matched: null,
+      written: { ...written, write_skipped_pre_write_fail: true },
+      prior,
+      overrides,
+      writeSkipped: true,
+      failedPreWrite: decision.failed,
+    };
+  }
+
+  // ── assemble the row + author the write statement — compute, pure JS ─────
+  const assembled = compute.buildRow(results, prevRowResolved, prior, config);
+  const authored = compute.buildWriteSql(assembled.row, clockNow);
+
+  // ── THE ONE STATEMENT ──────────────────────────────────────────────────
+  let isInsert = false;
+  await pipeline.withTransaction(pool, async (txClient) => {
+    const returned = await write.executeRecorderUpsert(txClient, authored.sql, authored.params);
+    isInsert = Boolean(returned && returned.is_insert);
+  });
+  written[write.targetKey(0)].scanned = 1;
+  written[write.targetKey(0)].inserted = isInsert ? 1 : 0;
+  written[write.targetKey(0)].updated = isInsert ? 0 : 1;
+  written[write.targetKey(0)].rows_changed = 1;
+
+  return {
+    matched: { ...assembled.matched, is_insert: isInsert, is_update: !isInsert },
+    written,
+    prior,
+    overrides,
+    writeSkipped: false,
+  };
+}
+
+/**
  * `outputs.writes[]` EXECUTED IN DECLARATION ORDER, in ONE transaction (§1.4: "Order is
  * declared and the runner executes it in order").
  *
@@ -2144,6 +2331,7 @@ async function runWithPool(runnable, pool, ctx) {
       let cascade = null;
       let materialize = null;
       let backfill = null;
+      let recorder = null;
       let onlyChecks = null;
       // R-T addendum (Fold A-3/B-2) — the SAME gated-skip narrowing a real `checks[]`
       // entry gets, extended to invariants[]/plausibility[]. `onlyChecks` narrows by id
@@ -2153,7 +2341,8 @@ async function runWithPool(runnable, pool, ctx) {
       // (score every declared `when`), matching `onlyChecks`'s own null-means-everything.
       let onlyWhen = null;
       const drivesWrites = isIngestStep(descriptor) || isLinkStep(descriptor) || isLinkKeyedStep(descriptor)
-        || isCascadeStep(descriptor) || isMaterializeStep(descriptor) || isBackfillStep(descriptor);
+        || isCascadeStep(descriptor) || isMaterializeStep(descriptor) || isBackfillStep(descriptor)
+        || isRecorderStep(descriptor);
       // Spec 47 §R3.5 / B-11 — the DB clock, captured ONCE, inside the lock, for
       // WHICHEVER phase drives the write. One capture is not a tidiness preference: it is
       // what makes the written timestamp a single watermark, so two batches of one run
@@ -2287,6 +2476,27 @@ async function runWithPool(runnable, pool, ctx) {
           onlyWhen = positions;
           stepCtx.checks = stepCtx.checks.filter((id) => onlyChecks.has(id));
         }
+      } else if (isRecorderStep(descriptor)) {
+        recorder = await runRecorderPhase({
+          descriptor, pool, compute: runnable.compute, config: configValues,
+          chainId, log: pipeline.log, tag: `[${slug}]`, clockNow,
+          preWriteGate: makePreWriteGate({ descriptor, chainId, stepCtx, compute: runnable.compute, config: configValues }),
+        });
+        stepCtx.matched = recorder.matched;
+        stepCtx.written = recorder.written;
+        stepCtx.prior = recorder.prior;
+        stepCtx.overrides = recorder.overrides;
+        stepCtx.elapsed_ms = Date.now() - startMs;
+        if (recorder.writeSkipped) {
+          // A RECORDER has no zero-work path (it always has work — recording
+          // current state IS the work); only a pre_write-fail narrows the
+          // scored checks, same reasoning as every other archetype's own
+          // pre_write-fail narrowing above.
+          const positions = ['pre', 'pre_write'];
+          onlyChecks = new Set(descriptor.checks.filter((c) => positions.includes(c.when)).map((c) => c.id));
+          onlyWhen = positions;
+          stepCtx.checks = stepCtx.checks.filter((id) => onlyChecks.has(id));
+        }
       }
 
       // §5.5 (2) — `ctx.report()` is the ONLY observation path. A returned
@@ -2348,7 +2558,9 @@ async function runWithPool(runnable, pool, ctx) {
               ? { matched: materialize.matched, written: materialize.written, gate: materialize.gate }
               : (backfill
                 ? { matched: backfill.matched, written: backfill.written }
-                : (ingest ? { acquired: ingest.acquired, written: ingest.written } : null)))));
+                : (recorder
+                  ? { matched: recorder.matched, written: recorder.written }
+                  : (ingest ? { acquired: ingest.acquired, written: ingest.written } : null))))));
       counters = (ingest && ingest.skipped) || (cascade && cascade.skipped) || (materialize && materialize.skipped)
         ? { records_total: null, records_new: null, records_updated: null }
         : deriveCounters(descriptor, computeResult, counterScope);
@@ -2598,6 +2810,7 @@ module.exports = {
   isCascadeStep,
   isMaterializeStep,
   isBackfillStep,
+  isRecorderStep,
   assertRequirements,
   REQUIREMENT_PROBES,
   ledgerPipelineName,
@@ -2607,6 +2820,7 @@ module.exports = {
   runCascadePhase,
   runMaterializePhase,
   runBackfillPhase,
+  runRecorderPhase,
   runTierToConvergence,
   executeOrderedWrites,
   acceptedCheckIds,

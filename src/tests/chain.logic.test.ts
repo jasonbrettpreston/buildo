@@ -716,15 +716,14 @@ describe('PIPELINE_SUMMARY convention', () => {
     'classify-scope.js',
     'geocode-permits.js',
     'link-neighbourhoods.js',
-    // link-massing.js / link-wsib.js / compute-centroids.js / link-parcels.js RE-HOMED
-    // (Spec 122 §5.1 conversion, pilots 3 + 4 + 6 + 7) — same treatment as assert_schema
-    // at pilot 1: a converted step spells neither emit itself, and the
-    // `lib/step/index.js` entry already in the PIPELINE_META list below IS the emitter
-    // for all of them.
+    // link-massing.js / link-wsib.js / compute-centroids.js / link-parcels.js /
+    // refresh-snapshot.js RE-HOMED (Spec 122 §5.1 conversion, pilots 3 + 4 + 6 + 7
+    // + 8) — same treatment as assert_schema at pilot 1: a converted step spells
+    // neither emit itself, and the `lib/step/index.js` entry already in the
+    // PIPELINE_META list below IS the emitter for all of them.
     'link-similar.js',
     'link-coa.js',
     // Phase G (Spec 42 §6.11): create-pre-permits.js retired.
-    'refresh-snapshot.js',
   ];
 
   for (const script of SCRIPTS_WITH_COUNTS) {
@@ -867,14 +866,14 @@ describe('PIPELINE_META convention', () => {
     'classify-scope.js',
     'geocode-permits.js',
     'link-neighbourhoods.js',
-    // link-massing.js / link-wsib.js / compute-centroids.js / link-parcels.js RE-HOMED
-    // (Spec 122 §5.1 conversion, pilots 3 + 4 + 6 + 7) — same treatment as assert_schema
-    // at pilot 1: a converted step spells neither emit itself, and the
-    // `lib/step/index.js` entry below IS the emitter for all of them.
+    // link-massing.js / link-wsib.js / compute-centroids.js / link-parcels.js /
+    // refresh-snapshot.js RE-HOMED (Spec 122 §5.1 conversion, pilots 3 + 4 + 6 + 7
+    // + 8) — same treatment as assert_schema at pilot 1: a converted step spells
+    // neither emit itself, and the `lib/step/index.js` entry below IS the emitter
+    // for all of them.
     'link-similar.js',
     'link-coa.js',
     // Phase G (Spec 42 §6.11): create-pre-permits.js retired.
-    'refresh-snapshot.js',
     'enrich-web-search.js',
     // RE-HOMED (pilot 1, Spec 122 §5.1): assert_schema is a converted step, so its
     // PIPELINE_META line is emitted by the step LIBRARY from `descriptor.inputs`/

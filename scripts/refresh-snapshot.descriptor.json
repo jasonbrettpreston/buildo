@@ -1,0 +1,390 @@
+{
+  "identity": {
+    "name": "refresh_snapshot",
+    "display_name": "Refresh Data Quality Snapshot",
+    "owner": "data",
+    "description": "Recomputes today's data_quality_snapshots row from live tables — 8 consolidated reads (WF3 F1, Spec 118 §1/§7.1) on one pinned REPEATABLE READ READ ONLY client, plus 6 independently-caught optional reads — and UPSERTs the single row for CURRENT_DATE. RECORDER's own contract (Spec 122 §1.10): record current state every run, never judge value bounds (assert_data_bounds owns that). Runs in ALL 4 chains (permits/coa/sources/deep_scrapes); every chain's own invocation re-upserts the SAME day's row.",
+    "lock": 40,
+    "why_lock": {
+      "text": "Lock 40 is Spec 47 §A.5's registry id (the 'Maintenance' wave) — this step has carried lock 40 since its own advisory-lock retrofit (3c3e6f84, 2026-04-16) and nothing about the conversion changes it. Confirmed unique repo-wide (commit 1 grounding).",
+      "liveness": { "kind": "file", "ref": "src/tests/pipeline-advisory-lock.infra.test.ts" }
+    },
+    "spec": "60",
+    "spec_version": "1.0",
+    "archetype": "RECORDER",
+    "contract_version": 1,
+    "gate_exempt": false
+  },
+
+  "inputs": {
+    "reads": {
+      "steps": [
+        { "step": "link_parcels", "version_pin": "gte" },
+        { "step": "link_massing", "version_pin": "gte" },
+        { "step": "link_wsib", "version_pin": "gte" }
+      ],
+      "tables": [
+        { "table": "permits" },
+        { "table": "permit_trades" },
+        { "table": "entities" },
+        { "table": "permit_parcels" },
+        { "table": "coa_applications" },
+        { "table": "sync_runs" },
+        { "table": "building_footprints" },
+        { "table": "parcel_buildings" },
+        { "table": "permit_inspections" },
+        { "table": "cost_estimates", "columns": ["cost_source", "estimated_cost"] },
+        { "table": "lead_parcels", "columns": ["lead_id"] },
+        { "table": "trade_forecasts", "columns": ["lead_id", "urgency", "opportunity_score"] }
+      ],
+      "externals": []
+    },
+    "expect_nonempty": true,
+    "on_missing": "warn"
+  },
+
+  "outputs": {
+    "writes": [
+      {
+        "table": "data_quality_snapshots",
+        "key": "snapshot_date",
+        "columns": [
+          { "name": "total_permits", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "active_permits", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "permits_with_trades", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "trade_matches_total", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "trade_avg_confidence", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "trade_tier1_count", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "trade_tier2_count", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "trade_tier3_count", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "trade_residential_classified", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "trade_residential_total", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "trade_commercial_classified", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "trade_commercial_total", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "permits_with_builder", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "builders_total", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "builders_enriched", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "builders_with_phone", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "builders_with_email", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "builders_with_website", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "builders_with_google", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "builders_with_wsib", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "permits_with_parcel", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "parcel_exact_matches", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "parcel_name_matches", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "parcel_spatial_matches", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "parcel_avg_confidence", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "permits_with_neighbourhood", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "permits_geocoded", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "coa_total", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "coa_linked", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "coa_avg_confidence", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "coa_high_confidence", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "coa_low_confidence", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "permits_with_scope", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "scope_project_type_breakdown", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "permits_with_scope_tags", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "permits_with_detailed_tags", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "scope_tags_top", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "permits_updated_24h", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "permits_updated_7d", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "permits_updated_30d", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "last_sync_at", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "last_sync_status", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "building_footprints_total", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "parcels_with_buildings", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "null_description_count", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "null_builder_name_count", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "null_est_const_cost_count", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "null_street_num_count", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "null_street_name_count", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "null_geo_id_count", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "violation_cost_out_of_range", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "violation_future_issued_date", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "violation_missing_status", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "violations_total", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "schema_column_counts", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "sla_permits_ingestion_hours", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "inspections_total", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "inspections_permits_scraped", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "inspections_outstanding_count", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "inspections_passed_count", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "inspections_not_passed_count", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "cost_estimates_total", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "cost_estimates_from_permit", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "cost_estimates_from_model", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "cost_estimates_null_cost", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "timing_calibration_total", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "timing_calibration_avg_sample", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "timing_calibration_freshness_hours", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" }
+        ],
+        "write_discipline": {
+          "class": "guarded_upsert",
+          "set_source": "compute",
+          "guard": "none",
+          "guard_why": {
+            "text": "GAP-2 (schema-prescribed, step.schema.json:104-111) + Finding 1. An IS DISTINCT FROM guard on a 68-column dashboard-snapshot row would compare fresh live-DB counts against yesterday's (or this morning's own earlier chain-run's) counts, which are EXPECTED to differ on almost every column, almost every run — permit counts change constantly. A change guard on a metrics-recording row is close to vacuous by construction: the 'change' IS the row's entire purpose. Grandfathered in scripts/steps/_schema/grandfathered.json (Rule 9), mirroring the pre-filed fixture_grandfathered_snapshot fixture's own reasoning verbatim (commit 9e2da7b1, Spec 122 V7).",
+            "liveness": { "kind": "table", "ref": "data_quality_snapshots" }
+          },
+          "guard_columns": "all_declared",
+          "guard_columns_why": {
+            "text": "LG-9 escape hatch, moot here — guard is \"none\", so guard_columns is never consulted to build an IS DISTINCT FROM clause.",
+            "liveness": { "kind": "file", "ref": "scripts/lib/step/write.js" }
+          },
+          "scope": "snapshot_date = CURRENT_DATE",
+          "expected_change_ratio": "== 1.0",
+          "idempotent_rerun": "declared_drift",
+          "idempotent_rerun_why": {
+            "text": "Every declared column is rewritten every run, by design — a same-day re-run always rewrites (live counts drift between runs). Explicitly NOT the \"zero_writes\" default every other class defaults to.",
+            "liveness": { "kind": "file", "ref": "scripts/lib/compute/refresh-snapshot.js" }
+          },
+          "txn_scope": "step",
+          "why": {
+            "text": "LG-27 (this pilot, Fold B RULING). A single INSERT...ON CONFLICT...DO UPDATE, no batching — the whole write is one statement inside one pipeline.withTransaction. compute authors the statement text (buildWriteSql) because the key column is a server-side CURRENT_DATE literal, not a bound value, and several columns are JSONB-aggregated across 8+ prior reads — not expressible as the DEFAULT (unnamed) guarded_upsert codegen, which always binds the key as a parameter and always appends a guard clause.",
+            "liveness": { "kind": "file", "ref": "scripts/lib/compute/refresh-snapshot.js" }
+          }
+        },
+        "retract": "none",
+        "replay": "idempotent_upsert",
+        "source_key_policy": { "unique": true, "on_collision": "not_applicable", "key_space_migration": "none" }
+      }
+    ],
+    "cascades": "none",
+    "invalidates": [],
+    "publish": "direct",
+    "write_inventory": {
+      "statements": 1,
+      "why": {
+        "text": "ONE write statement — the single INSERT...ON CONFLICT (snapshot_date) DO UPDATE. write_inventory.statements counts WRITE (INSERT/UPDATE/DELETE) statements only, per step.schema.json's own description, confirmed against every landed descriptor's convention. This step's 8 pinned-client SELECTs + 6 optional SELECTs are reads and do not count — the smallest write surface of any pilot to date (16 total DML statements enumerated in the plan's own disposition table, all but #16 are reads).",
+        "liveness": { "kind": "file", "ref": "scripts/lib/compute/refresh-snapshot.js" }
+      }
+    }
+  },
+
+  "staleness": {
+    "scope": "none",
+    "trigger": "none",
+    "mode_select": "none",
+    "checkpoint": "none",
+    "interval": "none",
+    "fingerprint": "derived",
+    "fingerprint_inputs": ["scripts/lib/compute/refresh-snapshot.js"],
+    "logic_version": "v1-wf3f1-consolidated",
+    "on_fingerprint_change": "none"
+  },
+
+  "guards": {
+    "requires": [],
+    "srid": "none",
+    "empty_source": "none",
+    "schema_drift": "none"
+  },
+
+  "execution": {
+    "shape": "recorder",
+    "budget": "5m",
+    "txn_scope": "step",
+    "txn_budget": "5m",
+    "chunked": false,
+    "statement_timeout": "none",
+    "step_timeout": "15m",
+    "batch": "none",
+    "needs_disk_mb": "none",
+    "partial_fill": "atomic",
+    "on_row_error": "fail_fast",
+    "on_batch_error": "fail_step",
+    "on_check_error": "fail_step",
+    "on_check_error_why": {
+      "text": "Every check reads a value the library already measured — a check that throws is a library defect, not an upstream condition. It must redden the run, not drop its row.",
+      "liveness": { "kind": "file", "ref": "scripts/lib/compute/refresh-snapshot.js" }
+    },
+    "on_degrade": "none",
+    "criticality": "required",
+    "network": "none",
+    "invocation": {
+      "permits": { "argv": [], "env": {} },
+      "coa": { "argv": [], "env": {} },
+      "sources": { "argv": [], "env": {} },
+      "deep_scrapes": { "argv": [], "env": {} }
+    },
+    "maintenance": "none"
+  },
+
+  "checks": [
+    {
+      "id": "snapshots_created", "kind": "field_coverage",
+      "expect": { "reports": "1 if this run's UPSERT was an INSERT (today's row did not exist yet), else 0" },
+      "limit": "viol == 0", "severity": "INFO", "blocking": false, "when": "post", "chains": "all", "accept_until": "none",
+      "why": { "text": "Ported by name from the pre-conversion script's own is_insert-derived counter (:629). INV-2's own source: snapshots_created + snapshots_updated == 1 every run.", "liveness": { "kind": "table", "ref": "data_quality_snapshots" } }
+    },
+    {
+      "id": "snapshots_updated", "kind": "field_coverage",
+      "expect": { "reports": "1 if this run's UPSERT was an UPDATE (today's row already existed), else 0" },
+      "limit": "viol == 0", "severity": "INFO", "blocking": false, "when": "post", "chains": "all", "accept_until": "none",
+      "why": { "text": "Ported by name from the pre-conversion script's own is_insert-derived counter (:630). INV-2's own source, the xor half of snapshots_created.", "liveness": { "kind": "table", "ref": "data_quality_snapshots" } }
+    },
+    {
+      "id": "optional_query_failed", "kind": "bound",
+      "expect": { "of": "the 6 optional reads (massing, schema column counts, SLA, inspections, cost estimates, CoA funnel) that fell back to a carried-forward value this run" },
+      "limit": "viol == 0", "severity": "WARN", "blocking": false, "when": "post", "chains": "all", "accept_until": "none",
+      "why": { "text": "RS-D2 (Finding 5, Ask 1 FIX). Today an optional-query failure is only a log.warn line, invisible to records_meta — this check makes it visible in the audit row (nothing-hidden, Rule 1), WARN not FAIL since carry-forward is the correct, designed response to a transient read failure, not a reason to halt.", "liveness": { "kind": "file", "ref": "scripts/lib/compute/refresh-snapshot.js" } }
+    },
+    {
+      "id": "coa_cost_coverage_pct", "kind": "field_coverage",
+      "expect": { "reports": "priced CoAs (cost_source='archetype_parcel') / total, as a percentage" },
+      "limit": "viol == 0", "severity": "INFO", "blocking": false, "when": "post", "chains": "all", "accept_until": "none",
+      "why": { "text": "Ported by name from the pre-conversion script's own audit row (WF2 P5, 2026-07-06). INFO — informs, does not gate the traffic light.", "liveness": { "kind": "table", "ref": "coa_applications" } }
+    },
+    {
+      "id": "coa_cost_coverage_open_pct", "kind": "field_coverage",
+      "expect": { "reports": "priced CoAs among the OPEN (geo+non-terminal) subset, as a percentage" },
+      "limit": "viol == 0", "severity": "INFO", "blocking": false, "when": "post", "chains": "all", "accept_until": "none",
+      "why": { "text": "Ported by name from the pre-conversion script's own audit row (WF2 P5).", "liveness": { "kind": "table", "ref": "coa_applications" } }
+    },
+    {
+      "id": "servable_coa_funnel_total", "kind": "field_coverage",
+      "expect": { "reports": "the servable-CoA funnel's stage-0 total (all CoA applications)" },
+      "limit": "viol == 0", "severity": "INFO", "blocking": false, "when": "post", "chains": "all", "accept_until": "none",
+      "why": { "text": "Ported by name from the pre-conversion script's own audit row (WF2 P5). Row-derived, Spec-48 conformant.", "liveness": { "kind": "table", "ref": "coa_applications" } }
+    },
+    {
+      "id": "servable_coa_funnel_geo_open", "kind": "field_coverage",
+      "expect": { "reports": "the funnel's stage-1 count (geo-located, non-terminal)" },
+      "limit": "viol == 0", "severity": "INFO", "blocking": false, "when": "post", "chains": "all", "accept_until": "none",
+      "why": { "text": "Ported by name from the pre-conversion script's own audit row (WF2 P5).", "liveness": { "kind": "table", "ref": "coa_applications" } }
+    },
+    {
+      "id": "servable_coa_funnel_cost", "kind": "field_coverage",
+      "expect": { "reports": "the funnel's stage-2 count (+ priced)" },
+      "limit": "viol == 0", "severity": "INFO", "blocking": false, "when": "post", "chains": "all", "accept_until": "none",
+      "why": { "text": "Ported by name from the pre-conversion script's own audit row (WF2 P5).", "liveness": { "kind": "table", "ref": "coa_applications" } }
+    },
+    {
+      "id": "servable_coa_funnel_fresh_forecast", "kind": "field_coverage",
+      "expect": { "reports": "the funnel's stage-3 count (+ a fresh, non-expired forecast)" },
+      "limit": "viol == 0", "severity": "INFO", "blocking": false, "when": "post", "chains": "all", "accept_until": "none",
+      "why": { "text": "Ported by name from the pre-conversion script's own audit row (WF2 P5).", "liveness": { "kind": "table", "ref": "trade_forecasts" } }
+    },
+    {
+      "id": "servable_coa_funnel_score", "kind": "field_coverage",
+      "expect": { "reports": "the funnel's stage-4 count (+ a computed opportunity score)" },
+      "limit": "viol == 0", "severity": "INFO", "blocking": false, "when": "post", "chains": "all", "accept_until": "none",
+      "why": { "text": "Ported by name from the pre-conversion script's own audit row (WF2 P5).", "liveness": { "kind": "table", "ref": "trade_forecasts" } }
+    }
+  ],
+
+  "invariants": [
+    {
+      "id": "duplicate_snapshot_date_count",
+      "sql": "SELECT count(*)::int AS c FROM (SELECT snapshot_date FROM data_quality_snapshots GROUP BY snapshot_date HAVING count(*) > 1) d",
+      "bound": "viol == 0", "severity": "WARN", "blocking": false, "when": "post",
+      "source": "invariant", "frequency": "every_run",
+      "last_measured": { "value": 0, "at": "2026-08-31T00:00:00.000Z", "commit": "cfac586d", "cost_ms": 5, "sample_n": 5, "source_run": { "run_id": null, "chain": null, "event": "golden_capture" } },
+      "why": { "text": "INV-1 (plan's own Validator surface section). Mirrors the live UNIQUE(snapshot_date) DB constraint as a declared, observable check rather than an implicit reliance on the constraint alone (Rule 1, nothing hidden). Measured clean on all 5 commit-5 golden captures.", "liveness": { "kind": "table", "ref": "data_quality_snapshots" } }
+    }
+  ],
+  "plausibility": "none",
+
+  "override": { "force_full": "none", "force_run": "none", "dry_run": "none" },
+
+  "emits": "none",
+
+  "deviations": "none",
+
+  "limitations": [
+    {
+      "what": "Finding 6 — compute_cost_estimates.js writes 2 columns (cost_estimates_liar_gate_overrides, cost_estimates_zero_total_bypass) into data_quality_snapshots via a best-effort UPDATE, order-dependent on chain position — a cascade this step does not own and correctly does not claim in its own writes[]/emitMeta.",
+      "measured": "Live: 4/10 most recent rows NULL on both columns (compute_cost_estimates runs before refresh_snapshot creates that day's row on the first chain run of any given day).",
+      "check_id": "none"
+    },
+    {
+      "what": "Finding 7 — src/lib/quality/metrics.ts's captureDataQualitySnapshot() (POST /api/quality/refresh, the admin 'Refresh Now' button) is a second, independent implementation of this exact logic, parallel-query-shaped (the pre-WF3-F1 pathology), no advisory lock, 61 of the same 68 columns. Cross-Domain, out of this pilot's Operating Boundary — filed review_followups.md HIGH.",
+      "measured": "Live: 0 advisory-lock hits in metrics.ts/route.ts; 61 vs 68 column-list diff confirmed.",
+      "check_id": "none"
+    }
+  ],
+
+  "interpretation": { "file": "refresh-snapshot.notes.json", "entries": 2 },
+
+  "recovery": {
+    "reset": "No TRUNCATE/rebuild mechanism exists — a re-run re-derives the full row from live tables every time, which IS the correct reset behaviour for a class that overwrites unconditionally (guard:\"none\").",
+    "resume": "none",
+    "force": "none",
+    "rollback": "none",
+    "verify_clean": "none",
+    "cascades": "derived",
+    "interrupted": "none",
+    "interrupted_why": {
+      "text": "No destructive retraction target exists on this step (retract:\"none\") — there is nothing for an interrupted run to leave half-retracted. A crashed mid-write run simply leaves yesterday's row (or no row) for today; a re-run recomputes the whole row from scratch, which is the same normal-run behaviour, not a special recovery path.",
+      "liveness": { "kind": "check", "ref": "snapshots_created" }
+    },
+    "before_image": "none",
+    "before_image_why": {
+      "text": "R-M's scope is destructive retraction (a DELETE, or an UPDATE overwriting a value with no record of the prior one under conditions where the guard predicate could be wrong) — this write is an idempotent keyed upsert, retract:\"none\", guard:\"none\" by design (the row is EXPECTED to differ every run). Unlike CC-D3's centroid repair (which overwrites a value it cannot re-derive without a live recomputation and needed a before-image audit trail), this step's every column is re-derived FRESH from live source tables on every single run — there is no value here that a before-image would let an operator recover that a simple re-run does not already recover identically.",
+      "liveness": { "kind": "file", "ref": "scripts/refresh-snapshot.notes.json" }
+    }
+  },
+
+  "database": {
+    "class": "primary",
+    "min_migration": 15,
+    "assert_current_database": "postgres"
+  },
+
+  "counters": {
+    "records_total": { "source": "written.e1.scanned", "scoped_by": "step" },
+    "records_new": { "source": "written.e1.inserted", "scoped_by": "step" },
+    "records_updated": { "source": "written.e1.updated", "scoped_by": "step" }
+  },
+
+  "config": {
+    "logic_variables": [
+      { "name": "snapshot_coa_conf_high", "min": 0.01, "max": 1, "on_invalid": "fail" },
+      { "name": "coa_match_conf_medium", "min": 0.01, "max": 1, "on_invalid": "fail" }
+    ],
+    "validation": "strict",
+    "hoisted_above_gate": true,
+    "retired": []
+  },
+
+  "sharing": {
+    "chains": "derived",
+    "shared": "derived",
+    "slug_forms": "derived",
+    "varies_by_chain": {
+      "checks": "none",
+      "phase": { "permits": 18, "coa": 7, "sources": 13, "deep_scrapes": 4 },
+      "audit_table": "one",
+      "scope": "none"
+    },
+    "on_contention": "self_skip"
+  },
+
+  "terminals": [
+    {
+      "id": "recorded", "kind": "success", "status": "completed",
+      "records_meta": { "duration_ms": "int", "audit_table": "object", "terminal": "string" },
+      "why": { "text": "The normal, and only steady-state, outcome: a RECORDER always has work (recording current state IS the work) — verdict is always PASS, matching Spec 122 :1112's own citation.", "liveness": { "kind": "check", "ref": "snapshots_created" } }
+    },
+    {
+      "id": "recorded_with_warnings", "kind": "success", "status": "completed_with_warnings",
+      "records_meta": { "audit_table": "object", "terminal": "string" },
+      "why": { "text": "A WARN row stands (optional_query_failed or duplicate_snapshot_date_count) and nothing FAILED — the run completed and wrote; the warning is in the table.", "liveness": { "kind": "check", "ref": "optional_query_failed" } }
+    },
+    {
+      "id": "lock_held_elsewhere", "kind": "skip_lock_contention", "status": "self_skipped",
+      "records_meta": { "skipped": "bool", "reason": "string" },
+      "why": { "text": "Advisory lock 40 is held by another process — a row-derived SKIP summary, never a bare SDK skip with no audit_table.", "liveness": { "kind": "file", "ref": "scripts/lib/step/index.js" } }
+    },
+    {
+      "id": "failed_config_out_of_bounds", "kind": "fail_error", "status": "failed",
+      "records_meta": { "audit_table": "object", "terminal": "string" },
+      "why": { "text": "T1/T2 resolved outside its bounds under on_invalid:\"fail\". hoisted_above_gate puts this refusal ABOVE the advisory lock.", "liveness": { "kind": "file", "ref": "scripts/lib/step/config.js" } }
+    },
+    {
+      "id": "failed_write", "kind": "fail_error", "status": "failed",
+      "records_meta": { "audit_table": "object", "terminal": "string" },
+      "why": { "text": "The one write statement itself failed (a genuine DB error, not an optional-read failure — those carry forward instead of failing the run).", "liveness": { "kind": "file", "ref": "scripts/lib/step/write.js" } }
+    }
+  ]
+}

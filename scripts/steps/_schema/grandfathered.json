@@ -87,6 +87,16 @@
       "adjudicated_by": "Spec 122 V7 (schema fixture, not a manifest step)",
       "date": "2026-08-25",
       "lock_test": "src/tests/step-schema.logic.test.ts"
+    },
+    "refresh_snapshot": {
+      "paths": {
+        "outputs.writes[].write_discipline.guard": "none"
+      },
+      "why": "outputs.writes[0] is the sole `INSERT INTO data_quality_snapshots (...) VALUES (...) ON CONFLICT (snapshot_date) DO UPDATE SET ...` (LG-27, class guarded_upsert/set_source:\"compute\", retract:\"none\") — GAP-2's own prescribed declaration (step.schema.json:104-111), mirroring fixture_grandfathered_snapshot's own reasoning verbatim (the fixture this exact write inspired, filed 2026-08-25, Spec 122 V7). An IS DISTINCT FROM guard on a 68-column dashboard-snapshot row would compare fresh live-DB counts against yesterday's, which are EXPECTED to differ on almost every column, almost every run — permit counts change constantly. A change guard on a metrics-recording row is close to vacuous by construction: the 'change' IS the row's entire purpose (same class of finding as link_massing's E1 precedent — guard:\"none\" is right, not merely tolerated).",
+      "commit": "pilot 8 commit 7 (2026-08-31)",
+      "adjudicated_by": "Fold B RULING (2026-08-31, orchestrator) + Finding 1's own grounding against GAP-2",
+      "date": "2026-08-31",
+      "lock_test": "src/tests/steps/refresh_snapshot/violations.test.ts"
     }
   }
 }

@@ -1,21 +1,29 @@
 // SPEC LINK: docs/specs/01-pipeline/118_deep_scrapes_execution_envelope.md §1, §7.1
 // SPEC LINK: docs/specs/01-pipeline/47_pipeline_script_protocol.md
+// SPEC LINK: docs/specs/01-pipeline/122_pipeline_step_optimization.md §1.10 (RECORDER)
 //
 // WF3 F1 (2026-08-15) — the refresh_snapshot pathology fix (measured 2026-08-14:
 // the stats query index-fetched 187,187 rows = 73% of permits via idx_permits_status;
 // 3min -> 64min once the week's mass-UPDATE traffic destroyed the heap's physical
 // correlation with status order — NOT bloat, NOT locks, NOT a plan flip).
 //
-// This is the SHAPE lock (source-level): the measured three-part winner is exported
-// from scripts/refresh-snapshot.js and this file pins the ADOPTED shape —
+// RETARGETED pilot 8 commit 7 (2026-08-31, RECORDER conversion): the 3 query
+// builders + splitTagBreakdown moved verbatim from scripts/refresh-snapshot.js to
+// scripts/lib/compute/refresh-snapshot.js (Rule 2 — compute is JUST compute, no
+// pg/pipeline/argv/env). This is the SHAPE lock (source-level): the measured
+// three-part winner is exported from the compute module and this file pins the
+// ADOPTED shape —
 //   ① buildPermitsScalarQuery — 10 scalar permits.status-scoped aggregates, ONE
 //      no-WHERE FILTER pass (no top-level WHERE at all — that absence is the fix).
 //   ② buildTagBreakdownQuery — the 2 GROUP BY scope_tags queries, ONE pass, using
 //      the `(status = ANY($1)) IS TRUE` index-defeat idiom (not a bare `= ANY()`).
 //   ③ buildTradeByTypeQuery — same JOIN shape as before (unchanged query text); the
-//      fix is executing it under `enable_indexscan = off` on the caller's pinned
-//      client, which this file pins by source-scanning the caller (refresh-snapshot.js)
-//      for the SET/RESET bracketing around the query, not inside the query builder.
+//      fix is executing it under `enable_indexscan = off` — DECLARED as a `guc`
+//      field on the tradeByType read step in buildReads() (compute authors the
+//      plan, the RUNNER — runRecorderPhase, scripts/lib/step/index.js — executes
+//      the session-scoped SET/RESET bracket around it; a source-level test of the
+//      compute module alone cannot see the runner's own bracketing execution, only
+//      that it was DECLARED, which is what this file now checks).
 //
 // Value equivalence (the numbers into data_quality_snapshots are unchanged) is
 // proven separately by src/tests/db/refresh-snapshot-consolidation.db.test.ts —
@@ -25,11 +33,12 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
-const SRC = readFileSync(join(process.cwd(), 'scripts/refresh-snapshot.js'), 'utf8');
+const COMPUTE_REL = 'scripts/lib/compute/refresh-snapshot.js';
+const SRC = readFileSync(join(process.cwd(), COMPUTE_REL), 'utf8');
 // eslint-disable-next-line @typescript-eslint/no-require-imports -- exercising the real module's exports, not re-implementing them
-const mod = require(join(process.cwd(), 'scripts/refresh-snapshot.js'));
+const mod = require(join(process.cwd(), COMPUTE_REL));
 
-describe('refresh-snapshot.js — WF3 F1 query-consolidation shape lock (Spec 118 §1/§7.1)', () => {
+describe('refresh-snapshot compute — WF3 F1 query-consolidation shape lock (Spec 118 §1/§7.1)', () => {
   it('exports the three query builders + the tag-split helper', () => {
     expect(typeof mod.buildPermitsScalarQuery).toBe('function');
     expect(typeof mod.buildTagBreakdownQuery).toBe('function');
@@ -37,10 +46,14 @@ describe('refresh-snapshot.js — WF3 F1 query-consolidation shape lock (Spec 11
     expect(typeof mod.splitTagBreakdown).toBe('function');
   });
 
-  it('requiring the module has NO side effects (guarded by require.main === module)', () => {
-    // If pipeline.run() fired at require-time, this file would already have thrown
-    // (no DB, no PG_* env in a plain vitest process) before reaching this line.
-    expect(SRC).toMatch(/if \(require\.main === module\)/);
+  it('the compute module opens no pool and issues no query at require-time (Rule 2 — a pure library, not a runnable script)', () => {
+    // The old file's own "require.main === module" guard existed to make a
+    // hand-rolled pipeline.run() script safe to require() from a test process.
+    // A compute module under scripts/lib/compute/ is never runnable on its own —
+    // it exports pure functions only, enforced generically by
+    // scripts/hooks/step-require-probe.cjs + src/tests/steps/refresh_snapshot/
+    // violations.test.ts's own probe-based lock, not re-checked here.
+    expect(typeof mod.compute).toBe('function');
   });
 
   it('① the permits scalar query has NO top-level WHERE clause on `permits`', () => {
@@ -83,16 +96,13 @@ describe('refresh-snapshot.js — WF3 F1 query-consolidation shape lock (Spec 11
     expect(params).toEqual([mod.ACTIVE_PERMIT_STATUSES]);
   });
 
-  it('③ tradeByTypeRes is executed under session-scoped enable_indexscan=off + RESET on the pinned client', () => {
-    // Source-level: the SET/RESET bracket the tradeByTypeQuery call site.
-    const setIdx = SRC.indexOf("snapClient.query('SET enable_indexscan = off')");
-    const callIdx = SRC.indexOf('snapClient.query(tradeByTypeQuery.sql, tradeByTypeQuery.params)');
-    const resetIdx = SRC.indexOf("snapClient.query('RESET enable_indexscan')");
-    expect(setIdx, 'SET enable_indexscan = off must exist').toBeGreaterThan(-1);
-    expect(callIdx, 'tradeByTypeQuery call must exist').toBeGreaterThan(-1);
-    expect(resetIdx, 'RESET enable_indexscan must exist').toBeGreaterThan(-1);
-    expect(setIdx).toBeLessThan(callIdx);
-    expect(callIdx).toBeLessThan(resetIdx);
+  it('③ tradeByType is DECLARED to run under session-scoped enable_indexscan=off + RESET — buildReads()\'s own read-plan, executed by the runner (not this compute module)', () => {
+    const reads = mod.buildReads({ snapshot_coa_conf_high: 0.8, coa_match_conf_medium: 0.5 });
+    const step = reads.main.find((s: { key: string }) => s.key === 'tradeByType');
+    expect(step, 'buildReads().main must declare a tradeByType step').toBeTruthy();
+    expect(step.guc, 'tradeByType must declare a guc bracket').toBeTruthy();
+    expect(step.guc.set).toBe('SET enable_indexscan = off');
+    expect(step.guc.reset).toBe('RESET enable_indexscan');
   });
 
   it('the in-code comment states the I/O-pattern rationale and cites Spec 118 §1 (ceiling, not a guess)', () => {
@@ -101,7 +111,7 @@ describe('refresh-snapshot.js — WF3 F1 query-consolidation shape lock (Spec 11
     expect(SRC).toMatch(/stale correlation/i);
   });
 
-  it('old per-metric query variables are gone — the consolidation actually replaced them, not just added to them', () => {
+  it('old per-metric query variables are gone from the compute module — the consolidation actually replaced them, not just added to them', () => {
     // These variable NAMES existed pre-fix as separate round trips; their absence
     // (as declarations) proves the 10+2 queries were actually removed, not merely
     // shadowed by new ones running alongside the old.

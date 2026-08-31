@@ -2101,10 +2101,16 @@ describe('Pipeline manifest includes assert_engine_health', () => {
 });
 
 // ── Regression: refresh-snapshot captures cost + timing metrics ──
+// RE-HOMED (pilot 8, 2026-08-31, Spec 122 §5.1 conversion): the frozen
+// scripts/refresh-snapshot.js shape carries no query text of its own any more —
+// the WF3-F1 query builders (verbatim port, incl. this regression's own guard)
+// live in scripts/lib/compute/refresh-snapshot.js. The fence this pins ("cost
+// estimates are queried; v1 timing_calibration is gone") is unchanged, only the
+// file moved.
 
 describe('refresh-snapshot.js cost/timing observability', () => {
   const snapshotSource = fs.readFileSync(
-    path.join(__dirname, '../../scripts/refresh-snapshot.js'), 'utf-8'
+    path.join(__dirname, '../../scripts/lib/compute/refresh-snapshot.js'), 'utf-8'
   );
 
   it('queries cost_estimates table', () => {
