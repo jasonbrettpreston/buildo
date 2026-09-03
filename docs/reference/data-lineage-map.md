@@ -1550,4 +1550,102 @@ Coverage: **1128** columns across **78** tables, from **66** in-chain steps.
 
 ---
 
+## Upstream sets
+
+For every in-chain step, in every chain it runs in: the set of steps whose `writes` intersect its own `reads` at COLUMN granularity, restricted to producers sharing that SAME chain. Derived by `scripts/lib/ledger.js#stepUpstreams` from the table above — never hand-maintained (Spec 122 §6, LDG-4).
+
+| Step | Chain | Derived upstream producers |
+|------|-------|------------------------------|
+| `address_points` | `sources` | — |
+| `assert_coa_freshness` | `coa` | `coa`, `link_coa` |
+| `assert_data_bounds` | `coa` | — |
+| `assert_data_bounds` | `deep_scrapes` | — |
+| `assert_data_bounds` | `permits` | — |
+| `assert_data_bounds` | `sources` | — |
+| `assert_engine_health` | `coa` | — |
+| `assert_engine_health` | `deep_scrapes` | — |
+| `assert_engine_health` | `permits` | — |
+| `assert_engine_health` | `sources` | — |
+| `assert_entity_tracing` | `permits` | `backfill_realtor_permit_trades`, `classify_lifecycle_phase`, `classify_permit_phase`, `classify_permits`, `compute_cost_estimates`, `compute_opportunity_scores`, `compute_trade_forecasts`, `link_coa`, `permits` |
+| `assert_global_coverage` | `coa` | — |
+| `assert_global_coverage` | `permits` | — |
+| `assert_global_coverage` | `sources` | — |
+| `assert_lifecycle_phase_distribution` | `coa` | `classify_lifecycle_phase`, `coa`, `create_pre_permits`, `link_coa` |
+| `assert_lifecycle_phase_distribution` | `permits` | `classify_lifecycle_phase`, `classify_permit_phase`, `close_stale_permits`, `link_coa`, `permits` |
+| `assert_network_health` | `deep_scrapes` | — |
+| `assert_parcel_sanity` | `sources` | `compute_parcel_cost_estimates`, `enrich_parcels`, `parcels` |
+| `assert_pre_permit_aging` | `coa` | `coa`, `link_coa` |
+| `assert_schema` | `coa` | — |
+| `assert_schema` | `permits` | — |
+| `assert_schema` | `sources` | — |
+| `assert_staleness` | `deep_scrapes` | `inspections` |
+| `backfill_realtor_permit_trades` | `permits` | `classify_scope`, `classify_scope_class`, `classify_scope_tags`, `close_stale_permits`, `link_similar`, `permits` |
+| `builders` | `permits` | `permits` |
+| `classify_coa_scope` | `coa` | `coa`, `link_coa` |
+| `classify_coa_trades` | `coa` | `classify_coa_scope` |
+| `classify_inspection_status` | `deep_scrapes` | `inspections` |
+| `classify_lifecycle_phase` | `coa` | `classify_coa_scope`, `coa`, `create_pre_permits`, `link_coa`, `link_coa_to_parcels` |
+| `classify_lifecycle_phase` | `permits` | `classify_permit_phase`, `close_stale_permits`, `compute_trade_forecasts`, `link_coa`, `permits` |
+| `classify_permit_phase` | `permits` | `close_stale_permits`, `link_coa`, `permits` |
+| `classify_permits` | `permits` | `classify_permit_phase`, `classify_scope`, `classify_scope_class`, `classify_scope_tags`, `close_stale_permits`, `link_coa`, `link_similar`, `permits` |
+| `classify_scope` | `permits` | `classify_permit_phase`, `classify_scope_class`, `classify_scope_tags`, `link_coa`, `link_similar`, `permits` |
+| `classify_scope_class` | `permits` | `classify_permit_phase`, `classify_scope`, `classify_scope_tags`, `link_coa`, `link_similar`, `permits` |
+| `classify_scope_tags` | `permits` | `classify_permit_phase`, `classify_scope`, `classify_scope_class`, `link_coa`, `link_similar`, `permits` |
+| `close_stale_permits` | `permits` | `classify_permit_phase`, `link_coa`, `permits` |
+| `coa` | `coa` | — |
+| `compute_build_norms` | `permits` | `classify_scope`, `classify_scope_class`, `classify_scope_tags`, `compute_storey_norms`, `enrich_permits`, `link_similar`, `permits` |
+| `compute_centroids` | `sources` | `parcels` |
+| `compute_coa_cost_estimates` | `coa` | `classify_coa_scope`, `classify_coa_trades`, `enrich_coa_zoning`, `link_coa_to_parcels` |
+| `compute_cost_estimates` | `permits` | `backfill_realtor_permit_trades`, `classify_permits`, `classify_scope`, `classify_scope_class`, `classify_scope_tags`, `enrich_permits`, `link_massing`, `link_parcels`, `link_similar`, `permits` |
+| `compute_opportunity_scores` | `permits` | `compute_cost_estimates`, `compute_trade_forecasts`, `update_tracked_projects` |
+| `compute_parcel_cost_estimates` | `sources` | `enrich_parcels`, `parcels` |
+| `compute_phase_calibration` | `coa` | `classify_coa_scope`, `classify_lifecycle_phase` |
+| `compute_phase_calibration` | `permits` | `classify_lifecycle_phase` |
+| `compute_storey_norms` | `permits` | `enrich_permits`, `link_neighbourhoods`, `permits` |
+| `compute_timing_calibration_v2` | `permits` | `permits` |
+| `compute_trade_forecasts` | `permits` | `backfill_realtor_permit_trades`, `classify_lifecycle_phase`, `classify_permits`, `compute_phase_calibration`, `compute_timing_calibration_v2`, `permits` |
+| `create_pre_permits` | `coa` | `coa`, `link_coa` |
+| `dispatch_notifications` | `permits` | — |
+| `enrich_centreline` | `sources` | `load_centreline`, `parcels` |
+| `enrich_coa_zoning` | `coa` | `link_coa_to_parcels` |
+| `enrich_heritage` | `sources` | `load_heritage`, `parcels` |
+| `enrich_named_builders` | `entities` | `enrich_wsib_builders` |
+| `enrich_parcels` | `sources` | `enrich_centreline`, `enrich_heritage`, `enrich_ravines`, `link_massing`, `load_zoning`, `massing`, `neighbourhoods`, `parcels` |
+| `enrich_permits` | `permits` | `link_parcels`, `permits` |
+| `enrich_ravines` | `sources` | `load_ravines`, `parcels` |
+| `enrich_wsib_builders` | `entities` | `enrich_named_builders` |
+| `geocode_permits` | `permits` | `permits` |
+| `geocode_permits` | `sources` | `address_points` |
+| `inspections` | `(standalone)` | — |
+| `inspections` | `deep_scrapes` | `classify_inspection_status` |
+| `link_coa` | `coa` | `coa`, `create_pre_permits`, `link_coa_to_parcels` |
+| `link_coa` | `permits` | `geocode_permits`, `permits` |
+| `link_coa_to_parcels` | `coa` | `coa` |
+| `link_massing` | `permits` | — |
+| `link_massing` | `sources` | `compute_centroids`, `massing`, `parcels` |
+| `link_neighbourhoods` | `permits` | `geocode_permits`, `permits` |
+| `link_neighbourhoods` | `sources` | `geocode_permits`, `neighbourhoods`, `parcels` |
+| `link_parcel_addresses` | `sources` | `address_points`, `parcels` |
+| `link_parcels` | `permits` | `geocode_permits`, `permits` |
+| `link_parcels` | `sources` | `address_points`, `compute_centroids`, `geocode_permits`, `link_parcel_addresses`, `parcels` |
+| `link_similar` | `permits` | `classify_scope`, `classify_scope_class`, `classify_scope_tags`, `permits` |
+| `link_wsib` | `permits` | `builders` |
+| `link_wsib` | `sources` | `load_wsib` |
+| `load_centreline` | `sources` | — |
+| `load_heritage` | `sources` | — |
+| `load_ravines` | `sources` | — |
+| `load_wsib` | `sources` | — |
+| `load_zoning` | `sources` | — |
+| `massing` | `sources` | — |
+| `neighbourhoods` | `sources` | — |
+| `parcels` | `sources` | — |
+| `permits` | `permits` | `close_stale_permits` |
+| `refresh_snapshot` | `coa` | `compute_coa_cost_estimates`, `link_coa_to_parcels` |
+| `refresh_snapshot` | `deep_scrapes` | — |
+| `refresh_snapshot` | `permits` | `compute_cost_estimates`, `compute_opportunity_scores`, `compute_trade_forecasts` |
+| `refresh_snapshot` | `sources` | — |
+| `update_tracked_projects` | `permits` | `classify_lifecycle_phase`, `compute_trade_forecasts`, `link_coa`, `permits` |
+
+---
+
 *Snapshot: 89 in-chain steps scanned. DB pipeline_runs.records_meta.pipeline_meta (latest per chain:step) + static emitMeta parse of one-time/backfill scripts. Refresh with `npm run lineage-docs -- --refresh`.*

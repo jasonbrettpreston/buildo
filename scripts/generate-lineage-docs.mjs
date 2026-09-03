@@ -28,6 +28,11 @@
 
 import fs from 'fs';
 import path from 'path';
+// Commit 4 (WF1 cross-step ledger, Spec 122 §6, tier 2) — the "## Upstream
+// sets" section below is DERIVED via the same stepUpstreams/slugForms the
+// unconverted steps and staleness.js's deriveLedgerSlugs already share (§11
+// dual path: one expansion, never a second hand-rolled copy in this file).
+import { stepUpstreams } from './lib/ledger.js';
 
 const ROOT = path.resolve(import.meta.dirname, '..');
 const MANIFEST_PATH = path.join(ROOT, 'scripts', 'manifest.json');
@@ -236,6 +241,26 @@ Coverage: **${totalCols}** columns across **${tables.length}** tables, from **${
     }
     md += '\n';
   }
+
+  // ── Upstream sets (Commit 4, WF1 cross-step ledger, Spec 122 §6, LDG-4) ──
+  // One row per (step, chain) pair — stepUpstreams requires an explicit
+  // chain (Fold C/D: chain-unaware derivation is unproven beyond the one
+  // step it was measured on), and 15 of 66 in-chain steps run in more than
+  // one chain, so the derived producer set can legitimately differ per
+  // chain a step participates in. Derived, never hand-maintained — this is
+  // the tier-2 artifact the drift guard (`--check`) now covers too.
+  md += `---\n\n## Upstream sets\n\n`;
+  md += `For every in-chain step, in every chain it runs in: the set of steps whose \`writes\` intersect its own \`reads\` at COLUMN granularity, restricted to producers sharing that SAME chain. Derived by \`scripts/lib/ledger.js#stepUpstreams\` from the table above — never hand-maintained (Spec 122 §6, LDG-4).\n\n`;
+  md += `| Step | Chain | Derived upstream producers |\n|------|-------|------------------------------|\n`;
+  for (const step of Object.keys(inchain).sort()) {
+    const chains = [...(inchain[step].chains || [])].sort();
+    for (const chain of chains) {
+      const producers = stepUpstreams(step, { chain });
+      const rendered = producers.length ? producers.map((p) => `\`${p}\``).join(', ') : '—';
+      md += `| \`${step}\` | \`${chain}\` | ${rendered} |\n`;
+    }
+  }
+  md += '\n';
 
   md += `---\n\n*Snapshot: ${snapshot._runs_scanned ?? '?'} in-chain steps scanned. ${snapshot._generated ?? ''}*\n`;
   return md;
