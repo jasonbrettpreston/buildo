@@ -2084,3 +2084,76 @@ describe('G-1 — new schema fields require x-ruling (schema-baseline ratchet)',
     for (const f of baseline.fields) expect(f, `malformed baseline entry: ${f}`).toMatch(/^[a-z_]+\.[a-zA-Z_]+$/);
   });
 });
+
+// ---------------------------------------------------------------------------
+// PH-2 churn×complexity BATCH artifact (Spec 123 §2/§6, G2, S6b) — the guard
+// against the table rotting into a decoration: it must cover every
+// manifest.chains.sources slug, its window_end must still be a real ancestor
+// of HEAD, and a fresh `--check` (which recomputes every column AT that SHA)
+// must exit clean.
+// ---------------------------------------------------------------------------
+describe('PH-2 churn×complexity BATCH artifact (G2) — coverage + drift', () => {
+  const GENERATOR = path.join(REPO_ROOT, 'scripts/analysis/step-churn-complexity.mjs');
+  const TABLE_PATH = path.join(REPO_ROOT, 'docs/reports/generated/122-churn-complexity.md');
+
+  /** Local, test-owned parse — deliberately not importing the generator's own
+   * parseChurnTable, so a bug shared between generator and consumer can still
+   * be caught independently. */
+  function parseSlugs(text: string): string[] {
+    const slugs: string[] = [];
+    for (const raw of text.split('\n')) {
+      const line = raw.trim();
+      if (!line.startsWith('|') || /^\|[-\s|:]+\|$/.test(line)) continue;
+      const cells = line.split('|').map((c) => c.trim());
+      const slug = cells[1];
+      if (slug && slug !== 'slug') slugs.push(slug);
+    }
+    return slugs;
+  }
+
+  it('the generator\'s own self-test passes (proves the checker fires before trusting it, Spec 121 §12b.6)', () => {
+    const run = spawnSync('node', [GENERATOR, '--self-test'], { cwd: REPO_ROOT, encoding: 'utf8', timeout: 30_000 });
+    expect(run.status, `stdout=${run.stdout} stderr=${run.stderr}`).toBe(0);
+  });
+
+  it('the REAL table passes --check clean (deterministic re-derivation at its own window_end matches the committed file)', () => {
+    const run = spawnSync('node', [GENERATOR, '--check'], { cwd: REPO_ROOT, encoding: 'utf8', timeout: 60_000 });
+    expect(run.status, `G2 artifact drift; stdout=${run.stdout} stderr=${run.stderr}`).toBe(0);
+  });
+
+  it('covers every manifest.chains.sources slug — no missing, no extras', () => {
+    const text = fs.readFileSync(TABLE_PATH, 'utf8');
+    const tableSlugs = new Set(parseSlugs(text));
+    const manifestSlugs = new Set<string>(manifest.chains.sources ?? []);
+    const missing = [...manifestSlugs].filter((s) => !tableSlugs.has(s));
+    const extra = [...tableSlugs].filter((s) => !manifestSlugs.has(s));
+    expect(missing, `slugs in manifest.chains.sources with no table row: ${missing.join(', ')}`).toEqual([]);
+    expect(extra, `table rows with no manifest.chains.sources slug: ${extra.join(', ')}`).toEqual([]);
+  });
+
+  it('window_end is a real ancestor of HEAD (not a rebased/dangling window)', () => {
+    const text = fs.readFileSync(TABLE_PATH, 'utf8');
+    const m = /window_end:\s*`([0-9a-f]{40})`/.exec(text);
+    expect(m, 'no parseable window_end header in the committed table').not.toBeNull();
+    const sha = m![1]!;
+    const res = spawnSync('git', ['merge-base', '--is-ancestor', sha, 'HEAD'], { cwd: REPO_ROOT, encoding: 'utf8' });
+    expect(res.status, `window_end ${sha} is not an ancestor of HEAD`).toBe(0);
+  });
+
+  it('RED — a hand-edited row fires --check (known-bad fixture, real CLI, not just the exported function)', () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'g2-churn-fixture-'));
+    const original = fs.readFileSync(TABLE_PATH, 'utf8');
+    const tampered = original.replace(/\|\s*bottom-right\s*\|/, '| top-right |');
+    expect(tampered, 'fixture setup: no "bottom-right" cell found to tamper with').not.toBe(original);
+    const badTablePath = path.join(dir, 'bad-122-churn-complexity.md');
+    fs.writeFileSync(badTablePath, tampered);
+    const run = spawnSync('node', [GENERATOR, '--check'], {
+      cwd: REPO_ROOT,
+      encoding: 'utf8',
+      timeout: 60_000,
+      env: { ...process.env, BUILDO_CHURN_TABLE_PATH: path.relative(REPO_ROOT, badTablePath) },
+    });
+    expect(run.status, `the checker did not fire on a hand-edited row; stdout=${run.stdout}`).toBe(1);
+    expect(run.stderr + run.stdout).toContain('DRIFT');
+  });
+});
