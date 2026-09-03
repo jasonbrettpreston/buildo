@@ -915,7 +915,7 @@ EXECUTE, and that is what `compute-shape.yml` + the harness-fidelity battery exi
 
 Spec 119 §4.6 names this the proven pattern: *"nobody hand-maintains column lineage, because `data-lineage-map.infra.test.ts` fails CI when the generated artifact drifts."* **The ledger is this generator, widened from columns to the five edge classes below.**
 
-⚠️ **But do not inherit its numbers.** `data-lineage-map.md` **does not reconcile with itself**: 1,553 lines / 1,135 data rows / a header claiming **1,128 columns** — three figures, none agreeing, flagged as L-4 and still unresolved. Its snapshot also predates Phase B B3. Re-derive before use.
+✅ **L-4 RESOLVED (WF1 cross-step ledger commit 6, 2026-09-03) — re-measured, not inherited.** This section originally flagged `data-lineage-map.md` as *"does not reconcile with itself: 1,553 lines / 1,135 data rows / a header claiming 1,128 columns — three figures, none agreeing."* That was a measurement artifact, not a generator defect: a flat `grep -c '^| \`'` over the WHOLE file conflates THREE different sections' row shapes. Measured against the current doc (post commit 4's `## Upstream sets` addition): the header's **1,128 columns** is exactly the per-table column-lineage section's row count; the doc also carries **7** one-time/backfill table-level rows and **89** `## Upstream sets` (step, chain) rows — `1,128 + 7 + 89 = 1,224` data rows, matching `grep -c '^| \`'` exactly; **1,651** total lines including headers/blanks. Fully reconciled once the sections are counted separately. Its snapshot was refreshed 2026-09-03 (WF1 commit 5) — no longer predates Phase B B3.
 
 **② The governing doctrine — Spec 119 §4.6's tier ladder.** Every cross-step contract sits at a tier: **0** documented-only (treat as unverified) → **1** generated → **2** CI-drift-guarded → **3** consumed by the dependent code. The binding rule, verbatim:
 
@@ -927,7 +927,7 @@ Spec 119 §4.6 names this the proven pattern: *"nobody hand-maintains column lin
 
 > **GENERATE → GUARD → CONSUME**
 
-with Phase 0's per-contract tier map across all 66 in-chain steps, Phase 1's `stepUpstreams(slug)` derived from lineage (*"lands red-first by construction"* on the cost step), and Phases 2–5 for counters, the status enum, gate consumption and the step-contract template. **That task is not superseded — it is §5's implementation plan.**
+with Phase 0's per-contract tier map across all 66 in-chain steps, Phase 1's `stepUpstreams(slug)` derived from lineage (*"lands red-first by construction"* on the cost step — **measured STALE, WF1 commit 6, 2026-09-03**: the "red" was a slug-FORM divergence (`'load-parcels'`) that an unrelated commit (`a81c6a7c`, D#6) had already fixed the substantive half of before this queued WF1 ever ran; see §6.3), and Phases 2–5 for counters, the status enum, gate consumption and the step-contract template. **That task is not superseded — it is §5's implementation plan, now BUILT for Phase 1 (`scripts/lib/ledger.js#stepUpstreams`, LDG-4).**
 
 ### 6.1 What the ledger holds
 
@@ -963,17 +963,17 @@ Regression-locked at `load-ravines.infra.test.ts:102`, `load-heritage.infra.test
 
 Eight stamp columns drive incremental scope `[READ 2026-08-23]`. Six are **self-consumed** (the step reads its own stamp to re-scope). Two are genuine cross-step edges: `parcel_buildings.linked_at` (step 15) → `enrich-parcels.js:365-367`, and `coa_applications.parcel_linked_at` (**a different chain**) → `enrich-parcels.js:380-388`.
 
-⚠️ **The tier-0 surface, and it has already been caught being wrong.** Three steps carry **hand-written upstream slug arrays** feeding `runLedgerGateDecision`:
+⚠️ **The tier-0 surface, and it has already been caught being wrong.** Three steps carried **hand-written upstream slug arrays** feeding `runLedgerGateDecision` — **HISTORICAL as of 2026-09-03 (WF1 commit 6): all three are now retired, table kept for the record of what the tier-0 surface looked like:**
 
-| Site | Declares |
-|---|---|
-| `link-parcel-addresses.js:61-64` | `sources:address_points`, `sources:parcels` |
-| `link-wsib.js:69-72` | `sources:load_wsib`, `permits:builders` |
-| `compute-parcel-cost-estimates.js:85` | `sources:enrich_parcels`, `sources:parcels` |
+| Site | Declared | Retired |
+|---|---|---|
+| `link-parcel-addresses.js:61-64` | `sources:address_points`, `sources:parcels` | `5ee14f5b` |
+| `link-wsib.js:69-72` | `sources:load_wsib`, `permits:builders` | `69de8a13` |
+| `compute-parcel-cost-estimates.js:85` | `sources:enrich_parcels`, `sources:parcels` | `6155f1ed` |
 
-The third carries its own confession in-file at `:77-84`: the omitted `sources:parcels` producer *"was already listed in the lineage map … this hand-maintained array simply hadn't been kept in sync with it (exactly how the gap was missed)."* Spec 119 cites this as the canonical proof that **generated beats documented**. Locked red-first at `ledger-gate-callers.db.test.ts:448-449`.
+The third carries its own confession in-file at `:77-84`: the omitted `sources:parcels` producer *"was already listed in the lineage map … this hand-maintained array simply hadn't been kept in sync with it (exactly how the gap was missed)."* Spec 119 cites this as the canonical proof that **generated beats documented**. ⚠️ **`ledger-gate-callers.db.test.ts:448-449` is a DEAD anchor (WF1 commit 6, 2026-09-03) — that file is 356 lines post pilot 5.** Locked red-first instead at `src/tests/step-upstreams.logic.test.ts` (commit 1's `stepUpstreams` value assertion + commit 2's drift lock) and `src/tests/step-conformance.infra.test.ts`'s `LDG-4` describe blocks (commit 5's descriptor↔ledger cross-check).
 
-> **§5's first deliverable is `stepUpstreams(slug)` derived from the ledger, retiring all three arrays.** This is Phase 1 of the queued WF1 and it *"lands red-first by construction."*
+> **✅ BUILT (WF1 cross-step ledger, 2026-09-03).** §5's first deliverable, `stepUpstreams(slug)` derived from the ledger, shipped as `scripts/lib/ledger.js#stepUpstreams`; all three hand-maintained arrays are retired (`link-parcel-addresses.js` at `5ee14f5b`, `link-wsib.js` at `69de8a13`, `compute-parcel-cost-estimates.js` at commit `6155f1ed`). **This is Phase 1 of the queued WF1 and it *"lands red-first by construction"* was MEASURED STALE before this WF began** — the actual red (proven live, commit 1/2) was a slug-FORM divergence (`'load-parcels'`, retired as dead weight after a Step-0 grounding query found zero live `pipeline_runs` hits, local AND cloud), not a missing producer as originally assumed; see the corrected L-4/§6.0 text above.
 
 Also write-only and worth retiring: `parcels.zoning_base_source_dataset_version` is stamped every run (`enrich-parcels.js:303-348`) and **compared by nothing** — read only for admin display.
 

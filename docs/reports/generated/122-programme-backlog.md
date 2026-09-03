@@ -11,18 +11,19 @@ Total items: **75**
 | status | count |
 |---|---|
 | ⬜ NOT_STARTED | 15 |
-| ⚠️ PARTIAL | 21 |
-| ✅ BUILT | 37 |
+| ⚠️ PARTIAL | 20 |
+| ✅ BUILT | 38 |
 | ⏭️ SUPERSEDED | 2 |
 
-**blocks batching: 7**
+**blocks batching: 8**
 
-## Batching prerequisite — blocks "freeze after the eighth" (Spec 122 §8.2/§10.3) (7)
+## Batching prerequisite — blocks "freeze after the eighth" (Spec 122 §8.2/§10.3) (8)
 
 | id | spec | title | status | owner | blocks | last reviewed |
 |---|---|---|---|---|---|---|
 | `STD-7` | 122 §1.10 | archetype drives required-field profile, 8 archetypes dispatched | ⚠️ PARTIAL | pilot: pilot7_refresh_snapshot, pilot8_enrich_parcels | batching | 2026-08-29 |
 | `STD-8` | 122 §8.2 | freeze the template after the eighth, never the first | ⬜ NOT_STARTED | wf: wf: programme-STD-8 | batching | 2026-08-29 |
+| `LDG-4` | 122 §6.3 | stepUpstreams(slug) derived from the ledger | ✅ BUILT | wf: wf: cross-step ledger (WF1), commits 1-6, 2026-09-03 | batching | 2026-09-03 |
 | `LC-1` | 122 §4.1 (Spec 120 §4) | ~35 step lifecycle behaviours | ⚠️ PARTIAL | pilot: pilot7_refresh_snapshot | batching | 2026-08-29 |
 | `STA-1` | 120 §6 | 4 new state tables | ⬜ NOT_STARTED | wf: wf: programme-STA-1 | batching | 2026-08-29 |
 | `PRG-3` | 122 §7.2 | pilot order rulings | ⚠️ PARTIAL | pilot: pilot 6 cutover, d9057a54 | batching | 2026-08-29 |
@@ -37,7 +38,7 @@ Total items: **75**
 | `STA-3` | 120 §6b | 3 destructive-reset guards | ⬜ NOT_STARTED | wf: wf: programme-STA-2 | refresh_snapshot | 2026-09-03 |
 | `CLOUDPARITY` | 122 R-D | cloud database must run apply-logic-variables.js before any cloud cutover | ⚠️ PARTIAL | followup: review_followups.md HIGH ops entry (filed 2026-08-27, peel 8c) | cloud_deploy | 2026-08-29 |
 
-## Nice-to-have — real gap, not currently blocking (65)
+## Nice-to-have — real gap, not currently blocking (64)
 
 | id | spec | title | status | owner | blocks | last reviewed |
 |---|---|---|---|---|---|---|
@@ -51,7 +52,6 @@ Total items: **75**
 | `LDG-1` | 122 §6.0 | column-lineage generator | ✅ BUILT | wf: pre-existing infra | — | 2026-08-29 |
 | `LDG-2` | 122 §6.1 | ledger table edges from outputs.writes -> inputs.reads | ✅ BUILT | wf: R-T addendum commit 5 (absorbed into VAL-WF2) | — | 2026-08-30 |
 | `LDG-3` | 122 §6.2 | records_meta contracts HALT on violation | ✅ BUILT | wf: pre-existing infra | — | 2026-08-29 |
-| `LDG-4` | 122 §6.3 | stepUpstreams(slug) derived from the ledger | ⚠️ PARTIAL | followup: review_followups.md (2026-08-29 programme backlog filing) | — | 2026-08-29 |
 | `LDG-5` | 122 §6.4 | 4 invalidation mechanisms real today | ✅ BUILT | wf: pre-existing infra | — | 2026-08-29 |
 | `LDG-6` | 122 §6.4a | the centroid invalidation gap | ✅ BUILT | pilot: pilot6_compute_centroids | — | 2026-08-29 |
 | `LDG-7` | 122 §6.5 | descriptor reads/writes consistent with manifest.chains order | ✅ BUILT | wf: R-T addendum commit 5 (absorbed into VAL-WF2) | — | 2026-08-30 |
@@ -109,4 +109,4 @@ Total items: **75**
 
 ---
 
-*Freeze-readiness (Spec 122 §8.2/§10.3): the template may honestly "freeze after the eighth" only when the batching_prereq set above is EMPTY. Currently **7** item(s) block it.*
+*Freeze-readiness (Spec 122 §8.2/§10.3): the template may honestly "freeze after the eighth" only when the batching_prereq set above is EMPTY. Currently **8** item(s) block it.*

@@ -230,17 +230,17 @@
       "spec": "122 §6.3",
       "title": "stepUpstreams(slug) derived from the ledger",
       "promised": "stepUpstreams(slug) derived from the ledger, retiring 3 hand-maintained slug arrays",
-      "status": "PARTIAL",
-      "evidence": "0 grep hits for stepUpstreams anywhere in scripts/ or src/; 2 of 3 arrays gone as a side effect of full-file conversion; scripts/compute-parcel-cost-estimates.js:85 UPSTREAM_SLUGS still hand-maintained",
+      "status": "BUILT",
+      "evidence": "scripts/lib/ledger.js#stepUpstreams + #slugForms (commit 1db5ddf4); scripts/compute-parcel-cost-estimates.js:85 UPSTREAM_SLUGS retired, last of the 3 hand-maintained arrays (commit 6155f1ed); descriptor<->ledger cross-check src/tests/step-conformance.infra.test.ts 'LDG-4' describe blocks (commit 3f41f2a5); tier-2 doc section docs/reference/data-lineage-map.md#Upstream-sets (commit c8b17cdb)",
       "owner": {
-        "kind": "followup",
-        "ref": "review_followups.md (2026-08-29 programme backlog filing)"
+        "kind": "wf",
+        "ref": "wf: cross-step ledger (WF1), commits 1-6, 2026-09-03"
       },
       "gate": {
-        "kind": "nice_to_have",
-        "blocks": []
+        "kind": "batching_prereq",
+        "blocks": ["batching"]
       },
-      "last_reviewed": "2026-08-29"
+      "last_reviewed": "2026-09-03"
     },
     {
       "id": "LDG-5",
