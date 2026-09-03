@@ -1,6 +1,7 @@
 // SPEC LINK: docs/specs/01-pipeline/122_pipeline_step_optimization.md §5.2 (Condition 2 — the conformance suite)
 // SPEC LINK: docs/specs/01-pipeline/122_pipeline_step_optimization.md §5.1 (Condition 1 — the A2 shape rule)
 // SPEC LINK: docs/specs/01-pipeline/121_*.md §12b.6 (a checker that never fires proves nothing)
+// SPEC LINK: docs/specs/01-pipeline/122_pipeline_step_optimization.md §6 (tier 3 — descriptor <-> ledger cross-check, LDG-4)
 //
 // ⚠️ ZERO STEPS ARE CONVERTED TODAY, AND THIS SUITE MUST NOT READ AS GREEN FOR IT.
 //
@@ -1652,6 +1653,180 @@ describe('§5.2 conformance — every converted step', () => {
       expect(findings, findings.join('\n')).toEqual([]);
     });
   }
+});
+
+// ---------------------------------------------------------------------------
+// 6b. Commit 5 (WF1 cross-step ledger, Spec 122 §6, LDG-4) — tier 3 for
+//     converted steps: does the descriptor's OWN `inputs.reads.steps[]`
+//     agree with what the column-lineage ledger derives?
+//
+// R-V's seam pass (scripts/lib/step/seam.js) already derives converted<->
+// converted EDGES from this same `inputs.reads.steps[]` array — but it
+// TRUSTS the array; it has no independent way to tell whether the array
+// itself is complete. This cross-check is the independent check: it derives
+// upstream producers from COLUMN OVERLAP (scripts/lib/ledger.js#stepUpstreams)
+// and compares that against what's actually declared.
+// ---------------------------------------------------------------------------
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const ledger = require(path.join(REPO_ROOT, 'scripts/lib/ledger.js')) as {
+  stepUpstreams: (slug: string, opts: { chain: string; env?: Record<string, string | undefined> }) => string[];
+};
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const seam = require(path.join(REPO_ROOT, 'scripts/lib/step/seam.js')) as {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  loadConvertedDescriptors: () => Record<string, { descriptor: any; slug: string; relFile: string }>;
+};
+
+interface LdgDescriptorLite {
+  identity: { name: string };
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  execution?: any;
+  inputs: { reads: { steps: { step: string }[] } };
+}
+
+/** The chains a descriptor runs in — Object.keys(execution.invocation), mirroring staleness.js#deriveLedgerSlugs (never hand-copied). */
+function ldgDerivedChains(descriptor: LdgDescriptorLite): string[] {
+  const inv = descriptor.execution && descriptor.execution.invocation;
+  return inv && inv !== 'none' ? Object.keys(inv) : [];
+}
+
+/**
+ * The UNION, across every chain a descriptor runs in, of `stepUpstreams`'
+ * derived producers, restricted to `convertedNames` (excluding self).
+ * `inputs.reads.steps[]` is declared ONCE per descriptor — flat, chain-
+ * agnostic — so it must be compared against the UNION of what's derivable
+ * across every chain, not chain-by-chain: a chain-by-chain compare produces
+ * a FALSE positive on link_massing/permits (measured 2026-09-03) —
+ * compute_centroids never RUNS in the 'permits' chain, so a strict per-chain
+ * restriction wrongly excludes it there even though link_massing's permits
+ * invocation still reads the SAME parcels.centroid_lat/centroid_lng column
+ * compute_centroids wrote during a 'sources' run (chains are scheduling
+ * contexts, not table partitions — a column written in one chain is real
+ * data every other chain's queries can see).
+ */
+function ldgDerivedConvertedUnion(
+  name: string,
+  chains: string[],
+  convertedNames: Set<string>,
+  opts?: { env?: Record<string, string | undefined> },
+): string[] {
+  const union = new Set<string>();
+  for (const chain of chains) {
+    const stepUpstreamsOpts = opts?.env ? { chain, env: opts.env } : { chain };
+    for (const p of ledger.stepUpstreams(name, stepUpstreamsOpts)) union.add(p);
+  }
+  return [...union].filter((p) => convertedNames.has(p) && p !== name);
+}
+
+/**
+ * SUPERSET + EQUALITY (Fold C, DeepSeek #6) for one descriptor: SUPERSET
+ * alone is structurally blind to a LEDGER-side omission (shrinking the
+ * derived set only makes SUPERSET easier to pass), so EQUALITY on the SAME
+ * converted-producer-restricted sets closes that gap.
+ */
+function ldgConformance(
+  name: string,
+  descriptor: LdgDescriptorLite,
+  convertedNames: Set<string>,
+  opts?: { env?: Record<string, string | undefined> },
+): { missing: string[]; extra: string[] } {
+  const chains = ldgDerivedChains(descriptor);
+  const declaredSteps = new Set((descriptor.inputs.reads.steps || []).map((s) => s.step));
+  const declaredConverted = [...declaredSteps].filter((p) => convertedNames.has(p));
+  const derivedConverted = ldgDerivedConvertedUnion(name, chains, convertedNames, opts);
+  const missing = derivedConverted.filter((p) => !declaredSteps.has(p)); // SUPERSET violations
+  const extra = declaredConverted.filter((p) => !derivedConverted.includes(p)); // EQUALITY-only violations
+  return { missing, extra };
+}
+
+describe('LDG-4 — descriptor <-> ledger cross-check (SUPERSET + EQUALITY, converted-producer-restricted)', () => {
+  const byName = seam.loadConvertedDescriptors();
+  const convertedNames = new Set(Object.keys(byName));
+
+  /**
+   * Two genuine, MEASURED findings on the real 8 (2026-09-03), each filed in
+   * `docs/reports/review_followups.md` and asserted EXACTLY here — never a
+   * silent skip. A WIDENING of either gap still REDs (a new undeclared
+   * dependency); a fix that shrinks a gap to `[]` ALSO reds (forcing this
+   * allowlist to be updated, not left stale — same discipline LM-D6/LM-D11
+   * exists to enforce for programme-item promises).
+   *
+   *   · `link_parcels` (HIGH) — declares `inputs.reads.steps: []` but the
+   *     ledger finds two real column-level producers: `compute_centroids`
+   *     (`parcels.centroid_lat`/`centroid_lng`) and `link_parcel_addresses`
+   *     (`parcel_address_points.parcel_id`/`address_point_id`, a table the
+   *     descriptor's OWN `inputs.reads.tables[]` still declares reading).
+   *     `centroid_lat`/`centroid_lng` is ALSO a casualty of this branch's own
+   *     LP-D12..15 fixes (`58664257`, this session) not yet having a real
+   *     completed run recorded anywhere — checked live against BOTH the local
+   *     DB and cloud (`aws-0-ca-central-1`, run `permits:link_parcels`
+   *     2026-09-02T15:34:50Z) — but `link_parcel_addresses` is CURRENT,
+   *     unrelated to staleness. Declaring either changes live
+   *     `ledgerGatedSkip` staleness-gating behavior for a converted LINK
+   *     step, which this plumbing-only WF must not do unreviewed.
+   *   · `refresh_snapshot` (LOW, documented limitation, not a defect) —
+   *     declares 3 converted upstream steps the ledger's column-overlap
+   *     derivation does not find, because a RECORDER's dependency on them is
+   *     an ORDERING/lifecycle wait ("snapshot after these complete"), not a
+   *     shared-COLUMN data read — the ledger can only derive the latter.
+   */
+  const KNOWN_GAPS: Record<string, { missing: string[]; extra: string[] }> = {
+    link_parcels: { missing: ['compute_centroids', 'link_parcel_addresses'], extra: [] },
+    refresh_snapshot: { missing: [], extra: ['link_massing', 'link_parcels', 'link_wsib'] },
+  };
+
+  for (const [name, { descriptor }] of Object.entries(byName)) {
+    it(`${name} — declared inputs.reads.steps[] vs the ledger-derived converted-producer set`, () => {
+      const { missing, extra } = ldgConformance(name, descriptor, convertedNames);
+      const known = KNOWN_GAPS[name] || { missing: [], extra: [] };
+      expect(
+        missing.slice().sort(),
+        `${name}: SUPERSET — declared inputs.reads.steps[] is missing ${missing.join(', ') || '(none)'} (known gap: ${known.missing.join(', ') || '(none)'})`,
+      ).toEqual(known.missing.slice().sort());
+      expect(
+        extra.slice().sort(),
+        `${name}: EQUALITY — declared ${extra.join(', ') || '(none)'} that the ledger does not derive (known gap: ${known.extra.join(', ') || '(none)'})`,
+      ).toEqual(known.extra.slice().sort());
+    });
+  }
+});
+
+describe('LDG-4 fixture proofs (the cross-check genuinely detects a regression, not vacuous)', () => {
+  const FIXTURE_ENV = { BUILDO_LEDGER_SNAPSHOT_PATH: 'src/tests/fixtures/ledger-snapshot.fixture.json' };
+  const MISSING_PRODUCER_ENV = { BUILDO_LEDGER_SNAPSHOT_PATH: 'src/tests/fixtures/ledger-snapshot-missing-producer.fixture.json' };
+  const FIXTURE_CONVERTED = new Set(['fixture_consumer', 'fixture_producer_a', 'fixture_producer_b']);
+  const fixtureDescriptor = (steps: string[]): LdgDescriptorLite => ({
+    identity: { name: 'fixture_consumer' },
+    execution: { invocation: { sources: {} } },
+    inputs: { reads: { steps: steps.map((step) => ({ step })) } },
+  });
+
+  it('SUPERSET fails when a real converted producer is dropped from inputs.reads.steps[] (mirrors: dropping compute_centroids from link_massing\'s reads)', () => {
+    const { missing } = ldgConformance('fixture_consumer', fixtureDescriptor(['fixture_producer_a']), FIXTURE_CONVERTED, { env: FIXTURE_ENV });
+    expect(missing).toEqual(['fixture_producer_b']);
+  });
+
+  it('SUPERSET passes when both real producers are declared', () => {
+    const { missing } = ldgConformance('fixture_consumer', fixtureDescriptor(['fixture_producer_a', 'fixture_producer_b']), FIXTURE_CONVERTED, { env: FIXTURE_ENV });
+    expect(missing).toEqual([]);
+  });
+
+  it('EQUALITY (DeepSeek #6) catches a LEDGER-side omission that SUPERSET alone cannot: a fixture snapshot with a producer\'s write removed', () => {
+    const { missing, extra } = ldgConformance('fixture_consumer', fixtureDescriptor(['fixture_producer_a', 'fixture_producer_b']), FIXTURE_CONVERTED, { env: MISSING_PRODUCER_ENV });
+    // SUPERSET is structurally blind here: the SHRUNK derived set is
+    // [fixture_producer_a] only, a subset of the still-fully-declared pair,
+    // so superset trivially passes.
+    expect(missing).toEqual([]);
+    // EQUALITY catches it: declared still names fixture_producer_b, the
+    // (shrunk) derived set no longer does.
+    expect(extra).toEqual(['fixture_producer_b']);
+  });
+
+  it('EQUALITY passes on the matched pair (both directions proven; the real GREEN case)', () => {
+    const { missing, extra } = ldgConformance('fixture_consumer', fixtureDescriptor(['fixture_producer_a', 'fixture_producer_b']), FIXTURE_CONVERTED, { env: FIXTURE_ENV });
+    expect(missing).toEqual([]);
+    expect(extra).toEqual([]);
+  });
 });
 
 // ---------------------------------------------------------------------------

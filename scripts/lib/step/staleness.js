@@ -32,6 +32,11 @@
 'use strict';
 
 const sourceVersion = require('../source-version');
+// Commit 5 (WF1 cross-step ledger, Spec 122 §6, §11 dual path) — the
+// three-form slug expansion `deriveLedgerSlugs` computed as a private
+// closure is now the SAME `slugForms` `scripts/lib/ledger.js#stepUpstreams`
+// uses, imported rather than re-derived, so exactly one expansion exists.
+const { slugForms } = require('../ledger');
 
 /** The env value that arms an override. `'1'`, exactly — never truthiness. */
 const OVERRIDE_ON = '1';
@@ -541,14 +546,9 @@ function deriveLedgerSlugs(descriptor) {
   const slug = descriptor.identity.name;
   const inv = descriptor.execution && descriptor.execution.invocation;
   const chains = inv && inv !== NONE ? Object.keys(inv) : [];
-  const forms = (name) => [
-    ...chains.map((c) => `${c}:${name}`),
-    name,
-    name.replace(/_/g, '-'),
-  ];
-  const own = [...new Set(forms(slug))];
+  const own = [...new Set(slugForms(slug, chains))];
   const steps = (descriptor.inputs && descriptor.inputs.reads && descriptor.inputs.reads.steps) || [];
-  const upstream = [...new Set(steps.flatMap((s) => forms(s.step)))];
+  const upstream = [...new Set(steps.flatMap((s) => slugForms(s.step, chains)))];
   return { own, upstream };
 }
 

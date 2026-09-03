@@ -3,6 +3,17 @@ _Generated following the Pipeline Clean-up Mandate. Trimmed 2026-05-05 — full 
 
 ---
 
+## WF1 cross-step ledger (Spec 122 §6, LDG-4) — commit 5 findings (2026-09-03)
+
+Source: `.cursor/wf1_cross_step_ledger_active_task.md` commit 5 — the descriptor↔ledger cross-check, `src/tests/step-conformance.infra.test.ts`'s new `LDG-4` describe block, verified live against the real 8 `converted.json` entries and both the local and cloud DB.
+
+| Severity | Source | Item | Disposition |
+|----------|--------|------|--------------|
+| HIGH | LDG-4 cross-check, measured 2026-09-03 | **`link_parcels.descriptor.json` declares `inputs.reads.steps: []` (empty) but the ledger derives TWO real converted upstream producers it does not name: `compute_centroids` (`parcels.centroid_lat`/`centroid_lng`) and `link_parcel_addresses` (`parcel_address_points.parcel_id`/`address_point_id` — a table `inputs.reads.tables[]` still currently declares reading).** `link_parcel_addresses` is a CURRENT gap, unrelated to data staleness. `compute_centroids` is entangled with the same-branch LP-D12..15 fixes (`58664257`) not yet having a completed run recorded anywhere — checked live against both the local DB and cloud (`aws-0-ca-central-1`, `permits:link_parcels` run 2026-09-02T15:34:50Z) — so it may partly self-resolve once this branch merges and the chain re-runs, but should be re-measured, not assumed. R-V's seam pass (`scripts/lib/step/seam.js`) cannot see this either — it derives edges from the SAME empty `inputs.reads.steps[]` array. | **ACT** — WF3: add the two entries to `link_parcels.descriptor.json`'s `inputs.reads.steps[]`. Out of this WF's scope because it changes live `ledgerGatedSkip` staleness-gating behavior for a converted LINK step and needs its own reviewed WF, not a drive-by edit inside ledger-tooling. Re-verify against a fresh chain run before landing (`compute_centroids` may narrow or resolve). |
+| LOW · NOTED, not a defect | LDG-4 cross-check, measured 2026-09-03 | **`refresh_snapshot.descriptor.json` declares 3 converted upstream steps (`link_parcels`, `link_massing`, `link_wsib`) the ledger's column-overlap derivation does not find**, because a RECORDER's dependency on them is an ORDERING/lifecycle wait ("snapshot after these complete"), not a shared-COLUMN data read — a column-lineage-only ledger structurally cannot derive a pure ordering dependency. `LDG-4`'s EQUALITY check documents this as a named, asserted-exact exemption rather than silently widening the check's tolerance. | **NOTED, not a defect** — no action; the RECORDER archetype's declared reads.steps[] legitimately carries more than column overlap can prove. If a future ledger gains a `writes.invalidates`/ordering-edge concept this exemption should be re-measured. |
+
+---
+
 ## Pilot 8 (`refresh_snapshot`) Finding 7 — admin dual-path re-implementation (2026-09-03)
 
 Source: `docs/reports/2026-08-31-pilot8-refresh-snapshot-assessment.md` §0.6 Finding 7, filed per the pilot's own Ask 3 (`.cursor/active_task.md:150`). Out of Backend/Pipeline Operating Boundary — Cross-Domain, not actioned by pilot 8.

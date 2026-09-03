@@ -3638,6 +3638,24 @@
         ]
       },
       "writes": {}
+    },
+    "scripts/backfill/backfill-smeared-enriched-status.js": {
+      "script": "scripts/backfill/backfill-smeared-enriched-status.js",
+      "reads": {
+        "permits": [
+          "permit_num",
+          "revision_num",
+          "status",
+          "enriched_status",
+          "last_seen_at"
+        ]
+      },
+      "writes": {
+        "permits": [
+          "enriched_status",
+          "last_seen_at"
+        ]
+      }
     }
   }
 }

@@ -1545,7 +1545,7 @@ Coverage: **1128** columns across **78** tables, from **66** in-chain steps.
 | `coa_applications` | `scripts/one-time/backfill-coa-street-name-normalized.js`, `scripts/one-time/backfill-coa-structure-type.js` | `scripts/one-time/backfill-coa-products.js`, `scripts/one-time/backfill-coa-street-name-normalized.js`, `scripts/one-time/backfill-coa-structure-type.js` |
 | `cost_estimates` | — | `scripts/one-time/wf2-p13-null-legacy-cost-tail.js` |
 | `lead_products` | `scripts/one-time/backfill-coa-products.js` | — |
-| `permits` | — | `scripts/backfill/backfill-permits-location.js` |
+| `permits` | `scripts/backfill/backfill-smeared-enriched-status.js` | `scripts/backfill/backfill-permits-location.js`, `scripts/backfill/backfill-smeared-enriched-status.js` |
 | `product_groups` | — | `scripts/one-time/backfill-coa-products.js` |
 
 ---
