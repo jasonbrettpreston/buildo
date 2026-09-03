@@ -2482,4 +2482,85 @@ describe('R-B (LW-D20 / LG-19) — interrupted-retraction reader, fake-pool lock
     expect(result.gate?.reason).toBe('recover_interrupted_retraction');
     expect(logs.some((l) => l.includes('recover_interrupted_retraction')), 'the cascade mode gate log line must name the real reason').toBe(true);
   });
+
+  // -------------------------------------------------------------------------
+  // R-B/LW-D20 RECURRENCE — `runMaterializePhase` (added at pilot 5, 5ee14f5b)
+  // never received the same fold `runCascadePhase`/`runLinkPhase` got at
+  // 8adf5d19: its `bypassed` omitted the `interruptedRetraction.interrupted`
+  // term entirely, so a future MATERIALIZE step that ever declares
+  // `recovery.interrupted: "force_full_on_next_run"` would hit the exact
+  // unreachable-check bug LW-D20 already found and fixed once (the SAME
+  // `ledgerGatedSkip` early-return shape CASCADE has, LG-15). No live
+  // MATERIALIZER declares that today (link_parcel_addresses is `"none"`,
+  // LPA-D1/R-F item 1) — this locks the RUNNER, not one step's descriptor.
+  // -------------------------------------------------------------------------
+  function materializeCompute(materializeSql: Record<string, unknown>) {
+    return { buildMaterializeSql: () => materializeSql };
+  }
+
+  const LPA_BATCH_SQL = 'INSERT INTO parcel_address_points (parcel_id, address_point_id) '
+    + 'SELECT 1, 1 WHERE FALSE ON CONFLICT DO NOTHING RETURNING 0 AS new_links, NULL AS max_id, 0 AS rows_in_batch';
+  const LPA_MATERIALIZE_SQL = {
+    pre_sql: 'STUB_LPA_PRE', batch_sql: LPA_BATCH_SQL, post_sql: 'STUB_LPA_POST',
+    invariants_sql: 'STUB_LPA_INVARIANTS', invariants_params: [], batch_size_config_key: 'stub_batch_size',
+  };
+
+  function materializePool(interruptedRow: { id: number; pipeline: string; status: string; started_at: string } | null, ledgerSkip: boolean) {
+    return dryRunFakePool((text: string) => {
+      if (text.includes(INTERRUPTED_QUERY_MARK)) return { rows: interruptedRow ? [interruptedRow] : [] };
+      if (text.includes('own_last') && text.includes('upstream_since')) {
+        // A definite SKIP answer (own-last completed, zero upstream activity/changes) —
+        // reached ONLY if `bypassed` was computed false. Mirrors the cascade regression
+        // test's "sharpest possible proof" reasoning: if bypassed is wrongly false, the
+        // run SKIPs on this answer; if correctly true, `ledgerGatedSkip` never queries it.
+        return ledgerSkip
+          ? { rows: [{ own_started: '2026-08-01T00:00:00Z', own_completed: '2026-08-01T00:00:00Z', own_last_records_meta: {}, non_completed: '0', completed_with_changes: '0', stale_running: '0' }] }
+          : { rows: [{ own_started: '2026-08-01T00:00:00Z', own_completed: '2026-08-01T00:00:00Z', own_last_records_meta: {}, non_completed: '1', completed_with_changes: '0', stale_running: '0' }] };
+      }
+      if (text === 'STUB_LPA_PRE') return { rows: [{ parcels_with_geom: 5 }] };
+      if (text === LPA_BATCH_SQL) return { rows: [{ new_links: 0, max_id: null, rows_in_batch: 0 }] };
+      if (text === 'STUB_LPA_POST') return { rows: [{ parcel_address_points_count: 0 }] };
+      if (text === 'STUB_LPA_INVARIANTS') return { rows: [{ fanout_ok: true }] };
+      return undefined;
+    });
+  }
+
+  function lpaDescriptor() {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports -- the real descriptor, not a fixture copy
+    const descriptor = clone(require(join(process.cwd(), 'scripts/link-parcel-addresses.descriptor.json')));
+    descriptor.guards.requires = [];
+    // Orthogonal to this claim: proves the RUNNER's wiring is generic, independent of
+    // this one step's own current "none" declaration (LPA-D1/R-F item 1) — the fold
+    // must hold for the ARCHETYPE, not just whichever step happens to declare it today.
+    descriptor.recovery.interrupted = 'force_full_on_next_run';
+    return descriptor;
+  }
+
+  it('REGRESSION (R-B/LW-D20 recurrence, MATERIALIZER) — runMaterializePhase folds the interrupted-retraction check into `bypassed`, BEFORE the ledger gated-skip, so it cannot be skipped past', async () => {
+    const descriptor = lpaDescriptor();
+    const pool = materializePool(STUCK_ROW, true);
+    const result = await stepLib.runMaterializePhase({
+      descriptor, pool, compute: materializeCompute(LPA_MATERIALIZE_SQL), config: {}, chainId: null,
+      log: NOOP_LOG, tag: '[link_parcel_addresses]', clockNow: new Date('2026-08-29T20:00:00Z'),
+      ownRunId: 9003,
+    });
+    expect(pool.sql.some((s: string) => s.includes(INTERRUPTED_QUERY_MARK)), 'the interrupted-retraction reader must actually be invoked').toBe(true);
+    expect(result.skipped, 'an interrupted retraction must never resolve to a SKIP, even though the gate itself was fed a definite-skip answer').toBeFalsy();
+    expect(result.gatedSkip?.reason, 'ledgerGatedSkip short-circuits to "bypassed" and must never reach the real skip/run query').toBe('bypassed');
+    expect(pool.sql.some((s: string) => s.includes('own_last') && s.includes('upstream_since')), 'bypassed:true must short-circuit BEFORE the ledger-gate query is ever issued').toBe(false);
+  });
+
+  it('REVERSE (R-B/LW-D20 recurrence, MATERIALIZER) — NOT interrupted resolves `bypassed:false`, so the real ledger gate decides, and SKIPs when it genuinely would', async () => {
+    const descriptor = lpaDescriptor();
+    const pool = materializePool(null, true);
+    const result = await stepLib.runMaterializePhase({
+      descriptor, pool, compute: materializeCompute(LPA_MATERIALIZE_SQL), config: {}, chainId: null,
+      log: NOOP_LOG, tag: '[link_parcel_addresses]', clockNow: new Date('2026-08-29T20:00:00Z'),
+      ownRunId: 9004,
+    });
+    expect(pool.sql.some((s: string) => s.includes(INTERRUPTED_QUERY_MARK)), 'the interrupted-retraction reader must actually be invoked').toBe(true);
+    expect(pool.sql.some((s: string) => s.includes('own_last') && s.includes('upstream_since')), 'not interrupted → bypassed:false → the real ledger-gate query must be reached').toBe(true);
+    expect(result.skipped, 'a genuinely unchanged upstream must still SKIP when nothing bypasses the gate').toBe(true);
+    expect(result.gatedSkip?.reason).toBe('no_upstream_changes');
+  });
 });

@@ -1516,10 +1516,18 @@ async function runCascadePhase({ descriptor, pool, compute, config, chainId, log
  *
  * @returns {Promise<object>} `{mode, gate, matched, written, prior, overrides, skipped, gatedSkip}`
  */
-async function runMaterializePhase({ descriptor, pool, compute, config, chainId, log, tag, clockNow, preWriteGate }) {
+async function runMaterializePhase({ descriptor, pool, compute, config, chainId, log, tag, clockNow, preWriteGate, ownRunId }) {
   const requirements = await assertRequirements(pool, descriptor, { log, tag });
   const overrides = staleness.resolveOverrides(descriptor);
-  const bypassed = overrides.force_full === true;
+  // R-B (LW-D20/LG-19 recurrence) — MATERIALIZER shares CASCADE's exact `ledgerGatedSkip`
+  // early-return shape (LG-15): checked HERE, before the gate, and folded into `bypassed`
+  // so an interrupted retraction structurally cannot be skipped past — mirrors
+  // runCascadePhase's own placement/comment verbatim (8adf5d19). `detectInterruptedRetraction`
+  // is self-gating on `recovery.interrupted === "force_full_on_next_run"` (staleness.js),
+  // so this is a no-op for every MATERIALIZER that, like link_parcel_addresses today
+  // (LPA-D1, retract:"none"), declares no destructive retraction to recover.
+  const interruptedRetraction = await staleness.detectInterruptedRetraction(pool, descriptor, { ownRunId });
+  const bypassed = overrides.force_full === true || interruptedRetraction.interrupted;
 
   // ── LG-15 — THE LEDGER GATED SKIP, generalizing this step's own pre-existing B3 gate ──
   const gatedSkip = await staleness.ledgerGatedSkip(pool, descriptor, { now: clockNow, bypassed });
@@ -2437,7 +2445,7 @@ async function runWithPool(runnable, pool, ctx) {
       } else if (isMaterializeStep(descriptor)) {
         materialize = await runMaterializePhase({
           descriptor, pool, compute: runnable.compute, config: configValues,
-          chainId, log: pipeline.log, tag: `[${slug}]`, clockNow,
+          chainId, log: pipeline.log, tag: `[${slug}]`, clockNow, ownRunId: runId,
           preWriteGate: makePreWriteGate({ descriptor, chainId, stepCtx, compute: runnable.compute, config: configValues }),
         });
         stepCtx.matched = materialize.matched;
