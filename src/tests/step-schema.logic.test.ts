@@ -131,6 +131,13 @@ const INVALID_FIXTURES: Array<{
     keyword: 'required',
     param: ['missingProperty', 'frequency'],
   },
+  {
+    file: 'order-guarantee-missing-anchor.json',
+    rule: 'Spec 124 §2 Rule 11 (WF2 "Rules 10/11/12 mechanical checkers", C2) — a when:"pre_write" check must declare order_guarantee {guarantee, spec_ref, anchor}; a missing anchor is unevaluable (checkOrderGuaranteesCited cannot verify a citation with no literal to look for)',
+    path: '/checks/10/order_guarantee',
+    keyword: 'required',
+    param: ['missingProperty', 'anchor'],
+  },
 ];
 
 describe('step.schema.json — the canonical vocabulary (Spec 122 S1)', () => {

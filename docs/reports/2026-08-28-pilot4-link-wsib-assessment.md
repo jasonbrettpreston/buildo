@@ -691,7 +691,7 @@ Two REAL bugs were found by a **live kill-and-rerun proof against this exact ste
 - compare ran: true · diffs found: 218 · unexplained: 0
 
 ### Test suite (item iii)
-- 0/0 passed (suite success=true)
+- SKIPPED or failed to run: --fast: vitest spawn skipped
 
 ### Policy coverage matrix (item vi) — Spec 124 Rules 1-13
 
@@ -706,11 +706,11 @@ Two REAL bugs were found by a **live kill-and-rerun proof against this exact ste
 | 7 | Archetype gates categories | enforced-green |  |
 | 8 | Per-target write discipline | enforced-green |  |
 | 9 | Banned write needs ledger (+ V7 no_retraction) | enforced-green |  |
-| 10 | Verdict row-derived | prose-only | enforced by step-library.logic.test.ts, outside step:validate's (i)(ii)(iii) run scope |
-| 11 | Phase-order re-derive (R-B) | prose-only | R-B describe not scoped to this step |
-| 12 | Truthful crash posture (R-M + R-B reader) | prose-only | R-M/R-B-reader describes not scoped to this step |
+| 10 | Verdict row-derived | enforced-red | (a) OK — 11 corpus file(s) scanned, 0 unsanctioned second derivations, 2 sanctioned hit(s) matched SANCTIONED_VERDICT_SITES · (b) KNOWN-DEFECT (pinned) — KNOWN-DEFECT (Spec 123 §3.1 pin): skipRecordsMeta's all-INFO audit table folds to verdict=PASS — SEVERITY_RANK has no SKIP rank (scripts/lib/step/verdict.js:22). Pinned against review_followups.md "A lock-skipped converted step verdicts as PASS" (HIGH, 2026-09-03) and scripts/steps/_schema/programme-items.json "VRD-SKIP" (nice_to_have). |
+| 11 | Phase-order re-derive (declared half, checkOrderGuaranteesCited) | enforced-green | 1 when:"pre_write" check(s), 0 order_guarantee violation(s) — G-3 completeness half stays open |
+| 12 | Truthful crash posture (R-B reachability, static + R-M before-image) | enforced-green | R-B (checkInterruptedPostureTruthful): shape=cascade runner=runCascadePhase: calls staleness.ledgerGatedSkip; bypassed folds interruptedRetraction.interrupted before the early-return can short-circuit past it · R-M: prose-only (R-M/LG-17 describe not scoped to this step (vitest not run, or no before-image target)) |
 | 13 | A step validates itself | enforced-green | this run of step:validate IS the mechanism |
-| P3 | I/O cost adjudication (measured, not gated) | measured | descriptor=63533B notes=12503B checks=20 rows records_meta=4753B (newest post/ capture) |
+| P3 | I/O cost adjudication (measured, not gated) | measured | descriptor=63927B notes=12503B checks=20 rows records_meta=1392B (newest post/ capture) |
 
-**Enforced-green: 9/14**
+**Enforced-green: 11/14**
 

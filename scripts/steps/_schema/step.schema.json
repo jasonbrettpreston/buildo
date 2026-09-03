@@ -688,12 +688,34 @@
           "description": "R-T addendum, commit 3 (R-H, 2026-08-28 — 'carried to pilot 4', unmet until now). A machine-readable STRING naming the condition that would let this check's severity tighten (e.g. \"zero rows\" or \"population < N\") — the SAME field/grammar `invariants[]`/`plausibility[]` carry (Design decisions), extended to `checks[]` because R-H's own dispositioned checks (LM-D6/LM-D11) are pre-existing `checks[]` entries, not new declared invariants. Pairs with the EXISTING <metric>_retighten companion-audit-row convention (scripts/lib/accepted-baseline.js, Spec 48 §4.9) — this is the descriptor-side declaration, the companion row is the runtime-side emission, reused not reinvented. Optional: only a WARN-severity check with a standing non-zero population carries one.",
           "type": "string",
           "minLength": 1
+        },
+        "order_guarantee": {
+          "description": "Spec 124 §2 Rule 11 (WF2 'Rules 10/11/12 mechanical checkers', C2) — the DECLARED half of \"a phase-reorder must re-derive every 'before X' guarantee stated in the step's own governing spec.\" REQUIRED on any check with `when:\"pre_write\"` — that lifecycle position IS a declared ordering constraint (a FAIL row here with no active override skips the write entirely, per `when`'s own description above), so a check placed there is asserting a real spec-stated guarantee, and this field says WHICH one. `guarantee` is the human-authored one-line statement of what must hold before the write (e.g. \"abort before any DB write\"); `spec_ref` names the governing spec file the guarantee is quoted from; `anchor` is the literal substring `checkOrderGuaranteesCited` (scripts/analysis/step-validate.mjs) verifies is STILL PRESENT, verbatim, in that spec file — an anchor that rots (the cited spec prose changed or moved) is a RED, not a silent pass.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["guarantee", "spec_ref", "anchor"],
+          "properties": {
+            "guarantee": { "type": "string", "minLength": 1 },
+            "spec_ref": { "type": "string", "pattern": "^docs/specs/.+\\.md$" },
+            "anchor": { "type": "string", "minLength": 1 }
+          },
+          "x-ruling": {
+            "rungs_tried": [
+              "rung (a) reuse — why.liveness.kind already carries an enum value \"spec\" (step.schema.json:182)",
+              "declared check (a plain checks[].why free-text mention)"
+            ],
+            "why": "why.liveness.kind:\"spec\" is single-valued and every one of the 4 live pre_write checks already spends it on the file/table liveness THAT check needs (row 9 of the WF2 grounding table) — reusing it for order-guarantee citation would silently overload one field with two unrelated purposes, with no way for a reader (or a checker) to tell which reading applies on a given check. A plain checks[].why mention is unstructured prose — exactly the 'a spec scan is simultaneously false-positive and false-negative' failure mode this rule's own design note rejects. A new, structured field naming the spec + a verifiable literal anchor is the last-resort rung, per G-1."
+          }
         }
       },
       "allOf": [
         {
           "if": { "properties": { "blocking": { "const": true } }, "required": ["blocking"] },
           "then": { "properties": { "when": { "const": "pre" } } }
+        },
+        {
+          "if": { "properties": { "when": { "const": "pre_write" } }, "required": ["when"] },
+          "then": { "required": ["order_guarantee"] }
         }
       ]
     },

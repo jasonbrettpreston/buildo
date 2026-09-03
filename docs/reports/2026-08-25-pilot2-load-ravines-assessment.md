@@ -353,7 +353,7 @@ Declared BEFORE any old/new diff. Sources: `scripts/analysis/capture-step-golden
 |---|---|---|
 | `key:pipeline_runs[0].id` | `excluded-with-reason` | serial PK (`VOLATILE_KEYS`) |
 | `key:pipeline_runs[0].started_at` · `key:pipeline_runs[0].completed_at` · `key:pipeline_runs[0].duration_ms` | `excluded-with-reason` | wall clock / elapsed (`VOLATILE_KEYS`). Written out in full rather than abbreviated after the first suffix: the inventory is machine-read key-by-key, and `completed_at` on its own does not declare `pipeline_runs[0].completed_at`. Observed on the STANDALONE captures only — in-chain the ledger row belongs to `run-chain`, so the step's own capture has no `pipeline_runs` rows to strip. |
-| `key:id` · `run_id` · `timestamp` · `elapsed_ms` · `elapsed_s` · `generated_at` · `checked_at` · `captured_at` | `excluded-with-reason` | `VOLATILE_KEYS` (harness) |
+| `key:id` · `run_id` · `timestamp` · `elapsed_ms` · `elapsed_s` · `generated_at` · `checked_at` · `captured_at` · `key:summary.records_meta.chain_run_id` · `key:pipeline_runs[0].records_meta.chain_run_id` | `excluded-with-reason` | `VOLATILE_KEYS` (harness); `chain_run_id` added 2026-09-03 (WF2 "Rules 10/11/12 mechanical checkers" C2 — a per-invocation chain-run correlation UUID, R-B/R-U, run-scoped by design; stamped on both the emitted summary and the persisted `pipeline_runs` row) |
 | `row:sys_duration_ms` · `row:sys_velocity_rows_sec` | `excluded-with-reason` | `VOLATILE_METRIC_PREFIXES` `sys_` — observed on both baseline runs |
 | `pattern:duration_literal` | `normalize-then-match` | `completed in 3.1s` → `<DUR>` |
 | `pattern:iso_timestamp` · `pg_timestamp` · `rows_per_sec` · `run_id_literal` · `pipeline_runs_id_literal` · `pid_literal` | `normalize-then-match` | harness masks (`<TS>`, `<RATE>`, `<RUN_ID>`, `pipeline_runs <ID>`, `pid=<PID>`) |
@@ -470,7 +470,7 @@ Declared BEFORE any old/new diff. Sources: `scripts/analysis/capture-step-golden
 - compare ran: true · diffs found: 83 · unexplained: 0
 
 ### Test suite (item iii)
-- 0/0 passed (suite success=true)
+- SKIPPED or failed to run: --fast: vitest spawn skipped
 
 ### Policy coverage matrix (item vi) — Spec 124 Rules 1-13
 
@@ -485,11 +485,11 @@ Declared BEFORE any old/new diff. Sources: `scripts/analysis/capture-step-golden
 | 7 | Archetype gates categories | enforced-green |  |
 | 8 | Per-target write discipline | enforced-green |  |
 | 9 | Banned write needs ledger (+ V7 no_retraction) | enforced-green |  |
-| 10 | Verdict row-derived | prose-only | enforced by step-library.logic.test.ts, outside step:validate's (i)(ii)(iii) run scope |
-| 11 | Phase-order re-derive (R-B) | prose-only | R-B describe not scoped to this step |
-| 12 | Truthful crash posture (R-M + R-B reader) | prose-only | R-M/R-B-reader describes not scoped to this step |
+| 10 | Verdict row-derived | enforced-red | (a) OK — 11 corpus file(s) scanned, 0 unsanctioned second derivations, 2 sanctioned hit(s) matched SANCTIONED_VERDICT_SITES · (b) KNOWN-DEFECT (pinned) — KNOWN-DEFECT (Spec 123 §3.1 pin): skipRecordsMeta's all-INFO audit table folds to verdict=PASS — SEVERITY_RANK has no SKIP rank (scripts/lib/step/verdict.js:22). Pinned against review_followups.md "A lock-skipped converted step verdicts as PASS" (HIGH, 2026-09-03) and scripts/steps/_schema/programme-items.json "VRD-SKIP" (nice_to_have). |
+| 11 | Phase-order re-derive (declared half, checkOrderGuaranteesCited) | enforced-green | 2 when:"pre_write" check(s), 0 order_guarantee violation(s) — G-3 completeness half stays open |
+| 12 | Truthful crash posture (R-B reachability, static + R-M before-image) | enforced-green | R-B (checkInterruptedPostureTruthful): recovery.interrupted="none" — no reachability claim to verify · R-M: prose-only (R-M/LG-17 describe not scoped to this step (vitest not run, or no before-image target)) |
 | 13 | A step validates itself | enforced-green | this run of step:validate IS the mechanism |
-| P3 | I/O cost adjudication (measured, not gated) | measured | descriptor=47518B notes=8569B checks=19 rows records_meta=4096B (newest post/ capture) |
+| P3 | I/O cost adjudication (measured, not gated) | measured | descriptor=48334B notes=8569B checks=19 rows records_meta=2060B (newest post/ capture) |
 
-**Enforced-green: 10/14**
+**Enforced-green: 12/14**
 

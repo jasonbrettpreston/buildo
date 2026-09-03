@@ -71,6 +71,7 @@ The `--full` chain_arg (added `0031f37` for the one-time b16c036 ghost-link clea
 ### Edge Cases
 - Shapefile URL changes → `assert_schema` (Tier 1) checks URL accessibility
 - Large parameter counts → flushed at 30K to stay under PostgreSQL 65,535 limit
+- **Empty-source guard before the full-mode retraction (D-20, WF2 "Rules 10/11/12 mechanical checkers", C2, 2026-09-03).** The full-mode `DELETE FROM parcel_buildings ... WHERE parcel_id IN (SELECT id FROM parcels WHERE <baseFilter>)` carries no guard of its own against an empty or truncated `building_footprints` corpus — abort BEFORE the retraction runs whenever the upstream corpus is empty, or the run would delete all 520,492 links and rebuild nothing, leaving a junction table that is empty, a verdict that is PASS, and twelve derived parcel columns that go NULL one chain-step later. `link-massing.js`'s `empty_source_guard` check (`checks[].when:"pre_write"`) is the runtime enforcement — an unaccepted FAIL there means no DELETE statement is issued at all.
 </behavior>
 
 ---

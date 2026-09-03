@@ -1330,6 +1330,23 @@
         "blocks": []
       },
       "last_reviewed": "2026-09-03"
+    },
+    {
+      "id": "CRASH-BEHAV",
+      "spec": "124 §2 Rule 12",
+      "title": "live SIGTERM-and-recover behavioural proof for LINK, LINK_KEYED, MATERIALIZE (and, in the abstract, INGEST/BACKFILL/RECORDER)",
+      "promised": "the declared crash-recovery posture (recovery.interrupted) matches MEASURED runtime behaviour, not just static source reachability, for every shape whose runner could ever be asked to recover an interrupted destructive retraction",
+      "status": "NOT_STARTED",
+      "evidence": "src/tests/db/step-crash-posture.db.test.ts (WF2 'Rules 10/11/12 mechanical checkers', C3, 2026-09-03) is WRITTEN — spawn link_wsib for real, SIGTERM once pipeline_runs reads 'running', assert the row stays 'running' and the next staleness.selectMode call resolves mode:'full', reason:'recover_interrupted_retraction' — but committed describe.skip-gated, BLOCKED: measured live that a real converted step spawned against the ephemeral BUILDO_TEST_DB testcontainer always refuses at scripts/lib/resolve-db.js's assertDbTarget ('connected to database \"buildo_test\", expected one of \"postgres\"') — every descriptor's database.assert_current_database is a single literal with no test-context override, and link-wsib.js's descriptor require() has no path-override hook either. Filed HIGH in docs/reports/review_followups.md ('WF2 Rule 12 behavioural half — no db.test.ts can spawn a REAL converted step against the ephemeral test container', 2026-09-03). The STATIC reachability half (scripts/analysis/step-validate.mjs's checkInterruptedPostureTruthful) + the existing fake-pool unit lock (src/tests/step-library.logic.test.ts) remain the enforced mechanisms for all three live force_full_on_next_run archetypes (link/link_massing, cascade/link_wsib, link_keyed/link_parcels) in the meantime.",
+      "owner": {
+        "kind": "followup",
+        "ref": "docs/reports/review_followups.md — 'WF2 Rule 12 behavioural half — no db.test.ts can spawn a REAL converted step against the ephemeral test container' (HIGH, 2026-09-03): a scoped WF2/WF3 adds a genuine, reviewed test-context escape hatch to assertDbTarget, then un-skips step-crash-posture.db.test.ts and extends its pattern to link_massing (link) and link_parcels (link_keyed), parameterized rather than copy-pasted a third time"
+      },
+      "gate": {
+        "kind": "nice_to_have",
+        "blocks": []
+      },
+      "last_reviewed": "2026-09-03"
     }
   ]
 }

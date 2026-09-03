@@ -124,6 +124,7 @@ only"), `wsib_registry` row count and content unaffected (121,116, unchanged). S
 - WSIB CSV reload → enriched contacts preserved (load-wsib.js UPSERT doesn't touch contact columns)
 - Same company with multiple WSIB entries (different subclasses) → each enriched independently
 - Malformed mailing addresses (PO Box, Suite) → city extraction falls back to subsequent address parts
+- **Empty-source guard before the A-7/LG-16 full-mode repair's retraction (D-20, WF2 "Rules 10/11/12 mechanical checkers", C2, 2026-09-03).** A `retract_when: full_only` mode-full run retracts every tier-3 link before repairing them; abort BEFORE that retraction runs whenever the `entities` corpus is empty, or the run would retract every tier-3 link and repair nothing. `link-wsib.js`'s `full_repair_empty_source_guard` check (`checks[].when:"pre_write"`) is the runtime enforcement — an unaccepted FAIL there means no retraction statement is issued. Never fires in incremental mode.
 </behavior>
 
 ---

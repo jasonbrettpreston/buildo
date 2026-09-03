@@ -360,6 +360,11 @@
       "why": {
         "text": "D-20, and the one guarantee this step did not have. The full-mode retraction is `DELETE FROM parcel_buildings WHERE parcel_id IN (SELECT id FROM parcels WHERE <baseFilter>)` with NO guard of any kind: against an empty or truncated building_footprints it would delete all 520,492 links and rebuild nothing, leaving a junction that is empty, a verdict that is PASS, and twelve derived parcel columns that go NULL one chain-step later. Scored at `when: \"pre_write\"` — before writes[0], which IS the retraction — so an unaccepted FAIL means no statement is issued and the junction is exactly as the prior run left it.",
         "liveness": { "kind": "table", "ref": "building_footprints" }
+      },
+      "order_guarantee": {
+        "guarantee": "The full-mode retraction must abort BEFORE the retraction runs whenever the upstream corpus is empty, or it would delete all 520,492 links and rebuild nothing.",
+        "spec_ref": "docs/specs/01-pipeline/56_source_massing.md",
+        "anchor": "abort BEFORE the retraction runs whenever the upstream corpus is empty"
       }
     },
     {

@@ -297,7 +297,12 @@
       "id": "full_repair_empty_source_guard", "kind": "invariant",
       "expect": { "entities_nonempty_when_mode_full": true },
       "limit": "viol == 0", "severity": "FAIL", "blocking": false, "when": "pre_write", "chains": "all", "accept_until": "none",
-      "why": { "text": "D-20-class guard for A-7's LG-16 repair: against an empty entities corpus, a mode-full run would retract every tier-3 link and repair nothing. Scored pre_write — before the retraction statement — so an unaccepted FAIL means no statement is issued. Never fires in incremental mode (entities measured 3,948, never 0).", "liveness": { "kind": "table", "ref": "entities" } }
+      "why": { "text": "D-20-class guard for A-7's LG-16 repair: against an empty entities corpus, a mode-full run would retract every tier-3 link and repair nothing. Scored pre_write — before the retraction statement — so an unaccepted FAIL means no statement is issued. Never fires in incremental mode (entities measured 3,948, never 0).", "liveness": { "kind": "table", "ref": "entities" } },
+      "order_guarantee": {
+        "guarantee": "A-7/LG-16's full-mode repair must abort BEFORE that retraction runs whenever the `entities` corpus is empty, or it would retract every tier-3 link and repair nothing.",
+        "spec_ref": "docs/specs/01-pipeline/46_wsib_enrichment.md",
+        "anchor": "abort BEFORE that retraction runs whenever the `entities` corpus is empty"
+      }
     },
     {
       "id": "unlinked_start", "kind": "field_coverage",

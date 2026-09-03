@@ -79,9 +79,18 @@
  *                                       as PASS"), so this rule prints `enforced-red` on every step, never
  *                                       `prose-only` and never a false `enforced-green`. Same result for
  *                                       every step (a corpus-level check, not per-step), by design.
- *   Rule 11 (phase-order re-derive) -> describe /R-B —/i (scoped to slug where present).
- *   Rule 12 (truthful crash posture) -> describe /R-M\/LG-17/i (scoped to slug where present) +
- *                                       describe /R-B reader|LW-D20|LG-19/i (the crashed/stuck-running FULL trigger).
+ *   Rule 11 (phase-order re-derive) -> checkOrderGuaranteesCited(descriptor) — DECLARED half only:
+ *                                       every when:"pre_write" check's order_guarantee.spec_ref
+ *                                       resolves under docs/specs/, its anchor is found literally in
+ *                                       that file, and spec_ref agrees with identity.spec. GAP G-3's
+ *                                       completeness half (does the declaration cover EVERY "before X"
+ *                                       the spec states?) stays open — noted in the row's own detail.
+ *   Rule 12 (truthful crash posture) -> checkInterruptedPostureTruthful(descriptor) — R-B half: static +
+ *                                       runner-derived (declaration truthfulness + REACHABILITY, scanning
+ *                                       scripts/lib/step/index.js's actual runner for the descriptor's
+ *                                       execution.shape — a runner behind a gated-skip early return must
+ *                                       fold interruptedRetraction into `bypassed`, else "unreachable") +
+ *                                       describe /R-M\/LG-17/i (before-image; scoped to slug, hyphen-normalized).
  *   Rule 13 (a step validates itself) -> (i)-(vi) all ran successfully for this step, this run
  *                                       (this tool IS Rule 13's mechanism — a step with no scorecard
  *                                       block or a stale one violates it; see the conformance lock).
@@ -1389,7 +1398,6 @@ function checkNoSecondDerivation() {
 
 /** (b) — a SELF_SKIPPED terminal's audit rows must not fold to PASS. KNOWN-DEFECT: ships RED. */
 function checkSelfSkipNeverPass() {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports -- exercising the real CJS library
   const stepIndex = require(path.join(REPO_ROOT, 'scripts/lib/step/index.js'));
   const meta = stepIndex.skipRecordsMeta({ identity: { display_name: '__rule10_self_test__' } }, 'advisory_lock_held_elsewhere');
   const verdict = meta.audit_table.verdict;
@@ -1417,6 +1425,241 @@ function checkVerdictSingleSource() {
     ? `(a) FAILED — ${singleSource.detail}`
     : `(a) OK — ${singleSource.detail} · (b) ${skipNeverPass.pass ? 'OK' : 'KNOWN-DEFECT (pinned)'} — ${skipNeverPass.detail}`;
   return { status, detail, singleSource, skipNeverPass };
+}
+
+// ---------------------------------------------------------------------------
+// Rule 11 (Spec 124 §2, WF2 "Rules 10/11/12 mechanical checkers", C2) —
+// checkOrderGuaranteesCited: the DECLARED half only (GAP G-3's completeness
+// half stays open — nothing proves the declaration is COMPLETE w.r.t. the
+// spec's prose, and a future generic phase-order change is not re-audited
+// automatically). Regex-scanning a spec's free-form "before X" prose is
+// explicitly REJECTED (simultaneously false-positive on every incidental
+// "before" and false-negative on any other phrasing) — the checker instead
+// verifies the DECLARED `checks[].order_guarantee` field the schema now
+// requires on every `when:"pre_write"` check:
+//   (a) every pre_write check carries order_guarantee — schema-enforced
+//       (allOf if/then, step.schema.json), re-verified here defensively
+//       since a caller may hand this function a descriptor that bypassed
+//       AJV (e.g. a fixture).
+//   (b) order_guarantee.spec_ref resolves to a real file under docs/specs/.
+//   (c) order_guarantee.anchor is found LITERALLY in that file — an anchor
+//       that rots (the cited prose moved or changed) is RED, never silently
+//       stale.
+//   (d) spec_ref agrees with the descriptor's own identity.spec — a
+//       pre_write check's ordering guarantee must trace to THIS STEP's own
+//       governing spec, never an unrelated one.
+// ---------------------------------------------------------------------------
+
+/** The docs/specs/**\/<n>_*.md file for a bare spec number string (e.g. "59"), or null if none/ambiguous. Two levels deep only — matches the real tree (docs/specs/*.md, docs/specs/<subdir>/*.md). */
+function resolveSpecFileForNumber(specNumber) {
+  if (!specNumber || !/^\d+$/.test(String(specNumber))) return null;
+  const specsRoot = path.join(REPO_ROOT, 'docs/specs');
+  const re = new RegExp(`^${specNumber}_.*\\.md$`);
+  const hits = [];
+  const scan = (dir) => {
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      if (entry.isDirectory()) {
+        for (const f of readdirSync(path.join(dir, entry.name))) {
+          if (re.test(f)) hits.push(path.join(dir, entry.name, f));
+        }
+      } else if (re.test(entry.name)) {
+        hits.push(path.join(dir, entry.name));
+      }
+    }
+  };
+  scan(specsRoot);
+  return hits.length === 1 ? hits[0] : null;
+}
+
+/**
+ * Pure over an already-parsed descriptor, so `selfTest()` can exercise it
+ * in-memory. `specTextByFile` is an OPTIONAL override map (relFile -> text)
+ * used only by the self-test to avoid disk I/O for synthetic fixtures —
+ * production calls it with no override and real files are read.
+ */
+function checkOrderGuaranteesCited(descriptor, specTextByFile = null) {
+  if (!descriptor) return { pass: true, detail: 'no descriptor', violations: [] };
+  const checks = Array.isArray(descriptor.checks) ? descriptor.checks : [];
+  const preWrite = checks.filter((c) => c && c.when === 'pre_write');
+  if (preWrite.length === 0) {
+    return { pass: true, detail: 'no when:"pre_write" checks — vacuously nothing to cite', violations: [] };
+  }
+  const identitySpec = descriptor.identity && descriptor.identity.spec;
+  const specFile = specTextByFile ? null : resolveSpecFileForNumber(identitySpec);
+  const violations = [];
+  for (const c of preWrite) {
+    const og = c.order_guarantee;
+    if (!og || typeof og !== 'object' || !og.spec_ref || !og.anchor) {
+      violations.push(`${c.id}: no order_guarantee {guarantee, spec_ref, anchor} declared`);
+      continue;
+    }
+    let text;
+    if (specTextByFile) {
+      text = Object.prototype.hasOwnProperty.call(specTextByFile, og.spec_ref) ? specTextByFile[og.spec_ref] : null;
+      if (text === null) {
+        violations.push(`${c.id}: spec_ref "${og.spec_ref}" does not resolve`);
+        continue;
+      }
+    } else {
+      const abs = path.join(REPO_ROOT, og.spec_ref);
+      if (!og.spec_ref.startsWith('docs/specs/') || !existsSync(abs)) {
+        violations.push(`${c.id}: spec_ref "${og.spec_ref}" does not resolve to a real file under docs/specs/`);
+        continue;
+      }
+      text = readFileSync(abs, 'utf8');
+    }
+    if (!text.includes(og.anchor)) {
+      violations.push(`${c.id}: anchor not found literally in ${og.spec_ref} — rotted citation`);
+      continue;
+    }
+    if (!specTextByFile && identitySpec) {
+      if (!specFile) {
+        violations.push(`${c.id}: identity.spec "${identitySpec}" does not resolve to exactly one docs/specs/**/<n>_*.md file, so spec_ref agreement cannot be checked`);
+      } else if (path.resolve(REPO_ROOT, og.spec_ref) !== path.resolve(specFile)) {
+        violations.push(`${c.id}: spec_ref "${og.spec_ref}" does not agree with identity.spec "${identitySpec}" (-> ${path.relative(REPO_ROOT, specFile)})`);
+      }
+    }
+  }
+  return {
+    pass: violations.length === 0,
+    detail: `${preWrite.length} when:"pre_write" check(s), ${violations.length} order_guarantee violation(s)`,
+    violations,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Rule 12 (Spec 124 §2, WF2 "Rules 10/11/12 mechanical checkers", C3) —
+// checkInterruptedPostureTruthful: static, runner-derived crash-recovery
+// posture. Two parts, over ONE converted descriptor:
+//   (a) DECLARATION — a destructive retraction target (a write with
+//       `retract:"all"` or `retract_when:"full_only"`) must declare
+//       `recovery.interrupted === "force_full_on_next_run"`. Mirrors the
+//       existing R-B lock (step-conformance.infra.test.ts) so Rule 12's OWN
+//       matrix row is not silently PROSE-ONLY from step:validate's vantage.
+//   (b) REACHABILITY — when `recovery.interrupted` IS declared
+//       "force_full_on_next_run", the descriptor's `execution.shape`'s own
+//       runner (scripts/lib/step/index.js) must actually REACH
+//       `detectInterruptedRetraction` on every path — DERIVED, never hand-
+//       listed, from a source scan: a runner that calls
+//       `staleness.ledgerGatedSkip` must fold `interruptedRetraction` into
+//       its `bypassed` term BEFORE that call, else the check sits dead
+//       behind the gated-skip early return (the LW-D20 recurrence shape —
+//       closed for MATERIALIZE at `febd0968`, ahead of this checker landing,
+//       per Fold A item 2). A runner with NO `ledgerGatedSkip` call at all
+//       instead calls `staleness.selectMode` UNCONDITIONALLY, which folds
+//       the same reader internally (`staleness.js`) — also reachable. A
+//       runner reaching neither is unreachable.
+// ---------------------------------------------------------------------------
+
+/** shape -> the run*Phase function name that drives it (scripts/lib/step/index.js). "assert" has none — an ASSERT writes nothing, so it can never have a destructive retraction target to protect. */
+const SHAPE_RUNNER_FN = {
+  assert: null,
+  ingest: 'runIngestPhase',
+  link: 'runLinkPhase',
+  link_keyed: 'runLinkKeyedPhase',
+  cascade: 'runCascadePhase',
+  materialize: 'runMaterializePhase',
+  backfill: 'runBackfillPhase',
+  recorder: 'runRecorderPhase',
+};
+
+/**
+ * The brace-matched body of `async function <fnName>(` in `source`, or null if
+ * not found. Pure text scan — no AST dependency, mirrors the rest of this
+ * file's own convention (e.g. `section()`). Every runner here takes ONE
+ * destructured object parameter (`({ descriptor, pool, ... })`), so the
+ * parameter list's OWN `{`/`}` must be paren-matched past FIRST — searching
+ * for the body's `{` from `m.index` directly would stop at the destructuring
+ * pattern's opening brace instead of the function body's.
+ */
+function extractFunctionBody(source, fnName) {
+  const m = new RegExp(`\\basync function ${fnName}\\s*\\(`).exec(source);
+  if (!m) return null;
+  const parenStart = source.indexOf('(', m.index);
+  if (parenStart === -1) return null;
+  let pdepth = 0;
+  let parenEnd = -1;
+  for (let i = parenStart; i < source.length; i++) {
+    if (source[i] === '(') pdepth++;
+    else if (source[i] === ')') {
+      pdepth--;
+      if (pdepth === 0) { parenEnd = i; break; }
+    }
+  }
+  if (parenEnd === -1) return null;
+  const braceStart = source.indexOf('{', parenEnd);
+  if (braceStart === -1) return null;
+  let depth = 0;
+  for (let i = braceStart; i < source.length; i++) {
+    if (source[i] === '{') depth++;
+    else if (source[i] === '}') {
+      depth--;
+      if (depth === 0) return source.slice(braceStart, i + 1);
+    }
+  }
+  return null;
+}
+
+/** Pure — takes a runner function BODY (already extracted), so `selfTest()` can exercise it in-memory against synthetic bodies. */
+function runnerReachability(body) {
+  if (!body) return { reachable: false, reason: 'runner function not found in scripts/lib/step/index.js' };
+  const callsLedgerGatedSkip = /staleness\.ledgerGatedSkip\s*\(/.test(body);
+  const callsDetectInterrupted = /detectInterruptedRetraction\s*\(/.test(body);
+  const bypassedFoldsInterrupted = /bypassed\s*=[^;\n]*interruptedRetraction/.test(body);
+  if (callsLedgerGatedSkip) {
+    if (callsDetectInterrupted && bypassedFoldsInterrupted) {
+      return { reachable: true, reason: 'calls staleness.ledgerGatedSkip; bypassed folds interruptedRetraction.interrupted before the early-return can short-circuit past it' };
+    }
+    return {
+      reachable: false,
+      reason: 'calls staleness.ledgerGatedSkip but `bypassed` does not fold interruptedRetraction.interrupted — a crashed/stuck-running prior run cannot force FULL past the gated-skip early return (the LW-D20 recurrence shape)',
+    };
+  }
+  if (/staleness\.selectMode\s*\(/.test(body)) {
+    return { reachable: true, reason: 'no staleness.ledgerGatedSkip early-return on this path; calls staleness.selectMode unconditionally, which folds detectInterruptedRetraction internally' };
+  }
+  return { reachable: false, reason: 'reaches neither staleness.ledgerGatedSkip nor staleness.selectMode — no interrupted-retraction check exists on this runner\'s path' };
+}
+
+function checkInterruptedPostureTruthful(descriptor, indexSourceOverride = null) {
+  if (!descriptor) return { pass: true, detail: 'no descriptor', declarationViolations: [], reachability: null };
+  const writes = descriptor.outputs && descriptor.outputs !== 'none' && Array.isArray(descriptor.outputs.writes) ? descriptor.outputs.writes : [];
+  const hasDestructiveRetraction = writes.some((w) => w.retract === 'all' || w.retract_when === 'full_only');
+  const interrupted = descriptor.recovery && descriptor.recovery !== 'none' ? descriptor.recovery.interrupted : undefined;
+
+  const declarationViolations = [];
+  if (hasDestructiveRetraction && interrupted !== 'force_full_on_next_run') {
+    declarationViolations.push(`a destructive retraction target (retract:"all" or retract_when:"full_only") requires recovery.interrupted === "force_full_on_next_run", got ${JSON.stringify(interrupted ?? null)}`);
+  }
+
+  if (interrupted !== 'force_full_on_next_run') {
+    return {
+      pass: declarationViolations.length === 0,
+      detail: declarationViolations.length === 0
+        ? `recovery.interrupted=${JSON.stringify(interrupted ?? null)} — no reachability claim to verify`
+        : declarationViolations.join('; '),
+      declarationViolations,
+      reachability: null,
+    };
+  }
+
+  const shape = descriptor.execution && descriptor.execution.shape;
+  const fnName = shape ? SHAPE_RUNNER_FN[shape] : undefined;
+  if (fnName === undefined) {
+    return { pass: false, detail: `execution.shape ${JSON.stringify(shape ?? null)} is not a recognized shape — cannot verify reachability`, declarationViolations, reachability: null };
+  }
+  if (fnName === null) {
+    return { pass: false, detail: `execution.shape "${shape}" has no runner that could ever reach an interrupted-retraction check, yet recovery.interrupted="force_full_on_next_run" is declared — an unreachable declaration`, declarationViolations, reachability: null };
+  }
+  const source = indexSourceOverride !== null ? indexSourceOverride : readFileSync(path.join(REPO_ROOT, 'scripts/lib/step/index.js'), 'utf8');
+  const body = extractFunctionBody(source, fnName);
+  const reachability = runnerReachability(body);
+  return {
+    pass: declarationViolations.length === 0 && reachability.reachable,
+    detail: `shape=${shape} runner=${fnName}: ${reachability.reason}${declarationViolations.length ? ` · ${declarationViolations.join('; ')}` : ''}`,
+    declarationViolations,
+    reachability,
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -1478,14 +1721,30 @@ function computePolicyMatrix(row, descriptorInfo, shape, vitestResult, p3, repor
     push(10, 'Verdict row-derived', v10.status, v10.detail);
   }
   {
-    const m = vitestResult.ranOk ? matchTests(tests, /R-B —/i, slugToken) : [];
-    push(11, 'Phase-order re-derive (R-B)', m.length > 0 ? ruleStatus(m) : 'prose-only', m.length === 0 ? 'R-B describe not scoped to this step' : '');
+    const v11 = checkOrderGuaranteesCited(descriptorInfo.descriptor);
+    const status = v11.pass ? 'enforced-green' : 'enforced-red';
+    push(11, 'Phase-order re-derive (declared half, checkOrderGuaranteesCited)', status, `${v11.detail}${v11.violations.length ? `: ${v11.violations.join('; ')}` : ''} — G-3 completeness half stays open`);
   }
   {
-    const m1 = vitestResult.ranOk ? matchTests(tests, /R-M\/LG-17/i, slugToken) : [];
-    const m2 = vitestResult.ranOk ? matchTests(tests, /R-B reader|LW-D20|LG-19/i, slugToken) : [];
-    const m = [...m1, ...m2];
-    push(12, 'Truthful crash posture (R-M + R-B reader)', m.length > 0 ? ruleStatus(m) : 'prose-only', m.length === 0 ? 'R-M/R-B-reader describes not scoped to this step' : '');
+    // R-B half (recovery.interrupted, this checker's own job): static, mechanical.
+    const v12 = checkInterruptedPostureTruthful(descriptorInfo.descriptor);
+    // R-M half (recovery.before_image — Spec 124's own rulings table also tags
+    // R-M "Rule 12 (recovery category)"): the EXISTING step-conformance.infra.
+    // test.ts describe already enforces this robustly; it just could not be SEEN
+    // by this tool's vitest-title matching, for the same underscore/hyphen
+    // scopeToken bug C4 fixes generically in `matchTests` (Fold A item 3). Scoped
+    // here with a locally hyphenated token — a contained fix for THIS row, not a
+    // change to `matchTests` itself (which Rule 3 also calls).
+    const hyphenSlugToken = row.slug.replace(/_/g, '-');
+    const mRM = vitestResult.ranOk ? matchTests(tests, /R-M\/LG-17/i, hyphenSlugToken) : [];
+    const rmStatus = mRM.length > 0 ? ruleStatus(mRM) : 'prose-only';
+    const rmNote = mRM.length === 0 ? 'R-M/LG-17 describe not scoped to this step (vitest not run, or no before-image target)' : '';
+    // R-B (this checker) is the PRIMARY, always-live claim; R-M only REDS the row
+    // when it has actually run and found a real problem — a 'prose-only' R-M
+    // (vitest skipped via --fast, or no before-image target on this step) never
+    // downgrades an otherwise-green R-B half.
+    const status = !v12.pass || rmStatus === 'enforced-red' ? 'enforced-red' : 'enforced-green';
+    push(12, 'Truthful crash posture (R-B reachability, static + R-M before-image)', status, `R-B (checkInterruptedPostureTruthful): ${v12.detail} · R-M: ${rmStatus}${rmNote ? ` (${rmNote})` : ''}`);
   }
   push(13, 'A step validates itself', descriptorInfo.ok ? 'enforced-green' : 'enforced-red', 'this run of step:validate IS the mechanism');
   push('P3', 'I/O cost adjudication (measured, not gated)', 'measured', p3.detail);
@@ -1809,6 +2068,103 @@ function selfTest() {
     if (skip.pass !== false) {
       throw new Error(`self-test FAILED: checkSelfSkipNeverPass no longer reproduces the KNOWN-DEFECT (pass=${skip.pass}) — if this is a genuine fix, VRD-SKIP must move to BUILT and this self-test assertion must flip WITH it, in the same commit`);
     }
+  }
+  // Rule 11 (Spec 124 §2 Rule 11, WF2 C2) — checkOrderGuaranteesCited, in-memory
+  // via the specTextByFile override (no disk I/O — Spec 121 §12b.6).
+  {
+    // GREEN: no pre_write checks at all — vacuously satisfied.
+    const vacuous = checkOrderGuaranteesCited({ identity: { spec: '999' }, checks: [{ id: 'c1', when: 'post' }] });
+    if (!vacuous.pass) throw new Error(`self-test FAILED: checkOrderGuaranteesCited did not vacuously pass a descriptor with no pre_write checks (${JSON.stringify(vacuous)})`);
+
+    // RED: a pre_write check with NO order_guarantee at all.
+    const noGuarantee = checkOrderGuaranteesCited({ identity: { spec: '999' }, checks: [{ id: 'c1', when: 'pre_write' }] });
+    if (noGuarantee.pass) throw new Error('self-test FAILED: checkOrderGuaranteesCited did not RED on a pre_write check with no order_guarantee');
+
+    const goodDescriptor = {
+      identity: { spec: '999' },
+      checks: [{ id: 'c1', when: 'pre_write', order_guarantee: { guarantee: 'abort before any write', spec_ref: 'docs/specs/fixture/999_fixture.md', anchor: 'THE ANCHOR TEXT' } }],
+    };
+    const fixtureText = { 'docs/specs/fixture/999_fixture.md': 'some prose ... THE ANCHOR TEXT ... more prose' };
+
+    // GREEN: anchor present, spec_ref resolves (via the override map — spec_ref
+    // agreement with identity.spec is skipped under the override, by design:
+    // that half needs the real docs/specs/ tree, exercised at integration
+    // altitude against the real descriptors instead, see step-conformance.infra.test.ts).
+    const good = checkOrderGuaranteesCited(goodDescriptor, fixtureText);
+    if (!good.pass) throw new Error(`self-test FAILED: checkOrderGuaranteesCited did not pass a well-formed order_guarantee (${JSON.stringify(good)})`);
+
+    // RED: the anchor is NOT present in the cited spec text — a rotted citation.
+    const rotted = checkOrderGuaranteesCited(goodDescriptor, { 'docs/specs/fixture/999_fixture.md': 'the anchor text moved or was reworded, and is no longer here verbatim' });
+    if (rotted.pass) throw new Error('self-test FAILED: checkOrderGuaranteesCited did not RED on a rotted (no-longer-present) anchor');
+
+    // RED: spec_ref does not resolve at all.
+    const unresolved = checkOrderGuaranteesCited(goodDescriptor, { 'docs/specs/fixture/OTHER.md': 'irrelevant' });
+    if (unresolved.pass) throw new Error('self-test FAILED: checkOrderGuaranteesCited did not RED on an unresolved spec_ref');
+  }
+  // Rule 12 (Spec 124 §2 Rule 12, WF2 C3) — checkInterruptedPostureTruthful +
+  // runnerReachability, in-memory via a synthetic index.js source override.
+  {
+    // (a) DECLARATION half — a destructive retraction target with no truthful
+    // recovery.interrupted is RED, independent of shape/reachability.
+    const destructiveNoDecl = checkInterruptedPostureTruthful({
+      outputs: { writes: [{ table: 't', retract: 'all' }] },
+      recovery: { interrupted: 'none' },
+      execution: { shape: 'cascade' },
+    });
+    if (destructiveNoDecl.pass) throw new Error('self-test FAILED: checkInterruptedPostureTruthful did not RED a destructive retraction target declaring recovery.interrupted "none"');
+
+    // GREEN: no destructive retraction target at all, interrupted "none" — legal.
+    const noTarget = checkInterruptedPostureTruthful({
+      outputs: { writes: [{ table: 't', retract: 'departed' }] },
+      recovery: { interrupted: 'none' },
+      execution: { shape: 'ingest' },
+    });
+    if (!noTarget.pass) throw new Error(`self-test FAILED: checkInterruptedPostureTruthful RED with no destructive retraction target (${JSON.stringify(noTarget)})`);
+
+    // (b) REACHABILITY half — the exact PRE-fix runMaterializePhase shape
+    // (bypassed omits interruptedRetraction entirely): RED.
+    const preFixMaterializeSource =
+      'async function runMaterializePhase({ descriptor, pool, overrides, ownRunId, clockNow }) {\n' +
+      '  const bypassed = overrides.force_full === true;\n' +
+      '  const gatedSkip = await staleness.ledgerGatedSkip(pool, descriptor, { now: clockNow, bypassed });\n' +
+      '  return gatedSkip;\n' +
+      '}\n';
+    const preFixRed = checkInterruptedPostureTruthful(
+      { outputs: { writes: [{ table: 't', retract: 'all' }] }, recovery: { interrupted: 'force_full_on_next_run' }, execution: { shape: 'materialize' } },
+      preFixMaterializeSource,
+    );
+    if (preFixRed.pass) throw new Error(`self-test FAILED: checkInterruptedPostureTruthful did not RED the pre-fix runMaterializePhase shape (bypassed omits interruptedRetraction) (${JSON.stringify(preFixRed)})`);
+
+    // GREEN: the real, POST-fix shape (bypassed folds interruptedRetraction).
+    const postFixMaterializeSource =
+      'async function runMaterializePhase({ descriptor, pool, overrides, ownRunId, clockNow }) {\n' +
+      '  const interruptedRetraction = await staleness.detectInterruptedRetraction(pool, descriptor, { ownRunId });\n' +
+      '  const bypassed = overrides.force_full === true || interruptedRetraction.interrupted;\n' +
+      '  const gatedSkip = await staleness.ledgerGatedSkip(pool, descriptor, { now: clockNow, bypassed });\n' +
+      '  return gatedSkip;\n' +
+      '}\n';
+    const postFixGreen = checkInterruptedPostureTruthful(
+      { outputs: { writes: [{ table: 't', retract: 'all' }] }, recovery: { interrupted: 'force_full_on_next_run' }, execution: { shape: 'materialize' } },
+      postFixMaterializeSource,
+    );
+    if (!postFixGreen.pass) throw new Error(`self-test FAILED: checkInterruptedPostureTruthful did not pass the post-fix runMaterializePhase shape (${JSON.stringify(postFixGreen)})`);
+
+    // GREEN: a LINK-shaped runner with no ledgerGatedSkip at all, calling
+    // selectMode unconditionally — reachable via selectMode's own internal fold.
+    const linkSource = 'async function runLinkPhase({ descriptor, pool, ownRunId }) {\n  const gate = await staleness.selectMode({ descriptor, pool, ownRunId });\n  return gate;\n}\n';
+    const linkGreen = checkInterruptedPostureTruthful(
+      { outputs: { writes: [{ table: 't', retract: 'all' }] }, recovery: { interrupted: 'force_full_on_next_run' }, execution: { shape: 'link' } },
+      linkSource,
+    );
+    if (!linkGreen.pass) throw new Error(`self-test FAILED: checkInterruptedPostureTruthful did not pass a link-shaped runner reaching selectMode unconditionally (${JSON.stringify(linkGreen)})`);
+
+    // RED: a shape whose runner reaches NEITHER ledgerGatedSkip nor selectMode.
+    const deadSource = 'async function runRecorderPhase({ descriptor, pool }) {\n  return { ok: true };\n}\n';
+    const deadRed = checkInterruptedPostureTruthful(
+      { outputs: { writes: [{ table: 't', retract: 'all' }] }, recovery: { interrupted: 'force_full_on_next_run' }, execution: { shape: 'recorder' } },
+      deadSource,
+    );
+    if (deadRed.pass) throw new Error(`self-test FAILED: checkInterruptedPostureTruthful did not RED a runner reaching neither ledgerGatedSkip nor selectMode (${JSON.stringify(deadRed)})`);
   }
 }
 

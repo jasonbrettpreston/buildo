@@ -2060,6 +2060,86 @@ describe('Rule 10 — verdict is row-derived from exactly one place (checkVerdic
 });
 
 // ---------------------------------------------------------------------------
+// Rule 11 (Spec 124 §2 Rule 11, WF2 "Rules 10/11/12 mechanical checkers", C2)
+// — checkOrderGuaranteesCited, exercised the same two ways as Rule 10 above
+// (step-validate.mjs cannot be `import`ed directly). The `--self-test-only`
+// spawn proves the RED/GREEN in-memory halves; the real `--step` runs prove
+// the disk-reading path against all three real descriptors that carry a
+// when:"pre_write" check.
+// ---------------------------------------------------------------------------
+describe('Rule 11 — phase-order re-derivation, declared half (checkOrderGuaranteesCited)', () => {
+  const STEP_VALIDATE = path.join(REPO_ROOT, 'scripts/analysis/step-validate.mjs');
+
+  it('`--self-test-only` passes — the RED/GREEN in-memory proofs for checkOrderGuaranteesCited all fire correctly', () => {
+    const run = spawnSync('node', [STEP_VALIDATE, '--self-test-only'], { cwd: REPO_ROOT, encoding: 'utf8', timeout: 30_000 });
+    expect(run.status, `self-test did not pass; stdout=${run.stdout}\nstderr=${run.stderr}`).toBe(0);
+    expect(run.stdout).toContain('self-test PASSED');
+  });
+
+  it('a step with NO when:"pre_write" checks reports Rule 11 enforced-green, vacuously', () => {
+    const run = spawnSync('node', [STEP_VALIDATE, '--step=assert_schema', '--fast'], { cwd: REPO_ROOT, encoding: 'utf8', timeout: 30_000 });
+    expect(run.status, `stdout=${run.stdout}\nstderr=${run.stderr}`).toBe(0);
+    const row = (run.stdout.split('\n').find((l) => /^\|\s*11\s*\|/.test(l.trim())) || '');
+    expect(row, `no Rule 11 matrix row found; stdout=${run.stdout}`).not.toBe('');
+    expect(row).toContain('enforced-green');
+    expect(row).toContain('vacuously nothing to cite');
+  });
+
+  it.each([
+    ['load_ravines', 2],
+    ['link_massing', 1],
+    ['link_wsib', 1],
+  ])('%s: %d real when:"pre_write" check(s) each carry a live, non-rotted order_guarantee — Rule 11 enforced-green', (slug, count) => {
+    const run = spawnSync('node', [STEP_VALIDATE, `--step=${slug}`, '--fast'], { cwd: REPO_ROOT, encoding: 'utf8', timeout: 30_000 });
+    expect(run.status, `stdout=${run.stdout}\nstderr=${run.stderr}`).toBe(0);
+    const row = (run.stdout.split('\n').find((l) => /^\|\s*11\s*\|/.test(l.trim())) || '');
+    expect(row, `no Rule 11 matrix row found; stdout=${run.stdout}`).not.toBe('');
+    expect(row).toContain('enforced-green');
+    expect(row).toContain(`${count} when:"pre_write" check(s), 0 order_guarantee violation(s)`);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Rule 12 (Spec 124 §2 Rule 12, WF2 "Rules 10/11/12 mechanical checkers", C3)
+// — checkInterruptedPostureTruthful + runnerReachability, exercised the same
+// two ways as Rules 10/11 above. The BEHAVIOURAL half (a real SIGTERM against
+// a real link_wsib process) lives separately in
+// src/tests/db/step-crash-posture.db.test.ts (BUILDO_TEST_DB=1) — this suite
+// covers the STATIC half only.
+// ---------------------------------------------------------------------------
+describe('Rule 12 — truthful crash posture, static half (checkInterruptedPostureTruthful)', () => {
+  const STEP_VALIDATE = path.join(REPO_ROOT, 'scripts/analysis/step-validate.mjs');
+
+  it('`--self-test-only` passes — the RED/GREEN in-memory proofs for checkInterruptedPostureTruthful and runnerReachability all fire correctly', () => {
+    const run = spawnSync('node', [STEP_VALIDATE, '--self-test-only'], { cwd: REPO_ROOT, encoding: 'utf8', timeout: 30_000 });
+    expect(run.status, `self-test did not pass; stdout=${run.stdout}\nstderr=${run.stderr}`).toBe(0);
+    expect(run.stdout).toContain('self-test PASSED');
+  });
+
+  it('a step with recovery.interrupted "none" reports Rule 12 enforced-green, with no reachability claim to verify', () => {
+    const run = spawnSync('node', [STEP_VALIDATE, '--step=load_ravines', '--fast'], { cwd: REPO_ROOT, encoding: 'utf8', timeout: 30_000 });
+    expect(run.status, `stdout=${run.stdout}\nstderr=${run.stderr}`).toBe(0);
+    const row = (run.stdout.split('\n').find((l) => /^\|\s*12\s*\|/.test(l.trim())) || '');
+    expect(row, `no Rule 12 matrix row found; stdout=${run.stdout}`).not.toBe('');
+    expect(row).toContain('enforced-green');
+    expect(row).toContain('no reachability claim to verify');
+  });
+
+  it.each([
+    ['link_massing', 'link', 'runLinkPhase'],
+    ['link_wsib', 'cascade', 'runCascadePhase'],
+    ['link_parcels', 'link_keyed', 'runLinkKeyedPhase'],
+  ])('%s: shape=%s declares force_full_on_next_run and its runner (%s) is measured REACHABLE against the live scripts/lib/step/index.js', (slug, shape, fnName) => {
+    const run = spawnSync('node', [STEP_VALIDATE, `--step=${slug}`, '--fast'], { cwd: REPO_ROOT, encoding: 'utf8', timeout: 30_000 });
+    expect(run.status, `stdout=${run.stdout}\nstderr=${run.stderr}`).toBe(0);
+    const row = (run.stdout.split('\n').find((l) => /^\|\s*12\s*\|/.test(l.trim())) || '');
+    expect(row, `no Rule 12 matrix row found; stdout=${run.stdout}`).not.toBe('');
+    expect(row).toContain('enforced-green');
+    expect(row).toContain(`shape=${shape} runner=${fnName}`);
+  });
+});
+
+// ---------------------------------------------------------------------------
 // GAP G-1 (Spec 124 SS2 Rule 1) — a new schema field requires a declared
 // x-ruling, checked by shelling generate-schema-baseline.mjs --check (the
 // "shell the generator's own --check" pattern, Spec 123 SS4.5).

@@ -347,6 +347,11 @@
       "why": {
         "text": "L7. A source that suddenly carries half as many polygons is a publisher error, not a legal change to the ravine boundary; failing BEFORE the write is what stops 400 protected parcels from silently becoming unprotected. `when: \"pre_write\"` is what makes that sentence true again (Fold C / LR-D9): the runner scores this check between the read-only geometry validation and the first write statement, and an unaccepted FAIL means no transaction is opened at all — the pre-conversion `return { failed: true }` at 33786d1a:scripts/load-ravines.js:402-417, restored structurally. Computable from ctx.acquired.feature_count + ctx.prior alone, which is the precondition for the position.",
         "liveness": { "kind": "file", "ref": "scripts/enrich-ravines.js" }
+      },
+      "order_guarantee": {
+        "guarantee": "A source that suddenly carries half as many polygons is a publisher error, not a legal boundary change — the run must FAIL before any write, and an operator override (RAVINE_ACCEPT_FEATURE_COUNT_DRIFT=1) enables execution but never suppresses the FAIL verdict.",
+        "spec_ref": "docs/specs/01-pipeline/59_source_ravine_protection.md",
+        "anchor": "RAVINE_ACCEPT_FEATURE_COUNT_DRIFT"
       }
     },
     {
@@ -393,6 +398,11 @@
       "why": {
         "text": "L8. Dropped polygons are protected land that stops being protected. Spec 59 L8 spells the guarantee out — \"do not enter pipeline.withTransaction ... zero rows touched\" — so this check is scored at `when: \"pre_write\"` (Fold C / LR-D9): the geometry validation is read-only SQL, its counters exist before any write, and an unaccepted FAIL skips the write entirely. Unlike L7 there is NO override.accept_anomaly entry, so the abort is unconditional. The bound is re-checked independently by enrich-ravines.js:57, so producer and consumer must move together. LR-D1: the dropped source ids travel in THIS row's observation.detail — one row, never one row per dropped feature — capped at 50 ids with the exact dropped_count and a dropped_ids_truncated flag beside them, so the audit table's row count is bounded by the check count and the reader is never misled about how much was lost.",
         "liveness": { "kind": "file", "ref": "scripts/enrich-ravines.js" }
+      },
+      "order_guarantee": {
+        "guarantee": "More than 5% of features failing geometry validation means the run must abort before any DB write — do not enter pipeline.withTransaction; no transaction state can dangle.",
+        "spec_ref": "docs/specs/01-pipeline/59_source_ravine_protection.md",
+        "anchor": "before any DB writes"
       }
     },
     {

@@ -93,6 +93,14 @@ const VOLATILE_KEYS = [
   'generated_at',
   'checked_at',
   'captured_at',
+  // R-U (records_meta.chain_run_id) — a per-invocation chain-run correlation
+  // key (scripts/lib/step/index.js), run-scoped by design ("a fact about THIS
+  // invocation's chainId"). WF2 "Rules 10/11/12 mechanical checkers" C2
+  // (2026-09-03): found stripping the 3 order_guarantee descriptors' golden
+  // fingerprints — recapturing surfaced this as a previously-latent gap (an
+  // OLDER pre/post pair happened to share the same value coincidentally; a
+  // fresh capture never will), never a defect this WF2 introduced.
+  'chain_run_id',
 ];
 // audit_table rows whose `metric` is auto-injected timing by emitSummary (pipeline.js:346-352)
 const VOLATILE_METRIC_PREFIXES = ['sys_'];
