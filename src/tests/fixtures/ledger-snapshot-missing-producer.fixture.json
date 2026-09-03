@@ -1,0 +1,42 @@
+{
+  "_generated": "TEST FIXTURE for src/tests/step-upstreams.logic.test.ts — same shape as ledger-snapshot.fixture.json but fixture_producer_b's write of widgets.col_b is REMOVED (proves stepUpstreams is genuinely data-driven, not hardcoded).",
+  "_runs_scanned": 0,
+  "inchain": {
+    "fixture_producer_a": {
+      "chains": ["sources"],
+      "script": "scripts/fixture-producer-a.js",
+      "reads": {},
+      "writes": { "widgets": ["col_a"] },
+      "external": []
+    },
+    "fixture_producer_b": {
+      "chains": ["sources"],
+      "script": "scripts/fixture-producer-b.js",
+      "reads": {},
+      "writes": {},
+      "external": []
+    },
+    "fixture_producer_other_chain": {
+      "chains": ["other_chain"],
+      "script": "scripts/fixture-producer-other-chain.js",
+      "reads": {},
+      "writes": { "widgets": ["col_c"] },
+      "external": []
+    },
+    "fixture_consumer": {
+      "chains": ["sources"],
+      "script": "scripts/fixture-consumer.js",
+      "reads": { "widgets": ["col_a", "col_b", "col_c"] },
+      "writes": {},
+      "external": []
+    },
+    "fixture_no_reads": {
+      "chains": ["sources"],
+      "script": "scripts/fixture-no-reads.js",
+      "reads": null,
+      "writes": {},
+      "external": []
+    }
+  },
+  "static": {}
+}

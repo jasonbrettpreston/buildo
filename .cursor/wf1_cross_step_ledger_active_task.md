@@ -1,0 +1,134 @@
+# Active Task: Cross-Step Ledger — `stepUpstreams(slug)` to tier 3 (Spec 122 §6 / S5)
+**Status:** Implementation (authorized 2026-09-03; folds A-D applied; plan panel: Integration, Regression Guardian, DeepSeek adjudicated, Cross-read Adversary)
+
+## Context
+
+* **Goal:** Close the last tier-0 cross-step surface Spec 119 §4.6 names — *upstream dependency sets* — by EXTRACTING (Spec 122 §6.0: "an EXTRACTION, not an invention") a `stepUpstreams(slug)` reader over the already tier-2 column-lineage ledger, retiring the last hand-maintained slug array and making the derived set the ONLY source both a converted and an unconverted step may use. Converted steps already derive upstreams from their descriptor (`scripts/lib/step/staleness.js`, anchor `function deriveLedgerSlugs(descriptor)`); the 19 still-unconverted `sources`-chain steps have no such path, and that asymmetry is what this WF removes.
+* **Target Spec:** `docs/specs/01-pipeline/122_pipeline_step_optimization.md` §6 (anchor `## 6. The cross-step ledger`; §6.3 anchor `### 6.3 Watermarks — and the tier-0 surface that must retire`). Supporting: `docs/specs/01-pipeline/123_step_opt_assessment_validation.md` §5.1 (S5 row, 19 claims) · `docs/specs/01-pipeline/124_step_standard_policy.md` R-E / R-U / R-V · `docs/specs/01-pipeline/119_backend_verification_doctrine.md` §4.6 (tier ladder 0→1→2→3).
+* **Domain Mode:** Backend/Pipeline → `scripts/CLAUDE.md`. **Workflow:** WF1. **Branch:** `wf2/deep-scrapes-restore-l0` (current; fork per WF8 if the slot is contended).
+* **Programme item owned:** `LDG-4` (`scripts/steps/_schema/programme-items.json`, anchor `"id": "LDG-4"`) — status `PARTIAL`, owner `followup`, gate `nice_to_have`. **Open question O1:** the orchestration brief calls LDG-4 a batching gate; the committed data does not. Either the gate is re-classified `batching_prereq` in commit 6 or the brief's premise is corrected — an operator ruling, not this plan's to assume.
+* **Key Files** (all verified to exist):
+  * `scripts/generate-lineage-docs.mjs` — the working control case; anchors `async function refresh()`, `function render(snapshot)`, `if (CHECK) {`.
+  * `scripts/seeds/lineage-meta-snapshot.json` — committed, DB-free render source (66 in-chain steps).
+  * `docs/reference/data-lineage-map.md` — the tier-2 artifact.
+  * `src/tests/data-lineage-map.infra.test.ts` — the drift guard; anchor `describe('data-lineage map — drift guard (P10-3)'`.
+  * `scripts/compute-parcel-cost-estimates.js` — the LAST hand-written array; anchors `const UPSTREAM_SLUGS =`, `upstreamSlugs: UPSTREAM_SLUGS`, and its `module.exports` `UPSTREAM_SLUGS,` entry.
+  * `scripts/lib/step/staleness.js` — anchor `function deriveLedgerSlugs(descriptor)` (the converted-step half, already derived).
+  * `scripts/lib/source-version.js` — anchor `async function runLedgerGateDecision(pool, { ownSlugs, upstreamSlugs, now = null } = {})`.
+  * `src/tests/db/ledger-gate-callers.db.test.ts`, `src/tests/compute-parcel-cost-ledger-gate.logic.test.ts` — the existing locks.
+  * `scripts/steps/_schema/step.schema.json` — `inputs.reads.steps[]`, required `["step","version_pin"]`, `version_pin ∈ {exact,gte,none}`, dormant `assert_health[]`.
+  * `scripts/lib/step/seam.js` + `src/tests/step-seam.logic.test.ts` + `scripts/analysis/chain-end-synthesis.mjs` — R-V, already built. **Consumed, not rebuilt.**
+
+### The three arrays Spec 122 §6.3 names — 2 of 3 already retired
+
+| Site (as Spec 122 §6.3 names it) | State today | Evidence |
+|---|---|---|
+| `scripts/link-parcel-addresses.js:61-64` | **GONE** | 0 grep hits in the file; retired at `5ee14f5b` (pilot 5 commit 7) |
+| `scripts/link-wsib.js:69-72` | **GONE** | 0 grep hits in the file; retired at `69de8a13` (pilot 4 commit 7) |
+| `scripts/compute-parcel-cost-estimates.js:85` (anchor `const UPSTREAM_SLUGS =`) | **LIVE** | the only remaining hand-maintained set; step is NOT in `converted.json` |
+
+⚠️ **Spec 122 §6.3's "lands red-first by construction" premise is STALE and this plan corrects it.** D#6 already added `sources:parcels` to the cost array, so the derived PRODUCER set now matches the declared one exactly (`{enrich_parcels, parcels}`). The surviving red is a *slug-FORM* divergence, not a missing producer: the array carries `'load-parcels'` (a SCRIPT name), which no form-expansion of the slug `parcels` can produce. That is the red-first, and it is measured, not assumed.
+
+### The 19 S5 claims
+
+Enumerated in `docs/reports/generated/123-claim-plan.md` (anchor `### S5 — Cross-step ledger generator + drift guard (19)`), each mapping to test artifact `src/tests/violations/generated-drift.infra.test.ts` — **a path that does not exist yet** (`src/tests/violations/` absent; the built violations live at `src/tests/steps/<slug>/violations.test.ts`). IDs: `R-020` `R-045` `R-053` `R-054` `R-061` `R-082` `R-088` `R-117` `R-129` `R-139` `R-140` `R-141` `R-142` `R-143` `R-144` `R-145` `R-146` `R-147` `R-197`. **This WF discharges the upstream-set slice only** — `R-054` (a `pending` on a lineage column requires a declared invalidator), `R-061` (declared downstream is invalidated), `R-082` (computed declarations generated at build time and committed), `R-088` (dependencies checked for freshness), `R-129`/`R-146`/`R-197` (generated artifacts stale-checked / hand-edit reds). `R-145` ("the DAG is derived from `writes`, never declared") is **declared dead** by Spec 122 §6.5, which substitutes the ordering-consistency claim already discharged by `LDG-7`/`VAL-3`. The remaining 11 are runner-lifecycle claims (`R-139`–`R-144`) routed below.
+
+## Technical Implementation
+
+* **New/Modified Components:** N/A — no `src/` UI or API components. Backend/Pipeline library + generator + conformance tests.
+* **Data Hooks/Libs:**
+  * `scripts/lib/ledger.js` (**new**) — `loadLedger()` resolves the snapshot via `path.resolve(__dirname, '../seeds/lineage-meta-snapshot.json')` (Fold C, matching `seam.js`'s `__dirname` convention) and reads the COMMITTED `lineage-meta-snapshot.json` (DB-free, deterministic, same discipline the drift test already relies on); `slugForms(name, chains)` (extracted from `staleness.js`'s `forms` — **Fold A (Integration, 2026-09-03): `forms` is a local closure inside `deriveLedgerSlugs` capturing `chains` from descriptor scope, so extraction PARAMETERISES `chains`, it is not a verbatim lift** — then re-imported there so one expansion exists); `stepUpstreams(slug, { chain })` → the set of steps whose `writes` intersect `slug`'s `reads` at COLUMN granularity, **restricted to producers sharing `chain` (Fold C, DeepSeek #3: chain-unaware derivation is measured safe for the cost step today but unproven for the other 19; `chain` is required, not optional)**.
+  * `scripts/compute-parcel-cost-estimates.js` (edit) — `UPSTREAM_SLUGS` literal → `stepUpstreams('compute_parcel_cost_estimates', { chain: 'sources' })`.
+  * `scripts/lib/step/staleness.js` (edit) — `deriveLedgerSlugs` imports `slugForms`; the descriptor-vs-ledger cross-check is a conformance assertion, not a runtime branch.
+  * `scripts/generate-lineage-docs.mjs` (edit) — an `## Upstream sets` section in `render()`, so the derived sets are COMMITTED and `--check`-guarded (tier 2), not recomputed per process.
+  * `src/tests/step-upstreams.logic.test.ts` (**new**), `src/tests/data-lineage-map.infra.test.ts` (edit).
+* **Database Impact:** **NO.** No migration, no column, no table. The ledger reads a committed JSON snapshot; the only DB touch is the READ-ONLY grounding query in Step 0. The four new state tables (`pipeline_intervals`, `published_batch`, `step_error`, `step_quarantine`) are programme item **`STA-1`** — `NOT_STARTED`, `batching_prereq`, owner `wf: programme-STA-1` — **a separate item this WF neither needs nor touches.**
+
+## Standards Compliance
+
+* **Try-Catch Boundary:** N/A — no `src/app/api/` route created or modified. `loadLedger()` lets `fs`/`JSON.parse` throw (a missing or malformed committed snapshot is a broken registry, mirroring `seam.js`'s `loadConvertedDescriptors()` rule of throwing rather than silently skipping); `stepUpstreams()` throws on an unknown slug rather than returning `[]`, because an empty upstream set is a legal answer and must never be confusable with "step not found".
+* **Unhappy Path Tests:** unknown slug → throw (not `[]`); a snapshot fixture with a producer removed → `stepUpstreams` omits it and the equality lock REDs; a hand-edited `## Upstream sets` section → `--check` exits 1; a `null`/absent `reads` on a step → `[]`, not a throw; the gate call with a derived set is asserted to reach `runLedgerGateDecision`'s own non-empty guard (anchor `requires a non-empty upstreamSlugs array`).
+* **logError Mandate:** N/A for `scripts/` (Spec 47 uses `pipeline.log.warn/error`; no new catch block is introduced).
+* **UI Layout:** N/A.
+* **§11 Shared Logic (dual path):** the slug-form expansion is TODAY duplicated between `staleness.js`'s `forms` and the cost step's literal. Commit 1 collapses it to one exported function; `npx vitest related scripts/lib/ledger.js --run` planned at each commit.
+* **§11 Cross-Layer Contracts:** no numeric threshold crosses spec ↔ SQL ↔ Zod ↔ migration; `docs/specs/_contracts.json` unchanged.
+
+## Execution Plan
+
+- [ ] **Step 0 (grounding, no commit).** Run `SELECT DISTINCT pipeline FROM pipeline_runs WHERE pipeline LIKE '%parcels%'` against the resolved DB (`scripts/lib/resolve-db.js`, same helper the generator uses). **This is the Chesterton's fence on `'load-parcels'`.** If real rows carry that literal, the ledger's form-expansion must gain a manifest-script-name form and commit 2's red changes shape; if zero, the form is dead weight and deleting it is a retirement, not a regression. **Gate:** the query result is recorded in this file before commit 1 begins. Regression Guardian is a MANDATORY plan-roster seat here (the diff deletes existing code).
+  **Fold B — Step 0 EXECUTED (Regression Guardian, 2026-09-03, resolved local DB):** 7 distinct `pipeline` values LIKE `%parcels%`, none is `load-parcels` / `load_parcels` (explicit ILIKE → `[]`). Fence for the literal is `a81c6a7c` (D#6: `load-parcels.js` writes `lot_size_sqm`, a cost input) — the SUBSTANCE (parcels as upstream) is preserved by `stepUpstreams`; the string FORM is a measured retirement. Cloud DB not queried; re-run Step 0 there before FIX 4 of the cloud-parity WF if the chain has run on cloud since.
+  **Step 0 CLOUD — EXECUTED (executor, 2026-09-03), `SUPABASE_DATABASE_URL` explicit against `aws-0-ca-central-1.pooler.supabase.com` postgres, 242 migrations, read-only):** `SELECT DISTINCT pipeline FROM pipeline_runs WHERE pipeline ILIKE '%parcels%'` → 7 rows: `coa:link_coa_to_parcels`, `link_parcels`, `parcels`, `permits:link_parcels`, `sources:enrich_parcels`, `sources:link_parcels`, `sources:parcels`. None is `load-parcels`/`load_parcels` — matches the local result exactly. Fold C's hard gate (commit 3) is satisfied: the cloud half agrees with local, `'load-parcels'` retirement stands, commit 3 may proceed without retaining the form.
+- [ ] **Step 1 — Commit 1: `scripts/lib/ledger.js` + `src/tests/step-upstreams.logic.test.ts`.** `loadLedger`/`slugForms`/`stepUpstreams`, plus a `BUILDO_LEDGER_SNAPSHOT_PATH` test-only override (mirrors `BUILDO_PROGRAMME_ITEMS_PATH`). **Gate:** `stepUpstreams('compute_parcel_cost_estimates', { chain: 'sources' })` → exactly `['enrich_parcels','parcels']` (Fold D: chain argument required everywhere) against the REAL committed snapshot. **Red-first, both directions (R-E):** RED — a fixture snapshot with `parcels`' `lot_size_sqm` write removed yields `['enrich_parcels']` and the assertion fails; GREEN — the real snapshot yields both. A second pair proves the throw: RED — `stepUpstreams('no_such_step')` returning `[]` would pass a naive test, so the test asserts it THROWS; GREEN — a real slug does not.
+- [ ] **Step 2 — Commit 2: the drift lock (RED on landing).** Assert `new Set(UPSTREAM_SLUGS)` equals `new Set(stepUpstreams(...).flatMap(slugForms))` for the live cost step. **This is red at HEAD:** declared carries `load-parcels`, derived does not; symmetric difference = `{load-parcels}`. **Both directions:** RED — the committed pair as-is; GREEN — after commit 3. Plus a fixture pair proving the lock is not vacuous: an injected EXTRA form REDs, an injected MISSING form REDs, the matched pair passes. **Fold C (DeepSeek #1, grounder-confirmed):** the lock's declared side is the LITERAL captured as a committed fixture array inside the test at commit 2 (`DECLARED_AT_HEAD = ['enrich_parcels','parcels','load-parcels', ...]` copied from the file with a `git blame` cite), never a live import of `UPSTREAM_SLUGS` -- so commit 3's deletion cannot break the lock; commit 3 flips the fixture to the derived form and the equality goes GREEN.
+- [ ] **Step 3 — Commit 3: retire the last array.** `scripts/compute-parcel-cost-estimates.js` — delete the literal (anchor `const UPSTREAM_SLUGS =`), call `stepUpstreams('compute_parcel_cost_estimates', { chain: 'sources' })` (Fold D), drop the `UPSTREAM_SLUGS,` export entry, and replace the in-file `:77-84` confession comment with a pointer to the ledger. **Gate:** commit 2's lock flips GREEN; `npx vitest run src/tests/compute-parcel-cost-ledger-gate.logic.test.ts src/tests/db/ledger-gate-callers.db.test.ts` green; the `UPSTREAM_SLUGS: string[]` field in `ledger-gate-callers.db.test.ts` and `compute-parcel-cost-ledger-gate.logic.test.ts` is deleted in the SAME commit — **Fold B: it is a type-only `require(...) as {...}` cast, never read as a value, so it enforces nothing today (Guardian-verified); the real coverage is commit 1's value assertion + commit 2's drift lock, matching the precedent `link-parcel-addresses-ledger-gate.logic.test.ts` set when it replaced its own dead cast with a `deriveLedgerSlugs` value assertion.** The commit message must not claim the deleted field asserted anything. Fence statement required for the deleted `'load-parcels'` form, answered by Step 0. **Fold C (DeepSeek #5):** Step 0's query is ALSO run read-only against the cloud DB (`SUPABASE_DATABASE_URL` explicit, runbook section 3 form) and its result recorded here BEFORE this commit -- a HARD gate, not advisory; a cloud hit for `load-parcels` means the form is retained and commit 2's fixture keeps it.
+- [ ] **Step 4 — Commit 4: tier 2 — commit the derived sets + drift-guard them.** `render()` gains `## Upstream sets` (one row per in-chain step → its derived producers); `npm run lineage-docs` regenerates; `data-lineage-map.infra.test.ts` covers it via the existing `--check` path. **Gate:** `node scripts/generate-lineage-docs.mjs --check` exits 0 on the committed doc. **Both directions:** RED — hand-edit one row, `--check` exits 1 and the vitest drift guard fails; GREEN — restore.
+- [ ] **Step 5 — Commit 5: tier 3 for converted steps — the descriptor↔ledger cross-check.** A conformance assertion (in `step-conformance.infra.test.ts`, inside the existing per-CONVERTED loop `describe('§5.2 conformance — every converted step'` — Fold A anchor; there is no block literally named "registry rules") that every converted descriptor's `inputs.reads.steps[].step` set is a SUPERSET of `stepUpstreams(identity.name, { chain })` for each chain in the descriptor's `identity.chains` (Fold D), restricted to converted producers. `staleness.js`'s `deriveLedgerSlugs` imports the shared `slugForms`. **Gate:** all 8 `converted.json` entries pass. **Both directions:** RED — a fixture descriptor dropping `compute_centroids` from `link_massing`'s reads fails; **Fold C (DeepSeek #6): a SUPERSET check is structurally blind to a LEDGER-side omission (shrinking the derived set only makes it easier to pass) -- so commit 5 ALSO asserts EQUALITY on the converted-producer-restricted set, with a RED fixture removing a real producer from a fixture snapshot; SUPERSET is documented as the limitation for unconverted producers only** (and would also silently delete the one pre-existing live seam pair, which the seam suite independently catches); GREEN — the real 8. This is where the ledger and R-V's seam pass MEET: seam covers converted↔converted edges only (4 live pairs); the ledger covers all 66 in-chain steps.
+- [ ] **Step 6 — Commit 6: docs + register.** `programme-items.json` `LDG-4` → `BUILT`, **and `gate.kind` → `batching_prereq` (O1 RULED by operator 2026-09-03; Fold D)**, with a resolving `file:line` evidence string (`programme-backlog.infra.test.ts`'s evidence rule applies automatically); `npm run programme-backlog`. Spec 122 §6.3 — replace the stale "lands red-first by construction" sentence with the measured form-divergence, and note 2 of 3 arrays retired at `5ee14f5b`/`69de8a13`. **Fold B:** the same sentence is echoed in §6.0 (reported speech, anchor `red-first by construction`) — correct BOTH occurrences; and §6.3's "Locked red-first at `ledger-gate-callers.db.test.ts:448-449`" is a dead anchor (file is 356 lines post pilot 5) — repoint it to the commit-1/2 tests by greppable name. Spec 122 §6.0 — retire the **L-4** "three figures, none agreeing" flag: it reconciles (1128 column rows + 7 one-time table rows = 1135 data rows; 1553 = lines incl. headers/blanks). `tasks/lessons.md` — one line: *a spec's own "red-first by construction" claim decays when the defect it names is fixed by an unrelated commit; re-measure the red before planning on it.*
+- [ ] **Step 7:** Pipeline WF1 panel per `CLAUDE.md`: PLAN altitude (Integration + Ground-truth + Regression Guardian + DeepSeek lens set) BEFORE Step 1; OUTPUT altitude on the diff. **Reality-Check is SKIPPED** — no enriched/derived parcel field is added or changed (pure plumbing; `CLAUDE.md` §Trigger — Reality-Check). Commit through the hook, foreground, no `--no-verify`.
+
+## Operating Boundaries
+
+### Target Files
+- `scripts/lib/ledger.js` (new) · `src/tests/step-upstreams.logic.test.ts` (new)
+- `scripts/compute-parcel-cost-estimates.js` · `scripts/lib/step/staleness.js` · `scripts/generate-lineage-docs.mjs`
+- `src/tests/data-lineage-map.infra.test.ts` · `src/tests/db/ledger-gate-callers.db.test.ts` · `src/tests/step-conformance.infra.test.ts`
+- `docs/reference/data-lineage-map.md` (generated) · `scripts/steps/_schema/programme-items.json` · `docs/reports/generated/122-programme-backlog.md` (generated)
+- `docs/specs/01-pipeline/122_pipeline_step_optimization.md` §6 · `tasks/lessons.md`
+
+### Out-of-Scope Files
+- `scripts/lib/step/seam.js`, `scripts/analysis/chain-end-synthesis.mjs`, `scripts/run-chain.js`, `scripts/lib/step/index.js` — **R-U and R-V are BUILT and locked both directions**; this WF consumes them and must not re-derive them.
+- `scripts/steps/_schema/step.schema.json` — no schema change. `inputs.reads.steps[]` is used as-is; `assert_health[]` stays dormant (`ASSERT-HEALTH-SHAPE`).
+- `migrations/` — Database Impact is NO. `STA-1`'s four tables are not this WF's.
+- `scripts/manifest.json` — `telemetry_tables`' two proven omissions (Spec 122 §6.1) are a separate WF3.
+- `src/` UI, `src/app/api/` — untouched (§10 boundary).
+
+### Cross-Spec Dependencies
+- **Relies on:** Spec 119 §4.6 (tier ladder) · Spec 122 §6 (the extraction mandate) · Spec 124 R-E (both-directions locks replace the mutation-≥80% gate), R-U, R-V · Spec 47 §R11 (`emitMeta`, the ledger's substrate).
+- **Consumed by:** Spec 123 S5 (7 of 19 claims) · the C-track batch conversion (every unconverted `sources` step inherits a derived upstream set instead of authoring one).
+
+## Grounding
+
+Every executable claim above, with the command run to verify it (planner session, 2026-09-03). No unexecuted claim.
+
+| Claim | Command | Result |
+|---|---|---|
+| Only ONE hand-written array survives | `grep -rn "UPSTREAM_SLUGS\|upstreamSlugs" scripts/*.js` | 3 hits, all `compute-parcel-cost-estimates.js` (`:85`, `:590`, `:736`) + 1 comment in `load-wsib.js:159` |
+| The other two are gone, and when | `git log --oneline -S "UPSTREAM_SLUGS" -- scripts/link-wsib.js` / `... link-parcel-addresses.js` | `69de8a13` (wsib), `5ee14f5b` (lpa), both after `74653a8f` which introduced them |
+| `stepUpstreams` does not exist yet | `grep -rn "stepUpstreams" scripts src docs` | 0 code hits (only spec/programme prose) |
+| Derived producers for the cost step | `node -e` over `scripts/seeds/lineage-meta-snapshot.json`: intersect its `reads` columns with every other step's `writes` | `enrich_parcels, parcels` |
+| The red-first is a FORM divergence, not a missing producer | `node -e` comparing declared `UPSTREAM_SLUGS` vs `slugForms(['enrich_parcels','parcels'], ['sources'])` | only-in-declared `['load-parcels']`; only-in-derived `[]` |
+| Cost step is unconverted | `grep -c "compute-parcel-cost-estimates" scripts/steps/_schema/converted.json` | `0` (8 entries, none it) |
+| Cost step is in the `sources` chain | `node -e` over `scripts/manifest.json` `chains.sources` | present, index 22 of 28 |
+| The lineage drift guard is live and green | `node scripts/generate-lineage-docs.mjs --check` | `✔ up to date`, exit 0 |
+| L-4's three figures reconcile | `grep -n "^Coverage:" docs/reference/data-lineage-map.md`; `wc -l`; `grep -c "^| \`"`; `awk` split at `## One-time / backfill` | 1128 columns / 78 tables / 66 steps; 1553 lines; 1135 data rows = 1128 + 7 one-time |
+| R-U is built and locked both directions | `grep -n "CHAIN_RUN_ID" scripts/run-chain.js scripts/lib/step/index.js`; `grep -n "chain_run_id" src/tests/step-library.logic.test.ts` | `run-chain.js:650` exports it; `index.js:2148` reads it; `RED/GREEN #1` (propagation) and `#2` (standalone → `null`) at `step-library.logic.test.ts:903/:926`, plus the contention-skip path `:950` |
+| R-V is built; seam derives from `inputs.reads.steps` | `Read scripts/lib/step/seam.js` (`deriveSeamPairs`); `Read src/tests/step-seam.logic.test.ts` | derives from `inputs.reads.steps[].step`, NOT `outputs.invalidates`; 4 live pairs against the real 8-entry registry |
+| Validator v2 already covers the seam/synthesis half | `grep -n "R-U\|R-V\|seam" .cursor/validator_v2_active_task.md` | commit 5 shipped `seam.js` + `chain-end-synthesis.mjs` + `CHAIN_RUN_ID`; `VAL-3`/`LDG-2`/`LDG-7` closed by it |
+| `STA-1` is a separate, un-started item | `node -e` over `programme-items.json` for `^STA-` | `STA-1` `NOT_STARTED`, `batching_prereq`, owner `wf: programme-STA-1`, 0 migration hits |
+| LDG-4's real gate is `nice_to_have` (O1) | same `node -e`, `"id": "LDG-4"` | `PARTIAL`, `gate.kind: nice_to_have`, `blocks: []`, owner `followup` |
+| The 19 S5 claims and their IDs | `sed -n '269,290p' docs/reports/generated/123-claim-plan.md` | 19 rows, `R-020` … `R-197`, all pointing at `src/tests/violations/generated-drift.infra.test.ts` |
+| That test artifact does not exist | `ls src/tests/violations/`; `find src -name "generated-drift*"` | no such directory; 0 matches |
+| The gate helper rejects an empty upstream set | `grep -n "upstreamSlugs" scripts/lib/source-version.js` | `:297-298` throws on a non-array/empty set |
+| npm entry points exist | `node -e` over `package.json` scripts | `lineage-docs`, `programme-backlog`, `step:validate`, `task`, `system-map` all present |
+
+## Not in scope
+
+* **`R-139`–`R-144`** (runner ≤1,500 lines · codemod-per-contract-change · deprecation lifecycle · stable step IDs · step-as-process) — runner-lifecycle claims, not ledger edges. → programme item `LC-1` (`PARTIAL`, `batching_prereq`, owner `pilot7_refresh_snapshot`).
+* **`R-045`/`R-053`** (producer `SPEC_VERSION` + health; producer-newer-than-watermark tripwire) — the `records_meta`-contract edge class, already HALT-enforced (`LDG-3` BUILT) for the three loaders. → the per-step C-track checklist, not a ledger deliverable.
+* **`R-117`** (reset cascades via the `invalidates` graph) → `STA-2`/`STA-3` (`cutover_prereq`, owner `wf: programme-STA-2`).
+* **Table-edge generation from `outputs.writes` → `inputs.reads`** and the ordering-consistency replacement for dead claim #145 → already BUILT as `LDG-2`/`LDG-7`/`VAL-3` via `scripts/lib/step/seam.js`. Re-deriving them here would duplicate validator v2.
+* **`manifest.json` `telemetry_tables`' two proven omissions** (`massing` DELETEs `parcel_buildings`; `enrich_parcels` INSERTs `enrich_parcels_pass3_scope`) → new WF3, filed to `docs/reports/review_followups.md` in commit 6.
+* **`chain.logic.test.ts:173-174`'s false lock** (`enrich_ravines == link_parcels + 1`, a dependency `enrich-ravines.js` does not have) → WF3, filed the same way; deleting a false ordering lock is a Regression-Guardian-owned change and does not belong inside a net-new-library WF.
+* **`parcels.zoning_base_source_dataset_version`** (stamped every run, compared by nothing) → `review_followups.md`, LOW.
+* **Snapshot freshness** (Fold C, DeepSeek #2): `lineage-meta-snapshot.json` is regenerated only by manual `--refresh`; `--check` diffs doc vs snapshot, never snapshot vs live. A standing freshness gate is Spec 124 R-C territory -> `validator_v2_active_task.md` (R-C standing-gate item), filed MED in commit 6.
+* **`assert_health[]`'s closed shape** → `ASSERT-HEALTH-SHAPE` (`NOT_STARTED`, `nice_to_have`).
+* **The `sources` chain's remaining 19 unconverted steps' descriptors** → the C-track batch this WF unblocks; the ledger is the input, not the conversion.
+
+## Open questions (operator)
+1. **O1 — RULED (operator, 2026-09-03):** LDG-4 becomes `batching_prereq` in commit 6.
+2. **`'load-parcels'` form** — Step 0 EXECUTED locally (Fold B): 0 hits, retirement. Cloud half pending (Fold C hard gate on commit 3).
+
+Low-confidence: Spec 122 §6.3's red-first premise is measured stale (D#6 fixed the missing producer); commit 5 uses SUPERSET not EQUALITY while only 8/27 steps are converted.
+
+> **PLAN LOCKED. Do you authorize this WF1 plan? (y/n)**
+> §11 note: Database Impact is NO — `STA-1`'s four state tables are a separate, un-started programme item, deliberately not folded in. Step 0 is a grounding query, not a commit, because deleting the `'load-parcels'` slug form is a Chesterton's fence that only a live `pipeline_runs` read can defend.
