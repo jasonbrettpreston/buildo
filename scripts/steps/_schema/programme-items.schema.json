@@ -70,6 +70,16 @@
               "type": "array",
               "items": { "type": "string" },
               "description": "batching_prereq -> [\"batching\"]; cutover_prereq -> the specific pilot slug(s) it blocks (e.g. [\"refresh_snapshot\"]); nice_to_have -> [] (legal only here)."
+            },
+            "applies_when": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["descriptor_path", "equals"],
+              "properties": {
+                "descriptor_path": { "type": "string", "minLength": 1, "description": "Dot-notation path into the blocked slug's own descriptor JSON (e.g. \"recovery.reset\")." },
+                "equals": { "description": "The value descriptor_path must equal for THIS item to actually block the slug. A descriptor whose value differs (or that lacks the path) is not blocked by this item." }
+              },
+              "description": "RS-D-STA (2026-09-03, R-T addendum). Optional. Declares that a gate's applicability is itself a fact about the blocked slug's descriptor, not a hand-adjudicated exemption — a programme item authored against a generic archetype-level promise (Spec 120 §6b) before any descriptor of that archetype existed to check it against. Omitted -> the item blocks unconditionally (pre-existing behaviour)."
             }
           }
         },

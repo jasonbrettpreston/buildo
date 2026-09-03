@@ -54,15 +54,25 @@ describe('deriveSeamPairs — derived from converted.json + manifest.json, never
     expect(seam.deriveSeamPairs(byName)).toEqual([]);
   });
 
-  it('the REAL 7-descriptor registry (pilot 7 cutover, commit 9) still yields exactly the one live pair: compute_centroids -> link_massing', () => {
+  it('the REAL 8-descriptor registry (pilot 8 cutover, commit 9) now yields 4 live pairs: compute_centroids -> link_massing, plus refresh_snapshot\'s 3 declared inputs.reads.steps', () => {
     const byName = seam.loadConvertedDescriptors();
     expect(Object.keys(byName).sort()).toEqual(
-      ['assert_schema', 'compute_centroids', 'link_massing', 'link_parcel_addresses', 'link_parcels', 'link_wsib', 'load_ravines'].sort(),
+      ['assert_schema', 'compute_centroids', 'link_massing', 'link_parcel_addresses', 'link_parcels', 'link_wsib', 'load_ravines', 'refresh_snapshot'].sort(),
     );
     // link_parcels declares inputs.reads.steps: [] (no cross-step read dependency on
-    // another converted step's own output) — its addition to the registry does not
-    // introduce a new seam pair.
-    expect(seam.deriveSeamPairs(byName)).toEqual([{ upstream: 'compute_centroids', downstream: 'link_massing' }]);
+    // another converted step's own output) — its addition to the registry (pilot 7)
+    // did not introduce a new seam pair. refresh_snapshot (pilot 8) DOES declare
+    // inputs.reads.steps — scripts/refresh-snapshot.descriptor.json:22-24 names
+    // link_parcels, link_massing, link_wsib (each `version_pin: "gte"`) — so its
+    // addition contributes 3 new pairs, all downstream=refresh_snapshot. Order is
+    // deriveSeamPairs's own deterministic `downstream:upstream` localeCompare sort
+    // (scripts/lib/step/seam.js:95).
+    expect(seam.deriveSeamPairs(byName)).toEqual([
+      { upstream: 'compute_centroids', downstream: 'link_massing' },
+      { upstream: 'link_massing', downstream: 'refresh_snapshot' },
+      { upstream: 'link_parcels', downstream: 'refresh_snapshot' },
+      { upstream: 'link_wsib', downstream: 'refresh_snapshot' },
+    ]);
   });
 });
 
@@ -145,11 +155,26 @@ describe('checkSeam — legacy temporal fallback (Fold A-5, no shared chain_run_
 });
 
 describe('runSeamChecks — one row per derived pair', () => {
-  it('runs the single live pair against the REAL registry and returns one row', async () => {
+  // Pilot 8 cutover (2026-08-31): refresh_snapshot joining converted.json adds its
+  // OWN 3 declared `inputs.reads.steps` pairs (link_parcels, link_massing, link_wsib
+  // — assessment report §0.7) on top of the sole pre-existing live pair
+  // (compute_centroids -> link_massing) — 1 -> 4, same class of registry-size bump
+  // pilot 7 made to this same snapshot (6 -> 7 converted.json entries). Order is
+  // `deriveSeamPairs`'s own deterministic `downstream:upstream` localeCompare sort:
+  // 'link_massing:compute_centroids' < 'refresh_snapshot:link_massing' <
+  // 'refresh_snapshot:link_parcels' < 'refresh_snapshot:link_wsib'.
+  it('runs all 4 live pairs against the REAL registry and returns one row each', async () => {
     const pool = fakeSeamPool([], []);
     const rows = await seam.runSeamChecks(pool, { chainId: 'sources' });
-    expect(rows).toHaveLength(1);
-    expect(rows[0]?.metric).toBe('seam_compute_centroids_before_link_massing');
-    expect(rows[0]?.status).toBe('WARN'); // no history in this fake pool
+    expect(rows).toHaveLength(4);
+    expect(rows.map((r) => r?.metric)).toEqual([
+      'seam_compute_centroids_before_link_massing',
+      'seam_link_massing_before_refresh_snapshot',
+      'seam_link_parcels_before_refresh_snapshot',
+      'seam_link_wsib_before_refresh_snapshot',
+    ]);
+    for (const row of rows) {
+      expect(row?.status).toBe('WARN'); // no history in this fake pool
+    }
   });
 });

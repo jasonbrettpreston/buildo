@@ -869,10 +869,33 @@ function configKeysMap(src: string): Map<string, string> {
   return map;
 }
 
+/**
+ * RS-conformance-gap (pilot 8 cutover, commit 9, 2026-09-03) — a THIRD indirection
+ * pattern neither `CONFIG_READ_RE` nor `configKeysMap`'s object-literal form covers:
+ * `config[SIMPLE_VAR]` bracket access through a bare single-const alias (
+ * `refresh-snapshot.js`'s own `T1_VAR`/`T2_VAR` convention — `const T1_VAR =
+ * 'snapshot_coa_conf_high';` then `config[T1_VAR]`), not an object-literal map. Same
+ * class of blind spot as LP-D-conformance-gap above (found by executing — the moment
+ * `refresh_snapshot` actually joined `converted[]` this cutover and `§1.2a P4` ran
+ * against it for the first time, both T1/T2 vars read RED as dead declarations despite
+ * being genuinely read). Resolves any top-level `const <NAME> = 'string-literal';` in
+ * source, then treats a bare `config[<NAME>]` as consuming whatever string that const
+ * resolves to.
+ */
+function configSimpleConstMap(src: string): Map<string, string> {
+  const map = new Map<string, string>();
+  const constRe = /const\s+([A-Z][A-Z0-9_]*)\s*=\s*'([^']+)';/g;
+  for (const m of src.matchAll(constRe)) {
+    map.set(m[1]!, m[2]!);
+  }
+  return map;
+}
+
 /** Every `ctx.config.<name>` (or bare `config.<name>`, see `CONFIG_READ_RE`), PLUS any
  * `config[<CONFIG_KEYS_MAP_NAME>.<prop>]` bracket read resolved through a local
- * object-literal map (see `configKeysMap`) — read in already-in-memory source text,
- * comments stripped first. */
+ * object-literal map (see `configKeysMap`), PLUS any `config[<SIMPLE_CONST>]` bracket
+ * read resolved through a bare single-const alias (see `configSimpleConstMap`) — read
+ * in already-in-memory source text, comments stripped first. */
 function configReadsFromSource(src: string): string[] {
   const stripped = stripComments(src);
   const dotReads = [...stripped.matchAll(CONFIG_READ_RE)].map((m) => m[1]!);
@@ -881,7 +904,12 @@ function configReadsFromSource(src: string): string[] {
   const bracketReads = [...stripped.matchAll(bracketRe)]
     .map((m) => keysMap.get(m[1]!))
     .filter((v): v is string => Boolean(v));
-  return [...new Set([...dotReads, ...bracketReads])];
+  const simpleConstMap = configSimpleConstMap(stripped);
+  const simpleBracketRe = /config\[([A-Z][A-Z0-9_]*)\]/g;
+  const simpleBracketReads = [...stripped.matchAll(simpleBracketRe)]
+    .map((m) => simpleConstMap.get(m[1]!))
+    .filter((v): v is string => Boolean(v));
+  return [...new Set([...dotReads, ...bracketReads, ...simpleBracketReads])];
 }
 
 /** Same, from a file on disk. */

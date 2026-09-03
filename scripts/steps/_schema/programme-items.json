@@ -609,7 +609,7 @@
       "title": "reset generated per archetype",
       "promised": "reset generated per archetype (a library mechanism that produces reset SQL from outputs/recovery.reset)",
       "status": "NOT_STARTED",
-      "evidence": "no reset-SQL generator function anywhere in scripts/lib/step/index.js or write.js; recovery.reset is a declared field only, never derived",
+      "evidence": "no reset-SQL generator function anywhere in scripts/lib/step/index.js or write.js; recovery.reset is a declared field only, never derived. Measured against refresh_snapshot (pilot 8, 2026-09-03): its recovery.reset is prose, not \"generated\" (scripts/refresh-snapshot.descriptor.json:309-310); compute has zero DELETE/TRUNCATE (grep -niE \"delete|truncate\" scripts/lib/compute/refresh-snapshot.js -> 0 hits); step.schema.json's RECORDER x-profile (:1686-1694) imposes no recovery.reset constraint at all — this gate does not apply to it.",
       "owner": {
         "kind": "wf",
         "ref": "wf: programme-STA-2"
@@ -618,9 +618,10 @@
         "kind": "cutover_prereq",
         "blocks": [
           "refresh_snapshot"
-        ]
+        ],
+        "applies_when": { "descriptor_path": "recovery.reset", "equals": "generated" }
       },
-      "last_reviewed": "2026-08-29"
+      "last_reviewed": "2026-09-03"
     },
     {
       "id": "STA-3",
@@ -628,7 +629,7 @@
       "title": "3 destructive-reset guards",
       "promised": "3 destructive-reset guards (dry-run default, explicit target confirmation, one-txn magnitude+empty-source guard)",
       "status": "NOT_STARTED",
-      "evidence": "none of the 3 guards found in scripts/lib/step/write.js or any reset CLI entry point",
+      "evidence": "none of the 3 guards found in scripts/lib/step/write.js or any reset CLI entry point. Measured against refresh_snapshot (pilot 8, 2026-09-03): its recovery.reset is prose, not \"generated\" (scripts/refresh-snapshot.descriptor.json:309-310); compute has zero DELETE/TRUNCATE (grep -niE \"delete|truncate\" scripts/lib/compute/refresh-snapshot.js -> 0 hits); step.schema.json's RECORDER x-profile (:1686-1694) imposes no recovery.reset constraint at all — no destructive reset target exists for these 3 guards to guard here.",
       "owner": {
         "kind": "wf",
         "ref": "wf: programme-STA-2"
@@ -637,9 +638,10 @@
         "kind": "cutover_prereq",
         "blocks": [
           "refresh_snapshot"
-        ]
+        ],
+        "applies_when": { "descriptor_path": "recovery.reset", "equals": "generated" }
       },
-      "last_reviewed": "2026-08-29"
+      "last_reviewed": "2026-09-03"
     },
     {
       "id": "STA-4",

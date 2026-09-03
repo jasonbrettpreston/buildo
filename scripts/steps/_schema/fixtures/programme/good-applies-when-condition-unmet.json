@@ -1,0 +1,17 @@
+{
+  "$comment": "GREEN canary (RS-D-STA, 2026-09-03) — src/tests/programme-backlog.infra.test.ts. compute_centroids's real descriptor (scripts/compute-centroids.descriptor.json) has identity.archetype == \"BACKFILL\", NOT \"RECORDER\" — this item's applies_when condition does NOT hold, so despite status NOT_STARTED, checkCutoverPrereqs() must NOT block compute_centroids on this item (proves the skip path, RS-D-STA).",
+  "contract_version": 1,
+  "items": [
+    {
+      "id": "FIXTURE-GOOD-APPLIES-WHEN-1",
+      "spec": "122 §10.3",
+      "title": "canary: an applies_when condition that does NOT match the blocked slug's descriptor does not block, even NOT_STARTED",
+      "promised": "this fixture exists only to prove checkCutoverPrereqs() skips an item whose applies_when condition is unmet",
+      "status": "NOT_STARTED",
+      "evidence": "fixture — no real evidence, deliberately",
+      "owner": { "kind": "wf", "ref": "wf: fixture" },
+      "gate": { "kind": "cutover_prereq", "blocks": ["compute_centroids"], "applies_when": { "descriptor_path": "identity.archetype", "equals": "RECORDER" } },
+      "last_reviewed": "2026-09-03"
+    }
+  ]
+}

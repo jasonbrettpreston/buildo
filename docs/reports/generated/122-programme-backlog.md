@@ -33,8 +33,8 @@ Total items: **75**
 
 | id | spec | title | status | owner | blocks | last reviewed |
 |---|---|---|---|---|---|---|
-| `STA-2` | 120 §6b | reset generated per archetype | ⬜ NOT_STARTED | wf: wf: programme-STA-2 | refresh_snapshot | 2026-08-29 |
-| `STA-3` | 120 §6b | 3 destructive-reset guards | ⬜ NOT_STARTED | wf: wf: programme-STA-2 | refresh_snapshot | 2026-08-29 |
+| `STA-2` | 120 §6b | reset generated per archetype | ⬜ NOT_STARTED | wf: wf: programme-STA-2 | refresh_snapshot | 2026-09-03 |
+| `STA-3` | 120 §6b | 3 destructive-reset guards | ⬜ NOT_STARTED | wf: wf: programme-STA-2 | refresh_snapshot | 2026-09-03 |
 | `CLOUDPARITY` | 122 R-D | cloud database must run apply-logic-variables.js before any cloud cutover | ⚠️ PARTIAL | followup: review_followups.md HIGH ops entry (filed 2026-08-27, peel 8c) | cloud_deploy | 2026-08-29 |
 
 ## Nice-to-have — real gap, not currently blocking (65)

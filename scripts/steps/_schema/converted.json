@@ -36,15 +36,8 @@
     "scripts/link-wsib.js",
     "scripts/link-parcel-addresses.js",
     "scripts/compute-centroids.js",
-    "scripts/link-parcels.js"
+    "scripts/link-parcels.js",
+    "scripts/refresh-snapshot.js"
   ],
-  "pending": [
-    {
-      "file": "scripts/refresh-snapshot.js",
-      "registers_at": "C1 pilot 8 commit 9 (cutover)",
-      "reason": "PH-7 red suite landed commit 6 (src/tests/steps/refresh_snapshot/violations.test.ts, 17 it.fails() call sites); descriptor/compute/library growth (LG-26/LG-27) landed commit 7 — shape-clean confirmed live (check-step-shape.mjs), converted.json registration still deferred to commit 9 (cutover)",
-      "declared": "2026-08-31",
-      "stage": "shape_clean"
-    }
-  ]
+  "pending": []
 }

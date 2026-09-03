@@ -27,6 +27,8 @@ const GENERATOR = path.join(REPO_ROOT, 'scripts/violations/generate-programme-ba
 const STEP_VALIDATE = path.join(REPO_ROOT, 'scripts/analysis/step-validate.mjs');
 const BAD_FIXTURE = 'scripts/steps/_schema/fixtures/programme/bad-unmet-cutover-prereq.json';
 const GOOD_FIXTURE = 'scripts/steps/_schema/fixtures/programme/good-met-cutover-prereq.json';
+const BAD_APPLIES_WHEN_FIXTURE = 'scripts/steps/_schema/fixtures/programme/bad-applies-when-condition-met.json';
+const GOOD_APPLIES_WHEN_FIXTURE = 'scripts/steps/_schema/fixtures/programme/good-applies-when-condition-unmet.json';
 
 interface ProgrammeOwner {
   kind: 'pilot' | 'wf' | 'followup' | 'library-wf' | 'none';
@@ -35,6 +37,7 @@ interface ProgrammeOwner {
 interface ProgrammeGate {
   kind: 'batching_prereq' | 'cutover_prereq' | 'nice_to_have';
   blocks: string[];
+  applies_when?: { descriptor_path: string; equals: unknown };
 }
 interface ProgrammeItem {
   id: string;
@@ -253,6 +256,63 @@ describe('step-validate.mjs — programme section', () => {
     });
     expect(out).toMatch(/programme: compute_centroids is named by 1 blocking item\(s\)/);
   });
+
+  // -------------------------------------------------------------------------
+  // RS-D-STA (pilot 8 commit 9, operator ruling, 2026-09-03) — gate.applies_when.
+  // A programme item may declare its applicability as a fact about the BLOCKED
+  // slug's own descriptor (dot-path lookup) rather than a hand-adjudicated
+  // exemption. Proven both directions against compute_centroids's REAL,
+  // already-converted descriptor (scripts/compute-centroids.descriptor.json,
+  // identity.archetype === "BACKFILL", verified) — the fixture only supplies
+  // the programme-items.json side; the descriptor read is always the real one.
+  // -------------------------------------------------------------------------
+
+  it('RED — applies_when: a condition that MATCHES the blocked slug\'s descriptor still blocks (exit 1)', () => {
+    let threw = false;
+    let out = '';
+    try {
+      out = execFileSync('node', [STEP_VALIDATE, '--step=compute_centroids', '--fast'], {
+        cwd: REPO_ROOT,
+        encoding: 'utf8',
+        env: { ...process.env, BUILDO_PROGRAMME_ITEMS_PATH: BAD_APPLIES_WHEN_FIXTURE },
+      });
+    } catch (err) {
+      threw = true;
+      out = String((err as { stdout?: string }).stdout ?? '');
+    }
+    expect(threw, 'applies_when whose condition holds must still be a hard stop').toBe(true);
+    expect(out).toMatch(/unmet cutover_prereq blocking an already-converted slug: compute_centroids <- FIXTURE-BAD-APPLIES-WHEN-1/);
+  });
+
+  it('GREEN — applies_when: a condition that does NOT match the blocked slug\'s descriptor does not block, even NOT_STARTED', () => {
+    const out = execFileSync('node', [STEP_VALIDATE, '--step=compute_centroids', '--fast'], {
+      cwd: REPO_ROOT,
+      encoding: 'utf8',
+      env: { ...process.env, BUILDO_PROGRAMME_ITEMS_PATH: GOOD_APPLIES_WHEN_FIXTURE },
+    });
+    expect(out).toMatch(/\| 9 \| \(registry\) \| PASS \| clean \(0 converted slugs blocked/);
+  });
+
+  it('RED — an item with NO applies_when at all still blocks unconditionally (pre-existing behaviour, unchanged)', () => {
+    // Re-states the BAD_FIXTURE proof above explicitly under the applies_when
+    // feature's own describe scope, so this file documents both branches
+    // (declared applies_when vs. none) side by side rather than relying on a
+    // reader to notice the earlier block covers the "none" case.
+    let threw = false;
+    let out = '';
+    try {
+      out = execFileSync('node', [STEP_VALIDATE, '--step=compute_centroids', '--fast'], {
+        cwd: REPO_ROOT,
+        encoding: 'utf8',
+        env: { ...process.env, BUILDO_PROGRAMME_ITEMS_PATH: BAD_FIXTURE },
+      });
+    } catch (err) {
+      threw = true;
+      out = String((err as { stdout?: string }).stdout ?? '');
+    }
+    expect(threw, 'an item with no applies_when must keep blocking unconditionally').toBe(true);
+    expect(out).toMatch(/unmet cutover_prereq blocking an already-converted slug: compute_centroids <- FIXTURE-BAD-1/);
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -270,12 +330,27 @@ describe('step-validate.mjs — programme section', () => {
 // the predicate in miniature so the LOGIC itself has a fast, DB-free,
 // spawn-free lock too — both are load-bearing, neither substitutes the other.
 
-function checkCutoverPrereqsMirror(convertedSlugs: string[], items: ProgrammeItem[]) {
+/** Mirrors scripts/analysis/step-validate.mjs's own getByPath — generic dot-path lookup. */
+function getByPathMirror(obj: unknown, dotPath: string): unknown {
+  return dotPath.split('.').reduce<unknown>((acc, key) => {
+    if (acc && typeof acc === 'object') return (acc as Record<string, unknown>)[key];
+    return undefined;
+  }, obj);
+}
+
+function checkCutoverPrereqsMirror(convertedSlugs: string[], items: ProgrammeItem[], descriptorsBySlug: Record<string, unknown> = {}) {
   const violations: Array<{ slug: string; id: string; status: string }> = [];
   for (const slug of convertedSlugs) {
     for (const it of items) {
       if (it.gate.kind !== 'cutover_prereq') continue;
       if (!it.gate.blocks.includes(slug)) continue;
+      if (it.gate.applies_when) {
+        const descriptor = descriptorsBySlug[slug];
+        if (descriptor !== undefined) {
+          const actual = getByPathMirror(descriptor, it.gate.applies_when.descriptor_path);
+          if (actual !== it.gate.applies_when.equals) continue;
+        }
+      }
       if (it.status !== 'BUILT') violations.push({ slug, id: it.id, status: it.status });
     }
   }
@@ -316,11 +391,59 @@ describe('checkCutoverPrereqs predicate — mirrored unit lock (spec for the spa
     const manifest = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, 'scripts/manifest.json'), 'utf8')) as {
       scripts: Record<string, { file: string | null }>;
     };
-    const slugs = (convertedRaw.converted as string[]).map((f) => {
+    const convertedFiles = convertedRaw.converted as string[];
+    const slugs = convertedFiles.map((f) => {
       const found = Object.entries(manifest.scripts).find(([, e]) => e.file === f)?.[0];
       if (!found) throw new Error(`no manifest.scripts entry points at ${f}`);
       return found;
     });
-    expect(checkCutoverPrereqsMirror(slugs, ITEMS)).toEqual([]);
+    // Same slug -> descriptor map shape step-validate.mjs's real call site builds,
+    // so this mirror exercises the applies_when path against REAL descriptors
+    // (e.g. refresh_snapshot's recovery.reset, STA-2/STA-3's own RS-D-STA condition).
+    const descriptorsBySlug: Record<string, unknown> = {};
+    convertedFiles.forEach((relFile, i) => {
+      const descPath = path.join(REPO_ROOT, relFile.replace(/\.js$/, '.descriptor.json'));
+      if (fs.existsSync(descPath)) descriptorsBySlug[slugs[i]!] = JSON.parse(fs.readFileSync(descPath, 'utf8'));
+    });
+    expect(checkCutoverPrereqsMirror(slugs, ITEMS, descriptorsBySlug)).toEqual([]);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// 7. gate.applies_when (RS-D-STA, pilot 8 commit 9, 2026-09-03) — mirror-level,
+//    proven both directions independent of the CLI-spawn fixtures above.
+// ---------------------------------------------------------------------------
+
+describe('checkCutoverPrereqs predicate — gate.applies_when (RS-D-STA)', () => {
+  const baseItem: ProgrammeItem = {
+    id: 'X',
+    spec: '122',
+    title: 't',
+    promised: 'p',
+    status: 'NOT_STARTED',
+    evidence: 'e',
+    owner: { kind: 'wf', ref: 'r' },
+    gate: { kind: 'cutover_prereq', blocks: ['some_slug'], applies_when: { descriptor_path: 'recovery.reset', equals: 'generated' } },
+    last_reviewed: '2026-09-03',
+  };
+
+  it('RED — applies_when condition MATCHES the slug\'s descriptor: still blocks', () => {
+    const descriptorsBySlug = { some_slug: { recovery: { reset: 'generated' } } };
+    expect(checkCutoverPrereqsMirror(['some_slug'], [baseItem], descriptorsBySlug)).toHaveLength(1);
+  });
+
+  it('GREEN — applies_when condition does NOT match the slug\'s descriptor (prose reset, e.g. refresh_snapshot\'s real shape): does not block', () => {
+    const descriptorsBySlug = { some_slug: { recovery: { reset: 'No TRUNCATE/rebuild mechanism exists.' } } };
+    expect(checkCutoverPrereqsMirror(['some_slug'], [baseItem], descriptorsBySlug)).toHaveLength(0);
+  });
+
+  it('RED — applies_when with no descriptor supplied for the slug: conservative default is to STILL block (never silently exempt for lack of wiring)', () => {
+    expect(checkCutoverPrereqsMirror(['some_slug'], [baseItem], {})).toHaveLength(1);
+  });
+
+  it('RED — an item with NO applies_when at all still blocks unconditionally, regardless of descriptor content', () => {
+    const itemNoAppliesWhen: ProgrammeItem = { ...baseItem, gate: { kind: 'cutover_prereq', blocks: ['some_slug'] } };
+    const descriptorsBySlug = { some_slug: { recovery: { reset: 'anything at all' } } };
+    expect(checkCutoverPrereqsMirror(['some_slug'], [itemNoAppliesWhen], descriptorsBySlug)).toHaveLength(1);
   });
 });

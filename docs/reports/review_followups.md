@@ -3,6 +3,16 @@ _Generated following the Pipeline Clean-up Mandate. Trimmed 2026-05-05 — full 
 
 ---
 
+## Pilot 8 (`refresh_snapshot`) Finding 7 — admin dual-path re-implementation (2026-09-03)
+
+Source: `docs/reports/2026-08-31-pilot8-refresh-snapshot-assessment.md` §0.6 Finding 7, filed per the pilot's own Ask 3 (`.cursor/active_task.md:150`). Out of Backend/Pipeline Operating Boundary — Cross-Domain, not actioned by pilot 8.
+
+| Severity | Source | Item | Disposition |
+|----------|--------|------|--------------|
+| HIGH | Pilot 8 assessment, Finding 7, 2026-08-31 | **`src/lib/quality/metrics.ts`'s `captureDataQualitySnapshot()` (`:23-`) is a second, independent TypeScript re-implementation of `scripts/refresh-snapshot.js`'s snapshot-capture logic**, called from the live admin "Refresh Now" trigger (`POST /api/quality/refresh`, `src/app/api/quality/refresh/route.ts`). Measured: (1) runs its queries via the exact `Promise.all` parallel-dispatch pattern `8cc99c78` fixed in the pipeline script (73% index-fetch pathology, 3 min → 64 min under a stale correlation stat); (2) acquires **no advisory lock** (`grep -n "advisory" src/lib/quality/metrics.ts src/app/api/quality/refresh/route.ts` → zero hits) — nothing prevents it racing a concurrent pipeline-triggered `refresh_snapshot` run, both targeting the same `ON CONFLICT (snapshot_date)` row with no coordination; (3) its own INSERT column list (`:130-166`) carries 61 columns vs. the pipeline script's 68 — missing the 4 `cost_estimates_*` and 3 `timing_calibration_*` columns (a manual refresh can't zero them under `DO UPDATE`, but also can't populate them from a fresh state). Genuine, live, currently-shippable defect; lives entirely in `src/lib/`/`src/app/api/` (Admin/Cross-Domain territory per root `CLAUDE.md`'s Domain Rules table), outside pilot 8's `scripts/`-only Operating Boundary. | **ACT** — schedule a Cross-Domain WF3: either retire `metrics.ts`'s duplicate implementation in favor of calling the pipeline script's own query builders, or at minimum add the advisory lock (`ADVISORY_LOCK_ID` per Spec 47 §A.5 registry) so the manual trigger can't race a pipeline run. |
+
+---
+
 ## `step:validate` scorecard remediation — pilots 1-4 (2026-08-29)
 
 Source: `npm run step:validate -- --step=<slug>` run against all four converted-step assessment reports (`assert_schema`, `load_ravines`, `link_massing`, `link_wsib`) to close their outstanding hard stops (Spec 123 §6 G6/G8/G9) and other red gates. Items here are genuine gaps found and left open (Class C), not fixed silently — see each pilot's own report/`defect-ledger.md` for what WAS fixed.

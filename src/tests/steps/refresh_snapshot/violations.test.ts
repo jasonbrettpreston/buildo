@@ -288,16 +288,16 @@ describe('the compute module — Rule 2 (compute is JUST compute) + RS-D2 (Ask 1
     }
   });
 
-  it.fails('THE Ask-1 fix (RS-D2): costEst\'s failure path in buildRow() reads the PRIOR data_quality_snapshots row\'s own 4 cost_estimates_* columns (mirroring the other 4 optional blocks\' pre-existing carry-forward policy) — the "zero on failure" branch is gone (flips at: commit 7)', () => {
+  it('THE Ask-1 fix (RS-D2): costEst\'s failure path in buildRow() reads the PRIOR data_quality_snapshots row\'s own 4 cost_estimates_* columns (mirroring the other 4 optional blocks\' pre-existing carry-forward policy) — the "zero on failure" branch is gone (flips at: commit 7)', () => {
     const src = stripComments(computeSource());
-    const costEstFailedBlock = /costEstFailed[\s\S]{0,400}/i.exec(src);
+    const costEstFailedBlock = /costEstFailed[\s\S]{0,500}/i.exec(src);
     expect(costEstFailedBlock, 'compute.js must carry a costEstFailed branch in buildRow()').toBeTruthy();
     expect(costEstFailedBlock![0].includes('prevRow.cost_estimates_total'), 'RS-D2: costEst\'s failure path must read prevRow.cost_estimates_* on failure, not leave the zero default').toBe(true);
   });
 
-  it.fails('THE Ask-1 fix (RS-D2): coaFunnel\'s failure path in buildRow() reads the PRIOR RUN\'s own reported audit-row values (its 7 fields are audit/telemetry only, never written to data_quality_snapshots — the prior ROW has no matching columns, so the prior RUN\'s records_meta is the correct carry-forward source) — the "zero on failure" branch is gone (flips at: commit 7)', () => {
+  it('THE Ask-1 fix (RS-D2): coaFunnel\'s failure path in buildRow() reads the PRIOR RUN\'s own reported audit-row values (its 7 fields are audit/telemetry only, never written to data_quality_snapshots — the prior ROW has no matching columns, so the prior RUN\'s records_meta is the correct carry-forward source) — the "zero on failure" branch is gone (flips at: commit 7)', () => {
     const src = stripComments(computeSource());
-    const coaFunnelFailedBlock = /coaFunnelFailed[\s\S]{0,700}/i.exec(src);
+    const coaFunnelFailedBlock = /coaFunnelFailed[\s\S]{0,900}/i.exec(src);
     expect(coaFunnelFailedBlock, 'compute.js must carry a coaFunnelFailed branch in buildRow()').toBeTruthy();
     expect(coaFunnelFailedBlock![0].includes('priorAuditMetric'), 'RS-D2: coaFunnel\'s failure path must read the prior run\'s own audit values on failure, not leave the zero default').toBe(true);
   });
@@ -445,12 +445,19 @@ describe('facts testable today — the live tree, not a future artifact', () => 
     expect(nums.includes(23), 'LG-23 must stay retired — never reused by this or any pilot').toBe(false);
   });
 
-  it('LANDED (commit 7) — converted.json — pending advances to stage "shape_clean" (R-K.1): the descriptor now exists AND check-step-shape.mjs confirms the frozen shape is genuinely shape-clean; converted.json registration itself still deferred to commit 9 (cutover)', () => {
+  // -------------------------------------------------------------------------
+  // R-K.1 pending-stage registration (structural, cross-checked against the generic
+  // step-conformance.infra.test.ts gate — not re-implementing that gate, only confirming
+  // this step's own entry is well-formed). Commits 6-8 pinned the PRE-cutover shape
+  // (registered in converted[], pending stage "shape_clean") — commit 9 (this commit)
+  // is the cutover itself, so this lock now pins the POST-cutover shape, mirroring
+  // link_parcels' own commit-9 update (pilot 7, src/tests/steps/link_parcels/violations.test.ts).
+  // -------------------------------------------------------------------------
+  it('LANDED (commit 9) — converted.json — refresh_snapshot is REGISTERED (cutover landed, per R-K.1): the file is in converted[], no pending entry remains, and the descriptor exists', () => {
     const c = JSON.parse(fs.readFileSync(abs(CONVERTED_REL), 'utf8')) as { converted: string[]; pending: Array<{ file: string; stage: string }> };
-    expect(c.converted.includes(STEP_REL), 'refresh_snapshot must not be registered as converted yet — that is commit 9 (cutover)').toBe(false);
+    expect(c.converted.includes(STEP_REL), 'refresh_snapshot must be registered as converted — commit 9 is the cutover').toBe(true);
     const entry = c.pending.find((p) => p.file === STEP_REL);
-    expect(entry, `converted.json.pending must carry a ${STEP_REL} entry`).toBeDefined();
-    expect(entry!.stage, 'R-K.1: a step whose descriptor exists and is shape-clean must advance to stage "shape_clean" in the SAME commit — a stale "red_suite" here would itself be RED ("stage not advanced")').toBe('shape_clean');
-    expect(fs.existsSync(abs(DESCRIPTOR_REL)), 'a "shape_clean"-stage pending entry MUST have a sibling descriptor').toBe(true);
+    expect(entry, `a stale pending entry still exists for ${STEP_REL} — R-K.1 cutover should have removed it`).toBeUndefined();
+    expect(fs.existsSync(abs(DESCRIPTOR_REL)), 'descriptor must exist for a registered converted entry').toBe(true);
   });
 });

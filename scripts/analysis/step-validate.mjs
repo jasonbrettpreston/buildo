@@ -290,6 +290,14 @@ export function blockingItemsFor(slug, items) {
 }
 
 /**
+ * Generic dot-path lookup (e.g. "recovery.reset") into a plain object — no
+ * step names, no special-casing. Returns undefined on any missing segment.
+ */
+function getByPath(obj, dotPath) {
+  return dotPath.split('.').reduce((acc, key) => (acc && typeof acc === 'object' ? acc[key] : undefined), obj);
+}
+
+/**
  * The cutover-prereq lock: for every slug already registered in
  * converted.json, every cutover_prereq item that names it (by gate.blocks)
  * must be status BUILT. A registered-but-still-blocked slug means a cutover
@@ -298,13 +306,40 @@ export function blockingItemsFor(slug, items) {
  * exists to catch. batching_prereq items are NOT checked here (they gate
  * the programme-wide freeze declaration, not an individual slug's cutover —
  * see STD-8/PRG-10) — only cutover_prereq.
+ *
+ * RS-D-STA (pilot 8 commit 9, 2026-09-03, operator ruling) — a gate declared
+ * before its target archetype was ever measured (STA-2/STA-3, authored
+ * against Spec 120 §6b's generic "reset generated per archetype" promise,
+ * pre-dating any RECORDER descriptor to check it against) may carry an
+ * OPTIONAL `gate.applies_when: {descriptor_path, equals}`: the item only
+ * blocks a slug whose OWN descriptor's value at `descriptor_path` (dot
+ * notation, resolved via `getByPath`) equals `equals`. A slug whose
+ * descriptor doesn't match is not blocked by that item at all — the gate's
+ * applicability becomes declared data, not a hand-adjudicated exemption. An
+ * item with no `applies_when` keeps the unconditional behaviour this lock
+ * always had. `descriptorsBySlug` is an optional slug -> parsed-descriptor
+ * map; a slug missing from it (or an item with no matching descriptor) is
+ * treated conservatively — still blocked — never silently exempted for lack
+ * of wiring.
  */
-export function checkCutoverPrereqs(convertedSlugs, items) {
+export function checkCutoverPrereqs(convertedSlugs, items, descriptorsBySlug = {}) {
   const violations = [];
   for (const slug of convertedSlugs) {
     for (const it of items) {
       if (it.gate?.kind !== 'cutover_prereq') continue;
       if (!it.gate.blocks?.includes(slug)) continue;
+      if (it.gate.applies_when) {
+        const descriptor = descriptorsBySlug[slug];
+        // A descriptor genuinely resolved for this slug is trusted to answer the
+        // condition (match -> still block; mismatch -> skip, the whole point of
+        // this feature). A descriptor we could NOT resolve is NOT evidence of a
+        // mismatch — falling through here keeps the pre-applies_when behaviour
+        // (still block) rather than silently exempting a slug for lack of wiring.
+        if (descriptor !== undefined) {
+          const actual = getByPath(descriptor, it.gate.applies_when.descriptor_path);
+          if (actual !== it.gate.applies_when.equals) continue; // condition genuinely unmet — this item does not block this slug
+        }
+      }
       if (it.status !== 'BUILT') {
         violations.push({ slug, id: it.id, status: it.status, title: it.title });
       }
@@ -715,7 +750,19 @@ function fastInvariants(rows, converted, pending) {
   // fleet, mirrors items 4/5's shape) since a violation is a fleet-integrity
   // fact, not a property of the ONE step currently being validated.
   const programmeItems = loadProgrammeItems();
-  const cutoverViolations = checkCutoverPrereqs(converted.map((f) => slugFor(loadManifest(), f)), programmeItems);
+  const manifestForCutover = loadManifest();
+  const descriptorsBySlug = {};
+  for (const relFile of converted) {
+    const slug = slugFor(manifestForCutover, relFile);
+    const descAbs = path.join(REPO_ROOT, harness.descriptorPathFor(relFile));
+    if (!existsSync(descAbs)) continue;
+    try {
+      descriptorsBySlug[slug] = JSON.parse(readFileSync(descAbs, 'utf8'));
+    } catch {
+      /* unparsable descriptor — leave the slug undefined, checkCutoverPrereqs blocks conservatively */
+    }
+  }
+  const cutoverViolations = checkCutoverPrereqs(converted.map((f) => slugFor(manifestForCutover, f)), programmeItems, descriptorsBySlug);
   results.push({
     id: 9,
     slug: '(registry)',

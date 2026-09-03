@@ -98,6 +98,7 @@
         "assert_schema_csv_header_bytes",
         "assert_schema_geojson_probe_bytes",
         "assert_schema_type_sample_rows",
+        "coa_match_conf_medium",
         "compute_centroids_compute_rate_warn_pct",
         "compute_centroids_failed_geometries_warn",
         "compute_centroids_full_recompute_batch_size",
@@ -132,6 +133,7 @@
         "massing_garage_max_sqm",
         "massing_nearest_max_distance_m",
         "massing_shed_threshold_sqm",
+        "snapshot_coa_conf_high",
         "spatial_match_confidence",
         "spatial_match_max_distance_m",
         "wsib_fuzzy_match_threshold"
@@ -404,6 +406,7 @@
       "assert_schema_csv_header_bytes",
       "assert_schema_geojson_probe_bytes",
       "assert_schema_type_sample_rows",
+      "coa_match_conf_medium",
       "compute_centroids_compute_rate_warn_pct",
       "compute_centroids_failed_geometries_warn",
       "compute_centroids_full_recompute_batch_size",
@@ -438,6 +441,7 @@
       "massing_garage_max_sqm",
       "massing_nearest_max_distance_m",
       "massing_shed_threshold_sqm",
+      "snapshot_coa_conf_high",
       "spatial_match_confidence",
       "spatial_match_max_distance_m",
       "wsib_fuzzy_match_threshold"

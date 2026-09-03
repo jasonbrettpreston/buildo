@@ -1,0 +1,17 @@
+{
+  "$comment": "RED canary (RS-D-STA, 2026-09-03) — src/tests/programme-backlog.infra.test.ts. compute_centroids is already registered in converted.json, and its real descriptor (scripts/compute-centroids.descriptor.json) has identity.archetype == \"BACKFILL\" (verified) — matching this item's applies_when.equals, so the condition HOLDS. checkCutoverPrereqs() must still fire on this NOT_STARTED item exactly as it would with no applies_when at all.",
+  "contract_version": 1,
+  "items": [
+    {
+      "id": "FIXTURE-BAD-APPLIES-WHEN-1",
+      "spec": "122 §10.3",
+      "title": "canary: an applies_when condition that MATCHES the blocked slug's descriptor still blocks",
+      "promised": "this fixture exists only to prove checkCutoverPrereqs() still fires RED when applies_when's condition is met",
+      "status": "NOT_STARTED",
+      "evidence": "fixture — no real evidence, deliberately",
+      "owner": { "kind": "wf", "ref": "wf: fixture" },
+      "gate": { "kind": "cutover_prereq", "blocks": ["compute_centroids"], "applies_when": { "descriptor_path": "identity.archetype", "equals": "BACKFILL" } },
+      "last_reviewed": "2026-09-03"
+    }
+  ]
+}
