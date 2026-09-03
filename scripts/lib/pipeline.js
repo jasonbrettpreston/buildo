@@ -21,6 +21,23 @@
  * SPEC LINK: docs/specs/01-pipeline/40_pipeline_system.md
  */
 const { Pool } = require('pg');
+
+// WF3 enrich_parcels stall commit 2 (2026-09-03) — H5 (premise verification,
+// wf3_enrich_parcels_cloud_stall, UNDETERMINED): a dropped TCP connection the
+// client never notices. pg@8.13.1 defaults `keepAlive:false`, so a socket
+// reaped mid-query by an idle-looking-connection middlebox (Supavisor/NLB —
+// no idle-timeout value is documented for either, Spec 113 §5 gap) leaves
+// node awaiting a response that will NEVER arrive: infinite silent hang, not
+// an error. With keepAlive on, the OS sends TCP keepalive probes on an
+// idle-LOOKING (but query-in-flight) connection; if the peer is gone, the
+// kernel reports it back to node (ECONNRESET/ETIMEDOUT) instead of hanging
+// forever. This does not PROVE H5 — only a live pg_stat_activity capture can
+// (still UNDETERMINED) — it closes the one code gap that made a reaped
+// socket SILENT instead of a loud error. 10s = TCP keepalive convention
+// (Linux net.ipv4.tcp_keepalive_time default is 7200s server-side; probing
+// from the client at 10s catches a dead peer fast without adding meaningful
+// traffic on a healthy, minutes-long batch connection).
+const POOL_KEEPALIVE_INITIAL_DELAY_MS = 10000;
 const { resolveAndCountTriple } = require('./vocab-coverage');
 const { resolveSslConfig, stripSslParams } = require('./ssl-config');
 const { REQUIRED_PG_VARS } = require('./resolve-db');
@@ -113,6 +130,9 @@ function createPool() {
       // Spec 113 §4.1 — resolveSslConfig is the only place `ssl` is built;
       // connectionString style pins the CA for any non-loopback host.
       ssl: resolveSslConfig({ connectionString }),
+      // WF3 enrich_parcels stall commit 2 — see POOL_KEEPALIVE_INITIAL_DELAY_MS above.
+      keepAlive: true,
+      keepAliveInitialDelayMillis: POOL_KEEPALIVE_INITIAL_DELAY_MS,
     }));
   }
 
@@ -169,6 +189,9 @@ function createPool() {
     password: pgPassword || 'postgres',
     // Spec 113 §4.1 — the only place an `ssl` config is constructed.
     ssl: resolveSslConfig({ host }),
+    // WF3 enrich_parcels stall commit 2 — see POOL_KEEPALIVE_INITIAL_DELAY_MS above.
+    keepAlive: true,
+    keepAliveInitialDelayMillis: POOL_KEEPALIVE_INITIAL_DELAY_MS,
   }));
 }
 

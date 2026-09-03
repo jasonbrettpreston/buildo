@@ -203,6 +203,49 @@ describe('Pipeline SDK', () => {
         else env.SUPABASE_DATABASE_URL = origUrl;
       }
     });
+
+    // -----------------------------------------------------------------------
+    // WF3 enrich_parcels stall commit 2 (2026-09-03) — keepAlive on every pool.
+  //
+  // H5 (premise verification, wf3_enrich_parcels_cloud_stall, UNDETERMINED):
+  // a dropped TCP connection the client never notices — createPool() set no
+  // `keepAlive` (pg@8.13.1 defaults false) and no `query_timeout`; a reaped
+  // socket mid-query leaves node awaiting a response that will never arrive.
+  // This does not PROVE H5 (that needs a live pg_stat_activity capture —
+  // still UNDETERMINED), but it removes the one code gap that made a reaped
+  // socket silent instead of an error: with keepAlive on, the OS sends TCP
+  // keepalive probes on an idle-LOOKING connection and the kernel reports a
+  // dead peer back to node (ECONNRESET/ETIMEDOUT) instead of hanging forever.
+  // -----------------------------------------------------------------------
+  describe('WF3 enrich_parcels stall commit 2 — keepAlive on every pool.connect()', () => {
+    it('SUPABASE_DATABASE_URL branch: keepAlive true, keepAliveInitialDelayMillis set', () => {
+      const env = process.env as Record<string, string | undefined>;
+      const origHost = env.PG_HOST;
+      const origUrl = env.SUPABASE_DATABASE_URL;
+      try {
+        delete env.PG_HOST;
+        env.SUPABASE_DATABASE_URL = 'postgresql://ci:pw@127.0.0.1:5432/buildo_ci';
+        const pool = pipeline.createPool();
+        expect(pool.options.keepAlive).toBe(true);
+        expect(pool.options.keepAliveInitialDelayMillis).toBeGreaterThan(0);
+        pool.end().catch(() => {});
+      } finally {
+        if (origHost === undefined) delete env.PG_HOST;
+        else env.PG_HOST = origHost;
+        if (origUrl === undefined) delete env.SUPABASE_DATABASE_URL;
+        else env.SUPABASE_DATABASE_URL = origUrl;
+      }
+    });
+
+    it('discrete PG_* branch: keepAlive true, keepAliveInitialDelayMillis set', () => {
+      withDiscretePgVars(() => {
+        const pool = pipeline.createPool();
+        expect(pool.options.keepAlive).toBe(true);
+        expect(pool.options.keepAliveInitialDelayMillis).toBeGreaterThan(0);
+        pool.end().catch(() => {});
+      });
+    });
+    });
   });
 
   describe('WF3 B3-H7: telemetry uses Number() on bigint columns (no parseInt truncation)', () => {

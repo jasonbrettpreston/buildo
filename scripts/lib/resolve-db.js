@@ -339,7 +339,16 @@ function createResolvedPool(opts) {
   const o = opts || {};
   const label = o.label || 'resolve-db';
   const { poolConfig, description, source } = resolveDbConfig(o);
-  const pool = new Pool({ ...poolConfig, ...(o.poolOverrides || {}) });
+  // WF3 enrich_parcels stall commit 2 (2026-09-03) — same H5 rationale as
+  // pipeline.js's createPool() (see POOL_KEEPALIVE_INITIAL_DELAY_MS there):
+  // a reaped socket must error, never hang silently. Spread BEFORE
+  // poolOverrides so a caller can still opt out explicitly.
+  const pool = new Pool({
+    ...poolConfig,
+    keepAlive: true,
+    keepAliveInitialDelayMillis: 10000,
+    ...(o.poolOverrides || {}),
+  });
   pool.buildoTarget = { description, source };
   return withTargetAssertion(pool, {
     label,

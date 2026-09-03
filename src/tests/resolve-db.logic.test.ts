@@ -424,3 +424,35 @@ describe('migrate.js is the ONE sanctioned floor exemption', () => {
     expect(floorExemptionCallSites()).not.toContain('scripts/lib/resolve-db.js');
   });
 });
+
+// -----------------------------------------------------------------------
+// WF3 enrich_parcels stall commit 2 (2026-09-03) — keepAlive on createResolvedPool()
+//
+// resolve-db.js's createResolvedPool() is the OTHER `new Pool(...)` site in
+// scripts/ (pipeline.js's createPool() is the other two, covered in
+// pipeline-sdk.logic.test.ts). Same H5 rationale: a reaped socket must error,
+// never hang silently.
+// -----------------------------------------------------------------------
+describe('WF3 enrich_parcels stall commit 2 — createResolvedPool() sets keepAlive', () => {
+  it('keepAlive true, keepAliveInitialDelayMillis set, on the caller:connectionString path', () => {
+    const pool = resolveDb.createResolvedPool({
+      label: 't',
+      connectionString: 'postgresql://ci:pw@127.0.0.1:5432/buildo_ci',
+      minMigration: null,
+    }) as { options: { keepAlive: boolean; keepAliveInitialDelayMillis: number }; end: () => Promise<void> };
+    expect(pool.options.keepAlive).toBe(true);
+    expect(pool.options.keepAliveInitialDelayMillis).toBeGreaterThan(0);
+    pool.end().catch(() => {});
+  });
+
+  it('an explicit poolOverrides.keepAlive still wins (opt-out escape hatch preserved)', () => {
+    const pool = resolveDb.createResolvedPool({
+      label: 't',
+      connectionString: 'postgresql://ci:pw@127.0.0.1:5432/buildo_ci',
+      minMigration: null,
+      poolOverrides: { keepAlive: false },
+    }) as { options: { keepAlive: boolean }; end: () => Promise<void> };
+    expect(pool.options.keepAlive).toBe(false);
+    pool.end().catch(() => {});
+  });
+});
