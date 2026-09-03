@@ -224,6 +224,10 @@ export const GROUPS: Array<{ label: string; keys: string[] }> = [
       // yet (a pre-existing gap: most of its ~18 tunables are not in GROUPS at
       // all — filed review_followups, not fixed here).
       'enrich_parcels_heartbeat_minutes',
+      // WF3 enrich_parcels stall commit 1 (2026-09-03) — the paired bounded, LOUD SET LOCAL
+      // timeouts for the passes-1-4 shared transaction (Spec 115 §2.2 fail-safe-loud).
+      'enrich_parcels_pass_statement_timeout_minutes',
+      'enrich_parcels_lock_timeout_ms',
     ],
   },
   {

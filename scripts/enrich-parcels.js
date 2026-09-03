@@ -49,6 +49,16 @@ const LOGIC_VARS_SCHEMA = z.object({
   // heartbeat line, so the NEXT stall is diagnosable from cloud logs instead of
   // an unexplained silence. Bounds mirror scripts/seeds/logic_variables.json.
   enrich_parcels_heartbeat_minutes: z.coerce.number().finite().min(1).max(60),
+  // WF3 enrich_parcels stall (2026-09-03, commit 1) — bounded, LOUD termination for the
+  // passes-1-4 SHARED transaction. STEP 0 premise verification measured REAL cloud runs: no
+  // single pass exceeds 90 min in either successful completion (pass2/max-build dominates at
+  // ~47-48 min); this lands regardless of the H4-vs-H5 ruling (Spec 115 §2.2 fail-safe-loud —
+  // a wedged statement should die at a NAMED boundary, not the 300-min platform wall). 0 =
+  // disabled (falls through to whatever the session already has — today 0/unbounded via
+  // withPipelineStatementTimeout, UNCHANGED by this SET LOCAL — see the fence note at the call
+  // site). Bounds mirror scripts/seeds/logic_variables.json.
+  enrich_parcels_pass_statement_timeout_minutes: z.coerce.number().finite().min(0).max(180),
+  enrich_parcels_lock_timeout_ms: z.coerce.number().finite().min(0).max(3600000),
 }).strict();
 const {
   PRECEDENCE_RULES,
@@ -70,6 +80,14 @@ const DEFER_THRESHOLD_ROWS_DEFAULT = 50000;
 // WF3 cloud-parity FIX 3.2b — default mirrors scripts/seeds/logic_variables.json's
 // enrich_parcels_heartbeat_minutes.
 const HEARTBEAT_MINUTES_DEFAULT = 5;
+// WF3 enrich_parcels stall commit 1 — defaults mirror scripts/seeds/logic_variables.json's
+// enrich_parcels_pass_statement_timeout_minutes / enrich_parcels_lock_timeout_ms. 75 min =
+// STEP 0's measured max real pass (48.3 min, pass2/max-build) x1.5 (Spec 122 §10.1 remedy
+// formula), rounded up; 1,800,000 ms (30 min) lock_timeout is deliberately far shorter than
+// the statement timeout so a genuine lock wait is named distinctly rather than being masked
+// by the coarser statement-timeout abort.
+const PASS_STATEMENT_TIMEOUT_MINUTES_DEFAULT = 75;
+const PASS_LOCK_TIMEOUT_MS_DEFAULT = 1800000;
 const DEFER_STEP_SLUG = 'enrich_parcels'; // manifest slug — the marker names ITS OWN step
 
 // Parcel column -> base-table (zoning_bylaw_areas) source column. These 20 are the
@@ -1731,6 +1749,27 @@ function computeAggregateRecordsUpdated({ zoningIds, maxBuildIds, existingIds, s
   return touched.size;
 }
 
+// WF3 enrich_parcels stall commit 1 — wraps one pass so a SET LOCAL-triggered abort dies LOUD
+// with the pass's OWN name in the thrown error (Spec 115 §2.2 fail-safe-loud), instead of a
+// bare 57014/55P03 postgres error that never says which of the 4 passes hung. Passes through
+// any other error UNCHANGED — this must never mask a real pass bug as a timeout.
+async function runPass(passName, fn) {
+  try {
+    return await fn();
+  } catch (err) {
+    if (err && (err.code === '57014' || err.code === '55P03')) {
+      const kind = err.code === '57014' ? 'statement_timeout' : 'lock_timeout';
+      const wrapped = new Error(
+        `${TAG} ${passName} aborted by ${kind} (see enrich_parcels_pass_statement_timeout_minutes / enrich_parcels_lock_timeout_ms): ${err.message}`,
+      );
+      wrapped.code = err.code;
+      wrapped.cause = err;
+      throw wrapped;
+    }
+    throw err;
+  }
+}
+
 async function main(pool, ctx) {
   // WF3 cloud-parity FIX 3 remediation (2026-09-03) — ctx.runId is THIS
   // step's own pipeline_runs.id (pipeline.js#run(), from run-chain.js's
@@ -1776,6 +1815,8 @@ async function main(pool, ctx) {
       garden_suite_max_gfa_sqm: Number(logicVars?.garden_suite_max_gfa_sqm ?? mb.GARDEN_SUITE_MAX_GFA_SQM),
       enrich_parcels_defer_threshold_rows: Number(logicVars?.enrich_parcels_defer_threshold_rows ?? DEFER_THRESHOLD_ROWS_DEFAULT),
       enrich_parcels_heartbeat_minutes: Number(logicVars?.enrich_parcels_heartbeat_minutes ?? HEARTBEAT_MINUTES_DEFAULT),
+      enrich_parcels_pass_statement_timeout_minutes: Number(logicVars?.enrich_parcels_pass_statement_timeout_minutes ?? PASS_STATEMENT_TIMEOUT_MINUTES_DEFAULT),
+      enrich_parcels_lock_timeout_ms: Number(logicVars?.enrich_parcels_lock_timeout_ms ?? PASS_LOCK_TIMEOUT_MS_DEFAULT),
     };
     const vparse = LOGIC_VARS_SCHEMA.safeParse(resolvedVars);
     if (!vparse.success) {
@@ -1897,6 +1938,22 @@ async function main(pool, ctx) {
     // until B7 measures real per-pass durations against them; this is the measurement instrument).
     const passDurationsMs = {};
     await pipeline.withTransaction(pool, async (client) => {
+      // WF3 enrich_parcels stall commit 1 — bounded, LOUD termination via SET LOCAL, scoped to
+      // ONLY this shared passes-1-4 transaction (SET LOCAL reverts at COMMIT/ROLLBACK, so it
+      // never leaks onto anything else this pooled connection later runs — Spec 122 §7.2 rule,
+      // same posture as scripts/lib/step/plausibility.js:124).
+      //
+      // FENCE: withPipelineStatementTimeout (scripts/lib/pipeline.js:44-79) still issues a
+      // SESSION-level `SET statement_timeout TO 0` on every physical client createPool() hands
+      // out — that fence is UNCHANGED and still governs every OTHER caller (pass 5's separate
+      // connection below, every other pipeline script). This SET LOCAL only OVERRIDES the
+      // session value for the lifetime of THIS transaction; a resolved value of 0 here falls
+      // through to whatever the session already has (today, 0/unbounded) — a real "disabled"
+      // state, not a silent no-op.
+      const passTimeoutMs = Math.round(resolvedVars.enrich_parcels_pass_statement_timeout_minutes * 60000);
+      const lockTimeoutMs = Math.round(resolvedVars.enrich_parcels_lock_timeout_ms);
+      if (passTimeoutMs > 0) await client.query(`SET LOCAL statement_timeout = ${passTimeoutMs}`);
+      if (lockTimeoutMs > 0) await client.query(`SET LOCAL lock_timeout = ${lockTimeoutMs}`);
       await assertPreconditions(client);
       const runAt = await pipeline.getDbTimestamp(client);
       // D4′ — synthetic run_id for enrich_parcels_pass3_scope (run_id, parcel_id): the table is
@@ -1906,20 +1963,20 @@ async function main(pool, ctx) {
       // bookkeeping, not a foreign key) — ON CONFLICT DO NOTHING guards the rare same-second collision.
       scopeRunId = Math.floor(runAt.getTime() / 1000);
       let passT = Date.now();
-      result = await enrichParcels(client, { scopeWhere: 'TRUE', full, roadDist, runAt, staleOverlays });
+      result = await runPass('pass1_zoning', () => enrichParcels(client, { scopeWhere: 'TRUE', full, roadDist, runAt, staleOverlays }));
       passDurationsMs.pass1 = Date.now() - passT; passT = Date.now();
       // Second pass — max-build envelope (Spec 65 §). Same txn: parcel_zoning_enrich (ON COMMIT
       // DROP) is still visible for incremental scoping; reads the zoning feed just written above.
-      mbResult = await enrichMaxBuild(client, { scopeWhere: 'TRUE', full, storeyHeight, acc, mislinkTol: reno.mislinkTol, minDim: resolvedVars.max_build_min_dimension_m, runAt });
+      mbResult = await runPass('pass2_max_build', () => enrichMaxBuild(client, { scopeWhere: 'TRUE', full, storeyHeight, acc, mislinkTol: reno.mislinkTol, minDim: resolvedVars.max_build_min_dimension_m, runAt }));
       passDurationsMs.pass2 = Date.now() - passT; passT = Date.now();
       // Third pass — existing structure (Spec 65 Phase 1) + reno/build scenarios (Phase 2). Same txn:
       // parcel_max_build (ON COMMIT DROP) visible for scoping; reads the PRIMARY building (massing)
       // + the max-build cols written above; computes SCENARIO_COLS via a sibling UPDATE.
-      exResult = await enrichExistingStructure(client, { scopeWhere: 'TRUE', full, reno });
+      exResult = await runPass('pass3_existing_structure', () => enrichExistingStructure(client, { scopeWhere: 'TRUE', full, reno }));
       passDurationsMs.pass3 = Date.now() - passT; passT = Date.now();
       // Fourth pass — comparable builds (Spec 78 Phase 3C). Same txn: reads the max-build envelope +
       // imagery_roof footprint just written + committed permits/coa; writes the disjoint comp_* columns.
-      compResult = await enrichComparableBuilds(client, { scopeWhere: 'TRUE', full });
+      compResult = await runPass('pass4_comparable_builds', () => enrichComparableBuilds(client, { scopeWhere: 'TRUE', full }));
       passDurationsMs.pass4 = Date.now() - passT;
       // D4′ — hand the eligible max-build scope to pass 5 (enrichOptimalConfig), which runs AFTER
       // this txn commits on a SEPARATE connection. Written IN-TXN with the work above so a crash
@@ -2203,6 +2260,8 @@ module.exports = {
   buildEnrichmentSql,
   buildUpdateSql,
   enrichParcels,
+  // WF3 enrich_parcels stall commit 1 — bounded, LOUD per-pass SET LOCAL timeouts.
+  runPass,
   buildMaxBuildSql,
   buildMaxBuildUpdateSql,
   buildMassingStampSql,

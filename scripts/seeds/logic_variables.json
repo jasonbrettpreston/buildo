@@ -2958,6 +2958,20 @@
     "max": 60,
     "description": "WF3 cloud-parity FIX 3.2b (2026-09-03) — how often (wall-clock minutes) enrich-parcels.js's optimal-config pass logs a progress heartbeat while streaming parcels (the one genuine per-row loop in the file; the four SQL passes ahead of it are single set-based statements with no JS-side iteration). Filed after a live cloud run (GH run 33324653235, 2026-08-30) stalled for 3h31m with zero log output between config load and the 300-minute hard-ceiling kill. Minimal, no-behaviour-change instrumentation — does not fix the stall itself (own WF3, wf3_enrich_parcels_cloud_stall), only makes the next one diagnosable. Default 5 = frequent enough to bound a silent gap without spamming logs on the common ~2h full run. CONSUMED by scripts/enrich-parcels.js."
   },
+  "enrich_parcels_pass_statement_timeout_minutes": {
+    "default": 75,
+    "type": "number",
+    "min": 0,
+    "max": 180,
+    "description": "WF3 enrich_parcels stall (2026-09-03, commit 1) — bounded, LOUD `SET LOCAL statement_timeout` for enrich-parcels.js's shared passes-1-4 transaction, so a wedged statement dies at a NAMED boundary (the pass name is folded into the thrown error by runPass()) instead of the 300-minute chain-sources platform wall (Spec 115 §2.2 fail-safe-loud). STEP 0 premise verification (2026-09-03, wf3_enrich_parcels_cloud_stall) measured REAL cloud pipeline_runs.records_meta per-pass durations: no single pass exceeds 90 min in either successful completion, pass2 (max-build envelope) dominates at 46.7/48.3 min. Default 75 = measured max (48.3 min) x1.5 margin (the Spec 122 §10.1 remedy formula), rounded up. 0 = disabled — falls through to createPool()'s session-level statement_timeout (today 0/unbounded, UNCHANGED by this var). Does NOT touch scripts/lib/pipeline.js's withPipelineStatementTimeout, which still governs every other caller. CONSUMED by scripts/enrich-parcels.js."
+  },
+  "enrich_parcels_lock_timeout_ms": {
+    "default": 1800000,
+    "type": "number",
+    "min": 0,
+    "max": 3600000,
+    "description": "WF3 enrich_parcels stall (2026-09-03, commit 1) — bounded, LOUD `SET LOCAL lock_timeout` (ms) for enrich-parcels.js's shared passes-1-4 transaction, paired with enrich_parcels_pass_statement_timeout_minutes. Deliberately far shorter than the statement timeout (default 30 min vs 75 min) so a genuine heavyweight-lock wait (H3 in the premise verification, UNDETERMINED — needs a live pg_stat_activity/pg_locks capture) is named distinctly (57014 vs 55P03, surfaced via runPass()) rather than being masked by the coarser statement-timeout abort. 0 = disabled. CONSUMED by scripts/enrich-parcels.js."
+  },
   "assert_schema_type_sample_rows": {
     "default": 20,
     "type": "number",
