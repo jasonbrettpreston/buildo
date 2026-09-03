@@ -1148,7 +1148,7 @@
       "title": "cloud database must run apply-logic-variables.js before any cloud cutover",
       "promised": "assert_schema's declared_logic_variables_present FAILs a chain naming the remedy 'node -r dotenv/config scripts/seeds/apply-logic-variables.js'; the cloud database has not been confirmed to have run it",
       "status": "PARTIAL",
-      "evidence": "scripts/seeds/apply-logic-variables.js exists and runs locally (pilot 6: seeds applied locally 428->432, 448 total rows); no evidence found this session that it has been run against the cloud database - MEMORY resume note (2026-08-27): 'CLOUD must run scripts/seeds/apply-logic-variables.js before cutover'",
+      "evidence": "WF3 cloud-parity FIX 1 (2026-09-03, .cursor/wf3_cloud_parity_active_task.md): apply-logic-variables.js run cloud-explicit against the live Supabase DB — 419 rows before, 454 after (35/435 newly inserted, 400 already existed). T5 (link_parcels_link_rate_warn_pct) verified = 25 both before-absent/after-present (no guarded UPDATE needed). Full value diff: 0 seed keys missing from cloud, 1 genuine divergence (p16_inference_layer_enabled, cloud=1 vs seed default=0, updated_at 2026-07-10 — recorded as an intentional admin override, review_followups INFO). 42/42 declared_logic_variables_present keys confirmed on cloud (0 missing). migrate.js --verify: 242 migrations, 0 missing, 0 drift. Status stays PARTIAL — this closes the seed-parity half of CLOUDPARITY; the gate (cutover_prereq, blocks cloud_deploy) is flipped to BUILT only at FIX 4's acceptance run (one clean cloud chain_sources run), not here.",
       "owner": {
         "kind": "followup",
         "ref": "review_followups.md HIGH ops entry (filed 2026-08-27, peel 8c)"

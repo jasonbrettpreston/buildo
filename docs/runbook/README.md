@@ -84,6 +84,13 @@ These are **not** chain steps (not in `scripts/manifest.json` / no 6 AM cron). R
 ## 3. Deploy-ordering rules (violate these and a run corrupts data)
 
 1. **Seed BEFORE code.** A logic-variable's seed row must land before code that reads it via a required Zod field — the config-loader throws on a missing var (`assert-coa-freshness` `coa_freshness_fail_days`, the forecast threshold pair, etc.). Migration first, then deploy the reader.
+
+1a. **Applying the `logic_variables` seed to cloud — the procedure.** `scripts/seeds/apply-logic-variables.js` guards its own standalone invocation with `require.main === module`, so a `require('./scripts/seeds/apply-logic-variables.js')` from inside a `node -e "..."` wrapper is a silent no-op (the module loads, `module.exports` is set, nothing runs) — unlike `scripts/migrate.js` (2a below), which has no such guard and DOES run when required. **Invoke the file directly, never via `-e require(...)`:**
+   ```bash
+   SUPABASE_CA_CERT_PATH=scripts/certs/supabase-ca.pem PG_HOST= DATABASE_URL=$SUPABASE_DATABASE_URL \
+     node -r dotenv/config scripts/seeds/apply-logic-variables.js
+   ```
+   `PG_HOST=` (cleared) prevents any discrete `PG_*` triple from winning; `DATABASE_URL=$SUPABASE_DATABASE_URL` is required because `resolve-db.js`'s `createResolvedPool` consults `DATABASE_URL` BEFORE `SUPABASE_DATABASE_URL` (Spec 113 §3 D14) — a `.env` carrying both would otherwise resolve to whichever `DATABASE_URL` already points at (usually local). The loader is `ON CONFLICT (variable_key) DO NOTHING` — it only ever inserts NEW keys and can never correct an existing row holding the wrong value; see the docstring in the script itself for the T5-class blind spot this leaves. Verify after: re-run the presence/value queries in `.cursor/wf3_cloud_parity_active_task.md` FIX 1, or `SELECT count(*) FROM logic_variables`.
 2. **`npm run migrate -- --verify` in pre-flight.** Confirms the DB is caught up to code before any chain runs. **Both DRIFT and MISSING are blockers** — `scripts/migrate.js:164` exits non-zero on `missing > 0 || drift > 0`, and this rule previously said only "Drift = stop", which is why the MISSING case had no documented answer. (Known-accepted drift set is documented; a NEW drift is a blocker.)
    * **MISSING = a migration is committed but not yet applied to that database.** Apply it (2a), then re-run the chain.
    * **DRIFT = an applied file's checksum changed.** Do NOT apply — investigate. If it is the known CRLF class, use `node scripts/analysis/reconcile-migration-checksums.js --target=cloud|local`.

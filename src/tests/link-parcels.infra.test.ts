@@ -56,6 +56,33 @@ describe('scripts/lib/compute/link-parcels.js — spatial match constant externa
     }
   });
 
+  it('T5 value parity (WF3 cloud-parity FIX 1.6, 2026-09-03) — the seed default is the UNLINKED-ceiling complement form (25), never the pre-conversion link-rate floor (75), and agrees with the descriptor\'s own limit literal', () => {
+    // apply-logic-variables.js is ON CONFLICT DO NOTHING: a cloud row seeded
+    // wrong (75 — the old literal's sense) survives forever undetected by the
+    // loader itself (see that file's docstring). This lock guards the ONE
+    // place a regression could originate: the declared default drifting back
+    // to 75. See docs/specs/01-pipeline/122_pipeline_step_optimization.md T5
+    // and .cursor/wf3_cloud_parity_active_task.md FIX 1 step 1.3.
+    const entry = SEED.link_parcels_link_rate_warn_pct;
+    if (!entry) throw new Error('link_parcels_link_rate_warn_pct missing from seed JSON');
+    expect(entry.default).toBe(25);
+
+    const descriptor = JSON.parse(
+      fs.readFileSync(
+        path.resolve(__dirname, '../../scripts/link-parcels.descriptor.json'),
+        'utf-8',
+      ),
+    ) as { checks: Array<{ id: string; limit?: string; limit_from_config?: string }> };
+    const linkRateCheck = descriptor.checks.find((c) => c.id === 'link_rate');
+    if (!linkRateCheck) throw new Error('link_rate check missing from link-parcels.descriptor.json');
+    expect(linkRateCheck.limit_from_config).toBe('link_parcels_link_rate_warn_pct');
+    // The check's own literal threshold ("pct <= 25") must equal the seed
+    // default it substitutes at runtime — verdict.js applies NO transform.
+    const literalMatch = linkRateCheck.limit?.match(/pct\s*<=\s*(\d+(?:\.\d+)?)/);
+    if (!literalMatch) throw new Error(`link_rate check limit did not match "pct <= N": ${linkRateCheck.limit}`);
+    expect(Number(literalMatch[1])).toBe(entry.default);
+  });
+
   it('THE FIX\'s spatial_fallback_sql reads spatialMaxDistanceM/spatialConfidence via bound params ($5/$6), never a hardcoded literal', () => {
     expect(SRC).toMatch(/spatial_fallback_sql:/);
     expect(SRC).not.toMatch(/<=\s*100\b/); // the cap must never be a literal 100 in the generated SQL

@@ -3225,3 +3225,15 @@ exactly the kind of retroactive massaging Spec 123 §3's PIN-vs-FIX discipline w
   specific selector/role rather than one that can legitimately match more than one element under a slow
   render. Not investigated further or fixed here — filed per the coordinator's own instruction (real
   programme friction affecting every future WF's commit cadence, not this pilot's own scope).
+
+---
+
+## WF3 cloud-parity FIX 1 (`.cursor/wf3_cloud_parity_active_task.md`) — findings filed at FIX 1.6 (2026-09-03)
+
+Source: FIX 1 (cloud `logic_variables` seed parity) live execution against the cloud Supabase DB —
+419 rows before, 454 after; T5 verified; full value diff run per Fold C (DeepSeek #5).
+
+| Severity | Source | Item | Disposition |
+|----------|--------|------|--------------|
+| LOW | Fold C (DeepSeek #12), `.cursor/wf3_cloud_parity_active_task.md` "Not in scope" | **`link_parcels_link_rate_warn_pct` stores the UNLINKED ceiling (25), not the link-rate floor its name implies (75)** — correct per `link-parcels.descriptor.json`'s `"limit": "pct <= 25"` + `limit_from_config` (no transform applied), but the inverted name is a standing footgun for any future operator who tunes it by name alone (T5 complement-form, LP-D4). | DEFER — a rename is a Rule 3 admin-visible change and rides its own WF2, not a drive-by inside a cloud-parity WF3. |
+| INFO | FIX 1.6, live cloud value diff (1.3b), 2026-09-03 | **`p16_inference_layer_enabled` diverges from its seed default on cloud** — cloud value `1`, seed default `0`, `logic_variables.updated_at = 2026-07-10T22:19:48.132Z` (distinct from the bulk-seed batch's `2026-06-10T14:01:52.xxx` timestamps on every other row seeded that day), consistent with a deliberate later admin toggle rather than drift. Recorded as an intentional admin override, not corrected. | NO ACTION — informational record only; `apply-logic-variables.js`'s `ON CONFLICT DO NOTHING` already preserves it correctly. Re-open only if a future value-diff finds this key disagreeing with its OWN prior recorded value (i.e., genuine unexplained drift, not an admin override already on record). |
