@@ -37,6 +37,7 @@ const { buildParcelCostMenu, PARCEL_COST_LINES } = require('./lib/parcel-cost');
 const { parcelFamilyFromZoning } = require('./lib/build-norms'); // Spec 78 P2 R2 — detached-only norm_basis
 const { COST_SCALAR_COLS, FSI_SCALAR_COLS } = require('./lib/parcel-cost-cols');
 const sourceVersion = require('./lib/source-version'); // Phase B B3 — run-ledger gate
+const ledger = require('./lib/ledger'); // Commit 3 (WF1 cross-step ledger, Spec 122 §6) — derived upstream set
 
 // §R2 — advisory lock. The owning Spec is 88, but lock 88 is taken by classify-permits.js
 // (predates the spec-number convention). Per the compute-phase-calibration / backfill-realtor
@@ -72,17 +73,25 @@ const ALL_SCALAR_COLS = [...COST_SCALAR_COLS, ...FSI_SCALAR_COLS];
 // chain ONLY (manifest.json :105).
 const OWN_SLUGS = ['sources:compute_parcel_cost_estimates', 'compute_parcel_cost_estimates', 'compute-parcel-cost-estimates'];
 // Upstream producer of the parcel envelope fields this step prices (max_buildable_*,
-// opt_aor_gfa_sqm, etc.) — enrich-parcels.js, sources-chain-only.
-// D#6 (B3 output-panel remediation) — sources:parcels/load-parcels.js added:
-// lot_size_sqm is a DIRECT cost-engine input (see computeParcelCostEstimates's
-// SELECT below) written by load-parcels.js, not enrich-parcels.js.
-// docs/reference/data-lineage-map.md (generated, `npm run lineage-docs`) already
-// listed compute_parcel_cost_estimates as a consumer of the `parcels`-produced
-// lot_size_sqm column — this hand-maintained array simply hadn't been kept in
-// sync with it (exactly how the gap was missed). The lineage map is the
-// generated source of truth to re-check whenever this slug set changes; a
-// fully lineage-map-derived slug list is a followup, not done here.
-const UPSTREAM_SLUGS = ['sources:enrich_parcels', 'enrich_parcels', 'enrich-parcels', 'sources:parcels', 'parcels', 'load-parcels'];
+// opt_aor_gfa_sqm, lot_size_sqm, etc.) — DERIVED, not hand-maintained (Commit 3, WF1
+// cross-step ledger, Spec 122 §6 / LDG-4). This was the LAST hand-written upstream
+// array Spec 122 §6.3 names; `scripts/lib/ledger.js#stepUpstreams` reads the
+// committed column-lineage ledger (`scripts/seeds/lineage-meta-snapshot.json`) and
+// intersects this step's `reads` columns against every other `sources`-chain step's
+// `writes`, so a future producer change updates this set on the next
+// `npm run lineage-docs -- --refresh` instead of silently drifting from a literal
+// nobody remembers to touch (exactly the gap D#6 found and fixed by hand).
+//
+// The one form this drops vs. the retired literal is `'load-parcels'` — a SCRIPT
+// name, not a slug any form-expansion of `parcels` produces. Step 0 of the ledger WF
+// (2026-09-03) measured ZERO `pipeline_runs` rows carrying that literal, locally AND
+// on cloud — a genuine retirement, not a silently dropped upstream: the SUBSTANCE
+// (`parcels` as an upstream producer) is preserved by `stepUpstreams`; only the dead
+// string form is gone.
+const UPSTREAM_SLUGS = [...new Set(
+  ledger.stepUpstreams('compute_parcel_cost_estimates', { chain: 'sources' })
+    .flatMap((name) => ledger.slugForms(name, ['sources'])),
+)];
 // Escape hatch (D2′/R3-B4 precedent — LINK_MASSING_FORCE_FULL): forces a real
 // recompute even when the ledger gate + rate/index signals agree nothing changed.
 const FORCE_FULL_ENV = 'COMPUTE_PARCEL_COST_FORCE_FULL';
@@ -733,7 +742,6 @@ module.exports = {
   hasRateOrIndexChanged,
   ADVISORY_LOCK_ID,
   OWN_SLUGS,
-  UPSTREAM_SLUGS,
   FORCE_FULL_ENV,
   PARCEL_COST_LINES,
   COST_SCALAR_COLS,

@@ -27,7 +27,6 @@ const costEstimates = require('../../scripts/compute-parcel-cost-estimates.js') 
   ) => boolean;
   FORCE_FULL_ENV: string;
   OWN_SLUGS: string[];
-  UPSTREAM_SLUGS: string[];
 };
 
 describe('C1 — canonical ISO version keys stamped on both the run and skip paths', () => {

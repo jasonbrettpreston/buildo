@@ -75,7 +75,6 @@ const costEstimates = require('../../../scripts/compute-parcel-cost-estimates.js
   readCostVersionSignals: (pool: Pool) => Promise<{ ratesAsOf: string | null; indexUpdatedAt: string | null; indexValue: number | null }>;
   hasRateOrIndexChanged: (meta: Record<string, unknown> | null, signals: { ratesAsOf: string | null; indexUpdatedAt: string | null }) => boolean;
   OWN_SLUGS: string[];
-  UPSTREAM_SLUGS: string[];
 };
 
 /** Capture every PIPELINE_SUMMARY / PIPELINE_META line emitted to console.log during fn(). */
