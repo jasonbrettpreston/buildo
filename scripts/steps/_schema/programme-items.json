@@ -890,17 +890,17 @@
       "spec": "123 §6",
       "title": "Gate G2 - Structure, churn x complexity plot",
       "promised": "churn x complexity plot, top-right quadrant named",
-      "status": "PARTIAL",
-      "evidence": "scripts/analysis/step-validate.mjs scoreG2 (R-T addendum commit 6, 2026-08-30) — the vacuous-green half is FIXED: a report with no PH-2/churn x complexity section AND no ASSESSMENT-INCOMPLETE claim now scores 0 (was a fabricated 1/1); 3 of 6 real reports (link_wsib/link_parcel_addresses/compute_centroids) dropped from the false 1 to the honest 0. The churn x complexity plot itself is still not built/checked for — owned S6b (review_followups.md:2994), unchanged.",
+      "status": "BUILT",
+      "evidence": "scripts/analysis/step-churn-complexity.mjs (PH-2 churn x complexity BATCH generator, S6b, 2026-09-03) emits docs/reports/generated/122-churn-complexity.md — one deterministic table over the 27 domain steps (manifest.chains.sources minus reconcile, chain-head infra per Spec 122 §7.4 A3), median-split quadrants, drift-checked via --check (wired into .husky/pre-commit ahead of step-validate). scripts/analysis/step-validate.mjs scoreG2(row, report, churnFindings) now derives G2 from this generated table FIRST (falls through to a real report PH-2 section, then ASSESSMENT-INCOMPLETE, unchanged). The 4 previously-red converted steps (link_wsib/link_parcel_addresses/compute_centroids/refresh_snapshot) flipped 0->1; the 4 waiver-passing steps kept their score with detail text now citing the artifact.",
       "owner": {
-        "kind": "followup",
-        "ref": "review_followups.md:2994 (S6b)"
+        "kind": "wf",
+        "ref": "WF2 PH-2 churn x complexity BATCH (S6b, review_followups.md:2994), 2026-09-03"
       },
       "gate": {
         "kind": "nice_to_have",
         "blocks": []
       },
-      "last_reviewed": "2026-08-30"
+      "last_reviewed": "2026-09-03"
     },
     {
       "id": "G3-G5",

@@ -11,8 +11,8 @@ Total items: **75**
 | status | count |
 |---|---|
 | ⬜ NOT_STARTED | 15 |
-| ⚠️ PARTIAL | 20 |
-| ✅ BUILT | 38 |
+| ⚠️ PARTIAL | 19 |
+| ✅ BUILT | 39 |
 | ⏭️ SUPERSEDED | 2 |
 
 **blocks batching: 8**
@@ -83,7 +83,7 @@ Total items: **75**
 | `PRG-11` | 123 §4.8 | Two CI holes closed | ✅ BUILT | wf: P0c, landed pre-session | — | 2026-08-29 |
 | `G0` | 123 §6 | Gate G0 - Boundary freeze | ✅ BUILT | wf: R-R, step:validate | — | 2026-08-29 |
 | `G1` | 123 §6 | Gate G1 - Archaeology / Intent Ledger | ⚠️ PARTIAL | followup: review_followups.md (2026-08-29 programme backlog filing) | — | 2026-08-29 |
-| `G2` | 123 §6 | Gate G2 - Structure, churn x complexity plot | ⚠️ PARTIAL | followup: review_followups.md:2994 (S6b) | — | 2026-08-30 |
+| `G2` | 123 §6 | Gate G2 - Structure, churn x complexity plot | ✅ BUILT | wf: WF2 PH-2 churn x complexity BATCH (S6b, review_followups.md:2994), 2026-09-03 | — | 2026-09-03 |
 | `G3-G5` | 123 §6 | Gates G3-G5 - Golden master, Differential, Cutover | ✅ BUILT | wf: R-R, step:validate | — | 2026-08-29 |
 | `G6` | 123 §6 | Gate G6 - Behaviour classification | ✅ BUILT | wf: R-R, step:validate | — | 2026-08-29 |
 | `G7` | 123 §6 | Gate G7 - Test adequacy | ✅ BUILT | wf: R-R, step:validate | — | 2026-08-29 |
