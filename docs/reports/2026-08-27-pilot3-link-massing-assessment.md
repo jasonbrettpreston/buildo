@@ -520,7 +520,7 @@ Spec 124 §2 Rule 13's R-T addendum lands `invariants[]`/`plausibility[]` (5 net
 - compare ran: true · diffs found: 434 · unexplained: 0
 
 ### Test suite (item iii)
-- SKIPPED or failed to run: --fast: vitest spawn skipped
+- 0/0 passed (suite success=true)
 
 ### Policy coverage matrix (item vi) — Spec 124 Rules 1-13
 

@@ -1665,11 +1665,29 @@ function checkInterruptedPostureTruthful(descriptor, indexSourceOverride = null)
 // ---------------------------------------------------------------------------
 // (vi) POLICY COVERAGE MATRIX — Spec 124 Rules 1-13, per the header map above.
 // ---------------------------------------------------------------------------
+/**
+ * C4 (Fold A item 3, binding correction) — a test title scopes to a step via
+ * its RELATIVE FILE PATH (`scripts/link-massing.js`, hyphenated, since that
+ * is the literal string every `it(\`${relFile} — …\`)` call site in
+ * step-conformance.infra.test.ts embeds — measured, not assumed), while
+ * every caller here passed `row.slug` (underscored, `link_massing`, the
+ * manifest.scripts registry key) as the scope token. `"link_massing".
+ * toLowerCase().includes("link-massing")` is false, so EVERY scoped match
+ * in this file — Rule 3's §1.2a P4/LW-D10/R-A matching included, not only
+ * Rule 11's now-retired one — silently matched ZERO tests and fell through
+ * to whatever the caller's own "m.length === 0" branch did, never actually
+ * reading the vitest result it claimed to. Normalizing BOTH sides to the
+ * same separator makes the match direction-agnostic: a caller may pass
+ * either the underscored slug or the hyphenated relFile.
+ */
+function normalizeScopeToken(s) {
+  return s.toLowerCase().replace(/[-_]/g, '-');
+}
 function matchTests(tests, describeRe, scopeToken) {
   return tests.filter((t) => {
     if (!describeRe.test(t.fullName) && !t.ancestorTitles.some((a) => describeRe.test(a))) return false;
     if (!scopeToken) return true;
-    return t.fullName.toLowerCase().includes(scopeToken.toLowerCase());
+    return normalizeScopeToken(t.fullName).includes(normalizeScopeToken(scopeToken));
   });
 }
 function ruleStatus(matched) {
@@ -1732,11 +1750,9 @@ function computePolicyMatrix(row, descriptorInfo, shape, vitestResult, p3, repor
     // R-M "Rule 12 (recovery category)"): the EXISTING step-conformance.infra.
     // test.ts describe already enforces this robustly; it just could not be SEEN
     // by this tool's vitest-title matching, for the same underscore/hyphen
-    // scopeToken bug C4 fixes generically in `matchTests` (Fold A item 3). Scoped
-    // here with a locally hyphenated token — a contained fix for THIS row, not a
-    // change to `matchTests` itself (which Rule 3 also calls).
-    const hyphenSlugToken = row.slug.replace(/_/g, '-');
-    const mRM = vitestResult.ranOk ? matchTests(tests, /R-M\/LG-17/i, hyphenSlugToken) : [];
+    // scopeToken bug C4 now fixes generically in `matchTests` itself (Fold A
+    // item 3) — no local workaround needed here anymore.
+    const mRM = vitestResult.ranOk ? matchTests(tests, /R-M\/LG-17/i, row.slug) : [];
     const rmStatus = mRM.length > 0 ? ruleStatus(mRM) : 'prose-only';
     const rmNote = mRM.length === 0 ? 'R-M/LG-17 describe not scoped to this step (vitest not run, or no before-image target)' : '';
     // R-B (this checker) is the PRIMARY, always-live claim; R-M only REDS the row
@@ -2165,6 +2181,31 @@ function selfTest() {
       deadSource,
     );
     if (deadRed.pass) throw new Error(`self-test FAILED: checkInterruptedPostureTruthful did not RED a runner reaching neither ledgerGatedSkip nor selectMode (${JSON.stringify(deadRed)})`);
+  }
+  // C4 (Fold A item 3) — matchTests's scopeToken must match regardless of
+  // whether the caller passes the underscored slug (row.slug, e.g.
+  // "link_massing") or the hyphenated relFile a real it(`${relFile} — …`)
+  // title embeds (e.g. "scripts/link-massing.js"). Both directions proven:
+  // a slug-scoped match actually matches (the bug this fixes: it used to
+  // match ZERO tests, always), and an unrelated slug still does not.
+  {
+    const fixtureTests = [
+      { fullName: 'some describe > scripts/link-massing.js — declared ⊆ registry, declared ⊆ GROUPS, consumed ≡ declared', ancestorTitles: ['some describe'], status: 'passed' },
+      { fullName: 'some describe > scripts/link-wsib.js — declared ⊆ registry, declared ⊆ GROUPS, consumed ≡ declared', ancestorTitles: ['some describe'], status: 'passed' },
+    ];
+    const describeRe = /declared ⊆ registry/i;
+    const matchedByUnderscoredSlug = matchTests(fixtureTests, describeRe, 'link_massing');
+    if (matchedByUnderscoredSlug.length !== 1 || !matchedByUnderscoredSlug[0].fullName.includes('link-massing')) {
+      throw new Error(`self-test FAILED: matchTests did not match a hyphenated test title when scoped by the underscored slug "link_massing" (matched ${matchedByUnderscoredSlug.length})`);
+    }
+    const matchedByHyphenatedRelFile = matchTests(fixtureTests, describeRe, 'scripts/link-wsib.js');
+    if (matchedByHyphenatedRelFile.length !== 1 || !matchedByHyphenatedRelFile[0].fullName.includes('link-wsib')) {
+      throw new Error(`self-test FAILED: matchTests did not match when scoped by a hyphenated relFile "scripts/link-wsib.js" (matched ${matchedByHyphenatedRelFile.length})`);
+    }
+    const matchedByUnrelatedSlug = matchTests(fixtureTests, describeRe, 'compute_centroids');
+    if (matchedByUnrelatedSlug.length !== 0) {
+      throw new Error(`self-test FAILED: matchTests matched an unrelated slug "compute_centroids" against link-massing/link-wsib titles (matched ${matchedByUnrelatedSlug.length})`);
+    }
   }
 }
 
