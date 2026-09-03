@@ -189,6 +189,20 @@ function esc(s) {
   return String(s == null ? '' : s).replace(/\|/g, '\\|').replace(/\r?\n/g, ' ').trim();
 }
 
+// Admin-visibility label for the registry's Admin column. Seed vars carry a
+// declared `admin` field (WF2 "Admin Tunable Coverage", commit 1); migration-only
+// / JSONB vars are absent from the seed file entirely, so the reverse-coverage
+// lock (src/tests/logic-var-admin-declarations.logic.test.ts) cannot see them —
+// their admin visibility is governed by GlobalConfigCard GROUPS alone (a second,
+// LOW followup tracks this gap; NOT fixed here — see Not in Scope, WF2 admin
+// tunable coverage plan).
+function adminLabel(v) {
+  if (!v || typeof v !== 'object' || !v.admin) return '— (governed by GROUPS only)';
+  if (v.admin.group) return `group: ${v.admin.group}`;
+  if (v.admin.hidden) return `hidden: ${v.admin.hidden}`;
+  return '—';
+}
+
 const rows = [];
 // numeric seed vars
 for (const [key, v] of Object.entries(seed)) {
@@ -201,6 +215,7 @@ for (const [key, v] of Object.entries(seed)) {
     source: 'seed',
     description: v.description || '',
     consumers: consumers.has(key) ? [...consumers.get(key)].sort() : [],
+    admin: adminLabel(v),
   });
 }
 // migration-only vars (not in seed)
@@ -215,6 +230,7 @@ for (const [key, v] of migVars) {
     source: `migration ${v.migration.replace(/_.*$/, '')}`,
     description: v.description || '',
     consumers: consumers.has(key) ? [...consumers.get(key)].sort() : [],
+    admin: adminLabel(null),
   });
 }
 rows.sort((a, b) => a.key.localeCompare(b.key));
@@ -236,6 +252,7 @@ defaults below are the seed / migration baselines.
 - **Numeric vars** (${numericCount}) live in \`scripts/seeds/logic_variables.json\` (the parity-tested surface re-exported as \`LOGIC_VAR_DEFAULTS\` in \`src/lib/admin/control-panel.ts\`), except the ${migCount} seeded via migrations only (last column notes the migration).
 - **JSONB vars** (${jsonCount}) carry non-numeric values in \`logic_variables.variable_value_json\`; they are migration-seeded (never in the seed JSON — a JSONB value cannot live in the numeric \`variable_value\` column) and read directly (config-loader passes object JSON through untouched).
 - **Consuming scripts** are derived from each script's local \`LOGIC_VARS_SCHEMA = z.object({...})\` Zod union. A blank cell means no static consumer was found; some consumers read **computed keys** (e.g. \`assert-lifecycle-phase-distribution.js\` builds \`lifecycle_band_\${…}\` at runtime) invisible to a static scan — those are named in the seed JSON's \`CONSUMED by …\` annotation, surfaced in the Description.
+- **Admin** is the declared \`admin\` field on each seed key (WF2 "Admin Tunable Coverage"): \`group: <label>\` means the key renders in \`GlobalConfigCard\`'s GROUPS under that label; \`hidden: <reason>\` means it does not render there, with \`unclassified\` a transitional marker tracked by programme-backlog item \`ADMIN-1\` (never a final classification). Migration-only / JSONB vars are absent from the seed file, so this column reads "— (governed by GROUPS only)" for them — their admin visibility is unchanged and ungoverned by this declaration.
 
 **Cross-refs:** Spec 40 (\`docs/specs/01-pipeline/40_pipeline_system.md\`, config-loader / logicVars contract) · Spec 86 (\`docs/specs/02-web-admin/86_control_panel.md\`, the Control Panel that edits these).
 
@@ -243,13 +260,13 @@ Total: **${rows.length}** logic variables (${numericCount} numeric, ${jsonCount}
 
 ---
 
-| Variable | Kind | Default | Bounds | Consumers | Source | Description |
-|----------|------|---------|--------|-----------|--------|-------------|
+| Variable | Kind | Default | Bounds | Consumers | Source | Admin | Description |
+|----------|------|---------|--------|-----------|--------|-------|-------------|
 `;
 
 for (const r of rows) {
   const cons = r.consumers.length ? r.consumers.map((c) => `\`${c}\``).join('<br>') : '—';
-  md += `| \`${r.key}\` | ${r.kind} | ${esc(r.default)} | ${r.bounds} | ${cons} | ${r.source} | ${esc(r.description)} |\n`;
+  md += `| \`${r.key}\` | ${r.kind} | ${esc(r.default)} | ${r.bounds} | ${cons} | ${r.source} | ${esc(r.admin)} | ${esc(r.description)} |\n`;
 }
 
 md += `\n---\n\n*Generated from ${Object.keys(seed).length} seed vars + ${migCount} migration-only vars + ${consumers.size} consumer-mapped keys across ${SCRIPTS_DIRS.length} script dirs.*\n`;
