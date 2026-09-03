@@ -157,3 +157,63 @@ describe('the derived set reaches runLedgerGateDecision\'s own non-empty guard',
     ).rejects.toThrow(/requires a non-empty upstreamSlugs array/);
   });
 });
+
+// Commit 2 — the drift lock (Fold C). DECLARED_AT_HEAD is a captured LITERAL
+// copy of scripts/compute-parcel-cost-estimates.js:85's UPSTREAM_SLUGS array,
+// `git blame`-cited to commit a81c6a7c (2026-08-16, D#6) — NEVER a live
+// `require()` of the module's own UPSTREAM_SLUGS. Fold C: importing it live
+// would let commit 3's deletion of the array silently break this lock
+// instead of exercising it (the lock must survive the array's own removal).
+//
+// RED proven live (2026-09-03): a naive STRICT-equality assertion between
+// this literal and the derived+expanded set fails at HEAD —
+// `expected Set{ 'sources:enrich_parcels', ...(5) } to deeply equal
+// Set{ 'sources:enrich_parcels', ...(4) }` with `+ "load-parcels"` the sole
+// extra element on the received (derived) side — i.e. `onlyDeclared` is
+// exactly `['load-parcels']`. That is Spec 122 §6.3's measured, corrected
+// red: a slug-FORM divergence, not a missing producer (D#6 already fixed the
+// missing producer). The tests below encode that measured state precisely,
+// and prove the checker is not vacuous by injecting an EXTRA and a MISSING
+// form. Commit 3 flips DECLARED_AT_HEAD to the post-retirement form (drops
+// 'load-parcels') and the final test's zero-difference assertion — already
+// written and already passing today — is what "the lock flips GREEN" means.
+describe("drift lock — the cost step's declared UPSTREAM_SLUGS vs the derived ledger (Fold C)", () => {
+  const DECLARED_AT_HEAD = ['sources:enrich_parcels', 'enrich_parcels', 'enrich-parcels', 'sources:parcels', 'parcels', 'load-parcels'];
+  // The form commit 3 is expected to leave behind once the hand-maintained
+  // array is retired (Fold B: Step 0 measured 'load-parcels' has 0 live
+  // pipeline_runs hits, locally AND on cloud — a genuine retirement).
+  const POST_RETIREMENT = DECLARED_AT_HEAD.filter((s) => s !== 'load-parcels');
+
+  function symmetricDifference(declared: string[]) {
+    const derived = ledger.stepUpstreams('compute_parcel_cost_estimates', { chain: 'sources' });
+    const derivedForms = new Set(derived.flatMap((name) => ledger.slugForms(name, ['sources'])));
+    const declaredSet = new Set(declared);
+    return {
+      onlyDeclared: [...declaredSet].filter((s) => !derivedForms.has(s)).sort(),
+      onlyDerived: [...derivedForms].filter((s) => !declaredSet.has(s)).sort(),
+    };
+  }
+
+  it('the measured divergence at HEAD is EXACTLY the load-parcels form — Spec 122 §6.3, corrected', () => {
+    const { onlyDeclared, onlyDerived } = symmetricDifference(DECLARED_AT_HEAD);
+    expect(onlyDeclared).toEqual(['load-parcels']);
+    expect(onlyDerived).toEqual([]);
+  });
+
+  it('is not vacuous: an injected EXTRA declared form is detected on top of the known divergence', () => {
+    const { onlyDeclared } = symmetricDifference([...DECLARED_AT_HEAD, 'totally-bogus-form']);
+    expect(onlyDeclared).toEqual(['load-parcels', 'totally-bogus-form']);
+  });
+
+  it('is not vacuous: a MISSING declared form (dropping a real producer) is detected', () => {
+    const withoutParcels = DECLARED_AT_HEAD.filter((s) => s !== 'sources:parcels' && s !== 'parcels');
+    const { onlyDerived } = symmetricDifference(withoutParcels);
+    expect(onlyDerived).toEqual(['parcels', 'sources:parcels']);
+  });
+
+  it('the post-retirement form (commit 3) equals the derived set with ZERO difference', () => {
+    const { onlyDeclared, onlyDerived } = symmetricDifference(POST_RETIREMENT);
+    expect(onlyDeclared).toEqual([]);
+    expect(onlyDerived).toEqual([]);
+  });
+});
