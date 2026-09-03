@@ -231,6 +231,8 @@ monitoring window** watching Supavisor's client-connection count. The specific a
 is set at Phase 4.4 implementation time against observed production connection patterns — this
 spec establishes the requirement (a monitored, alerting threshold MUST exist before Phase 4.4 is
 considered closed) without pre-committing a number that would be a guess today.
+
+**OPEN — Supavisor/NLB idle-connection timeout is UNDOCUMENTED (2026-09-03, `wf3_enrich_parcels_cloud_stall` premise verification, H5).** Neither Supabase's own docs nor this spec name a duration after which the session-mode pooler (or an intermediate AWS load balancer) drops a connection that has gone quiet — as distinct from the *startup-param-dropping* behaviour documented above, which IS characterised. A long-running pipeline statement (`enrich_parcels`'s passes routinely run 15-48 min each, §5 routing table) produces exactly this "quiet but alive" shape from the pooler's perspective: no bytes flow while Postgres computes server-side. If a middlebox in the path reaps such a connection, the client (no `keepAlive` before WF3 enrich_parcels stall commit 2, `e9d7fda6`) would await a response that never arrives — an unbounded, silent hang, not an error. **Filed OPEN, not closed**: closing it needs either a stated number from Supabase/AWS, or a live reproduction (a `pg_stat_activity` capture during an actual hang, per the linked WF's STEP 0) showing the backend gone while the client still waits. `keepAliveInitialDelayMillis: 10000` (WF3 enrich_parcels stall commit 2) is a mitigation, not a resolution of this gap — it makes a reaped connection surface as an error instead of a hang, but does not establish or change the reap threshold itself.
 </architecture>
 
 ---

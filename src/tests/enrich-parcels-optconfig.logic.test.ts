@@ -411,3 +411,134 @@ describe('WF3 cloud-parity FIX 3 remediation — optimal-config heartbeat is BEH
     }
   });
 });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// WF3 enrich_parcels stall commit 3 (2026-09-03) — silence-gated pg_stat_activity
+// diagnostic (Spec 48 §3.10). The existing heartbeat only logs on a COMPLETED loop
+// iteration; if the underlying cursor's FETCH itself blocks (H5, premise
+// verification, UNDETERMINED), no JS in the loop body runs at all. startStallTicker
+// is a genuine setInterval, independent of the loop's own await points, driven here
+// via vi.advanceTimersByTimeAsync so both the ticker AND a deliberately-stalled mock
+// stream advance on the SAME fake clock.
+// ─────────────────────────────────────────────────────────────────────────────
+describe('WF3 enrich_parcels stall commit 3 — silence-gated pg_stat_activity diagnostic (pass 5)', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const pipeline = require(join(process.cwd(), 'scripts/lib/pipeline.js'));
+  const FAKE_RUN_ID = 9191;
+
+  let origStreamQuery: typeof pipeline.streamQuery;
+  let recordedQueries: Array<{ sql: string; params: unknown[] }>;
+
+  beforeEach(() => {
+    origStreamQuery = pipeline.streamQuery;
+    recordedQueries = [];
+    vi.useFakeTimers();
+  });
+
+  afterEach(() => {
+    pipeline.streamQuery = origStreamQuery;
+    vi.useRealTimers();
+  });
+
+  function makeMockPool() {
+    return {
+      query: vi.fn(async (sql: string, params: unknown[] = []) => {
+        recordedQueries.push({ sql, params });
+        if (/neighbourhood_build_norms/.test(sql)) return { rowCount: 1, rows: [{ x: 1 }] };
+        if (/SELECT NOW\(\) AS now/.test(sql)) return { rows: [{ now: new Date('2026-09-03T00:00:00Z') }] };
+        if (/pg_stat_activity/.test(sql)) {
+          return {
+            rows: [{ pid: 777, state: 'active', wait_event_type: 'IO', wait_event: 'DataFileRead', query_start: new Date('2026-09-03T00:00:00Z') }],
+          };
+        }
+        return { rowCount: 0, rows: [] };
+      }),
+    };
+  }
+
+  /** Yields ONE row immediately, then genuinely BLOCKS (a real fake-timer setTimeout,
+   * not a synchronous system-time bump) for `delayMs` before a SECOND, final row —
+   * models a stalled cursor FETCH the loop cannot poll around while it is suspended. */
+  function mockStreamQueryStalled(delayMs: number) {
+    pipeline.streamQuery = vi.fn(async function* () {
+      yield { id: 1 };
+      await new Promise((resolve) => setTimeout(resolve, delayMs));
+      yield { id: 2 };
+    });
+  }
+
+  /** Yields `n` rows, each after a REAL fake-timer delay of `stepMs` — progress that
+   * keeps pace with (faster than) the tick interval, so the ticker should never fire. */
+  function mockStreamQueryProgressing(n: number, stepMs: number) {
+    pipeline.streamQuery = vi.fn(async function* () {
+      for (let i = 0; i < n; i++) {
+        await new Promise((resolve) => setTimeout(resolve, stepMs));
+        yield { id: i };
+      }
+    });
+  }
+
+  it('RED->GREEN: 2 consecutive no-progress ticks trigger ONE pg_stat_activity capture, written to records_meta.stall_diagnostic', async () => {
+    const intervalMs = 1000;
+    const heartbeatMinutes = intervalMs / 60000;
+    mockStreamQueryStalled(intervalMs * 5); // stalls for 5x the tick interval before the 2nd (final) row
+    const pool = makeMockPool();
+    const promise = ep.enrichOptimalConfig(pool, { heartbeatMinutes, pipelineRunId: FAKE_RUN_ID });
+    await vi.advanceTimersByTimeAsync(intervalMs * 6);
+    await promise;
+
+    const probe = recordedQueries.find((q) => /pg_stat_activity/.test(q.sql));
+    expect(probe).toBeDefined();
+    expect(probe!.sql).toContain('wait_event_type');
+    expect(probe!.sql).toContain('wait_event');
+    expect(probe!.sql).toContain('state');
+    expect(probe!.sql).toContain('query_start');
+
+    const diagUpdate = recordedQueries.find((q) => /stall_diagnostic/.test(q.sql));
+    expect(diagUpdate).toBeDefined();
+    expect(diagUpdate!.sql).toContain("COALESCE(records_meta, '{}'::jsonb)");
+    expect(diagUpdate!.params).toContain(FAKE_RUN_ID);
+  });
+
+  it('no diagnostic fires when progress keeps pace with the heartbeat interval', async () => {
+    const intervalMs = 1000;
+    const heartbeatMinutes = intervalMs / 60000;
+    mockStreamQueryProgressing(5, 400); // 400ms steps, faster than the 1000ms tick
+    const pool = makeMockPool();
+    const promise = ep.enrichOptimalConfig(pool, { heartbeatMinutes, pipelineRunId: FAKE_RUN_ID });
+    await vi.advanceTimersByTimeAsync(intervalMs * 6);
+    await promise;
+
+    const probe = recordedQueries.find((q) => /pg_stat_activity/.test(q.sql));
+    expect(probe).toBeUndefined();
+  });
+
+  it('captureStallDiagnostic no-ops when pipelineRunId is null (standalone invocation)', async () => {
+    const pool = makeMockPool();
+    await ep.captureStallDiagnostic(pool, null);
+    expect(pool.query).not.toHaveBeenCalled();
+  });
+
+  it('captureStallDiagnostic swallows a query error via pipeline.log.warn (never throws)', async () => {
+    const pool = {
+      query: vi.fn(async () => { throw new Error('connection reset'); }),
+    };
+    const origWarn = pipeline.log.warn;
+    const warnSpy = vi.fn(origWarn);
+    pipeline.log.warn = warnSpy;
+    try {
+      await expect(ep.captureStallDiagnostic(pool, FAKE_RUN_ID)).resolves.toBeUndefined();
+      expect(warnSpy).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.stringMatching(new RegExp(`stall diagnostic capture failed.*${FAKE_RUN_ID}`)),
+      );
+    } finally {
+      pipeline.log.warn = origWarn;
+    }
+  });
+
+  it('startStallTicker with intervalMs<=0 returns a no-op stop function (defensive)', () => {
+    const stop = ep.startStallTicker(makeMockPool(), FAKE_RUN_ID, 0, () => 0);
+    expect(() => stop()).not.toThrow();
+  });
+});

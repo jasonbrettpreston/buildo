@@ -1558,6 +1558,89 @@ async function recordHeartbeat(pool, pipelineRunId, currentPass, rowsProcessedCo
   }
 }
 
+/**
+ * WF3 enrich_parcels stall commit 3 (2026-09-03) — silence-gated `pg_stat_activity` capture,
+ * Spec 48 §3.10. The existing heartbeat (above) only LOGS on a COMPLETED loop iteration — if the
+ * underlying cursor's FETCH itself blocks (H5, premise verification, UNDETERMINED: a reaped TCP
+ * socket the client never notices), no JS in the loop body runs at all and an inline per-row check
+ * can never fire. `startStallTicker` (below) is therefore a genuine `setInterval`, independent of
+ * the loop's own await points, so it still fires while the loop is fully stuck; THIS function is
+ * what it calls once 2 consecutive ticks see no progress. Runs on `pool.query` — a FRESH physical
+ * connection from the pool, not the (possibly stuck) client `pipeline.streamQuery` already checked
+ * out — so the capture can still complete while the main stream is wedged.
+ *
+ * Never throws (§3.6 "never crash the pass it is instrumenting" posture, same as recordHeartbeat):
+ * a failed probe or a failed write is caught and logged via `pipeline.log.warn`, never re-thrown.
+ * No-ops when `pipelineRunId` is null (standalone invocation).
+ *
+ * @param {import('pg').Pool} pool
+ * @param {number|null} pipelineRunId
+ */
+async function captureStallDiagnostic(pool, pipelineRunId) {
+  if (pipelineRunId == null) return;
+  try {
+    const probe = await pool.query(
+      `SELECT pid, state, wait_event_type, wait_event, query_start
+         FROM pg_stat_activity
+        WHERE pid <> pg_backend_pid()
+          AND state <> 'idle'
+          AND query ILIKE '%max_buildable_footprint_sqm%'
+        ORDER BY query_start ASC NULLS LAST
+        LIMIT 1`,
+    );
+    const diag = probe.rows[0] || { note: 'no matching backend found in pg_stat_activity' };
+    await pool.query(
+      `UPDATE pipeline_runs
+          SET records_meta = COALESCE(records_meta, '{}'::jsonb) || jsonb_build_object(
+                'stall_diagnostic', $1::jsonb,
+                'stall_diagnostic_at', now()
+              )
+        WHERE id = $2`,
+      [JSON.stringify(diag), pipelineRunId],
+    );
+  } catch (err) {
+    pipeline.log.warn(TAG, `stall diagnostic capture failed (run id ${pipelineRunId}): ${err.message}`);
+  }
+}
+
+/**
+ * WF3 enrich_parcels stall commit 3 — starts the silence-gated ticker described above. Two
+ * CONSECUTIVE ticks with an unchanged `getRowsProcessed()` value (the heartbeat interval has
+ * elapsed TWICE with zero new rows) trigger ONE `captureStallDiagnostic` call; progress resuming
+ * resets the counter AND the fired-once guard, so a SECOND, separate stall later in the same run
+ * is captured too (never spams one query per tick for the duration of a real multi-hour hang).
+ * Returns a `stop()` closure — callers MUST clear it in a `finally` once the loop it watches ends.
+ *
+ * @param {import('pg').Pool} pool
+ * @param {number|null} pipelineRunId
+ * @param {number} intervalMs
+ * @param {() => number} getRowsProcessed
+ * @returns {() => void}
+ */
+function startStallTicker(pool, pipelineRunId, intervalMs, getRowsProcessed) {
+  if (!intervalMs || intervalMs <= 0) return () => {};
+  let lastSeen = getRowsProcessed();
+  let staleTicks = 0;
+  let fired = false;
+  const timer = setInterval(() => {
+    const current = getRowsProcessed();
+    if (current === lastSeen) {
+      staleTicks += 1;
+      if (staleTicks >= 2 && !fired) {
+        fired = true;
+        captureStallDiagnostic(pool, pipelineRunId).catch((err) => {
+          pipeline.log.warn(TAG, `stall ticker diagnostic dispatch failed: ${err.message}`);
+        });
+      }
+    } else {
+      staleTicks = 0;
+      fired = false;
+    }
+    lastSeen = current;
+  }, intervalMs);
+  return () => clearInterval(timer);
+}
+
 async function enrichOptimalConfig(pool, { full = false, scopeWhere = 'TRUE', runId = null, heartbeatMinutes = HEARTBEAT_MINUTES_DEFAULT, pipelineRunId = null } = {}) {
   // Precondition: the citywide (NULL,'all') backstop row MUST exist — the SELECT's cwa CROSS JOIN is
   // filtered to structure_family='all', so without it the whole pass yields 0 rows → silent no-op
@@ -1600,43 +1683,52 @@ async function enrichOptimalConfig(pool, { full = false, scopeWhere = 'TRUE', ru
   let rowsProcessed = 0;
   let lastHeartbeatAt = Date.now();
   const heartbeatIntervalMs = heartbeatMinutes * 60 * 1000;
-  for await (const r of pipeline.streamQuery(pool, buildOptConfigSelectSql({ full, scopeWhere }), [], { batchSize: 200 })) {
-    rowsProcessed += 1;
-    const now = Date.now();
-    if (now - lastHeartbeatAt >= heartbeatIntervalMs) {
-      pipeline.log.info(TAG, `optimal-config heartbeat: ${rowsProcessed} rows processed, ${Math.round((now - lastHeartbeatAt) / 1000)}s since last heartbeat`);
-      // Deliberate await (not fire-and-forget): an infrequent (default 5-min)
-      // heartbeat write, so a failure is caught and logged (never crashes the
-      // pass) rather than raced against the loop.
-      await recordHeartbeat(pool, pipelineRunId, 'optimal_config', rowsProcessed);
-      lastHeartbeatAt = now;
+  // WF3 enrich_parcels stall commit 3 — the silence-gated ticker (see startStallTicker's own doc
+  // comment). Started BEFORE the loop and independent of its await points, so it still fires even
+  // if the loop below is fully stuck on a blocked cursor FETCH. MUST be stopped in the finally —
+  // a leaked setInterval would keep this pass's event loop alive after the pass itself is done.
+  const stopStallTicker = startStallTicker(pool, pipelineRunId, heartbeatIntervalMs, () => rowsProcessed);
+  try {
+    for await (const r of pipeline.streamQuery(pool, buildOptConfigSelectSql({ full, scopeWhere }), [], { batchSize: 200 })) {
+      rowsProcessed += 1;
+      const now = Date.now();
+      if (now - lastHeartbeatAt >= heartbeatIntervalMs) {
+        pipeline.log.info(TAG, `optimal-config heartbeat: ${rowsProcessed} rows processed, ${Math.round((now - lastHeartbeatAt) / 1000)}s since last heartbeat`);
+        // Deliberate await (not fire-and-forget): an infrequent (default 5-min)
+        // heartbeat write, so a failure is caught and logged (never crashes the
+        // pass) rather than raced against the loop.
+        await recordHeartbeat(pool, pipelineRunId, 'optimal_config', rowsProcessed);
+        lastHeartbeatAt = now;
+      }
+      let row;
+      try {
+        row = computeOptConfigRow(r);
+      } catch (err) {
+        stats.errors += 1;
+        pipeline.log.warn(TAG, `optimal-config engine error on parcel ${r.id}: ${err.message}`);
+        continue;
+      }
+      if (row[6]) stats.suite_fits += 1;                 // opt_suite_fits_full
+      if (row[8] === 'high') stats.conf_high += 1;
+      else if (row[8] === 'medium') stats.conf_medium += 1;
+      else stats.conf_low += 1;
+      if (r.used_citywide) stats.citywide += 1;
+      // WF3: count as-of-right builds whose storeys the envelope cap reduced (mirrors the engine's cap
+      // decision from the raw row — the 12-tuple is locked, so we can't read cfg here).
+      const rawP50 = numOrNull(r.storeys_p50) ?? numOrNull(r.max_build_stories);
+      const effMbs = numOrNull(r.max_build_stories)
+        ?? (r.max_buildable_gfa_basis === 'heritage_existing'
+            && numOrNull(r.max_buildable_footprint_sqm) > 0 && numOrNull(r.max_buildable_gfa_sqm) != null
+            ? Math.round(numOrNull(r.max_buildable_gfa_sqm) / numOrNull(r.max_buildable_footprint_sqm))
+            : null);
+      if (effMbs != null && rawP50 != null && rawP50 > effMbs) stats.envelope_capped += 1;
+      batch.push(row);
+      if (batch.length >= OPTCFG_BATCH) { stats.updated += await flushOptConfigBatch(pool, batch, stats.genuineIds); batch = []; }
     }
-    let row;
-    try {
-      row = computeOptConfigRow(r);
-    } catch (err) {
-      stats.errors += 1;
-      pipeline.log.warn(TAG, `optimal-config engine error on parcel ${r.id}: ${err.message}`);
-      continue;
-    }
-    if (row[6]) stats.suite_fits += 1;                 // opt_suite_fits_full
-    if (row[8] === 'high') stats.conf_high += 1;
-    else if (row[8] === 'medium') stats.conf_medium += 1;
-    else stats.conf_low += 1;
-    if (r.used_citywide) stats.citywide += 1;
-    // WF3: count as-of-right builds whose storeys the envelope cap reduced (mirrors the engine's cap
-    // decision from the raw row — the 12-tuple is locked, so we can't read cfg here).
-    const rawP50 = numOrNull(r.storeys_p50) ?? numOrNull(r.max_build_stories);
-    const effMbs = numOrNull(r.max_build_stories)
-      ?? (r.max_buildable_gfa_basis === 'heritage_existing'
-          && numOrNull(r.max_buildable_footprint_sqm) > 0 && numOrNull(r.max_buildable_gfa_sqm) != null
-          ? Math.round(numOrNull(r.max_buildable_gfa_sqm) / numOrNull(r.max_buildable_footprint_sqm))
-          : null);
-    if (effMbs != null && rawP50 != null && rawP50 > effMbs) stats.envelope_capped += 1;
-    batch.push(row);
-    if (batch.length >= OPTCFG_BATCH) { stats.updated += await flushOptConfigBatch(pool, batch, stats.genuineIds); batch = []; }
+    if (batch.length) stats.updated += await flushOptConfigBatch(pool, batch, stats.genuineIds);
+  } finally {
+    stopStallTicker();
   }
-  if (batch.length) stats.updated += await flushOptConfigBatch(pool, batch, stats.genuineIds);
   // D4′/S-2 — flip THIS run's own scope rows in ONE set-based UPDATE now that the stream above has
   // attempted every row it covers (work-before-stamp; never per-parcel — that is the founding O(N)
   // serial-requery class on a --full run touching ~437K parcels). A scope row whose parcel the
@@ -2290,6 +2382,9 @@ module.exports = {
   flushOptConfigBatch,
   enrichOptimalConfig,
   recordHeartbeat,
+  // WF3 enrich_parcels stall commit 3 — silence-gated pg_stat_activity diagnostic.
+  captureStallDiagnostic,
+  startStallTicker,
   verdictCascade,
   // D#5 (B3 output-panel remediation) — the honest records_updated aggregate.
   computeAggregateRecordsUpdated,
