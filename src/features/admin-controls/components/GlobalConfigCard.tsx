@@ -217,6 +217,13 @@ export const GROUPS: Array<{ label: string; keys: string[] }> = [
       'load_ravines_invalid_geometry_fail_pct',
       'load_ravines_mass_delete_fail_pct',
       'load_ravines_download_timeout_ms',
+      // WF3 cloud-parity FIX 3 remediation (2026-09-03) — not a load_ravines knob,
+      // but the same class of operational/observability tunable (governs how
+      // often a long-running ingestion-adjacent pass reports progress) rather
+      // than a business-logic value; enrich-parcels.js has no group of its own
+      // yet (a pre-existing gap: most of its ~18 tunables are not in GROUPS at
+      // all — filed review_followups, not fixed here).
+      'enrich_parcels_heartbeat_minutes',
     ],
   },
   {

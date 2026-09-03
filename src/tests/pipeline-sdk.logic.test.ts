@@ -2206,6 +2206,51 @@ describe('Pipeline SDK', () => {
   });
 
   // -----------------------------------------------------------------------
+  // WF3 cloud-parity FIX 3 remediation (2026-09-03): run() exposes ctx.runId
+  // -----------------------------------------------------------------------
+  describe('run() exposes ctx.runId from STEP_RUN_ID (a legacy step\'s own pipeline_runs.id)', () => {
+    beforeEach(() => {
+      vi.stubEnv('PG_HOST', 'localhost');
+      vi.stubEnv('PG_PORT', '5432');
+      vi.stubEnv('PG_DATABASE', 'buildo');
+    });
+    afterEach(() => {
+      vi.unstubAllEnvs();
+    });
+
+    it('ctx.runId is the parsed STEP_RUN_ID when run-chain.js set it', async () => {
+      vi.stubEnv('STEP_RUN_ID', '4242');
+      let seenCtx;
+      await pipeline.run('test-script', async (pool: any, ctx: any) => {
+        seenCtx = ctx;
+        pool.end().catch(() => {});
+      });
+      expect(seenCtx).toEqual({ runId: 4242 });
+    });
+
+    it('ctx.runId is null under standalone invocation (STEP_RUN_ID unset)', async () => {
+      let seenCtx;
+      await pipeline.run('test-script', async (pool: any, ctx: any) => {
+        seenCtx = ctx;
+        pool.end().catch(() => {});
+      });
+      expect(seenCtx).toEqual({ runId: null });
+    });
+
+    it('ctx.runId is null (never NaN) for a blank or non-numeric STEP_RUN_ID', async () => {
+      for (const bad of ['', '   ', 'not-a-number']) {
+        vi.stubEnv('STEP_RUN_ID', bad);
+        let seenCtx;
+        await pipeline.run('test-script', async (pool: any, ctx: any) => {
+          seenCtx = ctx;
+          pool.end().catch(() => {});
+        });
+        expect(seenCtx, `STEP_RUN_ID=${JSON.stringify(bad)}`).toEqual({ runId: null });
+      }
+    });
+  });
+
+  // -----------------------------------------------------------------------
   // WF3-08: validateLogicVars() in config-loader (spec 47 §4)
   // -----------------------------------------------------------------------
   describe('validateLogicVars() in config-loader', () => {

@@ -648,6 +648,14 @@ async function run() {
         ...process.env,
         PIPELINE_CHAIN: chainId,
         ...(chainRunId ? { CHAIN_RUN_ID: String(chainRunId) } : {}),
+        // WF3 cloud-parity FIX 3 remediation (2026-09-03) — same shape as
+        // CHAIN_RUN_ID above: stepRunId is THIS step's own pipeline_runs.id,
+        // already minted by the INSERT a few lines up. Previously never
+        // reached the child at all — a pipeline.run()-based legacy script
+        // (e.g. enrich-parcels.js) had no way to address its own row for a
+        // heartbeat/progress UPDATE. pipeline.js#run() reads it into
+        // ctx.runId.
+        ...(stepRunId ? { STEP_RUN_ID: String(stepRunId) } : {}),
         ...(scriptEntry.env || {}),
       };
       const extraArgs = [...(scriptEntry.chain_args?.[chainId] || [])];

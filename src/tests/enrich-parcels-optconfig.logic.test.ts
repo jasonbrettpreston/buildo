@@ -9,7 +9,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const ep = require('../../scripts/enrich-parcels.js');
@@ -222,7 +222,7 @@ describe('D#5 — main() wires the aggregate into records_updated (source-scan)'
   it('main() calls computeAggregateRecordsUpdated with all four SQL-pass id sets + the optconfig genuine set', () => {
     // The FUNCTION DEFINITION (module scope) appears earlier in the file than
     // its call site inside main() — search from AFTER main()'s declaration.
-    const mainIdx = src.indexOf('async function main(pool)');
+    const mainIdx = src.indexOf('async function main(pool, ctx)');
     expect(mainIdx).toBeGreaterThan(-1);
     const callIdx = src.indexOf('computeAggregateRecordsUpdated({', mainIdx);
     expect(callIdx).toBeGreaterThan(-1);
@@ -269,22 +269,145 @@ describe('WF3 cloud-parity FIX 3.2b — optimal-config stream progress heartbeat
     );
   });
 
-  it('enrichOptimalConfig accepts heartbeatMinutes and main() threads resolvedVars into the call', () => {
-    expect(src).toMatch(/async function enrichOptimalConfig\(pool, \{[^}]*heartbeatMinutes = HEARTBEAT_MINUTES_DEFAULT/);
+  it('enrichOptimalConfig accepts heartbeatMinutes + pipelineRunId, and main() threads both from resolvedVars/ctx', () => {
+    expect(src).toMatch(/async function enrichOptimalConfig\(pool, \{[^}]*heartbeatMinutes = HEARTBEAT_MINUTES_DEFAULT[^}]*pipelineRunId = null/);
     const callIdx = src.indexOf('const ocResult = await enrichOptimalConfig(pool, {');
     expect(callIdx).toBeGreaterThan(-1);
-    const callBlock = src.slice(callIdx, callIdx + 200);
+    const callBlock = src.slice(callIdx, callIdx + 250);
     expect(callBlock).toContain('heartbeatMinutes: resolvedVars.enrich_parcels_heartbeat_minutes');
+    expect(callBlock).toContain('pipelineRunId');
+    // main(pool, ctx) — ctx.runId sourced via pipeline.js#run()'s STEP_RUN_ID (WF3 FIX 3 remediation).
+    expect(src).toMatch(/async function main\(pool, ctx\)/);
+    expect(src).toMatch(/const pipelineRunId = ctx\?\.runId \?\? null;/);
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// WF3 cloud-parity FIX 3 remediation (2026-09-03) — BEHAVIOURAL heartbeat lock.
+// Replaces the prior source-string-only lock: calls the REAL exported
+// enrichOptimalConfig with a mocked pool + a mocked pipeline.streamQuery (an
+// async generator that advances a FAKE clock between yields — deterministic
+// and fast, no real wall-clock waits/flakiness) + a spied pipeline.log.info.
+// Asserts BOTH observable effects of a heartbeat tick: the stdout log line
+// AND the pipeline_runs UPDATE the remediation adds (Spec 48 §3.6/§3.7 — a
+// heartbeat must be visible in the pipeline's own records, not stdout only).
+// ─────────────────────────────────────────────────────────────────────────────
+describe('WF3 cloud-parity FIX 3 remediation — optimal-config heartbeat is BEHAVIOURAL, not source-scanned', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const pipeline = require(join(process.cwd(), 'scripts/lib/pipeline.js'));
+  const FAKE_RUN_ID = 4242;
+
+  let origStreamQuery: typeof pipeline.streamQuery;
+  let origLogInfo: typeof pipeline.log.info;
+  let recordedQueries: Array<{ sql: string; params: unknown[] }>;
+  let logInfoSpy: ReturnType<typeof vi.fn>;
+
+  beforeEach(() => {
+    origStreamQuery = pipeline.streamQuery;
+    origLogInfo = pipeline.log.info;
+    recordedQueries = [];
+    logInfoSpy = vi.fn(origLogInfo);
+    pipeline.log.info = logInfoSpy;
+    vi.useFakeTimers();
   });
 
-  it('the heartbeat is logged only when the interval has elapsed — not on every row (would spam logs)', () => {
-    const loopIdx = src.indexOf('for await (const r of pipeline.streamQuery(pool, buildOptConfigSelectSql');
-    expect(loopIdx).toBeGreaterThan(-1);
-    const loopHead = src.slice(loopIdx, loopIdx + 500);
-    expect(loopHead).toContain('now - lastHeartbeatAt >= heartbeatIntervalMs');
-    expect(loopHead).toContain('pipeline.log.info(TAG,');
-    // Elapsed-time arithmetic, never a DB timestamp — Date.now() is the
-    // CLAUDE.md-sanctioned exception for elapsed time (never written to DB).
-    expect(loopHead).toContain('Date.now()');
+  afterEach(() => {
+    pipeline.streamQuery = origStreamQuery;
+    pipeline.log.info = origLogInfo;
+    vi.useRealTimers();
+  });
+
+  /** A mocked pool covering every query enrichOptimalConfig's non-hot-path
+   * makes (precondition check, DB-clock read) — everything else defaults to
+   * an empty-but-valid result, which is sufficient because the fake rows
+   * below fail computeOptConfigRow's engine (missing fields) and are caught
+   * + skipped before ever reaching flushOptConfigBatch's write. */
+  function makeMockPool() {
+    return {
+      query: vi.fn(async (sql: string, params: unknown[] = []) => {
+        recordedQueries.push({ sql, params });
+        if (/neighbourhood_build_norms/.test(sql)) return { rowCount: 1, rows: [{ x: 1 }] };
+        if (/SELECT NOW\(\) AS now/.test(sql)) return { rows: [{ now: new Date('2026-09-03T00:00:00Z') }] };
+        return { rowCount: 0, rows: [] };
+      }),
+    };
+  }
+
+  /** Fake streamQuery: yields `n` minimal (deliberately engine-invalid) rows,
+   * advancing vitest's fake system clock by `stepMs` before each yield — the
+   * loop's `Date.now()` heartbeat check therefore sees REAL elapsed time
+   * without a REAL wait. */
+  function mockStreamQuery(n: number, stepMs: number) {
+    pipeline.streamQuery = vi.fn(async function* () {
+      let t = Date.now();
+      for (let i = 0; i < n; i++) {
+        t += stepMs;
+        vi.setSystemTime(t);
+        yield { id: i };
+      }
+    });
+  }
+
+  it('RED: a huge heartbeat interval fires NEITHER the log line NOR the pipeline_runs UPDATE', async () => {
+    mockStreamQuery(5, 50);
+    const pool = makeMockPool();
+    await ep.enrichOptimalConfig(pool, {
+      heartbeatMinutes: 60, // 1 hour — 5 rows * 50ms never gets close
+      pipelineRunId: FAKE_RUN_ID,
+    });
+    expect(logInfoSpy).not.toHaveBeenCalledWith(expect.anything(), expect.stringMatching(/heartbeat/));
+    expect(recordedQueries.some((q) => /UPDATE pipeline_runs/.test(q.sql))).toBe(false);
+  });
+
+  it('GREEN: a tiny heartbeat interval fires the log line AND the pipeline_runs UPDATE addressed to the run id', async () => {
+    mockStreamQuery(5, 50);
+    const pool = makeMockPool();
+    await ep.enrichOptimalConfig(pool, {
+      heartbeatMinutes: 0.0005, // 30ms
+      pipelineRunId: FAKE_RUN_ID,
+    });
+    expect(logInfoSpy).toHaveBeenCalledWith(expect.anything(), expect.stringMatching(/heartbeat/));
+    const hb = recordedQueries.find((q) => /UPDATE pipeline_runs/.test(q.sql));
+    expect(hb).toBeDefined();
+    expect(hb!.sql).toContain('last_heartbeat_at');
+    expect(hb!.sql).toContain("COALESCE(records_meta, '{}'::jsonb)"); // NULL-swallow guard, not decorative
+    expect(hb!.params).toContain(FAKE_RUN_ID);
+  });
+
+  it('a tiny interval with pipelineRunId=null still logs to stdout but issues NO pipeline_runs UPDATE (standalone invocation)', async () => {
+    mockStreamQuery(5, 50);
+    const pool = makeMockPool();
+    await ep.enrichOptimalConfig(pool, {
+      heartbeatMinutes: 0.0005,
+      pipelineRunId: null,
+    });
+    expect(logInfoSpy).toHaveBeenCalledWith(expect.anything(), expect.stringMatching(/heartbeat/));
+    expect(recordedQueries.some((q) => /UPDATE pipeline_runs/.test(q.sql))).toBe(false);
+  });
+
+  it('a failed pipeline_runs UPDATE is swallowed via pipeline.log.warn (never thrown, never crashes the pass)', async () => {
+    mockStreamQuery(5, 50);
+    const pool = {
+      query: vi.fn(async (sql: string) => {
+        if (/neighbourhood_build_norms/.test(sql)) return { rowCount: 1, rows: [{ x: 1 }] };
+        if (/SELECT NOW\(\) AS now/.test(sql)) return { rows: [{ now: new Date() }] };
+        if (/UPDATE pipeline_runs/.test(sql)) throw new Error('connection reset');
+        return { rowCount: 0, rows: [] };
+      }),
+    };
+    const origWarn = pipeline.log.warn;
+    const warnSpy = vi.fn(origWarn);
+    pipeline.log.warn = warnSpy;
+    try {
+      await expect(
+        ep.enrichOptimalConfig(pool, { heartbeatMinutes: 0.0005, pipelineRunId: FAKE_RUN_ID }),
+      ).resolves.toBeDefined();
+      expect(warnSpy).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.stringMatching(new RegExp(`heartbeat.*${FAKE_RUN_ID}`)),
+      );
+    } finally {
+      pipeline.log.warn = origWarn;
+    }
   });
 });

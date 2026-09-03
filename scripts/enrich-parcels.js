@@ -1501,7 +1501,46 @@ async function consumePendingScope(pool, runId = -1, stats = { errors: 0 }, runA
   return recovered;
 }
 
-async function enrichOptimalConfig(pool, { full = false, scopeWhere = 'TRUE', runId = null, heartbeatMinutes = HEARTBEAT_MINUTES_DEFAULT } = {}) {
+/**
+ * WF3 cloud-parity FIX 3 remediation (2026-09-03, Spec 48 §3.6/§3.7) — make a
+ * heartbeat VISIBLE in the pipeline's own records, not just stdout. Runs a
+ * guarded UPDATE on the step's OWN `pipeline_runs` row (the SAME `pool` the
+ * rest of the pass uses — never a second connection). `COALESCE(records_meta,
+ * '{}'::jsonb)` is required, not decorative: run-chain.js's per-step INSERT
+ * sets no `records_meta`, so the column is NULL for the entire duration a
+ * step is `running` — a bare `records_meta || jsonb_build_object(...)` on a
+ * NULL left operand evaluates to NULL in Postgres, silently erasing the
+ * column instead of setting it (the exact NULL-swallow class `tasks/lessons.md`
+ * already documents for MIN/LEAST). Swallows nothing silently: a failed
+ * UPDATE is logged via `pipeline.log.warn` naming the run id and never
+ * throws — a heartbeat write must never crash the pass it is instrumenting.
+ * No-ops when `pipelineRunId` is null (standalone invocation, no run-chain.js
+ * parent to have minted a tracking row).
+ *
+ * @param {import('pg').Pool} pool
+ * @param {number|null} pipelineRunId
+ * @param {string} currentPass
+ * @param {number} rowsProcessedCount
+ */
+async function recordHeartbeat(pool, pipelineRunId, currentPass, rowsProcessedCount) {
+  if (pipelineRunId == null) return;
+  try {
+    await pool.query(
+      `UPDATE pipeline_runs
+          SET records_meta = COALESCE(records_meta, '{}'::jsonb) || jsonb_build_object(
+                'last_heartbeat_at', now(),
+                'current_pass', $1::text,
+                'rows_processed', $2::int
+              )
+        WHERE id = $3`,
+      [currentPass, rowsProcessedCount, pipelineRunId],
+    );
+  } catch (err) {
+    pipeline.log.warn(TAG, `heartbeat pipeline_runs UPDATE failed (run id ${pipelineRunId}): ${err.message}`);
+  }
+}
+
+async function enrichOptimalConfig(pool, { full = false, scopeWhere = 'TRUE', runId = null, heartbeatMinutes = HEARTBEAT_MINUTES_DEFAULT, pipelineRunId = null } = {}) {
   // Precondition: the citywide (NULL,'all') backstop row MUST exist — the SELECT's cwa CROSS JOIN is
   // filtered to structure_family='all', so without it the whole pass yields 0 rows → silent no-op
   // (review C1). compute-build-norms writes the 'all' backstop UNCONDITIONALLY (P2).
@@ -1548,6 +1587,10 @@ async function enrichOptimalConfig(pool, { full = false, scopeWhere = 'TRUE', ru
     const now = Date.now();
     if (now - lastHeartbeatAt >= heartbeatIntervalMs) {
       pipeline.log.info(TAG, `optimal-config heartbeat: ${rowsProcessed} rows processed, ${Math.round((now - lastHeartbeatAt) / 1000)}s since last heartbeat`);
+      // Deliberate await (not fire-and-forget): an infrequent (default 5-min)
+      // heartbeat write, so a failure is caught and logged (never crashes the
+      // pass) rather than raced against the loop.
+      await recordHeartbeat(pool, pipelineRunId, 'optimal_config', rowsProcessed);
       lastHeartbeatAt = now;
     }
     let row;
@@ -1688,7 +1731,13 @@ function computeAggregateRecordsUpdated({ zoningIds, maxBuildIds, existingIds, s
   return touched.size;
 }
 
-async function main(pool) {
+async function main(pool, ctx) {
+  // WF3 cloud-parity FIX 3 remediation (2026-09-03) — ctx.runId is THIS
+  // step's own pipeline_runs.id (pipeline.js#run(), from run-chain.js's
+  // STEP_RUN_ID env var); null under standalone invocation. Distinct from
+  // scopeRunId below (a SYNTHETIC epoch-seconds value used only to key
+  // enrich_parcels_pass3_scope rows — never a real pipeline_runs.id).
+  const pipelineRunId = ctx?.runId ?? null;
   const lockResult = await pipeline.withAdvisoryLock(pool, ADVISORY_LOCK_ID, async () => {
     // D2′/R3-B4 — per-script force-full env, OR'd directly into THIS script's own argv check
     // (never into pipeline.isFullMode(), which other scripts like link_parcels also call — doing
@@ -1893,6 +1942,7 @@ async function main(pool) {
       full,
       runId: scopeRunId,
       heartbeatMinutes: resolvedVars.enrich_parcels_heartbeat_minutes,
+      pipelineRunId,
     });
     passDurationsMs.pass5 = Date.now() - pass5T;
 
@@ -2180,6 +2230,7 @@ module.exports = {
   computeOptConfigRow,
   flushOptConfigBatch,
   enrichOptimalConfig,
+  recordHeartbeat,
   verdictCascade,
   // D#5 (B3 output-panel remediation) — the honest records_updated aggregate.
   computeAggregateRecordsUpdated,

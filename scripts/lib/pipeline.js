@@ -488,14 +488,14 @@ function progress(label, current, total, startMs) {
 /**
  * Run a pipeline script with standardized lifecycle:
  * 1. Create pool
- * 2. Execute fn(pool) inside try/catch
+ * 2. Execute fn(pool, ctx) inside try/catch
  * 3. Always pool.end() in finally
  * 4. Re-throw on fatal error (lets caller or Node.js unhandled rejection handle exit)
  *
  * Safe to import in long-running processes — does not call process.exit().
  *
  * @param {string} name - Script name for logging (e.g. 'load-permits')
- * @param {(pool: Pool) => Promise<void>} fn - The main pipeline logic
+ * @param {(pool: Pool, ctx: { runId: number | null }) => Promise<void>} fn - The main pipeline logic. `ctx.runId` is THIS step's own `pipeline_runs.id` when run-chain.js spawned it (via STEP_RUN_ID), else `null` (standalone invocation, or no chain-level tracking row) — WF3 cloud-parity FIX 3 remediation, 2026-09-03.
  */
 async function run(name, fn) {
   // WF3 B3-H8 (2026-04-23): reset module-level counters at the top of
@@ -507,9 +507,21 @@ async function run(name, fn) {
   let pool;
   const startMs = Date.now();
   _runStartMs = startMs; // expose to emitSummary for velocity calc
+  // WF3 cloud-parity FIX 3 remediation (2026-09-03) — STEP_RUN_ID is set by
+  // run-chain.js (mirrors CHAIN_RUN_ID's own shape) to this step's own
+  // pipeline_runs.id. A legacy pipeline.run()-based script previously had
+  // no way to address its own row (see enrich-parcels.js's own comment on
+  // scopeRunId, which is a SYNTHETIC value, not this). Absent/blank/
+  // non-numeric → null, never NaN — a step body must never receive a value
+  // it would have to re-validate before using in a WHERE id = $N.
+  const rawStepRunId = process.env.STEP_RUN_ID;
+  const parsedStepRunId = rawStepRunId !== undefined && rawStepRunId.trim() !== ''
+    ? Number(rawStepRunId)
+    : NaN;
+  const ctx = { runId: Number.isFinite(parsedStepRunId) ? parsedStepRunId : null };
   try {
     pool = createPool();
-    await fn(pool);
+    await fn(pool, ctx);
     const elapsed = ((Date.now() - startMs) / 1000).toFixed(1);
     console.log(`\n[${name}] completed in ${elapsed}s`);
   } catch (err) {
