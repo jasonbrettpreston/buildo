@@ -164,3 +164,8 @@
 
 ## A spec's own "red-first by construction" claim decays when the defect it names is fixed by an unrelated commit — re-measure the red before planning on it (LDG-4, 2026-09-03)
 - Spec 122 §6.0/§6.3 both asserted `stepUpstreams(slug)` "lands red-first by construction" on the cost step's `UPSTREAM_SLUGS` array; by the time the WF1 cross-step ledger executed, `a81c6a7c` (D#6) had already fixed the missing-producer half, leaving only a slug-FORM divergence (`'load-parcels'`) as the real, measured red — a materially different defect than the one planned around. Always re-run the red before building on a spec's "this fails" claim, however recently it was written.
+
+## Pilot 8 retrospective one-liners (2026-09-03)
+- **Never have two committers active on the same branch at once** — interleaved commits and stale local `main` diffs are how patch-identity confusion (landed-under-an-amended-hash) happens.
+- **Concurrent full test suites collide on the local DB's temp state** (`restore-db.infra.test.ts`) — an intermittent unnamed hook red under load traces here; re-run once, never blindly retry, and name the failing test with a full log the next time it fires.
+- **Plan-type agents cannot write files** — a plan-mode agent producing an active-task doc or spec edit must hand the content back for a non-plan agent/tool to write; do not assume its output landed on disk.

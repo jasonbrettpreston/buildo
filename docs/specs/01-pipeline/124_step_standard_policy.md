@@ -375,6 +375,22 @@ Neither T4 nor T5 has a migrated descriptor equivalent as of this commit — bot
 | RECORDER | *(pilot 8, run — corrected 2026-09-03, WF3 cloud-parity FIX 1.6)* | `refresh_snapshot` converted (`converted.json`, 8 entries) via `runRecorderPhase` (LG-26/LG-27 library growth). Was mislabeled "pilot 7, not yet run" — pilot 7 was `link_parcels` (LINK archetype). RECORDER's daily-keyed upsert fit `guarded_upsert` with `guard:"none"` (declared, not invented); see the pilot 8 commit history and `docs/reports/2026-08-31-pilot8-refresh-snapshot-assessment.md` for the worked answer. |
 | ENRICHER | *(pilot 9, not yet run — corrected 2026-09-03; was mislabeled "pilot 8, not yet run")* | **Untested, named in advance:** `enrich_parcels` is 2,153 lines, 5 passes, the largest single conversion in the programme; its clock-relative comps-window gate (Spec 122a's own open question Q3 — "no count- or watermark-based gate can ever skip it") has no analogue in any archetype converted so far, and is the last of the eight-archetype coverage table's rows to be proven against real code rather than the aspirational dispatch-map comment in `scripts/lib/step/index.js`. |
 
+## §R-8 Pilot retrospective (after the eighth, 2026-09-03)
+
+| Lesson | Evidence (hash) | Standardisation |
+|---|---|---|
+| Gates authored before measurement block on theory | `32eec17f` | `gate.applies_when` (RS-D-STA) |
+| Checkers widened to fit compute have blind spots | `32eec17f` | known-bad fixtures required at widening (§4.4) |
+| Declaration drift between descriptor and ledger | `3f41f2a5`, `87834ac2` | tier-3 cross-check + snapshot freshness gate — **OPEN** |
+| A descriptor is a fingerprint, not free-edit text | `87834ac2` | recapture procedure (Spec 123 §7 commit 5) |
+| Same-commit spec amendment missed 4× | `f5446fa3` | commit-9 spec-diff-or-N-A line (Spec 123 §7 commit 9) |
+| Hand-maintained trackers rot | `3ca3180b` | R-R extends to plan files and spec counts |
+| stdout ≠ observable, and skip verdicts read as PASS | `00659574` | Rule 10 / Spec 48 checkers — **OPEN** (followups HIGH) |
+| 302/436 tunables admin-invisible | `00659574` | Rule 3 reverse test — **OPEN** (followup MED) |
+| Cloud parity was never a per-step gate | `3ca3180b` | CLOUDPARITY per step |
+| One committer at a time; concurrent full suites collide on the local DB's temp state | session evidence: `restore-db.infra.test.ts` temp-file collisions, hook retries | operating discipline, not yet a built gate |
+| Freeze not claimable at 8; KFM 5 reported per batch | `programme-items.json`: 7 `batching_prereq` items open | programme-backlog (§9 above) |
+
 ## Operating Boundaries
 
 **Target files:** none — this is a policy document with no owned implementation. It is *read by* every

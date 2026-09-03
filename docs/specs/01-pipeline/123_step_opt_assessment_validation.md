@@ -341,11 +341,13 @@ Assessment is DONE for a chain when **all three** hold:
 | 2 | **PH-3** intent ledger — **a human adjudicates** (Spec 121 §12.5) | G3 | 4 h | **skip** unless top-right or fence>0 |
 | 3 | **PH-5** seam map | G5 | 30 m | 15 m |
 | 4 | **PH-6** classification | G6 | 2 h | 30 m |
-| 5 | **Golden master** — 4-tuple: rows ordered by PK · telemetry · ledger+audit · verdict. **Non-determinism inventory declared BEFORE the first diff** | G1′ | 2 h | 1 h |
+| 5 | **Golden master** — 4-tuple: rows ordered by PK · telemetry · ledger+audit · verdict. **Non-determinism inventory declared BEFORE the first diff.** Every descriptor is a fingerprint file; any descriptor edit after capture requires recapture with the named cause (R-C) | G1′ | 2 h | 1 h |
 | 6 | **PH-7** test design + **prove red** | G7 | 4 h | 1 h |
-| 7 | **Descriptor + compute verbatim** — ⚠️ **must be a genuine no-op diff** | G2′ | 1–2 d | 2 h |
+| 7 | **Descriptor + compute verbatim** — ⚠️ **must be a genuine no-op diff**. Any checker widened to accept the compute's read form ships a known-bad fixture proving the RED seed still fires (§4.4; precedent RS-conformance-gap `32eec17f`) | G2′ | 1–2 d | 2 h |
 | 8 | **Peel** — one policy concern per commit: gating → verdict/audit → thresholds/checks | green diff after **every** peel | | |
-| 9 | **Differential + cutover** — the SAME commit runs `node scripts/analysis/step-validate.mjs --step=<slug> --write` (R-R) to generate and commit the report's scorecard block | G8, G4d, G-shape | 3 h | 1 h |
+| 9 | **Differential + cutover** — the SAME commit runs `node scripts/analysis/step-validate.mjs --step=<slug> --write` (R-R) to generate and commit the report's scorecard block. (a) CLOUDPARITY applies to this step as a `cutover_prereq` with `applies_when` — seeds applied and one cloud run recorded, or the item's `applies_when` exempts it; (b) spec diff present in this commit for every governing spec touched, or "N-A" stated in the body (Spec 124 §4.5; four misses closed by `f5446fa3`) | G8, G4d, G-shape | 3 h | 1 h |
+
+Programme gates may not name a step in `blocks` without either a measured pilot of that archetype or an `applies_when` (RS-D-STA, `32eec17f`).
 
 ⚠️ **Step 7 is where Spec 122 is structurally better than Spec 120.** Under a file-relocating runner the "wrap verbatim, no-op diff" phase is a *simulated* intermediate state. Here it is literally the first commit and the no-op is real — old and new are **the same file at two commits, invoked identically by the same `spawnStepChild`**.
 
