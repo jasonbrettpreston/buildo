@@ -1769,10 +1769,25 @@ describe('LDG-4 — descriptor <-> ledger cross-check (SUPERSET + EQUALITY, conv
    *     derivation does not find, because a RECORDER's dependency on them is
    *     an ORDERING/lifecycle wait ("snapshot after these complete"), not a
    *     shared-COLUMN data read — the ledger can only derive the latter.
+   *
+   * **This is NOT a Spec 124 Rule 9 / R-I.2 grandfather.** R-I.2 governs a
+   * BANNED write shape shipped with a dated, SHA-anchored, named-approver
+   * ledger entry (`scripts/steps/_schema/grandfathered.json`, read by
+   * `assertGrandfathered`) — an exception to a policy rule. `KNOWN_GAPS` is a
+   * MEASURED-GAP allowlist: both rows are pre-existing descriptor/ledger
+   * mismatches found by this WF's own Execution Plan Step 5 (commit 5, the
+   * LDG-4 cross-check, `.cursor/wf1_cross_step_ledger_active_task.md`), each
+   * filed in `review_followups.md` (measured 2026-09-03) rather than fixed
+   * here (fixing either changes live `ledgerGatedSkip` staleness-gating
+   * behavior for a converted step, out of scope for a plumbing-only WF).
+   * `toEqual` below locks it EXACT — both a widening (a new undeclared
+   * dependency) and a narrowing (a fix landing) RED, so neither can drift
+   * silently. Defect Ledger (`docs/reports/defect-ledger.md`): `link_parcels`
+   * = `LDG-D1`, `refresh_snapshot` = `LDG-D2`.
    */
   const KNOWN_GAPS: Record<string, { missing: string[]; extra: string[] }> = {
-    link_parcels: { missing: ['compute_centroids', 'link_parcel_addresses'], extra: [] },
-    refresh_snapshot: { missing: [], extra: ['link_massing', 'link_parcels', 'link_wsib'] },
+    link_parcels: { missing: ['compute_centroids', 'link_parcel_addresses'], extra: [] }, // LDG-D1
+    refresh_snapshot: { missing: [], extra: ['link_massing', 'link_parcels', 'link_wsib'] }, // LDG-D2
   };
 
   for (const [name, { descriptor }] of Object.entries(byName)) {

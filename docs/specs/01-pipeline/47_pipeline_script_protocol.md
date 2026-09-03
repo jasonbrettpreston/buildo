@@ -122,6 +122,8 @@ pipeline.run('[script-slug]', async (pool) => {
 });
 ```
 
+> **`pipeline.run(name, fn)`'s second callback argument, `ctx` (2026-09-03, `00659574`).** `fn` is invoked as `fn(pool, ctx)`, not `fn(pool)` — the skeleton above omits `ctx` because most scripts don't need it, not because it isn't passed. `ctx.runId` is THIS step's own `pipeline_runs.id` (an `int`) when `run-chain.js` spawned the process (it mints the per-step row before spawning and passes it via the `STEP_RUN_ID` env var, mirroring `CHAIN_RUN_ID`'s existing shape); `ctx.runId` is `null` on a standalone invocation (no `run-chain.js` parent, no `STEP_RUN_ID`) — parsed with `Number.isFinite`, so an absent/blank/non-numeric env value becomes `null`, never `NaN`. Backward compatible: every pre-existing `pipeline.run((pool) => ...)` callback simply ignores the extra argument, and `scripts/lib/step/index.js`'s own call site (the converted-step runner, §5 of Spec 122) does not consume it either. Intended use: a script with a genuine per-row loop can thread `ctx.runId` through to a heartbeat write against its own `pipeline_runs` row (see `scripts/enrich-parcels.js`'s `recordHeartbeat`, Spec 48 §3.10) — keep it distinct from any script-local synthetic run identifier (e.g. `enrich-parcels.js`'s pre-existing `scopeRunId`, an epoch-seconds value with no relation to `pipeline_runs.id`). Locked both directions in `src/tests/pipeline-sdk.logic.test.ts`.
+
 ---
 
 ## 3. SPEC LINK Header

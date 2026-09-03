@@ -275,6 +275,31 @@ defer point are ordinary `completed` rows and must not be flagged as "missing" b
 `failedStep` may be non-null incidentally (the cancel check runs between steps), so the
 helper reads `wasCancelled` first to avoid misreading a cancellation as a genuine failure.
 
+### 3.10 `records_meta.last_heartbeat_at` / `current_pass` / `rows_processed` — progress heartbeat _(NEW 2026-09-03 — WF3 cloud-parity FIX 3 remediation, `00659574`)_
+
+**Shape:** `records_meta.last_heartbeat_at` (timestamp, `now()`), `records_meta.current_pass`
+(text — the script-local name of the loop currently running, e.g. `'optimal_config'`),
+`records_meta.rows_processed` (int — rows seen by that loop so far this run), written onto
+the STEP's own `pipeline_runs` row (not the chain-level row §3.9 uses).
+
+**Producer:** `scripts/enrich-parcels.js`'s `recordHeartbeat(pool, pipelineRunId, currentPass, rowsProcessedCount)`, called from inside `enrichOptimalConfig`'s per-row stream loop at a configurable interval (`enrich_parcels_heartbeat_minutes`, default via `HEARTBEAT_MINUTES_DEFAULT`). `pipelineRunId` is threaded from `ctx.runId` (Spec 47's `pipeline.run(name, fn)` second argument) — `null` under a standalone invocation, in which case `recordHeartbeat` no-ops. The write is a guarded UPDATE on the SAME `pool` the rest of the pass uses:
+
+```sql
+UPDATE pipeline_runs
+   SET records_meta = COALESCE(records_meta, '{}'::jsonb) || jsonb_build_object(
+         'last_heartbeat_at', now(),
+         'current_pass', $1::text,
+         'rows_processed', $2::int
+       )
+ WHERE id = $3
+```
+
+The `COALESCE(records_meta, '{}'::jsonb)` is deliberate, not decorative: `run-chain.js`'s per-step INSERT sets no `records_meta`, so the column reads `NULL` for a row's entire `running` lifetime — a bare `records_meta || jsonb_build_object(...)` against a `NULL` left operand evaluates to `NULL` in Postgres, silently erasing the column instead of setting it (the same NULL-swallow class `tasks/lessons.md` already documents for `MIN`/`LEAST`). A failed UPDATE is caught and logged via `pipeline.log.warn` naming the run id, never thrown — this satisfies §3.6's "never crash the pass it is instrumenting" posture: a heartbeat write must be able to fail without taking the run down with it.
+
+**Consumer:** none yet. The intended consumer is the admin stats reaper (the same surface that already ages out stranded `running` rows, `stats/route.ts`) — reading `last_heartbeat_at` would let it distinguish a genuinely stalled run from one still making progress before declaring it dead, rather than reaping on elapsed wall-clock time alone. **OPEN** — not built; filed so this producer/consumer contract does not silently drift the way §3.9's did before this table existed.
+
+**Rationale (§3.6).** Before this, a stalled per-row loop was invisible in the pipeline's own records — a real cloud run stalled silently for 3h31m with zero output between "config load" and the timeout kill (`review_followups.md` HIGH) and the only observability was a `pipeline.log.info` line to stdout, gone the moment the log stream rotated or was lost. §3.6 requires observability to live in the pipeline's own records, not stdout; this field makes a stalled pass diagnosable from `pipeline_runs` itself, on the run's OWN row, without fixing the stall (a separate WF3, `wf3_enrich_parcels_cloud_stall`) — it makes the *next* one legible.
+
 </behavior>
 
 ---
