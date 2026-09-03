@@ -289,6 +289,63 @@ export function blockingItemsFor(slug, items) {
   return items.filter((it) => it.gate?.blocks?.includes(slug));
 }
 
+// ---------------------------------------------------------------------------
+// G2 — churn×complexity, PH-2 BATCH artifact (Spec 123 §2/§6, S6b — R-T
+// followup review_followups.md:2994). scripts/analysis/step-churn-complexity.mjs
+// is the ONE generator (run once, deterministic at a recorded `window_end`
+// SHA); this file only CONSUMES its output. Parsed ONCE upstream in main()
+// into `churnFindings` (mirrors `checkCaptures(row,…)` -> `scoreG8(captureFindings)`
+// below), never re-read per row and never read inside scoreG2 itself.
+// ---------------------------------------------------------------------------
+// BUILDO_CHURN_TABLE_PATH is a TEST-ONLY override, same convention as
+// BUILDO_PROGRAMME_ITEMS_PATH above — src/tests/step-conformance.infra.test.ts
+// points this at a fixture/nonexistent file to exercise the loader in a
+// spawned child process without importing this module.
+const CHURN_TABLE_PATH = process.env.BUILDO_CHURN_TABLE_PATH
+  ? path.join(REPO_ROOT, process.env.BUILDO_CHURN_TABLE_PATH)
+  : path.join(REPO_ROOT, 'docs/reports/generated/122-churn-complexity.md');
+
+/**
+ * Pure parse of a rendered `122-churn-complexity.md` table into
+ * `{windowEnd, bySlug: Map<slug, {quadrant}>}`. Split out from disk I/O
+ * (mirrors `validateNotesFences`/`parseDefectLedgerRow` below) so it is
+ * self-testable in-memory. `quadrant` is `null` for an excluded row (e.g.
+ * `reconcile`, marked `excluded: chain-head (A3)`) or a genuinely empty
+ * cell — both must read as "no quadrant" to `scoreG2`, never as a hit.
+ */
+export function parseChurnTable(text) {
+  const windowMatch = /window_end:\s*`([0-9a-f]{40})`/.exec(text);
+  const windowEnd = windowMatch ? windowMatch[1] : null;
+  const bySlug = new Map();
+  for (const raw of text.split('\n')) {
+    const line = raw.trim();
+    if (!line.startsWith('|')) continue;
+    if (/^\|[-\s|:]+\|$/.test(line)) continue; // separator row
+    const cells = splitTableRow(line);
+    const [, slug, , , , , , quadrantRaw] = cells;
+    if (!slug || slug === 'slug') continue; // header row guard
+    const quadrant = quadrantRaw && quadrantRaw.length > 0 && !quadrantRaw.startsWith('excluded') ? quadrantRaw : null;
+    bySlug.set(slug, { quadrant });
+  }
+  return { windowEnd, bySlug };
+}
+
+const EMPTY_CHURN_FINDINGS = { windowEnd: null, bySlug: new Map() };
+
+/**
+ * Disk-reading wrapper over parseChurnTable. A missing table is a legitimate
+ * "not yet generated" state (returns the empty findings, never throws) — G2
+ * falls through to its pre-existing report-driven paths, exactly the
+ * "unhappy path: missing generated table -> not a crash, not a free pass"
+ * requirement. `filePath` defaults to CHURN_TABLE_PATH but takes an explicit
+ * override so main()'s self-test can prove the RED (hidden-file) direction
+ * in-process without spawning a child process or mutating process.env.
+ */
+function loadChurnFindings(filePath = CHURN_TABLE_PATH) {
+  if (!existsSync(filePath)) return EMPTY_CHURN_FINDINGS;
+  return parseChurnTable(readFileSync(filePath, 'utf8'));
+}
+
 /**
  * Generic dot-path lookup (e.g. "recovery.reset") into a plain object — no
  * step names, no special-casing. Returns undefined on any missing segment.
@@ -1004,21 +1061,30 @@ function scoreG1(report) {
  * INCOMPLETE not claimed (vacuously satisfied)` with zero PH-2 evidence —
  * a lie, not a pass.
  *
- * The actual PH-2 BATCH artifact (the churn×complexity plot over all 27
- * manifest steps, run ONCE, not per-pilot — operator ruling 2026-08-25
- * decision 2, `review_followups.md:2994`) is explicitly OUT of this WF's
- * scope (owned by the separate `S6b` build-once item). This fix is
- * therefore scoped to what commit 6's own ledger row calls "cheap": stop
- * the SILENT auto-pass. A report now needs EITHER (a) an actual PH-2/
- * churn×complexity section naming a quadrant (mirrors G0/G1/G3/G5's own
- * `section()` convention — becomes reachable once S6b ships and a report
- * starts citing it), OR (b) an honest ASSESSMENT-INCOMPLETE self-flag with
- * a stated reason (the pre-existing justification mechanism, unchanged —
- * a report IS allowed to say "PH-2 not yet run" and cite why). Absent
- * BOTH, it scores 0 — the true, current state of every report to date,
- * not a fabricated pass.
+ * The PH-2 BATCH artifact (the churn×complexity plot over the 27 domain
+ * steps, run ONCE, not per-pilot — operator ruling 2026-08-25 decision 2,
+ * `review_followups.md:2994`) now EXISTS: `scripts/analysis/step-churn-
+ * complexity.mjs` generates `docs/reports/generated/122-churn-complexity.md`
+ * (S6b, PH-2 churn×complexity batch WF2). `scoreG2` derives from it FIRST —
+ * a generated, drift-checked fact beats a hand-written report section (the
+ * R-R rule: generated, never hand-written). Fall-through order:
+ *   (1) the generated table names THIS slug's quadrant (real quadrant, not
+ *       the `excluded: chain-head (A3)` sentinel) -> 1, cites the artifact.
+ *   (2) an actual PH-2/churn×complexity section in the report itself names
+ *       a quadrant (mirrors G0/G1/G3/G5's own `section()` convention;
+ *       unchanged from before this artifact existed) -> 1.
+ *   (3) an honest ASSESSMENT-INCOMPLETE self-flag with a stated reason (the
+ *       pre-existing justification mechanism, unchanged) -> 1.
+ *   (4) none of the above -> 0 — the true state, never a fabricated pass.
+ * `churnFindings` is parsed ONCE upstream (main(), mirrors captureFindings/
+ * checkCaptures) — this function does no I/O of its own (FOLD 1).
  */
-function scoreG2(report) {
+function scoreG2(row, report, churnFindings) {
+  const churnRow = churnFindings.bySlug.get(row.slug);
+  if (churnRow && churnRow.quadrant) {
+    const sha7 = churnFindings.windowEnd ? churnFindings.windowEnd.slice(0, 7) : '(unknown)';
+    return { max: 1, score: 1, detail: `122-churn-complexity.md quadrant=${churnRow.quadrant} window=${sha7}` };
+  }
   const phSection = section(report, /##\s*.{0,10}\d*\.?\s*PH-2[^\n]*\n/i)
     || section(report, /##\s*.{0,10}\d*\.?\s*(churn.{0,20}complexity)[^\n]*\n/i);
   if (phSection) {
@@ -1027,10 +1093,10 @@ function scoreG2(report) {
   }
   const hasIncomplete = /ASSESSMENT-INCOMPLETE/.test(report);
   if (!hasIncomplete) {
-    return { max: 1, score: 0, detail: 'no PH-2/churn×complexity section found, and ASSESSMENT-INCOMPLETE not claimed either — was a vacuous 1/1 before the R-T fix' };
+    return { max: 1, score: 0, detail: 'no generated churn×complexity row for this slug, no PH-2/churn×complexity section, and ASSESSMENT-INCOMPLETE not claimed either' };
   }
   const stated = /ASSESSMENT-INCOMPLETE[\s\S]{0,300}?(because|why|reason|time-box|saturation)/i.test(report);
-  return { max: 1, score: stated ? 1 : 0, detail: `no PH-2 section; ASSESSMENT-INCOMPLETE claimed instead; why-stated=${stated}` };
+  return { max: 1, score: stated ? 1 : 0, detail: `no generated churn×complexity row; no PH-2 section; ASSESSMENT-INCOMPLETE claimed instead; why-stated=${stated}` };
 }
 function scoreG3(report) {
   const phSection = section(report, /##\s*.{0,10}\d*\.?\s*PH-3[^\n]*\n/i);
@@ -1158,11 +1224,11 @@ function scoreGShape(shape) {
   return { pass, detail: `file-clean=${shape.fileClean} compute-clean=${shape.computeClean}` };
 }
 
-function computeScorecard(row, report, descriptorInfo, shape, captureFindings, invariantResults) {
+function computeScorecard(row, report, descriptorInfo, shape, captureFindings, invariantResults, churnFindings) {
   const g = {
     G0: scoreG0(report),
     G1: scoreG1(report),
-    G2: scoreG2(report),
+    G2: scoreG2(row, report, churnFindings),
     G3: scoreG3(report),
     G4: scoreG4(report),
     G5: scoreG5(report),
@@ -1390,20 +1456,59 @@ function selfTest() {
     throw new Error('self-test FAILED: LEDGER_STATUS_VOCAB did not discriminate CLOSED/PIN vs free-text OPEN');
   }
   // R-T addendum, commit 6 — scoreG2's vacuous-green fix (Spec 123 §6's own
-  // documented defect, `123_step_opt_assessment_validation.md:313`). RED:
-  // `goodReport` (defined above) has NO PH-2/churn×complexity section and
-  // never claims ASSESSMENT-INCOMPLETE either — the OLD code scored this
-  // 1/1 "vacuously satisfied"; the fix must score it 0. GREEN: a report
-  // that DOES carry a PH-2 section naming a quadrant scores 1.
+  // documented defect, `123_step_opt_assessment_validation.md:313`), BYTE-
+  // PRESERVED here with EMPTY_CHURN_FINDINGS (no generated table entry for
+  // this fixture slug, so this exercises exactly the pre-existing report-
+  // driven fallback — Regression Guardian's "old path unchanged" concern).
+  // RED: `goodReport` (defined above) has NO PH-2/churn×complexity section
+  // and never claims ASSESSMENT-INCOMPLETE either — the OLD code scored
+  // this 1/1 "vacuously satisfied"; the fix must score it 0. GREEN: a
+  // report that DOES carry a PH-2 section naming a quadrant scores 1.
+  const g2Row = { slug: '__self_test_g2_fixture_slug__' };
   {
-    const g2NoPh2 = scoreG2(goodReport);
+    const g2NoPh2 = scoreG2(g2Row, goodReport, EMPTY_CHURN_FINDINGS);
     if (g2NoPh2.score !== 0) {
       throw new Error(`self-test FAILED: scoreG2 still vacuously passes a report with no PH-2 section and no ASSESSMENT-INCOMPLETE claim (score=${g2NoPh2.score})`);
     }
     const withPh2 = goodReport + '\n## §4. PH-2 — churn × complexity (S6b batch, commit 6)\nthe top-right quadrant is named here.\n';
-    const g2WithPh2 = scoreG2(withPh2);
+    const g2WithPh2 = scoreG2(g2Row, withPh2, EMPTY_CHURN_FINDINGS);
     if (g2WithPh2.score !== 1) {
       throw new Error(`self-test FAILED: scoreG2 did not award the point for a genuine PH-2 section naming a quadrant (score=${g2WithPh2.score}, detail=${g2WithPh2.detail})`);
+    }
+  }
+  // PH-2 churn×complexity BATCH generator (S6b) — both-directions locks on
+  // the NEW artifact-derived path (FOLD 1: scoreG2 does no I/O of its own;
+  // churnFindings is threaded in). RED: the artifact "hidden" (loadChurnFindings
+  // pointed at a nonexistent path, same test-only-override convention as
+  // BUILDO_PROGRAMME_ITEMS_PATH — here exercised via the function's own
+  // override parameter rather than env/child-process, since this self-test
+  // runs in-process on every invocation) still scores exactly the pre-
+  // existing report-driven result — a hidden/missing table is a fall-through,
+  // never a crash and never a free pass. GREEN: a fixture table containing
+  // the slug with a real quadrant scores 1 and the detail cites the artifact.
+  // FABRICATED direction: a fixture row whose quadrant cell is genuinely
+  // empty must NOT score 1 off the table's mere existence.
+  {
+    const hidden = loadChurnFindings(path.join(REPO_ROOT, '__nonexistent_churn_table_for_self_test__.md'));
+    const g2Hidden = scoreG2(g2Row, badReport, hidden);
+    const g2HiddenBaseline = scoreG2(g2Row, badReport, EMPTY_CHURN_FINDINGS);
+    if (g2Hidden.score !== 0 || g2Hidden.score !== g2HiddenBaseline.score) {
+      throw new Error(`self-test FAILED: scoreG2 with a hidden/missing churn table must fall through exactly like EMPTY_CHURN_FINDINGS (got score=${g2Hidden.score}, baseline=${g2HiddenBaseline.score})`);
+    }
+    const fixtureTable = [
+      '| slug | file | commits | lines_changed | LOC | branches | quadrant |',
+      '|---|---|---:|---:|---:|---:|---|',
+      '| pilot4_g2_fixture | `scripts/pilot4-g2-fixture.js` | 10 | 100 | 50 | 20 | top-right |',
+      '| pilot4_g2_empty | `scripts/pilot4-g2-empty.js` | 10 | 100 | 50 | 20 |  |',
+    ].join('\n');
+    const findings = parseChurnTable(`window_end: \`${'a'.repeat(40)}\`\n\n${fixtureTable}\n`);
+    const g2Hit = scoreG2({ slug: 'pilot4_g2_fixture' }, badReport, findings);
+    if (g2Hit.score !== 1 || !g2Hit.detail.includes('122-churn-complexity.md') || !g2Hit.detail.includes('top-right')) {
+      throw new Error(`self-test FAILED: scoreG2 did not award the point for a real generated-table quadrant hit (${JSON.stringify(g2Hit)})`);
+    }
+    const g2EmptyCell = scoreG2({ slug: 'pilot4_g2_empty' }, badReport, findings);
+    if (g2EmptyCell.score !== 0) {
+      throw new Error(`self-test FAILED: a fixture row with an EMPTY quadrant cell must not score 1 off the table's mere existence (score=${g2EmptyCell.score})`);
     }
   }
   // R-T addendum, commit 6 — defect-ledger.md strict-row-schema parse. RED:
@@ -1447,12 +1552,12 @@ function selfTest() {
   // the block absent — the block itself must never become evidence.
   {
     const contaminated = badReport + '\n## Validation scorecard (generated)\n\n| G2 | 0 | 1 | ASSESSMENT-INCOMPLETE claimed; why-stated=false |\n';
-    const g2Clean = scoreG2(badReport);
-    const g2FromStripped = scoreG2(stripScorecard(contaminated));
+    const g2Clean = scoreG2(g2Row, badReport, EMPTY_CHURN_FINDINGS);
+    const g2FromStripped = scoreG2(g2Row, stripScorecard(contaminated), EMPTY_CHURN_FINDINGS);
     if (g2Clean.score !== g2FromStripped.score) {
       throw new Error('self-test FAILED: stripScorecard did not neutralise a self-contaminating prior block');
     }
-    const g2Unstripped = scoreG2(contaminated);
+    const g2Unstripped = scoreG2(g2Row, contaminated, EMPTY_CHURN_FINDINGS);
     if (g2Unstripped.score === g2Clean.score && g2Unstripped.detail === g2Clean.detail) {
       throw new Error('self-test FAILED: the contamination fixture does not actually contaminate — the RED half of this lock never fires');
     }
@@ -1571,6 +1676,9 @@ async function main() {
   const invariantResults = fastInvariants(targets, converted, pending);
   const shapeBatch = checkShapeBatch(targets);
   const vitestResult = opts.fast ? { ranOk: false, error: '--fast: vitest spawn skipped' } : runVitest();
+  // G2 (FOLD 1) — the generated churn×complexity table is parsed ONCE here,
+  // never per-row and never inside scoreG2 itself.
+  const churnFindings = loadChurnFindings();
 
   let anyHardStop = false;
   const summaries = [];
@@ -1585,7 +1693,7 @@ async function main() {
     }
     const captureFindings = checkCaptures(row, descriptorInfo, computePath, report);
     const p3 = measureP3Footprint(row, descriptorInfo);
-    const sc = computeScorecard(row, report, descriptorInfo, shape, captureFindings, invariantResults);
+    const sc = computeScorecard(row, report, descriptorInfo, shape, captureFindings, invariantResults, churnFindings);
     const matrix = computePolicyMatrix(row, descriptorInfo, shape, vitestResult, p3, report);
     const block = renderScorecard(row, sc, matrix, captureFindings, vitestResult, invariantResults);
 
