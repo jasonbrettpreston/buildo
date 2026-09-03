@@ -2951,6 +2951,13 @@
     "max": 500000,
     "description": "Phase B B2 (R3-B8, Spec 40 §3.1.2 / Spec 47 §8.7) — row-count threshold that trips enrich-parcels.js's clean scope-defer (chain terminalizes deferred_to_full instead of attempting the pass) when a gated pass's PRE-TRANSACTION scope count exceeds it. Default 50,000 = 10-15x measured-normal decision scope (~3,461/14d) and ~9x under measured-escalated full 5-pass citywide runtime (46.5-53 min); sized against the 08-03 CKAN re-export citywide event (485,567 rows) as the designed defer trigger, not the common case. Every run emits scope_count/threshold/ratio audit rows and WARNs at >=80% of this value (code-side, not a var) so the operator sees the cliff coming before a defer fires. Two CONSECUTIVE defers on the same step escalate to a red verdict (Spec 40 §3.1.2 defer-streak rule) requiring a supervised force-full (ENRICH_PARCELS_FORCE_FULL=1). Threshold is a labeled projection until Phase B B7 measures real per-pass durations against it. CONSUMED by scripts/enrich-parcels.js."
   },
+  "enrich_parcels_heartbeat_minutes": {
+    "default": 5,
+    "type": "number",
+    "min": 1,
+    "max": 60,
+    "description": "WF3 cloud-parity FIX 3.2b (2026-09-03) — how often (wall-clock minutes) enrich-parcels.js's optimal-config pass logs a progress heartbeat while streaming parcels (the one genuine per-row loop in the file; the four SQL passes ahead of it are single set-based statements with no JS-side iteration). Filed after a live cloud run (GH run 33324653235, 2026-08-30) stalled for 3h31m with zero log output between config load and the 300-minute hard-ceiling kill. Minimal, no-behaviour-change instrumentation — does not fix the stall itself (own WF3, wf3_enrich_parcels_cloud_stall), only makes the next one diagnosable. Default 5 = frequent enough to bound a silent gap without spamming logs on the common ~2h full run. CONSUMED by scripts/enrich-parcels.js."
+  },
   "assert_schema_type_sample_rows": {
     "default": 20,
     "type": "number",

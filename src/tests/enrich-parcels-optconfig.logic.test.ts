@@ -243,3 +243,48 @@ describe('D#5 — main() wires the aggregate into records_updated (source-scan)'
     expect(src).toContain('records_updated_aggregate_distinct_parcels');
   });
 });
+
+describe('WF3 cloud-parity FIX 3.2b — optimal-config stream progress heartbeat (source-scan)', () => {
+  const src = readFileSync(join(process.cwd(), 'scripts/enrich-parcels.js'), 'utf8');
+  const SEED = JSON.parse(
+    readFileSync(join(process.cwd(), 'scripts/seeds/logic_variables.json'), 'utf8'),
+  ) as Record<string, { default: number; type: string; min?: number; max?: number }>;
+
+  it('seed declares enrich_parcels_heartbeat_minutes (default 5, sane bounds)', () => {
+    const entry = SEED.enrich_parcels_heartbeat_minutes;
+    if (!entry) throw new Error('enrich_parcels_heartbeat_minutes missing from seed JSON');
+    expect(entry.default).toBe(5);
+    expect(entry.type).toBe('number');
+    expect(entry.min).toBeGreaterThan(0);
+    expect(entry.max).toBeGreaterThanOrEqual(entry.default);
+  });
+
+  it('LOGIC_VARS_SCHEMA validates the resolved tunable (same bounds as the seed)', () => {
+    expect(src).toMatch(/enrich_parcels_heartbeat_minutes:\s*z\.coerce\.number\(\)\.finite\(\)\.min\(1\)\.max\(60\)/);
+  });
+
+  it('main() resolves the tunable from logicVars with the HEARTBEAT_MINUTES_DEFAULT fallback', () => {
+    expect(src).toMatch(
+      /enrich_parcels_heartbeat_minutes:\s*Number\(logicVars\?\.enrich_parcels_heartbeat_minutes\s*\?\?\s*HEARTBEAT_MINUTES_DEFAULT\)/,
+    );
+  });
+
+  it('enrichOptimalConfig accepts heartbeatMinutes and main() threads resolvedVars into the call', () => {
+    expect(src).toMatch(/async function enrichOptimalConfig\(pool, \{[^}]*heartbeatMinutes = HEARTBEAT_MINUTES_DEFAULT/);
+    const callIdx = src.indexOf('const ocResult = await enrichOptimalConfig(pool, {');
+    expect(callIdx).toBeGreaterThan(-1);
+    const callBlock = src.slice(callIdx, callIdx + 200);
+    expect(callBlock).toContain('heartbeatMinutes: resolvedVars.enrich_parcels_heartbeat_minutes');
+  });
+
+  it('the heartbeat is logged only when the interval has elapsed — not on every row (would spam logs)', () => {
+    const loopIdx = src.indexOf('for await (const r of pipeline.streamQuery(pool, buildOptConfigSelectSql');
+    expect(loopIdx).toBeGreaterThan(-1);
+    const loopHead = src.slice(loopIdx, loopIdx + 500);
+    expect(loopHead).toContain('now - lastHeartbeatAt >= heartbeatIntervalMs');
+    expect(loopHead).toContain('pipeline.log.info(TAG,');
+    // Elapsed-time arithmetic, never a DB timestamp — Date.now() is the
+    // CLAUDE.md-sanctioned exception for elapsed time (never written to DB).
+    expect(loopHead).toContain('Date.now()');
+  });
+});

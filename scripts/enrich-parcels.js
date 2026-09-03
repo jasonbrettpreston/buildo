@@ -41,6 +41,14 @@ const LOGIC_VARS_SCHEMA = z.object({
   garden_suite_max_gfa_sqm: z.coerce.number().finite().min(10).max(200),
   // B2 (D2′ R3-B8) — pre-transaction defer threshold. Bounds mirror scripts/seeds/logic_variables.json.
   enrich_parcels_defer_threshold_rows: z.coerce.number().finite().min(1000).max(500000),
+  // WF3 cloud-parity FIX 3.2b (2026-09-03) — minimal, no-behaviour-change progress
+  // instrumentation. A cloud run stalled silently for 3h31m with zero log output
+  // (review_followups HIGH, filed this commit); root cause is a SEPARATE WF3
+  // (wf3_enrich_parcels_cloud_stall). This tunable only controls how often the
+  // optimal-config stream (the one genuine per-row loop in this file) emits a
+  // heartbeat line, so the NEXT stall is diagnosable from cloud logs instead of
+  // an unexplained silence. Bounds mirror scripts/seeds/logic_variables.json.
+  enrich_parcels_heartbeat_minutes: z.coerce.number().finite().min(1).max(60),
 }).strict();
 const {
   PRECEDENCE_RULES,
@@ -59,6 +67,9 @@ const PRODUCER_NAME = 'sources:load_zoning';    // Spec 58 producer we consume (
 const TAG = '[enrich-parcels]';
 // B2 (D2′ R3-B8) — default mirrors scripts/seeds/logic_variables.json's enrich_parcels_defer_threshold_rows.
 const DEFER_THRESHOLD_ROWS_DEFAULT = 50000;
+// WF3 cloud-parity FIX 3.2b — default mirrors scripts/seeds/logic_variables.json's
+// enrich_parcels_heartbeat_minutes.
+const HEARTBEAT_MINUTES_DEFAULT = 5;
 const DEFER_STEP_SLUG = 'enrich_parcels'; // manifest slug — the marker names ITS OWN step
 
 // Parcel column -> base-table (zoning_bylaw_areas) source column. These 20 are the
@@ -1490,7 +1501,7 @@ async function consumePendingScope(pool, runId = -1, stats = { errors: 0 }, runA
   return recovered;
 }
 
-async function enrichOptimalConfig(pool, { full = false, scopeWhere = 'TRUE', runId = null } = {}) {
+async function enrichOptimalConfig(pool, { full = false, scopeWhere = 'TRUE', runId = null, heartbeatMinutes = HEARTBEAT_MINUTES_DEFAULT } = {}) {
   // Precondition: the citywide (NULL,'all') backstop row MUST exist — the SELECT's cwa CROSS JOIN is
   // filtered to structure_family='all', so without it the whole pass yields 0 rows → silent no-op
   // (review C1). compute-build-norms writes the 'all' backstop UNCONDITIONALLY (P2).
@@ -1521,7 +1532,24 @@ async function enrichOptimalConfig(pool, { full = false, scopeWhere = 'TRUE', ru
   // optimal_config_enriched_count audit row, unchanged in meaning.
   stats.genuineIds = new Set();
   let batch = [];
+  // WF3 cloud-parity FIX 3.2b (2026-09-03) — minimal progress heartbeat, no
+  // behaviour change. This is the one genuine per-row loop in enrich-parcels.js
+  // (the four SQL passes ahead of it are single set-based statements with no
+  // JS-side iteration to hook a heartbeat into). A cloud run stalled silently
+  // for 3h31m with zero log output between "config load" and the timeout kill
+  // (review_followups HIGH); this does not fix that stall (own WF3,
+  // wf3_enrich_parcels_cloud_stall) — it makes the NEXT one diagnosable from
+  // cloud logs. Wall-clock elapsed time (Date.now()), never written to the DB.
+  let rowsProcessed = 0;
+  let lastHeartbeatAt = Date.now();
+  const heartbeatIntervalMs = heartbeatMinutes * 60 * 1000;
   for await (const r of pipeline.streamQuery(pool, buildOptConfigSelectSql({ full, scopeWhere }), [], { batchSize: 200 })) {
+    rowsProcessed += 1;
+    const now = Date.now();
+    if (now - lastHeartbeatAt >= heartbeatIntervalMs) {
+      pipeline.log.info(TAG, `optimal-config heartbeat: ${rowsProcessed} rows processed, ${Math.round((now - lastHeartbeatAt) / 1000)}s since last heartbeat`);
+      lastHeartbeatAt = now;
+    }
     let row;
     try {
       row = computeOptConfigRow(r);
@@ -1698,6 +1726,7 @@ async function main(pool) {
       garden_suite_min_rear_yard_m: Number(logicVars?.garden_suite_min_rear_yard_m ?? mb.GARDEN_SUITE_MIN_REAR_YARD_M),
       garden_suite_max_gfa_sqm: Number(logicVars?.garden_suite_max_gfa_sqm ?? mb.GARDEN_SUITE_MAX_GFA_SQM),
       enrich_parcels_defer_threshold_rows: Number(logicVars?.enrich_parcels_defer_threshold_rows ?? DEFER_THRESHOLD_ROWS_DEFAULT),
+      enrich_parcels_heartbeat_minutes: Number(logicVars?.enrich_parcels_heartbeat_minutes ?? HEARTBEAT_MINUTES_DEFAULT),
     };
     const vparse = LOGIC_VARS_SCHEMA.safeParse(resolvedVars);
     if (!vparse.success) {
@@ -1860,7 +1889,11 @@ async function main(pool) {
     // pass (consumes the per-row engine optimal-config.js) and reads the just-committed max-build
     // envelope on a separate connection. Cross-chain read of neighbourhood_build_norms (permits chain).
     const pass5T = Date.now();
-    const ocResult = await enrichOptimalConfig(pool, { full, runId: scopeRunId });
+    const ocResult = await enrichOptimalConfig(pool, {
+      full,
+      runId: scopeRunId,
+      heartbeatMinutes: resolvedVars.enrich_parcels_heartbeat_minutes,
+    });
     passDurationsMs.pass5 = Date.now() - pass5T;
 
     const totalParcels = await pool
