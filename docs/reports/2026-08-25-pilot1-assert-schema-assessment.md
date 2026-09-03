@@ -424,7 +424,7 @@ AFTER this report's own captures were last taken, unrelated to CC-D3 or the prob
 |---|---:|---:|---|
 | G0 | 1 | 1 | boundary-section=true spec-line=true |
 | G1 | 1 | 1 | PH-3 section found=true sha-count=51 |
-| G2 | 1 | 1 | no PH-2 section; ASSESSMENT-INCOMPLETE claimed instead; why-stated=true |
+| G2 | 1 | 1 | 122-churn-complexity.md quadrant=bottom-right window=39313d9 |
 | G3 | 1 | 2 | table rows=31 vocab-hit rows=12 |
 | G4 | 2 | 2 | risk-class row with chance+impact found=true |
 | G5 | 1 | 1 | db=true clock=true network=true argv/env=true |
