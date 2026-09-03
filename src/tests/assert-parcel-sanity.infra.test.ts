@@ -35,16 +35,17 @@ describe('assert-parcel-sanity.js — observer contract', () => {
     expect(src()).toMatch(/\},\s*\{\}\s*\)/); // empty writes object
   });
 
-  it('REUSES the exported runSanity + verdictCascade (no 5th local cascade copy)', () => {
+  it('REUSES the exported runSanity + deriveVerdict (no 5th local cascade copy) — Rule 10, WF2 C1', () => {
     expect(src()).toMatch(/require\(['"]\.\/\.\.\/analysis\/parcel-sanity-audit['"]\)/);
     expect(src()).toMatch(/\brunSanity\b/);
-    expect(src()).toMatch(/\bverdictCascade\b/);
-    // it must NOT define its own cascade
+    expect(src()).toMatch(/\bderiveVerdict\b/);
+    // it must NOT define its own cascade, nor the retired verdictCascade duplicate
     expect(src()).not.toMatch(/function verdictCascade/);
+    expect(src()).not.toMatch(/\bverdictCascade\b/);
   });
 
-  it('records_meta.audit_table has the row-derived verdict via verdictCascade(rows)', () => {
-    expect(src()).toMatch(/verdict:\s*verdictCascade\(rows\)/);
+  it('records_meta.audit_table has the row-derived verdict via deriveVerdict(rows) (the single verdict cascade — Rule 10)', () => {
+    expect(src()).toMatch(/verdict:\s*deriveVerdict\(rows\)/);
   });
 });
 
@@ -60,20 +61,26 @@ describe('scripts/lib/step/plausibility.js — data-driven gate mapping (Spec 48
     expect(p).not.toMatch(/status[^\n]*\bcheck\.id ===/);
   });
 
-  it('parcel-sanity-audit.js does NOT define statusFor/verdictCascade locally — it re-imports from plausibility.js (Fold A-4d: extract once, both sides import)', () => {
+  it('parcel-sanity-audit.js does NOT define statusFor locally, and no longer carries the retired verdictCascade duplicate — it re-imports statusFor from plausibility.js and deriveVerdict from verdict.js (Fold A-4d + Rule 10)', () => {
     const a = audit();
     expect(a).not.toMatch(/function statusFor/);
     expect(a).not.toMatch(/function verdictCascade/);
     expect(a).toMatch(/require\(['"]\.\.\/lib\/step\/plausibility['"]\)/);
-    expect(a).toMatch(/\{\s*statusFor,\s*verdictCascade,\s*runDistributionScan\s*\}/);
+    expect(a).toMatch(/\{\s*statusFor,\s*runDistributionScan\s*\}/);
+    expect(a).toMatch(/require\(['"]\.\.\/lib\/step\/verdict['"]\)/);
+    expect(a).toMatch(/\{\s*deriveVerdict\s*\}/);
   });
 
-  it('exports runSanity + verdictCascade + statusFor (parcel-sanity-audit.js re-exports the imported names)', () => {
-    expect(audit()).toMatch(/module\.exports = \{[^}]*runSanity[^}]*verdictCascade[^}]*\}/);
+  it('exports runSanity + deriveVerdict + statusFor (parcel-sanity-audit.js re-exports the imported names)', () => {
+    expect(audit()).toMatch(/module\.exports = \{[^}]*runSanity[^}]*deriveVerdict[^}]*\}/);
   });
 
-  it('plausibility.js exports statusFor, verdictCascade, runDistributionScan for reuse (Fold B-7)', () => {
-    expect(plausibility()).toMatch(/module\.exports = \{[^}]*statusFor[^}]*verdictCascade[^}]*runDistributionScan[^}]*\}/);
+  it('plausibility.js exports statusFor, runDistributionScan for reuse (Fold B-7) — no verdictCascade EXPORT (Rule 10 retired it; the identifier may still appear in the file\'s own retirement-explanation prose)', () => {
+    const p = plausibility();
+    expect(p).toMatch(/module\.exports = \{[^}]*statusFor[^}]*runDistributionScan[^}]*\}/);
+    expect(p).not.toMatch(/function verdictCascade/);
+    const exportsBlock = p.slice(p.indexOf('module.exports = {'));
+    expect(exportsBlock).not.toMatch(/\bverdictCascade\b/);
   });
 
   it('the gated (zero-baseline) invariants carry gate:true', () => {
@@ -93,9 +100,9 @@ describe('scripts/lib/step/plausibility.js — data-driven gate mapping (Spec 48
   });
 });
 
-describe('parcel-sanity-audit.js — statusFor / verdictCascade behaviour (unit)', () => {
+describe('parcel-sanity-audit.js — statusFor / deriveVerdict behaviour (unit)', () => {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const { statusFor, verdictCascade } = require('../../scripts/analysis/parcel-sanity-audit.js');
+  const { statusFor, deriveVerdict } = require('../../scripts/analysis/parcel-sanity-audit.js');
 
   it('a gated check that goes non-zero → FAIL', () => {
     expect(statusFor({ gate: true, sev: 'HIGH' }, 1)).toBe('FAIL');
@@ -115,10 +122,10 @@ describe('parcel-sanity-audit.js — statusFor / verdictCascade behaviour (unit)
     // pop undefined (population unknown, unit-altitude call) keeps the historic mapping
     expect(statusFor({ gate: true, sev: 'HIGH' }, 0)).toBe('PASS');
   });
-  it('verdictCascade is row-derived: FAIL > WARN > PASS', () => {
-    expect(verdictCascade([{ status: 'PASS' }, { status: 'WARN' }, { status: 'FAIL' }])).toBe('FAIL');
-    expect(verdictCascade([{ status: 'PASS' }, { status: 'WARN' }, { status: 'INFO' }])).toBe('WARN');
-    expect(verdictCascade([{ status: 'PASS' }, { status: 'INFO' }])).toBe('PASS');
+  it('deriveVerdict (the single verdict cascade, Rule 10) is row-derived: FAIL > WARN > PASS', () => {
+    expect(deriveVerdict([{ status: 'PASS' }, { status: 'WARN' }, { status: 'FAIL' }])).toBe('FAIL');
+    expect(deriveVerdict([{ status: 'PASS' }, { status: 'WARN' }, { status: 'INFO' }])).toBe('WARN');
+    expect(deriveVerdict([{ status: 'PASS' }, { status: 'INFO' }])).toBe('PASS');
   });
 });
 

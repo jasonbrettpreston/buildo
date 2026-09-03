@@ -3,12 +3,16 @@
  *
  * EXTRACTED VERBATIM from `scripts/analysis/parcel-sanity-audit.js` (R-T addendum,
  * Spec 124 §2 Rule 13, WF2 "The Step Validator, Data-First", commit 2). That file
- * now re-imports `statusFor`/`verdictCascade` from here rather than defining them
- * locally — one copy of the gate-mapping policy, not a second one forked for the
- * new `invariants[]`/`plausibility[]` categories (Fold A-4d: "extract once, both
- * sides import" — the same discipline used for `statusFor`/`verdictCascade` is
- * applied here to `parcel-sanity-audit.js`'s DIST_FIELDS distribution scan too,
- * Fold B-7).
+ * now re-imports `statusFor` from here rather than defining it locally — one copy
+ * of the gate-mapping policy, not a second one forked for the new
+ * `invariants[]`/`plausibility[]` categories (Fold A-4d: "extract once, both sides
+ * import" — the same discipline used for `statusFor` is applied here to
+ * `parcel-sanity-audit.js`'s DIST_FIELDS distribution scan too, Fold B-7).
+ *
+ * `verdictCascade` — a second, hand-rolled duplicate of `scripts/lib/step/verdict.js`'s
+ * `deriveVerdict` that used to live here — was RETIRED at Rule 10's WF2 (Spec 124
+ * §2 Rule 10, "verdict is row-derived from ONE place"). Its one consumer
+ * (`scripts/quality/assert-parcel-sanity.js`) now imports `deriveVerdict` directly.
  *
  * `runDistributionScan` is exported so a future `plausibility[].kind:"distribution"`
  * row type (Fold B-7, wiring decided at commit 7) can call it directly instead of
@@ -33,12 +37,13 @@ function statusFor(check, viol, pop) {
   return check.gate && viol > 0 ? 'FAIL' : check.sev === 'INFO' ? 'INFO' : viol > 0 ? 'WARN' : 'PASS';
 }
 
-// Row-derived verdict cascade (Spec 48 §3.6) — co-located with the sanity policy so the pipeline step
-// imports it rather than adding a 5th copy of the generic helper.
-function verdictCascade(rows) {
-  return rows.some((r) => r.status === 'FAIL') ? 'FAIL'
-    : rows.some((r) => r.status === 'WARN') ? 'WARN' : 'PASS';
-}
+// Rule 10 (Spec 124 §2, WF2 "Rules 10/11/12 mechanical checkers", C1) — the
+// verdictCascade duplicate that lived here (a second, hand-rolled copy of
+// verdict.js's deriveVerdict) is RETIRED. Its only consumer,
+// scripts/quality/assert-parcel-sanity.js, now imports deriveVerdict directly
+// from scripts/lib/step/verdict.js — same rows-in shape (`{status}[]`), same
+// PASS/WARN/FAIL-else-PASS semantics, proven behaviour-identical in
+// src/tests/step-conformance.infra.test.ts before the cutover.
 
 // buildDistributionQuery — the exact SQL `parcel-sanity-audit.js`'s inline `distQ` closure built,
 // parameterised on the residential-scope predicate and the zone-class bucket expression (both were
@@ -196,7 +201,6 @@ function runPlausibility(pool, descriptor, opts) {
 
 module.exports = {
   statusFor,
-  verdictCascade,
   buildDistributionQuery,
   runDistributionScan,
   parseDurationMs,

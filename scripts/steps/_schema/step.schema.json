@@ -289,7 +289,7 @@
     },
 
     "plausibility": {
-      "description": "R-T addendum — cross-field/zone-aware declarative-SQL check that MAY span tables this step does not itself write (e.g. link_massing checking parcels.centroid_lat populated by compute_centroids). Reuse target for parsing is parcel-sanity-audit.js's ENGINE (statusFor/verdictCascade, extracted to scripts/lib/step/plausibility.js), never its CHECKS[] entries — those are spliced into one folded query with no per-check id, so a plausibility[] entry structurally cannot reference one 1:1 and carries its own standalone SQL (Fold A-4d: duplication of predicate text is accepted this WF, filed as a nice_to_have for a future per-check-id pass).",
+      "description": "R-T addendum — cross-field/zone-aware declarative-SQL check that MAY span tables this step does not itself write (e.g. link_massing checking parcels.centroid_lat populated by compute_centroids). Reuse target for parsing is parcel-sanity-audit.js's ENGINE (statusFor, extracted to scripts/lib/step/plausibility.js; the verdict cascade itself is scripts/lib/step/verdict.js's deriveVerdict — Rule 10 retired the parcel-sanity-audit-local verdictCascade duplicate), never its CHECKS[] entries — those are spliced into one folded query with no per-check id, so a plausibility[] entry structurally cannot reference one 1:1 and carries its own standalone SQL (Fold A-4d: duplication of predicate text is accepted this WF, filed as a nice_to_have for a future per-check-id pass).",
       "type": "object",
       "additionalProperties": false,
       "required": ["id", "sql", "bound", "severity", "blocking", "why", "when", "source", "frequency", "last_measured"],

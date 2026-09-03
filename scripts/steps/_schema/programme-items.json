@@ -1313,6 +1313,23 @@
         "blocks": []
       },
       "last_reviewed": "2026-08-30"
+    },
+    {
+      "id": "VRD-SKIP",
+      "spec": "124 §2 Rule 10",
+      "title": "a SELF_SKIPPED terminal must not verdict identically to a genuine PASS",
+      "promised": "the verdict is row-derived, never a parallel boolean, and a designed skip carries different evidentiary weight than a real PASS (Spec 48 §3.5/§3.6, Spec 79 §10 C12 hidden-failure-tripwire)",
+      "status": "NOT_STARTED",
+      "evidence": "scripts/lib/step/index.js skipRecordsMeta (:2163-2178) builds an all-INFO audit table and folds it through scripts/lib/step/verdict.js's deriveVerdict, whose SEVERITY_RANK (:22) has no SKIP rank — {PASS:0, INFO:0, WARN:1, FAIL:2} — so the all-INFO skip table reads verdict=PASS, indistinguishable from a real run in step_verdicts. Measured 2026-09-03 by scripts/analysis/step-validate.mjs's checkSelfSkipNeverPass (Rule 10 checker, C1): calls the REAL skipRecordsMeta and asserts verdict != 'PASS' — RED today, pinned KNOWN-DEFECT per Spec 123 §3.1. Filed HIGH in docs/reports/review_followups.md ('A lock-skipped converted step verdicts as PASS', Fold C DeepSeek #2, grounder-confirmed at scripts/lib/step/index.js anchors SELF_SKIPPED/skipRecordsMeta, 2026-09-03).",
+      "owner": {
+        "kind": "followup",
+        "ref": "docs/reports/review_followups.md — 'A lock-skipped converted step verdicts as PASS' (HIGH, 2026-09-03); the follow-on WF3 gives deriveVerdict a distinct SKIP severity rank, row-derived (never a consumer-side if(skipped) bolt-on), and updates every step_verdicts/check-chain-verdict.js consumer that currently treats it as a 2-value (PASS/FAIL) cascade"
+      },
+      "gate": {
+        "kind": "nice_to_have",
+        "blocks": []
+      },
+      "last_reviewed": "2026-09-03"
     }
   ]
 }

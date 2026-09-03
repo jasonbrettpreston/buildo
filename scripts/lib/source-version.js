@@ -105,6 +105,14 @@
 
 const crypto = require('crypto');
 const fs = require('fs');
+// Rule 10 (Spec 124 §2, WF2 "Rules 10/11/12 mechanical checkers") — route this
+// site through the single verdict cascade rather than a hand-rolled duplicate.
+// Behaviour-identical (both read only rows[].status, PASS/INFO otherwise never
+// elevate, WARN < FAIL): src/tests/step-conformance.infra.test.ts pins the two
+// forms equal over the same row fixtures before/after this call, and this
+// commit only ever narrows the RHS of the assignment below, not the shape of
+// the emitted verdict.
+const { deriveVerdict } = require('./step/verdict');
 
 // ---------------------------------------------------------------------------
 // Outcomes (three-way, distinguishable)
@@ -447,7 +455,7 @@ function buildSkipGateRecordsMeta({
     },
     ...carriedRows,
   ];
-  const verdict = rows.some((r) => r.status === 'FAIL') ? 'FAIL' : rows.some((r) => r.status === 'WARN') ? 'WARN' : 'PASS';
+  const verdict = deriveVerdict(rows);
   // last_full_run_at: carried forward from a prior SKIP's own last_full_run_at
   // (this run is skipping too, so the last REAL execution hasn't moved), else
   // the own-last completed run's completed_at (that run WAS the last full run).

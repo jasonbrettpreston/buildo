@@ -69,10 +69,16 @@
  *   Rule 8  (per-target write discipline) -> (i) AJV write_discipline if/then blocks.
  *   Rule 9  (banned write needs ledger) -> (i) assertGrandfathered + assertNoRetraction (V7 no_retraction,
  *                                       validate.js semanticFindings).
- *   Rule 10 (verdict row-derived)   -> enforced by step-library.logic.test.ts, which is OUTSIDE this
- *                                       tool's run scope (spec names step-conformance + golden-fingerprint
- *                                       + src/tests/steps/<slug>/ only) -> PROSE-ONLY from step:validate's
- *                                       own vantage, with that caveat stated explicitly.
+ *   Rule 10 (verdict row-derived)   -> checkVerdictSingleSource(report) — two halves: (a) a static scan
+ *                                       of the closed VERDICT_LIBRARY_CORPUS (scripts/lib/step/*.js +
+ *                                       pipeline.js + source-version.js) for an unsanctioned second
+ *                                       PASS/WARN/FAIL cascade (SANCTIONED_VERDICT_SITES is the declared,
+ *                                       cited exemption list); (b) a SELF_SKIPPED terminal's all-INFO rows
+ *                                       must fold to verdict != PASS — KNOWN-DEFECT today (Spec 123 §3.1
+ *                                       pin, review_followups.md "A lock-skipped converted step verdicts
+ *                                       as PASS"), so this rule prints `enforced-red` on every step, never
+ *                                       `prose-only` and never a false `enforced-green`. Same result for
+ *                                       every step (a corpus-level check, not per-step), by design.
  *   Rule 11 (phase-order re-derive) -> describe /R-B —/i (scoped to slug where present).
  *   Rule 12 (truthful crash posture) -> describe /R-M\/LG-17/i (scoped to slug where present) +
  *                                       describe /R-B reader|LW-D20|LG-19/i (the crashed/stuck-running FULL trigger).
@@ -1247,6 +1253,173 @@ function computeScorecard(row, report, descriptorInfo, shape, captureFindings, i
 }
 
 // ---------------------------------------------------------------------------
+// Rule 10 (Spec 124 §2, WF2 "Rules 10/11/12 mechanical checkers", C1, Fold A
+// item 1, binding) — checkVerdictSingleSource: the audit_table verdict is
+// derived from rows in exactly ONE place, scripts/lib/step/verdict.js's
+// deriveVerdict. Two mechanically-decidable halves:
+//   (a) checkNoSecondDerivation — no OTHER file in the closed library corpus
+//       hand-rolls a duplicate PASS/WARN/FAIL cascade, unless it is EITHER
+//       routed through deriveVerdict OR declared + cited in
+//       SANCTIONED_VERDICT_SITES below (Rule 1 "nothing hidden" — the
+//       exemption is a schema-visible row, not a code comment a scan would
+//       never read).
+//   (b) checkSelfSkipNeverPass — a SELF_SKIPPED terminal's all-INFO audit
+//       rows must fold to a verdict OTHER than PASS. This CANNOT pass today
+//       (SEVERITY_RANK has no SKIP rank — verdict.js:22) and Spec 123 §3.1
+//       requires shipping the checker RED, pinned KNOWN-DEFECT, rather than
+//       silently narrowing scope until it goes green: review_followups.md's
+//       HIGH entry at "A lock-skipped converted step verdicts as PASS"
+//       (filed 2026-09-03, grounder-confirmed) IS this defect, and
+//       programme-items.json's VRD-SKIP item is its owner.
+// ---------------------------------------------------------------------------
+
+// The CLOSED corpus (Fold A item 1, binding): every scripts/lib/step/*.js
+// file plus scripts/lib/pipeline.js and scripts/lib/source-version.js — the
+// library files that see a full `rows` array and could therefore hand-roll a
+// second cascade. scripts/lib/step/verdict.js itself is EXCLUDED: it is the
+// canonical site, not "outside" it. Unconverted step scripts' own hand-rolled
+// cascades (row 4 of the grounding table — enrich-parcels.js,
+// enrich-permits.js, etc.) are OUT OF SCOPE by design (Operating Boundaries).
+const VERDICT_LIBRARY_CORPUS = [
+  'scripts/lib/step/index.js',
+  'scripts/lib/step/acquire.js',
+  'scripts/lib/step/config.js',
+  'scripts/lib/step/ledger.js',
+  'scripts/lib/step/plausibility.js',
+  'scripts/lib/step/seam.js',
+  'scripts/lib/step/staleness.js',
+  'scripts/lib/step/validate.js',
+  'scripts/lib/step/write.js',
+  'scripts/lib/pipeline.js',
+  'scripts/lib/source-version.js',
+];
+
+/**
+ * Declared, cited exceptions — the SINGLE sanctioned re-derivation per site.
+ * Matched by EXACT (whitespace-normalized) text: an edit to the sanctioned
+ * line un-sanctions it until a human re-reviews and updates the snippet —
+ * the sanction is tied to the actual code, not to a filename.
+ */
+const SANCTIONED_VERDICT_SITES = [
+  {
+    file: 'scripts/lib/pipeline.js',
+    anchor: 'emitSummary — escalate-only verdict recompute (pipeline.js:461-469)',
+    reason:
+      'Deliberately asymmetric from deriveVerdict, per Spec 48 §3.5/§3.6: raises the ' +
+      'verdict when an auto-injected sys_*/err_*/dq_*/cov_* health-metric row is more ' +
+      'severe than the caller-supplied verdict, but NEVER downgrades an already-set ' +
+      'verdict, and preserves SKIP/UNKNOWN verbatim. deriveVerdict has no escalate-only ' +
+      'mode and no SKIP/UNKNOWN concept, so this is not behaviour-identical and cannot ' +
+      'be routed through it — it is the one sanctioned second site in the corpus.',
+    snippets: [
+      "rows.some((r) => r.status === 'FAIL') ? 'FAIL' : rows.some((r) => r.status === 'WARN') ? 'WARN'",
+      '.verdict = rowDerived',
+    ],
+  },
+];
+
+// The hand-rolled duplicate-of-deriveVerdict cascade shape, regardless of what
+// it is assigned to (Fold A: "the checker REDs on any other verdict assignment").
+const VERDICT_CASCADE_RE = /rows\.some\(\s*\(?\s*[\w$]+\s*\)?\s*=>\s*[\w.$]+\.status\s*===\s*(['"])FAIL\1\s*\)\s*\?\s*(['"])FAIL\2[\s\S]{0,120}?rows\.some\(\s*\(?\s*[\w$]+\s*\)?\s*=>\s*[\w.$]+\.status\s*===\s*(['"])WARN\3\s*\)\s*\?\s*(['"])WARN\4/g;
+// An assignment/declaration whose LHS is literally `verdict` (a bare variable
+// or object key) or a `.verdict` member — the direct tell of a second
+// derivation SITE, independent of the cascade shape above (e.g. `at.verdict =
+// rowDerived` reads the cascade's own OUTPUT, not the cascade itself).
+const VERDICT_SITE_RE = /((?:(?<![.\w])verdict\s*[:=](?!=))|(?:\.verdict\s*=))\s*([^;,\n]+)/g;
+
+function normalizeVerdictSnippet(s) {
+  return s.replace(/\s+/g, ' ').trim();
+}
+
+/** True iff `rhs` is a routed call, a plain string-literal sentinel, or a bare property-read alias — none of which are a SECOND derivation. */
+function isVerdictSiteExempt(rhs) {
+  const t = rhs.trim().replace(/;\s*$/, '');
+  if (/deriveVerdict\s*\(/.test(t)) return true; // routed — the single source, not duplicated
+  if (/^(['"]).*\1$/.test(t)) return true; // a hardcoded sentinel (e.g. 'UNKNOWN'), not row-derived
+  if (/^[\w.$]+\.verdict$/.test(t)) return true; // `X.verdict` — a READ/alias, not an assignment TO verdict
+  return false;
+}
+
+/**
+ * Every hand-rolled verdict-derivation site in `source` — pure (no I/O), so
+ * `selfTest()` can exercise it in-memory (Spec 121 §12b.6: a checker never
+ * proven to fire is not evidence).
+ * @returns {Array<{line:number, text:string}>}
+ */
+function findVerdictDerivationSites(source) {
+  const hits = [];
+  let m;
+  VERDICT_CASCADE_RE.lastIndex = 0;
+  while ((m = VERDICT_CASCADE_RE.exec(source))) {
+    hits.push({ line: source.slice(0, m.index).split('\n').length, text: normalizeVerdictSnippet(m[0]) });
+  }
+  VERDICT_SITE_RE.lastIndex = 0;
+  while ((m = VERDICT_SITE_RE.exec(source))) {
+    if (isVerdictSiteExempt(m[2])) continue;
+    hits.push({ line: source.slice(0, m.index).split('\n').length, text: normalizeVerdictSnippet(m[0]) });
+  }
+  return hits;
+}
+
+/** (a) — no unlisted second derivation across the closed library corpus. */
+function checkNoSecondDerivation() {
+  const sanctionedByFile = new Map(SANCTIONED_VERDICT_SITES.map((s) => [s.file, s]));
+  const unsanctioned = [];
+  const sanctionedHits = [];
+  for (const relFile of VERDICT_LIBRARY_CORPUS) {
+    const abs = path.join(REPO_ROOT, relFile);
+    if (!existsSync(abs)) continue;
+    const source = readFileSync(abs, 'utf8');
+    for (const hit of findVerdictDerivationSites(source)) {
+      const sanction = sanctionedByFile.get(relFile);
+      const isSanctioned = !!sanction && sanction.snippets.some((s) => normalizeVerdictSnippet(s) === hit.text);
+      if (isSanctioned) sanctionedHits.push({ file: relFile, ...hit });
+      else unsanctioned.push({ file: relFile, ...hit });
+    }
+  }
+  return {
+    pass: unsanctioned.length === 0,
+    detail: unsanctioned.length === 0
+      ? `${VERDICT_LIBRARY_CORPUS.length} corpus file(s) scanned, 0 unsanctioned second derivations, ${sanctionedHits.length} sanctioned hit(s) matched SANCTIONED_VERDICT_SITES`
+      : `unsanctioned second derivation(s): ${unsanctioned.map((u) => `${u.file}:${u.line}`).join(', ')}`,
+    unsanctioned,
+    sanctionedHits,
+  };
+}
+
+/** (b) — a SELF_SKIPPED terminal's audit rows must not fold to PASS. KNOWN-DEFECT: ships RED. */
+function checkSelfSkipNeverPass() {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports -- exercising the real CJS library
+  const stepIndex = require(path.join(REPO_ROOT, 'scripts/lib/step/index.js'));
+  const meta = stepIndex.skipRecordsMeta({ identity: { display_name: '__rule10_self_test__' } }, 'advisory_lock_held_elsewhere');
+  const verdict = meta.audit_table.verdict;
+  return {
+    pass: verdict !== 'PASS',
+    detail: verdict === 'PASS'
+      ? `KNOWN-DEFECT (Spec 123 §3.1 pin): skipRecordsMeta's all-INFO audit table folds to verdict=PASS — ` +
+        `SEVERITY_RANK has no SKIP rank (scripts/lib/step/verdict.js:22). Pinned against ` +
+        `review_followups.md "A lock-skipped converted step verdicts as PASS" (HIGH, 2026-09-03) and ` +
+        `scripts/steps/_schema/programme-items.json "VRD-SKIP" (nice_to_have).`
+      : `SELF_SKIPPED audit table folds to verdict=${verdict} (!= PASS) — the KNOWN-DEFECT is closed; VRD-SKIP should move to BUILT`,
+  };
+}
+
+/** Both halves, folded into the ONE matrix-row status + detail for Rule 10. */
+function checkVerdictSingleSource() {
+  const singleSource = checkNoSecondDerivation();
+  const skipNeverPass = checkSelfSkipNeverPass();
+  // A genuinely UNSANCTIONED second derivation is a real, unpinned bug — that
+  // reds independent of the KNOWN-DEFECT pin below. Otherwise the row is
+  // `enforced-red` by RULING (Spec 123 §3.1): the checker is correct and the
+  // library is not, pinned rather than silently narrowed to pass.
+  const status = !singleSource.pass ? 'enforced-red' : (skipNeverPass.pass ? 'enforced-green' : 'enforced-red');
+  const detail = !singleSource.pass
+    ? `(a) FAILED — ${singleSource.detail}`
+    : `(a) OK — ${singleSource.detail} · (b) ${skipNeverPass.pass ? 'OK' : 'KNOWN-DEFECT (pinned)'} — ${skipNeverPass.detail}`;
+  return { status, detail, singleSource, skipNeverPass };
+}
+
+// ---------------------------------------------------------------------------
 // (vi) POLICY COVERAGE MATRIX — Spec 124 Rules 1-13, per the header map above.
 // ---------------------------------------------------------------------------
 function matchTests(tests, describeRe, scopeToken) {
@@ -1300,7 +1473,10 @@ function computePolicyMatrix(row, descriptorInfo, shape, vitestResult, p3, repor
   push(7, 'Archetype gates categories', descriptorInfo.ok ? 'enforced-green' : 'enforced-red', '');
   push(8, 'Per-target write discipline', descriptorInfo.ok ? 'enforced-green' : 'enforced-red', '');
   push(9, 'Banned write needs ledger (+ V7 no_retraction)', descriptorInfo.ok ? 'enforced-green' : 'enforced-red', '');
-  push(10, 'Verdict row-derived', 'prose-only', 'enforced by step-library.logic.test.ts, outside step:validate\'s (i)(ii)(iii) run scope');
+  {
+    const v10 = checkVerdictSingleSource();
+    push(10, 'Verdict row-derived', v10.status, v10.detail);
+  }
   {
     const m = vitestResult.ranOk ? matchTests(tests, /R-B —/i, slugToken) : [];
     push(11, 'Phase-order re-derive (R-B)', m.length > 0 ? ruleStatus(m) : 'prose-only', m.length === 0 ? 'R-B describe not scoped to this step' : '');
@@ -1590,6 +1766,49 @@ function selfTest() {
   const g4Good = checkOnInvalidFail({ ...g4Descriptor, config: { logic_variables: [{ name: 'x_warn_pct', on_invalid: 'fail' }] } });
   if (g4Bad.pass || !g4Covered.pass || !g4Good.pass) {
     throw new Error(`self-test FAILED: checkOnInvalidFail did not discriminate fixtures (bad=${g4Bad.pass}, covered=${g4Covered.pass}, good=${g4Good.pass})`);
+  }
+  // Rule 10 (Spec 124 §2 Rule 10, WF2 C1) — findVerdictDerivationSites, in-memory
+  // (Spec 121 §12b.6: proven to fire before it is trusted as evidence).
+  // RED: a hand-rolled duplicate cascade, regardless of what it is assigned to.
+  {
+    const badCascade = "function f(rows) {\n  const x = rows.some((r) => r.status === 'FAIL') ? 'FAIL'\n    : rows.some((r) => r.status === 'WARN') ? 'WARN' : 'PASS';\n  return x;\n}\n";
+    const hits = findVerdictDerivationSites(badCascade);
+    if (hits.length === 0) {
+      throw new Error('self-test FAILED: findVerdictDerivationSites did not fire on a hand-rolled duplicate cascade');
+    }
+  }
+  // RED: a direct, non-literal `verdict =`/`.verdict =` assignment not routed through deriveVerdict.
+  {
+    const badAssign = "function f(rows, at) {\n  const verdict = computeSomethingElse(rows);\n  at.verdict = verdict;\n  return at;\n}\n";
+    const hits = findVerdictDerivationSites(badAssign);
+    if (hits.length !== 2) {
+      throw new Error(`self-test FAILED: findVerdictDerivationSites did not catch both the "verdict =" declaration and the ".verdict =" assignment (got ${hits.length})`);
+    }
+  }
+  // GREEN: routed through deriveVerdict — never flagged, however it is named/assigned.
+  {
+    const routed = "function f(rows, at) {\n  const verdict = deriveVerdict(rows);\n  at.verdict = deriveVerdict(rows);\n  return verdict;\n}\n";
+    const hits = findVerdictDerivationSites(routed);
+    if (hits.length !== 0) {
+      throw new Error(`self-test FAILED: findVerdictDerivationSites flagged code that routes through deriveVerdict (${JSON.stringify(hits)})`);
+    }
+  }
+  // GREEN: a hardcoded sentinel literal (e.g. the "no audit_table given at all" default) is not a derivation.
+  // GREEN: a plain `X.verdict` alias/read is not an assignment TO verdict.
+  {
+    const exempt = "function f(payload, built) {\n  const audit = { verdict: 'UNKNOWN', rows: [] };\n  const alias = built.audit_table.verdict;\n  return { audit, alias };\n}\n";
+    const hits = findVerdictDerivationSites(exempt);
+    if (hits.length !== 0) {
+      throw new Error(`self-test FAILED: findVerdictDerivationSites flagged a literal sentinel or a plain property-read alias (${JSON.stringify(hits)})`);
+    }
+  }
+  // checkSelfSkipNeverPass — proven to RED today (the KNOWN-DEFECT this WF pins,
+  // never silently fixed by narrowing the check itself).
+  {
+    const skip = checkSelfSkipNeverPass();
+    if (skip.pass !== false) {
+      throw new Error(`self-test FAILED: checkSelfSkipNeverPass no longer reproduces the KNOWN-DEFECT (pass=${skip.pass}) — if this is a genuine fix, VRD-SKIP must move to BUILT and this self-test assertion must flip WITH it, in the same commit`);
+    }
   }
 }
 

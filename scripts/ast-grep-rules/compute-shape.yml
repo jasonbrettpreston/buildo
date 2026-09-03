@@ -251,3 +251,51 @@ rule:
       regex: '(hasPostGIS|pg_extension|postgis_version)'
     - kind: template_string
       regex: '(hasPostGIS|pg_extension|postgis_version)'
+
+---
+
+id: compute-no-verdict-derivation
+language: JavaScript
+severity: error
+message: |
+  A compute module derives a VERDICT (Spec 124 §2 Rule 10, WF2 "Rules 10/11/12
+  mechanical checkers", C1).
+
+  `scripts/lib/step/verdict.js`'s `deriveVerdict(rows)` is the ONE place a
+  PASS/WARN/FAIL cascade is computed, from rows alone (Spec 48 §3.6/§3.7). A
+  compute reports per-check observations via `ctx.report(id, observation)` —
+  never a `verdict` of its own — that is a SECOND, silently-diverging source
+  of truth for the same PASS/WARN/FAIL decision, the exact "verdict must be
+  row-derived, never a parallel boolean" failure mode Spec 48 §3.5 names.
+
+  A compute has no `rows` of its own to fold (only `ctx.report(id, …)` per
+  check), so the hand-rolled `rows.some(r => r.status === 'FAIL') ? 'FAIL' :
+  …` cascade shape cannot physically occur here — it is banned at the
+  LIBRARY layer instead (`node scripts/analysis/step-validate.mjs`'s
+  `checkVerdictSingleSource`, scoped to `scripts/lib/step/*.js` +
+  `scripts/lib/pipeline.js` + `scripts/lib/source-version.js`, which DO see
+  the full row set). This rule bans only the narrower, compute-local
+  tell: an identifier or object key literally named `verdict`. A per-check
+  WARN/INFO ternary that feeds `ctx.report(id, {violations, detail})` (e.g.
+  `scripts/lib/compute/load-ravines.js`'s `datasetAgeStatus`) is NOT this
+  violation — it never assigns anything named `verdict`, and the actual row
+  `status` is still derived by `scripts/lib/step/verdict.js`'s `checkRow`
+  from the reported `violations`/`value` against the descriptor's declared
+  `checks[].limit`, exactly as Rule 3 requires.
+
+  FIX: report each check's observation and let the library's `checkRow`/
+  `deriveVerdict` (scripts/lib/step/verdict.js) derive the verdict from the
+  emitted rows. A compute has no legitimate reason to assign anything named
+  `verdict`.
+
+  SPEC LINK: docs/specs/01-pipeline/124_step_standard_policy.md §2 Rule 10
+  SPEC LINK: docs/specs/01-pipeline/48_pipeline_observability.md §3.5/§3.6
+files:
+  - 'scripts/lib/compute/**/*.js'
+  - 'scripts/steps/_schema/fixtures/compute/**/*.js'
+rule:
+  any:
+    - kind: identifier
+      regex: '^verdict$'
+    - kind: property_identifier
+      regex: '^verdict$'

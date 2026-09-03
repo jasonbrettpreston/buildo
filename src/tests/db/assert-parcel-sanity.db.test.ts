@@ -9,7 +9,7 @@ import { describe, it, expect, beforeAll, afterEach } from 'vitest';
 import type { Pool } from 'pg';
 import { dbAvailable, getTestPool } from './setup-testcontainer';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const { runSanity, verdictCascade } = require('../../../scripts/analysis/parcel-sanity-audit.js');
+const { runSanity, deriveVerdict } = require('../../../scripts/analysis/parcel-sanity-audit.js');
 
 const sq = (x0: number, y0: number, side: number): string => JSON.stringify({
   type: 'Polygon', coordinates: [[[x0, y0], [x0 + side, y0], [x0 + side, y0 + side], [x0, y0 + side], [x0, y0]]],
@@ -32,7 +32,7 @@ describe.skipIf(!dbAvailable())('assert_parcel_sanity — runSanity FAIL-gate (l
     expect(weld.gate).toBe(true);        // it is a gated invariant
     expect(weld.status).toBe('FAIL');    // non-zero + gate → FAIL
     // …and the step-level verdict is therefore FAIL (a gated check tripped).
-    expect(verdictCascade(results.map((r: { status: string }) => ({ status: r.status })))).toBe('FAIL');
+    expect(deriveVerdict(results.map((r: { status: string }) => ({ status: r.status })))).toBe('FAIL');
   }, 120_000);
 
   // WF3 Phase 1 D-E 1 (R3-M6): a build dimension exceeding its lot dimension (the wrong-axis error

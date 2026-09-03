@@ -18,9 +18,10 @@
  *   compute-no-literal-byte-window — `Range: bytes=0-2048` (§1.2a P4)
  *   compute-no-literal-threshold   — `violations > 3`, a limit the descriptor owns
  *   compute-no-postgis-branch      — `ctx.hasPostGIS` branch (Spec 124 §2 Rule 2, R-W)
+ *   compute-no-verdict-derivation  — `const verdict = … ? 'FAIL' : 'PASS'` (Spec 124 §2 Rule 10, C1)
  *
  * SPEC LINK: docs/specs/01-pipeline/122_pipeline_step_optimization.md §5.5, §1.2a P4
- * SPEC LINK: docs/specs/01-pipeline/124_step_standard_policy.md §2 Rule 2 (R-W)
+ * SPEC LINK: docs/specs/01-pipeline/124_step_standard_policy.md §2 Rule 2 (R-W), Rule 10
  */
 'use strict';
 
@@ -34,11 +35,14 @@ async function bad_check(ctx) {
     headers: { Range: 'bytes=0-2048' },
   });
   const violations = res.ok ? 0 : 1;
+  // compute-no-verdict-derivation (Rule 10) — a compute must never derive a verdict
+  // of its own; that is scripts/lib/step/verdict.js's deriveVerdict's one job.
+  const verdict = violations > 3 ? 'FAIL' : 'PASS';
   if (ctx.hasPostGIS) {
-    ctx.report('bad_check', { violations: violations > 3 ? violations : 0, detail: started });
+    ctx.report('bad_check', { violations: violations > 3 ? violations : 0, detail: `${started}:${verdict}` });
     return;
   }
-  ctx.report('bad_check', { violations: violations > 3 ? violations : 0, detail: started });
+  ctx.report('bad_check', { violations: violations > 3 ? violations : 0, detail: `${started}:${verdict}` });
 }
 
 const CHECKS = { bad_check };

@@ -545,6 +545,11 @@ const COMPUTE_RULE_IDS = [
   // precedents: link_massing A-8, compute_centroids A-1(a), link_parcels A-1
   // (planned). The fixture's `ctx.hasPostGIS` branch is this rule's prove-red.
   'compute-no-postgis-branch',
+  // Spec 124 §2 Rule 10 (WF2 "Rules 10/11/12 mechanical checkers", C1) — a
+  // compute may not assign anything named `verdict`; the cascade is
+  // scripts/lib/step/verdict.js's deriveVerdict's one job. The fixture's
+  // `const verdict = … ? 'FAIL' : 'PASS'` is this rule's prove-red.
+  'compute-no-verdict-derivation',
 ];
 
 interface ComputePair {
@@ -2018,6 +2023,40 @@ describe('R-R / Rule 13 — the generated scorecard block is not stale (vitest-i
       });
     });
   }
+});
+
+// ---------------------------------------------------------------------------
+// Rule 10 (Spec 124 §2 Rule 10, WF2 "Rules 10/11/12 mechanical checkers", C1)
+// — checkVerdictSingleSource, exercised two ways per the file's own testing
+// convention (step-validate.mjs runs its own CLI unconditionally at import
+// time, so it cannot be `import`ed directly — see programme-backlog.infra.
+// test.ts's own note on this): (1) `--self-test-only` spawns the REAL tool,
+// which runs `selfTest()` unconditionally BEFORE anything else — a failing
+// RED/GREEN assertion there throws and exits 2, so a passing spawn IS the
+// both-directions proof (Spec 121 §12b.6); (2) a real `--step` run's
+// stdout is asserted to carry the KNOWN-DEFECT-pinned enforced-red row,
+// end-to-end against the live corpus (not a fixture).
+// ---------------------------------------------------------------------------
+describe('Rule 10 — verdict is row-derived from exactly one place (checkVerdictSingleSource)', () => {
+  const STEP_VALIDATE = path.join(REPO_ROOT, 'scripts/analysis/step-validate.mjs');
+
+  it('`--self-test-only` passes — the RED/GREEN in-memory proofs for findVerdictDerivationSites and checkSelfSkipNeverPass all fire correctly', () => {
+    const run = spawnSync('node', [STEP_VALIDATE, '--self-test-only'], { cwd: REPO_ROOT, encoding: 'utf8', timeout: 30_000 });
+    expect(run.status, `self-test did not pass; stdout=${run.stdout}\nstderr=${run.stderr}`).toBe(0);
+    expect(run.stdout).toContain('self-test PASSED');
+  });
+
+  it('a real `--step` run reports Rule 10 as enforced-red, KNOWN-DEFECT-pinned, with zero unsanctioned second derivations across the live VERDICT_LIBRARY_CORPUS', () => {
+    const run = spawnSync('node', [STEP_VALIDATE, '--step=assert_schema', '--fast'], { cwd: REPO_ROOT, encoding: 'utf8', timeout: 30_000 });
+    expect(run.status, `stdout=${run.stdout}\nstderr=${run.stderr}`).toBe(0);
+    const row = (run.stdout.split('\n').find((l) => /^\|\s*10\s*\|/.test(l.trim())) || '');
+    expect(row, `no Rule 10 matrix row found; stdout=${run.stdout}`).not.toBe('');
+    expect(row).toContain('enforced-red');
+    expect(row).toContain('0 unsanctioned second derivations');
+    expect(row).toContain('KNOWN-DEFECT');
+    expect(row).toContain('review_followups.md');
+    expect(row).toContain('VRD-SKIP');
+  });
 });
 
 // ---------------------------------------------------------------------------

@@ -176,11 +176,17 @@ const DIST_FIELDS = [
   { id: 'lot_size_sqm', expr: 'lot_size_sqm' },
 ];
 
-// R-T addendum (Spec 124 §2 Rule 13, WF2 "The Step Validator, Data-First", commit 2) — statusFor,
-// verdictCascade, and the distribution-scan mechanism are now EXTRACTED to scripts/lib/step/
-// plausibility.js (Fold A-4d: "extract once, both sides import"). This file re-imports rather than
-// defining them locally — one copy of the gate-mapping policy, not a fork per consumer.
-const { statusFor, verdictCascade, runDistributionScan } = require('../lib/step/plausibility');
+// R-T addendum (Spec 124 §2 Rule 13, WF2 "The Step Validator, Data-First", commit 2) — statusFor
+// and the distribution-scan mechanism are now EXTRACTED to scripts/lib/step/plausibility.js
+// (Fold A-4d: "extract once, both sides import"). This file re-imports rather than defining
+// them locally — one copy of the gate-mapping policy, not a fork per consumer.
+//
+// Rule 10 (Spec 124 §2 Rule 10, WF2 "Rules 10/11/12 mechanical checkers", C1) — verdictCascade
+// (a second hand-rolled duplicate of scripts/lib/step/verdict.js's deriveVerdict) previously
+// lived in plausibility.js and was re-exported from here for assert-parcel-sanity.js. Retired:
+// the one consumer now imports deriveVerdict from scripts/lib/step/verdict.js directly.
+const { statusFor, runDistributionScan } = require('../lib/step/plausibility');
+const { deriveVerdict } = require('../lib/step/verdict');
 
 // runSanity(pool) — the OPTIMIZED sweep the pipeline step consumes. ONE scan folds every BOUND/INVARIANT
 // check into `count(*) FILTER (...)` columns (was 29 sequential scans); the 8 per-zone DISTRIBUTION
@@ -253,7 +259,7 @@ async function runAudit() {
   }
 }
 
-module.exports = { CHECKS, DIST_FIELDS, RES, ZC, LOWRISE, MAX_BUILD_MIN_DIMENSION_M, runSanity, statusFor, verdictCascade, makeCliPool };
+module.exports = { CHECKS, DIST_FIELDS, RES, ZC, LOWRISE, MAX_BUILD_MIN_DIMENSION_M, runSanity, statusFor, deriveVerdict, makeCliPool };
 
 if (require.main === module) {
   runAudit().catch((e) => { console.error(e); process.exit(1); });

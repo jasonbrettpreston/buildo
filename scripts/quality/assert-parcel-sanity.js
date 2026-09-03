@@ -19,7 +19,7 @@
 'use strict';
 
 const pipeline = require('./../lib/pipeline');
-const { runSanity, verdictCascade } = require('./../analysis/parcel-sanity-audit');
+const { runSanity, deriveVerdict } = require('./../analysis/parcel-sanity-audit');
 
 // §R2 — lock id = the assert-family slot 107 (102–111 assert family; 107 was the only unused one).
 const ADVISORY_LOCK_ID = 107;
@@ -56,7 +56,7 @@ pipeline.run('assert-parcel-sanity', async (pool) => {
         audit_table: {
           phase: ADVISORY_LOCK_ID,
           name: 'Parcel Sanity Profile',
-          verdict: verdictCascade(rows),
+          verdict: deriveVerdict(rows),
           rows,
         },
       },
