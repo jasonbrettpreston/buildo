@@ -66,7 +66,7 @@ These are **not** chain steps (not in `scripts/manifest.json` / no 6 AM cron). R
 | `backfill-permits-location.js` | Write `permits.location` from lat/lng for ~219K historical rows |
 | `migrate-entities.js` | Migrate legacy entity rows |
 | `seed-pipeline-runs.js` | Seed `pipeline_runs` history |
-| `backfill-smeared-enriched-status.js` | Clear `enriched_status` from rows whose own `status` is not `'Inspection'` (Spec 44 §3). `--confirm` to write; default is a DRY RUN that counts and reports only. **ONE FINAL ROUTINE RUN AT C7 DEPLOY** — run it the NEXT UTC day after C7 lands on `main` (a same-UTC-day re-run fails closed on the dated-backup name collision — expected); **emergency-only thereafter**, since C7 closed all four `permits.status` writer sites (see §3 rule 6). Backs up to a **dated** `_backup_smeared_enriched_status_<YYYYMMDD>` and prints the restore UPDATE. **⚠ TARGET-DB: the script loads no dotenv — a bare `node …` hits the LOCAL Docker DB via `createPool()`'s localhost default (lessons `:83`; burned a session 2026-08-13, two dry runs reported dev's counts as cloud). Cloud invocation: `PG_HOST= node -r dotenv/config scripts/backfill/backfill-smeared-enriched-status.js [--confirm]` — and check the reported scope against the nightly `enriched_status_status_scope_drift` WARN row before confirming.** **⚠ VERIFY-DRIFT-0 PROBE: `SET statement_timeout` explicitly on any ad-hoc pooler session** before counting `enriched_status_status_scope_drift` — an ad-hoc session defaults to a 2-min `statement_timeout` and the drift COUNT can exceed it. |
+| `backfill-smeared-enriched-status.js` | Clear `enriched_status` from rows whose own `status` is not `'Inspection'` (Spec 44 §3). `--confirm` to write; default is a DRY RUN that counts and reports only. **ONE FINAL ROUTINE RUN AT C7 DEPLOY** — run it the NEXT UTC day after C7 lands on `main` (a same-UTC-day re-run fails closed on the dated-backup name collision — expected); **emergency-only thereafter**, since C7 closed all four `permits.status` writer sites (see §3 rule 6). Backs up to a **dated** `_backup_smeared_enriched_status_<YYYYMMDD>` and prints the restore UPDATE. **⚠ TARGET-DB: the script loads no dotenv on its own — a bare `node …` resolves via whatever `.env` on that machine already sets. Before WF3 cloud-parity FIX 2 (2026-09-03), `createPool()` additionally DEFAULTED to the LOCAL Docker DB (`PG_HOST || 'localhost'`) when nothing was set at all, which is what actually burned a session 2026-08-13 (two dry runs reported dev's counts as cloud, lessons `:83`) — `createPool()` now THROWS instead of silently defaulting when neither `SUPABASE_DATABASE_URL` nor the full discrete `PG_HOST`/`PG_PORT`/`PG_DATABASE` triple is set. The residual risk is narrower but real: a dev `.env` that EXPLICITLY sets `PG_HOST=localhost` (not a default — a genuine, present value) still silently wins over `SUPABASE_DATABASE_URL` per createPool's own precedence, so always use the cloud-explicit form below rather than relying on ambient `.env`. Cloud invocation: `PG_HOST= node -r dotenv/config scripts/backfill/backfill-smeared-enriched-status.js [--confirm]` — and check the reported scope against the nightly `enriched_status_status_scope_drift` WARN row before confirming.** **⚠ VERIFY-DRIFT-0 PROBE: `SET statement_timeout` explicitly on any ad-hoc pooler session** before counting `enriched_status_status_scope_drift` — an ad-hoc session defaults to a 2-min `statement_timeout` and the drift COUNT can exceed it. |
 
 ### Root + analysis one-offs
 
@@ -188,8 +188,14 @@ so the scheduled `chain_sources` `load_wsib` step SKIPs (PASS + instructions row
 (Spec 52). Cloud state as of 2026-07-29: 121,116 Class G rows (2026-03-05 snapshot), 0 contacts.
 
 1. Download the Business Classification CSV from wsib.ca (annual).
-2. From a machine with cloud credentials in `.env`:
-   `node scripts/load-wsib.js --file "data/BusinessClassificationDetails(YYYY).csv"`
+2. From a machine with cloud credentials in `.env` (WF3 cloud-parity FIX 2, 2026-09-03:
+   `createPool()` no longer defaults PG_HOST/PG_PORT/PG_DATABASE — an unprefixed
+   invocation now THROWS naming the missing vars rather than silently hitting the
+   local Docker DB; use the explicit cloud-target prefix):
+   ```
+   SUPABASE_CA_CERT_PATH=scripts/certs/supabase-ca.pem PG_HOST= DATABASE_URL=$SUPABASE_DATABASE_URL \
+     node -r dotenv/config scripts/load-wsib.js --file "data/BusinessClassificationDetails(YYYY).csv"
+   ```
    — keeps all of Class G (builders AND trades: G1/G3/G4/G5/G6), computes `is_gta` per-row
    (this also repairs the 2026-03 all-false `is_gta` state that blocks the enrichment queue),
    and never overwrites previously-enriched contact columns (Spec 46 edge case).

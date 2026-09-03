@@ -34,18 +34,15 @@ export const ROOT = process.cwd();
  * An entry here is a promise the exclusion was reasoned about — not a place
  * to park a violation.
  */
-export const FENCED: Record<string, string> = {
-  // Coordinator boundary (WF3 2026-08-23): createPool's default feeds all 27
-  // manifest steps + run-chain + the cloud cron. Changing it is a separate,
-  // measured commit — filed in docs/reports/review_followups.md.
-  'scripts/lib/pipeline.js':
-    "createPool's default — blast radius is every pipeline step; separate measured commit",
-  // The pre-flight checker REPORTS the target; it must mirror whatever
-  // createPool actually does, or it reports a target nothing uses. It moves
-  // WITH pipeline.js, never before it. (It opens no pool of its own.)
-  'scripts/ai-env-check.mjs':
-    'diagnostic that mirrors createPool default by design; moves with pipeline.js',
-};
+// WF3 cloud-parity FIX 2 (2026-09-03): both fences RETIRED. createPool()
+// (scripts/lib/pipeline.js) and its mirrored diagnostic (scripts/ai-env-check.mjs)
+// no longer default PG_HOST/PG_PORT/PG_DATABASE — both now fail-loud/report-
+// loud via resolve-db.js's REQUIRED_PG_VARS triple rule, same measured commit
+// (Fold A, 2026-09-03: 2 real createPool() callers repo-wide, neither newly
+// throws — every manifest step + run-chain.js already sets PG_*/SUPABASE_DATABASE_URL).
+// The census going green with an EMPTY map is the proof; see
+// docs/reports/review_followups.md's now-CLOSED HIGH/MED entries (filed 2026-08-23).
+export const FENCED: Record<string, string> = {};
 
 /**
  * The census patterns, applied to CODE only.

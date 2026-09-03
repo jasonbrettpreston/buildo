@@ -23,6 +23,7 @@
 const { Pool } = require('pg');
 const { resolveAndCountTriple } = require('./vocab-coverage');
 const { resolveSslConfig, stripSslParams } = require('./ssl-config');
+const { REQUIRED_PG_VARS } = require('./resolve-db');
 
 // ---------------------------------------------------------------------------
 // Pool Creation — single standardized pattern (PG_* env vars)
@@ -96,6 +97,11 @@ function withPipelineStatementTimeout(pool) {
   return pool;
 }
 
+/** Is `v` a usable (present, non-blank) env value? Mirrors resolve-db.js's isSet. */
+function isSetEnv(v) {
+  return typeof v === 'string' && v.trim() !== '';
+}
+
 function createPool() {
   if (!process.env.PG_HOST && process.env.SUPABASE_DATABASE_URL) {
     const connectionString = process.env.SUPABASE_DATABASE_URL;
@@ -109,7 +115,29 @@ function createPool() {
       ssl: resolveSslConfig({ connectionString }),
     }));
   }
-  const rawPort = process.env.PG_PORT || '5432';
+
+  // WF3 cloud-parity FIX 2 (review_followups HIGH, filed 2026-08-23; measured
+  // 2026-09-03, Fold A: exactly 2 real invocations of this function repo-wide
+  // — pipeline.run's self-call and run-chain.js — neither newly throws, since
+  // every manifest step and run-chain.js already sets PG_* or
+  // SUPABASE_DATABASE_URL). The old `PG_HOST || 'localhost'` / `PG_PORT ||
+  // '5432'` / `PG_DATABASE || 'buildo'` fallback silently pointed an
+  // unconfigured caller at the PRE-CUTOVER local Docker DB — the exact class
+  // resolve-db.js (Spec 122 §P0) already fixed for the 24 scripts calling
+  // createResolvedPool(). Delegate the SAME fail-loud triple rule here
+  // (REQUIRED_PG_VARS, imported, not re-declared, so the two can never drift):
+  // no silent default, no fallback — an unset var is named in the throw.
+  const missing = REQUIRED_PG_VARS.filter((name) => !isSetEnv(process.env[name]));
+  if (missing.length > 0) {
+    throw new Error(
+      `createPool: refusing to connect — no explicit database target.\n` +
+        `  There is deliberately NO default (see resolve-db.js's header for why).\n` +
+        `  Missing: ${missing.join(', ')}.\n` +
+        `  FIX — set SUPABASE_DATABASE_URL, or ALL of ${REQUIRED_PG_VARS.join(', ')}.`,
+    );
+  }
+
+  const rawPort = process.env.PG_PORT;
   const port = parseInt(rawPort, 10);
   if (!Number.isFinite(port) || port < 1 || port > 65535) {
     throw new Error(
@@ -130,11 +158,11 @@ function createPool() {
       'PG_PASSWORD env var is required in production/staging — refusing to start pipeline pool without it',
     );
   }
-  const host = process.env.PG_HOST || 'localhost';
+  const host = process.env.PG_HOST;
   return withPipelineStatementTimeout(new Pool({
     host,
     port,
-    database: process.env.PG_DATABASE || 'buildo',
+    database: process.env.PG_DATABASE,
     user: process.env.PG_USER || 'postgres',
     // Dev fallback only; the isProd guard above makes this line unreachable
     // when NODE_ENV is production or staging.

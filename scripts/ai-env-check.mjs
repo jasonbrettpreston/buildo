@@ -90,9 +90,41 @@ run('node -v', 'Node.js');
 run('npx --no-install tsc --version', 'TypeScript');
 
 // 2. Database (from env vars, not hardcoded)
-const pgHost = process.env.PG_HOST || 'localhost';
-const pgPort = process.env.PG_PORT || '5432';
-run(`pg_isready -h ${pgHost} -p ${pgPort}`, `PostgreSQL: ${pgHost}:${pgPort}`);
+//
+// WF3 cloud-parity FIX 2 (2026-09-03): createPool() (scripts/lib/pipeline.js)
+// no longer defaults PG_HOST/'localhost' — it throws when PG_HOST/PG_PORT/
+// PG_DATABASE aren't ALL set and SUPABASE_DATABASE_URL is absent. This
+// diagnostic mirrors that SAME resolution by design (review_followups MED,
+// filed 2026-08-23) so it never reports a target createPool() wouldn't
+// actually use. It stays report-only — no pool opens here.
+function resolveCreatePoolTarget() {
+  if (!process.env.PG_HOST && process.env.SUPABASE_DATABASE_URL) {
+    try {
+      const url = new URL(process.env.SUPABASE_DATABASE_URL);
+      return { host: url.hostname, port: url.port || '5432', source: 'SUPABASE_DATABASE_URL' };
+    } catch {
+      return { host: null, port: null, source: 'SUPABASE_DATABASE_URL (unparseable)' };
+    }
+  }
+  const missing = ['PG_HOST', 'PG_PORT', 'PG_DATABASE'].filter((v) => !process.env[v]);
+  if (missing.length > 0) {
+    return { host: null, port: null, source: null, missing };
+  }
+  return { host: process.env.PG_HOST, port: process.env.PG_PORT, source: 'PG_HOST/PG_PORT/PG_DATABASE' };
+}
+
+const createPoolTarget = resolveCreatePoolTarget();
+if (createPoolTarget.host) {
+  run(
+    `pg_isready -h ${createPoolTarget.host} -p ${createPoolTarget.port}`,
+    `PostgreSQL (${createPoolTarget.source}): ${createPoolTarget.host}:${createPoolTarget.port}`,
+  );
+} else {
+  console.log(
+    `✘ PostgreSQL: createPool() would THROW — missing ${(createPoolTarget.missing || []).join(', ') || 'a usable target'}. ` +
+    `Set SUPABASE_DATABASE_URL, or ALL of PG_HOST/PG_PORT/PG_DATABASE.`,
+  );
+}
 
 // 2b. Migration drift — schema_migrations ledger vs the migrations/ folder on disk.
 // `migrate.js --verify` exits non-zero if any migration file is unapplied (MISSING) or its
@@ -136,7 +168,13 @@ try {
 
   const supaUrl = nextResolvedEnv.NEXT_PUBLIC_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
   const planeDbUrl = nextResolvedEnv.DATABASE_URL || process.env.DATABASE_URL;
-  const planePgHost = nextResolvedEnv.PG_HOST || process.env.PG_HOST || 'localhost';
+  // WF3 cloud-parity FIX 2 (2026-09-03): no 'localhost' fallback — createPool()
+  // no longer defaults it, so this diagnostic must not assume loopback either.
+  // A genuinely unset PG_HOST here means "unknown", not "localhost"; the
+  // `dbHost` gate below already skips the mismatch check when it is falsy.
+  const planePgHost = nextResolvedEnv.PG_HOST
+    ? nextResolvedEnv.PG_HOST
+    : (process.env.PG_HOST ? process.env.PG_HOST : null);
   if (supaUrl) {
     const supaHost = hostOf(supaUrl);
     const dbHost = planeDbUrl ? hostOf(planeDbUrl) : planePgHost;

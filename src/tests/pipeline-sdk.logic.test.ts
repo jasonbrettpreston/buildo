@@ -14,49 +14,100 @@ describe('Pipeline SDK', () => {
   // createPool
   // -----------------------------------------------------------------------
   describe('createPool()', () => {
+    // WF3 cloud-parity FIX 2 (2026-09-03): createPool() no longer defaults
+    // PG_HOST/PG_PORT/PG_DATABASE (review_followups HIGH, filed 2026-08-23) —
+    // every test in this describe block that exercises the discrete-PG_*
+    // path must now set all three explicitly, matching resolve-db.js's own
+    // REQUIRED_PG_VARS triple rule this function now delegates to.
+    const withDiscretePgVars = (fn: () => void) => {
+      const env = process.env as Record<string, string | undefined>;
+      const orig = { PG_HOST: env.PG_HOST, PG_PORT: env.PG_PORT, PG_DATABASE: env.PG_DATABASE };
+      try {
+        env.PG_HOST = 'localhost';
+        env.PG_PORT = '5432';
+        env.PG_DATABASE = 'buildo';
+        fn();
+      } finally {
+        for (const [k, v] of Object.entries(orig)) {
+          if (v === undefined) delete env[k];
+          else env[k] = v;
+        }
+      }
+    };
+
     it('returns a Pool instance with PG_* env var defaults', () => {
-      const pool = pipeline.createPool();
-      expect(pool).toBeDefined();
-      expect(typeof pool.query).toBe('function');
-      expect(typeof pool.connect).toBe('function');
-      expect(typeof pool.end).toBe('function');
-      // Clean up the pool immediately
-      pool.end().catch(() => {});
+      withDiscretePgVars(() => {
+        const pool = pipeline.createPool();
+        expect(pool).toBeDefined();
+        expect(typeof pool.query).toBe('function');
+        expect(typeof pool.connect).toBe('function');
+        expect(typeof pool.end).toBe('function');
+        // Clean up the pool immediately
+        pool.end().catch(() => {});
+      });
+    });
+
+    it('throws naming every missing var when PG_HOST/PG_PORT/PG_DATABASE and SUPABASE_DATABASE_URL are all unset', () => {
+      const env = process.env as Record<string, string | undefined>;
+      const orig = {
+        PG_HOST: env.PG_HOST,
+        PG_PORT: env.PG_PORT,
+        PG_DATABASE: env.PG_DATABASE,
+        SUPABASE_DATABASE_URL: env.SUPABASE_DATABASE_URL,
+      };
+      try {
+        delete env.PG_HOST;
+        delete env.PG_PORT;
+        delete env.PG_DATABASE;
+        delete env.SUPABASE_DATABASE_URL;
+        expect(() => pipeline.createPool()).toThrow(
+          /refusing to connect[\s\S]*Missing: PG_HOST, PG_PORT, PG_DATABASE/,
+        );
+      } finally {
+        for (const [k, v] of Object.entries(orig)) {
+          if (v === undefined) delete env[k];
+          else env[k] = v;
+        }
+      }
     });
 
     it('WF3 B3-H5: throws in production/staging when PG_PASSWORD is missing', () => {
-      const env = process.env as Record<string, string | undefined>;
-      const origNodeEnv = env.NODE_ENV;
-      const origPassword = env.PG_PASSWORD;
-      try {
-        env.NODE_ENV = 'production';
-        delete env.PG_PASSWORD;
-        expect(() => pipeline.createPool()).toThrow(/PG_PASSWORD/);
+      withDiscretePgVars(() => {
+        const env = process.env as Record<string, string | undefined>;
+        const origNodeEnv = env.NODE_ENV;
+        const origPassword = env.PG_PASSWORD;
+        try {
+          env.NODE_ENV = 'production';
+          delete env.PG_PASSWORD;
+          expect(() => pipeline.createPool()).toThrow(/PG_PASSWORD/);
 
-        env.NODE_ENV = 'staging';
-        expect(() => pipeline.createPool()).toThrow(/PG_PASSWORD/);
-      } finally {
-        env.NODE_ENV = origNodeEnv;
-        if (origPassword === undefined) delete env.PG_PASSWORD;
-        else env.PG_PASSWORD = origPassword;
-      }
+          env.NODE_ENV = 'staging';
+          expect(() => pipeline.createPool()).toThrow(/PG_PASSWORD/);
+        } finally {
+          env.NODE_ENV = origNodeEnv;
+          if (origPassword === undefined) delete env.PG_PASSWORD;
+          else env.PG_PASSWORD = origPassword;
+        }
+      });
     });
 
     it('WF3 B3-H5: accepts the dev-default password when NODE_ENV is not production/staging', () => {
-      const env = process.env as Record<string, string | undefined>;
-      const origNodeEnv = env.NODE_ENV;
-      const origPassword = env.PG_PASSWORD;
-      try {
-        env.NODE_ENV = 'test';
-        delete env.PG_PASSWORD;
-        const pool = pipeline.createPool();
-        expect(pool).toBeDefined();
-        pool.end().catch(() => {});
-      } finally {
-        env.NODE_ENV = origNodeEnv;
-        if (origPassword === undefined) delete env.PG_PASSWORD;
-        else env.PG_PASSWORD = origPassword;
-      }
+      withDiscretePgVars(() => {
+        const env = process.env as Record<string, string | undefined>;
+        const origNodeEnv = env.NODE_ENV;
+        const origPassword = env.PG_PASSWORD;
+        try {
+          env.NODE_ENV = 'test';
+          delete env.PG_PASSWORD;
+          const pool = pipeline.createPool();
+          expect(pool).toBeDefined();
+          pool.end().catch(() => {});
+        } finally {
+          env.NODE_ENV = origNodeEnv;
+          if (origPassword === undefined) delete env.PG_PASSWORD;
+          else env.PG_PASSWORD = origPassword;
+        }
+      });
     });
 
     it('Spec 113 §3 D14: falls back to SUPABASE_DATABASE_URL when PG_HOST is unset (GH Actions chain workflows)', () => {
@@ -78,30 +129,34 @@ describe('Pipeline SDK', () => {
     });
 
     it('statement_timeout: createPool wraps pool.connect so each new client gets the session SET before checkout (Supavisor drops startup params — verified live)', () => {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      const { Pool } = require('pg');
-      const pool = pipeline.createPool();
-      expect(pool.connect).not.toBe(Pool.prototype.connect);
-      expect(pool.connect.name).toBe('connectWithTimeout');
-      pool.end().catch(() => {});
+      withDiscretePgVars(() => {
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
+        const { Pool } = require('pg');
+        const pool = pipeline.createPool();
+        expect(pool.connect).not.toBe(Pool.prototype.connect);
+        expect(pool.connect.name).toBe('connectWithTimeout');
+        pool.end().catch(() => {});
+      });
     });
 
     it('statement_timeout: throws on a non-numeric or negative PIPELINE_STATEMENT_TIMEOUT_MS', () => {
-      const env = process.env as Record<string, string | undefined>;
-      const orig = env.PIPELINE_STATEMENT_TIMEOUT_MS;
-      try {
-        env.PIPELINE_STATEMENT_TIMEOUT_MS = 'not-a-number';
-        expect(() => pipeline.createPool()).toThrow(/PIPELINE_STATEMENT_TIMEOUT_MS/);
-        env.PIPELINE_STATEMENT_TIMEOUT_MS = '-5';
-        expect(() => pipeline.createPool()).toThrow(/PIPELINE_STATEMENT_TIMEOUT_MS/);
-        env.PIPELINE_STATEMENT_TIMEOUT_MS = '300000';
-        const pool = pipeline.createPool();
-        expect(pool).toBeDefined();
-        pool.end().catch(() => {});
-      } finally {
-        if (orig === undefined) delete env.PIPELINE_STATEMENT_TIMEOUT_MS;
-        else env.PIPELINE_STATEMENT_TIMEOUT_MS = orig;
-      }
+      withDiscretePgVars(() => {
+        const env = process.env as Record<string, string | undefined>;
+        const orig = env.PIPELINE_STATEMENT_TIMEOUT_MS;
+        try {
+          env.PIPELINE_STATEMENT_TIMEOUT_MS = 'not-a-number';
+          expect(() => pipeline.createPool()).toThrow(/PIPELINE_STATEMENT_TIMEOUT_MS/);
+          env.PIPELINE_STATEMENT_TIMEOUT_MS = '-5';
+          expect(() => pipeline.createPool()).toThrow(/PIPELINE_STATEMENT_TIMEOUT_MS/);
+          env.PIPELINE_STATEMENT_TIMEOUT_MS = '300000';
+          const pool = pipeline.createPool();
+          expect(pool).toBeDefined();
+          pool.end().catch(() => {});
+        } finally {
+          if (orig === undefined) delete env.PIPELINE_STATEMENT_TIMEOUT_MS;
+          else env.PIPELINE_STATEMENT_TIMEOUT_MS = orig;
+        }
+      });
     });
 
     it('F1g class: strips sslmode= from the SUPABASE_DATABASE_URL fallback so pg cannot discard the pinned-CA ssl config', () => {
@@ -125,9 +180,13 @@ describe('Pipeline SDK', () => {
     it('Spec 113 §3 D14: discrete PG_HOST wins over SUPABASE_DATABASE_URL — a local dev run must never silently target the cloud DB', () => {
       const env = process.env as Record<string, string | undefined>;
       const origHost = env.PG_HOST;
+      const origPort = env.PG_PORT;
+      const origDatabase = env.PG_DATABASE;
       const origUrl = env.SUPABASE_DATABASE_URL;
       try {
         env.PG_HOST = '127.0.0.1';
+        env.PG_PORT = '5432';
+        env.PG_DATABASE = 'buildo';
         env.SUPABASE_DATABASE_URL = 'postgresql://cloud:pw@db.example-project.supabase.co:5432/postgres';
         const pool = pipeline.createPool();
         expect(pool.options.connectionString).toBeUndefined();
@@ -136,6 +195,10 @@ describe('Pipeline SDK', () => {
       } finally {
         if (origHost === undefined) delete env.PG_HOST;
         else env.PG_HOST = origHost;
+        if (origPort === undefined) delete env.PG_PORT;
+        else env.PG_PORT = origPort;
+        if (origDatabase === undefined) delete env.PG_DATABASE;
+        else env.PG_DATABASE = origDatabase;
         if (origUrl === undefined) delete env.SUPABASE_DATABASE_URL;
         else env.SUPABASE_DATABASE_URL = origUrl;
       }
@@ -1892,6 +1955,13 @@ describe('Pipeline SDK', () => {
   // WF3-08: createPool() env validation (H-W11 class)
   // -----------------------------------------------------------------------
   describe('createPool() env validation', () => {
+    beforeEach(() => {
+      // WF3 cloud-parity FIX 2 (2026-09-03): PG_HOST/PG_DATABASE no longer
+      // default — every test below exercises PG_PORT validation, which only
+      // runs once the REQUIRED_PG_VARS presence check has already passed.
+      vi.stubEnv('PG_HOST', 'localhost');
+      vi.stubEnv('PG_DATABASE', 'buildo');
+    });
     afterEach(() => {
       vi.unstubAllEnvs();
     });
@@ -1911,12 +1981,11 @@ describe('Pipeline SDK', () => {
       expect(() => pipeline.createPool()).toThrow(/PG_PORT must be a valid port number/);
     });
 
-    it('uses default 5432 when PG_PORT is empty string', () => {
+    it('throws naming PG_PORT as missing when PG_PORT is an empty string (WF3 FIX 2 — no longer falls back to 5432)', () => {
       vi.stubEnv('PG_PORT', '');
-      // Empty string → falls back to '5432' via || '5432'
-      const pool = pipeline.createPool();
-      expect(pool).toBeDefined();
-      pool.end().catch(() => {});
+      // Empty string is not a "set" value (isSetEnv) — the REQUIRED_PG_VARS
+      // presence check now catches this before port parsing ever runs.
+      expect(() => pipeline.createPool()).toThrow(/refusing to connect[\s\S]*Missing: PG_PORT/);
     });
 
     it('succeeds when PG_PORT is "5432"', () => {
@@ -2116,6 +2185,12 @@ describe('Pipeline SDK', () => {
   // WF3-08: run() pool safety — createPool() inside try block
   // -----------------------------------------------------------------------
   describe('run() pool safety', () => {
+    beforeEach(() => {
+      // WF3 cloud-parity FIX 2 (2026-09-03): needed so createPool() reaches
+      // its PG_PORT parsing rather than throwing "missing PG_HOST/PG_DATABASE".
+      vi.stubEnv('PG_HOST', 'localhost');
+      vi.stubEnv('PG_DATABASE', 'buildo');
+    });
     afterEach(() => {
       vi.unstubAllEnvs();
     });

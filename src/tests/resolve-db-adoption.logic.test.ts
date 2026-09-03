@@ -148,10 +148,12 @@ describe('the fenced exclusions stay small and stay explained', () => {
     }
   });
 
-  it('the fence list has not grown — 2 entries, both deferred by an explicit ruling', () => {
+  it('the fence list is EMPTY (WF3 cloud-parity FIX 2, 2026-09-03 — both prior fences retired, not grown)', () => {
     // A silently-growing exclusion list is how a census lock dies. Any addition
-    // must be a deliberate edit to this number with a followup filed.
-    expect(Object.keys(FENCED)).toHaveLength(2);
+    // must be a deliberate edit to this number with a followup filed. The two
+    // fences that used to live here (pipeline.js's createPool default,
+    // ai-env-check.mjs's mirror of it) are both fixed now, not exempted.
+    expect(Object.keys(FENCED)).toHaveLength(0);
   });
 });
 
