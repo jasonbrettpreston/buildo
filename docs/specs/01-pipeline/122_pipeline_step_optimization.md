@@ -941,6 +941,8 @@ Five edge classes. **All five are real today; none is declared anywhere a machin
 | **Invalidation** | `outputs.invalidates` | four mechanisms, and **one load-bearing gap** (§5.4) |
 | **Ordering** | consistency against `manifest.chains` | **5 hand-written assertions for 27 steps, one of them wrong** (§5.5) |
 
+✅ **LDG-D1 RULED (WF3 `wf3_link_parcels_declared_reads`, 2026-09-03).** `link_parcels`'s table-edge gap (LDG-4 cross-check, HIGH) split: `link_parcel_addresses` is a genuine table edge, now declared; `compute_centroids`'s shared columns (`parcels.centroid_lat`/`centroid_lng`) are NOT a dependency post-KNN-fix (`b37087f3` removed the read entirely — 0 grep hits) — the ledger only still derives it because `lineage-meta-snapshot.json` is stale (no post-fix run has completed anywhere to refresh it), a snapshot-freshness gap, not a table-edge gap.
+
 ### 6.2 `records_meta` contracts — verified, and they HALT
 
 `[READ 2026-08-23]` The three §9 blocks are **runtime contracts, not documentation**. Each consumer *throws* on violation.

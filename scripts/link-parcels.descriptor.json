@@ -18,7 +18,9 @@
 
   "inputs": {
     "reads": {
-      "steps": [],
+      "steps": [
+        { "step": "link_parcel_addresses", "version_pin": "gte" }
+      ],
       "tables": [
         { "table": "permits", "columns": ["permit_num", "revision_num", "street_num", "street_name", "street_type", "latitude", "longitude", "parcel_linked_at", "geocoded_at"] },
         { "table": "parcels", "columns": ["id", "addr_num_normalized", "street_name_normalized", "street_type_normalized", "geom"] },

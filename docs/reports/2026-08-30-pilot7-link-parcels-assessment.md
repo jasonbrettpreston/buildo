@@ -1843,6 +1843,8 @@ claim now measured rather than only argued.
 > sourced from the plan's own R-F section; every row below either carries that draft forward unchanged or is
 > a genuine new finding from commits 8/8a/8b/9 — nothing fabricated to fill the table.
 
+✅ **LDG-D1 RULED (WF3 `wf3_link_parcels_declared_reads`, 2026-09-03, post-cutover).** The LDG-4 cross-check found `link_parcels`'s `inputs.reads.steps: []` under-declared. Ruling: `link_parcel_addresses` is declared (genuine, load-bearing bridge read); `compute_centroids` is ruled NOT a dependency post-KNN-fix (`b37087f3` deleted the `centroid_lat`/`centroid_lng` read entirely) — the ledger's derivation of it is a stale `lineage-meta-snapshot.json` artifact from a run that predates the fix, not a live table edge.
+
 ### LOW-CONFIDENCE
 
 | Item | Why low-confidence | Carried from |
@@ -2227,7 +2229,7 @@ above).*
 | 11 | Phase-order re-derive (R-B) | prose-only | R-B describe not scoped to this step |
 | 12 | Truthful crash posture (R-M + R-B reader) | prose-only | R-M/R-B-reader describes not scoped to this step |
 | 13 | A step validates itself | enforced-green | this run of step:validate IS the mechanism |
-| P3 | I/O cost adjudication (measured, not gated) | measured | descriptor=49420B notes=8682B checks=15 rows records_meta=3102B (newest post/ capture) |
+| P3 | I/O cost adjudication (measured, not gated) | measured | descriptor=49493B notes=8682B checks=15 rows records_meta=3102B (newest post/ capture) |
 
 **Enforced-green: 10/14**
 

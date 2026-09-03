@@ -1751,19 +1751,31 @@ describe('LDG-4 — descriptor <-> ledger cross-check (SUPERSET + EQUALITY, conv
    * allowlist to be updated, not left stale — same discipline LM-D6/LM-D11
    * exists to enforce for programme-item promises).
    *
-   *   · `link_parcels` (HIGH) — declares `inputs.reads.steps: []` but the
-   *     ledger finds two real column-level producers: `compute_centroids`
-   *     (`parcels.centroid_lat`/`centroid_lng`) and `link_parcel_addresses`
-   *     (`parcel_address_points.parcel_id`/`address_point_id`, a table the
-   *     descriptor's OWN `inputs.reads.tables[]` still declares reading).
-   *     `centroid_lat`/`centroid_lng` is ALSO a casualty of this branch's own
-   *     LP-D12..15 fixes (`58664257`, this session) not yet having a real
-   *     completed run recorded anywhere — checked live against BOTH the local
-   *     DB and cloud (`aws-0-ca-central-1`, run `permits:link_parcels`
-   *     2026-09-02T15:34:50Z) — but `link_parcel_addresses` is CURRENT,
-   *     unrelated to staleness. Declaring either changes live
-   *     `ledgerGatedSkip` staleness-gating behavior for a converted LINK
-   *     step, which this plumbing-only WF must not do unreviewed.
+   *   · `link_parcels` (HIGH, split disposition LDG-D1, WF3
+   *     `wf3_link_parcels_declared_reads`, 2026-09-03) — was `steps: []`
+   *     omitting BOTH ledger-derived producers; now DECLARES
+   *     `link_parcel_addresses` (genuine, load-bearing —
+   *     `scripts/lib/compute/link-parcels.js:120` JOINs
+   *     `parcel_address_points`, Strategy 1a's entire bridge — G5/G12) and
+   *     narrows the remaining gap to `compute_centroids` alone.
+   *     `compute_centroids`'s shared columns (`parcels.centroid_lat`/
+   *     `centroid_lng`) are a STALE-LEDGER artifact, not a live dependency:
+   *     `grep -c "centroid_lat\|centroid_lng" scripts/lib/compute/link-parcels.js`
+   *     is 0 (G3) — Strategy 3 Step 2's KNN fix (`b37087f3`) replaced the
+   *     centroid-nearest join with `pa.geom <-> …` entirely, and
+   *     `lineage-meta-snapshot.json`'s `inchain.link_parcels.reads.parcels`
+   *     still lists those two columns only because no post-fix run has
+   *     completed anywhere to refresh it (G4) — re-verified live this WF
+   *     (2026-09-03): the snapshot still lists them, so this row stays
+   *     narrowed, not deleted, per the plan's own S1 abort condition.
+   *     Routed to the standing snapshot-freshness followup
+   *     (`review_followups.md:17`, filed 2026-09-03) — a completed post-fix
+   *     run + `generate-lineage-docs.mjs --refresh` is what finally drops
+   *     the columns and lets this row go to `[]`. Declaring
+   *     `link_parcel_addresses` changes live `ledgerGatedSkip`
+   *     staleness-gating behavior for a converted LINK step (`version_pin:
+   *     "gte"`, matching all 4 sibling descriptors) — reviewed and landed
+   *     under this WF, not a drive-by.
    *   · `refresh_snapshot` (LOW, documented limitation, not a defect) —
    *     declares 3 converted upstream steps the ledger's column-overlap
    *     derivation does not find, because a RECORDER's dependency on them is
@@ -1786,7 +1798,7 @@ describe('LDG-4 — descriptor <-> ledger cross-check (SUPERSET + EQUALITY, conv
    * = `LDG-D1`, `refresh_snapshot` = `LDG-D2`.
    */
   const KNOWN_GAPS: Record<string, { missing: string[]; extra: string[] }> = {
-    link_parcels: { missing: ['compute_centroids', 'link_parcel_addresses'], extra: [] }, // LDG-D1
+    link_parcels: { missing: ['compute_centroids'], extra: [] }, // LDG-D1 (narrowed, split disposition, 2026-09-03: link_parcel_addresses now declared)
     refresh_snapshot: { missing: [], extra: ['link_massing', 'link_parcels', 'link_wsib'] }, // LDG-D2
   };
 
