@@ -2096,6 +2096,53 @@ describe('Rule 10 — verdict is row-derived from exactly one place (checkVerdic
     expect(row).toContain('review_followups.md');
     expect(row).toContain('VRD-SKIP');
   });
+
+  // WF3 "Rules 10-12 output panel remediation" commit 3 — Rule 10's own
+  // checker (checkNoSecondDerivation, above) has NEVER been proven to fire on
+  // a genuine unsanctioned site (Spec 121 §12b.6) — the assertion above only
+  // proves the live corpus reads CLEAN, which is also what a checker that
+  // never looks would report. `BUILDO_VERDICT_CORPUS_EXTRA` (the same
+  // additive, test-only env-override convention as
+  // `BUILDO_PROGRAMME_ITEMS_PATH`/`BUILDO_CHURN_TABLE_PATH`) fixtures a
+  // committed, never-`require()`'d known-bad file into the SCANNED corpus —
+  // no live corpus file is ever edited. Both directions: the fixture reds
+  // with an exact `file:line` citation; the SAME run's 2 sanctioned hits
+  // (pipeline.js's escalate-only recompute + source-version.js's routed
+  // call) still pass, proving the override is additive, not a replacement
+  // that silently narrows what the real 11-file corpus is scored against.
+  it('BUILDO_VERDICT_CORPUS_EXTRA fixtures an unsanctioned verdict cascade — checkNoSecondDerivation reds it with an exact file:line citation, and the sanctioned sites in the real corpus still pass', () => {
+    const FIXTURE_REL = 'scripts/steps/_schema/fixtures/verdict-corpus/unsanctioned-cascade.js';
+    const run = spawnSync('node', [STEP_VALIDATE, '--step=assert_schema', '--fast'], {
+      cwd: REPO_ROOT,
+      encoding: 'utf8',
+      timeout: 30_000,
+      env: { ...process.env, BUILDO_VERDICT_CORPUS_EXTRA: FIXTURE_REL },
+    });
+    // Status is 0 OR 1 here, never 2 (a crash): once Rule 13's hard-stop
+    // wiring (WF3 commit 4, computeMatrixHardStop) lands, THIS fixture's own
+    // injected unsanctioned cascade is exactly the unpinned enforced-red case
+    // that wiring exists to catch, so a hard-stop exit (1) here is a CORRECT
+    // side effect proving the two mechanisms compose, not a failure of
+    // either — the assertions below check the Rule 10 row's own content,
+    // which is what this test is actually about.
+    expect(run.status, `crashed; stdout=${run.stdout}\nstderr=${run.stderr}`).not.toBe(2);
+    const row = (run.stdout.split('\n').find((l) => /^\|\s*10\s*\|/.test(l.trim())) || '');
+    expect(row, `no Rule 10 matrix row found; stdout=${run.stdout}`).not.toBe('');
+    expect(row).toContain('enforced-red');
+    expect(row).toContain('FAILED');
+    // The exact fixture file + line — a checker that reports SOME violation
+    // but not THIS one, or that reports it without a line number, has not
+    // actually been proven to fire correctly.
+    expect(row).toContain(`${FIXTURE_REL}:31`);
+  });
+
+  it('the SAME sanctioned sites still pass with no override at all — the fixture above is additive, never a narrowing of the real corpus', () => {
+    const run = spawnSync('node', [STEP_VALIDATE, '--step=assert_schema', '--fast'], { cwd: REPO_ROOT, encoding: 'utf8', timeout: 30_000 });
+    expect(run.status, `stdout=${run.stdout}\nstderr=${run.stderr}`).toBe(0);
+    const row = (run.stdout.split('\n').find((l) => /^\|\s*10\s*\|/.test(l.trim())) || '');
+    expect(row).toContain('0 unsanctioned second derivations');
+    expect(row).toContain('2 sanctioned hit(s) matched SANCTIONED_VERDICT_SITES');
+  });
 });
 
 // ---------------------------------------------------------------------------

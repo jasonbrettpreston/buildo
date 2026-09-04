@@ -1303,6 +1303,19 @@ const VERDICT_LIBRARY_CORPUS = [
   'scripts/lib/source-version.js',
 ];
 
+// BUILDO_VERDICT_CORPUS_EXTRA is a TEST-ONLY, ADDITIVE override (same
+// convention as BUILDO_PROGRAMME_ITEMS_PATH/BUILDO_CHURN_TABLE_PATH/
+// BUILDO_COMPUTE_DIR — a repo-relative path resolved once at module load) so
+// `checkNoSecondDerivation`'s own real-CLI conformance lock (Spec 124 §2 Rule
+// 10, WF3 "Rules 10-12 output panel remediation", commit 3) can fixture an
+// UNSANCTIONED second verdict-derivation site into the SCANNED corpus without
+// ever editing a live corpus file. ADDITIVE, not a replacement: the real 11
+// files are always scanned too, so this cannot be used to silently narrow
+// what production reads as clean.
+const VERDICT_CORPUS_EXTRA = process.env.BUILDO_VERDICT_CORPUS_EXTRA
+  ? [process.env.BUILDO_VERDICT_CORPUS_EXTRA]
+  : [];
+
 /**
  * Declared, cited exceptions — the SINGLE sanctioned re-derivation per site.
  * Matched by EXACT (whitespace-normalized) text: an edit to the sanctioned
@@ -1372,10 +1385,11 @@ function findVerdictDerivationSites(source) {
 
 /** (a) — no unlisted second derivation across the closed library corpus. */
 function checkNoSecondDerivation() {
+  const corpus = [...VERDICT_LIBRARY_CORPUS, ...VERDICT_CORPUS_EXTRA];
   const sanctionedByFile = new Map(SANCTIONED_VERDICT_SITES.map((s) => [s.file, s]));
   const unsanctioned = [];
   const sanctionedHits = [];
-  for (const relFile of VERDICT_LIBRARY_CORPUS) {
+  for (const relFile of corpus) {
     const abs = path.join(REPO_ROOT, relFile);
     if (!existsSync(abs)) continue;
     const source = readFileSync(abs, 'utf8');
@@ -1389,7 +1403,7 @@ function checkNoSecondDerivation() {
   return {
     pass: unsanctioned.length === 0,
     detail: unsanctioned.length === 0
-      ? `${VERDICT_LIBRARY_CORPUS.length} corpus file(s) scanned, 0 unsanctioned second derivations, ${sanctionedHits.length} sanctioned hit(s) matched SANCTIONED_VERDICT_SITES`
+      ? `${corpus.length} corpus file(s) scanned, 0 unsanctioned second derivations, ${sanctionedHits.length} sanctioned hit(s) matched SANCTIONED_VERDICT_SITES`
       : `unsanctioned second derivation(s): ${unsanctioned.map((u) => `${u.file}:${u.line}`).join(', ')}`,
     unsanctioned,
     sanctionedHits,
