@@ -77,3 +77,57 @@ confirmed to reject an unconverted slug outright (hard registry-lookup error, no
 recorded so no later commit assumes the tool was ever run against this step before conversion.
 
 ---
+
+## §2. PH-3 — Intent Ledger over the corpus (commit 2, G3)
+
+> 35 commits (`git log --follow`), **20 `fix(` = 57%**, the highest fix density of any pilot to
+> date. Every fence below re-verified via direct `git show <sha> -- scripts/enrich-parcels.js` this
+> commit, not transcribed from the plan's own citation list. Per Spec 124 §4.2's discoverer≠adjudicator
+> split, every disposition is PROPOSED by this pass (agent, 2026-09-04), stands until a human
+> operator ratifies or overturns at commit 7. Closed disposition vocabulary only (Rule 13):
+> `preserved-in-runner | preserved-in-validator | preserved-in-compute | encoded-as-descriptor-field |
+> encoded-as-deviation | knowingly-retired`. `INCIDENTAL` never appears as a disposition (that
+> vocabulary is G6's, not G3's).
+
+| Commit | Date | Construct | Live today? | Proposed disposition | Ground |
+|---|---|---|---|---|---|
+| `1da014c60` (`tasks/lessons.md:28`'s own fence) | 2026-05-31 | The float8-vs-`NUMERIC(5,4)` `IS DISTINCT FROM` idempotency trap: `zoning_dominant_area_share` computed as `MAX(area_share)` (float8) never compared equal to the target's `NUMERIC(5,4)`, so every multi-zone parcel rewrote forever | ✓ current file `:336` `round(MAX(area_share)::numeric, 4)`, byte-identical cast | **preserved-in-compute** — Fold B1 rules this ports VERBATIM; the guard SQL is never regenerated generically from a column list, this exact cast is the fix | `:336` current file; re-blamed `1da014c60` this commit |
+| `7e130bff` | 2026-05-31 | **Origin of the whole zoning-pass architecture** — the set-based join CTE rewrite replacing per-parcel correlated `EXISTS` subqueries (`tasks/lessons.md:33`'s own fence: >9min intractable → ~8min with `CREATE TEMP TABLE … AS` + `LEFT JOIN`) | ✓ current file, `enrichParcels`'s whole temp-table/UPDATE shape (`:222-443`) is this commit's architecture, unbroken since | **preserved-in-compute** — the set-based join CTE pattern is load-bearing (a correctness AND performance fence) and ports verbatim; this is pass 1's entire SQL shape | full-file read; re-blamed this commit |
+| `df7ef272` | 2026-07-02 | **Origin of the comp-family filter Fold C2/EP-D8 measures the boundary of** — `comp_fsi_p50` restricted to new-build comps (`work_type='new_build'`) with `permit_fsi ∈ [0.05, 8]`, plus the comps-ineligibility reset | ✓ current file, `buildCompCandidatesSql` filter (`:1088-1098`) and the `resetIneligible` UPDATE (`:1208-1213`) both trace to this commit's shape | **preserved-in-compute** — the work_type/FSI-range filter and the reset-on-ineligibility pattern are both verbatim-ported. **This fence is the boundary of what the comp-match predicate DOES filter on** — it never added a `structure_family` term, which is exactly EP-D8's gap (Fold C2/G4): the fence explains why EP-D8 is a genuine spec-silent hole, not an oversight of an existing rule | `:1088-1098,1208-1213` current file; re-blamed `df7ef272` this commit |
+| `e8793c8f` | 2026-08-14 | **Origin of the scope-defer mechanism** — `computeDeferScope`, `enrich_parcels_pass3_scope` (mig 240), `enrich_parcels_defer_threshold_rows` — the only LOGGED recovery ledger in the estate (389 lines added, largest single-commit diff to this file) | ✓ current file, `computeDeferScope` `:1777-1847`, the `INSERT INTO enrich_parcels_pass3_scope … ON CONFLICT DO NOTHING` `:2077-2078`, `DEFER_STEP_SLUG` `:91` | **SPLIT disposition** — the SQL/logic is **preserved-in-compute** (verbatim port); the crash-recoverable ledger CONCEPT (rows left inside the txn by design, `:2073-2076`) is **encoded-as-descriptor-field** at commit 7 (`recovery.interrupted` for the pass-3/pass-5 resets per Fold A2, and the pass3_scope table itself named in `outputs.writes[]`) — this is the mechanism Fold A3 says has "no analogue in any converted step" | `:1777-1847,2077-2078,91` current file; re-blamed `e8793c8f` this commit |
+| `a81c6a7c` | 2026-08-16 | **Origin of the honest `records_updated` aggregate** — `computeAggregateRecordsUpdated`, deliberately EXCLUDING pass 4 (comps) from the distinct-union of pass 1/2/3/5 ids | ✓ current file `:1834-1842`, byte-identical shape (`zoningIds, maxBuildIds, existingIds, scenarioIds, optConfigGenuineIds` — no comps ids param at all) | **preserved-in-compute** — this is a §11 counter-scoping decision (Rule 3-B8 lineage) that must survive conversion verbatim; the docblock `:1820-1829` states the exclusion is deliberate, not an omission | `:1834-1842` current file; re-blamed `a81c6a7c` this commit |
+| `fa9e984c2` | 2026-07-29 | Cloud pipeline-infra fence (does NOT touch `enrich-parcels.js` — `git show --stat` confirms 0 file changes here): the Supavisor session-mode pooler drops startup params AND pool-level `statement_timeout`; only a live `SET`/`SET LOCAL` on the established session sticks (`tasks/lessons.md:82`) | N/A to this file directly — governs HOW any pass-timeout mechanism in this file must be wired | **preserved-in-runner** — Fold B2 makes this a hard constraint on Ask 7's pass-5 timeout bound: whatever bound pass 5 gets must be applied via a live `SET LOCAL` on the actual session (not a pool-level param), and the regression lock must assert it via `SHOW statement_timeout` on that session, never by inspecting a config value. This fence is why the SET LOCAL pair at `:2047-2048` is scoped to passes 1-4's shared txn only — pass 5 runs on a separate post-commit connection and inherits none of it (Ask 7's own "cannot survive a slowdown" finding) | `git show --stat fa9e984c2` (0 hits on this file); cross-referenced against `:2047-2048` current file |
+| `c7b20ac9` | 2026-09-03 | **Origin of the passes-1–4 bounded SET LOCAL timeout instrumentation** — "bounded LOUD SET LOCAL statement_timeout/lock_timeout for passes 1-4" (WF3 enrich_parcels stall commit 1) | ✓ current file `:2047-2048` (`SET LOCAL statement_timeout`/`lock_timeout`, only when >0), `enrich_parcels_pass_statement_timeout_minutes`/`enrich_parcels_lock_timeout_ms` in `LOGIC_VARS_SCHEMA` `:60-61` | **preserved-in-runner** — first-of-kind mechanism (zero hits in `scripts/lib/` before this file), moves into `runEnrichPhase`/the library WITH the runner per Fold D3 (LG-28), not into pure compute | `:2047-2048,60-61` current file; re-blamed `c7b20ac9` this commit |
+| `aff1b093` | 2026-09-03 | **Origin of the silence-gated `pg_stat_activity` stall diagnostic** — `captureStallDiagnostic` (WF3 enrich_parcels stall commit 3) | ✓ current file `:1579-1626` (`captureStallDiagnostic`), consumed at `:1593` | **preserved-in-runner** — same class as `c7b20ac9`, moves into the shared library with the runner (Fold D3), whole-step (not pass-5-only, closing the stall WF3's own deferred item) | `:1579-1626,1593` current file; re-blamed `aff1b093` this commit |
+| `00659574` | 2026-09-03 | **Origin of `recordHeartbeat`'s `pipeline_runs` visibility** — "heartbeat observable in pipeline_runs" (WF3 cloud parity FIX 3 remediation) | ✓ current file `:1543-1577` (`recordHeartbeat`), consumed at `:1547` | **preserved-in-runner** — same class, moves into the shared library with the runner (Fold D3); this is also the fence that makes `EP-D5` (pipeline_runs written, undeclared in `emitMeta`) a real gap rather than dead code — the write is genuinely load-bearing (cloud stall diagnosis), just undeclared | `:1543-1577,1547` current file; re-blamed `00659574` this commit |
+
+**Approver for every disposition above:** this pilot's PH-3 pass (agent, 2026-09-04), grounded in
+direct `git show`/`git log -p`/`git blame` re-verification this commit — per Spec 124 §4.2's
+discoverer≠adjudicator split, PROPOSED here, stands until a human operator ratifies or overturns at
+commit 7.
+
+### Defect ledger — opened this commit, formally recorded at commit 4
+
+Per the plan's own Fold G1 ruling (Spec 123 §3.1 pin-then-fix), two DEFECTs found across the fold
+process are carried into PH-6 (commit 4) rather than closed here: **`EP-D1`** (B4.5 — the comp-write
+`UPDATE` at `:1143-1150` has no `IS DISTINCT FROM`, and the `comp_count = 0` zero-fill at `:1228-1229`
+empties the incremental predicate forever after run 1, so the 5-year comps window at `:1114` never
+refreshes except under `--full`) and **`EP-D8`** (Fold C2 — `comp_fsi_p50` has no structure_family/zone
+compatibility invariant; `df7ef272` above is the fence proving this was never in scope, not an
+oversight). Both close per Fold G1's PIN mechanism, not a fix-now disposition.
+
+### G3 verdict
+
+**CLOSED this commit.** 9 fences re-verified by direct `git show`/`git blame` against the live file,
+zero transcribed from the plan. `1da014c60` (lessons.md:28's own numeric-cast fence), `e8793c8f`
+(scope-defer origin), `a81c6a7c` (honest records_updated origin), `df7ef272` (comp-family filter
+boundary — the fence that makes EP-D8 provably a gap, not a regression), `7e130bff` (the whole
+zoning-pass architecture), `fa9e984c2` (the Supavisor SET LOCAL constraint governing Ask 7), and the
+three 2026-09-03 stall commits (`00659574`/`c7b20ac9`/`aff1b093`, the origin of the heartbeat/
+diagnostic/timeout instrumentation this pilot ports into the runner) are all adjudicated with the
+pilot 8 vocabulary — 5 `preserved-in-compute`, 3 `preserved-in-runner`, 1 `SPLIT` (preserved-in-
+compute + encoded-as-descriptor-field). No `knowingly-retired` disposition this commit — unlike
+`refresh_snapshot`'s phase-ternary defect, every fence excavated here is still load-bearing in its
+original form.
+
+---
