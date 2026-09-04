@@ -131,3 +131,106 @@ compute + encoded-as-descriptor-field). No `knowingly-retired` disposition this 
 original form.
 
 ---
+
+## §3. PH-5 — Seam map (commit 3, G5)
+
+> Every place `scripts/enrich-parcels.js` (2,391 lines) touches something outside pure
+> computation — DB, clock, network, argv/env — re-derived by direct read this commit, organized by
+> seam kind per Spec 122 §5.4, mirroring the plan's own 27-statement DML table but by SEAM rather
+> than by statement.
+
+### DB seam
+
+- `pool` — supplied by `pipeline.run('enrich-parcels', main)` (`:2343`), never a local `new Pool()`.
+- **44 `.query(` call sites** (re-confirmed commit 1). Passes 1-4 share ONE `pipeline.withTransaction`
+  wrap (`:2032-2076`) on a single client; pass 5 runs on `pool` directly, AFTER that transaction
+  commits (`:2088-2096`) — the estate's first genuinely two-phase (in-txn + post-commit) step.
+- `assertPreconditions` (`:156-167`) — precondition HALT: PostGIS extension present, GiST index on
+  `parcels.geom` present. Zero `hasPostGIS`/`pg_extension` BRANCHING anywhere else in the file
+  (re-confirmed `grep -c hasPostGIS` = 0) — this becomes `guards.requires` per R-W, a port not a
+  retirement.
+- **Passes 1-4's shared-txn SET LOCAL pair** (`:2047-2048`) — `statement_timeout`/`lock_timeout`,
+  only issued when the resolved logic-var is `>0`; explicitly scoped to THIS transaction only
+  (comment `:2033-2043` names `withPipelineStatementTimeout`'s session-level `SET statement_timeout
+  TO 0` as the UNCHANGED fallback fence for everything else, incl. pass 5's own connection).
+- **Pass 5 is outside BOTH `runPass` and the SET LOCAL pair** — `runPass` wraps only
+  `:2058/:2062/:2067/:2071` (passes 1-4); pass 5's own call (`:2090-2095`) runs on `pool` with no
+  `runPass` wrapper and no statement-timeout bound of its own, inheriting whatever the session
+  already has (today: unbounded). Confirms Ask 7's "this step cannot survive a slowdown" finding —
+  a hang in pass 5 dies unnamed at the platform wall, not at a declared boundary.
+- **The comps-write B4.5 site** (`buildComparableBuildsUpdateSql`, `:1143-1150`) — `UPDATE parcels p
+  SET … FROM (…) agg WHERE p.id = agg.id`, no `IS DISTINCT FROM` anywhere in the statement (`EP-D1`).
+- **`permits` read** — `:1112` `FROM permits pr` inside pass 4's candidate-set materialization; ALSO
+  already declared in the current file's own `emitMeta` reads-map (`:2322`, 7 columns) — the new
+  descriptor's `inputs.reads.tables` gains this as a producer edge, but the read itself is not new.
+- **`pipeline_runs` seam** — `recordHeartbeat` (`:1543-1577`, UPDATE at `:1547`) and
+  `captureStallDiagnostic` (`:1579-1626`, UPDATE at `:1593`) both write `pipeline_runs`, but
+  `emitMeta`'s writes-map (`:2318-2333`) names only `parcels` and `enrich_parcels_pass3_scope` —
+  `pipeline_runs` is genuinely undeclared (`EP-D5`, re-confirmed this commit).
+
+### Clock seam
+
+- **11 `Date.now()` sites** (`:1684,1694,1877,2057×2,2059×2,2063×2,2068×2,2072,2089,2096,2252`) —
+  ALL elapsed-time-only (heartbeat interval checks, `passDurationsMs`, total `duration_ms`), never
+  written to the DB as a timestamp. Legal per `tasks/lessons.md`'s explicit carve-out for
+  elapsed-only `Date.now()`.
+- **5 `pipeline.getDbTimestamp(...)` DB-clock reads** (`:442,896,1493,1740,2050`) — the correct
+  R3.5-compliant pattern for every timestamp actually WRITTEN (`zoning_enriched_at`,
+  `massing_enriched_at`, the scope-hand-off `run_id`/`consumed_at` flips).
+- **The one genuinely clock-relative gate** — `:1114` `AND pr.issued_date >= (now()::date -
+  interval '5 years')`, a server-side `NOW()`-arithmetic literal INSIDE generated SQL. Confirmed the
+  ONLY `NOW() − INTERVAL` construct in the file (`grep -n "now()::date"` = 1 hit). Per Fold G3, this
+  is a MANDATORY seam rewrite at commit 7 (Spec 122 §5.5 bans `Date.now()`/`new Date(`/bare `fetch(`
+  outright as of the injected-seam rule) — `ctx.clock.asOfDate()` threaded through `runEnrichPhase`,
+  not an optional cleanup. Externalizing the as-of-date as a logic variable is a reasonable
+  extension but not literally mandated by Rule 3's closed 7-item category list (Fold G3).
+- **0 `new Date(` anywhere** (re-confirmed).
+
+### Network seam
+
+- **0 `fetch(` calls** — no external network dependency, consistent with every prior converted
+  `sources`/`permits`-chain step.
+
+### argv/env seam
+
+- **1 `process.argv` + 1 `process.env` read, same line** (`:1876`):
+  `process.argv.includes('--full') || process.env.ENRICH_PARCELS_FORCE_FULL === '1'` — matches
+  `manifest.json`'s `chain_args.sources: ["--full"]` / `supports_full: true` / `supports_dry_run:
+  false` exactly. No other argv/env reads anywhere in the file.
+
+### Producer/consumer seams (Finding-class, R-V)
+
+**Producers this step reads from (live, verified this commit):**
+
+| Producer | Read site (this file) | Producer confirmation |
+|---|---|---|
+| `link_massing` (**already converted**, `converted.json`) | `parcel_buildings`, `building_footprints` (emitMeta reads-map, `:1148-1149`; used at pass 2's heritage freeze + pass 3's existing-structure primary-massing join) | `scripts/link-massing.js:8` header: "Link parcels to building footprints and write the parcel_buildings junction"; `scripts/lib/compute/link-massing.js` writes `parcel_buildings`/reads `building_footprints`, re-confirmed this commit |
+| `permits` (chain-level table, not yet a converted step's own write target) | `:1112`, pass 4 candidate-set materialization | table exists, written by `load-permits.js` / classification scripts upstream of this step in the `sources`/`permits` chains |
+| `neighbourhood_build_norms` / `neighbourhood_storey_norms` / `neighbourhoods` | pass 2 (LATERAL) + pass 5 citywide backstop (`:1650` throws if absent) | written by `compute-build-norms.js` (permits chain), not yet a converted step |
+
+**Only ONE live seam against an already-converted step exists today (`link_massing` via
+`parcel_buildings`/`building_footprints`)** — unlike pilot 8's 3 new seams (`link_parcels`/
+`link_massing`/`link_wsib`, tripling R-V's surface), this pilot adds exactly 1, because none of
+this step's other upstream producers (`load-permits.js`, `compute-build-norms.js`) are converted
+yet. `parcels.centroid_lat/lng` (from `compute_centroids`, converted) and `permit_parcels`
+(from `link_parcels`, converted) are **NOT** read anywhere in this file — confirmed by direct read,
+not assumed; no seam there.
+
+**Consumers of this step's writes (downstream, not yet converted):** `compute-build-norms.js`,
+`compute-coa-cost-estimates.js`, `compute-cost-estimates.js`, `compute-parcel-cost-estimates.js`,
+`enrich-permits.js` — all read `max_buildable_gfa_sqm`/`opt_aor_gfa_sqm`/`comparable_builds` (grep
+confirmed, `grep -rl` over `scripts/*.js`). None are converted steps, so no NEW live seam
+declaration is owed in the other direction this pilot.
+
+### Seam-map verdict (G5)
+
+**CLOSED this commit.** DB: 44 query sites characterized by phase (passes 1-4 shared-txn vs. pass 5
+post-commit standalone), the SET LOCAL pair's exact scope (passes 1-4 only, confirmed pass 5's
+exclusion), the B4.5 unguarded write, and the `pipeline_runs` declaration gap (`EP-D5`). Clock: 11
+elapsed-only `Date.now()` sites (legal), 5 DB-clock reads (correct pattern), 1 genuinely
+clock-relative gate (`:1114`, MANDATORY seam rewrite per Fold G3, not optional). Network: absent.
+argv/env: 1 `--full` flag, both spellings on one line, matches manifest declaration. Producer seams:
+1 live edge against an already-converted step (`link_massing`), smaller than pilot 8's 3 because
+this step's other producers are not yet converted — declared honestly rather than inflated.
+
+---
