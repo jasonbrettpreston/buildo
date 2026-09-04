@@ -799,15 +799,33 @@ function registryKeys(): Set<string> {
 }
 const REGISTRY_KEYS = registryKeys();
 
-/** The admin surface: every numeric key GlobalConfigCard actually renders. */
+/**
+ * The admin surface: every numeric key GlobalConfigCard actually renders.
+ *
+ * WF2 "Admin Tunable Coverage" commit 3 (Fold A item 4) — GROUPS stopped
+ * being a hand-authored literal in GlobalConfigCard.tsx (it now imports
+ * src/features/admin-controls/generated/logic-variable-groups.json, itself
+ * generated FROM the seed's declared `admin.group` field). The old regex
+ * parse of `export const GROUPS[\s\S]*?\n\];` in the .tsx source would find
+ * nothing once that array literal is gone — this reads the SAME structural
+ * source GlobalConfigCard.tsx now imports, so the check still measures the
+ * real admin-visible surface, not a stale text pattern.
+ */
+/** Pure parse, exported-by-closure for the RED-fixture test right below. */
+function parseGroupKeys(parsed: unknown): Set<string> {
+  if (!Array.isArray(parsed) || parsed.length === 0) {
+    throw new Error('logic-variable-groups.json parsed empty — GROUPS block not found');
+  }
+  const groups = parsed as Array<{ label: string; keys: string[] }>;
+  return new Set(groups.flatMap((g) => g.keys));
+}
 function groupKeys(): Set<string> {
-  const src = fs.readFileSync(
-    path.join(REPO_ROOT, 'src/features/admin-controls/components/GlobalConfigCard.tsx'),
-    'utf8',
+  const generatedPath = path.join(
+    REPO_ROOT,
+    'src/features/admin-controls/generated/logic-variable-groups.json',
   );
-  const block = /export const GROUPS[\s\S]*?\n\];/.exec(src);
-  if (!block) throw new Error('GROUPS block not found in GlobalConfigCard.tsx');
-  return new Set([...block[0]!.matchAll(/'([a-z][a-z0-9_]*)'/g)].map((m) => m[1]!));
+  const raw = fs.readFileSync(generatedPath, 'utf8');
+  return parseGroupKeys(JSON.parse(raw));
 }
 const GROUP_KEYS = groupKeys();
 
@@ -1078,6 +1096,27 @@ describe('§1.2a P4 — every tunable is externalized (declared ≡ registry ≡
     expect(REGISTRY_KEYS.size, 'the logic-variable registry parsed empty').toBeGreaterThan(300);
     expect(GROUP_KEYS.size, 'GlobalConfigCard GROUPS parsed empty').toBeGreaterThan(50);
     expect([...Object.keys(SEED)].every((k) => REGISTRY_KEYS.has(k)), 'registry ⊉ seed — the doc parse missed rows').toBe(true);
+  });
+
+  // WF2 "Admin Tunable Coverage" commit 3 (Fold A item 4) — groupKeys() was
+  // retargeted from a regex over GlobalConfigCard.tsx's literal GROUPS array
+  // (gone as of this commit — GROUPS is now imported from generated JSON) to
+  // parsing that generated JSON directly. Prove the NEW parse path actually
+  // catches an empty/stale fixture, not just that today's real file happens
+  // to be non-empty (the assertion above alone wouldn't prove the retargeted
+  // parser itself still reddens on a genuine miss).
+  it('RED — an empty generated-groups fixture reddens the vacuous-pass guard (parseGroupKeys)', () => {
+    expect(() => parseGroupKeys([])).toThrow(/parsed empty/);
+    expect(() => parseGroupKeys(null)).toThrow(/parsed empty/);
+    expect(() => parseGroupKeys({})).toThrow(/parsed empty/);
+  });
+
+  it('GREEN — a well-formed generated-groups fixture parses to its key set (parseGroupKeys)', () => {
+    const fixture = [
+      { label: 'Fixture Group', keys: ['fixture_key_a', 'fixture_key_b'] },
+      { label: 'Second Fixture Group', keys: ['fixture_key_c'] },
+    ];
+    expect(parseGroupKeys(fixture)).toEqual(new Set(['fixture_key_a', 'fixture_key_b', 'fixture_key_c']));
   });
 
   it('at least one converted step actually DECLARES a config var (else every check below is vacuous)', () => {

@@ -1,0 +1,244 @@
+[
+  {
+    "label": "Lead Scoring",
+    "keys": [
+      "los_multiplier_bid",
+      "los_multiplier_work",
+      "los_penalty_tracking",
+      "los_penalty_saving",
+      "los_base_cap",
+      "los_base_divisor"
+    ]
+  },
+  {
+    "label": "Scoring Tiers",
+    "keys": [
+      "score_tier_elite",
+      "score_tier_strong",
+      "score_tier_moderate"
+    ]
+  },
+  {
+    "label": "Timing & Staleness",
+    "keys": [
+      "stall_penalty_precon",
+      "stall_penalty_active",
+      "expired_threshold_days",
+      "coa_stall_threshold"
+    ]
+  },
+  {
+    "label": "Forecast & Urgency",
+    "keys": [
+      "urgency_overdue_days",
+      "urgency_upcoming_days",
+      "calibration_default_median_days",
+      "calibration_default_p25_days",
+      "calibration_default_p75_days"
+    ]
+  },
+  {
+    "label": "Inspection & Closure",
+    "keys": [
+      "inspection_stall_days",
+      "stale_closure_abort_pct",
+      "pending_closed_grace_days"
+    ]
+  },
+  {
+    "label": "Pre-Permits",
+    "keys": [
+      "pre_permit_expiry_months",
+      "pre_permit_stale_months"
+    ]
+  },
+  {
+    "label": "Coverage & Quality",
+    "keys": [
+      "urban_coverage_ratio",
+      "suburban_coverage_ratio",
+      "trust_threshold_pct",
+      "calibration_min_sample_size"
+    ]
+  },
+  {
+    "label": "Cost Tuning",
+    "keys": [
+      "liar_gate_threshold",
+      "commercial_shell_multiplier",
+      "placeholder_cost_threshold",
+      "income_premium_tiers"
+    ]
+  },
+  {
+    "label": "CoA Matching",
+    "keys": [
+      "coa_match_conf_high",
+      "coa_match_conf_medium",
+      "snapshot_coa_conf_high",
+      "coa_freshness_warn_days",
+      "coa_stall_threshold_p2_days",
+      "coa_imminent_window_days"
+    ]
+  },
+  {
+    "label": "Spatial & Massing",
+    "keys": [
+      "massing_shed_threshold_sqm",
+      "massing_garage_max_sqm",
+      "massing_nearest_max_distance_m",
+      "link_massing_link_rate_fail_pct",
+      "link_massing_centroid_confidence",
+      "link_massing_nearest_confidence"
+    ]
+  },
+  {
+    "label": "Parcel Linking",
+    "keys": [
+      "spatial_match_max_distance_m",
+      "spatial_match_confidence",
+      "link_parcels_confidence_address_points_exact",
+      "link_parcels_confidence_exact_address",
+      "link_parcels_confidence_spatial_polygon",
+      "link_parcels_confidence_name_only",
+      "link_parcels_link_rate_warn_pct"
+    ]
+  },
+  {
+    "label": "WSIB Matching",
+    "keys": [
+      "wsib_fuzzy_match_threshold",
+      "link_wsib_link_rate_warn_pct",
+      "link_wsib_tier1_confidence",
+      "link_wsib_tier2_confidence",
+      "link_wsib_tier3_confidence",
+      "link_wsib_entity_fanin_warn",
+      "link_wsib_tier3_full_max_iterations",
+      "link_wsib_tier3_token_overlap_fail_pct"
+    ]
+  },
+  {
+    "label": "Parcel-Address Bridge",
+    "keys": [
+      "link_parcel_addresses_batch_size",
+      "link_parcel_addresses_no_address_warn_pct",
+      "link_parcel_addresses_no_parcel_warn_pct",
+      "link_parcel_addresses_fanout_warn_noncondo",
+      "link_parcel_addresses_fanout_warn_condo",
+      "link_parcel_addresses_structure_link_rate_warn_pct",
+      "link_parcel_addresses_fanout_warn_rd_rs"
+    ]
+  },
+  {
+    "label": "Centroid Computation",
+    "keys": [
+      "compute_centroids_failed_geometries_warn",
+      "compute_centroids_compute_rate_warn_pct",
+      "compute_centroids_full_recompute_batch_size"
+    ]
+  },
+  {
+    "label": "Data Quality Thresholds",
+    "keys": [
+      "cost_outlier_ceiling_cad",
+      "desc_null_rate_warn_pct",
+      "builder_null_rate_warn_pct",
+      "cost_est_null_rate_warn_pct",
+      "cost_est_min_tiers",
+      "calibration_freshness_warn_hours",
+      "cost_model_coverage_warn_pct",
+      "assert_schema_type_sample_rows",
+      "assert_schema_csv_header_bytes",
+      "assert_schema_geojson_probe_bytes"
+    ]
+  },
+  {
+    "label": "Source Ingestion",
+    "keys": [
+      "load_ravines_dataset_age_warn_years",
+      "load_ravines_count_drift_fail_pct",
+      "load_ravines_geometry_update_warn_pct",
+      "load_ravines_invalid_geometry_fail_pct",
+      "load_ravines_mass_delete_fail_pct",
+      "load_ravines_download_timeout_ms",
+      "enrich_parcels_heartbeat_minutes",
+      "enrich_parcels_pass_statement_timeout_minutes",
+      "enrich_parcels_lock_timeout_ms"
+    ]
+  },
+  {
+    "label": "Scraper & Network Health",
+    "keys": [
+      "scrape_early_phase_threshold_pct",
+      "scrape_stale_days",
+      "scraper_error_rate_warn_pct",
+      "scraper_latency_p50_warn_ms",
+      "scraper_empty_streak_warn",
+      "lifecycle_unclassified_max"
+    ]
+  },
+  {
+    "label": "Pipeline Staleness Thresholds",
+    "keys": [
+      "staleness_max_stale_over_30d",
+      "staleness_min_coverage_pct",
+      "staleness_max_days_stale"
+    ]
+  },
+  {
+    "label": "Lifecycle Ledger",
+    "keys": [
+      "lifecycle_status_history_retention_days"
+    ]
+  },
+  {
+    "label": "Lifecycle Phase Distribution Bands",
+    "keys": [
+      "lifecycle_cross_stalled_threshold",
+      "lifecycle_cross_active_inspection_threshold",
+      "lifecycle_cross_issued_threshold",
+      "lifecycle_band_p3_min",
+      "lifecycle_band_p3_max",
+      "lifecycle_band_p4_min",
+      "lifecycle_band_p4_max",
+      "lifecycle_band_p5_min",
+      "lifecycle_band_p5_max",
+      "lifecycle_band_p6_min",
+      "lifecycle_band_p6_max",
+      "lifecycle_band_p7a_min",
+      "lifecycle_band_p7a_max",
+      "lifecycle_band_p7b_min",
+      "lifecycle_band_p7b_max",
+      "lifecycle_band_p7c_min",
+      "lifecycle_band_p7c_max",
+      "lifecycle_band_p7d_min",
+      "lifecycle_band_p7d_max",
+      "lifecycle_band_p8_min",
+      "lifecycle_band_p8_max",
+      "lifecycle_band_p18_min",
+      "lifecycle_band_p18_max",
+      "lifecycle_band_p19_min",
+      "lifecycle_band_p19_max",
+      "lifecycle_band_p20_min",
+      "lifecycle_band_p20_max",
+      "lifecycle_band_p9_p17_agg_min",
+      "lifecycle_band_p9_p17_agg_max",
+      "lifecycle_band_o1_min",
+      "lifecycle_band_o1_max",
+      "lifecycle_band_o2_min",
+      "lifecycle_band_o2_max",
+      "lifecycle_band_o3_min",
+      "lifecycle_band_o3_max",
+      "lifecycle_band_coa_p1_min",
+      "lifecycle_band_coa_p1_max",
+      "lifecycle_band_coa_p2_min",
+      "lifecycle_band_coa_p2_max"
+    ]
+  },
+  {
+    "label": "Step Validator",
+    "keys": [
+      "invariants_every_run_budget_ms"
+    ]
+  }
+]
