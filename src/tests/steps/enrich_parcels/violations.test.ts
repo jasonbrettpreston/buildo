@@ -362,7 +362,7 @@ describe('the compute module — Rule 2 (compute is JUST compute) + §5.5 clock 
     }
   });
 
-  it.fails('§5.5 clock seam (Fold G3, MANDATORY not optional) — no raw now()::date or Date.now() wall-clock fragment survives in compute; the comps window is read via an injected ctx.clock.asOfDate() instead of scripts/enrich-parcels.js\'s own now()::date - interval \'5 years\' literal (:1114) (flips at: commit 7)', () => {
+  it('§5.5 clock seam (Fold G3, MANDATORY not optional) — no raw now()::date or Date.now() wall-clock fragment survives in compute; the comps window is read via an injected ctx.clock.asOfDate() instead of scripts/enrich-parcels.js\'s own now()::date - interval \'5 years\' literal (:1114) (flipped at: commit 7c)', () => {
     const src = stripComments(computeSource());
     expect(/now\(\)::date/i.test(src), 'a bare now()::date literal survived the seam rewrite — Spec 122 §5.5 bans it outright').toBe(false);
     expect(/\bDate\.now\(\)/.test(src) === false || /ctx\.clock/.test(src), 'Date.now() must be routed through ctx.clock, never called bare, for any DB-facing timestamp').toBe(true);
@@ -380,7 +380,7 @@ describe('the compute module — Rule 2 (compute is JUST compute) + §5.5 clock 
     }
   });
 
-  it.fails('the zoning_dominant_area_share guard ports the ::numeric cast VERBATIM (Fold B1, fence 7e130bff, lessons.md:28 float8-vs-NUMERIC IS DISTINCT FROM trap) — never regenerated generically from a column list (flips at: commit 7)', () => {
+  it('the zoning_dominant_area_share guard ports the ::numeric cast VERBATIM (Fold B1, fence 7e130bff, lessons.md:28 float8-vs-NUMERIC IS DISTINCT FROM trap) — never regenerated generically from a column list (flipped at: commit 7c)', () => {
     const src = computeSource();
     expect(/round\([^)]*::numeric[^)]*,\s*4\)/i.test(src), 'the round(...::numeric, 4) cast on zoning_dominant_area_share must survive the port byte-for-byte').toBe(true);
   });
@@ -558,13 +558,14 @@ describe('facts testable today — the live tree, not a future artifact', () => 
     expect(Math.max(...nums, 0), 'the highest LG number in scripts/lib + scripts/steps/_schema must be 27 until commit 7 lands LG-28 (runEnrichPhase)').toBe(27);
   });
 
-  it('converted.json — pending stays registered (not yet converted); stage advanced "red_suite" -> "descriptor_only" at commit 7b, the ONE artifact THIS commit itself produces (R-K.1, three-value vocabulary widened this commit) (updated at: commit 7b — the commit-6 text asserted the PRE-descriptor state, which this commit\'s own artifact necessarily changes)', () => {
+  it('converted.json — pending stays registered (not yet converted); compute (7c) has landed (scripts/lib/compute/enrich-parcels.js exists), but the DECLARED stage is deliberately HELD at "descriptor_only" rather than advanced to "compute_ported" (updated at: commit 7c). Reason (see converted.json.pending[].reason verbatim): step-validate.mjs\'s STAGE_HARDSTOP_EXCLUSIONS table narrows compute_ported to excluding only {G8, G9} — advancing would make Rule 11 (checkOrderGuaranteesCited, the pass-5 order_guarantee\'s single-spec-identity limitation, already filed at 7b as out-of-scope) a REAL, UNPINNABLE git-hook hard-stop on this and every subsequent commit until that architectural tension is separately ruled on. The compute artifact existing is decoupled from the declared stage advancing — R-K.1\'s own step-conformance.infra.test.ts lock only requires a "descriptor_only" entry\'s descriptor to independently validate and its conformanceFindings() to be NOT YET clean, both still true here.', () => {
     const c = JSON.parse(fs.readFileSync(abs(CONVERTED_REL), 'utf8')) as { converted: string[]; pending: Array<{ file: string; stage: string }> };
     expect(c.converted.includes(STEP_REL), 'enrich_parcels must not be registered as converted yet — that is commit 9 (cutover)').toBe(false);
     const entry = c.pending.find((p) => p.file === STEP_REL);
     expect(entry, `converted.json.pending must carry a ${STEP_REL} entry`).toBeDefined();
-    expect(entry!.stage, 'R-K.1: a step whose descriptor now exists and validates, but whose compute/runner have not yet landed, must declare the new middle stage "descriptor_only" — not the pre-descriptor "red_suite", and not "shape_clean" (which requires conformanceFindings() clean, i.e. compute wired)').toBe('descriptor_only');
-    expect(fs.existsSync(abs(DESCRIPTOR_REL)), 'R-K.1: a "descriptor_only"-stage pending entry MUST have a sibling descriptor').toBe(true);
+    expect(entry!.stage, 'stage deliberately held at "descriptor_only" (see this test\'s own title for why) — not yet "compute_ported" despite compute existing, and not "shape_clean" (conformanceFindings() is not yet clean — no runner)').toBe('descriptor_only');
+    expect(fs.existsSync(abs(DESCRIPTOR_REL)), 'a descriptor_only-stage pending entry MUST have a sibling descriptor').toBe(true);
+    expect(fs.existsSync(abs(COMPUTE_REL)), 'compute (7c) exists on disk even though the declared stage has not advanced past descriptor_only').toBe(true);
   });
 
   it('defect-ledger.md — EP-D1, EP-D8, EP-D9, EP-D10 all carry the PIN (Spec 123 §3.1) status, pinned_until pilot9 commit 9 (already landed, commits 4/4c/5)', () => {
