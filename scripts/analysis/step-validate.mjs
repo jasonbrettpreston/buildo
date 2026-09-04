@@ -241,9 +241,22 @@ function filterToStaged(registry) {
 // ---------------------------------------------------------------------------
 function loadConverted() {
   const parsed = JSON.parse(readFileSync(CONVERTED_PATH, 'utf8'));
+  const pendingRaw = parsed.pending || [];
+  // pendingStages: relFile -> declared `stage` string, straight from the JSON,
+  // UNVALIDATED here (a legacy string-only pending entry carries no stage at
+  // all, which stageExclusions() below treats as "no exclusion" — today's
+  // behaviour). Validation against the closed vocabulary happens where the
+  // stage is actually CONSUMED (stageExclusions), so a bad value REDs loudly
+  // at the row that needs it rather than aborting the whole registry load.
+  const pendingStages = {};
+  for (const p of pendingRaw) {
+    if (typeof p === 'string' || !p || !p.stage) continue;
+    pendingStages[String(p.file).replace(/\\/g, '/')] = p.stage;
+  }
   return {
     converted: (parsed.converted || []).map((f) => String(f).replace(/\\/g, '/')),
-    pending: (parsed.pending || []).map((p) => (typeof p === 'string' ? p : p.file)).map((f) => String(f).replace(/\\/g, '/')),
+    pending: pendingRaw.map((p) => (typeof p === 'string' ? p : p.file)).map((f) => String(f).replace(/\\/g, '/')),
+    pendingStages,
   };
 }
 
@@ -445,7 +458,7 @@ function reportPathFor(slug) {
 
 function buildRegistry() {
   const manifest = loadManifest();
-  const { converted, pending } = loadConverted();
+  const { converted, pending, pendingStages } = loadConverted();
   const rows = [];
   for (const relFile of converted) {
     const slug = slugFor(manifest, relFile);
@@ -458,7 +471,12 @@ function buildRegistry() {
     } catch {
       continue; // a pending entry not (yet) reachable from any chain is not this tool's problem
     }
-    rows.push({ slug, relFile, stage: 'pending', prefix: defectPrefixFor(slug), report: reportPathFor(slug) });
+    // `pendingStage` (R-K amendment, distinct from the `stage: 'pending'`
+    // registry-membership field two lines below — that one only ever says
+    // pending-vs-converted) is the DECLARED converted.json.pending[].stage
+    // value (red_suite | descriptor_only | compute_ported | runner_wired |
+    // shape_clean), read here so computeScorecard can gate hardStop by it.
+    rows.push({ slug, relFile, stage: 'pending', pendingStage: pendingStages[relFile], prefix: defectPrefixFor(slug), report: reportPathFor(slug) });
   }
   return rows;
 }
@@ -1307,12 +1325,117 @@ function scoreGShape(shape) {
  * @param {Array<{rule:number|string, status:string, pinned?:boolean}>} matrix
  * @returns {{hardStop:boolean, reasons:string[]}}
  */
-function computeMatrixHardStop(matrix) {
-  const unpinnedRed = (matrix || []).filter((r) => r.status === 'enforced-red' && !r.pinned);
+function computeMatrixHardStop(matrix, excludedRules = new Set()) {
+  const unpinnedRed = (matrix || []).filter(
+    (r) => r.status === 'enforced-red' && !r.pinned && !excludedRules.has(Number(r.rule)),
+  );
   return {
     hardStop: unpinnedRed.length > 0,
     reasons: unpinnedRed.map((r) => `Rule ${r.rule} (unpinned enforced-red)`),
   };
+}
+
+/**
+ * R-K amendment (Spec 124), pilot 9 commit "step-validate honours declared
+ * pending.stage for hard-stop" (2026-09-04) — "stage gates the hard-stop
+ * set". `converted.json.pending[].stage` is DECLARED DATA (R-K.1) naming how
+ * far a SPLIT commit-7 (descriptor before compute before runner — pilot 9,
+ * ENRICHER, is the first pilot to do this; every pilot through 8 landed all
+ * three in one commit) has progressed. G7 (RED-evidence, needs compute to
+ * exist) / G8 (golden POST captures, need the runner actually wired to
+ * dispatch compute) / G9 (the pilot's own closing Reflection, written once
+ * the conversion concludes) and Rules 4 (compute-rule grounding) / 11
+ * (order-guarantee reachability) / 12 (crash-posture reachability) are each
+ * UNDECIDABLE — not merely unmet — before their own artifact exists; scoring
+ * them 0/enforced-red and hard-stopping on that is indistinguishable from a
+ * genuine regression, which this table exists to stop conflating.
+ *
+ * A step NOT named in `pending`, or named with NO declared `stage`, or
+ * `stage` one of the two ORIGINAL terminal values (`red_suite` — nothing has
+ * landed, `shape_clean` — everything has) gets TODAY'S BEHAVIOUR BYTE FOR
+ * BYTE: `stageExclusions(undefined)` and `stageExclusions('red_suite'|
+ * 'shape_clean')` all return empty sets, so every downstream `.has(...)`
+ * check is always false and every arithmetic expression this feeds is
+ * identical to the pre-amendment code path.
+ *
+ * An unrecognised `stage` string throws — "REDs the schema" — rather than
+ * silently defaulting to "no exclusion" (which would hide a typo'd stage as
+ * a full hard-stop, the wrong failure direction) or "exclude everything"
+ * (which would hide a typo'd stage as a free pass, the dangerous direction).
+ */
+const PENDING_STAGE_VOCAB = ['red_suite', 'descriptor_only', 'compute_ported', 'runner_wired', 'shape_clean'];
+const STAGE_HARDSTOP_EXCLUSIONS = {
+  // red_suite and shape_clean are deliberately ABSENT — they fall through to
+  // the `{gates:[], rules:[]}` default below, not a table entry, so a NEW
+  // terminal value added to PENDING_STAGE_VOCAB without a matching table row
+  // is "no exclusion" (safe direction) rather than a silent KeyError.
+  descriptor_only: { gates: ['G7', 'G8', 'G9'], rules: [4, 11, 12] },
+  compute_ported: { gates: ['G8', 'G9'], rules: [] },
+  runner_wired: { gates: ['G9'], rules: [] },
+};
+
+/** @param {string|undefined} stage @returns {{gates: Set<string>, rules: Set<number>}} */
+function stageExclusions(stage) {
+  if (stage === undefined || stage === null) return { gates: new Set(), rules: new Set() };
+  if (!PENDING_STAGE_VOCAB.includes(stage)) {
+    throw new Error(
+      `converted.json pending[].stage "${stage}" is not in the closed vocabulary (${PENDING_STAGE_VOCAB.join(' | ')}) — R-K`,
+    );
+  }
+  const entry = STAGE_HARDSTOP_EXCLUSIONS[stage];
+  return entry ? { gates: new Set(entry.gates), rules: new Set(entry.rules) } : { gates: new Set(), rules: new Set() };
+}
+
+/** Appends " — stage-gated (<stage>)" to an excluded-and-red matrix row's `note`, never mutating the input array. */
+function annotateStageGatedMatrix(matrix, excludedRules, stage) {
+  if (!excludedRules || excludedRules.size === 0) return matrix;
+  return (matrix || []).map((r) => (
+    r.status === 'enforced-red' && !r.pinned && excludedRules.has(Number(r.rule))
+      ? { ...r, note: `${r.note} — stage-gated (${stage})` }
+      : r
+  ));
+}
+
+/**
+ * The hard-stop AGGREGATION only — split out of computeScorecard so the R-K
+ * stage-gating behaviour is self-testable on synthetic `g`/`g9`/`matrixHardStop`
+ * fixtures, with no need to fabricate a realistic report/descriptor/capture-
+ * findings just to drive G6-G9 to particular values (Spec 121 §12b.6, the
+ * SAME "test the pure computation in-memory" posture computeMatrixHardStop's
+ * own self-test already uses). G6 is never excludable — no `pending.stage`
+ * value speaks to whether the DEFECT LEDGER is well-formed, only to whether
+ * compute/runner/golden artifacts exist yet.
+ *
+ * @param {Record<string,{score:number,max:number,detail:string}>} g - G0-G8
+ * @param {{pass:boolean,detail:string}} g9
+ * @param {boolean} invariantsFail
+ * @param {{hardStop:boolean,reasons:string[]}} matrixHardStop - already computed with excl.rules applied
+ * @param {{gates:Set<string>,rules:Set<number>}} excl
+ * @param {string|undefined} stage
+ */
+function aggregateHardStop(g, g9, invariantsFail, matrixHardStop, excl, stage) {
+  const g7Excluded = excl.gates.has('G7');
+  const g8Excluded = excl.gates.has('G8');
+  const g9Excluded = excl.gates.has('G9');
+  const g7 = g7Excluded && g.G7.score === 0 ? { ...g.G7, detail: `${g.G7.detail} — stage-gated (${stage})` } : g.G7;
+  const g8 = g8Excluded && g.G8.score === 0 ? { ...g.G8, detail: `${g.G8.detail} — stage-gated (${stage})` } : g.G8;
+  const g9a = g9Excluded && !g9.pass ? { ...g9, detail: `${g9.detail} — stage-gated (${stage})` } : g9;
+  const hardStopReasons = [
+    ...(g.G6.score === 0 ? ['G6'] : []),
+    ...(g.G7.score === 0 && !g7Excluded ? ['G7'] : []),
+    ...(g.G8.score === 0 && !g8Excluded ? ['G8'] : []),
+    ...(!g9.pass && !g9Excluded ? ['G9'] : []),
+    ...(invariantsFail ? ['fast invariant'] : []),
+    ...matrixHardStop.reasons,
+  ];
+  const hardStop =
+    g.G6.score === 0
+    || (g.G7.score === 0 && !g7Excluded)
+    || (g.G8.score === 0 && !g8Excluded)
+    || (!g9.pass && !g9Excluded)
+    || invariantsFail
+    || matrixHardStop.hardStop;
+  return { g: { ...g, G7: g7, G8: g8 }, g9: g9a, hardStop, hardStopReasons };
 }
 
 function computeScorecard(row, report, descriptorInfo, shape, captureFindings, invariantResults, churnFindings, matrix) {
@@ -1329,21 +1452,30 @@ function computeScorecard(row, report, descriptorInfo, shape, captureFindings, i
   };
   const total = Object.values(g).reduce((s, x) => s + x.score, 0);
   const maxTotal = Object.values(g).reduce((s, x) => s + x.max, 0);
-  const g9 = scoreG9(report);
+  const g9raw = scoreG9(report);
   const g4d = scoreG4d(row);
   const gshape = scoreGShape(shape);
   const invariantsFail = invariantResults.some((r) => (r.slug === row.slug || r.slug === '(registry)') && !r.pass);
-  const matrixHardStop = computeMatrixHardStop(matrix);
-  const hardStopReasons = [
-    ...(g.G6.score === 0 ? ['G6'] : []),
-    ...(g.G7.score === 0 ? ['G7'] : []),
-    ...(g.G8.score === 0 ? ['G8'] : []),
-    ...(!g9.pass ? ['G9'] : []),
-    ...(invariantsFail ? ['fast invariant'] : []),
-    ...matrixHardStop.reasons,
-  ];
-  const hardStop = g.G6.score === 0 || g.G7.score === 0 || g.G8.score === 0 || !g9.pass || invariantsFail || matrixHardStop.hardStop;
-  return { g, total, maxTotal, g9, g4d, gshape, hardStop, hardStopReasons, descriptorOk: descriptorInfo.ok };
+  // R-K amendment: `row.pendingStage` is undefined for every converted step
+  // and for a pending step with no declared stage — `stageExclusions`
+  // returns empty sets for both, so `aggregateHardStop` below is byte-for-
+  // byte the pre-amendment scoring for every step not naming a partial stage.
+  const excl = stageExclusions(row.pendingStage);
+  const matrixHardStop = computeMatrixHardStop(matrix, excl.rules);
+  const agg = aggregateHardStop(g, g9raw, invariantsFail, matrixHardStop, excl, row.pendingStage);
+  const annotatedMatrix = annotateStageGatedMatrix(matrix, excl.rules, row.pendingStage);
+  return {
+    g: agg.g,
+    total,
+    maxTotal,
+    g9: agg.g9,
+    g4d,
+    gshape,
+    hardStop: agg.hardStop,
+    hardStopReasons: agg.hardStopReasons,
+    descriptorOk: descriptorInfo.ok,
+    matrix: annotatedMatrix,
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -2331,6 +2463,95 @@ function selfTest() {
       throw new Error(`self-test FAILED: computeMatrixHardStop did not isolate the unpinned row in a mixed matrix (${JSON.stringify(mixed)})`);
     }
   }
+  // R-K amendment (Spec 124) — stageExclusions / aggregateHardStop, both
+  // directions, in-memory (Spec 121 §12b.6). A synthetic GREEN g/g9/matrix
+  // fixture with G7/G8 forced RED (score 0) and matrix Rules 4/11/12 forced
+  // enforced-red — the exact shape a descriptor-only commit produces before
+  // compute/golden/reflection exist.
+  {
+    const redG7 = { score: 0, max: 3, detail: 'file=true fences=2 it-count=35 RED-evidence=false' };
+    const redG8 = { score: 0, max: 3, detail: 'missing-invocations=2 stale-fingerprints=0 unexplained-diffs=0' };
+    const greenG = {
+      G0: { score: 1, max: 1, detail: '' }, G1: { score: 1, max: 1, detail: '' }, G2: { score: 1, max: 1, detail: '' },
+      G3: { score: 1, max: 1, detail: '' }, G4: { score: 1, max: 1, detail: '' }, G5: { score: 1, max: 1, detail: '' },
+      G6: { score: 3, max: 3, detail: '' }, G7: redG7, G8: redG8,
+    };
+    const redG9 = { pass: false, detail: 'heading=false low-confidence-table=false recurring-table=false' };
+    const redMatrix = [
+      { rule: 4, name: 'Compute rule declared', status: 'enforced-red', note: 'x', pinned: false },
+      { rule: 11, name: 'Phase-order re-derive', status: 'enforced-red', note: 'y', pinned: false },
+      { rule: 12, name: 'Truthful crash posture', status: 'enforced-red', note: 'z', pinned: false },
+    ];
+
+    // (a) stageExclusions itself — the three partial values, the two
+    // no-op values, undefined, and an unrecognised value (RED-the-schema).
+    const doExcl = stageExclusions('descriptor_only');
+    if (doExcl.gates.size !== 3 || !['G7', 'G8', 'G9'].every((k) => doExcl.gates.has(k))) {
+      throw new Error(`self-test FAILED: stageExclusions('descriptor_only') gates wrong (${JSON.stringify([...doExcl.gates])})`);
+    }
+    if (![4, 11, 12].every((r) => doExcl.rules.has(r))) {
+      throw new Error(`self-test FAILED: stageExclusions('descriptor_only') rules wrong (${JSON.stringify([...doExcl.rules])})`);
+    }
+    const cpExcl = stageExclusions('compute_ported');
+    if (!cpExcl.gates.has('G8') || !cpExcl.gates.has('G9') || cpExcl.gates.has('G7') || cpExcl.rules.size !== 0) {
+      throw new Error(`self-test FAILED: stageExclusions('compute_ported') wrong (${JSON.stringify({ gates: [...cpExcl.gates], rules: [...cpExcl.rules] })})`);
+    }
+    const rwExcl = stageExclusions('runner_wired');
+    if (!rwExcl.gates.has('G9') || rwExcl.gates.has('G7') || rwExcl.gates.has('G8') || rwExcl.rules.size !== 0) {
+      throw new Error(`self-test FAILED: stageExclusions('runner_wired') wrong (${JSON.stringify({ gates: [...rwExcl.gates], rules: [...rwExcl.rules] })})`);
+    }
+    for (const noop of [undefined, 'red_suite', 'shape_clean']) {
+      const e = stageExclusions(noop);
+      if (e.gates.size !== 0 || e.rules.size !== 0) {
+        throw new Error(`self-test FAILED: stageExclusions(${JSON.stringify(noop)}) must be a no-op (today's-behaviour direction) but excluded something (${JSON.stringify({ gates: [...e.gates], rules: [...e.rules] })})`);
+      }
+    }
+    let threw = false;
+    try { stageExclusions('bogus_stage'); } catch { threw = true; }
+    if (!threw) throw new Error("self-test FAILED: stageExclusions('bogus_stage') did not throw — an unknown stage value must RED the schema, not silently pass through");
+
+    // (b) aggregateHardStop, descriptor_only — G7/G8/Rules 4/11/12 excluded,
+    // G9 excluded too; G6 green, invariants clean -> NOT a hard stop, and
+    // every excluded row's own detail/note carries "stage-gated (...)".
+    const excl1 = stageExclusions('descriptor_only');
+    const mh1 = computeMatrixHardStop(redMatrix, excl1.rules);
+    const agg1 = aggregateHardStop(greenG, redG9, false, mh1, excl1, 'descriptor_only');
+    if (agg1.hardStop) throw new Error(`self-test FAILED: aggregateHardStop hard-stopped a descriptor_only fixture whose only reds are ALL stage-gated (${JSON.stringify(agg1)})`);
+    if (agg1.hardStopReasons.length !== 0) throw new Error(`self-test FAILED: aggregateHardStop reported hardStopReasons on a fully stage-gated descriptor_only fixture (${JSON.stringify(agg1.hardStopReasons)})`);
+    if (!agg1.g.G7.detail.includes('stage-gated (descriptor_only)') || !agg1.g.G8.detail.includes('stage-gated (descriptor_only)') || !agg1.g9.detail.includes('stage-gated (descriptor_only)')) {
+      throw new Error(`self-test FAILED: aggregateHardStop did not annotate every excluded row's detail with "stage-gated (descriptor_only)" (${JSON.stringify(agg1)})`);
+    }
+    const annotated1 = annotateStageGatedMatrix(redMatrix, excl1.rules, 'descriptor_only');
+    if (!annotated1.every((r) => r.note.includes('stage-gated (descriptor_only)'))) {
+      throw new Error(`self-test FAILED: annotateStageGatedMatrix did not annotate every excluded-rule row (${JSON.stringify(annotated1)})`);
+    }
+
+    // (c) SAME reds, NO stage (the "step absent from pending" / red_suite /
+    // shape_clean direction) -> DOES hard-stop, naming every red gate/rule.
+    const excl0 = stageExclusions(undefined);
+    const mh0 = computeMatrixHardStop(redMatrix, excl0.rules);
+    const agg0 = aggregateHardStop(greenG, redG9, false, mh0, excl0, undefined);
+    if (!agg0.hardStop) throw new Error(`self-test FAILED: aggregateHardStop did NOT hard-stop the SAME reds with no declared stage — a step absent from pending must get today's behaviour byte-for-byte (${JSON.stringify(agg0)})`);
+    if (!['G7', 'G8', 'G9'].every((k) => agg0.hardStopReasons.includes(k))) {
+      throw new Error(`self-test FAILED: unstaged fixture's hardStopReasons missing an expected gate (${JSON.stringify(agg0.hardStopReasons)})`);
+    }
+    if (!agg0.hardStopReasons.some((r) => r.includes('Rule 4')) || !agg0.hardStopReasons.some((r) => r.includes('Rule 11')) || !agg0.hardStopReasons.some((r) => r.includes('Rule 12'))) {
+      throw new Error(`self-test FAILED: unstaged fixture's hardStopReasons missing an expected Rule (${JSON.stringify(agg0.hardStopReasons)})`);
+    }
+
+    // (d) compute_ported — only G8/G9 excluded; G7 (still red in this
+    // fixture) now DOES hard-stop, proving the exclusion set narrows as the
+    // stage advances rather than being all-or-nothing.
+    const excl2 = stageExclusions('compute_ported');
+    const mh2 = computeMatrixHardStop(redMatrix, excl2.rules);
+    const agg2 = aggregateHardStop(greenG, redG9, false, mh2, excl2, 'compute_ported');
+    if (!agg2.hardStop || !agg2.hardStopReasons.includes('G7')) {
+      throw new Error(`self-test FAILED: compute_ported must still hard-stop on G7 (not yet excludable at this stage) (${JSON.stringify(agg2)})`);
+    }
+    if (agg2.hardStopReasons.includes('G8') || agg2.hardStopReasons.includes('G9')) {
+      throw new Error(`self-test FAILED: compute_ported must exclude G8/G9 from hardStopReasons (${JSON.stringify(agg2.hardStopReasons)})`);
+    }
+  }
   // C4 (Fold A item 3) — matchTests's scopeToken must match regardless of
   // whether the caller passes the underscored slug (row.slug, e.g.
   // "link_massing") or the hyphenated relFile a real it(`${relFile} — …`)
@@ -2463,7 +2684,11 @@ async function main() {
     // row into hardStop, so it needs the matrix as an input, not a sibling.
     const matrix = computePolicyMatrix(row, descriptorInfo, shape, vitestResult, p3, report);
     const sc = computeScorecard(row, report, descriptorInfo, shape, captureFindings, invariantResults, churnFindings, matrix);
-    const block = renderScorecard(row, sc, matrix, captureFindings, vitestResult, invariantResults);
+    // sc.matrix carries the same rows with a " — stage-gated (<stage>)" note
+    // appended on any row a declared pending[].stage excluded from hardStop
+    // (R-K amendment) — rendering it, not the raw `matrix`, is what keeps the
+    // printed table from reading as a silent pass.
+    const block = renderScorecard(row, sc, sc.matrix, captureFindings, vitestResult, invariantResults);
 
     console.log(`\n\`\`\`\n[step-validate] ${row.slug} (${row.stage}) — ${sc.total}/${sc.maxTotal}, hard-stop=${sc.hardStop}${sc.hardStop ? ` (${sc.hardStopReasons.join(', ')})` : ''}\n\`\`\`\n`);
     console.log(block);
