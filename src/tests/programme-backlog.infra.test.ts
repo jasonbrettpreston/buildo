@@ -17,6 +17,7 @@ import { describe, it, expect } from 'vitest';
 import { execFileSync } from 'child_process';
 import fs from 'fs';
 import path from 'path';
+import { pathToFileURL } from 'url';
 import Ajv from 'ajv';
 
 const REPO_ROOT = path.resolve(__dirname, '../../');
@@ -28,6 +29,7 @@ const STEP_VALIDATE = path.join(REPO_ROOT, 'scripts/analysis/step-validate.mjs')
 const BAD_FIXTURE = 'scripts/steps/_schema/fixtures/programme/bad-unmet-cutover-prereq.json';
 const GOOD_FIXTURE = 'scripts/steps/_schema/fixtures/programme/good-met-cutover-prereq.json';
 const BAD_APPLIES_WHEN_FIXTURE = 'scripts/steps/_schema/fixtures/programme/bad-applies-when-condition-met.json';
+const FIXTURE_HONESTY = 'scripts/steps/_schema/fixtures/programme/batching-count-honesty.json';
 const GOOD_APPLIES_WHEN_FIXTURE = 'scripts/steps/_schema/fixtures/programme/good-applies-when-condition-unmet.json';
 
 interface ProgrammeOwner {
@@ -205,6 +207,36 @@ describe('docs/reports/generated/122-programme-backlog.md — generated, drift-g
 });
 
 // ---------------------------------------------------------------------------
+// 4b. G9 (WF2 "template freeze" C1, 2026-09-04) — generate-programme-backlog.mjs's
+//    render() mirrors step-validate.mjs's blocksBatchingCount honesty fix: both
+//    the "**blocks batching: N**" summary line and the closing freeze-readiness
+//    sentence must exclude BUILT/SUPERSEDED items, and must agree with each
+//    other (they now share one computed count — see generate-programme-
+//    backlog.mjs's `openBatchingPrereq`).
+// ---------------------------------------------------------------------------
+
+describe('generate-programme-backlog.mjs — render() blocksBatching honesty (G9)', () => {
+  it('over the honesty fixture, both the summary line and the freeze-readiness sentence report 1, never 3', async () => {
+    const mod = (await import(pathToFileURL(GENERATOR).href)) as { render: (items: ProgrammeItem[]) => string };
+    const fixture = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, FIXTURE_HONESTY), 'utf8')) as { items: ProgrammeItem[] };
+    const rendered = mod.render(fixture.items);
+    expect(rendered).toContain('**blocks batching: 1**');
+    expect(rendered).toContain('Currently **1** item(s) block it.');
+    expect(rendered).not.toContain('blocks batching: 3');
+  });
+
+  it('the two lines never disagree over the real committed data either', async () => {
+    const mod = (await import(pathToFileURL(GENERATOR).href)) as { render: (items: ProgrammeItem[]) => string };
+    const rendered = mod.render(ITEMS);
+    const summaryMatch = rendered.match(/\*\*blocks batching: (\d+)\*\*/);
+    const readinessMatch = rendered.match(/Currently \*\*(\d+)\*\* item\(s\) block it\./);
+    expect(summaryMatch, rendered).not.toBeNull();
+    expect(readinessMatch, rendered).not.toBeNull();
+    expect(summaryMatch![1]).toBe(readinessMatch![1]);
+  });
+});
+
+// ---------------------------------------------------------------------------
 // 5. step:validate's programme section — "blocks batching: N", per-step
 //    blocking items, and the cutover-prereq lock proven BOTH directions
 // ---------------------------------------------------------------------------
@@ -316,6 +348,47 @@ describe('step-validate.mjs — programme section', () => {
     }
     expect(threw, 'an item with no applies_when must keep blocking unconditionally').toBe(true);
     expect(out).toMatch(/unmet cutover_prereq blocking an already-converted slug: compute_centroids <- FIXTURE-BAD-1/);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// 5b. G9 (WF2 "template freeze" C1, 2026-09-04) — blocksBatchingCount excludes
+//    BUILT/SUPERSEDED items. Before this fix the count filtered on
+//    gate.blocks.includes('batching') only, never status — a BUILT item's
+//    already-delivered promise still counted as an open blocker forever,
+//    meaning Spec 122 §8.2's "empty set" precondition could never be
+//    satisfied except by deleting the row. FIXTURE_HONESTY carries one BUILT,
+//    one SUPERSEDED, and one genuinely open batching_prereq item — the honest
+//    count is 1, never 3.
+// ---------------------------------------------------------------------------
+
+describe('step-validate.mjs — blocksBatchingCount honesty (G9)', () => {
+  it('a BUILT item and a SUPERSEDED item naming "batching" are NOT counted as open blockers — only the genuinely open one is', () => {
+    const out = execFileSync('node', [STEP_VALIDATE, '--step=compute_centroids', '--fast'], {
+      cwd: REPO_ROOT,
+      encoding: 'utf8',
+      env: { ...process.env, BUILDO_PROGRAMME_ITEMS_PATH: FIXTURE_HONESTY },
+    });
+    expect(out).toMatch(/\[step-validate\] programme: blocks batching: 1 /);
+    expect(out).toMatch(/blocks batching: 1\)/);
+  });
+
+  it('RED (status-blind, pre-fix) — a naive count that ignores status would report 3 over the same fixture, proving the fix is load-bearing', () => {
+    const fixture = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, FIXTURE_HONESTY), 'utf8')) as { items: ProgrammeItem[] };
+    const naiveCount = fixture.items.filter((it) => it.gate.blocks.includes('batching')).length;
+    const honestCount = fixture.items.filter((it) => it.gate.blocks.includes('batching') && it.status !== 'BUILT' && it.status !== 'SUPERSEDED').length;
+    expect(naiveCount).toBe(3);
+    expect(honestCount).toBe(1);
+  });
+
+  it('the real committed programme-items.json: an unfiltered count and the honest count now disagree by exactly the BUILT+SUPERSEDED batching_prereq rows (proves the live data actually exercises the fix, not just the fixture)', () => {
+    const naiveCount = ITEMS.filter((it) => it.gate.blocks.includes('batching')).length;
+    const honestCount = ITEMS.filter((it) => it.gate.blocks.includes('batching') && it.status !== 'BUILT' && it.status !== 'SUPERSEDED').length;
+    const closedCount = ITEMS.filter((it) => it.gate.blocks.includes('batching') && (it.status === 'BUILT' || it.status === 'SUPERSEDED')).length;
+    expect(closedCount).toBeGreaterThan(0);
+    expect(naiveCount - honestCount).toBe(closedCount);
+    const out = execFileSync('node', [STEP_VALIDATE, '--step=compute_centroids', '--fast'], { cwd: REPO_ROOT, encoding: 'utf8' });
+    expect(out).toMatch(new RegExp(`blocks batching: ${honestCount}\\b`));
   });
 });
 

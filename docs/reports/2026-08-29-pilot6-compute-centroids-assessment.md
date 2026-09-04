@@ -1348,7 +1348,7 @@ from the run that actually performed it, not from a `capture-step-golden.js` inv
 | 8 | compute_centroids | PASS | G-4: 3 declared, 2 verdict-affecting, 0 violate on_invalid:fail with no deviations[] cover |
 | 4 | (registry) | PASS | overlap: none |
 | 5 | (registry) | PASS | clean (0 it.fails( call sites outside a declared pending slug) |
-| 9 | (registry) | PASS | clean (0 converted slugs blocked by an unmet cutover_prereq item; blocks batching: 8) |
+| 9 | (registry) | PASS | clean (0 converted slugs blocked by an unmet cutover_prereq item; blocks batching: 7) |
 
 ### Captures (item iv)
 - missing invocations: none
@@ -1356,7 +1356,7 @@ from the run that actually performed it, not from a `capture-step-golden.js` inv
 - compare ran: true · diffs found: 67 · unexplained: 0
 
 ### Test suite (item iii)
-- 767/786 passed (suite success=false)
+- 770/786 passed (suite success=true)
 
 ### Policy coverage matrix (item vi) — Spec 124 Rules 1-13
 

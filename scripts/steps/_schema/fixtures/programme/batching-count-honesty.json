@@ -1,0 +1,39 @@
+{
+  "$comment": "RED/GREEN canary — src/tests/programme-backlog.infra.test.ts + step-validate.mjs's blocksBatchingCount (G9, WF2 'template freeze' C1, 2026-09-04). FIXTURE-BUILT-1 is BUILT (its promise is delivered) but still names 'batching' in gate.blocks — a status-blind count would still report it as an open blocker forever, the exact defect this fixture proves fixed. FIXTURE-SUPERSEDED-1 is SUPERSEDED (retired, e.g. a duplicate) — same story. FIXTURE-OPEN-1 is the one genuine open blocker. The honest count over this fixture is 1, never 3.",
+  "contract_version": 1,
+  "items": [
+    {
+      "id": "FIXTURE-BUILT-1",
+      "spec": "122 §8.2",
+      "title": "canary: a BUILT item must not count as an open batching blocker",
+      "promised": "this fixture exists only to prove blocksBatchingCount excludes BUILT",
+      "status": "BUILT",
+      "evidence": "fixture — no real evidence, deliberately; scripts/steps/_schema/fixtures/programme/batching-count-honesty.json",
+      "owner": { "kind": "wf", "ref": "wf: fixture" },
+      "gate": { "kind": "batching_prereq", "blocks": ["batching"] },
+      "last_reviewed": "2026-09-04"
+    },
+    {
+      "id": "FIXTURE-SUPERSEDED-1",
+      "spec": "122 §8.2",
+      "title": "canary: a SUPERSEDED item must not count as an open batching blocker",
+      "promised": "this fixture exists only to prove blocksBatchingCount excludes SUPERSEDED",
+      "status": "SUPERSEDED",
+      "evidence": "fixture — no real evidence, deliberately",
+      "owner": { "kind": "none", "ref": "" },
+      "gate": { "kind": "batching_prereq", "blocks": ["batching"] },
+      "last_reviewed": "2026-09-04"
+    },
+    {
+      "id": "FIXTURE-OPEN-1",
+      "spec": "122 §8.2",
+      "title": "canary: the one genuinely open batching blocker in this fixture",
+      "promised": "this fixture exists only to prove blocksBatchingCount still counts a genuine open item",
+      "status": "NOT_STARTED",
+      "evidence": "fixture — no real evidence, deliberately",
+      "owner": { "kind": "wf", "ref": "wf: fixture" },
+      "gate": { "kind": "batching_prereq", "blocks": ["batching"] },
+      "last_reviewed": "2026-09-04"
+    }
+  ]
+}

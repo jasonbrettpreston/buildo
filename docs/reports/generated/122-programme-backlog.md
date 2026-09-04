@@ -15,7 +15,7 @@ Total items: **78**
 | ✅ BUILT | 41 |
 | ⏭️ SUPERSEDED | 2 |
 
-**blocks batching: 8**
+**blocks batching: 7**
 
 ## Batching prerequisite — blocks "freeze after the eighth" (Spec 122 §8.2/§10.3) (8)
 
@@ -112,4 +112,4 @@ Total items: **78**
 
 ---
 
-*Freeze-readiness (Spec 122 §8.2/§10.3): the template may honestly "freeze after the eighth" only when the batching_prereq set above is EMPTY. Currently **8** item(s) block it.*
+*Freeze-readiness (Spec 122 §8.2/§10.3): the template may honestly "freeze after the eighth" only when the batching_prereq set above is EMPTY. Currently **7** item(s) block it.*

@@ -282,9 +282,17 @@ function loadProgrammeItems() {
   return Array.isArray(parsed.items) ? parsed.items : [];
 }
 
-/** How many declared items block "batching" (Spec 122 §8.2 freeze-after-the-eighth). */
+/**
+ * How many declared items still block "batching" (Spec 122 §8.2 freeze-after-
+ * the-eighth). G9 defect (WF2 "template freeze" C1, 2026-09-04): this used to
+ * count every item whose gate.blocks names "batching", regardless of status —
+ * a BUILT item (its promise already delivered) still counted as an open
+ * blocker forever, meaning §8.2's "empty set" precondition could never be
+ * satisfied except by deleting the row. A BUILT or SUPERSEDED item is closed;
+ * it does not block anything.
+ */
 function blocksBatchingCount(items) {
-  return items.filter((it) => it.gate?.blocks?.includes('batching')).length;
+  return items.filter((it) => it.gate?.blocks?.includes('batching') && it.status !== 'BUILT' && it.status !== 'SUPERSEDED').length;
 }
 
 /**

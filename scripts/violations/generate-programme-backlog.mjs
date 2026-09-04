@@ -77,12 +77,16 @@ function renderTable(items) {
 
 export function render(items) {
   const byStatus = {};
-  const byGate = {};
   for (const it of items) {
     byStatus[it.status] = (byStatus[it.status] ?? 0) + 1;
-    byGate[it.gate.kind] = (byGate[it.gate.kind] ?? 0) + 1;
   }
-  const blocksBatching = items.filter((it) => it.gate.blocks.includes('batching')).length;
+  // G9 defect (WF2 "template freeze" C1, 2026-09-04, mirrors step-validate.mjs's
+  // blocksBatchingCount): a BUILT/SUPERSEDED item's promise is already delivered —
+  // it does not block anything. Both counts below (the summary line AND the
+  // freeze-readiness line, which used to read the unfiltered byGate.batching_prereq)
+  // now share this one honest, status-filtered set so they can never disagree.
+  const openBatchingPrereq = items.filter((it) => it.gate.blocks.includes('batching') && it.status !== 'BUILT' && it.status !== 'SUPERSEDED').length;
+  const blocksBatching = openBatchingPrereq;
 
   const parts = [];
   parts.push('# Spec 122 programme backlog (generated)');
@@ -118,7 +122,7 @@ export function render(items) {
   parts.push('');
   parts.push(
     `*Freeze-readiness (Spec 122 §8.2/§10.3): the template may honestly "freeze after the eighth" only when the ` +
-      `batching_prereq set above is EMPTY. Currently **${byGate.batching_prereq ?? 0}** item(s) block it.*`,
+      `batching_prereq set above is EMPTY. Currently **${openBatchingPrereq}** item(s) block it.*`,
   );
   parts.push('');
   return parts.join('\n');
