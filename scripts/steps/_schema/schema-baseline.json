@@ -40,6 +40,7 @@
     "execution.on_row_error",
     "execution.on_row_error_max_pct",
     "execution.partial_fill",
+    "execution.phases",
     "execution.shape",
     "execution.statement_timeout",
     "execution.step_timeout",

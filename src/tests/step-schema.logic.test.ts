@@ -505,6 +505,145 @@ describe('step.schema.json — the V1-V6 and R6 rulings are actually encoded', (
   });
 });
 
+// ---------------------------------------------------------------------------
+// PILOT 9 commit 7a (2026-09-04) — `execution.shape` gains "enrich" and the
+// ENRICHER profile gains `execution.phases[]` (Spec 122 §1.10 profile table,
+// §8 "RE-FREEZE #1").
+//
+// BOTH DIRECTIONS, and the positive control differs from every negative by
+// EXACTLY ONE MUTATION: each negative is the committed ENRICHER exemplar
+// (`fixtures/valid/enrich_heritage.descriptor.json`) with a single replaced
+// `execution.phases` value, so a difference in outcome can only be that value.
+// The AJV path + keyword are pinned per rule — a rule that fires at the wrong
+// place is indistinguishable from one that fires by accident (§12b.6).
+// ---------------------------------------------------------------------------
+
+describe('execution.shape "enrich" + the ENRICHER execution.phases[] profile (pilot 9)', () => {
+  const ENRICHER_EXEMPLAR = path.join(FIXTURES, 'valid', 'enrich_heritage.descriptor.json');
+
+  interface Phase {
+    name: string;
+    order: number;
+    txn: string;
+    writes_ref: number;
+    scope: string;
+    invalidator_ref?: number;
+    timeout_minutes_from_config: string;
+    [k: string]: unknown;
+  }
+  const phase = (order: number, extra: Record<string, unknown> = {}): Phase => ({
+    name: `p${order}`,
+    order,
+    txn: 'shared',
+    writes_ref: 0,
+    scope: 'full',
+    timeout_minutes_from_config: 'none',
+    ...extra,
+  });
+
+  /** The committed ENRICHER exemplar with `execution.phases` replaced — the ONE mutation. */
+  function withPhases(phases: unknown): Record<string, unknown> {
+    const d = readJson(ENRICHER_EXEMPLAR) as Record<string, unknown>;
+    d.execution = { ...(d.execution as Record<string, unknown>), phases };
+    return d;
+  }
+  function omitPhases(): Record<string, unknown> {
+    const d = readJson(ENRICHER_EXEMPLAR) as Record<string, unknown>;
+    const exec = { ...(d.execution as Record<string, unknown>) };
+    delete exec.phases;
+    d.execution = exec;
+    return d;
+  }
+  function errorsOf(d: Record<string, unknown>): AjvErrorLike[] {
+    expect(validate(d), 'the mutation must make the descriptor INVALID — a fixture that does not fire proves nothing').toBe(false);
+    return (validate.errors ?? []) as unknown as AjvErrorLike[];
+  }
+  function pin(errors: AjvErrorLike[], at: string, keyword: string, param?: [string, unknown]): void {
+    const found = errors.find(
+      (e) => errPath(e) === at && e.keyword === keyword && (!param || e.params?.[param[0]] === param[1]),
+    );
+    expect(
+      found,
+      `expected ${keyword} at "${at}"; got ${errors.map((e) => `${errPath(e)}:${e.keyword}`).join(', ')}`,
+    ).toBeDefined();
+  }
+
+  it('the x-frozen shape enum carries "enrich" as its 9th value and the node carries an x-ruling (Rule 1 / G-1 ratchet)', () => {
+    interface ShapeNode {
+      enum?: string[];
+      'x-frozen'?: boolean;
+      'x-ruling'?: { rungs_tried?: unknown[]; why?: string };
+    }
+    const shapeNode = (schema.properties as { execution: { properties: { shape: ShapeNode } } }).execution.properties.shape;
+    expect(shapeNode.enum).toEqual(['assert', 'ingest', 'link', 'link_keyed', 'cascade', 'materialize', 'backfill', 'recorder', 'enrich']);
+    expect(shapeNode['x-frozen'], 'the enum stays frozen — widening it is what costs the re-freeze').toBe(true);
+    expect(shapeNode['x-ruling']?.rungs_tried?.length).toBeGreaterThan(0);
+    expect((shapeNode['x-ruling']?.why ?? '').length).toBeGreaterThan(0);
+  });
+
+  it('GREEN — the committed ENRICHER exemplar (one shared phase) validates', () => {
+    expect(validate(readJson(ENRICHER_EXEMPLAR)), JSON.stringify(validate.errors, null, 1)).toBe(true);
+  });
+
+  it('GREEN — a 5-phase enrich shape (4 shared + 1 post_commit, LAST) validates: enrich_parcels\'s real structure', () => {
+    const d = withPhases([
+      phase(1, { name: 'zoning', scope: 'incremental', invalidator_ref: 0 }),
+      phase(2, { name: 'max_build', scope: 'incremental', invalidator_ref: 0 }),
+      phase(3, { name: 'existing_structure', scope: 'deferred' }),
+      phase(4, { name: 'comparable_builds', scope: 'incremental' }),
+      phase(5, { name: 'optimal_config', txn: 'post_commit', timeout_minutes_from_config: 'enrich_parcels_pass_statement_timeout_minutes' }),
+    ]);
+    expect(validate(d), JSON.stringify(validate.errors, null, 1)).toBe(true);
+  });
+
+  it('RED — an ENRICHER that omits execution.phases entirely (the §1.10 profile requirement)', () => {
+    pin(errorsOf(omitPhases()), '/execution', 'required', ['missingProperty', 'phases']);
+  });
+
+  it('RED — a duplicate order (1, 1): the orders_contiguous rule', () => {
+    pin(errorsOf(withPhases([phase(1), phase(1)])), '/execution/phases', 'contains');
+  });
+
+  it('RED — a gap in order (1, 3): the same rule, so contiguity is not merely uniqueness', () => {
+    pin(errorsOf(withPhases([phase(1), phase(3)])), '/execution/phases', 'contains');
+  });
+
+  it('RED — two post_commit phases: the post_commit_last rule caps the array at the first one', () => {
+    pin(errorsOf(withPhases([phase(1), phase(2, { txn: 'post_commit' }), phase(3, { txn: 'post_commit' })])), '/execution/phases', 'maxItems', ['limit', 2]);
+  });
+
+  it('RED — a post_commit phase that is NOT last: a phase after the step\'s own COMMIT cannot be followed by one assuming the txn is open', () => {
+    pin(errorsOf(withPhases([phase(1, { txn: 'post_commit' }), phase(2)])), '/execution/phases', 'maxItems', ['limit', 1]);
+  });
+
+  it('RED — an unknown key inside a phase: the per-phase shape is CLOSED', () => {
+    pin(errorsOf(withPhases([phase(1, { retry_policy: 'x' })])), '/execution/phases/0', 'additionalProperties', ['additionalProperty', 'retry_policy']);
+  });
+
+  it('RED — an empty phases[]: an ENRICHER has at least one pass', () => {
+    pin(errorsOf(withPhases([])), '/execution/phases', 'minItems');
+  });
+
+  it('RED — an illegal txn value: the axis is frozen to shared|post_commit', () => {
+    pin(errorsOf(withPhases([phase(1, { txn: 'own_txn' })])), '/execution/phases/0/txn', 'enum');
+  });
+
+  it('the other seven profiles are UNAFFECTED — every committed step descriptor still validates, and none of their files changed in this commit', () => {
+    const converted = (JSON.parse(fs.readFileSync(path.join(REPO_ROOT, 'scripts/steps/_schema/converted.json'), 'utf8')) as { converted: string[] }).converted;
+    expect(converted.length, 'eight steps are converted as of pilot 9 commit 7a').toBe(8);
+    const descriptorPaths = converted.map((f) => f.replace(/\.js$/, '.descriptor.json'));
+    for (const rel of descriptorPaths) {
+      const d = readJson(path.join(REPO_ROOT, rel));
+      expect((d.identity as { archetype: string }).archetype, 'no converted step is an ENRICHER yet — the new requirement cannot reach them').not.toBe('ENRICHER');
+      expect(validate(d), `${rel}: ${JSON.stringify(validate.errors, null, 1)}`).toBe(true);
+    }
+    // Byte-identical, not merely still-valid: the profile addition must not have
+    // moved a single descriptor byte (each one is an R-C golden fingerprint).
+    const dirty = execFileSync('git', ['status', '--porcelain', '--', ...descriptorPaths], { cwd: REPO_ROOT, encoding: 'utf8' }).trim();
+    expect(dirty, `converted descriptors changed by this commit:\n${dirty}`).toBe('');
+  });
+});
+
 describe('122-vocabulary.md — generated, gated, and not stale', () => {
   it('the generator refuses to run without its self-test passing', () => {
     const out = execFileSync('node', [GENERATOR, '--self-test'], { cwd: REPO_ROOT, encoding: 'utf8' });

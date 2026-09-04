@@ -132,6 +132,17 @@
     "schema_drift": "pause"
   },
   "execution": {
+    "phases": [
+      {
+        "name": "heritage",
+        "order": 1,
+        "txn": "shared",
+        "writes_ref": 0,
+        "scope": "incremental",
+        "invalidator_ref": 0,
+        "timeout_minutes_from_config": "none"
+      }
+    ],
     "budget": "20m",
     "txn_scope": "step",
     "txn_budget": "none",

@@ -235,11 +235,23 @@ describe('the descriptor — ENRICHER archetype, execution.shape:"enrich" (Ask 1
     }
   });
 
-  it.fails('the frozen execution.shape enum (step.schema.json, x-frozen:true) gains a 9th value "enrich" with an x-ruling — checked against the LIVE schema file, which today still enumerates only the original 8 (flips at: commit 7)', () => {
-    const schema = JSON.parse(readTextToday(SCHEMA_REL)) as { definitions: { execution: { properties: { shape: { enum: string[]; 'x-ruling'?: unknown } } } } };
-    const shapeNode = schema.definitions.execution.properties.shape;
-    expect(shapeNode.enum, 'the shape enum must gain "enrich" (Ask 2) — Spec 122 §8 does_not_freeze pays this price in the SAME commit as the port').toContain('enrich');
+  // FLIPPED at commit 7a (2026-09-04). ⚠️ The accessor was `schema.definitions.
+  // execution…` when this lock landed at commit 6, and `execution` is a ROOT
+  // `properties` category, never a `definitions` entry — so the body threw a
+  // TypeError and the `it.fails` passed for the WRONG reason (the "green
+  // because it never looked" class, Spec 121 §12b.6). Corrected here, and the
+  // correction is proven both directions rather than asserted: against
+  // `git show HEAD~1:…step.schema.json` (the pre-bump schema) the CORRECTED
+  // accessor still reads `enum.includes("enrich") === false` and
+  // `x-ruling === undefined` — i.e. the lock was genuinely red for the ENUM,
+  // not for the typo, and goes green only because THIS commit bumps it.
+  it('the frozen execution.shape enum (step.schema.json, x-frozen:true) gains a 9th value "enrich" with an x-ruling — checked against the LIVE schema file (flipped at: commit 7a)', () => {
+    const schema = JSON.parse(readTextToday(SCHEMA_REL)) as { properties: { execution: { properties: { shape: { enum: string[]; 'x-ruling'?: { rungs_tried?: unknown[]; why?: string } } } } } };
+    const shapeNode = schema.properties.execution.properties.shape;
+    expect(shapeNode.enum, 'the shape enum must gain "enrich" (Ask 2) — Spec 122 §8 does_not_freeze pays this price in the SAME commit as the bump').toContain('enrich');
     expect(shapeNode['x-ruling'], 'a schema-frozen field bump requires an x-ruling node (Rule 1 G-1 ratchet)').toBeDefined();
+    expect(shapeNode['x-ruling']?.rungs_tried?.length, 'x-ruling must NAME the cheaper rungs tried, not merely exist').toBeGreaterThan(0);
+    expect((shapeNode['x-ruling']?.why ?? '').length, 'x-ruling must say why none of them fit').toBeGreaterThan(0);
   });
 });
 

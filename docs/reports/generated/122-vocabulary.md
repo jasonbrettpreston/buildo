@@ -2,7 +2,7 @@
 <!-- Source of truth: scripts/steps/_schema/step.schema.json (operator ruling R2). -->
 <!-- Regenerate: node scripts/violations/schema-to-vocab.mjs docs/reports/generated/122-vocabulary.md -->
 
-# The step contract — 20 categories, 424 declarable fields
+# The step contract — 20 categories, 432 declarable fields
 
 **Contract version 1 · status `v0-unfrozen-until-C3`.** The schema is canonical; this document is generated from it. Editing this file changes nothing.
 
@@ -19,7 +19,7 @@
 | 3 | `outputs` | 93 | 25 | 2 |
 | 4 | `staleness` | 25 | 7 | 0 |
 | 5 | `guards` | 21 | 7 | 0 |
-| 6 | `execution` | 52 | 13 | 1 |
+| 6 | `execution` | 60 | 15 | 1 |
 | 7 | `checks` | 29 | 6 | 0 |
 | 8 | `invariants` | 33 | 6 | 0 |
 | 9 | `plausibility` | 35 | 7 | 0 |
@@ -44,7 +44,7 @@
 | `ASSERT` | outputs = `none` · recovery = `none` · counters = `none` |
 | `INGESTOR` | outputs is object |
 | `LINK / MATCHER` | outputs.invalidates min 1 · counters is object |
-| `ENRICHER` | outputs is object · **if staleness.scope is a predicate ⇒ outputs.invalidates min 1** |
+| `ENRICHER` | outputs is object · execution is object · **if staleness.scope is a predicate ⇒ outputs.invalidates min 1** |
 | `MATERIALIZER / BACKFILL` | outputs is object · recovery.reset != `none` |
 | `RECORDER` | outputs.publish in `direct`/`pointer` |
 
@@ -337,7 +337,15 @@ Grandfathered, never legal for a new step: an existing step must be able to decl
 
 | Field | Menu | Markers |
 |---|---|---|
-| `shape` | `assert` · `ingest` · `link` · `link_keyed` · `cascade` · `materialize` · `backfill` · `recorder` | ! |
+| `shape` | `assert` · `ingest` · `link` · `link_keyed` · `cascade` · `materialize` · `backfill` · `recorder` · `enrich` | ! |
+| `phases` | list (min 1) of object {name, order, txn, writes_ref, scope, invalidator_ref, timeout_minutes_from_config} | — |
+| `phases[].name` | string `^[a-z][a-z0-9_]*$` | † |
+| `phases[].order` | integer >= 1, <= 8 | † |
+| `phases[].txn` | `shared` · `post_commit` | † ! |
+| `phases[].writes_ref` | integer >= 0 | † |
+| `phases[].scope` | `full` · `incremental` · `deferred` | † ! |
+| `phases[].invalidator_ref` | integer >= 0 | — |
+| `phases[].timeout_minutes_from_config` | string | † |
 | `tiers` | `none` \| list (min 1) of object {id, confidence_from_config, max_iterations_from_config} | — |
 | `tiers[].id` | string `^[a-z][a-z0-9_]*$` | † |
 | `tiers[].confidence_from_config` | string | † |
