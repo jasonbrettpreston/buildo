@@ -6,25 +6,24 @@
 
 ## Counts
 
-Total items: **79**
+Total items: **80**
 
 | status | count |
 |---|---|
-| ⬜ NOT_STARTED | 17 |
+| ⬜ NOT_STARTED | 15 |
 | ⚠️ PARTIAL | 17 |
-| ✅ BUILT | 43 |
-| ⏭️ SUPERSEDED | 2 |
+| ✅ BUILT | 44 |
+| ⏭️ SUPERSEDED | 4 |
 
-**blocks batching: 5**
+**blocks batching: 4**
 
-## Batching prerequisite — blocks "freeze after the eighth" (Spec 122 §8.2/§10.3) (6)
+## Batching prerequisite — blocks "freeze after the eighth" (Spec 122 §8.2/§10.3) (5)
 
 | id | spec | title | status | owner | blocks | last reviewed |
 |---|---|---|---|---|---|---|
 | `STD-7` | 122 §1.10 | archetype drives required-field profile, 8 archetypes dispatched | ⚠️ PARTIAL | pilot: pilot9_enrich_parcels | batching | 2026-09-04 |
-| `STD-8` | 122 §8.2 | freeze the template after the eighth, never the first | ⬜ NOT_STARTED | wf: wf: programme-STD-8 | batching | 2026-08-29 |
 | `LDG-4` | 122 §6.3 | stepUpstreams(slug) derived from the ledger | ✅ BUILT | wf: wf: cross-step ledger (WF1), commits 1-6, 2026-09-03 | batching | 2026-09-03 |
-| `PRG-10` | 122 §8.2 | freeze after the eighth - no formal batching mechanism (repeat of STD-8) | ⬜ NOT_STARTED | wf: wf: programme-STD-8 | batching | 2026-08-29 |
+| `FREEZE-1` | 122 §8.2 | freeze precondition satisfied — the batching_prereq set is genuinely empty | ⬜ NOT_STARTED | wf: wf: programme-FREEZE-1, blocked on STD-7/WD-1/ADMIN-1 | batching | 2026-09-04 |
 | `WD-1` | 122 §1.4 | class-enum-without-write.js-branch lock | ⬜ NOT_STARTED | wf: wf: programme-WD1 | batching | 2026-08-29 |
 | `ADMIN-1` | 124 §2 Rule 3 | admin GROUPS reverse-coverage — every unclassified seed key gets a real group or a reviewed hidden reason | ⬜ NOT_STARTED | wf: wf: programme-ADMIN-1 | batching | 2026-09-03 |
 
@@ -37,7 +36,7 @@ Total items: **79**
 | `STA-3` | 120 §6b | 3 destructive-reset guards | ✅ BUILT | wf: wf: programme-STA-2 | refresh_snapshot | 2026-09-03 |
 | `CLOUDPARITY` | 122 R-D | cloud database must run apply-logic-variables.js before any cloud cutover | ⚠️ PARTIAL | followup: review_followups.md HIGH ops entry (filed 2026-08-27, peel 8c) | cloud_deploy | 2026-08-29 |
 
-## Nice-to-have — real gap, not currently blocking (69)
+## Nice-to-have — real gap, not currently blocking (71)
 
 | id | spec | title | status | owner | blocks | last reviewed |
 |---|---|---|---|---|---|---|
@@ -47,6 +46,7 @@ Total items: **79**
 | `STD-4` | 122 §4.1 | step-0 reconcile becomes a reconcile step | ✅ BUILT | wf: manifest, pre-session | — | 2026-08-29 |
 | `STD-5` | 122 §5.5 | the COMPUTE shape | ✅ BUILT | pilot: pilots 1-6 | — | 2026-08-29 |
 | `STD-6` | 122 §4.2 | pipeline.step() is a factory, AJV-validates before compute runs | ✅ BUILT | wf: step library | — | 2026-08-29 |
+| `STD-8` | 122 §8.2 | freeze the template after the eighth, never the first | ✅ BUILT | wf: wf: programme-STD-8, e029c37d | — | 2026-09-04 |
 | `STD-9` | 122 §5.4 | ADVISORY_LOCK_ID kept textually | ✅ BUILT | pilot: pilots 1-6 | — | 2026-08-29 |
 | `LDG-1` | 122 §6.0 | column-lineage generator | ✅ BUILT | wf: pre-existing infra | — | 2026-08-29 |
 | `LDG-2` | 122 §6.1 | ledger table edges from outputs.writes -> inputs.reads | ✅ BUILT | wf: R-T addendum commit 5 (absorbed into VAL-WF2) | — | 2026-08-30 |
@@ -82,6 +82,7 @@ Total items: **79**
 | `PRG-7` | 122 R-D | assert_schema gains declared_logic_variables_present | ✅ BUILT | pilot: R-D, exercised every pilot since 4 | — | 2026-08-29 |
 | `PRG-8` | 122 R-A | config.retired[] declaration mechanism | ✅ BUILT | pilot: R-A, pilot 3+ | — | 2026-08-29 |
 | `PRG-9` | 122 V7 | grandfathered.json rules[] array | ✅ BUILT | pilot: V7, pilots 3/5 | — | 2026-08-29 |
+| `PRG-10` | 122 §8.2 | freeze after the eighth - no formal batching mechanism (repeat of STD-8) | ⏭️ SUPERSEDED | — | — | 2026-09-04 |
 | `PRG-11` | 123 §4.8 | Two CI holes closed | ✅ BUILT | wf: P0c, landed pre-session | — | 2026-08-29 |
 | `G0` | 123 §6 | Gate G0 - Boundary freeze | ✅ BUILT | wf: R-R, step:validate | — | 2026-08-29 |
 | `G1` | 123 §6 | Gate G1 - Archaeology / Intent Ledger | ⚠️ PARTIAL | followup: review_followups.md (2026-08-29 programme backlog filing) | — | 2026-08-29 |
@@ -101,7 +102,7 @@ Total items: **79**
 | `TCADB` | 124 §2 | database.assert_current_database is proven live once, not standing testcontainer-enforced | ⚠️ PARTIAL | followup: review_followups.md LOW entry (LW-D16 class) | — | 2026-08-29 |
 | `REGEXSC` | 124 §2 Rule 13 | step-validate.mjs's regex-brittle report-scraping is superseded in design by VAL-WF2's structured-artifact scorecard | ⏭️ SUPERSEDED | — | — | 2026-08-30 |
 | `VAL-WF2` | 124 §2 Rule 13 | Validator v2 - a DATA-plausibility validator, distinct from the process scorecard | ✅ BUILT | wf: R-T addendum, "The Step Validator, Data-First" (2026-08-30) | — | 2026-08-30 |
-| `LG-21` | 122 §5.5 | runPhaseScaffold(descriptor, phaseBody) - shared phase-runner scaffold | ⬜ NOT_STARTED | library-wf: post-pilot-8 library WF (LG-21 runPhaseScaffold) | — | 2026-08-29 |
+| `LG-21` | 122 §5.5 | runPhaseScaffold(descriptor, phaseBody) - shared phase-runner scaffold | ⏭️ SUPERSEDED | — | — | 2026-09-04 |
 | `G-DEREGEX` | 124 §2 Rule 13 | Gates G0/G1/G3/G4/G5/G9 still prose-regex-scraped, not structured artifacts | ⬜ NOT_STARTED | followup: review_followups.md (R-T addendum commit 7 filing, 2026-08-30); Ask 3 | — | 2026-08-30 |
 | `ASSERT-HEALTH-SHAPE` | 124 §2 | assert_health[] — a closed-shape category for health/liveness checks, left dormant | ⬜ NOT_STARTED | followup: review_followups.md (R-T addendum commit 7 filing, 2026-08-30); Ask 4 | — | 2026-08-30 |
 | `PSA-CHECK-IDS` | 124 §2 Rule 13 | parcel-sanity-audit.js's 42 CHECKS[] entries have no per-check id — plausibility[] SQL is duplicated, not referenced | ⬜ NOT_STARTED | followup: review_followups.md (R-T addendum commit 7 filing, 2026-08-30); Fold A-4d | — | 2026-08-30 |
@@ -113,4 +114,4 @@ Total items: **79**
 
 ---
 
-*Freeze-readiness (Spec 122 §8.2/§10.3): the template may honestly "freeze after the eighth" only when the batching_prereq set above is EMPTY. Currently **5** item(s) block it.*
+*Freeze-readiness (Spec 122 §8.2/§10.3): the template may honestly "freeze after the eighth" only when the batching_prereq set above is EMPTY. Currently **4** item(s) block it.*

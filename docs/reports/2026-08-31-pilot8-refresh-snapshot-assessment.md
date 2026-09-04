@@ -693,7 +693,7 @@ This report's every executed claim was independently re-executed (not re-read) b
 | 8 | refresh_snapshot | PASS | G-4: 2 declared, 0 verdict-affecting, 0 violate on_invalid:fail with no deviations[] cover |
 | 4 | (registry) | PASS | overlap: none |
 | 5 | (registry) | PASS | clean (0 it.fails( call sites outside a declared pending slug) |
-| 9 | (registry) | PASS | clean (0 converted slugs blocked by an unmet cutover_prereq item; blocks batching: 5) |
+| 9 | (registry) | PASS | clean (0 converted slugs blocked by an unmet cutover_prereq item; blocks batching: 4) |
 
 ### Captures (item iv)
 - missing invocations: none

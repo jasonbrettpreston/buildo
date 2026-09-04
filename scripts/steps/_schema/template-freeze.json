@@ -260,14 +260,9 @@
       "owner": "pilot: pilot9_enrich_parcels"
     },
     {
-      "id": "STD-8",
+      "id": "FREEZE-1",
       "status": "NOT_STARTED",
-      "owner": "wf: wf: programme-STD-8"
-    },
-    {
-      "id": "PRG-10",
-      "status": "NOT_STARTED",
-      "owner": "wf: wf: programme-STD-8"
+      "owner": "wf: wf: programme-FREEZE-1, blocked on STD-7/WD-1/ADMIN-1"
     },
     {
       "id": "WD-1",
