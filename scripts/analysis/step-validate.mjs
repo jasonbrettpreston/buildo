@@ -570,15 +570,49 @@ function vitestEntry() {
 function runVitest() {
   const outFile = path.join(os.tmpdir(), `step-validate-vitest-${process.pid}.json`);
   const targets = ['src/tests/step-conformance.infra.test.ts', 'src/tests/golden-fingerprint.infra.test.ts', 'src/tests/steps/'];
+  // WF3 "Rules 10-12 output panel remediation" commit 4 (found en route, not
+  // filed further — the same class LW-D15's "found and fixed en route"
+  // precedent covers). `step-validate.mjs` itself is routinely invoked as
+  // `node -r dotenv/config scripts/analysis/step-validate.mjs` (this repo's
+  // own sanctioned invocation, e.g. this spec's Rule 4 grounding commit),
+  // which loads `.env`'s `DATABASE_URL` into THIS process's env — and
+  // `spawnSync` inherits the full parent env into the child by default.
+  // None of `targets` above is a `.db.test.ts` file, but `vitest.config.ts`'s
+  // `globalSetup` (`src/tests/db/setup-testcontainer.ts`) checks
+  // `process.env.DATABASE_URL` FIRST, unconditionally of which files are
+  // actually selected, and (believing itself to be in CI) attempts to run
+  // real migrations/seeding against whatever `DATABASE_URL` points at —
+  // measured live: a real local dev DB, refused with "permission denied for
+  // schema auth" (the connecting role correctly lacks the elevated grants a
+  // CI/testcontainer superuser would have) — a SAFE refusal this time, but
+  // never an intended one, and the resulting vitest run silently produces a
+  // 0-test, `success:true` report (see the `numTotalTests` guard below) —
+  // exactly the "green because it never looked" class this whole file exists
+  // to retire, one layer up. Strip both URL forms from the CHILD's env only
+  // (never step-validate.mjs's own — `runDataValidatorsForWrite` still needs
+  // a real pool) so this scoped, DB-test-free target set can never trip
+  // globalSetup's CI-path at all.
+  const childEnv = { ...process.env };
+  delete childEnv.DATABASE_URL;
+  delete childEnv.SUPABASE_DATABASE_URL;
   const run = spawnSync(
     process.execPath,
     [vitestEntry(), 'run', ...targets, '--reporter=json', `--outputFile=${outFile}`],
-    { cwd: REPO_ROOT, encoding: 'utf8', timeout: 600_000, maxBuffer: 256 * 1024 * 1024 },
+    { cwd: REPO_ROOT, encoding: 'utf8', timeout: 600_000, maxBuffer: 256 * 1024 * 1024, env: childEnv },
   );
   if (!existsSync(outFile)) {
     return { ranOk: false, error: `vitest produced no JSON report (exit ${run.status}); stderr: ${(run.stderr || '').slice(0, 2000)}`, tests: [] };
   }
   const parsed = JSON.parse(readFileSync(outFile, 'utf8'));
+  // A genuine run of these 3 targets is never 0 tests — this repo's own
+  // conformance/golden-fingerprint/per-step suites are never empty. Treat a
+  // 0-test "success" the same as no report at all: a checker that reports
+  // clean because it silently ran nothing is the exact defect class this
+  // guard exists to catch (found live via the DATABASE_URL issue above,
+  // closed structurally rather than only by removing that one cause).
+  if (parsed.numTotalTests === 0) {
+    return { ranOk: false, error: `vitest collected 0 tests across ${targets.join(', ')} (exit ${run.status}) — treated as a failed run, never a vacuous pass; stderr: ${(run.stderr || '').slice(0, 2000)}`, tests: [] };
+  }
   const tests = [];
   for (const file of parsed.testResults || []) {
     for (const a of file.assertionResults || []) {
@@ -1239,7 +1273,41 @@ function scoreGShape(shape) {
   return { pass, detail: `file-clean=${shape.fileClean} compute-clean=${shape.computeClean}` };
 }
 
-function computeScorecard(row, report, descriptorInfo, shape, captureFindings, invariantResults, churnFindings) {
+/**
+ * Rule 13 hard-stop wiring (Spec 124 §2 Rule 13, WF3 "Rules 10-12 output
+ * panel remediation" commit 4). Before this, the policy-coverage matrix
+ * (Rules 1-13) was purely REPORTED — a genuine, unpinned `enforced-red` row
+ * (a checker finding a real, unadjudicated defect) never fed `hardStop`,
+ * only G6/G7/G8/G9/the fast invariants did. That is the "green because it
+ * never looked" class one layer up: the matrix COULD read red forever
+ * without ever blocking anything.
+ *
+ * A row is exempt from gating ONLY when it carries a declared pin
+ * (`pinned: true`, the SAME mechanism Rule 10's `checkVerdictSingleSource`
+ * already uses for its own Spec 123 §3.1 KNOWN-DEFECT — `computePolicyMatrix`
+ * sets it there and nowhere else today) — a checker that is correct while
+ * the code is a FILED, adjudicated, ships-red-on-purpose defect. An
+ * `enforced-red` row with no pin is either a brand-new finding nobody has
+ * adjudicated, or (as `link_wsib`'s Rule 4 is, live, as of this commit) a
+ * defect already reported to the operator but not yet ruled on — either way,
+ * pre-commit/pre-push must not go green over it silently.
+ *
+ * Pure and side-effect-free so `selfTest()` can exercise all three cases
+ * in-memory (Spec 121 §12b.6): unpinned red -> hard stop; pinned red -> no
+ * hard stop; green -> no hard stop.
+ *
+ * @param {Array<{rule:number|string, status:string, pinned?:boolean}>} matrix
+ * @returns {{hardStop:boolean, reasons:string[]}}
+ */
+function computeMatrixHardStop(matrix) {
+  const unpinnedRed = (matrix || []).filter((r) => r.status === 'enforced-red' && !r.pinned);
+  return {
+    hardStop: unpinnedRed.length > 0,
+    reasons: unpinnedRed.map((r) => `Rule ${r.rule} (unpinned enforced-red)`),
+  };
+}
+
+function computeScorecard(row, report, descriptorInfo, shape, captureFindings, invariantResults, churnFindings, matrix) {
   const g = {
     G0: scoreG0(report),
     G1: scoreG1(report),
@@ -1257,8 +1325,17 @@ function computeScorecard(row, report, descriptorInfo, shape, captureFindings, i
   const g4d = scoreG4d(row);
   const gshape = scoreGShape(shape);
   const invariantsFail = invariantResults.some((r) => (r.slug === row.slug || r.slug === '(registry)') && !r.pass);
-  const hardStop = g.G6.score === 0 || g.G7.score === 0 || g.G8.score === 0 || !g9.pass || invariantsFail;
-  return { g, total, maxTotal, g9, g4d, gshape, hardStop, descriptorOk: descriptorInfo.ok };
+  const matrixHardStop = computeMatrixHardStop(matrix);
+  const hardStopReasons = [
+    ...(g.G6.score === 0 ? ['G6'] : []),
+    ...(g.G7.score === 0 ? ['G7'] : []),
+    ...(g.G8.score === 0 ? ['G8'] : []),
+    ...(!g9.pass ? ['G9'] : []),
+    ...(invariantsFail ? ['fast invariant'] : []),
+    ...matrixHardStop.reasons,
+  ];
+  const hardStop = g.G6.score === 0 || g.G7.score === 0 || g.G8.score === 0 || !g9.pass || invariantsFail || matrixHardStop.hardStop;
+  return { g, total, maxTotal, g9, g4d, gshape, hardStop, hardStopReasons, descriptorOk: descriptorInfo.ok };
 }
 
 // ---------------------------------------------------------------------------
@@ -1715,7 +1792,13 @@ function computePolicyMatrix(row, descriptorInfo, shape, vitestResult, p3, repor
   const computeToken = harness.computePathFor(row.relFile) || '';
 
   const rows = [];
-  const push = (rule, name, status, note) => rows.push({ rule, name, status, note });
+  // `pinned` (Rule 13 hard-stop wiring, WF3 commit 4, `computeMatrixHardStop`
+  // above) — the SAME Spec 123 §3.1 KNOWN-DEFECT concept `checkVerdictSingleSource`
+  // already carries in its own `detail` prose, now also a structured flag on
+  // the row itself so a consumer never has to string-match "KNOWN-DEFECT" out
+  // of free text to know whether an `enforced-red` row gates. Defaults false —
+  // an `enforced-red` row is a hard stop unless explicitly, narrowly pinned.
+  const push = (rule, name, status, note, pinned = false) => rows.push({ rule, name, status, note, pinned });
 
   {
     const baseline = checkSchemaBaseline();
@@ -1750,7 +1833,13 @@ function computePolicyMatrix(row, descriptorInfo, shape, vitestResult, p3, repor
   push(9, 'Banned write needs ledger (+ V7 no_retraction)', descriptorInfo.ok ? 'enforced-green' : 'enforced-red', '');
   {
     const v10 = checkVerdictSingleSource();
-    push(10, 'Verdict row-derived', v10.status, v10.detail);
+    // Pinned iff the red is caused SOLELY by the filed KNOWN-DEFECT
+    // (skipNeverPass failing) with zero unsanctioned second derivations
+    // (singleSource passing) — a genuine unsanctioned site (singleSource
+    // failing) is NOT covered by the pin and still gates, per Fold A's own
+    // "reds independent of the KNOWN-DEFECT pin below" ruling.
+    const v10Pinned = v10.status === 'enforced-red' && v10.singleSource.pass && !v10.skipNeverPass.pass;
+    push(10, 'Verdict row-derived', v10.status, v10.detail, v10Pinned);
   }
   {
     const v11 = checkOrderGuaranteesCited(descriptorInfo.descriptor);
@@ -1792,7 +1881,7 @@ function renderScorecard(row, sc, matrix, captureFindings, vitestResult, invaria
   lines.push(`> Generated by \`node scripts/analysis/step-validate.mjs --step=${row.slug} --write\` — Spec 123 §6, ruling R-R (2026-08-29).`);
   lines.push(`> Regenerate with the same command; a stale block is a conformance-lock finding (\`step-conformance.infra.test.ts\`).`);
   lines.push('');
-  lines.push(`**Score: ${sc.total}/${sc.maxTotal}** · G9 Reflection: ${sc.g9.pass ? 'PASS' : 'FAIL'} · G4d fence-lock coverage: ${sc.g4d.pass ? 'PASS' : 'FAIL'} · G-shape: ${sc.gshape.pass ? 'PASS' : 'FAIL'} · **Hard stop: ${sc.hardStop ? 'YES' : 'no'}**`);
+  lines.push(`**Score: ${sc.total}/${sc.maxTotal}** · G9 Reflection: ${sc.g9.pass ? 'PASS' : 'FAIL'} · G4d fence-lock coverage: ${sc.g4d.pass ? 'PASS' : 'FAIL'} · G-shape: ${sc.gshape.pass ? 'PASS' : 'FAIL'} · **Hard stop: ${sc.hardStop ? `YES (${sc.hardStopReasons.join(', ')})` : 'no'}**`);
   lines.push('');
   lines.push('| Gate | Score | Max | Detail |');
   lines.push('|---|---:|---:|---|');
@@ -2196,6 +2285,44 @@ function selfTest() {
     );
     if (deadRed.pass) throw new Error(`self-test FAILED: checkInterruptedPostureTruthful did not RED a runner reaching neither ledgerGatedSkip nor selectMode (${JSON.stringify(deadRed)})`);
   }
+  // Rule 13 hard-stop wiring (Spec 124 §2 Rule 13, WF3 "Rules 10-12 output
+  // panel remediation" commit 4) — computeMatrixHardStop, pure, in-memory
+  // (Spec 121 §12b.6). Three cases, all directions: an UNPINNED enforced-red
+  // row hard-stops and names its rule number in the reason; a PINNED
+  // enforced-red row (the same mechanism Rule 10's own KNOWN-DEFECT already
+  // sets) does NOT hard-stop; an enforced-green row never hard-stops either.
+  {
+    const unpinnedRed = computeMatrixHardStop([{ rule: 4, status: 'enforced-red' }]);
+    if (!unpinnedRed.hardStop) {
+      throw new Error(`self-test FAILED: computeMatrixHardStop did not hard-stop on an unpinned enforced-red row (${JSON.stringify(unpinnedRed)})`);
+    }
+    if (!unpinnedRed.reasons.some((r) => r.includes('Rule 4'))) {
+      throw new Error(`self-test FAILED: computeMatrixHardStop's reason did not name the rule number (${JSON.stringify(unpinnedRed)})`);
+    }
+
+    const pinnedRed = computeMatrixHardStop([{ rule: 10, status: 'enforced-red', pinned: true }]);
+    if (pinnedRed.hardStop) {
+      throw new Error(`self-test FAILED: computeMatrixHardStop hard-stopped on a PINNED enforced-red row (${JSON.stringify(pinnedRed)})`);
+    }
+
+    const green = computeMatrixHardStop([{ rule: 4, status: 'enforced-green' }]);
+    if (green.hardStop) {
+      throw new Error(`self-test FAILED: computeMatrixHardStop hard-stopped on an enforced-green row (${JSON.stringify(green)})`);
+    }
+
+    // Mixed matrix: one pinned red (Rule 10) + one unpinned red (Rule 4) —
+    // the pin is per-row, never a blanket "any pin present neutralizes the
+    // whole matrix" — the overall result still hard-stops, naming only the
+    // unpinned rule.
+    const mixed = computeMatrixHardStop([
+      { rule: 10, status: 'enforced-red', pinned: true },
+      { rule: 4, status: 'enforced-red' },
+      { rule: 11, status: 'enforced-green' },
+    ]);
+    if (!mixed.hardStop || mixed.reasons.length !== 1 || !mixed.reasons[0].includes('Rule 4')) {
+      throw new Error(`self-test FAILED: computeMatrixHardStop did not isolate the unpinned row in a mixed matrix (${JSON.stringify(mixed)})`);
+    }
+  }
   // C4 (Fold A item 3) — matchTests's scopeToken must match regardless of
   // whether the caller passes the underscored slug (row.slug, e.g.
   // "link_massing") or the hyphenated relFile a real it(`${relFile} — …`)
@@ -2323,11 +2450,14 @@ async function main() {
     }
     const captureFindings = checkCaptures(row, descriptorInfo, computePath, report);
     const p3 = measureP3Footprint(row, descriptorInfo);
-    const sc = computeScorecard(row, report, descriptorInfo, shape, captureFindings, invariantResults, churnFindings);
+    // matrix computed BEFORE the scorecard (Rule 13 hard-stop wiring, WF3
+    // commit 4) — computeScorecard now folds an unpinned enforced-red matrix
+    // row into hardStop, so it needs the matrix as an input, not a sibling.
     const matrix = computePolicyMatrix(row, descriptorInfo, shape, vitestResult, p3, report);
+    const sc = computeScorecard(row, report, descriptorInfo, shape, captureFindings, invariantResults, churnFindings, matrix);
     const block = renderScorecard(row, sc, matrix, captureFindings, vitestResult, invariantResults);
 
-    console.log(`\n\`\`\`\n[step-validate] ${row.slug} (${row.stage}) — ${sc.total}/${sc.maxTotal}, hard-stop=${sc.hardStop}\n\`\`\`\n`);
+    console.log(`\n\`\`\`\n[step-validate] ${row.slug} (${row.stage}) — ${sc.total}/${sc.maxTotal}, hard-stop=${sc.hardStop}${sc.hardStop ? ` (${sc.hardStopReasons.join(', ')})` : ''}\n\`\`\`\n`);
     console.log(block);
 
     const blockingForRow = blockingItemsFor(row.slug, programmeItemsAll);
@@ -2373,7 +2503,7 @@ async function main() {
   if (dataValidatorPool) await dataValidatorPool.end();
 
   if (anyHardStop) {
-    console.error('\n[step-validate] HARD STOP on at least one step (G6/G7/G8 == 0, G9 FAIL, or a fast invariant FAIL). Exiting non-zero.');
+    console.error('\n[step-validate] HARD STOP on at least one step (G6/G7/G8 == 0, G9 FAIL, a fast invariant FAIL, or an unpinned enforced-red policy-matrix row). Exiting non-zero.');
     process.exit(1);
   }
 }

@@ -470,7 +470,7 @@ Declared BEFORE any old/new diff. Sources: `scripts/analysis/capture-step-golden
 - compare ran: true · diffs found: 83 · unexplained: 0
 
 ### Test suite (item iii)
-- 761/777 passed (suite success=true)
+- 763/779 passed (suite success=true)
 
 ### Policy coverage matrix (item vi) — Spec 124 Rules 1-13
 

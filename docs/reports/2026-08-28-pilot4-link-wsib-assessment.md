@@ -49,12 +49,12 @@ Read verbatim this commit: the row at `docs/reports/review_followups.md:3015` (t
 | Commit | Construct | Live today? | Proposed disposition | Ground |
 |---|---|---|---|---|
 | `4bb44fbb` (F1) | Phase-ordinal ternary `(PIPELINE_CHAIN==='sources')?19:7` | ✓ (`:163`, `:198`, `:526`) | **encoded-as-descriptor-field** | → `sharing.varies_by_chain.phase: {permits:7, sources:19}` (E3) — supersedes `5baaed5a`'s earlier 12/5 values (see below) |
-| `a81c6a7c` | `FORCE_FULL_ENV`, `readThresholdVersionSignal`/`hasThresholdChanged`, honest `records_updated: totalLinked` | ✓ (`:36`, `:85-106`, `:510`) | **encoded-as-descriptor-field** (override/staleness) + **preserved-in-compute** (the honest aggregate) | `override.force_full` (E1, box already exists per pilot 3's own E1 finding); `staleness.trigger` gains `config_version` (A-3/LG-12) |
+| `a81c6a7c` | `FORCE_FULL_ENV`, `readThresholdVersionSignal`/`hasThresholdChanged`, honest `records_updated: totalLinked` | ✓ (`:36`, `:85-106`, `:510`) | **encoded-as-descriptor-field** (override/staleness AND the honest aggregate — re-disposed, LW-D21, operator ruling 2026-09-03, see §12; the aggregate half was compute-resident before this ruling) | `override.force_full` (E1, box already exists per pilot 3's own E1 finding); `staleness.trigger` gains `config_version` (A-3/LG-12); the aggregate half now cites `outputs.counters.records_updated` (:585) as its `why` |
 | `b92ad16f` | `buildSkipGateRecordsMeta` skip-path audit rows | ✓ (`:160-166`) | **preserved-in-runner**, PINNED pending commit 7's LG-15 ruling | Fold A's B1/LG-15 finding: this becomes the library's gated-skip mechanism; stays in compute until A-1 is ruled |
 | `2633c1cb` (A1/A2/A3) | logicVars validation + `--dry-run` parse hoisted ABOVE the advisory lock/gate | ✓ (`:110-126`) | **encoded-as-descriptor-field** | `config.hoisted_above_gate: true` — the schema field already exists FOR THIS EXACT FENCE (G-4) |
 | `2577e694` (AP1) | zero-unlinked `audit_table` shape (SKIPPED/reason INFO rows); `preRowCount`-before-DELETE half N/A (0 DELETE in this file, confirmed) | ✓ shape (`:190-207`); DELETE-guard half N/A | **encoded-as-descriptor-field** (the shape) | `terminals[]` gains the vacuous-zero-unlinked entry (G-12) |
 | `52ad6527` (§11) | `records_total: totalUnlinked` (not `totalLinked`) — "full evaluation scope, not matched-only" | ✓ (`:508`, current/final value — see churn note below) | **preserved-in-compute**, PIN pending commit 7's `outputs.counters` declaration | commit message IS the `why` Rule 4 requires; carries forward verbatim into the descriptor |
-| `76dcca28` (B1 Batch 3) | `parseInt`→`safeParsePositiveInt` ×4 sites | ✓ (`:185`, `:340`, `:494-495`) | **preserved-in-compute** | pure numeric-safety helper call, Rule 2 domain logic, no descriptor field warranted |
+| `76dcca28` (B1 Batch 3) | `parseInt`→`safeParsePositiveInt` ×4 sites | ✗ **SUPERSEDED** (LW-D21, operator ruling 2026-09-03 — see §12): 0 `safeParsePositiveInt` hits in the converted compute | **knowingly-retired** (re-disposed this ruling) | the safety concern (never crash on a bad numeric input) is moot under `count(*)::int` — Postgres cannot return a non-numeric COUNT, so the guard has nothing left to guard against |
 | `c1ef0b73` (Bundle G Wave 2) | `ADVISORY_LOCK_ID = 94`, `RUN_AT` via `getDbTimestamp`/`withAdvisoryLock` | ✓ (`:30`, `:128-129`) | **encoded-as-descriptor-field** | `identity.lock: 94` kept textually (§5.4, S1) |
 | `714dc48e` (WF3-E20) | `wsib_fuzzy_match_threshold` externalized to `logic_variables` | ✓ (`:26-28`, `:114-117`) | **encoded-as-descriptor-field** | `config.logic_variables[]` (T1, already registered+GROUPed) |
 | `d704a447` | Strip leading THE/A/AN before first-letter blocking comparison | ✓ (`:258-259`, `:272-273`) | **preserved-in-compute** + Rule-4 `why` owed | **Most consequential fence in the corpus** — the predicate this fix INTRODUCED is what today's tier-3 pass rate (38.1%) measures against; because the `WHERE linked_entity_id IS NULL` guard is monotone (G-8), the 60.5% pre-fix contamination this fix could not retroactively repair is exactly A-7's reason for existing (Fold A/Reality-Check). The article-stripping rule itself needs a `checks[].why` at commit 7, same treatment as LM-D13's tiebreak |
@@ -628,12 +628,12 @@ Filed to `docs/reports/review_followups.md`: a MED follow-up naming every residu
 
 - **Row `30ff8805`** (§2) — kept `preserved-in-compute`; grounded in-row: the parameterized-threshold shape survives as `buildFuzzyMatchSql`/`buildFuzzyMatchCountSql` (`scripts/lib/compute/link-wsib.js:287,336`); the `why` cited is descriptor `deviations[]` `LW-D15` (`:532`), which requires the dry-run mirror to share the live query's exact parameterized predicate.
 - **Row `b71db6e0`** (§2) — kept `preserved-in-compute`; the row's OWN prior claim ("Rule 4 already satisfied — the header comment already documents...") is corrected: a code comment is not a valid grounding site (Spec 124 §5.4). Grounded instead via `notes.json fences[]` (the GIN-index CTE-split fence, same incident numbers, commit-attributed to `647d0935` — confirmed as the corpus's canonical attribution for this still-live shape by `buildFuzzyMatchSql`'s own header comment, which cross-cites both `d704a447` and `647d0935`).
-- **Row `a81c6a7c`** (§2) — **PREMISE REFUTED, NOT re-disposed (operator instruction, 2026-09-03: report, do not retire).** The "honest aggregate" (`totalLinked`) does not survive: `grep -rn totalLinked scripts/lib/compute/link-wsib.js scripts/link-wsib.js` → 0 hits (the only `totalLinked` hits repo-wide are in the unrelated `scripts/link-coa.js`). `records_updated` is now sourced declaratively via `outputs.counters.records_updated: {source: "written.e1.updated", scoped_by: "id"}` (`scripts/link-wsib.descriptor.json:585`) — a runner-derived counter, not a hand-computed compute variable. **Left as `preserved-in-compute`, ungrounded, pending operator ruling** on whether the correct disposition is `encoded-as-descriptor-field` (the counters declaration) or `knowingly-retired` (the specific variable/mechanism).
-- **Row `76dcca28`** (§2) — **PREMISE REFUTED, NOT re-disposed (same instruction).** `grep -rn safeParsePositiveInt scripts/lib/compute/link-wsib.js` → 0 hits; all COUNT queries in the current compute module use server-side `count(*)::int` casts (`scripts/lib/compute/link-wsib.js:267,376,391,410,443`) — the same "superseded by server-side `COUNT(*)::int`" pattern `CC-D4` found for `compute_centroids`' own `90e3d0f8` row. **Left as `preserved-in-compute`, ungrounded, pending operator ruling.**
+- **Row `a81c6a7c`** (§2) — ~~PREMISE REFUTED, NOT re-disposed (operator instruction, 2026-09-03: report, do not retire).~~ **Ruled (LW-D21, operator ruling, 2026-09-03, same-day follow-on to the report above — Spec 124 §4.2 adjudication):** re-disposed `preserved-in-compute` → `encoded-as-descriptor-field`, same precedent as `1933c1e0`'s Row C for `compute_centroids`' `90e3d0f8`. Refutation evidence unchanged: `grep -rn totalLinked scripts/lib/compute/link-wsib.js scripts/link-wsib.js` → 0 hits (the only `totalLinked` hits repo-wide are in the unrelated `scripts/link-coa.js`). Purpose preserved: `records_updated` is sourced declaratively via `outputs.counters.records_updated: {source: "written.e1.updated", scoped_by: "id"}` (`scripts/link-wsib.descriptor.json:585`) — a runner-derived counter, not a hand-computed compute variable, is the `why` this row now cites.
+- **Row `76dcca28`** (§2) — ~~PREMISE REFUTED, NOT re-disposed (same instruction).~~ **Ruled (LW-D21, same operator ruling):** re-disposed `preserved-in-compute` → `knowingly-retired` (mirrors `1933c1e0`'s Row C disposition word exactly — the analogous `safeParsePositiveInt`→`count(*)::int` supersession `CC-D4` found for `compute_centroids`' own `90e3d0f8`). Refutation evidence unchanged: `grep -rn safeParsePositiveInt scripts/lib/compute/link-wsib.js` → 0 hits; all COUNT queries in the current compute module use server-side `count(*)::int` casts (`scripts/lib/compute/link-wsib.js:267,376,391,410,443`) — Postgres cannot return a non-numeric COUNT, so the safe-parse guard has nothing left to guard against.
 
-**Operator: 2 of the 4 originally-ungrounded rows are grounded above (citation only, no descriptor/notes.json change). The other 2 (`a81c6a7c`, `76dcca28`) have a refuted premise — the construct the row describes was not ported into the converted compute — and are reported here rather than silently re-disposed, per this WF3's explicit instruction. Rule 4 / GAP G-2 therefore stays `enforced-red` for `link_wsib` after this commit (2 ungrounded rows, down from 4), and the new Rule-13 hard-stop wiring (this same WF3, commit 4) will correctly flag it — that is the mechanism working as designed, not a defect in this commit.**
+**Operator (amended 2026-09-03, same day, later commit — not silently): all 4 originally-ungrounded rows are now closed** — 2 grounded by in-row citation (`30ff8805`, `b71db6e0`, no descriptor/notes.json change), 2 re-disposed by operator ruling (`a81c6a7c` → `encoded-as-descriptor-field`, `76dcca28` → `knowingly-retired`), the discoverer/adjudicator split this WF3's own commit 1 held to (Spec 124 §4.2) now closed by the adjudication. Rule 4 / GAP G-2 is fully CLOSED for `link_wsib`: 0 of 6 remaining `preserved-in-compute` rows (`30ff8805`, `b71db6e0`, `52ad6527`, `d704a447`, `647d0935`, `0523947c`) are ungrounded.
 
-**RED, verbatim (after this commit, `--write`):** see the regenerated scorecard below — Rule 4 row and G-2 detail now read "8 preserved-in-compute row(s), 2 with no why/notes.json/checks[] grounding" (down from 4 ungrounded).
+**GREEN, verbatim (after this commit, `--write`):** see the regenerated scorecard below — Rule 4 row now reads `enforced-green`, G-2 detail reads "6 preserved-in-compute row(s), 0 with no why/notes.json/checks[] grounding".
 
 ---
 
@@ -720,16 +720,16 @@ Two REAL bugs were found by a **live kill-and-rerun proof against this exact ste
 - compare ran: true · diffs found: 218 · unexplained: 0
 
 ### Test suite (item iii)
-- SKIPPED or failed to run: --fast: vitest spawn skipped
+- 763/779 passed (suite success=true)
 
 ### Policy coverage matrix (item vi) — Spec 124 Rules 1-13
 
 | Rule | Name | Status | Note |
 |---|---|---|---|
 | 1 | Nothing hidden | enforced-green | G-1 schema-baseline: schema-baseline clean |
-| 2 | Compute is just compute | enforced-green | §5.5 describe not scoped to this step in the vitest run |
+| 2 | Compute is just compute | enforced-green |  |
 | 3 | Tunables externalized | enforced-green | G-4: 8 declared, 3 verdict-affecting, 0 violate on_invalid:fail with no deviations[] cover |
-| 4 | Compute rule declared | enforced-red | G-2: 8 preserved-in-compute row(s), 2 with no why/notes.json/checks[] grounding |
+| 4 | Compute rule declared | enforced-green | G-2: 6 preserved-in-compute row(s), 0 with no why/notes.json/checks[] grounding |
 | 5 | checks >= 1 | enforced-green |  |
 | 6 | Omission fails (18 categories) | enforced-green |  |
 | 7 | Archetype gates categories | enforced-green |  |
@@ -741,5 +741,5 @@ Two REAL bugs were found by a **live kill-and-rerun proof against this exact ste
 | 13 | A step validates itself | enforced-green | this run of step:validate IS the mechanism |
 | P3 | I/O cost adjudication (measured, not gated) | measured | descriptor=63927B notes=12503B checks=20 rows records_meta=1392B (newest post/ capture) |
 
-**Enforced-green: 11/14**
+**Enforced-green: 12/14**
 
