@@ -2177,13 +2177,7 @@ describe('Rule 11 — phase-order re-derivation, declared half (checkOrderGuaran
     ['link_wsib', 1],
   ])('%s: %d real when:"pre_write" check(s) each carry a live, non-rotted order_guarantee — Rule 11 enforced-green', (slug, count) => {
     const run = spawnSync('node', [STEP_VALIDATE, `--step=${slug}`, '--fast'], { cwd: REPO_ROOT, encoding: 'utf8', timeout: 30_000 });
-    // Exit status is 0 (clean) OR 1 (Rule 13 hard-stop, WF3 commit 4) — NEVER
-    // 2 (an uncaught exception/crash). `link_wsib` is expected to exit 1
-    // here: its own Rule 4 row is a genuine, unpinned enforced-red (LW-D21,
-    // pending operator ruling) UNRELATED to Rule 11, which this test scopes
-    // to by asserting the Rule 11 row's own content below, not the process's
-    // overall exit code.
-    expect(run.status, `crashed; stdout=${run.stdout}\nstderr=${run.stderr}`).not.toBe(2);
+    expect(run.status, `stdout=${run.stdout}\nstderr=${run.stderr}`).toBe(0);
     const row = (run.stdout.split('\n').find((l) => /^\|\s*11\s*\|/.test(l.trim())) || '');
     expect(row, `no Rule 11 matrix row found; stdout=${run.stdout}`).not.toBe('');
     expect(row).toContain('enforced-green');
@@ -2223,10 +2217,7 @@ describe('Rule 12 — truthful crash posture, static half (checkInterruptedPostu
     ['link_parcels', 'link_keyed', 'runLinkKeyedPhase'],
   ])('%s: shape=%s declares force_full_on_next_run and its runner (%s) is measured REACHABLE against the live scripts/lib/step/index.js', (slug, shape, fnName) => {
     const run = spawnSync('node', [STEP_VALIDATE, `--step=${slug}`, '--fast'], { cwd: REPO_ROOT, encoding: 'utf8', timeout: 30_000 });
-    // See the Rule 11 it.each above (same file, same reason) — `link_wsib`
-    // legitimately exits 1 (Rule 13 hard-stop, WF3 commit 4) on its own
-    // unrelated Rule 4 red; only a crash (status 2) is disallowed here.
-    expect(run.status, `crashed; stdout=${run.stdout}\nstderr=${run.stderr}`).not.toBe(2);
+    expect(run.status, `stdout=${run.stdout}\nstderr=${run.stderr}`).toBe(0);
     const row = (run.stdout.split('\n').find((l) => /^\|\s*12\s*\|/.test(l.trim())) || '');
     expect(row, `no Rule 12 matrix row found; stdout=${run.stdout}`).not.toBe('');
     expect(row).toContain('enforced-green');
