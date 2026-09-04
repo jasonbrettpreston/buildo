@@ -185,3 +185,64 @@ describe('logic-var-admin-declarations — reverse coverage (seed key ⇒ admin 
     expect(findings.some((f) => f.includes(`"${fixtureKey}"`)), findings.join('\n')).toBe(false);
   });
 });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ADMIN-1 monotonic ratchet (commit 4) — programme-items.json's ADMIN-1
+// ("unclassified count = 0") is NOT enforced by a red vitest (G10: a red test
+// with 302 members would wedge .husky/pre-commit for every future commit,
+// including the ones that would fix it). Instead: the live unclassified count
+// may never RISE above the recorded high-water mark
+// (scripts/steps/_schema/admin-unclassified-high-water-mark.json, refreshed
+// downward-only by scripts/generate-logic-variable-groups.mjs) — a new key
+// can never be added unclassified, while genuine reclassification work is
+// free to lower the mark over time. This IS a red/green vitest — because the
+// assertion is an inequality with 302 slack today, not "== 0".
+// ─────────────────────────────────────────────────────────────────────────────
+const RATCHET_PATH = path.join(REPO_ROOT, 'scripts', 'steps', '_schema', 'admin-unclassified-high-water-mark.json');
+
+function liveUnclassifiedCount(seed: Seed): number {
+  return Object.values(seed).filter((v) => v.admin && 'hidden' in v.admin && v.admin.hidden === 'unclassified').length;
+}
+
+/** Pure ratchet check, mirrored by the RED/GREEN fixtures below. */
+function checkRatchet(liveCount: number, highWaterMark: number): string[] {
+  if (liveCount > highWaterMark) {
+    return [
+      `live unclassified count (${liveCount}) exceeds the recorded high-water mark (${highWaterMark}) — a key was added hidden:"unclassified" without lowering the mark, or the mark was tampered with; see scripts/steps/_schema/admin-unclassified-high-water-mark.json`,
+    ];
+  }
+  return [];
+}
+
+describe('ADMIN-1 monotonic ratchet — unclassified count never rises above the recorded high-water mark', () => {
+  const ratchet = JSON.parse(fs.readFileSync(RATCHET_PATH, 'utf-8')) as { high_water_mark: number };
+
+  it('vacuous-pass guard: the ratchet file parsed a real, positive high_water_mark', () => {
+    expect(typeof ratchet.high_water_mark).toBe('number');
+    expect(ratchet.high_water_mark).toBeGreaterThan(0);
+  });
+
+  it('GREEN — the real live count does not exceed the recorded high-water mark', () => {
+    const live = liveUnclassifiedCount(SEED);
+    const findings = checkRatchet(live, ratchet.high_water_mark);
+    expect(findings, findings.join('\n')).toEqual([]);
+  });
+
+  it('RED — a live count exceeding the recorded high-water mark reddens (fixture, not the real seed)', () => {
+    const findings = checkRatchet(ratchet.high_water_mark + 1, ratchet.high_water_mark);
+    expect(
+      findings.some((f) => f.includes('exceeds the recorded high-water mark')),
+      findings.join('\n'),
+    ).toBe(true);
+  });
+
+  it('GREEN — a live count BELOW the recorded high-water mark does not redden (decreasing is free)', () => {
+    const findings = checkRatchet(ratchet.high_water_mark - 1, ratchet.high_water_mark);
+    expect(findings, findings.join('\n')).toEqual([]);
+  });
+
+  it('GREEN — a live count EQUAL to the recorded high-water mark does not redden (boundary)', () => {
+    const findings = checkRatchet(ratchet.high_water_mark, ratchet.high_water_mark);
+    expect(findings, findings.join('\n')).toEqual([]);
+  });
+});

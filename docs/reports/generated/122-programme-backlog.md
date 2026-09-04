@@ -6,18 +6,18 @@
 
 ## Counts
 
-Total items: **77**
+Total items: **78**
 
 | status | count |
 |---|---|
-| ⬜ NOT_STARTED | 17 |
+| ⬜ NOT_STARTED | 18 |
 | ⚠️ PARTIAL | 19 |
 | ✅ BUILT | 39 |
 | ⏭️ SUPERSEDED | 2 |
 
-**blocks batching: 8**
+**blocks batching: 9**
 
-## Batching prerequisite — blocks "freeze after the eighth" (Spec 122 §8.2/§10.3) (8)
+## Batching prerequisite — blocks "freeze after the eighth" (Spec 122 §8.2/§10.3) (9)
 
 | id | spec | title | status | owner | blocks | last reviewed |
 |---|---|---|---|---|---|---|
@@ -29,6 +29,7 @@ Total items: **77**
 | `PRG-3` | 122 §7.2 | pilot order rulings | ⚠️ PARTIAL | pilot: pilot 6 cutover, d9057a54 | batching | 2026-08-29 |
 | `PRG-10` | 122 §8.2 | freeze after the eighth - no formal batching mechanism (repeat of STD-8) | ⬜ NOT_STARTED | wf: wf: programme-STD-8 | batching | 2026-08-29 |
 | `WD-1` | 122 §1.4 | class-enum-without-write.js-branch lock | ⬜ NOT_STARTED | wf: wf: programme-WD1 | batching | 2026-08-29 |
+| `ADMIN-1` | 124 §2 Rule 3 | admin GROUPS reverse-coverage — every unclassified seed key gets a real group or a reviewed hidden reason | ⬜ NOT_STARTED | wf: wf: programme-ADMIN-1 | batching | 2026-09-03 |
 
 ## Cutover prerequisite — blocks a specific pilot slug registering in converted.json (3)
 
@@ -111,4 +112,4 @@ Total items: **77**
 
 ---
 
-*Freeze-readiness (Spec 122 §8.2/§10.3): the template may honestly "freeze after the eighth" only when the batching_prereq set above is EMPTY. Currently **8** item(s) block it.*
+*Freeze-readiness (Spec 122 §8.2/§10.3): the template may honestly "freeze after the eighth" only when the batching_prereq set above is EMPTY. Currently **9** item(s) block it.*

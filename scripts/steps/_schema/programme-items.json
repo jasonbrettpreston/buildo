@@ -238,7 +238,9 @@
       },
       "gate": {
         "kind": "batching_prereq",
-        "blocks": ["batching"]
+        "blocks": [
+          "batching"
+        ]
       },
       "last_reviewed": "2026-09-03"
     },
@@ -619,7 +621,10 @@
         "blocks": [
           "refresh_snapshot"
         ],
-        "applies_when": { "descriptor_path": "recovery.reset", "equals": "generated" }
+        "applies_when": {
+          "descriptor_path": "recovery.reset",
+          "equals": "generated"
+        }
       },
       "last_reviewed": "2026-09-03"
     },
@@ -639,7 +644,10 @@
         "blocks": [
           "refresh_snapshot"
         ],
-        "applies_when": { "descriptor_path": "recovery.reset", "equals": "generated" }
+        "applies_when": {
+          "descriptor_path": "recovery.reset",
+          "equals": "generated"
+        }
       },
       "last_reviewed": "2026-09-03"
     },
@@ -1345,6 +1353,25 @@
       "gate": {
         "kind": "nice_to_have",
         "blocks": []
+      },
+      "last_reviewed": "2026-09-03"
+    },
+    {
+      "id": "ADMIN-1",
+      "spec": "124 §2 Rule 3",
+      "title": "admin GROUPS reverse-coverage — every unclassified seed key gets a real group or a reviewed hidden reason",
+      "promised": "unclassified count = 0",
+      "status": "NOT_STARTED",
+      "evidence": "302 of 438 scripts/seeds/logic_variables.json keys carry admin.hidden === \"unclassified\" as of scripts/generate-logic-variable-groups.mjs (WF2 \"Admin Tunable Coverage\" commit 4, 2026-09-03) — refreshed by that generator on every regeneration (npm run logic-var-groups); high-water mark tracked in scripts/steps/_schema/admin-unclassified-high-water-mark.json (monotonic ratchet, src/tests/logic-var-admin-declarations.logic.test.ts) so the count can only decrease, never increase, going forward. review_followups.md — \"WF3 cloud-parity FIX 3 remediation — admin GROUPS reverse-coverage gap (2026-09-03)\" is the originating followup this item batches.",
+      "owner": {
+        "kind": "wf",
+        "ref": "wf: programme-ADMIN-1"
+      },
+      "gate": {
+        "kind": "batching_prereq",
+        "blocks": [
+          "batching"
+        ]
       },
       "last_reviewed": "2026-09-03"
     }

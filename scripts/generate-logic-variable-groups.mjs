@@ -359,4 +359,50 @@ if (CHECK) {
   fs.writeFileSync(OUTPUT, OUT_JSON);
   console.log(`✔ Generated ${path.relative(ROOT, OUTPUT)}`);
   console.log(`  ${GROUP_ORDER.length} groups, ${GROUP_ORDER.reduce((a, g) => a + g.keys.length, 0)} keys`);
+
+  // ── ADMIN-1 bookkeeping (commit 4) ─────────────────────────────────────
+  // The generator "emits the live unclassified count" — refreshes the
+  // ratchet (DOWNWARD only, never up) and programme-items.json's ADMIN-1
+  // evidence text. Write-mode only; --check never mutates either file.
+  const unclassifiedCount = Object.values(seed).filter(
+    (v) => v && typeof v === 'object' && v.admin && 'hidden' in v.admin && v.admin.hidden === 'unclassified',
+  ).length;
+  const totalCount = Object.keys(seed).length;
+
+  const RATCHET_PATH = path.join(ROOT, 'scripts', 'steps', '_schema', 'admin-unclassified-high-water-mark.json');
+  if (fs.existsSync(RATCHET_PATH)) {
+    const ratchetRaw = fs.readFileSync(RATCHET_PATH, 'utf-8');
+    const ratchetUsesCRLF = ratchetRaw.includes('\r\n');
+    const ratchet = JSON.parse(ratchetRaw);
+    const newMark = Math.min(ratchet.high_water_mark, unclassifiedCount);
+    if (newMark !== ratchet.high_water_mark) {
+      ratchet.high_water_mark = newMark;
+      ratchet.recorded_at = new Date().toISOString().slice(0, 10);
+      let ratchetOut = JSON.stringify(ratchet, null, 2) + '\n';
+      if (ratchetUsesCRLF) ratchetOut = ratchetOut.replace(/\n/g, '\r\n');
+      fs.writeFileSync(RATCHET_PATH, ratchetOut);
+      console.log(`  ratchet high_water_mark lowered to ${newMark}`);
+    }
+  }
+
+  const PROGRAMME_ITEMS_PATH = path.join(ROOT, 'scripts', 'steps', '_schema', 'programme-items.json');
+  if (fs.existsSync(PROGRAMME_ITEMS_PATH)) {
+    const piRaw = fs.readFileSync(PROGRAMME_ITEMS_PATH, 'utf-8');
+    const piUsesCRLF = piRaw.includes('\r\n');
+    const piData = JSON.parse(piRaw);
+    const admin1 = piData.items.find((i) => i.id === 'ADMIN-1');
+    if (admin1) {
+      const refreshed = admin1.evidence.replace(
+        /^\d+ of \d+ scripts\/seeds\/logic_variables\.json keys carry admin\.hidden === "unclassified"/,
+        `${unclassifiedCount} of ${totalCount} scripts/seeds/logic_variables.json keys carry admin.hidden === "unclassified"`,
+      );
+      if (refreshed !== admin1.evidence) {
+        admin1.evidence = refreshed;
+        let piOut = JSON.stringify(piData, null, 2) + '\n';
+        if (piUsesCRLF) piOut = piOut.replace(/\n/g, '\r\n');
+        fs.writeFileSync(PROGRAMME_ITEMS_PATH, piOut);
+        console.log(`  programme-items.json ADMIN-1 evidence refreshed (${unclassifiedCount} of ${totalCount})`);
+      }
+    }
+  }
 }
