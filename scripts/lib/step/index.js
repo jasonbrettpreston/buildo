@@ -369,6 +369,31 @@ function isRecorderStep(descriptor) {
   return Boolean(descriptor.execution && descriptor.execution.shape === 'recorder');
 }
 
+/**
+ * Is this an ENRICHER — N heterogeneous per-parcel passes, some sharing ONE
+ * transaction, at least one running AFTER that transaction commits, no
+ * ledger-gated skip, its own declared pre-transaction scope-defer mechanism?
+ * (Ask 1/Ask 2 RULING, ENRICHER pilot 9, `enrich_parcels`, 2026-09-04.)
+ *
+ * ⚠️ FORKED, NOT AN EXTENSION OF ANY EXISTING RUNNER. Measured at commit 7
+ * (Ask 1): `runCascadePhase`'s `execution.tiers[]` loop is a single-write-target
+ * convergence loop inside one txn; `enrich_parcels` has FIVE heterogeneous
+ * passes over MULTIPLE write targets, four sharing one transaction and a FIFTH
+ * that must run on a SEPARATE connection strictly AFTER that transaction
+ * commits (Spec 78 §P3A.1 — a same-txn read of what the first four just wrote
+ * would be invisible) — no existing `phase_order` value expresses a post-commit
+ * second phase. None of the five archetype runners use `staleness.
+ * ledgerGatedSkip`/`selectMode` either: this archetype's own staleness axis is
+ * Spec 122 §3.0b's scope-defer (a pre-transaction row-count check that, over
+ * threshold, makes the run a genuine zero-write no-op rather than a gated
+ * skip). `execution.shape` is still the ONE declared field selecting the
+ * runner branch (§4.1a); this predicate mirrors every sibling `is*Step`'s
+ * shape, not its mechanism.
+ */
+function isEnrichStep(descriptor) {
+  return Boolean(descriptor.execution && descriptor.execution.shape === 'enrich');
+}
+
 /** One requirement kind → the catalog probe that answers "is it there?". */
 const REQUIREMENT_PROBES = {
   extension: { sql: 'SELECT 1 FROM pg_extension WHERE extname = $1', args: (r) => [r.name] },
@@ -2049,6 +2074,471 @@ async function runRecorderPhase({ descriptor, pool, compute, config, chainId, lo
   };
 }
 
+// ---------------------------------------------------------------------------
+// THE ENRICH PHASE (LG-28, ENRICHER pilot 9, `enrich_parcels`, execution.shape:"enrich")
+// ---------------------------------------------------------------------------
+
+/**
+ * WF3 enrich_parcels stall commits 1/3 (2026-09-03), moved into the library at LG-28
+ * (Fold D3 — first-of-kind, zero prior hits in scripts/lib/). Writes
+ * `pipeline_runs.records_meta.{last_heartbeat_at,current_pass,rows_processed}` via a
+ * COALESCE merge so an earlier phase's own fields survive. Never throws (§3.6 "never
+ * crash the pass it is instrumenting") — a failed write is caught and logged. No-ops
+ * when `runId` is null (a standalone invocation with no `pipeline_runs` row to update).
+ * @param {import('pg').Pool} pool
+ * @param {number|null} runId
+ * @param {string} currentPhase
+ * @param {number} rowsProcessed
+ */
+async function recordHeartbeat(pool, runId, currentPhase, rowsProcessed) {
+  if (runId == null) return;
+  try {
+    await pool.query(
+      `UPDATE pipeline_runs
+          SET records_meta = COALESCE(records_meta, '{}'::jsonb) || jsonb_build_object(
+                'last_heartbeat_at', now(),
+                'current_pass', $1::text,
+                'rows_processed', $2::int
+              )
+        WHERE id = $3`,
+      [currentPhase, rowsProcessed, runId],
+    );
+  } catch (err) {
+    pipeline.log.warn('[step/enrich]', `heartbeat pipeline_runs UPDATE failed (run id ${runId}): ${err.message}`);
+  }
+}
+
+/**
+ * WF3 enrich_parcels stall commit 3 — silence-gated `pg_stat_activity` capture, Spec 48
+ * §3.10, moved into the library at LG-28. Generalized beyond the legacy pass-5-only
+ * version: this one takes the CURRENT phase's own backend `pid` (the runner now manages
+ * every phase's client directly, unlike the legacy `pipeline.streamQuery`-hidden
+ * connection) and probes `pg_stat_activity` for that exact pid — precise, not a
+ * domain-column `ILIKE` guess. Runs on `pool.query` — a FRESH physical connection, not
+ * the (possibly stuck) client being probed — so the capture can complete while the
+ * probed session is wedged. Never throws; no-ops when `runId` is null.
+ * @param {import('pg').Pool} pool
+ * @param {number|null} runId
+ * @param {number|null} pid
+ */
+async function captureStallDiagnostic(pool, runId, pid) {
+  if (runId == null) return;
+  try {
+    const probe = pid != null
+      ? await pool.query(
+        `SELECT pid, state, wait_event_type, wait_event, query_start
+           FROM pg_stat_activity WHERE pid = $1`,
+        [pid],
+      )
+      : { rows: [] };
+    const diag = probe.rows[0] || { note: 'no matching backend found in pg_stat_activity' };
+    await pool.query(
+      `UPDATE pipeline_runs
+          SET records_meta = COALESCE(records_meta, '{}'::jsonb) || jsonb_build_object(
+                'stall_diagnostic', $1::jsonb,
+                'stall_diagnostic_at', now()
+              )
+        WHERE id = $2`,
+      [JSON.stringify(diag), runId],
+    );
+  } catch (err) {
+    pipeline.log.warn('[step/enrich]', `stall diagnostic capture failed (run id ${runId}): ${err.message}`);
+  }
+}
+
+/**
+ * WF3 enrich_parcels stall commit 3 — starts a silence-gated ticker for ONE phase,
+ * moved into the library at LG-28 and generalized from pass-5-only to EVERY phase (the
+ * WF3's own filed deliverable: "whole-step ticker... passes-1-4 heartbeat" — this
+ * closes both in one mechanism). Since `runEnrichPhase` now owns every phase's client
+ * directly (no per-row progress channel crosses the compute seam — §5.5 keeps compute a
+ * pure SQL author), the staleness proxy is TIME SINCE THIS PHASE STARTED rather than
+ * legacy's per-row `rowsProcessed` counter: if a single phase call has not returned
+ * within `2 * intervalMs`, one diagnostic capture fires (never spams — `fired` latches
+ * until the caller starts a fresh ticker for the NEXT phase). Returns a `stop()`
+ * closure — callers MUST clear it in a `finally` once the phase call settles.
+ * @param {import('pg').Pool} pool
+ * @param {number|null} runId
+ * @param {number} intervalMs
+ * @param {() => number|null} getPid
+ * @returns {() => void}
+ */
+function startStallTicker(pool, runId, intervalMs, getPid) {
+  if (!intervalMs || intervalMs <= 0) return () => {};
+  let fired = false;
+  const timer = setInterval(() => {
+    if (fired) return;
+    fired = true;
+    captureStallDiagnostic(pool, runId, getPid()).catch((err) => {
+      pipeline.log.warn('[step/enrich]', `stall ticker diagnostic dispatch failed: ${err.message}`);
+    });
+  }, intervalMs * 2);
+  if (typeof timer.unref === 'function') timer.unref();
+  return () => clearInterval(timer);
+}
+
+/**
+ * A `ctx.stream` implementation PINNED TO ONE ALREADY-OPEN client (never a fresh
+ * `pool.connect()` the way `pipeline.streamQuery` opens internally) — the mechanism
+ * Fold B2 requires: pass 5's `SET LOCAL statement_timeout` must bind to the EXACT same
+ * session the cursor reads on, or the bound is provably a no-op (`SHOW statement_timeout`
+ * on that session is how the regression lock asserts it, never a config-value inspection).
+ * `pipeline`'s own pool-level `streamQuery` helper cannot be reused here for exactly that
+ * reason — it has no client-pinned form. Same underlying primitive (`pg-query-stream`), same
+ * yield-one-row contract; `withPipelineStatementTimeout`'s own SESSION-level fence
+ * (`scripts/lib/pipeline.js:80-`) is untouched, because this never calls `pool.connect()`
+ * itself — the caller already owns `client`.
+ * @param {import('pg').PoolClient} client
+ * @param {string} sql
+ * @param {any[]} params
+ * @param {{batchSize?: number}} [options]
+ */
+async function* streamOverClient(client, sql, params = [], options = {}) {
+  const QueryStream = require('pg-query-stream');
+  const qs = new QueryStream(sql, params, { batchSize: options.batchSize || 100 });
+  const stream = client.query(qs);
+  try {
+    for await (const row of stream) yield row;
+  } finally {
+    stream.destroy();
+  }
+}
+
+/**
+ * THE ENRICH PHASE (LG-28, ENRICHER pilot 9, `enrich_parcels`, `execution.shape:"enrich"`,
+ * Ask 1/Ask 2 RULING).
+ *
+ * Forked from every existing runner (`isEnrichStep`'s own header states why none of the
+ * six fit). Phase order, mirroring the descriptor's own `execution.phases[]`:
+ *   guards.requires              preconditions before the first read (`assertRequirements`)
+ *   Spec 58 §9/§11 consumer protocol   `compute.readZoningContract` — HALTS on a missing/
+ *                                 failed producer, BEFORE the transaction opens
+ *   R-B interrupted-retraction    `staleness.detectInterruptedRetraction`, folded into
+ *                                 `full` UNCONDITIONALLY (no ledger-gated-skip early
+ *                                 return exists on this archetype to hide behind —
+ *                                 Rule 12 reachability, `step-validate.mjs`'s
+ *                                 `runnerReachability`)
+ *   Spec 122 §3.0b scope-defer    `compute.computeDeferScope`, `!full` only — a
+ *                                 pre-transaction row-count check that, over threshold,
+ *                                 makes the run a genuine ZERO-WRITE no-op (never a
+ *                                 gated skip — the run still executes to completion)
+ *   THE PRE-WRITE GATE            scored before the first write, same contract as every
+ *                                 other archetype (this step declares one INFO-severity
+ *                                 pre_write check today, which never aborts)
+ *   FOUR PASSES, ONE SHARED TXN   `execution.phases[].txn:"shared"`, in declared `order`,
+ *                                 each phase wrapped in its OWN `SET LOCAL
+ *                                 statement_timeout`/`lock_timeout` (reverts at COMMIT/
+ *                                 ROLLBACK, Spec 122 §7.2 — never leaks onto a later
+ *                                 pooled checkout); heartbeat + a silence-gated stall
+ *                                 ticker around every phase, not just pass 5 (closing
+ *                                 the WF3-filed deliverable)
+ *   THE SCOPE HAND-OFF INSERT     the `insert_only_no_retraction`-class write target
+ *                                 (`enrich_parcels_pass3_scope`) — inside the SAME shared
+ *                                 transaction, BEFORE commit (Spec 122 §3.0b's own crash-
+ *                                 recoverable trail)
+ *   THE FIFTH PASS, POST-COMMIT   `execution.phases[].txn:"post_commit"` — a DEDICATED
+ *                                 connection, its OWN transaction (Fold B2: a live
+ *                                 `SET LOCAL` needs an open transaction to bind to), the
+ *                                 select streamed via `ctx.stream` (`streamOverClient`,
+ *                                 above) — Spec 78 §P3A.1's "a same-txn read would be
+ *                                 invisible" guarantee, declared as this step's one
+ *                                 `pre_write` `order_guarantee`
+ *   STEP-LEVEL POST CHECKS        `zone_class_pct` / `opt_aor_without_max_gfa` — read
+ *                                 the now-fully-committed `parcels` table on `pool`
+ *
+ * @returns {Promise<object>} `{deferred, matched, written, prior, overrides, writeSkipped, skipped}`
+ */
+async function runEnrichPhase({ descriptor, pool, compute, config, chainId, log, tag, clockNow, preWriteGate, ownRunId }) {
+  const t0 = Date.now();
+  const requirements = await assertRequirements(pool, descriptor, { log, tag });
+  const overrides = staleness.resolveOverrides(descriptor);
+  // R-B (Rule 12) — folded UNCONDITIONALLY into `full`: this archetype has no
+  // ledger-gated-skip early return to hide behind (runnerReachability's ENRICHER
+  // branch, step-validate.mjs), so an interrupted prior run forces this one to treat
+  // itself as full, mirroring runCascadePhase's own `bypassed` fold verbatim.
+  const interruptedRetraction = await staleness.detectInterruptedRetraction(pool, descriptor, { ownRunId });
+  const full = process.argv.includes('--full') || overrides.force_full === true || interruptedRetraction.interrupted;
+  const privilege = await write.assertWritePrivileges(pool, descriptor, { log, tag });
+  const prior = await staleness.readPriorEmit(pool, ledgerPipelineName(descriptor, chainId), null);
+
+  const specs = descriptor.outputs.writes;
+  const written = {};
+  for (let i = 0; i < specs.length; i++) {
+    written[write.targetKey(i)] = { scanned: 0, inserted: 0, updated: 0, deleted: 0, retracted: 0, rows_changed: 0 };
+  }
+  written.privilege = privilege[specs[0].table] || null;
+  written.requirements = requirements;
+  if (interruptedRetraction.interrupted) written.interrupted_retraction_forced_full = true;
+
+  // ── Spec 58 §9/§11 consumer protocol — HALTS on a missing/failed producer ────
+  const contract = await compute.readZoningContract(pool);
+  const staleOverlays = new Set(
+    (compute.OVERLAY_LAYERS || []).filter((l) => l.col && contract.layers[l.key] === false).map((l) => l.key),
+  );
+
+  // ── Spec 122 §3.0b — the pre-transaction scope-defer decision (ZERO writes if deferred) ──
+  if (!full) {
+    const deferThreshold = Number(config.enrich_parcels_defer_threshold_rows);
+    const scope = await compute.computeDeferScope(pool, deferThreshold);
+    if (scope.scope_count >= deferThreshold) {
+      log.warn(tag, `enrich defer: combined scope ${scope.scope_count} >= threshold ${deferThreshold} (ratio ${scope.ratio})`);
+      return {
+        deferred: true,
+        matched: { defer_scope: scope, enrich_parcels_duration_ms: Date.now() - t0 },
+        written,
+        prior,
+        overrides,
+        writeSkipped: false,
+        skipped: false,
+      };
+    }
+  }
+
+  // ── THE PRE-WRITE GATE, before the first write ───────────────────────────
+  const decision = preWriteGate
+    ? await preWriteGate({ matched: {}, gate: null, prior, overrides, written: null })
+    : { abort: false, failed: [] };
+  if (decision.abort) {
+    log.error(tag, `pre_write check(s) FAILED with no standing override — enrich write SKIPPED: ${decision.failed.join(', ')}`);
+    return {
+      matched: {},
+      written: { ...written, write_skipped_pre_write_fail: true },
+      prior,
+      overrides,
+      writeSkipped: true,
+      failedPreWrite: decision.failed,
+    };
+  }
+
+  const phases = descriptor.execution.phases;
+  if (!Array.isArray(phases) || phases.length === 0) {
+    throw new Error(`${tag} execution.shape "enrich" requires a non-empty execution.phases[] array`);
+  }
+  const sharedPhases = phases.filter((p) => p.txn === 'shared').slice().sort((a, b) => a.order - b.order);
+  const postCommitPhases = phases.filter((p) => p.txn === 'post_commit').slice().sort((a, b) => a.order - b.order);
+  const passByName = (name) => {
+    const spec = compute.passes.find((p) => p.name === name);
+    if (!spec) throw new Error(`${tag} execution.phases[] names "${name}", which compute.passes[] does not declare`);
+    return spec;
+  };
+
+  const runAt = clockNow;
+  const scopeRunId = Math.floor(runAt.getTime() / 1000);
+  const asOfOverride = config.enrich_parcels_comps_as_of_date;
+  const clock = {
+    now: () => runAt,
+    asOfDate: () => (asOfOverride ? String(asOfOverride) : runAt.toISOString().slice(0, 10)),
+  };
+  const heartbeatMs = Math.round(Number(config.enrich_parcels_heartbeat_minutes) * 60000);
+  const lockTimeoutMs = Math.round(Number(config.enrich_parcels_lock_timeout_ms));
+
+  const passRaw = {};
+  let scopeInsertCount = 0;
+
+  await pipeline.withTransaction(pool, async (client) => {
+    const pidRow = await client.query('SELECT pg_backend_pid() AS pid');
+    const pid = pidRow.rows[0] ? Number(pidRow.rows[0].pid) : null;
+    for (const phase of sharedPhases) {
+      // Spec 122 §7.2 — SET LOCAL is scoped to THIS transaction and reverts at
+      // COMMIT/ROLLBACK; re-issued per phase so a future descriptor giving
+      // different phases different timeout config names is honoured without
+      // further runner changes (today all four share one name).
+      const timeoutMinutes = Number(config[phase.timeout_minutes_from_config]);
+      const timeoutMs = Math.round(timeoutMinutes * 60000);
+      if (timeoutMs > 0) await client.query(`SET LOCAL statement_timeout = ${timeoutMs}`);
+      if (lockTimeoutMs > 0) await client.query(`SET LOCAL lock_timeout = ${lockTimeoutMs}`);
+      const passSpec = passByName(phase.name);
+      const passCtx = { full, scopeWhere: 'TRUE', staleOverlays, clock, log, config, scopeRunId };
+      await recordHeartbeat(pool, ownRunId, phase.name, 0);
+      const stopTicker = startStallTicker(pool, ownRunId, heartbeatMs, () => pid);
+      try {
+        // WF3 stall commit 1 — a SET LOCAL-triggered abort dies LOUD with the
+        // phase's OWN name (Spec 115 §2.2 fail-safe-loud), never a bare
+        // 57014/55P03 postgres error that names none of the five phases.
+        passRaw[phase.name] = await (async () => {
+          try {
+            return await passSpec.run(client, passCtx, config);
+          } catch (err) {
+            if (err && (err.code === '57014' || err.code === '55P03')) {
+              const kind = err.code === '57014' ? 'statement_timeout' : 'lock_timeout';
+              const wrapped = new Error(`${tag} ${phase.name} aborted by ${kind}: ${err.message}`);
+              wrapped.code = err.code;
+              wrapped.cause = err;
+              throw wrapped;
+            }
+            throw err;
+          }
+        })();
+      } finally {
+        stopTicker();
+      }
+      await recordHeartbeat(pool, ownRunId, phase.name, 1);
+    }
+
+    // ── Spec 122 §3.0b scope hand-off — the ENRICHER's one LOGGED recovery
+    // ledger, left inside THIS transaction by design (a crash between commit
+    // and pass 5's own read never silently drops scope-deferred work). Found
+    // structurally (write_discipline.class), never by table-name string match
+    // — the same lookup shape runCascadePhase uses for its own class-scoped
+    // write targets.
+    const scopeTarget = specs.find((s) => s.write_discipline.class === 'insert_only_no_retraction');
+    const massingTarget = sharedPhases.find((p) => p.name === 'max_build');
+    if (scopeTarget && massingTarget) {
+      const ins = await client.query(
+        `INSERT INTO ${scopeTarget.table} (run_id, parcel_id)
+         SELECT $1, e.pid FROM parcel_max_build e
+         WHERE e.max_buildable_footprint_sqm IS NOT NULL
+         ON CONFLICT (run_id, parcel_id) DO NOTHING`,
+        [scopeRunId],
+      );
+      scopeInsertCount = ins.rowCount || 0;
+    }
+  });
+
+  // ── POST-COMMIT PHASE(S) (Spec 78 §P3A.1) — a DEDICATED connection, its OWN
+  // transaction (Fold B2): a live SET LOCAL needs an open transaction to bind
+  // to, and wrapping the pass in one txn is what makes the bound provable via
+  // SHOW on the SAME session, never by inspecting the config value back.
+  for (const phase of postCommitPhases) {
+    const passSpec = passByName(phase.name);
+    const timeoutMinutes = Number(config[phase.timeout_minutes_from_config]);
+    const timeoutMs = Math.round(timeoutMinutes * 60000);
+    const postClient = await pool.connect();
+    try {
+      await postClient.query('BEGIN');
+      let pid = null;
+      try {
+        const pidRow = await postClient.query('SELECT pg_backend_pid() AS pid');
+        pid = pidRow.rows[0] ? Number(pidRow.rows[0].pid) : null;
+        if (timeoutMs > 0) await postClient.query(`SET LOCAL statement_timeout = ${timeoutMs}`);
+        const streamBatchSize = Number(config.enrich_parcels_pass5_stream_batch_size);
+        const passCtx = {
+          full, scopeWhere: 'TRUE', staleOverlays, clock, log, config, scopeRunId,
+          stream: (sql, params, opts) => streamOverClient(postClient, sql, params, { batchSize: streamBatchSize, ...opts }),
+        };
+        await recordHeartbeat(pool, ownRunId, phase.name, 0);
+        const stopTicker = startStallTicker(pool, ownRunId, heartbeatMs, () => pid);
+        try {
+          passRaw[phase.name] = await (async () => {
+            try {
+              return await passSpec.run(postClient, passCtx, config);
+            } catch (err) {
+              if (err && (err.code === '57014' || err.code === '55P03')) {
+                const kind = err.code === '57014' ? 'statement_timeout' : 'lock_timeout';
+                const wrapped = new Error(`${tag} ${phase.name} aborted by ${kind}: ${err.message}`);
+                wrapped.code = err.code;
+                wrapped.cause = err;
+                throw wrapped;
+              }
+              throw err;
+            }
+          })();
+        } finally {
+          stopTicker();
+        }
+        await recordHeartbeat(pool, ownRunId, phase.name, 1);
+        await postClient.query('COMMIT');
+      } catch (err) {
+        await postClient.query('ROLLBACK').catch(() => {});
+        throw err;
+      }
+    } finally {
+      postClient.release();
+    }
+  }
+
+  // ── STEP-LEVEL POST CHECKS — the fully-committed parcels table, on `pool` ──
+  const totalParcels = await pool.query('SELECT COUNT(*)::int AS n FROM parcels WHERE geom IS NOT NULL').then((r) => r.rows[0].n);
+  const withZone = await pool.query('SELECT COUNT(*)::int AS n FROM parcels WHERE zoning_class IS NOT NULL').then((r) => r.rows[0].n);
+  const zonePct = totalParcels ? Math.round((1000 * withZone) / totalParcels) / 10 : 0;
+  const optAorWithoutMaxGfa = await pool.query(
+    'SELECT COUNT(*)::int AS n FROM parcels WHERE opt_aor_gfa_sqm IS NOT NULL AND max_buildable_gfa_sqm IS NULL',
+  ).then((r) => r.rows[0].n);
+
+  const zoning = passRaw.zoning || {};
+  const maxBuild = passRaw.max_build || {};
+  const existing = passRaw.existing_structure || {};
+  const comps = passRaw.comparable_builds || {};
+  const optCfg = passRaw.optimal_config || {};
+  const genuineIds = optCfg.genuineIds ? [...optCfg.genuineIds] : [];
+
+  const matched = {
+    zone_class_pct: zonePct,
+    opt_config_engine_errors: optCfg.errors || 0,
+    opt_aor_without_max_gfa: optAorWithoutMaxGfa,
+    parcels_enriched_count: zoning.updated || 0,
+    parcels_ambiguous_zone_count: { ambiguous: zoning.ambiguous || 0, scoped: zoning.scoped || 0 },
+    zoning_fsi_source_nulled_count: zoning.fsiSourceNulled || 0,
+    max_build_enriched_count: maxBuild.updated || 0,
+    massing_zero_link_ghost: maxBuild.zero_link_ghost_cnt || 0,
+    max_build_coverage_defaulted_count: maxBuild.coverage_defaulted_cnt || 0,
+    max_build_box_excluded_count: maxBuild.box_excluded_cnt || 0,
+    heritage_mislink_footprint_count: maxBuild.heritage_mislink_cnt || 0,
+    ravine_constrained_count: maxBuild.ravine_constrained_cnt || 0,
+    existing_structure_enriched_count: existing.updated || 0,
+    existing_mislinked_footprint_count: existing.mislinked || 0,
+    scenario_enriched_count: existing.scenarioUpdated || 0,
+    comp_candidate_pool: comps.candidates || 0,
+    comparable_builds_enriched_count: comps.updated || 0,
+    comp_zero_comps_count: comps.zero_comps || 0,
+    optimal_config_enriched_count: optCfg.updated || 0,
+    opt_aor_envelope_capped_count: optCfg.envelope_capped || 0,
+    opt_config_citywide_fallback_count: optCfg.citywide || 0,
+    enrich_parcels_duration_ms: Date.now() - t0,
+    passes: passRaw,
+    // D#5 — the honest aggregate, computed by compute's own pure helper (never
+    // re-derived here) — feeds counters.records_updated via config.counters'
+    // "compute.records_updated_aggregate" source.
+    compute: {
+      total_parcels_scanned: totalParcels,
+      records_new_aggregate: 0,
+      records_updated_aggregate: compute.computeAggregateRecordsUpdated({
+        zoningIds: zoning.updatedIds,
+        maxBuildIds: maxBuild.updatedIds,
+        existingIds: existing.updatedIds,
+        scenarioIds: existing.scenarioUpdatedIds,
+        optConfigGenuineIds: genuineIds,
+      }),
+    },
+  };
+
+  written[write.targetKey(0)].scanned = zoning.scoped || 0;
+  written[write.targetKey(0)].updated = zoning.updated || 0;
+  written[write.targetKey(0)].rows_changed = zoning.updated || 0;
+  written[write.targetKey(1)].scanned = maxBuild.scoped || 0;
+  written[write.targetKey(1)].updated = maxBuild.updated || 0;
+  written[write.targetKey(1)].rows_changed = maxBuild.updated || 0;
+  written[write.targetKey(2)].scanned = existing.scoped || 0;
+  written[write.targetKey(2)].updated = (existing.updated || 0) + (existing.scenarioUpdated || 0);
+  written[write.targetKey(2)].rows_changed = written[write.targetKey(2)].updated;
+  written[write.targetKey(3)].scanned = comps.candidates || 0;
+  written[write.targetKey(3)].updated = comps.updated || 0;
+  written[write.targetKey(3)].rows_changed = comps.updated || 0;
+  written[write.targetKey(4)].scanned = optCfg.updated || 0;
+  written[write.targetKey(4)].updated = optCfg.updated || 0;
+  written[write.targetKey(4)].rows_changed = optCfg.updated || 0;
+  const stampsIdx = specs.findIndex((s) => s.write_discipline.class === 'set_based_scoped');
+  if (stampsIdx >= 0) {
+    written[write.targetKey(stampsIdx)].updated = (zoning.updated || 0) + (maxBuild.updated || 0);
+    written[write.targetKey(stampsIdx)].rows_changed = written[write.targetKey(stampsIdx)].updated;
+  }
+  const scopeIdx = specs.findIndex((s) => s.write_discipline.class === 'insert_only_no_retraction');
+  if (scopeIdx >= 0) {
+    written[write.targetKey(scopeIdx)].inserted = scopeInsertCount;
+    written[write.targetKey(scopeIdx)].rows_changed = scopeInsertCount;
+  }
+
+  return {
+    deferred: false,
+    matched,
+    written,
+    prior,
+    overrides,
+    writeSkipped: false,
+    skipped: false,
+  };
+}
+
 /**
  * `outputs.writes[]` EXECUTED IN DECLARATION ORDER, in ONE transaction (§1.4: "Order is
  * declared and the runner executes it in order").
@@ -2346,6 +2836,7 @@ async function runWithPool(runnable, pool, ctx) {
       let materialize = null;
       let backfill = null;
       let recorder = null;
+      let enrich = null;
       let onlyChecks = null;
       // R-T addendum (Fold A-3/B-2) — the SAME gated-skip narrowing a real `checks[]`
       // entry gets, extended to invariants[]/plausibility[]. `onlyChecks` narrows by id
@@ -2356,7 +2847,7 @@ async function runWithPool(runnable, pool, ctx) {
       let onlyWhen = null;
       const drivesWrites = isIngestStep(descriptor) || isLinkStep(descriptor) || isLinkKeyedStep(descriptor)
         || isCascadeStep(descriptor) || isMaterializeStep(descriptor) || isBackfillStep(descriptor)
-        || isRecorderStep(descriptor);
+        || isRecorderStep(descriptor) || isEnrichStep(descriptor);
       // Spec 47 §R3.5 / B-11 — the DB clock, captured ONCE, inside the lock, for
       // WHICHEVER phase drives the write. One capture is not a tidiness preference: it is
       // what makes the written timestamp a single watermark, so two batches of one run
@@ -2511,6 +3002,33 @@ async function runWithPool(runnable, pool, ctx) {
           onlyWhen = positions;
           stepCtx.checks = stepCtx.checks.filter((id) => onlyChecks.has(id));
         }
+      } else if (isEnrichStep(descriptor)) {
+        enrich = await runEnrichPhase({
+          descriptor, pool, compute: runnable.compute, config: configValues,
+          chainId, log: pipeline.log, tag: `[${slug}]`, clockNow, ownRunId: runId,
+          preWriteGate: makePreWriteGate({ descriptor, chainId, stepCtx, compute: runnable.compute, config: configValues }),
+        });
+        stepCtx.matched = enrich.matched;
+        stepCtx.written = enrich.written;
+        stepCtx.prior = enrich.prior;
+        stepCtx.overrides = enrich.overrides;
+        stepCtx.elapsed_ms = Date.now() - startMs;
+        if (enrich.writeSkipped) {
+          // Same reasoning as isCascadeStep/isMaterializeStep's own pre_write-fail
+          // narrowing above — an ENRICHER shares the identical failure-to-reach shape.
+          const positions = ['pre', 'pre_write'];
+          onlyChecks = new Set(descriptor.checks.filter((c) => positions.includes(c.when)).map((c) => c.id));
+          onlyWhen = positions;
+          stepCtx.checks = stepCtx.checks.filter((id) => onlyChecks.has(id));
+        } else if (enrich.deferred) {
+          // Spec 122 §3.0b scope-defer — NOT a skip_gated terminal (the run still
+          // executed to completion, it just made zero writes): narrows to `pre` only,
+          // mirroring every other archetype's zero-work/gated-skip narrowing, since
+          // `post` checks have no written subject to observe.
+          onlyChecks = new Set(descriptor.checks.filter((c) => c.when === 'pre').map((c) => c.id));
+          onlyWhen = ['pre'];
+          stepCtx.checks = stepCtx.checks.filter((id) => onlyChecks.has(id));
+        }
       }
 
       // §5.5 (2) — `ctx.report()` is the ONLY observation path. A returned
@@ -2574,7 +3092,9 @@ async function runWithPool(runnable, pool, ctx) {
                 ? { matched: backfill.matched, written: backfill.written }
                 : (recorder
                   ? { matched: recorder.matched, written: recorder.written }
-                  : (ingest ? { acquired: ingest.acquired, written: ingest.written } : null))))));
+                  : (enrich
+                    ? { matched: enrich.matched, written: enrich.written }
+                    : (ingest ? { acquired: ingest.acquired, written: ingest.written } : null)))))));
       counters = (ingest && ingest.skipped) || (cascade && cascade.skipped) || (materialize && materialize.skipped)
         ? { records_total: null, records_new: null, records_updated: null }
         : deriveCounters(descriptor, computeResult, counterScope);
@@ -2601,6 +3121,15 @@ async function runWithPool(runnable, pool, ctx) {
         // LG-15 — same shape as the cascade gated skip, above.
         status = RUN_STATUS.COMPLETED;
         terminal = selectTerminal(descriptor, { kind: 'skip_gated', status, discriminator: 'skip' });
+      } else if (enrich && enrich.deferred && verdict !== 'FAIL' && verdict !== 'WARN') {
+        // Spec 122 §3.0b scope-defer — a genuine, correct, ZERO-WRITE outcome (never a
+        // gated skip: the run executed to completion, it just deferred its writes to a
+        // future --full run). `deferred_to_full` is its own ledger status (Spec 120
+        // §3.2b vocabulary) — first wired to a runner here (ENRICHER pilot 9). Falls
+        // back to the first `success` terminal (selectTerminal), same posture as the
+        // WARN branch below, since this descriptor declares no defer-specific terminal.
+        status = RUN_STATUS.DEFERRED_TO_FULL;
+        terminal = selectTerminal(descriptor, { kind: 'success', status });
       } else if (backfill && backfill.zeroWork && verdict !== 'FAIL' && verdict !== 'WARN') {
         // ZERO-WORK COMPLETION (R-P N/A — NOT a skip_gated kind, a normal
         // `success` completion with a distinct discriminated terminal id, so it
@@ -2825,6 +3354,7 @@ module.exports = {
   isMaterializeStep,
   isBackfillStep,
   isRecorderStep,
+  isEnrichStep,
   assertRequirements,
   REQUIREMENT_PROBES,
   ledgerPipelineName,
@@ -2835,6 +3365,11 @@ module.exports = {
   runMaterializePhase,
   runBackfillPhase,
   runRecorderPhase,
+  runEnrichPhase,
+  recordHeartbeat,
+  captureStallDiagnostic,
+  startStallTicker,
+  streamOverClient,
   runTierToConvergence,
   executeOrderedWrites,
   acceptedCheckIds,

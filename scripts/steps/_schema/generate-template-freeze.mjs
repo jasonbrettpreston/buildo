@@ -211,7 +211,7 @@ function deriveSchema() {
 // and is immune to a comment rewording).
 // ---------------------------------------------------------------------------
 
-const RUNNER_NAMES = ['runIngestPhase', 'runLinkPhase', 'runLinkKeyedPhase', 'runCascadePhase', 'runMaterializePhase', 'runBackfillPhase', 'runRecorderPhase'];
+const RUNNER_NAMES = ['runIngestPhase', 'runLinkPhase', 'runLinkKeyedPhase', 'runCascadePhase', 'runMaterializePhase', 'runBackfillPhase', 'runRecorderPhase', 'runEnrichPhase'];
 const RUNNER_TO_SHAPE = {
   runIngestPhase: 'ingest',
   runLinkPhase: 'link',
@@ -220,6 +220,14 @@ const RUNNER_TO_SHAPE = {
   runMaterializePhase: 'materialize',
   runBackfillPhase: 'backfill',
   runRecorderPhase: 'recorder',
+  // RE-FREEZE #3 (pilot 9 commit 7d/2, 2026-09-04, LG-28) — the 8th runner, ENRICHER's
+  // own `execution.shape:"enrich"`. Its arrival is also what corrected runRecorderPhase's
+  // OWN frozen phase_order in the SAME refresh: `runnerRanges` bounds each runner's range
+  // by the NEXT `async function run\w+(` match, and runRecorderPhase was previously the
+  // LAST such match in the file — its range silently extended to EOF and picked up
+  // executeOrderedWrites' write.executeSetBasedClear/write.executeUpsertBatch calls as if
+  // they belonged to it. runEnrichPhase now bounds it correctly.
+  runEnrichPhase: 'enrich',
 };
 const LIBRARY_CALL_RE = /\b(staleness|write|verdict|ledger|acquire|pipeline)\.(\w+)\(|\b(preWriteGate)\(/g;
 

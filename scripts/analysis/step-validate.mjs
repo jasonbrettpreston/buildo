@@ -1821,6 +1821,7 @@ const SHAPE_RUNNER_FN = {
   materialize: 'runMaterializePhase',
   backfill: 'runBackfillPhase',
   recorder: 'runRecorderPhase',
+  enrich: 'runEnrichPhase',
 };
 
 /**
@@ -1878,7 +1879,18 @@ function runnerReachability(body) {
   if (/staleness\.selectMode\s*\(/.test(body)) {
     return { reachable: true, reason: 'no staleness.ledgerGatedSkip early-return on this path; calls staleness.selectMode unconditionally, which folds detectInterruptedRetraction internally' };
   }
-  return { reachable: false, reason: 'reaches neither staleness.ledgerGatedSkip nor staleness.selectMode — no interrupted-retraction check exists on this runner\'s path' };
+  // ENRICHER (pilot 9, runEnrichPhase) — a THIRD reachable shape. This archetype
+  // has no ledger-gated skip and no full/incremental mode selector to fold into
+  // (its own staleness mechanism is the DECLARED scope-defer, Spec 122 §3.0b, an
+  // unconditional pre-transaction count check, not a staleness.selectMode call).
+  // Reachable iff the runner calls staleness.detectInterruptedRetraction directly
+  // AND folds interruptedRetraction.interrupted into the `full` decision that
+  // every pass reads — the same structural guarantee CASCADE's `bypassed` fold
+  // gives, under ENRICHER's own vocabulary.
+  if (/detectInterruptedRetraction\s*\(/.test(body) && /\bfull\s*=[^;\n]*interruptedRetraction/.test(body)) {
+    return { reachable: true, reason: 'no staleness.ledgerGatedSkip/selectMode on this path (ENRICHER\'s own scope-defer archetype, Spec 122 §3.0b); calls staleness.detectInterruptedRetraction directly and folds interruptedRetraction.interrupted into the full/incremental decision before any pass runs' };
+  }
+  return { reachable: false, reason: 'reaches neither staleness.ledgerGatedSkip, staleness.selectMode, nor an interruptedRetraction fold into `full` — no interrupted-retraction check exists on this runner\'s path' };
 }
 
 function checkInterruptedPostureTruthful(descriptor, indexSourceOverride = null) {

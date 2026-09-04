@@ -560,15 +560,15 @@ describe('facts testable today — the live tree, not a future artifact', () => 
     scan('scripts/lib');
     scan('scripts/steps/_schema');
     const nums = [...hits].map((h) => Number(h.slice(3))).sort((a, b) => a - b);
-    expect(Math.max(...nums, 0), 'the highest LG number in scripts/lib + scripts/steps/_schema must be 27 until commit 7 lands LG-28 (runEnrichPhase)').toBe(27);
+    expect(Math.max(...nums, 0), 'LG-28 (runEnrichPhase) has now landed (commit 7d/commit 2) — the highest LG number in scripts/lib + scripts/steps/_schema must be 28').toBe(28);
   });
 
-  it('converted.json — pending stays registered (not yet converted); compute (7c) has landed and the Rule 11 multi-spec tension is RESOLVED (commit 1: checkOrderGuaranteesCited accepts a spec-qualified anchor, reads enforced-green), but the DECLARED stage is DELIBERATELY HELD at "descriptor_only" rather than advanced to "compute_ported" (measured this commit, see converted.json.pending[].reason verbatim): advancing would ALSO newly expose Rule 4 (compute preserved-in-compute grounding, pre-existing from 7c, unrelated to this commit) and G7 (golden-capture RED-evidence, commit 7e\'s own deliverable) to the pre-commit hook\'s hard-stop, which this commit\'s own fix does not resolve — a stage claim the hook itself could not honestly pass.', () => {
+  it('converted.json — pending stays registered (not yet converted); compute (7c) AND the runner (7d, runEnrichPhase) have both landed and Rule 11 reads enforced-green (commit 1), but the DECLARED stage is DELIBERATELY HELD at "descriptor_only" (measured live, see converted.json.pending[].reason verbatim): advancing to compute_ported/runner_wired would additionally expose Rule 4 (compute preserved-in-compute grounding, pre-existing from 7c, unrelated to this pilot\'s own commits) and G7 (golden-capture RED-evidence, commit 7e\'s own deliverable) to the pre-commit hook\'s hard-stop, neither of which this pilot\'s commit 1/2 pair resolves.', () => {
     const c = JSON.parse(fs.readFileSync(abs(CONVERTED_REL), 'utf8')) as { converted: string[]; pending: Array<{ file: string; stage: string }> };
     expect(c.converted.includes(STEP_REL), 'enrich_parcels must not be registered as converted yet — that is commit 9 (cutover)').toBe(false);
     const entry = c.pending.find((p) => p.file === STEP_REL);
     expect(entry, `converted.json.pending must carry a ${STEP_REL} entry`).toBeDefined();
-    expect(entry!.stage, 'stage deliberately held at "descriptor_only" this commit (see this test\'s own title for why)').toBe('descriptor_only');
+    expect(entry!.stage, 'stage deliberately held at "descriptor_only" (see this test\'s own title for why)').toBe('descriptor_only');
     expect(fs.existsSync(abs(DESCRIPTOR_REL)), 'a descriptor_only-stage pending entry MUST have a sibling descriptor').toBe(true);
     expect(fs.existsSync(abs(COMPUTE_REL)), 'compute (7c) exists on disk even though the declared stage has not advanced past descriptor_only').toBe(true);
   });
@@ -592,5 +592,309 @@ describe('facts testable today — the live tree, not a future artifact', () => 
       expect(row?.gate?.kind).toBe('cutover_prereq');
       expect(row?.gate?.blocks).toContain('enrich_parcels');
     }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// runEnrichPhase (LG-28) — logic tests against a fake pool, mirroring
+// src/tests/step-library.logic.test.ts's own fakePool convention (commit 7d).
+// A hand-built ENRICHER-shaped fixture descriptor + a minimal fake compute
+// module — NOT the real 486K-parcel-scale compute.js — so these tests exercise
+// the RUNNER's own orchestration (phase order, txn scoping, timeouts,
+// heartbeat, stream batching, interrupted-retraction reachability) fast and
+// deterministically. See src/tests/steps/enrich_parcels/violations.test.ts's
+// OTHER describe blocks (above) for the real-descriptor/real-compute checks.
+// ---------------------------------------------------------------------------
+
+describe('runEnrichPhase (LG-28) — logic tests against a fake pool', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports -- exercising the real CJS library
+  const stepLib = require(path.join(REPO_ROOT, 'scripts/lib/step/index.js')) as {
+    runEnrichPhase: (args: Record<string, unknown>) => Promise<{
+      deferred?: boolean; matched: Record<string, unknown>; written: Record<string, unknown>;
+      writeSkipped: boolean; skipped?: boolean;
+    }>;
+    isEnrichStep: (d: unknown) => boolean;
+  };
+
+  interface FakePoolOpts {
+    interruptedRow?: { id: number; pipeline: string; status: string; started_at: string } | null;
+  }
+
+  function fakePool(opts: FakePoolOpts = {}) {
+    const sql: string[] = [];
+    const params: unknown[][] = [];
+    const answer = (text: string) => {
+      if (/pg_extension|information_schema\.columns|pg_indexes/.test(text)) return { rows: [{ present: 1 }] };
+      if (/pg_backend_pid/.test(text)) return { rows: [{ pid: 4242 }] };
+      if (/own_last_completed/.test(text)) {
+        return { rows: opts.interruptedRow ? [opts.interruptedRow] : [] };
+      }
+      if (/COUNT\(\*\)::int AS n FROM parcels/.test(text)) return { rows: [{ n: 0 }] };
+      if (/INSERT INTO enrich_parcels_pass3_scope/.test(text)) return { rows: [], rowCount: 3 };
+      return { rows: [] };
+    };
+    const record = async (text: string, values?: unknown[]) => {
+      sql.push(text);
+      params.push(values ?? []);
+      return answer(text);
+    };
+    return {
+      sql,
+      params,
+      query: record,
+      connect: async () => ({ query: record, release: () => {} }),
+    };
+  }
+
+  /** A minimal ENRICHER-shaped descriptor — enough for runEnrichPhase, not full AJV validity. */
+  function fixtureDescriptor(overrides: Record<string, unknown> = {}): Record<string, unknown> {
+    return {
+      identity: { name: 'fixture_enrich', lock: 999999, archetype: 'ENRICHER', spec: '999' },
+      outputs: {
+        writes: [
+          { table: 'parcels', key: 'id', write_discipline: { class: 'temp_materialize' } },
+          { table: 'parcels', key: 'id', write_discipline: { class: 'temp_materialize' } },
+          { table: 'parcels', key: 'id', write_discipline: { class: 'temp_materialize' } },
+          { table: 'parcels', key: 'id', write_discipline: { class: 'set_based_join_update' } },
+          { table: 'parcels', key: 'id', write_discipline: { class: 'derived_recompute' } },
+          { table: 'parcels', key: 'id', write_discipline: { class: 'set_based_scoped' } },
+          { table: 'fixture_scope', key: ['run_id', 'parcel_id'], write_discipline: { class: 'insert_only_no_retraction' } },
+        ],
+      },
+      execution: {
+        shape: 'enrich',
+        phases: [
+          { name: 'zoning', order: 1, txn: 'shared', writes_ref: 0, timeout_minutes_from_config: 'fixture_pass_timeout_minutes' },
+          { name: 'max_build', order: 2, txn: 'shared', writes_ref: 1, timeout_minutes_from_config: 'fixture_pass_timeout_minutes' },
+          { name: 'existing_structure', order: 3, txn: 'shared', writes_ref: 2, timeout_minutes_from_config: 'fixture_pass_timeout_minutes' },
+          { name: 'comparable_builds', order: 4, txn: 'shared', writes_ref: 3, timeout_minutes_from_config: 'fixture_pass_timeout_minutes' },
+          { name: 'optimal_config', order: 5, txn: 'post_commit', writes_ref: 4, timeout_minutes_from_config: 'fixture_pass5_timeout_minutes' },
+        ],
+        invocation: { sources: { argv: [], env: {} } },
+      },
+      guards: { requires: [{ kind: 'extension', name: 'postgis', on_missing: 'fail' }] },
+      recovery: 'none',
+      override: { force_full: 'FIXTURE_ENRICH_FORCE_FULL', force_run: 'none', dry_run: 'none' },
+      checks: [],
+      ...overrides,
+    };
+  }
+
+  interface FakePassResult { [k: string]: unknown }
+  interface FakeCompute {
+    OVERLAY_LAYERS: unknown[];
+    readZoningContract: (pool: unknown) => Promise<{ layers: Record<string, boolean>; partial: boolean; baseCommittedAfterOverlayFailed: boolean }>;
+    computeDeferScope: (pool: unknown, threshold: number) => Promise<{ scope_count: number; threshold: number; ratio: number; perPass: Record<string, number> }>;
+    computeAggregateRecordsUpdated: () => number;
+    passes: Array<{ name: string; txn: string; run: (client: unknown, ctx: Record<string, unknown>, config: Record<string, unknown>) => Promise<FakePassResult> }>;
+  }
+
+  /** Records every phase invocation `{name, txn}` in call order — the phase-ordering witness. */
+  function fakeCompute(passLog: Array<{ name: string; txn: string }>, opts: { deferScopeCount?: number; passImpl?: Record<string, (client: unknown, ctx: Record<string, unknown>) => Promise<FakePassResult>> } = {}): FakeCompute {
+    const names = ['zoning', 'max_build', 'existing_structure', 'comparable_builds', 'optimal_config'];
+    return {
+      OVERLAY_LAYERS: [],
+      readZoningContract: async () => ({ layers: { base: true }, partial: false, baseCommittedAfterOverlayFailed: false }),
+      computeDeferScope: async () => ({ scope_count: opts.deferScopeCount ?? 0, threshold: 1000, ratio: 0, perPass: {} }),
+      computeAggregateRecordsUpdated: () => 0,
+      passes: names.map((name, i) => ({
+        name,
+        txn: i < 4 ? 'shared' : 'post_commit',
+        run: async (client: unknown, ctx: Record<string, unknown>) => {
+          passLog.push({ name, txn: i < 4 ? 'shared' : 'post_commit' });
+          if (opts.passImpl && opts.passImpl[name]) return opts.passImpl[name](client, ctx);
+          return { scoped: 0, updated: 0, updatedIds: [] };
+        },
+      })),
+    };
+  }
+
+  const baseArgs = (descriptor: Record<string, unknown>, pool: ReturnType<typeof fakePool>, compute: FakeCompute) => ({
+    descriptor,
+    pool,
+    compute,
+    config: {
+      fixture_pass_timeout_minutes: 5,
+      fixture_pass5_timeout_minutes: 10,
+      enrich_parcels_lock_timeout_ms: 0,
+      enrich_parcels_heartbeat_minutes: 60,
+      enrich_parcels_defer_threshold_rows: 1000,
+      enrich_parcels_pass5_stream_batch_size: 137,
+      enrich_parcels_comps_as_of_date: null,
+    },
+    chainId: null,
+    log: { info: () => {}, warn: () => {}, error: () => {} },
+    tag: '[fixture_enrich]',
+    clockNow: new Date('2026-09-04T00:00:00.000Z'),
+    preWriteGate: null,
+    ownRunId: 4242,
+  });
+
+  it('phase ordering — the four shared-txn phases run in declared `order`, then the post_commit phase runs strictly after', async () => {
+    const passLog: Array<{ name: string; txn: string }> = [];
+    const compute = fakeCompute(passLog);
+    const pool = fakePool();
+    await stepLib.runEnrichPhase(baseArgs(fixtureDescriptor(), pool, compute) as never);
+    expect(passLog.map((p) => p.name)).toEqual(['zoning', 'max_build', 'existing_structure', 'comparable_builds', 'optimal_config']);
+    expect(passLog[4]!.txn).toBe('post_commit');
+  });
+
+  it('post_commit isolation — a throw in pass 5 does NOT roll back passes 1-4 (they already committed in their own transaction, before pass 5 ever runs)', async () => {
+    const passLog: Array<{ name: string; txn: string }> = [];
+    const pool = fakePool();
+    const compute = fakeCompute(passLog, {
+      passImpl: {
+        optimal_config: async () => { throw new Error('pass 5 boom'); },
+      },
+    });
+    await expect(stepLib.runEnrichPhase(baseArgs(fixtureDescriptor(), pool, compute) as never)).rejects.toThrow('pass 5 boom');
+    // The shared txn's own COMMIT already ran (pipeline.withTransaction awaits `fn`, then
+    // COMMITs, before runEnrichPhase ever reaches the post-commit loop) — proven by the
+    // scope hand-off INSERT (inside that same shared txn, target table "fixture_scope" in
+    // this fixture) having already been issued.
+    expect(pool.sql.some((s) => /INSERT INTO fixture_scope/.test(s))).toBe(true);
+    // And no ROLLBACK was issued against the shared-txn client for the four completed passes.
+    expect(pool.sql.filter((s) => s === 'ROLLBACK')).toHaveLength(1); // only pass 5's own dedicated post-commit txn rolls back
+  });
+
+  it('timeouts applied per shared phase — SET LOCAL statement_timeout/lock_timeout issued, minutes converted to milliseconds, before each shared phase runs', async () => {
+    const passLog: Array<{ name: string; txn: string }> = [];
+    const compute = fakeCompute(passLog);
+    const pool = fakePool();
+    const args = baseArgs(fixtureDescriptor(), pool, compute);
+    (args.config as Record<string, unknown>).enrich_parcels_lock_timeout_ms = 30000;
+    await stepLib.runEnrichPhase(args as never);
+    // 5 minutes * 60000 = 300000ms, once per SHARED phase (4) — filtered to that exact
+    // value so the post_commit phase's OWN distinct timeout (10 min = 600000ms, asserted
+    // in the sibling test below) does not conflate the two into one count.
+    const sharedStatementTimeouts = pool.sql.filter((s) => s === 'SET LOCAL statement_timeout = 300000');
+    const lockTimeouts = pool.sql.filter((s) => /^SET LOCAL lock_timeout = /.test(s));
+    expect(sharedStatementTimeouts).toEqual(Array(4).fill('SET LOCAL statement_timeout = 300000'));
+    expect(lockTimeouts).toEqual(Array(4).fill('SET LOCAL lock_timeout = 30000'));
+  });
+
+  it('timeouts applied to the post_commit phase — a DEDICATED connection\'s own SET LOCAL statement_timeout, converted from enrich_parcels_pass5_timeout_minutes', async () => {
+    const passLog: Array<{ name: string; txn: string }> = [];
+    const compute = fakeCompute(passLog);
+    const pool = fakePool();
+    await stepLib.runEnrichPhase(baseArgs(fixtureDescriptor(), pool, compute) as never);
+    // 10 minutes * 60000 = 600000ms.
+    expect(pool.sql).toContain('SET LOCAL statement_timeout = 600000');
+  });
+
+  it('heartbeat writes — pipeline_runs.records_meta is UPDATEd with current_pass around EVERY phase (all 5, not just pass 5 — closing the WF3-filed deliverable)', async () => {
+    const passLog: Array<{ name: string; txn: string }> = [];
+    const compute = fakeCompute(passLog);
+    const pool = fakePool();
+    await stepLib.runEnrichPhase(baseArgs(fixtureDescriptor(), pool, compute) as never);
+    const heartbeats = pool.sql.filter((s) => /UPDATE pipeline_runs/.test(s) && /current_pass/.test(s));
+    const namesHeartbeaten = new Set<string>();
+    for (const p of pool.params.filter((_p, i) => /UPDATE pipeline_runs/.test(pool.sql[i]!) && /current_pass/.test(pool.sql[i]!))) {
+      namesHeartbeaten.add(String(p[0]));
+    }
+    expect(heartbeats.length).toBeGreaterThanOrEqual(10); // start + end, x5 phases
+    expect(namesHeartbeaten).toEqual(new Set(['zoning', 'max_build', 'existing_structure', 'comparable_builds', 'optimal_config']));
+  });
+
+  it('R-B / Rule 12 reachability — staleness.detectInterruptedRetraction is folded into `full` UNCONDITIONALLY (no ledger-gated-skip early return exists on this archetype to hide behind)', async () => {
+    const passLog: Array<{ name: string; txn: string }> = [];
+    let sawFull: boolean | undefined;
+    const compute = fakeCompute(passLog, {
+      passImpl: {
+        zoning: async (_client, ctx) => { sawFull = ctx.full as boolean; return { scoped: 0, updated: 0, updatedIds: [] }; },
+      },
+    });
+    const pool = fakePool({ interruptedRow: { id: 1, pipeline: 'fixture_enrich', status: 'running', started_at: '2026-09-03T00:00:00.000Z' } });
+    const descriptor = fixtureDescriptor({ recovery: { interrupted: 'force_full_on_next_run' } });
+    await stepLib.runEnrichPhase(baseArgs(descriptor, pool, compute) as never);
+    expect(sawFull, 'an interrupted prior run must force ctx.full = true even with no --full argv and no force_full override').toBe(true);
+  });
+
+  it('scope-defer (Spec 122 §3.0b) — over threshold makes the run a genuine ZERO-WRITE no-op: no shared-txn SQL, deferred:true returned', async () => {
+    const passLog: Array<{ name: string; txn: string }> = [];
+    const compute = fakeCompute(passLog, { deferScopeCount: 5000 });
+    const pool = fakePool();
+    const out = await stepLib.runEnrichPhase(baseArgs(fixtureDescriptor(), pool, compute) as never) as { deferred: boolean };
+    expect(out.deferred).toBe(true);
+    expect(passLog).toHaveLength(0);
+    expect(pool.sql.some((s) => /BEGIN/.test(s))).toBe(false);
+  });
+
+  it('assertRequirements (guards.requires) is genuinely enforced — a missing PostGIS extension throws before any phase runs', async () => {
+    const passLog: Array<{ name: string; txn: string }> = [];
+    const compute = fakeCompute(passLog);
+    const sql: string[] = [];
+    const missingPool = {
+      sql,
+      query: async (text: string) => {
+        sql.push(text);
+        return { rows: [] }; // every probe (incl. pg_extension) reads absent
+      },
+      connect: async () => ({ query: async (text: string) => { sql.push(text); return { rows: [] }; }, release: () => {} }),
+    };
+    await expect(stepLib.runEnrichPhase(baseArgs(fixtureDescriptor(), missingPool as never, compute) as never))
+      .rejects.toThrow(/postgis.*ABSENT/i);
+    expect(passLog).toHaveLength(0);
+  });
+
+  it('ctx.stream batch size — the post_commit phase\'s ctx.stream is backed by a client-pinned pg-query-stream cursor whose batchSize is config.enrich_parcels_pass5_stream_batch_size, and it never surfaces more than one cursor batch of rows at a time', async () => {
+    // Module-cache injection (documented technique, this file only): pg-query-stream's
+    // QueryStream needs a REAL protocol-level connection to iterate — a fake pool cannot
+    // satisfy that. Swap the module for a fake class that just records its own batchSize
+    // and gives the runner's streamOverClient an object it can loop `for await` over.
+    const qsPath = require.resolve('pg-query-stream');
+    const original = require.cache[qsPath];
+    const seenBatchSizes: Array<number | undefined> = [];
+    const fakeRows = [{ id: 1 }, { id: 2 }, { id: 3 }];
+    class FakeQueryStream {
+      sql: string; params: unknown[]; opts: { batchSize?: number };
+      constructor(sqlText: string, params: unknown[], opts: { batchSize?: number }) {
+        this.sql = sqlText; this.params = params; this.opts = opts;
+        seenBatchSizes.push(opts.batchSize);
+      }
+      destroy() {}
+      [Symbol.asyncIterator]() {
+        let i = 0;
+        return { next: async () => (i < fakeRows.length ? { value: fakeRows[i++], done: false } : { value: undefined, done: true }) };
+      }
+    }
+    require.cache[qsPath] = { id: qsPath, filename: qsPath, loaded: true, exports: FakeQueryStream } as never;
+    try {
+      const passLog: Array<{ name: string; txn: string }> = [];
+      let rowsSeenByPass: unknown[] = [];
+      const compute = fakeCompute(passLog, {
+        passImpl: {
+          optimal_config: async (_client, ctx) => {
+            const stream = (ctx.stream as (sql: string, params: unknown[], opts: Record<string, unknown>) => AsyncIterable<unknown>)('SELECT fixture', [], {});
+            const seen: unknown[] = [];
+            for await (const row of stream) seen.push(row);
+            rowsSeenByPass = seen;
+            return { updated: seen.length, errors: 0 };
+          },
+        },
+      });
+      const pool = fakePool();
+      // The fake client's `.query(qs)` must recognize a FakeQueryStream instance and hand
+      // back ITSELF (already async-iterable) rather than the generic `{rows: []}` answer.
+      const streamAwarePool = {
+        ...pool,
+        connect: async () => ({
+          query: (arg: unknown, ...rest: unknown[]) => (arg instanceof FakeQueryStream ? arg : pool.query(arg as string, ...(rest as [unknown[]]))),
+          release: () => {},
+        }),
+      };
+      await stepLib.runEnrichPhase(baseArgs(fixtureDescriptor(), streamAwarePool as never, compute) as never);
+      expect(seenBatchSizes, 'ctx.stream must construct its cursor with config.enrich_parcels_pass5_stream_batch_size (137 in this fixture), never a hardcoded default').toContain(137);
+      expect(rowsSeenByPass).toEqual(fakeRows);
+    } finally {
+      if (original) require.cache[qsPath] = original;
+      else delete require.cache[qsPath];
+    }
+  });
+
+  it('isEnrichStep — declared shape only, never sniffed', () => {
+    expect(stepLib.isEnrichStep({ execution: { shape: 'enrich' } })).toBe(true);
+    expect(stepLib.isEnrichStep({ execution: { shape: 'cascade' } })).toBe(false);
+    expect(stepLib.isEnrichStep({})).toBe(false);
   });
 });

@@ -38,8 +38,8 @@
  * (a commit-8 peel routes those through `verdict.js#deriveVerdict`, EP-D3), and does not implement
  * `computeAggregateRecordsUpdated`'s downstream consumption (kept here as a pure helper — see below).
  *
- * THE ctx CONTRACT this file consumes (implemented by runEnrichPhase, commit 7d — NOT yet built; this
- * commit only writes code against the contract, per Fold G/E7):
+ * THE ctx CONTRACT this file consumes (implemented by runEnrichPhase, LG-28, commit 7d,
+ * `scripts/lib/step/index.js`):
  *   ctx.clock.asOfDate(): string   - YYYY-MM-DD, bound as the comps-window $N::date. Reads
  *                                     config.enrich_parcels_comps_as_of_date when non-null, else the
  *                                     runner's own clock date (Fold G3).
@@ -54,6 +54,13 @@
  *   ctx.staleOverlays: Set<string> - Spec 58 §9/§11 consumer-protocol result (readZoningContract, below),
  *                                     computed once by the runner before pass 1 and handed to every pass
  *                                     that needs it (only pass 1 does).
+ *   ctx.scopeRunId: number         - the D4' synthetic run id (Math.floor(runAt/1000)) the runner keys
+ *                                     enrich_parcels_pass3_scope rows on; read only by pass 5.
+ *   ctx.stream(sql, params, opts)  - pass 5 ONLY (post_commit phase): an async-iterable cursor over the
+ *                                     SAME pinned session pass 5's own SET LOCAL statement_timeout binds
+ *                                     to (Fold B2) — the runner's streamOverClient, backed by the same
+ *                                     pg-query-stream primitive pipeline.streamQuery uses, never
+ *                                     pipeline.streamQuery itself (Rule 2, no ../pipeline import here).
  *
  * KNOWN-DEFECT pins ported VERBATIM, in their CURRENT WRONG FORM (Spec 123 §3.1 — see
  * docs/reports/defect-ledger.md EP-D1/EP-D8/EP-D9/EP-D10): pass 4's comps UPDATE carries NO
@@ -1171,11 +1178,14 @@ async function runPass4(client, ctx, config) {
 // identically to the shared-txn `client` passes 1-4 use (it never opens/closes anything itself).
 //
 // The legacy pass streamed via pipeline.streamQuery(batchSize:200) — banned here (Rule 2, no
-// ../pipeline). This port instead SELECTs the full eligible set with client.query and batches the
-// writes in JS (batch size from config.enrich_parcels_optcfg_batch_size), which is a genuine behaviour
-// change from cursor-streamed to buffered reads (documented per this commit's own reporting
-// requirement — a future 7d/7e peel may reintroduce true server-side streaming via a runner-provided
-// seam if memory profiling shows it is needed; row VALUES are unchanged either way).
+// ../pipeline). REVERTED at commit 7d (runner amendment) from an intermediate buffered
+// client.query select back to a cursor-streamed read via the injected ctx.stream seam
+// (Spec 122 §5.5) — the runner's own streamOverClient, pinned to the SAME session pass 5's
+// SET LOCAL statement_timeout binds to (Fold B2), backed by the same pg-query-stream cursor
+// primitive pipeline.streamQuery uses. Cursor batch size is config.enrich_parcels_pass5_
+// stream_batch_size, distinct from config.enrich_parcels_optcfg_batch_size (the WRITE flush
+// size, unchanged) — never holds more than one cursor batch of rows in memory. Row VALUES
+// are unchanged either way.
 // ===========================================================================
 
 const OPTCFG_WRITE_COLS = [
@@ -1444,8 +1454,14 @@ async function runPass5(client, ctx, config) {
 
   const batchSize = Number(config.enrich_parcels_optcfg_batch_size);
   let batch = [];
-  const { rows } = await client.query(buildOptConfigSelectSql({ full, scopeWhere }));
-  for (const r of rows) {
+  // Runner amendment (commit 7d) — REVERTED from a buffered client.query select back to
+  // a cursor-streamed read via ctx.stream (the legacy pipeline.streamQuery(batchSize:200)
+  // fence, Spec 122 §5.5's injected I/O seam form of it). ctx.stream's own cursor
+  // batchSize is enrich_parcels_pass5_stream_batch_size — DISTINCT from
+  // enrich_parcels_optcfg_batch_size (batchSize, above), which still controls only the
+  // WRITE flush size. Never holds more than the cursor's own batchSize rows in memory.
+  const streamBatchSize = Number(config.enrich_parcels_pass5_stream_batch_size);
+  for await (const r of ctx.stream(buildOptConfigSelectSql({ full, scopeWhere }), [], { batchSize: streamBatchSize })) {
     let row;
     try {
       row = computeOptConfigRow(r);

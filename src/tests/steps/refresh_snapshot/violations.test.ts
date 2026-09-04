@@ -441,7 +441,10 @@ describe('facts testable today — the live tree, not a future artifact', () => 
     // converted.json's own pending "reason" text is prose, not implementation, and
     // must never gain a citation the generator/executor didn't actually land first.
     const nums = [...hits].map((h) => Number(h.slice(3))).sort((a, b) => a - b);
-    expect(Math.max(...nums, 0), 'the highest LG number in scripts/lib must be 27 now that LG-26/LG-27 have landed').toBe(27);
+    // LG-28 (runEnrichPhase, pilot 9 commit 7d/2, 2026-09-04) landed after this pilot's own
+    // 26/27 — the ceiling moves again, honestly, rather than this lock staying pinned to a
+    // number a LATER pilot's own genuine growth made stale.
+    expect(Math.max(...nums, 0), 'the highest LG number in scripts/lib must be 28 now that LG-28 (runEnrichPhase, pilot 9) has also landed').toBe(28);
     expect(nums.includes(23), 'LG-23 must stay retired — never reused by this or any pilot').toBe(false);
   });
 

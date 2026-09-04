@@ -1061,6 +1061,22 @@ function sharedRunnerConsumedVars(): string[] {
   return fs.existsSync(runnerPath) ? configReadsIn(runnerPath) : [];
 }
 
+/** link_parcels' own pair — no shared prefix, named explicitly. */
+const LINK_PARCELS_SHARED_RUNNER_VARS = new Set(['spatial_match_max_distance_m', 'spatial_match_confidence']);
+
+/**
+ * Which slug's own runner branch reads `name` directly out of the shared library file —
+ * null when `name` matches no known step-owned pathway (kept in every scoped slug's own
+ * check, the pre-existing conservative default). `enrich_parcels`' own reads (LG-28,
+ * `runEnrichPhase`) all share one clean prefix; `link_parcels`' pair does not, so it is
+ * named explicitly instead.
+ */
+function sharedRunnerVarOwner(name: string): string | null {
+  if (name.startsWith('enrich_parcels_')) return 'enrich_parcels';
+  if (LINK_PARCELS_SHARED_RUNNER_VARS.has(name)) return 'link_parcels';
+  return null;
+}
+
 /**
  * Every §1.2a P4 finding for one step. Empty array = conformant.
  *
@@ -1116,17 +1132,27 @@ function configFindings(relFile: string, slug: string, declared: string[]): stri
     }
   }
   // The reverse-direction check for `sharedRunnerConsumedVars` (LP-D-conformance-gap,
-  // commit 9) — deliberately scoped to `link_parcels` ONLY. The shared runner has no
-  // per-step namespacing, so a step-agnostic version of this loop (tried first, reverted)
-  // flagged link_massing/compute_centroids/link_wsib as "not declaring" link_parcels'
-  // OWN spatial_match_max_distance_m/spatial_match_confidence reads — true in a narrow
-  // textual sense (their descriptors genuinely don't declare those names) but wrong in
-  // spirit (the runner only reads them on link_parcels' own `isLinkKeyedStep` branch).
-  // Scoping to the one step that actually owns this pathway keeps the check sound;
+  // commit 9) — deliberately scoped to a SMALL, EXPLICIT set of slugs whose own runner
+  // branch reads config directly out of the shared file, never step-agnostic. The shared
+  // runner has no per-step namespacing, so a step-agnostic version of this loop (tried
+  // first, reverted) flagged link_massing/compute_centroids/link_wsib as "not declaring"
+  // link_parcels' OWN spatial_match_max_distance_m/spatial_match_confidence reads — true
+  // in a narrow textual sense (their descriptors genuinely don't declare those names) but
+  // wrong in spirit (the runner only reads them on link_parcels' own `isLinkKeyedStep`
+  // branch). Scoping to the steps that actually own each pathway keeps the check sound;
   // widening it to a general per-step attribution mechanism is future work, not this
-  // commit's problem to solve.
-  if (slug === 'link_parcels') {
+  // commit's problem to solve. `enrich_parcels` joins the set at LG-28 (pilot 9 commit
+  // 7d/2, 2026-09-04) — `runEnrichPhase` reads its own SET LOCAL/heartbeat/scope-defer
+  // tunables (`enrich_parcels_pass_statement_timeout_minutes` etc.) directly on its own
+  // `isEnrichStep` branch, the identical shape as link_parcels' pair. `sharedRunnerVarOwner`
+  // attributes each shared-runner-read name to the ONE slug whose own runner branch reads
+  // it, so testing link_parcels never blames it for enrich_parcels' own names (and vice
+  // versa) — a name with no recognized owner is still checked against BOTH (conservative,
+  // matches the pre-existing unattributed behavior).
+  if (slug === 'link_parcels' || slug === 'enrich_parcels') {
     for (const name of sharedRunnerConsumedVars()) {
+      const owner = sharedRunnerVarOwner(name);
+      if (owner !== null && owner !== slug) continue;
       if (!declared.includes(name) && !computeConsumed.includes(name)) {
         findings.push(`scripts/lib/step/index.js reads ctx.config.${name} (shared runner), which the descriptor does not declare — strict projection makes it undefined at runtime`);
       }
