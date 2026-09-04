@@ -129,6 +129,22 @@ function parseArgs(argv) {
 const DEFAULT_TABLE_ROW_CEILING = 100000;
 const TABLE_NAME_RE = /^[a-z_][a-z0-9_]*$/;
 
+// pilot9 commit5 finding (2026-09-04): a single `string_agg(ROW(...)::text)` over a large
+// row_count x wide-column-set (incl. jsonb payloads) OOM'd postgres on `parcels` (486,530 rows
+// x 100 projected cols) — docs/reports/golden/enrich_parcels/pre/sources_run1.json records the
+// reproduction. Above this many cells, captureTableState switches to a row-hash-then-concat
+// method (md5 each row first — fixed 32-byte width — then string_agg+md5 the hashes) instead of
+// concatenating full row text. Every table captured by the 8 already-converted pilots is well
+// under this (max measured: parcel_buildings 520,492 rows x 6 projected cols = 3,122,952 cells,
+// 666ms, unaffected — docs/reports/golden/link_massing/post/permits.json), so their content_hash
+// values are reproduced byte-for-byte by the UNCHANGED narrow-table path.
+const WIDE_TABLE_CELL_THRESHOLD = 10_000_000;
+
+/** Pure: whether row_count x column-width crosses WIDE_TABLE_CELL_THRESHOLD. */
+function isWideTable({ row_count, width, threshold = WIDE_TABLE_CELL_THRESHOLD }) {
+  return row_count * width > threshold;
+}
+
 /** Strict non-negative integer parse for `--table-row-ceiling` (no parseInt: '12abc' must throw). */
 function parseRowCeiling(raw) {
   if (raw === undefined) return DEFAULT_TABLE_ROW_CEILING;
@@ -363,11 +379,27 @@ async function captureTableState(pool, table, ceiling, spec = { columns: null, o
     if (!allColumns.includes(c)) throw new Error(`table ${table} has no column ${JSON.stringify(c)} (have ${allColumns.join(',')})`);
   }
   const orderBy = orderByClause({ orderColumns: spec.order, pkColumns, allColumns });
+  const orderCols = spec.order && spec.order.length > 0 ? spec.order : (pkColumns.length > 0 ? pkColumns : allColumns);
+  const width = projected ? spec.columns.length : allColumns.length;
+  const wide = isWideTable({ row_count, width });
   const t0 = Date.now();
-  const h = await pool.query(`SELECT md5(string_agg(${rowTextExpr(spec.columns)}, '|' ORDER BY ${orderBy})) AS h FROM ${q} t`);
+  // WIDE path: hash each row first (fixed 32-byte width), then string_agg+md5 the per-row
+  // hashes — bounded intermediate memory. NARROW path (every table below the threshold,
+  // including all 8 already-converted pilots' goldens): UNCHANGED single-pass query, so their
+  // committed content_hash values are reproduced byte-for-byte. Column lists are pre-joined
+  // into PLAIN strings (no nested template literals inside the SQL literal below) — a nested
+  // backtick would split the naive `` /`SELECT...`/ `` source scan test #173 relies on.
+  const subOrderBy = orderCols.map((c) => 'sub.' + quoteIdent(c)).join(', ');
+  const subSelectCols = orderCols.map((c) => 't.' + quoteIdent(c)).join(', ');
+  const h = wide
+    ? await pool.query(
+        `SELECT md5(string_agg(sub.rh, '|' ORDER BY ${subOrderBy})) AS h
+           FROM (SELECT ${subSelectCols}, md5(${rowTextExpr(spec.columns)}) AS rh FROM ${q} t) sub`,
+      )
+    : await pool.query(`SELECT md5(string_agg(${rowTextExpr(spec.columns)}, '|' ORDER BY ${orderBy})) AS h FROM ${q} t`);
   const hash_ms = Date.now() - t0;
   console.log(`[capture-step-golden] hashed ${table}: ${row_count} rows in ${hash_ms} ms ` +
-    `(columns ${projected ? spec.columns.join(',') : '<all>'}; order by ${orderBy})`);
+    `(columns ${projected ? spec.columns.join(',') : '<all>'}; order by ${orderBy}; method ${wide ? 'row_hash' : 'concat'})`);
   const record = {
     ...decision.record,
     content_hash: h.rows[0].h, // null when the table is empty (string_agg over 0 rows)
@@ -375,6 +407,7 @@ async function captureTableState(pool, table, ceiling, spec = { columns: null, o
   };
   if (spec.order && spec.order.length > 0) record.order_columns = [...spec.order];
   if (projected) record.columns = [...spec.columns];
+  if (wide) record.hash_method = 'row_hash_then_concat';
   return { record, hash_ms };
 }
 
@@ -856,6 +889,9 @@ module.exports = {
   VOLATILE_PATTERNS,
   SUMMARY_MARKER,
   META_MARKER,
+  WIDE_TABLE_CELL_THRESHOLD,
+  isWideTable,
+  captureTableState,
   parseArgs,
   parseMarkers,
   normalise,

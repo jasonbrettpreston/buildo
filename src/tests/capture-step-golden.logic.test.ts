@@ -399,7 +399,7 @@ describe('normalise + --compare — table state and invariants are must-match-ex
 });
 
 // ── (e) column projection + explicit order — pilot-3 A-4 / Fold B item 5 / D-18 (no DB) ────────
-const { parseTableColumnSpec, deriveTableSpecs, resolveTableSpec, rowTextExpr } = harness;
+const { parseTableColumnSpec, deriveTableSpecs, resolveTableSpec, rowTextExpr, isWideTable, WIDE_TABLE_CELL_THRESHOLD } = harness;
 
 const PB_COLUMNS = ['parcel_id', 'building_id', 'is_primary', 'structure_type', 'match_type', 'confidence'];
 const PB_STATE = {
@@ -460,6 +460,35 @@ describe('deriveTableSpecs — outputs.writes[].key + columns[] (Fold B item 5)'
     const spec = resolveTableSpec({ table: 'parcel_buildings', argColumns: { parcel_buildings: PB_COLUMNS }, argOrder: {}, derived });
     expect(spec).toEqual({ columns: PB_COLUMNS, columns_source: 'arg', order: ['parcel_id', 'building_id'], order_source: 'descriptor' });
     expect(resolveTableSpec({ table: 'other', argColumns: {}, argOrder: {}, derived })).toEqual({ columns: null, columns_source: 'none', order: null, order_source: 'none' });
+  });
+});
+
+describe('isWideTable — pilot9 commit5 finding: string_agg(ROW(...)::text) OOM on wide tables', () => {
+  // RED evidence (reproduced live, 2026-09-04, local DB, node scripts/analysis/capture-step-golden.js
+  // --step=scripts/enrich-parcels.js --chain=sources --args=--full --tables=parcels,enrich_parcels_pass3_scope
+  // --table-columns=parcels:<100 golden cols>;enrich_parcels_pass3_scope:parcel_id):
+  //   [capture-step-golden] hashed enrich_parcels_pass3_scope: 884488 rows in 1060 ms (columns parcel_id; ...)
+  //   [capture-step-golden] error: out of memory
+  //       at C:\Users\User\Buildo\node_modules\pg-pool\index.js:45:11
+  //       at async captureTableState (C:\Users\User\Buildo\scripts\analysis\capture-step-golden.js:367:13)
+  // — the single-pass `string_agg(ROW(...)::text)` over `parcels` (486,530 rows x 100 projected
+  // cols incl. jsonb: comparable_builds/optimal_config/zoning_overlays/…) exceeded available
+  // memory materialising ONE giant concatenated string. Captured (with the fix below already
+  // routing it to the row-hash path) at docs/reports/golden/enrich_parcels/pre/sources_run1.json.
+  it('the OOM-reproducing scenario is WIDE; every existing golden table stays NARROW (unchanged path, byte-identical hashes)', () => {
+    // The actual OOM case: parcels, 486,530 rows x 100 projected golden columns.
+    expect(isWideTable({ row_count: 486530, width: 100 })).toBe(true);
+    // The widest table any of the 8 already-converted pilots ever captured (parcel_buildings,
+    // link_massing/post/permits.json): 520,492 rows x 6 projected cols = 3,122,952 cells —
+    // well under the threshold, so it takes the ORIGINAL, unmodified concat query and its
+    // committed content_hash is reproduced byte-for-byte (no algorithm change below threshold).
+    expect(isWideTable({ row_count: 520492, width: 6 })).toBe(false);
+    // enrich_parcels_pass3_scope (this pilot's own second table): 1,326,732 rows x 1 projected
+    // column (parcel_id) — narrow despite the large row_count, because width is 1.
+    expect(isWideTable({ row_count: 1326732, width: 1 })).toBe(false);
+    // Boundary: exactly at the threshold is NOT wide (strict >); one cell over IS.
+    expect(isWideTable({ row_count: WIDE_TABLE_CELL_THRESHOLD, width: 1 })).toBe(false);
+    expect(isWideTable({ row_count: WIDE_TABLE_CELL_THRESHOLD + 1, width: 1 })).toBe(true);
   });
 });
 
