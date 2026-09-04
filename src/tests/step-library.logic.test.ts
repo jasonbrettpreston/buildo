@@ -2594,3 +2594,99 @@ describe('R-B (LW-D20 / LG-19) — interrupted-retraction reader, fake-pool lock
     expect(result.gatedSkip?.reason).toBe('no_upstream_changes');
   });
 });
+
+// ---------------------------------------------------------------------------
+// STA-3 (WF1 "state tables reset", 2026-09-03) — the three destructive-reset
+// guards in scripts/lib/step/reset.js, each proven refused-when-bad and
+// permitted-when-good. Not wired into any live descriptor today (STA-2's own
+// grounding: 0 descriptors declare recovery.reset "generated"), so these are
+// fixture-only unit locks on the exported guard functions themselves — the
+// same standing this file already gives fakePool-based unit locks elsewhere
+// (LR-D6's lock-contention proof, above).
+// ---------------------------------------------------------------------------
+describe('STA-3 — the three destructive-reset guards (scripts/lib/step/reset.js)', () => {
+  const oneStatementPlan = { statements: [{ table: 'fixture_table', kind: 'delete_all', sql: 'DELETE FROM fixture_table WHERE 1=1;' }] };
+  const zeroStatementPlan = { statements: [] };
+
+  describe('guard 1 — assertBeforeImageDeclared (R-M)', () => {
+    it('BAD — a destructive statement with recovery.before_image "none" is refused', () => {
+      const descriptor = { identity: { name: 'fixture_step' }, recovery: { before_image: 'none' } };
+      expect(() => stepLib.assertBeforeImageDeclared(descriptor, oneStatementPlan)).toThrow(/before_image/);
+      expect(() => stepLib.assertBeforeImageDeclared(descriptor, oneStatementPlan)).toThrow(/fixture_step/);
+    });
+
+    it('BAD — a destructive statement with recovery.before_image MISSING entirely is refused', () => {
+      const descriptor = { identity: { name: 'fixture_step' }, recovery: {} };
+      expect(() => stepLib.assertBeforeImageDeclared(descriptor, oneStatementPlan)).toThrow(/before_image/);
+    });
+
+    it('GOOD — a destructive statement with recovery.before_image "generated" is permitted', () => {
+      const descriptor = { identity: { name: 'fixture_step' }, recovery: { before_image: 'generated' } };
+      expect(() => stepLib.assertBeforeImageDeclared(descriptor, oneStatementPlan)).not.toThrow();
+    });
+
+    it('GOOD — a plan with ZERO statements is permitted regardless of before_image (nothing destructive to guard)', () => {
+      const descriptor = { identity: { name: 'fixture_step' }, recovery: { before_image: 'none' } };
+      expect(() => stepLib.assertBeforeImageDeclared(descriptor, zeroStatementPlan)).not.toThrow();
+    });
+  });
+
+  describe('guard 2 — assertForceFullAuthorized (R-L)', () => {
+    const manifestWithChainArgs = { scripts: { fixture_step: { chain_args: { sources: ['--full'] } } } };
+    const manifestWithoutChainArgs = { scripts: { fixture_step: {} } };
+
+    it('BAD — override.force_full is not true, refused', () => {
+      expect(() => stepLib.assertForceFullAuthorized({ overrides: {}, manifest: manifestWithChainArgs, slug: 'fixture_step' })).toThrow(/force_full/);
+      expect(() => stepLib.assertForceFullAuthorized({ overrides: { force_full: false }, manifest: manifestWithChainArgs, slug: 'fixture_step' })).toThrow(/force_full/);
+      expect(() => stepLib.assertForceFullAuthorized({ manifest: manifestWithChainArgs, slug: 'fixture_step' })).toThrow(/force_full/);
+    });
+
+    it('BAD — force_full is true but the slug\'s manifest entry declares no chain_args.sources "--full", refused', () => {
+      expect(() => stepLib.assertForceFullAuthorized({ overrides: { force_full: true }, manifest: manifestWithoutChainArgs, slug: 'fixture_step' })).toThrow(/chain_args/);
+    });
+
+    it('GOOD — force_full true AND the slug\'s manifest entry declares chain_args.sources including "--full", permitted (mirrors the real enrich_parcels/link_massing/link_wsib shape)', () => {
+      expect(() => stepLib.assertForceFullAuthorized({ overrides: { force_full: true }, manifest: manifestWithChainArgs, slug: 'fixture_step' })).not.toThrow();
+    });
+
+    it('the real manifest.json agrees this shape exists for at least one live slug (non-vacuity)', () => {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports -- the real committed manifest
+      const manifest = require(join(process.cwd(), 'scripts/manifest.json'));
+      expect(() => stepLib.assertForceFullAuthorized({ overrides: { force_full: true }, manifest, slug: 'link_massing' })).not.toThrow();
+    });
+  });
+
+  describe('guard 3 — assertAdvisoryLockAvailable (§4.1② / index.js:2270)', () => {
+    it('BAD — pg_try_advisory_xact_lock returns acquired:false (fakePool lockAcquired:false), refused with advisory_lock_held_elsewhere', async () => {
+      const pool = fakePool({ lockAcquired: false });
+      await expect(stepLib.assertAdvisoryLockAvailable(pool, 99)).rejects.toThrow(/advisory_lock_held_elsewhere/);
+    });
+
+    it('GOOD — pg_try_advisory_xact_lock returns acquired:true (fakePool lockAcquired:true), permitted', async () => {
+      const pool = fakePool({ lockAcquired: true });
+      await expect(stepLib.assertAdvisoryLockAvailable(pool, 99)).resolves.toBe(true);
+      expect(pool.sql.some((s: string) => s.includes('pg_try_advisory_xact_lock'))).toBe(true);
+    });
+  });
+
+  describe('applyGeneratedReset — the three guards run in order, before any statement, then writeBeforeImage strictly before each statement', () => {
+    it('a lock held elsewhere refuses BEFORE any statement runs, even when the other two guards would pass', async () => {
+      const descriptor = { identity: { name: 'fixture_step', lock: 99 }, recovery: { before_image: 'generated' } };
+      const manifest = { scripts: { fixture_step: { chain_args: { sources: ['--full'] } } } };
+      const pool = fakePool({ lockAcquired: false });
+      await expect(
+        stepLib.applyGeneratedReset(pool, descriptor, oneStatementPlan, { overrides: { force_full: true }, manifest, runAt: new Date('2026-09-03T00:00:00Z') }),
+      ).rejects.toThrow(/advisory_lock_held_elsewhere/);
+      expect(pool.sql.some((s: string) => /DELETE FROM fixture_table/.test(s)), 'the destructive statement must never run when the lock guard refuses').toBe(false);
+    });
+
+    it('a missing before_image refuses before the force_full/lock guards are even reached (guard order)', async () => {
+      const descriptor = { identity: { name: 'fixture_step', lock: 99 }, recovery: {} };
+      const pool = fakePool({ lockAcquired: true });
+      await expect(
+        stepLib.applyGeneratedReset(pool, descriptor, oneStatementPlan, { overrides: {}, manifest: { scripts: {} }, runAt: new Date('2026-09-03T00:00:00Z') }),
+      ).rejects.toThrow(/before_image/);
+      expect(pool.sql.some((s: string) => s.includes('pg_try_advisory_xact_lock')), 'guard 1 must refuse before guard 3 ever queries the lock').toBe(false);
+    });
+  });
+});

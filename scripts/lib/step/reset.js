@@ -1,6 +1,6 @@
 /**
- * `recovery.reset === "generated"` -> reset SQL (STA-2, WF1 "state tables reset",
- * 2026-09-03).
+ * `recovery.reset === "generated"` -> reset SQL, plus the three destructive-reset
+ * guards (STA-2 / STA-3, WF1 "state tables reset", 2026-09-03).
  *
  * WHY THIS EXISTS. `recovery.reset` (step.schema.json:1480) has been a declared field
  * only since Spec 120: every MATERIALIZER/BACKFILL descriptor satisfies the
@@ -36,12 +36,30 @@
  *
  * `generateReset` is DRY-RUN BY DEFAULT (`{ execute: false }` unless the caller
  * passes `{ execute: true }`) — it always returns the statements it WOULD run; it
- * never opens a client or executes anything itself. The three destructive-reset
- * guards (STA-3: no reset without a before-image, no reset outside a `chain_args`
- * force_full authorization, no reset while another run holds the advisory lock)
- * land in a follow-on commit — this file is `generateReset` alone.
+ * never opens a client or executes anything itself. `applyGeneratedReset` (STA-3)
+ * is the only function in this file that touches a live connection, and it runs the
+ * three guards below before issuing a single statement.
  *
- * SPEC LINK: docs/specs/01-pipeline/122_pipeline_step_optimization.md §7.5b
+ * STA-3 — three guards, each refusing BEFORE any statement runs:
+ *   1. `assertBeforeImageDeclared` — no reset without a before-image (R-M,
+ *      step.schema.json:1492-1496). Reuses `write.writeBeforeImage` verbatim.
+ *   2. `assertForceFullAuthorized` — no reset outside a `chain_args` force_full
+ *      authorization (R-L, Spec 124:188) — `override.force_full` must be true AND
+ *      the slug's own `manifest.json scripts[slug].chain_args.sources` must declare
+ *      `"--full"` (three converted steps already carry this shape today).
+ *   3. `assertAdvisoryLockAvailable` — no reset while another run holds the step's
+ *      advisory lock (`identity.lock`, §4.1② / index.js:2270). Uses the SAME
+ *      `pg_try_advisory_xact_lock` primitive the runner's own `withAdvisoryLock`
+ *      uses (pipeline.js:996) rather than a second locking mechanism.
+ *
+ * ⚠️ Delta from STA-3's original `promised` text ("dry-run default, explicit target
+ * confirmation, one-txn magnitude+empty-source guard"): dry-run default survives
+ * unchanged (`generateReset`'s own default). The other two guards are RE-DERIVED
+ * from R-L and R-M, which post-date the original promise and are the stronger,
+ * already-ratified mechanisms — recorded here, not silently substituted.
+ *
+ * SPEC LINK: docs/specs/01-pipeline/122_pipeline_step_optimization.md §7.5
+ * SPEC LINK: docs/specs/01-pipeline/124_step_standard_policy.md R-L (:188), R-M (:189)
  */
 'use strict';
 
@@ -135,8 +153,117 @@ function generateReset(descriptor, opts = {}) {
   return { kind: RESET_GENERATED, execute, statements };
 }
 
+/**
+ * STA-3 guard 1 — R-M. Any generated destructive statement requires
+ * `recovery.before_image === "generated"`; refuses otherwise. A `resetPlan` with
+ * zero statements (kind "none"/"declared_prose", or "generated" with nothing
+ * destructive to retract) has nothing to guard and passes trivially.
+ *
+ * @param {object} descriptor
+ * @param {{ statements: unknown[] }} resetPlan - from generateReset
+ */
+function assertBeforeImageDeclared(descriptor, resetPlan) {
+  if (!resetPlan.statements || resetPlan.statements.length === 0) return;
+  const beforeImage = descriptor.recovery && descriptor.recovery.before_image;
+  if (beforeImage !== 'generated') {
+    const slug = (descriptor.identity && descriptor.identity.name) || '<unknown>';
+    throw new Error(
+      `[generateReset guard 1/before_image] ${slug}: reset would run ${resetPlan.statements.length} `
+      + `destructive statement(s) but recovery.before_image is "${beforeImage ?? 'undefined'}", not `
+      + '"generated" (R-M, step.schema.json:1492-1496). Refusing — a destructive reset with no '
+      + 'row-level before-image cannot be audited.',
+    );
+  }
+}
+
+/**
+ * STA-3 guard 2 — R-L (Spec 124:188). A reset may run only under an
+ * operator-authorized `override.force_full`, sourced from a chain whose
+ * `manifest.json scripts[slug]` entry declares `chain_args: {"sources": ["--full"]}`
+ * — never a bare corpus-signal or an autonomous schedule.
+ *
+ * @param {{ overrides?: {force_full?: boolean}, manifest: {scripts: Record<string, {chain_args?: {sources?: string[]}}>}, slug: string }} args
+ */
+function assertForceFullAuthorized({ overrides, manifest, slug } = {}) {
+  if (!overrides || overrides.force_full !== true) {
+    throw new Error(
+      '[generateReset guard 2/force_full] reset refused: override.force_full is not true. A reset may '
+      + 'run only under an operator-authorized force_full (R-L, Spec 124:188) sourced from a declared '
+      + 'chain_args argv flag, never a bare corpus-signal or an autonomous trigger.',
+    );
+  }
+  const entry = manifest && manifest.scripts && manifest.scripts[slug];
+  const sources = (entry && entry.chain_args && entry.chain_args.sources) || [];
+  if (!sources.includes('--full')) {
+    throw new Error(
+      `[generateReset guard 2/force_full] reset refused: manifest.json scripts["${slug}"] does not declare `
+      + 'chain_args.sources including "--full" — force_full must be sourced from a declared argv flag '
+      + '(R-L), not an autonomous/corpus-signal trigger.',
+    );
+  }
+}
+
+/**
+ * STA-3 guard 3 — §4.1② / index.js:2270,2718. The SAME `pg_try_advisory_xact_lock`
+ * primitive `pipeline.withAdvisoryLock` uses (pipeline.js:996), run on the caller's
+ * own client/transaction so the acquisition and the reset statements that follow
+ * share one transaction boundary. Refuses with `advisory_lock_held_elsewhere`
+ * rather than racing a live writer.
+ *
+ * @param {{ query: (sql: string, params?: unknown[]) => Promise<{rows: Array<{acquired: boolean}>}> }} client
+ * @param {number} lockId - descriptor.identity.lock
+ */
+async function assertAdvisoryLockAvailable(client, lockId) {
+  const { rows } = await client.query('SELECT pg_try_advisory_xact_lock($1) AS acquired', [lockId]);
+  const acquired = Boolean(rows && rows[0] && rows[0].acquired === true);
+  if (!acquired) {
+    throw new Error(
+      `[generateReset guard 3/advisory_lock] reset refused: advisory_lock_held_elsewhere for lock id `
+      + `${lockId} — another run holds it; refusing to race a live writer (index.js:2270 §4.1②, `
+      + 'index.js:2718 precedent).',
+    );
+  }
+  return true;
+}
+
+/**
+ * The three guards, applied in order, followed by the before-image write (reusing
+ * `write.writeBeforeImage` verbatim, on the SAME client, strictly before each
+ * statement, unwrapped by try/catch per its own fail-loud contract) and the
+ * statement itself. Not exercised by any live descriptor today (STA-2's own
+ * grounding: 0 descriptors declare `recovery.reset: "generated"`) — provided so
+ * the first `generated` declarer has a guarded executor to call rather than a raw
+ * `client.query(stmt.sql)` loop.
+ *
+ * @param {import('pg').PoolClient} client
+ * @param {object} descriptor
+ * @param {ReturnType<typeof generateReset>} resetPlan
+ * @param {{ overrides?: {force_full?: boolean}, manifest: object, runAt: Date }} args
+ */
+async function applyGeneratedReset(client, descriptor, resetPlan, { overrides, manifest, runAt } = {}) {
+  const slug = (descriptor.identity && descriptor.identity.name) || '<unknown>';
+  assertBeforeImageDeclared(descriptor, resetPlan);
+  assertForceFullAuthorized({ overrides, manifest, slug });
+  await assertAdvisoryLockAvailable(client, descriptor.identity && descriptor.identity.lock);
+
+  const results = [];
+  for (const stmt of resetPlan.statements) {
+    // eslint-disable-next-line no-await-in-loop -- each statement's before-image must
+    // land, and be committed to disk, strictly before that statement's own retraction.
+    await write.writeBeforeImage(client, stmt.plan, [], slug, runAt);
+    // eslint-disable-next-line no-await-in-loop -- same ordering requirement
+    const result = await client.query(stmt.sql);
+    results.push({ table: stmt.table, kind: stmt.kind, rowCount: result.rowCount || 0 });
+  }
+  return results;
+}
+
 module.exports = {
   generateReset,
+  assertBeforeImageDeclared,
+  assertForceFullAuthorized,
+  assertAdvisoryLockAvailable,
+  applyGeneratedReset,
   RESET_GENERATED,
   RESET_NONE,
   SET_BASED_NULL_RETRACT_CLASS,

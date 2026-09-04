@@ -72,9 +72,12 @@ const write = require('./write');
 const { finalizeStrandedRun } = require('../ledger-window');
 // R-T addendum (Spec 124 §2 Rule 13, commit 3) — the invariants[]/plausibility[] executor.
 const { runInvariants, runPlausibility } = require('./plausibility');
-// STA-2 (WF1 "state tables reset", 2026-09-03) — generateReset. Export only:
-// reset.js owns the implementation.
-const { generateReset } = require('./reset');
+// STA-2/STA-3 (WF1 "state tables reset", 2026-09-03) — generateReset + the three
+// destructive-reset guards. Export only: reset.js owns the implementation.
+const {
+  generateReset, assertBeforeImageDeclared, assertForceFullAuthorized,
+  assertAdvisoryLockAvailable, applyGeneratedReset,
+} = require('./reset');
 
 /** The `config: "none"` projection — one shared frozen empty object, never a fresh `{}` per run. */
 const EMPTY_CONFIG = Object.freeze(Object.create(null));
@@ -2837,4 +2840,8 @@ module.exports = {
   acceptedCheckIds,
   makePreWriteGate,
   generateReset,
+  assertBeforeImageDeclared,
+  assertForceFullAuthorized,
+  assertAdvisoryLockAvailable,
+  applyGeneratedReset,
 };

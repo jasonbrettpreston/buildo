@@ -635,8 +635,8 @@
       "spec": "120 §6b",
       "title": "3 destructive-reset guards",
       "promised": "3 destructive-reset guards (dry-run default, explicit target confirmation, one-txn magnitude+empty-source guard)",
-      "status": "NOT_STARTED",
-      "evidence": "none of the 3 guards found in scripts/lib/step/write.js or any reset CLI entry point. Measured against refresh_snapshot (pilot 8, 2026-09-03): its recovery.reset is prose, not \"generated\" (scripts/refresh-snapshot.descriptor.json:309-310); compute has zero DELETE/TRUNCATE (grep -niE \"delete|truncate\" scripts/lib/compute/refresh-snapshot.js -> 0 hits); step.schema.json's RECORDER x-profile (:1686-1694) imposes no recovery.reset constraint at all — no destructive reset target exists for these 3 guards to guard here.",
+      "status": "BUILT",
+      "evidence": "BUILT 2026-09-03, WF1 'state tables reset' commit 3: scripts/lib/step/reset.js ships 3 guards, each refusing before any statement runs — assertBeforeImageDeclared (R-M: no reset without recovery.before_image \"generated\"), assertForceFullAuthorized (R-L: no reset outside override.force_full sourced from a manifest.json chain_args.sources \"--full\" declaration), assertAdvisoryLockAvailable (no reset while the step's identity.lock is held elsewhere, via the same pg_try_advisory_xact_lock primitive pipeline.withAdvisoryLock uses). applyGeneratedReset runs all three in order then reuses write.writeBeforeImage verbatim before each statement. Each guard has a known-bad fixture and both-directions lock (fake pool) in src/tests/step-library.logic.test.ts (describe 'STA-3'). DELTA FROM PROMISED, recorded not silently substituted: the original promise was \"dry-run default, explicit target confirmation, one-txn magnitude+empty-source guard\" — dry-run default survives unchanged (STA-2's generateReset own default); the other two guards are RE-DERIVED from R-L and R-M (Spec 124 §5), which post-date the original promise and are the stronger, already-ratified mechanisms. Spec 124 R-L/R-M rows gain an \"Enforced by\" note same commit.",
       "owner": {
         "kind": "wf",
         "ref": "wf: programme-STA-2"
