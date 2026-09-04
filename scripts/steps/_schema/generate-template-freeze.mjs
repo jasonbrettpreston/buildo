@@ -220,29 +220,49 @@ const RUNNER_TO_SHAPE = {
   runMaterializePhase: 'materialize',
   runBackfillPhase: 'backfill',
   runRecorderPhase: 'recorder',
-  // RE-FREEZE #3 (pilot 9 commit 7d/2, 2026-09-04, LG-28) — the 8th runner, ENRICHER's
-  // own `execution.shape:"enrich"`. Its arrival is also what corrected runRecorderPhase's
-  // OWN frozen phase_order in the SAME refresh: `runnerRanges` bounds each runner's range
-  // by the NEXT `async function run\w+(` match, and runRecorderPhase was previously the
-  // LAST such match in the file — its range silently extended to EOF and picked up
-  // executeOrderedWrites' write.executeSetBasedClear/write.executeUpsertBatch calls as if
-  // they belonged to it. runEnrichPhase now bounds it correctly.
+  // RE-FREEZE #3 (pilot 9 commit 7d/2, 2026-09-04, LG-28) — the 8th runner, ENRICHER's own
+  // `execution.shape:"enrich"`.
   runEnrichPhase: 'enrich',
 };
 const LIBRARY_CALL_RE = /\b(staleness|write|verdict|ledger|acquire|pipeline)\.(\w+)\(|\b(preWriteGate)\(/g;
 
-/** { runnerName -> source line range } for every top-level `async function run*(` in index.js. */
+// pilot 9 commit 7e/1 (2026-09-04) — RE-FREEZE #3's own generator side-effect, closed here.
+// The PRIOR bound was "the next `async function run\w+(` match" — a `run\w+` name is not a
+// runner boundary, it's an accident of THIS runner's own naming convention colliding with
+// unrelated `run`-prefixed helpers (`runWithPool`, `runTierToConvergence`,
+// `runBackfillFullRecompute`) and, when no such helper follows, with nothing at all — which is
+// exactly how `runRecorderPhase` (until 7d) and then `runEnrichPhase` (from 7d) each in turn
+// silently inherited `executeOrderedWrites`' write.executeSetBasedClear/write.executeUpsertBatch
+// calls: neither `executeOrderedWrites` nor `makePreWriteGate`, the two non-"run"-named
+// functions sitting directly after them in file order, are `run\w+`-shaped, so the old
+// heuristic ran straight past them to the next accidental `run\w+` match. A runner's true
+// boundary is "the next top-level declaration of ANY kind" — every declaration in this file
+// (function or async function, "run"-prefixed or not) starts at column 0, so bounding on that
+// is both correct and a STRICT NARROWING of the old bound (the new boundary set is a superset
+// of the old one, so a range can only shrink, never grow) — which is why regenerating below
+// leaves all seven pre-existing runners' phase_order byte-identical and fixes only
+// runEnrichPhase's.
+const TOP_LEVEL_DECLARATION_RE = /^(?:async )?function (\w+)\(/;
+
+/** { runnerName -> source line range } for every top-level `async function run*(` in index.js,
+ * each bounded by the START of the next top-level declaration of ANY kind (see the note above
+ * `TOP_LEVEL_DECLARATION_RE` for why a `run\w+`-only bound is wrong). */
 export function runnerRanges(source) {
   const lines = source.split('\n');
-  const starts = [];
+  const declarationStarts = [];
+  for (let i = 0; i < lines.length; i++) {
+    if (TOP_LEVEL_DECLARATION_RE.test(lines[i])) declarationStarts.push(i);
+  }
+  declarationStarts.push(lines.length); // EOF sentinel
+  const runnerStarts = [];
   for (let i = 0; i < lines.length; i++) {
     const m = lines[i].match(/^async function (run\w+)\(/);
-    if (m) starts.push({ name: m[1], line: i });
+    if (m) runnerStarts.push({ name: m[1], line: i });
   }
-  starts.push({ name: '__EOF__', line: lines.length });
   const ranges = {};
-  for (let i = 0; i < starts.length - 1; i++) {
-    ranges[starts[i].name] = { start: starts[i].line, end: starts[i + 1].line };
+  for (const { name, line } of runnerStarts) {
+    const end = declarationStarts.find((b) => b > line);
+    ranges[name] = { start: line, end };
   }
   return { lines, ranges };
 }
