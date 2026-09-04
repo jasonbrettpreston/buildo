@@ -58,11 +58,11 @@ Read verbatim this commit: the row at `docs/reports/review_followups.md:3015` (t
 | `c1ef0b73` (Bundle G Wave 2) | `ADVISORY_LOCK_ID = 94`, `RUN_AT` via `getDbTimestamp`/`withAdvisoryLock` | ✓ (`:30`, `:128-129`) | **encoded-as-descriptor-field** | `identity.lock: 94` kept textually (§5.4, S1) |
 | `714dc48e` (WF3-E20) | `wsib_fuzzy_match_threshold` externalized to `logic_variables` | ✓ (`:26-28`, `:114-117`) | **encoded-as-descriptor-field** | `config.logic_variables[]` (T1, already registered+GROUPed) |
 | `d704a447` | Strip leading THE/A/AN before first-letter blocking comparison | ✓ (`:258-259`, `:272-273`) | **preserved-in-compute** + Rule-4 `why` owed | **Most consequential fence in the corpus** — the predicate this fix INTRODUCED is what today's tier-3 pass rate (38.1%) measures against; because the `WHERE linked_entity_id IS NULL` guard is monotone (G-8), the 60.5% pre-fix contamination this fix could not retroactively repair is exactly A-7's reason for existing (Fold A/Reality-Check). The article-stripping rule itself needs a `checks[].why` at commit 7, same treatment as LM-D13's tiebreak |
-| `30ff8805` | `buildTier3Ctes(extraFilter)` parameterization + dry-run `pg_trgm` threshold parity | ✓ (`:251-285`, `:334`) | **preserved-in-compute** | correctness/safety refactor (fragile string-replace → parameterized function), Rule 2 |
+| `30ff8805` | `buildTier3Ctes(extraFilter)` parameterization + dry-run `pg_trgm` threshold parity | ✓ (`:251-285`, `:334`) | **preserved-in-compute** | correctness/safety refactor (fragile string-replace → parameterized function), Rule 2. **Grounded (LW-D21, 2026-09-03):** the shape survives as `buildFuzzyMatchSql`/`buildFuzzyMatchCountSql` (`scripts/lib/compute/link-wsib.js:287,336`, threshold as `$2`/`$1` respectively, not string-surgery) — the `why` this parity exists for is descriptor `deviations[]` `LW-D15` (`:532`): the dry-run count-mirror MUST issue "read-only count-query mirrors of each write's exact predicate," which structurally requires the same threshold-parameterized pair this commit introduced. |
 | `647d0935` (8 fixes) | ORDER BY score DESC scoring rule; `SET pg_trgm.similarity_threshold` before Tier 3; `LIMIT 1000` safety cap; `copyContacts` aggregation+NULLIF guard; pairwise WHERE guard; dry-run tier1/2 exclusion; threshold 70%→5% | ✓ all (`:291`, `:431`, `:292` S3, `:219-241`, `:328-332`) | **SPLIT**: `LIMIT 1000` → **encoded-as-descriptor-field** (S3, structural); scoring ORDER BY → **preserved-in-compute** + Rule-4 why; `copyContacts` guard → **encoded-as-descriptor-field** (`write_discipline.guard_why`, G-15); `>=5%` value → **encoded-as-descriptor-field** (T2) | the single largest commit in the corpus (8 named fixes); none superseded |
 | `0523947c` | Cumulative (not run-specific) link rate; threshold 70%→5% | ✓ (`:494-496`, `:503`) | **preserved-in-compute** (the cumulative-vs-run-specific choice) + **encoded-as-descriptor-field** (T2 value) | commit message states the `why` ("most WSIB entries have no matching entity in our 3.7K builder pool") — carries forward verbatim |
 | `5baaed5a` | Phase ternary INTRODUCED (values 12/5) + sources-chain `assert_schema`/`link_neighbourhoods`/`load_wsib`/`compute_centroids` audit_table gaps (other files) | ⚠️ **SUPERSEDED** — mechanism survives, VALUES corrected by `4bb44fbb` (12/5 → 19/7) | **knowingly-retired** (this commit's specific values), superseded-by `4bb44fbb` | no separate LW-D needed — same E3 field, later value wins |
-| `b71db6e0` | OR-join → `trade_matches`/`legal_matches`/`combined` CTE split (GIN index use) | ✓ (`:252-284`) | **preserved-in-compute** | Rule 4 already satisfied — the header comment (`:243-246`) already documents the "Nested Loop over 107K × 3.6K rows (~394M similarity calls)" rationale |
+| `b71db6e0` | OR-join → `trade_matches`/`legal_matches`/`combined` CTE split (GIN index use) | ✓ (`:252-284`) | **preserved-in-compute** | ~~Rule 4 already satisfied — the header comment (`:243-246`) already documents the "Nested Loop over 107K × 3.6K rows (~394M similarity calls)" rationale~~ **Corrected (LW-D21, 2026-09-03):** a code comment is NOT a valid Rule 4 grounding site (`checks[].why`/`notes.json`/`checks[]` only — comments are explicitly excluded, Spec 124 §5.4 "policy text in `checks[].why` never in comments"). **Grounded instead** via `notes.json fences[]` ("Tier 3 splits trade/legal name comparison into two UNION ALL CTEs instead of one OR-joined query," `commit: 647d0935`) — the SAME construct and the SAME incident numbers (107K×3.6K, ~394M `similarity()` calls) this commit introduced; `buildFuzzyMatchSql`'s own header (`scripts/lib/compute/link-wsib.js:278-280`) cross-cites both `d704a447` and `647d0935` as the two commits whose predicates it preserves verbatim, confirming `647d0935` (not this commit) is the corpus's canonical fence attribution for the still-live shape. |
 | `bd06751d` | `records_total: totalLinked` (reverting `412927ca`'s `totalUnlinked`) | ⚠️ **SUPERSEDED** by `52ad6527` (reverted back to `totalUnlinked`, the CURRENT value) | **knowingly-retired** | see churn note below — this is the middle flip in a 3-commit back-and-forth |
 | `412927ca` (C3) | First `pipeline.emitSummary`/raw `PIPELINE_SUMMARY` console.log + `records_total: totalUnlinked` in the raw `pipeline_runs` UPDATE | ⚠️ **SUPERSEDED** by the Pipeline SDK migration (`0ef23550`, not itself in the 17-fix corpus — a `refactor(` commit) | **knowingly-retired** (the raw-console.log/raw-UPDATE mechanism); the semantic intent (`records_total` = the DENOMINATOR, not just matches) survives via `52ad6527` | the SDK's `emitSummary`/`emitMeta` triples (G-9) are the living descendant |
 
@@ -608,6 +608,35 @@ Filed to `docs/reports/review_followups.md`: a MED follow-up naming every residu
 
 ---
 
+## §12. LW-D21 — Rule 4/G-2 grounding (WF3, 2026-09-03)
+
+**RED, verbatim (before this commit):**
+
+```
+| 4 | Compute rule declared | enforced-red | G-2: 8 preserved-in-compute row(s), 4 with no why/notes.json/checks[] grounding |
+```
+`node -r dotenv/config scripts/analysis/step-validate.mjs --step=link_wsib --fast` → `link_wsib: 16/17 hard-stop=false` (measured this session).
+
+**The 4 ungrounded rows** (`checkPreservedInComputeHasWhy`, exact match against the live PH-3 table — re-executed via a standalone node script, not eyeballed):
+
+1. `a81c6a7c` — `FORCE_FULL_ENV`, `readThresholdVersionSignal`/`hasThresholdChanged`, honest `records_updated: totalLinked`
+2. `76dcca28` — `parseInt`→`safeParsePositiveInt` ×4 sites
+3. `30ff8805` — `buildTier3Ctes(extraFilter)` parameterization + dry-run `pg_trgm` threshold parity
+4. `b71db6e0` — OR-join → `trade_matches`/`legal_matches`/`combined` CTE split
+
+**Dispositions (this commit):**
+
+- **Row `30ff8805`** (§2) — kept `preserved-in-compute`; grounded in-row: the parameterized-threshold shape survives as `buildFuzzyMatchSql`/`buildFuzzyMatchCountSql` (`scripts/lib/compute/link-wsib.js:287,336`); the `why` cited is descriptor `deviations[]` `LW-D15` (`:532`), which requires the dry-run mirror to share the live query's exact parameterized predicate.
+- **Row `b71db6e0`** (§2) — kept `preserved-in-compute`; the row's OWN prior claim ("Rule 4 already satisfied — the header comment already documents...") is corrected: a code comment is not a valid grounding site (Spec 124 §5.4). Grounded instead via `notes.json fences[]` (the GIN-index CTE-split fence, same incident numbers, commit-attributed to `647d0935` — confirmed as the corpus's canonical attribution for this still-live shape by `buildFuzzyMatchSql`'s own header comment, which cross-cites both `d704a447` and `647d0935`).
+- **Row `a81c6a7c`** (§2) — **PREMISE REFUTED, NOT re-disposed (operator instruction, 2026-09-03: report, do not retire).** The "honest aggregate" (`totalLinked`) does not survive: `grep -rn totalLinked scripts/lib/compute/link-wsib.js scripts/link-wsib.js` → 0 hits (the only `totalLinked` hits repo-wide are in the unrelated `scripts/link-coa.js`). `records_updated` is now sourced declaratively via `outputs.counters.records_updated: {source: "written.e1.updated", scoped_by: "id"}` (`scripts/link-wsib.descriptor.json:585`) — a runner-derived counter, not a hand-computed compute variable. **Left as `preserved-in-compute`, ungrounded, pending operator ruling** on whether the correct disposition is `encoded-as-descriptor-field` (the counters declaration) or `knowingly-retired` (the specific variable/mechanism).
+- **Row `76dcca28`** (§2) — **PREMISE REFUTED, NOT re-disposed (same instruction).** `grep -rn safeParsePositiveInt scripts/lib/compute/link-wsib.js` → 0 hits; all COUNT queries in the current compute module use server-side `count(*)::int` casts (`scripts/lib/compute/link-wsib.js:267,376,391,410,443`) — the same "superseded by server-side `COUNT(*)::int`" pattern `CC-D4` found for `compute_centroids`' own `90e3d0f8` row. **Left as `preserved-in-compute`, ungrounded, pending operator ruling.**
+
+**Operator: 2 of the 4 originally-ungrounded rows are grounded above (citation only, no descriptor/notes.json change). The other 2 (`a81c6a7c`, `76dcca28`) have a refuted premise — the construct the row describes was not ported into the converted compute — and are reported here rather than silently re-disposed, per this WF3's explicit instruction. Rule 4 / GAP G-2 therefore stays `enforced-red` for `link_wsib` after this commit (2 ungrounded rows, down from 4), and the new Rule-13 hard-stop wiring (this same WF3, commit 4) will correctly flag it — that is the mechanism working as designed, not a defect in this commit.**
+
+**RED, verbatim (after this commit, `--write`):** see the regenerated scorecard below — Rule 4 row and G-2 detail now read "8 preserved-in-compute row(s), 2 with no why/notes.json/checks[] grounding" (down from 4 ungrounded).
+
+---
+
 ## §R. Reflection (written after cutover, commit 9 — R-F item 5)
 
 **Low-confidence table** — claims this pilot made that turned out to need correction, or that a future reader should re-verify rather than trust:
@@ -660,12 +689,12 @@ Two REAL bugs were found by a **live kill-and-rerun proof against this exact ste
 | Gate | Score | Max | Detail |
 |---|---:|---:|---|
 | G0 | 1 | 1 | boundary-section=true spec-line=true |
-| G1 | 1 | 1 | PH-3 section found=true sha-count=35 |
+| G1 | 1 | 1 | PH-3 section found=true sha-count=39 |
 | G2 | 1 | 1 | 122-churn-complexity.md quadrant=bottom-right window=39313d9 |
 | G3 | 1 | 2 | table rows=18 vocab-hit rows=17 |
 | G4 | 2 | 2 | risk-class row with chance+impact found=true |
 | G5 | 1 | 1 | db=true clock=true network=true argv/env=true |
-| G6 | 3 | 3 | 20 ledger row(s), 0 without CLOSED/PIN () |
+| G6 | 3 | 3 | 21 ledger row(s), 0 without CLOSED/PIN () |
 | G7 | 3 | 3 | file=true fences=5 it-count=78 RED-evidence=true |
 | G8 | 3 | 3 | missing-invocations=0 stale-fingerprints=0 unexplained-diffs=0 |
 | G9 (binary) | PASS | — | heading=true low-confidence-table=true recurring-table=true |
@@ -691,16 +720,16 @@ Two REAL bugs were found by a **live kill-and-rerun proof against this exact ste
 - compare ran: true · diffs found: 218 · unexplained: 0
 
 ### Test suite (item iii)
-- 756/777 passed (suite success=false)
+- SKIPPED or failed to run: --fast: vitest spawn skipped
 
 ### Policy coverage matrix (item vi) — Spec 124 Rules 1-13
 
 | Rule | Name | Status | Note |
 |---|---|---|---|
 | 1 | Nothing hidden | enforced-green | G-1 schema-baseline: schema-baseline clean |
-| 2 | Compute is just compute | enforced-green |  |
+| 2 | Compute is just compute | enforced-green | §5.5 describe not scoped to this step in the vitest run |
 | 3 | Tunables externalized | enforced-green | G-4: 8 declared, 3 verdict-affecting, 0 violate on_invalid:fail with no deviations[] cover |
-| 4 | Compute rule declared | enforced-red | G-2: 8 preserved-in-compute row(s), 4 with no why/notes.json/checks[] grounding |
+| 4 | Compute rule declared | enforced-red | G-2: 8 preserved-in-compute row(s), 2 with no why/notes.json/checks[] grounding |
 | 5 | checks >= 1 | enforced-green |  |
 | 6 | Omission fails (18 categories) | enforced-green |  |
 | 7 | Archetype gates categories | enforced-green |  |
