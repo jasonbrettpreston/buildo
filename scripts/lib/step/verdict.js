@@ -195,7 +195,27 @@ function checkRow(check, observation, onCheckError, config = null) {
   // object it builds). Lets a consumer reading only the emitted audit table (not
   // the descriptor) tell DATA rows from PROCESS rows without re-deriving it from
   // array membership.
-  const row = (value, status) => ({ metric: check.id, value, threshold, status, source: check.source || 'check' });
+  //
+  // Rule 11 observability (Spec 124 §2 Rule 11; Spec 48 §3.11) — a
+  // `when:"pre_write"` check's declared `order_guarantee` ({guarantee, spec_ref,
+  // anchor}, schema-required per the C2 checker above) is passed through onto
+  // ITS OWN audit row as `{anchor, guarantee}` (spec_ref omitted — it is the
+  // CITATION coordinate `checkOrderGuaranteesCited` re-verifies at descriptor-
+  // validation time, not something a `pipeline_runs.records_meta.audit_table`
+  // reader needs to re-resolve a file path from). Without this, the ordering
+  // guarantee is declared in the descriptor but invisible in the RUN'S OWN
+  // record — a consumer reading only records_meta could not tell, after the
+  // fact, that this row's pre_write position was asserting a specific,
+  // spec-cited "before X" promise. Absent on any check with no declared
+  // order_guarantee (the common case) — never an empty/null placeholder key.
+  const row = (value, status) => ({
+    metric: check.id,
+    value,
+    threshold,
+    status,
+    source: check.source || 'check',
+    ...(check.order_guarantee ? { order_guarantee: { anchor: check.order_guarantee.anchor, guarantee: check.order_guarantee.guarantee } } : {}),
+  });
 
   if (observation && observation.error !== undefined && observation.error !== null) {
     const msg = observation.error instanceof Error ? observation.error.message : String(observation.error);

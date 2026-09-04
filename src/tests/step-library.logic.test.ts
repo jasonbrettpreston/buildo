@@ -311,6 +311,36 @@ describe('the verdict is ROW-DERIVED, and all three values are reachable (§7.1,
     expect(built.errors).toEqual(['c0: fail-detail']);
     expect(built.warnings).toEqual(['c1: warn-detail']);
   });
+
+  // Rule 11 observability (Spec 124 §2 Rule 11; Spec 48 §3.11, WF3 Rules
+  // 10-12 output panel remediation, commit 2) — a `checks[].order_guarantee`
+  // declared on the descriptor is passed through onto ITS OWN audit row as
+  // `{anchor, guarantee}` — `spec_ref` is NOT re-emitted (it is the citation
+  // coordinate `checkOrderGuaranteesCited` re-resolves at descriptor-
+  // validation time, not something a records_meta reader needs). Both
+  // directions: declared → present; undeclared (the overwhelming majority of
+  // checks) → the key is absent altogether, never an empty/null placeholder.
+  it('declared checks[].order_guarantee is passed through onto its own audit row as {anchor, guarantee} (spec_ref omitted)', () => {
+    const d = withChecks([
+      {
+        when: 'pre_write',
+        order_guarantee: {
+          guarantee: 'abort before any DB write',
+          spec_ref: 'docs/specs/fixture/999_fixture.md',
+          anchor: 'THE ANCHOR TEXT',
+        },
+      },
+    ]);
+    const built = build(d, { c0: { violations: 0 } });
+    expect(built.rows[0].order_guarantee).toEqual({ guarantee: 'abort before any DB write', anchor: 'THE ANCHOR TEXT' });
+    expect(built.rows[0].order_guarantee).not.toHaveProperty('spec_ref');
+  });
+
+  it('a check with NO declared order_guarantee carries no order_guarantee key on its row at all', () => {
+    const d = withChecks([{}]);
+    const built = build(d, { c0: { violations: 0 } });
+    expect(built.rows[0]).not.toHaveProperty('order_guarantee');
+  });
 });
 
 // ---------------------------------------------------------------------------

@@ -18,7 +18,7 @@
 * **UI Layout:** N/A.
 
 ## Execution Plan
-- [x] Commit 1 — link_wsib Rule 4 grounding: 2 of 4 ungrounded rows cited in place (`30ff8805`, `b71db6e0`); 2 rows (`a81c6a7c`, `76dcca28`) premise-refuted, reported not retired per explicit operator instruction; GAP G-2 count updated in Spec 124; `LW-D21` filed PIN; scorecard `--write`d.
+- [x] Commit 1 — link_wsib Rule 4 grounding: 2 of 4 ungrounded rows cited in place (`30ff8805`, `b71db6e0`); 2 rows (`a81c6a7c`, `76dcca28`) premise-refuted, reported not retired per explicit operator instruction; GAP G-2 count updated in Spec 124; `LW-D21` filed PIN; scorecard `--write`d. Landed `11691609` (pre-commit hook flaked ~7x with a Tinypool "Worker exited unexpectedly" crash reproducible even outside git via `npm run lint && npm run test` in one shell — content-independent, confirmed by 3 clean standalone `npm run test` runs; landed via a bounded retry loop).
 - [ ] Commit 2 — Rule 11 observability: `order_guarantee` on the runtime audit row (`verdict.js#checkRow`), Spec 48 key registration, both-directions logic test.
 - [ ] Commit 3 — Rule 10 lock: fixture an unsanctioned verdict cascade, assert `unsanctioned` with file:line; sanctioned site still passes.
 - [ ] Commit 4 — Hard stop: unpinned `enforced-red` matrix row -> `hardStop = true` with rule number in reason; self-test both directions; Spec 124 Rule 13 gains one sentence; regenerate all 8 scorecards `--all --write`.
