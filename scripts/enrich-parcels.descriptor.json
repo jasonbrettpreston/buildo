@@ -518,9 +518,9 @@
       "order_guarantee": {
         "guarantee": "pass 5 reads parcels columns passes 1-4 just wrote inside their own shared transaction and MUST run only after that transaction commits — a same-txn read would be invisible.",
         "spec_ref": "docs/specs/01-pipeline/78_optimal_lot_configuration.md",
-        "anchor": "read would be invisible"
+        "anchor": "78:read would be invisible"
       },
-      "why": { "text": "Rule 11 (Spec 124 §2) — the declared half of Spec 78 §P3A.1's own ordering guarantee, verified this commit to still be literally present in the cited spec text before being cited (Rule 11 order-guarantee test, this file).", "liveness": { "kind": "spec", "ref": "docs/specs/01-pipeline/78_optimal_lot_configuration.md" } }
+      "why": { "text": "Rule 11 (Spec 124 §2, Ask 6 amendment pilot 9 commit 1) — the declared half of Spec 78 §P3A.1's own ordering guarantee, verified this commit to still be literally present in the cited spec text before being cited (Rule 11 order-guarantee test, this file). The anchor is spec-qualified (\"78:...\") because identity.spec is \"65\" (Ask 6 ruling: Spec 78 governs 2 of 5 passes, but identity.spec is single-valued) — checkOrderGuaranteesCited resolves a qualified anchor's spec_ref agreement against the qualifier's own spec, not identity.spec.", "liveness": { "kind": "spec", "ref": "docs/specs/01-pipeline/78_optimal_lot_configuration.md" } }
     },
     { "id": "parcels_enriched_count", "kind": "field_coverage", "expect": { "reports": "pass 1 rows the guarded UPDATE actually changed" }, "limit": "viol == 0", "severity": "INFO", "blocking": false, "when": "post", "chains": "all", "accept_until": "none", "why": { "text": "Ported by name.", "liveness": { "kind": "table", "ref": "parcels" } } },
     { "id": "parcels_ambiguous_zone_count", "kind": "bound", "expect": { "of": "parcels with zoning_dominant_area_share < 0.60 among scoped parcels" }, "limit": "pct <= 5", "severity": "WARN", "blocking": false, "when": "post", "chains": "all", "accept_until": "none", "why": { "text": "Ported by name — result.scoped && result.ambiguous > 0.05*result.scoped -> WARN.", "liveness": { "kind": "column", "ref": "parcels.zoning_is_ambiguous" } } },

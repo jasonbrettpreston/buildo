@@ -1678,7 +1678,12 @@ function checkVerdictSingleSource() {
 //       stale.
 //   (d) spec_ref agrees with the descriptor's own identity.spec — a
 //       pre_write check's ordering guarantee must trace to THIS STEP's own
-//       governing spec, never an unrelated one.
+//       governing spec, never an unrelated one. Ask 6 amendment (pilot 9
+//       commit 1): an anchor may be spec-qualified "<specnum>:<anchor text>"
+//       to name a DIFFERENT governing spec for THIS check only (identity.spec
+//       stays single-valued) — rule (d) then compares spec_ref against the
+//       qualifier's own resolved file instead. An unqualified anchor is the
+//       unchanged pre-existing behavior.
 // ---------------------------------------------------------------------------
 
 /** The docs/specs/**\/<n>_*.md file for a bare spec number string (e.g. "59"), or null if none/ambiguous. Two levels deep only — matches the real tree (docs/specs/*.md, docs/specs/<subdir>/*.md). */
@@ -1724,6 +1729,21 @@ function checkOrderGuaranteesCited(descriptor, specTextByFile = null) {
       violations.push(`${c.id}: no order_guarantee {guarantee, spec_ref, anchor} declared`);
       continue;
     }
+    // Ask 6 amendment (Spec 124 §2 Rule 11, pilot 9 commit 1) — an anchor MAY be
+    // spec-qualified as "<specnum>:<anchor text>" to declare that THIS pre_write
+    // check's order_guarantee governs under a DIFFERENT spec than the descriptor's
+    // own identity.spec. Rule (d) below (spec_ref must agree with the governing
+    // spec) then compares spec_ref against the QUALIFIER's resolved file instead
+    // of identity.spec's — the step-wide identity.spec stays single-valued
+    // (unchanged), but one specific pre_write check can cite a spec the step's
+    // outputs genuinely span (e.g. enrich_parcels: identity.spec "65", pass 5's
+    // own order_guarantee governed by Spec 78 §P3A.1). An UNQUALIFIED anchor is
+    // byte-for-byte the pre-existing behavior — nothing changes for any other
+    // pilot's descriptor.
+    const qualified = /^(\d+):([\s\S]+)$/.exec(og.anchor);
+    const qualifiedSpecNumber = qualified ? qualified[1] : null;
+    const anchorText = qualified ? qualified[2] : og.anchor;
+
     let text;
     if (specTextByFile) {
       text = Object.prototype.hasOwnProperty.call(specTextByFile, og.spec_ref) ? specTextByFile[og.spec_ref] : null;
@@ -1739,15 +1759,24 @@ function checkOrderGuaranteesCited(descriptor, specTextByFile = null) {
       }
       text = readFileSync(abs, 'utf8');
     }
-    if (!text.includes(og.anchor)) {
+    if (!text.includes(anchorText)) {
       violations.push(`${c.id}: anchor not found literally in ${og.spec_ref} — rotted citation`);
       continue;
     }
-    if (!specTextByFile && identitySpec) {
-      if (!specFile) {
-        violations.push(`${c.id}: identity.spec "${identitySpec}" does not resolve to exactly one docs/specs/**/<n>_*.md file, so spec_ref agreement cannot be checked`);
-      } else if (path.resolve(REPO_ROOT, og.spec_ref) !== path.resolve(specFile)) {
-        violations.push(`${c.id}: spec_ref "${og.spec_ref}" does not agree with identity.spec "${identitySpec}" (-> ${path.relative(REPO_ROOT, specFile)})`);
+    if (!specTextByFile) {
+      if (qualifiedSpecNumber) {
+        const qualifiedFile = resolveSpecFileForNumber(qualifiedSpecNumber);
+        if (!qualifiedFile) {
+          violations.push(`${c.id}: anchor qualifier "${qualifiedSpecNumber}:" does not resolve to exactly one docs/specs/**/<n>_*.md file`);
+        } else if (path.resolve(REPO_ROOT, og.spec_ref) !== path.resolve(qualifiedFile)) {
+          violations.push(`${c.id}: spec_ref "${og.spec_ref}" does not agree with its own anchor qualifier "${qualifiedSpecNumber}:" (-> ${path.relative(REPO_ROOT, qualifiedFile)})`);
+        }
+      } else if (identitySpec) {
+        if (!specFile) {
+          violations.push(`${c.id}: identity.spec "${identitySpec}" does not resolve to exactly one docs/specs/**/<n>_*.md file, so spec_ref agreement cannot be checked`);
+        } else if (path.resolve(REPO_ROOT, og.spec_ref) !== path.resolve(specFile)) {
+          violations.push(`${c.id}: spec_ref "${og.spec_ref}" does not agree with identity.spec "${identitySpec}" (-> ${path.relative(REPO_ROOT, specFile)}) — qualify the anchor "<specnum>:<text>" if this check genuinely governs under a different spec`);
+        }
       }
     }
   }
@@ -2359,6 +2388,34 @@ function selfTest() {
     // RED: spec_ref does not resolve at all.
     const unresolved = checkOrderGuaranteesCited(goodDescriptor, { 'docs/specs/fixture/OTHER.md': 'irrelevant' });
     if (unresolved.pass) throw new Error('self-test FAILED: checkOrderGuaranteesCited did not RED on an unresolved spec_ref');
+
+    // Ask 6 amendment (pilot 9 commit 1) — spec-qualified anchors, exercised
+    // against the REAL docs/specs/ tree (specTextByFile = null / omitted):
+    // rule (d)'s spec_ref-agreement half is a no-op under the fixture override
+    // (see the comment on `good`, above), so these three cases need real files.
+    const SPEC_78_REL_FIXTURE = 'docs/specs/01-pipeline/78_optimal_lot_configuration.md';
+    const multiSpecDescriptor = (anchor) => ({
+      identity: { spec: '65' }, // enrich_parcels's own identity.spec — NOT 78
+      checks: [{ id: 'pass5_post_commit_read_order', when: 'pre_write', order_guarantee: {
+        guarantee: 'a same-txn read would be invisible', spec_ref: SPEC_78_REL_FIXTURE, anchor,
+      } }],
+    });
+
+    // RED (control, unchanged behavior): an UNQUALIFIED anchor whose spec_ref
+    // points at Spec 78 while identity.spec is "65" still disagrees under rule
+    // (d) — qualifying the anchor is what makes this legal, not merely citing 78.
+    const unqualifiedMultiSpec = checkOrderGuaranteesCited(multiSpecDescriptor('read would be invisible'));
+    if (unqualifiedMultiSpec.pass) throw new Error(`self-test FAILED: checkOrderGuaranteesCited did not RED on an unqualified anchor whose spec_ref disagrees with identity.spec (${JSON.stringify(unqualifiedMultiSpec)})`);
+
+    // GREEN: the SAME anchor text, qualified "78:...", resolves against Spec 78
+    // (its own literal text) and agrees with spec_ref via the qualifier, not
+    // identity.spec — identity.spec "65" is never consulted for this check.
+    const qualifiedMultiSpec = checkOrderGuaranteesCited(multiSpecDescriptor('78:read would be invisible'));
+    if (!qualifiedMultiSpec.pass) throw new Error(`self-test FAILED: checkOrderGuaranteesCited did not GREEN a qualified anchor citing its own spec_ref's real spec (${JSON.stringify(qualifiedMultiSpec)})`);
+
+    // RED: a qualifier naming a spec number that resolves to no file at all.
+    const badQualifier = checkOrderGuaranteesCited(multiSpecDescriptor('999999:read would be invisible'));
+    if (badQualifier.pass) throw new Error('self-test FAILED: checkOrderGuaranteesCited did not RED on an anchor qualifier naming a nonexistent spec number');
   }
   // Rule 12 (Spec 124 §2 Rule 12, WF2 C3) — checkInterruptedPostureTruthful +
   // runnerReachability, in-memory via a synthetic index.js source override.

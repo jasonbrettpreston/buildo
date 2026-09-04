@@ -394,14 +394,19 @@ describe('Rule 11 order_guarantee — pass 5 runs AFTER the shared txn COMMITs (
   // NOTE: the spec's own prose wraps mid-phrase ("...envelope (a same-txn\nread would be invisible)."
   // at :205-206) — the anchor must be a substring that survives the line break, so it is the clause
   // AFTER the wrap, not the "a same-txn read..." framing used in this pilot's own prose above.
-  const ANCHOR = 'read would be invisible';
+  const ANCHOR_TEXT = 'read would be invisible';
+  // Rule 11 amendment (Spec 124 §2, Ask 6, pilot 9 commit 1) — enrich_parcels's identity.spec is
+  // "65", but pass 5's own order_guarantee genuinely cites Spec 78 (§P3A.1). checkOrderGuaranteesCited
+  // now accepts a spec-qualified anchor "<specnum>:<anchor text>" so rule (d) (spec_ref must agree
+  // with the governing spec) resolves against the QUALIFIER's spec rather than identity.spec.
+  const ANCHOR = `78:${ANCHOR_TEXT}`;
 
   it('the anchor text is genuinely present in Spec 78 today (verified BEFORE authoring the check — checkOrderGuaranteesCited would RED on a rotted anchor)', () => {
     const spec = readTextToday(SPEC_78_REL);
-    expect(spec.includes(ANCHOR), `Spec 78 must literally contain "${ANCHOR}" for the future order_guarantee.anchor to verify against`).toBe(true);
+    expect(spec.includes(ANCHOR_TEXT), `Spec 78 must literally contain "${ANCHOR_TEXT}" for the future order_guarantee.anchor to verify against`).toBe(true);
   });
 
-  it('a pre_write check on the pass-5 write target declares order_guarantee{guarantee, spec_ref, anchor}, anchor citing Spec 78 §P3A.1\'s own text verbatim (flipped at: commit 7b; runner/compute land at 7c/7d — Fold G2: nothing forces authorship, so its absence is a real gap until this check exists)', () => {
+  it('a pre_write check on the pass-5 write target declares order_guarantee{guarantee, spec_ref, anchor}, anchor citing Spec 78 §P3A.1\'s own text verbatim, spec-qualified "78:..." since identity.spec is "65" (flipped at: commit 7b; runner/compute land at 7c/7d)', () => {
     const d = loadDescriptor();
     const preWriteChecks = d.checks.filter((c) => c.when === 'pre_write');
     const withOrderGuarantee = preWriteChecks.filter((c) => c.order_guarantee);
@@ -558,12 +563,12 @@ describe('facts testable today — the live tree, not a future artifact', () => 
     expect(Math.max(...nums, 0), 'the highest LG number in scripts/lib + scripts/steps/_schema must be 27 until commit 7 lands LG-28 (runEnrichPhase)').toBe(27);
   });
 
-  it('converted.json — pending stays registered (not yet converted); compute (7c) has landed (scripts/lib/compute/enrich-parcels.js exists), but the DECLARED stage is deliberately HELD at "descriptor_only" rather than advanced to "compute_ported" (updated at: commit 7c). Reason (see converted.json.pending[].reason verbatim): step-validate.mjs\'s STAGE_HARDSTOP_EXCLUSIONS table narrows compute_ported to excluding only {G8, G9} — advancing would make Rule 11 (checkOrderGuaranteesCited, the pass-5 order_guarantee\'s single-spec-identity limitation, already filed at 7b as out-of-scope) a REAL, UNPINNABLE git-hook hard-stop on this and every subsequent commit until that architectural tension is separately ruled on. The compute artifact existing is decoupled from the declared stage advancing — R-K.1\'s own step-conformance.infra.test.ts lock only requires a "descriptor_only" entry\'s descriptor to independently validate and its conformanceFindings() to be NOT YET clean, both still true here.', () => {
+  it('converted.json — pending stays registered (not yet converted); compute (7c) has landed and the Rule 11 multi-spec tension is RESOLVED (commit 1: checkOrderGuaranteesCited accepts a spec-qualified anchor, reads enforced-green), but the DECLARED stage is DELIBERATELY HELD at "descriptor_only" rather than advanced to "compute_ported" (measured this commit, see converted.json.pending[].reason verbatim): advancing would ALSO newly expose Rule 4 (compute preserved-in-compute grounding, pre-existing from 7c, unrelated to this commit) and G7 (golden-capture RED-evidence, commit 7e\'s own deliverable) to the pre-commit hook\'s hard-stop, which this commit\'s own fix does not resolve — a stage claim the hook itself could not honestly pass.', () => {
     const c = JSON.parse(fs.readFileSync(abs(CONVERTED_REL), 'utf8')) as { converted: string[]; pending: Array<{ file: string; stage: string }> };
     expect(c.converted.includes(STEP_REL), 'enrich_parcels must not be registered as converted yet — that is commit 9 (cutover)').toBe(false);
     const entry = c.pending.find((p) => p.file === STEP_REL);
     expect(entry, `converted.json.pending must carry a ${STEP_REL} entry`).toBeDefined();
-    expect(entry!.stage, 'stage deliberately held at "descriptor_only" (see this test\'s own title for why) — not yet "compute_ported" despite compute existing, and not "shape_clean" (conformanceFindings() is not yet clean — no runner)').toBe('descriptor_only');
+    expect(entry!.stage, 'stage deliberately held at "descriptor_only" this commit (see this test\'s own title for why)').toBe('descriptor_only');
     expect(fs.existsSync(abs(DESCRIPTOR_REL)), 'a descriptor_only-stage pending entry MUST have a sibling descriptor').toBe(true);
     expect(fs.existsSync(abs(COMPUTE_REL)), 'compute (7c) exists on disk even though the declared stage has not advanced past descriptor_only').toBe(true);
   });
