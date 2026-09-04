@@ -1442,6 +1442,44 @@
         ]
       },
       "last_reviewed": "2026-09-04"
+    },
+    {
+      "id": "EP-PIN-D9",
+      "spec": "78 §P3C.2",
+      "title": "EP-D9 pin — pass-4 comps candidate selection has no deterministic tiebreak (comparable_builds jsonb instability)",
+      "promised": "Spec 123 §3.1: a KNOWN-DEFECT is pinned in its current wrong form, annotated with a Defect Ledger ID, and fixed in a separate commit after the conversion is green",
+      "status": "NOT_STARTED",
+      "evidence": "docs/reports/defect-ledger.md EP-D9 row (pilot 9 commit 4c, 2026-09-04) — golden-master G1' measured comparable_builds differing on 248/486,530 parcels (0.051%) across two identical back-to-back --full runs on unchanged source data; root-caused by a read-only diagnostic (comp_cand rebuilt, rolled back, zero persisted writes) to the ORDER BY (abs(lot_delta)+abs(frontage_delta)*10) LIMIT 10 cutoff in buildComparableBuildsUpdateSql (scripts/enrich-parcels.js:1143-1150) carrying no deterministic secondary sort key — 1,921/344,845 subjects (0.56%) measured with an exact score tie at that boundary.",
+      "owner": {
+        "kind": "pilot",
+        "ref": "pilot9_enrich_parcels"
+      },
+      "gate": {
+        "kind": "cutover_prereq",
+        "blocks": [
+          "enrich_parcels"
+        ]
+      },
+      "last_reviewed": "2026-09-04"
+    },
+    {
+      "id": "EP-PIN-D10",
+      "spec": "122 §3.0b",
+      "title": "EP-D10 pin — enrich_parcels_pass3_scope grows unbounded (append-only, never pruned)",
+      "promised": "Spec 123 §3.1: a KNOWN-DEFECT is pinned in its current wrong form, annotated with a Defect Ledger ID, and fixed in a separate commit after the conversion is green",
+      "status": "NOT_STARTED",
+      "evidence": "docs/reports/defect-ledger.md EP-D10 row (pilot 9 commit 4c, 2026-09-04) — measured linear +442,244 rows per --full run across 4 consecutive local runs (442,244 -> 884,488 -> 1,326,732 -> 1,768,976; distinct_run_ids 1->2->3->4), distinct(parcel_id) flat at 442,244 throughout (100% of growth is pure duplication). The :2073-2076 comment (\"enrichOptimalConfig unions any prior run's UNCONSUMED rows, regardless of run_id\") is a crash-recovery safety net only; zero DELETE/TRUNCATE against this table exists anywhere in the file (confirmed, 27-statement DML enumeration).",
+      "owner": {
+        "kind": "pilot",
+        "ref": "pilot9_enrich_parcels"
+      },
+      "gate": {
+        "kind": "cutover_prereq",
+        "blocks": [
+          "enrich_parcels"
+        ]
+      },
+      "last_reviewed": "2026-09-04"
     }
   ]
 }

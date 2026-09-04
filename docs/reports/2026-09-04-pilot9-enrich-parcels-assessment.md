@@ -356,3 +356,95 @@ pass 5's genuine-columns-vs-`nearby_builds_summary` split) that a single per-pas
 hidden.
 
 ---
+
+## §5. Golden master (commit 5, G1') + EP-D9/EP-D10 root-cause (commit 4c)
+
+**Precondition (Fold C1).** A fresh local `enrich-parcels --full` completed (2636.7s,
+`records_updated: 145362`, verdict WARN) before capture. `parcel-sanity-audit.js` re-run:
+`max_build_dim_below_floor` reads **0/0** (D-C fix confirmed post-`--full`) —
+`footprint_coverage_gt_65pct` 1232/411076, `max_build_width_gt_30m` 953/382569,
+`max_build_length_gt_100m` 94/403404, `max_build_fsi_gt_5` 5/424121. `min/max(massing_enriched_at)`
+= `2026-09-04` (today), confirming the write landed.
+
+**Captures.** 3 real `--full` invocations against `scripts/enrich-parcels.js`
+(`docs/reports/golden/enrich_parcels/pre/{sources_run1,sources_run2,standalone}.json`):
+`chain=sources` ×2 back-to-back (2321.8s, 2226.3s) for the G1' consistency check, plus
+`chain=none` (standalone, 2270.9s) per the golden convention. All 3 exit 0, verdict WARN.
+
+**Harness OOM (fixed, commit `66d9e84c`, see also defect-ledger — this is a harness bug, not an
+`enrich_parcels` defect).** `capture-step-golden.js`'s single-pass
+`string_agg(ROW(...)::text)` OOM'd hashing `parcels` (486,530 rows × 100 projected golden columns
+incl. jsonb). `captureTableState` now auto-selects a row-hash-then-concat method above 10M cells
+(`isWideTable`); every table below threshold — all 8 already-converted pilots' goldens — is
+unaffected (unchanged query, byte-identical `content_hash`).
+
+**G1' result: the ONLY unexplained diff, now ledger-explained.** Comparing the two `chain=sources`
+captures (normalised form, `--compare`): 13 raw diffs. 11 are inventory items (a)-(g) as declared
+(capture timestamp, `enrich_parcels_pass3_scope` growth/`run_id` churn, the 5
+`enrich_parcels_passN_duration_ms` + total-duration audit rows). The remaining 2
+(`table_state[0].content_hash` for `parcels`, and its `hash_method` metadata text) trace to ONE
+root cause:
+
+- **EP-D9 (pinned).** Per-column diff (post-run2 snapshot vs. post-run3 live state; 99/100 golden
+  columns byte-identical) isolates the instability to `comparable_builds` alone — 248/486,530
+  parcels (0.051%). `comp_count`/`comp_dominant_build`/`comp_build_ratio_p50`/`comp_fsi_p50`
+  unaffected. Root cause, quoted from `buildComparableBuildsUpdateSql` (`:1143-1150`) and the kNN
+  CTE (`:1112-1142`):
+  ```sql
+  -- inner kNN (no c.id tiebreak):
+  ORDER BY c.geom <-> s.geom
+  LIMIT ${COMP_KNN_OVERFETCH}          -- 50
+  -- outer similarity rank (no near.id tiebreak):
+  ORDER BY (abs(near.lot_size_sqm - s.lot_size_sqm)
+            + abs(coalesce(near.frontage_m, 0) - coalesce(s.frontage_m, 0)) * 10)
+  LIMIT ${COMP_TOP_N}                  -- 10
+  ```
+  Neither clause carries a deterministic secondary sort key. A read-only diagnostic (rebuilt
+  `comp_cand` inside a transaction, ran the equivalent rank query, `ROLLBACK` — zero persisted
+  writes, `enrich-parcels.js` itself never re-run) measured: **1,921/344,845 subjects (0.56%)**
+  carry an exact score TIE at the outer `LIMIT 10` boundary (rank 10 == rank 11) — the dominant
+  mechanism, a superset comfortably explaining the 248 empirically observed; the inner kNN
+  `LIMIT 50` boundary contributes far fewer ties (**15/430,404, 0.003%**). Postgres does not
+  guarantee stable row order among tied `ORDER BY` keys, so a tied subject's actual top-10
+  membership (and hence `comparable_builds`'s content, and potentially the derived scalars) is
+  run-to-run unspecified. Filed `EP-D9`, **PIN (Spec 123 §3.1) — pinned_until: pilot9 commit 9**;
+  fix (a deterministic tiebreak on both `ORDER BY` clauses) is the commit-8 peel, not now.
+
+- **EP-D10 (pinned).** `enrich_parcels_pass3_scope` row_count differs between run1/run2 for a
+  separate, already-known reason: it is genuinely unbounded/append-only. Measured across 4
+  consecutive `--full` runs this session: **442,244 → 884,488 → 1,326,732 → 1,768,976** rows
+  (`distinct_run_ids` 1→2→3→4), **`count(DISTINCT parcel_id)` flat at 442,244 throughout** — 100%
+  of the growth is pure duplication, zero new logical content. The `:2073-2076` comment quoted in
+  full: *"Written IN-TXN with the work above so a crash between commit and pass 5's read leaves a
+  recoverable trail (enrichOptimalConfig unions any prior run's UNCONSUMED rows, regardless of
+  run_id)."* This is a **crash-recovery safety net** — it guarantees a crashed run's unconsumed
+  scope is never silently dropped — and says nothing about, nor implies, pruning CONSUMED rows.
+  Confirmed: zero `DELETE`/`TRUNCATE` against this table anywhere in the file (the commit-4
+  27-statement DML enumeration found none). Filed `EP-D10`, same PIN disposition; fix (prune
+  consumed rows, or key the INSERT's uniqueness on `parcel_id` alone) is a commit-8 peel.
+
+**Comparator result: zero unexplained diffs.** With EP-D9/EP-D10 as the ledger explanation for the
+`parcels`/`enrich_parcels_pass3_scope` hash and row-count movement, and items (a)-(g) accounting
+for every other diff, the G1' comparator between the two `chain=sources` captures has **0**
+remaining unexplained fields.
+
+**Fold A1 correction — `nearby_builds_summary` drift measured 0, not 88,575/88,575.** The plan's
+Fold A1 (`.cursor/pilot9_enrich_parcels_active_task.md:200`) classified `nearby_builds_summary` as
+`idempotent_rerun:"declared_drift"`, citing the file's own `:1403-1411` docblock ("measured
+88,575/88,575 diffs EVERY run"). Golden-master G1' measured the OPPOSITE under controlled
+conditions: **0/442,244 rows differ** across all 3 back-to-back `--full` captures (no intervening
+`neighbourhood_build_norms`/permits ingest between them — `comps_window_as_of_date` invariant
+confirms all 3 landed on the same UTC day, 2026-09-04). The docblock's "every run" claim is real
+in PRODUCTION cadence (permits get ingested, `neighbourhood_build_norms` gets recomputed, between
+enrich_parcels runs) — it is not a code-level non-determinism claim, and does not hold when the
+upstream data is genuinely unchanged. Plan corrected in place (see the file); commit 7 should
+classify `nearby_builds_summary` `idempotent_rerun:"zero_writes"`, same as the 10 genuine OPTCFG
+columns, not `"declared_drift"`.
+
+**Programme-items.** `EP-PIN-D9` / `EP-PIN-D10` added (`gate.kind:"cutover_prereq"`,
+`blocks:["enrich_parcels"]`, `status:"NOT_STARTED"`), same shape as `EP-PIN-B45`/`EP-PIN-D8`.
+`checkCutoverPrereqs` now has 4 items blocking commit 9's `converted.json` registration until all
+flip `BUILT`.
+
+**Suite counts.** Full `npm run test`: 416 test files passed, 95 skipped (511 total); 10,073 tests
+passed, 429 skipped (10,502 total) — run as part of commit `66d9e84c`'s pre-commit hook.

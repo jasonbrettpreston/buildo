@@ -6,11 +6,11 @@
 
 ## Counts
 
-Total items: **82**
+Total items: **84**
 
 | status | count |
 |---|---|
-| ⬜ NOT_STARTED | 17 |
+| ⬜ NOT_STARTED | 19 |
 | ⚠️ PARTIAL | 17 |
 | ✅ BUILT | 44 |
 | ⏭️ SUPERSEDED | 4 |
@@ -27,7 +27,7 @@ Total items: **82**
 | `WD-1` | 122 §1.4 | class-enum-without-write.js-branch lock | ⬜ NOT_STARTED | wf: wf: programme-WD1 | batching | 2026-08-29 |
 | `ADMIN-1` | 124 §2 Rule 3 | admin GROUPS reverse-coverage — every unclassified seed key gets a real group or a reviewed hidden reason | ⬜ NOT_STARTED | wf: wf: programme-ADMIN-1 | batching | 2026-09-03 |
 
-## Cutover prerequisite — blocks a specific pilot slug registering in converted.json (6)
+## Cutover prerequisite — blocks a specific pilot slug registering in converted.json (8)
 
 | id | spec | title | status | owner | blocks | last reviewed |
 |---|---|---|---|---|---|---|
@@ -37,6 +37,8 @@ Total items: **82**
 | `CLOUDPARITY` | 122 R-D | cloud database must run apply-logic-variables.js before any cloud cutover | ⚠️ PARTIAL | followup: review_followups.md HIGH ops entry (filed 2026-08-27, peel 8c) | cloud_deploy | 2026-08-29 |
 | `EP-PIN-B45` | 78 §P3C.1/§3.0b | B4.5 pin — pass-4 comps UPDATE has no IS DISTINCT FROM; the comp_count IS NULL incremental predicate never refreshes | ⬜ NOT_STARTED | pilot: pilot9_enrich_parcels | enrich_parcels | 2026-09-04 |
 | `EP-PIN-D8` | 78 §P3C.2 | EP-D8 pin — comp_fsi_p50 has no structure_family/zone compatibility invariant | ⬜ NOT_STARTED | pilot: pilot9_enrich_parcels | enrich_parcels | 2026-09-04 |
+| `EP-PIN-D9` | 78 §P3C.2 | EP-D9 pin — pass-4 comps candidate selection has no deterministic tiebreak (comparable_builds jsonb instability) | ⬜ NOT_STARTED | pilot: pilot9_enrich_parcels | enrich_parcels | 2026-09-04 |
+| `EP-PIN-D10` | 122 §3.0b | EP-D10 pin — enrich_parcels_pass3_scope grows unbounded (append-only, never pruned) | ⬜ NOT_STARTED | pilot: pilot9_enrich_parcels | enrich_parcels | 2026-09-04 |
 
 ## Nice-to-have — real gap, not currently blocking (71)
 
