@@ -1,0 +1,2032 @@
+{
+  "harness": "scripts/analysis/capture-step-golden.js",
+  "spec": "docs/specs/01-pipeline/122_pipeline_step_optimization.md §5.3",
+  "step": "scripts/enrich-parcels.js",
+  "chain": "none",
+  "git_head": "43c01bc7602abff8031daff2d88a520c81a29f04",
+  "exit_code": 0,
+  "signal": null,
+  "summary": {
+    "records_total": null,
+    "records_new": null,
+    "records_updated": 0,
+    "records_meta": {
+      "audit_table": {
+        "phase": 65,
+        "name": "Parcel zoning enrichment",
+        "verdict": "WARN",
+        "rows": [
+          {
+            "metric": "parcels_with_zone_class_pct",
+            "value": 96.6,
+            "status": "PASS"
+          },
+          {
+            "metric": "parcels_enriched_count",
+            "value": 0,
+            "status": "INFO"
+          },
+          {
+            "metric": "parcels_no_base_zone_count",
+            "value": 16365,
+            "status": "INFO"
+          },
+          {
+            "metric": "parcels_multi_zone_count",
+            "value": 103203,
+            "status": "INFO"
+          },
+          {
+            "metric": "parcels_ambiguous_zone_count",
+            "value": 953,
+            "status": "INFO"
+          },
+          {
+            "metric": "parcels_zone_conflict_count",
+            "value": 21761,
+            "status": "INFO"
+          },
+          {
+            "metric": "zoning_fsi_source_nulled_count",
+            "value": 93,
+            "status": "INFO"
+          },
+          {
+            "metric": "bylaw_max_fsi_null_pct",
+            "value": 94.9,
+            "status": "INFO"
+          },
+          {
+            "metric": "bylaw_max_coverage_pct_null_pct",
+            "value": 42.7,
+            "status": "INFO"
+          },
+          {
+            "metric": "bylaw_max_height_m_null_pct",
+            "value": 9.9,
+            "status": "INFO"
+          },
+          {
+            "metric": "max_build_enriched_count",
+            "value": 0,
+            "status": "INFO"
+          },
+          {
+            "metric": "massing_zero_link_ghost",
+            "value": 1395,
+            "threshold": "== 0 (forward-looking)",
+            "status": "WARN"
+          },
+          {
+            "metric": "lot_size_confidence_high_count",
+            "value": 459705,
+            "status": "INFO"
+          },
+          {
+            "metric": "lot_size_confidence_medium_count",
+            "value": 384,
+            "status": "INFO"
+          },
+          {
+            "metric": "lot_size_confidence_low_count",
+            "value": 26441,
+            "status": "INFO"
+          },
+          {
+            "metric": "max_buildable_footprint_count",
+            "value": 442244,
+            "status": "INFO"
+          },
+          {
+            "metric": "max_buildable_gfa_count",
+            "value": 442244,
+            "status": "INFO"
+          },
+          {
+            "metric": "max_build_box_count",
+            "value": 408396,
+            "status": "INFO"
+          },
+          {
+            "metric": "max_buildable_gfa_basis_fsi_count",
+            "value": 3976,
+            "status": "INFO"
+          },
+          {
+            "metric": "max_buildable_gfa_basis_coverage_box_count",
+            "value": 400584,
+            "status": "INFO"
+          },
+          {
+            "metric": "max_buildable_gfa_basis_coverage_only_count",
+            "value": 32546,
+            "status": "INFO"
+          },
+          {
+            "metric": "ravine_constrained_count",
+            "value": 14005,
+            "status": "INFO"
+          },
+          {
+            "metric": "max_build_box_excluded_count",
+            "value": 34808,
+            "status": "INFO"
+          },
+          {
+            "metric": "max_build_min_dimension_m_applied",
+            "value": 3,
+            "status": "INFO"
+          },
+          {
+            "metric": "max_build_coverage_defaulted_count",
+            "value": 176218,
+            "status": "INFO"
+          },
+          {
+            "metric": "max_build_coverage_binding_count",
+            "value": 140897,
+            "status": "INFO"
+          },
+          {
+            "metric": "heritage_mislink_footprint_count",
+            "value": 4144,
+            "status": "INFO"
+          },
+          {
+            "metric": "max_build_confidence_high_count",
+            "value": 21599,
+            "status": "INFO"
+          },
+          {
+            "metric": "max_build_confidence_medium_count",
+            "value": 387812,
+            "status": "INFO"
+          },
+          {
+            "metric": "max_build_confidence_low_count",
+            "value": 46838,
+            "status": "INFO"
+          },
+          {
+            "metric": "garden_suite_fits_count",
+            "value": 295833,
+            "status": "INFO"
+          },
+          {
+            "metric": "envelope_constrained_count",
+            "value": 67815,
+            "status": "INFO"
+          },
+          {
+            "metric": "max_build_stories_basis_bylaw_count",
+            "value": 178793,
+            "status": "INFO"
+          },
+          {
+            "metric": "max_build_stories_basis_pocket_count",
+            "value": 263451,
+            "status": "INFO"
+          },
+          {
+            "metric": "max_build_stories_basis_derived_count",
+            "value": 0,
+            "status": "INFO"
+          },
+          {
+            "metric": "market_exceeds_bylaw_count",
+            "value": 3242,
+            "status": "INFO"
+          },
+          {
+            "metric": "neighbourhood_join_count",
+            "value": 486385,
+            "status": "INFO"
+          },
+          {
+            "metric": "neighbourhood_premium_above_1_count",
+            "value": 486385,
+            "status": "INFO"
+          },
+          {
+            "metric": "attached_modal_side_count_parcels",
+            "value": 41042,
+            "status": "INFO"
+          },
+          {
+            "metric": "garage_fits_count",
+            "value": 186908,
+            "status": "INFO"
+          },
+          {
+            "metric": "garage_permission_as_of_right_count",
+            "value": 186846,
+            "status": "INFO"
+          },
+          {
+            "metric": "garage_permission_coa_required_count",
+            "value": 62,
+            "status": "INFO"
+          },
+          {
+            "metric": "rear_suite_laneway_count",
+            "value": 25811,
+            "status": "INFO"
+          },
+          {
+            "metric": "rear_suite_garden_count",
+            "value": 279243,
+            "status": "INFO"
+          },
+          {
+            "metric": "rear_suite_permission_as_of_right_count",
+            "value": 261703,
+            "status": "INFO"
+          },
+          {
+            "metric": "rear_suite_permission_coa_required_count",
+            "value": 43351,
+            "status": "INFO"
+          },
+          {
+            "metric": "existing_structure_enriched_count",
+            "value": 0,
+            "status": "INFO"
+          },
+          {
+            "metric": "imagery_roof_footprint_count",
+            "value": 424962,
+            "status": "INFO"
+          },
+          {
+            "metric": "imagery_roof_gfa_count",
+            "value": 424962,
+            "status": "INFO"
+          },
+          {
+            "metric": "existing_dims_count",
+            "value": 424962,
+            "status": "INFO"
+          },
+          {
+            "metric": "existing_structure_confidence_high_count",
+            "value": 370057,
+            "status": "INFO"
+          },
+          {
+            "metric": "existing_structure_confidence_low_count",
+            "value": 115078,
+            "status": "INFO"
+          },
+          {
+            "metric": "existing_other_structures_present_count",
+            "value": 11855,
+            "status": "INFO"
+          },
+          {
+            "metric": "existing_greenspace_count",
+            "value": 424962,
+            "status": "INFO"
+          },
+          {
+            "metric": "max_newbuild_coa_gfa_count",
+            "value": 442244,
+            "status": "INFO"
+          },
+          {
+            "metric": "cur_floor_gfa_count",
+            "value": 424962,
+            "status": "INFO"
+          },
+          {
+            "metric": "cur_pot_2story_gfa_count",
+            "value": 424962,
+            "status": "INFO"
+          },
+          {
+            "metric": "cur_pot_3story_gfa_count",
+            "value": 63717,
+            "status": "INFO"
+          },
+          {
+            "metric": "cur_gfa_range_basis_count",
+            "value": 394373,
+            "status": "INFO"
+          },
+          {
+            "metric": "existing_mislinked_footprint_count",
+            "value": 60173,
+            "status": "INFO"
+          },
+          {
+            "metric": "cur_est_kitchen_gfa_count",
+            "value": 424962,
+            "status": "INFO"
+          },
+          {
+            "metric": "cur_est_bath_gfa_count",
+            "value": 424962,
+            "status": "INFO"
+          },
+          {
+            "metric": "scenario_enriched_count",
+            "value": 0,
+            "status": "INFO"
+          },
+          {
+            "metric": "reno_coa_uplift_pct_applied",
+            "value": 0.05,
+            "status": "INFO"
+          },
+          {
+            "metric": "reno_kitchen_gfa_pct_applied",
+            "value": 0.15,
+            "status": "INFO"
+          },
+          {
+            "metric": "reno_bath_gfa_pct_applied",
+            "value": 0.07,
+            "status": "INFO"
+          },
+          {
+            "metric": "mislink_footprint_lot_tol_applied",
+            "value": 0.05,
+            "status": "INFO"
+          },
+          {
+            "metric": "storey_height_m_applied",
+            "value": 3,
+            "status": "INFO"
+          },
+          {
+            "metric": "comp_candidate_pool",
+            "value": 9319,
+            "status": "INFO"
+          },
+          {
+            "metric": "comparable_builds_enriched_count",
+            "value": 344845,
+            "status": "INFO"
+          },
+          {
+            "metric": "comp_zero_filled_count",
+            "value": 85559,
+            "status": "INFO"
+          },
+          {
+            "metric": "comp_with_comps_count",
+            "value": 344845,
+            "status": "INFO"
+          },
+          {
+            "metric": "comp_zero_comps_count",
+            "value": 85559,
+            "status": "INFO"
+          },
+          {
+            "metric": "comp_build_ratio_p50_count",
+            "value": 285818,
+            "status": "INFO"
+          },
+          {
+            "metric": "comp_reset_ineligible_count",
+            "value": 0,
+            "status": "INFO"
+          },
+          {
+            "metric": "optimal_config_enriched_count",
+            "value": 0,
+            "status": "INFO"
+          },
+          {
+            "metric": "opt_config_reset_ineligible_count",
+            "value": 0,
+            "status": "INFO"
+          },
+          {
+            "metric": "opt_aor_envelope_capped_count",
+            "value": 3390,
+            "status": "INFO"
+          },
+          {
+            "metric": "opt_suite_fits_full_count",
+            "value": 401991,
+            "status": "INFO"
+          },
+          {
+            "metric": "opt_config_confidence_high_count",
+            "value": 2790,
+            "status": "INFO"
+          },
+          {
+            "metric": "opt_config_confidence_medium_count",
+            "value": 439454,
+            "status": "INFO"
+          },
+          {
+            "metric": "opt_config_confidence_low_count",
+            "value": 0,
+            "status": "INFO"
+          },
+          {
+            "metric": "opt_config_citywide_fallback_count",
+            "value": 35372,
+            "status": "INFO"
+          },
+          {
+            "metric": "opt_config_engine_errors",
+            "value": 0,
+            "threshold": "== 0",
+            "status": "INFO"
+          },
+          {
+            "metric": "opt_aor_without_max_gfa",
+            "value": 0,
+            "threshold": "== 0",
+            "status": "PASS"
+          },
+          {
+            "metric": "enrich_parcels_pass1_duration_ms",
+            "value": 501791,
+            "status": "INFO"
+          },
+          {
+            "metric": "enrich_parcels_pass2_duration_ms",
+            "value": 1339232,
+            "status": "INFO"
+          },
+          {
+            "metric": "enrich_parcels_pass3_duration_ms",
+            "value": 57476,
+            "status": "INFO"
+          },
+          {
+            "metric": "enrich_parcels_pass4_duration_ms",
+            "value": 277471,
+            "status": "INFO"
+          },
+          {
+            "metric": "enrich_parcels_pass5_duration_ms",
+            "value": 87041,
+            "status": "INFO"
+          },
+          {
+            "metric": "enrich_parcels_duration_ms",
+            "value": 2270867,
+            "status": "INFO"
+          },
+          {
+            "metric": "records_updated_aggregate_distinct_parcels",
+            "value": 0,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "sys_velocity_rows_sec",
+            "value": 0,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "sys_duration_ms",
+            "value": 2270899,
+            "threshold": null,
+            "status": "INFO"
+          }
+        ]
+      }
+    }
+  },
+  "summary_count": 1,
+  "meta": [
+    {
+      "reads": {
+        "zoning_bylaw_areas": [
+          "source_id",
+          "zn_zone",
+          "zn_string",
+          "gen_zone",
+          "zn_holding",
+          "zone_status",
+          "fsi_max",
+          "coverage_max_pct",
+          "units_max",
+          "density_max",
+          "frontage_min_m",
+          "area_min_sqm",
+          "standard_setback",
+          "pct_commercial_max",
+          "pct_residential_max",
+          "pct_employment_max",
+          "pct_office_max",
+          "exception_number",
+          "exception_text",
+          "bylaw_chapter",
+          "bylaw_section",
+          "bylaw_exception_ref",
+          "geom",
+          "source_dataset_version"
+        ],
+        "zoning_height_overlay": [
+          "source_id",
+          "height_max_m",
+          "ht_stories",
+          "geom",
+          "source_dataset_version"
+        ],
+        "zoning_lot_coverage_overlay": [
+          "source_id",
+          "coverage_max_pct_override",
+          "geom",
+          "source_dataset_version"
+        ],
+        "zoning_policy_area_overlay": [
+          "source_id",
+          "geom",
+          "source_dataset_version"
+        ],
+        "zoning_policy_road_overlay": [
+          "source_id",
+          "road_name",
+          "geom",
+          "source_dataset_version"
+        ],
+        "zoning_rooming_house_overlay": [
+          "source_id",
+          "geom",
+          "source_dataset_version"
+        ],
+        "zoning_parking_zone_overlay": [
+          "source_id",
+          "geom",
+          "source_dataset_version"
+        ],
+        "zoning_building_setback_overlay": [
+          "source_id",
+          "geom",
+          "source_dataset_version"
+        ],
+        "zoning_priority_retail_overlay": [
+          "source_id",
+          "geom",
+          "source_dataset_version"
+        ],
+        "zoning_queenstw_eat_overlay": [
+          "source_id",
+          "geom",
+          "source_dataset_version"
+        ],
+        "parcels": [
+          "id",
+          "parcel_id",
+          "geom",
+          "zoning_enriched_at",
+          "massing_enriched_at",
+          "lot_size_sqm",
+          "frontage_m",
+          "depth_m",
+          "bylaw_max_height_m",
+          "bylaw_max_stories",
+          "bylaw_max_fsi",
+          "bylaw_max_coverage_pct",
+          "bylaw_standard_setback_m",
+          "zoning_class",
+          "zoning_is_ambiguous",
+          "is_corner_lot",
+          "is_through_lot",
+          "is_in_ravine_protection_area",
+          "is_heritage_designated",
+          "lot_size_confidence",
+          "abuts_laneway",
+          "max_buildable_gfa_sqm",
+          "max_build_stories",
+          "max_buildable_footprint_sqm",
+          "imagery_roof_footprint_sqm"
+        ],
+        "parcel_buildings": [
+          "parcel_id",
+          "building_id",
+          "is_primary",
+          "confidence",
+          "linked_at"
+        ],
+        "building_footprints": [
+          "id",
+          "footprint_area_sqm",
+          "estimated_stories",
+          "max_height_m",
+          "geom"
+        ],
+        "neighbourhood_build_norms": [
+          "id",
+          "neighbourhood_id",
+          "structure_family",
+          "storeys_p50",
+          "storeys_p90",
+          "new_builds_5yr",
+          "additions_5yr",
+          "renos_5yr",
+          "suites_5yr",
+          "demos_5yr",
+          "realized_fsi_p50",
+          "realized_fsi_p90",
+          "build_ratio_p50",
+          "existing_build_ratio_p25",
+          "existing_build_ratio_p50",
+          "coa_approved",
+          "coa_refused",
+          "coa_approval_rate",
+          "window_start",
+          "window_end",
+          "sample_n"
+        ],
+        "neighbourhood_storey_norms": [
+          "neighbourhood_id",
+          "storeys_p50",
+          "storeys_p90"
+        ],
+        "neighbourhoods": [
+          "id",
+          "name",
+          "avg_household_income"
+        ],
+        "permits": [
+          "zoning_dominant_parcel_id",
+          "project_type",
+          "issued_date",
+          "street_num",
+          "street_name",
+          "residential_sqm",
+          "storeys",
+          "structure_type"
+        ],
+        "coa_applications": [
+          "zoning_dominant_parcel_id",
+          "decision",
+          "decision_date",
+          "hearing_date",
+          "parcel_linked_at"
+        ],
+        "enrich_parcels_pass3_scope": [
+          "run_id",
+          "parcel_id",
+          "consumed_at"
+        ]
+      },
+      "writes": {
+        "parcels": [
+          "zoning_class",
+          "zoning_zn_string",
+          "zoning_gen_zone",
+          "zoning_holding",
+          "zone_status",
+          "exception_number",
+          "exception_text",
+          "bylaw_chapter",
+          "bylaw_section",
+          "bylaw_exception_ref",
+          "bylaw_max_fsi",
+          "bylaw_max_units",
+          "bylaw_max_density",
+          "bylaw_pct_commercial_max",
+          "bylaw_pct_residential_max",
+          "bylaw_pct_employment_max",
+          "bylaw_pct_office_max",
+          "bylaw_min_frontage_m",
+          "bylaw_min_area_sqm",
+          "bylaw_standard_setback_m",
+          "bylaw_max_coverage_pct",
+          "bylaw_max_height_m",
+          "bylaw_max_stories",
+          "in_policy_area",
+          "on_policy_road",
+          "in_rooming_house_overlay",
+          "in_parking_zone_overlay",
+          "in_building_setback_overlay",
+          "on_priority_retail",
+          "in_queenstw_eat_overlay",
+          "zoning_overlays",
+          "zoning_base_source_id",
+          "zoning_dominant_area_share",
+          "zoning_is_ambiguous",
+          "zoning_base_source_dataset_version",
+          "lot_size_confidence",
+          "lot_size_basis",
+          "max_build_setback_basis",
+          "max_buildable_footprint_sqm",
+          "max_build_width_m",
+          "max_build_length_m",
+          "max_build_height_m",
+          "max_build_stories",
+          "max_build_stories_basis",
+          "max_build_basis",
+          "max_buildable_gfa_sqm",
+          "max_buildable_gfa_basis",
+          "max_build_confidence",
+          "max_garden_suite_gfa_sqm",
+          "garden_suite_fits",
+          "envelope_constrained",
+          "envelope_constraint_reason",
+          "max_garage_gfa_sqm",
+          "garage_capacity_cars",
+          "garage_constraint_reason",
+          "garage_permission",
+          "max_laneway_suite_gfa_sqm",
+          "max_rear_suite_gfa_sqm",
+          "rear_suite_type",
+          "rear_suite_permission",
+          "max_build_stories_aggressive",
+          "market_exceeds_bylaw",
+          "neighbourhood_id",
+          "neighbourhood_cost_premium",
+          "imagery_roof_footprint_sqm",
+          "existing_stories",
+          "existing_height_m",
+          "imagery_roof_gfa_sqm",
+          "existing_width_m",
+          "existing_length_m",
+          "existing_structure_confidence",
+          "existing_other_structures_count",
+          "existing_other_structures_sqm",
+          "existing_greenspace_sqm",
+          "existing_data_quality_flag",
+          "max_newbuild_coa_gfa_sqm",
+          "cur_basement_gfa_sqm",
+          "cur_storey_gfa_sqm",
+          "cur_interior_reno_gfa_sqm",
+          "cur_est_kitchen_gfa_sqm",
+          "cur_est_bath_gfa_sqm",
+          "cur_floor_gfa_sqm",
+          "cur_pot_2story_gfa_sqm",
+          "cur_pot_3story_gfa_sqm",
+          "cur_gfa_range_basis",
+          "comparable_builds",
+          "comp_count",
+          "comp_dominant_build",
+          "comp_build_ratio_p50",
+          "comp_fsi_p50",
+          "opt_aor_storeys",
+          "opt_aor_gfa_sqm",
+          "opt_aor_units",
+          "opt_coa_storeys",
+          "opt_coa_gfa_sqm",
+          "opt_suite_type",
+          "opt_suite_fits_full",
+          "opt_binding_constraint",
+          "opt_config_confidence",
+          "optimal_config",
+          "nearby_builds_summary",
+          "zoning_enriched_at",
+          "massing_enriched_at"
+        ],
+        "enrich_parcels_pass3_scope": [
+          "run_id",
+          "parcel_id",
+          "consumed_at"
+        ]
+      }
+    }
+  ],
+  "parse_errors": [],
+  "verdict": "WARN",
+  "ledger_status": [],
+  "stdout": "{\"level\":\"INFO\",\"tag\":\"[enrich_parcels]\",\"msg\":\"Loaded 35 trade configs from control panel\"}\n{\"level\":\"INFO\",\"tag\":\"[enrich_parcels]\",\"msg\":\"Loaded 455 logic variables from control panel\"}\nPIPELINE_SUMMARY:{\"records_total\":null,\"records_new\":null,\"records_updated\":0,\"records_meta\":{\"audit_table\":{\"phase\":65,\"name\":\"Parcel zoning enrichment\",\"verdict\":\"WARN\",\"rows\":[{\"metric\":\"parcels_with_zone_class_pct\",\"value\":96.6,\"status\":\"PASS\"},{\"metric\":\"parcels_enriched_count\",\"value\":0,\"status\":\"INFO\"},{\"metric\":\"parcels_no_base_zone_count\",\"value\":16365,\"status\":\"INFO\"},{\"metric\":\"parcels_multi_zone_count\",\"value\":103203,\"status\":\"INFO\"},{\"metric\":\"parcels_ambiguous_zone_count\",\"value\":953,\"status\":\"INFO\"},{\"metric\":\"parcels_zone_conflict_count\",\"value\":21761,\"status\":\"INFO\"},{\"metric\":\"zoning_fsi_source_nulled_count\",\"value\":93,\"status\":\"INFO\"},{\"metric\":\"bylaw_max_fsi_null_pct\",\"value\":94.9,\"status\":\"INFO\"},{\"metric\":\"bylaw_max_coverage_pct_null_pct\",\"value\":42.7,\"status\":\"INFO\"},{\"metric\":\"bylaw_max_height_m_null_pct\",\"value\":9.9,\"status\":\"INFO\"},{\"metric\":\"max_build_enriched_count\",\"value\":0,\"status\":\"INFO\"},{\"metric\":\"massing_zero_link_ghost\",\"value\":1395,\"threshold\":\"== 0 (forward-looking)\",\"status\":\"WARN\"},{\"metric\":\"lot_size_confidence_high_count\",\"value\":459705,\"status\":\"INFO\"},{\"metric\":\"lot_size_confidence_medium_count\",\"value\":384,\"status\":\"INFO\"},{\"metric\":\"lot_size_confidence_low_count\",\"value\":26441,\"status\":\"INFO\"},{\"metric\":\"max_buildable_footprint_count\",\"value\":442244,\"status\":\"INFO\"},{\"metric\":\"max_buildable_gfa_count\",\"value\":442244,\"status\":\"INFO\"},{\"metric\":\"max_build_box_count\",\"value\":408396,\"status\":\"INFO\"},{\"metric\":\"max_buildable_gfa_basis_fsi_count\",\"value\":3976,\"status\":\"INFO\"},{\"metric\":\"max_buildable_gfa_basis_coverage_box_count\",\"value\":400584,\"status\":\"INFO\"},{\"metric\":\"max_buildable_gfa_basis_coverage_only_count\",\"value\":32546,\"status\":\"INFO\"},{\"metric\":\"ravine_constrained_count\",\"value\":14005,\"status\":\"INFO\"},{\"metric\":\"max_build_box_excluded_count\",\"value\":34808,\"status\":\"INFO\"},{\"metric\":\"max_build_min_dimension_m_applied\",\"value\":3,\"status\":\"INFO\"},{\"metric\":\"max_build_coverage_defaulted_count\",\"value\":176218,\"status\":\"INFO\"},{\"metric\":\"max_build_coverage_binding_count\",\"value\":140897,\"status\":\"INFO\"},{\"metric\":\"heritage_mislink_footprint_count\",\"value\":4144,\"status\":\"INFO\"},{\"metric\":\"max_build_confidence_high_count\",\"value\":21599,\"status\":\"INFO\"},{\"metric\":\"max_build_confidence_medium_count\",\"value\":387812,\"status\":\"INFO\"},{\"metric\":\"max_build_confidence_low_count\",\"value\":46838,\"status\":\"INFO\"},{\"metric\":\"garden_suite_fits_count\",\"value\":295833,\"status\":\"INFO\"},{\"metric\":\"envelope_constrained_count\",\"value\":67815,\"status\":\"INFO\"},{\"metric\":\"max_build_stories_basis_bylaw_count\",\"value\":178793,\"status\":\"INFO\"},{\"metric\":\"max_build_stories_basis_pocket_count\",\"value\":263451,\"status\":\"INFO\"},{\"metric\":\"max_build_stories_basis_derived_count\",\"value\":0,\"status\":\"INFO\"},{\"metric\":\"market_exceeds_bylaw_count\",\"value\":3242,\"status\":\"INFO\"},{\"metric\":\"neighbourhood_join_count\",\"value\":486385,\"status\":\"INFO\"},{\"metric\":\"neighbourhood_premium_above_1_count\",\"value\":486385,\"status\":\"INFO\"},{\"metric\":\"attached_modal_side_count_parcels\",\"value\":41042,\"status\":\"INFO\"},{\"metric\":\"garage_fits_count\",\"value\":186908,\"status\":\"INFO\"},{\"metric\":\"garage_permission_as_of_right_count\",\"value\":186846,\"status\":\"INFO\"},{\"metric\":\"garage_permission_coa_required_count\",\"value\":62,\"status\":\"INFO\"},{\"metric\":\"rear_suite_laneway_count\",\"value\":25811,\"status\":\"INFO\"},{\"metric\":\"rear_suite_garden_count\",\"value\":279243,\"status\":\"INFO\"},{\"metric\":\"rear_suite_permission_as_of_right_count\",\"value\":261703,\"status\":\"INFO\"},{\"metric\":\"rear_suite_permission_coa_required_count\",\"value\":43351,\"status\":\"INFO\"},{\"metric\":\"existing_structure_enriched_count\",\"value\":0,\"status\":\"INFO\"},{\"metric\":\"imagery_roof_footprint_count\",\"value\":424962,\"status\":\"INFO\"},{\"metric\":\"imagery_roof_gfa_count\",\"value\":424962,\"status\":\"INFO\"},{\"metric\":\"existing_dims_count\",\"value\":424962,\"status\":\"INFO\"},{\"metric\":\"existing_structure_confidence_high_count\",\"value\":370057,\"status\":\"INFO\"},{\"metric\":\"existing_structure_confidence_low_count\",\"value\":115078,\"status\":\"INFO\"},{\"metric\":\"existing_other_structures_present_count\",\"value\":11855,\"status\":\"INFO\"},{\"metric\":\"existing_greenspace_count\",\"value\":424962,\"status\":\"INFO\"},{\"metric\":\"max_newbuild_coa_gfa_count\",\"value\":442244,\"status\":\"INFO\"},{\"metric\":\"cur_floor_gfa_count\",\"value\":424962,\"status\":\"INFO\"},{\"metric\":\"cur_pot_2story_gfa_count\",\"value\":424962,\"status\":\"INFO\"},{\"metric\":\"cur_pot_3story_gfa_count\",\"value\":63717,\"status\":\"INFO\"},{\"metric\":\"cur_gfa_range_basis_count\",\"value\":394373,\"status\":\"INFO\"},{\"metric\":\"existing_mislinked_footprint_count\",\"value\":60173,\"status\":\"INFO\"},{\"metric\":\"cur_est_kitchen_gfa_count\",\"value\":424962,\"status\":\"INFO\"},{\"metric\":\"cur_est_bath_gfa_count\",\"value\":424962,\"status\":\"INFO\"},{\"metric\":\"scenario_enriched_count\",\"value\":0,\"status\":\"INFO\"},{\"metric\":\"reno_coa_uplift_pct_applied\",\"value\":0.05,\"status\":\"INFO\"},{\"metric\":\"reno_kitchen_gfa_pct_applied\",\"value\":0.15,\"status\":\"INFO\"},{\"metric\":\"reno_bath_gfa_pct_applied\",\"value\":0.07,\"status\":\"INFO\"},{\"metric\":\"mislink_footprint_lot_tol_applied\",\"value\":0.05,\"status\":\"INFO\"},{\"metric\":\"storey_height_m_applied\",\"value\":3,\"status\":\"INFO\"},{\"metric\":\"comp_candidate_pool\",\"value\":9319,\"status\":\"INFO\"},{\"metric\":\"comparable_builds_enriched_count\",\"value\":344845,\"status\":\"INFO\"},{\"metric\":\"comp_zero_filled_count\",\"value\":85559,\"status\":\"INFO\"},{\"metric\":\"comp_with_comps_count\",\"value\":344845,\"status\":\"INFO\"},{\"metric\":\"comp_zero_comps_count\",\"value\":85559,\"status\":\"INFO\"},{\"metric\":\"comp_build_ratio_p50_count\",\"value\":285818,\"status\":\"INFO\"},{\"metric\":\"comp_reset_ineligible_count\",\"value\":0,\"status\":\"INFO\"},{\"metric\":\"optimal_config_enriched_count\",\"value\":0,\"status\":\"INFO\"},{\"metric\":\"opt_config_reset_ineligible_count\",\"value\":0,\"status\":\"INFO\"},{\"metric\":\"opt_aor_envelope_capped_count\",\"value\":3390,\"status\":\"INFO\"},{\"metric\":\"opt_suite_fits_full_count\",\"value\":401991,\"status\":\"INFO\"},{\"metric\":\"opt_config_confidence_high_count\",\"value\":2790,\"status\":\"INFO\"},{\"metric\":\"opt_config_confidence_medium_count\",\"value\":439454,\"status\":\"INFO\"},{\"metric\":\"opt_config_confidence_low_count\",\"value\":0,\"status\":\"INFO\"},{\"metric\":\"opt_config_citywide_fallback_count\",\"value\":35372,\"status\":\"INFO\"},{\"metric\":\"opt_config_engine_errors\",\"value\":0,\"threshold\":\"== 0\",\"status\":\"INFO\"},{\"metric\":\"opt_aor_without_max_gfa\",\"value\":0,\"threshold\":\"== 0\",\"status\":\"PASS\"},{\"metric\":\"enrich_parcels_pass1_duration_ms\",\"value\":501791,\"status\":\"INFO\"},{\"metric\":\"enrich_parcels_pass2_duration_ms\",\"value\":1339232,\"status\":\"INFO\"},{\"metric\":\"enrich_parcels_pass3_duration_ms\",\"value\":57476,\"status\":\"INFO\"},{\"metric\":\"enrich_parcels_pass4_duration_ms\",\"value\":277471,\"status\":\"INFO\"},{\"metric\":\"enrich_parcels_pass5_duration_ms\",\"value\":87041,\"status\":\"INFO\"},{\"metric\":\"enrich_parcels_duration_ms\",\"value\":2270867,\"status\":\"INFO\"},{\"metric\":\"records_updated_aggregate_distinct_parcels\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":2270899,\"threshold\":null,\"status\":\"INFO\"}]}}}\nPIPELINE_META:{\"reads\":{\"zoning_bylaw_areas\":[\"source_id\",\"zn_zone\",\"zn_string\",\"gen_zone\",\"zn_holding\",\"zone_status\",\"fsi_max\",\"coverage_max_pct\",\"units_max\",\"density_max\",\"frontage_min_m\",\"area_min_sqm\",\"standard_setback\",\"pct_commercial_max\",\"pct_residential_max\",\"pct_employment_max\",\"pct_office_max\",\"exception_number\",\"exception_text\",\"bylaw_chapter\",\"bylaw_section\",\"bylaw_exception_ref\",\"geom\",\"source_dataset_version\"],\"zoning_height_overlay\":[\"source_id\",\"height_max_m\",\"ht_stories\",\"geom\",\"source_dataset_version\"],\"zoning_lot_coverage_overlay\":[\"source_id\",\"coverage_max_pct_override\",\"geom\",\"source_dataset_version\"],\"zoning_policy_area_overlay\":[\"source_id\",\"geom\",\"source_dataset_version\"],\"zoning_policy_road_overlay\":[\"source_id\",\"road_name\",\"geom\",\"source_dataset_version\"],\"zoning_rooming_house_overlay\":[\"source_id\",\"geom\",\"source_dataset_version\"],\"zoning_parking_zone_overlay\":[\"source_id\",\"geom\",\"source_dataset_version\"],\"zoning_building_setback_overlay\":[\"source_id\",\"geom\",\"source_dataset_version\"],\"zoning_priority_retail_overlay\":[\"source_id\",\"geom\",\"source_dataset_version\"],\"zoning_queenstw_eat_overlay\":[\"source_id\",\"geom\",\"source_dataset_version\"],\"parcels\":[\"id\",\"parcel_id\",\"geom\",\"zoning_enriched_at\",\"massing_enriched_at\",\"lot_size_sqm\",\"frontage_m\",\"depth_m\",\"bylaw_max_height_m\",\"bylaw_max_stories\",\"bylaw_max_fsi\",\"bylaw_max_coverage_pct\",\"bylaw_standard_setback_m\",\"zoning_class\",\"zoning_is_ambiguous\",\"is_corner_lot\",\"is_through_lot\",\"is_in_ravine_protection_area\",\"is_heritage_designated\",\"lot_size_confidence\",\"abuts_laneway\",\"max_buildable_gfa_sqm\",\"max_build_stories\",\"max_buildable_footprint_sqm\",\"imagery_roof_footprint_sqm\"],\"parcel_buildings\":[\"parcel_id\",\"building_id\",\"is_primary\",\"confidence\",\"linked_at\"],\"building_footprints\":[\"id\",\"footprint_area_sqm\",\"estimated_stories\",\"max_height_m\",\"geom\"],\"neighbourhood_build_norms\":[\"id\",\"neighbourhood_id\",\"structure_family\",\"storeys_p50\",\"storeys_p90\",\"new_builds_5yr\",\"additions_5yr\",\"renos_5yr\",\"suites_5yr\",\"demos_5yr\",\"realized_fsi_p50\",\"realized_fsi_p90\",\"build_ratio_p50\",\"existing_build_ratio_p25\",\"existing_build_ratio_p50\",\"coa_approved\",\"coa_refused\",\"coa_approval_rate\",\"window_start\",\"window_end\",\"sample_n\"],\"neighbourhood_storey_norms\":[\"neighbourhood_id\",\"storeys_p50\",\"storeys_p90\"],\"neighbourhoods\":[\"id\",\"name\",\"avg_household_income\"],\"permits\":[\"zoning_dominant_parcel_id\",\"project_type\",\"issued_date\",\"street_num\",\"street_name\",\"residential_sqm\",\"storeys\",\"structure_type\"],\"coa_applications\":[\"zoning_dominant_parcel_id\",\"decision\",\"decision_date\",\"hearing_date\",\"parcel_linked_at\"],\"enrich_parcels_pass3_scope\":[\"run_id\",\"parcel_id\",\"consumed_at\"]},\"writes\":{\"parcels\":[\"zoning_class\",\"zoning_zn_string\",\"zoning_gen_zone\",\"zoning_holding\",\"zone_status\",\"exception_number\",\"exception_text\",\"bylaw_chapter\",\"bylaw_section\",\"bylaw_exception_ref\",\"bylaw_max_fsi\",\"bylaw_max_units\",\"bylaw_max_density\",\"bylaw_pct_commercial_max\",\"bylaw_pct_residential_max\",\"bylaw_pct_employment_max\",\"bylaw_pct_office_max\",\"bylaw_min_frontage_m\",\"bylaw_min_area_sqm\",\"bylaw_standard_setback_m\",\"bylaw_max_coverage_pct\",\"bylaw_max_height_m\",\"bylaw_max_stories\",\"in_policy_area\",\"on_policy_road\",\"in_rooming_house_overlay\",\"in_parking_zone_overlay\",\"in_building_setback_overlay\",\"on_priority_retail\",\"in_queenstw_eat_overlay\",\"zoning_overlays\",\"zoning_base_source_id\",\"zoning_dominant_area_share\",\"zoning_is_ambiguous\",\"zoning_base_source_dataset_version\",\"lot_size_confidence\",\"lot_size_basis\",\"max_build_setback_basis\",\"max_buildable_footprint_sqm\",\"max_build_width_m\",\"max_build_length_m\",\"max_build_height_m\",\"max_build_stories\",\"max_build_stories_basis\",\"max_build_basis\",\"max_buildable_gfa_sqm\",\"max_buildable_gfa_basis\",\"max_build_confidence\",\"max_garden_suite_gfa_sqm\",\"garden_suite_fits\",\"envelope_constrained\",\"envelope_constraint_reason\",\"max_garage_gfa_sqm\",\"garage_capacity_cars\",\"garage_constraint_reason\",\"garage_permission\",\"max_laneway_suite_gfa_sqm\",\"max_rear_suite_gfa_sqm\",\"rear_suite_type\",\"rear_suite_permission\",\"max_build_stories_aggressive\",\"market_exceeds_bylaw\",\"neighbourhood_id\",\"neighbourhood_cost_premium\",\"imagery_roof_footprint_sqm\",\"existing_stories\",\"existing_height_m\",\"imagery_roof_gfa_sqm\",\"existing_width_m\",\"existing_length_m\",\"existing_structure_confidence\",\"existing_other_structures_count\",\"existing_other_structures_sqm\",\"existing_greenspace_sqm\",\"existing_data_quality_flag\",\"max_newbuild_coa_gfa_sqm\",\"cur_basement_gfa_sqm\",\"cur_storey_gfa_sqm\",\"cur_interior_reno_gfa_sqm\",\"cur_est_kitchen_gfa_sqm\",\"cur_est_bath_gfa_sqm\",\"cur_floor_gfa_sqm\",\"cur_pot_2story_gfa_sqm\",\"cur_pot_3story_gfa_sqm\",\"cur_gfa_range_basis\",\"comparable_builds\",\"comp_count\",\"comp_dominant_build\",\"comp_build_ratio_p50\",\"comp_fsi_p50\",\"opt_aor_storeys\",\"opt_aor_gfa_sqm\",\"opt_aor_units\",\"opt_coa_storeys\",\"opt_coa_gfa_sqm\",\"opt_suite_type\",\"opt_suite_fits_full\",\"opt_binding_constraint\",\"opt_config_confidence\",\"optimal_config\",\"nearby_builds_summary\",\"zoning_enriched_at\",\"massing_enriched_at\"],\"enrich_parcels_pass3_scope\":[\"run_id\",\"parcel_id\",\"consumed_at\"]}}\n{\"level\":\"INFO\",\"tag\":\"[enrich-parcels]\",\"msg\":\"enriched 0 parcels (zone_class 96.6%, gaps 16365, ambiguous 953, conflicts 21761)\"}\n\n[enrich-parcels] completed in 2270.9s\n",
+  "stderr": "{\"level\":\"WARN\",\"tag\":\"[enrich_parcels]\",\"msg\":\"allocation_pct sum is 1.0744 (expected 1.0) — normalizing\"}\n{\"level\":\"WARN\",\"tag\":\"[enrich_parcels]\",\"msg\":\"logic_variables.lifecycle_seq_band_22_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[enrich_parcels]\",\"msg\":\"logic_variables.lifecycle_seq_band_28_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[enrich_parcels]\",\"msg\":\"logic_variables.lifecycle_seq_band_30_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[enrich_parcels]\",\"msg\":\"logic_variables.lifecycle_seq_band_34_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[enrich_parcels]\",\"msg\":\"logic_variables.lifecycle_seq_band_37_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[enrich_parcels]\",\"msg\":\"logic_variables.lifecycle_seq_band_44_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[enrich_parcels]\",\"msg\":\"logic_variables.lifecycle_seq_band_47_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[enrich_parcels]\",\"msg\":\"logic_variables.lifecycle_seq_band_48_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[enrich_parcels]\",\"msg\":\"logic_variables.lifecycle_seq_band_50_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[enrich_parcels]\",\"msg\":\"logic_variables.lifecycle_seq_band_53_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[enrich_parcels]\",\"msg\":\"logic_variables.lifecycle_seq_band_54_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[enrich_parcels]\",\"msg\":\"logic_variables.lifecycle_seq_band_55_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[enrich_parcels]\",\"msg\":\"logic_variables.lifecycle_seq_band_56_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[enrich_parcels]\",\"msg\":\"logic_variables.lifecycle_seq_band_58_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[enrich_parcels]\",\"msg\":\"logic_variables.lifecycle_seq_band_65_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[enrich_parcels]\",\"msg\":\"logic_variables.lifecycle_seq_band_66_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[enrich_parcels]\",\"msg\":\"logic_variables.lifecycle_seq_band_67_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[enrich_parcels]\",\"msg\":\"logic_variables.lifecycle_seq_band_70_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[enrich_parcels]\",\"msg\":\"logic_variables.lifecycle_seq_band_71_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[enrich_parcels]\",\"msg\":\"logic_variables.lifecycle_seq_band_74_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[enrich_parcels]\",\"msg\":\"logic_variables.lifecycle_seq_band_75_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[enrich_parcels]\",\"msg\":\"logic_variables.lifecycle_seq_band_76_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[enrich_parcels]\",\"msg\":\"logic_variables.lifecycle_seq_band_77_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[enrich_parcels]\",\"msg\":\"logic_variables.lifecycle_seq_band_78_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[enrich_parcels]\",\"msg\":\"logic_variables.lifecycle_seq_band_79_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[enrich_parcels]\",\"msg\":\"logic_variables.lifecycle_seq_band_80_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[enrich_parcels]\",\"msg\":\"logic_variables.lifecycle_seq_band_81_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[enrich_parcels]\",\"msg\":\"logic_variables.lifecycle_seq_band_82_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[enrich_parcels]\",\"msg\":\"logic_variables.lifecycle_seq_band_83_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[enrich_parcels]\",\"msg\":\"logic_variables.lifecycle_seq_band_88_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[enrich_parcels]\",\"msg\":\"logic_variables.lifecycle_seq_band_91_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[enrich_parcels]\",\"msg\":\"logic_variables.lifecycle_seq_band_94_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[enrich_parcels]\",\"msg\":\"logic_variables.lifecycle_seq_band_96_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n",
+  "pipeline_runs": [],
+  "pipeline_runs_max_id_before": 1836,
+  "table_state": [
+    {
+      "table": "parcels",
+      "row_count": 486530,
+      "ceiling_bypassed": "projected",
+      "content_hash": "0ac3a8289ca7ae161357b53164f707ea",
+      "order_by": "explicit",
+      "order_columns": [
+        "id"
+      ],
+      "columns": [
+        "zoning_class",
+        "zoning_zn_string",
+        "zoning_gen_zone",
+        "zoning_holding",
+        "zone_status",
+        "exception_number",
+        "exception_text",
+        "bylaw_chapter",
+        "bylaw_section",
+        "bylaw_exception_ref",
+        "bylaw_max_fsi",
+        "bylaw_max_units",
+        "bylaw_max_density",
+        "bylaw_pct_commercial_max",
+        "bylaw_pct_residential_max",
+        "bylaw_pct_employment_max",
+        "bylaw_pct_office_max",
+        "bylaw_min_frontage_m",
+        "bylaw_min_area_sqm",
+        "bylaw_standard_setback_m",
+        "bylaw_max_coverage_pct",
+        "bylaw_max_height_m",
+        "bylaw_max_stories",
+        "in_policy_area",
+        "on_policy_road",
+        "in_rooming_house_overlay",
+        "in_parking_zone_overlay",
+        "in_building_setback_overlay",
+        "on_priority_retail",
+        "in_queenstw_eat_overlay",
+        "zoning_overlays",
+        "zoning_base_source_id",
+        "zoning_dominant_area_share",
+        "zoning_is_ambiguous",
+        "zoning_base_source_dataset_version",
+        "lot_size_confidence",
+        "lot_size_basis",
+        "max_build_setback_basis",
+        "max_buildable_footprint_sqm",
+        "max_build_width_m",
+        "max_build_length_m",
+        "max_build_height_m",
+        "max_build_stories",
+        "max_build_stories_basis",
+        "max_build_basis",
+        "max_buildable_gfa_sqm",
+        "max_buildable_gfa_basis",
+        "max_build_confidence",
+        "max_garden_suite_gfa_sqm",
+        "garden_suite_fits",
+        "envelope_constrained",
+        "envelope_constraint_reason",
+        "max_garage_gfa_sqm",
+        "garage_capacity_cars",
+        "garage_constraint_reason",
+        "garage_permission",
+        "max_laneway_suite_gfa_sqm",
+        "max_rear_suite_gfa_sqm",
+        "rear_suite_type",
+        "rear_suite_permission",
+        "max_build_stories_aggressive",
+        "market_exceeds_bylaw",
+        "neighbourhood_id",
+        "neighbourhood_cost_premium",
+        "imagery_roof_footprint_sqm",
+        "existing_stories",
+        "existing_height_m",
+        "imagery_roof_gfa_sqm",
+        "existing_width_m",
+        "existing_length_m",
+        "existing_structure_confidence",
+        "existing_other_structures_count",
+        "existing_other_structures_sqm",
+        "existing_greenspace_sqm",
+        "existing_data_quality_flag",
+        "max_newbuild_coa_gfa_sqm",
+        "cur_basement_gfa_sqm",
+        "cur_storey_gfa_sqm",
+        "cur_interior_reno_gfa_sqm",
+        "cur_est_kitchen_gfa_sqm",
+        "cur_est_bath_gfa_sqm",
+        "cur_floor_gfa_sqm",
+        "cur_pot_2story_gfa_sqm",
+        "cur_pot_3story_gfa_sqm",
+        "cur_gfa_range_basis",
+        "comparable_builds",
+        "comp_count",
+        "comp_dominant_build",
+        "comp_build_ratio_p50",
+        "comp_fsi_p50",
+        "opt_aor_storeys",
+        "opt_aor_gfa_sqm",
+        "opt_aor_units",
+        "opt_coa_storeys",
+        "opt_coa_gfa_sqm",
+        "opt_suite_type",
+        "opt_suite_fits_full",
+        "opt_binding_constraint",
+        "opt_config_confidence",
+        "optimal_config"
+      ],
+      "hash_method": "row_hash_then_concat"
+    },
+    {
+      "table": "enrich_parcels_pass3_scope",
+      "row_count": 1768976,
+      "ceiling_bypassed": "projected",
+      "content_hash": "bdfbca59ac94145e530d91c880a0c257",
+      "order_by": "pk",
+      "columns": [
+        "parcel_id"
+      ]
+    }
+  ],
+  "tables_source": "arg",
+  "table_row_ceiling": 100000,
+  "table_timing": {
+    "parcels": 24812,
+    "enrich_parcels_pass3_scope": 697
+  },
+  "table_specs": {
+    "parcels": {
+      "columns": [
+        "zoning_class",
+        "zoning_zn_string",
+        "zoning_gen_zone",
+        "zoning_holding",
+        "zone_status",
+        "exception_number",
+        "exception_text",
+        "bylaw_chapter",
+        "bylaw_section",
+        "bylaw_exception_ref",
+        "bylaw_max_fsi",
+        "bylaw_max_units",
+        "bylaw_max_density",
+        "bylaw_pct_commercial_max",
+        "bylaw_pct_residential_max",
+        "bylaw_pct_employment_max",
+        "bylaw_pct_office_max",
+        "bylaw_min_frontage_m",
+        "bylaw_min_area_sqm",
+        "bylaw_standard_setback_m",
+        "bylaw_max_coverage_pct",
+        "bylaw_max_height_m",
+        "bylaw_max_stories",
+        "in_policy_area",
+        "on_policy_road",
+        "in_rooming_house_overlay",
+        "in_parking_zone_overlay",
+        "in_building_setback_overlay",
+        "on_priority_retail",
+        "in_queenstw_eat_overlay",
+        "zoning_overlays",
+        "zoning_base_source_id",
+        "zoning_dominant_area_share",
+        "zoning_is_ambiguous",
+        "zoning_base_source_dataset_version",
+        "lot_size_confidence",
+        "lot_size_basis",
+        "max_build_setback_basis",
+        "max_buildable_footprint_sqm",
+        "max_build_width_m",
+        "max_build_length_m",
+        "max_build_height_m",
+        "max_build_stories",
+        "max_build_stories_basis",
+        "max_build_basis",
+        "max_buildable_gfa_sqm",
+        "max_buildable_gfa_basis",
+        "max_build_confidence",
+        "max_garden_suite_gfa_sqm",
+        "garden_suite_fits",
+        "envelope_constrained",
+        "envelope_constraint_reason",
+        "max_garage_gfa_sqm",
+        "garage_capacity_cars",
+        "garage_constraint_reason",
+        "garage_permission",
+        "max_laneway_suite_gfa_sqm",
+        "max_rear_suite_gfa_sqm",
+        "rear_suite_type",
+        "rear_suite_permission",
+        "max_build_stories_aggressive",
+        "market_exceeds_bylaw",
+        "neighbourhood_id",
+        "neighbourhood_cost_premium",
+        "imagery_roof_footprint_sqm",
+        "existing_stories",
+        "existing_height_m",
+        "imagery_roof_gfa_sqm",
+        "existing_width_m",
+        "existing_length_m",
+        "existing_structure_confidence",
+        "existing_other_structures_count",
+        "existing_other_structures_sqm",
+        "existing_greenspace_sqm",
+        "existing_data_quality_flag",
+        "max_newbuild_coa_gfa_sqm",
+        "cur_basement_gfa_sqm",
+        "cur_storey_gfa_sqm",
+        "cur_interior_reno_gfa_sqm",
+        "cur_est_kitchen_gfa_sqm",
+        "cur_est_bath_gfa_sqm",
+        "cur_floor_gfa_sqm",
+        "cur_pot_2story_gfa_sqm",
+        "cur_pot_3story_gfa_sqm",
+        "cur_gfa_range_basis",
+        "comparable_builds",
+        "comp_count",
+        "comp_dominant_build",
+        "comp_build_ratio_p50",
+        "comp_fsi_p50",
+        "opt_aor_storeys",
+        "opt_aor_gfa_sqm",
+        "opt_aor_units",
+        "opt_coa_storeys",
+        "opt_coa_gfa_sqm",
+        "opt_suite_type",
+        "opt_suite_fits_full",
+        "opt_binding_constraint",
+        "opt_config_confidence",
+        "optimal_config"
+      ],
+      "columns_source": "arg",
+      "order": [
+        "id"
+      ],
+      "order_source": "arg"
+    },
+    "enrich_parcels_pass3_scope": {
+      "columns": [
+        "parcel_id"
+      ],
+      "columns_source": "arg",
+      "order": null,
+      "order_source": "none"
+    }
+  },
+  "invariants": [
+    {
+      "name": "capture_as_of_utc_date",
+      "value": "Fri Sep 04 2026 14:30:41 GMT-0400 (Eastern Daylight Time)"
+    },
+    {
+      "name": "comps_window_as_of_date",
+      "value": "Fri Sep 04 2026 00:00:00 GMT-0400 (Eastern Daylight Time)"
+    },
+    {
+      "name": "parcels_total",
+      "value": "486530"
+    },
+    {
+      "name": "parcels_with_nearby_builds_summary",
+      "value": "442244"
+    },
+    {
+      "name": "pass3_scope_total_rows",
+      "value": "1768976"
+    },
+    {
+      "name": "pass3_scope_distinct_parcel_ids",
+      "value": "442244"
+    },
+    {
+      "name": "pass3_scope_distinct_run_ids",
+      "value": "4"
+    }
+  ],
+  "invariants_file": "C:/Users/User/AppData/Local/Temp/claude/C--Users-User-Buildo/ee9d52ec-8dbe-4af5-9c7b-6986223525f3/scratchpad/enrich_parcels_invariants.json",
+  "db_target": "postgresql://postgres:***@127.0.0.1:54322/postgres",
+  "runtime": "node",
+  "args": [
+    "--full"
+  ],
+  "nondeterminism": [
+    "pattern:duration_literal",
+    "row:sys_duration_ms",
+    "row:sys_velocity_rows_sec"
+  ],
+  "normalised": {
+    "step": "scripts/enrich-parcels.js",
+    "chain": "none",
+    "exit_code": 0,
+    "summary": {
+      "records_meta": {
+        "audit_table": {
+          "name": "Parcel zoning enrichment",
+          "phase": 65,
+          "rows": [
+            {
+              "metric": "parcels_with_zone_class_pct",
+              "status": "PASS",
+              "value": 96.6
+            },
+            {
+              "metric": "parcels_enriched_count",
+              "status": "INFO",
+              "value": 0
+            },
+            {
+              "metric": "parcels_no_base_zone_count",
+              "status": "INFO",
+              "value": 16365
+            },
+            {
+              "metric": "parcels_multi_zone_count",
+              "status": "INFO",
+              "value": 103203
+            },
+            {
+              "metric": "parcels_ambiguous_zone_count",
+              "status": "INFO",
+              "value": 953
+            },
+            {
+              "metric": "parcels_zone_conflict_count",
+              "status": "INFO",
+              "value": 21761
+            },
+            {
+              "metric": "zoning_fsi_source_nulled_count",
+              "status": "INFO",
+              "value": 93
+            },
+            {
+              "metric": "bylaw_max_fsi_null_pct",
+              "status": "INFO",
+              "value": 94.9
+            },
+            {
+              "metric": "bylaw_max_coverage_pct_null_pct",
+              "status": "INFO",
+              "value": 42.7
+            },
+            {
+              "metric": "bylaw_max_height_m_null_pct",
+              "status": "INFO",
+              "value": 9.9
+            },
+            {
+              "metric": "max_build_enriched_count",
+              "status": "INFO",
+              "value": 0
+            },
+            {
+              "metric": "massing_zero_link_ghost",
+              "status": "WARN",
+              "threshold": "== 0 (forward-looking)",
+              "value": 1395
+            },
+            {
+              "metric": "lot_size_confidence_high_count",
+              "status": "INFO",
+              "value": 459705
+            },
+            {
+              "metric": "lot_size_confidence_medium_count",
+              "status": "INFO",
+              "value": 384
+            },
+            {
+              "metric": "lot_size_confidence_low_count",
+              "status": "INFO",
+              "value": 26441
+            },
+            {
+              "metric": "max_buildable_footprint_count",
+              "status": "INFO",
+              "value": 442244
+            },
+            {
+              "metric": "max_buildable_gfa_count",
+              "status": "INFO",
+              "value": 442244
+            },
+            {
+              "metric": "max_build_box_count",
+              "status": "INFO",
+              "value": 408396
+            },
+            {
+              "metric": "max_buildable_gfa_basis_fsi_count",
+              "status": "INFO",
+              "value": 3976
+            },
+            {
+              "metric": "max_buildable_gfa_basis_coverage_box_count",
+              "status": "INFO",
+              "value": 400584
+            },
+            {
+              "metric": "max_buildable_gfa_basis_coverage_only_count",
+              "status": "INFO",
+              "value": 32546
+            },
+            {
+              "metric": "ravine_constrained_count",
+              "status": "INFO",
+              "value": 14005
+            },
+            {
+              "metric": "max_build_box_excluded_count",
+              "status": "INFO",
+              "value": 34808
+            },
+            {
+              "metric": "max_build_min_dimension_m_applied",
+              "status": "INFO",
+              "value": 3
+            },
+            {
+              "metric": "max_build_coverage_defaulted_count",
+              "status": "INFO",
+              "value": 176218
+            },
+            {
+              "metric": "max_build_coverage_binding_count",
+              "status": "INFO",
+              "value": 140897
+            },
+            {
+              "metric": "heritage_mislink_footprint_count",
+              "status": "INFO",
+              "value": 4144
+            },
+            {
+              "metric": "max_build_confidence_high_count",
+              "status": "INFO",
+              "value": 21599
+            },
+            {
+              "metric": "max_build_confidence_medium_count",
+              "status": "INFO",
+              "value": 387812
+            },
+            {
+              "metric": "max_build_confidence_low_count",
+              "status": "INFO",
+              "value": 46838
+            },
+            {
+              "metric": "garden_suite_fits_count",
+              "status": "INFO",
+              "value": 295833
+            },
+            {
+              "metric": "envelope_constrained_count",
+              "status": "INFO",
+              "value": 67815
+            },
+            {
+              "metric": "max_build_stories_basis_bylaw_count",
+              "status": "INFO",
+              "value": 178793
+            },
+            {
+              "metric": "max_build_stories_basis_pocket_count",
+              "status": "INFO",
+              "value": 263451
+            },
+            {
+              "metric": "max_build_stories_basis_derived_count",
+              "status": "INFO",
+              "value": 0
+            },
+            {
+              "metric": "market_exceeds_bylaw_count",
+              "status": "INFO",
+              "value": 3242
+            },
+            {
+              "metric": "neighbourhood_join_count",
+              "status": "INFO",
+              "value": 486385
+            },
+            {
+              "metric": "neighbourhood_premium_above_1_count",
+              "status": "INFO",
+              "value": 486385
+            },
+            {
+              "metric": "attached_modal_side_count_parcels",
+              "status": "INFO",
+              "value": 41042
+            },
+            {
+              "metric": "garage_fits_count",
+              "status": "INFO",
+              "value": 186908
+            },
+            {
+              "metric": "garage_permission_as_of_right_count",
+              "status": "INFO",
+              "value": 186846
+            },
+            {
+              "metric": "garage_permission_coa_required_count",
+              "status": "INFO",
+              "value": 62
+            },
+            {
+              "metric": "rear_suite_laneway_count",
+              "status": "INFO",
+              "value": 25811
+            },
+            {
+              "metric": "rear_suite_garden_count",
+              "status": "INFO",
+              "value": 279243
+            },
+            {
+              "metric": "rear_suite_permission_as_of_right_count",
+              "status": "INFO",
+              "value": 261703
+            },
+            {
+              "metric": "rear_suite_permission_coa_required_count",
+              "status": "INFO",
+              "value": 43351
+            },
+            {
+              "metric": "existing_structure_enriched_count",
+              "status": "INFO",
+              "value": 0
+            },
+            {
+              "metric": "imagery_roof_footprint_count",
+              "status": "INFO",
+              "value": 424962
+            },
+            {
+              "metric": "imagery_roof_gfa_count",
+              "status": "INFO",
+              "value": 424962
+            },
+            {
+              "metric": "existing_dims_count",
+              "status": "INFO",
+              "value": 424962
+            },
+            {
+              "metric": "existing_structure_confidence_high_count",
+              "status": "INFO",
+              "value": 370057
+            },
+            {
+              "metric": "existing_structure_confidence_low_count",
+              "status": "INFO",
+              "value": 115078
+            },
+            {
+              "metric": "existing_other_structures_present_count",
+              "status": "INFO",
+              "value": 11855
+            },
+            {
+              "metric": "existing_greenspace_count",
+              "status": "INFO",
+              "value": 424962
+            },
+            {
+              "metric": "max_newbuild_coa_gfa_count",
+              "status": "INFO",
+              "value": 442244
+            },
+            {
+              "metric": "cur_floor_gfa_count",
+              "status": "INFO",
+              "value": 424962
+            },
+            {
+              "metric": "cur_pot_2story_gfa_count",
+              "status": "INFO",
+              "value": 424962
+            },
+            {
+              "metric": "cur_pot_3story_gfa_count",
+              "status": "INFO",
+              "value": 63717
+            },
+            {
+              "metric": "cur_gfa_range_basis_count",
+              "status": "INFO",
+              "value": 394373
+            },
+            {
+              "metric": "existing_mislinked_footprint_count",
+              "status": "INFO",
+              "value": 60173
+            },
+            {
+              "metric": "cur_est_kitchen_gfa_count",
+              "status": "INFO",
+              "value": 424962
+            },
+            {
+              "metric": "cur_est_bath_gfa_count",
+              "status": "INFO",
+              "value": 424962
+            },
+            {
+              "metric": "scenario_enriched_count",
+              "status": "INFO",
+              "value": 0
+            },
+            {
+              "metric": "reno_coa_uplift_pct_applied",
+              "status": "INFO",
+              "value": 0.05
+            },
+            {
+              "metric": "reno_kitchen_gfa_pct_applied",
+              "status": "INFO",
+              "value": 0.15
+            },
+            {
+              "metric": "reno_bath_gfa_pct_applied",
+              "status": "INFO",
+              "value": 0.07
+            },
+            {
+              "metric": "mislink_footprint_lot_tol_applied",
+              "status": "INFO",
+              "value": 0.05
+            },
+            {
+              "metric": "storey_height_m_applied",
+              "status": "INFO",
+              "value": 3
+            },
+            {
+              "metric": "comp_candidate_pool",
+              "status": "INFO",
+              "value": 9319
+            },
+            {
+              "metric": "comparable_builds_enriched_count",
+              "status": "INFO",
+              "value": 344845
+            },
+            {
+              "metric": "comp_zero_filled_count",
+              "status": "INFO",
+              "value": 85559
+            },
+            {
+              "metric": "comp_with_comps_count",
+              "status": "INFO",
+              "value": 344845
+            },
+            {
+              "metric": "comp_zero_comps_count",
+              "status": "INFO",
+              "value": 85559
+            },
+            {
+              "metric": "comp_build_ratio_p50_count",
+              "status": "INFO",
+              "value": 285818
+            },
+            {
+              "metric": "comp_reset_ineligible_count",
+              "status": "INFO",
+              "value": 0
+            },
+            {
+              "metric": "optimal_config_enriched_count",
+              "status": "INFO",
+              "value": 0
+            },
+            {
+              "metric": "opt_config_reset_ineligible_count",
+              "status": "INFO",
+              "value": 0
+            },
+            {
+              "metric": "opt_aor_envelope_capped_count",
+              "status": "INFO",
+              "value": 3390
+            },
+            {
+              "metric": "opt_suite_fits_full_count",
+              "status": "INFO",
+              "value": 401991
+            },
+            {
+              "metric": "opt_config_confidence_high_count",
+              "status": "INFO",
+              "value": 2790
+            },
+            {
+              "metric": "opt_config_confidence_medium_count",
+              "status": "INFO",
+              "value": 439454
+            },
+            {
+              "metric": "opt_config_confidence_low_count",
+              "status": "INFO",
+              "value": 0
+            },
+            {
+              "metric": "opt_config_citywide_fallback_count",
+              "status": "INFO",
+              "value": 35372
+            },
+            {
+              "metric": "opt_config_engine_errors",
+              "status": "INFO",
+              "threshold": "== 0",
+              "value": 0
+            },
+            {
+              "metric": "opt_aor_without_max_gfa",
+              "status": "PASS",
+              "threshold": "== 0",
+              "value": 0
+            },
+            {
+              "metric": "enrich_parcels_pass1_duration_ms",
+              "status": "INFO",
+              "value": 501791
+            },
+            {
+              "metric": "enrich_parcels_pass2_duration_ms",
+              "status": "INFO",
+              "value": 1339232
+            },
+            {
+              "metric": "enrich_parcels_pass3_duration_ms",
+              "status": "INFO",
+              "value": 57476
+            },
+            {
+              "metric": "enrich_parcels_pass4_duration_ms",
+              "status": "INFO",
+              "value": 277471
+            },
+            {
+              "metric": "enrich_parcels_pass5_duration_ms",
+              "status": "INFO",
+              "value": 87041
+            },
+            {
+              "metric": "enrich_parcels_duration_ms",
+              "status": "INFO",
+              "value": 2270867
+            },
+            {
+              "metric": "records_updated_aggregate_distinct_parcels",
+              "status": "INFO",
+              "threshold": null,
+              "value": 0
+            }
+          ],
+          "verdict": "WARN"
+        }
+      },
+      "records_new": null,
+      "records_total": null,
+      "records_updated": 0
+    },
+    "summary_count": 1,
+    "meta": [
+      {
+        "reads": {
+          "building_footprints": [
+            "id",
+            "footprint_area_sqm",
+            "estimated_stories",
+            "max_height_m",
+            "geom"
+          ],
+          "coa_applications": [
+            "zoning_dominant_parcel_id",
+            "decision",
+            "decision_date",
+            "hearing_date",
+            "parcel_linked_at"
+          ],
+          "enrich_parcels_pass3_scope": [
+            "run_id",
+            "parcel_id",
+            "consumed_at"
+          ],
+          "neighbourhood_build_norms": [
+            "id",
+            "neighbourhood_id",
+            "structure_family",
+            "storeys_p50",
+            "storeys_p90",
+            "new_builds_5yr",
+            "additions_5yr",
+            "renos_5yr",
+            "suites_5yr",
+            "demos_5yr",
+            "realized_fsi_p50",
+            "realized_fsi_p90",
+            "build_ratio_p50",
+            "existing_build_ratio_p25",
+            "existing_build_ratio_p50",
+            "coa_approved",
+            "coa_refused",
+            "coa_approval_rate",
+            "window_start",
+            "window_end",
+            "sample_n"
+          ],
+          "neighbourhood_storey_norms": [
+            "neighbourhood_id",
+            "storeys_p50",
+            "storeys_p90"
+          ],
+          "neighbourhoods": [
+            "id",
+            "name",
+            "avg_household_income"
+          ],
+          "parcel_buildings": [
+            "parcel_id",
+            "building_id",
+            "is_primary",
+            "confidence",
+            "linked_at"
+          ],
+          "parcels": [
+            "id",
+            "parcel_id",
+            "geom",
+            "zoning_enriched_at",
+            "massing_enriched_at",
+            "lot_size_sqm",
+            "frontage_m",
+            "depth_m",
+            "bylaw_max_height_m",
+            "bylaw_max_stories",
+            "bylaw_max_fsi",
+            "bylaw_max_coverage_pct",
+            "bylaw_standard_setback_m",
+            "zoning_class",
+            "zoning_is_ambiguous",
+            "is_corner_lot",
+            "is_through_lot",
+            "is_in_ravine_protection_area",
+            "is_heritage_designated",
+            "lot_size_confidence",
+            "abuts_laneway",
+            "max_buildable_gfa_sqm",
+            "max_build_stories",
+            "max_buildable_footprint_sqm",
+            "imagery_roof_footprint_sqm"
+          ],
+          "permits": [
+            "zoning_dominant_parcel_id",
+            "project_type",
+            "issued_date",
+            "street_num",
+            "street_name",
+            "residential_sqm",
+            "storeys",
+            "structure_type"
+          ],
+          "zoning_building_setback_overlay": [
+            "source_id",
+            "geom",
+            "source_dataset_version"
+          ],
+          "zoning_bylaw_areas": [
+            "source_id",
+            "zn_zone",
+            "zn_string",
+            "gen_zone",
+            "zn_holding",
+            "zone_status",
+            "fsi_max",
+            "coverage_max_pct",
+            "units_max",
+            "density_max",
+            "frontage_min_m",
+            "area_min_sqm",
+            "standard_setback",
+            "pct_commercial_max",
+            "pct_residential_max",
+            "pct_employment_max",
+            "pct_office_max",
+            "exception_number",
+            "exception_text",
+            "bylaw_chapter",
+            "bylaw_section",
+            "bylaw_exception_ref",
+            "geom",
+            "source_dataset_version"
+          ],
+          "zoning_height_overlay": [
+            "source_id",
+            "height_max_m",
+            "ht_stories",
+            "geom",
+            "source_dataset_version"
+          ],
+          "zoning_lot_coverage_overlay": [
+            "source_id",
+            "coverage_max_pct_override",
+            "geom",
+            "source_dataset_version"
+          ],
+          "zoning_parking_zone_overlay": [
+            "source_id",
+            "geom",
+            "source_dataset_version"
+          ],
+          "zoning_policy_area_overlay": [
+            "source_id",
+            "geom",
+            "source_dataset_version"
+          ],
+          "zoning_policy_road_overlay": [
+            "source_id",
+            "road_name",
+            "geom",
+            "source_dataset_version"
+          ],
+          "zoning_priority_retail_overlay": [
+            "source_id",
+            "geom",
+            "source_dataset_version"
+          ],
+          "zoning_queenstw_eat_overlay": [
+            "source_id",
+            "geom",
+            "source_dataset_version"
+          ],
+          "zoning_rooming_house_overlay": [
+            "source_id",
+            "geom",
+            "source_dataset_version"
+          ]
+        },
+        "writes": {
+          "enrich_parcels_pass3_scope": [
+            "run_id",
+            "parcel_id",
+            "consumed_at"
+          ],
+          "parcels": [
+            "zoning_class",
+            "zoning_zn_string",
+            "zoning_gen_zone",
+            "zoning_holding",
+            "zone_status",
+            "exception_number",
+            "exception_text",
+            "bylaw_chapter",
+            "bylaw_section",
+            "bylaw_exception_ref",
+            "bylaw_max_fsi",
+            "bylaw_max_units",
+            "bylaw_max_density",
+            "bylaw_pct_commercial_max",
+            "bylaw_pct_residential_max",
+            "bylaw_pct_employment_max",
+            "bylaw_pct_office_max",
+            "bylaw_min_frontage_m",
+            "bylaw_min_area_sqm",
+            "bylaw_standard_setback_m",
+            "bylaw_max_coverage_pct",
+            "bylaw_max_height_m",
+            "bylaw_max_stories",
+            "in_policy_area",
+            "on_policy_road",
+            "in_rooming_house_overlay",
+            "in_parking_zone_overlay",
+            "in_building_setback_overlay",
+            "on_priority_retail",
+            "in_queenstw_eat_overlay",
+            "zoning_overlays",
+            "zoning_base_source_id",
+            "zoning_dominant_area_share",
+            "zoning_is_ambiguous",
+            "zoning_base_source_dataset_version",
+            "lot_size_confidence",
+            "lot_size_basis",
+            "max_build_setback_basis",
+            "max_buildable_footprint_sqm",
+            "max_build_width_m",
+            "max_build_length_m",
+            "max_build_height_m",
+            "max_build_stories",
+            "max_build_stories_basis",
+            "max_build_basis",
+            "max_buildable_gfa_sqm",
+            "max_buildable_gfa_basis",
+            "max_build_confidence",
+            "max_garden_suite_gfa_sqm",
+            "garden_suite_fits",
+            "envelope_constrained",
+            "envelope_constraint_reason",
+            "max_garage_gfa_sqm",
+            "garage_capacity_cars",
+            "garage_constraint_reason",
+            "garage_permission",
+            "max_laneway_suite_gfa_sqm",
+            "max_rear_suite_gfa_sqm",
+            "rear_suite_type",
+            "rear_suite_permission",
+            "max_build_stories_aggressive",
+            "market_exceeds_bylaw",
+            "neighbourhood_id",
+            "neighbourhood_cost_premium",
+            "imagery_roof_footprint_sqm",
+            "existing_stories",
+            "existing_height_m",
+            "imagery_roof_gfa_sqm",
+            "existing_width_m",
+            "existing_length_m",
+            "existing_structure_confidence",
+            "existing_other_structures_count",
+            "existing_other_structures_sqm",
+            "existing_greenspace_sqm",
+            "existing_data_quality_flag",
+            "max_newbuild_coa_gfa_sqm",
+            "cur_basement_gfa_sqm",
+            "cur_storey_gfa_sqm",
+            "cur_interior_reno_gfa_sqm",
+            "cur_est_kitchen_gfa_sqm",
+            "cur_est_bath_gfa_sqm",
+            "cur_floor_gfa_sqm",
+            "cur_pot_2story_gfa_sqm",
+            "cur_pot_3story_gfa_sqm",
+            "cur_gfa_range_basis",
+            "comparable_builds",
+            "comp_count",
+            "comp_dominant_build",
+            "comp_build_ratio_p50",
+            "comp_fsi_p50",
+            "opt_aor_storeys",
+            "opt_aor_gfa_sqm",
+            "opt_aor_units",
+            "opt_coa_storeys",
+            "opt_coa_gfa_sqm",
+            "opt_suite_type",
+            "opt_suite_fits_full",
+            "opt_binding_constraint",
+            "opt_config_confidence",
+            "optimal_config",
+            "nearby_builds_summary",
+            "zoning_enriched_at",
+            "massing_enriched_at"
+          ]
+        }
+      }
+    ],
+    "parse_errors": [],
+    "pipeline_runs": [],
+    "stdout_lines": [
+      "{\"level\":\"INFO\",\"msg\":\"Loaded 35 trade configs from control panel\",\"tag\":\"[enrich_parcels]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"Loaded 455 logic variables from control panel\",\"tag\":\"[enrich_parcels]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"enriched 0 parcels (zone_class 96.6%, gaps 16365, ambiguous 953, conflicts 21761)\",\"tag\":\"[enrich-parcels]\"}",
+      "[enrich-parcels] completed in <DUR>"
+    ],
+    "table_state": [
+      {
+        "table": "parcels",
+        "row_count": 486530,
+        "ceiling_bypassed": "projected",
+        "content_hash": "0ac3a8289ca7ae161357b53164f707ea",
+        "order_by": "explicit",
+        "order_columns": [
+          "id"
+        ],
+        "columns": [
+          "zoning_class",
+          "zoning_zn_string",
+          "zoning_gen_zone",
+          "zoning_holding",
+          "zone_status",
+          "exception_number",
+          "exception_text",
+          "bylaw_chapter",
+          "bylaw_section",
+          "bylaw_exception_ref",
+          "bylaw_max_fsi",
+          "bylaw_max_units",
+          "bylaw_max_density",
+          "bylaw_pct_commercial_max",
+          "bylaw_pct_residential_max",
+          "bylaw_pct_employment_max",
+          "bylaw_pct_office_max",
+          "bylaw_min_frontage_m",
+          "bylaw_min_area_sqm",
+          "bylaw_standard_setback_m",
+          "bylaw_max_coverage_pct",
+          "bylaw_max_height_m",
+          "bylaw_max_stories",
+          "in_policy_area",
+          "on_policy_road",
+          "in_rooming_house_overlay",
+          "in_parking_zone_overlay",
+          "in_building_setback_overlay",
+          "on_priority_retail",
+          "in_queenstw_eat_overlay",
+          "zoning_overlays",
+          "zoning_base_source_id",
+          "zoning_dominant_area_share",
+          "zoning_is_ambiguous",
+          "zoning_base_source_dataset_version",
+          "lot_size_confidence",
+          "lot_size_basis",
+          "max_build_setback_basis",
+          "max_buildable_footprint_sqm",
+          "max_build_width_m",
+          "max_build_length_m",
+          "max_build_height_m",
+          "max_build_stories",
+          "max_build_stories_basis",
+          "max_build_basis",
+          "max_buildable_gfa_sqm",
+          "max_buildable_gfa_basis",
+          "max_build_confidence",
+          "max_garden_suite_gfa_sqm",
+          "garden_suite_fits",
+          "envelope_constrained",
+          "envelope_constraint_reason",
+          "max_garage_gfa_sqm",
+          "garage_capacity_cars",
+          "garage_constraint_reason",
+          "garage_permission",
+          "max_laneway_suite_gfa_sqm",
+          "max_rear_suite_gfa_sqm",
+          "rear_suite_type",
+          "rear_suite_permission",
+          "max_build_stories_aggressive",
+          "market_exceeds_bylaw",
+          "neighbourhood_id",
+          "neighbourhood_cost_premium",
+          "imagery_roof_footprint_sqm",
+          "existing_stories",
+          "existing_height_m",
+          "imagery_roof_gfa_sqm",
+          "existing_width_m",
+          "existing_length_m",
+          "existing_structure_confidence",
+          "existing_other_structures_count",
+          "existing_other_structures_sqm",
+          "existing_greenspace_sqm",
+          "existing_data_quality_flag",
+          "max_newbuild_coa_gfa_sqm",
+          "cur_basement_gfa_sqm",
+          "cur_storey_gfa_sqm",
+          "cur_interior_reno_gfa_sqm",
+          "cur_est_kitchen_gfa_sqm",
+          "cur_est_bath_gfa_sqm",
+          "cur_floor_gfa_sqm",
+          "cur_pot_2story_gfa_sqm",
+          "cur_pot_3story_gfa_sqm",
+          "cur_gfa_range_basis",
+          "comparable_builds",
+          "comp_count",
+          "comp_dominant_build",
+          "comp_build_ratio_p50",
+          "comp_fsi_p50",
+          "opt_aor_storeys",
+          "opt_aor_gfa_sqm",
+          "opt_aor_units",
+          "opt_coa_storeys",
+          "opt_coa_gfa_sqm",
+          "opt_suite_type",
+          "opt_suite_fits_full",
+          "opt_binding_constraint",
+          "opt_config_confidence",
+          "optimal_config"
+        ],
+        "hash_method": "row_hash_then_concat"
+      },
+      {
+        "table": "enrich_parcels_pass3_scope",
+        "row_count": 1768976,
+        "ceiling_bypassed": "projected",
+        "content_hash": "bdfbca59ac94145e530d91c880a0c257",
+        "order_by": "pk",
+        "columns": [
+          "parcel_id"
+        ]
+      }
+    ],
+    "invariants": [
+      {
+        "name": "capture_as_of_utc_date",
+        "value": "Fri Sep 04 2026 14:30:41 GMT-0400 (Eastern Daylight Time)"
+      },
+      {
+        "name": "comps_window_as_of_date",
+        "value": "Fri Sep 04 2026 00:00:00 GMT-0400 (Eastern Daylight Time)"
+      },
+      {
+        "name": "parcels_total",
+        "value": "486530"
+      },
+      {
+        "name": "parcels_with_nearby_builds_summary",
+        "value": "442244"
+      },
+      {
+        "name": "pass3_scope_total_rows",
+        "value": "1768976"
+      },
+      {
+        "name": "pass3_scope_distinct_parcel_ids",
+        "value": "442244"
+      },
+      {
+        "name": "pass3_scope_distinct_run_ids",
+        "value": "4"
+      }
+    ]
+  },
+  "source_fingerprint": null,
+  "fingerprint_files": [],
+  "fingerprint_skipped_reason": "no_descriptor_yet",
+  "g1_comparator_report": "docs/reports/golden/enrich_parcels/g1-comparator-report.md",
+  "g1_unexplained_diff_count": 0,
+  "g1_ledger_refs": [
+    "EP-D9",
+    "EP-D10"
+  ]
+}
