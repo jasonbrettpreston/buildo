@@ -43,6 +43,7 @@ import { createHash } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { isOpenBatchingItem } from '../../violations/generate-programme-backlog.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(HERE, '..', '..', '..');
@@ -82,7 +83,7 @@ function gitDiffNameOnly(args) {
 }
 
 /** `git show <ref>:<path>` — the file's content at ref, or null if it does not exist there. */
-function gitShowFile(ref, relPath) {
+export function gitShowFile(ref, relPath) {
   const res = spawnSync('git', ['show', `${ref}:${relPath}`], { cwd: ROOT, encoding: 'utf8' });
   if (res.status !== 0) return null;
   return res.stdout;
@@ -93,9 +94,21 @@ function gitShowFile(ref, relPath) {
  * including, the next `## ` heading, or EOF). Returns '' if the heading is
  * not found — a caller comparing two such extractions across a diff treats a
  * heading that DISAPPEARED as a real, non-empty change (old !== '').
+ *
+ * CRLF-tolerant (mirrors the `heritage-418`/`cost-ledger-gate` precedent,
+ * `docs/reports/review_followups.md` "CRLF-tolerant" — `quality-ledger-
+ * window.logic.test.ts:206-211`'s own note on why this is load-bearing on a
+ * Windows checkout, `core.autocrlf=true`, no `.gitattributes`). `gitShowFile`
+ * returns the committed blob (LF); a disk `readFileSync` of the SAME spec on
+ * Windows returns CRLF. Comparing the two RAW would make `section8Changed`
+ * always true, permanently disarming the R-E "re-freeze without a Spec 122
+ * §8 diff" hard stop. Normalise line endings AND trailing whitespace before
+ * splitting, so a checkout-line-ending difference — never a real edit — can
+ * not move the comparison.
  */
 export function extractSection(markdown, headingPattern) {
-  const lines = markdown.split('\n');
+  const normalised = markdown.replace(/\r\n/g, '\n').replace(/[ \t]+$/gm, '');
+  const lines = normalised.split('\n');
   const startIdx = lines.findIndex((l) => headingPattern.test(l));
   if (startIdx === -1) return '';
   let endIdx = lines.length;
@@ -304,14 +317,17 @@ function deriveArchetypeProfiles(schema) {
 
 // ---------------------------------------------------------------------------
 // DERIVED: batching_prereq_snapshot — programme-items.json's open set right
-// now (mirrors step-validate.mjs's blocksBatchingCount / generate-programme-
-// backlog.mjs's openBatchingCount — G9, WF2 "template freeze" C1).
+// now. Filters with the SAME `isOpenBatchingItem` predicate step-validate.
+// mjs's blocksBatchingCount and generate-programme-backlog.mjs's
+// openBatchingCount use — G9, WF2 "template freeze" C1 + remediation
+// (2026-09-04) — so this generator can never drift into a second,
+// independently-maintained copy of the same filter.
 // ---------------------------------------------------------------------------
 
 function deriveBatchingPrereqSnapshot() {
   const items = JSON.parse(readFileSync(PROGRAMME_ITEMS_PATH, 'utf8')).items;
   return items
-    .filter((it) => it.gate.blocks.includes('batching') && it.status !== 'BUILT' && it.status !== 'SUPERSEDED')
+    .filter(isOpenBatchingItem)
     .map((it) => ({ id: it.id, status: it.status, owner: it.owner.kind === 'none' ? '—' : `${it.owner.kind}: ${it.owner.ref}` }));
 }
 

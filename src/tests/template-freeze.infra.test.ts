@@ -85,6 +85,7 @@ async function loadGenerator() {
     }) => { ok: boolean; reason: string };
     runnerRanges: (source: string) => { lines: string[]; ranges: Record<string, { start: number; end: number }> };
     extractPhaseOrder: (lines: string[], range: { start: number; end: number }) => string[];
+    gitShowFile: (ref: string, relPath: string) => string | null;
   };
 }
 
@@ -237,6 +238,39 @@ describe('checkFrozenSchemaConsistency — the R-E lock (C4)', () => {
     const section = mod.extractSection(md, /^## 8\. /);
     expect(section.length).toBeGreaterThan(0);
     expect(section).toContain('## 8. The conversion process');
+  });
+
+  // CRLF-tolerant section compare — remediation, 2026-09-04 (freeze WF's
+  // Guardian finding). `gitShowFile` returns the COMMITTED blob (git stores
+  // LF); `readFileSync` of the SAME file on a Windows checkout
+  // (`core.autocrlf=true`, no `.gitattributes`) returns CRLF. Exercises the
+  // REAL `extractSection` + `gitShowFile` path against the real Spec 122
+  // file and the real git history, not a fixtured boolean — mirrors the
+  // `heritage-418`/`cost-ledger-gate` CRLF-tolerant precedent
+  // (`docs/reports/review_followups.md` "CRLF-tolerant").
+  it('CRLF-tolerant: the committed blob (LF, via gitShowFile) and the disk copy of the SAME content (CRLF-normalized to match) compare EQUAL through extractSection — section8Changed must read false for a pure line-ending difference', async () => {
+    const mod = await loadGenerator();
+    const specRelPath = 'docs/specs/01-pipeline/122_pipeline_step_optimization.md';
+    const committed = mod.gitShowFile('HEAD', specRelPath); // git blob — LF
+    expect(committed, 'HEAD must carry this spec file').not.toBeNull();
+    const asDiskWouldRead = (committed as string).replace(/\n/g, '\r\n'); // simulates a Windows checkout of the identical content
+    const fromCommitted = mod.extractSection(committed as string, /^## 8\. /);
+    const fromDiskLike = mod.extractSection(asDiskWouldRead, /^## 8\. /);
+    expect(fromCommitted.length).toBeGreaterThan(0);
+    expect(fromCommitted).toBe(fromDiskLike);
+    expect(fromCommitted !== fromDiskLike).toBe(false); // section8Changed, byte-identical content modulo EOL
+  });
+
+  it('CRLF-tolerant: a genuine one-line content change inside §8 (on the CRLF-simulated disk copy) still reads as changed', async () => {
+    const mod = await loadGenerator();
+    const specRelPath = 'docs/specs/01-pipeline/122_pipeline_step_optimization.md';
+    const committed = mod.gitShowFile('HEAD', specRelPath) as string;
+    const fromCommitted = mod.extractSection(committed, /^## 8\. /);
+    const mutatedDiskLike = committed
+      .replace(/\n/g, '\r\n')
+      .replace('## 8.', '## 8. MUTATED-BY-TEST'); // one real content edit inside the heading line
+    const fromMutated = mod.extractSection(mutatedDiskLike, /^## 8\. /);
+    expect(fromCommitted !== fromMutated).toBe(true); // section8Changed must fire for a real edit
   });
 });
 

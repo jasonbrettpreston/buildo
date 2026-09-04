@@ -66,18 +66,30 @@ function statusBadge(status) {
 }
 
 /**
+ * Does this declared item still block "batching"? A BUILT/SUPERSEDED item's
+ * promise is already delivered; it does not block anything. The ONE
+ * predicate every caller in the estate uses — this file's own
+ * `openBatchingCount` AND `scripts/steps/_schema/generate-template-freeze.
+ * mjs`'s `batching_prereq_snapshot` (WF2 "template freeze" remediation,
+ * 2026-09-04) — so a second, independently-drifting reimplementation of the
+ * same filter can never creep back in.
+ */
+export function isOpenBatchingItem(it) {
+  return it.gate.blocks.includes('batching') && it.status !== 'BUILT' && it.status !== 'SUPERSEDED';
+}
+
+/**
  * How many declared items still block "batching" — G9 defect (WF2 "template
- * freeze" C1, 2026-09-04), mirrors step-validate.mjs's blocksBatchingCount. A
- * BUILT/SUPERSEDED item's promise is already delivered; it does not block
- * anything. The ONE shared implementation every caller in this file uses
- * (render()'s two printed lines AND main()'s --write console summary) so a
- * third independent status-blind reimplementation can never creep back in —
+ * freeze" C1, 2026-09-04), mirrors step-validate.mjs's blocksBatchingCount.
+ * The ONE shared implementation every caller in this file uses (render()'s
+ * two printed lines AND main()'s --write console summary) so a third
+ * independent status-blind reimplementation can never creep back in —
  * exactly what happened once already (main()'s own console line still read
  * the raw unfiltered count after render() was fixed, caught by inspecting
  * `--write`'s own console output during C2, not by a test).
  */
 export function openBatchingCount(items) {
-  return items.filter((it) => it.gate.blocks.includes('batching') && it.status !== 'BUILT' && it.status !== 'SUPERSEDED').length;
+  return items.filter(isOpenBatchingItem).length;
 }
 
 function renderTable(items) {
