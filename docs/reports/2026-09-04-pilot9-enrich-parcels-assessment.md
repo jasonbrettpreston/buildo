@@ -91,7 +91,7 @@ recorded so no later commit assumes the tool was ever run against this step befo
 
 | Commit | Date | Construct | Live today? | Proposed disposition | Ground |
 |---|---|---|---|---|---|
-| `1da014c60` (`tasks/lessons.md:28`'s own fence) | 2026-05-31 | The float8-vs-`NUMERIC(5,4)` `IS DISTINCT FROM` idempotency trap: `zoning_dominant_area_share` computed as `MAX(area_share)` (float8) never compared equal to the target's `NUMERIC(5,4)`, so every multi-zone parcel rewrote forever | ✓ current file `:336` `round(MAX(area_share)::numeric, 4)`, byte-identical cast | **preserved-in-compute** — Fold B1 rules this ports VERBATIM; the guard SQL is never regenerated generically from a column list, this exact cast is the fix | `:336` current file; re-blamed `1da014c60` this commit |
+| `7e130bff` (fix folded into the pass 1 SQL; `tasks/lessons.md:28` documents it) | 2026-05-31 | The float8-vs-`NUMERIC(5,4)` `IS DISTINCT FROM` idempotency trap: `zoning_dominant_area_share` computed as `MAX(area_share)` (float8) never compared equal to the target's `NUMERIC(5,4)`, so every multi-zone parcel rewrote forever | ✓ current file `:336` `round(MAX(area_share)::numeric, 4)`, byte-identical cast | **preserved-in-compute** — Fold B1 rules this ports VERBATIM; the guard SQL is never regenerated generically from a column list, this exact cast is the fix | `:334-338` current file, `git blame` = `7e130bff` (**corrected this commit — `1da014c60`, previously cited, only added tests + the lessons.md:28 prose the same day; it never touched `scripts/enrich-parcels.js`, confirmed via `git show --stat`**); `1da014c60` remains the correct cite for the lesson's own documentation |
 | `7e130bff` | 2026-05-31 | **Origin of the whole zoning-pass architecture** — the set-based join CTE rewrite replacing per-parcel correlated `EXISTS` subqueries (`tasks/lessons.md:33`'s own fence: >9min intractable → ~8min with `CREATE TEMP TABLE … AS` + `LEFT JOIN`) | ✓ current file, `enrichParcels`'s whole temp-table/UPDATE shape (`:222-443`) is this commit's architecture, unbroken since | **preserved-in-compute** — the set-based join CTE pattern is load-bearing (a correctness AND performance fence) and ports verbatim; this is pass 1's entire SQL shape | full-file read; re-blamed this commit |
 | `df7ef272` | 2026-07-02 | **Origin of the comp-family filter Fold C2/EP-D8 measures the boundary of** — `comp_fsi_p50` restricted to new-build comps (`work_type='new_build'`) with `permit_fsi ∈ [0.05, 8]`, plus the comps-ineligibility reset | ✓ current file, `buildCompCandidatesSql` filter (`:1088-1098`) and the `resetIneligible` UPDATE (`:1208-1213`) both trace to this commit's shape | **preserved-in-compute** — the work_type/FSI-range filter and the reset-on-ineligibility pattern are both verbatim-ported. **This fence is the boundary of what the comp-match predicate DOES filter on** — it never added a `structure_family` term, which is exactly EP-D8's gap (Fold C2/G4): the fence explains why EP-D8 is a genuine spec-silent hole, not an oversight of an existing rule | `:1088-1098,1208-1213` current file; re-blamed `df7ef272` this commit |
 | `e8793c8f` | 2026-08-14 | **Origin of the scope-defer mechanism** — `computeDeferScope`, `enrich_parcels_pass3_scope` (mig 240), `enrich_parcels_defer_threshold_rows` — the only LOGGED recovery ledger in the estate (389 lines added, largest single-commit diff to this file) | ✓ current file, `computeDeferScope` `:1777-1847`, the `INSERT INTO enrich_parcels_pass3_scope … ON CONFLICT DO NOTHING` `:2077-2078`, `DEFER_STEP_SLUG` `:91` | **SPLIT disposition** — the SQL/logic is **preserved-in-compute** (verbatim port); the crash-recoverable ledger CONCEPT (rows left inside the txn by design, `:2073-2076`) is **encoded-as-descriptor-field** at commit 7 (`recovery.interrupted` for the pass-3/pass-5 resets per Fold A2, and the pass3_scope table itself named in `outputs.writes[]`) — this is the mechanism Fold A3 says has "no analogue in any converted step" | `:1777-1847,2077-2078,91` current file; re-blamed `e8793c8f` this commit |
@@ -119,10 +119,13 @@ oversight). Both close per Fold G1's PIN mechanism, not a fix-now disposition.
 ### G3 verdict
 
 **CLOSED this commit.** 9 fences re-verified by direct `git show`/`git blame` against the live file,
-zero transcribed from the plan. `1da014c60` (lessons.md:28's own numeric-cast fence), `e8793c8f`
-(scope-defer origin), `a81c6a7c` (honest records_updated origin), `df7ef272` (comp-family filter
-boundary — the fence that makes EP-D8 provably a gap, not a regression), `7e130bff` (the whole
-zoning-pass architecture), `fa9e984c2` (the Supavisor SET LOCAL constraint governing Ask 7), and the
+zero transcribed from the plan. `7e130bff` (the whole zoning-pass architecture, including the
+`:336` numeric-cast fence `tasks/lessons.md:28` documents — corrected commit 4b: `1da014c60`, the
+same-day commit previously cited for the cast, only added tests + the lessons.md prose and never
+touched `scripts/enrich-parcels.js`), `e8793c8f` (scope-defer origin), `a81c6a7c` (honest
+records_updated origin), `df7ef272` (comp-family filter boundary — the fence that makes EP-D8
+provably a gap, not a regression), `fa9e984c2` (the Supavisor SET LOCAL constraint governing Ask 7),
+and the
 three 2026-09-03 stall commits (`00659574`/`c7b20ac9`/`aff1b093`, the origin of the heartbeat/
 diagnostic/timeout instrumentation this pilot ports into the runner) are all adjudicated with the
 pilot 8 vocabulary — 5 `preserved-in-compute`, 3 `preserved-in-runner`, 1 `SPLIT` (preserved-in-
@@ -200,21 +203,43 @@ original form.
 
 ### Producer/consumer seams (Finding-class, R-V)
 
-**Producers this step reads from (live, verified this commit):**
+**Producers this step reads from — derived from the ledger tool, not hand-listed (corrected
+commit 4b).** `node -e "require('./scripts/lib/ledger.js').stepUpstreams('enrich_parcels',
+{chain:'sources'})"` returns **8 producers**, byte-identical to `docs/reference/
+data-lineage-map.md`'s own `## Upstream sets` row (`enrich_parcels | sources | enrich_centreline,
+enrich_heritage, enrich_ravines, link_massing, load_zoning, massing, neighbourhoods, parcels`) — the
+committed doc and a fresh tool run agree exactly:
 
-| Producer | Read site (this file) | Producer confirmation |
+| Producer | Converted? (`converted.json`) | Read site (this file) |
 |---|---|---|
-| `link_massing` (**already converted**, `converted.json`) | `parcel_buildings`, `building_footprints` (emitMeta reads-map, `:1148-1149`; used at pass 2's heritage freeze + pass 3's existing-structure primary-massing join) | `scripts/link-massing.js:8` header: "Link parcels to building footprints and write the parcel_buildings junction"; `scripts/lib/compute/link-massing.js` writes `parcel_buildings`/reads `building_footprints`, re-confirmed this commit |
-| `permits` (chain-level table, not yet a converted step's own write target) | `:1112`, pass 4 candidate-set materialization | table exists, written by `load-permits.js` / classification scripts upstream of this step in the `sources`/`permits` chains |
-| `neighbourhood_build_norms` / `neighbourhood_storey_norms` / `neighbourhoods` | pass 2 (LATERAL) + pass 5 citywide backstop (`:1650` throws if absent) | written by `compute-build-norms.js` (permits chain), not yet a converted step |
+| `enrich_centreline` | not converted | ravine/heritage/centreline flags read by pass 2 (`buildMaxBuildSql` inputs) |
+| `enrich_heritage` | not converted | `is_heritage_designated` read by pass 2's heritage freeze |
+| `enrich_ravines` | not converted | `is_in_ravine_protection_area` read by pass 2 |
+| **`link_massing`** | **CONVERTED** | `parcel_buildings`/`building_footprints` (emitMeta reads-map `:1148-1149`; pass 2 heritage freeze + pass 3 primary-massing join) — `scripts/link-massing.js:8` header confirms the write, re-checked this commit |
+| `load_zoning` | not converted | the 10 `zoning_*` overlay/bylaw tables pass 1 joins |
+| `massing` (INGESTOR, `building_footprints`) | not converted | pass 2/3's `building_footprints` reads |
+| `neighbourhoods` | not converted | `neighbourhoods.avg_household_income`, `neighbourhood_storey_norms` (pass 2 LATERAL) |
+| `parcels` | not converted (self-referential upstream — the ledger's own column-lineage sense: prior-run columns this step reads back) | pass 1's `geom`/lot-dimension base read |
 
-**Only ONE live seam against an already-converted step exists today (`link_massing` via
-`parcel_buildings`/`building_footprints`)** — unlike pilot 8's 3 new seams (`link_parcels`/
-`link_massing`/`link_wsib`, tripling R-V's surface), this pilot adds exactly 1, because none of
-this step's other upstream producers (`load-permits.js`, `compute-build-norms.js`) are converted
-yet. `parcels.centroid_lat/lng` (from `compute_centroids`, converted) and `permit_parcels`
-(from `link_parcels`, converted) are **NOT** read anywhere in this file — confirmed by direct read,
-not assumed; no seam there.
+**Only ONE of the 8 ledger-derived producers is converted (`link_massing`)** — matches pilot 8's
+own R-V framing but is smaller in absolute count than its 3 new seams, because none of this step's
+other 7 ledger-derived producers are converted yet.
+
+**Correction (commit 4b, ground-truth):** commit 3's original table hand-listed `permits`
+(`load-permits.js`) and `neighbourhood_build_norms`/`neighbourhood_storey_norms`
+(`compute-build-norms.js`) as producer seams. The ledger tool does **not** derive either for the
+`sources` chain — `load-permits.js`/`compute-build-norms.js` run in the `permits` chain, not
+`sources`, so `stepUpstreams('enrich_parcels', {chain:'sources'})`'s own chain-restriction (§ "Upstream
+sets", `data-lineage-map.md:1555`: "restricted to producers sharing that SAME chain") correctly
+excludes them — they are real column reads (`permits pr` at `:1112`; `neighbourhood_build_norms` at
+pass 2/5) but NOT same-chain producer edges under the `sources` chain this pilot converts against.
+The commit-7 descriptor must reflect this split: `inputs.reads.steps` declares the converted subset
+(`link_massing`) plus, if the descriptor's author chooses to declare cross-chain producers too, the
+7 unconverted same-chain ones by name; `inputs.reads.tables` covers `permits`/
+`neighbourhood_build_norms`/`neighbourhood_storey_norms` as plain table reads (no step-edge claim,
+since they are not same-chain producers of `sources`). `parcels.centroid_lat/lng` (from
+`compute_centroids`, converted) and `permit_parcels` (from `link_parcels`, converted) are **NOT**
+read anywhere in this file — confirmed by direct read, not assumed; no seam there.
 
 **Consumers of this step's writes (downstream, not yet converted):** `compute-build-norms.js`,
 `compute-coa-cost-estimates.js`, `compute-cost-estimates.js`, `compute-parcel-cost-estimates.js`,
@@ -229,9 +254,13 @@ post-commit standalone), the SET LOCAL pair's exact scope (passes 1-4 only, conf
 exclusion), the B4.5 unguarded write, and the `pipeline_runs` declaration gap (`EP-D5`). Clock: 11
 elapsed-only `Date.now()` sites (legal), 5 DB-clock reads (correct pattern), 1 genuinely
 clock-relative gate (`:1114`, MANDATORY seam rewrite per Fold G3, not optional). Network: absent.
-argv/env: 1 `--full` flag, both spellings on one line, matches manifest declaration. Producer seams:
-1 live edge against an already-converted step (`link_massing`), smaller than pilot 8's 3 because
-this step's other producers are not yet converted — declared honestly rather than inflated.
+argv/env: 1 `--full` flag, both spellings on one line, matches manifest declaration. Producer seams
+(corrected commit 4b): 8 producers, ledger-tool-derived (`stepUpstreams('enrich_parcels',
+{chain:'sources'})`, byte-identical to `data-lineage-map.md`'s own row), of which only
+`link_massing` is converted — smaller than pilot 8's 3 new seams because this step's other 7
+same-chain producers are not yet converted. `permits`/`neighbourhood_build_norms` are real reads but
+NOT same-chain producers of `sources` (they run in the `permits` chain) — declared as
+`inputs.reads.tables`, not `inputs.reads.steps`, at commit 7.
 
 ---
 
