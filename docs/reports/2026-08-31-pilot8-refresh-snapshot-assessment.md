@@ -693,7 +693,7 @@ This report's every executed claim was independently re-executed (not re-read) b
 | 8 | refresh_snapshot | PASS | G-4: 2 declared, 0 verdict-affecting, 0 violate on_invalid:fail with no deviations[] cover |
 | 4 | (registry) | PASS | overlap: none |
 | 5 | (registry) | PASS | clean (0 it.fails( call sites outside a declared pending slug) |
-| 9 | (registry) | PASS | clean (0 converted slugs blocked by an unmet cutover_prereq item; blocks batching: 9) |
+| 9 | (registry) | PASS | clean (0 converted slugs blocked by an unmet cutover_prereq item; blocks batching: 8) |
 
 ### Captures (item iv)
 - missing invocations: none
@@ -701,7 +701,7 @@ This report's every executed claim was independently re-executed (not re-read) b
 - compare ran: true · diffs found: 732 · unexplained: 0
 
 ### Test suite (item iii)
-- 763/779 passed (suite success=true)
+- 769/786 passed (suite success=false)
 
 ### Policy coverage matrix (item vi) — Spec 124 Rules 1-13
 

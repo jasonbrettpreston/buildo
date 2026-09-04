@@ -592,18 +592,20 @@
       "title": "4 new state tables",
       "promised": "4 new tables at migrations 245-248: pipeline_intervals, published_batch, step_error, step_quarantine",
       "status": "NOT_STARTED",
-      "evidence": "migrations/ 240-245 exist, but 245 is parcels_centroid_geom_invalidation.sql (pilot 6's unrelated fix); 0 hits for pipeline_intervals/published_batch/step_error/step_quarantine in any migrations/*.sql",
+      "evidence": "migrations/ 240-245 exist, 246 does not (no published_batch table). RECLASSIFIED 2026-09-03 — WF1 'state tables reset' Fold A operator ruling (.cursor/wf1_state_tables_reset_active_task.md Fold A item 2): outputs.publish/recovery.rollback \"pointer\" are schema enums with ZERO implementation (step.schema.json:987, index.js:45 comment only) and grep '\"publish\"' scripts/*.descriptor.json -> all 7 real declarers (assert_schema has outputs:\"none\", ASSERT profile) say \"direct\", 0 say \"pointer\" — published_batch has no writer without a pointer-publish producer, so migration 246 is deferred until one exists rather than landing with an unimplemented owner. Reclassified batching_prereq -> cutover_prereq with applies_when so it structurally cannot block today's freeze-after-the-eighth decision (0 converted slugs declare outputs.publish:\"pointer\") but is armed the moment blocks[] names a slug that does. The published_batch column shape is recorded as FIRST-DESIGN text at docs/specs/01-pipeline/122_pipeline_step_optimization.md §7.5a (2026-09-03), cross-referencing the §7.4 A3 reconcile rollback sentence (:1066) that will own it.",
       "owner": {
         "kind": "wf",
         "ref": "wf: programme-STA-1"
       },
       "gate": {
-        "kind": "batching_prereq",
-        "blocks": [
-          "batching"
-        ]
+        "kind": "cutover_prereq",
+        "blocks": [],
+        "applies_when": {
+          "descriptor_path": "outputs.publish",
+          "equals": "pointer"
+        }
       },
-      "last_reviewed": "2026-08-29"
+      "last_reviewed": "2026-09-03"
     },
     {
       "id": "STA-2",

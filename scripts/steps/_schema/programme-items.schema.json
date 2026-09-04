@@ -98,8 +98,18 @@
           "then": { "properties": { "gate": { "properties": { "blocks": { "contains": { "const": "batching" } } } } } }
         },
         {
+          "$comment": "RS-D-STA follow-on (2026-09-03, WF1 'state tables reset'). A cutover_prereq normally names the slug(s) it blocks (minItems 1). A FORWARD-DECLARED cutover_prereq — a real requirement with applies_when-declared applicability but ZERO current victims (e.g. STA-1: no descriptor declares outputs.publish:\"pointer\" yet) — may declare blocks:[] instead, on the condition that applies_when is present: the item is armed the moment a future descriptor's blocks[] entry is added, never silently unenforceable. blocks:[] with no applies_when stays illegal (indistinguishable from a mis-typed nice_to_have).",
           "if": { "properties": { "gate": { "properties": { "kind": { "const": "cutover_prereq" } } } } },
-          "then": { "properties": { "gate": { "properties": { "blocks": { "minItems": 1 } } } } }
+          "then": {
+            "properties": {
+              "gate": {
+                "anyOf": [
+                  { "properties": { "blocks": { "minItems": 1 } } },
+                  { "required": ["applies_when"] }
+                ]
+              }
+            }
+          }
         },
         {
           "if": { "properties": { "owner": { "properties": { "kind": { "const": "none" } } } } },

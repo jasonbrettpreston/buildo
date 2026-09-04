@@ -15,9 +15,9 @@ Total items: **78**
 | ✅ BUILT | 39 |
 | ⏭️ SUPERSEDED | 2 |
 
-**blocks batching: 9**
+**blocks batching: 8**
 
-## Batching prerequisite — blocks "freeze after the eighth" (Spec 122 §8.2/§10.3) (9)
+## Batching prerequisite — blocks "freeze after the eighth" (Spec 122 §8.2/§10.3) (8)
 
 | id | spec | title | status | owner | blocks | last reviewed |
 |---|---|---|---|---|---|---|
@@ -25,16 +25,16 @@ Total items: **78**
 | `STD-8` | 122 §8.2 | freeze the template after the eighth, never the first | ⬜ NOT_STARTED | wf: wf: programme-STD-8 | batching | 2026-08-29 |
 | `LDG-4` | 122 §6.3 | stepUpstreams(slug) derived from the ledger | ✅ BUILT | wf: wf: cross-step ledger (WF1), commits 1-6, 2026-09-03 | batching | 2026-09-03 |
 | `LC-1` | 122 §4.1 (Spec 120 §4) | ~35 step lifecycle behaviours | ⚠️ PARTIAL | pilot: pilot7_refresh_snapshot | batching | 2026-08-29 |
-| `STA-1` | 120 §6 | 4 new state tables | ⬜ NOT_STARTED | wf: wf: programme-STA-1 | batching | 2026-08-29 |
 | `PRG-3` | 122 §7.2 | pilot order rulings | ⚠️ PARTIAL | pilot: pilot 6 cutover, d9057a54 | batching | 2026-08-29 |
 | `PRG-10` | 122 §8.2 | freeze after the eighth - no formal batching mechanism (repeat of STD-8) | ⬜ NOT_STARTED | wf: wf: programme-STD-8 | batching | 2026-08-29 |
 | `WD-1` | 122 §1.4 | class-enum-without-write.js-branch lock | ⬜ NOT_STARTED | wf: wf: programme-WD1 | batching | 2026-08-29 |
 | `ADMIN-1` | 124 §2 Rule 3 | admin GROUPS reverse-coverage — every unclassified seed key gets a real group or a reviewed hidden reason | ⬜ NOT_STARTED | wf: wf: programme-ADMIN-1 | batching | 2026-09-03 |
 
-## Cutover prerequisite — blocks a specific pilot slug registering in converted.json (3)
+## Cutover prerequisite — blocks a specific pilot slug registering in converted.json (4)
 
 | id | spec | title | status | owner | blocks | last reviewed |
 |---|---|---|---|---|---|---|
+| `STA-1` | 120 §6 | 4 new state tables | ⬜ NOT_STARTED | wf: wf: programme-STA-1 | — | 2026-09-03 |
 | `STA-2` | 120 §6b | reset generated per archetype | ⬜ NOT_STARTED | wf: wf: programme-STA-2 | refresh_snapshot | 2026-09-03 |
 | `STA-3` | 120 §6b | 3 destructive-reset guards | ⬜ NOT_STARTED | wf: wf: programme-STA-2 | refresh_snapshot | 2026-09-03 |
 | `CLOUDPARITY` | 122 R-D | cloud database must run apply-logic-variables.js before any cloud cutover | ⚠️ PARTIAL | followup: review_followups.md HIGH ops entry (filed 2026-08-27, peel 8c) | cloud_deploy | 2026-08-29 |
@@ -112,4 +112,4 @@ Total items: **78**
 
 ---
 
-*Freeze-readiness (Spec 122 §8.2/§10.3): the template may honestly "freeze after the eighth" only when the batching_prereq set above is EMPTY. Currently **9** item(s) block it.*
+*Freeze-readiness (Spec 122 §8.2/§10.3): the template may honestly "freeze after the eighth" only when the batching_prereq set above is EMPTY. Currently **8** item(s) block it.*

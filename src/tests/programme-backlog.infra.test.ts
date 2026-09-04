@@ -54,6 +54,10 @@ interface ProgrammeItem {
 const raw = JSON.parse(fs.readFileSync(ITEMS_PATH, 'utf8')) as { contract_version: number; items: ProgrammeItem[] };
 const ITEMS: ProgrammeItem[] = raw.items;
 
+/** The committed converted-slug file list (scripts/steps/_schema/converted.json), for section 8's STA-1 corpus check. */
+const CONVERTED_PATH = path.join(REPO_ROOT, 'scripts/steps/_schema/converted.json');
+const CONVERTED: string[] = (JSON.parse(fs.readFileSync(CONVERTED_PATH, 'utf8')).converted as string[]).map((f) => f.replace(/\\/g, '/'));
+
 // ---------------------------------------------------------------------------
 // 1. Schema validity (AJV — the same library scripts/lib/step/validate.js uses)
 // ---------------------------------------------------------------------------
@@ -445,5 +449,69 @@ describe('checkCutoverPrereqs predicate — gate.applies_when (RS-D-STA)', () =>
     const itemNoAppliesWhen: ProgrammeItem = { ...baseItem, gate: { kind: 'cutover_prereq', blocks: ['some_slug'] } };
     const descriptorsBySlug = { some_slug: { recovery: { reset: 'anything at all' } } };
     expect(checkCutoverPrereqsMirror(['some_slug'], [itemNoAppliesWhen], descriptorsBySlug)).toHaveLength(1);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// 8. STA-1 (WF1 "state tables reset", 2026-09-03) — reclassified batching_prereq
+//    -> cutover_prereq with applies_when: {descriptor_path: "outputs.publish",
+//    equals: "pointer"} and blocks: [] (a FORWARD-DECLARED prerequisite — real,
+//    but armed against zero current victims because no descriptor declares
+//    outputs.publish:"pointer" today; schema RS-D-STA follow-on permits
+//    cutover_prereq blocks:[] exactly when applies_when is present).
+//
+//    checkCutoverPrereqsMirror only checks a slug present in gate.blocks[], so
+//    the REAL STA-1 item (blocks: []) cannot be exercised end-to-end against a
+//    real converted slug — this proves the applies_when CONDITION ITSELF
+//    correctly discriminates "outputs.publish" using a fixture item shaped
+//    identically to STA-1 but with blocks naming a slug, the same technique
+//    section 7 above uses for STA-2/STA-3's "recovery.reset" condition.
+// ---------------------------------------------------------------------------
+
+describe('STA-1 — outputs.publish:"pointer" applies_when condition (RS-D-STA follow-on)', () => {
+  const sta1Shaped: ProgrammeItem = {
+    id: 'FIXTURE-STA-1',
+    spec: '120 §6',
+    title: 'fixture mirror of STA-1\'s own gate shape',
+    promised: 'p',
+    status: 'NOT_STARTED',
+    evidence: 'e',
+    owner: { kind: 'wf', ref: 'r' },
+    gate: { kind: 'cutover_prereq', blocks: ['fixture_pointer_publisher'], applies_when: { descriptor_path: 'outputs.publish', equals: 'pointer' } },
+    last_reviewed: '2026-09-03',
+  };
+
+  it('RED — a fixture descriptor with outputs.publish:"pointer" trips the gate', () => {
+    const descriptorsBySlug = { fixture_pointer_publisher: { outputs: { publish: 'pointer' } } };
+    expect(checkCutoverPrereqsMirror(['fixture_pointer_publisher'], [sta1Shaped], descriptorsBySlug)).toHaveLength(1);
+  });
+
+  it('GREEN — the same gate does NOT trip for a "direct" publisher', () => {
+    const descriptorsBySlug = { fixture_pointer_publisher: { outputs: { publish: 'direct' } } };
+    expect(checkCutoverPrereqsMirror(['fixture_pointer_publisher'], [sta1Shaped], descriptorsBySlug)).toHaveLength(0);
+  });
+
+  it('GREEN — not for the 8 real converted descriptors: none declares outputs.publish:"pointer" (assert_schema has no outputs at all, ASSERT profile)', () => {
+    for (const relFile of CONVERTED) {
+      const descriptor = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, relFile.replace(/\.js$/, '.descriptor.json')), 'utf8')) as { outputs: 'none' | { publish: string } };
+      const publish = descriptor.outputs === 'none' ? undefined : descriptor.outputs.publish;
+      expect(publish, `${relFile}: expected outputs.publish to be undefined ("none" archetype) or "direct", never "pointer"`).not.toBe('pointer');
+    }
+    // Re-run the SAME mirror against the real corpus, so the assertion above and the
+    // mechanism this suite locks agree with each other, not just with a hand-read grep.
+    const descriptorsBySlug: Record<string, unknown> = {};
+    const item: ProgrammeItem = { ...sta1Shaped, gate: { ...sta1Shaped.gate, blocks: CONVERTED.map((f) => f) } };
+    CONVERTED.forEach((relFile) => {
+      descriptorsBySlug[relFile] = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, relFile.replace(/\.js$/, '.descriptor.json')), 'utf8'));
+    });
+    expect(checkCutoverPrereqsMirror(CONVERTED, [item], descriptorsBySlug)).toEqual([]);
+  });
+
+  it('the REAL STA-1 entry in programme-items.json carries exactly this reclassified shape', () => {
+    const sta1 = ITEMS.find((i) => i.id === 'STA-1');
+    expect(sta1, 'STA-1 must still exist in programme-items.json').toBeDefined();
+    expect(sta1!.gate.kind).toBe('cutover_prereq');
+    expect(sta1!.gate.blocks).toEqual([]);
+    expect(sta1!.gate.applies_when).toEqual({ descriptor_path: 'outputs.publish', equals: 'pointer' });
   });
 });

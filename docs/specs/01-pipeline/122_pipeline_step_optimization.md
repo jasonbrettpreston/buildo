@@ -1071,6 +1071,25 @@ Migrations **245–248 are free** — 244 is the highest `[MEASURED]`. Sequencin
 
 ⚠️ **But the claims do not relax.** `pipeline_intervals` (#103–#106, and #74 — `--backfill` has *no implementation at all* without it) · `published_batch` (#107, #108, #123) · `step_error` (#67, #84, #195, #196, #253) · `step_quarantine` (#62, #192). **"Optional" means deferrable to the second wave, not unnecessary.** Say it that way in the plan, or the tables never get built.
 
+### 7.5a `published_batch` column shape — FIRST DESIGN (2026-09-03, WF1 "state tables reset")
+
+⚠️ **This is FIRST-DESIGN TEXT, not a derivation from an existing mechanism.** `outputs.publish`/`recovery.rollback` are `step.schema.json` enums (`"direct" | "pointer"` and `"pointer" | "none"` respectively) with **zero live implementation** — the only trace of `"pointer"` anywhere in `scripts/lib/step/index.js` is a comment at `:45`, and every one of the 7 real descriptors that declares `outputs.publish` (`assert_schema`'s ASSERT profile forces `outputs: "none"`) says `"direct"`. There is no existing pointer-publish producer this shape generalises from; it is proposed here so the eventual §7.4 A3 `reconcile` step (:1066, *"It also owns `published_batch` rollback, which is otherwise ownerless"*) has a concrete table to design its rollback query against, and so migration 246 can land in one commit alongside that rollback rather than shipping a table with an unimplemented owner (the same reasoning `reconcile-runs.js:135-175`'s `TABLE_EXISTS_ROLLBACK_NOT_IMPLEMENTED` FAIL branch exists to prevent).
+
+Proposed columns, deferred until a descriptor declares `outputs.publish: "pointer"` (programme item `STA-1`, `scripts/steps/_schema/programme-items.json`, `cutover_prereq` / `applies_when: {descriptor_path: "outputs.publish", equals: "pointer"}`):
+
+| column | type | notes |
+|---|---|---|
+| `id` | `bigserial primary key` | |
+| `pipeline_run_id` | `bigint not null references pipeline_runs(id)` | the producing run |
+| `target` | `text not null` | the published table/pointer name |
+| `batch_id` | `text not null` | the batch this run published |
+| `previous_batch_id` | `text null` | the pointer this batch superseded, if any |
+| `published_at` | `timestamptz not null default now()` | |
+| `rolled_back_at` | `timestamptz null` | set by §7.4's `reconcile` step when the producing run is reaped as `crashed` |
+| `rollback_reason` | `text null` | e.g. `"producing run crashed"` |
+
+Unique `(target, batch_id)`; index on `pipeline_run_id`. `reconcile`'s rollback query (§7.4) is expected to read `UPDATE published_batch SET rolled_back_at = …, rollback_reason = … WHERE pipeline_run_id = ANY(<reaped run ids>) AND rolled_back_at IS NULL`, on the same `PoolClient` as the reap, per §7.2's WAP rule.
+
 ---
 
 ## 8. The conversion process
