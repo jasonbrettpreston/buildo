@@ -10,9 +10,9 @@ Total items: **78**
 
 | status | count |
 |---|---|
-| ⬜ NOT_STARTED | 18 |
+| ⬜ NOT_STARTED | 17 |
 | ⚠️ PARTIAL | 19 |
-| ✅ BUILT | 39 |
+| ✅ BUILT | 40 |
 | ⏭️ SUPERSEDED | 2 |
 
 **blocks batching: 8**
@@ -35,7 +35,7 @@ Total items: **78**
 | id | spec | title | status | owner | blocks | last reviewed |
 |---|---|---|---|---|---|---|
 | `STA-1` | 120 §6 | 4 new state tables | ⬜ NOT_STARTED | wf: wf: programme-STA-1 | — | 2026-09-03 |
-| `STA-2` | 120 §6b | reset generated per archetype | ⬜ NOT_STARTED | wf: wf: programme-STA-2 | refresh_snapshot | 2026-09-03 |
+| `STA-2` | 120 §6b | reset generated per archetype | ✅ BUILT | wf: wf: programme-STA-2 | refresh_snapshot | 2026-09-03 |
 | `STA-3` | 120 §6b | 3 destructive-reset guards | ⬜ NOT_STARTED | wf: wf: programme-STA-2 | refresh_snapshot | 2026-09-03 |
 | `CLOUDPARITY` | 122 R-D | cloud database must run apply-logic-variables.js before any cloud cutover | ⚠️ PARTIAL | followup: review_followups.md HIGH ops entry (filed 2026-08-27, peel 8c) | cloud_deploy | 2026-08-29 |
 

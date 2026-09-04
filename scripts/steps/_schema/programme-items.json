@@ -612,8 +612,8 @@
       "spec": "120 §6b",
       "title": "reset generated per archetype",
       "promised": "reset generated per archetype (a library mechanism that produces reset SQL from outputs/recovery.reset)",
-      "status": "NOT_STARTED",
-      "evidence": "no reset-SQL generator function anywhere in scripts/lib/step/index.js or write.js; recovery.reset is a declared field only, never derived. Measured against refresh_snapshot (pilot 8, 2026-09-03): its recovery.reset is prose, not \"generated\" (scripts/refresh-snapshot.descriptor.json:309-310); compute has zero DELETE/TRUNCATE (grep -niE \"delete|truncate\" scripts/lib/compute/refresh-snapshot.js -> 0 hits); step.schema.json's RECORDER x-profile (:1686-1694) imposes no recovery.reset constraint at all — this gate does not apply to it.",
+      "status": "BUILT",
+      "evidence": "BUILT 2026-09-03, WF1 'state tables reset' commit 2: scripts/lib/step/reset.js generateReset(descriptor) reads recovery.reset and, for \"generated\", derives DELETE/UPDATE-SET-NULL reset SQL per outputs.writes[] entry via write.buildWritePlan; dry-run by default. Exported from scripts/lib/step/index.js. Conformance in src/tests/step-conformance.infra.test.ts (describe 'STA-2 — generateReset'): 0 real descriptors declare \"generated\" today (vacuous, per this item's own prior evidence, unchanged), so non-vacuity is proven on fixture descriptors — a retract:\"all\" fixture and a set_based_null_retract fixture both round-trip to >=1 statement, and a RED-first negative fixture (retract:\"departed\") throws naming the table/index/class. Spec 122 §7.5b documents the mechanism same commit.",
       "owner": {
         "kind": "wf",
         "ref": "wf: programme-STA-2"

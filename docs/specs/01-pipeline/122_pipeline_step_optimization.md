@@ -1090,6 +1090,12 @@ Proposed columns, deferred until a descriptor declares `outputs.publish: "pointe
 
 Unique `(target, batch_id)`; index on `pipeline_run_id`. `reconcile`'s rollback query (§7.4) is expected to read `UPDATE published_batch SET rolled_back_at = …, rollback_reason = … WHERE pipeline_run_id = ANY(<reaped run ids>) AND rolled_back_at IS NULL`, on the same `PoolClient` as the reap, per §7.2's WAP rule.
 
+### 7.5b `generateReset(descriptor)` — STA-2 closes the "declared field only" gap (2026-09-03, WF1 "state tables reset")
+
+`recovery.reset` (`step.schema.json:1480`) has carried the `"generated"` enum member since Spec 120 with no mechanism deriving SQL from it — every live MATERIALIZER/BACKFILL descriptor satisfies the `reset != "none"` MATERIALIZER/BACKFILL profile requirement (§8.1's per-step table) with a PROSE string instead. `scripts/lib/step/reset.js generateReset(descriptor)` is the mechanism: reads `recovery.reset` and, when it is `"generated"`, derives reset SQL for every destructive `outputs.writes[]` entry by calling `write.buildWritePlan` — the SAME codegen path §1.4/§8.2's `write_discipline` classes already use for a live run's own retraction, never a second drifting implementation. It supports exactly two write shapes: `retract: "all"` (`DELETE FROM <table> WHERE <scope>`) and `write_discipline.class: "set_based_null_retract"` (`UPDATE <table> SET <cols> = NULL WHERE <scope>`) — never `TRUNCATE`. Every other shape (`retract: "departed"`, and every descriptive-only class whose SQL is compute-authored) THROWS naming the table/index/class rather than emitting the wrong statement. `generateReset` is dry-run by default; it never opens a client or executes anything.
+
+Today this is **vacuously exercised**: 0 descriptors declare `recovery.reset: "generated"` (§7.5's own honest posture — both live MATERIALIZER/BACKFILL steps satisfy the profile with prose). Non-vacuity is proven on fixture descriptors in `src/tests/step-conformance.infra.test.ts` (STA-2), including a RED-first negative fixture (`retract: "departed"`) proving the refusal fires rather than silently producing a wrong statement.
+
 ---
 
 ## 8. The conversion process

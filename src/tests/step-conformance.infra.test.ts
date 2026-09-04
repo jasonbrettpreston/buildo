@@ -2371,3 +2371,184 @@ describe('PH-2 churn×complexity BATCH artifact (G2) — coverage + drift', () =
     expect(run.stderr + run.stdout).toContain('DRIFT');
   });
 });
+
+// ---------------------------------------------------------------------------
+// STA-2 (WF1 "state tables reset", 2026-09-03) — generateReset(descriptor)
+// round-trips every descriptor whose recovery.reset is "generated".
+//
+// Programme item STA-2 (scripts/steps/_schema/programme-items.json) measured 0
+// hits for a reset-SQL generator anywhere in scripts/lib/step/ — recovery.reset
+// was a declared field only, never derived. scripts/lib/step/reset.js is the
+// generator this closes the gap with. The real corpus is VACUOUSLY green today:
+// every converted MATERIALIZER/BACKFILL step's recovery.reset is a PROSE string
+// (Spec 122 §7.5's own honest posture — "Both live MATERIALIZER/BACKFILL steps
+// satisfy reset != none with prose, not generated"), so 0 real descriptors
+// declare "generated" and the round-trip loop below has nothing to iterate.
+// Non-vacuity is proven by two FIXTURE descriptors (one per supported reset
+// shape) plus a RED-first negative fixture proving the generator refuses a
+// write shape it cannot express, rather than silently emitting the wrong SQL.
+// ---------------------------------------------------------------------------
+describe('STA-2 — generateReset(descriptor) round-trips recovery.reset === "generated"', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports -- the real CJS reset module
+  const resetLib = require(path.join(REPO_ROOT, 'scripts/lib/step/reset.js'));
+
+  interface ResetDescriptor {
+    identity: { name: string };
+    recovery: 'none' | { reset: string };
+    outputs: 'none' | { writes: unknown[] };
+  }
+
+  it('the real corpus is vacuously green — 0 converted descriptors declare recovery.reset "generated" today', () => {
+    const declarers = CONVERTED.filter((f) => {
+      const d = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, `${f.slice(0, -3)}.descriptor.json`), 'utf8')) as ResetDescriptor;
+      return d.recovery !== 'none' && d.recovery.reset === 'generated';
+    });
+    expect(declarers, 'a descriptor now declares "generated" — the fixture-only proof below is no longer the only coverage; extend this suite to iterate the real one too').toEqual([]);
+  });
+
+  it('every real converted descriptor round-trips generateReset without throwing (kind "none" or "declared_prose" today)', () => {
+    for (const f of CONVERTED) {
+      const d = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, `${f.slice(0, -3)}.descriptor.json`), 'utf8')) as ResetDescriptor;
+      const result = resetLib.generateReset(d);
+      expect(['none', 'declared_prose'], `${f}: recovery.reset "${d.recovery === 'none' ? 'none (archetype)' : d.recovery.reset}" produced unexpected kind "${result.kind}"`).toContain(result.kind);
+      expect(result.statements).toEqual([]);
+    }
+  });
+
+  it('NON-VACUITY — a fixture descriptor declaring "generated" with a retract:"all" target produces >=1 DELETE statement', () => {
+    const fixture = {
+      identity: { name: 'fixture_generated_reset_delete' },
+      recovery: { reset: 'generated' },
+      outputs: {
+        writes: [{
+          table: 'fixture_reset_table',
+          key: 'id',
+          key_sql_type: 'BIGINT',
+          columns: [
+            { name: 'id', vocabulary: 'none', written: 'step', bind: 'value' },
+            { name: 'val', vocabulary: 'none', written: 'step', bind: 'value' },
+          ],
+          write_discipline: {
+            class: 'guarded_upsert',
+            guard: 'is_distinct_from',
+            guard_columns: ['val'],
+            scope: "batch_id = 'fixture-batch'",
+            expected_change_ratio: 'none',
+            idempotent_rerun: 'zero_writes',
+            txn_scope: 'batch',
+          },
+          retract: 'all',
+          retract_when: 'always',
+          replay: 'idempotent_upsert',
+        }],
+      },
+    };
+    const result = resetLib.generateReset(fixture);
+    expect(result.kind).toBe('generated');
+    expect(result.statements).toHaveLength(1);
+    expect(result.statements[0].kind).toBe('delete_all');
+    expect(result.statements[0].sql).toBe("DELETE FROM fixture_reset_table WHERE batch_id = 'fixture-batch';");
+    expect(result.statements[0].sql).not.toMatch(/TRUNCATE/i);
+  });
+
+  it('NON-VACUITY — a fixture descriptor declaring "generated" with a set_based_null_retract target produces >=1 UPDATE...SET NULL statement', () => {
+    const fixture = {
+      identity: { name: 'fixture_generated_reset_null' },
+      recovery: { reset: 'generated' },
+      outputs: {
+        writes: [{
+          table: 'fixture_flag_table',
+          key: 'id',
+          key_sql_type: 'BIGINT',
+          columns: [{ name: 'flag_col', vocabulary: 'none', written: 'step', bind: 'value', set_value: null }],
+          write_discipline: {
+            class: 'set_based_null_retract',
+            guard: 'none',
+            guard_columns: [],
+            scope: 'flag_col IS NOT NULL',
+            expected_change_ratio: 'none',
+            idempotent_rerun: 'zero_writes',
+            txn_scope: 'statement',
+          },
+          retract: 'none',
+          replay: 'idempotent_upsert',
+        }],
+      },
+    };
+    const result = resetLib.generateReset(fixture);
+    expect(result.kind).toBe('generated');
+    expect(result.statements).toHaveLength(1);
+    expect(result.statements[0].kind).toBe('set_null');
+    expect(result.statements[0].sql).toBe('UPDATE fixture_flag_table SET flag_col = null WHERE flag_col IS NOT NULL;');
+  });
+
+  it('RED — a fixture descriptor declaring "generated" with a write class the generator does not support (retract:"departed") THROWS', () => {
+    const fixture = {
+      identity: { name: 'fixture_bad_generated_reset' },
+      recovery: { reset: 'generated' },
+      outputs: {
+        writes: [{
+          table: 'fixture_departed_table',
+          key: 'source_id',
+          key_sql_type: 'BIGINT',
+          columns: [
+            { name: 'source_id', vocabulary: 'none', written: 'step', bind: 'value' },
+            { name: 'val', vocabulary: 'none', written: 'step', bind: 'value' },
+          ],
+          write_discipline: {
+            class: 'upsert_scoped_departure_delete',
+            guard: 'is_distinct_from',
+            guard_columns: ['val'],
+            scope: 'none',
+            expected_change_ratio: '<= 0.5',
+            idempotent_rerun: 'zero_writes',
+            txn_scope: 'step',
+          },
+          retract: 'departed',
+          replay: 'idempotent_upsert',
+        }],
+      },
+    };
+    expect(() => resetLib.generateReset(fixture)).toThrow(/retract "departed" is not one of the two reset shapes this generator supports/);
+    expect(() => resetLib.generateReset(fixture)).toThrow(/fixture_bad_generated_reset outputs\.writes\[0\]/);
+    expect(() => resetLib.generateReset(fixture)).toThrow(/never TRUNCATE|never reach for TRUNCATE/);
+  });
+
+  it('a target with retract "none" and an ordinary class produces NO statement (nothing destructive to reset)', () => {
+    const fixture = {
+      identity: { name: 'fixture_generated_reset_noop' },
+      recovery: { reset: 'generated' },
+      outputs: {
+        writes: [{
+          table: 'fixture_upsert_only_table',
+          key: 'id',
+          key_sql_type: 'BIGINT',
+          columns: [
+            { name: 'id', vocabulary: 'none', written: 'step', bind: 'value' },
+            { name: 'val', vocabulary: 'none', written: 'step', bind: 'value' },
+          ],
+          write_discipline: {
+            class: 'guarded_upsert',
+            guard: 'is_distinct_from',
+            guard_columns: ['val'],
+            scope: 'none',
+            expected_change_ratio: 'none',
+            idempotent_rerun: 'zero_writes',
+            txn_scope: 'batch',
+          },
+          retract: 'none',
+          replay: 'idempotent_upsert',
+        }],
+      },
+    };
+    const result = resetLib.generateReset(fixture);
+    expect(result.kind).toBe('generated');
+    expect(result.statements).toEqual([]);
+  });
+
+  it('recovery.reset "none" and a prose string both round-trip to 0 statements, never throwing', () => {
+    expect(resetLib.generateReset({ recovery: { reset: 'none' } })).toEqual({ kind: 'none', execute: false, statements: [] });
+    expect(resetLib.generateReset({ recovery: { reset: 'TRUNCATE is never correct here — re-run instead' } }))
+      .toEqual({ kind: 'declared_prose', execute: false, statements: [] });
+  });
+});
