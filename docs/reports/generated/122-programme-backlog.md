@@ -6,11 +6,11 @@
 
 ## Counts
 
-Total items: **80**
+Total items: **82**
 
 | status | count |
 |---|---|
-| ⬜ NOT_STARTED | 15 |
+| ⬜ NOT_STARTED | 17 |
 | ⚠️ PARTIAL | 17 |
 | ✅ BUILT | 44 |
 | ⏭️ SUPERSEDED | 4 |
@@ -27,7 +27,7 @@ Total items: **80**
 | `WD-1` | 122 §1.4 | class-enum-without-write.js-branch lock | ⬜ NOT_STARTED | wf: wf: programme-WD1 | batching | 2026-08-29 |
 | `ADMIN-1` | 124 §2 Rule 3 | admin GROUPS reverse-coverage — every unclassified seed key gets a real group or a reviewed hidden reason | ⬜ NOT_STARTED | wf: wf: programme-ADMIN-1 | batching | 2026-09-03 |
 
-## Cutover prerequisite — blocks a specific pilot slug registering in converted.json (4)
+## Cutover prerequisite — blocks a specific pilot slug registering in converted.json (6)
 
 | id | spec | title | status | owner | blocks | last reviewed |
 |---|---|---|---|---|---|---|
@@ -35,6 +35,8 @@ Total items: **80**
 | `STA-2` | 120 §6b | reset generated per archetype | ✅ BUILT | wf: wf: programme-STA-2 | refresh_snapshot | 2026-09-03 |
 | `STA-3` | 120 §6b | 3 destructive-reset guards | ✅ BUILT | wf: wf: programme-STA-2 | refresh_snapshot | 2026-09-03 |
 | `CLOUDPARITY` | 122 R-D | cloud database must run apply-logic-variables.js before any cloud cutover | ⚠️ PARTIAL | followup: review_followups.md HIGH ops entry (filed 2026-08-27, peel 8c) | cloud_deploy | 2026-08-29 |
+| `EP-PIN-B45` | 78 §P3C.1/§3.0b | B4.5 pin — pass-4 comps UPDATE has no IS DISTINCT FROM; the comp_count IS NULL incremental predicate never refreshes | ⬜ NOT_STARTED | pilot: pilot9_enrich_parcels | enrich_parcels | 2026-09-04 |
+| `EP-PIN-D8` | 78 §P3C.2 | EP-D8 pin — comp_fsi_p50 has no structure_family/zone compatibility invariant | ⬜ NOT_STARTED | pilot: pilot9_enrich_parcels | enrich_parcels | 2026-09-04 |
 
 ## Nice-to-have — real gap, not currently blocking (71)
 

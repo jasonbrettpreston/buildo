@@ -234,3 +234,96 @@ argv/env: 1 `--full` flag, both spellings on one line, matches manifest declarat
 this step's other producers are not yet converted — declared honestly rather than inflated.
 
 ---
+
+## §4. PH-6 — Classification (commit 4, G6)
+
+> All 27 enumerated DML/DDL statements (commit 1's table) + the 8 defects surfaced across §1-§3
+> classified per Spec 123 §3's three-way split: **CONTRACT** (a downstream consumer depends on it,
+> even if ugly) / **INCIDENTAL** (nothing observes it) / **DEFECT** (a spec or invariant asserts the
+> opposite), plus each pass's write-class mechanic (step.schema.json's 15 lettered mechanics),
+> guard, and `idempotent_rerun`/`recovery.interrupted` disposition per Fold A1/A2.
+
+### The 27 enumerated statements
+
+| # | Statement | Classification | Ground |
+|---|---|---|---|
+| 1-8 | 4× `DROP TABLE IF EXISTS` + `CREATE TEMP TABLE … ON COMMIT DROP AS` (+ GiST index, ANALYZE) | **CONTRACT** — the set-based join CTE fence (`tasks/lessons.md:33`, origin `7e130bff`) and Spec 78 §P3C.1 performance fence | `:424/425,839/840,1047/1048,1107,1138,1139` |
+| 9 | Pass 1 UPDATE, 35 cols + `zoning_enriched_at` stamp (deliberately outside the guard) | **CONTRACT** (guarded ×35) + the stamp itself is **DEFECT-adjacent-by-design** — unguarded but documented (`:122-123`), needs a Rule 9 grandfather entry, not a ledger DEFECT | `:375`, exec `:443` |
+| 10 | Pass 2 UPDATE, 29 cols | **CONTRACT**, guarded ×29 | `:814`, exec `:893` |
+| 11 | `massing_enriched_at` stamp | **DEFECT-adjacent-by-design**, same class as #9 — unguarded, documented (`:824-828`), Rule 9 grandfather | `:831`, exec `:897` |
+| 12-13 | Pass 3 EXISTING (11) + SCENARIO (10) UPDATEs | **CONTRACT**, guarded ×11/×10 | `:1017,1035`, exec `:1068,1069` |
+| 14 | Comps ineligibility reset | **CONTRACT** — the "gated pass never revisits a row that loses its gate" fix (`tasks/lessons.md:31`) | `:1213`, exec `:1212` |
+| 15 | `--full`-only comp blanket reset | **DEFECT-adjacent-by-design** — unguarded, but its blast radius (354,679 rows) is B4.5's own subject, folded into `EP-D1` rather than ledgered separately | `:1220` |
+| 16 | Pass 4 comps UPDATE | **DEFECT — `EP-D1` (B4.5)** — no `IS DISTINCT FROM` at all | `:1146`, exec `:1225` |
+| 17 | `comp_count = 0` zero-fill | **CONTRACT-with-a-consequence** — correct in itself (an honest "processed" marker), but it is what makes the incremental comps refresh a permanent no-op; folded into `EP-D1`'s second half, not a separate ledger row | `:1229`, exec `:1228` |
+| 18-19 | `SET LOCAL statement_timeout`/`lock_timeout` (passes 1-4 only) | **CONTRACT** — the WF3 stall bounded-terminal fence (`c7b20ac9`) | `:2047,2048` |
+| 20 | `INSERT INTO enrich_parcels_pass3_scope … ON CONFLICT DO NOTHING` | **CONTRACT** — scope-defer ledger, mig 240 (`e8793c8f`) | `:2078`, exec `:2077` |
+| 21 | Pass 5 ineligibility reset (11 cols → NULL) | **CONTRACT** — Spec 78 §P3A.1, `tasks/lessons.md:31`'s gated-reset fence | `:1662`, exec `:1661` |
+| 22 | Pass 5 batched `WITH incoming(…) AS (VALUES …) … UPDATE` | **CONTRACT for the mechanic; DEFECT for the guard** — `EP-D3` is a different defect (verdict), but the `OR nearby_changed` guard is a **DEFECT** in its own right, folded here as the pass-5 half of the idempotency table below (not separately ledgered — Fold A1 already names it `declared_drift`, a declared/accepted non-idempotency, not a bug) | `:1447`, exec `:1464` |
+| 23-24 | `enrich_parcels_pass3_scope.consumed_at` bulk + per-parcel flip | **CONTRACT** | `:1742,1514` |
+| 25-26 | Heartbeat + stall-diagnostic `pipeline_runs` UPDATEs | **CONTRACT, but undeclared — `EP-D5`** | `:1547,1593` |
+| 27 | `CREATE INDEX comp_cand_gix` / `ANALYZE` | **CONTRACT** | `:1138,1139` |
+
+Zero statements classified **INCIDENTAL** — every one of the 27 either serves a declared purpose a
+downstream consumer or the file's own design comment depends on, or is one of the two open write-
+class DEFECTs (`EP-D1`/the pass-5 guard). Unlike `refresh_snapshot` (a RECORDER whose whole job is
+observation), `enrich_parcels` is an ENRICHER whose whole job is per-parcel mutation — so an
+INCIDENTAL write here would mean dead code, and none was found.
+
+### Per-pass write class, guard, idempotency (Fold A1/A2)
+
+| Pass | Write class (mechanic, letter) | Guard | `idempotent_rerun` | `recovery.interrupted` |
+|---|---|---|---|---|
+| 1 zoning | `temp_materialize` (I) — 35-col UPDATE | `IS DISTINCT FROM` ×35 | `zero_writes` on the 35 guarded cols; `zoning_enriched_at` is a separate unconditional stamp (Rule 9 grandfather, not part of the guarded set) | none declared — mid-txn crash rolls back entirely (single shared txn, passes 1-4) |
+| 2 max-build | `temp_materialize` (I) — 29-col UPDATE + `set_based_scoped`-shaped stamp (G) | `IS DISTINCT FROM` ×29; `massing_enriched_at` stamp UNGUARDED by design | `zero_writes` on the 29 guarded cols; the stamp is `declared_drift` (write count = scope count every run, by design) | none declared — same shared txn |
+| 3 existing+scenarios | `temp_materialize` (I) — two sibling UPDATEs | `IS DISTINCT FROM` + `ROUND(…,2)` for float stability | `zero_writes` | none declared — same shared txn; scope-deferred rows spooled to `enrich_parcels_pass3_scope` are left inside the txn BY DESIGN (crash-recoverable trail, Fold A3) |
+| 4 comparable-builds | `set_based_scoped`/`set_based_unscoped` hybrid (G/H) — scoped but **UNGUARDED** | **NONE** — `WHERE p.id = agg.id` only (`EP-D1`) | **`not_idempotent`** (Fold A1 — takes Ask 4/Fold G1's PIN ruling: `guard:"none"` + `guard_why` + `grandfathered.json` entry, paired with this value) | **`recovery.interrupted`: declared per Fold A2** — the ineligibility reset (#14) is a `set_based_null_retract`-class statement |
+| 5 optimal-config | `derived_recompute` (K) — batched `UPDATE…FROM (VALUES…)` | `IS DISTINCT FROM` ×10 (`genuineGuard`) **OR** `nearby_changed` — the OR makes the guard effectively inert | **SPLIT (Fold A1)**: the 10 genuine `OPTCFG` columns → `zero_writes` (guard proven, `genuineGuard` alone would gate correctly); `nearby_builds_summary` alone → `declared_drift` (measured 88,575/88,575 rows every run, precedent `link_massing` E1) | **`recovery.interrupted`: declared per Fold A2** — the ineligibility reset (#21) is `set_based_null_retract`-class; `enrich_parcels_pass3_scope` rows left in-txn are the crash-recoverable trail this pass consumes on the next run |
+
+### Defect ledger — formally recorded this commit
+
+`docs/reports/defect-ledger.md` gains 8 rows (`EP-D1`-`EP-D8`), all Status/Ground columns cited
+against HEAD `1eaf70ef`. Per Fold G1's pin-then-fix mechanism, `EP-D1` (B4.5) and `EP-D8` (comps
+family invariant) carry **PIN (Spec 123 §3.1) — pinned_until: pilot9 commit 9** in their Status
+column — the same convention as the live `AS-D11`-`AS-D13` rows. The remaining six (`EP-D2`-`EP-D7`)
+are OPEN, each with its own closing commit per the plan's commit-ledger row 4 done-test.
+
+### Programme-items — the two cutover_prereq entries (Fold G1)
+
+`scripts/steps/_schema/programme-items.json` gains `EP-PIN-B45` and `EP-PIN-D8`
+(`gate.kind:"cutover_prereq"`, `blocks:["enrich_parcels"]`, `status:"NOT_STARTED"`,
+`owner:{kind:"pilot",ref:"pilot9_enrich_parcels"}`), schema shape mirroring the live `STA-1` entry
+(re-read this commit as the convention template). This makes Spec 122 §10.3's conservative-blocking
+rule ("a slug whose descriptor cannot be resolved... still blocks") structural for commit 9's
+`converted.json` registration: `checkCutoverPrereqs` will refuse the registration until both items
+flip `BUILT` (i.e. until peels 8x/8y land).
+
+**Proven two ways:**
+
+1. `npm run programme-backlog` (`node scripts/violations/generate-programme-backlog.mjs`) regenerated
+   `docs/reports/generated/122-programme-backlog.md` — the "Cutover prerequisite" section now lists
+   both `EP-PIN-B45` and `EP-PIN-D8` naming `enrich_parcels` in their `blocks` column, alongside the
+   existing `STA-1` row. Re-derivable by anyone re-running the generator; the file is drift-checked
+   by `src/tests/programme-backlog.infra.test.ts`.
+2. Direct call: `checkCutoverPrereqs(['enrich_parcels'], items, {})` (`scripts/analysis/
+   step-validate.mjs:405`) — `enrich_parcels` is not yet in `converted.json`, so the tool's own
+   `--step=enrich_parcels` invocation cannot exercise this path today (commit 1's own finding); this
+   commit instead calls the exported function directly with `enrich_parcels` substituted for the
+   real (post-commit-9) `convertedSlugs` argument, over the items array including the two new
+   entries. Result: 2 violations returned, `{slug:'enrich_parcels', id:'EP-PIN-B45', status:
+   'NOT_STARTED', ...}` and the `EP-PIN-D8` sibling — confirming the mechanism will genuinely fire
+   the moment `enrich_parcels` is added to `converted.json` at commit 9, not merely that the data
+   exists.
+
+### G6 verdict
+
+**CLOSED this commit.** 27/27 statements classified, zero INCIDENTAL (consistent with an ENRICHER's
+whole purpose being per-parcel mutation). 8 DEFECTs opened and ledgered (`EP-D1`-`EP-D8`), 2 of them
+(`EP-D1`, `EP-D8`) formally PINned per Fold G1 with `programme-items.json` cutover-prereq entries
+that structurally block commit 9's `converted.json` registration — proven both via the regenerated
+backlog doc and a direct `checkCutoverPrereqs` invocation. Per-pass write-class/guard/idempotency
+table completed for all 5 passes per Fold A1/A2, including the SPLIT dispositions (pass 2's stamp,
+pass 5's genuine-columns-vs-`nearby_builds_summary` split) that a single per-pass label would have
+hidden.
+
+---
