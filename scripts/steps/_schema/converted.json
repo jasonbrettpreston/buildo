@@ -39,5 +39,13 @@
     "scripts/link-parcels.js",
     "scripts/refresh-snapshot.js"
   ],
-  "pending": []
+  "pending": [
+    {
+      "file": "scripts/enrich-parcels.js",
+      "registers_at": "C1 pilot 9 commit 9 (cutover)",
+      "reason": "PH-7 red suite landed commit 6 (src/tests/steps/enrich_parcels/violations.test.ts, it.fails() call sites); descriptor/compute/library growth land commit 7, advancing stage to shape_clean",
+      "declared": "2026-09-04",
+      "stage": "red_suite"
+    }
+  ]
 }
