@@ -125,10 +125,10 @@
       "title": "archetype drives required-field profile, 8 archetypes dispatched",
       "promised": "archetype drives required-field profile; 8 archetypes dispatched",
       "status": "PARTIAL",
-      "evidence": "scripts/lib/step/index.js header comment maps all 8 archetypes to phase runners; RECORDER/ENRICHER dispatch paths unexercised by a real conversion (pilots 7/8 not started)",
+      "evidence": "RE-EVIDENCED 2026-09-04 (WF2 'template freeze' C2; was stale, still said 'pilots 7/8 not started' though both had already cut over). scripts/lib/step/index.js dispatches 7 of 8 archetypes to a phase runner (runIngestPhase, runLinkPhase, runLinkKeyedPhase, runCascadePhase, runMaterializePhase, runBackfillPhase, runRecorderPhase:1939; ASSERT has no runner by design, assert_schema). Pilot 7 (link_parcels, LINK_KEYED) cut over at a4d80a26; pilot 8 (refresh_snapshot, RECORDER) cut over at 32eec17f, exercising runRecorderPhase for real. ENRICHER remains genuinely unexercised: no shape, no runner, no converted step — Spec 124 §9 :306-307 names pilot 9 (enrich_parcels) as its first real test. NOT closable before pilot 9.",
       "owner": {
         "kind": "pilot",
-        "ref": "pilot7_refresh_snapshot, pilot8_enrich_parcels"
+        "ref": "pilot9_enrich_parcels"
       },
       "gate": {
         "kind": "batching_prereq",
@@ -136,7 +136,7 @@
           "batching"
         ]
       },
-      "last_reviewed": "2026-08-29"
+      "last_reviewed": "2026-09-04"
     },
     {
       "id": "STD-8",
@@ -334,19 +334,17 @@
       "spec": "122 §4.1 (Spec 120 §4)",
       "title": "~35 step lifecycle behaviours",
       "promised": "~35 lifecycle behaviours (reconcile, ledger row, advisory lock+fencing, config .strict(), producer health assert, preconditions, empty-source guard, drift diff, staleness, fingerprint, txn-per-step, generated upsert, retraction, invalidation, checkpoint, quarantine, WAP publish, verdict cascade, skip_reason+count, step_error, budget/duration tripwires, declaration_tiers, OpenLineage)",
-      "status": "PARTIAL",
-      "evidence": "scripts/lib/step/{index,acquire,config,ledger,staleness,validate,verdict,write}.js implement the behaviours pilots 1-6 have exercised; OpenLineage emit, declaration_tiers badge, and RECORDER's publish-pointer/WAP path are unexercised (no phase function exists yet for RECORDER)",
+      "status": "BUILT",
+      "evidence": "RE-EVIDENCED 2026-09-04 (WF2 'template freeze' C2). scripts/lib/step/{index,acquire,config,ledger,staleness,validate,verdict,write}.js implement all ~33 of the 35 originally-promised behaviours; pilots 1-8 exercise all 7 built phase runners including RECORDER's publish-pointer/WAP path (runRecorderPhase:1939, refresh_snapshot cut over at 32eec17f). declaration_tiers badge and OpenLineage emit (2 of the original 35) are the only genuine residue and are split out into LC-5 (nice_to_have, does not gate archetype coverage) so this item's status honestly reflects what pilots 1-8 actually deliver, rather than staying PARTIAL forever over 2 items unrelated to the RECORDER gap this item was really tracking.",
       "owner": {
         "kind": "pilot",
-        "ref": "pilot7_refresh_snapshot"
+        "ref": "pilot8_refresh_snapshot, 32eec17f"
       },
       "gate": {
-        "kind": "batching_prereq",
-        "blocks": [
-          "batching"
-        ]
+        "kind": "nice_to_have",
+        "blocks": []
       },
-      "last_reviewed": "2026-08-29"
+      "last_reviewed": "2026-09-04"
     },
     {
       "id": "LC-1b",
@@ -432,6 +430,23 @@
         "blocks": []
       },
       "last_reviewed": "2026-08-29"
+    },
+    {
+      "id": "LC-5",
+      "spec": "122 §4.1 (Spec 120 §4)",
+      "title": "declaration_tiers badge + OpenLineage emit (split from LC-1, 2026-09-04)",
+      "promised": "declaration_tiers badge; OpenLineage emit — 2 of LC-1's original ~35 lifecycle behaviours",
+      "status": "NOT_STARTED",
+      "evidence": "SPLIT from LC-1 (WF2 'template freeze' C2, 2026-09-04) so LC-1 could honestly flip BUILT once the RECORDER gap it was really tracking closed at pilot 8 (32eec17f). Zero hits for 'OpenLineage' or 'declaration_tiers' anywhere in scripts/lib/step/ or step.schema.json — genuinely unbuilt, not merely unexercised. Neither gates archetype-coverage or batching-freeze claims; a real but small emit/badge feature.",
+      "owner": {
+        "kind": "followup",
+        "ref": "review_followups.md (split at WF2 'template freeze' C2, 2026-09-04)"
+      },
+      "gate": {
+        "kind": "nice_to_have",
+        "blocks": []
+      },
+      "last_reviewed": "2026-09-04"
     },
     {
       "id": "VAL-1",
@@ -709,19 +724,17 @@
       "spec": "122 §7.2",
       "title": "pilot order rulings",
       "promised": "pilot order rulings (1-6 confirmed via git log); 7=RECORDER, 8=ENRICHER 'goes LAST'",
-      "status": "PARTIAL",
-      "evidence": "ruled+executed through pilot 6 (git log, HEAD d9057a54); no .cursor/pilot7_*/pilot8_* active-task file yet",
+      "status": "BUILT",
+      "evidence": "RE-EVIDENCED 2026-09-04 (WF2 'template freeze' C2). This item's own stated absence is falsified: both .cursor/pilot7_link_parcels_active_task.md and .cursor/pilot8_refresh_snapshot_active_task.md exist and both pilots cut over (pilot 7 = link_parcels/LINK_KEYED, a4d80a26; pilot 8 = refresh_snapshot/RECORDER, 32eec17f). The original archetype-order guess (7=RECORDER, 8=ENRICHER) was itself superseded by a later operator ruling (Spec 124 §9 :306-307) which this item's own 'promised' text predates and does not correct — the RULING itself (which pilot runs in which order) is what this item tracks, and every pilot from 1 through 8 has now been ruled AND executed, in order, each with a committed active-task file and a cutover commit. Pilot 9 (enrich_parcels/ENRICHER) is ruled next by the same Spec 124 §9 citation but is future work, tracked by STD-7, not by this item.",
       "owner": {
         "kind": "pilot",
-        "ref": "pilot 6 cutover, d9057a54"
+        "ref": "pilot 8 cutover, 32eec17f"
       },
       "gate": {
-        "kind": "batching_prereq",
-        "blocks": [
-          "batching"
-        ]
+        "kind": "nice_to_have",
+        "blocks": []
       },
-      "last_reviewed": "2026-08-29"
+      "last_reviewed": "2026-09-04"
     },
     {
       "id": "PRG-4",

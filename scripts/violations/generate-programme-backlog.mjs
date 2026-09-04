@@ -65,6 +65,21 @@ function statusBadge(status) {
   return { NOT_STARTED: '⬜ NOT_STARTED', PARTIAL: '⚠️ PARTIAL', BUILT: '✅ BUILT', SUPERSEDED: '⏭️ SUPERSEDED' }[status] ?? status;
 }
 
+/**
+ * How many declared items still block "batching" — G9 defect (WF2 "template
+ * freeze" C1, 2026-09-04), mirrors step-validate.mjs's blocksBatchingCount. A
+ * BUILT/SUPERSEDED item's promise is already delivered; it does not block
+ * anything. The ONE shared implementation every caller in this file uses
+ * (render()'s two printed lines AND main()'s --write console summary) so a
+ * third independent status-blind reimplementation can never creep back in —
+ * exactly what happened once already (main()'s own console line still read
+ * the raw unfiltered count after render() was fixed, caught by inspecting
+ * `--write`'s own console output during C2, not by a test).
+ */
+export function openBatchingCount(items) {
+  return items.filter((it) => it.gate.blocks.includes('batching') && it.status !== 'BUILT' && it.status !== 'SUPERSEDED').length;
+}
+
 function renderTable(items) {
   const lines = ['| id | spec | title | status | owner | blocks | last reviewed |', '|---|---|---|---|---|---|---|'];
   for (const it of items) {
@@ -80,12 +95,11 @@ export function render(items) {
   for (const it of items) {
     byStatus[it.status] = (byStatus[it.status] ?? 0) + 1;
   }
-  // G9 defect (WF2 "template freeze" C1, 2026-09-04, mirrors step-validate.mjs's
-  // blocksBatchingCount): a BUILT/SUPERSEDED item's promise is already delivered —
-  // it does not block anything. Both counts below (the summary line AND the
-  // freeze-readiness line, which used to read the unfiltered byGate.batching_prereq)
-  // now share this one honest, status-filtered set so they can never disagree.
-  const openBatchingPrereq = items.filter((it) => it.gate.blocks.includes('batching') && it.status !== 'BUILT' && it.status !== 'SUPERSEDED').length;
+  // Both counts below (the summary line AND the freeze-readiness line, which
+  // used to read the unfiltered byGate.batching_prereq) share the one honest
+  // openBatchingCount() so they can never disagree with each other or with
+  // main()'s --write console summary.
+  const openBatchingPrereq = openBatchingCount(items);
   const blocksBatching = openBatchingPrereq;
 
   const parts = [];
@@ -143,7 +157,7 @@ function main() {
   }
   fs.mkdirSync(path.dirname(OUT_PATH), { recursive: true });
   fs.writeFileSync(OUT_PATH, rendered);
-  console.log(`[generate-programme-backlog] wrote ${path.relative(ROOT, OUT_PATH)} (${items.length} items, blocks batching: ${items.filter((it) => it.gate.blocks.includes('batching')).length})`);
+  console.log(`[generate-programme-backlog] wrote ${path.relative(ROOT, OUT_PATH)} (${items.length} items, blocks batching: ${openBatchingCount(items)})`);
 }
 
 const isEntry = process.argv[1] && pathToFileURL(process.argv[1]).href === import.meta.url;

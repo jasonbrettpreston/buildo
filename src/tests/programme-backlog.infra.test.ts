@@ -234,6 +234,22 @@ describe('generate-programme-backlog.mjs — render() blocksBatching honesty (G9
     expect(readinessMatch, rendered).not.toBeNull();
     expect(summaryMatch![1]).toBe(readinessMatch![1]);
   });
+
+  it('exported openBatchingCount() is the ONE implementation main()\'s --write console line, render()\'s summary line, and render()\'s freeze-readiness line all share (found live, C2: main()\'s console line still read the raw unfiltered count after render() was fixed — a third independent reimplementation of the same predicate)', async () => {
+    const mod = (await import(pathToFileURL(GENERATOR).href)) as { render: (items: ProgrammeItem[]) => string; openBatchingCount: (items: ProgrammeItem[]) => number };
+    expect(typeof mod.openBatchingCount).toBe('function');
+    const fixture = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, FIXTURE_HONESTY), 'utf8')) as { items: ProgrammeItem[] };
+    expect(mod.openBatchingCount(fixture.items)).toBe(1);
+    expect(mod.openBatchingCount(ITEMS)).toBe(
+      ITEMS.filter((it) => it.gate.blocks.includes('batching') && it.status !== 'BUILT' && it.status !== 'SUPERSEDED').length,
+    );
+    // The CLI's own --write console line uses the same function — spawn it for real
+    // and check the printed count agrees with the exported function over the real data.
+    const out = execFileSync('node', [GENERATOR], { cwd: REPO_ROOT, encoding: 'utf8' });
+    const cliMatch = out.match(/blocks batching: (\d+)\)/);
+    expect(cliMatch, out).not.toBeNull();
+    expect(Number(cliMatch![1])).toBe(mod.openBatchingCount(ITEMS));
+  });
 });
 
 // ---------------------------------------------------------------------------

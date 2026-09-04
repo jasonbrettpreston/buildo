@@ -6,26 +6,24 @@
 
 ## Counts
 
-Total items: **78**
+Total items: **79**
 
 | status | count |
 |---|---|
-| ⬜ NOT_STARTED | 16 |
-| ⚠️ PARTIAL | 19 |
-| ✅ BUILT | 41 |
+| ⬜ NOT_STARTED | 17 |
+| ⚠️ PARTIAL | 17 |
+| ✅ BUILT | 43 |
 | ⏭️ SUPERSEDED | 2 |
 
-**blocks batching: 7**
+**blocks batching: 5**
 
-## Batching prerequisite — blocks "freeze after the eighth" (Spec 122 §8.2/§10.3) (8)
+## Batching prerequisite — blocks "freeze after the eighth" (Spec 122 §8.2/§10.3) (6)
 
 | id | spec | title | status | owner | blocks | last reviewed |
 |---|---|---|---|---|---|---|
-| `STD-7` | 122 §1.10 | archetype drives required-field profile, 8 archetypes dispatched | ⚠️ PARTIAL | pilot: pilot7_refresh_snapshot, pilot8_enrich_parcels | batching | 2026-08-29 |
+| `STD-7` | 122 §1.10 | archetype drives required-field profile, 8 archetypes dispatched | ⚠️ PARTIAL | pilot: pilot9_enrich_parcels | batching | 2026-09-04 |
 | `STD-8` | 122 §8.2 | freeze the template after the eighth, never the first | ⬜ NOT_STARTED | wf: wf: programme-STD-8 | batching | 2026-08-29 |
 | `LDG-4` | 122 §6.3 | stepUpstreams(slug) derived from the ledger | ✅ BUILT | wf: wf: cross-step ledger (WF1), commits 1-6, 2026-09-03 | batching | 2026-09-03 |
-| `LC-1` | 122 §4.1 (Spec 120 §4) | ~35 step lifecycle behaviours | ⚠️ PARTIAL | pilot: pilot7_refresh_snapshot | batching | 2026-08-29 |
-| `PRG-3` | 122 §7.2 | pilot order rulings | ⚠️ PARTIAL | pilot: pilot 6 cutover, d9057a54 | batching | 2026-08-29 |
 | `PRG-10` | 122 §8.2 | freeze after the eighth - no formal batching mechanism (repeat of STD-8) | ⬜ NOT_STARTED | wf: wf: programme-STD-8 | batching | 2026-08-29 |
 | `WD-1` | 122 §1.4 | class-enum-without-write.js-branch lock | ⬜ NOT_STARTED | wf: wf: programme-WD1 | batching | 2026-08-29 |
 | `ADMIN-1` | 124 §2 Rule 3 | admin GROUPS reverse-coverage — every unclassified seed key gets a real group or a reviewed hidden reason | ⬜ NOT_STARTED | wf: wf: programme-ADMIN-1 | batching | 2026-09-03 |
@@ -39,7 +37,7 @@ Total items: **78**
 | `STA-3` | 120 §6b | 3 destructive-reset guards | ✅ BUILT | wf: wf: programme-STA-2 | refresh_snapshot | 2026-09-03 |
 | `CLOUDPARITY` | 122 R-D | cloud database must run apply-logic-variables.js before any cloud cutover | ⚠️ PARTIAL | followup: review_followups.md HIGH ops entry (filed 2026-08-27, peel 8c) | cloud_deploy | 2026-08-29 |
 
-## Nice-to-have — real gap, not currently blocking (66)
+## Nice-to-have — real gap, not currently blocking (69)
 
 | id | spec | title | status | owner | blocks | last reviewed |
 |---|---|---|---|---|---|---|
@@ -58,11 +56,13 @@ Total items: **78**
 | `LDG-7` | 122 §6.5 | descriptor reads/writes consistent with manifest.chains order | ✅ BUILT | wf: R-T addendum commit 5 (absorbed into VAL-WF2) | — | 2026-08-30 |
 | `LDG-8` | 122 §6.1 | invalidation + counters scoped by writes.key | ✅ BUILT | pilot: pilot3_link_massing, pilot4_link_wsib | — | 2026-08-29 |
 | `LDG-9` | 122 §1.7 | sharing.chains/shared/slug_forms are ~ derived | ⚠️ PARTIAL | followup: review_followups.md (2026-08-29 programme backlog filing) | — | 2026-08-29 |
+| `LC-1` | 122 §4.1 (Spec 120 §4) | ~35 step lifecycle behaviours | ✅ BUILT | pilot: pilot8_refresh_snapshot, 32eec17f | — | 2026-09-04 |
 | `LC-1b` | 122 §4.1 | reap stale heartbeats -> crashed | ✅ BUILT | wf: A3, pre-session | — | 2026-08-29 |
 | `LC-1c` | 122 §4.1 | a skip re-measures its checks live | ⚠️ PARTIAL | followup: review_followups.md (2026-08-29 programme backlog filing) | — | 2026-08-29 |
 | `LC-2` | 122 §4.1a | 5-part logic fingerprint | ⚠️ PARTIAL | followup: review_followups.md (2026-08-29 programme backlog filing) | — | 2026-08-29 |
 | `LC-3` | 122 §4.2b | --plan mode | ⬜ NOT_STARTED | followup: review_followups.md (2026-08-29 programme backlog filing) | — | 2026-08-29 |
 | `LC-4` | 122 §4.6 | generated SQL only, no string surgery | ⬜ NOT_STARTED | followup: review_followups.md (2026-08-29 programme backlog filing) | — | 2026-08-29 |
+| `LC-5` | 122 §4.1 (Spec 120 §4) | declaration_tiers badge + OpenLineage emit (split from LC-1, 2026-09-04) | ⬜ NOT_STARTED | followup: review_followups.md (split at WF2 'template freeze' C2, 2026-09-04) | — | 2026-09-04 |
 | `VAL-1` | 120 §5 | 12 named check types as generators | ⏭️ SUPERSEDED | — | — | 2026-08-29 |
 | `VAL-2` | 79 §2 | 12-item per-step evidence checklist | ⚠️ PARTIAL | followup: review_followups.md (2026-08-29 programme backlog filing) | — | 2026-08-29 |
 | `VAL-3` | 79 §3a' | Seam-Validation Pass | ✅ BUILT | wf: R-T addendum commit 5 (absorbed into VAL-WF2) | — | 2026-08-30 |
@@ -75,6 +75,7 @@ Total items: **78**
 | `STA-4` | 120 §6c | admin surface: check-list-as-data etc. | ⚠️ PARTIAL | followup: review_followups.md (2026-08-29 programme backlog filing) | — | 2026-08-29 |
 | `PRG-1` | 122 R3 | clean cloud chain_sources run gates C1 | ⚠️ PARTIAL | followup: review_followups.md (2026-08-29 programme backlog filing) | — | 2026-08-29 |
 | `PRG-2` | 122 R4 | S2 is a vertical slice, not a monolith | ✅ BUILT | wf: ongoing | — | 2026-08-29 |
+| `PRG-3` | 122 §7.2 | pilot order rulings | ✅ BUILT | pilot: pilot 8 cutover, 32eec17f | — | 2026-09-04 |
 | `PRG-4` | 122a §12.2 | 6 missing P0 categories adjudicated | ⚠️ PARTIAL | followup: review_followups.md (2026-08-29 programme backlog filing) | — | 2026-08-29 |
 | `PRG-5` | 122a §B2 | 54 orphan claims triaged in batches | ⚠️ PARTIAL | followup: R5, ongoing | — | 2026-08-29 |
 | `PRG-6` | 123 §6 G7 | mutation testing replaced by both-directions red-first locks | ✅ BUILT | followup: review_followups.md S6b entry (2026-08-25 ruling) | — | 2026-08-29 |
@@ -112,4 +113,4 @@ Total items: **78**
 
 ---
 
-*Freeze-readiness (Spec 122 §8.2/§10.3): the template may honestly "freeze after the eighth" only when the batching_prereq set above is EMPTY. Currently **7** item(s) block it.*
+*Freeze-readiness (Spec 122 §8.2/§10.3): the template may honestly "freeze after the eighth" only when the batching_prereq set above is EMPTY. Currently **5** item(s) block it.*
