@@ -87,30 +87,54 @@ const CONVERTED: string[] = Array.isArray(convertedRaw.converted)
   : [];
 
 /**
- * `pending` (Spec 123 §3.1 pin-then-add ordering; R-K.1, 2026-08-29): a file staged
- * out of the "must violate the shape rule" corpus ahead of its cutover commit.
- * Declared data, not a code skip — "nothing hidden" (Spec 122/123 policy) means the
- * stage gap is named in the fixture the tests read, not silently exempted in test
- * logic. Each entry is `{file, registers_at, reason, declared, stage}` — all
- * strings, `stage` closed-vocabulary `"red_suite" | "shape_clean"` (R-K.1): a
- * `red_suite` entry's per-step `violations.test.ts` (with `it.fails()` call sites)
- * has landed but the sibling `<slug>.descriptor.json` does NOT exist yet — the file
- * MAY still be shape-dirty; a `shape_clean` entry's descriptor exists and the file
- * genuinely passes `conformanceFindings()`. R-K.1's own worked example: pilot 6
- * (`compute_centroids`) declares `red_suite` at ITS commit 6 (the red-suite landing
- * commit, not commit 7 as pilots 4/5 did before `step-validate.mjs`'s fast
- * invariant #5 existed — that invariant requires every `it.fails(` call site to sit
- * under a DECLARED pending slug, of either stage, so the declaration must be
- * contemporaneous with the red suite, not deferred past it).
+ * `pending` (Spec 123 §3.1 pin-then-add ordering; R-K.1, 2026-08-29; five-value
+ * vocabulary widened at pilot 9's TWO commits, 2026-09-04 — "descriptor exists,
+ * independently validates" landed first, then "gates step-validate.mjs's own
+ * hard-stop set" landed as its own commit, `feat(...): step-validate honours
+ * declared pending.stage for hard-stop (R-K; descriptor-first conversions)`):
+ * a file staged out of the "must violate the shape rule" corpus ahead of its
+ * cutover commit. Declared data, not a code skip — "nothing hidden" (Spec
+ * 122/123 policy) means the stage gap is named in the fixture the tests read,
+ * not silently exempted in test logic. Each entry is `{file, registers_at,
+ * reason, declared, stage}` — all strings, `stage` closed-vocabulary
+ * `"red_suite" | "descriptor_only" | "compute_ported" | "runner_wired" |
+ * "shape_clean"` (R-K.1, Spec 124): a `red_suite` entry's per-step
+ * `violations.test.ts` (with `it.fails()` call sites) has landed but the
+ * sibling `<slug>.descriptor.json` does NOT exist yet — the file MAY still be
+ * shape-dirty; a `descriptor_only` entry's descriptor exists and independently
+ * validates against `step.schema.json` (`validateDescriptor`), but the step's
+ * own compute/runner have not yet landed — `conformanceFindings()` is NOT
+ * expected to be clean yet (`module.exports.compute` still absent on the
+ * shell); `compute_ported`/`runner_wired` are the two later partial stages
+ * (compute module ported; shell frozen onto `pipeline.step()`) this repo has
+ * not yet exercised, kept in the vocabulary for the commit that first needs
+ * them rather than invented ahead of use; a `shape_clean` entry's descriptor
+ * exists and the file genuinely passes `conformanceFindings()`. R-K.1's own
+ * worked example: pilot 6 (`compute_centroids`) declares `red_suite` at ITS
+ * commit 6 (the red-suite landing commit, not commit 7 as pilots 4/5 did
+ * before `step-validate.mjs`'s fast invariant #5 existed — that invariant
+ * requires every `it.fails(` call site to sit under a DECLARED pending slug,
+ * of ANY stage, so the declaration must be contemporaneous with the red
+ * suite, not deferred past it). The middle values exist because pilot 9
+ * (ENRICHER) is the first pilot whose own commit 7 is itself split (7a schema
+ * / 7b descriptor / 7c compute / 7d runner / 7e golden-gate), per the
+ * operator's own dispatch: every earlier pilot landed descriptor + compute +
+ * runner in ONE commit, so `red_suite -> shape_clean` was always a single
+ * atomic jump and the middle states were never observable. `stage` ALSO now
+ * gates `scripts/analysis/step-validate.mjs`'s own hard-stop set (Spec 124
+ * R-K amendment) — see that module's `stageExclusions`/`aggregateHardStop`
+ * and its own `selfTest()` locks; this file's own checks below are the
+ * DIFFERENT, R-K.1-original concern (does the declared stage match the real
+ * artifact state on disk), not the hard-stop-gating concern.
  */
 interface PendingEntry {
   file: string;
   registers_at: string;
   reason: string;
   declared: string;
-  stage: 'red_suite' | 'shape_clean';
+  stage: 'red_suite' | 'descriptor_only' | 'compute_ported' | 'runner_wired' | 'shape_clean';
 }
-const PENDING_STAGES = ['red_suite', 'shape_clean'] as const;
+const PENDING_STAGES = ['red_suite', 'descriptor_only', 'compute_ported', 'runner_wired', 'shape_clean'] as const;
 const PENDING_RAW: unknown[] = Array.isArray(convertedRaw.pending) ? (convertedRaw.pending as unknown[]) : [];
 const PENDING: PendingEntry[] = PENDING_RAW as PendingEntry[];
 const PENDING_FILES: string[] = PENDING.map((p) => String(p?.file ?? '').replace(/\\/g, '/'));
@@ -310,9 +334,37 @@ describe('converted.json — `pending` (declared data, not a code skip)', () => 
       expect(
         fs.existsSync(path.join(REPO_ROOT, descriptorRel)),
         `pending file ${p.file} is stage "red_suite" but its descriptor ${descriptorRel} already exists — ` +
-          'the stage must advance to "shape_clean" in the same commit that lands the descriptor (R-K.1); ' +
+          'the stage must advance to at least "descriptor_only" in the same commit that lands the descriptor (R-K.1); ' +
           '"stage not advanced" is itself a defect this lock exists to catch',
       ).toBe(false);
+    }
+  });
+
+  it('a `descriptor_only` pending file has a descriptor that exists and independently validates, but is NOT yet shape-clean — a file whose conformanceFindings() is already [] should have advanced to "shape_clean" instead (pilot 9 commit 7b, 2026-09-04)', () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports -- exercising the real CJS validator
+    const { validateDescriptor } = require(path.join(REPO_ROOT, 'scripts/lib/step/validate.js')) as {
+      validateDescriptor: (d: unknown) => unknown;
+    };
+    for (const p of PENDING) {
+      if (p.stage !== 'descriptor_only') continue;
+      expect(CONVERTED, `pending file ${p.file} is already in converted.json — the pending entry is stale and must be deleted`).not.toContain(p.file);
+      const descriptorRel = `${p.file.slice(0, -3)}.descriptor.json`;
+      const descriptorAbs = path.join(REPO_ROOT, descriptorRel);
+      expect(
+        fs.existsSync(descriptorAbs),
+        `pending file ${p.file} is stage "descriptor_only" but its descriptor ${descriptorRel} does not exist — the stage was advanced before its own precondition landed`,
+      ).toBe(true);
+      const descriptor: unknown = JSON.parse(fs.readFileSync(descriptorAbs, 'utf8'));
+      expect(
+        () => validateDescriptor(descriptor),
+        `pending file ${p.file}'s descriptor ${descriptorRel} does not independently validate against step.schema.json — "descriptor_only" requires a genuinely valid descriptor, not merely a present file`,
+      ).not.toThrow();
+      const findings = conformanceFindings(p.file);
+      expect(
+        findings.length,
+        `pending file ${p.file} is stage "descriptor_only" but conformanceFindings() is already clean ([]) — ` +
+          'the compute/runner have evidently landed too, so the stage should have advanced straight to "shape_clean" instead',
+      ).toBeGreaterThan(0);
     }
   });
 

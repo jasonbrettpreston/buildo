@@ -4247,6 +4247,116 @@
       "group": "Source Ingestion"
     }
   },
+  "enrich_parcels_comp_lot_tol": {
+    "default": 0.2,
+    "type": "number",
+    "min": 0,
+    "max": 1,
+    "description": "Pilot 9 commit 7b (2026-09-04, Ask 5 externalization, Spec 78 §P3C.2). Pass-4 comps kNN candidate similarity window (±20% lot-size/frontage) — was the bare literal `COMP_LOT_TOL = 0.2` at scripts/enrich-parcels.js:1088. Value preserved verbatim; only the declaration changed. CONSUMED by scripts/enrich-parcels.js (comp candidate CTE, :1191-1193).",
+    "admin": { "group": "Source Ingestion" }
+  },
+  "enrich_parcels_comp_knn_overfetch": {
+    "default": 50,
+    "type": "number",
+    "min": 1,
+    "max": 500,
+    "description": "Pilot 9 commit 7b (2026-09-04, Ask 5 externalization, Spec 78 §P3C.2). GiST kNN over-fetch count before the similarity post-filter — was the bare literal `COMP_KNN_OVERFETCH = 50` at scripts/enrich-parcels.js:1089. Value preserved verbatim. CONSUMED by scripts/enrich-parcels.js (:1184).",
+    "admin": { "group": "Source Ingestion" }
+  },
+  "enrich_parcels_comp_top_n": {
+    "default": 10,
+    "type": "number",
+    "min": 1,
+    "max": 100,
+    "description": "Pilot 9 commit 7b (2026-09-04, Ask 5 externalization, Spec 78 §P3C.2). Comps kept per subject parcel — was the bare literal `COMP_TOP_N = 10` at scripts/enrich-parcels.js:1090. Value preserved verbatim. CONSUMED by scripts/enrich-parcels.js (:1195).",
+    "admin": { "group": "Source Ingestion" }
+  },
+  "enrich_parcels_comp_over_capture_clamp": {
+    "default": 1.1,
+    "type": "number",
+    "min": 1,
+    "max": 5,
+    "description": "Pilot 9 commit 7b (2026-09-04, Ask 5 externalization, Spec 78 §P3C.2). build_ratio above this = massing over-capture, excluded from comp_build_ratio_p50 — was the bare literal `COMP_OVER_CAPTURE_CLAMP = 1.1` at scripts/enrich-parcels.js:1091. Value preserved verbatim. CONSUMED by scripts/enrich-parcels.js (:1160).",
+    "admin": { "group": "Source Ingestion" }
+  },
+  "enrich_parcels_comp_fsi_min_plausible": {
+    "default": 0.05,
+    "type": "number",
+    "min": 0,
+    "max": 1,
+    "description": "Pilot 9 commit 7b (2026-09-04, Ask 5 externalization, Spec 78 §P3C.2). Lower plausible bound on a new-build comp's permit_fsi for inclusion in comp_fsi_p50 — was the bare literal `COMP_FSI_MIN_PLAUSIBLE = 0.05` at scripts/enrich-parcels.js:1097. Value preserved verbatim. CONSUMED by scripts/enrich-parcels.js (:1166).",
+    "admin": { "group": "Source Ingestion" }
+  },
+  "enrich_parcels_comp_fsi_max_plausible": {
+    "default": 8,
+    "type": "number",
+    "min": 1,
+    "max": 50,
+    "description": "Pilot 9 commit 7b (2026-09-04, Ask 5 externalization, Spec 78 §P3C.2). Upper plausible bound on a new-build comp's permit_fsi for inclusion in comp_fsi_p50 — was the bare literal `COMP_FSI_MAX_PLAUSIBLE = 8` at scripts/enrich-parcels.js:1098. Value preserved verbatim. CONSUMED by scripts/enrich-parcels.js (:1166).",
+    "admin": { "group": "Source Ingestion" }
+  },
+  "enrich_parcels_comps_window_years": {
+    "default": 5,
+    "type": "number",
+    "min": 1,
+    "max": 20,
+    "description": "Pilot 9 commit 7b (2026-09-04, Ask 5 externalization, Spec 78 §P3C.1). The rolling comps-eligibility window (permits.issued_date >= as-of-date minus this many years) — was the bare literal `interval '5 years'` at scripts/enrich-parcels.js:1114, the estate's first genuinely clock-relative gate. Fold G3 (MANDATORY, Spec 122 §5.5): the CLOCK ANCHOR itself moves to ctx.clock.asOfDate() at commit 7c (compute seam rewrite); this variable is the WINDOW LENGTH only, a Rule-3 threshold externalization, value preserved verbatim (5). CONSUMED by scripts/enrich-parcels.js.",
+    "admin": { "group": "Source Ingestion" }
+  },
+  "enrich_parcels_optcfg_batch_size": {
+    "default": 500,
+    "type": "number",
+    "min": 50,
+    "max": 5000,
+    "description": "Pilot 9 commit 7b (2026-09-04, Ask 5 externalization). Pass-5 optimal-config flush batch size — was the bare literal `OPTCFG_BATCH = 500` at scripts/enrich-parcels.js:1251. Value preserved verbatim. CONSUMED by scripts/enrich-parcels.js (:1726).",
+    "admin": { "group": "Source Ingestion" }
+  },
+  "enrich_parcels_pass5_stream_batch_size": {
+    "default": 200,
+    "type": "number",
+    "min": 10,
+    "max": 2000,
+    "description": "Pilot 9 commit 7b (2026-09-04, Ask 5 externalization). Pass-5 pipeline.streamQuery batchSize (the eligible-parcels read cursor, distinct from enrich_parcels_optcfg_batch_size's own write-flush size) — was the bare literal `{ batchSize: 200 }` at scripts/enrich-parcels.js:1692. Value preserved verbatim. CONSUMED by scripts/enrich-parcels.js.",
+    "admin": { "group": "Source Ingestion" }
+  },
+  "enrich_parcels_bbox_degree_divisor": {
+    "default": 78000,
+    "type": "number",
+    "min": 1000,
+    "max": 1000000,
+    "description": "Pilot 9 commit 7b (2026-09-04, Ask 5 externalization). Pass-1 road-overlay bbox pre-filter's metres-to-degrees-of-longitude divisor at Toronto's latitude (a degree of longitude is ~80.5km there; dividing by 78000 < 80500 guarantees the box is >= roadDist) — was the bare literal `78000` at scripts/enrich-parcels.js:237-246. Value preserved verbatim. CONSUMED by scripts/enrich-parcels.js.",
+    "admin": { "group": "Source Ingestion" }
+  },
+  "enrich_parcels_zone_class_pct_pass_floor": {
+    "default": 95,
+    "type": "number",
+    "min": 0,
+    "max": 100,
+    "description": "Pilot 9 commit 7b (2026-09-04, Ask 5 externalization, Spec 65 §3a DEC-4). The zoning_class-coverage PASS floor (>= this = PASS, else falls to the WARN/FAIL split) — was the bare literal `zonePct >= 95` at scripts/enrich-parcels.js:2109. Value preserved verbatim. Live measured 96.8%. CONSUMED by scripts/enrich-parcels.js; descriptor check parcels_with_zone_class_pct_warn.",
+    "admin": { "group": "Data Quality Thresholds" }
+  },
+  "enrich_parcels_zone_class_pct_warn_floor": {
+    "default": 90,
+    "type": "number",
+    "min": 0,
+    "max": 100,
+    "description": "Pilot 9 commit 7b (2026-09-04, Ask 5 externalization, Spec 65 §3a DEC-4). The zoning_class-coverage WARN floor (>= this = WARN, below = FAIL) — was the bare literal `zonePct >= 90` at scripts/enrich-parcels.js:2109. Value preserved verbatim. CONSUMED by scripts/enrich-parcels.js; descriptor check parcels_with_zone_class_pct_fail.",
+    "admin": { "group": "Data Quality Thresholds" }
+  },
+  "enrich_parcels_comps_as_of_date": {
+    "default": null,
+    "type": "string",
+    "description": "Pilot 9 commit 7b (2026-09-04, Fold G3). NEW — the injected clock-anchor override for pass 4's comps window (ctx.clock.asOfDate()), replacing the raw `now()::date` call the legacy script makes at :1114 (Spec 122 §5.5 bans a bare wall-clock read in compute outright). null (the default) means \"use the live DB clock\", matching today's behaviour exactly; a set ISO date pins the comps window for reproducible golden-master capture (commit 5/7e's own non-determinism-inventory mitigation) without needing same-UTC-day capture timing. Not literally one of Rule 3's seven closed threshold categories (Spec 124 §2) — a reasonable, spec-silent-but-consistent extension, not a Rule-3-mandated one (Fold G3). CONSUMED by scripts/lib/compute/enrich-parcels.js.",
+    "admin": { "group": "Source Ingestion" }
+  },
+  "enrich_parcels_pass5_timeout_minutes": {
+    "default": 60,
+    "type": "number",
+    "min": 0,
+    "max": 180,
+    "description": "Pilot 9 commit 7b (2026-09-04, Ask 7). NEW — bounded, LOUD pass-5 (optimal-config) statement timeout, applied via a live SET on the pass-5 session by runEnrichPhase (commit 7d) since pass 5 runs on a SEPARATE post-commit connection outside the SET LOCAL pair enrich_parcels_pass_statement_timeout_minutes/enrich_parcels_lock_timeout_ms bound for passes 1-4 (EP-D7, OPEN — legacy pass 5 is unbounded today, inheriting the session-level statement_timeout=0). 0 = disabled. Default 60 is a conservative first bound pending real per-pass-5 duration measurement (pass 5 is JS-streaming, not a single SQL statement, so the passes-1-4 measured-max x1.5 formula does not directly transfer). CONSUMED by scripts/lib/step/index.js (runEnrichPhase).",
+    "admin": { "group": "Source Ingestion" }
+  },
   "assert_schema_type_sample_rows": {
     "default": 20,
     "type": "number",

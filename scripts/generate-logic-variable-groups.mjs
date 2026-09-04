@@ -204,7 +204,9 @@ const GROUP_ORDER = [
       "cost_model_coverage_warn_pct",
       "assert_schema_type_sample_rows",
       "assert_schema_csv_header_bytes",
-      "assert_schema_geojson_probe_bytes"
+      "assert_schema_geojson_probe_bytes",
+      "enrich_parcels_zone_class_pct_pass_floor",
+      "enrich_parcels_zone_class_pct_warn_floor"
     ]
   },
   {
@@ -218,7 +220,19 @@ const GROUP_ORDER = [
       "load_ravines_download_timeout_ms",
       "enrich_parcels_heartbeat_minutes",
       "enrich_parcels_pass_statement_timeout_minutes",
-      "enrich_parcels_lock_timeout_ms"
+      "enrich_parcels_lock_timeout_ms",
+      "enrich_parcels_comp_lot_tol",
+      "enrich_parcels_comp_knn_overfetch",
+      "enrich_parcels_comp_top_n",
+      "enrich_parcels_comp_over_capture_clamp",
+      "enrich_parcels_comp_fsi_min_plausible",
+      "enrich_parcels_comp_fsi_max_plausible",
+      "enrich_parcels_comps_window_years",
+      "enrich_parcels_optcfg_batch_size",
+      "enrich_parcels_pass5_stream_batch_size",
+      "enrich_parcels_bbox_degree_divisor",
+      "enrich_parcels_comps_as_of_date",
+      "enrich_parcels_pass5_timeout_minutes"
     ]
   },
   {

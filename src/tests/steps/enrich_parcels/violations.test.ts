@@ -217,7 +217,7 @@ function manifest(): { chains: Record<string, string[]>; scripts: Record<string,
 // ---------------------------------------------------------------------------
 
 describe('the descriptor — ENRICHER archetype, execution.shape:"enrich" (Ask 1/Ask 2 RULING)', () => {
-  it.fails('descriptor exists, validates, carries the ruled shape: ENRICHER archetype, execution.shape:"enrich", lock 65, ≥5 write targets (parcels ×4 groups + enrich_parcels_pass3_scope), config ⊇ the 25 pre-existing tunables, every entry on_invalid:"fail" (R-G, write-affecting) (flips at: commit 7)', () => {
+  it('descriptor exists, validates, carries the ruled shape: ENRICHER archetype, execution.shape:"enrich", lock 65, ≥5 write targets (parcels ×4 groups + enrich_parcels_pass3_scope), config ⊇ the 25 pre-existing tunables, every entry on_invalid:"fail" (R-G, write-affecting) (flipped at: commit 7b)', () => {
     const d = loadDescriptor();
     expect(d.identity.lock).toBe(LOCK_ID);
     expect(d.identity.archetype, 'ENRICHER (Spec 122 §1.10, the 8th and last unproven archetype)').toMatch(/enricher/i);
@@ -260,7 +260,7 @@ describe('the descriptor — ENRICHER archetype, execution.shape:"enrich" (Ask 1
 // ---------------------------------------------------------------------------
 
 describe('per-pass write class / guard / idempotent_rerun (Fold A1/A2 — the corrected table)', () => {
-  it.fails('pass 1 zoning — temp_materialize (I), IS DISTINCT FROM guard, idempotent_rerun:"zero_writes" on the 35 guarded cols (flips at: commit 7)', () => {
+  it('pass 1 zoning — temp_materialize (I), IS DISTINCT FROM guard, idempotent_rerun:"zero_writes" on the 35 guarded cols (flipped at: commit 7b)', () => {
     const d = loadDescriptor();
     const t = writeTargetFor(d, PARCELS, 0);
     expect(t.write_discipline.class).toBe('temp_materialize');
@@ -268,7 +268,7 @@ describe('per-pass write class / guard / idempotent_rerun (Fold A1/A2 — the co
     expect(t.write_discipline.idempotent_rerun, 'a second identical --full run must write 0 rows on the guarded 35 cols (founding fence 7e130bff)').toBe('zero_writes');
   });
 
-  it.fails('the two Rule-9 run-clock stamps — zoning_enriched_at (Fold E1, the "third unguarded write") and massing_enriched_at — are BOTH guard:"none" with a guard_why, deliberately outside the IS DISTINCT FROM set (flips at: commit 7)', () => {
+  it('the two Rule-9 run-clock stamps — zoning_enriched_at (Fold E1, the "third unguarded write") and massing_enriched_at — are BOTH guard:"none" with a guard_why, deliberately outside the IS DISTINCT FROM set (flipped at: commit 7b)', () => {
     const d = loadDescriptor();
     const zoningStamp = writes(d).find((t) => t.table === PARCELS && t.write_discipline.guard === 'none' && /zoning_enriched_at/i.test(JSON.stringify(t)));
     const massingStamp = writes(d).find((t) => t.table === PARCELS && t.write_discipline.guard === 'none' && /massing_enriched_at/i.test(JSON.stringify(t)));
@@ -278,7 +278,7 @@ describe('per-pass write class / guard / idempotent_rerun (Fold A1/A2 — the co
     expect(massingStamp?.write_discipline.guard_why).toBeDefined();
   });
 
-  it.fails('pass 2 max-build — temp_materialize (I), IS DISTINCT FROM guard, idempotent_rerun:"zero_writes" on the 29 guarded cols (flips at: commit 7)', () => {
+  it('pass 2 max-build — temp_materialize (I), IS DISTINCT FROM guard, idempotent_rerun:"zero_writes" on the 29 guarded cols (flipped at: commit 7b)', () => {
     const d = loadDescriptor();
     const t = writeTargetFor(d, PARCELS, 1);
     expect(t.write_discipline.class).toBe('temp_materialize');
@@ -286,7 +286,7 @@ describe('per-pass write class / guard / idempotent_rerun (Fold A1/A2 — the co
     expect(t.write_discipline.idempotent_rerun).toBe('zero_writes');
   });
 
-  it.fails('pass 3 existing+scenarios — temp_materialize (I), IS DISTINCT FROM + ROUND(...,2) guard, idempotent_rerun:"zero_writes"; recovery prose states scope-deferred rows are left in-txn BY DESIGN (crash-recoverable trail, Fold A3), never framed as a defect (flips at: commit 7)', () => {
+  it('pass 3 existing+scenarios — temp_materialize (I), IS DISTINCT FROM + ROUND(...,2) guard, idempotent_rerun:"zero_writes"; recovery prose states scope-deferred rows are left in-txn BY DESIGN (crash-recoverable trail, Fold A3), never framed as a defect (flipped at: commit 7b)', () => {
     const d = loadDescriptor();
     const t = writeTargetFor(d, PARCELS, 2);
     expect(t.write_discipline.class).toBe('temp_materialize');
@@ -299,7 +299,7 @@ describe('per-pass write class / guard / idempotent_rerun (Fold A1/A2 — the co
     ).toBe(true);
   });
 
-  it.fails('pass 4 comparable-builds — guard:"none" (EP-D1/B4.5 PIN, no IS DISTINCT FROM at all), idempotent_rerun:"not_idempotent"; outputs.invalidates declares ≥1 entry naming permits for this target (Ask 3(a) — a real invalidator, not an applies_when escape) (flips at: commit 7)', () => {
+  it('pass 4 comparable-builds — guard:"none" (EP-D1/B4.5 PIN, no IS DISTINCT FROM at all), idempotent_rerun:"not_idempotent"; outputs.invalidates declares ≥1 entry naming permits for this target (Ask 3(a) — a real invalidator, not an applies_when escape) (flipped at: commit 7b)', () => {
     const d = loadDescriptor();
     const t = writeTargetFor(d, PARCELS, 3);
     expect(t.write_discipline.guard, 'EP-D1/B4.5 — pinned in its CURRENT wrong form, no IS DISTINCT FROM').toBe('none');
@@ -311,7 +311,7 @@ describe('per-pass write class / guard / idempotent_rerun (Fold A1/A2 — the co
     expect(outputs.invalidates.some((i) => i.table === 'permits'), 'the invalidator must name permits — pass 4 reads permits pr at :1112, the real staleness source for the comps window').toBe(true);
   });
 
-  it.fails('pass 5 optimal-config — derived_recompute (K), IS DISTINCT FROM ×10 OR nearby_changed; idempotent_rerun:"zero_writes" on ALL 11 OPTCFG cols INCLUDING nearby_builds_summary — Fold A1 CORRECTION: the original split ("nearby_builds_summary" → declared_drift) is WITHDRAWN, golden-master G1\' measured 0/442,244 drift under controlled conditions (flips at: commit 7)', () => {
+  it('pass 5 optimal-config — derived_recompute (K), IS DISTINCT FROM ×10 OR nearby_changed; idempotent_rerun:"zero_writes" on ALL 11 OPTCFG cols INCLUDING nearby_builds_summary — Fold A1 CORRECTION: the original split ("nearby_builds_summary" → declared_drift) is WITHDRAWN, golden-master G1\' measured 0/442,244 drift under controlled conditions (flipped at: commit 7b)', () => {
     const d = loadDescriptor();
     const t = writeTargetFor(d, PARCELS, 4);
     expect(t.write_discipline.class).toBe('derived_recompute');
@@ -321,7 +321,7 @@ describe('per-pass write class / guard / idempotent_rerun (Fold A1/A2 — the co
     ).toBe('zero_writes');
   });
 
-  it.fails('step-level recovery.interrupted:"force_full_on_next_run" — passes 4 and 5\'s ineligibility resets are set_based_null_retract-class statements (Fold A2, Rule 12/R-B) (flips at: commit 7)', () => {
+  it('step-level recovery.interrupted:"force_full_on_next_run" — passes 4 and 5\'s ineligibility resets are set_based_null_retract-class statements (Fold A2, Rule 12/R-B) (flipped at: commit 7b)', () => {
     const d = loadDescriptor();
     expect(d.recovery, 'recovery must not be "none" for a step with real write targets').not.toBe('none');
     const recovery = d.recovery as Exclude<Descriptor['recovery'], 'none' | undefined>;
@@ -334,7 +334,7 @@ describe('per-pass write class / guard / idempotent_rerun (Fold A1/A2 — the co
 // ---------------------------------------------------------------------------
 
 describe('grandfathered.json (Rule 9) — zoning_enriched_at + massing_enriched_at + EP-D1/B4.5, one guard:"none" path', () => {
-  it.fails('grandfathered.json carries a real enrich_parcels entry, path outputs.writes[].write_discipline.guard = "none", whose why covers all THREE guard:"none" dispositions (the mechanism is generic — assertGrandfathered reads .guard, never .class, so one entry licenses every unguarded write target) (flips at: commit 7)', () => {
+  it('grandfathered.json carries a real enrich_parcels entry, path outputs.writes[].write_discipline.guard = "none", whose why covers all THREE guard:"none" dispositions (the mechanism is generic — assertGrandfathered reads .guard, never .class, so one entry licenses every unguarded write target) (flipped at: commit 7b)', () => {
     const g = JSON.parse(fs.readFileSync(abs(GRANDFATHERED_REL), 'utf8')) as { steps: Record<string, { paths?: Record<string, unknown>; why?: string }> };
     const entry = g.steps.enrich_parcels;
     expect(entry, 'no grandfathered.json entry for enrich_parcels').toBeDefined();
@@ -369,7 +369,7 @@ describe('the compute module — Rule 2 (compute is JUST compute) + §5.5 clock 
     expect(/ctx\.clock/.test(src), 'the injected clock seam (ctx.clock.asOfDate() or equivalent) must appear in compute').toBe(true);
   });
 
-  it.fails(`P4 declared-tunables ⊆ registry — every config.logic_variables[].name (the 25 pre-existing + ≥${MIN_NEW_LITERALS} newly-externalized, Ask 5) has a scripts/seeds/logic_variables.json row; total declared count ≥ 36 (flips at: commit 7/8, seed rows land alongside)`, () => {
+  it(`P4 declared-tunables ⊆ registry — every config.logic_variables[].name (the 25 pre-existing + ≥${MIN_NEW_LITERALS} newly-externalized, Ask 5) has a scripts/seeds/logic_variables.json row; total declared count ≥ 36 (flipped at: commit 7b; runner/compute land at 7c/7d, seed rows land alongside)`, () => {
     const d = loadDescriptor();
     expect(d.config).not.toBe('none');
     const cfg = d.config as Exclude<Descriptor['config'], 'none'>;
@@ -401,7 +401,7 @@ describe('Rule 11 order_guarantee — pass 5 runs AFTER the shared txn COMMITs (
     expect(spec.includes(ANCHOR), `Spec 78 must literally contain "${ANCHOR}" for the future order_guarantee.anchor to verify against`).toBe(true);
   });
 
-  it.fails('a pre_write check on the pass-5 write target declares order_guarantee{guarantee, spec_ref, anchor}, anchor citing Spec 78 §P3A.1\'s own text verbatim (flips at: commit 7/8 — Fold G2: nothing forces authorship, so its absence is a real gap until this check exists)', () => {
+  it('a pre_write check on the pass-5 write target declares order_guarantee{guarantee, spec_ref, anchor}, anchor citing Spec 78 §P3A.1\'s own text verbatim (flipped at: commit 7b; runner/compute land at 7c/7d — Fold G2: nothing forces authorship, so its absence is a real gap until this check exists)', () => {
     const d = loadDescriptor();
     const preWriteChecks = d.checks.filter((c) => c.when === 'pre_write');
     const withOrderGuarantee = preWriteChecks.filter((c) => c.order_guarantee);
@@ -449,7 +449,7 @@ describe('KNOWN-DEFECT pins (Spec 123 §3.1) — each fails the moment its named
     expect(/DELETE\s+FROM\s+enrich_parcels_pass3_scope/i.test(src), 'EP-D10 pin: no pruning DELETE against enrich_parcels_pass3_scope may exist yet').toBe(false);
   });
 
-  it.fails('EP-D8 small-N audit row — descriptor plausibility[] declares an audit row for comp_fsi_p50 sourced from < 3 non-null comps, WITH A COUNT (Fold C2) (flips at: commit 7)', () => {
+  it('EP-D8 small-N audit row — descriptor plausibility[] declares an audit row for comp_fsi_p50 sourced from < 3 non-null comps, WITH A COUNT (Fold C2) (flipped at: commit 7b)', () => {
     const d = loadDescriptor();
     expect(d.plausibility, 'plausibility[] must not be "none" — comp_fsi_p50 has a small-N sample-size caveat').not.toBe('none');
     const rows = (d.plausibility ?? []) as Array<{ id?: string; name?: string; count_field?: string }>;
@@ -464,7 +464,7 @@ describe('KNOWN-DEFECT pins (Spec 123 §3.1) — each fails the moment its named
 // ---------------------------------------------------------------------------
 
 describe('Ask 9 — heritage-basis max-build coverage is INFO-only (Fold G4: spec CONTRADICTS a WARN/FAIL bound)', () => {
-  it.fails('descriptor plausibility[] declares a heritage-basis coverage DISTRIBUTION row, severity INFO, mirroring MB-8\'s "all INFO, never gated" convention — NO WARN/FAIL threshold attached, per Spec 65 §4 MB-5\'s own stated intent (flips at: commit 7)', () => {
+  it('descriptor plausibility[] declares a heritage-basis coverage DISTRIBUTION row, severity INFO, mirroring MB-8\'s "all INFO, never gated" convention — NO WARN/FAIL threshold attached, per Spec 65 §4 MB-5\'s own stated intent (flipped at: commit 7b)', () => {
     const d = loadDescriptor();
     expect(d.plausibility).not.toBe('none');
     const rows = (d.plausibility ?? []) as Array<{ id?: string; name?: string; severity?: string }>;
@@ -558,13 +558,13 @@ describe('facts testable today — the live tree, not a future artifact', () => 
     expect(Math.max(...nums, 0), 'the highest LG number in scripts/lib + scripts/steps/_schema must be 27 until commit 7 lands LG-28 (runEnrichPhase)').toBe(27);
   });
 
-  it('converted.json — pending gains an enrich_parcels entry, stage "red_suite" (R-K.1) — the ONE artifact THIS commit itself produces', () => {
+  it('converted.json — pending stays registered (not yet converted); stage advanced "red_suite" -> "descriptor_only" at commit 7b, the ONE artifact THIS commit itself produces (R-K.1, three-value vocabulary widened this commit) (updated at: commit 7b — the commit-6 text asserted the PRE-descriptor state, which this commit\'s own artifact necessarily changes)', () => {
     const c = JSON.parse(fs.readFileSync(abs(CONVERTED_REL), 'utf8')) as { converted: string[]; pending: Array<{ file: string; stage: string }> };
     expect(c.converted.includes(STEP_REL), 'enrich_parcels must not be registered as converted yet — that is commit 9 (cutover)').toBe(false);
     const entry = c.pending.find((p) => p.file === STEP_REL);
     expect(entry, `converted.json.pending must carry a ${STEP_REL} entry`).toBeDefined();
-    expect(entry!.stage, 'R-K.1: a step with a landed red suite but no descriptor yet must declare stage "red_suite"').toBe('red_suite');
-    expect(fs.existsSync(abs(DESCRIPTOR_REL)), 'R-K.1: a "red_suite"-stage pending entry must NOT yet have a sibling descriptor — that would be "stage not advanced"').toBe(false);
+    expect(entry!.stage, 'R-K.1: a step whose descriptor now exists and validates, but whose compute/runner have not yet landed, must declare the new middle stage "descriptor_only" — not the pre-descriptor "red_suite", and not "shape_clean" (which requires conformanceFindings() clean, i.e. compute wired)').toBe('descriptor_only');
+    expect(fs.existsSync(abs(DESCRIPTOR_REL)), 'R-K.1: a "descriptor_only"-stage pending entry MUST have a sibling descriptor').toBe(true);
   });
 
   it('defect-ledger.md — EP-D1, EP-D8, EP-D9, EP-D10 all carry the PIN (Spec 123 §3.1) status, pinned_until pilot9 commit 9 (already landed, commits 4/4c/5)', () => {

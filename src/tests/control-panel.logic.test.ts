@@ -64,6 +64,24 @@ const EXPECTED_LOGIC_VAR_KEYS = [
   'enrich_parcels_heartbeat_minutes', // WF3 cloud-parity FIX 3.2b (2026-09-03) — optimal-config stream progress heartbeat interval
   'enrich_parcels_pass_statement_timeout_minutes', // WF3 enrich_parcels stall commit 1 (2026-09-03) — bounded, LOUD SET LOCAL statement_timeout for passes 1-4
   'enrich_parcels_lock_timeout_ms', // WF3 enrich_parcels stall commit 1 (2026-09-03) — bounded, LOUD SET LOCAL lock_timeout for passes 1-4
+  // Pilot 9 commit 7b (2026-09-04, Ask 5 externalization, Spec 78 §P3C.1/§P3C.2) — the 7 pass-4 comp literals.
+  'enrich_parcels_comp_lot_tol',
+  'enrich_parcels_comp_knn_overfetch',
+  'enrich_parcels_comp_top_n',
+  'enrich_parcels_comp_over_capture_clamp',
+  'enrich_parcels_comp_fsi_min_plausible',
+  'enrich_parcels_comp_fsi_max_plausible',
+  'enrich_parcels_comps_window_years',
+  // Pilot 9 commit 7b — OPTCFG_BATCH, pass-5 stream batchSize, the bbox degree divisor.
+  'enrich_parcels_optcfg_batch_size',
+  'enrich_parcels_pass5_stream_batch_size',
+  'enrich_parcels_bbox_degree_divisor',
+  // Pilot 9 commit 7b (Spec 65 §3a DEC-4) — the zoning_class-coverage PASS/WARN floors (95/90).
+  'enrich_parcels_zone_class_pct_pass_floor',
+  'enrich_parcels_zone_class_pct_warn_floor',
+  // Pilot 9 commit 7b — NEW: the comps clock-anchor override (Fold G3) and the pass-5 timeout bound (Ask 7).
+  'enrich_parcels_comps_as_of_date',
+  'enrich_parcels_pass5_timeout_minutes',
   'centreline_propagation_coverage_min', // Spec 62 §8e L24c — enrich-permits propagation coverage gate
   'road_overlay_distance_m', // Spec 58 — seeded for WF2 enrich-parcels (F-C2)
   'reno_coa_uplift_pct', // Spec 65 §6 SC-3 — new-build CoA uplift over max-build GFA

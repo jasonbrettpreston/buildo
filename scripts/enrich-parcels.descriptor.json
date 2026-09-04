@@ -1,0 +1,778 @@
+{
+  "identity": {
+    "name": "enrich_parcels",
+    "display_name": "Parcel Enrichment (Zoning / Max-Build / Existing-Structure / Comparables / Optimal-Config)",
+    "owner": "data",
+    "description": "Five-pass ENRICHER over parcels — zoning by-law precedence (Spec 65 §2), max-build envelope + accessory fit (§4/§7), existing-structure + reno/build scenarios (§5/§6), comparable-builds kNN (Spec 78 §Phase-3C), and optimal-config (Spec 78 §Phase-3A). Passes 1-4 share ONE pipeline.withTransaction; pass 5 streams on a separate connection AFTER that transaction COMMITs (Spec 78 §P3A.1 — a same-txn read would be invisible), the archetype's own execution.shape:\"enrich\" reason for being (Spec 122 §8, pilot 9).",
+    "lock": 65,
+    "why_lock": "none",
+    "spec": "65",
+    "spec_version": "1.1",
+    "archetype": "ENRICHER",
+    "contract_version": 1,
+    "gate_exempt": false
+  },
+
+  "inputs": {
+    "reads": {
+      "steps": [
+        { "step": "link_massing", "version_pin": "gte" }
+      ],
+      "tables": [
+        { "table": "parcels", "columns": ["id", "geom", "lot_size_sqm", "frontage_m", "zoning_class", "max_buildable_footprint_sqm", "max_buildable_gfa_sqm", "zoning_enriched_at", "massing_enriched_at"] },
+        { "table": "zoning_bylaw_areas" },
+        { "table": "zoning_height_overlay" },
+        { "table": "zoning_lot_coverage_overlay" },
+        { "table": "parcel_buildings", "columns": ["parcel_id", "is_primary", "linked_at", "footprint_sqm", "gfa_sqm"] },
+        { "table": "neighbourhood_build_norms" },
+        { "table": "neighbourhood_storey_norms" },
+        { "table": "neighbourhoods" },
+        { "table": "permits", "columns": ["id", "work_type", "issued_date", "permit_fsi", "latitude", "longitude"] }
+      ],
+      "externals": []
+    },
+    "expect_nonempty": true,
+    "on_missing": "halt"
+  },
+
+  "outputs": {
+    "writes": [
+      {
+        "table": "parcels",
+        "key": "id",
+        "columns": [
+          { "name": "zoning_class", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "zoning_zn_string", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "zoning_gen_zone", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "zoning_holding", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "zone_status", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "exception_number", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "exception_text", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "bylaw_chapter", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "bylaw_section", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "bylaw_exception_ref", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "bylaw_max_fsi", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "bylaw_max_units", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "bylaw_max_density", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "bylaw_pct_commercial_max", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "bylaw_pct_residential_max", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "bylaw_pct_employment_max", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "bylaw_pct_office_max", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "bylaw_min_frontage_m", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "bylaw_min_area_sqm", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "bylaw_standard_setback_m", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "bylaw_max_coverage_pct", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "bylaw_max_height_m", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "bylaw_max_stories", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "in_policy_area", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "on_policy_road", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "in_rooming_house_overlay", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "in_parking_zone_overlay", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "in_building_setback_overlay", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "on_priority_retail", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "in_queenstw_eat_overlay", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "zoning_overlays", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "zoning_base_source_id", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "zoning_dominant_area_share", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "zoning_is_ambiguous", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "zoning_base_source_dataset_version", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" }
+        ],
+        "write_discipline": {
+          "class": "temp_materialize",
+          "guard": "is_distinct_from",
+          "guard_columns": "all_declared",
+          "scope": "buildPass1ScopeWhere({full}) — TRUE under --full (the only cloud invocation); otherwise (p.zoning_enriched_at IS NULL OR a zoning_bylaw_areas polygon's source_dataset_version outdates it)",
+          "expected_change_ratio": "none",
+          "idempotent_rerun": "zero_writes",
+          "txn_scope": "step",
+          "why": {
+            "text": "Pass 1 (zoning). Spec 65 §2 DEC-3: a session TEMP TABLE (parcel_zoning_enrich) holds the precedence-resolved row per parcel, then ONE UPDATE...FROM applies it, guarded IS DISTINCT FROM over all 35 columns (Spec 65 §2 Implementation step 5). zoning_dominant_area_share's own guard casts round(...::numeric,4) — the float8-vs-NUMERIC IS DISTINCT FROM trap (lessons.md:28, fence 7e130bff) — ported VERBATIM by compute, never regenerated generically from a column list (Fold B1).",
+            "liveness": { "kind": "file", "ref": "scripts/lib/compute/enrich-parcels.js" }
+          }
+        },
+        "retract": "none",
+        "replay": "idempotent_upsert",
+        "source_key_policy": { "unique": true, "on_collision": "not_applicable", "key_space_migration": "none" }
+      },
+      {
+        "table": "parcels",
+        "key": "id",
+        "columns": [
+          { "name": "lot_size_confidence", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "lot_size_basis", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "max_build_setback_basis", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "max_buildable_footprint_sqm", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "max_build_width_m", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "max_build_length_m", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "max_build_height_m", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "max_build_stories", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "max_build_stories_basis", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "max_build_basis", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "max_buildable_gfa_sqm", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "max_buildable_gfa_basis", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "max_build_confidence", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "max_garden_suite_gfa_sqm", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "garden_suite_fits", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "envelope_constrained", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "envelope_constraint_reason", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "max_garage_gfa_sqm", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "garage_capacity_cars", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "garage_constraint_reason", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "garage_permission", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "max_laneway_suite_gfa_sqm", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "max_rear_suite_gfa_sqm", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "rear_suite_type", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "rear_suite_permission", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "max_build_stories_aggressive", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "market_exceeds_bylaw", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "neighbourhood_id", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "neighbourhood_cost_premium", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" }
+        ],
+        "write_discipline": {
+          "class": "temp_materialize",
+          "guard": "is_distinct_from",
+          "guard_columns": "all_declared",
+          "scope": "buildPass2ScopeWhere({full}) — TRUE under --full; otherwise gated on parcel_buildings.linked_at > parcels.massing_enriched_at (LG-9-relevant: parcel_buildings itself is NOT this pass's own write target and carries no run-clock trap here)",
+          "expected_change_ratio": "none",
+          "idempotent_rerun": "zero_writes",
+          "txn_scope": "step",
+          "why": {
+            "text": "Pass 2 (max-build envelope + accessory fit, Spec 65 §4/§7/§8). Same DEC-3 shape as pass 1: session TEMP TABLE (parcel_max_build) then one UPDATE...FROM, IS DISTINCT FROM x29. Dominant runtime cost of the whole step (46.7/48.3 min measured live).",
+            "liveness": { "kind": "file", "ref": "scripts/lib/compute/enrich-parcels.js" }
+          }
+        },
+        "retract": "none",
+        "replay": "idempotent_upsert",
+        "source_key_policy": { "unique": true, "on_collision": "not_applicable", "key_space_migration": "none" }
+      },
+      {
+        "table": "parcels",
+        "key": "id",
+        "columns": [
+          { "name": "imagery_roof_footprint_sqm", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "existing_stories", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "existing_height_m", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "imagery_roof_gfa_sqm", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "existing_width_m", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "existing_length_m", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "existing_structure_confidence", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "existing_other_structures_count", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "existing_other_structures_sqm", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "existing_greenspace_sqm", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "existing_data_quality_flag", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "max_newbuild_coa_gfa_sqm", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "cur_basement_gfa_sqm", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "cur_storey_gfa_sqm", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "cur_interior_reno_gfa_sqm", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "cur_est_kitchen_gfa_sqm", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "cur_est_bath_gfa_sqm", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "cur_floor_gfa_sqm", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "cur_pot_2story_gfa_sqm", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "cur_pot_3story_gfa_sqm", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "cur_gfa_range_basis", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" }
+        ],
+        "write_discipline": {
+          "class": "temp_materialize",
+          "guard": "is_distinct_from",
+          "guard_columns": "all_declared",
+          "scope": "buildPass3ScopeWhere({full}) — TRUE under --full; otherwise gated on massing/building linkage change, minus any parcel_id already spooled unconsumed in enrich_parcels_pass3_scope this run (computeDeferScope, Spec 122 §3.0b)",
+          "expected_change_ratio": "none",
+          "idempotent_rerun": "zero_writes",
+          "txn_scope": "step",
+          "why": {
+            "text": "Pass 3 (existing-structure, Spec 65 §5, ES-1..ES-6, + reno/build scenarios, §6 SC-1..SC-7). Two sibling UPDATEs off ONE temp table (parcel_existing_struct), IS DISTINCT FROM + ROUND(...,2) for idempotency (ES-2). Scope-deferred rows (over the enrich_parcels_defer_threshold_rows PRE-TRANSACTION count) are spooled to enrich_parcels_pass3_scope INSIDE this same transaction, BY DESIGN, as a crash-recoverable trail (Fold A3) — see interpretation notes, never framed as a defect.",
+            "liveness": { "kind": "file", "ref": "scripts/lib/compute/enrich-parcels.js" }
+          }
+        },
+        "retract": "none",
+        "replay": "idempotent_upsert",
+        "source_key_policy": { "unique": true, "on_collision": "not_applicable", "key_space_migration": "none" }
+      },
+      {
+        "table": "parcels",
+        "key": "id",
+        "columns": [
+          { "name": "comparable_builds", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "comp_count", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "comp_dominant_build", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "comp_build_ratio_p50", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "comp_fsi_p50", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" }
+        ],
+        "write_discipline": {
+          "class": "set_based_join_update",
+          "guard": "none",
+          "guard_why": {
+            "text": "EP-D1/B4.5 (Spec 123 §3.1 PIN — see docs/reports/defect-ledger.md, pinned_until: pilot9 commit 9). buildComparableBuildsUpdateSql (:1143-1150) carries NO IS DISTINCT FROM anywhere in its statement text — `WHERE p.id = agg.id` is the ONLY predicate. Under --full (the only cloud mode, manifest.json chain_args.sources:[\"--full\"]) this rewrites all 354,679 comp-bearing parcels every run. Pinned in its CURRENT wrong form per Spec 123 §3.1 (grounded live measurement, pilot 9 commit 4/G1'); peel 8x (Fold G1) adds the guard and recaptures the golden diff named cause \"B4.5 fix\".",
+            "liveness": { "kind": "file", "ref": "docs/reports/defect-ledger.md" }
+          },
+          "guard_columns": "all_declared",
+          "guard_columns_why": {
+            "text": "LG-9 escape hatch, moot here — guard is \"none\" (EP-D1/B4.5 PIN), so guard_columns is never consulted to build an IS DISTINCT FROM clause.",
+            "liveness": { "kind": "file", "ref": "scripts/lib/step/write.js" }
+          },
+          "scope": "comp candidate CTE (comp_cand, GiST kNN LATERAL) joined against parcels — WHERE p.id = agg.id only; the incremental half (AND sp.comp_count IS NULL) is genuinely empty after run 1 because the comp_count=0 zero-fill (below) permanently satisfies it (EP-D1's second, opposite half)",
+          "expected_change_ratio": "none",
+          "idempotent_rerun": "not_idempotent",
+          "idempotent_rerun_why": {
+            "text": "Two independent, stacked sources of non-determinism, both PINNED (Spec 123 §3.1): EP-D1/B4.5's absent guard (every eligible row rewrites every --full run, whether or not its own comps changed) and EP-D9 (golden-master G1' measured comparable_builds differing on 248/486,530 parcels, 0.051%, across two identical back-to-back --full runs on unchanged data — the comps candidate SQL's two ORDER BY clauses carry no deterministic secondary tiebreak).",
+            "liveness": { "kind": "file", "ref": "docs/reports/defect-ledger.md" }
+          },
+          "txn_scope": "step",
+          "why": {
+            "text": "Pass 4 (comparable-builds kNN, Spec 78 §Phase-3C — NOT governed by Spec 55 or 65, grep-confirmed zero hits, Fold G4). A scoped UPDATE...FROM a compute-authored matched CTE (comp_cand aggregated to agg) with INSERT structurally forbidden (LG-11's set_based_join_update mechanic, write.js executeSetBasedJoinUpdate). The clock-relative 5-year comps window (now()::date - interval '5 years', :1114) is the estate's first genuinely clock-relative gate — replaced by ctx.clock.asOfDate() in compute (Fold G3, MANDATORY, Spec 122 §5.5).",
+            "liveness": { "kind": "file", "ref": "scripts/lib/compute/enrich-parcels.js" }
+          }
+        },
+        "retract": "none",
+        "replay": "idempotent_upsert",
+        "source_key_policy": {
+          "unique": true,
+          "on_collision": "not_applicable",
+          "key_space_migration": "none"
+        }
+      },
+      {
+        "table": "parcels",
+        "key": "id",
+        "columns": [
+          { "name": "opt_aor_storeys", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "opt_aor_gfa_sqm", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "opt_aor_units", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "opt_coa_storeys", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "opt_coa_gfa_sqm", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "opt_suite_type", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "opt_suite_fits_full", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "opt_binding_constraint", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "opt_config_confidence", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "optimal_config", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "nearby_builds_summary", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" }
+        ],
+        "write_discipline": {
+          "class": "derived_recompute",
+          "guard": "is_distinct_from",
+          "guard_columns": "all_declared",
+          "scope": "batched WITH incoming(...) AS (VALUES ...) ... UPDATE, fed by the enrich_parcels_pass3_scope deferred-rows union plus this run's own eligible-scope select; OPTCFG_BATCH-sized flush groups (batchSize:200 stream, flush 500/batch)",
+          "expected_change_ratio": "none",
+          "idempotent_rerun": "zero_writes",
+          "idempotent_rerun_why": {
+            "text": "Fold A1 CORRECTION (superseding this plan's original text, golden-master G1' 2026-09-04): nearby_builds_summary measured BYTE-IDENTICAL, 0/442,244 rows differing, across three controlled back-to-back local --full re-runs with no intervening permits/neighbourhood_build_norms ingest between them. The file's own :1403-1411 docblock (\"differs 88,575/88,575 every run\") is a PRODUCTION-CADENCE observation (real calendar time + real upstream data movement between production runs), not a code non-determinism claim — the OR nearby_changed guard clause is genuinely inert under a held-data control, so idempotent_rerun is zero_writes on ALL 11 columns, not declared_drift.",
+            "liveness": { "kind": "file", "ref": "docs/reports/2026-09-04-pilot9-enrich-parcels-assessment.md" }
+          },
+          "txn_scope": "none",
+          "why": {
+            "text": "Pass 5 (optimal-config, Spec 78 §Phase-3A — NOT governed by Spec 55 or 65). Runs AFTER passes 1-4's shared transaction COMMITs, on a SEPARATE connection (Spec 78 §P3A.1: a same-txn read of what passes 1-4 just wrote would be invisible) — the archetype's defining shape (execution.shape:\"enrich\", execution.phases[] order 5, txn:\"post_commit\"). IS DISTINCT FROM x10 OR nearby_changed (:1445/:1454) — the OR makes the guard's own second arm effectively inert per Fold A1's correction above, but the declared mechanic is still is_distinct_from (the SQL text genuinely contains the clause; its practical bite is what Fold A1 corrects, not its declaration).",
+            "liveness": { "kind": "file", "ref": "scripts/lib/compute/enrich-parcels.js" }
+          }
+        },
+        "retract": "none",
+        "replay": "idempotent_upsert",
+        "source_key_policy": { "unique": true, "on_collision": "not_applicable", "key_space_migration": "none" }
+      },
+      {
+        "table": "parcels",
+        "key": "id",
+        "columns": [
+          { "name": "zoning_enriched_at", "vocabulary": "none", "written": "step", "bind": "value", "source": "run_at" },
+          { "name": "massing_enriched_at", "vocabulary": "none", "written": "step", "bind": "value", "source": "run_at" }
+        ],
+        "write_discipline": {
+          "class": "set_based_scoped",
+          "guard": "none",
+          "guard_why": {
+            "text": "Rule 9 (LG-9-style run-clock stamp). zoning_enriched_at (:375/:443, Fold E1 — the third unguarded write) and massing_enriched_at (:831, deliberately unguarded by design, :824-828) are BOTH run-clock watermarks, columns[].source \"run_at\" — a run-clock column is DISTINCT FROM its own stored value on every run, so an IS DISTINCT FROM guard naming either is vacuous by construction, the exact LG-9 trap. These are the invalidation TARGETS mig 242's trg_parcels_geom_invalidation trigger nulls on a parcels.geom change (outputs.invalidates[1]/[2] below), which is the real staleness signal for passes 1/2's own incremental scope — the stamp itself carries none.",
+            "liveness": { "kind": "file", "ref": "scripts/steps/_schema/grandfathered.json" }
+          },
+          "guard_columns": "all_declared",
+          "guard_columns_why": {
+            "text": "LG-9 escape hatch. \"all_declared\" expands over zoning_enriched_at + massing_enriched_at, both columns[].source \"run_at\" — normally banned, moot here because guard is already \"none\" and guard_columns is never consulted to build a clause. Grandfathered together with the pass-4 comps UPDATE and the pass-3-scope INSERT under ONE scripts/steps/_schema/grandfathered.json entry (Rule 9, three/four dispositions sharing one why).",
+            "liveness": { "kind": "file", "ref": "scripts/lib/step/validate.js" }
+          },
+          "scope": "each stamp fires alongside its own owning pass's UPDATE (zoning_enriched_at inside pass 1's statement; massing_enriched_at as pass 2's own separate exec :897) — never independently scheduled",
+          "expected_change_ratio": "== 1.0",
+          "idempotent_rerun": "declared_drift",
+          "idempotent_rerun_why": {
+            "text": "A same-run-clock re-run always rewrites both stamps to the fresh RUN_AT value, by design — the watermark IS meant to move every time its owning pass fires, mirroring link_parcels' e3 permits.parcel_linked_at precedent verbatim.",
+            "liveness": { "kind": "file", "ref": "scripts/link-parcels.descriptor.json" }
+          },
+          "txn_scope": "step",
+          "why": {
+            "text": "Declared as its OWN write target (distinct write_discipline.guard from the 35-col zoning target and the 29-col max-build target it physically rides alongside) because a single target's write_discipline covers ALL its declared columns under one guard — zoning_enriched_at/massing_enriched_at are deliberately OUTSIDE the IS DISTINCT FROM set those two targets declare, so they cannot share those targets' write_discipline without misrepresenting them as guarded.",
+            "liveness": { "kind": "file", "ref": "scripts/enrich-parcels.js" }
+          }
+        },
+        "retract": "none",
+        "replay": "idempotent_upsert",
+        "source_key_policy": { "unique": true, "on_collision": "not_applicable", "key_space_migration": "none" }
+      },
+      {
+        "table": "enrich_parcels_pass3_scope",
+        "key": ["run_id", "parcel_id"],
+        "columns": [
+          { "name": "run_id", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "parcel_id", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "consumed_at", "vocabulary": "none", "written": "step", "bind": "value", "source": "run_at" }
+        ],
+        "write_discipline": {
+          "class": "insert_only_no_retraction",
+          "guard": "none",
+          "guard_why": {
+            "text": "The INSERT half (:2078, ON CONFLICT (run_id, parcel_id) DO NOTHING) has no value to guard — a change guard compares an update against itself; this is append-only. The consumed_at UPDATE half (pass 5's own flip, :1514/:1742) is a run-clock stamp, same LG-9 shape as the parcels run-clock target above.",
+            "liveness": { "kind": "table", "ref": "enrich_parcels_pass3_scope" }
+          },
+          "guard_columns": "all_declared",
+          "guard_columns_why": {
+            "text": "LG-9 escape hatch — consumed_at is columns[].source \"run_at\"; guard is already \"none\" so guard_columns is never consulted.",
+            "liveness": { "kind": "file", "ref": "scripts/lib/step/write.js" }
+          },
+          "scope": "pass 3's own scope-deferred rows this run (INSERT); pass 5's own consumed set this run (consumed_at UPDATE)",
+          "expected_change_ratio": "none",
+          "idempotent_rerun": "not_idempotent",
+          "idempotent_rerun_why": {
+            "text": "EP-D10 (Spec 123 §3.1 PIN — docs/reports/defect-ledger.md, pinned_until: pilot9 commit 9). scopeRunId is distinct per run (Math.floor(runAt.getTime()/1000)), so ON CONFLICT (run_id, parcel_id) DO NOTHING never fires ACROSS runs — every --full run inserts a fresh full-population row set. Measured: +442,244 rows per run across 4 consecutive local runs, distinct(parcel_id) flat throughout (100% pure duplication, zero DELETE/TRUNCATE anywhere in the file). PINNED in its current wrong form; peel (commit 8) either DELETEs fully-consumed rows older than N runs or re-keys ON CONFLICT (parcel_id) alone.",
+            "liveness": { "kind": "file", "ref": "docs/reports/defect-ledger.md" }
+          },
+          "txn_scope": "step",
+          "why": {
+            "text": "The ONE LOGGED recovery ledger in the estate (Spec 122 §3.0b) — a crash between commit and pass 5's own read never silently drops scope-deferred work (:2073-2076), which is the mechanism's genuine purpose. Its unboundedness (EP-D10) is a separate, pinned defect, not a reason this INSERT is wrong to be unguarded.",
+            "liveness": { "kind": "file", "ref": "scripts/enrich-parcels.js" }
+          }
+        },
+        "retract": "none",
+        "replay": "idempotent_upsert",
+        "source_key_policy": { "unique": true, "on_collision": "not_applicable", "key_space_migration": "none" }
+      }
+    ],
+    "cascades": "none",
+    "invalidates": [
+      {
+        "table": "permits",
+        "column": "issued_date",
+        "when": "a new/updated permits row within the rolling comps window (ctx.clock.asOfDate() − 5 years) changes the eligible comparable-builds candidate pool for pass 4 — Ask 3(a) RULING (Fold G, option (a)): declared now rather than exempted via staleness.scope:\"all\" (option (b)), even though the ONLY live cloud invocation is --full and this invalidator is therefore not yet mechanically consumed by an incremental run. Spec 78 §P3C.1's own disclaimed \"standing limitation\" (EP-D1's never-refresh half) is the reason a real trigger-backed invalidator does not exist YET — this entry states the correct dependency so a future incremental path (or peel 8x) has something to wire against, rather than re-discovering claim #54's gap a second time."
+      },
+      {
+        "table": "parcels",
+        "column": "zoning_enriched_at",
+        "when": "trg_parcels_geom_invalidation (migration 242) nulls zoning_enriched_at when parcels.geom changes — verified live (pg_trigger on parcels), the real re-eligibility signal for pass 1's own incremental scope predicate."
+      },
+      {
+        "table": "parcels",
+        "column": "massing_enriched_at",
+        "when": "trg_parcels_geom_invalidation (migration 242) nulls massing_enriched_at when parcels.geom changes — the same trigger, the re-eligibility signal for pass 2's own incremental scope predicate (parcel_buildings.linked_at > parcels.massing_enriched_at)."
+      }
+    ],
+    "publish": "direct",
+    "write_inventory": {
+      "statements": 14,
+      "why": {
+        "text": "The 27-statement DML/DDL enumeration (commit 1) minus temp-table CREATE/DROP/INDEX/ANALYZE (statements 1-8, 27) and the two SET LOCAL statement/lock timeout statements (18-19, txn config, not writes): pass1 UPDATE (9), pass2 UPDATE (10), massing stamp (11), existing UPDATE (12), scenario UPDATE (13), comps ineligibility reset (14), --full-only comp blanket reset (15), pass4 comps UPDATE (16), comp_count zero-fill (17), pass3_scope INSERT (20), pass5 ineligibility reset (21), pass5 batched UPDATE (22), pass3_scope consumed_at flips (23/24 counted once — same statement shape, bulk + per-parcel). The two optional pipeline_runs heartbeat/stall-diagnostic UPDATEs (25/26) are EXCLUDED from this count (EP-D5 — undeclared in emitMeta's own writes map today; not this write_inventory's own target table, cascades territory) — see limitations[].",
+        "liveness": { "kind": "file", "ref": ".cursor/pilot9_enrich_parcels_active_task.md" }
+      }
+    }
+  },
+
+  "staleness": {
+    "scope": "varies per execution.phases[] — passes 1-3 gate on a per-pass lineage predicate (buildPassNScopeWhere), pass 4 gates on comp_count IS NULL (EP-D1's never-refreshing half), pass 5 consumes enrich_parcels_pass3_scope's deferred rows; the ONLY live cloud invocation forces TRUE for all of them (--full, manifest.json chain_args.sources)",
+    "trigger": [
+      { "signal": "always", "position": "pre_compute" }
+    ],
+    "mode_select": "tri_state",
+    "checkpoint": "none",
+    "interval": "none",
+    "fingerprint": "derived",
+    "fingerprint_inputs": ["scripts/lib/compute/enrich-parcels.js", "scripts/lib/max-build.js", "scripts/lib/zoning-precedence.js", "scripts/lib/optimal-config.js", "scripts/lib/build-norms.js"],
+    "logic_version": "v1-five-pass-enrich",
+    "on_fingerprint_change": "run"
+  },
+
+  "guards": {
+    "requires": [
+      {
+        "kind": "extension",
+        "name": "postgis",
+        "on_missing": "fail",
+        "why": {
+          "text": "assertPreconditions (:157-159) — the zoning spatial join and every kNN/ST_Within predicate across all 5 passes are non-viable without PostGIS. Ported verbatim (R-W: compute must not branch on PostGIS availability — there is no non-PostGIS fallback path in this file to retire, unlike link_parcels/link_massing's own A-1(a) precedent).",
+          "liveness": { "kind": "external", "ref": "postgis" }
+        }
+      },
+      {
+        "kind": "column",
+        "name": "parcels.geom",
+        "on_missing": "fail",
+        "why": {
+          "text": "Every pass's own temp-table join predicate keys off parcels.geom directly (spatial containment for zoning/overlays, kNN <-> for pass 4's comp candidates).",
+          "liveness": { "kind": "column", "ref": "parcels.geom" }
+        }
+      },
+      {
+        "kind": "index",
+        "name": "idx_parcels_geom_gist",
+        "on_missing": "fail",
+        "why": {
+          "text": "assertPreconditions (:161-167) refuses to run a sequential-scan join — migration 039's GiST index is a hard precondition, checked live via pg_indexes before any pass fires.",
+          "liveness": { "kind": "file", "ref": "migrations/039_add_postgis_geom_columns.sql" }
+        }
+      }
+    ],
+    "srid": 4326,
+    "empty_source": "parcels",
+    "schema_drift": "none"
+  },
+
+  "execution": {
+    "shape": "enrich",
+    "phases": [
+      { "name": "zoning", "order": 1, "txn": "shared", "writes_ref": 0, "scope": "incremental", "invalidator_ref": 1, "timeout_minutes_from_config": "enrich_parcels_pass_statement_timeout_minutes" },
+      { "name": "max_build", "order": 2, "txn": "shared", "writes_ref": 1, "scope": "incremental", "invalidator_ref": 2, "timeout_minutes_from_config": "enrich_parcels_pass_statement_timeout_minutes" },
+      { "name": "existing_structure", "order": 3, "txn": "shared", "writes_ref": 2, "scope": "incremental", "timeout_minutes_from_config": "enrich_parcels_pass_statement_timeout_minutes" },
+      { "name": "comparable_builds", "order": 4, "txn": "shared", "writes_ref": 3, "scope": "incremental", "invalidator_ref": 0, "timeout_minutes_from_config": "enrich_parcels_pass_statement_timeout_minutes" },
+      { "name": "optimal_config", "order": 5, "txn": "post_commit", "writes_ref": 4, "scope": "deferred", "timeout_minutes_from_config": "enrich_parcels_pass5_timeout_minutes" }
+    ],
+    "budget": "150m",
+    "txn_scope": "step",
+    "txn_budget": "130m",
+    "chunked": true,
+    "statement_timeout": "75m",
+    "step_timeout": "180m",
+    "batch": 500,
+    "batch_size_from_config": "enrich_parcels_optcfg_batch_size",
+    "needs_disk_mb": "none",
+    "partial_fill": "staged",
+    "on_row_error": "fail_fast",
+    "on_batch_error": "fail_step",
+    "on_check_error": "fail_step",
+    "on_check_error_why": {
+      "text": "Every check reads a value the library already measured — mirrors every prior pilot's own on_check_error_why reasoning verbatim.",
+      "liveness": { "kind": "file", "ref": "scripts/lib/compute/enrich-parcels.js" }
+    },
+    "on_degrade": "none",
+    "criticality": "required",
+    "network": "none",
+    "invocation": {
+      "sources": { "argv": ["--full"], "env": {} }
+    },
+    "maintenance": "none"
+  },
+
+  "checks": [
+    {
+      "id": "parcels_with_zone_class_pct_warn",
+      "kind": "bound",
+      "expect": { "of": "parcels.zoning_class IS NOT NULL / parcels WHERE geom IS NOT NULL, as a percentage" },
+      "limit": "pct >= 95",
+      "limit_from_config": "enrich_parcels_zone_class_pct_pass_floor",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": { "text": "Spec 65 §3a DEC-4 — the ONE hard gate, ported by name from the legacy audit row's WARN arm (zonePct >= 95 PASS else WARN/FAIL). Live measured 96.8%.", "liveness": { "kind": "column", "ref": "parcels.zoning_class" } }
+    },
+    {
+      "id": "parcels_with_zone_class_pct_fail",
+      "kind": "bound",
+      "expect": { "of": "parcels.zoning_class IS NOT NULL / parcels WHERE geom IS NOT NULL, as a percentage" },
+      "limit": "pct >= 90",
+      "limit_from_config": "enrich_parcels_zone_class_pct_warn_floor",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": { "text": "Spec 65 §3a DEC-4 — the same gate's FAIL arm (< 90%). Split into two checks (WARN floor 95, FAIL floor 90) because checks[] is single-severity per entry; the legacy script's own three-tier ternary (>=95 PASS, >=90 WARN, else FAIL) is expressed as two independently-thresholded bound checks over the SAME metric.", "liveness": { "kind": "column", "ref": "parcels.zoning_class" } }
+    },
+    {
+      "id": "opt_config_engine_errors",
+      "kind": "bound",
+      "expect": { "of": "per-row optimal-config engine exceptions, caught and counted, stream continues (Spec 78 §P3A.4)" },
+      "limit": "viol == 0",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": { "text": "Ported by name — the one gated engine-error counter among the 96 audit rows.", "liveness": { "kind": "column", "ref": "parcels.optimal_config" } }
+    },
+    {
+      "id": "opt_aor_without_max_gfa",
+      "kind": "invariant",
+      "expect": { "invariant": "opt_aor_gfa_sqm populated with no max_buildable_gfa_sqm to have derived it from is vacuous-zero territory (B0 item 4's companion check, covers the 13,746 non-ravine NULL-envelope parcels ravine_constrained_carries_priced_cost does not)" },
+      "limit": "viol == 0",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": { "text": "Ported by name — measured 0/437,305 on ratification.", "liveness": { "kind": "column", "ref": "parcels.opt_aor_gfa_sqm" } }
+    },
+    {
+      "id": "pass5_post_commit_read_order",
+      "kind": "plan_shape",
+      "expect": { "reports": "pass 5 (optimal-config) runs ONLY after passes 1-4's shared transaction has COMMITted" },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "pre_write",
+      "chains": "all",
+      "accept_until": "none",
+      "order_guarantee": {
+        "guarantee": "pass 5 reads parcels columns passes 1-4 just wrote inside their own shared transaction and MUST run only after that transaction commits — a same-txn read would be invisible.",
+        "spec_ref": "docs/specs/01-pipeline/78_optimal_lot_configuration.md",
+        "anchor": "read would be invisible"
+      },
+      "why": { "text": "Rule 11 (Spec 124 §2) — the declared half of Spec 78 §P3A.1's own ordering guarantee, verified this commit to still be literally present in the cited spec text before being cited (Rule 11 order-guarantee test, this file).", "liveness": { "kind": "spec", "ref": "docs/specs/01-pipeline/78_optimal_lot_configuration.md" } }
+    },
+    { "id": "parcels_enriched_count", "kind": "field_coverage", "expect": { "reports": "pass 1 rows the guarded UPDATE actually changed" }, "limit": "viol == 0", "severity": "INFO", "blocking": false, "when": "post", "chains": "all", "accept_until": "none", "why": { "text": "Ported by name.", "liveness": { "kind": "table", "ref": "parcels" } } },
+    { "id": "parcels_ambiguous_zone_count", "kind": "bound", "expect": { "of": "parcels with zoning_dominant_area_share < 0.60 among scoped parcels" }, "limit": "pct <= 5", "severity": "WARN", "blocking": false, "when": "post", "chains": "all", "accept_until": "none", "why": { "text": "Ported by name — result.scoped && result.ambiguous > 0.05*result.scoped -> WARN.", "liveness": { "kind": "column", "ref": "parcels.zoning_is_ambiguous" } } },
+    { "id": "zoning_fsi_source_nulled_count", "kind": "field_coverage", "expect": { "reports": "corrupt R-zone fsi_max > 10 source rows nulled pre-aggregation (WF3 B2 source-plausibility guard)" }, "limit": "viol == 0", "severity": "INFO", "blocking": false, "when": "post", "chains": "all", "accept_until": "none", "why": { "text": "Ported by name.", "liveness": { "kind": "table", "ref": "zoning_bylaw_areas" } } },
+    { "id": "max_build_enriched_count", "kind": "field_coverage", "expect": { "reports": "pass 2 rows the guarded UPDATE actually changed" }, "limit": "viol == 0", "severity": "INFO", "blocking": false, "when": "post", "chains": "all", "accept_until": "none", "why": { "text": "Ported by name.", "liveness": { "kind": "table", "ref": "parcels" } } },
+    { "id": "massing_zero_link_ghost", "kind": "bound", "expect": { "of": "scoped parcels with ZERO parcel_buildings links at all (forward-looking; a future citywide-massing regression must be visible)" }, "limit": "viol == 0", "severity": "WARN", "blocking": false, "when": "post", "chains": "all", "accept_until": "none", "why": { "text": "Ported by name — D1' forward-looking guard, day-one value 0.", "liveness": { "kind": "table", "ref": "parcel_buildings" } } },
+    { "id": "max_build_coverage_defaulted_count", "kind": "field_coverage", "expect": { "reports": "zone-default coverage applied (no bylaw coverage)" }, "limit": "viol == 0", "severity": "INFO", "blocking": false, "when": "post", "chains": "all", "accept_until": "none", "why": { "text": "Ported by name — reported via envelope_constraint_reason/max_build_setback_basis provenance, no dedicated boolean column.", "liveness": { "kind": "table", "ref": "parcels" } } },
+    { "id": "max_build_box_excluded_count", "kind": "field_coverage", "expect": { "reports": "box+buffer excluded as degenerate (D-C below-floor residual)" }, "limit": "viol == 0", "severity": "INFO", "blocking": false, "when": "post", "chains": "all", "accept_until": "none", "why": { "text": "Ported by name.", "liveness": { "kind": "column", "ref": "parcels.max_buildable_footprint_sqm" } } },
+    { "id": "heritage_mislink_footprint_count", "kind": "field_coverage", "expect": { "reports": "heritage freezes nulled because the primary-massing footprint exceeds the lot (mislink guard, Spec 65 MB-5)" }, "limit": "viol == 0", "severity": "INFO", "blocking": false, "when": "post", "chains": "all", "accept_until": "none", "why": { "text": "Ported by name — reported via envelope_constraint_reason provenance, no dedicated boolean column.", "liveness": { "kind": "table", "ref": "parcels" } } },
+    { "id": "ravine_constrained_count", "kind": "field_coverage", "expect": { "reports": "the ravine-constrained all-NULL residual (envelope_constraint_reason = 'ravine')" }, "limit": "viol == 0", "severity": "INFO", "blocking": false, "when": "post", "chains": "all", "accept_until": "none", "why": { "text": "Ported by name.", "liveness": { "kind": "column", "ref": "parcels.envelope_constraint_reason" } } },
+    { "id": "existing_structure_enriched_count", "kind": "field_coverage", "expect": { "reports": "pass 3 EXISTING-half rows the guarded UPDATE actually changed" }, "limit": "viol == 0", "severity": "INFO", "blocking": false, "when": "post", "chains": "all", "accept_until": "none", "why": { "text": "Ported by name.", "liveness": { "kind": "table", "ref": "parcels" } } },
+    { "id": "existing_mislinked_footprint_count", "kind": "field_coverage", "expect": { "reports": "primary-massing footprint / lot_size_sqm exceeding 1 + mislink_footprint_lot_tol (ES-6.2) — whole existing structure NULLed, existing_data_quality_flag = 'footprint_exceeds_lot'" }, "limit": "viol == 0", "severity": "INFO", "blocking": false, "when": "post", "chains": "all", "accept_until": "none", "why": { "text": "Ported by name.", "liveness": { "kind": "column", "ref": "parcels.existing_data_quality_flag" } } },
+    { "id": "scenario_enriched_count", "kind": "field_coverage", "expect": { "reports": "pass 3 SCENARIO-half rows the guarded UPDATE actually changed" }, "limit": "viol == 0", "severity": "INFO", "blocking": false, "when": "post", "chains": "all", "accept_until": "none", "why": { "text": "Ported by name.", "liveness": { "kind": "table", "ref": "parcels" } } },
+    { "id": "comp_candidate_pool", "kind": "field_coverage", "expect": { "reports": "pass 4 candidate rows found before the top-N cutoff" }, "limit": "viol == 0", "severity": "INFO", "blocking": false, "when": "post", "chains": "all", "accept_until": "none", "why": { "text": "Ported by name.", "liveness": { "kind": "table", "ref": "permits" } } },
+    { "id": "comparable_builds_enriched_count", "kind": "field_coverage", "expect": { "reports": "pass 4 rows the (unguarded, EP-D1-pinned) UPDATE touched" }, "limit": "viol == 0", "severity": "INFO", "blocking": false, "when": "post", "chains": "all", "accept_until": "none", "why": { "text": "Ported by name.", "liveness": { "kind": "column", "ref": "parcels.comparable_builds" } } },
+    { "id": "comp_zero_comps_count", "kind": "field_coverage", "expect": { "reports": "eligible parcels with zero matching comps (comp_count = 0 zero-fill population)" }, "limit": "viol == 0", "severity": "INFO", "blocking": false, "when": "post", "chains": "all", "accept_until": "none", "why": { "text": "Ported by name — EP-D1's never-refresh signature.", "liveness": { "kind": "column", "ref": "parcels.comp_count" } } },
+    { "id": "optimal_config_enriched_count", "kind": "field_coverage", "expect": { "reports": "pass 5 rows the batched UPDATE actually changed" }, "limit": "viol == 0", "severity": "INFO", "blocking": false, "when": "post", "chains": "all", "accept_until": "none", "why": { "text": "Ported by name.", "liveness": { "kind": "table", "ref": "parcels" } } },
+    { "id": "opt_aor_envelope_capped_count", "kind": "field_coverage", "expect": { "reports": "as-of-right builds whose storeys were capped at the parcel's own max-build envelope" }, "limit": "viol == 0", "severity": "INFO", "blocking": false, "when": "post", "chains": "all", "accept_until": "none", "why": { "text": "Ported by name.", "liveness": { "kind": "column", "ref": "parcels.opt_aor_gfa_sqm" } } },
+    { "id": "opt_config_citywide_fallback_count", "kind": "field_coverage", "expect": { "reports": "parcels whose optimal-config fell back to the citywide (NULL,'all') neighbourhood_build_norms backstop" }, "limit": "viol == 0", "severity": "INFO", "blocking": false, "when": "post", "chains": "all", "accept_until": "none", "why": { "text": "Ported by name.", "liveness": { "kind": "table", "ref": "neighbourhood_build_norms" } } },
+    { "id": "enrich_parcels_duration_ms", "kind": "field_coverage", "expect": { "reports": "total step wall-clock duration" }, "limit": "viol == 0", "severity": "INFO", "blocking": false, "when": "post", "chains": "all", "accept_until": "none", "why": { "text": "Ported by name.", "liveness": { "kind": "check", "ref": "opt_config_engine_errors" } } }
+  ],
+
+  "invariants": [
+    {
+      "id": "opt_aor_gfa_gt_max_buildable_gfa_count",
+      "sql": "SELECT count(*)::int FROM parcels WHERE opt_aor_gfa_sqm IS NOT NULL AND max_buildable_gfa_sqm IS NOT NULL AND opt_aor_gfa_sqm > max_buildable_gfa_sqm",
+      "bound": "viol == 0",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "source": "invariant",
+      "frequency": "every_run",
+      "last_measured": { "value": 0, "at": "2026-09-04T00:00:00.000Z", "commit": "cd26f9ea", "cost_ms": 210, "sample_n": 1, "source_run": { "run_id": null, "chain": null, "event": "golden_capture" } },
+      "why": { "text": "Spec 78 §P2 — an as-of-right build may never exceed the max-build envelope. Fold C4 measured 0/424,123 clean; a genuine positive count means the optimal-config engine escaped its own binding constraint.", "liveness": { "kind": "column", "ref": "parcels.opt_aor_gfa_sqm" } }
+    },
+    {
+      "id": "zoning_dominant_area_share_out_of_range_count",
+      "sql": "SELECT count(*)::int FROM parcels WHERE zoning_dominant_area_share IS NOT NULL AND (zoning_dominant_area_share < 0 OR zoning_dominant_area_share > 1)",
+      "bound": "viol == 0",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "source": "invariant",
+      "frequency": "every_run",
+      "last_measured": { "value": 0, "at": "2026-09-04T00:00:00.000Z", "commit": "cd26f9ea", "cost_ms": 180, "sample_n": 1, "source_run": { "run_id": null, "chain": null, "event": "golden_capture" } },
+      "why": { "text": "Spec 65 §3c — a share is structurally a fraction of total joined area; a value outside [0,1] means the area-aggregation SQL itself regressed, not a data-quality finding.", "liveness": { "kind": "column", "ref": "parcels.zoning_dominant_area_share" } }
+    }
+  ],
+
+  "plausibility": [
+    {
+      "id": "comp_fsi_p50_small_n_sample_count",
+      "sql": "SELECT count(*)::int FROM parcels WHERE comp_fsi_p50 IS NOT NULL AND comp_count IS NOT NULL AND comp_count < 3",
+      "bound": "viol == 0",
+      "count_field": "comp_fsi_p50_small_n_count",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "source": "plausibility",
+      "frequency": "every_run",
+      "retighten_when": "population trends toward 0 as the comps corpus densifies",
+      "last_measured": { "value": 0, "at": "2026-09-04T00:00:00.000Z", "commit": "cd26f9ea", "cost_ms": 240, "sample_n": 1, "source_run": { "run_id": null, "chain": null, "event": "manual_timing" } },
+      "why": { "text": "EP-D8 small-N caveat (Fold C2, PINNED per Spec 123 §3.1). comp_fsi_p50 has no structure_family/zone compatibility invariant (:1164-1166 filters work_type + [0.05,8] only) — parcel 8244 (R, detached, 290 sqm) measured comp_fsi_p50=6.615 sourced from apartment-scale comps (structure_family:\"all\"). A median over < 3 comps is a genuinely thin sample regardless of the family-mismatch defect; WARN surfaces the population so a reader can weigh confidence, peel 8y (Fold G1) fixes the family filter itself.", "liveness": { "kind": "file", "ref": "docs/reports/defect-ledger.md" } }
+    },
+    {
+      "id": "heritage_basis_coverage_distribution",
+      "sql": "SELECT count(*)::int FROM parcels WHERE max_buildable_gfa_basis = 'heritage_existing' AND max_buildable_footprint_sqm IS NOT NULL AND lot_size_sqm > 0 AND (max_buildable_footprint_sqm / lot_size_sqm) > 0.65",
+      "bound": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "source": "plausibility",
+      "frequency": "every_run",
+      "kind": "distribution",
+      "last_measured": { "value": 1677, "at": "2026-09-04T00:00:00.000Z", "commit": "cd26f9ea", "cost_ms": 260, "sample_n": 1, "source_run": { "run_id": null, "chain": null, "event": "manual_timing" } },
+      "why": { "text": "Ask 9 RULING (Fold G4): Spec 65 §4 MB-5 states heritage GFA carries NO FSI cap by design — high heritage coverage is EXPECTED, not anomalous. Fold C3 measured 1,677/5,283 (31.7%) of heritage-basis parcels exceeding 65% coverage; a WARN/FAIL bound on ~32% of a class the spec itself calls legitimate repeats the exact over-gating pattern DEC-4 rejects elsewhere in this same spec. INFO-only distribution row, mirroring MB-8's own \"all INFO, never gated\" convention — a gated bound would require a fresh Spec 65 §4 amendment overriding MB-5's stated intent, not a silent commit-7 default.", "liveness": { "kind": "spec", "ref": "docs/specs/01-pipeline/65_enrich_parcels.md" } }
+    },
+    {
+      "id": "existing_mislink_footprint_ratio_out_of_bound_count",
+      "sql": "SELECT count(*)::int FROM parcels WHERE imagery_roof_footprint_sqm IS NOT NULL AND lot_size_sqm > 0 AND (imagery_roof_footprint_sqm / lot_size_sqm) > 1.05 AND existing_data_quality_flag IS DISTINCT FROM 'footprint_exceeds_lot'",
+      "bound": "viol == 0",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "source": "plausibility",
+      "frequency": "every_run",
+      "retighten_when": "zero rows",
+      "last_measured": { "value": 0, "at": "2026-09-04T00:00:00.000Z", "commit": "cd26f9ea", "cost_ms": 190, "sample_n": 1, "source_run": { "run_id": null, "chain": null, "event": "manual_timing" } },
+      "why": { "text": "Spec 65 §5 ES-6.2 — a primary footprint exceeding 1 + mislink_footprint_lot_tol (0.05) of its own lot should already be NULLed by the mislink guard (existing_data_quality_flag = 'footprint_exceeds_lot'). A row past the bound WITHOUT that flag set is the guard failing to fire on its own stated case.", "liveness": { "kind": "column", "ref": "parcels.existing_data_quality_flag" } }
+    }
+  ],
+
+  "override": {
+    "force_full": "ENRICH_PARCELS_FORCE_FULL",
+    "force_run": "none",
+    "dry_run": "none"
+  },
+
+  "emits": [
+    { "key": "duration_ms", "type": "int", "consumers": [] },
+    { "key": "pass_durations_ms", "type": "object", "consumers": [] },
+    { "key": "records_updated_aggregate", "type": "int", "consumers": [] }
+  ],
+
+  "deviations": "none",
+
+  "limitations": [
+    {
+      "what": "pipeline_runs is written by recordHeartbeat/captureStallDiagnostic (:1547/:1593) but absent from emitMeta's own declared writes map (EP-D5, OPEN, PIN) — a producer/consumer records_meta contract gap (Spec 48 §3.6/§3.7). Not declared as an outputs.writes[] target this commit (the writes are operational heartbeat telemetry, not step-owned data); filed for a future peel.",
+      "measured": "scripts/enrich-parcels.js:1547,1593 vs emitMeta writes map :2318-2333",
+      "check_id": "none"
+    },
+    {
+      "what": "The hand-rolled verdictCascade (:1799) sits outside scripts/lib/step/verdict.js#deriveVerdict (Rule 10, EP-D3, OPEN, PIN) — the checkVerdictSingleSource corpus does not yet see this file. Routed through deriveVerdict at the commit-8 peel.",
+      "measured": "scripts/enrich-parcels.js:1799",
+      "check_id": "none"
+    },
+    {
+      "what": "Three spellings of the step slug in one file (EP-D6, OPEN, PIN): pipeline.run('enrich-parcels') (:2343), PIPELINE_NAME='sources:enrich_parcels' (:75, declared and never referenced — dead), DEFER_STEP_SLUG='enrich_parcels' (:91, what the defer marker actually emits). identity.name becomes the single source of truth once cutover retires the dead :75 declaration.",
+      "measured": "scripts/enrich-parcels.js:2343,75,91",
+      "check_id": "none"
+    },
+    {
+      "what": "Pass 5 runs outside both runPass (:2058/:2062/:2067/:2071) and the SET LOCAL statement_timeout/lock_timeout pair (:2047-2048, txn-scoped to passes 1-4 only) in the LEGACY script (EP-D7, OPEN — Ask 7 ruling pending). This descriptor declares enrich_parcels_pass5_timeout_minutes as its bound; the runner (runEnrichPhase, commit 7d) is what actually enforces it via a live SET on the pass-5 session, closing the legacy gap.",
+      "measured": "scripts/enrich-parcels.js:2088-2096",
+      "check_id": "none"
+    }
+  ],
+
+  "interpretation": { "file": "enrich-parcels.notes.json", "entries": 6 },
+
+  "recovery": {
+    "reset": "No TRUNCATE/rebuild mechanism — a full re-run (ENRICH_PARCELS_FORCE_FULL=1) re-derives every guarded column from live source tables; the two run-clock stamps and the pass-4/5 unguarded targets always rewrite regardless of mode.",
+    "resume": "none",
+    "force": "ENRICH_PARCELS_FORCE_FULL",
+    "rollback": "none",
+    "verify_clean": "generated",
+    "cascades": "derived",
+    "interrupted": "force_full_on_next_run",
+    "interrupted_why": {
+      "text": "Fold A2 (Rule 12/R-B) — passes 4 and 5's own ineligibility resets (:1220-1221 comp blanket reset, :1662 pass-5 11-col reset to NULL) are set_based_null_retract-class statements: a process killed mid-reset leaves a hole no incremental run's own staleness gate can see (the same class R-B's own link_massing precedent names). A crashed run's next invocation must be forced full.",
+      "liveness": { "kind": "file", "ref": "scripts/enrich-parcels.js" }
+    },
+    "before_image": "none",
+    "before_image_why": {
+      "text": "R-M's scope is destructive RETRACTION (a DELETE, or an UPDATE overwriting a value the guard predicate could be wrong about, with no record of the prior value) — every write target here either fully re-derives its columns from live source tables on every eligible row (passes 1-3, 5) or is an explicitly PINNED unguarded overwrite whose own guard_why already states the reasoning (pass 4, the run-clock stamps, the pass3_scope ledger). None of the 5 write targets DELETEs a row or nulls a value it cannot immediately re-derive on the next run.",
+      "liveness": { "kind": "file", "ref": "scripts/enrich-parcels.js" }
+    }
+  },
+
+  "database": {
+    "class": "primary",
+    "min_migration": 237,
+    "assert_current_database": "postgres"
+  },
+
+  "counters": {
+    "records_total": { "source": "compute.total_parcels_scanned", "scoped_by": "step" },
+    "records_new": { "source": "compute.records_new_aggregate", "scoped_by": "step" },
+    "records_updated": { "source": "compute.records_updated_aggregate", "scoped_by": "step" }
+  },
+
+  "config": {
+    "logic_variables": [
+      { "name": "road_overlay_distance_m", "min": 0, "max": 500, "on_invalid": "fail" },
+      { "name": "reno_coa_uplift_pct", "min": 0, "max": 1, "on_invalid": "fail" },
+      { "name": "reno_kitchen_gfa_pct", "min": 0, "max": 1, "on_invalid": "fail" },
+      { "name": "reno_bath_gfa_pct", "min": 0, "max": 1, "on_invalid": "fail" },
+      { "name": "mislink_footprint_lot_tol", "min": 0, "max": 1, "on_invalid": "fail" },
+      { "name": "max_build_min_dimension_m", "min": 0, "max": 20, "on_invalid": "fail" },
+      { "name": "storey_height_m", "min": 1, "max": 10, "on_invalid": "fail" },
+      { "name": "garage_min_lot_sqm", "min": 0, "max": 5000, "on_invalid": "fail" },
+      { "name": "garage_max_gfa_sqm", "min": 0, "max": 500, "on_invalid": "fail" },
+      { "name": "garage_min_footprint_sqm", "min": 0, "max": 200, "on_invalid": "fail" },
+      { "name": "accessory_max_coverage_pct", "min": 0, "max": 1, "on_invalid": "fail" },
+      { "name": "car_footprint_sqm", "min": 0, "max": 100, "on_invalid": "fail" },
+      { "name": "laneway_suite_max_gfa_sqm", "min": 0, "max": 500, "on_invalid": "fail" },
+      { "name": "laneway_suite_min_lot_sqm", "min": 0, "max": 5000, "on_invalid": "fail" },
+      { "name": "laneway_suite_min_rear_yard_m", "min": 0, "max": 20, "on_invalid": "fail" },
+      { "name": "min_soft_landscaping_pct", "min": 0, "max": 1, "on_invalid": "fail" },
+      { "name": "laneway_suite_storeys", "min": 1, "max": 3, "on_invalid": "fail" },
+      { "name": "garden_suite_storeys", "min": 1, "max": 3, "on_invalid": "fail" },
+      { "name": "garden_suite_min_lot_sqm", "min": 0, "max": 5000, "on_invalid": "fail" },
+      { "name": "garden_suite_min_rear_yard_m", "min": 0, "max": 20, "on_invalid": "fail" },
+      { "name": "garden_suite_max_gfa_sqm", "min": 0, "max": 500, "on_invalid": "fail" },
+      { "name": "enrich_parcels_defer_threshold_rows", "min": 1000, "max": 500000, "on_invalid": "fail" },
+      { "name": "enrich_parcels_heartbeat_minutes", "min": 1, "max": 60, "on_invalid": "fail" },
+      { "name": "enrich_parcels_pass_statement_timeout_minutes", "min": 0, "max": 180, "on_invalid": "fail" },
+      { "name": "enrich_parcels_lock_timeout_ms", "min": 0, "max": 3600000, "on_invalid": "fail" },
+      { "name": "enrich_parcels_comp_lot_tol", "min": 0, "max": 1, "on_invalid": "fail" },
+      { "name": "enrich_parcels_comp_knn_overfetch", "min": 1, "max": 500, "on_invalid": "fail" },
+      { "name": "enrich_parcels_comp_top_n", "min": 1, "max": 100, "on_invalid": "fail" },
+      { "name": "enrich_parcels_comp_over_capture_clamp", "min": 1, "max": 5, "on_invalid": "fail" },
+      { "name": "enrich_parcels_comp_fsi_min_plausible", "min": 0, "max": 1, "on_invalid": "fail" },
+      { "name": "enrich_parcels_comp_fsi_max_plausible", "min": 1, "max": 50, "on_invalid": "fail" },
+      { "name": "enrich_parcels_comps_window_years", "min": 1, "max": 20, "on_invalid": "fail" },
+      { "name": "enrich_parcels_optcfg_batch_size", "min": 50, "max": 5000, "on_invalid": "fail" },
+      { "name": "enrich_parcels_pass5_stream_batch_size", "min": 10, "max": 2000, "on_invalid": "fail" },
+      { "name": "enrich_parcels_bbox_degree_divisor", "min": 1000, "max": 1000000, "on_invalid": "fail" },
+      { "name": "enrich_parcels_zone_class_pct_pass_floor", "min": 0, "max": 100, "on_invalid": "fail" },
+      { "name": "enrich_parcels_zone_class_pct_warn_floor", "min": 0, "max": 100, "on_invalid": "fail" },
+      { "name": "enrich_parcels_comps_as_of_date", "min": "none", "max": "none", "on_invalid": "fail" },
+      { "name": "enrich_parcels_pass5_timeout_minutes", "min": 0, "max": 180, "on_invalid": "fail" }
+    ],
+    "validation": "strict",
+    "hoisted_above_gate": true,
+    "retired": []
+  },
+
+  "sharing": {
+    "chains": "derived",
+    "shared": "derived",
+    "slug_forms": "derived",
+    "varies_by_chain": {
+      "checks": "none",
+      "phase": { "sources": 22 },
+      "audit_table": "one",
+      "scope": "none"
+    },
+    "on_contention": "self_skip"
+  },
+
+  "terminals": [
+    {
+      "id": "enriched_full", "kind": "success", "status": "completed",
+      "records_meta": { "duration_ms": "int", "pass_durations_ms": "object", "records_updated_aggregate": "int", "audit_table": "object", "terminal": "string" },
+      "why": { "text": "The normal outcome under the only live cloud invocation (--full): all 5 phases ran, no FAIL row stands.", "liveness": { "kind": "check", "ref": "parcels_with_zone_class_pct_warn" } }
+    },
+    {
+      "id": "enriched_full_with_warnings", "kind": "success", "status": "completed_with_warnings",
+      "records_meta": { "audit_table": "object", "terminal": "string" },
+      "why": { "text": "A WARN row stands (zone-class pct floor, massing_zero_link_ghost, ambiguous-zone pct, or a plausibility WARN) and nothing FAILED.", "liveness": { "kind": "check", "ref": "massing_zero_link_ghost" } }
+    },
+    {
+      "id": "lock_held_elsewhere", "kind": "skip_lock_contention", "status": "self_skipped",
+      "records_meta": { "skipped": "bool", "reason": "string" },
+      "why": { "text": "Advisory lock 65 is held by another process — a row-derived SKIP summary, never a bare SDK skip with no audit_table.", "liveness": { "kind": "file", "ref": "scripts/lib/step/index.js" } }
+    },
+    {
+      "id": "failed_precondition", "kind": "fail_error", "status": "failed",
+      "records_meta": { "audit_table": "object", "terminal": "string" },
+      "why": { "text": "assertPreconditions refused before the shared transaction even opened — PostGIS missing or no GiST index on parcels.geom.", "liveness": { "kind": "file", "ref": "scripts/enrich-parcels.js" } }
+    },
+    {
+      "id": "failed_zone_class_pct", "kind": "fail_check", "status": "failed",
+      "records_meta": { "audit_table": "object", "terminal": "string" },
+      "why": { "text": "The zone-class-coverage FAIL floor (< 90%) fired — the write already happened (pass 1 completed and committed with the rest of the shared transaction), so this is a fail_check, not a pre-write refusal.", "liveness": { "kind": "check", "ref": "parcels_with_zone_class_pct_fail" } }
+    },
+    {
+      "id": "failed_opt_config_engine_errors", "kind": "fail_check", "status": "failed",
+      "records_meta": { "audit_table": "object", "terminal": "string" },
+      "why": { "text": "opt_config_engine_errors > 0 — pass 5 already wrote (per-row engine exceptions are caught and counted, the stream continues), so this is a fail_check surfaced after the write, mirroring Spec 78 §P3A.4's own caught-and-counted posture.", "liveness": { "kind": "check", "ref": "opt_config_engine_errors" } }
+    }
+  ]
+}
