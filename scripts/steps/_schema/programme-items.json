@@ -1467,8 +1467,8 @@
       "spec": "122 §3.0b",
       "title": "EP-D10 pin — enrich_parcels_pass3_scope grows unbounded (append-only, never pruned)",
       "promised": "Spec 123 §3.1: a KNOWN-DEFECT is pinned in its current wrong form, annotated with a Defect Ledger ID, and fixed in a separate commit after the conversion is green",
-      "status": "NOT_STARTED",
-      "evidence": "docs/reports/defect-ledger.md EP-D10 row (pilot 9 commit 4c, 2026-09-04) — measured linear +442,244 rows per --full run across 4 consecutive local runs (442,244 -> 884,488 -> 1,326,732 -> 1,768,976; distinct_run_ids 1->2->3->4), distinct(parcel_id) flat at 442,244 throughout (100% of growth is pure duplication). The :2073-2076 comment (\"enrichOptimalConfig unions any prior run's UNCONSUMED rows, regardless of run_id\") is a crash-recovery safety net only; zero DELETE/TRUNCATE against this table exists anywhere in the file (confirmed, 27-statement DML enumeration).",
+      "status": "BUILT",
+      "evidence": "docs/reports/defect-ledger.md EP-D10 row (CLOSED-in-commit, pilot9 commit 8 P1, 2026-09-08) — DELETE FROM enrich_parcels_pass3_scope WHERE consumed_at IS NOT NULL added to runPass5 (scripts/lib/compute/enrich-parcels.js), issued after consumePendingScope so every row this run could process has already been attempted before pruning; unconsumed rows (a per-row recovery error) are preserved. Pin test flipped RED->GREEN in the new form (src/tests/steps/enrich_parcels/violations.test.ts, EP-D10 FIXED). Full enrich_parcels test file green (49/49).",
       "owner": {
         "kind": "pilot",
         "ref": "pilot9_enrich_parcels"
@@ -1479,7 +1479,7 @@
           "enrich_parcels"
         ]
       },
-      "last_reviewed": "2026-09-04"
+      "last_reviewed": "2026-09-08"
     },
     {
       "id": "EP-PIN-PERF",

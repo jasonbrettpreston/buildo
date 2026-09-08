@@ -53,7 +53,9 @@
       "paths": {
         "outputs.writes[].write_discipline.guard": "none"
       },
-      "rules": ["no_retraction"],
+      "rules": [
+        "no_retraction"
+      ],
       "why": "outputs.writes[0] is the sole INSERT INTO parcel_address_points ... SELECT ... JOIN ST_Within ... ON CONFLICT (parcel_id, address_point_id) DO NOTHING (LG-18, class insert_only_no_retraction, retract:\"none\"). No column on this write target is ever updated after insert — computed_at is a write-once RUN_AT stamp. A change guard would compare a row against itself and always pass; the genuine gap IS the banned no_retraction shape itself (LPA-D1, pinned per Spec 123 §3.1 as a KNOWN-DEFECT with zero measured live exposure: an upstream geom UPDATE on parcels/address_points can leave a stale row with no repair mechanism). Both the guard axis and the retraction axis are grandfathered together here — same defect, same commit, same adjudication — mirroring link_massing's E1 precedent for the guard half (keyed on .guard, never .class, per assertGrandfathered's GUARD_PATH) and naming the rule id directly for the retraction half (per assertNoRetraction's rules[] shape, V7 GAP closure 2026-08-29).",
       "commit": "d44b4458",
       "adjudicated_by": "operator ruling 2026-08-29 (pilot 5 Fold A, A-2)",
@@ -61,7 +63,9 @@
       "lock_test": "src/tests/steps/link_parcel_addresses/violations.test.ts"
     },
     "fixture_no_retraction_allowed": {
-      "rules": ["no_retraction"],
+      "rules": [
+        "no_retraction"
+      ],
       "why": "The schema's own exemplar for the V7 grandfathered no_retraction shape — a FIXTURE, never a runnable step, exercising the rule in isolation from the guard axis (guard here is is_distinct_from, not the banned \"none\", so a difference in outcome between this fixture and its un-allowlisted twin can only be the rules[] allowlist). Exists so src/tests/step-schema.logic.test.ts can prove assertNoRetraction's GREEN direction is real, mirroring fixture_grandfathered_snapshot's role for assertGrandfathered.",
       "commit": "a51facca",
       "adjudicated_by": "Spec 124 GAP V7 no_retraction closure (schema fixture, not a manifest step)",
@@ -102,8 +106,10 @@
       "paths": {
         "outputs.writes[].write_discipline.guard": "none"
       },
-      "rules": ["no_retraction"],
-      "why": "ONE entry covering FOUR guard:\"none\" dispositions (the mechanism is generic — assertGrandfathered reads .guard, never .class, so one entry licenses every unguarded write target) plus the one no_retraction shape, per pilot 9's own fold record (2026-09-04): (1) zoning_enriched_at (:375/:443, Fold E1, the third unguarded write) and (2) massing_enriched_at (:831, deliberately unguarded by design, :824-828) are BOTH Rule-9 run-clock stamps sharing one write target — an IS DISTINCT FROM guard on a run-clock column is vacuous by construction (LG-9), and the real staleness signal lives in migration 242's trg_parcels_geom_invalidation trigger (declared as outputs.invalidates[1]/[2]), not in the stamp itself. (3) The pass-4 comparable_builds/comp_count/comp_dominant_build/comp_build_ratio_p50/comp_fsi_p50 UPDATE is EP-D1/B4.5 (docs/reports/defect-ledger.md), PINNED per Spec 123 §3.1 in its current wrong form (buildComparableBuildsUpdateSql carries no IS DISTINCT FROM anywhere; under --full, the only cloud mode, 354,679 parcels rewrite every run) — pinned_until: pilot9 commit 9, peel 8x is the fix. (4) The enrich_parcels_pass3_scope INSERT (ON CONFLICT (run_id, parcel_id) DO NOTHING) is genuinely append-only with no value to guard; its own no_retraction shape is EP-D10 (also PIN, pinned_until: pilot9 commit 9, docs/reports/defect-ledger.md) — every --full run's distinct run_id means ON CONFLICT never fires across runs, so the table grows unbounded (measured +442,244 rows/run, 100% duplication) with zero DELETE/TRUNCATE anywhere in the file; peel (commit 8) either prunes fully-consumed rows or re-keys ON CONFLICT (parcel_id) alone.",
+      "rules": [
+        "no_retraction"
+      ],
+      "why": "ONE entry covering FOUR guard:\"none\" dispositions (the mechanism is generic — assertGrandfathered reads .guard, never .class, so one entry licenses every unguarded write target) plus the one no_retraction shape, per pilot 9's own fold record (2026-09-04): (1) zoning_enriched_at (:375/:443, Fold E1, the third unguarded write) and (2) massing_enriched_at (:831, deliberately unguarded by design, :824-828) are BOTH Rule-9 run-clock stamps sharing one write target — an IS DISTINCT FROM guard on a run-clock column is vacuous by construction (LG-9), and the real staleness signal lives in migration 242's trg_parcels_geom_invalidation trigger (declared as outputs.invalidates[1]/[2]), not in the stamp itself. (3) The pass-4 comparable_builds/comp_count/comp_dominant_build/comp_build_ratio_p50/comp_fsi_p50 UPDATE is EP-D1/B4.5 (docs/reports/defect-ledger.md), PINNED per Spec 123 §3.1 in its current wrong form (buildComparableBuildsUpdateSql carries no IS DISTINCT FROM anywhere; under --full, the only cloud mode, 354,679 parcels rewrite every run) — pinned_until: pilot9 commit 9, peel 8x is the fix. (4) The enrich_parcels_pass3_scope INSERT (ON CONFLICT (run_id, parcel_id) DO NOTHING) is genuinely append-only with no value to guard — the no_retraction shape is intrinsic to the INSERT itself (an append-only crash-recovery ledger has nothing to retract), independent of EP-D10's own disposition. EP-D10 (docs/reports/defect-ledger.md) was CLOSED-in-commit at pilot9 commit 8 P1 (2026-09-08): runPass5 now issues DELETE FROM enrich_parcels_pass3_scope WHERE consumed_at IS NOT NULL immediately after consumePendingScope, pruning fully-consumed rows at run end (unconsumed rows are preserved for future crash recovery) — measured pre-fix growth was +442,244 rows/run, 100% duplication, across 4 consecutive local --full runs.",
       "commit": "pilot 9 commit 7b (2026-09-04)",
       "adjudicated_by": "Fold A/B/E/G (2026-09-04) + operator ruling G1 (pin-then-fix, Spec 123 §3.1)",
       "date": "2026-09-04",

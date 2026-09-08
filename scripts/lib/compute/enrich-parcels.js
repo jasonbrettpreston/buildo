@@ -1519,6 +1519,24 @@ async function runPass5(client, ctx, config) {
     );
   }
   stats.updated += await consumePendingScope(client, runId ?? -1, stats, stamp, stats.genuineIds, ctx.log);
+
+  // EP-D10 fix (pilot 9 commit 8 P1, Spec 123 §3.1 pin-then-fix). enrich_parcels_pass3_scope
+  // is genuinely unbounded/append-only by design (D4' crash-recovery, mig 240) — every --full
+  // run INSERTs a fresh (run_id, parcel_id) row per eligible parcel and nothing ever deleted
+  // them (measured: 442,244 rows/run, 100% duplication by run 4). The crash-recoverable
+  // GUARANTEE only needs UNCONSUMED rows (consumed_at IS NULL) to survive a crash between
+  // COMMIT and pass 5's read; a row whose consumed_at has already been stamped — by THIS run's
+  // own set-based UPDATE above, or by consumePendingScope's per-row recovery loop just above —
+  // has nothing left to recover and is pure debris. Pruned HERE, after every row this run could
+  // process has already been attempted (both the current run's own rows and any prior run's
+  // straggler), so a row a slower concurrent recovery might still need is never pruned out from
+  // under it — the advisory lock (identity.lock) already serializes this step to one run at a
+  // time, so "concurrent" here means only THIS invocation. Deliberately unconditional (every
+  // consumed row from every past run, not just this one) — there is no future use for a
+  // consumed row once written, and confining the DELETE to this run's own run_id would leave
+  // every PRIOR run's already-consumed rows undeleted forever, which is the exact bug being fixed.
+  const pruned = await client.query(`DELETE FROM enrich_parcels_pass3_scope WHERE consumed_at IS NOT NULL`);
+  stats.scope_pruned = pruned.rowCount || 0;
   return stats;
 }
 

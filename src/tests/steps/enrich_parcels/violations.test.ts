@@ -487,17 +487,21 @@ describe('KNOWN-DEFECT pins (Spec 123 §3.1) — each fails the moment its named
     expect(/near\.lot_size_sqm[\s\S]{0,140}\* 10\),\s*near\.id\)/i.test(src), 'EP-D9 pin: the outer rank clause must NOT yet carry a near.id secondary key').toBe(false);
   });
 
-  it('EP-D10 pin, TODAY\'s live tree (runner) — the enrich_parcels_pass3_scope hand-off INSERT (scripts/lib/step/index.js\'s runEnrichPhase — the seam-rewritten table-target now reads descriptor.outputs.writes[], not a literal table name) is ON CONFLICT (run_id, parcel_id) DO NOTHING (no dedup-by-parcel_id) and there is NO DELETE/TRUNCATE against this table anywhere in the runner or compute (peel, commit 8, flips this)', () => {
+  it('EP-D10 FIXED (peel, commit 8 P1), TODAY\'s live tree — the enrich_parcels_pass3_scope hand-off INSERT (scripts/lib/step/index.js\'s runEnrichPhase) stays ON CONFLICT (run_id, parcel_id) DO NOTHING (append-only, crash-recoverable trail unchanged), but compute now PRUNES fully-consumed rows at run end: a DELETE FROM enrich_parcels_pass3_scope WHERE consumed_at IS NOT NULL runs AFTER consumePendingScope, so the table no longer grows unboundedly (442,244 rows/run measured pre-fix). consumePendingScope\'s own recovery read already deduped by parcel_id (SELECT DISTINCT parcel_id …) — no DISTINCT ON was needed.', () => {
     const runnerSrc = lf(readTextToday(INDEX_REL));
     const computeSrc = computeSource();
     expect(
       /INSERT INTO \$\{scopeTarget\.table\}[\s\S]*?ON CONFLICT \(run_id, parcel_id\) DO NOTHING/.test(runnerSrc),
-      'EP-D10 pin: the append-only ON CONFLICT (run_id, parcel_id) shape must still be present in runEnrichPhase\'s scope hand-off insert',
+      'the append-only ON CONFLICT (run_id, parcel_id) shape must still be present in runEnrichPhase\'s scope hand-off insert — the crash-recoverable trail itself is unchanged, only its consumed tail is pruned',
     ).toBe(true);
     expect(
-      /DELETE\s+FROM\s+enrich_parcels_pass3_scope/i.test(runnerSrc) || /DELETE\s+FROM\s+enrich_parcels_pass3_scope/i.test(computeSrc),
-      'EP-D10 pin: no pruning DELETE against enrich_parcels_pass3_scope may exist yet (runner or compute)',
-    ).toBe(false);
+      /DELETE\s+FROM\s+enrich_parcels_pass3_scope\s+WHERE\s+consumed_at\s+IS\s+NOT\s+NULL/i.test(computeSrc),
+      'EP-D10 fix: a pruning DELETE (consumed_at IS NOT NULL only — unconsumed rows stay for future crash recovery) must exist in compute, issued after consumePendingScope',
+    ).toBe(true);
+    expect(
+      /SELECT\s+DISTINCT\s+parcel_id\s+FROM\s+enrich_parcels_pass3_scope/i.test(computeSrc),
+      'consumePendingScope\'s own recovery read must dedupe by parcel_id (SELECT DISTINCT parcel_id) — already true, re-asserted so a future regression is caught',
+    ).toBe(true);
   });
 
   it('EP-D8 small-N audit row — descriptor plausibility[] declares an audit row for comp_fsi_p50 sourced from < 3 non-null comps, WITH A COUNT (Fold C2) (flipped at: commit 7b)', () => {
@@ -615,24 +619,35 @@ describe('facts testable today — the live tree, not a future artifact', () => 
     expect(Math.max(...nums, 0), 'LG-28 (runEnrichPhase) has now landed (commit 7d/commit 2) — the highest LG number in scripts/lib + scripts/steps/_schema must be 28').toBe(28);
   });
 
-  it('converted.json — pending stays registered (not yet converted); the DECLARED stage has advanced to "shape_clean" (commit 7e/3, 2026-09-08): G9 (Reflection: heading + LOW-CONFIDENCE + RECURRING/STANDARD-SHAPING tables, assessment report §R) now PASSES, so G6/G7/G8/G9 are all clean (step-validate.mjs 16/17, hard-stop=false) — the file is genuinely shape-clean AND the declared stage now matches. Commit 9 cutover still needs the 4 cutover_prereq items (EP-PIN-B45/D8/D9/D10) resolved plus a green cloud chain-sources run.', () => {
+  it('converted.json — pending stays registered (not yet converted); the DECLARED stage is "shape_clean" or its R-K.2 sibling "shape_clean_pending_recapture" (commit 7e/3 advanced to shape_clean 2026-09-08; commit 8 P1 moved it to shape_clean_pending_recapture the SAME day, since P1-P4 edit compute\'s VALUES without changing its SHAPE — conformanceFindings() stays [], only the golden fingerprint is knowingly deferred to P6). Commit 9 cutover still needs the 4 cutover_prereq items (EP-PIN-B45/D8/D9/D10) resolved plus a green cloud chain-sources run.', () => {
     const c = JSON.parse(fs.readFileSync(abs(CONVERTED_REL), 'utf8')) as { converted: string[]; pending: Array<{ file: string; stage: string }> };
     expect(c.converted.includes(STEP_REL), 'enrich_parcels must not be registered as converted yet — that is commit 9 (cutover)').toBe(false);
     const entry = c.pending.find((p) => p.file === STEP_REL);
     expect(entry, `converted.json.pending must carry a ${STEP_REL} entry`).toBeDefined();
-    expect(entry!.stage, 'stage advanced to "shape_clean" this commit (see this test\'s own title for why)').toBe('shape_clean');
+    expect(
+      ['shape_clean', 'shape_clean_pending_recapture'],
+      'stage must be shape_clean or the R-K.2 shape_clean_pending_recapture sibling — both promise conformanceFindings() === []',
+    ).toContain(entry!.stage);
     expect(fs.existsSync(abs(DESCRIPTOR_REL)), 'a shape_clean-stage pending entry MUST have a sibling descriptor').toBe(true);
     expect(fs.existsSync(abs(COMPUTE_REL)), 'compute (7c) exists on disk').toBe(true);
   });
 
-  it('defect-ledger.md — EP-D1, EP-D8, EP-D9, EP-D10 all carry the PIN (Spec 123 §3.1) status, pinned_until pilot9 commit 9 (already landed, commits 4/4c/5)', () => {
+  it('defect-ledger.md — EP-D1, EP-D8, EP-D9 carry the PIN (Spec 123 §3.1) status, pinned_until pilot9 commit 9 (already landed, commits 4/4c/5)', () => {
     const ledger = readTextToday(DEFECT_LEDGER_REL);
-    for (const id of ['EP-D1', 'EP-D8', 'EP-D9', 'EP-D10']) {
+    for (const id of ['EP-D1', 'EP-D8', 'EP-D9']) {
       const row = ledger.split('\n').find((l) => l.includes(`| ${id} |`));
       expect(row, `${DEFECT_LEDGER_REL} has no row for ${id}`).toBeDefined();
       expect(row, `${id} row must carry PIN status`).toMatch(/\*\*PIN \(Spec 123 §3\.1\)/);
       expect(row, `${id} row must state pinned_until: pilot9 commit 9`).toMatch(/pinned_until:\s*pilot9 commit 9/);
     }
+  });
+
+  it('defect-ledger.md — EP-D10 is CLOSED-in-commit (commit 8 P1, 2026-09-08) — no longer PIN (flipped at: commit 8)', () => {
+    const ledger = readTextToday(DEFECT_LEDGER_REL);
+    const row = ledger.split('\n').find((l) => l.includes('| EP-D10 |'));
+    expect(row, `${DEFECT_LEDGER_REL} has no row for EP-D10`).toBeDefined();
+    expect(row, 'EP-D10 row must carry CLOSED-in-commit status, not PIN').toMatch(/\*\*CLOSED-in-commit/);
+    expect(row, 'EP-D10 row must no longer claim a PIN').not.toMatch(/\*\*PIN \(Spec 123 §3\.1\)/);
   });
 
   it('programme-items.json — EP-PIN-B45/D8/D9/D10 cutover_prereq entries exist, all blocking enrich_parcels (already landed, commits 4/4c/5)', () => {

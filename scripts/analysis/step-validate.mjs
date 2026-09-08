@@ -1362,8 +1362,22 @@ function computeMatrixHardStop(matrix, excludedRules = new Set()) {
  * silently defaulting to "no exclusion" (which would hide a typo'd stage as
  * a full hard-stop, the wrong failure direction) or "exclude everything"
  * (which would hide a typo'd stage as a free pass, the dangerous direction).
+ *
+ * **R-K.2 amendment (pilot 9 commit 8, 2026-09-08) — `"shape_clean_pending_recapture"`,
+ * a SIXTH value, NOT a no-op.** Pilot 9's commit-8 sequence (Spec 123 §3.1 pin-then-fix,
+ * one policy concern per peel) fixes B4.5/EP-D9/EP-D8 across THREE SEPARATE commits
+ * (P2/P3/P4), each editing `scripts/lib/compute/enrich-parcels.js` — but the golden POST
+ * captures are recaptured ONCE, in a LATER commit (P6), after all three land: recapturing
+ * after every peel would cost ~40 real minutes apiece to explain a diff only the FINAL
+ * post-P4 state needs to account for. This is the first value that is genuinely a
+ * TERMINAL-shaped stage (the file IS shape-clean — `conformanceFindings()` is `[]`, same
+ * promise `"shape_clean"` makes) that STILL excludes a gate: G8 alone (golden fingerprint
+ * currency), because that is the ONE thing the batched-recapture design deliberately defers.
+ * Unlike `descriptor_only`/`compute_ported`/`runner_wired` (which exclude gates that are
+ * UNDECIDABLE because their artifact does not exist yet), G8 here is fully decidable and
+ * genuinely red — the exclusion is a DECLARED, BOUNDED deferral, not an artifact gap.
  */
-const PENDING_STAGE_VOCAB = ['red_suite', 'descriptor_only', 'compute_ported', 'runner_wired', 'shape_clean'];
+const PENDING_STAGE_VOCAB = ['red_suite', 'descriptor_only', 'compute_ported', 'runner_wired', 'shape_clean', 'shape_clean_pending_recapture'];
 const STAGE_HARDSTOP_EXCLUSIONS = {
   // red_suite and shape_clean are deliberately ABSENT — they fall through to
   // the `{gates:[], rules:[]}` default below, not a table entry, so a NEW
@@ -1372,6 +1386,9 @@ const STAGE_HARDSTOP_EXCLUSIONS = {
   descriptor_only: { gates: ['G7', 'G8', 'G9'], rules: [4, 11, 12] },
   compute_ported: { gates: ['G8', 'G9'], rules: [] },
   runner_wired: { gates: ['G9'], rules: [] },
+  // R-K.2 — G8 ONLY. G7/G9/Rules 4/11/12 all remain enforced: this stage's whole point is
+  // that everything BUT golden-fingerprint currency is genuinely, presently true.
+  shape_clean_pending_recapture: { gates: ['G8'], rules: [] },
 };
 
 /** @param {string|undefined} stage @returns {{gates: Set<string>, rules: Set<number>}} */
@@ -2619,6 +2636,33 @@ function selfTest() {
     }
     if (agg2.hardStopReasons.includes('G8') || agg2.hardStopReasons.includes('G9')) {
       throw new Error(`self-test FAILED: compute_ported must exclude G8/G9 from hardStopReasons (${JSON.stringify(agg2.hardStopReasons)})`);
+    }
+
+    // (e) R-K.2 — shape_clean_pending_recapture: G8 ONLY excluded. A fixture with
+    // EVERYTHING green except G8 (the genuinely-decidable, deliberately-deferred gate)
+    // must NOT hard-stop; the SAME fixture with G7 ALSO red (an artifact gap this
+    // stage does NOT excuse, unlike descriptor_only/compute_ported) MUST still
+    // hard-stop, proving the exclusion is scoped to G8 alone, not "everything late-stage".
+    const excl3 = stageExclusions('shape_clean_pending_recapture');
+    if (!excl3.gates.has('G8') || excl3.gates.has('G7') || excl3.gates.has('G9') || excl3.rules.size !== 0) {
+      throw new Error(`self-test FAILED: stageExclusions('shape_clean_pending_recapture') wrong (${JSON.stringify({ gates: [...excl3.gates], rules: [...excl3.rules] })})`);
+    }
+    const greenGWithRedG8Only = { ...greenG, G7: { score: 3, max: 3, detail: '' }, G8: redG8 };
+    const cleanMatrix = redMatrix.map((r) => ({ ...r, status: 'enforced-green' }));
+    const cleanG9 = { pass: true, detail: '' };
+    const mh3 = computeMatrixHardStop(cleanMatrix, excl3.rules);
+    const agg3 = aggregateHardStop(greenGWithRedG8Only, cleanG9, false, mh3, excl3, 'shape_clean_pending_recapture');
+    if (agg3.hardStop) throw new Error(`self-test FAILED: shape_clean_pending_recapture hard-stopped on G8 alone, which this stage exists to declare-and-defer (${JSON.stringify(agg3)})`);
+    if (!agg3.g.G8.detail.includes('stage-gated (shape_clean_pending_recapture)')) {
+      throw new Error(`self-test FAILED: shape_clean_pending_recapture did not annotate the excluded G8 row's detail (${JSON.stringify(agg3.g.G8)})`);
+    }
+    const greenGWithRedG7AndG8 = { ...greenG, G7: redG7, G8: redG8 };
+    const agg4 = aggregateHardStop(greenGWithRedG7AndG8, cleanG9, false, mh3, excl3, 'shape_clean_pending_recapture');
+    if (!agg4.hardStop || !agg4.hardStopReasons.includes('G7')) {
+      throw new Error(`self-test FAILED: shape_clean_pending_recapture must still hard-stop on a red G7 — the exclusion is G8-ONLY, not "everything late-stage" (${JSON.stringify(agg4)})`);
+    }
+    if (agg4.hardStopReasons.includes('G8')) {
+      throw new Error(`self-test FAILED: shape_clean_pending_recapture must exclude G8 from hardStopReasons even when G7 is ALSO red (${JSON.stringify(agg4.hardStopReasons)})`);
     }
   }
   // C4 (Fold A item 3) — matchTests's scopeToken must match regardless of

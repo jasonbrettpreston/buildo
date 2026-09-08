@@ -98,7 +98,8 @@ const CONVERTED: string[] = Array.isArray(convertedRaw.converted)
  * not silently exempted in test logic. Each entry is `{file, registers_at,
  * reason, declared, stage}` — all strings, `stage` closed-vocabulary
  * `"red_suite" | "descriptor_only" | "compute_ported" | "runner_wired" |
- * "shape_clean"` (R-K.1, Spec 124): a `red_suite` entry's per-step
+ * "shape_clean" | "shape_clean_pending_recapture"` (R-K.1, Spec 124; the
+ * sixth value is the R-K.2 amendment below): a `red_suite` entry's per-step
  * `violations.test.ts` (with `it.fails()` call sites) has landed but the
  * sibling `<slug>.descriptor.json` does NOT exist yet — the file MAY still be
  * shape-dirty; a `descriptor_only` entry's descriptor exists and independently
@@ -126,15 +127,33 @@ const CONVERTED: string[] = Array.isArray(convertedRaw.converted)
  * and its own `selfTest()` locks; this file's own checks below are the
  * DIFFERENT, R-K.1-original concern (does the declared stage match the real
  * artifact state on disk), not the hard-stop-gating concern.
+ *
+ * **R-K.2 amendment (pilot 9 commit 8, 2026-09-08) — `"shape_clean_pending_recapture"`,
+ * a SIXTH value.** Pilot 9's own commit-8 sequence is the FIRST time a step's compute
+ * changes ACROSS MULTIPLE SEPARATE COMMITS after the file already reached genuine
+ * `"shape_clean"` (Spec 123 §3.1's own pin-then-fix ladder, applied one policy concern
+ * per peel — P1..P4 each touch `scripts/lib/compute/enrich-parcels.js`, but the golden
+ * POST captures are deliberately recaptured ONCE, in a LATER commit, after all four
+ * land — recapturing after every single peel would burn ~40 real minutes per peel for
+ * a diff only the FINAL, post-P4 state needs to explain). `conformanceFindings()` is
+ * STILL genuinely `[]` at this stage (the shape — descriptor/compute/runner wiring —
+ * is unaffected by a peel that only changes VALUES, not structure); only G8 (golden
+ * fingerprint currency) is knowingly, declaredly stale. Unlike the original two
+ * "terminal, no-exclusion" values, this one DOES exclude G8 from `step-validate.mjs`'s
+ * hard-stop (see that module's own `STAGE_HARDSTOP_EXCLUSIONS` R-K.2 entry) — the
+ * declared staleness is real, not a loophole: the excluded row's score/detail is
+ * UNCHANGED (still 0, still carries "— stage-gated (...)"), so nothing reads as a
+ * silent pass. Reverts to plain `"shape_clean"` in the SAME commit that lands the
+ * batched recapture (pilot 9 commit 8 P6).
  */
 interface PendingEntry {
   file: string;
   registers_at: string;
   reason: string;
   declared: string;
-  stage: 'red_suite' | 'descriptor_only' | 'compute_ported' | 'runner_wired' | 'shape_clean';
+  stage: 'red_suite' | 'descriptor_only' | 'compute_ported' | 'runner_wired' | 'shape_clean' | 'shape_clean_pending_recapture';
 }
-const PENDING_STAGES = ['red_suite', 'descriptor_only', 'compute_ported', 'runner_wired', 'shape_clean'] as const;
+const PENDING_STAGES = ['red_suite', 'descriptor_only', 'compute_ported', 'runner_wired', 'shape_clean', 'shape_clean_pending_recapture'] as const;
 const PENDING_RAW: unknown[] = Array.isArray(convertedRaw.pending) ? (convertedRaw.pending as unknown[]) : [];
 const PENDING: PendingEntry[] = PENDING_RAW as PendingEntry[];
 const PENDING_FILES: string[] = PENDING.map((p) => String(p?.file ?? '').replace(/\\/g, '/'));
@@ -316,7 +335,7 @@ describe('converted.json — `pending` (declared data, not a code skip)', () => 
       }
       expect(
         PENDING_STAGES as readonly string[],
-        `pending entry ${entry.file}.stage "${String(entry.stage)}" is not in the closed vocabulary (red_suite | shape_clean)`,
+        `pending entry ${entry.file}.stage "${String(entry.stage)}" is not in the closed vocabulary (${PENDING_STAGES.join(' | ')})`,
       ).toContain(entry.stage);
     }
   });
@@ -368,12 +387,22 @@ describe('converted.json — `pending` (declared data, not a code skip)', () => 
     }
   });
 
-  it('a `shape_clean` pending file is genuinely shape-clean AND not yet registered (a dirty or already-registered pending entry is a stale declaration)', () => {
+  it('a `shape_clean` (or `shape_clean_pending_recapture`) pending file is genuinely shape-clean AND not yet registered (a dirty or already-registered pending entry is a stale declaration) — the recapture-pending variant makes the SAME conformanceFindings() promise, only G8 currency differs (R-K.2)', () => {
     for (const p of PENDING) {
-      if (p.stage !== 'shape_clean') continue;
+      if (p.stage !== 'shape_clean' && p.stage !== 'shape_clean_pending_recapture') continue;
       expect(CONVERTED, `pending file ${p.file} is already in converted.json — the pending entry is stale and must be deleted`).not.toContain(p.file);
       const findings = conformanceFindings(p.file);
-      expect(findings, `pending file ${p.file} is declared shape-clean but conformanceFindings() disagrees (stale pending entry)`).toEqual([]);
+      expect(findings, `pending file ${p.file} is declared shape-clean (stage "${p.stage}") but conformanceFindings() disagrees (stale pending entry)`).toEqual([]);
+    }
+  });
+
+  it('a `shape_clean_pending_recapture` pending file names WHICH commit will restore plain "shape_clean" — the deferral must be a bounded, declared promise, not open-ended (R-K.2)', () => {
+    for (const p of PENDING) {
+      if (p.stage !== 'shape_clean_pending_recapture') continue;
+      expect(
+        /commit 8 P6|P6\b/.test(p.reason),
+        `pending file ${p.file} declares "shape_clean_pending_recapture" but its reason text does not name the batched-recapture commit that restores "shape_clean" — an unbounded deferral is indistinguishable from silently dropping the promise`,
+      ).toBe(true);
     }
   });
 });
