@@ -79,8 +79,13 @@ const EXPECTED_LOGIC_VAR_KEYS = [
   // Pilot 9 commit 7b (Spec 65 §3a DEC-4) — the zoning_class-coverage PASS/WARN floors (95/90).
   'enrich_parcels_zone_class_pct_pass_floor',
   'enrich_parcels_zone_class_pct_warn_floor',
-  // Pilot 9 commit 7b — NEW: the comps clock-anchor override (Fold G3) and the pass-5 timeout bound (Ask 7).
-  'enrich_parcels_comps_as_of_date',
+  // Pilot 9 commit 7b — NEW: the pass-5 timeout bound (Ask 7). `enrich_parcels_comps_as_of_date`
+  // (the comps clock-anchor override, Fold G3) was declared here too but REMOVED at commit
+  // 7e/2 (2026-09-07): resolveConfig's invalidReason (scripts/lib/step/config.js:76-81) is
+  // unconditionally numeric-only, so a nullable/string override throws on_invalid:"fail" on
+  // every real invocation — found running this pilot's own G2' golden capture. The MANDATORY
+  // seam (ctx.clock.asOfDate(), no bare now()::date literal) is unaffected; only the OPTIONAL
+  // operator-override capability was dropped. See docs/reports/review_followups.md (MED).
   'enrich_parcels_pass5_timeout_minutes',
   'centreline_propagation_coverage_min', // Spec 62 §8e L24c — enrich-permits propagation coverage gate
   'road_overlay_distance_m', // Spec 58 — seeded for WF2 enrich-parcels (F-C2)

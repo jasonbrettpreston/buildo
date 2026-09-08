@@ -2341,10 +2341,20 @@ async function runEnrichPhase({ descriptor, pool, compute, config, chainId, log,
 
   const runAt = clockNow;
   const scopeRunId = Math.floor(runAt.getTime() / 1000);
-  const asOfOverride = config.enrich_parcels_comps_as_of_date;
+  // pilot 9 commit 7e/2 (2026-09-04) — a `config.logic_variables[]`-declared date-anchor
+  // override (enrich_parcels_comps_as_of_date, commit 7b) was REMOVED: the entry is a
+  // string/nullable value, and resolveConfig's invalidReason (scripts/lib/step/config.js:76-81)
+  // is unconditionally numeric-only (`typeof raw !== 'number'` => 'non_finite') across every
+  // archetype — a live `--full` run threw "on_invalid \"fail\" refuses the step" before any
+  // pass could execute (discovered running commit 7e's own G2' golden capture). Fold G3 already
+  // flagged this half as "a reasonable but NOT literally mandated extension" (not one of Rule
+  // 3's seven closed categories) — the MANDATORY half (§5.5's injected-clock ban on a bare
+  // now()::date literal) stands unconditionally below; only the OPTIONAL operator-override
+  // capability is dropped. Widening resolveConfig to a typed/nullable tunable class is a
+  // followup for whichever pilot next needs one, not this commit's scope.
   const clock = {
     now: () => runAt,
-    asOfDate: () => (asOfOverride ? String(asOfOverride) : runAt.toISOString().slice(0, 10)),
+    asOfDate: () => runAt.toISOString().slice(0, 10),
   };
   const heartbeatMs = Math.round(Number(config.enrich_parcels_heartbeat_minutes) * 60000);
   const lockTimeoutMs = Math.round(Number(config.enrich_parcels_lock_timeout_ms));
@@ -2404,6 +2414,15 @@ async function runEnrichPhase({ descriptor, pool, compute, config, chainId, log,
       if (lockTimeoutMs > 0) await client.query(`SET LOCAL lock_timeout = ${lockTimeoutMs}`);
       const passSpec = passByName(phase.name);
       const passCtx = { full, scopeWhere: 'TRUE', staleOverlays, clock, log, config, scopeRunId };
+      // WF3 enrich_parcels stall incident (2026-09-07, orchestrator observation) — Spec 48 §3.6
+      // silence class: with NO per-phase log line, a `--full` run's own stdout goes silent from
+      // the single startup INFO line until the whole step finishes (measured live: a real,
+      // healthy 60+-min pass-2 run produced zero further stdout). This is the runner's own
+      // boundary logging, independent of (and in addition to) recordHeartbeat's DB-only writes —
+      // an operator tailing a log, or this pilot's own golden-capture harness (which tees child
+      // stdout live, confirmed not itself at fault), needs a visible phase start/end + duration.
+      log.info(tag, `phase ${phase.name} starting (shared txn, timeout ${timeoutMinutes}min)`);
+      const phaseStartMs = Date.now();
       await recordHeartbeat(pool, ownRunId, phase.name, 0);
       const stopTicker = startStallTicker(pool, ownRunId, heartbeatMs, () => pid);
       try {
@@ -2428,6 +2447,7 @@ async function runEnrichPhase({ descriptor, pool, compute, config, chainId, log,
         stopTicker();
       }
       await recordHeartbeat(pool, ownRunId, phase.name, 1);
+      log.info(tag, `phase ${phase.name} completed in ${Date.now() - phaseStartMs}ms`);
     }
 
     // ── Spec 122 §3.0b scope hand-off — the ENRICHER's one LOGGED recovery

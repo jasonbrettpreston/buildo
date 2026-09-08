@@ -2211,7 +2211,7 @@ describe('D-5 linked_at guard trap', () => {
     expect(expanded, 'all_declared = every step-written column except the key — which is exactly the 520K-row rewrite').toEqual(WRITE_COLUMNS.filter((c) => !WRITE_KEY.includes(c)));
     expect(expanded).toContain(RUN_CLOCK_COLUMN);
     // And the downstream re-scope this guards against is real: enrich-parcels scopes on linked_at > massing_enriched_at.
-    const enrich = fs.readFileSync(abs('scripts/enrich-parcels.js'), 'utf8');
+    const enrich = fs.readFileSync(abs('scripts/lib/compute/enrich-parcels.js'), 'utf8'); // RETARGETED pilot 9 commit 7e/2 (2026-09-07): the SQL moved out of the legacy thin-shelled file
     expect(/linked_at\s*>\s*p\.massing_enriched_at|pb\.linked_at\s*>/.test(enrich), 'buildMassingScopeWhere re-scopes on pb.linked_at — the blast radius of a guarded linked_at').toBe(true);
   });
 });

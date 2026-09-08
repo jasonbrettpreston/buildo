@@ -2690,3 +2690,135 @@ describe('STA-3 — the three destructive-reset guards (scripts/lib/step/reset.j
     });
   });
 });
+
+// ---------------------------------------------------------------------------
+// 7. recordHeartbeat / captureStallDiagnostic / startStallTicker (LG-28, first-of-kind
+//    library growth, pilot 9 commit 7d) — RETARGETED here at pilot 9 commit 7e/2: these
+//    were previously exercised ONLY as an embedded, enrich_parcels-specific mechanism
+//    (the legacy `enrichOptimalConfig`'s own heartbeatMinutes/pipelineRunId params,
+//    src/tests/enrich-parcels-optconfig.logic.test.ts's "WF3 cloud-parity FIX 3
+//    remediation"/"WF3 enrich_parcels stall commit 3" blocks). The thin-shell
+//    conversion GENERALIZED them into standalone scripts/lib/step/index.js exports,
+//    called by runEnrichPhase around EVERY phase (not pass-5-only) — they had ZERO
+//    standalone unit coverage of their own (Fold D3's own "first-of-kind, zero prior
+//    hits" note), so this block is new coverage, not a mechanical retarget: same
+//    behaviours the old embedded tests proved, now against the real exported functions.
+// ---------------------------------------------------------------------------
+
+describe('recordHeartbeat / captureStallDiagnostic / startStallTicker (LG-28, fake pool)', () => {
+  describe('recordHeartbeat', () => {
+    it('issues an UPDATE pipeline_runs with current_pass/rows_processed/last_heartbeat_at, addressed to runId', async () => {
+      const pool = fakePool();
+      await stepLib.recordHeartbeat(pool, 4242, 'zoning', 7);
+      const hb = pool.sql.find((s: string) => /UPDATE pipeline_runs/.test(s) && /current_pass/.test(s));
+      expect(hb).toBeDefined();
+      expect(hb).toContain('last_heartbeat_at');
+      expect(hb).toContain("COALESCE(records_meta, '{}'::jsonb)");
+      const idx = pool.sql.indexOf(hb!);
+      expect(pool.params[idx]).toEqual(['zoning', 7, 4242]);
+    });
+
+    it('no-ops when runId is null (standalone invocation) — issues no query at all', async () => {
+      const pool = fakePool();
+      await stepLib.recordHeartbeat(pool, null, 'zoning', 0);
+      expect(pool.sql).toHaveLength(0);
+    });
+
+    it('swallows a query failure via pipeline.log.warn — never throws', async () => {
+      const throwingPool = { query: async () => { throw new Error('connection reset'); } };
+      const origWarn = pipeline.log.warn;
+      const warnSpy = vi.fn(origWarn);
+      pipeline.log.warn = warnSpy;
+      try {
+        await expect(stepLib.recordHeartbeat(throwingPool, 4242, 'zoning', 0)).resolves.toBeUndefined();
+        expect(warnSpy).toHaveBeenCalledWith(expect.anything(), expect.stringMatching(/heartbeat.*4242/));
+      } finally {
+        pipeline.log.warn = origWarn;
+      }
+    });
+  });
+
+  describe('captureStallDiagnostic', () => {
+    it('probes pg_stat_activity for the given pid and writes stall_diagnostic + stall_diagnostic_at', async () => {
+      const pool = fakePool({
+        queryAnswers: [{
+          match: (t: string) => /FROM pg_stat_activity WHERE pid/.test(t),
+          rows: [{ pid: 555, state: 'active', wait_event_type: 'IO', wait_event: 'DataFileRead', query_start: '2026-09-07T00:00:00Z' }],
+        }],
+      });
+      await stepLib.captureStallDiagnostic(pool, 4242, 555);
+      const upd = pool.sql.find((s: string) => /UPDATE pipeline_runs/.test(s) && /stall_diagnostic/.test(s));
+      expect(upd).toBeDefined();
+      const idx = pool.sql.indexOf(upd!);
+      const diag = JSON.parse(pool.params[idx]![0] as string);
+      expect(diag.pid).toBe(555);
+      expect(diag.state).toBe('active');
+    });
+
+    it('falls back to a "no matching backend" note when pid is null', async () => {
+      const pool = fakePool();
+      await stepLib.captureStallDiagnostic(pool, 4242, null);
+      const upd = pool.sql.find((s: string) => /UPDATE pipeline_runs/.test(s) && /stall_diagnostic/.test(s));
+      const idx = pool.sql.indexOf(upd!);
+      const diag = JSON.parse(pool.params[idx]![0] as string);
+      expect(diag.note).toMatch(/no matching backend/);
+    });
+
+    it('no-ops when runId is null — issues no query at all', async () => {
+      const pool = fakePool();
+      await stepLib.captureStallDiagnostic(pool, null, 555);
+      expect(pool.sql).toHaveLength(0);
+    });
+
+    it('swallows a query failure via pipeline.log.warn — never throws', async () => {
+      const throwingPool = { query: async () => { throw new Error('connection reset'); } };
+      const origWarn = pipeline.log.warn;
+      const warnSpy = vi.fn(origWarn);
+      pipeline.log.warn = warnSpy;
+      try {
+        await expect(stepLib.captureStallDiagnostic(throwingPool, 4242, 555)).resolves.toBeUndefined();
+        expect(warnSpy).toHaveBeenCalledWith(expect.anything(), expect.stringMatching(/stall diagnostic.*4242/));
+      } finally {
+        pipeline.log.warn = origWarn;
+      }
+    });
+  });
+
+  describe('startStallTicker', () => {
+    it('intervalMs <= 0 returns a no-op stop function (defensive) — never schedules a timer', () => {
+      const pool = fakePool();
+      const stop = stepLib.startStallTicker(pool, 4242, 0, () => 555);
+      expect(typeof stop).toBe('function');
+      expect(() => stop()).not.toThrow();
+    });
+
+    it('fires exactly ONE captureStallDiagnostic after 2x intervalMs of silence, then latches (never fires twice for the same ticker)', async () => {
+      vi.useFakeTimers();
+      try {
+        const pool = fakePool();
+        const stop = stepLib.startStallTicker(pool, 4242, 100, () => 555);
+        await vi.advanceTimersByTimeAsync(210); // one 2x-interval tick (200ms) elapses
+        await vi.advanceTimersByTimeAsync(210); // a second tick would fire at 400ms if not latched
+        stop();
+        const diagnosticUpdates = pool.sql.filter((s: string) => /stall_diagnostic/.test(s));
+        expect(diagnosticUpdates).toHaveLength(1);
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+
+    it('no diagnostic fires when stop() is called before 2x intervalMs elapses (progress keeps pace)', async () => {
+      vi.useFakeTimers();
+      try {
+        const pool = fakePool();
+        const stop = stepLib.startStallTicker(pool, 4242, 100, () => 555);
+        await vi.advanceTimersByTimeAsync(50);
+        stop();
+        await vi.advanceTimersByTimeAsync(500); // stopped — no further ticks should fire
+        expect(pool.sql.filter((s: string) => /stall_diagnostic/.test(s))).toHaveLength(0);
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+  });
+});

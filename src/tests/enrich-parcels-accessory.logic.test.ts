@@ -12,7 +12,7 @@ import { resolve } from 'node:path';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const mb = require('../../scripts/lib/max-build.js');
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const ep = require('../../scripts/enrich-parcels.js');
+const ep = require('../../scripts/lib/compute/enrich-parcels.js');
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const eperm = require('../../scripts/enrich-permits.js');
 // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -20,6 +20,13 @@ const ec = require('../../scripts/enrich-centreline.js');
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const aj = require('../../scripts/lib/archetypes.js');
 import { ARCHETYPE_GEOM_BASIS as TS_GEOM_BASIS } from '../lib/classification/archetypes';
+
+// RETARGETED pilot 9 commit 7e/2 (2026-09-07, ENRICHER thin-shell conversion) — compute's
+// buildMaxBuildSql takes storeyHeight/acc/mislinkTol/minDim as explicit params (legacy module
+// constants, now config-sourced); values below are the legacy defaults
+// (scripts/seeds/logic_variables.json); acc:{} falls back to scripts/lib/max-build.js's own
+// DEFAULT constants per-field (N(acc.x, mb.DEFAULT) — verified byte-identical to seed defaults).
+const LEGACY_MB_DEFAULTS = { storeyHeight: 3, acc: {}, mislinkTol: 0.05, minDim: 3 };
 
 const ACCESSORY_COLS = [
   'max_garage_gfa_sqm', 'garage_capacity_cars', 'garage_constraint_reason', 'garage_permission',
@@ -42,7 +49,7 @@ describe('accessory — column sets (Phase 3 regression lock)', () => {
 });
 
 describe('accessory — buildMaxBuildSql SQL plumbing', () => {
-  const sql = ep.buildMaxBuildSql({});
+  const sql = ep.buildMaxBuildSql(LEGACY_MB_DEFAULTS);
   it('reads abuts_laneway + a TOTAL (all-buildings) existing footprint in-pass', () => {
     expect(sql).toMatch(/COALESCE\(p\.abuts_laneway, false\) AS abuts_laneway/);
     expect(sql).toMatch(/SUM\(bf\.footprint_area_sqm\)::numeric AS existing_total_footprint_sqm/);
@@ -95,8 +102,8 @@ describe('accessory — buildMaxBuildSql SQL plumbing', () => {
   });
 
   it('externalized garden-suite constants flow from acc (logic-vars), default-byte-stable', () => {
-    const def = ep.buildMaxBuildSql({});
-    const overridden = ep.buildMaxBuildSql({ acc: { gardenMaxGfa: 99 } });
+    const def = ep.buildMaxBuildSql(LEGACY_MB_DEFAULTS);
+    const overridden = ep.buildMaxBuildSql({ ...LEGACY_MB_DEFAULTS, acc: { gardenMaxGfa: 99 } });
     expect(def).toMatch(/round\(60::numeric, 2\) END AS max_garden_suite_gfa_sqm/);
     expect(overridden).toMatch(/round\(99::numeric, 2\) END AS max_garden_suite_gfa_sqm/);
   });

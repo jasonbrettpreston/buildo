@@ -50,7 +50,11 @@ import { describe, it, expect } from 'vitest';
 
 const RUN_CHAIN_PATH = join(process.cwd(), 'scripts/run-chain.js');
 const CHECK_VERDICT_PATH = join(process.cwd(), 'scripts/check-chain-verdict.js');
-const ENRICH_PARCELS_PATH = join(process.cwd(), 'scripts/enrich-parcels.js');
+// RETARGETED pilot 9 commit 7e/2 (2026-09-07, ENRICHER thin-shell conversion) — the force-full
+// env plumbing moved out of scripts/enrich-parcels.js (now the thin shell) into the descriptor +
+// the generic runner (scripts/lib/step/index.js's runEnrichPhase).
+const ENRICH_PARCELS_DESCRIPTOR_PATH = join(process.cwd(), 'scripts/enrich-parcels.descriptor.json');
+const STEP_INDEX_PATH = join(process.cwd(), 'scripts/lib/step/index.js');
 const PIPELINE_LIB_PATH = join(process.cwd(), 'scripts/lib/pipeline.js');
 const SOURCE_VERSION_PATH = join(process.cwd(), 'scripts/lib/source-version.js');
 const COST_ESTIMATES_PATH = join(process.cwd(), 'scripts/compute-parcel-cost-estimates.js');
@@ -251,21 +255,31 @@ describe('⑧-helper — classifyDeferStreak (ⓔ, net-new pure export)', () => 
 // style locks, not reds).
 // ---------------------------------------------------------------------------
 describe('⑤ — force-full env plumbing', () => {
-  it('(a) ✓red — enrich-parcels.js:1378 does not yet OR in ENRICH_PARCELS_FORCE_FULL', () => {
-    const src = readFileSync(ENRICH_PARCELS_PATH, 'utf8');
-    // THE red-first assertion. Today :1378 is exactly
-    // `const full = process.argv.includes('--full');` — no env fallback.
-    expect(src).toMatch(/ENRICH_PARCELS_FORCE_FULL/);
-  });
+  it(
+    'RETARGETED pilot 9 commit 7e/2 (2026-09-07, ENRICHER thin-shell conversion) — ' +
+      'ENRICH_PARCELS_FORCE_FULL moved from a literal `process.env.ENRICH_PARCELS_FORCE_FULL === \'1\'` ' +
+      'OR-condition inline in the legacy script to the GENERIC, DECLARATIVE `override.force_full` ' +
+      'mechanism every converted step shares (staleness.resolveOverrides(descriptor), read at the top ' +
+      'of runEnrichPhase) — same env var name, same OR\'d-with---full semantics, now expressed as data ' +
+      'per Rule 1 (nothing hidden) instead of a per-script literal. The descriptor is the new source of truth.',
+    () => {
+      const descriptor = JSON.parse(readFileSync(ENRICH_PARCELS_DESCRIPTOR_PATH, 'utf8'));
+      expect(descriptor.override.force_full).toBe('ENRICH_PARCELS_FORCE_FULL');
+    },
+  );
 
-  it('(a) the --full argv check itself is untouched (the OR is additive, not a replacement)', () => {
-    const src = readFileSync(ENRICH_PARCELS_PATH, 'utf8');
-    expect(src).toMatch(/process\.argv\.includes\(['"]--full['"]\)/);
+  it('(a) the --full argv check itself is untouched (the OR is additive, not a replacement) — now in the runner, not the legacy script', () => {
+    const src = readFileSync(STEP_INDEX_PATH, 'utf8');
+    const fnMatch = src.match(/async function runEnrichPhase\([\s\S]*?\n\}/);
+    expect(fnMatch, 'runEnrichPhase function body not found').not.toBeNull();
+    expect(fnMatch![0]).toMatch(/process\.argv\.includes\(['"]--full['"]\)/);
+    expect(fnMatch![0]).toMatch(/overrides\.force_full === true/);
   });
 
   it(
     '(b) g/b — pipeline.isFullMode() does NOT match ENRICH_PARCELS_FORCE_FULL (the link_parcels fence). ' +
-      'RULING (D2′/R3-B4): the new env is OR\'d directly into enrich-parcels.js\'s OWN argv check, never ' +
+      'RULING (D2′/R3-B4): the env is OR\'d directly into enrich_parcels\'s OWN full-mode decision (now ' +
+      'runEnrichPhase\'s, via the descriptor-declared override, not a literal env read), never ' +
       'into the shared isFullMode() helper other scripts (e.g. link_parcels) call — doing so would flip ' +
       'link_parcels to --full mode too. TRUE TODAY (isFullMode only checks argv) and must stay true forever.',
     () => {

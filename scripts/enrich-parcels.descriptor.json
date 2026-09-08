@@ -722,7 +722,6 @@
       { "name": "enrich_parcels_bbox_degree_divisor", "min": 1000, "max": 1000000, "on_invalid": "fail" },
       { "name": "enrich_parcels_zone_class_pct_pass_floor", "min": 0, "max": 100, "on_invalid": "fail" },
       { "name": "enrich_parcels_zone_class_pct_warn_floor", "min": 0, "max": 100, "on_invalid": "fail" },
-      { "name": "enrich_parcels_comps_as_of_date", "min": "none", "max": "none", "on_invalid": "fail" },
       { "name": "enrich_parcels_pass5_timeout_minutes", "min": 0, "max": 180, "on_invalid": "fail" }
     ],
     "validation": "strict",

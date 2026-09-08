@@ -6,13 +6,13 @@
 
 ## Counts
 
-Total items: **84**
+Total items: **85**
 
 | status | count |
 |---|---|
 | ⬜ NOT_STARTED | 19 |
 | ⚠️ PARTIAL | 17 |
-| ✅ BUILT | 44 |
+| ✅ BUILT | 45 |
 | ⏭️ SUPERSEDED | 4 |
 
 **blocks batching: 4**
@@ -40,7 +40,7 @@ Total items: **84**
 | `EP-PIN-D9` | 78 §P3C.2 | EP-D9 pin — pass-4 comps candidate selection has no deterministic tiebreak (comparable_builds jsonb instability) | ⬜ NOT_STARTED | pilot: pilot9_enrich_parcels | enrich_parcels | 2026-09-04 |
 | `EP-PIN-D10` | 122 §3.0b | EP-D10 pin — enrich_parcels_pass3_scope grows unbounded (append-only, never pruned) | ⬜ NOT_STARTED | pilot: pilot9_enrich_parcels | enrich_parcels | 2026-09-04 |
 
-## Nice-to-have — real gap, not currently blocking (71)
+## Nice-to-have — real gap, not currently blocking (72)
 
 | id | spec | title | status | owner | blocks | last reviewed |
 |---|---|---|---|---|---|---|
@@ -115,6 +115,7 @@ Total items: **84**
 | `PILOT7-LP` | 122 §8.2 | Pilot 7 = link_parcels (LINK, 2nd member) — ruled 2026-08-30, implementation not started | ⚠️ PARTIAL | pilot: pilot 7 (link_parcels) | — | 2026-08-30 |
 | `VRD-SKIP` | 124 §2 Rule 10 | a SELF_SKIPPED terminal must not verdict identically to a genuine PASS | ⬜ NOT_STARTED | followup: docs/reports/review_followups.md — 'A lock-skipped converted step verdicts as PASS' (HIGH, 2026-09-03); the follow-on WF3 gives deriveVerdict a distinct SKIP severity rank, row-derived (never a consumer-side if(skipped) bolt-on), and updates every step_verdicts/check-chain-verdict.js consumer that currently treats it as a 2-value (PASS/FAIL) cascade | — | 2026-09-03 |
 | `CRASH-BEHAV` | 124 §2 Rule 12 | live SIGTERM-and-recover behavioural proof for LINK, LINK_KEYED, MATERIALIZE (and, in the abstract, INGEST/BACKFILL/RECORDER) | ⬜ NOT_STARTED | followup: docs/reports/review_followups.md — 'WF2 Rule 12 behavioural half — no db.test.ts can spawn a REAL converted step against the ephemeral test container' (HIGH, 2026-09-03): a scoped WF2/WF3 adds a genuine, reviewed test-context escape hatch to assertDbTarget, then un-skips step-crash-posture.db.test.ts and extends its pattern to link_massing (link) and link_parcels (link_keyed), parameterized rather than copy-pasted a third time | — | 2026-09-03 |
+| `EP-PIN-PERF` | 122 (WF3 enrich_parcels double-run/lock-fix commit chain) | converted enrich_parcels per-pass timing within 25% of the legacy PRE goldens (KFM 7) | ✅ BUILT | pilot: pilot9_enrich_parcels | — | 2026-09-08 |
 
 ---
 

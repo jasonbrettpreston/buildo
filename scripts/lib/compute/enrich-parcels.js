@@ -40,9 +40,16 @@
  *
  * THE ctx CONTRACT this file consumes (implemented by runEnrichPhase, LG-28, commit 7d,
  * `scripts/lib/step/index.js`):
- *   ctx.clock.asOfDate(): string   - YYYY-MM-DD, bound as the comps-window $N::date. Reads
- *                                     config.enrich_parcels_comps_as_of_date when non-null, else the
- *                                     runner's own clock date (Fold G3).
+ *   ctx.clock.asOfDate(): string   - YYYY-MM-DD, bound as the comps-window $N::date; the runner's own
+ *                                     clock date (Fold G3). A config-driven override
+ *                                     (enrich_parcels_comps_as_of_date) was declared at commit 7b and
+ *                                     REMOVED at commit 7e/2 — resolveConfig's invalidReason
+ *                                     (scripts/lib/step/config.js:76-81) is unconditionally numeric-only
+ *                                     across every archetype, so a string/nullable override throws
+ *                                     on_invalid:"fail" before any pass runs (discovered running this
+ *                                     commit's own G2' golden capture). Fold G3 already flagged the
+ *                                     override half as optional, not Rule-3-mandated; only that half
+ *                                     was dropped — this seam itself (no bare now()::date literal) stays.
  *   ctx.clock.now(): Date          - the DB-facing RUN_AT, captured ONCE by the runner before pass 1
  *                                     begins and held STABLE for the whole phase invocation (mirrors
  *                                     the `const runAt = clockNow;` convention every other runner in
@@ -1736,7 +1743,61 @@ const passes = [
   { name: 'optimal_config', txn: 'post_commit', run: runPass5 },
 ];
 
-module.exports = {
+/**
+ * §5.5 (2) — run the SELECTED checks, and nothing else; this is the same generic
+ * checks-dispatch entry point every OTHER converted compute module exports (link-parcels.js,
+ * refresh-snapshot.js, …) — ENRICHER needs it too, for the identical reason: `runWithPool`
+ * (scripts/lib/step/index.js:3038) calls `runnable.compute(stepCtx)` directly, AFTER
+ * `runEnrichPhase` has already used the SAME export's `.passes[]`/`.readZoningContract`/
+ * `.computeDeferScope`/`.computeAggregateRecordsUpdated` properties to do the actual 5-pass
+ * DB work. The two roles are orthogonal, not competing: `passes[]` is the ENRICHER-specific
+ * per-pass execution table `runEnrichPhase` dispatches; `compute(ctx)` is the archetype-generic
+ * checks/observations dispatcher every archetype's runner calls afterward. No conformance
+ * amendment is needed — the suite's `.compute` expectation already generalizes; ENRICHER is
+ * simply the first archetype whose compute module needs BOTH shapes on the one export.
+ */
+async function compute(ctx) {
+  for (const id of ctx.checks) {
+    const check = CHECKS[id];
+    if (typeof check !== 'function') {
+      throw new Error(`[${ctx.descriptor.identity.name}] descriptor declares check "${id}" with no function in the compute dispatch table`);
+    }
+    try {
+      await check(ctx);
+    } catch (err) {
+      ctx.log.error(`[${ctx.descriptor.identity.name}]`, `FAIL: ${id} — ${err.message}`);
+      ctx.report(id, { error: err });
+    }
+  }
+  if (!ctx.matched) return { records_meta: {} };
+  // A summarized subset of runEnrichPhase's own `matched` object (:2465-2503) — the
+  // per-check `ctx.report` rows already carry the full per-metric detail; records_meta is
+  // the human-scannable run-level roll-up, mirroring link-parcels.js's buildLinkMeta shape.
+  return {
+    records_meta: {
+      duration_ms: ctx.matched.enrich_parcels_duration_ms,
+      zone_class_pct: ctx.matched.zone_class_pct,
+      total_parcels_scanned: ctx.matched.compute ? ctx.matched.compute.total_parcels_scanned : null,
+      records_updated_aggregate: ctx.matched.compute ? ctx.matched.compute.records_updated_aggregate : null,
+      parcels_enriched_count: ctx.matched.parcels_enriched_count,
+      max_build_enriched_count: ctx.matched.max_build_enriched_count,
+      existing_structure_enriched_count: ctx.matched.existing_structure_enriched_count,
+      comparable_builds_enriched_count: ctx.matched.comparable_builds_enriched_count,
+      optimal_config_enriched_count: ctx.matched.optimal_config_enriched_count,
+      opt_config_engine_errors: ctx.matched.opt_config_engine_errors,
+    },
+  };
+}
+
+// `module.exports` MUST be the `compute(ctx)` FUNCTION itself (pipeline.step's own contract,
+// scripts/lib/step/index.js:3321 — `typeof compute !== 'function'` throws), decorated with the
+// same static properties every other converted compute module attaches (refresh-snapshot.js,
+// link-parcels.js, …) — `runnable.compute` is both called directly (checks dispatch) AND handed
+// into runEnrichPhase as the `compute` arg it reads `.passes[]`/`.readZoningContract`/
+// `.computeDeferScope`/`.computeAggregateRecordsUpdated` off of.
+module.exports = compute;
+Object.assign(module.exports, {
+  compute,
   ADVISORY_LOCK_ID: 65,
   TAG,
   BASE_SRC,
@@ -1788,4 +1849,4 @@ module.exports = {
   computeAggregateRecordsUpdated,
   // dispatch
   passes,
-};
+});

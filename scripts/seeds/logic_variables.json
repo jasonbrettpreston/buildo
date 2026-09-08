@@ -4343,12 +4343,6 @@
     "description": "Pilot 9 commit 7b (2026-09-04, Ask 5 externalization, Spec 65 §3a DEC-4). The zoning_class-coverage WARN floor (>= this = WARN, below = FAIL) — was the bare literal `zonePct >= 90` at scripts/enrich-parcels.js:2109. Value preserved verbatim. CONSUMED by scripts/enrich-parcels.js; descriptor check parcels_with_zone_class_pct_fail.",
     "admin": { "group": "Data Quality Thresholds" }
   },
-  "enrich_parcels_comps_as_of_date": {
-    "default": null,
-    "type": "string",
-    "description": "Pilot 9 commit 7b (2026-09-04, Fold G3). NEW — the injected clock-anchor override for pass 4's comps window (ctx.clock.asOfDate()), replacing the raw `now()::date` call the legacy script makes at :1114 (Spec 122 §5.5 bans a bare wall-clock read in compute outright). null (the default) means \"use the live DB clock\", matching today's behaviour exactly; a set ISO date pins the comps window for reproducible golden-master capture (commit 5/7e's own non-determinism-inventory mitigation) without needing same-UTC-day capture timing. Not literally one of Rule 3's seven closed threshold categories (Spec 124 §2) — a reasonable, spec-silent-but-consistent extension, not a Rule-3-mandated one (Fold G3). CONSUMED by scripts/lib/compute/enrich-parcels.js.",
-    "admin": { "group": "Source Ingestion" }
-  },
   "enrich_parcels_pass5_timeout_minutes": {
     "default": 60,
     "type": "number",

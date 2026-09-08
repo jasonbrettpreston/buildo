@@ -8,7 +8,7 @@ import { describe, expect, it } from 'vitest';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const mb = require('../../scripts/lib/max-build.js');
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const ep = require('../../scripts/enrich-parcels.js');
+const ep = require('../../scripts/lib/compute/enrich-parcels.js');
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const eperm = require('../../scripts/enrich-permits.js');
 // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -85,7 +85,7 @@ describe('storey-height refinement (Part C)', () => {
   });
 
   it('max-build SQL derives max_build_stories via the storey-height CASE + emits max_build_stories_basis', () => {
-    const sql = ep.buildMaxBuildSql({ storeyHeight: 3.0 });
+    const sql = ep.buildMaxBuildSql({ storeyHeight: 3.0, acc: {}, mislinkTol: 0.05, minDim: 3 });
     expect(sql).toMatch(/bylaw_max_height_m \/ \(CASE WHEN upper\(zoning_class\)/);
     expect(sql).toMatch(/WHEN bylaw_max_stories IS NOT NULL THEN 'bylaw'[\s\S]*AS max_build_stories_basis/);
   });
@@ -94,7 +94,7 @@ describe('storey-height refinement (Part C)', () => {
   // `estimated_stories` (via the `existing_stories` CTE column) or emit the retired `'existing'` basis.
   // Pins the retirement so a future copy-paste of the old heritage-freeze logic is caught immediately.
   it('max-build SQL does NOT source heritage storeys/GFA from the retired massing existing_stories', () => {
-    const sql = ep.buildMaxBuildSql({ storeyHeight: 3.0 });
+    const sql = ep.buildMaxBuildSql({ storeyHeight: 3.0, acc: {}, mislinkTol: 0.05, minDim: 3 });
     expect(sql).not.toMatch(/WHEN heritage THEN existing_stories/);          // old storey source
     expect(sql).not.toMatch(/WHEN heritage THEN 'existing'/);                // retired basis value
     expect(sql).not.toContain('COALESCE(existing_stories');                  // old heritage GFA multiplier

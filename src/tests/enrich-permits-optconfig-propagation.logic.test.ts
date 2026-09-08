@@ -12,7 +12,7 @@ const { OPT_COMP_PROP_COLS, OPT_COMP_JSONB_COLS } = require('../../scripts/lib/o
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const eperm = require('../../scripts/enrich-permits.js');
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const ep = require('../../scripts/enrich-parcels.js');
+const ep = require('../../scripts/lib/compute/enrich-parcels.js');
 
 describe('OPT_COMP_PROP_COLS — single-source drift pin', () => {
   it('is the 13 flat scalars = (OPTCFG_WRITE_COLS ∪ COMP_WRITE_COLS) minus the 3 JSONB blobs', () => {

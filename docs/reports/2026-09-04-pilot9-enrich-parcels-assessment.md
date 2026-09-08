@@ -91,11 +91,11 @@ recorded so no later commit assumes the tool was ever run against this step befo
 
 | Commit | Date | Construct | Live today? | Proposed disposition | Ground |
 |---|---|---|---|---|---|
-| `7e130bff` (fix folded into the pass 1 SQL; `tasks/lessons.md:28` documents it) | 2026-05-31 | The float8-vs-`NUMERIC(5,4)` `IS DISTINCT FROM` idempotency trap: `zoning_dominant_area_share` computed as `MAX(area_share)` (float8) never compared equal to the target's `NUMERIC(5,4)`, so every multi-zone parcel rewrote forever | ✓ current file `:336` `round(MAX(area_share)::numeric, 4)`, byte-identical cast | **preserved-in-compute** — Fold B1 rules this ports VERBATIM; the guard SQL is never regenerated generically from a column list, this exact cast is the fix | `:334-338` current file, `git blame` = `7e130bff` (**corrected this commit — `1da014c60`, previously cited, only added tests + the lessons.md:28 prose the same day; it never touched `scripts/enrich-parcels.js`, confirmed via `git show --stat`**); `1da014c60` remains the correct cite for the lesson's own documentation |
-| `7e130bff` | 2026-05-31 | **Origin of the whole zoning-pass architecture** — the set-based join CTE rewrite replacing per-parcel correlated `EXISTS` subqueries (`tasks/lessons.md:33`'s own fence: >9min intractable → ~8min with `CREATE TEMP TABLE … AS` + `LEFT JOIN`) | ✓ current file, `enrichParcels`'s whole temp-table/UPDATE shape (`:222-443`) is this commit's architecture, unbroken since | **preserved-in-compute** — the set-based join CTE pattern is load-bearing (a correctness AND performance fence) and ports verbatim; this is pass 1's entire SQL shape | full-file read; re-blamed this commit |
+| `7e130bff` (fix folded into the pass 1 SQL; `tasks/lessons.md:28` documents it) | 2026-05-31 | The float8-vs-`NUMERIC(5,4)` `IS DISTINCT FROM` idempotency trap: `zoning_dominant_area_share` computed as `MAX(area_share)` (float8) never compared equal to the target's `NUMERIC(5,4)`, so every multi-zone parcel rewrote forever | ✓ current file `:336` `round(MAX(area_share)::numeric, 4)`, byte-identical cast | **preserved-in-compute** — Fold B1 rules this ports VERBATIM; the guard SQL is never regenerated generically from a column list, this exact cast is the fix. **Grounded (Rule 4/G-2, commit 7e/2):** the RULE is already written down in `enrich-parcels.notes.json` `fences[]` (`"7e130bff (zoning_dominant_area_share ::numeric cast, lessons.md:28)"`) — this row cites the same fence, not a fresh claim | `:334-338` current file, `git blame` = `7e130bff` (**corrected this commit — `1da014c60`, previously cited, only added tests + the lessons.md:28 prose the same day; it never touched `scripts/enrich-parcels.js`, confirmed via `git show --stat`**); `1da014c60` remains the correct cite for the lesson's own documentation |
+| `7e130bff` | 2026-05-31 | **Origin of the whole zoning-pass architecture** — the set-based join CTE rewrite replacing per-parcel correlated `EXISTS` subqueries (`tasks/lessons.md:33`'s own fence: >9min intractable → ~8min with `CREATE TEMP TABLE … AS` + `LEFT JOIN`) | ✓ current file, `enrichParcels`'s whole temp-table/UPDATE shape (`:222-443`) is this commit's architecture, unbroken since | **preserved-in-compute** — the set-based join CTE pattern is load-bearing (a correctness AND performance fence) and ports verbatim; this is pass 1's entire SQL shape. **Grounded (Rule 4/G-2, commit 7e/2):** `lessons.md:33`'s fence is now ALSO carried in `enrich-parcels.notes.json` `fences[]` (added this commit, alongside a matching `decisions[]` entry) — the rule was cited in this ledger's own prose but had never been written into the shipped notes artifact until now | full-file read; re-blamed this commit |
 | `df7ef272` | 2026-07-02 | **Origin of the comp-family filter Fold C2/EP-D8 measures the boundary of** — `comp_fsi_p50` restricted to new-build comps (`work_type='new_build'`) with `permit_fsi ∈ [0.05, 8]`, plus the comps-ineligibility reset | ✓ current file, `buildCompCandidatesSql` filter (`:1088-1098`) and the `resetIneligible` UPDATE (`:1208-1213`) both trace to this commit's shape | **preserved-in-compute** — the work_type/FSI-range filter and the reset-on-ineligibility pattern are both verbatim-ported. **This fence is the boundary of what the comp-match predicate DOES filter on** — it never added a `structure_family` term, which is exactly EP-D8's gap (Fold C2/G4): the fence explains why EP-D8 is a genuine spec-silent hole, not an oversight of an existing rule | `:1088-1098,1208-1213` current file; re-blamed `df7ef272` this commit |
-| `e8793c8f` | 2026-08-14 | **Origin of the scope-defer mechanism** — `computeDeferScope`, `enrich_parcels_pass3_scope` (mig 240), `enrich_parcels_defer_threshold_rows` — the only LOGGED recovery ledger in the estate (389 lines added, largest single-commit diff to this file) | ✓ current file, `computeDeferScope` `:1777-1847`, the `INSERT INTO enrich_parcels_pass3_scope … ON CONFLICT DO NOTHING` `:2077-2078`, `DEFER_STEP_SLUG` `:91` | **SPLIT disposition** — the SQL/logic is **preserved-in-compute** (verbatim port); the crash-recoverable ledger CONCEPT (rows left inside the txn by design, `:2073-2076`) is **encoded-as-descriptor-field** at commit 7 (`recovery.interrupted` for the pass-3/pass-5 resets per Fold A2, and the pass3_scope table itself named in `outputs.writes[]`) — this is the mechanism Fold A3 says has "no analogue in any converted step" | `:1777-1847,2077-2078,91` current file; re-blamed `e8793c8f` this commit |
-| `a81c6a7c` | 2026-08-16 | **Origin of the honest `records_updated` aggregate** — `computeAggregateRecordsUpdated`, deliberately EXCLUDING pass 4 (comps) from the distinct-union of pass 1/2/3/5 ids | ✓ current file `:1834-1842`, byte-identical shape (`zoningIds, maxBuildIds, existingIds, scenarioIds, optConfigGenuineIds` — no comps ids param at all) | **preserved-in-compute** — this is a §11 counter-scoping decision (Rule 3-B8 lineage) that must survive conversion verbatim; the docblock `:1820-1829` states the exclusion is deliberate, not an omission | `:1834-1842` current file; re-blamed `a81c6a7c` this commit |
+| `e8793c8f` | 2026-08-14 | **Origin of the scope-defer mechanism** — `computeDeferScope`, `enrich_parcels_pass3_scope` (mig 240), `enrich_parcels_defer_threshold_rows` — the only LOGGED recovery ledger in the estate (389 lines added, largest single-commit diff to this file) | ✓ current file, `computeDeferScope` `:1777-1847`, the `INSERT INTO enrich_parcels_pass3_scope … ON CONFLICT DO NOTHING` `:2077-2078`, `DEFER_STEP_SLUG` `:91` | **SPLIT disposition** — the SQL/logic is **preserved-in-compute** (verbatim port); the crash-recoverable ledger CONCEPT (rows left inside the txn by design, `:2073-2076`) is **encoded-as-descriptor-field** at commit 7 (`recovery.interrupted` for the pass-3/pass-5 resets per Fold A2, and the pass3_scope table itself named in `outputs.writes[]`) — this is the mechanism Fold A3 says has "no analogue in any converted step". **Grounded (Rule 4/G-2, commit 7e/2):** the preserved-in-compute half's own RULE (defer the whole run when combined scope >= threshold) is written down as the `enrich_parcels_defer_threshold_rows` config.logic_variables[] entry (bounds [1000,500000], on_invalid:"fail") plus a new `enrich-parcels.notes.json` `decisions[]` entry added this commit | `:1777-1847,2077-2078,91` current file; re-blamed `e8793c8f` this commit |
+| `a81c6a7c` | 2026-08-16 | **Origin of the honest `records_updated` aggregate** — `computeAggregateRecordsUpdated`, deliberately EXCLUDING pass 4 (comps) from the distinct-union of pass 1/2/3/5 ids | ✓ current file `:1834-1842`, byte-identical shape (`zoningIds, maxBuildIds, existingIds, scenarioIds, optConfigGenuineIds` — no comps ids param at all) | **preserved-in-compute** — this is a §11 counter-scoping decision (Rule 3-B8 lineage) that must survive conversion verbatim; the docblock `:1820-1829` states the exclusion is deliberate, not an omission. **Grounded (Rule 4/G-2, commit 7e/2):** the ported function's own docblock (`scripts/lib/compute/enrich-parcels.js`, "D#5 — the honest aggregate records_updated") restates the rule, and a new `enrich-parcels.notes.json` `decisions[]` entry added this commit cross-references it — pass 4's own write target already declares `idempotent_rerun:"not_idempotent"` (EP-D1/B4.5 PIN), which is why a row that cannot claim genuine work is a bad candidate for a "records genuinely updated" counter | `:1834-1842` current file; re-blamed `a81c6a7c` this commit |
 | `fa9e984c2` | 2026-07-29 | Cloud pipeline-infra fence (does NOT touch `enrich-parcels.js` — `git show --stat` confirms 0 file changes here): the Supavisor session-mode pooler drops startup params AND pool-level `statement_timeout`; only a live `SET`/`SET LOCAL` on the established session sticks (`tasks/lessons.md:82`) | N/A to this file directly — governs HOW any pass-timeout mechanism in this file must be wired | **preserved-in-runner** — Fold B2 makes this a hard constraint on Ask 7's pass-5 timeout bound: whatever bound pass 5 gets must be applied via a live `SET LOCAL` on the actual session (not a pool-level param), and the regression lock must assert it via `SHOW statement_timeout` on that session, never by inspecting a config value. This fence is why the SET LOCAL pair at `:2047-2048` is scoped to passes 1-4's shared txn only — pass 5 runs on a separate post-commit connection and inherits none of it (Ask 7's own "cannot survive a slowdown" finding) | `git show --stat fa9e984c2` (0 hits on this file); cross-referenced against `:2047-2048` current file |
 | `c7b20ac9` | 2026-09-03 | **Origin of the passes-1–4 bounded SET LOCAL timeout instrumentation** — "bounded LOUD SET LOCAL statement_timeout/lock_timeout for passes 1-4" (WF3 enrich_parcels stall commit 1) | ✓ current file `:2047-2048` (`SET LOCAL statement_timeout`/`lock_timeout`, only when >0), `enrich_parcels_pass_statement_timeout_minutes`/`enrich_parcels_lock_timeout_ms` in `LOGIC_VARS_SCHEMA` `:60-61` | **preserved-in-runner** — first-of-kind mechanism (zero hits in `scripts/lib/` before this file), moves into `runEnrichPhase`/the library WITH the runner per Fold D3 (LG-28), not into pure compute | `:2047-2048,60-61` current file; re-blamed `c7b20ac9` this commit |
 | `aff1b093` | 2026-09-03 | **Origin of the silence-gated `pg_stat_activity` stall diagnostic** — `captureStallDiagnostic` (WF3 enrich_parcels stall commit 3) | ✓ current file `:1579-1626` (`captureStallDiagnostic`), consumed at `:1593` | **preserved-in-runner** — same class as `c7b20ac9`, moves into the shared library with the runner (Fold D3), whole-step (not pass-5-only, closing the stall WF3's own deferred item) | `:1579-1626,1593` current file; re-blamed `aff1b093` this commit |
@@ -448,3 +448,395 @@ flip `BUILT`.
 
 **Suite counts.** Full `npm run test`: 416 test files passed, 95 skipped (511 total); 10,073 tests
 passed, 429 skipped (10,502 total) — run as part of commit `66d9e84c`'s pre-commit hook.
+
+## §6. PH-7 — test design + prove RED (commit 6, `c9534fbd`, G7)
+
+`src/tests/steps/enrich_parcels/violations.test.ts` lands: 31 tests (18 `it.fails()` + 13 plain
+`it()`) — a SCOPE NOTE in the file's own header states it does not port all 13
+`src/tests/db/enrich-parcels-*.db.test.ts` files to full parity, covering instead the MATERIAL
+commit-7/8 obligations named in this pilot's own fold record (the descriptor's ruled shape, the
+schema enum bump, the per-pass write-class/guard/idempotent_rerun table incl. the Fold A1
+CORRECTION, the two Rule-9 run-clock stamps + the EP-D1/B4.5 pinned guard sharing one
+`grandfathered.json` entry, the pass-4 `permits` invalidator, Rule 11's `order_guarantee`, the P4
+declared-tunables ⊆ registry check, the four KNOWN-DEFECT pins asserted against the LIVE tree in
+their CURRENT WRONG FORM, Ask 9's INFO-only heritage ruling, the golden PRE/POST differential
+shape, and a #151-equivalent git-order lock).
+
+**Genuinely RED, proven both directions (Spec 121 §12b.6):** every claim wrapped `it.fails(...)`
+inverts internally — vitest reports the wrapped test PASSED only because the body itself threw for
+the declared reason (a missing artifact, an unmet descriptor field), never for an unrelated import
+or syntax error. A full green run of this file at commit 6 (31/31) is ITSELF the proof every
+`it.fails()` claim was RED for the right reason — the same discipline `checkPreservedInComputeHasWhy`
+and the canary battery (§4 of this report's own G7 lock) apply elsewhere in this programme.
+`converted.json.pending` gains the `enrich_parcels` entry, `stage:"red_suite"` (R-K.1) — the one
+artifact this commit itself produces.
+
+### G7 verdict
+
+`file=true` (the violations.test.ts lock exists) · `fences=3` (`enrich-parcels.notes.json`'s
+`fences[]`, extended at commit 7e/2 with the `lessons.md:33` CTE-architecture entry) ·
+`it-count=45` (commit 6's 31 + commit 7b/7d's own growth) — `lockCoverage` holds (45 >= 3) ·
+`RED-evidence=true` per this section's own text. **G7 = 3/3.**
+
+## §7. Commit 7 (7a-7e) — the descriptor + compute + runner + thin shell + G2' golden diff
+
+**7a (`64c45463`) — the schema/freeze half.** `execution.shape` enum gains a 9th value `"enrich"`
+(`x-ruling`); `definitions.enrichPhase` (`execution.phases[]`) becomes REQUIRED for archetype
+ENRICHER; two array-level AJV rules (`order` unique+contiguous; `post_commit` admitted at most
+once, only last). `generate-schema-baseline.mjs --write` (G-1), `generate-template-freeze.mjs
+--refresh` (`frozen_at -> c9534fbd`), Spec 122 §8 RE-FREEZE #1 amendment. One `it.fails` flipped
+(the schema-enum-bump lock).
+
+**7b (`07afb862`) — the descriptor.** `scripts/enrich-parcels.descriptor.json` (7 write targets:
+zoning/max-build/existing+scenarios/comps/optimal-config/run-clock-stamps/pass3-scope-ledger;
+`execution.phases[]` 5 entries; originally 39 `config.logic_variables` = 25 pre-existing + 14
+newly-externalized, corrected to 38 at commit 7e/2 — see below) + `scripts/enrich-parcels.notes.json`
++ a `grandfathered.json` entry (`guard:"none"` x4 dispositions + `no_retraction` for the
+scope-ledger) + new `scripts/seeds/logic_variables.json` rows. 13 `it.fails` flipped to `it()`.
+`converted.json.pending.stage` advances `red_suite -> descriptor_only`.
+
+**7c (`7e3cc6e7`) — the compute port.** `scripts/lib/compute/enrich-parcels.js`: the 5 pass
+functions ported BYTE-VERBATIM off the legacy script, seam-rewritten per §5.5 (`ctx.clock.asOfDate()`
+replacing the raw `now()::date - interval '5 years'` literal; `pipeline.log.*` -> `ctx.log.*`;
+`process.env` removed; the `::numeric` cast on `zoning_dominant_area_share`'s guard ported
+byte-for-byte, Fold B1).
+
+**7d / "pilot 9 commit 2" (`7e75c50e`, preceded by the Rule 11 fix `958e8cc3`) — `runEnrichPhase`
+(LG-28).** Shared-txn passes 1-4 with per-phase `SET LOCAL statement_timeout`/`lock_timeout`, the
+post_commit pass on a DEDICATED connection inside its OWN transaction (Fold B2), the D4' scope
+hand-off INSERT, whole-step heartbeat/stall diagnostics for all 5 phases, `staleness.
+detectInterruptedRetraction` folded UNCONDITIONALLY into `full` (Rule 12). `converted.json.pending`
+DELIBERATELY HELD at `descriptor_only` through 7a-7d (Rule 4 and G7/G8/G9 still enforced-red at that
+point) — see this report's own committed history for the verbatim reasoning.
+
+**7e (this WF2, 3 commits) — the generator fix, the thin shell, and G2'.**
+
+*Commit 1 (`f7e695fc`).* `generate-template-freeze.mjs`'s `runnerRanges` bounded each runner's
+`phase_order` extraction by the next `async function run\w+(` match — a name accident, not a real
+boundary. `runRecorderPhase` (until 7d) and then `runEnrichPhase` (from 7d) each in turn silently
+inherited `executeOrderedWrites`' `write.executeSetBasedClear`/`write.executeUpsertBatch` calls, the
+unrelated function sitting after them in file order. Measured RED: `runEnrichPhase`'s frozen
+`phase_order` carried those two extra calls; the other 7 runners did not. Fixed by bounding on the
+next TOP-LEVEL DECLARATION OF ANY KIND, not merely a `run\w+`-named one — a strict narrowing of the
+old boundary set (new superset of old ⇒ ranges can only shrink), proven by regenerating: the other 7
+runners' `phase_order` byte-identical, only `runEnrichPhase`'s changes (drops the 2 polluted calls).
+`--check` clean; Spec 122 §8 RE-FREEZE #3 paragraph corrected in the same commit.
+
+*Commit 2 (this commit) — the thin shell + Rule 4 grounding + a genuine descriptor bug found and
+fixed.*
+
+- `scripts/enrich-parcels.js` becomes the thin `pipeline.step(descriptor, compute)` shell (pilot 8
+  `refresh-snapshot.js` shape) — the 2,391-line legacy body deleted; it lives entirely in
+  `scripts/lib/compute/enrich-parcels.js` + `scripts/lib/step/index.js` now.
+- **The compute export shape (the last `it.fails`'s own claim).** `scripts/lib/compute/
+  enrich-parcels.js` was missing the generic `compute(ctx)` checks-dispatch entry point every
+  OTHER converted compute module exports (`refresh-snapshot.js`, `link-parcels.js`, ...) — its
+  `module.exports` was a plain OBJECT (`passes[]`, `checks`, the SQL builders), not a FUNCTION, and
+  `pipeline.step()` requires `typeof compute === 'function'`. Added `async function compute(ctx)`
+  (the identical checks-dispatch pattern: iterate `ctx.checks`, call `CHECKS[id]`, catch-and-report
+  per check, return `{records_meta}`), then decorated it with the same static properties (`.passes`,
+  `.checks`, `.readZoningContract`, ...) every other archetype's compute module already carries. NO
+  conformance-suite amendment was needed — the suite's `.compute` expectation already generalizes;
+  ENRICHER is simply the first archetype whose compute needs BOTH shapes (`passes[]` for
+  `runEnrichPhase`'s own per-pass dispatch, `compute(ctx)` for the archetype-generic checks/
+  observations dispatch `runWithPool` calls directly) on the ONE export.
+- **Rule 4 / G-2 grounded, RED to GREEN.** `checkPreservedInComputeHasWhy` measured 5
+  preserved-in-compute Intent Ledger rows (§2 of this report), 4 with no why/notes.json/checks[]
+  grounding in-row. Grounded in place (`enrich-parcels.notes.json` gains a `fences[]` entry for
+  `lessons.md:33` and two new `decisions[]` entries for `computeDeferScope`'s threshold rule and
+  `computeAggregateRecordsUpdated`'s D#5 exclusion; §2's own table rows cite them). `node
+  scripts/analysis/step-validate.mjs --step=enrich_parcels --fast`: Rule 4 `enforced-red` ("5
+  preserved-in-compute row(s), 4 with no why/notes.json/checks[] grounding") -> `enforced-green`
+  ("5 preserved-in-compute row(s), 0 with no why/notes.json/checks[] grounding").
+- **A genuine descriptor bug, found running the FIRST real `--full` invocation of the converted
+  step and fixed in this commit.** `enrich_parcels_comps_as_of_date` (a nullable ISO-date
+  comps-window override, declared at 7b, Fold G3's own explicitly-OPTIONAL half) threw
+  `on_invalid:"fail"` on every real invocation — `resolveConfig`'s `invalidReason`
+  (`scripts/lib/step/config.js:76-81`) is unconditionally numeric-only (`typeof raw !== 'number'`
+  => `'non_finite'`) for EVERY declared `config.logic_variables[]` entry across EVERY archetype, and
+  `step.schema.json`'s own item schema (`additionalProperties:false`) has no `type` discriminator
+  to register a non-numeric tunable class. Since Fold G3 already ruled this override half
+  optional (not Rule-3-mandated), the fix is REMOVAL, not a library widening: dropped from the
+  descriptor (39 -> 38 declared tunables), `scripts/seeds/logic_variables.json`, and
+  `scripts/generate-logic-variable-groups.mjs`'s GROUP_ORDER; `runEnrichPhase`'s `clock.asOfDate()`
+  no longer reads any config key (the MANDATORY seam — no bare `now()::date` literal — is
+  unaffected). Filed `docs/reports/review_followups.md` (MED) as a followup: widen
+  `config.logic_variables[]` to a typed/nullable tunable class for whichever future pilot next
+  needs one.
+- **Coordinator addendum — Fold B2's `SHOW statement_timeout` claim made literally true in the
+  fake-pool lock.** The pre-existing "timeouts applied to the post_commit phase" test asserted only
+  the outgoing `SET LOCAL` SQL text, while the code comment/RE-FREEZE #3/commit body all claim a
+  `SHOW statement_timeout`-based session proof. `fakePool` extended: each `connect()` call is now
+  its OWN closed-over session (a distinct `statementTimeoutMs`, moved only by a `SET LOCAL
+  statement_timeout` issued on THAT client), with every connected client tracked in `pool.clients[]`
+  so a test can reach back into a SPECIFIC session after `runEnrichPhase` returns. The test now
+  issues `SHOW statement_timeout` on the post_commit phase's own pinned client (asserts the bound
+  600000ms) AND on a fresh sibling client (asserts the untouched default, proving isolation). RED
+  proven live: commenting out the real `SET LOCAL` line in `scripts/lib/step/index.js` and
+  re-running just this test fails at the assertion (`expected [...] to include 'SET LOCAL
+  statement_timeout = 600000'`) — reverted immediately after, diff confirmed clean. A companion
+  scratch-reproduction test pins the discriminating power of the SHOW-based assertion itself.
+- **A second genuine bug, found running the ACTUAL golden-capture `--full` invocation (2026-09-07),
+  after the `enrich_parcels_comps_as_of_date` fix above cleared config resolution.** Pass 4 threw
+  `error: cannot insert multiple commands into a prepared statement` inside `runPass4`.
+  `buildCompCandidatesSql`'s rendered text is `CREATE TEMP TABLE comp_cand ON COMMIT DROP AS …;
+  CREATE INDEX comp_cand_gix …; ANALYZE comp_cand;` — THREE statements in one string. The legacy
+  script called this builder with NO query parameters (a bare `now()::date` literal), so pg's node
+  driver used the SIMPLE query protocol (multi-statement-safe); once Fold G3's seam rewrite bound
+  the as-of-date as `$1::date` (`client.query(sql, [asOfDate])`), the driver switched to the
+  EXTENDED protocol (a real prepared statement), which Postgres restricts to exactly one command.
+  Fixed by splitting the CREATE INDEX/ANALYZE pair into a sibling function,
+  `buildCompCandidatesIndexSql()`, issued as its own parameter-free `client.query()` call (simple
+  protocol, multi-statement-safe again) immediately after the bound CREATE TEMP TABLE call. The
+  SELECT text itself is byte-unchanged.
+- **Legacy dedicated test-file fallout, found running the full suite after the thin shell landed.**
+  20 pre-existing test files required `scripts/enrich-parcels.js` directly (8 `*.logic.test.ts`
+  with no DB gating — genuine collection-time crashes; 11 `*.db.test.ts`, already
+  `describe.skipIf(!dbAvailable())`-gated in this environment, so unaffected; 1 unrelated ops
+  script, `scripts/analysis/wf3-cost-coherence-sanity.js`, never imported by the suite). Handled
+  per the pilot 8 precedent ("3 legacy dedicated test files retargeted to compute.js," `c19cf224`):
+  the 8 logic files' `require()` retargeted to `scripts/lib/compute/enrich-parcels.js`, with
+  per-call-site parameter fixes where the seam rewrite changed a builder's signature (module
+  constants → explicit params: `buildMaxBuildSql`'s `storeyHeight/acc/mislinkTol/minDim`,
+  `buildCompCandidatesSql`'s `asOfDateParamIndex/windowYears`, `buildComparableBuildsUpdateSql`'s
+  `comp{lotTol,knnOverfetch,topN,overCaptureClamp,fsiMinPlausible,fsiMaxPlausible}` — legacy-exact
+  values, sourced from `scripts/seeds/logic_variables.json`). Two files tested mechanisms the
+  conversion RETIRED, not merely relocated, and were rewritten in place (kept, not deleted, per
+  "never delete a file you did not create"): `sql-verbatim.logic.test.ts` (its whole job —
+  legacy-vs-compute byte comparison — is impossible now that legacy has no SQL builders left; its
+  header records why, per-builder coverage continues in the retargeted files) and
+  `enrich-parcels-stall-hardening.logic.test.ts` (the legacy per-pass `runPass()` wrapper is
+  inlined into `runEnrichPhase`; the admin-visibility check survives, the runPass-specific checks
+  are ported below). `enrich-parcels-optconfig.logic.test.ts` lost 4 describe blocks
+  (`main()`-source-scan, `LOGIC_VARS_SCHEMA`-source-scan, and two behavioural blocks built around
+  the legacy `enrichOptimalConfig(pool, {heartbeatMinutes, pipelineRunId})` embedding) — the
+  source-scans are superseded by the generic `config.logic_variables[]`/`resolveConfig` mechanism;
+  the behavioural coverage is NOT dropped, it is GENERALIZED: `recordHeartbeat`/
+  `captureStallDiagnostic`/`startStallTicker` (LG-28) had ZERO standalone unit tests since their
+  commit-7d library move (Fold D3's own "first-of-kind, zero prior hits" note) — new coverage
+  added to `src/tests/step-library.logic.test.ts` (10 tests: heartbeat UPDATE shape + null-runId
+  no-op + error-swallow; stall-diagnostic pid probe + null-pid fallback + null-runId no-op +
+  error-swallow; ticker no-op-below-threshold + fires-once-then-latches + stop-before-threshold).
+  The LOUD 57014/55P03 rethrow + unrelated-error-passthrough behaviours are proven against the
+  REAL `runEnrichPhase` in `violations.test.ts` (3 new tests). Full suite verified green after
+  every retarget (`npx vitest run` on each touched file, then a full `npm run test` before commit).
+- **A THIRD genuine bug, found by the orchestrator (2026-09-07, coordinator observation) — a
+  crashed golden-capture attempt left a postgres backend `idle in transaction`, holding
+  `pg_try_advisory_xact_lock(65)` forever, its own node process already gone.** Live stderr
+  evidence from a LATER capture attempt (same incident class, the run raced the still-stuck
+  backend): `Unhandled 'error' event... error: terminating connection due to administrator
+  command` (57P01) — a pg Client-level error crashing the ENTIRE node process. Root cause: neither
+  `scripts/lib/pipeline.js`'s `createPool()` nor `scripts/lib/resolve-db.js`'s
+  `createResolvedPool()` ever attached a `pool.on('error', ...)` listener — node-postgres re-emits
+  an IDLE client's connection-level error as the Pool's own 'error' event, and Node's default
+  EventEmitter behaviour for an unheard 'error' event is to throw SYNCHRONOUSLY, outside every
+  try/catch/finally in this codebase. A hard crash never reaches a `finally` that hasn't run yet —
+  so a DIFFERENT client, mid-`withAdvisoryLock`'s open `BEGIN`/lock-acquire (unrelated to whatever
+  connection actually errored), never gets to its own `client.release()`/`ROLLBACK`, leaving the
+  backend (and the lock) stuck until an operator manually `pg_terminate_backend()`s it. Fixed:
+  `attachPoolErrorLogger` (pipeline.js, both `createPool()` branches) + an equivalent inline
+  listener (resolve-db.js's `createResolvedPool`) — logged via `pipeline.log.error`/the caller's
+  `logger`, never rethrown. New regression lock, `src/tests/pipeline-pool-error-handling.logic.test.ts`
+  (5 tests): a bare EventEmitter with no listener genuinely throws on 'error' (proves the incident
+  mechanism, not merely asserts the fix); `attachPoolErrorLogger` makes the SAME event a no-op;
+  `withAdvisoryLock`'s own PRE-EXISTING (and already correct) crash posture — a normal JS throw in
+  `fn()` — is locked against regression (ROLLBACK issued, client released, error rethrows) so a
+  future edit cannot silently break it, alongside the lock-not-acquired and success paths.
+- **A FOURTH bug, the "VRD-SKIP conflation" — the harness itself, not the step.** Once the
+  orphaned lock was manually cleared (`pg_terminate_backend`), the NEXT capture attempt correctly
+  self-skipped in the child process (`records_meta.skipped:true`,
+  `reason:"advisory_lock_held_elsewhere"`, `status:"self_skipped"`, exit 0 when clean) — but
+  `capture-step-golden.js` wrote this SKIP to `--out` exactly as if it were a genuine completed
+  run, which would have silently enshrined "nothing happened" as the new reference state for
+  every future G8/`--compare` diff. Separately, but caught by the SAME check: a genuinely CRASHED
+  capture (non-zero exit, no `PIPELINE_SUMMARY` at all) was ALSO being written. Fixed:
+  `assertCaptureIsValid(doc)` (new, exported, pure) — refuses (throws, no write) when
+  `doc.exit_code !== 0` or `doc.summary?.records_meta?.skipped === true`, called in `main()`
+  immediately after `buildCapture`, before the `--out` write. RED-first proof + GREEN in
+  `src/tests/capture-step-golden.logic.test.ts`'s new `assertCaptureIsValid` describe block: the
+  exact live incident shape (skipped, reason `advisory_lock_held_elsewhere`) throws with that
+  reason named in the message; a crashed capture (exit 1, no summary) throws separately; a
+  genuine completed run passes untouched.
+- **Corrective action taken (2026-09-07, before any further capture attempt):** the stuck backend
+  was terminated (advisory lock 65 confirmed free), the stale/invalid
+  `docs/reports/golden/enrich_parcels/post/sources_run1.json` (the crashed exit=1 capture) was
+  deleted (created this session, not a pre-existing artifact), and the capture was re-launched
+  ONLY after both fixes above landed and the full suite (below) was green. First-progress check
+  (per the coordinator's own instruction): `pg_stat_activity` queried directly ~1-2 minutes after
+  launch confirmed pass 1's real `CREATE TEMP TABLE parcel_zoning_enrich ...` query genuinely
+  `state:'active'` — not a silent stall — before letting the run proceed unattended to completion.
+- **A FIFTH gap, orchestrator observation while this same re-run was in flight (Spec 48 §3.6
+  silence class): the capture's own log produced ZERO further lines for 60+ minutes past the
+  startup INFO line, despite the run genuinely, healthily progressing (confirmed via direct
+  `pg_stat_activity` inspection — a real, active query each time).** Two candidate causes ruled
+  out/in by direct evidence, not guessed: (1) the capture harness's own child-stdout/stderr
+  piping (`spawnStep`, `capture-step-golden.js`) already tees BOTH streams to the parent's own
+  stdout/stderr live, per-chunk, as data arrives — verified by reading the code; NOT the fault.
+  (2) `runEnrichPhase` (`scripts/lib/step/index.js`) had ZERO `log.*` calls anywhere in its
+  5-phase dispatch loop — confirmed by an exhaustive scan of the function body (only a
+  scope-defer WARN and a pre-write-gate-fail ERROR exist, neither on the hot path of a healthy
+  run). Fixed: `log.info(tag, ...)` at the START and END (+ duration) of every shared-txn AND
+  post-commit phase — the runner's own boundary logging, independent of (and additional to)
+  `recordHeartbeat`'s DB-only writes, so an operator tailing a log (or this pilot's own harness)
+  sees real progress without needing a DB query.
+- **A SIXTH gap, found investigating the FIFTH — and load-bearing far beyond enrich_parcels: EVERY
+  converted step's heartbeat mechanism was unreachable during a REAL `run-chain.js` chain run,
+  not just standalone.** `run-chain.js` (`:606-658`) pre-INSERTs each step's own `pipeline_runs`
+  row (`status:'running'`) and threads its id via `STEP_RUN_ID`, specifically so the step can
+  address its own row (`pipeline.js`'s legacy `run()` has read `STEP_RUN_ID` into `ctx.runId`
+  since the 2026-09-03 cloud-parity FIX 3 remediation) — but `scripts/lib/step/index.js`'s
+  `runWithPool` (the shared entry point EVERY converted step uses) never read `STEP_RUN_ID` at
+  all. For a chain run, `chainId` is set (truthy) so `owns = ownsLedgerRow(chainId) = false`,
+  skipping `openLedgerRow` (correctly — ownership belongs to run-chain) — but nothing filled
+  `runId` from the id run-chain had ALREADY minted, leaving it `null` for the step's entire
+  lifetime. This is not merely a heartbeat gap: `staleness.detectInterruptedRetraction`'s own
+  `ownRunId` exclusion (`staleness.js:399-409`, its own comment recording the EXACT prior
+  incident this generalizes: "without excluding ownRunId, THIS INVOCATION'S OWN just-opened
+  running row... reads every run as interrupted and forces FULL forever") was measured, at
+  commit time, using a scenario where `ownRunId` WAS populated (standalone/`openLedgerRow`) — a
+  REAL chain run for ANY step declaring `recovery.interrupted:"force_full_on_next_run"` would
+  see its OWN chain-inserted 'running' row and misidentify itself as an interrupted PRIOR run,
+  silently forcing full/incremental-defeating behaviour on every chain invocation. Fixed:
+  `parseStepRunIdEnv()` (mirrors `pipeline.js`'s own STEP_RUN_ID parsing verbatim — absent/blank/
+  non-numeric → null, never NaN), read into `runId` on the `owns=false` branch. Standalone
+  (`owns=true`, `openLedgerRow`) was never affected. This is a shared-library fix (`runWithPool`),
+  not an enrich_parcels-only patch — every one of the 8 converted steps benefits identically; full
+  suite re-verified green after landing it (below).
+- **Harness-side heartbeat visibility considered, deliberately NOT implemented.**
+  `capture-step-golden.js` simulates "inside a chain" via `PIPELINE_CHAIN` alone (unlike real
+  `run-chain.js`, which also pre-inserts + finalizes the step's own row) — mirroring the FULL
+  pre-insert/finalize pair was attempted, then reverted: pre-inserting without a matching
+  finalize would leave an orphaned `'running'` row forever (nothing else updates it, since
+  `owns=false` on the harness's own simulated-chain path means the step correctly never
+  finalizes it either) AND would pollute the capture's own `pipeline_runs` diff
+  (`WHERE id > maxIdBefore`) with a spurious extra row — a new, self-inflicted "VRD-SKIP"-shaped
+  risk under time pressure, not worth taking for a dev-only tool when the PRODUCTION fix (above)
+  is what actually matters. Filed `docs/reports/review_followups.md` (LOW) instead.
+- **A cross-step fallout, found running the full suite: `src/tests/steps/link_massing/violations.test.ts`
+  and `src/tests/run-chain-defer.logic.test.ts` both source-scanned `scripts/enrich-parcels.js`'s
+  own text for facts that moved with the thin-shell conversion** — `link_massing`'s own D-5 guard
+  test cross-references enrich_parcels' `buildMassingScopeWhere` re-scope predicate (retargeted to
+  `scripts/lib/compute/enrich-parcels.js`); `run-chain-defer`'s "⑤ force-full env plumbing" block
+  tested a stale historical framing ("✓red — does not yet OR in ENRICH_PARCELS_FORCE_FULL") that
+  had ALREADY gone green when the legacy script gained that env fallback long before this pilot
+  (confirmed: `git show HEAD:scripts/enrich-parcels.js` had it) — and Spec 43 §Chain-Specific
+  Arguments confirms `ENRICH_PARCELS_FORCE_FULL` is a real, documented, operator-facing incident-
+  response mechanism (Chesterton's Fence, NOT dead code). Verified NOT a regression before
+  retargeting: the descriptor already declares `override.force_full:"ENRICH_PARCELS_FORCE_FULL"`
+  (`:617`), read generically by `staleness.resolveOverrides` and OR'd into `runEnrichPhase`'s own
+  `full` derivation (`overrides.force_full === true`) — the exact same env var, same semantics,
+  now expressed declaratively instead of as a per-script literal. Both files retargeted (kept, not
+  deleted); full suite re-verified green.
+
+### G2' — CONVERTED-step golden diff
+
+**NOT COMPLETED this session — STOP-and-report, per instruction, not silently retried.** Two
+`--full` capture attempts both failed to reach a genuine completion (the first two were the
+prepared-statement bug + the crash-path/VRD-SKIP incidents documented above, both fixed in-commit
+before the third attempt). The THIRD attempt, launched only after all fixes above landed and the
+full suite was green, ran passes 1-4 successfully (~35 min, consistent with local history) but
+then genuinely HUNG inside pass 5 (optimal-config) — measured live (not inferred): 1h10m+ with
+zero forward progress, `pg_stat_activity.wait_event='ClientRead'` throughout (postgres idle,
+waiting on the client), both TCP connections `State: Established` (rules out a dropped socket —
+the literal "H5" hypothesis this now supersedes with live evidence), and the node child process
+measured at **0.953 total CPU-seconds across 1h44m of wall-clock time** — conclusive evidence of a
+genuine stall, not a slow computation. `scripts/lib/optimal-config.js` has zero unbounded loops,
+ruling out a pathological per-row hang in the engine itself; the leading hypothesis is the
+`ctx.stream`/`pg-query-stream` cursor-consumption mechanism in `runPass5`
+(`scripts/lib/compute/enrich-parcels.js:1477`) silently stopping mid-stream. Terminated cleanly
+(Windows PIDs, not the Cygwin-translated ones `ps` reports); DB verified clean afterward (zero
+advisory locks, zero idle-in-transaction sessions, no orphaned golden file, no stray
+`pipeline_runs` row). Filed CRITICAL in `docs/reports/review_followups.md` as its own dedicated
+entry — a WF3 to root-cause the pass-5 stream stall is now a hard prerequisite for G2', ahead of
+any further capture attempt. **`converted.json.pending.stage` stays at `descriptor_only`** (NOT
+advanced to `runner_wired`) and the POST-golden `it.fails` in `violations.test.ts` stays red,
+unflipped — both correctly reflect that G2' has not actually passed; advancing either now would be
+the exact "declared stage past what the hook can actually pass" dishonesty R-K.1/STA-2 exist to
+prevent.
+
+
+## §6. G2' — the pass-5 stall root-caused, fixed, and the same-day comparator (2026-09-08)
+
+The pass-5 hang documented above (§5's tail) was root-caused live against the local DB: a write
+issued on the SAME client that holds an open `pg-query-stream` cursor hangs forever (10s-timeout
+reproduction, a 5-row scratch table) — `pg-query-stream` holds the connection's one command slot
+for the cursor's whole lifetime, so a queued write never runs and the cursor never gets to fetch
+its next batch either. `git log -S"streamQuery" -- scripts/lib/pipeline.js` (`55ad5670`): the
+legacy `pipeline.streamQuery` always opened its OWN dedicated client via `pool.connect()`
+internally, and legacy `enrichOptimalConfig`'s writes went through `pool.query(...)` — a different
+client from the pool's rotation. The two never shared a connection. Fixed: `ctx.stream`'s cursor
+now runs on a dedicated `streamClient`, separate from the write/txn client — mirroring the legacy
+split exactly.
+
+A second, independent incident surfaced during recapture: an externally-terminated background
+process left the shared-txn's connection dead while the runner's OWN separate write connection
+kept running unprotected, and a second invocation's outer advisory lock (now released) started a
+CONCURRENT `--full` run against the same `parcels` rows. Verified clean afterward (neither run had
+committed, so no data corruption occurred) but the race was real. Fixed: a two-key advisory lock
+`(identity.lock, 1)` — distinct from the outer single-key lock so it does not self-conflict —
+acquired on the shared-txn client and independently on the post_commit client, coupling lock
+lifetime to connection lifetime.
+
+### G2' same-day comparator (`docs/reports/golden/enrich_parcels/g2-comparator-report.md`)
+
+The 2026-09-04 PRE golden and today's POST capture are 4 days apart on a live, shared dev DB —
+comparing them directly conflates genuine upstream drift with conversion-introduced differences.
+The authoritative G2' evidence is instead a SAME-DAY, back-to-back comparator: the legacy script
+materialized untracked from `7e75c50e^` via `git show`, run `--full` immediately after the
+converted run, both against the same DB state modulo only the converted run's own writes.
+**Result: 99/100 golden columns byte-identical; the 1 diff (`comparable_builds`, 225/486,530 rows,
+0.046%) is confirmed EP-D9 tie-break re-ordering (identical comp sets, order only) via 5 sampled
+ids. Zero unexplained columns.** Per-pass timing ratio 1.00x (2548.4s legacy vs 2543.6s converted),
+no pass exceeds the 25% KFM-7 band — **EP-D11 (G2' performance finding) is CLOSED — REFUTED**: the
+earlier 1.6-2.9x slowdowns traced to a 1.3M-row `enrich_parcels_pass3_scope` backlog
+(`consumePendingScope`, no batching/limit — a pre-existing design gap, not a code regression) plus
+live DB contention on the shared dev instance, both resolved by an environment repair (guarded
+`DELETE` of `consumed_at IS NULL` rows + `VACUUM ANALYZE`), not a code fix.
+
+### Raw PRE-vs-POST diff (162 leaf fields) — every one a declared, expected consequence of the archetype conversion itself, not a behaviour regression
+
+The raw `--compare` between the 2026-09-04 PRE capture (legacy hand-rolled `auditRows.push`/
+`emitMeta` shape) and today's POST capture (descriptor-driven `checks[]`/`plausibility[]` shape,
+per Rule 1/Rule 4) surfaces 162 differences, ALL attributable to the SHAPE of the observability
+surface changing as part of the conversion itself — never the underlying `parcels`/
+`enrich_parcels_pass3_scope` write behaviour, which the G2' column-level diff above proves
+byte-identical outside EP-D9:
+
+- **`invariants`** — PRE's hand-picked invariant set (`pass3_scope_distinct_parcel_ids`,
+  `pass3_scope_distinct_run_ids`, etc.) is replaced by the descriptor's `plausibility[]`-derived
+  set (`opt_aor_gfa_gt_max_buildable_gfa_count`, `zoning_dominant_area_share_out_of_range_count`,
+  `comp_fsi_p50_small_n_sample_count`, `heritage_basis_coverage_distribution`,
+  `existing_mislink_footprint_ratio_out_of_bound_count`) — a declared, intentional widening
+  (Reality-Check plan-altitude bounds, §"Reality-Check plan-altitude requirements" above), not a
+  loss. 2 differences here (`invariants[5]`, `invariants[6]`).
+- **`meta[0].reads`** — the PIPELINE_META reads-map now names its sources per the descriptor's own
+  `inputs.reads.tables[]` declaration (`coa_applications`, `zoning_building_setback_overlay`,
+  `zoning_bylaw_areas`, `zoning_height_overlay`, `zoning_lot_coverage_overlay`,
+  `zoning_parking_zone_overlay`, `zoning_policy_area_overlay`, `zoning_policy_road_overlay`,
+  `zoning_priority_retail_overlay`, `zoning_queenstw_eat_overlay`, `zoning_rooming_house_overlay`,
+  `neighbourhood_build_norms`, `neighbourhood_storey_norms`, `neighbourhoods`,
+  `building_footprints`, `enrich_parcels_pass3_scope`) — MORE explicit than the legacy script's own
+  ad-hoc `emitMeta` call, per Rule 1 (nothing hidden). ~44 differences here, all this one bucket.
+- **`stdout_lines`** — the converted runner's own per-phase `log.info` boundary lines (added this
+  same commit chain, closing the WF3-filed Spec 48 §3.6 silence-class gap) differ textually from
+  the legacy script's console output — 10 differences, `stdout_lines` bucket.
+- **`summary.records_meta.audit_table.rows`** — the audit table is now built from the descriptor's
+  declared `checks[]` dispatch (Rule 10, `deriveVerdict`) instead of the legacy's hand-rolled
+  `verdictCascade`/96 `auditRows.push` call sites — different row set, different `.metric` names,
+  same underlying counts where both sides measure the same thing. ~93 differences, `rows`/`metric`
+  buckets.
+- **`summary.records_meta.{checks_failed,checks_warned,comparable_builds_enriched_count,
+  existing_structure_enriched_count,ledger_row,max_build_enriched_count,opt_config_engine_errors,
+  optimal_config_enriched_count,parcels_enriched_count,records_updated_aggregate,
+  total_parcels_scanned,warnings,zone_class_pct}`** — new, MORE granular top-level records_meta
+  fields the descriptor's `compute(ctx)` dispatch now emits (mirroring every other converted
+  archetype's own `records_meta` shape, e.g. `link-parcels.js`'s `buildLinkMeta`) that the legacy
+  script's own flatter shape never had. 13 differences.
+- **`table_state[*].order_columns`** — the converted capture's table-state now declares its
+  ordering explicitly (`order_by:"explicit"`, `order_columns:[...]`), where PRE's legacy capture
+  defaulted to primary-key ordering with no explicit declaration. 4 differences.
+
+**162 differences total, all in the observability/audit SHAPE (never a write-behaviour diff) —
+zero unexplained once attributed to the conversion itself.** The authoritative behaviour-
+preservation evidence remains the SAME-DAY G2' column-level comparator above (99/100 columns
+byte-identical, 0 unexplained).

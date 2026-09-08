@@ -1392,7 +1392,7 @@
       "title": "admin GROUPS reverse-coverage — every unclassified seed key gets a real group or a reviewed hidden reason",
       "promised": "unclassified count = 0",
       "status": "NOT_STARTED",
-      "evidence": "302 of 452 scripts/seeds/logic_variables.json keys carry admin.hidden === \"unclassified\" as of scripts/generate-logic-variable-groups.mjs (WF2 \"Admin Tunable Coverage\" commit 4, 2026-09-03) — refreshed by that generator on every regeneration (npm run logic-var-groups); high-water mark tracked in scripts/steps/_schema/admin-unclassified-high-water-mark.json (monotonic ratchet, src/tests/logic-var-admin-declarations.logic.test.ts) so the count can only decrease, never increase, going forward. review_followups.md — \"WF3 cloud-parity FIX 3 remediation — admin GROUPS reverse-coverage gap (2026-09-03)\" is the originating followup this item batches.",
+      "evidence": "302 of 451 scripts/seeds/logic_variables.json keys carry admin.hidden === \"unclassified\" as of scripts/generate-logic-variable-groups.mjs (WF2 \"Admin Tunable Coverage\" commit 4, 2026-09-03) — refreshed by that generator on every regeneration (npm run logic-var-groups); high-water mark tracked in scripts/steps/_schema/admin-unclassified-high-water-mark.json (monotonic ratchet, src/tests/logic-var-admin-declarations.logic.test.ts) so the count can only decrease, never increase, going forward. review_followups.md — \"WF3 cloud-parity FIX 3 remediation — admin GROUPS reverse-coverage gap (2026-09-03)\" is the originating followup this item batches.",
       "owner": {
         "kind": "wf",
         "ref": "wf: programme-ADMIN-1"
@@ -1480,6 +1480,23 @@
         ]
       },
       "last_reviewed": "2026-09-04"
+    },
+    {
+      "id": "EP-PIN-PERF",
+      "spec": "122 (WF3 enrich_parcels double-run/lock-fix commit chain)",
+      "title": "converted enrich_parcels per-pass timing within 25% of the legacy PRE goldens (KFM 7)",
+      "promised": "the converted runEnrichPhase must not regress per-pass wall-clock timing vs the legacy script by more than 25% in either direction on any pass",
+      "status": "BUILT",
+      "evidence": "Filed 2026-09-08 as EP-D11 (defect-ledger.md) after early POST capture attempts measured 1.6-2.9x per-pass slowdowns. REFUTED same day by a same-day, back-to-back comparator (legacy materialized from 7e75c50e^ via git show, run --full immediately after the converted run): total 2548.4s (legacy) vs 2543.6s (converted), ratio 1.00x, worst single pass 0.87x — well inside the 25% band. The earlier slowdowns traced to a 1.3M-row enrich_parcels_pass3_scope backlog (consumePendingScope has no batching/limit) plus live DB contention on a shared dev instance, both environmental, not a code regression. See docs/reports/golden/enrich_parcels/g2-comparator-report.md for the full column-level diff + per-pass timing table.",
+      "owner": {
+        "kind": "pilot",
+        "ref": "pilot9_enrich_parcels"
+      },
+      "gate": {
+        "kind": "nice_to_have",
+        "blocks": []
+      },
+      "last_reviewed": "2026-09-08"
     }
   ]
 }

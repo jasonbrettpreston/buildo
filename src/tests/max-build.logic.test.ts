@@ -10,7 +10,7 @@ import { describe, expect, it } from 'vitest';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const mb = require('../../scripts/lib/max-build.js');
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const ep = require('../../scripts/enrich-parcels.js');
+const ep = require('../../scripts/lib/compute/enrich-parcels.js');
 
 describe('max-build — constants', () => {
   it('exposes the documented model constants', () => {
@@ -206,7 +206,11 @@ describe('computeCurGfaRange (WF3-A current-building GFA menu)', () => {
 
 describe('max-build — enrich-parcels second-pass SQL plumbing', () => {
   it('buildMaxBuildSql references the zoning feed + lot dims + the massing join', () => {
-    const sql = ep.buildMaxBuildSql({});
+    // RETARGETED pilot 9 commit 7e/2 — compute's buildMaxBuildSql takes storeyHeight/acc/
+    // mislinkTol/minDim as explicit params (legacy module constants, now config-sourced);
+    // values below are the legacy defaults (scripts/seeds/logic_variables.json), acc:{}
+    // falls back to scripts/lib/max-build.js's own DEFAULT constants per-field.
+    const sql = ep.buildMaxBuildSql({ storeyHeight: 3, acc: {}, mislinkTol: 0.05, minDim: 3 });
     expect(sql).toMatch(/CREATE TEMP TABLE parcel_max_build/);
     expect(sql).toMatch(/parcel_buildings pb JOIN building_footprints bf/);
     // WF3-B: buffer side inset is party-wall-scaled (side_count/2.0); ravine_red still added separately.

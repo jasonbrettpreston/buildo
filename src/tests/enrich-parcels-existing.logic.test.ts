@@ -12,7 +12,7 @@ import { describe, expect, it } from 'vitest';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const mb = require('../../scripts/lib/max-build.js');
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const ep = require('../../scripts/enrich-parcels.js');
+const ep = require('../../scripts/lib/compute/enrich-parcels.js');
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const eperm = require('../../scripts/enrich-permits.js');
 

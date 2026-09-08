@@ -5,18 +5,33 @@
 //  - the kNN UPDATE: GiST over-fetch → zoning + lot/frontage ±20% post-filter → top-N by similarity
 //  - over-capture exclusion (build_ratio > 1.1) from comp_build_ratio_p50, not from the evidence array
 //  - subjects are scoped at the SOURCE (not just the final UPDATE) + incremental guard
+//
+// RETARGETED pilot 9 commit 7e/2 (2026-09-07, ENRICHER thin-shell conversion): builders moved
+// verbatim to scripts/lib/compute/enrich-parcels.js. Two seam changes from the legacy
+// scripts/enrich-parcels.js (Fold G3/Ask 5): (1) the comps window's as-of-date is now a BOUND
+// $1::date param (ctx.clock.asOfDate()) instead of a bare now()::date literal — asserted here as
+// the bound-parameter form, not the literal text; (2) the 7 comp literals (lotTol/knnOverfetch/
+// topN/overCaptureClamp/fsiMinPlausible/fsiMaxPlausible/windowYears) are now config-sourced
+// function params instead of module constants — passed here at their exact legacy values
+// (scripts/seeds/logic_variables.json's enrich_parcels_comp_* defaults) so the rendered SQL is
+// byte-identical to the pre-conversion literals.
 
 import { describe, expect, it } from 'vitest';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const ep = require('../../scripts/enrich-parcels.js');
+const ep = require('../../scripts/lib/compute/enrich-parcels.js');
+
+const LEGACY_COMP = { lotTol: 0.2, knnOverfetch: 50, topN: 10, overCaptureClamp: 1.1, fsiMinPlausible: 0.05, fsiMaxPlausible: 8 };
+const LEGACY_WINDOW_YEARS = 5;
 
 describe('comps candidate-set SQL', () => {
-  const sql = ep.buildCompCandidatesSql();
+  const sql = ep.buildCompCandidatesSql({ asOfDateParamIndex: 1, windowYears: LEGACY_WINDOW_YEARS });
   it('starts from the filtered permit set (recent new_build/addition), not a parcels scan', () => {
     expect(sql).toMatch(/FROM permits pr/);
     expect(sql).toContain("project_type IN ('new_build','addition')");
-    expect(sql).toContain("interval '5 years'");
+    // Fold G3 seam: bound $1::date, not a bare now()::date literal — the window LENGTH (5 years)
+    // is still the legacy value, now expressed as `(5 * interval '1 year')`.
+    expect(sql).toMatch(/\$1::date - \(5 \* interval '1 year'\)/);
     // principal permit per parcel via DISTINCT ON, then JOIN parcels (small-set-driven)
     expect(sql).toMatch(/DISTINCT ON \(pr\.zoning_dominant_parcel_id\)/);
     expect(sql).toMatch(/JOIN parcels pa ON pa\.id = r\.pid/);
@@ -25,15 +40,15 @@ describe('comps candidate-set SQL', () => {
     expect(sql).toMatch(/DISTINCT ON \(zoning_dominant_parcel_id\)/);
     expect(sql).not.toMatch(/LEFT JOIN LATERAL[\s\S]*coa_applications/);
   });
-  it('build_ratio = imagery roof footprint ÷ max-build; geom GiST index for the kNN', () => {
+  it('build_ratio = imagery roof footprint ÷ max-build; geom GiST index for the kNN (index now a SEPARATE statement, EP-D bugfix commit 7e/2 — "cannot insert multiple commands into a prepared statement" once the as-of-date became a bound param)', () => {
     expect(sql).toContain('imagery_roof_footprint_sqm / pa.max_buildable_footprint_sqm');
-    expect(sql).toContain('USING gist (geom)');
+    expect(ep.buildCompCandidatesIndexSql()).toContain('USING gist (geom)');
   });
 });
 
 describe('comps kNN UPDATE SQL', () => {
   it('over-fetches the 50 nearest (GiST kNN) then post-filters family + lot/frontage ±20%', () => {
-    const sql = ep.buildComparableBuildsUpdateSql({ full: true });
+    const sql = ep.buildComparableBuildsUpdateSql({ full: true, comp: LEGACY_COMP });
     expect(sql).toMatch(/ORDER BY c\.geom <-> s\.geom\s+LIMIT 50/);
     // R4: dwelling-family match (specific family pools same-form comps; 'all' keeps the exact-zoning match).
     expect(sql).toContain('near.comp_family = s.subj_family');
@@ -42,18 +57,18 @@ describe('comps kNN UPDATE SQL', () => {
     expect(sql).toMatch(/LIMIT 10/); // top-N kept
   });
   it('R4: each comp carries its built structure_family + the subject family is computed once', () => {
-    const sql = ep.buildComparableBuildsUpdateSql({ full: true });
+    const sql = ep.buildComparableBuildsUpdateSql({ full: true, comp: LEGACY_COMP });
     expect(sql).toContain("'structure_family', m.comp_family"); // comp JSONB carries the built family
     expect(sql).toContain('AS subj_family');                    // subject family computed in the subject SELECT
   });
   it('excludes over-captured comps (build_ratio > 1.1) from the p50 only', () => {
-    const sql = ep.buildComparableBuildsUpdateSql({ full: true });
+    const sql = ep.buildComparableBuildsUpdateSql({ full: true, comp: LEGACY_COMP });
     expect(sql).toMatch(/FILTER \(WHERE m\.build_ratio IS NOT NULL AND m\.build_ratio <= 1\.1\)/);
     // build_ratio still flows into the evidence array (not filtered out of jsonb_agg)
     expect(sql).toMatch(/'build_ratio', m\.build_ratio/);
   });
   it('WF3: comp_fsi_p50 is NEW-BUILD comps only, two-sided plausibility band (regression lock)', () => {
-    const sql = ep.buildComparableBuildsUpdateSql({ full: true });
+    const sql = ep.buildComparableBuildsUpdateSql({ full: true, comp: LEGACY_COMP });
     expect(sql).toContain("m.work_type = 'new_build'");
     expect(sql).toMatch(/m\.permit_fsi BETWEEN 0\.05 AND 8/);
     // additions still populate the evidence array + comp_dominant_build (only the fsi SCALAR narrows)
@@ -61,11 +76,11 @@ describe('comps kNN UPDATE SQL', () => {
     expect(sql).toContain('mode() WITHIN GROUP (ORDER BY m.work_type)');
   });
   it('scopes the SUBJECTS at source (not just the final UPDATE) + incremental guard', () => {
-    const full = ep.buildComparableBuildsUpdateSql({ full: true, scopeWhere: "sp.parcel_id = 'X'" });
+    const full = ep.buildComparableBuildsUpdateSql({ full: true, scopeWhere: "sp.parcel_id = 'X'", comp: LEGACY_COMP });
     expect(full).toContain('FROM parcels sp');
     expect(full).toContain("sp.parcel_id = 'X'");
     expect(full).not.toContain('sp.comp_count IS NULL'); // full = no incremental guard
-    const incr = ep.buildComparableBuildsUpdateSql({ full: false });
+    const incr = ep.buildComparableBuildsUpdateSql({ full: false, comp: LEGACY_COMP });
     expect(incr).toContain('sp.comp_count IS NULL');
   });
   it('exposes the comp write-column set', () => {

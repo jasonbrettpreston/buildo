@@ -231,7 +231,6 @@ const GROUP_ORDER = [
       "enrich_parcels_optcfg_batch_size",
       "enrich_parcels_pass5_stream_batch_size",
       "enrich_parcels_bbox_degree_divisor",
-      "enrich_parcels_comps_as_of_date",
       "enrich_parcels_pass5_timeout_minutes"
     ]
   },
