@@ -2351,8 +2351,46 @@ async function runEnrichPhase({ descriptor, pool, compute, config, chainId, log,
 
   const passRaw = {};
   let scopeInsertCount = 0;
+  let sharedTxnLockDenied = false;
+
+  // WF3 enrich_parcels double-run incident (2026-09-07) — the GENERIC outer lock
+  // (`runWithPool`'s `withAdvisoryLock(pool, descriptor.identity.lock, ...)`, §4.1 ②)
+  // acquires `pg_try_advisory_xact_lock(identity.lock)` on its OWN dedicated connection,
+  // separate from the one `pipeline.withTransaction` opens here for the real shared-txn
+  // work — exactly the SAME two-connection shape the LEGACY script used
+  // (`pipeline.withAdvisoryLock(pool, ADVISORY_LOCK_ID, async () => { ... await
+  // pipeline.withTransaction(pool, ...) ... })`, `7e75c50e^:1872/2032` — NOT a fence this
+  // conversion dropped; both had it). Measured live: the outer lock's connection died
+  // (an external interruption) while this shared-txn's OWN connection kept running,
+  // un-protected, for the REST of its 4 passes — and a SECOND invocation's outer lock
+  // then legitimately re-acquired `identity.lock` (now released) and started a
+  // CONCURRENT `--full` run against the same `parcels` rows.
+  //
+  // FIX (this connection ALSO holds a lock, tied to ITS OWN transaction): a two-key
+  // advisory lock `(identity.lock, ENRICH_INNER_LOCK_SUBKEY)` — a lock ID DISTINCT from
+  // the outer's single-key `identity.lock`, so this does not self-conflict with the
+  // outer lock this SAME process already holds. Coupled to THIS connection/transaction
+  // (`pg_try_advisory_xact_lock`, auto-released at COMMIT/ROLLBACK/disconnect): if this
+  // connection dies, the lock dies with it — but critically, if the OUTER lock's
+  // connection dies FIRST while this one is still working, a second invocation's own
+  // attempt at this SAME two-key lock (from its own shared-txn client) now correctly
+  // reports `false` and self-skips, because THIS connection still holds it. The failure
+  // mode closed is "a second worker starts while a first is still genuinely working" —
+  // not "this worker's own death is undone" (nothing can undo that; Rule 12 truthful
+  // crash posture applies as it always did).
+  const ENRICH_INNER_LOCK_SUBKEY = 1;
 
   await pipeline.withTransaction(pool, async (client) => {
+    const lockRow = await client.query(
+      'SELECT pg_try_advisory_xact_lock($1, $2) AS acquired',
+      [descriptor.identity.lock, ENRICH_INNER_LOCK_SUBKEY],
+    );
+    if (!lockRow.rows[0].acquired) {
+      throw Object.assign(
+        new Error(`${tag} shared-txn phases: advisory lock (${descriptor.identity.lock}, ${ENRICH_INNER_LOCK_SUBKEY}) held elsewhere`),
+        { advisoryLockDenied: true },
+      );
+    }
     const pidRow = await client.query('SELECT pg_backend_pid() AS pid');
     const pid = pidRow.rows[0] ? Number(pidRow.rows[0].pid) : null;
     for (const phase of sharedPhases) {
@@ -2410,7 +2448,20 @@ async function runEnrichPhase({ descriptor, pool, compute, config, chainId, log,
       );
       scopeInsertCount = ins.rowCount || 0;
     }
+  }).catch((err) => {
+    // The inner lock-denial signal above stops here — a clean, honest self-skip
+    // (mirrors the outer `withAdvisoryLock`'s own `{acquired:false}` semantics),
+    // never a crash. Every OTHER error (a genuine pass failure, a 57014/55P03
+    // timeout) is rethrown UNCHANGED.
+    if (err && err.advisoryLockDenied) { sharedTxnLockDenied = true; return; }
+    throw err;
   });
+  if (sharedTxnLockDenied) {
+    return {
+      matched: {}, written, prior, overrides, writeSkipped: false, skipped: true,
+      lockDenied: true,
+    };
+  }
 
   // ── POST-COMMIT PHASE(S) (Spec 78 §P3A.1) — a DEDICATED connection, its OWN
   // transaction (Fold B2): a live SET LOCAL needs an open transaction to bind
@@ -2423,6 +2474,7 @@ async function runEnrichPhase({ descriptor, pool, compute, config, chainId, log,
   // `ctx.stream`'s cursor. `postClient` (this loop's BEGIN/SET LOCAL/COMMIT transaction)
   // is reserved for writes — the two must never be the same object, or a write issued
   // mid-stream queues behind the open cursor and hangs forever (H1, proven live).
+  try {
   for (const phase of postCommitPhases) {
     const passSpec = passByName(phase.name);
     const timeoutMinutes = Number(config[phase.timeout_minutes_from_config]);
@@ -2433,6 +2485,25 @@ async function runEnrichPhase({ descriptor, pool, compute, config, chainId, log,
       await postClient.query('BEGIN');
       let pid = null;
       try {
+        // WF3 enrich_parcels double-run incident (2026-09-07) — same reasoning as the
+        // shared-txn phases above: the outer `withAdvisoryLock` connection can die while
+        // this phase is still working, since the outer lock is XACT-scoped and this phase
+        // runs on ITS OWN dedicated connection (`postClient`, opened after the shared txn
+        // already COMMITted — the shared-txn's own two-key lock is ALSO already released
+        // by COMMIT, so there is nothing left to "re-check"; this connection must acquire
+        // its OWN copy). Same two-key sub-lock, same subkey (the shared-txn phase and this
+        // one never run concurrently within one invocation, so reusing the subkey is
+        // safe) — released automatically at this transaction's COMMIT/ROLLBACK/disconnect.
+        const postLockRow = await postClient.query(
+          'SELECT pg_try_advisory_xact_lock($1, $2) AS acquired',
+          [descriptor.identity.lock, ENRICH_INNER_LOCK_SUBKEY],
+        );
+        if (!postLockRow.rows[0].acquired) {
+          throw Object.assign(
+            new Error(`${tag} post_commit phase "${phase.name}": advisory lock (${descriptor.identity.lock}, ${ENRICH_INNER_LOCK_SUBKEY}) held elsewhere`),
+            { advisoryLockDenied: true },
+          );
+        }
         const pidRow = await postClient.query('SELECT pg_backend_pid() AS pid');
         pid = pidRow.rows[0] ? Number(pidRow.rows[0].pid) : null;
         if (timeoutMs > 0) await postClient.query(`SET LOCAL statement_timeout = ${timeoutMs}`);
@@ -2476,6 +2547,18 @@ async function runEnrichPhase({ descriptor, pool, compute, config, chainId, log,
       if (streamClient) streamClient.release();
       postClient.release();
     }
+  }
+  } catch (err) {
+    // Same contract as the shared-txn phases above: the lock-denial signal is a clean,
+    // honest self-skip, never a crash. Every other error (statement_timeout, lock_timeout,
+    // a genuine pass failure) is rethrown UNCHANGED.
+    if (err && err.advisoryLockDenied) {
+      return {
+        matched: {}, written, prior, overrides, writeSkipped: false, skipped: true,
+        lockDenied: true,
+      };
+    }
+    throw err;
   }
 
   // ── STEP-LEVEL POST CHECKS — the fully-committed parcels table, on `pool` ──
@@ -2774,6 +2857,20 @@ async function runWithPool(runnable, pool, ctx) {
   let ledgerFinalized = false;
   let windowError = null;
 
+  // WF3 enrich_parcels double-run incident (2026-09-07) - the inner advisory-lock denial
+  // (runEnrichPhase own coupled lock) is a clean, honest self-skip, NOT a crash: mirrors
+  // !lockResult.acquired own terminal exactly (same status, same records_meta shape, same
+  // emitSummary call) - the ONLY difference is which connection detected contention first.
+  // Kept as a helper (not inlined in the catch below) so the catch block itself stays within
+  // the ledger-window regression lock own regex window (src/tests/quality-ledger-window.
+  // logic.test.ts) - windowError = err; ... throw err; must stay close to catch (err) {.
+  function emitInnerLockDeniedSkip() {
+    status = RUN_STATUS.SELF_SKIPPED;
+    recordsMeta = { ...skipRecordsMeta(descriptor, 'advisory_lock_held_elsewhere'), ledger_row: owns ? LEDGER_ROW_VALUES[0] : LEDGER_ROW_VALUES[1], chain_run_id: chainRunId };
+    pipeline.emitSummary({ records_total: null, records_new: null, records_updated: null, records_meta: recordsMeta });
+    return { status, recordsMeta, runId, acquired: false };
+  }
+
   // ── §1.2a P4 — `ctx.config`, and WHERE it is resolved ──────────────────────
   // `hoisted_above_gate` is link-wsib's A1/A2 fence, generalized: a SKIP-eligible
   // step must never let an invalid threshold hide behind a green SKIPPED summary,
@@ -3062,6 +3159,20 @@ async function runWithPool(runnable, pool, ctx) {
           chainId, log: pipeline.log, tag: `[${slug}]`, clockNow, ownRunId: runId,
           preWriteGate: makePreWriteGate({ descriptor, chainId, stepCtx, compute: runnable.compute, config: configValues }),
         });
+        // WF3 enrich_parcels double-run incident (2026-09-07) — `runEnrichPhase`'s OWN
+        // inner advisory lock (coupled to its shared-txn/post-commit connections, unlike
+        // the outer `withAdvisoryLock` above which is already held by THIS connection)
+        // found a genuinely concurrent invocation already working. Thrown here, INSIDE
+        // the outer lock's callback, so `withAdvisoryLock` ROLLBACKs/releases the outer
+        // lock's own connection normally; the outer catch block below (marked
+        // `advisoryLockDenied`) converts this into the SAME self-skip terminal
+        // `!lockResult.acquired` already produces — never a crash.
+        if (enrich.lockDenied) {
+          throw Object.assign(
+            new Error(`[${slug}] enrich inner advisory lock held elsewhere`),
+            { advisoryLockDenied: true },
+          );
+        }
         stepCtx.matched = enrich.matched;
         stepCtx.written = enrich.written;
         stepCtx.prior = enrich.prior;
@@ -3312,6 +3423,7 @@ async function runWithPool(runnable, pool, ctx) {
   // and-rethrow is the strand window's: the halt must still propagate, because
   // swallowing here would let a chain proceed past a step that failed.
   } catch (err) {
+    if (err && err.advisoryLockDenied) return emitInnerLockDeniedSkip();
     errorMessage = errorMessage || (err && err.message ? err.message : String(err));
     status = RUN_STATUS.FAILED;
     windowError = err;
