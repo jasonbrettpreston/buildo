@@ -200,21 +200,21 @@
         ],
         "write_discipline": {
           "class": "set_based_join_update",
-          "guard": "none",
+          "guard": "is_distinct_from",
           "guard_why": {
-            "text": "EP-D1/B4.5 (Spec 123 §3.1 PIN — see docs/reports/defect-ledger.md, pinned_until: pilot9 commit 9). buildComparableBuildsUpdateSql (:1143-1150) carries NO IS DISTINCT FROM anywhere in its statement text — `WHERE p.id = agg.id` is the ONLY predicate. Under --full (the only cloud mode, manifest.json chain_args.sources:[\"--full\"]) this rewrites all 354,679 comp-bearing parcels every run. Pinned in its CURRENT wrong form per Spec 123 §3.1 (grounded live measurement, pilot 9 commit 4/G1'); peel 8x (Fold G1) adds the guard and recaptures the golden diff named cause \"B4.5 fix\".",
+            "text": "EP-D1/B4.5 FIXED (peel 8x, pilot 9 commit 8 P2, Spec 123 §3.1 pin-then-fix). buildComparableBuildsUpdateSql now guards on IS DISTINCT FROM over all 5 comp columns (comparable_builds, comp_count, comp_dominant_build, comp_build_ratio_p50, comp_fsi_p50) — comp_build_ratio_p50/comp_fsi_p50 compared against a ::numeric-cast computed value (percentile_cont returns double precision; the target columns are unbounded NUMERIC, migration 202/204 — casting both sides to the same type avoids the float8-vs-NUMERIC IS DISTINCT FROM trap, lessons.md:28, fence 7e130bff, without the lossy round() that trap needed since this column has no fixed scale to round to). Previously WHERE p.id = agg.id was the ONLY predicate; measured live, 354,679 parcels rewritten every --full run regardless of actual change (docs/reports/defect-ledger.md EP-D1 row, now CLOSED-in-commit).",
             "liveness": { "kind": "file", "ref": "docs/reports/defect-ledger.md" }
           },
           "guard_columns": "all_declared",
           "guard_columns_why": {
-            "text": "LG-9 escape hatch, moot here — guard is \"none\" (EP-D1/B4.5 PIN), so guard_columns is never consulted to build an IS DISTINCT FROM clause.",
-            "liveness": { "kind": "file", "ref": "scripts/lib/step/write.js" }
+            "text": "guard_columns:\"all_declared\" now genuinely governs the IS DISTINCT FROM clause — all 5 declared columns are guarded, no LG-9 escape hatch narrowing.",
+            "liveness": { "kind": "file", "ref": "scripts/lib/compute/enrich-parcels.js" }
           },
-          "scope": "comp candidate CTE (comp_cand, GiST kNN LATERAL) joined against parcels — WHERE p.id = agg.id only; the incremental half (AND sp.comp_count IS NULL) is genuinely empty after run 1 because the comp_count=0 zero-fill (below) permanently satisfies it (EP-D1's second, opposite half)",
+          "scope": "comp candidate CTE (comp_cand, GiST kNN LATERAL) joined against parcels — WHERE p.id = agg.id AND an IS DISTINCT FROM guard over all 5 comp columns (peel 8x); the incremental half (AND sp.comp_count IS NULL) is genuinely empty after run 1 because the comp_count=0 zero-fill (below) permanently satisfies it (EP-D1's second, opposite half — the never-refresh predicate, Spec 78 §P3C.1's own disclaimed standing limitation, PINNED, not fixed by this peel)",
           "expected_change_ratio": "none",
-          "idempotent_rerun": "not_idempotent",
+          "idempotent_rerun": "zero_writes",
           "idempotent_rerun_why": {
-            "text": "Two independent, stacked sources of non-determinism, both PINNED (Spec 123 §3.1): EP-D1/B4.5's absent guard (every eligible row rewrites every --full run, whether or not its own comps changed) and EP-D9 (golden-master G1' measured comparable_builds differing on 248/486,530 parcels, 0.051%, across two identical back-to-back --full runs on unchanged data — the comps candidate SQL's two ORDER BY clauses carry no deterministic secondary tiebreak).",
+            "text": "Declared for the COMBINED P2+P3 state (peel 8x adds the guard here at P2; peel, commit 8 P3 adds EP-D9's deterministic tiebreak to the comps candidate SELECT) — a guard alone is not sufficient while the candidate SELECT feeding agg can still reorder comparable_builds on a tied subject over unchanged data (EP-D9, golden-master G1' measured 248/486,530 parcels, 0.051%, across two identical back-to-back --full runs). Until EP-D9 also lands, a tied subject can still trigger a real (not spurious) rewrite under this guard, since the recomputed jsonb genuinely differs byte-for-byte from the stored value — the guard correctly detects that difference, it just cannot make the underlying candidate selection deterministic on its own.",
             "liveness": { "kind": "file", "ref": "docs/reports/defect-ledger.md" }
           },
           "txn_scope": "step",

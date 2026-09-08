@@ -69,12 +69,15 @@
  *                                     pg-query-stream primitive pipeline.streamQuery uses, never
  *                                     pipeline.streamQuery itself (Rule 2, no ../pipeline import here).
  *
- * KNOWN-DEFECT pins ported VERBATIM, in their CURRENT WRONG FORM (Spec 123 §3.1 — see
- * docs/reports/defect-ledger.md EP-D1/EP-D8/EP-D9/EP-D10): pass 4's comps UPDATE carries NO
- * IS DISTINCT FROM guard (EP-D1/B4.5); the generic-family comp-match fallback carries no
- * structure-scale/type filter (EP-D8); neither comps ORDER BY carries a deterministic tiebreak (EP-D9);
- * enrich_parcels_pass3_scope's ON CONFLICT (run_id, parcel_id) never dedupes across runs (EP-D10). None
- * of these are touched by this commit — peels 8x/8y (commit 8) fix them.
+ * KNOWN-DEFECT pins (Spec 123 §3.1 — see docs/reports/defect-ledger.md EP-D1/EP-D8/EP-D9/EP-D10),
+ * status as of pilot 9 commit 8 P2 (2026-09-08): **EP-D1/B4.5's guard half — CLOSED** (this commit,
+ * peel 8x): pass 4's comps UPDATE now guards `IS DISTINCT FROM` over all 5 comp columns (the
+ * never-refresh `comp_count IS NULL` half remains PIN — Fold G4 ruling, spec-supported disclaimed
+ * limitation, not reopened). **EP-D10 — CLOSED** (commit 8 P1): `enrich_parcels_pass3_scope`'s
+ * consumed rows are pruned at run end. **EP-D9 and EP-D8 — still OPEN, ported VERBATIM in their
+ * CURRENT WRONG FORM:** neither comps `ORDER BY` clause carries a deterministic tiebreak (EP-D9,
+ * commit 8 P3); the generic-family comp-match fallback carries no structure-scale/type filter
+ * (EP-D8, peel 8y, commit 8 P4).
  */
 'use strict';
 
@@ -1082,9 +1085,23 @@ function buildCompCandidatesIndexSql() {
 
 /**
  * SECURITY — scopeWhere is interpolated verbatim; trusted internal/test predicate only (never user input).
- * EP-D1/B4.5 PIN: no IS DISTINCT FROM anywhere in this statement — WHERE p.id = agg.id is the ONLY
- * predicate. EP-D8 PIN: the generic (s.subj_family='all') fallback carries no structure-scale/type
- * filter. EP-D9 PIN: neither ORDER BY below carries a deterministic secondary tiebreak.
+ * EP-D1/B4.5 FIXED (peel 8x, pilot 9 commit 8 P2, Spec 123 §3.1 pin-then-fix): the final UPDATE now
+ * guards on IS DISTINCT FROM over all 5 comp columns — a genuinely unchanged parcel is skipped, not
+ * rewritten every --full run (previously WHERE p.id = agg.id was the ONLY predicate; measured live,
+ * 354,679 parcels rewritten every run regardless of actual change). comp_build_ratio_p50/comp_fsi_p50
+ * are cast ::numeric on the computed side before comparison — the target columns are unbounded NUMERIC
+ * (migration 202/204) but percentile_cont() returns double precision; casting BOTH sides to the SAME
+ * type avoids the float8-vs-NUMERIC IS DISTINCT FROM trap (lessons.md:28, fence 7e130bff) even though,
+ * unlike that fence's NUMERIC(5,4) column, this column's own unbounded scale means no rounding occurs
+ * on write — the cast here is precision-safe, not a lossy round(). comparable_builds (jsonb) and
+ * comp_dominant_build (text) compare structurally/exactly, no cast needed. NOTE (Ask 4, EP-D9): the
+ * comps candidate SELECT feeding `agg` still has NO deterministic tiebreak until EP-D9 (peel, commit
+ * 8 P3) lands — a tied subject can therefore still compute a differently-ordered `comparable_builds`
+ * array on a rerun over UNCHANGED data, which this guard then (correctly, not spuriously) treats as a
+ * real change; idempotent_rerun:"zero_writes" (descriptor) is the declared value for the COMBINED
+ * P2+P3 state, not P2 in isolation. EP-D8 PIN: the generic (s.subj_family='all') fallback carries no
+ * structure-scale/type filter (still open, peel 8y, commit 8 P4). EP-D9 PIN: neither ORDER BY below
+ * carries a deterministic secondary tiebreak (still open, commit 8 P3).
  */
 function buildComparableBuildsUpdateSql({ full = false, scopeWhere = 'TRUE', comp = {} } = {}) {
   const incr = full ? '' : 'AND sp.comp_count IS NULL';
@@ -1145,7 +1162,12 @@ function buildComparableBuildsUpdateSql({ full = false, scopeWhere = 'TRUE', com
     ) m
     GROUP BY s.id
   ) agg
-  WHERE p.id = agg.id;`;
+  WHERE p.id = agg.id
+    AND (p.comparable_builds IS DISTINCT FROM agg.comps
+      OR p.comp_count IS DISTINCT FROM agg.cnt
+      OR p.comp_dominant_build IS DISTINCT FROM agg.dominant
+      OR p.comp_build_ratio_p50 IS DISTINCT FROM agg.br_p50::numeric
+      OR p.comp_fsi_p50 IS DISTINCT FROM agg.fsi_p50::numeric);`;
 }
 
 async function runPass4(client, ctx, config) {

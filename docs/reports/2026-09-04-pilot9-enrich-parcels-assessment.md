@@ -857,7 +857,7 @@ byte-identical, 0 unexplained).
 
 **Recurring/standard-shaping:** This WF3 surfaced a NEW class not seen in pilots 1–8: a **connection-topology bug shared between the legacy script and the converted runner**, not introduced by conversion (both used two separate connections — one for the advisory lock, one for the actual work — with no coupling between them). Prior pilots' regression-guardian findings have all been about the CONVERSION changing behaviour; this one is about the conversion INHERITING a pre-existing architectural gap that only manifested under a specific external-interruption timing window. Worth a standing check in future ENRICHER-shaped (or any post-commit-phase) pilots: does the step's own advisory lock genuinely couple to the connection doing the real work, or does a generic outer lock (held on a separate connection) merely provide a false sense of mutual exclusion? A second recurring pattern: `pg-query-stream`'s single-command-slot-per-connection behaviour (H1) is a general node-postgres/pg-query-stream constraint, not specific to this step — any FUTURE post-commit-phase pass that both streams and writes should default to a dedicated stream client from the start, not discover the deadlock live.
 
-**Commit-chain rulings (operator, 2026-09-07/08):** Environment repair (guarded `DELETE FROM enrich_parcels_pass3_scope WHERE consumed_at IS NULL` + `VACUUM ANALYZE`, semantic criterion: rows superseded by a fresh `--full` run's own scope insert for the same parcel) was explicitly ruled DISTINCT from EP-D10's actual code fix — a one-time operational cleanup, not a defect closure. **EP-D10's actual code fix landed 2026-09-08 (pilot 9 commit 8 P1):** `DELETE FROM enrich_parcels_pass3_scope WHERE consumed_at IS NOT NULL` now runs inside `runPass5` itself, at run end, after `consumePendingScope`; `EP-PIN-D10` → BUILT, pin test flipped in `src/tests/steps/enrich_parcels/violations.test.ts`. EP-D11 (G2' performance finding) was REFUTED by the same-day comparator, not silently dropped — the ledger row and `programme-items.json`'s `EP-PIN-PERF` both stay (status BUILT/CLOSED), keeping the investigation's history rather than deleting it. The PRE-vs-POST four-day-gap problem (comparing a 2026-09-04 capture against a 2026-09-08 run on a live shared DB) is now a named methodology gap: a future pilot's own G2'/G8 gate should prefer a same-day comparator by default, not treat a stale PRE capture as automatically authoritative.
+**Commit-chain rulings (operator, 2026-09-07/08):** Environment repair (guarded `DELETE FROM enrich_parcels_pass3_scope WHERE consumed_at IS NULL` + `VACUUM ANALYZE`, semantic criterion: rows superseded by a fresh `--full` run's own scope insert for the same parcel) was explicitly ruled DISTINCT from EP-D10's actual code fix — a one-time operational cleanup, not a defect closure. **EP-D10's actual code fix landed 2026-09-08 (pilot 9 commit 8 P1):** `DELETE FROM enrich_parcels_pass3_scope WHERE consumed_at IS NOT NULL` now runs inside `runPass5` itself, at run end, after `consumePendingScope`; `EP-PIN-D10` → BUILT, pin test flipped in `src/tests/steps/enrich_parcels/violations.test.ts`. **EP-D1/B4.5's Half 1 (the unguarded UPDATE) also landed 2026-09-08 (pilot 9 commit 8 P2, peel 8x):** `buildComparableBuildsUpdateSql` now guards `IS DISTINCT FROM` over all 5 comp columns (`comp_build_ratio_p50`/`comp_fsi_p50` cast `::numeric` to match the target columns' own type — avoiding the float8-vs-NUMERIC trap, `lessons.md:28`, without the lossy `round()` that trap needed, since these columns carry no fixed scale); `EP-PIN-B45` → BUILT. Half 2 (the never-refresh `comp_count IS NULL` incremental predicate) is explicitly NOT reopened — Fold G4 already ruled it spec-supported as a disclaimed limitation (Spec 78 §P3C.1's own text), so the `EP-D1` ledger row's Status is `PARTIAL` (guard half CLOSED, never-refresh half remains PIN) rather than fully CLOSED. `idempotent_rerun` for the pass-4 write target moved to `"zero_writes"` — declared for the COMBINED P2+P3 state (a tied subject can still trigger a real, non-spurious rewrite until EP-D9's own tiebreak fix, commit 8 P3, also lands). EP-D11 (G2' performance finding) was REFUTED by the same-day comparator, not silently dropped — the ledger row and `programme-items.json`'s `EP-PIN-PERF` both stay (status BUILT/CLOSED), keeping the investigation's history rather than deleting it. The PRE-vs-POST four-day-gap problem (comparing a 2026-09-04 capture against a 2026-09-08 run on a live shared DB) is now a named methodology gap: a future pilot's own G2'/G8 gate should prefer a same-day comparator by default, not treat a stale PRE capture as automatically authoritative.
 
 ---
 
@@ -877,10 +877,10 @@ byte-identical, 0 unexplained).
 | G4 | 2 | 2 | risk-class row with chance+impact found=true |
 | G5 | 1 | 1 | db=true clock=true network=true argv/env=true |
 | G6 | 3 | 3 | 11 ledger row(s), 0 without CLOSED/PIN () |
-| G7 | 3 | 3 | file=true fences=3 it-count=54 RED-evidence=true |
+| G7 | 3 | 3 | file=true fences=3 it-count=55 RED-evidence=true |
 | G8 | 0 | 3 | missing-invocations=0 stale-fingerprints=2 unexplained-diffs=0 — stage-gated (shape_clean_pending_recapture) |
 | G9 (binary) | PASS | — | heading=true low-confidence-table=true recurring-table=true |
-| G4d (fence<=lock) | PASS | — | fences=3 lock-it-count=54 |
+| G4d (fence<=lock) | PASS | — | fences=3 lock-it-count=55 |
 | G-shape | PASS | — | file-clean=null compute-clean=true |
 
 ### Fast invariants (always run — the fast descriptor gate)
@@ -902,7 +902,7 @@ byte-identical, 0 unexplained).
 - compare ran: true · diffs found: 550 · unexplained: 0
 
 ### Test suite (item iii)
-- 827/843 passed (suite success=true)
+- 828/844 passed (suite success=true)
 
 ### Policy coverage matrix (item vi) — Spec 124 Rules 1-13
 
@@ -921,7 +921,7 @@ byte-identical, 0 unexplained).
 | 11 | Phase-order re-derive (declared half, checkOrderGuaranteesCited) | enforced-green | 1 when:"pre_write" check(s), 0 order_guarantee violation(s) — G-3 completeness half stays open |
 | 12 | Truthful crash posture (R-B reachability, static + R-M before-image) | enforced-green | R-B (checkInterruptedPostureTruthful): shape=enrich runner=runEnrichPhase: no staleness.ledgerGatedSkip/selectMode on this path (ENRICHER's own scope-defer archetype, Spec 122 §3.0b); calls staleness.detectInterruptedRetraction directly and folds interruptedRetraction.interrupted into the full/incremental decision before any pass runs · R-M: prose-only (R-M/LG-17 describe not scoped to this step (vitest not run, or no before-image target)) |
 | 13 | A step validates itself | enforced-green | this run of step:validate IS the mechanism |
-| P3 | I/O cost adjudication (measured, not gated) | measured | descriptor=66015B notes=9615B checks=24 rows records_meta=5792B (newest post/ capture) |
+| P3 | I/O cost adjudication (measured, not gated) | measured | descriptor=66788B notes=9615B checks=24 rows records_meta=5792B (newest post/ capture) |
 
 **Enforced-green: 12/14**
 

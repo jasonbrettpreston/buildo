@@ -331,12 +331,12 @@ describe('per-pass write class / guard / idempotent_rerun (Fold A1/A2 — the co
     ).toBe(true);
   });
 
-  it('pass 4 comparable-builds — guard:"none" (EP-D1/B4.5 PIN, no IS DISTINCT FROM at all), idempotent_rerun:"not_idempotent"; outputs.invalidates declares ≥1 entry naming permits for this target (Ask 3(a) — a real invalidator, not an applies_when escape) (flipped at: commit 7b)', () => {
+  it('pass 4 comparable-builds — guard:"is_distinct_from" (EP-D1/B4.5 FIXED, peel 8x, commit 8 P2), idempotent_rerun:"zero_writes"; outputs.invalidates declares ≥1 entry naming permits for this target (Ask 3(a) — a real invalidator, not an applies_when escape) (flipped at: commit 8 P2)', () => {
     const d = loadDescriptor();
     const t = writeTargetFor(d, PARCELS, 3);
-    expect(t.write_discipline.guard, 'EP-D1/B4.5 — pinned in its CURRENT wrong form, no IS DISTINCT FROM').toBe('none');
+    expect(t.write_discipline.guard, 'EP-D1/B4.5 FIXED — IS DISTINCT FROM over all 5 comp columns, peel 8x').toBe('is_distinct_from');
     expect(t.write_discipline.guard_why).toBeDefined();
-    expect(t.write_discipline.idempotent_rerun, 'not zero_writes — the guard is genuinely absent, not merely inert').toBe('not_idempotent');
+    expect(t.write_discipline.idempotent_rerun, 'zero_writes now that the guard is real (Ask 4 ruling, Fold G1 peel 8x)').toBe('zero_writes');
     expect(t.write_discipline.idempotent_rerun_why).toBeDefined();
     const outputs = d.outputs as { invalidates: Array<{ table: string; column: string; when: string }> };
     expect(Array.isArray(outputs.invalidates) && outputs.invalidates.length >= 1, 'claim #54 — an ENRICHER lineage predicate needs ≥1 declared invalidator; Ask 3 ruled option (a), not the schema-exempt option (b)').toBe(true);
@@ -365,8 +365,8 @@ describe('per-pass write class / guard / idempotent_rerun (Fold A1/A2 — the co
 // grandfathered.json (Rule 9) — one entry, three dispositions
 // ---------------------------------------------------------------------------
 
-describe('grandfathered.json (Rule 9) — zoning_enriched_at + massing_enriched_at + EP-D1/B4.5, one guard:"none" path', () => {
-  it('grandfathered.json carries a real enrich_parcels entry, path outputs.writes[].write_discipline.guard = "none", whose why covers all THREE guard:"none" dispositions (the mechanism is generic — assertGrandfathered reads .guard, never .class, so one entry licenses every unguarded write target) (flipped at: commit 7b)', () => {
+describe('grandfathered.json (Rule 9) — zoning_enriched_at + massing_enriched_at, TWO guard:"none" dispositions (EP-D1/B4.5 CLOSED at commit 8 P2, no longer covered)', () => {
+  it('grandfathered.json carries a real enrich_parcels entry, path outputs.writes[].write_discipline.guard = "none", whose why covers the TWO remaining guard:"none" dispositions and explains EP-D1/B4.5\'s departure (flipped at: commit 8 P2)', () => {
     const g = JSON.parse(fs.readFileSync(abs(GRANDFATHERED_REL), 'utf8')) as { steps: Record<string, { paths?: Record<string, unknown>; why?: string }> };
     const entry = g.steps.enrich_parcels;
     expect(entry, 'no grandfathered.json entry for enrich_parcels').toBeDefined();
@@ -375,7 +375,14 @@ describe('grandfathered.json (Rule 9) — zoning_enriched_at + massing_enriched_
     const why = entry?.why ?? '';
     expect(/zoning_enriched_at/i.test(why), 'why must name zoning_enriched_at (Fold E1)').toBe(true);
     expect(/massing_enriched_at/i.test(why), 'why must name massing_enriched_at').toBe(true);
-    expect(/EP-D1|B4\.5|comparable.builds|comp_/i.test(why), 'why must name the EP-D1/B4.5 pinned comps UPDATE').toBe(true);
+    expect(/EP-D1|B4\.5/i.test(why), 'why must still explain EP-D1/B4.5\'s history even though it is no longer a covered disposition').toBe(true);
+    expect(/CLOSED/i.test(why), 'why must state EP-D1/B4.5 is CLOSED, not merely historical prose left stale').toBe(true);
+  });
+
+  it('the pass-4 write target (guard:"is_distinct_from") is NOT the target of the grandfathered.json guard:"none" allowlist — assertGrandfathered only licenses write targets that ARE guard:"none" (flipped at: commit 8 P2)', () => {
+    const d = loadDescriptor();
+    const t = writeTargetFor(d, PARCELS, 3);
+    expect(t.write_discipline.guard, 'the pass-4 target must be a REAL guard, no longer needing the allowlist').not.toBe('none');
   });
 });
 
@@ -459,11 +466,17 @@ describe('KNOWN-DEFECT pins (Spec 123 §3.1) — each fails the moment its named
   // verbatim at commit 7c, its own docblock ":1004-1007" states "Ports EP-D1/B4.5, EP-D8, EP-D9
   // ... in their CURRENT WRONG FORM"). These four pins move from stepSource() to computeSource()
   // — same live-tree assertion, correct file now that the legacy body is gone.
-  it('EP-D1/B4.5 pin, TODAY\'s live tree (compute) — buildComparableBuildsUpdateSql carries NO IS DISTINCT FROM anywhere in its statement text (peel 8x flips this)', () => {
+  it('EP-D1/B4.5 FIXED (peel 8x, pilot 9 commit 8 P2), TODAY\'s live tree (compute) — buildComparableBuildsUpdateSql now carries IS DISTINCT FROM over all 5 comp columns, cast to the target columns\' own NUMERIC type for comp_build_ratio_p50/comp_fsi_p50 (avoiding the float8-vs-NUMERIC IS DISTINCT FROM trap, lessons.md:28)', () => {
     const src = computeSource();
     const fn = /function buildComparableBuildsUpdateSql[\s\S]*?\n}\n/.exec(src);
     expect(fn, 'buildComparableBuildsUpdateSql not found — has the pin-worthy shape moved?').toBeTruthy();
-    expect(/IS DISTINCT FROM/i.test(fn![0]), 'EP-D1 pin: the pass-4 comps UPDATE must have NO guard today — this is the wrong-form fact peel 8x must flip').toBe(false);
+    const body = fn![0];
+    expect(/IS DISTINCT FROM/i.test(body), 'EP-D1 fix: the pass-4 comps UPDATE must now guard on all 5 columns').toBe(true);
+    for (const col of ['comparable_builds', 'comp_count', 'comp_dominant_build', 'comp_build_ratio_p50', 'comp_fsi_p50']) {
+      expect(new RegExp(`p\\.${col}\\s+IS DISTINCT FROM`, 'i').test(body), `EP-D1 fix: p.${col} must be guarded`).toBe(true);
+    }
+    expect(/comp_build_ratio_p50\s+IS DISTINCT FROM\s+agg\.br_p50::numeric/i.test(body), 'comp_build_ratio_p50 must compare against a ::numeric-cast value (the target column is NUMERIC; percentile_cont returns double precision — cast avoids a cross-type comparison trap)').toBe(true);
+    expect(/comp_fsi_p50\s+IS DISTINCT FROM\s+agg\.fsi_p50::numeric/i.test(body), 'comp_fsi_p50 must compare against a ::numeric-cast value, same reasoning').toBe(true);
   });
 
   it('EP-D8 pin, TODAY\'s live tree (compute) — the subj_family:"all" fallback branch (s.subj_family = \'all\' AND near.zoning_class = s.zoning_class) carries NO additional structure-scale/type filter (peel 8y flips this)', () => {
