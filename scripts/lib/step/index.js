@@ -2655,6 +2655,28 @@ function parseChainRunIdEnv() {
   return Number.isFinite(n) ? n : null;
 }
 
+/**
+ * WF3 enrich_parcels stall incident (2026-09-07, orchestrator observation) — the SAME contract
+ * `pipeline.js`'s legacy `run()` has carried since the 2026-09-03 cloud-parity FIX 3 remediation
+ * (its own comment: "ctx.runId is THIS step's own pipeline_runs.id when run-chain.js spawned it
+ * via STEP_RUN_ID, else null"), but `runWithPool` never read it — a converted step running inside
+ * a REAL `run-chain.js` chain (`owns=false`, since run-chain.js itself owns finalization) had
+ * `runId` permanently `null` for the step's own lifetime, even though run-chain.js had ALREADY
+ * INSERTed this step's own `pipeline_runs` row (`run-chain.js:606`) and threaded its id via
+ * `STEP_RUN_ID` (`run-chain.js:658`) specifically so the step could address it. Every converted
+ * step's `recordHeartbeat`/`captureStallDiagnostic` (LG-28) — and any future one — was silently
+ * unreachable during a real chain run for this reason; standalone (`owns=true`) was never
+ * affected (`openLedgerRow` already gives it a fresh id at start). Absent/blank/non-numeric ->
+ * null, never NaN — mirrors `parseChainRunIdEnv` immediately below and `pipeline.js`'s own
+ * STEP_RUN_ID parsing verbatim.
+ */
+function parseStepRunIdEnv() {
+  const raw = process.env.STEP_RUN_ID;
+  if (raw === undefined || raw === '') return null;
+  const n = Number(raw);
+  return Number.isFinite(n) ? n : null;
+}
+
 /** The SKIP terminal's records_meta — verdict row-derived like every other path (no hardcoded 'PASS'). */
 function skipRecordsMeta(descriptor, reason) {
   const rows = [
@@ -2761,6 +2783,7 @@ async function runWithPool(runnable, pool, ctx) {
   try {
     await assertDatabaseTarget(pool, descriptor);
     if (owns) runId = await openLedgerRow(pool, slug);
+    else runId = parseStepRunIdEnv();
     if (hoisted) ({ values: configValues, stamp: configStamp, retiredStatus: configRetiredStatus, probeStatus: configProbeStatus } = await resolveConfig(pool, descriptor));
 
     // §4.1 ② — txn-scoped advisory lock on identity.lock. `skipEmit: false`
