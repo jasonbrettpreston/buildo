@@ -28,6 +28,17 @@
 // only the legacy-vs-compute DIFFERENTIAL mechanism (meaningful only during the 7c-to-thin-shell
 // transition window) is retired. File kept, not deleted, per "nothing hidden" — this header is
 // the record of why it is now inert.
+//
+// UPDATE (pilot 9 commit 8 P2/P3, 2026-09-08): the "SELECT text itself is untouched" claim above
+// is now STALE, not re-verified — Spec 123 §3.1 pin-then-fix peels genuinely changed
+// buildComparableBuildsUpdateSql's SQL text (P2, peel 8x: an IS DISTINCT FROM guard added to the
+// final UPDATE's WHERE clause; P3: a c.id/near.id deterministic secondary tiebreak added to both
+// ORDER BY clauses) — both are VALUE-AFFECTING changes against the pinned KNOWN-DEFECT baseline
+// this file's own retirement note describes, not merely a port-fidelity concern. This file stays
+// inert regardless (there is still no legacy module to diff against), but the historical "nothing
+// has re-touched those SQL strings since" sentence is no longer true as of P2/P3 — the coverage
+// that DOES matter for these changes is src/tests/enrich-parcels-comps.logic.test.ts (updated the
+// same commits) and src/tests/steps/enrich_parcels/violations.test.ts's own EP-D1/EP-D9 pin tests.
 
 import { describe, it, expect } from 'vitest';
 

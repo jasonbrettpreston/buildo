@@ -47,9 +47,9 @@ describe('comps candidate-set SQL', () => {
 });
 
 describe('comps kNN UPDATE SQL', () => {
-  it('over-fetches the 50 nearest (GiST kNN) then post-filters family + lot/frontage ±20%', () => {
+  it('over-fetches the 50 nearest (GiST kNN) then post-filters family + lot/frontage ±20% — EP-D9 FIXED (pilot 9 commit 8 P3): ORDER BY now carries a c.id deterministic secondary tiebreak (previously ties among exactly-equidistant candidates were run-to-run unspecified, golden-master G1\' measured 15/430,404 inner-kNN ties)', () => {
     const sql = ep.buildComparableBuildsUpdateSql({ full: true, comp: LEGACY_COMP });
-    expect(sql).toMatch(/ORDER BY c\.geom <-> s\.geom\s+LIMIT 50/);
+    expect(sql).toMatch(/ORDER BY c\.geom <-> s\.geom, c\.id\s+LIMIT 50/);
     // R4: dwelling-family match (specific family pools same-form comps; 'all' keeps the exact-zoning match).
     expect(sql).toContain('near.comp_family = s.subj_family');
     expect(sql).toContain("s.subj_family = 'all' AND near.zoning_class = s.zoning_class");

@@ -214,7 +214,7 @@
           "expected_change_ratio": "none",
           "idempotent_rerun": "zero_writes",
           "idempotent_rerun_why": {
-            "text": "Declared for the COMBINED P2+P3 state (peel 8x adds the guard here at P2; peel, commit 8 P3 adds EP-D9's deterministic tiebreak to the comps candidate SELECT) — a guard alone is not sufficient while the candidate SELECT feeding agg can still reorder comparable_builds on a tied subject over unchanged data (EP-D9, golden-master G1' measured 248/486,530 parcels, 0.051%, across two identical back-to-back --full runs). Until EP-D9 also lands, a tied subject can still trigger a real (not spurious) rewrite under this guard, since the recomputed jsonb genuinely differs byte-for-byte from the stored value — the guard correctly detects that difference, it just cannot make the underlying candidate selection deterministic on its own.",
+            "text": "Declared for the COMBINED P2+P3 state, both now landed (pilot 9 commit 8): peel 8x (P2) added the IS DISTINCT FROM guard over all 5 comp columns; peel (P3, this commit) added EP-D9's deterministic secondary tiebreak (c.id inner kNN, near.id outer rank) to the comps candidate SELECT, closing the remaining source of spurious rewrites on tied subjects. A rerun over genuinely unchanged data now recomputes byte-identical comparable_builds (tie order is now stable) and the guard correctly detects zero difference, writing nothing.",
             "liveness": { "kind": "file", "ref": "docs/reports/defect-ledger.md" }
           },
           "txn_scope": "step",

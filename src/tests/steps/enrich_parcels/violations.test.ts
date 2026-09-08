@@ -488,16 +488,14 @@ describe('KNOWN-DEFECT pins (Spec 123 §3.1) — each fails the moment its named
     expect(/residential_sqm|structure_type|gfa/i.test(clauseMatch![0]), 'EP-D8 pin: no structure-scale/type term guards the \'all\'-family fallback yet — parcel 8244 (detached, 290 m²) can still match apartment-scale comps').toBe(false);
   });
 
-  it('EP-D9 pin, TODAY\'s live tree (compute) — neither ORDER BY clause (inner kNN, outer similarity rank) in the comps candidate SQL carries a deterministic secondary tiebreak key (peel, commit 8, flips this)', () => {
+  it('EP-D9 FIXED (peel, pilot 9 commit 8 P3), TODAY\'s live tree (compute) — BOTH ORDER BY clauses (inner kNN, outer similarity rank) in the comps candidate SQL now carry a deterministic secondary tiebreak key (id-based)', () => {
     const src = computeSource();
     // §5.5 seam rewrite (commit 7c) renamed the bare COMP_KNN_OVERFETCH/COMP_TOP_N literals to
-    // config-sourced knnOverfetch/topN — same wrong-form SQL shape, new parameter names (Ask 5).
-    const innerKnn = /ORDER BY c\.geom <-> s\.geom\s*\n\s*LIMIT \$\{knnOverfetch\}/i;
-    const outerRank = /ORDER BY \(abs\(near\.lot_size_sqm[\s\S]{0,120}LIMIT \$\{topN\}/i;
-    expect(innerKnn.test(src), 'inner kNN ORDER BY not found in its expected wrong form (no c.id tiebreak)').toBe(true);
-    expect(outerRank.test(src), 'outer similarity-rank ORDER BY not found in its expected wrong form (no near.id tiebreak)').toBe(true);
-    expect(/ORDER BY c\.geom <-> s\.geom,\s*c\.id/i.test(src), 'EP-D9 pin: the inner kNN clause must NOT yet carry a c.id secondary key').toBe(false);
-    expect(/near\.lot_size_sqm[\s\S]{0,140}\* 10\),\s*near\.id\)/i.test(src), 'EP-D9 pin: the outer rank clause must NOT yet carry a near.id secondary key').toBe(false);
+    // config-sourced knnOverfetch/topN — same SQL shape, new parameter names (Ask 5).
+    const innerKnn = /ORDER BY c\.geom <-> s\.geom,\s*c\.id\s*\n\s*LIMIT \$\{knnOverfetch\}/i;
+    const outerRank = /ORDER BY \(abs\(near\.lot_size_sqm[\s\S]{0,140}\* 10\),\s*near\.id\s*\n\s*LIMIT \$\{topN\}/i;
+    expect(innerKnn.test(src), 'EP-D9 fix: the inner kNN ORDER BY must carry a c.id secondary tiebreak key').toBe(true);
+    expect(outerRank.test(src), 'EP-D9 fix: the outer similarity-rank ORDER BY must carry a near.id secondary tiebreak key').toBe(true);
   });
 
   it('EP-D10 FIXED (peel, commit 8 P1), TODAY\'s live tree — the enrich_parcels_pass3_scope hand-off INSERT (scripts/lib/step/index.js\'s runEnrichPhase) stays ON CONFLICT (run_id, parcel_id) DO NOTHING (append-only, crash-recoverable trail unchanged), but compute now PRUNES fully-consumed rows at run end: a DELETE FROM enrich_parcels_pass3_scope WHERE consumed_at IS NOT NULL runs AFTER consumePendingScope, so the table no longer grows unboundedly (442,244 rows/run measured pre-fix). consumePendingScope\'s own recovery read already deduped by parcel_id (SELECT DISTINCT parcel_id …) — no DISTINCT ON was needed.', () => {
@@ -645,9 +643,9 @@ describe('facts testable today — the live tree, not a future artifact', () => 
     expect(fs.existsSync(abs(COMPUTE_REL)), 'compute (7c) exists on disk').toBe(true);
   });
 
-  it('defect-ledger.md — EP-D1, EP-D8, EP-D9 carry the PIN (Spec 123 §3.1) status, pinned_until pilot9 commit 9 (already landed, commits 4/4c/5)', () => {
+  it('defect-ledger.md — EP-D1 (PARTIAL, never-refresh half only) and EP-D8 carry the PIN (Spec 123 §3.1) status, pinned_until pilot9 commit 9 (already landed, commits 4/4c/5)', () => {
     const ledger = readTextToday(DEFECT_LEDGER_REL);
-    for (const id of ['EP-D1', 'EP-D8', 'EP-D9']) {
+    for (const id of ['EP-D1', 'EP-D8']) {
       const row = ledger.split('\n').find((l) => l.includes(`| ${id} |`));
       expect(row, `${DEFECT_LEDGER_REL} has no row for ${id}`).toBeDefined();
       expect(row, `${id} row must carry PIN status`).toMatch(/\*\*PIN \(Spec 123 §3\.1\)/);
@@ -655,12 +653,14 @@ describe('facts testable today — the live tree, not a future artifact', () => 
     }
   });
 
-  it('defect-ledger.md — EP-D10 is CLOSED-in-commit (commit 8 P1, 2026-09-08) — no longer PIN (flipped at: commit 8)', () => {
+  it('defect-ledger.md — EP-D9 and EP-D10 are CLOSED-in-commit (commits 8 P3 and P1, 2026-09-08) — no longer PIN (flipped at: commit 8)', () => {
     const ledger = readTextToday(DEFECT_LEDGER_REL);
-    const row = ledger.split('\n').find((l) => l.includes('| EP-D10 |'));
-    expect(row, `${DEFECT_LEDGER_REL} has no row for EP-D10`).toBeDefined();
-    expect(row, 'EP-D10 row must carry CLOSED-in-commit status, not PIN').toMatch(/\*\*CLOSED-in-commit/);
-    expect(row, 'EP-D10 row must no longer claim a PIN').not.toMatch(/\*\*PIN \(Spec 123 §3\.1\)/);
+    for (const id of ['EP-D9', 'EP-D10']) {
+      const row = ledger.split('\n').find((l) => l.includes(`| ${id} |`));
+      expect(row, `${DEFECT_LEDGER_REL} has no row for ${id}`).toBeDefined();
+      expect(row, `${id} row must carry CLOSED-in-commit status, not PIN`).toMatch(/\*\*CLOSED-in-commit/);
+      expect(row, `${id} row must no longer claim a PIN`).not.toMatch(/\*\*PIN \(Spec 123 §3\.1\)/);
+    }
   });
 
   it('programme-items.json — EP-PIN-B45/D8/D9/D10 cutover_prereq entries exist, all blocking enrich_parcels (already landed, commits 4/4c/5)', () => {

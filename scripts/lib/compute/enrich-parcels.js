@@ -70,14 +70,14 @@
  *                                     pipeline.streamQuery itself (Rule 2, no ../pipeline import here).
  *
  * KNOWN-DEFECT pins (Spec 123 §3.1 — see docs/reports/defect-ledger.md EP-D1/EP-D8/EP-D9/EP-D10),
- * status as of pilot 9 commit 8 P2 (2026-09-08): **EP-D1/B4.5's guard half — CLOSED** (this commit,
- * peel 8x): pass 4's comps UPDATE now guards `IS DISTINCT FROM` over all 5 comp columns (the
+ * status as of pilot 9 commit 8 P3 (2026-09-08): **EP-D1/B4.5's guard half — CLOSED** (peel 8x,
+ * commit 8 P2): pass 4's comps UPDATE now guards `IS DISTINCT FROM` over all 5 comp columns (the
  * never-refresh `comp_count IS NULL` half remains PIN — Fold G4 ruling, spec-supported disclaimed
- * limitation, not reopened). **EP-D10 — CLOSED** (commit 8 P1): `enrich_parcels_pass3_scope`'s
- * consumed rows are pruned at run end. **EP-D9 and EP-D8 — still OPEN, ported VERBATIM in their
- * CURRENT WRONG FORM:** neither comps `ORDER BY` clause carries a deterministic tiebreak (EP-D9,
- * commit 8 P3); the generic-family comp-match fallback carries no structure-scale/type filter
- * (EP-D8, peel 8y, commit 8 P4).
+ * limitation, not reopened). **EP-D9 — CLOSED** (this commit, P3): both comps `ORDER BY` clauses now
+ * carry a deterministic secondary tiebreak (`c.id` inner kNN, `near.id` outer rank). **EP-D10 —
+ * CLOSED** (commit 8 P1): `enrich_parcels_pass3_scope`'s consumed rows are pruned at run end.
+ * **EP-D8 — still OPEN, ported VERBATIM in its CURRENT WRONG FORM:** the generic-family comp-match
+ * fallback carries no structure-scale/type filter — peel 8y (commit 8 P4) fixes it.
  */
 'use strict';
 
@@ -1143,10 +1143,16 @@ function buildComparableBuildsUpdateSql({ full = false, scopeWhere = 'TRUE', com
       SELECT near.*
       FROM (
         -- GiST kNN: the N nearest candidates (index-served), excluding the subject itself.
+        -- EP-D9 FIXED (peel, pilot 9 commit 8 P3): c.id is a deterministic secondary tiebreak —
+        -- Postgres does not guarantee stable row order among exactly-tied ORDER BY keys (two
+        -- candidates equidistant from s.geom), so without it which candidate lands inside the
+        -- knnOverfetch window was run-to-run unspecified (golden-master G1' measured 15/430,404
+        -- inner-kNN ties, 0.003%, a minority of the 248/486,530 comparable_builds instability —
+        -- the outer rank tiebreak below is the dominant fix).
         SELECT c.*, c.geom <-> s.geom AS dist
         FROM comp_cand c
         WHERE c.id <> s.id
-        ORDER BY c.geom <-> s.geom
+        ORDER BY c.geom <-> s.geom, c.id
         LIMIT ${knnOverfetch}
       ) near
       -- post-filter to genuinely comparable lots, then keep the topN most similar (|Dlot| + |Dfrontage|*10).
@@ -1157,7 +1163,14 @@ function buildComparableBuildsUpdateSql({ full = false, scopeWhere = 'TRUE', com
         AND near.lot_size_sqm BETWEEN s.lot_size_sqm * ${1 - lotTol} AND s.lot_size_sqm * ${1 + lotTol}
         AND (s.frontage_m IS NULL OR near.frontage_m IS NULL
              OR near.frontage_m BETWEEN s.frontage_m * ${1 - lotTol} AND s.frontage_m * ${1 + lotTol})
-      ORDER BY (abs(near.lot_size_sqm - s.lot_size_sqm) + abs(coalesce(near.frontage_m, 0) - coalesce(s.frontage_m, 0)) * 10)
+      -- EP-D9 FIXED (peel, pilot 9 commit 8 P3): near.id is a deterministic secondary tiebreak —
+      -- the DOMINANT half of the fix (golden-master G1' measured 1,921/344,845 subjects, 0.56%,
+      -- carrying an exact score TIE at this LIMIT topN boundary, a superset comfortably
+      -- explaining the 248/486,530 comparable_builds instability observed across two identical
+      -- back-to-back --full runs). Without it, which candidate broke a tied score and therefore
+      -- landed in the top-N (and so in comparable_builds, and potentially shifted
+      -- comp_dominant_build/comp_build_ratio_p50/comp_fsi_p50) was run-to-run unspecified.
+      ORDER BY (abs(near.lot_size_sqm - s.lot_size_sqm) + abs(coalesce(near.frontage_m, 0) - coalesce(s.frontage_m, 0)) * 10), near.id
       LIMIT ${topN}
     ) m
     GROUP BY s.id

@@ -1448,8 +1448,8 @@
       "spec": "78 §P3C.2",
       "title": "EP-D9 pin — pass-4 comps candidate selection has no deterministic tiebreak (comparable_builds jsonb instability)",
       "promised": "Spec 123 §3.1: a KNOWN-DEFECT is pinned in its current wrong form, annotated with a Defect Ledger ID, and fixed in a separate commit after the conversion is green",
-      "status": "NOT_STARTED",
-      "evidence": "docs/reports/defect-ledger.md EP-D9 row (pilot 9 commit 4c, 2026-09-04) — root-caused via read-only diagnostic: 1,921/344,845 subjects (0.56%) carry an exact score tie at the outer LIMIT 10 boundary (dominant mechanism); inner kNN LIMIT 50 boundary contributes far fewer ties (15/430,404, 0.003%). Postgres does not guarantee stable row order among tied ORDER BY keys.",
+      "status": "BUILT",
+      "evidence": "docs/reports/defect-ledger.md EP-D9 row (CLOSED-in-commit, pilot9 commit 8 P3, 2026-09-08): both comps ORDER BY clauses in the kNN candidate SELECT (scripts/lib/compute/enrich-parcels.js) now carry a deterministic secondary tiebreak (c.id inner kNN, near.id outer rank). Pin test flipped RED->GREEN in the new form (src/tests/steps/enrich_parcels/violations.test.ts, EP-D9 FIXED). Golden recapture (named cause EP-D9-FIX) deferred to commit 8 P6.",
       "owner": {
         "kind": "pilot",
         "ref": "pilot9_enrich_parcels"
@@ -1460,7 +1460,7 @@
           "enrich_parcels"
         ]
       },
-      "last_reviewed": "2026-09-04"
+      "last_reviewed": "2026-09-08"
     },
     {
       "id": "EP-PIN-D10",
