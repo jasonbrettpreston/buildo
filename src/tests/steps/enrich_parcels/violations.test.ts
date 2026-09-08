@@ -615,13 +615,13 @@ describe('facts testable today — the live tree, not a future artifact', () => 
     expect(Math.max(...nums, 0), 'LG-28 (runEnrichPhase) has now landed (commit 7d/commit 2) — the highest LG number in scripts/lib + scripts/steps/_schema must be 28').toBe(28);
   });
 
-  it('converted.json — pending stays registered (not yet converted); the DECLARED stage has advanced to "runner_wired" (commit 7e/2, 2026-09-08): the runner (7d) and the thin-shell wiring (7e/2) are both live and golden-verified (G6/G7/G8 all green, step-validate.mjs 16/17, hard-stop=false) — only G9 (Reflection) and the final shape_clean bump remain, owed to commit 3.', () => {
+  it('converted.json — pending stays registered (not yet converted); the DECLARED stage has advanced to "shape_clean" (commit 7e/3, 2026-09-08): G9 (Reflection: heading + LOW-CONFIDENCE + RECURRING/STANDARD-SHAPING tables, assessment report §R) now PASSES, so G6/G7/G8/G9 are all clean (step-validate.mjs 16/17, hard-stop=false) — the file is genuinely shape-clean AND the declared stage now matches. Commit 9 cutover still needs the 4 cutover_prereq items (EP-PIN-B45/D8/D9/D10) resolved plus a green cloud chain-sources run.', () => {
     const c = JSON.parse(fs.readFileSync(abs(CONVERTED_REL), 'utf8')) as { converted: string[]; pending: Array<{ file: string; stage: string }> };
     expect(c.converted.includes(STEP_REL), 'enrich_parcels must not be registered as converted yet — that is commit 9 (cutover)').toBe(false);
     const entry = c.pending.find((p) => p.file === STEP_REL);
     expect(entry, `converted.json.pending must carry a ${STEP_REL} entry`).toBeDefined();
-    expect(entry!.stage, 'stage advanced to "runner_wired" this commit (see this test\'s own title for why)').toBe('runner_wired');
-    expect(fs.existsSync(abs(DESCRIPTOR_REL)), 'a runner_wired-stage pending entry MUST have a sibling descriptor').toBe(true);
+    expect(entry!.stage, 'stage advanced to "shape_clean" this commit (see this test\'s own title for why)').toBe('shape_clean');
+    expect(fs.existsSync(abs(DESCRIPTOR_REL)), 'a shape_clean-stage pending entry MUST have a sibling descriptor').toBe(true);
     expect(fs.existsSync(abs(COMPUTE_REL)), 'compute (7c) exists on disk').toBe(true);
   });
 
