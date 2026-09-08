@@ -1055,9 +1055,22 @@ function buildCompCandidatesSql({ asOfDateParamIndex, windowYears }) {
   FROM recent r
   JOIN parcels pa ON pa.id = r.pid
   LEFT JOIN coa ON coa.pid = r.pid
-  WHERE pa.geom IS NOT NULL AND pa.zoning_class IS NOT NULL AND pa.lot_size_sqm > 0;
-  CREATE INDEX comp_cand_gix ON comp_cand USING gist (geom);
-  ANALYZE comp_cand;`;
+  WHERE pa.geom IS NOT NULL AND pa.zoning_class IS NOT NULL AND pa.lot_size_sqm > 0;`;
+}
+
+/**
+ * Split out of buildCompCandidatesSql (found running commit 7e/2's own G2' golden capture,
+ * 2026-09-07): "cannot insert multiple commands into a prepared statement". Once the comps
+ * window's as-of-date became a BOUND $N::date parameter (Fold G3/§5.5 seam rewrite, commit 7c),
+ * the CREATE TEMP TABLE...AS statement above is issued with a values array, so pg's node driver
+ * uses the EXTENDED protocol (a real prepared statement) — which Postgres restricts to exactly
+ * ONE command. The legacy script's own equivalent call passed NO params (a bare now()::date
+ * literal, simple-protocol, multi-statement-safe), so the CREATE INDEX/ANALYZE pair riding the
+ * same semicolon-joined string never tripped this. Issued as its own, parameter-free
+ * client.query() call (no values array => simple protocol, multi-statement allowed again).
+ */
+function buildCompCandidatesIndexSql() {
+  return `CREATE INDEX comp_cand_gix ON comp_cand USING gist (geom); ANALYZE comp_cand;`;
 }
 
 /**
@@ -1157,6 +1170,7 @@ async function runPass4(client, ctx, config) {
   }
   const asOfDate = ctx.clock.asOfDate();
   await client.query(buildCompCandidatesSql({ asOfDateParamIndex: 1, windowYears }), [asOfDate]);
+  await client.query(buildCompCandidatesIndexSql());
   const cand = (await client.query('SELECT count(*)::int AS n FROM comp_cand')).rows[0].n;
   const upd = await client.query(buildComparableBuildsUpdateSql({ full, scopeWhere, comp }));
   // Mark eligible subjects that matched NO comps as comp_count = 0 (a clean "processed" marker, so the
@@ -1753,6 +1767,7 @@ module.exports = {
   COMP_WRITE_COLS,
   buildDecisionScopeWhere,
   buildCompCandidatesSql,
+  buildCompCandidatesIndexSql,
   buildComparableBuildsUpdateSql,
   runPass4,
   // pass 5
