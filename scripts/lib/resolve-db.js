@@ -349,6 +349,19 @@ function createResolvedPool(opts) {
     keepAliveInitialDelayMillis: 10000,
     ...(o.poolOverrides || {}),
   });
+  // WF3 enrich_parcels stall incident (2026-09-07, root-cause fix — see pipeline.js's
+  // attachPoolErrorLogger for the full mechanism note): a Pool with no 'error' listener
+  // crashes the WHOLE PROCESS on any unhandled client-level error (node-postgres re-emits
+  // an idle client's error as the pool's own 'error' event; Node's default EventEmitter
+  // behaviour for an unheard 'error' event is to throw) — including collaterally killing
+  // an UNRELATED transaction elsewhere in the same process before its own finally/ROLLBACK
+  // ever runs. Logged, never rethrown.
+  const errLogger = o.logger || console;
+  pool.on('error', (err, client) => {
+    (errLogger.warn || errLogger.log || console.warn).call(
+      errLogger, `[${label}] pool idle-client error (logged, not rethrown): ${err.message}`, { hadClient: client != null },
+    );
+  });
   pool.buildoTarget = { description, source };
   return withTargetAssertion(pool, {
     label,

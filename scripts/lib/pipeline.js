@@ -114,6 +114,33 @@ function withPipelineStatementTimeout(pool) {
   return pool;
 }
 
+/**
+ * WF3 enrich_parcels stall incident (2026-09-07, root-cause fix): a pg Pool with NO
+ * 'error' listener crashes the WHOLE PROCESS on any unhandled client-level error — per
+ * node-postgres's own docs, the pool re-emits an idle client's error as its own 'error'
+ * event, and Node's default EventEmitter behaviour for an unheard 'error' event is to
+ * THROW. Measured live: an admin-side 'terminating connection due to administrator
+ * command' (57P01) against an unrelated idle pooled connection crashed the entire node
+ * process mid-run — including a DIFFERENT client that was, at that exact moment,
+ * holding pg_try_advisory_xact_lock 65 inside an open BEGIN (withAdvisoryLock). The
+ * crash is a hard, synchronous throw outside any try/catch/finally in this file — the
+ * lock-holding transaction's own finally { client.release() } never runs, so postgres
+ * never sees a ROLLBACK and the advisory lock (and the backend, 'idle in transaction')
+ * stays held until an operator manually pg_terminate_backend()s it. This listener does
+ * not fix that specific in-flight transaction (nothing can, once the process is mid-
+ * crash) — it fixes the CLASS: an idle client's connection loss no longer crashes the
+ * process at all, so a lock-holding transaction elsewhere is never collaterally killed
+ * by an unrelated connection's own error.
+ * @param {import('pg').Pool} pool
+ * @returns {import('pg').Pool}
+ */
+function attachPoolErrorLogger(pool) {
+  pool.on('error', (err, client) => {
+    log.error('[pipeline]', err, { phase: 'pool_idle_client_error', hadClient: client != null });
+  });
+  return pool;
+}
+
 /** Is `v` a usable (present, non-blank) env value? Mirrors resolve-db.js's isSet. */
 function isSetEnv(v) {
   return typeof v === 'string' && v.trim() !== '';
@@ -122,7 +149,7 @@ function isSetEnv(v) {
 function createPool() {
   if (!process.env.PG_HOST && process.env.SUPABASE_DATABASE_URL) {
     const connectionString = process.env.SUPABASE_DATABASE_URL;
-    return withPipelineStatementTimeout(new Pool({
+    return withPipelineStatementTimeout(attachPoolErrorLogger(new Pool({
       // stripSslParams (F1g root-cause class): an sslmode=/sslrootcert=
       // query param in the URL makes pg build its own ssl config and
       // silently DISCARD the pinned-CA `ssl` object below.
@@ -133,7 +160,7 @@ function createPool() {
       // WF3 enrich_parcels stall commit 2 — see POOL_KEEPALIVE_INITIAL_DELAY_MS above.
       keepAlive: true,
       keepAliveInitialDelayMillis: POOL_KEEPALIVE_INITIAL_DELAY_MS,
-    }));
+    })));
   }
 
   // WF3 cloud-parity FIX 2 (review_followups HIGH, filed 2026-08-23; measured
@@ -179,7 +206,7 @@ function createPool() {
     );
   }
   const host = process.env.PG_HOST;
-  return withPipelineStatementTimeout(new Pool({
+  return withPipelineStatementTimeout(attachPoolErrorLogger(new Pool({
     host,
     port,
     database: process.env.PG_DATABASE,
@@ -192,7 +219,7 @@ function createPool() {
     // WF3 enrich_parcels stall commit 2 — see POOL_KEEPALIVE_INITIAL_DELAY_MS above.
     keepAlive: true,
     keepAliveInitialDelayMillis: POOL_KEEPALIVE_INITIAL_DELAY_MS,
-  }));
+  })));
 }
 
 // ---------------------------------------------------------------------------
@@ -1053,6 +1080,7 @@ module.exports = {
   log,
   withTransaction,
   withAdvisoryLock,
+  attachPoolErrorLogger,
   getDbTimestamp,
   track,
   getTracked,
