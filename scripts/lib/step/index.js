@@ -2178,16 +2178,33 @@ function startStallTicker(pool, runId, intervalMs, getPid) {
 }
 
 /**
- * A `ctx.stream` implementation PINNED TO ONE ALREADY-OPEN client (never a fresh
- * `pool.connect()` the way `pipeline.streamQuery` opens internally) — the mechanism
- * Fold B2 requires: pass 5's `SET LOCAL statement_timeout` must bind to the EXACT same
- * session the cursor reads on, or the bound is provably a no-op (`SHOW statement_timeout`
- * on that session is how the regression lock asserts it, never a config-value inspection).
- * `pipeline`'s own pool-level `streamQuery` helper cannot be reused here for exactly that
- * reason — it has no client-pinned form. Same underlying primitive (`pg-query-stream`), same
- * yield-one-row contract; `withPipelineStatementTimeout`'s own SESSION-level fence
- * (`scripts/lib/pipeline.js:80-`) is untouched, because this never calls `pool.connect()`
- * itself — the caller already owns `client`.
+ * A `ctx.stream` implementation over a CALLER-SUPPLIED client — same underlying primitive
+ * (`pg-query-stream`), same yield-one-row contract as `pipeline.streamQuery`, but taking an
+ * already-open client instead of calling `pool.connect()` itself, so the caller decides
+ * which connection the cursor lives on.
+ *
+ * WF3 enrich_parcels pass-5 stream/write deadlock (2026-09-07) — Fold B2's ORIGINAL
+ * rationale for this function (superseded, see below) was to pin the cursor to the SAME
+ * client pass 5 also writes on, so `SET LOCAL statement_timeout` (bound once, at BEGIN)
+ * would provably cover the read too. Measured live against the local DB: a client with an
+ * open `pg-query-stream` cursor HANGS FOREVER on any other query issued on that SAME
+ * client — pg-query-stream holds the connection's one command slot for the life of the
+ * cursor, so a write queued behind it never runs, and the cursor never gets to fetch its
+ * next batch because the code awaiting that write never returns control to the loop
+ * (`wait_event=ClientRead`, ~0% CPU — this IS the 2026-09-04/09-07 stuck-pass incident).
+ * The SAME-client write on a fresh, unrelated client succeeded immediately (10s timeout,
+ * both cases reproduced with a 5-row table).
+ *
+ * FIX: the caller (`runEnrichPhase`'s post-commit loop) now passes a DEDICATED
+ * `pool.connect()`'d client for the stream — never the write/txn client — mirroring the
+ * LEGACY script's own split: `pipeline.streamQuery` always opened its own client via
+ * `pool.connect()`, and legacy pass 5's writes went through `pool.query(...)` (a
+ * different client from the pool's rotation), so the two NEVER shared a connection. The
+ * one thing that split trades away is exactly Fold B2's original guarantee — the
+ * dedicated stream client carries no `SET LOCAL statement_timeout` of its own (same as
+ * the legacy script, which never bounded the read either); the write/txn client's bound
+ * timeout (asserted via `SHOW` on that session, RE-FREEZE #3) is untouched and still
+ * covers every write in this phase.
  * @param {import('pg').PoolClient} client
  * @param {string} sql
  * @param {any[]} params
@@ -2399,11 +2416,19 @@ async function runEnrichPhase({ descriptor, pool, compute, config, chainId, log,
   // transaction (Fold B2): a live SET LOCAL needs an open transaction to bind
   // to, and wrapping the pass in one txn is what makes the bound provable via
   // SHOW on the SAME session, never by inspecting the config value back.
+  //
+  // WF3 enrich_parcels pass-5 stream/write deadlock (2026-09-07, root-cause fix —
+  // see streamOverClient's own doc comment for the full mechanism + live reproduction):
+  // `streamClient` is a SEPARATE, dedicated `pool.connect()`'d client used ONLY for
+  // `ctx.stream`'s cursor. `postClient` (this loop's BEGIN/SET LOCAL/COMMIT transaction)
+  // is reserved for writes — the two must never be the same object, or a write issued
+  // mid-stream queues behind the open cursor and hangs forever (H1, proven live).
   for (const phase of postCommitPhases) {
     const passSpec = passByName(phase.name);
     const timeoutMinutes = Number(config[phase.timeout_minutes_from_config]);
     const timeoutMs = Math.round(timeoutMinutes * 60000);
     const postClient = await pool.connect();
+    let streamClient = null;
     try {
       await postClient.query('BEGIN');
       let pid = null;
@@ -2412,9 +2437,14 @@ async function runEnrichPhase({ descriptor, pool, compute, config, chainId, log,
         pid = pidRow.rows[0] ? Number(pidRow.rows[0].pid) : null;
         if (timeoutMs > 0) await postClient.query(`SET LOCAL statement_timeout = ${timeoutMs}`);
         const streamBatchSize = Number(config.enrich_parcels_pass5_stream_batch_size);
+        // Connected eagerly (mirrors postClient above) rather than lazily inside the
+        // `stream:` closure — an async generator cannot itself `await` a connect() before
+        // yielding without an extra wrapper layer, and every post-commit phase today does
+        // stream, so there is no live no-op case this would needlessly cost a connection on.
+        streamClient = await pool.connect();
         const passCtx = {
           full, scopeWhere: 'TRUE', staleOverlays, clock, log, config, scopeRunId,
-          stream: (sql, params, opts) => streamOverClient(postClient, sql, params, { batchSize: streamBatchSize, ...opts }),
+          stream: (sql, params, opts) => streamOverClient(streamClient, sql, params, { batchSize: streamBatchSize, ...opts }),
         };
         await recordHeartbeat(pool, ownRunId, phase.name, 0);
         const stopTicker = startStallTicker(pool, ownRunId, heartbeatMs, () => pid);
@@ -2443,6 +2473,7 @@ async function runEnrichPhase({ descriptor, pool, compute, config, chainId, log,
         throw err;
       }
     } finally {
+      if (streamClient) streamClient.release();
       postClient.release();
     }
   }
