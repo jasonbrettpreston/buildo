@@ -1058,6 +1058,11 @@ function buildCompCandidatesSql({ asOfDateParamIndex, windowYears }) {
     -- R4 (Spec 78 P2): the comp's BUILT dwelling family (permit structure_type), falling back to the
     -- candidate parcel's zoning family when the permit is untyped — so comps match on dwelling FORM.
     COALESCE(${bn.structureFamilyCaseSql('r')}, ${bn.parcelFamilyFromZoningCaseSql('pa.zoning_class')}) AS comp_family,
+    -- EP-D8 FIXED (peel 8y, pilot 9 commit 8 P4): TRUE only when the permit's OWN structure_type was
+    -- genuinely classifiable (detached/townhouse/multiplex) — FALSE when comp_family instead fell back
+    -- to the candidate's zoning-derived family (r.structure_type was NULL/unmatched, e.g. an apartment
+    -- or other high-density permit with no low-density classification). Spec 78 §P3C.2 amendment.
+    (${bn.structureFamilyCaseSql('r')} IS NOT NULL) AS comp_structure_type_known,
     CASE WHEN pa.lot_size_sqm > 0 AND r.residential_sqm > 0 THEN round(r.residential_sqm / pa.lot_size_sqm, 2) END AS permit_fsi,
     CASE WHEN pa.max_buildable_footprint_sqm > 0 AND pa.imagery_roof_footprint_sqm > 0
          THEN round(pa.imagery_roof_footprint_sqm / pa.max_buildable_footprint_sqm, 2) END AS build_ratio,
@@ -1159,7 +1164,15 @@ function buildComparableBuildsUpdateSql({ full = false, scopeWhere = 'TRUE', com
       -- R4 (Spec 78 P2): match on dwelling FAMILY — a specific-family subject (detached/townhouse/multiplex)
       -- pools comps of the same BUILT form (so RD + RS both count as detached); a generic 'all' subject
       -- (R/RA/RAC) keeps the exact-zoning match. Replaces the old bare near.zoning_class = s.zoning_class.
-      WHERE (near.comp_family = s.subj_family OR (s.subj_family = 'all' AND near.zoning_class = s.zoning_class))
+      -- EP-D8 FIXED (peel 8y, pilot 9 commit 8 P4, Spec 78 §P3C.2 amendment): the generic 'all' fallback
+      -- ALSO requires near.comp_structure_type_known — a zoning-class match alone let an apartment-scale
+      -- permit (comp_family:'all' via the zoning fallback, no classifiable structure_type) stand in for
+      -- a detached-home subject (measured live: parcel 8244, R zoning/detached, 290 m2, carried
+      -- comp_fsi_p50=6.615 sourced from a 1,695 m2 apartment-scale comp). Excluding unclassified/
+      -- high-density comps from the fallback match closes that gap without touching the specific-family
+      -- branch (near.comp_family = s.subj_family), which was never the defect.
+      WHERE (near.comp_family = s.subj_family
+             OR (s.subj_family = 'all' AND near.zoning_class = s.zoning_class AND near.comp_structure_type_known))
         AND near.lot_size_sqm BETWEEN s.lot_size_sqm * ${1 - lotTol} AND s.lot_size_sqm * ${1 + lotTol}
         AND (s.frontage_m IS NULL OR near.frontage_m IS NULL
              OR near.frontage_m BETWEEN s.frontage_m * ${1 - lotTol} AND s.frontage_m * ${1 + lotTol})

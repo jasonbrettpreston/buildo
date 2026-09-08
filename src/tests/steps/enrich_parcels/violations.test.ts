@@ -479,13 +479,14 @@ describe('KNOWN-DEFECT pins (Spec 123 §3.1) — each fails the moment its named
     expect(/comp_fsi_p50\s+IS DISTINCT FROM\s+agg\.fsi_p50::numeric/i.test(body), 'comp_fsi_p50 must compare against a ::numeric-cast value, same reasoning').toBe(true);
   });
 
-  it('EP-D8 pin, TODAY\'s live tree (compute) — the subj_family:"all" fallback branch (s.subj_family = \'all\' AND near.zoning_class = s.zoning_class) carries NO additional structure-scale/type filter (peel 8y flips this)', () => {
+  it('EP-D8 FIXED (peel 8y, pilot 9 commit 8 P4), TODAY\'s live tree (compute) — the subj_family:"all" fallback branch (s.subj_family = \'all\' AND near.zoning_class = s.zoning_class) is UNCHANGED, but the WHERE clause now ALSO requires near.comp_structure_type_known — a structure-scale/type filter excluding unclassified/high-density comps from the generic-family fallback', () => {
     const src = computeSource();
     const fallback = /s\.subj_family\s*=\s*'all'\s*AND\s*near\.zoning_class\s*=\s*s\.zoning_class/i;
-    expect(fallback.test(src), 'EP-D8 pin: the generic-family fallback clause must still be present, unmodified, today').toBe(true);
+    expect(fallback.test(src), 'EP-D8 fix: the generic-family fallback clause must still be present, unmodified — the specific-family branch was never the defect').toBe(true);
     const clauseMatch = /WHERE\s*\(near\.comp_family[\s\S]*?LIMIT \$\{topN\}/i.exec(src) ?? /near\.comp_family = s\.subj_family[\s\S]{0,400}/i.exec(src);
-    expect(clauseMatch, 'the comp-match WHERE clause block was not found for the EP-D8 pin scan').toBeTruthy();
-    expect(/residential_sqm|structure_type|gfa/i.test(clauseMatch![0]), 'EP-D8 pin: no structure-scale/type term guards the \'all\'-family fallback yet — parcel 8244 (detached, 290 m²) can still match apartment-scale comps').toBe(false);
+    expect(clauseMatch, 'the comp-match WHERE clause block was not found for the EP-D8 fix scan').toBeTruthy();
+    expect(/residential_sqm|structure_type|gfa/i.test(clauseMatch![0]), 'EP-D8 fix: a structure-scale/type term must now guard the \'all\'-family fallback — parcel 8244 (detached, 290 m²) must no longer be able to match apartment-scale comps').toBe(true);
+    expect(/near\.comp_structure_type_known/i.test(clauseMatch![0]), 'EP-D8 fix: the fallback branch specifically must require near.comp_structure_type_known').toBe(true);
   });
 
   it('EP-D9 FIXED (peel, pilot 9 commit 8 P3), TODAY\'s live tree (compute) — BOTH ORDER BY clauses (inner kNN, outer similarity rank) in the comps candidate SQL now carry a deterministic secondary tiebreak key (id-based)', () => {
@@ -643,9 +644,9 @@ describe('facts testable today — the live tree, not a future artifact', () => 
     expect(fs.existsSync(abs(COMPUTE_REL)), 'compute (7c) exists on disk').toBe(true);
   });
 
-  it('defect-ledger.md — EP-D1 (PARTIAL, never-refresh half only) and EP-D8 carry the PIN (Spec 123 §3.1) status, pinned_until pilot9 commit 9 (already landed, commits 4/4c/5)', () => {
+  it('defect-ledger.md — EP-D1 (PARTIAL, never-refresh half only) carries the PIN (Spec 123 §3.1) status, pinned_until pilot9 commit 9 (already landed, commits 4/4c/5)', () => {
     const ledger = readTextToday(DEFECT_LEDGER_REL);
-    for (const id of ['EP-D1', 'EP-D8']) {
+    for (const id of ['EP-D1']) {
       const row = ledger.split('\n').find((l) => l.includes(`| ${id} |`));
       expect(row, `${DEFECT_LEDGER_REL} has no row for ${id}`).toBeDefined();
       expect(row, `${id} row must carry PIN status`).toMatch(/\*\*PIN \(Spec 123 §3\.1\)/);
@@ -653,9 +654,9 @@ describe('facts testable today — the live tree, not a future artifact', () => 
     }
   });
 
-  it('defect-ledger.md — EP-D9 and EP-D10 are CLOSED-in-commit (commits 8 P3 and P1, 2026-09-08) — no longer PIN (flipped at: commit 8)', () => {
+  it('defect-ledger.md — EP-D8, EP-D9 and EP-D10 are CLOSED-in-commit (commits 8 P4, P3, P1, 2026-09-08) — no longer PIN (flipped at: commit 8)', () => {
     const ledger = readTextToday(DEFECT_LEDGER_REL);
-    for (const id of ['EP-D9', 'EP-D10']) {
+    for (const id of ['EP-D8', 'EP-D9', 'EP-D10']) {
       const row = ledger.split('\n').find((l) => l.includes(`| ${id} |`));
       expect(row, `${DEFECT_LEDGER_REL} has no row for ${id}`).toBeDefined();
       expect(row, `${id} row must carry CLOSED-in-commit status, not PIN`).toMatch(/\*\*CLOSED-in-commit/);

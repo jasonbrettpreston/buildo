@@ -1429,8 +1429,8 @@
       "spec": "78 §P3C.2",
       "title": "EP-D8 pin — comp_fsi_p50 has no structure_family/zone compatibility invariant",
       "promised": "Spec 123 §3.1: a KNOWN-DEFECT is pinned in its current wrong form, annotated with a Defect Ledger ID, and fixed in a separate commit after the conversion is green",
-      "status": "NOT_STARTED",
-      "evidence": "docs/reports/defect-ledger.md EP-D8 row (pilot 9 commit 4, 2026-09-04) — parcel 8244 (R, detached, 290 sqm) carries comp_fsi_p50 = 6.615 sourced from apartment-scale comps (structure_family:\"all\", 1,695 sqm GFA); Spec 78 P3C.1/P3C.2's comp-match predicate has no structure_family term anywhere, a genuine spec-silent gap re-confirmed against df7ef272 (the predicate's own introducing commit).",
+      "status": "BUILT",
+      "evidence": "docs/reports/defect-ledger.md EP-D8 row (CLOSED-in-commit, pilot9 commit 8 P4, peel 8y, 2026-09-08): buildCompCandidatesSql now computes comp_structure_type_known (TRUE only when the permit structure_type is genuinely classifiable as detached/townhouse/multiplex); buildComparableBuildsUpdateSql WHERE clause requires it on the generic all-family fallback branch, excluding unclassified/high-density comps (e.g. apartment permits) from matching a low-density subject via zoning_class equality alone. Pin test flipped RED->GREEN in the new form (src/tests/steps/enrich_parcels/violations.test.ts, EP-D8 FIXED). Spec 78 §Phase-3C gains a companion amendment stating the rule. Golden recapture (named cause EP-D8-FIX) deferred to commit 8 P6.",
       "owner": {
         "kind": "pilot",
         "ref": "pilot9_enrich_parcels"
@@ -1441,7 +1441,7 @@
           "enrich_parcels"
         ]
       },
-      "last_reviewed": "2026-09-04"
+      "last_reviewed": "2026-09-08"
     },
     {
       "id": "EP-PIN-D9",

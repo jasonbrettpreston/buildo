@@ -283,6 +283,30 @@ footprint + committed permits/coa).
    same `zoning_class` + lot/frontage within **±20%** → keep the **10 most similar** (`|Δlot| +
    |Δfrontage|·10`) → `jsonb_agg` nearest-first.
 
+**Amendment (pilot 9 commit 8 P4, peel 8y, 2026-09-08 — EP-D8, `docs/reports/defect-ledger.md`):
+comp-match family/zone compatibility invariant.** This section's own text above predates the R4
+dwelling-family match (`scripts/lib/compute/enrich-parcels.js`'s `buildCompCandidatesSql`/
+`buildComparableBuildsUpdateSql`): a subject with a SPECIFIC dwelling family (detached/townhouse/
+multiplex, derived from `zoning_class`) matches comps of the SAME built family; a subject with the
+generic `'all'` family (non-RD/RS/RT/RM zoning, e.g. `R`/`RA`/`RAC`) falls back to an EXACT
+`zoning_class` match. **Neither the pre-R4 text above nor R4 itself ever stated a structure-scale/
+type compatibility rule for that generic `'all'` fallback** — a genuine spec-silent gap, not a
+regression against prior text (confirmed: grepped, zero `structure_family`/scale-compatibility
+clause anywhere in §Phase-3C before this amendment). Consequence, measured live: a subject zoned
+generically `R` (dwelling family `'all'`) could match a comp whose OWN permit was apartment/
+high-density-scaled — the comp's own `comp_family` also fell back to `'all'` via the SAME
+zoning-derived rule (its own permit `structure_type` unclassifiable as detached/townhouse/
+multiplex) — because the fallback branch checked `zoning_class` equality only, never the comp's
+built scale or classifiability. Parcel 8244 (`R` zoning, physically detached, 290 m² lot) carried
+`comp_fsi_p50 = 6.615` sourced from a comp permit with `1,695 m²` GFA. **Rule, stated now:** the
+generic `'all'`-family fallback additionally requires the comp's own permit `structure_type` to be
+genuinely classifiable as one of the three recognized low-density families (detached/townhouse/
+multiplex) — an unclassified or high-density permit (the same test `structureFamilyCaseSql` already
+applies to derive `comp_family` itself) may never satisfy the fallback match, even when its
+`zoning_class` happens to equal the subject's. The specific-family branch (`near.comp_family =
+s.subj_family`) is UNCHANGED — it was never the defect (a specific family already requires the
+comp's own built form to match, by construction).
+
 ### P3C.2 — Columns (§K)
 `comparable_builds` (jsonb array of `{address, lot_sqm, frontage_m, distance_m, work_type,
 permit_gfa_sqm, permit_fsi, storeys, coa_decision, build_ratio}`), `comp_count`, `comp_dominant_build`
