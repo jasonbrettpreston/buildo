@@ -634,8 +634,8 @@
       "check_id": "none"
     },
     {
-      "what": "The hand-rolled verdictCascade (:1799) sits outside scripts/lib/step/verdict.js#deriveVerdict (Rule 10, EP-D3, OPEN, PIN) — the checkVerdictSingleSource corpus does not yet see this file. Routed through deriveVerdict at the commit-8 peel.",
-      "measured": "scripts/enrich-parcels.js:1799",
+      "what": "EP-D3, CLOSED (pilot9 commit 8 P5, 6aa46613, 2026-09-08): the LEGACY script's hand-rolled verdictCascade (:1799, pre-conversion) sat outside scripts/lib/step/verdict.js#deriveVerdict (Rule 10) — the checkVerdictSingleSource corpus did not see it. Was already resolved by the thin-shell conversion (commit 7e/2), confirmed at commit 8 P5: verdictCascade was never ported into scripts/lib/compute/enrich-parcels.js (repo-wide grep, zero hits) — the converted step's compute(ctx) already routes every check through ctx.report() and the runner's generic deriveVerdict, the SAME mechanism as every other converted step. checkVerdictSingleSource's own live scorecard row already reads 0 unsanctioned second derivations across 11 corpus files. No peel was needed; two stale file-header comments claiming this was still outstanding were corrected in the same commit.",
+      "measured": "scripts/lib/compute/enrich-parcels.js (checks dispatch); formerly scripts/enrich-parcels.js:1799 (legacy, retired)",
       "check_id": "none"
     },
     {

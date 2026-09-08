@@ -1207,3 +1207,119 @@ describe('runEnrichPhase (LG-28) — logic tests against a fake pool', () => {
     expect(stepLib.isEnrichStep({})).toBe(false);
   });
 });
+
+// ---------------------------------------------------------------------------
+// EP-D10 — a genuine BEHAVIOURAL lock on runPass5's pruning DELETE (pilot 9 commit 8 P7),
+// against the REAL compute module's runPass5 (not the fixture-compute runEnrichPhase tests
+// above, which exist to exercise the RUNNER's own orchestration — see that section's own
+// header comment). The commit-8-P1 pin flip (src/tests/steps/enrich_parcels/violations.test.ts
+// "EP-D10 FIXED", earlier in this file) is a SOURCE-TEXT regex lock only: it proves the DELETE
+// statement text exists, never that running it actually prunes the right rows. This block
+// drives runPass5 against a fake client with an in-memory enrich_parcels_pass3_scope
+// simulation, seeding one ALREADY-consumed row and one UNCONSUMED prior-run row whose own
+// recovery attempt genuinely fails (an engine error on that one parcel, mirroring
+// consumePendingScope's own real try/catch — a row a recovery attempt could not process is
+// deliberately preserved, never pruned), and asserts the real DELETE removed exactly the
+// consumed row while the still-unconsumed one survives.
+// ---------------------------------------------------------------------------
+
+describe('runPass5 pruning DELETE — genuine BEHAVIOURAL lock (pilot 9 commit 8 P7, EP-D10)', () => {
+  interface ScopeRow { run_id: number; parcel_id: number; consumed_at: string | null }
+
+  function scopeFakeClient(seed: ScopeRow[]) {
+    const rows: ScopeRow[] = seed.map((r) => ({ ...r }));
+    const sql: string[] = [];
+    const query = async (text: string, params: unknown[] = []): Promise<{ rows: unknown[]; rowCount: number }> => {
+      sql.push(text);
+      // Citywide (NULL,'all') backstop check — pass 5's own precondition. Anchored to the
+      // LEADING "SELECT 1" so it does NOT also match the OPTCFG select's own CROSS JOIN
+      // sub-select against the same table further down (a real bug found writing this test:
+      // the un-anchored form swallowed the per-row recovery SELECT before it ever reached
+      // the p.id = $1 branch below, silently passing with stats.errors staying 0).
+      if (/^\s*SELECT 1 FROM neighbourhood_build_norms WHERE neighbourhood_id IS NULL/.test(text)) {
+        return { rows: [{ '?column?': 1 }], rowCount: 1 };
+      }
+      // Ineligibility reset — irrelevant to this lock, no rows touched.
+      if (/UPDATE parcels p SET/.test(text) && /opt_config_confidence IS NOT NULL/.test(text)) {
+        return { rows: [], rowCount: 0 };
+      }
+      // THIS run's own set-based consumed_at flip.
+      if (/UPDATE enrich_parcels_pass3_scope SET consumed_at = \$2 WHERE run_id = \$1/.test(text)) {
+        const [runId, stamp] = params as [number, string];
+        let n = 0;
+        for (const r of rows) if (r.run_id === runId && r.consumed_at === null) { r.consumed_at = stamp; n += 1; }
+        return { rows: [], rowCount: n };
+      }
+      // consumePendingScope's own recovery scan (prior runs' unconsumed rows).
+      if (/SELECT DISTINCT parcel_id FROM enrich_parcels_pass3_scope WHERE consumed_at IS NULL AND run_id <> \$1/.test(text)) {
+        const [runId] = params as [number];
+        const ids = [...new Set(rows.filter((r) => r.run_id !== runId && r.consumed_at === null).map((r) => r.parcel_id))];
+        return { rows: ids.map((parcel_id) => ({ parcel_id })), rowCount: ids.length };
+      }
+      // The per-row recovery SELECT (buildOptConfigSelectSql, scopeWhere: 'p.id = $1') — THIS
+      // is where the simulated engine error fires for the "stuck" parcel, exactly mirroring
+      // consumePendingScope's own try/catch (a genuinely thrown query error, not a synthetic
+      // shortcut — the same class of failure a real optimal-config engine error produces).
+      if (/p\.id = \$1/.test(text)) {
+        throw new Error('simulated optimal-config engine error (EP-D10 behavioural lock fixture)');
+      }
+      // Per-row consumed_at flip inside consumePendingScope — never reached for the stuck
+      // parcel (its own SELECT above threw first), asserted unreached below.
+      if (/UPDATE enrich_parcels_pass3_scope SET consumed_at = \$2 WHERE parcel_id = \$1/.test(text)) {
+        const [pid, stamp] = params as [number, string];
+        for (const r of rows) if (r.parcel_id === pid && r.consumed_at === null) r.consumed_at = stamp;
+        return { rows: [], rowCount: 1 };
+      }
+      // THE pruning DELETE under test (peel, pilot 9 commit 8 P1).
+      if (/DELETE FROM enrich_parcels_pass3_scope WHERE consumed_at IS NOT NULL/.test(text)) {
+        const before = rows.length;
+        for (let i = rows.length - 1; i >= 0; i--) if (rows[i]!.consumed_at !== null) rows.splice(i, 1);
+        return { rows: [], rowCount: before - rows.length };
+      }
+      return { rows: [], rowCount: 0 };
+    };
+    return { query, rowsSnapshot: () => rows.map((r) => ({ ...r })), sql };
+  }
+
+  it('seeds one CONSUMED row + one UNCONSUMED (recovery-failed) prior-run row — after runPass5, the consumed row is pruned and the unconsumed row survives', async () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports -- the real compute module under test
+    const ep = require(path.join(REPO_ROOT, 'scripts/lib/compute/enrich-parcels.js')) as {
+      runPass5: (client: unknown, ctx: unknown, config: Record<string, number>) => Promise<Record<string, unknown>>;
+    };
+    const OWN_RUN_ID = 999;
+    const STUCK_PARCEL_RUN_ID = 500; // a PRIOR run, distinct from OWN_RUN_ID
+    const seed: ScopeRow[] = [
+      { run_id: OWN_RUN_ID, parcel_id: 1, consumed_at: '2026-09-01T00:00:00.000Z' }, // already consumed
+      { run_id: STUCK_PARCEL_RUN_ID, parcel_id: 2, consumed_at: null }, // prior-run, recovery will fail
+    ];
+    const client = scopeFakeClient(seed);
+    // Named `passCtx`, not `ctx` — LW-D11's harness-fidelity lock (step-conformance.infra.test.ts)
+    // extracts the FIRST `const ctx = { ... }` in a violations.test.ts file and checks its keys
+    // against STEP_CTX_KEYS, the closed set the library assigns onto the GENERIC step-level
+    // stepCtx (scripts/lib/step/index.js:95). This object is a DIFFERENT thing: the ENRICHER
+    // per-pass ctx runEnrichPhase builds internally and threads straight into each pass function
+    // (runPass5(client, ctx, config)) — scopeWhere/full/stream/scopeRunId are real keys on THAT
+    // ctx, never assigned onto stepCtx, so LW-D11's own `ctx`-shaped extractor would misclassify
+    // them as a phantom generic-stepCtx field. Renaming sidesteps the false positive without
+    // teaching the checker to conflate two runner-internal ctx shapes it was never meant to merge.
+    const passCtx = {
+      scopeWhere: 'TRUE',
+      full: true,
+      stream: async function* stream() { /* empty — this lock is scoped to the scope-table prune, not the main OPTCFG loop */ },
+      scopeRunId: OWN_RUN_ID,
+      clock: { now: () => new Date('2026-09-08T12:00:00.000Z') },
+      log: { warn: () => {}, info: () => {}, error: () => {} },
+    };
+    const config = { enrich_parcels_optcfg_batch_size: 500, enrich_parcels_pass5_stream_batch_size: 200 };
+
+    const stats = await ep.runPass5(client, passCtx, config);
+
+    expect(stats.errors, 'the stuck parcel\'s simulated engine error must be counted, not swallowed silently').toBe(1);
+    const after = client.rowsSnapshot();
+    expect(after.map((r) => r.parcel_id), 'the already-consumed row (parcel 1) must be PRUNED — gone from the table').not.toContain(1);
+    expect(after.map((r) => r.parcel_id), 'the recovery-failed row (parcel 2) must SURVIVE — still present, still unconsumed').toContain(2);
+    const survivor = after.find((r) => r.parcel_id === 2);
+    expect(survivor?.consumed_at, 'the survivor\'s consumed_at must still be NULL — its own recovery attempt genuinely failed').toBeNull();
+    expect(client.sql.some((s) => /DELETE FROM enrich_parcels_pass3_scope WHERE consumed_at IS NOT NULL/.test(s)), 'the pruning DELETE must have actually been issued, not merely present in source text').toBe(true);
+  });
+});
