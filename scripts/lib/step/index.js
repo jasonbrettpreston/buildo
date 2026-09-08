@@ -2886,7 +2886,7 @@ async function runWithPool(runnable, pool, ctx) {
   // logic.test.ts) - windowError = err; ... throw err; must stay close to catch (err) {.
   function emitInnerLockDeniedSkip() {
     status = RUN_STATUS.SELF_SKIPPED;
-    recordsMeta = { ...skipRecordsMeta(descriptor, 'advisory_lock_held_elsewhere'), ledger_row: owns ? LEDGER_ROW_VALUES[0] : LEDGER_ROW_VALUES[1], chain_run_id: chainRunId };
+    recordsMeta = { ...skipRecordsMeta(descriptor, 'advisory_lock_held_elsewhere'), ledger_row: owns ? LEDGER_ROW_VALUES[0] : LEDGER_ROW_VALUES[1], chain_run_id: chainRunId, pool_errors: pool.__buildoPoolErrorCount ?? 0 };
     pipeline.emitSummary({ records_total: null, records_new: null, records_updated: null, records_meta: recordsMeta });
     return { status, recordsMeta, runId, acquired: false };
   }
@@ -3392,6 +3392,13 @@ async function runWithPool(runnable, pool, ctx) {
         // uncorrelated. `null` is the honest, always-observable standalone
         // value (Rule 1: nothing hidden).
         chain_run_id: chainRunId,
+        // Pilot 9 commit 8 P5(a), Spec 48 §3.10 — pool.on('error') events (pipeline.js's
+        // attachPoolErrorLogger) COALESCE-merged in from the pool's own per-run counter,
+        // not log-only: an idle-client error used to be visible ONLY on stdout, invisible
+        // in the run's own persisted record (the exact "observability lives in the
+        // pipeline's own records" gap §3.6 exists to close). 0 on the common case — always
+        // present, never omitted when zero, matching chain_run_id's own "nothing hidden" rule.
+        pool_errors: pool.__buildoPoolErrorCount ?? 0,
         // LW-D15 — declared, never inferred: a downstream reader must not have to guess
         // "were these counts real?" from the presence/absence of other fields.
         ...(stepCtx.overrides && stepCtx.overrides.dry_run ? { dry_run: true } : {}),
@@ -3435,7 +3442,7 @@ async function runWithPool(runnable, pool, ctx) {
       // a lock-held skip is still a real chain-spawned (or standalone) row,
       // and the seam pass / chain-end synthesis must see the SAME key on
       // every row regardless of which branch produced it.
-      recordsMeta = { ...skipRecordsMeta(descriptor, 'advisory_lock_held_elsewhere'), ledger_row: owns ? LEDGER_ROW_VALUES[0] : LEDGER_ROW_VALUES[1], chain_run_id: chainRunId };
+      recordsMeta = { ...skipRecordsMeta(descriptor, 'advisory_lock_held_elsewhere'), ledger_row: owns ? LEDGER_ROW_VALUES[0] : LEDGER_ROW_VALUES[1], chain_run_id: chainRunId, pool_errors: pool.__buildoPoolErrorCount ?? 0 };
       pipeline.emitSummary({ records_total: null, records_new: null, records_updated: null, records_meta: recordsMeta });
     }
     return { status, recordsMeta, runId, acquired: lockResult.acquired };

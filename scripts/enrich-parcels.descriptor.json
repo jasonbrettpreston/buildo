@@ -680,7 +680,14 @@
   "counters": {
     "records_total": { "source": "compute.total_parcels_scanned", "scoped_by": "step" },
     "records_new": { "source": "compute.records_new_aggregate", "scoped_by": "step" },
-    "records_updated": { "source": "compute.records_updated_aggregate", "scoped_by": "step" }
+    "records_updated": {
+      "source": "compute.records_updated_aggregate",
+      "scoped_by": "step",
+      "why": {
+        "text": "computeAggregateRecordsUpdated (scripts/lib/compute/enrich-parcels.js) deliberately EXCLUDES pass 4 (comparable-builds) from the distinct-union of ids it aggregates from passes 1/2/3/5 — a row pass 4 alone touches is not counted as \"genuinely updated\" work. Carried verbatim from the legacy script's own docblock (a §11 counter-scoping decision, not an omission): pass 4's own write target was EP-D1/B4.5-PINNED (no IS DISTINCT FROM guard) for most of this pilot, and its idempotent_rerun only reached \"zero_writes\" once commit 8 P2 (the guard) and P3 (EP-D9's deterministic tiebreak) both landed — before that, every eligible row's pass-4 write was unconditional under --full, making a pass-4-inclusive count meaningless as a \"did work happen\" signal. scoped_by:\"step\" therefore does NOT mean every write target contributes to this counter.",
+        "liveness": { "kind": "file", "ref": "scripts/lib/compute/enrich-parcels.js" }
+      }
+    }
   },
 
   "config": {

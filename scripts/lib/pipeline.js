@@ -133,9 +133,20 @@ function withPipelineStatementTimeout(pool) {
  * by an unrelated connection's own error.
  * @param {import('pg').Pool} pool
  * @returns {import('pg').Pool}
+ * Pilot 9 commit 8 P5(a), Spec 48 §3.10 — ALSO increments `pool.__buildoPoolErrorCount`, a
+ * per-pool counter `runWithPool` (`scripts/lib/step/index.js`) reads into
+ * `records_meta.pool_errors` at run end (COALESCE-merged: `pool.__buildoPoolErrorCount ?? 0`).
+ * Log-only until this commit — an operator tailing stdout could see the error, but the
+ * run's OWN persisted record said nothing, the same "invisible in the pipeline's own
+ * records" gap §3.6 exists to close. Named on the POOL, not a module-level global: each
+ * `pipeline.run`/converted-step invocation gets its own fresh pool (a standalone process,
+ * or one spawned child per step in a chain — Spec 122's own per-step-process model), so
+ * the counter is correctly scoped to THIS run without needing to reset anything between runs.
  */
 function attachPoolErrorLogger(pool) {
+  pool.__buildoPoolErrorCount = 0;
   pool.on('error', (err, client) => {
+    pool.__buildoPoolErrorCount += 1;
     log.error('[pipeline]', err, { phase: 'pool_idle_client_error', hadClient: client != null });
   });
   return pool;

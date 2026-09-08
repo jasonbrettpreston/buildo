@@ -139,6 +139,18 @@ describe('Pipeline SDK', () => {
       });
     });
 
+    it('pool_errors (pilot 9 commit 8 P5(a), Spec 48 §3.10): attachPoolErrorLogger increments pool.__buildoPoolErrorCount on every \'error\' event, starting at 0, never throwing (the crash-prevention fix, WF3 2026-09-07, stays intact)', () => {
+      withDiscretePgVars(() => {
+        const pool = pipeline.createPool();
+        expect(pool.__buildoPoolErrorCount, 'starts at 0 — always present, never undefined (Rule 1: nothing hidden)').toBe(0);
+        expect(() => pool.emit('error', new Error('idle client test error'), null)).not.toThrow();
+        expect(pool.__buildoPoolErrorCount).toBe(1);
+        pool.emit('error', new Error('second idle client test error'), null);
+        expect(pool.__buildoPoolErrorCount, 'counts every event, does not saturate at 1').toBe(2);
+        pool.end().catch(() => {});
+      });
+    });
+
     it('statement_timeout: throws on a non-numeric or negative PIPELINE_STATEMENT_TIMEOUT_MS', () => {
       withDiscretePgVars(() => {
         const env = process.env as Record<string, string | undefined>;

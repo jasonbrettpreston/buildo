@@ -792,6 +792,10 @@
             "scoped_by": {
               "description": "The outputs.writes[].key this counter counts, or \"step\" for a whole-step count. §11 counter scoping.",
               "anyOf": [{ "const": "step" }, { "$ref": "#/definitions/columnName" }, { "type": "array", "items": { "$ref": "#/definitions/columnName" } }]
+            },
+            "why": {
+              "$ref": "#/definitions/why",
+              "description": "OPTIONAL (pilot 9 commit 8 P5b, R-K.2-adjacent frozen-template bump). Names a non-obvious counter-scoping decision — e.g. a write target this counter's own scoped_by/source deliberately EXCLUDES from the count, and why (a §11 counter-scoping rule, not an omission). Absent for the common case (scoped_by covers every write target that contributes)."
             }
           }
         }

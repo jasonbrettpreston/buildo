@@ -609,6 +609,27 @@ describe('run(ctx) — the lifecycle, against a fake pool', () => {
     }
   });
 
+  it('records_meta.pool_errors (pilot 9 commit 8 P5(a), Spec 48 §3.10) — COALESCE-merged from the pool\'s own __buildoPoolErrorCount, 0 on the common (no-error) case, the real count when the pool saw idle-client errors', async () => {
+    const cleanPool = fakePool();
+    const cap1 = captureEmissions();
+    try {
+      await pipeline.step(ASSERT_SCHEMA, allClean).run({ pool: cleanPool, chainId: 'sources' });
+      expect(cap1.summary().records_meta.pool_errors, 'always present, never omitted when zero').toBe(0);
+    } finally {
+      cap1.restore();
+    }
+
+    const dirtyPool = fakePool();
+    (dirtyPool as unknown as { __buildoPoolErrorCount: number }).__buildoPoolErrorCount = 3;
+    const cap2 = captureEmissions();
+    try {
+      await pipeline.step(ASSERT_SCHEMA, allClean).run({ pool: dirtyPool, chainId: 'sources' });
+      expect(cap2.summary().records_meta.pool_errors, 'the run\'s own persisted record reflects idle-client errors the pool saw, not merely a stdout log line').toBe(3);
+    } finally {
+      cap2.restore();
+    }
+  });
+
   it('a blocking FAIL rejects — but the audit rows are emitted FIRST (WAP, §7.2)', async () => {
     const pool = fakePool();
     const cap = captureEmissions();

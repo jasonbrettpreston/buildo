@@ -2,7 +2,7 @@
 <!-- Source of truth: scripts/steps/_schema/step.schema.json (operator ruling R2). -->
 <!-- Regenerate: node scripts/violations/schema-to-vocab.mjs docs/reports/generated/122-vocabulary.md -->
 
-# The step contract — 20 categories, 433 declarable fields
+# The step contract — 20 categories, 448 declarable fields
 
 **Contract version 1 · status `v0-unfrozen-until-C3`.** The schema is canonical; this document is generated from it. Editing this file changes nothing.
 
@@ -30,7 +30,7 @@
 | 14 | `interpretation` | 2 | 0 | 0 |
 | 15 | `recovery` | 18 | 8 | 0 |
 | 16 | `database` | 3 | 1 | 0 |
-| 17 | `counters` | 9 | 0 | 0 |
+| 17 | `counters` | 24 | 3 | 0 |
 | 18 | `config` | 22 | 4 | 0 |
 | 19 | `sharing` | 9 | 4 | 0 |
 | 20 | `terminals` | 9 | 3 | 0 |
@@ -615,15 +615,30 @@ Grandfathered, never legal for a new step: an existing step must be able to decl
 
 | Field | Menu | Markers |
 |---|---|---|
-| `records_total` | `none` \| object {source, scoped_by} | † |
+| `records_total` | `none` \| object {source, scoped_by, why} | † |
 | `records_total.source` | string | † |
 | `records_total.scoped_by` | `step` \| string `^[a-z_][a-z0-9_]*$` \| list of string `^[a-z_][a-z0-9_]*$` | † |
-| `records_new` | `none` \| object {source, scoped_by} | † |
+| `records_total.why` | object {text, liveness} | — |
+| `records_total.why.text` | string | † |
+| `records_total.why.liveness` | `none` \| object {kind, ref} | † |
+| `records_total.why.liveness.kind` | `check` · `file` · `table` · `column` · `external` · `spec` | † ! |
+| `records_total.why.liveness.ref` | string | † |
+| `records_new` | `none` \| object {source, scoped_by, why} | † |
 | `records_new.source` | string | † |
 | `records_new.scoped_by` | `step` \| string `^[a-z_][a-z0-9_]*$` \| list of string `^[a-z_][a-z0-9_]*$` | † |
-| `records_updated` | `none` \| object {source, scoped_by} | † |
+| `records_new.why` | object {text, liveness} | — |
+| `records_new.why.text` | string | † |
+| `records_new.why.liveness` | `none` \| object {kind, ref} | † |
+| `records_new.why.liveness.kind` | `check` · `file` · `table` · `column` · `external` · `spec` | † ! |
+| `records_new.why.liveness.ref` | string | † |
+| `records_updated` | `none` \| object {source, scoped_by, why} | † |
 | `records_updated.source` | string | † |
 | `records_updated.scoped_by` | `step` \| string `^[a-z_][a-z0-9_]*$` \| list of string `^[a-z_][a-z0-9_]*$` | † |
+| `records_updated.why` | object {text, liveness} | — |
+| `records_updated.why.text` | string | † |
+| `records_updated.why.liveness` | `none` \| object {kind, ref} | † |
+| `records_updated.why.liveness.kind` | `check` · `file` · `table` · `column` · `external` · `spec` | † ! |
+| `records_updated.why.liveness.ref` | string | † |
 
 ### config
 

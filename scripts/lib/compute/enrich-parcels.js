@@ -33,10 +33,16 @@
  * `logic_variables` from the DB (the runner resolves + Zod-validates `config` before calling any pass),
  * does not check PostGIS/GiST-index preconditions itself — the legacy `assertPreconditions` is NOT
  * ported (R-W: a compute may not branch on PostGIS availability); the descriptor's own declarative
- * `guards.requires` is the ONLY legal form and the runner enforces it generically. Does not emit audit
- * rows / verdicts
- * (a commit-8 peel routes those through `verdict.js#deriveVerdict`, EP-D3), and does not implement
- * `computeAggregateRecordsUpdated`'s downstream consumption (kept here as a pure helper — see below).
+ * `guards.requires` is the ONLY legal form and the runner enforces it generically. Does not build the
+ * `audit_table`/derive the verdict itself — `compute(ctx)`'s own `ctx.report(id, observation)` calls
+ * (below) are the ONLY audit-emission surface this file uses; the runner's own generic
+ * `scripts/lib/step/verdict.js#deriveVerdict` (Rule 10) assembles `ctx.report`'s accumulated
+ * observations into rows and derives the verdict, exactly as it does for every other converted step
+ * — there is no separate, ENRICHER-specific verdict path here (EP-D3, `docs/reports/defect-ledger.md`,
+ * CLOSED: the legacy script's own hand-rolled `verdictCascade` was never ported — it simply does not
+ * exist in this file, confirmed by a repo-wide grep — so there was never anything left to "wire up").
+ * Also does not implement `computeAggregateRecordsUpdated`'s downstream consumption (kept here as a
+ * pure helper — see below).
  *
  * THE ctx CONTRACT this file consumes (implemented by runEnrichPhase, LG-28, commit 7d,
  * `scripts/lib/step/index.js`):
@@ -1644,9 +1650,11 @@ function computeAggregateRecordsUpdated({ zoningIds, maxBuildIds, existingIds, s
 // mbResult.zero_link_ghost_cnt`) plus the two step-level queries the legacy main() ran inline
 // (zone_class_pct, opt_aor_without_max_gfa) and the step's own wall-clock duration. This mirrors every
 // other converted step's `ctx.matched` convention (refresh-snapshot.js, link-parcels.js) — the actual
-// assembly is the runner's job (commit 7d), not this file's; NOT wired to a `compute(ctx)` dispatch
-// loop here (that entry point, and the audit-row/verdict-cascade routing through
-// scripts/lib/step/verdict.js#deriveVerdict per Rule 10/EP-D3, are a commit-8 peel).
+// assembly is the runner's job (commit 7d), not this file's. These functions ARE the dispatch loop's
+// targets: `compute(ctx)` (module.exports, below) iterates `ctx.checks` and calls `CHECKS[id](ctx)` —
+// each function below reports via `ctx.report(id, observation)`, and the runner's generic
+// `scripts/lib/step/verdict.js#deriveVerdict` (Rule 10) does the audit-row/verdict-cascade routing,
+// same mechanism as every other converted step (EP-D3, CLOSED — see the file-header note above).
 // ===========================================================================
 
 function parcels_with_zone_class_pct_warn(ctx) {
