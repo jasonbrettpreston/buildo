@@ -2514,6 +2514,126 @@ describe('R-B (LW-D20 / LG-19) — interrupted-retraction reader, fake-pool lock
   });
 
   // -------------------------------------------------------------------------
+  // P0 (2026-09-08, Spec 47 §125) — the REGRESSION above (2026-08-29) proved
+  // detectInterruptedRetraction's OWN ownRunId parameter excludes the caller's
+  // row when threaded. It did NOT prove `runWithPool` (the ONLY real caller in
+  // a live chain run) actually THREADS it: `42ebaaea` found runWithPool's
+  // chain-mode branch (`owns=false`) left `runId = null` for the step's entire
+  // lifetime — run-chain.js opens this step's OWN pipeline_runs row and passes
+  // its id via the STEP_RUN_ID env var specifically so the step could read it
+  // back (run-chain.js:606/:658), but nothing read it until `42ebaaea`. The
+  // live consequence, unwitnessed by any prior test: link_wsib/link_massing's
+  // OWN just-opened `running` row satisfied `detectInterruptedRetraction`
+  // on EVERY chain run, forcing mode "full" forever (measured on cloud,
+  // review_followups.md, 2026-08-29..2026-09-08).
+  //
+  // This block exercises the REAL integration seam — `pipeline.step(...)
+  // .run({pool, chainId})` → `runWithPool` → `parseStepRunIdEnv()` →
+  // `runCascadePhase({..., ownRunId})` → `staleness.detectInterruptedRetraction`
+  // — via a `vi.spyOn` on the shared `staleness` module object (index.js reads
+  // `staleness.detectInterruptedRetraction` as a live property access, never a
+  // destructured reference, so the spy observes the REAL call args/return
+  // without needing the rest of the (partially-stubbed) run to complete
+  // cleanly downstream).
+  // -------------------------------------------------------------------------
+  describe('P0 — runWithPool threads STEP_RUN_ID (parseStepRunIdEnv) into ownRunId in chain mode (42ebaaea)', () => {
+    const OWN_RUN_ID = 555;
+    const OWN_ROW = { id: OWN_RUN_ID, pipeline: 'link_wsib', status: 'running', started_at: '2026-09-08T19:00:00.000Z' };
+
+    async function runChainModeAndCaptureInterruptedCheck(stepRunId: string | undefined) {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports -- the real descriptor, not a fixture copy
+      const descriptor = clone(require(join(process.cwd(), 'scripts/link-wsib.descriptor.json')));
+      descriptor.guards.requires = []; // orthogonal to this claim — same simplification every sibling test in this file uses
+      descriptor.staleness.trigger = 'none';
+      descriptor.override.dry_run = '--dry-run'; // keeps this fake-pool run from needing real write-statement answers
+      // eslint-disable-next-line @typescript-eslint/no-require-imports -- the real compute module (must be the function export, S2-min's own contract)
+      const compute = require(join(process.cwd(), 'scripts/lib/compute/link-wsib.js'));
+      // link-wsib.descriptor.json's config.hoisted_above_gate is TRUE (resolveConfig runs
+      // BEFORE the advisory lock, S2-min §1.2a P4) — every declared logic_variable needs a
+      // real row or resolveConfig throws before detectInterruptedRetraction is ever
+      // reached. Defaults copied from scripts/seeds/logic_variables.json (bootstrap values,
+      // not re-derived — orthogonal to this claim).
+      const LOGIC_VAR_DEFAULTS: Record<string, number> = {
+        wsib_fuzzy_match_threshold: 0.6, link_wsib_link_rate_warn_pct: 5,
+        link_wsib_tier1_confidence: 0.95, link_wsib_tier2_confidence: 0.9,
+        link_wsib_tier3_confidence: 0.6, link_wsib_entity_fanin_warn: 20,
+        link_wsib_tier3_full_max_iterations: 20, link_wsib_tier3_token_overlap_fail_pct: 50,
+      };
+      const pool = dryRunFakePool((text: string, values: unknown) => {
+        if (text.includes(INTERRUPTED_QUERY_MARK)) {
+          // Simulates the REAL WHERE clause's `$2::integer IS NULL OR p.id <> $2::integer`
+          // exclusion (staleness.js) rather than asserting on it after the fact — this fake
+          // pool is not a real Postgres, so the exclusion must be reproduced here from the
+          // BOUND PARAM the runner actually sent, exactly the behaviour the fix controls.
+          const ownParam = (values as unknown[] | undefined)?.[1];
+          return { rows: ownParam === OWN_ROW.id ? [] : [OWN_ROW] };
+        }
+        if (text.includes('current_database()')) return { rows: [{ database: 'postgres', db_user: 'postgres', has_tracking: true }] };
+        if (text.includes('FROM public.schema_migrations')) return { rows: [{ n: 999 }] };
+        if (text.includes('FROM logic_variables')) {
+          return { rows: Object.entries(LOGIC_VAR_DEFAULTS).map(([variable_key, variable_value]) => ({ variable_key, variable_value, variable_value_json: null })) };
+        }
+        if (text.includes('pg_try_advisory_xact_lock')) return { rows: [{ acquired: true }] };
+        if (text.startsWith('INSERT INTO pipeline_runs')) return { rows: [{ id: 9003 }] };
+        if (/NOW\(\)\s+AS\s+now/i.test(text)) return { rows: [{ now: new Date('2026-09-08T20:00:00Z') }] };
+        if (/^(BEGIN|COMMIT|ROLLBACK)$/.test(text)) return { rows: [] };
+        if (/unlinked_start/i.test(text)) return { rows: [{ unlinked_start: '5', entities_count: '3' }] };
+        return undefined;
+      });
+      const spy = vi.spyOn(stalenessLib, 'detectInterruptedRetraction');
+      const prevStepRunId = process.env.STEP_RUN_ID;
+      if (stepRunId === undefined) delete process.env.STEP_RUN_ID; else process.env.STEP_RUN_ID = stepRunId;
+      const cap = captureEmissions();
+      try {
+        // Tolerate a downstream throw from partial stubbing (real buildTierSql/checks
+        // issue real SQL text this fake pool does not know) — the interrupted-retraction
+        // read happens BEFORE the tier loop and BEFORE checks, so by the time any such
+        // throw could occur the spy has already recorded the call this test asserts on.
+        await withDryRunArgv(() => pipeline.step(descriptor, compute).run({ pool, chainId: 'sources' }));
+      } catch {
+        // intentionally swallowed — see comment above
+      } finally {
+        cap.restore();
+        if (prevStepRunId === undefined) delete process.env.STEP_RUN_ID; else process.env.STEP_RUN_ID = prevStepRunId;
+      }
+      // ⚠️ Captured BEFORE spy.mockRestore(): mockRestore() also CLEARS mock.calls/
+      // mock.results (same as mockReset()) — reading them after restore always finds
+      // an empty call list, regardless of whether the spy actually fired. This bug was
+      // caught live authoring this exact test (2026-09-08): the first draft restored
+      // then asserted, and "detectInterruptedRetraction was never called" fired on BOTH
+      // branches even though a standalone reproduction outside vitest proved the spy's
+      // target function ran to completion every time.
+      expect(spy, 'detectInterruptedRetraction was never called — the interrupted-retraction read did not happen at all').toHaveBeenCalled();
+      const callArgs = spy.mock.calls[0]!;
+      const opts = callArgs[2] as { ownRunId?: number | null } | undefined;
+      const result = await spy.mock.results[0]!.value;
+      spy.mockRestore();
+      return { ownRunId: opts?.ownRunId ?? null, result: result as { interrupted: boolean; row: unknown } };
+    }
+
+    it('chain mode (chainId set, owns=false), STEP_RUN_ID=555: ownRunId is threaded as 555, and the step\'s own just-opened running row (id 555) is excluded — interrupted:false', async () => {
+      const { ownRunId, result } = await runChainModeAndCaptureInterruptedCheck(String(OWN_RUN_ID));
+      expect(ownRunId, 'runWithPool must read STEP_RUN_ID via parseStepRunIdEnv and thread it as ownRunId (42ebaaea)').toBe(OWN_RUN_ID);
+      expect(result.interrupted, 'the step\'s own just-opened row (id === STEP_RUN_ID) must be excluded — the forced-FULL-forever bug this fix closes').toBe(false);
+    });
+
+    // RED PROOF (grounded per Spec 08 §11 — not merely asserted): this exact test,
+    // run against `scripts/lib/step/index.js` with the ONE line `runId =
+    // parseStepRunIdEnv();` (:2934) reverted to `runId = null;` — the literal
+    // pre-42ebaaea shape of the `owns=false` branch — reproducibly FAILS both
+    // assertions below (ownRunId reads null; interrupted reads true, because the
+    // step's own row is no longer excluded). Executed live 2026-09-08 (revert →
+    // rerun → RED → restore → rerun → GREEN); not re-run automatically here because
+    // permanently reverting shipped code inside a test file to prove a historical
+    // regression would itself be the bug this suite exists to catch.
+    it('chain mode, STEP_RUN_ID unset (standalone-shaped call in chain mode — the pre-42ebaaea observable state): ownRunId is null, and the step\'s own row is NOT excluded — interrupted:true (same fake pool, same own row, only the env var differs)', async () => {
+      const { ownRunId, result } = await runChainModeAndCaptureInterruptedCheck(undefined);
+      expect(ownRunId, 'no STEP_RUN_ID env — ownRunId has nothing to read and must stay null').toBeNull();
+      expect(result.interrupted, 'RED-shaped: with no ownRunId to exclude it, the own row satisfies the interrupted-retraction predicate').toBe(true);
+    });
+  });
+
+  // -------------------------------------------------------------------------
   // R-B/LW-D20 RECURRENCE — `runMaterializePhase` (added at pilot 5, 5ee14f5b)
   // never received the same fold `runCascadePhase`/`runLinkPhase` got at
   // 8adf5d19: its `bypassed` omitted the `interruptedRetraction.interrupted`
