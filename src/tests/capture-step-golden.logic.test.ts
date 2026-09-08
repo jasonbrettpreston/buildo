@@ -11,7 +11,7 @@ import { createRequire } from 'node:module';
 
 const require = createRequire(import.meta.url);
 const harness = require('../../scripts/analysis/capture-step-golden.js');
-const { parseMarkers, normalise, diffNormalised, buildCapture, parseArgs, VOLATILE_KEYS } = harness;
+const { parseMarkers, normalise, diffNormalised, buildCapture, parseArgs, VOLATILE_KEYS, assertCaptureIsValid } = harness;
 
 const SUMMARY = {
   records_total: 0,
@@ -201,6 +201,45 @@ describe('buildCapture + parseArgs', () => {
   });
   it('parses --k=v and bare --flag', () => {
     expect(parseArgs(['--step=a.js', '--chain=none', '--compare=x,y', '--v'])).toEqual({ step: 'a.js', chain: 'none', compare: 'x,y', v: true });
+  });
+});
+
+// ── assertCaptureIsValid — WF3 enrich_parcels stall incident (2026-09-07), the "VRD-SKIP
+// conflation" memory gotcha closed structurally: a SELF-SKIPPED or CRASHED invocation must never
+// be written as a golden capture (measured live: a run that raced an orphaned lock-holding
+// backend wrote records_meta.skipped:true, reason:"advisory_lock_held_elsewhere" to
+// docs/reports/golden/enrich_parcels/post/sources_run1.json as if it were real work). ────────────
+describe('assertCaptureIsValid — refuses a SKIPPED or CRASHED capture (RED-first: the exact live-incident shape must throw)', () => {
+  it('a genuine completed run (exit 0, no skip) passes — the baseline GREEN', () => {
+    expect(() => assertCaptureIsValid(buildCapture(rawCapture()))).not.toThrow();
+  });
+
+  it('REFUSES a self-skipped capture (records_meta.skipped:true) — the exact live incident shape', () => {
+    const skippedSummary = {
+      records_total: 0,
+      records_new: 0,
+      records_updated: 0,
+      records_meta: { skipped: true, reason: 'advisory_lock_held_elsewhere', ledger_row: 'owned' },
+    };
+    const doc = buildCapture(rawCapture({
+      exit_code: 0,
+      summary: skippedSummary,
+      summary_count: 1,
+      pipeline_runs: [{
+        id: 1843, pipeline: 'enrich_parcels', status: 'self_skipped',
+        started_at: '2026-09-07T21:13:30.678Z', completed_at: '2026-09-07T21:13:30.718Z',
+        duration_ms: 83, records_total: null, records_new: null, records_updated: null,
+        records_meta: skippedSummary.records_meta, error_message: null,
+      }],
+    }));
+    expect(() => assertCaptureIsValid(doc)).toThrow(/REFUSING to write a golden capture/);
+    expect(() => assertCaptureIsValid(doc)).toThrow(/advisory_lock_held_elsewhere/);
+  });
+
+  it('REFUSES a crashed capture (non-zero exit_code) even with no summary at all — the OTHER live incident shape (pool "error" event crash, summaries=0)', () => {
+    const doc = buildCapture(rawCapture({ exit_code: 1, summary: null, summary_count: 0 }));
+    expect(() => assertCaptureIsValid(doc)).toThrow(/REFUSING to write a golden capture/);
+    expect(() => assertCaptureIsValid(doc)).toThrow(/exited 1/);
   });
 });
 

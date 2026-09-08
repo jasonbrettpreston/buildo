@@ -753,6 +753,40 @@ function buildCapture(raw) {
 }
 
 /**
+ * WF3 enrich_parcels stall incident (2026-09-07) — the "VRD-SKIP conflation" memory gotcha,
+ * closed structurally. Before this, a capture whose child process SELF-SKIPPED (advisory lock
+ * held elsewhere, ledger-gated no-op, etc — `records_meta.skipped:true`) or CRASHED (non-zero
+ * exit) was written to `--out` exactly like a genuine completed run: no real enrichment work
+ * happened, yet the file would silently become the new reference state for every future
+ * `--compare`/G8 diff. Measured live: a golden-capture attempt that raced an orphaned, still-lock-
+ * holding backend produced a `pipeline_runs` row with `status:"self_skipped"`,
+ * `records_meta.skipped:true`, `reason:"advisory_lock_held_elsewhere"` — the harness wrote it to
+ * `docs/reports/golden/enrich_parcels/post/sources_run1.json` anyway. Refuses now, loudly,
+ * BEFORE any write — pure, throws, never logs/writes itself (the caller decides how to surface
+ * the throw).
+ * @param {object} doc - buildCapture's return value
+ * @throws {Error} when the capture is not a genuine, completed run
+ */
+function assertCaptureIsValid(doc) {
+  if (doc.exit_code !== 0) {
+    throw new Error(
+      `capture-step-golden: REFUSING to write a golden capture — the invocation exited ${doc.exit_code} ` +
+        '(non-zero, signal=' + JSON.stringify(doc.signal) + '). A crashed run is not a valid reference ' +
+        'state for a golden diff.',
+    );
+  }
+  if (doc.summary?.records_meta?.skipped === true) {
+    const reason = doc.summary?.records_meta?.reason ?? '(no reason given)';
+    throw new Error(
+      'capture-step-golden: REFUSING to write a golden capture — the invocation SELF-SKIPPED ' +
+        `(records_meta.skipped:true, reason:"${reason}"). A skip is not a valid reference state for a ` +
+        'golden diff (the "VRD-SKIP conflation" this check exists to close) — re-run once the blocking ' +
+        'condition (e.g. an advisory lock held elsewhere) clears.',
+    );
+  }
+}
+
+/**
  * RULING R-C (2026-08-28): `git_head` unresolvable THROWS (the capture exits non-zero) —
  * never "unknown". A lockfile whose provenance field can silently degrade to a string is
  * not a lockfile: a capture with no resolvable commit records NOTHING about what code
@@ -825,6 +859,7 @@ async function main() {
 
   const raw = await capture({ step, chain: String(opts.chain), args, tables, tablesSource, ceiling, tableSpecs, invariantSpec, invariantsFile });
   const doc = buildCapture(raw);
+  assertCaptureIsValid(doc);
 
   // R-C — the LOCKFILE stamp. Computed after the run (not before): the fields it hashes
   // (step file, descriptor, notes, compute module) are exactly what could have changed
@@ -898,6 +933,7 @@ module.exports = {
   diffNormalised,
   formatDiff,
   buildCapture,
+  assertCaptureIsValid,
   DEFAULT_TABLE_ROW_CEILING,
   parseRowCeiling,
   descriptorPathFor,
