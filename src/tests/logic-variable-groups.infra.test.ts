@@ -84,7 +84,16 @@ describe('logic-variable-groups — drift guard (WF2 admin tunable coverage, com
   // mutated.
   it('RED — a seed key naming a group absent from GROUP_ORDER throws (not silently accepted)', () => {
     const realSeed = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, 'scripts', 'seeds', 'logic_variables.json'), 'utf-8'));
-    const someKey = Object.keys(realSeed)[0] as string;
+    // Pick a key that is CURRENTLY admin.hidden (guaranteed absent from
+    // GROUP_ORDER today, unlike an arbitrary admin.group key which may
+    // already be pinned somewhere and would instead trip the FORWARD-direction
+    // mismatch check — a different, also-valid throw, but not the one this
+    // fixture is pinning) so this test exercises the REVERSE-direction check
+    // regardless of which batch of the ADMIN-1 ratchet has landed.
+    const someKey = Object.entries(realSeed as Record<string, { admin?: { hidden?: string } }>).find(
+      ([, v]) => v.admin && 'hidden' in v.admin,
+    )?.[0] as string;
+    expect(someKey, 'no admin.hidden seed key found to build the fixture from').toBeTruthy();
     const tampered = { ...realSeed, [someKey]: { ...realSeed[someKey], admin: { group: '___NOT_PINNED_IN_GROUP_ORDER___' } } };
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'logic-var-groups-seed-fixture-'));
     const badSeedPath = path.join(dir, 'tampered-logic_variables.json');

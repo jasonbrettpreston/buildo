@@ -68,7 +68,8 @@ const GROUP_ORDER = [
       "los_penalty_tracking",
       "los_penalty_saving",
       "los_base_cap",
-      "los_base_divisor"
+      "los_base_divisor",
+      "los_decay_divisor"
     ]
   },
   {
@@ -95,7 +96,10 @@ const GROUP_ORDER = [
       "urgency_upcoming_days",
       "calibration_default_median_days",
       "calibration_default_p25_days",
-      "calibration_default_p75_days"
+      "calibration_default_p75_days",
+      "forecast_default_calibration_fail_pct",
+      "forecast_default_calibration_warn_pct",
+      "snowplow_buffer_days"
     ]
   },
   {
@@ -119,7 +123,12 @@ const GROUP_ORDER = [
       "urban_coverage_ratio",
       "suburban_coverage_ratio",
       "trust_threshold_pct",
-      "calibration_min_sample_size"
+      "calibration_min_sample_size",
+      "centreline_propagation_coverage_min",
+      "profiling_coverage_pass_pct",
+      "profiling_coverage_warn_pct",
+      "vocab_coverage_pass_pct",
+      "vocab_coverage_warn_pct"
     ]
   },
   {
@@ -288,7 +297,22 @@ const GROUP_ORDER = [
       "enrich_parcels_zone_class_pct_warn_floor",
       "mislink_footprint_lot_tol",
       "coa_bylaw_max_fsi_null_warn_pct",
-      "coa_bylaw_max_coverage_null_warn_pct"
+      "coa_bylaw_max_coverage_null_warn_pct",
+      "permits_bylaw_max_coverage_null_warn_pct",
+      "permits_bylaw_max_fsi_null_warn_pct"
+    ]
+  },
+  {
+    "label": "Scope Inference",
+    "keys": [
+      "p16_inference_layer_enabled",
+      "inference_weight"
+    ]
+  },
+  {
+    "label": "Data Retention & Privacy",
+    "keys": [
+      "lead_view_retention_days"
     ]
   },
   {

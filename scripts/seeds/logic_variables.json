@@ -6,7 +6,7 @@
     "min": 0,
     "max": 1,
     "admin": {
-      "hidden": "unclassified"
+      "group": "Coverage & Quality"
     }
   },
   "road_overlay_distance_m": {
@@ -726,7 +726,7 @@
     "min": 1,
     "max": 1000,
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lead Scoring"
     }
   },
   "cost_model_coverage_warn_pct": {
@@ -1046,7 +1046,7 @@
     "min": 0,
     "max": 100,
     "admin": {
-      "hidden": "unclassified"
+      "group": "Data Quality Thresholds"
     }
   },
   "permits_bylaw_max_coverage_null_warn_pct": {
@@ -1056,7 +1056,7 @@
     "min": 0,
     "max": 100,
     "admin": {
-      "hidden": "unclassified"
+      "group": "Data Quality Thresholds"
     }
   },
   "coa_bylaw_max_fsi_null_warn_pct": {
@@ -1326,7 +1326,7 @@
     "min": 1,
     "max": 60,
     "admin": {
-      "hidden": "unclassified"
+      "group": "Forecast & Urgency"
     }
   },
   "calibration_default_median_days": {
@@ -1366,7 +1366,7 @@
     "min": 0,
     "max": 100,
     "admin": {
-      "hidden": "unclassified"
+      "group": "Forecast & Urgency"
     }
   },
   "forecast_default_calibration_fail_pct": {
@@ -1376,7 +1376,7 @@
     "min": 0,
     "max": 100,
     "admin": {
-      "hidden": "unclassified"
+      "group": "Forecast & Urgency"
     }
   },
   "profiling_coverage_pass_pct": {
@@ -1386,7 +1386,7 @@
     "min": 0,
     "max": 100,
     "admin": {
-      "hidden": "unclassified"
+      "group": "Coverage & Quality"
     }
   },
   "profiling_coverage_warn_pct": {
@@ -1396,7 +1396,7 @@
     "min": 0,
     "max": 100,
     "admin": {
-      "hidden": "unclassified"
+      "group": "Coverage & Quality"
     }
   },
   "cost_coverage_pass_pct": {
@@ -1426,7 +1426,7 @@
     "min": 0,
     "max": 100,
     "admin": {
-      "hidden": "unclassified"
+      "group": "Coverage & Quality"
     }
   },
   "vocab_coverage_warn_pct": {
@@ -1436,7 +1436,7 @@
     "min": 0,
     "max": 100,
     "admin": {
-      "hidden": "unclassified"
+      "group": "Coverage & Quality"
     }
   },
   "lifecycle_issued_stall_days": {
@@ -1496,7 +1496,7 @@
     "min": 7,
     "max": 365,
     "admin": {
-      "hidden": "unclassified"
+      "group": "Data Retention & Privacy"
     }
   },
   "lifecycle_band_p3_min": {
@@ -4194,7 +4194,7 @@
     "max": 1,
     "description": "Spec 80 §5.C / P16-D3 [BUG-6] — HARD gate for the lean scope-mapped inference layer in classify-permits.js + classify-coa-trades.js. 0 = OFF (evidence-only emission; 16C/16D wire the code but emit NO inference rows). 1 = ON (the LINE_TRADE_COMPLEMENT lean inference is UNIONed onto evidence at is_active=true / attachment_basis='inference'). Seeded OFF on the 16B GO gate (2026-07-10, hold-out recall 61.4% / prec(insp) 70.5% / mean 10.2); flips to 1 in 16F only AFTER 16E's consumer contract ships. A NO-GO complement cannot ship by accident. The deep_scrapes-resume re-measure can flip it back to 0.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Scope Inference"
     }
   },
   "inference_weight": {
@@ -4204,7 +4204,7 @@
     "max": 1,
     "description": "Spec 80 §5.C / P16-16E [Gemini MEDIUM pinned] — provenance weight for INFERENCE-basis trade attachments in compute-trade-forecasts.js input aggregation: an inference row's calibration sample is scaled by this factor before classifyConfidence banding (needs 1/weight x the evidence sample for the same confidence band). Ranking/serving authority stays attachment_basis (D5) — this weights, never gates. Panel-adjustable; 0.5 = the pinned default so re-activated inference never re-creates P13-3 full-weight inflation. CONSUMED by scripts/compute-trade-forecasts.js.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Scope Inference"
     }
   },
   "enrich_parcels_defer_threshold_rows": {
