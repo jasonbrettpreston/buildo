@@ -2180,8 +2180,9 @@ describe('R-R / Rule 13 — the generated scorecard block is not stale (vitest-i
 // which runs `selfTest()` unconditionally BEFORE anything else — a failing
 // RED/GREEN assertion there throws and exits 2, so a passing spawn IS the
 // both-directions proof (Spec 121 §12b.6); (2) a real `--step` run's
-// stdout is asserted to carry the KNOWN-DEFECT-pinned enforced-red row,
-// end-to-end against the live corpus (not a fixture).
+// stdout is asserted to carry the enforced-green row (VRD-SKIP CLOSED
+// 2026-09-09, Spec 124 §2 Rule 10 rung b), end-to-end against the live
+// corpus (not a fixture).
 // ---------------------------------------------------------------------------
 describe('Rule 10 — verdict is row-derived from exactly one place (checkVerdictSingleSource)', () => {
   const STEP_VALIDATE = path.join(REPO_ROOT, 'scripts/analysis/step-validate.mjs');
@@ -2192,16 +2193,16 @@ describe('Rule 10 — verdict is row-derived from exactly one place (checkVerdic
     expect(run.stdout).toContain('self-test PASSED');
   });
 
-  it('a real `--step` run reports Rule 10 as enforced-red, KNOWN-DEFECT-pinned, with zero unsanctioned second derivations across the live VERDICT_LIBRARY_CORPUS', () => {
+  it('a real `--step` run reports Rule 10 as enforced-green — VRD-SKIP closed, zero unsanctioned second derivations across the live VERDICT_LIBRARY_CORPUS', () => {
     const run = spawnSync('node', [STEP_VALIDATE, '--step=assert_schema', '--fast'], { cwd: REPO_ROOT, encoding: 'utf8', timeout: 30_000 });
     expect(run.status, `stdout=${run.stdout}\nstderr=${run.stderr}`).toBe(0);
     const row = (run.stdout.split('\n').find((l) => /^\|\s*10\s*\|/.test(l.trim())) || '');
     expect(row, `no Rule 10 matrix row found; stdout=${run.stdout}`).not.toBe('');
-    expect(row).toContain('enforced-red');
+    expect(row).toContain('enforced-green');
+    expect(row).not.toContain('enforced-red');
     expect(row).toContain('0 unsanctioned second derivations');
-    expect(row).toContain('KNOWN-DEFECT');
-    expect(row).toContain('review_followups.md');
-    expect(row).toContain('VRD-SKIP');
+    expect(row).not.toContain('KNOWN-DEFECT');
+    expect(row).toContain('VRD-SKIP closed');
   });
 
   // WF3 "Rules 10-12 output panel remediation" commit 3 — Rule 10's own

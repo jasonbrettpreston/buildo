@@ -2878,10 +2878,20 @@ function parseStepRunIdEnv() {
   return Number.isFinite(n) ? n : null;
 }
 
-/** The SKIP terminal's records_meta — verdict row-derived like every other path (no hardcoded 'PASS'). */
+/**
+ * The SKIP terminal's records_meta — verdict row-derived like every other path
+ * (no hardcoded terminal value). VRD-SKIP (Spec 124 §2 Rule 10 R-H addendum,
+ * rung b): a self-skip is the maximal case of "a check the library could not
+ * evaluate" — zero declared checks ran — so it must never fold to PASS. The
+ * 'status' row's declared severity is WARN with its real threshold ('ran'),
+ * which `deriveVerdict` folds to a WARN verdict through the unchanged
+ * SEVERITY_RANK lattice; the non-halting posture is preserved exactly (only
+ * FAIL/blockingFailures halt). 'reason' stays a purely descriptive INFO row
+ * (R-H: no threshold possible for it).
+ */
 function skipRecordsMeta(descriptor, reason) {
   const rows = [
-    { metric: 'status', value: 'SKIPPED', threshold: null, status: 'INFO' },
+    { metric: 'status', value: 'SKIPPED', threshold: 'ran', status: 'WARN' },
     { metric: 'reason', value: reason, threshold: null, status: 'INFO' },
   ];
   return {

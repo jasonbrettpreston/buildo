@@ -260,6 +260,11 @@ describe('the verdict is ROW-DERIVED, and all three values are reachable (§7.1,
     expect(meta.audit_table.rows.length).toBeGreaterThan(0);
     expect(meta.audit_table.verdict).toBe(verdictLib.deriveVerdict(meta.audit_table.rows));
     expect(meta.reason).toBe('advisory_lock_held_elsewhere');
+    // VRD-SKIP (Spec 124 §2 Rule 10 R-H addendum): a self-skip is the maximal
+    // case of "a check the library could not evaluate" — it must never fold
+    // to PASS. rung (b): the 'status' row's declared severity is WARN.
+    expect(meta.audit_table.verdict).toBe('WARN');
+    expect(meta.audit_table.verdict).not.toBe('PASS');
   });
 
   // LM-D16 — `errors[]`/`warnings[]` interpolate `row.value` directly, so an
@@ -662,7 +667,11 @@ describe('run(ctx) — the lifecycle, against a fake pool', () => {
       expect(out.status).toBe('self_skipped');
       const summary = cap.summary();
       expect(summary.records_meta.skipped).toBe(true);
-      expect(summary.records_meta.audit_table.verdict).toBe('PASS');
+      // VRD-SKIP (Spec 124 §2 Rule 10 rung b): a SELF_SKIPPED terminal must
+      // not verdict identically to a genuine PASS — the 'status' row's
+      // declared severity is WARN (threshold:'ran'), row-derived through the
+      // unchanged deriveVerdict, never a hardcoded terminal value.
+      expect(summary.records_meta.audit_table.verdict).toBe('WARN');
       expect(summary.records_meta.audit_table.rows.some((r: Row) => r.metric === 'reason')).toBe(true);
     } finally {
       cap.restore();

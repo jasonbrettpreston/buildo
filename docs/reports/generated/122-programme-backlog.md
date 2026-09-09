@@ -10,9 +10,9 @@ Total items: **85**
 
 | status | count |
 |---|---|
-| ⬜ NOT_STARTED | 15 |
+| ⬜ NOT_STARTED | 14 |
 | ⚠️ PARTIAL | 17 |
-| ✅ BUILT | 49 |
+| ✅ BUILT | 50 |
 | ⏭️ SUPERSEDED | 4 |
 
 **blocks batching: 4**
@@ -113,7 +113,7 @@ Total items: **85**
 | `TRIPWIRE-T4T5` | 124 §8 | run-step.mjs tripwires T4/T5 stay N/A-MANUAL for both converted ingest_linkage steps | ⬜ NOT_STARTED | followup: review_followups.md (R-T addendum commit 7 filing, 2026-08-30); Fold A-4e | — | 2026-08-30 |
 | `R-W` | 124 §2 Rule 2 addendum | Compute must not branch on PostGIS availability — guards.requires is the only legal form | ✅ BUILT | wf: WF6, docs(122_step_optimization) pilot7 ruling + R-W commit, 2026-08-30 | — | 2026-08-30 |
 | `PILOT7-LP` | 122 §8.2 | Pilot 7 = link_parcels (LINK, 2nd member) — ruled 2026-08-30, implementation not started | ⚠️ PARTIAL | pilot: pilot 7 (link_parcels) | — | 2026-08-30 |
-| `VRD-SKIP` | 124 §2 Rule 10 | a SELF_SKIPPED terminal must not verdict identically to a genuine PASS | ⬜ NOT_STARTED | followup: docs/reports/review_followups.md — 'A lock-skipped converted step verdicts as PASS' (HIGH, 2026-09-03); the follow-on WF3 gives deriveVerdict a distinct SKIP severity rank, row-derived (never a consumer-side if(skipped) bolt-on), and updates every step_verdicts/check-chain-verdict.js consumer that currently treats it as a 2-value (PASS/FAIL) cascade | — | 2026-09-03 |
+| `VRD-SKIP` | 124 §2 Rule 10 | a SELF_SKIPPED terminal must not verdict identically to a genuine PASS | ✅ BUILT | wf: wf: WF3 VRD-SKIP, 2026-09-09 — .cursor/wf3_vrd_skip_active_task.md; fix site scripts/lib/step/index.js skipRecordsMeta (+ scripts/analysis/step-validate.mjs checkSelfSkipNeverPass/selfTest); see docs/reports/review_followups.md for the closed HIGH entry, the new HIGH sibling followup (buildSkipGateRecordsMeta, Ask B2), and the two filed MED followups (compute-trade-forecasts pass_or_warn residual; the pre-existing FreshnessTimeline SKIP mis-render) | — | 2026-09-09 |
 | `CRASH-BEHAV` | 124 §2 Rule 12 | live SIGTERM-and-recover behavioural proof for LINK, LINK_KEYED, MATERIALIZE (and, in the abstract, INGEST/BACKFILL/RECORDER) | ⬜ NOT_STARTED | followup: docs/reports/review_followups.md — 'WF2 Rule 12 behavioural half — no db.test.ts can spawn a REAL converted step against the ephemeral test container' (HIGH, 2026-09-03): a scoped WF2/WF3 adds a genuine, reviewed test-context escape hatch to assertDbTarget, then un-skips step-crash-posture.db.test.ts and extends its pattern to link_massing (link) and link_parcels (link_keyed), parameterized rather than copy-pasted a third time | — | 2026-09-03 |
 | `EP-PIN-PERF` | 122 (WF3 enrich_parcels double-run/lock-fix commit chain) | converted enrich_parcels per-pass timing within 25% of the legacy PRE goldens (KFM 7) | ✅ BUILT | pilot: pilot9_enrich_parcels | — | 2026-09-08 |
 
