@@ -291,6 +291,40 @@ describe('step-validate.mjs — programme section', () => {
     expect(out).toMatch(/unmet cutover_prereq blocking an already-converted slug: compute_centroids/);
   });
 
+  it('GREEN (EP-D13-adjacent, pilot 9 commit 8 P9, 2026-09-08) — the SAME bad fixture (blocks compute_centroids ONLY) does NOT hard-stop an UNRELATED step\'s own --fast run: gate.blocks is honoured literally, one blocked slug is not everyone\'s problem', () => {
+    // Same BAD_FIXTURE as the RED test above (blocks ONLY compute_centroids), but this
+    // invocation validates link_massing — a completely different, unrelated converted
+    // step. Before the P9 fix, invariant #9's registry-wide FAIL made every step's own
+    // --fast run hard-stop regardless of which slug was actually named — the exact
+    // "cloud_deploy token or similar" over-broad wiring CLOUDPARITY's own real-world use
+    // (blocking `enrich_parcels` alone, EP-D13) surfaced live.
+    const out = execFileSync('node', [STEP_VALIDATE, '--step=link_massing', '--fast'], {
+      cwd: REPO_ROOT,
+      encoding: 'utf8',
+      env: { ...process.env, BUILDO_PROGRAMME_ITEMS_PATH: BAD_FIXTURE },
+    });
+    expect(out, 'link_massing must NOT hard-stop on compute_centroids\' own unmet cutover_prereq').toMatch(/link_massing: \d+\/\d+ hard-stop=false/);
+    // The registry-wide fact is still SURFACED (nothing hidden) — just not gating.
+    expect(out).toMatch(/#9: unmet cutover_prereq blocking an already-converted slug: compute_centroids.*\(informational — does not name a slug in this run\)/);
+  });
+
+  it('RED-proof (EP-D13-adjacent, P9) — when the VALIDATED step IS the blocked slug, it still hard-stops (the GREEN test above is a real scope narrowing, not a blanket suppression)', () => {
+    let threw = false;
+    let out = '';
+    try {
+      out = execFileSync('node', [STEP_VALIDATE, '--step=compute_centroids', '--fast'], {
+        cwd: REPO_ROOT,
+        encoding: 'utf8',
+        env: { ...process.env, BUILDO_PROGRAMME_ITEMS_PATH: BAD_FIXTURE },
+      });
+    } catch (err) {
+      threw = true;
+      out = String((err as { stdout?: string }).stdout ?? '');
+    }
+    expect(threw, 'the NAMED slug\'s own --fast run must still hard-stop').toBe(true);
+    expect(out).not.toMatch(/informational — does not name a slug in this run/);
+  });
+
   it('GREEN — the same slug, same shape, but the item is BUILT — passes clean (proves the finding names the STATUS, not the fixture)', () => {
     const out = execFileSync('node', [STEP_VALIDATE, '--step=compute_centroids', '--fast'], {
       cwd: REPO_ROOT,

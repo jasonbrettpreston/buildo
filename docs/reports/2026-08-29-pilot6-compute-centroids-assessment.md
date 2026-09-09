@@ -1356,7 +1356,7 @@ from the run that actually performed it, not from a `capture-step-golden.js` inv
 - compare ran: true · diffs found: 67 · unexplained: 0
 
 ### Test suite (item iii)
-- 770/786 passed (suite success=true)
+- 822/846 passed (suite success=false)
 
 ### Policy coverage matrix (item vi) — Spec 124 Rules 1-13
 

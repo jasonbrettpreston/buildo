@@ -726,7 +726,7 @@ describe('runEnrichPhase (LG-28) — logic tests against a fake pool', () => {
       if (/INSERT INTO enrich_parcels_pass3_scope/.test(text)) return { rows: [], rowCount: 3 };
       // WF3 enrich_parcels double-run incident (2026-09-07) — the two-key inner lock
       // both the shared-txn client and the post_commit client acquire on themselves.
-      if (/pg_try_advisory_xact_lock\(\$1, \$2\)/.test(text)) return { rows: [{ acquired: innerLockAcquired }] };
+      if (/pg_try_advisory(?:_xact)?_lock\(\$1, \$2\)/.test(text)) return { rows: [{ acquired: innerLockAcquired }] };
       if (/^SHOW statement_timeout$/i.test(text)) {
         return { rows: [{ statement_timeout: sessionStatementTimeoutMs === undefined ? SESSION_DEFAULT : `${sessionStatementTimeoutMs}ms` }] };
       }
@@ -758,6 +758,12 @@ describe('runEnrichPhase (LG-28) — logic tests against a fake pool', () => {
           params.push(values ?? []);
           const m = /^SET LOCAL statement_timeout = (\d+)$/.exec(text);
           if (m) statementTimeoutMs = Number(m[1]);
+          // EP-D13 H1 fix (pilot 9 commit 8 P9, 2026-09-08) — SET LOCAL is scoped to the
+          // CURRENT transaction only; a real Postgres session reverts to the session
+          // default the instant that transaction COMMITs or ROLLBACKs. Modelled here so a
+          // per-batch flushBatch transaction's own SET LOCAL cannot leak into whatever
+          // this connection does next.
+          if (/^COMMIT$/.test(text) || /^ROLLBACK$/.test(text)) statementTimeoutMs = undefined;
           return answer(text, statementTimeoutMs);
         };
         const client = { query: clientQuery, release: () => {} };
@@ -873,8 +879,15 @@ describe('runEnrichPhase (LG-28) — logic tests against a fake pool', () => {
     // scope hand-off INSERT (inside that same shared txn, target table "fixture_scope" in
     // this fixture) having already been issued.
     expect(pool.sql.some((s) => /INSERT INTO fixture_scope/.test(s))).toBe(true);
-    // And no ROLLBACK was issued against the shared-txn client for the four completed passes.
-    expect(pool.sql.filter((s) => s === 'ROLLBACK')).toHaveLength(1); // only pass 5's own dedicated post-commit txn rolls back
+    // EP-D13 H1 fix (pilot 9 commit 8 P9, 2026-09-08) — pass 5 no longer runs inside ONE
+    // wrapping transaction (each batch flush is its own short BEGIN/COMMIT via
+    // ctx.flushBatch); this fixture's own throw fires BEFORE any batch is ever flushed,
+    // so genuinely ZERO transactions (and zero ROLLBACKs) exist on the post_commit
+    // connection — there is nothing to roll back, which is itself the point: a pass-5
+    // failure with no batches yet committed cannot possibly touch passes 1-4's own
+    // ALREADY-COMMITTED work (proven above by the scope hand-off INSERT already present).
+    expect(pool.sql.filter((s) => s === 'ROLLBACK')).toHaveLength(0);
+    expect(pool.sql.filter((s) => s === 'BEGIN')).toHaveLength(1); // the shared-txn phases' own single wrapping transaction — nothing from post_commit
   });
 
   it('timeouts applied per shared phase — SET LOCAL statement_timeout/lock_timeout issued, minutes converted to milliseconds, before each shared phase runs', async () => {
@@ -925,22 +938,45 @@ describe('runEnrichPhase (LG-28) — logic tests against a fake pool', () => {
       .rejects.toThrow('column "foo" does not exist');
   });
 
-  it('timeouts applied to the post_commit phase — a DEDICATED connection\'s own SET LOCAL statement_timeout, converted from enrich_parcels_pass5_timeout_minutes, and PROVABLE via SHOW on that SAME session (Fold B2 / coordinator addendum, commit 7e/2): a live SET LOCAL, not a config-value inspection — plus session isolation against a sibling client', async () => {
+  it('timeouts applied PER BATCH in the post_commit phase (EP-D13 H1 fix, pilot 9 commit 8 P9, 2026-09-08) — SET LOCAL statement_timeout is scoped to EACH batch\'s own short transaction, PROVABLE via SHOW issued INSIDE that same batch (still the bound value) and SHOW issued AFTER the pass completes (reverted to the session default, since that batch\'s transaction already committed) — plus session isolation against a sibling client', async () => {
     const passLog: Array<{ name: string; txn: string }> = [];
-    const compute = fakeCompute(passLog);
+    let showInsideBatch: { rows: Array<{ statement_timeout: string }> } | null = null;
+    const compute = fakeCompute(passLog, {
+      passImpl: {
+        // ctx.flushBatch accepts an arbitrary (sql, params) pair — using it to run a bare
+        // SHOW (not a real UPDATE) is a legitimate exercise of the SAME seam a real batch
+        // UPDATE goes through: BEGIN; SET LOCAL statement_timeout/lock_timeout; <sql>; COMMIT.
+        optimal_config: async (_client: unknown, ctx: unknown) => {
+          showInsideBatch = (await (ctx as { flushBatch: (sql: string, params: unknown[]) => Promise<unknown> }).flushBatch('SHOW statement_timeout', [])) as { rows: Array<{ statement_timeout: string }> };
+          return { scoped: 0, updated: 0, updatedIds: [] };
+        },
+      },
+    });
     const pool = fakePool();
     await stepLib.runEnrichPhase(baseArgs(fixtureDescriptor(), pool, compute) as never);
     // 10 minutes * 60000 = 600000ms.
     expect(pool.sql).toContain('SET LOCAL statement_timeout = 600000');
+    expect(showInsideBatch, 'the passImpl above must have actually run').not.toBeNull();
+    expect(
+      showInsideBatch!.rows[0]!.statement_timeout,
+      'SHOW statement_timeout INSIDE the batch\'s own short transaction must read back the bound value, not the session default',
+    ).toBe('600000ms');
     // The fixture's own call order (proven by the "phase ordering" test above): clients[0] is
-    // the shared-txn client (pipeline.withTransaction's own pool.connect()), clients[1] is the
-    // post_commit phase's dedicated connection (runEnrichPhase's own pool.connect() at the
-    // post-commit loop). SHOW on THAT session — never inspecting config — is the regression
-    // lock's own assertion (RE-FREEZE #3, Spec 122 §8; Fold B2).
-    expect(pool.clients.length).toBeGreaterThanOrEqual(2);
-    const postCommitClient = pool.clients[1]!;
-    const bound = (await postCommitClient.query('SHOW statement_timeout')) as { rows: Array<{ statement_timeout: string }> };
-    expect(bound.rows[0]!.statement_timeout, 'SHOW statement_timeout on the post_commit phase\'s OWN session must read back the bound value, not the session default').toBe('600000ms');
+    // heartbeatClient (EP-D12, pilot 9 commit 8 P8 — acquired FIRST, before the shared txn even
+    // opens), clients[1] is the shared-txn client (pipeline.withTransaction's own
+    // pool.connect()), clients[2] is the post_commit phase's dedicated connection
+    // (runEnrichPhase's own pool.connect() at the post-commit loop). SHOW on THAT session,
+    // issued AFTER the pass has already returned (i.e. after the one batch's own BEGIN/SET
+    // LOCAL/COMMIT already ran) — never inspecting config — proves SET LOCAL's scope ended
+    // with that batch's COMMIT, not with the whole phase (RE-FREEZE #3, Spec 122 §8; Fold B2;
+    // EP-D13 H1 fix, P9).
+    expect(pool.clients.length).toBeGreaterThanOrEqual(3);
+    const postCommitClient = pool.clients[2]!;
+    const afterPass = (await postCommitClient.query('SHOW statement_timeout')) as { rows: Array<{ statement_timeout: string }> };
+    expect(
+      afterPass.rows[0]!.statement_timeout,
+      'SHOW statement_timeout on the SAME session, issued AFTER the pass completes, must read the SESSION DEFAULT — the bound batch already committed and released its SET LOCAL scope',
+    ).toBe('0');
     // Isolation: a FRESH client (a different session) reads the untouched default — a live
     // SET LOCAL bound on one connection must never leak onto a pooled sibling checkout.
     const siblingClient = await pool.connect();
@@ -1104,7 +1140,7 @@ describe('runEnrichPhase (LG-28) — logic tests against a fake pool', () => {
         if (/own_last_completed/.test(text)) return { rows: [] };
         if (/COUNT\(\*\)::int AS n FROM parcels/.test(text)) return { rows: [{ n: 0 }] };
         if (/INSERT INTO enrich_parcels_pass3_scope/.test(text)) return { rows: [], rowCount: 3 };
-        if (/pg_try_advisory_xact_lock\(\$1, \$2\)/.test(text)) return { rows: [{ acquired: true }] };
+        if (/pg_try_advisory(?:_xact)?_lock\(\$1, \$2\)/.test(text)) return { rows: [{ acquired: true }] };
         return { rows: [] };
       };
       const trackedPool = {
@@ -1166,16 +1202,18 @@ describe('runEnrichPhase (LG-28) — logic tests against a fake pool', () => {
       const compute = fakeCompute(passLog);
       const pool = fakePool();
       await stepLib.runEnrichPhase(baseArgs(fixtureDescriptor(), pool, compute) as never);
-      const lockCalls = pool.sql.filter((s) => /pg_try_advisory_xact_lock\(\$1, \$2\)/.test(s));
+      const lockCalls = pool.sql.filter((s) => /pg_try_advisory(?:_xact)?_lock\(\$1, \$2\)/.test(s));
       expect(lockCalls.length, 'the shared-txn phase must acquire the inner lock exactly once').toBeGreaterThanOrEqual(1);
       const lockIdx = pool.sql.indexOf(lockCalls[0]!);
       // fixtureDescriptor's identity.lock is 999999 (the fixture's own lock id).
       expect(pool.params[lockIdx]).toEqual([999999, 1]);
-      // clients[0] is pipeline.withTransaction's own connect() — the SAME client that then
-      // runs the passes (proven by the phase-ordering test above); the lock call must be the
-      // FIRST statement issued on it, before the pid probe.
-      const client0 = pool.clients[0]!;
-      expect(client0).toBeDefined();
+      // clients[0] is EP-D12's own heartbeatClient (pilot 9 commit 8 P8) — acquired FIRST,
+      // before the shared txn even opens. clients[1] is pipeline.withTransaction's own
+      // connect() — the SAME client that then runs the passes (proven by the phase-ordering
+      // test above); the lock call must be the FIRST statement issued on IT, before the pid
+      // probe.
+      const client1 = pool.clients[1]!;
+      expect(client1).toBeDefined();
     });
 
     it('a genuinely concurrent invocation (the inner lock already held elsewhere) makes runEnrichPhase self-skip with ZERO passes run and ZERO writes — never a crash', async () => {
@@ -1194,7 +1232,7 @@ describe('runEnrichPhase (LG-28) — logic tests against a fake pool', () => {
       const compute = fakeCompute(passLog);
       const pool = fakePool();
       await stepLib.runEnrichPhase(baseArgs(fixtureDescriptor(), pool, compute) as never);
-      const lockCalls = pool.sql.filter((s) => /pg_try_advisory_xact_lock\(\$1, \$2\)/.test(s));
+      const lockCalls = pool.sql.filter((s) => /pg_try_advisory(?:_xact)?_lock\(\$1, \$2\)/.test(s));
       // One on the shared-txn client, one on the post_commit client — two DISTINCT connections,
       // each independently proving exclusivity for its own transaction's lifetime.
       expect(lockCalls.length, 'both the shared-txn AND post_commit phases must each acquire the inner lock on their own connection').toBe(2);
@@ -1205,6 +1243,117 @@ describe('runEnrichPhase (LG-28) — logic tests against a fake pool', () => {
     expect(stepLib.isEnrichStep({ execution: { shape: 'enrich' } })).toBe(true);
     expect(stepLib.isEnrichStep({ execution: { shape: 'cascade' } })).toBe(false);
     expect(stepLib.isEnrichStep({})).toBe(false);
+  });
+
+  // EP-D12 (pilot 9 commit 8 P8, 2026-09-08) — cloud evidence (pipeline_runs row 4429,
+  // live): current_pass/last_heartbeat_at stayed NULL for the ENTIRE run. A genuine
+  // BEHAVIOURAL lock, not a call-trace assertion: this fake pool models REAL per-connection
+  // commit semantics (a client with an open BEGIN buffers its writes until COMMIT; a client
+  // that never issues BEGIN — autocommit — flushes immediately), so the test actually
+  // exercises "is the write visible to an independent reader before the phase's own
+  // transaction commits", the exact property the fix promises. `fakePool()` (the shared
+  // helper above) does NOT model this — every one of its writes lands in one flat trace
+  // with no commit/visibility distinction — which is why this test builds its own.
+  describe('EP-D12 — heartbeat writes are visible to an independent client BEFORE the phase transaction commits', () => {
+    function transactionalFakePool() {
+      const committed: { records_meta: Record<string, unknown> } = { records_meta: {} };
+      const connectedCount = { n: 0 };
+      const heartbeatClients = new Set<object>();
+
+      function makeClient(): { query: (text: string, values?: unknown[]) => Promise<{ rows: unknown[] }>; release: () => void } {
+        let inTxn = false;
+        let pendingRecordsMeta: Record<string, unknown> | null = null;
+        const self = {
+          query: async (text: string, values?: unknown[]) => {
+            if (/pg_extension|information_schema\.columns|pg_indexes/.test(text)) return { rows: [{ present: 1 }] };
+            if (/pg_backend_pid/.test(text)) return { rows: [{ pid: 1 }] };
+            if (/own_last_completed/.test(text)) return { rows: [] };
+            if (/COUNT\(\*\)::int AS n FROM parcels/.test(text)) return { rows: [{ n: 0 }] };
+            if (/INSERT INTO fixture_scope/.test(text)) return { rows: [], rowCount: 0 };
+            if (/pg_try_advisory(?:_xact)?_lock\(\$1, \$2\)/.test(text)) return { rows: [{ acquired: true }] };
+            if (/^SET LOCAL/.test(text)) return { rows: [] };
+            if (/^BEGIN$/.test(text)) { inTxn = true; pendingRecordsMeta = null; return { rows: [] }; }
+            if (/^COMMIT$/.test(text)) {
+              if (pendingRecordsMeta) Object.assign(committed.records_meta, pendingRecordsMeta);
+              inTxn = false;
+              return { rows: [] };
+            }
+            if (/^ROLLBACK$/.test(text)) { inTxn = false; pendingRecordsMeta = null; return { rows: [] }; }
+            if (/UPDATE pipeline_runs[\s\S]*last_heartbeat_at/.test(text)) {
+              const update = { last_heartbeat_at: 'now', current_pass: values?.[0] };
+              if (inTxn) {
+                // Buffered on THIS client's own open transaction — not yet visible
+                // to any other client, exactly like a real Postgres UPDATE inside
+                // an uncommitted transaction.
+                pendingRecordsMeta = { ...(pendingRecordsMeta ?? {}), ...update };
+              } else {
+                // Autocommit — no BEGIN was ever issued on this client — flushes
+                // to the shared committed store the instant the statement runs.
+                Object.assign(committed.records_meta, update);
+              }
+              return { rows: [] };
+            }
+            if (/SELECT records_meta FROM pipeline_runs/.test(text)) {
+              return { rows: [{ records_meta: { ...committed.records_meta } }] };
+            }
+            return { rows: [] };
+          },
+          release: () => {},
+        };
+        return self;
+      }
+
+      return {
+        query: async (text: string, values?: unknown[]) => makeClient().query(text, values), // pool-level = always autocommit
+        connect: async () => {
+          connectedCount.n += 1;
+          const client = makeClient();
+          heartbeatClients.add(client);
+          return client;
+        },
+        connectedCount,
+        readCommitted: () => ({ ...committed.records_meta }),
+      };
+    }
+
+    it('a heartbeat issued mid-phase (zoning) is READ back by an independent monitor client while the shared-txn client is still open (no COMMIT issued yet)', async () => {
+      const pool = transactionalFakePool();
+      let observedDuringPhase: Record<string, unknown> | null = null;
+      const passLog: Array<{ name: string; txn: string }> = [];
+      const compute = fakeCompute(passLog, {
+        passImpl: {
+          zoning: async () => {
+            // Mid-phase: the shared-txn client has issued BEGIN but not COMMIT (we are
+            // still INSIDE pipeline.withTransaction's `fn(client)` callback). A fresh,
+            // independent "monitor" connection — modelling an operator's own psql session
+            // or this pilot's own stall-diagnostic tooling — reads pipeline_runs directly.
+            const monitor = await pool.connect();
+            const res = await monitor.query('SELECT records_meta FROM pipeline_runs WHERE id = $1', [4242]);
+            observedDuringPhase = (res.rows[0] as { records_meta: Record<string, unknown> }).records_meta;
+            monitor.release();
+            return { scoped: 0, updated: 0, updatedIds: [] };
+          },
+        },
+      });
+      await stepLib.runEnrichPhase(baseArgs(fixtureDescriptor(), pool as unknown as ReturnType<typeof fakePool>, compute) as never);
+      expect(observedDuringPhase, 'the monitor must have observed SOMETHING (a null read here means the test itself is broken, not the fix)').not.toBeNull();
+      expect(
+        (observedDuringPhase as unknown as Record<string, unknown>).last_heartbeat_at,
+        'the pre-phase heartbeat (recordHeartbeat(heartbeatClient, ..., 0) issued before passSpec.run) must already be visible to an independent client — proves it did NOT go through the still-open shared-txn client',
+      ).toBe('now');
+      expect(
+        (observedDuringPhase as unknown as Record<string, unknown>).current_pass,
+        'must name the CURRENT phase (zoning), not a stale value from a prior phase',
+      ).toBe('zoning');
+      // heartbeatClient (1, connect()-ed ONCE and reused for every heartbeat/stall call
+      // across BOTH phase loops) + the shared-txn client (1, via pipeline.withTransaction)
+      // + post_commit's own two (postClient + streamClient) + this test's OWN one
+      // throwaway monitor connection = 5. If heartbeatClient were instead re-acquired
+      // per heartbeat call (the naive alternative this fix rejects), this count would be
+      // much higher — 4 shared-phase heartbeats + 2 post_commit heartbeats = 6 MORE
+      // connections on top of these 5.
+      expect(pool.connectedCount.n, 'heartbeatClient must be acquired via pool.connect() exactly once, not once per heartbeat call').toBe(5);
+    });
   });
 });
 

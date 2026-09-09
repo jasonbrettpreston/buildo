@@ -2085,15 +2085,24 @@ async function runRecorderPhase({ descriptor, pool, compute, config, chainId, lo
  * COALESCE merge so an earlier phase's own fields survive. Never throws (§3.6 "never
  * crash the pass it is instrumenting") — a failed write is caught and logged. No-ops
  * when `runId` is null (a standalone invocation with no `pipeline_runs` row to update).
- * @param {import('pg').Pool} pool
+ * EP-D12 fix (pilot 9 commit 8 P8, 2026-09-08): the caller (`runEnrichPhase`) now always
+ * passes a DEDICATED, PRE-ACQUIRED autocommit client (`heartbeatClient`, held for the
+ * whole call, never inside BEGIN/COMMIT/ROLLBACK) rather than the bare `pool` — a
+ * per-call `pool.query()` checkout can queue behind the phase's own long-held
+ * connection(s) under a constrained connection ceiling (measured on cloud: heartbeat
+ * fields stayed NULL for an entire run, `pipeline_runs` row 4429), making the write
+ * observably invisible for as long as the phase itself runs even though it was never
+ * literally inside the phase's own transaction. Duck-typed on `.query()` — works
+ * identically whether passed a `Pool` or a checked-out `PoolClient`.
+ * @param {import('pg').Pool | import('pg').PoolClient} writer
  * @param {number|null} runId
  * @param {string} currentPhase
  * @param {number} rowsProcessed
  */
-async function recordHeartbeat(pool, runId, currentPhase, rowsProcessed) {
+async function recordHeartbeat(writer, runId, currentPhase, rowsProcessed) {
   if (runId == null) return;
   try {
-    await pool.query(
+    await writer.query(
       `UPDATE pipeline_runs
           SET records_meta = COALESCE(records_meta, '{}'::jsonb) || jsonb_build_object(
                 'last_heartbeat_at', now(),
@@ -2114,25 +2123,27 @@ async function recordHeartbeat(pool, runId, currentPhase, rowsProcessed) {
  * version: this one takes the CURRENT phase's own backend `pid` (the runner now manages
  * every phase's client directly, unlike the legacy `pipeline.streamQuery`-hidden
  * connection) and probes `pg_stat_activity` for that exact pid — precise, not a
- * domain-column `ILIKE` guess. Runs on `pool.query` — a FRESH physical connection, not
- * the (possibly stuck) client being probed — so the capture can complete while the
- * probed session is wedged. Never throws; no-ops when `runId` is null.
- * @param {import('pg').Pool} pool
+ * domain-column `ILIKE` guess. Runs on a DEDICATED client (`heartbeatClient`, EP-D12 fix,
+ * pilot 9 commit 8 P8) — a FRESH physical connection, not the (possibly stuck) client
+ * being probed — so the capture can complete while the probed session is wedged, and its
+ * own write is visible immediately rather than queuing behind a per-call pool checkout
+ * under a constrained connection ceiling. Never throws; no-ops when `runId` is null.
+ * @param {import('pg').Pool | import('pg').PoolClient} writer
  * @param {number|null} runId
  * @param {number|null} pid
  */
-async function captureStallDiagnostic(pool, runId, pid) {
+async function captureStallDiagnostic(writer, runId, pid) {
   if (runId == null) return;
   try {
     const probe = pid != null
-      ? await pool.query(
+      ? await writer.query(
         `SELECT pid, state, wait_event_type, wait_event, query_start
            FROM pg_stat_activity WHERE pid = $1`,
         [pid],
       )
       : { rows: [] };
     const diag = probe.rows[0] || { note: 'no matching backend found in pg_stat_activity' };
-    await pool.query(
+    await writer.query(
       `UPDATE pipeline_runs
           SET records_meta = COALESCE(records_meta, '{}'::jsonb) || jsonb_build_object(
                 'stall_diagnostic', $1::jsonb,
@@ -2157,19 +2168,19 @@ async function captureStallDiagnostic(pool, runId, pid) {
  * within `2 * intervalMs`, one diagnostic capture fires (never spams — `fired` latches
  * until the caller starts a fresh ticker for the NEXT phase). Returns a `stop()`
  * closure — callers MUST clear it in a `finally` once the phase call settles.
- * @param {import('pg').Pool} pool
+ * @param {import('pg').Pool | import('pg').PoolClient} writer
  * @param {number|null} runId
  * @param {number} intervalMs
  * @param {() => number|null} getPid
  * @returns {() => void}
  */
-function startStallTicker(pool, runId, intervalMs, getPid) {
+function startStallTicker(writer, runId, intervalMs, getPid) {
   if (!intervalMs || intervalMs <= 0) return () => {};
   let fired = false;
   const timer = setInterval(() => {
     if (fired) return;
     fired = true;
-    captureStallDiagnostic(pool, runId, getPid()).catch((err) => {
+    captureStallDiagnostic(writer, runId, getPid()).catch((err) => {
       pipeline.log.warn('[step/enrich]', `stall ticker diagnostic dispatch failed: ${err.message}`);
     });
   }, intervalMs * 2);
@@ -2390,6 +2401,23 @@ async function runEnrichPhase({ descriptor, pool, compute, config, chainId, log,
   // crash posture applies as it always did).
   const ENRICH_INNER_LOCK_SUBKEY = 1;
 
+  // EP-D12 fix (pilot 9 commit 8 P8, 2026-09-08) — a DEDICATED, PRE-ACQUIRED, autocommit
+  // client for heartbeat/stall_diagnostic writes only, held for this call's ENTIRE
+  // lifetime (both the shared-txn phase loop and the post_commit phase loop) and released
+  // in the `finally` below. Cloud evidence (pipeline_runs row 4429, live): `current_pass`/
+  // `last_heartbeat_at` stayed NULL for the whole run — recordHeartbeat/
+  // captureStallDiagnostic already called `pool.query(...)` (a checked-out-then-returned
+  // connection per call, never the phase's own pinned `client`/`postClient`), but under
+  // cloud's tighter Supavisor-pooled connection ceiling that per-call checkout can queue
+  // behind the phase's own long-held connection(s) — invisible-until-released is
+  // observably identical to invisible-until-COMMIT from an external monitor's point of
+  // view. A client acquired ONCE, up front, and held for the duration cannot starve on a
+  // later checkout the way a fresh per-call `pool.query()` can. Never used for BEGIN/
+  // COMMIT/ROLLBACK — every write on it is its own autocommit statement, visible to any
+  // other session (including this same process's own monitoring query) the instant it
+  // executes, regardless of whether the phase's own transaction is still open.
+  const heartbeatClient = await pool.connect();
+  try {
   await pipeline.withTransaction(pool, async (client) => {
     const lockRow = await client.query(
       'SELECT pg_try_advisory_xact_lock($1, $2) AS acquired',
@@ -2423,8 +2451,8 @@ async function runEnrichPhase({ descriptor, pool, compute, config, chainId, log,
       // stdout live, confirmed not itself at fault), needs a visible phase start/end + duration.
       log.info(tag, `phase ${phase.name} starting (shared txn, timeout ${timeoutMinutes}min)`);
       const phaseStartMs = Date.now();
-      await recordHeartbeat(pool, ownRunId, phase.name, 0);
-      const stopTicker = startStallTicker(pool, ownRunId, heartbeatMs, () => pid);
+      await recordHeartbeat(heartbeatClient, ownRunId, phase.name, 0);
+      const stopTicker = startStallTicker(heartbeatClient, ownRunId, heartbeatMs, () => pid);
       try {
         // WF3 stall commit 1 — a SET LOCAL-triggered abort dies LOUD with the
         // phase's OWN name (Spec 115 §2.2 fail-safe-loud), never a bare
@@ -2446,7 +2474,7 @@ async function runEnrichPhase({ descriptor, pool, compute, config, chainId, log,
       } finally {
         stopTicker();
       }
-      await recordHeartbeat(pool, ownRunId, phase.name, 1);
+      await recordHeartbeat(heartbeatClient, ownRunId, phase.name, 1);
       log.info(tag, `phase ${phase.name} completed in ${Date.now() - phaseStartMs}ms`);
     }
 
@@ -2501,69 +2529,102 @@ async function runEnrichPhase({ descriptor, pool, compute, config, chainId, log,
     const timeoutMs = Math.round(timeoutMinutes * 60000);
     const postClient = await pool.connect();
     let streamClient = null;
+    let lockAcquired = false;
     try {
-      await postClient.query('BEGIN');
       let pid = null;
-      try {
-        // WF3 enrich_parcels double-run incident (2026-09-07) — same reasoning as the
-        // shared-txn phases above: the outer `withAdvisoryLock` connection can die while
-        // this phase is still working, since the outer lock is XACT-scoped and this phase
-        // runs on ITS OWN dedicated connection (`postClient`, opened after the shared txn
-        // already COMMITted — the shared-txn's own two-key lock is ALSO already released
-        // by COMMIT, so there is nothing left to "re-check"; this connection must acquire
-        // its OWN copy). Same two-key sub-lock, same subkey (the shared-txn phase and this
-        // one never run concurrently within one invocation, so reusing the subkey is
-        // safe) — released automatically at this transaction's COMMIT/ROLLBACK/disconnect.
-        const postLockRow = await postClient.query(
-          'SELECT pg_try_advisory_xact_lock($1, $2) AS acquired',
-          [descriptor.identity.lock, ENRICH_INNER_LOCK_SUBKEY],
+      // WF3 enrich_parcels double-run incident (2026-09-07) — same reasoning as the
+      // shared-txn phases above: the outer `withAdvisoryLock` connection can die while
+      // this phase is still working, since the outer lock is XACT-scoped and this phase
+      // runs on ITS OWN dedicated connection (`postClient`, opened after the shared txn
+      // already COMMITted — the shared-txn's own two-key lock is ALSO already released
+      // by COMMIT, so there is nothing left to "re-check"; this connection must acquire
+      // its OWN copy). Same two-key sub-lock, same subkey (the shared-txn phase and this
+      // one never run concurrently within one invocation, so reusing the subkey is safe).
+      // EP-D13 H1 fix (pilot 9 commit 8 P9, 2026-09-08): now SESSION-scoped
+      // (`pg_try_advisory_lock`, not the `_xact_` variant) — this phase's write side no
+      // longer runs inside one wrapping transaction (see `flushBatch` below, each batch
+      // is its own short BEGIN/COMMIT), so an xact-scoped lock would release after the
+      // FIRST batch's own COMMIT, leaving every subsequent batch unprotected. Explicitly
+      // released via `pg_advisory_unlock` in the `finally` below — a session lock is
+      // NOT auto-released at any one batch's COMMIT/ROLLBACK, only at explicit unlock or
+      // full disconnect, so a leaked lock would otherwise persist across this pooled
+      // connection's NEXT reuse by a different client.
+      const postLockRow = await postClient.query(
+        'SELECT pg_try_advisory_lock($1, $2) AS acquired',
+        [descriptor.identity.lock, ENRICH_INNER_LOCK_SUBKEY],
+      );
+      lockAcquired = !!postLockRow.rows[0].acquired;
+      if (!lockAcquired) {
+        throw Object.assign(
+          new Error(`${tag} post_commit phase "${phase.name}": advisory lock (${descriptor.identity.lock}, ${ENRICH_INNER_LOCK_SUBKEY}) held elsewhere`),
+          { advisoryLockDenied: true },
         );
-        if (!postLockRow.rows[0].acquired) {
-          throw Object.assign(
-            new Error(`${tag} post_commit phase "${phase.name}": advisory lock (${descriptor.identity.lock}, ${ENRICH_INNER_LOCK_SUBKEY}) held elsewhere`),
-            { advisoryLockDenied: true },
-          );
-        }
-        const pidRow = await postClient.query('SELECT pg_backend_pid() AS pid');
-        pid = pidRow.rows[0] ? Number(pidRow.rows[0].pid) : null;
-        if (timeoutMs > 0) await postClient.query(`SET LOCAL statement_timeout = ${timeoutMs}`);
-        const streamBatchSize = Number(config.enrich_parcels_pass5_stream_batch_size);
-        // Connected eagerly (mirrors postClient above) rather than lazily inside the
-        // `stream:` closure — an async generator cannot itself `await` a connect() before
-        // yielding without an extra wrapper layer, and every post-commit phase today does
-        // stream, so there is no live no-op case this would needlessly cost a connection on.
-        streamClient = await pool.connect();
-        const passCtx = {
-          full, scopeWhere: 'TRUE', staleOverlays, clock, log, config, scopeRunId,
-          stream: (sql, params, opts) => streamOverClient(streamClient, sql, params, { batchSize: streamBatchSize, ...opts }),
-        };
-        await recordHeartbeat(pool, ownRunId, phase.name, 0);
-        const stopTicker = startStallTicker(pool, ownRunId, heartbeatMs, () => pid);
-        try {
-          passRaw[phase.name] = await (async () => {
-            try {
-              return await passSpec.run(postClient, passCtx, config);
-            } catch (err) {
-              if (err && (err.code === '57014' || err.code === '55P03')) {
-                const kind = err.code === '57014' ? 'statement_timeout' : 'lock_timeout';
-                const wrapped = new Error(`${tag} ${phase.name} aborted by ${kind}: ${err.message}`);
-                wrapped.code = err.code;
-                wrapped.cause = err;
-                throw wrapped;
-              }
-              throw err;
-            }
-          })();
-        } finally {
-          stopTicker();
-        }
-        await recordHeartbeat(pool, ownRunId, phase.name, 1);
-        await postClient.query('COMMIT');
-      } catch (err) {
-        await postClient.query('ROLLBACK').catch(() => {});
-        throw err;
       }
+      const pidRow = await postClient.query('SELECT pg_backend_pid() AS pid');
+      pid = pidRow.rows[0] ? Number(pidRow.rows[0].pid) : null;
+      const streamBatchSize = Number(config.enrich_parcels_pass5_stream_batch_size);
+      // Connected eagerly (mirrors postClient above) rather than lazily inside the
+      // `stream:` closure — an async generator cannot itself `await` a connect() before
+      // yielding without an extra wrapper layer, and every post-commit phase today does
+      // stream, so there is no live no-op case this would needlessly cost a connection on.
+      streamClient = await pool.connect();
+      // EP-D13 H1 fix (P9) — `flushBatch` replaces the single wrapping transaction that
+      // held ALL ~2,200 batches' worth of writes open for the pass's ENTIRE duration
+      // (measured: hit the 300-min cloud budget, run 34231689122, still in pass 5).
+      // Each call is its OWN short transaction (`git show 7e75c50e^`'s legacy
+      // `flushOptConfigBatch(pool, ...)` fence: every batch there was its own independent
+      // autocommit `pool.query()`, never wrapped in a transaction at all — this restores
+      // that same per-batch commit boundary, with a per-batch SET LOCAL safety net legacy
+      // never had). Injected via `passCtx`, mirroring `stream`'s own seam-injection
+      // pattern (Spec 122 §5.5) — compute stays JUST compute (SQL authorship only),
+      // transaction boundaries stay the runner's job (Rule 2).
+      const flushBatch = async (sql, params) => {
+        await postClient.query('BEGIN');
+        try {
+          if (timeoutMs > 0) await postClient.query(`SET LOCAL statement_timeout = ${timeoutMs}`);
+          if (lockTimeoutMs > 0) await postClient.query(`SET LOCAL lock_timeout = ${lockTimeoutMs}`);
+          const result = await postClient.query(sql, params);
+          await postClient.query('COMMIT');
+          return result;
+        } catch (err) {
+          await postClient.query('ROLLBACK').catch(() => {});
+          throw err;
+        }
+      };
+      const passCtx = {
+        full, scopeWhere: 'TRUE', staleOverlays, clock, log, config, scopeRunId,
+        stream: (sql, params, opts) => streamOverClient(streamClient, sql, params, { batchSize: streamBatchSize, ...opts }),
+        flushBatch,
+      };
+      await recordHeartbeat(heartbeatClient, ownRunId, phase.name, 0);
+      const stopTicker = startStallTicker(heartbeatClient, ownRunId, heartbeatMs, () => pid);
+      try {
+        passRaw[phase.name] = await (async () => {
+          try {
+            return await passSpec.run(postClient, passCtx, config);
+          } catch (err) {
+            if (err && (err.code === '57014' || err.code === '55P03')) {
+              const kind = err.code === '57014' ? 'statement_timeout' : 'lock_timeout';
+              const wrapped = new Error(`${tag} ${phase.name} aborted by ${kind}: ${err.message}`);
+              wrapped.code = err.code;
+              wrapped.cause = err;
+              throw wrapped;
+            }
+            throw err;
+          }
+        })();
+      } finally {
+        stopTicker();
+      }
+      await recordHeartbeat(heartbeatClient, ownRunId, phase.name, 1);
+      // No outer COMMIT/ROLLBACK here — every batch already committed (or rolled back)
+      // on its own via `flushBatch`; a genuine failure above leaves whatever batches
+      // already succeeded COMMITted, matching legacy's own partial-progress-preserved
+      // behaviour (never one giant all-or-nothing rollback of ~90 minutes of work).
     } finally {
+      if (lockAcquired) {
+        await postClient.query('SELECT pg_advisory_unlock($1, $2)', [descriptor.identity.lock, ENRICH_INNER_LOCK_SUBKEY]).catch(() => {});
+      }
       if (streamClient) streamClient.release();
       postClient.release();
     }
@@ -2671,6 +2732,12 @@ async function runEnrichPhase({ descriptor, pool, compute, config, chainId, log,
     writeSkipped: false,
     skipped: false,
   };
+  } finally {
+    // EP-D12 (P8) — released on EVERY exit path from the try above (both early
+    // returns — shared-txn lock denied, post_commit lock denied — and the
+    // normal-completion return just above it), never leaked back to the pool.
+    heartbeatClient.release();
+  }
 }
 
 /**

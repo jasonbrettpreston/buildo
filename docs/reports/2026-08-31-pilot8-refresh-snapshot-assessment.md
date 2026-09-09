@@ -701,7 +701,7 @@ This report's every executed claim was independently re-executed (not re-read) b
 - compare ran: true · diffs found: 732 · unexplained: 0
 
 ### Test suite (item iii)
-- 770/786 passed (suite success=true)
+- 829/846 passed (suite success=false)
 
 ### Policy coverage matrix (item vi) — Spec 124 Rules 1-13
 

@@ -1512,6 +1512,18 @@ async function consumePendingScope(client, runId, stats, stamp, genuineIds, log)
  * connection the runner hands this pass AFTER passes 1-4's shared transaction commits.
  */
 async function runPass5(client, ctx, config) {
+  // EP-D13 H1 fix (pilot 9 commit 8 P9, 2026-09-08) — the main loop's write flush
+  // (below) routes through `ctx.flushBatch` (the runner's per-batch short-transaction
+  // seam, Spec 122 §5.5) rather than `client` directly: each batch commits (or rolls
+  // back) on its own instead of accumulating inside one ~90-minute transaction. Duck-
+  // typed to `.query()` so `flushOptConfigBatch`'s own body needs no change at all.
+  // Every OTHER statement in this function (the citywide backstop check just below,
+  // the reset UPDATE, the scope-consumed UPDATE, `consumePendingScope`'s own queries,
+  // the final scope-prune DELETE) still uses `client` directly — now genuinely
+  // autocommit per statement (no outer transaction wraps this function at all
+  // anymore), matching the legacy script's own `enrichOptimalConfig(pool, ...)`,
+  // where every one of these was ALSO an independent autocommit call.
+  const flushClient = { query: (sql, params) => ctx.flushBatch(sql, params) };
   const cw = await client.query(`SELECT 1 FROM neighbourhood_build_norms WHERE neighbourhood_id IS NULL AND structure_family = 'all' LIMIT 1`);
   if (!cw.rowCount) {
     throw new Error(`${TAG} optimal-config: no citywide (NULL,'all') neighbourhood_build_norms backstop — run compute_build_norms (permits chain) first`);
@@ -1558,9 +1570,9 @@ async function runPass5(client, ctx, config) {
           : null);
     if (effMbs != null && rawP50 != null && rawP50 > effMbs) stats.envelope_capped += 1;
     batch.push(row);
-    if (batch.length >= batchSize) { stats.updated += await flushOptConfigBatch(client, batch, stats.genuineIds); batch = []; }
+    if (batch.length >= batchSize) { stats.updated += await flushOptConfigBatch(flushClient, batch, stats.genuineIds); batch = []; }
   }
-  if (batch.length) stats.updated += await flushOptConfigBatch(client, batch, stats.genuineIds);
+  if (batch.length) stats.updated += await flushOptConfigBatch(flushClient, batch, stats.genuineIds);
 
   // D4'/S-2 — flip THIS run's own scope rows in ONE set-based UPDATE now that the loop above has
   // attempted every row it covers, THEN recover ONLY prior runs' leftover.

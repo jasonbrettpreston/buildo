@@ -2210,7 +2210,7 @@ above).*
 - compare ran: true · diffs found: 249 · unexplained: 0
 
 ### Test suite (item iii)
-- 770/786 passed (suite success=true)
+- 825/846 passed (suite success=false)
 
 ### Policy coverage matrix (item vi) — Spec 124 Rules 1-13
 

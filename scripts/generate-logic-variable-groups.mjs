@@ -122,7 +122,10 @@ const GROUP_ORDER = [
       "liar_gate_threshold",
       "commercial_shell_multiplier",
       "placeholder_cost_threshold",
-      "income_premium_tiers"
+      "income_premium_tiers",
+      "reno_coa_uplift_pct",
+      "reno_kitchen_gfa_pct",
+      "reno_bath_gfa_pct"
     ]
   },
   {
@@ -144,7 +147,23 @@ const GROUP_ORDER = [
       "massing_nearest_max_distance_m",
       "link_massing_link_rate_fail_pct",
       "link_massing_centroid_confidence",
-      "link_massing_nearest_confidence"
+      "link_massing_nearest_confidence",
+      "max_build_min_dimension_m",
+      "storey_height_m",
+      "garage_min_lot_sqm",
+      "garage_max_gfa_sqm",
+      "garage_min_footprint_sqm",
+      "accessory_max_coverage_pct",
+      "car_footprint_sqm",
+      "laneway_suite_max_gfa_sqm",
+      "laneway_suite_min_lot_sqm",
+      "laneway_suite_min_rear_yard_m",
+      "min_soft_landscaping_pct",
+      "laneway_suite_storeys",
+      "garden_suite_storeys",
+      "garden_suite_min_lot_sqm",
+      "garden_suite_min_rear_yard_m",
+      "garden_suite_max_gfa_sqm"
     ]
   },
   {
@@ -206,7 +225,8 @@ const GROUP_ORDER = [
       "assert_schema_csv_header_bytes",
       "assert_schema_geojson_probe_bytes",
       "enrich_parcels_zone_class_pct_pass_floor",
-      "enrich_parcels_zone_class_pct_warn_floor"
+      "enrich_parcels_zone_class_pct_warn_floor",
+      "mislink_footprint_lot_tol"
     ]
   },
   {
@@ -218,6 +238,7 @@ const GROUP_ORDER = [
       "load_ravines_invalid_geometry_fail_pct",
       "load_ravines_mass_delete_fail_pct",
       "load_ravines_download_timeout_ms",
+      "road_overlay_distance_m",
       "enrich_parcels_heartbeat_minutes",
       "enrich_parcels_pass_statement_timeout_minutes",
       "enrich_parcels_lock_timeout_ms",
@@ -231,7 +252,8 @@ const GROUP_ORDER = [
       "enrich_parcels_optcfg_batch_size",
       "enrich_parcels_pass5_stream_batch_size",
       "enrich_parcels_bbox_degree_divisor",
-      "enrich_parcels_pass5_timeout_minutes"
+      "enrich_parcels_pass5_timeout_minutes",
+      "enrich_parcels_defer_threshold_rows"
     ]
   },
   {

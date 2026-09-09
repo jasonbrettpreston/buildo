@@ -454,7 +454,7 @@ AFTER this report's own captures were last taken, unrelated to CC-D3 or the prob
 - compare ran: true · diffs found: 239 · unexplained: 0
 
 ### Test suite (item iii)
-- 770/786 passed (suite success=true)
+- 828/846 passed (suite success=false)
 
 ### Policy coverage matrix (item vi) — Spec 124 Rules 1-13
 

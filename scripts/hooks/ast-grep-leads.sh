@@ -127,6 +127,13 @@ while IFS= read -r f; do
   case "$f" in
     scripts/run-chain.js) ;;           # 2-arg form, separate namespace — exempt
     scripts/lib/pipeline.js) ;;        # helper implementation — exempt
+    scripts/lib/step/index.js) ;;      # EP-D13 H1 fix (pilot 9 commit 8 P9, 2026-09-08): runEnrichPhase's
+                                        # post_commit phase needs a SESSION-scoped two-key lock
+                                        # (pg_try_advisory_lock/pg_advisory_unlock) that survives across
+                                        # MANY short per-batch transactions — withAdvisoryLock's own shape
+                                        # (single-key, xact-scoped, one wrapping BEGIN/COMMIT) cannot do
+                                        # this; a second helper implementation, same exemption class as
+                                        # scripts/lib/pipeline.js above — exempt
     *)
       echo "footgun[direct-advisory-lock]: $f calls pg_try_advisory_lock directly. Use pipeline.withAdvisoryLock() instead (spec 47 §5, Bundle A migration). Exception: scripts/run-chain.js (2-arg form) and scripts/lib/pipeline.js (helper)."
       advisory_lock=1

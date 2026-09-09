@@ -12,11 +12,11 @@
   "road_overlay_distance_m": {
     "default": 5,
     "type": "number",
-    "description": "Distance (metres) for the LineString zoning-overlay spatial join (Policy Road, Priority Retail). SEEDED by Spec 58 load-zoning; CONSUMED by the future WF2 enrich-parcels.js via ST_DWithin(parcels.geom::geography, road.geom::geography, road_overlay_distance_m) — the ::geography cast is mandatory (F-C2), else SRID 4326 treats the value as degrees (~111km/deg).",
+    "description": "Distance (metres) for the LineString zoning-overlay spatial join (Policy Road, Priority Retail). SEEDED by Spec 58 load-zoning; CONSUMED by enrich-parcels.js (pilot 9 commit 9 cutover, 2026-09-08) via ST_DWithin(parcels.geom::geography, road.geom::geography, road_overlay_distance_m) — the ::geography cast is mandatory (F-C2), else SRID 4326 treats the value as degrees (~111km/deg).",
     "min": 0,
     "max": 100,
     "admin": {
-      "hidden": "unclassified"
+      "group": "Source Ingestion"
     }
   },
   "reno_coa_uplift_pct": {
@@ -26,7 +26,7 @@
     "min": 0,
     "max": 1,
     "admin": {
-      "hidden": "unclassified"
+      "group": "Cost Tuning"
     }
   },
   "reno_kitchen_gfa_pct": {
@@ -36,7 +36,7 @@
     "min": 0.01,
     "max": 1,
     "admin": {
-      "hidden": "unclassified"
+      "group": "Cost Tuning"
     }
   },
   "reno_bath_gfa_pct": {
@@ -46,7 +46,7 @@
     "min": 0.01,
     "max": 1,
     "admin": {
-      "hidden": "unclassified"
+      "group": "Cost Tuning"
     }
   },
   "mislink_footprint_lot_tol": {
@@ -56,7 +56,7 @@
     "min": 0,
     "max": 1,
     "admin": {
-      "hidden": "unclassified"
+      "group": "Data Quality Thresholds"
     }
   },
   "max_build_min_dimension_m": {
@@ -66,7 +66,7 @@
     "min": 0,
     "max": 10,
     "admin": {
-      "hidden": "unclassified"
+      "group": "Spatial & Massing"
     }
   },
   "storey_height_m": {
@@ -76,7 +76,7 @@
     "min": 2,
     "max": 6,
     "admin": {
-      "hidden": "unclassified"
+      "group": "Spatial & Massing"
     }
   },
   "garage_min_lot_sqm": {
@@ -86,7 +86,7 @@
     "min": 100,
     "max": 2000,
     "admin": {
-      "hidden": "unclassified"
+      "group": "Spatial & Massing"
     }
   },
   "garage_max_gfa_sqm": {
@@ -96,7 +96,7 @@
     "min": 10,
     "max": 200,
     "admin": {
-      "hidden": "unclassified"
+      "group": "Spatial & Massing"
     }
   },
   "garage_min_footprint_sqm": {
@@ -106,7 +106,7 @@
     "min": 5,
     "max": 200,
     "admin": {
-      "hidden": "unclassified"
+      "group": "Spatial & Massing"
     }
   },
   "accessory_max_coverage_pct": {
@@ -116,7 +116,7 @@
     "min": 0.05,
     "max": 1,
     "admin": {
-      "hidden": "unclassified"
+      "group": "Spatial & Massing"
     }
   },
   "car_footprint_sqm": {
@@ -126,7 +126,7 @@
     "min": 10,
     "max": 40,
     "admin": {
-      "hidden": "unclassified"
+      "group": "Spatial & Massing"
     }
   },
   "laneway_suite_max_gfa_sqm": {
@@ -136,7 +136,7 @@
     "min": 20,
     "max": 400,
     "admin": {
-      "hidden": "unclassified"
+      "group": "Spatial & Massing"
     }
   },
   "laneway_suite_min_lot_sqm": {
@@ -146,7 +146,7 @@
     "min": 100,
     "max": 2000,
     "admin": {
-      "hidden": "unclassified"
+      "group": "Spatial & Massing"
     }
   },
   "laneway_suite_min_rear_yard_m": {
@@ -156,7 +156,7 @@
     "min": 2,
     "max": 30,
     "admin": {
-      "hidden": "unclassified"
+      "group": "Spatial & Massing"
     }
   },
   "min_soft_landscaping_pct": {
@@ -166,7 +166,7 @@
     "min": 0.05,
     "max": 0.9,
     "admin": {
-      "hidden": "unclassified"
+      "group": "Spatial & Massing"
     }
   },
   "laneway_suite_storeys": {
@@ -176,7 +176,7 @@
     "min": 1,
     "max": 4,
     "admin": {
-      "hidden": "unclassified"
+      "group": "Spatial & Massing"
     }
   },
   "garden_suite_storeys": {
@@ -186,7 +186,7 @@
     "min": 1,
     "max": 4,
     "admin": {
-      "hidden": "unclassified"
+      "group": "Spatial & Massing"
     }
   },
   "garden_suite_min_lot_sqm": {
@@ -196,7 +196,7 @@
     "min": 100,
     "max": 2000,
     "admin": {
-      "hidden": "unclassified"
+      "group": "Spatial & Massing"
     }
   },
   "garden_suite_min_rear_yard_m": {
@@ -206,7 +206,7 @@
     "min": 2,
     "max": 30,
     "admin": {
-      "hidden": "unclassified"
+      "group": "Spatial & Massing"
     }
   },
   "garden_suite_max_gfa_sqm": {
@@ -216,7 +216,7 @@
     "min": 10,
     "max": 200,
     "admin": {
-      "hidden": "unclassified"
+      "group": "Spatial & Massing"
     }
   },
   "los_multiplier_bid": {
@@ -4214,7 +4214,7 @@
     "max": 500000,
     "description": "Phase B B2 (R3-B8, Spec 40 §3.1.2 / Spec 47 §8.7) — row-count threshold that trips enrich-parcels.js's clean scope-defer (chain terminalizes deferred_to_full instead of attempting the pass) when a gated pass's PRE-TRANSACTION scope count exceeds it. Default 50,000 = 10-15x measured-normal decision scope (~3,461/14d) and ~9x under measured-escalated full 5-pass citywide runtime (46.5-53 min); sized against the 08-03 CKAN re-export citywide event (485,567 rows) as the designed defer trigger, not the common case. Every run emits scope_count/threshold/ratio audit rows and WARNs at >=80% of this value (code-side, not a var) so the operator sees the cliff coming before a defer fires. Two CONSECUTIVE defers on the same step escalate to a red verdict (Spec 40 §3.1.2 defer-streak rule) requiring a supervised force-full (ENRICH_PARCELS_FORCE_FULL=1). Threshold is a labeled projection until Phase B B7 measures real per-pass durations against it. CONSUMED by scripts/enrich-parcels.js.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Source Ingestion"
     }
   },
   "enrich_parcels_heartbeat_minutes": {

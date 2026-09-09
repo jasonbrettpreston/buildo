@@ -899,6 +899,15 @@ function fastInvariants(rows, converted, pending) {
     id: 9,
     slug: '(registry)',
     pass: cutoverViolations.length === 0,
+    // EP-D13-adjacent fix (pilot 9 commit 8 P9, 2026-09-08) — `blockedSlugs` names
+    // EXACTLY which converted slug(s) an unmet cutover_prereq blocks, so the hard-stop
+    // computation below can scope this invariant to the step actually being validated
+    // rather than treating ANY other step's own unmet prereq as this step's own
+    // hard-stop. `checkCutoverPrereqs` is honoured LITERALLY (a `gate.blocks` entry
+    // names specific slugs, e.g. CLOUDPARITY blocks `enrich_parcels` alone) — a
+    // completely unrelated step (e.g. `compute_centroids`) must not hard-stop on
+    // `enrich_parcels`'s own CLOUDPARITY-pending state.
+    blockedSlugs: cutoverViolations.map((v) => v.slug),
     detail: cutoverViolations.length
       ? `unmet cutover_prereq blocking an already-converted slug: ${cutoverViolations.map((v) => `${v.slug} <- ${v.id} (${v.status})`).join('; ')}`
       : `clean (0 converted slugs blocked by an unmet cutover_prereq item; blocks batching: ${blocksBatchingCount(programmeItems)})`,
@@ -1472,7 +1481,20 @@ function computeScorecard(row, report, descriptorInfo, shape, captureFindings, i
   const g9raw = scoreG9(report);
   const g4d = scoreG4d(row);
   const gshape = scoreGShape(shape);
-  const invariantsFail = invariantResults.some((r) => (r.slug === row.slug || r.slug === '(registry)') && !r.pass);
+  // EP-D13-adjacent fix (pilot 9 commit 8 P9, 2026-09-08) — id:9's `blockedSlugs` (when
+  // present) scopes its hard-stop to the slug(s) it ACTUALLY names via `gate.blocks`
+  // (checked literally, per checkCutoverPrereqs), not to every OTHER converted step's
+  // own unrelated `--step=X` run. Every other `(registry)` invariant (4, 5 — genuine
+  // fleet-wide integrity checks with no single implicated slug) keeps its existing
+  // "any registry fail matters to everyone" semantics unchanged.
+  const invariantsFail = invariantResults.some((r) => {
+    if (!r.pass && r.slug === row.slug) return true;
+    if (!r.pass && r.slug === '(registry)') {
+      if (r.id === 9 && Array.isArray(r.blockedSlugs)) return r.blockedSlugs.includes(row.slug);
+      return true;
+    }
+    return false;
+  });
   // R-K amendment: `row.pendingStage` is undefined for every converted step
   // and for a pending step with no declared stage — `stageExclusions`
   // returns empty sets for both, so `aggregateHardStop` below is byte-for-
@@ -2837,13 +2859,29 @@ async function main() {
   }
 
   const registryFails = invariantResults.filter((r) => r.slug === '(registry)' && !r.pass);
-  if (registryFails.length) anyHardStop = true;
+  // EP-D13-adjacent fix (pilot 9 commit 8 P9, 2026-09-08) — id:9 (checkCutoverPrereqs)
+  // is scoped to `blockedSlugs`: it only forces this INVOCATION's overall exit code
+  // non-zero when a step actually being validated THIS run is one of the named,
+  // literally-blocked slugs (e.g. `enrich_parcels` under CLOUDPARITY) — a completely
+  // unrelated `--step=X` run (or `--all`/`--staged` run that never touches the blocked
+  // slug) must not fail on another step's own unmet cutover_prereq. Every OTHER
+  // registry invariant (4, 5 — genuine fleet-wide integrity, no single implicated
+  // slug) keeps its existing unconditional hard-stop.
+  const validatedSlugs = new Set(summaries.map((s) => s.slug));
+  const registryHardStopFails = registryFails.filter((r) => {
+    if (r.id !== 9) return true;
+    return Array.isArray(r.blockedSlugs) && r.blockedSlugs.some((slug) => validatedSlugs.has(slug));
+  });
+  if (registryHardStopFails.length) anyHardStop = true;
 
   console.log('\n[step-validate] summary:');
   for (const s of summaries) console.log(`  ${s.slug}: ${s.total}/${s.maxTotal} hard-stop=${s.hardStop}${s.blocking ? '' : ' (non-blocking: doc-only touch)'}`);
   if (registryFails.length) {
     console.log('[step-validate] registry-level fast invariant failures:');
-    for (const r of registryFails) console.log(`  #${r.id}: ${r.detail}`);
+    for (const r of registryFails) {
+      const gates = r.id === 9 && !registryHardStopFails.includes(r) ? ' (informational — does not name a slug in this run)' : '';
+      console.log(`  #${r.id}: ${r.detail}${gates}`);
+    }
   }
 
   if (dataValidatorPool) await dataValidatorPool.end();
