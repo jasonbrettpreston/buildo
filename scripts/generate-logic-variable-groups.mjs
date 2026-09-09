@@ -340,12 +340,22 @@ const GROUP_ORDER = [
   {
     "label": "Lifecycle Ledger",
     "keys": [
-      "lifecycle_status_history_retention_days"
+      "lifecycle_status_history_retention_days",
+      "lifecycle_inspection_stall_days",
+      "lifecycle_issued_stall_days",
+      "lifecycle_orphan_stall_days",
+      "lifecycle_p7a_max_days",
+      "lifecycle_p7b_max_days"
     ]
   },
   {
     "label": "Lifecycle Phase Distribution Bands",
     "keys": [
+      "lifecycle_seq_unclassified_max",
+      "lifecycle_live_status_null_warn_count",
+      "lifecycle_seq_band_promote_to_fail_band_violation",
+      "lifecycle_seq_band_promote_to_fail_expected_data_missing",
+      "lifecycle_seq_band_promote_to_fail_no_band_configured",
       "lifecycle_cross_stalled_threshold",
       "lifecycle_cross_active_inspection_threshold",
       "lifecycle_cross_issued_threshold",

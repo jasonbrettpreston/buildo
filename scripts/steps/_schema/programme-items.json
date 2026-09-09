@@ -1392,7 +1392,7 @@
       "title": "admin GROUPS reverse-coverage — every unclassified seed key gets a real group or a reviewed hidden reason",
       "promised": "unclassified count = 0",
       "status": "NOT_STARTED",
-      "evidence": "244 of 451 scripts/seeds/logic_variables.json keys carry admin.hidden === \"unclassified\" as of scripts/generate-logic-variable-groups.mjs (WF2 \"Admin Tunable Coverage\" commit 4, 2026-09-03) — refreshed by that generator on every regeneration (npm run logic-var-groups); high-water mark tracked in scripts/steps/_schema/admin-unclassified-high-water-mark.json (monotonic ratchet, src/tests/logic-var-admin-declarations.logic.test.ts) so the count can only decrease, never increase, going forward. review_followups.md — \"WF3 cloud-parity FIX 3 remediation — admin GROUPS reverse-coverage gap (2026-09-03)\" is the originating followup this item batches.",
+      "evidence": "234 of 451 scripts/seeds/logic_variables.json keys carry admin.hidden === \"unclassified\" as of scripts/generate-logic-variable-groups.mjs (WF2 \"Admin Tunable Coverage\" commit 4, 2026-09-03) — refreshed by that generator on every regeneration (npm run logic-var-groups); high-water mark tracked in scripts/steps/_schema/admin-unclassified-high-water-mark.json (monotonic ratchet, src/tests/logic-var-admin-declarations.logic.test.ts) so the count can only decrease, never increase, going forward. review_followups.md — \"WF3 cloud-parity FIX 3 remediation — admin GROUPS reverse-coverage gap (2026-09-03)\" is the originating followup this item batches.",
       "owner": {
         "kind": "wf",
         "ref": "wf: programme-ADMIN-1"

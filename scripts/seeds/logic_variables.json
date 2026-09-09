@@ -626,7 +626,7 @@
     "min": 0,
     "max": 100000,
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Phase Distribution Bands"
     }
   },
   "lifecycle_status_history_retention_days": {
@@ -1446,7 +1446,7 @@
     "min": 1,
     "max": 3650,
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Ledger"
     }
   },
   "lifecycle_inspection_stall_days": {
@@ -1456,7 +1456,7 @@
     "min": 1,
     "max": 3650,
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Ledger"
     }
   },
   "lifecycle_p7a_max_days": {
@@ -1466,7 +1466,7 @@
     "min": 1,
     "max": 365,
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Ledger"
     }
   },
   "lifecycle_p7b_max_days": {
@@ -1476,7 +1476,7 @@
     "min": 1,
     "max": 365,
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Ledger"
     }
   },
   "lifecycle_orphan_stall_days": {
@@ -1486,7 +1486,7 @@
     "min": 1,
     "max": 3650,
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Ledger"
     }
   },
   "lead_view_retention_days": {
@@ -4126,7 +4126,7 @@
     "max": 100000,
     "description": "Max row count where lifecycle_seq IS NULL on permits or coa_applications. WARN threshold (E.4); Phase D + E.2 first-run state expected to violate. Tighten via E.5 after ramp-up.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Phase Distribution Bands"
     }
   },
   "lifecycle_seq_band_promote_to_fail_band_violation": {
@@ -4136,7 +4136,7 @@
     "max": 1,
     "description": "Phase E.5 gate for `band_violation` kind. 0=WARN (E.4 default; seqBandsWarn++); 1=FAIL (E.5 promotion; seqBandsFailing++ → verdict FAIL → pipeline halt). Canonical regression-detection gate. See Spec 84 §3.4 pre-promotion checklist.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Phase Distribution Bands"
     }
   },
   "lifecycle_seq_band_promote_to_fail_no_band_configured": {
@@ -4146,7 +4146,7 @@
     "max": 1,
     "description": "Phase E.5 gate for `no_band_configured` kind (seq present in data but no band loaded — operator config gap). 0=WARN (default); 1=FAIL (rare). See Spec 84 §3.4.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Phase Distribution Bands"
     }
   },
   "lifecycle_seq_band_promote_to_fail_expected_data_missing": {
@@ -4156,7 +4156,7 @@
     "max": 1,
     "description": "Phase E.5 gate for `expected_data_missing` kind (band has min > 0 but zero observed rows — possible data deletion or classifier-skip). 0=WARN (default); 1=FAIL (after verifying no structurally-absent seqs remain; see Spec 84 §3.4 structural-absence resolution path).",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Phase Distribution Bands"
     }
   },
   "coa_lifecycle_transition_stale_days": {
