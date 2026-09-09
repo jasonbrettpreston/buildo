@@ -226,9 +226,15 @@ function checkRatchet(liveCount: number, highWaterMark: number): string[] {
 describe('ADMIN-1 monotonic ratchet — unclassified count never rises above the recorded high-water mark', () => {
   const ratchet = JSON.parse(fs.readFileSync(RATCHET_PATH, 'utf-8')) as { high_water_mark: number };
 
-  it('vacuous-pass guard: the ratchet file parsed a real, positive high_water_mark', () => {
+  it('vacuous-pass guard: the ratchet file parsed a real number (not NaN/undefined/missing)', () => {
+    // WF2 ADMIN-1 ratchet batch 5 drove the live count to its TARGET of 0 —
+    // 0 is the legitimate terminal value (Math.min never raises it back), so
+    // this guard can no longer assert > 0; it only needs to rule out a parse
+    // failure silently vacuous-passing every check below (e.g. NaN, which
+    // would make `live > NaN` always false and every count "pass").
     expect(typeof ratchet.high_water_mark).toBe('number');
-    expect(ratchet.high_water_mark).toBeGreaterThan(0);
+    expect(Number.isFinite(ratchet.high_water_mark)).toBe(true);
+    expect(ratchet.high_water_mark).toBeGreaterThanOrEqual(0);
   });
 
   it('GREEN — the real live count does not exceed the recorded high-water mark', () => {

@@ -84,17 +84,15 @@ describe('logic-variable-groups — drift guard (WF2 admin tunable coverage, com
   // mutated.
   it('RED — a seed key naming a group absent from GROUP_ORDER throws (not silently accepted)', () => {
     const realSeed = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, 'scripts', 'seeds', 'logic_variables.json'), 'utf-8'));
-    // Pick a key that is CURRENTLY admin.hidden (guaranteed absent from
-    // GROUP_ORDER today, unlike an arbitrary admin.group key which may
-    // already be pinned somewhere and would instead trip the FORWARD-direction
-    // mismatch check — a different, also-valid throw, but not the one this
-    // fixture is pinning) so this test exercises the REVERSE-direction check
-    // regardless of which batch of the ADMIN-1 ratchet has landed.
-    const someKey = Object.entries(realSeed as Record<string, { admin?: { hidden?: string } }>).find(
-      ([, v]) => v.admin && 'hidden' in v.admin,
-    )?.[0] as string;
-    expect(someKey, 'no admin.hidden seed key found to build the fixture from').toBeTruthy();
-    const tampered = { ...realSeed, [someKey]: { ...realSeed[someKey], admin: { group: '___NOT_PINNED_IN_GROUP_ORDER___' } } };
+    // A brand-new fake key, never a member of GROUP_ORDER by construction —
+    // robust regardless of how much of the ADMIN-1 ratchet has landed (an
+    // arbitrary REAL key might already be pinned somewhere and would instead
+    // trip the FORWARD-direction mismatch check, a different, also-valid
+    // throw, but not the REVERSE-direction one this fixture targets; and once
+    // the ratchet reaches 0 there is no admin.hidden key left to reuse).
+    const fakeKey = '___wf2_admin1_ratchet_fixture_key_never_in_seed___';
+    expect(realSeed[fakeKey], 'fixture key collided with a real seed key — pick a different name').toBeUndefined();
+    const tampered = { ...realSeed, [fakeKey]: { default: 1, type: 'number', description: 'fixture only', min: 0, max: 1, admin: { group: '___NOT_PINNED_IN_GROUP_ORDER___' } } };
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'logic-var-groups-seed-fixture-'));
     const badSeedPath = path.join(dir, 'tampered-logic_variables.json');
     fs.writeFileSync(badSeedPath, JSON.stringify(tampered, null, 2) + '\n');

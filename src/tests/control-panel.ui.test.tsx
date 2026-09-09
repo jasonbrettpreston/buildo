@@ -3,7 +3,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import React from 'react';
-import type { MarketplaceConfig } from '@/lib/admin/control-panel';
+import type { MarketplaceConfig, LogicVariableRow } from '@/lib/admin/control-panel';
 
 // ─── Mock TanStack Query ───────────────────────────────────────────────────────
 vi.mock('@tanstack/react-query', () => ({
@@ -135,6 +135,75 @@ describe('ConfirmSyncModal — diff display', () => {
     expect(screen.getByText('los_base_divisor')).toBeDefined();
     expect(screen.getByText('10000')).toBeDefined();
     expect(screen.getByText('5000')).toBeDefined();
+  });
+});
+
+// ─── GlobalConfigCard — single render path (WF2 ADMIN-1 ratchet batch 5) ──────
+// F2 fence: GlobalConfigCard used to render lifecycle_seq_band_<N>_{min,max}
+// through a SECOND, bespoke <section> in addition to the derived GROUPS path
+// (both keyed off the same DB-loaded `variables` prop). Batch 5 deletes that
+// bespoke section — GROUPS (generated from the seed's admin.group
+// declarations, which now include a "Lifecycle Seq Bands" group covering all
+// 220 keys) is the only render path left. The regression this fixture pins:
+// a double-render (both paths active) would show two <label>s per key.
+describe('GlobalConfigCard — lifecycle_seq_band_* renders through ONE path only', () => {
+  beforeEach(() => {
+    mockStoreState = makeDefaultStore();
+  });
+
+  it('each of the 220 seq-band keys renders exactly once (no double-render)', async () => {
+    const { GlobalConfigCard, GROUPS } = await import('@/features/admin-controls/components/GlobalConfigCard');
+
+    const seqBandKeys: string[] = [];
+    for (let n = 1; n <= 110; n++) {
+      seqBandKeys.push(`lifecycle_seq_band_${n}_min`, `lifecycle_seq_band_${n}_max`);
+    }
+    expect(seqBandKeys.length).toBe(220);
+
+    // Every GROUPS key gets a row so the card renders its full real shape,
+    // not just the seq-band family in isolation.
+    const allGroupKeys = GROUPS.flatMap((g: { keys: string[] }) => g.keys).filter((k: string) => k !== 'income_premium_tiers');
+    const variables: LogicVariableRow[] = allGroupKeys.map((key: string) => ({
+      key,
+      value: 1,
+      jsonValue: null,
+      description: null,
+      updatedAt: '',
+    }));
+
+    const { container } = render(<GlobalConfigCard variables={variables} />);
+
+    const labels = Array.from(container.querySelectorAll('label'));
+    for (const key of seqBandKeys) {
+      const matches = labels.filter((el) => new RegExp(`^${key}(\\s|$)`).test(el.textContent ?? ''));
+      expect(matches.length, `"${key}" rendered ${matches.length} times, expected exactly 1`).toBe(1);
+    }
+
+    // Sanity: exactly 220 seq-band labels total — no extras from a leftover path.
+    const seqBandLabelCount = labels.filter((el) => /^lifecycle_seq_band_\d+_(min|max)(\s|$)/.test(el.textContent ?? '')).length;
+    expect(seqBandLabelCount).toBe(220);
+
+    // The bespoke section's own aria-label must be gone entirely.
+    expect(container.querySelector('[aria-label="Lifecycle Seq Bands"]')).toBeNull();
+  });
+
+  // F-2 (output-panel finding): the deleted bespoke section suppressed
+  // itself with `seqBandSeqs.length > 0 && (...)` — GROUPS never carried
+  // that guard, so a group with zero present rows rendered an empty
+  // heading with no fields. Proves the restored group.keys.some(...) guard
+  // actually suppresses the WHOLE section (heading included), not just the
+  // field rows underneath it.
+  it('a group with zero present rows renders no section/heading at all', async () => {
+    const { GlobalConfigCard } = await import('@/features/admin-controls/components/GlobalConfigCard');
+
+    // "Lifecycle Seq Bands" is a real GROUPS label with 220 keys; passing
+    // ZERO of them (and nothing else) must suppress that group's entire
+    // <section>, not just render an empty one.
+    const { container } = render(<GlobalConfigCard variables={[]} />);
+
+    expect(container.querySelectorAll('section').length).toBe(0);
+    expect(screen.queryByText('Lifecycle Seq Bands')).toBeNull();
+    expect(container.querySelectorAll('label').length).toBe(0);
   });
 });
 

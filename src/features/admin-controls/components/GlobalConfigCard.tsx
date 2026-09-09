@@ -1,15 +1,18 @@
 'use client';
 /**
- * GlobalConfigCard — renders all numeric logic_variables grouped by domain
- * (~93 keys post migration 119), plus income_premium_tiers (JSONB type,
- * seeded via migration 097). Uses DeltaGuardInput for numeric fields and
- * JsonTiersEditor for the income_premium_tiers JSONB field.
+ * GlobalConfigCard — renders every numeric logic_variables key grouped by
+ * domain (single render path — GROUPS, generated from the seed's declared
+ * `admin.group` field; WF2 ADMIN-1 ratchet batch 5 retired the bespoke
+ * lifecycle_seq_band_* section in favour of this ONE path), plus
+ * income_premium_tiers (JSONB type, seeded via migration 097). Uses
+ * DeltaGuardInput for numeric fields and JsonTiersEditor for the
+ * income_premium_tiers JSONB field.
  *
  * SPEC LINK: docs/specs/02-web-admin/86_control_panel.md §5 Phase 3
  * SPEC LINK: docs/specs/01-pipeline/84_lifecycle_phase_engine.md §3.4
+ * SPEC LINK: docs/specs/01-pipeline/124_step_standard_policy.md (Rule 3, "the admin intersection")
  */
 
-import React from 'react';
 import type { LogicVariableRow } from '@/lib/admin/control-panel';
 import { DeltaGuardInput } from './DeltaGuardInput';
 import { JsonTiersEditor } from './JsonTiersEditor';
@@ -107,122 +110,66 @@ interface GlobalConfigCardProps {
   variables: LogicVariableRow[];
 }
 
-// Regex that matches lifecycle_seq_band_<N>_min / lifecycle_seq_band_<N>_max keys.
-// These are seeded via mig 148 (one pair per Universal Stream catalog seq) — too
-// numerous to hardcode in GROUPS; rendered dynamically from the DB-loaded variables prop.
-const SEQ_BAND_PATTERN = /^lifecycle_seq_band_(\d+)_(min|max)$/;
-
 export function GlobalConfigCard({ variables }: GlobalConfigCardProps) {
   const updateDraftLogicVar = useAdminControlsStore((s) => s.updateDraftLogicVar);
 
   const byKey = new Map(variables.map((v) => [v.key, v]));
 
-  // Build sorted seq-number list for dynamic rendering (empty if no seq-band keys present).
-  const seqBandSeqs: number[] = React.useMemo(() => {
-    const seqs = new Set<number>();
-    for (const v of variables) {
-      const m = SEQ_BAND_PATTERN.exec(v.key);
-      if (m) seqs.add(Number(m[1]));
-    }
-    return Array.from(seqs).sort((a, b) => a - b);
-  }, [variables]);
-
   return (
     <div className="space-y-6">
-      {GROUPS.map((group) => (
-        <section key={group.label}>
-          <h3 className="mb-3 text-xs font-semibold uppercase tracking-wide text-gray-400 border-b border-gray-100 pb-1">
-            {group.label}
-          </h3>
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {group.keys.map((key) => {
-              const row = byKey.get(key);
-              if (!row) return null;
+      {GROUPS.map((group) => {
+        // WF2 ADMIN-1 ratchet, F-2: the retired bespoke seq-band section
+        // suppressed itself entirely when no member rows were loaded
+        // (`seqBandSeqs.length > 0 && (...)`); GROUPS never had that guard,
+        // so a group with zero rows present in `variables` renders an empty
+        // heading with no fields underneath. Restore the suppression at the
+        // GROUPS level, generically, for every group — not just the one the
+        // deletion happened to affect.
+        if (!group.keys.some((k) => byKey.has(k))) return null;
+        return (
+          <section key={group.label}>
+            <h3 className="mb-3 text-xs font-semibold uppercase tracking-wide text-gray-400 border-b border-gray-100 pb-1">
+              {group.label}
+            </h3>
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              {group.keys.map((key) => {
+                const row = byKey.get(key);
+                if (!row) return null;
 
-              if (JSON_KEYS.has(key)) {
+                if (JSON_KEYS.has(key)) {
+                  return (
+                    <div key={key} className="sm:col-span-2 lg:col-span-3">
+                      <JsonTiersEditor
+                        value={row.jsonValue}
+                        onChange={(val) => updateDraftLogicVar(key, null, val)}
+                      />
+                    </div>
+                  );
+                }
+
                 return (
-                  <div key={key} className="sm:col-span-2 lg:col-span-3">
-                    <JsonTiersEditor
-                      value={row.jsonValue}
-                      onChange={(val) => updateDraftLogicVar(key, null, val)}
+                  <div key={key} className="pt-5">
+                    <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
+                      {key}
+                      {row.description && (
+                        <span className="ml-1 text-gray-400 normal-case font-normal">
+                          — {row.description}
+                        </span>
+                      )}
+                    </label>
+                    <DeltaGuardInput
+                      varKey={key}
+                      value={row.value ?? 0}
+                      onChange={(val) => updateDraftLogicVar(key, val)}
+                      step={stepFor(key, row.value ?? 0)}
                     />
                   </div>
                 );
-              }
-
-              return (
-                <div key={key} className="pt-5">
-                  <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
-                    {key}
-                    {row.description && (
-                      <span className="ml-1 text-gray-400 normal-case font-normal">
-                        — {row.description}
-                      </span>
-                    )}
-                  </label>
-                  <DeltaGuardInput
-                    varKey={key}
-                    value={row.value ?? 0}
-                    onChange={(val) => updateDraftLogicVar(key, val)}
-                    step={stepFor(key, row.value ?? 0)}
-                  />
-                </div>
-              );
-            })}
-          </div>
-        </section>
-      ))}
-
-      {/* Dynamic seq-band section — lifecycle_seq_band_<N>_min/_max (×220 max).
-          Rendered only when the DB-loaded variables contain seq-band keys (mig 148). */}
-      {seqBandSeqs.length > 0 && (
-        <section aria-label="Lifecycle Seq Bands">
-          <h3 className="mb-3 text-xs font-semibold uppercase tracking-wide text-gray-400 border-b border-gray-100 pb-1">
-            Lifecycle Seq Bands
-            <span className="ml-2 normal-case font-normal text-gray-400">
-              ({seqBandSeqs.length} seqs — consumed by assert-lifecycle-phase-distribution.js)
-            </span>
-          </h3>
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {seqBandSeqs.map((seq) => {
-              const minKey = `lifecycle_seq_band_${seq}_min`;
-              const maxKey = `lifecycle_seq_band_${seq}_max`;
-              const minRow = byKey.get(minKey);
-              const maxRow = byKey.get(maxKey);
-              return (
-                <React.Fragment key={seq}>
-                  {minRow && (
-                    <div className="pt-5">
-                      <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
-                        {minKey}
-                      </label>
-                      <DeltaGuardInput
-                        varKey={minKey}
-                        value={minRow.value ?? 0}
-                        onChange={(val) => updateDraftLogicVar(minKey, val)}
-                        step={1}
-                      />
-                    </div>
-                  )}
-                  {maxRow && (
-                    <div className="pt-5">
-                      <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
-                        {maxKey}
-                      </label>
-                      <DeltaGuardInput
-                        varKey={maxKey}
-                        value={maxRow.value ?? 0}
-                        onChange={(val) => updateDraftLogicVar(maxKey, val)}
-                        step={1}
-                      />
-                    </div>
-                  )}
-                </React.Fragment>
-              );
-            })}
-          </div>
-        </section>
-      )}
+              })}
+            </div>
+          </section>
+        );
+      })}
     </div>
   );
 }

@@ -1926,7 +1926,7 @@
     "max": 99999,
     "description": "Min row count for lifecycle_seq=1 (Received). Catalog snapshot rows_count=10; 2-branch continuous formula. Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_1_max": {
@@ -1936,7 +1936,7 @@
     "max": 999999,
     "description": "Max row count for lifecycle_seq=1 (Received). Catalog snapshot rows_count=10; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_2_min": {
@@ -1946,7 +1946,7 @@
     "max": 99999,
     "description": "Min row count for lifecycle_seq=2 (Accepted). Catalog snapshot rows_count=279; 2-branch continuous formula. Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_2_max": {
@@ -1956,7 +1956,7 @@
     "max": 999999,
     "description": "Max row count for lifecycle_seq=2 (Accepted). Catalog snapshot rows_count=279; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_3_min": {
@@ -1966,7 +1966,7 @@
     "max": 99999,
     "description": "Min row count for lifecycle_seq=3 (Notice Prep). Catalog snapshot rows_count=54; 2-branch continuous formula. Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_3_max": {
@@ -1976,7 +1976,7 @@
     "max": 999999,
     "description": "Max row count for lifecycle_seq=3 (Notice Prep). Catalog snapshot rows_count=54; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_4_min": {
@@ -1986,7 +1986,7 @@
     "max": 99999,
     "description": "Min row count for lifecycle_seq=4 (Notice Prepared). Catalog snapshot rows_count=74; 2-branch continuous formula. Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_4_max": {
@@ -1996,7 +1996,7 @@
     "max": 999999,
     "description": "Max row count for lifecycle_seq=4 (Notice Prepared). Catalog snapshot rows_count=74; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_5_min": {
@@ -2006,7 +2006,7 @@
     "max": 99999,
     "description": "Min row count for lifecycle_seq=5 (Tentatively Scheduled). Catalog snapshot rows_count=118; 2-branch continuous formula. Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_5_max": {
@@ -2016,7 +2016,7 @@
     "max": 999999,
     "description": "Max row count for lifecycle_seq=5 (Tentatively Scheduled). Catalog snapshot rows_count=118; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_6_min": {
@@ -2026,7 +2026,7 @@
     "max": 99999,
     "description": "Min row count for lifecycle_seq=6 (Hearing Scheduled). Catalog snapshot rows_count=317; 2-branch continuous formula. Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_6_max": {
@@ -2036,7 +2036,7 @@
     "max": 999999,
     "description": "Max row count for lifecycle_seq=6 (Hearing Scheduled). Catalog snapshot rows_count=317; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_7_min": {
@@ -2046,7 +2046,7 @@
     "max": 99999,
     "description": "Min row count for lifecycle_seq=7 (Hearing Rescheduled). Catalog snapshot rows_count=1; 2-branch continuous formula. Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_7_max": {
@@ -2056,7 +2056,7 @@
     "max": 999999,
     "description": "Max row count for lifecycle_seq=7 (Hearing Rescheduled). Catalog snapshot rows_count=1; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_8_min": {
@@ -2066,7 +2066,7 @@
     "max": 99999,
     "description": "Min row count for lifecycle_seq=8 (Postponed). Catalog snapshot rows_count=292; 2-branch continuous formula. Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_8_max": {
@@ -2076,7 +2076,7 @@
     "max": 999999,
     "description": "Max row count for lifecycle_seq=8 (Postponed). Catalog snapshot rows_count=292; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_9_min": {
@@ -2086,7 +2086,7 @@
     "max": 99999,
     "description": "Min row count for lifecycle_seq=9 (Deferred). Catalog snapshot rows_count=270; 2-branch continuous formula. Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_9_max": {
@@ -2096,7 +2096,7 @@
     "max": 999999,
     "description": "Max row count for lifecycle_seq=9 (Deferred). Catalog snapshot rows_count=270; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_10_min": {
@@ -2106,7 +2106,7 @@
     "max": 99999,
     "description": "Min row count for lifecycle_seq=10 (Conditional Consent). Catalog snapshot rows_count=326; 2-branch continuous formula. Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_10_max": {
@@ -2116,7 +2116,7 @@
     "max": 999999,
     "description": "Max row count for lifecycle_seq=10 (Conditional Consent). Catalog snapshot rows_count=326; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_11_min": {
@@ -2126,7 +2126,7 @@
     "max": 99999,
     "description": "Min row count for lifecycle_seq=11 (Approved). Catalog snapshot rows_count=246; 2-branch continuous formula. Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_11_max": {
@@ -2136,7 +2136,7 @@
     "max": 999999,
     "description": "Max row count for lifecycle_seq=11 (Approved). Catalog snapshot rows_count=246; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_12_min": {
@@ -2146,7 +2146,7 @@
     "max": 99999,
     "description": "Min row count for lifecycle_seq=12 (Approved + Conditions). Catalog snapshot rows_count=554; 2-branch continuous formula. Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_12_max": {
@@ -2156,7 +2156,7 @@
     "max": 999999,
     "description": "Max row count for lifecycle_seq=12 (Approved + Conditions). Catalog snapshot rows_count=554; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_13_min": {
@@ -2166,7 +2166,7 @@
     "max": 99999,
     "description": "Min row count for lifecycle_seq=13 (Refused). Catalog snapshot rows_count=59; 2-branch continuous formula. Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_13_max": {
@@ -2176,7 +2176,7 @@
     "max": 999999,
     "description": "Max row count for lifecycle_seq=13 (Refused). Catalog snapshot rows_count=59; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_14_min": {
@@ -2186,7 +2186,7 @@
     "max": 99999,
     "description": "Min row count for lifecycle_seq=14 (Final & Binding). Catalog snapshot rows_count=1; 2-branch continuous formula. Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_14_max": {
@@ -2196,7 +2196,7 @@
     "max": 999999,
     "description": "Max row count for lifecycle_seq=14 (Final & Binding). Catalog snapshot rows_count=1; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_15_min": {
@@ -2206,7 +2206,7 @@
     "max": 99999,
     "description": "Min row count for lifecycle_seq=15 (Awaiting Expiry). Catalog snapshot rows_count=24; 2-branch continuous formula. Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_15_max": {
@@ -2216,7 +2216,7 @@
     "max": 999999,
     "description": "Max row count for lifecycle_seq=15 (Awaiting Expiry). Catalog snapshot rows_count=24; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_16_min": {
@@ -2226,7 +2226,7 @@
     "max": 99999,
     "description": "Min row count for lifecycle_seq=16 (Appealed). Catalog snapshot rows_count=1; 2-branch continuous formula. Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_16_max": {
@@ -2236,7 +2236,7 @@
     "max": 999999,
     "description": "Max row count for lifecycle_seq=16 (Appealed). Catalog snapshot rows_count=1; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_17_min": {
@@ -2246,7 +2246,7 @@
     "max": 99999,
     "description": "Min row count for lifecycle_seq=17 (TLAB Appeal). Catalog snapshot rows_count=347; 2-branch continuous formula. Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_17_max": {
@@ -2256,7 +2256,7 @@
     "max": 999999,
     "description": "Max row count for lifecycle_seq=17 (TLAB Appeal). Catalog snapshot rows_count=347; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_18_min": {
@@ -2266,7 +2266,7 @@
     "max": 99999,
     "description": "Min row count for lifecycle_seq=18 (OMB Appeal). Catalog snapshot rows_count=218; 2-branch continuous formula. Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_18_max": {
@@ -2276,7 +2276,7 @@
     "max": 999999,
     "description": "Max row count for lifecycle_seq=18 (OMB Appeal). Catalog snapshot rows_count=218; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_19_min": {
@@ -2286,7 +2286,7 @@
     "max": 99999,
     "description": "Min row count for lifecycle_seq=19 (Withdrawn). Catalog snapshot rows_count=904; 2-branch continuous formula. Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_19_max": {
@@ -2296,7 +2296,7 @@
     "max": 999999,
     "description": "Max row count for lifecycle_seq=19 (Withdrawn). Catalog snapshot rows_count=904; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_20_min": {
@@ -2306,7 +2306,7 @@
     "max": 99999,
     "description": "Min row count for lifecycle_seq=20 (Cancelled). Catalog snapshot rows_count=1; 2-branch continuous formula. Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_20_max": {
@@ -2316,7 +2316,7 @@
     "max": 999999,
     "description": "Max row count for lifecycle_seq=20 (Cancelled). Catalog snapshot rows_count=1; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_21_min": {
@@ -2326,7 +2326,7 @@
     "max": 99999,
     "description": "Min row count for lifecycle_seq=21 (Complete). Catalog snapshot rows_count=8; 2-branch continuous formula. Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_21_max": {
@@ -2336,7 +2336,7 @@
     "max": 999999,
     "description": "Max row count for lifecycle_seq=21 (Complete). Catalog snapshot rows_count=8; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_22_min": {
@@ -2346,7 +2346,7 @@
     "max": 99999,
     "description": "Min row count for lifecycle_seq=22 (Closed). Catalog snapshot rows_count=NULL; 2-branch continuous formula. Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_22_max": {
@@ -2356,7 +2356,7 @@
     "max": 999999,
     "description": "Max row count for lifecycle_seq=22 (Closed). Catalog snapshot rows_count=NULL; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_23_min": {
@@ -2366,7 +2366,7 @@
     "max": 99999,
     "description": "Min row count for lifecycle_seq=23 (Request Received). Catalog snapshot rows_count=1; 2-branch continuous formula. Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_23_max": {
@@ -2376,7 +2376,7 @@
     "max": 999999,
     "description": "Max row count for lifecycle_seq=23 (Request Received). Catalog snapshot rows_count=1; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_24_min": {
@@ -2386,7 +2386,7 @@
     "max": 99999,
     "description": "Min row count for lifecycle_seq=24 (Application Received). Catalog snapshot rows_count=218; 2-branch continuous formula. Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_24_max": {
@@ -2396,7 +2396,7 @@
     "max": 999999,
     "description": "Max row count for lifecycle_seq=24 (Application Received). Catalog snapshot rows_count=218; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_25_min": {
@@ -2406,7 +2406,7 @@
     "max": 99999,
     "description": "Min row count for lifecycle_seq=25 (Application Acceptable). Catalog snapshot rows_count=465; 2-branch continuous formula. Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_25_max": {
@@ -2416,7 +2416,7 @@
     "max": 999999,
     "description": "Max row count for lifecycle_seq=25 (Application Acceptable). Catalog snapshot rows_count=465; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_26_min": {
@@ -2426,7 +2426,7 @@
     "max": 99999,
     "description": "Min row count for lifecycle_seq=26 (Open). Catalog snapshot rows_count=519; 2-branch continuous formula. Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_26_max": {
@@ -2436,7 +2436,7 @@
     "max": 999999,
     "description": "Max row count for lifecycle_seq=26 (Open). Catalog snapshot rows_count=519; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_27_min": {
@@ -2446,7 +2446,7 @@
     "max": 99999,
     "description": "Min row count for lifecycle_seq=27 (Active). Catalog snapshot rows_count=24; 2-branch continuous formula. Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_27_max": {
@@ -2456,7 +2456,7 @@
     "max": 999999,
     "description": "Max row count for lifecycle_seq=27 (Active). Catalog snapshot rows_count=24; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_28_min": {
@@ -2466,7 +2466,7 @@
     "max": 99999,
     "description": "Min row count for lifecycle_seq=28 (Not Started). Catalog snapshot rows_count=NULL; 2-branch continuous formula. Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_28_max": {
@@ -2476,7 +2476,7 @@
     "max": 999999,
     "description": "Max row count for lifecycle_seq=28 (Not Started). Catalog snapshot rows_count=NULL; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_29_min": {
@@ -2486,7 +2486,7 @@
     "max": 99999,
     "description": "Min row count for lifecycle_seq=29 (Not Started - Express). Catalog snapshot rows_count=92; 2-branch continuous formula. Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_29_max": {
@@ -2496,7 +2496,7 @@
     "max": 999999,
     "description": "Max row count for lifecycle_seq=29 (Not Started - Express). Catalog snapshot rows_count=92; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_30_min": {
@@ -2506,7 +2506,7 @@
     "max": 99999,
     "description": "Min row count for lifecycle_seq=30 (Under Review). Catalog snapshot rows_count=NULL; 2-branch continuous formula. Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_30_max": {
@@ -2516,7 +2516,7 @@
     "max": 999999,
     "description": "Max row count for lifecycle_seq=30 (Under Review). Catalog snapshot rows_count=NULL; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_31_min": {
@@ -2526,7 +2526,7 @@
     "max": 99999,
     "description": "Min row count for lifecycle_seq=31 (Examination). Catalog snapshot rows_count=30; 2-branch continuous formula. Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_31_max": {
@@ -2536,7 +2536,7 @@
     "max": 999999,
     "description": "Max row count for lifecycle_seq=31 (Examination). Catalog snapshot rows_count=30; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_32_min": {
@@ -2546,7 +2546,7 @@
     "max": 99999,
     "description": "Min row count for lifecycle_seq=32 (Plan Review Complete). Catalog snapshot rows_count=57; 2-branch continuous formula. Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_32_max": {
@@ -2556,7 +2556,7 @@
     "max": 999999,
     "description": "Max row count for lifecycle_seq=32 (Plan Review Complete). Catalog snapshot rows_count=57; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_33_min": {
@@ -2566,7 +2566,7 @@
     "max": 99999,
     "description": "Min row count for lifecycle_seq=33 (Consultation Completed). Catalog snapshot rows_count=2; 2-branch continuous formula. Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_33_max": {
@@ -2576,7 +2576,7 @@
     "max": 999999,
     "description": "Max row count for lifecycle_seq=33 (Consultation Completed). Catalog snapshot rows_count=2; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_34_min": {
@@ -2586,7 +2586,7 @@
     "max": 99999,
     "description": "Min row count for lifecycle_seq=34 (Examiner's Notice Sent). Catalog snapshot rows_count=NULL; 2-branch continuous formula. Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_34_max": {
@@ -2596,7 +2596,7 @@
     "max": 999999,
     "description": "Max row count for lifecycle_seq=34 (Examiner's Notice Sent). Catalog snapshot rows_count=NULL; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_35_min": {
@@ -2606,7 +2606,7 @@
     "max": 99999,
     "description": "Min row count for lifecycle_seq=35 (Notice Sent). Catalog snapshot rows_count=1; 2-branch continuous formula. Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_35_max": {
@@ -2616,7 +2616,7 @@
     "max": 999999,
     "description": "Max row count for lifecycle_seq=35 (Notice Sent). Catalog snapshot rows_count=1; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_36_min": {
@@ -2626,7 +2626,7 @@
     "max": 99999,
     "description": "Min row count for lifecycle_seq=36 (Deficiency Notice). Catalog snapshot rows_count=117; 2-branch continuous formula. Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_36_max": {
@@ -2636,7 +2636,7 @@
     "max": 999999,
     "description": "Max row count for lifecycle_seq=36 (Deficiency Notice). Catalog snapshot rows_count=117; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_37_min": {
@@ -2646,7 +2646,7 @@
     "max": 99999,
     "description": "Min row count for lifecycle_seq=37 (On Hold). Catalog snapshot rows_count=NULL; 2-branch continuous formula. Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_37_max": {
@@ -2656,7 +2656,7 @@
     "max": 999999,
     "description": "Max row count for lifecycle_seq=37 (On Hold). Catalog snapshot rows_count=NULL; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_38_min": {
@@ -2666,7 +2666,7 @@
     "max": 99999,
     "description": "Min row count for lifecycle_seq=38 (On Hold (variant)). Catalog snapshot rows_count=4; 2-branch continuous formula. Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_38_max": {
@@ -2676,7 +2676,7 @@
     "max": 999999,
     "description": "Max row count for lifecycle_seq=38 (On Hold (variant)). Catalog snapshot rows_count=4; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_39_min": {
@@ -2686,7 +2686,7 @@
     "max": 99999,
     "description": "Min row count for lifecycle_seq=39 (Response Received). Catalog snapshot rows_count=436; 2-branch continuous formula. Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_39_max": {
@@ -2696,7 +2696,7 @@
     "max": 999999,
     "description": "Max row count for lifecycle_seq=39 (Response Received). Catalog snapshot rows_count=436; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_40_min": {
@@ -2706,7 +2706,7 @@
     "max": 99999,
     "description": "Min row count for lifecycle_seq=40 (Parent Folder Pending). Catalog snapshot rows_count=33; 2-branch continuous formula. Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_40_max": {
@@ -2716,7 +2716,7 @@
     "max": 999999,
     "description": "Max row count for lifecycle_seq=40 (Parent Folder Pending). Catalog snapshot rows_count=33; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_41_min": {
@@ -2726,7 +2726,7 @@
     "max": 99999,
     "description": "Min row count for lifecycle_seq=41 (Approved). Catalog snapshot rows_count=23; 2-branch continuous formula. Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_41_max": {
@@ -2736,7 +2736,7 @@
     "max": 999999,
     "description": "Max row count for lifecycle_seq=41 (Approved). Catalog snapshot rows_count=23; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_42_min": {
@@ -2746,7 +2746,7 @@
     "max": 99999,
     "description": "Min row count for lifecycle_seq=42 (Ready for Issuance). Catalog snapshot rows_count=233; 2-branch continuous formula. Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_42_max": {
@@ -2756,7 +2756,7 @@
     "max": 999999,
     "description": "Max row count for lifecycle_seq=42 (Ready for Issuance). Catalog snapshot rows_count=233; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_43_min": {
@@ -2766,7 +2766,7 @@
     "max": 99999,
     "description": "Min row count for lifecycle_seq=43 (Forwarded for Issuance). Catalog snapshot rows_count=3; 2-branch continuous formula. Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_43_max": {
@@ -2776,7 +2776,7 @@
     "max": 999999,
     "description": "Max row count for lifecycle_seq=43 (Forwarded for Issuance). Catalog snapshot rows_count=3; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_44_min": {
@@ -2786,7 +2786,7 @@
     "max": 99999,
     "description": "Min row count for lifecycle_seq=44 (Issuance Pending). Catalog snapshot rows_count=NULL; 2-branch continuous formula. Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_44_max": {
@@ -2796,7 +2796,7 @@
     "max": 999999,
     "description": "Max row count for lifecycle_seq=44 (Issuance Pending). Catalog snapshot rows_count=NULL; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_45_min": {
@@ -2806,7 +2806,7 @@
     "max": 99999,
     "description": "Min row count for lifecycle_seq=45 (Agreement in Progress). Catalog snapshot rows_count=10; 2-branch continuous formula. Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_45_max": {
@@ -2816,7 +2816,7 @@
     "max": 999999,
     "description": "Max row count for lifecycle_seq=45 (Agreement in Progress). Catalog snapshot rows_count=10; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_46_min": {
@@ -2826,7 +2826,7 @@
     "max": 99999,
     "description": "Min row count for lifecycle_seq=46 (Licence Issued). Catalog snapshot rows_count=4; 2-branch continuous formula. Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_46_max": {
@@ -2836,7 +2836,7 @@
     "max": 999999,
     "description": "Max row count for lifecycle_seq=46 (Licence Issued). Catalog snapshot rows_count=4; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_47_min": {
@@ -2846,7 +2846,7 @@
     "max": 99999,
     "description": "Min row count for lifecycle_seq=47 (Permit Issued). Catalog snapshot rows_count=NULL; 2-branch continuous formula. Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_47_max": {
@@ -2856,7 +2856,7 @@
     "max": 999999,
     "description": "Max row count for lifecycle_seq=47 (Permit Issued). Catalog snapshot rows_count=NULL; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_48_min": {
@@ -2866,7 +2866,7 @@
     "max": 99999,
     "description": "Min row count for lifecycle_seq=48 (Work Not Started). Catalog snapshot rows_count=NULL; 2-branch continuous formula. Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_48_max": {
@@ -2876,7 +2876,7 @@
     "max": 999999,
     "description": "Max row count for lifecycle_seq=48 (Work Not Started). Catalog snapshot rows_count=NULL; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_49_min": {
@@ -2886,7 +2886,7 @@
     "max": 99999,
     "description": "Min row count for lifecycle_seq=49 (Extension Granted). Catalog snapshot rows_count=3; 2-branch continuous formula. Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_49_max": {
@@ -2896,7 +2896,7 @@
     "max": 999999,
     "description": "Max row count for lifecycle_seq=49 (Extension Granted). Catalog snapshot rows_count=3; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_50_min": {
@@ -2906,7 +2906,7 @@
     "max": 99999,
     "description": "Min row count for lifecycle_seq=50 (Inspection). Catalog snapshot rows_count=NULL; 2-branch continuous formula. Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_50_max": {
@@ -2916,7 +2916,7 @@
     "max": 999999,
     "description": "Max row count for lifecycle_seq=50 (Inspection). Catalog snapshot rows_count=NULL; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_51_min": {
@@ -2926,7 +2926,7 @@
     "max": 99999,
     "description": "Min row count for lifecycle_seq=51 (Forward to Inspector). Catalog snapshot rows_count=1; 2-branch continuous formula. Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_51_max": {
@@ -2936,7 +2936,7 @@
     "max": 999999,
     "description": "Max row count for lifecycle_seq=51 (Forward to Inspector). Catalog snapshot rows_count=1; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_52_min": {
@@ -2946,7 +2946,7 @@
     "max": 99999,
     "description": "Min row count for lifecycle_seq=52 (Rescheduled). Catalog snapshot rows_count=1; 2-branch continuous formula. Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_52_max": {
@@ -2956,7 +2956,7 @@
     "max": 999999,
     "description": "Max row count for lifecycle_seq=52 (Rescheduled). Catalog snapshot rows_count=1; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_53_min": {
@@ -2966,7 +2966,7 @@
     "max": 99999,
     "description": "Min row count for lifecycle_seq=53 (Site Grading). Catalog snapshot rows_count=NULL; 2-branch continuous formula. Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_53_max": {
@@ -2976,7 +2976,7 @@
     "max": 999999,
     "description": "Max row count for lifecycle_seq=53 (Site Grading). Catalog snapshot rows_count=NULL; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_54_min": {
@@ -2986,7 +2986,7 @@
     "max": 99999,
     "description": "Min row count for lifecycle_seq=54 (Excavation/Shoring). Catalog snapshot rows_count=NULL; 2-branch continuous formula. Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_54_max": {
@@ -2996,7 +2996,7 @@
     "max": 999999,
     "description": "Max row count for lifecycle_seq=54 (Excavation/Shoring). Catalog snapshot rows_count=NULL; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_55_min": {
@@ -3006,7 +3006,7 @@
     "max": 99999,
     "description": "Min row count for lifecycle_seq=55 (Demolition). Catalog snapshot rows_count=NULL; 2-branch continuous formula. Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_55_max": {
@@ -3016,7 +3016,7 @@
     "max": 999999,
     "description": "Max row count for lifecycle_seq=55 (Demolition). Catalog snapshot rows_count=NULL; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_56_min": {
@@ -3026,7 +3026,7 @@
     "max": 99999,
     "description": "Min row count for lifecycle_seq=56 (Footings/Foundations). Catalog snapshot rows_count=NULL; 2-branch continuous formula. Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_56_max": {
@@ -3036,7 +3036,7 @@
     "max": 999999,
     "description": "Max row count for lifecycle_seq=56 (Footings/Foundations). Catalog snapshot rows_count=NULL; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_57_min": {
@@ -3046,7 +3046,7 @@
     "max": 99999,
     "description": "Min row count for lifecycle_seq=57 (Foundation). Catalog snapshot rows_count=2; 2-branch continuous formula. Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_57_max": {
@@ -3056,7 +3056,7 @@
     "max": 999999,
     "description": "Max row count for lifecycle_seq=57 (Foundation). Catalog snapshot rows_count=2; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_58_min": {
@@ -3066,7 +3066,7 @@
     "max": 99999,
     "description": "Min row count for lifecycle_seq=58 (Structural Framing). Catalog snapshot rows_count=NULL; 2-branch continuous formula. Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_58_max": {
@@ -3076,7 +3076,7 @@
     "max": 999999,
     "description": "Max row count for lifecycle_seq=58 (Structural Framing). Catalog snapshot rows_count=NULL; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_59_min": {
@@ -3086,7 +3086,7 @@
     "max": 99999,
     "description": "Min row count for lifecycle_seq=59 (HVAC Rough-in). Catalog snapshot rows_count=883; 2-branch continuous formula. Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_59_max": {
@@ -3096,7 +3096,7 @@
     "max": 999999,
     "description": "Max row count for lifecycle_seq=59 (HVAC Rough-in). Catalog snapshot rows_count=883; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_60_min": {
@@ -3106,7 +3106,7 @@
     "max": 99999,
     "description": "Min row count for lifecycle_seq=60 (Water Service). Catalog snapshot rows_count=888; 2-branch continuous formula. Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_60_max": {
@@ -3116,7 +3116,7 @@
     "max": 999999,
     "description": "Max row count for lifecycle_seq=60 (Water Service). Catalog snapshot rows_count=888; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_61_min": {
@@ -3126,7 +3126,7 @@
     "max": 99999,
     "description": "Min row count for lifecycle_seq=61 (Water Distribution). Catalog snapshot rows_count=911; 2-branch continuous formula. Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_61_max": {
@@ -3136,7 +3136,7 @@
     "max": 999999,
     "description": "Max row count for lifecycle_seq=61 (Water Distribution). Catalog snapshot rows_count=911; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_62_min": {
@@ -3146,7 +3146,7 @@
     "max": 99999,
     "description": "Min row count for lifecycle_seq=62 (Drain/Waste/Vents). Catalog snapshot rows_count=910; 2-branch continuous formula. Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_62_max": {
@@ -3156,7 +3156,7 @@
     "max": 999999,
     "description": "Max row count for lifecycle_seq=62 (Drain/Waste/Vents). Catalog snapshot rows_count=910; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_63_min": {
@@ -3166,7 +3166,7 @@
     "max": 99999,
     "description": "Min row count for lifecycle_seq=63 (Sewers/Drains/Sewage). Catalog snapshot rows_count=890; 2-branch continuous formula. Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_63_max": {
@@ -3176,7 +3176,7 @@
     "max": 999999,
     "description": "Max row count for lifecycle_seq=63 (Sewers/Drains/Sewage). Catalog snapshot rows_count=890; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_64_min": {
@@ -3186,7 +3186,7 @@
     "max": 99999,
     "description": "Min row count for lifecycle_seq=64 (Fire Service). Catalog snapshot rows_count=889; 2-branch continuous formula. Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_64_max": {
@@ -3196,7 +3196,7 @@
     "max": 999999,
     "description": "Max row count for lifecycle_seq=64 (Fire Service). Catalog snapshot rows_count=889; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_65_min": {
@@ -3206,7 +3206,7 @@
     "max": 99999,
     "description": "Min row count for lifecycle_seq=65 (Fire Access Routes). Catalog snapshot rows_count=NULL; 2-branch continuous formula. Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_65_max": {
@@ -3216,7 +3216,7 @@
     "max": 999999,
     "description": "Max row count for lifecycle_seq=65 (Fire Access Routes). Catalog snapshot rows_count=NULL; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_66_min": {
@@ -3226,7 +3226,7 @@
     "max": 99999,
     "description": "Min row count for lifecycle_seq=66 (Fire Protection Systems). Catalog snapshot rows_count=NULL; 2-branch continuous formula. Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_66_max": {
@@ -3236,7 +3236,7 @@
     "max": 999999,
     "description": "Max row count for lifecycle_seq=66 (Fire Protection Systems). Catalog snapshot rows_count=NULL; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_67_min": {
@@ -3246,7 +3246,7 @@
     "max": 99999,
     "description": "Min row count for lifecycle_seq=67 (Insulation/Vapour Barrier). Catalog snapshot rows_count=NULL; 2-branch continuous formula. Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_67_max": {
@@ -3256,7 +3256,7 @@
     "max": 999999,
     "description": "Max row count for lifecycle_seq=67 (Insulation/Vapour Barrier). Catalog snapshot rows_count=NULL; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_68_min": {
@@ -3266,7 +3266,7 @@
     "max": 99999,
     "description": "Min row count for lifecycle_seq=68 (Insulation). Catalog snapshot rows_count=1; 2-branch continuous formula. Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_68_max": {
@@ -3276,7 +3276,7 @@
     "max": 999999,
     "description": "Max row count for lifecycle_seq=68 (Insulation). Catalog snapshot rows_count=1; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_69_min": {
@@ -3286,7 +3286,7 @@
     "max": 99999,
     "description": "Min row count for lifecycle_seq=69 (Insulation & AirBarrier). Catalog snapshot rows_count=1; 2-branch continuous formula. Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_69_max": {
@@ -3296,7 +3296,7 @@
     "max": 999999,
     "description": "Max row count for lifecycle_seq=69 (Insulation & AirBarrier). Catalog snapshot rows_count=1; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_70_min": {
@@ -3306,7 +3306,7 @@
     "max": 99999,
     "description": "Min row count for lifecycle_seq=70 (Fire Separations). Catalog snapshot rows_count=NULL; 2-branch continuous formula. Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_70_max": {
@@ -3316,7 +3316,7 @@
     "max": 999999,
     "description": "Max row count for lifecycle_seq=70 (Fire Separations). Catalog snapshot rows_count=NULL; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_71_min": {
@@ -3326,7 +3326,7 @@
     "max": 99999,
     "description": "Min row count for lifecycle_seq=71 (Interior Final). Catalog snapshot rows_count=NULL; 2-branch continuous formula. Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_71_max": {
@@ -3336,7 +3336,7 @@
     "max": 999999,
     "description": "Max row count for lifecycle_seq=71 (Interior Final). Catalog snapshot rows_count=NULL; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_72_min": {
@@ -3346,7 +3346,7 @@
     "max": 99999,
     "description": "Min row count for lifecycle_seq=72 (Plumbing Final). Catalog snapshot rows_count=914; 2-branch continuous formula. Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_72_max": {
@@ -3356,7 +3356,7 @@
     "max": 999999,
     "description": "Max row count for lifecycle_seq=72 (Plumbing Final). Catalog snapshot rows_count=914; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_73_min": {
@@ -3366,7 +3366,7 @@
     "max": 99999,
     "description": "Min row count for lifecycle_seq=73 (HVAC Final). Catalog snapshot rows_count=883; 2-branch continuous formula. Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_73_max": {
@@ -3376,7 +3376,7 @@
     "max": 999999,
     "description": "Max row count for lifecycle_seq=73 (HVAC Final). Catalog snapshot rows_count=883; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_74_min": {
@@ -3386,7 +3386,7 @@
     "max": 99999,
     "description": "Min row count for lifecycle_seq=74 (Exterior Final). Catalog snapshot rows_count=NULL; 2-branch continuous formula. Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_74_max": {
@@ -3396,7 +3396,7 @@
     "max": 999999,
     "description": "Max row count for lifecycle_seq=74 (Exterior Final). Catalog snapshot rows_count=NULL; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_75_min": {
@@ -3406,7 +3406,7 @@
     "max": 99999,
     "description": "Min row count for lifecycle_seq=75 (Occupancy). Catalog snapshot rows_count=NULL; 2-branch continuous formula. Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_75_max": {
@@ -3416,7 +3416,7 @@
     "max": 999999,
     "description": "Max row count for lifecycle_seq=75 (Occupancy). Catalog snapshot rows_count=NULL; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_76_min": {
@@ -3426,7 +3426,7 @@
     "max": 99999,
     "description": "Min row count for lifecycle_seq=76 (Final Inspection). Catalog snapshot rows_count=NULL; 2-branch continuous formula. Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_76_max": {
@@ -3436,7 +3436,7 @@
     "max": 999999,
     "description": "Max row count for lifecycle_seq=76 (Final Inspection). Catalog snapshot rows_count=NULL; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_77_min": {
@@ -3446,7 +3446,7 @@
     "max": 99999,
     "description": "Min row count for lifecycle_seq=77 (Pool Suction/Gravity). Catalog snapshot rows_count=NULL; 2-branch continuous formula. Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_77_max": {
@@ -3456,7 +3456,7 @@
     "max": 999999,
     "description": "Max row count for lifecycle_seq=77 (Pool Suction/Gravity). Catalog snapshot rows_count=NULL; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_78_min": {
@@ -3466,7 +3466,7 @@
     "max": 99999,
     "description": "Min row count for lifecycle_seq=78 (Pool Circulation). Catalog snapshot rows_count=NULL; 2-branch continuous formula. Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_78_max": {
@@ -3476,7 +3476,7 @@
     "max": 999999,
     "description": "Max row count for lifecycle_seq=78 (Pool Circulation). Catalog snapshot rows_count=NULL; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_79_min": {
@@ -3486,7 +3486,7 @@
     "max": 99999,
     "description": "Min row count for lifecycle_seq=79 (Repair/Retrofit). Catalog snapshot rows_count=NULL; 2-branch continuous formula. Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_79_max": {
@@ -3496,7 +3496,7 @@
     "max": 999999,
     "description": "Max row count for lifecycle_seq=79 (Repair/Retrofit). Catalog snapshot rows_count=NULL; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_80_min": {
@@ -3506,7 +3506,7 @@
     "max": 99999,
     "description": "Min row count for lifecycle_seq=80 (Change of Use). Catalog snapshot rows_count=NULL; 2-branch continuous formula. Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_80_max": {
@@ -3516,7 +3516,7 @@
     "max": 999999,
     "description": "Max row count for lifecycle_seq=80 (Change of Use). Catalog snapshot rows_count=NULL; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_81_min": {
@@ -3526,7 +3526,7 @@
     "max": 99999,
     "description": "Min row count for lifecycle_seq=81 (System). Catalog snapshot rows_count=NULL; 2-branch continuous formula. Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_81_max": {
@@ -3536,7 +3536,7 @@
     "max": 999999,
     "description": "Max row count for lifecycle_seq=81 (System). Catalog snapshot rows_count=NULL; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_82_min": {
@@ -3546,7 +3546,7 @@
     "max": 99999,
     "description": "Min row count for lifecycle_seq=82 (Security Device). Catalog snapshot rows_count=NULL; 2-branch continuous formula. Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_82_max": {
@@ -3556,7 +3556,7 @@
     "max": 999999,
     "description": "Max row count for lifecycle_seq=82 (Security Device). Catalog snapshot rows_count=NULL; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_83_min": {
@@ -3566,7 +3566,7 @@
     "max": 99999,
     "description": "Min row count for lifecycle_seq=83 (Tent/Portable Classroom). Catalog snapshot rows_count=NULL; 2-branch continuous formula. Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_83_max": {
@@ -3576,7 +3576,7 @@
     "max": 999999,
     "description": "Max row count for lifecycle_seq=83 (Tent/Portable Classroom). Catalog snapshot rows_count=NULL; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_84_min": {
@@ -3586,7 +3586,7 @@
     "max": 99999,
     "description": "Min row count for lifecycle_seq=84 (Final Interior). Catalog snapshot rows_count=1; 2-branch continuous formula. Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_84_max": {
@@ -3596,7 +3596,7 @@
     "max": 999999,
     "description": "Max row count for lifecycle_seq=84 (Final Interior). Catalog snapshot rows_count=1; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_85_min": {
@@ -3606,7 +3606,7 @@
     "max": 99999,
     "description": "Min row count for lifecycle_seq=85 (HVAC Permit?). Catalog snapshot rows_count=1; 2-branch continuous formula. Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_85_max": {
@@ -3616,7 +3616,7 @@
     "max": 999999,
     "description": "Max row count for lifecycle_seq=85 (HVAC Permit?). Catalog snapshot rows_count=1; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_86_min": {
@@ -3626,7 +3626,7 @@
     "max": 99999,
     "description": "Min row count for lifecycle_seq=86 (Survey). Catalog snapshot rows_count=1; 2-branch continuous formula. Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_86_max": {
@@ -3636,7 +3636,7 @@
     "max": 999999,
     "description": "Max row count for lifecycle_seq=86 (Survey). Catalog snapshot rows_count=1; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_87_min": {
@@ -3646,7 +3646,7 @@
     "max": 99999,
     "description": "Min row count for lifecycle_seq=87 (Survey Submitted?). Catalog snapshot rows_count=1; 2-branch continuous formula. Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_87_max": {
@@ -3656,7 +3656,7 @@
     "max": 999999,
     "description": "Max row count for lifecycle_seq=87 (Survey Submitted?). Catalog snapshot rows_count=1; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_88_min": {
@@ -3666,7 +3666,7 @@
     "max": 99999,
     "description": "Min row count for lifecycle_seq=88 (Revision Issued). Catalog snapshot rows_count=NULL; 2-branch continuous formula. Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_88_max": {
@@ -3676,7 +3676,7 @@
     "max": 999999,
     "description": "Max row count for lifecycle_seq=88 (Revision Issued). Catalog snapshot rows_count=NULL; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_89_min": {
@@ -3686,7 +3686,7 @@
     "max": 99999,
     "description": "Min row count for lifecycle_seq=89 (Revised). Catalog snapshot rows_count=27; 2-branch continuous formula. Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_89_max": {
@@ -3696,7 +3696,7 @@
     "max": 999999,
     "description": "Max row count for lifecycle_seq=89 (Revised). Catalog snapshot rows_count=27; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_90_min": {
@@ -3706,7 +3706,7 @@
     "max": 99999,
     "description": "Min row count for lifecycle_seq=90 (Order Complied). Catalog snapshot rows_count=22; 2-branch continuous formula. Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_90_max": {
@@ -3716,7 +3716,7 @@
     "max": 999999,
     "description": "Max row count for lifecycle_seq=90 (Order Complied). Catalog snapshot rows_count=22; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_91_min": {
@@ -3726,7 +3726,7 @@
     "max": 99999,
     "description": "Min row count for lifecycle_seq=91 (Pending Closed). Catalog snapshot rows_count=NULL; 2-branch continuous formula. Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_91_max": {
@@ -3736,7 +3736,7 @@
     "max": 999999,
     "description": "Max row count for lifecycle_seq=91 (Pending Closed). Catalog snapshot rows_count=NULL; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_92_min": {
@@ -3746,7 +3746,7 @@
     "max": 99999,
     "description": "Min row count for lifecycle_seq=92 (Pending Cancellation). Catalog snapshot rows_count=488; 2-branch continuous formula. Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_92_max": {
@@ -3756,7 +3756,7 @@
     "max": 999999,
     "description": "Max row count for lifecycle_seq=92 (Pending Cancellation). Catalog snapshot rows_count=488; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_93_min": {
@@ -3766,7 +3766,7 @@
     "max": 99999,
     "description": "Min row count for lifecycle_seq=93 (Inspection Request to Cancel). Catalog snapshot rows_count=1; 2-branch continuous formula. Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_93_max": {
@@ -3776,7 +3776,7 @@
     "max": 999999,
     "description": "Max row count for lifecycle_seq=93 (Inspection Request to Cancel). Catalog snapshot rows_count=1; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_94_min": {
@@ -3786,7 +3786,7 @@
     "max": 99999,
     "description": "Min row count for lifecycle_seq=94 (Revocation Pending). Catalog snapshot rows_count=NULL; 2-branch continuous formula. Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_94_max": {
@@ -3796,7 +3796,7 @@
     "max": 999999,
     "description": "Max row count for lifecycle_seq=94 (Revocation Pending). Catalog snapshot rows_count=NULL; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_95_min": {
@@ -3806,7 +3806,7 @@
     "max": 99999,
     "description": "Min row count for lifecycle_seq=95 (Revocation Notice Sent). Catalog snapshot rows_count=1; 2-branch continuous formula. Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_95_max": {
@@ -3816,7 +3816,7 @@
     "max": 999999,
     "description": "Max row count for lifecycle_seq=95 (Revocation Notice Sent). Catalog snapshot rows_count=1; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_96_min": {
@@ -3826,7 +3826,7 @@
     "max": 99999,
     "description": "Min row count for lifecycle_seq=96 (Closed). Catalog snapshot rows_count=NULL; 2-branch continuous formula. Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_96_max": {
@@ -3836,7 +3836,7 @@
     "max": 999999,
     "description": "Max row count for lifecycle_seq=96 (Closed). Catalog snapshot rows_count=NULL; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_97_min": {
@@ -3846,7 +3846,7 @@
     "max": 99999,
     "description": "Min row count for lifecycle_seq=97 (File Closed). Catalog snapshot rows_count=6; 2-branch continuous formula. Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_97_max": {
@@ -3856,7 +3856,7 @@
     "max": 999999,
     "description": "Max row count for lifecycle_seq=97 (File Closed). Catalog snapshot rows_count=6; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_98_min": {
@@ -3866,7 +3866,7 @@
     "max": 99999,
     "description": "Min row count for lifecycle_seq=98 (Permit Issued/Close File). Catalog snapshot rows_count=2; 2-branch continuous formula. Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_98_max": {
@@ -3876,7 +3876,7 @@
     "max": 999999,
     "description": "Max row count for lifecycle_seq=98 (Permit Issued/Close File). Catalog snapshot rows_count=2; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_99_min": {
@@ -3886,7 +3886,7 @@
     "max": 99999,
     "description": "Min row count for lifecycle_seq=99 (Refusal Notice). Catalog snapshot rows_count=958; 2-branch continuous formula. Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_99_max": {
@@ -3896,7 +3896,7 @@
     "max": 999999,
     "description": "Max row count for lifecycle_seq=99 (Refusal Notice). Catalog snapshot rows_count=958; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_100_min": {
@@ -3906,7 +3906,7 @@
     "max": 99999,
     "description": "Min row count for lifecycle_seq=100 (Refused). Catalog snapshot rows_count=1; 2-branch continuous formula. Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_100_max": {
@@ -3916,7 +3916,7 @@
     "max": 999999,
     "description": "Max row count for lifecycle_seq=100 (Refused). Catalog snapshot rows_count=1; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_101_min": {
@@ -3926,7 +3926,7 @@
     "max": 99999,
     "description": "Min row count for lifecycle_seq=101 (Abandoned). Catalog snapshot rows_count=122; 2-branch continuous formula. Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_101_max": {
@@ -3936,7 +3936,7 @@
     "max": 999999,
     "description": "Max row count for lifecycle_seq=101 (Abandoned). Catalog snapshot rows_count=122; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_102_min": {
@@ -3946,7 +3946,7 @@
     "max": 99999,
     "description": "Min row count for lifecycle_seq=102 (Application Withdrawn). Catalog snapshot rows_count=49; 2-branch continuous formula. Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_102_max": {
@@ -3956,7 +3956,7 @@
     "max": 999999,
     "description": "Max row count for lifecycle_seq=102 (Application Withdrawn). Catalog snapshot rows_count=49; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_103_min": {
@@ -3966,7 +3966,7 @@
     "max": 99999,
     "description": "Min row count for lifecycle_seq=103 (Not Accepted). Catalog snapshot rows_count=9; 2-branch continuous formula. Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_103_max": {
@@ -3976,7 +3976,7 @@
     "max": 999999,
     "description": "Max row count for lifecycle_seq=103 (Not Accepted). Catalog snapshot rows_count=9; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_104_min": {
@@ -3986,7 +3986,7 @@
     "max": 99999,
     "description": "Min row count for lifecycle_seq=104 (Permit Revoked). Catalog snapshot rows_count=2; 2-branch continuous formula. Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_104_max": {
@@ -3996,7 +3996,7 @@
     "max": 999999,
     "description": "Max row count for lifecycle_seq=104 (Permit Revoked). Catalog snapshot rows_count=2; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_105_min": {
@@ -4006,7 +4006,7 @@
     "max": 99999,
     "description": "Min row count for lifecycle_seq=105 (Revoked). Catalog snapshot rows_count=2; 2-branch continuous formula. Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_105_max": {
@@ -4016,7 +4016,7 @@
     "max": 999999,
     "description": "Max row count for lifecycle_seq=105 (Revoked). Catalog snapshot rows_count=2; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_106_min": {
@@ -4026,7 +4026,7 @@
     "max": 99999,
     "description": "Min row count for lifecycle_seq=106 (Work Suspended). Catalog snapshot rows_count=18; 2-branch continuous formula. Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_106_max": {
@@ -4036,7 +4036,7 @@
     "max": 999999,
     "description": "Max row count for lifecycle_seq=106 (Work Suspended). Catalog snapshot rows_count=18; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_107_min": {
@@ -4046,7 +4046,7 @@
     "max": 99999,
     "description": "Min row count for lifecycle_seq=107 (VIOLATION). Catalog snapshot rows_count=16; 2-branch continuous formula. Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_107_max": {
@@ -4056,7 +4056,7 @@
     "max": 999999,
     "description": "Max row count for lifecycle_seq=107 (VIOLATION). Catalog snapshot rows_count=16; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_108_min": {
@@ -4066,7 +4066,7 @@
     "max": 99999,
     "description": "Min row count for lifecycle_seq=108 (Order Issued). Catalog snapshot rows_count=7; 2-branch continuous formula. Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_108_max": {
@@ -4076,7 +4076,7 @@
     "max": 999999,
     "description": "Max row count for lifecycle_seq=108 (Order Issued). Catalog snapshot rows_count=7; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_109_min": {
@@ -4086,7 +4086,7 @@
     "max": 99999,
     "description": "Min row count for lifecycle_seq=109 (Cancelled). Catalog snapshot rows_count=1; 2-branch continuous formula. Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_109_max": {
@@ -4096,7 +4096,7 @@
     "max": 999999,
     "description": "Max row count for lifecycle_seq=109 (Cancelled). Catalog snapshot rows_count=1; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_110_min": {
@@ -4106,7 +4106,7 @@
     "max": 99999,
     "description": "Min row count for lifecycle_seq=110 (Follow-up Required). Catalog snapshot rows_count=1; 2-branch continuous formula. Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_band_110_max": {
@@ -4116,7 +4116,7 @@
     "max": 999999,
     "description": "Max row count for lifecycle_seq=110 (Follow-up Required). Catalog snapshot rows_count=1; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "Lifecycle Seq Bands"
     }
   },
   "lifecycle_seq_unclassified_max": {
