@@ -1,0 +1,296 @@
+{
+  "$comment": [
+    "THE ENFORCER FOR WD-1 (Spec 122 §1.4 / §1.10; Spec 124 §5 register) — every",
+    "`outputs.write_discipline.class` enum value (frozen, x-frozen: true,",
+    "step.schema.json definitions.writeDiscipline.properties.class), and every",
+    "`sharing.on_contention` enum value (frozen, folded in per Ask A3(ii)), must",
+    "carry a disposition row HERE naming whether it has a real, live executor",
+    "(`implemented` / `executor_by_runner`), is `banned_for_new` (codegen-capable",
+    "or schema-expressible but forbidden for any new descriptor), or is",
+    "`retire` (the class was measured-refuted — nothing live ever needed it, or",
+    "it is structurally undeclarable). This mirrors grandfathered.json's proven",
+    "posture ('adjudication is a reviewed diff, not something a descriptor",
+    "grants itself') applied to the ENUM itself rather than to a per-step",
+    "guard/retraction exemption.",
+    "",
+    "This file does NOT change step.schema.json's bytes (schema_sha256 stays",
+    "byte-identical — verified by generate-template-freeze.mjs --check) and",
+    "does NOT remove any enum value (Ask A3 ruling: a `retire`/`banned_for_new`",
+    "class stays declarable in the frozen enum; pruning it is a deliberate,",
+    "separately-authorized re-freeze, not this WF).",
+    "",
+    "Both directions are enforced by src/tests/write-class-disposition.infra.test.ts:",
+    "  (0) every row's `disposition` (write_classes AND on_contention) is one of",
+    "      EXACTLY the four closed-menu values named above — never a free string",
+    "      (a typo like \"implementedd\", or an invented fifth value, is RED).",
+    "  (1) every live enum value (class + on_contention) has a row here, every",
+    "      `implemented`/`executor_by_runner` row's executor_fn/runners[]",
+    "      resolve to real exported symbols in scripts/lib/step/write.js or",
+    "      scripts/lib/step/index.js (grep-verified, not trusted), and no live",
+    "      descriptor (scripts/*.descriptor.json, scripts/quality/*.descriptor.json)",
+    "      declares a banned_for_new/retire class OR sharing.on_contention value —",
+    "      the on_contention half is checked against its OWN registry rows, never",
+    "      inferred from the class half.",
+    "  (2)-(4) RED on three shapes: a descriptor declaring a banned class, a",
+    "      registry missing a live enum row, and an orphan registry row not in",
+    "      the live enum — so the registry can never silently drift in either",
+    "      direction.",
+    "",
+    "A row MAY carry an optional `basis` field (e.g. self_skip's \"by_construction\")",
+    "for a nuance that does not change the disposition itself — `basis` is never",
+    "part of the closed-menu check, only `disposition` is.",
+    "",
+    "Measured 2026-09-09 @ f3bab336, branch wf2/deep-scrapes-restore-l0, by the",
+    "WD-1 WF5 audit (.cursor/wf5_wd1_write_class_audit_active_task.md §1.1/§1.3).",
+    "Each `why` below cites the grounded evidence directly, not the plan."
+  ],
+  "contract_version": 1,
+  "write_classes": {
+    "guarded_upsert": {
+      "letter": "A",
+      "disposition": "implemented",
+      "executor": {
+        "branch": "two live paths: set_source:\"compute\" -> the GUARDED_UPSERT_COMPUTE_CLASS descriptive plan (write.js:514); otherwise -> the DEFAULT (unnamed) codegen path (write.js:555-620)",
+        "executor_fn": ["executeRecorderUpsert", "executeUpsertBatch"],
+        "runners": ["runRecorderPhase", "executeOrderedWrites", "runLinkKeyedPhase"]
+      },
+      "declared_by": [
+        { "step": "refresh_snapshot", "target": "data_quality_snapshots", "note": "compute path (set_source:\"compute\"), via runRecorderPhase" },
+        { "step": "link_massing", "target": "parcel_buildings", "note": "default codegen path" },
+        { "step": "link_parcels", "target": "permit_parcels", "note": "default codegen path, via runLinkKeyedPhase" }
+      ],
+      "why": "Live, exercised on 3 real targets across 2 archetypes. The compute path resolves through executeRecorderUpsert <- runRecorderPhase (index.js:1964); the default codegen path resolves through executeUpsertBatch <- executeOrderedWrites (index.js:2752) / runLinkKeyedPhase (index.js:891). No gap.",
+      "adjudicated_by": "WD-1 WF5 audit",
+      "date": "2026-09-09"
+    },
+    "upsert_scoped_departure_delete": {
+      "letter": "B",
+      "disposition": "implemented",
+      "executor": {
+        "branch": "the DEFAULT (unnamed) codegen path's retract axis: write.js:606 retract===\"departed\" -> delete_sql",
+        "executor_fn": ["executeWrite", "executeRetraction"],
+        "runners": ["runIngestPhase"]
+      },
+      "declared_by": [
+        { "step": "load_ravines", "target": "ravines", "note": "retract:\"departed\"" }
+      ],
+      "why": "Class B needs no named write.js branch — it IS the default codegen path's canonical shape, driven by the retract axis rather than a class-keyed switch. Live for load_ravines via write.executeWrite (index.js:633, inside runIngestPhase 489-707) -> write.executeRetraction. executeRetraction is also called generically at index.js:793 (inside runLinkPhase, 708-890) and :961 (inside runLinkKeyedPhase, 891-1181) for those runners' own retract handling, but the executor (write.executeWrite/write.executeRetraction) is runner-agnostic, so class B's disposition does not depend on which caller resolved which site (WD-1 plan §7 item 2).",
+      "adjudicated_by": "WD-1 WF5 audit",
+      "date": "2026-09-09"
+    },
+    "staging_full_replace": {
+      "letter": "C",
+      "disposition": "banned_for_new",
+      "executor": null,
+      "declared_by": [],
+      "why": "ZERO mention in scripts/lib/ — no codegen branch, no executor. A descriptor declaring it would silently fall to the DEFAULT codegen path (a plain guarded upsert), NOT the promised temp->DELETE->INSERT...SELECT shape, so the label would be a lie if it were ever declared. The one suspected site (load_zoning) is already recorded as REFUTED in x-menu-completeness. No live descriptor declares it.",
+      "adjudicated_by": "WD-1 WF5 audit",
+      "date": "2026-09-09"
+    },
+    "insert_only_no_retraction": {
+      "letter": "D",
+      "disposition": "implemented",
+      "executor": {
+        "branch": "INSERT_ONLY_NO_RETRACT_CLASS descriptive plan (write.js:445)",
+        "executor_fn": ["executeInsertSelectNoRetract"],
+        "runners": ["runMaterializePhase"]
+      },
+      "declared_by": [
+        { "step": "link_parcel_addresses", "target": "parcel_address_points" },
+        { "step": "enrich_parcels", "target": "enrich_parcels_pass3_scope", "note": "⚠ enrich_parcels's own target reaches this class via write.js/runMaterializePhase's shared codegen, not via runEnrichPhase (see class I/K note)" }
+      ],
+      "why": "Live via executeInsertSelectNoRetract <- runMaterializePhase (index.js:1550, call site :1630). Also read by validate.js:212 NO_RETRACTION_CLASSES (the assertNoRetraction construction-time refusal) and index.js:2487/2720. Already banned-for-new by the existing x-banned-for-new.rules[] no_retraction predicate (grandfathered for link_parcel_addresses in scripts/steps/_schema/grandfathered.json) — WD-1 adds no new enforcement here, it confirms the class is genuinely implemented AND already governed.",
+      "adjudicated_by": "WD-1 WF5 audit",
+      "date": "2026-09-09"
+    },
+    "write_once_backfill": {
+      "letter": "E",
+      "disposition": "implemented",
+      "executor": {
+        "branch": "WRITE_ONCE_BACKFILL_CLASS descriptive plan (write.js:542)",
+        "executor_fn": ["executeBackfillUpdate"],
+        "runners": ["runBackfillPhase"]
+      },
+      "declared_by": [
+        { "step": "compute_centroids", "target": "parcels" }
+      ],
+      "why": "Live via executeBackfillUpdate <- runBackfillPhase (index.js:1727, call site :1802). This was WD-1's own founding gap (pilot 6 Fold C B-1 found class E genuinely UNIMPLEMENTED before LG-20 built it) — LG-20 closed it; re-audited here and confirmed still implemented.",
+      "adjudicated_by": "WD-1 WF5 audit",
+      "date": "2026-09-09"
+    },
+    "link_full_retraction": {
+      "letter": "F",
+      "disposition": "implemented",
+      "executor": {
+        "branch": "LINK_FULL_RETRACTION_CLASS descriptive plan (write.js:486)",
+        "executor_fn": ["executeGuardedDeleteByKey"],
+        "runners": ["runLinkKeyedPhase"]
+      },
+      "declared_by": [
+        { "step": "link_parcels", "target": "permit_parcels" }
+      ],
+      "why": "Live via executeGuardedDeleteByKey <- runLinkKeyedPhase (index.js:891, call site :1104). No gap.",
+      "adjudicated_by": "WD-1 WF5 audit",
+      "date": "2026-09-09"
+    },
+    "set_based_scoped": {
+      "letter": "G",
+      "disposition": "implemented",
+      "executor": {
+        "branch": "in SET_BASED_CLASSES (write.js:63); codegen clear_sql (write.js:383) for the scoped-clear shape, OR set_source:\"compute\" descriptive plan (write.js:365) for the compute-guarded-update shape",
+        "executor_fn": ["executeSetBasedClear", "executeGuardedUpdate"],
+        "runners": ["runLinkPhase", "runCascadePhase", "runLinkKeyedPhase", "runBackfillPhase", "executeOrderedWrites"]
+      },
+      "declared_by": [
+        { "step": "compute_centroids", "target": "parcels" },
+        { "step": "enrich_parcels", "target": "parcels", "note": "⚠ see class I/K note — this target reaches G via write.js/its own runner, not runEnrichPhase" },
+        { "step": "link_massing", "target": "parcel_buildings" },
+        { "step": "link_parcels", "target": "permits" },
+        { "step": "link_wsib", "target": "wsib_registry / entities (2 targets)" }
+      ],
+      "why": "Live and the most widely-declared class (6 targets across 5 steps). executeSetBasedClear <- runCascadePhase (index.js:1385,1439,1483, direct) and <- executeOrderedWrites (index.js:2762, itself reached from runLinkPhase :828 and generically available to runLinkKeyedPhase); executeGuardedUpdate <- runLinkKeyedPhase (index.js:1117, direct, watermark update) and <- runBackfillFullRecompute (index.js:1882, an internal, non-exported helper of runBackfillPhase's own FULL-mode branch — listed here as runBackfillPhase since that is the real exported dispatch entry point). No gap.",
+      "adjudicated_by": "WD-1 WF5 audit",
+      "date": "2026-09-09"
+    },
+    "set_based_unscoped": {
+      "letter": "H",
+      "disposition": "banned_for_new",
+      "executor": {
+        "branch": "in SET_BASED_CLASSES (write.js:63) — codegen WORKS if declared",
+        "executor_fn": ["executeSetBasedClear"],
+        "runners": []
+      },
+      "declared_by": [],
+      "why": "Codegen-capable (SET_BASED_CLASSES includes it) but ZERO descriptors declare it — implemented-unexercised. Already banned by x-banned-for-new.rules[] unscoped_set_based, whose enforcer is MISSING (Spec 122 :64, \"remains UNENFORCED - no consumer yet\", re-measured live here). This WD-1 lock adds the CLASS-level ban (a live descriptor declaring set_based_unscoped now reds this suite); the scope-predicate rule's own missing enforcer is a separate item, filed HIGH in review_followups.md (commit 1) and deliberately kept out of WD-1's scope (Ask A2).",
+      "adjudicated_by": "WD-1 WF5 audit",
+      "date": "2026-09-09"
+    },
+    "temp_materialize": {
+      "letter": "I",
+      "disposition": "executor_by_runner",
+      "executor": {
+        "branch": "execution.shape:\"enrich\" + execution.phases[] (RE-FREEZE #1) — resolved by phase NAME, never by write_discipline.class; runEnrichPhase has ZERO buildWritePlan calls and ZERO write.execute* calls",
+        "executor_fn": null,
+        "executor_fn_note": "no static write.js/index.js symbol to resolve — the real executor is the named compute pass function, resolved at runtime via passByName(phase.name) -> passSpec.run(client, passCtx, config) in scripts/lib/compute/enrich-parcels.js. This is precisely why the disposition is executor_by_runner, not implemented: only runners[] (runEnrichPhase, a real index.js export) is mechanically checkable.",
+        "runners": ["runEnrichPhase"]
+      },
+      "declared_by": [
+        { "step": "enrich_parcels", "target": "parcels", "note": "3 targets (e1,e2,e3) — zoning/max_build/existing_structure passes" }
+      ],
+      "why": "runEnrichPhase (index.js:2279) iterates descriptor.execution.phases[] sorted by order, splits on txn, and calls passSpec.run at :2462 (shared txn passes) / :2604 (post_commit pass) — a lookup BY NAME into compute.passes[], never by class. The class is a truthful description of the mechanic (a session TEMP table -> one UPDATE...FROM guarded IS DISTINCT FROM) with no codegen consumer, which is why executor_by_runner is the honest disposition rather than implemented (no write.js branch exists) or banned_for_new (3 live enrich_parcels targets depend on it). The SQL is authored in scripts/lib/compute/enrich-parcels.js (35 client.query( sites, the K3 residual).",
+      "adjudicated_by": "WD-1 WF5 audit",
+      "date": "2026-09-09"
+    },
+    "multi_pass_defer": {
+      "letter": "J",
+      "disposition": "retire",
+      "executor": null,
+      "declared_by": [],
+      "why": "ZERO mention anywhere. Spec 122 §1.4/§8.2 originally assigned it to enrich_parcels (step 21) — which, converted, declares per-target classes instead. Multi-pass-defer is a STEP LIFECYCLE, now execution.shape:\"enrich\" + execution.phases[] (RE-FREEZE #1), not a write mechanic — a V7 category error in the original taxonomy. No live descriptor declares it, and none should: the concept it named now lives in execution.shape, not write_discipline.class.",
+      "adjudicated_by": "WD-1 WF5 audit",
+      "date": "2026-09-09"
+    },
+    "derived_recompute": {
+      "letter": "K",
+      "disposition": "executor_by_runner",
+      "executor": {
+        "branch": "same mechanism as class I — execution.phases[], resolved by phase NAME (the optimal_config pass, txn:\"post_commit\")",
+        "executor_fn": null,
+        "executor_fn_note": "identical reasoning to class I's executor_fn_note — no static write.js/index.js symbol, resolved at runtime via passByName(phase.name) -> passSpec.run(...) in scripts/lib/compute/enrich-parcels.js.",
+        "runners": ["runEnrichPhase"]
+      },
+      "declared_by": [
+        { "step": "enrich_parcels", "target": "parcels", "note": "1 target (e5) — optimal_config pass" }
+      ],
+      "why": "Identical reasoning to class I (see that row's why in full) — ZERO write.js mention, executed by the named post_commit compute pass via runEnrichPhase, not by class-keyed codegen.",
+      "adjudicated_by": "WD-1 WF5 audit",
+      "date": "2026-09-09"
+    },
+    "verdict_only": {
+      "letter": "L",
+      "disposition": "retire",
+      "executor": null,
+      "declared_by": [],
+      "why": "ZERO mention, and STRUCTURALLY UNDECLARABLE: class exists only under outputs.writes[], and the ASSERT archetype's own frozen x-profile forces outputs to the literal const \"none\" (step.schema.json:1718) — so NO ASSERT step, including assert_schema (the sole ASSERT representative, Spec 122 §8.2), can ever declare outputs.writes[] at all, let alone a class inside it. assert-schema.descriptor.json already carries a formal deviations[] entry recording exactly this gap FROM §8.2's own class-L assignment. This is not merely unexercised (like H) or refuted-by-measurement (like M) — it is undeclarable BY CONSTRUCTION for the only archetype that was ever assigned it. Closed in commit 3: Spec 122 §1.10 and §8.2's ASSERT archetype row are both amended to state this explicitly.",
+      "adjudicated_by": "WD-1 WF5 audit",
+      "date": "2026-09-09"
+    },
+    "snapshot_append": {
+      "letter": "M",
+      "disposition": "retire",
+      "executor": null,
+      "declared_by": [],
+      "why": "ZERO mention. x-menu-completeness records the one step Spec 122 §1.4/§8.2 assigned M to (refresh_snapshot, RECORDER archetype) as measured-refuted: \"M -> INEXPRESSIBLE\" — refresh_snapshot's actual write is a keyed ON CONFLICT (snapshot_date) DO UPDATE (class A, guarded_upsert/set_source:\"compute\", executed via executeRecorderUpsert <- runRecorderPhase), not an append-only INSERT into a separate snapshot table. Unlike class L (undeclarable by construction for its whole archetype), M's own archetype (RECORDER) DOES declare outputs freely — the class was simply never the real shape of the one step ever assigned it. Spec 122 §8.2's RECORDER archetype row (currently reading \"M\") is amended in commit 3 to record this refutation alongside its now-correct class A.",
+      "adjudicated_by": "WD-1 WF5 audit",
+      "date": "2026-09-09"
+    },
+    "set_based_join_update": {
+      "letter": "N",
+      "disposition": "implemented",
+      "executor": {
+        "branch": "JOIN_UPDATE_CLASS descriptive plan (write.js:417); execution-time refusal of any INSERT INTO/ON CONFLICT text (write.js:897)",
+        "executor_fn": ["executeSetBasedJoinUpdate"],
+        "runners": ["runCascadePhase"]
+      },
+      "declared_by": [
+        { "step": "link_wsib", "target": "wsib_registry / entities (2 targets)" },
+        { "step": "enrich_parcels", "target": "parcels", "note": "⚠ see class I/K note — this target reaches N via write.js/runCascadePhase, not runEnrichPhase" }
+      ],
+      "why": "Live via executeSetBasedJoinUpdate <- runCascadePhase (index.js:1241, call sites :1427,:1452). No gap.",
+      "adjudicated_by": "WD-1 WF5 audit",
+      "date": "2026-09-09"
+    },
+    "set_based_null_retract": {
+      "letter": "O",
+      "disposition": "implemented",
+      "executor": {
+        "branch": "in SET_BASED_CLASSES (write.js:63)",
+        "executor_fn": ["executeSetBasedClear"],
+        "runners": ["runCascadePhase"]
+      },
+      "declared_by": [
+        { "step": "link_wsib", "target": "wsib_registry" }
+      ],
+      "why": "Live via executeSetBasedClear <- runCascadePhase (index.js:1385). Also the only class reset.js generateReset can derive reset SQL for (reset.js:73,143). No gap.",
+      "adjudicated_by": "WD-1 WF5 audit",
+      "date": "2026-09-09"
+    }
+  },
+  "on_contention": {
+    "self_skip": {
+      "disposition": "implemented",
+      "basis": "by_construction",
+      "executor": {
+        "branch": "no reader keyed on this field — it IS the library's behaviour by construction",
+        "executor_fn": null,
+        "executor_fn_note": "pipeline.withAdvisoryLock (scripts/lib/pipeline.js, not scripts/lib/step/) plus each runner's own advisory_lock_held_elsewhere self-skip terminal — not a scripts/lib/step/ symbol, so not mechanically resolved by this lock. disposition is plain 'implemented' (the closed 4-value menu has no fifth value for this) — 'basis: \"by_construction\"' is the field that records nothing reads this value to SELECT the behaviour; it is true by the library's construction, not merely undeclared.",
+        "runners": []
+      },
+      "declared_by": [
+        { "step": "compute_centroids" }, { "step": "enrich_parcels" }, { "step": "link_massing" },
+        { "step": "link_parcel_addresses" }, { "step": "link_parcels" }, { "step": "link_wsib" },
+        { "step": "load_ravines" }, { "step": "assert_schema" }, { "step": "refresh_snapshot" }
+      ],
+      "why": "9 of 9 converted descriptors declare self_skip; grep -rn on_contention scripts/lib/ scripts/*.js scripts/analysis/ scripts/hooks/ src/ = ZERO readers (only descriptors, schema, and Spec 122 prose). Declared-only, but truthfully so: pipeline.withAdvisoryLock's self-skip terminal is the library's actual, unconditional contention behaviour today, so the field names something real even with no dedicated reader — hence plain 'implemented', with basis:\"by_construction\" recording the nuance (nothing reads the field to select this) rather than inventing a fifth disposition value. A drift guard (below) is the cheap, non-inventive lock this WF adds (Ask A1).",
+      "adjudicated_by": "WD-1 WF5 audit + Ask A1 recommendation",
+      "date": "2026-09-09",
+      "drift_guard": "every converted descriptor's sharing.on_contention must equal whichever on_contention key is dispositioned \"implemented\" in THIS registry (today: self_skip) — derived from the registry, never a hardcoded literal, so the guard cannot silently stay green if a future ruling changes which value is implemented (proven by the infra lock's Ask A1 assertion) — a genuine drift guard, not a new mechanism; rejects the heavier option of inventing an unexecuted runner read of the field."
+    },
+    "wait": {
+      "disposition": "banned_for_new",
+      "executor": null,
+      "declared_by": [],
+      "why": "ZERO — no wait/retry/lock-timeout-loop path keyed on this field exists anywhere in scripts/lib/.",
+      "adjudicated_by": "WD-1 WF5 audit",
+      "date": "2026-09-09"
+    },
+    "fail": {
+      "disposition": "banned_for_new",
+      "executor": null,
+      "declared_by": [],
+      "why": "ZERO — no path raises on contention instead of self-skipping.",
+      "adjudicated_by": "WD-1 WF5 audit",
+      "date": "2026-09-09"
+    }
+  }
+}
