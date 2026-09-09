@@ -72,4 +72,34 @@ describe('logic-variable-groups — drift guard (WF2 admin tunable coverage, com
     expect(run.status, `the checker did not fire on a stale fixture; stdout=${run.stdout} stderr=${run.stderr}`).toBe(1);
     expect(run.stderr + run.stdout).toContain('STALE');
   });
+
+  // WF2 ADMIN-1 ratchet, batch 1 (§4.4/R-8 known-bad-fixture gap): the
+  // KNOWN_GROUP_LABELS set in logic-var-admin-declarations.logic.test.ts is
+  // DERIVED from the seed itself, so a seed-wide typo'd label is vacuously
+  // green there. The real authority is THIS generator's GROUP_ORDER
+  // cross-validation — a seed key declaring admin.group = X where X is not
+  // pinned anywhere in GROUP_ORDER must THROW, never silently spawn a new
+  // 1-key group. BUILDO_LOGIC_VARS_SEED_PATH points the generator at a
+  // tampered temp copy of the real seed; the real committed seed is never
+  // mutated.
+  it('RED — a seed key naming a group absent from GROUP_ORDER throws (not silently accepted)', () => {
+    const realSeed = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, 'scripts', 'seeds', 'logic_variables.json'), 'utf-8'));
+    const someKey = Object.keys(realSeed)[0] as string;
+    const tampered = { ...realSeed, [someKey]: { ...realSeed[someKey], admin: { group: '___NOT_PINNED_IN_GROUP_ORDER___' } } };
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'logic-var-groups-seed-fixture-'));
+    const badSeedPath = path.join(dir, 'tampered-logic_variables.json');
+    fs.writeFileSync(badSeedPath, JSON.stringify(tampered, null, 2) + '\n');
+    const run = spawnSync('node', [GENERATOR, '--check'], {
+      cwd: REPO_ROOT,
+      encoding: 'utf8',
+      timeout: 60_000,
+      env: {
+        ...process.env,
+        BUILDO_LOGIC_VARS_SEED_PATH: path.relative(REPO_ROOT, badSeedPath),
+        BUILDO_LOGIC_VAR_GROUPS_PATH: path.relative(REPO_ROOT, path.join(dir, 'throwaway-output.json')),
+      },
+    });
+    expect(run.status, `the generator did not throw on an unpinned group label; stdout=${run.stdout} stderr=${run.stderr}`).not.toBe(0);
+    expect(run.stderr + run.stdout).toContain('is not pinned in GROUP_ORDER');
+  });
 });

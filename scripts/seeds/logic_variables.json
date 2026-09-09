@@ -356,7 +356,7 @@
     "min": 1,
     "max": 365,
     "admin": {
-      "hidden": "unclassified"
+      "group": "CoA Matching"
     }
   },
   "inspection_stall_days": {
@@ -426,7 +426,7 @@
     "min": 14,
     "max": 365,
     "admin": {
-      "hidden": "unclassified"
+      "group": "CoA Matching"
     }
   },
   "scrape_early_phase_threshold_pct": {
@@ -606,7 +606,7 @@
     "min": 1,
     "max": 100,
     "admin": {
-      "hidden": "unclassified"
+      "group": "CoA Gates & Staleness"
     }
   },
   "lifecycle_unclassified_max": {
@@ -986,7 +986,7 @@
     "min": 0,
     "max": 100,
     "admin": {
-      "hidden": "unclassified"
+      "group": "CoA Gates & Staleness"
     }
   },
   "coa_parcel_conf_tier1a": {
@@ -996,7 +996,7 @@
     "min": 0.01,
     "max": 1,
     "admin": {
-      "hidden": "unclassified"
+      "group": "CoA Matching"
     }
   },
   "coa_parcel_conf_tier1b": {
@@ -1006,7 +1006,7 @@
     "min": 0.01,
     "max": 1,
     "admin": {
-      "hidden": "unclassified"
+      "group": "CoA Matching"
     }
   },
   "coa_scope_unmapped_threshold_pct": {
@@ -1016,7 +1016,7 @@
     "min": 0,
     "max": 100,
     "admin": {
-      "hidden": "unclassified"
+      "group": "CoA Scope & Trades"
     }
   },
   "coa_trades_unmapped_threshold_pct": {
@@ -1026,7 +1026,7 @@
     "min": 0,
     "max": 100,
     "admin": {
-      "hidden": "unclassified"
+      "group": "CoA Scope & Trades"
     }
   },
   "coa_active_trades_warn_max": {
@@ -1036,7 +1036,7 @@
     "min": 1,
     "max": 35,
     "admin": {
-      "hidden": "unclassified"
+      "group": "CoA Scope & Trades"
     }
   },
   "permits_bylaw_max_fsi_null_warn_pct": {
@@ -1066,7 +1066,7 @@
     "min": 0,
     "max": 100,
     "admin": {
-      "hidden": "unclassified"
+      "group": "Data Quality Thresholds"
     }
   },
   "coa_bylaw_max_coverage_null_warn_pct": {
@@ -1076,7 +1076,7 @@
     "min": 0,
     "max": 100,
     "admin": {
-      "hidden": "unclassified"
+      "group": "Data Quality Thresholds"
     }
   },
   "coa_cost_coverage_threshold_pct": {
@@ -1086,7 +1086,7 @@
     "min": 0,
     "max": 100,
     "admin": {
-      "hidden": "unclassified"
+      "group": "Cost Tuning"
     }
   },
   "coa_cost_coverage_fail_pct": {
@@ -1096,7 +1096,7 @@
     "min": 0,
     "max": 100,
     "admin": {
-      "hidden": "unclassified"
+      "group": "Cost Tuning"
     }
   },
   "coa_inherit_from_permit_min_confidence": {
@@ -1106,7 +1106,7 @@
     "min": 0.01,
     "max": 1,
     "admin": {
-      "hidden": "unclassified"
+      "group": "CoA Matching"
     }
   },
   "massing_shed_threshold_sqm": {
@@ -4165,7 +4165,7 @@
     "min": 1,
     "description": "Phase F.1 CoA forecast snowplow staleness gate: if lifecycle_transitions.MAX(transitioned_at) anchor is older than this many days, the CoA forecast becomes snowplow-eligible (treats long-stalled E.2-classified CoAs without subsequent transitions as Rescue Missions). Default 180 = 6 months ≈ p75 of typical CoA decision cohort duration per Spec 84 §7.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "CoA Gates & Staleness"
     }
   },
   "coa_gate_calibration_window_days": {
@@ -4174,7 +4174,7 @@
     "min": 1,
     "description": "Phase F.1 CoA audit-verdict gate freshness window: compute_phase_calibration must have a permits-chain pipeline_runs row within this many days for the gate to consult its verdict. Older runs trigger no_prior_run state. Default 7 aligns with Spec 48 §3.4 baseline window. Operator may raise this if calibration runs are less frequent than weekly.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "CoA Gates & Staleness"
     }
   },
   "coa_gate_force_active": {
@@ -4184,7 +4184,7 @@
     "max": 1,
     "description": "Spec 79 §7a WF3 #2 — operator safety valve for compute-trade-forecasts.js CoA audit-verdict gate. 0 = normal gate behavior (calibration verdict + cold-start grace decide). 1 = force CoA writes regardless of calibration verdict; use for post-grace deadlocks where coa_cohort_presence remains 0 after 7 days. When 1, script emits WARN audit row + pipeline.log.warn on every run; reset to 0 once root cause is resolved.",
     "admin": {
-      "hidden": "unclassified"
+      "group": "CoA Gates & Staleness"
     }
   },
   "p16_inference_layer_enabled": {

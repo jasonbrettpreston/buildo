@@ -44,7 +44,13 @@ import fs from 'fs';
 import path from 'path';
 
 const ROOT = path.resolve(import.meta.dirname, '..');
-const SEED_PATH = path.join(ROOT, 'scripts', 'seeds', 'logic_variables.json');
+// BUILDO_LOGIC_VARS_SEED_PATH — test-only override (same shape as
+// BUILDO_LOGIC_VAR_GROUPS_PATH below) so a RED fixture can point the
+// GROUP_ORDER cross-validation (below) at a tampered temp seed file instead
+// of mutating the real committed scripts/seeds/logic_variables.json.
+const SEED_PATH = process.env.BUILDO_LOGIC_VARS_SEED_PATH
+  ? path.resolve(ROOT, process.env.BUILDO_LOGIC_VARS_SEED_PATH)
+  : path.join(ROOT, 'scripts', 'seeds', 'logic_variables.json');
 // BUILDO_LOGIC_VAR_GROUPS_PATH — test-only override (mirrors
 // BUILDO_CHURN_TABLE_PATH in scripts/analysis/step-churn-complexity.mjs) so
 // the RED-fixture test can point --check at a tampered temp file instead of
@@ -125,7 +131,9 @@ const GROUP_ORDER = [
       "income_premium_tiers",
       "reno_coa_uplift_pct",
       "reno_kitchen_gfa_pct",
-      "reno_bath_gfa_pct"
+      "reno_bath_gfa_pct",
+      "coa_cost_coverage_threshold_pct",
+      "coa_cost_coverage_fail_pct"
     ]
   },
   {
@@ -136,7 +144,30 @@ const GROUP_ORDER = [
       "snapshot_coa_conf_high",
       "coa_freshness_warn_days",
       "coa_stall_threshold_p2_days",
-      "coa_imminent_window_days"
+      "coa_imminent_window_days",
+      "coa_freshness_fail_days",
+      "coa_parcel_conf_tier1a",
+      "coa_parcel_conf_tier1b",
+      "coa_inherit_from_permit_min_confidence",
+      "coa_stall_threshold_postponed_days"
+    ]
+  },
+  {
+    "label": "CoA Scope & Trades",
+    "keys": [
+      "coa_scope_unmapped_threshold_pct",
+      "coa_trades_unmapped_threshold_pct",
+      "coa_active_trades_warn_max"
+    ]
+  },
+  {
+    "label": "CoA Gates & Staleness",
+    "keys": [
+      "coa_gate_calibration_window_days",
+      "coa_gate_force_active",
+      "coa_lifecycle_transition_stale_days",
+      "coa_forward_link_sub085_warn_pct",
+      "coa_unmatched_threshold_pct"
     ]
   },
   {
@@ -226,7 +257,9 @@ const GROUP_ORDER = [
       "assert_schema_geojson_probe_bytes",
       "enrich_parcels_zone_class_pct_pass_floor",
       "enrich_parcels_zone_class_pct_warn_floor",
-      "mislink_footprint_lot_tol"
+      "mislink_footprint_lot_tol",
+      "coa_bylaw_max_fsi_null_warn_pct",
+      "coa_bylaw_max_coverage_null_warn_pct"
     ]
   },
   {

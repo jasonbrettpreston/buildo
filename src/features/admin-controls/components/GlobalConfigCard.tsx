@@ -37,11 +37,39 @@ export const GROUPS: Array<{ label: string; keys: string[] }> = GENERATED_GROUPS
 export const JSON_KEYS = new Set(['income_premium_tiers']);
 
 /**
- * Returns an appropriate input step for a given logic_variable key.
+ * Number of digits after the decimal point in a finite number's own decimal
+ * literal representation (`0.05` → 2, `14.5` → 1, `10000` → 0). Capped at 4
+ * — these are hand-authored seed defaults, never a computed float with a
+ * long tail — so a `toString()` round-trip is safe (no scientific notation
+ * for anything in this magnitude range).
+ */
+export function decimalPlaces(n: number): number {
+  if (!Number.isFinite(n)) return 0;
+  const s = Math.abs(n).toString();
+  if (s.includes('e') || s.includes('E')) return 0;
+  const idx = s.indexOf('.');
+  return idx === -1 ? 0 : Math.min(s.length - idx - 1, 4);
+}
+
+/**
+ * Returns an appropriate input step for a given logic_variable key/value pair.
  * Large-magnitude keys (costs, durations in ms) get coarser steps; ratios/
  * confidence scores get fine steps.
+ *
+ * WF2 ADMIN-1 ratchet, F-4: `LogicVariableRow` carries only the live `value`
+ * (no `min`/`max` — the seed's declared bounds are not plumbed to the admin
+ * API today), so this derives from the CURRENTLY DISPLAYED value's own
+ * decimal places rather than the name-pattern heuristic alone. A step
+ * derived this way is guaranteed valid for the value it was derived from
+ * (`value % step === 0` by construction), closing the HTML5 `stepMismatch`
+ * class of bug the name-only heuristic could not see (e.g.
+ * `archetype_t1_fsi_min` default `0.05` matched no ratio-name pattern and
+ * fell through to the integer default `step={1}`). The name-pattern
+ * fallback stays for the case a ratio-shaped key's CURRENT value happens to
+ * be a whole number (e.g. exactly `1`) — decimals(1) === 0 would otherwise
+ * derive `step={1}` on a 0-1 ratio field that should stay fine-grained.
  */
-function stepFor(key: string): number {
+export function stepFor(key: string, value: number): number {
   if (key === 'cost_outlier_ceiling_cad') return 1_000_000;
   if (key === 'los_base_divisor' || key === 'scraper_latency_p50_warn_ms') return 100;
   if (key === 'placeholder_cost_threshold') return 100;
@@ -53,9 +81,14 @@ function stepFor(key: string): number {
     key === 'scrape_early_phase_threshold_pct'
   ) return 1;
   // Lifecycle band/threshold keys are integer row counts, not ratios.
-  // Must short-circuit BEFORE the "_threshold" includes() check below
-  // (which would otherwise return 0.01 — wrong step for counts in the thousands).
+  // Must short-circuit BEFORE the decimal-derivation/name-pattern checks
+  // below (which would otherwise derive a fractional step for counts in
+  // the thousands, or for a count that happens to be a round number).
   if (key.startsWith('lifecycle_band_') || key.startsWith('lifecycle_cross_') || key.startsWith('lifecycle_seq_band_')) return 1;
+
+  const decimals = decimalPlaces(value);
+  if (decimals > 0) return Number((10 ** -decimals).toFixed(decimals));
+
   if (
     key.endsWith('_conf') ||
     key.endsWith('_conf_high') ||
@@ -131,7 +164,7 @@ export function GlobalConfigCard({ variables }: GlobalConfigCardProps) {
                     varKey={key}
                     value={row.value ?? 0}
                     onChange={(val) => updateDraftLogicVar(key, val)}
-                    step={stepFor(key)}
+                    step={stepFor(key, row.value ?? 0)}
                   />
                 </div>
               );

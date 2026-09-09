@@ -39,6 +39,15 @@ const SEED: Seed = JSON.parse(rawSeed);
 // brand-new group needs at least one real key declaring it; that is a
 // deliberate future decision, not something this lock should silently permit
 // via typo.
+//
+// NOTE (WF2 ADMIN-1 ratchet, batch 1): this set is derived FROM the real
+// seed, so a seed-wide typo (every occurrence of a label spelled the same
+// wrong way) is vacuously green here — it never disagrees with itself. The
+// BINDING lock for label correctness is scripts/generate-logic-variable-groups.mjs's
+// GROUP_ORDER cross-validation (`:336-380`), which is pinned independently of
+// the seed and THROWS on a seed→GROUP_ORDER mismatch in both directions; see
+// the "RED — a seed key naming a group absent from GROUP_ORDER throws"
+// fixture in src/tests/logic-variable-groups.infra.test.ts.
 const KNOWN_GROUP_LABELS = new Set(
   Object.values(SEED)
     .map((v) => (v.admin && 'group' in v.admin ? v.admin.group : undefined))

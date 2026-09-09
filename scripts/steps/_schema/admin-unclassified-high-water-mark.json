@@ -1,5 +1,5 @@
 {
   "$comment": "WF2 \"Admin Tunable Coverage\" commit 4 (.cursor/wf2_admin_tunable_coverage_active_task.md) — the monotonic ratchet for programme-items.json's ADMIN-1 (\"unclassified count = 0\"). high_water_mark is refreshed by scripts/generate-logic-variable-groups.mjs on every regeneration (npm run logic-var-groups), but ONLY DOWNWARD — it is min(existing value, live count), never max. src/tests/logic-var-admin-declarations.logic.test.ts asserts the LIVE unclassified count (scripts/seeds/logic_variables.json keys with admin.hidden === \"unclassified\") never exceeds this value, so a new key can never be added unclassified, while genuine reclassification work is free to lower the mark over time.",
-  "high_water_mark": 280,
-  "recorded_at": "2026-09-08"
+  "high_water_mark": 263,
+  "recorded_at": "2026-09-09"
 }
