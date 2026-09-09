@@ -133,7 +133,36 @@ const GROUP_ORDER = [
       "reno_kitchen_gfa_pct",
       "reno_bath_gfa_pct",
       "coa_cost_coverage_threshold_pct",
-      "coa_cost_coverage_fail_pct"
+      "coa_cost_coverage_fail_pct",
+      "cost_est_legacy_cost_ceiling_cad",
+      "cost_est_legacy_gfa_ceiling_sqm",
+      "permit_declared_cost_ceiling"
+    ]
+  },
+  {
+    "label": "Archetype Cost Plausibility",
+    "keys": [
+      "archetype_t1_fsi_max",
+      "archetype_t1_fsi_min",
+      "archetype_t1_total_cap",
+      "archetype_t2_build_line_cap",
+      "archetype_t2_build_line_min",
+      "archetype_t2_reno_line_cap",
+      "archetype_t3_total_cap",
+      "archetype_nofit_residential_warn_pct"
+    ]
+  },
+  {
+    "label": "Cost Audit Thresholds",
+    "keys": [
+      "cost_matrix_miss_fail_pct",
+      "cost_matrix_miss_warn_pct",
+      "cost_model_coverage_fail_pct",
+      "cost_ptc_skipped_warn_pct",
+      "cost_coverage_pass_pct",
+      "cost_coverage_warn_pct",
+      "cost_t4_matrix_miss_fail_pct",
+      "cost_t4_matrix_miss_warn_pct"
     ]
   },
   {

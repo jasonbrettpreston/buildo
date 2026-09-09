@@ -566,7 +566,7 @@
     "min": 1000000,
     "max": 2000000000,
     "admin": {
-      "hidden": "unclassified"
+      "group": "Cost Tuning"
     }
   },
   "cost_est_legacy_gfa_ceiling_sqm": {
@@ -576,7 +576,7 @@
     "min": 10000,
     "max": 5000000,
     "admin": {
-      "hidden": "unclassified"
+      "group": "Cost Tuning"
     }
   },
   "permit_declared_cost_ceiling": {
@@ -586,7 +586,7 @@
     "min": 10000000,
     "max": 2000000000,
     "admin": {
-      "hidden": "unclassified"
+      "group": "Cost Tuning"
     }
   },
   "calibration_freshness_warn_hours": {
@@ -746,7 +746,7 @@
     "min": 0,
     "max": 100,
     "admin": {
-      "hidden": "unclassified"
+      "group": "Cost Audit Thresholds"
     }
   },
   "cost_matrix_miss_warn_pct": {
@@ -756,7 +756,7 @@
     "min": 0,
     "max": 100,
     "admin": {
-      "hidden": "unclassified"
+      "group": "Cost Audit Thresholds"
     }
   },
   "cost_matrix_miss_fail_pct": {
@@ -766,7 +766,7 @@
     "min": 0,
     "max": 100,
     "admin": {
-      "hidden": "unclassified"
+      "group": "Cost Audit Thresholds"
     }
   },
   "cost_t4_matrix_miss_warn_pct": {
@@ -776,7 +776,7 @@
     "min": 0,
     "max": 100,
     "admin": {
-      "hidden": "unclassified"
+      "group": "Cost Audit Thresholds"
     }
   },
   "cost_t4_matrix_miss_fail_pct": {
@@ -786,7 +786,7 @@
     "min": 0,
     "max": 100,
     "admin": {
-      "hidden": "unclassified"
+      "group": "Cost Audit Thresholds"
     }
   },
   "archetype_nofit_residential_warn_pct": {
@@ -796,7 +796,7 @@
     "min": 0,
     "max": 100,
     "admin": {
-      "hidden": "unclassified"
+      "group": "Archetype Cost Plausibility"
     }
   },
   "archetype_t1_fsi_min": {
@@ -806,7 +806,7 @@
     "min": 0,
     "max": 1,
     "admin": {
-      "hidden": "unclassified"
+      "group": "Archetype Cost Plausibility"
     }
   },
   "archetype_t1_fsi_max": {
@@ -816,7 +816,7 @@
     "min": 1,
     "max": 100,
     "admin": {
-      "hidden": "unclassified"
+      "group": "Archetype Cost Plausibility"
     }
   },
   "archetype_t1_total_cap": {
@@ -826,7 +826,7 @@
     "min": 1000000,
     "max": 1000000000,
     "admin": {
-      "hidden": "unclassified"
+      "group": "Archetype Cost Plausibility"
     }
   },
   "archetype_t2_reno_line_cap": {
@@ -836,7 +836,7 @@
     "min": 100000,
     "max": 1000000000,
     "admin": {
-      "hidden": "unclassified"
+      "group": "Archetype Cost Plausibility"
     }
   },
   "archetype_t2_build_line_cap": {
@@ -846,7 +846,7 @@
     "min": 100000,
     "max": 1000000000,
     "admin": {
-      "hidden": "unclassified"
+      "group": "Archetype Cost Plausibility"
     }
   },
   "archetype_t2_build_line_min": {
@@ -856,7 +856,7 @@
     "min": 0,
     "max": 10000000,
     "admin": {
-      "hidden": "unclassified"
+      "group": "Archetype Cost Plausibility"
     }
   },
   "archetype_t3_total_cap": {
@@ -866,7 +866,7 @@
     "min": 1000000,
     "max": 1000000000,
     "admin": {
-      "hidden": "unclassified"
+      "group": "Archetype Cost Plausibility"
     }
   },
   "cost_ptc_skipped_warn_pct": {
@@ -876,7 +876,7 @@
     "min": 0,
     "max": 100,
     "admin": {
-      "hidden": "unclassified"
+      "group": "Cost Audit Thresholds"
     }
   },
   "coa_match_conf_high": {
@@ -1406,7 +1406,7 @@
     "min": 0,
     "max": 100,
     "admin": {
-      "hidden": "unclassified"
+      "group": "Cost Audit Thresholds"
     }
   },
   "cost_coverage_warn_pct": {
@@ -1416,7 +1416,7 @@
     "min": 0,
     "max": 100,
     "admin": {
-      "hidden": "unclassified"
+      "group": "Cost Audit Thresholds"
     }
   },
   "vocab_coverage_pass_pct": {
