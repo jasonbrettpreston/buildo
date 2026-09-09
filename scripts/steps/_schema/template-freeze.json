@@ -276,11 +276,6 @@
       "owner": "wf: wf: programme-FREEZE-1, blocked on STD-7/WD-1/ADMIN-1"
     },
     {
-      "id": "WD-1",
-      "status": "NOT_STARTED",
-      "owner": "wf: wf: programme-WD1"
-    },
-    {
       "id": "ADMIN-1",
       "status": "NOT_STARTED",
       "owner": "wf: wf: programme-ADMIN-1"

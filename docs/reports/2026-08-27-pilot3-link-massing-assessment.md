@@ -512,7 +512,7 @@ Spec 124 §2 Rule 13's R-T addendum lands `invariants[]`/`plausibility[]` (5 net
 | 8 | link_massing | PASS | G-4: 6 declared, 1 verdict-affecting, 0 violate on_invalid:fail with no deviations[] cover |
 | 4 | (registry) | PASS | overlap: none |
 | 5 | (registry) | PASS | clean (0 it.fails( call sites outside a declared pending slug) |
-| 9 | (registry) | PASS | clean (0 converted slugs blocked by an unmet cutover_prereq item; blocks batching: 4) |
+| 9 | (registry) | PASS | clean (0 converted slugs blocked by an unmet cutover_prereq item; blocks batching: 3) |
 
 ### Captures (item iv)
 - missing invocations: none
@@ -520,7 +520,7 @@ Spec 124 §2 Rule 13's R-T addendum lands `invariants[]`/`plausibility[]` (5 net
 - compare ran: true · diffs found: 434 · unexplained: 0
 
 ### Test suite (item iii)
-- 823/846 passed (suite success=false)
+- 824/846 passed (suite success=false)
 
 ### Policy coverage matrix (item vi) — Spec 124 Rules 1-13
 
@@ -535,11 +535,11 @@ Spec 124 §2 Rule 13's R-T addendum lands `invariants[]`/`plausibility[]` (5 net
 | 7 | Archetype gates categories | enforced-green |  |
 | 8 | Per-target write discipline | enforced-green |  |
 | 9 | Banned write needs ledger (+ V7 no_retraction) | enforced-green |  |
-| 10 | Verdict row-derived | enforced-red | (a) OK — 11 corpus file(s) scanned, 0 unsanctioned second derivations, 2 sanctioned hit(s) matched SANCTIONED_VERDICT_SITES · (b) KNOWN-DEFECT (pinned) — KNOWN-DEFECT (Spec 123 §3.1 pin): skipRecordsMeta's all-INFO audit table folds to verdict=PASS — SEVERITY_RANK has no SKIP rank (scripts/lib/step/verdict.js:22). Pinned against review_followups.md "A lock-skipped converted step verdicts as PASS" (HIGH, 2026-09-03) and scripts/steps/_schema/programme-items.json "VRD-SKIP" (nice_to_have). |
+| 10 | Verdict row-derived | enforced-green | (a) OK — 11 corpus file(s) scanned, 0 unsanctioned second derivations, 2 sanctioned hit(s) matched SANCTIONED_VERDICT_SITES · (b) OK — SELF_SKIPPED audit table folds to verdict=WARN (!= PASS), row-derived off 1 non-INFO row(s) — VRD-SKIP closed |
 | 11 | Phase-order re-derive (declared half, checkOrderGuaranteesCited) | enforced-green | 1 when:"pre_write" check(s), 0 order_guarantee violation(s) — G-3 completeness half stays open |
 | 12 | Truthful crash posture (R-B reachability, static + R-M before-image) | enforced-green | R-B (checkInterruptedPostureTruthful): shape=link runner=runLinkPhase: no staleness.ledgerGatedSkip early-return on this path; calls staleness.selectMode unconditionally, which folds detectInterruptedRetraction internally · R-M: prose-only (R-M/LG-17 describe not scoped to this step (vitest not run, or no before-image target)) |
 | 13 | A step validates itself | enforced-green | this run of step:validate IS the mechanism |
 | P3 | I/O cost adjudication (measured, not gated) | measured | descriptor=68637B notes=17389B checks=19 rows records_meta=4690B (newest post/ capture) |
 
-**Enforced-green: 12/14**
+**Enforced-green: 13/14**
 

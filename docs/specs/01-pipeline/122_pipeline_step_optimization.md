@@ -323,23 +323,25 @@ Spec 120 has `outputs.replay` (`idempotent_upsert` · `full_replace` · ⛔ `app
 > ⚠️ **CORRECTED — the vocabulary already exists and was measured. Do not invent one.**
 > A first draft of this section invented a `write_discipline` shape from scratch. **The evidence base §3f already contains a measured 13-class update taxonomy over all 27 steps** `[READ 2026-08-22]`, and §3g a 5-class partial-fill taxonomy. **This is the same mistake §5.0 corrects for the ledger** — treating an existing, grounded artifact as greenfield. The vocabulary below is *ported*, not authored.
 
-**`outputs.write_discipline.class` — the 13 measured classes** `[READ evidence base §3f]`. Closed, `!` frozen:
+**`outputs.write_discipline.class` — the 15 measured classes** `[READ evidence base §3f]`. Closed, `!` frozen. **Corrected 2026-09-09 (WD-1 WF5 audit + WF2 lock):** this table's own heading undercounted at "13" — N and O (LG-11/LG-16, pilot 4, 2026-08-28) were never added to it, though both have been live, frozen enum members since that pilot. The **Disposition** column is new: `implemented` (a real, exercised executor) · `executor_by_runner` (executed by a named runner dispatch, never by class-keyed codegen) · `banned_for_new` (declarable but forbidden for any new descriptor) · `retire` (measured-refuted or structurally undeclarable — the value stays in the frozen enum per Ask A3, it is not removed). Enforced both directions by `scripts/steps/_schema/write-class-disposition.json` (the registry, one row per value, each citing grounded line-level evidence) + `src/tests/write-class-disposition.infra.test.ts` (the lock — no live descriptor may declare a `banned_for_new`/`retire` class, and the registry can neither omit a live enum value nor carry an orphan one), mirroring `grandfathered.json`'s proven "adjudication is a reviewed diff" posture applied to the enum itself:
 
-| Class | Pattern | Steps today |
-|---|---|---|
-| **A** `guarded_upsert` | `ON CONFLICT … WHERE IS DISTINCT FROM` | 2, 4, 6, 14, 16, 18, 20 |
-| **B** `upsert_scoped_departure_delete` | A + `DELETE … <> ALL($1)` | 5 |
-| **C** `staging_full_replace` | temp → `DELETE` → `INSERT…SELECT` — **legal, requires `why`** | 7 |
-| **D** ⛔ `insert_only_no_retraction` | `ON CONFLICT DO NOTHING` — **a W3 breach; banned for new steps** | 8 |
-| **E** `write_once_backfill` | `UPDATE … WHERE <col> IS NULL` — ⚠️ **requires a declared invalidator (§5.4a)** | 9 |
-| **F** `link_full_retraction` | upsert + DELETE stale + DELETE zero-match | 10, 15 |
-| **G** `set_based_scoped` | one UPDATE, guard, **with** a scope predicate | 11 |
-| **H** ⛔ `set_based_unscoped` | guard but **no scope predicate** — **banned for new steps** | 12 |
-| **I** `temp_materialize` | TEMP table → UPDATE | 13 |
-| **J** `multi_pass_defer` | N passes + scope-defer | 21 |
-| **K** `derived_recompute` | bulk UPDATE of a derived column | 3, 17, 19, 22 |
-| **L** `verdict_only` | writes `pipeline_runs` only | 1, 23, 24, 26 |
-| **M** `snapshot_append` | INSERT into a snapshot table | 25, 27 |
+| Class | Pattern | Steps today | Disposition |
+|---|---|---|---|
+| **A** `guarded_upsert` | `ON CONFLICT … WHERE IS DISTINCT FROM` | 2, 4, 6, 14, 16, 18, 20 | `implemented` |
+| **B** `upsert_scoped_departure_delete` | A + `DELETE … <> ALL($1)` | 5 | `implemented` |
+| **C** `staging_full_replace` | temp → `DELETE` → `INSERT…SELECT` — **legal, requires `why`** | 7 | `banned_for_new` — zero executor in `scripts/lib/`; a descriptor declaring it would silently fall to the default codegen path (a plain guarded upsert), not this shape |
+| **D** ⛔ `insert_only_no_retraction` | `ON CONFLICT DO NOTHING` — **a W3 breach; banned for new steps** | 8 | `implemented` (and already banned-for-new via `x-banned-for-new.rules[] no_retraction`) |
+| **E** `write_once_backfill` | `UPDATE … WHERE <col> IS NULL` — ⚠️ **requires a declared invalidator (§5.4a)** | 9 | `implemented` — this was WD-1's own founding gap (genuinely unimplemented before LG-20 built it); re-confirmed implemented |
+| **F** `link_full_retraction` | upsert + DELETE stale + DELETE zero-match | 10, 15 | `implemented` |
+| **G** `set_based_scoped` | one UPDATE, guard, **with** a scope predicate | 11 | `implemented` |
+| **H** ⛔ `set_based_unscoped` | guard but **no scope predicate** — **banned for new steps** | 12 | `banned_for_new` — codegen-capable but zero live declarer; the scope-predicate ban's own enforcer is separately still missing (filed MED, `review_followups.md`) |
+| **I** `temp_materialize` | TEMP table → UPDATE | 13 | `executor_by_runner` — `runEnrichPhase`, resolved by `execution.phases[].name`, never by class |
+| **J** `multi_pass_defer` | N passes + scope-defer | 21 | `retire` — a V7 category error: this is a STEP LIFECYCLE, now `execution.shape:"enrich"` + `execution.phases[]` (RE-FREEZE #1), not a write mechanic |
+| **K** `derived_recompute` | bulk UPDATE of a derived column | 3, 17, 19, 22 | `executor_by_runner` — `runEnrichPhase`, same mechanism as I (the `optimal_config` post-commit pass) |
+| **L** `verdict_only` | writes `pipeline_runs` only | 1, 23, 24, 26 | `retire` — **structurally undeclarable**: `class` exists only under `outputs.writes[]`, and the ASSERT archetype's own frozen `x-profile` forces `outputs` to the literal `const "none"` (`step.schema.json:1718`), so no ASSERT step can ever declare it. See §8.2's amended ASSERT row |
+| **M** `snapshot_append` | INSERT into a snapshot table | 25, 27 | `retire` — measured-refuted: the one step ever assigned it (`refresh_snapshot`, RECORDER) is actually class A (`guarded_upsert`/`set_source:"compute"`), not an append-only insert. See §8.2's amended RECORDER row |
+| **N** `set_based_join_update` | scoped `UPDATE … FROM` over a compute-authored matched CTE; `INSERT`/`ON CONFLICT` structurally forbidden at execution time (LG-11) | 19 (`link_wsib`), 21 (`enrich_parcels`) | `implemented` |
+| **O** `set_based_null_retract` | constant `SET … = NULL` over a declared scope, for a target this step does not own (LG-16) | 19 (`link_wsib`) | `implemented` |
 
 **`execution.partial_fill` — the 5 measured classes** `[READ §3g]`: `atomic` (8 steps) · `batched` (13) · `staged` (1) · `none` (4) · `mixed` (1).
 
@@ -1126,17 +1128,17 @@ After commit 9 (cutover) and the WF6 output panel, the pilot's assessment report
 
 **Spec 120 §14.1 proposes simplest / median / worst. That is the wrong axis for validating this contract, and the `assert_schema` audit proved it:**
 
-> An **ASSERT forces 5 of 18 categories to `"none"`** — `outputs`, `recovery`, `override`, `config`, plus `counters: null` (**amended 2026-08-25, operator ruling, Pilot 1 Fold D:** `emits` is NOT forced — the schema `allOf` forces only `outputs · recovery · counters`, §1.10 agrees, and claim #203 requires every `emits` key to name a consumer; an ASSERT that emits `checks_passed/checks_failed/errors` declares them like any other step. Nothing-hidden policy: declared, observable keys beat a forced `"none"`) — and two more to a single value (`write_discipline: verdict_only`, `partial_fill: none`). **It exercises the least of the contract that any archetype can.** Picking by size would have frozen the template against the thinnest possible test.
+> An **ASSERT forces 5 of 18 categories to `"none"`** — `outputs`, `recovery`, `override`, `config`, plus `counters: null` (**amended 2026-08-25, operator ruling, Pilot 1 Fold D:** `emits` is NOT forced — the schema `allOf` forces only `outputs · recovery · counters`, §1.10 agrees, and claim #203 requires every `emits` key to name a consumer; an ASSERT that emits `checks_passed/checks_failed/errors` declares them like any other step. Nothing-hidden policy: declared, observable keys beat a forced `"none"`) — and one more to a single value (`partial_fill: none`). **CORRECTED 2026-09-09 (WD-1 WF5 audit):** `write_discipline: verdict_only` is NOT a forced single value alongside `partial_fill` — `outputs` itself is forced to the literal `const "none"` (`step.schema.json:1718`), so `write_discipline` (which lives only under `outputs.writes[]`) is not merely fixed to class L, it is **unreachable** for any ASSERT step; class L is `retire`-dispositioned in `write-class-disposition.json` for exactly this reason. **It exercises the least of the contract that any archetype can.** Picking by size would have frozen the template against the thinnest possible test.
 
 **Because `identity.archetype` drives the required-field profile (§3.0d), contract coverage is an archetype property, not a size property.** One representative per archetype, and **four are forced — they have exactly one member each** `[MEASURED]`:
 
 | Archetype | Members | Representative | Why this one | Write class |
 |---|---:|---|---|---|
-| **ASSERT** | 5 | `assert_schema` | ✅ **audited** — 39/40 concerns land, 1 gap found (#41) | L `verdict_only` |
+| **ASSERT** | 5 | `assert_schema` | ✅ **audited** — 39/40 concerns land, 1 gap found (#41) | ~~L `verdict_only`~~ — **CORRECTED 2026-09-09 (WD-1):** undeclarable by construction, `outputs` forced to `const "none"`; `assert-schema.descriptor.json`'s own `deviations[]` entry already recorded this. Class L is `retire`-dispositioned, `write-class-disposition.json` |
 | **MATERIALIZER** | **1** | `link_parcel_addresses` | ⚠️ forced — and it is class **D**, a **W3 retraction breach** | D ⛔ |
 | **MATCHER** | **1** | `link_wsib` | ⚠️ forced — dual-chain, run-ledger gate, the A1/A2 config-hoist fence | K |
 | **BACKFILL** | **1** | `compute_centroids` | ⚠️ forced — **and it is the centroid defect itself** | E |
-| **RECORDER** | **1** | `refresh_snapshot` | ⚠️ forced — verdict is PASS-only, all rows INFO | M |
+| **RECORDER** | **1** | `refresh_snapshot` | ⚠️ forced — verdict is PASS-only, all rows INFO | ~~M~~ — **CORRECTED 2026-09-09 (WD-1):** measured-refuted; `refresh_snapshot`'s actual write is class **A** (`guarded_upsert`/`set_source:"compute"`, a keyed `ON CONFLICT ... DO UPDATE`), never an append-only snapshot insert. Class M is `retire`-dispositioned, `write-class-disposition.json` |
 | **INGESTOR** | 9 | `load_ravines` | richest: class **B**, 4 `finally`, drift + mass-delete env overrides, two-tier gate | B |
 | **LINK** | 3 | `link_massing` | the **only** step with a code+data signal (G3), full retraction | F |
 | **ENRICHER** | 6 | `enrich_parcels` | **2,153 lines**, 5 passes, scope-defer, the clock-relative gate at `:1085` | J |
@@ -1162,7 +1164,7 @@ After commit 9 (cutover) and the WF6 output panel, the pilot's assessment report
 
 > **Footnote — R-A..R-F (2026-08-28, post pilot 3 cutover).** From pilot 4 (`link_wsib`) onward: descriptors declare `config.retired[]` for any retired tunable (R-A) and `recovery.interrupted` for any `retract_when: full_only`/`retract: "all"` write (R-B, mechanism lands this pilot); golden captures are re-stamped with `source_fingerprint` and matched by recorded fields, not filename (R-C); `assert_schema` gains `declared_logic_variables_present` where it runs (R-D); Gate G7 drops the mutation-≥80% clause for a both-directions red-first lock, and G9 Reflection is required after cutover (R-E, R-F — Spec 123 §6).
 
-⚠️ **Coverage caveat, stated because it is not obvious:** eight archetypes do **not** cover the 13 write classes. `INGESTOR` alone spans A, B and C; `ENRICHER` spans G, H, I, J and K. **That is acceptable** — the classes are covered by the `write_discipline.class` **enum being ported from the measured taxonomy** (§3.0b), not by converting one of each. The archetype pilot validates the *required-field profile*; the enum validates the *write shapes*.
+⚠️ **Coverage caveat, stated because it is not obvious:** eight archetypes do **not** cover the 15 write classes (**corrected 2026-09-09, WD-1 WF5 audit — this read "13" before the table at §1.4 was found to be undercounting: N and O were live, frozen enum members since pilot 4 but had never been added to §1.4's own table**). `INGESTOR` alone spans A, B and C; `ENRICHER` spans G, H, I, J, K and N (measured live: `enrich_parcels` declares G, N, I×3 and K — not merely G/H/I/J/K as this sentence's own pre-audit list implied; J is itself `retire`-dispositioned, a category error, not a real coverage member — see §1.4). **That is acceptable** — the classes are covered by the `write_discipline.class` **enum being ported from the measured taxonomy** (§3.0b), not by converting one of each. The archetype pilot validates the *required-field profile*; the enum validates the *write shapes*, and `write-class-disposition.json` (WD-1) is the closed-menu record of which of the 15 have a real executor at all.
 
 **Freeze the template after the eighth, never the first** — and if any of the eight forces a contract change, the count is not the eight, it is however many it takes.
 
