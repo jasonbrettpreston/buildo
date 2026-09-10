@@ -2186,7 +2186,7 @@ above).*
 | G5 | 1 | 1 | db=true clock=true network=true argv/env=true |
 | G6 | 3 | 3 | 15 ledger row(s), 0 without CLOSED/PIN () |
 | G7 | 3 | 3 | file=true fences=1 it-count=14 RED-evidence=true |
-| G8 | 3 | 3 | missing-invocations=0 stale-fingerprints=0 unexplained-diffs=0 |
+| G8 | 3 | 3 | missing-invocations=0 missing-pre-invocations=0 stale-fingerprints=0 unexplained-diffs=0 |
 | G9 (binary) | PASS | — | heading=true low-confidence-table=true recurring-table=true |
 | G4d (fence<=lock) | PASS | — | fences=1 lock-it-count=14 |
 | G-shape | PASS | — | file-clean=true compute-clean=true |
@@ -2200,17 +2200,20 @@ above).*
 | 3 | link_parcels | PASS | retired=0 overlap-with-declared=none |
 | 7 | link_parcels | PASS | SPEC LINK header present=true |
 | 8 | link_parcels | PASS | G-4: 7 declared, 1 verdict-affecting, 0 violate on_invalid:fail with no deviations[] cover |
+| 20 | link_parcels | PASS | HB-1: execution.shape="link_keyed" — HB-1 applies_when execution.shape=="enrich" only (RS-D-STA); not applicable, never a pass-by-omission |
+| 21 | link_parcels | PASS | CEIL-1: execution.shape="link_keyed" — CEIL-1 applies_when execution.shape=="enrich" only (RS-D-STA); not applicable, never a pass-by-omission |
 | 4 | (registry) | PASS | overlap: none |
 | 5 | (registry) | PASS | clean (0 it.fails( call sites outside a declared pending slug) |
 | 9 | (registry) | PASS | clean (0 converted slugs blocked by an unmet cutover_prereq item; blocks batching: 2) |
 
 ### Captures (item iv)
-- missing invocations: none
+- missing invocations (POST): none
+- missing invocations (PRE, GOLD-PRE): none
 - stale fingerprints: none
 - compare ran: true · diffs found: 249 · unexplained: 0
 
 ### Test suite (item iii)
-- 843/861 passed (suite success=false)
+- 842/861 passed (suite success=false)
 
 ### Policy coverage matrix (item vi) — Spec 124 Rules 1-13
 
@@ -2229,7 +2232,7 @@ above).*
 | 11 | Phase-order re-derive (declared half, checkOrderGuaranteesCited) | enforced-green | no when:"pre_write" checks — vacuously nothing to cite — G-3 completeness half stays open |
 | 12 | Truthful crash posture (R-B reachability, static + R-M before-image) | enforced-green | R-B (checkInterruptedPostureTruthful): shape=link_keyed runner=runLinkKeyedPhase: no staleness.ledgerGatedSkip early-return on this path; calls staleness.selectMode unconditionally, which folds detectInterruptedRetraction internally · R-M: prose-only (R-M/LG-17 describe not scoped to this step (vitest not run, or no before-image target)) |
 | 13 | A step validates itself | enforced-green | this run of step:validate IS the mechanism |
-| P3 | I/O cost adjudication (measured, not gated) | measured | descriptor=49493B notes=8682B checks=15 rows records_meta=3102B (newest post/ capture) |
+| P3 | I/O cost adjudication (measured, not gated) | measured | descriptor=50180B notes=8753B checks=15 rows records_meta=3110B (newest post/ capture) |
 
 **Enforced-green: 13/14**
 

@@ -11,13 +11,23 @@
  *   (ii)  runs the shape gate for its file + compute module
  *   (iii) runs vitest for step-conformance + golden-fingerprint + src/tests/steps/<slug>/
  *   (iv)  checks golden captures: post/ present for every declared invocation,
- *         fingerprint current, --compare of newest post vs pre shows only
- *         explained-bucket diffs
+ *         AND pre/ present for every declared invocation (GOLD-PRE, WF1
+ *         "conversion roadmap" commit 3 — modulo any declared, cited
+ *         GOLD_PRE_KNOWN_GAPS pin), fingerprint current, --compare of newest
+ *         post vs pre shows only explained-bucket diffs
  *   (v)   computes the Spec 123 SS6 SCORECARD G0-G9 from ARTIFACTS, never prose
  *   (vi)  prints the Spec 124 POLICY COVERAGE MATRIX (Rules 1-13) for this step
  *
- * PLUS the 7 fast invariants (the "fast descriptor gate" followup, subsumed here
- * per the operator's instruction) — always run, always cheap, no vitest/DB needed:
+ * PLUS the fast invariants (the "fast descriptor gate" followup, subsumed here
+ * per the operator's instruction) — always run, always cheap, no vitest/DB needed.
+ * Ids 1/2/3/7/8/20/21 are per-row (one result per converted/pending slug); ids
+ * 4/5/9 are registry-scoped (one result for the whole fleet — a fleet-integrity
+ * fact, not a property of any single step). Id 6 is retired (superseded by G8/
+ * item iv, never reused). HIGH-2 (output-panel remediation, 2026-09-10): ids
+ * 20/21 (not 10/11) — 1-13 is reserved so a fast invariant id can NEVER
+ * collide with a Policy Coverage Matrix Rule number in a naive stdout scrape
+ * (both tables render one row per "| N | ..." and the Fast Invariants table
+ * comes first in the output). Currently 10 invariants, ids 1-5,7-9,20-21:
  *   1. database.min_migration <= migrations/*.sql COUNT (LW-D8 — a COUNT floor,
  *      never a filename number)
  *   2. every declared config.logic_variables[].name has a scripts/seeds/logic_variables.json entry
@@ -25,11 +35,22 @@
  *   4. converted.json: converted INTERSECT pending === empty
  *   5. every real `it.fails(` call site under src/tests/steps/ sits under a slug
  *      that is in converted.json's `pending` list AND carries a "flips at" comment
- *   6. golden-fingerprint currency (shares its result with item iv/G8)
+ *   [6. retired]
  *   7. the step file carries a `SPEC LINK:` header comment
  *   8. G-4 (Rule 3) — a verdict-affecting logic variable (named by some check's
  *      `limit_from_config`) has `on_invalid:"fail"`, unless `deviations[]` names a
  *      reviewed, dated exception (the `load_ravines` cloud-seed-timing precedent)
+ *   9. programme-items.json (R-T): no converted slug is blocked by an unmet
+ *      cutover_prereq item that names it (registry-scoped; scoped per-run by
+ *      `blockedSlugs` so an unrelated step's own --fast run is not hard-stopped
+ *      by another step's own unmet prereq)
+ *   20. HB-1 (Rule 12, WF1 "conversion roadmap" commit 3): heartbeat covers the
+ *      WHOLE step for an ENRICHER-shaped descriptor (EP-D15) — applies_when
+ *      execution.shape=="enrich", vacuous (pass, not-applicable) otherwise
+ *   21. CEIL-1 (Rule 12, same commit): statement/lock ceiling token presence on
+ *      the runner incl. the post_commit client (EP-D16) — same applies_when
+ *      scoping as HB-1; MED-6 scopes this as a token-presence check, not a
+ *      per-phase proof (see docs/reports/review_followups.md)
  *
  * SPEC LINK: docs/specs/01-pipeline/123_step_opt_assessment_validation.md SS6 (gates),
  *            SS5.2 (per-step checklist), SS4.4 (checker self-test doctrine, SS12b.6)
@@ -696,14 +717,59 @@ function capturesIn(slug, sub) {
     });
 }
 
+/**
+ * GOLD-PRE (Spec 122 §5.3, programme-items.json GOLD-PRE row, WF1 "conversion
+ * roadmap" commit 3, 2026-09-10) — the ONE currently-real gap this checker's
+ * own both-directions proof found live against the committed golden tree:
+ * `link_wsib`'s `sources --full` invocation has a POST capture
+ * (`post/sources-full-forced-4.json`) but no matching PRE capture. Pinned
+ * here explicitly (Spec 123 §3.1 KNOWN-DEFECT — cited in
+ * docs/reports/review_followups.md, "GOLD-PRE's own live finding") so the
+ * checker can land without a false regression on an already-shipped step.
+ * Declared data, never silent: remove the row the moment the PRE capture is
+ * taken, and GOLD-PRE reds again if it isn't.
+ */
+const GOLD_PRE_KNOWN_GAPS = [
+  { slug: 'link_wsib', chain: 'sources', args: ['--full'] },
+  // MED-3 (WF1 "conversion roadmap" output-panel remediation, 2026-09-10) —
+  // enrich_parcels' `chain:"none", args:[]` invocation has no matching PRE
+  // capture: pre/ holds sources::--full ×2 (sources_run1/run2.json) and
+  // standalone.json (chain:"none", args:["--full"] — a FORCED-full manual
+  // run, not the plain none::[] invocation derivedInvocations() derives).
+  // Fold A I-8 (this plan's own §1 ground-truth row) already named this
+  // class of gap as a pre-existing, accepted G8 half-gap for the pending
+  // ENRICHER pilot; cited explicitly here rather than left to accidentally
+  // ride on `shape_clean_pending_recapture`'s own G8 stage-exclusion (a
+  // DIFFERENT reason it doesn't hard-stop today) — see
+  // docs/reports/review_followups.md "GOLD-PRE's own live finding" for the
+  // fix-after (recapture at the consolidated C6 golden pass).
+  { slug: 'enrich_parcels', chain: 'none', args: [] },
+];
+function isGoldPreKnownGap(slug, invocationKeyStr) {
+  return GOLD_PRE_KNOWN_GAPS.some((g) => g.slug === slug && invocationKey(g) === invocationKeyStr);
+}
+
 function checkCaptures(row, descriptorInfo, computePath, report) {
   const manifest = loadManifest();
-  const findings = { invocationsMissing: [], staleFingerprints: [], compareRan: false, diffs: [], unexplainedDiffs: [] };
+  const findings = { invocationsMissing: [], preInvocationsMissing: [], staleFingerprints: [], compareRan: false, diffs: [], unexplainedDiffs: [] };
 
   const invocations = derivedInvocations(manifest, row.slug);
   const posts = capturesIn(row.slug, 'post');
   const postKeys = new Set(posts.filter((p) => p.doc).map((p) => invocationKey({ chain: String(p.doc.chain), args: p.doc.args || [] })));
   findings.invocationsMissing = invocations.filter((inv) => !postKeys.has(invocationKey(inv))).map(invocationKey);
+
+  // GOLD-PRE — mirror the POST-side completeness check above for the PRE
+  // side (Spec 122 §5.3). G8 only ever checked `capturesIn(slug, 'pre')` for
+  // `--compare` PAIRING (below); it never asked whether every DECLARED chain
+  // invocation has a pre-image at all. `preInvocationsMissing` excludes any
+  // row pinned in `GOLD_PRE_KNOWN_GAPS` (declared, cited, both-directions —
+  // removing the pin without also taking the capture makes this red again).
+  const presAll = capturesIn(row.slug, 'pre');
+  const preKeys = new Set(presAll.filter((p) => p.doc).map((p) => invocationKey({ chain: String(p.doc.chain), args: p.doc.args || [] })));
+  findings.preInvocationsMissing = invocations
+    .filter((inv) => !preKeys.has(invocationKey(inv)))
+    .map(invocationKey)
+    .filter((key) => !isGoldPreKnownGap(row.slug, key));
 
   let expected = null;
   if (descriptorInfo.ok || existsSync(path.join(REPO_ROOT, descriptorInfo.descriptorPath))) {
@@ -842,6 +908,28 @@ function fastInvariants(rows, converted, pending) {
     // unless a deviations[] entry names a reviewed, dated exception (load_ravines precedent).
     const g4 = checkOnInvalidFail(descriptor);
     results.push({ id: 8, slug: row.slug, pass: g4.pass, detail: `G-4: ${g4.detail}` });
+
+    // 20. HB-1 (Rule 12, programme-items.json) — heartbeat covers the WHOLE
+    // step for an ENRICHER-shaped descriptor (EP-D15). applies_when
+    // execution.shape=="enrich" — vacuous (pass, applicable:false) for every
+    // other shape; 0 converted steps are "enrich" today, so this is currently
+    // a standing GREEN-by-inapplicability, armed the moment one converts.
+    // Numbered 20 (NOT 10) — HIGH-2 output-panel finding: ids 1-13 collide
+    // with the Policy Matrix's OWN Rule 1-13 numbering in every `/^\|\s*N\s*\|/`
+    // stdout-scrape test in step-conformance.infra.test.ts (the Fast
+    // Invariants table renders BEFORE the Policy Matrix table, so a naive
+    // scrape for "row 10" or "row 11" would find THIS table's row first).
+    // 20/21 are deliberately outside the 1-13 range so no future Rule can
+    // collide with them either.
+    const hb1 = checkHeartbeatWholeStep(descriptor);
+    results.push({ id: 20, slug: row.slug, pass: hb1.pass, detail: `HB-1: ${hb1.detail}` });
+
+    // 21. CEIL-1 (Rule 12, programme-items.json) — statement/lock ceiling
+    // bound on EVERY phase incl. post_commit for an ENRICHER-shaped
+    // descriptor (EP-D16). Same applies_when scoping as HB-1. Numbered 21
+    // for the same collision-avoidance reason as HB-1 above.
+    const ceil1 = checkStatementCeilingEveryPhase(descriptor);
+    results.push({ id: 21, slug: row.slug, pass: ceil1.pass, detail: `CEIL-1: ${ceil1.detail}` });
   }
 
   // 4. converted INTERSECT pending === empty (whole-registry, one row).
@@ -1275,13 +1363,17 @@ function scoreG7(row, report) {
 }
 function scoreG8(captureFindings) {
   const invOk = captureFindings.invocationsMissing.length === 0;
+  // GOLD-PRE (Spec 122 §5.3) — the PRE side of the same completeness claim.
+  // `preInvocationsMissing` already excludes GOLD_PRE_KNOWN_GAPS-pinned rows
+  // (checkCaptures), so a non-empty array here is a genuinely UNPINNED gap.
+  const preOk = (captureFindings.preInvocationsMissing ?? []).length === 0;
   const fpOk = captureFindings.staleFingerprints.length === 0;
   const diffOk = captureFindings.unexplainedDiffs.length === 0;
-  const score = invOk && fpOk && diffOk ? 3 : 0;
+  const score = invOk && preOk && fpOk && diffOk ? 3 : 0;
   return {
     max: 3,
     score,
-    detail: `missing-invocations=${captureFindings.invocationsMissing.length} stale-fingerprints=${captureFindings.staleFingerprints.length} unexplained-diffs=${captureFindings.unexplainedDiffs.length}`,
+    detail: `missing-invocations=${captureFindings.invocationsMissing.length} missing-pre-invocations=${(captureFindings.preInvocationsMissing ?? []).length} stale-fingerprints=${captureFindings.staleFingerprints.length} unexplained-diffs=${captureFindings.unexplainedDiffs.length}`,
   };
 }
 function scoreG9(report) {
@@ -2048,6 +2140,124 @@ function checkInterruptedPostureTruthful(descriptor, indexSourceOverride = null)
 }
 
 // ---------------------------------------------------------------------------
+// HB-1 (Spec 124 §2 Rule 12, programme-items.json HB-1 row, WF1 "conversion
+// roadmap" commit 3, 2026-09-10) — checkHeartbeatWholeStep: static,
+// runner-derived proof that heartbeat covers the WHOLE step (EP-D15), not
+// only phase boundaries. Scoped by DECLARED DATA, not hand-adjudication —
+// mirrors RS-D-STA's own `gate.applies_when {descriptor_path, equals}`
+// mechanism (checkCutoverPrereqs): this checker only APPLIES when the
+// descriptor's own `execution.shape === "enrich"` (the ENRICHER archetype —
+// the one shape whose runner, `runEnrichPhase`, can run a phase long enough
+// for a phase-boundary-only heartbeat to go stale for tens of minutes, per
+// EP-D15's own filed motivation). Every other shape's runner reads as
+// "not applicable" (`applicable: false`), never as pass-by-omission — the
+// distinction the RS-D-STA note itself makes ("a descriptor whose value
+// differs is not blocked by this item at all", never silently exempted for
+// lack of wiring).
+//
+// MED-6 (output-panel remediation, 2026-09-10) — SCOPED HONESTLY: like
+// CEIL-1, this is a RUNNER-LEVEL TOKEN-PRESENCE check over the ONE shared
+// `runEnrichPhase` function's source text — it confirms an `onProgress`
+// seam token AND a `startHeartbeatTicker(` call token both exist SOMEWHERE
+// in the body. Unlike CEIL-1's per-write claim, the periodic ticker DOES
+// cover every phase uniformly BY CONSTRUCTION once it exists (it fires on a
+// timer independent of any phase boundary) — but this check does not verify
+// the ticker is actually started/stopped correctly, nor that `onProgress` is
+// wired at each of the 4 shared-txn passes individually (only that at least
+// one assignment exists). Filed alongside CEIL-1's own MED-6 followup.
+// ---------------------------------------------------------------------------
+
+/** Pure — takes the runner body already extracted, so selfTest() can exercise it in-memory against synthetic bodies (mirrors runnerReachability). */
+function heartbeatReachability(body) {
+  if (!body) return { reachable: false, reason: 'runner function not found in scripts/lib/step/index.js' };
+  const hasOnProgressSeam = /onProgress\s*:/.test(body) || /\bonProgress\s*\(/.test(body);
+  const hasPeriodicTicker = /startHeartbeatTicker\s*\(/.test(body);
+  if (hasOnProgressSeam && hasPeriodicTicker) {
+    return {
+      reachable: true,
+      reason: 'runner-level token presence (MED-6, not a per-phase proof): source contains an onProgress seam token AND a startHeartbeatTicker( call token — the periodic ticker covers every phase uniformly by construction once present, independent of any single phase\'s own boundary, but ticker start/stop lifecycle is not independently verified here',
+    };
+  }
+  const missing = [!hasOnProgressSeam && 'an onProgress seam token', !hasPeriodicTicker && 'a periodic heartbeat ticker token'].filter(Boolean).join(' and ');
+  return { reachable: false, reason: `runner source is missing ${missing} — heartbeat can go stale for the duration of a single long phase, never advancing mid-phase (token-presence check, MED-6)` };
+}
+
+/**
+ * @param {object|null} descriptor
+ * @param {string|null} indexSourceOverride — self-test seam (mirrors checkInterruptedPostureTruthful)
+ */
+function checkHeartbeatWholeStep(descriptor, indexSourceOverride = null) {
+  if (!descriptor) return { pass: true, applicable: false, detail: 'no descriptor' };
+  const shape = descriptor.execution && descriptor.execution !== 'none' ? descriptor.execution.shape : undefined;
+  if (shape !== 'enrich') {
+    return { pass: true, applicable: false, detail: `execution.shape=${JSON.stringify(shape ?? null)} — HB-1 applies_when execution.shape=="enrich" only (RS-D-STA); not applicable, never a pass-by-omission` };
+  }
+  const fnName = SHAPE_RUNNER_FN.enrich; // 'runEnrichPhase' — the only runner this applies_when can ever resolve to
+  const source = indexSourceOverride !== null ? indexSourceOverride : readFileSync(path.join(REPO_ROOT, 'scripts/lib/step/index.js'), 'utf8');
+  const body = extractFunctionBody(source, fnName);
+  const r = heartbeatReachability(body);
+  return { pass: r.reachable, applicable: true, detail: `runner=${fnName}: ${r.reason}` };
+}
+
+// ---------------------------------------------------------------------------
+// CEIL-1 (Spec 124 §2 Rule 12, programme-items.json CEIL-1 row, WF1
+// "conversion roadmap" commit 3, 2026-09-10) — checkStatementCeilingEveryPhase.
+//
+// MED-6 (output-panel remediation, 2026-09-10) — SCOPED HONESTLY: this is a
+// RUNNER-LEVEL TOKEN-PRESENCE check, not a per-phase, AST-verified proof.
+// It confirms the ONE shared `runEnrichPhase` function's source text
+// contains (a) a `SET LOCAL statement_timeout`+`SET LOCAL lock_timeout`
+// token pair (the shared-txn passes' bind) and (b) a `postClient`-scoped
+// `SET statement_timeout` token (EP-D16's session-level bind) — it does NOT
+// independently verify that EACH of the 5 declared `execution.phases[]`
+// entries individually binds before ITS OWN first write, nor that the
+// regex-matched tokens sit on the code path a given phase actually executes.
+// A genuine per-phase proof (walking each phase's own sub-body against its
+// own first `client.query`/`postClient.query` write) is filed as its own
+// followup (docs/reports/review_followups.md, MED-6) rather than overclaimed
+// here. Same applies_when scoping as HB-1 — vacuous for every other shape,
+// never a silent pass.
+// ---------------------------------------------------------------------------
+
+/** Pure — takes the runner body already extracted (mirrors heartbeatReachability/runnerReachability). */
+function statementCeilingReachability(body) {
+  if (!body) return { reachable: false, reason: 'runner function not found in scripts/lib/step/index.js' };
+  // The shared-txn passes (1-4) bind their ceiling per-phase, transaction-
+  // scoped (`SET LOCAL`, reverts at COMMIT/ROLLBACK). The dedicated
+  // `post_commit` client runs OUTSIDE that transaction on its own connection
+  // (Fold B2) and must bind its OWN ceiling — EP-D16 makes that bind
+  // SESSION-level (`SET`, no `LOCAL`) on `postClient` because `SET LOCAL`
+  // has no effect outside a transaction block.
+  const sharedTxnCeiling = /SET LOCAL statement_timeout/.test(body) && /SET LOCAL lock_timeout/.test(body);
+  const postCommitCeiling = /postClient\.query\(\s*`SET\s+statement_timeout/.test(body);
+  if (sharedTxnCeiling && postCommitCeiling) {
+    return {
+      reachable: true,
+      reason: 'runner-level token presence (MED-6, not a per-phase proof): source contains a SET LOCAL statement_timeout/lock_timeout token pair AND a postClient-scoped SET statement_timeout token (EP-D16) — the per-phase claim itself is filed as its own followup',
+    };
+  }
+  const missing = [!sharedTxnCeiling && 'the shared-txn passes\' SET LOCAL ceiling token pair', !postCommitCeiling && 'the post_commit client\'s own session-level ceiling token'].filter(Boolean).join(' and ');
+  return { reachable: false, reason: `runner source is missing ${missing} — a phase (or the post_commit client specifically) could write with no statement/lock ceiling bound (token-presence check, MED-6)` };
+}
+
+/**
+ * @param {object|null} descriptor
+ * @param {string|null} indexSourceOverride — self-test seam
+ */
+function checkStatementCeilingEveryPhase(descriptor, indexSourceOverride = null) {
+  if (!descriptor) return { pass: true, applicable: false, detail: 'no descriptor' };
+  const shape = descriptor.execution && descriptor.execution !== 'none' ? descriptor.execution.shape : undefined;
+  if (shape !== 'enrich') {
+    return { pass: true, applicable: false, detail: `execution.shape=${JSON.stringify(shape ?? null)} — CEIL-1 applies_when execution.shape=="enrich" only (RS-D-STA); not applicable, never a pass-by-omission` };
+  }
+  const fnName = SHAPE_RUNNER_FN.enrich;
+  const source = indexSourceOverride !== null ? indexSourceOverride : readFileSync(path.join(REPO_ROOT, 'scripts/lib/step/index.js'), 'utf8');
+  const body = extractFunctionBody(source, fnName);
+  const r = statementCeilingReachability(body);
+  return { pass: r.reachable, applicable: true, detail: `runner=${fnName}: ${r.reason}` };
+}
+
+// ---------------------------------------------------------------------------
 // (vi) POLICY COVERAGE MATRIX — Spec 124 Rules 1-13, per the header map above.
 // ---------------------------------------------------------------------------
 /**
@@ -2194,7 +2404,11 @@ function renderScorecard(row, sc, matrix, captureFindings, vitestResult, invaria
   for (const r of mine) lines.push(`| ${r.id} | ${r.slug} | ${r.pass ? 'PASS' : 'FAIL'} | ${r.detail} |`);
   lines.push('');
   lines.push('### Captures (item iv)');
-  lines.push(`- missing invocations: ${captureFindings.invocationsMissing.length ? captureFindings.invocationsMissing.join(', ') : 'none'}`);
+  lines.push(`- missing invocations (POST): ${captureFindings.invocationsMissing.length ? captureFindings.invocationsMissing.join(', ') : 'none'}`);
+  // GOLD-PRE (MED-5) — mirror the POST line above for the PRE side, so a
+  // reader sees WHICH invocation is missing a pre/ capture, not merely a
+  // count buried in G8's own detail string.
+  lines.push(`- missing invocations (PRE, GOLD-PRE): ${(captureFindings.preInvocationsMissing ?? []).length ? captureFindings.preInvocationsMissing.join(', ') : 'none'}`);
   lines.push(`- stale fingerprints: ${captureFindings.staleFingerprints.length ? captureFindings.staleFingerprints.join(', ') : 'none'}`);
   lines.push(`- compare ran: ${captureFindings.compareRan} · diffs found: ${captureFindings.diffs.length} · unexplained: ${captureFindings.unexplainedDiffs.length}`);
   if (captureFindings.unexplainedDiffs.length) {
@@ -2634,6 +2848,95 @@ function selfTest() {
       deadSource,
     );
     if (deadRed.pass) throw new Error(`self-test FAILED: checkInterruptedPostureTruthful did not RED a runner reaching neither ledgerGatedSkip nor selectMode (${JSON.stringify(deadRed)})`);
+  }
+  // HB-1 (Spec 124 §2 Rule 12, WF1 "conversion roadmap" commit 3, 2026-09-10)
+  // — checkHeartbeatWholeStep + heartbeatReachability, in-memory via a
+  // synthetic index.js source override (mirrors Rule 12's own self-test
+  // shape immediately above).
+  {
+    // applies_when scoping — a non-"enrich" shape is not applicable at all,
+    // regardless of the (irrelevant) synthetic body, and must PASS (never a
+    // silent exemption disguised as red).
+    const notApplicable = checkHeartbeatWholeStep({ execution: { shape: 'link' } }, 'async function runLinkPhase() {}\n');
+    if (!notApplicable.pass || notApplicable.applicable) throw new Error(`self-test FAILED: checkHeartbeatWholeStep must be pass:true, applicable:false for a non-"enrich" shape (${JSON.stringify(notApplicable)})`);
+
+    // RED — an "enrich"-shaped runner missing BOTH the onProgress seam and the periodic ticker.
+    const hb1DeadSource = 'async function runEnrichPhase({ descriptor, pool }) {\n  return { ok: true };\n}\n';
+    const hb1Red = checkHeartbeatWholeStep({ execution: { shape: 'enrich' } }, hb1DeadSource);
+    if (hb1Red.pass || !hb1Red.applicable) throw new Error(`self-test FAILED: checkHeartbeatWholeStep did not RED an "enrich" runner with no heartbeat seam at all (${JSON.stringify(hb1Red)})`);
+
+    // RED — onProgress wired but NO periodic ticker (phase-boundary-only, the exact EP-D15 defect).
+    const hb1PartialSource = 'async function runEnrichPhase({ ctx }) {\n  const passCtx = { onProgress: (n) => { rowsProcessed = n; } };\n  return passCtx;\n}\n';
+    const hb1Partial = checkHeartbeatWholeStep({ execution: { shape: 'enrich' } }, hb1PartialSource);
+    if (hb1Partial.pass) throw new Error(`self-test FAILED: checkHeartbeatWholeStep did not RED an onProgress-only runner with no periodic ticker (${JSON.stringify(hb1Partial)})`);
+
+    // GREEN — the REAL runEnrichPhase source (both the onProgress seam and startHeartbeatTicker exist live).
+    const realIndexSource = readFileSync(path.join(REPO_ROOT, 'scripts/lib/step/index.js'), 'utf8');
+    const hb1Green = checkHeartbeatWholeStep({ execution: { shape: 'enrich' } }, realIndexSource);
+    if (!hb1Green.pass) throw new Error(`self-test FAILED: checkHeartbeatWholeStep did not pass against the REAL scripts/lib/step/index.js runEnrichPhase (${JSON.stringify(hb1Green)})`);
+  }
+  // CEIL-1 (Spec 124 §2 Rule 12, WF1 "conversion roadmap" commit 3,
+  // 2026-09-10) — checkStatementCeilingEveryPhase + statementCeilingReachability.
+  {
+    const notApplicable = checkStatementCeilingEveryPhase({ execution: { shape: 'cascade' } }, 'async function runCascadePhase() {}\n');
+    if (!notApplicable.pass || notApplicable.applicable) throw new Error(`self-test FAILED: checkStatementCeilingEveryPhase must be pass:true, applicable:false for a non-"enrich" shape (${JSON.stringify(notApplicable)})`);
+
+    // RED — no ceiling bound anywhere.
+    const ceil1DeadSource = 'async function runEnrichPhase({ descriptor, pool }) {\n  return { ok: true };\n}\n';
+    const ceil1Red = checkStatementCeilingEveryPhase({ execution: { shape: 'enrich' } }, ceil1DeadSource);
+    if (ceil1Red.pass || !ceil1Red.applicable) throw new Error(`self-test FAILED: checkStatementCeilingEveryPhase did not RED an "enrich" runner with no ceiling bind at all (${JSON.stringify(ceil1Red)})`);
+
+    // RED — the shared-txn passes bind a ceiling, but the post_commit client never does (the exact EP-D16 defect, pre-fix).
+    const ceil1PartialSource = 'async function runEnrichPhase({ client, postClient }) {\n  await client.query(`SET LOCAL statement_timeout = 1`);\n  await client.query(`SET LOCAL lock_timeout = 1`);\n  await postClient.query(`BEGIN`);\n  return true;\n}\n';
+    const ceil1Partial = checkStatementCeilingEveryPhase({ execution: { shape: 'enrich' } }, ceil1PartialSource);
+    if (ceil1Partial.pass) throw new Error(`self-test FAILED: checkStatementCeilingEveryPhase did not RED a runner whose post_commit client binds no session-level ceiling (${JSON.stringify(ceil1Partial)})`);
+
+    // GREEN — the REAL runEnrichPhase source (shared-txn SET LOCAL + postClient's own SET statement_timeout, EP-D16).
+    const realIndexSource = readFileSync(path.join(REPO_ROOT, 'scripts/lib/step/index.js'), 'utf8');
+    const ceil1Green = checkStatementCeilingEveryPhase({ execution: { shape: 'enrich' } }, realIndexSource);
+    if (!ceil1Green.pass) throw new Error(`self-test FAILED: checkStatementCeilingEveryPhase did not pass against the REAL scripts/lib/step/index.js runEnrichPhase (${JSON.stringify(ceil1Green)})`);
+  }
+  // GOLD-PRE (Spec 122 §5.3, WF1 "conversion roadmap" commit 3, 2026-09-10) —
+  // checkCaptures'/scoreG8's new preInvocationsMissing half, proven both
+  // directions against real capturesIn() output shapes (no disk I/O needed —
+  // capturesIn's own {file, doc} shape is small enough to fabricate here,
+  // mirroring the rest of this file's "pure function, synthetic input"
+  // self-test convention).
+  {
+    const invocations = [
+      { chain: 'sources', args: [] },
+      { chain: 'sources', args: ['--full'] },
+      { chain: 'none', args: [] },
+    ];
+    // RED — a declared invocation with NO pre/ capture at all, for a slug
+    // NOT in GOLD_PRE_KNOWN_GAPS.
+    const preDocsRed = [{ doc: { chain: 'sources', args: [] } }, { doc: { chain: 'none', args: [] } }]; // missing sources::--full
+    const preKeysRed = new Set(preDocsRed.map((p) => invocationKey({ chain: String(p.doc.chain), args: p.doc.args || [] })));
+    const missingRed = invocations.filter((inv) => !preKeysRed.has(invocationKey(inv))).map(invocationKey).filter((key) => !isGoldPreKnownGap('fixture_slug_not_pinned', key));
+    if (missingRed.length === 0) throw new Error('self-test FAILED: GOLD-PRE preInvocationsMissing did not RED a genuinely missing pre/ capture for an unpinned slug');
+
+    // GREEN — the SAME missing invocation, but for the ONE pinned slug/key (link_wsib, sources::--full).
+    const missingPinned = invocations.filter((inv) => !preKeysRed.has(invocationKey(inv))).map(invocationKey).filter((key) => !isGoldPreKnownGap('link_wsib', key));
+    if (missingPinned.length !== 0) throw new Error(`self-test FAILED: GOLD-PRE did not exempt the declared link_wsib sources::--full pin (${JSON.stringify(missingPinned)})`);
+
+    // GREEN (MED-3) — the enrich_parcels `none::` pin exempts exactly that
+    // key, mirroring the real docs/reports/golden/enrich_parcels/pre/ shape
+    // (sources::--full ×2 present; none:: absent, only none::--full exists).
+    const epInvocations = [{ chain: 'sources', args: ['--full'] }, { chain: 'none', args: [] }];
+    const epPreDocs = [{ doc: { chain: 'sources', args: ['--full'] } }, { doc: { chain: 'none', args: ['--full'] } }];
+    const epPreKeys = new Set(epPreDocs.map((p) => invocationKey({ chain: String(p.doc.chain), args: p.doc.args || [] })));
+    const epMissingUnpinned = epInvocations.filter((inv) => !epPreKeys.has(invocationKey(inv))).map(invocationKey).filter((key) => !isGoldPreKnownGap('fixture_not_enrich_parcels', key));
+    if (epMissingUnpinned.length === 0) throw new Error('self-test FAILED: GOLD-PRE preInvocationsMissing did not RED the enrich_parcels-shaped gap for an unpinned slug');
+    const epMissingPinned = epInvocations.filter((inv) => !epPreKeys.has(invocationKey(inv))).map(invocationKey).filter((key) => !isGoldPreKnownGap('enrich_parcels', key));
+    if (epMissingPinned.length !== 0) throw new Error(`self-test FAILED: GOLD-PRE did not exempt the declared enrich_parcels none::[] pin (${JSON.stringify(epMissingPinned)})`);
+
+    // GREEN — scoreG8 reads 3/3 when preInvocationsMissing is empty (post-pin, or a fully-captured slug).
+    const g8Green = scoreG8({ invocationsMissing: [], preInvocationsMissing: [], staleFingerprints: [], unexplainedDiffs: [] });
+    if (g8Green.score !== 3) throw new Error(`self-test FAILED: scoreG8 did not award 3/3 with empty preInvocationsMissing (${JSON.stringify(g8Green)})`);
+
+    // RED — scoreG8 reads 0/3 when preInvocationsMissing is non-empty (an UNPINNED gap), even with everything else clean.
+    const g8Red = scoreG8({ invocationsMissing: [], preInvocationsMissing: ['sources::'], staleFingerprints: [], unexplainedDiffs: [] });
+    if (g8Red.score !== 0) throw new Error(`self-test FAILED: scoreG8 did not RED on a non-empty preInvocationsMissing (${JSON.stringify(g8Red)})`);
   }
   // Rule 13 hard-stop wiring (Spec 124 §2 Rule 13, WF3 "Rules 10-12 output
   // panel remediation" commit 4) — computeMatrixHardStop, pure, in-memory

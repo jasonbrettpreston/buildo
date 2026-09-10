@@ -430,7 +430,7 @@ AFTER this report's own captures were last taken, unrelated to CC-D3 or the prob
 | G5 | 1 | 1 | db=true clock=true network=true argv/env=true |
 | G6 | 3 | 3 | 14 ledger row(s), 0 without CLOSED/PIN () |
 | G7 | 3 | 3 | file=true fences=4 it-count=63 RED-evidence=true |
-| G8 | 3 | 3 | missing-invocations=0 stale-fingerprints=0 unexplained-diffs=0 |
+| G8 | 3 | 3 | missing-invocations=0 missing-pre-invocations=0 stale-fingerprints=0 unexplained-diffs=0 |
 | G9 (binary) | PASS | — | heading=true low-confidence-table=true recurring-table=true |
 | G4d (fence<=lock) | PASS | — | fences=4 lock-it-count=63 |
 | G-shape | PASS | — | file-clean=true compute-clean=true |
@@ -444,17 +444,20 @@ AFTER this report's own captures were last taken, unrelated to CC-D3 or the prob
 | 3 | assert_schema | PASS | retired=0 overlap-with-declared=none |
 | 7 | assert_schema | PASS | SPEC LINK header present=true |
 | 8 | assert_schema | PASS | G-4: 3 declared, 0 verdict-affecting, 0 violate on_invalid:fail with no deviations[] cover |
+| 20 | assert_schema | PASS | HB-1: execution.shape=null — HB-1 applies_when execution.shape=="enrich" only (RS-D-STA); not applicable, never a pass-by-omission |
+| 21 | assert_schema | PASS | CEIL-1: execution.shape=null — CEIL-1 applies_when execution.shape=="enrich" only (RS-D-STA); not applicable, never a pass-by-omission |
 | 4 | (registry) | PASS | overlap: none |
 | 5 | (registry) | PASS | clean (0 it.fails( call sites outside a declared pending slug) |
 | 9 | (registry) | PASS | clean (0 converted slugs blocked by an unmet cutover_prereq item; blocks batching: 2) |
 
 ### Captures (item iv)
-- missing invocations: none
+- missing invocations (POST): none
+- missing invocations (PRE, GOLD-PRE): none
 - stale fingerprints: none
 - compare ran: true · diffs found: 239 · unexplained: 0
 
 ### Test suite (item iii)
-- 837/861 passed (suite success=false)
+- 836/861 passed (suite success=false)
 
 ### Policy coverage matrix (item vi) — Spec 124 Rules 1-13
 

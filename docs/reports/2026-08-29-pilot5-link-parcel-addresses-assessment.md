@@ -707,7 +707,7 @@ Spec 124 §2 Rule 13's R-T addendum lands 5 net-new `invariants[]` (rows, multi_
 | G5 | 1 | 1 | db=true clock=true network=true argv/env=true |
 | G6 | 3 | 3 | 6 ledger row(s), 0 without CLOSED/PIN () |
 | G7 | 3 | 3 | file=true fences=3 it-count=83 RED-evidence=true |
-| G8 | 3 | 3 | missing-invocations=0 stale-fingerprints=0 unexplained-diffs=0 |
+| G8 | 3 | 3 | missing-invocations=0 missing-pre-invocations=0 stale-fingerprints=0 unexplained-diffs=0 |
 | G9 (binary) | PASS | — | heading=true low-confidence-table=true recurring-table=true |
 | G4d (fence<=lock) | PASS | — | fences=3 lock-it-count=83 |
 | G-shape | PASS | — | file-clean=true compute-clean=true |
@@ -721,17 +721,20 @@ Spec 124 §2 Rule 13's R-T addendum lands 5 net-new `invariants[]` (rows, multi_
 | 3 | link_parcel_addresses | PASS | retired=0 overlap-with-declared=none |
 | 7 | link_parcel_addresses | PASS | SPEC LINK header present=true |
 | 8 | link_parcel_addresses | PASS | G-4: 7 declared, 6 verdict-affecting, 0 violate on_invalid:fail with no deviations[] cover |
+| 20 | link_parcel_addresses | PASS | HB-1: execution.shape="materialize" — HB-1 applies_when execution.shape=="enrich" only (RS-D-STA); not applicable, never a pass-by-omission |
+| 21 | link_parcel_addresses | PASS | CEIL-1: execution.shape="materialize" — CEIL-1 applies_when execution.shape=="enrich" only (RS-D-STA); not applicable, never a pass-by-omission |
 | 4 | (registry) | PASS | overlap: none |
 | 5 | (registry) | PASS | clean (0 it.fails( call sites outside a declared pending slug) |
 | 9 | (registry) | PASS | clean (0 converted slugs blocked by an unmet cutover_prereq item; blocks batching: 2) |
 
 ### Captures (item iv)
-- missing invocations: none
+- missing invocations (POST): none
+- missing invocations (PRE, GOLD-PRE): none
 - stale fingerprints: none
 - compare ran: true · diffs found: 91 · unexplained: 0
 
 ### Test suite (item iii)
-- 841/861 passed (suite success=false)
+- 840/861 passed (suite success=false)
 
 ### Policy coverage matrix (item vi) — Spec 124 Rules 1-13
 
@@ -750,7 +753,7 @@ Spec 124 §2 Rule 13's R-T addendum lands 5 net-new `invariants[]` (rows, multi_
 | 11 | Phase-order re-derive (declared half, checkOrderGuaranteesCited) | enforced-green | no when:"pre_write" checks — vacuously nothing to cite — G-3 completeness half stays open |
 | 12 | Truthful crash posture (R-B reachability, static + R-M before-image) | enforced-green | R-B (checkInterruptedPostureTruthful): recovery.interrupted="none" — no reachability claim to verify · R-M: prose-only (R-M/LG-17 describe not scoped to this step (vitest not run, or no before-image target)) |
 | 13 | A step validates itself | enforced-green | this run of step:validate IS the mechanism |
-| P3 | I/O cost adjudication (measured, not gated) | measured | descriptor=42892B notes=8210B checks=19 rows records_meta=3836B (newest post/ capture) |
+| P3 | I/O cost adjudication (measured, not gated) | measured | descriptor=42892B notes=8299B checks=19 rows records_meta=1390B (newest post/ capture) |
 
 **Enforced-green: 13/14**
 

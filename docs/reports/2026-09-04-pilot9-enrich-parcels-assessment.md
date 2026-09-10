@@ -886,33 +886,36 @@ byte-identical, 0 unexplained).
 | G3 | 1 | 2 | table rows=10 vocab-hit rows=9 |
 | G4 | 2 | 2 | risk-class row with chance+impact found=true |
 | G5 | 1 | 1 | db=true clock=true network=true argv/env=true |
-| G6 | 3 | 3 | 11 ledger row(s), 0 without CLOSED/PIN () |
-| G7 | 3 | 3 | file=true fences=3 it-count=56 RED-evidence=true |
-| G8 | 0 | 3 | missing-invocations=0 stale-fingerprints=1 unexplained-diffs=0 — stage-gated (shape_clean_pending_recapture) |
+| G6 | 3 | 3 | 16 ledger row(s), 0 without CLOSED/PIN () |
+| G7 | 3 | 3 | file=true fences=3 it-count=69 RED-evidence=true |
+| G8 | 0 | 3 | missing-invocations=0 missing-pre-invocations=0 stale-fingerprints=2 unexplained-diffs=0 — stage-gated (shape_clean_pending_recapture) |
 | G9 (binary) | PASS | — | heading=true low-confidence-table=true recurring-table=true |
-| G4d (fence<=lock) | PASS | — | fences=3 lock-it-count=56 |
+| G4d (fence<=lock) | PASS | — | fences=3 lock-it-count=69 |
 | G-shape | PASS | — | file-clean=null compute-clean=true |
 
 ### Fast invariants (always run — the fast descriptor gate)
 
 | # | Scope | Pass | Detail |
 |---|---|---|---|
-| 1 | enrich_parcels | PASS | min_migration=237 <= migrations count=242 |
-| 2 | enrich_parcels | PASS | 38 declared, missing from seeds: none |
+| 1 | enrich_parcels | PASS | min_migration=237 <= migrations count=243 |
+| 2 | enrich_parcels | PASS | 40 declared, missing from seeds: none |
 | 3 | enrich_parcels | PASS | retired=0 overlap-with-declared=none |
 | 7 | enrich_parcels | PASS | SPEC LINK header present=true |
-| 8 | enrich_parcels | PASS | G-4: 38 declared, 2 verdict-affecting, 0 violate on_invalid:fail with no deviations[] cover |
+| 8 | enrich_parcels | PASS | G-4: 40 declared, 3 verdict-affecting, 0 violate on_invalid:fail with no deviations[] cover |
+| 20 | enrich_parcels | PASS | HB-1: runner=runEnrichPhase: runner-level token presence (MED-6, not a per-phase proof): source contains an onProgress seam token AND a startHeartbeatTicker( call token — the periodic ticker covers every phase uniformly by construction once present, independent of any single phase's own boundary, but ticker start/stop lifecycle is not independently verified here |
+| 21 | enrich_parcels | PASS | CEIL-1: runner=runEnrichPhase: runner-level token presence (MED-6, not a per-phase proof): source contains a SET LOCAL statement_timeout/lock_timeout token pair AND a postClient-scoped SET statement_timeout token (EP-D16) — the per-phase claim itself is filed as its own followup |
 | 4 | (registry) | PASS | overlap: none |
 | 5 | (registry) | PASS | clean (0 it.fails( call sites outside a declared pending slug) |
-| 9 | (registry) | PASS | clean (0 converted slugs blocked by an unmet cutover_prereq item; blocks batching: 4) |
+| 9 | (registry) | PASS | clean (0 converted slugs blocked by an unmet cutover_prereq item; blocks batching: 2) |
 
 ### Captures (item iv)
-- missing invocations: none
-- stale fingerprints: none_incremental.json
+- missing invocations (POST): none
+- missing invocations (PRE, GOLD-PRE): none
+- stale fingerprints: none_incremental.json, sources_run1.json
 - compare ran: true · diffs found: 552 · unexplained: 0
 
 ### Test suite (item iii)
-- 829/845 passed (suite success=true)
+- 844/861 passed (suite success=false)
 
 ### Policy coverage matrix (item vi) — Spec 124 Rules 1-13
 
@@ -920,18 +923,18 @@ byte-identical, 0 unexplained).
 |---|---|---|---|
 | 1 | Nothing hidden | enforced-green | G-1 schema-baseline: schema-baseline clean |
 | 2 | Compute is just compute | enforced-green |  |
-| 3 | Tunables externalized | enforced-green | G-4: 38 declared, 2 verdict-affecting, 0 violate on_invalid:fail with no deviations[] cover |
+| 3 | Tunables externalized | enforced-green | G-4: 40 declared, 3 verdict-affecting, 0 violate on_invalid:fail with no deviations[] cover |
 | 4 | Compute rule declared | enforced-green | G-2: 5 preserved-in-compute row(s), 0 with no why/notes.json/checks[] grounding |
 | 5 | checks >= 1 | enforced-green |  |
 | 6 | Omission fails (18 categories) | enforced-green |  |
 | 7 | Archetype gates categories | enforced-green |  |
 | 8 | Per-target write discipline | enforced-green |  |
 | 9 | Banned write needs ledger (+ V7 no_retraction) | enforced-green |  |
-| 10 | Verdict row-derived | enforced-red | (a) OK — 11 corpus file(s) scanned, 0 unsanctioned second derivations, 2 sanctioned hit(s) matched SANCTIONED_VERDICT_SITES · (b) KNOWN-DEFECT (pinned) — KNOWN-DEFECT (Spec 123 §3.1 pin): skipRecordsMeta's all-INFO audit table folds to verdict=PASS — SEVERITY_RANK has no SKIP rank (scripts/lib/step/verdict.js:22). Pinned against review_followups.md "A lock-skipped converted step verdicts as PASS" (HIGH, 2026-09-03) and scripts/steps/_schema/programme-items.json "VRD-SKIP" (nice_to_have). |
-| 11 | Phase-order re-derive (declared half, checkOrderGuaranteesCited) | enforced-green | 1 when:"pre_write" check(s), 0 order_guarantee violation(s) — G-3 completeness half stays open |
+| 10 | Verdict row-derived | enforced-green | (a) OK — 11 corpus file(s) scanned, 0 unsanctioned second derivations, 2 sanctioned hit(s) matched SANCTIONED_VERDICT_SITES · (b) OK — SELF_SKIPPED audit table folds to verdict=WARN (!= PASS), row-derived off 1 non-INFO row(s) — VRD-SKIP closed |
+| 11 | Phase-order re-derive (declared half, checkOrderGuaranteesCited) | enforced-green | 2 when:"pre_write" check(s), 0 order_guarantee violation(s) — G-3 completeness half stays open |
 | 12 | Truthful crash posture (R-B reachability, static + R-M before-image) | enforced-green | R-B (checkInterruptedPostureTruthful): shape=enrich runner=runEnrichPhase: no staleness.ledgerGatedSkip/selectMode on this path (ENRICHER's own scope-defer archetype, Spec 122 §3.0b); calls staleness.detectInterruptedRetraction directly and folds interruptedRetraction.interrupted into the full/incremental decision before any pass runs · R-M: prose-only (R-M/LG-17 describe not scoped to this step (vitest not run, or no before-image target)) |
 | 13 | A step validates itself | enforced-green | this run of step:validate IS the mechanism |
-| P3 | I/O cost adjudication (measured, not gated) | measured | descriptor=68289B notes=9615B checks=24 rows records_meta=5806B (newest post/ capture) |
+| P3 | I/O cost adjudication (measured, not gated) | measured | descriptor=72578B notes=11528B checks=28 rows records_meta=1839B (newest post/ capture) |
 
-**Enforced-green: 12/14**
+**Enforced-green: 13/14**
 
