@@ -754,6 +754,25 @@ above; it does not need to be enumerated here first. VACUUM/ANALYZE tuning beyon
 Postgres's own autovacuum is deliberately not itemized — add an entry if and when a
 specific table's autovacuum settings prove insufficient, rather than pre-guessing one now.
 
+**⚠️ The trigger condition named above has now occurred (WF3 EP-D17, 2026-09-10).**
+`parcels`' default autovacuum settings proved insufficient: cloud-measured `dead_ratio`
+0.697 (run 34506962436, `pipeline_runs` 4566/4588) after `enrich_parcels`' own pass-4
+comps rewrite bloated the heap inside one shared ~93-minute transaction whose xmin
+pinned the vacuum horizon — no autovacuum setting can reclaim dead tuples DURING that
+transaction, but the settings DO govern how fast the POST-COMMIT catch-up runs, and the
+default `autovacuum_vacuum_cost_delay=2ms` measured ~49 minutes throttled for 1.35M dead
+tuples, exactly the window inside which the step's own run-end post checks (a 150x
+scan-cost cliff, EP-D17's own code fix) ran. Migration `247_parcels_autovacuum_storage_params.sql`
+itemizes `parcels`: `autovacuum_vacuum_scale_factor=0.02`, `autovacuum_analyze_scale_factor=0.01`,
+`autovacuum_vacuum_cost_delay=0` (SHARE UPDATE EXCLUSIVE, catalog-only, sub-second —
+DB-tested against a real Postgres via `src/tests/db/migration-247-parcels-autovacuum-params.db.test.ts`).
+A complementary in-step executor (`scripts/lib/step/plausibility.js` `runMaintenance`,
+wired from `execution.maintenance`) runs `VACUUM (ANALYZE) parcels` itself, mid-chain,
+right after `enrich_parcels`' own write phases, whenever the measured `dead_ratio`
+exceeds the declared `parcels_dead_tuple_ratio_warn_max` bound — this migration's tuned
+params are designed to keep the steady-state ratio ahead of what that executor would
+otherwise need to fire on every run.
+
 **All call sites in this catalog are schema-qualified** (`cron.schedule(...)`,
 `net.http_post(...)` where applicable) — see §5a for why that is the actual portability
 guarantee, not a schema pin.
