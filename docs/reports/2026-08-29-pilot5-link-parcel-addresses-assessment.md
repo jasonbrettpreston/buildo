@@ -723,7 +723,7 @@ Spec 124 §2 Rule 13's R-T addendum lands 5 net-new `invariants[]` (rows, multi_
 | 8 | link_parcel_addresses | PASS | G-4: 7 declared, 6 verdict-affecting, 0 violate on_invalid:fail with no deviations[] cover |
 | 4 | (registry) | PASS | overlap: none |
 | 5 | (registry) | PASS | clean (0 it.fails( call sites outside a declared pending slug) |
-| 9 | (registry) | PASS | clean (0 converted slugs blocked by an unmet cutover_prereq item; blocks batching: 3) |
+| 9 | (registry) | PASS | clean (0 converted slugs blocked by an unmet cutover_prereq item; blocks batching: 2) |
 
 ### Captures (item iv)
 - missing invocations: none

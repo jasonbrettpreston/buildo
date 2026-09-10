@@ -859,10 +859,10 @@
       "title": "freeze precondition satisfied — the batching_prereq set is genuinely empty",
       "promised": "Spec 122 §8.2: 'the template may honestly freeze after the eighth pilot only when the batching_prereq set is empty' — the PRECONDITION, not the mechanism (STD-8, BUILT, is the mechanism)",
       "status": "NOT_STARTED",
-      "evidence": "The freeze MECHANISM is built (STD-8) but the DECLARATION it gates is not yet honest: template-freeze.json's own batching_prereq_snapshot (LIVE tier, re-derived every regen) currently lists 3 open items after this commit — STD-7 (ENRICHER unexercised until pilot 9), WD-1 (write_discipline class-enum cross-audit), ADMIN-1 (admin GROUPS reverse-coverage, 302 unclassified keys). This item exists so the ledger cannot silently read 'STD-8: BUILT' as 'the freeze has happened' — it has not, until this item ALSO flips.",
+      "evidence": "The freeze MECHANISM is built (STD-8) but the DECLARATION it gates is not yet honest: template-freeze.json's own batching_prereq_snapshot (LIVE tier, re-derived every regen) is worded here as 1 open item — STD-7 (ENRICHER unexercised until pilot 9); snapshot [STD-7, FREEZE-1]. WD-1 (write_discipline class-enum cross-audit) lands BEFORE ADMIN-1 merges into the main tree and is expected CLOSED by then — this worktree's own isolated regeneration still shows it open (unmerged), not a discrepancy to chase here. ADMIN-1 (admin GROUPS reverse-coverage) CLOSED 2026-09-09 (WF2 'ADMIN-1 ratchet to zero', 5 batches, 280 → 0) and no longer appears in the snapshot. This item exists so the ledger cannot silently read 'STD-8: BUILT' as 'the freeze has happened' — it has not, until this item ALSO flips.",
       "owner": {
         "kind": "wf",
-        "ref": "wf: programme-FREEZE-1, blocked on STD-7/WD-1/ADMIN-1"
+        "ref": "wf: programme-FREEZE-1, blocked on STD-7 (WD-1 expected closed pre-merge)"
       },
       "gate": {
         "kind": "batching_prereq",
@@ -1391,8 +1391,8 @@
       "spec": "124 §2 Rule 3",
       "title": "admin GROUPS reverse-coverage — every unclassified seed key gets a real group or a reviewed hidden reason",
       "promised": "unclassified count = 0",
-      "status": "NOT_STARTED",
-      "evidence": "0 of 451 scripts/seeds/logic_variables.json keys carry admin.hidden === \"unclassified\" as of scripts/generate-logic-variable-groups.mjs (WF2 \"Admin Tunable Coverage\" commit 4, 2026-09-03) — refreshed by that generator on every regeneration (npm run logic-var-groups); high-water mark tracked in scripts/steps/_schema/admin-unclassified-high-water-mark.json (monotonic ratchet, src/tests/logic-var-admin-declarations.logic.test.ts) so the count can only decrease, never increase, going forward. review_followups.md — \"WF3 cloud-parity FIX 3 remediation — admin GROUPS reverse-coverage gap (2026-09-03)\" is the originating followup this item batches.",
+      "status": "BUILT",
+      "evidence": "0 of 451 scripts/seeds/logic_variables.json keys carry admin.hidden === \"unclassified\" as of scripts/generate-logic-variable-groups.mjs (WF2 \"ADMIN-1 ratchet to zero\" batch 5, 2026-09-09) — refreshed by that generator on every regeneration (npm run logic-var-groups); high-water mark pinned at 0 in scripts/steps/_schema/admin-unclassified-high-water-mark.json (monotonic ratchet, src/tests/logic-var-admin-declarations.logic.test.ts). Closed in 5 reviewed batches (CoA chain 17, cost/archetype chain 19, lifecycle chain 10, coverage asserts + residue 14, lifecycle_seq_band_* family 220 — GlobalConfigCard.tsx's bespoke seq-band render path deleted in the same batch, single render path proven by an exactly-once-render fixture) — see .cursor/wf2_admin1_ratchet_to_zero_active_task.md. Batch 6 (this evidence) additionally RETIRED \"unclassified\" from the closed hidden-reason enum (derived|internal|deprecated|migration-only) — a new unclassified key is now a structural error, not merely ratcheted. review_followups.md — \"WF3 cloud-parity FIX 3 remediation — admin GROUPS reverse-coverage gap (2026-09-03)\" is the originating followup this item batches.",
       "owner": {
         "kind": "wf",
         "ref": "wf: programme-ADMIN-1"
@@ -1403,7 +1403,7 @@
           "batching"
         ]
       },
-      "last_reviewed": "2026-09-03"
+      "last_reviewed": "2026-09-09"
     },
     {
       "id": "EP-PIN-B45",

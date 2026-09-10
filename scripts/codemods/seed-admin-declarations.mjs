@@ -1,28 +1,44 @@
 #!/usr/bin/env node
 // ---------------------------------------------------------------------------
-// One-shot codemod — declares a per-key `admin` field on every
-// scripts/seeds/logic_variables.json entry.
+// RETIRED — one-shot historical codemod. DO NOT RUN.
 //
-// WF2 "Admin Tunable Coverage" (.cursor/wf2_admin_tunable_coverage_active_task.md)
-// commit 1 — closes review_followups.md "WF3 cloud-parity FIX 3 remediation —
-// admin GROUPS reverse-coverage gap (2026-09-03)": 302 of 438 seed keys are
-// absent from GlobalConfigCard's GROUPS (invisible to operators) with no
-// declared reason. This codemod does NOT decide admin-editability by hand —
-// it declares the CURRENT, already-shipped truth:
-//   - the 136 numeric keys GlobalConfigCard.tsx's GROUPS array ALREADY renders
-//     get `admin: { group: "<label from that GROUPS entry>" }`
-//   - every other key gets `admin: { hidden: "unclassified" }` — a transitional
-//     marker, tracked by the ADMIN-1 programme-backlog item + a monotonic
-//     ratchet test (commit 4), NOT asserted here as a final classification.
+// Ran exactly once, at WF2 "Admin Tunable Coverage" commit 1
+// (.cursor/wf2_admin_tunable_coverage_active_task.md, 2026-09-03), to
+// bootstrap a per-key `admin` field onto every scripts/seeds/
+// logic_variables.json entry that lacked one. Retired by TWO independent,
+// irreversible changes landed since:
+//   1. Commit 3 of that same plan made GlobalConfigCard.tsx's `GROUPS`
+//      GENERATED (`export const GROUPS = GENERATED_GROUPS` from
+//      scripts/generate-logic-variable-groups.mjs), not a hand-authored
+//      literal array — this codemod's own GROUPS-parsing regex
+//      (`export const GROUPS[\s\S]*?\n\];`) already cannot find that shape
+//      and would throw "GROUPS block not found" on any re-run.
+//   2. WF2 "ADMIN-1 ratchet to zero" batch 6 (2026-09-09) RETIRED
+//      `"unclassified"` from the closed `hidden` enum
+//      (derived|internal|deprecated|migration-only) — this codemod's line 2
+//      fallback (`entry.admin = { hidden: 'unclassified' }`) writes a value
+//      that is now a structural error (src/tests/logic-var-admin-
+//      declarations.logic.test.ts's closed-enum check reddens on it).
 //
-// Idempotent: re-running after commit 3 (GROUPS derived from generated JSON)
-// would find `admin` already present on every key and is a no-op via the
-// existing-field short-circuit below. Preserves key order and every existing
-// field byte-for-byte; only appends `admin` to each entry. Preserves the
-// source file's CRLF line endings.
+// F-5 (WF2 ADMIN-1 ratchet, output panel): rather than "fix" a codemod that
+// re-derives an already-superseded array shape (redundant with
+// scripts/generate-logic-variable-groups.mjs, which is the actual live
+// generator today), this file is left in place as a HISTORICAL record —
+// its idempotent existing-field short-circuit already makes a re-run of
+// the real (unreachable) codemod body a no-op — and hard-stops instead.
+// Any future "reclassify a fresh batch of unclassified keys" need is
+// scripts/generate-logic-variable-groups.mjs's job (it already cross-
+// validates `admin.group` against `GROUP_ORDER` both directions); a NEW
+// codemod for a NEW purpose should not resurrect this file's name or shape.
 //
-// Usage: node scripts/codemods/seed-admin-declarations.mjs
+// Usage: none — retired. (Historically: node scripts/codemods/seed-admin-declarations.mjs)
 // ---------------------------------------------------------------------------
+throw new Error(
+  'scripts/codemods/seed-admin-declarations.mjs is RETIRED (see header) — ' +
+    'it ran once at WF2 "Admin Tunable Coverage" commit 1 and its GROUPS-parsing ' +
+    'assumption + "unclassified" fallback are both stale. Do not run it.',
+);
+
 import fs from 'fs';
 import path from 'path';
 

@@ -9,7 +9,9 @@
 // structurally honest:
 //   (a) reverse   — every seed key HAS an admin declaration.
 //   (b) XOR+enum  — exactly one of group/hidden; hidden reason ∈ a closed
-//                   enum (derived|internal|deprecated|migration-only|unclassified).
+//                   enum (derived|internal|deprecated|migration-only —
+//                   "unclassified" RETIRED batch 6 of the ADMIN-1 ratchet,
+//                   see the HIDDEN_REASONS declaration below).
 //   (c) dead⇒deprecated — a key with ZERO consumers anywhere in
 //                   scripts/src/migrations (scripts/lib/logic-var-consumers.js,
 //                   the ONE scanner shared with any future generator) MUST be
@@ -28,7 +30,14 @@ type AdminDecl = { group: string } | { hidden: string };
 type SeedEntry = { admin?: AdminDecl; [k: string]: unknown };
 type Seed = Record<string, SeedEntry>;
 
-const HIDDEN_REASONS = new Set(['derived', 'internal', 'deprecated', 'migration-only', 'unclassified']);
+// WF2 ADMIN-1 ratchet, batch 6 (closeout, F3): "unclassified" RETIRED from the
+// closed enum. It was ratified as "the transitional value ONLY; not a valid
+// end state" (WF2 "Admin Tunable Coverage" commit 1) — batches 1-5 drove the
+// live count to 0 (scripts/steps/_schema/admin-unclassified-high-water-mark.json
+// pinned at 0) and this removal makes a NEW unclassified key structurally
+// impossible to declare, not merely ratcheted. The monotonic ratchet stays
+// (belt-and-braces, F1) — this is an ADDITIONAL lock, not a replacement.
+const HIDDEN_REASONS = new Set(['derived', 'internal', 'deprecated', 'migration-only']);
 
 const rawSeed = fs.readFileSync(SEED_PATH, 'utf-8');
 const SEED: Seed = JSON.parse(rawSeed);
@@ -160,6 +169,17 @@ describe('logic-var-admin-declarations — reverse coverage (seed key ⇒ admin 
     ).toBe(true);
   });
 
+  it('RED — batch 6: "unclassified" is RETIRED from the closed enum, so declaring it now reddens', () => {
+    const someKey = Object.keys(SEED)[0]!;
+    const fixture: Seed = structuredClone(SEED);
+    fixture[someKey]!.admin = { hidden: 'unclassified' };
+    const findings = checkAdminDeclarations(fixture, findConsumer);
+    expect(
+      findings.some((f) => f.includes(`"${someKey}"`) && f.includes('is not in the closed enum')),
+      findings.join('\n'),
+    ).toBe(true);
+  });
+
   it('RED — an unknown group label reddens the known-groups check', () => {
     const someKey = Object.keys(SEED)[0]!;
     const fixture: Seed = structuredClone(SEED);
@@ -171,7 +191,7 @@ describe('logic-var-admin-declarations — reverse coverage (seed key ⇒ admin 
     ).toBe(true);
   });
 
-  it('RED — a key with zero consumers left hidden:"unclassified" reddens the dead⇒deprecated check', () => {
+  it('RED — a key with zero consumers left hidden:"internal" reddens the dead⇒deprecated check', () => {
     // Built by concatenation, not a literal — the whole-corpus scanner reads
     // THIS test file too, so a literal fixture name would "consume" itself.
     const fixtureKey = ['zzz_wf2_admin_dead_fixture_never', 'consumed_anywhere'].join('_');
@@ -179,7 +199,13 @@ describe('logic-var-admin-declarations — reverse coverage (seed key ⇒ admin 
     // corpus BEFORE asserting on it — a name that happens to collide with
     // real source text would make this a false RED for the wrong reason.
     expect(findConsumer(fixtureKey), 'fixture key collided with a real consumer — pick a different name').toBeNull();
-    const fixture: Seed = { ...structuredClone(SEED), [fixtureKey]: { admin: { hidden: 'unclassified' } } };
+    // WF2 ADMIN-1 ratchet, batch 6 (F-5): the vehicle for "any non-deprecated
+    // hidden reason on a dead key must still redden" was "unclassified" —
+    // now RETIRED from the enum, so a non-deprecated-vehicle test can no
+    // longer use it (it would redden for the WRONG reason, the closed-enum
+    // check, not the dead⇒deprecated check this test targets). "internal" is
+    // a live, still-valid non-deprecated member of the enum.
+    const fixture: Seed = { ...structuredClone(SEED), [fixtureKey]: { admin: { hidden: 'internal' } } };
     const findings = checkAdminDeclarations(fixture, findConsumer);
     expect(
       findings.some((f) => f.includes(`"${fixtureKey}"`) && f.includes('MUST be hidden:"deprecated"')),

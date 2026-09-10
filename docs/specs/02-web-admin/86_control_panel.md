@@ -38,7 +38,7 @@ These are universal "Gravity" constants. They act as baseline rules, fallbacks, 
 | `coa_stall_threshold_p2_days` | CRM (CoA branch) | **WF1 2026-05-13:** Days a CoA can sit at `status='Hearing Scheduled'` (Universal Stream B1.B / P2) before alert. Default 90 — distinct from `coa_stall_threshold` (P1 intake stall, default 30) because hearing-prep takes substantively longer than intake processing. |
 | `coa_imminent_window_days` | CRM (CoA branch) | **WF1 2026-05-13:** Days before a CoA `hearing_date` triggers IMMINENT alert (default 7). Used by `update-tracked-projects.js` CoA branch instead of `predicted_start - NOW()`. |
 
-> The table above is illustrative; the **single source of truth** for the full key set is `scripts/seeds/logic_variables.json`. Schema parity between that file, `scripts/lib/config-loader.js` (`FALLBACK_LOGIC_VARS`), and `src/lib/admin/control-panel.ts` (`LOGIC_VAR_DEFAULTS`) is enforced by `src/tests/control-panel.logic.test.ts`. Adding a new variable means appending to the JSON; the admin UI grouping lives in `src/features/admin-controls/components/GlobalConfigCard.tsx` `GROUPS`.
+> The table above is illustrative; the **single source of truth** for the full key set is `scripts/seeds/logic_variables.json`. Schema parity between that file, `scripts/lib/config-loader.js` (`FALLBACK_LOGIC_VARS`), and `src/lib/admin/control-panel.ts` (`LOGIC_VAR_DEFAULTS`) is enforced by `src/tests/control-panel.logic.test.ts`. Adding a new variable means appending to the JSON with a declared `admin` field (`{group: "<label>"}` or `{hidden: "<reason>"}`, closed enum `derived|internal|deprecated|migration-only`). **`GROUPS` in `src/features/admin-controls/components/GlobalConfigCard.tsx` is GENERATED** (`scripts/generate-logic-variable-groups.mjs` → `src/features/admin-controls/generated/logic-variable-groups.json`, `npm run logic-var-groups`), not hand-maintained — it is derived from every seed key's `admin.group` declaration (WF2 "ADMIN-1 ratchet to zero", 2026-09-09), so a key can no longer be silently omitted from the rendered card. There is exactly ONE render path — no bespoke per-family section bypasses GROUPS.
 >
 > **AI-operator index:** the generated `docs/reference/logic-variables-registry.md` (`npm run logic-vars-docs`) lists every variable — including the migration-only JSONB vars absent from the seed JSON — with its default, bounds, and consuming scripts.
 
@@ -138,7 +138,7 @@ Create a single React page (or tabbed view) in the Admin dashboard with four dis
 - [ ] **Write Store Tests:** Assert draft mutations, discard rollbacks, and dirty-state tracking in Zustand work flawlessly.
 
 ### Phase 3: Global Platform Logic View
-**Objective:** Build the UI for the 15 universal `logic_variables`.
+**Objective:** Build the UI for the universal `logic_variables` (15 at Phase 3 authoring time; 451 as of WF2 "ADMIN-1 ratchet to zero", 2026-09-09 — see §1 note).
 
 - [ ] **Create Layout Shell:** Implement the main Tabs component to switch between Global, Trade, and Matrix views.
 - [ ] **Build `GlobalConfigCard.tsx`:** Group variables logically into UI sections using Shadcn Cards: Scoring (divisors, multipliers, penalties), Timing (thresholds, windows), and Geography/Cost (coverage ratios, liar gate).

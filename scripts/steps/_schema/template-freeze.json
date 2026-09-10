@@ -273,12 +273,7 @@
     {
       "id": "FREEZE-1",
       "status": "NOT_STARTED",
-      "owner": "wf: wf: programme-FREEZE-1, blocked on STD-7/WD-1/ADMIN-1"
-    },
-    {
-      "id": "ADMIN-1",
-      "status": "NOT_STARTED",
-      "owner": "wf: wf: programme-ADMIN-1"
+      "owner": "wf: wf: programme-FREEZE-1, blocked on STD-7 (WD-1 expected closed pre-merge)"
     }
   ],
   "does_not_freeze": [
