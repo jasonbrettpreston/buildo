@@ -47,7 +47,7 @@ file for the full procedure; this index is the map.
 
 These are **not** chain steps (not in `scripts/manifest.json` / no 6 AM cron). Run them by hand for the one-time job noted.
 
-### `scripts/one-time/` — idempotent one-shots (7)
+### `scripts/one-time/` — idempotent one-shots (9)
 
 | Script | Owning spec | Job |
 |--------|-------------|-----|
@@ -58,6 +58,8 @@ These are **not** chain steps (not in `scripts/manifest.json` / no 6 AM cron). R
 | `backfill-coa-structure-type.js` | 42 §6.6.D | Classify CoA `structure_type` from description |
 | `backfill-parcels-zoning-index.js` | 65 §2 | Build the parcels zoning index (`CREATE INDEX CONCURRENTLY`) |
 | `backfill-permits-coa-zoning-index.js` | 66 §2 | Build the permits/coa zoning index (`CREATE INDEX CONCURRENTLY`) |
+| `wf2-p13-null-legacy-cost-tail.js` | 83 §3 | Null the legacy (model/permit) `cost_estimates` tail breaching magnitude ceilings (lock 122) — was missing from this table before WF3 EP-D14 closed the gap, though it was already in the §A.5 lock registry |
+| `wf3-prune-pass3-scope.js` | 78 §P3A.1 / 122 §3.0b | WF3 EP-D14 — dated+timed-backup DELETE of `enrich_parcels_pass3_scope`'s current contents (both consumed and unconsumed rows — Ask 1 ruling: byte-identical to the legacy per-parcel loop's own output either way, F6-corrected) before mig 246 applies and before the next `--full` `enrich_parcels` dispatch. **F3 (output panel, 2026-09-09): REFUSES outright if enrich_parcels' own advisory lock (65, 1) is held OR a `pipeline_runs` row shows an enrich_parcels invocation `status='running'`** — never run this while enrich_parcels is mid-run; under `REPEATABLE READ` it would delete that run's own freshly-spooled, still-unconsumed scope rows. `--confirm` to write; default is a DRY RUN (lock 125). Restore: `INSERT INTO enrich_parcels_pass3_scope SELECT * FROM _backup_pass3_scope_<YYYYMMDD>_<HHMMSS>;` — valid ONLY before the next `--full` run. Cloud invocation: `PG_HOST= node -r dotenv/config scripts/one-time/wf3-prune-pass3-scope.js` (dry run) then `... --confirm`. **Run BEFORE mig 246 (§2a below) so the partial index builds over ~0 rows, and only once enrich_parcels is confirmed idle.** |
 
 ### `scripts/backfill/` — historical backfills (4)
 

@@ -93,6 +93,11 @@ const LOCK_ID_REGISTRY: Record<string, number> = {
   'scripts/one-time/backfill-coa-structure-type.js':          119,
   'scripts/one-time/backfill-coa-products.js':                120,
   'scripts/one-time/backfill-building-footprints-geom.js':    121,
+  // WF3 EP-D14 (2026-09-09) — next-free from the post-Wave-7 sequential range
+  // (113 observe-chain, 114 backfill-realtor, 115 link-parcel-addresses, 116
+  // reserved one-time, 117 compute-parcel-cost-estimates, ..., 123
+  // dispatch-notifications, 124 reconcile-runs -> 125 next-free).
+  'scripts/one-time/wf3-prune-pass3-scope.js':                 125,
   // C3 (2026-08-12) — first `scripts/backfill/` entry in this registry.
   // Registration is CONVENTION here, not test-enforced: the ":291" coverage test
   // filters to manifest scripts and this is a one-off. Only UNIQUENESS is enforced

@@ -1908,6 +1908,7 @@ and registry-vs-code agreement.
 |---------|--------|------|--------------------|
 | **2** | `scripts/load-permits.js` | 4 — Load/Ingest | YES — `last_seen_at` |
 | **44** | `scripts/backfill/backfill-smeared-enriched-status.js` | n/a — one-off backfill, not a chain step (this table's header scopes it to the 40 chain scripts; C3 is a deliberate widening and `Wave` has no natural value) | YES — `last_seen_at` (deliberate: `enriched_status` is not a dirty key for `classify-lifecycle-phase.js`, so the bump is what makes the reclassifier re-derive) |
+| **125** | `scripts/one-time/wf3-prune-pass3-scope.js` | n/a — one-off (WF3 EP-D14, not a chain step), next-free from the post-Wave-7 sequential range (113→114→115→116→117→...→123→124→**125**) | NO — deletes `enrich_parcels_pass3_scope` rows, writes no timestamp column |
 | **5** | `scripts/geocode-permits.js` | 4 — Load/Ingest | YES — `geocoded_at` |
 | **11** | `scripts/extract-builders.js` | 4 — Load/Ingest | YES — `last_seen_at` |
 | **30** | `scripts/link-similar.js` | 2 — Link | YES — `scope_classified_at` |

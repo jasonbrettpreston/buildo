@@ -1073,6 +1073,8 @@ Spec 120 §4.1 Step 0 reconciles the previous run **once at start, before any wo
 
 Migrations **245–248 are free** — 244 is the highest `[MEASURED]`. Sequencing relaxes: you can convert step one against today's tables and get gating, transaction, audit, verdict and ledger benefits immediately.
 
+⚠️ **STALE (WF3 EP-D14, 2026-09-09):** the reservation is prose, already broken twice. `245_parcels_centroid_geom_invalidation.sql` consumed 245 first; migration 246 (`246_pass3_scope_parcel_id_unconsumed_index.sql`, WF3 EP-D14's `enrich_parcels_pass3_scope` partial index) consumed 246 second. **247–248 are now the free range** for the four state tables below, not 245–248.
+
 ⚠️ **But the claims do not relax.** `pipeline_intervals` (#103–#106, and #74 — `--backfill` has *no implementation at all* without it) · `published_batch` (#107, #108, #123) · `step_error` (#67, #84, #195, #196, #253) · `step_quarantine` (#62, #192). **"Optional" means deferrable to the second wave, not unnecessary.** Say it that way in the plan, or the tables never get built.
 
 ### 7.5a `published_batch` column shape — FIRST DESIGN (2026-09-03, WF1 "state tables reset")
