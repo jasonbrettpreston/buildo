@@ -2195,7 +2195,7 @@ above).*
 
 | # | Scope | Pass | Detail |
 |---|---|---|---|
-| 1 | link_parcels | PASS | min_migration=12 <= migrations count=242 |
+| 1 | link_parcels | PASS | min_migration=12 <= migrations count=243 |
 | 2 | link_parcels | PASS | 7 declared, missing from seeds: none |
 | 3 | link_parcels | PASS | retired=0 overlap-with-declared=none |
 | 7 | link_parcels | PASS | SPEC LINK header present=true |
@@ -2210,7 +2210,7 @@ above).*
 - compare ran: true · diffs found: 249 · unexplained: 0
 
 ### Test suite (item iii)
-- 828/846 passed (suite success=false)
+- 843/861 passed (suite success=false)
 
 ### Policy coverage matrix (item vi) — Spec 124 Rules 1-13
 

@@ -204,7 +204,22 @@ It therefore **streams** eligible parcels (`pipeline.streamQuery`), maps each ro
 **batch-UPDATEs** (`UPDATE … FROM (VALUES …)`, ~500/batch). It runs **AFTER the SQL passes COMMIT** —
 `streamQuery` uses a separate connection, so it reads the just-committed max-build envelope (a same-txn
 read would be invisible). Eligibility: `max_buildable_footprint_sqm IS NOT NULL AND lot_size_sqm > 0`;
-`--full` recomputes all. **Incremental (WF3 D-D staleness amendment):** selects `opt_config_confidence
+`--full` recomputes all. **D4' recovery bound (WF3 EP-D14 amendment, 2026-09-09; F6-corrected, output
+panel, same day — the original "superset of the stream's scope" framing had the argument backwards):**
+under `--full`, stamping a pending row `consumed_at` WITHOUT recompute is BYTE-IDENTICAL to the legacy
+per-parcel loop's own output for both populations the pending set can contain. A pending parcel that is
+no longer eligible (`max_buildable_footprint_sqm IS NOT NULL AND lot_size_sqm > 0` now excludes it) —
+the legacy per-parcel query already returned zero rows for it and stamped `consumed_at` ANYWAY; the new
+set-based stamp reproduces that outcome with no query needed to discover it. A pending parcel that IS
+still eligible — the `--full` stream itself scans every currently-eligible parcel in this SAME
+invocation, so it has already recomputed and flushed that exact parcel; recovering it again would
+write nothing new. Excepting only parcels that threw an engine error in THIS run's own stream, which stay
+unconsumed for a future recovery to genuinely retry. Under incremental the pending set CAN fall
+genuinely outside the stream's own staleness predicate (a stale parcel from a run whose own pass 5
+never got to recompute it), so it IS recovered there — batched (`ANY($1::int[])`,
+`enrich_parcels_scope_recovery_batch_size` at a time), never per-parcel; a per-parcel loop is an
+unindexed full scan (no index leads on `parcel_id`) and does not scale past a few thousand rows.
+**Incremental (WF3 D-D staleness amendment):** selects `opt_config_confidence
 IS NULL` **OR** stored `optimal_config→'as_of_right'→'main_footprint_sqm' IS DISTINCT FROM
 `max_buildable_footprint_sqm` — a parcel whose envelope moved after configuration is stale and MUST
 recompute (the engine always writes `main_footprint_sqm` = the streamed footprint, `NUMERIC(12,2)`/

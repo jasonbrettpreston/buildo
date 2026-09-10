@@ -4351,6 +4351,22 @@
     "description": "Pilot 9 commit 7b (2026-09-04, Ask 7). NEW — bounded, LOUD pass-5 (optimal-config) statement timeout, applied via a live SET on the pass-5 session by runEnrichPhase (commit 7d) since pass 5 runs on a SEPARATE post-commit connection outside the SET LOCAL pair enrich_parcels_pass_statement_timeout_minutes/enrich_parcels_lock_timeout_ms bound for passes 1-4 (EP-D7, OPEN — legacy pass 5 is unbounded today, inheriting the session-level statement_timeout=0). 0 = disabled. Default 60 is a conservative first bound pending real per-pass-5 duration measurement (pass 5 is JS-streaming, not a single SQL statement, so the passes-1-4 measured-max x1.5 formula does not directly transfer). CONSUMED by scripts/lib/step/index.js (runEnrichPhase).",
     "admin": { "group": "Source Ingestion" }
   },
+  "enrich_parcels_scope_recovery_batch_size": {
+    "default": 1000,
+    "type": "number",
+    "min": 100,
+    "max": 10000,
+    "description": "WF3 EP-D14 (2026-09-09, .cursor/wf3_ep_d14_pass5_recovery_scan_active_task.md C1). Batch size for consumePendingScope's INCREMENTAL D4' recovery path (the number of ids per ANY($1::int[]) round trip for both the recompute SELECT and the consumed_at stamp UPDATE) — replaces the per-parcel loop that was a full-scan UPDATE with no index leading on parcel_id (cloud-measured 2026-09-09: 439,130 unconsumed rows, one backend active 23 minutes on a single such UPDATE). Under --full this variable is unused: the recovery is one set-based stamp with no recompute (Ask 1 ruling). CONSUMED by scripts/lib/compute/enrich-parcels.js (consumePendingScope).",
+    "admin": { "group": "Source Ingestion" }
+  },
+  "enrich_parcels_pending_scope_warn_max": {
+    "default": 50000,
+    "type": "number",
+    "min": 0,
+    "max": 5000000,
+    "description": "WF3 EP-D14 (2026-09-09, .cursor/wf3_ep_d14_pass5_recovery_scan_active_task.md C1). WARN (not FAIL — a large backlog is the legitimate state right after a killed run, and a blocking FAIL would abort the very run whose job is to drain it) bound on enrich_parcels_pass3_scope rows unconsumed from a PRIOR run, observed at pass-5 start. Cloud-measured 2026-09-09: 439,130 unconsumed (well above this default) — the descriptor's pending_scope_parcels check is what would have surfaced that backlog before the stall. CONSUMED by scripts/lib/compute/enrich-parcels.js; descriptor check pending_scope_parcels.",
+    "admin": { "group": "Data Quality Thresholds" }
+  },
   "assert_schema_type_sample_rows": {
     "default": 20,
     "type": "number",

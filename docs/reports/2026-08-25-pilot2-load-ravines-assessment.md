@@ -455,7 +455,7 @@ Declared BEFORE any old/new diff. Sources: `scripts/analysis/capture-step-golden
 
 | # | Scope | Pass | Detail |
 |---|---|---|---|
-| 1 | load_ravines | PASS | min_migration=167 <= migrations count=242 |
+| 1 | load_ravines | PASS | min_migration=167 <= migrations count=243 |
 | 2 | load_ravines | PASS | 6 declared, missing from seeds: none |
 | 3 | load_ravines | PASS | retired=0 overlap-with-declared=none |
 | 7 | load_ravines | PASS | SPEC LINK header present=true |
@@ -470,7 +470,7 @@ Declared BEFORE any old/new diff. Sources: `scripts/analysis/capture-step-golden
 - compare ran: true · diffs found: 83 · unexplained: 0
 
 ### Test suite (item iii)
-- 823/846 passed (suite success=false)
+- 838/861 passed (suite success=false)
 
 ### Policy coverage matrix (item vi) — Spec 124 Rules 1-13
 

@@ -716,7 +716,7 @@ Spec 124 §2 Rule 13's R-T addendum lands 5 net-new `invariants[]` (rows, multi_
 
 | # | Scope | Pass | Detail |
 |---|---|---|---|
-| 1 | link_parcel_addresses | PASS | min_migration=159 <= migrations count=242 |
+| 1 | link_parcel_addresses | PASS | min_migration=159 <= migrations count=243 |
 | 2 | link_parcel_addresses | PASS | 7 declared, missing from seeds: none |
 | 3 | link_parcel_addresses | PASS | retired=0 overlap-with-declared=none |
 | 7 | link_parcel_addresses | PASS | SPEC LINK header present=true |
@@ -731,7 +731,7 @@ Spec 124 §2 Rule 13's R-T addendum lands 5 net-new `invariants[]` (rows, multi_
 - compare ran: true · diffs found: 91 · unexplained: 0
 
 ### Test suite (item iii)
-- 826/846 passed (suite success=false)
+- 841/861 passed (suite success=false)
 
 ### Policy coverage matrix (item vi) — Spec 124 Rules 1-13
 

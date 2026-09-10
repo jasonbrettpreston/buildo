@@ -686,7 +686,7 @@ This report's every executed claim was independently re-executed (not re-read) b
 
 | # | Scope | Pass | Detail |
 |---|---|---|---|
-| 1 | refresh_snapshot | PASS | min_migration=15 <= migrations count=242 |
+| 1 | refresh_snapshot | PASS | min_migration=15 <= migrations count=243 |
 | 2 | refresh_snapshot | PASS | 2 declared, missing from seeds: none |
 | 3 | refresh_snapshot | PASS | retired=0 overlap-with-declared=none |
 | 7 | refresh_snapshot | PASS | SPEC LINK header present=true |
@@ -701,7 +701,7 @@ This report's every executed claim was independently re-executed (not re-read) b
 - compare ran: true · diffs found: 732 · unexplained: 0
 
 ### Test suite (item iii)
-- 829/846 passed (suite success=false)
+- 844/861 passed (suite success=false)
 
 ### Policy coverage matrix (item vi) — Spec 124 Rules 1-13
 

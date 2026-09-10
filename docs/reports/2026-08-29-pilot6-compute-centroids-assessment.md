@@ -1341,7 +1341,7 @@ from the run that actually performed it, not from a `capture-step-golden.js` inv
 
 | # | Scope | Pass | Detail |
 |---|---|---|---|
-| 1 | compute_centroids | PASS | min_migration=16 <= migrations count=242 |
+| 1 | compute_centroids | PASS | min_migration=16 <= migrations count=243 |
 | 2 | compute_centroids | PASS | 3 declared, missing from seeds: none |
 | 3 | compute_centroids | PASS | retired=0 overlap-with-declared=none |
 | 7 | compute_centroids | PASS | SPEC LINK header present=true |
@@ -1356,7 +1356,7 @@ from the run that actually performed it, not from a `capture-step-golden.js` inv
 - compare ran: true · diffs found: 67 · unexplained: 0
 
 ### Test suite (item iii)
-- 827/846 passed (suite success=false)
+- 842/861 passed (suite success=false)
 
 ### Policy coverage matrix (item vi) — Spec 124 Rules 1-13
 

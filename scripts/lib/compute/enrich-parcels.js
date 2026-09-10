@@ -1469,41 +1469,118 @@ async function flushOptConfigBatch(client, batch, genuineIds = new Set()) {
 
 /**
  * D4' crash-safe scope hand-off recovery (migration 240). Handles ONLY prior runs' unconsumed
- * enrich_parcels_pass3_scope rows (run_id <> the current run). Verbatim from :1491-1520 —
- * `pipeline.getDbTimestamp(pool)` -> `ctx.clock.now()`, `pipeline.log.warn` -> `ctx.log.warn`.
+ * enrich_parcels_pass3_scope rows (run_id <> the current run).
+ *
+ * EP-D14 (WF3 .cursor/wf3_ep_d14_pass5_recovery_scan_active_task.md C1, 2026-09-09) — REWRITTEN
+ * from the per-parcel loop (`UPDATE … WHERE parcel_id = $1`, a full scan: no index leads on
+ * `parcel_id` alone, `idx_pass3_scope_unconsumed` is `(run_id) WHERE consumed_at IS NULL`).
+ * Ask 1 ruling (Spec 78 §P3A.1 D4' recovery bound amendment) — F6 CORRECTED (output panel,
+ * 2026-09-09; the ORIGINAL "pending is a superset of the stream scope" framing had the
+ * argument backwards): under `--full`, stamping a pending row WITHOUT recompute is
+ * BYTE-IDENTICAL to the legacy per-parcel loop's own output, for BOTH populations the pending
+ * set can contain — (a) a parcel that is NO LONGER eligible (`buildOptConfigSelectSql`'s own
+ * `max_buildable_footprint_sqm IS NOT NULL AND lot_size_sqm > 0` filter now excludes it): the
+ * LEGACY per-parcel query already returned `rows.length === 0` for exactly this case and
+ * stamped `consumed_at` ANYWAY (`if (succeeded) { UPDATE … }` ran regardless of whether a row
+ * came back) — the new set-based stamp reproduces that "0 rows found, stamp anyway" outcome
+ * directly, with no query needed to discover it; (b) a parcel that IS STILL eligible: the
+ * `--full` stream (`ctx.stream`, `scopeWhere:'TRUE'`) scans EVERY currently-eligible parcel in
+ * THIS SAME `runPass5` invocation, so it has ALREADY recomputed and flushed that exact parcel
+ * earlier in this call — re-deriving the identical deterministic value in the recovery loop
+ * would write nothing new, only repeat work already committed. Excluding only parcels that
+ * threw an engine error in THIS run's own stream (their scope row must survive for a future
+ * run's genuine recovery — stamping them here would erase the crash-recovery marker for a
+ * genuinely unprocessed parcel). `!full ⇒` the pending set CAN genuinely fall outside the
+ * incremental stream's own staleness predicate, so it IS recovered — batched
+ * (`enrich_parcels_scope_recovery_batch_size` ids per `ANY($1::int[])` round trip), never
+ * per-parcel.
  * @param {import('pg').PoolClient|import('pg').Pool} client
  * @param {number} runId
- * @param {{ errors: number }} stats
+ * @param {{ errors: number, errorIds?: Set<number> }} stats
  * @param {Date} stamp
  * @param {Set<number>} genuineIds
  * @param {{info:Function,warn:Function,error:Function}} log
+ * @param {{ full: boolean, batchSize: number, flushClient: {query: Function} }} opts
  */
-async function consumePendingScope(client, runId, stats, stamp, genuineIds, log) {
+async function consumePendingScope(client, runId, stats, stamp, genuineIds, log, opts) {
+  const { full, batchSize, flushClient } = opts;
+  // F10 (output panel, 2026-09-09) — the descriptor declares enrich_parcels_scope_recovery_batch_size
+  // on_invalid:"fail" with bounds [100,10000] (scripts/lib/step/config.js resolveConfig), which
+  // SHOULD already refuse a bad value before it ever reaches here — but this loop's own
+  // `i += batchSize` NEVER ADVANCES if batchSize is NaN/0/negative (an infinite loop, not merely
+  // a bad batch), so it is guarded here too, defense in depth, naming the remedy rather than
+  // hanging silently.
+  if (!full && (!Number.isFinite(batchSize) || batchSize <= 0)) {
+    throw new Error(`${TAG} consumePendingScope: batchSize must be a positive finite number, got ${batchSize} — check enrich_parcels_scope_recovery_batch_size in logic_variables`);
+  }
   const pending = await client.query(
     `SELECT DISTINCT parcel_id FROM enrich_parcels_pass3_scope WHERE consumed_at IS NULL AND run_id <> $1`,
     [runId],
   );
+  const pendingIds = pending.rows.map((r) => r.parcel_id);
+  stats.pending_scope_count = pendingIds.length;
+  stats.scope_recovery_batches = 0;
+  stats.scope_recovery_recovered_count = 0;
+  stats.scope_stamped_without_recompute_count = 0;
+  if (!pendingIds.length) return 0;
+
+  if (full) {
+    const errorIds = Array.from(stats.errorIds || []);
+    const res = await client.query(
+      `UPDATE enrich_parcels_pass3_scope SET consumed_at = $2
+         WHERE consumed_at IS NULL AND run_id <> $1 AND parcel_id <> ALL($3::int[])`,
+      [runId, stamp, errorIds],
+    );
+    stats.scope_stamped_without_recompute_count = res.rowCount || 0;
+    return 0;
+  }
+
   let recovered = 0;
-  for (const { parcel_id: pid } of pending.rows) {
-    let succeeded = true;
+  for (let i = 0; i < pendingIds.length; i += batchSize) {
+    const idsBatch = pendingIds.slice(i, i + batchSize);
+    stats.scope_recovery_batches += 1;
+    // F2 (output panel, 2026-09-09) — per-BATCH error isolation, restoring the legacy
+    // per-parcel loop's own guarantee (7e3cc6e70:1489-1499, which try-wrapped the SELECT +
+    // computeOptConfigRow + flush for ONE parcel) at the coarser batch granularity this
+    // rewrite operates at: a genuinely thrown batch SELECT or `flushOptConfigBatch`/
+    // `ctx.flushBatch` call (a statement_timeout, a constraint violation — `flushBatch`
+    // itself re-throws by design, `:BEGIN/SET LOCAL/<sql>/COMMIT` catch-and-rethrow above)
+    // must isolate to THIS ONE BATCH, never abort the whole recovery loop. Per-parcel
+    // granularity is KNOWINGLY COARSENED to per-batch here — a batch-level failure cannot
+    // identify which specific parcel(s) inside it were the cause, so the WHOLE batch's ids
+    // stay excluded from the stamp (unconsumed, correctly preserved for a future recovery
+    // attempt) and stats.errors counts every id in the batch, not a per-parcel guess.
     try {
-      const { rows } = await client.query(buildOptConfigSelectSql({ full: true, scopeWhere: 'p.id = $1' }), [pid]);
-      if (rows.length) {
-        const row = computeOptConfigRow(rows[0]);
-        recovered += await flushOptConfigBatch(client, [row], genuineIds);
+      const { rows } = await client.query(
+        buildOptConfigSelectSql({ full: true, scopeWhere: 'p.id = ANY($1::int[])' }),
+        [idsBatch],
+      );
+      const batchRows = [];
+      const succeededIds = new Set(idsBatch);
+      for (const r of rows) {
+        try {
+          batchRows.push(computeOptConfigRow(r));
+        } catch (err) {
+          succeededIds.delete(r.id);
+          stats.errors += 1;
+          log.warn(TAG, `D4' recovery: optimal-config engine error on parcel ${r.id}: ${err.message}`);
+        }
+      }
+      if (batchRows.length) {
+        recovered += await flushOptConfigBatch(flushClient, batchRows, genuineIds);
+      }
+      if (succeededIds.size) {
+        await client.query(
+          `UPDATE enrich_parcels_pass3_scope SET consumed_at = $2 WHERE parcel_id = ANY($1::int[]) AND consumed_at IS NULL`,
+          [Array.from(succeededIds), stamp],
+        );
       }
     } catch (err) {
-      succeeded = false;
-      stats.errors += 1;
-      log.warn(TAG, `D4' recovery: optimal-config engine error on parcel ${pid}: ${err.message}`);
-    }
-    if (succeeded) {
-      await client.query(
-        `UPDATE enrich_parcels_pass3_scope SET consumed_at = $2 WHERE parcel_id = $1 AND consumed_at IS NULL`,
-        [pid, stamp],
-      );
+      stats.errors += idsBatch.length;
+      log.warn(TAG, `D4' recovery: batch error (${idsBatch.length} parcel ids, batch ${stats.scope_recovery_batches}): ${err.message}`);
     }
   }
+  stats.scope_recovery_recovered_count = recovered;
   return recovered;
 }
 
@@ -1538,6 +1615,11 @@ async function runPass5(client, ctx, config) {
          AND p.opt_config_confidence IS NOT NULL`);
   const stats = { updated: 0, reset_ineligible: reset.rowCount || 0, envelope_capped: 0, suite_fits: 0, conf_high: 0, conf_medium: 0, conf_low: 0, citywide: 0, errors: 0 };
   stats.genuineIds = new Set();
+  // EP-D14 (WF3 C1) — parcels whose engine computation threw in THIS run's own stream.
+  // Excluded from the set-based --full recovery stamp: their scope row must survive so
+  // a future run's recovery can genuinely retry them (never silently erase the D4'
+  // crash-recovery marker for a parcel that was never actually recomputed).
+  stats.errorIds = new Set();
 
   const batchSize = Number(config.enrich_parcels_optcfg_batch_size);
   let batch = [];
@@ -1554,6 +1636,7 @@ async function runPass5(client, ctx, config) {
       row = computeOptConfigRow(r);
     } catch (err) {
       stats.errors += 1;
+      stats.errorIds.add(r.id);
       ctx.log.warn(TAG, `optimal-config engine error on parcel ${r.id}: ${err.message}`);
       continue;
     }
@@ -1570,21 +1653,43 @@ async function runPass5(client, ctx, config) {
           : null);
     if (effMbs != null && rawP50 != null && rawP50 > effMbs) stats.envelope_capped += 1;
     batch.push(row);
-    if (batch.length >= batchSize) { stats.updated += await flushOptConfigBatch(flushClient, batch, stats.genuineIds); batch = []; }
+    if (batch.length >= batchSize) {
+      stats.updated += await flushOptConfigBatch(flushClient, batch, stats.genuineIds);
+      batch = [];
+      // EP-D15 (WF3 C4) — report cumulative progress through the runner-owned seam (if the
+      // caller provides one; compute stays JUST compute — the write cadence/connection are
+      // the runner's job, this is only a number).
+      if (typeof ctx.onProgress === 'function') ctx.onProgress(stats.updated);
+    }
   }
-  if (batch.length) stats.updated += await flushOptConfigBatch(flushClient, batch, stats.genuineIds);
+  if (batch.length) {
+    stats.updated += await flushOptConfigBatch(flushClient, batch, stats.genuineIds);
+    if (typeof ctx.onProgress === 'function') ctx.onProgress(stats.updated);
+  }
 
   // D4'/S-2 — flip THIS run's own scope rows in ONE set-based UPDATE now that the loop above has
   // attempted every row it covers, THEN recover ONLY prior runs' leftover.
   const runId = ctx.scopeRunId;
   const stamp = ctx.clock.now();
   if (runId != null) {
+    // F9 (output panel, 2026-09-09) — exclude THIS run's own errored parcel ids from the
+    // stamp, same carve-out `consumePendingScope`'s --full branch already applies to PRIOR
+    // runs (:1509 `errorIds` array). Before this fix a parcel that threw in this run's own
+    // stream still had its OWN scope row (inserted by index.js's hand-off INSERT for THIS
+    // run's scopeRunId) stamped consumed HERE unconditionally — contradicting the whole
+    // "an errored parcel's scope row must survive for a future genuine recovery" principle
+    // the rest of this function is built around.
+    const thisRunErrorIds = Array.from(stats.errorIds || []);
     await client.query(
-      `UPDATE enrich_parcels_pass3_scope SET consumed_at = $2 WHERE run_id = $1 AND consumed_at IS NULL`,
-      [runId, stamp],
+      `UPDATE enrich_parcels_pass3_scope SET consumed_at = $2 WHERE run_id = $1 AND consumed_at IS NULL AND parcel_id <> ALL($3::int[])`,
+      [runId, stamp, thisRunErrorIds],
     );
   }
-  stats.updated += await consumePendingScope(client, runId ?? -1, stats, stamp, stats.genuineIds, ctx.log);
+  stats.updated += await consumePendingScope(client, runId ?? -1, stats, stamp, stats.genuineIds, ctx.log, {
+    full,
+    batchSize: Number(config.enrich_parcels_scope_recovery_batch_size),
+    flushClient,
+  });
 
   // EP-D10 fix (pilot 9 commit 8 P1, Spec 123 §3.1 pin-then-fix). enrich_parcels_pass3_scope
   // is genuinely unbounded/append-only by design (D4' crash-recovery, mig 240) — every --full
@@ -1691,6 +1796,27 @@ function opt_aor_without_max_gfa(ctx) {
  *  IS the assertion; there is no runtime metric to additionally report here. */
 function pass5_post_commit_read_order(ctx) {
   ctx.report('pass5_post_commit_read_order', { violations: 0, detail: 'post_commit — see checks[].order_guarantee' });
+}
+
+// EP-D14 (WF3 C1) — four checks observing the rewritten consumePendingScope.
+function pending_scope_parcels(ctx) {
+  const n = ctx.matched.pending_scope_parcels || 0;
+  ctx.report('pending_scope_parcels', { violations: n, detail: n });
+}
+
+function scope_recovery_recovered_count(ctx) {
+  const n = ctx.matched.scope_recovery_recovered_count || 0;
+  ctx.report('scope_recovery_recovered_count', { violations: 0, detail: n });
+}
+
+function scope_recovery_batches(ctx) {
+  const n = ctx.matched.scope_recovery_batches || 0;
+  ctx.report('scope_recovery_batches', { violations: 0, detail: n });
+}
+
+function scope_stamped_without_recompute_count(ctx) {
+  const n = ctx.matched.scope_stamped_without_recompute_count || 0;
+  ctx.report('scope_stamped_without_recompute_count', { violations: 0, detail: n });
 }
 
 function parcels_enriched_count(ctx) {
@@ -1815,6 +1941,10 @@ const CHECKS = {
   opt_aor_envelope_capped_count,
   opt_config_citywide_fallback_count,
   enrich_parcels_duration_ms,
+  pending_scope_parcels,
+  scope_recovery_recovered_count,
+  scope_recovery_batches,
+  scope_stamped_without_recompute_count,
 };
 
 // ---------------------------------------------------------------------------

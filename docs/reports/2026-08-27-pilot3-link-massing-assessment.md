@@ -505,7 +505,7 @@ Spec 124 §2 Rule 13's R-T addendum lands `invariants[]`/`plausibility[]` (5 net
 
 | # | Scope | Pass | Detail |
 |---|---|---|---|
-| 1 | link_massing | PASS | min_migration=81 <= migrations count=242 |
+| 1 | link_massing | PASS | min_migration=81 <= migrations count=243 |
 | 2 | link_massing | PASS | 6 declared, missing from seeds: none |
 | 3 | link_massing | PASS | retired=1 overlap-with-declared=none |
 | 7 | link_massing | PASS | SPEC LINK header present=true |
@@ -520,7 +520,7 @@ Spec 124 §2 Rule 13's R-T addendum lands `invariants[]`/`plausibility[]` (5 net
 - compare ran: true · diffs found: 434 · unexplained: 0
 
 ### Test suite (item iii)
-- 824/846 passed (suite success=false)
+- 839/861 passed (suite success=false)
 
 ### Policy coverage matrix (item vi) — Spec 124 Rules 1-13
 

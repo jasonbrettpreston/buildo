@@ -295,6 +295,7 @@ const GROUP_ORDER = [
       "assert_schema_geojson_probe_bytes",
       "enrich_parcels_zone_class_pct_pass_floor",
       "enrich_parcels_zone_class_pct_warn_floor",
+      "enrich_parcels_pending_scope_warn_max",
       "mislink_footprint_lot_tol",
       "coa_bylaw_max_fsi_null_warn_pct",
       "coa_bylaw_max_coverage_null_warn_pct",
@@ -339,7 +340,8 @@ const GROUP_ORDER = [
       "enrich_parcels_pass5_stream_batch_size",
       "enrich_parcels_bbox_degree_divisor",
       "enrich_parcels_pass5_timeout_minutes",
-      "enrich_parcels_defer_threshold_rows"
+      "enrich_parcels_defer_threshold_rows",
+      "enrich_parcels_scope_recovery_batch_size"
     ]
   },
   {

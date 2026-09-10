@@ -64,6 +64,8 @@ const EXPECTED_LOGIC_VAR_KEYS = [
   'enrich_parcels_heartbeat_minutes', // WF3 cloud-parity FIX 3.2b (2026-09-03) — optimal-config stream progress heartbeat interval
   'enrich_parcels_pass_statement_timeout_minutes', // WF3 enrich_parcels stall commit 1 (2026-09-03) — bounded, LOUD SET LOCAL statement_timeout for passes 1-4
   'enrich_parcels_lock_timeout_ms', // WF3 enrich_parcels stall commit 1 (2026-09-03) — bounded, LOUD SET LOCAL lock_timeout for passes 1-4
+  'enrich_parcels_scope_recovery_batch_size', // WF3 EP-D14 (2026-09-10) — pass-5 D4' recovery batch size (incremental mode; --full stamps set-based)
+  'enrich_parcels_pending_scope_warn_max', // WF3 EP-D14 (2026-09-10) — pre_write WARN bound on pending pass-3 scope parcels before pass 5
   // Pilot 9 commit 7b (2026-09-04, Ask 5 externalization, Spec 78 §P3C.1/§P3C.2) — the 7 pass-4 comp literals.
   'enrich_parcels_comp_lot_tol',
   'enrich_parcels_comp_knn_overfetch',

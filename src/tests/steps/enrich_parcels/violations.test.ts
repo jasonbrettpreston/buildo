@@ -65,7 +65,7 @@
 //     differential against commit 5's `pre/*.json`, comparator honours the declared non-determinism
 //     inventory (a)-(g) + the Fold A1 correction + the EP-D9/EP-D10 pins
 
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { execFileSync } from 'child_process';
 import fs from 'fs';
 import path from 'path';
@@ -631,7 +631,7 @@ describe('facts testable today — the live tree, not a future artifact', () => 
     expect(Math.max(...nums, 0), 'LG-28 (runEnrichPhase) has now landed (commit 7d/commit 2) — the highest LG number in scripts/lib + scripts/steps/_schema must be 28').toBe(28);
   });
 
-  it('converted.json — pending stays registered (not yet converted); the DECLARED stage is "shape_clean" or its R-K.2 sibling "shape_clean_pending_recapture" (commit 7e/3 advanced to shape_clean 2026-09-08; commit 8 P1 moved it to shape_clean_pending_recapture the SAME day, since P1-P4 edit compute\'s VALUES without changing its SHAPE — conformanceFindings() stays [], only the golden fingerprint is knowingly deferred to P6). Commit 9 cutover still needs the 4 cutover_prereq items (EP-PIN-B45/D8/D9/D10) resolved plus a green cloud chain-sources run.', () => {
+  it('converted.json — pending stays registered (not yet converted); the DECLARED stage is "shape_clean" or its R-K.2 sibling "shape_clean_pending_recapture" (commit 7e/3 advanced to shape_clean 2026-09-08; commit 8 P1 moved it to shape_clean_pending_recapture the SAME day, since P1-P4 edit compute\'s VALUES without changing its SHAPE — conformanceFindings() stays [], only the golden fingerprint is knowingly deferred to P6). Commit 9 cutover still needs the 5 cutover_prereq items (EP-PIN-B45/D8/D9/D10/D14) resolved plus a green cloud chain-sources run.', () => {
     const c = JSON.parse(fs.readFileSync(abs(CONVERTED_REL), 'utf8')) as { converted: string[]; pending: Array<{ file: string; stage: string }> };
     expect(c.converted.includes(STEP_REL), 'enrich_parcels must not be registered as converted yet — that is commit 9 (cutover)').toBe(false);
     const entry = c.pending.find((p) => p.file === STEP_REL);
@@ -752,19 +752,25 @@ describe('runEnrichPhase (LG-28) — logic tests against a fake pool', () => {
       // that only THIS client's own SET LOCAL statement_timeout can move — the mechanism the
       // isolation half of the addendum test below asserts against a SECOND, sibling client.
       connect: async () => {
-        let statementTimeoutMs: number | undefined;
+        // F1 (output panel, 2026-09-09) — TWO distinct timeout states, matching real
+        // Postgres session semantics: `sessionTimeoutMs` (a plain `SET`, persists across
+        // COMMIT/ROLLBACK, cleared only by another `SET`/`RESET`) and `localTimeoutMs` (a
+        // `SET LOCAL`, scoped to the CURRENT transaction only, reverts to whatever
+        // `sessionTimeoutMs` currently is — never to a hard-coded '0' — the instant that
+        // transaction COMMITs/ROLLBACKs). Before this fix the fixture modelled only the
+        // LOCAL half, which could not distinguish a genuine session-level SET from no SET
+        // at all — exactly the gap that let EP-D16's own `RESET`-vs-`SET` defect (F1) hide.
+        let sessionTimeoutMs: number | undefined;
+        let localTimeoutMs: number | undefined;
         const clientQuery = async (text: string, values?: unknown[]) => {
           sql.push(text);
           params.push(values ?? []);
-          const m = /^SET LOCAL statement_timeout = (\d+)$/.exec(text);
-          if (m) statementTimeoutMs = Number(m[1]);
-          // EP-D13 H1 fix (pilot 9 commit 8 P9, 2026-09-08) — SET LOCAL is scoped to the
-          // CURRENT transaction only; a real Postgres session reverts to the session
-          // default the instant that transaction COMMITs or ROLLBACKs. Modelled here so a
-          // per-batch flushBatch transaction's own SET LOCAL cannot leak into whatever
-          // this connection does next.
-          if (/^COMMIT$/.test(text) || /^ROLLBACK$/.test(text)) statementTimeoutMs = undefined;
-          return answer(text, statementTimeoutMs);
+          const localMatch = /^SET LOCAL statement_timeout = (\d+)$/.exec(text);
+          if (localMatch) localTimeoutMs = Number(localMatch[1]);
+          const sessionMatch = /^SET statement_timeout = (\d+)$/.exec(text);
+          if (sessionMatch) sessionTimeoutMs = Number(sessionMatch[1]);
+          if (/^COMMIT$/.test(text) || /^ROLLBACK$/.test(text)) localTimeoutMs = undefined;
+          return answer(text, localTimeoutMs ?? sessionTimeoutMs);
         };
         const client = { query: clientQuery, release: () => {} };
         clients.push(client);
@@ -973,10 +979,16 @@ describe('runEnrichPhase (LG-28) — logic tests against a fake pool', () => {
     expect(pool.clients.length).toBeGreaterThanOrEqual(3);
     const postCommitClient = pool.clients[2]!;
     const afterPass = (await postCommitClient.query('SHOW statement_timeout')) as { rows: Array<{ statement_timeout: string }> };
+    // F1 (output panel, 2026-09-09) — '0ms', not the bare '0' this assertion read before F1:
+    // the finally block now explicitly re-`SET`s the pool's own resolved bound (0 in this test
+    // env) rather than issuing a `RESET` (which this fixture cannot even distinguish from "never
+    // touched" — exactly the gap that hid EP-D16's own defect). The LOCAL batch scope has still
+    // ended (proving EP-D13 H1 unchanged) — what changed is that a GENUINE SET now restores the
+    // session, rather than nothing restoring it at all.
     expect(
       afterPass.rows[0]!.statement_timeout,
-      'SHOW statement_timeout on the SAME session, issued AFTER the pass completes, must read the SESSION DEFAULT — the bound batch already committed and released its SET LOCAL scope',
-    ).toBe('0');
+      'SHOW statement_timeout on the SAME session, issued AFTER the pass completes, must read the POOL\'S OWN RESTORED value (an explicit SET, F1) — the bound batch already committed and released its SET LOCAL scope',
+    ).toBe('0ms');
     // Isolation: a FRESH client (a different session) reads the untouched default — a live
     // SET LOCAL bound on one connection must never leak onto a pooled sibling checkout.
     const siblingClient = await pool.connect();
@@ -1000,6 +1012,60 @@ describe('runEnrichPhase (LG-28) — logic tests against a fake pool', () => {
     expect(bound.rows[0]!.statement_timeout).not.toBe('600000ms');
   });
 
+  it('EP-D16 (WF3 C3, 2026-09-09) — a SESSION-level SET statement_timeout is issued on the post_commit client right after pool.connect(), BEFORE passSpec.run, so a non-flushBatch statement (e.g. consumePendingScope\'s own queries) is ALSO bound, not just a batch flush', async () => {
+    const passLog: Array<{ name: string; txn: string }> = [];
+    let sqlAtPassStart = -1;
+    const compute = fakeCompute(passLog, {
+      passImpl: {
+        optimal_config: async () => {
+          sqlAtPassStart = pool.sql.length;
+          return { scoped: 0, updated: 0, updatedIds: [] };
+        },
+      },
+    });
+    const pool = fakePool();
+    await stepLib.runEnrichPhase(baseArgs(fixtureDescriptor(), pool, compute) as never);
+    // 10 minutes * 60000 = 600000ms — the SAME config value flushBatch's own SET LOCAL uses,
+    // deliberately: the session-level SET is a WIDER-scope defence-in-depth binding of the
+    // identical declared bound, not a second, differently-valued timeout.
+    const sessionTimeoutIndex = pool.sql.indexOf('SET statement_timeout = 600000');
+    expect(sessionTimeoutIndex, 'the session-level SET (no LOCAL) must have been issued').toBeGreaterThanOrEqual(0);
+    expect(sqlAtPassStart, 'passImpl must have actually run').toBeGreaterThanOrEqual(0);
+    expect(sessionTimeoutIndex, 'the session-level SET must precede passSpec.run, not follow it').toBeLessThan(sqlAtPassStart);
+  });
+
+  it('EP-D16 — a 57014 thrown by a NON-flushBatch statement inside the post_commit pass (e.g. consumePendingScope, the reset UPDATE, the citywide check, or the EP-D10 prune) is rethrown LOUD with the phase name — proving the session-level bound actually reaches those statements, not only flushBatch\'s own', async () => {
+    const passLog: Array<{ name: string; txn: string }> = [];
+    const pgErr = Object.assign(new Error('canceling statement due to statement timeout'), { code: '57014' });
+    const compute = fakeCompute(passLog, { passImpl: { optimal_config: async () => { throw pgErr; } } });
+    const pool = fakePool();
+    await expect(stepLib.runEnrichPhase(baseArgs(fixtureDescriptor(), pool, compute) as never))
+      .rejects.toThrow(/optimal_config[\s\S]*statement_timeout/);
+  });
+
+  it('F1 (output panel, 2026-09-09) — after the post_commit phase completes, postClient\'s statement_timeout equals the POOL\'S OWN resolved bound (PIPELINE_STATEMENT_TIMEOUT_MS), never the bare server default a `RESET` would produce, when the pool\'s own bound is genuinely non-zero', async () => {
+    const priorEnv = process.env.PIPELINE_STATEMENT_TIMEOUT_MS;
+    process.env.PIPELINE_STATEMENT_TIMEOUT_MS = '300000';
+    try {
+      const passLog: Array<{ name: string; txn: string }> = [];
+      const compute = fakeCompute(passLog);
+      const pool = fakePool();
+      await stepLib.runEnrichPhase(baseArgs(fixtureDescriptor(), pool, compute) as never);
+      expect(pool.clients.length).toBeGreaterThanOrEqual(3);
+      const postCommitClient = pool.clients[2]!;
+      const afterPass = (await postCommitClient.query('SHOW statement_timeout')) as { rows: Array<{ statement_timeout: string }> };
+      // A `RESET` would revert to this fixture's hard-coded '0' SESSION_DEFAULT (modelling
+      // the real server/session default) — genuinely DIFFERENT from the pool's own 300000ms
+      // bound, which is what proves this lock distinguishes the two mechanisms (the prior
+      // lock above cannot: the pool default in that test env is 0, so RESET-vs-SET-to-0 are
+      // indistinguishable by VALUE alone).
+      expect(afterPass.rows[0]!.statement_timeout, 'must equal the pool\'s own 300000ms bound, not the server default 0').toBe('300000ms');
+    } finally {
+      if (priorEnv === undefined) delete process.env.PIPELINE_STATEMENT_TIMEOUT_MS;
+      else process.env.PIPELINE_STATEMENT_TIMEOUT_MS = priorEnv;
+    }
+  });
+
   it('heartbeat writes — pipeline_runs.records_meta is UPDATEd with current_pass around EVERY phase (all 5, not just pass 5 — closing the WF3-filed deliverable)', async () => {
     const passLog: Array<{ name: string; txn: string }> = [];
     const compute = fakeCompute(passLog);
@@ -1012,6 +1078,97 @@ describe('runEnrichPhase (LG-28) — logic tests against a fake pool', () => {
     }
     expect(heartbeats.length).toBeGreaterThanOrEqual(10); // start + end, x5 phases
     expect(namesHeartbeaten).toEqual(new Set(['zoning', 'max_build', 'existing_structure', 'comparable_builds', 'optimal_config']));
+  });
+
+  it('EP-D15 (WF3 C4, 2026-09-09) — a post_commit phase spanning 3x heartbeatMs produces >=3 PERIODIC (unlatched) recordHeartbeat writes with monotonically increasing rows_processed (fed by ctx.onProgress), plus a "phase optimal_config completed in Xms" log line', async () => {
+    vi.useFakeTimers();
+    try {
+      const passLog: Array<{ name: string; txn: string }> = [];
+      const HEARTBEAT_MS = 60000; // enrich_parcels_heartbeat_minutes: 1, below
+      const compute = fakeCompute(passLog, {
+        passImpl: {
+          optimal_config: async (_client: unknown, ctx: unknown) => {
+            const c = ctx as { onProgress: (n: number) => void };
+            c.onProgress(100);
+            await vi.advanceTimersByTimeAsync(HEARTBEAT_MS);
+            c.onProgress(200);
+            await vi.advanceTimersByTimeAsync(HEARTBEAT_MS);
+            c.onProgress(300);
+            await vi.advanceTimersByTimeAsync(HEARTBEAT_MS);
+            return { scoped: 0, updated: 0, updatedIds: [] };
+          },
+        },
+      });
+      const pool = fakePool();
+      const logLines: string[] = [];
+      const args = baseArgs(fixtureDescriptor(), pool, compute);
+      (args.config as Record<string, unknown>).enrich_parcels_heartbeat_minutes = 1;
+      args.log = { info: (...a: unknown[]) => { logLines.push(String(a[1])); }, warn: () => {}, error: () => {} } as typeof args.log;
+      await stepLib.runEnrichPhase(args as never);
+
+      const heartbeatCalls = pool.params.filter((_p, i) => /UPDATE pipeline_runs/.test(pool.sql[i]!) && /current_pass/.test(pool.sql[i]!));
+      const optCfgHeartbeats = heartbeatCalls.filter((p) => p[0] === 'optimal_config');
+      // >= 3 periodic ticks + the phase's own start(0)/end(1) writes = >= 5 total for this ONE phase.
+      expect(optCfgHeartbeats.length, 'at least 3 periodic heartbeat writes for optimal_config alone (un-latched — every tick writes, not just one)').toBeGreaterThanOrEqual(5);
+      const rowsProcessedSeries = optCfgHeartbeats.map((p) => Number(p[1]));
+      // F5 (output panel, 2026-09-09) — the phase-end boundary write ALSO now carries the
+      // real cumulative count (never the literal `1` this comment described before F5), so
+      // the FULL series (start boundary + every periodic tick + end boundary) must be
+      // monotonically non-decreasing — no slice-off-the-last-element carve-out needed.
+      for (let i = 1; i < rowsProcessedSeries.length; i++) {
+        expect(rowsProcessedSeries[i], `rows_processed must be monotonically non-decreasing (index ${i})`).toBeGreaterThanOrEqual(rowsProcessedSeries[i - 1]!);
+      }
+      expect(rowsProcessedSeries[rowsProcessedSeries.length - 1], 'the phase-end boundary write must equal the LAST real onProgress value (300), never the literal 1').toBe(300);
+      expect(rowsProcessedSeries, 'the real onProgress-fed values (100/200/300) must appear among the periodic writes, not just the 0/1 boundary literals').toEqual(
+        expect.arrayContaining([100, 200, 300]),
+      );
+      expect(logLines.some((l) => /phase optimal_config completed in \d+ms/.test(l)), 'the post_commit loop must emit its own completed-in-Xms line, mirroring the shared-txn phases').toBe(true);
+      expect(logLines.some((l) => /phase optimal_config starting \(post_commit/.test(l))).toBe(true);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('F5 (output panel, 2026-09-09) — the periodic heartbeat ticker is WHOLE-STEP: it fires during a SHARED-TXN phase too (the reaper hazard\'s own evidence, "phase max_build completed in 3049335ms", was a shared-txn phase, not post_commit), and rows_processed carries over CUMULATIVELY into later phases rather than resetting per-phase', async () => {
+    vi.useFakeTimers();
+    try {
+      const passLog: Array<{ name: string; txn: string }> = [];
+      const HEARTBEAT_MS = 60000; // enrich_parcels_heartbeat_minutes: 1, below
+      const compute = fakeCompute(passLog, {
+        passImpl: {
+          max_build: async (_client: unknown, ctx: unknown) => {
+            const c = ctx as { onProgress: (n: number) => void };
+            c.onProgress(50);
+            await vi.advanceTimersByTimeAsync(HEARTBEAT_MS);
+            c.onProgress(75);
+            await vi.advanceTimersByTimeAsync(HEARTBEAT_MS);
+            return { scoped: 0, updated: 0, updatedIds: [] };
+          },
+        },
+      });
+      const pool = fakePool();
+      const args = baseArgs(fixtureDescriptor(), pool, compute);
+      (args.config as Record<string, unknown>).enrich_parcels_heartbeat_minutes = 1;
+      await stepLib.runEnrichPhase(args as never);
+
+      const heartbeatCalls = pool.params.filter((_p, i) => /UPDATE pipeline_runs/.test(pool.sql[i]!) && /current_pass/.test(pool.sql[i]!));
+      const maxBuildHeartbeats = heartbeatCalls.filter((p) => p[0] === 'max_build');
+      // >= 2 periodic ticks + start/end boundary writes = >= 4 for max_build alone — proves
+      // the SAME ticker mechanism reaches a shared-txn phase, not just post_commit.
+      expect(maxBuildHeartbeats.length, 'the whole-step ticker must produce periodic writes during a SHARED-TXN phase, not only post_commit').toBeGreaterThanOrEqual(4);
+      const maxBuildSeries = maxBuildHeartbeats.map((p) => Number(p[1]));
+      expect(maxBuildSeries, 'the real onProgress-fed values (50/75) must appear').toEqual(expect.arrayContaining([50, 75]));
+
+      // Cumulative carry-over: the FIRST heartbeat write of the very NEXT phase after
+      // max_build (existing_structure, which contributes no onProgress of its own) must
+      // still read >= 75 — proving rows_processed is a STEP-LEVEL accumulator, never reset
+      // to 0 when a new phase starts.
+      const existingStructureHeartbeats = heartbeatCalls.filter((p) => p[0] === 'existing_structure');
+      expect(existingStructureHeartbeats.length, 'existing_structure must still get its own boundary heartbeats').toBeGreaterThanOrEqual(2);
+      expect(Number(existingStructureHeartbeats[0]![1]), 'the NEXT phase\'s own start-boundary heartbeat must carry max_build\'s cumulative count forward, not reset to 0').toBeGreaterThanOrEqual(75);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('R-B / Rule 12 reachability — staleness.detectInterruptedRetraction is folded into `full` UNCONDITIONALLY (no ledger-gated-skip early return exists on this archetype to hide behind)', async () => {
@@ -1358,6 +1515,199 @@ describe('runEnrichPhase (LG-28) — logic tests against a fake pool', () => {
 });
 
 // ---------------------------------------------------------------------------
+// EP-D14 (WF3 C1, .cursor/wf3_ep_d14_pass5_recovery_scan_active_task.md, 2026-09-09) — a genuine
+// BEHAVIOURAL lock directly against `consumePendingScope` (not the whole `runPass5`), seeded with
+// scope rows from TWO foreign run_ids to prove the query-COUNT claim: today's per-parcel loop issued
+// one UPDATE per pending parcel (2,500 parcels -> 2,500 statements); the fix issues either ONE
+// set-based UPDATE (--full) or `ceil(pending/batchSize)` batched round trips (incremental), never one
+// per parcel. RED against the pre-fix tree — reproduced live by checking out the parent commit's
+// `consumePendingScope` and confirming this test fails with "expected 1 UPDATE, saw 2500" (git
+// stash-verified this session, not merely asserted).
+// ---------------------------------------------------------------------------
+
+describe('consumePendingScope — EP-D14 query-count lock (the load-bearing one)', () => {
+  interface Call { kind: string; params: unknown[] }
+
+  function scopeRecoveryFakeClient(pendingParcelIds: number[], opts: { throwOnBatchSelectContaining?: number; throwOnBatchFlush?: boolean } = {}) {
+    const calls: Call[] = [];
+    const query = async (text: string, params: unknown[] = []): Promise<{ rows: unknown[]; rowCount: number }> => {
+      if (/^\s*SELECT DISTINCT parcel_id FROM enrich_parcels_pass3_scope WHERE consumed_at IS NULL AND run_id <> \$1/.test(text)) {
+        calls.push({ kind: 'select_pending', params });
+        return { rows: pendingParcelIds.map((parcel_id) => ({ parcel_id })), rowCount: pendingParcelIds.length };
+      }
+      if (/UPDATE enrich_parcels_pass3_scope SET consumed_at = \$2\s+WHERE consumed_at IS NULL AND run_id <> \$1 AND parcel_id <> ALL\(\$3::int\[\]\)/.test(text)) {
+        calls.push({ kind: 'set_based_stamp', params });
+        return { rows: [], rowCount: pendingParcelIds.length };
+      }
+      if (/p\.id = ANY\(\$1::int\[\]\)/.test(text)) {
+        calls.push({ kind: 'batch_select', params });
+        const ids = params[0] as number[];
+        // F2 (output panel, 2026-09-09) — simulates a genuinely thrown batch SELECT (a real
+        // DB/network error, not a per-row engine error) for the batch containing this id.
+        if (opts.throwOnBatchSelectContaining !== undefined && ids.includes(opts.throwOnBatchSelectContaining)) {
+          throw new Error(`simulated batch SELECT error (F2 fixture, batch containing ${opts.throwOnBatchSelectContaining})`);
+        }
+        return { rows: ids.map((id) => ({ id })), rowCount: ids.length };
+      }
+      if (/WITH incoming\(id,/.test(text)) {
+        calls.push({ kind: 'batch_flush', params });
+        // F2 (output panel) — simulates flushBatch's own re-throw-by-design behaviour.
+        if (opts.throwOnBatchFlush) {
+          throw new Error('simulated flushOptConfigBatch/ctx.flushBatch error (F2 fixture)');
+        }
+        return { rows: [], rowCount: params.length / 12 }; // 12 params/row (flushOptConfigBatch's own perRow)
+      }
+      if (/UPDATE enrich_parcels_pass3_scope SET consumed_at = \$2 WHERE parcel_id = ANY\(\$1::int\[\]\) AND consumed_at IS NULL/.test(text)) {
+        calls.push({ kind: 'batch_stamp', params });
+        return { rows: [], rowCount: (params[0] as number[]).length };
+      }
+      calls.push({ kind: 'UNEXPECTED: ' + text.slice(0, 80), params });
+      return { rows: [], rowCount: 0 };
+    };
+    return { query, calls };
+  }
+
+  it('full:true — exactly ONE set-based UPDATE, ZERO buildOptConfigSelectSql/batch calls, regardless of pending count (2,500 parcels across 2 foreign run_ids)', async () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports -- the real compute module under test
+    const ep = require(path.join(REPO_ROOT, 'scripts/lib/compute/enrich-parcels.js')) as {
+      consumePendingScope: (
+        client: unknown, runId: number, stats: Record<string, unknown>, stamp: Date,
+        genuineIds: Set<number>, log: unknown, opts: { full: boolean; batchSize: number; flushClient: unknown },
+      ) => Promise<number>;
+    };
+    const pendingIds = Array.from({ length: 2500 }, (_, i) => i + 1); // simulates run_ids 1001/1002's combined 2,500 distinct parcels
+    const { query, calls } = scopeRecoveryFakeClient(pendingIds);
+    const stats: Record<string, unknown> = { errors: 0, errorIds: new Set<number>() };
+    const flushClient = { query };
+    await ep.consumePendingScope(
+      { query } as unknown as { query: typeof query },
+      999, stats, new Date('2026-09-09T00:00:00.000Z'), new Set(), { warn: () => {}, info: () => {}, error: () => {} },
+      { full: true, batchSize: 1000, flushClient },
+    );
+    const byKind = calls.reduce<Record<string, number>>((acc, c) => { acc[c.kind] = (acc[c.kind] || 0) + 1; return acc; }, {});
+    expect(byKind.select_pending, 'exactly one pending-scope read').toBe(1);
+    expect(byKind.set_based_stamp, 'exactly ONE set-based UPDATE under --full').toBe(1);
+    expect(byKind.batch_select, '--full must issue ZERO buildOptConfigSelectSql calls — recompute is redundant (Ask 1 ruling)').toBeUndefined();
+    expect(byKind.batch_flush, '--full must issue ZERO flushOptConfigBatch calls').toBeUndefined();
+    expect(byKind.UNEXPECTED, 'no unhandled/unexpected SQL — every statement is accounted for').toBeUndefined();
+    expect(stats.scope_stamped_without_recompute_count).toBe(2500);
+  });
+
+  it('full:false, batch size 1000 — ceil(2500/1000)=3 scope UPDATEs and 3 select+flush pairs, never 2,500 (RED against the per-parcel loop)', async () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports -- the real compute module under test
+    const ep = require(path.join(REPO_ROOT, 'scripts/lib/compute/enrich-parcels.js')) as {
+      consumePendingScope: (
+        client: unknown, runId: number, stats: Record<string, unknown>, stamp: Date,
+        genuineIds: Set<number>, log: unknown, opts: { full: boolean; batchSize: number; flushClient: unknown },
+      ) => Promise<number>;
+    };
+    const pendingIds = Array.from({ length: 2500 }, (_, i) => i + 1);
+    const { query, calls } = scopeRecoveryFakeClient(pendingIds);
+    const stats: Record<string, unknown> = { errors: 0, errorIds: new Set<number>() };
+    const flushClient = { query };
+    await ep.consumePendingScope(
+      { query } as unknown as { query: typeof query },
+      999, stats, new Date('2026-09-09T00:00:00.000Z'), new Set(), { warn: () => {}, info: () => {}, error: () => {} },
+      { full: false, batchSize: 1000, flushClient },
+    );
+    const byKind = calls.reduce<Record<string, number>>((acc, c) => { acc[c.kind] = (acc[c.kind] || 0) + 1; return acc; }, {});
+    expect(byKind.select_pending).toBe(1);
+    expect(byKind.batch_select, 'ceil(2500/1000) = 3 batched recompute SELECTs, never one per parcel').toBe(3);
+    expect(byKind.batch_flush).toBe(3);
+    expect(byKind.batch_stamp, '3 batched stamp UPDATEs, never one per parcel (2,500 in the pre-fix tree)').toBe(3);
+    expect(byKind.set_based_stamp, 'the --full-only set-based UPDATE must NOT fire under incremental').toBeUndefined();
+    expect(byKind.UNEXPECTED).toBeUndefined();
+    expect(stats.scope_recovery_batches).toBe(3);
+    expect(stats.scope_recovery_recovered_count).toBe(2500);
+  });
+
+  it('full:true — a parcel that errored in THIS run\'s own stream (stats.errorIds) is EXCLUDED from the set-based stamp, so its scope row survives for a future genuine recovery', async () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports -- the real compute module under test
+    const ep = require(path.join(REPO_ROOT, 'scripts/lib/compute/enrich-parcels.js')) as {
+      consumePendingScope: (
+        client: unknown, runId: number, stats: Record<string, unknown>, stamp: Date,
+        genuineIds: Set<number>, log: unknown, opts: { full: boolean; batchSize: number; flushClient: unknown },
+      ) => Promise<number>;
+    };
+    const pendingIds = [1, 2, 3];
+    const { query, calls } = scopeRecoveryFakeClient(pendingIds);
+    const stats: Record<string, unknown> = { errors: 1, errorIds: new Set<number>([2]) };
+    await ep.consumePendingScope(
+      { query } as unknown as { query: typeof query },
+      999, stats, new Date('2026-09-09T00:00:00.000Z'), new Set(), { warn: () => {}, info: () => {}, error: () => {} },
+      { full: true, batchSize: 1000, flushClient: { query } },
+    );
+    const stampCall = calls.find((c) => c.kind === 'set_based_stamp');
+    expect(stampCall, 'the set-based stamp must have fired').toBeDefined();
+    expect(stampCall!.params[2], 'the exclusion array must name exactly the errored parcel id').toEqual([2]);
+  });
+
+  it('F2 (output panel, 2026-09-09) — full:false, a genuinely thrown batch SELECT isolates to ONE batch: stats.errors counts every id in that batch, its ids stay unstamped, and the loop continues to process the REMAINING batches (never aborts the whole recovery)', async () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports -- the real compute module under test
+    const ep = require(path.join(REPO_ROOT, 'scripts/lib/compute/enrich-parcels.js')) as {
+      consumePendingScope: (
+        client: unknown, runId: number, stats: Record<string, unknown>, stamp: Date,
+        genuineIds: Set<number>, log: unknown, opts: { full: boolean; batchSize: number; flushClient: unknown },
+      ) => Promise<number>;
+    };
+    // 3 batches of 2: [1,2] throws on SELECT, [3,4] and [5,6] succeed normally.
+    const pendingIds = [1, 2, 3, 4, 5, 6];
+    const { query, calls } = scopeRecoveryFakeClient(pendingIds, { throwOnBatchSelectContaining: 1 });
+    const stats: Record<string, unknown> = { errors: 0, errorIds: new Set<number>() };
+    const recovered = await ep.consumePendingScope(
+      { query } as unknown as { query: typeof query },
+      999, stats, new Date('2026-09-09T00:00:00.000Z'), new Set(), { warn: () => {}, info: () => {}, error: () => {} },
+      { full: false, batchSize: 2, flushClient: { query } },
+    );
+    expect(stats.errors, 'the 2 ids in the thrown batch must be counted').toBe(2);
+    expect(stats.scope_recovery_batches, 'all 3 batches must have been ATTEMPTED — the throw in batch 1 must not stop the loop').toBe(3);
+    const batchStampCalls = calls.filter((c) => c.kind === 'batch_stamp');
+    expect(batchStampCalls.length, 'the 2 SURVIVING batches must still be stamped').toBe(2);
+    const stampedIds = batchStampCalls.flatMap((c) => c.params[0] as number[]);
+    expect(stampedIds.sort(), 'ids 1 and 2 (the thrown batch) must NEVER be stamped; 3/4/5/6 must be').toEqual([3, 4, 5, 6]);
+    expect(recovered).toBe(4);
+  });
+
+  it('F2 — full:false, a genuinely thrown flush (ctx.flushBatch\'s own re-throw-by-design) ALSO isolates to one batch, not the whole recovery', async () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports -- the real compute module under test
+    const ep = require(path.join(REPO_ROOT, 'scripts/lib/compute/enrich-parcels.js')) as {
+      consumePendingScope: (
+        client: unknown, runId: number, stats: Record<string, unknown>, stamp: Date,
+        genuineIds: Set<number>, log: unknown, opts: { full: boolean; batchSize: number; flushClient: unknown },
+      ) => Promise<number>;
+    };
+    const pendingIds = [1, 2, 3, 4];
+    const { query, calls } = scopeRecoveryFakeClient(pendingIds, { throwOnBatchFlush: true });
+    const stats: Record<string, unknown> = { errors: 0, errorIds: new Set<number>() };
+    await ep.consumePendingScope(
+      { query } as unknown as { query: typeof query },
+      999, stats, new Date('2026-09-09T00:00:00.000Z'), new Set(), { warn: () => {}, info: () => {}, error: () => {} },
+      { full: false, batchSize: 2, flushClient: { query } },
+    );
+    expect(stats.scope_recovery_batches, 'both batches must have been attempted').toBe(2);
+    expect(stats.errors, 'every id across both thrown-flush batches must be counted').toBe(4);
+    expect(calls.some((c) => c.kind === 'batch_stamp'), 'no batch may be stamped when its own flush threw').toBe(false);
+  });
+
+  it.each([NaN, 0, -1, -1000])('F10 (output panel, 2026-09-09) — full:false with an invalid batchSize (%s) throws naming the remedy, rather than looping forever (i += batchSize never advances)', async (badBatchSize) => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports -- the real compute module under test
+    const ep = require(path.join(REPO_ROOT, 'scripts/lib/compute/enrich-parcels.js')) as {
+      consumePendingScope: (
+        client: unknown, runId: number, stats: Record<string, unknown>, stamp: Date,
+        genuineIds: Set<number>, log: unknown, opts: { full: boolean; batchSize: number; flushClient: unknown },
+      ) => Promise<number>;
+    };
+    const { query } = scopeRecoveryFakeClient([1, 2, 3]);
+    const stats: Record<string, unknown> = { errors: 0, errorIds: new Set<number>() };
+    await expect(ep.consumePendingScope(
+      { query } as unknown as { query: typeof query },
+      999, stats, new Date('2026-09-09T00:00:00.000Z'), new Set(), { warn: () => {}, info: () => {}, error: () => {} },
+      { full: false, batchSize: badBatchSize, flushClient: { query } },
+    )).rejects.toThrow(/batchSize must be a positive finite number/);
+  });
+});
+
+// ---------------------------------------------------------------------------
 // EP-D10 — a genuine BEHAVIOURAL lock on runPass5's pruning DELETE (pilot 9 commit 8 P7),
 // against the REAL compute module's runPass5 (not the fixture-compute runEnrichPhase tests
 // above, which exist to exercise the RUNNER's own orchestration — see that section's own
@@ -1365,14 +1715,21 @@ describe('runEnrichPhase (LG-28) — logic tests against a fake pool', () => {
 // "EP-D10 FIXED", earlier in this file) is a SOURCE-TEXT regex lock only: it proves the DELETE
 // statement text exists, never that running it actually prunes the right rows. This block
 // drives runPass5 against a fake client with an in-memory enrich_parcels_pass3_scope
-// simulation, seeding one ALREADY-consumed row and one UNCONSUMED prior-run row whose own
-// recovery attempt genuinely fails (an engine error on that one parcel, mirroring
-// consumePendingScope's own real try/catch — a row a recovery attempt could not process is
-// deliberately preserved, never pruned), and asserts the real DELETE removed exactly the
-// consumed row while the still-unconsumed one survives.
+// simulation, seeding one ALREADY-consumed row and one prior-run row whose OWN PARCEL errors in
+// THIS run's own stream, and asserts the real DELETE removed exactly the consumed row while the
+// still-unconsumed (genuinely-erroring) one survives.
+//
+// UPDATED (WF3 EP-D14, 2026-09-09) — the ORIGINAL fixture (pre-C1) simulated a "recovery-failed"
+// row by making the PER-PARCEL recovery SELECT itself throw (`p.id = $1`). EP-D14's Ask 1 ruling
+// retires that whole code path under --full: the pending set is stamped consumed set-based with
+// NO recompute at all, so there is no per-parcel "recovery attempt" left to fail. The ONLY
+// remaining way a prior-run scope row can legitimately survive under --full is if its OWN PARCEL
+// also appears in THIS run's own main stream and throws there (`stats.errorIds`) — this fixture
+// now reproduces exactly that, via a row whose `lot_size_sqm` getter throws (a genuine JS
+// exception on first field access inside mapRowToEngineInput, not a synthetic shortcut).
 // ---------------------------------------------------------------------------
 
-describe('runPass5 pruning DELETE — genuine BEHAVIOURAL lock (pilot 9 commit 8 P7, EP-D10)', () => {
+describe('runPass5 pruning DELETE — genuine BEHAVIOURAL lock (pilot 9 commit 8 P7, EP-D10; fixture updated for EP-D14)', () => {
   interface ScopeRow { run_id: number; parcel_id: number; consumed_at: string | null }
 
   function scopeFakeClient(seed: ScopeRow[]) {
@@ -1380,11 +1737,7 @@ describe('runPass5 pruning DELETE — genuine BEHAVIOURAL lock (pilot 9 commit 8
     const sql: string[] = [];
     const query = async (text: string, params: unknown[] = []): Promise<{ rows: unknown[]; rowCount: number }> => {
       sql.push(text);
-      // Citywide (NULL,'all') backstop check — pass 5's own precondition. Anchored to the
-      // LEADING "SELECT 1" so it does NOT also match the OPTCFG select's own CROSS JOIN
-      // sub-select against the same table further down (a real bug found writing this test:
-      // the un-anchored form swallowed the per-row recovery SELECT before it ever reached
-      // the p.id = $1 branch below, silently passing with stats.errors staying 0).
+      // Citywide (NULL,'all') backstop check — pass 5's own precondition.
       if (/^\s*SELECT 1 FROM neighbourhood_build_norms WHERE neighbourhood_id IS NULL/.test(text)) {
         return { rows: [{ '?column?': 1 }], rowCount: 1 };
       }
@@ -1392,11 +1745,12 @@ describe('runPass5 pruning DELETE — genuine BEHAVIOURAL lock (pilot 9 commit 8
       if (/UPDATE parcels p SET/.test(text) && /opt_config_confidence IS NOT NULL/.test(text)) {
         return { rows: [], rowCount: 0 };
       }
-      // THIS run's own set-based consumed_at flip.
-      if (/UPDATE enrich_parcels_pass3_scope SET consumed_at = \$2 WHERE run_id = \$1/.test(text)) {
-        const [runId, stamp] = params as [number, string];
+      // THIS run's own set-based consumed_at flip. F9 (output panel) — reads the 3rd param
+      // (this run's own errorIds exclusion array) so the fixture genuinely exercises it.
+      if (/UPDATE enrich_parcels_pass3_scope SET consumed_at = \$2 WHERE run_id = \$1 AND consumed_at IS NULL AND parcel_id <> ALL\(\$3::int\[\]\)/.test(text)) {
+        const [runId, stamp, excluded] = params as [number, string, number[]];
         let n = 0;
-        for (const r of rows) if (r.run_id === runId && r.consumed_at === null) { r.consumed_at = stamp; n += 1; }
+        for (const r of rows) if (r.run_id === runId && r.consumed_at === null && !excluded.includes(r.parcel_id)) { r.consumed_at = stamp; n += 1; }
         return { rows: [], rowCount: n };
       }
       // consumePendingScope's own recovery scan (prior runs' unconsumed rows).
@@ -1405,19 +1759,15 @@ describe('runPass5 pruning DELETE — genuine BEHAVIOURAL lock (pilot 9 commit 8
         const ids = [...new Set(rows.filter((r) => r.run_id !== runId && r.consumed_at === null).map((r) => r.parcel_id))];
         return { rows: ids.map((parcel_id) => ({ parcel_id })), rowCount: ids.length };
       }
-      // The per-row recovery SELECT (buildOptConfigSelectSql, scopeWhere: 'p.id = $1') — THIS
-      // is where the simulated engine error fires for the "stuck" parcel, exactly mirroring
-      // consumePendingScope's own try/catch (a genuinely thrown query error, not a synthetic
-      // shortcut — the same class of failure a real optimal-config engine error produces).
-      if (/p\.id = \$1/.test(text)) {
-        throw new Error('simulated optimal-config engine error (EP-D10 behavioural lock fixture)');
-      }
-      // Per-row consumed_at flip inside consumePendingScope — never reached for the stuck
-      // parcel (its own SELECT above threw first), asserted unreached below.
-      if (/UPDATE enrich_parcels_pass3_scope SET consumed_at = \$2 WHERE parcel_id = \$1/.test(text)) {
-        const [pid, stamp] = params as [number, string];
-        for (const r of rows) if (r.parcel_id === pid && r.consumed_at === null) r.consumed_at = stamp;
-        return { rows: [], rowCount: 1 };
+      // EP-D14 (C1) — the set-based --full stamp: consumed_at IS NULL, a PRIOR run, and NOT one
+      // of this run's own errored parcel ids.
+      if (/UPDATE enrich_parcels_pass3_scope SET consumed_at = \$2\s+WHERE consumed_at IS NULL AND run_id <> \$1 AND parcel_id <> ALL\(\$3::int\[\]\)/.test(text)) {
+        const [runId, stamp, excluded] = params as [number, string, number[]];
+        let n = 0;
+        for (const r of rows) {
+          if (r.run_id !== runId && r.consumed_at === null && !excluded.includes(r.parcel_id)) { r.consumed_at = stamp; n += 1; }
+        }
+        return { rows: [], rowCount: n };
       }
       // THE pruning DELETE under test (peel, pilot 9 commit 8 P1).
       if (/DELETE FROM enrich_parcels_pass3_scope WHERE consumed_at IS NOT NULL/.test(text)) {
@@ -1430,7 +1780,17 @@ describe('runPass5 pruning DELETE — genuine BEHAVIOURAL lock (pilot 9 commit 8
     return { query, rowsSnapshot: () => rows.map((r) => ({ ...r })), sql };
   }
 
-  it('seeds one CONSUMED row + one UNCONSUMED (recovery-failed) prior-run row — after runPass5, the consumed row is pruned and the unconsumed row survives', async () => {
+  /** A stream row whose `lot_size_sqm` getter throws on first access — mapRowToEngineInput's
+   * OWN first field read — simulating a genuine engine error in THIS run's own main stream,
+   * never a synthetic shortcut. */
+  function throwingStreamRow(id: number) {
+    return Object.defineProperties({}, {
+      id: { value: id, enumerable: true },
+      lot_size_sqm: { enumerable: true, get(): number { throw new Error('simulated optimal-config engine error (EP-D10/EP-D14 behavioural lock fixture)'); } },
+    });
+  }
+
+  it('seeds one CONSUMED row + one UNCONSUMED prior-run row whose OWN PARCEL errors in this run\'s own stream — after runPass5, the consumed row is pruned and the erroring row survives', async () => {
     // eslint-disable-next-line @typescript-eslint/no-require-imports -- the real compute module under test
     const ep = require(path.join(REPO_ROOT, 'scripts/lib/compute/enrich-parcels.js')) as {
       runPass5: (client: unknown, ctx: unknown, config: Record<string, number>) => Promise<Record<string, unknown>>;
@@ -1439,7 +1799,7 @@ describe('runPass5 pruning DELETE — genuine BEHAVIOURAL lock (pilot 9 commit 8
     const STUCK_PARCEL_RUN_ID = 500; // a PRIOR run, distinct from OWN_RUN_ID
     const seed: ScopeRow[] = [
       { run_id: OWN_RUN_ID, parcel_id: 1, consumed_at: '2026-09-01T00:00:00.000Z' }, // already consumed
-      { run_id: STUCK_PARCEL_RUN_ID, parcel_id: 2, consumed_at: null }, // prior-run, recovery will fail
+      { run_id: STUCK_PARCEL_RUN_ID, parcel_id: 2, consumed_at: null }, // prior-run; parcel 2 errors in THIS run's own stream below
     ];
     const client = scopeFakeClient(seed);
     // Named `passCtx`, not `ctx` — LW-D11's harness-fidelity lock (step-conformance.infra.test.ts)
@@ -1454,21 +1814,50 @@ describe('runPass5 pruning DELETE — genuine BEHAVIOURAL lock (pilot 9 commit 8
     const passCtx = {
       scopeWhere: 'TRUE',
       full: true,
-      stream: async function* stream() { /* empty — this lock is scoped to the scope-table prune, not the main OPTCFG loop */ },
+      stream: async function* stream() { yield throwingStreamRow(2); },
       scopeRunId: OWN_RUN_ID,
       clock: { now: () => new Date('2026-09-08T12:00:00.000Z') },
       log: { warn: () => {}, info: () => {}, error: () => {} },
     };
-    const config = { enrich_parcels_optcfg_batch_size: 500, enrich_parcels_pass5_stream_batch_size: 200 };
+    const config = { enrich_parcels_optcfg_batch_size: 500, enrich_parcels_pass5_stream_batch_size: 200, enrich_parcels_scope_recovery_batch_size: 1000 };
 
     const stats = await ep.runPass5(client, passCtx, config);
 
     expect(stats.errors, 'the stuck parcel\'s simulated engine error must be counted, not swallowed silently').toBe(1);
     const after = client.rowsSnapshot();
     expect(after.map((r) => r.parcel_id), 'the already-consumed row (parcel 1) must be PRUNED — gone from the table').not.toContain(1);
-    expect(after.map((r) => r.parcel_id), 'the recovery-failed row (parcel 2) must SURVIVE — still present, still unconsumed').toContain(2);
+    expect(after.map((r) => r.parcel_id), 'the erroring row (parcel 2) must SURVIVE — still present, still unconsumed').toContain(2);
     const survivor = after.find((r) => r.parcel_id === 2);
-    expect(survivor?.consumed_at, 'the survivor\'s consumed_at must still be NULL — its own recovery attempt genuinely failed').toBeNull();
+    expect(survivor?.consumed_at, 'the survivor\'s consumed_at must still be NULL — EP-D14\'s errored-id exclusion kept it out of the set-based stamp').toBeNull();
     expect(client.sql.some((s) => /DELETE FROM enrich_parcels_pass3_scope WHERE consumed_at IS NOT NULL/.test(s)), 'the pruning DELETE must have actually been issued, not merely present in source text').toBe(true);
+  });
+
+  it('F9 (output panel, 2026-09-09) — a parcel that errors in THIS run\'s OWN stream keeps its OWN scope row (same run_id as ownRunId) unconsumed too — the this-run stamp must exclude errorIds, not just the prior-run recovery stamp', async () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports -- the real compute module under test
+    const ep = require(path.join(REPO_ROOT, 'scripts/lib/compute/enrich-parcels.js')) as {
+      runPass5: (client: unknown, ctx: unknown, config: Record<string, number>) => Promise<Record<string, unknown>>;
+    };
+    const OWN_RUN_ID = 999;
+    const seed: ScopeRow[] = [
+      { run_id: OWN_RUN_ID, parcel_id: 1, consumed_at: null }, // healthy, this run's own
+      { run_id: OWN_RUN_ID, parcel_id: 2, consumed_at: null }, // errors in this run's own stream below
+    ];
+    const client = scopeFakeClient(seed);
+    const passCtx = {
+      scopeWhere: 'TRUE',
+      full: true,
+      stream: async function* stream() { yield throwingStreamRow(2); },
+      scopeRunId: OWN_RUN_ID,
+      clock: { now: () => new Date('2026-09-09T12:00:00.000Z') },
+      log: { warn: () => {}, info: () => {}, error: () => {} },
+    };
+    const config = { enrich_parcels_optcfg_batch_size: 500, enrich_parcels_pass5_stream_batch_size: 200, enrich_parcels_scope_recovery_batch_size: 1000 };
+    await ep.runPass5(client, passCtx, config);
+    const after = client.rowsSnapshot();
+    const row2 = after.find((r) => r.parcel_id === 2);
+    expect(row2, 'parcel 2\'s scope row must still exist (not pruned, since it was never stamped consumed)').toBeDefined();
+    expect(row2?.consumed_at, 'parcel 2 errored in THIS run\'s own stream — its OWN scope row must stay unconsumed, not be stamped by the this-run set-based UPDATE').toBeNull();
+    const row1 = after.find((r) => r.parcel_id === 1);
+    expect(row1, 'parcel 1 (healthy) must have been pruned — consumed then removed').toBeUndefined();
   });
 });

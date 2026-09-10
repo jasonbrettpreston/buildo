@@ -705,7 +705,7 @@ Two REAL bugs were found by a **live kill-and-rerun proof against this exact ste
 
 | # | Scope | Pass | Detail |
 |---|---|---|---|
-| 1 | link_wsib | PASS | min_migration=240 <= migrations count=242 |
+| 1 | link_wsib | PASS | min_migration=240 <= migrations count=243 |
 | 2 | link_wsib | PASS | 8 declared, missing from seeds: none |
 | 3 | link_wsib | PASS | retired=0 overlap-with-declared=none |
 | 7 | link_wsib | PASS | SPEC LINK header present=true |
@@ -720,7 +720,7 @@ Two REAL bugs were found by a **live kill-and-rerun proof against this exact ste
 - compare ran: true · diffs found: 218 · unexplained: 0
 
 ### Test suite (item iii)
-- 825/846 passed (suite success=false)
+- 840/861 passed (suite success=false)
 
 ### Policy coverage matrix (item vi) — Spec 124 Rules 1-13
 
