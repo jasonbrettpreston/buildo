@@ -61,6 +61,9 @@
 'use strict';
 
 const pipeline = require('../pipeline');
+// Module-top alias — see the pass-5 statement_timeout restore in runEnrichPhase for why this
+// value getter must not be spelled `pipeline.getPoolStatementTimeoutMs(` inside a runner body.
+const { getPoolStatementTimeoutMs } = pipeline;
 const { assertDbTarget } = require('../resolve-db');
 const { validateDescriptor } = require('./validate');
 const { buildAuditTable, deriveVerdict, selectChecks } = require('./verdict');
@@ -2161,13 +2164,13 @@ async function captureStallDiagnostic(writer, runId, pid) {
  * WF3 enrich_parcels stall commit 3 — starts a silence-gated ticker for ONE phase,
  * moved into the library at LG-28 and generalized from pass-5-only to EVERY phase (the
  * WF3's own filed deliverable: "whole-step ticker... passes-1-4 heartbeat" — this
- * closes both in one mechanism). Since `runEnrichPhase` now owns every phase's client
- * directly (no per-row progress channel crosses the compute seam — §5.5 keeps compute a
- * pure SQL author), the staleness proxy is TIME SINCE THIS PHASE STARTED rather than
- * legacy's per-row `rowsProcessed` counter: if a single phase call has not returned
- * within `2 * intervalMs`, one diagnostic capture fires (never spams — `fired` latches
- * until the caller starts a fresh ticker for the NEXT phase). Returns a `stop()`
- * closure — callers MUST clear it in a `finally` once the phase call settles.
+ * closes both in one mechanism). If a single phase call has not returned within
+ * `2 * intervalMs`, one diagnostic capture fires (never spams — `fired` latches until
+ * the caller starts a fresh ticker for the NEXT phase). This is the STALL PROBE only
+ * (a `pg_stat_activity` snapshot) — the periodic HEARTBEAT WRITE is a separate,
+ * UNLATCHED mechanism (`startHeartbeatTicker`, EP-D15, WF3 C4) that advances
+ * `last_heartbeat_at`/`rows_processed` on every tick, not once per phase. Returns a
+ * `stop()` closure — callers MUST clear it in a `finally` once the phase call settles.
  * @param {import('pg').Pool | import('pg').PoolClient} writer
  * @param {number|null} runId
  * @param {number} intervalMs
@@ -2184,6 +2187,43 @@ function startStallTicker(writer, runId, intervalMs, getPid) {
       pipeline.log.warn('[step/enrich]', `stall ticker diagnostic dispatch failed: ${err.message}`);
     });
   }, intervalMs * 2);
+  if (typeof timer.unref === 'function') timer.unref();
+  return () => clearInterval(timer);
+}
+
+/**
+ * EP-D15 (WF3 C4, 2026-09-09) — a PERIODIC, UNLATCHED heartbeat write: every `intervalMs`,
+ * for as long as the phase runs, `recordHeartbeat` is called again with the CURRENT
+ * `rows_processed` value (`getRowsProcessed()`, fed by the runner-owned `ctx.onProgress(n)`
+ * seam a pass MAY call — compute stays JUST compute, Rule 2; the progress NUMBER is
+ * whatever the pass reports, the WRITE CADENCE/CONNECTION stay the runner's job).
+ * Deliberately un-latched (unlike `startStallTicker`'s one-shot probe): a healthy run inside
+ * a 50+-minute phase (measured, EP-D15's own defect evidence — `phase max_build completed in
+ * 3049335ms`) must advance `last_heartbeat_at` repeatedly, not go silent between the phase's
+ * own start/end writes.
+ *
+ * F5 (output panel, 2026-09-09) — WHOLE-STEP, not post_commit-only: the reaper hazard's own
+ * evidence (`phase max_build completed in 3049335ms` = 50.8 min) is a SHARED-txn phase, so a
+ * ticker scoped to post_commit alone left every shared-txn phase's own silence gap open. One
+ * instance now spans the entire call (started before the shared-txn loop, stopped after the
+ * post_commit loop, on the SAME dedicated `heartbeatClient`) — `getPhaseName` reads whichever
+ * phase is CURRENTLY running, since a single fixed name can no longer describe every tick.
+ * @param {import('pg').Pool | import('pg').PoolClient} writer
+ * @param {number|null} runId
+ * @param {() => string|null} getPhaseName
+ * @param {number} intervalMs
+ * @param {() => number} getRowsProcessed
+ * @returns {() => void}
+ */
+function startHeartbeatTicker(writer, runId, getPhaseName, intervalMs, getRowsProcessed) {
+  if (!intervalMs || intervalMs <= 0) return () => {};
+  const timer = setInterval(() => {
+    const phaseName = getPhaseName();
+    if (!phaseName) return; // between phases (or before the first one) — nothing to attribute the tick to
+    recordHeartbeat(writer, runId, phaseName, getRowsProcessed()).catch((err) => {
+      pipeline.log.warn('[step/enrich]', `heartbeat ticker write failed (phase ${phaseName}): ${err.message}`);
+    });
+  }, intervalMs);
   if (typeof timer.unref === 'function') timer.unref();
   return () => clearInterval(timer);
 }
@@ -2417,6 +2457,12 @@ async function runEnrichPhase({ descriptor, pool, compute, config, chainId, log,
   // other session (including this same process's own monitoring query) the instant it
   // executes, regardless of whether the phase's own transaction is still open.
   const heartbeatClient = await pool.connect();
+  // F5 (output panel, 2026-09-09) — STEP-LEVEL, cumulative across every phase (shared-txn
+  // and post_commit alike) — never reset per-phase. `currentPhaseName` names whichever phase
+  // is running RIGHT NOW so the whole-step ticker's own ticks attribute correctly.
+  let rowsProcessed = 0;
+  let currentPhaseName = null;
+  const stopHeartbeatTicker = startHeartbeatTicker(heartbeatClient, ownRunId, () => currentPhaseName, heartbeatMs, () => rowsProcessed);
   try {
   await pipeline.withTransaction(pool, async (client) => {
     const lockRow = await client.query(
@@ -2441,7 +2487,12 @@ async function runEnrichPhase({ descriptor, pool, compute, config, chainId, log,
       if (timeoutMs > 0) await client.query(`SET LOCAL statement_timeout = ${timeoutMs}`);
       if (lockTimeoutMs > 0) await client.query(`SET LOCAL lock_timeout = ${lockTimeoutMs}`);
       const passSpec = passByName(phase.name);
-      const passCtx = { full, scopeWhere: 'TRUE', staleOverlays, clock, log, config, scopeRunId };
+      // F5 (output panel) — onProgress added for parity with post_commit's own passCtx; the 4
+      // shared-txn passes are each a single set-based SQL statement with no natural
+      // per-batch progress point, so none call it today — the whole-step ticker still
+      // advances last_heartbeat_at every tick regardless (its own tick does not require a
+      // progress update, only a live phase name), closing the silence gap by itself.
+      const passCtx = { full, scopeWhere: 'TRUE', staleOverlays, clock, log, config, scopeRunId, onProgress: (n) => { rowsProcessed = n; } };
       // WF3 enrich_parcels stall incident (2026-09-07, orchestrator observation) — Spec 48 §3.6
       // silence class: with NO per-phase log line, a `--full` run's own stdout goes silent from
       // the single startup INFO line until the whole step finishes (measured live: a real,
@@ -2451,7 +2502,8 @@ async function runEnrichPhase({ descriptor, pool, compute, config, chainId, log,
       // stdout live, confirmed not itself at fault), needs a visible phase start/end + duration.
       log.info(tag, `phase ${phase.name} starting (shared txn, timeout ${timeoutMinutes}min)`);
       const phaseStartMs = Date.now();
-      await recordHeartbeat(heartbeatClient, ownRunId, phase.name, 0);
+      currentPhaseName = phase.name;
+      await recordHeartbeat(heartbeatClient, ownRunId, phase.name, rowsProcessed);
       const stopTicker = startStallTicker(heartbeatClient, ownRunId, heartbeatMs, () => pid);
       try {
         // WF3 stall commit 1 — a SET LOCAL-triggered abort dies LOUD with the
@@ -2474,7 +2526,9 @@ async function runEnrichPhase({ descriptor, pool, compute, config, chainId, log,
       } finally {
         stopTicker();
       }
-      await recordHeartbeat(heartbeatClient, ownRunId, phase.name, 1);
+      // F5 (output panel) — the real cumulative step-level count, never the literal `1`
+      // (which would clobber whatever the periodic ticker/onProgress already advanced it to).
+      await recordHeartbeat(heartbeatClient, ownRunId, phase.name, rowsProcessed);
       log.info(tag, `phase ${phase.name} completed in ${Date.now() - phaseStartMs}ms`);
     }
 
@@ -2530,7 +2584,24 @@ async function runEnrichPhase({ descriptor, pool, compute, config, chainId, log,
     const postClient = await pool.connect();
     let streamClient = null;
     let lockAcquired = false;
+    // EP-D16 (WF3 C3, 2026-09-09) — a SESSION-level `SET statement_timeout` on `postClient`,
+    // right after `pool.connect()`, so EVERY autocommit statement this phase issues inherits
+    // the declared bound: `consumePendingScope`'s own SELECT/UPDATEs, the ineligibility reset,
+    // the citywide backstop check, and the EP-D10 prune DELETE — not just `flushBatch`'s own
+    // per-batch `SET LOCAL` (kept below as defence in depth, since a batch's own short
+    // transaction is a strictly narrower scope than the whole phase). Before this fix the
+    // declared `enrich_parcels_pass5_timeout_minutes` bound (execution.phases[].
+    // timeout_minutes_from_config) was READ but applied ONLY inside `flushBatch`'s BEGIN/COMMIT
+    // — every other statement on `postClient` ran with NO timeout at all, inheriting
+    // `PIPELINE_STATEMENT_TIMEOUT_MS`'s own default of 0 (unbounded) — the mechanism behind the
+    // 2026-09-09 pass-5 wedge that could not die (EP-D14). Restored (re-`SET`, never `RESET`
+    // — F1 below) in the `finally` before `.release()` — a session-level SET is not
+    // auto-cleared like `SET LOCAL` at COMMIT, and this connection returns to the pool for
+    // reuse by a later phase/caller. Issued INSIDE the try (F4, output panel 2026-09-09) — a
+    // throw from this SET itself, before this fix, skipped the `finally` entirely and leaked
+    // `postClient` (never released).
     try {
+      if (timeoutMs > 0) await postClient.query(`SET statement_timeout = ${timeoutMs}`);
       let pid = null;
       // WF3 enrich_parcels double-run incident (2026-09-07) — same reasoning as the
       // shared-txn phases above: the outer `withAdvisoryLock` connection can die while
@@ -2591,12 +2662,29 @@ async function runEnrichPhase({ descriptor, pool, compute, config, chainId, log,
           throw err;
         }
       };
+      // EP-D15 (WF3 C4) — the progress accumulator `ctx.onProgress(n)` writes into.
+      // Runner-owned (Rule 2: compute stays JUST compute) — a pass MAY call it after
+      // each unit of committed work; if it never does, this simply stays whatever it last
+      // was and the periodic heartbeat keeps writing that, which is itself an honest signal
+      // (silence-safe, never throws, never blocks the pass on a missed call).
+      // F5 (output panel) — `rowsProcessed`/`onProgress`/the heartbeat ticker are now
+      // STEP-LEVEL (declared once, before the shared-txn loop, per §2460 above) so the
+      // count is cumulative across every phase and one ticker instance covers this phase
+      // too — no per-phase re-declaration here.
       const passCtx = {
         full, scopeWhere: 'TRUE', staleOverlays, clock, log, config, scopeRunId,
         stream: (sql, params, opts) => streamOverClient(streamClient, sql, params, { batchSize: streamBatchSize, ...opts }),
         flushBatch,
+        onProgress: (n) => { rowsProcessed = n; },
       };
-      await recordHeartbeat(heartbeatClient, ownRunId, phase.name, 0);
+      // EP-D15 (WF3 C4, 2026-09-09) — mirrors the shared-txn phases' own boundary logging
+      // (:2452/:2478) — the post_commit loop previously had NEITHER line, so pass 5's
+      // duration appeared in no log and no golden capture (post/sources_run1.json carried
+      // 4 phase lines, not 5).
+      log.info(tag, `phase ${phase.name} starting (post_commit, timeout ${timeoutMinutes}min)`);
+      const phaseStartMs = Date.now();
+      currentPhaseName = phase.name;
+      await recordHeartbeat(heartbeatClient, ownRunId, phase.name, rowsProcessed);
       const stopTicker = startStallTicker(heartbeatClient, ownRunId, heartbeatMs, () => pid);
       try {
         passRaw[phase.name] = await (async () => {
@@ -2616,7 +2704,10 @@ async function runEnrichPhase({ descriptor, pool, compute, config, chainId, log,
       } finally {
         stopTicker();
       }
-      await recordHeartbeat(heartbeatClient, ownRunId, phase.name, 1);
+      // F5 (output panel) — the real cumulative step-level count, never the literal `1`
+      // (which would clobber whatever the periodic ticker/onProgress already advanced it to).
+      await recordHeartbeat(heartbeatClient, ownRunId, phase.name, rowsProcessed);
+      log.info(tag, `phase ${phase.name} completed in ${Date.now() - phaseStartMs}ms`);
       // No outer COMMIT/ROLLBACK here — every batch already committed (or rolled back)
       // on its own via `flushBatch`; a genuine failure above leaves whatever batches
       // already succeeded COMMITted, matching legacy's own partial-progress-preserved
@@ -2625,8 +2716,33 @@ async function runEnrichPhase({ descriptor, pool, compute, config, chainId, log,
       if (lockAcquired) {
         await postClient.query('SELECT pg_advisory_unlock($1, $2)', [descriptor.identity.lock, ENRICH_INNER_LOCK_SUBKEY]).catch(() => {});
       }
+      // EP-D16 (C3) — RESTORE before release: a session-level SET statement_timeout must not
+      // leak onto whoever reuses this pooled connection next.
+      // F1 (output panel, 2026-09-09) — `RESET statement_timeout` reverts to the SERVER
+      // session default (2min on cloud, tasks/lessons.md:82), NOT to the pool's own
+      // PIPELINE_STATEMENT_TIMEOUT_MS bound: `withPipelineStatementTimeout`'s `configured`
+      // WeakSet guard means the wrapped `pool.connect()` never re-issues its own `SET` for an
+      // already-configured client, so nothing else would put the pool's bound back. The next
+      // caller to check this client out of the pool (e.g. the citywide `COUNT(*)` on
+      // `parcels`, `pool.query(...)` at :2722) would silently inherit the 2-min cloud default
+      // instead. Re-`SET` to the pool's own resolved value explicitly instead.
+      // The resolver is called through the module-top alias `getPoolStatementTimeoutMs` (not
+      // `pipeline.getPoolStatementTimeoutMs`) on purpose: generate-template-freeze.mjs's
+      // LIBRARY_CALL_RE treats EVERY `pipeline.<fn>(` inside a runner as a frozen phase-order
+      // entry, and a config-value getter is not a phase (filed LOW: the extractor should list
+      // phase functions explicitly). A failed restore must not hand a capped connection back to
+      // the pool silently: log it and destroy the client so the pool discards it (lessons:82).
+      let restoreFailed = false;
+      if (timeoutMs > 0) {
+        try {
+          await postClient.query(`SET statement_timeout = ${getPoolStatementTimeoutMs()}`);
+        } catch (restoreErr) {
+          restoreFailed = true;
+          log.warn(tag, `pass-5 statement_timeout restore failed (${restoreErr.message}) — destroying the post_commit client so the pool never reuses it capped`);
+        }
+      }
       if (streamClient) streamClient.release();
-      postClient.release();
+      postClient.release(restoreFailed ? new Error('pass-5 statement_timeout restore failed — client destroyed, not pooled') : undefined);
     }
   }
   } catch (err) {
@@ -2680,6 +2796,11 @@ async function runEnrichPhase({ descriptor, pool, compute, config, chainId, log,
     opt_aor_envelope_capped_count: optCfg.envelope_capped || 0,
     opt_config_citywide_fallback_count: optCfg.citywide || 0,
     enrich_parcels_duration_ms: Date.now() - t0,
+    // EP-D14 (WF3 C1) — observability for the set-based/batched D4' recovery rewrite.
+    pending_scope_parcels: optCfg.pending_scope_count || 0,
+    scope_recovery_recovered_count: optCfg.scope_recovery_recovered_count || 0,
+    scope_recovery_batches: optCfg.scope_recovery_batches || 0,
+    scope_stamped_without_recompute_count: optCfg.scope_stamped_without_recompute_count || 0,
     passes: passRaw,
     // D#5 — the honest aggregate, computed by compute's own pure helper (never
     // re-derived here) — feeds counters.records_updated via config.counters'
@@ -2733,6 +2854,9 @@ async function runEnrichPhase({ descriptor, pool, compute, config, chainId, log,
     skipped: false,
   };
   } finally {
+    // F5 (output panel) — the whole-step periodic heartbeat ticker stops before the
+    // client it writes on is released, on every exit path (same reasoning as EP-D12 below).
+    stopHeartbeatTicker();
     // EP-D12 (P8) — released on EVERY exit path from the try above (both early
     // returns — shared-txn lock denied, post_commit lock denied — and the
     // normal-completion return just above it), never leaked back to the pool.

@@ -77,7 +77,16 @@ const { REQUIRED_PG_VARS } = require('./resolve-db');
  * `SET statement_timeout` before it is ever handed to a caller. Covers
  * pool.query too (it acquires via pool.connect internally).
  */
-function withPipelineStatementTimeout(pool) {
+/**
+ * WF3 EP-D16 (F1, output panel, 2026-09-09) — extracted so a caller that needs to
+ * RESTORE the pool's own bound after temporarily raising it on one pooled client
+ * (e.g. runEnrichPhase's post_commit phase) can re-issue the SAME value `SET`, never
+ * `RESET` — `RESET` reverts to the SERVER session default (2min on cloud, lessons:82),
+ * NOT to this value, and `withPipelineStatementTimeout`'s own `configured` WeakSet
+ * guard means the wrapped `pool.connect()` will never re-apply this `SET` for an
+ * already-configured client, so nothing else would ever put the pool's bound back.
+ */
+function getPoolStatementTimeoutMs() {
   const raw = process.env.PIPELINE_STATEMENT_TIMEOUT_MS;
   const timeoutMs = raw === undefined ? 0 : parseInt(raw, 10);
   if (!Number.isFinite(timeoutMs) || timeoutMs < 0) {
@@ -85,6 +94,11 @@ function withPipelineStatementTimeout(pool) {
       `PIPELINE_STATEMENT_TIMEOUT_MS must be a non-negative integer (ms), got: ${JSON.stringify(raw)}`
     );
   }
+  return timeoutMs;
+}
+
+function withPipelineStatementTimeout(pool) {
+  const timeoutMs = getPoolStatementTimeoutMs();
   const setSql = `SET statement_timeout TO ${timeoutMs}`;
   const configured = new WeakSet();
   const origConnect = pool.connect.bind(pool);
@@ -1072,6 +1086,11 @@ async function withAdvisoryLock(pool, lockId, fn, opts) {
 // ---------------------------------------------------------------------------
 
 module.exports = {
+  // WF3 EP-D16 (F1) — the pool's own resolved statement_timeout bound (PIPELINE_STATEMENT_TIMEOUT_MS,
+  // default 0). Exported so a caller can re-`SET` it explicitly after temporarily raising the bound
+  // on one pooled client, never `RESET` (which reverts to the server default, not this value).
+  getPoolStatementTimeoutMs,
+
   /**
    * Spec 122 §4.2 — `pipeline.step(descriptor, compute)`, the step factory.
    *
