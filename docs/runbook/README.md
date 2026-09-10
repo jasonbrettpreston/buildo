@@ -47,7 +47,7 @@ file for the full procedure; this index is the map.
 
 These are **not** chain steps (not in `scripts/manifest.json` / no 6 AM cron). Run them by hand for the one-time job noted.
 
-### `scripts/one-time/` — idempotent one-shots (9)
+### `scripts/one-time/` — idempotent one-shots (10)
 
 | Script | Owning spec | Job |
 |--------|-------------|-----|
@@ -60,6 +60,7 @@ These are **not** chain steps (not in `scripts/manifest.json` / no 6 AM cron). R
 | `backfill-permits-coa-zoning-index.js` | 66 §2 | Build the permits/coa zoning index (`CREATE INDEX CONCURRENTLY`) |
 | `wf2-p13-null-legacy-cost-tail.js` | 83 §3 | Null the legacy (model/permit) `cost_estimates` tail breaching magnitude ceilings (lock 122) — was missing from this table before WF3 EP-D14 closed the gap, though it was already in the §A.5 lock registry |
 | `wf3-prune-pass3-scope.js` | 78 §P3A.1 / 122 §3.0b | WF3 EP-D14 — dated+timed-backup DELETE of `enrich_parcels_pass3_scope`'s current contents (both consumed and unconsumed rows — Ask 1 ruling: byte-identical to the legacy per-parcel loop's own output either way, F6-corrected) before mig 246 applies and before the next `--full` `enrich_parcels` dispatch. **F3 (output panel, 2026-09-09): REFUSES outright if enrich_parcels' own advisory lock (65, 1) is held OR a `pipeline_runs` row shows an enrich_parcels invocation `status='running'`** — never run this while enrich_parcels is mid-run; under `REPEATABLE READ` it would delete that run's own freshly-spooled, still-unconsumed scope rows. `--confirm` to write; default is a DRY RUN (lock 125). Restore: `INSERT INTO enrich_parcels_pass3_scope SELECT * FROM _backup_pass3_scope_<YYYYMMDD>_<HHMMSS>;` — valid ONLY before the next `--full` run. Cloud invocation: `PG_HOST= node -r dotenv/config scripts/one-time/wf3-prune-pass3-scope.js` (dry run) then `... --confirm`. **Run BEFORE mig 246 (§2a below) so the partial index builds over ~0 rows, and only once enrich_parcels is confirmed idle.** |
+| `wf3-vacuum-analyze-parcels.js` | 115 §5 / 122 §7 ladder | WF3 EP-D17 — one-off unthrottled `VACUUM (ANALYZE) parcels`, reclaiming the ~1.35M dead tuples enrich_parcels' own pass-4 comps rewrite leaves behind (dead_ratio measured 0.697, 2026-09-10) before mig 247's tuned autovacuum params (§2a below) take over steady-state maintenance. Prints `n_live_tup`/`n_dead_tup`/`dead_ratio`/heap size/`reloptions` before and after. REFUSES outright if enrich_parcels' own advisory lock (65, single-key OUTER lock) is held OR a `pipeline_runs` row shows an enrich_parcels invocation `status='running'` — a manual VACUUM competes for the same IO budget as a live chain. `--confirm` to write; default is a DRY RUN (lock 126). Plain `VACUUM`, never `FULL` — does not reclaim heap size to the OS, only marks space reusable (Ask 3 in the WF3 plan is the separate `VACUUM (FULL)`/`pg_repack` decision, not this script). Cloud invocation: `PG_HOST= node -r dotenv/config scripts/one-time/wf3-vacuum-analyze-parcels.js` (dry run) then `... --confirm`. **Run AFTER mig 247 applies (§2a below), so the reclaimed state is the state the new autovacuum params then maintain.** |
 
 ### `scripts/backfill/` — historical backfills (4)
 
