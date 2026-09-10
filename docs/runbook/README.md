@@ -212,5 +212,16 @@ so the scheduled `chain_sources` `load_wsib` step SKIPs (PASS + instructions row
 Note: rows once enriched with no contacts found are never retried; a true refresh pass
 requires resetting `last_enriched_at` (deliberate — Spec 45/46 spend control).
 
+## 6. Cloud-write allow-rule practice (declared 2026-09-10; WF2 "Specs 122/123/124 grounding + reorg + split checker")
+
+The existing operator practice for a GitHub Actions workflow that writes to the CLOUD database is to allow-list the
+EXACT command dispatched (a workflow-level `if:`/argv match, or the runbook step below it), never a wildcard on the
+workflow name alone — the same "declared, never inferred" discipline this spec family applies to descriptors. This
+task looked for a corresponding `.claude/settings.json` exact-allow-rule gate and found none; the practice is
+documented here as EXISTING OPERATOR PRACTICE observed across §1–§5 above (e.g. §5's `chain-wsib` dispatch names the
+exact secret + limit it is allowed to spend; §3b's reconcile step names the exact SQL it may run, never a bare
+`UPDATE`), not a new gate this task introduces. If a machine-checked exact-command allow list is wanted, it is a
+separate, scoped WF — filed in `docs/reports/review_followups.md`.
+
 ## Python harness (`npm run test:py`)
 Unit tests for `scripts/*.py` live in `scripts/tests/` (pytest, no DB / no browser / no network). Install once with `pip install -r scripts/requirements-dev.txt`; the chains install `requirements.txt` only, so the harness can never affect a production run. CI runs it as the `Pytest (Pipeline Python)` job in `pipeline-lint.yml`. Added 2026-07-29 after three consecutive cloud-only failures (GH runs 30485096998 / 30487133930 / 30490094619) all turned out to be pure-logic seams costing a ~6-minute Actions round-trip each. Run it before pushing any `scripts/*.py` change.
