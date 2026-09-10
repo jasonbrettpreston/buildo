@@ -20,8 +20,8 @@
     {
       "id": "STD-1",
       "spec": "122 §1.3",
-      "title": "18 categories, schema-canonical",
-      "promised": "18 categories, schema-canonical",
+      "title": "20 categories, schema-canonical",
+      "promised": "20 categories, schema-canonical",
       "status": "BUILT",
       "evidence": "scripts/steps/_schema/step.schema.json x-categories (18 entries), confirmed 2026-08-25",
       "owner": {

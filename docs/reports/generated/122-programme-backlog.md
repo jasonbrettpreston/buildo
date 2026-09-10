@@ -44,7 +44,7 @@ Total items: **85**
 
 | id | spec | title | status | owner | blocks | last reviewed |
 |---|---|---|---|---|---|---|
-| `STD-1` | 122 §1.3 | 18 categories, schema-canonical | ✅ BUILT | wf: schema (R2), pre-existing | — | 2026-08-29 |
+| `STD-1` | 122 §1.3 | 20 categories, schema-canonical | ✅ BUILT | wf: schema (R2), pre-existing | — | 2026-08-29 |
 | `STD-2` | 122 §4.1 | descriptor is a data-only sibling JSON | ✅ BUILT | pilot: pilots 1-6 | — | 2026-08-29 |
 | `STD-3` | 122 §5.1 | mandatory ast-grep shape rule | ✅ BUILT | wf: shape gate, all pilots | — | 2026-08-29 |
 | `STD-4` | 122 §4.1 | step-0 reconcile becomes a reconcile step | ✅ BUILT | wf: manifest, pre-session | — | 2026-08-29 |

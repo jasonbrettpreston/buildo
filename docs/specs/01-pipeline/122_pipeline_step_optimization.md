@@ -102,13 +102,13 @@ Policy frame: §1.2a "nothing hidden" + McDonald's standardization — declare e
 
 > ### One shape · one menu · one compute
 >
-> **Every step in the estate is the same step, except for its compute.** It declares **18 categories** (schema-canonical, §1.3 amendment); those declarations answer the schema's leaf-field concerns; every answer is chosen from a **closed menu**, and `"none"` is always a legal answer that must be written down. The library does everything else — identically, 64 times.
+> **Every step in the estate is the same step, except for its compute.** It declares **20 categories** (schema-canonical, §1.3 amendment) — corrected 2026-09-09 (WF2 "FREEZE-1, the freeze precondition" commit 4; `invariants`/`plausibility` joined the frozen set, R-T addendum, Spec 124 §2 Rule 13, 2026-08-29); those declarations answer the schema's leaf-field concerns; every answer is chosen from a **closed menu**, and `"none"` is always a legal answer that must be written down. The library does everything else — identically, 64 times.
 >
 > **Three machines, and a step author touches only the first:**
 >
 > | | Machine | Who writes it | What it is |
 > |---|---|---|---|
-> | **1** | **DECLARE** | the step author | `<file-stem>.descriptor.json` — 18 categories, closed menus |
+> | **1** | **DECLARE** | the step author | `<file-stem>.descriptor.json` — 20 categories, closed menus |
 > | **2** | **DELEGATE** | nobody — the library | `pipeline.step(descriptor, compute)` runs the lifecycle |
 > | **3** | **VERIFY** | nobody — generated | the validator, the checks, the ledger, the differential |
 >
@@ -146,7 +146,7 @@ Policy frame: §1.2a "nothing hidden" + McDonald's standardization — declare e
 
 | | Machine | Artifact | Who |
 |---|---|---|---|
-| **1** | **DECLARE** | `<file-stem>.descriptor.json` — 18 categories | the author |
+| **1** | **DECLARE** | `<file-stem>.descriptor.json` — 20 categories | the author |
 | **2** | **DELEGATE** | `pipeline.step(descriptor, compute)` | nobody — the library |
 | **3** | **VERIFY** | validator · checks · ledger · differential | nobody — generated |
 
@@ -217,11 +217,11 @@ Three questions get asked of this design repeatedly. Here they are, answered onc
 | `INGESTOR` | `write_discipline` + `retract` + `replay` + `empty_source` all required |
 | `LINK` / `MATCHER` | `invalidates` required; counters scoped by `writes.key` |
 
-**For an ASSERT, most of the 18 categories collapse to `"none"`** (the draft `assert_schema` descriptor is the measured instance). That is the archetype earning its place: it tells you which categories are live, and forces the rest to be *explicit* rather than *forgotten*.
+**For an ASSERT, most of the 20 categories collapse to `"none"`** (the draft `assert_schema` descriptor is the measured instance). That is the archetype earning its place: it tells you which categories are live, and forces the rest to be *explicit* rather than *forgotten*.
 
 ---
 
-### 1.2 ⚠️ THE CONTRACT — 18 categories, set in stone (schema-canonical)
+### 1.2 ⚠️ THE CONTRACT — 20 categories, set in stone (schema-canonical)
 
 > **This is the load-bearing rule of the whole programme.** The category list and the allowed responses are decided **once, for all 64 steps**. Extending a `!` vocabulary is a **runner change reviewed once**, never a per-step invention. A step that needs a value the menu lacks does not add one — it escalates (§7.3's kill criteria).
 >
@@ -233,7 +233,7 @@ Three questions get asked of this design repeatedly. Here they are, answered onc
 
 ### 1.2a ⚠️ OPERATING POLICY — nothing hidden — MOVED TO SPEC 124 (R-J, 2026-08-28)
 
-> **Objective this programme serves:** the "McDonald's pipeline" — every step is the same step except for its compute; every one of the 18 categories answered from a closed menu; data validated and observable *within* each step; every standardized setting visible *across* all steps.
+> **Objective this programme serves:** the "McDonald's pipeline" — every step is the same step except for its compute; every one of the 20 categories answered from a closed menu; data validated and observable *within* each step; every standardized setting visible *across* all steps.
 
 **The P1/P2/P4/P5 rule text that used to live here has moved to Spec 124 §2 — that spec is now the standalone
 home of the durable policy; this spec cites it, it does not restate it (R-J).** Pointers:
@@ -268,9 +268,11 @@ CLAUDE.md PD#10 exists to catch.**
 See the R-A..R-J rulings block above for R-A's retirement declaration and R-D's chain-start assertion (both
 folded into Spec 124 Rule 3 per R-G's presence/validity split).
 
-### 1.3 The 18 categories
+### 1.3 The 20 categories
 
 > ⚠️ **Amended 2026-08-25 (Pilot 1 plan review):** the count is **18** — `step.schema.json.required` measured by `node -e "require('./scripts/steps/_schema/step.schema.json').required.length"` → 18; `terminals` landed as the 18th via R6 at S1. Under R2 the schema is canonical: any prose count in this spec that disagrees with the schema is stale, not authoritative. The **concerns** are the schema's leaf fields and are *generated*, not fixed here (walk measured 2026-08-25: 73 leaf fields, 58 top-level fields across the 18 categories). Prior prose said "17 categories / 49 concerns".
+>
+> ⚠️ **Further amended 2026-09-09 (WF2 "FREEZE-1, the freeze precondition" commit 4, remeasured at HEAD `4d318b2c`):** the count is now **20**, not 18 — `step.schema.json.required.length` → 20; `invariants` and `plausibility` (R-T addendum, Spec 124 §2 Rule 13, 2026-08-29) joined the frozen set between `checks` and `override`, per §8.2's own already-corrected text above ("the 20 required top-level categories, not the stale '18'..."). This amendment propagates that same correction to every other "18 categories" prose site this section and §1.1/§1.2/§1.9/§1.10/§3.0's cross-references share (13 sites total, cited by the commit that made this edit). The table below still enumerates only the original 17 numbered rows + `terminals`; `invariants`/`plausibility` are not yet given their own rows here — tracked as a residual, not fabricated in this commit.
 
 | # | Category | Declares | Vocabulary |
 |---|---|---|---|
@@ -523,7 +525,7 @@ They are not parallel lists, and the Concern Index **adds no declaration surface
 
 | Home | Meaning | Count |
 |---|---:|---:|
-| one of the **18 categories** | the step declares it | **44** |
+| one of the **20 categories** | the step declares it | **44** ⚠️ unaudited against the 18→20 correction (2026-09-09) — `invariants`/`plausibility` likely add concerns of their own; this count is not re-walked by this commit |
 | **RUNNER** | the library owns it; **nothing is declared per step, and a step cannot opt out** | **4** |
 | **OPEN** | the compute | **1** |
 
@@ -643,7 +645,7 @@ Same shape for concern 9: `step_timeout_minutes` is manifest-only and **1 of 67 
 
 ### 1.9 What is NOT a canned response
 
-**16 of 18 categories are fully closed menus** (18 per §1.3 amendment; `terminals` is closed via `$ref terminal`). Two are deliberately not, and the boundary matters:
+**16 of 18 categories are fully closed menus** (total corrected to **20** per §1.3's 2026-09-09 amendment; `terminals` is closed via `$ref terminal`). Two of the original 18 are deliberately not, and the boundary matters — **⚠️ `invariants`/`plausibility` (the 2 categories added since) are NOT yet classified against this closed/open split by this commit** (they share `checks`'s declarative-SQL, `anyOf["none" | array]` shape per `step.schema.json`, which is suggestive but unaudited here; tracked as a residual):
 
 | Category | Closed part | Open part |
 |---|---|---|
@@ -745,11 +747,11 @@ The execution envelope — workflow ceilings, chain splitting, the strand factor
 | File | Content | Executable? |
 |---|---|---|
 | `scripts/<dir>/<file-stem>.js` (path unchanged from today) | the call site: the §5.1 frozen shape | yes — but only `require` + one `pipeline.step()` |
-| `scripts/<dir>/<file-stem>.descriptor.json` — sibling of the step file, same hyphenated stem (e.g. `scripts/quality/assert-schema.descriptor.json`; `step-conformance.infra.test.ts` derives it as `<file>.slice(0,-3)+'.descriptor.json'`) | the 18 categories of `step.schema.json` (§1.3) | **no — data only** (A1) |
+| `scripts/<dir>/<file-stem>.descriptor.json` — sibling of the step file, same hyphenated stem (e.g. `scripts/quality/assert-schema.descriptor.json`; `step-conformance.infra.test.ts` derives it as `<file>.slice(0,-3)+'.descriptor.json'`) | the 20 categories of `step.schema.json` (§1.3) | **no — data only** (A1) |
 | `scripts/<dir>/<file-stem>.notes.json` | Spec 120 §3.4's interpretation, capped at 12 prose entries | no |
 | `scripts/lib/compute/<slug>.js` | the domain logic, exporting `compute` | yes |
 
-**The declaration is inherited from Spec 120 §3, extended to the schema's 18 categories (§1.3 amendment)** — the controlled vocabularies, the `†`/`~`/`!` markers, `severity ⊥ blocking`, the status enum, `notes.json` and its cap, and the rule that interpretive text may reference a check id but never quote a number. **122 changes none of it.** Do not re-specify it here; §3 of Spec 120 is the text.
+**The declaration is inherited from Spec 120 §3, extended to the schema's 20 categories (§1.3 amendment)** — the controlled vocabularies, the `†`/`~`/`!` markers, `severity ⊥ blocking`, the status enum, `notes.json` and its cap, and the rule that interpretive text may reference a check id but never quote a number. **122 changes none of it.** Do not re-specify it here; §3 of Spec 120 is the text.
 
 ### 4.2 `pipeline.step(descriptor, compute)`
 
@@ -1128,7 +1130,7 @@ After commit 9 (cutover) and the WF6 output panel, the pilot's assessment report
 
 **Spec 120 §14.1 proposes simplest / median / worst. That is the wrong axis for validating this contract, and the `assert_schema` audit proved it:**
 
-> An **ASSERT forces 5 of 18 categories to `"none"`** — `outputs`, `recovery`, `override`, `config`, plus `counters: null` (**amended 2026-08-25, operator ruling, Pilot 1 Fold D:** `emits` is NOT forced — the schema `allOf` forces only `outputs · recovery · counters`, §1.10 agrees, and claim #203 requires every `emits` key to name a consumer; an ASSERT that emits `checks_passed/checks_failed/errors` declares them like any other step. Nothing-hidden policy: declared, observable keys beat a forced `"none"`) — and one more to a single value (`partial_fill: none`). **CORRECTED 2026-09-09 (WD-1 WF5 audit):** `write_discipline: verdict_only` is NOT a forced single value alongside `partial_fill` — `outputs` itself is forced to the literal `const "none"` (`step.schema.json:1718`), so `write_discipline` (which lives only under `outputs.writes[]`) is not merely fixed to class L, it is **unreachable** for any ASSERT step; class L is `retire`-dispositioned in `write-class-disposition.json` for exactly this reason. **It exercises the least of the contract that any archetype can.** Picking by size would have frozen the template against the thinnest possible test.
+> An **ASSERT forces 5 of 18 categories to `"none"`** (total corrected to **20** per §1.3's 2026-09-09 amendment; whether `invariants`/`plausibility` — both `"none"` for `assert_schema` today, per its descriptor — are *schema-forced* to `"none"` for ASSERT specifically, the way this paragraph's own later correction narrows `outputs`/`recovery`/`counters` to be, is unaudited by this commit) — `outputs`, `recovery`, `override`, `config`, plus `counters: null` (**amended 2026-08-25, operator ruling, Pilot 1 Fold D:** `emits` is NOT forced — the schema `allOf` forces only `outputs · recovery · counters`, §1.10 agrees, and claim #203 requires every `emits` key to name a consumer; an ASSERT that emits `checks_passed/checks_failed/errors` declares them like any other step. Nothing-hidden policy: declared, observable keys beat a forced `"none"`) — and one more to a single value (`partial_fill: none`). **CORRECTED 2026-09-09 (WD-1 WF5 audit):** `write_discipline: verdict_only` is NOT a forced single value alongside `partial_fill` — `outputs` itself is forced to the literal `const "none"` (`step.schema.json:1718`), so `write_discipline` (which lives only under `outputs.writes[]`) is not merely fixed to class L, it is **unreachable** for any ASSERT step; class L is `retire`-dispositioned in `write-class-disposition.json` for exactly this reason. **It exercises the least of the contract that any archetype can.** Picking by size would have frozen the template against the thinnest possible test.
 
 **Because `identity.archetype` drives the required-field profile (§3.0d), contract coverage is an archetype property, not a size property.** One representative per archetype, and **four are forced — they have exactly one member each** `[MEASURED]`:
 

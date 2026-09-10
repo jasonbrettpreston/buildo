@@ -17,8 +17,10 @@
  * `assertGrandfathered`). This generator is that mechanism for schema fields:
  *
  *   1. `schema-baseline.json` is a committed snapshot of every `category.field`
- *      pair the schema declares TODAY (18 categories x their direct object-shape
- *      properties — the "new schema field" unit Rule 1's own text uses).
+ *      pair the schema declares TODAY (20 categories, corrected 2026-09-09 —
+ *      WF2 "FREEZE-1, the freeze precondition" commit 4, was stale "18" — x
+ *      their direct object-shape properties — the "new schema field" unit
+ *      Rule 1's own text uses).
  *   2. Every field NOT in the baseline is a field added AFTER this ratchet
  *      armed, and its OWN schema node must carry `x-ruling: {rungs_tried, why}`
  *      — a sibling annotation naming which cheaper rungs were tried and why
