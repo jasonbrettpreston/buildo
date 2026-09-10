@@ -43,7 +43,7 @@ import { createHash } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { isOpenBatchingItem } from '../../violations/generate-programme-backlog.mjs';
+import { isOpenBatchingItem, DELIVERED_ITEM_STATUSES } from '../../violations/generate-programme-backlog.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(HERE, '..', '..', '..');
@@ -159,6 +159,81 @@ export function checkFrozenSchemaConsistency({ oldFrozenSchemaSha256, newFrozenS
     return { ok: false, reason: 'template-freeze.json was re-frozen (schema_sha256 bumped to match the live schema) but Spec 122 §8 ("The conversion process") carries no text change in this commit — a re-freeze must be accompanied by a spec amendment, not a silent hash bump' };
   }
   return { ok: true, reason: 're-freeze: schema_sha256 bumped to match the live schema, Spec 122 §8 amended, both in the same commit' };
+}
+
+// ---------------------------------------------------------------------------
+// FREEZE-1 LOCK (WF2 "FREEZE-1, the freeze precondition", commit 1, 2026-09-09)
+// — is the FREEZE-1 declaration itself honest, given the programme-items.json
+// ledger it is derived from and the archetype_profiles this same artifact
+// records?
+//
+// Spec 122 §8.2's PRECONDITION ("the template may honestly freeze after the
+// eighth pilot only when the batching_prereq set is empty") had, until this
+// commit, only a console line (`blocks batching: N`) as its guard — the exact
+// defect class this programme refuses everywhere else (a claim with no lock).
+// This predicate is that lock, pure and fixture-testable both directions
+// (Spec 121 §12b.6), mirroring `checkFrozenSchemaConsistency` above.
+//
+// Arms (operator Ask A1, ruled NO, 2026-09-09 — STD-7 may not read BUILT
+// while any `archetype_profiles[]` row is not `proven === true`; arm E is
+// armed):
+//   A — FREEZE-1 declared BUILT/SUPERSEDED but another batching_prereq item
+//       is still open, per a FRESH scan of programme-items.json (excluding
+//       FREEZE-1's own row): the LEDGER disagrees with the declaration.
+//   B — FREEZE-1 declared BUILT/SUPERSEDED but the COMMITTED, on-disk
+//       template-freeze.json's own batching_prereq_snapshot still lists an
+//       open item: the ARTIFACT disagrees — distinct from A, and read from a
+//       genuinely different source (the on-disk file, not the freshly
+//       re-derived live tier main() is about to write), so a hand-edited or
+//       stale-regenerated artifact is caught even when a fresh ledger scan
+//       (arm A) is honest.
+//   C — FREEZE-1 not yet declared (NOT_STARTED/PARTIAL): vacuous ok:true —
+//       this is today's state, and the honest interim state through phase 1.
+//   E — FREEZE-1 declared BUILT/SUPERSEDED, every other gate clear, but an
+//       archetype_profiles[] row is not proven === true (a missing/
+//       non-boolean value fails closed, same as an explicit false): "8
+//       archetypes dispatched" (STD-7's own promise) is false while the
+//       frozen artifact records one unproven — a freeze declared over that
+//       is counted, not honest.
+//   D — FREEZE-1 declared BUILT/SUPERSEDED, no other open item, snapshot
+//       empty, every archetype proven: ok:true — the target state.
+// ---------------------------------------------------------------------------
+
+// Same closed pair `isOpenBatchingItem` uses to decide "delivered" — imported,
+// never re-copied (LOW followup, WF2 "FREEZE-1, the freeze precondition"
+// output review: a second hand-written `!== 'BUILT' && !== 'SUPERSEDED'`
+// literal is exactly the "second, independently-drifting reimplementation"
+// `isOpenBatchingItem`'s own docblock refuses).
+const DECLARED_FREEZE_STATUSES = new Set(DELIVERED_ITEM_STATUSES);
+
+export function checkFreezeDeclarationHonesty({ freezeItemStatus, otherOpenBatchingIds, snapshotIds, archetypeProfiles }) {
+  if (!DECLARED_FREEZE_STATUSES.has(freezeItemStatus)) {
+    return { ok: true, reason: `FREEZE-1 is not yet declared (status: ${freezeItemStatus}) — the lock is vacuous until the declaration is made (arm C)` };
+  }
+  if (otherOpenBatchingIds.length > 0) {
+    return {
+      ok: false,
+      reason: `FREEZE-1 is declared ${freezeItemStatus} but ${otherOpenBatchingIds.length} other batching_prereq item(s) are still open (${otherOpenBatchingIds.join(', ')}) — the declaration claims a precondition that is measurably unmet (arm A)`,
+    };
+  }
+  if (snapshotIds.length > 0) {
+    return {
+      ok: false,
+      reason: `FREEZE-1 is declared ${freezeItemStatus} but batching_prereq_snapshot still lists ${snapshotIds.length} open item(s) (${snapshotIds.join(', ')}) — the artifact and the ledger disagree (arm B)`,
+    };
+  }
+  // `!== true`, not `=== false` — a missing/undefined/non-boolean `proven`
+  // must fail closed the same as an explicit `false` (fail-open on absence
+  // is exactly the "green because it never looked" defect class this
+  // programme refuses elsewhere).
+  const unproven = archetypeProfiles.filter((p) => p.proven !== true).map((p) => p.archetype);
+  if (unproven.length > 0) {
+    return {
+      ok: false,
+      reason: `FREEZE-1 is declared ${freezeItemStatus} but archetype_profiles still records ${unproven.join(', ')} as not proven:true — "8 archetypes dispatched" is false while an unproven archetype stands in the frozen artifact (arm E, Ask A1 ruled NO)`,
+    };
+  }
+  return { ok: true, reason: `FREEZE-1 is declared ${freezeItemStatus}, the batching_prereq set is genuinely empty, and every archetype_profiles[] row is proven — the declaration is honest (arm D)` };
 }
 
 // ---------------------------------------------------------------------------
@@ -478,7 +553,38 @@ function main() {
       process.exit(1);
     }
 
-    console.log('[generate-template-freeze] clean — no drift, R-E consistent');
+    // FREEZE-1 lock (WF2 "FREEZE-1, the freeze precondition", commit 1) — is
+    // the FREEZE-1 declaration itself honest? Arms A and B are DELIBERATELY
+    // fed from two different sources (output-review fix, 2026-09-09 — the
+    // original wiring fed both from the same freshly-derived `artifact.
+    // batching_prereq_snapshot`, so arm B could never independently fire:
+    // whatever made arm A's otherOpenBatchingIds empty ALSO made arm B's
+    // snapshotIds empty, every time, because they were the same live-derived
+    // array with FREEZE-1 filtered out). Arm A reads a FRESH scan of
+    // programme-items.json (the ledger, right now). Arm B reads the
+    // COMMITTED, on-disk artifact's own batching_prereq_snapshot (`existing`
+    // — null on first-ever generation, in which case there is nothing yet to
+    // disagree with) — never the just-assembled `artifact` this same run is
+    // about to (over)write, so a stale or hand-edited committed snapshot is
+    // visible even when the fresh ledger scan is honest. Check-path only:
+    // never mutates OUT_PATH.
+    const programmeItems = JSON.parse(readFileSync(PROGRAMME_ITEMS_PATH, 'utf8')).items;
+    const freezeItem = programmeItems.find((it) => it.id === 'FREEZE-1');
+    if (!freezeItem) throw new Error('generate-template-freeze: FREEZE-1 not found in programme-items.json');
+    const otherOpenBatchingIds = programmeItems.filter((it) => it.id !== 'FREEZE-1' && isOpenBatchingItem(it)).map((it) => it.id);
+    const committedSnapshotIds = existing ? existing.batching_prereq_snapshot.map((s) => s.id) : [];
+    const honesty = checkFreezeDeclarationHonesty({
+      freezeItemStatus: freezeItem.status,
+      otherOpenBatchingIds,
+      snapshotIds: committedSnapshotIds,
+      archetypeProfiles: artifact.archetype_profiles,
+    });
+    if (!honesty.ok) {
+      console.error(`[generate-template-freeze] FREEZE-1 VIOLATION: ${honesty.reason}`);
+      process.exit(1);
+    }
+
+    console.log('[generate-template-freeze] clean — no drift, R-E consistent, FREEZE-1 honest');
     return;
   }
 

@@ -83,6 +83,12 @@ async function loadGenerator() {
       liveSchemaSha256: string;
       section8Changed: boolean;
     }) => { ok: boolean; reason: string };
+    checkFreezeDeclarationHonesty: (args: {
+      freezeItemStatus: string;
+      otherOpenBatchingIds: string[];
+      snapshotIds: string[];
+      archetypeProfiles: ArchetypeProfile[];
+    }) => { ok: boolean; reason: string };
     runnerRanges: (source: string) => { lines: string[]; ranges: Record<string, { start: number; end: number }> };
     extractPhaseOrder: (lines: string[], range: { start: number; end: number }) => string[];
     gitShowFile: (ref: string, relPath: string) => string | null;
@@ -349,6 +355,74 @@ describe('template-freeze.json — batching_prereq_snapshot is the live, honest 
       expect(real, `${s.id} not found in programme-items.json`).toBeDefined();
       expect(['NOT_STARTED', 'PARTIAL']).toContain(real!.status);
     }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// checkFreezeDeclarationHonesty — the FREEZE-1 lock (WF2 "FREEZE-1, the
+// freeze precondition" phase 1 commit 1, 2026-09-09). Spec 122 §8.2's
+// PRECONDITION ("the template may honestly freeze after the eighth pilot
+// only when the batching_prereq set is empty") had only a console line as
+// its guard; this is the both-directions lock, pure fixtures (Spec 121
+// §12b.6), mirroring checkFrozenSchemaConsistency's own test shape above.
+// Arms per the plan's §2 table (operator Ask A1 ruled NO, 2026-09-09 — arm E
+// is armed).
+// ---------------------------------------------------------------------------
+
+describe('checkFreezeDeclarationHonesty — the FREEZE-1 lock', () => {
+  const PROVEN_PROFILES: ArchetypeProfile[] = [{ archetype: 'ENRICHER', shapes: ['enrich'], runners: ['runEnrichPhase'], first_step: 'enrich_parcels', proven: true }];
+  const UNPROVEN_PROFILES: ArchetypeProfile[] = [{ archetype: 'ENRICHER', shapes: [], runners: [], first_step: null, proven: false }];
+
+  it('RED (arm A) — FREEZE-1 declared BUILT but another batching_prereq item is still open: the declaration claims a precondition that is measurably unmet', async () => {
+    const mod = await loadGenerator();
+    const r = mod.checkFreezeDeclarationHonesty({ freezeItemStatus: 'BUILT', otherOpenBatchingIds: ['STD-7'], snapshotIds: ['STD-7'], archetypeProfiles: PROVEN_PROFILES });
+    expect(r.ok).toBe(false);
+    expect(r.reason).toMatch(/STD-7/);
+    expect(r.reason).toMatch(/arm A/);
+  });
+
+  it('RED (arm B) — FREEZE-1 declared BUILT, no OTHER open item, but the LIVE snapshot itself still lists FREEZE-1 as open: the artifact and the ledger disagree', async () => {
+    const mod = await loadGenerator();
+    const r = mod.checkFreezeDeclarationHonesty({ freezeItemStatus: 'BUILT', otherOpenBatchingIds: [], snapshotIds: ['FREEZE-1'], archetypeProfiles: PROVEN_PROFILES });
+    expect(r.ok).toBe(false);
+    expect(r.reason).toMatch(/disagree/);
+    expect(r.reason).toMatch(/arm B/);
+  });
+
+  it('GREEN, vacuous (arm C) — FREEZE-1 not yet declared (today\'s actual state: NOT_STARTED): the lock is vacuous no matter what else is open or unproven', async () => {
+    const mod = await loadGenerator();
+    const r = mod.checkFreezeDeclarationHonesty({ freezeItemStatus: 'NOT_STARTED', otherOpenBatchingIds: ['STD-7'], snapshotIds: ['STD-7', 'FREEZE-1'], archetypeProfiles: UNPROVEN_PROFILES });
+    expect(r.ok).toBe(true);
+    expect(r.reason).toMatch(/arm C/);
+    // PARTIAL is equally vacuous — the arm is keyed on "not yet declared", not on NOT_STARTED specifically.
+    const partial = mod.checkFreezeDeclarationHonesty({ freezeItemStatus: 'PARTIAL', otherOpenBatchingIds: ['STD-7'], snapshotIds: ['STD-7', 'FREEZE-1'], archetypeProfiles: UNPROVEN_PROFILES });
+    expect(partial.ok).toBe(true);
+  });
+
+  it('RED (arm E, Ask A1 ruled NO) — FREEZE-1 declared BUILT, every other gate clear, but ENRICHER still reads proven:false: a freeze declared over that is counted, not honest', async () => {
+    const mod = await loadGenerator();
+    const r = mod.checkFreezeDeclarationHonesty({ freezeItemStatus: 'BUILT', otherOpenBatchingIds: [], snapshotIds: [], archetypeProfiles: UNPROVEN_PROFILES });
+    expect(r.ok).toBe(false);
+    expect(r.reason).toMatch(/not proven:true/);
+    expect(r.reason).toMatch(/arm E/);
+  });
+
+  it('RED (arm E) — a MISSING/non-boolean `proven` fails closed the same as an explicit false (output-review fix: `!== true`, never `=== false`)', async () => {
+    const mod = await loadGenerator();
+    const missingProven = [{ archetype: 'ENRICHER', shapes: [], runners: [], first_step: null }] as unknown as ArchetypeProfile[];
+    const r = mod.checkFreezeDeclarationHonesty({ freezeItemStatus: 'BUILT', otherOpenBatchingIds: [], snapshotIds: [], archetypeProfiles: missingProven });
+    expect(r.ok).toBe(false);
+    expect(r.reason).toMatch(/arm E/);
+  });
+
+  it('GREEN (arm D) — FREEZE-1 declared BUILT, no other open item, snapshot empty, every archetype proven: the target state', async () => {
+    const mod = await loadGenerator();
+    const r = mod.checkFreezeDeclarationHonesty({ freezeItemStatus: 'BUILT', otherOpenBatchingIds: [], snapshotIds: [], archetypeProfiles: PROVEN_PROFILES });
+    expect(r.ok).toBe(true);
+    expect(r.reason).toMatch(/arm D/);
+    // SUPERSEDED is the same declared-honest status as BUILT for this lock's purposes.
+    const superseded = mod.checkFreezeDeclarationHonesty({ freezeItemStatus: 'SUPERSEDED', otherOpenBatchingIds: [], snapshotIds: [], archetypeProfiles: PROVEN_PROFILES });
+    expect(superseded.ok).toBe(true);
   });
 });
 

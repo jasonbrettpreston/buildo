@@ -66,6 +66,16 @@ function statusBadge(status) {
 }
 
 /**
+ * A declared item's promise counts as DELIVERED — it can neither block
+ * "batching" (`isOpenBatchingItem` below) nor stand as a `FREEZE-1`
+ * declaration this programme trusts (`generate-template-freeze.mjs`'s
+ * `DECLARED_FREEZE_STATUSES`, WF2 "FREEZE-1, the freeze precondition"
+ * commit 1) — ONE closed pair, exported once, never a second hand-copied
+ * `!== 'BUILT' && !== 'SUPERSEDED'` literal anywhere else in the estate.
+ */
+export const DELIVERED_ITEM_STATUSES = ['BUILT', 'SUPERSEDED'];
+
+/**
  * Does this declared item still block "batching"? A BUILT/SUPERSEDED item's
  * promise is already delivered; it does not block anything. The ONE
  * predicate every caller in the estate uses — this file's own
@@ -75,7 +85,7 @@ function statusBadge(status) {
  * same filter can never creep back in.
  */
 export function isOpenBatchingItem(it) {
-  return it.gate.blocks.includes('batching') && it.status !== 'BUILT' && it.status !== 'SUPERSEDED';
+  return it.gate.blocks.includes('batching') && !DELIVERED_ITEM_STATUSES.includes(it.status);
 }
 
 /**
