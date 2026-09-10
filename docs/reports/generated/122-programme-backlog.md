@@ -6,13 +6,13 @@
 
 ## Counts
 
-Total items: **85**
+Total items: **86**
 
 | status | count |
 |---|---|
 | ⬜ NOT_STARTED | 12 |
 | ⚠️ PARTIAL | 17 |
-| ✅ BUILT | 52 |
+| ✅ BUILT | 53 |
 | ⏭️ SUPERSEDED | 4 |
 
 **blocks batching: 2**
@@ -27,7 +27,7 @@ Total items: **85**
 | `WD-1` | 122 §1.4 | class-enum-without-write.js-branch lock | ✅ BUILT | wf: wf: programme-WD1, WD-1 WF5+WF2 commits 1-3 | batching | 2026-09-09 |
 | `ADMIN-1` | 124 §2 Rule 3 | admin GROUPS reverse-coverage — every unclassified seed key gets a real group or a reviewed hidden reason | ✅ BUILT | wf: wf: programme-ADMIN-1 | batching | 2026-09-09 |
 
-## Cutover prerequisite — blocks a specific pilot slug registering in converted.json (8)
+## Cutover prerequisite — blocks a specific pilot slug registering in converted.json (9)
 
 | id | spec | title | status | owner | blocks | last reviewed |
 |---|---|---|---|---|---|---|
@@ -39,6 +39,7 @@ Total items: **85**
 | `EP-PIN-D8` | 78 §P3C.2 | EP-D8 pin — comp_fsi_p50 has no structure_family/zone compatibility invariant | ✅ BUILT | pilot: pilot9_enrich_parcels | enrich_parcels | 2026-09-08 |
 | `EP-PIN-D9` | 78 §P3C.2 | EP-D9 pin — pass-4 comps candidate selection has no deterministic tiebreak (comparable_builds jsonb instability) | ✅ BUILT | pilot: pilot9_enrich_parcels | enrich_parcels | 2026-09-08 |
 | `EP-PIN-D10` | 122 §3.0b | EP-D10 pin — enrich_parcels_pass3_scope grows unbounded (append-only, never pruned) | ✅ BUILT | pilot: pilot9_enrich_parcels | enrich_parcels | 2026-09-08 |
+| `EP-PIN-D14` | 78 §P3A.1 / 122 §3.0b | EP-D14 pin — pass-5 D4' recovery walks unconsumed enrich_parcels_pass3_scope rows one at a time (full-scan UPDATE per parcel, redundant under --full) | ✅ BUILT | pilot: pilot9_enrich_parcels | enrich_parcels | 2026-09-09 |
 
 ## Nice-to-have — real gap, not currently blocking (72)
 

@@ -1392,7 +1392,7 @@
       "title": "admin GROUPS reverse-coverage — every unclassified seed key gets a real group or a reviewed hidden reason",
       "promised": "unclassified count = 0",
       "status": "BUILT",
-      "evidence": "0 of 451 scripts/seeds/logic_variables.json keys carry admin.hidden === \"unclassified\" as of scripts/generate-logic-variable-groups.mjs (WF2 \"ADMIN-1 ratchet to zero\" batch 5, 2026-09-09) — refreshed by that generator on every regeneration (npm run logic-var-groups); high-water mark pinned at 0 in scripts/steps/_schema/admin-unclassified-high-water-mark.json (monotonic ratchet, src/tests/logic-var-admin-declarations.logic.test.ts). Closed in 5 reviewed batches (CoA chain 17, cost/archetype chain 19, lifecycle chain 10, coverage asserts + residue 14, lifecycle_seq_band_* family 220 — GlobalConfigCard.tsx's bespoke seq-band render path deleted in the same batch, single render path proven by an exactly-once-render fixture) — see .cursor/wf2_admin1_ratchet_to_zero_active_task.md. Batch 6 (this evidence) additionally RETIRED \"unclassified\" from the closed hidden-reason enum (derived|internal|deprecated|migration-only) — a new unclassified key is now a structural error, not merely ratcheted. review_followups.md — \"WF3 cloud-parity FIX 3 remediation — admin GROUPS reverse-coverage gap (2026-09-03)\" is the originating followup this item batches.",
+      "evidence": "0 of 453 scripts/seeds/logic_variables.json keys carry admin.hidden === \"unclassified\" as of scripts/generate-logic-variable-groups.mjs (WF2 \"ADMIN-1 ratchet to zero\" batch 5, 2026-09-09) — refreshed by that generator on every regeneration (npm run logic-var-groups); high-water mark pinned at 0 in scripts/steps/_schema/admin-unclassified-high-water-mark.json (monotonic ratchet, src/tests/logic-var-admin-declarations.logic.test.ts). Closed in 5 reviewed batches (CoA chain 17, cost/archetype chain 19, lifecycle chain 10, coverage asserts + residue 14, lifecycle_seq_band_* family 220 — GlobalConfigCard.tsx's bespoke seq-band render path deleted in the same batch, single render path proven by an exactly-once-render fixture) — see .cursor/wf2_admin1_ratchet_to_zero_active_task.md. Batch 6 (this evidence) additionally RETIRED \"unclassified\" from the closed hidden-reason enum (derived|internal|deprecated|migration-only) — a new unclassified key is now a structural error, not merely ratcheted. review_followups.md — \"WF3 cloud-parity FIX 3 remediation — admin GROUPS reverse-coverage gap (2026-09-03)\" is the originating followup this item batches.",
       "owner": {
         "kind": "wf",
         "ref": "wf: programme-ADMIN-1"
@@ -1480,6 +1480,25 @@
         ]
       },
       "last_reviewed": "2026-09-08"
+    },
+    {
+      "id": "EP-PIN-D14",
+      "spec": "78 §P3A.1 / 122 §3.0b",
+      "title": "EP-D14 pin — pass-5 D4' recovery walks unconsumed enrich_parcels_pass3_scope rows one at a time (full-scan UPDATE per parcel, redundant under --full)",
+      "promised": "Spec 123 §3.1: a KNOWN-DEFECT is pinned in its current wrong form, annotated with a Defect Ledger ID, and fixed in a separate commit after the conversion is green",
+      "status": "BUILT",
+      "evidence": "docs/reports/defect-ledger.md EP-D14 row (CLOSED-in-commit, WF3, 2026-09-09, C1) — consumePendingScope (scripts/lib/compute/enrich-parcels.js) rewritten: full=>one set-based UPDATE stamping consumed_at with NO recompute (errored parcels from this run's own stream excluded via stats.errorIds), !full=>batched ANY($1::int[]) recovery at enrich_parcels_scope_recovery_batch_size (default 1000) per round trip. Migration 246 (partial index on enrich_parcels_pass3_scope(parcel_id) WHERE consumed_at IS NULL) applied and DB-tested (C2). New pending_scope_parcels WARN check + 3 INFO rows. 3 locks proven RED (against the pre-fix per-parcel loop, git-stash-verified) then GREEN: query-count lock (2,500 pending parcels -> 1 UPDATE under --full / 3 batches under incremental, never 2,500), errored-id exclusion lock. Cloud-measured backlog: 439,130 unconsumed enrich_parcels_pass3_scope rows, one backend ACTIVE 23 min on a single per-parcel UPDATE (run 34400284685, pipeline_runs 4560). Golden recapture REQUIRED for fingerprint staleness — DEFERRED to the consolidated C6 recapture, not skipped; values measured unchanged (same computeOptimalConfig inputs/eligibility predicate/write SQL — only the recovery loop's statement count, the EP-D16 session timeout, and EP-D15 observability changed).",
+      "owner": {
+        "kind": "pilot",
+        "ref": "pilot9_enrich_parcels"
+      },
+      "gate": {
+        "kind": "cutover_prereq",
+        "blocks": [
+          "enrich_parcels"
+        ]
+      },
+      "last_reviewed": "2026-09-09"
     },
     {
       "id": "EP-PIN-PERF",
