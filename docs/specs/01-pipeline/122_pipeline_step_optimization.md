@@ -234,6 +234,22 @@ stated. Pilot 1 baseline (records_meta B / check rows / stdout B, pre→post): p
 coa 665→425/5→2/1094→1088 · sources 418→796/2→6/2960→3572 · standalone 669→1036/5→9/3492→4093; ~50 KB read per
 invocation (step + descriptor + notes + compute). Accepted.
 
+⚠️ **P3 extended to READ I/O (WF3 EP-D17, 2026-09-10).** The table above prices WRITE-side cost
+(bytes/rows written per run); it named no analogue for a declared check's own SCAN cost, and EP-D17
+found the gap concretely: `enrich_parcels`' 5 run-end `invariants[]`/`plausibility[]` post checks
+each declared `last_measured.cost_ms` of 180-260ms (a single LOCAL golden-capture sample against a
+small dev table) while the SAME queries measured 568,601-573,235 EXPLAIN cost against the real
+production `parcels` heap (561,204 pages, 4,384 MB) — a full `Seq Scan`, not the index-served read the
+local sample implied. Worse, that cost is not even a constant: cloud-measured 16-30s on a vacuumed
+heap vs 40+ minutes against the 1,346,759 dead tuples the SAME step's own pass 4 had just created
+(run 34506962436, 2026-09-10) — a 150x cliff keyed on heap state, invisible to any single-sample
+measurement taken once at descriptor-authoring time. **P3 extension:** a declared check's scan cost is
+part of its price, and that price MUST be stated against the target it actually runs on (production
+scale, production heap-state variance), never a local golden capture with `sample_n:1` alone — EP-D17's
+own fix pairs a declared ceiling (rung a) with a per-entry `duration_ms` audit row (rung b, Spec 48
+§3.5 extension) precisely so the true cost becomes a standing, self-correcting artifact rather than a
+number an author wrote down once and nobody re-checked.
+
 ⚠️ **Automated, 2026-08-29 (WF1 "close policy gaps").** Pilot 1's baseline table above was hand-computed once;
 `scripts/analysis/step-validate.mjs`'s `measureP3Footprint` now reports the SAME class of numbers
 (descriptor bytes, notes bytes, `checks[]` row count, and the newest golden capture's `records_meta` byte
@@ -1025,6 +1041,8 @@ Migrations **245–248 are free** — 244 is the highest `[MEASURED]`. Sequencin
 
 ⚠️ **STALE (WF3 EP-D14, 2026-09-09):** the reservation is prose, already broken twice. `245_parcels_centroid_geom_invalidation.sql` consumed 245 first; migration 246 (`246_pass3_scope_parcel_id_unconsumed_index.sql`, WF3 EP-D14's `enrich_parcels_pass3_scope` partial index) consumed 246 second. **247–248 are now the free range** for the four state tables below, not 245–248.
 
+⚠️ **STALE AGAIN (WF3 EP-D17, 2026-09-10):** broken a third time. `247_parcels_autovacuum_storage_params.sql` (this WF3's migration, Spec 115 §5's own pre-authorised autovacuum-tuning trigger) consumed 247. **248 alone is now the free range** for the four state tables below — the reservation is down to a single migration number, and the next consumer should stop treating "245–248" (or "247–248") as license and instead run `ls migrations/ | tail -1` before claiming a number.
+
 ⚠️ **But the claims do not relax.** `pipeline_intervals` (#103–#106, and #74 — `--backfill` has *no implementation at all* without it) · `published_batch` (#107, #108, #123) · `step_error` (#67, #84, #195, #196, #253) · `step_quarantine` (#62, #192). **"Optional" means deferrable to the second wave, not unnecessary.** Say it that way in the plan, or the tables never get built.
 
 ### 7.5a `published_batch` column shape — FIRST DESIGN (2026-09-03, WF1 "state tables reset")
@@ -1055,6 +1073,9 @@ Today this is **vacuously exercised**: 0 descriptors declare `recovery.reset: "g
 ---
 
 ## 8. The conversion process
+
+
+**RE-FREEZE #6 — EP-D17 (2026-09-11):** `execution.maintenance.txn_scope` enum gains `"step"` (one enum line + its description; `generate-schema-baseline --check` 0 new fields) so a step-scoped runner can declare the maintenance the library now executes (`runMaintenance`, Spec 122 §4.3). Payment record: `122a_step_optimization_appendix.md` Appendix §A9 (body text under the historical #1-#4 heading). This line exists because the R-E lock requires a §8 text change whenever `schema_sha256` moves.
 
 ### 8.1 Per step — nine commits, each independently revertable
 
@@ -1219,6 +1240,7 @@ Two entry criteria belong to the architecture, not the plan, and they bind where
 | 5 | Ceremony is *added* to the library rather than *absorbed* from steps | §2.1's 3,000–3,600 line figure is the budget; net corpus LOC must fall |
 | 6 | The fingerprint's field split drifts | §6.3's seven per-field assertions (#52g) |
 | 7 | ⚠️ **Conversion regressions are indistinguishable from envelope failures** | §9's P1 gate. This is why a green run precedes S |
+| 8 | ⚠️ **A declared bound's cost is measured on a small local table and is 3 orders of magnitude cheaper than on the target** — the check runs unbounded on cloud against a heap the same run just bloated (EP-D17, 2026-09-10: 180-260ms local vs a 40+-minute cloud cliff) | The per-entry ceiling (defaulted from `step_post_check_statement_timeout_minutes` when undeclared) + the per-entry `duration_ms` INFO row (Spec 48 §3.5 extension) so the true cost lands on the audit table every run, never only at declaration time + the pre-dispatch bloat reading (`EP-PIN-D17`'s evidence field) |
 
 ### 10b. What this architecture creates that the runner did not
 

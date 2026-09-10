@@ -328,6 +328,109 @@ Moved from Spec 122 — One-time R-E payment records for landed commits (64c4546
 
 ---
 
+<!--
+FOR THE LANDING ORCHESTRATOR: insert this paragraph under Spec 122
+(docs/specs/01-pipeline/122_pipeline_step_optimization.md) Appendix §A9
+("RE-FREEZE #6 — EP-D17 maintenance executor, 2026-09-10"). Leave a short
+stub/pointer line in §8's own RE-FREEZE list ("RE-FREEZE #6 — see Appendix §A9")
+rather than the full paragraph inline, matching the §8-declutter convention the
+parallel commit-9 work has already applied to RE-FREEZE #1-#4.
+
+This WF3's own patches (02_c1_c2b_c4_combined.patch) do NOT touch Spec 122 §8 or
+create an Appendix §A9 — by explicit operator instruction, to avoid colliding
+with the parallel restructuring. Land this paragraph (and the §8 stub) as ONE
+commit, in the SAME commit that lands the schema/template-freeze changes below,
+so R-E's "a re-freeze must be paired with a spec text change in the same commit"
+rule reads GREEN at landing. It reads RED in this WF3's own patches taken alone
+(`node scripts/steps/_schema/generate-template-freeze.mjs --check` on patch
+02's tree, in isolation) — measured and disclosed, not fixed here, because the
+fix IS this file's insertion.
+-->
+
+**⚠️ RE-FREEZE #6 — WF3 EP-D17 (2026-09-10): `execution.maintenance`'s `txn_scope`
+conditional widens to admit `"step"`.** Numbered #6 regardless of landing order
+relative to any parallel `--refresh` this same day (pilot 9 commit 9's own
+cutover) — `frozen_at`/`schema_sha256` are re-derived by whichever `--refresh`
+runs LAST against the merged tree, so this paragraph documents the CONTENT of
+the price paid, not a claim about which numbered refresh's hash survives.
+
+Before this WF3, `step.schema.json`'s own conditional narrowed a
+maintenance-declaring step's `txn_scope` to `["statement", "batch", "none"]` —
+reasoning stated inline as *"a step-scoped transaction cannot contain a
+VACUUM"* — which structurally forbade `enrich_parcels` (`txn_scope:"step"`)
+from ever declaring `execution.maintenance`, the field's own P11 grounding
+(this WF3's Step 0) having already found it REQUIRED-and-frozen but with
+**zero executors anywhere in `scripts/lib`** (all 8 converted descriptors said
+`"none"` because nothing else was buildable). Operator structural ruling
+(2026-09-10, "we don't want scope creep — this gap should be closed") decided
+path (iii) IN this WF3 rather than deferring to a follow-on WF2: the
+conditional's OWN stated reasoning is narrower than its enum encoded — the
+constraint is that the VACUUM STATEMENT must never run inside an open
+transaction, not that the STEP'S OWN `txn_scope` declaration must exclude
+`"step"`. `scripts/lib/step/plausibility.js` gained a real executor
+(`runMaintenance`, wired from `scripts/lib/step/index.js` — as of output-panel
+fix F2, BEFORE the run-end `invariants[]`/`plausibility[]` checks, not after;
+for an ENRICHER that means AFTER passes 1-4's shared transaction has committed
+and pass 5's post_commit write is done) that always issues its
+`VACUUM`/`ANALYZE`/`VACUUM (ANALYZE)`/`REINDEX TABLE` statement autocommit on
+its own DEDICATED `pool.connect()` client (never the shared `pool.query()`
+path), bound by its own declared ceiling (`${table}_maintenance_timeout_minutes`,
+output-panel fix F5) — satisfying the conditional's real intent regardless of
+what `txn_scope` says.
+
+**Measured diff:** one line — the `then.properties.txn_scope.enum` array
+widened from `["statement", "batch", "none"]` to `["statement", "batch",
+"step", "none"]` — plus an expanded `description` string on the SAME
+conditional node, plus a one-line correction to the schema's top-level
+`x-categories["R6-maintenance"]` summary string (previously read as an
+unqualified "VACUUM cannot run inside a transaction" ban; now states the
+`statement|batch|step|none` narrowing explicitly, since `"step"` is now legal
+provided the executor honours the real constraint). No other schema field
+touched.
+
+`enrich_parcels` is the first (and, as of this WF3, only) step to declare
+`execution.maintenance` (`vacuum_analyze` on `parcels`, triggered by the same
+`parcels_dead_tuple_ratio_warn_max` logic variable the descriptor's own new
+`parcels_dead_tuple_ratio` plausibility check reads — one measurement, one
+threshold name, two consumers that cannot silently disagree, per naming
+convention).
+
+Widens an existing frozen enum VALUE SET inside an `allOf` conditional's
+`then` clause — it declares no new field, so `generate-schema-baseline.mjs
+--check` (G-1's own tracked grain, confirmed live: 18/20-category direct-field
+only) reports **0 new fields**, unlike RE-FREEZE #1/#3's genuinely new
+top-level fields; closer in kind to RE-FREEZE #2/#4's "does not trip G-1"
+shape, though those were nested leaf-definition additions and this is a
+direct `execution` conditional edit.
+
+**Paid the same way as every prior RE-FREEZE**, with two corrections against
+an earlier draft of this paragraph (both measured, not assumed):
+
+1. `generate-template-freeze.mjs --refresh` re-derives `frozen_at`/`schema_sha256`
+   against the tree at the time it runs. Measured on THIS WF3's own tree: the
+   refresh ALSO absorbed an UNRELATED, already-landed phase_order change — the
+   ENRICH runner's frozen `phase_order` gained `pipeline.withAdvisoryLock`
+   between the entries for `preWriteGate` and `pipeline.withTransaction`. This
+   call was added to `scripts/lib/step/index.js` by commit `7242cc65` (EP-D16,
+   landed in the base tree this WF3 branched from) — genuine, correct,
+   pre-existing code that had simply never been swept into a `--refresh` before
+   this one ran. Disclosed explicitly rather than silently absorbed under this
+   WF3's own change: the `phase_order` diff a landing reviewer sees is NOT
+   entirely EP-D17's own doing.
+2. `docs/reports/generated/122-vocabulary.md` genuinely regenerates with a
+   ONE-LINE diff, at the `R6-maintenance` row — the corrected
+   `x-categories["R6-maintenance"]` summary string above (an earlier draft of
+   this paragraph claimed a regeneration "paid the price" with no visible
+   diff at all, because the FIRST regeneration attempt only widened the
+   conditional's own enum/description, which the vocabulary generator does not
+   render for a nested `allOf` conditional — only the top-level `x-categories`
+   summary string renders, and only the SECOND schema edit, correcting that
+   summary string, produced a real, checkable diff).
+
+Also paid: the pinned `src/tests/step-schema.logic.test.ts` R6 assertion
+flipped (it now asserts `"step"` IS present, alongside the three pre-existing
+values, rather than absent).
+
 ## Appendix §A10 — The claim that replaces #145 (moved from Spec 122 §6) — HISTORICAL, 2026-09-10
 
 Moved from Spec 122 — Claim-register bookkeeping (Spec 120 claim #145 vs its replacement) — a one-time disposition record, not live standard text.

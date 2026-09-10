@@ -129,6 +129,25 @@ Every other step (including `link_parcels`, `link_neighbourhoods`, `link_wsib`, 
   un-refreshed — Phase B **B6.5**'s per-step staleness assert (Spec 115 §2.5) is the backstop
   that surfaces this even though the watchdog's absence check alone cannot (a defer counts as
   "ran").
+- **`enrich_parcels`' pass-4 write bloats `parcels` mid-chain; the chain's own pre-flight bloat
+  gate cannot see it (EP-D17, WF3, 2026-09-10).** `run-chain.js`'s Phase 0 (Spec 30 §4.1) samples
+  `pg_stat_user_tables` dead-tuple ratios ONCE, at chain START, before step 1 runs — on run 4566
+  it read PASS for `parcels` at 17:15Z, because the PREVIOUS run's own chain-tail
+  `assert_engine_health` had just vacuumed it. `enrich_parcels`' pass 4 then bloated `parcels` to
+  `dead_ratio` 0.697 by ~19:35Z, mid-chain, 2¼ hours after Phase 0 sampled — a gate that reads
+  bloat only before step 1 can never see bloat the chain ITSELF creates that same run. This chain
+  now carries an undocumented coupling: its own speed depends on the PREVIOUS run's last step
+  (`assert_engine_health`, chain-tail VACUUM owner) having actually succeeded — if that step ever
+  fails or is skipped, the NEXT dispatch inherits the bloat at chain start instead of at the tail,
+  and the FIRST `parcels`-touching step pays the 150x scan-cost cliff instead of the last. Interim
+  guard (this WF3, not a fix to the coupling itself): `enrich_parcels` now declares
+  `execution.maintenance` — a library-owned VACUUM executor (`scripts/lib/step/plausibility.js`
+  `runMaintenance`) that runs right after the step's own write phases, mid-chain, so the NEXT
+  chain step (`link_neighbourhoods`/`link_wsib` per §2's ordering, or the next chain's own Phase 0)
+  reads a heap `enrich_parcels` has already cleaned up itself, rather than waiting for
+  `assert_engine_health` at the very end. Hoisting the chain-tail vacuum decision to the chain
+  HEAD, and arming Phase 0's own warn-only gate with the Rule-3 tunables this WF3 filed HIGH, both
+  remain OPEN — deliberately deferred to a WF2, per the operator's own no-scope-creep ruling.
 </behavior>
 
 ---
