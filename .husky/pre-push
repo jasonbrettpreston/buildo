@@ -8,4 +8,4 @@
 # entire historical fleet (see step-validate.mjs's own `filterToStaged` doc).
 # Direct `node` invocation (not `npm run`) — measured 2026-08-29: npm's own CLI
 # wrapper adds real overhead on top of the script's own <1s budget.
-node scripts/analysis/step-validate.mjs --staged --fast && npm run typecheck
+node scripts/analysis/step-validate.mjs --staged --fast && node scripts/analysis/spec-split-check.mjs --check && npm run typecheck

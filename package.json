@@ -34,6 +34,7 @@
     "step-shape": "node scripts/hooks/check-step-shape.mjs",
     "step:validate": "node scripts/analysis/step-validate.mjs",
     "churn-complexity": "node scripts/analysis/step-churn-complexity.mjs",
+    "spec:split-check": "node scripts/analysis/spec-split-check.mjs",
     "programme-backlog": "node scripts/violations/generate-programme-backlog.mjs",
     "review:gemini": "node scripts/gemini-review.js",
     "review:deepseek": "node scripts/deepseek-review.js",

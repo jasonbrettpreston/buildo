@@ -1,0 +1,247 @@
+{
+  "contract_version": 1,
+  "budgets": {
+    "122": {
+      "headroom_pct": 10,
+      "measured_at": {
+        "lines": 1243,
+        "bytes": 143947,
+        "commit": "0820685d"
+      }
+    },
+    "123": {
+      "headroom_pct": 10,
+      "measured_at": {
+        "lines": 422,
+        "bytes": 49705,
+        "commit": "0820685d"
+      }
+    },
+    "124": {
+      "headroom_pct": 10,
+      "measured_at": {
+        "lines": 418,
+        "bytes": 102949,
+        "commit": "0820685d"
+      }
+    }
+  },
+  "reader_guards": [
+    {
+      "reader": "src/tests/assert-schema-config-parity.logic.test.ts",
+      "slices": [
+        "### 1.2a",
+        "### 1.3"
+      ],
+      "reader_literal": "indexOf('### 1.2a')"
+    },
+    {
+      "reader": "scripts/violations/map-concerns.mjs",
+      "slices": [
+        "| # | Concern | Declared in |"
+      ],
+      "reader_literal": "Declared in\\s*\\|"
+    },
+    {
+      "reader": "scripts/steps/_schema/generate-template-freeze.mjs",
+      "slices": [
+        "## 8. The conversion process"
+      ],
+      "reader_literal": "SECTION_8_HEADING = /^## 8\\. /"
+    },
+    {
+      "reader": "src/tests/template-freeze.infra.test.ts",
+      "slices": [
+        "## 8. The conversion process"
+      ],
+      "reader_literal": "toContain('## 8. The conversion process')"
+    },
+    {
+      "reader": "scripts/analysis/step-validate.mjs",
+      "slices": [],
+      "reader_literal": "specNumber}_.*"
+    },
+    {
+      "reader": "scripts/generate-system-map.mjs",
+      "slices": [],
+      "reader_literal": "^\\*\\*Status:\\*\\*\\s*(.+)$",
+      "checks_spec_files": true
+    }
+  ],
+  "known_dangling": [
+    {
+      "citation": "Spec 122 §5.4a",
+      "sites": 3,
+      "why": "Forward-reference to a \"cross-step invalidator ledger\" concept that was cited from day one (aeb5703d, 2026-08-23) but never authored under a real §5.4a heading — §5.4 today covers an unrelated topic (the lock-test convention). The invalidator REQUIREMENT itself is real and enforced (outputs.invalidates, concern-table row 19, step.schema.json ENRICHER profile); only the \"cross-step ledger\" elaboration this label promised was never written.",
+      "owner": "followup review_followups.md#spec122-5.4a-cross-step-ledger",
+      "declared": "2026-09-10"
+    },
+    {
+      "citation": "Spec 121 §12b.6",
+      "sites": 52,
+      "why": "Spec 121 has no §12b namespace (its §12 runs 12.0-12.18) — the cited self-test/refuse-to-emit rule is really Spec 120 §12b.6:825. Spec 121 mislabels its own citation as \"its own §12b.6\" (Spec 121:62), and that mislabel propagated fleet-wide (~52 measured sites: docs/specs, src/tests, scripts/, .cursor/). This task corrected every NEW citation it authored (spec-split-check.mjs's own SPEC LINK header cites Spec 120 §12b.6) but a fleet-wide re-citation of ~52 pre-existing sites is out of this task's scope (it owns Specs 122/122a/123/124 prose + this one checker, not the other ~15 files this rot touches).",
+      "owner": "followup review_followups.md#spec121-12b6-fleetwide-mislabel",
+      "declared": "2026-09-10"
+    },
+    {
+      "citation": "Spec 124 §5.4",
+      "sites": 2,
+      "why": "docs/reports/2026-08-28-pilot4-link-wsib-assessment.md cites \"Spec 124 §5.4\" for the \"policy text in checks[].why, never in comments\" rule, which actually lives at Spec 124 §2 Rule 4. A miscitation in an already-closed, dated assessment report — out of this task's owned-files scope (122/122a/123/124 prose only).",
+      "owner": "followup review_followups.md#spec124-5.4-miscitation-pilot4-report",
+      "declared": "2026-09-10"
+    },
+    {
+      "citation": "Spec 120 §12.17",
+      "sites": 3,
+      "why": "Cited from Spec 121:2641 and two generated claim-classification reports. Spec 120/121 prose is out of this task's scope (owns 122/122a/123/124 only); not independently verified whether §12.17 exists in 120 today.",
+      "owner": "followup review_followups.md#spec120-12.17-out-of-scope",
+      "declared": "2026-09-10"
+    },
+    {
+      "citation": "Spec 120 §10.8",
+      "sites": 1,
+      "why": "Cited from Spec 121:1986. Spec 120/121 prose is out of this task's scope.",
+      "owner": "followup review_followups.md#spec120-10.8-out-of-scope",
+      "declared": "2026-09-10"
+    },
+    {
+      "citation": "Spec 119 §4.8",
+      "sites": 1,
+      "why": "Cited from Spec 120:468. Spec 119/120 prose is out of this task's scope.",
+      "owner": "followup review_followups.md#spec119-4.8-out-of-scope",
+      "declared": "2026-09-10"
+    }
+  ],
+  "moves": [
+    {
+      "id": "G-A1",
+      "from_spec": "122",
+      "anchor": "(grandfathered — moved 2026-08-28, commit b14e7d18, before spec-split-check.mjs existed; not independently re-verified by this tool)",
+      "to_spec": "122a",
+      "to_anchor": "## Appendix §A1 — The coverage-audit refutation (moved from Spec 122 §1) — superseded 2026-08-23, closed by V1–V7/R2",
+      "content_sha256": null,
+      "line_count": 1,
+      "moved_at": "2026-08-28",
+      "commit": "b14e7d18",
+      "classification": "GRANDFATHERED",
+      "evidence": "Pre-existing move from the operator's 2026-08-28 122a-split ruling; exists only so arm (vi) totality does not flag it as undeclared. Not independently re-verified (i)/(ii) — predates this tool."
+    },
+    {
+      "id": "G-A2",
+      "from_spec": "122",
+      "anchor": "(grandfathered — moved 2026-08-28, commit b14e7d18, before spec-split-check.mjs existed; not independently re-verified by this tool)",
+      "to_spec": "122a",
+      "to_anchor": "## Appendix §A2 — Vocabulary-extraction conflict-discovery detail (moved from Spec 122 §1.2) — superseded 2026-08-23, resolved by V1–V6/R2",
+      "content_sha256": null,
+      "line_count": 1,
+      "moved_at": "2026-08-28",
+      "commit": "b14e7d18",
+      "classification": "GRANDFATHERED",
+      "evidence": "Pre-existing move from the operator's 2026-08-28 122a-split ruling; see G-A1."
+    },
+    {
+      "id": "G-A3",
+      "from_spec": "122",
+      "anchor": "(grandfathered — moved 2026-08-28, commit b14e7d18, before spec-split-check.mjs existed; not independently re-verified by this tool)",
+      "to_spec": "122a",
+      "to_anchor": "## Appendix §A3 — The measured case (moved from Spec 122 §3) — size, vocabulary divergence, broken instrument",
+      "content_sha256": null,
+      "line_count": 1,
+      "moved_at": "2026-08-28",
+      "commit": "b14e7d18",
+      "classification": "GRANDFATHERED",
+      "evidence": "Pre-existing move from the operator's 2026-08-28 122a-split ruling; see G-A1."
+    },
+    {
+      "id": "G-A4",
+      "from_spec": "122",
+      "anchor": "(grandfathered — moved 2026-08-28, commit b14e7d18, before spec-split-check.mjs existed; not independently re-verified by this tool)",
+      "to_spec": "122a",
+      "to_anchor": "## Appendix §A4 — What changes from Spec 120 — GENERATED claim classification (moved from Spec 122 §9)",
+      "content_sha256": null,
+      "line_count": 1,
+      "moved_at": "2026-08-28",
+      "commit": "b14e7d18",
+      "classification": "GRANDFATHERED",
+      "evidence": "Pre-existing move from the operator's 2026-08-28 122a-split ruling; see G-A1."
+    },
+    {
+      "id": "G-A5",
+      "from_spec": "122",
+      "anchor": "(grandfathered — moved 2026-08-28, commit b14e7d18, before spec-split-check.mjs existed; not independently re-verified by this tool)",
+      "to_spec": "122a",
+      "to_anchor": "## Appendix §A5 — Ratification checklist — historical (moved from Spec 122 §12, \"OUTSTANDING BEFORE VERIFICATION\")",
+      "content_sha256": null,
+      "line_count": 1,
+      "moved_at": "2026-08-28",
+      "commit": "b14e7d18",
+      "classification": "GRANDFATHERED",
+      "evidence": "Pre-existing move from the operator's 2026-08-28 122a-split ruling; see G-A1."
+    },
+    {
+      "id": "M01",
+      "from_spec": "122",
+      "anchor": "## Operator rulings R-A..R-R (2026-08-28/29, post pilot 3 cutover `68b8e361`; R-K..R-O post pilot 4 cutover `903fe5a7`; R-R post pilot 5, WF1 \"Spec 123 integrated validation\") — ✅ ACCEPTED",
+      "to_spec": "122a",
+      "to_anchor": "## Appendix §A7 — Operator rulings R-A..R-R (moved from Spec 122 §top-of-file rulings table) — HISTORICAL, 2026-09-10",
+      "content_sha256": "b79b48edfaff2ae1d6cd1eabd5294ec9862afadab48d9dd76289aee810e833ef",
+      "line_count": 28,
+      "moved_at": "2026-09-10",
+      "commit": "0820685d",
+      "classification": "HISTORICAL",
+      "evidence": "R-J's own words: \"Spec 124 §5 is the authoritative rulings register going forward; this table remains as history\"; 15 of 18 rows already read \"Full text: Spec 124 §5\"."
+    },
+    {
+      "id": "M02",
+      "from_spec": "122",
+      "anchor": "#### ⚠️ Concern 41, found by auditing the contract against a whole real file",
+      "to_spec": "122a",
+      "to_anchor": "## Appendix §A8 — Concerns 41 and 15, discovery narrative (moved from Spec 122 §1.8) — HISTORICAL, 2026-09-10",
+      "content_sha256": "1cf1417eb6bd49ef7f2e0dd135b4ce4858289c3ea5b18381bdc5cc82ff4ad031",
+      "line_count": 27,
+      "moved_at": "2026-09-10",
+      "commit": "0820685d",
+      "classification": "HISTORICAL",
+      "evidence": "Discovery narrative for a table (the 49-concern index) that stays in 122; [MEASURED 2026-08-23], blame aeb5703d, untouched 18 days."
+    },
+    {
+      "id": "M03",
+      "from_spec": "122",
+      "anchor": "**⚠️ RE-FREEZE #1 — pilot 9 commit 7a (2026-09-04): `execution.shape` gains `\"enrich\"`, the ENRICHER profile gains `execution.phases[]`.** The first commit to spend `does_not_freeze`'s *\"Additive fields carrying x-ruling\"* clause with the R-E lock armed, and the concrete case §8.2's own escape clause anticipated (*\"if any of the eight forces a contract change…\"*). `enrich_parcels`'s five passes fit none of the eight frozen shapes: passes 1–4 share ONE `pipeline.withTransaction` while pass 5 streams on a SEPARATE connection AFTER that transaction COMMITs (Spec 78 §P3A.1 — a same-txn read of what passes 1–4 just wrote would be invisible), and **none of the seven frozen `phase_runners` orders contains a phase that runs after the step's own COMMIT.** So the enum gains a ninth value `\"enrich\"` (carrying its `x-ruling`, the Rule 1 / G-1 ratchet), and the ENRICHER profile gains `execution.phases[]` — a CLOSED, ordered per-pass array (`name`/`order`/`txn`/`writes_ref`/`scope`/optional `invalidator_ref`/`timeout_minutes_from_config`) required for that archetype alone, so the other seven profiles and all eight converted descriptors are byte-untouched. It exists because the step-level `staleness.scope` + `outputs.invalidates[]` pair answers for every pass AT ONCE — which is exactly how `enrich_parcels` pass 4's absent comps invalidator (`EP-D4`, Spec 78 §P3C.1's \"standing limitation\") stayed unexpressed while claim #54's ENRICHER arm read satisfied; per-pass, that gap becomes a reviewable `scope: \"incremental\"` with no `invalidator_ref`. **The price is paid in this same commit, as the mechanism demands:** `generate-schema-baseline.mjs --write` (G-1), `generate-template-freeze.mjs --refresh` (`schema_sha256` re-derived, `frozen_at` advanced; the ENRICHER row stays `proven: false` — it flips only when pilot 9's cutover registers `enrich_parcels` in `converted.json`), this amendment, §1.10's profile-table row, and a regenerated `122-vocabulary.md`. The runner (`runEnrichPhase`, LG-28), the descriptor and the compute land at **commit 7b** — commit 7 is deliberately SPLIT into schema/freeze half then port half, the `d7f1f983` (pilot 8) precedent.",
+      "to_spec": "122a",
+      "to_anchor": "## Appendix §A9 — RE-FREEZE #1-#4 payment records (moved from Spec 122 §8.2) — HISTORICAL, 2026-09-10",
+      "content_sha256": "dc44a43fb6f20b7e8d5304b4364f4ef41061383c2a7350767f9a93174c77e422",
+      "line_count": 7,
+      "moved_at": "2026-09-10",
+      "commit": "0820685d",
+      "classification": "HISTORICAL",
+      "evidence": "One-time R-E payment records for landed commits (64c45463, 7e75c50e, 819ccfdc); the mechanism (R-E lock) stays live in §8.2, only the paid-and-closed payment narratives move."
+    },
+    {
+      "id": "M04",
+      "from_spec": "122",
+      "anchor": "#### The claim that replaces #145",
+      "to_spec": "122a",
+      "to_anchor": "## Appendix §A10 — The claim that replaces #145 (moved from Spec 122 §6) — HISTORICAL, 2026-09-10",
+      "content_sha256": "b1c738d5ac3bee93539e05ecb5909a6e1d6e3dcf5833026a2bb60cc3f4356693",
+      "line_count": 10,
+      "moved_at": "2026-09-10",
+      "commit": "0820685d",
+      "classification": "HISTORICAL",
+      "evidence": "Claim-register bookkeeping (Spec 120 claim #145 vs its replacement) — a one-time disposition record, not live standard text."
+    },
+    {
+      "id": "M05",
+      "from_spec": "122",
+      "anchor": "### 10b. What this architecture creates that the runner did not",
+      "to_spec": "122a",
+      "to_anchor": "## Appendix §A11 — What this architecture creates that the runner did not (moved from Spec 122 §10b) — HISTORICAL, 2026-09-10",
+      "content_sha256": "dffb5ae292f088781432457a1caa9c94a4866cd1e4c0eed5016437532e1f36fb",
+      "line_count": 7,
+      "moved_at": "2026-09-10",
+      "commit": "0820685d",
+      "classification": "HISTORICAL",
+      "evidence": "Mis-nested under §11 (Known Failure Modes) at 0 citations; a comparative rationale versus the pre-Spec-122 runner, not live standard text."
+    }
+  ]
+}
