@@ -1189,12 +1189,12 @@ Spec 120 §9.4's four, with one correction: *"step file > 20 lines"* is meaningl
 
 | Criterion |
 |---|
-| The **descriptor** exceeds 20 lines beyond its declared categories |
+| ~~The **descriptor** exceeds 20 lines beyond its declared categories~~ — **K1 RETIRED (operator ruling A2, 2026-09-09; register row Spec 124 §5 R-Y).** Measured across all 9 on-disk descriptors (8 registered in `converted.json` + `enrich_parcels` pending registration at pilot 9 commit 9): every one carries exactly the 20 top-level non-`$` keys `step.schema.json.required` names, `beyond20 = 0` for all nine. This is not restraint — `step.schema.json`'s `additionalProperties: false` + `required.length === 20` (pinned both directions by `template-freeze.infra.test.ts`'s `"categories is exactly step.schema.json.required"` test) makes a 21st top-level key structurally impossible to declare; AJV rejects it before any descriptor could land. A criterion that can never fire is a green-because-it-never-looked criterion (Spec 123 KFM 1), not a live guard. No successor criterion is invented here (A2 forbids it) — a genuine replacement candidate is filed as a new Ask |
 | Any **per-step override** is needed |
 | A procedural step **leaks runner concepts** into its compute |
 | An **unexplainable differential** |
 
-**Any one fires ⇒ stop and redesign, not proceed.** ⚠️ These gate C3 and C4, not just C5/C6 — Spec 121 §12.18a under-enforced its own declared order.
+**Any one of K2–K4 fires ⇒ stop and redesign, not proceed.** ⚠️ These gate C3 and C4, not just C5/C6 — Spec 121 §12.18a under-enforced its own declared order.
 
 ### 8.4 Blast radius
 
