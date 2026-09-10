@@ -6,13 +6,13 @@
 
 ## Counts
 
-Total items: **86**
+Total items: **96**
 
 | status | count |
 |---|---|
-| ⬜ NOT_STARTED | 12 |
+| ⬜ NOT_STARTED | 18 |
 | ⚠️ PARTIAL | 17 |
-| ✅ BUILT | 53 |
+| ✅ BUILT | 57 |
 | ⏭️ SUPERSEDED | 4 |
 
 **blocks batching: 2**
@@ -27,7 +27,7 @@ Total items: **86**
 | `WD-1` | 122 §1.4 | class-enum-without-write.js-branch lock | ✅ BUILT | wf: wf: programme-WD1, WD-1 WF5+WF2 commits 1-3 | batching | 2026-09-09 |
 | `ADMIN-1` | 124 §2 Rule 3 | admin GROUPS reverse-coverage — every unclassified seed key gets a real group or a reviewed hidden reason | ✅ BUILT | wf: wf: programme-ADMIN-1 | batching | 2026-09-09 |
 
-## Cutover prerequisite — blocks a specific pilot slug registering in converted.json (9)
+## Cutover prerequisite — blocks a specific pilot slug registering in converted.json (12)
 
 | id | spec | title | status | owner | blocks | last reviewed |
 |---|---|---|---|---|---|---|
@@ -40,8 +40,11 @@ Total items: **86**
 | `EP-PIN-D9` | 78 §P3C.2 | EP-D9 pin — pass-4 comps candidate selection has no deterministic tiebreak (comparable_builds jsonb instability) | ✅ BUILT | pilot: pilot9_enrich_parcels | enrich_parcels | 2026-09-08 |
 | `EP-PIN-D10` | 122 §3.0b | EP-D10 pin — enrich_parcels_pass3_scope grows unbounded (append-only, never pruned) | ✅ BUILT | pilot: pilot9_enrich_parcels | enrich_parcels | 2026-09-08 |
 | `EP-PIN-D14` | 78 §P3A.1 / 122 §3.0b | EP-D14 pin — pass-5 D4' recovery walks unconsumed enrich_parcels_pass3_scope rows one at a time (full-scan UPDATE per parcel, redundant under --full) | ✅ BUILT | pilot: pilot9_enrich_parcels | enrich_parcels | 2026-09-09 |
+| `GOLD-PRE` | 122 §5.3 | Golden PRE-side capture completeness enforced per declared chain | ✅ BUILT | wf: wf: conversion-roadmap commit 3, 2026-09-10 | assert_global_coverage, assert_data_bounds, assert_engine_health, link_neighbourhoods, geocode_permits | 2026-09-10 |
+| `HB-1` | 124 §2 Rule 12 | Heartbeat covers the WHOLE step, not only phase boundaries (EP-D15) | ✅ BUILT | wf: wf: conversion-roadmap commit 3, 2026-09-10 | — | 2026-09-10 |
+| `CEIL-1` | 124 §2 Rule 12 | Statement/lock ceiling bound on EVERY phase incl. post_commit (EP-D16) | ✅ BUILT | wf: wf: conversion-roadmap commit 3, 2026-09-10 | — | 2026-09-10 |
 
-## Nice-to-have — real gap, not currently blocking (72)
+## Nice-to-have — real gap, not currently blocking (79)
 
 | id | spec | title | status | owner | blocks | last reviewed |
 |---|---|---|---|---|---|---|
@@ -117,6 +120,13 @@ Total items: **86**
 | `VRD-SKIP` | 124 §2 Rule 10 | a SELF_SKIPPED terminal must not verdict identically to a genuine PASS | ✅ BUILT | wf: wf: WF3 VRD-SKIP, 2026-09-09 — .cursor/wf3_vrd_skip_active_task.md; fix site scripts/lib/step/index.js skipRecordsMeta (+ scripts/analysis/step-validate.mjs checkSelfSkipNeverPass/selfTest); see docs/reports/review_followups.md for the closed HIGH entry, the new HIGH sibling followup (buildSkipGateRecordsMeta, Ask B2), and the two filed MED followups (compute-trade-forecasts pass_or_warn residual; the pre-existing FreshnessTimeline SKIP mis-render) | — | 2026-09-09 |
 | `CRASH-BEHAV` | 124 §2 Rule 12 | live SIGTERM-and-recover behavioural proof for LINK, LINK_KEYED, MATERIALIZE (and, in the abstract, INGEST/BACKFILL/RECORDER) | ⬜ NOT_STARTED | followup: docs/reports/review_followups.md — 'WF2 Rule 12 behavioural half — no db.test.ts can spawn a REAL converted step against the ephemeral test container' (HIGH, 2026-09-03): a scoped WF2/WF3 adds a genuine, reviewed test-context escape hatch to assertDbTarget, then un-skips step-crash-posture.db.test.ts and extends its pattern to link_massing (link) and link_parcels (link_keyed), parameterized rather than copy-pasted a third time | — | 2026-09-03 |
 | `EP-PIN-PERF` | 122 (WF3 enrich_parcels double-run/lock-fix commit chain) | converted enrich_parcels per-pass timing within 25% of the legacy PRE goldens (KFM 7) | ✅ BUILT | pilot: pilot9_enrich_parcels | — | 2026-09-08 |
+| `RM-1` | 122 §10.3 | Conversion roadmap is generated + drift-guarded, never hand-maintained | ✅ BUILT | wf: wf: conversion-roadmap (this plan) | — | 2026-09-10 |
+| `CLOUD-PRE` | 123 §6 | Pre-dispatch cloud-state checklist — table sizes, index presence, stranded running rows measured BEFORE a cutover attempt | ⬜ NOT_STARTED | wf: wf: unassigned | — | 2026-09-10 |
+| `ACC-1` | 122 §7.2 | Acceptance is per-slug and row-derived, never a GitHub run tick | ⬜ NOT_STARTED | wf: wf: unassigned | — | 2026-09-10 |
+| `LAND-1` | 124 §R-8 | Landing discipline declared: derived-artifact regen, EOL normalisation, exact-command cloud-write allow rules | ⬜ NOT_STARTED | wf: wf: unassigned | — | 2026-09-10 |
+| `PH2-EXT` | 123 §2 | PH-2 churn×complexity population widened from 27 sources steps to all 65 chain slugs | ⬜ NOT_STARTED | wf: wf: unassigned | — | 2026-09-10 |
+| `ARCH-CENSUS` | 122 §1.10 | Archetype declared for the 36 non-sources unconverted files (blocks any C6 ordering) | ⬜ NOT_STARTED | wf: wf: unassigned | — | 2026-09-10 |
+| `CLAIMS-MTX` | 123 §5 | Claims × steps matrix generated (plan-claims.mjs emits the 44/5/6 split today, not a per-step × per-claim grid) | ⬜ NOT_STARTED | followup: review_followups.md (WF1 'conversion roadmap' filing, 2026-09-10) | — | 2026-09-10 |
 
 ---
 

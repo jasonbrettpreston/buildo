@@ -1516,6 +1516,190 @@
         "blocks": []
       },
       "last_reviewed": "2026-09-08"
+    },
+    {
+      "id": "RM-1",
+      "spec": "122 §10.3",
+      "title": "Conversion roadmap is generated + drift-guarded, never hand-maintained",
+      "promised": "the forward plan for all 55 remaining step conversions is a generated, drift-guarded artifact — archetype-grouped, risk-ascending — never prose that rots the way Spec 120 §9.3 ⑤ and Spec 122 §1.7 both did (2 undercounts on record)",
+      "status": "BUILT",
+      "evidence": "scripts/violations/generate-conversion-roadmap.mjs + scripts/steps/_schema/step-archetype-census.json + docs/reports/generated/122-conversion-roadmap.md + src/tests/conversion-roadmap.infra.test.ts (WF1 'conversion roadmap' commit 1, 2026-09-10)",
+      "owner": {
+        "kind": "wf",
+        "ref": "wf: conversion-roadmap (this plan)"
+      },
+      "gate": {
+        "kind": "nice_to_have",
+        "blocks": []
+      },
+      "last_reviewed": "2026-09-10"
+    },
+    {
+      "id": "GOLD-PRE",
+      "spec": "122 §5.3",
+      "title": "Golden PRE-side capture completeness enforced per declared chain",
+      "promised": "G8's golden differential must be complete on BOTH the pre-image and the post-image side of every declared chain invocation, not the POST side alone",
+      "status": "BUILT",
+      "evidence": "BUILT commit 3 (output-panel remediation, 2026-09-10). checkCaptures() (scripts/analysis/step-validate.mjs) now computes preInvocationsMissing (mirrors :704-706's POST-side derivedInvocations() match, for capturesIn(slug,'pre')); scoreG8 reds on any UNPINNED entry. Both-directions proven in selfTest() against synthetic pre/ shapes (RED: a genuinely missing capture for an unpinned slug; GREEN: the same gap, pinned). Two REAL, live gaps this checker itself found (never silent) are declared, cited exemptions in GOLD_PRE_KNOWN_GAPS: link_wsib sources::--full (docs/reports/golden/link_wsib/post/sources-full-forced-4.json has no pre/ match) and enrich_parcels none::[] (MED-3; docs/reports/review_followups.md 'GOLD-PRE's own live finding') — each fix-after tracked, neither hidden. blocks[] names the 5 C4 slugs FORWARD-declared (none are converted yet, so checkCutoverPrereqs is currently vacuous over them, same posture as STA-2/STA-3): the mechanism is built and live-tested; the precondition it will check is armed, not yet exercised.",
+      "owner": {
+        "kind": "wf",
+        "ref": "wf: conversion-roadmap commit 3, 2026-09-10"
+      },
+      "gate": {
+        "kind": "cutover_prereq",
+        "blocks": [
+          "assert_global_coverage",
+          "assert_data_bounds",
+          "assert_engine_health",
+          "link_neighbourhoods",
+          "geocode_permits"
+        ]
+      },
+      "last_reviewed": "2026-09-10"
+    },
+    {
+      "id": "HB-1",
+      "spec": "124 §2 Rule 12",
+      "title": "Heartbeat covers the WHOLE step, not only phase boundaries (EP-D15)",
+      "promised": "every execution.phases[] entry of an ENRICHER-shaped step must be reachable by a progress emit (ctx.onProgress / the periodic heartbeat ticker), not only updated at phase boundaries",
+      "status": "BUILT",
+      "evidence": "BUILT commit 3 (2026-09-10). checkHeartbeatWholeStep + heartbeatReachability (scripts/analysis/step-validate.mjs) statically verify runEnrichPhase wires ctx.onProgress into the rows-processed accumulator AND runs startHeartbeatTicker (EP-D15) — proven both directions in selfTest() (RED: no seam at all; RED: onProgress wired but no periodic ticker, the exact pre-EP-D15 defect shape; GREEN: the REAL scripts/lib/step/index.js source, live-verified). applies_when execution.shape==\"enrich\" scopes it to the one shape it can ever gate — 0 converted steps match today (currently vacuous, mechanism proven and armed, same posture as STA-1/STA-2).",
+      "owner": {
+        "kind": "wf",
+        "ref": "wf: conversion-roadmap commit 3, 2026-09-10"
+      },
+      "gate": {
+        "kind": "cutover_prereq",
+        "blocks": [],
+        "applies_when": {
+          "descriptor_path": "execution.shape",
+          "equals": "enrich"
+        }
+      },
+      "last_reviewed": "2026-09-10"
+    },
+    {
+      "id": "CEIL-1",
+      "spec": "124 §2 Rule 12",
+      "title": "Statement/lock ceiling bound on EVERY phase incl. post_commit (EP-D16)",
+      "promised": "every phase of an ENRICHER-shaped step, INCLUDING the dedicated post_commit client, must bind statement_timeout+lock_timeout before its first write",
+      "status": "BUILT",
+      "evidence": "BUILT commit 3 (2026-09-10), SCOPED per MED-6 (output-panel remediation): checkStatementCeilingEveryPhase + statementCeilingReachability (scripts/analysis/step-validate.mjs) are a runner-level TOKEN-PRESENCE proof — they confirm runEnrichPhase's source contains a shared-txn `SET LOCAL statement_timeout`+`SET LOCAL lock_timeout` bind AND a `postClient`-scoped session-level `SET statement_timeout` bind (EP-D16) — not a per-phase, AST-verified proof that EVERY one of the 5 declared execution.phases[] individually binds before its own first write. Proven both directions in selfTest() at the token-presence level (RED: no bind at all; RED: shared-txn bound but post_commit's own client never binds; GREEN: the REAL source). The per-phase proof is filed as its own followup (docs/reports/review_followups.md, MED-6) rather than overclaimed here. applies_when execution.shape==\"enrich\" — currently vacuous (0 converted steps match), mechanism proven and armed.",
+      "owner": {
+        "kind": "wf",
+        "ref": "wf: conversion-roadmap commit 3, 2026-09-10"
+      },
+      "gate": {
+        "kind": "cutover_prereq",
+        "blocks": [],
+        "applies_when": {
+          "descriptor_path": "execution.shape",
+          "equals": "enrich"
+        }
+      },
+      "last_reviewed": "2026-09-10"
+    },
+    {
+      "id": "CLOUD-PRE",
+      "spec": "123 §6",
+      "title": "Pre-dispatch cloud-state checklist — table sizes, index presence, stranded running rows measured BEFORE a cutover attempt",
+      "promised": "cloud data state (table sizes, index presence, stranded `running` pipeline_runs rows) is measured before a cutover attempt is dispatched, not discovered afterward (the EP-D14 class: a committed fix whose cloud `--full` re-run has not yet landed)",
+      "status": "NOT_STARTED",
+      "evidence": "grep -n 'CLOUD-PRE\\|pre-dispatch' scripts/analysis/step-validate.mjs docs/runbook/README.md -> 0 hits. EP-D14's own cloud backlog measurement (439,130 unconsumed enrich_parcels_pass3_scope rows, one backend ACTIVE 23 min, docs/reports/defect-ledger.md EP-D14 row) was a one-off WF3 measurement, never a standing pre-dispatch checklist any future cutover runs automatically",
+      "owner": {
+        "kind": "wf",
+        "ref": "wf: unassigned"
+      },
+      "gate": {
+        "kind": "nice_to_have",
+        "blocks": []
+      },
+      "last_reviewed": "2026-09-10"
+    },
+    {
+      "id": "ACC-1",
+      "spec": "122 §7.2",
+      "title": "Acceptance is per-slug and row-derived, never a GitHub run tick",
+      "promised": "a chain-sources cloud run's acceptance is encoded per-slug in check-chain-verdict, row-derived from pipeline_runs/records_meta — never a single GH Actions green-checkmark standing in for every slug in the batch",
+      "status": "NOT_STARTED",
+      "evidence": "scripts/analysis/check-chain-verdict.js's OK_STATUSES-based acceptance (:91) is chain-scoped, not per-slug; grep -n 'per-slug acceptance\\|acceptance.*row-derived' scripts/analysis/check-chain-verdict.js docs/specs/01-pipeline/122_pipeline_step_optimization.md -> 0 hits. Directly load-bearing for Ask A5 (CLOUD ACCEPTANCE PER BATCH, Spec 124 §5 R-PACE-2): that ruling's own guard text names this exact mechanism as not-yet-built",
+      "owner": {
+        "kind": "wf",
+        "ref": "wf: unassigned"
+      },
+      "gate": {
+        "kind": "nice_to_have",
+        "blocks": []
+      },
+      "last_reviewed": "2026-09-10"
+    },
+    {
+      "id": "LAND-1",
+      "spec": "124 §R-8",
+      "title": "Landing discipline declared: derived-artifact regen, EOL normalisation, exact-command cloud-write allow rules",
+      "promised": "landing discipline (working-tree hook, derived-artifact regeneration in the same commit, EOL normalisation, cloud writes needing exact-command allow rules) is declared as one artifact, not scattered tribal knowledge",
+      "status": "NOT_STARTED",
+      "evidence": "no single declared artifact states the working-tree-hook + derived-artifact-regen + EOL-normalisation + cloud-write-allow-rule set together. tasks/lessons.md's 2026-09-09 CRLF/`git apply` lesson documents the EOL failure mode in prose; `programme-backlog.infra.test.ts`'s drift guard covers derived-artifact regen for ONE generator only — neither is Spec 124 §R-8's own declared register row",
+      "owner": {
+        "kind": "wf",
+        "ref": "wf: unassigned"
+      },
+      "gate": {
+        "kind": "nice_to_have",
+        "blocks": []
+      },
+      "last_reviewed": "2026-09-10"
+    },
+    {
+      "id": "PH2-EXT",
+      "spec": "123 §2",
+      "title": "PH-2 churn×complexity population widened from 27 sources steps to all 65 chain slugs",
+      "promised": "the churn×complexity risk quadrant (Spec 123 §2/§6 G2) covers every chain slug, not only the 27 domain `sources` steps — C6 today has NO risk data at all",
+      "status": "NOT_STARTED",
+      "evidence": "docs/reports/generated/122-churn-complexity.md's own header: 'Population: 27 domain steps (manifest.chains.sources minus reconcile)'. This WF1's own docs/reports/generated/122-conversion-roadmap.md C6 section (36 files) renders every quadrant cell '—' for that whole batch, confirming zero PH-2 coverage measured live, not assumed",
+      "owner": {
+        "kind": "wf",
+        "ref": "wf: unassigned"
+      },
+      "gate": {
+        "kind": "nice_to_have",
+        "blocks": []
+      },
+      "last_reviewed": "2026-09-10"
+    },
+    {
+      "id": "ARCH-CENSUS",
+      "spec": "122 §1.10",
+      "title": "Archetype declared for the 36 non-sources unconverted files (blocks any C6 ordering)",
+      "promised": "Spec 122 §1.10's archetype census, today scoped to the 27 `sources` steps only, is widened to declare a real archetype for the 36 non-`sources` unconverted files (permits/coa/deep_scrapes/entities+wsib/orphan) — required before C6 can be archetype-grouped and risk-ordered the way C4/C5 are",
+      "status": "NOT_STARTED",
+      "evidence": "scripts/steps/_schema/step-archetype-census.json (WF1 commit 1, 2026-09-10): 39 of its 58 entries carry archetype \"UNDECLARED\" — the 36 C6 files plus `reconcile` (chain-head). Seeding real archetypes for them is this item's own future WF, deliberately not built here (Ask A3's own ruling: one WF before C6 opens, not per-step at PH-0)",
+      "owner": {
+        "kind": "wf",
+        "ref": "wf: unassigned"
+      },
+      "gate": {
+        "kind": "nice_to_have",
+        "blocks": []
+      },
+      "last_reviewed": "2026-09-10"
+    },
+    {
+      "id": "CLAIMS-MTX",
+      "spec": "123 §5",
+      "title": "Claims × steps matrix generated (plan-claims.mjs emits the 44/5/6 split today, not a per-step × per-claim grid)",
+      "promised": "a generated per-step × per-claim coverage grid (which of the 55 PER_STEP + universal claims each specific step satisfies), superseding the current aggregate-only 44-A/5-B/6-C split",
+      "status": "NOT_STARTED",
+      "evidence": "scripts/violations/plan-claims.mjs --checklist emits docs/reports/generated/123-per-step-checklist.md's 55-claim aggregate split; grep -n 'per-step.*per-claim\\|claim.*matrix\\|grid' scripts/violations/plan-claims.mjs -> 0 hits — no per-step × per-claim cross-tabulation exists",
+      "owner": {
+        "kind": "followup",
+        "ref": "review_followups.md (WF1 'conversion roadmap' filing, 2026-09-10)"
+      },
+      "gate": {
+        "kind": "nice_to_have",
+        "blocks": []
+      },
+      "last_reviewed": "2026-09-10"
     }
   ]
 }
