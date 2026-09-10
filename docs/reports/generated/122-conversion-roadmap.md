@@ -44,7 +44,7 @@ Remaining files: **55** (+ **1** pending) · remaining slugs: **57** (+ **1** pe
 | ENRICHER | `scripts/enrich-heritage.js` | enrich_heritage | sources (1) | bottom-left | — | — |
 | ENRICHER | `scripts/enrich-ravines.js` | enrich_ravines | sources (1) | bottom-left | — | — |
 | ENRICHER | `scripts/compute-parcel-cost-estimates.js` | compute_parcel_cost_estimates | sources (1) | top-left | supports_dry_run | — |
-| ENRICHER | `scripts/enrich-parcels.js` | enrich_parcels [pending: shape_clean_pending_recapture] | sources (1) | top-right | supports_full, chain_args={"sources":["--full"]} | — |
+| ENRICHER | `scripts/enrich-parcels.js` | enrich_parcels [pending: shape_clean_pending_recapture] | sources (1) | top-right | supports_full, chain_args={"sources":["--full"]} | EP-PIN-D17 (enrich_parcels) |
 | INGESTOR | `scripts/load-address-points.js` | address_points | sources (1) | top-left | — | — |
 | INGESTOR | `scripts/load-centreline.js` | load_centreline | sources (1) | top-left | — | — |
 | INGESTOR | `scripts/load-heritage.js` | load_heritage | sources (1) | top-left | — | — |

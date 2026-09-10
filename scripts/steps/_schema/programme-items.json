@@ -1392,7 +1392,7 @@
       "title": "admin GROUPS reverse-coverage — every unclassified seed key gets a real group or a reviewed hidden reason",
       "promised": "unclassified count = 0",
       "status": "BUILT",
-      "evidence": "0 of 453 scripts/seeds/logic_variables.json keys carry admin.hidden === \"unclassified\" as of scripts/generate-logic-variable-groups.mjs (WF2 \"ADMIN-1 ratchet to zero\" batch 5, 2026-09-09) — refreshed by that generator on every regeneration (npm run logic-var-groups); high-water mark pinned at 0 in scripts/steps/_schema/admin-unclassified-high-water-mark.json (monotonic ratchet, src/tests/logic-var-admin-declarations.logic.test.ts). Closed in 5 reviewed batches (CoA chain 17, cost/archetype chain 19, lifecycle chain 10, coverage asserts + residue 14, lifecycle_seq_band_* family 220 — GlobalConfigCard.tsx's bespoke seq-band render path deleted in the same batch, single render path proven by an exactly-once-render fixture) — see .cursor/wf2_admin1_ratchet_to_zero_active_task.md. Batch 6 (this evidence) additionally RETIRED \"unclassified\" from the closed hidden-reason enum (derived|internal|deprecated|migration-only) — a new unclassified key is now a structural error, not merely ratcheted. review_followups.md — \"WF3 cloud-parity FIX 3 remediation — admin GROUPS reverse-coverage gap (2026-09-03)\" is the originating followup this item batches.",
+      "evidence": "0 of 457 scripts/seeds/logic_variables.json keys carry admin.hidden === \"unclassified\" as of scripts/generate-logic-variable-groups.mjs (WF2 \"ADMIN-1 ratchet to zero\" batch 5, 2026-09-09) — refreshed by that generator on every regeneration (npm run logic-var-groups); high-water mark pinned at 0 in scripts/steps/_schema/admin-unclassified-high-water-mark.json (monotonic ratchet, src/tests/logic-var-admin-declarations.logic.test.ts). Closed in 5 reviewed batches (CoA chain 17, cost/archetype chain 19, lifecycle chain 10, coverage asserts + residue 14, lifecycle_seq_band_* family 220 — GlobalConfigCard.tsx's bespoke seq-band render path deleted in the same batch, single render path proven by an exactly-once-render fixture) — see .cursor/wf2_admin1_ratchet_to_zero_active_task.md. Batch 6 (this evidence) additionally RETIRED \"unclassified\" from the closed hidden-reason enum (derived|internal|deprecated|migration-only) — a new unclassified key is now a structural error, not merely ratcheted. review_followups.md — \"WF3 cloud-parity FIX 3 remediation — admin GROUPS reverse-coverage gap (2026-09-03)\" is the originating followup this item batches.",
       "owner": {
         "kind": "wf",
         "ref": "wf: programme-ADMIN-1"
@@ -1499,6 +1499,25 @@
         ]
       },
       "last_reviewed": "2026-09-09"
+    },
+    {
+      "id": "EP-PIN-D17",
+      "spec": "124 §7 / 48 §3.5",
+      "title": "EP-D17 pin — parcels post-run checks are unbounded serial full scans over a bloat-inflated heap",
+      "promised": "Spec 123 §3.1: a KNOWN-DEFECT is pinned in its current wrong form, annotated with a Defect Ledger ID, and fixed in a separate commit after the conversion is green",
+      "status": "PARTIAL",
+      "evidence": "CODE BUILT, CLOUD UNVERIFIED — not yet BUILT because no green cloud run has exercised any of it. docs/reports/defect-ledger.md EP-D17 row — the 5 descriptor invariants[]/plausibility[] post checks now carry a declared statement_timeout ceiling (defaulted from step_post_check_statement_timeout_minutes when absent, never a hardcoded per-entry literal — output-panel fix F4) + a per-entry sys_-prefixed duration_ms INFO row (golden-scrub-safe, fix F1), and run in bounded concurrent batches (step_post_check_concurrency, default 4, fix F7) instead of serially; migration 247 sets parcels' autovacuum storage params per Spec 115 §5's own pre-authorisation, DB-tested against a real Postgres (testcontainers). Operator structural ruling (2026-09-10) folded the execution.maintenance gap into this same WF3: step.schema.json's txn_scope conditional relaxed to admit \"step\" (RE-FREEZE #6), scripts/lib/step/plausibility.js gained a real runMaintenance executor (reads pg_stat_user_tables' dead_ratio, catalog-only, never a heap scan; compares against parcels_dead_tuple_ratio_warn_max; runs the declared VACUUM (ANALYZE) parcels, bound by its own declared ceiling, only when exceeded; emits a sys_-prefixed ran/skipped row) that now runs BEFORE the run-end post checks (output-panel fix F2, closing the self-defeating ordering an earlier draft shipped), and enrich_parcels' own descriptor now declares execution.maintenance plus a new parcels_dead_tuple_ratio plausibility bound reading POST-maintenance state. WHAT FLIPS THIS TO BUILT: (1) the pre-dispatch dead_ratio reading (operator must read pg_stat_user_tables for parcels — n_dead_tup, dead_ratio, pg_relation_size — immediately before the next chain-sources dispatch and record it here; NOT YET TAKEN, no SUPABASE_DATABASE_URL in this WF3's worktree) and (2) one green chain-sources cloud run exercising the reordered maintenance-then-checks path, migration 247 applied, and the 2 new logic_variables rows seeded (apply-logic-variables.js's ON CONFLICT DO NOTHING trap — verify VALUES, not the insert count).",
+      "owner": {
+        "kind": "pilot",
+        "ref": "pilot9_enrich_parcels"
+      },
+      "gate": {
+        "kind": "cutover_prereq",
+        "blocks": [
+          "enrich_parcels"
+        ]
+      },
+      "last_reviewed": "2026-09-10"
     },
     {
       "id": "EP-PIN-PERF",
