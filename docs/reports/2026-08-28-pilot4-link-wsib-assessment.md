@@ -705,7 +705,7 @@ Two REAL bugs were found by a **live kill-and-rerun proof against this exact ste
 
 | # | Scope | Pass | Detail |
 |---|---|---|---|
-| 1 | link_wsib | PASS | min_migration=240 <= migrations count=243 |
+| 1 | link_wsib | PASS | min_migration=240 <= migrations count=244 |
 | 2 | link_wsib | PASS | 8 declared, missing from seeds: none |
 | 3 | link_wsib | PASS | retired=0 overlap-with-declared=none |
 | 7 | link_wsib | PASS | SPEC LINK header present=true |
@@ -723,7 +723,7 @@ Two REAL bugs were found by a **live kill-and-rerun proof against this exact ste
 - compare ran: true · diffs found: 218 · unexplained: 0
 
 ### Test suite (item iii)
-- 839/861 passed (suite success=false)
+- 841/862 passed (suite success=false)
 
 ### Policy coverage matrix (item vi) — Spec 124 Rules 1-13
 
@@ -742,7 +742,7 @@ Two REAL bugs were found by a **live kill-and-rerun proof against this exact ste
 | 11 | Phase-order re-derive (declared half, checkOrderGuaranteesCited) | enforced-green | 1 when:"pre_write" check(s), 0 order_guarantee violation(s) — G-3 completeness half stays open |
 | 12 | Truthful crash posture (R-B reachability, static + R-M before-image) | enforced-green | R-B (checkInterruptedPostureTruthful): shape=cascade runner=runCascadePhase: calls staleness.ledgerGatedSkip; bypassed folds interruptedRetraction.interrupted before the early-return can short-circuit past it · R-M: prose-only (R-M/LG-17 describe not scoped to this step (vitest not run, or no before-image target)) |
 | 13 | A step validates itself | enforced-green | this run of step:validate IS the mechanism |
-| P3 | I/O cost adjudication (measured, not gated) | measured | descriptor=63927B notes=12503B checks=20 rows records_meta=1398B (newest post/ capture) |
+| P3 | I/O cost adjudication (measured, not gated) | measured | descriptor=63927B notes=12503B checks=20 rows records_meta=1392B (newest post/ capture) |
 
 **Enforced-green: 13/14**
 

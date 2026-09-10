@@ -1341,7 +1341,7 @@ from the run that actually performed it, not from a `capture-step-golden.js` inv
 
 | # | Scope | Pass | Detail |
 |---|---|---|---|
-| 1 | compute_centroids | PASS | min_migration=16 <= migrations count=243 |
+| 1 | compute_centroids | PASS | min_migration=16 <= migrations count=244 |
 | 2 | compute_centroids | PASS | 3 declared, missing from seeds: none |
 | 3 | compute_centroids | PASS | retired=0 overlap-with-declared=none |
 | 7 | compute_centroids | PASS | SPEC LINK header present=true |
@@ -1359,7 +1359,7 @@ from the run that actually performed it, not from a `capture-step-golden.js` inv
 - compare ran: true · diffs found: 67 · unexplained: 0
 
 ### Test suite (item iii)
-- 841/861 passed (suite success=false)
+- 843/862 passed (suite success=false)
 
 ### Policy coverage matrix (item vi) — Spec 124 Rules 1-13
 
@@ -1378,7 +1378,7 @@ from the run that actually performed it, not from a `capture-step-golden.js` inv
 | 11 | Phase-order re-derive (declared half, checkOrderGuaranteesCited) | enforced-green | no when:"pre_write" checks — vacuously nothing to cite — G-3 completeness half stays open |
 | 12 | Truthful crash posture (R-B reachability, static + R-M before-image) | enforced-green | R-B (checkInterruptedPostureTruthful): recovery.interrupted="none" — no reachability claim to verify · R-M: prose-only (R-M/LG-17 describe not scoped to this step (vitest not run, or no before-image target)) |
 | 13 | A step validates itself | enforced-green | this run of step:validate IS the mechanism |
-| P3 | I/O cost adjudication (measured, not gated) | measured | descriptor=36279B notes=9533B checks=8 rows records_meta=2416B (newest post/ capture) |
+| P3 | I/O cost adjudication (measured, not gated) | measured | descriptor=36279B notes=9463B checks=8 rows records_meta=2416B (newest post/ capture) |
 
 **Enforced-green: 13/14**
 

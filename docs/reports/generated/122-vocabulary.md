@@ -112,7 +112,7 @@ Grandfathered, never legal for a new step: an existing step must be able to decl
 | **V5** | staleness.pending is DISSOLVED into three axes: scope (which rows) / trigger (what makes the step eligible) / mode_select (what the trigger chooses), plus fingerprint_inputs. |
 | **V6** | guards.empty_source is the typed form <table> | [<table>,...] | none — AS AMENDED 2026-08-24. The original ruling typed the scalar form only; the array form is a ratified amendment recorded in Spec 122's V-table, needed because a step may guard on more than one source table (enrich_heritage guards on heritage_properties AND heritage_districts, Spec 120 §3.3). Recorded as an amendment rather than restated silently. |
 | **R6-acquisition** | NOT a category. Absorbed as staleness.trigger[].position (the acquisition lifecycle position) + inputs.reads.externals[].cache. |
-| **R6-maintenance** | NOT a category. Absorbed as execution.maintenance — declares targets and CONSTRAINS txn_scope (VACUUM cannot run inside a transaction). |
+| **R6-maintenance** | NOT a category. Absorbed as execution.maintenance — declares targets and CONSTRAINS txn_scope (RE-FREEZE #6, EP-D17 2026-09-10: narrows txn_scope to statement|batch|step|none when maintenance is declared, since the VACUUM statement itself must never run inside a transaction regardless of the declaring step's own txn_scope value — the executor always runs it autocommit on a dedicated connection). |
 | **R6-terminals** | A NEW CATEGORY (the 18th). Declared exit paths, each with its records_meta shape. Retires the hand-written per-terminal 'PASS'. |
 | **R6-plan_shape** | NOT a category. A checks[].kind value. |
 | **R6-source_key_policy** | NOT a category. A per-target field: outputs.writes[].source_key_policy. |

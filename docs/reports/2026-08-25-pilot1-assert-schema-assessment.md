@@ -439,7 +439,7 @@ AFTER this report's own captures were last taken, unrelated to CC-D3 or the prob
 
 | # | Scope | Pass | Detail |
 |---|---|---|---|
-| 1 | assert_schema | PASS | min_migration=41 <= migrations count=243 |
+| 1 | assert_schema | PASS | min_migration=41 <= migrations count=244 |
 | 2 | assert_schema | PASS | 3 declared, missing from seeds: none |
 | 3 | assert_schema | PASS | retired=0 overlap-with-declared=none |
 | 7 | assert_schema | PASS | SPEC LINK header present=true |
@@ -457,7 +457,7 @@ AFTER this report's own captures were last taken, unrelated to CC-D3 or the prob
 - compare ran: true · diffs found: 239 · unexplained: 0
 
 ### Test suite (item iii)
-- 836/861 passed (suite success=false)
+- 838/862 passed (suite success=false)
 
 ### Policy coverage matrix (item vi) — Spec 124 Rules 1-13
 

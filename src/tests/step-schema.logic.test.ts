@@ -417,7 +417,19 @@ describe('step.schema.json — the V1-V6 and R6 rulings are actually encoded', (
       then?: { properties?: Record<string, { enum?: string[] }> };
     }>;
     const vacuumRule = conditionals.find((c) => c.if?.properties?.maintenance?.type === 'array');
-    expect(vacuumRule?.then?.properties?.txn_scope?.enum, 'a step-scoped txn cannot contain a VACUUM').not.toContain('step');
+    // RE-FREEZE #6 (EP-D17, WF3, 2026-09-10) — the enum was widened to admit "step".
+    // The constraint this conditional actually encodes is narrower than "a step-scoped
+    // step may never declare maintenance": it is that the VACUUM STATEMENT ITSELF must
+    // never run inside an open transaction. enrich_parcels (txn_scope:"step") is the
+    // first step to declare execution.maintenance, and its executor
+    // (scripts/lib/step/plausibility.js runMaintenance) always issues the statement
+    // autocommit on its own pool connection, after the step's own transaction has
+    // already committed — never inside it, regardless of what txn_scope declares. This
+    // assertion is flipped, not deleted: it still proves the OTHER three values
+    // ("statement", "batch", "none") remain legal, and that "step" is now ALSO legal.
+    expect(vacuumRule?.then?.properties?.txn_scope?.enum, 'RE-FREEZE #6 — "step" is now legal; a step-scoped txn still cannot contain the VACUUM STATEMENT itself, which is why the executor always runs autocommit').toEqual(
+      expect.arrayContaining(['statement', 'batch', 'step', 'none']),
+    );
   });
 
   it('R6 — plan_shape is a checks[].kind value and source_key_policy is a per-target field', () => {

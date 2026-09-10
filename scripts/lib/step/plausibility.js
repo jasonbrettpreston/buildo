@@ -114,9 +114,30 @@ function coerceScalar(raw) {
  * ERROR becomes a distinct FAIL observation — bound-doctrine criterion 1 (Design
  * decisions: "a query error is a distinct FAIL, not folded into the bound") — never
  * swallowed, never read as a clean 0.
+ *
+ * EP-D17 (WF3, 2026-09-10, C1) — `defaultTimeoutMs` is the ceiling this entry
+ * inherits when it declares no `statement_timeout` of its own ("none"/absent).
+ * Before this, an `every_run` entry with no declared override took the bare
+ * `pool.query` branch below and ran with NO ceiling at all — `PIPELINE_STATEMENT_TIMEOUT_MS`
+ * defaults to 0, so nothing bound it even on cloud, where a `parcels` full scan
+ * against a bloated heap measured 40+ minutes (EP-D17, cloud EXPLAIN 2026-09-10).
+ * The caller (`scripts/lib/step/index.js`) resolves `defaultTimeoutMs` from the
+ * step's own declared `execution.statement_timeout` unless the new
+ * `step_post_check_statement_timeout_minutes` logic variable overrides it — either
+ * way, EVERY every_run entry now runs inside a `SET LOCAL statement_timeout`
+ * envelope, declared or defaulted, never bare `pool.query`.
+ *
+ * Also returns `duration_ms` (Spec 48 §3.5's `sys_duration_ms` precedent — an
+ * INFO cost row is explicitly legal) on BOTH the success and error path, so a
+ * timed-out entry's own FAIL row still carries how long it ran before it died.
  */
-async function executeEntry(pool, entry) {
-  const timeoutMs = parseDurationMs(entry.statement_timeout);
+async function executeEntry(pool, entry, defaultTimeoutMs) {
+  const declaredMs = parseDurationMs(entry.statement_timeout);
+  // A declared "none"/absent falls through to the step's own ceiling — never to
+  // an unbound connection. `defaultTimeoutMs` is itself `null`/`0`/falsy only for
+  // a caller that passed nothing (fixture safety net, not a live step).
+  const timeoutMs = declaredMs != null ? declaredMs : (defaultTimeoutMs || null);
+  const startedAt = Date.now();
   try {
     let result;
     if (timeoutMs) {
@@ -140,23 +161,50 @@ async function executeEntry(pool, entry) {
     }
     const raw = result.rows[0] ? Object.values(result.rows[0])[0] : null;
     const scalar = coerceScalar(raw);
+    const duration_ms = Date.now() - startedAt;
     // Mirror both `.value` (value_min/value_max, pct) and `.violations` (viol) —
     // the SAME measured scalar under both names, so whichever bound form the entry
     // declares is evaluable without this executor needing to know which one it is
     // (verdict.js's evaluateLimit already picks the right reading per form).
-    return typeof scalar === 'number' ? { value: scalar, violations: scalar } : { value: scalar };
+    return typeof scalar === 'number'
+      ? { value: scalar, violations: scalar, duration_ms }
+      : { value: scalar, duration_ms };
   } catch (err) {
-    return { error: err };
+    return { error: err, duration_ms: Date.now() - startedAt };
   }
 }
 
 /**
- * runValidatorEntries(pool, entries, {frequency, when, config}) — the ONE executor
- * for BOTH `invariants[]` and `plausibility[]` (same runtime shape, same rules).
- * Filters to entries whose `frequency` matches AND whose `when` is in the allowed
- * set (Fold B-2 — the same gated-skip narrowing a real check gets), executes each,
- * and returns `{checks, observations}` ready for `buildAuditTable`'s existing
+ * runValidatorEntries(pool, entries, {frequency, when, defaultTimeoutMs}) — the ONE
+ * executor for BOTH `invariants[]` and `plausibility[]` (same runtime shape, same
+ * rules). Filters to entries whose `frequency` matches AND whose `when` is in the
+ * allowed set (Fold B-2 — the same gated-skip narrowing a real check gets), executes
+ * each, and returns `{checks, observations}` ready for `buildAuditTable`'s existing
  * selected-check loop (Fold A-2).
+ *
+ * EP-D17 (WF3, 2026-09-10, C2b) — selected entries are issued CONCURRENTLY in
+ * BATCHES of `concurrency` (default 4, `step_post_check_concurrency`), one
+ * `executeEntry` call per entry, each of which already opens its OWN
+ * `pool.connect()` client when a ceiling applies (every entry has one as of
+ * C1 — declared or defaulted, never "none" reaching an unbound connection).
+ * Measured live 2026-09-10: 8 concurrent `parcels` scans finish in ~4-5s each
+ * (one shared `BufferIo` heap read, `pg_stat_activity` sampled) against 2min+
+ * when the same 5 statements ran strictly serially — the `runSanity` 8-way
+ * distribution-query `Promise.all` (`parcel-sanity-audit.js`) is the in-repo
+ * precedent this generalises, not a new mechanism.
+ *
+ * OUTPUT-PANEL FIX F7 (MED, 2026-09-10) — corrected claim: pool `max` is the pg
+ * default (10, `createPool` sets none), and this executor is NOT the only
+ * consumer of that pool at the moment it runs — the outer step-level advisory
+ * lock (`pipeline.withAdvisoryLock`) holds its own client for the step's whole
+ * duration, and `link_wsib` alone declares 9 invariants/plausibility entries
+ * (measured live, `scripts/link-wsib.descriptor.json`), which an UNBOUNDED
+ * `Promise.all` would have tried to run on 9 simultaneous clients — comfortably
+ * OVER budget once the lock's own client is counted, not "comfortably under" as
+ * originally claimed. The declared `step_post_check_concurrency` bound caps the
+ * batch width instead: entries execute `concurrency`-wide batches, sequentially
+ * between batches, so a step with N entries never opens more than `concurrency`
+ * simultaneous post-check clients regardless of N.
  *
  * @param {import('pg').Pool} pool
  * @param {Array<object>|'none'|undefined} entries - descriptor.invariants or .plausibility
@@ -165,27 +213,37 @@ async function executeEntry(pool, entry) {
  * executor only builds the check-shaped object + runs the raw query, so it takes
  * no `config` of its own.
  *
- * @param {{frequency:string, when:string[]|null}} opts
+ * @param {{frequency:string, when:string[]|null, defaultTimeoutMs?:number|null, concurrency?:number}} opts
  * @returns {Promise<{checks:object[], observations:Record<string,object>}>}
  */
-async function runValidatorEntries(pool, entries, { frequency, when }) {
+async function runValidatorEntries(pool, entries, { frequency, when, defaultTimeoutMs, concurrency } = {}) {
   const list = Array.isArray(entries) ? entries : [];
   // `when: null` (or absent) means unrestricted — score every declared `when`, the
   // same null-means-everything convention `onlyChecks` itself uses in index.js.
   const selected = list.filter((e) => e.frequency === frequency && (!when || when.includes(e.when || 'pre')));
-  const checks = [];
-  const observations = {};
-  for (const entry of selected) {
-    checks.push({
-      id: entry.id,
-      limit: entry.bound,
-      limit_from_config: entry.limit_from_config,
-      severity: entry.severity,
-      blocking: entry.blocking,
-      source: entry.source,
-    });
-    observations[entry.id] = await executeEntry(pool, entry);
+  const checks = selected.map((entry) => ({
+    id: entry.id,
+    limit: entry.bound,
+    limit_from_config: entry.limit_from_config,
+    severity: entry.severity,
+    blocking: entry.blocking,
+    source: entry.source,
+  }));
+  // F7 — batch width caps simultaneous clients at `concurrency` (default 4, matching
+  // step_post_check_concurrency's own seed default); a non-positive/non-finite value
+  // degrades to fully serial (batch width 1), never to unbounded.
+  const batchSize = Number.isFinite(concurrency) && concurrency > 0 ? Math.floor(concurrency) : 4;
+  const results = [];
+  for (let i = 0; i < selected.length; i += batchSize) {
+    const batch = selected.slice(i, i + batchSize);
+    // `executeEntry` NEVER rejects (every path returns `{value|error, duration_ms}`),
+    // so `Promise.all` cannot short-circuit and swallow a batch-mate's row — one
+    // entry's FAIL is a value in its own slot, not a rejection.
+    const batchResults = await Promise.all(batch.map((entry) => executeEntry(pool, entry, defaultTimeoutMs)));
+    results.push(...batchResults);
   }
+  const observations = {};
+  selected.forEach((entry, i) => { observations[entry.id] = results[i]; });
   return { checks, observations };
 }
 
@@ -199,13 +257,178 @@ function runPlausibility(pool, descriptor, opts) {
   return runValidatorEntries(pool, descriptor.plausibility, opts);
 }
 
+/** Local copy of pipeline.js's own identifier guard — kept tiny/duplicated rather than
+ * requiring `../pipeline` here, since `execution.maintenance.table` is already
+ * AJV-validated against `#/definitions/tableName` (`^[a-z_][a-z0-9_]*$`) before this
+ * ever runs; this is defence in depth, not the primary guard. */
+function quoteMaintenanceIdent(name) {
+  if (!/^[a-z_][a-z0-9_]*$/.test(name)) throw new Error(`Invalid maintenance table identifier: ${name}`);
+  return `"${name}"`;
+}
+
+const MAINTENANCE_SQL = {
+  vacuum: (t) => `VACUUM ${t}`,
+  analyze: (t) => `ANALYZE ${t}`,
+  vacuum_analyze: (t) => `VACUUM (ANALYZE) ${t}`,
+  reindex: (t) => `REINDEX TABLE ${t}`,
+};
+
+// F5 (output panel, 2026-09-10) — the VACUUM/ANALYZE/REINDEX statement had NO declared
+// ceiling: an unbounded manual VACUUM against a heap large enough to need one in the
+// first place is the exact unbounded-statement shape EP-D17's own C1 rung exists to
+// close everywhere else. Default 15 min, applied ONLY when the declaring step has not
+// itself overridden `${table}_maintenance_timeout_minutes` — a manual VACUUM (default
+// vacuum_cost_delay=0, unthrottled) measured a 3-10 min estimate for the ~1.35M dead
+// tuples that motivated this WF3 (scripts/one-time/wf3-vacuum-analyze-parcels.js's own
+// header), so 15 min carries real margin without inheriting an unrelated step's own
+// declared execution.statement_timeout (which prices a different SQL shape entirely).
+const MAINTENANCE_DEFAULT_TIMEOUT_MS = 15 * 60000;
+
+/**
+ * runMaintenance(pool, maintenance, config, opts) — EP-D17 (WF3, 2026-09-10, C4) rung
+ * (d): the library-owned `execution.maintenance` executor. Before this WF3, the
+ * field was REQUIRED-and-frozen in `step.schema.json` (a 4-value `operation`
+ * enum, a `txn_scope` conditional, a mandatory `why`) but had NO executor
+ * anywhere in `scripts/lib` — every converted descriptor declared `"none"`
+ * because there was nothing else a declaration could DO (P11 grounding, this
+ * WF3's own Step 0). This function is that executor.
+ *
+ * OUTPUT-PANEL FIX F2 (HIGH, 2026-09-10) — the CALLER (`scripts/lib/step/index.js`)
+ * now invokes this BEFORE `runInvariants`/`runPlausibility`, not after: the ORIGINAL
+ * ordering let the 5 bloat-sensitive post checks scan the heap the step's own write
+ * phases had just bloated, and C1's new declared ceiling turned "slow but eventually
+ * green" into "FAILs loudly at the ceiling" for exactly the runs this executor exists
+ * to clean up first. Retired fence, stated honestly: the pre-fix code had NO ceiling
+ * on those checks at all, so a long scan simply ran to completion (successfully, if
+ * slowly) — C1's ceiling makes that silent tolerance impossible, which is why the
+ * reorder is load-bearing, not cosmetic.
+ *
+ * Runs AFTER the step's own write phases (for `enrich_parcels` that means passes
+ * 1-4's shared transaction has already COMMITted and pass 5's post_commit write is
+ * done) but BEFORE the run-end checks, and the VACUUM/ANALYZE/REINDEX statement
+ * itself ALWAYS runs autocommit on its OWN dedicated `pool.connect()` client —
+ * never inside an open transaction (Postgres forbids VACUUM inside one), and never
+ * on the shared `pool.query()` path other callers use. This is what makes the
+ * `txn_scope:"step"` schema relaxation (RE-FREEZE #6) safe for an ENRICHER: the
+ * step's own shared transaction is gone by the time this runs.
+ *
+ * For each declared `{operation, table, owned_by, why}` target: reads
+ * `pg_stat_user_tables` for the SAME cheap, catalog-only `n_live_tup`/`n_dead_tup`
+ * counters `pipeline.js`'s own `captureTelemetry` T6 block already reads
+ * elsewhere in the library — never a scan of `table` itself — and compares the
+ * resulting `dead_ratio` against `config[\`${table}_dead_tuple_ratio_warn_max\`]`,
+ * the SAME named tunable the step's own declared `plausibility[]` bound reads
+ * (by convention: one measurement, one threshold name, two independent
+ * consumers that can never silently disagree about it). Below the threshold —
+ * or the threshold is undeclared for this table — the target is SKIPPED with a
+ * stated reason, never silently. At or above it, the declared operation runs,
+ * bound by `config[\`${table}_maintenance_timeout_minutes\`]` (default 15 min,
+ * F5), and the row records the ACTION. A measurement OR execution failure is
+ * logged via `pipeline.log.warn` (F6 — a swallowed maintenance failure with no
+ * log line would be invisible outside the returned row) in addition to being
+ * returned as a WARN row.
+ *
+ * Every returned row's `metric` is `sys_maintenance_<table>_<operation>` (F1,
+ * CRITICAL) — `scripts/analysis/capture-step-golden.js`'s `scrub()` drops a
+ * WHOLE row whose `metric` starts with the declared `sys_` prefix
+ * (`VOLATILE_METRIC_PREFIXES`), which is the ONLY mechanism that keeps this
+ * row's raw `dead_ratio`/`duration_ms`/free-text `note` (none of which the
+ * scrubber's `VOLATILE_KEYS`/`VOLATILE_PATTERNS` would otherwise catch) from
+ * making every converted step's golden master non-reproducible. The row is
+ * still fully visible on a LIVE run's `records_meta.audit_table.rows` — only
+ * golden-diff comparison excludes it, the same trade `sys_duration_ms` itself
+ * already makes.
+ *
+ * @param {import('pg').Pool} pool
+ * @param {Array<{operation:string, table:string, owned_by:string, why:object}>|'none'|undefined} maintenance
+ * @param {Readonly<Record<string, number>>} config - `ctx.config` (resolveConfig's `values`)
+ * @param {{log?: {warn: (tag:string, msg:string) => void}, tag?: string}} [opts]
+ * @returns {Promise<Array<{metric:string, value:unknown, threshold:unknown, status:string, note:string}>>}
+ */
+async function runMaintenance(pool, maintenance, config, opts = {}) {
+  const entries = Array.isArray(maintenance) ? maintenance : [];
+  const log = opts.log || null;
+  const tag = opts.tag || '[step/maintenance]';
+  const rows = [];
+  for (const entry of entries) {
+    const metric = `sys_maintenance_${entry.table}_${entry.operation}`;
+    const cfgKey = `${entry.table}_dead_tuple_ratio_warn_max`;
+    const threshold = typeof (config || {})[cfgKey] === 'number' ? config[cfgKey] : null;
+    let deadRatio = null;
+    try {
+      const statRes = await pool.query(
+        'SELECT n_live_tup::bigint AS live, n_dead_tup::bigint AS dead FROM pg_stat_user_tables WHERE relname = $1',
+        [entry.table],
+      );
+      const r = statRes.rows[0];
+      if (r) {
+        const live = Number(r.live) || 0;
+        const dead = Number(r.dead) || 0;
+        deadRatio = (live + dead) > 0 ? Math.round((dead / (live + dead)) * 10000) / 10000 : 0;
+      }
+    } catch (err) {
+      const note = `dead_ratio measurement failed: ${err.message}`;
+      if (log) log.warn(tag, `runMaintenance: ${entry.table} ${note}`);
+      rows.push({ metric, value: null, threshold: null, status: 'WARN', note });
+      continue;
+    }
+    if (threshold === null) {
+      rows.push({ metric, value: deadRatio, threshold: null, status: 'WARN', note: `skipped — no ${cfgKey} logic variable declared` });
+      continue;
+    }
+    if (deadRatio === null || deadRatio <= threshold) {
+      rows.push({ metric, value: deadRatio, threshold, status: 'INFO', note: `skipped — dead_ratio ${deadRatio} <= ${threshold}` });
+      continue;
+    }
+    const buildSql = MAINTENANCE_SQL[entry.operation];
+    if (!buildSql) {
+      rows.push({ metric, value: deadRatio, threshold, status: 'WARN', note: `skipped — unmapped operation "${entry.operation}"` });
+      continue;
+    }
+    const timeoutCfgKey = `${entry.table}_maintenance_timeout_minutes`;
+    const timeoutMs = typeof (config || {})[timeoutCfgKey] === 'number'
+      ? config[timeoutCfgKey] * 60000
+      : MAINTENANCE_DEFAULT_TIMEOUT_MS;
+    const startedAt = Date.now();
+    try {
+      // F5 — quoteMaintenanceIdent() moved INSIDE the try: a malformed table name
+      // (defence-in-depth only — AJV already validates it at construction) now
+      // produces a WARN row through the same path as any other failure, never an
+      // uncaught throw out of runMaintenance itself.
+      const sql = buildSql(quoteMaintenanceIdent(entry.table));
+      // F5 — a dedicated, autocommit client carries its OWN declared ceiling. VACUUM
+      // forbids an enclosing transaction, so this is a bare SET + statement pair, the
+      // same shape executeEntry's own ceiling branch uses minus the BEGIN/COMMIT.
+      const client = await pool.connect();
+      try {
+        await client.query(`SET statement_timeout = ${timeoutMs}`);
+        await client.query(sql);
+      } finally {
+        client.release();
+      }
+      rows.push({
+        metric, value: deadRatio, threshold, status: 'INFO',
+        note: `ran "${sql}" — dead_ratio ${deadRatio} > ${threshold}`,
+        duration_ms: Date.now() - startedAt,
+      });
+    } catch (err) {
+      const note = `maintenance statement FAILED (ceiling ${timeoutMs}ms): ${err.message}`;
+      if (log) log.warn(tag, `runMaintenance: ${entry.table} ${note}`);
+      rows.push({ metric, value: deadRatio, threshold, status: 'WARN', note });
+    }
+  }
+  return rows;
+}
+
 module.exports = {
   statusFor,
   buildDistributionQuery,
   runDistributionScan,
   parseDurationMs,
   coerceScalar,
+  executeEntry,
   runValidatorEntries,
   runInvariants,
   runPlausibility,
+  runMaintenance,
 };

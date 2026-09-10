@@ -451,7 +451,14 @@
     "invocation": {
       "sources": { "argv": ["--full"], "env": {} }
     },
-    "maintenance": "none"
+    "maintenance": [
+      {
+        "operation": "vacuum_analyze",
+        "table": "parcels",
+        "owned_by": "self",
+        "why": { "text": "EP-D17 (WF3, 2026-09-10, C4) — operator structural ruling folded the maintenance gap into this WF3 rather than a follow-on WF2. Passes 1-4 share one transaction whose xmin pins the vacuum horizon for the whole run, so autovacuum cannot reclaim pass 4's own dead tuples until AFTER this step's COMMIT — the post-COMMIT catch-up measured ~49 minutes throttled at the default autovacuum_vacuum_cost_delay=2ms, exactly the window this WF3's own 5 post checks ran inside on 2026-09-10. Declaring vacuum_analyze here (rather than waiting for chain-tail assert_engine_health) lets the step clean up the heap it just bloated before the next step reads it, without waiting for the whole chain to finish. RE-FREEZE #6 relaxed step.schema.json's txn_scope conditional (added \"step\" to the allowed enum) so a txn_scope:\"step\" runner may legally declare this field — the executor itself always runs autocommit, never inside the step's own transaction.", "liveness": { "kind": "file", "ref": "scripts/lib/step/plausibility.js" } }
+      }
+    ]
   },
 
   "checks": [
@@ -557,7 +564,9 @@
       "when": "post",
       "source": "invariant",
       "frequency": "every_run",
-      "last_measured": { "value": 0, "at": "2026-09-04T00:00:00.000Z", "commit": "cd26f9ea", "cost_ms": 210, "sample_n": 1, "source_run": { "run_id": null, "chain": null, "event": "golden_capture" } },
+      "statement_timeout": "none",
+      "statement_timeout_why": { "text": "EP-D17 (WF3, 2026-09-10, C1; output-panel fix F4) — declared \"none\" DELIBERATELY, not a hardcoded duration: this entry inherits step_post_check_statement_timeout_minutes (10 min default) as its ceiling, resolved by scripts/lib/step/index.js at run time. A hardcoded \"10m\" literal here would have won over the tunable and made step_post_check_statement_timeout_minutes inert (Rule 3 — nothing hidden). Cloud EXPLAIN measured this SQL shape (a full Seq Scan on parcels, cost 568,601-573,235) at 16-30s on a vacuumed heap vs 40+ min against the 1,346,759 dead tuples pass 4 creates — the 10-minute default is 20-37x the clean-heap cost with headroom, and raising the tunable (not editing this entry) is how an operator widens it.", "liveness": { "kind": "file", "ref": ".cursor/wf3_ep_d17_pass5_fullscan_checks_active_task.md" } },
+      "last_measured": { "value": 0, "at": "2026-09-10T20:17:29.000Z", "commit": "EP-D17", "cost_ms": 24000, "sample_n": 1, "source_run": { "run_id": "34506962436", "chain": "sources", "event": "chain_run" } },
       "why": { "text": "Spec 78 §P2 — an as-of-right build may never exceed the max-build envelope. Fold C4 measured 0/424,123 clean; a genuine positive count means the optimal-config engine escaped its own binding constraint.", "liveness": { "kind": "column", "ref": "parcels.opt_aor_gfa_sqm" } }
     },
     {
@@ -569,7 +578,9 @@
       "when": "post",
       "source": "invariant",
       "frequency": "every_run",
-      "last_measured": { "value": 0, "at": "2026-09-04T00:00:00.000Z", "commit": "cd26f9ea", "cost_ms": 180, "sample_n": 1, "source_run": { "run_id": null, "chain": null, "event": "golden_capture" } },
+      "statement_timeout": "none",
+      "statement_timeout_why": { "text": "EP-D17 (WF3, 2026-09-10, C1; output-panel fix F4) — declared \"none\" DELIBERATELY: inherits step_post_check_statement_timeout_minutes (10 min default) as its ceiling rather than a hardcoded literal that would have made the tunable inert (Rule 3). Same SQL shape as this step's other 4 post checks (full Seq Scan on parcels, EXPLAIN cost within 1% of the other 4 entries), so the same 16-30s clean / 40+ min bloated cliff applies.", "liveness": { "kind": "file", "ref": ".cursor/wf3_ep_d17_pass5_fullscan_checks_active_task.md" } },
+      "last_measured": { "value": 0, "at": "2026-09-10T20:17:29.000Z", "commit": "EP-D17", "cost_ms": 24000, "sample_n": 1, "source_run": { "run_id": "34506962436", "chain": "sources", "event": "chain_run" } },
       "why": { "text": "Spec 65 §3c — a share is structurally a fraction of total joined area; a value outside [0,1] means the area-aggregation SQL itself regressed, not a data-quality finding.", "liveness": { "kind": "column", "ref": "parcels.zoning_dominant_area_share" } }
     }
   ],
@@ -586,7 +597,9 @@
       "source": "plausibility",
       "frequency": "every_run",
       "retighten_when": "population trends toward 0 as the comps corpus densifies",
-      "last_measured": { "value": 0, "at": "2026-09-04T00:00:00.000Z", "commit": "cd26f9ea", "cost_ms": 240, "sample_n": 1, "source_run": { "run_id": null, "chain": null, "event": "manual_timing" } },
+      "statement_timeout": "none",
+      "statement_timeout_why": { "text": "EP-D17 (WF3, 2026-09-10, C1; output-panel fix F4) — declared \"none\" DELIBERATELY: inherits step_post_check_statement_timeout_minutes (10 min default) as its ceiling rather than a hardcoded literal that would have made the tunable inert (Rule 3). Same SQL shape as this step's other 4 post checks (full Seq Scan on parcels, EXPLAIN cost within 1% of the other 4 entries), so the same clean/bloated cliff applies.", "liveness": { "kind": "file", "ref": ".cursor/wf3_ep_d17_pass5_fullscan_checks_active_task.md" } },
+      "last_measured": { "value": 0, "at": "2026-09-10T20:17:29.000Z", "commit": "EP-D17", "cost_ms": 24000, "sample_n": 1, "source_run": { "run_id": "34506962436", "chain": "sources", "event": "chain_run" } },
       "why": { "text": "EP-D8 small-N caveat (Fold C2, PINNED per Spec 123 §3.1). comp_fsi_p50 has no structure_family/zone compatibility invariant (:1164-1166 filters work_type + [0.05,8] only) — parcel 8244 (R, detached, 290 sqm) measured comp_fsi_p50=6.615 sourced from apartment-scale comps (structure_family:\"all\"). A median over < 3 comps is a genuinely thin sample regardless of the family-mismatch defect; WARN surfaces the population so a reader can weigh confidence, peel 8y (Fold G1) fixes the family filter itself.", "liveness": { "kind": "file", "ref": "docs/reports/defect-ledger.md" } }
     },
     {
@@ -599,7 +612,9 @@
       "source": "plausibility",
       "frequency": "every_run",
       "kind": "distribution",
-      "last_measured": { "value": 1677, "at": "2026-09-04T00:00:00.000Z", "commit": "cd26f9ea", "cost_ms": 260, "sample_n": 1, "source_run": { "run_id": null, "chain": null, "event": "manual_timing" } },
+      "statement_timeout": "none",
+      "statement_timeout_why": { "text": "EP-D17 (WF3, 2026-09-10, C1; output-panel fix F4) — declared \"none\" DELIBERATELY: inherits step_post_check_statement_timeout_minutes (10 min default) as its ceiling rather than a hardcoded literal that would have made the tunable inert (Rule 3). Same SQL shape as this step's other 4 post checks (full Seq Scan on parcels, EXPLAIN cost within 1% of the other 4 entries), so the same clean/bloated cliff applies.", "liveness": { "kind": "file", "ref": ".cursor/wf3_ep_d17_pass5_fullscan_checks_active_task.md" } },
+      "last_measured": { "value": 1677, "at": "2026-09-10T20:17:29.000Z", "commit": "EP-D17", "cost_ms": 24000, "sample_n": 1, "source_run": { "run_id": "34506962436", "chain": "sources", "event": "chain_run" } },
       "why": { "text": "Ask 9 RULING (Fold G4): Spec 65 §4 MB-5 states heritage GFA carries NO FSI cap by design — high heritage coverage is EXPECTED, not anomalous. Fold C3 measured 1,677/5,283 (31.7%) of heritage-basis parcels exceeding 65% coverage; a WARN/FAIL bound on ~32% of a class the spec itself calls legitimate repeats the exact over-gating pattern DEC-4 rejects elsewhere in this same spec. INFO-only distribution row, mirroring MB-8's own \"all INFO, never gated\" convention — a gated bound would require a fresh Spec 65 §4 amendment overriding MB-5's stated intent, not a silent commit-7 default.", "liveness": { "kind": "spec", "ref": "docs/specs/01-pipeline/65_enrich_parcels.md" } }
     },
     {
@@ -612,8 +627,24 @@
       "source": "plausibility",
       "frequency": "every_run",
       "retighten_when": "zero rows",
-      "last_measured": { "value": 0, "at": "2026-09-04T00:00:00.000Z", "commit": "cd26f9ea", "cost_ms": 190, "sample_n": 1, "source_run": { "run_id": null, "chain": null, "event": "manual_timing" } },
+      "statement_timeout": "none",
+      "statement_timeout_why": { "text": "EP-D17 (WF3, 2026-09-10, C1; output-panel fix F4) — declared \"none\" DELIBERATELY: inherits step_post_check_statement_timeout_minutes (10 min default) as its ceiling rather than a hardcoded literal that would have made the tunable inert (Rule 3). Same SQL shape as this step's other 4 post checks (full Seq Scan on parcels, EXPLAIN cost within 1% of the other 4 entries), so the same clean/bloated cliff applies.", "liveness": { "kind": "file", "ref": ".cursor/wf3_ep_d17_pass5_fullscan_checks_active_task.md" } },
+      "last_measured": { "value": 0, "at": "2026-09-10T20:17:29.000Z", "commit": "EP-D17", "cost_ms": 24000, "sample_n": 1, "source_run": { "run_id": "34506962436", "chain": "sources", "event": "chain_run" } },
       "why": { "text": "Spec 65 §5 ES-6.2 — a primary footprint exceeding 1 + mislink_footprint_lot_tol (0.05) of its own lot should already be NULLed by the mislink guard (existing_data_quality_flag = 'footprint_exceeds_lot'). A row past the bound WITHOUT that flag set is the guard failing to fire on its own stated case.", "liveness": { "kind": "column", "ref": "parcels.existing_data_quality_flag" } }
+    },
+    {
+      "id": "parcels_dead_tuple_ratio",
+      "sql": "SELECT round((n_dead_tup::numeric / GREATEST(n_live_tup + n_dead_tup, 1)) * 10000)::float8 / 10000 FROM pg_stat_user_tables WHERE relname = 'parcels'",
+      "bound": "value_max 0.30",
+      "limit_from_config": "parcels_dead_tuple_ratio_warn_max",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "source": "plausibility",
+      "frequency": "every_run",
+      "retighten_when": "migration 247's tuned autovacuum params keep the post-run ratio under half the warn bound for 5 consecutive runs",
+      "last_measured": { "value": 0.697, "at": "2026-09-10T20:31:00.000Z", "commit": "EP-D17", "cost_ms": 5, "sample_n": 1, "source_run": { "run_id": "34506962436", "chain": "sources", "event": "chain_run" } },
+      "why": { "text": "EP-D17 (WF3, 2026-09-10, C4) — operator structural ruling: bloat maintenance is part of the STANDARD step, not chain-tail folklore. Output-panel fix F2/F3 (2026-09-10): the caller (scripts/lib/step/index.js) runs execution.maintenance's runMaintenance BEFORE this entry, not after — an earlier draft had this reading the PRE-vacuum state on every run, which would WARN by construction (0.697 measured, well above the 0.30 default) and degrade every healthy chain to completed_with_warnings. With the reorder, THIS row reads the POST-maintenance state: on a run where the target exceeded the threshold, runMaintenance has already VACUUMed it, so a healthy run reads near 0, not 0.697. The 0.697 measured value below is the PRE-fix/PRE-reorder evidence that motivated this row's creation (cloud EXPLAIN 2026-09-10, run 34506962436) — the POST-reorder steady-state value is unmeasured pending the next real cloud dispatch (no SUPABASE_DATABASE_URL in this WF3's worktree). The sys_maintenance_parcels_vacuum_analyze row (scripts/lib/step/plausibility.js runMaintenance) is the PRE-maintenance reading on every run, visible live, excluded from golden by its sys_ prefix. The SQL here is a pg_stat_user_tables catalog lookup, not a scan of parcels itself — \"zero additional scans\" in the sense that matters (heap pages read), consistent with rung (b)'s cost bound.", "liveness": { "kind": "table", "ref": "parcels" } }
     }
   ],
 
@@ -735,7 +766,11 @@
       { "name": "enrich_parcels_zone_class_pct_warn_floor", "min": 0, "max": 100, "on_invalid": "fail" },
       { "name": "enrich_parcels_pass5_timeout_minutes", "min": 0, "max": 180, "on_invalid": "fail" },
       { "name": "enrich_parcels_scope_recovery_batch_size", "min": 100, "max": 10000, "on_invalid": "fail" },
-      { "name": "enrich_parcels_pending_scope_warn_max", "min": 0, "max": 5000000, "on_invalid": "fail" }
+      { "name": "enrich_parcels_pending_scope_warn_max", "min": 0, "max": 5000000, "on_invalid": "fail" },
+      { "name": "step_post_check_statement_timeout_minutes", "min": 1, "max": 75, "on_invalid": "fail" },
+      { "name": "parcels_dead_tuple_ratio_warn_max", "min": 0, "max": 5, "on_invalid": "fail" },
+      { "name": "step_post_check_concurrency", "min": 1, "max": 10, "on_invalid": "fail" },
+      { "name": "parcels_maintenance_timeout_minutes", "min": 1, "max": 60, "on_invalid": "fail" }
     ],
     "validation": "strict",
     "hoisted_above_gate": true,

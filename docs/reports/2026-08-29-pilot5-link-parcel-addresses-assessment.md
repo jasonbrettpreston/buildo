@@ -716,7 +716,7 @@ Spec 124 §2 Rule 13's R-T addendum lands 5 net-new `invariants[]` (rows, multi_
 
 | # | Scope | Pass | Detail |
 |---|---|---|---|
-| 1 | link_parcel_addresses | PASS | min_migration=159 <= migrations count=243 |
+| 1 | link_parcel_addresses | PASS | min_migration=159 <= migrations count=244 |
 | 2 | link_parcel_addresses | PASS | 7 declared, missing from seeds: none |
 | 3 | link_parcel_addresses | PASS | retired=0 overlap-with-declared=none |
 | 7 | link_parcel_addresses | PASS | SPEC LINK header present=true |
@@ -734,7 +734,7 @@ Spec 124 §2 Rule 13's R-T addendum lands 5 net-new `invariants[]` (rows, multi_
 - compare ran: true · diffs found: 91 · unexplained: 0
 
 ### Test suite (item iii)
-- 840/861 passed (suite success=false)
+- 842/862 passed (suite success=false)
 
 ### Policy coverage matrix (item vi) — Spec 124 Rules 1-13
 
@@ -753,7 +753,7 @@ Spec 124 §2 Rule 13's R-T addendum lands 5 net-new `invariants[]` (rows, multi_
 | 11 | Phase-order re-derive (declared half, checkOrderGuaranteesCited) | enforced-green | no when:"pre_write" checks — vacuously nothing to cite — G-3 completeness half stays open |
 | 12 | Truthful crash posture (R-B reachability, static + R-M before-image) | enforced-green | R-B (checkInterruptedPostureTruthful): recovery.interrupted="none" — no reachability claim to verify · R-M: prose-only (R-M/LG-17 describe not scoped to this step (vitest not run, or no before-image target)) |
 | 13 | A step validates itself | enforced-green | this run of step:validate IS the mechanism |
-| P3 | I/O cost adjudication (measured, not gated) | measured | descriptor=42892B notes=8299B checks=19 rows records_meta=1390B (newest post/ capture) |
+| P3 | I/O cost adjudication (measured, not gated) | measured | descriptor=42892B notes=8210B checks=19 rows records_meta=3836B (newest post/ capture) |
 
 **Enforced-green: 13/14**
 

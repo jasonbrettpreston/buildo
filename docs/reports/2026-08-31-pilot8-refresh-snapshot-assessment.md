@@ -686,7 +686,7 @@ This report's every executed claim was independently re-executed (not re-read) b
 
 | # | Scope | Pass | Detail |
 |---|---|---|---|
-| 1 | refresh_snapshot | PASS | min_migration=15 <= migrations count=243 |
+| 1 | refresh_snapshot | PASS | min_migration=15 <= migrations count=244 |
 | 2 | refresh_snapshot | PASS | 2 declared, missing from seeds: none |
 | 3 | refresh_snapshot | PASS | retired=0 overlap-with-declared=none |
 | 7 | refresh_snapshot | PASS | SPEC LINK header present=true |
@@ -704,7 +704,7 @@ This report's every executed claim was independently re-executed (not re-read) b
 - compare ran: true · diffs found: 732 · unexplained: 0
 
 ### Test suite (item iii)
-- 843/861 passed (suite success=false)
+- 845/862 passed (suite success=false)
 
 ### Policy coverage matrix (item vi) — Spec 124 Rules 1-13
 
@@ -723,7 +723,7 @@ This report's every executed claim was independently re-executed (not re-read) b
 | 11 | Phase-order re-derive (declared half, checkOrderGuaranteesCited) | enforced-green | no when:"pre_write" checks — vacuously nothing to cite — G-3 completeness half stays open |
 | 12 | Truthful crash posture (R-B reachability, static + R-M before-image) | enforced-green | R-B (checkInterruptedPostureTruthful): recovery.interrupted="none" — no reachability claim to verify · R-M: prose-only (R-M/LG-17 describe not scoped to this step (vitest not run, or no before-image target)) |
 | 13 | A step validates itself | enforced-green | this run of step:validate IS the mechanism |
-| P3 | I/O cost adjudication (measured, not gated) | measured | descriptor=28234B notes=3765B checks=10 rows records_meta=1701B (newest post/ capture) |
+| P3 | I/O cost adjudication (measured, not gated) | measured | descriptor=27844B notes=3746B checks=10 rows records_meta=1694B (newest post/ capture) |
 
 **Enforced-green: 13/14**
 

@@ -167,7 +167,8 @@ interface Descriptor {
   config: 'none' | { logic_variables: Array<{ name: string; min: unknown; max: unknown; on_invalid: string }> };
   inputs: { reads: { tables: Array<{ table: string; columns?: string[] }> } };
   recovery?: 'none' | { interrupted: string; interrupted_why?: unknown; before_image: string; before_image_why?: unknown };
-  plausibility?: 'none' | Array<{ id?: string; name?: string; count_field?: string; severity?: string }>;
+  plausibility?: 'none' | Array<{ id?: string; name?: string; count_field?: string; severity?: string; statement_timeout?: string }>;
+  invariants?: 'none' | Array<{ id?: string; name?: string; severity?: string; statement_timeout?: string }>;
 }
 interface Notes { [k: string]: unknown }
 type ComputeFn = (ctx: unknown) => Promise<{ records_meta?: Record<string, unknown> } | void>;
@@ -264,6 +265,26 @@ describe('the descriptor — ENRICHER archetype, execution.shape:"enrich" (Ask 1
       const entry = cfg.logic_variables.find((v) => v.name === name);
       expect(entry, `${name} (one of the 25 pre-existing LOGIC_VARS_SCHEMA keys) not declared in config.logic_variables[]`).toBeDefined();
       expect(entry!.on_invalid, `${name} is write-affecting — R-G mandates on_invalid:"fail"`).toBe('fail');
+    }
+  });
+
+  it('EP-D17 output-panel fix F4 — none of the original 5 bloat-sensitive invariants[]/plausibility[] entries hard-codes a statement_timeout literal; every one declares "none" so it actually inherits step_post_check_statement_timeout_minutes (a hardcoded literal would make the tunable inert)', () => {
+    const d = loadDescriptor();
+    const entries = [
+      ...(Array.isArray(d.invariants) ? d.invariants : []),
+      ...(Array.isArray(d.plausibility) ? d.plausibility : []),
+    ] as Array<{ id: string; statement_timeout?: string }>;
+    const bloatSensitiveIds = [
+      'opt_aor_gfa_gt_max_buildable_gfa_count',
+      'zoning_dominant_area_share_out_of_range_count',
+      'comp_fsi_p50_small_n_sample_count',
+      'heritage_basis_coverage_distribution',
+      'existing_mislink_footprint_ratio_out_of_bound_count',
+    ];
+    for (const id of bloatSensitiveIds) {
+      const e = entries.find((x) => x.id === id);
+      expect(e, `${id} not found on the descriptor`).toBeDefined();
+      expect(e!.statement_timeout, `${id} must declare statement_timeout:"none" so it inherits step_post_check_statement_timeout_minutes, not a hardcoded literal`).toBe('none');
     }
   });
 
@@ -631,7 +652,7 @@ describe('facts testable today — the live tree, not a future artifact', () => 
     expect(Math.max(...nums, 0), 'LG-28 (runEnrichPhase) has now landed (commit 7d/commit 2) — the highest LG number in scripts/lib + scripts/steps/_schema must be 28').toBe(28);
   });
 
-  it('converted.json — pending stays registered (not yet converted); the DECLARED stage is "shape_clean" or its R-K.2 sibling "shape_clean_pending_recapture" (commit 7e/3 advanced to shape_clean 2026-09-08; commit 8 P1 moved it to shape_clean_pending_recapture the SAME day, since P1-P4 edit compute\'s VALUES without changing its SHAPE — conformanceFindings() stays [], only the golden fingerprint is knowingly deferred to P6). Commit 9 cutover still needs the 5 cutover_prereq items (EP-PIN-B45/D8/D9/D10/D14) resolved plus a green cloud chain-sources run.', () => {
+  it('converted.json — pending stays registered (not yet converted); the DECLARED stage is "shape_clean" or its R-K.2 sibling "shape_clean_pending_recapture" (commit 7e/3 advanced to shape_clean 2026-09-08; commit 8 P1 moved it to shape_clean_pending_recapture the SAME day, since P1-P4 edit compute\'s VALUES without changing its SHAPE — conformanceFindings() stays [], only the golden fingerprint is knowingly deferred to P6). Commit 9 cutover still needs the 6 cutover_prereq items (EP-PIN-B45/D8/D9/D10/D14/D17) resolved plus a green cloud chain-sources run.', () => {
     const c = JSON.parse(fs.readFileSync(abs(CONVERTED_REL), 'utf8')) as { converted: string[]; pending: Array<{ file: string; stage: string }> };
     expect(c.converted.includes(STEP_REL), 'enrich_parcels must not be registered as converted yet — that is commit 9 (cutover)').toBe(false);
     const entry = c.pending.find((p) => p.file === STEP_REL);

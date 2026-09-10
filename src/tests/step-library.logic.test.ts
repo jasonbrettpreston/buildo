@@ -32,6 +32,8 @@ const pipeline = require(join(process.cwd(), 'scripts/lib/pipeline.js'));
 
 const stalenessLib = require(join(process.cwd(), 'scripts/lib/step/staleness.js'));
 const acquireLib = require(join(process.cwd(), 'scripts/lib/step/acquire.js'));
+// EP-D17 (WF3, 2026-09-10) — the ceiling/duration/concurrency/maintenance executor.
+const plausibilityLib = require(join(process.cwd(), 'scripts/lib/step/plausibility.js'));
 
 const FIXTURES = join(process.cwd(), 'scripts/steps/_schema/fixtures');
 const ASSERT_SCHEMA = require(join(FIXTURES, 'valid/assert_schema.descriptor.json'));
@@ -952,6 +954,322 @@ describe('R-T addendum, commit 3 — invariants[]/plausibility[] EVERY_RUN execu
     // This unit-level check instead locks that buildAuditTable folds EVERYTHING it is
     // handed, uniformly, with no category-specific branch — the actual Fold A-2 guarantee.
     expect(metrics).toEqual(expect.arrayContaining(['pre_entry', 'post_entry']));
+  });
+});
+
+// ---------------------------------------------------------------------------
+// 6c. EP-D17 (WF3, 2026-09-10) — plausibility.js's executeEntry/runValidatorEntries
+//     ceiling default, loud-timeout, duration_ms and concurrency; runMaintenance
+//     (the execution.maintenance library executor). Unit-level against hand-built
+//     fake pools/clients — the fixture in 6b (ASSERT_SCHEMA + fakePool) has no
+//     execution.statement_timeout worth asserting a default FROM, so these test
+//     plausibility.js's exported functions directly (SPEC LINK: 124_step_standard_policy.md
+//     §7 ladder rungs (a)(iii)/(b)/(c)/(d)).
+// ---------------------------------------------------------------------------
+
+function epD17TestEntry(overrides: Record<string, unknown> = {}) {
+  return {
+    id: 'ep_d17_test_entry',
+    sql: 'SELECT 1 AS v -- EP_D17_TEST_SQL',
+    bound: 'value_min 0',
+    severity: 'WARN',
+    blocking: false,
+    when: 'post',
+    source: 'plausibility',
+    frequency: 'every_run',
+    last_measured: {
+      value: 1, at: '2026-09-10T00:00:00.000Z', commit: '0000000', cost_ms: 1, sample_n: 1,
+      source_run: { run_id: null, chain: null, event: 'fixture' },
+    },
+    why: { text: 'fixture, EP-D17 test', liveness: 'none' },
+    ...overrides,
+  };
+}
+
+describe('EP-D17 (WF3, 2026-09-10) — executeEntry ceiling default + duration_ms + loud timeout', () => {
+  it('lock 1 (RED-first) — an entry with NO declared statement_timeout still runs inside BEGIN/SET LOCAL/COMMIT when a defaultTimeoutMs is supplied (never the bare pool.query branch)', async () => {
+    const calls: string[] = [];
+    const client = {
+      query: async (sql: string) => {
+        calls.push(sql);
+        if (sql.includes('EP_D17_TEST_SQL')) return { rows: [{ v: 7 }] };
+        return { rows: [] };
+      },
+      release: () => {},
+    };
+    const pool = {
+      connect: async () => client,
+      query: async () => { throw new Error('must not take the bare pool.query branch once a ceiling applies'); },
+    };
+    const result = await plausibilityLib.executeEntry(pool, epD17TestEntry(), 600000);
+    expect(calls[0]).toBe('BEGIN');
+    expect(calls[1]).toMatch(/^SET LOCAL statement_timeout = 600000$/);
+    expect(calls[2]).toContain('EP_D17_TEST_SQL');
+    expect(calls[3]).toBe('COMMIT');
+    expect(result.value).toBe(7);
+    expect(typeof result.duration_ms).toBe('number');
+  });
+
+  it('a DECLARED statement_timeout still wins over defaultTimeoutMs (the entry-level override is never silently widened by the step-level default)', async () => {
+    const calls: string[] = [];
+    const client = { query: async (sql: string) => { calls.push(sql); return sql.includes('EP_D17_TEST_SQL') ? { rows: [{ v: 1 }] } : { rows: [] }; }, release: () => {} };
+    const pool = { connect: async () => client, query: async () => { throw new Error('unused'); } };
+    await plausibilityLib.executeEntry(pool, epD17TestEntry({ statement_timeout: '30s', statement_timeout_why: { text: 'fixture', liveness: 'none' } }), 600000);
+    expect(calls[1]).toBe('SET LOCAL statement_timeout = 30000');
+  });
+
+  it('an entry with NO declared timeout and NO defaultTimeoutMs falls through to the bare pool.query branch (fixture safety net, never a live step)', async () => {
+    const pool = { connect: async () => { throw new Error('must not connect when no ceiling applies at all'); }, query: async (sql: string) => (sql.includes('EP_D17_TEST_SQL') ? { rows: [{ v: 3 }] } : { rows: [] }) };
+    const result = await plausibilityLib.executeEntry(pool, epD17TestEntry(), null);
+    expect(result.value).toBe(3);
+  });
+
+  it('lock 2 (both directions) — a 57014 statement-timeout error is a distinct FAIL-shaped {error} observation, never a swallowed value/0, and the client is released on the throw path', async () => {
+    const err = Object.assign(new Error('canceling statement due to statement timeout'), { code: '57014' });
+    let released = false;
+    const client = {
+      query: async (sql: string) => {
+        if (sql.includes('EP_D17_TEST_SQL')) throw err;
+        return { rows: [] }; // BEGIN / SET LOCAL / ROLLBACK all succeed
+      },
+      release: () => { released = true; },
+    };
+    const pool = { connect: async () => client, query: async () => { throw new Error('unused'); } };
+    const result = await plausibilityLib.executeEntry(pool, epD17TestEntry(), 5000);
+    expect(result.error).toBe(err);
+    expect(result.value).toBeUndefined();
+    expect(typeof result.duration_ms, 'a timed-out entry must still carry how long it ran before it died').toBe('number');
+    expect(released, 'the client must be released on the throw path too, not only on success').toBe(true);
+  });
+
+  it('lock 6 — runValidatorEntries attaches duration_ms to EVERY executed entry\'s observation, keyed by entry id', async () => {
+    const pool = {
+      connect: async () => ({ query: async (sql: string) => (sql.includes('EP_D17_TEST_SQL') ? { rows: [{ v: 1 }] } : { rows: [] }), release: () => {} }),
+      query: async () => { throw new Error('unused'); },
+    };
+    const { observations } = await plausibilityLib.runValidatorEntries(
+      pool, [epD17TestEntry({ id: 'a' }), epD17TestEntry({ id: 'b' })],
+      { frequency: 'every_run', when: null, defaultTimeoutMs: 5000 },
+    );
+    expect(typeof observations.a.duration_ms).toBe('number');
+    expect(typeof observations.b.duration_ms).toBe('number');
+  });
+
+  it('lock 5 (RED-first, both directions) — every selected entry\'s client is connect()ed BEFORE any of their queries resolve, each is released on both the success and throw path, and one entry\'s FAIL does not swallow the other\'s row', async () => {
+    const order: string[] = [];
+    const released: boolean[] = [];
+    let openGate: (() => void) | undefined;
+    const gate = new Promise<void>((res) => { openGate = res; });
+    let connectCount = 0;
+    const pool = {
+      connect: async () => {
+        const myIndex = connectCount++;
+        order.push(`connect:${myIndex}`);
+        return {
+          query: async (sql: string) => {
+            if (sql === 'BEGIN' || sql === 'COMMIT' || sql === 'ROLLBACK' || sql.startsWith('SET LOCAL')) return { rows: [] };
+            order.push(`query:${myIndex}`);
+            if (myIndex === 0) throw Object.assign(new Error('boom'), { code: '57014' }); // entry 0 fails
+            await gate; // entry 1 waits until BOTH connects are on record, proving they raced ahead of it
+            return { rows: [{ v: myIndex }] };
+          },
+          release: () => { released[myIndex] = true; },
+        };
+      },
+      query: async () => { throw new Error('unused — every entry declares/derives a ceiling'); },
+    };
+    const entries = [epD17TestEntry({ id: 'e0' }), epD17TestEntry({ id: 'e1' })];
+    const runPromise = plausibilityLib.runValidatorEntries(pool, entries, { frequency: 'every_run', when: null, defaultTimeoutMs: 5000 });
+    await new Promise((r) => setTimeout(r, 0));
+    expect(order.filter((o) => o.startsWith('connect:')), 'both clients must be requested before either query resolves — proves Promise.all, not the old for-await serial loop').toHaveLength(2);
+    openGate!();
+    const { observations } = await runPromise;
+    expect(observations.e0.error, 'entry 0\'s FAIL must not short-circuit Promise.all').toBeDefined();
+    expect(observations.e1.value, 'entry 1\'s row must still be produced despite entry 0\'s failure').toBe(1);
+    expect(released[0]).toBe(true);
+    expect(released[1]).toBe(true);
+  });
+});
+
+/** A fake pool whose `connect()` returns a dedicated client sharing the SAME
+ * `calls` log as `pool.query()` — mirrors runMaintenance's real dedicated-client
+ * ceiling path (F5) without needing the full `fakePool()` helper's config/ledger
+ * machinery for these pure-function unit tests. */
+function fakeMaintenancePool(answer: (sql: string) => { rows: unknown[] }) {
+  const calls: string[] = [];
+  const client = {
+    query: async (sql: string) => { calls.push(sql); return answer(sql); },
+    release: () => {},
+  };
+  return { calls, connect: async () => client, query: async (sql: string) => { calls.push(sql); return answer(sql); } };
+}
+
+describe('EP-D17 (WF3, 2026-09-10, C4) — runMaintenance: the execution.maintenance library executor', () => {
+  it('"none" declaration produces zero rows and issues zero queries (every converted step but enrich_parcels, today)', async () => {
+    const pool = { query: async () => { throw new Error('must not query at all for a "none" declaration'); }, connect: async () => { throw new Error('must not connect at all'); } };
+    const rows = await plausibilityLib.runMaintenance(pool, 'none', {});
+    expect(rows).toEqual([]);
+  });
+
+  it('below the declared threshold — SKIPPED, INFO, no VACUUM issued, sys_-prefixed metric (F1)', async () => {
+    const pool = fakeMaintenancePool((sql) => (sql.includes('pg_stat_user_tables') ? { rows: [{ live: '900', dead: '100' }] } : { rows: [] })); // dead_ratio 0.10
+    const rows = await plausibilityLib.runMaintenance(
+      pool,
+      [{ operation: 'vacuum_analyze', table: 'parcels', owned_by: 'self', why: { text: 'fixture, EP-D17 test', liveness: 'none' } }],
+      { parcels_dead_tuple_ratio_warn_max: 0.3 },
+    );
+    expect(rows).toHaveLength(1);
+    expect(rows[0].metric).toBe('sys_maintenance_parcels_vacuum_analyze');
+    expect(rows[0].status).toBe('INFO');
+    expect(rows[0].value).toBe(0.1);
+    expect(pool.calls.some((s) => s.startsWith('VACUUM'))).toBe(false);
+  });
+
+  it('both directions, RED-first — AT/ABOVE the declared threshold, the declared VACUUM (ANALYZE) statement is issued on a DEDICATED client with its own declared ceiling (F5), and the row records it under a sys_-prefixed metric (F1)', async () => {
+    const pool = fakeMaintenancePool((sql) => (sql.includes('pg_stat_user_tables') ? { rows: [{ live: '300', dead: '700' }] } : { rows: [] })); // dead_ratio 0.70
+    const rows = await plausibilityLib.runMaintenance(
+      pool,
+      [{ operation: 'vacuum_analyze', table: 'parcels', owned_by: 'self', why: { text: 'fixture, EP-D17 test', liveness: 'none' } }],
+      { parcels_dead_tuple_ratio_warn_max: 0.3 },
+    );
+    expect(pool.calls).toContain('VACUUM (ANALYZE) "parcels"');
+    // F5 — the default 15-minute ceiling, applied on the SAME dedicated client, BEFORE the statement.
+    const setIdx = pool.calls.findIndex((s) => s === 'SET statement_timeout = 900000');
+    const vacIdx = pool.calls.findIndex((s) => s === 'VACUUM (ANALYZE) "parcels"');
+    expect(setIdx, 'the ceiling must be SET before the VACUUM statement, on the same client').toBeGreaterThan(-1);
+    expect(setIdx).toBeLessThan(vacIdx);
+    expect(rows[0].metric).toBe('sys_maintenance_parcels_vacuum_analyze');
+    expect(rows[0].status).toBe('INFO');
+    expect(rows[0].value).toBe(0.7);
+    expect(typeof rows[0].duration_ms).toBe('number');
+  });
+
+  it('F5 lock (both directions) — a declared `${table}_maintenance_timeout_minutes` overrides the 15-minute default, and the applied SET reflects it (raising the tunable changes the applied ceiling)', async () => {
+    const pool = fakeMaintenancePool((sql) => (sql.includes('pg_stat_user_tables') ? { rows: [{ live: '300', dead: '700' }] } : { rows: [] }));
+    await plausibilityLib.runMaintenance(
+      pool,
+      [{ operation: 'vacuum_analyze', table: 'parcels', owned_by: 'self', why: { text: 'fixture, EP-D17 test', liveness: 'none' } }],
+      { parcels_dead_tuple_ratio_warn_max: 0.3, parcels_maintenance_timeout_minutes: 30 },
+    );
+    expect(pool.calls).toContain('SET statement_timeout = 1800000');
+    expect(pool.calls).not.toContain('SET statement_timeout = 900000');
+  });
+
+  it('no matching logic-variable declared for this table — SKIPPED with a WARN reason, never a silent hardcoded threshold', async () => {
+    const pool = fakeMaintenancePool((sql) => (sql.includes('pg_stat_user_tables') ? { rows: [{ live: '100', dead: '900' }] } : { rows: [] }));
+    const rows = await plausibilityLib.runMaintenance(
+      pool,
+      [{ operation: 'vacuum_analyze', table: 'parcels', owned_by: 'self', why: { text: 'fixture, EP-D17 test', liveness: 'none' } }],
+      {}, // no parcels_dead_tuple_ratio_warn_max
+    );
+    expect(rows[0].status).toBe('WARN');
+  });
+
+  it('F6 lock — a measurement failure (pg_stat_user_tables query throws) is reported AND logged (pipeline.log.warn), never crashes the step and never silently swallowed', async () => {
+    const pool = { query: async () => { throw new Error('connection reset'); }, connect: async () => { throw new Error('unused'); } };
+    const warnings: Array<[string, string]> = [];
+    const rows = await plausibilityLib.runMaintenance(
+      pool,
+      [{ operation: 'vacuum_analyze', table: 'parcels', owned_by: 'self', why: { text: 'fixture, EP-D17 test', liveness: 'none' } }],
+      { parcels_dead_tuple_ratio_warn_max: 0.3 },
+      { log: { warn: (tag: string, msg: string) => { warnings.push([tag, msg]); } }, tag: '[test-step]' },
+    );
+    expect(rows[0].status).toBe('WARN');
+    expect(rows[0].value).toBeNull();
+    expect(warnings).toHaveLength(1);
+    expect(warnings[0]![0]).toBe('[test-step]');
+    expect(warnings[0]![1]).toContain('connection reset');
+  });
+
+  it('F6 lock — an execution FAILURE (the VACUUM statement itself throws) is also reported AND logged', async () => {
+    const client = {
+      query: async (sql: string) => {
+        if (sql.startsWith('SET statement_timeout')) return { rows: [] };
+        throw new Error('canceling statement due to statement timeout');
+      },
+      release: () => {},
+    };
+    const pool = {
+      connect: async () => client,
+      query: async (sql: string) => (sql.includes('pg_stat_user_tables') ? { rows: [{ live: '300', dead: '700' }] } : { rows: [] }),
+    };
+    const warnings: Array<[string, string]> = [];
+    const rows = await plausibilityLib.runMaintenance(
+      pool,
+      [{ operation: 'vacuum_analyze', table: 'parcels', owned_by: 'self', why: { text: 'fixture, EP-D17 test', liveness: 'none' } }],
+      { parcels_dead_tuple_ratio_warn_max: 0.3 },
+      { log: { warn: (tag: string, msg: string) => { warnings.push([tag, msg]); } }, tag: '[test-step]' },
+    );
+    expect(rows[0].status).toBe('WARN');
+    expect(warnings).toHaveLength(1);
+    expect(warnings[0]![1]).toContain('statement timeout');
+  });
+});
+
+describe('EP-D17 output-panel fix F2 (HIGH) — execution.maintenance runs BEFORE the run-end invariants[]/plausibility[] checks', () => {
+  it('lock (order asserted) — the dead_ratio measurement query issues strictly before any post-check SQL, end to end through pipeline.step()', async () => {
+    const d = withInvariants([testInvariant({ id: 'post_check', when: 'post' })]);
+    (d as unknown as { execution: Record<string, unknown> }).execution = {
+      ...(d as unknown as { execution: Record<string, unknown> }).execution,
+      maintenance: [{ operation: 'vacuum_analyze', table: 'parcels', owned_by: 'self', why: { text: 'fixture, EP-D17 test', liveness: 'none' } }],
+    };
+    const pool = fakePool({
+      queryAnswers: [
+        { match: (t) => t.includes('pg_stat_user_tables'), rows: [{ live: '100', dead: '900' }] },
+        { match: (t) => t.includes('TEST_INVARIANT_SQL'), rows: [{ v: 0 }] },
+      ],
+    });
+    const cap = captureEmissions();
+    try {
+      await pipeline.step(d, allClean).run({ pool, chainId: 'sources' });
+    } finally {
+      cap.restore();
+    }
+    const statIdx = pool.sql.findIndex((s) => s.includes('pg_stat_user_tables'));
+    const checkIdx = pool.sql.findIndex((s) => s.includes('TEST_INVARIANT_SQL'));
+    expect(statIdx, 'the maintenance dead_ratio measurement must have run').toBeGreaterThan(-1);
+    expect(checkIdx, 'the post check must have run').toBeGreaterThan(-1);
+    expect(statIdx, 'maintenance must run BEFORE the post checks it exists to protect').toBeLessThan(checkIdx);
+  });
+});
+
+describe('EP-D17 output-panel fix F1 (CRITICAL) — golden-scrub stability for the new audit rows', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports -- exercising the real generator
+  const goldenLib = require(join(process.cwd(), 'scripts/analysis/capture-step-golden.js')) as {
+    normalise: (capture: Record<string, unknown>) => { normalised: unknown };
+  };
+
+  function captureWith(rows: Array<Record<string, unknown>>) {
+    return {
+      step: 'enrich_parcels', chain: 'sources', exit_code: 0,
+      summary: { records_meta: { audit_table: { rows } } },
+      summary_count: 1, meta: [], parse_errors: [], pipeline_runs: [],
+      stdout: '', table_state: [], invariants: [],
+    };
+  }
+
+  it('two runs with DIFFERENT raw duration_ms/dead_ratio values scrub to an IDENTICAL normalised shape', () => {
+    const runA = captureWith([
+      { metric: 'sys_post_check_duration_ms', value: 214, threshold: null, status: 'INFO' },
+      { metric: 'sys_maintenance_parcels_vacuum_analyze', value: 0.697, threshold: 0.3, status: 'INFO', note: 'ran "VACUUM (ANALYZE) \"parcels\"" — dead_ratio 0.697 > 0.3', duration_ms: 187345 },
+    ]);
+    const runB = captureWith([
+      { metric: 'sys_post_check_duration_ms', value: 2411987, threshold: null, status: 'INFO' },
+      { metric: 'sys_maintenance_parcels_vacuum_analyze', value: 0.412, threshold: 0.3, status: 'INFO', note: 'ran "VACUUM (ANALYZE) \"parcels\"" — dead_ratio 0.412 > 0.3', duration_ms: 903221 },
+    ]);
+    const a = goldenLib.normalise(runA).normalised;
+    const b = goldenLib.normalise(runB).normalised;
+    expect(a).toEqual(b);
+    expect(JSON.stringify(a)).not.toContain('duration_ms');
+    expect(JSON.stringify(a)).not.toContain('0.697');
+  });
+
+  it('a NON-sys_-prefixed duration/maintenance row would NOT scrub identically — proves the prefix is load-bearing, not incidental', () => {
+    const runA = captureWith([{ metric: 'post_check_duration_ms', value: 214, threshold: null, status: 'INFO' }]);
+    const runB = captureWith([{ metric: 'post_check_duration_ms', value: 999999, threshold: null, status: 'INFO' }]);
+    const a = goldenLib.normalise(runA).normalised;
+    const b = goldenLib.normalise(runB).normalised;
+    expect(a).not.toEqual(b);
   });
 });
 

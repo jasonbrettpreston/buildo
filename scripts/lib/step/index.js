@@ -74,7 +74,11 @@ const acquire = require('./acquire');
 const write = require('./write');
 const { finalizeStrandedRun } = require('../ledger-window');
 // R-T addendum (Spec 124 §2 Rule 13, commit 3) — the invariants[]/plausibility[] executor.
-const { runInvariants, runPlausibility } = require('./plausibility');
+// EP-D17 (WF3, 2026-09-10, C1/C4) — parseDurationMs resolves the step's own declared
+// execution.statement_timeout into the every_run ceiling default; runMaintenance is
+// the rung-(d) library executor for execution.maintenance (previously a dead declared
+// field — no executor existed anywhere in scripts/lib, per this WF3's own P11 grounding).
+const { runInvariants, runPlausibility, parseDurationMs, runMaintenance } = require('./plausibility');
 // STA-2/STA-3 (WF1 "state tables reset", 2026-09-03) — generateReset + the three
 // destructive-reset guards. Export only: reset.js owns the implementation.
 const {
@@ -3040,6 +3044,36 @@ function beforeImageRow(bi) {
   };
 }
 
+/**
+ * EP-D17 (WF3, 2026-09-10, C1, lock 6) — one INFO cost row per EXECUTED
+ * invariants[]/plausibility[] entry, keyed by entry id (Spec 48 §3.5's
+ * `sys_duration_ms` precedent: an INFO cost row with `threshold: null` is
+ * explicitly legal). `durationMs` can be `undefined` when a caller (a fixture,
+ * or a future entry type) never ran `executeEntry` at all for this id — the row
+ * still appears (never silently dropped) with `value: null` rather than a
+ * misleading 0, so a missing measurement is visibly missing, not visibly fast.
+ *
+ * OUTPUT-PANEL FIX F1 (CRITICAL, 2026-09-10) — the metric is `sys_${entryId}_duration_ms`,
+ * NOT `${entryId}_duration_ms`. `scripts/analysis/capture-step-golden.js`'s `scrub()`
+ * drops a WHOLE `audit_table.rows[]` entry only when its `metric` starts with the
+ * declared `sys_` prefix (`VOLATILE_METRIC_PREFIXES`) — a bare `duration_ms` SUFFIX on
+ * an otherwise-arbitrary metric name is invisible to that filter, and `VOLATILE_KEYS`
+ * matches the literal KEY `duration_ms`, never a metric NAME containing it. Without the
+ * prefix, this row's raw wall-clock `value` would have made every converted step's golden
+ * master non-reproducible the instant this ran against a real DB. `sys_duration_ms`
+ * itself (emitSummary's own auto-injected row, §3.5) is the existing precedent for
+ * exactly this naming mechanism — this row generalises it per-entry rather than
+ * inventing a second one.
+ */
+function durationRow(entryId, durationMs) {
+  return {
+    metric: `sys_${entryId}_duration_ms`,
+    value: typeof durationMs === 'number' ? durationMs : null,
+    threshold: null,
+    status: 'INFO',
+  };
+}
+
 /** LW-D15 — the INFO audit row every `--dry-run` run carries, naming the posture explicitly (Rule 1: nothing hidden). */
 function dryRunRow() {
   return {
@@ -3433,12 +3467,89 @@ async function runWithPool(runnable, pool, ctx) {
       // synthesis (Ask 6b). `onlyWhen` is the SAME gated-skip narrowing `onlyChecks`
       // just computed above (Fold A-3/B-2) — an `every_run` invariant must not fire
       // on a `skip_gated`/`writeSkipped`/zero-work run any more than a real check does.
-      const invariantsRun = await runInvariants(pool, descriptor, { frequency: 'every_run', when: onlyWhen });
-      const plausibilityRun = await runPlausibility(pool, descriptor, { frequency: 'every_run', when: onlyWhen });
+      // EP-D17 (WF3, 2026-09-10, C1) — the ceiling an every_run entry inherits when
+      // it declares no `statement_timeout` of its own. Before this, that entry took
+      // the bare `pool.query` branch inside `executeEntry` and ran with NO ceiling at
+      // all (`PIPELINE_STATEMENT_TIMEOUT_MS` defaults to 0), so the step's own
+      // declared `execution.statement_timeout` bound nothing here — these run AFTER
+      // `runnable.compute` returns, outside every pass/session-level SET this library
+      // applies elsewhere. `step_post_check_statement_timeout_minutes` (new Rule-3
+      // tunable) takes priority when a step declares it; the step's own
+      // `execution.statement_timeout` is the fallback for a step that has not
+      // (Rule 3 externalises this ONLY for the one declared consumer today,
+      // enrich_parcels — a step that never reads the var is unaffected).
+      const postCheckDefaultTimeoutMs = typeof configValues.step_post_check_statement_timeout_minutes === 'number'
+        ? configValues.step_post_check_statement_timeout_minutes * 60000
+        : parseDurationMs(descriptor.execution.statement_timeout);
+      // OUTPUT-PANEL FIX F7 (MED, 2026-09-10) — caps simultaneous post-check clients;
+      // see plausibility.js's runValidatorEntries docblock for the corrected pool-
+      // headroom reasoning (link_wsib alone declares 9 entries).
+      const postCheckConcurrency = typeof configValues.step_post_check_concurrency === 'number'
+        ? configValues.step_post_check_concurrency
+        : 4;
+
+      // OUTPUT-PANEL FIX F2 (HIGH, 2026-09-10) — execution.maintenance now runs
+      // BEFORE the run-end invariants[]/plausibility[] checks, not after. The
+      // ORIGINAL ordering let the 5 bloat-sensitive post checks scan the heap the
+      // step's own write phases had just bloated; C1's new declared ceiling turns
+      // that "slow but eventually green" run into a loud FAIL, which is strictly
+      // worse than the pre-fix behaviour for the exact runs this executor exists to
+      // clean up first. Retired fence, stated honestly: the pre-fix code carried NO
+      // ceiling on those checks at all, so a long scan simply ran to completion
+      // (successfully, if slowly, per EP-D17's own grounded facts) — this reorder
+      // does not merely restore that tolerance, it removes the NEED for it by
+      // cleaning the heap before the checks that scan it ever run.
+      //
+      // F5 (MED) — keeps the step's own heartbeat/stall ticker ALIVE across the
+      // maintenance call, on the SAME dedicated writer that already exists for this
+      // purpose (`heartbeatClient`/`enrich_parcels_heartbeat_minutes`, EP-D15) —
+      // never a new mechanism — and stops it again once maintenance returns, so a
+      // long VACUUM does not open a silent, unmonitored window between the runner's
+      // own ticker teardown and the step's final summary write. `heartbeatWriter`/
+      // `heartbeatRunId`/`maintenanceHeartbeatMs` are `null`/`0` for every step but
+      // enrich_parcels today (no other converted step declares `execution.maintenance`
+      // or `enrich_parcels_heartbeat_minutes`), so `startHeartbeatTicker`'s own
+      // `intervalMs <= 0` guard makes this a no-op everywhere else.
+      const maintenanceHeartbeatMs = typeof configValues.enrich_parcels_heartbeat_minutes === 'number'
+        ? Math.round(configValues.enrich_parcels_heartbeat_minutes * 60000)
+        : 0;
+      const stopMaintenanceHeartbeat = startHeartbeatTicker(
+        pool, runId, () => (descriptor.execution.maintenance !== 'none' ? 'maintenance' : null),
+        maintenanceHeartbeatMs, () => 0,
+      );
+      let maintenanceRows;
+      try {
+        // EP-D17 (WF3, 2026-09-10, C4) — rung (d): execution.maintenance's library
+        // executor (previously a dead declared field — P11 grounding found zero
+        // callers anywhere in scripts/lib). Runs AFTER the step's own write phases
+        // (compute has already returned above, so enrich_parcels' shared passes-1-4
+        // txn has committed and pass 5's post_commit write is done), never inside a
+        // step-scoped transaction — the VACUUM/ANALYZE statement itself always runs
+        // autocommit on its own dedicated connection (never `pool.query()` directly),
+        // which is what makes the txn_scope:"step" relaxation (RE-FREEZE #6) safe. A
+        // "none" declaration (every step but enrich_parcels, today) short-circuits to
+        // an empty array — zero cost, zero rows, for every other converted step.
+        maintenanceRows = await runMaintenance(
+          pool, descriptor.execution.maintenance, configValues,
+          { log: pipeline.log, tag: `[${slug}]` },
+        );
+      } finally {
+        stopMaintenanceHeartbeat();
+      }
+
+      const invariantsRun = await runInvariants(pool, descriptor, { frequency: 'every_run', when: onlyWhen, defaultTimeoutMs: postCheckDefaultTimeoutMs, concurrency: postCheckConcurrency });
+      const plausibilityRun = await runPlausibility(pool, descriptor, { frequency: 'every_run', when: onlyWhen, defaultTimeoutMs: postCheckDefaultTimeoutMs, concurrency: postCheckConcurrency });
       const synthetic = {
         checks: [...invariantsRun.checks, ...plausibilityRun.checks],
         observations: { ...invariantsRun.observations, ...plausibilityRun.observations },
       };
+      // Lock 6 (EP-D17 C1) — one INFO duration_ms row PER EXECUTED invariants[]/
+      // plausibility[] entry, keyed by entry id (Spec 48 §3.5's own `sys_duration_ms`
+      // worked example is the precedent for a bare cost row, threshold null). Makes
+      // §4.9's "self-announcing" posture apply to a category that had no cost
+      // observability at all before this WF3 — a future entry cannot be added
+      // without its cost becoming visible on the audit table.
+      const postCheckDurationRows = [...synthetic.checks].map((c) => durationRow(c.id, (invariantsRun.observations[c.id] || plausibilityRun.observations[c.id] || {}).duration_ms));
 
       // `extraRows` carries exactly one thing and only on a failure path: the
       // `warn_row` posture's `prior_run_read_failed` row (LR-D2). It is NOT a declared
@@ -3460,6 +3571,11 @@ async function runWithPool(runnable, pool, ctx) {
         // cascade.beforeImage). LG-24 (link_keyed) extends this to a compound-write
         // target's own keyed-DELETE before-image, appended per batch (Fold B item 5).
         ...((link && link.beforeImage) || (linkKeyed && linkKeyed.beforeImage) || (cascade && cascade.beforeImage) || []).map(beforeImageRow),
+        // EP-D17 (WF3, 2026-09-10, C1/C4) — per-entry cost rows for every executed
+        // invariants[]/plausibility[] entry, plus one row per execution.maintenance
+        // target (empty for every step but enrich_parcels today).
+        ...postCheckDurationRows,
+        ...maintenanceRows,
       ];
       const built = buildAuditTable(descriptor, chainId, observations, extraRows, configValues, onlyChecks, synthetic);
       // The counter SCOPE, per phase. §11's Counter Semantic Contract is a scoping

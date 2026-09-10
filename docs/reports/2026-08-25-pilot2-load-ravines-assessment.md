@@ -455,7 +455,7 @@ Declared BEFORE any old/new diff. Sources: `scripts/analysis/capture-step-golden
 
 | # | Scope | Pass | Detail |
 |---|---|---|---|
-| 1 | load_ravines | PASS | min_migration=167 <= migrations count=243 |
+| 1 | load_ravines | PASS | min_migration=167 <= migrations count=244 |
 | 2 | load_ravines | PASS | 6 declared, missing from seeds: none |
 | 3 | load_ravines | PASS | retired=0 overlap-with-declared=none |
 | 7 | load_ravines | PASS | SPEC LINK header present=true |
@@ -473,7 +473,7 @@ Declared BEFORE any old/new diff. Sources: `scripts/analysis/capture-step-golden
 - compare ran: true · diffs found: 83 · unexplained: 0
 
 ### Test suite (item iii)
-- 837/861 passed (suite success=false)
+- 839/862 passed (suite success=false)
 
 ### Policy coverage matrix (item vi) — Spec 124 Rules 1-13
 
@@ -492,7 +492,7 @@ Declared BEFORE any old/new diff. Sources: `scripts/analysis/capture-step-golden
 | 11 | Phase-order re-derive (declared half, checkOrderGuaranteesCited) | enforced-green | 2 when:"pre_write" check(s), 0 order_guarantee violation(s) — G-3 completeness half stays open |
 | 12 | Truthful crash posture (R-B reachability, static + R-M before-image) | enforced-green | R-B (checkInterruptedPostureTruthful): recovery.interrupted="none" — no reachability claim to verify · R-M: prose-only (R-M/LG-17 describe not scoped to this step (vitest not run, or no before-image target)) |
 | 13 | A step validates itself | enforced-green | this run of step:validate IS the mechanism |
-| P3 | I/O cost adjudication (measured, not gated) | measured | descriptor=48334B notes=8686B checks=19 rows records_meta=2060B (newest post/ capture) |
+| P3 | I/O cost adjudication (measured, not gated) | measured | descriptor=48334B notes=8569B checks=19 rows records_meta=2060B (newest post/ capture) |
 
 **Enforced-green: 13/14**
 

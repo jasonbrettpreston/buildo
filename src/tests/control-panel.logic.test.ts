@@ -66,6 +66,10 @@ const EXPECTED_LOGIC_VAR_KEYS = [
   'enrich_parcels_lock_timeout_ms', // WF3 enrich_parcels stall commit 1 (2026-09-03) — bounded, LOUD SET LOCAL lock_timeout for passes 1-4
   'enrich_parcels_scope_recovery_batch_size', // WF3 EP-D14 (2026-09-10) — pass-5 D4' recovery batch size (incremental mode; --full stamps set-based)
   'enrich_parcels_pending_scope_warn_max', // WF3 EP-D14 (2026-09-10) — pre_write WARN bound on pending pass-3 scope parcels before pass 5
+  'step_post_check_statement_timeout_minutes', // WF3 EP-D17 (2026-09-10) — default ceiling for an every_run invariants[]/plausibility[] entry with no declared statement_timeout
+  'parcels_dead_tuple_ratio_warn_max', // WF3 EP-D17 (2026-09-10) — WARN bound + execution.maintenance trigger threshold for parcels' pg_stat_user_tables dead_ratio
+  'step_post_check_concurrency', // WF3 EP-D17 output-panel fix F7 (2026-09-10) — batch width cap for concurrent invariants[]/plausibility[] entries
+  'parcels_maintenance_timeout_minutes', // WF3 EP-D17 output-panel fix F5 (2026-09-10) — declared ceiling for the execution.maintenance VACUUM statement
   // Pilot 9 commit 7b (2026-09-04, Ask 5 externalization, Spec 78 §P3C.1/§P3C.2) — the 7 pass-4 comp literals.
   'enrich_parcels_comp_lot_tol',
   'enrich_parcels_comp_knn_overfetch',
