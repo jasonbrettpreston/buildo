@@ -1,0 +1,90 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://buildo.local/schemas/step-archetype-census.schema.json",
+  "title": "Spec 122 §1.10 archetype census — every remaining step, declared",
+  "description": "WF1 'conversion roadmap' (2026-09-10). Ask A3's data half: an unconverted or pending file's archetype is DECLARED data, never inferred from its name. Rows cover every one of the 55 currently-unconverted files (scripts/steps/_schema/converted.json is NOT re-listed here — a converted step's own descriptor.identity.archetype is the authoritative source, provenance rule 1) plus the ONE pending file (enrich-parcels.js), which has a real descriptor but is not yet registered in converted.json's own `converted[]` array. archetype is one of the 8 canonical values (Spec 122 §1.10) or the literal string \"UNDECLARED\" — never silently absent (Ask A3: the 36 non-`sources` files have no archetype and no PH-2 risk data yet; ARCH-CENSUS is their own future WF, not this one).",
+  "x-ruling": "A1 / A3",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["$comment", "contract_version", "entries", "exemptions"],
+  "properties": {
+    "$comment": { "anyOf": [{ "type": "string" }, { "type": "array", "items": { "type": "string" } }] },
+    "contract_version": { "const": 1 },
+    "entries": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/definitions/entry" }
+    },
+    "exemptions": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/definitions/exemption" },
+      "description": "Ask A2 (operator ruling, 2026-09-10): a manifest.scripts entry with no JS file to convert at all (a `.py` step, or a `coming_soon` entry with file:null) is DECLARED here, explicitly, rather than silently dropped from the file-grain totality this census/roadmap otherwise enforces. Rendered in its own 'Declared exemptions' table by the generator and folded into the totality count so '65 manifest slugs = 8 converted + 1 pending + N exempted + 55 remaining' is provably exhaustive, never just the 55."
+    }
+  },
+  "definitions": {
+    "exemption": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["slug", "file", "reason", "ruling", "scope"],
+      "properties": {
+        "slug": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$",
+          "description": "manifest.scripts registry key."
+        },
+        "file": {
+          "type": ["string", "null"],
+          "description": "manifest.scripts[slug].file verbatim — a string ending .py, or the literal null a coming_soon entry declares. The generator throws if this disagrees with the live manifest."
+        },
+        "reason": {
+          "type": "string",
+          "enum": ["python_step_excluded", "no_file"],
+          "description": "python_step_excluded = operator ruling 2026-09-10: the Python step (aic-orchestrator.py) is EXCLUDED from the conversion programme entirely — not deferred to any future batch, out of the JS step standard's scope by design, stays on its own runner. no_file = a coming_soon manifest entry with file:null — nothing exists yet to convert."
+        },
+        "ruling": {
+          "type": "string",
+          "minLength": 1,
+          "description": "The operator ruling that made this a permanent exemption, e.g. \"operator 2026-09-10\"."
+        },
+        "scope": {
+          "type": "string",
+          "minLength": 1,
+          "description": "What the exemption covers / does not cover, e.g. \"out of the JS step standard; stays on its own runner\"."
+        }
+      }
+    },
+    "entry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["slug", "file", "archetype", "batch", "reason"],
+      "properties": {
+        "slug": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$",
+          "description": "manifest.scripts registry key. A slug with no such key is a schema violation the generator refuses to emit over (never silently skipped)."
+        },
+        "file": {
+          "type": "string",
+          "pattern": "^scripts/.*\\.js$",
+          "description": "Must equal manifest.scripts[slug].file exactly — the generator throws otherwise (converted ⊆ manifest files, this census's own analogue)."
+        },
+        "archetype": {
+          "type": "string",
+          "enum": ["INGESTOR", "MATERIALIZER", "LINK", "MATCHER", "ENRICHER", "BACKFILL", "ASSERT", "RECORDER", "UNDECLARED"],
+          "description": "One of Spec 122 §1.10's 8 canonical archetypes, or the literal \"UNDECLARED\" — a real, explicit row stating the census does not (yet) know, never an absent row a reader could mistake for an oversight."
+        },
+        "batch": {
+          "type": "string",
+          "enum": ["C4", "C5", "C6", "pending"],
+          "description": "The roadmap batch this file belongs to. \"pending\" is reserved for the ONE file registered in converted.json's pending[] (enrich-parcels.js) — tracked here, not double-counted against the 55 unconverted total."
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Why this archetype (or UNDECLARED) — a spec citation, a real descriptor path, or 'deferred to ARCH-CENSUS (Ask A3)'. Required for every row, real archetype or not — mirrors programme-items.json's evidence requirement: a NOT_STARTED/UNDECLARED row still needs the measurement that PROVES the absence, never empty."
+        }
+      }
+    }
+  }
+}

@@ -36,6 +36,7 @@
     "churn-complexity": "node scripts/analysis/step-churn-complexity.mjs",
     "spec:split-check": "node scripts/analysis/spec-split-check.mjs",
     "programme-backlog": "node scripts/violations/generate-programme-backlog.mjs",
+    "conversion-roadmap": "node scripts/violations/generate-conversion-roadmap.mjs",
     "review:gemini": "node scripts/gemini-review.js",
     "review:deepseek": "node scripts/deepseek-review.js",
     "generate:script": "node scripts/generate-script.mjs",

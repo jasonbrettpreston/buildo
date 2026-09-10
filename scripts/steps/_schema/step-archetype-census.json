@@ -1,0 +1,453 @@
+{
+  "$comment": [
+    "WF1 \"conversion roadmap\" (2026-09-10). Spec 122 §1.10 archetype census, DECLARED",
+    "DATA per the R-T precedent (§10.3) — never name-prefix inference (the defect Ask A6",
+    "retires). Rows cover every one of the 55 currently-unconverted files, PLUS the ONE",
+    "`pending` file (enrich-parcels.js — a real descriptor exists, commit 7b, but the file",
+    "is not yet in converted.json's own `converted[]` array). Rows for the 8 files already",
+    "in `converted[]` are deliberately ABSENT — a converted step's own",
+    "`descriptor.identity.archetype` is provenance rule 1 (authoritative), so re-declaring",
+    "it here would be a second, driftable copy of the same fact (the exact duplication",
+    "class `tasks/lessons.md` warns against for a hand-duplicated predicate).",
+    "",
+    "archetype is one of the 8 canonical Spec 122 §1.10 values, or the literal string",
+    "\"UNDECLARED\" — a real, explicit row, never a silently-absent one. 19 rows carry a",
+    "real archetype (the C4 batch of 5 + 13 of C5's 14 truly-unconverted members — the",
+    "14th, `reconcile`, is chain-head infrastructure and is ALSO declared UNDECLARED,",
+    "explicitly, with its own reason). The remaining 36 rows (permits/coa/deep_scrapes/",
+    "entities+wsib, plus 2 orphan scripts with no manifest.chains membership at all —",
+    "`reclassify_all`/`observe_chain`, a genuine finding this WF1 measured and is not",
+    "silently folding into any of the plan's named buckets) are UNDECLARED per Ask A3:",
+    "the census stops at the 27 `sources` steps; seeding the other 36 is ARCH-CENSUS's",
+    "own future WF, run once before C6 opens (Ask A3's own ruling).",
+    "",
+    "Cross-check the generator performs: every `slug`/`file` pair here must resolve to a",
+    "real `manifest.scripts` entry with that exact `file` value (throws otherwise); no",
+    "duplicate slugs; every archetype is one of the 9 legal values (schema-enforced)."
+  ],
+  "contract_version": 1,
+  "entries": [
+    {
+      "slug": "backfill_realtor_permit_trades",
+      "file": "scripts/backfill-realtor-permit-trades.js",
+      "archetype": "UNDECLARED",
+      "batch": "C6",
+      "reason": "Spec 122 §1.10's census covers only the 27 `sources` steps; this file is outside that scope — deferred to ARCH-CENSUS (Ask A3), a dedicated WF before C6 opens"
+    },
+    {
+      "slug": "backup_db",
+      "file": "scripts/backup-db.js",
+      "archetype": "UNDECLARED",
+      "batch": "C6",
+      "reason": "Spec 122 §1.10's census covers only the 27 `sources` steps; this file is outside that scope — deferred to ARCH-CENSUS (Ask A3), a dedicated WF before C6 opens"
+    },
+    {
+      "slug": "classify_coa_scope",
+      "file": "scripts/classify-coa-scope.js",
+      "archetype": "UNDECLARED",
+      "batch": "C6",
+      "reason": "Spec 122 §1.10's census covers only the 27 `sources` steps; this file is outside that scope — deferred to ARCH-CENSUS (Ask A3), a dedicated WF before C6 opens"
+    },
+    {
+      "slug": "classify_coa_trades",
+      "file": "scripts/classify-coa-trades.js",
+      "archetype": "UNDECLARED",
+      "batch": "C6",
+      "reason": "Spec 122 §1.10's census covers only the 27 `sources` steps; this file is outside that scope — deferred to ARCH-CENSUS (Ask A3), a dedicated WF before C6 opens"
+    },
+    {
+      "slug": "classify_inspection_status",
+      "file": "scripts/classify-inspection-status.js",
+      "archetype": "UNDECLARED",
+      "batch": "C6",
+      "reason": "Spec 122 §1.10's census covers only the 27 `sources` steps; this file is outside that scope — deferred to ARCH-CENSUS (Ask A3), a dedicated WF before C6 opens"
+    },
+    {
+      "slug": "classify_lifecycle_phase",
+      "file": "scripts/classify-lifecycle-phase.js",
+      "archetype": "UNDECLARED",
+      "batch": "C6",
+      "reason": "Spec 122 §1.10's census covers only the 27 `sources` steps; this file is outside that scope — deferred to ARCH-CENSUS (Ask A3), a dedicated WF before C6 opens"
+    },
+    {
+      "slug": "classify_permit_phase",
+      "file": "scripts/classify-permit-phase.js",
+      "archetype": "UNDECLARED",
+      "batch": "C6",
+      "reason": "Spec 122 §1.10's census covers only the 27 `sources` steps; this file is outside that scope — deferred to ARCH-CENSUS (Ask A3), a dedicated WF before C6 opens"
+    },
+    {
+      "slug": "classify_permits",
+      "file": "scripts/classify-permits.js",
+      "archetype": "UNDECLARED",
+      "batch": "C6",
+      "reason": "Spec 122 §1.10's census covers only the 27 `sources` steps; this file is outside that scope — deferred to ARCH-CENSUS (Ask A3), a dedicated WF before C6 opens"
+    },
+    {
+      "slug": "classify_scope",
+      "file": "scripts/classify-scope.js",
+      "archetype": "UNDECLARED",
+      "batch": "C6",
+      "reason": "Spec 122 §1.10's census covers only the 27 `sources` steps; this file is outside that scope — deferred to ARCH-CENSUS (Ask A3), a dedicated WF before C6 opens"
+    },
+    {
+      "slug": "close_stale_permits",
+      "file": "scripts/close-stale-permits.js",
+      "archetype": "UNDECLARED",
+      "batch": "C6",
+      "reason": "Spec 122 §1.10's census covers only the 27 `sources` steps; this file is outside that scope — deferred to ARCH-CENSUS (Ask A3), a dedicated WF before C6 opens"
+    },
+    {
+      "slug": "compute_build_norms",
+      "file": "scripts/compute-build-norms.js",
+      "archetype": "UNDECLARED",
+      "batch": "C6",
+      "reason": "Spec 122 §1.10's census covers only the 27 `sources` steps; this file is outside that scope — deferred to ARCH-CENSUS (Ask A3), a dedicated WF before C6 opens"
+    },
+    {
+      "slug": "compute_coa_cost_estimates",
+      "file": "scripts/compute-coa-cost-estimates.js",
+      "archetype": "UNDECLARED",
+      "batch": "C6",
+      "reason": "Spec 122 §1.10's census covers only the 27 `sources` steps; this file is outside that scope — deferred to ARCH-CENSUS (Ask A3), a dedicated WF before C6 opens"
+    },
+    {
+      "slug": "compute_cost_estimates",
+      "file": "scripts/compute-cost-estimates.js",
+      "archetype": "UNDECLARED",
+      "batch": "C6",
+      "reason": "Spec 122 §1.10's census covers only the 27 `sources` steps; this file is outside that scope — deferred to ARCH-CENSUS (Ask A3), a dedicated WF before C6 opens"
+    },
+    {
+      "slug": "compute_opportunity_scores",
+      "file": "scripts/compute-opportunity-scores.js",
+      "archetype": "UNDECLARED",
+      "batch": "C6",
+      "reason": "Spec 122 §1.10's census covers only the 27 `sources` steps; this file is outside that scope — deferred to ARCH-CENSUS (Ask A3), a dedicated WF before C6 opens"
+    },
+    {
+      "slug": "compute_parcel_cost_estimates",
+      "file": "scripts/compute-parcel-cost-estimates.js",
+      "archetype": "ENRICHER",
+      "batch": "C5",
+      "reason": "Spec 122 §1.10 declared"
+    },
+    {
+      "slug": "compute_phase_calibration",
+      "file": "scripts/compute-phase-calibration.js",
+      "archetype": "UNDECLARED",
+      "batch": "C6",
+      "reason": "Spec 122 §1.10's census covers only the 27 `sources` steps; this file is outside that scope — deferred to ARCH-CENSUS (Ask A3), a dedicated WF before C6 opens"
+    },
+    {
+      "slug": "compute_storey_norms",
+      "file": "scripts/compute-storey-norms.js",
+      "archetype": "UNDECLARED",
+      "batch": "C6",
+      "reason": "Spec 122 §1.10's census covers only the 27 `sources` steps; this file is outside that scope — deferred to ARCH-CENSUS (Ask A3), a dedicated WF before C6 opens"
+    },
+    {
+      "slug": "compute_timing_calibration_v2",
+      "file": "scripts/compute-timing-calibration-v2.js",
+      "archetype": "UNDECLARED",
+      "batch": "C6",
+      "reason": "Spec 122 §1.10's census covers only the 27 `sources` steps; this file is outside that scope — deferred to ARCH-CENSUS (Ask A3), a dedicated WF before C6 opens"
+    },
+    {
+      "slug": "compute_trade_forecasts",
+      "file": "scripts/compute-trade-forecasts.js",
+      "archetype": "UNDECLARED",
+      "batch": "C6",
+      "reason": "Spec 122 §1.10's census covers only the 27 `sources` steps; this file is outside that scope — deferred to ARCH-CENSUS (Ask A3), a dedicated WF before C6 opens"
+    },
+    {
+      "slug": "dispatch_notifications",
+      "file": "scripts/dispatch-notifications.js",
+      "archetype": "UNDECLARED",
+      "batch": "C6",
+      "reason": "Spec 122 §1.10's census covers only the 27 `sources` steps; this file is outside that scope — deferred to ARCH-CENSUS (Ask A3), a dedicated WF before C6 opens"
+    },
+    {
+      "slug": "enrich_centreline",
+      "file": "scripts/enrich-centreline.js",
+      "archetype": "ENRICHER",
+      "batch": "C5",
+      "reason": "Spec 122 §1.10 declared"
+    },
+    {
+      "slug": "enrich_heritage",
+      "file": "scripts/enrich-heritage.js",
+      "archetype": "ENRICHER",
+      "batch": "C5",
+      "reason": "Spec 122 §1.10 declared"
+    },
+    {
+      "slug": "enrich_permits",
+      "file": "scripts/enrich-permits.js",
+      "archetype": "UNDECLARED",
+      "batch": "C6",
+      "reason": "Spec 122 §1.10's census covers only the 27 `sources` steps; this file is outside that scope — deferred to ARCH-CENSUS (Ask A3), a dedicated WF before C6 opens"
+    },
+    {
+      "slug": "enrich_coa_zoning",
+      "file": "scripts/enrich-permits.js",
+      "archetype": "UNDECLARED",
+      "batch": "C6",
+      "reason": "Spec 122 §1.10's census covers only the 27 `sources` steps; this file is outside that scope — deferred to ARCH-CENSUS (Ask A3), a dedicated WF before C6 opens"
+    },
+    {
+      "slug": "enrich_ravines",
+      "file": "scripts/enrich-ravines.js",
+      "archetype": "ENRICHER",
+      "batch": "C5",
+      "reason": "Spec 122 §1.10 declared"
+    },
+    {
+      "slug": "enrich_wsib_builders",
+      "file": "scripts/enrich-web-search.js",
+      "archetype": "UNDECLARED",
+      "batch": "C6",
+      "reason": "Spec 122 §1.10's census covers only the 27 `sources` steps; this file is outside that scope — deferred to ARCH-CENSUS (Ask A3), a dedicated WF before C6 opens"
+    },
+    {
+      "slug": "enrich_named_builders",
+      "file": "scripts/enrich-web-search.js",
+      "archetype": "UNDECLARED",
+      "batch": "C6",
+      "reason": "Spec 122 §1.10's census covers only the 27 `sources` steps; this file is outside that scope — deferred to ARCH-CENSUS (Ask A3), a dedicated WF before C6 opens"
+    },
+    {
+      "slug": "enrich_wsib_registry",
+      "file": "scripts/enrich-wsib.js",
+      "archetype": "UNDECLARED",
+      "batch": "C6",
+      "reason": "Spec 122 §1.10's census covers only the 27 `sources` steps; this file is outside that scope — deferred to ARCH-CENSUS (Ask A3), a dedicated WF before C6 opens"
+    },
+    {
+      "slug": "builders",
+      "file": "scripts/extract-builders.js",
+      "archetype": "UNDECLARED",
+      "batch": "C6",
+      "reason": "Spec 122 §1.10's census covers only the 27 `sources` steps; this file is outside that scope — deferred to ARCH-CENSUS (Ask A3), a dedicated WF before C6 opens"
+    },
+    {
+      "slug": "geocode_permits",
+      "file": "scripts/geocode-permits.js",
+      "archetype": "ENRICHER",
+      "batch": "C4",
+      "reason": "C4 batching-entry §3.2 order 5"
+    },
+    {
+      "slug": "link_coa_to_parcels",
+      "file": "scripts/link-coa-to-parcels.js",
+      "archetype": "UNDECLARED",
+      "batch": "C6",
+      "reason": "Spec 122 §1.10's census covers only the 27 `sources` steps; this file is outside that scope — deferred to ARCH-CENSUS (Ask A3), a dedicated WF before C6 opens"
+    },
+    {
+      "slug": "link_coa",
+      "file": "scripts/link-coa.js",
+      "archetype": "UNDECLARED",
+      "batch": "C6",
+      "reason": "Spec 122 §1.10's census covers only the 27 `sources` steps; this file is outside that scope — deferred to ARCH-CENSUS (Ask A3), a dedicated WF before C6 opens"
+    },
+    {
+      "slug": "link_neighbourhoods",
+      "file": "scripts/link-neighbourhoods.js",
+      "archetype": "LINK",
+      "batch": "C4",
+      "reason": "C4 batching-entry §3.2 order 4 — LINK 3rd/last member"
+    },
+    {
+      "slug": "link_similar",
+      "file": "scripts/link-similar.js",
+      "archetype": "UNDECLARED",
+      "batch": "C6",
+      "reason": "Spec 122 §1.10's census covers only the 27 `sources` steps; this file is outside that scope — deferred to ARCH-CENSUS (Ask A3), a dedicated WF before C6 opens"
+    },
+    {
+      "slug": "address_points",
+      "file": "scripts/load-address-points.js",
+      "archetype": "INGESTOR",
+      "batch": "C5",
+      "reason": "Spec 122 §1.10 declared"
+    },
+    {
+      "slug": "load_centreline",
+      "file": "scripts/load-centreline.js",
+      "archetype": "INGESTOR",
+      "batch": "C5",
+      "reason": "Spec 122 §1.10 declared"
+    },
+    {
+      "slug": "coa",
+      "file": "scripts/load-coa.js",
+      "archetype": "UNDECLARED",
+      "batch": "C6",
+      "reason": "Spec 122 §1.10's census covers only the 27 `sources` steps; this file is outside that scope — deferred to ARCH-CENSUS (Ask A3), a dedicated WF before C6 opens"
+    },
+    {
+      "slug": "load_heritage",
+      "file": "scripts/load-heritage.js",
+      "archetype": "INGESTOR",
+      "batch": "C5",
+      "reason": "Spec 122 §1.10 declared"
+    },
+    {
+      "slug": "massing",
+      "file": "scripts/load-massing.js",
+      "archetype": "INGESTOR",
+      "batch": "C5",
+      "reason": "Spec 122 §1.10 declared"
+    },
+    {
+      "slug": "neighbourhoods",
+      "file": "scripts/load-neighbourhoods.js",
+      "archetype": "INGESTOR",
+      "batch": "C5",
+      "reason": "Spec 122 §1.10 declared"
+    },
+    {
+      "slug": "parcels",
+      "file": "scripts/load-parcels.js",
+      "archetype": "INGESTOR",
+      "batch": "C5",
+      "reason": "Spec 122 §1.10 declared"
+    },
+    {
+      "slug": "permits",
+      "file": "scripts/load-permits.js",
+      "archetype": "UNDECLARED",
+      "batch": "C6",
+      "reason": "Spec 122 §1.10's census covers only the 27 `sources` steps; this file is outside that scope — deferred to ARCH-CENSUS (Ask A3), a dedicated WF before C6 opens"
+    },
+    {
+      "slug": "load_wsib",
+      "file": "scripts/load-wsib.js",
+      "archetype": "INGESTOR",
+      "batch": "C5",
+      "reason": "Spec 122 §1.10 declared"
+    },
+    {
+      "slug": "load_zoning",
+      "file": "scripts/load-zoning.js",
+      "archetype": "INGESTOR",
+      "batch": "C5",
+      "reason": "Spec 122 §1.10 declared"
+    },
+    {
+      "slug": "observe_chain",
+      "file": "scripts/observe-chain.js",
+      "archetype": "UNDECLARED",
+      "batch": "C6",
+      "reason": "Spec 122 §1.10's census covers only the 27 `sources` steps; this file is outside that scope — deferred to ARCH-CENSUS (Ask A3), a dedicated WF before C6 opens"
+    },
+    {
+      "slug": "assert_coa_freshness",
+      "file": "scripts/quality/assert-coa-freshness.js",
+      "archetype": "UNDECLARED",
+      "batch": "C6",
+      "reason": "Spec 122 §1.10's census covers only the 27 `sources` steps; this file is outside that scope — deferred to ARCH-CENSUS (Ask A3), a dedicated WF before C6 opens"
+    },
+    {
+      "slug": "assert_data_bounds",
+      "file": "scripts/quality/assert-data-bounds.js",
+      "archetype": "ASSERT",
+      "batch": "C4",
+      "reason": "C4 batching-entry §3.2 order 2"
+    },
+    {
+      "slug": "assert_engine_health",
+      "file": "scripts/quality/assert-engine-health.js",
+      "archetype": "ASSERT",
+      "batch": "C4",
+      "reason": "C4 batching-entry §3.2 order 3 — Fold A I-1/I-2 (CRITICAL): a genuine domain write (engine_health_snapshots) inside the ASSERT x-profile (outputs:\"none\" forced); PH-0 must re-derive this, not trust the port"
+    },
+    {
+      "slug": "assert_entity_tracing",
+      "file": "scripts/quality/assert-entity-tracing.js",
+      "archetype": "UNDECLARED",
+      "batch": "C6",
+      "reason": "Spec 122 §1.10's census covers only the 27 `sources` steps; this file is outside that scope — deferred to ARCH-CENSUS (Ask A3), a dedicated WF before C6 opens"
+    },
+    {
+      "slug": "assert_global_coverage",
+      "file": "scripts/quality/assert-global-coverage.js",
+      "archetype": "ASSERT",
+      "batch": "C4",
+      "reason": "C4 batching-entry §3.2 order 1 — assert_schema is the ASSERT precedent (pilot 1)"
+    },
+    {
+      "slug": "assert_lifecycle_phase_distribution",
+      "file": "scripts/quality/assert-lifecycle-phase-distribution.js",
+      "archetype": "UNDECLARED",
+      "batch": "C6",
+      "reason": "Spec 122 §1.10's census covers only the 27 `sources` steps; this file is outside that scope — deferred to ARCH-CENSUS (Ask A3), a dedicated WF before C6 opens"
+    },
+    {
+      "slug": "assert_network_health",
+      "file": "scripts/quality/assert-network-health.js",
+      "archetype": "UNDECLARED",
+      "batch": "C6",
+      "reason": "Spec 122 §1.10's census covers only the 27 `sources` steps; this file is outside that scope — deferred to ARCH-CENSUS (Ask A3), a dedicated WF before C6 opens"
+    },
+    {
+      "slug": "assert_parcel_sanity",
+      "file": "scripts/quality/assert-parcel-sanity.js",
+      "archetype": "ASSERT",
+      "batch": "C5",
+      "reason": "Ask A1-bis: sources-only 1-slot ASSERT, ruled to join the C4 ASSERT group at conversion time; census still declares its true archetype under C5's own batch tag"
+    },
+    {
+      "slug": "assert_staleness",
+      "file": "scripts/quality/assert-staleness.js",
+      "archetype": "UNDECLARED",
+      "batch": "C6",
+      "reason": "Spec 122 §1.10's census covers only the 27 `sources` steps; this file is outside that scope — deferred to ARCH-CENSUS (Ask A3), a dedicated WF before C6 opens"
+    },
+    {
+      "slug": "reclassify_all",
+      "file": "scripts/reclassify-all.js",
+      "archetype": "UNDECLARED",
+      "batch": "C6",
+      "reason": "Spec 122 §1.10's census covers only the 27 `sources` steps; this file is outside that scope — deferred to ARCH-CENSUS (Ask A3), a dedicated WF before C6 opens"
+    },
+    {
+      "slug": "reconcile",
+      "file": "scripts/reconcile-runs.js",
+      "archetype": "UNDECLARED",
+      "batch": "C5",
+      "reason": "chain-head infrastructure (Spec 122 §7.4 A3) — excluded from the PH-2 population and from the 8-archetype dispatch; STD-4 tracks its manifest-position promise separately, not this census"
+    },
+    {
+      "slug": "update_tracked_projects",
+      "file": "scripts/update-tracked-projects.js",
+      "archetype": "UNDECLARED",
+      "batch": "C6",
+      "reason": "Spec 122 §1.10's census covers only the 27 `sources` steps; this file is outside that scope — deferred to ARCH-CENSUS (Ask A3), a dedicated WF before C6 opens"
+    },
+    {
+      "slug": "enrich_parcels",
+      "file": "scripts/enrich-parcels.js",
+      "archetype": "ENRICHER",
+      "batch": "pending",
+      "reason": "scripts/enrich-parcels.descriptor.json identity.archetype (real descriptor already lands, commit 7b) — registered here under provenance rule 2 until pilot 9 commit 9 adds it to converted.json's own converted[] array, at which point provenance rule 1 (the descriptor itself) supersedes this row"
+    }
+  ],
+  "exemptions": [
+    {
+      "slug": "inspections",
+      "file": "scripts/aic-orchestrator.py",
+      "reason": "python_step_excluded",
+      "ruling": "operator 2026-09-10",
+      "scope": "out of the JS step standard; stays on its own runner — EXCLUDED from the conversion programme entirely, not deferred to the deep_scrapes batch or any future WF"
+    },
+    {
+      "slug": "coa_documents",
+      "file": null,
+      "reason": "no_file",
+      "ruling": "n/a — no exemption WF was needed",
+      "scope": "manifest.scripts.coa_documents.coming_soon=true, file:null; nothing exists yet to convert"
+    }
+  ]
+}
