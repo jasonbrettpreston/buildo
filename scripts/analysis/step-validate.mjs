@@ -1774,6 +1774,35 @@ function resolveSpecFileForNumber(specNumber) {
   return hits.length === 1 ? hits[0] : null;
 }
 
+/** M6 widening (2026-09-10, WF2 "Specs 122/123/124 grounding" panel finding): the
+ * `^N_` regex above can never match an `Na_` appendix sibling (e.g. `122a_...`) —
+ * so an order_guarantee anchor whose text MOVED from a base spec into its own
+ * appendix (Spec 122 -> 122a) reads as a rotted citation even though the text still
+ * exists, just one file over. Separate function, not a change to the regex above —
+ * resolveSpecFileForNumber's own callers (the spec_ref-agreement rule) intentionally
+ * keep resolving to the PRIMARY file only. SEAM: the parallel roadmap WF also edits
+ * this file (fast invariants + GOLD-PRE, different regions) — this hunk touches only
+ * this function and its one call site below. */
+function resolveAppendixFileForNumber(specNumber) {
+  if (!specNumber || !/^\d+$/.test(String(specNumber))) return null;
+  const specsRoot = path.join(REPO_ROOT, 'docs/specs');
+  const re = new RegExp(`^${specNumber}a_.*\\.md$`);
+  const hits = [];
+  const scan = (dir) => {
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      if (entry.isDirectory()) {
+        for (const f of readdirSync(path.join(dir, entry.name))) {
+          if (re.test(f)) hits.push(path.join(dir, entry.name, f));
+        }
+      } else if (re.test(entry.name)) {
+        hits.push(path.join(dir, entry.name));
+      }
+    }
+  };
+  scan(specsRoot);
+  return hits.length === 1 ? hits[0] : null;
+}
+
 /**
  * Pure over an already-parsed descriptor, so `selfTest()` can exercise it
  * in-memory. `specTextByFile` is an OPTIONAL override map (relFile -> text)
@@ -1827,8 +1856,25 @@ function checkOrderGuaranteesCited(descriptor, specTextByFile = null) {
       text = readFileSync(abs, 'utf8');
     }
     if (!text.includes(anchorText)) {
-      violations.push(`${c.id}: anchor not found literally in ${og.spec_ref} — rotted citation`);
-      continue;
+      // M6 widening (2026-09-10): the anchor text may have MOVED from a base spec
+      // into its own `<N>a_` appendix (Spec 122 -> 122a) — try that sibling before
+      // declaring a rotted citation. Real-file mode resolves it by number
+      // (qualifier, else identity.spec); self-test mode reads a declared
+      // `appendix:<N>` key from specTextByFile so this is proven both directions
+      // with no disk I/O.
+      const numberForAppendix = qualifiedSpecNumber || (identitySpec && /^\d+$/.test(String(identitySpec)) ? identitySpec : null);
+      let appendixText = null;
+      if (specTextByFile) {
+        const appendixKey = `appendix:${numberForAppendix}`;
+        appendixText = Object.prototype.hasOwnProperty.call(specTextByFile, appendixKey) ? specTextByFile[appendixKey] : null;
+      } else if (numberForAppendix) {
+        const appendixFile = resolveAppendixFileForNumber(numberForAppendix);
+        if (appendixFile && existsSync(appendixFile)) appendixText = readFileSync(appendixFile, 'utf8');
+      }
+      if (!appendixText || !appendixText.includes(anchorText)) {
+        violations.push(`${c.id}: anchor not found literally in ${og.spec_ref} — rotted citation`);
+        continue;
+      }
     }
     if (!specTextByFile) {
       if (qualifiedSpecNumber) {
@@ -2498,6 +2544,31 @@ function selfTest() {
     // RED: a qualifier naming a spec number that resolves to no file at all.
     const badQualifier = checkOrderGuaranteesCited(multiSpecDescriptor('999999:read would be invisible'));
     if (badQualifier.pass) throw new Error('self-test FAILED: checkOrderGuaranteesCited did not RED on an anchor qualifier naming a nonexistent spec number');
+
+    // M6 widening (2026-09-10, WF2 "Specs 122/123/124 grounding" panel finding):
+    // `resolveSpecFileForNumber`'s `^N_` regex can never match an `Na_` appendix
+    // sibling, so an anchor whose text moved from Spec 122 into 122a used to read
+    // as a rotted citation even though the text still exists, one file over.
+    // specTextByFile's `appendix:<N>` key stands in for the real 122a file (the
+    // fixture proves the FALLBACK logic in-memory, not the disk resolver — that
+    // half is exercised for real by src/tests/spec-split.infra.test.ts, which
+    // spawns this file's own checker sibling against the real 122/122a tree).
+    const movedAnchorDescriptor = {
+      identity: { spec: '122' },
+      checks: [{ id: 'moved_anchor_check', when: 'pre_write', order_guarantee: {
+        guarantee: 'a rule that moved into the appendix', spec_ref: 'docs/specs/01-pipeline/122_pipeline_step_optimization.md',
+        anchor: '122:the anchor text moved to 122a',
+      } }],
+    };
+    const beforeWidening = checkOrderGuaranteesCited(movedAnchorDescriptor, {
+      'docs/specs/01-pipeline/122_pipeline_step_optimization.md': 'no trace of that anchor here anymore',
+    });
+    if (beforeWidening.pass) throw new Error('self-test FAILED: checkOrderGuaranteesCited GREENed with no appendix text available at all — the fallback must not fabricate a match');
+    const afterWidening = checkOrderGuaranteesCited(movedAnchorDescriptor, {
+      'docs/specs/01-pipeline/122_pipeline_step_optimization.md': 'no trace of that anchor here anymore',
+      'appendix:122': 'moved here: the anchor text moved to 122a — verbatim',
+    });
+    if (!afterWidening.pass) throw new Error(`self-test FAILED: checkOrderGuaranteesCited did not GREEN once the anchor was found in the 122a appendix fallback (${JSON.stringify(afterWidening)})`);
   }
   // Rule 12 (Spec 124 §2 Rule 12, WF2 C3) — checkInterruptedPostureTruthful +
   // runnerReachability, in-memory via a synthetic index.js source override.

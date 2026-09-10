@@ -1,7 +1,9 @@
 #!/usr/bin/env node
 /**
  * Concern -> home mapping, with a 1:1 totality proof.
- * SPEC LINK: docs/specs/01-pipeline/122_pipeline_step_optimization.md §1.4
+ * SPEC LINK: docs/specs/01-pipeline/122_pipeline_step_optimization.md §1.8
+ *   (CORRECTED 2026-09-10 — was §1.4; the Concern Index moved there before this
+ *   comment was last touched. Pre-existing rot, corrected-note, not a code change.)
  *
  * THE QUESTION THIS ANSWERS: "the 17 categories and the 41 concerns seem to
  * overlap -- are they two things?"
@@ -47,7 +49,7 @@ const NON_CATEGORY_HOMES = ['RUNNER', 'OPEN'];
 
 // ---------------------------------------------------------------------------
 
-/** Rows of the §1.4 Concern Index: `| 12 | Producer version pin | inputs.version_pin | ... |` */
+/** Rows of the §1.8 Concern Index (CORRECTED 2026-09-10 — was §1.4): `| 12 | Producer version pin | inputs.version_pin | ... |` */
 export function parseConcerns(md) {
   const out = [];
   let inIndex = false;
