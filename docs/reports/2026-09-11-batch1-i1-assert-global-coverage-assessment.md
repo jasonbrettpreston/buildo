@@ -512,4 +512,50 @@ DB seam: 2 named (direct `ctx.pool` + the nested `resolveAndCountTriple` sub-sea
 
 ---
 
-*Report continues — PH-6 classification + defect ledger (commit 4).*
+---
+
+## 4. PH-6 — Classification (commit 4 → G6)
+
+Every behaviour below is CONTRACT (must survive conversion unchanged), INCIDENTAL (implementation detail, no assertion needed), or DEFECT (a real bug, pinned per Spec 123 §3.1 — fixed after conversion, never silently during it). Every DEFECT gets an `AGC-D<n>` row in `docs/reports/defect-ledger.md`, status `PIN`.
+
+### 4.1 CONTRACT — must survive conversion
+
+- Non-halting verdict semantics: WARN/FAIL rows never throw; only the single `:86` logic-var-validation `throw new Error` is infrastructure-halting (§1.5).
+- The 3-branch chain scoping (`isCoaChain`/`isSourcesChain`/else-permits), including which rows are shared (`VOCAB_COVERAGE`, corrected to 4 entries — §3.0) vs branch-exclusive (C6/C3, permits-only — §3.0 correction 2).
+- All 6 logic-var-backed thresholds (§1.3) and their 3 cross-field `.refine()` ordering invariants (`warn < pass` ×2, `warn <= pass` ×1).
+- The C6 lead-id-integrity FAIL invariant (migration 138_a/241, IL-1) and the C3/C7 self-retiring WARN+INFO drift pair (Spec 48 §4.9, IL-2) — both load-bearing regression fences, both require both-directions G4d locks at commit 6.
+- The `{metric, value, threshold, status}` row shape and the `{phase:111, name:'Global Data Completeness Profile', verdict, rows}` `audit_table` envelope — the `FreshnessTimeline.tsx` consumer contract (§3.6), proven byte-identical by the zero-unexplained-diff golden gate (G8), not by a separate UI test.
+- The `has_bldg EXISTS(...)` residential-with-building scoping pattern behind 5 calibratedRow checks (IL-11/IL-12) — excludes building-less lots from BOTH numerator and denominator; must travel with its check as a declared `guard`, not just the raw threshold.
+- `records_total: 1` (always, per the file's own header comment `:16`) on a successful run — the ASSERT-archetype "one audit pass, never an entity count" convention, forced `outputs:"none"` by the archetype profile (plan §2).
+- All 6 SQL-side clock-relative expressions (§3.2) — non-determinism-inventory items the golden master (commit 5) must declare, not eliminate.
+
+### 4.2 INCIDENTAL — implementation detail, no assertion needed
+
+- The exact grouping into 6 named JS helper functions (`coverageRow`/`infoRow`/`calibratedRow`/`externalRow`/`vocabRow`/`profileVocabTriple`) — the compute-shape conversion is free to restructure these into a dispatch table (Spec 122 §5.5) as long as the PASS/WARN/FAIL math (§1.4) is preserved per check.
+- Variable naming (`ca`/`cx`/`cm`/`pa`/`ea`/`bnd`/`wa`/`pb`/`pt`/`ce`/`misc`/`tfd`/`tfa`/`pSchema`/`pp`/`mbc`/`pcm`) — purely local, no external contract.
+- The `mbc`/`pcm` queries each independently re-deriving the same "residential parcel with a building" `EXISTS` subquery (§3.6 sources-branch note) rather than sharing one CTE — a minor redundant-computation detail, not a correctness issue (two separate COUNT aggregates over the same predicate, same result either way).
+- Comment-level citations (`Bug 1`-`4`, `F2`, `WF2 #4`, `WF2 #415`, `WF3 #406`/`#428`, `DEC-B`) that document denominator CHOICES already reflected correctly in the SQL — historical rationale, not independently testable behaviour beyond the denominator itself (which IS covered under the relevant CONTRACT row).
+
+### 4.3 DEFECT — pin in current form, fix after (Spec 123 §3.1)
+
+| Ledger ID | Anchor | One-line | Disposition |
+|---|---|---|---|
+| **AGC-D1** | `src/tests/assert-global-coverage.infra.test.ts:8` (docblock), `:184`, `:199` (test-title prose) | Stale chain-length claims — docblock says "permits chain = 28 steps, coa chain = 12 steps" and the two test titles say "step 29"/"step 15"; **all wrong** vs the measured 33/16/28 (§1.1 claim 3). **Lives ONLY in the test file, confirmed by direct read of the script** — `scripts/quality/assert-global-coverage.js` contains zero hard-coded chain-length literals (§1.1 claim 12). The live `toHaveLength(33)`/`toHaveLength(16)`/`toHaveLength(28)` assertions themselves are current and passing. | Test-file documentation drift, not a script defect — the two-way disposition is DEFECT-in-test / CONTRACT-in-script. |
+| **AGC-D2** | `docs/specs/01-pipeline/49_data_completeness_profiling.md:18-19` | Spec 49 §2 architecture text says "Permits chain: step 26 (last step...)" / "CoA chain: step 10 (last step...)" — both wrong vs measured position 32-of-33 (permits, NOT last) / 16-of-16 (coa, IS last) (§1.1 claim 13). | Documentation-only, deferred to commit 9 per the plan's Ask A3 (ruled) — rides the conversion's own required spec-diff, not fixed here. |
+| **AGC-D3** | `scripts/quality/assert-global-coverage.js:120-131` (`externalRow`), 2 call sites `:1073`,`:1075` | `externalRow`'s PASS≥10%/WARN≥5% threshold is a bare JS literal, never promoted to a `logic_variables` entry and carrying no `deviations[]` justification — the clearest live Rule 3 (Spec 124 §2) gap in the file (IL-8). | Fix-after: register `assert_global_coverage_external_field_pass_pct`/`_warn_pct` (or fold `externalRow` into `calibratedRow`'s per-check-declared-limit shape at conversion, since both are per-field literal thresholds structurally). |
+| **AGC-D4** | `scripts/quality/assert-global-coverage.js:927-936` (`tfd`) vs `scripts/compute-trade-forecasts.js` `SOURCE_SQL` | The `tfd` query's own comment (`:929`) admits it "mirrors `SOURCE_SQL` in `compute-trade-forecasts.js` exactly" — a hand-maintained cross-file SQL duplication with no shared source of truth (IL-13). This is the SAME drift class that already bit this file once (the WF2 #4 `fetchLeadInspect` sibling-fix, commit `73f3ae68`, cited at `:823`, `:1195-1196`). | Fix-after: extract `SOURCE_SQL` into a shared `scripts/lib/` fragment both files import, or accept the duplication explicitly with a cross-reference test pinning both copies equal. |
+| **AGC-D5** | `scripts/quality/assert-global-coverage.js:317` (`aged_pre_permits`) | The `cm` query computes `aged_pre_permits` (permits older than 18 months still `PRE-%`) but the value is **never read or pushed anywhere** — confirmed by grep, zero further references to `cm.aged_pre_permits` in the file. Dead SELECT column: wasted computation, zero behaviour impact. | Fix-after: either wire it into an `infoRow` (it reads as an intentional, still-useful metric per its own naming) or delete the SELECT expression — either is a trivial, behaviour-changing peel, correctly deferred out of this conversion. |
+| **AGC-D6** | `scripts/quality/assert-global-coverage.js:1418-1420` | Hand-rolled verdict cascade (`rows.some(FAIL) ? 'FAIL' : rows.some(WARN) ? 'WARN' : 'PASS'`) duplicates `scripts/lib/step/verdict.js`'s `deriveVerdict(rows)`, already the shared, converted-fleet-wide implementation of the identical row-derived cascade (matches the `assert_schema` precedent, `AS-D1`/`AS-D1b`). | Fix-after: the descriptor+compute conversion (commit 7) adopts the library's `deriveVerdict` directly, retiring the local copy — mirrors `AS-D1`/`AS-D1b` exactly. |
+| **AGC-D7** | `scripts/quality/assert-global-coverage.js:1447-1463` | Lock-contention skip hand-rolls its own `emitSummary({records_total:0, records_meta:{skipped:true, reason:'lock_held', advisory_lock_id}})` with **no `audit_table` at all** — not the shared `skipRecordsMeta`/`RUN_STATUS.SELF_SKIPPED` shape the plan's WD-1/A3 (`sharing.on_contention: "self_skip"`) ruling names as the target state (matches `AS-D9`/`LR-D6` precedent — both closed the identical gap for their own steps at conversion). | Fix-after: library adoption at commit 7 emits the declared `lock_held_elsewhere` terminal with a proper row-derived `audit_table`, mirroring `assert_schema`'s post-conversion shape. |
+
+### 4.4 Defect ledger — recorded this commit
+
+Appended to `docs/reports/defect-ledger.md` (7 rows, `AGC-D1`-`AGC-D7`, all `PIN`; ID scheme + column format matches the file's own header).
+
+### G6 verdict
+
+Every behaviour in the file is classified CONTRACT, INCIDENTAL, or DEFECT. 7 DEFECTs found, every one carries an `AGC-D<n>` ledger row with status `PIN` (fix deferred past conversion, per Spec 123 §3.1 — none silently fixed here). The two chain-length literals named by the task brief are confirmed to live only in the pre-existing test file (AGC-D1), never in the script — the script itself carries zero hard-coded chain-length literals. **G6: PASS** (every DEFECT has a ledger ID; `LEDGER_STATUS_VOCAB` — `CLOSED`/`PIN` — satisfied by all 7 new rows).
+
+---
+
+*Report continues — golden master (commit 5) and beyond are out of scope for this WF2-C batch-1 I1 assessment session (commits 1-4 only, per the executing instruction; commits 5-9 are separate, code-touching WF2 work).*
