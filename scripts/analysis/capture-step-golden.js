@@ -125,6 +125,76 @@ function parseArgs(argv) {
   return out;
 }
 
+// ── Overwrite guard (C4 step H, Spec 124 R-AC — "PRE captures are committed
+// before any re-run; the harness overwrites in place") ──────────────────────
+//
+// Until 2026-09-11 `--out` was a bare fs.writeFileSync: run 2 destroyed run 1's
+// reference in place (pilot 9 commit 8 P6 did exactly that to
+// enrich_parcels/post/sources_run1.json) with git history as the only rollback
+// — and NO rollback at all when the destroyed file had never been committed.
+// The guard below makes the ONLY overwritable reference one git can restore.
+//
+// ONE definition of "recoverable", shared with step-validate.mjs's fast
+// invariant #22 (GOLD-PRE-FRESH) — never re-implemented there (Fold A item 3):
+//   tracked        = the path is in the INDEX (`git ls-files --error-unmatch`),
+//                    which includes a staged-new `A ` file;
+//   worktreeClean  = worktree content == index content (`git status --porcelain`
+//                    second column is a space, or the line is absent).
+// `??` (untracked, incl. git-ignored — ls-files decides), ` M` / `MM` / `AM`
+// (worktree differs from index) are NOT recoverable.
+function captureGitState(file, opts = {}) {
+  const abs = path.resolve(String(file));
+  const cwd = opts.cwd || process.cwd();
+  const exists = fs.existsSync(abs);
+  if (!exists) return { exists: false, tracked: false, worktreeClean: true };
+  let tracked = false;
+  try {
+    execFileSync('git', ['ls-files', '--error-unmatch', '--', abs], { cwd, stdio: ['ignore', 'pipe', 'ignore'] });
+    tracked = true;
+  } catch {
+    tracked = false;
+  }
+  let worktreeClean = true;
+  if (tracked) {
+    const porcelain = execFileSync('git', ['status', '--porcelain', '--', abs], { cwd, encoding: 'utf8' });
+    const line = porcelain.split(/\r?\n/).find((l) => l.length >= 2);
+    // "XY path": X = index vs HEAD, Y = worktree vs index. Recoverable iff Y is a space.
+    worktreeClean = !line || line[1] === ' ';
+  }
+  return { exists, tracked, worktreeClean };
+}
+
+/**
+ * Pure: may `--out` write to a path in this git state? Never touches fs/git.
+ * @param {{exists:boolean, tracked:boolean, worktreeClean:boolean, overwriteFlag:boolean}} s
+ * @returns {{allow:boolean, reason:string, remedy:string}}
+ */
+function overwriteDecision(s) {
+  if (!s.exists) return { allow: true, reason: 'target absent', remedy: '' };
+  if (!s.tracked) {
+    return {
+      allow: false,
+      reason: 'target exists and is NOT tracked by git (untracked or ignored) — nothing can restore it if overwritten',
+      remedy: 'commit it first, or `rm <file>` (or `git clean -f -- <file>`) if the earlier attempt was wrong, then re-run',
+    };
+  }
+  if (!s.worktreeClean) {
+    return {
+      allow: false,
+      reason: 'target exists, is tracked, but its worktree content differs from the index — the local edit is unrecoverable',
+      remedy: 'commit it, or `git checkout -- <file>` to restore the indexed version, then re-run with --overwrite',
+    };
+  }
+  if (!s.overwriteFlag) {
+    return {
+      allow: false,
+      reason: 'target exists and is a committed/indexed reference — overwriting requires an explicit --overwrite',
+      remedy: 're-run with --overwrite (git history restores the previous capture: `git checkout HEAD -- <file>`)',
+    };
+  }
+  return { allow: true, reason: 'target is tracked and clean; --overwrite given — git can restore it', remedy: '' };
+}
+
 // ── Table state (e) ───────────────────────────────────────────────────────────
 const DEFAULT_TABLE_ROW_CEILING = 100000;
 const TABLE_NAME_RE = /^[a-z_][a-z0-9_]*$/;
@@ -820,11 +890,22 @@ async function main() {
   }
 
   if (!opts.step || !opts.chain) {
-    throw new Error('usage: --step=<script> --chain=<chainId|none> [--out=<file>] [--args=a,b]  |  --compare=<a>,<b>');
+    throw new Error('usage: --step=<script> --chain=<chainId|none> [--out=<file>] [--overwrite] [--args=a,b]  |  --compare=<a>,<b>');
   }
   const step = String(opts.step);
   if (!fs.existsSync(step)) throw new Error(`step script not found: ${step}`);
   const args = opts.args ? String(opts.args).split(',').filter(Boolean) : [];
+
+  // Overwrite guard runs BEFORE the child step is spawned (a refused capture
+  // must cost seconds, not the step's full runtime — enrich_parcels --full is
+  // 45+ minutes). Same decision is re-checked at the write site below, so a
+  // file that appears DURING the run is still caught.
+  if (opts.out) {
+    const decision = overwriteDecision({ ...captureGitState(opts.out), overwriteFlag: opts.overwrite === true });
+    if (!decision.allow) {
+      throw new Error(`[capture-step-golden] refusing --out=${opts.out}: ${decision.reason}. Remedy: ${decision.remedy}`);
+    }
+  }
 
   const descriptorPath = descriptorPathFor(step);
   const descriptor = fs.existsSync(descriptorPath) ? JSON.parse(fs.readFileSync(descriptorPath, 'utf8')) : null;
@@ -901,6 +982,10 @@ async function main() {
     `\n[capture-step-golden] invariants: ${invLine || '(none)'}`;
   if (opts.out) {
     const outPath = path.resolve(String(opts.out));
+    const decision = overwriteDecision({ ...captureGitState(outPath), overwriteFlag: opts.overwrite === true });
+    if (!decision.allow) {
+      throw new Error(`[capture-step-golden] refusing --out=${opts.out} at write time: ${decision.reason}. Remedy: ${decision.remedy}`);
+    }
     fs.mkdirSync(path.dirname(outPath), { recursive: true });
     fs.writeFileSync(outPath, JSON.stringify(doc, null, 2) + '\n');
     console.log(`${line}\n[capture-step-golden] wrote ${outPath}`);
@@ -952,4 +1037,6 @@ module.exports = {
   computePathFor,
   notesPathFor,
   gitHead,
+  captureGitState,
+  overwriteDecision,
 };
