@@ -142,21 +142,40 @@ function parseArgs(argv) {
 //                    second column is a space, or the line is absent).
 // `??` (untracked, incl. git-ignored — ls-files decides), ` M` / `MM` / `AM`
 // (worktree differs from index) are NOT recoverable.
+// A genuine "not tracked" answer from `git ls-files --error-unmatch` is ALWAYS exit
+// status 1 from a live git binary — that's the one case overwriteDecision is entitled
+// to read as "untracked". Anything else (git missing → ENOENT; `cwd` not a repo → exit
+// 128; permissions, corrupt index, etc.) is a PROBE FAILURE, not an answer, and must
+// never be silently folded into "untracked" — that used to make overwriteDecision hand
+// the operator a `rm <file>` remedy for a real committed file the probe never actually
+// reached. Fail loud instead.
+function gitProbeFailure(abs, err) {
+  const detail = err && err.code === 'ENOENT' ? err.code : (err && err.message) || String(err);
+  return new Error(`[capture-step-golden] git probe failed for ${abs}: ${detail} — cannot decide recoverability; not touching the file`);
+}
+
 function captureGitState(file, opts = {}) {
   const abs = path.resolve(String(file));
   const cwd = opts.cwd || process.cwd();
+  const gitBin = opts.gitBin || 'git';
   const exists = fs.existsSync(abs);
   if (!exists) return { exists: false, tracked: false, worktreeClean: true };
   let tracked = false;
   try {
-    execFileSync('git', ['ls-files', '--error-unmatch', '--', abs], { cwd, stdio: ['ignore', 'pipe', 'ignore'] });
+    execFileSync(gitBin, ['ls-files', '--error-unmatch', '--', abs], { cwd, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
     tracked = true;
-  } catch {
+  } catch (err) {
+    if (err.code === 'ENOENT' || err.status !== 1) throw gitProbeFailure(abs, err);
     tracked = false;
   }
   let worktreeClean = true;
   if (tracked) {
-    const porcelain = execFileSync('git', ['status', '--porcelain', '--', abs], { cwd, encoding: 'utf8' });
+    let porcelain;
+    try {
+      porcelain = execFileSync(gitBin, ['status', '--porcelain', '--', abs], { cwd, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
+    } catch (err) {
+      throw gitProbeFailure(abs, err);
+    }
     const line = porcelain.split(/\r?\n/).find((l) => l.length >= 2);
     // "XY path": X = index vs HEAD, Y = worktree vs index. Recoverable iff Y is a space.
     worktreeClean = !line || line[1] === ' ';

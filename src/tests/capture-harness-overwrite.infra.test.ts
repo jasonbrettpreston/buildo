@@ -26,7 +26,7 @@ const REPO_ROOT = path.resolve(__dirname, '../../');
 // eslint-disable-next-line @typescript-eslint/no-require-imports -- exercising the real CJS harness
 const harness = require(path.join(REPO_ROOT, 'scripts/analysis/capture-step-golden.js')) as {
   overwriteDecision: (s: { exists: boolean; tracked: boolean; worktreeClean: boolean; overwriteFlag: boolean }) => { allow: boolean; reason: string; remedy: string };
-  captureGitState: (file: string, opts?: { cwd?: string }) => { exists: boolean; tracked: boolean; worktreeClean: boolean };
+  captureGitState: (file: string, opts?: { cwd?: string; gitBin?: string }) => { exists: boolean; tracked: boolean; worktreeClean: boolean };
 };
 
 describe('overwriteDecision — pure, the five states (C4 step H, R-AC)', () => {
@@ -103,6 +103,21 @@ describe('captureGitState — the ONE two-probe definition of "recoverable", pro
     expect(porcelain.startsWith('??')).toBe(true); // porcelain reports it, but as untracked — not a "clean" signal
     const cleanPorcelain = git('status', '--porcelain', '--', 'committed.json');
     expect(cleanPorcelain).toBe(''); // silence == clean only ONCE tracking is established by ls-files
+  });
+
+  it('a git PROBE FAILURE (cwd is not a repo at all) THROWS — never silently reads as "untracked" (exit 128, not git\'s own exit-1 "no match")', () => {
+    const notARepo = fs.mkdtempSync(path.join(os.tmpdir(), 'buildo-capture-guard-norepo-'));
+    try {
+      const target = path.join(notARepo, 'committed.json');
+      fs.writeFileSync(target, '{"a":1}\n');
+      expect(() => harness.captureGitState(target, { cwd: notARepo })).toThrow(/git probe failed/);
+    } finally {
+      fs.rmSync(notARepo, { recursive: true, force: true });
+    }
+  });
+
+  it('a git PROBE FAILURE (git binary missing, ENOENT) THROWS — never silently reads as "untracked"', () => {
+    expect(() => harness.captureGitState(path.join(repo, 'committed.json'), { cwd: repo, gitBin: 'git-does-not-exist-xyz' })).toThrow(/git probe failed/);
   });
 });
 
