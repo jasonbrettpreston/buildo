@@ -85,7 +85,7 @@
  *                                       preserved-in-compute Intent Ledger row names where the
  *                                       rule is written down (why/notes.json/checks[] in the same row).
  *   Rule 5  (checks != "none")      -> (i) AJV `checks` minItems:1.
- *   Rule 6  (omission fails)        -> (i) AJV top-level `required` (18 categories).
+ *   Rule 6  (omission fails)        -> (i) AJV top-level `required` (20 categories — schema-canonical, Spec 122 §1.3 amendment 2026-09-09; label corrected 2026-09-11, FREEZE-1 phase 2 commit 6).
  *   Rule 7  (archetype gates categories) -> (i) AJV allOf archetype profiles.
  *   Rule 8  (per-target write discipline) -> (i) AJV write_discipline if/then blocks.
  *   Rule 9  (banned write needs ledger) -> (i) assertGrandfathered + assertNoRetraction (V7 no_retraction,
@@ -2331,7 +2331,7 @@ function computePolicyMatrix(row, descriptorInfo, shape, vitestResult, p3, repor
     push(4, 'Compute rule declared', g2.pass ? 'enforced-green' : 'enforced-red', `G-2: ${g2.detail}`);
   }
   push(5, 'checks >= 1', descriptorInfo.ok ? 'enforced-green' : 'enforced-red', '');
-  push(6, 'Omission fails (18 categories)', descriptorInfo.ok ? 'enforced-green' : 'enforced-red', '');
+  push(6, 'Omission fails (20 categories)', descriptorInfo.ok ? 'enforced-green' : 'enforced-red', '');
   push(7, 'Archetype gates categories', descriptorInfo.ok ? 'enforced-green' : 'enforced-red', '');
   push(8, 'Per-target write discipline', descriptorInfo.ok ? 'enforced-green' : 'enforced-red', '');
   push(9, 'Banned write needs ledger (+ V7 no_retraction)', descriptorInfo.ok ? 'enforced-green' : 'enforced-red', '');

@@ -472,7 +472,7 @@ The enrich_parcels cutover (pilot 9 commit 9) added 44 declared logic variables 
 | 3 | Tunables externalized | enforced-green | G-4: 3 declared, 0 verdict-affecting, 0 violate on_invalid:fail with no deviations[] cover |
 | 4 | Compute rule declared | enforced-green | G-2: 6 preserved-in-compute row(s), 0 with no why/notes.json/checks[] grounding |
 | 5 | checks >= 1 | enforced-green |  |
-| 6 | Omission fails (18 categories) | enforced-green |  |
+| 6 | Omission fails (20 categories) | enforced-green |  |
 | 7 | Archetype gates categories | enforced-green |  |
 | 8 | Per-target write discipline | enforced-green |  |
 | 9 | Banned write needs ledger (+ V7 no_retraction) | enforced-green |  |
