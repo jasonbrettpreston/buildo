@@ -440,4 +440,76 @@ All 4 Fold-A-named fences (C6, C3/C7, DEC-1, DEC-2) are confirmed against `git l
 
 ---
 
-*Report continues — PH-5 seam map (commit 3), PH-6 classification + defect ledger (commit 4).*
+---
+
+## 3. PH-5 — Seam map (commit 3 → G5)
+
+### 3.0 Correction to §1.4 / §2.2 (found during PH-5 seam mapping — re-measured, not silently fixed)
+
+Two claims in the already-committed §1.4 and §2.2 sections are **wrong** and are corrected here rather than edited in place (Spec 123 conventions — a correction is a new, dated note, not a silent rewrite of a committed finding; mirrors the pattern already live in `docs/reports/defect-ledger.md`, e.g. LM-D6's "Amended 2026-08-28"):
+
+1. **`VOCAB_COVERAGE` has 4 entries, not 3.** Re-counted this session: `node -e "…match(/stepTarget:/g)…"` → **4** — `Step 13 — classify_permits` (trades), `Step 13 — classify_permits (products)`, `CoA Step 7 — classify_coa_trades`, `Step 10 — link_neighbourhoods`. §1.4 ("`:1413` fires **3×**") and §2.2 IL-6 ("3 entries") both undercount by 1; census row 273 (§2.3) is likewise stated as "3 entries/run" and should read **4**. The runtime dynamic-row contribution of the `:1413` static site is **4 rows/run** in permits and coa (excluded from sources), not 3.
+2. **The two C6 rows (`:1336`,`:1342`) and the two C3/C7 rows (`:1380`,`:1393`) run in the PERMITS branch only — never in coa.** §1.4's "Mutual exclusivity" paragraph states they run "in the permits and coa branches" — **wrong**. Traced the brace structure precisely this session (`awk` over `:975-985`, `:1298-1312`, `:1401-1416`): the C6/C3 code sits at the SAME 6-space indent as `rows.push(infoRow('Step 1 — assert_schema', …))` (permits branch content), and the `}` at `:1404` (4-space indent) closes the `else { … }` (permits) arm of the `if (isCoaChain) {…} else if (isSourcesChain) {…} else {…}` construct — the SAME brace that opened at the `else {` before "Step 1 — assert_schema". Only the `VOCAB_COVERAGE` loop that follows, textually outside all three branches and gated solely by `if (!isSourcesChain)`, is genuinely shared between permits and coa. The plan's own §1 boundary text (`.cursor/batch1_i1_assert_global_coverage_active_task.md:38`) had this right ("permits branch only" for both pairs) — this session's own §1.4 introduced the error, now corrected.
+
+Both corrections are re-verified against the source directly (line numbers cited) and change no G-score already recorded (G0/G3 stand as PASS; neither correction touches a disposition or a re-measured count that fed a gate).
+
+### 3.1 DB seam
+
+**Two distinct DB access patterns, not one:**
+
+1. **`ctx.pool` (direct):** the 22 `pool.query(...)` call sites enumerated in §1.2, using the step's own pool-borrowed connection per call (no explicit `BEGIN`/transaction — every query is a bare read).
+2. **A second, nested DB seam inside the shared library `resolveAndCountTriple`** (`scripts/lib/vocab-coverage.js:38-90`, imported `:30`) — **not visible in the 22-query count above**, because it issues its own queries via a **dedicated borrowed client** (`pool.connect()`, `:52`), wrapped in `BEGIN` / `SET LOCAL statement_timeout = <15000ms default>` / `ROLLBACK` (`:54-55`, `:88`), running **up to 3 statements per triple** (2× `information_schema.columns` type lookups sequentially, `:60-65`, + 1× the intersection-count query, `:73-78`). Called via `profileVocabTriple` (`:170-176`) at 2 static sites: the CoA-only direct call (`:446`, 1 triple) and the shared `VOCAB_COVERAGE` loop (`:1413`, 4 triples per §3.0 correction 1). **Measured per-run DB-statement load from this seam alone:** CoA branch up to `(1+4) × 3 = 15` statements; permits branch up to `4 × 3 = 12` statements; sources branch **0** (loop skipped, `:446` unreachable outside the CoA branch). This sub-seam **never throws** (graceful `{unresolved: reason}` degradation, `:79-83`) — a property the compute conversion must preserve exactly (Spec 122 §5.5 pure-function shape: this library call must still be reachable through `ctx.pool`, not a second implicit pool reference).
+
+### 3.2 Clock seam
+
+**No JS-side clock read** — confirmed again this session (`grep -n "Date.now\|new Date("` → zero hits, matches §1.1 claim). **But 6 SQL-side `NOW()`/`CURRENT_DATE`-relative expressions exist**, all server-evaluated inside `pool.query()` calls (so the clock seam and the DB seam are the same call site here — there is no separate `ctx.clock` need, since nothing computes elapsed time in JS):
+
+| Line | Branch | Expression | Feeds |
+|---|---|---|---|
+| 286 | CoA | `EXTRACT(days FROM NOW() - MAX(last_seen_at))::int` | `days_since_latest` INFO row (`:342`) |
+| 317 | CoA | `issued_date < NOW() - INTERVAL '18 months'` | `aged_pre_permits` — **queried but never read or pushed anywhere** (confirmed by grep: `cm.aged_pre_permits` has zero further references in the file) — a dead SELECT column, flagged for G6 §4 |
+| 318 | CoA | `snapshot_date = CURRENT_DATE` | `snapshot_today` INFO row (`:499`) |
+| 319 | CoA | `captured_at > NOW() - INTERVAL '25 hours'` | `engine_health_today` INFO row (`:505`) |
+| 916 | Permits (`misc`) | `snapshot_date = CURRENT_DATE` | `snapshot_today` INFO row (`:1245`) |
+| 918 | Permits (`misc`) | `captured_at > NOW() - INTERVAL '25 hours'` | `engine_health_today` INFO row (`:1251`) |
+| 936 | Permits (`tfd`) | `COALESCE(phase_started_at, issued_date, application_date) >= NOW() - INTERVAL '3 years'` | forecast-eligible-permit denominator (feeds `:1276-1294` rows) |
+
+All 6 are **non-determinism inventory items** for the future golden-master capture (commit 5, G1′) — clock-relative, non-pinnable-to-an-exact-value, diff-tolerant by construction. This is a superset of the plan's implicit clock claim ("no `Date.now()`/`new Date(` — confirm at commit 1"), which was correct as far as it went but silent on the SQL-side clock reads; recorded here in full.
+
+### 3.3 Network seam
+
+**None.** Confirmed again (`grep -n "fetch(\|require('http\|axios\|got("` → zero hits). No HTTP egress anywhere in this file.
+
+### 3.4 argv/env seam
+
+**`process.env.PIPELINE_CHAIN`** (`:97-98`) — the sole argv/env input, read twice to derive `isCoaChain`/`isSourcesChain`. This is the ONE seam requiring real conversion design work (plan §3 row 3): today's `if/else if/else` branch selection must become the library's chain-derived `ctx.checks` scoping — three near-disjoint `checks[].chains` sets (permits/coa/sources), not `assert_schema`'s overlapping-subset precedent.
+
+### 3.5 Producer/consumer seams — which converted steps' outputs this step reads (measured, not assumed)
+
+**⚠️ Correction to the plan's own framing.** The plan's Low-confidence item 4 / this session's task brief both frame this as "likely none load-bearing." **That is wrong, measured against the 9 converted-step descriptors' own `outputs.writes[].table` declarations** (`node -e` reading each `scripts/*.descriptor.json` / `scripts/quality/assert-schema.descriptor.json` this session):
+
+| Converted step | Declares writes to | Read by `assert_global_coverage`? |
+|---|---|---|
+| `assert_schema` | (none — Observer, ASSERT profile) | n/a |
+| `load_ravines` | `ravines` | **No** — `ravines` is not among the 23 tables read (§1.1 claim 6) |
+| `link_massing` | `parcel_buildings` | **Yes** — query site 13 (`pb`, `:825`) |
+| `link_wsib` | `wsib_registry`, `entities` | **Yes** — query sites 10 (`ea`, `:775`) and 12 (`wa`, `:806`), plus the `bnd` join (site 11) |
+| `link_parcel_addresses` | `parcel_address_points` | **No** — not among the 23 tables read |
+| `compute_centroids` | `parcels` | **Yes** — query sites 5 (`pp`), 6 (`mbc`), 7 (`reasonDist`), 8 (`pcm`), plus the `misc` cross-table subselects |
+| `link_parcels` | `permit_parcels`, `permits` | **Yes** — `permit_parcels` in `misc` (site 16); `permits` is the single most-read table in the file (sites 9, 11, 21, 22, plus `misc`'s duplicate-PK self-check) |
+| `refresh_snapshot` | `data_quality_snapshots` | **Yes** — query site 3 (`cm`) and `misc` (site 16) |
+| `enrich_parcels` | `parcels`, `enrich_parcels_pass3_scope` | **Yes** — same `parcels` sites as `compute_centroids` above (both write different `parcels` columns; `assert_global_coverage` reads the union) |
+
+**6 of the 9 already-converted steps are load-bearing producers for this step's reads** — `link_massing`, `link_wsib`, `compute_centroids`, `link_parcels`, `refresh_snapshot`, `enrich_parcels`. This matters directly for the golden-master capture (commit 5): a re-run of any of those 6 steps between PRE and POST captures changes this step's own output, which is exactly the kind of cross-step coupling the differential gate (G8) must be able to attribute correctly rather than misreading as a behaviour regression in THIS conversion.
+
+### 3.6 Downstream consumer — `src/components/FreshnessTimeline.tsx`
+
+Confirmed this session (`grep -n "metric\|audit_table\|assert_global_coverage"`): the admin renderer keys this step by slug at `:98` (`assert_global_coverage: { name: 'Global Coverage Profile', group: 'quality' }`) and reads its `records_meta.audit_table` generically through the **legacy metric-row path** (`:1288-1310`, `:1196-1253`) — iterating `at.rows` by `r.metric`/`r.value`/`r.threshold`/`r.status`, with `at.phase`/`at.name`/`at.verdict` read at the table level. **No metric-string is hardcoded for this step** in the renderer (unlike `funnelSrc.auditMetric`-style special cases elsewhere in the same file for other steps) — the contract is purely structural: `{metric, value, threshold, status}` rows under `phase: 111, name: 'Global Data Completeness Profile'`. One naming nuance worth recording: a comment at `:1283` ("Columnar format (assert-global-coverage): has `columns` string[]") names this step as the HISTORICAL example of the branch condition (`'columns' in atRaw`), but the step's own emitted shape (`:1434-1440` in the source file) carries no `columns` key — it takes the "Legacy metric-row format" branch, confirmed by direct comparison of the two shapes. Not a defect; the comment is a stale label on a branch-check that still functions correctly for any step (this one included) whose payload lacks `columns`.
+
+### Seam-map verdict (G5)
+
+DB seam: 2 named (direct `ctx.pool` + the nested `resolveAndCountTriple` sub-seam). Clock seam: named (SQL-side only, 6 sites, folded into the DB seam call sites — no standalone JS clock). Network seam: named (none). argv/env seam: named (`PIPELINE_CHAIN`). All four required seam categories are present with a stated finding. **G5: PASS.**
+
+---
+
+*Report continues — PH-6 classification + defect ledger (commit 4).*
