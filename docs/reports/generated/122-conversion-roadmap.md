@@ -7,19 +7,19 @@
 
 ## Counts
 
-Remaining files: **55** (+ **1** pending) · remaining slugs: **57** (+ **1** pending)
+Remaining files: **55** (+ **0** pending) · remaining slugs: **57** (+ **0** pending)
 
 | Batch | Files | Slots |
 |---|---:|---:|
 | C4 | 5 | 15 |
-| C5 | 15 | 15 |
+| C5 | 14 | 14 |
 | C6 | 36 | 40 |
 
 ## C4 — archetype-grouped, risk-ascending
 
 | Archetype | File | Slug(s) | Chains (slots) | Quadrant | Write hints | Open cutover_prereq |
 |---|---|---|---|---|---|---|
-| ASSERT | `scripts/quality/assert-data-bounds.js` | assert_data_bounds | coa+deep_scrapes+permits+sources (4) | top-right | — | — |
+| ASSERT | `scripts/quality/assert-data-bounds.js` | assert_data_bounds | coa+deep_scrapes+permits+sources (4) | top-right | — | EP-PIN-D17 (assert_data_bounds) |
 | ASSERT | `scripts/quality/assert-engine-health.js` | assert_engine_health | coa+deep_scrapes+permits+sources (4) | top-right | — | — |
 | ASSERT | `scripts/quality/assert-global-coverage.js` | assert_global_coverage | coa+permits+sources (3) | top-right | — | — |
 | ENRICHER | `scripts/geocode-permits.js` | geocode_permits | permits+sources (2) | bottom-left | supports_full | — |
@@ -44,7 +44,6 @@ Remaining files: **55** (+ **1** pending) · remaining slugs: **57** (+ **1** pe
 | ENRICHER | `scripts/enrich-heritage.js` | enrich_heritage | sources (1) | bottom-left | — | — |
 | ENRICHER | `scripts/enrich-ravines.js` | enrich_ravines | sources (1) | bottom-left | — | — |
 | ENRICHER | `scripts/compute-parcel-cost-estimates.js` | compute_parcel_cost_estimates | sources (1) | top-left | supports_dry_run | — |
-| ENRICHER | `scripts/enrich-parcels.js` | enrich_parcels [pending: shape_clean_pending_recapture] | sources (1) | top-right | supports_full, chain_args={"sources":["--full"]} | EP-PIN-D17 (enrich_parcels) |
 | INGESTOR | `scripts/load-address-points.js` | address_points | sources (1) | top-left | — | — |
 | INGESTOR | `scripts/load-centreline.js` | load_centreline | sources (1) | top-left | — | — |
 | INGESTOR | `scripts/load-heritage.js` | load_heritage | sources (1) | top-left | — | — |
@@ -60,7 +59,6 @@ Remaining files: **55** (+ **1** pending) · remaining slugs: **57** (+ **1** pe
 - `scripts/compute-parcel-cost-estimates.js` (ENRICHER): Spec 122 §1.10 declared
 - `scripts/enrich-centreline.js` (ENRICHER): Spec 122 §1.10 declared
 - `scripts/enrich-heritage.js` (ENRICHER): Spec 122 §1.10 declared
-- `scripts/enrich-parcels.js` (ENRICHER): scripts/enrich-parcels.descriptor.json identity.archetype (real descriptor already lands, commit 7b) — registered here under provenance rule 2 until pilot 9 commit 9 adds it to converted.json's own converted[] array, at which point provenance rule 1 (the descriptor itself) supersedes this row
 - `scripts/enrich-ravines.js` (ENRICHER): Spec 122 §1.10 declared
 - `scripts/load-address-points.js` (INGESTOR): Spec 122 §1.10 declared
 - `scripts/load-centreline.js` (INGESTOR): Spec 122 §1.10 declared
@@ -127,4 +125,4 @@ Remaining files: **55** (+ **1** pending) · remaining slugs: **57** (+ **1** pe
 
 ---
 
-*Totality (both directions, proven by `src/tests/conversion-roadmap.infra.test.ts`; slug-grain, IDENTITY HOLDS): **68** manifest.scripts slugs = **8** converted + **1** pending + **2** declared exemptions (Ask A2, excluded from the conversion programme entirely — never silently dropped, see the table above) + **57** remaining, each counted exactly once, in exactly one of C4/C5/C6/pending/exempted.*
+*Totality (both directions, proven by `src/tests/conversion-roadmap.infra.test.ts`; slug-grain, IDENTITY HOLDS): **68** manifest.scripts slugs = **9** converted + **0** pending + **2** declared exemptions (Ask A2, excluded from the conversion programme entirely — never silently dropped, see the table above) + **57** remaining, each counted exactly once, in exactly one of C4/C5/C6/pending/exempted.*

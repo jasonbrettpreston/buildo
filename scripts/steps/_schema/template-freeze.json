@@ -13,7 +13,7 @@
     "preserved, live tier refreshed) or `--refresh` (frozen tier re-derived, frozen_at := HEAD)."
   ],
   "contract_version": 1,
-  "frozen_at": "ec28216ae5c34999375d96064ed5e445484f8436",
+  "frozen_at": "bc81ac84ab99469f45daf65aa3e3d1f9ba09d5f3",
   "frozen_after_pilot": 9,
   "schema_sha256": "679febb3c080cbef2f2ee4b192fd2561e972b6c6851dc235175a774e0f738b8e",
   "categories": [
@@ -83,10 +83,14 @@
     },
     {
       "archetype": "ENRICHER",
-      "shapes": [],
-      "runners": [],
-      "first_step": null,
-      "proven": false
+      "shapes": [
+        "enrich"
+      ],
+      "runners": [
+        "runEnrichPhase"
+      ],
+      "first_step": "enrich_parcels",
+      "proven": true
     },
     {
       "archetype": "BACKFILL",
@@ -265,11 +269,6 @@
     ]
   },
   "batching_prereq_snapshot": [
-    {
-      "id": "STD-7",
-      "status": "PARTIAL",
-      "owner": "pilot: pilot9_enrich_parcels"
-    },
     {
       "id": "FREEZE-1",
       "status": "NOT_STARTED",

@@ -640,27 +640,28 @@ describe('execution.shape "enrich" + the ENRICHER execution.phases[] profile (pi
     pin(errorsOf(withPhases([phase(1, { txn: 'own_txn' })])), '/execution/phases/0/txn', 'enum');
   });
 
-  it('the other seven profiles are UNAFFECTED — every committed step descriptor still validates, and none of their files changed in this commit (Rule 3/claim #175 probe_presence fleet fix is the ONE known, declared exception — assert-schema.descriptor.json, unrelated to any archetype-profile change; enrich_parcels\' own cutover stays deferred, CLOUDPARITY UNMET, EP-D13 — converted.json is unchanged at 8 entries)', () => {
+  it('the other seven profiles are UNAFFECTED — every committed step descriptor still validates, and none of their files changed in this commit (Rule 3/claim #175 probe_presence fleet fix is the ONE known, declared exception — assert-schema.descriptor.json, unrelated to any archetype-profile change); enrich_parcels is the ONE ENRICHER (pilot 9 commit 9 cutover, 2026-09-11 — converted.json at 9 entries)', () => {
     // Pilot 9 commit 8 P8/P9 (2026-09-08) legitimately edits assert-schema.descriptor.json's
     // checks[].expect/config.probe_presence arrays (Rule 3 / claim #175's probe_presence fleet
-    // union — a genuine, independent tunable-visibility fix, NOT tied to enrich_parcels'
-    // conversion, which stays deferred pending a green CLOUDPARITY cloud run per EP-D13,
-    // and whose own registration edit is deliberately kept OUT of this commit — restored to
-    // its pending form on disk too, not just unstaged, per the operator's ruling). This is a
-    // KNOWN, DECLARED change, not accidental drift — narrow the "must be clean" scope to
-    // exclude ONLY it; every other converted descriptor (still eight) remains a byte-identical
-    // R-C golden fingerprint.
+    // union — a genuine, independent tunable-visibility fix, NOT tied to any archetype-profile
+    // change). Pilot 9 commit 9 (2026-09-11) registered enrich_parcels in converted.json and
+    // regenerated the same two arrays again (42 → 86 names, R-D three-way lock) — the same
+    // ONE known, declared exception. Narrow the "must be clean" scope to exclude ONLY it;
+    // every other converted descriptor (now eight of nine) remains a byte-identical R-C
+    // golden fingerprint.
     const converted = (JSON.parse(fs.readFileSync(path.join(REPO_ROOT, 'scripts/steps/_schema/converted.json'), 'utf8')) as { converted: string[] }).converted;
-    expect(converted.length, 'eight steps are converted as of pilot 9 commit 7a (enrich_parcels cutover remains deferred — CLOUDPARITY UNMET, EP-D13)').toBe(8);
+    expect(converted.length, 'nine steps are converted as of pilot 9 commit 9 (enrich_parcels cutover, 2026-09-11)').toBe(9);
     const KNOWN_CHANGED_THIS_COMMIT = new Set([
-      'scripts/quality/assert-schema.descriptor.json', // Rule 3/claim #175 probe_presence fleet fix
+      'scripts/quality/assert-schema.descriptor.json', // Rule 3/claim #175 probe_presence fleet fix (R-D three-way lock regen at every cutover)
     ]);
     const descriptorPaths = converted.map((f) => f.replace(/\.js$/, '.descriptor.json'));
+    const enrichers: string[] = [];
     for (const rel of descriptorPaths) {
       const d = readJson(path.join(REPO_ROOT, rel));
-      expect((d.identity as { archetype: string }).archetype, 'no converted step is an ENRICHER yet — enrich_parcels\' cutover remains deferred').not.toBe('ENRICHER');
+      if ((d.identity as { archetype: string }).archetype === 'ENRICHER') enrichers.push(rel);
       expect(validate(d), `${rel}: ${JSON.stringify(validate.errors, null, 1)}`).toBe(true);
     }
+    expect(enrichers, 'exactly one converted ENRICHER — enrich_parcels (pilot 9 commit 9); the profile is exercised by ONE real descriptor, not zero and not a second one this test never planned for').toEqual(['scripts/enrich-parcels.descriptor.json']);
     // Byte-identical, not merely still-valid, for every descriptor EXCEPT the one known,
     // declared exception above — each of the other seven is still an R-C golden fingerprint.
     const unexpectedTargets = descriptorPaths.filter((rel) => !KNOWN_CHANGED_THIS_COMMIT.has(rel));

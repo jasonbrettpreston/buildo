@@ -11,17 +11,17 @@ Total items: **97**
 | status | count |
 |---|---|
 | ⬜ NOT_STARTED | 18 |
-| ⚠️ PARTIAL | 18 |
-| ✅ BUILT | 57 |
+| ⚠️ PARTIAL | 16 |
+| ✅ BUILT | 59 |
 | ⏭️ SUPERSEDED | 4 |
 
-**blocks batching: 2**
+**blocks batching: 1**
 
 ## Batching prerequisite — blocks "freeze after the eighth" (Spec 122 §8.2/§10.3) (5)
 
 | id | spec | title | status | owner | blocks | last reviewed |
 |---|---|---|---|---|---|---|
-| `STD-7` | 122 §1.10 | archetype drives required-field profile, 8 archetypes dispatched | ⚠️ PARTIAL | pilot: pilot9_enrich_parcels | batching | 2026-09-04 |
+| `STD-7` | 122 §1.10 | archetype drives required-field profile, 8 archetypes dispatched | ✅ BUILT | pilot: pilot9_enrich_parcels | batching | 2026-09-10 |
 | `LDG-4` | 122 §6.3 | stepUpstreams(slug) derived from the ledger | ✅ BUILT | wf: wf: cross-step ledger (WF1), commits 1-6, 2026-09-03 | batching | 2026-09-03 |
 | `FREEZE-1` | 122 §8.2 | freeze precondition satisfied — the batching_prereq set is genuinely empty | ⬜ NOT_STARTED | wf: wf: programme-FREEZE-1, blocked on STD-7 (WD-1 expected closed pre-merge) | batching | 2026-09-04 |
 | `WD-1` | 122 §1.4 | class-enum-without-write.js-branch lock | ✅ BUILT | wf: wf: programme-WD1, WD-1 WF5+WF2 commits 1-3 | batching | 2026-09-09 |
@@ -34,13 +34,13 @@ Total items: **97**
 | `STA-1` | 120 §6 | 4 new state tables | ⬜ NOT_STARTED | wf: wf: programme-STA-1 | — | 2026-09-03 |
 | `STA-2` | 120 §6b | reset generated per archetype | ✅ BUILT | wf: wf: programme-STA-2 | refresh_snapshot | 2026-09-03 |
 | `STA-3` | 120 §6b | 3 destructive-reset guards | ✅ BUILT | wf: wf: programme-STA-2 | refresh_snapshot | 2026-09-03 |
-| `CLOUDPARITY` | 122 R-D | cloud database must run apply-logic-variables.js before any cloud cutover | ⚠️ PARTIAL | followup: review_followups.md HIGH ops entry (filed 2026-08-27, peel 8c) | cloud_deploy | 2026-08-29 |
+| `CLOUDPARITY` | 122 R-D | cloud database must run apply-logic-variables.js before any cloud cutover | ✅ BUILT | followup: review_followups.md HIGH ops entry (filed 2026-08-27, peel 8c); EP-D13 (filed 2026-09-08, defect-ledger.md); pilot 9 commit 9 acceptance run (orchestrator, 2026-09-10) | cloud_deploy, enrich_parcels | 2026-09-10 |
 | `EP-PIN-B45` | 78 §P3C.1/§3.0b | B4.5 pin — pass-4 comps UPDATE has no IS DISTINCT FROM; the comp_count IS NULL incremental predicate never refreshes | ✅ BUILT | pilot: pilot9_enrich_parcels | enrich_parcels | 2026-09-08 |
 | `EP-PIN-D8` | 78 §P3C.2 | EP-D8 pin — comp_fsi_p50 has no structure_family/zone compatibility invariant | ✅ BUILT | pilot: pilot9_enrich_parcels | enrich_parcels | 2026-09-08 |
 | `EP-PIN-D9` | 78 §P3C.2 | EP-D9 pin — pass-4 comps candidate selection has no deterministic tiebreak (comparable_builds jsonb instability) | ✅ BUILT | pilot: pilot9_enrich_parcels | enrich_parcels | 2026-09-08 |
 | `EP-PIN-D10` | 122 §3.0b | EP-D10 pin — enrich_parcels_pass3_scope grows unbounded (append-only, never pruned) | ✅ BUILT | pilot: pilot9_enrich_parcels | enrich_parcels | 2026-09-08 |
 | `EP-PIN-D14` | 78 §P3A.1 / 122 §3.0b | EP-D14 pin — pass-5 D4' recovery walks unconsumed enrich_parcels_pass3_scope rows one at a time (full-scan UPDATE per parcel, redundant under --full) | ✅ BUILT | pilot: pilot9_enrich_parcels | enrich_parcels | 2026-09-09 |
-| `EP-PIN-D17` | 124 §7 / 48 §3.5 | EP-D17 pin — parcels post-run checks are unbounded serial full scans over a bloat-inflated heap | ⚠️ PARTIAL | pilot: pilot9_enrich_parcels | enrich_parcels | 2026-09-10 |
+| `EP-PIN-D17` | 124 §7 / 48 §3.5 | EP-D17 pin — parcels post-run checks are unbounded serial full scans over a bloat-inflated heap | ⚠️ PARTIAL | pilot: pilot9_enrich_parcels | assert_data_bounds | 2026-09-11 |
 | `GOLD-PRE` | 122 §5.3 | Golden PRE-side capture completeness enforced per declared chain | ✅ BUILT | wf: wf: conversion-roadmap commit 3, 2026-09-10 | assert_global_coverage, assert_data_bounds, assert_engine_health, link_neighbourhoods, geocode_permits | 2026-09-10 |
 | `HB-1` | 124 §2 Rule 12 | Heartbeat covers the WHOLE step, not only phase boundaries (EP-D15) | ✅ BUILT | wf: wf: conversion-roadmap commit 3, 2026-09-10 | — | 2026-09-10 |
 | `CEIL-1` | 124 §2 Rule 12 | Statement/lock ceiling bound on EVERY phase incl. post_commit (EP-D16) | ✅ BUILT | wf: wf: conversion-roadmap commit 3, 2026-09-10 | — | 2026-09-10 |
@@ -131,4 +131,4 @@ Total items: **97**
 
 ---
 
-*Freeze-readiness (Spec 122 §8.2/§10.3): the template may honestly "freeze after the eighth" only when the batching_prereq set above is EMPTY. Currently **2** item(s) block it.*
+*Freeze-readiness (Spec 122 §8.2/§10.3): the template may honestly "freeze after the eighth" only when the batching_prereq set above is EMPTY. Currently **1** item(s) block it.*

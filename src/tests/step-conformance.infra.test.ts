@@ -1090,6 +1090,56 @@ function sharedRunnerConsumedVars(): string[] {
   return fs.existsSync(runnerPath) ? configReadsIn(runnerPath) : [];
 }
 
+/**
+ * EP-D17 conformance gap (pilot 9 commit 9, 2026-09-11) — the LIBRARY-consumed tunables the
+ * two scanners above cannot see. `sharedRunnerConsumedVars` only matches `ctx.config.<x>` /
+ * bare `config.<x>` reads, but the run-end post-check executor reads its two ceilings off a
+ * local named `configValues` (`configValues.step_post_check_statement_timeout_minutes`,
+ * `configValues.step_post_check_concurrency` — scripts/lib/step/index.js, the runValidatorEntries
+ * call site), and `runMaintenance` (scripts/lib/step/plausibility.js) reads the per-table
+ * VACUUM ceiling by a DYNAMIC key it derives from the descriptor's own
+ * `execution.maintenance[].table` (`${table}_maintenance_timeout_minutes`) — no scanner can
+ * recover a template-literal key from source text. Both paths are real reads with real
+ * seed rows; EP-D17 declared all three in enrich-parcels.descriptor.json (Rule 3) but the
+ * step was still `pending` when it landed, so §1.2a P4's converted-only loop never saw them
+ * until the cutover registered the step, at which point all three read RED as "dead
+ * declarations" (measured 2026-09-11, the RS-conformance-gap / LW-D10 class again).
+ *
+ * Two deliberately narrow additions, unioned into the DEAD-DECLARATION check only (never
+ * into `runnerConsumed`, whose opposite-direction check must stay scoped to `*_from_config`):
+ *   (a) `configValues.<name>` reads in the shared runner — a second identifier for the SAME
+ *       `ctx.config` object, matched only in scripts/lib/step/index.js (not in computes, so a
+ *       compute that invents a `configValues` local does not get silently credited);
+ *   (b) the library-derived maintenance key per declared `execution.maintenance[]` entry,
+ *       mirrored by NAME from plausibility.js (`${entry.table}_maintenance_timeout_minutes`) —
+ *       a descriptor with `maintenance: "none"` (or none at all) derives nothing.
+ * Both directions are locked below ("pilot 9 commit 9 — library-consumed tunables").
+ */
+const CONFIG_VALUES_READ_RE = /(?<![\w.])configValues\.([a-z][a-z0-9_]*)/g;
+
+/** (a) — `configValues.<name>` reads in the shared runner file only. */
+function sharedRunnerConfigValuesReads(src?: string): string[] {
+  const runnerPath = path.join(REPO_ROOT, 'scripts/lib/step/index.js');
+  const text = src ?? (fs.existsSync(runnerPath) ? fs.readFileSync(runnerPath, 'utf8') : '');
+  return [...new Set([...stripComments(text).matchAll(CONFIG_VALUES_READ_RE)].map((m) => m[1]!))];
+}
+
+/** (b) — the maintenance ceiling keys the library derives from a descriptor's own declaration. */
+function maintenanceDerivedVars(descriptor: { execution?: { maintenance?: 'none' | Array<{ table: string }> } }): string[] {
+  const m = descriptor.execution?.maintenance;
+  if (!Array.isArray(m)) return [];
+  return [...new Set(m.map((e) => `${e.table}_maintenance_timeout_minutes`))];
+}
+
+/** (a) ∪ (b) for one step — the library-consumed set the dead-declaration check credits. */
+function libraryConsumedVars(relFile: string): string[] {
+  const descriptorPath = path.join(REPO_ROOT, `${relFile.slice(0, -3)}.descriptor.json`);
+  const descriptor = fs.existsSync(descriptorPath)
+    ? (JSON.parse(fs.readFileSync(descriptorPath, 'utf8')) as { execution?: { maintenance?: 'none' | Array<{ table: string }> } })
+    : {};
+  return [...new Set([...sharedRunnerConfigValuesReads(), ...maintenanceDerivedVars(descriptor)])];
+}
+
 /** link_parcels' own pair — no shared prefix, named explicitly. */
 const LINK_PARCELS_SHARED_RUNNER_VARS = new Set(['spatial_match_max_distance_m', 'spatial_match_confidence']);
 
@@ -1137,7 +1187,11 @@ function configFindings(relFile: string, slug: string, declared: string[]): stri
   // scoped to genuine `*_from_config` fields only). A variable reached by any of the
   // three is live.
   const runnerConsumed = runnerConsumedVars(relFile);
-  const consumed = [...new Set([...computeConsumed, ...runnerConsumed, ...sharedRunnerConsumedVars()])];
+  // Fourth path (pilot 9 commit 9, EP-D17 conformance gap): what the LIBRARY reads under a
+  // second identifier (`configValues.<x>`) or by a descriptor-derived dynamic key
+  // (`<table>_maintenance_timeout_minutes`) — see `libraryConsumedVars`. Dead-declaration
+  // check only, same posture as `sharedRunnerConsumedVars`.
+  const consumed = [...new Set([...computeConsumed, ...runnerConsumed, ...sharedRunnerConsumedVars(), ...libraryConsumedVars(relFile)])];
 
   for (const name of declared) {
     if (!REGISTRY_KEYS.has(name)) {
@@ -1474,6 +1528,55 @@ describe('pilot 6 peel 8c — compute_centroids T1/T2/T3: declared ⊆ registry,
     const withoutT2 = declared.filter((n) => n !== 'compute_centroids_compute_rate_warn_pct');
     const findings = configFindings(CC_STEP, slug, withoutT2);
     expect(findings.some((f) => f.includes('the descriptor names "compute_centroids_compute_rate_warn_pct" in a *_from_config field, which its config does not declare')), findings.join('\n')).toBe(true);
+  });
+});
+
+// EP-D17 conformance gap (pilot 9 commit 9, 2026-09-11) — the three library-consumed tunables
+// read RED as dead declarations the moment enrich_parcels joined CONVERTED. Both directions
+// of the widening (`libraryConsumedVars`) are locked here, Spec 121 §12b.6.
+const EP_STEP = 'scripts/enrich-parcels.js';
+const EP_LIBRARY_VARS = ['step_post_check_statement_timeout_minutes', 'step_post_check_concurrency', 'parcels_maintenance_timeout_minutes'];
+
+describe('pilot 9 commit 9 — library-consumed tunables (EP-D17: configValues.<x> reads + the descriptor-derived maintenance key)', () => {
+  it('the fixture is non-vacuous — all three are declared by enrich_parcels, NONE is read as ctx.config in compute, NONE is *_from_config-reachable, NONE is a ctx.config read in the shared runner (the three pre-existing paths genuinely miss them)', () => {
+    const { declared } = declaredConfigVars(EP_STEP);
+    for (const v of EP_LIBRARY_VARS) expect(declared, `${v} is no longer declared — the fixture premise is stale`).toContain(v);
+    const computeReads = configReadsIn(path.join(REPO_ROOT, `${COMPUTE_DIR}/enrich-parcels.js`));
+    const fromConfig = runnerConsumedVars(EP_STEP);
+    const sharedCtx = sharedRunnerConsumedVars();
+    for (const v of EP_LIBRARY_VARS) {
+      expect(computeReads.includes(v), `${v} is read as ctx.config in compute — the library-only premise is untested`).toBe(false);
+      expect(fromConfig.includes(v), `${v} is *_from_config-reachable — the library-only premise is untested`).toBe(false);
+      expect(sharedCtx.includes(v), `${v} is a plain ctx.config read in the shared runner — the widening would be redundant`).toBe(false);
+    }
+  });
+
+  it('GREEN — the widening credits exactly the three: (a) the two configValues.<x> reads in scripts/lib/step/index.js, (b) parcels_maintenance_timeout_minutes derived from the declared execution.maintenance[] entry', () => {
+    const lib = libraryConsumedVars(EP_STEP);
+    for (const v of EP_LIBRARY_VARS) expect(lib, `libraryConsumedVars misses ${v}`).toContain(v);
+    expect(sharedRunnerConfigValuesReads()).toEqual(expect.arrayContaining(['step_post_check_statement_timeout_minutes', 'step_post_check_concurrency']));
+    const { slug, declared } = declaredConfigVars(EP_STEP);
+    const findings = configFindings(EP_STEP, slug, declared);
+    expect(findings, findings.join('\n')).toEqual([]);
+  });
+
+  it('RED — (a) the configValues scanner reads NOTHING from a source with only ctx.config reads, and a `myconfigValues.x` / `obj.configValues.x` read is NOT credited (identifier-start anchored, same LW-D10 discipline)', () => {
+    expect(sharedRunnerConfigValuesReads('const a = ctx.config.step_post_check_concurrency; const b = config.foo;')).toEqual([]);
+    expect(sharedRunnerConfigValuesReads('const a = myconfigValues.step_post_check_concurrency; const b = obj.configValues.zzz;')).toEqual([]);
+    expect(sharedRunnerConfigValuesReads('// configValues.commented_out\nconst a = configValues.real_one;')).toEqual(['real_one']);
+  });
+
+  it('RED — (b) a descriptor with maintenance "none" (or absent) derives NO maintenance key; a declared entry derives exactly `<table>_maintenance_timeout_minutes` (mirrors plausibility.js by name)', () => {
+    expect(maintenanceDerivedVars({ execution: { maintenance: 'none' } })).toEqual([]);
+    expect(maintenanceDerivedVars({})).toEqual([]);
+    expect(maintenanceDerivedVars({ execution: { maintenance: [{ table: 'parcels' }, { table: 'parcels' }] } })).toEqual(['parcels_maintenance_timeout_minutes']);
+    expect(maintenanceDerivedVars({ execution: { maintenance: [{ table: 'permits' }] } })).toEqual(['permits_maintenance_timeout_minutes']);
+  });
+
+  it('RED canary — the dead-declaration finding still FIRES for a declared var that no path (compute, *_from_config, shared ctx.config, configValues, maintenance-derived) reads — the widening did not blanket-credit everything', () => {
+    const { slug, declared } = declaredConfigVars(EP_STEP);
+    const findings = configFindings(EP_STEP, slug, [...declared, 'enrich_parcels_totally_unread_var']);
+    expect(findings.some((f) => f.includes('declared config var "enrich_parcels_totally_unread_var" is read neither')), findings.join('\n')).toBe(true);
   });
 });
 

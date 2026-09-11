@@ -1075,6 +1075,8 @@ Today this is **vacuously exercised**: 0 descriptors declare `recovery.reset: "g
 ## 8. The conversion process
 
 
+**RE-FREEZE #5 — pilot 9 commit 9 cutover (2026-09-11):** `generate-template-freeze.mjs --refresh` re-derives `archetype_profiles[ENRICHER]` to `{shapes:["enrich"], runners:["runEnrichPhase"], first_step:"enrich_parcels", proven:true}` — the 8th and last archetype proven, `STD-7` → BUILT, `batching_prereq` open set 2 → 1 (`FREEZE-1` alone). No schema-text change (`schema_sha256` unchanged, so the R-E lock does not fire by itself — this line is §8's own house rule, Spec 124 §R-8 same-commit spec-diff). Payment record: `122a_step_optimization_appendix.md` Appendix §A9 (body text under the historical #1-#4 heading, after #6).
+
 **RE-FREEZE #6 — EP-D17 (2026-09-11):** `execution.maintenance.txn_scope` enum gains `"step"` (one enum line + its description; `generate-schema-baseline --check` 0 new fields) so a step-scoped runner can declare the maintenance the library now executes (`runMaintenance`, Spec 122 §4.3). Payment record: `122a_step_optimization_appendix.md` Appendix §A9 (body text under the historical #1-#4 heading). This line exists because the R-E lock requires a §8 text change whenever `schema_sha256` moves.
 
 ### 8.1 Per step — nine commits, each independently revertable

@@ -871,12 +871,37 @@ byte-identical, 0 unexplained).
 
 ---
 
+## §9. Commit 9 — differential + cutover (2026-09-11, HEAD `bc81ac84`, main tree)
+
+**Recapture — R-C named cause.** Both POST captures were re-taken at HEAD `bc81ac84` against the local Supabase stack (127.0.0.1:54322/postgres, migration 247 applied locally first, `migrate --verify` 0 drift) because EP-D17 (`d9a90035`, 2026-09-11) edited `scripts/enrich-parcels.descriptor.json` (+42/−7: `execution.maintenance`, the `parcels_dead_tuple_ratio` plausibility bound, `step_post_check_statement_timeout_minutes`) AFTER the previous captures (`git_head` `404388ea` / `f7e695fc`, fingerprints `96c27841` / `c8058899`) — Spec 122 §5.3 R-C makes the descriptor a fingerprint file, so both read `stale-fingerprints=2` and G8 scored 0/3. A worktree recapture taken the same day at base `0820685d` (fingerprint `501ce326`) was ALSO stale for the same reason and was discarded, not reused. New `source_fingerprint` `0501de76` on both files; `git_head` `bc81ac84`.
+
+| Capture | chain / args | exit | verdict | terminal | wall | notes |
+|---|---|---|---|---|---|---|
+| `post/sources_run1.json` | `sources` / `--full` | 0 | WARN (3 warned, 0 failed) | `enriched_full_with_warnings` | **2,738 s (45.6 min)** — vs 6,770 s (112.8 min) for the identical invocation at `0820685d` on 2026-09-10 | passes: zoning 614 s · max_build 1,579 s · existing_structure 74 s · comparable_builds 354 s · optimal_config 100 s; `parcels` 486,530 rows hashed |
+| `post/none_incremental.json` | `none` / (none) | 0 | WARN (2 warned) | `enriched_full_with_warnings` | 138 s | every `*_enriched_count` = 0 (nothing stale after the FULL run); `enrich_parcels_pass3_scope` 0 rows |
+
+**EP-D17 exercised for the first time, locally (the cloud proof rides batch 1 — see the EP-PIN-D17 ruling below).** The five post checks (`opt_aor_gfa_gt_max_buildable_gfa_count`, `zoning_dominant_area_share_out_of_range_count`, `comp_fsi_p50_small_n_sample_count`, `heritage_basis_coverage_distribution`, `existing_mislink_footprint_ratio_out_of_bound_count`) each carry a `sys_<id>_duration_ms` row: 1,474 / 1,358 / 1,734 / 1,600 / 1,823 ms on the FULL run — seconds, concurrent, under a declared ceiling. `sys_maintenance_parcels_vacuum_analyze` recorded `ran "VACUUM (ANALYZE) parcels" — dead_ratio 0.6862 > 0.3`, 5,399 ms, on the FULL run and `skipped — dead_ratio 0 <= 0.3` on the incremental run. (`sys_`-prefixed rows are scrubbed from the golden comparison by `VOLATILE_METRIC_PREFIXES`, so none of them is a diff leaf.)
+
+**⚠️ EP-D18 (found by reading the numbers, not the code — filed PIN, not fixed here):** the POST-maintenance bound `parcels_dead_tuple_ratio` read **0.7362 WARN** (`value_max 0.30`) on the FULL run immediately AFTER the declared VACUUM had run — a physically implausible sequence if the VACUUM reclaimed anything. Measured cause: `runMaintenance` is called inside the outer `withAdvisoryLock` callback (`scripts/lib/step/index.js` — call site under the `post_commit` phase, the lock opened at the `pipeline.withAdvisoryLock(pool, descriptor.identity.lock, …)` site), and `withAdvisoryLock` is `BEGIN → pg_try_advisory_xact_lock → fn() → COMMIT` (`scripts/lib/pipeline.js`) — an open transaction with a snapshot for the ENTIRE step. `pg_stat_activity` during the incremental run showed exactly that session: `idle in transaction`, `backend_xmin` set, query `SELECT pg_try_advisory_xact_lock($1)`. That xmin pins the vacuum horizon at step START, so a VACUUM run at step END cannot remove a single tuple the step itself killed (≈1.35 M dead vs 0.49 M live after four full-table UPDATE passes ⇒ 0.73 by construction); it CAN reclaim bloat older than the step (the 2.3×-live cloud heap EP-D17 was pinned on), which is why the post checks were still fast here. `pg_stat_user_tables` one minute after the step exited: `n_dead_tup = 0`, `last_vacuum` 12:38:35Z (the declared VACUUM), `last_autovacuum` 12:39:48Z (migration 247's tuned autovacuum, which did the reclaim once the lock transaction had ended). Consequences: (a) the `parcels_dead_tuple_ratio` bound WARNs on every FULL run by construction and PASSes on every incremental run — a bound whose verdict is decided by the invocation mode, not by heap health; (b) the in-step VACUUM pays its scan for pre-existing bloat only. Both are recorded in `defect-ledger.md` EP-D18 and `review_followups.md` (HIGH) for a follow-on WF3 (candidates: run the declared maintenance AFTER the lock transaction commits, or bound on `n_dead_tup` older than the step's own xmin, or re-express the bound as pre-run state); the check's own `retighten_when` clause already anticipates re-tuning. Not fixed in this commit — WF3 cadence (one finding per WF3) and Spec 123 §3 (a DEFECT fixed during conversion contaminates the differential).
+
+**Differential (G8): 573 leaf diffs pre → post, 0 unexplained — every one a declared consequence already named in §7/§6 (the archetype conversion itself) or in the EP-D17 addendum:** `table_state.columns` (204 — the descriptor's declared write-column list replaces the pre-conversion `--tables` snapshot's raw column set; `table_state.order_columns` 4), `summary.records_meta.audit_table.rows` (58 rows added/reshaped: `metric`/`threshold`/`source`/`value`/`status` — the row-derived cascade of §7, `source:"check"` and `viol == 0` thresholds now declared, plus the new `parcels_dead_tuple_ratio` plausibility row), `meta.reads.*` (`zoning_bylaw_areas` 24, `parcels` 24, `neighbourhood_build_norms` 21, `permits` 7, `zoning_height_overlay` 5, `zoning_lot_coverage_overlay` 4 — declared `inputs.reads` replace the pre-conversion inferred read set), `invariants.name`/`invariants.value` (6: the sixth invariant `parcels_dead_tuple_ratio` and the comps small-N count 3,300 → 3,294 under the same clock-relative window, both named), `stdout_lines` (12). Non-determinism inventory (§5) unchanged: `chain_run_id`, `duration_ms`, `sys_duration_ms`, `sys_velocity_rows_sec`, `pipeline_runs[].id/started_at/completed_at` scrubbed. `parcels` `content_hash` `906b1f6a` — clock-relative comps window pinned by capturing both files within one UTC day (2026-09-11).
+
+**Cutover obligations (Spec 123 §7 row 9 / §7.2 A6 / FREEZE-1 plan) — all in THIS commit:** `converted.json` gains `scripts/enrich-parcels.js`, `pending` = `[]` (R-K) · `violations.test.ts` cutover assertion flipped (no `it.fails` remained — the 3 textual hits are the file's own header comment) · `programme-items.json`: `STD-7` → BUILT, `CLOUDPARITY` → BUILT (GH run 34506962436, `headSha` `0820685d`, `pipeline_runs` row 4588, all 9 converted slugs present, none skipped — grounded 2026-09-10) · **RE-FREEZE #5** (`generate-template-freeze.mjs --refresh`: ENRICHER `{shapes:["enrich"], runners:["runEnrichPhase"], first_step:"enrich_parcels", proven:true}`, `frozen_at` `bc81ac84`, `batching_prereq_snapshot` = `FREEZE-1` only; `template-freeze.infra.test.ts` pin flipped; Spec 122 §8 line + 122a §A9 paragraph) · `step-archetype-census.json` row for `enrich_parcels` retired (its own `reason` named this commit) → roadmap 55 files / 57 slugs / 0 pending, `conversion-roadmap.infra.test.ts` repinned · backlog regenerated, **blocks batching: 1** · `node scripts/analysis/step-validate.mjs --step=enrich_parcels --write` (the generated block below) + the other 8 scorecards regenerated.
+
+**Operator ruling (Spec 124 §4, 2026-09-11) — EP-PIN-D17 re-pointed.** `gate.blocks`: `enrich_parcels` → `assert_data_bounds` (batch 1 lead, per the generated roadmap). A dedicated third ~270-min chain-sources run whose only purpose was to flip EP-PIN-D17 was refused: run 34506962436 already proved CLOUDPARITY for this step (pre-EP-D17 code), EP-D17 is a cost fix, and Spec 124 R-AB already mandates one acceptance run per archetype batch — that run is the green run EP-PIN-D17 waits for. Migration 247 was applied on the cloud the same morning (apply-migrations run 34598594544, `headSha` `bc81ac84`, verify 0 drift; cloud `parcels` `dead_ratio` 0.000, reloptions live). No cron was disabled; no cloud window was opened.
+
+**Spec diff (Spec 123 §7 row 9 (b) / Spec 124 §R-8):** Spec 122 §8 (RE-FREEZE #5 line) · Spec 122a §A9 (payment paragraph) · Spec 124 §9 (ENRICHER dispatch row proven; concerns row "cut over commit 9"; §R-8 rows: blocks batching 2 → 1, EP-D13 dispatch lesson, ENRICHER schema-bump lesson) · Spec 65 §2 (conversion bullet, cites §3c for the maintenance declaration) · **Spec 78: N-A** — nothing in the optimal-config algorithm or its contract changes at cutover.
+
+**Three further cutover findings, all surfaced by the registration itself (checks that only run for `converted[]` slugs saw this step for the first time) — each fixed in this commit by the pilot-7/8 commit-9 precedent (`a4d80a26`, `32eec17f`):** (1) **EP-D17 conformance gap — three library-read tunables read as dead declarations** (`step_post_check_statement_timeout_minutes`, `step_post_check_concurrency`, `parcels_maintenance_timeout_minutes`): §1.2a P4 credits `ctx.config.<x>` / bare `config.<x>` reads and `*_from_config` fields, but the post-check executor reads its ceilings off a local named `configValues` and `runMaintenance` derives `<table>_maintenance_timeout_minutes` from the descriptor at run time — a template key no scanner can see. `step-conformance.infra.test.ts` gains `libraryConsumedVars` (configValues reads in `scripts/lib/step/index.js` only + the descriptor-derived maintenance key, mirrored by name from `plausibility.js`), unioned into the dead-declaration check only, with a five-test both-directions block (non-vacuous premise, GREEN on the real files, RED on `ctx.config`-only / `myconfigValues.` / commented sources, RED on `maintenance:"none"`, and the unread-var canary still firing). Same class as RS-conformance-gap / LW-D10. (2) **R-D three-way lock**: `assert-schema.descriptor.json`'s `config.probe_presence` and `checks[declared_logic_variables_present].expect` regenerated 42 → 86 from `collectDeclaredLogicVariableNames()` (the 44 enrich_parcels vars), all four assert_schema POST goldens re-taken (fingerprint `37025a60`, PASS ×4) and the one new leaf (`pool_errors`) named in the pilot-1 report addendum — assert_schema stays 16/17. (3) **`none_incremental` verdict pin**: the committed 2026-09-08 PASS came from a genuinely deferred run whose `when:"post"` bounds never executed; this recapture ran minutes after the FULL run with an EMPTY stale scope, so it ran all five passes over 0 rows and executed the table-wide `comp_fsi_p50_small_n_sample_count` bound (WARN, 3,294) — the pin now reads WARN with the measured reason. Two different code paths chosen by DB state for the same invocation — the same "verdict decided by mode, not health" shape as EP-D18, recorded there.
+
+**Scorecard at cutover (fast, pre-`--write`): 16/17, G6 3/3 · G7 3/3 · G8 3/3 · G9 PASS · G4d PASS · G-shape PASS (`file-clean=true compute-clean=true`) · hard-stop=false.** The one open point is G3 (10 table rows, 9 vocab hits) — pre-existing, unchanged by this commit.
+
 ## Validation scorecard (generated)
 
 > Generated by `node scripts/analysis/step-validate.mjs --step=enrich_parcels --write` — Spec 123 §6, ruling R-R (2026-08-29).
 > Regenerate with the same command; a stale block is a conformance-lock finding (`step-conformance.infra.test.ts`).
 
-**Score: 13/17** · G9 Reflection: PASS · G4d fence-lock coverage: PASS · G-shape: PASS · **Hard stop: no**
+**Score: 16/17** · G9 Reflection: PASS · G4d fence-lock coverage: PASS · G-shape: PASS · **Hard stop: no**
 
 | Gate | Score | Max | Detail |
 |---|---:|---:|---|
@@ -886,12 +911,12 @@ byte-identical, 0 unexplained).
 | G3 | 1 | 2 | table rows=10 vocab-hit rows=9 |
 | G4 | 2 | 2 | risk-class row with chance+impact found=true |
 | G5 | 1 | 1 | db=true clock=true network=true argv/env=true |
-| G6 | 3 | 3 | 17 ledger row(s), 0 without CLOSED/PIN () |
-| G7 | 3 | 3 | file=true fences=3 it-count=70 RED-evidence=true |
-| G8 | 0 | 3 | missing-invocations=0 missing-pre-invocations=0 stale-fingerprints=2 unexplained-diffs=0 — stage-gated (shape_clean_pending_recapture) |
+| G6 | 3 | 3 | 18 ledger row(s), 0 without CLOSED/PIN () |
+| G7 | 3 | 3 | file=true fences=3 it-count=71 RED-evidence=true |
+| G8 | 3 | 3 | missing-invocations=0 missing-pre-invocations=0 stale-fingerprints=0 unexplained-diffs=0 |
 | G9 (binary) | PASS | — | heading=true low-confidence-table=true recurring-table=true |
-| G4d (fence<=lock) | PASS | — | fences=3 lock-it-count=70 |
-| G-shape | PASS | — | file-clean=null compute-clean=true |
+| G4d (fence<=lock) | PASS | — | fences=3 lock-it-count=71 |
+| G-shape | PASS | — | file-clean=true compute-clean=true |
 
 ### Fast invariants (always run — the fast descriptor gate)
 
@@ -906,16 +931,16 @@ byte-identical, 0 unexplained).
 | 21 | enrich_parcels | PASS | CEIL-1: runner=runEnrichPhase: runner-level token presence (MED-6, not a per-phase proof): source contains a SET LOCAL statement_timeout/lock_timeout token pair AND a postClient-scoped SET statement_timeout token (EP-D16) — the per-phase claim itself is filed as its own followup |
 | 4 | (registry) | PASS | overlap: none |
 | 5 | (registry) | PASS | clean (0 it.fails( call sites outside a declared pending slug) |
-| 9 | (registry) | PASS | clean (0 converted slugs blocked by an unmet cutover_prereq item; blocks batching: 2) |
+| 9 | (registry) | PASS | clean (0 converted slugs blocked by an unmet cutover_prereq item; blocks batching: 1) |
 
 ### Captures (item iv)
 - missing invocations (POST): none
 - missing invocations (PRE, GOLD-PRE): none
-- stale fingerprints: none_incremental.json, sources_run1.json
-- compare ran: true · diffs found: 552 · unexplained: 0
+- stale fingerprints: none
+- compare ran: true · diffs found: 573 · unexplained: 0
 
 ### Test suite (item iii)
-- 846/862 passed (suite success=true)
+- 868/884 passed (suite success=true)
 
 ### Policy coverage matrix (item vi) — Spec 124 Rules 1-13
 
@@ -934,7 +959,7 @@ byte-identical, 0 unexplained).
 | 11 | Phase-order re-derive (declared half, checkOrderGuaranteesCited) | enforced-green | 2 when:"pre_write" check(s), 0 order_guarantee violation(s) — G-3 completeness half stays open |
 | 12 | Truthful crash posture (R-B reachability, static + R-M before-image) | enforced-green | R-B (checkInterruptedPostureTruthful): shape=enrich runner=runEnrichPhase: no staleness.ledgerGatedSkip/selectMode on this path (ENRICHER's own scope-defer archetype, Spec 122 §3.0b); calls staleness.detectInterruptedRetraction directly and folds interruptedRetraction.interrupted into the full/incremental decision before any pass runs · R-M: prose-only (R-M/LG-17 describe not scoped to this step (vitest not run, or no before-image target)) |
 | 13 | A step validates itself | enforced-green | this run of step:validate IS the mechanism |
-| P3 | I/O cost adjudication (measured, not gated) | measured | descriptor=78961B notes=11481B checks=28 rows records_meta=1839B (newest post/ capture) |
+| P3 | I/O cost adjudication (measured, not gated) | measured | descriptor=78961B notes=11481B checks=28 rows records_meta=7654B (newest post/ capture) |
 
 **Enforced-green: 13/14**
 

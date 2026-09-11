@@ -54,11 +54,17 @@ describe('deriveSeamPairs — derived from converted.json + manifest.json, never
     expect(seam.deriveSeamPairs(byName)).toEqual([]);
   });
 
-  it('the REAL 8-descriptor registry (WF3 wf3_link_parcels_declared_reads, LDG-D1 split disposition) now yields 5 live pairs: compute_centroids -> link_massing, link_parcel_addresses -> link_parcels, plus refresh_snapshot\'s 3 declared inputs.reads.steps', () => {
+  it('the REAL 9-descriptor registry (pilot 9 commit 9 cutover, 2026-09-11) now yields 6 live pairs: link_massing -> enrich_parcels (new), compute_centroids -> link_massing, link_parcel_addresses -> link_parcels, plus refresh_snapshot\'s 3 declared inputs.reads.steps', () => {
     const byName = seam.loadConvertedDescriptors();
     expect(Object.keys(byName).sort()).toEqual(
-      ['assert_schema', 'compute_centroids', 'link_massing', 'link_parcel_addresses', 'link_parcels', 'link_wsib', 'load_ravines', 'refresh_snapshot'].sort(),
+      ['assert_schema', 'compute_centroids', 'enrich_parcels', 'link_massing', 'link_parcel_addresses', 'link_parcels', 'link_wsib', 'load_ravines', 'refresh_snapshot'].sort(),
     );
+    // enrich_parcels (pilot 9, cut over commit 9, 2026-09-11) declares inputs.reads.steps for
+    // load_zoning, link_massing, enrich_centreline, compute_storey_norms and link_neighbourhoods
+    // (PH-5 seam map, commit 3) — only link_massing is itself converted, so its registration
+    // contributes exactly ONE new live pair, downstream=enrich_parcels, which sorts FIRST
+    // ('enrich_parcels:link_massing' < 'link_massing:compute_centroids'). The other four
+    // producers arm the moment their own cutover registers them (R-V generalises, measured).
     // link_parcels now declares inputs.reads.steps: [{step: 'link_parcel_addresses',
     // version_pin: 'gte'}] (LDG-D1 split disposition, WF3 wf3_link_parcels_declared_reads,
     // 2026-09-03: the read is genuine and load-bearing — Strategy 1a's
@@ -73,6 +79,7 @@ describe('deriveSeamPairs — derived from converted.json + manifest.json, never
     // 'link_parcels:link_parcel_addresses' < 'refresh_snapshot:link_massing' <
     // 'refresh_snapshot:link_parcels' < 'refresh_snapshot:link_wsib'.
     expect(seam.deriveSeamPairs(byName)).toEqual([
+      { upstream: 'link_massing', downstream: 'enrich_parcels' },
       { upstream: 'compute_centroids', downstream: 'link_massing' },
       { upstream: 'link_parcel_addresses', downstream: 'link_parcels' },
       { upstream: 'link_massing', downstream: 'refresh_snapshot' },
@@ -171,12 +178,14 @@ describe('runSeamChecks — one row per derived pair', () => {
   // review_followups.md:17) — 4 -> 5. Order is `deriveSeamPairs`'s own deterministic
   // `downstream:upstream` localeCompare sort: 'link_massing:compute_centroids' <
   // 'link_parcels:link_parcel_addresses' < 'refresh_snapshot:link_massing' <
-  // 'refresh_snapshot:link_parcels' < 'refresh_snapshot:link_wsib'.
-  it('runs all 5 live pairs against the REAL registry and returns one row each', async () => {
+  // 'refresh_snapshot:link_parcels' < 'refresh_snapshot:link_wsib'. Pilot 9 commit 9
+  // (2026-09-11) adds 'enrich_parcels:link_massing', which sorts FIRST — 5 -> 6.
+  it('runs all 6 live pairs against the REAL registry and returns one row each', async () => {
     const pool = fakeSeamPool([], []);
     const rows = await seam.runSeamChecks(pool, { chainId: 'sources' });
-    expect(rows).toHaveLength(5);
+    expect(rows).toHaveLength(6);
     expect(rows.map((r) => r?.metric)).toEqual([
+      'seam_link_massing_before_enrich_parcels',
       'seam_compute_centroids_before_link_massing',
       'seam_link_parcel_addresses_before_link_parcels',
       'seam_link_massing_before_refresh_snapshot',

@@ -173,15 +173,16 @@ describe('template-freeze.json — the frozen categories/runners match the live 
     expect(names).toEqual(['runBackfillPhase', 'runCascadePhase', 'runEnrichPhase', 'runIngestPhase', 'runLinkKeyedPhase', 'runLinkPhase', 'runMaterializePhase', 'runRecorderPhase'].sort());
   });
 
-  it('archetype_profiles names all 8 identity.archetype enum values, ENRICHER unproven', () => {
+  it('archetype_profiles names all 8 identity.archetype enum values, ALL 8 proven — RE-FREEZE #5 (pilot 9 commit 9, 2026-09-11) closes ENRICHER, the last unproven archetype', () => {
     const stepSchema = JSON.parse(fs.readFileSync(STEP_SCHEMA_PATH, 'utf8'));
     const enumValues = stepSchema.properties.identity.properties.archetype.enum as string[];
     expect(ARTIFACT.archetype_profiles.map((p) => p.archetype).sort()).toEqual([...enumValues].sort());
     const enricher = ARTIFACT.archetype_profiles.find((p) => p.archetype === 'ENRICHER');
-    expect(enricher?.proven).toBe(false);
-    expect(enricher?.first_step).toBeNull();
-    const proven = ARTIFACT.archetype_profiles.filter((p) => p.archetype !== 'ENRICHER');
-    expect(proven.every((p) => p.proven)).toBe(true);
+    expect(enricher?.proven).toBe(true);
+    expect(enricher?.first_step).toBe('enrich_parcels');
+    expect(enricher?.shapes).toEqual(['enrich']);
+    expect(enricher?.runners).toEqual(['runEnrichPhase']);
+    expect(ARTIFACT.archetype_profiles.every((p) => p.proven)).toBe(true);
   });
 
   it('LINK is honestly recorded with 2 shapes (link, link_keyed) — a real branch not shown by Spec 124 §9\'s own 1-row-per-archetype table', () => {

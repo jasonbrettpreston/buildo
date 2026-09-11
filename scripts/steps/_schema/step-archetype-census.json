@@ -425,13 +425,6 @@
       "archetype": "UNDECLARED",
       "batch": "C6",
       "reason": "Spec 122 §1.10's census covers only the 27 `sources` steps; this file is outside that scope — deferred to ARCH-CENSUS (Ask A3), a dedicated WF before C6 opens"
-    },
-    {
-      "slug": "enrich_parcels",
-      "file": "scripts/enrich-parcels.js",
-      "archetype": "ENRICHER",
-      "batch": "pending",
-      "reason": "scripts/enrich-parcels.descriptor.json identity.archetype (real descriptor already lands, commit 7b) — registered here under provenance rule 2 until pilot 9 commit 9 adds it to converted.json's own converted[] array, at which point provenance rule 1 (the descriptor itself) supersedes this row"
     }
   ],
   "exemptions": [

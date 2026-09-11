@@ -276,3 +276,304 @@ Precedent: pilot 8's own `d7f1f983` (schema-only) → `c19cf224` (descriptor+com
 **Schema note (this commit):** `plausibility[].count_field` (new optional field, EP-D8 small-N caveat, Fold C2) — nested inside the `plausibility` item definition, not a direct category field, so it does NOT trip the G-1 ratchet (`schema-baseline.json` tracks 18-category/direct-field grain only, confirmed live: `plausibility.*` has zero tracked direct fields). It DOES trip R-E (`template-freeze.json`'s `schema_sha256` hashes the WHOLE schema file) — paid: `--refresh` (`frozen_at` stays `64c45463`, i.e. 7a, since 7b had not yet landed when this ran) + `docs/reports/generated/122-vocabulary.md` regenerated.
 
 **What the plan/schema got wrong (found this commit):** `checkOrderGuaranteesCited` (Rule 11, `step-analysis/step-validate.mjs`) hard-requires `checks[].order_guarantee.spec_ref` to resolve to the SAME file as `identity.spec` — a single-spec assumption. Pass 5's order guarantee genuinely cites Spec 78 (§P3A.1, "a same-txn read would be invisible"), while `identity.spec` is `"65"` (Ask 6's own ruling: Spec 78 governs 2 of 5 passes, but `identity.spec` is single-valued and the operator named 55/65 as the Target Spec line). This is Ask 6's multi-spec tension resurfacing in a checker nobody had exercised against a multi-spec ENRICHER before — `step:validate --fast` reports it as `enforced-red` for Rule 11 (see the pasted gate table below); the `violations.test.ts` lock itself is correct (it asserts `spec_ref === SPEC_78_REL` verbatim, matching Ask 6's ruling) and passes. Not fixed this commit (out of 7b's own scope — a generic checker widening or an `identity.spec` multi-value amendment is its own ruling); filed here so it is not silently absorbed into the hard-stop's already-expected G6/G7/G8 noise.
+
+---
+
+## Cloud acceptance run — backup plan (2026-09-09, pre-dispatch)
+
+**Written BEFORE dispatch, executable immediately.** Domain: Backend/Pipeline. All cloud reads were
+READ-ONLY, cloud-explicit (`PG_HOST=` cleared + `DATABASE_URL=$SUPABASE_DATABASE_URL`,
+`NODE_PATH=node_modules`, target logged: `aws-0-ca-central-1.pooler.supabase.com:5432/postgres`,
+`migrations=242`). No cloud writes were made by this pass. Clock at authoring: **2026-09-09T20:10:38Z**.
+
+### 1. Measured timeline — expected shape for tonight
+
+Source: cloud `pipeline_runs`, last 3 `chain_sources` runs + their `sources:%` step rows.
+
+| chain run | started (UTC) | status | total min | steps 1-21 (reconcile→load_zoning) | `enrich_parcels` (step 22) | steps 23-28 tail |
+|---|---|---|---|---|---|---|
+| **4470** | 2026-09-09 03:23Z | **running (STRANDED)** | — | died in `address_points` (row 4473, `running` 1007 min) | never reached | never reached |
+| **4407** | 2026-09-08 13:24Z | failed (306.5) | 306.5 | **58.4** | **248.1 — KILLED** (legacy script, EP-D13) | 0/6 ran |
+| **4309** | 2026-09-06 16:01Z | completed_with_warnings | **278.4** | **111.1** | **125.6** (verdict WARN) | **41.7** |
+| (3463, 08-24, 4th point) | 2026-08-24 21:22Z | completed_with_warnings | 202.8 | — | 113.8 (row 3485) | — |
+
+`sources:enrich_parcels` measured history: **125.6 · 113.8 · 135.6 · 111.7** min completed; **248.1** killed;
+two strands (5709.3, 2478.2 — ops-closed, not durations). Cloud tunables live and confirmed:
+`enrich_parcels_pass5_stream_batch_size=2000`, `enrich_parcels_optcfg_batch_size=5000` (both `updated_at`
+2026-09-09T03:10Z), `enrich_parcels_pass_statement_timeout_minutes=75`.
+
+Other cost centres on the clean 09-06 run (min): `enrich_ravines` 30.8 · `enrich_centreline` 23.8 ·
+`compute_parcel_cost_estimates` 16.5 · `enrich_heritage` 16.0 · `parcels` 11.3 · `assert_global_coverage` 9.5 ·
+`assert_parcel_sanity` 7.5 · `link_parcel_addresses` 7.5 · `compute_centroids` 6.5 · `refresh_snapshot` 3.8.
+Head variance is large and real: 58.4 min (09-08, incremental) vs 111.1 min (09-06).
+
+**THE BUDGET RISK IS `enrich_parcels`, AND THE MARGIN IS ~11 MINUTES.** Ceilings (`chain-sources.yml`):
+job `timeout-minutes: 330` · chain step `SOURCES_STEP_TIMEOUT_MINUTES: 300` (this is the whole-chain GH step,
+NOT a per-pipeline-step budget — 4407's "300-min step budget" kill was chain-wide) ·
+`CHAIN_TIME_BUDGET_MINUTES = 290` soft self-stop, checked BETWEEN steps only ·
+`CHAIN_DURATION_BUDGET_MINUTES = 300` verdict tripwire (warns past 240).
+
+Derived thresholds, with `T_pre` = steps 1-21 and the measured 33.5-min gap from `enrich_parcels` end to
+`refresh_snapshot` start (`compute_parcel_cost_estimates` 16.5 + `assert_global_coverage` 9.5 + `assert_parcel_sanity` 7.5):
+
+| what must hold | condition | at `T_pre`=111.1 (09-06) | at `T_pre`=58.4 (09-08) |
+|---|---|---|---|
+| `refresh_snapshot` (step 26, **a CONVERTED slug**) is reached at all | `T_EP < 256.5 − T_pre` | **`T_EP` < 145.4** | `T_EP` < 198.1 |
+| all 28 steps finish with no budget-stop | `T_EP ≤ 248.3 − T_pre` | **`T_EP` ≤ 137.2** | `T_EP` ≤ 189.9 |
+| last measured `T_EP` | 125.6 | margin **11.6 min** | margin 64.3 min |
+
+⚠️ **The trap this exposes:** a soft-budget stop finalizes the chain `completed_with_warnings`, which is on
+`check-chain-verdict.js`'s GREEN ALLOWLIST. **A GREEN GH run therefore does NOT imply all 9 converted slugs
+ran** — `refresh_snapshot` (26), `assert_data_bounds` (27), `assert_engine_health` (28) can each be recorded
+`skipped: chain time budget reached (…)` behind a green check. CLOUDPARITY evidence MUST be read from the
+per-step `pipeline_runs` rows, never from the workflow's green tick.
+
+**All 9 converted slugs are in `chains.sources`** — `assert_schema`(2), `load_ravines`(6),
+`link_parcel_addresses`(9), `compute_centroids`(10), `link_parcels`(11), `link_massing`(16), `link_wsib`(20),
+`enrich_parcels`(22), `refresh_snapshot`(26) — so ONE sources run can satisfy the gate. `refresh_snapshot` at
+position 26 is the one behind the budget cliff.
+
+### 2. Pre-dispatch state to know
+
+* **Two STRANDED `running` rows exist right now:** `4470` (`chain_sources`) and `4473`
+  (`sources:address_points`), both from a 2026-09-09T03:23Z dispatch, age 1007 min. They are **past the 12h
+  `isChainRunning` TTL** (`scripts/lib/chain-concurrency.js:32-42`; 03:23Z+12h = 15:23Z < now), so
+  `check-chain-running.js sources` will NOT skip tonight's dispatch, and the dead process holds no advisory
+  lock. **No operator UPDATE is required:** `sources:reconcile` (Spec 122 §7.4, `scripts/reconcile-runs.js`)
+  reaps any `running` row older than **120 min** to `status='crashed'` at the head of the next sources chain.
+  This is a NEW incident not yet in Spec 115 §9's stranding log — file it after the run.
+* **`chain_deep_scrapes` 4530 is LIVE** (started 18:18:53Z, age 111.8 min at authoring; peers finished at
+  117.2 / 123.2 min → expect terminal ~20:16-20:25Z). `deep_scrapes` **shares `refresh_snapshot`,
+  `assert_data_bounds`, `assert_engine_health`** with `sources` (manifest-verified). Dispatching before 4530
+  terminalises is scenario (d) by construction. **DO NOT DISPATCH until 4530 has a terminal status.**
+* **The pushed commit is correct:** `HEAD:scripts/enrich-parcels.js` is the 41-line thin shell
+  (`module.exports = pipeline.step(descriptor, compute)`), so `f3bab336` genuinely executes `runEnrichPhase`.
+  `converted.json` at HEAD still carries `enrich-parcels.js` in `pending` (stage
+  `shape_clean_pending_recapture`) — that is an **enforcement-scope list for the shape rule, not a runtime
+  switch**, so registration state cannot change which code path runs. Per `tasks/lessons.md:176`, still assert
+  `gh run view <id> --json headSha` == `git rev-parse origin/wf2/deep-scrapes-restore-l0` before trusting the run.
+
+### 3. Failure scenarios → immediate action
+
+| # | Scenario | Detect | Immediate action | Evidence to capture | CLOUDPARITY still satisfiable? |
+|---|---|---|---|---|---|
+| **(a)** | `enrich_parcels` outruns the budget: soft self-stop at 290 min, or the 300-min GH step kill | Soft: chain row `completed_with_warnings` + `records_meta.budget_stopped = {elapsed_min, budget_min, steps_skipped}` and `error_message = 'skipped: chain time budget reached (…)'` on the tail rows. Hard: chain row left `running`/ops-closed, `enrich_parcels` row never terminal | **Do NOT re-dispatch blind.** Read `records_meta.current_pass` / `last_heartbeat_at` on the `sources:enrich_parcels` row (EP-D12's dedicated autocommit `heartbeatClient` makes these visible mid-run for the FIRST time) and record which pass consumed the time. Then choose: (i) re-dispatch in a clean window if a contention confounder is identified; (ii) raise `SOURCES_STEP_TIMEOUT_MINUTES` (330 job / 300 step / 290 soft move together — a step can never outlive its job) as a separate WF3 with measured evidence; (iii) take the laptop fallback in §4 for the *measurement*, not the gate | GH run id + `headSha`; chain row id + all `sources:%` row ids; `enrich_parcels` `records_meta` (`current_pass`, `last_heartbeat_at`, `budget_stopped`, `pool_errors`); which of the 6 tail steps carry the budget `error_message`; overlapping chains from `pipeline_runs` in the same window | **NO** if `enrich_parcels` never terminalises or `refresh_snapshot` is budget-skipped — the gate needs all 9. Partial evidence is still filed under EP-D13 as the first genuine converted-runner cloud measurement |
+| **(b)** | A step FAILs its verdict or throws | Chain row `completed_with_errors` (verdict FAIL folded in, `run-chain.js:580-589`) or `failed` (throw); `check-chain-verdict.js` exits 1 → GH red. `records_meta.step_verdicts` names the slug | Triage by slug: a FAIL on one of the **9 converted** slugs is a conversion defect → new EP-D/defect-ledger row + WF3 before any re-dispatch. A FAIL on an **unconverted** slug (e.g. `parcels`, `geocode_permits` — both routinely WARN) is pre-existing and does **not** invalidate the other slugs' rows | GH run id; the failing row's `records_meta.audit_table.rows[]` (the FAIL row's `metric`/`value`/`threshold`); `errors[]`/`checks_failed` (R-Q: FAIL-only counters); chain `records_meta.step_verdicts` | **PARTIALLY** — if the FAIL is on an unconverted slug and all 9 converted slugs produced PASS/WARN rows in the same `chain_run_id`, the gate's own text ("a green cloud verdict names all 9 slugs") is arguably met but the run is NOT green. **Treat as an Ask, not a judgement call** (see §5 option 3) |
+| **(c)** | Runner eviction / cancel / job timeout (SIGKILL class) | GH run `cancelled`/`failure` with no logs near the wall; cloud rows left `status='running'` (Spec 115 §4 item 6's SIGINT/SIGTERM handler has now failed twice across 5 rows — assume it did not fire) | **Nothing urgent.** The rows do not block: 12h TTL. Do NOT hand-close them unless a dispatch is needed inside 12h — `sources:reconcile` reaps anything >120 min to `crashed` at the next chain start. If a same-day re-dispatch IS needed, use runbook §3b's guarded UPDATE (`WHERE id IN (…) AND status='running'`, `completed_at` REQUIRED, ops-time noted in `error_message`) and record the exact matched row count | GH run id + conclusion; every `running` row id (`SELECT id, pipeline, started_at FROM pipeline_runs WHERE status='running' ORDER BY id` — REPO-WIDE, `findStaleRunningRow` matches `chain_<id>` only and is blind to `sources:%` step rows); append the incident to Spec 115 §9's stranding log | **NO** for this attempt. Re-dispatch is the only path |
+| **(d)** | A converted step SELF_SKIPs on lock contention (**VRD-SKIP**) | `status='self_skipped'`, `records_meta.skipped=true`, `reason='advisory_lock_held_elsewhere'`, `records_meta.ledger_row` present — **and `audit_table.verdict` reads `PASS`**, row-derived from two INFO rows (`scripts/lib/step/index.js:2955`, `:3503`; LM-D8/LR-D6). The chain, the verdict check, and the golden harness all read GREEN. Highest-risk slug: `refresh_snapshot`, contended by `deep_scrapes` | **This is the scenario a green tick hides — check for it explicitly on every one of the 9 slugs, every time:** `records_meta->>'skipped'` must be NULL and `status` must be `completed` for each. A `self_skipped` converted slug means **its evidence for this run does not exist**, regardless of the PASS verdict. Re-dispatch in a window with no overlapping chain | The `self_skipped` row's id + full `records_meta` (`skipped`, `reason`, `ledger_row`, `chain_run_id`); the CONTENDING chain's own rows in the same window; the standing MED followup (the golden harness hashing a SKIPPED run as PASS off another process's table) applies here — do NOT accept a golden capture from a self-skipped run | **NO for the skipped slug.** The gate needs 9/9 genuinely-executed rows. This scenario is the strongest argument for waiting out `chain_deep_scrapes` 4530 |
+
+### 4. LAPTOP-TO-CLOUD fallback — VERDICT: it genuinely executes the converted runner, and it does NOT satisfy the gate
+
+**Does it work? YES — verified by reading the code, not assumed.**
+
+* `run-chain.js:228` calls `pipeline.createPool()`, whose FIRST branch is
+  `if (!process.env.PG_HOST && process.env.SUPABASE_DATABASE_URL)` → connection string + pinned CA
+  (`scripts/lib/pipeline.js:160-175`). It **never consults `DATABASE_URL`** (that is `resolve-db.js`'s
+  precedence, `DATABASE_URL` → `SUPABASE_DATABASE_URL`, used by `migrate.js` / `step-validate.mjs` / 35 other
+  tools). So for the CHAIN path the load-bearing pair is `PG_HOST` cleared + `SUPABASE_DATABASE_URL` set.
+* **`statement_timeout` behaves identically to cloud** — `withPipelineStatementTimeout` wraps `pool.connect`
+  with a once-per-client awaited session-level `SET statement_timeout` (default 0, `PIPELINE_STATEMENT_TIMEOUT_MS`
+  override). That is the exact mechanism `tasks/lessons.md:82` proved is the ONLY one that survives Supavisor
+  (startup-packet `options` and pg config params are silently dropped; the cloud session default is **2 min**).
+  Same pooler, same code, same result. `keepAlive: true` + `keepAliveInitialDelayMillis` are set on both
+  `createPool` and `createResolvedPool` (a reaped socket errors rather than hanging). The per-pass
+  `SET LOCAL statement_timeout` / `lock_timeout` inside `runEnrichPhase`, and pass 5's per-batch
+  `BEGIN` / `SET LOCAL` / `COMMIT` (commit 8 P9), are on the phase's own pinned client → unaffected by the pooler.
+* **`STEP_RUN_ID` / `ctx.runId` wiring is CHAIN-ONLY, and the laptop chain reproduces it exactly.**
+  `run-chain.js:658` injects `STEP_RUN_ID` (and `CHAIN_RUN_ID`, R-U) into each spawned child — same code path
+  locally — so `records_meta.chain_run_id` is stamped and EP-D12's heartbeats have a row to address.
+* **Concurrency is safe in both directions.** The laptop run INSERTs its own `chain_sources` row and takes
+  `pg_try_advisory_lock(2, hashtext('chain_sources'))` on a pinned client; a GH dispatch during it would see the
+  `running` row via `check-chain-running.js` (<12h) and skip, and would also fail to take the lock. The reverse
+  holds too. **No GH 300-min step budget applies** — `CHAIN_TIME_BUDGET_MINUTES` is unset locally →
+  `run-chain.js:468` reads 0 → the soft self-stop is **inert**. That is the fallback's one real advantage: an
+  `enrich_parcels` that needs 200 min can finish.
+* **No `--from` / `--only` flag exists — VERIFIED.** `run-chain.js` reads `process.argv[2]` (chainId),
+  `process.argv[3]` (a numeric `externalRunId`), `--force`, and `--manifest=<path>` (test-only). There is no
+  way to resume a chain part-way. Confirmed by exhaustive grep of every `process.argv` use in the file.
+* No `.py` steps in `chains.sources` (verified) → no `python`-vs-`python3` Windows seam on this chain.
+
+**Exact command lines (Git Bash, cwd = repo root, cloud-explicit):**
+
+```bash
+# 0. PRE-FLIGHT — never skip. Both MISSING and DRIFT are blockers (runbook section 3 rule 2).
+cd /c/Users/User/Buildo
+PG_HOST= node -r dotenv/config scripts/migrate.js --verify              # expect "0 missing, 0 drift"
+PG_HOST= node -r dotenv/config scripts/check-chain-running.js sources   # expect skip=false
+
+# 1. THE RUN — detached, because the interactive harness kills a foreground shell at ~10 min
+#    (runbook section 3 rule 3; docs/runbook/scope_intensity_matrix_rekey_baseline_spike.md).
+LOG=/c/Users/User/AppData/Local/Temp/sources_laptop_run.log
+PG_HOST= PG_PORT= PG_DATABASE= SUPABASE_CA_CERT_PATH=scripts/certs/supabase-ca.pem \
+  nohup node -r dotenv/config scripts/run-chain.js sources > "$LOG" 2>&1 &
+echo "pid=$!  log=$LOG"
+
+# 2. VERIFY THE TARGET before walking away — the run's first log line MUST read:
+#    target: ...pooler.supabase.com:5432/postgres -> database=postgres ... migrations=242
+head -5 "$LOG"
+
+# 3. POLL VIA THE DB, not the log (read-only, cloud-explicit):
+#    SELECT id, pipeline, started_at, completed_at, status,
+#           round(EXTRACT(EPOCH FROM (coalesce(completed_at,now())-started_at))/60.0,1) AS min,
+#           records_meta->>'skipped' AS skipped,
+#           records_meta->'audit_table'->>'verdict' AS verdict,
+#           records_meta->>'current_pass' AS pass, records_meta->>'last_heartbeat_at' AS hb
+#      FROM pipeline_runs WHERE pipeline LIKE 'sources:%' AND started_at > now() - interval '8 hours'
+#     ORDER BY started_at;
+```
+
+⚠️ **THE `PG_HOST=` FORM IS NOT PORTABLE BETWEEN SHELLS — a live foot-gun.** Verified against the installed
+`dotenv@17.4.2`: a **present-but-empty** `PG_HOST` is NOT overridden by dotenv (it assigns only keys absent
+from `process.env`; measured 35 injected vs 36), and `createPool`'s test is `!process.env.PG_HOST`, so `''`
+correctly falls through to `SUPABASE_DATABASE_URL`. But **in cmd.exe a `set PG_HOST=` line DELETES the
+variable**, after which `-r dotenv/config` restores `PG_HOST` from `.env` and the whole chain silently
+rewrites the **LOCAL** database (`tasks/lessons.md:87`, three prior wrong-DB incidents). If a `.cmd` wrapper is
+used for the detached launch, it must NOT rely on the empty-value trick. **Prefer the Git Bash form above and
+confirm the logged target line.** Note also that a `node -e "require('./scripts/run-chain.js')"` bootstrap —
+which would let you `delete process.env.PG_HOST` in JS — **does not work**: `run-chain.js`'s CLI body is
+guarded by `require.main === module`.
+
+**Abort / rollback:**
+
+* **Graceful (preferred, no orphans):** `UPDATE pipeline_runs SET status='cancelled' WHERE id=<chain row id>`.
+  `run-chain.js` polls this BETWEEN steps and stops cleanly (cancel wins over the budget check by design,
+  Guardian 2026-08-09). Nothing is rolled back mid-step — each step's own transaction either committed or did not.
+* **Hard kill:** `kill <pid>` (Git Bash) / `Stop-Process -Id <pid>`. Consequences, stated plainly: the
+  chain-level advisory lock releases when the connection drops; the in-flight step's transaction ROLLBACKs
+  (passes 1-4 are ONE transaction; pass 5's per-batch transactions leave every already-COMMITted batch in place,
+  which is idempotent-by-design and re-derived on the next run); `pipeline_runs` rows are left `running`.
+  **Do NOT hand-close them** — `sources:reconcile` reaps anything >120 min to `crashed` at the next chain start
+  (Spec 122 §7.4). Hand-close only if you must re-dispatch inside 12h, via runbook §3b's guarded UPDATE.
+  `enrich_parcels` declares `recovery.interrupted` for its passes 4/5 retraction (Fold A-2, R-B), so an
+  interrupted retraction forces FULL on the next run automatically.
+* **Data rollback:** none available or needed — this is an idempotent `--full` enrichment, not a migration.
+
+**Evidence it yields:** cloud `pipeline_runs` rows `chain_sources` + 28 × `sources:<slug>`, each carrying
+`records_meta.chain_run_id` (R-U), `ledger_row='chain_owned'`, the full `audit_table` (row-derived verdict,
+R-Q per-severity counters), `current_pass` / `last_heartbeat_at` (EP-D12) and `pool_errors`; the chain row's
+`step_verdicts` roll-up; plus `chain-end-synthesis.mjs`'s artifact. **What it does NOT yield: a GitHub run id**,
+a GH job log, or the `migrate --verify` + guard trail inside an audited workflow run.
+
+**Single-step laptop run (`node scripts/enrich-parcels.js`) after a partially-successful GH run — verdict: DIAGNOSTIC ONLY.**
+
+* **Prerequisites (manifest order):** the declared producer edge is exactly ONE —
+  `inputs.reads.steps = [{step: "link_massing", version_pin: "gte"}]`. `version_pin` is **declared-only**
+  (grep: no consumer anywhere in `scripts/lib/step/`), so nothing gates at runtime. The real prerequisites are
+  DATA: `inputs.expect_nonempty: true` + `on_missing: "halt"` over `parcels`, `zoning_bylaw_areas`,
+  `zoning_height_overlay`, `zoning_lot_coverage_overlay`, `parcel_buildings`, `neighbourhood_build_norms`,
+  `neighbourhood_storey_norms`, `neighbourhoods`, `permits`. In chain order that means positions **1-21** must
+  have landed — critically `parcels`(5), `link_parcel_addresses`(9), `compute_centroids`(10), `link_parcels`(11),
+  `massing`(15), `link_massing`(16), `neighbourhoods`(17), `link_neighbourhoods`(18), `load_zoning`(21).
+  `guards.requires` additionally hard-fails without PostGIS (R-W — no fallback path exists to select).
+* **`--full` must be passed by hand.** `chain_args: {"sources": ["--full"]}` is applied by `run-chain.js:661`
+  only; a standalone invocation gets no argv. R-L's `assertForceFullAuthorized` reads the manifest's
+  `chain_args.sources` declaration (satisfied for this slug), but `explicitFull` still needs the flag present.
+* **The ledger rows CANNOT be satisfied by a standalone run.** `ownsLedgerRow(chainId)` is `!chainId`
+  (`scripts/lib/step/ledger.js:48-50`) and `chainId` comes from `process.env.PIPELINE_CHAIN`
+  (`scripts/lib/step/index.js:2922`). Standalone → `owns=true` → the step opens its OWN row under
+  `pipeline='enrich_parcels'` (**not** `sources:enrich_parcels`), stamps `ledger_row='owned'`, and
+  `records_meta.chain_run_id = null` (R-U's declared standalone posture). `STEP_RUN_ID` is also absent, so the
+  heartbeat path takes its null-`runId` skip. **A standalone step row is structurally distinguishable from a
+  chain row and cannot be presented as one.** Setting `PIPELINE_CHAIN=sources` by hand would suppress the ledger
+  row entirely (the step would expect an enclosing chain to own it) — worse, not better. Do not do it.
+
+### 5. The ruling the operator must make
+
+**Gate text, quoted verbatim** (`scripts/steps/_schema/programme-items.json`, item `CLOUDPARITY`, `evidence`):
+
+> "CLOUDPARITY evidence for enrich_parcels' own cutover remains UNMET: commit 9 does not land until a green
+> cloud verdict names all 9 slugs + **the GH run id** + each step's cloud pipeline_runs row id, from a run that
+> genuinely executes the converted runner."
+
+And commit 9's own row in this plan: "**(a) CLOUDPARITY** as a `cutover_prereq` with `applies_when` — seeds
+applied + **one green cloud `chain-sources` run** recorded".
+
+**Reading:** "the GH run id" is named as a REQUIRED element of the evidence, and "a green cloud verdict" keys on
+`check-chain-verdict.js`'s allowlist, which only a workflow run produces. A laptop-driven
+`node scripts/run-chain.js sources` against the cloud DB produces every OTHER element — 9 genuine
+`sources:<slug>` rows sharing one `records_meta.chain_run_id`, and a chain row whose status that same allowlist
+would pass — but **no GH run id**. As written, it does **not** satisfy the gate.
+
+**Proposed default (Spec 124 §4 protocol — this pass is the DISCOVERER and therefore does NOT adjudicate; §4.2
+is a policy rule, not a procedure step):**
+
+1. **Default: the GH run id stays MANDATORY.** A laptop-driven converted-runner cloud run is admitted as a
+   **DIAGNOSTIC** — it is the cheapest way to get the first genuine converted-runner cloud measurement of pass 5
+   under the new 2000/5000 batch sizes with NO 300-min guillotine, which is exactly what EP-D13's "corrected
+   measurement plan" is still missing — recorded in `defect-ledger.md` under EP-D13, explicitly NOT as gate
+   satisfaction, and `CLOUDPARITY` stays `PARTIAL`.
+2. **If the operator instead rules the laptop run sufficient**, that is an AMENDMENT and carries the §4 price in
+   the same commit: (a) discoverer proposes / **a different, named + dated party adjudicates** (the operator);
+   (b) recorded — as an `EP-D` ledger row if pilot-local, or promoted into Spec 124 §5's register if it is
+   expected to recur for the other 7 slugs (it is: "the other 7 already-converted steps have STILL never
+   completed a converted-form cloud run under this gate either"), which makes it estate-wide and forces a
+   Spec 124 §2 amendment per §4.5; (c) **a rule without a lock is not yet a rule** (§4.4) — the amended
+   `programme-items.json` text needs a both-directions test in `src/tests/programme-backlog.infra.test.ts` (red
+   on the old wording, green on the new); (d) the amended evidence shape must state what REPLACES the GH run id.
+   Proposed replacement: orchestrator identity (host + detached log path + the chain row id) **plus** the
+   assertion that all 9 `sources:<slug>` rows share one non-null `chain_run_id` and none carries
+   `records_meta.skipped`.
+3. **A third, narrower option worth naming:** accept a GH run that went RED **only** on an unconverted slug
+   (scenario (b)) provided all 9 converted slugs produced non-skipped rows under one `chain_run_id`. This is a
+   smaller amendment than (2) and would have salvaged more than one past attempt. Also an Ask, not a call this
+   pass may make.
+
+**ASK (blocks commit 9, not tonight's dispatch):** Does a laptop-driven converted-runner run against the cloud DB
+satisfy CLOUDPARITY — **default NO** (diagnostic only, per 1) — and if the answer is YES, which of the §4
+amendment obligations (2a-2d) rides which commit?
+
+### 6. Timing — the window tonight
+
+| fact | value |
+|---|---|
+| now | 2026-09-09 20:10Z |
+| blocker: `chain_deep_scrapes` 4530 | started 18:18:53Z; peers 117.2 / 123.2 min → **expect terminal ~20:16-20:25Z** |
+| next `chain-entities` | cron `0 8 * * *` → **2026-09-10 08:00Z** (observed starts drift later: 12:42Z / 12:49Z). Measured duration 0.0 min on both recent runs → contention risk ~nil |
+| next `chain-coa-permits` | cron `0 11 * * *` → **2026-09-10 11:00Z** (observed starts 15:00Z / 15:03Z — a consistent ~+4h GH scheduling drift; plan against the CRON, not the observation). Measured `chain_permits` 134.9 / 198.0 min. **This is the binding constraint** — it was the 09-08 confounder |
+| next `chain-deep-scrapes` | cron `0 15 * * 1-5` → 2026-09-10 15:00Z (weekday) — not binding |
+| worst-case chain need | 330 min (job ceiling, incl. ~30 min reserved job overhead); 300 min chain-step ceiling; 290 min soft self-stop |
+| **latest safe dispatch (worst case)** | 11:00Z − 330 min = **2026-09-10 05:30Z** |
+| latest safe dispatch (300-min chain + ~8 min real overhead) | 05:52Z |
+| latest safe dispatch (measured 278.4-min shape) | 06:14Z |
+| **RECOMMENDED dispatch** | **as soon as 4530 terminalises, ~20:30Z tonight** → expected finish ~01:10Z on the measured shape, **~9.8 h of clearance** before the coa cron. Every hour of delay is spent margin, not saved |
+
+### 7. Low-confidence list
+
+1. **The ~+4h gap between the committed crons and observed scheduled start times** (coa 11:00Z vs 15:00-15:03Z;
+   entities 08:00Z vs 12:42-12:49Z, twice each) is unexplained. Two samples per chain is not a pattern I would
+   defend. Deliberately planned against the CRON as worst case; if the drift is real and stable the window is
+   ~4h larger than stated. **Not verified out-of-band** (`gh api …/actions/workflows` not consulted this pass).
+2. **`T_pre` (steps 1-21) is genuinely bimodal** — 58.4 vs 111.1 min across two consecutive runs — and which
+   regime tonight lands in is unknown. The 33.5-min post-`enrich_parcels` gap and the 41.7-min tail are each from
+   ONE clean run (4309). Every derived threshold in §1 inherits that.
+3. **`enrich_parcels`'s cloud duration under the CONVERTED runner is completely unmeasured.** All 4 completed
+   figures (111.7-135.6) are the LEGACY script. The 2000/5000 batch sizes are expected to cut pass-5 round trips
+   ~2,200 → ~220, but the direction and size of the net effect on wall time is a prediction, not a measurement —
+   and P9's per-batch transactions add a COMMIT per batch in exchange.
+4. **Why 4470 died in `address_points` at 03:23Z today is unknown** — not investigated this pass (no GH log read,
+   no `records_meta` inspection on row 4473). If that failure mode is systemic rather than a one-off, tonight's
+   run may not even reach `enrich_parcels`, and none of §1's arithmetic applies.
+5. **Whether a budget-stopped or partially-red run's evidence is *usable*** is exactly the §5 Ask — a default is
+   stated, not a ruling; §4.2 forbids this pass from adjudicating its own finding.
+6. **The cmd.exe `set PG_HOST=` foot-gun is reasoned** from dotenv's assign-if-absent semantics plus cmd's
+   delete-on-empty semantics, and from the MEASURED Git Bash case (35 vs 36 injected). The cmd.exe path itself
+   was NOT executed. Treat the Git Bash form as the proven one.
+7. **`check-chain-verdict.js`'s treatment of a `self_skipped` step row** was read from its docblock and the green
+   allowlist, not exercised. The claim "a VRD-SKIP reads green end-to-end" rests on the row-derived PASS verdict
+   (`index.js:2955`, LM-D8's live 2026-08-27 demonstration) plus `completed_with_warnings` being allowlisted —
+   the verdict checker was not run against a synthetic self-skipped row.
+
+
+## Status at session close 2026-09-11
+- CLOUDPARITY MET: GH run 34506962436 (headSha 0820685d) SUCCESS; chain completed_with_warnings 204 min; all 9 converted slugs completed, none skipped; enrich_parcels row 4588 completed 142.7 min, WARN (2 declared rows), checks_failed 0.
+- Commit 8 complete; EP-D14/D15/D16/D17 landed (0820685d…bc81ac84). All 5 EP-PIN cutover_prereq BUILT except EP-PIN-D17 (PARTIAL: pre-dispatch dead_ratio=0 recorded 2026-09-11; flips on one green run).
+- Commit 9 IN PROGRESS in worktree agent-a3c38533a6bc657eb (local --full golden recapture for G8), lands next session with RE-FREEZE #5 (§8 pointer line + 122a §A9 paragraph), STD-7 → BUILT, CLOUDPARITY → BUILT.
+- Operator pre-approved the next production run (attempt #3) for the next session.
+
+## Status 2026-09-11 — commit 9 landing in the MAIN tree (orchestrator session)
+- Worktree `agent-a3c38533a6bc657eb` (base `0820685d`) NOT reused: 13 commits behind HEAD `bc81ac84`; its recapture fingerprint `501ce326` is stale against HEAD's `0501de76` because EP-D17 (`d9a90035`) edited the descriptor after it ran (Spec 122 §5.3 R-C; Spec 123 §7 row 5 — recapture with the named cause = EP-D17). Hand edits ported by patch; this plan file kept the main-tree version.
+- Local recapture at HEAD, detached, target 127.0.0.1:54322/postgres (migration 247 applied locally first; `migrate --verify` 0 drift): `capture-step-golden --chain=sources --args=--full` → `post/sources_run1.json`, then `--chain=none` → `post/none_incremental.json`. Descriptor now emits 6 invariants (+`parcels_dead_tuple_ratio`), `sys_<entry>_duration_ms` rows and `sys_maintenance_parcels_*` rows — every new diff leaf is cited by name in the assessment report's commit-9 section (G8 rule).
+- **Operator ruling (Spec 124 §4) — EP-PIN-D17 re-pointed:** `gate.blocks` `enrich_parcels` → `assert_data_bounds` (batch 1 lead). A dedicated third ~270-min chain-sources run solely to flip EP-PIN-D17 was REFUSED ("we just did this yesterday"): run 34506962436 (headSha `0820685d`) already proved CLOUDPARITY; EP-D17 is a cost fix; its cloud proof rides batch 1's own R-AB acceptance run. Crons untouched (no cloud window opened today). Recorded in `programme-items.json` EP-PIN-D17 evidence.
+- RE-FREEZE #5 paid (`template-freeze.json` ENRICHER proven, frozen_at `bc81ac84`, snapshot = FREEZE-1 only; Spec 122 §8 line + 122a §A9 paragraph; test pin flipped). STD-7 → BUILT, CLOUDPARITY → BUILT. Census row for enrich_parcels retired (its own reason text named commit 9); roadmap 55 files / 57 slugs / 0 pending. Spec 65 §2 conversion bullet; Spec 78 = N-A (nothing in it changes). Blocks batching: 1.
+- Still open before push: mig 247 cloud apply (dry-run 34544668362 waiting on the deployment gate — operator approves); FREEZE-1 phase 2 is the next WF after this commit.
+- Cloud 12:24Z: migration 247 APPLIED on the cloud (run 34598594544, headSha bc81ac84; verify 0 drift; 244 migrations; reloptions live; parcels dead_ratio 0.000; no stranded rows). Evidence appended to EP-PIN-D17.

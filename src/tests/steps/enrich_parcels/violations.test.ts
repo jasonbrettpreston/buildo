@@ -579,8 +579,17 @@ describe('golden capture — PRE (commit 5, LANDED, testable today) + POST (comm
   // run (exercises all 5 passes' checks, WARN-eligible per the known heritage-basis/comp-sample
   // WARN-severity checks); none_incremental is a genuinely deferred run (scope-defer narrows the
   // scored checks to 'pre' only, per Spec 122 §3.0b) — measured live 2026-09-08 (post-repair, a
-  // clean parcels table): checks_passed:'all', 0 warned, an honest PASS, not a regression.
-  const EXPECTED_POST_VERDICT: Record<string, string> = { sources_run1: 'WARN', none_incremental: 'PASS' };
+  // clean parcels table): checks_passed:'all', 0 warned, an honest PASS at that commit.
+  // RE-MEASURED at the commit-9 recapture (2026-09-11, HEAD bc81ac84, fingerprint 0501de76):
+  // none_incremental folds to WARN. That capture was taken minutes after the FULL capture, so the
+  // stale scope was EMPTY — the run did NOT take the scope-defer path (terminal
+  // `enriched_full_with_warnings`, all five passes ran over 0 rows, every *_enriched_count = 0)
+  // and therefore DID execute the `when:"post"` plausibility bounds, one of which
+  // (`comp_fsi_p50_small_n_sample_count` = 3,294, EP-D8, table-wide by construction) warns on
+  // the whole parcels table irrespective of scope. The 2026-09-08 PASS was a genuinely
+  // DEFERRED run whose post bounds never executed. Same input file name, two different code
+  // paths chosen by DB state at capture time — the pin follows the measured capture (R-C).
+  const EXPECTED_POST_VERDICT: Record<string, string> = { sources_run1: 'WARN', none_incremental: 'WARN' };
   it('both POST invocations exist under docs/reports/golden/enrich_parcels/post/ — sources_run1 (real --full, the sole behaviour-preservation diff against pre/sources_run1.json) + none_incremental (real, empty-args, satisfies G8\'s own manifest-invocation key coverage without colliding with any pre/*.json filename) — exit 0; sources_run1\'s differential against PRE is accounted for ENTIRELY by the declared non-determinism inventory (a)-(g) + the Fold A1 correction + the EP-D9/EP-D10 pins — zero unexplained diffs (flipped at: commit 2)', () => {
     for (const inv of POST_INVOCATIONS) {
       const doc = JSON.parse(fs.readFileSync(artifact(`${GOLDEN_DIR_REL}/post/${inv.name}.json`), 'utf8')) as { exit_code: number; verdict: string };
@@ -652,16 +661,12 @@ describe('facts testable today — the live tree, not a future artifact', () => 
     expect(Math.max(...nums, 0), 'LG-28 (runEnrichPhase) has now landed (commit 7d/commit 2) — the highest LG number in scripts/lib + scripts/steps/_schema must be 28').toBe(28);
   });
 
-  it('converted.json — pending stays registered (not yet converted); the DECLARED stage is "shape_clean" or its R-K.2 sibling "shape_clean_pending_recapture" (commit 7e/3 advanced to shape_clean 2026-09-08; commit 8 P1 moved it to shape_clean_pending_recapture the SAME day, since P1-P4 edit compute\'s VALUES without changing its SHAPE — conformanceFindings() stays [], only the golden fingerprint is knowingly deferred to P6). Commit 9 cutover still needs the 6 cutover_prereq items (EP-PIN-B45/D8/D9/D10/D14/D17) resolved plus a green cloud chain-sources run.', () => {
+  it('converted.json — REGISTERED as converted (commit 9 cutover, 2026-09-11); the pending entry is DELETED in the SAME commit (R-K mutual-exclusion lock — a file cannot be both converted AND pending at once). History: commit 7e/3 advanced the pending stage to shape_clean 2026-09-08; commit 8 P1 moved it to shape_clean_pending_recapture the SAME day; the golden fingerprint was re-stamped at commit 9 against the EP-D17 descriptor (R-C named cause).', () => {
     const c = JSON.parse(fs.readFileSync(abs(CONVERTED_REL), 'utf8')) as { converted: string[]; pending: Array<{ file: string; stage: string }> };
-    expect(c.converted.includes(STEP_REL), 'enrich_parcels must not be registered as converted yet — that is commit 9 (cutover)').toBe(false);
+    expect(c.converted.includes(STEP_REL), 'enrich_parcels must be registered as converted — commit 9 is the cutover').toBe(true);
     const entry = c.pending.find((p) => p.file === STEP_REL);
-    expect(entry, `converted.json.pending must carry a ${STEP_REL} entry`).toBeDefined();
-    expect(
-      ['shape_clean', 'shape_clean_pending_recapture'],
-      'stage must be shape_clean or the R-K.2 shape_clean_pending_recapture sibling — both promise conformanceFindings() === []',
-    ).toContain(entry!.stage);
-    expect(fs.existsSync(abs(DESCRIPTOR_REL)), 'a shape_clean-stage pending entry MUST have a sibling descriptor').toBe(true);
+    expect(entry, `a stale pending entry still exists for ${STEP_REL} — the cutover should have removed it (mutual-exclusion lock)`).toBeUndefined();
+    expect(fs.existsSync(abs(DESCRIPTOR_REL)), 'descriptor must exist for a registered converted entry').toBe(true);
     expect(fs.existsSync(abs(COMPUTE_REL)), 'compute (7c) exists on disk').toBe(true);
   });
 
