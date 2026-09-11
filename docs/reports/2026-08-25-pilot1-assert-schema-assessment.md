@@ -453,6 +453,7 @@ The enrich_parcels cutover (pilot 9 commit 9) added 44 declared logic variables 
 | 4 | (registry) | PASS | overlap: none |
 | 5 | (registry) | PASS | clean (0 it.fails( call sites outside a declared pending slug) |
 | 9 | (registry) | PASS | clean (0 converted slugs blocked by an unmet cutover_prereq item; blocks batching: 0) |
+| 22 | (registry) | PASS | GOLD-PRE-FRESH: 38 PRE capture(s) across 9 converted step(s) all tracked + clean (git can restore every reference) |
 
 ### Captures (item iv)
 - missing invocations (POST): none
@@ -461,7 +462,7 @@ The enrich_parcels cutover (pilot 9 commit 9) added 44 declared logic variables 
 - compare ran: true · diffs found: 239 · unexplained: 0
 
 ### Test suite (item iii)
-- 868/884 passed (suite success=true)
+- 859/884 passed (suite success=false)
 
 ### Policy coverage matrix (item vi) — Spec 124 Rules 1-13
 

@@ -21,8 +21,9 @@
  * PLUS the fast invariants (the "fast descriptor gate" followup, subsumed here
  * per the operator's instruction) — always run, always cheap, no vitest/DB needed.
  * Ids 1/2/3/7/8/20/21 are per-row (one result per converted/pending slug); ids
- * 4/5/9 are registry-scoped (one result for the whole fleet — a fleet-integrity
- * fact, not a property of any single step). Id 6 is retired (superseded by G8/
+ * 4/5/9/22 are registry-scoped (one result for the whole fleet — a fleet-integrity
+ * fact, not a property of any single step; 22 = GOLD-PRE-FRESH, C4 step H
+ * 2026-09-11, hard-stop scoped to its `blockedSlugs` exactly like id 9). Id 6 is retired (superseded by G8/
  * item iv, never reused). HIGH-2 (output-panel remediation, 2026-09-10): ids
  * 20/21 (not 10/11) — 1-13 is reserved so a fast invariant id can NEVER
  * collide with a Policy Coverage Matrix Rule number in a naive stdout scrape
@@ -411,6 +412,42 @@ function loadChurnFindings(filePath = CHURN_TABLE_PATH) {
  */
 function getByPath(obj, dotPath) {
   return dotPath.split('.').reduce((acc, key) => (acc && typeof acc === 'object' ? acc[key] : undefined), obj);
+}
+
+/**
+ * GOLD-PRE-FRESH predicate (fast invariant #22, C4 step H, Spec 124 R-AC).
+ * PURE — takes the already-probed git state of every converted step's `pre/`
+ * captures and decides; the probe itself is the harness's `captureGitState`
+ * (ONE definition of "recoverable": tracked in the INDEX + worktree == index).
+ *
+ * @param {Array<{slug:string, files:Array<{file:string, exists:boolean, tracked:boolean, worktreeClean:boolean}>}>} preStates
+ * @returns {{pass:boolean, blockedSlugs:string[], detail:string, violations:Array<{slug:string,file:string,why:string}>}}
+ *
+ * A converted step with NO `pre/` capture at all is a violation too (the worst
+ * case — a differential with no reference — is never a vacuous pass).
+ */
+export function checkPreCapturesRecoverable(preStates) {
+  const violations = [];
+  for (const s of preStates) {
+    if (!s.files || s.files.length === 0) {
+      violations.push({ slug: s.slug, file: `docs/reports/golden/${s.slug}/pre/`, why: 'no PRE capture on disk at all' });
+      continue;
+    }
+    for (const f of s.files) {
+      if (!f.tracked) violations.push({ slug: s.slug, file: f.file, why: 'untracked (or ignored) — nothing can restore it' });
+      else if (!f.worktreeClean) violations.push({ slug: s.slug, file: f.file, why: 'worktree differs from the index — the local edit is unrecoverable' });
+    }
+  }
+  const blockedSlugs = [...new Set(violations.map((v) => v.slug))];
+  const total = preStates.reduce((n, s) => n + (s.files ? s.files.length : 0), 0);
+  return {
+    pass: violations.length === 0,
+    blockedSlugs,
+    violations,
+    detail: violations.length
+      ? `GOLD-PRE-FRESH: ${violations.length} unrecoverable PRE capture(s): ${violations.map((v) => `${v.file} (${v.why})`).join('; ')}`
+      : `GOLD-PRE-FRESH: ${total} PRE capture(s) across ${preStates.length} converted step(s) all tracked + clean (git can restore every reference)`,
+  };
 }
 
 /**
@@ -1003,6 +1040,38 @@ function fastInvariants(rows, converted, pending) {
       : `clean (0 converted slugs blocked by an unmet cutover_prereq item; blocks batching: ${blocksBatchingCount(programmeItems)})`,
   });
 
+  // 22. GOLD-PRE-FRESH (C4 step H commit 2, Spec 124 R-AC, Fold A D-1 —
+  // 2026-09-11). Every PRE capture of every CONVERTED step is recoverable by
+  // git: tracked in the INDEX and worktree == index. A PRE reference that is
+  // untracked or locally modified is one nothing can restore once
+  // `capture-step-golden.js --out` (now guarded, commit 1) or a stray edit
+  // touches it — and the whole G8 differential rests on it. Registry-scoped
+  // over `converted[]` (never per-row over the staged targets — a step joins
+  // `converted[]` only at commit 9, by which time its PRE files landed at
+  // commit 5; Fold A item 2), with `blockedSlugs` so the hard-stop scopes to
+  // the slug(s) whose references are actually at risk (id 9's own shape).
+  // The predicate is `checkPreCapturesRecoverable`; the git probe is the
+  // harness's `captureGitState` — ONE definition of "recoverable" shared with
+  // the --out guard, never re-implemented here (Fold A item 3).
+  {
+    const manifestForPre = loadManifest();
+    const preStates = [];
+    for (const relFile of converted) {
+      const slug = slugFor(manifestForPre, relFile);
+      const dir = path.join(GOLDEN_ROOT, slug, 'pre');
+      const files = existsSync(dir) ? readdirSync(dir).filter((f) => f.endsWith('.json')).map((f) => path.join(dir, f)) : [];
+      preStates.push({ slug, files: files.map((abs) => ({ file: path.relative(REPO_ROOT, abs).replace(/\\/g, '/'), ...harness.captureGitState(abs, { cwd: REPO_ROOT }) })) });
+    }
+    const fresh = checkPreCapturesRecoverable(preStates);
+    results.push({
+      id: 22,
+      slug: '(registry)',
+      pass: fresh.pass,
+      blockedSlugs: fresh.blockedSlugs,
+      detail: fresh.detail,
+    });
+  }
+
   return results;
 }
 
@@ -1584,7 +1653,7 @@ function computeScorecard(row, report, descriptorInfo, shape, captureFindings, i
   const invariantsFail = invariantResults.some((r) => {
     if (!r.pass && r.slug === row.slug) return true;
     if (!r.pass && r.slug === '(registry)') {
-      if (r.id === 9 && Array.isArray(r.blockedSlugs)) return r.blockedSlugs.includes(row.slug);
+      if ((r.id === 9 || r.id === 22) && Array.isArray(r.blockedSlugs)) return r.blockedSlugs.includes(row.slug);
       return true;
     }
     return false;
@@ -2895,6 +2964,25 @@ function selfTest() {
     const realIndexSource = readFileSync(path.join(REPO_ROOT, 'scripts/lib/step/index.js'), 'utf8');
     const ceil1Green = checkStatementCeilingEveryPhase({ execution: { shape: 'enrich' } }, realIndexSource);
     if (!ceil1Green.pass) throw new Error(`self-test FAILED: checkStatementCeilingEveryPhase did not pass against the REAL scripts/lib/step/index.js runEnrichPhase (${JSON.stringify(ceil1Green)})`);
+  }
+  // GOLD-PRE-FRESH (fast invariant #22, C4 step H commit 2, Spec 124 R-AC,
+  // 2026-09-11) — checkPreCapturesRecoverable, proven both directions on
+  // in-memory git-state fixtures (the probe itself, captureGitState, is locked
+  // against a throwaway git repo in src/tests/capture-harness-overwrite.infra.test.ts).
+  {
+    const ok = (file) => ({ file, exists: true, tracked: true, worktreeClean: true });
+    // GREEN — every PRE capture tracked + clean.
+    const green = checkPreCapturesRecoverable([{ slug: 'a', files: [ok('a/pre/x.json'), ok('a/pre/y.json')] }, { slug: 'b', files: [ok('b/pre/x.json')] }]);
+    if (!green.pass || green.blockedSlugs.length !== 0) throw new Error(`self-test FAILED: checkPreCapturesRecoverable must PASS when every PRE capture is tracked+clean (${JSON.stringify(green)})`);
+    // RED — one untracked PRE (the never-committed reference).
+    const redUntracked = checkPreCapturesRecoverable([{ slug: 'a', files: [ok('a/pre/x.json'), { file: 'a/pre/new.json', exists: true, tracked: false, worktreeClean: true }] }, { slug: 'b', files: [ok('b/pre/x.json')] }]);
+    if (redUntracked.pass || JSON.stringify(redUntracked.blockedSlugs) !== '["a"]') throw new Error(`self-test FAILED: checkPreCapturesRecoverable did not RED an untracked PRE capture scoped to its slug (${JSON.stringify(redUntracked)})`);
+    // RED — one tracked-but-modified PRE (worktree != index).
+    const redDirty = checkPreCapturesRecoverable([{ slug: 'b', files: [{ file: 'b/pre/x.json', exists: true, tracked: true, worktreeClean: false }] }]);
+    if (redDirty.pass || !redDirty.detail.includes('worktree differs')) throw new Error(`self-test FAILED: checkPreCapturesRecoverable did not RED a worktree-modified PRE capture (${JSON.stringify(redDirty)})`);
+    // RED — a converted step with NO PRE capture at all is never a vacuous pass.
+    const redNone = checkPreCapturesRecoverable([{ slug: 'c', files: [] }]);
+    if (redNone.pass || JSON.stringify(redNone.blockedSlugs) !== '["c"]') throw new Error(`self-test FAILED: checkPreCapturesRecoverable must RED a converted step with no PRE capture on disk (${JSON.stringify(redNone)})`);
   }
   // GOLD-PRE (Spec 122 §5.3, WF1 "conversion roadmap" commit 3, 2026-09-10) —
   // checkCaptures'/scoreG8's new preInvocationsMissing half, proven both
