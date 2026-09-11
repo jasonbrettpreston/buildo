@@ -97,17 +97,17 @@ describe('measured counts — independently re-derived, not transcribed from the
     return map;
   }
 
-  it('55 remaining files, 57 remaining slugs (excluding the 9 converted, 0 pending after pilot 9 commit 9 (2026-09-11), and the 1 python-exempt file)', () => {
+  it('54 remaining files, 56 remaining slugs (excluding the 9 converted, 1 pending — assert_global_coverage, batch1 I1 commit 6, 2026-09-11 — and the 1 python-exempt file)', () => {
     const fileToSlugs = fileToSlugsMap();
     const convertedSet = new Set(CONVERTED);
     const pendingSet = new Set(PENDING_FILES);
     const remaining = Object.keys(fileToSlugs).filter((f) => !convertedSet.has(f) && !pendingSet.has(f));
     const remainingSlugCount = remaining.reduce((n, f) => n + (fileToSlugs[f]?.length ?? 0), 0);
-    expect(remaining.length).toBe(55);
-    expect(remainingSlugCount).toBe(57);
+    expect(remaining.length).toBe(54);
+    expect(remainingSlugCount).toBe(56);
   });
 
-  it('the census file-count-by-batch matches the independently re-derived C4/C5/C6 split (C4=5, C5=14, C6=36; pending=0 — enrich_parcels left the census at its cutover, provenance rule 1)', () => {
+  it('the census file-count-by-batch matches the independently re-derived C4/C5/C6 split (C4=4, C5=14, C6=36; pending=1 — assert_global_coverage entered the census at batch1 I1 commit 6, 2026-09-11, provenance rule 1)', () => {
     const census = JSON.parse(fs.readFileSync(CENSUS_PATH, 'utf8')) as { entries: Array<{ slug: string; file: string; batch: string }> };
     const fileToSlugs = fileToSlugsMap();
     const convertedSet = new Set(CONVERTED);
@@ -126,13 +126,15 @@ describe('measured counts — independently re-derived, not transcribed from the
     const c5 = byBatch.get('C5')!;
     const c6 = byBatch.get('C6')!;
     const pendingBatch = byBatch.get('pending')!;
-    expect(c4.size).toBe(5);
+    // assert_global_coverage's census row flipped from batch:"C4" to batch:"pending"
+    // at batch1 I1 commit 6 (2026-09-11), when converted.json first declared it
+    // pending (stage red_suite) — C4 drops 5→4, pending rises 0→1.
+    expect(c4.size).toBe(4);
     // C5 as declared in the census covers the 14 truly-remaining files + reconcile is
     // among them already (UNDECLARED but batch:"C5") — 14 remaining + reconcile is
-    // already counted in that 14. enrich_parcels was the sole pending row until pilot 9
-    // commit 9 (2026-09-11) registered it in converted.json and retired its census row.
+    // already counted in that 14.
     expect(c5.size).toBe(14);
-    expect(pendingBatch.size).toBe(0);
+    expect(pendingBatch.size).toBe(1);
     expect(c6.size).toBe(36);
     expect(c4.size + c5.size + c6.size).toBe(remaining.length);
   });
@@ -182,10 +184,10 @@ describe('docs/reports/generated/122-conversion-roadmap.md — generated, drift-
     }
   });
 
-  it('the rendered table\'s counts agree with the independently re-derived counts above (55 remaining files, 0 pending)', () => {
+  it('the rendered table\'s counts agree with the independently re-derived counts above (54 remaining files, 1 pending)', () => {
     const text = fs.readFileSync(GENERATED_PATH, 'utf8');
-    expect(text).toContain('Remaining files: **55** (+ **0** pending)');
-    expect(text).toContain('remaining slugs: **57** (+ **0** pending)');
+    expect(text).toContain('Remaining files: **54** (+ **1** pending)');
+    expect(text).toContain('remaining slugs: **56** (+ **1** pending)');
   });
 });
 
@@ -271,15 +273,15 @@ describe('buildRoadmap() — totality over the real committed data (HIGH-1: slug
 
     const files = rows.map((r) => r.file);
     expect(new Set(files).size, 'no file appears twice').toBe(files.length);
-    expect(rows.filter((r) => !r.pending).length).toBe(55);
-    expect(rows.filter((r) => r.pending).length).toBe(0);
+    expect(rows.filter((r) => !r.pending).length).toBe(54);
+    expect(rows.filter((r) => r.pending).length).toBe(1);
     for (const r of rows) {
       expect(['C4', 'C5', 'C6', 'pending']).toContain(r.batch);
       expect(r.pending).toBe(r.batch === 'pending');
     }
   });
 
-  it('HIGH-1: the 2 declared exemptions (inspections, coa_documents) are NOT silently dropped — 68 total manifest slugs = 9 converted + 0 pending + 2 exempted + 57 remaining', async () => {
+  it('HIGH-1: the 2 declared exemptions (inspections, coa_documents) are NOT silently dropped — 68 total manifest slugs = 9 converted + 1 pending + 2 exempted + 56 remaining', async () => {
     const mod = (await import(pathToFileURL(GENERATOR).href)) as unknown as RoadmapModule;
     const args = await loadRealArgs(mod);
     expect(args.exemptions.map((e) => e.slug).sort()).toEqual(['coa_documents', 'inspections']);
@@ -289,8 +291,8 @@ describe('buildRoadmap() — totality over the real committed data (HIGH-1: slug
     const totalSlugs = Object.keys(args.manifest.scripts).length;
     expect(totalSlugs).toBe(68);
     expect(9 + pendingSlugs + args.exemptions.length + remainingSlugs).toBe(totalSlugs);
-    expect(pendingSlugs).toBe(0);
-    expect(remainingSlugs).toBe(57);
+    expect(pendingSlugs).toBe(1);
+    expect(remainingSlugs).toBe(56);
   });
 
   it('the rendered report never silently drops the 2 exemptions — both appear in the Declared exemptions table and the totality sentence states IDENTITY HOLDS', async () => {

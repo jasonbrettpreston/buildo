@@ -5,8 +5,74 @@
 //       mirrored from each source script's WHERE clause
 //   (b) Payload shape — audit_table has `columns`, all rows have required keys,
 //       records_total = 1
-//   (c) Chain count — permits chain = 28 steps, coa chain = 12 steps
+//   (c) Chain count — permits chain = 33 steps, coa chain = 16 steps (last step),
+//       sources chain = 28 steps (measured 2026-09-11; corrected from the stale
+//       "28 steps / 12 steps" this docblock carried — AGC-D1, `docs/reports/
+//       defect-ledger.md`. This was DOCUMENTATION drift only: the script itself
+//       has zero hard-coded chain-length literals, and the live
+//       `toHaveLength(33)`/`toHaveLength(16)`/`toHaveLength(28)` assertions below
+//       were already current and passing — only this comment and the two test
+//       TITLE strings at "assert_global_coverage is second-to-last in permits
+//       chain" / "assert_global_coverage is last step in coa chain" carried the
+//       stale prose, now corrected in place.)
 //   (d) Advisory lock ID = 111
+//
+// ── AGC batch-1-I1 commit 6 (2026-09-11) — BEHAVIOUR vs SKELETON classification ──
+// Ask A2 (RULED, `.cursor/batch1_i1_assert_global_coverage_active_task.md`): this
+// pre-existing file is KEPT, corrected, following the sole measured precedent
+// `src/tests/link-wsib.infra.test.ts` (which coexists with
+// `src/tests/steps/link_wsib/violations.test.ts`) — not deleted, not silently
+// migrated. Fold A item 2 (binding): of the 173 `.toContain(`/`.toMatch(` source-
+// text assertions in this file (all reading `src()` — this STEP file's own text
+// — except the 2 buckets noted N/A below), each `describe` block is classified:
+//
+//   BEHAVIOUR (153) — domain thresholds/denominators/row-builder choices; this is
+//   business logic the conversion PRESERVES IN COMPUTE (Spec 122 §5.5). At commit
+//   7, once `scripts/lib/compute/assert-global-coverage.js` exists, these assertions
+//   REPOINT to a second `COMPUTE = readFileSync('scripts/lib/compute/assert-global-
+//   coverage.js')` read, mirroring `link-wsib.infra.test.ts:19-23` exactly — NOT
+//   done in this commit (the compute file does not exist yet; repointing now would
+//   red the whole file). Blocks: "denominator gates (source-script mirroring)" (12),
+//   "chain-aware behavior" (11), "Bug 1+2… infoRow" (6), "Bug 3… unlinked
+//   denominator" (7), "Bug 4… cannot exceed 100%" (4), "W2 regression… INFO not
+//   FAIL" (8), "WF2 P6.5… infoRow" (2), "Bug 5… infoRow" (6), "WF3-A… non-expired
+//   denominator" (2), "WF3-B… infoRow" (2), "WF3-C… externalRow" (2), "WF3-D…
+//   shared lib" (2), "GC-1… infoRow" (2), "Surgical Triangle input coverage" (7),
+//   "Pass-2 CoA chain coverage additions" (18), "WF3 #406 zoning coverage rows"
+//   (13), "WF2 #415 ravine coverage rows" (10), "WF3 #428 heritage coverage rows"
+//   (8), "§8e centreline coverage rows" (9), "§3 vocabulary-coverage" (22).
+//   ⚠️ Sub-note: the calibrated-threshold LITERALS inside "WF3 #406 zoning coverage
+//   rows" (80/75, 95/90, 45/35) and inside the sources-chain/parcel-cost-menu rows
+//   this file also covers (88/75, 85/80) and the `externalRow` 10/5 pair are, per
+//   the PH-3 adjudication (report §2.4, IL-3/IL-8/IL-9/IL-10/IL-11/IL-12), PROMOTED
+//   to registered `logic_variables` at commit 7 — their compute-side form is a
+//   `ctx.config.<name>` read, not a bare `80, 75)` literal, so those specific
+//   assertions need a SHAPE change (literal-text → config-name text), not just a
+//   file repoint, when commit 7's repoint lands. Flagged here so the repoint
+//   commit does not treat this sub-set as a mechanical find/replace.
+//
+//   SKELETON (17) — plumbing/archetype convention that either stays textually in
+//   the frozen 8-line shell forever (the lock constant, `pipeline.withAdvisoryLock`
+//   — travels via `identity.lock` + the §5.4 source-text convention, never moves to
+//   compute) or is retired wholesale into the shared library and stops being a
+//   source-text fact about THIS step at all (the `records_total: 1` literal — the
+//   ASSERT archetype's own counter convention, `scripts/lib/step/index.js`; the
+//   `audit_table` envelope assembly — `buildAuditTable`/`deriveVerdict`, AGC-D6;
+//   the `LOGIC_VARS_SCHEMA` Zod object — replaced by `config.logic_variables[].min/
+//   max/on_invalid` + `scripts/lib/step/config.js`). Blocks: "advisory lock" (2),
+//   "records_total contract" (2), "audit_table shape" (9), "logic_variables Zod
+//   validation" (3), "manifest.json — chain wiring" (1, the `manifest.scripts.
+//   assert_global_coverage.file` check — wiring, not this step's behaviour).
+//   These 17 are NOT expected to repoint to COMPUTE at commit 7; several are
+//   expected to need a rewrite entirely once the library owns the mechanism
+//   (a fix-after item, not this commit's scope — do not repoint SKELETON either).
+//
+//   N/A — not a source-text fact about the step at all (3): "chain specs — step
+//   counts updated" reads `docs/specs/01-pipeline/41_chain_permits.md`/
+//   `42_chain_coa.md`, not `src()` — untouched by the conversion either way.
+//
+// Nothing above changes any assertion body in this commit — Ask A2 + Fold A item 2
+// are documentation-only obligations for commit 6; the repoint is commit 7's.
 
 import * as fs from 'node:fs';
 import * as path from 'node:path';
@@ -181,7 +247,7 @@ describe('manifest.json — chain wiring', () => {
     );
   });
 
-  it('assert_global_coverage is second-to-last in permits chain; backup_db is last (step 29 post-Phase G)', () => {
+  it('assert_global_coverage is second-to-last in permits chain; backup_db is last (position 32 of 33, measured 2026-09-11 — AGC-D1 corrected the stale "step 29" title)', () => {
     // WF3 2026-04-25: backup_db appended as final step 28 (OP4 fix).
     // WF1 #B 2026-05-09: compute_phase_calibration inserted between
     // assert_lifecycle_phase_distribution and compute_trade_forecasts;
@@ -196,7 +262,7 @@ describe('manifest.json — chain wiring', () => {
     expect(permitsChain).toHaveLength(33); // +compute_storey_norms (Spec 65 §8 WF3-C1); +compute_build_norms (Spec 78 P1); +dispatch_notifications (P25 25A)
   });
 
-  it('assert_global_coverage is last step in coa chain (step 15 post-Phase G retirement of create_pre_permits + assert_pre_permit_aging)', () => {
+  it('assert_global_coverage is last step in coa chain (position 16 of 16, measured 2026-09-11 — AGC-D1 corrected the stale "step 15" title)', () => {
     // WF2 2026-05-14 R5.2 — +1 step (link_coa_to_parcels). Chain length 13.
     // WF1 2026-05-14 R5.3 — +1 step (classify_coa_scope). Chain length now 14.
     // WF1 2026-05-14 R5.4 — +1 step (classify_coa_trades). Chain length now 15.

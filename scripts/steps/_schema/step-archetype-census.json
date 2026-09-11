@@ -374,8 +374,8 @@
       "slug": "assert_global_coverage",
       "file": "scripts/quality/assert-global-coverage.js",
       "archetype": "ASSERT",
-      "batch": "C4",
-      "reason": "C4 batching-entry §3.2 order 1 — assert_schema is the ASSERT precedent (pilot 1)"
+      "batch": "pending",
+      "reason": "C4 batching-entry §3.2 order 1 — assert_schema is the ASSERT precedent (pilot 1). Batch1 I1 commit 6 (2026-09-11): PH-7 red suite landed, converted.json now declares this slug pending (stage red_suite) — batch flips from the pre-registration \"C4\" label to \"pending\" per generate-conversion-roadmap.mjs's own invariant (a pending file's census row must read batch:\"pending\")."
     },
     {
       "slug": "assert_lifecycle_phase_distribution",
