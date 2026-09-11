@@ -724,7 +724,7 @@ Two REAL bugs were found by a **live kill-and-rerun proof against this exact ste
 - compare ran: true · diffs found: 218 · unexplained: 0
 
 ### Test suite (item iii)
-- 859/884 passed (suite success=false)
+- 868/884 passed (suite success=true)
 
 ### Policy coverage matrix (item vi) — Spec 124 Rules 1-13
 

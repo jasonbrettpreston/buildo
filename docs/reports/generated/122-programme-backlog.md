@@ -6,13 +6,13 @@
 
 ## Counts
 
-Total items: **97**
+Total items: **98**
 
 | status | count |
 |---|---|
 | ⬜ NOT_STARTED | 17 |
 | ⚠️ PARTIAL | 16 |
-| ✅ BUILT | 60 |
+| ✅ BUILT | 61 |
 | ⏭️ SUPERSEDED | 4 |
 
 **blocks batching: 0**
@@ -27,7 +27,7 @@ Total items: **97**
 | `WD-1` | 122 §1.4 | class-enum-without-write.js-branch lock | ✅ BUILT | wf: wf: programme-WD1, WD-1 WF5+WF2 commits 1-3 | batching | 2026-09-09 |
 | `ADMIN-1` | 124 §2 Rule 3 | admin GROUPS reverse-coverage — every unclassified seed key gets a real group or a reviewed hidden reason | ✅ BUILT | wf: wf: programme-ADMIN-1 | batching | 2026-09-09 |
 
-## Cutover prerequisite — blocks a specific pilot slug registering in converted.json (13)
+## Cutover prerequisite — blocks a specific pilot slug registering in converted.json (14)
 
 | id | spec | title | status | owner | blocks | last reviewed |
 |---|---|---|---|---|---|---|
@@ -42,6 +42,7 @@ Total items: **97**
 | `EP-PIN-D14` | 78 §P3A.1 / 122 §3.0b | EP-D14 pin — pass-5 D4' recovery walks unconsumed enrich_parcels_pass3_scope rows one at a time (full-scan UPDATE per parcel, redundant under --full) | ✅ BUILT | pilot: pilot9_enrich_parcels | enrich_parcels | 2026-09-09 |
 | `EP-PIN-D17` | 124 §7 / 48 §3.5 | EP-D17 pin — parcels post-run checks are unbounded serial full scans over a bloat-inflated heap | ⚠️ PARTIAL | pilot: pilot9_enrich_parcels | enrich_centreline | 2026-09-11 |
 | `GOLD-PRE` | 122 §5.3 | Golden PRE-side capture completeness enforced per declared chain | ✅ BUILT | wf: wf: conversion-roadmap commit 3, 2026-09-10 | assert_global_coverage, assert_data_bounds, assert_engine_health, link_neighbourhoods, geocode_permits | 2026-09-10 |
+| `C4-GATE` | 122 §5.3 / C4 plan §3.4 | C4 "every chain" capture gate is a CHECKER — completeness + freshness, both sides | ✅ BUILT | wf: wf: C4 step H — c4_chain_completeness_gate (2026-09-11) — CLOSED | assert_global_coverage, assert_data_bounds, assert_engine_health, link_neighbourhoods, geocode_permits | 2026-09-11 |
 | `HB-1` | 124 §2 Rule 12 | Heartbeat covers the WHOLE step, not only phase boundaries (EP-D15) | ✅ BUILT | wf: wf: conversion-roadmap commit 3, 2026-09-10 | — | 2026-09-10 |
 | `CEIL-1` | 124 §2 Rule 12 | Statement/lock ceiling bound on EVERY phase incl. post_commit (EP-D16) | ✅ BUILT | wf: wf: conversion-roadmap commit 3, 2026-09-10 | — | 2026-09-10 |
 
