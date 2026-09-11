@@ -268,13 +268,7 @@
       "LG-21"
     ]
   },
-  "batching_prereq_snapshot": [
-    {
-      "id": "FREEZE-1",
-      "status": "NOT_STARTED",
-      "owner": "wf: wf: programme-FREEZE-1, blocked on STD-7 (WD-1 expected closed pre-merge)"
-    }
-  ],
+  "batching_prereq_snapshot": [],
   "does_not_freeze": [
     "Library internals — runner bodies, helper extraction, perf work inside scripts/lib/step/** — only the phase ORDER per shape and the shape enum are frozen.",
     "Compute — scripts/lib/compute/<slug>.js is per-step logic, never template surface.",

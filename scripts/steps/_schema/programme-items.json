@@ -858,11 +858,11 @@
       "spec": "122 §8.2",
       "title": "freeze precondition satisfied — the batching_prereq set is genuinely empty",
       "promised": "Spec 122 §8.2: 'the template may honestly freeze after the eighth pilot only when the batching_prereq set is empty' — the PRECONDITION, not the mechanism (STD-8, BUILT, is the mechanism)",
-      "status": "NOT_STARTED",
-      "evidence": "The freeze MECHANISM is built (STD-8) but the DECLARATION it gates is not yet honest: template-freeze.json's own batching_prereq_snapshot (LIVE tier, re-derived every regen) is worded here as 1 open item — STD-7 (ENRICHER unexercised until pilot 9); snapshot [STD-7, FREEZE-1]. WD-1 (write_discipline class-enum cross-audit) lands BEFORE ADMIN-1 merges into the main tree and is expected CLOSED by then — this worktree's own isolated regeneration still shows it open (unmerged), not a discrepancy to chase here. ADMIN-1 (admin GROUPS reverse-coverage) CLOSED 2026-09-09 (WF2 'ADMIN-1 ratchet to zero', 5 batches, 280 → 0) and no longer appears in the snapshot. This item exists so the ledger cannot silently read 'STD-8: BUILT' as 'the freeze has happened' — it has not, until this item ALSO flips.",
+      "status": "BUILT",
+      "evidence": "BUILT 2026-09-11 (WF2 \"FREEZE-1, the freeze precondition\" phase 2 commit 5, immediately after pilot 9 commit 9 `3c1f1923`). Gate re-measured before the flip, not assumed: converted.json registers scripts/enrich-parcels.js with pending [] (R-K); STD-7 reads BUILT (ENRICHER dispatched — runEnrichPhase, first_step enrich_parcels, template-freeze.json archetype_profiles all 8 proven:true after RE-FREEZE #5); CLOUDPARITY reads BUILT (GH run 34506962436, all 9 converted slugs present, none skipped); step-validate --all --fast registry invariant #9 \"clean (0 converted slugs blocked by an unmet cutover_prereq item; blocks batching: 1)\" — the ONE remaining open batching_prereq item was this item itself. With this flip the batching_prereq set is genuinely EMPTY: `node scripts/steps/_schema/generate-template-freeze.mjs` (no flag — frozen tier preserved verbatim, frozen_at stays at RE-FREEZE #5's bc81ac84; no re-freeze is owed) re-derives batching_prereq_snapshot = [] and checkFreezeDeclarationHonesty returns ok on arm D (declared BUILT, no other open item, snapshot empty, every archetype proven) — the lock stops being vacuous at this commit. Prior evidence retained: the freeze MECHANISM (STD-8) was built 2026-09-04; this item existed so the ledger could not read \"STD-8: BUILT\" as \"the freeze has happened\". It has now happened: the template is frozen after the ninth pilot (Spec 122 §8.2 operator ruling frozen_after_pilot: 9), every archetype proven by a real cutover, and the C4 batching entry (batch 1, assert_data_bounds first) is unblocked. EP-PIN-D17 (cutover_prereq on assert_data_bounds) and EP-D18 (PIN) remain open as cutover-level items, not batching-level ones.",
       "owner": {
         "kind": "wf",
-        "ref": "wf: programme-FREEZE-1, blocked on STD-7 (WD-1 expected closed pre-merge)"
+        "ref": "wf: programme-FREEZE-1 (phase 2 commit 5, 2026-09-11) — CLOSED"
       },
       "gate": {
         "kind": "batching_prereq",
@@ -870,7 +870,7 @@
           "batching"
         ]
       },
-      "last_reviewed": "2026-09-04"
+      "last_reviewed": "2026-09-11"
     },
     {
       "id": "PRG-11",

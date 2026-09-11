@@ -10,12 +10,12 @@ Total items: **97**
 
 | status | count |
 |---|---|
-| ⬜ NOT_STARTED | 18 |
+| ⬜ NOT_STARTED | 17 |
 | ⚠️ PARTIAL | 16 |
-| ✅ BUILT | 59 |
+| ✅ BUILT | 60 |
 | ⏭️ SUPERSEDED | 4 |
 
-**blocks batching: 1**
+**blocks batching: 0**
 
 ## Batching prerequisite — blocks "freeze after the eighth" (Spec 122 §8.2/§10.3) (5)
 
@@ -23,7 +23,7 @@ Total items: **97**
 |---|---|---|---|---|---|---|
 | `STD-7` | 122 §1.10 | archetype drives required-field profile, 8 archetypes dispatched | ✅ BUILT | pilot: pilot9_enrich_parcels | batching | 2026-09-10 |
 | `LDG-4` | 122 §6.3 | stepUpstreams(slug) derived from the ledger | ✅ BUILT | wf: wf: cross-step ledger (WF1), commits 1-6, 2026-09-03 | batching | 2026-09-03 |
-| `FREEZE-1` | 122 §8.2 | freeze precondition satisfied — the batching_prereq set is genuinely empty | ⬜ NOT_STARTED | wf: wf: programme-FREEZE-1, blocked on STD-7 (WD-1 expected closed pre-merge) | batching | 2026-09-04 |
+| `FREEZE-1` | 122 §8.2 | freeze precondition satisfied — the batching_prereq set is genuinely empty | ✅ BUILT | wf: wf: programme-FREEZE-1 (phase 2 commit 5, 2026-09-11) — CLOSED | batching | 2026-09-11 |
 | `WD-1` | 122 §1.4 | class-enum-without-write.js-branch lock | ✅ BUILT | wf: wf: programme-WD1, WD-1 WF5+WF2 commits 1-3 | batching | 2026-09-09 |
 | `ADMIN-1` | 124 §2 Rule 3 | admin GROUPS reverse-coverage — every unclassified seed key gets a real group or a reviewed hidden reason | ✅ BUILT | wf: wf: programme-ADMIN-1 | batching | 2026-09-09 |
 
@@ -131,4 +131,4 @@ Total items: **97**
 
 ---
 
-*Freeze-readiness (Spec 122 §8.2/§10.3): the template may honestly "freeze after the eighth" only when the batching_prereq set above is EMPTY. Currently **1** item(s) block it.*
+*Freeze-readiness (Spec 122 §8.2/§10.3): the template may honestly "freeze after the eighth" only when the batching_prereq set above is EMPTY. Currently **0** item(s) block it.*
