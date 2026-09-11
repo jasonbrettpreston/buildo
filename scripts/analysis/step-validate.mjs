@@ -1627,6 +1627,23 @@ function aggregateHardStop(g, g9, invariantsFail, matrixHardStop, excl, stage) {
   return { g: { ...g, G7: g7, G8: g8 }, g9: g9a, hardStop, hardStopReasons };
 }
 
+// Pure — the ONE definition of registry-scoped hard-stop scoping (WF3 fix,
+// 2026-09-11). A `(registry)` fast-invariant result whose `blockedSlugs` is an
+// Array is scoped to exactly the slug(s) it names (e.g. id 9 CHECKCUTOVERPREREQS'
+// `gate.blocks`, id 22 GOLD-PRE-FRESH's at-risk PRE captures) — ANY registry
+// result carrying that shape, not a hard-coded id list. A registry result with
+// no `blockedSlugs` at all is genuine fleet-wide integrity (e.g. ids 4/5) and
+// blocks every slug. Before this fix, computeScorecard's per-row derivation
+// (line ~1653) special-cased `id === 9 || id === 22` while the fleet-wide
+// hard-stop derivation below (`registryHardStopFails`) special-cased ONLY
+// `id === 9` — so an id-22 registry failure hard-stopped every unrelated
+// `--staged`/`--step=X` run even when its `blockedSlugs` named none of them.
+// Caller is expected to have already checked `!result.pass`.
+function registryFailureBlocks(result, slug) {
+  if (Array.isArray(result.blockedSlugs)) return result.blockedSlugs.includes(slug);
+  return true;
+}
+
 function computeScorecard(row, report, descriptorInfo, shape, captureFindings, invariantResults, churnFindings, matrix) {
   const g = {
     G0: scoreG0(report),
@@ -1644,18 +1661,19 @@ function computeScorecard(row, report, descriptorInfo, shape, captureFindings, i
   const g9raw = scoreG9(report);
   const g4d = scoreG4d(row);
   const gshape = scoreGShape(shape);
-  // EP-D13-adjacent fix (pilot 9 commit 8 P9, 2026-09-08) — id:9's `blockedSlugs` (when
-  // present) scopes its hard-stop to the slug(s) it ACTUALLY names via `gate.blocks`
-  // (checked literally, per checkCutoverPrereqs), not to every OTHER converted step's
-  // own unrelated `--step=X` run. Every other `(registry)` invariant (4, 5 — genuine
-  // fleet-wide integrity checks with no single implicated slug) keeps its existing
-  // "any registry fail matters to everyone" semantics unchanged.
+  // EP-D13-adjacent fix (pilot 9 commit 8 P9, 2026-09-08; generalised WF3 fix,
+  // 2026-09-11) — a `(registry)` invariant carrying an Array `blockedSlugs`
+  // (id 9 CHECKCUTOVERPREREQS' `gate.blocks`, id 22 GOLD-PRE-FRESH's at-risk PRE
+  // captures, or any future registry check shaped the same way) scopes its
+  // hard-stop to the slug(s) it ACTUALLY names, not to every OTHER converted
+  // step's own unrelated `--step=X` run. A registry invariant with no
+  // `blockedSlugs` (4, 5 — genuine fleet-wide integrity checks with no single
+  // implicated slug) keeps its existing "any registry fail matters to everyone"
+  // semantics. See `registryFailureBlocks` — the one shared definition, also
+  // used by main()'s fleet-wide `registryHardStopFails`.
   const invariantsFail = invariantResults.some((r) => {
     if (!r.pass && r.slug === row.slug) return true;
-    if (!r.pass && r.slug === '(registry)') {
-      if ((r.id === 9 || r.id === 22) && Array.isArray(r.blockedSlugs)) return r.blockedSlugs.includes(row.slug);
-      return true;
-    }
+    if (!r.pass && r.slug === '(registry)') return registryFailureBlocks(r, row.slug);
     return false;
   });
   // R-K amendment: `row.pendingStage` is undefined for every converted step
@@ -3205,6 +3223,28 @@ function selfTest() {
       throw new Error(`self-test FAILED: matchTests matched an unrelated slug "compute_centroids" against link-massing/link-wsib titles (matched ${matchedByUnrelatedSlug.length})`);
     }
   }
+  // WF3 fix (2026-09-11) — registryFailureBlocks is the ONE shared definition
+  // of registry-scoped hard-stop scoping: "any registry result carrying an
+  // Array blockedSlugs is scoped to those slugs; a result with none is
+  // fleet-wide." Before this fix, computeScorecard's per-row derivation
+  // special-cased `id === 9 || id === 22` while main()'s fleet-wide
+  // `registryHardStopFails` special-cased ONLY `id === 9` — so a fake id-22
+  // failure scoped to 'zzz' still hard-stopped an unrelated validated slug
+  // 'aaa'. Both directions proven here, by id (never a magic 9/22), so a
+  // future registry check gets the correct scoping for free.
+  {
+    const scopedToZzz = { id: 22, slug: '(registry)', pass: false, blockedSlugs: ['zzz'] };
+    if (registryFailureBlocks(scopedToZzz, 'aaa')) {
+      throw new Error(`self-test FAILED: registryFailureBlocks(id 22 scoped to 'zzz') hard-stopped unrelated validated slug 'aaa' (blockedSlugs=${JSON.stringify(scopedToZzz.blockedSlugs)})`);
+    }
+    if (!registryFailureBlocks(scopedToZzz, 'zzz')) {
+      throw new Error(`self-test FAILED: registryFailureBlocks(id 22 scoped to 'zzz') did NOT hard-stop its own named slug 'zzz'`);
+    }
+    const fleetWide = { id: 4, slug: '(registry)', pass: false };
+    if (!registryFailureBlocks(fleetWide, 'aaa') || !registryFailureBlocks(fleetWide, 'zzz')) {
+      throw new Error(`self-test FAILED: registryFailureBlocks(id 4, no blockedSlugs) did not hard-stop every slug (fleet-wide integrity check)`);
+    }
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -3352,19 +3392,22 @@ async function main() {
   }
 
   const registryFails = invariantResults.filter((r) => r.slug === '(registry)' && !r.pass);
-  // EP-D13-adjacent fix (pilot 9 commit 8 P9, 2026-09-08) — id:9 (checkCutoverPrereqs)
-  // is scoped to `blockedSlugs`: it only forces this INVOCATION's overall exit code
-  // non-zero when a step actually being validated THIS run is one of the named,
-  // literally-blocked slugs (e.g. `enrich_parcels` under CLOUDPARITY) — a completely
-  // unrelated `--step=X` run (or `--all`/`--staged` run that never touches the blocked
-  // slug) must not fail on another step's own unmet cutover_prereq. Every OTHER
-  // registry invariant (4, 5 — genuine fleet-wide integrity, no single implicated
-  // slug) keeps its existing unconditional hard-stop.
+  // EP-D13-adjacent fix (pilot 9 commit 8 P9, 2026-09-08; generalised WF3 fix,
+  // 2026-09-11) — a registry invariant scoped by an Array `blockedSlugs` (id 9
+  // CHECKCUTOVERPREREQS, id 22 GOLD-PRE-FRESH, or any future registry check
+  // shaped the same way) only forces this INVOCATION's overall exit code
+  // non-zero when a step actually being validated THIS run is one of the
+  // named, literally-blocked slugs — a completely unrelated `--step=X` run
+  // (or `--all`/`--staged` run that never touches a blocked slug) must not
+  // fail on another step's own unmet registry item. A registry invariant with
+  // NO `blockedSlugs` (4, 5 — genuine fleet-wide integrity, no single
+  // implicated slug) keeps its existing unconditional hard-stop. Same
+  // `registryFailureBlocks` predicate as computeScorecard's per-row
+  // derivation above (line ~1653) — ONE definition, not two independently
+  // maintained id lists (that drift is exactly what let an id-22 failure
+  // hard-stop unrelated slugs before this fix).
   const validatedSlugs = new Set(summaries.map((s) => s.slug));
-  const registryHardStopFails = registryFails.filter((r) => {
-    if (r.id !== 9) return true;
-    return Array.isArray(r.blockedSlugs) && r.blockedSlugs.some((slug) => validatedSlugs.has(slug));
-  });
+  const registryHardStopFails = registryFails.filter((r) => [...validatedSlugs].some((slug) => registryFailureBlocks(r, slug)));
   if (registryHardStopFails.length) anyHardStop = true;
 
   console.log('\n[step-validate] summary:');
@@ -3372,7 +3415,7 @@ async function main() {
   if (registryFails.length) {
     console.log('[step-validate] registry-level fast invariant failures:');
     for (const r of registryFails) {
-      const gates = r.id === 9 && !registryHardStopFails.includes(r) ? ' (informational — does not name a slug in this run)' : '';
+      const gates = Array.isArray(r.blockedSlugs) && !registryHardStopFails.includes(r) ? ' (informational — does not name a slug in this run)' : '';
       console.log(`  #${r.id}: ${r.detail}${gates}`);
     }
   }
