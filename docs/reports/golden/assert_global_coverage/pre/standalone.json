@@ -1,0 +1,2431 @@
+{
+  "harness": "scripts/analysis/capture-step-golden.js",
+  "spec": "docs/specs/01-pipeline/122_pipeline_step_optimization.md §5.3",
+  "step": "scripts/quality/assert-global-coverage.js",
+  "chain": "none",
+  "git_head": "3e3ba2495802555fd2e9ff4be17f95ec1eceb6cc",
+  "exit_code": 0,
+  "signal": null,
+  "summary": {
+    "records_total": 1,
+    "records_new": 0,
+    "records_updated": 0,
+    "records_meta": {
+      "audit_table": {
+        "phase": 111,
+        "name": "Global Data Completeness Profile",
+        "verdict": "FAIL",
+        "rows": [
+          {
+            "metric": "permits.columns_present (Step 1 — assert_schema)",
+            "value": 171,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "permits.permit_type (Step 2 — load_permits)",
+            "value": "100%",
+            "threshold": ">= 90%",
+            "status": "PASS"
+          },
+          {
+            "metric": "permits.structure_type (Step 2 — load_permits)",
+            "value": "99.6%",
+            "threshold": ">= 90%",
+            "status": "PASS"
+          },
+          {
+            "metric": "permits.work (Step 2 — load_permits)",
+            "value": "99.8%",
+            "threshold": ">= 90%",
+            "status": "PASS"
+          },
+          {
+            "metric": "permits.street_num (Step 2 — load_permits)",
+            "value": "100%",
+            "threshold": ">= 90%",
+            "status": "PASS"
+          },
+          {
+            "metric": "permits.street_name (Step 2 — load_permits)",
+            "value": "100%",
+            "threshold": ">= 90%",
+            "status": "PASS"
+          },
+          {
+            "metric": "permits.street_name_normalized (Step 2 — load_permits)",
+            "value": "85.5%",
+            "threshold": ">= 90%",
+            "status": "WARN"
+          },
+          {
+            "metric": "permits.street_type (Step 2 — load_permits)",
+            "value": "100%",
+            "threshold": ">= 90%",
+            "status": "PASS"
+          },
+          {
+            "metric": "permits.street_direction (Step 2 — load_permits)",
+            "value": 36295,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "permits.city (Step 2 — load_permits)",
+            "value": "100%",
+            "threshold": ">= 90%",
+            "status": "PASS"
+          },
+          {
+            "metric": "permits.postal (Step 2 — load_permits)",
+            "value": "100%",
+            "threshold": ">= 90%",
+            "status": "PASS"
+          },
+          {
+            "metric": "permits.geo_id (Step 2 — load_permits)",
+            "value": "97%",
+            "threshold": ">= 90%",
+            "status": "PASS"
+          },
+          {
+            "metric": "permits.building_type (Step 2 — load_permits)",
+            "value": 0,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "permits.category (Step 2 — load_permits)",
+            "value": 0,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "permits.application_date (Step 2 — load_permits)",
+            "value": "100%",
+            "threshold": ">= 90%",
+            "status": "PASS"
+          },
+          {
+            "metric": "permits.issued_date (Step 2 — load_permits)",
+            "value": "93.6%",
+            "threshold": ">= 90%",
+            "status": "PASS"
+          },
+          {
+            "metric": "permits.completed_date (Step 2 — load_permits)",
+            "value": 42793,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "permits.status (Step 2 — load_permits)",
+            "value": "100%",
+            "threshold": ">= 90%",
+            "status": "PASS"
+          },
+          {
+            "metric": "permits.description (Step 2 — load_permits)",
+            "value": "99.8%",
+            "threshold": ">= 90%",
+            "status": "PASS"
+          },
+          {
+            "metric": "permits.est_const_cost (Step 2 — load_permits)",
+            "value": 137234,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "permits.builder_name (Step 2 — load_permits)",
+            "value": 13037,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "permits.owner (Step 2 — load_permits)",
+            "value": 0,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "permits.dwelling_units_created (Step 2 — load_permits)",
+            "value": "100%",
+            "threshold": ">= 90%",
+            "status": "PASS"
+          },
+          {
+            "metric": "permits.dwelling_units_lost (Step 2 — load_permits)",
+            "value": "100%",
+            "threshold": ">= 90%",
+            "status": "PASS"
+          },
+          {
+            "metric": "permits.ward (Step 2 — load_permits)",
+            "value": 49334,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "permits.council_district (Step 2 — load_permits)",
+            "value": 0,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "permits.current_use (Step 2 — load_permits)",
+            "value": "88.6%",
+            "threshold": ">= 90%",
+            "status": "WARN"
+          },
+          {
+            "metric": "permits.proposed_use (Step 2 — load_permits)",
+            "value": "88.6%",
+            "threshold": ">= 90%",
+            "status": "WARN"
+          },
+          {
+            "metric": "permits.housing_units (Step 2 — load_permits)",
+            "value": "100%",
+            "threshold": ">= 90%",
+            "status": "PASS"
+          },
+          {
+            "metric": "permits.storeys (Step 2 — load_permits)",
+            "value": "100%",
+            "threshold": ">= 90%",
+            "status": "PASS"
+          },
+          {
+            "metric": "permits.data_hash (Step 2 — load_permits)",
+            "value": "100%",
+            "threshold": ">= 90%",
+            "status": "PASS"
+          },
+          {
+            "metric": "permits.raw_json (Step 2 — load_permits)",
+            "value": "100%",
+            "threshold": ">= 90%",
+            "status": "PASS"
+          },
+          {
+            "metric": "permits.last_seen_at (Step 2 — load_permits)",
+            "value": "100%",
+            "threshold": ">= 90%",
+            "status": "PASS"
+          },
+          {
+            "metric": "permits.status (stale total) (Step 3 — close_stale_permits)",
+            "value": 42797,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "permits.completed_date (Step 3 — close_stale_permits)",
+            "value": 42793,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "permits.enriched_status (Step 4 — classify_permit_phase)",
+            "value": 60,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "permits.project_type (Step 5 — classify_scope)",
+            "value": "100%",
+            "threshold": ">= 90%",
+            "status": "PASS"
+          },
+          {
+            "metric": "permits.scope_tags (Step 5 — classify_scope)",
+            "value": "100%",
+            "threshold": ">= 90%",
+            "status": "PASS"
+          },
+          {
+            "metric": "permits.scope_classified_at (Step 5 — classify_scope)",
+            "value": "100%",
+            "threshold": ">= 90%",
+            "status": "PASS"
+          },
+          {
+            "metric": "permits.scope_source (Step 5 — classify_scope)",
+            "value": "100%",
+            "threshold": ">= 90%",
+            "status": "PASS"
+          },
+          {
+            "metric": "entities.name_normalized (permit builders) (Step 6 — extract_builders)",
+            "value": "80.3%",
+            "threshold": ">= 90%",
+            "status": "WARN"
+          },
+          {
+            "metric": "entities.legal_name (Step 6 — extract_builders)",
+            "value": "100%",
+            "threshold": ">= 90%",
+            "status": "PASS"
+          },
+          {
+            "metric": "entities.permit_count (Step 6 — extract_builders)",
+            "value": "100%",
+            "threshold": ">= 90%",
+            "status": "PASS"
+          },
+          {
+            "metric": "entities.entity_type (Step 6 — extract_builders)",
+            "value": "100%",
+            "threshold": ">= 90%",
+            "status": "PASS"
+          },
+          {
+            "metric": "entities.last_seen_at (Step 6 — extract_builders)",
+            "value": "100%",
+            "threshold": ">= 90%",
+            "status": "PASS"
+          },
+          {
+            "metric": "entities.primary_phone (via entities chain — Spec 45) (Step 6 — extract_builders)",
+            "value": 32,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "entities.primary_email (via entities chain — Spec 45) (Step 6 — extract_builders)",
+            "value": 24,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "entities.website (via entities chain — Spec 45) (Step 6 — extract_builders)",
+            "value": 57,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "entities.is_wsib_registered (Step 7 — link_wsib)",
+            "value": "7.6%",
+            "threshold": ">= 10%",
+            "status": "WARN"
+          },
+          {
+            "metric": "wsib_registry.linked_entity_id (Step 7 — link_wsib)",
+            "value": "0.7%",
+            "threshold": ">= 10%",
+            "status": "FAIL"
+          },
+          {
+            "metric": "wsib_registry.match_confidence (Step 7 — link_wsib)",
+            "value": "100%",
+            "threshold": ">= 90%",
+            "status": "PASS"
+          },
+          {
+            "metric": "permits.latitude (Step 8 — geocode_permits)",
+            "value": "91.3%",
+            "threshold": ">= 90%",
+            "status": "PASS"
+          },
+          {
+            "metric": "permits.longitude (Step 8 — geocode_permits)",
+            "value": "91.3%",
+            "threshold": ">= 90%",
+            "status": "PASS"
+          },
+          {
+            "metric": "permits.location (Step 8 — geocode_permits)",
+            "value": "91.3%",
+            "threshold": ">= 90%",
+            "status": "PASS"
+          },
+          {
+            "metric": "permits.geocoded_at (Step 8 — geocode_permits)",
+            "value": "91.3%",
+            "threshold": ">= 90%",
+            "status": "PASS"
+          },
+          {
+            "metric": "permit_parcels.permits_linked (Step 9 — link_parcels)",
+            "value": "94.4%",
+            "threshold": ">= 90%",
+            "status": "PASS"
+          },
+          {
+            "metric": "permit_parcels.match_type (geocoded) (Step 9 — link_parcels)",
+            "value": "98.9%",
+            "threshold": ">= 90%",
+            "status": "PASS"
+          },
+          {
+            "metric": "permit_parcels.confidence (geocoded) (Step 9 — link_parcels)",
+            "value": "98.9%",
+            "threshold": ">= 90%",
+            "status": "PASS"
+          },
+          {
+            "metric": "permit_parcels.linked_at (geocoded) (Step 9 — link_parcels)",
+            "value": "98.9%",
+            "threshold": ">= 90%",
+            "status": "PASS"
+          },
+          {
+            "metric": "parcels.lot_size_sqm (Step 9 — link_parcels)",
+            "value": "100%",
+            "threshold": ">= 90%",
+            "status": "PASS"
+          },
+          {
+            "metric": "permits.zoning_class (Step 9b — enrich_permits)",
+            "value": "83.4%",
+            "threshold": ">= 80%",
+            "status": "PASS"
+          },
+          {
+            "metric": "permits.zoning_enriched_at (Step 9b — enrich_permits)",
+            "value": 240183,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "permits.bylaw_max_coverage_pct (Step 9b — enrich_permits)",
+            "value": 85822,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "permits.bylaw_max_fsi (Step 9b — enrich_permits)",
+            "value": 43282,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "permits.bylaw_max_height_m (Step 9b — enrich_permits)",
+            "value": 185913,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "permits.exception_number (Step 9b — enrich_permits)",
+            "value": 164635,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "permits.applicable_bylaws (Step 9b — enrich_permits)",
+            "value": 240183,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "permits.overlay_summary (Step 9b — enrich_permits)",
+            "value": 240183,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "permits.zoning_parcel_count (Step 9b — enrich_permits)",
+            "value": 240183,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "permits.zoning_dominant_parcel_id (Step 9b — enrich_permits)",
+            "value": 240183,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "permits.zoning_dominant_parcel_method (Step 9b — enrich_permits)",
+            "value": 240183,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "permits.is_in_ravine_protection_area (Step 9b — enrich_permits)",
+            "value": 18327,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "permits.ravine_distance_m (Step 9b — enrich_permits)",
+            "value": 240183,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "permits.is_heritage_designated (Step 9b — enrich_permits)",
+            "value": 17414,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "permits.heritage_designation_type (Step 9b — enrich_permits)",
+            "value": 17414,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "permits.heritage_designation_date (Step 9b — enrich_permits)",
+            "value": 15775,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "permits.is_corner_lot (Step 9b — enrich_permits)",
+            "value": 48499,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "permits.is_through_lot (Step 9b — enrich_permits)",
+            "value": 12945,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "permits.abuts_laneway (Step 9b — enrich_permits)",
+            "value": 53130,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "permits.primary_frontage_street_name (Step 9b — enrich_permits)",
+            "value": 234361,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "permits.lot_size_confidence (Step 9b — enrich_permits)",
+            "value": 240183,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "permits.max_buildable_footprint_sqm (Step 9b — enrich_permits)",
+            "value": 170720,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "permits.max_buildable_gfa_sqm (Step 9b — enrich_permits)",
+            "value": 170720,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "permits.max_buildable_gfa_basis_fsi (Step 9b — enrich_permits)",
+            "value": 2347,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "permits.max_buildable_gfa_basis_coverage_box (Step 9b — enrich_permits)",
+            "value": 162360,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "permits.max_buildable_gfa_basis_coverage_only (Step 9b — enrich_permits)",
+            "value": 0,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "permits.max_build_confidence_high (Step 9b — enrich_permits)",
+            "value": 23533,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "permits.max_build_confidence_medium (Step 9b — enrich_permits)",
+            "value": 136359,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "permits.max_build_confidence_low (Step 9b — enrich_permits)",
+            "value": 11281,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "permits.garden_suite_fits (Step 9b — enrich_permits)",
+            "value": 105798,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "permits.envelope_constrained (Step 9b — enrich_permits)",
+            "value": 25721,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "permits.imagery_roof_footprint_sqm (Step 9b — enrich_permits)",
+            "value": 209840,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "permits.imagery_roof_gfa_sqm (Step 9b — enrich_permits)",
+            "value": 209840,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "permits.existing_structure_confidence_high (Step 9b — enrich_permits)",
+            "value": 191844,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "permits.existing_structure_confidence_low (Step 9b — enrich_permits)",
+            "value": 48231,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "permits.existing_greenspace_sqm (Step 9b — enrich_permits)",
+            "value": 209840,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "permits.max_newbuild_coa_gfa_sqm (Step 9b — enrich_permits)",
+            "value": 170720,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "permits.cur_floor_gfa_sqm (Step 9b — enrich_permits)",
+            "value": 209840,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "permits.cur_pot_2story_gfa_sqm (Step 9b — enrich_permits)",
+            "value": 209840,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "permits.cur_pot_3story_gfa_sqm (Step 9b — enrich_permits)",
+            "value": 35272,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "permits.cur_gfa_range_basis (Step 9b — enrich_permits)",
+            "value": 148313,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "permits.cur_est_kitchen_gfa_sqm (Step 9b — enrich_permits)",
+            "value": 209840,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "permits.cur_est_bath_gfa_sqm (Step 9b — enrich_permits)",
+            "value": 209840,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "permits.max_garage_gfa_sqm (Step 9b — enrich_permits)",
+            "value": 63556,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "permits.garage_permission_as_of_right (Step 9b — enrich_permits)",
+            "value": 63354,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "permits.garage_permission_coa_required (Step 9b — enrich_permits)",
+            "value": 202,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "permits.opt_config_confidence (Step 9b — enrich_permits)",
+            "value": 170720,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "permits.comp_count (Step 9b — enrich_permits)",
+            "value": 160205,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "permits.rear_suite_type (Step 9b — enrich_permits)",
+            "value": 111067,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "permits.rear_suite_permission_as_of_right (Step 9b — enrich_permits)",
+            "value": 89999,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "permits.rear_suite_permission_coa_required (Step 9b — enrich_permits)",
+            "value": 21068,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "permits.cost_fb_total (Step 9b — enrich_permits)",
+            "value": 139034,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "permits.cost_coa_total (Step 9b — enrich_permits)",
+            "value": 139034,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "permits.cost_solar_total (Step 9b — enrich_permits)",
+            "value": 139034,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "permits.cost_garden_suite_total (Step 9b — enrich_permits)",
+            "value": 88788,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "permits.cost_laneway_suite_total (Step 9b — enrich_permits)",
+            "value": 13137,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "permits.cost_garage_total (Step 9b — enrich_permits)",
+            "value": 58364,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "permits.cost_gut_total (Step 9b — enrich_permits)",
+            "value": 145031,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "permits.cost_addition_total (Step 9b — enrich_permits)",
+            "value": 145031,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "permits.cost_kitchen_per_sqm (Step 9b — enrich_permits)",
+            "value": 145031,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "permits.cost_bath_per_sqm (Step 9b — enrich_permits)",
+            "value": 145031,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "permits.cost_basement_per_sqm (Step 9b — enrich_permits)",
+            "value": 145031,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "permits.cost_basement_underpin_per_sqm (Step 9b — enrich_permits)",
+            "value": 145031,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "permits.max_build_fsi (Step 9b — enrich_permits)",
+            "value": 139034,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "permits.coa_fsi (Step 9b — enrich_permits)",
+            "value": 139034,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "permits.realized_fsi_p90 (Step 9b — enrich_permits)",
+            "value": 0,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "permits.neighbourhood_id (Step 10 — link_neighbourhoods)",
+            "value": "94.8%",
+            "threshold": ">= 90%",
+            "status": "PASS"
+          },
+          {
+            "metric": "parcels.with_centroid (Step 11 — link_massing)",
+            "value": 486530,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "parcel_buildings.linked_parcels (Step 11 — link_massing)",
+            "value": 485135,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "parcel_buildings.is_primary (Step 11 — link_massing)",
+            "value": "100%",
+            "threshold": ">= 90%",
+            "status": "PASS"
+          },
+          {
+            "metric": "parcel_buildings.structure_type (Step 11 — link_massing)",
+            "value": "100%",
+            "threshold": ">= 90%",
+            "status": "PASS"
+          },
+          {
+            "metric": "parcel_buildings.match_type (Step 11 — link_massing)",
+            "value": "100%",
+            "threshold": ">= 90%",
+            "status": "PASS"
+          },
+          {
+            "metric": "parcel_buildings.confidence (Step 11 — link_massing)",
+            "value": "100%",
+            "threshold": ">= 90%",
+            "status": "PASS"
+          },
+          {
+            "metric": "parcel_buildings.linked_at (Step 11 — link_massing)",
+            "value": "100%",
+            "threshold": ">= 90%",
+            "status": "PASS"
+          },
+          {
+            "metric": "building_footprints.footprint_area_sqm (Step 11 — link_massing)",
+            "value": "100%",
+            "threshold": ">= 90%",
+            "status": "PASS"
+          },
+          {
+            "metric": "building_footprints.max_height_m (Step 11 — link_massing)",
+            "value": "100%",
+            "threshold": ">= 90%",
+            "status": "PASS"
+          },
+          {
+            "metric": "permits.scope_tags (non-BLD) (Step 12 — link_similar)",
+            "value": "100%",
+            "threshold": ">= 90%",
+            "status": "PASS"
+          },
+          {
+            "metric": "permit_trades.permits_with_active_trade (Step 13 — classify_permits)",
+            "value": "98.2%",
+            "threshold": ">= 90%",
+            "status": "PASS"
+          },
+          {
+            "metric": "permit_trades.tier (Step 13 — classify_permits)",
+            "value": "100%",
+            "threshold": ">= 90%",
+            "status": "PASS"
+          },
+          {
+            "metric": "permit_trades.confidence (Step 13 — classify_permits)",
+            "value": "100%",
+            "threshold": ">= 90%",
+            "status": "PASS"
+          },
+          {
+            "metric": "permit_trades.is_active (Step 13 — classify_permits)",
+            "value": "100%",
+            "threshold": ">= 90%",
+            "status": "PASS"
+          },
+          {
+            "metric": "permit_trades.phase (Step 13 — classify_permits)",
+            "value": "100%",
+            "threshold": ">= 90%",
+            "status": "PASS"
+          },
+          {
+            "metric": "permit_trades.lead_score (Step 13 — classify_permits)",
+            "value": "100%",
+            "threshold": ">= 90%",
+            "status": "PASS"
+          },
+          {
+            "metric": "permit_trades.classified_at (Step 13 — classify_permits)",
+            "value": "100%",
+            "threshold": ">= 90%",
+            "status": "PASS"
+          },
+          {
+            "metric": "cost_estimates.permits_covered (Step 14 — compute_cost_estimates)",
+            "value": "99.9%",
+            "threshold": ">= 90%",
+            "status": "PASS"
+          },
+          {
+            "metric": "cost_estimates.estimated_cost (Step 14 — compute_cost_estimates)",
+            "value": "60.2%",
+            "threshold": ">= 55%",
+            "status": "PASS"
+          },
+          {
+            "metric": "cost_estimates.cost_source (Step 14 — compute_cost_estimates)",
+            "value": "100%",
+            "threshold": ">= 90%",
+            "status": "PASS"
+          },
+          {
+            "metric": "cost_estimates.cost_tier (Step 14 — compute_cost_estimates)",
+            "value": "60.2%",
+            "threshold": ">= 55%",
+            "status": "PASS"
+          },
+          {
+            "metric": "cost_estimates.cost_range_low (Step 14 — compute_cost_estimates)",
+            "value": "60.2%",
+            "threshold": ">= 55%",
+            "status": "PASS"
+          },
+          {
+            "metric": "cost_estimates.cost_range_high (Step 14 — compute_cost_estimates)",
+            "value": "60.2%",
+            "threshold": ">= 55%",
+            "status": "PASS"
+          },
+          {
+            "metric": "cost_estimates.premium_factor (Step 14 — compute_cost_estimates)",
+            "value": "100%",
+            "threshold": ">= 90%",
+            "status": "PASS"
+          },
+          {
+            "metric": "cost_estimates.complexity_score (Step 14 — compute_cost_estimates)",
+            "value": "100%",
+            "threshold": ">= 90%",
+            "status": "PASS"
+          },
+          {
+            "metric": "cost_estimates.model_version (Step 14 — compute_cost_estimates)",
+            "value": "100%",
+            "threshold": ">= 90%",
+            "status": "PASS"
+          },
+          {
+            "metric": "cost_estimates.is_geometric_override (Step 14 — compute_cost_estimates)",
+            "value": "100%",
+            "threshold": ">= 90%",
+            "status": "PASS"
+          },
+          {
+            "metric": "cost_estimates.modeled_gfa_sqm (Step 14 — compute_cost_estimates)",
+            "value": "61.9%",
+            "threshold": ">= 55%",
+            "status": "PASS"
+          },
+          {
+            "metric": "cost_estimates.effective_area_sqm (Step 14 — compute_cost_estimates)",
+            "value": "61.9%",
+            "threshold": ">= 55%",
+            "status": "PASS"
+          },
+          {
+            "metric": "cost_estimates.trade_contract_values (Step 14 — compute_cost_estimates)",
+            "value": "100%",
+            "threshold": ">= 90%",
+            "status": "PASS"
+          },
+          {
+            "metric": "cost_estimates.computed_at (Step 14 — compute_cost_estimates)",
+            "value": "100%",
+            "threshold": ">= 90%",
+            "status": "PASS"
+          },
+          {
+            "metric": "phase_calibration.rows_with_median (Step 15 — compute_timing_calibration_v2)",
+            "value": 6,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "coa_applications.linked_permit_num (Step 16 — link_coa)",
+            "value": "99.4%",
+            "threshold": ">= 90%",
+            "status": "PASS"
+          },
+          {
+            "metric": "data_quality_snapshots.today (Step 18 — refresh_snapshot)",
+            "value": 0,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "permits.duplicate_pks (Step 19 — assert_data_bounds)",
+            "value": 0,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "engine_health_snapshots.today (Step 20 — assert_engine_health)",
+            "value": 0,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "permits.lifecycle_phase (Step 21 — classify_lifecycle_phase)",
+            "value": "99.5%",
+            "threshold": ">= 90%",
+            "status": "PASS"
+          },
+          {
+            "metric": "permits.phase_started_at (Step 21 — classify_lifecycle_phase)",
+            "value": "100%",
+            "threshold": ">= 90%",
+            "status": "PASS"
+          },
+          {
+            "metric": "permits.lifecycle_stalled (Step 21 — classify_lifecycle_phase)",
+            "value": 22918,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "permits.lifecycle_classified_at (Step 21 — classify_lifecycle_phase)",
+            "value": "100%",
+            "threshold": ">= 90%",
+            "status": "PASS"
+          },
+          {
+            "metric": "coa_applications.lifecycle_phase (Step 21 — classify_lifecycle_phase)",
+            "value": "100%",
+            "threshold": ">= 90%",
+            "status": "PASS"
+          },
+          {
+            "metric": "permits.unclassified_count (Step 22 — assert_lifecycle_phase_distribution)",
+            "value": 1160,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "trade_forecasts.permits_covered (Step 23 — compute_trade_forecasts)",
+            "value": 150186,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "trade_forecasts.predicted_start (Step 23 — compute_trade_forecasts)",
+            "value": 150186,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "trade_forecasts.urgency (classified) (Step 23 — compute_trade_forecasts)",
+            "value": 150186,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "trade_forecasts.trade_slug (Step 23 — compute_trade_forecasts)",
+            "value": "100%",
+            "threshold": ">= 90%",
+            "status": "PASS"
+          },
+          {
+            "metric": "trade_forecasts.target_window (Step 23 — compute_trade_forecasts)",
+            "value": "100%",
+            "threshold": ">= 90%",
+            "status": "PASS"
+          },
+          {
+            "metric": "trade_forecasts.confidence (Step 23 — compute_trade_forecasts)",
+            "value": "100%",
+            "threshold": ">= 90%",
+            "status": "PASS"
+          },
+          {
+            "metric": "trade_forecasts.calibration_method (Step 23 — compute_trade_forecasts)",
+            "value": "100%",
+            "threshold": ">= 90%",
+            "status": "PASS"
+          },
+          {
+            "metric": "trade_forecasts.sample_size (Step 23 — compute_trade_forecasts)",
+            "value": "100%",
+            "threshold": ">= 90%",
+            "status": "PASS"
+          },
+          {
+            "metric": "trade_forecasts.median_days (Step 23 — compute_trade_forecasts)",
+            "value": "100%",
+            "threshold": ">= 90%",
+            "status": "PASS"
+          },
+          {
+            "metric": "trade_forecasts.p25_days (Step 23 — compute_trade_forecasts)",
+            "value": "100%",
+            "threshold": ">= 90%",
+            "status": "PASS"
+          },
+          {
+            "metric": "trade_forecasts.p75_days (Step 23 — compute_trade_forecasts)",
+            "value": "100%",
+            "threshold": ">= 90%",
+            "status": "PASS"
+          },
+          {
+            "metric": "trade_forecasts.opportunity_score (Step 23 — compute_trade_forecasts)",
+            "value": "80%",
+            "threshold": ">= 90%",
+            "status": "WARN"
+          },
+          {
+            "metric": "trade_forecasts.computed_at (Step 23 — compute_trade_forecasts)",
+            "value": "100%",
+            "threshold": ">= 90%",
+            "status": "PASS"
+          },
+          {
+            "metric": "trade_forecasts.opportunity_score (>0) (Step 24 — compute_opportunity_scores)",
+            "value": "80%",
+            "threshold": ">= 90%",
+            "status": "WARN"
+          },
+          {
+            "metric": "tracked_projects.active (Step 25 — update_tracked_projects)",
+            "value": 0,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "lead_analytics.rows (Step 25 — update_tracked_projects)",
+            "value": 0,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "entity_tracing.last_verdict (Step 26 — assert_entity_tracing)",
+            "value": 0,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "lead_id_administrative_drift",
+            "value": 0,
+            "threshold": "0 (mig 138_a + 241 invariant)",
+            "status": "PASS"
+          },
+          {
+            "metric": "lead_id_duplicate_groups",
+            "value": 0,
+            "threshold": "0 (lead_id must be unique across permits)",
+            "status": "PASS"
+          },
+          {
+            "metric": "enriched_status_status_scope_drift",
+            "value": 5,
+            "threshold": "accepted-WARN while > 0 — rows whose enriched_status outlived the status that justified it. C7 (2026-08-13) closed the regeneration path at all four permits.status writer sites (load-permits.js:357, close-stale-permits.js:128/:146, src/lib/sync/process.ts). Post-C7 + the final routine C3 run, expected steady-state is 0 on EVERY chain_permits run — a single nonzero reading is a regression signal, not noise. C3 (backfill-smeared-enriched-status.js) remains the emergency clear for residuals. SELF-RETIRES at 0 — both rows disappear and the plain gate resumes. Spec 48 §4.9.",
+            "status": "WARN"
+          },
+          {
+            "metric": "enriched_status_status_scope_drift_retighten",
+            "value": 5,
+            "threshold": "re-tighten condition (machine-observable): live value = 0 across a full cycle of chain_permits + chain_deep_scrapes — durable post-C7 (all four writer sites clear enriched_status on status move) + the final routine C3 run; C3 remains available as an emergency clear for any future residual.",
+            "status": "INFO"
+          },
+          {
+            "metric": "trade_id vocab (Step 13 — classify_permits)",
+            "value": "30/35 (85.7%)",
+            "threshold": ">= 90%",
+            "status": "WARN"
+          },
+          {
+            "metric": "product_id vocab (Step 13 — classify_permits (products))",
+            "value": "27/27 (100%)",
+            "threshold": ">= 90%",
+            "status": "PASS"
+          },
+          {
+            "metric": "trade_id vocab (CoA Step 7 — classify_coa_trades)",
+            "value": "35/35 (100%)",
+            "threshold": ">= 90%",
+            "status": "PASS"
+          },
+          {
+            "metric": "neighbourhood_id vocab (Step 10 — link_neighbourhoods)",
+            "value": "158/158 (100%)",
+            "threshold": ">= 90%",
+            "status": "PASS"
+          },
+          {
+            "metric": "sys_velocity_rows_sec",
+            "value": 0.06,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "sys_duration_ms",
+            "value": 17907,
+            "threshold": null,
+            "status": "INFO"
+          }
+        ]
+      }
+    }
+  },
+  "summary_count": 1,
+  "meta": [
+    {
+      "reads": {},
+      "writes": {}
+    }
+  ],
+  "parse_errors": [],
+  "verdict": "FAIL",
+  "ledger_status": [],
+  "stdout": "{\"level\":\"INFO\",\"tag\":\"[assert-global-coverage]\",\"msg\":\"Loaded 35 trade configs from control panel\"}\n{\"level\":\"INFO\",\"tag\":\"[assert-global-coverage]\",\"msg\":\"Loaded 477 logic variables from control panel\"}\n{\"level\":\"INFO\",\"tag\":\"[assert-global-coverage]\",\"msg\":\"Chain mode: permits (full profile)\",\"context\":{\"pass_pct\":90,\"warn_pct\":70}}\nPIPELINE_SUMMARY:{\"records_total\":1,\"records_new\":0,\"records_updated\":0,\"records_meta\":{\"audit_table\":{\"phase\":111,\"name\":\"Global Data Completeness Profile\",\"verdict\":\"FAIL\",\"rows\":[{\"metric\":\"permits.columns_present (Step 1 — assert_schema)\",\"value\":171,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"permits.permit_type (Step 2 — load_permits)\",\"value\":\"100%\",\"threshold\":\">= 90%\",\"status\":\"PASS\"},{\"metric\":\"permits.structure_type (Step 2 — load_permits)\",\"value\":\"99.6%\",\"threshold\":\">= 90%\",\"status\":\"PASS\"},{\"metric\":\"permits.work (Step 2 — load_permits)\",\"value\":\"99.8%\",\"threshold\":\">= 90%\",\"status\":\"PASS\"},{\"metric\":\"permits.street_num (Step 2 — load_permits)\",\"value\":\"100%\",\"threshold\":\">= 90%\",\"status\":\"PASS\"},{\"metric\":\"permits.street_name (Step 2 — load_permits)\",\"value\":\"100%\",\"threshold\":\">= 90%\",\"status\":\"PASS\"},{\"metric\":\"permits.street_name_normalized (Step 2 — load_permits)\",\"value\":\"85.5%\",\"threshold\":\">= 90%\",\"status\":\"WARN\"},{\"metric\":\"permits.street_type (Step 2 — load_permits)\",\"value\":\"100%\",\"threshold\":\">= 90%\",\"status\":\"PASS\"},{\"metric\":\"permits.street_direction (Step 2 — load_permits)\",\"value\":36295,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"permits.city (Step 2 — load_permits)\",\"value\":\"100%\",\"threshold\":\">= 90%\",\"status\":\"PASS\"},{\"metric\":\"permits.postal (Step 2 — load_permits)\",\"value\":\"100%\",\"threshold\":\">= 90%\",\"status\":\"PASS\"},{\"metric\":\"permits.geo_id (Step 2 — load_permits)\",\"value\":\"97%\",\"threshold\":\">= 90%\",\"status\":\"PASS\"},{\"metric\":\"permits.building_type (Step 2 — load_permits)\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"permits.category (Step 2 — load_permits)\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"permits.application_date (Step 2 — load_permits)\",\"value\":\"100%\",\"threshold\":\">= 90%\",\"status\":\"PASS\"},{\"metric\":\"permits.issued_date (Step 2 — load_permits)\",\"value\":\"93.6%\",\"threshold\":\">= 90%\",\"status\":\"PASS\"},{\"metric\":\"permits.completed_date (Step 2 — load_permits)\",\"value\":42793,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"permits.status (Step 2 — load_permits)\",\"value\":\"100%\",\"threshold\":\">= 90%\",\"status\":\"PASS\"},{\"metric\":\"permits.description (Step 2 — load_permits)\",\"value\":\"99.8%\",\"threshold\":\">= 90%\",\"status\":\"PASS\"},{\"metric\":\"permits.est_const_cost (Step 2 — load_permits)\",\"value\":137234,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"permits.builder_name (Step 2 — load_permits)\",\"value\":13037,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"permits.owner (Step 2 — load_permits)\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"permits.dwelling_units_created (Step 2 — load_permits)\",\"value\":\"100%\",\"threshold\":\">= 90%\",\"status\":\"PASS\"},{\"metric\":\"permits.dwelling_units_lost (Step 2 — load_permits)\",\"value\":\"100%\",\"threshold\":\">= 90%\",\"status\":\"PASS\"},{\"metric\":\"permits.ward (Step 2 — load_permits)\",\"value\":49334,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"permits.council_district (Step 2 — load_permits)\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"permits.current_use (Step 2 — load_permits)\",\"value\":\"88.6%\",\"threshold\":\">= 90%\",\"status\":\"WARN\"},{\"metric\":\"permits.proposed_use (Step 2 — load_permits)\",\"value\":\"88.6%\",\"threshold\":\">= 90%\",\"status\":\"WARN\"},{\"metric\":\"permits.housing_units (Step 2 — load_permits)\",\"value\":\"100%\",\"threshold\":\">= 90%\",\"status\":\"PASS\"},{\"metric\":\"permits.storeys (Step 2 — load_permits)\",\"value\":\"100%\",\"threshold\":\">= 90%\",\"status\":\"PASS\"},{\"metric\":\"permits.data_hash (Step 2 — load_permits)\",\"value\":\"100%\",\"threshold\":\">= 90%\",\"status\":\"PASS\"},{\"metric\":\"permits.raw_json (Step 2 — load_permits)\",\"value\":\"100%\",\"threshold\":\">= 90%\",\"status\":\"PASS\"},{\"metric\":\"permits.last_seen_at (Step 2 — load_permits)\",\"value\":\"100%\",\"threshold\":\">= 90%\",\"status\":\"PASS\"},{\"metric\":\"permits.status (stale total) (Step 3 — close_stale_permits)\",\"value\":42797,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"permits.completed_date (Step 3 — close_stale_permits)\",\"value\":42793,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"permits.enriched_status (Step 4 — classify_permit_phase)\",\"value\":60,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"permits.project_type (Step 5 — classify_scope)\",\"value\":\"100%\",\"threshold\":\">= 90%\",\"status\":\"PASS\"},{\"metric\":\"permits.scope_tags (Step 5 — classify_scope)\",\"value\":\"100%\",\"threshold\":\">= 90%\",\"status\":\"PASS\"},{\"metric\":\"permits.scope_classified_at (Step 5 — classify_scope)\",\"value\":\"100%\",\"threshold\":\">= 90%\",\"status\":\"PASS\"},{\"metric\":\"permits.scope_source (Step 5 — classify_scope)\",\"value\":\"100%\",\"threshold\":\">= 90%\",\"status\":\"PASS\"},{\"metric\":\"entities.name_normalized (permit builders) (Step 6 — extract_builders)\",\"value\":\"80.3%\",\"threshold\":\">= 90%\",\"status\":\"WARN\"},{\"metric\":\"entities.legal_name (Step 6 — extract_builders)\",\"value\":\"100%\",\"threshold\":\">= 90%\",\"status\":\"PASS\"},{\"metric\":\"entities.permit_count (Step 6 — extract_builders)\",\"value\":\"100%\",\"threshold\":\">= 90%\",\"status\":\"PASS\"},{\"metric\":\"entities.entity_type (Step 6 — extract_builders)\",\"value\":\"100%\",\"threshold\":\">= 90%\",\"status\":\"PASS\"},{\"metric\":\"entities.last_seen_at (Step 6 — extract_builders)\",\"value\":\"100%\",\"threshold\":\">= 90%\",\"status\":\"PASS\"},{\"metric\":\"entities.primary_phone (via entities chain — Spec 45) (Step 6 — extract_builders)\",\"value\":32,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"entities.primary_email (via entities chain — Spec 45) (Step 6 — extract_builders)\",\"value\":24,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"entities.website (via entities chain — Spec 45) (Step 6 — extract_builders)\",\"value\":57,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"entities.is_wsib_registered (Step 7 — link_wsib)\",\"value\":\"7.6%\",\"threshold\":\">= 10%\",\"status\":\"WARN\"},{\"metric\":\"wsib_registry.linked_entity_id (Step 7 — link_wsib)\",\"value\":\"0.7%\",\"threshold\":\">= 10%\",\"status\":\"FAIL\"},{\"metric\":\"wsib_registry.match_confidence (Step 7 — link_wsib)\",\"value\":\"100%\",\"threshold\":\">= 90%\",\"status\":\"PASS\"},{\"metric\":\"permits.latitude (Step 8 — geocode_permits)\",\"value\":\"91.3%\",\"threshold\":\">= 90%\",\"status\":\"PASS\"},{\"metric\":\"permits.longitude (Step 8 — geocode_permits)\",\"value\":\"91.3%\",\"threshold\":\">= 90%\",\"status\":\"PASS\"},{\"metric\":\"permits.location (Step 8 — geocode_permits)\",\"value\":\"91.3%\",\"threshold\":\">= 90%\",\"status\":\"PASS\"},{\"metric\":\"permits.geocoded_at (Step 8 — geocode_permits)\",\"value\":\"91.3%\",\"threshold\":\">= 90%\",\"status\":\"PASS\"},{\"metric\":\"permit_parcels.permits_linked (Step 9 — link_parcels)\",\"value\":\"94.4%\",\"threshold\":\">= 90%\",\"status\":\"PASS\"},{\"metric\":\"permit_parcels.match_type (geocoded) (Step 9 — link_parcels)\",\"value\":\"98.9%\",\"threshold\":\">= 90%\",\"status\":\"PASS\"},{\"metric\":\"permit_parcels.confidence (geocoded) (Step 9 — link_parcels)\",\"value\":\"98.9%\",\"threshold\":\">= 90%\",\"status\":\"PASS\"},{\"metric\":\"permit_parcels.linked_at (geocoded) (Step 9 — link_parcels)\",\"value\":\"98.9%\",\"threshold\":\">= 90%\",\"status\":\"PASS\"},{\"metric\":\"parcels.lot_size_sqm (Step 9 — link_parcels)\",\"value\":\"100%\",\"threshold\":\">= 90%\",\"status\":\"PASS\"},{\"metric\":\"permits.zoning_class (Step 9b — enrich_permits)\",\"value\":\"83.4%\",\"threshold\":\">= 80%\",\"status\":\"PASS\"},{\"metric\":\"permits.zoning_enriched_at (Step 9b — enrich_permits)\",\"value\":240183,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"permits.bylaw_max_coverage_pct (Step 9b — enrich_permits)\",\"value\":85822,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"permits.bylaw_max_fsi (Step 9b — enrich_permits)\",\"value\":43282,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"permits.bylaw_max_height_m (Step 9b — enrich_permits)\",\"value\":185913,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"permits.exception_number (Step 9b — enrich_permits)\",\"value\":164635,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"permits.applicable_bylaws (Step 9b — enrich_permits)\",\"value\":240183,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"permits.overlay_summary (Step 9b — enrich_permits)\",\"value\":240183,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"permits.zoning_parcel_count (Step 9b — enrich_permits)\",\"value\":240183,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"permits.zoning_dominant_parcel_id (Step 9b — enrich_permits)\",\"value\":240183,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"permits.zoning_dominant_parcel_method (Step 9b — enrich_permits)\",\"value\":240183,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"permits.is_in_ravine_protection_area (Step 9b — enrich_permits)\",\"value\":18327,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"permits.ravine_distance_m (Step 9b — enrich_permits)\",\"value\":240183,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"permits.is_heritage_designated (Step 9b — enrich_permits)\",\"value\":17414,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"permits.heritage_designation_type (Step 9b — enrich_permits)\",\"value\":17414,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"permits.heritage_designation_date (Step 9b — enrich_permits)\",\"value\":15775,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"permits.is_corner_lot (Step 9b — enrich_permits)\",\"value\":48499,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"permits.is_through_lot (Step 9b — enrich_permits)\",\"value\":12945,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"permits.abuts_laneway (Step 9b — enrich_permits)\",\"value\":53130,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"permits.primary_frontage_street_name (Step 9b — enrich_permits)\",\"value\":234361,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"permits.lot_size_confidence (Step 9b — enrich_permits)\",\"value\":240183,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"permits.max_buildable_footprint_sqm (Step 9b — enrich_permits)\",\"value\":170720,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"permits.max_buildable_gfa_sqm (Step 9b — enrich_permits)\",\"value\":170720,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"permits.max_buildable_gfa_basis_fsi (Step 9b — enrich_permits)\",\"value\":2347,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"permits.max_buildable_gfa_basis_coverage_box (Step 9b — enrich_permits)\",\"value\":162360,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"permits.max_buildable_gfa_basis_coverage_only (Step 9b — enrich_permits)\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"permits.max_build_confidence_high (Step 9b — enrich_permits)\",\"value\":23533,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"permits.max_build_confidence_medium (Step 9b — enrich_permits)\",\"value\":136359,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"permits.max_build_confidence_low (Step 9b — enrich_permits)\",\"value\":11281,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"permits.garden_suite_fits (Step 9b — enrich_permits)\",\"value\":105798,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"permits.envelope_constrained (Step 9b — enrich_permits)\",\"value\":25721,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"permits.imagery_roof_footprint_sqm (Step 9b — enrich_permits)\",\"value\":209840,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"permits.imagery_roof_gfa_sqm (Step 9b — enrich_permits)\",\"value\":209840,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"permits.existing_structure_confidence_high (Step 9b — enrich_permits)\",\"value\":191844,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"permits.existing_structure_confidence_low (Step 9b — enrich_permits)\",\"value\":48231,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"permits.existing_greenspace_sqm (Step 9b — enrich_permits)\",\"value\":209840,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"permits.max_newbuild_coa_gfa_sqm (Step 9b — enrich_permits)\",\"value\":170720,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"permits.cur_floor_gfa_sqm (Step 9b — enrich_permits)\",\"value\":209840,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"permits.cur_pot_2story_gfa_sqm (Step 9b — enrich_permits)\",\"value\":209840,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"permits.cur_pot_3story_gfa_sqm (Step 9b — enrich_permits)\",\"value\":35272,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"permits.cur_gfa_range_basis (Step 9b — enrich_permits)\",\"value\":148313,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"permits.cur_est_kitchen_gfa_sqm (Step 9b — enrich_permits)\",\"value\":209840,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"permits.cur_est_bath_gfa_sqm (Step 9b — enrich_permits)\",\"value\":209840,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"permits.max_garage_gfa_sqm (Step 9b — enrich_permits)\",\"value\":63556,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"permits.garage_permission_as_of_right (Step 9b — enrich_permits)\",\"value\":63354,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"permits.garage_permission_coa_required (Step 9b — enrich_permits)\",\"value\":202,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"permits.opt_config_confidence (Step 9b — enrich_permits)\",\"value\":170720,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"permits.comp_count (Step 9b — enrich_permits)\",\"value\":160205,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"permits.rear_suite_type (Step 9b — enrich_permits)\",\"value\":111067,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"permits.rear_suite_permission_as_of_right (Step 9b — enrich_permits)\",\"value\":89999,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"permits.rear_suite_permission_coa_required (Step 9b — enrich_permits)\",\"value\":21068,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"permits.cost_fb_total (Step 9b — enrich_permits)\",\"value\":139034,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"permits.cost_coa_total (Step 9b — enrich_permits)\",\"value\":139034,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"permits.cost_solar_total (Step 9b — enrich_permits)\",\"value\":139034,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"permits.cost_garden_suite_total (Step 9b — enrich_permits)\",\"value\":88788,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"permits.cost_laneway_suite_total (Step 9b — enrich_permits)\",\"value\":13137,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"permits.cost_garage_total (Step 9b — enrich_permits)\",\"value\":58364,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"permits.cost_gut_total (Step 9b — enrich_permits)\",\"value\":145031,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"permits.cost_addition_total (Step 9b — enrich_permits)\",\"value\":145031,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"permits.cost_kitchen_per_sqm (Step 9b — enrich_permits)\",\"value\":145031,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"permits.cost_bath_per_sqm (Step 9b — enrich_permits)\",\"value\":145031,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"permits.cost_basement_per_sqm (Step 9b — enrich_permits)\",\"value\":145031,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"permits.cost_basement_underpin_per_sqm (Step 9b — enrich_permits)\",\"value\":145031,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"permits.max_build_fsi (Step 9b — enrich_permits)\",\"value\":139034,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"permits.coa_fsi (Step 9b — enrich_permits)\",\"value\":139034,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"permits.realized_fsi_p90 (Step 9b — enrich_permits)\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"permits.neighbourhood_id (Step 10 — link_neighbourhoods)\",\"value\":\"94.8%\",\"threshold\":\">= 90%\",\"status\":\"PASS\"},{\"metric\":\"parcels.with_centroid (Step 11 — link_massing)\",\"value\":486530,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"parcel_buildings.linked_parcels (Step 11 — link_massing)\",\"value\":485135,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"parcel_buildings.is_primary (Step 11 — link_massing)\",\"value\":\"100%\",\"threshold\":\">= 90%\",\"status\":\"PASS\"},{\"metric\":\"parcel_buildings.structure_type (Step 11 — link_massing)\",\"value\":\"100%\",\"threshold\":\">= 90%\",\"status\":\"PASS\"},{\"metric\":\"parcel_buildings.match_type (Step 11 — link_massing)\",\"value\":\"100%\",\"threshold\":\">= 90%\",\"status\":\"PASS\"},{\"metric\":\"parcel_buildings.confidence (Step 11 — link_massing)\",\"value\":\"100%\",\"threshold\":\">= 90%\",\"status\":\"PASS\"},{\"metric\":\"parcel_buildings.linked_at (Step 11 — link_massing)\",\"value\":\"100%\",\"threshold\":\">= 90%\",\"status\":\"PASS\"},{\"metric\":\"building_footprints.footprint_area_sqm (Step 11 — link_massing)\",\"value\":\"100%\",\"threshold\":\">= 90%\",\"status\":\"PASS\"},{\"metric\":\"building_footprints.max_height_m (Step 11 — link_massing)\",\"value\":\"100%\",\"threshold\":\">= 90%\",\"status\":\"PASS\"},{\"metric\":\"permits.scope_tags (non-BLD) (Step 12 — link_similar)\",\"value\":\"100%\",\"threshold\":\">= 90%\",\"status\":\"PASS\"},{\"metric\":\"permit_trades.permits_with_active_trade (Step 13 — classify_permits)\",\"value\":\"98.2%\",\"threshold\":\">= 90%\",\"status\":\"PASS\"},{\"metric\":\"permit_trades.tier (Step 13 — classify_permits)\",\"value\":\"100%\",\"threshold\":\">= 90%\",\"status\":\"PASS\"},{\"metric\":\"permit_trades.confidence (Step 13 — classify_permits)\",\"value\":\"100%\",\"threshold\":\">= 90%\",\"status\":\"PASS\"},{\"metric\":\"permit_trades.is_active (Step 13 — classify_permits)\",\"value\":\"100%\",\"threshold\":\">= 90%\",\"status\":\"PASS\"},{\"metric\":\"permit_trades.phase (Step 13 — classify_permits)\",\"value\":\"100%\",\"threshold\":\">= 90%\",\"status\":\"PASS\"},{\"metric\":\"permit_trades.lead_score (Step 13 — classify_permits)\",\"value\":\"100%\",\"threshold\":\">= 90%\",\"status\":\"PASS\"},{\"metric\":\"permit_trades.classified_at (Step 13 — classify_permits)\",\"value\":\"100%\",\"threshold\":\">= 90%\",\"status\":\"PASS\"},{\"metric\":\"cost_estimates.permits_covered (Step 14 — compute_cost_estimates)\",\"value\":\"99.9%\",\"threshold\":\">= 90%\",\"status\":\"PASS\"},{\"metric\":\"cost_estimates.estimated_cost (Step 14 — compute_cost_estimates)\",\"value\":\"60.2%\",\"threshold\":\">= 55%\",\"status\":\"PASS\"},{\"metric\":\"cost_estimates.cost_source (Step 14 — compute_cost_estimates)\",\"value\":\"100%\",\"threshold\":\">= 90%\",\"status\":\"PASS\"},{\"metric\":\"cost_estimates.cost_tier (Step 14 — compute_cost_estimates)\",\"value\":\"60.2%\",\"threshold\":\">= 55%\",\"status\":\"PASS\"},{\"metric\":\"cost_estimates.cost_range_low (Step 14 — compute_cost_estimates)\",\"value\":\"60.2%\",\"threshold\":\">= 55%\",\"status\":\"PASS\"},{\"metric\":\"cost_estimates.cost_range_high (Step 14 — compute_cost_estimates)\",\"value\":\"60.2%\",\"threshold\":\">= 55%\",\"status\":\"PASS\"},{\"metric\":\"cost_estimates.premium_factor (Step 14 — compute_cost_estimates)\",\"value\":\"100%\",\"threshold\":\">= 90%\",\"status\":\"PASS\"},{\"metric\":\"cost_estimates.complexity_score (Step 14 — compute_cost_estimates)\",\"value\":\"100%\",\"threshold\":\">= 90%\",\"status\":\"PASS\"},{\"metric\":\"cost_estimates.model_version (Step 14 — compute_cost_estimates)\",\"value\":\"100%\",\"threshold\":\">= 90%\",\"status\":\"PASS\"},{\"metric\":\"cost_estimates.is_geometric_override (Step 14 — compute_cost_estimates)\",\"value\":\"100%\",\"threshold\":\">= 90%\",\"status\":\"PASS\"},{\"metric\":\"cost_estimates.modeled_gfa_sqm (Step 14 — compute_cost_estimates)\",\"value\":\"61.9%\",\"threshold\":\">= 55%\",\"status\":\"PASS\"},{\"metric\":\"cost_estimates.effective_area_sqm (Step 14 — compute_cost_estimates)\",\"value\":\"61.9%\",\"threshold\":\">= 55%\",\"status\":\"PASS\"},{\"metric\":\"cost_estimates.trade_contract_values (Step 14 — compute_cost_estimates)\",\"value\":\"100%\",\"threshold\":\">= 90%\",\"status\":\"PASS\"},{\"metric\":\"cost_estimates.computed_at (Step 14 — compute_cost_estimates)\",\"value\":\"100%\",\"threshold\":\">= 90%\",\"status\":\"PASS\"},{\"metric\":\"phase_calibration.rows_with_median (Step 15 — compute_timing_calibration_v2)\",\"value\":6,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"coa_applications.linked_permit_num (Step 16 — link_coa)\",\"value\":\"99.4%\",\"threshold\":\">= 90%\",\"status\":\"PASS\"},{\"metric\":\"data_quality_snapshots.today (Step 18 — refresh_snapshot)\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"permits.duplicate_pks (Step 19 — assert_data_bounds)\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"engine_health_snapshots.today (Step 20 — assert_engine_health)\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"permits.lifecycle_phase (Step 21 — classify_lifecycle_phase)\",\"value\":\"99.5%\",\"threshold\":\">= 90%\",\"status\":\"PASS\"},{\"metric\":\"permits.phase_started_at (Step 21 — classify_lifecycle_phase)\",\"value\":\"100%\",\"threshold\":\">= 90%\",\"status\":\"PASS\"},{\"metric\":\"permits.lifecycle_stalled (Step 21 — classify_lifecycle_phase)\",\"value\":22918,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"permits.lifecycle_classified_at (Step 21 — classify_lifecycle_phase)\",\"value\":\"100%\",\"threshold\":\">= 90%\",\"status\":\"PASS\"},{\"metric\":\"coa_applications.lifecycle_phase (Step 21 — classify_lifecycle_phase)\",\"value\":\"100%\",\"threshold\":\">= 90%\",\"status\":\"PASS\"},{\"metric\":\"permits.unclassified_count (Step 22 — assert_lifecycle_phase_distribution)\",\"value\":1160,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"trade_forecasts.permits_covered (Step 23 — compute_trade_forecasts)\",\"value\":150186,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"trade_forecasts.predicted_start (Step 23 — compute_trade_forecasts)\",\"value\":150186,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"trade_forecasts.urgency (classified) (Step 23 — compute_trade_forecasts)\",\"value\":150186,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"trade_forecasts.trade_slug (Step 23 — compute_trade_forecasts)\",\"value\":\"100%\",\"threshold\":\">= 90%\",\"status\":\"PASS\"},{\"metric\":\"trade_forecasts.target_window (Step 23 — compute_trade_forecasts)\",\"value\":\"100%\",\"threshold\":\">= 90%\",\"status\":\"PASS\"},{\"metric\":\"trade_forecasts.confidence (Step 23 — compute_trade_forecasts)\",\"value\":\"100%\",\"threshold\":\">= 90%\",\"status\":\"PASS\"},{\"metric\":\"trade_forecasts.calibration_method (Step 23 — compute_trade_forecasts)\",\"value\":\"100%\",\"threshold\":\">= 90%\",\"status\":\"PASS\"},{\"metric\":\"trade_forecasts.sample_size (Step 23 — compute_trade_forecasts)\",\"value\":\"100%\",\"threshold\":\">= 90%\",\"status\":\"PASS\"},{\"metric\":\"trade_forecasts.median_days (Step 23 — compute_trade_forecasts)\",\"value\":\"100%\",\"threshold\":\">= 90%\",\"status\":\"PASS\"},{\"metric\":\"trade_forecasts.p25_days (Step 23 — compute_trade_forecasts)\",\"value\":\"100%\",\"threshold\":\">= 90%\",\"status\":\"PASS\"},{\"metric\":\"trade_forecasts.p75_days (Step 23 — compute_trade_forecasts)\",\"value\":\"100%\",\"threshold\":\">= 90%\",\"status\":\"PASS\"},{\"metric\":\"trade_forecasts.opportunity_score (Step 23 — compute_trade_forecasts)\",\"value\":\"80%\",\"threshold\":\">= 90%\",\"status\":\"WARN\"},{\"metric\":\"trade_forecasts.computed_at (Step 23 — compute_trade_forecasts)\",\"value\":\"100%\",\"threshold\":\">= 90%\",\"status\":\"PASS\"},{\"metric\":\"trade_forecasts.opportunity_score (>0) (Step 24 — compute_opportunity_scores)\",\"value\":\"80%\",\"threshold\":\">= 90%\",\"status\":\"WARN\"},{\"metric\":\"tracked_projects.active (Step 25 — update_tracked_projects)\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"lead_analytics.rows (Step 25 — update_tracked_projects)\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"entity_tracing.last_verdict (Step 26 — assert_entity_tracing)\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"lead_id_administrative_drift\",\"value\":0,\"threshold\":\"0 (mig 138_a + 241 invariant)\",\"status\":\"PASS\"},{\"metric\":\"lead_id_duplicate_groups\",\"value\":0,\"threshold\":\"0 (lead_id must be unique across permits)\",\"status\":\"PASS\"},{\"metric\":\"enriched_status_status_scope_drift\",\"value\":5,\"threshold\":\"accepted-WARN while > 0 — rows whose enriched_status outlived the status that justified it. C7 (2026-08-13) closed the regeneration path at all four permits.status writer sites (load-permits.js:357, close-stale-permits.js:128/:146, src/lib/sync/process.ts). Post-C7 + the final routine C3 run, expected steady-state is 0 on EVERY chain_permits run — a single nonzero reading is a regression signal, not noise. C3 (backfill-smeared-enriched-status.js) remains the emergency clear for residuals. SELF-RETIRES at 0 — both rows disappear and the plain gate resumes. Spec 48 §4.9.\",\"status\":\"WARN\"},{\"metric\":\"enriched_status_status_scope_drift_retighten\",\"value\":5,\"threshold\":\"re-tighten condition (machine-observable): live value = 0 across a full cycle of chain_permits + chain_deep_scrapes — durable post-C7 (all four writer sites clear enriched_status on status move) + the final routine C3 run; C3 remains available as an emergency clear for any future residual.\",\"status\":\"INFO\"},{\"metric\":\"trade_id vocab (Step 13 — classify_permits)\",\"value\":\"30/35 (85.7%)\",\"threshold\":\">= 90%\",\"status\":\"WARN\"},{\"metric\":\"product_id vocab (Step 13 — classify_permits (products))\",\"value\":\"27/27 (100%)\",\"threshold\":\">= 90%\",\"status\":\"PASS\"},{\"metric\":\"trade_id vocab (CoA Step 7 — classify_coa_trades)\",\"value\":\"35/35 (100%)\",\"threshold\":\">= 90%\",\"status\":\"PASS\"},{\"metric\":\"neighbourhood_id vocab (Step 10 — link_neighbourhoods)\",\"value\":\"158/158 (100%)\",\"threshold\":\">= 90%\",\"status\":\"PASS\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":0.06,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":17907,\"threshold\":null,\"status\":\"INFO\"}]}}}\nPIPELINE_META:{\"reads\":{},\"writes\":{}}\n\n[assert-global-coverage] completed in 17.9s\n",
+  "stderr": "{\"level\":\"WARN\",\"tag\":\"[assert-global-coverage]\",\"msg\":\"allocation_pct sum is 1.0744 (expected 1.0) — normalizing\"}\n{\"level\":\"WARN\",\"tag\":\"[assert-global-coverage]\",\"msg\":\"logic_variables.lifecycle_seq_band_22_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-global-coverage]\",\"msg\":\"logic_variables.lifecycle_seq_band_28_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-global-coverage]\",\"msg\":\"logic_variables.lifecycle_seq_band_30_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-global-coverage]\",\"msg\":\"logic_variables.lifecycle_seq_band_34_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-global-coverage]\",\"msg\":\"logic_variables.lifecycle_seq_band_37_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-global-coverage]\",\"msg\":\"logic_variables.lifecycle_seq_band_44_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-global-coverage]\",\"msg\":\"logic_variables.lifecycle_seq_band_47_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-global-coverage]\",\"msg\":\"logic_variables.lifecycle_seq_band_48_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-global-coverage]\",\"msg\":\"logic_variables.lifecycle_seq_band_50_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-global-coverage]\",\"msg\":\"logic_variables.lifecycle_seq_band_53_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-global-coverage]\",\"msg\":\"logic_variables.lifecycle_seq_band_54_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-global-coverage]\",\"msg\":\"logic_variables.lifecycle_seq_band_55_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-global-coverage]\",\"msg\":\"logic_variables.lifecycle_seq_band_56_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-global-coverage]\",\"msg\":\"logic_variables.lifecycle_seq_band_58_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-global-coverage]\",\"msg\":\"logic_variables.lifecycle_seq_band_65_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-global-coverage]\",\"msg\":\"logic_variables.lifecycle_seq_band_66_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-global-coverage]\",\"msg\":\"logic_variables.lifecycle_seq_band_67_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-global-coverage]\",\"msg\":\"logic_variables.lifecycle_seq_band_70_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-global-coverage]\",\"msg\":\"logic_variables.lifecycle_seq_band_71_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-global-coverage]\",\"msg\":\"logic_variables.lifecycle_seq_band_74_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-global-coverage]\",\"msg\":\"logic_variables.lifecycle_seq_band_75_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-global-coverage]\",\"msg\":\"logic_variables.lifecycle_seq_band_76_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-global-coverage]\",\"msg\":\"logic_variables.lifecycle_seq_band_77_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-global-coverage]\",\"msg\":\"logic_variables.lifecycle_seq_band_78_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-global-coverage]\",\"msg\":\"logic_variables.lifecycle_seq_band_79_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-global-coverage]\",\"msg\":\"logic_variables.lifecycle_seq_band_80_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-global-coverage]\",\"msg\":\"logic_variables.lifecycle_seq_band_81_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-global-coverage]\",\"msg\":\"logic_variables.lifecycle_seq_band_82_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-global-coverage]\",\"msg\":\"logic_variables.lifecycle_seq_band_83_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-global-coverage]\",\"msg\":\"logic_variables.lifecycle_seq_band_88_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-global-coverage]\",\"msg\":\"logic_variables.lifecycle_seq_band_91_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-global-coverage]\",\"msg\":\"logic_variables.lifecycle_seq_band_94_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-global-coverage]\",\"msg\":\"logic_variables.lifecycle_seq_band_96_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-global-coverage]\",\"msg\":\"Coverage verdict: FAIL\",\"context\":{\"fail_count\":1,\"warn_count\":9}}\n",
+  "pipeline_runs": [],
+  "pipeline_runs_max_id_before": 1857,
+  "table_state": [],
+  "tables_source": "none",
+  "table_row_ceiling": 100000,
+  "table_timing": {},
+  "table_specs": {},
+  "invariants": [],
+  "invariants_file": null,
+  "db_target": "postgresql://postgres:***@127.0.0.1:54322/postgres",
+  "runtime": "node",
+  "args": [],
+  "nondeterminism": [
+    "pattern:duration_literal",
+    "row:sys_duration_ms",
+    "row:sys_velocity_rows_sec"
+  ],
+  "normalised": {
+    "step": "scripts/quality/assert-global-coverage.js",
+    "chain": "none",
+    "exit_code": 0,
+    "summary": {
+      "records_meta": {
+        "audit_table": {
+          "name": "Global Data Completeness Profile",
+          "phase": 111,
+          "rows": [
+            {
+              "metric": "permits.columns_present (Step 1 — assert_schema)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 171
+            },
+            {
+              "metric": "permits.permit_type (Step 2 — load_permits)",
+              "status": "PASS",
+              "threshold": ">= 90%",
+              "value": "100%"
+            },
+            {
+              "metric": "permits.structure_type (Step 2 — load_permits)",
+              "status": "PASS",
+              "threshold": ">= 90%",
+              "value": "99.6%"
+            },
+            {
+              "metric": "permits.work (Step 2 — load_permits)",
+              "status": "PASS",
+              "threshold": ">= 90%",
+              "value": "99.8%"
+            },
+            {
+              "metric": "permits.street_num (Step 2 — load_permits)",
+              "status": "PASS",
+              "threshold": ">= 90%",
+              "value": "100%"
+            },
+            {
+              "metric": "permits.street_name (Step 2 — load_permits)",
+              "status": "PASS",
+              "threshold": ">= 90%",
+              "value": "100%"
+            },
+            {
+              "metric": "permits.street_name_normalized (Step 2 — load_permits)",
+              "status": "WARN",
+              "threshold": ">= 90%",
+              "value": "85.5%"
+            },
+            {
+              "metric": "permits.street_type (Step 2 — load_permits)",
+              "status": "PASS",
+              "threshold": ">= 90%",
+              "value": "100%"
+            },
+            {
+              "metric": "permits.street_direction (Step 2 — load_permits)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 36295
+            },
+            {
+              "metric": "permits.city (Step 2 — load_permits)",
+              "status": "PASS",
+              "threshold": ">= 90%",
+              "value": "100%"
+            },
+            {
+              "metric": "permits.postal (Step 2 — load_permits)",
+              "status": "PASS",
+              "threshold": ">= 90%",
+              "value": "100%"
+            },
+            {
+              "metric": "permits.geo_id (Step 2 — load_permits)",
+              "status": "PASS",
+              "threshold": ">= 90%",
+              "value": "97%"
+            },
+            {
+              "metric": "permits.building_type (Step 2 — load_permits)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 0
+            },
+            {
+              "metric": "permits.category (Step 2 — load_permits)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 0
+            },
+            {
+              "metric": "permits.application_date (Step 2 — load_permits)",
+              "status": "PASS",
+              "threshold": ">= 90%",
+              "value": "100%"
+            },
+            {
+              "metric": "permits.issued_date (Step 2 — load_permits)",
+              "status": "PASS",
+              "threshold": ">= 90%",
+              "value": "93.6%"
+            },
+            {
+              "metric": "permits.completed_date (Step 2 — load_permits)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 42793
+            },
+            {
+              "metric": "permits.status (Step 2 — load_permits)",
+              "status": "PASS",
+              "threshold": ">= 90%",
+              "value": "100%"
+            },
+            {
+              "metric": "permits.description (Step 2 — load_permits)",
+              "status": "PASS",
+              "threshold": ">= 90%",
+              "value": "99.8%"
+            },
+            {
+              "metric": "permits.est_const_cost (Step 2 — load_permits)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 137234
+            },
+            {
+              "metric": "permits.builder_name (Step 2 — load_permits)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 13037
+            },
+            {
+              "metric": "permits.owner (Step 2 — load_permits)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 0
+            },
+            {
+              "metric": "permits.dwelling_units_created (Step 2 — load_permits)",
+              "status": "PASS",
+              "threshold": ">= 90%",
+              "value": "100%"
+            },
+            {
+              "metric": "permits.dwelling_units_lost (Step 2 — load_permits)",
+              "status": "PASS",
+              "threshold": ">= 90%",
+              "value": "100%"
+            },
+            {
+              "metric": "permits.ward (Step 2 — load_permits)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 49334
+            },
+            {
+              "metric": "permits.council_district (Step 2 — load_permits)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 0
+            },
+            {
+              "metric": "permits.current_use (Step 2 — load_permits)",
+              "status": "WARN",
+              "threshold": ">= 90%",
+              "value": "88.6%"
+            },
+            {
+              "metric": "permits.proposed_use (Step 2 — load_permits)",
+              "status": "WARN",
+              "threshold": ">= 90%",
+              "value": "88.6%"
+            },
+            {
+              "metric": "permits.housing_units (Step 2 — load_permits)",
+              "status": "PASS",
+              "threshold": ">= 90%",
+              "value": "100%"
+            },
+            {
+              "metric": "permits.storeys (Step 2 — load_permits)",
+              "status": "PASS",
+              "threshold": ">= 90%",
+              "value": "100%"
+            },
+            {
+              "metric": "permits.data_hash (Step 2 — load_permits)",
+              "status": "PASS",
+              "threshold": ">= 90%",
+              "value": "100%"
+            },
+            {
+              "metric": "permits.raw_json (Step 2 — load_permits)",
+              "status": "PASS",
+              "threshold": ">= 90%",
+              "value": "100%"
+            },
+            {
+              "metric": "permits.last_seen_at (Step 2 — load_permits)",
+              "status": "PASS",
+              "threshold": ">= 90%",
+              "value": "100%"
+            },
+            {
+              "metric": "permits.status (stale total) (Step 3 — close_stale_permits)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 42797
+            },
+            {
+              "metric": "permits.completed_date (Step 3 — close_stale_permits)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 42793
+            },
+            {
+              "metric": "permits.enriched_status (Step 4 — classify_permit_phase)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 60
+            },
+            {
+              "metric": "permits.project_type (Step 5 — classify_scope)",
+              "status": "PASS",
+              "threshold": ">= 90%",
+              "value": "100%"
+            },
+            {
+              "metric": "permits.scope_tags (Step 5 — classify_scope)",
+              "status": "PASS",
+              "threshold": ">= 90%",
+              "value": "100%"
+            },
+            {
+              "metric": "permits.scope_classified_at (Step 5 — classify_scope)",
+              "status": "PASS",
+              "threshold": ">= 90%",
+              "value": "100%"
+            },
+            {
+              "metric": "permits.scope_source (Step 5 — classify_scope)",
+              "status": "PASS",
+              "threshold": ">= 90%",
+              "value": "100%"
+            },
+            {
+              "metric": "entities.name_normalized (permit builders) (Step 6 — extract_builders)",
+              "status": "WARN",
+              "threshold": ">= 90%",
+              "value": "80.3%"
+            },
+            {
+              "metric": "entities.legal_name (Step 6 — extract_builders)",
+              "status": "PASS",
+              "threshold": ">= 90%",
+              "value": "100%"
+            },
+            {
+              "metric": "entities.permit_count (Step 6 — extract_builders)",
+              "status": "PASS",
+              "threshold": ">= 90%",
+              "value": "100%"
+            },
+            {
+              "metric": "entities.entity_type (Step 6 — extract_builders)",
+              "status": "PASS",
+              "threshold": ">= 90%",
+              "value": "100%"
+            },
+            {
+              "metric": "entities.last_seen_at (Step 6 — extract_builders)",
+              "status": "PASS",
+              "threshold": ">= 90%",
+              "value": "100%"
+            },
+            {
+              "metric": "entities.primary_phone (via entities chain — Spec 45) (Step 6 — extract_builders)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 32
+            },
+            {
+              "metric": "entities.primary_email (via entities chain — Spec 45) (Step 6 — extract_builders)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 24
+            },
+            {
+              "metric": "entities.website (via entities chain — Spec 45) (Step 6 — extract_builders)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 57
+            },
+            {
+              "metric": "entities.is_wsib_registered (Step 7 — link_wsib)",
+              "status": "WARN",
+              "threshold": ">= 10%",
+              "value": "7.6%"
+            },
+            {
+              "metric": "wsib_registry.linked_entity_id (Step 7 — link_wsib)",
+              "status": "FAIL",
+              "threshold": ">= 10%",
+              "value": "0.7%"
+            },
+            {
+              "metric": "wsib_registry.match_confidence (Step 7 — link_wsib)",
+              "status": "PASS",
+              "threshold": ">= 90%",
+              "value": "100%"
+            },
+            {
+              "metric": "permits.latitude (Step 8 — geocode_permits)",
+              "status": "PASS",
+              "threshold": ">= 90%",
+              "value": "91.3%"
+            },
+            {
+              "metric": "permits.longitude (Step 8 — geocode_permits)",
+              "status": "PASS",
+              "threshold": ">= 90%",
+              "value": "91.3%"
+            },
+            {
+              "metric": "permits.location (Step 8 — geocode_permits)",
+              "status": "PASS",
+              "threshold": ">= 90%",
+              "value": "91.3%"
+            },
+            {
+              "metric": "permits.geocoded_at (Step 8 — geocode_permits)",
+              "status": "PASS",
+              "threshold": ">= 90%",
+              "value": "91.3%"
+            },
+            {
+              "metric": "permit_parcels.permits_linked (Step 9 — link_parcels)",
+              "status": "PASS",
+              "threshold": ">= 90%",
+              "value": "94.4%"
+            },
+            {
+              "metric": "permit_parcels.match_type (geocoded) (Step 9 — link_parcels)",
+              "status": "PASS",
+              "threshold": ">= 90%",
+              "value": "98.9%"
+            },
+            {
+              "metric": "permit_parcels.confidence (geocoded) (Step 9 — link_parcels)",
+              "status": "PASS",
+              "threshold": ">= 90%",
+              "value": "98.9%"
+            },
+            {
+              "metric": "permit_parcels.linked_at (geocoded) (Step 9 — link_parcels)",
+              "status": "PASS",
+              "threshold": ">= 90%",
+              "value": "98.9%"
+            },
+            {
+              "metric": "parcels.lot_size_sqm (Step 9 — link_parcels)",
+              "status": "PASS",
+              "threshold": ">= 90%",
+              "value": "100%"
+            },
+            {
+              "metric": "permits.zoning_class (Step 9b — enrich_permits)",
+              "status": "PASS",
+              "threshold": ">= 80%",
+              "value": "83.4%"
+            },
+            {
+              "metric": "permits.zoning_enriched_at (Step 9b — enrich_permits)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 240183
+            },
+            {
+              "metric": "permits.bylaw_max_coverage_pct (Step 9b — enrich_permits)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 85822
+            },
+            {
+              "metric": "permits.bylaw_max_fsi (Step 9b — enrich_permits)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 43282
+            },
+            {
+              "metric": "permits.bylaw_max_height_m (Step 9b — enrich_permits)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 185913
+            },
+            {
+              "metric": "permits.exception_number (Step 9b — enrich_permits)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 164635
+            },
+            {
+              "metric": "permits.applicable_bylaws (Step 9b — enrich_permits)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 240183
+            },
+            {
+              "metric": "permits.overlay_summary (Step 9b — enrich_permits)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 240183
+            },
+            {
+              "metric": "permits.zoning_parcel_count (Step 9b — enrich_permits)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 240183
+            },
+            {
+              "metric": "permits.zoning_dominant_parcel_id (Step 9b — enrich_permits)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 240183
+            },
+            {
+              "metric": "permits.zoning_dominant_parcel_method (Step 9b — enrich_permits)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 240183
+            },
+            {
+              "metric": "permits.is_in_ravine_protection_area (Step 9b — enrich_permits)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 18327
+            },
+            {
+              "metric": "permits.ravine_distance_m (Step 9b — enrich_permits)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 240183
+            },
+            {
+              "metric": "permits.is_heritage_designated (Step 9b — enrich_permits)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 17414
+            },
+            {
+              "metric": "permits.heritage_designation_type (Step 9b — enrich_permits)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 17414
+            },
+            {
+              "metric": "permits.heritage_designation_date (Step 9b — enrich_permits)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 15775
+            },
+            {
+              "metric": "permits.is_corner_lot (Step 9b — enrich_permits)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 48499
+            },
+            {
+              "metric": "permits.is_through_lot (Step 9b — enrich_permits)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 12945
+            },
+            {
+              "metric": "permits.abuts_laneway (Step 9b — enrich_permits)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 53130
+            },
+            {
+              "metric": "permits.primary_frontage_street_name (Step 9b — enrich_permits)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 234361
+            },
+            {
+              "metric": "permits.lot_size_confidence (Step 9b — enrich_permits)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 240183
+            },
+            {
+              "metric": "permits.max_buildable_footprint_sqm (Step 9b — enrich_permits)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 170720
+            },
+            {
+              "metric": "permits.max_buildable_gfa_sqm (Step 9b — enrich_permits)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 170720
+            },
+            {
+              "metric": "permits.max_buildable_gfa_basis_fsi (Step 9b — enrich_permits)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 2347
+            },
+            {
+              "metric": "permits.max_buildable_gfa_basis_coverage_box (Step 9b — enrich_permits)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 162360
+            },
+            {
+              "metric": "permits.max_buildable_gfa_basis_coverage_only (Step 9b — enrich_permits)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 0
+            },
+            {
+              "metric": "permits.max_build_confidence_high (Step 9b — enrich_permits)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 23533
+            },
+            {
+              "metric": "permits.max_build_confidence_medium (Step 9b — enrich_permits)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 136359
+            },
+            {
+              "metric": "permits.max_build_confidence_low (Step 9b — enrich_permits)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 11281
+            },
+            {
+              "metric": "permits.garden_suite_fits (Step 9b — enrich_permits)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 105798
+            },
+            {
+              "metric": "permits.envelope_constrained (Step 9b — enrich_permits)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 25721
+            },
+            {
+              "metric": "permits.imagery_roof_footprint_sqm (Step 9b — enrich_permits)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 209840
+            },
+            {
+              "metric": "permits.imagery_roof_gfa_sqm (Step 9b — enrich_permits)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 209840
+            },
+            {
+              "metric": "permits.existing_structure_confidence_high (Step 9b — enrich_permits)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 191844
+            },
+            {
+              "metric": "permits.existing_structure_confidence_low (Step 9b — enrich_permits)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 48231
+            },
+            {
+              "metric": "permits.existing_greenspace_sqm (Step 9b — enrich_permits)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 209840
+            },
+            {
+              "metric": "permits.max_newbuild_coa_gfa_sqm (Step 9b — enrich_permits)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 170720
+            },
+            {
+              "metric": "permits.cur_floor_gfa_sqm (Step 9b — enrich_permits)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 209840
+            },
+            {
+              "metric": "permits.cur_pot_2story_gfa_sqm (Step 9b — enrich_permits)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 209840
+            },
+            {
+              "metric": "permits.cur_pot_3story_gfa_sqm (Step 9b — enrich_permits)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 35272
+            },
+            {
+              "metric": "permits.cur_gfa_range_basis (Step 9b — enrich_permits)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 148313
+            },
+            {
+              "metric": "permits.cur_est_kitchen_gfa_sqm (Step 9b — enrich_permits)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 209840
+            },
+            {
+              "metric": "permits.cur_est_bath_gfa_sqm (Step 9b — enrich_permits)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 209840
+            },
+            {
+              "metric": "permits.max_garage_gfa_sqm (Step 9b — enrich_permits)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 63556
+            },
+            {
+              "metric": "permits.garage_permission_as_of_right (Step 9b — enrich_permits)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 63354
+            },
+            {
+              "metric": "permits.garage_permission_coa_required (Step 9b — enrich_permits)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 202
+            },
+            {
+              "metric": "permits.opt_config_confidence (Step 9b — enrich_permits)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 170720
+            },
+            {
+              "metric": "permits.comp_count (Step 9b — enrich_permits)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 160205
+            },
+            {
+              "metric": "permits.rear_suite_type (Step 9b — enrich_permits)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 111067
+            },
+            {
+              "metric": "permits.rear_suite_permission_as_of_right (Step 9b — enrich_permits)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 89999
+            },
+            {
+              "metric": "permits.rear_suite_permission_coa_required (Step 9b — enrich_permits)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 21068
+            },
+            {
+              "metric": "permits.cost_fb_total (Step 9b — enrich_permits)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 139034
+            },
+            {
+              "metric": "permits.cost_coa_total (Step 9b — enrich_permits)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 139034
+            },
+            {
+              "metric": "permits.cost_solar_total (Step 9b — enrich_permits)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 139034
+            },
+            {
+              "metric": "permits.cost_garden_suite_total (Step 9b — enrich_permits)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 88788
+            },
+            {
+              "metric": "permits.cost_laneway_suite_total (Step 9b — enrich_permits)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 13137
+            },
+            {
+              "metric": "permits.cost_garage_total (Step 9b — enrich_permits)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 58364
+            },
+            {
+              "metric": "permits.cost_gut_total (Step 9b — enrich_permits)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 145031
+            },
+            {
+              "metric": "permits.cost_addition_total (Step 9b — enrich_permits)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 145031
+            },
+            {
+              "metric": "permits.cost_kitchen_per_sqm (Step 9b — enrich_permits)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 145031
+            },
+            {
+              "metric": "permits.cost_bath_per_sqm (Step 9b — enrich_permits)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 145031
+            },
+            {
+              "metric": "permits.cost_basement_per_sqm (Step 9b — enrich_permits)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 145031
+            },
+            {
+              "metric": "permits.cost_basement_underpin_per_sqm (Step 9b — enrich_permits)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 145031
+            },
+            {
+              "metric": "permits.max_build_fsi (Step 9b — enrich_permits)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 139034
+            },
+            {
+              "metric": "permits.coa_fsi (Step 9b — enrich_permits)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 139034
+            },
+            {
+              "metric": "permits.realized_fsi_p90 (Step 9b — enrich_permits)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 0
+            },
+            {
+              "metric": "permits.neighbourhood_id (Step 10 — link_neighbourhoods)",
+              "status": "PASS",
+              "threshold": ">= 90%",
+              "value": "94.8%"
+            },
+            {
+              "metric": "parcels.with_centroid (Step 11 — link_massing)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 486530
+            },
+            {
+              "metric": "parcel_buildings.linked_parcels (Step 11 — link_massing)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 485135
+            },
+            {
+              "metric": "parcel_buildings.is_primary (Step 11 — link_massing)",
+              "status": "PASS",
+              "threshold": ">= 90%",
+              "value": "100%"
+            },
+            {
+              "metric": "parcel_buildings.structure_type (Step 11 — link_massing)",
+              "status": "PASS",
+              "threshold": ">= 90%",
+              "value": "100%"
+            },
+            {
+              "metric": "parcel_buildings.match_type (Step 11 — link_massing)",
+              "status": "PASS",
+              "threshold": ">= 90%",
+              "value": "100%"
+            },
+            {
+              "metric": "parcel_buildings.confidence (Step 11 — link_massing)",
+              "status": "PASS",
+              "threshold": ">= 90%",
+              "value": "100%"
+            },
+            {
+              "metric": "parcel_buildings.linked_at (Step 11 — link_massing)",
+              "status": "PASS",
+              "threshold": ">= 90%",
+              "value": "100%"
+            },
+            {
+              "metric": "building_footprints.footprint_area_sqm (Step 11 — link_massing)",
+              "status": "PASS",
+              "threshold": ">= 90%",
+              "value": "100%"
+            },
+            {
+              "metric": "building_footprints.max_height_m (Step 11 — link_massing)",
+              "status": "PASS",
+              "threshold": ">= 90%",
+              "value": "100%"
+            },
+            {
+              "metric": "permits.scope_tags (non-BLD) (Step 12 — link_similar)",
+              "status": "PASS",
+              "threshold": ">= 90%",
+              "value": "100%"
+            },
+            {
+              "metric": "permit_trades.permits_with_active_trade (Step 13 — classify_permits)",
+              "status": "PASS",
+              "threshold": ">= 90%",
+              "value": "98.2%"
+            },
+            {
+              "metric": "permit_trades.tier (Step 13 — classify_permits)",
+              "status": "PASS",
+              "threshold": ">= 90%",
+              "value": "100%"
+            },
+            {
+              "metric": "permit_trades.confidence (Step 13 — classify_permits)",
+              "status": "PASS",
+              "threshold": ">= 90%",
+              "value": "100%"
+            },
+            {
+              "metric": "permit_trades.is_active (Step 13 — classify_permits)",
+              "status": "PASS",
+              "threshold": ">= 90%",
+              "value": "100%"
+            },
+            {
+              "metric": "permit_trades.phase (Step 13 — classify_permits)",
+              "status": "PASS",
+              "threshold": ">= 90%",
+              "value": "100%"
+            },
+            {
+              "metric": "permit_trades.lead_score (Step 13 — classify_permits)",
+              "status": "PASS",
+              "threshold": ">= 90%",
+              "value": "100%"
+            },
+            {
+              "metric": "permit_trades.classified_at (Step 13 — classify_permits)",
+              "status": "PASS",
+              "threshold": ">= 90%",
+              "value": "100%"
+            },
+            {
+              "metric": "cost_estimates.permits_covered (Step 14 — compute_cost_estimates)",
+              "status": "PASS",
+              "threshold": ">= 90%",
+              "value": "99.9%"
+            },
+            {
+              "metric": "cost_estimates.estimated_cost (Step 14 — compute_cost_estimates)",
+              "status": "PASS",
+              "threshold": ">= 55%",
+              "value": "60.2%"
+            },
+            {
+              "metric": "cost_estimates.cost_source (Step 14 — compute_cost_estimates)",
+              "status": "PASS",
+              "threshold": ">= 90%",
+              "value": "100%"
+            },
+            {
+              "metric": "cost_estimates.cost_tier (Step 14 — compute_cost_estimates)",
+              "status": "PASS",
+              "threshold": ">= 55%",
+              "value": "60.2%"
+            },
+            {
+              "metric": "cost_estimates.cost_range_low (Step 14 — compute_cost_estimates)",
+              "status": "PASS",
+              "threshold": ">= 55%",
+              "value": "60.2%"
+            },
+            {
+              "metric": "cost_estimates.cost_range_high (Step 14 — compute_cost_estimates)",
+              "status": "PASS",
+              "threshold": ">= 55%",
+              "value": "60.2%"
+            },
+            {
+              "metric": "cost_estimates.premium_factor (Step 14 — compute_cost_estimates)",
+              "status": "PASS",
+              "threshold": ">= 90%",
+              "value": "100%"
+            },
+            {
+              "metric": "cost_estimates.complexity_score (Step 14 — compute_cost_estimates)",
+              "status": "PASS",
+              "threshold": ">= 90%",
+              "value": "100%"
+            },
+            {
+              "metric": "cost_estimates.model_version (Step 14 — compute_cost_estimates)",
+              "status": "PASS",
+              "threshold": ">= 90%",
+              "value": "100%"
+            },
+            {
+              "metric": "cost_estimates.is_geometric_override (Step 14 — compute_cost_estimates)",
+              "status": "PASS",
+              "threshold": ">= 90%",
+              "value": "100%"
+            },
+            {
+              "metric": "cost_estimates.modeled_gfa_sqm (Step 14 — compute_cost_estimates)",
+              "status": "PASS",
+              "threshold": ">= 55%",
+              "value": "61.9%"
+            },
+            {
+              "metric": "cost_estimates.effective_area_sqm (Step 14 — compute_cost_estimates)",
+              "status": "PASS",
+              "threshold": ">= 55%",
+              "value": "61.9%"
+            },
+            {
+              "metric": "cost_estimates.trade_contract_values (Step 14 — compute_cost_estimates)",
+              "status": "PASS",
+              "threshold": ">= 90%",
+              "value": "100%"
+            },
+            {
+              "metric": "cost_estimates.computed_at (Step 14 — compute_cost_estimates)",
+              "status": "PASS",
+              "threshold": ">= 90%",
+              "value": "100%"
+            },
+            {
+              "metric": "phase_calibration.rows_with_median (Step 15 — compute_timing_calibration_v2)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 6
+            },
+            {
+              "metric": "coa_applications.linked_permit_num (Step 16 — link_coa)",
+              "status": "PASS",
+              "threshold": ">= 90%",
+              "value": "99.4%"
+            },
+            {
+              "metric": "data_quality_snapshots.today (Step 18 — refresh_snapshot)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 0
+            },
+            {
+              "metric": "permits.duplicate_pks (Step 19 — assert_data_bounds)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 0
+            },
+            {
+              "metric": "engine_health_snapshots.today (Step 20 — assert_engine_health)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 0
+            },
+            {
+              "metric": "permits.lifecycle_phase (Step 21 — classify_lifecycle_phase)",
+              "status": "PASS",
+              "threshold": ">= 90%",
+              "value": "99.5%"
+            },
+            {
+              "metric": "permits.phase_started_at (Step 21 — classify_lifecycle_phase)",
+              "status": "PASS",
+              "threshold": ">= 90%",
+              "value": "100%"
+            },
+            {
+              "metric": "permits.lifecycle_stalled (Step 21 — classify_lifecycle_phase)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 22918
+            },
+            {
+              "metric": "permits.lifecycle_classified_at (Step 21 — classify_lifecycle_phase)",
+              "status": "PASS",
+              "threshold": ">= 90%",
+              "value": "100%"
+            },
+            {
+              "metric": "coa_applications.lifecycle_phase (Step 21 — classify_lifecycle_phase)",
+              "status": "PASS",
+              "threshold": ">= 90%",
+              "value": "100%"
+            },
+            {
+              "metric": "permits.unclassified_count (Step 22 — assert_lifecycle_phase_distribution)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 1160
+            },
+            {
+              "metric": "trade_forecasts.permits_covered (Step 23 — compute_trade_forecasts)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 150186
+            },
+            {
+              "metric": "trade_forecasts.predicted_start (Step 23 — compute_trade_forecasts)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 150186
+            },
+            {
+              "metric": "trade_forecasts.urgency (classified) (Step 23 — compute_trade_forecasts)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 150186
+            },
+            {
+              "metric": "trade_forecasts.trade_slug (Step 23 — compute_trade_forecasts)",
+              "status": "PASS",
+              "threshold": ">= 90%",
+              "value": "100%"
+            },
+            {
+              "metric": "trade_forecasts.target_window (Step 23 — compute_trade_forecasts)",
+              "status": "PASS",
+              "threshold": ">= 90%",
+              "value": "100%"
+            },
+            {
+              "metric": "trade_forecasts.confidence (Step 23 — compute_trade_forecasts)",
+              "status": "PASS",
+              "threshold": ">= 90%",
+              "value": "100%"
+            },
+            {
+              "metric": "trade_forecasts.calibration_method (Step 23 — compute_trade_forecasts)",
+              "status": "PASS",
+              "threshold": ">= 90%",
+              "value": "100%"
+            },
+            {
+              "metric": "trade_forecasts.sample_size (Step 23 — compute_trade_forecasts)",
+              "status": "PASS",
+              "threshold": ">= 90%",
+              "value": "100%"
+            },
+            {
+              "metric": "trade_forecasts.median_days (Step 23 — compute_trade_forecasts)",
+              "status": "PASS",
+              "threshold": ">= 90%",
+              "value": "100%"
+            },
+            {
+              "metric": "trade_forecasts.p25_days (Step 23 — compute_trade_forecasts)",
+              "status": "PASS",
+              "threshold": ">= 90%",
+              "value": "100%"
+            },
+            {
+              "metric": "trade_forecasts.p75_days (Step 23 — compute_trade_forecasts)",
+              "status": "PASS",
+              "threshold": ">= 90%",
+              "value": "100%"
+            },
+            {
+              "metric": "trade_forecasts.opportunity_score (Step 23 — compute_trade_forecasts)",
+              "status": "WARN",
+              "threshold": ">= 90%",
+              "value": "80%"
+            },
+            {
+              "metric": "trade_forecasts.computed_at (Step 23 — compute_trade_forecasts)",
+              "status": "PASS",
+              "threshold": ">= 90%",
+              "value": "100%"
+            },
+            {
+              "metric": "trade_forecasts.opportunity_score (>0) (Step 24 — compute_opportunity_scores)",
+              "status": "WARN",
+              "threshold": ">= 90%",
+              "value": "80%"
+            },
+            {
+              "metric": "tracked_projects.active (Step 25 — update_tracked_projects)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 0
+            },
+            {
+              "metric": "lead_analytics.rows (Step 25 — update_tracked_projects)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 0
+            },
+            {
+              "metric": "entity_tracing.last_verdict (Step 26 — assert_entity_tracing)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 0
+            },
+            {
+              "metric": "lead_id_administrative_drift",
+              "status": "PASS",
+              "threshold": "0 (mig 138_a + 241 invariant)",
+              "value": 0
+            },
+            {
+              "metric": "lead_id_duplicate_groups",
+              "status": "PASS",
+              "threshold": "0 (lead_id must be unique across permits)",
+              "value": 0
+            },
+            {
+              "metric": "enriched_status_status_scope_drift",
+              "status": "WARN",
+              "threshold": "accepted-WARN while > 0 — rows whose enriched_status outlived the status that justified it. C7 (2026-08-13) closed the regeneration path at all four permits.status writer sites (load-permits.js:357, close-stale-permits.js:128/:146, src/lib/sync/process.ts). Post-C7 + the final routine C3 run, expected steady-state is 0 on EVERY chain_permits run — a single nonzero reading is a regression signal, not noise. C3 (backfill-smeared-enriched-status.js) remains the emergency clear for residuals. SELF-RETIRES at 0 — both rows disappear and the plain gate resumes. Spec 48 §4.9.",
+              "value": 5
+            },
+            {
+              "metric": "enriched_status_status_scope_drift_retighten",
+              "status": "INFO",
+              "threshold": "re-tighten condition (machine-observable): live value = 0 across a full cycle of chain_permits + chain_deep_scrapes — durable post-C7 (all four writer sites clear enriched_status on status move) + the final routine C3 run; C3 remains available as an emergency clear for any future residual.",
+              "value": 5
+            },
+            {
+              "metric": "trade_id vocab (Step 13 — classify_permits)",
+              "status": "WARN",
+              "threshold": ">= 90%",
+              "value": "30/35 (85.7%)"
+            },
+            {
+              "metric": "product_id vocab (Step 13 — classify_permits (products))",
+              "status": "PASS",
+              "threshold": ">= 90%",
+              "value": "27/27 (100%)"
+            },
+            {
+              "metric": "trade_id vocab (CoA Step 7 — classify_coa_trades)",
+              "status": "PASS",
+              "threshold": ">= 90%",
+              "value": "35/35 (100%)"
+            },
+            {
+              "metric": "neighbourhood_id vocab (Step 10 — link_neighbourhoods)",
+              "status": "PASS",
+              "threshold": ">= 90%",
+              "value": "158/158 (100%)"
+            }
+          ],
+          "verdict": "FAIL"
+        }
+      },
+      "records_new": 0,
+      "records_total": 1,
+      "records_updated": 0
+    },
+    "summary_count": 1,
+    "meta": [
+      {
+        "reads": {},
+        "writes": {}
+      }
+    ],
+    "parse_errors": [],
+    "pipeline_runs": [],
+    "stdout_lines": [
+      "{\"level\":\"INFO\",\"msg\":\"Loaded 35 trade configs from control panel\",\"tag\":\"[assert-global-coverage]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"Loaded 477 logic variables from control panel\",\"tag\":\"[assert-global-coverage]\"}",
+      "{\"context\":{\"pass_pct\":90,\"warn_pct\":70},\"level\":\"INFO\",\"msg\":\"Chain mode: permits (full profile)\",\"tag\":\"[assert-global-coverage]\"}",
+      "[assert-global-coverage] completed in <DUR>"
+    ],
+    "table_state": [],
+    "invariants": []
+  },
+  "source_fingerprint": null,
+  "fingerprint_files": [],
+  "fingerprint_skipped_reason": "no_descriptor_yet"
+}

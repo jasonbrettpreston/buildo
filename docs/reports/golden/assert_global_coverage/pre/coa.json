@@ -1,0 +1,1303 @@
+{
+  "harness": "scripts/analysis/capture-step-golden.js",
+  "spec": "docs/specs/01-pipeline/122_pipeline_step_optimization.md §5.3",
+  "step": "scripts/quality/assert-global-coverage.js",
+  "chain": "coa",
+  "git_head": "3e3ba2495802555fd2e9ff4be17f95ec1eceb6cc",
+  "exit_code": 0,
+  "signal": null,
+  "summary": {
+    "records_total": 1,
+    "records_new": 0,
+    "records_updated": 0,
+    "records_meta": {
+      "audit_table": {
+        "phase": 111,
+        "name": "Global Data Completeness Profile",
+        "verdict": "WARN",
+        "rows": [
+          {
+            "metric": "coa_applications.columns_present (CoA Step 1 — assert_schema)",
+            "value": 146,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "coa_applications.address (CoA Step 2 — load_coa)",
+            "value": "100%",
+            "threshold": ">= 90%",
+            "status": "PASS"
+          },
+          {
+            "metric": "coa_applications.ward (CoA Step 2 — load_coa)",
+            "value": "100%",
+            "threshold": ">= 90%",
+            "status": "PASS"
+          },
+          {
+            "metric": "coa_applications.decision (CoA Step 2 — load_coa)",
+            "value": "94.1%",
+            "threshold": ">= 90%",
+            "status": "PASS"
+          },
+          {
+            "metric": "coa_applications.application_number (CoA Step 2 — load_coa)",
+            "value": "100%",
+            "threshold": ">= 90%",
+            "status": "PASS"
+          },
+          {
+            "metric": "coa_applications.days_since_latest (CoA Step 3 — assert_coa_freshness)",
+            "value": 56,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "coa_applications.parcel_linked_at (CoA Step 4 — link_coa_to_parcels)",
+            "value": "100%",
+            "threshold": ">= 90%",
+            "status": "PASS"
+          },
+          {
+            "metric": "lead_parcels.coa_rows (CoA Step 4 — link_coa_to_parcels)",
+            "value": 29694,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "coa_applications.neighbourhood_id (CoA Step 4 — link_coa_to_parcels)",
+            "value": "100%",
+            "threshold": ">= 95%",
+            "status": "PASS"
+          },
+          {
+            "metric": "coa_applications.zoning_class (CoA Step 4b — enrich_coa_zoning)",
+            "value": "86.5%",
+            "threshold": ">= 80%",
+            "status": "PASS"
+          },
+          {
+            "metric": "coa_applications.zoning_enriched_at (CoA Step 4b — enrich_coa_zoning)",
+            "value": 29694,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "coa_applications.bylaw_max_coverage_pct (CoA Step 4b — enrich_coa_zoning)",
+            "value": 13489,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "coa_applications.bylaw_max_fsi (CoA Step 4b — enrich_coa_zoning)",
+            "value": 2025,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "coa_applications.bylaw_max_height_m (CoA Step 4b — enrich_coa_zoning)",
+            "value": 27073,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "coa_applications.exception_number (CoA Step 4b — enrich_coa_zoning)",
+            "value": 22374,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "coa_applications.variance_context (CoA Step 4b — enrich_coa_zoning)",
+            "value": 29694,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "coa_applications.zoning_parcel_count (CoA Step 4b — enrich_coa_zoning)",
+            "value": 29694,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "coa_applications.zoning_dominant_parcel_id (CoA Step 4b — enrich_coa_zoning)",
+            "value": 29694,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "coa_applications.zoning_dominant_parcel_method (CoA Step 4b — enrich_coa_zoning)",
+            "value": 29694,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "coa_applications.is_in_ravine_protection_area (CoA Step 4b — enrich_coa_zoning)",
+            "value": 2007,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "coa_applications.ravine_distance_m (CoA Step 4b — enrich_coa_zoning)",
+            "value": 29694,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "coa_applications.is_heritage_designated (CoA Step 4b — enrich_coa_zoning)",
+            "value": 1076,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "coa_applications.heritage_designation_type (CoA Step 4b — enrich_coa_zoning)",
+            "value": 1076,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "coa_applications.heritage_designation_date (CoA Step 4b — enrich_coa_zoning)",
+            "value": 900,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "coa_applications.is_corner_lot (CoA Step 4b — enrich_coa_zoning)",
+            "value": 4531,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "coa_applications.is_through_lot (CoA Step 4b — enrich_coa_zoning)",
+            "value": 460,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "coa_applications.abuts_laneway (CoA Step 4b — enrich_coa_zoning)",
+            "value": 5813,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "coa_applications.primary_frontage_street_name (CoA Step 4b — enrich_coa_zoning)",
+            "value": 29499,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "coa_applications.lot_size_confidence (CoA Step 4b — enrich_coa_zoning)",
+            "value": 29694,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "coa_applications.max_buildable_footprint_sqm (CoA Step 4b — enrich_coa_zoning)",
+            "value": 27383,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "coa_applications.max_buildable_gfa_sqm (CoA Step 4b — enrich_coa_zoning)",
+            "value": 27383,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "coa_applications.max_buildable_gfa_basis_fsi (CoA Step 4b — enrich_coa_zoning)",
+            "value": 208,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "coa_applications.max_buildable_gfa_basis_coverage_box (CoA Step 4b — enrich_coa_zoning)",
+            "value": 26543,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "coa_applications.max_buildable_gfa_basis_coverage_only (CoA Step 4b — enrich_coa_zoning)",
+            "value": 0,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "coa_applications.max_build_confidence_high (CoA Step 4b — enrich_coa_zoning)",
+            "value": 1777,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "coa_applications.max_build_confidence_medium (CoA Step 4b — enrich_coa_zoning)",
+            "value": 23768,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "coa_applications.max_build_confidence_low (CoA Step 4b — enrich_coa_zoning)",
+            "value": 1838,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "coa_applications.garden_suite_fits (CoA Step 4b — enrich_coa_zoning)",
+            "value": 17608,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "coa_applications.envelope_constrained (CoA Step 4b — enrich_coa_zoning)",
+            "value": 3816,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "coa_applications.imagery_roof_footprint_sqm (CoA Step 4b — enrich_coa_zoning)",
+            "value": 27431,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "coa_applications.imagery_roof_gfa_sqm (CoA Step 4b — enrich_coa_zoning)",
+            "value": 27431,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "coa_applications.existing_structure_confidence_high (CoA Step 4b — enrich_coa_zoning)",
+            "value": 24917,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "coa_applications.existing_structure_confidence_low (CoA Step 4b — enrich_coa_zoning)",
+            "value": 4769,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "coa_applications.existing_greenspace_sqm (CoA Step 4b — enrich_coa_zoning)",
+            "value": 27431,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "coa_applications.max_newbuild_coa_gfa_sqm (CoA Step 4b — enrich_coa_zoning)",
+            "value": 27383,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "coa_applications.cur_floor_gfa_sqm (CoA Step 4b — enrich_coa_zoning)",
+            "value": 27431,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "coa_applications.cur_pot_2story_gfa_sqm (CoA Step 4b — enrich_coa_zoning)",
+            "value": 27431,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "coa_applications.cur_pot_3story_gfa_sqm (CoA Step 4b — enrich_coa_zoning)",
+            "value": 5868,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "coa_applications.cur_gfa_range_basis (CoA Step 4b — enrich_coa_zoning)",
+            "value": 25458,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "coa_applications.cur_est_kitchen_gfa_sqm (CoA Step 4b — enrich_coa_zoning)",
+            "value": 27431,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "coa_applications.cur_est_bath_gfa_sqm (CoA Step 4b — enrich_coa_zoning)",
+            "value": 27431,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "coa_applications.max_garage_gfa_sqm (CoA Step 4b — enrich_coa_zoning)",
+            "value": 11527,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "coa_applications.garage_permission_as_of_right (CoA Step 4b — enrich_coa_zoning)",
+            "value": 11518,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "coa_applications.garage_permission_coa_required (CoA Step 4b — enrich_coa_zoning)",
+            "value": 9,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "coa_applications.rear_suite_type (CoA Step 4b — enrich_coa_zoning)",
+            "value": 18395,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "coa_applications.rear_suite_permission_as_of_right (CoA Step 4b — enrich_coa_zoning)",
+            "value": 16715,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "coa_applications.rear_suite_permission_coa_required (CoA Step 4b — enrich_coa_zoning)",
+            "value": 1680,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "coa_applications.opt_config_confidence (CoA Step 4b — enrich_coa_zoning)",
+            "value": 27383,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "coa_applications.comp_count (CoA Step 4b — enrich_coa_zoning)",
+            "value": 26935,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "coa_applications.cost_fb_total (CoA Step 4b — enrich_coa_zoning)",
+            "value": 25670,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "coa_applications.cost_coa_total (CoA Step 4b — enrich_coa_zoning)",
+            "value": 25670,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "coa_applications.cost_solar_total (CoA Step 4b — enrich_coa_zoning)",
+            "value": 25670,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "coa_applications.cost_garden_suite_total (CoA Step 4b — enrich_coa_zoning)",
+            "value": 16776,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "coa_applications.cost_laneway_suite_total (CoA Step 4b — enrich_coa_zoning)",
+            "value": 2102,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "coa_applications.cost_garage_total (CoA Step 4b — enrich_coa_zoning)",
+            "value": 11211,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "coa_applications.cost_gut_total (CoA Step 4b — enrich_coa_zoning)",
+            "value": 25081,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "coa_applications.cost_addition_total (CoA Step 4b — enrich_coa_zoning)",
+            "value": 25081,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "coa_applications.cost_kitchen_per_sqm (CoA Step 4b — enrich_coa_zoning)",
+            "value": 25081,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "coa_applications.cost_bath_per_sqm (CoA Step 4b — enrich_coa_zoning)",
+            "value": 25081,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "coa_applications.cost_basement_per_sqm (CoA Step 4b — enrich_coa_zoning)",
+            "value": 25081,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "coa_applications.cost_basement_underpin_per_sqm (CoA Step 4b — enrich_coa_zoning)",
+            "value": 25081,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "coa_applications.max_build_fsi (CoA Step 4b — enrich_coa_zoning)",
+            "value": 25670,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "coa_applications.coa_fsi (CoA Step 4b — enrich_coa_zoning)",
+            "value": 25670,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "coa_applications.realized_fsi_p90 (CoA Step 4b — enrich_coa_zoning)",
+            "value": 0,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "coa_applications.scope_tags (CoA Step 5 — classify_coa_scope)",
+            "value": "94.2%",
+            "threshold": ">= 90%",
+            "status": "PASS"
+          },
+          {
+            "metric": "coa_applications.scope_classified_at (CoA Step 5 — classify_coa_scope)",
+            "value": "98%",
+            "threshold": ">= 90%",
+            "status": "PASS"
+          },
+          {
+            "metric": "coa_applications.structure_type (CoA Step 5 — classify_coa_scope)",
+            "value": "53%",
+            "threshold": ">= 45%",
+            "status": "PASS"
+          },
+          {
+            "metric": "structure_type vocab (CoA Step 5 — classify_coa_scope)",
+            "value": "21/23 (91.3%)",
+            "threshold": ">= 90%",
+            "status": "PASS"
+          },
+          {
+            "metric": "coa_applications.trade_classified_at (CoA Step 6 — classify_coa_trades)",
+            "value": "94.2%",
+            "threshold": ">= 90%",
+            "status": "PASS"
+          },
+          {
+            "metric": "lead_trades.coa_rows (CoA Step 6 — classify_coa_trades)",
+            "value": 940769,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "lead_products.coa_rows (CoA Step 6 — classify_coa_trades)",
+            "value": 755432,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "coa_applications.cost_classified_at (CoA Step 7 — compute_coa_cost_estimates)",
+            "value": "100%",
+            "threshold": ">= 90%",
+            "status": "PASS"
+          },
+          {
+            "metric": "coa_applications.estimated_cost (CoA Step 7 — compute_coa_cost_estimates)",
+            "value": "61.2%",
+            "threshold": ">= 90% — accepted baseline, see coa_cost_coverage_gate_accepted",
+            "status": "WARN"
+          },
+          {
+            "metric": "coa_cost_coverage_gate_accepted",
+            "value": "61.2%",
+            "threshold": "accepted-WARN while < 90% — baseline 61.1-61.2% on 2026-08-03 (accepted; fix owned by Spec 80 Phase 4 forecast/cost reconciliation). Live value re-emitted every run; acceptance SELF-RETIRES at >= 90% (this row disappears and the plain gate resumes). Spec 48 §4.9.",
+            "status": "WARN"
+          },
+          {
+            "metric": "coa_cost_coverage_gate_accepted_retighten",
+            "value": "61.2%",
+            "threshold": "re-tighten condition (machine-observable): live value >= 90%",
+            "status": "INFO"
+          },
+          {
+            "metric": "cost_estimates.coa_rows (CoA Step 7 — compute_coa_cost_estimates)",
+            "value": 20486,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "coa_applications.linked_permit_num (CoA Step 8 — link_coa)",
+            "value": "99.4%",
+            "threshold": ">= 90%",
+            "status": "PASS"
+          },
+          {
+            "metric": "coa_applications.linked_confidence (CoA Step 8 — link_coa)",
+            "value": "100%",
+            "threshold": ">= 90%",
+            "status": "PASS"
+          },
+          {
+            "metric": "data_quality_snapshots.today (CoA Step 9 — refresh_snapshot)",
+            "value": 0,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "coa_applications.duplicate_pks (CoA Step 10 — assert_data_bounds)",
+            "value": 0,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "engine_health_snapshots.today (CoA Step 11 — assert_engine_health)",
+            "value": 0,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "coa_applications.lifecycle_phase (CoA Step 12 — classify_lifecycle_phase)",
+            "value": "100%",
+            "threshold": ">= 90%",
+            "status": "PASS"
+          },
+          {
+            "metric": "coa_applications.lifecycle_stalled (CoA Step 12 — classify_lifecycle_phase)",
+            "value": 5,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "coa_applications.lifecycle_classified_at (CoA Step 12 — classify_lifecycle_phase)",
+            "value": "100%",
+            "threshold": ">= 90%",
+            "status": "PASS"
+          },
+          {
+            "metric": "coa_applications.unclassified_count (CoA Step 13 — assert_lifecycle_phase_distribution)",
+            "value": 0,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "phase_stay_calibration.coa_rows (CoA Step 14 — compute_phase_calibration)",
+            "value": 220,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "trade_id vocab (Step 13 — classify_permits)",
+            "value": "30/35 (85.7%)",
+            "threshold": ">= 90%",
+            "status": "WARN"
+          },
+          {
+            "metric": "product_id vocab (Step 13 — classify_permits (products))",
+            "value": "27/27 (100%)",
+            "threshold": ">= 90%",
+            "status": "PASS"
+          },
+          {
+            "metric": "trade_id vocab (CoA Step 7 — classify_coa_trades)",
+            "value": "35/35 (100%)",
+            "threshold": ">= 90%",
+            "status": "PASS"
+          },
+          {
+            "metric": "neighbourhood_id vocab (Step 10 — link_neighbourhoods)",
+            "value": "158/158 (100%)",
+            "threshold": ">= 90%",
+            "status": "PASS"
+          },
+          {
+            "metric": "sys_velocity_rows_sec",
+            "value": 0.27,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "sys_duration_ms",
+            "value": 3737,
+            "threshold": null,
+            "status": "INFO"
+          }
+        ]
+      }
+    }
+  },
+  "summary_count": 1,
+  "meta": [
+    {
+      "reads": {},
+      "writes": {}
+    }
+  ],
+  "parse_errors": [],
+  "verdict": "WARN",
+  "ledger_status": [],
+  "stdout": "{\"level\":\"INFO\",\"tag\":\"[assert-global-coverage]\",\"msg\":\"Loaded 35 trade configs from control panel\"}\n{\"level\":\"INFO\",\"tag\":\"[assert-global-coverage]\",\"msg\":\"Loaded 477 logic variables from control panel\"}\n{\"level\":\"INFO\",\"tag\":\"[assert-global-coverage]\",\"msg\":\"Chain mode: coa (scoped subset)\",\"context\":{\"pass_pct\":90,\"warn_pct\":70}}\nPIPELINE_SUMMARY:{\"records_total\":1,\"records_new\":0,\"records_updated\":0,\"records_meta\":{\"audit_table\":{\"phase\":111,\"name\":\"Global Data Completeness Profile\",\"verdict\":\"WARN\",\"rows\":[{\"metric\":\"coa_applications.columns_present (CoA Step 1 — assert_schema)\",\"value\":146,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"coa_applications.address (CoA Step 2 — load_coa)\",\"value\":\"100%\",\"threshold\":\">= 90%\",\"status\":\"PASS\"},{\"metric\":\"coa_applications.ward (CoA Step 2 — load_coa)\",\"value\":\"100%\",\"threshold\":\">= 90%\",\"status\":\"PASS\"},{\"metric\":\"coa_applications.decision (CoA Step 2 — load_coa)\",\"value\":\"94.1%\",\"threshold\":\">= 90%\",\"status\":\"PASS\"},{\"metric\":\"coa_applications.application_number (CoA Step 2 — load_coa)\",\"value\":\"100%\",\"threshold\":\">= 90%\",\"status\":\"PASS\"},{\"metric\":\"coa_applications.days_since_latest (CoA Step 3 — assert_coa_freshness)\",\"value\":56,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"coa_applications.parcel_linked_at (CoA Step 4 — link_coa_to_parcels)\",\"value\":\"100%\",\"threshold\":\">= 90%\",\"status\":\"PASS\"},{\"metric\":\"lead_parcels.coa_rows (CoA Step 4 — link_coa_to_parcels)\",\"value\":29694,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"coa_applications.neighbourhood_id (CoA Step 4 — link_coa_to_parcels)\",\"value\":\"100%\",\"threshold\":\">= 95%\",\"status\":\"PASS\"},{\"metric\":\"coa_applications.zoning_class (CoA Step 4b — enrich_coa_zoning)\",\"value\":\"86.5%\",\"threshold\":\">= 80%\",\"status\":\"PASS\"},{\"metric\":\"coa_applications.zoning_enriched_at (CoA Step 4b — enrich_coa_zoning)\",\"value\":29694,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"coa_applications.bylaw_max_coverage_pct (CoA Step 4b — enrich_coa_zoning)\",\"value\":13489,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"coa_applications.bylaw_max_fsi (CoA Step 4b — enrich_coa_zoning)\",\"value\":2025,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"coa_applications.bylaw_max_height_m (CoA Step 4b — enrich_coa_zoning)\",\"value\":27073,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"coa_applications.exception_number (CoA Step 4b — enrich_coa_zoning)\",\"value\":22374,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"coa_applications.variance_context (CoA Step 4b — enrich_coa_zoning)\",\"value\":29694,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"coa_applications.zoning_parcel_count (CoA Step 4b — enrich_coa_zoning)\",\"value\":29694,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"coa_applications.zoning_dominant_parcel_id (CoA Step 4b — enrich_coa_zoning)\",\"value\":29694,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"coa_applications.zoning_dominant_parcel_method (CoA Step 4b — enrich_coa_zoning)\",\"value\":29694,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"coa_applications.is_in_ravine_protection_area (CoA Step 4b — enrich_coa_zoning)\",\"value\":2007,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"coa_applications.ravine_distance_m (CoA Step 4b — enrich_coa_zoning)\",\"value\":29694,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"coa_applications.is_heritage_designated (CoA Step 4b — enrich_coa_zoning)\",\"value\":1076,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"coa_applications.heritage_designation_type (CoA Step 4b — enrich_coa_zoning)\",\"value\":1076,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"coa_applications.heritage_designation_date (CoA Step 4b — enrich_coa_zoning)\",\"value\":900,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"coa_applications.is_corner_lot (CoA Step 4b — enrich_coa_zoning)\",\"value\":4531,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"coa_applications.is_through_lot (CoA Step 4b — enrich_coa_zoning)\",\"value\":460,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"coa_applications.abuts_laneway (CoA Step 4b — enrich_coa_zoning)\",\"value\":5813,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"coa_applications.primary_frontage_street_name (CoA Step 4b — enrich_coa_zoning)\",\"value\":29499,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"coa_applications.lot_size_confidence (CoA Step 4b — enrich_coa_zoning)\",\"value\":29694,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"coa_applications.max_buildable_footprint_sqm (CoA Step 4b — enrich_coa_zoning)\",\"value\":27383,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"coa_applications.max_buildable_gfa_sqm (CoA Step 4b — enrich_coa_zoning)\",\"value\":27383,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"coa_applications.max_buildable_gfa_basis_fsi (CoA Step 4b — enrich_coa_zoning)\",\"value\":208,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"coa_applications.max_buildable_gfa_basis_coverage_box (CoA Step 4b — enrich_coa_zoning)\",\"value\":26543,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"coa_applications.max_buildable_gfa_basis_coverage_only (CoA Step 4b — enrich_coa_zoning)\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"coa_applications.max_build_confidence_high (CoA Step 4b — enrich_coa_zoning)\",\"value\":1777,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"coa_applications.max_build_confidence_medium (CoA Step 4b — enrich_coa_zoning)\",\"value\":23768,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"coa_applications.max_build_confidence_low (CoA Step 4b — enrich_coa_zoning)\",\"value\":1838,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"coa_applications.garden_suite_fits (CoA Step 4b — enrich_coa_zoning)\",\"value\":17608,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"coa_applications.envelope_constrained (CoA Step 4b — enrich_coa_zoning)\",\"value\":3816,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"coa_applications.imagery_roof_footprint_sqm (CoA Step 4b — enrich_coa_zoning)\",\"value\":27431,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"coa_applications.imagery_roof_gfa_sqm (CoA Step 4b — enrich_coa_zoning)\",\"value\":27431,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"coa_applications.existing_structure_confidence_high (CoA Step 4b — enrich_coa_zoning)\",\"value\":24917,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"coa_applications.existing_structure_confidence_low (CoA Step 4b — enrich_coa_zoning)\",\"value\":4769,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"coa_applications.existing_greenspace_sqm (CoA Step 4b — enrich_coa_zoning)\",\"value\":27431,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"coa_applications.max_newbuild_coa_gfa_sqm (CoA Step 4b — enrich_coa_zoning)\",\"value\":27383,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"coa_applications.cur_floor_gfa_sqm (CoA Step 4b — enrich_coa_zoning)\",\"value\":27431,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"coa_applications.cur_pot_2story_gfa_sqm (CoA Step 4b — enrich_coa_zoning)\",\"value\":27431,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"coa_applications.cur_pot_3story_gfa_sqm (CoA Step 4b — enrich_coa_zoning)\",\"value\":5868,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"coa_applications.cur_gfa_range_basis (CoA Step 4b — enrich_coa_zoning)\",\"value\":25458,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"coa_applications.cur_est_kitchen_gfa_sqm (CoA Step 4b — enrich_coa_zoning)\",\"value\":27431,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"coa_applications.cur_est_bath_gfa_sqm (CoA Step 4b — enrich_coa_zoning)\",\"value\":27431,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"coa_applications.max_garage_gfa_sqm (CoA Step 4b — enrich_coa_zoning)\",\"value\":11527,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"coa_applications.garage_permission_as_of_right (CoA Step 4b — enrich_coa_zoning)\",\"value\":11518,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"coa_applications.garage_permission_coa_required (CoA Step 4b — enrich_coa_zoning)\",\"value\":9,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"coa_applications.rear_suite_type (CoA Step 4b — enrich_coa_zoning)\",\"value\":18395,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"coa_applications.rear_suite_permission_as_of_right (CoA Step 4b — enrich_coa_zoning)\",\"value\":16715,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"coa_applications.rear_suite_permission_coa_required (CoA Step 4b — enrich_coa_zoning)\",\"value\":1680,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"coa_applications.opt_config_confidence (CoA Step 4b — enrich_coa_zoning)\",\"value\":27383,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"coa_applications.comp_count (CoA Step 4b — enrich_coa_zoning)\",\"value\":26935,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"coa_applications.cost_fb_total (CoA Step 4b — enrich_coa_zoning)\",\"value\":25670,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"coa_applications.cost_coa_total (CoA Step 4b — enrich_coa_zoning)\",\"value\":25670,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"coa_applications.cost_solar_total (CoA Step 4b — enrich_coa_zoning)\",\"value\":25670,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"coa_applications.cost_garden_suite_total (CoA Step 4b — enrich_coa_zoning)\",\"value\":16776,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"coa_applications.cost_laneway_suite_total (CoA Step 4b — enrich_coa_zoning)\",\"value\":2102,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"coa_applications.cost_garage_total (CoA Step 4b — enrich_coa_zoning)\",\"value\":11211,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"coa_applications.cost_gut_total (CoA Step 4b — enrich_coa_zoning)\",\"value\":25081,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"coa_applications.cost_addition_total (CoA Step 4b — enrich_coa_zoning)\",\"value\":25081,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"coa_applications.cost_kitchen_per_sqm (CoA Step 4b — enrich_coa_zoning)\",\"value\":25081,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"coa_applications.cost_bath_per_sqm (CoA Step 4b — enrich_coa_zoning)\",\"value\":25081,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"coa_applications.cost_basement_per_sqm (CoA Step 4b — enrich_coa_zoning)\",\"value\":25081,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"coa_applications.cost_basement_underpin_per_sqm (CoA Step 4b — enrich_coa_zoning)\",\"value\":25081,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"coa_applications.max_build_fsi (CoA Step 4b — enrich_coa_zoning)\",\"value\":25670,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"coa_applications.coa_fsi (CoA Step 4b — enrich_coa_zoning)\",\"value\":25670,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"coa_applications.realized_fsi_p90 (CoA Step 4b — enrich_coa_zoning)\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"coa_applications.scope_tags (CoA Step 5 — classify_coa_scope)\",\"value\":\"94.2%\",\"threshold\":\">= 90%\",\"status\":\"PASS\"},{\"metric\":\"coa_applications.scope_classified_at (CoA Step 5 — classify_coa_scope)\",\"value\":\"98%\",\"threshold\":\">= 90%\",\"status\":\"PASS\"},{\"metric\":\"coa_applications.structure_type (CoA Step 5 — classify_coa_scope)\",\"value\":\"53%\",\"threshold\":\">= 45%\",\"status\":\"PASS\"},{\"metric\":\"structure_type vocab (CoA Step 5 — classify_coa_scope)\",\"value\":\"21/23 (91.3%)\",\"threshold\":\">= 90%\",\"status\":\"PASS\"},{\"metric\":\"coa_applications.trade_classified_at (CoA Step 6 — classify_coa_trades)\",\"value\":\"94.2%\",\"threshold\":\">= 90%\",\"status\":\"PASS\"},{\"metric\":\"lead_trades.coa_rows (CoA Step 6 — classify_coa_trades)\",\"value\":940769,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"lead_products.coa_rows (CoA Step 6 — classify_coa_trades)\",\"value\":755432,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"coa_applications.cost_classified_at (CoA Step 7 — compute_coa_cost_estimates)\",\"value\":\"100%\",\"threshold\":\">= 90%\",\"status\":\"PASS\"},{\"metric\":\"coa_applications.estimated_cost (CoA Step 7 — compute_coa_cost_estimates)\",\"value\":\"61.2%\",\"threshold\":\">= 90% — accepted baseline, see coa_cost_coverage_gate_accepted\",\"status\":\"WARN\"},{\"metric\":\"coa_cost_coverage_gate_accepted\",\"value\":\"61.2%\",\"threshold\":\"accepted-WARN while < 90% — baseline 61.1-61.2% on 2026-08-03 (accepted; fix owned by Spec 80 Phase 4 forecast/cost reconciliation). Live value re-emitted every run; acceptance SELF-RETIRES at >= 90% (this row disappears and the plain gate resumes). Spec 48 §4.9.\",\"status\":\"WARN\"},{\"metric\":\"coa_cost_coverage_gate_accepted_retighten\",\"value\":\"61.2%\",\"threshold\":\"re-tighten condition (machine-observable): live value >= 90%\",\"status\":\"INFO\"},{\"metric\":\"cost_estimates.coa_rows (CoA Step 7 — compute_coa_cost_estimates)\",\"value\":20486,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"coa_applications.linked_permit_num (CoA Step 8 — link_coa)\",\"value\":\"99.4%\",\"threshold\":\">= 90%\",\"status\":\"PASS\"},{\"metric\":\"coa_applications.linked_confidence (CoA Step 8 — link_coa)\",\"value\":\"100%\",\"threshold\":\">= 90%\",\"status\":\"PASS\"},{\"metric\":\"data_quality_snapshots.today (CoA Step 9 — refresh_snapshot)\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"coa_applications.duplicate_pks (CoA Step 10 — assert_data_bounds)\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"engine_health_snapshots.today (CoA Step 11 — assert_engine_health)\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"coa_applications.lifecycle_phase (CoA Step 12 — classify_lifecycle_phase)\",\"value\":\"100%\",\"threshold\":\">= 90%\",\"status\":\"PASS\"},{\"metric\":\"coa_applications.lifecycle_stalled (CoA Step 12 — classify_lifecycle_phase)\",\"value\":5,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"coa_applications.lifecycle_classified_at (CoA Step 12 — classify_lifecycle_phase)\",\"value\":\"100%\",\"threshold\":\">= 90%\",\"status\":\"PASS\"},{\"metric\":\"coa_applications.unclassified_count (CoA Step 13 — assert_lifecycle_phase_distribution)\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"phase_stay_calibration.coa_rows (CoA Step 14 — compute_phase_calibration)\",\"value\":220,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"trade_id vocab (Step 13 — classify_permits)\",\"value\":\"30/35 (85.7%)\",\"threshold\":\">= 90%\",\"status\":\"WARN\"},{\"metric\":\"product_id vocab (Step 13 — classify_permits (products))\",\"value\":\"27/27 (100%)\",\"threshold\":\">= 90%\",\"status\":\"PASS\"},{\"metric\":\"trade_id vocab (CoA Step 7 — classify_coa_trades)\",\"value\":\"35/35 (100%)\",\"threshold\":\">= 90%\",\"status\":\"PASS\"},{\"metric\":\"neighbourhood_id vocab (Step 10 — link_neighbourhoods)\",\"value\":\"158/158 (100%)\",\"threshold\":\">= 90%\",\"status\":\"PASS\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":0.27,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":3737,\"threshold\":null,\"status\":\"INFO\"}]}}}\nPIPELINE_META:{\"reads\":{},\"writes\":{}}\n\n[assert-global-coverage] completed in 3.7s\n",
+  "stderr": "{\"level\":\"WARN\",\"tag\":\"[assert-global-coverage]\",\"msg\":\"allocation_pct sum is 1.0744 (expected 1.0) — normalizing\"}\n{\"level\":\"WARN\",\"tag\":\"[assert-global-coverage]\",\"msg\":\"logic_variables.lifecycle_seq_band_22_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-global-coverage]\",\"msg\":\"logic_variables.lifecycle_seq_band_28_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-global-coverage]\",\"msg\":\"logic_variables.lifecycle_seq_band_30_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-global-coverage]\",\"msg\":\"logic_variables.lifecycle_seq_band_34_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-global-coverage]\",\"msg\":\"logic_variables.lifecycle_seq_band_37_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-global-coverage]\",\"msg\":\"logic_variables.lifecycle_seq_band_44_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-global-coverage]\",\"msg\":\"logic_variables.lifecycle_seq_band_47_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-global-coverage]\",\"msg\":\"logic_variables.lifecycle_seq_band_48_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-global-coverage]\",\"msg\":\"logic_variables.lifecycle_seq_band_50_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-global-coverage]\",\"msg\":\"logic_variables.lifecycle_seq_band_53_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-global-coverage]\",\"msg\":\"logic_variables.lifecycle_seq_band_54_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-global-coverage]\",\"msg\":\"logic_variables.lifecycle_seq_band_55_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-global-coverage]\",\"msg\":\"logic_variables.lifecycle_seq_band_56_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-global-coverage]\",\"msg\":\"logic_variables.lifecycle_seq_band_58_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-global-coverage]\",\"msg\":\"logic_variables.lifecycle_seq_band_65_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-global-coverage]\",\"msg\":\"logic_variables.lifecycle_seq_band_66_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-global-coverage]\",\"msg\":\"logic_variables.lifecycle_seq_band_67_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-global-coverage]\",\"msg\":\"logic_variables.lifecycle_seq_band_70_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-global-coverage]\",\"msg\":\"logic_variables.lifecycle_seq_band_71_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-global-coverage]\",\"msg\":\"logic_variables.lifecycle_seq_band_74_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-global-coverage]\",\"msg\":\"logic_variables.lifecycle_seq_band_75_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-global-coverage]\",\"msg\":\"logic_variables.lifecycle_seq_band_76_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-global-coverage]\",\"msg\":\"logic_variables.lifecycle_seq_band_77_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-global-coverage]\",\"msg\":\"logic_variables.lifecycle_seq_band_78_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-global-coverage]\",\"msg\":\"logic_variables.lifecycle_seq_band_79_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-global-coverage]\",\"msg\":\"logic_variables.lifecycle_seq_band_80_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-global-coverage]\",\"msg\":\"logic_variables.lifecycle_seq_band_81_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-global-coverage]\",\"msg\":\"logic_variables.lifecycle_seq_band_82_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-global-coverage]\",\"msg\":\"logic_variables.lifecycle_seq_band_83_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-global-coverage]\",\"msg\":\"logic_variables.lifecycle_seq_band_88_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-global-coverage]\",\"msg\":\"logic_variables.lifecycle_seq_band_91_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-global-coverage]\",\"msg\":\"logic_variables.lifecycle_seq_band_94_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-global-coverage]\",\"msg\":\"logic_variables.lifecycle_seq_band_96_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-global-coverage]\",\"msg\":\"Coverage verdict: WARN\",\"context\":{\"fail_count\":0,\"warn_count\":3}}\n",
+  "pipeline_runs": [],
+  "pipeline_runs_max_id_before": 1857,
+  "table_state": [],
+  "tables_source": "none",
+  "table_row_ceiling": 100000,
+  "table_timing": {},
+  "table_specs": {},
+  "invariants": [],
+  "invariants_file": null,
+  "db_target": "postgresql://postgres:***@127.0.0.1:54322/postgres",
+  "runtime": "node",
+  "args": [],
+  "nondeterminism": [
+    "pattern:duration_literal",
+    "row:sys_duration_ms",
+    "row:sys_velocity_rows_sec"
+  ],
+  "normalised": {
+    "step": "scripts/quality/assert-global-coverage.js",
+    "chain": "coa",
+    "exit_code": 0,
+    "summary": {
+      "records_meta": {
+        "audit_table": {
+          "name": "Global Data Completeness Profile",
+          "phase": 111,
+          "rows": [
+            {
+              "metric": "coa_applications.columns_present (CoA Step 1 — assert_schema)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 146
+            },
+            {
+              "metric": "coa_applications.address (CoA Step 2 — load_coa)",
+              "status": "PASS",
+              "threshold": ">= 90%",
+              "value": "100%"
+            },
+            {
+              "metric": "coa_applications.ward (CoA Step 2 — load_coa)",
+              "status": "PASS",
+              "threshold": ">= 90%",
+              "value": "100%"
+            },
+            {
+              "metric": "coa_applications.decision (CoA Step 2 — load_coa)",
+              "status": "PASS",
+              "threshold": ">= 90%",
+              "value": "94.1%"
+            },
+            {
+              "metric": "coa_applications.application_number (CoA Step 2 — load_coa)",
+              "status": "PASS",
+              "threshold": ">= 90%",
+              "value": "100%"
+            },
+            {
+              "metric": "coa_applications.days_since_latest (CoA Step 3 — assert_coa_freshness)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 56
+            },
+            {
+              "metric": "coa_applications.parcel_linked_at (CoA Step 4 — link_coa_to_parcels)",
+              "status": "PASS",
+              "threshold": ">= 90%",
+              "value": "100%"
+            },
+            {
+              "metric": "lead_parcels.coa_rows (CoA Step 4 — link_coa_to_parcels)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 29694
+            },
+            {
+              "metric": "coa_applications.neighbourhood_id (CoA Step 4 — link_coa_to_parcels)",
+              "status": "PASS",
+              "threshold": ">= 95%",
+              "value": "100%"
+            },
+            {
+              "metric": "coa_applications.zoning_class (CoA Step 4b — enrich_coa_zoning)",
+              "status": "PASS",
+              "threshold": ">= 80%",
+              "value": "86.5%"
+            },
+            {
+              "metric": "coa_applications.zoning_enriched_at (CoA Step 4b — enrich_coa_zoning)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 29694
+            },
+            {
+              "metric": "coa_applications.bylaw_max_coverage_pct (CoA Step 4b — enrich_coa_zoning)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 13489
+            },
+            {
+              "metric": "coa_applications.bylaw_max_fsi (CoA Step 4b — enrich_coa_zoning)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 2025
+            },
+            {
+              "metric": "coa_applications.bylaw_max_height_m (CoA Step 4b — enrich_coa_zoning)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 27073
+            },
+            {
+              "metric": "coa_applications.exception_number (CoA Step 4b — enrich_coa_zoning)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 22374
+            },
+            {
+              "metric": "coa_applications.variance_context (CoA Step 4b — enrich_coa_zoning)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 29694
+            },
+            {
+              "metric": "coa_applications.zoning_parcel_count (CoA Step 4b — enrich_coa_zoning)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 29694
+            },
+            {
+              "metric": "coa_applications.zoning_dominant_parcel_id (CoA Step 4b — enrich_coa_zoning)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 29694
+            },
+            {
+              "metric": "coa_applications.zoning_dominant_parcel_method (CoA Step 4b — enrich_coa_zoning)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 29694
+            },
+            {
+              "metric": "coa_applications.is_in_ravine_protection_area (CoA Step 4b — enrich_coa_zoning)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 2007
+            },
+            {
+              "metric": "coa_applications.ravine_distance_m (CoA Step 4b — enrich_coa_zoning)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 29694
+            },
+            {
+              "metric": "coa_applications.is_heritage_designated (CoA Step 4b — enrich_coa_zoning)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 1076
+            },
+            {
+              "metric": "coa_applications.heritage_designation_type (CoA Step 4b — enrich_coa_zoning)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 1076
+            },
+            {
+              "metric": "coa_applications.heritage_designation_date (CoA Step 4b — enrich_coa_zoning)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 900
+            },
+            {
+              "metric": "coa_applications.is_corner_lot (CoA Step 4b — enrich_coa_zoning)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 4531
+            },
+            {
+              "metric": "coa_applications.is_through_lot (CoA Step 4b — enrich_coa_zoning)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 460
+            },
+            {
+              "metric": "coa_applications.abuts_laneway (CoA Step 4b — enrich_coa_zoning)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 5813
+            },
+            {
+              "metric": "coa_applications.primary_frontage_street_name (CoA Step 4b — enrich_coa_zoning)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 29499
+            },
+            {
+              "metric": "coa_applications.lot_size_confidence (CoA Step 4b — enrich_coa_zoning)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 29694
+            },
+            {
+              "metric": "coa_applications.max_buildable_footprint_sqm (CoA Step 4b — enrich_coa_zoning)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 27383
+            },
+            {
+              "metric": "coa_applications.max_buildable_gfa_sqm (CoA Step 4b — enrich_coa_zoning)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 27383
+            },
+            {
+              "metric": "coa_applications.max_buildable_gfa_basis_fsi (CoA Step 4b — enrich_coa_zoning)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 208
+            },
+            {
+              "metric": "coa_applications.max_buildable_gfa_basis_coverage_box (CoA Step 4b — enrich_coa_zoning)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 26543
+            },
+            {
+              "metric": "coa_applications.max_buildable_gfa_basis_coverage_only (CoA Step 4b — enrich_coa_zoning)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 0
+            },
+            {
+              "metric": "coa_applications.max_build_confidence_high (CoA Step 4b — enrich_coa_zoning)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 1777
+            },
+            {
+              "metric": "coa_applications.max_build_confidence_medium (CoA Step 4b — enrich_coa_zoning)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 23768
+            },
+            {
+              "metric": "coa_applications.max_build_confidence_low (CoA Step 4b — enrich_coa_zoning)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 1838
+            },
+            {
+              "metric": "coa_applications.garden_suite_fits (CoA Step 4b — enrich_coa_zoning)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 17608
+            },
+            {
+              "metric": "coa_applications.envelope_constrained (CoA Step 4b — enrich_coa_zoning)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 3816
+            },
+            {
+              "metric": "coa_applications.imagery_roof_footprint_sqm (CoA Step 4b — enrich_coa_zoning)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 27431
+            },
+            {
+              "metric": "coa_applications.imagery_roof_gfa_sqm (CoA Step 4b — enrich_coa_zoning)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 27431
+            },
+            {
+              "metric": "coa_applications.existing_structure_confidence_high (CoA Step 4b — enrich_coa_zoning)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 24917
+            },
+            {
+              "metric": "coa_applications.existing_structure_confidence_low (CoA Step 4b — enrich_coa_zoning)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 4769
+            },
+            {
+              "metric": "coa_applications.existing_greenspace_sqm (CoA Step 4b — enrich_coa_zoning)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 27431
+            },
+            {
+              "metric": "coa_applications.max_newbuild_coa_gfa_sqm (CoA Step 4b — enrich_coa_zoning)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 27383
+            },
+            {
+              "metric": "coa_applications.cur_floor_gfa_sqm (CoA Step 4b — enrich_coa_zoning)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 27431
+            },
+            {
+              "metric": "coa_applications.cur_pot_2story_gfa_sqm (CoA Step 4b — enrich_coa_zoning)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 27431
+            },
+            {
+              "metric": "coa_applications.cur_pot_3story_gfa_sqm (CoA Step 4b — enrich_coa_zoning)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 5868
+            },
+            {
+              "metric": "coa_applications.cur_gfa_range_basis (CoA Step 4b — enrich_coa_zoning)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 25458
+            },
+            {
+              "metric": "coa_applications.cur_est_kitchen_gfa_sqm (CoA Step 4b — enrich_coa_zoning)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 27431
+            },
+            {
+              "metric": "coa_applications.cur_est_bath_gfa_sqm (CoA Step 4b — enrich_coa_zoning)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 27431
+            },
+            {
+              "metric": "coa_applications.max_garage_gfa_sqm (CoA Step 4b — enrich_coa_zoning)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 11527
+            },
+            {
+              "metric": "coa_applications.garage_permission_as_of_right (CoA Step 4b — enrich_coa_zoning)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 11518
+            },
+            {
+              "metric": "coa_applications.garage_permission_coa_required (CoA Step 4b — enrich_coa_zoning)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 9
+            },
+            {
+              "metric": "coa_applications.rear_suite_type (CoA Step 4b — enrich_coa_zoning)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 18395
+            },
+            {
+              "metric": "coa_applications.rear_suite_permission_as_of_right (CoA Step 4b — enrich_coa_zoning)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 16715
+            },
+            {
+              "metric": "coa_applications.rear_suite_permission_coa_required (CoA Step 4b — enrich_coa_zoning)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 1680
+            },
+            {
+              "metric": "coa_applications.opt_config_confidence (CoA Step 4b — enrich_coa_zoning)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 27383
+            },
+            {
+              "metric": "coa_applications.comp_count (CoA Step 4b — enrich_coa_zoning)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 26935
+            },
+            {
+              "metric": "coa_applications.cost_fb_total (CoA Step 4b — enrich_coa_zoning)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 25670
+            },
+            {
+              "metric": "coa_applications.cost_coa_total (CoA Step 4b — enrich_coa_zoning)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 25670
+            },
+            {
+              "metric": "coa_applications.cost_solar_total (CoA Step 4b — enrich_coa_zoning)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 25670
+            },
+            {
+              "metric": "coa_applications.cost_garden_suite_total (CoA Step 4b — enrich_coa_zoning)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 16776
+            },
+            {
+              "metric": "coa_applications.cost_laneway_suite_total (CoA Step 4b — enrich_coa_zoning)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 2102
+            },
+            {
+              "metric": "coa_applications.cost_garage_total (CoA Step 4b — enrich_coa_zoning)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 11211
+            },
+            {
+              "metric": "coa_applications.cost_gut_total (CoA Step 4b — enrich_coa_zoning)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 25081
+            },
+            {
+              "metric": "coa_applications.cost_addition_total (CoA Step 4b — enrich_coa_zoning)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 25081
+            },
+            {
+              "metric": "coa_applications.cost_kitchen_per_sqm (CoA Step 4b — enrich_coa_zoning)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 25081
+            },
+            {
+              "metric": "coa_applications.cost_bath_per_sqm (CoA Step 4b — enrich_coa_zoning)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 25081
+            },
+            {
+              "metric": "coa_applications.cost_basement_per_sqm (CoA Step 4b — enrich_coa_zoning)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 25081
+            },
+            {
+              "metric": "coa_applications.cost_basement_underpin_per_sqm (CoA Step 4b — enrich_coa_zoning)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 25081
+            },
+            {
+              "metric": "coa_applications.max_build_fsi (CoA Step 4b — enrich_coa_zoning)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 25670
+            },
+            {
+              "metric": "coa_applications.coa_fsi (CoA Step 4b — enrich_coa_zoning)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 25670
+            },
+            {
+              "metric": "coa_applications.realized_fsi_p90 (CoA Step 4b — enrich_coa_zoning)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 0
+            },
+            {
+              "metric": "coa_applications.scope_tags (CoA Step 5 — classify_coa_scope)",
+              "status": "PASS",
+              "threshold": ">= 90%",
+              "value": "94.2%"
+            },
+            {
+              "metric": "coa_applications.scope_classified_at (CoA Step 5 — classify_coa_scope)",
+              "status": "PASS",
+              "threshold": ">= 90%",
+              "value": "98%"
+            },
+            {
+              "metric": "coa_applications.structure_type (CoA Step 5 — classify_coa_scope)",
+              "status": "PASS",
+              "threshold": ">= 45%",
+              "value": "53%"
+            },
+            {
+              "metric": "structure_type vocab (CoA Step 5 — classify_coa_scope)",
+              "status": "PASS",
+              "threshold": ">= 90%",
+              "value": "21/23 (91.3%)"
+            },
+            {
+              "metric": "coa_applications.trade_classified_at (CoA Step 6 — classify_coa_trades)",
+              "status": "PASS",
+              "threshold": ">= 90%",
+              "value": "94.2%"
+            },
+            {
+              "metric": "lead_trades.coa_rows (CoA Step 6 — classify_coa_trades)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 940769
+            },
+            {
+              "metric": "lead_products.coa_rows (CoA Step 6 — classify_coa_trades)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 755432
+            },
+            {
+              "metric": "coa_applications.cost_classified_at (CoA Step 7 — compute_coa_cost_estimates)",
+              "status": "PASS",
+              "threshold": ">= 90%",
+              "value": "100%"
+            },
+            {
+              "metric": "coa_applications.estimated_cost (CoA Step 7 — compute_coa_cost_estimates)",
+              "status": "WARN",
+              "threshold": ">= 90% — accepted baseline, see coa_cost_coverage_gate_accepted",
+              "value": "61.2%"
+            },
+            {
+              "metric": "coa_cost_coverage_gate_accepted",
+              "status": "WARN",
+              "threshold": "accepted-WARN while < 90% — baseline 61.1-61.2% on 2026-08-03 (accepted; fix owned by Spec 80 Phase 4 forecast/cost reconciliation). Live value re-emitted every run; acceptance SELF-RETIRES at >= 90% (this row disappears and the plain gate resumes). Spec 48 §4.9.",
+              "value": "61.2%"
+            },
+            {
+              "metric": "coa_cost_coverage_gate_accepted_retighten",
+              "status": "INFO",
+              "threshold": "re-tighten condition (machine-observable): live value >= 90%",
+              "value": "61.2%"
+            },
+            {
+              "metric": "cost_estimates.coa_rows (CoA Step 7 — compute_coa_cost_estimates)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 20486
+            },
+            {
+              "metric": "coa_applications.linked_permit_num (CoA Step 8 — link_coa)",
+              "status": "PASS",
+              "threshold": ">= 90%",
+              "value": "99.4%"
+            },
+            {
+              "metric": "coa_applications.linked_confidence (CoA Step 8 — link_coa)",
+              "status": "PASS",
+              "threshold": ">= 90%",
+              "value": "100%"
+            },
+            {
+              "metric": "data_quality_snapshots.today (CoA Step 9 — refresh_snapshot)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 0
+            },
+            {
+              "metric": "coa_applications.duplicate_pks (CoA Step 10 — assert_data_bounds)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 0
+            },
+            {
+              "metric": "engine_health_snapshots.today (CoA Step 11 — assert_engine_health)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 0
+            },
+            {
+              "metric": "coa_applications.lifecycle_phase (CoA Step 12 — classify_lifecycle_phase)",
+              "status": "PASS",
+              "threshold": ">= 90%",
+              "value": "100%"
+            },
+            {
+              "metric": "coa_applications.lifecycle_stalled (CoA Step 12 — classify_lifecycle_phase)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 5
+            },
+            {
+              "metric": "coa_applications.lifecycle_classified_at (CoA Step 12 — classify_lifecycle_phase)",
+              "status": "PASS",
+              "threshold": ">= 90%",
+              "value": "100%"
+            },
+            {
+              "metric": "coa_applications.unclassified_count (CoA Step 13 — assert_lifecycle_phase_distribution)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 0
+            },
+            {
+              "metric": "phase_stay_calibration.coa_rows (CoA Step 14 — compute_phase_calibration)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 220
+            },
+            {
+              "metric": "trade_id vocab (Step 13 — classify_permits)",
+              "status": "WARN",
+              "threshold": ">= 90%",
+              "value": "30/35 (85.7%)"
+            },
+            {
+              "metric": "product_id vocab (Step 13 — classify_permits (products))",
+              "status": "PASS",
+              "threshold": ">= 90%",
+              "value": "27/27 (100%)"
+            },
+            {
+              "metric": "trade_id vocab (CoA Step 7 — classify_coa_trades)",
+              "status": "PASS",
+              "threshold": ">= 90%",
+              "value": "35/35 (100%)"
+            },
+            {
+              "metric": "neighbourhood_id vocab (Step 10 — link_neighbourhoods)",
+              "status": "PASS",
+              "threshold": ">= 90%",
+              "value": "158/158 (100%)"
+            }
+          ],
+          "verdict": "WARN"
+        }
+      },
+      "records_new": 0,
+      "records_total": 1,
+      "records_updated": 0
+    },
+    "summary_count": 1,
+    "meta": [
+      {
+        "reads": {},
+        "writes": {}
+      }
+    ],
+    "parse_errors": [],
+    "pipeline_runs": [],
+    "stdout_lines": [
+      "{\"level\":\"INFO\",\"msg\":\"Loaded 35 trade configs from control panel\",\"tag\":\"[assert-global-coverage]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"Loaded 477 logic variables from control panel\",\"tag\":\"[assert-global-coverage]\"}",
+      "{\"context\":{\"pass_pct\":90,\"warn_pct\":70},\"level\":\"INFO\",\"msg\":\"Chain mode: coa (scoped subset)\",\"tag\":\"[assert-global-coverage]\"}",
+      "[assert-global-coverage] completed in <DUR>"
+    ],
+    "table_state": [],
+    "invariants": []
+  },
+  "source_fingerprint": null,
+  "fingerprint_files": [],
+  "fingerprint_skipped_reason": "no_descriptor_yet"
+}

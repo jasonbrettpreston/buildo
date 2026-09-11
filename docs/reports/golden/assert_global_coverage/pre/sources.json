@@ -1,0 +1,403 @@
+{
+  "harness": "scripts/analysis/capture-step-golden.js",
+  "spec": "docs/specs/01-pipeline/122_pipeline_step_optimization.md §5.3",
+  "step": "scripts/quality/assert-global-coverage.js",
+  "chain": "sources",
+  "git_head": "3e3ba2495802555fd2e9ff4be17f95ec1eceb6cc",
+  "exit_code": 0,
+  "signal": null,
+  "summary": {
+    "records_total": 1,
+    "records_new": 0,
+    "records_updated": 0,
+    "records_meta": {
+      "audit_table": {
+        "phase": 111,
+        "name": "Global Data Completeness Profile",
+        "verdict": "PASS",
+        "rows": [
+          {
+            "metric": "parcels.zoning_class (Sources Step — enrich_parcels)",
+            "value": "96.6%",
+            "threshold": ">= 90%",
+            "status": "PASS"
+          },
+          {
+            "metric": "parcels.max_buildable_footprint_sqm (residential w/ building) (Sources Step — enrich_parcels)",
+            "value": "94%",
+            "threshold": ">= 88%",
+            "status": "PASS"
+          },
+          {
+            "metric": "parcels.max_buildable_gfa_sqm (residential w/ building) (Sources Step — enrich_parcels)",
+            "value": "94%",
+            "threshold": ">= 88%",
+            "status": "PASS"
+          },
+          {
+            "metric": "parcels.max_build_stories (residential w/ building) (Sources Step — enrich_parcels)",
+            "value": "94%",
+            "threshold": ">= 88%",
+            "status": "PASS"
+          },
+          {
+            "metric": "parcels.opt_aor_gfa_sqm (residential w/ building) (Sources Step — enrich_parcels)",
+            "value": "94%",
+            "threshold": ">= 88%",
+            "status": "PASS"
+          },
+          {
+            "metric": "parcels.bylaw_max_fsi (Sources Step — enrich_parcels)",
+            "value": 24638,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "parcels.opt_config_confidence (Sources Step — enrich_parcels)",
+            "value": 442244,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "parcels.opt_coa_gfa_sqm (Sources Step — enrich_parcels)",
+            "value": 442244,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "parcels.comp_count (Sources Step — enrich_parcels)",
+            "value": 430404,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "parcels.neighbourhood_id (Sources Step — enrich_parcels)",
+            "value": 486385,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "parcels.cost_fb_total (Sources Step — enrich_parcels)",
+            "value": 424123,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "parcels.envelope_constrained (TRUE) (Sources Step — enrich_parcels)",
+            "value": 67815,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "parcels.envelope_constraint_reason='lot_too_narrow' (Sources Step — enrich_parcels)",
+            "value": 31890,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "parcels.envelope_constraint_reason='lot_too_large' (Sources Step — enrich_parcels)",
+            "value": 18742,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "parcels.envelope_constraint_reason='ravine_constrained' (Sources Step — enrich_parcels)",
+            "value": 14005,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "parcels.envelope_constraint_reason='ravine' (Sources Step — enrich_parcels)",
+            "value": 12286,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "parcels.envelope_constraint_reason='lot_too_small' (Sources Step — enrich_parcels)",
+            "value": 7695,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "parcels.envelope_constraint_reason='heritage' (Sources Step — enrich_parcels)",
+            "value": 5138,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "parcels.envelope_constraint_reason='heritage_footprint_exceeds_lot' (Sources Step — enrich_parcels)",
+            "value": 3836,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "parcels.envelope_constraint_reason='setback_exceeds_lot' (Sources Step — enrich_parcels)",
+            "value": 656,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "parcels.envelope_constraint_reason='ambiguous_zone' (Sources Step — enrich_parcels)",
+            "value": 194,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "parcels.envelope_constraint_reason='low_lot_confidence' (Sources Step — enrich_parcels)",
+            "value": 4,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "parcels.envelope_constraint_reason='heritage_no_massing' (Sources Step — enrich_parcels)",
+            "value": 4,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "parcels.parcel_cost_menu (residential w/ building) (Sources Step — compute_parcel_cost_estimates)",
+            "value": "100%",
+            "threshold": ">= 85%",
+            "status": "PASS"
+          },
+          {
+            "metric": "parcels.parcel_cost_menu (any residential) (Sources Step — compute_parcel_cost_estimates)",
+            "value": 437279,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "sys_velocity_rows_sec",
+            "value": 0.11,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "sys_duration_ms",
+            "value": 8822,
+            "threshold": null,
+            "status": "INFO"
+          }
+        ]
+      }
+    }
+  },
+  "summary_count": 1,
+  "meta": [
+    {
+      "reads": {},
+      "writes": {}
+    }
+  ],
+  "parse_errors": [],
+  "verdict": "PASS",
+  "ledger_status": [],
+  "stdout": "{\"level\":\"INFO\",\"tag\":\"[assert-global-coverage]\",\"msg\":\"Loaded 35 trade configs from control panel\"}\n{\"level\":\"INFO\",\"tag\":\"[assert-global-coverage]\",\"msg\":\"Loaded 477 logic variables from control panel\"}\n{\"level\":\"INFO\",\"tag\":\"[assert-global-coverage]\",\"msg\":\"Chain mode: sources (parcels profile)\",\"context\":{\"pass_pct\":90,\"warn_pct\":70}}\nPIPELINE_SUMMARY:{\"records_total\":1,\"records_new\":0,\"records_updated\":0,\"records_meta\":{\"audit_table\":{\"phase\":111,\"name\":\"Global Data Completeness Profile\",\"verdict\":\"PASS\",\"rows\":[{\"metric\":\"parcels.zoning_class (Sources Step — enrich_parcels)\",\"value\":\"96.6%\",\"threshold\":\">= 90%\",\"status\":\"PASS\"},{\"metric\":\"parcels.max_buildable_footprint_sqm (residential w/ building) (Sources Step — enrich_parcels)\",\"value\":\"94%\",\"threshold\":\">= 88%\",\"status\":\"PASS\"},{\"metric\":\"parcels.max_buildable_gfa_sqm (residential w/ building) (Sources Step — enrich_parcels)\",\"value\":\"94%\",\"threshold\":\">= 88%\",\"status\":\"PASS\"},{\"metric\":\"parcels.max_build_stories (residential w/ building) (Sources Step — enrich_parcels)\",\"value\":\"94%\",\"threshold\":\">= 88%\",\"status\":\"PASS\"},{\"metric\":\"parcels.opt_aor_gfa_sqm (residential w/ building) (Sources Step — enrich_parcels)\",\"value\":\"94%\",\"threshold\":\">= 88%\",\"status\":\"PASS\"},{\"metric\":\"parcels.bylaw_max_fsi (Sources Step — enrich_parcels)\",\"value\":24638,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"parcels.opt_config_confidence (Sources Step — enrich_parcels)\",\"value\":442244,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"parcels.opt_coa_gfa_sqm (Sources Step — enrich_parcels)\",\"value\":442244,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"parcels.comp_count (Sources Step — enrich_parcels)\",\"value\":430404,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"parcels.neighbourhood_id (Sources Step — enrich_parcels)\",\"value\":486385,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"parcels.cost_fb_total (Sources Step — enrich_parcels)\",\"value\":424123,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"parcels.envelope_constrained (TRUE) (Sources Step — enrich_parcels)\",\"value\":67815,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"parcels.envelope_constraint_reason='lot_too_narrow' (Sources Step — enrich_parcels)\",\"value\":31890,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"parcels.envelope_constraint_reason='lot_too_large' (Sources Step — enrich_parcels)\",\"value\":18742,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"parcels.envelope_constraint_reason='ravine_constrained' (Sources Step — enrich_parcels)\",\"value\":14005,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"parcels.envelope_constraint_reason='ravine' (Sources Step — enrich_parcels)\",\"value\":12286,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"parcels.envelope_constraint_reason='lot_too_small' (Sources Step — enrich_parcels)\",\"value\":7695,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"parcels.envelope_constraint_reason='heritage' (Sources Step — enrich_parcels)\",\"value\":5138,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"parcels.envelope_constraint_reason='heritage_footprint_exceeds_lot' (Sources Step — enrich_parcels)\",\"value\":3836,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"parcels.envelope_constraint_reason='setback_exceeds_lot' (Sources Step — enrich_parcels)\",\"value\":656,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"parcels.envelope_constraint_reason='ambiguous_zone' (Sources Step — enrich_parcels)\",\"value\":194,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"parcels.envelope_constraint_reason='low_lot_confidence' (Sources Step — enrich_parcels)\",\"value\":4,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"parcels.envelope_constraint_reason='heritage_no_massing' (Sources Step — enrich_parcels)\",\"value\":4,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"parcels.parcel_cost_menu (residential w/ building) (Sources Step — compute_parcel_cost_estimates)\",\"value\":\"100%\",\"threshold\":\">= 85%\",\"status\":\"PASS\"},{\"metric\":\"parcels.parcel_cost_menu (any residential) (Sources Step — compute_parcel_cost_estimates)\",\"value\":437279,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":0.11,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":8822,\"threshold\":null,\"status\":\"INFO\"}]}}}\nPIPELINE_META:{\"reads\":{},\"writes\":{}}\n\n[assert-global-coverage] completed in 8.8s\n",
+  "stderr": "{\"level\":\"WARN\",\"tag\":\"[assert-global-coverage]\",\"msg\":\"allocation_pct sum is 1.0744 (expected 1.0) — normalizing\"}\n{\"level\":\"WARN\",\"tag\":\"[assert-global-coverage]\",\"msg\":\"logic_variables.lifecycle_seq_band_22_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-global-coverage]\",\"msg\":\"logic_variables.lifecycle_seq_band_28_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-global-coverage]\",\"msg\":\"logic_variables.lifecycle_seq_band_30_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-global-coverage]\",\"msg\":\"logic_variables.lifecycle_seq_band_34_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-global-coverage]\",\"msg\":\"logic_variables.lifecycle_seq_band_37_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-global-coverage]\",\"msg\":\"logic_variables.lifecycle_seq_band_44_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-global-coverage]\",\"msg\":\"logic_variables.lifecycle_seq_band_47_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-global-coverage]\",\"msg\":\"logic_variables.lifecycle_seq_band_48_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-global-coverage]\",\"msg\":\"logic_variables.lifecycle_seq_band_50_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-global-coverage]\",\"msg\":\"logic_variables.lifecycle_seq_band_53_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-global-coverage]\",\"msg\":\"logic_variables.lifecycle_seq_band_54_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-global-coverage]\",\"msg\":\"logic_variables.lifecycle_seq_band_55_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-global-coverage]\",\"msg\":\"logic_variables.lifecycle_seq_band_56_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-global-coverage]\",\"msg\":\"logic_variables.lifecycle_seq_band_58_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-global-coverage]\",\"msg\":\"logic_variables.lifecycle_seq_band_65_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-global-coverage]\",\"msg\":\"logic_variables.lifecycle_seq_band_66_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-global-coverage]\",\"msg\":\"logic_variables.lifecycle_seq_band_67_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-global-coverage]\",\"msg\":\"logic_variables.lifecycle_seq_band_70_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-global-coverage]\",\"msg\":\"logic_variables.lifecycle_seq_band_71_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-global-coverage]\",\"msg\":\"logic_variables.lifecycle_seq_band_74_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-global-coverage]\",\"msg\":\"logic_variables.lifecycle_seq_band_75_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-global-coverage]\",\"msg\":\"logic_variables.lifecycle_seq_band_76_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-global-coverage]\",\"msg\":\"logic_variables.lifecycle_seq_band_77_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-global-coverage]\",\"msg\":\"logic_variables.lifecycle_seq_band_78_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-global-coverage]\",\"msg\":\"logic_variables.lifecycle_seq_band_79_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-global-coverage]\",\"msg\":\"logic_variables.lifecycle_seq_band_80_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-global-coverage]\",\"msg\":\"logic_variables.lifecycle_seq_band_81_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-global-coverage]\",\"msg\":\"logic_variables.lifecycle_seq_band_82_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-global-coverage]\",\"msg\":\"logic_variables.lifecycle_seq_band_83_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-global-coverage]\",\"msg\":\"logic_variables.lifecycle_seq_band_88_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-global-coverage]\",\"msg\":\"logic_variables.lifecycle_seq_band_91_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-global-coverage]\",\"msg\":\"logic_variables.lifecycle_seq_band_94_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-global-coverage]\",\"msg\":\"logic_variables.lifecycle_seq_band_96_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n",
+  "pipeline_runs": [],
+  "pipeline_runs_max_id_before": 1857,
+  "table_state": [],
+  "tables_source": "none",
+  "table_row_ceiling": 100000,
+  "table_timing": {},
+  "table_specs": {},
+  "invariants": [],
+  "invariants_file": null,
+  "db_target": "postgresql://postgres:***@127.0.0.1:54322/postgres",
+  "runtime": "node",
+  "args": [],
+  "nondeterminism": [
+    "pattern:duration_literal",
+    "row:sys_duration_ms",
+    "row:sys_velocity_rows_sec"
+  ],
+  "normalised": {
+    "step": "scripts/quality/assert-global-coverage.js",
+    "chain": "sources",
+    "exit_code": 0,
+    "summary": {
+      "records_meta": {
+        "audit_table": {
+          "name": "Global Data Completeness Profile",
+          "phase": 111,
+          "rows": [
+            {
+              "metric": "parcels.zoning_class (Sources Step — enrich_parcels)",
+              "status": "PASS",
+              "threshold": ">= 90%",
+              "value": "96.6%"
+            },
+            {
+              "metric": "parcels.max_buildable_footprint_sqm (residential w/ building) (Sources Step — enrich_parcels)",
+              "status": "PASS",
+              "threshold": ">= 88%",
+              "value": "94%"
+            },
+            {
+              "metric": "parcels.max_buildable_gfa_sqm (residential w/ building) (Sources Step — enrich_parcels)",
+              "status": "PASS",
+              "threshold": ">= 88%",
+              "value": "94%"
+            },
+            {
+              "metric": "parcels.max_build_stories (residential w/ building) (Sources Step — enrich_parcels)",
+              "status": "PASS",
+              "threshold": ">= 88%",
+              "value": "94%"
+            },
+            {
+              "metric": "parcels.opt_aor_gfa_sqm (residential w/ building) (Sources Step — enrich_parcels)",
+              "status": "PASS",
+              "threshold": ">= 88%",
+              "value": "94%"
+            },
+            {
+              "metric": "parcels.bylaw_max_fsi (Sources Step — enrich_parcels)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 24638
+            },
+            {
+              "metric": "parcels.opt_config_confidence (Sources Step — enrich_parcels)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 442244
+            },
+            {
+              "metric": "parcels.opt_coa_gfa_sqm (Sources Step — enrich_parcels)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 442244
+            },
+            {
+              "metric": "parcels.comp_count (Sources Step — enrich_parcels)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 430404
+            },
+            {
+              "metric": "parcels.neighbourhood_id (Sources Step — enrich_parcels)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 486385
+            },
+            {
+              "metric": "parcels.cost_fb_total (Sources Step — enrich_parcels)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 424123
+            },
+            {
+              "metric": "parcels.envelope_constrained (TRUE) (Sources Step — enrich_parcels)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 67815
+            },
+            {
+              "metric": "parcels.envelope_constraint_reason='lot_too_narrow' (Sources Step — enrich_parcels)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 31890
+            },
+            {
+              "metric": "parcels.envelope_constraint_reason='lot_too_large' (Sources Step — enrich_parcels)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 18742
+            },
+            {
+              "metric": "parcels.envelope_constraint_reason='ravine_constrained' (Sources Step — enrich_parcels)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 14005
+            },
+            {
+              "metric": "parcels.envelope_constraint_reason='ravine' (Sources Step — enrich_parcels)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 12286
+            },
+            {
+              "metric": "parcels.envelope_constraint_reason='lot_too_small' (Sources Step — enrich_parcels)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 7695
+            },
+            {
+              "metric": "parcels.envelope_constraint_reason='heritage' (Sources Step — enrich_parcels)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 5138
+            },
+            {
+              "metric": "parcels.envelope_constraint_reason='heritage_footprint_exceeds_lot' (Sources Step — enrich_parcels)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 3836
+            },
+            {
+              "metric": "parcels.envelope_constraint_reason='setback_exceeds_lot' (Sources Step — enrich_parcels)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 656
+            },
+            {
+              "metric": "parcels.envelope_constraint_reason='ambiguous_zone' (Sources Step — enrich_parcels)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 194
+            },
+            {
+              "metric": "parcels.envelope_constraint_reason='low_lot_confidence' (Sources Step — enrich_parcels)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 4
+            },
+            {
+              "metric": "parcels.envelope_constraint_reason='heritage_no_massing' (Sources Step — enrich_parcels)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 4
+            },
+            {
+              "metric": "parcels.parcel_cost_menu (residential w/ building) (Sources Step — compute_parcel_cost_estimates)",
+              "status": "PASS",
+              "threshold": ">= 85%",
+              "value": "100%"
+            },
+            {
+              "metric": "parcels.parcel_cost_menu (any residential) (Sources Step — compute_parcel_cost_estimates)",
+              "status": "INFO",
+              "threshold": null,
+              "value": 437279
+            }
+          ],
+          "verdict": "PASS"
+        }
+      },
+      "records_new": 0,
+      "records_total": 1,
+      "records_updated": 0
+    },
+    "summary_count": 1,
+    "meta": [
+      {
+        "reads": {},
+        "writes": {}
+      }
+    ],
+    "parse_errors": [],
+    "pipeline_runs": [],
+    "stdout_lines": [
+      "{\"level\":\"INFO\",\"msg\":\"Loaded 35 trade configs from control panel\",\"tag\":\"[assert-global-coverage]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"Loaded 477 logic variables from control panel\",\"tag\":\"[assert-global-coverage]\"}",
+      "{\"context\":{\"pass_pct\":90,\"warn_pct\":70},\"level\":\"INFO\",\"msg\":\"Chain mode: sources (parcels profile)\",\"tag\":\"[assert-global-coverage]\"}",
+      "[assert-global-coverage] completed in <DUR>"
+    ],
+    "table_state": [],
+    "invariants": []
+  },
+  "source_fingerprint": null,
+  "fingerprint_files": [],
+  "fingerprint_skipped_reason": "no_descriptor_yet"
+}
