@@ -59,12 +59,13 @@ describe('deriveSeamPairs — derived from converted.json + manifest.json, never
     expect(Object.keys(byName).sort()).toEqual(
       ['assert_schema', 'compute_centroids', 'enrich_parcels', 'link_massing', 'link_parcel_addresses', 'link_parcels', 'link_wsib', 'load_ravines', 'refresh_snapshot'].sort(),
     );
-    // enrich_parcels (pilot 9, cut over commit 9, 2026-09-11) declares inputs.reads.steps for
-    // load_zoning, link_massing, enrich_centreline, compute_storey_norms and link_neighbourhoods
-    // (PH-5 seam map, commit 3) — only link_massing is itself converted, so its registration
-    // contributes exactly ONE new live pair, downstream=enrich_parcels, which sorts FIRST
-    // ('enrich_parcels:link_massing' < 'link_massing:compute_centroids'). The other four
-    // producers arm the moment their own cutover registers them (R-V generalises, measured).
+    // enrich_parcels (pilot 9, cut over commit 9, 2026-09-11) declares inputs.reads.steps:
+    // [{step: 'link_massing'}] ONLY — measured from scripts/enrich-parcels.descriptor.json on
+    // 2026-09-11 (the PH-5 seam map in the plan named five producers; the descriptor declares
+    // one — corrected here the same day, a transcription caught by re-executing the claim).
+    // link_massing is itself converted, so the registration contributes exactly ONE new live
+    // pair, downstream=enrich_parcels, which sorts FIRST
+    // ('enrich_parcels:link_massing' < 'link_massing:compute_centroids').
     // link_parcels now declares inputs.reads.steps: [{step: 'link_parcel_addresses',
     // version_pin: 'gte'}] (LDG-D1 split disposition, WF3 wf3_link_parcels_declared_reads,
     // 2026-09-03: the read is genuine and load-bearing — Strategy 1a's

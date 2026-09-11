@@ -40,7 +40,7 @@ Total items: **97**
 | `EP-PIN-D9` | 78 §P3C.2 | EP-D9 pin — pass-4 comps candidate selection has no deterministic tiebreak (comparable_builds jsonb instability) | ✅ BUILT | pilot: pilot9_enrich_parcels | enrich_parcels | 2026-09-08 |
 | `EP-PIN-D10` | 122 §3.0b | EP-D10 pin — enrich_parcels_pass3_scope grows unbounded (append-only, never pruned) | ✅ BUILT | pilot: pilot9_enrich_parcels | enrich_parcels | 2026-09-08 |
 | `EP-PIN-D14` | 78 §P3A.1 / 122 §3.0b | EP-D14 pin — pass-5 D4' recovery walks unconsumed enrich_parcels_pass3_scope rows one at a time (full-scan UPDATE per parcel, redundant under --full) | ✅ BUILT | pilot: pilot9_enrich_parcels | enrich_parcels | 2026-09-09 |
-| `EP-PIN-D17` | 124 §7 / 48 §3.5 | EP-D17 pin — parcels post-run checks are unbounded serial full scans over a bloat-inflated heap | ⚠️ PARTIAL | pilot: pilot9_enrich_parcels | assert_data_bounds | 2026-09-11 |
+| `EP-PIN-D17` | 124 §7 / 48 §3.5 | EP-D17 pin — parcels post-run checks are unbounded serial full scans over a bloat-inflated heap | ⚠️ PARTIAL | pilot: pilot9_enrich_parcels | enrich_centreline | 2026-09-11 |
 | `GOLD-PRE` | 122 §5.3 | Golden PRE-side capture completeness enforced per declared chain | ✅ BUILT | wf: wf: conversion-roadmap commit 3, 2026-09-10 | assert_global_coverage, assert_data_bounds, assert_engine_health, link_neighbourhoods, geocode_permits | 2026-09-10 |
 | `HB-1` | 124 §2 Rule 12 | Heartbeat covers the WHOLE step, not only phase boundaries (EP-D15) | ✅ BUILT | wf: wf: conversion-roadmap commit 3, 2026-09-10 | — | 2026-09-10 |
 | `CEIL-1` | 124 §2 Rule 12 | Statement/lock ceiling bound on EVERY phase incl. post_commit (EP-D16) | ✅ BUILT | wf: wf: conversion-roadmap commit 3, 2026-09-10 | — | 2026-09-10 |

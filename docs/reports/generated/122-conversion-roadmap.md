@@ -19,7 +19,7 @@ Remaining files: **55** (+ **0** pending) · remaining slugs: **57** (+ **0** pe
 
 | Archetype | File | Slug(s) | Chains (slots) | Quadrant | Write hints | Open cutover_prereq |
 |---|---|---|---|---|---|---|
-| ASSERT | `scripts/quality/assert-data-bounds.js` | assert_data_bounds | coa+deep_scrapes+permits+sources (4) | top-right | — | EP-PIN-D17 (assert_data_bounds) |
+| ASSERT | `scripts/quality/assert-data-bounds.js` | assert_data_bounds | coa+deep_scrapes+permits+sources (4) | top-right | — | — |
 | ASSERT | `scripts/quality/assert-engine-health.js` | assert_engine_health | coa+deep_scrapes+permits+sources (4) | top-right | — | — |
 | ASSERT | `scripts/quality/assert-global-coverage.js` | assert_global_coverage | coa+permits+sources (3) | top-right | — | — |
 | ENRICHER | `scripts/geocode-permits.js` | geocode_permits | permits+sources (2) | bottom-left | supports_full | — |
@@ -40,7 +40,7 @@ Remaining files: **55** (+ **0** pending) · remaining slugs: **57** (+ **0** pe
 | Archetype | File | Slug(s) | Chains (slots) | Quadrant | Write hints | Open cutover_prereq |
 |---|---|---|---|---|---|---|
 | ASSERT | `scripts/quality/assert-parcel-sanity.js` | assert_parcel_sanity | sources (1) | bottom-left | — | — |
-| ENRICHER | `scripts/enrich-centreline.js` | enrich_centreline | sources (1) | bottom-left | — | — |
+| ENRICHER | `scripts/enrich-centreline.js` | enrich_centreline | sources (1) | bottom-left | — | EP-PIN-D17 (enrich_centreline) |
 | ENRICHER | `scripts/enrich-heritage.js` | enrich_heritage | sources (1) | bottom-left | — | — |
 | ENRICHER | `scripts/enrich-ravines.js` | enrich_ravines | sources (1) | bottom-left | — | — |
 | ENRICHER | `scripts/compute-parcel-cost-estimates.js` | compute_parcel_cost_estimates | sources (1) | top-left | supports_dry_run | — |
