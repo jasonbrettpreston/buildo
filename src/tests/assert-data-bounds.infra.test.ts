@@ -8,6 +8,43 @@
 //   - cost_est_null_rate_warn_pct (E9): cost_estimates null-rate SLA
 //   - cost_est_min_tiers (E9): minimum distinct cost tiers
 //   - calibration_freshness_warn_hours (E10): timing_calibration staleness SLA
+//
+// ── Batch1 I2 commit 6 (2026-09-12) — BEHAVIOUR vs SKELETON classification ──
+// Fold A item 1 (`.cursor/batch1_i2_assert_data_bounds_active_task.md`): this
+// pre-existing file is KEPT, not deleted, following the sole measured precedent
+// `src/tests/link-wsib.infra.test.ts` (which coexists with
+// `src/tests/steps/link_wsib/violations.test.ts`) and `assert-global-coverage.
+// infra.test.ts`'s own I1 precedent — not deleted, not silently migrated. Of
+// the 18 `expect(SRC)` source-text assertions in this file (all reading
+// `SRC` — this STEP file's own text), each is classified:
+//
+//   BEHAVIOUR (15) — domain thresholds this conversion PRESERVES IN COMPUTE
+//   (Spec 122 §5.5). At commit 7, once `scripts/lib/compute/assert-data-
+//   bounds.js` exists, these assertions REPOINT to a second
+//   `COMPUTE = readFileSync('scripts/lib/compute/assert-data-bounds.js')`
+//   read, mirroring `link-wsib.infra.test.ts:19-23` — NOT done in this
+//   commit (the compute file does not exist yet; repointing now would red
+//   the whole file). Lines: `:35-36` (E7 cost_outlier_ceiling_cad, though
+//   the audit-row threshold itself is CHANGE-TO logic var at commit 7 per
+//   the report §2.4 IL-2 ruling — a distinct threshold from this one),
+//   `:59-62` (E8 desc/builder null-rate), `:85-88` (E9 cost_estimates null-
+//   rate + min tiers), `:102-103` (E10 calibration_freshness_warn_hours —
+//   ⚠ this assertion only proves the var is READ into a local, not that it
+//   affects any verdict; the report's ADB-D5 finding is that it is dead —
+//   commit 7 RETIRES this var entirely, so this specific assertion does not
+//   survive the repoint at all, unlike the other 14), `:117-118,120`
+//   (P12-B2 coa_forward_link_sub085_warn_pct + the WARN/PASS ternary).
+//
+//   SKELETON (3) — archetype/plumbing convention, retired wholesale into the
+//   shared library at commit 7 rather than repointed to COMPUTE (mirrors I1's
+//   own "logic_variables Zod validation" SKELETON bucket exactly): `:125-127`
+//   (`LOGIC_VARS_SCHEMA`, `loadMarketplaceConfigs`, `validateLogicVars` — the
+//   Zod-schema/config-loader convention, replaced by `config.logic_variables[].
+//   min/max/on_invalid` + `scripts/lib/step/config.js`).
+//
+// Nothing above changes any assertion body in this commit — this classification
+// is a documentation-only obligation for commit 6; the repoint (and the E10
+// assertion's removal) is commit 7's.
 import { describe, it, expect } from 'vitest';
 import * as fs from 'fs';
 import * as path from 'path';

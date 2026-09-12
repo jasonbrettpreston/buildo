@@ -79,5 +79,13 @@
     "scripts/enrich-parcels.js",
     "scripts/quality/assert-global-coverage.js"
   ],
-  "pending": []
+  "pending": [
+    {
+      "file": "scripts/quality/assert-data-bounds.js",
+      "registers_at": "C4 batch 1 I2 commit 9 (cutover)",
+      "reason": "PH-7 red suite landed commit 6 (src/tests/steps/assert_data_bounds/violations.test.ts, 8 it.fails() call sites, 30 tests total); descriptor/compute land commit 7",
+      "declared": "2026-09-12",
+      "stage": "red_suite"
+    }
+  ]
 }
