@@ -69,14 +69,31 @@ describe('acceptedBaselineRows — pure accepted-baseline builder (Spec 48 §4.9
 describe('gate wiring — producer-side acceptance (source-scan)', () => {
   const read = (rel: string) => fs.readFileSync(path.resolve(__dirname, '../../', rel), 'utf-8');
 
-  it('assert-global-coverage.js wires coa_cost_coverage_gate_accepted through the shared builder (coa chain only)', () => {
-    const src = read('scripts/quality/assert-global-coverage.js');
-    expect(src).toMatch(/require\(['"]\.\.?\/?\.?\.?\/lib\/accepted-baseline['"]\)/);
-    expect(src).toContain("acceptanceMetric: 'coa_cost_coverage_gate_accepted'");
-    // Scope guard: the permits-chain Step-14 cost profile stays a PLAIN
-    // calibratedRow — the permits assert_global_coverage profile currently
-    // PASSes and must NOT be relaxed.
-    expect(src).toMatch(/calibratedRow\('Step 14 — compute_cost_estimates',\s*'cost_estimates\.estimated_cost'/);
+  it('assert-global-coverage.js wires coa_cost_coverage_gate_accepted, coa chain only (C4 batch 1 I1 commit 7 — repointed off the shared acceptedBaselineRows() call, §7.2/§7.5 of the assessment report)', () => {
+    // Post-conversion, the shared `acceptedBaselineRows()` helper's 0-2-conditional-
+    // rows shape does not fit the checks[] framework (every declared check ALWAYS
+    // emits exactly one row — verdict.js checkRow, "not reported by compute" never
+    // reads PASS-by-default). The SAME producer-side, self-announcing acceptance
+    // contract (Spec 48 §4.6/§4.9: lives in the gate, self-retires, live value every
+    // run) is now expressed declaratively instead: `coa_step7_estimated_cost` gets a
+    // fixed (non-config) `warnLimitLiteral: 'pct >= 0'` — always true, so `limit`
+    // failing NEVER falls through past WARN — and the self-announcing companion pair
+    // (`coa_cost_coverage_gate_accepted`/`_retighten`) is its own pair of declared
+    // checks, one carrying `severityOverride: 'WARN'` for the exact reason the
+    // shared helper exists: a companion row must never itself re-escalate the chain's
+    // verdict to FAIL (measured live, report §7.2 — the bug this override fixes).
+    const fields = read('scripts/lib/assert-global-coverage-fields.js');
+    expect(fields).toMatch(/id:\s*'coa_step7_estimated_cost'[\s\S]{0,200}warnLimitLiteral:\s*'pct >= 0'/);
+    expect(fields).toContain("id: 'coa_cost_coverage_gate_accepted'");
+    expect(fields).toMatch(/id:\s*'coa_cost_coverage_gate_accepted'[\s\S]{0,200}severityOverride:\s*'WARN'/);
+    expect(fields).toContain("id: 'coa_cost_coverage_gate_accepted_retighten'");
+    expect(fields).toContain("chain: 'coa'"); // present on every CoA-scoped entry, including these three
+    // Scope guard: the permits-chain Step-14 cost profile stays a PLAIN calibrated
+    // check (passVar/warnVar cost_coverage_pass_pct/warn_pct, no severityOverride) —
+    // the permits assert_global_coverage profile currently PASSes there and must not
+    // be relaxed.
+    expect(fields).toMatch(/id:\s*'p_step14_estimated_cost'[\s\S]{0,250}passVar:\s*'cost_coverage_pass_pct'/);
+    expect(fields).not.toMatch(/id:\s*'p_step14_estimated_cost'[\s\S]{0,250}severityOverride/);
   });
 
   it('assert-entity-tracing.js wires permits_opportunity_score_gate_accepted and derives its verdict from rows (never a parallel boolean)', () => {

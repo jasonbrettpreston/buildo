@@ -128,7 +128,19 @@ const GROUP_ORDER = [
       "profiling_coverage_pass_pct",
       "profiling_coverage_warn_pct",
       "vocab_coverage_pass_pct",
-      "vocab_coverage_warn_pct"
+      "vocab_coverage_warn_pct",
+      "zoning_class_coverage_pass_pct",
+      "zoning_class_coverage_warn_pct",
+      "coa_neighbourhood_coverage_pass_pct",
+      "coa_neighbourhood_coverage_warn_pct",
+      "coa_structure_type_coverage_pass_pct",
+      "coa_structure_type_coverage_warn_pct",
+      "sources_zoning_class_coverage_pass_pct",
+      "sources_zoning_class_coverage_warn_pct",
+      "sources_maxbuild_coverage_pass_pct",
+      "sources_maxbuild_coverage_warn_pct",
+      "external_coverage_pass_pct",
+      "external_coverage_warn_pct"
     ]
   },
   {
@@ -171,7 +183,9 @@ const GROUP_ORDER = [
       "cost_coverage_pass_pct",
       "cost_coverage_warn_pct",
       "cost_t4_matrix_miss_fail_pct",
-      "cost_t4_matrix_miss_warn_pct"
+      "cost_t4_matrix_miss_warn_pct",
+      "parcel_cost_menu_coverage_pass_pct",
+      "parcel_cost_menu_coverage_warn_pct"
     ]
   },
   {

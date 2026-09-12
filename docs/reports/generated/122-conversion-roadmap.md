@@ -38,7 +38,7 @@ Remaining files: **54** (+ **1** pending) · remaining slugs: **56** (+ **1** pe
 | Archetype | File | Slug(s) | Chains (slots) | Quadrant | Write hints | Open cutover_prereq |
 |---|---|---|---|---|---|---|
 | ASSERT | `scripts/quality/assert-parcel-sanity.js` | assert_parcel_sanity | sources (1) | bottom-left | — | — |
-| ASSERT | `scripts/quality/assert-global-coverage.js` | assert_global_coverage [pending: red_suite] | coa+permits+sources (3) | top-right | — | — |
+| ASSERT | `scripts/quality/assert-global-coverage.js` | assert_global_coverage [pending: runner_wired] | coa+permits+sources (3) | top-right | — | — |
 | ENRICHER | `scripts/enrich-centreline.js` | enrich_centreline | sources (1) | bottom-left | — | EP-PIN-D17 (enrich_centreline) |
 | ENRICHER | `scripts/enrich-heritage.js` | enrich_heritage | sources (1) | bottom-left | — | — |
 | ENRICHER | `scripts/enrich-ravines.js` | enrich_ravines | sources (1) | bottom-left | — | — |

@@ -506,12 +506,24 @@ function defectPrefixFor(slug) {
   return slug.split('_').map((w) => w[0].toUpperCase()).join('');
 }
 
-/** The assessment report for a slug, found by dash-form filename match — never hand-mapped. */
+/**
+ * The assessment report for a slug, found by dash-form filename match — never hand-mapped.
+ *
+ * Two naming conventions, both accepted: pilots 1-9 named their reports
+ * `YYYY-MM-DD-pilotN-<dash-slug>-assessment.md`; the C4 "batching" programme (batch
+ * 1 onward, 2026-09-11) renamed the unit to `YYYY-MM-DD-batchN-i<M>-<dash-slug>-
+ * assessment.md` (`.cursor/c4_batching_entry_active_task.md` §3.2) — e.g.
+ * `2026-09-11-batch1-i1-assert-global-coverage-assessment.md`. The original regex
+ * only matched `pilot\d+`, so every batch-1+ step's G0/G1/G3/G4/G5/G7/G9 scored a
+ * SPURIOUS 0 (report path = null, not "report has no PH-0/PH-3/PH-5 content") the
+ * first time one reached this gate (batch 1 I1, commit 7) — found and fixed here
+ * rather than worked around per-step, since it is shared, batch-wide infrastructure.
+ */
 function reportPathFor(slug) {
   const dashSlug = slug.replace(/_/g, '-');
   const dir = path.join(REPO_ROOT, 'docs/reports');
   const hit = readdirSync(dir).find(
-    (f) => /^\d{4}-\d{2}-\d{2}-pilot\d+-.*-assessment\.md$/.test(f) && f.includes(`-${dashSlug}-assessment.md`),
+    (f) => /^\d{4}-\d{2}-\d{2}-(pilot\d+|batch\d+-i\d+)-.*-assessment\.md$/.test(f) && f.includes(`-${dashSlug}-assessment.md`),
   );
   return hit ? path.join(dir, hit) : null;
 }
@@ -2598,6 +2610,29 @@ function selfTest() {
   const g3bad = scoreG3(badReport);
   if (g3good.score < 1 || g3bad.score !== 0) {
     throw new Error(`self-test FAILED: G3 did not discriminate good/bad fixtures (good=${g3good.score}, bad=${g3bad.score})`);
+  }
+  // reportPathFor — both-directions proof of the batch\d+-i\d+ naming-convention fix
+  // (found live, C4 batch 1 I1 commit 7, 2026-09-11: the regex only matched the OLD
+  // `pilotN` filename convention, so EVERY batch-N step's report was invisible to
+  // G0/G1/G3/G4/G5/G7/G9 — scored 0 for "report has no PH-0/PH-3/..." when the real
+  // defect was "report file was never found at all"). GREEN (both conventions):
+  // a real `pilotN` report (pilot 6, on disk) still resolves; the real `batch1-i1`
+  // report (this commit's own) now ALSO resolves — proving the fix is additive, not
+  // a replacement that could have silently broken the old convention. RED: a slug
+  // with no report of either shape resolves to null, not a false match.
+  {
+    const pilotHit = reportPathFor('compute_centroids');
+    if (!pilotHit || !pilotHit.includes('pilot6-compute-centroids-assessment.md')) {
+      throw new Error(`self-test FAILED: reportPathFor('compute_centroids') lost the pre-existing pilotN convention (got ${JSON.stringify(pilotHit)})`);
+    }
+    const batchHit = reportPathFor('assert_global_coverage');
+    if (!batchHit || !batchHit.includes('batch1-i1-assert-global-coverage-assessment.md')) {
+      throw new Error(`self-test FAILED: reportPathFor('assert_global_coverage') did not resolve the batchN-iM convention (got ${JSON.stringify(batchHit)})`);
+    }
+    const noHit = reportPathFor('__no_such_step_self_test__');
+    if (noHit !== null) {
+      throw new Error(`self-test FAILED: reportPathFor of a nonexistent slug must be null, not a false match (got ${JSON.stringify(noHit)})`);
+    }
   }
   const g6good = { status: 'CLOSED · commit 7' };
   const g6bad = { status: 'OPEN · fix scheduled commit 7' };

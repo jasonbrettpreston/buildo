@@ -4253,7 +4253,9 @@
     "min": 0,
     "max": 1,
     "description": "Pilot 9 commit 7b (2026-09-04, Ask 5 externalization, Spec 78 §P3C.2). Pass-4 comps kNN candidate similarity window (±20% lot-size/frontage) — was the bare literal `COMP_LOT_TOL = 0.2` at scripts/enrich-parcels.js:1088. Value preserved verbatim; only the declaration changed. CONSUMED by scripts/enrich-parcels.js (comp candidate CTE, :1191-1193).",
-    "admin": { "group": "Source Ingestion" }
+    "admin": {
+      "group": "Source Ingestion"
+    }
   },
   "enrich_parcels_comp_knn_overfetch": {
     "default": 50,
@@ -4261,7 +4263,9 @@
     "min": 1,
     "max": 500,
     "description": "Pilot 9 commit 7b (2026-09-04, Ask 5 externalization, Spec 78 §P3C.2). GiST kNN over-fetch count before the similarity post-filter — was the bare literal `COMP_KNN_OVERFETCH = 50` at scripts/enrich-parcels.js:1089. Value preserved verbatim. CONSUMED by scripts/enrich-parcels.js (:1184).",
-    "admin": { "group": "Source Ingestion" }
+    "admin": {
+      "group": "Source Ingestion"
+    }
   },
   "enrich_parcels_comp_top_n": {
     "default": 10,
@@ -4269,7 +4273,9 @@
     "min": 1,
     "max": 100,
     "description": "Pilot 9 commit 7b (2026-09-04, Ask 5 externalization, Spec 78 §P3C.2). Comps kept per subject parcel — was the bare literal `COMP_TOP_N = 10` at scripts/enrich-parcels.js:1090. Value preserved verbatim. CONSUMED by scripts/enrich-parcels.js (:1195).",
-    "admin": { "group": "Source Ingestion" }
+    "admin": {
+      "group": "Source Ingestion"
+    }
   },
   "enrich_parcels_comp_over_capture_clamp": {
     "default": 1.1,
@@ -4277,7 +4283,9 @@
     "min": 1,
     "max": 5,
     "description": "Pilot 9 commit 7b (2026-09-04, Ask 5 externalization, Spec 78 §P3C.2). build_ratio above this = massing over-capture, excluded from comp_build_ratio_p50 — was the bare literal `COMP_OVER_CAPTURE_CLAMP = 1.1` at scripts/enrich-parcels.js:1091. Value preserved verbatim. CONSUMED by scripts/enrich-parcels.js (:1160).",
-    "admin": { "group": "Source Ingestion" }
+    "admin": {
+      "group": "Source Ingestion"
+    }
   },
   "enrich_parcels_comp_fsi_min_plausible": {
     "default": 0.05,
@@ -4285,7 +4293,9 @@
     "min": 0,
     "max": 1,
     "description": "Pilot 9 commit 7b (2026-09-04, Ask 5 externalization, Spec 78 §P3C.2). Lower plausible bound on a new-build comp's permit_fsi for inclusion in comp_fsi_p50 — was the bare literal `COMP_FSI_MIN_PLAUSIBLE = 0.05` at scripts/enrich-parcels.js:1097. Value preserved verbatim. CONSUMED by scripts/enrich-parcels.js (:1166).",
-    "admin": { "group": "Source Ingestion" }
+    "admin": {
+      "group": "Source Ingestion"
+    }
   },
   "enrich_parcels_comp_fsi_max_plausible": {
     "default": 8,
@@ -4293,7 +4303,9 @@
     "min": 1,
     "max": 50,
     "description": "Pilot 9 commit 7b (2026-09-04, Ask 5 externalization, Spec 78 §P3C.2). Upper plausible bound on a new-build comp's permit_fsi for inclusion in comp_fsi_p50 — was the bare literal `COMP_FSI_MAX_PLAUSIBLE = 8` at scripts/enrich-parcels.js:1098. Value preserved verbatim. CONSUMED by scripts/enrich-parcels.js (:1166).",
-    "admin": { "group": "Source Ingestion" }
+    "admin": {
+      "group": "Source Ingestion"
+    }
   },
   "enrich_parcels_comps_window_years": {
     "default": 5,
@@ -4301,7 +4313,9 @@
     "min": 1,
     "max": 20,
     "description": "Pilot 9 commit 7b (2026-09-04, Ask 5 externalization, Spec 78 §P3C.1). The rolling comps-eligibility window (permits.issued_date >= as-of-date minus this many years) — was the bare literal `interval '5 years'` at scripts/enrich-parcels.js:1114, the estate's first genuinely clock-relative gate. Fold G3 (MANDATORY, Spec 122 §5.5): the CLOCK ANCHOR itself moves to ctx.clock.asOfDate() at commit 7c (compute seam rewrite); this variable is the WINDOW LENGTH only, a Rule-3 threshold externalization, value preserved verbatim (5). CONSUMED by scripts/enrich-parcels.js.",
-    "admin": { "group": "Source Ingestion" }
+    "admin": {
+      "group": "Source Ingestion"
+    }
   },
   "enrich_parcels_optcfg_batch_size": {
     "default": 500,
@@ -4309,7 +4323,9 @@
     "min": 50,
     "max": 5000,
     "description": "Pilot 9 commit 7b (2026-09-04, Ask 5 externalization). Pass-5 optimal-config flush batch size — was the bare literal `OPTCFG_BATCH = 500` at scripts/enrich-parcels.js:1251. Value preserved verbatim. CONSUMED by scripts/enrich-parcels.js (:1726).",
-    "admin": { "group": "Source Ingestion" }
+    "admin": {
+      "group": "Source Ingestion"
+    }
   },
   "enrich_parcels_pass5_stream_batch_size": {
     "default": 200,
@@ -4317,7 +4333,9 @@
     "min": 10,
     "max": 2000,
     "description": "Pilot 9 commit 7b (2026-09-04, Ask 5 externalization). Pass-5 pipeline.streamQuery batchSize (the eligible-parcels read cursor, distinct from enrich_parcels_optcfg_batch_size's own write-flush size) — was the bare literal `{ batchSize: 200 }` at scripts/enrich-parcels.js:1692. Value preserved verbatim. CONSUMED by scripts/enrich-parcels.js.",
-    "admin": { "group": "Source Ingestion" }
+    "admin": {
+      "group": "Source Ingestion"
+    }
   },
   "enrich_parcels_bbox_degree_divisor": {
     "default": 78000,
@@ -4325,7 +4343,9 @@
     "min": 1000,
     "max": 1000000,
     "description": "Pilot 9 commit 7b (2026-09-04, Ask 5 externalization). Pass-1 road-overlay bbox pre-filter's metres-to-degrees-of-longitude divisor at Toronto's latitude (a degree of longitude is ~80.5km there; dividing by 78000 < 80500 guarantees the box is >= roadDist) — was the bare literal `78000` at scripts/enrich-parcels.js:237-246. Value preserved verbatim. CONSUMED by scripts/enrich-parcels.js.",
-    "admin": { "group": "Source Ingestion" }
+    "admin": {
+      "group": "Source Ingestion"
+    }
   },
   "enrich_parcels_zone_class_pct_pass_floor": {
     "default": 95,
@@ -4333,7 +4353,9 @@
     "min": 0,
     "max": 100,
     "description": "Pilot 9 commit 7b (2026-09-04, Ask 5 externalization, Spec 65 §3a DEC-4). The zoning_class-coverage PASS floor (>= this = PASS, else falls to the WARN/FAIL split) — was the bare literal `zonePct >= 95` at scripts/enrich-parcels.js:2109. Value preserved verbatim. Live measured 96.8%. CONSUMED by scripts/enrich-parcels.js; descriptor check parcels_with_zone_class_pct_warn.",
-    "admin": { "group": "Data Quality Thresholds" }
+    "admin": {
+      "group": "Data Quality Thresholds"
+    }
   },
   "enrich_parcels_zone_class_pct_warn_floor": {
     "default": 90,
@@ -4341,7 +4363,9 @@
     "min": 0,
     "max": 100,
     "description": "Pilot 9 commit 7b (2026-09-04, Ask 5 externalization, Spec 65 §3a DEC-4). The zoning_class-coverage WARN floor (>= this = WARN, below = FAIL) — was the bare literal `zonePct >= 90` at scripts/enrich-parcels.js:2109. Value preserved verbatim. CONSUMED by scripts/enrich-parcels.js; descriptor check parcels_with_zone_class_pct_fail.",
-    "admin": { "group": "Data Quality Thresholds" }
+    "admin": {
+      "group": "Data Quality Thresholds"
+    }
   },
   "enrich_parcels_pass5_timeout_minutes": {
     "default": 60,
@@ -4349,7 +4373,9 @@
     "min": 0,
     "max": 180,
     "description": "Pilot 9 commit 7b (2026-09-04, Ask 7). NEW — bounded, LOUD pass-5 (optimal-config) statement timeout, applied via a live SET on the pass-5 session by runEnrichPhase (commit 7d) since pass 5 runs on a SEPARATE post-commit connection outside the SET LOCAL pair enrich_parcels_pass_statement_timeout_minutes/enrich_parcels_lock_timeout_ms bound for passes 1-4 (EP-D7, OPEN — legacy pass 5 is unbounded today, inheriting the session-level statement_timeout=0). 0 = disabled. Default 60 is a conservative first bound pending real per-pass-5 duration measurement (pass 5 is JS-streaming, not a single SQL statement, so the passes-1-4 measured-max x1.5 formula does not directly transfer). CONSUMED by scripts/lib/step/index.js (runEnrichPhase).",
-    "admin": { "group": "Source Ingestion" }
+    "admin": {
+      "group": "Source Ingestion"
+    }
   },
   "enrich_parcels_scope_recovery_batch_size": {
     "default": 1000,
@@ -4357,7 +4383,9 @@
     "min": 100,
     "max": 10000,
     "description": "WF3 EP-D14 (2026-09-09, .cursor/wf3_ep_d14_pass5_recovery_scan_active_task.md C1). Batch size for consumePendingScope's INCREMENTAL D4' recovery path (the number of ids per ANY($1::int[]) round trip for both the recompute SELECT and the consumed_at stamp UPDATE) — replaces the per-parcel loop that was a full-scan UPDATE with no index leading on parcel_id (cloud-measured 2026-09-09: 439,130 unconsumed rows, one backend active 23 minutes on a single such UPDATE). Under --full this variable is unused: the recovery is one set-based stamp with no recompute (Ask 1 ruling). CONSUMED by scripts/lib/compute/enrich-parcels.js (consumePendingScope).",
-    "admin": { "group": "Source Ingestion" }
+    "admin": {
+      "group": "Source Ingestion"
+    }
   },
   "enrich_parcels_pending_scope_warn_max": {
     "default": 50000,
@@ -4365,7 +4393,9 @@
     "min": 0,
     "max": 5000000,
     "description": "WF3 EP-D14 (2026-09-09, .cursor/wf3_ep_d14_pass5_recovery_scan_active_task.md C1). WARN (not FAIL — a large backlog is the legitimate state right after a killed run, and a blocking FAIL would abort the very run whose job is to drain it) bound on enrich_parcels_pass3_scope rows unconsumed from a PRIOR run, observed at pass-5 start. Cloud-measured 2026-09-09: 439,130 unconsumed (well above this default) — the descriptor's pending_scope_parcels check is what would have surfaced that backlog before the stall. CONSUMED by scripts/lib/compute/enrich-parcels.js; descriptor check pending_scope_parcels.",
-    "admin": { "group": "Data Quality Thresholds" }
+    "admin": {
+      "group": "Data Quality Thresholds"
+    }
   },
   "step_post_check_statement_timeout_minutes": {
     "default": 10,
@@ -4373,7 +4403,9 @@
     "min": 1,
     "max": 75,
     "description": "WF3 EP-D17 (2026-09-10, .cursor/wf3_ep_d17_pass5_fullscan_checks_active_task.md C1). The declared ceiling an every_run invariants[]/plausibility[] entry inherits when it declares no statement_timeout of its own — before this, that entry took the bare pool.query branch inside scripts/lib/step/plausibility.js's executeEntry and ran with NO ceiling at all (PIPELINE_STATEMENT_TIMEOUT_MS defaults to 0). Cloud EXPLAIN measured enrich_parcels' 5 post checks (full Seq Scans on parcels) at 16-30s on a vacuumed heap vs 40+ min against a bloated one (run 34506962436, 2026-09-10) — 10 min is comfortably inside the clean-heap cost with headroom, and a genuine regression past it now FAILs loudly instead of wedging the chain. CONSUMED by scripts/lib/step/index.js (the every_run invariants/plausibility executor's default-ceiling resolution); today's sole declaring consumer is enrich_parcels.",
-    "admin": { "group": "Source Ingestion" }
+    "admin": {
+      "group": "Source Ingestion"
+    }
   },
   "parcels_dead_tuple_ratio_warn_max": {
     "default": 0.3,
@@ -4381,7 +4413,9 @@
     "min": 0,
     "max": 5,
     "description": "WF3 EP-D17 (2026-09-10, .cursor/wf3_ep_d17_pass5_fullscan_checks_active_task.md C4). WARN bound on parcels' pg_stat_user_tables dead_ratio, read by TWO independent consumers of the SAME measurement by naming convention (\"${table}_dead_tuple_ratio_warn_max\"): the descriptor's own declared parcels_dead_tuple_ratio plausibility check (observability, rung b) and scripts/lib/step/plausibility.js's runMaintenance executor (the execution.maintenance trigger, rung d) — the same threshold name means the two can never silently disagree about it. Cloud-measured 2026-09-10 (run 34506962436): parcels read 0.697, well above this default, right after enrich_parcels' own pass-4 comps rewrite bloated the heap inside one shared 93-minute transaction whose xmin pinned the vacuum horizon. CONSUMED by scripts/lib/step/plausibility.js (runMaintenance) and scripts/enrich-parcels.descriptor.json's parcels_dead_tuple_ratio check (limit_from_config).",
-    "admin": { "group": "Data Quality Thresholds" }
+    "admin": {
+      "group": "Data Quality Thresholds"
+    }
   },
   "step_post_check_concurrency": {
     "default": 4,
@@ -4389,7 +4423,9 @@
     "min": 1,
     "max": 10,
     "description": "WF3 EP-D17 output-panel fix F7 (2026-09-10, .cursor/wf3_ep_d17_pass5_fullscan_checks_active_task.md C1/C2b). Caps the number of invariants[]/plausibility[] entries scripts/lib/step/plausibility.js's runValidatorEntries executes SIMULTANEOUSLY (batch width) at the run-end every_run hook. The original C2b design ran every selected entry concurrently, unbounded — measured against link_wsib's own 9 declared entries, that would open 9 simultaneous pool clients against a pg default max of 10, on top of the step's own outer advisory-lock client, over budget. Default 4 keeps a wide margin for every converted step regardless of how many entries it declares. CONSUMED by scripts/lib/step/index.js (the every_run invariants/plausibility executor's batch-width resolution); today's sole declaring consumer is enrich_parcels, but the library-level default (4) applies to every step even when undeclared.",
-    "admin": { "group": "Source Ingestion" }
+    "admin": {
+      "group": "Source Ingestion"
+    }
   },
   "parcels_maintenance_timeout_minutes": {
     "default": 15,
@@ -4397,7 +4433,9 @@
     "min": 1,
     "max": 60,
     "description": "WF3 EP-D17 output-panel fix F5 (2026-09-10, .cursor/wf3_ep_d17_pass5_fullscan_checks_active_task.md C4). Declared ceiling for the execution.maintenance VACUUM/ANALYZE/REINDEX statement scripts/lib/step/plausibility.js's runMaintenance issues on parcels — the original design had NO ceiling on this statement at all, the exact unbounded-statement shape EP-D17's own C1 rung exists to close everywhere else. Applied via a SET statement_timeout on a dedicated autocommit client (VACUUM forbids an enclosing transaction). Default 15 min carries real margin over the 3-10 min a manual, unthrottled VACUUM was estimated to take for the ~1.35M dead tuples that motivated this WF3 (scripts/one-time/wf3-vacuum-analyze-parcels.js's own header). CONSUMED by scripts/lib/step/plausibility.js (runMaintenance, keyed by \"${table}_maintenance_timeout_minutes\" — same naming convention as parcels_dead_tuple_ratio_warn_max); today's sole declaring consumer is enrich_parcels via parcels_maintenance_timeout_minutes.",
-    "admin": { "group": "Source Ingestion" }
+    "admin": {
+      "group": "Source Ingestion"
+    }
   },
   "assert_schema_type_sample_rows": {
     "default": 20,
@@ -4527,6 +4565,146 @@
     "description": "WF2 'Step Validator, Data-First' (Spec 124 §2 Rule 13 addendum, VAL-WF2, commit 1) — the cost-adjudication default for a `checks[].invariants[]`/`plausibility[]` candidate's `frequency` field: a candidate whose measured single-query cost (grounder median, ≥5 timings across ≥2 sessions, `last_measured.cost_ms`) is below this budget defaults to `every_run` (hooked into scripts/lib/step/index.js on every pipeline execution); at or above it, `validate_only` (executed only from `step:validate --write` / chain-end synthesis). 5000 = the plan's own stated default (Fold A-1), pending re-derivation per step at commit 3/4's live re-timing. Not yet CONSUMED by any executor as of commit 1 (schema-shape only; the executor lands at commit 3).",
     "admin": {
       "group": "Step Validator"
+    }
+  },
+  "zoning_class_coverage_pass_pct": {
+    "default": 80,
+    "type": "number",
+    "description": "assert-global-coverage: zoning_class calibrated coverage (DEC-1, #406) -> PASS (CoA + permits)",
+    "min": 0,
+    "max": 100,
+    "admin": {
+      "group": "Coverage & Quality"
+    }
+  },
+  "zoning_class_coverage_warn_pct": {
+    "default": 75,
+    "type": "number",
+    "description": "assert-global-coverage: zoning_class calibrated coverage (DEC-1, #406) -> WARN, else FAIL",
+    "min": 0,
+    "max": 100,
+    "admin": {
+      "group": "Coverage & Quality"
+    }
+  },
+  "coa_neighbourhood_coverage_pass_pct": {
+    "default": 95,
+    "type": "number",
+    "description": "assert-global-coverage: CoA neighbourhood_id calibrated coverage -> PASS",
+    "min": 0,
+    "max": 100,
+    "admin": {
+      "group": "Coverage & Quality"
+    }
+  },
+  "coa_neighbourhood_coverage_warn_pct": {
+    "default": 90,
+    "type": "number",
+    "description": "assert-global-coverage: CoA neighbourhood_id calibrated coverage -> WARN, else FAIL",
+    "min": 0,
+    "max": 100,
+    "admin": {
+      "group": "Coverage & Quality"
+    }
+  },
+  "coa_structure_type_coverage_pass_pct": {
+    "default": 45,
+    "type": "number",
+    "description": "assert-global-coverage: CoA structure_type calibrated coverage (description-classifier ceiling ~52%) -> PASS",
+    "min": 0,
+    "max": 100,
+    "admin": {
+      "group": "Coverage & Quality"
+    }
+  },
+  "coa_structure_type_coverage_warn_pct": {
+    "default": 35,
+    "type": "number",
+    "description": "assert-global-coverage: CoA structure_type calibrated coverage -> WARN, else FAIL",
+    "min": 0,
+    "max": 100,
+    "admin": {
+      "group": "Coverage & Quality"
+    }
+  },
+  "sources_zoning_class_coverage_pass_pct": {
+    "default": 90,
+    "type": "number",
+    "description": "assert-global-coverage: sources-chain parcels.zoning_class calibrated coverage -> PASS",
+    "min": 0,
+    "max": 100,
+    "admin": {
+      "group": "Coverage & Quality"
+    }
+  },
+  "sources_zoning_class_coverage_warn_pct": {
+    "default": 85,
+    "type": "number",
+    "description": "assert-global-coverage: sources-chain parcels.zoning_class calibrated coverage -> WARN, else FAIL",
+    "min": 0,
+    "max": 100,
+    "admin": {
+      "group": "Coverage & Quality"
+    }
+  },
+  "sources_maxbuild_coverage_pass_pct": {
+    "default": 88,
+    "type": "number",
+    "description": "assert-global-coverage: sources-chain max-build/opt envelope calibrated coverage (residential w/ building) -> PASS",
+    "min": 0,
+    "max": 100,
+    "admin": {
+      "group": "Coverage & Quality"
+    }
+  },
+  "sources_maxbuild_coverage_warn_pct": {
+    "default": 75,
+    "type": "number",
+    "description": "assert-global-coverage: sources-chain max-build/opt envelope calibrated coverage (residential w/ building) -> WARN, else FAIL",
+    "min": 0,
+    "max": 100,
+    "admin": {
+      "group": "Coverage & Quality"
+    }
+  },
+  "parcel_cost_menu_coverage_pass_pct": {
+    "default": 85,
+    "type": "number",
+    "description": "assert-global-coverage: sources-chain parcel_cost_menu calibrated coverage (residential w/ building) -> PASS",
+    "min": 0,
+    "max": 100,
+    "admin": {
+      "group": "Cost Audit Thresholds"
+    }
+  },
+  "parcel_cost_menu_coverage_warn_pct": {
+    "default": 80,
+    "type": "number",
+    "description": "assert-global-coverage: sources-chain parcel_cost_menu calibrated coverage (residential w/ building) -> WARN, else FAIL",
+    "min": 0,
+    "max": 100,
+    "admin": {
+      "group": "Cost Audit Thresholds"
+    }
+  },
+  "external_coverage_pass_pct": {
+    "default": 10,
+    "type": "number",
+    "description": "assert-global-coverage: scraper-sourced (external) field coverage -> PASS (AGC-D3)",
+    "min": 0,
+    "max": 100,
+    "admin": {
+      "group": "Coverage & Quality"
+    }
+  },
+  "external_coverage_warn_pct": {
+    "default": 5,
+    "type": "number",
+    "description": "assert-global-coverage: scraper-sourced (external) field coverage -> WARN, else FAIL (AGC-D3)",
+    "min": 0,
+    "max": 100,
+    "admin": {
+      "group": "Coverage & Quality"
     }
   }
 }

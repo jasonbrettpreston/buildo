@@ -84,7 +84,7 @@
       "registers_at": "C4 batch 1 I1 commit 9 (cutover)",
       "reason": "PH-7 red suite landed commit 6 (src/tests/steps/assert_global_coverage/violations.test.ts, 7 it.fails() call sites); descriptor/compute land commit 7",
       "declared": "2026-09-11",
-      "stage": "red_suite"
+      "stage": "runner_wired"
     }
   ]
 }

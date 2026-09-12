@@ -243,7 +243,7 @@ describe('assert_global_coverage — measured facts, true today (plain it)', () 
     expect(floor).toBeLessThanOrEqual(273);
   });
 
-  it('converted.json declares this step pending at stage "red_suite" (R-K/R-K.1) — well-formed, and not double-registered in `converted`', () => {
+  it('converted.json declares this step pending, well-formed and not double-registered in `converted` (R-K/R-K.1) — stage advanced to "runner_wired" at commit 7 (descriptor+compute landed and the shell is frozen onto pipeline.step(), but G9\'s post-cutover §R Reflection is commit-9-only per Spec 124 R-F — `runner_wired` is the R-K.1 stage that excludes exactly G9, `STAGE_HARDSTOP_EXCLUSIONS.runner_wired`)', () => {
     const doc = JSON.parse(fs.readFileSync(artifact(CONVERTED_REL), 'utf8')) as {
       converted: string[];
       pending: Array<{ file: string; registers_at: string; reason: string; declared: string; stage: string }>;
@@ -251,7 +251,7 @@ describe('assert_global_coverage — measured facts, true today (plain it)', () 
     expect(doc.converted, 'must not be double-registered while still pending').not.toContain(STEP_REL);
     const entry = doc.pending.find((p) => p.file === STEP_REL);
     expect(entry, `${CONVERTED_REL} has no pending entry for ${STEP_REL}`).toBeDefined();
-    expect(entry?.stage).toBe('red_suite');
+    expect(entry?.stage).toBe('runner_wired');
     expect(entry?.declared).toBe('2026-09-11');
   });
 
@@ -278,10 +278,26 @@ interface Fence {
   revert: (text: string) => string; // simulate the fence being silently dropped
 }
 
-const FENCES: Fence[] = [
+// Post-commit-7 repoint (Fold A item 2, link_wsib precedent): the thin shell (`src()`)
+// no longer carries any BEHAVIOUR text — C6/C3/DEC-1 all now live in the DATA module
+// (`scripts/lib/assert-global-coverage-fields.js`), the single source of truth for both
+// the descriptor and the compute dispatch table. Each fence's `source()` names exactly
+// where its own subject now lives; `detect`/`revert` are otherwise unchanged in spirit
+// (both-directions proof), only their assertions updated for the new representation.
+const FIELDS_REL = 'scripts/lib/assert-global-coverage-fields.js';
+function fields(): string {
+  return readText(FIELDS_REL);
+}
+
+interface Fence2 extends Fence {
+  source: () => string;
+}
+
+const FENCES: Fence2[] = [
   {
     name: 'C6 — lead_id integrity (migration 138_a/241)',
     commit: '5ef51de7',
+    source: fields,
     detect: (t) => {
       const v: string[] = [];
       if (!t.includes('lead_id_administrative_drift')) v.push('lead_id_administrative_drift row is gone');
@@ -298,41 +314,59 @@ const FENCES: Fence[] = [
   {
     name: 'C3/C7 — enriched_status scope-drift self-retiring WARN+INFO pair (Spec 48 §4.9)',
     commit: '5ec3523a',
+    source: fields,
     detect: (t) => {
       const v: string[] = [];
       if (!t.includes('enriched_status_status_scope_drift')) v.push('enriched_status_status_scope_drift row is gone');
       if (!t.includes('_retighten')) v.push('the retighten companion row is gone');
-      if (!/driftRows\s*>\s*0/.test(t)) v.push('the self-retiring conditional (driftRows > 0) is gone');
+      // Conversion consequence (named in the compute file's own header, "three named,
+      // documented conversion consequences" (c)): the pair is now ALWAYS a declared
+      // check (reads PASS/INFO when inert) rather than conditionally emitted at
+      // `driftRows > 0` — the checks[] framework has no "0 rows" shape. The fence now
+      // asserts the pair is declared with DISTINCT builder roles (warn vs retighten),
+      // which is what makes the self-retiring READING still distinguishable per row.
+      if (!t.includes("builder: 'scope_drift_warn'")) v.push('the WARN-role builder for the drift pair is gone');
+      if (!t.includes("builder: 'scope_drift_retighten'")) v.push('the retighten-role builder for the drift pair is gone');
       return v;
     },
     revert: (t) =>
       t
         .replace(/enriched_status_status_scope_drift/g, 'removed')
         .replace(/_retighten/g, 'removed')
-        .replace(/driftRows\s*>\s*0/g, 'false'),
+        .replace(/scope_drift_warn/g, 'removed')
+        .replace(/scope_drift_retighten/g, 'removed'),
   },
   {
     name: 'DEC-1 — zoning_class calibrated 80/75 threshold (#406), both call sites (CoA + permits)',
     commit: '3ab4fa83',
+    source: fields,
     detect: (t) => {
       const v: string[] = [];
-      const hits = [...t.matchAll(/zoning_class['"],[^\n]*?,\s*80,\s*75\)/g)];
-      if (hits.length < 2) v.push(`expected 2 zoning_class 80/75 call sites (CoA + permits), found ${hits.length}`);
+      // Conversion consequence: the 80/75 literal is no longer a bare call-site argument
+      // pair — it is a registered logic_variables default (IL-3 ruling, report §2.4),
+      // reached from both call sites via `passVar`/`warnVar: 'zoning_class_coverage_*_pct'`.
+      const sites = [...t.matchAll(/passVar: 'zoning_class_coverage_pass_pct'/g)];
+      if (sites.length < 2) v.push(`expected 2 checks declaring passVar zoning_class_coverage_pass_pct (CoA + permits), found ${sites.length}`);
+      if (!t.includes("name: 'zoning_class_coverage_pass_pct', default: 80")) v.push('the zoning_class_coverage_pass_pct default (80) is gone');
+      if (!t.includes("name: 'zoning_class_coverage_warn_pct', default: 75")) v.push('the zoning_class_coverage_warn_pct default (75) is gone');
       return v;
     },
-    revert: (t) => t.replace(/(zoning_class['"],[^\n]*?,\s*)80,\s*75\)/g, '$1999, 999)'),
+    revert: (t) =>
+      t
+        .replace(/passVar: 'zoning_class_coverage_pass_pct'/g, "passVar: 'removed'")
+        .replace(/default: 80,\s*min: 0,\s*max: 100,\s*group: 'Coverage & Quality',\s*description: 'assert-global-coverage: zoning_class/g, 'default: 999, min: 0, max: 100, group: \'Coverage & Quality\', description: \'removed'),
   },
 ];
 
 describe('assert_global_coverage — G4d fence locks (both directions, pre-conversion source)', () => {
   for (const fence of FENCES) {
     describe(`${fence.name} (${fence.commit})`, () => {
-      it('is intact in the current step source', () => {
-        expect(fence.detect(src()), `fence violated in the live file: ${fence.name}`).toEqual([]);
+      it('is intact in the current source', () => {
+        expect(fence.detect(fence.source()), `fence violated in the live file: ${fence.name}`).toEqual([]);
       });
 
       it('a reverted copy is detected as violated (proves the detector is not vacuous)', () => {
-        expect(fence.detect(fence.revert(src())).length, `reverted text should trip ${fence.name}`).toBeGreaterThan(0);
+        expect(fence.detect(fence.revert(fence.source())).length, `reverted text should trip ${fence.name}`).toBeGreaterThan(0);
       });
     });
   }
@@ -343,7 +377,7 @@ describe('assert_global_coverage — G4d fence locks (both directions, pre-conve
 // ===========================================================================
 
 describe('assert_global_coverage — genuinely red until commit 7 (it.fails)', () => {
-  it.fails('descriptor exists and validates against the ASSERT profile: outputs/recovery/counters "none"', () => { // flips at: commit 7
+  it('descriptor exists and validates against the ASSERT profile: outputs/recovery/counters "none"', () => { // flipped at: commit 7
     const d = loadDescriptor();
     expect(d.identity.archetype).toBe('ASSERT');
     expect(d.outputs).toBe('none');
@@ -351,7 +385,7 @@ describe('assert_global_coverage — genuinely red until commit 7 (it.fails)', (
     expect(d.counters).toBe('none');
   });
 
-  it.fails('config.logic_variables is a superset of the 6 existing + 14 newly-declared tunables (report §2.4)', () => { // flips at: commit 7
+  it('config.logic_variables is a superset of the 6 existing + 14 newly-declared tunables (report §2.4)', () => { // flipped at: commit 7
     const d = loadDescriptor();
     expect(d.config).not.toBe('none');
     const cfg = d.config as { logic_variables: Array<{ name: string }> };
@@ -371,19 +405,26 @@ describe('assert_global_coverage — genuinely red until commit 7 (it.fails)', (
     for (const name of expected) expect(names.has(name), `config.logic_variables missing ${name}`).toBe(true);
   });
 
-  it.fails('checks[] count is at least the row-builder census distinct-metric floor (report §2.3, tool-generated per Ask A1)', () => { // flips at: commit 7
+  it('checks[] count is at least the row-builder census distinct-metric floor (report §2.3, tool-generated per Ask A1)', () => { // flipped at: commit 7
     const d = loadDescriptor();
     const floor = censusDistinctMetricCount();
     expect(floor, 'census produced zero distinct metrics — parser regression').toBeGreaterThan(200);
     expect(d.checks.length).toBeGreaterThanOrEqual(floor);
   });
 
-  it.fails('DEC-1 (zoning_class 80/75) is reachable via limit_from_config at both call sites (CoA + permits)', () => { // flips at: commit 7
+  it('DEC-1 (zoning_class 80/75) is reachable via limit_from_config at both call sites (CoA + permits)', () => { // flipped at: commit 7
     const d = loadDescriptor();
     const hits = d.checks.filter((c) => c.limit_from_config === 'zoning_class_coverage_pass_pct');
     expect(hits.length, 'expected 2 checks (CoA + permits) declaring limit_from_config zoning_class_coverage_pass_pct').toBe(2);
   });
 
+  // STILL RED at commit 7, deliberately: `checks[].limit` (definitions.bound, x-frozen)
+  // has no bare-number form — only the string grammar (`"viol == 0"`) or the {warn,fail}
+  // object. `c.limit` is therefore the STRING `"viol == 0"`, not the number `0`, so this
+  // exact assertion never flips without a step.schema.json edit (out of scope per the
+  // commit's own Rules). kind/severity DO flip true; the third assertion inside this
+  // `it.fails` is what keeps the whole block genuinely red — left as `it.fails`, not
+  // corrected, per the instruction to flip only claims that become true.
   it.fails('the C6 lead-id invariants are declared as kind:"invariant", severity:"FAIL", limit 0 (IL-1, both-directions fence)', () => { // flips at: commit 7
     const d = loadDescriptor();
     const drift = d.checks.filter((c) => /lead_id_administrative_drift|lead_id_duplicate_groups/.test(c.id));
@@ -395,7 +436,7 @@ describe('assert_global_coverage — genuinely red until commit 7 (it.fails)', (
     }
   });
 
-  it.fails('the compute module exists, exports compute, and passes the compute-shape ast-grep rule (Spec 122 §5.5)', () => { // flips at: commit 7
+  it('the compute module exists, exports compute, and passes the compute-shape ast-grep rule (Spec 122 §5.5)', () => { // flipped at: commit 7
     computeSource(); // throws via artifact() if missing
     const ruleAbs = abs(COMPUTE_SHAPE_RULE_REL);
     expect(fs.existsSync(ruleAbs), `${COMPUTE_SHAPE_RULE_REL} missing`).toBe(true);
@@ -412,7 +453,7 @@ describe('assert_global_coverage — genuinely red until commit 7 (it.fails)', (
     expect(res.trim(), `compute-shape violations:\n${res}`).toBe('');
   });
 
-  it.fails('commit 9\'s frozen shell calls pipeline.step(...) while keeping the lock-111 constant (thin shell)', () => { // flips at: commit 7 (compute), fully true only after commit 9's cutover peel
+  it('commit 9\'s frozen shell calls pipeline.step(...) while keeping the lock-111 constant (thin shell)', () => { // flipped at: commit 7 (the frozen shell already lands here, not deferred to commit 9)
     expect(src()).toContain('ADVISORY_LOCK_ID = 111');
     expect(src()).toMatch(/pipeline\.step\(/);
   });

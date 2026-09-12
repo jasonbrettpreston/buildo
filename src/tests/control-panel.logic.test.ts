@@ -355,6 +355,16 @@ const EXPECTED_LOGIC_VAR_KEYS = [
   // the every_run/validate_only frequency-default budget for invariants[]/plausibility[]
   // candidates, rendered under GROUPS "Step Validator".
   'invariants_every_run_budget_ms',
+  // C4 batch 1 I1 (2026-09-11, `assert_global_coverage` commit 7) — 7 pairs, the
+  // per-field calibrated-coverage thresholds promoted off bare JS literals (report
+  // §2.4 adjudication: IL-3/DEC-1, IL-8, IL-9, IL-10, IL-11 ×2, IL-12).
+  'zoning_class_coverage_pass_pct', 'zoning_class_coverage_warn_pct',
+  'coa_neighbourhood_coverage_pass_pct', 'coa_neighbourhood_coverage_warn_pct',
+  'coa_structure_type_coverage_pass_pct', 'coa_structure_type_coverage_warn_pct',
+  'sources_zoning_class_coverage_pass_pct', 'sources_zoning_class_coverage_warn_pct',
+  'sources_maxbuild_coverage_pass_pct', 'sources_maxbuild_coverage_warn_pct',
+  'parcel_cost_menu_coverage_pass_pct', 'parcel_cost_menu_coverage_warn_pct',
+  'external_coverage_pass_pct', 'external_coverage_warn_pct',
 ];
 
 describe('LOGIC_VAR_DEFAULTS — complete key set', () => {
