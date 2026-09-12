@@ -1,0 +1,295 @@
+{
+  "harness": "scripts/analysis/capture-step-golden.js",
+  "spec": "docs/specs/01-pipeline/122_pipeline_step_optimization.md §5.3",
+  "step": "scripts/quality/assert-data-bounds.js",
+  "chain": "coa",
+  "git_head": "fa9394fa21fdcbb0439549df953a30c49009c086",
+  "exit_code": 0,
+  "signal": null,
+  "summary": {
+    "records_total": 0,
+    "records_new": null,
+    "records_updated": null,
+    "records_meta": {
+      "checks_passed": "all",
+      "checks_failed": 0,
+      "checks_warned": 0,
+      "audit_table": {
+        "phase": 8,
+        "name": "CoA Data Quality",
+        "verdict": "PASS",
+        "rows": [
+          {
+            "metric": "orphan_link_count",
+            "value": 0,
+            "threshold": "== 0",
+            "status": "PASS"
+          },
+          {
+            "metric": "coa_forward_link_sub085_pct",
+            "value": 53.9,
+            "threshold": "<= 59",
+            "status": "PASS"
+          },
+          {
+            "metric": "null_address",
+            "value": 3,
+            "threshold": "< 10",
+            "status": "PASS"
+          },
+          {
+            "metric": "null_app_num",
+            "value": 0,
+            "threshold": "== 0",
+            "status": "PASS"
+          },
+          {
+            "metric": "future_hearing",
+            "value": 0,
+            "threshold": "== 0",
+            "status": "PASS"
+          },
+          {
+            "metric": "ancient_hearing",
+            "value": 1,
+            "threshold": "< 5",
+            "status": "PASS"
+          },
+          {
+            "metric": "coa_estimated_cost_gt10m",
+            "value": 66,
+            "threshold": "<= 80",
+            "status": "PASS"
+          },
+          {
+            "metric": "coa_app_fsi_gt5",
+            "value": 0,
+            "threshold": "== 0",
+            "status": "PASS"
+          },
+          {
+            "metric": "coa_maxbuild_gfa_gt3lot",
+            "value": 30,
+            "threshold": "<= 45",
+            "status": "PASS"
+          },
+          {
+            "metric": "permits_pre_permit_count",
+            "value": 0,
+            "threshold": "== 0",
+            "status": "PASS"
+          },
+          {
+            "metric": "sys_velocity_rows_sec",
+            "value": 0,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "sys_duration_ms",
+            "value": 359,
+            "threshold": null,
+            "status": "INFO"
+          }
+        ]
+      }
+    }
+  },
+  "summary_count": 1,
+  "meta": [
+    {
+      "reads": {
+        "permits": [
+          "*"
+        ],
+        "parcels": [
+          "*"
+        ],
+        "address_points": [
+          "*"
+        ],
+        "building_footprints": [
+          "*"
+        ],
+        "neighbourhoods": [
+          "*"
+        ],
+        "coa_applications": [
+          "*"
+        ],
+        "permit_inspections": [
+          "*"
+        ]
+      },
+      "writes": {
+        "pipeline_runs": [
+          "checks_passed",
+          "checks_failed",
+          "checks_warned"
+        ]
+      }
+    }
+  ],
+  "parse_errors": [],
+  "verdict": "PASS",
+  "ledger_status": [],
+  "stdout": "\n=== CQA Tier 2: Data Bounds Validation ===\n\n{\"level\":\"INFO\",\"tag\":\"[assert-data-bounds]\",\"msg\":\"Loaded 35 trade configs from control panel\"}\n{\"level\":\"INFO\",\"tag\":\"[assert-data-bounds]\",\"msg\":\"Loaded 491 logic variables from control panel\"}\n  OK: No orphaned CoA links\n  OK: CoA sub-0.85 link share 53.9% within baseline (<= 59%)\n  OK: CoA NULL addresses within baseline (3)\n  OK: No NULL CoA application numbers\n  OK: No future hearing dates beyond 2 years\n  OK: Ancient hearing dates within baseline (1)\n  OK: CoA estimated_cost > $10M within baseline (66)\n  OK: No CoA with coa_fsi > 5 (max ~3.15)\n  OK: CoA max_buildable_gfa > 3x lot within baseline (30)\nPIPELINE_SUMMARY:{\"records_total\":0,\"records_new\":null,\"records_updated\":null,\"records_meta\":{\"checks_passed\":\"all\",\"checks_failed\":0,\"checks_warned\":0,\"audit_table\":{\"phase\":8,\"name\":\"CoA Data Quality\",\"verdict\":\"PASS\",\"rows\":[{\"metric\":\"orphan_link_count\",\"value\":0,\"threshold\":\"== 0\",\"status\":\"PASS\"},{\"metric\":\"coa_forward_link_sub085_pct\",\"value\":53.9,\"threshold\":\"<= 59\",\"status\":\"PASS\"},{\"metric\":\"null_address\",\"value\":3,\"threshold\":\"< 10\",\"status\":\"PASS\"},{\"metric\":\"null_app_num\",\"value\":0,\"threshold\":\"== 0\",\"status\":\"PASS\"},{\"metric\":\"future_hearing\",\"value\":0,\"threshold\":\"== 0\",\"status\":\"PASS\"},{\"metric\":\"ancient_hearing\",\"value\":1,\"threshold\":\"< 5\",\"status\":\"PASS\"},{\"metric\":\"coa_estimated_cost_gt10m\",\"value\":66,\"threshold\":\"<= 80\",\"status\":\"PASS\"},{\"metric\":\"coa_app_fsi_gt5\",\"value\":0,\"threshold\":\"== 0\",\"status\":\"PASS\"},{\"metric\":\"coa_maxbuild_gfa_gt3lot\",\"value\":30,\"threshold\":\"<= 45\",\"status\":\"PASS\"},{\"metric\":\"permits_pre_permit_count\",\"value\":0,\"threshold\":\"== 0\",\"status\":\"PASS\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":359,\"threshold\":null,\"status\":\"INFO\"}]}}}\nPIPELINE_META:{\"reads\":{\"permits\":[\"*\"],\"parcels\":[\"*\"],\"address_points\":[\"*\"],\"building_footprints\":[\"*\"],\"neighbourhoods\":[\"*\"],\"coa_applications\":[\"*\"],\"permit_inspections\":[\"*\"]},\"writes\":{\"pipeline_runs\":[\"checks_passed\",\"checks_failed\",\"checks_warned\"]}}\n\n=== Data Bounds: COMPLETED (0.3s) ===\n\n\n[assert-data-bounds] completed in 0.4s\n",
+  "stderr": "{\"level\":\"WARN\",\"tag\":\"[assert-data-bounds]\",\"msg\":\"allocation_pct sum is 1.0744 (expected 1.0) — normalizing\"}\n{\"level\":\"WARN\",\"tag\":\"[assert-data-bounds]\",\"msg\":\"logic_variables.lifecycle_seq_band_22_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-data-bounds]\",\"msg\":\"logic_variables.lifecycle_seq_band_28_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-data-bounds]\",\"msg\":\"logic_variables.lifecycle_seq_band_30_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-data-bounds]\",\"msg\":\"logic_variables.lifecycle_seq_band_34_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-data-bounds]\",\"msg\":\"logic_variables.lifecycle_seq_band_37_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-data-bounds]\",\"msg\":\"logic_variables.lifecycle_seq_band_44_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-data-bounds]\",\"msg\":\"logic_variables.lifecycle_seq_band_47_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-data-bounds]\",\"msg\":\"logic_variables.lifecycle_seq_band_48_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-data-bounds]\",\"msg\":\"logic_variables.lifecycle_seq_band_50_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-data-bounds]\",\"msg\":\"logic_variables.lifecycle_seq_band_53_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-data-bounds]\",\"msg\":\"logic_variables.lifecycle_seq_band_54_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-data-bounds]\",\"msg\":\"logic_variables.lifecycle_seq_band_55_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-data-bounds]\",\"msg\":\"logic_variables.lifecycle_seq_band_56_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-data-bounds]\",\"msg\":\"logic_variables.lifecycle_seq_band_58_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-data-bounds]\",\"msg\":\"logic_variables.lifecycle_seq_band_65_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-data-bounds]\",\"msg\":\"logic_variables.lifecycle_seq_band_66_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-data-bounds]\",\"msg\":\"logic_variables.lifecycle_seq_band_67_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-data-bounds]\",\"msg\":\"logic_variables.lifecycle_seq_band_70_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-data-bounds]\",\"msg\":\"logic_variables.lifecycle_seq_band_71_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-data-bounds]\",\"msg\":\"logic_variables.lifecycle_seq_band_74_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-data-bounds]\",\"msg\":\"logic_variables.lifecycle_seq_band_75_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-data-bounds]\",\"msg\":\"logic_variables.lifecycle_seq_band_76_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-data-bounds]\",\"msg\":\"logic_variables.lifecycle_seq_band_77_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-data-bounds]\",\"msg\":\"logic_variables.lifecycle_seq_band_78_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-data-bounds]\",\"msg\":\"logic_variables.lifecycle_seq_band_79_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-data-bounds]\",\"msg\":\"logic_variables.lifecycle_seq_band_80_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-data-bounds]\",\"msg\":\"logic_variables.lifecycle_seq_band_81_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-data-bounds]\",\"msg\":\"logic_variables.lifecycle_seq_band_82_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-data-bounds]\",\"msg\":\"logic_variables.lifecycle_seq_band_83_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-data-bounds]\",\"msg\":\"logic_variables.lifecycle_seq_band_88_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-data-bounds]\",\"msg\":\"logic_variables.lifecycle_seq_band_91_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-data-bounds]\",\"msg\":\"logic_variables.lifecycle_seq_band_94_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-data-bounds]\",\"msg\":\"logic_variables.lifecycle_seq_band_96_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n",
+  "pipeline_runs": [],
+  "pipeline_runs_max_id_before": 1862,
+  "table_state": [],
+  "tables_source": "none",
+  "table_row_ceiling": 100000,
+  "table_timing": {},
+  "table_specs": {},
+  "invariants": [],
+  "invariants_file": null,
+  "db_target": "postgresql://postgres:***@127.0.0.1:54322/postgres",
+  "runtime": "node",
+  "args": [],
+  "nondeterminism": [
+    "pattern:duration_literal",
+    "row:sys_duration_ms",
+    "row:sys_velocity_rows_sec"
+  ],
+  "normalised": {
+    "step": "scripts/quality/assert-data-bounds.js",
+    "chain": "coa",
+    "exit_code": 0,
+    "summary": {
+      "records_meta": {
+        "audit_table": {
+          "name": "CoA Data Quality",
+          "phase": 8,
+          "rows": [
+            {
+              "metric": "orphan_link_count",
+              "status": "PASS",
+              "threshold": "== 0",
+              "value": 0
+            },
+            {
+              "metric": "coa_forward_link_sub085_pct",
+              "status": "PASS",
+              "threshold": "<= 59",
+              "value": 53.9
+            },
+            {
+              "metric": "null_address",
+              "status": "PASS",
+              "threshold": "< 10",
+              "value": 3
+            },
+            {
+              "metric": "null_app_num",
+              "status": "PASS",
+              "threshold": "== 0",
+              "value": 0
+            },
+            {
+              "metric": "future_hearing",
+              "status": "PASS",
+              "threshold": "== 0",
+              "value": 0
+            },
+            {
+              "metric": "ancient_hearing",
+              "status": "PASS",
+              "threshold": "< 5",
+              "value": 1
+            },
+            {
+              "metric": "coa_estimated_cost_gt10m",
+              "status": "PASS",
+              "threshold": "<= 80",
+              "value": 66
+            },
+            {
+              "metric": "coa_app_fsi_gt5",
+              "status": "PASS",
+              "threshold": "== 0",
+              "value": 0
+            },
+            {
+              "metric": "coa_maxbuild_gfa_gt3lot",
+              "status": "PASS",
+              "threshold": "<= 45",
+              "value": 30
+            },
+            {
+              "metric": "permits_pre_permit_count",
+              "status": "PASS",
+              "threshold": "== 0",
+              "value": 0
+            }
+          ],
+          "verdict": "PASS"
+        },
+        "checks_failed": 0,
+        "checks_passed": "all",
+        "checks_warned": 0
+      },
+      "records_new": null,
+      "records_total": 0,
+      "records_updated": null
+    },
+    "summary_count": 1,
+    "meta": [
+      {
+        "reads": {
+          "address_points": [
+            "*"
+          ],
+          "building_footprints": [
+            "*"
+          ],
+          "coa_applications": [
+            "*"
+          ],
+          "neighbourhoods": [
+            "*"
+          ],
+          "parcels": [
+            "*"
+          ],
+          "permit_inspections": [
+            "*"
+          ],
+          "permits": [
+            "*"
+          ]
+        },
+        "writes": {
+          "pipeline_runs": [
+            "checks_passed",
+            "checks_failed",
+            "checks_warned"
+          ]
+        }
+      }
+    ],
+    "parse_errors": [],
+    "pipeline_runs": [],
+    "stdout_lines": [
+      "=== CQA Tier 2: Data Bounds Validation ===",
+      "{\"level\":\"INFO\",\"msg\":\"Loaded 35 trade configs from control panel\",\"tag\":\"[assert-data-bounds]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"Loaded 491 logic variables from control panel\",\"tag\":\"[assert-data-bounds]\"}",
+      "  OK: No orphaned CoA links",
+      "  OK: CoA sub-0.85 link share 53.9% within baseline (<= 59%)",
+      "  OK: CoA NULL addresses within baseline (3)",
+      "  OK: No NULL CoA application numbers",
+      "  OK: No future hearing dates beyond 2 years",
+      "  OK: Ancient hearing dates within baseline (1)",
+      "  OK: CoA estimated_cost > $10M within baseline (66)",
+      "  OK: No CoA with coa_fsi > 5 (max ~3.15)",
+      "  OK: CoA max_buildable_gfa > 3x lot within baseline (30)",
+      "=== Data Bounds: COMPLETED (<DUR>) ===",
+      "[assert-data-bounds] completed in <DUR>"
+    ],
+    "table_state": [],
+    "invariants": []
+  },
+  "source_fingerprint": null,
+  "fingerprint_files": [],
+  "fingerprint_skipped_reason": "no_descriptor_yet"
+}

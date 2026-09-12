@@ -1,0 +1,328 @@
+{
+  "harness": "scripts/analysis/capture-step-golden.js",
+  "spec": "docs/specs/01-pipeline/122_pipeline_step_optimization.md §5.3",
+  "step": "scripts/quality/assert-data-bounds.js",
+  "chain": "permits",
+  "git_head": "fa9394fa21fdcbb0439549df953a30c49009c086",
+  "exit_code": 0,
+  "signal": null,
+  "summary": {
+    "records_total": 0,
+    "records_new": null,
+    "records_updated": null,
+    "records_meta": {
+      "checks_failed": 0,
+      "checks_warned": 1,
+      "warnings": [
+        "207632 non-terminal permits not seen in 30+ days (oldest: Fri Jul 10 2026 18:52:42 GMT-0400 (Eastern Daylight Time))"
+      ],
+      "audit_table": {
+        "phase": 15,
+        "name": "Data Quality Checks",
+        "verdict": "WARN",
+        "rows": [
+          {
+            "metric": "cost_outliers",
+            "value": 0,
+            "threshold": "< 20",
+            "status": "PASS"
+          },
+          {
+            "metric": "orphaned_permit_trades",
+            "value": 0,
+            "threshold": "== 0",
+            "status": "PASS"
+          },
+          {
+            "metric": "orphaned_permit_parcels",
+            "value": 0,
+            "threshold": "== 0",
+            "status": "PASS"
+          },
+          {
+            "metric": "duplicate_pk_groups",
+            "value": 0,
+            "threshold": "== 0",
+            "status": "PASS"
+          },
+          {
+            "metric": "permits_pre_permit_count",
+            "value": 0,
+            "threshold": "== 0",
+            "status": "PASS"
+          },
+          {
+            "metric": "wsib_no_legal_name",
+            "value": 0,
+            "threshold": "== 0",
+            "status": "PASS"
+          },
+          {
+            "metric": "wsib_no_g_class",
+            "value": 0,
+            "threshold": "== 0",
+            "status": "PASS"
+          },
+          {
+            "metric": "wsib_invalid_naics",
+            "value": 0,
+            "threshold": "== 0",
+            "status": "PASS"
+          },
+          {
+            "metric": "wsib_orphaned_links",
+            "value": 0,
+            "threshold": "== 0",
+            "status": "PASS"
+          },
+          {
+            "metric": "cost_estimate_over_ceiling",
+            "value": 0,
+            "threshold": "== 0 (> $50M, 3 accepted)",
+            "status": "PASS"
+          },
+          {
+            "metric": "modeled_gfa_over_ceiling",
+            "value": 0,
+            "threshold": "== 0 (priced, > 50K m²)",
+            "status": "PASS"
+          },
+          {
+            "metric": "ghost_permits_30d",
+            "value": 207632,
+            "threshold": "== 0",
+            "status": "WARN"
+          },
+          {
+            "metric": "sys_velocity_rows_sec",
+            "value": 0,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "sys_duration_ms",
+            "value": 2808,
+            "threshold": null,
+            "status": "INFO"
+          }
+        ]
+      }
+    }
+  },
+  "summary_count": 1,
+  "meta": [
+    {
+      "reads": {
+        "permits": [
+          "*"
+        ],
+        "parcels": [
+          "*"
+        ],
+        "address_points": [
+          "*"
+        ],
+        "building_footprints": [
+          "*"
+        ],
+        "neighbourhoods": [
+          "*"
+        ],
+        "coa_applications": [
+          "*"
+        ],
+        "permit_inspections": [
+          "*"
+        ]
+      },
+      "writes": {
+        "pipeline_runs": [
+          "checks_passed",
+          "checks_failed",
+          "checks_warned"
+        ]
+      }
+    }
+  ],
+  "parse_errors": [],
+  "verdict": "WARN",
+  "ledger_status": [],
+  "stdout": "\n=== CQA Tier 2: Data Bounds Validation ===\n\n{\"level\":\"INFO\",\"tag\":\"[assert-data-bounds]\",\"msg\":\"Loaded 35 trade configs from control panel\"}\n{\"level\":\"INFO\",\"tag\":\"[assert-data-bounds]\",\"msg\":\"Loaded 491 logic variables from control panel\"}\n  OK: Cost bounds — within the known baseline\n  SKIP: No recent permits (last 24h) — null rate checks skipped\n  OK: No orphaned permit_trades\n  OK: No orphaned permit_parcels\n  OK: No duplicate PKs\n  OK: wsib_registry has 121,116 rows\n  OK: All WSIB entries have legal names\n  OK: All WSIB entries have at least one G classification\n  OK: All WSIB NAICS codes are numeric\n  OK: No orphaned WSIB entity links\n\n--- Cost Estimates Coverage ---\n  OK: 274398 cost estimates (39.8% null, 5 distinct tiers)\n\n--- Ghost Records (stale > 30 days) ---\nPIPELINE_SUMMARY:{\"records_total\":0,\"records_new\":null,\"records_updated\":null,\"records_meta\":{\"checks_failed\":0,\"checks_warned\":1,\"warnings\":[\"207632 non-terminal permits not seen in 30+ days (oldest: Fri Jul 10 2026 18:52:42 GMT-0400 (Eastern Daylight Time))\"],\"audit_table\":{\"phase\":15,\"name\":\"Data Quality Checks\",\"verdict\":\"WARN\",\"rows\":[{\"metric\":\"cost_outliers\",\"value\":0,\"threshold\":\"< 20\",\"status\":\"PASS\"},{\"metric\":\"orphaned_permit_trades\",\"value\":0,\"threshold\":\"== 0\",\"status\":\"PASS\"},{\"metric\":\"orphaned_permit_parcels\",\"value\":0,\"threshold\":\"== 0\",\"status\":\"PASS\"},{\"metric\":\"duplicate_pk_groups\",\"value\":0,\"threshold\":\"== 0\",\"status\":\"PASS\"},{\"metric\":\"permits_pre_permit_count\",\"value\":0,\"threshold\":\"== 0\",\"status\":\"PASS\"},{\"metric\":\"wsib_no_legal_name\",\"value\":0,\"threshold\":\"== 0\",\"status\":\"PASS\"},{\"metric\":\"wsib_no_g_class\",\"value\":0,\"threshold\":\"== 0\",\"status\":\"PASS\"},{\"metric\":\"wsib_invalid_naics\",\"value\":0,\"threshold\":\"== 0\",\"status\":\"PASS\"},{\"metric\":\"wsib_orphaned_links\",\"value\":0,\"threshold\":\"== 0\",\"status\":\"PASS\"},{\"metric\":\"cost_estimate_over_ceiling\",\"value\":0,\"threshold\":\"== 0 (> $50M, 3 accepted)\",\"status\":\"PASS\"},{\"metric\":\"modeled_gfa_over_ceiling\",\"value\":0,\"threshold\":\"== 0 (priced, > 50K m²)\",\"status\":\"PASS\"},{\"metric\":\"ghost_permits_30d\",\"value\":207632,\"threshold\":\"== 0\",\"status\":\"WARN\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":2808,\"threshold\":null,\"status\":\"INFO\"}]}}}\nPIPELINE_META:{\"reads\":{\"permits\":[\"*\"],\"parcels\":[\"*\"],\"address_points\":[\"*\"],\"building_footprints\":[\"*\"],\"neighbourhoods\":[\"*\"],\"coa_applications\":[\"*\"],\"permit_inspections\":[\"*\"]},\"writes\":{\"pipeline_runs\":[\"checks_passed\",\"checks_failed\",\"checks_warned\"]}}\n\n  Warnings: 1\n\n=== Data Bounds: COMPLETED (2.7s) ===\n\n\n[assert-data-bounds] completed in 2.8s\n",
+  "stderr": "{\"level\":\"WARN\",\"tag\":\"[assert-data-bounds]\",\"msg\":\"allocation_pct sum is 1.0744 (expected 1.0) — normalizing\"}\n{\"level\":\"WARN\",\"tag\":\"[assert-data-bounds]\",\"msg\":\"logic_variables.lifecycle_seq_band_22_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-data-bounds]\",\"msg\":\"logic_variables.lifecycle_seq_band_28_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-data-bounds]\",\"msg\":\"logic_variables.lifecycle_seq_band_30_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-data-bounds]\",\"msg\":\"logic_variables.lifecycle_seq_band_34_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-data-bounds]\",\"msg\":\"logic_variables.lifecycle_seq_band_37_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-data-bounds]\",\"msg\":\"logic_variables.lifecycle_seq_band_44_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-data-bounds]\",\"msg\":\"logic_variables.lifecycle_seq_band_47_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-data-bounds]\",\"msg\":\"logic_variables.lifecycle_seq_band_48_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-data-bounds]\",\"msg\":\"logic_variables.lifecycle_seq_band_50_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-data-bounds]\",\"msg\":\"logic_variables.lifecycle_seq_band_53_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-data-bounds]\",\"msg\":\"logic_variables.lifecycle_seq_band_54_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-data-bounds]\",\"msg\":\"logic_variables.lifecycle_seq_band_55_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-data-bounds]\",\"msg\":\"logic_variables.lifecycle_seq_band_56_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-data-bounds]\",\"msg\":\"logic_variables.lifecycle_seq_band_58_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-data-bounds]\",\"msg\":\"logic_variables.lifecycle_seq_band_65_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-data-bounds]\",\"msg\":\"logic_variables.lifecycle_seq_band_66_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-data-bounds]\",\"msg\":\"logic_variables.lifecycle_seq_band_67_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-data-bounds]\",\"msg\":\"logic_variables.lifecycle_seq_band_70_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-data-bounds]\",\"msg\":\"logic_variables.lifecycle_seq_band_71_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-data-bounds]\",\"msg\":\"logic_variables.lifecycle_seq_band_74_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-data-bounds]\",\"msg\":\"logic_variables.lifecycle_seq_band_75_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-data-bounds]\",\"msg\":\"logic_variables.lifecycle_seq_band_76_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-data-bounds]\",\"msg\":\"logic_variables.lifecycle_seq_band_77_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-data-bounds]\",\"msg\":\"logic_variables.lifecycle_seq_band_78_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-data-bounds]\",\"msg\":\"logic_variables.lifecycle_seq_band_79_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-data-bounds]\",\"msg\":\"logic_variables.lifecycle_seq_band_80_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-data-bounds]\",\"msg\":\"logic_variables.lifecycle_seq_band_81_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-data-bounds]\",\"msg\":\"logic_variables.lifecycle_seq_band_82_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-data-bounds]\",\"msg\":\"logic_variables.lifecycle_seq_band_83_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-data-bounds]\",\"msg\":\"logic_variables.lifecycle_seq_band_88_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-data-bounds]\",\"msg\":\"logic_variables.lifecycle_seq_band_91_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-data-bounds]\",\"msg\":\"logic_variables.lifecycle_seq_band_94_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-data-bounds]\",\"msg\":\"logic_variables.lifecycle_seq_band_96_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n  WARN: 207632 ghost permits (non-terminal, unseen 30+ days) — oldest last_seen_at: Fri Jul 10 2026 18:52:42 GMT-0400 (Eastern Daylight Time)\n",
+  "pipeline_runs": [],
+  "pipeline_runs_max_id_before": 1862,
+  "table_state": [],
+  "tables_source": "none",
+  "table_row_ceiling": 100000,
+  "table_timing": {},
+  "table_specs": {},
+  "invariants": [],
+  "invariants_file": null,
+  "db_target": "postgresql://postgres:***@127.0.0.1:54322/postgres",
+  "runtime": "node",
+  "args": [],
+  "nondeterminism": [
+    "pattern:duration_literal",
+    "row:sys_duration_ms",
+    "row:sys_velocity_rows_sec"
+  ],
+  "normalised": {
+    "step": "scripts/quality/assert-data-bounds.js",
+    "chain": "permits",
+    "exit_code": 0,
+    "summary": {
+      "records_meta": {
+        "audit_table": {
+          "name": "Data Quality Checks",
+          "phase": 15,
+          "rows": [
+            {
+              "metric": "cost_outliers",
+              "status": "PASS",
+              "threshold": "< 20",
+              "value": 0
+            },
+            {
+              "metric": "orphaned_permit_trades",
+              "status": "PASS",
+              "threshold": "== 0",
+              "value": 0
+            },
+            {
+              "metric": "orphaned_permit_parcels",
+              "status": "PASS",
+              "threshold": "== 0",
+              "value": 0
+            },
+            {
+              "metric": "duplicate_pk_groups",
+              "status": "PASS",
+              "threshold": "== 0",
+              "value": 0
+            },
+            {
+              "metric": "permits_pre_permit_count",
+              "status": "PASS",
+              "threshold": "== 0",
+              "value": 0
+            },
+            {
+              "metric": "wsib_no_legal_name",
+              "status": "PASS",
+              "threshold": "== 0",
+              "value": 0
+            },
+            {
+              "metric": "wsib_no_g_class",
+              "status": "PASS",
+              "threshold": "== 0",
+              "value": 0
+            },
+            {
+              "metric": "wsib_invalid_naics",
+              "status": "PASS",
+              "threshold": "== 0",
+              "value": 0
+            },
+            {
+              "metric": "wsib_orphaned_links",
+              "status": "PASS",
+              "threshold": "== 0",
+              "value": 0
+            },
+            {
+              "metric": "cost_estimate_over_ceiling",
+              "status": "PASS",
+              "threshold": "== 0 (> $50M, 3 accepted)",
+              "value": 0
+            },
+            {
+              "metric": "modeled_gfa_over_ceiling",
+              "status": "PASS",
+              "threshold": "== 0 (priced, > 50K m²)",
+              "value": 0
+            },
+            {
+              "metric": "ghost_permits_30d",
+              "status": "WARN",
+              "threshold": "== 0",
+              "value": 207632
+            }
+          ],
+          "verdict": "WARN"
+        },
+        "checks_failed": 0,
+        "checks_warned": 1,
+        "warnings": [
+          "207632 non-terminal permits not seen in 30+ days (oldest: Fri Jul 10 2026 18:52:42 GMT-0400 (Eastern Daylight Time))"
+        ]
+      },
+      "records_new": null,
+      "records_total": 0,
+      "records_updated": null
+    },
+    "summary_count": 1,
+    "meta": [
+      {
+        "reads": {
+          "address_points": [
+            "*"
+          ],
+          "building_footprints": [
+            "*"
+          ],
+          "coa_applications": [
+            "*"
+          ],
+          "neighbourhoods": [
+            "*"
+          ],
+          "parcels": [
+            "*"
+          ],
+          "permit_inspections": [
+            "*"
+          ],
+          "permits": [
+            "*"
+          ]
+        },
+        "writes": {
+          "pipeline_runs": [
+            "checks_passed",
+            "checks_failed",
+            "checks_warned"
+          ]
+        }
+      }
+    ],
+    "parse_errors": [],
+    "pipeline_runs": [],
+    "stdout_lines": [
+      "=== CQA Tier 2: Data Bounds Validation ===",
+      "{\"level\":\"INFO\",\"msg\":\"Loaded 35 trade configs from control panel\",\"tag\":\"[assert-data-bounds]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"Loaded 491 logic variables from control panel\",\"tag\":\"[assert-data-bounds]\"}",
+      "  OK: Cost bounds — within the known baseline",
+      "  SKIP: No recent permits (last 24h) — null rate checks skipped",
+      "  OK: No orphaned permit_trades",
+      "  OK: No orphaned permit_parcels",
+      "  OK: No duplicate PKs",
+      "  OK: wsib_registry has 121,116 rows",
+      "  OK: All WSIB entries have legal names",
+      "  OK: All WSIB entries have at least one G classification",
+      "  OK: All WSIB NAICS codes are numeric",
+      "  OK: No orphaned WSIB entity links",
+      "--- Cost Estimates Coverage ---",
+      "  OK: 274398 cost estimates (39.8% null, 5 distinct tiers)",
+      "--- Ghost Records (stale > 30 days) ---",
+      "  Warnings: 1",
+      "=== Data Bounds: COMPLETED (<DUR>) ===",
+      "[assert-data-bounds] completed in <DUR>"
+    ],
+    "table_state": [],
+    "invariants": []
+  },
+  "source_fingerprint": null,
+  "fingerprint_files": [],
+  "fingerprint_skipped_reason": "no_descriptor_yet"
+}

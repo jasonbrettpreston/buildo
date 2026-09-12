@@ -406,7 +406,47 @@ Every notable behaviour in the file is classified CONTRACT, INCIDENTAL, or DEFEC
 
 ---
 
-## 5. Session scope note (commits 1-4 only)
+## 5. Non-determinism inventory (commit 5 → G1′; Spec 120 §14.2, claim #151/#151a)
+
+Declared BEFORE the first capture, per Spec 122 §5.3's "non-determinism inventory declared before the first diff" and Spec 124 R-AC.
+
+### 5.1 Harness volatiles (always masked/stripped by the normaliser, every step)
+
+Confirmed against `scripts/analysis/capture-step-golden.js`'s own header comment (§(b)/(c)) and the `pipeline_runs` SELECT (`:762`):
+
+- `duration_ms` — `pipeline_runs.duration_ms` column, and the step's own `durationMs` (`Date.now()` elapsed, §3.2) surfaced in `PIPELINE_META`.
+- `sys_duration_ms` — the harness's own wall-clock measurement of the child process, recorded alongside the captured summary (never a step-emitted field).
+- `chain_run_id` — `records_meta.chain_run_id` (R-U, the per-invocation chain-run correlation id).
+- `pipeline_runs[].id` / `.started_at` / `.completed_at` — the ledger row's own PK and timestamps; **N/A for the 4 in-chain captures** (a step run under `PIPELINE_CHAIN` skips its own ledger row per run-chain's convention, confirmed by this file's own comment header §(c) — zero `pipeline_runs` rows expected for permits/coa/sources/deep_scrapes). Applies only to `standalone.json`, where this step owns its ledger row (`:92` INSERT / `:1004` UPDATE).
+- resolve-db target stdout `migrations=N` — printed once per child-process boot by `scripts/lib/resolve-db.js:285`, not part of the captured JSON; recorded per-capture in §5.3 below as a live abort-check, not diffed.
+
+### 5.2 The 4 clock-relative SQL predicate classes (§3.2), mapped to their metric names
+
+| Class | SQL fragment | Metric(s) fed | Chain(s) |
+|---|---|---|---|
+| 1 | `NOW() - INTERVAL '1 day'` (4 sites, `:149/:158/:169/:180`) | `null_descriptions_24h`, `null_builders_24h`, `null_status_24h` (`recentTotal` itself is a denominator only, no standalone metric row) | permits |
+| 2 | `CURRENT_DATE + INTERVAL '2 years'` (`:335`) | `future_hearing` | coa |
+| 3 | `CURRENT_DATE - INTERVAL '30 days'` (`:938`) | `ghost_permits_30d` | permits |
+| 4 | bare `CURRENT_DATE` (`:808`) | `future_dates` (inspection, via `checkInsp`) | deep_scrapes |
+
+None of these 4 metrics' `value`/`status` fields are expected to be masked by the harness's normaliser (they are ordinary integers/percentages, not timestamps) — they are non-deterministic only in the sense that their VALUE can legitimately drift between the PRE and POST capture of the same chain if the underlying row population changes between runs (§5.3), not because the harness masks them structurally. Flagged here so a genuine future-diff on these 4 metrics is read as "the moving window rolled" or "a row count changed," not "the conversion broke something," before commit 5's PRE/POST pair is ever compared.
+
+### 5.3 Rows depending on live table counts other chains mutate
+
+This step reads 16 tables (§0 claim 5) on the shared local Docker DB — not a snapshot isolated per capture. The counts below are fed by scrape/ingest/link chains that run independently of this ASSERT step and can change between any two invocations if another chain runs in between:
+
+`permits`, `coa_applications`, `permit_inspections`, `permit_trades`, `permit_parcels`, `entities`, `wsib_registry`, `cost_estimates` — all 8 are written by not-yet-converted producers or link steps (§3.6) that are not gated by this capture session. The remaining 8 read tables (`parcels`, `address_points`, `building_footprints`, `neighbourhoods`, `ravines`, `heritage_properties`, `heritage_districts`, `toronto_centreline`) are reference/batch-loaded tables not expected to mutate mid-session.
+
+**Mitigation (pinned per the executor brief):** all 5 PRE captures (§5.4) run sequentially, back-to-back, with no intervening chain run — and the eventual POST captures (a later commit) must do the same relative to PRE, so any PRE/POST diff on these 8 tables' derived metrics is attributable to the conversion, not to an interleaved write from another process.
+
+### 5.4 ASSERT specifics
+
+- **Zero domain writes** — confirmed §0 claim 4 (the only 2 `pool.query` writes are the SDK-owned `pipeline_runs` ledger row, retired under conversion). The captures below read the DB; they write nothing new.
+- **`table_state`, no descriptor yet:** `resolveTables({descriptor, tablesArg})` (`scripts/analysis/capture-step-golden.js:339-357`) returns `{tables:[], source:'none'}` whenever `descriptor` is `null` (no `assert-data-bounds.descriptor.json` exists — `fs.existsSync` false, `:930`) AND no `--tables=` CLI arg is passed. Neither capture below passes `--tables=`, so **no table snapshot is taken and no `table_state` entries appear in any of the 5 captures** — this is the ASSERT profile's expected shape (`outputs.writes` is forced `"none"` even post-conversion, §2, so `table_state` will never populate for this step by descriptor-derived means, not just pre-conversion). `source_fingerprint` is likewise expected `null`/SKIPPED for the same reason (`descriptorPathFor` doesn't exist yet, `:989` logs the SKIPPED line explicitly).
+
+---
+
+## 6. Session scope note (commits 1-4 only)
 
 This deliverable covers PH-0 through PH-6 (G0, G3, G5, G6) of the nine-commit ledger (plan §3). **Commits 5-9 (golden master, red-first suite, descriptor+compute, peels, cutover+differential) are explicitly out of this session's scope** per the executor brief ("No code under scripts/lib, scripts/quality, src/tests/steps (commits 5-9)"; "No `converted.json` edit"). `step-validate --step=assert_data_bounds --fast` correctly reports "no step found" after every one of these 4 commits (re-run and confirmed after commits 1 and 2; the registry only gains an entry at commit 6's `pending` declaration) — this is expected, not a gap.
 

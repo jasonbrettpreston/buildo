@@ -1,0 +1,393 @@
+{
+  "harness": "scripts/analysis/capture-step-golden.js",
+  "spec": "docs/specs/01-pipeline/122_pipeline_step_optimization.md §5.3",
+  "step": "scripts/quality/assert-data-bounds.js",
+  "chain": "sources",
+  "git_head": "fa9394fa21fdcbb0439549df953a30c49009c086",
+  "exit_code": 0,
+  "signal": null,
+  "summary": {
+    "records_total": 0,
+    "records_new": null,
+    "records_updated": null,
+    "records_meta": {
+      "checks_failed": 0,
+      "checks_warned": 1,
+      "warnings": [
+        "4 parcels with lot_size_sqm out of bounds (0-1M sqm)"
+      ],
+      "audit_table": {
+        "phase": 14,
+        "name": "Sources Data Quality",
+        "verdict": "WARN",
+        "rows": [
+          {
+            "metric": "address_points_count",
+            "value": 525346,
+            "threshold": ">= 500000",
+            "status": "PASS"
+          },
+          {
+            "metric": "address_point_dupes",
+            "value": 0,
+            "threshold": "== 0",
+            "status": "PASS"
+          },
+          {
+            "metric": "parcels_count",
+            "value": 486530,
+            "threshold": ">= 460000",
+            "status": "PASS"
+          },
+          {
+            "metric": "parcel_dupes",
+            "value": 0,
+            "threshold": "== 0",
+            "status": "PASS"
+          },
+          {
+            "metric": "parcel_lot_outliers",
+            "value": 4,
+            "threshold": "== 0",
+            "status": "WARN"
+          },
+          {
+            "metric": "building_footprints_count",
+            "value": 427077,
+            "threshold": ">= 400000",
+            "status": "PASS"
+          },
+          {
+            "metric": "building_height_outliers",
+            "value": 0,
+            "threshold": "== 0",
+            "status": "PASS"
+          },
+          {
+            "metric": "neighbourhoods_count",
+            "value": 158,
+            "threshold": ">= 158",
+            "status": "PASS"
+          },
+          {
+            "metric": "neighbourhood_dupes",
+            "value": 0,
+            "threshold": "== 0",
+            "status": "PASS"
+          },
+          {
+            "metric": "ravines_count",
+            "value": 854,
+            "threshold": ">= 500",
+            "status": "PASS"
+          },
+          {
+            "metric": "heritage_properties_count",
+            "value": 8824,
+            "threshold": ">= 8000",
+            "status": "PASS"
+          },
+          {
+            "metric": "heritage_districts_count",
+            "value": 29,
+            "threshold": ">= 20",
+            "status": "PASS"
+          },
+          {
+            "metric": "toronto_centreline_count",
+            "value": 47363,
+            "threshold": ">= 40000",
+            "status": "PASS"
+          },
+          {
+            "metric": "wsib_no_legal_name",
+            "value": 0,
+            "threshold": "== 0",
+            "status": "PASS"
+          },
+          {
+            "metric": "wsib_no_g_class",
+            "value": 0,
+            "threshold": "== 0",
+            "status": "PASS"
+          },
+          {
+            "metric": "wsib_invalid_naics",
+            "value": 0,
+            "threshold": "== 0",
+            "status": "PASS"
+          },
+          {
+            "metric": "wsib_orphaned_links",
+            "value": 0,
+            "threshold": "== 0",
+            "status": "PASS"
+          },
+          {
+            "metric": "sys_velocity_rows_sec",
+            "value": 0,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "sys_duration_ms",
+            "value": 4509,
+            "threshold": null,
+            "status": "INFO"
+          }
+        ]
+      }
+    }
+  },
+  "summary_count": 1,
+  "meta": [
+    {
+      "reads": {
+        "permits": [
+          "*"
+        ],
+        "parcels": [
+          "*"
+        ],
+        "address_points": [
+          "*"
+        ],
+        "building_footprints": [
+          "*"
+        ],
+        "neighbourhoods": [
+          "*"
+        ],
+        "coa_applications": [
+          "*"
+        ],
+        "permit_inspections": [
+          "*"
+        ]
+      },
+      "writes": {
+        "pipeline_runs": [
+          "checks_passed",
+          "checks_failed",
+          "checks_warned"
+        ]
+      }
+    }
+  ],
+  "parse_errors": [],
+  "verdict": "WARN",
+  "ledger_status": [],
+  "stdout": "\n=== CQA Tier 2: Data Bounds Validation ===\n\n{\"level\":\"INFO\",\"tag\":\"[assert-data-bounds]\",\"msg\":\"Loaded 35 trade configs from control panel\"}\n{\"level\":\"INFO\",\"tag\":\"[assert-data-bounds]\",\"msg\":\"Loaded 491 logic variables from control panel\"}\n  OK: address_points has 525,346 rows (>= 500,000)\n  OK: No duplicate address_point_id\n  OK: parcels has 486,530 rows (>= 460,000)\n  OK: No duplicate parcel_id\n  WARN: 4 parcels with lot size outliers\n  OK: building_footprints has 427,077 rows (>= 400,000)\n  OK: Building footprint heights within bounds\n  OK: neighbourhoods has 158 rows (>= 158)\n  OK: No duplicate neighbourhood_id\n  OK: ravines has 854 rows (>= 500)\n  OK: heritage_properties has 8,824 rows (>= 8000)\n  OK: heritage_districts has 29 rows (>= 20)\n  OK: toronto_centreline has 47,363 rows (>= 40000)\n  OK: wsib_registry has 121,116 rows\n  OK: All WSIB entries have legal names\n  OK: All WSIB entries have at least one G classification\n  OK: All WSIB NAICS codes are numeric\n  OK: No orphaned WSIB entity links\nPIPELINE_SUMMARY:{\"records_total\":0,\"records_new\":null,\"records_updated\":null,\"records_meta\":{\"checks_failed\":0,\"checks_warned\":1,\"warnings\":[\"4 parcels with lot_size_sqm out of bounds (0-1M sqm)\"],\"audit_table\":{\"phase\":14,\"name\":\"Sources Data Quality\",\"verdict\":\"WARN\",\"rows\":[{\"metric\":\"address_points_count\",\"value\":525346,\"threshold\":\">= 500000\",\"status\":\"PASS\"},{\"metric\":\"address_point_dupes\",\"value\":0,\"threshold\":\"== 0\",\"status\":\"PASS\"},{\"metric\":\"parcels_count\",\"value\":486530,\"threshold\":\">= 460000\",\"status\":\"PASS\"},{\"metric\":\"parcel_dupes\",\"value\":0,\"threshold\":\"== 0\",\"status\":\"PASS\"},{\"metric\":\"parcel_lot_outliers\",\"value\":4,\"threshold\":\"== 0\",\"status\":\"WARN\"},{\"metric\":\"building_footprints_count\",\"value\":427077,\"threshold\":\">= 400000\",\"status\":\"PASS\"},{\"metric\":\"building_height_outliers\",\"value\":0,\"threshold\":\"== 0\",\"status\":\"PASS\"},{\"metric\":\"neighbourhoods_count\",\"value\":158,\"threshold\":\">= 158\",\"status\":\"PASS\"},{\"metric\":\"neighbourhood_dupes\",\"value\":0,\"threshold\":\"== 0\",\"status\":\"PASS\"},{\"metric\":\"ravines_count\",\"value\":854,\"threshold\":\">= 500\",\"status\":\"PASS\"},{\"metric\":\"heritage_properties_count\",\"value\":8824,\"threshold\":\">= 8000\",\"status\":\"PASS\"},{\"metric\":\"heritage_districts_count\",\"value\":29,\"threshold\":\">= 20\",\"status\":\"PASS\"},{\"metric\":\"toronto_centreline_count\",\"value\":47363,\"threshold\":\">= 40000\",\"status\":\"PASS\"},{\"metric\":\"wsib_no_legal_name\",\"value\":0,\"threshold\":\"== 0\",\"status\":\"PASS\"},{\"metric\":\"wsib_no_g_class\",\"value\":0,\"threshold\":\"== 0\",\"status\":\"PASS\"},{\"metric\":\"wsib_invalid_naics\",\"value\":0,\"threshold\":\"== 0\",\"status\":\"PASS\"},{\"metric\":\"wsib_orphaned_links\",\"value\":0,\"threshold\":\"== 0\",\"status\":\"PASS\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":4509,\"threshold\":null,\"status\":\"INFO\"}]}}}\nPIPELINE_META:{\"reads\":{\"permits\":[\"*\"],\"parcels\":[\"*\"],\"address_points\":[\"*\"],\"building_footprints\":[\"*\"],\"neighbourhoods\":[\"*\"],\"coa_applications\":[\"*\"],\"permit_inspections\":[\"*\"]},\"writes\":{\"pipeline_runs\":[\"checks_passed\",\"checks_failed\",\"checks_warned\"]}}\n\n  Warnings: 1\n\n=== Data Bounds: COMPLETED (4.5s) ===\n\n\n[assert-data-bounds] completed in 4.5s\n",
+  "stderr": "{\"level\":\"WARN\",\"tag\":\"[assert-data-bounds]\",\"msg\":\"allocation_pct sum is 1.0744 (expected 1.0) — normalizing\"}\n{\"level\":\"WARN\",\"tag\":\"[assert-data-bounds]\",\"msg\":\"logic_variables.lifecycle_seq_band_22_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-data-bounds]\",\"msg\":\"logic_variables.lifecycle_seq_band_28_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-data-bounds]\",\"msg\":\"logic_variables.lifecycle_seq_band_30_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-data-bounds]\",\"msg\":\"logic_variables.lifecycle_seq_band_34_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-data-bounds]\",\"msg\":\"logic_variables.lifecycle_seq_band_37_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-data-bounds]\",\"msg\":\"logic_variables.lifecycle_seq_band_44_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-data-bounds]\",\"msg\":\"logic_variables.lifecycle_seq_band_47_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-data-bounds]\",\"msg\":\"logic_variables.lifecycle_seq_band_48_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-data-bounds]\",\"msg\":\"logic_variables.lifecycle_seq_band_50_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-data-bounds]\",\"msg\":\"logic_variables.lifecycle_seq_band_53_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-data-bounds]\",\"msg\":\"logic_variables.lifecycle_seq_band_54_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-data-bounds]\",\"msg\":\"logic_variables.lifecycle_seq_band_55_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-data-bounds]\",\"msg\":\"logic_variables.lifecycle_seq_band_56_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-data-bounds]\",\"msg\":\"logic_variables.lifecycle_seq_band_58_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-data-bounds]\",\"msg\":\"logic_variables.lifecycle_seq_band_65_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-data-bounds]\",\"msg\":\"logic_variables.lifecycle_seq_band_66_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-data-bounds]\",\"msg\":\"logic_variables.lifecycle_seq_band_67_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-data-bounds]\",\"msg\":\"logic_variables.lifecycle_seq_band_70_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-data-bounds]\",\"msg\":\"logic_variables.lifecycle_seq_band_71_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-data-bounds]\",\"msg\":\"logic_variables.lifecycle_seq_band_74_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-data-bounds]\",\"msg\":\"logic_variables.lifecycle_seq_band_75_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-data-bounds]\",\"msg\":\"logic_variables.lifecycle_seq_band_76_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-data-bounds]\",\"msg\":\"logic_variables.lifecycle_seq_band_77_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-data-bounds]\",\"msg\":\"logic_variables.lifecycle_seq_band_78_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-data-bounds]\",\"msg\":\"logic_variables.lifecycle_seq_band_79_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-data-bounds]\",\"msg\":\"logic_variables.lifecycle_seq_band_80_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-data-bounds]\",\"msg\":\"logic_variables.lifecycle_seq_band_81_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-data-bounds]\",\"msg\":\"logic_variables.lifecycle_seq_band_82_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-data-bounds]\",\"msg\":\"logic_variables.lifecycle_seq_band_83_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-data-bounds]\",\"msg\":\"logic_variables.lifecycle_seq_band_88_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-data-bounds]\",\"msg\":\"logic_variables.lifecycle_seq_band_91_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-data-bounds]\",\"msg\":\"logic_variables.lifecycle_seq_band_94_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[assert-data-bounds]\",\"msg\":\"logic_variables.lifecycle_seq_band_96_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n",
+  "pipeline_runs": [],
+  "pipeline_runs_max_id_before": 1862,
+  "table_state": [],
+  "tables_source": "none",
+  "table_row_ceiling": 100000,
+  "table_timing": {},
+  "table_specs": {},
+  "invariants": [],
+  "invariants_file": null,
+  "db_target": "postgresql://postgres:***@127.0.0.1:54322/postgres",
+  "runtime": "node",
+  "args": [],
+  "nondeterminism": [
+    "pattern:duration_literal",
+    "row:sys_duration_ms",
+    "row:sys_velocity_rows_sec"
+  ],
+  "normalised": {
+    "step": "scripts/quality/assert-data-bounds.js",
+    "chain": "sources",
+    "exit_code": 0,
+    "summary": {
+      "records_meta": {
+        "audit_table": {
+          "name": "Sources Data Quality",
+          "phase": 14,
+          "rows": [
+            {
+              "metric": "address_points_count",
+              "status": "PASS",
+              "threshold": ">= 500000",
+              "value": 525346
+            },
+            {
+              "metric": "address_point_dupes",
+              "status": "PASS",
+              "threshold": "== 0",
+              "value": 0
+            },
+            {
+              "metric": "parcels_count",
+              "status": "PASS",
+              "threshold": ">= 460000",
+              "value": 486530
+            },
+            {
+              "metric": "parcel_dupes",
+              "status": "PASS",
+              "threshold": "== 0",
+              "value": 0
+            },
+            {
+              "metric": "parcel_lot_outliers",
+              "status": "WARN",
+              "threshold": "== 0",
+              "value": 4
+            },
+            {
+              "metric": "building_footprints_count",
+              "status": "PASS",
+              "threshold": ">= 400000",
+              "value": 427077
+            },
+            {
+              "metric": "building_height_outliers",
+              "status": "PASS",
+              "threshold": "== 0",
+              "value": 0
+            },
+            {
+              "metric": "neighbourhoods_count",
+              "status": "PASS",
+              "threshold": ">= 158",
+              "value": 158
+            },
+            {
+              "metric": "neighbourhood_dupes",
+              "status": "PASS",
+              "threshold": "== 0",
+              "value": 0
+            },
+            {
+              "metric": "ravines_count",
+              "status": "PASS",
+              "threshold": ">= 500",
+              "value": 854
+            },
+            {
+              "metric": "heritage_properties_count",
+              "status": "PASS",
+              "threshold": ">= 8000",
+              "value": 8824
+            },
+            {
+              "metric": "heritage_districts_count",
+              "status": "PASS",
+              "threshold": ">= 20",
+              "value": 29
+            },
+            {
+              "metric": "toronto_centreline_count",
+              "status": "PASS",
+              "threshold": ">= 40000",
+              "value": 47363
+            },
+            {
+              "metric": "wsib_no_legal_name",
+              "status": "PASS",
+              "threshold": "== 0",
+              "value": 0
+            },
+            {
+              "metric": "wsib_no_g_class",
+              "status": "PASS",
+              "threshold": "== 0",
+              "value": 0
+            },
+            {
+              "metric": "wsib_invalid_naics",
+              "status": "PASS",
+              "threshold": "== 0",
+              "value": 0
+            },
+            {
+              "metric": "wsib_orphaned_links",
+              "status": "PASS",
+              "threshold": "== 0",
+              "value": 0
+            }
+          ],
+          "verdict": "WARN"
+        },
+        "checks_failed": 0,
+        "checks_warned": 1,
+        "warnings": [
+          "4 parcels with lot_size_sqm out of bounds (0-1M sqm)"
+        ]
+      },
+      "records_new": null,
+      "records_total": 0,
+      "records_updated": null
+    },
+    "summary_count": 1,
+    "meta": [
+      {
+        "reads": {
+          "address_points": [
+            "*"
+          ],
+          "building_footprints": [
+            "*"
+          ],
+          "coa_applications": [
+            "*"
+          ],
+          "neighbourhoods": [
+            "*"
+          ],
+          "parcels": [
+            "*"
+          ],
+          "permit_inspections": [
+            "*"
+          ],
+          "permits": [
+            "*"
+          ]
+        },
+        "writes": {
+          "pipeline_runs": [
+            "checks_passed",
+            "checks_failed",
+            "checks_warned"
+          ]
+        }
+      }
+    ],
+    "parse_errors": [],
+    "pipeline_runs": [],
+    "stdout_lines": [
+      "=== CQA Tier 2: Data Bounds Validation ===",
+      "{\"level\":\"INFO\",\"msg\":\"Loaded 35 trade configs from control panel\",\"tag\":\"[assert-data-bounds]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"Loaded 491 logic variables from control panel\",\"tag\":\"[assert-data-bounds]\"}",
+      "  OK: address_points has 525,346 rows (>= 500,000)",
+      "  OK: No duplicate address_point_id",
+      "  OK: parcels has 486,530 rows (>= 460,000)",
+      "  OK: No duplicate parcel_id",
+      "  WARN: 4 parcels with lot size outliers",
+      "  OK: building_footprints has 427,077 rows (>= 400,000)",
+      "  OK: Building footprint heights within bounds",
+      "  OK: neighbourhoods has 158 rows (>= 158)",
+      "  OK: No duplicate neighbourhood_id",
+      "  OK: ravines has 854 rows (>= 500)",
+      "  OK: heritage_properties has 8,824 rows (>= 8000)",
+      "  OK: heritage_districts has 29 rows (>= 20)",
+      "  OK: toronto_centreline has 47,363 rows (>= 40000)",
+      "  OK: wsib_registry has 121,116 rows",
+      "  OK: All WSIB entries have legal names",
+      "  OK: All WSIB entries have at least one G classification",
+      "  OK: All WSIB NAICS codes are numeric",
+      "  OK: No orphaned WSIB entity links",
+      "  Warnings: 1",
+      "=== Data Bounds: COMPLETED (<DUR>) ===",
+      "[assert-data-bounds] completed in <DUR>"
+    ],
+    "table_state": [],
+    "invariants": []
+  },
+  "source_fingerprint": null,
+  "fingerprint_files": [],
+  "fingerprint_skipped_reason": "no_descriptor_yet"
+}
