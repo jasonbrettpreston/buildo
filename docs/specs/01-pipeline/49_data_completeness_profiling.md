@@ -14,9 +14,10 @@ As a pipeline operator, I want a single authoritative field-level coverage repor
 
 ## 2. Architecture
 
-**Placement (post-Phase G):**
-- Permits chain: step 26 (last step, after assert_entity_tracing) — was step 27 pre-Phase G; `create_pre_permits` removed by Phase G.
-- CoA chain: step 10 (last step, after assert_lifecycle_phase_distribution) — was step 12 pre-Phase G; `create_pre_permits` + `assert_pre_permit_aging` removed by Phase G.
+**Placement (measured against `scripts/manifest.json.chains`, corrected 2026-09-12, AGC-D2 — the prior "post-Phase G" step numbers were stale, not re-verified since Phase G; batch 1 I1 commit 9's own G0 re-measurement is the source of the numbers below):**
+- Permits chain: position **32/33** (`manifest.json.chains.permits[31]`), directly after `assert_entity_tracing` — **NOT the last step**; `backup_db` (position 33) runs after it.
+- CoA chain: position **16/16** — the **last step** in the chain, directly after `compute_phase_calibration`.
+- Sources chain: position **24/28** (`manifest.json.chains.sources[23]`), directly after `compute_parcel_cost_estimates` and immediately before its own sibling `assert_parcel_sanity` (position 25) — also **NOT the last step**; `refresh_snapshot`/`assert_data_bounds`/`assert_engine_health` run after it.
 
 **Non-halting.** Coverage gaps emit WARN/FAIL rows in the audit_table but do not throw. Infrastructure failures (DB connectivity, Zod validation) re-throw.
 

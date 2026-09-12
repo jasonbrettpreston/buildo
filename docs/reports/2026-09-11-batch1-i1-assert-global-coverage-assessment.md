@@ -744,4 +744,110 @@ Related suites green: `violations.test.ts` (25, was 21), `assert-global-coverage
 
 ---
 
-*Report continues — commit 9 (differential + cutover) is out of scope for this session.*
+## 9. Commit 9 — differential + cutover (2026-09-12, HEAD `fa960c48`, main tree)
+
+**No recapture required for this step's own goldens.** Commit 9's edits (`converted.json`, `step-archetype-census.json`, docs/tests/spec) touch none of the 3 fingerprinted inputs (`scripts/quality/assert-global-coverage.js`, `.descriptor.json`, `scripts/lib/compute/assert-global-coverage.js`) — `step-validate --fast` read `stale-fingerprints=0 unexplained-diffs=0` both before and after this commit's edits, confirmed independently (`--step=assert_global_coverage --write`, this session).
+
+**7th `it.fails()` resolved (R-K).** `src/tests/steps/assert_global_coverage/violations.test.ts`'s one remaining `it.fails()` (the C6 lead-id invariants' `limit` assertion) was never flippable as originally written — `checks[].limit` has no bare-number form, only the string grammar (`"viol == 0"`), confirmed against the live descriptor (`lead_id_administrative_drift`/`lead_id_duplicate_groups`, both `kind:"invariant"`, `severity:"FAIL"`, `limit:"viol == 0"`). Rewritten to assert the documented reality (`c.limit` toBe `'viol == 0'`, a string) rather than the never-true bare-`0` claim; now a plain, genuinely-passing `it()`. **0 `it.fails()` remain in this file** (fast invariant #5 stays clean).
+
+**Cutover obligations (Spec 123 §7 row 9 / §7.2 A6, R-K) — all in THIS commit:** `converted.json` gains `scripts/quality/assert-global-coverage.js`, `pending` = `[]` · `scripts/steps/_schema/step-archetype-census.json`'s row for this slug RETIRED (deleted, not flagged — mirrors the pilot 9/`enrich_parcels` precedent `3c1f1923`: a converted slug carries no census row at all) → `npm run conversion-roadmap` (54 remaining files / 56 remaining slugs / 0 pending, unchanged — this slug was already excluded from "remaining" while pending, so only the pending counter moves 1→0) + `--check` clean · `npm run programme-backlog` (98 items, blocks batching: 0) · `generate-template-freeze.mjs` run with NO flag — `--check` clean, zero content diff (no RE-FREEZE owed; schema untouched since RE-FREEZE #7) · repinned count tests: `conversion-roadmap.infra.test.ts` (2 independently-re-derived-count tests + 1 rendered-table-agreement test, all corrected 9→10 converted / 1→0 pending, all green), `step-schema.logic.test.ts` ("nine steps are converted" → ten, `KNOWN_CHANGED_THIS_COMMIT` unchanged since `assert-schema.descriptor.json` is again the one known exception), `step-seam.logic.test.ts` (registry 9→10 descriptors; live pairs stay at 6 — `assert_global_coverage` declares `inputs.reads.steps: []`, contributing zero new seam edges since it reads 28 tables directly, never another step's declared output) · `step-conformance.infra.test.ts`'s `reportPathFor()` widened to accept the `batchN-iM` report-filename convention alongside the pre-existing `pilotN` one (this is the FIRST batch-labelled report in the fleet; the regex only ever matched `pilot\d+`) · `node -r dotenv/config scripts/analysis/step-validate.mjs --step=assert_global_coverage --write` then `--all --write` (full mode) — all 9 other scorecards regenerated to pick up the registry-wide GOLD-PRE-FRESH line (38→42 PRE captures, 9→10 converted steps).
+
+**R-D three-way lock, exercised a third time.** `assert_global_coverage`'s 20 declared `config.logic_variables` (6 pre-existing + 14 new, report §2.4) join the converted fleet's union the moment this commit registers it in `converted.json.converted[]` — `scripts/lib/declared-logic-variables.js#collectDeclaredLogicVariableNames()` reads ONLY `converted[]`, never `pending[]`, so these 20 names were invisible to the union throughout commits 6-8 despite the descriptor existing since commit 7. `assert-schema.descriptor.json`'s `checks[0].expect` / `config.probe_presence` regenerated **86 → 106** names (+20, 0 removed — the exact `assert_global_coverage` set, verified programmatically against the live derivation; no other field touched). All four `assert_schema` POST goldens re-taken (`--overwrite`, local stack, migrations=244): fingerprint `2c7a2830…` on all four (was `37025a60…`), exit 0, verdict PASS, `declared_logic_variables_present` row reads `{"missing":[]}` on every chain — confirming all 106 names, the 20 new ones included, resolve against the live `logic_variables` table (seeded at this step's own commit 7). Full detail: `docs/reports/2026-08-25-pilot1-assert-schema-assessment.md` §Addendum 2.
+
+**Seed-annotation gap found and closed (registration-surfaced, mirrors the pilot 9/pilot-7/8 commit-9 precedent — a conformance check that only runs over `CONVERTED[]` sees a step for the first time at cutover).** `step-conformance.infra.test.ts`'s both-directions canary (`RED — <file>: DROPPING a declared var reddens conformance`) failed on its second assertion for ALL 20 of this step's declared `config.logic_variables` — `scripts/seeds/logic_variables.json`'s entries lacked the `CONSUMED by <slug>` annotation every OTHER converted step's seed rows carry (`taggedToStep()`'s own cross-check). Because this loop is scoped to `CONVERTED`, it never ran against `assert_global_coverage` while pending (commits 6-8) — the gap was invisible until registration. Fixed: appended `CONSUMED by assert_global_coverage.` to all 20 descriptions (text-only; no name/bound/value/seed-key changed, no DB re-seed needed — the annotation is read from the JSON file directly by the conformance test, never from a live DB column).
+
+**AGC-D2 closed (Ask A3).** Spec 49 §2's "Placement" text ("Permits chain: step 26 (last step...)", "CoA chain: step 10 (last step...)") replaced with the measured `manifest.json.chains` positions, re-verified live this commit: permits **32/33** (after `assert_entity_tracing`, NOT last — `backup_db` runs after it), coa **16/16** (last step), sources **24/28** (after `compute_parcel_cost_estimates`, before its own sibling `assert_parcel_sanity`, NOT last). `defect-ledger.md` AGC-D2 row flipped OPEN·PIN → CLOSED·commit 9; `violations.test.ts`'s defect-ledger-disposition test repinned to match.
+
+**Scorecard at cutover (fast, pre-`--write`): 16/17, G0-G8 full per row, G9 PASS (this section + §R below), G4d PASS, G-shape PASS (`file-clean=true compute-clean=true`), hard-stop=false.** The one open point is G3 (297 table rows, 8 vocab-hit rows) — pre-existing since commit 1, unchanged by this commit (the census counts table-name mentions, not a completeness dimension this conversion touches).
+
+**Spec diff (Spec 123 §7 row 9(b) / Spec 124 §R-8):** Spec 49 §2 (AGC-D2 fix, above) — the only spec touched by this commit. Specs 41/42/43/122/123/124: **N/A** — no chain step-list renumbering, no archetype-profile change, no register amendment owed (RE-FREEZE #7 already paid the schema cost at commit 7).
+
+### §R Reflection (Spec 124 R-F, mandatory after cutover)
+
+**LOW-CONFIDENCE** — findings this pilot could not fully resolve, carried forward with their own disposition rather than silently dropped:
+
+| # | Finding | Why LOW-CONFIDENCE | Disposition |
+|---|---|---|---|
+| 1 | **Plan low-confidence item 1** — the exact runtime distinct-metric-row count per chain (permits/coa/sources), after accounting for the 2 dynamic loop sites (`reasonDist`, `COST_PROP_COLS`) and the 2 object-argument `profileVocabTriple` calls the bracket-matching census extractor could not destructure — was never closed with a live per-chain count across commits 1-9. The golden captures DO carry the true runtime row count per chain (permits 196, coa 102, sources 17, standalone 307 — report §7.4.3), which answers the question in practice, but no commit explicitly re-derived it from the static census the way the plan's own item 1 asked | The census (273 static sites) and the golden captures (real per-chain row counts) were never cross-tabulated site-by-site in one place — the arithmetic in §7.4.3 confirms the TOTALS reconcile, not that every individual dynamic site's contribution was independently counted | **Carried, not closeable by this pilot's remaining scope** — the golden captures are the practical answer; a future step needing the SAME census-generation approach at this scale (see RECURRING #1 below) should budget for this cross-tabulation up front rather than deferring it |
+| 2 | **Plan low-confidence item 5 — measured, not resolved as expected.** The two conditional scope-drift rows (`enriched_status_status_scope_drift`/`_retighten`, IL-2, C3/C7) were expected to plausibly already read 0 (self-retired) in production. Measured this session against the live permits POST capture: **both read 5, not 0** — the WARN/INFO pair is still genuinely live, still draining historical residue through the 4 named writer sites C7 closed in 2026 | This is a live DB value that will change on its own as the residue drains — today's "5" is a snapshot, not a permanent fact, so neither "self-retired" nor "still needed" is provable as a lasting state from one measurement | **Carried as a fact, not a defect** — IL-2's own disposition (ACCEPT, preserved-in-compute) does not depend on the count reaching 0; recorded here so a future reader does not mistake the design's self-retiring INTENT for an already-retired STATE |
+| 3 | **AGC-D4/D5 remain OPEN · PIN**, unchanged by this commit — AGC-D4 (hand-duplicated `tfd` SQL mirroring `compute-trade-forecasts.js` `SOURCE_SQL`, the same drift class that caused the WF2 #4 `fetchLeadInspect` bug once already in this file) and AGC-D5 (`aged_pre_permits`, a dead SELECT column, zero behaviour impact) both had no operator ruling authorizing a fix during this conversion (Spec 123 §3: a DEFECT fixed during conversion contaminates the differential) | Neither is closeable without either a cross-file shared-SQL extraction (D4) or a deliberate deletion/wiring decision (D5) — both are genuine code changes, not documentation corrections like AGC-D2 was | **fix-after**, per their own ledger rows — carried forward unchanged, not re-litigated here |
+
+**RECURRING/STANDARD-SHAPING** — findings this pilot believes are likely to recur in a FUTURE step, feeding Spec 124 §4.6's promotion criterion:
+
+| # | Finding | Named archetype match this is expected to recur against | Proposed lock |
+|---|---|---|---|
+| 1 | **The tool-generated `checks[]`-from-row-builder-census approach (Ask A1) is now the programme's scale-defining precedent** (305 declared checks, ≥9× the prior largest, `enrich_parcels`'s 31) — a hand-authored descriptor was never realistic at this count. The SAME shape (a large ASSERT step with dozens-to-hundreds of near-identical row-builder call sites) is a near-certainty for this batch's own remaining ASSERT members | **`assert_data_bounds` (I2) and `assert_engine_health` (I3) — the next two steps in THIS SAME batch 1**, both named in the C4 batching-entry plan as ASSERT-archetype siblings of this step | Already generalized as a reusable pattern in this commit's own `scripts/generate-assert-global-coverage-descriptor.js` (`buildDescriptor(CHECK_DEFS, LOGIC_VAR_DEFS)`, a pure function, peel 8c) — I2/I3's own plans should budget PH-0/PH-3 time for a row-builder census + generator from the start, not discover the need for one mid-commit the way this pilot did |
+| 2 | **The R-D three-way lock's `assert-schema.descriptor.json` regeneration has now fired on 3 of this fleet's 10 cutovers** (pilot 9: 42→86, this commit: 86→106) — every time, by hand: locate the two arrays, compute the sorted union, splice. No drift yet (this commit's own regeneration matched `collectDeclaredLogicVariableNames()` byte-for-byte), but the manual process has zero guard against a future transcription slip | **Every future cutover that registers ANY new `config.logic_variables`** — i.e. most of the remaining 54 files, since Rule 3 (tunables externalized) makes a bare threshold non-conforming | **Proposed lock:** a small generator script (`scripts/generate-assert-schema-probe-lists.js` or similar) that reads `collectDeclaredLogicVariableNames()` and rewrites both arrays in place, with a `--check` drift mode mirroring peel 8c's own `buildDescriptor --check` convention — filed as a LOW/MED followup (`review_followups.md`), not built in this commit (out of this step's Operating Boundaries) |
+| 3 | **A spec's own architecture/placement prose can drift silently from `manifest.json` for a long time with no conformance check catching it** (AGC-D2 — Spec 49 §2 named the wrong chain positions since before this fleet's conversion programme began, discovered only because THIS step's own G0 happened to re-measure chain position as part of `sharing.varies_by_chain.phase`). No other converted step's PH-0 has had a reason to re-derive its OWN chain position and cross-check it against the owning spec's prose | Any future step whose owning spec states a specific chain position/step-count in prose (grep for "step \d+" / "last step" across `docs/specs/01-pipeline/`) | **Not proposed as a new lock this commit** (a repo-wide spec-vs-manifest position scanner is a dedicated WF's worth of scope, not a one-line follow-on) — filed as a MED followup naming this exact recurrence count (1 so far) so a second occurrence promotes it per §4.6 |
+| 4 | **A pre-existing (pre-conversion) logic_variable's seed row can silently lack the `CONSUMED by <slug>` annotation for the ENTIRE pending period** (commits 6-8, ~1 day) because `step-conformance.infra.test.ts`'s both-directions canary is scoped to `CONVERTED[]` — the same "invisible until registration" shape as RECURRING #2's R-D lock and the EP-D17-class conformance gaps pilot 9 found at ITS OWN cutover. This pilot's OWN 6 pre-existing vars (used by the legacy pre-conversion script for years) had never once been checked against this convention; all 20 (6 old + 14 new) were missing it | **Any future step converting PRE-EXISTING logic_variables that predate the seed-annotation convention** — `assert_data_bounds`/`assert_engine_health` (I2/I3, this batch) are the most likely next candidates, being long-lived legacy ASSERT scripts with their own pre-existing tunables | **Proposed:** a standing (not per-step-scoped) conformance test that greps EVERY seed entry named by ANY manifest slug's legacy script (not only `CONVERTED[]`) for the annotation — would have caught this the moment the 6 old vars were first written, not at cutover. Filed as a MED followup alongside RECURRING #2 (both are "the canary only fires once a step joins `CONVERTED[]`" shape) |
+
+---
+
+## Validation scorecard (generated)
+
+> Generated by `node scripts/analysis/step-validate.mjs --step=assert_global_coverage --write` — Spec 123 §6, ruling R-R (2026-08-29).
+> Regenerate with the same command; a stale block is a conformance-lock finding (`step-conformance.infra.test.ts`).
+
+**Score: 16/17** · G9 Reflection: PASS · G4d fence-lock coverage: PASS · G-shape: PASS · **Hard stop: no**
+
+| Gate | Score | Max | Detail |
+|---|---:|---:|---|
+| G0 | 1 | 1 | boundary-section=true spec-line=true |
+| G1 | 1 | 1 | PH-3 section found=true sha-count=23 |
+| G2 | 1 | 1 | 122-churn-complexity.md quadrant=top-right window=39313d9 |
+| G3 | 1 | 2 | table rows=297 vocab-hit rows=8 |
+| G4 | 2 | 2 | risk-class row with chance+impact found=true |
+| G5 | 1 | 1 | db=true clock=true network=true argv/env=true |
+| G6 | 3 | 3 | 7 ledger row(s), 0 without CLOSED/PIN () |
+| G7 | 3 | 3 | file=true fences=0 it-count=27 RED-evidence=true |
+| G8 | 3 | 3 | missing-invocations=0 missing-pre-invocations=0 stale-fingerprints=0 unexplained-diffs=0 |
+| G9 (binary) | PASS | — | heading=true low-confidence-table=true recurring-table=true |
+| G4d (fence<=lock) | PASS | — | fences=0 lock-it-count=27 |
+| G-shape | PASS | — | file-clean=true compute-clean=true |
+
+### Fast invariants (always run — the fast descriptor gate)
+
+| # | Scope | Pass | Detail |
+|---|---|---|---|
+| 1 | assert_global_coverage | PASS | min_migration=241 <= migrations count=244 |
+| 2 | assert_global_coverage | PASS | 20 declared, missing from seeds: none |
+| 3 | assert_global_coverage | PASS | retired=0 overlap-with-declared=none |
+| 7 | assert_global_coverage | PASS | SPEC LINK header present=true |
+| 8 | assert_global_coverage | PASS | G-4: 20 declared, 10 verdict-affecting, 0 violate on_invalid:fail with no deviations[] cover |
+| 20 | assert_global_coverage | PASS | HB-1: execution.shape=null — HB-1 applies_when execution.shape=="enrich" only (RS-D-STA); not applicable, never a pass-by-omission |
+| 21 | assert_global_coverage | PASS | CEIL-1: execution.shape=null — CEIL-1 applies_when execution.shape=="enrich" only (RS-D-STA); not applicable, never a pass-by-omission |
+| 4 | (registry) | PASS | overlap: none |
+| 5 | (registry) | PASS | clean (0 it.fails( call sites outside a declared pending slug) |
+| 9 | (registry) | PASS | clean (0 converted slugs blocked by an unmet cutover_prereq item; blocks batching: 0) |
+| 22 | (registry) | PASS | GOLD-PRE-FRESH: 42 PRE capture(s) across 10 converted step(s) all tracked + clean (git can restore every reference) |
+
+### Captures (item iv)
+- missing invocations (POST): none
+- missing invocations (PRE, GOLD-PRE): none
+- stale fingerprints: none
+- compare ran: true · diffs found: 2287 · unexplained: 0
+
+### Test suite (item iii)
+- 914/930 passed (suite success=true)
+
+### Policy coverage matrix (item vi) — Spec 124 Rules 1-13
+
+| Rule | Name | Status | Note |
+|---|---|---|---|
+| 1 | Nothing hidden | enforced-green | G-1 schema-baseline: schema-baseline clean |
+| 2 | Compute is just compute | enforced-green |  |
+| 3 | Tunables externalized | enforced-green | G-4: 20 declared, 10 verdict-affecting, 0 violate on_invalid:fail with no deviations[] cover |
+| 4 | Compute rule declared | enforced-green | G-2: 3 preserved-in-compute row(s), 0 with no why/notes.json/checks[] grounding |
+| 5 | checks >= 1 | enforced-green |  |
+| 6 | Omission fails (20 categories) | enforced-green |  |
+| 7 | Archetype gates categories | enforced-green |  |
+| 8 | Per-target write discipline | enforced-green |  |
+| 9 | Banned write needs ledger (+ V7 no_retraction) | enforced-green |  |
+| 10 | Verdict row-derived | enforced-green | (a) OK — 11 corpus file(s) scanned, 0 unsanctioned second derivations, 2 sanctioned hit(s) matched SANCTIONED_VERDICT_SITES · (b) OK — SELF_SKIPPED audit table folds to verdict=WARN (!= PASS), row-derived off 1 non-INFO row(s) — VRD-SKIP closed |
+| 11 | Phase-order re-derive (declared half, checkOrderGuaranteesCited) | enforced-green | no when:"pre_write" checks — vacuously nothing to cite — G-3 completeness half stays open |
+| 12 | Truthful crash posture (R-B reachability, static + R-M before-image) | enforced-green | R-B (checkInterruptedPostureTruthful): recovery.interrupted=null — no reachability claim to verify · R-M: prose-only (R-M/LG-17 describe not scoped to this step (vitest not run, or no before-image target)) |
+| 13 | A step validates itself | enforced-green | this run of step:validate IS the mechanism |
+| P3 | I/O cost adjudication (measured, not gated) | measured | descriptor=297274B notes=0B checks=305 rows records_meta=40039B (newest post/ capture) |
+
+**Enforced-green: 13/14**
+

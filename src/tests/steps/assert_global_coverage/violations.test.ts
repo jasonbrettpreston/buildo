@@ -13,8 +13,8 @@
 // assessment.md` — §4.1 is the CONTRACT list this file locks; §2.4 is the operator's PH-3 adjudication
 // (14 new logic_variables, 7 pairs); §4.3/§4.4 is the AGC-D1..D7 defect ledger (`docs/reports/
 // defect-ledger.md`). Commit 8a (the peel) closed AGC-D1/D3/D6/D7 — each was already fixed structurally
-// by commit 6 (D1) or commit 7 (D3/D6/D7) but the ledger itself had not been updated; AGC-D2/D4/D5 stay
-// OPEN · PIN (D2 rides commit 9 per Ask A3, D4/D5 are fix-after with no operator ruling to fix now).
+// by commit 6 (D1) or commit 7 (D3/D6/D7) but the ledger itself had not been updated; D2 closed at
+// commit 9 (Spec 49 §2 fix, Ask A3); AGC-D4/D5 stay OPEN · PIN (fix-after, no operator ruling to fix now).
 //
 // ⚠️ EVERY CLAIM TEST MUST BE RED TODAY, AND RED FOR THE RIGHT REASON. Claims that read a FUTURE artifact
 // (the descriptor, the compute module) open with `artifact()` → `expect(existsSync).toBe(true)`, so the
@@ -246,16 +246,14 @@ describe('assert_global_coverage — measured facts, true today (plain it)', () 
     expect(floor).toBeLessThanOrEqual(273);
   });
 
-  it('converted.json declares this step pending, well-formed and not double-registered in `converted` (R-K/R-K.1) — stage advanced to "runner_wired" at commit 7 (descriptor+compute landed and the shell is frozen onto pipeline.step(), but G9\'s post-cutover §R Reflection is commit-9-only per Spec 124 R-F — `runner_wired` is the R-K.1 stage that excludes exactly G9, `STAGE_HARDSTOP_EXCLUSIONS.runner_wired`)', () => {
+  it('converted.json registers this step and deletes its pending entry in the SAME commit (R-K, commit 9 cutover) — mirrors the pilot 9/enrich_parcels precedent (3c1f1923)', () => {
     const doc = JSON.parse(fs.readFileSync(artifact(CONVERTED_REL), 'utf8')) as {
       converted: string[];
       pending: Array<{ file: string; registers_at: string; reason: string; declared: string; stage: string }>;
     };
-    expect(doc.converted, 'must not be double-registered while still pending').not.toContain(STEP_REL);
+    expect(doc.converted, `${CONVERTED_REL} must register ${STEP_REL}`).toContain(STEP_REL);
     const entry = doc.pending.find((p) => p.file === STEP_REL);
-    expect(entry, `${CONVERTED_REL} has no pending entry for ${STEP_REL}`).toBeDefined();
-    expect(entry?.stage).toBe('runner_wired');
-    expect(entry?.declared).toBe('2026-09-11');
+    expect(entry, `${CONVERTED_REL} must have NO pending entry for ${STEP_REL} once converted (R-K)`).toBeUndefined();
   });
 
   it('the defect ledger carries all 7 AGC-D rows with the commit-8a-verified disposition (report §4.3/§4.4)', () => {
@@ -263,11 +261,12 @@ describe('assert_global_coverage — measured facts, true today (plain it)', () 
     // 6/7 code — each closure is itself independently proven elsewhere in this file (the FENCES
     // block covers C6/C3/DEC-1; D6/D7 mirror the AS-D1/AS-D9 structural-adoption precedent, cited
     // by the infra test at src/tests/assert-global-coverage.infra.test.ts:139 and the descriptor's
-    // own terminals[0].why). D2/D4/D5 stay OPEN · PIN — no ruling authorized fixing them here.
+    // own terminals[0].why). D2 closed at commit 9 (Spec 49 §2 fix). D4/D5 stay OPEN · PIN — no
+    // ruling authorized fixing them here.
     const ledger = fs.readFileSync(artifact(DEFECT_LEDGER_REL), 'utf8');
     const expectedStatus: Record<number, RegExp> = {
       1: /CLOSED\s*·\s*commit 6/,
-      2: /OPEN\s*·\s*PIN/,
+      2: /CLOSED\s*·\s*commit 9/,
       3: /CLOSED\s*·\s*commit 7/,
       4: /OPEN\s*·\s*PIN/,
       5: /OPEN\s*·\s*PIN/,
@@ -451,7 +450,7 @@ describe('assert_global_coverage — G4d fence locks (both directions, pre-conve
 // 3. Genuinely RED today — flips at commit 7 (descriptor + compute land)
 // ===========================================================================
 
-describe('assert_global_coverage — genuinely red until commit 7 (it.fails)', () => {
+describe('assert_global_coverage — descriptor/compute claims, all flipped plain at commit 9 (0 it.fails remain)', () => {
   it('descriptor exists and validates against the ASSERT profile: outputs/recovery/counters "none"', () => { // flipped at: commit 7
     const d = loadDescriptor();
     expect(d.identity.archetype).toBe('ASSERT');
@@ -493,21 +492,21 @@ describe('assert_global_coverage — genuinely red until commit 7 (it.fails)', (
     expect(hits.length, 'expected 2 checks (CoA + permits) declaring limit_from_config zoning_class_coverage_pass_pct').toBe(2);
   });
 
-  // STILL RED at commit 7, deliberately: `checks[].limit` (definitions.bound, x-frozen)
-  // has no bare-number form — only the string grammar (`"viol == 0"`) or the {warn,fail}
-  // object. `c.limit` is therefore the STRING `"viol == 0"`, not the number `0`, so this
-  // exact assertion never flips without a step.schema.json edit (out of scope per the
-  // commit's own Rules). kind/severity DO flip true; the third assertion inside this
-  // `it.fails` is what keeps the whole block genuinely red — left as `it.fails`, not
-  // corrected, per the instruction to flip only claims that become true.
-  it.fails('the C6 lead-id invariants are declared as kind:"invariant", severity:"FAIL", limit 0 (IL-1, both-directions fence)', () => { // flips at: commit 7
+  // Corrected at commit 9 (R-K): `checks[].limit` (definitions.bound, x-frozen) has no
+  // bare-number form — only the string grammar (`"viol == 0"`) or the {warn,fail} object.
+  // The original claim (`c.limit` toBe(0), a bare number) was never true and never could
+  // be without a step.schema.json edit (frozen, out of scope). This asserts the documented
+  // reality instead: `c.limit` is the STRING `"viol == 0"`, which is IL-1's both-directions
+  // fence expressed in the frozen bound grammar (viol count of 0 is the zero-tolerance
+  // invariant) — kind/severity/limit all now plain, genuinely-passing assertions.
+  it('the C6 lead-id invariants are declared as kind:"invariant", severity:"FAIL", limit "viol == 0" (IL-1, both-directions fence)', () => { // corrected at: commit 9 — see report §9
     const d = loadDescriptor();
     const drift = d.checks.filter((c) => /lead_id_administrative_drift|lead_id_duplicate_groups/.test(c.id));
     expect(drift.length, 'expected both C6 invariant checks declared').toBe(2);
     for (const c of drift) {
       expect(c.kind).toBe('invariant');
       expect(c.severity).toBe('FAIL');
-      expect(c.limit).toBe(0);
+      expect(c.limit).toBe('viol == 0');
     }
   });
 

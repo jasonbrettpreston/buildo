@@ -2209,7 +2209,7 @@ describe('R-R / Rule 13 — the generated scorecard block is not stale (vitest-i
     const dir = path.join(REPO_ROOT, 'docs/reports');
     const hit = fs
       .readdirSync(dir)
-      .find((f) => /^\d{4}-\d{2}-\d{2}-pilot\d+-.*-assessment\.md$/.test(f) && f.includes(`-${dashSlug}-assessment.md`));
+      .find((f) => /^\d{4}-\d{2}-\d{2}-(pilot\d+|batch\d+-i\d+)-.*-assessment\.md$/i.test(f) && f.includes(`-${dashSlug}-assessment.md`));
     return hit ? path.join(dir, hit) : null;
   }
 

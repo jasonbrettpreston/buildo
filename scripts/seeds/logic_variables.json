@@ -1382,7 +1382,7 @@
   "profiling_coverage_pass_pct": {
     "default": 90,
     "type": "number",
-    "description": "assert-global-coverage: coverage >= this integer pct -> PASS (spec 49)",
+    "description": "assert-global-coverage: coverage >= this integer pct -> PASS (spec 49) CONSUMED by assert_global_coverage.",
     "min": 0,
     "max": 100,
     "admin": {
@@ -1392,7 +1392,7 @@
   "profiling_coverage_warn_pct": {
     "default": 70,
     "type": "number",
-    "description": "assert-global-coverage: coverage >= this integer pct -> WARN; below -> FAIL (spec 49)",
+    "description": "assert-global-coverage: coverage >= this integer pct -> WARN; below -> FAIL (spec 49) CONSUMED by assert_global_coverage.",
     "min": 0,
     "max": 100,
     "admin": {
@@ -1402,7 +1402,7 @@
   "cost_coverage_pass_pct": {
     "default": 55,
     "type": "number",
-    "description": "WF3 F4: assert-global-coverage Step-14 cost_estimates rows PASS floor. Whole-corpus cost coverage is ~62% BY DESIGN under the archetype+safe-skip model (non-residential T4 matrix-miss safe-skip, fit-blocked permissioning, MEC-only nofit are legitimately NULL) — the global 90% bar was inherited indiscriminately and was already red pre-WF2 (40%). Scoped recalibration of these ~6 non-halting observability rows only; global 90/70 untouched (don't blind other row-quality checks). 55 leaves ~7pt headroom over measured 61.8% while still FAILing on a genuine collapse.",
+    "description": "WF3 F4: assert-global-coverage Step-14 cost_estimates rows PASS floor. Whole-corpus cost coverage is ~62% BY DESIGN under the archetype+safe-skip model (non-residential T4 matrix-miss safe-skip, fit-blocked permissioning, MEC-only nofit are legitimately NULL) — the global 90% bar was inherited indiscriminately and was already red pre-WF2 (40%). Scoped recalibration of these ~6 non-halting observability rows only; global 90/70 untouched (don't blind other row-quality checks). 55 leaves ~7pt headroom over measured 61.8% while still FAILing on a genuine collapse. CONSUMED by assert_global_coverage.",
     "min": 0,
     "max": 100,
     "admin": {
@@ -1412,7 +1412,7 @@
   "cost_coverage_warn_pct": {
     "default": 50,
     "type": "number",
-    "description": "WF3 F4: assert-global-coverage Step-14 cost_estimates rows WARN floor (below -> FAIL). Pairs with cost_coverage_pass_pct.",
+    "description": "WF3 F4: assert-global-coverage Step-14 cost_estimates rows WARN floor (below -> FAIL). Pairs with cost_coverage_pass_pct. CONSUMED by assert_global_coverage.",
     "min": 0,
     "max": 100,
     "admin": {
@@ -1422,7 +1422,7 @@
   "vocab_coverage_pass_pct": {
     "default": 90,
     "type": "number",
-    "description": "assert-global-coverage vocabulary-coverage (spec 49 §3): distinct values present / defined vocabulary >= this integer pct -> PASS",
+    "description": "assert-global-coverage vocabulary-coverage (spec 49 §3): distinct values present / defined vocabulary >= this integer pct -> PASS CONSUMED by assert_global_coverage.",
     "min": 0,
     "max": 100,
     "admin": {
@@ -1432,7 +1432,7 @@
   "vocab_coverage_warn_pct": {
     "default": 70,
     "type": "number",
-    "description": "assert-global-coverage vocabulary-coverage (spec 49 §3): >= this integer pct -> WARN; below -> FAIL",
+    "description": "assert-global-coverage vocabulary-coverage (spec 49 §3): >= this integer pct -> WARN; below -> FAIL CONSUMED by assert_global_coverage.",
     "min": 0,
     "max": 100,
     "admin": {
@@ -4570,7 +4570,7 @@
   "zoning_class_coverage_pass_pct": {
     "default": 80,
     "type": "number",
-    "description": "assert-global-coverage: zoning_class calibrated coverage (DEC-1, #406) -> PASS (CoA + permits)",
+    "description": "assert-global-coverage: zoning_class calibrated coverage (DEC-1, #406) -> PASS (CoA + permits) CONSUMED by assert_global_coverage.",
     "min": 0,
     "max": 100,
     "admin": {
@@ -4580,7 +4580,7 @@
   "zoning_class_coverage_warn_pct": {
     "default": 75,
     "type": "number",
-    "description": "assert-global-coverage: zoning_class calibrated coverage (DEC-1, #406) -> WARN, else FAIL",
+    "description": "assert-global-coverage: zoning_class calibrated coverage (DEC-1, #406) -> WARN, else FAIL CONSUMED by assert_global_coverage.",
     "min": 0,
     "max": 100,
     "admin": {
@@ -4590,7 +4590,7 @@
   "coa_neighbourhood_coverage_pass_pct": {
     "default": 95,
     "type": "number",
-    "description": "assert-global-coverage: CoA neighbourhood_id calibrated coverage -> PASS",
+    "description": "assert-global-coverage: CoA neighbourhood_id calibrated coverage -> PASS CONSUMED by assert_global_coverage.",
     "min": 0,
     "max": 100,
     "admin": {
@@ -4600,7 +4600,7 @@
   "coa_neighbourhood_coverage_warn_pct": {
     "default": 90,
     "type": "number",
-    "description": "assert-global-coverage: CoA neighbourhood_id calibrated coverage -> WARN, else FAIL",
+    "description": "assert-global-coverage: CoA neighbourhood_id calibrated coverage -> WARN, else FAIL CONSUMED by assert_global_coverage.",
     "min": 0,
     "max": 100,
     "admin": {
@@ -4610,7 +4610,7 @@
   "coa_structure_type_coverage_pass_pct": {
     "default": 45,
     "type": "number",
-    "description": "assert-global-coverage: CoA structure_type calibrated coverage (description-classifier ceiling ~52%) -> PASS",
+    "description": "assert-global-coverage: CoA structure_type calibrated coverage (description-classifier ceiling ~52%) -> PASS CONSUMED by assert_global_coverage.",
     "min": 0,
     "max": 100,
     "admin": {
@@ -4620,7 +4620,7 @@
   "coa_structure_type_coverage_warn_pct": {
     "default": 35,
     "type": "number",
-    "description": "assert-global-coverage: CoA structure_type calibrated coverage -> WARN, else FAIL",
+    "description": "assert-global-coverage: CoA structure_type calibrated coverage -> WARN, else FAIL CONSUMED by assert_global_coverage.",
     "min": 0,
     "max": 100,
     "admin": {
@@ -4630,7 +4630,7 @@
   "sources_zoning_class_coverage_pass_pct": {
     "default": 90,
     "type": "number",
-    "description": "assert-global-coverage: sources-chain parcels.zoning_class calibrated coverage -> PASS",
+    "description": "assert-global-coverage: sources-chain parcels.zoning_class calibrated coverage -> PASS CONSUMED by assert_global_coverage.",
     "min": 0,
     "max": 100,
     "admin": {
@@ -4640,7 +4640,7 @@
   "sources_zoning_class_coverage_warn_pct": {
     "default": 85,
     "type": "number",
-    "description": "assert-global-coverage: sources-chain parcels.zoning_class calibrated coverage -> WARN, else FAIL",
+    "description": "assert-global-coverage: sources-chain parcels.zoning_class calibrated coverage -> WARN, else FAIL CONSUMED by assert_global_coverage.",
     "min": 0,
     "max": 100,
     "admin": {
@@ -4650,7 +4650,7 @@
   "sources_maxbuild_coverage_pass_pct": {
     "default": 88,
     "type": "number",
-    "description": "assert-global-coverage: sources-chain max-build/opt envelope calibrated coverage (residential w/ building) -> PASS",
+    "description": "assert-global-coverage: sources-chain max-build/opt envelope calibrated coverage (residential w/ building) -> PASS CONSUMED by assert_global_coverage.",
     "min": 0,
     "max": 100,
     "admin": {
@@ -4660,7 +4660,7 @@
   "sources_maxbuild_coverage_warn_pct": {
     "default": 75,
     "type": "number",
-    "description": "assert-global-coverage: sources-chain max-build/opt envelope calibrated coverage (residential w/ building) -> WARN, else FAIL",
+    "description": "assert-global-coverage: sources-chain max-build/opt envelope calibrated coverage (residential w/ building) -> WARN, else FAIL CONSUMED by assert_global_coverage.",
     "min": 0,
     "max": 100,
     "admin": {
@@ -4670,7 +4670,7 @@
   "parcel_cost_menu_coverage_pass_pct": {
     "default": 85,
     "type": "number",
-    "description": "assert-global-coverage: sources-chain parcel_cost_menu calibrated coverage (residential w/ building) -> PASS",
+    "description": "assert-global-coverage: sources-chain parcel_cost_menu calibrated coverage (residential w/ building) -> PASS CONSUMED by assert_global_coverage.",
     "min": 0,
     "max": 100,
     "admin": {
@@ -4680,7 +4680,7 @@
   "parcel_cost_menu_coverage_warn_pct": {
     "default": 80,
     "type": "number",
-    "description": "assert-global-coverage: sources-chain parcel_cost_menu calibrated coverage (residential w/ building) -> WARN, else FAIL",
+    "description": "assert-global-coverage: sources-chain parcel_cost_menu calibrated coverage (residential w/ building) -> WARN, else FAIL CONSUMED by assert_global_coverage.",
     "min": 0,
     "max": 100,
     "admin": {
@@ -4690,7 +4690,7 @@
   "external_coverage_pass_pct": {
     "default": 10,
     "type": "number",
-    "description": "assert-global-coverage: scraper-sourced (external) field coverage -> PASS (AGC-D3)",
+    "description": "assert-global-coverage: scraper-sourced (external) field coverage -> PASS (AGC-D3) CONSUMED by assert_global_coverage.",
     "min": 0,
     "max": 100,
     "admin": {
@@ -4700,7 +4700,7 @@
   "external_coverage_warn_pct": {
     "default": 5,
     "type": "number",
-    "description": "assert-global-coverage: scraper-sourced (external) field coverage -> WARN, else FAIL (AGC-D3)",
+    "description": "assert-global-coverage: scraper-sourced (external) field coverage -> WARN, else FAIL (AGC-D3) CONSUMED by assert_global_coverage.",
     "min": 0,
     "max": 100,
     "admin": {
