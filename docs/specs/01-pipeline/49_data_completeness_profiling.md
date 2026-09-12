@@ -45,7 +45,7 @@ As a pipeline operator, I want a single authoritative field-level coverage repor
 4. **Vocabulary-coverage** (the value/vocabulary dimension): for each triple in the `VOCAB_COVERAGE` matrix (§4.x), `COUNT(DISTINCT dataColumn)` PRESENT vs `COUNT(DISTINCT vocabColumn)` DEFINED — catches *silent under-emission* a field-NULL query can't see (a never-emitted value has no row to be null). An unresolved/type-mismatched triple → a **WARN** row (never silent INFO-skip).
 5. INFO rows (quality steps, count-only metrics, `denominator=0`/`vocab_size=0`) always get `status: 'INFO'`.
 6. Compute `verdict` = worst status across all rows (`rows.some(FAIL)?FAIL:some(WARN)?WARN:PASS`). **Non-halting** — verdict never throws (only Zod/DB infra errors do).
-7. `emitSummary({ records_total: 1, ... })` — `records_total` is ALWAYS 1 (one audit pass).
+7. `emitSummary({ records_total: 1, ... })` — `records_total` is ALWAYS 1 (one audit pass). **CORRECTED 2026-09-12 (batch-1 I1 cutover `d851c66e`, Observability panel):** under the Spec 122 step standard the ASSERT archetype is an Observer — the library emits `records_total: null, records_new: null, records_updated: null` (Spec 47 §R10 Observer rule; measured on all four POST goldens `docs/reports/golden/assert_global_coverage/post/*.json`). The `1` below is the pre-conversion legacy value, retained for history.
 
 ### Zod Schema
 ```js
