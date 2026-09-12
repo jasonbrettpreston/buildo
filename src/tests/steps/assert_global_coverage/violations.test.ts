@@ -12,7 +12,9 @@
 // + non-determinism inventory, commits 1-5): `docs/reports/2026-09-11-batch1-i1-assert-global-coverage-
 // assessment.md` — §4.1 is the CONTRACT list this file locks; §2.4 is the operator's PH-3 adjudication
 // (14 new logic_variables, 7 pairs); §4.3/§4.4 is the AGC-D1..D7 defect ledger (`docs/reports/
-// defect-ledger.md`), every row PIN, none fixed here.
+// defect-ledger.md`). Commit 8a (the peel) closed AGC-D1/D3/D6/D7 — each was already fixed structurally
+// by commit 6 (D1) or commit 7 (D3/D6/D7) but the ledger itself had not been updated; AGC-D2/D4/D5 stay
+// OPEN · PIN (D2 rides commit 9 per Ask A3, D4/D5 are fix-after with no operator ruling to fix now).
 //
 // ⚠️ EVERY CLAIM TEST MUST BE RED TODAY, AND RED FOR THE RIGHT REASON. Claims that read a FUTURE artifact
 // (the descriptor, the compute module) open with `artifact()` → `expect(existsSync).toBe(true)`, so the
@@ -255,12 +257,26 @@ describe('assert_global_coverage — measured facts, true today (plain it)', () 
     expect(entry?.declared).toBe('2026-09-11');
   });
 
-  it('the defect ledger carries all 7 AGC-D rows, each OPEN · PIN (report §4.3/§4.4, none fixed during this conversion)', () => {
+  it('the defect ledger carries all 7 AGC-D rows with the commit-8a-verified disposition (report §4.3/§4.4)', () => {
+    // D1/D3/D6/D7 were closed at commit 8a (peel) once re-verified against the landed commit
+    // 6/7 code — each closure is itself independently proven elsewhere in this file (the FENCES
+    // block covers C6/C3/DEC-1; D6/D7 mirror the AS-D1/AS-D9 structural-adoption precedent, cited
+    // by the infra test at src/tests/assert-global-coverage.infra.test.ts:139 and the descriptor's
+    // own terminals[0].why). D2/D4/D5 stay OPEN · PIN — no ruling authorized fixing them here.
     const ledger = fs.readFileSync(artifact(DEFECT_LEDGER_REL), 'utf8');
+    const expectedStatus: Record<number, RegExp> = {
+      1: /CLOSED\s*·\s*commit 6/,
+      2: /OPEN\s*·\s*PIN/,
+      3: /CLOSED\s*·\s*commit 7/,
+      4: /OPEN\s*·\s*PIN/,
+      5: /OPEN\s*·\s*PIN/,
+      6: /CLOSED\s*·\s*commit 7/,
+      7: /CLOSED\s*·\s*commit 7/,
+    };
     for (let n = 1; n <= 7; n++) {
       const row = ledger.split(/\r?\n/).find((l) => l.startsWith(`| AGC-D${n} `));
       expect(row, `defect ledger missing AGC-D${n}`).toBeDefined();
-      expect(row, `AGC-D${n} must be OPEN · PIN, not silently closed during this conversion`).toMatch(/OPEN\s*·\s*PIN/);
+      expect(row, `AGC-D${n} disposition drifted from commit 8a's verified state`).toMatch(expectedStatus[n] as RegExp);
     }
   });
 });
