@@ -185,3 +185,112 @@ The brief's "6 SDK-owned `pipeline_runs` writes" is reconciled as: **2 literal S
 All boundary claims independently re-measured this session. **Two internal-consistency slips were found and resolved within this commit's own drafting** (§1.2's domain-statement-count arithmetic; §1.5's "9 vs 8 verdict-affecting" count) — both are recorded rather than silently smoothed over, per the Grounded Verification Protocol's no-unexecuted-claim rule. One genuine correction against the plan: `calibration_freshness_warn_hours` is declared/validated but has zero runtime consumption (dead since migration 106). Spec 44's Target Files gap is closed in this commit; the system map is regenerated and shows the new row. **G0: PASS.**
 
 ---
+
+## 2. PH-3 — Intent Ledger (commit 2 → G3)
+
+Per Spec 123 §7.1 role split: **a human adjudicates; the agent discovers and cites evidence only.** Every row below is `PROPOSED (adjudication pending — Spec 123 §7.1 discoverer ≠ adjudicator)`. Closed vocabulary: `preserved-in-runner` / `preserved-in-validator` / `preserved-in-compute` / `encoded-as-descriptor-field` / `encoded-as-deviation` / `knowingly-retired`. Top-right churn quadrant (commit 1's §0 claim 14, unchanged from the plan) ⇒ full ledger, no Class-C skip (C4 §3.3 row 2).
+
+### 2.1 The six fences named by the executor brief — confirmed via `git log -1 --format="%H %s%n%b" <sha> -- scripts/quality/assert-data-bounds.js`
+
+| # | Fence | Blame commit | Subject | Evidence in the current file | Disposition — PROPOSED |
+|---|---|---|---|---|---|
+| IL-1 | E7-E10 threshold externalization (6 of the file's 9 logic vars) | `4f6114ce` | `feat(40_pipeline_system): WF3-E7-E10 — externalize data-bounds thresholds to logic_variables` | `cost_outlier_ceiling_cad`, `desc_null_rate_warn_pct`, `builder_null_rate_warn_pct`, `cost_est_null_rate_warn_pct`, `cost_est_min_tiers`, `calibration_freshness_warn_hours` were all bare JS literals before this commit; now read from `logicVars` (§1.5). E7's cost ceiling is the only one of the 6 that is correctly `pool.query($1, ...)`-parameterised (`:131-133`); the other 5 are JS-side comparisons (`> pct`), not SQL literals, so no parameterisation question applies to them. | **PROPOSED — encoded-as-descriptor-field** (already registered logic vars, Rule 3-compliant as declared; commit 7 carries them into `config.logic_variables`) |
+| IL-2 | `f238b814` false-WARN threshold corrections | `f238b814` | `fix(28_data_quality): adjust false WARN thresholds in CQA checks` | `cost_outliers: == 0 → < 20` (`:135-140`'s own comment names this commit + "C4 panel A1, 2026-08-13" re-review) and `builder_null_rate_warn_pct: 20% → 95%` (the SEED default, not a code literal — this commit's other half landed as the E8 seed value IL-1 already carries). The `cost_outliers` `< 20` threshold itself remains a **hardcoded JS literal** (`:140`, `if (costOutliers >= 20)`), not a logic var — it survived IL-1's externalization pass untouched. | **PROPOSED — preserved-in-compute**, threshold stays a hardcoded `20` (Spec 30 §5.4.1's own "whichever threshold was set by a commit that NAMED it a false positive is the one that stays" rule, `:38` of that spec section) — `why` cites `f238b814` + the 2026-08-13 C4 panel re-review verbatim. Not promoted to a logic var (the plan's own §8 Ask A1 note only proposes generator work for `assert-schema`'s probe lists, not new logic vars here — promoting this specific threshold is out of this session's scope; flagged for the human adjudicator to weigh against Rule 3). |
+| IL-3 | Phase G Pre-Permit retirement gate, duplicated across chains | `adec1f68` | `feat(42_chain_coa): WF1 Phase G — PRE-permit retirement shims + assert gate + lead-detail CoA branch` | `permits_pre_permit_count == 0` FAIL gate exists at `:250-258` (`runPermitChecks` block) AND `:399-410` (`runCoaChecks` block, same query text, same threshold) — the commit's own message states this is deliberate: "adds `permits_pre_permit_count==0` FAIL gate inside BOTH `runPermitChecks` AND `runCoaChecks` blocks (defense-in-depth per v2-Q2)". Spec 42 §6.11 (`:800`) confirms: "duplicated query — disjoint chain-scoped guards preclude shared variable; defense-in-depth per v2-Q2". | **PROPOSED — preserved-in-compute ×2** (one `checks[]` entry per chain, NOT collapsed into a single `chains:["permits","coa"]` row like the WSIB mechanism below) — the disjoint-guard reasoning is itself the `why`: `runPermitChecks`/`runCoaChecks` are independent booleans (both true only in a standalone run), so a single shared check risks silently not firing if one guard's branch is refactored away while the other survives. Preserving 2 independent checks is the intentional defense-in-depth the v2-Q2 decision named. |
+| IL-4 | WSIB metrics dual-injection (permits ∧ sources) | `326bb847` | `fix(35_wsib_registry): add WSIB metrics to assert-data-bounds audit_table` | `wsibAuditRows` (`:709-714`) is ONE array literal, `.push(...wsibAuditRows)`'d by reference into `permitsAuditTable.rows` (`:718`) AND `sourcesAuditTable.rows` (`:722`) — genuinely one mechanism, two destinations, unlike IL-3's two independent queries. Commit message: "Build WSIB audit rows and append to whichever audit_table is active (permits or sources). Re-evaluate verdict if WSIB rows have FAILs." | **PROPOSED — preserved-in-compute, ONE check group, `checks[].chains: ["permits","sources"]`** (the multi-chain array shape `assert_global_coverage`'s own descriptor already uses — not a new mechanism, `step.schema.json:685-691`) — the 4 WSIB metric definitions are authored once and reused, mirroring the source's own single-array-two-destinations shape rather than IL-3's deliberate duplication. |
+| IL-5 | `ghost_permits_30d` terminal-phase exclusion | `ea087109` | `fix(41_chain_permits): WF3 — exclude terminal permits from ghost_permits_30d assert` | `:938-940`: `AND lifecycle_phase IS NOT NULL AND lifecycle_phase NOT IN ('P19', 'P20')`. Commit message states the pre-fix behaviour ("already-vacuumed permits... accumulate unboundedly in the WARN count (8,683 today — all P19/P20)") and the corrected baseline ("True non-terminal ghost count in prod: 0"). This is the SAME exclusion class Fold A item 2 of the I1 plan names for `assert_global_coverage`'s own `enriched_status_status_scope_drift` pair — a sibling fence in a sibling file. | **PROPOSED — preserved-in-compute**, `why` cites `ea087109` + the "0 true ghosts, 8,683 false positives pre-fix" baseline verbatim; the `NOT IN ('P19','P20')` predicate must travel into the census (`scripts/lib/assert-data-bounds-fields.js`, commit 7) as literal SQL text, never re-derived from a lifecycle-phase enum lookup that could silently omit a future terminal phase. |
+| IL-6 | P13-1 cost/GFA magnitude ceilings + `COST_MAG_ACCEPT` allowlist | `e99ae61a` | `fix(83_lead_cost_model): P13-1/P13-2 legacy cost-tail magnitude gates + clamp + Liar's-Gate upper sentinel` | `cost_est_legacy_cost_ceiling_cad`/`cost_est_legacy_gfa_ceiling_sqm` (logic vars, §1.5) gate `cost_estimate_over_ceiling`/`modeled_gfa_over_ceiling` (`:886-921`). The 3-entry `COST_MAG_ACCEPT` allowlist (`:46`, `'04 202812 BLD'`/`'07 129713 BLD'`/`'06 196930 BLD'`) is a **hardcoded array**, not a logic var — the file's own comment (`:38-45`) names the investigation date (2026-07-09), the exact per-permit developments, and the durable-clamp relationship ("the legacy... tail is nulled by compute's clamp — after that runs, only accepted rows remain > ceiling"). | **PROPOSED — preserved-in-compute** for both the 2 logic-var ceilings (already Rule-3-compliant) AND the 3-entry accept-list (an audited exception list, not a tunable threshold — mirrors `parcel-sanity-audit.js`'s own `<> ALL(ARRAY[...])` precedent this file explicitly ported, `:36-37`) — `why` cites `e99ae61a` + the 2026-07-09 investigation + the 3 named permit_nums verbatim. The accept-list is a candidate for `checks[].config.accept_list` (a descriptor-declared array, not a logic var — Rule 3 exempts audited constant exception lists the same way I1's IL-1/C6 exempted a physical invariant) — human adjudicator to confirm this reading. |
+| IL-7 | LPA-D6 severity-separated counter precedent (`tasks/lessons.md:137`) | (no single commit — a standing structural property of this file, cited as precedent by the `link_parcel_addresses` lesson, filed 2026-09 during that step's own conversion) | — | `:981-982`: `checks_failed: errors.length`, `checks_warned: warnings.length` — TWO separate arrays feeding TWO separate counts, never one array double-counted. The lesson states verbatim: *"`scripts/quality/assert-data-bounds.js` (still hand-rolled, un-converted) already had the right shape... the fix brought the generic library to parity with that established precedent rather than inventing a new one."* This file is therefore the SOURCE precedent the shared library (`scripts/lib/step/verdict.js buildAuditTable`) was built to match — a reversed fence: not "preserve this file's odd shape," but "this file's shape is already the canonical target, confirm the conversion does not regress it to a single conflated counter." | **PROPOSED — preserved-in-runner** (the severity-separated shape moves INTO the shared library path this step now runs through, not re-implemented per-step) — `why` cites LPA-D6 + `tasks/lessons.md:137` verbatim; G4d (commit 6) must lock both directions: a FAIL-only run shows `checks_warned:0`, and a WARN-only run shows `checks_failed:0` (never derived from one shared `!== 'PASS'` count). |
+
+### 2.2 Additional non-obvious constants found independently this session (`git log -S`, not named by the brief)
+
+| # | Construct | Blame commit | Subject | Disposition — PROPOSED |
+|---|---|---|---|---|
+| IL-8 | GIS catastrophic-load floors: `ADDRESS_POINTS_FLOOR=500000`, `PARCELS_FLOOR=460000`, `BUILDING_FOOTPRINTS_FLOOR=400000` (`:434-436`) | `1f8ca38a` | `feat(43_chain_sources): sources-chain honesty gates — GIS floors, scoped max-build coverage, enrich --full, link-rate + order pins` | **PROPOSED — preserved-in-compute, hardcoded constants (NOT logic vars)** — the file's own comment (`:427-433`) frames these as ~95%-of-live-count catastrophic-load detectors ("a catastrophically short load FAILs while ordinary quarter-over-quarter growth does not"), the same design class as IL-1 (I1 report)'s C6 physical-invariant carve-out — a Rule-3 exemption candidate (constant-vs-config distinction), not a gap requiring 3 new logic-var pairs. Human adjudicator to confirm this reading rather than assume it. |
+| IL-9 | `neighbourhoods` floor (158) | `e3dad53d` (earlier: `b4e3d56e` first introduced the CQA-sources extension) | `fix(37_pipeline_system): restore schema circuit breaker, add missing audit metrics` | **PROPOSED — preserved-in-compute, hardcoded constant** — matches the live `neighbourhoods` table's known fixed cardinality (158 Toronto neighbourhoods, a closed real-world set, not a growth metric) — same physical-invariant class as IL-8. |
+| IL-10 | `ravines`(≥500) / `heritage_properties`(≥8000) / `heritage_districts`(≥20) / `toronto_centreline`(≥40000) floors, each `does not exist`-guarded for deploy ordering | `1ceebd17` (ravines, Spec 59 §8c), `169f22af` (heritage, Spec 61 §8c), `f6047e89` (centreline, Spec 62 §8c) | `feat(59/61/62_source_*): load-*.js + M-1 + sources chain wiring` | **PROPOSED — preserved-in-compute, hardcoded constants, each carrying its OWN try/catch `does not exist` guard** (migrations 167/170/173 deploy-ordering — the guard itself is load-bearing and must travel into the check's `guards`/`when` descriptor field, not just its threshold, mirroring the plan's own IL-11-class ruling from the I1 report for `has_bldg EXISTS` scoping). |
+| IL-11 | CoA per-application magnitude watches: `estimated_cost > $10M` (WARN `<= 80`), `coa_fsi > 5` (WARN `== 0`), `max_buildable_gfa_sqm > 3× lot_size_sqm` (WARN `<= 45`) | `c53f60a8` | `fix(60_shared_steps): P12-B/C CoA link identity floor + coherence gates` | **PROPOSED — preserved-in-compute, hardcoded constants** — commit message names the investigation baseline exactly ("64 estimated_cost>$10M investigated (all archetype_parcel, ~1,352 m² @ $8.7k/sqm oversized-envelope) → 3 per-application WARN watches"); `why` cites `c53f60a8` + the archetype_parcel envelope-tail explanation verbatim, same class as `assert_global_coverage`'s own WF3-F4 recalibrated-floor precedent (I1 report IL-7). |
+
+### 2.3 Row-builder census (all 49 distinct metrics), mechanically derived
+
+**Command** (throwaway, NOT committed — `scripts/CLAUDE.md`/Spec 122 conventions keep one-off analysis scripts out of `scripts/`; regenerate with the equivalent snippet against `scripts/quality/assert-data-bounds.js` at any time):
+
+```
+node <<'JS'
+const fs = require('fs');
+const src = fs.readFileSync('scripts/quality/assert-data-bounds.js', 'utf8');
+const staticMetrics = [...src.matchAll(/metric:\s*'([^']+)'/g)].map(m => m[1]);
+const checkInsp = [...src.matchAll(/checkInsp\('([^']+)'/g)].map(m => m[1]);
+const distinctStatic = [...new Set(staticMetrics)];
+console.log('static call sites:', staticMetrics.length, '(distinct names:', distinctStatic.length + ')');
+console.log('dynamic checkInsp names:', checkInsp.length);
+console.log('total distinct metrics:', distinctStatic.length + checkInsp.length);
+JS
+```
+
+Measured this session: 38 static call sites → 37 distinct names (one duplicate, `permits_pre_permit_count`, §1.3) + 12 dynamic `checkInsp` names = **49 total distinct metrics**, confirmed exactly against §1.1 row 9 and the plan's row 8.
+
+<details>
+<summary>49-row census (click to expand)</summary>
+
+| # | Metric | Chain(s) | Severity levels reachable | Threshold source | Fence (if any, §2.1/§2.2) |
+|---|---|---|---|---|---|
+| 1 | `cost_outliers` | permits | WARN/PASS | hardcoded (`< 20`) | IL-2 (`f238b814`) |
+| 2 | `null_descriptions_24h` | permits (conditional, `recentTotal>0`) | WARN/PASS | logic-var `desc_null_rate_warn_pct` | IL-1 (`4f6114ce`) |
+| 3 | `null_builders_24h` | permits (conditional) | WARN/PASS | logic-var `builder_null_rate_warn_pct` | IL-1/IL-2 |
+| 4 | `null_status_24h` | permits (conditional) | WARN/PASS | hardcoded (`== 0`) | — |
+| 5 | `orphaned_permit_trades` | permits | FAIL/PASS | hardcoded (`== 0`) | — |
+| 6 | `orphaned_permit_parcels` | permits | FAIL/PASS | hardcoded (`== 0`) | — |
+| 7 | `duplicate_pk_groups` | permits | FAIL/PASS | hardcoded (`== 0`) | — |
+| 8 | `permits_pre_permit_count` | permits AND coa (2 independent sites) | FAIL/PASS | hardcoded (`== 0`) | IL-3 (`adec1f68`) |
+| 9 | `cost_estimate_over_ceiling` | permits | WARN/PASS | logic-var `cost_est_legacy_cost_ceiling_cad` + hardcoded accept-list | IL-6 (`e99ae61a`) |
+| 10 | `modeled_gfa_over_ceiling` | permits | WARN/PASS | logic-var `cost_est_legacy_gfa_ceiling_sqm` + accept-list | IL-6 |
+| 11 | `ghost_permits_30d` | permits (conditional) | WARN/PASS | hardcoded (`== 0`) | IL-5 (`ea087109`) |
+| 12 | `orphan_link_count` | coa | FAIL/PASS | hardcoded (`== 0`) | — |
+| 13 | `coa_forward_link_sub085_pct` | coa | WARN/PASS | logic-var `coa_forward_link_sub085_warn_pct` | `c53f60a8` (B2, §2.1 not separately listed — same commit family as IL-11) |
+| 14 | `null_address` | coa | WARN/PASS | hardcoded (`< 10`) | — |
+| 15 | `null_app_num` | coa | FAIL/PASS | hardcoded (`== 0`) | — |
+| 16 | `future_hearing` | coa | FAIL/PASS | hardcoded (`== 0`, 2yr window) | — |
+| 17 | `ancient_hearing` | coa | WARN/PASS | hardcoded (`< 5`) | — |
+| 18 | `coa_estimated_cost_gt10m` | coa | WARN/PASS | hardcoded (`<= 80`) | IL-11 (`c53f60a8`) |
+| 19 | `coa_app_fsi_gt5` | coa | WARN/PASS | hardcoded (`== 0`) | IL-11 |
+| 20 | `coa_maxbuild_gfa_gt3lot` | coa | WARN/PASS | hardcoded (`<= 45`) | IL-11 |
+| 21 | `address_points_count` | sources | FAIL/PASS | hardcoded (`ADDRESS_POINTS_FLOOR`) | IL-8 (`1f8ca38a`) |
+| 22 | `address_point_dupes` | sources | FAIL/PASS | hardcoded (`== 0`) | — |
+| 23 | `parcels_count` | sources | FAIL/PASS | hardcoded (`PARCELS_FLOOR`) | IL-8 |
+| 24 | `parcel_dupes` | sources | FAIL/PASS | hardcoded (`== 0`) | — |
+| 25 | `parcel_lot_outliers` | sources | WARN/PASS | hardcoded (`== 0`) | — |
+| 26 | `building_footprints_count` | sources | FAIL/PASS | hardcoded (`BUILDING_FOOTPRINTS_FLOOR`) | IL-8 |
+| 27 | `building_height_outliers` | sources | WARN/PASS | hardcoded (`== 0`) | — |
+| 28 | `neighbourhoods_count` | sources | FAIL/PASS | hardcoded (`>= 158`) | IL-9 |
+| 29 | `neighbourhood_dupes` | sources | FAIL/PASS | hardcoded (`== 0`) | — |
+| 30 | `ravines_count` | sources (conditional, table-exists) | FAIL/PASS | hardcoded (`>= 500`) | IL-10 (`1ceebd17`) |
+| 31 | `heritage_properties_count` | sources (conditional) | FAIL/PASS | hardcoded (`>= 8000`) | IL-10 (`169f22af`) |
+| 32 | `heritage_districts_count` | sources (conditional) | FAIL/PASS | hardcoded (`>= 20`) | IL-10 |
+| 33 | `toronto_centreline_count` | sources (conditional) | FAIL/PASS | hardcoded (`>= 40000`) | IL-10 (`f6047e89`) |
+| 34 | `wsib_no_legal_name` | permits AND sources (1 shared check) | FAIL/PASS | hardcoded (`== 0`) | IL-4 (`326bb847`) |
+| 35 | `wsib_no_g_class` | permits AND sources | FAIL/PASS | hardcoded (`== 0`) | IL-4 |
+| 36 | `wsib_invalid_naics` | permits AND sources | WARN/PASS | hardcoded (`== 0`) | IL-4 |
+| 37 | `wsib_orphaned_links` | permits AND sources | FAIL/PASS | hardcoded (`== 0`) | IL-4 |
+| 38 | `null_permit_num` | deep_scrapes | FAIL/PASS | hardcoded (`== 0`) | — |
+| 39 | `null_stage_name` | deep_scrapes | FAIL/PASS | hardcoded (`== 0`) | — |
+| 40 | `null_status` | deep_scrapes | FAIL/PASS | hardcoded (`== 0`) | — |
+| 41 | `null_scraped_at` | deep_scrapes | FAIL/PASS | hardcoded (`== 0`) | — |
+| 42 | `orphan_inspections` | deep_scrapes | FAIL/PASS | hardcoded (`== 0`) | — |
+| 43 | `invalid_status` | deep_scrapes | FAIL/PASS | hardcoded (4-member enum) | — |
+| 44 | `outstanding_with_date` | deep_scrapes | WARN/PASS | hardcoded (`== 0`) | — |
+| 45 | `completed_without_date` | deep_scrapes | WARN/PASS | hardcoded (`== 0`) | — |
+| 46 | `duplicate_stages` | deep_scrapes | FAIL/PASS | hardcoded (`== 0`) | — |
+| 47 | `future_dates` | deep_scrapes | FAIL/PASS | hardcoded (`== 0`) | — |
+| 48 | `ancient_dates` | deep_scrapes | WARN/PASS | hardcoded (`<= 5`, fixed `2020-01-01`) | — |
+| 49 | `date_before_permit_year` | deep_scrapes | FAIL/PASS | hardcoded (`== 0`, permit_num-derived year) | — |
+
+</details>
+
+**Rule 3 observation (Spec 124 §2, not yet adjudicated):** of the 49 metrics, only **6 use a registered logic var** as their threshold source (#2, #3, #9, #10, #13, and indirectly #1 via IL-2's "stays hardcoded per the false-positive rule"); the remaining **43 use hardcoded JS/SQL literals**. This is a materially different shape from `assert_global_coverage` (I1), where the large majority of `coverageRow`/`calibratedRow` thresholds were already logic vars. Per the IL-8/IL-9/IL-10/IL-11 dispositions above (all `PROPOSED — preserved-in-compute, hardcoded`), the working theory is that most of these 43 are **physical/catastrophic-load/audited-investigation constants** (the same carve-out the I1 report's IL-1/C6 established: "constant vs config" is a real distinction Spec 124 draws, not every FAIL/WARN threshold is a Rule-3 tunable) rather than an undiscovered Rule-3 gap — but this is a PROPOSED reading, not yet ruled, and the human adjudicator should confirm it item-by-item rather than accept the blanket theory. Distinguishing feature vs `assert_global_coverage`'s IL-3/IL-8/IL-9/IL-10/IL-11/IL-12 (all `CHANGE-TO: registered logic var`): those were percentage-based COVERAGE floors calibrated against a moving population (naturally tunable as the population's characteristics drift); the 43 hardcoded values here are mostly either (a) fixed real-world cardinalities (neighbourhoods=158), (b) ~95%-of-known-live-count catastrophic-load floors (address_points/parcels/building_footprints/ravines/heritage/centreline), or (c) `== 0`/small-integer referential-integrity invariants (orphans, duplicates, nulls) where "tunable" has no sensible meaning — a 0-tolerance FK invariant is not a coverage percentage that drifts with data growth.
+
+### 2.4 Scope note — fields-module deferral
+
+The plan's §3 commit-2 row proposes starting `scripts/lib/assert-data-bounds-fields.js` (the `CHECK_DEFS`/`LOGIC_VAR_DEFS` data module) at THIS commit, per I1's own RECURRING #1 obligation. **Superseded by the executor brief for this session**: `scripts/lib` is out of scope for commits 1-4 (executor brief: "No code under scripts/lib, scripts/quality, src/tests/steps (commits 5-9)"). The §2.3 census above is the complete input this module will be mechanically derived from at commit 7 — every row's `{id, table, metric, threshold, severity, chains}` shape is already present in the 49-row table, so commit 7 is a transcription-plus-generator exercise against this census, not new discovery. Recorded here so the deferral is explicit rather than a silent scope drop.
+
+---
