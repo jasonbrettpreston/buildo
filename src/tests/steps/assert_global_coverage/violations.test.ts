@@ -55,6 +55,7 @@ const REPORT_REL = 'docs/reports/2026-09-11-batch1-i1-assert-global-coverage-ass
 const DEFECT_LEDGER_REL = 'docs/reports/defect-ledger.md';
 const GOLDEN_DIR_REL = 'docs/reports/golden/assert_global_coverage/pre';
 const COMPUTE_SHAPE_RULE_REL = 'scripts/ast-grep-rules/compute-shape.yml';
+const GENERATOR_REL = 'scripts/generate-assert-global-coverage-descriptor.js';
 
 function abs(rel: string): string {
   return path.join(REPO_ROOT, rel);
@@ -277,6 +278,64 @@ describe('assert_global_coverage — measured facts, true today (plain it)', () 
       const row = ledger.split(/\r?\n/).find((l) => l.startsWith(`| AGC-D${n} `));
       expect(row, `defect ledger missing AGC-D${n}`).toBeDefined();
       expect(row, `AGC-D${n} disposition drifted from commit 8a's verified state`).toMatch(expectedStatus[n] as RegExp);
+    }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// 1b. Descriptor generator drift lock (commit 8c, commit-7 output-panel finding b)
+//
+// scripts/generate-assert-global-coverage-descriptor.js exports a pure
+// buildDescriptor(CHECK_DEFS, LOGIC_VAR_DEFS) — no I/O, no shared mutable state
+// across calls. Both directions locked here WITHOUT touching the committed
+// descriptor.json file: "clean" regenerates in memory against the REAL fields
+// module and byte-compares against the committed file; "not vacuous" regenerates
+// against a deliberately mutated in-memory CHECK_DEFS fixture and asserts the
+// comparison actually differs. Deliberately NOT wired into .husky/pre-commit by
+// this peel (out of this plan's boundary) — CLI `--check` mode exists for a human
+// or a future WF to invoke; only this vitest lock runs it automatically today.
+// ---------------------------------------------------------------------------
+describe('assert_global_coverage — descriptor generator drift lock (both directions, commit 8c)', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports -- exercising the real CJS generator, same convention as validate.js above
+  const { buildDescriptor } = require(abs(GENERATOR_REL)) as {
+    buildDescriptor: (checkDefs: unknown[], logicVarDefs: unknown[]) => unknown;
+  };
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { CHECK_DEFS, LOGIC_VAR_DEFS } = require(abs(FIELDS_REL)) as {
+    CHECK_DEFS: Array<{ id: string } & Record<string, unknown>>;
+    LOGIC_VAR_DEFS: unknown[];
+  };
+
+  it('regenerating in memory against the REAL fields module byte-matches the committed descriptor.json (clean — no drift)', () => {
+    const regenerated = `${JSON.stringify(buildDescriptor(CHECK_DEFS, LOGIC_VAR_DEFS), null, 2)}\n`;
+    const committed = readText(DESCRIPTOR_REL);
+    expect(regenerated).toBe(committed);
+  });
+
+  it('the drift lock is not vacuous: a mutated in-memory CHECK_DEFS fixture produces a descriptor that differs from the committed file', () => {
+    const mutated = CHECK_DEFS.map((d, i) => (i === 0 ? { ...d, id: `${d.id}_mutated_for_drift_lock_test` } : d));
+    const regenerated = `${JSON.stringify(buildDescriptor(mutated, LOGIC_VAR_DEFS), null, 2)}\n`;
+    const committed = readText(DESCRIPTOR_REL);
+    expect(regenerated).not.toBe(committed);
+  });
+
+  it('the CLI --check mode itself reports clean against the current committed descriptor (exit 0)', () => {
+    expect(() => execFileSync('node', [abs(GENERATOR_REL), '--check'], { cwd: REPO_ROOT, encoding: 'utf8', stdio: 'pipe' })).not.toThrow();
+  });
+
+  it('the CLI --check mode is itself not vacuous: fires (exit non-zero) against a deliberately corrupted committed copy, restored after', () => {
+    const original = readText(DESCRIPTOR_REL);
+    try {
+      fs.writeFileSync(abs(DESCRIPTOR_REL), `${original}\n// drift-lock self-test corruption\n`);
+      let threw = false;
+      try {
+        execFileSync('node', [abs(GENERATOR_REL), '--check'], { cwd: REPO_ROOT, encoding: 'utf8', stdio: 'pipe' });
+      } catch {
+        threw = true;
+      }
+      expect(threw, '--check must exit non-zero on a corrupted/stale committed descriptor').toBe(true);
+    } finally {
+      fs.writeFileSync(abs(DESCRIPTOR_REL), original);
     }
   });
 });
