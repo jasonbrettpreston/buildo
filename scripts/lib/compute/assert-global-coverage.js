@@ -717,8 +717,6 @@ const EVALUATORS = {
 // generator, `scripts/generate-assert-global-coverage-descriptor.js`).
 // ---------------------------------------------------------------------------
 
-const DEFS_BY_ID = new Map(CHECK_DEFS.map((d) => [d.id, d]));
-
 const CHECKS = {};
 for (const def of CHECK_DEFS) {
   const evaluator = EVALUATORS[def.builder];
@@ -755,4 +753,3 @@ async function compute(ctx) {
 module.exports = compute;
 module.exports.compute = compute;
 module.exports.checks = CHECKS;
-module.exports.CHECK_DEFS_BY_ID = DEFS_BY_ID;
