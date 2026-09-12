@@ -95,6 +95,8 @@ describe('the descriptor is AJV-validated at CONSTRUCTION, and it throws (§4.2)
     { file: 'banned-value-severity-pass.json', rule: '§12.5 — severity PASS is not declarable', mentions: '/checks/0/severity' },
     { file: 'assert-with-outputs.json', rule: '§1.10 — an ASSERT declares outputs "none"', mentions: '/outputs' },
     { file: 'unknown-key.json', rule: 'the schema is CLOSED', mentions: '/identity' },
+    { file: 'warn-limit-wrong-grammar.json', rule: 'RE-FREEZE #7 — warn_limit is the STRING bound grammar only, never the {warn,fail} object form', mentions: '/checks/13/warn_limit' },
+    { file: 'warn-limit-with-object-limit.json', rule: 'RE-FREEZE #7 — warn_limit is redundant, and rejected, on a check whose limit is already the {warn,fail} object form', mentions: '/checks/15' },
   ];
 
   for (const fx of INVALID) {
@@ -347,6 +349,81 @@ describe('the verdict is ROW-DERIVED, and all three values are reachable (§7.1,
     const d = withChecks([{}]);
     const built = build(d, { c0: { violations: 0 } });
     expect(built.rows[0]).not.toHaveProperty('order_guarantee');
+  });
+
+  // RE-FREEZE #7 (Spec 124 §5 R-AD, 2026-09-11) — `checks[].warn_limit` +
+  // `warn_limit_from_config`: a second, looser, config-driven bound giving one
+  // check 3-tier PASS/WARN/FAIL coverage in a SINGLE row. Ruled to unblock
+  // `assert_global_coverage` (C4 batch 1 I1) commit 7 — see
+  // `.cursor/batch1_i1_assert_global_coverage_active_task.md` Fold B.
+  describe('RE-FREEZE #7 — checks[].warn_limit (Spec 124 §5 R-AD)', () => {
+    it('absent warn_limit is OLD BEHAVIOUR, byte-for-byte: no warn_threshold key, PASS/FAIL-only cascade unchanged', () => {
+      const d = withChecks([{ limit: 'pct <= 0.5', severity: 'FAIL' }]);
+      const pass = build(d, { c0: { value: 0.4 } });
+      const fail = build(d, { c0: { value: 0.51 } });
+      expect(pass.rows[0].status).toBe('PASS');
+      expect(fail.rows[0].status).toBe('FAIL');
+      expect(pass.rows[0]).not.toHaveProperty('warn_threshold');
+      expect(fail.rows[0]).not.toHaveProperty('warn_threshold');
+    });
+
+    it('limit ok -> PASS; else warn_limit present and ok -> WARN; else the declared severity', () => {
+      const d = withChecks([{ limit: 'pct <= 0.5', warn_limit: 'pct <= 0.75', severity: 'FAIL' }]);
+      expect(build(d, { c0: { value: 0.4 } }).rows[0].status, 'inside limit -> PASS').toBe('PASS');
+      expect(build(d, { c0: { value: 0.6 } }).rows[0].status, 'between limit and warn_limit -> WARN').toBe('WARN');
+      expect(build(d, { c0: { value: 0.9 } }).rows[0].status, 'beyond warn_limit -> the declared severity').toBe('FAIL');
+    });
+
+    it('the resolved warn_limit is exposed as warn_threshold, present only when warn_limit is declared', () => {
+      const d = withChecks([{ limit: 'pct <= 0.5', warn_limit: 'pct <= 0.75', severity: 'FAIL' }]);
+      const built = build(d, { c0: { value: 0.6 } });
+      expect(built.rows[0].warn_threshold).toBe('pct <= 0.75');
+      expect(built.rows[0].threshold).toBe('pct <= 0.5');
+    });
+
+    it('warn_limit_from_config substitutes into warn_threshold, the same way limit_from_config substitutes into threshold', () => {
+      const d = withChecks([{
+        limit: 'pct <= 0.5',
+        limit_from_config: 'tuned_limit',
+        warn_limit: 'pct <= 0.75',
+        warn_limit_from_config: 'tuned_warn_limit',
+        severity: 'FAIL',
+      }]);
+      const config = { tuned_limit: 0.2, tuned_warn_limit: 0.4 };
+      const inLimit = verdictLib.buildAuditTable(d, null, { c0: { value: 0.1 } }, [], config);
+      expect(inLimit.rows[0].threshold).toBe('pct <= 0.2');
+      expect(inLimit.rows[0].warn_threshold).toBe('pct <= 0.4');
+      expect(inLimit.rows[0].status).toBe('PASS');
+
+      const inWarn = verdictLib.buildAuditTable(d, null, { c0: { value: 0.3 } }, [], config);
+      expect(inWarn.rows[0].status, 'between the CONFIG-SUBSTITUTED bounds, not the seed defaults').toBe('WARN');
+
+      const beyondWarn = verdictLib.buildAuditTable(d, null, { c0: { value: 0.5 } }, [], config);
+      expect(beyondWarn.rows[0].status).toBe('FAIL');
+
+      // No config resolved (a chain that never selected either name) -> the declared literals stand.
+      const noConfig = build(d, { c0: { value: 0.6 } });
+      expect(noConfig.rows[0].threshold).toBe('pct <= 0.5');
+      expect(noConfig.rows[0].warn_threshold).toBe('pct <= 0.75');
+    });
+
+    it('a warn_limit is never consulted once limit already escalated via the {warn,fail} object form', () => {
+      // Defensive: the schema forbids declaring warn_limit alongside an object-form
+      // limit (an AJV RED fixture proves the construction-time refusal separately —
+      // scripts/steps/_schema/fixtures/invalid/warn-limit-with-object-limit.json).
+      // This proves the LIBRARY's own runtime guard independently of the schema gate.
+      const d = withChecks([{ limit: { warn: 5, fail: 10 }, severity: 'FAIL' }]);
+      d.checks[0].warn_limit = 'viol <= 2'; // smuggled past the schema, proving the code-level guard
+      expect(build(d, { c0: { violations: 4 } }).rows[0].status).toBe('PASS');
+      expect(build(d, { c0: { violations: 5 } }).rows[0].status).toBe('WARN');
+      expect(build(d, { c0: { violations: 10 } }).rows[0].status).toBe('FAIL');
+    });
+
+    it('resolveWarnLimit returns undefined when no warn_limit is declared, distinct from a falsy substitution', () => {
+      expect(verdictLib.resolveWarnLimit({ id: 'c0' }, null)).toBeUndefined();
+      expect(verdictLib.resolveWarnLimit({ id: 'c0', warn_limit: 'viol <= 2' }, null)).toBe('viol <= 2');
+      expect(verdictLib.resolveWarnLimit({ id: 'c0', warn_limit: 'viol <= 2', warn_limit_from_config: 'x' }, { x: 5 })).toBe('viol <= 5');
+    });
   });
 });
 

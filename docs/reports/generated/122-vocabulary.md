@@ -2,7 +2,7 @@
 <!-- Source of truth: scripts/steps/_schema/step.schema.json (operator ruling R2). -->
 <!-- Regenerate: node scripts/violations/schema-to-vocab.mjs docs/reports/generated/122-vocabulary.md -->
 
-# The step contract — 20 categories, 448 declarable fields
+# The step contract — 20 categories, 450 declarable fields
 
 **Contract version 1 · status `v0-unfrozen-until-C3`.** The schema is canonical; this document is generated from it. Editing this file changes nothing.
 
@@ -20,7 +20,7 @@
 | 4 | `staleness` | 25 | 7 | 0 |
 | 5 | `guards` | 21 | 7 | 0 |
 | 6 | `execution` | 60 | 15 | 1 |
-| 7 | `checks` | 29 | 6 | 0 |
+| 7 | `checks` | 31 | 6 | 0 |
 | 8 | `invariants` | 33 | 6 | 0 |
 | 9 | `plausibility` | 36 | 7 | 0 |
 | 10 | `override` | 11 | 1 | 0 |
@@ -411,6 +411,8 @@ Grandfathered, never legal for a new step: an existing step must be able to decl
 | `[].limit` | string `^(viol (==|<=) [0-9]+|pct (<=|>=) [0-9]*\.?[0-9]+|pop >= [0-9]+|ratio <= [0-9]*\.?[0-9]+ x median|value_min -?[0-9]*\.?[0-9]+|value_max -?[0-9]*\.?[0-9]+)$` \| object {warn, fail} | † ! |
 | `[].limit.warn` | number | † |
 | `[].limit.fail` | number | † |
+| `[].warn_limit` | string `^(viol (==|<=) [0-9]+|pct (<=|>=) [0-9]*\.?[0-9]+|pop >= [0-9]+|ratio <= [0-9]*\.?[0-9]+ x median|value_min -?[0-9]*\.?[0-9]+|value_max -?[0-9]*\.?[0-9]+)$` | — |
+| `[].warn_limit_from_config` | string | — |
 | `[].severity` | `INFO` · `WARN` · `FAIL` | † ! |
 | `[].blocking` | `true` · `false` | † |
 | `[].when` | `pre` · `pre_write` · `post` | † ! |

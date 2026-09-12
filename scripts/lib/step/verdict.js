@@ -112,6 +112,31 @@ function resolveLimit(check, config) {
 }
 
 /**
+ * RE-FREEZE #7 (Spec 124 §5 R-AD, 2026-09-11) — the same substitution
+ * mechanism as `resolveLimit`, for the optional `checks[].warn_limit`. A
+ * `checks[]` entry may declare a SECOND, looser, config-driven bound: `limit`
+ * ok → PASS, else `warn_limit` present and ok → WARN, else the check's
+ * declared severity — one row per check, both tiers config-substituted
+ * (Fold B, `.cursor/batch1_i1_assert_global_coverage_active_task.md`).
+ *
+ * Returns `undefined` — never `check.warn_limit`'s absence coerced to some
+ * other falsy value — when the check declares no `warn_limit` at all, so
+ * `checkRow` can tell "no warn tier declared" (old behaviour, byte-for-byte)
+ * apart from "the warn tier substituted to a value that happens to be falsy".
+ *
+ * @param {object} check
+ * @param {Record<string, number>|null} config - `ctx.config`
+ * @returns {string|undefined}
+ */
+function resolveWarnLimit(check, config) {
+  if (check.warn_limit === undefined) return undefined;
+  if (!check.warn_limit_from_config || !config || typeof check.warn_limit !== 'string') return check.warn_limit;
+  const value = config[check.warn_limit_from_config];
+  if (typeof value !== 'number' || !Number.isFinite(value)) return check.warn_limit;
+  return check.warn_limit.replace(LIMIT_NUMBER_RE, String(value));
+}
+
+/**
  * Evaluate one declared `limit` against a reported observation.
  *
  * Implemented: the `viol` forms, `pct <= <n>`, and the `{warn, fail}` object.
@@ -187,6 +212,13 @@ function evaluateLimit(limit, observation) {
 function checkRow(check, observation, onCheckError, config = null) {
   const limit = resolveLimit(check, config);
   const threshold = typeof limit === 'string' ? limit : JSON.stringify(limit);
+  // RE-FREEZE #7 (Spec 124 §5 R-AD) — a declared `warn_limit` only ever makes
+  // sense against a STRING-form `limit` (the schema's own allOf forbids one
+  // alongside the `{warn,fail}` object form, which is already its own
+  // two-tier cascade); `resolveWarnLimit` itself would still return the raw
+  // (unsubstituted) string for an object-form `limit`, so this guard is the
+  // belt to the schema's braces, not a second source of truth.
+  const warnLimit = typeof limit === 'string' ? resolveWarnLimit(check, config) : undefined;
   // Fold B-3 (R-T addendum) — every row carries a `source` tag: 'check' for an
   // ordinary `checks[]` entry (the default — `checks[]` items declare no `source`
   // field of their own, so a consumer never has to guess), or the entry's own
@@ -214,6 +246,12 @@ function checkRow(check, observation, onCheckError, config = null) {
     threshold,
     status,
     source: check.source || 'check',
+    // RE-FREEZE #7 — the resolved (config-substituted) warn tier, present
+    // ONLY when the check declares one (Nothing Hidden: the value in force,
+    // not merely the fact a warn tier exists) — absent entirely otherwise,
+    // never an empty/null placeholder, matching order_guarantee's own
+    // declared-only-if-present convention below.
+    ...(warnLimit !== undefined ? { warn_threshold: warnLimit } : {}),
     ...(check.order_guarantee ? { order_guarantee: { anchor: check.order_guarantee.anchor, guarantee: check.order_guarantee.guarantee } } : {}),
   });
 
@@ -237,6 +275,17 @@ function checkRow(check, observation, onCheckError, config = null) {
     ? observation.detail
     : (Number.isFinite(observation.violations) ? observation.violations : observation.value);
   if (verdict.ok) return row(observed, check.severity === 'INFO' ? 'INFO' : 'PASS');
+
+  // RE-FREEZE #7 (Spec 124 §5 R-AD) — `limit` failed. A declared `warn_limit`
+  // is a SECOND, looser bound: ok there reads WARN, before falling through to
+  // the check's own declared severity. Never consulted when `limit` already
+  // escalated via the `{warn,fail}` object form (`verdict.escalate`) — that
+  // form is its own two-tier cascade, and the schema forbids declaring
+  // `warn_limit` alongside an object-form `limit` in the first place.
+  if (warnLimit !== undefined && !verdict.escalate) {
+    const warnVerdict = evaluateLimit(warnLimit, observation);
+    if (warnVerdict.ok) return row(observed, 'WARN');
+  }
   return row(observed, verdict.escalate || check.severity);
 }
 
@@ -384,6 +433,7 @@ module.exports = {
   selectChecks,
   resolvePhase,
   resolveLimit,
+  resolveWarnLimit,
   evaluateLimit,
   checkRow,
   deriveVerdict,

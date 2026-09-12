@@ -654,6 +654,23 @@
           "description": "OPEN — domain knowledge. No vocabulary could supply that WARD is text in the CoA Active resource and WARD_NUMBER is int4 in Closed."
         },
         "limit": { "$ref": "#/definitions/bound" },
+        "warn_limit": {
+          "description": "OPERATOR RULING (2026-09-11, batch1 I1, RE-FREEZE #7 — Spec 124 §5 R-AD; see Spec 122 §8 / 122a Appendix §A9) — a SECOND, looser, optional bound giving a check 3-tier PASS/WARN/FAIL coverage in one row: `limit` ok -> PASS; else `warn_limit` present and ok -> WARN; else the check's own declared `severity`. Deliberately typed to the SAME STRING GRAMMAR as `limit`'s string arm (`definitions.bound`'s string pattern, byte-for-byte duplicated here rather than `$ref`'d — `bound` itself is `x-frozen` and this ruling does not touch it) — never the `{warn, fail}` object form, because `limit` already expresses a two-tier bound that way; declaring `warn_limit` alongside an object-form `limit` is redundant and rejected by the allOf below. Absent (the overwhelming majority of checks) is the OLD behaviour, byte-for-byte — no row shape change, no evaluation change.",
+          "type": "string",
+          "pattern": "^(viol (==|<=) [0-9]+|pct (<=|>=) [0-9]*\\.?[0-9]+|pop >= [0-9]+|ratio <= [0-9]*\\.?[0-9]+ x median|value_min -?[0-9]*\\.?[0-9]+|value_max -?[0-9]*\\.?[0-9]+)$",
+          "x-ruling": {
+            "rungs_tried": [
+              "rung (a) reuse — limit's own {warn,fail} object form already expresses a two-tier bound",
+              "a second checks[] entry per metric (the estate's existing two-check precedent, e.g. enrich_parcels' _warn/_fail pairs)"
+            ],
+            "why": "the object form's thresholds are NOT config-substitutable strings (definitions.bound's object arm is two bare `number` properties, no *_from_config sibling), so it cannot express a config-driven pct/value_min/value_max warn tier at all. A second checks[] entry per metric would double ~183 rows across this estate's largest ASSERT step and break FreshnessTimeline.tsx's metric-name lookups (two differently-named rows for one logical metric). A new, optional string-typed field on the SAME check, sharing limit's own grammar, is the last-resort rung: one row per metric, both tiers config-driven, names unchanged."
+          }
+        },
+        "warn_limit_from_config": {
+          "description": "OPERATOR RULING (2026-09-11, RE-FREEZE #7) — same substitution semantics as `limit_from_config` (OPERATOR RULING A-4), applied to `warn_limit` instead of `limit`: names a `config.logic_variables[].name` whose RESOLVED value replaces `warn_limit`'s trailing number before evaluation. `scripts/lib/step/verdict.js`'s `resolveWarnLimit` performs the substitution; the audit row's `warn_threshold` (present only when `warn_limit` is declared) renders the value IN FORCE, mirroring `threshold`'s own existing contract.",
+          "type": "string",
+          "minLength": 1
+        },
         "severity": {
           "enum": ["INFO", "WARN", "FAIL"],
           "x-frozen": true,
@@ -721,6 +738,11 @@
         {
           "if": { "properties": { "when": { "const": "pre_write" } }, "required": ["when"] },
           "then": { "required": ["order_guarantee"] }
+        },
+        {
+          "description": "RE-FREEZE #7 (Spec 124 §5 R-AD) — `warn_limit` is redundant, and rejected, on a check whose `limit` is already the two-tier `{warn,fail}` object form.",
+          "if": { "properties": { "limit": { "type": "object" } }, "required": ["limit"] },
+          "then": { "not": { "required": ["warn_limit"] } }
         }
       ]
     },
