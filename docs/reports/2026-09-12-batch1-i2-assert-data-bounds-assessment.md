@@ -294,3 +294,70 @@ Measured this session: 38 static call sites → 37 distinct names (one duplicate
 The plan's §3 commit-2 row proposes starting `scripts/lib/assert-data-bounds-fields.js` (the `CHECK_DEFS`/`LOGIC_VAR_DEFS` data module) at THIS commit, per I1's own RECURRING #1 obligation. **Superseded by the executor brief for this session**: `scripts/lib` is out of scope for commits 1-4 (executor brief: "No code under scripts/lib, scripts/quality, src/tests/steps (commits 5-9)"). The §2.3 census above is the complete input this module will be mechanically derived from at commit 7 — every row's `{id, table, metric, threshold, severity, chains}` shape is already present in the 49-row table, so commit 7 is a transcription-plus-generator exercise against this census, not new discovery. Recorded here so the deferral is explicit rather than a silent scope drop.
 
 ---
+
+## 3. PH-5 — Seam map (commit 3 → G5)
+
+### 3.1 DB seam
+
+Single seam: the `pool` object `pipeline.run('assert-data-bounds', async (pool) => {...})` injects (`:54`) — every one of the 56 domain statements (§1.2) plus the 2 ledger statements plus `finalizeStrandedRun`'s own conditional UPDATE (§1.7) go through this one `pool`. No second connection, no raw client checkout, no `pg.Pool()` construction in this file (confirmed absent by the `require()` list, commit 1 §0).
+
+### 3.2 Clock seam
+
+**Elapsed-time only** (harness-standard volatile, `Date.now()` — 3 sites: `:78` `startMs`, `:970` `durationMs`, `:1047` inside `finalizeStrandedRun`'s call args) — not a real non-determinism seam for golden capture (elapsed ms is expected to vary run-to-run and is not asserted byte-for-byte by any existing test).
+
+**Clock-relative SQL predicates — corrected count against the plan's row 3 ("6 distinct... classes"):** re-measured via `grep -n "INTERVAL\|CURRENT_DATE\|NOW()"` over the whole file, excluding the 2 ledger `NOW()` sites (`:92` INSERT, `:1004` UPDATE — DB-clock timestamps, not query predicates). **4 distinct predicate classes across 7 domain sites**, not 6:
+
+| Class | SQL fragment | Sites | Count |
+|---|---|---|---|
+| 1 | `NOW() - INTERVAL '1 day'` | `:149`, `:158`, `:169`, `:180` (recentTotal, descNull, builderNull, statusNull — all permit-scoped, all identical) | 4 |
+| 2 | `CURRENT_DATE + INTERVAL '2 years'` | `:335` (futureHearing, CoA) | 1 |
+| 3 | `CURRENT_DATE - INTERVAL '30 days'` | `:938` (ghostRes, permits) | 1 |
+| 4 | bare `CURRENT_DATE` | `:808` (futureDates, inspection) | 1 |
+
+**Correction, recorded not silently reconciled:** the plan's row 3 states "`CURRENT_DATE - INTERVAL '2 years'`/`'30 days'`" (both MINUS) — the live `futureHearing` predicate is actually `CURRENT_DATE + INTERVAL '2 years'` (PLUS — a forward-looking future-date bound, not a lookback window; the code and its own semantics, "hearing_date > CURRENT_DATE + INTERVAL '2 years'" = flag hearings scheduled implausibly far in the future, require `+`). This does not change the golden-capture non-determinism inventory (still 4 predicate classes to declare as non-deterministic across chain-relative runs) but the plan's operator sign was wrong and is corrected here per the "never infer behaviour from a name" directive (CLAUDE.md PD #10).
+
+**2 fixed-date literals (NOT clock-relative — do not add to the non-determinism inventory):** `ancientHearing`'s `hearing_date < '2010-01-01'` (`:346`) and `ancientDates`'s `inspection_date < '2020-01-01'` (`:815`) are static string literals, deterministic across all runs — flagged here only to distinguish them from the genuinely volatile class-1-4 predicates above (a golden-capture reviewer scanning for "date-shaped strings" could otherwise over-declare these as non-deterministic).
+
+### 3.3 Network seam
+
+**None.** Confirmed by full-file `require()` audit (commit 1 §0): `zod`, `../lib/pipeline`, `../lib/config-loader` (`loadMarketplaceConfigs`/`validateLogicVars`), `../lib/ledger-window` (`finalizeStrandedRun`) — no `fetch`/`axios`/`http`/`https` import, no external URL construction anywhere in the file. The plan's row 3 "network (none?)" uncertainty is resolved: **confirmed none**, not merely absent-by-omission.
+
+### 3.4 argv/env seam
+
+**One:** `process.env.PIPELINE_CHAIN` (`:52`) → `CHAIN_ID`, gating `runPermitChecks`/`runCoaChecks`/`runSourceChecks`/`runInspectionChecks` (`:107-110`) and the standalone-vs-chain audit-table selection (§1.4). No other `process.env.*` read in the file (confirmed by grep, commit-1-session re-run this commit). Becomes the library's chain-derived `ctx.checks` selection per the plan's own framing (§3 row 3) — the 4 boolean gates collapse into one `sharing.varies_by_chain` map (already declared in the plan §1, `{ permits: 22, coa: 11, sources: 27, deep_scrapes: 5 }`).
+
+### 3.5 The one real design seam — the WSIB OR-guard
+
+`if (runPermitChecks || runSourceChecks)` (`:639`) is the single non-mechanical branch condition in the file — every other `if (runXChecks)` gates exactly one audit table; this one gates a block whose OUTPUT (the `wsibAuditRows` array) is injected into up to TWO tables (§2.1 IL-4). Confirmed this commit: the guard is **inclusive-OR**, and in a standalone run (both `runPermitChecks` and `runSourceChecks` true) the block runs exactly ONCE (not twice) — `wsibCount`/`wsibNoName`/etc. are computed a single time (`:641-692`) and the SAME `wsibAuditRows` array is spread into both tables (§2.1 IL-4's "one mechanism, two destinations" finding) — no double-counting, no double-query. The generator (commit 7, Ask A1) must emit exactly 4 WSIB `checks[]` entries with `chains:["permits","sources"]`, never a 5th synthetic "wsib chain" branch and never 8 entries (4×2, wrongly treating the two destinations as separate checks).
+
+### 3.6 Producer seams — which CONVERTED steps' outputs this file reads (measured against `scripts/steps/_schema/converted.json`)
+
+`converted.json.converted` (10 entries, post-I1): `assert-schema.js`, `load-ravines.js`, `link-massing.js`, `link-wsib.js`, `link-parcel-addresses.js`, `compute-centroids.js`, `link-parcels.js`, `refresh-snapshot.js`, `enrich-parcels.js`, `assert-global-coverage.js`.
+
+Of the 16 tables this file reads (§1.0 claim 8), **3 are written by an already-converted producer**:
+
+| Table read here | Converted producer | Producer's `pending`/`converted` status |
+|---|---|---|
+| `parcels` | `enrich-parcels.js` | converted |
+| `ravines` | `load-ravines.js` | converted |
+| `permit_parcels` | `link-parcels.js` | converted |
+
+The remaining 13 tables (`address_points`, `building_footprints`, `coa_applications`, `cost_estimates`, `entities`, `heritage_districts`, `heritage_properties`, `neighbourhoods`, `permit_inspections`, `permit_trades`, `permits`, `toronto_centreline`, `wsib_registry`) are written by NOT-yet-converted producers (`load-address-points.js`, `load-heritage.js`, `load-centreline.js`, `load-neighbourhoods.js`, `load-permits.js`, `load-coa.js`, `compute-cost-estimates.js`, the AIC scraper, `classify-permits.js`, `link-wsib.js`'s upstream `load-wsib.js`, etc. — this file's own upstream, not itself converted). **No wiring risk to this step's own conversion** (it reads via `pool.query`, not via another step's descriptor/compute exports — the SDK archetypes have no cross-step import contract, confirmed by the plan's own Integration finding, Fold A item 4), but recorded per the executor brief's "producer seams vs `converted.json`" requirement.
+
+### 3.7 Audit-row consumers (`grep -rn "assert_data_bounds\|assert-data-bounds" src/ --include=*.ts --include=*.tsx | grep -v tests`)
+
+**7 hits, 5 files** — one more file than the plan's §12 handoff note (Fold A item, `src/lib/quality/types.ts`) already names, plus `src/app/api/admin/control-panel/resync/route.ts` which the plan's §12 did NOT enumerate:
+
+| File | Line | Contract |
+|---|---|---|
+| `src/app/api/admin/control-panel/resync/route.ts` | `:33` | Slug string in a resync-allowlist array — **not named in the plan's §12 handoff list**, a genuine gap found this session |
+| `src/components/DataQualityDashboard.tsx` | `:45` | `assert_data_bounds: { label: 'Daily' }` — cadence label |
+| `src/components/FreshnessTimeline.tsx` | `:90` | `{ name: 'Data Quality Checks', group: 'quality' }` — display metadata |
+| `src/components/FreshnessTimeline.tsx` | `:195` | Slug string in a rendering-order array |
+| `src/lib/admin/funnel.ts` | `:599` | Summary string + `table: 'pipeline_runs'` |
+| `src/lib/admin/funnel.ts` | `:849` | `pipeline_runs` table-key map entry |
+| `src/lib/quality/types.ts` | `:634` | `'Data Quality Checks'` label |
+
+**Correction against the plan's §12:** the plan's handoff note names exactly 4 consumer files (`FreshnessTimeline.tsx`, `DataQualityDashboard.tsx`, `funnel.ts`, `quality/types.ts`). This session's grep finds a **5th**: `src/app/api/admin/control-panel/resync/route.ts:33`, a resync-allowlist entry that must also render unchanged post-conversion (the slug string itself doesn't change, so this is likely a zero-risk omission, not a live gap) — flagged for the human plan-owner to fold into §12's consumer count before commit 9's G8 gate, since G8 only checks what it's told to check.
+
+---
