@@ -39,12 +39,13 @@ const PIPELINE_SCRIPTS = [
   // Every step still on the island path keeps its entry here, and the count below
   // shrinks by exactly one per conversion.
   'scripts/quality/assert-coa-freshness.js',
-  'scripts/quality/assert-data-bounds.js',
   // scripts/quality/assert-global-coverage.js RE-HOMED at ITS OWN commit 7 (C4 batch 1 I1,
   // 2026-09-11): LOGIC_VARS_SCHEMA (z.coerce.number() Zod object) retired into
   // config.logic_variables[]; scripts/lib/step/config.js resolves + bounds-checks the 20
   // declared names through loadMarketplaceConfigs before compute runs — same successor
   // mechanism as the link_massing/link_wsib/link_parcels/refresh_snapshot rows above.
+  // scripts/quality/assert-data-bounds.js RE-HOMED at ITS OWN commit 7 (C4 batch 1 I2,
+  // 2026-09-12) — same successor mechanism, 26 declared names.
   'scripts/quality/assert-lifecycle-phase-distribution.js',
   'scripts/quality/assert-network-health.js',
   // Phase G: scripts/quality/assert-pre-permit-aging.js retired to no-op shim — no logicVars.
@@ -52,8 +53,8 @@ const PIPELINE_SCRIPTS = [
 ];
 
 describe('Pipeline scripts — LOGIC_VARS_SCHEMA uses z.coerce.number() (spec 47 §4)', () => {
-  it('covers all 13 pipeline scripts still on the island path (was 20; Phase G retired 2 shims, C1 converted link_massing + link_wsib + link_parcels + refresh_snapshot, C4 batch 1 I1 converted assert_global_coverage)', () => {
-    expect(PIPELINE_SCRIPTS).toHaveLength(13);
+  it('covers all 12 pipeline scripts still on the island path (was 20; Phase G retired 2 shims, C1 converted link_massing + link_wsib + link_parcels + refresh_snapshot, C4 batch 1 I1 converted assert_global_coverage, C4 batch 1 I2 converted assert_data_bounds)', () => {
+    expect(PIPELINE_SCRIPTS).toHaveLength(12);
     // The count is a LEDGER, not a magic number: every entry must still be an unconverted
     // island, and a converted step left in this list would be asserting a schema that no
     // longer exists in it. Asserted rather than commented, so the two lists cannot drift.

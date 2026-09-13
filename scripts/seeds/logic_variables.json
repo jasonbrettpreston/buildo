@@ -512,7 +512,7 @@
   "cost_outlier_ceiling_cad": {
     "default": 2000000000,
     "type": "number",
-    "description": "Construction cost ceiling (CAD) above which a permit est_const_cost is flagged as a data-quality outlier (assert-data-bounds E7). $500M was too tight for legitimate Toronto megaprojects (hospitals, transit stations, mixed-use towers); raised to $2B.",
+    "description": "Construction cost ceiling (CAD) above which a permit est_const_cost is flagged as a data-quality outlier (assert-data-bounds E7). $500M was too tight for legitimate Toronto megaprojects (hospitals, transit stations, mixed-use towers); raised to $2B. CONSUMED by assert_data_bounds.",
     "min": 1000000,
     "max": 10000000000,
     "admin": {
@@ -522,7 +522,7 @@
   "desc_null_rate_warn_pct": {
     "default": 5,
     "type": "number",
-    "description": "Maximum acceptable percentage of recent permits (last 24h) with a NULL description before a data-quality warning is emitted",
+    "description": "Maximum acceptable percentage of recent permits (last 24h) with a NULL description before a data-quality warning is emitted CONSUMED by assert_data_bounds.",
     "min": 1,
     "max": 100,
     "admin": {
@@ -532,7 +532,7 @@
   "builder_null_rate_warn_pct": {
     "default": 95,
     "type": "number",
-    "description": "Maximum acceptable percentage of recent permits (last 24h) with a NULL builder_name before a data-quality warning is emitted",
+    "description": "Maximum acceptable percentage of recent permits (last 24h) with a NULL builder_name before a data-quality warning is emitted CONSUMED by assert_data_bounds.",
     "min": 1,
     "max": 100,
     "admin": {
@@ -542,7 +542,7 @@
   "cost_est_null_rate_warn_pct": {
     "default": 80,
     "type": "number",
-    "description": "Maximum acceptable percentage of NULL estimated_cost rows in cost_estimates before a data-quality warning is emitted",
+    "description": "Maximum acceptable percentage of NULL estimated_cost rows in cost_estimates before a data-quality warning is emitted CONSUMED by assert_data_bounds.",
     "min": 1,
     "max": 100,
     "admin": {
@@ -552,7 +552,7 @@
   "cost_est_min_tiers": {
     "default": 2,
     "type": "number",
-    "description": "Minimum number of distinct cost_tier values expected in cost_estimates; fewer triggers a data-quality warning",
+    "description": "Minimum number of distinct cost_tier values expected in cost_estimates; fewer triggers a data-quality warning CONSUMED by assert_data_bounds.",
     "min": 1,
     "max": 20,
     "admin": {
@@ -562,7 +562,7 @@
   "cost_est_legacy_cost_ceiling_cad": {
     "default": 50000000,
     "type": "number",
-    "description": "P13-1/P13-2: magnitude ceiling (CAD) on cost_estimates.estimated_cost for the LEGACY geometric/permit-passthrough sources (cost_source IN ('model','permit')). Above this a legacy row is treated as implausible (the mislinked-massing tail: whole-campus/whole-block GFA attributed to a single permit — e.g. Sunnybrook 792K m² on an elevator-cab permit). compute-cost-estimates nulls estimated_cost (keeps cost_source) via the durable clamp; assert-data-bounds WARNs on any residual not in the accepted-by-id list. Archetype (lot-validated) sources are exempt — the archetype caps already bound them.",
+    "description": "P13-1/P13-2: magnitude ceiling (CAD) on cost_estimates.estimated_cost for the LEGACY geometric/permit-passthrough sources (cost_source IN ('model','permit')). Above this a legacy row is treated as implausible (the mislinked-massing tail: whole-campus/whole-block GFA attributed to a single permit — e.g. Sunnybrook 792K m² on an elevator-cab permit). compute-cost-estimates nulls estimated_cost (keeps cost_source) via the durable clamp; assert-data-bounds WARNs on any residual not in the accepted-by-id list. Archetype (lot-validated) sources are exempt — the archetype caps already bound them. CONSUMED by assert_data_bounds.",
     "min": 1000000,
     "max": 2000000000,
     "admin": {
@@ -572,7 +572,7 @@
   "cost_est_legacy_gfa_ceiling_sqm": {
     "default": 50000,
     "type": "number",
-    "description": "P13-1/P13-2: magnitude ceiling (m²) on cost_estimates.modeled_gfa_sqm for LEGACY sources. A single permit modeling >50,000 m² GFA is almost always mislinked whole-block/campus massing (max observed 1.89M m²). Rows breaching this are nulled by the compute clamp; assert-data-bounds WARNs on residual priced rows (estimated_cost IS NOT NULL) above it.",
+    "description": "P13-1/P13-2: magnitude ceiling (m²) on cost_estimates.modeled_gfa_sqm for LEGACY sources. A single permit modeling >50,000 m² GFA is almost always mislinked whole-block/campus massing (max observed 1.89M m²). Rows breaching this are nulled by the compute clamp; assert-data-bounds WARNs on residual priced rows (estimated_cost IS NOT NULL) above it. CONSUMED by assert_data_bounds.",
     "min": 10000,
     "max": 5000000,
     "admin": {
@@ -592,7 +592,7 @@
   "calibration_freshness_warn_hours": {
     "default": 48,
     "type": "number",
-    "description": "Hours since last compute_timing_calibration run after which the timing_calibration table is considered stale and a warning is emitted",
+    "description": "Hours since last compute_timing_calibration run after which the timing_calibration table is considered stale and a warning is emitted NOTE (2026-09-12, batch1 I2 commit 7): no longer CONSUMED by assert_data_bounds (ADB-D5, dead there since migration 106) — still CONSUMED by compute_phase_calibration; NOT deleted (repo-wide grep found a live second consumer).",
     "min": 1,
     "max": 720,
     "admin": {
@@ -602,7 +602,7 @@
   "coa_forward_link_sub085_warn_pct": {
     "default": 59,
     "type": "number",
-    "description": "P12-B2: max acceptable percentage of LINKED coa_applications whose linked_confidence is below the 0.85 identity floor (a same-street/geo/flagged tier that must not surface as identity). Baseline sub-0.85 share ~54% (17,842 of 33,114 linked, 2026-07-08); seeded at baseline+5 so a regression in link quality WARNs. assert-data-bounds coa section.",
+    "description": "P12-B2: max acceptable percentage of LINKED coa_applications whose linked_confidence is below the 0.85 identity floor (a same-street/geo/flagged tier that must not surface as identity). Baseline sub-0.85 share ~54% (17,842 of 33,114 linked, 2026-07-08); seeded at baseline+5 so a regression in link quality WARNs. assert-data-bounds coa section. CONSUMED by assert_data_bounds.",
     "min": 1,
     "max": 100,
     "admin": {
@@ -4705,6 +4705,186 @@
     "max": 100,
     "admin": {
       "group": "Coverage & Quality"
+    }
+  },
+  "cost_outlier_count_warn_max": {
+    "default": 20,
+    "type": "number",
+    "description": "assert-data-bounds: permits cost-outlier row-count WARN ceiling (IL-2, f238b814 — 16-permit baseline, C4 panel A1 2026-08-13 re-review). CONSUMED by assert_data_bounds.",
+    "min": 1,
+    "max": 100000,
+    "admin": {
+      "group": "Data Quality Thresholds"
+    }
+  },
+  "sources_address_points_floor": {
+    "default": 500000,
+    "type": "number",
+    "description": "assert-data-bounds: address_points row-count FAIL floor (IL-8, 1f8ca38a — ~95% of live 525K). CONSUMED by assert_data_bounds.",
+    "min": 1,
+    "max": 5000000,
+    "admin": {
+      "group": "Sources Catastrophic-Load Floors"
+    }
+  },
+  "sources_parcels_floor": {
+    "default": 460000,
+    "type": "number",
+    "description": "assert-data-bounds: parcels row-count FAIL floor (IL-8, 1f8ca38a — ~95% of live 486K). CONSUMED by assert_data_bounds.",
+    "min": 1,
+    "max": 5000000,
+    "admin": {
+      "group": "Sources Catastrophic-Load Floors"
+    }
+  },
+  "sources_building_footprints_floor": {
+    "default": 400000,
+    "type": "number",
+    "description": "assert-data-bounds: building_footprints row-count FAIL floor (IL-8, 1f8ca38a — ~95% of live 427K). CONSUMED by assert_data_bounds.",
+    "min": 1,
+    "max": 5000000,
+    "admin": {
+      "group": "Sources Catastrophic-Load Floors"
+    }
+  },
+  "sources_neighbourhoods_floor": {
+    "default": 158,
+    "type": "number",
+    "description": "assert-data-bounds: neighbourhoods row-count FAIL floor (IL-9, e3dad53d/b4e3d56e). CONSUMED by assert_data_bounds.",
+    "min": 1,
+    "max": 1000,
+    "admin": {
+      "group": "Sources Catastrophic-Load Floors"
+    }
+  },
+  "sources_ravines_floor": {
+    "default": 500,
+    "type": "number",
+    "description": "assert-data-bounds: ravines row-count FAIL floor (IL-10, 1ceebd17, Spec 59 §8c — ~854 expected; does-not-exist deploy-order guarded, migration 167). CONSUMED by assert_data_bounds.",
+    "min": 1,
+    "max": 100000,
+    "admin": {
+      "group": "Sources Catastrophic-Load Floors"
+    }
+  },
+  "sources_heritage_properties_floor": {
+    "default": 8000,
+    "type": "number",
+    "description": "assert-data-bounds: heritage_properties row-count FAIL floor (IL-10, 169f22af, Spec 61 §8c; migration 170 deploy-order guarded). CONSUMED by assert_data_bounds.",
+    "min": 1,
+    "max": 100000,
+    "admin": {
+      "group": "Sources Catastrophic-Load Floors"
+    }
+  },
+  "sources_heritage_districts_floor": {
+    "default": 20,
+    "type": "number",
+    "description": "assert-data-bounds: heritage_districts row-count FAIL floor (IL-10, 169f22af, Spec 61 §8c; migration 170 deploy-order guarded). CONSUMED by assert_data_bounds.",
+    "min": 1,
+    "max": 1000,
+    "admin": {
+      "group": "Sources Catastrophic-Load Floors"
+    }
+  },
+  "sources_centreline_floor": {
+    "default": 40000,
+    "type": "number",
+    "description": "assert-data-bounds: toronto_centreline row-count FAIL floor (IL-10, f6047e89, Spec 62 §8c; migration 173 deploy-order guarded). CONSUMED by assert_data_bounds.",
+    "min": 1,
+    "max": 500000,
+    "admin": {
+      "group": "Sources Catastrophic-Load Floors"
+    }
+  },
+  "coa_null_address_count_warn_max": {
+    "default": 10,
+    "type": "number",
+    "description": "assert-data-bounds: coa_applications.address null/empty row-count WARN ceiling. CONSUMED by assert_data_bounds.",
+    "min": 1,
+    "max": 100000,
+    "admin": {
+      "group": "CoA Gates & Staleness"
+    }
+  },
+  "coa_ancient_hearing_count_warn_max": {
+    "default": 5,
+    "type": "number",
+    "description": "assert-data-bounds: coa_applications.hearing_date < 2010-01-01 row-count WARN ceiling. CONSUMED by assert_data_bounds.",
+    "min": 1,
+    "max": 100000,
+    "admin": {
+      "group": "CoA Gates & Staleness"
+    }
+  },
+  "coa_future_hearing_window_years": {
+    "default": 2,
+    "type": "number",
+    "description": "assert-data-bounds: coa_applications.hearing_date future-bound window (years) — FAIL if any hearing exceeds CURRENT_DATE + this many years. CONSUMED by assert_data_bounds.",
+    "min": 1,
+    "max": 20,
+    "admin": {
+      "group": "CoA Gates & Staleness"
+    }
+  },
+  "coa_cost_gt_threshold_cad": {
+    "default": 10000000,
+    "type": "number",
+    "description": "assert-data-bounds: coa_applications.estimated_cost magnitude-watch threshold (CAD), P12-C2 (c53f60a8). CONSUMED by assert_data_bounds.",
+    "min": 1000000,
+    "max": 500000000,
+    "admin": {
+      "group": "CoA Gates & Staleness"
+    }
+  },
+  "coa_cost_gt_threshold_warn_max": {
+    "default": 80,
+    "type": "number",
+    "description": "assert-data-bounds: row-count WARN ceiling for coa_estimated_cost_gt10m (c53f60a8 — baseline ~64 archetype-parcel envelope tail). CONSUMED by assert_data_bounds.",
+    "min": 1,
+    "max": 100000,
+    "admin": {
+      "group": "CoA Gates & Staleness"
+    }
+  },
+  "coa_fsi_gt_threshold": {
+    "default": 5,
+    "type": "number",
+    "description": "assert-data-bounds: coa_applications.coa_fsi magnitude-watch threshold (c53f60a8 — max observed ~3.15). CONSUMED by assert_data_bounds.",
+    "min": 1,
+    "max": 50,
+    "admin": {
+      "group": "CoA Gates & Staleness"
+    }
+  },
+  "coa_gfa_over_lot_multiple": {
+    "default": 3,
+    "type": "number",
+    "description": "assert-data-bounds: coa_applications.max_buildable_gfa_sqm-over-lot_size_sqm multiple watch (c53f60a8). CONSUMED by assert_data_bounds.",
+    "min": 1,
+    "max": 20,
+    "admin": {
+      "group": "CoA Gates & Staleness"
+    }
+  },
+  "coa_gfa_over_lot_warn_max": {
+    "default": 45,
+    "type": "number",
+    "description": "assert-data-bounds: row-count WARN ceiling for coa_maxbuild_gfa_gt3lot (c53f60a8 — baseline ~29 oversized-envelope). CONSUMED by assert_data_bounds.",
+    "min": 1,
+    "max": 100000,
+    "admin": {
+      "group": "CoA Gates & Staleness"
+    }
+  },
+  "inspection_ancient_dates_count_warn_max": {
+    "default": 5,
+    "type": "number",
+    "description": "assert-data-bounds: DECLARED per Rule 3 (report §2.4 item 18) but NOT YET WIRED to a real bound — the pre-conversion checkInsp() helper only ever compares value > 0 for ancient_dates; its displayed \"<= 5\" threshold was never a live comparison. See ADB-D7 (defect-ledger.md), fix-after. CONSUMED by assert_data_bounds.",
+    "min": 1,
+    "max": 100000,
+    "admin": {
+      "group": "Data Quality Thresholds"
     }
   }
 }

@@ -1480,3 +1480,45 @@ describe('RULING R-D — declared_logic_variables_present (cloud parity, chain-s
     expect(c.chains).toEqual(['permits', 'coa', 'sources']);
   });
 });
+
+// ---------------------------------------------------------------------------
+// ASK A1 (batch1 I2 commit 7, `.cursor/batch1_i2_assert_data_bounds_active_task.md`
+// §8) — `scripts/generate-assert-schema-probe-lists.js` closes I1's own RECURRING
+// #2 followup (2 prior hand-splices with "zero guard against a transcription
+// slip": pilot 9 42→86, I1 86→106). Locks BOTH directions: the committed
+// descriptor is clean under the generator's own `--check` (this session's real
+// derivation), and a MUTATED name list is detected as drift (proving the lock is
+// not vacuous — a generator whose --check always reports "clean" regardless of
+// input would pass the first assertion trivially).
+// ---------------------------------------------------------------------------
+describe('R-D generator — scripts/generate-assert-schema-probe-lists.js (Ask A1)', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports -- exercising the real CJS generator
+  const generator = require(path.join(REPO_ROOT, 'scripts/generate-assert-schema-probe-lists.js')) as {
+    buildProbeLists: (names: string[]) => { expect: string[]; probePresence: string[] };
+    applyToText: (text: string, names: string[]) => string;
+  };
+  // eslint-disable-next-line @typescript-eslint/no-require-imports -- exercising the real CJS helper
+  const { collectDeclaredLogicVariableNames } = require(path.join(REPO_ROOT, 'scripts/lib/declared-logic-variables.js')) as {
+    collectDeclaredLogicVariableNames: () => string[];
+  };
+
+  it('real file — applyToText(committed text, LIVE names) is a byte-for-byte no-op (the descriptor is clean, not stale)', () => {
+    const committed = fs.readFileSync(abs(DESCRIPTOR_REL), 'utf8');
+    const rendered = generator.applyToText(committed, collectDeclaredLogicVariableNames());
+    expect(rendered).toBe(committed);
+  });
+
+  it('mutated fixture — applyToText detects drift (proves the lock is not vacuous)', () => {
+    const committed = fs.readFileSync(abs(DESCRIPTOR_REL), 'utf8');
+    const mutatedNames = [...collectDeclaredLogicVariableNames(), 'zzz_fixture_only_name_never_real'];
+    const rendered = generator.applyToText(committed, mutatedNames);
+    expect(rendered).not.toBe(committed);
+    expect(rendered).toContain('zzz_fixture_only_name_never_real');
+  });
+
+  it('buildProbeLists(names) — expect and probePresence are identical (R-D: never independently constructed)', () => {
+    const { expect: expectArr, probePresence } = generator.buildProbeLists(['b_name', 'a_name', 'a_name']);
+    expect(expectArr).toEqual(['a_name', 'b_name']);
+    expect(probePresence).toEqual(['a_name', 'b_name']);
+  });
+});

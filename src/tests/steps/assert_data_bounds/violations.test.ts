@@ -17,21 +17,28 @@
 // 18 new logic_variables + 1 knowingly-retired); §4.3/§4.4 is the ADB-D1..D6 defect ledger
 // (`docs/reports/defect-ledger.md`), every row OPEN · PIN, none fixed here.
 //
-// ⚠️ EVERY CLAIM TEST MUST BE RED TODAY, AND RED FOR THE RIGHT REASON. Claims that read a FUTURE
-// artifact (the descriptor, the compute module) open with `artifact()` → `expect(existsSync).toBe(true)`,
-// so the failure names the missing artifact rather than surfacing as an import/parse error. Genuinely-red
-// claims are wrapped `it.fails(...)` with a `// flips at: commit 7` comment — `it.fails()` INVERTS: the
-// wrapped body genuinely throws internally and vitest reports the wrapped test as PASSED; if a claim were
-// NOT actually red, vitest reports "expected test to fail but it passed," a real suite failure. A fully
-// green run of this file is therefore the proof every `it.fails()` claim is genuinely red today. Plain
+// ⚠️ COMMIT 6 (red-first): EVERY CLAIM TEST HAD TO BE RED, AND RED FOR THE RIGHT REASON. Claims
+// that read a FUTURE artifact (the descriptor, the compute module) open with `artifact()` →
+// `expect(existsSync).toBe(true)`, so the failure names the missing artifact rather than surfacing
+// as an import/parse error. Genuinely-red claims were wrapped `it.fails(...)` with a
+// `// flips at: commit 7` comment — `it.fails()` INVERTS: the wrapped body genuinely throws
+// internally and vitest reports the wrapped test as PASSED; if a claim were NOT actually red, vitest
+// reported "expected test to fail but it passed," a real suite failure. A fully green run of the
+// file at commit 6 was the proof every `it.fails()` claim was genuinely red at that point.
+// COMMIT 7 (this commit): the descriptor + compute now exist — every one of those `it.fails(...)`
+// call sites is flipped to a plain `it(...)` (mechanical, body unchanged), and a green run is now
+// the proof every one of those claims is genuinely TRUE, not merely "still red." Plain
 // `it()` covers claims testable TODAY: facts already true (lock 103 in the step file, the 4 chains +
 // measured positions in manifest.json, the 8 live (non-retired) logic vars registered in seeds, the 5
 // golden PRE captures with exit 0 and their recorded verdicts, the report's sections/ledger rows) and the
-// six G4d fence detectors (IL-1 through IL-6, the named-fence set the executor brief scoped), which run
-// against the CURRENT (pre-conversion) step source exactly as `assert_schema`'s `FENCES` array runs
-// against its legacy step pre-conversion, and `assert_global_coverage`'s own I1 precedent — both
-// directions (fence intact / fence reverted) are provable today because the subject artifact (the step
-// file) already exists; only the descriptor/compute do not.
+// six G4d fence detectors (IL-1 through IL-6, the named-fence set the executor brief scoped). AT COMMIT 6
+// these ran against the CURRENT (pre-conversion) step source, exactly as `assert_schema`'s `FENCES` array
+// ran against its own legacy step pre-conversion. AT COMMIT 7 (this commit) they are REPOINTED to
+// `computeAndFieldsSource()` (scripts/lib/compute/assert-data-bounds.js + scripts/lib/assert-data-bounds-
+// fields.js) — the pre-conversion step file no longer contains this domain logic at all, so the fences
+// now prove the SAME facts against where the logic actually lives, mirroring the identical repoint
+// Fold A item 1 authorizes for src/tests/assert-data-bounds.infra.test.ts. See the block's own header
+// comment (§2 below) for the full repoint rationale, including IL-1's one genuine narrowing.
 //
 // The artifacts this file asserts against (commits 7-9, `.cursor/batch1_i2_assert_data_bounds_active_task.md`):
 //   scripts/quality/assert-data-bounds.descriptor.json — new, ASSERT archetype, outputs/recovery/
@@ -89,7 +96,7 @@ interface Check {
   blocking: boolean;
   when: string;
   chains: string[] | 'all';
-  why?: string;
+  why?: { text: string; liveness: unknown };
 }
 interface Descriptor {
   identity: { name: string; lock: number; archetype: string };
@@ -217,12 +224,24 @@ describe('assert_data_bounds — measured facts, true today (plain it)', () => {
     }
   });
 
-  it('the 9th registered var (calibration_freshness_warn_hours) is declared but has ZERO runtime consumption — the ADB-D5 dead var, confirming it as the correct commit-7 retirement target', () => {
-    const seed = JSON.parse(fs.readFileSync(abs(SEED_REL), 'utf8')) as Record<string, { default: number }>;
-    expect(seed.calibration_freshness_warn_hours, 'seed must still carry the var today — it retires at commit 7, not before').toBeDefined();
+  // COMMIT 7 UPDATE (mechanical, required by this commit's own change): this test
+  // originally read `src()` — the pre-conversion step file — to prove the var was
+  // dead THERE before retiring it. `src()` is now the frozen shell and contains
+  // none of the old domain logic at all (0 occurrences of anything), so that
+  // mechanism is retired along with the file it read. Repointed to prove the
+  // ACTUAL commit-7 outcome instead: the seed row survives (a genuine second
+  // consumer was found this session, scripts/compute-phase-calibration.js — NOT
+  // deleted, see scripts/lib/assert-data-bounds-fields.js's header), but
+  // assert_data_bounds' own descriptor no longer declares or consumes it.
+  it('calibration_freshness_warn_hours (ADB-D5 dead var) — seed row SURVIVES (a genuine second consumer, scripts/compute-phase-calibration.js, found this session — not deleted), but is retired from assert_data_bounds\' own descriptor + compute', () => {
+    const seed = JSON.parse(fs.readFileSync(abs(SEED_REL), 'utf8')) as Record<string, { default: number; description: string }>;
+    expect(seed.calibration_freshness_warn_hours, 'seed row must survive — a live second consumer exists').toBeDefined();
     expect(seed.calibration_freshness_warn_hours?.default).toBe(48);
-    const assignSites = [...src().matchAll(/calibFreshnessHours/g)];
-    expect(assignSites.length, 'expected exactly ONE occurrence (the dead assignment at :73) — any 2nd occurrence would mean it IS consumed and ADB-D5/the retirement ruling is wrong').toBe(1);
+    expect(seed.calibration_freshness_warn_hours?.description ?? '', 'seed description should note the partial retirement').toMatch(/no longer CONSUMED by assert_data_bounds/);
+    const d = loadDescriptor();
+    const cfg = d.config as { logic_variables: Array<{ name: string }> };
+    expect(cfg.logic_variables.map((v) => v.name), 'assert_data_bounds\' own config.logic_variables must NOT declare the dead var').not.toContain('calibration_freshness_warn_hours');
+    expect(computeSource(), 'assert_data_bounds\' own compute must not reference the dead var').not.toMatch(/calibration_freshness_warn_hours/);
   });
 
   it('the 5 golden PRE captures exist, exit 0, and carry the recorded per-chain verdicts (commit 5)', () => {
@@ -272,12 +291,17 @@ describe('assert_data_bounds — measured facts, true today (plain it)', () => {
     expect(md.includes('**PROPOSED —'), 'a §2.1/§2.2 disposition cell was not flipped to RULED').toBe(false);
   });
 
-  it('the row-builder census parser (§2.3, 49 distinct metric names) is not vacuous — proves the it.fails() checks[] floor test below will exercise a real number, not zero', () => {
+  it('the row-builder census parser (§2.3, 49 distinct metric names) is not vacuous — proves the checks[] floor test below exercises a real number, not zero', () => {
     const floor = censusDistinctMetricCount();
     expect(floor).toBe(49);
   });
 
-  it('converted.json declares this step pending at stage "red_suite" (R-K/R-K.1) — well-formed, and not double-registered in `converted`', () => {
+  // COMMIT 7 UPDATE (mechanical, required by R-K.1 — step-conformance.infra.test.ts's
+  // own "a red_suite pending file has NOT yet landed its sibling descriptor" lock):
+  // the descriptor now exists and independently validates, so R-K.1 REQUIRES the
+  // stage advance to at least "descriptor_only" in this same commit — leaving it at
+  // "red_suite" would itself be the defect that lock exists to catch.
+  it('converted.json declares this step pending at stage "shape_clean" (R-K/R-K.1, advanced from "red_suite" -> "descriptor_only" -> "shape_clean" at commit 7, since conformanceFindings() is already clean) — well-formed, and not double-registered in `converted`', () => {
     const doc = JSON.parse(fs.readFileSync(artifact(CONVERTED_REL), 'utf8')) as {
       converted: string[];
       pending: Array<{ file: string; registers_at: string; reason: string; declared: string; stage: string }>;
@@ -285,7 +309,7 @@ describe('assert_data_bounds — measured facts, true today (plain it)', () => {
     expect(doc.converted, 'must not be double-registered while still pending').not.toContain(STEP_REL);
     const entry = doc.pending.find((p) => p.file === STEP_REL);
     expect(entry, `${CONVERTED_REL} has no pending entry for ${STEP_REL}`).toBeDefined();
-    expect(entry?.stage).toBe('red_suite');
+    expect(entry?.stage).toBe('shape_clean');
     expect(entry?.declared).toBe('2026-09-12');
   });
 
@@ -300,10 +324,28 @@ describe('assert_data_bounds — measured facts, true today (plain it)', () => {
 });
 
 // ---------------------------------------------------------------------------
-// 2. G4d — six fences (IL-1 through IL-6, the executor brief's named set), both directions, against
-//    the CURRENT (pre-conversion) step source. Provable today because the subject (the step file)
-//    already exists — mirrors assert_schema's FENCES array and assert_global_coverage's I1 precedent.
+// 2. G4d — six fences (IL-1 through IL-6, the executor brief's named set), both directions.
+//
+// ── COMMIT 7 REPOINT (mirrors Fold A item 1's exact methodology, applied here to the
+//    SAME class of problem it names for src/tests/assert-data-bounds.infra.test.ts) ──
+// These fences were authored at commit 6 against `src()` (the pre-conversion, monolithic
+// step file) — the only artifact that existed then. Commit 7 replaces that file with the
+// 8-line frozen shell (scripts/quality/assert-data-bounds.js), so `src()` no longer
+// contains ANY of this domain logic; every fence's `detect()` now targets
+// `computeAndFieldsSource()` (scripts/lib/compute/assert-data-bounds.js +
+// scripts/lib/assert-data-bounds-fields.js, concatenated), where the SAME fences now
+// live, verbatim-preserved but relocated and renamed per the compute's own variable/
+// access-pattern conventions (`ctx.config.<name>` replaces `logicVars.<name>`, etc.).
+// IL-1 is the one GENUINE exception: `calibration_freshness_warn_hours` is the ADB-D5
+// dead var, KNOWINGLY retired from this step at commit 7 (not preserved) — its fence
+// is narrowed to the 5 vars that DO survive, plus a POSITIVE assertion that the 6th is
+// gone (the opposite of every other fence, and itself a fence: a future accidental
+// re-add of a dead var would trip it).
 // ---------------------------------------------------------------------------
+
+function computeAndFieldsSource(): string {
+  return `${computeSource()}\n${readText('scripts/lib/assert-data-bounds-fields.js')}`;
+}
 
 interface Fence {
   name: string;
@@ -314,56 +356,69 @@ interface Fence {
 
 const FENCES: Fence[] = [
   {
-    name: 'IL-1 — E7-E10 threshold externalization (6 of the file\'s 9 logic vars read via logicVars)',
+    name: 'IL-1 — E7-E10 threshold externalization: 5 of the file\'s original 6 logicVars-read vars survive (3 as direct ctx.config SQL binds, 2 — desc/builder null-rate — via the descriptor\'s limit_from_config substitution, declared as LOGIC_VAR_DEFS entries here); calibration_freshness_warn_hours is KNOWINGLY RETIRED (ADB-D5), not preserved',
     commit: '4f6114ce',
     detect: (t) => {
       const v: string[] = [];
       for (const name of [
         'cost_outlier_ceiling_cad', 'desc_null_rate_warn_pct', 'builder_null_rate_warn_pct',
-        'cost_est_null_rate_warn_pct', 'cost_est_min_tiers', 'calibration_freshness_warn_hours',
+        'cost_est_null_rate_warn_pct', 'cost_est_min_tiers',
       ]) {
-        if (!t.includes(`logicVars.${name}`)) v.push(`logicVars.${name} read is gone`);
+        // Either form counts as "consumed": a direct ctx.config.<name> SQL bind
+        // (compute.js), or a declared LOGIC_VAR_DEFS entry that feeds the
+        // descriptor's limit_from_config substitution (fields.js) — the pct-form
+        // checks (desc/builder null-rate) never touch ctx.config directly in
+        // compute; the library substitutes their bound at verdict-evaluation time.
+        if (!t.includes(`ctx.config.${name}`) && !t.includes(`name: '${name}'`)) v.push(`neither a ctx.config.${name} read nor a LOGIC_VAR_DEFS name: '${name}' declaration found`);
+      }
+      // Documentation prose (the fields module's own header explains the retirement
+      // BY NAME) legitimately mentions the string — only a LIVE declaration/read is
+      // disallowed: a LOGIC_VAR_DEFS entry or a ctx.config access.
+      if (t.includes("name: 'calibration_freshness_warn_hours'") || t.includes('ctx.config.calibration_freshness_warn_hours')) {
+        v.push('calibration_freshness_warn_hours must be ABSENT as a live LOGIC_VAR_DEFS entry / ctx.config read (ADB-D5 retirement), found one');
       }
       return v;
     },
-    revert: (t) => t.replace(/logicVars\.(cost_outlier_ceiling_cad|desc_null_rate_warn_pct|builder_null_rate_warn_pct|cost_est_null_rate_warn_pct|cost_est_min_tiers|calibration_freshness_warn_hours)/g, 'REMOVED'),
+    revert: (t) => t
+      .replace(/ctx\.config\.(cost_outlier_ceiling_cad|desc_null_rate_warn_pct|builder_null_rate_warn_pct|cost_est_null_rate_warn_pct|cost_est_min_tiers)/g, 'REMOVED')
+      .replace(/name: '(cost_outlier_ceiling_cad|desc_null_rate_warn_pct|builder_null_rate_warn_pct|cost_est_null_rate_warn_pct|cost_est_min_tiers)'/g, "name: 'REMOVED'"),
   },
   {
-    name: 'IL-2 — f238b814 cost_outliers >= 20 false-WARN fix (stays hardcoded per Spec 30 §5.4.1, promoted to a logic var at commit 7 per the §2.4 adjudication)',
+    name: 'IL-2 — f238b814 cost_outliers >= 20 false-WARN fix (promoted to logic var cost_outlier_count_warn_max at commit 7 per the §2.4 adjudication, config-driven boolean comparison in compute)',
     commit: 'f238b814',
     detect: (t) => {
       const v: string[] = [];
-      const hits = [...t.matchAll(/costOutliers >= 20/g)];
-      if (hits.length < 2) v.push(`expected 2 occurrences of "costOutliers >= 20" (the gate + the audit-row status expression), found ${hits.length}`);
-      if (!/f238b814/.test(t)) v.push('the f238b814 citation comment is gone');
+      if (!t.includes('cost_outlier_count_warn_max')) v.push('the cost_outlier_count_warn_max config var is gone');
+      if (!t.includes("id: 'cost_outliers'")) v.push('the cost_outliers check id is gone');
+      if (!/f238b814/.test(t)) v.push('the f238b814 citation is gone');
       return v;
     },
-    revert: (t) => t.replace(/costOutliers >= 20/g, 'costOutliers > 0').replace(/f238b814/g, 'removed'),
+    revert: (t) => t.replace(/cost_outlier_count_warn_max/g, 'REMOVED').replace(/f238b814/g, 'removed'),
   },
   {
-    name: 'IL-3 — adec1f68 Phase-G Pre-Permit duplicated gate, 2 independent sites, NOT collapsed',
+    name: 'IL-3 — adec1f68 Phase-G Pre-Permit duplicated gate, 2 independent check ids, NOT collapsed',
     commit: 'adec1f68',
     detect: (t) => {
       const v: string[] = [];
-      const hits = [...t.matchAll(/metric: 'permits_pre_permit_count'/g)];
-      if (hits.length !== 2) v.push(`expected exactly 2 "permits_pre_permit_count" check sites (permits + coa branches), found ${hits.length}`);
+      if (!t.includes("id: 'permits_pre_permit_count'")) v.push('the permits-branch permits_pre_permit_count check id is gone');
+      if (!t.includes("id: 'coa_permits_pre_permit_count'")) v.push('the coa-branch coa_permits_pre_permit_count check id is gone');
       if (!t.includes('prePermitCount')) v.push('the permits-branch prePermitCount var is gone');
       if (!t.includes('coaPrePermitCount')) v.push('the coa-branch coaPrePermitCount var is gone');
       return v;
     },
-    revert: (t) => t.replace(/coaAuditRows\.push\(\{\s*metric: 'permits_pre_permit_count',\s*value: coaPrePermitCount,/, "coaAuditRows.push({\n        metric: 'removed_duplicate',\n        value: coaPrePermitCount,"),
+    revert: (t) => t.replace("id: 'coa_permits_pre_permit_count'", "id: 'removed_duplicate'"),
   },
   {
-    name: 'IL-4 — 326bb847 WSIB dual-injection: ONE array, pushed by reference into BOTH permitsAuditTable and sourcesAuditTable',
+    name: 'IL-4 — 326bb847 WSIB dual-injection: ONE memoized loader, ONE check group, chains:["permits","sources"]',
     commit: '326bb847',
     detect: (t) => {
       const v: string[] = [];
-      if (!t.includes('const wsibAuditRows = [')) v.push('the single wsibAuditRows array literal is gone');
-      if (!t.includes('permitsAuditTable.rows.push(...wsibAuditRows)')) v.push('the permits-side spread-push is gone');
-      if (!t.includes('sourcesAuditTable.rows.push(...wsibAuditRows)')) v.push('the sources-side spread-push is gone');
+      if (!t.includes('loadWsibBranch')) v.push('the single loadWsibBranch loader is gone');
+      const wsibChainHits = [...t.matchAll(/chains:\s*\['permits',\s*'sources'\]/g)];
+      if (wsibChainHits.length < 4) v.push(`expected >= 4 checks[].chains:['permits','sources'] declarations (the 4 WSIB metrics), found ${wsibChainHits.length}`);
       return v;
     },
-    revert: (t) => t.replace('sourcesAuditTable.rows.push(...wsibAuditRows);', 'sourcesAuditTable.rows.push(); // reverted for fence test'),
+    revert: (t) => t.replace(/chains:\s*\['permits',\s*'sources'\]/g, "chains: ['permits']"),
   },
   {
     name: 'IL-5 — ea087109 ghost_permits_30d excludes P19/P20 terminal permits',
@@ -381,34 +436,37 @@ const FENCES: Fence[] = [
     detect: (t) => {
       const v: string[] = [];
       if (!t.includes("const COST_MAG_ACCEPT = ['04 202812 BLD', '07 129713 BLD', '06 196930 BLD'];")) v.push('the 3-entry COST_MAG_ACCEPT allowlist is gone or changed');
-      if (!t.includes('logicVars.cost_est_legacy_cost_ceiling_cad')) v.push('the legacy cost ceiling logic-var read is gone');
-      if (!t.includes('logicVars.cost_est_legacy_gfa_ceiling_sqm')) v.push('the legacy GFA ceiling logic-var read is gone');
+      if (!t.includes('cost_est_legacy_cost_ceiling_cad')) v.push('the legacy cost ceiling logic-var is gone');
+      if (!t.includes('cost_est_legacy_gfa_ceiling_sqm')) v.push('the legacy GFA ceiling logic-var is gone');
       return v;
     },
     revert: (t) => t.replace("const COST_MAG_ACCEPT = ['04 202812 BLD', '07 129713 BLD', '06 196930 BLD'];", 'const COST_MAG_ACCEPT = [];'),
   },
 ];
 
-describe('assert_data_bounds — G4d fence locks (both directions, pre-conversion source)', () => {
+describe('assert_data_bounds — G4d fence locks (both directions, commit 7: repointed to compute+fields)', () => {
   for (const fence of FENCES) {
     describe(`${fence.name} (${fence.commit})`, () => {
-      it('is intact in the current step source', () => {
-        expect(fence.detect(src()), `fence violated in the live file: ${fence.name}`).toEqual([]);
+      it('is intact in the compute+fields source', () => {
+        expect(fence.detect(computeAndFieldsSource()), `fence violated: ${fence.name}`).toEqual([]);
       });
 
       it('a reverted copy is detected as violated (proves the detector is not vacuous)', () => {
-        expect(fence.detect(fence.revert(src())).length, `reverted text should trip ${fence.name}`).toBeGreaterThan(0);
+        expect(fence.detect(fence.revert(computeAndFieldsSource())).length, `reverted text should trip ${fence.name}`).toBeGreaterThan(0);
       });
     });
   }
 });
 
 // ===========================================================================
-// 3. Genuinely RED today — flips at commit 7 (descriptor + compute land)
+// 3. Flipped at commit 7 (descriptor + compute now exist) — was `it.fails(...)`
+//    at commit 6, red-first; now plain `it(...)`, mechanically flipped, body
+//    unchanged, per `.cursor/batch1_i2_assert_data_bounds_active_task.md`
+//    deliverable 5.
 // ===========================================================================
 
-describe('assert_data_bounds — genuinely red until commit 7 (it.fails)', () => {
-  it.fails('descriptor exists and validates against the ASSERT profile: outputs/recovery/counters "none"', () => { // flips at: commit 7
+describe('assert_data_bounds — descriptor + compute (flipped from it.fails at commit 7)', () => {
+  it('descriptor exists and validates against the ASSERT profile: outputs/recovery/counters "none"', () => { // flips at: commit 7
     const d = loadDescriptor();
     expect(d.identity.archetype).toBe('ASSERT');
     expect(d.identity.lock).toBe(103);
@@ -417,7 +475,7 @@ describe('assert_data_bounds — genuinely red until commit 7 (it.fails)', () =>
     expect(d.counters).toBe('none');
   });
 
-  it.fails('config.logic_variables = 8 existing (live) + 18 newly-declared tunables (report §2.4); the retired calibration_freshness_warn_hours is ABSENT', () => { // flips at: commit 7
+  it('config.logic_variables = 8 existing (live) + 18 newly-declared tunables (report §2.4); the retired calibration_freshness_warn_hours is ABSENT', () => { // flips at: commit 7
     const d = loadDescriptor();
     expect(d.config).not.toBe('none');
     const cfg = d.config as { logic_variables: Array<{ name: string }> };
@@ -440,14 +498,14 @@ describe('assert_data_bounds — genuinely red until commit 7 (it.fails)', () =>
     expect(cfg.logic_variables.length).toBe(26);
   });
 
-  it.fails('checks[] count is at least the row-builder census distinct-metric floor (report §2.3, 49 metrics)', () => { // flips at: commit 7
+  it('checks[] count is at least the row-builder census distinct-metric floor (report §2.3, 49 metrics)', () => { // flips at: commit 7
     const d = loadDescriptor();
     const floor = censusDistinctMetricCount();
     expect(floor, 'census produced zero distinct metrics — parser regression').toBe(49);
     expect(d.checks.length).toBeGreaterThanOrEqual(floor);
   });
 
-  it.fails('the 4 WSIB metrics are declared as ONE check group with chains:["permits","sources"] (IL-4, both destinations, not an 8-entry split)', () => { // flips at: commit 7
+  it('the 4 WSIB metrics are declared as ONE check group with chains:["permits","sources"] (IL-4, both destinations, not an 8-entry split)', () => { // flips at: commit 7
     const d = loadDescriptor();
     const wsibIds = ['wsib_no_legal_name', 'wsib_no_g_class', 'wsib_invalid_naics', 'wsib_orphaned_links'];
     const hits = d.checks.filter((c) => wsibIds.includes(c.id));
@@ -458,27 +516,27 @@ describe('assert_data_bounds — genuinely red until commit 7 (it.fails)', () =>
     }
   });
 
-  it.fails('ghost_permits_30d is declared with its P19/P20 terminal-phase exclusion named in `why` (IL-5, a declared population-scope predicate, not a bare threshold)', () => { // flips at: commit 7
+  it('ghost_permits_30d is declared with its P19/P20 terminal-phase exclusion named in `why` (IL-5, a declared population-scope predicate, not a bare threshold)', () => { // flips at: commit 7
     const d = loadDescriptor();
     const check = d.checks.find((c) => c.id === 'ghost_permits_30d');
     expect(check, 'ghost_permits_30d check missing').toBeDefined();
-    expect(check?.why ?? '', 'why must cite ea087109').toMatch(/ea087109/);
-    expect(check?.why ?? '', 'why must name the P19/P20 exclusion').toMatch(/P19.*P20|P20.*P19/);
+    expect(check?.why?.text ?? '', 'why must cite ea087109').toMatch(/ea087109/);
+    expect(check?.why?.text ?? '', 'why must name the P19/P20 exclusion').toMatch(/P19.*P20|P20.*P19/);
   });
 
-  it.fails('the COST_MAG_ACCEPT 3-entry allowlist is declared and cited in `why` (IL-6, an audited exception list, not a threshold)', () => { // flips at: commit 7
+  it('the COST_MAG_ACCEPT 3-entry allowlist is declared and cited in `why` (IL-6, an audited exception list, not a threshold)', () => { // flips at: commit 7
     const d = loadDescriptor();
     const hits = d.checks.filter((c) => /cost_estimate_over_ceiling|modeled_gfa_over_ceiling/.test(c.id));
     expect(hits.length, 'expected both magnitude-gate checks declared').toBe(2);
     for (const c of hits) {
-      expect(c.why ?? '', `${c.id}.why must cite e99ae61a`).toMatch(/e99ae61a/);
+      expect(c.why?.text ?? '', `${c.id}.why must cite e99ae61a`).toMatch(/e99ae61a/);
       for (const permitNum of ['04 202812 BLD', '07 129713 BLD', '06 196930 BLD']) {
         expect(JSON.stringify(c), `${c.id} must declare the accepted permit_num ${permitNum} somewhere`).toContain(permitNum);
       }
     }
   });
 
-  it.fails('the compute module exists, exports compute, and passes the compute-shape ast-grep rule (Spec 122 §5.5)', () => { // flips at: commit 7
+  it('the compute module exists, exports compute, and passes the compute-shape ast-grep rule (Spec 122 §5.5)', () => { // flips at: commit 7
     computeSource(); // throws via artifact() if missing
     const ruleAbs = abs(COMPUTE_SHAPE_RULE_REL);
     expect(fs.existsSync(ruleAbs), `${COMPUTE_SHAPE_RULE_REL} missing`).toBe(true);
@@ -495,7 +553,7 @@ describe('assert_data_bounds — genuinely red until commit 7 (it.fails)', () =>
     expect(res.trim(), `compute-shape violations:\n${res}`).toBe('');
   });
 
-  it.fails('commit 9\'s frozen shell calls pipeline.step(...) while keeping the lock-103 constant (thin shell)', () => { // flips at: commit 7 (compute), fully true only after commit 9's cutover peel
+  it('commit 9\'s frozen shell calls pipeline.step(...) while keeping the lock-103 constant (thin shell)', () => { // flips at: commit 7 (compute), fully true only after commit 9's cutover peel
     expect(src()).toContain('ADVISORY_LOCK_ID = 103');
     expect(src()).toMatch(/pipeline\.step\(/);
   });

@@ -365,6 +365,21 @@ const EXPECTED_LOGIC_VAR_KEYS = [
   'sources_maxbuild_coverage_pass_pct', 'sources_maxbuild_coverage_warn_pct',
   'parcel_cost_menu_coverage_pass_pct', 'parcel_cost_menu_coverage_warn_pct',
   'external_coverage_pass_pct', 'external_coverage_warn_pct',
+  // C4 batch 1 I2 (2026-09-12, `assert_data_bounds` commit 7) — 18 new tunables
+  // (report §2.4 adjudication: IL-2, IL-8, IL-9, IL-10 ×4, IL-11 ×5, + 8 more
+  // promoted-in-full thresholds — scripts/lib/assert-data-bounds-fields.js
+  // LOGIC_VAR_DEFS). calibration_freshness_warn_hours is NOT added here — it
+  // already exists in this list from an earlier pilot and stays (a genuine
+  // second consumer, scripts/compute-phase-calibration.js, was found this
+  // session — not deleted).
+  'cost_outlier_count_warn_max',
+  'sources_address_points_floor', 'sources_parcels_floor', 'sources_building_footprints_floor',
+  'sources_neighbourhoods_floor', 'sources_ravines_floor', 'sources_heritage_properties_floor',
+  'sources_heritage_districts_floor', 'sources_centreline_floor',
+  'coa_null_address_count_warn_max', 'coa_ancient_hearing_count_warn_max',
+  'coa_future_hearing_window_years', 'coa_cost_gt_threshold_cad', 'coa_cost_gt_threshold_warn_max',
+  'coa_fsi_gt_threshold', 'coa_gfa_over_lot_multiple', 'coa_gfa_over_lot_warn_max',
+  'inspection_ancient_dates_count_warn_max',
 ];
 
 describe('LOGIC_VAR_DEFAULTS — complete key set', () => {

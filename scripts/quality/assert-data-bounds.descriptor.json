@@ -1,0 +1,1860 @@
+{
+  "identity": {
+    "name": "assert_data_bounds",
+    "display_name": "Data Quality Checks",
+    "owner": "data",
+    "description": "Tier-2 CQA: post-ingestion data-bounds validation over 16 tables across 4 chains (permits/coa/sources/deep_scrapes) — 52 declared checks (49 pre-conversion metrics + 2 promoted warnings-only rows + 1 split id), 26 logic_variables (8 pre-existing + 18 newly-adjudicated) gate WARN/FAIL boundaries; 4 WSIB checks shared permits+sources (IL-4); the Phase-G Pre-Permit gate stays 2 independent checks (IL-3).",
+    "lock": 103,
+    "why_lock": {
+      "text": "Registered in Spec 47 §A.5 (row: docs/specs/01-pipeline/47_pipeline_script_protocol.md:1947), category \"6 — Quality\", writes-DB = NO (read-only probe). Kept via identity.lock + the §5.4 source-text convention (ADVISORY_LOCK_ID = 103 declared, never read, in the frozen shell).",
+      "liveness": {
+        "kind": "file",
+        "ref": "docs/specs/01-pipeline/47_pipeline_script_protocol.md"
+      }
+    },
+    "spec": "44",
+    "spec_version": "1.0",
+    "archetype": "ASSERT",
+    "contract_version": 1,
+    "gate_exempt": true
+  },
+  "inputs": {
+    "reads": {
+      "steps": [],
+      "tables": [
+        {
+          "table": "address_points",
+          "columns": [
+            "address_point_id"
+          ]
+        },
+        {
+          "table": "building_footprints",
+          "columns": [
+            "max_height_m"
+          ]
+        },
+        {
+          "table": "coa_applications",
+          "columns": [
+            "address",
+            "application_number",
+            "coa_fsi",
+            "estimated_cost",
+            "hearing_date",
+            "linked_confidence",
+            "linked_permit_num",
+            "lot_size_sqm",
+            "max_buildable_gfa_sqm"
+          ]
+        },
+        {
+          "table": "cost_estimates",
+          "columns": [
+            "cost_tier",
+            "estimated_cost",
+            "modeled_gfa_sqm",
+            "permit_num"
+          ]
+        },
+        {
+          "table": "entities",
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "table": "heritage_districts",
+          "columns": []
+        },
+        {
+          "table": "heritage_properties",
+          "columns": []
+        },
+        {
+          "table": "neighbourhoods",
+          "columns": [
+            "neighbourhood_id"
+          ]
+        },
+        {
+          "table": "parcels",
+          "columns": [
+            "lot_size_sqm"
+          ]
+        },
+        {
+          "table": "permit_inspections",
+          "columns": [
+            "inspection_date",
+            "permit_num",
+            "scraped_at",
+            "stage_name",
+            "status"
+          ]
+        },
+        {
+          "table": "permit_parcels",
+          "columns": [
+            "permit_num",
+            "revision_num"
+          ]
+        },
+        {
+          "table": "permit_trades",
+          "columns": [
+            "permit_num",
+            "revision_num"
+          ]
+        },
+        {
+          "table": "permits",
+          "columns": [
+            "builder_name",
+            "description",
+            "est_const_cost",
+            "last_seen_at",
+            "lifecycle_phase",
+            "permit_num",
+            "permit_type",
+            "revision_num",
+            "status"
+          ]
+        },
+        {
+          "table": "ravines",
+          "columns": []
+        },
+        {
+          "table": "toronto_centreline",
+          "columns": []
+        },
+        {
+          "table": "wsib_registry",
+          "columns": [
+            "legal_name",
+            "linked_entity_id",
+            "naics_code",
+            "predominant_class",
+            "subclass"
+          ]
+        }
+      ],
+      "externals": []
+    },
+    "expect_nonempty": false,
+    "on_missing": "halt"
+  },
+  "outputs": "none",
+  "staleness": {
+    "scope": "none",
+    "trigger": [
+      {
+        "signal": "always",
+        "position": "pre_compute"
+      }
+    ],
+    "mode_select": "none",
+    "checkpoint": "none",
+    "interval": "none",
+    "fingerprint": "derived",
+    "fingerprint_inputs": [
+      "scripts/lib/assert-data-bounds-fields.js"
+    ],
+    "logic_version": "none",
+    "on_fingerprint_change": "queue"
+  },
+  "guards": {
+    "requires": [],
+    "srid": "none",
+    "empty_source": "none",
+    "schema_drift": "pause"
+  },
+  "execution": {
+    "budget": "10m",
+    "txn_scope": "none",
+    "txn_budget": "none",
+    "chunked": false,
+    "statement_timeout": "none",
+    "step_timeout": "15m",
+    "batch": "none",
+    "needs_disk_mb": "none",
+    "partial_fill": "none",
+    "on_row_error": "fail_fast",
+    "on_batch_error": "fail_step",
+    "on_check_error": "fail_step",
+    "on_check_error_why": {
+      "text": "Governs the ORDINARY (non-fatal) checks — the dispatch loop is the per-check error boundary for every check except the WSIB/inspection groups. The WSIB and inspection loaders deliberately let a non-\"does not exist\" query error escape UNCAUGHT (Spec 30 §5.4.1: exactly 3 exception classes are fatal — WSIB, inspection, and the outer boundary) — see scripts/lib/compute/assert-data-bounds.js header for the mechanism this preserves, regression-locked by src/tests/db/assert-data-bounds-halt.db.test.ts Case B.",
+      "liveness": {
+        "kind": "file",
+        "ref": "scripts/lib/compute/assert-data-bounds.js"
+      }
+    },
+    "on_degrade": "none",
+    "criticality": "required",
+    "network": "none",
+    "invocation": {
+      "permits": {
+        "argv": [],
+        "env": {
+          "PIPELINE_CHAIN": "permits"
+        }
+      },
+      "coa": {
+        "argv": [],
+        "env": {
+          "PIPELINE_CHAIN": "coa"
+        }
+      },
+      "sources": {
+        "argv": [],
+        "env": {
+          "PIPELINE_CHAIN": "sources"
+        }
+      },
+      "deep_scrapes": {
+        "argv": [],
+        "env": {
+          "PIPELINE_CHAIN": "deep_scrapes"
+        }
+      }
+    },
+    "maintenance": "none"
+  },
+  "checks": [
+    {
+      "id": "cost_outliers",
+      "kind": "bound",
+      "expect": {
+        "metric": "cost_outliers",
+        "loader": "permits",
+        "field": "costOutliers"
+      },
+      "limit": "viol == 0",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "chains": [
+        "permits"
+      ],
+      "accept_until": "none",
+      "why": {
+        "text": "Preserves fence f238b814. Cost-outlier row-count WARN ceiling — the C4 panel A1 (2026-08-13) re-review kept the >= 20 baseline; any change must cite git log -L on this check per Spec 30 §5.4.1. Ported verbatim from scripts/quality/assert-data-bounds.js (pre-conversion) — report: docs/reports/2026-09-12-batch1-i2-assert-data-bounds-assessment.md §2.3/§2.4.",
+        "liveness": {
+          "kind": "spec",
+          "ref": "docs/specs/01-pipeline/44_chain_deep_scrapes.md"
+        }
+      }
+    },
+    {
+      "id": "null_descriptions_24h",
+      "kind": "bound",
+      "expect": {
+        "metric": "null_descriptions_24h",
+        "loader": "permits",
+        "field": "descPct"
+      },
+      "limit": "pct <= 5",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "chains": [
+        "permits"
+      ],
+      "accept_until": "none",
+      "why": {
+        "text": "Preserves fence 4f6114ce. permits.description null-rate over the last 24h (recentTotal>0-gated in the pre-conversion source; SKIP-safe here — reports value:0 when no recent rows, never omitted). Ported verbatim from scripts/quality/assert-data-bounds.js (pre-conversion) — report: docs/reports/2026-09-12-batch1-i2-assert-data-bounds-assessment.md §2.3/§2.4.",
+        "liveness": {
+          "kind": "spec",
+          "ref": "docs/specs/01-pipeline/44_chain_deep_scrapes.md"
+        }
+      },
+      "limit_from_config": "desc_null_rate_warn_pct"
+    },
+    {
+      "id": "null_builders_24h",
+      "kind": "bound",
+      "expect": {
+        "metric": "null_builders_24h",
+        "loader": "permits",
+        "field": "builderPct"
+      },
+      "limit": "pct <= 95",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "chains": [
+        "permits"
+      ],
+      "accept_until": "none",
+      "why": {
+        "text": "Preserves fence 4f6114ce. permits.builder_name null-rate over the last 24h, same SKIP-safe gating as null_descriptions_24h. Ported verbatim from scripts/quality/assert-data-bounds.js (pre-conversion) — report: docs/reports/2026-09-12-batch1-i2-assert-data-bounds-assessment.md §2.3/§2.4.",
+        "liveness": {
+          "kind": "spec",
+          "ref": "docs/specs/01-pipeline/44_chain_deep_scrapes.md"
+        }
+      },
+      "limit_from_config": "builder_null_rate_warn_pct"
+    },
+    {
+      "id": "null_status_24h",
+      "kind": "bound",
+      "expect": {
+        "metric": "null_status_24h",
+        "loader": "permits",
+        "field": "statusNull"
+      },
+      "limit": "viol == 0",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "chains": [
+        "permits"
+      ],
+      "accept_until": "none",
+      "why": {
+        "text": "permits.status NULL count over the last 24h, same SKIP-safe gating. Ported verbatim from scripts/quality/assert-data-bounds.js (pre-conversion) — report: docs/reports/2026-09-12-batch1-i2-assert-data-bounds-assessment.md §2.3/§2.4.",
+        "liveness": {
+          "kind": "spec",
+          "ref": "docs/specs/01-pipeline/44_chain_deep_scrapes.md"
+        }
+      }
+    },
+    {
+      "id": "orphaned_permit_trades",
+      "kind": "bound",
+      "expect": {
+        "metric": "orphaned_permit_trades",
+        "loader": "permits",
+        "field": "orphanTrades"
+      },
+      "limit": "viol == 0",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "chains": [
+        "permits"
+      ],
+      "accept_until": "none",
+      "why": {
+        "text": "permit_trades rows with no matching (permit_num, revision_num) in permits — referential-integrity invariant, not a tunable. Ported verbatim from scripts/quality/assert-data-bounds.js (pre-conversion) — report: docs/reports/2026-09-12-batch1-i2-assert-data-bounds-assessment.md §2.3/§2.4.",
+        "liveness": {
+          "kind": "spec",
+          "ref": "docs/specs/01-pipeline/44_chain_deep_scrapes.md"
+        }
+      }
+    },
+    {
+      "id": "orphaned_permit_parcels",
+      "kind": "bound",
+      "expect": {
+        "metric": "orphaned_permit_parcels",
+        "loader": "permits",
+        "field": "orphanParcels"
+      },
+      "limit": "viol == 0",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "chains": [
+        "permits"
+      ],
+      "accept_until": "none",
+      "why": {
+        "text": "permit_parcels rows with no matching (permit_num, revision_num) in permits — referential-integrity invariant. Ported verbatim from scripts/quality/assert-data-bounds.js (pre-conversion) — report: docs/reports/2026-09-12-batch1-i2-assert-data-bounds-assessment.md §2.3/§2.4.",
+        "liveness": {
+          "kind": "spec",
+          "ref": "docs/specs/01-pipeline/44_chain_deep_scrapes.md"
+        }
+      }
+    },
+    {
+      "id": "duplicate_pk_groups",
+      "kind": "bound",
+      "expect": {
+        "metric": "duplicate_pk_groups",
+        "loader": "permits",
+        "field": "dupes"
+      },
+      "limit": "viol == 0",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "chains": [
+        "permits"
+      ],
+      "accept_until": "none",
+      "why": {
+        "text": "Duplicate (permit_num, revision_num) groups in permits — PK-uniqueness invariant. Ported verbatim from scripts/quality/assert-data-bounds.js (pre-conversion) — report: docs/reports/2026-09-12-batch1-i2-assert-data-bounds-assessment.md §2.3/§2.4.",
+        "liveness": {
+          "kind": "spec",
+          "ref": "docs/specs/01-pipeline/44_chain_deep_scrapes.md"
+        }
+      }
+    },
+    {
+      "id": "permits_pre_permit_count",
+      "kind": "bound",
+      "expect": {
+        "metric": "permits_pre_permit_count",
+        "loader": "permits",
+        "field": "prePermitCount"
+      },
+      "limit": "viol == 0",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "chains": [
+        "permits"
+      ],
+      "accept_until": "none",
+      "why": {
+        "text": "Preserves fence adec1f68. Phase G (Spec 42 §6.11) Pre-Permit retirement residue, permits-branch site. IL-3 ACCEPT: preserved as an INDEPENDENT check from the coa-branch site (coa_permits_pre_permit_count) — disjoint runPermitChecks/runCoaChecks guards preclude a single shared variable (defense-in-depth, v2-Q2). Ported verbatim from scripts/quality/assert-data-bounds.js (pre-conversion) — report: docs/reports/2026-09-12-batch1-i2-assert-data-bounds-assessment.md §2.3/§2.4.",
+        "liveness": {
+          "kind": "spec",
+          "ref": "docs/specs/01-pipeline/44_chain_deep_scrapes.md"
+        }
+      }
+    },
+    {
+      "id": "cost_estimate_over_ceiling",
+      "kind": "bound",
+      "expect": {
+        "metric": "cost_estimate_over_ceiling",
+        "loader": "costmag",
+        "field": "costMagCount"
+      },
+      "limit": "viol == 0",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "chains": [
+        "permits"
+      ],
+      "accept_until": "none",
+      "why": {
+        "text": "Preserves fence e99ae61a. P13-1 legacy cost_estimates.estimated_cost magnitude gate (> cost_est_legacy_cost_ceiling_cad, AND permit_num <> ALL(COST_MAG_ACCEPT)). Accept-list (audited exception, not a threshold): 04 202812 BLD, 07 129713 BLD, 06 196930 BLD — investigated 2026-07-09, all cost_source='archetype_rate' genuine multi-unit developments. Ported verbatim from scripts/quality/assert-data-bounds.js (pre-conversion) — report: docs/reports/2026-09-12-batch1-i2-assert-data-bounds-assessment.md §2.3/§2.4.",
+        "liveness": {
+          "kind": "spec",
+          "ref": "docs/specs/01-pipeline/44_chain_deep_scrapes.md"
+        }
+      }
+    },
+    {
+      "id": "modeled_gfa_over_ceiling",
+      "kind": "bound",
+      "expect": {
+        "metric": "modeled_gfa_over_ceiling",
+        "loader": "costmag",
+        "field": "gfaMagCount"
+      },
+      "limit": "viol == 0",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "chains": [
+        "permits"
+      ],
+      "accept_until": "none",
+      "why": {
+        "text": "Preserves fence e99ae61a. P13-1 legacy cost_estimates.modeled_gfa_sqm magnitude gate (priced rows only, > cost_est_legacy_gfa_ceiling_sqm, AND permit_num <> ALL(COST_MAG_ACCEPT)). Accept-list: 04 202812 BLD, 07 129713 BLD, 06 196930 BLD. Ported verbatim from scripts/quality/assert-data-bounds.js (pre-conversion) — report: docs/reports/2026-09-12-batch1-i2-assert-data-bounds-assessment.md §2.3/§2.4.",
+        "liveness": {
+          "kind": "spec",
+          "ref": "docs/specs/01-pipeline/44_chain_deep_scrapes.md"
+        }
+      }
+    },
+    {
+      "id": "ghost_permits_30d",
+      "kind": "bound",
+      "expect": {
+        "metric": "ghost_permits_30d",
+        "loader": "ghost",
+        "field": "ghostCount"
+      },
+      "limit": "viol == 0",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "chains": [
+        "permits"
+      ],
+      "accept_until": "none",
+      "why": {
+        "text": "Preserves fence ea087109. Permits not seen (last_seen_at) in 30+ days, EXCLUDING terminal lifecycle_phase IN ('P19','P20') — ea087109 baseline: pre-fix 8,683 false positives (all P19/P20), true non-terminal ghost count in prod 0. Non-fatal on query error (last_seen_at column may not exist) — reports a SKIP row, never omitted. Ported verbatim from scripts/quality/assert-data-bounds.js (pre-conversion) — report: docs/reports/2026-09-12-batch1-i2-assert-data-bounds-assessment.md §2.3/§2.4.",
+        "liveness": {
+          "kind": "spec",
+          "ref": "docs/specs/01-pipeline/44_chain_deep_scrapes.md"
+        }
+      }
+    },
+    {
+      "id": "cost_estimates_null_rate",
+      "kind": "bound",
+      "expect": {
+        "metric": "cost_estimates_null_rate",
+        "loader": "costest",
+        "field": "nullPct"
+      },
+      "limit": "pct <= 80",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "chains": [
+        "permits"
+      ],
+      "accept_until": "none",
+      "why": {
+        "text": "cost_estimates.estimated_cost NULL rate. Pre-conversion: warnings[]-only, no audit_table row — promoted to a visible row so cost_est_null_rate_warn_pct is honestly CONSUMED (Nothing Hidden), never a verdict change. Ported verbatim from scripts/quality/assert-data-bounds.js (pre-conversion) — report: docs/reports/2026-09-12-batch1-i2-assert-data-bounds-assessment.md §2.3/§2.4.",
+        "liveness": {
+          "kind": "spec",
+          "ref": "docs/specs/01-pipeline/44_chain_deep_scrapes.md"
+        }
+      },
+      "limit_from_config": "cost_est_null_rate_warn_pct"
+    },
+    {
+      "id": "cost_estimates_min_tiers",
+      "kind": "bound",
+      "expect": {
+        "metric": "cost_estimates_min_tiers",
+        "loader": "costest",
+        "field": "tierCount"
+      },
+      "limit": "value_min 2",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "chains": [
+        "permits"
+      ],
+      "accept_until": "none",
+      "why": {
+        "text": "Distinct cost_estimates.cost_tier count. Pre-conversion: warnings[]-only, no audit_table row — promoted to a visible row so cost_est_min_tiers is honestly CONSUMED, never a verdict change. Ported verbatim from scripts/quality/assert-data-bounds.js (pre-conversion) — report: docs/reports/2026-09-12-batch1-i2-assert-data-bounds-assessment.md §2.3/§2.4.",
+        "liveness": {
+          "kind": "spec",
+          "ref": "docs/specs/01-pipeline/44_chain_deep_scrapes.md"
+        }
+      },
+      "limit_from_config": "cost_est_min_tiers"
+    },
+    {
+      "id": "orphan_link_count",
+      "kind": "bound",
+      "expect": {
+        "metric": "orphan_link_count",
+        "loader": "coa",
+        "field": "orphanCoa"
+      },
+      "limit": "viol == 0",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "chains": [
+        "coa"
+      ],
+      "accept_until": "none",
+      "why": {
+        "text": "coa_applications.linked_permit_num with no matching permits row — referential-integrity invariant. Ported verbatim from scripts/quality/assert-data-bounds.js (pre-conversion) — report: docs/reports/2026-09-12-batch1-i2-assert-data-bounds-assessment.md §2.3/§2.4.",
+        "liveness": {
+          "kind": "spec",
+          "ref": "docs/specs/01-pipeline/44_chain_deep_scrapes.md"
+        }
+      }
+    },
+    {
+      "id": "coa_forward_link_sub085_pct",
+      "kind": "bound",
+      "expect": {
+        "metric": "coa_forward_link_sub085_pct",
+        "loader": "coa",
+        "field": "coaSub085"
+      },
+      "limit": "pct <= 59",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "chains": [
+        "coa"
+      ],
+      "accept_until": "none",
+      "why": {
+        "text": "P12-B2: CoA forward-link sub-0.85-confidence share — regression watch on link-quality degradation (baseline ~54%). Ported verbatim from scripts/quality/assert-data-bounds.js (pre-conversion) — report: docs/reports/2026-09-12-batch1-i2-assert-data-bounds-assessment.md §2.3/§2.4.",
+        "liveness": {
+          "kind": "spec",
+          "ref": "docs/specs/01-pipeline/44_chain_deep_scrapes.md"
+        }
+      },
+      "limit_from_config": "coa_forward_link_sub085_warn_pct"
+    },
+    {
+      "id": "null_address",
+      "kind": "bound",
+      "expect": {
+        "metric": "null_address",
+        "loader": "coa",
+        "field": "nullAddress"
+      },
+      "limit": "viol == 0",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "chains": [
+        "coa"
+      ],
+      "accept_until": "none",
+      "why": {
+        "text": "coa_applications.address NULL/empty row-count WARN ceiling. Ported verbatim from scripts/quality/assert-data-bounds.js (pre-conversion) — report: docs/reports/2026-09-12-batch1-i2-assert-data-bounds-assessment.md §2.3/§2.4.",
+        "liveness": {
+          "kind": "spec",
+          "ref": "docs/specs/01-pipeline/44_chain_deep_scrapes.md"
+        }
+      }
+    },
+    {
+      "id": "null_app_num",
+      "kind": "bound",
+      "expect": {
+        "metric": "null_app_num",
+        "loader": "coa",
+        "field": "nullAppNum"
+      },
+      "limit": "viol == 0",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "chains": [
+        "coa"
+      ],
+      "accept_until": "none",
+      "why": {
+        "text": "coa_applications.application_number NULL/empty — referential invariant. Ported verbatim from scripts/quality/assert-data-bounds.js (pre-conversion) — report: docs/reports/2026-09-12-batch1-i2-assert-data-bounds-assessment.md §2.3/§2.4.",
+        "liveness": {
+          "kind": "spec",
+          "ref": "docs/specs/01-pipeline/44_chain_deep_scrapes.md"
+        }
+      }
+    },
+    {
+      "id": "future_hearing",
+      "kind": "bound",
+      "expect": {
+        "metric": "future_hearing",
+        "loader": "coa",
+        "field": "futureHearing"
+      },
+      "limit": "viol == 0",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "chains": [
+        "coa"
+      ],
+      "accept_until": "none",
+      "why": {
+        "text": "coa_applications.hearing_date beyond CURRENT_DATE + coa_future_hearing_window_years (bound as a SQL interval parameter, not a verdict threshold) — invariant, always 0 expected. Ported verbatim from scripts/quality/assert-data-bounds.js (pre-conversion) — report: docs/reports/2026-09-12-batch1-i2-assert-data-bounds-assessment.md §2.3/§2.4.",
+        "liveness": {
+          "kind": "spec",
+          "ref": "docs/specs/01-pipeline/44_chain_deep_scrapes.md"
+        }
+      }
+    },
+    {
+      "id": "ancient_hearing",
+      "kind": "bound",
+      "expect": {
+        "metric": "ancient_hearing",
+        "loader": "coa",
+        "field": "ancientHearing"
+      },
+      "limit": "viol == 0",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "chains": [
+        "coa"
+      ],
+      "accept_until": "none",
+      "why": {
+        "text": "coa_applications.hearing_date before 2010-01-01 row-count WARN ceiling. Ported verbatim from scripts/quality/assert-data-bounds.js (pre-conversion) — report: docs/reports/2026-09-12-batch1-i2-assert-data-bounds-assessment.md §2.3/§2.4.",
+        "liveness": {
+          "kind": "spec",
+          "ref": "docs/specs/01-pipeline/44_chain_deep_scrapes.md"
+        }
+      }
+    },
+    {
+      "id": "coa_estimated_cost_gt10m",
+      "kind": "bound",
+      "expect": {
+        "metric": "coa_estimated_cost_gt10m",
+        "loader": "coa",
+        "field": "coaCostGt10m"
+      },
+      "limit": "value_max 80",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "chains": [
+        "coa"
+      ],
+      "accept_until": "none",
+      "why": {
+        "text": "Preserves fence c53f60a8. P12-C2: coa_applications.estimated_cost > coa_cost_gt_threshold_cad row-count WARN ceiling — archetype_parcel opportunity-menu modeling artifact on oversized opt-envelopes, not an applicant declaration (Spec 76/83, baseline ~64 rows). Ported verbatim from scripts/quality/assert-data-bounds.js (pre-conversion) — report: docs/reports/2026-09-12-batch1-i2-assert-data-bounds-assessment.md §2.3/§2.4.",
+        "liveness": {
+          "kind": "spec",
+          "ref": "docs/specs/01-pipeline/44_chain_deep_scrapes.md"
+        }
+      },
+      "limit_from_config": "coa_cost_gt_threshold_warn_max"
+    },
+    {
+      "id": "coa_app_fsi_gt5",
+      "kind": "bound",
+      "expect": {
+        "metric": "coa_app_fsi_gt5",
+        "loader": "coa",
+        "field": "coaAppFsiGt5"
+      },
+      "limit": "viol == 0",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "chains": [
+        "coa"
+      ],
+      "accept_until": "none",
+      "why": {
+        "text": "Preserves fence c53f60a8. coa_applications.coa_fsi > coa_fsi_gt_threshold (SQL-bound) — model/propagation regression watch, max observed ~3.15. Ported verbatim from scripts/quality/assert-data-bounds.js (pre-conversion) — report: docs/reports/2026-09-12-batch1-i2-assert-data-bounds-assessment.md §2.3/§2.4.",
+        "liveness": {
+          "kind": "spec",
+          "ref": "docs/specs/01-pipeline/44_chain_deep_scrapes.md"
+        }
+      }
+    },
+    {
+      "id": "coa_maxbuild_gfa_gt3lot",
+      "kind": "bound",
+      "expect": {
+        "metric": "coa_maxbuild_gfa_gt3lot",
+        "loader": "coa",
+        "field": "coaGfaGt3Lot"
+      },
+      "limit": "value_max 45",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "chains": [
+        "coa"
+      ],
+      "accept_until": "none",
+      "why": {
+        "text": "Preserves fence c53f60a8. coa_applications.max_buildable_gfa_sqm > coa_gfa_over_lot_multiple x lot_size_sqm row-count WARN ceiling — baseline ~29 oversized-envelope rows. Ported verbatim from scripts/quality/assert-data-bounds.js (pre-conversion) — report: docs/reports/2026-09-12-batch1-i2-assert-data-bounds-assessment.md §2.3/§2.4.",
+        "liveness": {
+          "kind": "spec",
+          "ref": "docs/specs/01-pipeline/44_chain_deep_scrapes.md"
+        }
+      },
+      "limit_from_config": "coa_gfa_over_lot_warn_max"
+    },
+    {
+      "id": "coa_permits_pre_permit_count",
+      "kind": "bound",
+      "expect": {
+        "metric": "coa_permits_pre_permit_count",
+        "loader": "coa",
+        "field": "coaPrePermitCount"
+      },
+      "limit": "viol == 0",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "chains": [
+        "coa"
+      ],
+      "accept_until": "none",
+      "why": {
+        "text": "Preserves fence adec1f68. Phase G (Spec 42 §6.11) Pre-Permit retirement residue, coa-branch site — SAME SQL as permits_pre_permit_count. IL-3 ACCEPT, declared as an independent id (consequence 2): a descriptor checks[] id is also the compute dispatch key, so the two disjoint-guard sites cannot literally share one id the way the pre-conversion audit rows shared one metric string. Ported verbatim from scripts/quality/assert-data-bounds.js (pre-conversion) — report: docs/reports/2026-09-12-batch1-i2-assert-data-bounds-assessment.md §2.3/§2.4.",
+        "liveness": {
+          "kind": "spec",
+          "ref": "docs/specs/01-pipeline/44_chain_deep_scrapes.md"
+        }
+      }
+    },
+    {
+      "id": "address_points_count",
+      "kind": "bound",
+      "expect": {
+        "metric": "address_points_count",
+        "loader": "sources",
+        "field": "apCount"
+      },
+      "limit": "value_min 500000",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "chains": [
+        "sources"
+      ],
+      "accept_until": "none",
+      "why": {
+        "text": "Preserves fence 1f8ca38a. Catastrophic-load floor — a truncated/partial load fails while ordinary quarter-over-quarter growth does not. Ported verbatim from scripts/quality/assert-data-bounds.js (pre-conversion) — report: docs/reports/2026-09-12-batch1-i2-assert-data-bounds-assessment.md §2.3/§2.4.",
+        "liveness": {
+          "kind": "spec",
+          "ref": "docs/specs/01-pipeline/44_chain_deep_scrapes.md"
+        }
+      },
+      "limit_from_config": "sources_address_points_floor"
+    },
+    {
+      "id": "address_point_dupes",
+      "kind": "bound",
+      "expect": {
+        "metric": "address_point_dupes",
+        "loader": "sources",
+        "field": "apDupes"
+      },
+      "limit": "viol == 0",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "chains": [
+        "sources"
+      ],
+      "accept_until": "none",
+      "why": {
+        "text": "Duplicate address_points.address_point_id groups — PK-uniqueness invariant. Ported verbatim from scripts/quality/assert-data-bounds.js (pre-conversion) — report: docs/reports/2026-09-12-batch1-i2-assert-data-bounds-assessment.md §2.3/§2.4.",
+        "liveness": {
+          "kind": "spec",
+          "ref": "docs/specs/01-pipeline/44_chain_deep_scrapes.md"
+        }
+      }
+    },
+    {
+      "id": "parcels_count",
+      "kind": "bound",
+      "expect": {
+        "metric": "parcels_count",
+        "loader": "sources",
+        "field": "parcelCount"
+      },
+      "limit": "value_min 460000",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "chains": [
+        "sources"
+      ],
+      "accept_until": "none",
+      "why": {
+        "text": "Preserves fence 1f8ca38a. Catastrophic-load floor, same reasoning as address_points_count. Ported verbatim from scripts/quality/assert-data-bounds.js (pre-conversion) — report: docs/reports/2026-09-12-batch1-i2-assert-data-bounds-assessment.md §2.3/§2.4.",
+        "liveness": {
+          "kind": "spec",
+          "ref": "docs/specs/01-pipeline/44_chain_deep_scrapes.md"
+        }
+      },
+      "limit_from_config": "sources_parcels_floor"
+    },
+    {
+      "id": "parcel_dupes",
+      "kind": "bound",
+      "expect": {
+        "metric": "parcel_dupes",
+        "loader": "sources",
+        "field": "parcelDupes"
+      },
+      "limit": "viol == 0",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "chains": [
+        "sources"
+      ],
+      "accept_until": "none",
+      "why": {
+        "text": "Duplicate parcels.parcel_id groups — PK-uniqueness invariant. Ported verbatim from scripts/quality/assert-data-bounds.js (pre-conversion) — report: docs/reports/2026-09-12-batch1-i2-assert-data-bounds-assessment.md §2.3/§2.4.",
+        "liveness": {
+          "kind": "spec",
+          "ref": "docs/specs/01-pipeline/44_chain_deep_scrapes.md"
+        }
+      }
+    },
+    {
+      "id": "parcel_lot_outliers",
+      "kind": "bound",
+      "expect": {
+        "metric": "parcel_lot_outliers",
+        "loader": "sources",
+        "field": "lotOutliers"
+      },
+      "limit": "viol == 0",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "chains": [
+        "sources"
+      ],
+      "accept_until": "none",
+      "why": {
+        "text": "parcels.lot_size_sqm outside (0, 1,000,000] — documented residual (Spec 43 §6.7-A), kept WARN (the enrich/cost pipeline already gates these out via LOT_MIN/MAX): a genuine load corruption would move the core-count floors above, not this handful of outliers. Ported verbatim from scripts/quality/assert-data-bounds.js (pre-conversion) — report: docs/reports/2026-09-12-batch1-i2-assert-data-bounds-assessment.md §2.3/§2.4.",
+        "liveness": {
+          "kind": "spec",
+          "ref": "docs/specs/01-pipeline/44_chain_deep_scrapes.md"
+        }
+      }
+    },
+    {
+      "id": "building_footprints_count",
+      "kind": "bound",
+      "expect": {
+        "metric": "building_footprints_count",
+        "loader": "sources",
+        "field": "bfCount"
+      },
+      "limit": "value_min 400000",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "chains": [
+        "sources"
+      ],
+      "accept_until": "none",
+      "why": {
+        "text": "Preserves fence 1f8ca38a. Catastrophic-load floor, same reasoning as address_points_count. Ported verbatim from scripts/quality/assert-data-bounds.js (pre-conversion) — report: docs/reports/2026-09-12-batch1-i2-assert-data-bounds-assessment.md §2.3/§2.4.",
+        "liveness": {
+          "kind": "spec",
+          "ref": "docs/specs/01-pipeline/44_chain_deep_scrapes.md"
+        }
+      },
+      "limit_from_config": "sources_building_footprints_floor"
+    },
+    {
+      "id": "building_height_outliers",
+      "kind": "bound",
+      "expect": {
+        "metric": "building_height_outliers",
+        "loader": "sources",
+        "field": "heightOutliers"
+      },
+      "limit": "viol == 0",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "chains": [
+        "sources"
+      ],
+      "accept_until": "none",
+      "why": {
+        "text": "building_footprints.max_height_m negative or > 500m. Ported verbatim from scripts/quality/assert-data-bounds.js (pre-conversion) — report: docs/reports/2026-09-12-batch1-i2-assert-data-bounds-assessment.md §2.3/§2.4.",
+        "liveness": {
+          "kind": "spec",
+          "ref": "docs/specs/01-pipeline/44_chain_deep_scrapes.md"
+        }
+      }
+    },
+    {
+      "id": "neighbourhoods_count",
+      "kind": "bound",
+      "expect": {
+        "metric": "neighbourhoods_count",
+        "loader": "sources",
+        "field": "nhoodCount"
+      },
+      "limit": "value_min 158",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "chains": [
+        "sources"
+      ],
+      "accept_until": "none",
+      "why": {
+        "text": "Preserves fence e3dad53d. Fixed real-world cardinality floor (158 Toronto neighbourhoods) — IL-9 CHANGE-TO logic var: Rule 3 draws no exemption for \"unlikely to change,\" only for ==0/small-integer invariants and audited exception lists. Ported verbatim from scripts/quality/assert-data-bounds.js (pre-conversion) — report: docs/reports/2026-09-12-batch1-i2-assert-data-bounds-assessment.md §2.3/§2.4.",
+        "liveness": {
+          "kind": "spec",
+          "ref": "docs/specs/01-pipeline/44_chain_deep_scrapes.md"
+        }
+      },
+      "limit_from_config": "sources_neighbourhoods_floor"
+    },
+    {
+      "id": "neighbourhood_dupes",
+      "kind": "bound",
+      "expect": {
+        "metric": "neighbourhood_dupes",
+        "loader": "sources",
+        "field": "nhoodDupes"
+      },
+      "limit": "viol == 0",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "chains": [
+        "sources"
+      ],
+      "accept_until": "none",
+      "why": {
+        "text": "Duplicate neighbourhoods.neighbourhood_id groups — PK-uniqueness invariant. Ported verbatim from scripts/quality/assert-data-bounds.js (pre-conversion) — report: docs/reports/2026-09-12-batch1-i2-assert-data-bounds-assessment.md §2.3/§2.4.",
+        "liveness": {
+          "kind": "spec",
+          "ref": "docs/specs/01-pipeline/44_chain_deep_scrapes.md"
+        }
+      }
+    },
+    {
+      "id": "ravines_count",
+      "kind": "bound",
+      "expect": {
+        "metric": "ravines_count",
+        "loader": "sources",
+        "field": "ravinesCount"
+      },
+      "limit": "value_min 500",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "chains": [
+        "sources"
+      ],
+      "accept_until": "none",
+      "why": {
+        "text": "Preserves fence 1ceebd17. Catastrophic-load floor (Spec 59 §8c, ~854 expected). IL-10 SPLIT: the numeric floor is a logic var; the deploy-order does-not-exist guard (migration 167) stays a declared guard on this check, never folded into the bound — reports a SKIP row (never omitted) when the table does not yet exist. Ported verbatim from scripts/quality/assert-data-bounds.js (pre-conversion) — report: docs/reports/2026-09-12-batch1-i2-assert-data-bounds-assessment.md §2.3/§2.4.",
+        "liveness": {
+          "kind": "spec",
+          "ref": "docs/specs/01-pipeline/44_chain_deep_scrapes.md"
+        }
+      },
+      "limit_from_config": "sources_ravines_floor"
+    },
+    {
+      "id": "heritage_properties_count",
+      "kind": "bound",
+      "expect": {
+        "metric": "heritage_properties_count",
+        "loader": "sources",
+        "field": "heritagePropsCount"
+      },
+      "limit": "value_min 8000",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "chains": [
+        "sources"
+      ],
+      "accept_until": "none",
+      "why": {
+        "text": "Preserves fence 169f22af. Catastrophic-load floor (Spec 61 §8c). IL-10 SPLIT, migration 170 deploy-order guard, SKIP-safe. Ported verbatim from scripts/quality/assert-data-bounds.js (pre-conversion) — report: docs/reports/2026-09-12-batch1-i2-assert-data-bounds-assessment.md §2.3/§2.4.",
+        "liveness": {
+          "kind": "spec",
+          "ref": "docs/specs/01-pipeline/44_chain_deep_scrapes.md"
+        }
+      },
+      "limit_from_config": "sources_heritage_properties_floor"
+    },
+    {
+      "id": "heritage_districts_count",
+      "kind": "bound",
+      "expect": {
+        "metric": "heritage_districts_count",
+        "loader": "sources",
+        "field": "heritageDistrictsCount"
+      },
+      "limit": "value_min 20",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "chains": [
+        "sources"
+      ],
+      "accept_until": "none",
+      "why": {
+        "text": "Preserves fence 169f22af. Catastrophic-load floor (Spec 61 §8c). IL-10 SPLIT, migration 170 deploy-order guard, SKIP-safe. Ported verbatim from scripts/quality/assert-data-bounds.js (pre-conversion) — report: docs/reports/2026-09-12-batch1-i2-assert-data-bounds-assessment.md §2.3/§2.4.",
+        "liveness": {
+          "kind": "spec",
+          "ref": "docs/specs/01-pipeline/44_chain_deep_scrapes.md"
+        }
+      },
+      "limit_from_config": "sources_heritage_districts_floor"
+    },
+    {
+      "id": "toronto_centreline_count",
+      "kind": "bound",
+      "expect": {
+        "metric": "toronto_centreline_count",
+        "loader": "sources",
+        "field": "centrelineCount"
+      },
+      "limit": "value_min 40000",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "chains": [
+        "sources"
+      ],
+      "accept_until": "none",
+      "why": {
+        "text": "Preserves fence f6047e89. Catastrophic-load floor (Spec 62 §8c). IL-10 SPLIT, migration 173 deploy-order guard, SKIP-safe. Ported verbatim from scripts/quality/assert-data-bounds.js (pre-conversion) — report: docs/reports/2026-09-12-batch1-i2-assert-data-bounds-assessment.md §2.3/§2.4.",
+        "liveness": {
+          "kind": "spec",
+          "ref": "docs/specs/01-pipeline/44_chain_deep_scrapes.md"
+        }
+      },
+      "limit_from_config": "sources_centreline_floor"
+    },
+    {
+      "id": "wsib_no_legal_name",
+      "kind": "bound",
+      "expect": {
+        "metric": "wsib_no_legal_name",
+        "loader": "wsib",
+        "field": "wsibNoName"
+      },
+      "limit": "viol == 0",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "chains": [
+        "permits",
+        "sources"
+      ],
+      "accept_until": "none",
+      "why": {
+        "text": "Preserves fence 326bb847. wsib_registry.legal_name NULL/empty — IL-4 ACCEPT, one check group authored once, chains:[\"permits\",\"sources\"] (mirrors assert_global_coverage's own multi-chain array shape, step.schema.json:685-691). SKIP-safe (reports a benign row) when wsib_registry is empty/missing. Ported verbatim from scripts/quality/assert-data-bounds.js (pre-conversion) — report: docs/reports/2026-09-12-batch1-i2-assert-data-bounds-assessment.md §2.3/§2.4.",
+        "liveness": {
+          "kind": "spec",
+          "ref": "docs/specs/01-pipeline/44_chain_deep_scrapes.md"
+        }
+      }
+    },
+    {
+      "id": "wsib_no_g_class",
+      "kind": "bound",
+      "expect": {
+        "metric": "wsib_no_g_class",
+        "loader": "wsib",
+        "field": "wsibNonG"
+      },
+      "limit": "viol == 0",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "chains": [
+        "permits",
+        "sources"
+      ],
+      "accept_until": "none",
+      "why": {
+        "text": "Preserves fence 326bb847. wsib_registry with no G-prefixed predominant_class/subclass — IL-4. Ported verbatim from scripts/quality/assert-data-bounds.js (pre-conversion) — report: docs/reports/2026-09-12-batch1-i2-assert-data-bounds-assessment.md §2.3/§2.4.",
+        "liveness": {
+          "kind": "spec",
+          "ref": "docs/specs/01-pipeline/44_chain_deep_scrapes.md"
+        }
+      }
+    },
+    {
+      "id": "wsib_invalid_naics",
+      "kind": "bound",
+      "expect": {
+        "metric": "wsib_invalid_naics",
+        "loader": "wsib",
+        "field": "wsibBadNaics"
+      },
+      "limit": "viol == 0",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "chains": [
+        "permits",
+        "sources"
+      ],
+      "accept_until": "none",
+      "why": {
+        "text": "Preserves fence 326bb847. wsib_registry.naics_code non-numeric — IL-4. Ported verbatim from scripts/quality/assert-data-bounds.js (pre-conversion) — report: docs/reports/2026-09-12-batch1-i2-assert-data-bounds-assessment.md §2.3/§2.4.",
+        "liveness": {
+          "kind": "spec",
+          "ref": "docs/specs/01-pipeline/44_chain_deep_scrapes.md"
+        }
+      }
+    },
+    {
+      "id": "wsib_orphaned_links",
+      "kind": "bound",
+      "expect": {
+        "metric": "wsib_orphaned_links",
+        "loader": "wsib",
+        "field": "wsibOrphan"
+      },
+      "limit": "viol == 0",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "chains": [
+        "permits",
+        "sources"
+      ],
+      "accept_until": "none",
+      "why": {
+        "text": "Preserves fence 326bb847. wsib_registry.linked_entity_id with no matching entities row — IL-4. Ported verbatim from scripts/quality/assert-data-bounds.js (pre-conversion) — report: docs/reports/2026-09-12-batch1-i2-assert-data-bounds-assessment.md §2.3/§2.4.",
+        "liveness": {
+          "kind": "spec",
+          "ref": "docs/specs/01-pipeline/44_chain_deep_scrapes.md"
+        }
+      }
+    },
+    {
+      "id": "null_permit_num",
+      "kind": "bound",
+      "expect": {
+        "metric": "null_permit_num",
+        "loader": "inspection",
+        "field": "nullPermitNum"
+      },
+      "limit": "viol == 0",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "chains": [
+        "deep_scrapes"
+      ],
+      "accept_until": "none",
+      "why": {
+        "text": "permit_inspections.permit_num NULL/empty. Ported verbatim from scripts/quality/assert-data-bounds.js (pre-conversion) — report: docs/reports/2026-09-12-batch1-i2-assert-data-bounds-assessment.md §2.3/§2.4.",
+        "liveness": {
+          "kind": "spec",
+          "ref": "docs/specs/01-pipeline/44_chain_deep_scrapes.md"
+        }
+      }
+    },
+    {
+      "id": "null_stage_name",
+      "kind": "bound",
+      "expect": {
+        "metric": "null_stage_name",
+        "loader": "inspection",
+        "field": "nullStageName"
+      },
+      "limit": "viol == 0",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "chains": [
+        "deep_scrapes"
+      ],
+      "accept_until": "none",
+      "why": {
+        "text": "permit_inspections.stage_name NULL/empty. Ported verbatim from scripts/quality/assert-data-bounds.js (pre-conversion) — report: docs/reports/2026-09-12-batch1-i2-assert-data-bounds-assessment.md §2.3/§2.4.",
+        "liveness": {
+          "kind": "spec",
+          "ref": "docs/specs/01-pipeline/44_chain_deep_scrapes.md"
+        }
+      }
+    },
+    {
+      "id": "null_status",
+      "kind": "bound",
+      "expect": {
+        "metric": "null_status",
+        "loader": "inspection",
+        "field": "nullStatus"
+      },
+      "limit": "viol == 0",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "chains": [
+        "deep_scrapes"
+      ],
+      "accept_until": "none",
+      "why": {
+        "text": "permit_inspections.status NULL/empty. Ported verbatim from scripts/quality/assert-data-bounds.js (pre-conversion) — report: docs/reports/2026-09-12-batch1-i2-assert-data-bounds-assessment.md §2.3/§2.4.",
+        "liveness": {
+          "kind": "spec",
+          "ref": "docs/specs/01-pipeline/44_chain_deep_scrapes.md"
+        }
+      }
+    },
+    {
+      "id": "null_scraped_at",
+      "kind": "bound",
+      "expect": {
+        "metric": "null_scraped_at",
+        "loader": "inspection",
+        "field": "nullScrapedAt"
+      },
+      "limit": "viol == 0",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "chains": [
+        "deep_scrapes"
+      ],
+      "accept_until": "none",
+      "why": {
+        "text": "permit_inspections.scraped_at NULL. Ported verbatim from scripts/quality/assert-data-bounds.js (pre-conversion) — report: docs/reports/2026-09-12-batch1-i2-assert-data-bounds-assessment.md §2.3/§2.4.",
+        "liveness": {
+          "kind": "spec",
+          "ref": "docs/specs/01-pipeline/44_chain_deep_scrapes.md"
+        }
+      }
+    },
+    {
+      "id": "orphan_inspections",
+      "kind": "bound",
+      "expect": {
+        "metric": "orphan_inspections",
+        "loader": "inspection",
+        "field": "orphanInsp"
+      },
+      "limit": "viol == 0",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "chains": [
+        "deep_scrapes"
+      ],
+      "accept_until": "none",
+      "why": {
+        "text": "permit_inspections.permit_num with no matching permits row. Ported verbatim from scripts/quality/assert-data-bounds.js (pre-conversion) — report: docs/reports/2026-09-12-batch1-i2-assert-data-bounds-assessment.md §2.3/§2.4.",
+        "liveness": {
+          "kind": "spec",
+          "ref": "docs/specs/01-pipeline/44_chain_deep_scrapes.md"
+        }
+      }
+    },
+    {
+      "id": "invalid_status",
+      "kind": "bound",
+      "expect": {
+        "metric": "invalid_status",
+        "loader": "inspection",
+        "field": "badStatus"
+      },
+      "limit": "viol == 0",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "chains": [
+        "deep_scrapes"
+      ],
+      "accept_until": "none",
+      "why": {
+        "text": "permit_inspections.status outside the 4-member enum ('Outstanding','Passed','Not Passed','Partial'). Ported verbatim from scripts/quality/assert-data-bounds.js (pre-conversion) — report: docs/reports/2026-09-12-batch1-i2-assert-data-bounds-assessment.md §2.3/§2.4.",
+        "liveness": {
+          "kind": "spec",
+          "ref": "docs/specs/01-pipeline/44_chain_deep_scrapes.md"
+        }
+      }
+    },
+    {
+      "id": "outstanding_with_date",
+      "kind": "bound",
+      "expect": {
+        "metric": "outstanding_with_date",
+        "loader": "inspection",
+        "field": "outstandingWithDate"
+      },
+      "limit": "viol == 0",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "chains": [
+        "deep_scrapes"
+      ],
+      "accept_until": "none",
+      "why": {
+        "text": "permit_inspections rows with status='Outstanding' AND a non-null inspection_date. Ported verbatim from scripts/quality/assert-data-bounds.js (pre-conversion) — report: docs/reports/2026-09-12-batch1-i2-assert-data-bounds-assessment.md §2.3/§2.4.",
+        "liveness": {
+          "kind": "spec",
+          "ref": "docs/specs/01-pipeline/44_chain_deep_scrapes.md"
+        }
+      }
+    },
+    {
+      "id": "completed_without_date",
+      "kind": "bound",
+      "expect": {
+        "metric": "completed_without_date",
+        "loader": "inspection",
+        "field": "completedNoDate"
+      },
+      "limit": "viol == 0",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "chains": [
+        "deep_scrapes"
+      ],
+      "accept_until": "none",
+      "why": {
+        "text": "permit_inspections rows with status!='Outstanding' AND a null inspection_date. Ported verbatim from scripts/quality/assert-data-bounds.js (pre-conversion) — report: docs/reports/2026-09-12-batch1-i2-assert-data-bounds-assessment.md §2.3/§2.4.",
+        "liveness": {
+          "kind": "spec",
+          "ref": "docs/specs/01-pipeline/44_chain_deep_scrapes.md"
+        }
+      }
+    },
+    {
+      "id": "duplicate_stages",
+      "kind": "bound",
+      "expect": {
+        "metric": "duplicate_stages",
+        "loader": "inspection",
+        "field": "inspDupes"
+      },
+      "limit": "viol == 0",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "chains": [
+        "deep_scrapes"
+      ],
+      "accept_until": "none",
+      "why": {
+        "text": "Duplicate (permit_num, stage_name) groups — composite-key uniqueness invariant. Ported verbatim from scripts/quality/assert-data-bounds.js (pre-conversion) — report: docs/reports/2026-09-12-batch1-i2-assert-data-bounds-assessment.md §2.3/§2.4.",
+        "liveness": {
+          "kind": "spec",
+          "ref": "docs/specs/01-pipeline/44_chain_deep_scrapes.md"
+        }
+      }
+    },
+    {
+      "id": "future_dates",
+      "kind": "bound",
+      "expect": {
+        "metric": "future_dates",
+        "loader": "inspection",
+        "field": "futureDates"
+      },
+      "limit": "viol == 0",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "chains": [
+        "deep_scrapes"
+      ],
+      "accept_until": "none",
+      "why": {
+        "text": "permit_inspections.inspection_date after CURRENT_DATE. Ported verbatim from scripts/quality/assert-data-bounds.js (pre-conversion) — report: docs/reports/2026-09-12-batch1-i2-assert-data-bounds-assessment.md §2.3/§2.4.",
+        "liveness": {
+          "kind": "spec",
+          "ref": "docs/specs/01-pipeline/44_chain_deep_scrapes.md"
+        }
+      }
+    },
+    {
+      "id": "ancient_dates",
+      "kind": "bound",
+      "expect": {
+        "metric": "ancient_dates",
+        "loader": "inspection",
+        "field": "ancientDates"
+      },
+      "limit": "viol == 0",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "chains": [
+        "deep_scrapes"
+      ],
+      "accept_until": "none",
+      "why": {
+        "text": "permit_inspections.inspection_date before 2020-01-01. Displays inspection_ancient_dates_count_warn_max in this check's detail for operator visibility, but the bound itself stays value > 0 (consequence 4 — checkInsp() never compared the pre-conversion '<= 5' label against anything; wiring a real >5 tolerance now would be an undeclared behaviour change). ADB-D7, defect-ledger.md, OPEN · PIN. Ported verbatim from scripts/quality/assert-data-bounds.js (pre-conversion) — report: docs/reports/2026-09-12-batch1-i2-assert-data-bounds-assessment.md §2.3/§2.4.",
+        "liveness": {
+          "kind": "spec",
+          "ref": "docs/specs/01-pipeline/44_chain_deep_scrapes.md"
+        }
+      }
+    },
+    {
+      "id": "date_before_permit_year",
+      "kind": "bound",
+      "expect": {
+        "metric": "date_before_permit_year",
+        "loader": "inspection",
+        "field": "dateBeforePermit"
+      },
+      "limit": "viol == 0",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "chains": [
+        "deep_scrapes"
+      ],
+      "accept_until": "none",
+      "why": {
+        "text": "permit_inspections.inspection_date year precedes the permit_num's 2-digit year prefix. Ported verbatim from scripts/quality/assert-data-bounds.js (pre-conversion) — report: docs/reports/2026-09-12-batch1-i2-assert-data-bounds-assessment.md §2.3/§2.4.",
+        "liveness": {
+          "kind": "spec",
+          "ref": "docs/specs/01-pipeline/44_chain_deep_scrapes.md"
+        }
+      }
+    }
+  ],
+  "invariants": "none",
+  "plausibility": "none",
+  "override": "none",
+  "emits": [
+    {
+      "key": "checks_passed",
+      "type": "string",
+      "consumers": []
+    },
+    {
+      "key": "checks_failed",
+      "type": "int",
+      "consumers": []
+    },
+    {
+      "key": "checks_warned",
+      "type": "int",
+      "consumers": []
+    },
+    {
+      "key": "errors",
+      "type": "array",
+      "consumers": []
+    },
+    {
+      "key": "warnings",
+      "type": "array",
+      "consumers": []
+    },
+    {
+      "key": "config",
+      "type": "object",
+      "consumers": []
+    },
+    {
+      "key": "audit_table",
+      "type": "object",
+      "consumers": [
+        "src/components/FreshnessTimeline.tsx",
+        "src/components/DataQualityDashboard.tsx",
+        "src/lib/admin/funnel.ts",
+        "src/lib/quality/types.ts",
+        "src/app/api/admin/control-panel/resync/route.ts"
+      ]
+    }
+  ],
+  "deviations": [
+    {
+      "from": "Spec 122 §8.2 pilot table default write class for a bounds-validation ASSERT (implied verdict_only)",
+      "why": {
+        "text": "WD-1 ruled verdict_only RETIRED and structurally undeclarable under the ASSERT x-profile — outputs/recovery/counters forced \"none\". Matches assert_schema/assert_global_coverage precedent.",
+        "liveness": {
+          "kind": "file",
+          "ref": ".cursor/wf5_wd1_write_class_audit_active_task.md"
+        }
+      },
+      "adjudicated_by": "WD-1 / Spec 122 §1.10 required-field profile",
+      "date": "2026-09-12"
+    },
+    {
+      "from": "Pre-conversion per-chain audit_table.name (4 distinct strings: permits \"Data Quality Checks\", coa \"CoA Data Quality\", sources \"Sources Data Quality\", deep_scrapes \"Data Quality\")",
+      "why": {
+        "text": "scripts/lib/step/verdict.js buildAuditTable() renders audit_table.name from the single identity.display_name (step.schema.json: \"the human-readable name emitted in records_meta.audit_table.name\") — no per-chain name map exists in the ASSERT profile or sharing.varies_by_chain (audit_table is a bare enum [\"one\",\"per_chain\"], not name data). No scripts/lib/step/**/step.schema.json edit is authorized this commit. Resolved: one shared display_name, \"Data Quality Checks\" (matches the permits chain, unchanged, and src/lib/quality/types.ts:634's own label). The coa/sources/deep_scrapes chains' audit_table.name text changes — cosmetic only, no consumer branches on the retired literal strings (FreshnessTimeline.tsx renders at.name verbatim).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/step/verdict.js"
+        }
+      },
+      "adjudicated_by": "commit 7 scope constraint (no step.schema.json/scripts/lib/step edit authorized)",
+      "date": "2026-09-12"
+    },
+    {
+      "from": "inspection_ancient_dates_count_warn_max (report §2.4 item 18) declared as a Rule-3 registered logic variable",
+      "why": {
+        "text": "Re-reading the pre-conversion checkInsp() helper this session found its displayed threshold parameter ('<= 5' for ancient_dates) is NEVER itself compared — every checkInsp() call site evaluates purely value > 0. Wiring the new var into a real >5-tolerant bound would be an undeclared behaviour change mid-conversion (forbidden, Spec 123 §1.1/KFM3). The var is declared (satisfies Rule 3 registration + the test suite's 26-name list) but not bound via limit_from_config — filed ADB-D7, defect-ledger.md, OPEN · PIN, fix-after.",
+        "liveness": {
+          "kind": "file",
+          "ref": "docs/reports/defect-ledger.md"
+        }
+      },
+      "adjudicated_by": "commit 7 (ADB-D7, Spec 123 §3.1 — no silent behaviour fix during conversion)",
+      "date": "2026-09-12"
+    },
+    {
+      "from": "checks[].limit_from_config on-invalid posture — Rule 3 default is \"fail\" for a verdict-affecting var with no safe fallback",
+      "why": {
+        "text": "All 26 logic_variables here carry a safe seed default (the exact pre-conversion literal, or — for inspection_ancient_dates_count_warn_max — a declared-not-yet-wired placeholder), so \"fail\" is the correct posture per Rule 3. Recorded here only because the config object forbids a per-variable why field (additionalProperties:false), mirroring assert_schema/assert_global_coverage's own precedent deviation entry.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/seeds/logic_variables.json"
+        }
+      },
+      "adjudicated_by": "Spec 124 §2 Rule 3",
+      "date": "2026-09-12"
+    }
+  ],
+  "limitations": [
+    {
+      "what": "A standalone (no PIPELINE_CHAIN) run selects ALL 52 checks across all 4 chains into ONE combined audit_table (scripts/lib/step/verdict.js selectChecks: per_chain filtering is bypassed entirely when chainId is null) — a structural IMPROVEMENT over the pre-conversion standalone behaviour (ADB-D4: picked exactly one domain's table by a fixed preference order, permits > sources > coa > inspection, hiding the other domains' rows even though checks_failed/checks_warned already reflected them). Nothing Hidden: standalone now shows every domain's rows; audit_table.phase resolves to 0 in standalone (resolvePhase: the 4 chain phase values disagree, so no single number is unambiguous) rather than the pre-conversion's single preferred-chain phase number.",
+      "measured": "scripts/lib/step/verdict.js selectChecks()/resolvePhase(); pre-conversion scripts/quality/assert-data-bounds.js:986-996 (ADB-D4).",
+      "check_id": "none"
+    },
+    {
+      "what": "permits_pre_permit_count / coa_permits_pre_permit_count are declared as two independent checks[] ids (IL-3, IL-3 ACCEPT, consequence 2) rather than sharing one metric name the way the pre-conversion audit rows did — the coa-chain row now reads metric \"coa_permits_pre_permit_count\", not \"permits_pre_permit_count\". Cosmetic only: identical SQL, threshold, and severity.",
+      "measured": "scripts/lib/assert-data-bounds-fields.js CHECK_DEFS.",
+      "check_id": "coa_permits_pre_permit_count"
+    }
+  ],
+  "interpretation": "none",
+  "recovery": "none",
+  "database": {
+    "class": "primary",
+    "min_migration": 244,
+    "assert_current_database": "postgres"
+  },
+  "counters": "none",
+  "config": {
+    "logic_variables": [
+      {
+        "name": "cost_outlier_ceiling_cad",
+        "min": 1000000,
+        "max": 10000000000,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "desc_null_rate_warn_pct",
+        "min": 1,
+        "max": 100,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "builder_null_rate_warn_pct",
+        "min": 1,
+        "max": 100,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "cost_est_null_rate_warn_pct",
+        "min": 1,
+        "max": 100,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "cost_est_min_tiers",
+        "min": 1,
+        "max": 20,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "coa_forward_link_sub085_warn_pct",
+        "min": 1,
+        "max": 100,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "cost_est_legacy_cost_ceiling_cad",
+        "min": 1000000,
+        "max": 2000000000,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "cost_est_legacy_gfa_ceiling_sqm",
+        "min": 10000,
+        "max": 5000000,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "cost_outlier_count_warn_max",
+        "min": 1,
+        "max": 100000,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "sources_address_points_floor",
+        "min": 1,
+        "max": 5000000,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "sources_parcels_floor",
+        "min": 1,
+        "max": 5000000,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "sources_building_footprints_floor",
+        "min": 1,
+        "max": 5000000,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "sources_neighbourhoods_floor",
+        "min": 1,
+        "max": 1000,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "sources_ravines_floor",
+        "min": 1,
+        "max": 100000,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "sources_heritage_properties_floor",
+        "min": 1,
+        "max": 100000,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "sources_heritage_districts_floor",
+        "min": 1,
+        "max": 1000,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "sources_centreline_floor",
+        "min": 1,
+        "max": 500000,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "coa_null_address_count_warn_max",
+        "min": 1,
+        "max": 100000,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "coa_ancient_hearing_count_warn_max",
+        "min": 1,
+        "max": 100000,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "coa_future_hearing_window_years",
+        "min": 1,
+        "max": 20,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "coa_cost_gt_threshold_cad",
+        "min": 1000000,
+        "max": 500000000,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "coa_cost_gt_threshold_warn_max",
+        "min": 1,
+        "max": 100000,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "coa_fsi_gt_threshold",
+        "min": 1,
+        "max": 50,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "coa_gfa_over_lot_multiple",
+        "min": 1,
+        "max": 20,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "coa_gfa_over_lot_warn_max",
+        "min": 1,
+        "max": 100000,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "inspection_ancient_dates_count_warn_max",
+        "min": 1,
+        "max": 100000,
+        "on_invalid": "fail"
+      }
+    ],
+    "validation": "strict",
+    "hoisted_above_gate": true
+  },
+  "sharing": {
+    "chains": "derived",
+    "shared": "derived",
+    "slug_forms": "derived",
+    "varies_by_chain": {
+      "checks": "per_chain",
+      "phase": {
+        "permits": 22,
+        "coa": 11,
+        "sources": 27,
+        "deep_scrapes": 5
+      },
+      "audit_table": "per_chain",
+      "scope": "per_chain"
+    },
+    "on_contention": "self_skip"
+  },
+  "terminals": [
+    {
+      "id": "lock_held_elsewhere",
+      "kind": "skip_lock_contention",
+      "status": "self_skipped",
+      "records_meta": {
+        "skipped": "bool",
+        "reason": "string"
+      },
+      "why": {
+        "text": "The generic runner (scripts/lib/step/index.js) emits the declared lock_held_elsewhere terminal on advisory-lock contention — the pre-conversion step returned bare with ZERO step-level emit at all (ADB-D2, worse than AS-D9/LR-D6/AGC-D7). Library adoption closes this structurally.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/step/index.js"
+        }
+      }
+    },
+    {
+      "id": "all_checks_passed",
+      "kind": "success",
+      "status": "completed",
+      "records_meta": {
+        "checks_passed": "string",
+        "checks_failed": "int",
+        "checks_warned": "int",
+        "errors": "array",
+        "warnings": "array",
+        "audit_table": "object",
+        "config": "object"
+      }
+    },
+    {
+      "id": "data_bounds_check_failed",
+      "kind": "fail_check",
+      "status": "completed",
+      "records_meta": {
+        "checks_failed": "int",
+        "checks_warned": "int",
+        "errors": "array",
+        "warnings": "array",
+        "audit_table": "object",
+        "config": "object"
+      },
+      "why": {
+        "text": "Non-halting by design (Spec 30 §5.4.1): a threshold-derived FAIL/WARN row reddens the audit_table's row-derived verdict but the run still completes — this step never gates the chain on a data-bounds FAIL. Distinguishes from data_bounds_check_error below.",
+        "liveness": {
+          "kind": "spec",
+          "ref": "docs/specs/01-pipeline/30_pipeline_architecture.md"
+        }
+      }
+    },
+    {
+      "id": "data_bounds_check_error",
+      "kind": "fail_error",
+      "status": "failed",
+      "records_meta": {
+        "checks_failed": "int",
+        "checks_warned": "int",
+        "errors": "array",
+        "warnings": "array",
+        "audit_table": "object",
+        "config": "object"
+      },
+      "why": {
+        "text": "Spec 30 §5.4.1: only EXCEPTION-derived failures halt (\"I could not check\") — the WSIB and inspection loaders let a non-\"does not exist\" query error escape uncaught (scripts/lib/compute/assert-data-bounds.js), propagating out of compute() and causing the step to exit non-zero. Regression-locked by src/tests/db/assert-data-bounds-halt.db.test.ts Case B (the load-bearing exception-must-still-halt proof).",
+        "liveness": {
+          "kind": "spec",
+          "ref": "docs/specs/01-pipeline/30_pipeline_architecture.md"
+        }
+      }
+    }
+  ]
+}

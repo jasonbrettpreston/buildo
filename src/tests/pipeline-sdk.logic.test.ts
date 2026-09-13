@@ -1222,8 +1222,11 @@ describe('Pipeline SDK', () => {
     // RE-HOMED (pilot 1, Spec 122 §5.1): a converted step declares `counters: "none"`
     // and never spells a counter itself — scripts/lib/step/index.js emits
     // `records_new: null` on its behalf (deriveCounters + the SKIP summary). The CQA
-    // exemption is unchanged; the file that spells it moved.
-    const CQA_SCRIPTS = ['lib/step/index.js', 'quality/assert-data-bounds.js'];
+    // exemption is unchanged; the file that spells it moved. `quality/assert-data-
+    // bounds.js` RE-HOMED the same way at its own conversion (batch1 I2 commit 7,
+    // 2026-09-12) — its frozen shell has no PIPELINE_SUMMARY/emitSummary text of its
+    // own either; `lib/step/index.js` alone already covers the exemption.
+    const CQA_SCRIPTS = ['lib/step/index.js'];
     for (const script of CQA_SCRIPTS) {
       it(`${script} emits records_new: null (not 0) for CQA exemption`, () => {
         const content = fs.readFileSync(path.join(scriptDir, script), 'utf-8');

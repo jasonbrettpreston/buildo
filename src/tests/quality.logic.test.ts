@@ -749,15 +749,13 @@ describe('CQA scripts write records_meta to pipeline_runs', () => {
     expect(source).toContain('checks_failed');
   });
 
-  it('assert-data-bounds.js writes records_meta with checks_passed, checks_failed, and checks_warned', () => {
-    const source = fs.readFileSync(
-      path.join(__dirname, '../../scripts/quality/assert-data-bounds.js'), 'utf-8'
-    );
-    expect(source).toContain('records_meta');
-    expect(source).toContain('checks_passed');
-    expect(source).toContain('checks_failed');
-    expect(source).toContain('checks_warned');
-  });
+  // RE-HOMED (batch1 I2 commit 7, Spec 122 §5.1, 2026-09-12): assert-data-bounds.js
+  // converted to the frozen 8-line shell — records_meta/checks_passed/checks_failed/
+  // checks_warned are stamped entirely by the shared library now (scripts/lib/step/
+  // verdict.js buildAuditTable / scripts/lib/step/index.js), which the sibling test
+  // immediately above this one already covers generically for every converted step.
+  // Mirrors the identical removal already applied at assert-schema's own conversion
+  // (no assert-schema-specific version of this test remains in this file either).
 
   // RE-HOMED (pilot 1, Spec 122 §5.1): the converted step's PIPELINE_SUMMARY is emitted
   // by the library via pipeline.emitSummary(), which is the function that prints the
@@ -770,13 +768,10 @@ describe('CQA scripts write records_meta to pipeline_runs', () => {
     expect(source).toContain('records_meta');
   });
 
-  it('assert-data-bounds.js emits PIPELINE_SUMMARY with records_meta for chain orchestrator', () => {
-    const source = fs.readFileSync(
-      path.join(__dirname, '../../scripts/quality/assert-data-bounds.js'), 'utf-8'
-    );
-    expect(source).toContain('PIPELINE_SUMMARY');
-    expect(source).toContain('records_meta');
-  });
+  // RE-HOMED (batch1 I2 commit 7, Spec 122 §5.1, 2026-09-12): same reasoning as the
+  // records_meta removal above — PIPELINE_SUMMARY is now entirely library-emitted;
+  // the sibling "the step library emits PIPELINE_SUMMARY..." test above already
+  // covers it generically.
 
   it('run-chain.js parses records_meta from PIPELINE_SUMMARY and writes to DB', () => {
     const source = fs.readFileSync(
@@ -2131,9 +2126,18 @@ describe('refresh-snapshot.js cost/timing observability', () => {
 
 // ── Regression: assert-data-bounds validates cost + timing tables ──
 
+// COMMIT 7 REPOINT (batch1 I2, 2026-09-12): assert-data-bounds.js is now the
+// Spec 122 frozen 8-line shell; the cost_estimates SQL lives verbatim in
+// scripts/lib/compute/assert-data-bounds.js. The old `runPermitChecks` boolean
+// (a chain-gating JS variable) no longer exists — chain gating is now declared
+// data (scripts/lib/assert-data-bounds-fields.js CHECK_DEFS[].chains), read by
+// the shared library's selectChecks(), not a source-text JS conditional.
 describe('assert-data-bounds.js cost/timing validation', () => {
   const boundsSource = fs.readFileSync(
-    path.join(__dirname, '../../scripts/quality/assert-data-bounds.js'), 'utf-8'
+    path.join(__dirname, '../../scripts/lib/compute/assert-data-bounds.js'), 'utf-8'
+  );
+  const fieldsSource = fs.readFileSync(
+    path.join(__dirname, '../../scripts/lib/assert-data-bounds-fields.js'), 'utf-8'
   );
 
   it('checks cost_estimates coverage', () => {
@@ -2145,9 +2149,12 @@ describe('assert-data-bounds.js cost/timing validation', () => {
     expect(boundsSource).not.toContain('FROM timing_calibration');
   });
 
-  it('gates cost checks on runPermitChecks', () => {
-    const permitBlock = boundsSource.split('runPermitChecks').slice(1).join('');
-    expect(permitBlock).toContain('cost_estimates');
+  it('gates cost checks on the permits chain (declared checks[].chains, not a JS boolean)', () => {
+    const costChecks = ['cost_estimates_null_rate', 'cost_estimates_min_tiers', 'cost_estimate_over_ceiling', 'modeled_gfa_over_ceiling'];
+    for (const id of costChecks) {
+      const re = new RegExp(`id:\\s*'${id}'[\\s\\S]{0,120}?chains:\\s*\\['permits'\\]`);
+      expect(fieldsSource, `${id} must declare chains: ['permits']`).toMatch(re);
+    }
   });
 });
 

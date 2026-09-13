@@ -158,7 +158,15 @@
       "coa_gate_force_active",
       "coa_lifecycle_transition_stale_days",
       "coa_forward_link_sub085_warn_pct",
-      "coa_unmatched_threshold_pct"
+      "coa_unmatched_threshold_pct",
+      "coa_null_address_count_warn_max",
+      "coa_ancient_hearing_count_warn_max",
+      "coa_future_hearing_window_years",
+      "coa_cost_gt_threshold_cad",
+      "coa_cost_gt_threshold_warn_max",
+      "coa_fsi_gt_threshold",
+      "coa_gfa_over_lot_multiple",
+      "coa_gfa_over_lot_warn_max"
     ]
   },
   {
@@ -254,7 +262,22 @@
       "coa_bylaw_max_fsi_null_warn_pct",
       "coa_bylaw_max_coverage_null_warn_pct",
       "permits_bylaw_max_coverage_null_warn_pct",
-      "permits_bylaw_max_fsi_null_warn_pct"
+      "permits_bylaw_max_fsi_null_warn_pct",
+      "cost_outlier_count_warn_max",
+      "inspection_ancient_dates_count_warn_max"
+    ]
+  },
+  {
+    "label": "Sources Catastrophic-Load Floors",
+    "keys": [
+      "sources_address_points_floor",
+      "sources_parcels_floor",
+      "sources_building_footprints_floor",
+      "sources_neighbourhoods_floor",
+      "sources_ravines_floor",
+      "sources_heritage_properties_floor",
+      "sources_heritage_districts_floor",
+      "sources_centreline_floor"
     ]
   },
   {

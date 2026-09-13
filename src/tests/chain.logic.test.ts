@@ -879,8 +879,9 @@ describe('PIPELINE_META convention', () => {
     // PIPELINE_META line is emitted by the step LIBRARY from `descriptor.inputs`/
     // `outputs` (deriveMeta), not spelled in the step file. The assertion follows the
     // emitter — the guarantee "this step emits PIPELINE_META" is unchanged.
+    // assert_data_bounds RE-HOMED the same way at its own conversion (batch1 I2
+    // commit 7, 2026-09-12) — the `lib/step/index.js` entry below already covers it.
     'lib/step/index.js',
-    'quality/assert-data-bounds.js',
   ];
 
   for (const script of SCRIPTS_WITH_META) {

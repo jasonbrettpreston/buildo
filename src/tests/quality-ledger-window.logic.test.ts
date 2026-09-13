@@ -197,8 +197,10 @@ describe('ledger-window — finalizeStrandedRun (the write)', () => {
 // there is no INSERT and no `finally` left in the step file to assert on — so the library
 // gained the window instead and the five source locks below follow it onto
 // scripts/lib/step/index.js. Every assertion is preserved; only the file it reads moved.
+// `assert-data-bounds` RE-HOMED the same way at its own conversion (batch1 I2 commit 7,
+// 2026-09-12) — the frozen 8-line shell has no INSERT/finally of its own either; the
+// shared library describe block below (`scripts/lib/step/index.js`) already covers it.
 const SCRIPTS: Array<[string, string]> = [
-  ['assert-data-bounds', 'scripts/quality/assert-data-bounds.js'],
   ['assert-engine-health', 'scripts/quality/assert-engine-health.js'],
 ];
 

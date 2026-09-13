@@ -113,33 +113,44 @@ describe('WSIB Registry Infrastructure', () => {
     });
   });
 
+  // COMMIT 7 REPOINT (batch1 I2, 2026-09-12): assert-data-bounds.js converted to
+  // the Spec 122 frozen 8-line shell — the WSIB domain logic (SQL + check
+  // declarations) now lives in scripts/lib/compute/assert-data-bounds.js
+  // (verbatim SQL) + scripts/lib/assert-data-bounds-fields.js (declared check
+  // ids/why text), mirroring the SAME repoint already applied to
+  // src/tests/assert-data-bounds.infra.test.ts (Fold A item 1) and the G4d
+  // fences in src/tests/steps/assert_data_bounds/violations.test.ts (IL-4).
+  // Two of the five original phrases ("no G class", "orphaned wsib_registry",
+  // "non-numeric naics_code") were console-log narration text, never preserved
+  // verbatim in the port — repointed to the declared check ids instead, which
+  // is a MORE robust anchor (a check id is schema-enforced unique, a log
+  // string is not).
   describe('CQA Integration', () => {
-    const boundsPath = path.resolve(__dirname, '../../scripts/quality/assert-data-bounds.js');
+    const computePath = path.resolve(__dirname, '../../scripts/lib/compute/assert-data-bounds.js');
+    const fieldsPath = path.resolve(__dirname, '../../scripts/lib/assert-data-bounds-fields.js');
+    const combined = () => fs.readFileSync(computePath, 'utf-8') + fs.readFileSync(fieldsPath, 'utf-8');
 
-    it('assert-data-bounds.js includes wsib_registry checks', () => {
-      const content = fs.readFileSync(boundsPath, 'utf-8');
-      expect(content).toContain('wsib_registry');
+    it('assert-data-bounds compute includes wsib_registry checks', () => {
+      expect(combined()).toContain('wsib_registry');
     });
 
     it('checks for NULL legal_name', () => {
-      const content = fs.readFileSync(boundsPath, 'utf-8');
-      expect(content).toContain('legal_name');
+      expect(combined()).toContain('legal_name');
     });
 
     it('checks for non-G class entries', () => {
-      const content = fs.readFileSync(boundsPath, 'utf-8');
-      expect(content).toContain("NOT LIKE 'G%'");
-      expect(content).toContain('no G class');
+      expect(combined()).toContain("NOT LIKE 'G%'");
+      expect(combined()).toContain("id: 'wsib_no_g_class'");
     });
 
     it('checks for orphaned linked_entity_id', () => {
-      const content = fs.readFileSync(boundsPath, 'utf-8');
-      expect(content).toContain('orphaned wsib_registry');
+      expect(combined()).toContain("id: 'wsib_orphaned_links'");
+      expect(combined()).toContain('linked_entity_id');
     });
 
     it('checks for non-numeric naics_code', () => {
-      const content = fs.readFileSync(boundsPath, 'utf-8');
-      expect(content).toContain('non-numeric naics_code');
+      expect(combined()).toContain("id: 'wsib_invalid_naics'");
+      expect(combined()).toContain('naics_code');
     });
   });
 

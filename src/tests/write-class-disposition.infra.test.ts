@@ -396,11 +396,12 @@ describe('write-class-disposition — WD-1 both-directions lock (Spec 122 §1.4/
     const classOnlyFindings = checkNoBannedClassDeclared(mutated, descriptorPaths);
     expect(classOnlyFindings).toEqual([]);
 
-    // the on_contention-aware checker catches every one of the 10 live descriptors
+    // the on_contention-aware checker catches every one of the 11 live descriptors
     // that currently declare self_skip (9 converted + assert_global_coverage,
-    // C4 batch 1 I1 commit 7, still pending but its descriptor already exists on disk):
+    // C4 batch 1 I1 commit 7, + assert_data_bounds, C4 batch 1 I2 commit 7 — both
+    // still pending but their descriptors already exist on disk):
     const contentionFindings = checkOnContentionBannedDeclared(mutated, descriptorPaths);
-    expect(contentionFindings.length).toBe(10);
+    expect(contentionFindings.length).toBe(11);
     expect(contentionFindings.every((f) => f.includes('self_skip') && f.includes('"retire"'))).toBe(true);
   });
 

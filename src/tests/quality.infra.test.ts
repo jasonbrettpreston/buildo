@@ -631,10 +631,14 @@ describe('Engine Health CQA Tier 3', () => {
   });
 });
 
+// COMMIT 7 REPOINT (batch1 I2, 2026-09-12): assert-data-bounds.js is now the
+// Spec 122 frozen 8-line shell; the ghost-record SQL lives verbatim in
+// scripts/lib/compute/assert-data-bounds.js, the declared check's `why` text
+// (which carries "non-terminal") in scripts/lib/assert-data-bounds-fields.js.
 describe('Ghost record detection in assert-data-bounds', () => {
   it('checks for permits not seen in 30+ days', () => {
     const source = fs.readFileSync(
-      path.join(__dirname, '../../scripts/quality/assert-data-bounds.js'),
+      path.join(__dirname, '../../scripts/lib/compute/assert-data-bounds.js'),
       'utf-8'
     );
     expect(source).toMatch(/last_seen_at[\s\S]{0,100}30\s*days/i);
@@ -645,7 +649,7 @@ describe('Ghost record detection in assert-data-bounds', () => {
     // then P20 (Closed). The assert must not re-count them as "ghosts" —
     // otherwise the warning grows unboundedly with every successful vacuum run.
     const source = fs.readFileSync(
-      path.join(__dirname, '../../scripts/quality/assert-data-bounds.js'),
+      path.join(__dirname, '../../scripts/lib/compute/assert-data-bounds.js'),
       'utf-8'
     );
     // Must filter lifecycle_phase IS NOT NULL (excludes dead states: Cancelled, Revoked, Withdrawn)
@@ -656,10 +660,10 @@ describe('Ghost record detection in assert-data-bounds', () => {
 
   it('WARN message describes non-terminal scope (not all stale permits)', () => {
     const source = fs.readFileSync(
-      path.join(__dirname, '../../scripts/quality/assert-data-bounds.js'),
+      path.join(__dirname, '../../scripts/lib/assert-data-bounds-fields.js'),
       'utf-8'
     );
-    // The warning should reflect that terminal permits are excluded
+    // The declared check's why-text should reflect that terminal permits are excluded
     expect(source).toMatch(/non-terminal/i);
   });
 });
@@ -747,8 +751,10 @@ describe('Cost violation threshold', () => {
   });
 
   it('assert-data-bounds.js flags only negative costs (< 0), not $0 permits', () => {
+    // COMMIT 7 REPOINT (batch1 I2, 2026-09-12): the cost-outlier SQL lives
+    // verbatim in scripts/lib/compute/assert-data-bounds.js post-conversion.
     const source = fs.readFileSync(
-      path.join(__dirname, '../../scripts/quality/assert-data-bounds.js'), 'utf-8'
+      path.join(__dirname, '../../scripts/lib/compute/assert-data-bounds.js'), 'utf-8'
     );
     expect(source).toMatch(/est_const_cost\s*<\s*0/);
     expect(source).not.toMatch(/est_const_cost\s*<\s*100/);

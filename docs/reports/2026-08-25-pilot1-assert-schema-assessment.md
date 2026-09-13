@@ -437,10 +437,10 @@ Batch1 I1's own cutover (`assert_global_coverage`, commit 9, R-K) registered 20 
 | G4 | 2 | 2 | risk-class row with chance+impact found=true |
 | G5 | 1 | 1 | db=true clock=true network=true argv/env=true |
 | G6 | 3 | 3 | 14 ledger row(s), 0 without CLOSED/PIN () |
-| G7 | 3 | 3 | file=true fences=4 it-count=63 RED-evidence=true |
+| G7 | 3 | 3 | file=true fences=4 it-count=66 RED-evidence=true |
 | G8 | 3 | 3 | missing-invocations=0 missing-pre-invocations=0 stale-fingerprints=0 unexplained-diffs=0 |
 | G9 (binary) | PASS | — | heading=true low-confidence-table=true recurring-table=true |
-| G4d (fence<=lock) | PASS | — | fences=4 lock-it-count=63 |
+| G4d (fence<=lock) | PASS | — | fences=4 lock-it-count=66 |
 | G-shape | PASS | — | file-clean=true compute-clean=true |
 
 ### Fast invariants (always run — the fast descriptor gate)
@@ -466,7 +466,7 @@ Batch1 I1's own cutover (`assert_global_coverage`, commit 9, R-K) registered 20 
 - compare ran: true · diffs found: 239 · unexplained: 0
 
 ### Test suite (item iii)
-- 914/930 passed (suite success=true)
+- 950/967 passed (suite success=false)
 
 ### Policy coverage matrix (item vi) — Spec 124 Rules 1-13
 
