@@ -640,19 +640,23 @@ describe('execution.shape "enrich" + the ENRICHER execution.phases[] profile (pi
     pin(errorsOf(withPhases([phase(1, { txn: 'own_txn' })])), '/execution/phases/0/txn', 'enum');
   });
 
-  it('the other eight profiles are UNAFFECTED — every committed step descriptor still validates, and none of their files changed in this commit (Rule 3/claim #175 probe_presence fleet fix is the ONE known, declared exception — assert-schema.descriptor.json, unrelated to any archetype-profile change); enrich_parcels is the ONE ENRICHER, assert_global_coverage is the SECOND ASSERT (batch1 I1 commit 9 cutover, 2026-09-12 — converted.json at 10 entries)', () => {
+  it('the other eight profiles are UNAFFECTED — every committed step descriptor still validates, and none of their files changed in this commit (Rule 3/claim #175 probe_presence fleet fix is the ONE known, declared exception — assert-schema.descriptor.json, unrelated to any archetype-profile change); enrich_parcels is the ONE ENRICHER, assert_global_coverage/assert_data_bounds are the SECOND and THIRD ASSERT (batch1 I2 commit 9 cutover, 2026-09-13 — converted.json at 11 entries)', () => {
     // Pilot 9 commit 8 P8/P9 (2026-09-08) legitimately edits assert-schema.descriptor.json's
     // checks[].expect/config.probe_presence arrays (Rule 3 / claim #175's probe_presence fleet
     // union — a genuine, independent tunable-visibility fix, NOT tied to any archetype-profile
     // change). Pilot 9 commit 9 (2026-09-11) registered enrich_parcels in converted.json and
     // regenerated the same two arrays again (42 → 86 names, R-D three-way lock). Batch1 I1
     // commit 9 (2026-09-12) registered assert_global_coverage and regenerated the same two
-    // arrays a third time (86 → 106 names, +20, 0 removed, R-D three-way lock) — the same
-    // ONE known, declared exception each time. Narrow the "must be clean" scope to exclude
-    // ONLY it; every other converted descriptor (now nine of ten) remains a byte-identical
-    // R-C golden fingerprint.
+    // arrays a third time (86 → 106 names, +20, 0 removed, R-D three-way lock). Batch1 I2
+    // commit 9 (2026-09-13) registered assert_data_bounds and regenerated the same two arrays
+    // a fourth time (106 → 132 names, +26, 0 removed — all 26 of this step's declared logic
+    // vars were net-new to the probe list, since assert_data_bounds was the only consumer and
+    // had never itself been a converted[] member before this cutover; measured, not the plan's
+    // guessed 106→115 or the brief's guessed 106→124) — the same ONE known, declared exception
+    // each time. Narrow the "must be clean" scope to exclude ONLY it; every other converted
+    // descriptor (now ten of eleven) remains a byte-identical R-C golden fingerprint.
     const converted = (JSON.parse(fs.readFileSync(path.join(REPO_ROOT, 'scripts/steps/_schema/converted.json'), 'utf8')) as { converted: string[] }).converted;
-    expect(converted.length, 'ten steps are converted as of batch1 I1 commit 9 (assert_global_coverage cutover, 2026-09-12)').toBe(10);
+    expect(converted.length, 'eleven steps are converted as of batch1 I2 commit 9 (assert_data_bounds cutover, 2026-09-13)').toBe(11);
     const KNOWN_CHANGED_THIS_COMMIT = new Set([
       'scripts/quality/assert-schema.descriptor.json', // Rule 3/claim #175 probe_presence fleet fix (R-D three-way lock regen at every cutover)
     ]);

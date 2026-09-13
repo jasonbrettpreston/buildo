@@ -77,15 +77,8 @@
     "scripts/link-parcels.js",
     "scripts/refresh-snapshot.js",
     "scripts/enrich-parcels.js",
-    "scripts/quality/assert-global-coverage.js"
+    "scripts/quality/assert-global-coverage.js",
+    "scripts/quality/assert-data-bounds.js"
   ],
-  "pending": [
-    {
-      "file": "scripts/quality/assert-data-bounds.js",
-      "registers_at": "C4 batch 1 I2 commit 9 (cutover)",
-      "reason": "Descriptor + compute + frozen shell all landed and shape-clean commit 7 (conformanceFindings() == []); registers at C4 batch 1 I2 commit 9 (cutover, adds the converted.json.converted entry + deletes this pending row).",
-      "declared": "2026-09-12",
-      "stage": "shape_clean"
-    }
-  ]
+  "pending": []
 }

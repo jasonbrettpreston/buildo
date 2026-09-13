@@ -2205,7 +2205,7 @@ above).*
 | 4 | (registry) | PASS | overlap: none |
 | 5 | (registry) | PASS | clean (0 it.fails( call sites outside a declared pending slug) |
 | 9 | (registry) | PASS | clean (0 converted slugs blocked by an unmet cutover_prereq item; blocks batching: 0) |
-| 22 | (registry) | PASS | GOLD-PRE-FRESH: 42 PRE capture(s) across 10 converted step(s) all tracked + clean (git can restore every reference) |
+| 22 | (registry) | PASS | GOLD-PRE-FRESH: 47 PRE capture(s) across 11 converted step(s) all tracked + clean (git can restore every reference) |
 
 ### Captures (item iv)
 - missing invocations (POST): none
@@ -2214,7 +2214,7 @@ above).*
 - compare ran: true · diffs found: 249 · unexplained: 0
 
 ### Test suite (item iii)
-- 914/930 passed (suite success=true)
+- 969/985 passed (suite success=true)
 
 ### Policy coverage matrix (item vi) — Spec 124 Rules 1-13
 

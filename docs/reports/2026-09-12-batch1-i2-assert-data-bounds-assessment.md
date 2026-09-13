@@ -673,3 +673,112 @@ The 5 cases are preserved with the SAME claims, re-expressed against the new mec
 ### 8. Scorecard after all 3 peels
 
 `step-validate --step=assert_data_bounds --fast` re-run after 8c: verdicts/checks unaffected by any peel (8a is docs-only; 8b is verdict-preserving by measurement + recapture; 8c touches only a `.db.test.ts` file the fast scorecard's own vitest-independent sections don't cite). `converted.json.pending[0].stage` remains `shape_clean` (unchanged by this commit — no shape edit). Commit 9 (cutover) remains the next and final commit in the nine-commit ledger: `converted.json` entry + `pending[]` deletion, the R-D probe-list generator growth (106→115, Ask A1), and the Spec 42/43 chain-position spec-diff (ADB-D6 rides the same commit if an operator ruling lands before then, else stays PIN past it).
+
+---
+
+## 9. Commit 9 — differential + cutover (2026-09-13, HEAD `5bb73ed6`, main tree)
+
+**No recapture required for this step's own goldens.** Commit 9's edits (`converted.json`, `step-archetype-census.json`, docs/tests/spec/seed) touch none of the 3 fingerprinted inputs (`scripts/quality/assert-data-bounds.js`, `.descriptor.json`, `scripts/lib/compute/assert-data-bounds.js`) — all 5 POST captures carry the SAME `source_fingerprint` (`144d6e2a…`) before and after this commit, verdicts unchanged from commit 8b's own table: permits WARN / coa PASS / sources WARN / deep_scrapes PASS / standalone WARN.
+
+**Cutover obligations (Spec 123 §7 row 9 / §7.2 A6, R-K) — all in THIS commit:** `converted.json` gains `scripts/quality/assert-data-bounds.js`, `pending` = `[]` · `scripts/steps/_schema/step-archetype-census.json`'s row for this slug RETIRED (deleted, not flagged — mirrors the pilot 9/`enrich_parcels` and batch1 I1/`assert_global_coverage` precedent) → `npm run conversion-roadmap` (53 remaining files / 55 remaining slugs / 0 pending, unchanged in absolute terms — this slug was already excluded from "remaining" while pending, so only the pending counter moved 1→0) + `--check` clean · `npm run programme-backlog` (98 items, blocks batching: 0, byte-identical — no content drift) · `generate-template-freeze.mjs` run with NO flag — `--check` clean, zero content diff (`frozen_at` preserved, no RE-FREEZE owed) · repinned count tests: `conversion-roadmap.infra.test.ts` (3 tests corrected 10→11 converted / 1→0 pending, all green), `step-schema.logic.test.ts` ("ten steps are converted" → eleven, `KNOWN_CHANGED_THIS_COMMIT` unchanged since `assert-schema.descriptor.json` is again the one known exception), `step-seam.logic.test.ts` (registry 10→11 descriptors; live pairs stay at 6 — `assert_data_bounds` declares `inputs.reads.steps: []`, contributing zero new seam edges since it reads 16 tables directly, never another step's declared output) · `node -r dotenv/config scripts/analysis/step-validate.mjs --step=assert_data_bounds --write` then `--all --write` (full mode, run 3 times this commit as findings surfaced and were fixed — final run clean) — all 10 other scorecards regenerated to pick up the registry-wide GOLD-PRE-FRESH line (42→47 PRE captures, 10→11 converted steps).
+
+**R-D three-way lock, exercised a fourth time — MEASURED, not the plan's or the task brief's guessed numbers.** `assert_data_bounds`'s 26 declared `config.logic_variables` (8 pre-existing + 18 newly adjudicated at PH-3/commit 7, report §2.4) join the converted fleet's union the moment this commit registers it in `converted.json.converted[]` — `scripts/lib/declared-logic-variables.js#collectDeclaredLogicVariableNames()` reads ONLY `converted[]`, never `pending[]`, so all 26 names were invisible to the union throughout commits 6-8 despite the descriptor existing since commit 7. `assert-schema.descriptor.json`'s `checks[0].expect` / `config.probe_presence` regenerated (Ask A1's generator, `scripts/generate-assert-schema-probe-lists.js`, built this commit — closing I1's own RECURRING #2 followup) **106 → 132** names (+26, 0 removed) — **not** the plan's guessed 106→115 (§3 row 67, based on "row 7's 9 names") nor the task brief's guessed 106→124 (based on "18 new" from commit 7's own message): the measured truth is that ALL 26 declared vars were net-new to the probe list, including the 8 that pre-date this conversion, because `assert_data_bounds` itself had never been a `converted[]` member before this cutover and the probe list's union is scoped to that array. All four `assert_schema` POST goldens re-taken (`--overwrite`, local stack `127.0.0.1:54322/postgres`, migrations=244): fingerprint `da3a2756…` on all four (was `2c7a2830…`), exit 0, verdict PASS on every chain, `declared_logic_variables_present` row reads `{"missing":[]}` on every chain — confirming all 132 names, the 26 new ones included, resolve against the live `logic_variables` table. `git diff` on the 4 recaptured files shows ONLY harness-volatile leaves moved (`git_head`, `sys_duration_ms`, `pipeline_runs_max_id_before`, `source_fingerprint`) — no check id/value/severity/row shape changed on any chain; confirmed by `src/tests/golden-fingerprint.infra.test.ts` (42/42 green).
+
+**A genuine conformance gap found and closed (ADB-conformance-gap, registration-surfaced — the same "invisible until a step joins `CONVERTED[]`" shape RECURRING #2/#4 already named).** `step-conformance.infra.test.ts`'s §1.2a P4 dead-declaration check went RED the moment `assert_data_bounds` registered: 4 declared vars (`cost_outlier_count_warn_max`, `coa_null_address_count_warn_max`, `coa_ancient_hearing_count_warn_max`, `inspection_ancient_dates_count_warn_max`) are consumed through a GENUINE runtime read — `scripts/lib/compute/assert-data-bounds.js`'s `evalBoolCfgGe`/`evalBoolCfgGt` generic-dispatch evaluators read `ctx.config[def.cfgVar]`, where `cfgVar` is a per-check string carried in `CHECK_DEFS[]` (`scripts/lib/assert-data-bounds-fields.js`), not a compile-time literal — but the checker's 4 existing indirection patterns (literal dot read, `CONST.KEY` object-literal map, bare `SIMPLE_CONST` alias, the two EP-D17 library paths) all require a STATIC, compile-time-resolvable name, and none recognizes a function-PARAMETER-carried key sourced from a shared census table. This is a FIFTH indirection pattern, not a real dead declaration — closed by widening `step-conformance.infra.test.ts` with a narrowly-scoped, structurally-detected `genericDispatchCfgVars()` (fires only when compute source contains a literal `config[<ident>.cfgVar]` bracket read; credits exactly the `cfgVar` values declared in the step's own `scripts/lib/<basename>-fields.js` sibling module — a step with no such module, or a different dispatch shape, gets zero credit, so this path can never silently launder an unrelated dead declaration elsewhere in the fleet). A second, independent registration-surfaced finding in the same pass: the `calibration_freshness_warn_hours` seed description's ADB-D5 note ("no longer CONSUMED by assert_data_bounds") was itself a false-positive trigger for `taggedToStep()`'s naive substring scan (no negation-awareness) — reworded to state the same fact (retired from this step, still consumed by `compute_phase_calibration`) without the literal `CONSUMED by assert_data_bounds` substring; the pre-existing regression lock in `violations.test.ts` that pinned the OLD wording was repointed to 3 narrower, meaning-preserving assertions rather than the one substring that happened to double as a scanner trigger. Both fixes are conformance-tooling widenings, never a behavioural change to `assert_data_bounds` itself.
+
+**ADB-D6 closed (spec-text ruling, no code change).** Spec 44 §4's ancient-inspection-dates row corrected against the measured reality: the date cutoff stays the fixed literal `'2020-01-01'` (a CONTRACT this conversion preserves byte-for-byte, unchanged), and the violation-count threshold corrected from the stale "> 0" to the actual wired comparator `> inspection_ancient_dates_count_warn_max` (default 5, wired at commit 8b's ADB-D7 fix). Ruled to correct the spec rather than convert the fixed-date literal to a genuine rolling predicate — a behavioural change is out of place in a cutover commit that must otherwise be a pure differential (Spec 123 §3). `defect-ledger.md` ADB-D6 flipped OPEN·PIN → CLOSED·commit 9; `violations.test.ts`'s defect-ledger-disposition test's `EXPECT_CLOSED` set widened `{1,2,4,5}` → `{1,2,4,5,6}`.
+
+**Spec diff, corrected against measured chain positions (row 3/§1.0).** Spec 42 (CoA chain): row 8's `assert_data_bounds` step number corrected — measured position **11 of 16** (0-indexed 10), not 8. Root-cause note added: the whole table is stale for a much larger reason than this one row (5 real steps omitted entirely, 2 Phase-G-retired steps still listed) — a full table rewrite is out of this step's Operating Boundary, filed HIGH in `review_followups.md`. Spec 43 (sources chain): row 26 corrected — measured position **27 of 28**, not 26; root cause IS fully diagnosed (a single missing leading `reconcile` row, every other row a clean 1:1 uniform +1 offset) but the full renumber is still deferred to a dedicated doc-fix WF2, filed HIGH alongside Spec 42's. Spec 41/44: no renumbering needed (already-correct positions, re-verified: permits 22/33, deep_scrapes 5/7). Spec 30 §5.4.1: unaffected in substance (unchanged exhibit). Specs 122/123/124: N/A — no archetype-profile change, no register amendment owed (RE-FREEZE #6 already paid the schema cost at commit 7's own EP-D17 work, unrelated to this step).
+
+**Scorecard at cutover (final, post-`--write`): 16/17, G0-G8 full per row, G9 PASS (this section + §R below), G4d PASS, G-shape PASS (`file-clean=true compute-clean=true`), hard-stop=false.** The one open point is G3 (90 table rows, 9 vocab-hit rows) — pre-existing since commit 1, unchanged by this commit.
+
+**`npm run test`: full suite green — 10,392 passed, 0 failed, 437 skipped** (re-run twice this commit: the first run caught 2 genuine regressions from this commit's OWN test-repin work — a stale `EXPECT_CLOSED` set and the ADB-D5 seed-wording lock, both fixed same-session, not deferred).
+
+### §R Reflection (Spec 124 R-F, mandatory after cutover)
+
+**LOW-CONFIDENCE** — findings this pilot could not fully resolve, carried forward with their own disposition rather than silently dropped:
+
+| # | Finding | Why LOW-CONFIDENCE | Disposition |
+|---|---|---|---|
+| 1 | **Plan low-confidence item 1** — the exact per-chain runtime row count after the WSIB cross-injection and the 2 conditional `permitsAuditTable.rows.push` appends was never independently re-derived from the static census against a live per-chain DB read across commits 1-9. The golden captures DO carry the true runtime row count per chain (answering the question in practice) but no commit cross-tabulated the static census against it site-by-site | Same class as I1's own LOW-CONFIDENCE #1 — the totals reconcile (§7.6's G2′ diff proved zero unexplained leaves), not that every individual dynamic site's contribution was independently counted | **Carried, not closeable by this pilot's remaining scope** — the golden captures are the practical answer |
+| 2 | **Spec 42's step-table drift is bigger than this session had budget to fully diagnose.** 5 real steps are missing content entirely (not just a number correction) — this session did not research what `enrich_coa_zoning`/`classify_coa_scope`/`classify_coa_trades`/`compute_coa_cost_estimates`/`link_coa_to_parcels` actually do beyond their names, which Prime Directive #10 forbids inferring | A full, accurate table rewrite requires reading 5 unfamiliar step files this conversion never had reason to open | **Filed HIGH in review_followups.md, not built** — a dedicated doc-fix WF2's own PH-0 must read each of the 5 files before writing their row |
+| 3 | **ADB-D3's fleet-level scope (`checks_passed: 'all'/undefined`, never a per-check count) remains OPEN·PIN, unchanged by this commit** — correctly re-scoped at commit 8a as library-owned, out of this single step's Operating Boundary, and not re-litigated here | A fleet-wide fix touches all 11 now-converted steps' `records_meta` shape and golden captures simultaneously — needs its own plan + operator ruling on recapture cost | **Carried, per its own commit-8a disposition** — recurrence count now 1 (this step) against `AS-D7`'s prior filing, both cited in `review_followups.md` |
+
+**RECURRING/STANDARD-SHAPING** — findings this pilot believes are likely to recur in a FUTURE step (I3, `assert_engine_health`), feeding Spec 124 §4.6's promotion criterion:
+
+| # | Finding | Named archetype match this is expected to recur against | Proposed lock |
+|---|---|---|---|
+| 1 | **A plan/brief's "N new vars this commit" estimate for R-D probe-list growth has now undercounted TWICE** (I1's own manual splice matched its own estimate exactly since it was hand-verified at commit time; THIS step's growth was independently guessed twice — 115 by the plan, 124 by the task brief — and measured 132, because pre-existing vars are ALSO net-new to the union the moment their OWNING step first joins `converted[]`) | `assert_engine_health` (I3) — very likely to carry pre-existing (pre-conversion) tunables of its own, the same shape this step and `assert_global_coverage` both had | **Proposed:** I3's own PH-0 should run `node scripts/generate-assert-schema-probe-lists.js --check` before AND after a dry-run registration to measure the real delta directly, rather than reason from "N new vars declared this commit" |
+| 2 | **A generic-dispatch evaluator (one function serving many config-driven checks via a per-row `cfgVar` string) is now a real, load-bearing pattern in this fleet** (`evalBoolCfgGe`/`evalBoolCfgGt`, 4 vars) that the shared conformance checker did NOT recognize until this cutover exercised it live — the same "found only at registration" shape as RS-conformance-gap/LP-D-conformance-gap/EP-D17-conformance-gap before it | Any future ASSERT step whose row-builder census reuses this same generic-dispatch shape for count-threshold checks (a near-certainty given the census+generator pattern is now the programme's standard for large ASSERT conversions, I1's own RECURRING #1) | **Already generalized this commit** — `genericDispatchCfgVars()` is structurally detected (never hardcoded to one slug), so I3 inherits the fix for free IF it reuses the exact `config[<ident>.cfgVar]` shape; if I3's own generic dispatch uses a differently-shaped indirection, a SIXTH pattern may still be needed |
+| 3 | **A seed description's own defect-disposition prose can accidentally trigger the SAME literal-substring scanner it is trying to inform** ("no longer CONSUMED by X" containing the literal trigger substring "CONSUMED by X") — a novel failure mode: the seed text was semantically correct and RIGHT, but its own WORDING tripped a downstream conformance check with no negation-awareness | Any future step's own ADB-D5-class dead-var retirement note, or any prose near a `CONSUMED by <slug>` annotation that needs to state a NEGATIVE fact about the same slug | **Not proposed as a new lock this commit** (a single wording convention — e.g. "RETIRED FOR <slug>" instead of "no longer CONSUMED by <slug>" — would avoid the trap structurally, but changing `taggedToStep()` to understand negation is a larger, riskier NLP-shaped fix) — filed MED in `review_followups.md`, recurrence count 1 |
+
+---
+
+## Validation scorecard (generated)
+
+> Generated by `node scripts/analysis/step-validate.mjs --step=assert_data_bounds --write` — Spec 123 §6, ruling R-R (2026-08-29).
+> Regenerate with the same command; a stale block is a conformance-lock finding (`step-conformance.infra.test.ts`).
+
+**Score: 16/17** · G9 Reflection: PASS · G4d fence-lock coverage: PASS · G-shape: PASS · **Hard stop: no**
+
+| Gate | Score | Max | Detail |
+|---|---:|---:|---|
+| G0 | 1 | 1 | boundary-section=true spec-line=true |
+| G1 | 1 | 1 | PH-3 section found=true sha-count=54 |
+| G2 | 1 | 1 | 122-churn-complexity.md quadrant=top-right window=39313d9 |
+| G3 | 1 | 2 | table rows=90 vocab-hit rows=9 |
+| G4 | 2 | 2 | risk-class row with chance+impact found=true |
+| G5 | 1 | 1 | db=true clock=true network=true argv/env=true |
+| G6 | 3 | 3 | 7 ledger row(s), 0 without CLOSED/PIN () |
+| G7 | 3 | 3 | file=true fences=0 it-count=30 RED-evidence=true |
+| G8 | 3 | 3 | missing-invocations=0 missing-pre-invocations=0 stale-fingerprints=0 unexplained-diffs=0 |
+| G9 (binary) | PASS | — | heading=true low-confidence-table=true recurring-table=true |
+| G4d (fence<=lock) | PASS | — | fences=0 lock-it-count=30 |
+| G-shape | PASS | — | file-clean=true compute-clean=true |
+
+### Fast invariants (always run — the fast descriptor gate)
+
+| # | Scope | Pass | Detail |
+|---|---|---|---|
+| 1 | assert_data_bounds | PASS | min_migration=244 <= migrations count=244 |
+| 2 | assert_data_bounds | PASS | 26 declared, missing from seeds: none |
+| 3 | assert_data_bounds | PASS | retired=0 overlap-with-declared=none |
+| 7 | assert_data_bounds | PASS | SPEC LINK header present=true |
+| 8 | assert_data_bounds | PASS | G-4: 26 declared, 15 verdict-affecting, 0 violate on_invalid:fail with no deviations[] cover |
+| 20 | assert_data_bounds | PASS | HB-1: execution.shape=null — HB-1 applies_when execution.shape=="enrich" only (RS-D-STA); not applicable, never a pass-by-omission |
+| 21 | assert_data_bounds | PASS | CEIL-1: execution.shape=null — CEIL-1 applies_when execution.shape=="enrich" only (RS-D-STA); not applicable, never a pass-by-omission |
+| 4 | (registry) | PASS | overlap: none |
+| 5 | (registry) | PASS | clean (0 it.fails( call sites outside a declared pending slug) |
+| 9 | (registry) | PASS | clean (0 converted slugs blocked by an unmet cutover_prereq item; blocks batching: 0) |
+| 22 | (registry) | PASS | GOLD-PRE-FRESH: 47 PRE capture(s) across 11 converted step(s) all tracked + clean (git can restore every reference) |
+
+### Captures (item iv)
+- missing invocations (POST): none
+- missing invocations (PRE, GOLD-PRE): none
+- stale fingerprints: none
+- compare ran: true · diffs found: 644 · unexplained: 0
+
+### Test suite (item iii)
+- 969/985 passed (suite success=true)
+
+### Policy coverage matrix (item vi) — Spec 124 Rules 1-13
+
+| Rule | Name | Status | Note |
+|---|---|---|---|
+| 1 | Nothing hidden | enforced-green | G-1 schema-baseline: schema-baseline clean |
+| 2 | Compute is just compute | enforced-green |  |
+| 3 | Tunables externalized | enforced-green | G-4: 26 declared, 15 verdict-affecting, 0 violate on_invalid:fail with no deviations[] cover |
+| 4 | Compute rule declared | enforced-green | G-2: 7 preserved-in-compute row(s), 0 with no why/notes.json/checks[] grounding |
+| 5 | checks >= 1 | enforced-green |  |
+| 6 | Omission fails (20 categories) | enforced-green |  |
+| 7 | Archetype gates categories | enforced-green |  |
+| 8 | Per-target write discipline | enforced-green |  |
+| 9 | Banned write needs ledger (+ V7 no_retraction) | enforced-green |  |
+| 10 | Verdict row-derived | enforced-green | (a) OK — 11 corpus file(s) scanned, 0 unsanctioned second derivations, 2 sanctioned hit(s) matched SANCTIONED_VERDICT_SITES · (b) OK — SELF_SKIPPED audit table folds to verdict=WARN (!= PASS), row-derived off 1 non-INFO row(s) — VRD-SKIP closed |
+| 11 | Phase-order re-derive (declared half, checkOrderGuaranteesCited) | enforced-green | no when:"pre_write" checks — vacuously nothing to cite — G-3 completeness half stays open |
+| 12 | Truthful crash posture (R-B reachability, static + R-M before-image) | enforced-green | R-B (checkInterruptedPostureTruthful): recovery.interrupted=null — no reachability claim to verify · R-M: prose-only (R-M/LG-17 describe not scoped to this step (vitest not run, or no before-image target)) |
+| 13 | A step validates itself | enforced-green | this run of step:validate IS the mechanism |
+| P3 | I/O cost adjudication (measured, not gated) | measured | descriptor=64789B notes=0B checks=52 rows records_meta=6627B (newest post/ capture) |
+
+**Enforced-green: 13/14**
+

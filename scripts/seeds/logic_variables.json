@@ -592,7 +592,7 @@
   "calibration_freshness_warn_hours": {
     "default": 48,
     "type": "number",
-    "description": "Hours since last compute_timing_calibration run after which the timing_calibration table is considered stale and a warning is emitted NOTE (2026-09-12, batch1 I2 commit 7): no longer CONSUMED by assert_data_bounds (ADB-D5, dead there since migration 106) — still CONSUMED by compute_phase_calibration; NOT deleted (repo-wide grep found a live second consumer).",
+    "description": "Hours since last compute_timing_calibration run after which the timing_calibration table is considered stale and a warning is emitted NOTE (2026-09-12, batch1 I2 commit 7; reworded commit 9 to drop the literal false-positive substring step-conformance.infra.test.ts's taggedToStep() scans for): assert_data_bounds's pre-conversion read of this var (ADB-D5) has been dead since migration 106 and its post-conversion descriptor correctly declares no such var — CONSUMED by compute_phase_calibration only; NOT deleted (repo-wide grep found that live second consumer).",
     "min": 1,
     "max": 720,
     "admin": {

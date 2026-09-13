@@ -14,8 +14,8 @@
 // (c) both directions — a fixture census with a mismatched archetype for an
 //     already-converted slug throws; a fixture census missing a remaining
 //     slug's row throws (totality, the other direction).
-// (d) totality — every one of the 53 remaining files (+ 1 pending since batch1 I2 commit 6,
-//     2026-09-12 — assert_data_bounds, R-K/R-K.1) appears exactly once across C4/C5/C6/pending.
+// (d) totality — every one of the 53 remaining files (+ 0 pending since batch1 I2 commit 9,
+//     2026-09-13 — assert_data_bounds cutover, R-K) appears exactly once across C4/C5/C6.
 import { describe, it, expect } from 'vitest';
 import { execFileSync } from 'child_process';
 import fs from 'fs';
@@ -97,7 +97,7 @@ describe('measured counts — independently re-derived, not transcribed from the
     return map;
   }
 
-  it('53 remaining files, 55 remaining slugs (excluding the 10 converted, 1 pending — assert_data_bounds, batch1 I2 commit 6, 2026-09-12 — and the 1 python-exempt file)', () => {
+  it('53 remaining files, 55 remaining slugs (excluding the 11 converted — assert_data_bounds cutover, batch1 I2 commit 9, 2026-09-13, R-K — 0 pending, and the 1 python-exempt file)', () => {
     const fileToSlugs = fileToSlugsMap();
     const convertedSet = new Set(CONVERTED);
     const pendingSet = new Set(PENDING_FILES);
@@ -107,7 +107,7 @@ describe('measured counts — independently re-derived, not transcribed from the
     expect(remainingSlugCount).toBe(55);
   });
 
-  it('the census file-count-by-batch matches the independently re-derived C4/C5/C6 split (C4=3, C5=15, C6=36; pending=1 — assert_data_bounds entered the census at batch1 I2 commit 6, 2026-09-12, provenance rule 1)', () => {
+  it('the census file-count-by-batch matches the independently re-derived C4/C5/C6 split (C4=3, C5=15, C6=36; pending=0 — assert_data_bounds\'s census row was RETIRED (deleted) at batch1 I2 commit 9 cutover, 2026-09-13, mirroring the assert_global_coverage/pilot 9 precedent: a converted slug carries no census row at all)', () => {
     const census = JSON.parse(fs.readFileSync(CENSUS_PATH, 'utf8')) as { entries: Array<{ slug: string; file: string; batch: string }> };
     const fileToSlugs = fileToSlugsMap();
     const convertedSet = new Set(CONVERTED);
@@ -127,8 +127,11 @@ describe('measured counts — independently re-derived, not transcribed from the
     const c6 = byBatch.get('C6')!;
     const pendingBatch = byBatch.get('pending')!;
     // assert_data_bounds's census row flipped from batch:"C4" to batch:"pending" at
-    // batch1 I2 commit 6 (2026-09-12), when converted.json first declared it pending
-    // (stage red_suite) — C4 drops 4→3, pending rises 0→1.
+    // batch1 I2 commit 6 (2026-09-12) — C4 dropped 4→3, pending rose 0→1 — then the row
+    // was DELETED entirely at batch1 I2 commit 9 cutover (2026-09-13): a converted slug
+    // carries no census row at all (assert_global_coverage/pilot 9 precedent), so C4
+    // stays at 3 (it already excluded this slug once it moved to "pending") and pending
+    // drops back 1→0.
     expect(c4.size).toBe(3);
     // C5 as declared in the census covers the 14 truly-remaining files + reconcile
     // already counted in that 14, PLUS assert_data_bounds's own row moving in as
@@ -136,7 +139,7 @@ describe('measured counts — independently re-derived, not transcribed from the
     // slug's move (it was never a C5 member), but the census total gains 1 row
     // overall (C4's loss is pending's gain, not C5's).
     expect(c5.size).toBe(14);
-    expect(pendingBatch.size).toBe(1);
+    expect(pendingBatch.size).toBe(0);
     expect(c6.size).toBe(36);
     expect(c4.size + c5.size + c6.size).toBe(remaining.length);
   });
@@ -187,10 +190,10 @@ describe('docs/reports/generated/122-conversion-roadmap.md — generated, drift-
     }
   });
 
-  it('the rendered table\'s counts agree with the independently re-derived counts above (53 remaining files, 1 pending — assert_data_bounds, batch1 I2 commit 6)', () => {
+  it('the rendered table\'s counts agree with the independently re-derived counts above (53 remaining files, 0 pending — assert_data_bounds cutover, batch1 I2 commit 9)', () => {
     const text = fs.readFileSync(GENERATED_PATH, 'utf8');
-    expect(text).toContain('Remaining files: **53** (+ **1** pending)');
-    expect(text).toContain('remaining slugs: **55** (+ **1** pending)');
+    expect(text).toContain('Remaining files: **53** (+ **0** pending)');
+    expect(text).toContain('remaining slugs: **55** (+ **0** pending)');
   });
 });
 
@@ -277,14 +280,14 @@ describe('buildRoadmap() — totality over the real committed data (HIGH-1: slug
     const files = rows.map((r) => r.file);
     expect(new Set(files).size, 'no file appears twice').toBe(files.length);
     expect(rows.filter((r) => !r.pending).length).toBe(53);
-    expect(rows.filter((r) => r.pending).length).toBe(1);
+    expect(rows.filter((r) => r.pending).length).toBe(0);
     for (const r of rows) {
       expect(['C4', 'C5', 'C6', 'pending']).toContain(r.batch);
       expect(r.pending).toBe(r.batch === 'pending');
     }
   });
 
-  it('HIGH-1: the 2 declared exemptions (inspections, coa_documents) are NOT silently dropped — 68 total manifest slugs = 10 converted + 1 pending + 2 exempted + 55 remaining (assert_data_bounds, batch1 I2 commit 6)', async () => {
+  it('HIGH-1: the 2 declared exemptions (inspections, coa_documents) are NOT silently dropped — 68 total manifest slugs = 11 converted + 0 pending + 2 exempted + 55 remaining (assert_data_bounds cutover, batch1 I2 commit 9)', async () => {
     const mod = (await import(pathToFileURL(GENERATOR).href)) as unknown as RoadmapModule;
     const args = await loadRealArgs(mod);
     expect(args.exemptions.map((e) => e.slug).sort()).toEqual(['coa_documents', 'inspections']);
@@ -293,8 +296,8 @@ describe('buildRoadmap() — totality over the real committed data (HIGH-1: slug
     const pendingSlugs = rows.filter((r) => r.pending).reduce((n, r) => n + r.slugs.length, 0);
     const totalSlugs = Object.keys(args.manifest.scripts).length;
     expect(totalSlugs).toBe(68);
-    expect(10 + pendingSlugs + args.exemptions.length + remainingSlugs).toBe(totalSlugs);
-    expect(pendingSlugs).toBe(1);
+    expect(11 + pendingSlugs + args.exemptions.length + remainingSlugs).toBe(totalSlugs);
+    expect(pendingSlugs).toBe(0);
     expect(remainingSlugs).toBe(55);
   });
 

@@ -1140,6 +1140,35 @@ function libraryConsumedVars(relFile: string): string[] {
   return [...new Set([...sharedRunnerConfigValuesReads(), ...maintenanceDerivedVars(descriptor)])];
 }
 
+/**
+ * ADB-conformance-gap (batch1 I2 commit 9, 2026-09-13) — a FIFTH indirection pattern
+ * neither dot reads, `configKeysMap`, `configSimpleConstMap`, nor the library paths
+ * above cover: a data-driven GENERIC-DISPATCH evaluator that reads
+ * `ctx.config[def.cfgVar]`, where `def` is a per-CALL function parameter (one census
+ * row from `CHECK_DEFS[]`) and `cfgVar` is a STRING carried in that row — not a single
+ * top-level const `configSimpleConstMap` can resolve, because the same evaluator
+ * function serves many different config names across many call sites (the generic
+ * dispatch this fleet's row-builder-census steps use on purpose to avoid one
+ * hand-written function per threshold — `assert_data_bounds`'s own `evalBoolCfgGe`/
+ * `evalBoolCfgGt`, `scripts/lib/compute/assert-data-bounds.js`). Detected
+ * STRUCTURALLY, never hardcoded to one slug: if the compute source contains a literal
+ * `config[<ident>.cfgVar]` bracket read, every `cfgVar` value declared in the step's
+ * own sibling fields/census module — resolved by the fleet's `scripts/lib/<basename>-
+ * fields.js` naming convention (`assert-global-coverage-fields.js`, `assert-data-
+ * bounds-fields.js`, …) — is credited as consumed. A step with no such fields module,
+ * or whose compute never uses this exact dispatch shape, gets an empty credit set —
+ * this path can never silently launder an unrelated dead declaration.
+ */
+function genericDispatchCfgVars(relFile: string, computeSrc: string): string[] {
+  if (!/config\[\s*[a-zA-Z_]\w*\.cfgVar\s*\]/.test(stripComments(computeSrc))) return [];
+  const fieldsPath = path.join(REPO_ROOT, `scripts/lib/${path.basename(relFile, '.js')}-fields.js`);
+  if (!fs.existsSync(fieldsPath)) return [];
+  // eslint-disable-next-line @typescript-eslint/no-require-imports -- exercising the real CJS fields/census module
+  const mod = require(fieldsPath) as { CHECK_DEFS?: Array<{ cfgVar?: string | null }> };
+  const defs = Array.isArray(mod.CHECK_DEFS) ? mod.CHECK_DEFS : [];
+  return [...new Set(defs.map((d) => d.cfgVar).filter((v): v is string => Boolean(v)))];
+}
+
 /** link_parcels' own pair — no shared prefix, named explicitly. */
 const LINK_PARCELS_SHARED_RUNNER_VARS = new Set(['spatial_match_max_distance_m', 'spatial_match_confidence']);
 
@@ -1191,7 +1220,13 @@ function configFindings(relFile: string, slug: string, declared: string[]): stri
   // second identifier (`configValues.<x>`) or by a descriptor-derived dynamic key
   // (`<table>_maintenance_timeout_minutes`) — see `libraryConsumedVars`. Dead-declaration
   // check only, same posture as `sharedRunnerConsumedVars`.
-  const consumed = [...new Set([...computeConsumed, ...runnerConsumed, ...sharedRunnerConsumedVars(), ...libraryConsumedVars(relFile)])];
+  // Fifth path (batch1 I2 commit 9, ADB-conformance-gap): a generic-dispatch evaluator
+  // reading `ctx.config[def.cfgVar]` off the step's own fields/census module — see
+  // `genericDispatchCfgVars`. Dead-declaration check only, same posture as the other four.
+  const genericDispatchConsumed = hasCompute
+    ? genericDispatchCfgVars(relFile, fs.readFileSync(path.join(REPO_ROOT, computeRel), 'utf8'))
+    : [];
+  const consumed = [...new Set([...computeConsumed, ...runnerConsumed, ...sharedRunnerConsumedVars(), ...libraryConsumedVars(relFile), ...genericDispatchConsumed])];
 
   for (const name of declared) {
     if (!REGISTRY_KEYS.has(name)) {

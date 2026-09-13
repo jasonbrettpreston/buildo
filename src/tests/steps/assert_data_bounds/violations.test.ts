@@ -233,11 +233,26 @@ describe('assert_data_bounds — measured facts, true today (plain it)', () => {
   // consumer was found this session, scripts/compute-phase-calibration.js — NOT
   // deleted, see scripts/lib/assert-data-bounds-fields.js's header), but
   // assert_data_bounds' own descriptor no longer declares or consumes it.
+  //
+  // COMMIT 9 UPDATE (ADB-conformance-gap): the description's ORIGINAL wording
+  // ("no longer CONSUMED by assert_data_bounds") is itself a false-positive
+  // trigger for step-conformance.infra.test.ts's taggedToStep() — a naive
+  // substring scan for "CONSUMED by <slug>" with no negation-awareness — which
+  // read RED the moment this step joined `converted[]` at cutover (the exact
+  // "invisible until registration" shape prior cutovers have already hit).
+  // Reworded to state the same fact without the literal false-positive
+  // substring; this lock now checks the MEANING (seed survives, is retired
+  // from THIS step, compute_phase_calibration is the live consumer) via 3
+  // narrower matches instead of one substring that happened to double as a
+  // scanner trigger.
   it('calibration_freshness_warn_hours (ADB-D5 dead var) — seed row SURVIVES (a genuine second consumer, scripts/compute-phase-calibration.js, found this session — not deleted), but is retired from assert_data_bounds\' own descriptor + compute', () => {
     const seed = JSON.parse(fs.readFileSync(abs(SEED_REL), 'utf8')) as Record<string, { default: number; description: string }>;
     expect(seed.calibration_freshness_warn_hours, 'seed row must survive — a live second consumer exists').toBeDefined();
     expect(seed.calibration_freshness_warn_hours?.default).toBe(48);
-    expect(seed.calibration_freshness_warn_hours?.description ?? '', 'seed description should note the partial retirement').toMatch(/no longer CONSUMED by assert_data_bounds/);
+    const desc = seed.calibration_freshness_warn_hours?.description ?? '';
+    expect(desc, 'seed description should note assert_data_bounds\' own retirement (ADB-D5)').toMatch(/ADB-D5/);
+    expect(desc, 'seed description should state the dead pre-conversion read is retired').toMatch(/dead since migration 106/);
+    expect(desc, 'seed description should name the live second consumer').toMatch(/CONSUMED by compute_phase_calibration/);
     const d = loadDescriptor();
     const cfg = d.config as { logic_variables: Array<{ name: string }> };
     expect(cfg.logic_variables.map((v) => v.name), 'assert_data_bounds\' own config.logic_variables must NOT declare the dead var').not.toContain('calibration_freshness_warn_hours');
@@ -296,21 +311,18 @@ describe('assert_data_bounds — measured facts, true today (plain it)', () => {
     expect(floor).toBe(49);
   });
 
-  // COMMIT 7 UPDATE (mechanical, required by R-K.1 — step-conformance.infra.test.ts's
-  // own "a red_suite pending file has NOT yet landed its sibling descriptor" lock):
-  // the descriptor now exists and independently validates, so R-K.1 REQUIRES the
-  // stage advance to at least "descriptor_only" in this same commit — leaving it at
-  // "red_suite" would itself be the defect that lock exists to catch.
-  it('converted.json declares this step pending at stage "shape_clean" (R-K/R-K.1, advanced from "red_suite" -> "descriptor_only" -> "shape_clean" at commit 7, since conformanceFindings() is already clean) — well-formed, and not double-registered in `converted`', () => {
+  // COMMIT 9 UPDATE (R-K): converted.json registers this step and deletes its pending
+  // entry in the SAME commit — mirrors the pilot 9/enrich_parcels precedent (3c1f1923)
+  // and batch1 I1's own assert_global_coverage cutover. A step cannot be both converted
+  // AND pending at once (the mutual-exclusion lock this test now proves).
+  it('converted.json registers this step and deletes its pending entry in the SAME commit (R-K, commit 9 cutover) — mirrors the pilot 9/enrich_parcels precedent (3c1f1923)', () => {
     const doc = JSON.parse(fs.readFileSync(artifact(CONVERTED_REL), 'utf8')) as {
       converted: string[];
       pending: Array<{ file: string; registers_at: string; reason: string; declared: string; stage: string }>;
     };
-    expect(doc.converted, 'must not be double-registered while still pending').not.toContain(STEP_REL);
+    expect(doc.converted, `${CONVERTED_REL} must register ${STEP_REL}`).toContain(STEP_REL);
     const entry = doc.pending.find((p) => p.file === STEP_REL);
-    expect(entry, `${CONVERTED_REL} has no pending entry for ${STEP_REL}`).toBeDefined();
-    expect(entry?.stage).toBe('shape_clean');
-    expect(entry?.declared).toBe('2026-09-12');
+    expect(entry, `${CONVERTED_REL} must have NO pending entry for ${STEP_REL} once converted (R-K)`).toBeUndefined();
   });
 
   // COMMIT 8a UPDATE — the 6 ADB-D rows this conversion found (report §4.3/§4.4)
@@ -321,14 +333,15 @@ describe('assert_data_bounds — measured facts, true today (plain it)', () => {
   // structurally by the library adoption itself; ADB-D4 by the operator's R1
   // ruling; ADB-D5 was already resolved at commit 7 per §7.3's STOP finding), 1
   // re-scoped but genuinely still open (ADB-D3 — fleet library-owned, out of this
-  // step's Operating Boundary), 1 unchanged (ADB-D6 — needs an operator ruling on
-  // Spec 44 §4's own wording, rides commit 9's spec-diff). See report §8a. A row
+  // step's Operating Boundary). ADB-D6 (Spec 44 §4's wording vs the fixed-date
+  // reality) closes at commit 9 — ruled to correct the spec text (no behavioural
+  // code change belongs in a cutover commit, Spec 123 §3). See report §8a/§9. A row
   // silently disappearing, or a CLOSED row silently reverting to OPEN with no
   // ledger text explaining why, is what this lock catches — not "must stay open
   // forever," which was only ever true up to the conversion's own boundary.
-  it('the defect ledger carries all 6 ADB-D rows found at conversion time, each with its truthful commit-8a disposition (report §4.3/§4.4 + §8a — closed where verified/ruled, still OPEN · PIN where genuinely deferred)', () => {
+  it('the defect ledger carries all 6 ADB-D rows found at conversion time, each with its truthful commit-9 disposition (report §4.3/§4.4 + §8a/§9 — closed where verified/ruled, still OPEN · PIN where genuinely deferred)', () => {
     const ledger = fs.readFileSync(artifact(DEFECT_LEDGER_REL), 'utf8');
-    const EXPECT_CLOSED = new Set([1, 2, 4, 5]); // ADB-D1/D2 (verified), ADB-D4 (R1 ruling), ADB-D5 (already-resolved at commit 7)
+    const EXPECT_CLOSED = new Set([1, 2, 4, 5, 6]); // ADB-D1/D2 (verified), ADB-D4 (R1 ruling), ADB-D5 (already-resolved at commit 7), ADB-D6 (commit 9 spec-diff ruling)
     for (let n = 1; n <= 6; n++) {
       const row = ledger.split(/\r?\n/).find((l) => l.startsWith(`| ADB-D${n} `));
       expect(row, `defect ledger missing ADB-D${n}`).toBeDefined();

@@ -54,10 +54,10 @@ describe('deriveSeamPairs — derived from converted.json + manifest.json, never
     expect(seam.deriveSeamPairs(byName)).toEqual([]);
   });
 
-  it('the REAL 10-descriptor registry (batch1 I1 commit 9 cutover, 2026-09-12 — assert_global_coverage) still yields 6 live pairs: link_massing -> enrich_parcels, compute_centroids -> link_massing, link_parcel_addresses -> link_parcels, plus refresh_snapshot\'s 3 declared inputs.reads.steps', () => {
+  it('the REAL 11-descriptor registry (batch1 I2 commit 9 cutover, 2026-09-13 — assert_data_bounds) still yields 6 live pairs: link_massing -> enrich_parcels, compute_centroids -> link_massing, link_parcel_addresses -> link_parcels, plus refresh_snapshot\'s 3 declared inputs.reads.steps', () => {
     const byName = seam.loadConvertedDescriptors();
     expect(Object.keys(byName).sort()).toEqual(
-      ['assert_global_coverage', 'assert_schema', 'compute_centroids', 'enrich_parcels', 'link_massing', 'link_parcel_addresses', 'link_parcels', 'link_wsib', 'load_ravines', 'refresh_snapshot'].sort(),
+      ['assert_data_bounds', 'assert_global_coverage', 'assert_schema', 'compute_centroids', 'enrich_parcels', 'link_massing', 'link_parcel_addresses', 'link_parcels', 'link_wsib', 'load_ravines', 'refresh_snapshot'].sort(),
     );
     // assert_global_coverage (batch1 I1, cut over commit 9, 2026-09-12) declares
     // inputs.reads.steps: [] — measured from scripts/quality/assert-global-coverage.
@@ -65,6 +65,12 @@ describe('deriveSeamPairs — derived from converted.json + manifest.json, never
     // parcels/etc.), never another converted step's declared step-to-step edge, so its
     // registration contributes zero new seam pairs — the registry grows 9 -> 10 descriptors
     // but the live-pairs count stays exactly 6.
+    // assert_data_bounds (batch1 I2, cut over commit 9, 2026-09-13) likewise declares
+    // inputs.reads.steps: [] — measured from scripts/quality/assert-data-bounds.descriptor.json
+    // on 2026-09-13: it reads 16 TABLES directly (§0 row 5 of its plan), never another
+    // converted step's declared step-to-step edge, so its registration also contributes zero
+    // new seam pairs — the registry grows 10 -> 11 descriptors but the live-pairs count stays
+    // exactly 6.
     // enrich_parcels (pilot 9, cut over commit 9, 2026-09-11) declares inputs.reads.steps:
     // [{step: 'link_massing'}] ONLY — measured from scripts/enrich-parcels.descriptor.json on
     // 2026-09-11 (the PH-5 seam map in the plan named five producers; the descriptor declares

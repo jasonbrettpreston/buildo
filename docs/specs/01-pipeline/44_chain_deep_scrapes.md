@@ -319,8 +319,10 @@ length is re-evaluated when the `populate_queue` re-queue-forever defect is fixe
 | Check | Threshold | Level |
 |-------|-----------|-------|
 | permit_inspections NULL status | > 0 | FAIL |
-| Ancient inspection dates (>5 years) | > 0 | WARN |
+| Ancient inspection dates | > `inspection_ancient_dates_count_warn_max` (default 5) | WARN |
 | Ghost permits (not seen in 30+ days) | > 0 | WARN |
+
+**ADB-D6, CLOSED (batch1 I2 commit 9, 2026-09-13):** the row above previously read "Ancient inspection dates (>5 years)" / "Threshold: > 0" — both stale. Corrected against the measured, live implementation: (a) the DATE cutoff is a fixed literal, `inspection_date < '2020-01-01'` (`scripts/lib/compute/assert-data-bounds.js`), not a rolling "5 years ago" window — it has already diverged from a true rolling 5-year boundary by over a year as of this correction and will keep diverging every year the literal is not updated (a separate, still-open observation, not re-opened as a new defect here since the fixed-date design is itself the CONTRACT this conversion preserved byte-for-byte, §4.1); (b) the VIOLATION-COUNT threshold is `> inspection_ancient_dates_count_warn_max` (logic var, default 5), not `> 0` — `checkInsp`'s pre-conversion `threshold` argument was display-text-only until ADB-D7 (commit 8b) wired it to a real comparator, so this table's "> 0" was accurate for the code's entire pre-conversion lifetime and only went stale at that same commit. Ruled: correct the spec text to the measured reality (no code change) rather than convert the fixed-date literal to a genuine rolling predicate — a behavioural change is out of place in a cutover commit that must otherwise be a pure differential (Spec 123 §3).
 </quality>
 
 ---
