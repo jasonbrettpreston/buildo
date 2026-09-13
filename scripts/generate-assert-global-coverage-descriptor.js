@@ -384,11 +384,22 @@ if (require.main === module) {
   const rendered = `${JSON.stringify(descriptor, null, 2)}\n`;
 
   if (process.argv.includes('--check')) {
-    const committed = fs.existsSync(OUT) ? fs.readFileSync(OUT, 'utf8') : null;
+    // `--check-against=<path>` (additive, batch1 I2 commit 8x — a drift-lock RED-arm
+    // test needs to prove --check FIRES on a corrupted copy without ever writing to
+    // the real committed descriptor: this file's own header already states the
+    // committed file is touched ONLY by the explicit --check/write CLI paths, so a
+    // test that mutated `scripts/quality/assert-global-coverage.descriptor.json` in
+    // place (even inside a try/finally) was violating that contract — a process kill
+    // between the write and the restore leaves the REAL file corrupted, exactly the
+    // failure this override exists to make structurally unreachable. Default (absent)
+    // behaviour is completely unchanged: still reads/reports against `OUT`.
+    const checkAgainstArg = process.argv.find((a) => a.startsWith('--check-against='));
+    const checkPath = checkAgainstArg ? checkAgainstArg.slice('--check-against='.length) : OUT;
+    const committed = fs.existsSync(checkPath) ? fs.readFileSync(checkPath, 'utf8') : null;
     if (committed === rendered) {
       console.log(`[generate-assert-global-coverage-descriptor] clean — no drift (${descriptor.checks.length} checks, ${descriptor.config.logic_variables.length} logic_variables, ${descriptor.inputs.reads.tables.length} read tables)`);
     } else {
-      console.error(`[generate-assert-global-coverage-descriptor] DRIFT — ${OUT} is stale relative to the live tree (scripts/lib/assert-global-coverage-fields.js). Run \`node scripts/generate-assert-global-coverage-descriptor.js\` to regenerate.`);
+      console.error(`[generate-assert-global-coverage-descriptor] DRIFT — ${checkPath} is stale relative to the live tree (scripts/lib/assert-global-coverage-fields.js). Run \`node scripts/generate-assert-global-coverage-descriptor.js\` to regenerate.`);
       process.exitCode = 1;
     }
   } else {

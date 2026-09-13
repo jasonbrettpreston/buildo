@@ -4880,7 +4880,7 @@
   "inspection_ancient_dates_count_warn_max": {
     "default": 5,
     "type": "number",
-    "description": "assert-data-bounds: DECLARED per Rule 3 (report §2.4 item 18) but NOT YET WIRED to a real bound — the pre-conversion checkInsp() helper only ever compares value > 0 for ancient_dates; its displayed \"<= 5\" threshold was never a live comparison. See ADB-D7 (defect-ledger.md), fix-after. CONSUMED by assert_data_bounds.",
+    "description": "assert-data-bounds: permit_inspections.inspection_date < 2020-01-01 row-count WARN ceiling — count > this value warns. WIRED at commit 8b (ADB-D7, defect-ledger.md, CLOSED): the pre-conversion checkInsp() helper only ever compared value > 0 for ancient_dates; its displayed \"<= 5\" threshold was never a live comparison until this fix. Verdict-safety measured before wiring: ancient_dates read 0 in every golden capture. CONSUMED by assert_data_bounds.",
     "min": 1,
     "max": 100000,
     "admin": {

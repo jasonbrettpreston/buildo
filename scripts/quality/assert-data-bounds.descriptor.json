@@ -1458,7 +1458,7 @@
       ],
       "accept_until": "none",
       "why": {
-        "text": "permit_inspections.inspection_date before 2020-01-01. Displays inspection_ancient_dates_count_warn_max in this check's detail for operator visibility, but the bound itself stays value > 0 (consequence 4 — checkInsp() never compared the pre-conversion '<= 5' label against anything; wiring a real >5 tolerance now would be an undeclared behaviour change). ADB-D7, defect-ledger.md, OPEN · PIN. Ported verbatim from scripts/quality/assert-data-bounds.js (pre-conversion) — report: docs/reports/2026-09-12-batch1-i2-assert-data-bounds-assessment.md §2.3/§2.4.",
+        "text": "permit_inspections.inspection_date before 2020-01-01, WARN when the count exceeds inspection_ancient_dates_count_warn_max (default 5). ADB-D7 fix-after (commit 8c, defect-ledger.md, CLOSED): pre-conversion checkInsp() never compared its displayed '<= 5' label against anything (status was unconditionally value > 0); wiring a real > 5 tolerance here IS the wiring ADB-D7 named as deferred. Measured safe before wiring: ancient_dates read 0 in every one of the 5 PRE and 5 POST golden captures where the check is reachable (deep_scrapes + standalone) — both the old (value > 0) and new (value > 5) conditions agree at value=0, so no verdict changed. See docs/reports/2026-09-12-batch1-i2-assert-data-bounds-assessment.md §8c for the measurement. Ported verbatim from scripts/quality/assert-data-bounds.js (pre-conversion) — report: docs/reports/2026-09-12-batch1-i2-assert-data-bounds-assessment.md §2.3/§2.4.",
         "liveness": {
           "kind": "spec",
           "ref": "docs/specs/01-pipeline/44_chain_deep_scrapes.md"

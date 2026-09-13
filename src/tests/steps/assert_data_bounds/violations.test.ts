@@ -313,13 +313,48 @@ describe('assert_data_bounds — measured facts, true today (plain it)', () => {
     expect(entry?.declared).toBe('2026-09-12');
   });
 
-  it('the defect ledger carries all 6 ADB-D rows, each OPEN · PIN (report §4.3/§4.4, none fixed during this conversion)', () => {
+  // COMMIT 8a UPDATE — the 6 ADB-D rows this conversion found (report §4.3/§4.4)
+  // were, correctly, ALL still OPEN · PIN as of commit 7 ("none fixed during this
+  // conversion" — Spec 123 §3.1, no silent fix mid-conversion). Commit 8 is the
+  // PEEL commit, exactly where Spec 123 §3.1 says a pinned DEFECT gets resolved —
+  // 4 of the 6 closed (verified/ruled, no code change: ADB-D1/D2 were retired
+  // structurally by the library adoption itself; ADB-D4 by the operator's R1
+  // ruling; ADB-D5 was already resolved at commit 7 per §7.3's STOP finding), 1
+  // re-scoped but genuinely still open (ADB-D3 — fleet library-owned, out of this
+  // step's Operating Boundary), 1 unchanged (ADB-D6 — needs an operator ruling on
+  // Spec 44 §4's own wording, rides commit 9's spec-diff). See report §8a. A row
+  // silently disappearing, or a CLOSED row silently reverting to OPEN with no
+  // ledger text explaining why, is what this lock catches — not "must stay open
+  // forever," which was only ever true up to the conversion's own boundary.
+  it('the defect ledger carries all 6 ADB-D rows found at conversion time, each with its truthful commit-8a disposition (report §4.3/§4.4 + §8a — closed where verified/ruled, still OPEN · PIN where genuinely deferred)', () => {
     const ledger = fs.readFileSync(artifact(DEFECT_LEDGER_REL), 'utf8');
+    const EXPECT_CLOSED = new Set([1, 2, 4, 5]); // ADB-D1/D2 (verified), ADB-D4 (R1 ruling), ADB-D5 (already-resolved at commit 7)
     for (let n = 1; n <= 6; n++) {
       const row = ledger.split(/\r?\n/).find((l) => l.startsWith(`| ADB-D${n} `));
       expect(row, `defect ledger missing ADB-D${n}`).toBeDefined();
-      expect(row, `ADB-D${n} must be OPEN · PIN, not silently closed during this conversion`).toMatch(/OPEN\s*·\s*PIN/);
+      if (EXPECT_CLOSED.has(n)) {
+        expect(row, `ADB-D${n} expected CLOSED at commit 8a`).toMatch(/\*\*CLOSED/);
+      } else {
+        expect(row, `ADB-D${n} expected still OPEN · PIN at commit 8a (genuinely deferred, with a stated reason)`).toMatch(/OPEN\s*·\s*PIN/);
+      }
     }
+  });
+
+  // COMMIT 8b — ADB-D7 (found re-reading the source AT commit 7, not one of the
+  // original 6 — see report §7.2 item 8) is fixed at commit 8b: `ancient_dates`
+  // now genuinely compares against `inspection_ancient_dates_count_warn_max`
+  // (kind: boolcfg_gt), measured verdict-safe (value 0 in every golden capture).
+  it('ADB-D7 (found post-conversion, commit 7) is CLOSED at commit 8b — ancient_dates now genuinely wired', () => {
+    const ledger = fs.readFileSync(artifact(DEFECT_LEDGER_REL), 'utf8');
+    const row = ledger.split(/\r?\n/).find((l) => l.startsWith('| ADB-D7 '));
+    expect(row, 'defect ledger missing ADB-D7').toBeDefined();
+    expect(row, 'ADB-D7 expected CLOSED at commit 8b').toMatch(/CLOSED/);
+
+    const fields = fs.readFileSync(artifact('scripts/lib/assert-data-bounds-fields.js'), 'utf8');
+    const ancientLine = fields.split(/\r?\n/).find((l) => l.includes("id: 'ancient_dates'"));
+    expect(ancientLine, 'ancient_dates CHECK_DEFS entry not found').toBeDefined();
+    expect(ancientLine, 'ancient_dates must now use kind boolcfg_gt, not raw0').toMatch(/kind:\s*'boolcfg_gt'/);
+    expect(ancientLine, 'ancient_dates must now bind inspection_ancient_dates_count_warn_max').toMatch(/cfgVar:\s*'inspection_ancient_dates_count_warn_max'/);
   });
 });
 

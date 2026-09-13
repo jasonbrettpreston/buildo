@@ -41,6 +41,7 @@
 import { describe, it, expect } from 'vitest';
 import { execFileSync } from 'child_process';
 import fs from 'fs';
+import os from 'os';
 import path from 'path';
 
 const REPO_ROOT = path.resolve(__dirname, '../../../../');
@@ -322,20 +323,41 @@ describe('assert_global_coverage — descriptor generator drift lock (both direc
     expect(() => execFileSync('node', [abs(GENERATOR_REL), '--check'], { cwd: REPO_ROOT, encoding: 'utf8', stdio: 'pipe' })).not.toThrow();
   });
 
-  it('the CLI --check mode is itself not vacuous: fires (exit non-zero) against a deliberately corrupted committed copy, restored after', () => {
+  // batch1 I2 commit 8x — REWRITTEN to never touch the real committed descriptor
+  // (this describe block's own header, above, already states the both-directions
+  // lock runs "WITHOUT touching the committed descriptor.json file" — this test,
+  // as originally written, violated that: it mutated
+  // scripts/quality/assert-global-coverage.descriptor.json IN PLACE and relied on
+  // a try/finally to restore it. A `finally` cannot survive a hard process kill
+  // (a vitest worker timeout, an OOM, a Ctrl-C) — and this is exactly what
+  // happened live: the corruption text was found still appended to the REAL
+  // committed file at the start of an unrelated commit's pre-commit run,
+  // blocking it. `--check-against=<path>` (generate-assert-global-coverage-
+  // descriptor.js, this same commit) lets this test corrupt a DISPOSABLE TEMP
+  // FILE COPY instead — the real committed descriptor is never opened for
+  // writing anywhere in this test, so no interruption window can corrupt it.
+  it('the CLI --check mode is itself not vacuous: fires (exit non-zero) against a deliberately corrupted TEMP COPY, never the real committed file', () => {
     const original = readText(DESCRIPTOR_REL);
+    const tmpPath = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'agc-drift-lock-')), 'assert-global-coverage.descriptor.json');
     try {
-      fs.writeFileSync(abs(DESCRIPTOR_REL), `${original}\n// drift-lock self-test corruption\n`);
+      fs.writeFileSync(tmpPath, `${original}\n// drift-lock self-test corruption\n`);
       let threw = false;
       try {
-        execFileSync('node', [abs(GENERATOR_REL), '--check'], { cwd: REPO_ROOT, encoding: 'utf8', stdio: 'pipe' });
+        execFileSync('node', [abs(GENERATOR_REL), '--check', `--check-against=${tmpPath}`], { cwd: REPO_ROOT, encoding: 'utf8', stdio: 'pipe' });
       } catch {
         threw = true;
       }
-      expect(threw, '--check must exit non-zero on a corrupted/stale committed descriptor').toBe(true);
+      expect(threw, '--check --check-against=<corrupted temp copy> must exit non-zero').toBe(true);
+      // Control: the SAME flag against the untouched real file must still report
+      // clean — proves --check-against reads the override path, not silently
+      // falling back to comparing the real file against itself either way.
+      expect(() => execFileSync('node', [abs(GENERATOR_REL), '--check', `--check-against=${abs(DESCRIPTOR_REL)}`], { cwd: REPO_ROOT, encoding: 'utf8', stdio: 'pipe' })).not.toThrow();
     } finally {
-      fs.writeFileSync(abs(DESCRIPTOR_REL), original);
+      fs.rmSync(path.dirname(tmpPath), { recursive: true, force: true });
     }
+    // The real committed file was never opened for writing above — confirm it
+    // still reads byte-identical to what this test started with.
+    expect(readText(DESCRIPTOR_REL)).toBe(original);
   });
 });
 

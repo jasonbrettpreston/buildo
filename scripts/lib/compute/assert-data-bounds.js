@@ -484,6 +484,23 @@ async function evalBoolCfgGe(ctx, def) {
   ctx.report(def.id, { violations: over ? 1 : 0, detail: value });
 }
 
+/** A real JS `count > ctx.config[cfgVar]` comparison, booleanized — the strict
+ * form (vs `evalBoolCfgGe`'s `>=`), for a bound whose pre-conversion display
+ * text promised "count <= N is safe" (i.e. WARN triggers only ABOVE N, not AT
+ * N). ADB-D7 (`ancient_dates`, commit 8c): the pre-conversion `checkInsp()`
+ * helper's displayed `'<= N'` label was never itself compared — every call
+ * site evaluated unconditionally `value > 0`. Wiring the real bound here uses
+ * `>` (not `>=`) to match that "<=N is safe" framing exactly, not
+ * `evalBoolCfgGe`'s off-by-one-different `>=` semantics its 3 existing
+ * siblings (`cost_outliers`/`null_address`/`ancient_hearing`) use. */
+async function evalBoolCfgGt(ctx, def) {
+  const branch = await loadBranch(ctx, def.loader);
+  const value = getPath(branch, def.field);
+  const bound = ctx.config[def.cfgVar];
+  const over = Number.isFinite(value) && Number.isFinite(bound) && value > bound;
+  ctx.report(def.id, { violations: over ? 1 : 0, detail: value });
+}
+
 /** value_min / value_max forms — the raw measured count/value, config-substituted. */
 async function evalValueBound(ctx, def) {
   const branch = await loadBranch(ctx, def.loader);
@@ -509,6 +526,7 @@ async function evalPctMax(ctx, def) {
 const EVALUATORS = {
   raw0: evalRaw0,
   boolcfg_ge: evalBoolCfgGe,
+  boolcfg_gt: evalBoolCfgGt,
   floor_min: evalValueBound,
   ceiling_max: evalValueBound,
   pctmax_cfg: evalPctMax,

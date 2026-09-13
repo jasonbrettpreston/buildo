@@ -48,6 +48,7 @@ function boundFor(def, LOGIC_VAR_DEFS) {
   switch (def.kind) {
     case 'raw0':
     case 'boolcfg_ge':
+    case 'boolcfg_gt':
       return { limit: 'viol == 0' };
     case 'floor_min':
       return { limit: `value_min ${defaultFor(LOGIC_VAR_DEFS, def.cfgVar)}`, limit_from_config: def.cfgVar };

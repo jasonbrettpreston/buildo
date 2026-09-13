@@ -60,17 +60,32 @@
  *      row, not merely referenced inside an un-audited `warnings.push`. A Nothing-
  *      Hidden addition (2 new visible audit rows), never a removal.
  *
- *  (4) `inspection_ancient_dates_count_warn_max` (item 18, report §2.4) is
- *      DECLARED (Rule 3, the test suite's 26-name list) but genuinely NOT bound
- *      via `limit_from_config` — re-reading the pre-conversion `checkInsp` helper
- *      (`:741-745`) this session found its `threshold` PARAMETER is DISPLAY TEXT
- *      ONLY: the actual status is `value > 0 ? level : 'PASS'` for every one of
- *      its 12 call sites, including `ancient_dates`'s own `'<= 5'` label — the "5"
- *      was NEVER compared against anything at runtime. Wiring the new var into a
- *      real 5-tolerant bound would be a BEHAVIOUR CHANGE mid-conversion (forbidden,
- *      Spec 123 §1.1/KFM3); the check stays `viol == 0` (value > 0 → WARN,
- *      verbatim). Filed as ADB-D7 (`docs/reports/defect-ledger.md`, OPEN · PIN) —
- *      not fixed here.
+ *  (4) `inspection_ancient_dates_count_warn_max` (item 18, report §2.4) was
+ *      DECLARED (Rule 3, the test suite's 26-name list) at commit 7 but genuinely
+ *      NOT bound via `limit_from_config` — re-reading the pre-conversion
+ *      `checkInsp` helper (`:741-745`) that session found its `threshold`
+ *      PARAMETER was DISPLAY TEXT ONLY: the actual status was `value > 0 ? level
+ *      : 'PASS'` for every one of its 12 call sites, including `ancient_dates`'s
+ *      own `'<= 5'` label — the "5" was NEVER compared against anything at
+ *      runtime. Wiring the var into a real bound at commit 7 would have been a
+ *      BEHAVIOUR CHANGE mid-conversion (forbidden, Spec 123 §1.1/KFM3); filed as
+ *      ADB-D7 (`docs/reports/defect-ledger.md`), fix-after.
+ *
+ *      FIXED at commit 8c (peel, post-conversion — exactly where Spec 123 §3.1
+ *      says a pinned DEFECT gets fixed): `ancient_dates` now uses `kind:
+ *      'boolcfg_gt'` (`value > ctx.config.inspection_ancient_dates_count_warn_max`,
+ *      a genuine strict-greater-than comparator — the exact "<=5 is safe, >5
+ *      warns" semantics the old display label always promised, distinct from
+ *      the existing `boolcfg_ge` (`>=`) kind its 3 siblings use). Verdict-safety
+ *      measured, not assumed, before wiring: `ancient_dates` read 0 in every PRE
+ *      and POST golden capture where the check is reachable (deep_scrapes +
+ *      standalone) — 0 is not `> 0` nor `> 5`, so both the old and new
+ *      conditions agree and no verdict changed. `checkRow`'s `observed` value
+ *      for `boolcfg_gt` reads `observation.detail` (the raw count), identical to
+ *      `raw0`'s `observation.violations` when the branch loader hands back a
+ *      finite number — so the rendered row (`value`, `threshold: 'viol == 0'`)
+ *      is BYTE-IDENTICAL to the pre-fix `raw0` shape at the measured value (0),
+ *      confirmed by recapture (§8c).
  */
 
 /** id-safe slug: lowercase, non [a-z0-9] runs -> '_', trim/collapse. Matches step.schema.json's `^[a-z][a-z0-9_]*$`. */
@@ -97,9 +112,10 @@ const COST_MAG_ACCEPT = ['04 202812 BLD', '07 129713 BLD', '06 196930 BLD'];
 
 // ---------------------------------------------------------------------------
 // LOGIC_VAR_DEFS — 8 pre-existing (live) + 18 newly-adjudicated (report §2.4,
-// commit-7 §"Tunables to declare"). All verdict-affecting (or, for
-// inspection_ancient_dates_count_warn_max, declared per Rule 3's registration
-// requirement though not yet wired — see consequence (4) above) -> on_invalid: "fail".
+// commit-7 §"Tunables to declare"). All verdict-affecting -> on_invalid: "fail"
+// (`inspection_ancient_dates_count_warn_max` was declared-but-not-wired at
+// commit 7 — see consequence (4) above — and became genuinely verdict-affecting
+// at commit 8c, ADB-D7).
 // `calibration_freshness_warn_hours` is KNOWINGLY-RETIRED FROM THIS STEP (ADB-D5,
 // zero runtime consumption in assert-data-bounds.js since migration 106) — absent
 // from this list, but NOT deleted from scripts/seeds/logic_variables.json: a
@@ -140,7 +156,7 @@ const LOGIC_VAR_DEFS = [
   { name: 'coa_fsi_gt_threshold', default: 5, min: 1, max: 50, group: 'CoA Gates & Staleness', description: 'assert-data-bounds: coa_applications.coa_fsi magnitude-watch threshold (c53f60a8 — max observed ~3.15).' },
   { name: 'coa_gfa_over_lot_multiple', default: 3, min: 1, max: 20, group: 'CoA Gates & Staleness', description: 'assert-data-bounds: coa_applications.max_buildable_gfa_sqm-over-lot_size_sqm multiple watch (c53f60a8).' },
   { name: 'coa_gfa_over_lot_warn_max', default: 45, min: 1, max: 100000, group: 'CoA Gates & Staleness', description: 'assert-data-bounds: row-count WARN ceiling for coa_maxbuild_gfa_gt3lot (c53f60a8 — baseline ~29 oversized-envelope).' },
-  { name: 'inspection_ancient_dates_count_warn_max', default: 5, min: 1, max: 100000, group: 'Data Quality Thresholds', description: 'assert-data-bounds: DECLARED per Rule 3 (report §2.4 item 18) but NOT YET WIRED to a real bound — the pre-conversion checkInsp() helper only ever compares value > 0 for ancient_dates; its displayed "<= 5" threshold was never a live comparison. See ADB-D7 (defect-ledger.md), fix-after.' },
+  { name: 'inspection_ancient_dates_count_warn_max', default: 5, min: 1, max: 100000, group: 'Data Quality Thresholds', description: 'assert-data-bounds: permit_inspections.inspection_date < 2020-01-01 row-count WARN ceiling — count > this value warns. WIRED at commit 8c (ADB-D7, defect-ledger.md, CLOSED): the pre-conversion checkInsp() helper only ever compared value > 0 for ancient_dates; its displayed "<= 5" threshold was never a live comparison until this fix (kind: boolcfg_gt). Verdict-safety measured before wiring: ancient_dates read 0 in every golden capture.' },
 ];
 
 // ---------------------------------------------------------------------------
@@ -222,7 +238,7 @@ const CHECK_DEFS = [
   { id: 'completed_without_date', chains: ['deep_scrapes'], severity: 'WARN', kind: 'raw0', loader: 'inspection', field: 'completedNoDate', cfgVar: null, fence: null, whyText: "permit_inspections rows with status!='Outstanding' AND a null inspection_date." },
   { id: 'duplicate_stages', chains: ['deep_scrapes'], severity: 'FAIL', kind: 'raw0', loader: 'inspection', field: 'inspDupes', cfgVar: null, fence: null, whyText: 'Duplicate (permit_num, stage_name) groups — composite-key uniqueness invariant.' },
   { id: 'future_dates', chains: ['deep_scrapes'], severity: 'FAIL', kind: 'raw0', loader: 'inspection', field: 'futureDates', cfgVar: null, fence: null, whyText: 'permit_inspections.inspection_date after CURRENT_DATE.' },
-  { id: 'ancient_dates', chains: ['deep_scrapes'], severity: 'WARN', kind: 'raw0', loader: 'inspection', field: 'ancientDates', cfgVar: null, fence: null, whyText: "permit_inspections.inspection_date before 2020-01-01. Displays inspection_ancient_dates_count_warn_max in this check's detail for operator visibility, but the bound itself stays value > 0 (consequence 4 — checkInsp() never compared the pre-conversion '<= 5' label against anything; wiring a real >5 tolerance now would be an undeclared behaviour change). ADB-D7, defect-ledger.md, OPEN · PIN." },
+  { id: 'ancient_dates', chains: ['deep_scrapes'], severity: 'WARN', kind: 'boolcfg_gt', loader: 'inspection', field: 'ancientDates', cfgVar: 'inspection_ancient_dates_count_warn_max', fence: null, whyText: "permit_inspections.inspection_date before 2020-01-01, WARN when the count exceeds inspection_ancient_dates_count_warn_max (default 5). ADB-D7 fix-after (commit 8c, defect-ledger.md, CLOSED): pre-conversion checkInsp() never compared its displayed '<= 5' label against anything (status was unconditionally value > 0); wiring a real > 5 tolerance here IS the wiring ADB-D7 named as deferred. Measured safe before wiring: ancient_dates read 0 in every one of the 5 PRE and 5 POST golden captures where the check is reachable (deep_scrapes + standalone) — both the old (value > 0) and new (value > 5) conditions agree at value=0, so no verdict changed. See docs/reports/2026-09-12-batch1-i2-assert-data-bounds-assessment.md §8c for the measurement." },
   { id: 'date_before_permit_year', chains: ['deep_scrapes'], severity: 'FAIL', kind: 'raw0', loader: 'inspection', field: 'dateBeforePermit', cfgVar: null, fence: null, whyText: "permit_inspections.inspection_date year precedes the permit_num's 2-digit year prefix." },
 ];
 
