@@ -64,6 +64,24 @@ describe('system map — G0 owner-row contract (both directions)', () => {
     expect(missing).toEqual([]);
   });
 
+  it('every chained manifest step has an owner row (WF2 2026-09-14: 26 of 65 chained steps had none — their chain specs said "all N scripts listed above" in prose the generator cannot read)', async () => {
+    const md = await generated();
+    const manifest = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, 'scripts/manifest.json'), 'utf8')) as {
+      scripts: Record<string, { file: string }>;
+      chains: Record<string, string[]>;
+    };
+    const chained = new Set(Object.values(manifest.chains).flat());
+    const unowned: string[] = [];
+    let checked = 0;
+    for (const [slug, entry] of Object.entries(manifest.scripts)) {
+      if (!chained.has(slug)) continue;
+      checked += 1;
+      if (!md.includes(`\`${entry.file}\``)) unowned.push(`${slug} (${entry.file})`);
+    }
+    expect(checked).toBeGreaterThanOrEqual(65);
+    expect(unowned).toEqual([]);
+  });
+
   it('the measured false negative is closed: assert-data-bounds.js (Spec 44 Target Files) greps in row 44', async () => {
     const md = await generated();
     const row44 = md.split('\n').find((l) => l.startsWith('| 44 | `01-pipeline/44_chain_deep_scrapes.md`'));

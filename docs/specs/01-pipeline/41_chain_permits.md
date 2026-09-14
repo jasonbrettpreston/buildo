@@ -232,7 +232,38 @@ The decision lives in one pure exported function, `classifyHaltDecision()`.
 
 ### Target Files
 - `scripts/manifest.json` (permits chain array)
-- All 32 scripts listed in the step breakdown above
+- Every script in the manifest `chains.permits` array, listed explicitly so the generated system map carries an owner row for each step (Spec 123 G0; WF2 2026-09-14 — the prior "all N scripts" prose was invisible to `npm run system-map`):
+- `scripts/quality/assert-schema.js` — step 1 `assert_schema`
+- `scripts/load-permits.js` — step 2 `permits`
+- `scripts/close-stale-permits.js` — step 3 `close_stale_permits`
+- `scripts/classify-permit-phase.js` — step 4 `classify_permit_phase`
+- `scripts/classify-scope.js` — step 5 `classify_scope`
+- `scripts/extract-builders.js` — step 6 `builders`
+- `scripts/link-wsib.js` — step 7 `link_wsib`
+- `scripts/geocode-permits.js` — step 8 `geocode_permits`
+- `scripts/link-parcels.js` — step 9 `link_parcels`
+- `scripts/enrich-permits.js` — step 10 `enrich_permits`
+- `scripts/link-neighbourhoods.js` — step 11 `link_neighbourhoods`
+- `scripts/link-massing.js` — step 12 `link_massing`
+- `scripts/link-similar.js` — step 13 `link_similar`
+- `scripts/classify-permits.js` — step 14 `classify_permits`
+- `scripts/compute-storey-norms.js` — step 15 `compute_storey_norms`
+- `scripts/compute-build-norms.js` — step 16 `compute_build_norms`
+- `scripts/backfill-realtor-permit-trades.js` — step 17 `backfill_realtor_permit_trades`
+- `scripts/compute-cost-estimates.js` — step 18 `compute_cost_estimates`
+- `scripts/compute-timing-calibration-v2.js` — step 19 `compute_timing_calibration_v2`
+- `scripts/link-coa.js` — step 20 `link_coa`
+- `scripts/refresh-snapshot.js` — step 21 `refresh_snapshot`
+- `scripts/quality/assert-data-bounds.js` — step 22 `assert_data_bounds`
+- `scripts/quality/assert-engine-health.js` — step 23 `assert_engine_health`
+- `scripts/classify-lifecycle-phase.js` — step 24 `classify_lifecycle_phase`
+- `scripts/compute-phase-calibration.js` — step 26 `compute_phase_calibration`
+- `scripts/compute-trade-forecasts.js` — step 27 `compute_trade_forecasts`
+- `scripts/compute-opportunity-scores.js` — step 28 `compute_opportunity_scores`
+- `scripts/update-tracked-projects.js` — step 29 `update_tracked_projects`
+- `scripts/dispatch-notifications.js` — step 30 `dispatch_notifications`
+- `scripts/quality/assert-global-coverage.js` — step 32 `assert_global_coverage`
+- `scripts/backup-db.js` — step 33 `backup_db`
 - `scripts/quality/assert-lifecycle-phase-distribution.js` (wired at step 25)
 - `scripts/quality/assert-entity-tracing.js` (wired at step 30)
 

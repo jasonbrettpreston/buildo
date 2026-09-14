@@ -377,6 +377,9 @@ self-documenting threshold string + row-derived WARN verdict on a small probe mi
 - `scripts/classify-inspection-status.js`
 - `scripts/quality/assert-network-health.js`, `scripts/quality/assert-staleness.js`
 - `scripts/quality/assert-data-bounds.js` — §4 "Data bounds (assert_data_bounds, deep_scrapes scope)" is this file's owning subsection; the script itself is fan-out shared with the permits/coa/sources chains (Specs 41/42/43), not deep_scrapes-exclusive (batch1 I2 PH-0, 2026-09-12)
+- Remaining `chains.deep_scrapes` steps, listed explicitly so the generated system map carries an owner row for each (Spec 123 G0; WF2 2026-09-14):
+- `scripts/refresh-snapshot.js` — step 4 `refresh_snapshot`
+- `scripts/quality/assert-engine-health.js` — step 6 `assert_engine_health`
 
 ### Out-of-Scope Files
 - `scripts/poc-aic-scraper-v2.js` — legacy JS scraper (deprecated)

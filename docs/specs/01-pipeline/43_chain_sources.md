@@ -170,7 +170,35 @@ Every other step (including `link_parcels`, `link_neighbourhoods`, `link_wsib`, 
 
 ### Target Files
 - `scripts/manifest.json` (`chains.sources` array + the `link_massing`/`enrich_parcels` `chain_args.sources` overrides)
-- All 27 scripts listed in the step breakdown
+- Every script in the manifest `chains.sources` array, listed explicitly so the generated system map carries an owner row for each step (Spec 123 G0; WF2 2026-09-14 — the prior "all N scripts" prose was invisible to `npm run system-map`):
+- `scripts/reconcile-runs.js` — step 1 `reconcile`
+- `scripts/quality/assert-schema.js` — step 2 `assert_schema`
+- `scripts/load-address-points.js` — step 3 `address_points`
+- `scripts/geocode-permits.js` — step 4 `geocode_permits`
+- `scripts/load-parcels.js` — step 5 `parcels`
+- `scripts/load-ravines.js` — step 6 `load_ravines`
+- `scripts/load-heritage.js` — step 7 `load_heritage`
+- `scripts/load-centreline.js` — step 8 `load_centreline`
+- `scripts/link-parcel-addresses.js` — step 9 `link_parcel_addresses`
+- `scripts/compute-centroids.js` — step 10 `compute_centroids`
+- `scripts/link-parcels.js` — step 11 `link_parcels`
+- `scripts/enrich-ravines.js` — step 12 `enrich_ravines`
+- `scripts/enrich-heritage.js` — step 13 `enrich_heritage`
+- `scripts/enrich-centreline.js` — step 14 `enrich_centreline`
+- `scripts/load-massing.js` — step 15 `massing`
+- `scripts/link-massing.js` — step 16 `link_massing`
+- `scripts/load-neighbourhoods.js` — step 17 `neighbourhoods`
+- `scripts/link-neighbourhoods.js` — step 18 `link_neighbourhoods`
+- `scripts/load-wsib.js` — step 19 `load_wsib`
+- `scripts/link-wsib.js` — step 20 `link_wsib`
+- `scripts/load-zoning.js` — step 21 `load_zoning`
+- `scripts/enrich-parcels.js` — step 22 `enrich_parcels`
+- `scripts/compute-parcel-cost-estimates.js` — step 23 `compute_parcel_cost_estimates`
+- `scripts/quality/assert-global-coverage.js` — step 24 `assert_global_coverage`
+- `scripts/quality/assert-parcel-sanity.js` — step 25 `assert_parcel_sanity`
+- `scripts/refresh-snapshot.js` — step 26 `refresh_snapshot`
+- `scripts/quality/assert-data-bounds.js` — step 27 `assert_data_bounds`
+- `scripts/quality/assert-engine-health.js` — step 28 `assert_engine_health`
 
 ### Out-of-Scope Files
 - `src/lib/parcels/`, `src/lib/spatial/` — TypeScript API paths

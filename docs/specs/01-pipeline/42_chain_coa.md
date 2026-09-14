@@ -134,6 +134,20 @@ with new CoA linkage are reclassified on the next daily permits chain run (≤24
 - `scripts/load-coa.js`, `scripts/link-coa.js`, `scripts/create-pre-permits.js`
 - `migrations/061_street_name_normalized.sql`
 - `scripts/quality/assert-coa-freshness.js`, `scripts/quality/assert-pre-permit-aging.js`
+- Remaining `chains.coa` steps, listed explicitly so the generated system map carries an owner row for each (Spec 123 G0; WF2 2026-09-14):
+- `scripts/quality/assert-schema.js` — step 1 `assert_schema`
+- `scripts/link-coa-to-parcels.js` — step 4 `link_coa_to_parcels`
+- `scripts/enrich-permits.js` — step 5 `enrich_coa_zoning`
+- `scripts/classify-coa-scope.js` — step 6 `classify_coa_scope`
+- `scripts/classify-coa-trades.js` — step 7 `classify_coa_trades`
+- `scripts/compute-coa-cost-estimates.js` — step 8 `compute_coa_cost_estimates`
+- `scripts/refresh-snapshot.js` — step 10 `refresh_snapshot`
+- `scripts/quality/assert-data-bounds.js` — step 11 `assert_data_bounds`
+- `scripts/quality/assert-engine-health.js` — step 12 `assert_engine_health`
+- `scripts/classify-lifecycle-phase.js` — step 13 `classify_lifecycle_phase`
+- `scripts/quality/assert-lifecycle-phase-distribution.js` — step 14 `assert_lifecycle_phase_distribution`
+- `scripts/compute-phase-calibration.js` — step 15 `compute_phase_calibration`
+- `scripts/quality/assert-global-coverage.js` — step 16 `assert_global_coverage`
 
 ### Out-of-Scope Files
 - `src/lib/coa/linker.ts` — TypeScript API path (governed by CoA linking step spec)
