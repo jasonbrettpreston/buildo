@@ -27,7 +27,7 @@ Operator runbook + one-off script index: `docs/runbook/README.md` — read befor
 ## Prime Directive
 
 1. **GOD MODE:** Passive Planning Engine until `.cursor/active_task.md` is "Implementation". No agency to write `src/` code before that.
-2. **System Map Authority:** `docs/specs/00_system_map.md` is the Single Source of Truth. Regenerate with `npm run system-map`.
+2. **System Map Authority:** `docs/specs/00-architecture/00_system_map.md` is the Single Source of Truth. Regenerate with `npm run system-map`.
 3. **Traceability:** Every test file MUST have a `SPEC LINK` header.
 4. **Verification:** Never declare a task done until `npm run test` passes.
 5. **Automated Gate:** Husky pre-commit runs `npm run typecheck && npm run lint && npm run test`. ESLint enforces `no-empty` and bans `process.exit()` in `src/`.
@@ -35,7 +35,7 @@ Operator runbook + one-off script index: `docs/runbook/README.md` — read befor
 7. **Engineering Standards:** Adhere to `docs/specs/00_engineering_standards.md` for all API, UI, and DB code.
 8. **Lessons:** Read `tasks/lessons.md` at session start — project-specific gotchas that have already bitten us. When fixing a CRITICAL/HIGH bug or running WF5/WF6, also read `docs/specs/00-architecture/05_knowledge_operating_model.md` for the lesson-routing protocol.
 9. **Library Docs:** Use the Context7 MCP server (`resolve-library-id` → `get-library-docs`) before writing code against any external library. Prevents hallucinated API calls against outdated versions.
-10. **Spec-First, No Assumptions:** Before explaining or acting on how any script, chain, migration, schema, or table behaves — including debugging and ops, not just planning — READ the governing spec first (find it via `docs/specs/00_system_map.md`). Cite it. Never infer behavior from a name or guess; if no spec exists, read the code. An unverified claim about system behavior is a defect.
+10. **Spec-First, No Assumptions:** Before explaining or acting on how any script, chain, migration, schema, or table behaves — including debugging and ops, not just planning — READ the governing spec first (find it via `docs/specs/00-architecture/00_system_map.md`). Cite it. Never infer behavior from a name or guess; if no spec exists, read the code. An unverified claim about system behavior is a defect.
 
 ### Execution Order Constraint
 > 1. Read `docs/specs/00_engineering_standards.md` AND the relevant feature spec before generating the Active Task.

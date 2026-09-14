@@ -12,6 +12,7 @@
 
 import fs from 'fs';
 import path from 'path';
+import { fileURLToPath } from 'url';
 
 const ROOT = path.resolve(import.meta.dirname, '..');
 const SPECS_DIR = path.join(ROOT, 'docs', 'specs');
@@ -118,9 +119,11 @@ function parseSpec(filePath) {
   };
 }
 
-function truncateList(items, max = 3) {
-  if (items.length <= max) return items.map(f => `\`${f}\``).join(', ');
-  return items.slice(0, max).map(f => `\`${f}\``).join(', ') + `, +${items.length - max} more`;
+// WF2 2026-09-14: NO cap. The map is the Single Source of Truth (CLAUDE.md PD #2) and Spec 123 G0
+// greps it for a step file; the former `max = 3` + `+N more` collapse made that grep a false
+// negative for every spec with >3 target files (measured: assert-data-bounds.js in Spec 44 → 0 hits).
+function formatList(items) {
+  return items.map(f => `\`${f}\``).join(', ');
 }
 
 /**
@@ -140,8 +143,12 @@ function collectSpecs(baseDir, subDir) {
     }));
 }
 
-// ── Main ────────────────────────────────────────────────────────────────────
-
+// ── Build ───────────────────────────────────────────────────────────────────
+// Pure: reads the spec files, returns the markdown. Exported so the drift lock
+// (src/tests/system-map.infra.test.ts) can assert the COMMITTED map equals what the
+// specs currently produce — the map is derived, never hand-edited, and the existing
+// pre-commit test run is the only process that keeps it accurate.
+export function buildSystemMap() {
 let totalSpecs = 0;
 let sectionCount = 0;
 
@@ -166,8 +173,8 @@ for (const section of SECTIONS) {
   md += `|---|-----------|---------|---------------|-------|--------|\n`;
 
   for (const spec of specs) {
-    const impl = spec.implFiles.length > 0 ? truncateList(spec.implFiles) : '—';
-    const tests = spec.testFiles.length > 0 ? truncateList(spec.testFiles) : '—';
+    const impl = spec.implFiles.length > 0 ? formatList(spec.implFiles) : '—';
+    const tests = spec.testFiles.length > 0 ? formatList(spec.testFiles) : '—';
     md += `| ${spec.prefix} | \`${spec.relPath}\` | ${spec.title} | ${impl} | ${tests} | ${spec.status} |\n`;
   }
 
@@ -194,7 +201,13 @@ md += `---
 | Pipeline Manifest | \`scripts/manifest.json\` |
 | Specs | \`docs/specs/\` (platform, product, pipeline) |
 `;
+return { md, totalSpecs, sectionCount };
+}
 
-fs.writeFileSync(OUTPUT, md);
-console.log(`✔ Generated ${path.relative(ROOT, OUTPUT)}`);
-console.log(`  ${totalSpecs} specs across ${sectionCount} sections`);
+// ── Main ────────────────────────────────────────────────────────────────────
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  const { md, totalSpecs, sectionCount } = buildSystemMap();
+  fs.writeFileSync(OUTPUT, md);
+  console.log(`✔ Generated ${path.relative(ROOT, OUTPUT)}`);
+  console.log(`  ${totalSpecs} specs across ${sectionCount} sections`);
+}
