@@ -1,0 +1,1934 @@
+{
+  "harness": "scripts/analysis/capture-step-golden.js",
+  "spec": "docs/specs/01-pipeline/122_pipeline_step_optimization.md §5.3",
+  "step": "scripts/quality/assert-engine-health.js",
+  "chain": "coa",
+  "git_head": "6bf28e88ee30302ef7423f42470a691e19354bbc",
+  "exit_code": 0,
+  "signal": null,
+  "summary": {
+    "records_total": 90,
+    "records_new": null,
+    "records_updated": 6,
+    "records_meta": {
+      "checks_warned": 1,
+      "checks_failed": 0,
+      "tables_checked": 90,
+      "tables_vacuumed": 0,
+      "warnings": [
+        "data_quality_snapshots: update/insert ratio 15.0x (15 upd vs 1 ins)"
+      ],
+      "engine_health": [
+        {
+          "table_name": "address_points",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 8,
+          "idx_scan": 4,
+          "seq_ratio": 0.6667
+        },
+        {
+          "table_name": "admin_audit_log",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 0,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "admin_backup_codes",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 0,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "admin_watchlist",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 0,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "archetype_cost_rates",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 0,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "building_footprints",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 16,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "coa_applications",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 34,
+          "idx_scan": 16,
+          "seq_ratio": 0.68
+        },
+        {
+          "table_name": "cost_estimates",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 48,
+          "idx_scan": 0,
+          "seq_ratio": 1
+        },
+        {
+          "table_name": "data_quality_snapshots",
+          "n_live_tup": 31,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 78,
+          "idx_scan": 32,
+          "seq_ratio": 0.7091
+        },
+        {
+          "table_name": "device_tokens",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 0,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "engine_health_snapshots",
+          "n_live_tup": 87,
+          "n_dead_tup": 2,
+          "dead_ratio": 0.023,
+          "seq_scan": 0,
+          "idx_scan": 90,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "enrich_parcels_pass3_scope",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 0,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "entities",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 24,
+          "idx_scan": 12,
+          "seq_ratio": 0.6667
+        },
+        {
+          "table_name": "entitlements",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 0,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "entity_contacts",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 0,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "entity_projects",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 0,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "heritage_districts",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 0,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "heritage_properties",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 0,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "inspection_stage_map",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 0,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "lead_analytics",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 0,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "lead_parcels",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 14080,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "lead_products",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 0,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "lead_trades",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 0,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "lead_view_events",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 0,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "lead_views",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 0,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "lifecycle_status_history",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 0,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "lifecycle_transitions",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 0,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "logic_variables",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 22,
+          "idx_scan": 38,
+          "seq_ratio": 0.3667
+        },
+        {
+          "table_name": "mv_monthly_permit_stats",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 0,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "neighbourhood_build_norms",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 0,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "neighbourhood_storey_norms",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 0,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "neighbourhoods",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 0,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "notification_dispatches",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 0,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "notifications",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 0,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "parcel_address_points",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 6,
+          "idx_scan": 2372240,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "parcel_buildings",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 12,
+          "idx_scan": 24,
+          "seq_ratio": 0.3333
+        },
+        {
+          "table_name": "parcels",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 200,
+          "idx_scan": 1094696,
+          "seq_ratio": 0.0002
+        },
+        {
+          "table_name": "permit_history",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 0,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "permit_inspections",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 16,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "permit_parcels",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 28,
+          "idx_scan": 16,
+          "seq_ratio": 0.6364
+        },
+        {
+          "table_name": "permit_phase_transitions",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 0,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "permit_products",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 0,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "permit_scrape_outcome_rollup",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 0,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "permit_scrape_outcomes",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 0,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "permit_trades",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 32,
+          "idx_scan": 0,
+          "seq_ratio": 1
+        },
+        {
+          "table_name": "permit_type_classifications",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 0,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "permits",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 104,
+          "idx_scan": 25402,
+          "seq_ratio": 0.0041
+        },
+        {
+          "table_name": "phase_calibration",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 0,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "phase_stay_calibration",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 0,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "pipeline_runs",
+          "n_live_tup": 1833,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 96,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "pipeline_schedules",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 0,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "product_groups",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 0,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "profiles",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 0,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "ravines",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 6,
+          "idx_scan": 0,
+          "seq_ratio": 1
+        },
+        {
+          "table_name": "schema_migrations",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 71,
+          "idx_scan": 0,
+          "seq_ratio": 1
+        },
+        {
+          "table_name": "schema_migrations",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 1,
+          "idx_scan": 0,
+          "seq_ratio": 1
+        },
+        {
+          "table_name": "schema_migrations",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 1,
+          "idx_scan": 0,
+          "seq_ratio": 1
+        },
+        {
+          "table_name": "schema_migrations",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 51,
+          "idx_scan": 0,
+          "seq_ratio": 1
+        },
+        {
+          "table_name": "scope_intensity_matrix",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 0,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "scraper_queue",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 0,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "spatial_ref_sys",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 134,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "stripe_webhook_events",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 0,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "subscribe_nonces",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 0,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "supplier_products",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 0,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "supplier_trades",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 0,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "suppliers",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 0,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "sync_runs",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 16,
+          "idx_scan": 0,
+          "seq_ratio": 1
+        },
+        {
+          "table_name": "toronto_centreline",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 0,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "tracked_projects",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 0,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "trade_configurations",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 22,
+          "idx_scan": 0,
+          "seq_ratio": 1
+        },
+        {
+          "table_name": "trade_forecasts",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 53088,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "trade_mapping_rules",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 0,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "trade_products",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 0,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "trade_sqft_rates",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 0,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "trade_suppliers",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 0,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "trades",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 0,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "universal_stream_catalog",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 0,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "universal_stream_trade_signals",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 0,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "user_profiles",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 0,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "wsib_registry",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 4,
+          "idx_scan": 12,
+          "seq_ratio": 0.25
+        },
+        {
+          "table_name": "zoning_building_setback_overlay",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 0,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "zoning_bylaw_areas",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 0,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "zoning_height_overlay",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 0,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "zoning_lot_coverage_overlay",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 0,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "zoning_parking_zone_overlay",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 0,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "zoning_policy_area_overlay",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 0,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "zoning_policy_road_overlay",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 0,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "zoning_priority_retail_overlay",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 0,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "zoning_queenstw_eat_overlay",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 0,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "zoning_rooming_house_overlay",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 0,
+          "seq_ratio": 0
+        }
+      ],
+      "audit_table": {
+        "phase": 9,
+        "name": "CoA Engine Health",
+        "verdict": "PASS",
+        "rows": [
+          {
+            "metric": "live_rows",
+            "value": 0,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "dead_rows",
+            "value": 0,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "dead_tuple_pct",
+            "value": "0%",
+            "threshold": "< 10%",
+            "status": "PASS"
+          },
+          {
+            "metric": "update_insert_ratio",
+            "value": 0,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "last_autovacuum",
+            "value": null,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "sys_velocity_rows_sec",
+            "value": 258.62,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "sys_duration_ms",
+            "value": 348,
+            "threshold": null,
+            "status": "INFO"
+          }
+        ]
+      }
+    }
+  },
+  "summary_count": 1,
+  "meta": [
+    {
+      "reads": {
+        "pg_stat_user_tables": [
+          "relname",
+          "n_live_tup",
+          "n_dead_tup",
+          "seq_scan",
+          "idx_scan",
+          "n_tup_ins",
+          "n_tup_upd"
+        ]
+      },
+      "writes": {
+        "engine_health_snapshots": [
+          "table_name",
+          "n_live_tup",
+          "n_dead_tup",
+          "dead_ratio",
+          "seq_scan",
+          "idx_scan",
+          "seq_ratio"
+        ]
+      }
+    }
+  ],
+  "parse_errors": [],
+  "verdict": "PASS",
+  "ledger_status": [],
+  "stdout": "\n=== CQA Tier 3: Engine Health & Volume Volatility ===\n\nMonitoring 87 tables\n\n  OK: address_points — dead tuple ratio 0.0%\n  OK: admin_audit_log — dead tuple ratio 0.0%\n  OK: admin_backup_codes — dead tuple ratio 0.0%\n  OK: admin_watchlist — dead tuple ratio 0.0%\n  OK: archetype_cost_rates — dead tuple ratio 0.0%\n  OK: building_footprints — dead tuple ratio 0.0%\n  OK: coa_applications — dead tuple ratio 0.0%\n  OK: cost_estimates — dead tuple ratio 0.0%\n  OK: data_quality_snapshots — dead tuple ratio 0.0%\n  WARN: data_quality_snapshots — update ping-pong 15.0x\n  OK: device_tokens — dead tuple ratio 0.0%\n  OK: engine_health_snapshots — dead tuple ratio 2.3%\n  OK: enrich_parcels_pass3_scope — dead tuple ratio 0.0%\n  OK: entities — dead tuple ratio 0.0%\n  OK: entitlements — dead tuple ratio 0.0%\n  OK: entity_contacts — dead tuple ratio 0.0%\n  OK: entity_projects — dead tuple ratio 0.0%\n  OK: heritage_districts — dead tuple ratio 0.0%\n  OK: heritage_properties — dead tuple ratio 0.0%\n  OK: inspection_stage_map — dead tuple ratio 0.0%\n  OK: lead_analytics — dead tuple ratio 0.0%\n  OK: lead_parcels — dead tuple ratio 0.0%\n  OK: lead_products — dead tuple ratio 0.0%\n  OK: lead_trades — dead tuple ratio 0.0%\n  OK: lead_view_events — dead tuple ratio 0.0%\n  OK: lead_views — dead tuple ratio 0.0%\n  OK: lifecycle_status_history — dead tuple ratio 0.0%\n  OK: lifecycle_transitions — dead tuple ratio 0.0%\n  OK: logic_variables — dead tuple ratio 0.0%\n  OK: mv_monthly_permit_stats — dead tuple ratio 0.0%\n  OK: neighbourhood_build_norms — dead tuple ratio 0.0%\n  OK: neighbourhood_storey_norms — dead tuple ratio 0.0%\n  OK: neighbourhoods — dead tuple ratio 0.0%\n  OK: notification_dispatches — dead tuple ratio 0.0%\n  OK: notifications — dead tuple ratio 0.0%\n  OK: parcel_address_points — dead tuple ratio 0.0%\n  OK: parcel_buildings — dead tuple ratio 0.0%\n  OK: parcels — dead tuple ratio 0.0%\n  OK: permit_history — dead tuple ratio 0.0%\n  OK: permit_inspections — dead tuple ratio 0.0%\n  OK: permit_parcels — dead tuple ratio 0.0%\n  OK: permit_phase_transitions — dead tuple ratio 0.0%\n  OK: permit_products — dead tuple ratio 0.0%\n  OK: permit_scrape_outcome_rollup — dead tuple ratio 0.0%\n  OK: permit_scrape_outcomes — dead tuple ratio 0.0%\n  OK: permit_trades — dead tuple ratio 0.0%\n  OK: permit_type_classifications — dead tuple ratio 0.0%\n  OK: permits — dead tuple ratio 0.0%\n  OK: phase_calibration — dead tuple ratio 0.0%\n  OK: phase_stay_calibration — dead tuple ratio 0.0%\n  OK: pipeline_runs — dead tuple ratio 0.0%\n  OK: pipeline_schedules — dead tuple ratio 0.0%\n  OK: product_groups — dead tuple ratio 0.0%\n  OK: profiles — dead tuple ratio 0.0%\n  OK: ravines — dead tuple ratio 0.0%\n  OK: schema_migrations — dead tuple ratio 0.0%\n  OK: schema_migrations — dead tuple ratio 0.0%\n  OK: schema_migrations — dead tuple ratio 0.0%\n  OK: schema_migrations — dead tuple ratio 0.0%\n  OK: scope_intensity_matrix — dead tuple ratio 0.0%\n  OK: scraper_queue — dead tuple ratio 0.0%\n  OK: spatial_ref_sys — dead tuple ratio 0.0%\n  OK: stripe_webhook_events — dead tuple ratio 0.0%\n  OK: subscribe_nonces — dead tuple ratio 0.0%\n  OK: supplier_products — dead tuple ratio 0.0%\n  OK: supplier_trades — dead tuple ratio 0.0%\n  OK: suppliers — dead tuple ratio 0.0%\n  OK: sync_runs — dead tuple ratio 0.0%\n  OK: toronto_centreline — dead tuple ratio 0.0%\n  OK: tracked_projects — dead tuple ratio 0.0%\n  OK: trade_configurations — dead tuple ratio 0.0%\n  OK: trade_forecasts — dead tuple ratio 0.0%\n  OK: trade_mapping_rules — dead tuple ratio 0.0%\n  OK: trade_products — dead tuple ratio 0.0%\n  OK: trade_sqft_rates — dead tuple ratio 0.0%\n  OK: trade_suppliers — dead tuple ratio 0.0%\n  OK: trades — dead tuple ratio 0.0%\n  OK: universal_stream_catalog — dead tuple ratio 0.0%\n  OK: universal_stream_trade_signals — dead tuple ratio 0.0%\n  OK: user_profiles — dead tuple ratio 0.0%\n  OK: wsib_registry — dead tuple ratio 0.0%\n  OK: zoning_building_setback_overlay — dead tuple ratio 0.0%\n  OK: zoning_bylaw_areas — dead tuple ratio 0.0%\n  OK: zoning_height_overlay — dead tuple ratio 0.0%\n  OK: zoning_lot_coverage_overlay — dead tuple ratio 0.0%\n  OK: zoning_parking_zone_overlay — dead tuple ratio 0.0%\n  OK: zoning_policy_area_overlay — dead tuple ratio 0.0%\n  OK: zoning_policy_road_overlay — dead tuple ratio 0.0%\n  OK: zoning_priority_retail_overlay — dead tuple ratio 0.0%\n  OK: zoning_queenstw_eat_overlay — dead tuple ratio 0.0%\n  OK: zoning_rooming_house_overlay — dead tuple ratio 0.0%\n\n  Snapshot: 90 tables written to engine_health_snapshots (6 actually updated)\nPIPELINE_SUMMARY:{\"records_total\":90,\"records_new\":null,\"records_updated\":6,\"records_meta\":{\"checks_warned\":1,\"checks_failed\":0,\"tables_checked\":90,\"tables_vacuumed\":0,\"warnings\":[\"data_quality_snapshots: update/insert ratio 15.0x (15 upd vs 1 ins)\"],\"engine_health\":[{\"table_name\":\"address_points\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":8,\"idx_scan\":4,\"seq_ratio\":0.6667},{\"table_name\":\"admin_audit_log\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"admin_backup_codes\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"admin_watchlist\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"archetype_cost_rates\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"building_footprints\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":16,\"seq_ratio\":0},{\"table_name\":\"coa_applications\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":34,\"idx_scan\":16,\"seq_ratio\":0.68},{\"table_name\":\"cost_estimates\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":48,\"idx_scan\":0,\"seq_ratio\":1},{\"table_name\":\"data_quality_snapshots\",\"n_live_tup\":31,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":78,\"idx_scan\":32,\"seq_ratio\":0.7091},{\"table_name\":\"device_tokens\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"engine_health_snapshots\",\"n_live_tup\":87,\"n_dead_tup\":2,\"dead_ratio\":0.023,\"seq_scan\":0,\"idx_scan\":90,\"seq_ratio\":0},{\"table_name\":\"enrich_parcels_pass3_scope\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"entities\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":24,\"idx_scan\":12,\"seq_ratio\":0.6667},{\"table_name\":\"entitlements\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"entity_contacts\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"entity_projects\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"heritage_districts\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"heritage_properties\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"inspection_stage_map\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"lead_analytics\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"lead_parcels\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":14080,\"seq_ratio\":0},{\"table_name\":\"lead_products\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"lead_trades\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"lead_view_events\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"lead_views\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"lifecycle_status_history\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"lifecycle_transitions\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"logic_variables\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":22,\"idx_scan\":38,\"seq_ratio\":0.3667},{\"table_name\":\"mv_monthly_permit_stats\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"neighbourhood_build_norms\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"neighbourhood_storey_norms\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"neighbourhoods\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"notification_dispatches\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"notifications\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"parcel_address_points\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":6,\"idx_scan\":2372240,\"seq_ratio\":0},{\"table_name\":\"parcel_buildings\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":12,\"idx_scan\":24,\"seq_ratio\":0.3333},{\"table_name\":\"parcels\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":200,\"idx_scan\":1094696,\"seq_ratio\":0.0002},{\"table_name\":\"permit_history\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"permit_inspections\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":16,\"seq_ratio\":0},{\"table_name\":\"permit_parcels\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":28,\"idx_scan\":16,\"seq_ratio\":0.6364},{\"table_name\":\"permit_phase_transitions\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"permit_products\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"permit_scrape_outcome_rollup\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"permit_scrape_outcomes\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"permit_trades\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":32,\"idx_scan\":0,\"seq_ratio\":1},{\"table_name\":\"permit_type_classifications\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"permits\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":104,\"idx_scan\":25402,\"seq_ratio\":0.0041},{\"table_name\":\"phase_calibration\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"phase_stay_calibration\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"pipeline_runs\",\"n_live_tup\":1833,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":96,\"seq_ratio\":0},{\"table_name\":\"pipeline_schedules\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"product_groups\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"profiles\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"ravines\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":6,\"idx_scan\":0,\"seq_ratio\":1},{\"table_name\":\"schema_migrations\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":71,\"idx_scan\":0,\"seq_ratio\":1},{\"table_name\":\"schema_migrations\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":1,\"idx_scan\":0,\"seq_ratio\":1},{\"table_name\":\"schema_migrations\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":1,\"idx_scan\":0,\"seq_ratio\":1},{\"table_name\":\"schema_migrations\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":51,\"idx_scan\":0,\"seq_ratio\":1},{\"table_name\":\"scope_intensity_matrix\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"scraper_queue\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"spatial_ref_sys\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":134,\"seq_ratio\":0},{\"table_name\":\"stripe_webhook_events\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"subscribe_nonces\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"supplier_products\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"supplier_trades\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"suppliers\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"sync_runs\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":16,\"idx_scan\":0,\"seq_ratio\":1},{\"table_name\":\"toronto_centreline\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"tracked_projects\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"trade_configurations\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":22,\"idx_scan\":0,\"seq_ratio\":1},{\"table_name\":\"trade_forecasts\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":53088,\"seq_ratio\":0},{\"table_name\":\"trade_mapping_rules\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"trade_products\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"trade_sqft_rates\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"trade_suppliers\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"trades\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"universal_stream_catalog\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"universal_stream_trade_signals\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"user_profiles\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"wsib_registry\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":4,\"idx_scan\":12,\"seq_ratio\":0.25},{\"table_name\":\"zoning_building_setback_overlay\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"zoning_bylaw_areas\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"zoning_height_overlay\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"zoning_lot_coverage_overlay\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"zoning_parking_zone_overlay\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"zoning_policy_area_overlay\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"zoning_policy_road_overlay\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"zoning_priority_retail_overlay\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"zoning_queenstw_eat_overlay\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"zoning_rooming_house_overlay\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0}],\"audit_table\":{\"phase\":9,\"name\":\"CoA Engine Health\",\"verdict\":\"PASS\",\"rows\":[{\"metric\":\"live_rows\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"dead_rows\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"dead_tuple_pct\",\"value\":\"0%\",\"threshold\":\"< 10%\",\"status\":\"PASS\"},{\"metric\":\"update_insert_ratio\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"last_autovacuum\",\"value\":null,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":258.62,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":348,\"threshold\":null,\"status\":\"INFO\"}]}}}\nPIPELINE_META:{\"reads\":{\"pg_stat_user_tables\":[\"relname\",\"n_live_tup\",\"n_dead_tup\",\"seq_scan\",\"idx_scan\",\"n_tup_ins\",\"n_tup_upd\"]},\"writes\":{\"engine_health_snapshots\":[\"table_name\",\"n_live_tup\",\"n_dead_tup\",\"dead_ratio\",\"seq_scan\",\"idx_scan\",\"seq_ratio\"]}}\n\n  Warnings: 1\n\n=== Engine Health: COMPLETED (0.3s) ===\n\n\n[assert-engine-health] completed in 0.3s\n",
+  "stderr": "",
+  "pipeline_runs": [],
+  "pipeline_runs_max_id_before": 1874,
+  "table_state": [],
+  "tables_source": "none",
+  "table_row_ceiling": 100000,
+  "table_timing": {},
+  "table_specs": {},
+  "invariants": [],
+  "invariants_file": null,
+  "db_target": "postgresql://postgres:***@127.0.0.1:54322/postgres",
+  "runtime": "node",
+  "args": [],
+  "nondeterminism": [
+    "pattern:duration_literal",
+    "row:sys_duration_ms",
+    "row:sys_velocity_rows_sec"
+  ],
+  "normalised": {
+    "step": "scripts/quality/assert-engine-health.js",
+    "chain": "coa",
+    "exit_code": 0,
+    "summary": {
+      "records_meta": {
+        "audit_table": {
+          "name": "CoA Engine Health",
+          "phase": 9,
+          "rows": [
+            {
+              "metric": "live_rows",
+              "status": "INFO",
+              "threshold": null,
+              "value": 0
+            },
+            {
+              "metric": "dead_rows",
+              "status": "INFO",
+              "threshold": null,
+              "value": 0
+            },
+            {
+              "metric": "dead_tuple_pct",
+              "status": "PASS",
+              "threshold": "< 10%",
+              "value": "0%"
+            },
+            {
+              "metric": "update_insert_ratio",
+              "status": "INFO",
+              "threshold": null,
+              "value": 0
+            },
+            {
+              "metric": "last_autovacuum",
+              "status": "INFO",
+              "threshold": null,
+              "value": null
+            }
+          ],
+          "verdict": "PASS"
+        },
+        "checks_failed": 0,
+        "checks_warned": 1,
+        "engine_health": [
+          {
+            "dead_ratio": 0,
+            "idx_scan": 4,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0.6667,
+            "seq_scan": 8,
+            "table_name": "address_points"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "admin_audit_log"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "admin_backup_codes"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "admin_watchlist"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "archetype_cost_rates"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 16,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "building_footprints"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 16,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0.68,
+            "seq_scan": 34,
+            "table_name": "coa_applications"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 1,
+            "seq_scan": 48,
+            "table_name": "cost_estimates"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 32,
+            "n_dead_tup": 0,
+            "n_live_tup": 31,
+            "seq_ratio": 0.7091,
+            "seq_scan": 78,
+            "table_name": "data_quality_snapshots"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "device_tokens"
+          },
+          {
+            "dead_ratio": 0.023,
+            "idx_scan": 90,
+            "n_dead_tup": 2,
+            "n_live_tup": 87,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "engine_health_snapshots"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "enrich_parcels_pass3_scope"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 12,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0.6667,
+            "seq_scan": 24,
+            "table_name": "entities"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "entitlements"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "entity_contacts"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "entity_projects"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "heritage_districts"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "heritage_properties"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "inspection_stage_map"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "lead_analytics"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 14080,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "lead_parcels"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "lead_products"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "lead_trades"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "lead_view_events"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "lead_views"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "lifecycle_status_history"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "lifecycle_transitions"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 38,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0.3667,
+            "seq_scan": 22,
+            "table_name": "logic_variables"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "mv_monthly_permit_stats"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "neighbourhood_build_norms"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "neighbourhood_storey_norms"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "neighbourhoods"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "notification_dispatches"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "notifications"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 2372240,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 6,
+            "table_name": "parcel_address_points"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 24,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0.3333,
+            "seq_scan": 12,
+            "table_name": "parcel_buildings"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 1094696,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0.0002,
+            "seq_scan": 200,
+            "table_name": "parcels"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "permit_history"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 16,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "permit_inspections"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 16,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0.6364,
+            "seq_scan": 28,
+            "table_name": "permit_parcels"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "permit_phase_transitions"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "permit_products"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "permit_scrape_outcome_rollup"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "permit_scrape_outcomes"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 1,
+            "seq_scan": 32,
+            "table_name": "permit_trades"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "permit_type_classifications"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 25402,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0.0041,
+            "seq_scan": 104,
+            "table_name": "permits"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "phase_calibration"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "phase_stay_calibration"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 96,
+            "n_dead_tup": 0,
+            "n_live_tup": 1833,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "pipeline_runs"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "pipeline_schedules"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "product_groups"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "profiles"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 1,
+            "seq_scan": 6,
+            "table_name": "ravines"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 1,
+            "seq_scan": 71,
+            "table_name": "schema_migrations"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 1,
+            "seq_scan": 1,
+            "table_name": "schema_migrations"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 1,
+            "seq_scan": 1,
+            "table_name": "schema_migrations"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 1,
+            "seq_scan": 51,
+            "table_name": "schema_migrations"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "scope_intensity_matrix"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "scraper_queue"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 134,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "spatial_ref_sys"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "stripe_webhook_events"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "subscribe_nonces"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "supplier_products"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "supplier_trades"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "suppliers"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 1,
+            "seq_scan": 16,
+            "table_name": "sync_runs"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "toronto_centreline"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "tracked_projects"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 1,
+            "seq_scan": 22,
+            "table_name": "trade_configurations"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 53088,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "trade_forecasts"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "trade_mapping_rules"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "trade_products"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "trade_sqft_rates"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "trade_suppliers"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "trades"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "universal_stream_catalog"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "universal_stream_trade_signals"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "user_profiles"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 12,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0.25,
+            "seq_scan": 4,
+            "table_name": "wsib_registry"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "zoning_building_setback_overlay"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "zoning_bylaw_areas"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "zoning_height_overlay"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "zoning_lot_coverage_overlay"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "zoning_parking_zone_overlay"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "zoning_policy_area_overlay"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "zoning_policy_road_overlay"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "zoning_priority_retail_overlay"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "zoning_queenstw_eat_overlay"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "zoning_rooming_house_overlay"
+          }
+        ],
+        "tables_checked": 90,
+        "tables_vacuumed": 0,
+        "warnings": [
+          "data_quality_snapshots: update/insert ratio 15.0x (15 upd vs 1 ins)"
+        ]
+      },
+      "records_new": null,
+      "records_total": 90,
+      "records_updated": 6
+    },
+    "summary_count": 1,
+    "meta": [
+      {
+        "reads": {
+          "pg_stat_user_tables": [
+            "relname",
+            "n_live_tup",
+            "n_dead_tup",
+            "seq_scan",
+            "idx_scan",
+            "n_tup_ins",
+            "n_tup_upd"
+          ]
+        },
+        "writes": {
+          "engine_health_snapshots": [
+            "table_name",
+            "n_live_tup",
+            "n_dead_tup",
+            "dead_ratio",
+            "seq_scan",
+            "idx_scan",
+            "seq_ratio"
+          ]
+        }
+      }
+    ],
+    "parse_errors": [],
+    "pipeline_runs": [],
+    "stdout_lines": [
+      "=== CQA Tier 3: Engine Health & Volume Volatility ===",
+      "Monitoring 87 tables",
+      "  OK: address_points — dead tuple ratio 0.0%",
+      "  OK: admin_audit_log — dead tuple ratio 0.0%",
+      "  OK: admin_backup_codes — dead tuple ratio 0.0%",
+      "  OK: admin_watchlist — dead tuple ratio 0.0%",
+      "  OK: archetype_cost_rates — dead tuple ratio 0.0%",
+      "  OK: building_footprints — dead tuple ratio 0.0%",
+      "  OK: coa_applications — dead tuple ratio 0.0%",
+      "  OK: cost_estimates — dead tuple ratio 0.0%",
+      "  OK: data_quality_snapshots — dead tuple ratio 0.0%",
+      "  WARN: data_quality_snapshots — update ping-pong 15.0x",
+      "  OK: device_tokens — dead tuple ratio 0.0%",
+      "  OK: engine_health_snapshots — dead tuple ratio 2.3%",
+      "  OK: enrich_parcels_pass3_scope — dead tuple ratio 0.0%",
+      "  OK: entities — dead tuple ratio 0.0%",
+      "  OK: entitlements — dead tuple ratio 0.0%",
+      "  OK: entity_contacts — dead tuple ratio 0.0%",
+      "  OK: entity_projects — dead tuple ratio 0.0%",
+      "  OK: heritage_districts — dead tuple ratio 0.0%",
+      "  OK: heritage_properties — dead tuple ratio 0.0%",
+      "  OK: inspection_stage_map — dead tuple ratio 0.0%",
+      "  OK: lead_analytics — dead tuple ratio 0.0%",
+      "  OK: lead_parcels — dead tuple ratio 0.0%",
+      "  OK: lead_products — dead tuple ratio 0.0%",
+      "  OK: lead_trades — dead tuple ratio 0.0%",
+      "  OK: lead_view_events — dead tuple ratio 0.0%",
+      "  OK: lead_views — dead tuple ratio 0.0%",
+      "  OK: lifecycle_status_history — dead tuple ratio 0.0%",
+      "  OK: lifecycle_transitions — dead tuple ratio 0.0%",
+      "  OK: logic_variables — dead tuple ratio 0.0%",
+      "  OK: mv_monthly_permit_stats — dead tuple ratio 0.0%",
+      "  OK: neighbourhood_build_norms — dead tuple ratio 0.0%",
+      "  OK: neighbourhood_storey_norms — dead tuple ratio 0.0%",
+      "  OK: neighbourhoods — dead tuple ratio 0.0%",
+      "  OK: notification_dispatches — dead tuple ratio 0.0%",
+      "  OK: notifications — dead tuple ratio 0.0%",
+      "  OK: parcel_address_points — dead tuple ratio 0.0%",
+      "  OK: parcel_buildings — dead tuple ratio 0.0%",
+      "  OK: parcels — dead tuple ratio 0.0%",
+      "  OK: permit_history — dead tuple ratio 0.0%",
+      "  OK: permit_inspections — dead tuple ratio 0.0%",
+      "  OK: permit_parcels — dead tuple ratio 0.0%",
+      "  OK: permit_phase_transitions — dead tuple ratio 0.0%",
+      "  OK: permit_products — dead tuple ratio 0.0%",
+      "  OK: permit_scrape_outcome_rollup — dead tuple ratio 0.0%",
+      "  OK: permit_scrape_outcomes — dead tuple ratio 0.0%",
+      "  OK: permit_trades — dead tuple ratio 0.0%",
+      "  OK: permit_type_classifications — dead tuple ratio 0.0%",
+      "  OK: permits — dead tuple ratio 0.0%",
+      "  OK: phase_calibration — dead tuple ratio 0.0%",
+      "  OK: phase_stay_calibration — dead tuple ratio 0.0%",
+      "  OK: pipeline_runs — dead tuple ratio 0.0%",
+      "  OK: pipeline_schedules — dead tuple ratio 0.0%",
+      "  OK: product_groups — dead tuple ratio 0.0%",
+      "  OK: profiles — dead tuple ratio 0.0%",
+      "  OK: ravines — dead tuple ratio 0.0%",
+      "  OK: schema_migrations — dead tuple ratio 0.0%",
+      "  OK: schema_migrations — dead tuple ratio 0.0%",
+      "  OK: schema_migrations — dead tuple ratio 0.0%",
+      "  OK: schema_migrations — dead tuple ratio 0.0%",
+      "  OK: scope_intensity_matrix — dead tuple ratio 0.0%",
+      "  OK: scraper_queue — dead tuple ratio 0.0%",
+      "  OK: spatial_ref_sys — dead tuple ratio 0.0%",
+      "  OK: stripe_webhook_events — dead tuple ratio 0.0%",
+      "  OK: subscribe_nonces — dead tuple ratio 0.0%",
+      "  OK: supplier_products — dead tuple ratio 0.0%",
+      "  OK: supplier_trades — dead tuple ratio 0.0%",
+      "  OK: suppliers — dead tuple ratio 0.0%",
+      "  OK: sync_runs — dead tuple ratio 0.0%",
+      "  OK: toronto_centreline — dead tuple ratio 0.0%",
+      "  OK: tracked_projects — dead tuple ratio 0.0%",
+      "  OK: trade_configurations — dead tuple ratio 0.0%",
+      "  OK: trade_forecasts — dead tuple ratio 0.0%",
+      "  OK: trade_mapping_rules — dead tuple ratio 0.0%",
+      "  OK: trade_products — dead tuple ratio 0.0%",
+      "  OK: trade_sqft_rates — dead tuple ratio 0.0%",
+      "  OK: trade_suppliers — dead tuple ratio 0.0%",
+      "  OK: trades — dead tuple ratio 0.0%",
+      "  OK: universal_stream_catalog — dead tuple ratio 0.0%",
+      "  OK: universal_stream_trade_signals — dead tuple ratio 0.0%",
+      "  OK: user_profiles — dead tuple ratio 0.0%",
+      "  OK: wsib_registry — dead tuple ratio 0.0%",
+      "  OK: zoning_building_setback_overlay — dead tuple ratio 0.0%",
+      "  OK: zoning_bylaw_areas — dead tuple ratio 0.0%",
+      "  OK: zoning_height_overlay — dead tuple ratio 0.0%",
+      "  OK: zoning_lot_coverage_overlay — dead tuple ratio 0.0%",
+      "  OK: zoning_parking_zone_overlay — dead tuple ratio 0.0%",
+      "  OK: zoning_policy_area_overlay — dead tuple ratio 0.0%",
+      "  OK: zoning_policy_road_overlay — dead tuple ratio 0.0%",
+      "  OK: zoning_priority_retail_overlay — dead tuple ratio 0.0%",
+      "  OK: zoning_queenstw_eat_overlay — dead tuple ratio 0.0%",
+      "  OK: zoning_rooming_house_overlay — dead tuple ratio 0.0%",
+      "  Snapshot: 90 tables written to engine_health_snapshots (6 actually updated)",
+      "  Warnings: 1",
+      "=== Engine Health: COMPLETED (<DUR>) ===",
+      "[assert-engine-health] completed in <DUR>"
+    ],
+    "table_state": [],
+    "invariants": []
+  },
+  "source_fingerprint": null,
+  "fingerprint_files": [],
+  "fingerprint_skipped_reason": "no_descriptor_yet"
+}
