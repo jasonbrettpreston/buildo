@@ -112,6 +112,10 @@ Consumer/mobile routes historically enforce subscription state at the **client**
 - **Out-of-Scope Files:** ALL of `scripts/`, `migrations/` (zero migrations, zero new indexes — the resolver reuses Spec 89 §3.3's indexed normalized columns), `src/lib/parcels/address.ts` (reused, never forked), the admin tool (`src/app/api/admin/parcels/**`, `src/app/admin/**`), the Lead Feed / Flight Center code.
 - **Cross-Spec Dependencies:** Spec 89 (resolver internals + tier degradation, consumed read-only), Spec 88 (cost-menu §2.3–2.5), Spec 78 / 65 (headline + neighbourhood columns), Spec 54 (address bridge + normalizer rules), Spec 96 §10 (subscription statuses), Spec 99 §4 (query keys), Spec 90 §11/§13 (auth + Zod boundary).
 
+### Cross-Spec Dependencies
+- `scripts/load-address-points.js` — consumes `address_points` rows via the Spec 89 resolver internals reused verbatim.
+- `scripts/load-parcels.js` — consumes `parcels` rows the whitelist assembler presents, never writes them.
+
 ## Known Failure Modes
 
 - **Whitelist leak (NEW).** A future migration adds a Tier-2/Tier-3 `parcels` column and a naive assembler spreads it into the response. Guard: the §3.2 explicit pick-by-name assembler + the `.infra` whitelist test (no unlisted key; no `groups`; no Spec 89 Tier-3 column name).

@@ -277,6 +277,10 @@ The decision lives in one pure exported function, `classifyHaltDecision()`.
 - **Relies on:** `chain_sources.md` (spatial reference tables must be populated first)
 - **Consumed by:** `chain_coa.md` (shares `link_coa`, `refresh_snapshot`)
 - **Shared steps:** See `60_shared_steps.md` for geocode_permits, link_parcels, link_neighbourhoods, link_massing, link_wsib, link_coa, refresh_snapshot
+- `load-coa.js` — coa chain's own load step; referenced only for the WF1 Phase E extension context, not governed here.
+- `load-address-points.js` — sources chain's own load step; consumed as the spatial reference table geocoding/linking read against.
+- `load-parcels.js` — sources chain's own load step; consumed as the spatial reference table `link_parcels` reads against.
+- `load-neighbourhoods.js` — sources chain's own load step; consumed as the spatial reference table `link_neighbourhoods` reads against.
 </constraints>
 
 ---

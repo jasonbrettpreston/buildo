@@ -94,4 +94,12 @@ emitMeta writes — all `parcels` table columns including LEGACY 5 (still writte
 - **Consumed by:** `link-parcels` Strategy 1b/2/3 (legacy parcels-table exact + name-only + spatial) — see Spec 41; `link-coa-to-parcels` legacy Tier 1a/1b fallback — see Spec 42
 - **Cross-Spec Dependencies:** Spec 54 (Address Points — canonical address source via `parcel_address_points` bridge), Spec 47 §A.5 (lock 55)
 - **Relies on:** `pipeline_system.md` (SDK), `scripts/lib/address-normalizers.js` (shared normalizer ensures JOIN-key consistency with Spec 54)
+
+### Target Files
+- `scripts/load-parcels.js` — this spec defines the parcels loader's contract (§2/§3).
+- `scripts/quality/assert-schema.js` — this spec pins `EXPECTED_PARCEL_COLUMNS` to its own frozen 4-column CSV set (§2).
+
+### Cross-Spec Dependencies
+- `scripts/enrich-parcels.js` — this spec is the parcels-schema SoT for enrichment-written columns but explicitly disclaims owning the write logic (§2: "NOT load-parcels").
+- `scripts/compute-centroids.js` — downstream step that fills `centroid_lat`/`centroid_lng` when missing (§2/§3); its own contract lives elsewhere.
 </constraints>

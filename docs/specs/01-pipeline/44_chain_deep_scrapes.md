@@ -396,4 +396,10 @@ self-documenting threshold string + row-derived WARN verdict on a small probe mi
 - **Relies on:** `pipeline_system.md` (SDK, orchestrator)
 - **Relies on:** `docs/specs/00-architecture/115_scheduling.md` §2.4 (the GitHub Actions runner contract for this chain — browser launch ownership, relay, Decodo credential/scheme/port contract, egress tripwire, Xvfb disposition)
 - **Relies on:** `chain_permits.md` (permits must be loaded first — scraper targets permits with `status = 'Inspection'`)
+- `load-permits.js` — permits-chain step named as one of the four `enriched_status`-clearing writer sites; referenced as context, not governed here.
+- `close-stale-permits.js` — permits-chain step named as one of the four `enriched_status`-clearing writer sites; referenced as context, not governed here.
+- `classify-permit-phase.js` — permits-chain step named as the source of the "so the permits loader upsert won't conflict" exclusion rule; referenced as context, not governed here.
+- `classify-lifecycle-phase.js` — permits/coa-chain step named as the consumer for which `enriched_status` is not a dirty key; referenced as context, not governed here.
+- `scripts/quality/assert-lifecycle-phase-distribution.js` — coa-chain step named as a row-grained consumer justifying the `enriched_status` write grain; referenced as context, not governed here.
+- `scripts/quality/assert-global-coverage.js` — fan-out-shared step whose `enriched_status_status_scope_drift`/`_retighten` WARN pair is named as the standing guard for the smear rule; the check's own contract lives in Spec 49/the chain specs, not governed here.
 </constraints>

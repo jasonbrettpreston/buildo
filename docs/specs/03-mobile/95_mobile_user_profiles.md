@@ -474,3 +474,14 @@ Note: `radius_km` currently exists in MMKV only (`tasks/lessons.md`). This migra
 - Spec 94 — onboarding writes all initial values
 - Spec 96 — `subscription_status` read on every app launch
 - Spec 97 — Settings UI reads and writes editable fields
+
+## Operating Boundaries
+
+### Target Files
+- none
+
+### Out-of-Scope Files
+- none
+
+### Cross-Spec Dependencies
+- `scripts/classify-lifecycle-phase.js` — consumes the notification-preference columns (`§2.4`) this spec owns, reading them directly for push-dispatch gating.

@@ -301,3 +301,26 @@ These nine fixes are mandatory to ensure the "Communication Layer" actually comm
 - **Flight Board Update:** Update the Pro App to query leads where `status != 'archived'`.
 - **Notification Hub:** Connect the Front-End to the `notifications` table to display the history of Stall and Imminent alerts.
 - **Calibration:** Use the Admin Panel to adjust a trade's `imminent_window_days` and verify that the App's "Amber Alerts" shift accordingly.
+
+---
+
+## Operating Boundaries
+
+### Target Files
+- `scripts/update-tracked-projects.js` — this spec defines the CRM Assistant's full evaluator/enqueuer contract: stall/imminent/disappearance rules, notification payloads, self-feed.
+- `src/app/api/leads/save/route.ts` — implementation file this spec already names in its body; declared explicitly 2026-09-14 (was only reaching the system map through the generator's whole-document fallback scan, which an explicit Target Files list suppresses)
+
+### Cross-Spec Dependencies
+- `scripts/dispatch-notifications.js` — the sole delivery mechanism for this spec's enqueued rows; its dispatch/ledger rules are Spec 101's territory, only referenced here.
+- `scripts/classify-lifecycle-phase.js` — the other enqueuer sharing this spec's notification queue design; its phase classification is Spec 84's territory.
+- `scripts/compute-trade-forecasts.js` — the "Stamper" this spec's imminent-alert logic reads (`target_window`); forecast formula owned by Spec 85.
+- `scripts/compute-opportunity-scores.js` — the "LOS Engine" that reads `lead_analytics` this spec produces; scoring formula owned by Spec 81.
+- `scripts/compute-cost-estimates.js` — the "Slicer" that uses `allocation_pct` from `trade_configurations`; cost formula owned by the cost model spec.
+- `scripts/load-coa.js` — upstream loader for the `coa`-prefixed leads this spec tracks and alerts on.
+- `scripts/quality/assert-entity-tracing.js` — downstream chain-sequence step following this one; not defined here.
+- `scripts/quality/assert-global-coverage.js` — downstream chain-sequence step; this spec's INFO rows are referenced but the check itself is not defined here.
+- `scripts/backup-db.js` — downstream chain-sequence step; not defined here.
+
+### Out-of-Scope Files
+- none
+

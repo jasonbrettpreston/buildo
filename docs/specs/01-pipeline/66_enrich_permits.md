@@ -127,4 +127,8 @@ SPEC LINK header on each.
 ### Cross-Spec Dependencies
 - **Relies on:** Spec 65 (`parcels` zoning columns + `zoning_enriched_at`), Spec 58 (§8d/§8e/F-H7/F-H12), Spec 47 (§R1–R12, §6.4, §8, §11), Spec 48 (§3.6), Spec 41 (`chain_permits`), Spec 42 (`chain_coa` + `lead_parcels` / `lead_id`), Spec 30 (Enrich archetype), `permit_type_classifications` (Spec — construction gate).
 - **Consumed by:** Spec 76 lead dashboard, Phase-3 cost model (terminal — no pipeline §9 contract).
+- `load-permits.js` — upstream loader; must populate `permits` rows before the dominant-parcel join runs
+- `load-parcels.js` — upstream loader for the `parcels` rows WF2 (Spec 65) enriches and this step reads
+- `link-parcels.js` — populates `permit_parcels`, read by the dominant-parcel resolution (DEC-1); runs immediately before `enrich_permits` in-chain
+- `link-coa-to-parcels.js` — populates the `lead_parcels.lead_id` key this step's CoA join relies on (DEC-4); runs immediately before `enrich_coa_zoning`
 </constraints>

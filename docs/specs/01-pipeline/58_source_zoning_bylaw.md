@@ -396,7 +396,7 @@ Every test file MUST include the SPEC LINK header.
 <constraints>
 ## 5. Operating Boundaries
 
-### Target Files (future implementation WF)
+### Target Files
 - `scripts/load-zoning.js`
 - `scripts/lib/zoning-attr-drift.js`
 - `scripts/lib/geometry-validator.js`
@@ -423,6 +423,8 @@ Every test file MUST include the SPEC LINK header.
 - **Spec 47** (`pipeline_script_protocol`) — R1-R12; §6.4 IS DISTINCT FROM; §6.6 polygon pre-validation; §8.1/§8.2/§8.4 audit_table; §10/§11.1/§11.2 counters; §R6 advisory lock; §R11 emitMeta
 - **Spec 48** (`pipeline_observability`) — §3.6 cascade; §3.7 spike runbook
 - **Spec 56** (`source_massing`) — structural reference (Shapefile-from-CKAN-ZIP pattern). Phase 0 confirmed Spec 58 does NOT need `ST_Transform`.
+- `scripts/load-permits.js` — chain-sequencing context only (`load_zoning` completes before WF2 `enrich-parcels` runs, §1); permits/coa columns are written by the future `enrich-permits.js` WF3, not this loader.
+- `scripts/load-parcels.js` — join target only; `parcels` columns are written by the future `enrich-parcels.js` (already Out-of-Scope Files above), not this loader.
 
 ### Consumer Dep
 - **Spec 55** (`source_parcels`) — `enrich-parcels.js` (future spec) spatially joins parcels against this spec's tables. Not a direct dep of Spec 58.

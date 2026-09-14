@@ -77,8 +77,9 @@ As a business analyst, I need the Ontario Workplace Safety and Insurance Board r
 ### Target Files
 - `scripts/load-wsib.js`
 
-### Out-of-Scope
+### Out-of-Scope Files
 - `scripts/link-wsib.js` — governed by step spec
+- `scripts/link-wsib.js` — governed by its own step spec, not this source's contract (see the note above under "Out-of-Scope").
 
 ### Cross-Spec Dependencies
 - **Consumed by:** `chain_sources.md` (step 11)

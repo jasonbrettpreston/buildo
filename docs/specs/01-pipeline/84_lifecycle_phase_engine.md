@@ -1968,3 +1968,49 @@ and three **operator-visible audit-row `threshold` strings** in the assert scrip
 point at a `§3.4` that never existed in this spec. An operator following one landed
 nowhere. Mitigated by the `id="3-4"` anchor on §8 rather than by editing 20 citations —
 see the note there before renumbering anything.
+
+
+---
+
+## Operating Boundaries
+
+### Target Files
+- `scripts/classify-lifecycle-phase.js` — this spec's own primary script; defines the permit-side and CoA-side phase classification rule engines.
+- `scripts/compute-phase-calibration.js` — §7 Calibration Source defines its ledger reads, LAG/PERCENTILE_CONT formula, and the `phase_stay_calibration` schema it writes.
+- `scripts/quality/assert-lifecycle-phase-distribution.js` — §8 Distribution Health Bands defines its per-phase/per-seq band check, thresholds, and `logic_variables` key namespace.
+- `src/lib/classification/lifecycle-phase.ts` — implementation file this spec already names in its body; declared explicitly 2026-09-14 (was only reaching the system map through the generator's whole-document fallback scan, which an explicit Target Files list suppresses)
+- `src/lib/leads/build-lifecycle-timeline.ts` — implementation file this spec already names in its body; declared explicitly 2026-09-14 (was only reaching the system map through the generator's whole-document fallback scan, which an explicit Target Files list suppresses)
+- `src/components/FreshnessTimeline.tsx` — implementation file this spec already names in its body; declared explicitly 2026-09-14 (was only reaching the system map through the generator's whole-document fallback scan, which an explicit Target Files list suppresses)
+- `src/app/api/leads/flight-board/route.ts` — implementation file this spec already names in its body; declared explicitly 2026-09-14 (was only reaching the system map through the generator's whole-document fallback scan, which an explicit Target Files list suppresses)
+- `src/app/api/leads/flight-board/detail/[id]/route.ts` — implementation file this spec already names in its body; declared explicitly 2026-09-14 (was only reaching the system map through the generator's whole-document fallback scan, which an explicit Target Files list suppresses)
+- `src/app/api/leads/detail/[id]/route.ts` — implementation file this spec already names in its body; declared explicitly 2026-09-14 (was only reaching the system map through the generator's whole-document fallback scan, which an explicit Target Files list suppresses)
+- `src/app/api/admin/leads/inspect/[id]/route.ts` — implementation file this spec already names in its body; declared explicitly 2026-09-14 (was only reaching the system map through the generator's whole-document fallback scan, which an explicit Target Files list suppresses)
+- `src/app/api/leads/search/route.ts` — implementation file this spec already names in its body; declared explicitly 2026-09-14 (was only reaching the system map through the generator's whole-document fallback scan, which an explicit Target Files list suppresses)
+- `src/lib/leads/lead-detail-query.ts` — implementation file this spec already names in its body; declared explicitly 2026-09-14 (was only reaching the system map through the generator's whole-document fallback scan, which an explicit Target Files list suppresses)
+- `src/lib/leads/lead-inspect-query.ts` — implementation file this spec already names in its body; declared explicitly 2026-09-14 (was only reaching the system map through the generator's whole-document fallback scan, which an explicit Target Files list suppresses)
+- `src/components/admin/lead-inspector/LifecycleTimelinePanel.tsx` — implementation file this spec already names in its body; declared explicitly 2026-09-14 (was only reaching the system map through the generator's whole-document fallback scan, which an explicit Target Files list suppresses)
+- `src/components/admin/LeadDetailInspector.tsx` — implementation file this spec already names in its body; declared explicitly 2026-09-14 (was only reaching the system map through the generator's whole-document fallback scan, which an explicit Target Files list suppresses)
+- `src/lib/admin/lead-schemas.ts` — implementation file this spec already names in its body; declared explicitly 2026-09-14 (was only reaching the system map through the generator's whole-document fallback scan, which an explicit Target Files list suppresses)
+- `src/lib/admin/lifecycle-timeline-utils.ts` — implementation file this spec already names in its body; declared explicitly 2026-09-14 (was only reaching the system map through the generator's whole-document fallback scan, which an explicit Target Files list suppresses)
+- `src/lib/classification/phase-names.ts` — implementation file this spec already names in its body; declared explicitly 2026-09-14 (was only reaching the system map through the generator's whole-document fallback scan, which an explicit Target Files list suppresses)
+- `src/lib/classification/phase-progression.ts` — implementation file this spec already names in its body; declared explicitly 2026-09-14 (was only reaching the system map through the generator's whole-document fallback scan, which an explicit Target Files list suppresses)
+
+### Cross-Spec Dependencies
+- `scripts/load-permits.js` — writes `event_date` into the status-history ledger this spec owns; loader behaviour is Spec 50's territory.
+- `scripts/load-coa.js` — writes `event_date` into the status-history ledger this spec owns; loader behaviour is Spec 51's territory.
+- `scripts/load-neighbourhoods.js` — `neighbourhoods` referenced only in an unrelated cross-spec table read list (Spec 26); not this spec's step.
+- `scripts/link-coa.js` — referenced as background context for the linked-permit phase-code namespace collision; matching logic is Spec 60's territory.
+- `scripts/link-coa-to-parcels.js` — referenced in the CoA-parity planning table; owned by Spec 42 §6.6.B.
+- `scripts/classify-coa-scope.js` — referenced in the CoA-parity planning table; owned elsewhere (new classifier, not this spec).
+- `scripts/classify-coa-trades.js` — referenced in the CoA-parity planning table; owned by Spec 41 §13 + Spec 13.
+- `scripts/compute-coa-cost-estimates.js` — referenced in the CoA-parity planning table; owned by Spec 41 §15 + Spec 83.
+- `scripts/compute-cost-estimates.js` — referenced in the CoA-parity planning table; owned by Spec 41 §15 + Spec 83.
+- `scripts/compute-trade-forecasts.js` — consumes this spec's `phase_started_at`/lifecycle_phase anchors and the `TRADE_TARGET_PHASE_FALLBACK` mapping; forecast formula owned by Spec 85 (advisory lock collision note confirms ownership split).
+- `scripts/compute-opportunity-scores.js` — downstream consumer of lifecycle phase/calibration data; scoring formula owned by Spec 81.
+- `scripts/update-tracked-projects.js` — downstream consumer of CoA-side lifecycle fields; CRM behaviour owned by Spec 82.
+- `scripts/quality/assert-engine-health.js` — sequencing reference only (runs immediately before `classify_lifecycle_phase`).
+- `scripts/quality/assert-global-coverage.js` — listed as a pipeline consumer of lifecycle data; check itself not defined here.
+- `scripts/backup-db.js` — referenced only in the KFM-1 incident narrative (downstream step skipped by a chain halt).
+
+### Out-of-Scope Files
+- none

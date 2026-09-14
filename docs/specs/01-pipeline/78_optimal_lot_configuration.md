@@ -379,6 +379,7 @@ lot/max-build/existing/scenario scalars already propagate; the new `opt_*`/`comp
   `scripts/compute-build-norms.js` (NEW, Mutator), `scripts/manifest.json` (chain wiring),
   `migrations/198_permits_occupancy_columns.sql`, `migrations/199_neighbourhood_build_norms.sql`,
   `docs/specs/_contracts.json` (`build_norms` group), `docs/runbook/permit_occupancy_first_deploy.md`.
+- `scripts/enrich-permits.js` — §4D wires `OPT_COMP_PROP_COLS`, `assertOptConfigColumns`, and the per-run propagation audit rows into this script (otherwise Spec 66)
 
 ### Out-of-Scope Files
 - `scripts/enrich-parcels.js` and the parcel new-fields / degrade-retire pass — **Phase 3**.
@@ -390,6 +391,8 @@ lot/max-build/existing/scenario scalars already propagate; the new `opt_*`/`comp
   (`neighbourhood_storey_norms`), Spec 47 (script protocol), Spec 48 §3.6/§3.7 (cascade + first-deploy
   runbook), Spec 30 (Mutator archetype), Spec 41/55 (lifecycle/CoA linkage of `coa_applications`).
 - **Consumed by:** Phases 2–3 (optimal-config engine + parcel calibration), Phase 4 (forecast/cost).
+- `load-parcels.js` — upstream loader for the `parcels` rows this spec's lot-driven outputs are computed on
+- `compute-storey-norms.js` — `storeys_p50/p90` joined from its `neighbourhood_storey_norms` output (Spec 65 §8); `compute_build_norms` runs after it in-chain
 
 ---
 

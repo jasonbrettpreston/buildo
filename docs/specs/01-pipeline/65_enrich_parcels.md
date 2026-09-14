@@ -314,14 +314,22 @@ Every test file carries the `SPEC LINK` header.
 - `docs/specs/01-pipeline/58_source_zoning_bylaw.md` — update §8c to point here
 - `src/tests/factories.ts` — parcel factory zoning fields
 - 3 test files (§5)
+- `scripts/compute-storey-norms.js` — §8 SN-1–SN-4 define its derivation formula (percentile aggregation, `STOREY_NORM_MIN_SAMPLE`/`STOREY_CLAMP_MAX` thresholds) and audit rows
 
 ### Out-of-Scope Files
 - `scripts/enrich-permits.js` / `permits` + `coa_applications` columns — Spec 58 WF3 (separate spec)
 - `permit_parcels` / `lead_parcels` — owned by Specs 41/42/55; WF2 only reads parcels
 - Heritage/ravine/centreline/corner-lot parcel columns — Specs 61/59/62
 - Any cost-model, UI, or API code — downstream consumers
+- `scripts/load-permits.js` — `permits` table is irrelevant to parcel zoning enrichment; loaded in a separate chain, owned elsewhere
 
 ### Cross-Spec Dependencies
 - **Relies on:** Spec 58 (zoning tables + frozen §9/§11 `records_meta` contract), Spec 55 (`parcels` + `idx_parcels_geom_gist`), Spec 47 (§R1–R12, §6.4 IS DISTINCT FROM, §8 audit, §11 counters), Spec 48 (§3.6 cascade), Spec 43 (`chain_sources` sequencing), Spec 30 (Enrich archetype).
 - **Consumed by:** Spec 58 WF3 (`enrich-permits.js` — reads `parcels.zoning_*` + `zoning_overlays` via `permit_parcels`/`lead_parcels`), Phase-3 cost model, lead-detail UI.
+- `load-parcels.js` — upstream loader that populates the `parcels` rows this spec enriches (Spec 55)
+- `load-massing.js` — §5 existing-structure fields read `building_footprints` populated by this loader (Spec 56)
+- `load-zoning.js` — §2 precondition gate reads its latest run status before enriching (Spec 58)
+- `enrich-centreline.js` — AF-1 `abuts_laneway` consumed same-run; chain order `enrich_centreline` → `enrich_parcels` (Spec 62)
+- `load-neighbourhoods.js` — §8 C2 spatial-joins `parcels` against `neighbourhoods` loaded by this script
+- `classify-permits.js` — §8 SN-1 only references chain sequencing ("permits chain after `classify_permits`"); trade classification is owned by Spec 80
 </constraints>

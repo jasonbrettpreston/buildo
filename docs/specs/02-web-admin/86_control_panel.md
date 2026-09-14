@@ -233,4 +233,7 @@ All Control Panel UI is built mobile-first (base Tailwind classes = mobile; `md:
 | `docs/specs/product/future/83_lead_cost_model.md` | `commercial_shell_multiplier`, `placeholder_cost_threshold`, `income_premium_tiers` directly feed this model |
 | `docs/specs/product/future/85_trade_forecast_engine.md` | `bid_phase_cutoff`, `work_phase_target`, `imminent_window_days`, stall penalties all configure this engine |
 | `docs/specs/00_engineering_standards.md §12` | Frontend Foundation Tooling (Zustand, TanStack Query, RHF+Zod, Shadcn) enforced |
+| Spec 91 (Realtor Feed) | `scripts/backfill-realtor-permit-trades.js` — chain-sequence step 14 consumes the trade-matrix context this spec's UI edits; write behaviour owned by Spec 91 |
+| Spec 82 (CRM Assistant & Alerts) | `scripts/update-tracked-projects.js` — reads `imminent_window_days`/`coa_imminent_window_days` this spec's UI edits; alert behaviour owned by Spec 82 |
+| Spec 84 (Lifecycle Phase Engine) | `scripts/quality/assert-lifecycle-phase-distribution.js` — reads `lifecycle_band_*`/`lifecycle_seq_band_*` keys this spec's UI edits; check formula owned by Spec 84 |
 | `docs/specs/_contracts.json` | Numeric thresholds for 18 logic_variables + 7 trade_config columns mapped here |

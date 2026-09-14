@@ -94,4 +94,11 @@ emitMeta writes — 16 persisted columns including derived `addr_num_normalized`
 - **Consumed by:** `link-parcels` Strategy 1a (commit `1ba020b`), `link-coa-to-parcels` Tier 1a bridge path (commit `986409e`), `geocode-permits` (address lookup)
 - **Cross-Spec Dependencies:** Spec 55 (parcels — bridge target), Spec 41 (chain_permits — Strategy 1a consumer), Spec 42 (chain_coa — Tier 1a consumer), Spec 47 §A.5 (locks 96/115/116)
 - **Relies on:** `pipeline_system.md` (SDK), `pipeline_observability.md` §3.6 (audit_table)
+
+### Target Files
+- `scripts/load-address-points.js` — this spec defines the address points loader's contract (§2/§3).
+- `scripts/link-parcel-addresses.js` — this spec defines the `parcel_address_points` bridge populator's contract (§2 Bridge table).
+
+### Cross-Spec Dependencies
+- `scripts/load-parcels.js` — `parcels` is the bridge target Spec 55 owns; this spec only consumes it as the join side (§2 Role change note).
 </constraints>

@@ -81,4 +81,14 @@ The `--full` chain_arg (added `0031f37` for the one-time b16c036 ghost-link clea
 - **Script:** `scripts/load-massing.js`
 - **Consumed by:** `chain_sources.md` (step 7), `link_massing` (spatial matching), `compute-cost-estimates.js` (GFA Step A — `footprint_area_sqm`), and `enrich-parcels.js` Spec 65 §5 existing-structure pass (PRIMARY building footprint/stories/height/geom → `parcels.existing_*`, propagated to permits/coa)
 - **Relies on:** `pipeline_system.md` (SDK)
+
+### Target Files
+- `scripts/load-massing.js` — this spec defines the massing loader's contract (§2/§3).
+- `scripts/link-massing.js` — this spec defines the `--full` gate's DATA/CODE signals, decision logic and empty-source guard (§3).
+
+### Cross-Spec Dependencies
+- `scripts/load-permits.js` — the `permits`-chain run (no `--full`) is referenced only as context for the gate decision (§3); this spec does not define its contract.
+- `scripts/enrich-parcels.js` — consumes massing/`building_footprints` data for its Spec 65 §5 existing-structure pass (§4 Consumed by); this spec does not define its contract.
+- `scripts/compute-cost-estimates.js` — reads `bf.footprint_area_sqm` as a cross-spec dependency (§3 note, Spec 83 §3 GFA Step A); this spec does not define its contract.
+- `scripts/quality/assert-schema.js` — Tier 1 shapefile-URL-accessibility gate referenced as context (§3 Edge Cases); its threshold is owned by its own step spec.
 </constraints>

@@ -142,4 +142,7 @@ All under `src/app/api/admin/leads/watchlist/**`; all call `verifyAdminAuth` as 
 ### Cross-Spec Dependencies
 - **Relies on:** Spec 33 (engineering), Spec 34 (testing), Spec 35 (state), Spec 89 (address-resolution precedent), Spec 81/84/85 (the forecast/lifecycle/score values the flight list reads).
 - **Consumed by:** — (leaf admin tool). Spec 76 §3.4's Flight Center prototype is SUPERSEDED by this spec.
+- `scripts/load-permits.js` — consumes `permits` rows the watchlist join/search resolver reads, never writes them.
+- `scripts/load-coa.js` — consumes `coa_applications` rows joined into the watchlist and `buildLeadKey`'s coa branch.
+- `scripts/load-address-points.js` — consumes `address_points` rows via the ported substring typeahead resolver.
 </constraints>

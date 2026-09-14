@@ -65,7 +65,7 @@ Replace the fragmented `builders` table with a unified `entities` hub and `entit
 
 ## 5. Operating Boundaries
 
-### Target Files (Modify / Create)
+### Target Files
 - `migrations/042_entities.sql` — DDL for entities + entity_projects tables
 - `migrations/043_entities_data_migration.sql` — Data migration from builders
 - `migrations/044_wsib_entity_link.sql` — Add linked_entity_id to wsib_registry
@@ -97,7 +97,7 @@ Replace the fragmented `builders` table with a unified `entities` hub and `entit
 - `src/tests/entities.logic.test.ts` — New
 - `src/tests/entities.infra.test.ts` — New
 
-### Out-of-Scope Files (DO NOT TOUCH)
+### Out-of-Scope Files
 - **`src/lib/classification/classifier.ts`**: Governed by Spec 08.
 - **`scripts/classify-permits.js`**: Governed by Spec 08.
 - **HCRA/OBR integration**: Deferred to future spec.
@@ -110,5 +110,6 @@ Replace the fragmented `builders` table with a unified `entities` hub and `entit
 - Modifies **Spec 28 (Data Quality Dashboard)** — metrics source changes.
 - Modifies **Spec 35 (WSIB Registry)** — linked_entity_id replaces linked_builder_id.
 - Relies on **Spec 12 (CoA Integration)** — CoA applicant extraction.
+- `scripts/extract-builders.js` — legacy step this spec's `extract-entities.js` replaces; referenced only as the data-migration source for the `builders` → `entities` cutover, not governed here.
 
 </constraints>

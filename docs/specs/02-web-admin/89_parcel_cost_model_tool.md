@@ -108,6 +108,10 @@ Every `parcels` column appears in **exactly one** tier. The schema-drift test as
 - **Out-of-Scope Files:** ALL of `scripts/` (except the comment), `migrations/` (zero migrations — incl. NO new indexes; pg_trgm contains-search is a deferred follow-up), `src/lib/db/generated/` (drizzle drift fixed elsewhere), the Expo app (`mobile/`), all pipeline specs' code.
 - **Cross-Spec Dependencies:** Spec 88 (cost-menu shape §2.3–2.4 — consumed read-only), Spec 78 (`nearby_builds_summary`/`comparable_builds`/opt_*), Spec 65 (envelope/scenario/accessory fields), Spec 58 (zoning fields), Spec 54 (`address_points` + `parcel_address_points` + the normalizer rules), Spec 33 §5/§12/§13 (auth + observability), Spec 35 §3.1 (the `parcel_lookup` cache row), Spec 34 (test tiers).
 
+### Cross-Spec Dependencies
+- `scripts/load-address-points.js` — consumes `address_points` rows via the typeahead/resolver, never writes them.
+- `scripts/load-parcels.js` — consumes `parcels` rows the tool presents unmodified, never writes them.
+
 ## Known Failure Modes
 
 - **`address_status='CURRENT'`-only filter** — matches 0 production rows (data is `'None'`/NULL). Guard: the §3 filter is normative; the `.infra` source-shape test pins it.

@@ -375,6 +375,22 @@ The remaining OPEN-subset `'none'` (1,615) decomposes per the §3-ARCHETYPE reje
 * **Relies on**: Spec 13 (Classify Permits) for trade identification and Spec 3 (Classify Scope) for project/structure types.
 * **Consumed by**: Opportunity Scoring (Step 23) which uses the trade-specific dollar values for lead ranking.
 
+### Target Files
+- `scripts/compute-cost-estimates.js` — §2/§7 "The Muscle" — this spec defines its Surgical Triangle valuation engine end-to-end
+- `scripts/compute-coa-cost-estimates.js` — §3-ARCHETYPE defines the CoA cost ladder (same ladder minus T1) this script implements
+
+### Out-of-Scope Files
+- `scripts/classify-permits.js` — upstream dependency; this spec consumes classification output but does not perform it
+
+### Cross-Spec Dependencies
+- `load-permits.js` — upstream loader for the `permits` table rows this engine values
+- `load-massing.js` — upstream loader whose `building_footprints` feed the GFA/massing inputs
+- `load-neighbourhoods.js` — upstream loader for `avg_household_income` used in the premium-tier join
+- `classify-coa-scope.js` — producer of the §3.A `structure_type` vocabulary this spec canonically owns; decision-tree logic owned by Spec 80
+- `classify-scope.js` — upstream `project_type`/`scope_tags` input (Spec 3)
+- `refresh-snapshot.js` — downstream reader of the preserved `cost_source='geometric'` enum value
+- `assert-global-coverage.js` — complementary population-level coverage step (step 27); this spec's Lead Detail Inspector operates at the per-permit level
+
 ---
 
 ## 7. Engine Mechanics Details

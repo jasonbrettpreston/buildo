@@ -150,9 +150,10 @@ Tracked in `docs/reports/review_followups.md` row 160 as candidate for future "e
 ### Target Files
 - `scripts/load-coa.js`
 
-### Out-of-Scope
+### Out-of-Scope Files
 - `scripts/link-coa.js` — governed by step spec
 - `src/lib/coa/linker.ts` — TypeScript API path
+- `scripts/link-coa.js` — governed by its own step spec, not this source's contract (see the note above under "Out-of-Scope").
 
 ### Cross-Spec Dependencies
 - **Consumed by:** `chain_coa.md` (step 2)

@@ -290,3 +290,15 @@ All interactive elements: `min-h-[44px] min-w-[44px]`. This is Apple HIG and And
 * Slider tint: `#f59e0b`
 * Active trade chip: `bg-amber-500/20 border border-amber-500 text-amber-300 rounded-lg px-3 py-2`
 * Inactive trade chip: `bg-zinc-800 border border-zinc-700 text-zinc-400 rounded-lg px-3 py-2`
+
+## Operating Boundaries
+
+### Target Files
+- none
+
+### Out-of-Scope Files
+- none
+
+### Cross-Spec Dependencies
+- `scripts/backfill-realtor-permit-trades.js` — §3.5 documents this script's 3-axis `shouldAppendRealtor` gate + idempotent every-eligible-active-permit contract, formally owned by the permits chain spec.
+- `scripts/link-massing.js` — referenced only as historical context (advisory-lock-91 collision found and fixed during the realtor backfill fix, §3.5).

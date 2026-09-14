@@ -259,4 +259,7 @@ dedicated test files went unnamed.
 - **Consumed by:** `chain_permits.md`, `chain_coa.md`, `chain_sources.md`
 - **Relies on:** `pipeline_system.md` (SDK), source specs (reference data tables)
 - **Operator-facing audit surface (WF2 #4 2026-05-08):** the admin Lead Detail Inspector (Spec 76 §3.5 Cycle 7) renders every output of these shared steps in its Spatial panel — parcel id + `area_sqm` (lot size), parcel_buildings `area_sqm` (footprint) + `height_m` + `stories`, neighbourhood id + name + `avg_household_income` + `period_of_construction`. Operators can audit per-permit which spatial joins succeeded without dropping to psql.
+- `load-permits.js` — referenced only as the `permits` table's other writer (`create-pre-permits.js`'s PRE- row INSERT shares the table, not the script); not governed here.
+- `load-address-points.js` — sources-chain step whose `address_points` table `geocode-permits.js` reads; referenced as context, not governed here.
+- `load-wsib.js` — sources-chain step named as `link-wsib.js`'s annual-cadence upstream refresh trigger; referenced as context, not governed here.
 </constraints>

@@ -135,7 +135,7 @@ The cost is `rate × AREA`, so the **area driver is half the model**. Two driver
 
 ## 6. Operating Boundaries
 
-### Target Files (P1)
+### Target Files
 - `scripts/lib/parcel-cost.js` (NEW, pure — engine + local line→field map + `area_confidence` + SOLAR/BAS-UNDERPIN), `scripts/compute-parcel-cost-estimates.js` (NEW, Mutator, lock 88), `scripts/manifest.json` (sources chain, after `enrich_parcels` before `refresh_snapshot`), `scripts/enrich-permits.js` (`COST_PROP_COLS` propagation), `scripts/quality/assert-global-coverage.js` (Spec 49 rows × 3 surfaces).
 - `migrations/NNN` — `archetype_cost_rates` table + seed; `parcels` cost/FSI cols; `permits`+`coa_applications` cost/FSI cols.
 - `docs/specs/_contracts.json` (`parcel_cost_model` group — non-tunable constants + seed-migration literal lock), `contracts.infra.test.ts`, `scripts/seeds/logic_variables.json`.
@@ -148,6 +148,11 @@ The cost is `rate × AREA`, so the **area driver is half the model**. Two driver
 ### Cross-Spec Dependencies
 - **Relies on:** Spec 65 §4 (`max_buildable_gfa/footprint_sqm`, the `cur_*` scenario fields, `neighbourhood_cost_premium`), Spec 78 (`opt_coa_gfa_sqm` + the §4D `OPT_COMP_PROP_COLS` propagation pattern), Spec 47 (Mutator skeleton), Spec 48 §3.6 (verdict cascade), Spec 49 (completeness matrix), Spec 86 (Control Panel — rate/logic-var tuning), Spec 26/35 (admin surfacing).
 - **Consumed by:** Spec 83 (lead cost model — selects an archetype + reads the propagated cost; MUST honor §2.6 premium-inclusive), Spec 87 (supplier audience — P3 product breakdown).
+- `load-permits.js` — upstream loader; only the `permits` table columns matter here, not its loading logic
+- `load-parcels.js` — upstream loader; only the `parcels` table rows matter here, not its loading logic
+- `enrich-parcels.js` — chain-sequencing reference only (`scripts/manifest.json`: "after `enrich_parcels` before `refresh_snapshot`"); zoning/max-build behavior is owned by Spec 65
+- `classify-permits.js` — advisory-lock-number footnote only (lock 88 predates the spec-number convention); no dependency on its classification logic
+- `refresh-snapshot.js` — chain-sequencing reference only (runs immediately after this spec's step)
 
 ## 7. Phasing
 **P1** cost engine + rates + propagation (this spec) → **P2** family-aware reads + R2 detached `opt_coa` + R4 type-aware comparables → **P3** products + breakdown. See `.cursor/active_task.md` for the phase execution plans.

@@ -741,12 +741,12 @@ The following items eliminate the duplication identified in the audit and resolv
 
 ## 10. Operating Boundaries
 
-### Target Files (this spec authorizes — actual edits happen in §9 followup WFs)
+### Target Files
 - `docs/specs/03-mobile/99_mobile_state_architecture.md` (this file — the spec)
 - `docs/reports/mobile_state_audit_2026-05-02.md` (the audit feeding §3)
 - `docs/specs/03-mobile/90_mobile_engineering_protocol.md` §7 (replaced with pointer to this spec)
 
-### Out-of-Scope Files (cleanup is gated on §9 followup WFs)
+### Out-of-Scope Files
 - All `mobile/src/store/*.ts` — modified in §9.3 / §9.5 followups, not here
 - All `mobile/app/**/_layout.tsx` — already fixed in prior WF3; further changes per §9.4
 - All `mobile/app/(onboarding)/*.tsx` — modified in §9.3 followup
@@ -757,3 +757,4 @@ The following items eliminate the duplication identified in the audit and resolv
 - **This spec is a dependency of:** every future mobile WF that adds state, a store, or a router.
 - **This spec depends on:** Spec 90 (engineering stack), Spec 93 (auth + AuthGate), Spec 94 (onboarding flow), Spec 95 (server profile = canonical), Spec 96 (subscription gate).
 - **Authorized amendment process:** any change to §3 (Field Ownership Matrix), §4 (Bridge Patterns), or §5 (Routing Authority Rules) requires a WF1 amendment with adversarial review.
+- `scripts/classify-lifecycle-phase.js` — consumes the mig-117 flattened notification-preference columns (`lifecycle_stalled_pref` etc.) this spec owns, for push-dispatch gating (§9.14).

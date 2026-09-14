@@ -124,6 +124,22 @@ All scoring constants are now DB-driven. Global constants (`los_penalty_tracking
 **Out-of-Scope Files:**
 - `src/lib/classification/scoring.ts` — Original `lead_score` is a static property of the permit; `opportunity_score` is a dynamic property of the marketplace.
 
+### Target Files
+- `scripts/compute-opportunity-scores.js` — this spec defines its `LOGIC_VARS_SCHEMA`, scoring formula (asymptotic LOS decay), and audit contract
+- `src/lib/classification/scoring.ts` — implementation file this spec already names in its body; declared explicitly 2026-09-14 (was only reaching the system map through the generator's whole-document fallback scan, which an explicit Target Files list suppresses)
+
+### Out-of-Scope Files
+- none
+
+### Cross-Spec Dependencies
+- `compute-coa-cost-estimates.js` — feeds the `cost_estimates` rows the CoA-branch score reads (freshness contract); cost formula owned by Spec 83
+- `compute-cost-estimates.js` — step 14 dependency for `trade_contract_values`; cost formula owned by Spec 83
+- `compute-phase-calibration.js` — shared advisory-locked step in the coa/permits freshness contract; calibration logic owned elsewhere
+- `compute-trade-forecasts.js` — the forecast engine that feeds this step's scoring input (Spec 85)
+- `update-tracked-projects.js` — runs immediately after this step (step 24 of 24); no shared logic
+- `refresh-snapshot.js` — shared advisory-locked step named in the freshness contract; behavior owned elsewhere
+- `classify-lifecycle-phase.js` — this step runs after it (step 21); phase classification owned elsewhere
+
 ---
 
 ## 6. Front-end Preparation (Admin & Pro App)

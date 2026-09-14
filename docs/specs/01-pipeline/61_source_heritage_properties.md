@@ -435,7 +435,7 @@ Write per-resource `last_modified`, `etag`, `content_hash` into `records_meta.he
 
 ## 5. Operating Boundaries
 
-### Target Files (future implementation WFs)
+### Target Files
 
 - `scripts/load-heritage.js` (NEW; Spec 47 skeleton; advisory lock 62)
 - `scripts/enrich-heritage.js` (NEW; sibling per L6; advisory lock 63)
@@ -464,7 +464,7 @@ Write per-resource `last_modified`, `etag`, `content_hash` into `records_meta.he
 - Federal/provincial heritage registers (Spec 61 = Toronto municipal only)
 - Listed properties + Under Appeal/Study HCDs (L25 filter)
 
-### Cross-spec dependencies
+### Cross-Spec Dependencies
 
 | Spec | Dependency |
 |---|---|
@@ -475,8 +475,14 @@ Write per-resource `last_modified`, `etag`, `content_hash` into `records_meta.he
 | Spec 59 | Pattern model; SQL inheritance for LATERAL `<->` + JS-side F-C1 + batched VALUES+UNNEST validation |
 | Spec 41 | chain_permits edit for heritage propagation step |
 | Spec 42 | chain_coa edit + CoA-to-parcels JOIN path (verify `lead_parcels` vs `permit_parcels`) |
+- `scripts/load-permits.js` — referenced only for goal/context (§1 Goal) and the shared M-3 migration note (§8e); not modified by this spec.
+- `scripts/enrich-ravines.js` — referenced only for chain-ordering context between `enrich_zoning`/`enrich_ravines`/`enrich_heritage` (§ H-v1.1.4); not modified by this spec.
+- `scripts/link-parcels.js` — referenced only for chain-ordering context (`enrich_heritage` AFTER `link_parcels`, § H-v1.1.4); not modified by this spec.
 
 ---
+
+### Out-of-Scope Files
+- `scripts/enrich-parcels.js` — heritage enrichment lives in the sibling `scripts/enrich-heritage.js` instead, per the L6 sibling-script decision (§5 L6).
 
 ## 6. License & Attribution
 

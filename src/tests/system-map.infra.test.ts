@@ -102,3 +102,73 @@ describe('system map — G0 owner-row contract (both directions)', () => {
     expect(tamperedRow44).not.toContain('`scripts/quality/assert-data-bounds.js`'); // and the owner-row lock (row-scoped: Specs 42/43 also declare the file)
   });
 });
+
+describe('spec Operating Boundaries — every step a spec names is classified (Spec 124 R-AF, 2026-09-14)', () => {
+  // A spec that names a chained step script anywhere in its body must place it in exactly one of
+  // its Operating Boundaries lists: `### Target Files` (the spec defines the step's behaviour,
+  // thresholds or written columns) or `### Cross-Spec Dependencies` (it consumes the step's output
+  // or references it) or `### Out-of-Scope Files`. Measured 2026-09-14 before the classification:
+  // 216 undeclared spec->step pairs across 42 specs — the domain specs (54-62, 65/66, 80-88 …) had
+  // never declared the steps they govern, so G0's owner lookup was true only for the chain specs.
+  // Cross-cutting architecture specs are exempt readers (they name every script by design).
+  const CROSS_CUTTING = new Set(['30', '40', '47', '48', '79', '118', '119', '120', '121', '122', '122a', '123', '124']);
+  const section = (c: string, name: string) => (c.match(new RegExp(`### ${name}[\\s\\S]*?(?=###|## |$)`)) || [''])[0];
+
+  it('Operating Boundaries sub-headings are spelled canonically and appear at most once per spec (the generator and this lock read the FIRST exact match only)', () => {
+    // Measured 2026-09-14: specs 50-53 wrote "### Out-of-Scope", 59/61/62 "### Cross-spec dependencies",
+    // 59 "### Target files (…)", and several carried suffixes ("(Modify / Create)", "(P1)") — the map
+    // generator's exact `### Target Files` match never saw those bullets, and a second canonical
+    // heading added beside a variant left its bullets invisible too.
+    const CANON = ['### Target Files', '### Out-of-Scope Files', '### Cross-Spec Dependencies'];
+    const variant = /^###\s*(target files?|out-of-scope(?: files)?|cross-spec dependencies)/i;
+    const problems: string[] = [];
+    for (const sub of ['01-pipeline', '02-web-admin', '03-mobile']) {
+      const dir = path.join(REPO_ROOT, 'docs/specs', sub);
+      for (const f of fs.readdirSync(dir).filter((x) => x.endsWith('.md') && !x.startsWith('_'))) {
+        const lines = normalize(fs.readFileSync(path.join(dir, f), 'utf8')).split('\n');
+        const seen = new Map<string, number>();
+        for (const [i, l] of lines.entries()) {
+          if (!variant.test(l)) continue;
+          if (!CANON.includes(l)) problems.push(`${sub}/${f}:${i + 1} non-canonical heading "${l}"`);
+          seen.set(l, (seen.get(l) ?? 0) + 1);
+        }
+        for (const [h, n] of seen) if (n > 1) problems.push(`${sub}/${f} has ${n}x "${h}"`);
+      }
+    }
+    expect(problems).toEqual([]);
+  });
+
+  it('no spec names a chained step script without classifying it in Target Files, Cross-Spec Dependencies or Out-of-Scope Files', () => {
+    const manifest = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, 'scripts/manifest.json'), 'utf8')) as {
+      scripts: Record<string, { file: string }>;
+      chains: Record<string, string[]>;
+    };
+    const chained = new Set(Object.values(manifest.chains).flat());
+    const steps = Object.entries(manifest.scripts).filter(([slug, e]) => chained.has(slug) && e.file);
+    const violations: string[] = [];
+    let specsChecked = 0;
+    for (const sub of ['01-pipeline', '02-web-admin', '03-mobile']) {
+      const dir = path.join(REPO_ROOT, 'docs/specs', sub);
+      for (const f of fs.readdirSync(dir).filter((x) => x.endsWith('.md') && !x.startsWith('_'))) {
+        const id = (f.match(/^(\d+[a-z]?)_/) || [])[1];
+        if (!id || CROSS_CUTTING.has(id)) continue;
+        specsChecked += 1;
+        const c = normalize(fs.readFileSync(path.join(dir, f), 'utf8'));
+        const tf = section(c, 'Target Files');
+        const dep = section(c, 'Cross-Spec Dependencies');
+        const oos = section(c, 'Out-of-Scope Files');
+        for (const [slug, e] of steps) {
+          const base = e.file.split('/').pop()!;
+          // Script FILENAME only — a backticked slug (`permits`, `parcels`, `massing` …) collides with
+          // the table/entity of the same name and produced false positives (group B, 2026-09-14).
+          const named = c.includes(base);
+          if (!named) continue;
+          const classified = tf.includes(`\`${e.file}\``) || dep.includes(base) || oos.includes(base);
+          if (!classified) violations.push(`${sub}/${f} names ${e.file} (${slug}) but classifies it nowhere`);
+        }
+      }
+    }
+    expect(specsChecked).toBeGreaterThan(40);
+    expect(violations).toEqual([]);
+  });
+});

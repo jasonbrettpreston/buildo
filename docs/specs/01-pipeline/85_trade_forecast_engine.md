@@ -156,6 +156,13 @@ Three bypass rows make every non-strict activation as loud as the others (overri
 ### Cross-Spec Dependencies
 - **Relies on:** Lifecycle Phase Engine (for anchors), `72_lead_cost_model` (for allocation).
 - **Consumed by:** `70_lead_feed` (to sort by timing) and Opportunity Score Engine (for the urgency multiplier).
+- `scripts/load-permits.js` — this spec's SOURCE_SQL reads the `permits` table the loader populates; loader behaviour not defined here.
+- `scripts/compute-coa-cost-estimates.js` — Branch B reads the CoA cost rows this step writes; cost formula owned by Spec 83.
+- `scripts/compute-timing-calibration-v2.js` — this spec consumes the `phase_calibration` it writes (step 15, ahead of this spec's step 22); formula not defined here.
+- `scripts/compute-phase-calibration.js` — this spec's CoA branch gates on its most-recent verdict (freshness + audit-verdict gate); calibration formula owned by Spec 84.
+- `scripts/compute-opportunity-scores.js` — downstream consumer of the `target_window`/`urgency` stamps this spec produces; scoring formula owned by Spec 81.
+- `scripts/update-tracked-projects.js` — downstream consumer of the `urgency` value this spec is authoritative over; alert behaviour owned by Spec 82.
+- `scripts/refresh-snapshot.js` — shares this spec's advisory-locked freshness contract (coa-before-permits serialization); not defined here.
 
 ### Control Panel (migrations 092 + 093)
 - `trade_configurations.bid_phase_cutoff` + `work_phase_target` define the bimodal routing per trade

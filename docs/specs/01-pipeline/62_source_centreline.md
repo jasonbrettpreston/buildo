@@ -440,7 +440,7 @@ The §11 8-CTE join over 486K parcels is the sources chain's single biggest cost
 
 ## 5. Operating Boundaries
 
-### Target Files (future implementation WFs)
+### Target Files
 
 - `scripts/load-centreline.js` (NEW; Spec 47 R1-R12 skeleton; advisory lock 63)
 - `scripts/enrich-centreline.js` (NEW; sibling per L6; advisory lock 64)
@@ -471,7 +471,7 @@ The §11 8-CTE join over 486K parcels is the sources chain's single biggest cost
 - Address-point lookups (`BEGIN_ADDR_*` / `END_ADDR_*` columns NOT v1-ingested)
 - One-way direction propagation to permits (`oneway_dir_code_desc` stored but not enriched onto parcels in v1)
 
-### Cross-spec dependencies
+### Cross-Spec Dependencies
 
 | Spec | Dependency |
 |---|---|
@@ -483,8 +483,16 @@ The §11 8-CTE join over 486K parcels is the sources chain's single biggest cost
 | Spec 61 | Pattern model — sibling-script (L6), `enrich-permits.js` file ownership (L28); LATERAL nearest-neighbor pattern (Spec 62 §11 doesn't use Levenshtein but inherits the LATERAL idiom) |
 | Spec 41 | chain_permits edit for centreline propagation step |
 | Spec 42 | chain_coa edit + CoA-to-parcels JOIN path (verify `lead_parcels` vs `permit_parcels`) |
+- `scripts/load-permits.js` — referenced only for goal/context (§1 Goal); not modified by this spec.
+- `scripts/load-parcels.js` — referenced only for the derived-column list (§L1) and row-level recompute scoping (§3.11 version-skip gate); not modified by this spec.
+- `scripts/enrich-ravines.js` — referenced only for the 4-parcels-writer cross-WF serialization ordering (§L11); not modified by this spec.
+- `scripts/enrich-heritage.js` — referenced only for chain-ordering context (`enrich_centreline` AFTER `enrich_heritage`, §L22); not modified by this spec.
+- `scripts/link-parcels.js` — referenced only for the 4-parcels-writer cross-WF serialization ordering (§L11); not modified by this spec.
 
 ---
+
+### Out-of-Scope Files
+- `scripts/enrich-parcels.js` — centreline enrichment lives in the sibling `scripts/enrich-centreline.js` instead, per the L6 sibling-script decision inherited from Spec 61 (§5 Cross-spec dependencies note).
 
 ## 6. License & Attribution
 

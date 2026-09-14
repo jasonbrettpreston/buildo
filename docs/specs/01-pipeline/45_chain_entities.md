@@ -98,4 +98,7 @@ Both steps run the **same script** (`enrich-web-search.js`) with different envir
 - **Relies on:** `chain_permits.md` (builders must be extracted first)
 - **Relies on:** `chain_sources.md` (WSIB registry must be loaded for prioritization)
 - **Relies on:** `chain_sources.md` (WSIB registry must be loaded for prioritization)
+- `load-permits.js` — permits-chain step named only to note this chain is never invoked from `permits`/`coa`/`sources`, not governed here.
+- `load-coa.js` — coa-chain step named only to note this chain is never invoked from `permits`/`coa`/`sources`, not governed here.
+- `scripts/quality/assert-global-coverage.js` — referenced only for its INFO-not-FAIL treatment of `entities.primary_phone/email/website` coverage; the check itself is governed by chain specs 41-44/49, not here.
 </constraints>

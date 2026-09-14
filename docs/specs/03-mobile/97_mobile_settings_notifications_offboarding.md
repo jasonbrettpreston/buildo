@@ -537,3 +537,16 @@ Spec 95 (DB + API) → Spec 93 (Auth) → Spec 94 (Onboarding) → Spec 96 (Subs
 - Spec 93 §3.6 — account deletion initiated here, Firebase cleanup defined there
 - Spec 95 — all settings writes update `user_profiles` via PATCH
 - Spec 96 — subscription status badge rendered in Settings; cancellation flow referenced
+
+## Operating Boundaries
+
+### Target Files
+- none
+
+### Out-of-Scope Files
+- none
+
+### Cross-Spec Dependencies
+- `scripts/update-tracked-projects.js` — enqueues the `LIFECYCLE_PHASE_CHANGED`/`LIFECYCLE_STALLED`/`START_DATE_URGENT` pushes this spec's settings gate (§2.3).
+- `scripts/dispatch-notifications.js` — the single gated `dispatch_notifications` chain step that delivers what this spec's preference toggles gate.
+- `scripts/classify-lifecycle-phase.js` — enqueues the lifecycle-phase pushes this spec's settings gate (§2.3).

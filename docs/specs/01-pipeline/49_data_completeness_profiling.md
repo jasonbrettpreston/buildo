@@ -286,4 +286,18 @@ This script emits **no `audit_table.columns`**, so FreshnessTimeline renders its
 - **Relies on:** `40_pipeline_system.md` (emitSummary contract, records_total semantics)
 - **Relies on:** `41_chain_permits.md` + `42_chain_coa.md` (step ordering)
 - **Consumed by:** FreshnessTimeline via the metric-row renderer (`{metric,value,threshold,status}`) — this script emits no `columns[]`
+- `load-permits.js` — profiled step (the `permits` branch's default full-profile scope); this script only reads its output, does not govern it.
+- `load-coa.js` — profiled step (the `coa`-scoped profile subset); this script only reads its output, does not govern it.
+- `load-parcels.js` — profiled step (the `sources`-scoped PARCELS-table coverage profile); this script only reads its output, does not govern it.
+- `compute-parcel-cost-estimates.js` — profiled step named for chain-position context (`parcel_cost_menu` gate); this script only reads its output, does not govern it.
+- `enrich-permits.js` — profiled step named for the Spec 59 ravine + Spec 61 heritage propagated-feed INFO rows; this script only reads its output, does not govern it.
+- `link-parcels.js` — profiled step named for the `Step 9b` insert-after-position convention; this script only reads its output, does not govern it.
+- `link-coa-to-parcels.js` — profiled step named for the `CoA Step 4b` insert-after-position convention; this script only reads its output, does not govern it.
+- `compute-phase-calibration.js` — profiled step named for the CoA-chain last-step position context; this script only reads its output, does not govern it.
+- `refresh-snapshot.js` — profiled step named for chain-position context; this script only reads its output, does not govern it.
+- `scripts/quality/assert-data-bounds.js` — sibling assert step named for chain-position context and the retired `create_pre_permits` gate; this script only reads its output, does not govern it.
+- `scripts/quality/assert-engine-health.js` — sibling assert step named for chain-position context; this script only reads its output, does not govern it.
+- `scripts/quality/assert-entity-tracing.js` — sibling assert step whose `last_verdict` this profile re-emits as an INFO row; this script only reads its output, does not govern it.
+- `scripts/quality/assert-parcel-sanity.js` — sibling "are the values CORRECT?" assert step named for the coverage/sanity boundary comparison; this script only reads its output, does not govern it.
+- `backup-db.js` — profiled step named for chain-position context; this script only reads its output, does not govern it.
 - **Consumed by:** Spec 79 §6.1 as the chain-end validation cap — every Spec 79 run finishes with this profile per chain, and the profile output becomes the final coverage gate.

@@ -437,7 +437,7 @@ Validate that `ST_IsValid` + `ST_MakeValid` + `ST_CollectionExtract` are invoked
 
 ## 5. Operating Boundaries
 
-### Target files (future implementation WFs — NOT this WF)
+### Target Files
 
 - `scripts/load-ravines.js` (NEW — Spec 47 skeleton; advisory lock 59)
 - `scripts/enrich-ravines.js` (NEW — sibling per L6; advisory lock 60 per L4b)
@@ -452,15 +452,21 @@ Validate that `ST_IsValid` + `ST_MakeValid` + `ST_CollectionExtract` are invoked
 - `scripts/manifest.json` (edit — add `source-ravines` + `enrich-ravines` slugs with read/write columns)
 - `src/tests/load-ravines.{logic,infra}.test.ts`, `src/tests/enrich-ravines.{logic,infra}.test.ts`, `src/tests/db/migration-N-ravines.db.test.ts`
 - `docs/runbook/source_ravines_first_deploy_spike.md` (NEW per Spec 48 §3.7)
+- `scripts/load-ravines.js` — this spec defines the ravines loader's contract (§3 Behavioral Contract, §9 Producer/Consumer Contract).
+- `scripts/enrich-ravines.js` — this spec defines the sibling enrichment script's contract (§8d, §11.1).
+- `scripts/enrich-permits.js` — this spec defines the ravine step's multi-parcel propagation rule and lock requirement (§8e, §11.2).
+- `scripts/quality/assert-schema.js` — this spec defines the new ravines CKAN URL + OBJECTID checks to add (§8c deliverable table).
+- `scripts/quality/assert-data-bounds.js` — this spec defines the new `>= 500` ravines row-count lower bound to add (§8c deliverable table).
 
-### Out-of-scope
+### Out-of-Scope Files
 
 - Admin UI surface for displaying the 2 fields — sibling spec under `docs/specs/02-web-admin/`
 - Bitemporal/historical compliance — deferred per L3
 - Ravine-core vs Regulated Area distinction (would require a new spec — see §8h)
 - Per-feature attribute metadata (CKAN has only `OBJECTID`)
+- `scripts/enrich-parcels.js` — ravine enrichment lives in the sibling `scripts/enrich-ravines.js` instead, per the L6 independent-deployability decision (§8d L6 trade-off table).
 
-### Cross-spec dependencies
+### Cross-Spec Dependencies
 
 | Spec | Dependency |
 |---|---|
@@ -469,6 +475,9 @@ Validate that `ST_IsValid` + `ST_MakeValid` + `ST_CollectionExtract` are invoked
 | Spec 58 | Pattern model; L11 cross-WF serialization; potential reuse of `scripts/lib/geometry-validator.js` |
 | Spec 43 | Chain step placement (§8c/§8d) |
 | Spec 42 | CoA JOIN path for §8e |
+- `scripts/load-permits.js` — referenced only for schema-as-built context (intro); not modified by this spec.
+- `scripts/load-parcels.js` — referenced only for chain-ordering context (`load_ravines` AFTER `parcels` slug, §8c) and migration-numbering context; not modified by this spec.
+- `scripts/link-parcels.js` — referenced only for chain-ordering context (`enrich_ravines` AFTER `link_parcels` slug, §8d); not modified by this spec.
 
 ---
 

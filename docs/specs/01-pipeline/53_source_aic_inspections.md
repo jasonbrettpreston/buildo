@@ -115,7 +115,7 @@ Our `permit_num` = `YY NNNNNN TYPE` (3 parts). The portal adds revision + work t
 - `scripts/aic-scraper-nodriver.py`
 - `scripts/aic-orchestrator.py`
 
-### Out-of-Scope
+### Out-of-Scope Files
 - `scripts/poc-aic-scraper-v2.js` — deprecated legacy JS scraper
 - `src/app/permits/[id]/page.tsx` — UI rendering
 
@@ -123,4 +123,5 @@ Our `permit_num` = `YY NNNNNN TYPE` (3 parts). The portal adds revision + work t
 - **Consumed by:** `chain_deep_scrapes.md` (step 1)
 - **Relies on:** `chain_permits.md` (permits must be loaded first)
 - **Relies on:** `pipeline_system.md` (SDK for orchestrator)
+- `scripts/load-permits.js` — this spec consumes permits already loaded by this step as its input queue (§3 Inputs), then writes `enriched_status` back onto them; it does not define this loader's own contract.
 </constraints>

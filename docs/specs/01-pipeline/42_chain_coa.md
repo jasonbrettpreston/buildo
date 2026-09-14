@@ -157,6 +157,29 @@ with new CoA linkage are reclassified on the next daily permits chain run (≤24
 - **Relies on:** `pipeline_system.md` (SDK, orchestrator)
 - **Relies on:** `chain_permits.md` (permits must be loaded first for linking)
 - **Shared steps (current state):** `link_coa`, `create_pre_permits`, `refresh_snapshot` also appear in `chain_permits.md`. `create_pre_permits` is retired in §6 Phase G; the other two remain shared after the WF.
+- `load-permits.js` — permits-chain step referenced as the CoA-lead-must-become-first-class design-pivot context, not governed here.
+- `close-stale-permits.js` — permits-chain step named as a "does CoA need this too" comparison in §6's per-step table.
+- `classify-permit-phase.js` — permits-chain step named as a comparison in §6's per-step table.
+- `extract-builders.js` — permits-chain `builders` step named as a "SKIP v1" comparison in §6's per-step table.
+- `load-address-points.js` — sources-chain step referenced via the shared spatial reference tables §6 cites for `link_coa_to_parcels`.
+- `load-parcels.js` — sources-chain step referenced via the shared spatial reference tables §6 cites for `link_coa_to_parcels`.
+- `load-neighbourhoods.js` — sources-chain step referenced via the shared spatial reference tables §6 cites for `link_coa_neighbourhoods`.
+- `geocode-permits.js` — permits-chain step named as the string-normalization comparison for the new CoA address-linking step.
+- `link-parcels.js` — permits-chain step named as the mirrored precedent for `link-coa-to-parcels.js`.
+- `link-neighbourhoods.js` — permits-chain step named as the point-in-polygon precedent for the new CoA neighbourhood step.
+- `link-massing.js` — permits-chain step named as a "shared, 2-hop JOIN" comparison in §6's per-step table.
+- `link-wsib.js` — permits-chain step named as a "Builders-only, NO" comparison in §6's per-step table.
+- `classify-scope.js` — permits-chain step named as the pattern-matching precedent for `classify-coa-scope.js`.
+- `classify-permits.js` — permits-chain step named as the trade-matrix precedent for `classify-coa-trades.js`.
+- `backfill-realtor-permit-trades.js` — permits-chain step named as the realtor fan-out precedent bundled into `classify-coa-trades.js`.
+- `compute-cost-estimates.js` — permits-chain step named as the applicant-cost-anchored comparison for `compute-coa-cost-estimates.js`.
+- `compute-timing-calibration-v2.js` — permits-chain step named as a "single shared calibration, NO" comparison in §6's per-step table.
+- `compute-trade-forecasts.js` — permits-chain step named as the rekey-on-`lead_id` unification precedent (Spec 85 design pivot).
+- `compute-opportunity-scores.js` — permits-chain step named as the rekey-on-`lead_id` unification precedent (Spec 81 design pivot).
+- `update-tracked-projects.js` — permits-chain step named as the CRM-alert extension precedent (Spec 82 design pivot).
+- `link-similar.js` — permits-chain step named as a "DEFER to v2" comparison in §6's per-step table.
+- `scripts/quality/assert-entity-tracing.js` — permits-chain step named as the 26-hour coverage-matrix extension precedent.
+- `backup-db.js` — permits-chain step named as a "Daily backup is global, NO" comparison in §6's per-step table.
 </constraints>
 
 ---

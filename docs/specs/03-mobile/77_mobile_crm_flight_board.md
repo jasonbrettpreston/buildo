@@ -255,6 +255,12 @@ Equivalent to iOS Live Activities: persistent notification with expandable timel
 * `mobile/src/screens/FlightBoard*.tsx` — UI component; this spec describes the API contract, not the React Native implementation
 * `src/app/api/leads/feed/route.ts` — the discovery feed; the flight board is a separate endpoint
 
+### Out-of-Scope Files
+- `scripts/compute-trade-forecasts.js` — the producer of `trade_forecasts` rows; this spec describes the consumer only.
+
+### Cross-Spec Dependencies
+- `scripts/load-permits.js` — consumes `permits` rows (`lifecycle_phase`/`lifecycle_stalled`) the flight-board endpoints join and filter on.
+
 **Cross-Spec Dependencies**
 
 | Spec | Dependency |

@@ -133,11 +133,12 @@ Pre-issuance status values observed in the feed (2026-05-11):
 - `scripts/load-permits.js`
 - `src/lib/permits/field-mapping.ts`, `src/lib/sync/ingest.ts`, `src/lib/sync/process.ts`
 
-### Out-of-Scope
+### Out-of-Scope Files
 - `src/lib/permits/hash.ts` — governed by change detection spec
 - `scripts/classify-*.js` — governed by step specs
 
 ### Cross-Spec Dependencies
 - **Consumed by:** `chain_permits.md` (step 2)
 - **Relies on:** `pipeline_system.md` (SDK)
+- `scripts/quality/assert-schema.js` — Tier 1 CKAN schema-drift gate referenced as context (§ Edge Cases: runs before `load-permits.js`); its threshold is owned by its own step spec, not this one.
 </constraints>

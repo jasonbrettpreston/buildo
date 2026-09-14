@@ -145,3 +145,13 @@ Real-estate agents are **not** a sourced trade and are out of scope for this spe
 - **Target Files (v2, deferred):** the `supplier_products` product-hub migration + product-keyed matching/read layer.
 - **Out-of-Scope Files:** Spec 80 taxonomy tables (`trades`, `products`, `trade_products`) — *referenced* (FK target), never modified here. The lead-serving layer (`lead_trades`), forecast (`compute-trade-forecasts.js`, Spec 85) and cost (Spec 83) engines — *consumed*, not changed. The realtor-append path (`shouldAppendRealtor` in the classifiers) — out of scope (see §Out of scope).
 - **Cross-Spec Dependencies:** **Spec 80** (`trades` = FK target for v1; `products`/`trade_products` = the v2 hub + install-side mirror), **Spec 85** (timing inheritance via `trade_forecasts`), **Spec 83** (`cost_basis`, trade-keyed cost).
+
+### Target Files
+- none
+
+### Cross-Spec Dependencies
+- `scripts/classify-coa-trades.js` — this spec's `is_active` precision guard depends on its `fromBundle`/`is_active` semantics; classifier logic not defined here.
+- `scripts/classify-permits.js` — this spec's permit-side precision guard depends on its tier/confidence bundle-prior writes; classifier logic not defined here.
+
+### Out-of-Scope Files
+- `scripts/compute-trade-forecasts.js` — already named in §Operating Boundaries above as consumed, not changed, by this spec.

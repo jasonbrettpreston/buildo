@@ -547,4 +547,24 @@ renovation→INT, mechanical→MEC; demolition/repair/other→null, `repair`→[
 - **Dual-path scripts:** `scripts/classify-permits.js`, `scripts/classify-permit-phase.js`, `scripts/reclassify-all.js`; **P16 dual paths:** `classify-permits.js` ↔ `classifier.ts`, `scripts/lib/coa-trade-classifier.js` ↔ `src/lib/classification/coa-trade-classifier.ts` (both consume `LINE_TRADE_COMPLEMENT`/`mapToLines` from `src/features/leads/lib/archetype-cost-map.js` — the single source of truth; the mig-143 trigger mirrors `attachment_basis` permit_trades→lead_trades)
 - **Consumed by:** `chain_permits.md` (steps 4, 5, 13), `60_shared_steps.md`
 - **Operator-facing rendering (WF2 #4 2026-05-08):** the admin Lead Detail Inspector (Spec 76 §3.5 Cycle 7) renders the trade vocabulary defined in §2 in its Trades panel — every `permit_trades` row with `confidence`, plus an `is_default_fallback` flag (true when `confidence === 0.55`, signaling tag-trade-matrix default with no permit-specific signal). The construction-phase vocabulary (§3) renders in the Lifecycle panel.
+
+### Target Files
+- `scripts/classify-permit-phase.js` — §3 defines the 4-phase lifecycle vocabulary and timing thresholds this script implements
+- `scripts/classify-coa-scope.js` — §4/§5.A define the description-keyword decision tree and CoA `structure_type`/`coa_type_class` vocabulary this script implements
+- `scripts/classify-coa-trades.js` — §4 defines the `lead_products` write contract (`classifyCoaProducts`, tag-hit/bundle confidence thresholds) this script implements
+- `scripts/classify-permits.js` — §2/§7.1 define the TRADES vocabulary and dual-path parity contract this script implements
+- `scripts/compute-cost-estimates.js` — the "Cost-model behaviors" section defines the `permit_type_class` gate (SOURCE_SQL join, short-circuit table, class enum) this script enforces
+- `src/lib/classification/trades.ts` — implementation file this spec already names in its body; declared explicitly 2026-09-14 (was only reaching the system map through the generator's whole-document fallback scan, which an explicit Target Files list suppresses)
+- `src/lib/classification/tag-trade-matrix.ts` — implementation file this spec already names in its body; declared explicitly 2026-09-14 (was only reaching the system map through the generator's whole-document fallback scan, which an explicit Target Files list suppresses)
+- `src/lib/classification/phases.ts` — implementation file this spec already names in its body; declared explicitly 2026-09-14 (was only reaching the system map through the generator's whole-document fallback scan, which an explicit Target Files list suppresses)
+- `src/lib/classification/groups.ts` — implementation file this spec already names in its body; declared explicitly 2026-09-14 (was only reaching the system map through the generator's whole-document fallback scan, which an explicit Target Files list suppresses)
+- `src/lib/classification/permit-type-class.ts` — implementation file this spec already names in its body; declared explicitly 2026-09-14 (was only reaching the system map through the generator's whole-document fallback scan, which an explicit Target Files list suppresses)
+- `src/lib/classification/classifier.ts` — implementation file this spec already names in its body; declared explicitly 2026-09-14 (was only reaching the system map through the generator's whole-document fallback scan, which an explicit Target Files list suppresses)
+- `src/lib/classification/coa-trade-classifier.ts` — implementation file this spec already names in its body; declared explicitly 2026-09-14 (was only reaching the system map through the generator's whole-document fallback scan, which an explicit Target Files list suppresses)
+
+### Out-of-Scope Files
+- none
+
+### Cross-Spec Dependencies
+- none
 </constraints>

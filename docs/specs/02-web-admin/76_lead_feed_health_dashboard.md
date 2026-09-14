@@ -445,6 +445,18 @@ never authored because the surface was never built (see §3.1/§3.3 DEFERRED).
 - **Relies on (Cycle 3):** `77_mobile_crm_flight_board.md` §3.2 + §3.3 + §3.3.1 (FlightBoardDetail contract consumed by §3.4 Flight Center + §3.6 inspector)
 - **Open coordination (Cycle 3):** Spec 91 amendment for user-type-differentiated feed views is a precondition for §3.7 (currently DEFERRED).
 - **Consumed by:** Admin users monitoring lead feed production health (§3.3) + Admin users testing the lead-feed read flows end-to-end (§3.4–§3.6).
+- `scripts/load-permits.js` — consumes `permits` rows the 4 aggregate queries and inspector panels read.
+- `scripts/classify-permit-phase.js` — consumes the `permit_type`/`structure_type`/`status`/`enriched_status` fields the Source panel displays.
+- `scripts/load-coa.js` — consumes `coa_applications` rows for radius search and the CoA description display.
+- `scripts/classify-coa-scope.js` — consumes the `structure_type` value it derives, displayed in the CoA Classification panel.
+- `scripts/link-wsib.js` — consumes the `legal_name`/`name_normalized`/`wsib_registered` fields the Entity panel displays.
+- `scripts/classify-scope.js` — consumes the `project_type`/`scope_tags[]` fields the Scope panel displays.
+- `scripts/classify-permits.js` — consumes the `permit_trades` rows + confidence the Trades panel displays.
+- `scripts/compute-phase-calibration.js` — consumes the calibration fields the Lifecycle panel displays.
+- `scripts/compute-trade-forecasts.js` — consumes the per-trade forecast rows the Forecast panel displays.
+- `scripts/compute-opportunity-scores.js` — consumes the `opportunity_score`/`trade_slice_dollar` fields the Forecast panel displays.
+- `scripts/classify-lifecycle-phase.js` — consumes the `phase`/`stalled`/timeline fields the Lifecycle panel displays, incl. the `bid_value` snapshot it writes.
+- `scripts/quality/assert-global-coverage.js` — referenced as the design precedent the Cycle 7 inspector's ~70-field coverage matrix mirrors.
 
 ### Mobile & Responsive Behavior
 - Dashboard sections stack vertically on mobile (base = single column)

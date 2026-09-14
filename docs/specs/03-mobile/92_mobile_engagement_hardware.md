@@ -219,3 +219,15 @@ const scheduleAllowed = (() => {
 const isUrgent = trigger === 'LIFECYCLE_STALLED' || trigger === 'START_DATE_URGENT';
 if (!scheduleAllowed && !isUrgent) return; // skip dispatch
 ```
+
+## Operating Boundaries
+
+### Target Files
+- none
+
+### Out-of-Scope Files
+- none
+
+### Cross-Spec Dependencies
+- `scripts/dispatch-notifications.js` — this spec documents the §2 trigger matrix, §3.1 payload schema, and §6.3 `notification_schedule` dispatch logic it implements, formally owned by Spec 101.
+- `scripts/load-permits.js` — referenced only for the `permits.lifecycle_stalled` naming-collision rationale behind the `_pref` column suffix.

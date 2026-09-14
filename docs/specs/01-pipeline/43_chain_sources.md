@@ -209,6 +209,8 @@ Every other step (including `link_parcels`, `link_neighbourhoods`, `link_wsib`, 
 - **Consumed by:** `41_chain_permits.md` / `42_chain_coa.md` (depend on spatial + enriched-parcel tables being populated)
 - **Enriched-parcel data specs:** `58_source_zoning.md` (zoning DataStore feed), `59_source_ravine_protection.md`, `61_source_heritage.md`, `62_source_centreline.md`, `65_enrich_parcels.md` (max-build envelope + existing/scenario), `78_optimal_lot_config.md` (optimal-config + comps), `88_parcel_cost_model.md` (parcel cost menu)
 - **Shared steps:** See `60_shared_steps.md` for geocode_permits, link_parcels, link_massing, link_neighbourhoods, link_wsib, refresh_snapshot
+- `extract-builders.js` — permits-chain `builders` step named as `link_wsib`'s upstream run-ledger gate signal (`entities.name_normalized`), not governed here.
+- `link-coa-to-parcels.js` — coa-chain step named as a downstream consumer of the `link_parcel_addresses` bridge (Tier 1a/1b), not governed here.
 </constraints>
 
 ---

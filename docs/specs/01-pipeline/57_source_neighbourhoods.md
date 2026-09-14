@@ -62,4 +62,16 @@ As the geographic aggregation layer, this script ingests 158 Toronto neighbourho
 - **Script:** `scripts/load-neighbourhoods.js`
 - **Consumed by:** `chain_sources.md` (step 9), `link_neighbourhoods` (point-in-polygon)
 - **Relies on:** `pipeline_system.md` (SDK)
+
+### Target Files
+- `scripts/load-neighbourhoods.js` — this spec defines the neighbourhoods loader's contract (§2/§3).
+- `src/lib/leads/lead-detail-query.ts` — implementation file this spec already names in its body; declared explicitly 2026-09-14 (was only reaching the system map through the generator's whole-document fallback scan, which an explicit Target Files list suppresses)
+- `src/lib/leads/lead-inspect-query.ts` — implementation file this spec already names in its body; declared explicitly 2026-09-14 (was only reaching the system map through the generator's whole-document fallback scan, which an explicit Target Files list suppresses)
+- `src/app/api/permits/[id]/route.ts` — implementation file this spec already names in its body; declared explicitly 2026-09-14 (was only reaching the system map through the generator's whole-document fallback scan, which an explicit Target Files list suppresses)
+
+### Cross-Spec Dependencies
+- `scripts/load-permits.js` — referenced only for the `n.id = p.neighbourhood_id` JOIN guidance (§2); this spec does not define its contract.
+- `scripts/load-parcels.js` — referenced only for the shared `id SERIAL` PK convention (§2); this spec does not define its contract.
+- `scripts/link-neighbourhoods.js` — downstream consumer of `neighbourhoods` via point-in-polygon matching (§4 Consumed by); its own contract lives in its step spec.
+- `scripts/compute-cost-estimates.js` — referenced only for the same JOIN guidance (§2); this spec does not define its contract.
 </constraints>
