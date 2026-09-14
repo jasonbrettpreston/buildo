@@ -7,19 +7,18 @@
 
 ## Counts
 
-Remaining files: **53** (+ **0** pending) · remaining slugs: **55** (+ **0** pending)
+Remaining files: **52** (+ **1** pending) · remaining slugs: **54** (+ **1** pending)
 
 | Batch | Files | Slots |
 |---|---:|---:|
-| C4 | 3 | 8 |
-| C5 | 14 | 14 |
+| C4 | 2 | 4 |
+| C5 | 15 | 18 |
 | C6 | 36 | 40 |
 
 ## C4 — archetype-grouped, risk-ascending
 
 | Archetype | File | Slug(s) | Chains (slots) | Quadrant | Write hints | Open cutover_prereq |
 |---|---|---|---|---|---|---|
-| ASSERT | `scripts/quality/assert-engine-health.js` | assert_engine_health | coa+deep_scrapes+permits+sources (4) | top-right | — | — |
 | ENRICHER | `scripts/geocode-permits.js` | geocode_permits | permits+sources (2) | bottom-left | supports_full | — |
 | LINK | `scripts/link-neighbourhoods.js` | link_neighbourhoods | permits+sources (2) | top-right | supports_full | — |
 
@@ -27,7 +26,6 @@ Remaining files: **53** (+ **0** pending) · remaining slugs: **55** (+ **0** pe
 
 - `scripts/geocode-permits.js` (ENRICHER): C4 batching-entry §3.2 order 5
 - `scripts/link-neighbourhoods.js` (LINK): C4 batching-entry §3.2 order 4 — LINK 3rd/last member
-- `scripts/quality/assert-engine-health.js` (ASSERT): C4 batching-entry §3.2 order 3 — Fold A I-1/I-2 (CRITICAL): a genuine domain write (engine_health_snapshots) inside the ASSERT x-profile (outputs:"none" forced); PH-0 must re-derive this, not trust the port
 
 </details>
 
@@ -36,6 +34,7 @@ Remaining files: **53** (+ **0** pending) · remaining slugs: **55** (+ **0** pe
 | Archetype | File | Slug(s) | Chains (slots) | Quadrant | Write hints | Open cutover_prereq |
 |---|---|---|---|---|---|---|
 | ASSERT | `scripts/quality/assert-parcel-sanity.js` | assert_parcel_sanity | sources (1) | bottom-left | — | — |
+| ASSERT | `scripts/quality/assert-engine-health.js` | assert_engine_health [pending: red_suite] | coa+deep_scrapes+permits+sources (4) | top-right | — | — |
 | ENRICHER | `scripts/enrich-centreline.js` | enrich_centreline | sources (1) | bottom-left | — | EP-PIN-D17 (enrich_centreline) |
 | ENRICHER | `scripts/enrich-heritage.js` | enrich_heritage | sources (1) | bottom-left | — | — |
 | ENRICHER | `scripts/enrich-ravines.js` | enrich_ravines | sources (1) | bottom-left | — | — |
@@ -64,6 +63,7 @@ Remaining files: **53** (+ **0** pending) · remaining slugs: **55** (+ **0** pe
 - `scripts/load-parcels.js` (INGESTOR): Spec 122 §1.10 declared
 - `scripts/load-wsib.js` (INGESTOR): Spec 122 §1.10 declared
 - `scripts/load-zoning.js` (INGESTOR): Spec 122 §1.10 declared
+- `scripts/quality/assert-engine-health.js` (ASSERT): batch1 I3 commit 1 (2026-09-14, compressed 3-commit form, R-PACE-1): PH-0 measured and proposed both ASSERT-with-exception and RECORDER as structurally supported (see docs/reports/2026-09-14-batch1-i3-assert-engine-health-assessment.md §2) — Ask 1 archetype ruling is OPEN, pending operator decision before commit 2's descriptor lands; archetype value here is the unresolved port default, not a ruling
 - `scripts/quality/assert-parcel-sanity.js` (ASSERT): Ask A1-bis: sources-only 1-slot ASSERT, ruled to join the C4 ASSERT group at conversion time; census still declares its true archetype under C5's own batch tag
 - `scripts/reconcile-runs.js` (UNDECLARED): chain-head infrastructure (Spec 122 §7.4 A3) — excluded from the PH-2 population and from the 8-archetype dispatch; STD-4 tracks its manifest-position promise separately, not this census
 
@@ -121,4 +121,4 @@ Remaining files: **53** (+ **0** pending) · remaining slugs: **55** (+ **0** pe
 
 ---
 
-*Totality (both directions, proven by `src/tests/conversion-roadmap.infra.test.ts`; slug-grain, IDENTITY HOLDS): **68** manifest.scripts slugs = **11** converted + **0** pending + **2** declared exemptions (Ask A2, excluded from the conversion programme entirely — never silently dropped, see the table above) + **55** remaining, each counted exactly once, in exactly one of C4/C5/C6/pending/exempted.*
+*Totality (both directions, proven by `src/tests/conversion-roadmap.infra.test.ts`; slug-grain, IDENTITY HOLDS): **68** manifest.scripts slugs = **11** converted + **1** pending + **2** declared exemptions (Ask A2, excluded from the conversion programme entirely — never silently dropped, see the table above) + **54** remaining, each counted exactly once, in exactly one of C4/C5/C6/pending/exempted.*

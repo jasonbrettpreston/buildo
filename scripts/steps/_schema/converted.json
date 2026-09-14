@@ -80,5 +80,13 @@
     "scripts/quality/assert-global-coverage.js",
     "scripts/quality/assert-data-bounds.js"
   ],
-  "pending": []
+  "pending": [
+    {
+      "file": "scripts/quality/assert-engine-health.js",
+      "registers_at": "C4 batch 1 I3 commit 3 (cutover)",
+      "reason": "PH-7 red suite landed commit 1 (compressed 3-commit form, R-PACE-1) — src/tests/steps/assert_engine_health/violations.test.ts, 8 it.fails() call sites; descriptor/compute land commit 2, pending the Ask 1 archetype ruling (ASSERT-with-exception vs RECORDER) — see docs/reports/2026-09-14-batch1-i3-assert-engine-health-assessment.md §2",
+      "declared": "2026-09-14",
+      "stage": "red_suite"
+    }
+  ]
 }
