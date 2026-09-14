@@ -129,8 +129,13 @@ describe('run-chain.js — spawnStepChild() (real child process, no manifest/cha
           'setTimeout(() => {}, 10000);',
         ],
         env: process.env,
-        // Same 600ms margin as the sibling test above (cold-start safety).
-        timeoutMinutes: 0.01,
+        // 0.05 min = 3s, NOT the sibling's 600ms. This test's property is "the summary line
+        // printed BEFORE the kill survives", so the child must reach console.log before the
+        // ceiling fires; under a full-suite hook run `node -e` cold-start exceeded 600ms four
+        // times on 2026-09-14 (POST-B1-5) and the child died before printing. 3s is a 5x
+        // margin on the worst observed cold-start and still 3x under the child's own 10s
+        // sleep, so the kill — not the sleep — is still what ends the child.
+        timeoutMinutes: 0.05,
       });
       throw new Error('expected rejection');
     } catch (err: unknown) {

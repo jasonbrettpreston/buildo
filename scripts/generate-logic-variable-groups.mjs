@@ -331,7 +331,8 @@ const GROUP_ORDER = [
       "engine_health_seq_scan_min_rows",
       "engine_health_ping_pong_ratio_warn_max",
       "engine_health_insp_dead_tuple_fail_pct",
-      "engine_health_insp_update_insert_fail_ratio"
+      "engine_health_insp_update_insert_fail_ratio",
+      "engine_health_dead_tuple_min_rows"
     ]
   },
   {

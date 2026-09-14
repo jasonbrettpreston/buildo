@@ -134,7 +134,7 @@
     {
       "id": "dead_tuple_ratio_high",
       "kind": "bound",
-      "expect": { "reports": "count of tables (live >= 1000 rows) whose dead-tuple ratio exceeds engine_health_dead_tuple_ratio_warn_max" },
+      "expect": { "reports": "count of tables (live >= engine_health_dead_tuple_min_rows) whose dead-tuple ratio exceeds engine_health_dead_tuple_ratio_warn_max" },
       "limit": "viol == 0",
       "severity": "WARN",
       "blocking": false,
@@ -142,7 +142,7 @@
       "chains": "all",
       "accept_until": "none",
       "why": {
-        "text": "Ported by predicate from the pre-conversion file's generic per-table loop (:118-124, DEAD_TUPLE_RATIO=0.10). Never blocking — report §1.2 measured this threshold never reached the halt; declaring severity:FAIL here (rather than WARN) would introduce a real halt (RUN_STATUS.FAILED) this step never had.",
+        "text": "Ported by predicate from the pre-conversion file's generic per-table loop (:118-124, DEAD_TUPLE_RATIO=0.10). Never blocking — report §1.2 measured this threshold never reached the halt; declaring severity:FAIL here (rather than WARN) would introduce a real halt (RUN_STATUS.FAILED) this step never had. The `live >= 1000` floor (R1, review panel commit 7 → peel commit 8, report §9.6) was itself a bare literal until this peel — externalized as engine_health_dead_tuple_min_rows below (byte-identical default 1000), the same convention seq_scan_ratio_high's own min-rows floor already used.",
         "liveness": { "kind": "table", "ref": "engine_health_snapshots" }
       }
     },
@@ -306,6 +306,11 @@
       "what": "The insp/coa targeted follow-up queries (fetchInsUpdVac) now run ONLY when the corresponding chain's check is actually selected (ctx.checks), rather than unconditionally on every chain as the pre-conversion file did (:208-211/:242-245 ran regardless of CHAIN_ID; only the DISPLAY was chain-scoped). The reported values are identical when they run — this eliminates 1-2 wasted queries per invocation on chains that never displayed the result.",
       "measured": "Pre-conversion :200-266 built both inspAuditTable and coaAuditTable unconditionally on every chain if the respective table row existed; only the meta-object IIFE (:278-293) selected which ONE to display.",
       "check_id": "none"
+    },
+    {
+      "what": "execution.shape is left UNDECLARED (not \"recorder\") — this step's real write is N rows over a runtime-discovered table set plus a VACUUM maintenance loop, a shape runRecorderPhase cannot express (report §9.1). Restated here (R3, commit 8 peel) so the fact is visible wherever limitations[]/deviations[] are rendered (registry, step-validate --write), not deviations[]-prose-only.",
+      "measured": "report §9.1; deviations[] entry \"execution.shape — left undeclared rather than \\\"recorder\\\"\" above carries the full grounds.",
+      "check_id": "none"
     }
   ],
 
@@ -349,7 +354,8 @@
       { "name": "engine_health_seq_scan_min_rows", "min": 0, "max": 100000000, "on_invalid": "fail" },
       { "name": "engine_health_ping_pong_ratio_warn_max", "min": 0, "max": 10000, "on_invalid": "fail" },
       { "name": "engine_health_insp_dead_tuple_fail_pct", "min": 0, "max": 100, "on_invalid": "fail" },
-      { "name": "engine_health_insp_update_insert_fail_ratio", "min": 0, "max": 10000, "on_invalid": "fail" }
+      { "name": "engine_health_insp_update_insert_fail_ratio", "min": 0, "max": 10000, "on_invalid": "fail" },
+      { "name": "engine_health_dead_tuple_min_rows", "min": 0, "max": 100000000, "on_invalid": "fail" }
     ],
     "validation": "strict",
     "hoisted_above_gate": true,

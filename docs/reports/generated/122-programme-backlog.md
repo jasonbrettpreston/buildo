@@ -6,13 +6,13 @@
 
 ## Counts
 
-Total items: **98**
+Total items: **110**
 
 | status | count |
 |---|---|
-| ⬜ NOT_STARTED | 17 |
+| ⬜ NOT_STARTED | 28 |
 | ⚠️ PARTIAL | 16 |
-| ✅ BUILT | 61 |
+| ✅ BUILT | 62 |
 | ⏭️ SUPERSEDED | 4 |
 
 **blocks batching: 0**
@@ -46,11 +46,11 @@ Total items: **98**
 | `HB-1` | 124 §2 Rule 12 | Heartbeat covers the WHOLE step, not only phase boundaries (EP-D15) | ✅ BUILT | wf: wf: conversion-roadmap commit 3, 2026-09-10 | — | 2026-09-10 |
 | `CEIL-1` | 124 §2 Rule 12 | Statement/lock ceiling bound on EVERY phase incl. post_commit (EP-D16) | ✅ BUILT | wf: wf: conversion-roadmap commit 3, 2026-09-10 | — | 2026-09-10 |
 
-## Nice-to-have — real gap, not currently blocking (79)
+## Nice-to-have — real gap, not currently blocking (91)
 
 | id | spec | title | status | owner | blocks | last reviewed |
 |---|---|---|---|---|---|---|
-| `STD-1` | 122 §1.3 | 20 categories, schema-canonical | ✅ BUILT | wf: schema (R2), pre-existing | — | 2026-08-29 |
+| `STD-1` | 122 §1.3 | 20 categories, schema-canonical | ✅ BUILT | wf: schema (R2), pre-existing | — | 2026-09-14 |
 | `STD-2` | 122 §4.1 | descriptor is a data-only sibling JSON | ✅ BUILT | pilot: pilots 1-6 | — | 2026-08-29 |
 | `STD-3` | 122 §5.1 | mandatory ast-grep shape rule | ✅ BUILT | wf: shape gate, all pilots | — | 2026-08-29 |
 | `STD-4` | 122 §4.1 | step-0 reconcile becomes a reconcile step | ✅ BUILT | wf: manifest, pre-session | — | 2026-08-29 |
@@ -129,6 +129,18 @@ Total items: **98**
 | `PH2-EXT` | 123 §2 | PH-2 churn×complexity population widened from 27 sources steps to all 65 chain slugs | ⬜ NOT_STARTED | wf: wf: unassigned | — | 2026-09-10 |
 | `ARCH-CENSUS` | 122 §1.10 | Archetype declared for the 36 non-sources unconverted files (blocks any C6 ordering) | ⬜ NOT_STARTED | wf: wf: unassigned | — | 2026-09-10 |
 | `CLAIMS-MTX` | 123 §5 | Claims × steps matrix generated (plan-claims.mjs emits the 44/5/6 split today, not a per-step × per-claim grid) | ⬜ NOT_STARTED | followup: review_followups.md (WF1 'conversion roadmap' filing, 2026-09-10) | — | 2026-09-10 |
+| `POST-B1-1` | 124 R-AE / 122 §5 | on_check_error "fail_step" enforced fleet-wide | ⬜ NOT_STARTED | followup: review_followups.md: commit-8 HIGH row (verdict.js checkRow downgrades to WARN) | — | 2026-09-14 |
+| `POST-B1-2` | 124 R-AE / 02-web-admin | admin engine health reads the pipeline's declared write | ⬜ NOT_STARTED | followup: review_followups.md:3544 family (HIGH admin duplicate compute) | — | 2026-09-14 |
+| `POST-B1-3` | 49 §heartbeat / 124 R-AE | engine_health_snapshots trend reader or retirement | ⬜ NOT_STARTED | followup: review_followups.md:3544 (MED no trend reader) | — | 2026-09-14 |
+| `POST-B1-4` | 40 lineage-docs generator (data-lineage-map.md) | lineage map free of the overlay-table artifact | ⬜ NOT_STARTED | followup: review_followups.md:3456 (MED lineage anomaly) | — | 2026-09-14 |
+| `POST-B1-5` | 120 pre-commit hook (run-chain-step-timeout.logic.test.ts) | run-chain-step-timeout kill-race test sequenced, not sleep-timed | ✅ BUILT | followup: review_followups.md:3457 (MED hook flake) | — | 2026-09-14 |
+| `POST-B1-6` | 123 §7 / step-validate | deviations[] printed in the scorecard | ⬜ NOT_STARTED | followup: review_followups.md: commit-8 MED row (deviations read by no tooling) | — | 2026-09-14 |
+| `POST-B1-7` | 54–62 source specs / 122 §5 | generated enforcement note per source spec | ⬜ NOT_STARTED | followup: operator direction 2026-09-14 (registry review) | — | 2026-09-14 |
+| `POST-B1-8` | 43 / 124 rule 3 | one shared download helper with retry as logic vars | ⬜ NOT_STARTED | followup: review_followups.md:415 (refuted disposition + operator ruling: ride the LOAD conversion) | — | 2026-09-14 |
+| `POST-B1-9` | 122 §5.3 | single descriptorPathFor definition | ⬜ NOT_STARTED | followup: review_followups.md:3459 (LOW) | — | 2026-09-14 |
+| `POST-B1-10` | 49 / descriptor interpretation | captured_at freshness semantics documented | ⬜ NOT_STARTED | followup: review_followups.md: commit-8 LOW row | — | 2026-09-14 |
+| `POST-B1-11` | 76 funnel.ts observability model | funnel mutation bounds match the fleet | ⬜ NOT_STARTED | followup: review_followups.md: commit-8 LOW row | — | 2026-09-14 |
+| `POST-B1-12` | 123 §7 G0 / registry | Step Registry generated in-repo | ⬜ NOT_STARTED | followup: Step Registry artifact built 2026-09-14 from scratch scripts outside the repo | — | 2026-09-14 |
 
 ---
 

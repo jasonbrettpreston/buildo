@@ -120,12 +120,16 @@ describe('assert_engine_health — measured facts, true today (plain it)', () =>
     expect(seeds.engine_health_seq_scan_ratio_warn_max?.default).toBe(0.80);
     expect(seeds.engine_health_seq_scan_min_rows?.default).toBe(10000);
     expect(seeds.engine_health_ping_pong_ratio_warn_max?.default).toBe(10);
+    // 7th var, added at commit 8's peel (R1, report §9.6): the dead-tuple check's own
+    // `live >= 1000` floor was a bare literal until this peel.
+    expect(seeds.engine_health_dead_tuple_min_rows?.default).toBe(1000);
     // Consumed in compute via ctx.config, never a bare literal (ast-grep compute-no-literal-threshold).
     const text = computeSource();
     expect(text).toContain('config.engine_health_dead_tuple_ratio_warn_max');
     expect(text).toContain('config.engine_health_seq_scan_ratio_warn_max');
     expect(text).toContain('config.engine_health_seq_scan_min_rows');
     expect(text).toContain('config.engine_health_ping_pong_ratio_warn_max');
+    expect(text).toContain('config.engine_health_dead_tuple_min_rows');
   });
 
   it('the 2 per-audit-table literals are RESOLVED to WARN severity at commit 7 (AEH-D3/AEH-IL-5/6) — the pre-conversion FAIL label was cosmetic (report §1.2/§9.2), porting it literally would introduce a genuine halt this step never had', () => {
@@ -356,6 +360,7 @@ describe('assert_engine_health — landed at commit 7 (flipped from it.fails to 
       'engine_health_ping_pong_ratio_warn_max',
       'engine_health_insp_dead_tuple_fail_pct',
       'engine_health_insp_update_insert_fail_ratio',
+      'engine_health_dead_tuple_min_rows', // 7th, added at commit 8's peel (R1, report §9.6)
     ]) {
       expect(names.has(name), `config.logic_variables missing ${name}`).toBe(true);
     }
@@ -393,5 +398,23 @@ describe('assert_engine_health — landed at commit 7 (flipped from it.fails to 
     const text = src();
     expect(text).toMatch(/pipeline\.step\(/);
     expect(text.split('\n').length).toBeLessThan(20);
+  });
+});
+
+// ===========================================================================
+// 4. Commit 8 peel (review panel on commit 7 — R1/R2, report §9.6)
+// ===========================================================================
+
+describe('assert_engine_health — landed at commit 8 (review panel peels R1/R2)', () => {
+  it('R2: per-table VACUUM success is logged via ctx.log.info, never a bare console.* (Rule 2)', () => {
+    const text = computeSource();
+    expect(text).toMatch(/ctx\.log\.info\(TAG, `VACUUM ANALYZE/);
+    expect(text).not.toMatch(/console\.(log|warn|info)\(/);
+  });
+
+  it('R2: records_meta declares vacuumed_tables[] alongside the existing tables_vacuumed count', () => {
+    const text = computeSource();
+    expect(text).toContain('vacuumed_tables: vacuumedTables');
+    expect(text).toContain('tables_vacuumed: vacuumTargets.length');
   });
 });

@@ -383,10 +383,12 @@ const EXPECTED_LOGIC_VAR_KEYS = [
   // C4 batch 1 I3 (2026-09-14, `assert_engine_health` commit 7) — 6 new tunables
   // (report §4.4 adjudication: 4 top-level thresholds + 2 per-audit-table AEH-IL-5
   // variables; the 6th check, coa_dead_tuple_pct, reuses engine_health_insp_dead_tuple_fail_pct
-  // per AEH-IL-6 rather than declaring a 7th).
+  // per AEH-IL-6 rather than declaring a 7th). Plus a 7th, added at commit 8's peel (R1,
+  // report §9.6): the `live >= 1000` dead-tuple-check floor, previously a bare literal.
   'engine_health_dead_tuple_ratio_warn_max', 'engine_health_seq_scan_ratio_warn_max',
   'engine_health_seq_scan_min_rows', 'engine_health_ping_pong_ratio_warn_max',
   'engine_health_insp_dead_tuple_fail_pct', 'engine_health_insp_update_insert_fail_ratio',
+  'engine_health_dead_tuple_min_rows',
 ];
 
 describe('LOGIC_VAR_DEFAULTS — complete key set', () => {

@@ -4946,5 +4946,15 @@
     "admin": {
       "group": "Data Quality Thresholds"
     }
+  },
+  "engine_health_dead_tuple_min_rows": {
+    "default": 1000,
+    "type": "number",
+    "description": "assert-engine-health: minimum live-row count a table must have before its dead-tuple ratio is evaluated at all (small tables are legitimately dead-tuple-heavy; autovacuum handles them). Ported verbatim from the pre-conversion bare literal `live >= 1000` (report §9.6, R1 peel commit 8) — the sibling seq_scan_min_rows floor was externalized at commit 7 but this one was missed until the review panel caught it. CONSUMED by assert_engine_health.",
+    "min": 0,
+    "max": 100000000,
+    "admin": {
+      "group": "Data Quality Thresholds"
+    }
   }
 }

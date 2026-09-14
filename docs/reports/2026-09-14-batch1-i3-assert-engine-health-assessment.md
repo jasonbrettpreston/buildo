@@ -256,6 +256,7 @@ Every one of the 5 `--compare` runs (pre/post) shows `audit_table.verdict`: `PAS
 | `summary.records_meta.config` | absent | the 6 resolved `engine_health_*` values | Rule 3 — every threshold this run actually used is now visible in `records_meta.config` (Nothing Hidden), previously invisible module-scope constants. |
 | `summary.records_meta.engine_health[N].{dead_ratio,idx_scan,n_dead_tup,n_live_tup,seq_scan,seq_ratio}` | one live snapshot | a later live snapshot | `pg_stat_user_tables` counters are cumulative/monotonic (`write_discipline.idempotent_rerun_why` in the descriptor) — PRE and POST were captured at genuinely different points in time on the SAME live local DB, so real drift on `seq_scan`/`idx_scan`/`n_live_tup`/`n_dead_tup` (and their derived ratios) between the two captures is expected, not a defect. Confirmed: every row that drifted is a table this session's own repeated invocations (5 POST runs plus the PRE run) themselves queried or wrote, which is exactly what a monotonic scan/tuple counter is expected to do. |
 | `summary.records_meta.ledger_row` / `pool_errors` / `terminal` | absent | `"chain_owned"`/`"owned"`, `0`, `"recorded_with_warnings"` | Generic library fields (AEH-IL-3: the ledger mechanism retires to the shared library, matching every other converted step's identical addition). |
+| `summary.records_meta.vacuumed_tables` | absent | `[]` (all 5 captures — no table exceeded the dead-tuple threshold in this capture session) | Commit 8 peel (R2): new declared field, table names actually vacuumed this run, alongside the pre-existing `tables_vacuumed` count. Empty in every capture because 0 tables crossed threshold — not a defect, just this session's live data; the array's shape is proven by the new `violations.test.ts` "landed at commit 8" tests (source-text assertion, since no live table crossed threshold to exercise a non-empty array). |
 | `summary.records_meta.records_updated` (nested) | absent | `7`/`8` (varies by chain/time of capture) | New `records_meta` field feeding the declared `counters.records_updated` source path (§ descriptor `counters`). |
 | `summary.records_meta.warnings[0]` (rendering format) | hand-formatted string (`"data_quality_snapshots: update/insert ratio 15.0x (15 upd vs 1 ins)"`) | `"<check_id>: <JSON detail>"` (`renderValue`, `scripts/lib/step/verdict.js`) | Generic library message rendering (LM-D16 precedent) — same information, machine-parseable shape, not a content loss. |
 | `summary.records_updated` (top-level) | `2`/`5`/`6` (varies) | `7`/`8` (varies) | Same monotonic-drift reasoning as `engine_health[N]` above, plus the genuine fix below (`pipeline_runs.records_total`/`records_updated`). |
@@ -267,6 +268,24 @@ Every one of the 5 `--compare` runs (pre/post) shows `audit_table.verdict`: `PAS
 **Structural (array-shaped, no field name of their own) diff-count breakdown, all 5 captures:** the deep_scrapes capture's own 163 differences break down as roughly 97 differences in `stdout_lines` (the per-table console.log-to-structured-JSON-log rendering change, §9.5 above), 1 difference in `invariants` (the new `duplicate_snapshot_key_count` entry), 1 difference in `table_state` (the new write-target hash, impossible before the descriptor existed), and 3 differences in `rows` (new `audit_table.rows[]` entries for the 2 new declared checks plus 1 new invariant row) — the permits/coa/sources/standalone captures show the identical 4 structural buckets at slightly different counts (fewer per-chain checks means fewer `rows` differences on permits/sources/standalone; standalone additionally shows its own `pipeline_runs[0].*` differences, §9.5's dedicated rows above). Every one of these 4 structural buckets, and every named-field diff in the §9.5 table above, is explained.
 
 **Compare summary (5/5):** exit 0 all invocations; verdict WARN all 5 (same genuine `update_ping_pong_high` condition, pre-existing, now correctly surfaced per AEH-D6); `engine_health_snapshots` row count 1269 stable across all 5 (same live table, captured within the same session); 0 diffs left unexplained by the table above.
+
+---
+
+## 9.6 Commit 8 — output-panel peel (R1/R2/R3)
+
+Output panel on commit 7: Guardian PASS ×5; Code Reviewer 2 FAIL (R1, R2); Observability 2 findings (R3 + the fleet `on_check_error` item, filed not built).
+
+**R1 (Spec 124 Rule 3, bare literal):** `scripts/lib/compute/assert-engine-health.js:140`'s `live >= 1000` dead-tuple-check floor was a bare literal — externalized as a 7th logic variable, `engine_health_dead_tuple_min_rows` (default 1000, byte-identical; min 0/max 100000000, matching the sibling `engine_health_seq_scan_min_rows` bound shape; `on_invalid:"fail"`). Registered in the descriptor's `config.logic_variables`, seeded in `scripts/seeds/logic_variables.json`, applied locally (`node --env-file=.env scripts/seeds/apply-logic-variables.js` — 1/496 inserted, 495 already existed, values preserved), `scripts/generate-logic-variable-groups.mjs` GROUP_ORDER updated (the generator throws on an un-pinned group label — genuinely caught a missing-pin defect, not cosmetic) and regenerated (29 groups, 497 keys), `docs/reference/logic-variables-registry.md` regenerated (515 vars). Fleet tests bumped: `control-panel.logic.test.ts` `EXPECTED_LOGIC_VAR_KEYS` (+1), `violations.test.ts` (both the "6 tunables" seed-default test and the commit-7 `config.logic_variables` test, +1 each). `write-class-disposition.infra.test.ts` does not count logic vars (only descriptor `self_skip` declarations) — unaffected, confirmed by re-grep.
+
+**Remaining numeric literals in the compute, swept exhaustively this commit:** `Math.round(x * 10000) / 10000` (`:132,:135`) and `Math.round(x * 10000) / 100` / `Math.round(x * 100) / 100` (`:361,:378` pre-peel line numbers) are display-precision/percentage unit conversions, not verdict thresholds — not tunables. `parseInt(v, 10)` radices — not tunables. `t.n_live_tup > 0` (VACUUM-target filter) and `ins > 0` (ping-pong guard) are div-by-zero/empty-table guards, not verdict bounds — not tunables. No other bare numeric literal affects a verdict or a write.
+
+**R2 (Spec 48 §3.6, lost telemetry):** the pre-conversion file logged `VACUUM ANALYZE <table> — done (was X% dead)` per successful vacuum (`git show 9abbdcc3^:scripts/quality/assert-engine-health.js:150`); the port dropped it. Restored: `ctx.log.info(TAG, ...)` with the identical message shape per successful vacuum, plus a new `records_meta.vacuumed_tables: string[]` (table names actually vacuumed this run) alongside the existing `tables_vacuumed` count. The descriptor's `terminals[].records_meta` shapes are loose type-only stubs (`"object"`/`"string"`), not an exhaustive key enumeration — no schema-contract update needed; `limitations[]`/`emits` unaffected.
+
+**R3 (Observability F5, `deviations[]` visibility):** no fleet tooling built (out of this peel's scope per the executor brief). Instead: the undeclared-`execution.shape` fact is now ALSO stated in the descriptor's `limitations[]` (previously `deviations[]`-only), matching where the registry/`step-validate --write` already render it. MED followup filed (`review_followups.md`, "Batch 1 I3 assert_engine_health, commit 8" section): step-validate's scorecard should print every `deviations[]` id per converted slug, fleet-wide, own WF2.
+
+**Also filed (not fixed here):** HIGH fleet-wide — `execution.on_check_error:"fail_step"` is caught by the step's own try/catch and downgraded to the check's declared severity by `verdict.js`'s `checkRow`, so the enum value currently means nothing operationally (own WF3). LOW — `engine_health_snapshots.captured_at` not refreshed for an unchanged row (by design; noted for a future freshness consumer). LOW — `funnel.ts:816` mutation bounds `[10,15]` stale against ~90 tables (pre-existing).
+
+**R-C recapture (source_fingerprint changed by the compute edit):** all 5 POST goldens re-captured against the local Docker DB, `--compare` against the committed PRE captures, `step-validate --step=assert_engine_health --write`, `step-validate --all --fast`, `npm run typecheck`, `npm run lint`, and the named vitest suites — results below.
 
 ---
 
@@ -286,10 +305,10 @@ Every one of the 5 `--compare` runs (pre/post) shows `audit_table.verdict`: `PAS
 | G4 | 2 | 2 | risk-class row with chance+impact found=true |
 | G5 | 1 | 1 | db=true clock=true network=true argv/env=true |
 | G6 | 3 | 3 | 5 ledger row(s), 0 without CLOSED/PIN () |
-| G7 | 3 | 3 | file=true fences=0 it-count=29 RED-evidence=true |
+| G7 | 3 | 3 | file=true fences=0 it-count=31 RED-evidence=true |
 | G8 | 3 | 3 | missing-invocations=0 missing-pre-invocations=0 stale-fingerprints=0 unexplained-diffs=0 |
 | G9 (binary) | PASS | — | heading=true low-confidence-table=true recurring-table=true |
-| G4d (fence<=lock) | PASS | — | fences=0 lock-it-count=29 |
+| G4d (fence<=lock) | PASS | — | fences=0 lock-it-count=31 |
 | G-shape | PASS | — | file-clean=null compute-clean=true |
 
 ### Fast invariants (always run — the fast descriptor gate)
@@ -297,10 +316,10 @@ Every one of the 5 `--compare` runs (pre/post) shows `audit_table.verdict`: `PAS
 | # | Scope | Pass | Detail |
 |---|---|---|---|
 | 1 | assert_engine_health | PASS | min_migration=48 <= migrations count=244 |
-| 2 | assert_engine_health | PASS | 6 declared, missing from seeds: none |
+| 2 | assert_engine_health | PASS | 7 declared, missing from seeds: none |
 | 3 | assert_engine_health | PASS | retired=0 overlap-with-declared=none |
 | 7 | assert_engine_health | PASS | SPEC LINK header present=true |
-| 8 | assert_engine_health | PASS | G-4: 6 declared, 2 verdict-affecting, 0 violate on_invalid:fail with no deviations[] cover |
+| 8 | assert_engine_health | PASS | G-4: 7 declared, 2 verdict-affecting, 0 violate on_invalid:fail with no deviations[] cover |
 | 20 | assert_engine_health | PASS | HB-1: execution.shape=null — HB-1 applies_when execution.shape=="enrich" only (RS-D-STA); not applicable, never a pass-by-omission |
 | 21 | assert_engine_health | PASS | CEIL-1: execution.shape=null — CEIL-1 applies_when execution.shape=="enrich" only (RS-D-STA); not applicable, never a pass-by-omission |
 | 4 | (registry) | PASS | overlap: none |
@@ -313,10 +332,10 @@ Every one of the 5 `--compare` runs (pre/post) shows `audit_table.verdict`: `PAS
 - missing invocations (POST): none
 - missing invocations (PRE, GOLD-PRE): none
 - stale fingerprints: none
-- compare ran: true · diffs found: 860 · unexplained: 0
+- compare ran: true · diffs found: 874 · unexplained: 0
 
 ### Test suite (item iii)
-- 1002/1018 passed (suite success=true)
+- 1004/1020 passed (suite success=true)
 
 ### Policy coverage matrix (item vi) — Spec 124 Rules 1-13
 
@@ -324,7 +343,7 @@ Every one of the 5 `--compare` runs (pre/post) shows `audit_table.verdict`: `PAS
 |---|---|---|---|
 | 1 | Nothing hidden | enforced-green | G-1 schema-baseline: schema-baseline clean |
 | 2 | Compute is just compute | enforced-green |  |
-| 3 | Tunables externalized | enforced-green | G-4: 6 declared, 2 verdict-affecting, 0 violate on_invalid:fail with no deviations[] cover |
+| 3 | Tunables externalized | enforced-green | G-4: 7 declared, 2 verdict-affecting, 0 violate on_invalid:fail with no deviations[] cover |
 | 4 | Compute rule declared | enforced-green | G-2: 2 preserved-in-compute row(s), 0 with no why/notes.json/checks[] grounding |
 | 5 | checks >= 1 | enforced-green |  |
 | 6 | Omission fails (20 categories) | enforced-green |  |
@@ -335,7 +354,7 @@ Every one of the 5 `--compare` runs (pre/post) shows `audit_table.verdict`: `PAS
 | 11 | Phase-order re-derive (declared half, checkOrderGuaranteesCited) | enforced-green | no when:"pre_write" checks — vacuously nothing to cite — G-3 completeness half stays open |
 | 12 | Truthful crash posture (R-B reachability, static + R-M before-image) | enforced-green | R-B (checkInterruptedPostureTruthful): recovery.interrupted="none" — no reachability claim to verify · R-M: prose-only (R-M/LG-17 describe not scoped to this step (vitest not run, or no before-image target)) |
 | 13 | A step validates itself | enforced-green | this run of step:validate IS the mechanism |
-| P3 | I/O cost adjudication (measured, not gated) | measured | descriptor=25597B notes=0B checks=8 rows records_meta=13140B (newest post/ capture) |
+| P3 | I/O cost adjudication (measured, not gated) | measured | descriptor=26614B notes=0B checks=8 rows records_meta=13206B (newest post/ capture) |
 
 **Enforced-green: 13/14**
 

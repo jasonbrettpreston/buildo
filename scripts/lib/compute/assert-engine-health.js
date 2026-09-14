@@ -14,6 +14,11 @@
  * `docs/reports/2026-09-14-batch1-i3-assert-engine-health-assessment.md`). Operator ruling
  * 2026-09-14 (report §2): archetype = RECORDER.
  *
+ * Commit 8 (peel, review panel on commit 7 — report §9.6): R1 externalized the
+ * `live >= 1000` dead-tuple-check floor (was a bare literal) to a 7th logic var,
+ * `engine_health_dead_tuple_min_rows`; R2 restored the pre-conversion per-table
+ * VACUUM-success log line (`ctx.log.info`) plus `records_meta.vacuumed_tables[]`.
+ *
  * ── WHY THIS FILE HAS NO `execution.shape` (a genuine finding, not silently worked around) ──
  * `runRecorderPhase` (scripts/lib/step/index.js) — the runner `execution.shape:"recorder"`
  * dispatches to — mechanically supports exactly ONE write statement per run: one
@@ -136,8 +141,11 @@ function buildTableResults(rows, config) {
     };
     tableResults.push(entry);
 
-    // Check 1: dead tuple ratio — skip small tables (<1000 rows, autovacuum handles them).
-    if (live >= 1000 && deadRatio > config.engine_health_dead_tuple_ratio_warn_max) {
+    // Check 1: dead tuple ratio — skip small tables (autovacuum handles them). The
+    // floor was a bare `1000` literal until commit 8 (R1, review panel on commit 7):
+    // externalized to its own logic var, byte-identical default, matching the
+    // seq_scan_min_rows sibling's own already-externalized floor.
+    if (live >= config.engine_health_dead_tuple_min_rows && deadRatio > config.engine_health_dead_tuple_ratio_warn_max) {
       deadTupleViolators.push({ table: row.table_name, dead_ratio: entry.dead_ratio, live });
     }
 
@@ -332,9 +340,16 @@ async function compute(ctx) {
     (t) => t.dead_ratio > config.engine_health_dead_tuple_ratio_warn_max && t.n_live_tup > 0,
   );
   const vacuumErrors = [];
+  const vacuumedTables = [];
   for (const target of vacuumTargets) {
     try {
       await pool.query(`VACUUM ANALYZE ${quoteIdent(target.table_name)}`);
+      vacuumedTables.push(target.table_name);
+      // R2 (review panel on commit 7): the pre-conversion file logged a per-table
+      // VACUUM-success line (git show 9abbdcc3^:scripts/quality/assert-engine-health.js:150)
+      // that the port dropped — restored via ctx.log.info (never a bare console.*,
+      // Rule 2) plus the records_meta.vacuumed_tables[] array below (Rule 1).
+      ctx.log.info(TAG, `VACUUM ANALYZE ${target.table_name} — done (was ${(target.dead_ratio * 100).toFixed(1)}% dead)`);
     } catch (err) {
       vacuumErrors.push({ table: target.table_name, error: err.message });
       ctx.log.warn(TAG, `VACUUM ANALYZE ${target.table_name} failed: ${err.message}`);
@@ -402,6 +417,7 @@ async function compute(ctx) {
     records_meta: {
       tables_checked: tableResults.length,
       tables_vacuumed: vacuumTargets.length,
+      vacuumed_tables: vacuumedTables,
       records_updated: recordsUpdated,
       engine_health: tableResults,
     },

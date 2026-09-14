@@ -7,14 +7,14 @@ bounds, numeric-vs-JSONB, description, and the pipeline scripts that consume it.
 Values are operator-tunable at runtime via the Spec 86 Control Panel; the
 defaults below are the seed / migration baselines.
 
-- **Numeric vars** (508) live in `scripts/seeds/logic_variables.json` (the parity-tested surface re-exported as `LOGIC_VAR_DEFAULTS` in `src/lib/admin/control-panel.ts`), except the 19 seeded via migrations only (last column notes the migration).
+- **Numeric vars** (509) live in `scripts/seeds/logic_variables.json` (the parity-tested surface re-exported as `LOGIC_VAR_DEFAULTS` in `src/lib/admin/control-panel.ts`), except the 19 seeded via migrations only (last column notes the migration).
 - **JSONB vars** (6) carry non-numeric values in `logic_variables.variable_value_json`; they are migration-seeded (never in the seed JSON — a JSONB value cannot live in the numeric `variable_value` column) and read directly (config-loader passes object JSON through untouched).
 - **Consuming scripts** are derived from each script's local `LOGIC_VARS_SCHEMA = z.object({...})` Zod union. A blank cell means no static consumer was found; some consumers read **computed keys** (e.g. `assert-lifecycle-phase-distribution.js` builds `lifecycle_band_${…}` at runtime) invisible to a static scan — those are named in the seed JSON's `CONSUMED by …` annotation, surfaced in the Description.
 - **Admin** is the declared `admin` field on each seed key (WF2 "Admin Tunable Coverage" / "ADMIN-1 ratchet to zero"): `group: <label>` means the key renders in `GlobalConfigCard`'s GROUPS under that label; `hidden: <reason>` means it does not render there, with `reason` ∈ `derived | internal | deprecated | migration-only` — the closed enum's transitional `unclassified` marker was RETIRED once programme-backlog item `ADMIN-1` reached 0 (every key now carries a real group or a reviewed hidden reason; declaring `unclassified` is now a structural error, not merely ratcheted). Migration-only / JSONB vars are absent from the seed file, so this column reads "— (governed by GROUPS only)" for them — their admin visibility is unchanged and ungoverned by this declaration.
 
 **Cross-refs:** Spec 40 (`docs/specs/01-pipeline/40_pipeline_system.md`, config-loader / logicVars contract) · Spec 86 (`docs/specs/02-web-admin/86_control_panel.md`, the Control Panel that edits these).
 
-Total: **514** logic variables (508 numeric, 6 JSONB).
+Total: **515** logic variables (509 numeric, 6 JSONB).
 
 ---
 
@@ -101,6 +101,7 @@ Total: **514** logic variables (508 numeric, 6 JSONB).
 | `cost_t4_matrix_miss_fail_pct` | numeric | 80 | 0 – 100 | — | seed | group: Cost Audit Thresholds | WF2 archetype (Spec 83 §3): matrix-miss FAIL threshold over the T4 population — catches a T4-only regression (e.g. matrix vocabulary drift) that the demoted full-population metric can no longer see. |
 | `cost_t4_matrix_miss_warn_pct` | numeric | 60 | 0 – 100 | — | seed | group: Cost Audit Thresholds | WF2 archetype (Spec 83 §3): matrix-miss WARN threshold over the T4 population ONLY (leads on the legacy path: non-residential + mapper-null residential). The T4 denominator keeps the gate meaningful after T1-T3 bypass the matrix — a full-population gate would always pass (Observability plan-review item 1). |
 | `desc_null_rate_warn_pct` | numeric | 5 | 1 – 100 | — | seed | group: Data Quality Thresholds | Maximum acceptable percentage of recent permits (last 24h) with a NULL description before a data-quality warning is emitted CONSUMED by assert_data_bounds. |
+| `engine_health_dead_tuple_min_rows` | numeric | 1000 | 0 – 100000000 | — | seed | group: Data Quality Thresholds | assert-engine-health: minimum live-row count a table must have before its dead-tuple ratio is evaluated at all (small tables are legitimately dead-tuple-heavy; autovacuum handles them). Ported verbatim from the pre-conversion bare literal `live >= 1000` (report §9.6, R1 peel commit 8) — the sibling seq_scan_min_rows floor was externalized at commit 7 but this one was missed until the review panel caught it. CONSUMED by assert_engine_health. |
 | `engine_health_dead_tuple_ratio_warn_max` | numeric | 0.1 | 0 – 1 | — | seed | group: Data Quality Thresholds | assert-engine-health: per-table dead-tuple ratio (n_dead_tup / n_live_tup, tables with >= 1000 live rows only) WARN ceiling — ratio above this value warns and is also the auto-VACUUM ANALYZE trigger threshold. Ported verbatim from the pre-conversion DEAD_TUPLE_RATIO constant (0.10). CONSUMED by assert_engine_health. |
 | `engine_health_insp_dead_tuple_fail_pct` | numeric | 10 | 0 – 100 | — | seed | group: Data Quality Thresholds | assert-engine-health: permit_inspections (deep_scrapes chain) AND coa_applications (coa chain) dead-tuple percentage WARN ceiling — shared by both per-chain checks (AEH-IL-6: the two pre-conversion audit tables used the identical 10% bound, disagreeing only on displayed severity, never on value). Ported verbatim from the pre-conversion inspAuditTable/coaAuditTable dead_tuple_pct literal (10). CONSUMED by assert_engine_health. |
 | `engine_health_insp_update_insert_fail_ratio` | numeric | 5 | 0 – 10000 | — | seed | group: Data Quality Thresholds | assert-engine-health: permit_inspections (deep_scrapes chain) cumulative update/insert ratio WARN ceiling. Ported verbatim from the pre-conversion inspAuditTable update_insert_ratio literal (5) — genuinely distinct from the top-level engine_health_ping_pong_ratio_warn_max (10) for the conceptually same metric (AEH-D3, this conversion's own finding, kept as a separate variable rather than silently unified). CONSUMED by assert_engine_health. |
@@ -537,4 +538,4 @@ Total: **514** logic variables (508 numeric, 6 JSONB).
 
 ---
 
-*Generated from 495 seed vars + 19 migration-only vars + 60 consumer-mapped keys across 2 script dirs.*
+*Generated from 496 seed vars + 19 migration-only vars + 60 consumer-mapped keys across 2 script dirs.*
