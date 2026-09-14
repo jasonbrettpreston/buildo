@@ -34,7 +34,6 @@ Remaining files: **52** (+ **1** pending) · remaining slugs: **54** (+ **1** pe
 | Archetype | File | Slug(s) | Chains (slots) | Quadrant | Write hints | Open cutover_prereq |
 |---|---|---|---|---|---|---|
 | ASSERT | `scripts/quality/assert-parcel-sanity.js` | assert_parcel_sanity | sources (1) | bottom-left | — | — |
-| ASSERT | `scripts/quality/assert-engine-health.js` | assert_engine_health [pending: red_suite] | coa+deep_scrapes+permits+sources (4) | top-right | — | — |
 | ENRICHER | `scripts/enrich-centreline.js` | enrich_centreline | sources (1) | bottom-left | — | EP-PIN-D17 (enrich_centreline) |
 | ENRICHER | `scripts/enrich-heritage.js` | enrich_heritage | sources (1) | bottom-left | — | — |
 | ENRICHER | `scripts/enrich-ravines.js` | enrich_ravines | sources (1) | bottom-left | — | — |
@@ -47,6 +46,7 @@ Remaining files: **52** (+ **1** pending) · remaining slugs: **54** (+ **1** pe
 | INGESTOR | `scripts/load-neighbourhoods.js` | neighbourhoods | sources (1) | top-right | — | — |
 | INGESTOR | `scripts/load-parcels.js` | parcels | sources (1) | top-right | — | — |
 | INGESTOR | `scripts/load-wsib.js` | load_wsib | sources (1) | top-right | — | — |
+| RECORDER | `scripts/quality/assert-engine-health.js` | assert_engine_health [pending: red_suite] | coa+deep_scrapes+permits+sources (4) | top-right | — | — |
 | UNDECLARED | `scripts/reconcile-runs.js` | reconcile | sources (1) | — | — | — |
 
 <details><summary>C5 — why each archetype (census <code>reason</code>)</summary>
@@ -63,7 +63,7 @@ Remaining files: **52** (+ **1** pending) · remaining slugs: **54** (+ **1** pe
 - `scripts/load-parcels.js` (INGESTOR): Spec 122 §1.10 declared
 - `scripts/load-wsib.js` (INGESTOR): Spec 122 §1.10 declared
 - `scripts/load-zoning.js` (INGESTOR): Spec 122 §1.10 declared
-- `scripts/quality/assert-engine-health.js` (ASSERT): batch1 I3 commit 1 (2026-09-14, compressed 3-commit form, R-PACE-1): PH-0 measured and proposed both ASSERT-with-exception and RECORDER as structurally supported (see docs/reports/2026-09-14-batch1-i3-assert-engine-health-assessment.md §2) — Ask 1 archetype ruling is OPEN, pending operator decision before commit 2's descriptor lands; archetype value here is the unresolved port default, not a ruling
+- `scripts/quality/assert-engine-health.js` (RECORDER): batch1 I3 (2026-09-14 operator ruling, Ask 1 RESOLVED): re-derives to RECORDER, not the ASSERT port default — the engine_health_snapshots guarded 6-column IS-DISTINCT-FROM upsert has no legal home under ASSERT (step.schema.json:1718 forces outputs:"none"), no threshold in the file ever reaches the halt (docs/reports/2026-09-14-batch1-i3-assert-engine-health-assessment.md §1.2/§2), and the admin panel computes engine health independently from pg_stat_user_tables (src/app/api/quality/route.ts:109-162) without reading this table at all. Consequence: RECORDER has 1 converted member (refresh_snapshot) so R-PACE-1's compressed form (floor >=2) is INELIGIBLE — this step reverts to the full Spec 123 §7 nine-commit form (see .cursor/batch1_i3_assert_engine_health_active_task.md §2).
 - `scripts/quality/assert-parcel-sanity.js` (ASSERT): Ask A1-bis: sources-only 1-slot ASSERT, ruled to join the C4 ASSERT group at conversion time; census still declares its true archetype under C5's own batch tag
 - `scripts/reconcile-runs.js` (UNDECLARED): chain-head infrastructure (Spec 122 §7.4 A3) — excluded from the PH-2 population and from the 8-archetype dispatch; STD-4 tracks its manifest-position promise separately, not this census
 

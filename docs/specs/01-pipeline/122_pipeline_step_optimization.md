@@ -644,7 +644,7 @@ Hard-fails on: a concern with **no** home · a concern with **two** homes · a h
 | `RECORDER` | **1** | 25 `refresh_snapshot` |
 | | **27** | |
 
-⚠️ **Step 27 `assert_engine_health` is an AST+REC hybrid** and gets ASSERT runtime treatment *only because `run-chain.js:544-550` dispatches on name prefix.* A declared archetype makes the hybrid explicit and retires the prefix dispatch.
+⚠️ **Step 27 `assert_engine_health` is an AST+REC hybrid** and gets ASSERT runtime treatment *only because `run-chain.js:544-550` dispatches on name prefix.* A declared archetype makes the hybrid explicit and retires the prefix dispatch. **RESOLVED 2026-09-14 — Spec 124 R-AE:** re-derives to RECORDER, not ASSERT (the `engine_health_snapshots` guarded upsert has no legal home under ASSERT's forced `outputs:"none"`; no threshold in the file ever reaches the halt). This row's `ASSERT` count above (5) and the table's `27` total are stale by 1 pending the cutover that moves the row to RECORDER — see `docs/reports/2026-09-14-batch1-i3-assert-engine-health-assessment.md` §2 and `scripts/steps/_schema/step-archetype-census.json`.
 
 The schema derives each step's **required-field profile** from its archetype:
 

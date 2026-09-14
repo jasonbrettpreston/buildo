@@ -163,10 +163,14 @@ describe('assert_engine_health — measured facts, true today (plain it)', () =>
     expect(followups).toContain('operator steer (2026-09-10)');
   });
 
-  it('the assessment report exists with the compressed-form marker, the Ask 1 ruling-request text, and its G0 verdict line', () => {
+  // Ask 1 was RULED 2026-09-14 (RECORDER; R-PACE-1 ineligible, 1 converted member vs the >=2 floor)
+  // after this file's own commit ① landed with the marker/ruling-REQUESTED text below — the report
+  // was rewritten in place to carry the ruling (same document, same commit ①, per the executor brief
+  // for the ruling-bookkeeping package). This assertion now pins the RESOLVED state, not the OPEN one.
+  it('the assessment report exists with the full-nine-commit-form marker, the Ask 1 RESOLVED ruling text, and its G0 verdict line', () => {
     const md = fs.readFileSync(artifact(REPORT_REL), 'utf8');
-    expect(md).toContain('**Commit form: compressed (R-PACE-1)**');
-    expect(md).toContain('RULING REQUESTED');
+    expect(md).toContain('Commit form: full nine-commit (R-PACE-1 ineligible — RECORDER has 1 converted member)');
+    expect(md).toContain('RESOLVED: RECORDER');
     expect(md).toContain('**G0: PASS.**');
     expect(md).toContain('### 4.1 CONTRACT');
     expect(md).toContain('### 4.3 DEFECT');
