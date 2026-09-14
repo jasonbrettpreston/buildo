@@ -18,6 +18,7 @@ const { spawn } = require('child_process');
 const { StringDecoder } = require('string_decoder');
 const path = require('path');
 const fs = require('fs');
+const { descriptorPathFor } = require('./lib/step/seam');
 
 // ---------------------------------------------------------------------------
 // Main
@@ -77,6 +78,59 @@ async function handleTerminationSignal(signal) {
 
 process.on('SIGINT', () => { handleTerminationSignal('SIGINT'); });
 process.on('SIGTERM', () => { handleTerminationSignal('SIGTERM'); });
+
+// ---------------------------------------------------------------------------
+// WF3 I3a (2026-09-14) — gate-skip exemption (Spec 122 §1.10 retirement)
+// ---------------------------------------------------------------------------
+
+/**
+ * Whether the chain's soft gate-skip should EXEMPT `slug` — i.e. keep it
+ * running even when the primary-ingest gate has soft-skipped the chain.
+ * Prefers the step's own declared `identity.gate_exempt` when a sibling
+ * `<step>.descriptor.json` exists (the retirement Spec 122 §1.10 names);
+ * falls back, UNCHANGED, to the legacy `isInfraStep` name-prefix predicate
+ * for every step with no descriptor yet (every unconverted step — 18 of the
+ * 27 `sources`-chain steps alone).
+ *
+ * `isInfraStep` exists because of two named incidents, both preserved by the
+ * fallback path: (a) a gate-skip that dropped quality/infra steps into a
+ * null-reason `skipped` row nobody could diagnose (P3, 2026-08-24, the
+ * 2026-08-07 `sources` run), and (b) a gate-skip that would have suppressed
+ * `update_tracked_projects`'s CRM stall/recovery alerts on a legitimate
+ * zero-ingest day (adversarial Probe 8 / independent FAIL-4). Neither slug has
+ * a descriptor today, so both stay on this same fallback, untouched.
+ *
+ * Fail-closed by construction: a descriptor file that EXISTS but is malformed
+ * (bad JSON) throws from `JSON.parse` — it is never caught here, so it can
+ * never silently fall back to `isInfraStep` (that would hide exactly the
+ * declared-vs-live mismatch class this retirement's own measurement found:
+ * `compute_centroids`/`refresh_snapshot` had declared `false` while their
+ * live `isInfraStep` verdict was `true`, unread by any runtime for months).
+ *
+ * Separated from the loop so it is unit-testable without a live DB or child
+ * process (mirrors `parseDeferMarker`/`resolveChainStatus` below).
+ *
+ * @param {string} slug
+ * @param {{ file?: string } | undefined} manifestEntry
+ * @returns {boolean}
+ */
+function resolveGateExempt(slug, manifestEntry) {
+  const file = manifestEntry && manifestEntry.file;
+  const descriptorPath = file ? descriptorPathFor(file) : null;
+  const descriptor = descriptorPath && fs.existsSync(descriptorPath)
+    ? JSON.parse(fs.readFileSync(descriptorPath, 'utf8'))
+    : null;
+  const isInfraStep = slug.startsWith('assert_')
+    || slug.startsWith('classify_')
+    || slug.startsWith('compute_')
+    || slug === 'refresh_snapshot'
+    || slug === 'close_stale_permits'
+    || slug === 'update_tracked_projects'
+    || slug === 'backup_db'
+    // Spec 122 §7.4 — reconcile is Step 0; a zero-ingest day still has rows to reap.
+    || slug === 'reconcile';
+  return descriptor ? descriptor.identity.gate_exempt : isInfraStep;
+}
 
 // ---------------------------------------------------------------------------
 // B2 — defer mechanism pure helpers (Spec 40 §3.1.2, Spec 47 §8.7, Spec 115 §2.5)
@@ -539,21 +593,7 @@ async function run() {
     // downstream steps but still run quality/infrastructure steps (assert_*,
     // classify_*, compute_*, refresh_snapshot) — they check cumulative DB state,
     // not just the latest batch.
-    //
-    // `update_tracked_projects` is explicitly included because it processes
-    // existing tracked rows to emit time-sensitive CRM alerts (stall, recovery,
-    // imminent). A stall that happens on a no-ingest day must still trigger a
-    // notification. See adversarial Probe 8 / independent FAIL-4.
-    const isInfraStep = slug.startsWith('assert_')
-      || slug.startsWith('classify_')
-      || slug.startsWith('compute_')
-      || slug === 'refresh_snapshot'
-      || slug === 'close_stale_permits'
-      || slug === 'update_tracked_projects'
-      || slug === 'backup_db'
-      // Spec 122 §7.4 — reconcile is Step 0; a zero-ingest day still has rows to reap.
-      || slug === 'reconcile';
-    if (gateSkipped && !isInfraStep) {
+    if (gateSkipped && !resolveGateExempt(slug, manifest.scripts[slug])) {
       console.log(`${stepLabel} — SKIPPED (gate: 0 new records)`);
       skippedGateSteps.push(slug);
       try {
@@ -1017,4 +1057,4 @@ if (require.main === module) {
   });
 }
 
-module.exports = { resolveChainStatus, parseDeferMarker, spawnStepChild };
+module.exports = { resolveChainStatus, parseDeferMarker, spawnStepChild, resolveGateExempt };

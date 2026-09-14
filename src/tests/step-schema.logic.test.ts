@@ -640,7 +640,7 @@ describe('execution.shape "enrich" + the ENRICHER execution.phases[] profile (pi
     pin(errorsOf(withPhases([phase(1, { txn: 'own_txn' })])), '/execution/phases/0/txn', 'enum');
   });
 
-  it('the other eight profiles are UNAFFECTED — every committed step descriptor still validates, and none of their files changed in this commit (Rule 3/claim #175 probe_presence fleet fix is the ONE known, declared exception — assert-schema.descriptor.json, unrelated to any archetype-profile change); enrich_parcels is the ONE ENRICHER, assert_global_coverage/assert_data_bounds are the SECOND and THIRD ASSERT (batch1 I2 commit 9 cutover, 2026-09-13 — converted.json at 11 entries)', () => {
+  it('the other eight profiles are UNAFFECTED — every committed step descriptor still validates, and none of their files changed in this commit beyond the known, declared exceptions (Rule 3/claim #175 probe_presence fleet fix — assert-schema.descriptor.json; WF3 I3a gate_exempt correction — compute-centroids.descriptor.json/refresh-snapshot.descriptor.json, unrelated to any archetype-profile change); enrich_parcels is the ONE ENRICHER, assert_global_coverage/assert_data_bounds are the SECOND and THIRD ASSERT (batch1 I2 commit 9 cutover, 2026-09-13 — converted.json at 11 entries)', () => {
     // Pilot 9 commit 8 P8/P9 (2026-09-08) legitimately edits assert-schema.descriptor.json's
     // checks[].expect/config.probe_presence arrays (Rule 3 / claim #175's probe_presence fleet
     // union — a genuine, independent tunable-visibility fix, NOT tied to any archetype-profile
@@ -659,6 +659,12 @@ describe('execution.shape "enrich" + the ENRICHER execution.phases[] profile (pi
     expect(converted.length, 'eleven steps are converted as of batch1 I2 commit 9 (assert_data_bounds cutover, 2026-09-13)').toBe(11);
     const KNOWN_CHANGED_THIS_COMMIT = new Set([
       'scripts/quality/assert-schema.descriptor.json', // Rule 3/claim #175 probe_presence fleet fix (R-D three-way lock regen at every cutover)
+      // WF3 I3a (2026-09-14, `.cursor/wf3_i3a_infra_step_exemption_active_task.md`) — the §0
+      // measured mismatch correction: identity.gate_exempt flipped false -> true on both,
+      // matching each slug's own always-true isInfraStep verdict (compute_ prefix /
+      // refresh_snapshot name match). A value correction, not an archetype-profile change.
+      'scripts/compute-centroids.descriptor.json',
+      'scripts/refresh-snapshot.descriptor.json',
     ]);
     const descriptorPaths = converted.map((f) => f.replace(/\.js$/, '.descriptor.json'));
     const enrichers: string[] = [];

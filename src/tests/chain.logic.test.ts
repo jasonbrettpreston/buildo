@@ -849,6 +849,73 @@ describe('run-chain.js captures stdout and parses PIPELINE_SUMMARY', () => {
   });
 });
 
+// WF3 I3a (2026-09-14) — SPEC LINK: docs/specs/01-pipeline/122_pipeline_step_optimization.md §1.10
+// `.cursor/wf3_i3a_infra_step_exemption_active_task.md` — retires the bare `isInfraStep`
+// name-prefix gate-skip dispatch in favour of a converted step's own declared
+// `identity.gate_exempt`, falling back to `isInfraStep` UNCHANGED for every step with
+// no sibling descriptor. Behavioral (not source-text) coverage: `resolveGateExempt` is
+// exported specifically so this suite can exercise it directly against the REAL
+// manifest + REAL descriptor files on disk, rather than regexing source text.
+describe('resolveGateExempt prefers declared identity.gate_exempt over isInfraStep (Spec 122 §1.10 retirement, WF3 I3a)', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports -- exercising the real module's exports
+  const runChain = require(path.join(process.cwd(), 'scripts/run-chain.js'));
+  // eslint-disable-next-line @typescript-eslint/no-require-imports -- exercising the real validator
+  const { validateDescriptor } = require(path.join(process.cwd(), 'scripts/lib/step/validate.js'));
+  const manifest = JSON.parse(
+    fs.readFileSync(path.resolve(__dirname, '../../scripts/manifest.json'), 'utf-8')
+  );
+
+  it('is exported for direct testing (mirrors resolveChainStatus/parseDeferMarker)', () => {
+    expect(typeof runChain.resolveGateExempt).toBe('function');
+  });
+
+  it('(a) compute_centroids — descriptor now declares gate_exempt: true, matching its always-true isInfraStep verdict (the §0 measured mismatch, now closed)', () => {
+    expect(runChain.resolveGateExempt('compute_centroids', manifest.scripts.compute_centroids)).toBe(true);
+  });
+
+  it('(a) refresh_snapshot — the other corrected slug — also resolves true from its own descriptor', () => {
+    expect(runChain.resolveGateExempt('refresh_snapshot', manifest.scripts.refresh_snapshot)).toBe(true);
+  });
+
+  it('(b) a descriptor declaring gate_exempt: false is skipped — link_parcels, unchanged by this WF', () => {
+    expect(runChain.resolveGateExempt('link_parcels', manifest.scripts.link_parcels)).toBe(false);
+  });
+
+  it('(c) a slug with NO descriptor follows isInfraStep exactly as today — backup_db (OP4 regression, :806 above, still passing unmodified)', () => {
+    expect(manifest.scripts.backup_db).toBeDefined();
+    expect(runChain.resolveGateExempt('backup_db', manifest.scripts.backup_db)).toBe(true);
+  });
+
+  it('(c) a slug with NO descriptor and no isInfraStep match resolves false — permits (primary ingest), unchanged', () => {
+    expect(manifest.scripts.permits).toBeDefined();
+    expect(runChain.resolveGateExempt('permits', manifest.scripts.permits)).toBe(false);
+  });
+
+  it('(d) the two corrected descriptors round-trip through validateDescriptor clean', () => {
+    const centroids = JSON.parse(
+      fs.readFileSync(path.resolve(__dirname, '../../scripts/compute-centroids.descriptor.json'), 'utf-8')
+    );
+    const snapshot = JSON.parse(
+      fs.readFileSync(path.resolve(__dirname, '../../scripts/refresh-snapshot.descriptor.json'), 'utf-8')
+    );
+    expect(centroids.identity.gate_exempt).toBe(true);
+    expect(snapshot.identity.gate_exempt).toBe(true);
+    expect(() => validateDescriptor(centroids)).not.toThrow();
+    expect(() => validateDescriptor(snapshot)).not.toThrow();
+  });
+
+  it('a descriptor that exists but fails to parse throws — never caught/swallowed into a silent isInfraStep fallback', () => {
+    // Standards Compliance self-checklist item 3: "is the descriptor require()
+    // fail-closed, not fail-open?" resolveGateExempt's own body must have no
+    // try/catch around the JSON.parse — a malformed descriptor for a
+    // listed-as-converted slug must throw loud, not vanish into the fallback.
+    const source = fs.readFileSync(path.resolve(__dirname, '../../scripts/run-chain.js'), 'utf-8');
+    const fnBody = source.slice(source.indexOf('function resolveGateExempt'), source.indexOf('function parseDeferMarker'));
+    expect(fnBody).toContain('JSON.parse');
+    expect(fnBody).not.toMatch(/try\s*\{[\s\S]*JSON\.parse/);
+  });
+});
+
 describe('PIPELINE_META convention', () => {
   const scriptsDir = path.resolve(__dirname, '../../scripts');
 

@@ -395,12 +395,24 @@ describe('golden capture — PRE (commit 5, LANDED, testable today) + POST (comm
   });
 
   it('LANDED (commit 7) — all 5 POST invocations exist; the differential against PRE is compared BY SHAPE (column presence/types, is_insert xor is_update), never by raw table-state hash — the plan\'s own declared non-determinism posture, since every invocation re-derives live-DB counts by construction', () => {
+    // WF3 I3a (2026-09-14): the POST count was a transcribed literal (30 = the commit-7 capture
+    // day). A RECORDER writes exactly one row per snapshot_date, so a recapture on a later day
+    // (Spec 122 §5.3 R-C — I3a's gate_exempt flip staled the fingerprints) legitimately reads
+    // PRE+1. The contract, not the day: all 5 same-day POST invocations agree (re-running adds
+    // nothing) and POST − PRE ∈ {0, 1}.
+    const preCount = (JSON.parse(fs.readFileSync(artifact(`${GOLDEN_DIR_REL}/pre/${INVOCATIONS[0]!.name}.json`), 'utf8')) as { table_state?: Array<{ row_count: number }> }).table_state?.[0]?.row_count;
+    expect(preCount).toBe(30);
+    const postCounts = new Set<number>();
     for (const inv of INVOCATIONS) {
       const doc = JSON.parse(fs.readFileSync(artifact(`${GOLDEN_DIR_REL}/post/${inv.name}.json`), 'utf8')) as { exit_code: number; verdict: string; table_state?: Array<{ row_count: number }> };
       expect(doc.exit_code).toBe(0);
       expect(doc.verdict).toBe('PASS');
-      expect(doc.table_state?.[0]?.row_count).toBe(30);
+      postCounts.add(doc.table_state?.[0]?.row_count ?? -1);
     }
+    expect(postCounts.size).toBe(1); // one row per day: 5 invocations, same day, same count
+    const postCount = [...postCounts][0]!;
+    expect(postCount - preCount!).toBeGreaterThanOrEqual(0);
+    expect(postCount - preCount!).toBeLessThanOrEqual(1);
   });
 });
 

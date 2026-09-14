@@ -13,7 +13,7 @@
     "spec_version": "1.0",
     "archetype": "RECORDER",
     "contract_version": 1,
-    "gate_exempt": false
+    "gate_exempt": true
   },
 
   "inputs": {

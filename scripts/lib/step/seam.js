@@ -44,7 +44,13 @@ function loadManifest() {
   return JSON.parse(fs.readFileSync(MANIFEST_PATH, 'utf8'));
 }
 
-/** Descriptor path convention: `<step>.descriptor.json` beside the script (capture-step-golden.js's own rule, mirrored here rather than imported to avoid a CLI-module→library dependency). */
+/**
+ * Descriptor path convention: `<step>.descriptor.json` beside the script
+ * (capture-step-golden.js's own rule, mirrored here rather than imported to
+ * avoid a CLI-module→library dependency). Exported (WF3 I3a, 2026-09-14) so
+ * run-chain.js — another scripts/lib consumer, not a CLI-module dependency —
+ * can share this ONE definition instead of a third copy.
+ */
 function descriptorPathFor(step) {
   return step.replace(/\.(js|py)$/, '') + '.descriptor.json';
 }
@@ -207,6 +213,7 @@ async function runSeamChecks(pool, { chainId = 'sources', descriptorsByName } = 
 }
 
 module.exports = {
+  descriptorPathFor,
   loadConvertedDescriptors,
   deriveSeamPairs,
   checkSeam,
