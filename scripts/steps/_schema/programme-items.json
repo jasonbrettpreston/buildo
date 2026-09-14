@@ -1,7 +1,7 @@
 {
   "$comment": [
     "R-T (2026-08-29). Cross-cutting Spec 122/123/124 programme items NOT owned by a",
-    "single pilot's own nine-commit sequence \u2014 seeded from a full grounding pass",
+    "single pilot's own nine-commit sequence — seeded from a full grounding pass",
     "against HEAD d9057a54 (docs/reports/generated/122-programme-backlog.md's own",
     "source inventory, reconciled 4-ways before this seed). Regenerated report:",
     "docs/reports/generated/122-programme-backlog.md via",
@@ -19,11 +19,11 @@
   "items": [
     {
       "id": "STD-1",
-      "spec": "122 \u00a71.3",
+      "spec": "122 §1.3",
       "title": "20 categories, schema-canonical",
       "promised": "20 categories, schema-canonical",
       "status": "BUILT",
-      "evidence": "scripts/steps/_schema/step.schema.json x-categories (20 entries \u2014 re-measured 2026-09-14, the earlier \"18 entries\" was a stale count; POST-B1-13)",
+      "evidence": "scripts/steps/_schema/step.schema.json x-categories (20 entries — re-measured 2026-09-14, the earlier \"18 entries\" was a stale count; POST-B1-13)",
       "owner": {
         "kind": "wf",
         "ref": "schema (R2), pre-existing"
@@ -36,7 +36,7 @@
     },
     {
       "id": "STD-2",
-      "spec": "122 \u00a74.1",
+      "spec": "122 §4.1",
       "title": "descriptor is a data-only sibling JSON",
       "promised": "descriptor is a data-only sibling JSON, never exported from .js",
       "status": "BUILT",
@@ -53,7 +53,7 @@
     },
     {
       "id": "STD-3",
-      "spec": "122 \u00a75.1",
+      "spec": "122 §5.1",
       "title": "mandatory ast-grep shape rule",
       "promised": "mandatory ast-grep shape rule bans per-step escape hatches; frozen file shape",
       "status": "BUILT",
@@ -70,7 +70,7 @@
     },
     {
       "id": "STD-4",
-      "spec": "122 \u00a74.1",
+      "spec": "122 §4.1",
       "title": "step-0 reconcile becomes a reconcile step",
       "promised": "step-0 reconcile becomes a reconcile step at head of manifest.chains.sources",
       "status": "BUILT",
@@ -87,7 +87,7 @@
     },
     {
       "id": "STD-5",
-      "spec": "122 \u00a75.5",
+      "spec": "122 §5.5",
       "title": "the COMPUTE shape",
       "promised": "Condition 4 - the COMPUTE shape (dispatch table, ctx.report, injected I/O seams, ctx.config)",
       "status": "BUILT",
@@ -104,7 +104,7 @@
     },
     {
       "id": "STD-6",
-      "spec": "122 \u00a74.2",
+      "spec": "122 §4.2",
       "title": "pipeline.step() is a factory, AJV-validates before compute runs",
       "promised": "pipeline.step() is a factory, AJV-validates descriptor before compute runs, throws",
       "status": "BUILT",
@@ -121,11 +121,11 @@
     },
     {
       "id": "STD-7",
-      "spec": "122 \u00a71.10",
+      "spec": "122 §1.10",
       "title": "archetype drives required-field profile, 8 archetypes dispatched",
       "promised": "archetype drives required-field profile; 8 archetypes dispatched",
       "status": "BUILT",
-      "evidence": "RE-EVIDENCED 2026-09-04 (WF2 'template freeze' C2; was stale, still said 'pilots 7/8 not started' though both had already cut over). scripts/lib/step/index.js dispatches 7 of 8 archetypes to a phase runner (runIngestPhase, runLinkPhase, runLinkKeyedPhase, runCascadePhase, runMaterializePhase, runBackfillPhase, runRecorderPhase:1939; ASSERT has no runner by design, assert_schema). Pilot 7 (link_parcels, LINK_KEYED) cut over at a4d80a26; pilot 8 (refresh_snapshot, RECORDER) cut over at 32eec17f, exercising runRecorderPhase for real. **BUILT 2026-09-11 (pilot 9 commit 9, cutover):** ENRICHER is now the 8th and last archetype exercised \u2014 `scripts/enrich-parcels.js` registered in `converted.json`, `scripts/lib/step/index.js` dispatches it via `runEnrichPhase` (RE-FREEZE #5, `generate-template-freeze.mjs --refresh`), and `scripts/steps/_schema/template-freeze.json`'s `archetype_profiles` ENRICHER row now reads `{shapes:[\"enrich\"], runners:[\"runEnrichPhase\"], first_step:\"enrich_parcels\", proven:true}` \u2014 the freeze artifact itself is the evidence (Spec 124 \u00a79 :306-307's named test, now measured). All 8 archetypes dispatched; 8/8, 0 remaining.",
+      "evidence": "RE-EVIDENCED 2026-09-04 (WF2 'template freeze' C2; was stale, still said 'pilots 7/8 not started' though both had already cut over). scripts/lib/step/index.js dispatches 7 of 8 archetypes to a phase runner (runIngestPhase, runLinkPhase, runLinkKeyedPhase, runCascadePhase, runMaterializePhase, runBackfillPhase, runRecorderPhase:1939; ASSERT has no runner by design, assert_schema). Pilot 7 (link_parcels, LINK_KEYED) cut over at a4d80a26; pilot 8 (refresh_snapshot, RECORDER) cut over at 32eec17f, exercising runRecorderPhase for real. **BUILT 2026-09-11 (pilot 9 commit 9, cutover):** ENRICHER is now the 8th and last archetype exercised — `scripts/enrich-parcels.js` registered in `converted.json`, `scripts/lib/step/index.js` dispatches it via `runEnrichPhase` (RE-FREEZE #5, `generate-template-freeze.mjs --refresh`), and `scripts/steps/_schema/template-freeze.json`'s `archetype_profiles` ENRICHER row now reads `{shapes:[\"enrich\"], runners:[\"runEnrichPhase\"], first_step:\"enrich_parcels\", proven:true}` — the freeze artifact itself is the evidence (Spec 124 §9 :306-307's named test, now measured). All 8 archetypes dispatched; 8/8, 0 remaining.",
       "owner": {
         "kind": "pilot",
         "ref": "pilot9_enrich_parcels"
@@ -140,11 +140,11 @@
     },
     {
       "id": "STD-8",
-      "spec": "122 \u00a78.2",
+      "spec": "122 §8.2",
       "title": "freeze the template after the eighth, never the first",
       "promised": "freeze the template after the eighth, never the first",
       "status": "BUILT",
-      "evidence": "CLOSED 2026-09-04 (WF2 'template freeze' C6) \u2014 the MECHANISM is built, honestly distinguished from the PRECONDITION being met (that is FREEZE-1, below, not this item). scripts/steps/_schema/template-freeze.json (generated by generate-template-freeze.mjs) is the declared artifact; the both-directions gate is src/tests/template-freeze.infra.test.ts (25 tests: schema validity :95, the R-E schema-hash lock :191, GAP G-3 phase-order re-derivation) + generate-template-freeze.mjs's own --check, hook-wired into .husky/pre-commit (e029c37d). A schema edit without a same-commit re-freeze + Spec 122 \u00a78 amendment now hard-stops every commit \u2014 'do not modify step.schema.json/index.js shape after pilot 8' finally has a script that enforces it, closing this item's own stated absence.",
+      "evidence": "CLOSED 2026-09-04 (WF2 'template freeze' C6) — the MECHANISM is built, honestly distinguished from the PRECONDITION being met (that is FREEZE-1, below, not this item). scripts/steps/_schema/template-freeze.json (generated by generate-template-freeze.mjs) is the declared artifact; the both-directions gate is src/tests/template-freeze.infra.test.ts (25 tests: schema validity :95, the R-E schema-hash lock :191, GAP G-3 phase-order re-derivation) + generate-template-freeze.mjs's own --check, hook-wired into .husky/pre-commit (e029c37d). A schema edit without a same-commit re-freeze + Spec 122 §8 amendment now hard-stops every commit — 'do not modify step.schema.json/index.js shape after pilot 8' finally has a script that enforces it, closing this item's own stated absence.",
       "owner": {
         "kind": "wf",
         "ref": "wf: programme-STD-8, e029c37d"
@@ -157,7 +157,7 @@
     },
     {
       "id": "STD-9",
-      "spec": "122 \u00a75.4",
+      "spec": "122 §5.4",
       "title": "ADVISORY_LOCK_ID kept textually",
       "promised": "ADVISORY_LOCK_ID kept textually, source-text loops widened to accept pipeline.step",
       "status": "BUILT",
@@ -174,7 +174,7 @@
     },
     {
       "id": "LDG-1",
-      "spec": "122 \u00a76.0",
+      "spec": "122 §6.0",
       "title": "column-lineage generator",
       "promised": "column-lineage generator is the working control case, tier-2, drift-guarded",
       "status": "BUILT",
@@ -191,11 +191,11 @@
     },
     {
       "id": "LDG-2",
-      "spec": "122 \u00a76.1",
+      "spec": "122 §6.1",
       "title": "ledger table edges from outputs.writes -> inputs.reads",
       "promised": "ledger should generate table edges from outputs.writes -> inputs.reads; cross-descriptor drift check (a step may not read a table written by a later step)",
       "status": "BUILT",
-      "evidence": "Concern satisfied by the seam pass (VAL-3, above): scripts/lib/step/seam.js checks a producer/consumer pair's RUN ORDER (downstream started_at >= upstream completed_at), mechanically, at chain-end \u2014 a step reading a table before its producer's write completed now fails the seam check rather than going unnoticed. R-T addendum commit 5, 2026-08-30.",
+      "evidence": "Concern satisfied by the seam pass (VAL-3, above): scripts/lib/step/seam.js checks a producer/consumer pair's RUN ORDER (downstream started_at >= upstream completed_at), mechanically, at chain-end — a step reading a table before its producer's write completed now fails the seam check rather than going unnoticed. R-T addendum commit 5, 2026-08-30.",
       "owner": {
         "kind": "wf",
         "ref": "R-T addendum commit 5 (absorbed into VAL-WF2)"
@@ -208,7 +208,7 @@
     },
     {
       "id": "LDG-3",
-      "spec": "122 \u00a76.2",
+      "spec": "122 §6.2",
       "title": "records_meta contracts HALT on violation",
       "promised": "records_meta contracts HALT on violation (ravine_load, heritage_load, centreline_load)",
       "status": "BUILT",
@@ -225,7 +225,7 @@
     },
     {
       "id": "LDG-4",
-      "spec": "122 \u00a76.3",
+      "spec": "122 §6.3",
       "title": "stepUpstreams(slug) derived from the ledger",
       "promised": "stepUpstreams(slug) derived from the ledger, retiring 3 hand-maintained slug arrays",
       "status": "BUILT",
@@ -244,7 +244,7 @@
     },
     {
       "id": "LDG-5",
-      "spec": "122 \u00a76.4",
+      "spec": "122 §6.4",
       "title": "4 invalidation mechanisms real today",
       "promised": "4 invalidation mechanisms real today (trigger mig 242, load-parcels.js DEC-FENCE2, enrich-permits.js, close-stale-permits.js)",
       "status": "BUILT",
@@ -261,7 +261,7 @@
     },
     {
       "id": "LDG-6",
-      "spec": "122 \u00a76.4a",
+      "spec": "122 §6.4a",
       "title": "the centroid invalidation gap",
       "promised": "centroid_lat/centroid_lng have no invalidator",
       "status": "BUILT",
@@ -278,7 +278,7 @@
     },
     {
       "id": "LDG-7",
-      "spec": "122 \u00a76.5",
+      "spec": "122 §6.5",
       "title": "descriptor reads/writes consistent with manifest.chains order",
       "promised": "ordering-consistency claim (replaces dead claim #145): descriptor reads/writes must be consistent with manifest array order",
       "status": "BUILT",
@@ -295,7 +295,7 @@
     },
     {
       "id": "LDG-8",
-      "spec": "122 \u00a76.1",
+      "spec": "122 §6.1",
       "title": "invalidation + counters scoped by writes.key",
       "promised": "invalidation + counters scoped by writes.key -> LINK/MATCHER growth wave",
       "status": "BUILT",
@@ -312,7 +312,7 @@
     },
     {
       "id": "LDG-9",
-      "spec": "122 \u00a71.7",
+      "spec": "122 §1.7",
       "title": "sharing.chains/shared/slug_forms are ~ derived",
       "promised": "sharing.chains/shared/slug_forms are ~ derived, never hand-declared",
       "status": "PARTIAL",
@@ -329,7 +329,7 @@
     },
     {
       "id": "LC-1",
-      "spec": "122 \u00a74.1 (Spec 120 \u00a74)",
+      "spec": "122 §4.1 (Spec 120 §4)",
       "title": "~35 step lifecycle behaviours",
       "promised": "~35 lifecycle behaviours (reconcile, ledger row, advisory lock+fencing, config .strict(), producer health assert, preconditions, empty-source guard, drift diff, staleness, fingerprint, txn-per-step, generated upsert, retraction, invalidation, checkpoint, quarantine, WAP publish, verdict cascade, skip_reason+count, step_error, budget/duration tripwires, declaration_tiers, OpenLineage)",
       "status": "BUILT",
@@ -346,7 +346,7 @@
     },
     {
       "id": "LC-1b",
-      "spec": "122 \u00a74.1",
+      "spec": "122 §4.1",
       "title": "reap stale heartbeats -> crashed",
       "promised": "reap stale heartbeats -> crashed; roll back unpublished batches; requeue quarantined units",
       "status": "BUILT",
@@ -363,7 +363,7 @@
     },
     {
       "id": "LC-1c",
-      "spec": "122 \u00a74.1",
+      "spec": "122 §4.1",
       "title": "a skip re-measures its checks live",
       "promised": "a skip re-measures its checks live; machine-readable skip_reason",
       "status": "PARTIAL",
@@ -380,7 +380,7 @@
     },
     {
       "id": "LC-2",
-      "spec": "122 \u00a74.1a",
+      "spec": "122 §4.1a",
       "title": "5-part logic fingerprint",
       "promised": "5-part logic fingerprint (normalize, widen input set, split by consequence, guards excluded, decouple detection from forced re-run)",
       "status": "PARTIAL",
@@ -397,7 +397,7 @@
     },
     {
       "id": "LC-3",
-      "spec": "122 \u00a74.2b",
+      "spec": "122 §4.2b",
       "title": "--plan mode",
       "promised": "--plan mode (resolve every gate, print what-would-run, open no write txn)",
       "status": "NOT_STARTED",
@@ -414,7 +414,7 @@
     },
     {
       "id": "LC-4",
-      "spec": "122 \u00a74.6",
+      "spec": "122 §4.6",
       "title": "generated SQL only, no string surgery",
       "promised": "generated SQL only, no string surgery (retires enrich-centreline.js:277-283's .replace() scoping bug)",
       "status": "NOT_STARTED",
@@ -431,11 +431,11 @@
     },
     {
       "id": "LC-5",
-      "spec": "122 \u00a74.1 (Spec 120 \u00a74)",
+      "spec": "122 §4.1 (Spec 120 §4)",
       "title": "declaration_tiers badge + OpenLineage emit (split from LC-1, 2026-09-04)",
-      "promised": "declaration_tiers badge; OpenLineage emit \u2014 2 of LC-1's original ~35 lifecycle behaviours",
+      "promised": "declaration_tiers badge; OpenLineage emit — 2 of LC-1's original ~35 lifecycle behaviours",
       "status": "NOT_STARTED",
-      "evidence": "SPLIT from LC-1 (WF2 'template freeze' C2, 2026-09-04) so LC-1 could honestly flip BUILT once the RECORDER gap it was really tracking closed at pilot 8 (32eec17f). Zero hits for 'OpenLineage' or 'declaration_tiers' anywhere in scripts/lib/step/ or step.schema.json \u2014 genuinely unbuilt, not merely unexercised. Neither gates archetype-coverage or batching-freeze claims; a real but small emit/badge feature.",
+      "evidence": "SPLIT from LC-1 (WF2 'template freeze' C2, 2026-09-04) so LC-1 could honestly flip BUILT once the RECORDER gap it was really tracking closed at pilot 8 (32eec17f). Zero hits for 'OpenLineage' or 'declaration_tiers' anywhere in scripts/lib/step/ or step.schema.json — genuinely unbuilt, not merely unexercised. Neither gates archetype-coverage or batching-freeze claims; a real but small emit/badge feature.",
       "owner": {
         "kind": "followup",
         "ref": "review_followups.md (split at WF2 'template freeze' C2, 2026-09-04)"
@@ -448,11 +448,11 @@
     },
     {
       "id": "VAL-1",
-      "spec": "120 \u00a75",
+      "spec": "120 §5",
       "title": "12 named check types as generators",
       "promised": "one record type + kind discriminator, 12 named check types as GENERATORS",
       "status": "SUPERSEDED",
-      "evidence": "step.schema.json definitions.check.properties.kind.description states verbatim the '12' is corrected to '9 named types + plan_shape' by Spec 122 \u00a712.5/R6; 0 grep hits for 'not_null'/'unique'/'row_count_floor' as functions in scripts/lib/step/*.js - a ratified design walk-back, not an unbuilt gap",
+      "evidence": "step.schema.json definitions.check.properties.kind.description states verbatim the '12' is corrected to '9 named types + plan_shape' by Spec 122 §12.5/R6; 0 grep hits for 'not_null'/'unique'/'row_count_floor' as functions in scripts/lib/step/*.js - a ratified design walk-back, not an unbuilt gap",
       "owner": {
         "kind": "none",
         "ref": ""
@@ -465,11 +465,11 @@
     },
     {
       "id": "VAL-2",
-      "spec": "79 \u00a72",
+      "spec": "79 §2",
       "title": "12-item per-step evidence checklist",
       "promised": "12-item per-step evidence checklist (C1-C12), machine-checked",
       "status": "PARTIAL",
-      "evidence": "Spec 79 \u00a72's checklist is a manual WF5 reviewer-agent process (Spec 79 \u00a73a), not integrated into scripts/analysis/step-validate.mjs's automated scorecard - two parallel systems",
+      "evidence": "Spec 79 §2's checklist is a manual WF5 reviewer-agent process (Spec 79 §3a), not integrated into scripts/analysis/step-validate.mjs's automated scorecard - two parallel systems",
       "owner": {
         "kind": "followup",
         "ref": "review_followups.md (2026-08-29 programme backlog filing)"
@@ -482,11 +482,11 @@
     },
     {
       "id": "VAL-3",
-      "spec": "79 \u00a73a'",
+      "spec": "79 §3a'",
       "title": "Seam-Validation Pass",
       "promised": "Seam-Validation Pass - producer/consumer contract checks across named step pairs, run after all per-step records exist",
       "status": "BUILT",
-      "evidence": "scripts/lib/step/seam.js deriveSeamPairs()/checkSeam()/runSeamChecks() \u2014 derives every producer/consumer step-pair edge from inputs.reads.steps[] (corrected from outputs.invalidates, which is {table,column,when}-shaped, not a step edge \u2014 Fold A-5), joins on records_meta.chain_run_id (R-U) with a legacy temporal fallback, runs at chain-end (scripts/analysis/chain-end-synthesis.mjs). Measured against the 6 real converted descriptors: exactly 1 live pair today (compute_centroids -> link_massing). R-T addendum commit 5, 2026-08-30.",
+      "evidence": "scripts/lib/step/seam.js deriveSeamPairs()/checkSeam()/runSeamChecks() — derives every producer/consumer step-pair edge from inputs.reads.steps[] (corrected from outputs.invalidates, which is {table,column,when}-shaped, not a step edge — Fold A-5), joins on records_meta.chain_run_id (R-U) with a legacy temporal fallback, runs at chain-end (scripts/analysis/chain-end-synthesis.mjs). Measured against the 6 real converted descriptors: exactly 1 live pair today (compute_centroids -> link_massing). R-T addendum commit 5, 2026-08-30.",
       "owner": {
         "kind": "wf",
         "ref": "R-T addendum commit 5 (absorbed into VAL-WF2)"
@@ -499,7 +499,7 @@
     },
     {
       "id": "VAL-4",
-      "spec": "79 \u00a73b",
+      "spec": "79 §3b",
       "title": "Chain-End Synthesis, 4-agent adversarial review",
       "promised": "Chain-End Synthesis with 4-agent adversarial review, Pass 1/2/2.5/3, severity rules, small-batch execution plan",
       "status": "BUILT",
@@ -516,7 +516,7 @@
     },
     {
       "id": "VAL-4b",
-      "spec": "79 \u00a710",
+      "spec": "79 §10",
       "title": "Hidden-Failure Tripwires, per-risk-class profile",
       "promised": "12 tripwires, per-risk-class profile",
       "status": "PARTIAL",
@@ -533,7 +533,7 @@
     },
     {
       "id": "VAL-5",
-      "spec": "122 \u00a77.1",
+      "spec": "122 §7.1",
       "title": "map-concerns.mjs and map-categories.mjs",
       "promised": "concern<->home 1:1 and claim<->category coverage, hard-fails on orphan",
       "status": "BUILT",
@@ -567,7 +567,7 @@
     },
     {
       "id": "VAL-7",
-      "spec": "121 \u00a76.4",
+      "spec": "121 §6.4",
       "title": "stopping rule: saturation + gate + time-box",
       "promised": "2 consecutive assessment passes with 0 new findings (saturation) + gate >=14/17 + time-box <=30% of estimated budget",
       "status": "NOT_STARTED",
@@ -584,7 +584,7 @@
     },
     {
       "id": "VAL-8",
-      "spec": "121 \u00a77.3",
+      "spec": "121 §7.3",
       "title": "method_version stamp + MAJOR-bump re-audit",
       "promised": "method_version stamped on the assessment method; a MAJOR version bump automatically queues affected steps for re-audit, by name",
       "status": "NOT_STARTED",
@@ -601,11 +601,11 @@
     },
     {
       "id": "STA-1",
-      "spec": "120 \u00a76",
+      "spec": "120 §6",
       "title": "4 new state tables",
       "promised": "4 new tables at migrations 245-248: pipeline_intervals, published_batch, step_error, step_quarantine",
       "status": "NOT_STARTED",
-      "evidence": "migrations/ 240-245 exist, 246 does not (no published_batch table). RECLASSIFIED 2026-09-03 \u2014 WF1 'state tables reset' Fold A operator ruling (.cursor/wf1_state_tables_reset_active_task.md Fold A item 2): outputs.publish/recovery.rollback \"pointer\" are schema enums with ZERO implementation (step.schema.json:987, index.js:45 comment only) and grep '\"publish\"' scripts/*.descriptor.json -> all 7 real declarers (assert_schema has outputs:\"none\", ASSERT profile) say \"direct\", 0 say \"pointer\" \u2014 published_batch has no writer without a pointer-publish producer, so migration 246 is deferred until one exists rather than landing with an unimplemented owner. Reclassified batching_prereq -> cutover_prereq with applies_when so it structurally cannot block today's freeze-after-the-eighth decision (0 converted slugs declare outputs.publish:\"pointer\") but is armed the moment blocks[] names a slug that does. The published_batch column shape is recorded as FIRST-DESIGN text at docs/specs/01-pipeline/122_pipeline_step_optimization.md \u00a77.5a (2026-09-03), cross-referencing the \u00a77.4 A3 reconcile rollback sentence (:1066) that will own it.",
+      "evidence": "migrations/ 240-245 exist, 246 does not (no published_batch table). RECLASSIFIED 2026-09-03 — WF1 'state tables reset' Fold A operator ruling (.cursor/wf1_state_tables_reset_active_task.md Fold A item 2): outputs.publish/recovery.rollback \"pointer\" are schema enums with ZERO implementation (step.schema.json:987, index.js:45 comment only) and grep '\"publish\"' scripts/*.descriptor.json -> all 7 real declarers (assert_schema has outputs:\"none\", ASSERT profile) say \"direct\", 0 say \"pointer\" — published_batch has no writer without a pointer-publish producer, so migration 246 is deferred until one exists rather than landing with an unimplemented owner. Reclassified batching_prereq -> cutover_prereq with applies_when so it structurally cannot block today's freeze-after-the-eighth decision (0 converted slugs declare outputs.publish:\"pointer\") but is armed the moment blocks[] names a slug that does. The published_batch column shape is recorded as FIRST-DESIGN text at docs/specs/01-pipeline/122_pipeline_step_optimization.md §7.5a (2026-09-03), cross-referencing the §7.4 A3 reconcile rollback sentence (:1066) that will own it.",
       "owner": {
         "kind": "wf",
         "ref": "wf: programme-STA-1"
@@ -622,11 +622,11 @@
     },
     {
       "id": "STA-2",
-      "spec": "120 \u00a76b",
+      "spec": "120 §6b",
       "title": "reset generated per archetype",
       "promised": "reset generated per archetype (a library mechanism that produces reset SQL from outputs/recovery.reset)",
       "status": "BUILT",
-      "evidence": "BUILT 2026-09-03, WF1 'state tables reset' commit 2: scripts/lib/step/reset.js generateReset(descriptor) reads recovery.reset and, for \"generated\", derives DELETE/UPDATE-SET-NULL reset SQL per outputs.writes[] entry via write.buildWritePlan; dry-run by default. Exported from scripts/lib/step/index.js. Conformance in src/tests/step-conformance.infra.test.ts (describe 'STA-2 \u2014 generateReset'): 0 real descriptors declare \"generated\" today (vacuous, per this item's own prior evidence, unchanged), so non-vacuity is proven on fixture descriptors \u2014 a retract:\"all\" fixture and a set_based_null_retract fixture both round-trip to >=1 statement, and a RED-first negative fixture (retract:\"departed\") throws naming the table/index/class. Spec 122 \u00a77.5b documents the mechanism same commit.",
+      "evidence": "BUILT 2026-09-03, WF1 'state tables reset' commit 2: scripts/lib/step/reset.js generateReset(descriptor) reads recovery.reset and, for \"generated\", derives DELETE/UPDATE-SET-NULL reset SQL per outputs.writes[] entry via write.buildWritePlan; dry-run by default. Exported from scripts/lib/step/index.js. Conformance in src/tests/step-conformance.infra.test.ts (describe 'STA-2 — generateReset'): 0 real descriptors declare \"generated\" today (vacuous, per this item's own prior evidence, unchanged), so non-vacuity is proven on fixture descriptors — a retract:\"all\" fixture and a set_based_null_retract fixture both round-trip to >=1 statement, and a RED-first negative fixture (retract:\"departed\") throws naming the table/index/class. Spec 122 §7.5b documents the mechanism same commit.",
       "owner": {
         "kind": "wf",
         "ref": "wf: programme-STA-2"
@@ -645,11 +645,11 @@
     },
     {
       "id": "STA-3",
-      "spec": "120 \u00a76b",
+      "spec": "120 §6b",
       "title": "3 destructive-reset guards",
       "promised": "3 destructive-reset guards (dry-run default, explicit target confirmation, one-txn magnitude+empty-source guard)",
       "status": "BUILT",
-      "evidence": "BUILT 2026-09-03, WF1 'state tables reset' commit 3: scripts/lib/step/reset.js ships 3 guards, each refusing before any statement runs \u2014 assertBeforeImageDeclared (R-M: no reset without recovery.before_image \"generated\"), assertForceFullAuthorized (R-L: no reset outside override.force_full sourced from a manifest.json chain_args.sources \"--full\" declaration), assertAdvisoryLockAvailable (no reset while the step's identity.lock is held elsewhere, via the same pg_try_advisory_xact_lock primitive pipeline.withAdvisoryLock uses). applyGeneratedReset runs all three in order then reuses write.writeBeforeImage verbatim before each statement. Each guard has a known-bad fixture and both-directions lock (fake pool) in src/tests/step-library.logic.test.ts (describe 'STA-3'). DELTA FROM PROMISED, recorded not silently substituted: the original promise was \"dry-run default, explicit target confirmation, one-txn magnitude+empty-source guard\" \u2014 dry-run default survives unchanged (STA-2's generateReset own default); the other two guards are RE-DERIVED from R-L and R-M (Spec 124 \u00a75), which post-date the original promise and are the stronger, already-ratified mechanisms. Spec 124 R-L/R-M rows gain an \"Enforced by\" note same commit.",
+      "evidence": "BUILT 2026-09-03, WF1 'state tables reset' commit 3: scripts/lib/step/reset.js ships 3 guards, each refusing before any statement runs — assertBeforeImageDeclared (R-M: no reset without recovery.before_image \"generated\"), assertForceFullAuthorized (R-L: no reset outside override.force_full sourced from a manifest.json chain_args.sources \"--full\" declaration), assertAdvisoryLockAvailable (no reset while the step's identity.lock is held elsewhere, via the same pg_try_advisory_xact_lock primitive pipeline.withAdvisoryLock uses). applyGeneratedReset runs all three in order then reuses write.writeBeforeImage verbatim before each statement. Each guard has a known-bad fixture and both-directions lock (fake pool) in src/tests/step-library.logic.test.ts (describe 'STA-3'). DELTA FROM PROMISED, recorded not silently substituted: the original promise was \"dry-run default, explicit target confirmation, one-txn magnitude+empty-source guard\" — dry-run default survives unchanged (STA-2's generateReset own default); the other two guards are RE-DERIVED from R-L and R-M (Spec 124 §5), which post-date the original promise and are the stronger, already-ratified mechanisms. Spec 124 R-L/R-M rows gain an \"Enforced by\" note same commit.",
       "owner": {
         "kind": "wf",
         "ref": "wf: programme-STA-2"
@@ -668,7 +668,7 @@
     },
     {
       "id": "STA-4",
-      "spec": "120 \u00a76c",
+      "spec": "120 §6c",
       "title": "admin surface: check-list-as-data etc.",
       "promised": "check-list-as-data, crashed distinct from failed, unpublished-table visibility, skip-reason counts, declaration-tier badge, one-click reconcile w/ dry-run",
       "status": "PARTIAL",
@@ -719,11 +719,11 @@
     },
     {
       "id": "PRG-3",
-      "spec": "122 \u00a77.2",
+      "spec": "122 §7.2",
       "title": "pilot order rulings",
       "promised": "pilot order rulings (1-6 confirmed via git log); 7=RECORDER, 8=ENRICHER 'goes LAST'",
       "status": "BUILT",
-      "evidence": "RE-EVIDENCED 2026-09-04 (WF2 'template freeze' C2). This item's own stated absence is falsified: both .cursor/pilot7_link_parcels_active_task.md and .cursor/pilot8_refresh_snapshot_active_task.md exist and both pilots cut over (pilot 7 = link_parcels/LINK_KEYED, a4d80a26; pilot 8 = refresh_snapshot/RECORDER, 32eec17f). The original archetype-order guess (7=RECORDER, 8=ENRICHER) was itself superseded by a later operator ruling (Spec 124 \u00a79 :306-307) which this item's own 'promised' text predates and does not correct \u2014 the RULING itself (which pilot runs in which order) is what this item tracks, and every pilot from 1 through 8 has now been ruled AND executed, in order, each with a committed active-task file and a cutover commit. Pilot 9 (enrich_parcels/ENRICHER) is ruled next by the same Spec 124 \u00a79 citation but is future work, tracked by STD-7, not by this item.",
+      "evidence": "RE-EVIDENCED 2026-09-04 (WF2 'template freeze' C2). This item's own stated absence is falsified: both .cursor/pilot7_link_parcels_active_task.md and .cursor/pilot8_refresh_snapshot_active_task.md exist and both pilots cut over (pilot 7 = link_parcels/LINK_KEYED, a4d80a26; pilot 8 = refresh_snapshot/RECORDER, 32eec17f). The original archetype-order guess (7=RECORDER, 8=ENRICHER) was itself superseded by a later operator ruling (Spec 124 §9 :306-307) which this item's own 'promised' text predates and does not correct — the RULING itself (which pilot runs in which order) is what this item tracks, and every pilot from 1 through 8 has now been ruled AND executed, in order, each with a committed active-task file and a cutover commit. Pilot 9 (enrich_parcels/ENRICHER) is ruled next by the same Spec 124 §9 citation but is future work, tracked by STD-7, not by this item.",
       "owner": {
         "kind": "pilot",
         "ref": "pilot 8 cutover, 32eec17f"
@@ -736,7 +736,7 @@
     },
     {
       "id": "PRG-4",
-      "spec": "122a \u00a712.2",
+      "spec": "122a §12.2",
       "title": "6 missing P0 categories adjudicated",
       "promised": "6 missing P0 categories go through categories-vs-fields adjudication",
       "status": "PARTIAL",
@@ -753,7 +753,7 @@
     },
     {
       "id": "PRG-5",
-      "spec": "122a \u00a7B2",
+      "spec": "122a §B2",
       "title": "54 orphan claims triaged in batches",
       "promised": "54 orphan claims triaged in batches, pilot-archetype-touching first",
       "status": "PARTIAL",
@@ -770,7 +770,7 @@
     },
     {
       "id": "PRG-6",
-      "spec": "123 \u00a76 G7",
+      "spec": "123 §6 G7",
       "title": "mutation testing replaced by both-directions red-first locks",
       "promised": "Stryker scoped to src/features/leads/lib/, 3 files, not a gate; a bounded mutation-spike over scripts/lib/compute/** filed as a followup",
       "status": "BUILT",
@@ -838,11 +838,11 @@
     },
     {
       "id": "PRG-10",
-      "spec": "122 \u00a78.2",
+      "spec": "122 §8.2",
       "title": "freeze after the eighth - no formal batching mechanism (repeat of STD-8)",
       "promised": "no formal batching mechanism",
       "status": "SUPERSEDED",
-      "evidence": "SUPERSEDED 2026-09-04 (WF2 'template freeze' C6) \u2014 duplicate of STD-8, same owner.ref at seeding ('wf: programme-STD-8'); one id survives (STD-8, now BUILT). This id is retired, not re-evidenced separately.",
+      "evidence": "SUPERSEDED 2026-09-04 (WF2 'template freeze' C6) — duplicate of STD-8, same owner.ref at seeding ('wf: programme-STD-8'); one id survives (STD-8, now BUILT). This id is retired, not re-evidenced separately.",
       "owner": {
         "kind": "none",
         "ref": ""
@@ -855,14 +855,14 @@
     },
     {
       "id": "FREEZE-1",
-      "spec": "122 \u00a78.2",
-      "title": "freeze precondition satisfied \u2014 the batching_prereq set is genuinely empty",
-      "promised": "Spec 122 \u00a78.2: 'the template may honestly freeze after the eighth pilot only when the batching_prereq set is empty' \u2014 the PRECONDITION, not the mechanism (STD-8, BUILT, is the mechanism)",
+      "spec": "122 §8.2",
+      "title": "freeze precondition satisfied — the batching_prereq set is genuinely empty",
+      "promised": "Spec 122 §8.2: 'the template may honestly freeze after the eighth pilot only when the batching_prereq set is empty' — the PRECONDITION, not the mechanism (STD-8, BUILT, is the mechanism)",
       "status": "BUILT",
-      "evidence": "BUILT 2026-09-11 (WF2 \"FREEZE-1, the freeze precondition\" phase 2 commit 5, immediately after pilot 9 commit 9 `3c1f1923`). Gate re-measured before the flip, not assumed: converted.json registers scripts/enrich-parcels.js with pending [] (R-K); STD-7 reads BUILT (ENRICHER dispatched \u2014 runEnrichPhase, first_step enrich_parcels, template-freeze.json archetype_profiles all 8 proven:true after RE-FREEZE #5); CLOUDPARITY reads BUILT (GH run 34506962436, all 9 converted slugs present, none skipped); step-validate --all --fast registry invariant #9 \"clean (0 converted slugs blocked by an unmet cutover_prereq item; blocks batching: 1)\" \u2014 the ONE remaining open batching_prereq item was this item itself. With this flip the batching_prereq set is genuinely EMPTY: `node scripts/steps/_schema/generate-template-freeze.mjs` (no flag \u2014 frozen tier preserved verbatim, frozen_at stays at RE-FREEZE #5's bc81ac84; no re-freeze is owed) re-derives batching_prereq_snapshot = [] and checkFreezeDeclarationHonesty returns ok on arm D (declared BUILT, no other open item, snapshot empty, every archetype proven) \u2014 the lock stops being vacuous at this commit. Prior evidence retained: the freeze MECHANISM (STD-8) was built 2026-09-04; this item existed so the ledger could not read \"STD-8: BUILT\" as \"the freeze has happened\". It has now happened: the template is frozen after the ninth pilot (Spec 122 \u00a78.2 operator ruling frozen_after_pilot: 9), every archetype proven by a real cutover, and the C4 batching entry (batch 1, assert_data_bounds first) is unblocked. EP-PIN-D17 (cutover_prereq on assert_data_bounds) and EP-D18 (PIN) remain open as cutover-level items, not batching-level ones.",
+      "evidence": "BUILT 2026-09-11 (WF2 \"FREEZE-1, the freeze precondition\" phase 2 commit 5, immediately after pilot 9 commit 9 `3c1f1923`). Gate re-measured before the flip, not assumed: converted.json registers scripts/enrich-parcels.js with pending [] (R-K); STD-7 reads BUILT (ENRICHER dispatched — runEnrichPhase, first_step enrich_parcels, template-freeze.json archetype_profiles all 8 proven:true after RE-FREEZE #5); CLOUDPARITY reads BUILT (GH run 34506962436, all 9 converted slugs present, none skipped); step-validate --all --fast registry invariant #9 \"clean (0 converted slugs blocked by an unmet cutover_prereq item; blocks batching: 1)\" — the ONE remaining open batching_prereq item was this item itself. With this flip the batching_prereq set is genuinely EMPTY: `node scripts/steps/_schema/generate-template-freeze.mjs` (no flag — frozen tier preserved verbatim, frozen_at stays at RE-FREEZE #5's bc81ac84; no re-freeze is owed) re-derives batching_prereq_snapshot = [] and checkFreezeDeclarationHonesty returns ok on arm D (declared BUILT, no other open item, snapshot empty, every archetype proven) — the lock stops being vacuous at this commit. Prior evidence retained: the freeze MECHANISM (STD-8) was built 2026-09-04; this item existed so the ledger could not read \"STD-8: BUILT\" as \"the freeze has happened\". It has now happened: the template is frozen after the ninth pilot (Spec 122 §8.2 operator ruling frozen_after_pilot: 9), every archetype proven by a real cutover, and the C4 batching entry (batch 1, assert_data_bounds first) is unblocked. EP-PIN-D17 (cutover_prereq on assert_data_bounds) and EP-D18 (PIN) remain open as cutover-level items, not batching-level ones.",
       "owner": {
         "kind": "wf",
-        "ref": "wf: programme-FREEZE-1 (phase 2 commit 5, 2026-09-11) \u2014 CLOSED"
+        "ref": "wf: programme-FREEZE-1 (phase 2 commit 5, 2026-09-11) — CLOSED"
       },
       "gate": {
         "kind": "batching_prereq",
@@ -874,7 +874,7 @@
     },
     {
       "id": "PRG-11",
-      "spec": "123 \u00a74.8",
+      "spec": "123 §4.8",
       "title": "Two CI holes closed",
       "promised": "no workflow runs the main vitest suite; db-tests.yml has no scripts/** path filter",
       "status": "BUILT",
@@ -891,7 +891,7 @@
     },
     {
       "id": "G0",
-      "spec": "123 \u00a76",
+      "spec": "123 §6",
       "title": "Gate G0 - Boundary freeze",
       "promised": "owner-spec assertion first",
       "status": "BUILT",
@@ -908,7 +908,7 @@
     },
     {
       "id": "G1",
-      "spec": "123 \u00a76",
+      "spec": "123 §6",
       "title": "Gate G1 - Archaeology / Intent Ledger",
       "promised": "100% dispositioned, git log -S/blame per non-obvious constant",
       "status": "PARTIAL",
@@ -925,11 +925,11 @@
     },
     {
       "id": "G2",
-      "spec": "123 \u00a76",
+      "spec": "123 §6",
       "title": "Gate G2 - Structure, churn x complexity plot",
       "promised": "churn x complexity plot, top-right quadrant named",
       "status": "BUILT",
-      "evidence": "scripts/analysis/step-churn-complexity.mjs (PH-2 churn x complexity BATCH generator, S6b, 2026-09-03) emits docs/reports/generated/122-churn-complexity.md \u2014 one deterministic table over the 27 domain steps (manifest.chains.sources minus reconcile, chain-head infra per Spec 122 \u00a77.4 A3), median-split quadrants, drift-checked via --check (wired into .husky/pre-commit ahead of step-validate). scripts/analysis/step-validate.mjs scoreG2(row, report, churnFindings) now derives G2 from this generated table FIRST (falls through to a real report PH-2 section, then ASSESSMENT-INCOMPLETE, unchanged). The 4 previously-red converted steps (link_wsib/link_parcel_addresses/compute_centroids/refresh_snapshot) flipped 0->1; the 4 waiver-passing steps kept their score with detail text now citing the artifact.",
+      "evidence": "scripts/analysis/step-churn-complexity.mjs (PH-2 churn x complexity BATCH generator, S6b, 2026-09-03) emits docs/reports/generated/122-churn-complexity.md — one deterministic table over the 27 domain steps (manifest.chains.sources minus reconcile, chain-head infra per Spec 122 §7.4 A3), median-split quadrants, drift-checked via --check (wired into .husky/pre-commit ahead of step-validate). scripts/analysis/step-validate.mjs scoreG2(row, report, churnFindings) now derives G2 from this generated table FIRST (falls through to a real report PH-2 section, then ASSESSMENT-INCOMPLETE, unchanged). The 4 previously-red converted steps (link_wsib/link_parcel_addresses/compute_centroids/refresh_snapshot) flipped 0->1; the 4 waiver-passing steps kept their score with detail text now citing the artifact.",
       "owner": {
         "kind": "wf",
         "ref": "WF2 PH-2 churn x complexity BATCH (S6b, review_followups.md:2994), 2026-09-03"
@@ -942,7 +942,7 @@
     },
     {
       "id": "G3-G5",
-      "spec": "123 \u00a76",
+      "spec": "123 §6",
       "title": "Gates G3-G5 - Golden master, Differential, Cutover",
       "promised": "per-commit gates",
       "status": "BUILT",
@@ -959,7 +959,7 @@
     },
     {
       "id": "G6",
-      "spec": "123 \u00a76",
+      "spec": "123 §6",
       "title": "Gate G6 - Behaviour classification",
       "promised": "closed disposition vocabulary, no bare INCIDENTAL",
       "status": "BUILT",
@@ -976,7 +976,7 @@
     },
     {
       "id": "G7",
-      "spec": "123 \u00a76",
+      "spec": "123 §6",
       "title": "Gate G7 - Test adequacy",
       "promised": "both-directions red-first locks, not mutation->=80%",
       "status": "BUILT",
@@ -993,7 +993,7 @@
     },
     {
       "id": "G8",
-      "spec": "123 \u00a76",
+      "spec": "123 §6",
       "title": "Gate G8 - Golden differential",
       "promised": "fingerprint-matched captures, zero unexplained diffs",
       "status": "BUILT",
@@ -1010,7 +1010,7 @@
     },
     {
       "id": "G9",
-      "spec": "123 \u00a76",
+      "spec": "123 §6",
       "title": "Gate G9 - Reflection",
       "promised": "low-confidence + recurring/standard-shaping tables, required after every pilot cutover",
       "status": "BUILT",
@@ -1027,7 +1027,7 @@
     },
     {
       "id": "CLAIM-1",
-      "spec": "123 \u00a75.2",
+      "spec": "123 §5.2",
       "title": "claim register - plan-claims.mjs",
       "promised": "test manifest becomes the claim register (R2)",
       "status": "BUILT",
@@ -1044,7 +1044,7 @@
     },
     {
       "id": "CLAIM-2",
-      "spec": "123 \u00a75.2",
+      "spec": "123 §5.2",
       "title": "spec:tests harvest",
       "promised": "harvests tests -> specs",
       "status": "BUILT",
@@ -1061,7 +1061,7 @@
     },
     {
       "id": "POLICY-MATRIX",
-      "spec": "124 \u00a72 Rule 13",
+      "spec": "124 §2 Rule 13",
       "title": "Spec 124 policy coverage matrix, per-step, generated",
       "promised": "generated, not hand-typed",
       "status": "BUILT",
@@ -1078,11 +1078,11 @@
     },
     {
       "id": "WD-1",
-      "spec": "122 \u00a71.4",
+      "spec": "122 §1.4",
       "title": "class-enum-without-write.js-branch lock",
       "promised": "the 15-class write_discipline.class enum (step.schema.json) names the write MECHANIC; every enum value must have an implemented, exercised executor, or be declared banned-for-new/retired",
       "status": "BUILT",
-      "evidence": "CLOSED 2026-09-09 (WF5 audit B1 + WF2 lock B2, `.cursor/wf5_wd1_write_class_audit_active_task.md`). Cross-audited all 15 write_discipline.class values (not 13 \u2014 the plan's own founding text was stale, corrected here) plus sharing.on_contention's 3 values (folded per Ask A3(ii)) against every real executor in scripts/lib/step/{write,index}.js and all 9 converted descriptors. Tally: 8 implemented (A,B,D,E,F,G,N,O) \u00b7 2 executor_by_runner (I,K \u2014 executed by the named compute pass via runEnrichPhase's execution.phases[] lookup, never by class-keyed codegen) \u00b7 2 banned_for_new (C,H) \u00b7 3 retire (J,L,M \u2014 J is a V7 category error, now execution.shape:\"enrich\"; L is structurally undeclarable, ASSERT's own x-profile forces outputs:\"none\"; M was the one step ever assigned it, measured-refuted, its real write is class A). Zero classes are left invisible. class E (write_once_backfill, this item's own founding gap) is re-confirmed implemented \u2014 LG-20 closed it at pilot 6. The registry: scripts/steps/_schema/write-class-disposition.json (15+3 rows, each `why` citing grounded line-level evidence). The lock: src/tests/write-class-disposition.infra.test.ts (5 assertions \u2014 enum-row completeness both directions, executor_fn/runners[] resolve to real exported scripts/lib/step/ symbols, no live descriptor declares a banned/retired class, plus Ask A1's self_skip drift guard), RED-proven against two dedicated fixtures (scripts/steps/_schema/fixtures/write-class/{banned-class-declared.descriptor.json,disposition-missing-row.json}) before going green. Zero step.schema.json bytes changed (schema_sha256 byte-identical, verified by generate-template-freeze.mjs --check). Two scope items filed OUT of WD-1 as their own followups (HIGH: execution.phases[].writes_ref has zero readers; MED: x-banned-for-new.rules[] unscoped_set_based's enforcer is still missing) \u2014 docs/reports/review_followups.md, WD-1 section, 2026-09-09.",
+      "evidence": "CLOSED 2026-09-09 (WF5 audit B1 + WF2 lock B2, `.cursor/wf5_wd1_write_class_audit_active_task.md`). Cross-audited all 15 write_discipline.class values (not 13 — the plan's own founding text was stale, corrected here) plus sharing.on_contention's 3 values (folded per Ask A3(ii)) against every real executor in scripts/lib/step/{write,index}.js and all 9 converted descriptors. Tally: 8 implemented (A,B,D,E,F,G,N,O) · 2 executor_by_runner (I,K — executed by the named compute pass via runEnrichPhase's execution.phases[] lookup, never by class-keyed codegen) · 2 banned_for_new (C,H) · 3 retire (J,L,M — J is a V7 category error, now execution.shape:\"enrich\"; L is structurally undeclarable, ASSERT's own x-profile forces outputs:\"none\"; M was the one step ever assigned it, measured-refuted, its real write is class A). Zero classes are left invisible. class E (write_once_backfill, this item's own founding gap) is re-confirmed implemented — LG-20 closed it at pilot 6. The registry: scripts/steps/_schema/write-class-disposition.json (15+3 rows, each `why` citing grounded line-level evidence). The lock: src/tests/write-class-disposition.infra.test.ts (5 assertions — enum-row completeness both directions, executor_fn/runners[] resolve to real exported scripts/lib/step/ symbols, no live descriptor declares a banned/retired class, plus Ask A1's self_skip drift guard), RED-proven against two dedicated fixtures (scripts/steps/_schema/fixtures/write-class/{banned-class-declared.descriptor.json,disposition-missing-row.json}) before going green. Zero step.schema.json bytes changed (schema_sha256 byte-identical, verified by generate-template-freeze.mjs --check). Two scope items filed OUT of WD-1 as their own followups (HIGH: execution.phases[].writes_ref has zero readers; MED: x-banned-for-new.rules[] unscoped_set_based's enforcer is still missing) — docs/reports/review_followups.md, WD-1 section, 2026-09-09.",
       "owner": {
         "kind": "wf",
         "ref": "wf: programme-WD1, WD-1 WF5+WF2 commits 1-3"
@@ -1097,14 +1097,14 @@
     },
     {
       "id": "RT-CC3",
-      "spec": "122 \u00a76.4a",
+      "spec": "122 §6.4a",
       "title": "compute_centroids drift + link_parcels Tier-3 join exposure - corrected measurement",
       "promised": "CC-D2/CC-D3 (defect-ledger.md, both PIN): 292,587/486,530 stored centroids differ from a fresh recompute by >1m; a HIGH followup against link-parcels.js's Tier-3 nearest-centroid join was reported 'already filed' in the pilot 6 assessment report but never actually landed in review_followups.md until this commit",
       "status": "PARTIAL",
-      "evidence": "docs/reports/defect-ledger.md CC-D2/CC-D3 rows; docs/reports/2026-08-29-pilot6-compute-centroids-assessment.md lines 138-155 (R-1/CC-D2, the 3,130/276 estimate over 494 spatial-tier links); review_followups.md HIGH entry filed 2026-08-29 supersedes that estimate with a fuller measurement over the full spatial-tier population: 6,808/17,500 (38.9%) spatial-tier permit_parcels links would resolve to a different parcel under ST_PointOnSurface/containment vs. the current nearest-centroid join. AMENDED 2026-08-30 (WF3, CC-D3's own repair): the CC-D3 half is CLOSED-MEASURED \u2014 a declared FULL mode (override.force_full, LG-22) repaired 395,085/486,530 (81.2%) parcels live, centroid_algorithm_drift_gt_1m_count 292,587 -> 0, before-imaged, idempotency proven twice-run. Still PARTIAL, not fully CLOSED: the CC-D2 half (link_parcels.js's Tier-3 join-strategy defect the drift exposes downstream) is UNCHANGED and still OPEN \u2014 the repair shrank but did not eliminate the exposed population (outside_polygon_count 3,626 -> 1,547, centroid_in_neighbour_parcel_count 3,130 -> 1,344, both measured after the repair, defect-ledger.md CC-D2 row 'count after' note) \u2014 the HIGH followup against link-parcels.js's own join predicate remains unaddressed by this WF3, which was scoped to compute_centroids only",
+      "evidence": "docs/reports/defect-ledger.md CC-D2/CC-D3 rows; docs/reports/2026-08-29-pilot6-compute-centroids-assessment.md lines 138-155 (R-1/CC-D2, the 3,130/276 estimate over 494 spatial-tier links); review_followups.md HIGH entry filed 2026-08-29 supersedes that estimate with a fuller measurement over the full spatial-tier population: 6,808/17,500 (38.9%) spatial-tier permit_parcels links would resolve to a different parcel under ST_PointOnSurface/containment vs. the current nearest-centroid join. AMENDED 2026-08-30 (WF3, CC-D3's own repair): the CC-D3 half is CLOSED-MEASURED — a declared FULL mode (override.force_full, LG-22) repaired 395,085/486,530 (81.2%) parcels live, centroid_algorithm_drift_gt_1m_count 292,587 -> 0, before-imaged, idempotency proven twice-run. Still PARTIAL, not fully CLOSED: the CC-D2 half (link_parcels.js's Tier-3 join-strategy defect the drift exposes downstream) is UNCHANGED and still OPEN — the repair shrank but did not eliminate the exposed population (outside_polygon_count 3,626 -> 1,547, centroid_in_neighbour_parcel_count 3,130 -> 1,344, both measured after the repair, defect-ledger.md CC-D2 row 'count after' note) — the HIGH followup against link-parcels.js's own join predicate remains unaddressed by this WF3, which was scoped to compute_centroids only",
       "owner": {
         "kind": "followup",
-        "ref": "review_followups.md HIGH entry, filed 2026-08-29 (supersedes the pilot-6-report 276 figure) \u2014 link_parcels.js join-strategy fix still OPEN, not this WF3's scope"
+        "ref": "review_followups.md HIGH entry, filed 2026-08-29 (supersedes the pilot-6-report 276 figure) — link_parcels.js join-strategy fix still OPEN, not this WF3's scope"
       },
       "gate": {
         "kind": "nice_to_have",
@@ -1114,7 +1114,7 @@
     },
     {
       "id": "LMD-RH",
-      "spec": "124 \u00a72 Rule 10 addendum",
+      "spec": "124 §2 Rule 10 addendum",
       "title": "LM-D6/LM-D11 R-H WARN promise not yet reflected in the ledger",
       "promised": "R-H (2026-08-28): LM-D6/LM-D11 re-dispositioned OPEN -> WARN + declared retighten condition, carried to pilot 4",
       "status": "PARTIAL",
@@ -1131,7 +1131,7 @@
     },
     {
       "id": "PROSE-G1P3",
-      "spec": "124 \u00a72 Rule 10",
+      "spec": "124 §2 Rule 10",
       "title": "Rule 10 step-library scope caveat + P3 disk-I/O measurement are intentionally prose-only",
       "promised": "step-validate.mjs's policy matrix prints Rule 10 PROSE-ONLY per step (a scope caveat, not a false enforced-green claim); P3 is a MEASUREMENT, never pass/fail ('visibility wins by default; the cost is stated')",
       "status": "BUILT",
@@ -1148,7 +1148,7 @@
     },
     {
       "id": "ZWP-56",
-      "spec": "123 \u00a76 G8",
+      "spec": "123 §6 G8",
       "title": "the real (non-SKIP) write path is barely live-exercised for pilots 5 and 6",
       "promised": "differential/golden captures should exercise the compute path, not only the SKIP/zero-work shape",
       "status": "PARTIAL",
@@ -1165,7 +1165,7 @@
     },
     {
       "id": "TCADB",
-      "spec": "124 \u00a72",
+      "spec": "124 §2",
       "title": "database.assert_current_database is proven live once, not standing testcontainer-enforced",
       "promised": "'the converted step REFUSES a wrong database' (database.assert_current_database, min_migration) - proven live once per step, not a standing CI-enforced testcontainer suite",
       "status": "PARTIAL",
@@ -1186,7 +1186,7 @@
       "title": "cloud database must run apply-logic-variables.js before any cloud cutover",
       "promised": "assert_schema's declared_logic_variables_present FAILs a chain naming the remedy 'node -r dotenv/config scripts/seeds/apply-logic-variables.js'; the cloud database has not been confirmed to have run it",
       "status": "BUILT",
-      "evidence": "WF3 cloud-parity FIX 1 (2026-09-03, .cursor/wf3_cloud_parity_active_task.md): apply-logic-variables.js run cloud-explicit against the live Supabase DB \u2014 419 rows before, 454 after (35/435 newly inserted, 400 already existed). T5 (link_parcels_link_rate_warn_pct) verified = 25 both before-absent/after-present (no guarded UPDATE needed). Full value diff: 0 seed keys missing from cloud, 1 genuine divergence (p16_inference_layer_enabled, cloud=1 vs seed default=0, updated_at 2026-07-10 \u2014 recorded as an intentional admin override, review_followups INFO). 42/42 declared_logic_variables_present keys confirmed on cloud (0 missing). migrate.js --verify: 242 migrations, 0 missing, 0 drift. enrich_parcels-specific (pilot 9 commit 8, 2026-09-08): the new seeds' 42-key declared_logic_variables_present presence query returned 0 missing on cloud. GH run 34231689122 (2026-09-08) FAILED at the 300-min step budget inside pass 5, but ORCHESTRATOR-ERROR RE-ATTRIBUTED same day: origin/wf2/deep-scrapes-restore-l0 was 191 commits behind local (3322be5c) at dispatch time and the remote converted.json had no enrich-parcels.js entry, so that run executed the LEGACY script, not the converted runner \u2014 the failure describes legacy pass 5 under coa-permits/autovacuum contention (EP-D13 H2), not a converted-runner defect (see defect-ledger.md EP-D13 for the full correction). Pilot 9 commit 8 P9 (2026-09-08) landed a per-batch-transaction design improvement and cloud tunables enrich_parcels_pass5_stream_batch_size 200->2000 / enrich_parcels_optcfg_batch_size 500->5000 were applied (guarded UPDATE, rollback recorded). Branch pushed to f3bab336 (2026-09-08). **MET \u2014 pilot 9 commit 9 acceptance run (grounded 2026-09-10T20:40Z, orchestrator, cloud-explicit read-only):** GH chain-sources run **34506962436** (workflow_dispatch from wf2/deep-scrapes-restore-l0, headSha `0820685d` == origin == local, asserted per tasks/lessons.md's post-EP-D13 rule) SUCCESS; cloud `pipeline_runs` `chain_sources` row status `completed_with_warnings`, 204.1 min; the 9 converted slugs all `completed`, none `skipped`: `sources:assert_schema` PASS 0.3m \u00b7 `load_ravines` PASS 0.1m \u00b7 `link_parcel_addresses` WARN 8.6m \u00b7 `compute_centroids` WARN 7.9m \u00b7 `link_parcels` WARN 2.3m \u00b7 `link_massing` WARN 3.0m \u00b7 `link_wsib` PASS 0.0m \u00b7 `enrich_parcels` WARN 142.7m (row id **4588**; 2 declared WARN rows `massing_zero_link_ghost` + `comp_fsi_p50_small_n_sample_count`; `checks_failed` 0 \u2014 this is the first genuine converted-runner cloud completion, superseding the EP-D13 legacy-script mis-run) \u00b7 `refresh_snapshot` PASS 1.8m; 28 `sources:%` step rows total, 0 non-terminal-success. Pre-dispatch state: `reconcile` reaped 4538/4560 stranded rows; mig 246 applied (dry-run 34505780200, apply 34506250717); 2 seed rows inserted; `enrich_parcels_pass3_scope` pruned 2,210,745 rows -> backup `_backup_pass3_scope_20260910_171342`. Per-step `pipeline_runs` row ids for the other 8 converted slugs were not independently re-queried by this commit's executor (no cloud DB credentials available in its worktree sandbox \u2014 `.env` absent there); `enrich_parcels`' own row id (4588) is directly confirmed, and the orchestrator's own read-only query pattern (`SELECT id, pipeline FROM pipeline_runs WHERE started_at > '2026-09-10T17:10Z' AND pipeline LIKE 'sources:%'`) is the reproducible source for the remaining 8 if a future session needs them individually. Gate (cutover_prereq, blocks `cloud_deploy` + `enrich_parcels`) flips to BUILT on this evidence \u2014 the item's own semantics (flip at the acceptance run) are satisfied: a green cloud verdict names all 9 slugs, the GH run id, and at least the converted step's own row id, from a run that genuinely executed the converted runner (headSha-asserted, not the EP-D13 mis-attribution class).",
+      "evidence": "WF3 cloud-parity FIX 1 (2026-09-03, .cursor/wf3_cloud_parity_active_task.md): apply-logic-variables.js run cloud-explicit against the live Supabase DB — 419 rows before, 454 after (35/435 newly inserted, 400 already existed). T5 (link_parcels_link_rate_warn_pct) verified = 25 both before-absent/after-present (no guarded UPDATE needed). Full value diff: 0 seed keys missing from cloud, 1 genuine divergence (p16_inference_layer_enabled, cloud=1 vs seed default=0, updated_at 2026-07-10 — recorded as an intentional admin override, review_followups INFO). 42/42 declared_logic_variables_present keys confirmed on cloud (0 missing). migrate.js --verify: 242 migrations, 0 missing, 0 drift. enrich_parcels-specific (pilot 9 commit 8, 2026-09-08): the new seeds' 42-key declared_logic_variables_present presence query returned 0 missing on cloud. GH run 34231689122 (2026-09-08) FAILED at the 300-min step budget inside pass 5, but ORCHESTRATOR-ERROR RE-ATTRIBUTED same day: origin/wf2/deep-scrapes-restore-l0 was 191 commits behind local (3322be5c) at dispatch time and the remote converted.json had no enrich-parcels.js entry, so that run executed the LEGACY script, not the converted runner — the failure describes legacy pass 5 under coa-permits/autovacuum contention (EP-D13 H2), not a converted-runner defect (see defect-ledger.md EP-D13 for the full correction). Pilot 9 commit 8 P9 (2026-09-08) landed a per-batch-transaction design improvement and cloud tunables enrich_parcels_pass5_stream_batch_size 200->2000 / enrich_parcels_optcfg_batch_size 500->5000 were applied (guarded UPDATE, rollback recorded). Branch pushed to f3bab336 (2026-09-08). **MET — pilot 9 commit 9 acceptance run (grounded 2026-09-10T20:40Z, orchestrator, cloud-explicit read-only):** GH chain-sources run **34506962436** (workflow_dispatch from wf2/deep-scrapes-restore-l0, headSha `0820685d` == origin == local, asserted per tasks/lessons.md's post-EP-D13 rule) SUCCESS; cloud `pipeline_runs` `chain_sources` row status `completed_with_warnings`, 204.1 min; the 9 converted slugs all `completed`, none `skipped`: `sources:assert_schema` PASS 0.3m · `load_ravines` PASS 0.1m · `link_parcel_addresses` WARN 8.6m · `compute_centroids` WARN 7.9m · `link_parcels` WARN 2.3m · `link_massing` WARN 3.0m · `link_wsib` PASS 0.0m · `enrich_parcels` WARN 142.7m (row id **4588**; 2 declared WARN rows `massing_zero_link_ghost` + `comp_fsi_p50_small_n_sample_count`; `checks_failed` 0 — this is the first genuine converted-runner cloud completion, superseding the EP-D13 legacy-script mis-run) · `refresh_snapshot` PASS 1.8m; 28 `sources:%` step rows total, 0 non-terminal-success. Pre-dispatch state: `reconcile` reaped 4538/4560 stranded rows; mig 246 applied (dry-run 34505780200, apply 34506250717); 2 seed rows inserted; `enrich_parcels_pass3_scope` pruned 2,210,745 rows -> backup `_backup_pass3_scope_20260910_171342`. Per-step `pipeline_runs` row ids for the other 8 converted slugs were not independently re-queried by this commit's executor (no cloud DB credentials available in its worktree sandbox — `.env` absent there); `enrich_parcels`' own row id (4588) is directly confirmed, and the orchestrator's own read-only query pattern (`SELECT id, pipeline FROM pipeline_runs WHERE started_at > '2026-09-10T17:10Z' AND pipeline LIKE 'sources:%'`) is the reproducible source for the remaining 8 if a future session needs them individually. Gate (cutover_prereq, blocks `cloud_deploy` + `enrich_parcels`) flips to BUILT on this evidence — the item's own semantics (flip at the acceptance run) are satisfied: a green cloud verdict names all 9 slugs, the GH run id, and at least the converted step's own row id, from a run that genuinely executed the converted runner (headSha-asserted, not the EP-D13 mis-attribution class).",
       "owner": {
         "kind": "followup",
         "ref": "review_followups.md HIGH ops entry (filed 2026-08-27, peel 8c); EP-D13 (filed 2026-09-08, defect-ledger.md); pilot 9 commit 9 acceptance run (orchestrator, 2026-09-10)"
@@ -1202,11 +1202,11 @@
     },
     {
       "id": "REGEXSC",
-      "spec": "124 \u00a72 Rule 13",
+      "spec": "124 §2 Rule 13",
       "title": "step-validate.mjs's regex-brittle report-scraping is superseded in design by VAL-WF2's structured-artifact scorecard",
       "promised": "a step validates itself from committed artifacts (Rule 13) - today the artifact is markdown prose parsed by regex (section()/splitTableRow()); the design direction is a structured (JSON) artifact scorecard, named as part of VAL-WF2",
       "status": "SUPERSEDED",
-      "evidence": "scripts/analysis/step-validate.mjs section()/splitTableRow() still regex-parse the assessment report's markdown for G0/G1/G3/G4/G5/G9 (filed as G-DEREGEX, below) \u2014 VAL-WF2 (now BUILT) only de-regexed the cheap slice (G2's vacuous-green + the defect-ledger/notes.json strict-row-schema parse, G6/G7/G4d, R-T addendum commit 6). Superseded-in-design status unchanged: the structured-artifact direction stands, most of the implementation does not yet.",
+      "evidence": "scripts/analysis/step-validate.mjs section()/splitTableRow() still regex-parse the assessment report's markdown for G0/G1/G3/G4/G5/G9 (filed as G-DEREGEX, below) — VAL-WF2 (now BUILT) only de-regexed the cheap slice (G2's vacuous-green + the defect-ledger/notes.json strict-row-schema parse, G6/G7/G4d, R-T addendum commit 6). Superseded-in-design status unchanged: the structured-artifact direction stands, most of the implementation does not yet.",
       "owner": {
         "kind": "none",
         "ref": ""
@@ -1219,11 +1219,11 @@
     },
     {
       "id": "VAL-WF2",
-      "spec": "124 \u00a72 Rule 13",
+      "spec": "124 §2 Rule 13",
       "title": "Validator v2 - a DATA-plausibility validator, distinct from the process scorecard",
-      "promised": "invariants bounds per Spec 30 \u00a75's bound doctrine (threshold-derived, reachable, last-measured-value beside the bound); checks[].plausibility[] per Spec 79; seam checks on outputs.invalidates edges (closes LDG-2/LDG-7/VAL-3's concern); chain-end synthesis automation; a structured-artifact scorecard (replaces REGEXSC's regex report-scraping); Rule 13 reworded per this same commit's Spec 124 addendum: 'the validator validates DATA (Spec 79/120/30 \u00a75); the scorecard validates process, from structured artifacts'",
+      "promised": "invariants bounds per Spec 30 §5's bound doctrine (threshold-derived, reachable, last-measured-value beside the bound); checks[].plausibility[] per Spec 79; seam checks on outputs.invalidates edges (closes LDG-2/LDG-7/VAL-3's concern); chain-end synthesis automation; a structured-artifact scorecard (replaces REGEXSC's regex report-scraping); Rule 13 reworded per this same commit's Spec 124 addendum: 'the validator validates DATA (Spec 79/120/30 §5); the scorecard validates process, from structured artifacts'",
       "status": "BUILT",
-      "evidence": "R-T addendum commits 1-6 (2026-08-30): invariants[]/plausibility[] bound doctrine landed in step.schema.json + scripts/lib/step/plausibility.js + scripts/lib/step/verdict.js (value_min/value_max branches); seam-validation pass at scripts/lib/step/seam.js; chain-end synthesis at scripts/analysis/chain-end-synthesis.mjs (the sources chain roll-up + the declared validate_only cloud trigger, Ask 6(b)); R-U chain-run correlation (records_meta.chain_run_id, scripts/run-chain.js + scripts/lib/step/index.js). Structured-artifact scorecard rewrite is PARTIAL, not full: only scoreG2 (vacuous-green) + the defect-ledger/notes.json strict-row-schema parse (G6/G7/G4d) were de-regexed (commit 6) \u2014 G0/G1/G3/G4/G5/G9 stay prose-regex, filed as G-DEREGEX below. commit 8: --all --write over 8 steps, 0 unexplained diffs.",
+      "evidence": "R-T addendum commits 1-6 (2026-08-30): invariants[]/plausibility[] bound doctrine landed in step.schema.json + scripts/lib/step/plausibility.js + scripts/lib/step/verdict.js (value_min/value_max branches); seam-validation pass at scripts/lib/step/seam.js; chain-end synthesis at scripts/analysis/chain-end-synthesis.mjs (the sources chain roll-up + the declared validate_only cloud trigger, Ask 6(b)); R-U chain-run correlation (records_meta.chain_run_id, scripts/run-chain.js + scripts/lib/step/index.js). Structured-artifact scorecard rewrite is PARTIAL, not full: only scoreG2 (vacuous-green) + the defect-ledger/notes.json strict-row-schema parse (G6/G7/G4d) were de-regexed (commit 6) — G0/G1/G3/G4/G5/G9 stay prose-regex, filed as G-DEREGEX below. commit 8: --all --write over 8 steps, 0 unexplained diffs.",
       "owner": {
         "kind": "wf",
         "ref": "R-T addendum, \"The Step Validator, Data-First\" (2026-08-30)"
@@ -1236,11 +1236,11 @@
     },
     {
       "id": "LG-21",
-      "spec": "122 \u00a75.5",
+      "spec": "122 §5.5",
       "title": "runPhaseScaffold(descriptor, phaseBody) - shared phase-runner scaffold",
       "promised": "the 4th duplication of the guards->prior->gate->pre_write->RUN_AT->post shape; fork-over-share deferred a 3rd time (pilot 3, pilot 5, pilot 6 Fold D: 'DEFERRED to a dedicated library WF after pilot 8, NOT shipped in this pilot')",
       "status": "SUPERSEDED",
-      "evidence": "SUPERSEDED-by-freeze 2026-09-04 (WF2 'template freeze' C3, template-freeze.json's lg21_decision). RATIFIED as fork-over-share, not consolidated: pilot 4 forked runCascadePhase (a tiers[] branch inside runLinkPhase would split its keyset loop), pilot 5 forked runMaterializePhase (runLinkPhase's SELECT-then-batch write would split a single server-side statement and break G2's verbatim-SQL guarantee), pilot 7 forked runLinkKeyedPhase leaving runLinkPhase byte-for-byte untouched (Spec 124 \u00a79 :306-310). Consolidating the 7 runners AT the freeze commit would rewrite all of them in the one commit that promises they stop changing \u2014 the inversion of '\u00a710b.1: enforcement must be harder to change than the enforced'. This is a ratified design decision, not an unbuilt gap.",
+      "evidence": "SUPERSEDED-by-freeze 2026-09-04 (WF2 'template freeze' C3, template-freeze.json's lg21_decision). RATIFIED as fork-over-share, not consolidated: pilot 4 forked runCascadePhase (a tiers[] branch inside runLinkPhase would split its keyset loop), pilot 5 forked runMaterializePhase (runLinkPhase's SELECT-then-batch write would split a single server-side statement and break G2's verbatim-SQL guarantee), pilot 7 forked runLinkKeyedPhase leaving runLinkPhase byte-for-byte untouched (Spec 124 §9 :306-310). Consolidating the 7 runners AT the freeze commit would rewrite all of them in the one commit that promises they stop changing — the inversion of '§10b.1: enforcement must be harder to change than the enforced'. This is a ratified design decision, not an unbuilt gap.",
       "owner": {
         "kind": "none",
         "ref": ""
@@ -1253,11 +1253,11 @@
     },
     {
       "id": "G-DEREGEX",
-      "spec": "124 \u00a72 Rule 13",
+      "spec": "124 §2 Rule 13",
       "title": "Gates G0/G1/G3/G4/G5/G9 still prose-regex-scraped, not structured artifacts",
       "promised": "Rule 13's DATA/PROCESS split names a structured (non-markdown-regex) artifact scorecard as the eventual replacement for step-validate.mjs's current section()/splitTableRow() prose-scraping (originally the REGEXSC item's full scope)",
       "status": "NOT_STARTED",
-      "evidence": "scripts/analysis/step-validate.mjs's scoreG0/scoreG1/scoreG3/scoreG4/scoreG5/scoreG9 (still section()-based regex scraping of the assessment report's free-form prose) are unchanged by R-T addendum commit 6 \u2014 only G2/G6/G7/G4d were de-regexed (Ask 3's own scoped default, \"file the larger lift, don't build it this WF\"). A genuinely large, separate lift: would need structured frontmatter added to every future assessment report, a format all 6 existing reports would also need migrating to.",
+      "evidence": "scripts/analysis/step-validate.mjs's scoreG0/scoreG1/scoreG3/scoreG4/scoreG5/scoreG9 (still section()-based regex scraping of the assessment report's free-form prose) are unchanged by R-T addendum commit 6 — only G2/G6/G7/G4d were de-regexed (Ask 3's own scoped default, \"file the larger lift, don't build it this WF\"). A genuinely large, separate lift: would need structured frontmatter added to every future assessment report, a format all 6 existing reports would also need migrating to.",
       "owner": {
         "kind": "followup",
         "ref": "review_followups.md (R-T addendum commit 7 filing, 2026-08-30); Ask 3"
@@ -1270,11 +1270,11 @@
     },
     {
       "id": "ASSERT-HEALTH-SHAPE",
-      "spec": "124 \u00a72",
-      "title": "assert_health[] \u2014 a closed-shape category for health/liveness checks, left dormant",
+      "spec": "124 §2",
+      "title": "assert_health[] — a closed-shape category for health/liveness checks, left dormant",
       "promised": "Ask 4 (R-T addendum plan, 2026-08-29): a dedicated, closed-vocabulary assert_health[] descriptor category was proposed for RECORDER/ENRICHER health-liveness checks, distinct from checks[]/invariants[]/plausibility[]",
       "status": "NOT_STARTED",
-      "evidence": "no assert_health field exists in scripts/steps/_schema/step.schema.json as of R-T addendum commit 7 (2026-08-30) \u2014 Ask 4's own default was accepted: \"left dormant, filed as an idea,\" not built this WF. No RECORDER/ENRICHER has converted yet (pilots 7/8, Spec 124 \u00a78), so the category has no real descriptor to prove itself against today.",
+      "evidence": "no assert_health field exists in scripts/steps/_schema/step.schema.json as of R-T addendum commit 7 (2026-08-30) — Ask 4's own default was accepted: \"left dormant, filed as an idea,\" not built this WF. No RECORDER/ENRICHER has converted yet (pilots 7/8, Spec 124 §8), so the category has no real descriptor to prove itself against today.",
       "owner": {
         "kind": "followup",
         "ref": "review_followups.md (R-T addendum commit 7 filing, 2026-08-30); Ask 4"
@@ -1287,11 +1287,11 @@
     },
     {
       "id": "PSA-CHECK-IDS",
-      "spec": "124 \u00a72 Rule 13",
-      "title": "parcel-sanity-audit.js's 42 CHECKS[] entries have no per-check id \u2014 plausibility[] SQL is duplicated, not referenced",
-      "promised": "Fold A-4d (R-T addendum plan, 2026-08-29): each plausibility[] entry migrated this WF deliberately restates a parcel-sanity-audit.js predicate in isolated standalone-SQL form (no per-check id exists on the 42 CHECKS[] entries to reference instead) \u2014 ruled ACCEPTED duplication this WF, with a followup proposing per-check ids so a future pass can de-duplicate",
+      "spec": "124 §2 Rule 13",
+      "title": "parcel-sanity-audit.js's 42 CHECKS[] entries have no per-check id — plausibility[] SQL is duplicated, not referenced",
+      "promised": "Fold A-4d (R-T addendum plan, 2026-08-29): each plausibility[] entry migrated this WF deliberately restates a parcel-sanity-audit.js predicate in isolated standalone-SQL form (no per-check id exists on the 42 CHECKS[] entries to reference instead) — ruled ACCEPTED duplication this WF, with a followup proposing per-check ids so a future pass can de-duplicate",
       "status": "NOT_STARTED",
-      "evidence": "scripts/lib/step/plausibility.js's runValidatorEntries() executes each invariants[]/plausibility[] entry's OWN standalone sql field; scripts/analysis/parcel-sanity-audit.js's 42-entry CHECKS[] array (29 BOUND / 13 INVARIANT, 10 zone-aware, Fold B-7 recount) has no id field per entry as of R-T addendum commit 7 (2026-08-30) \u2014 cross-checked live, 0 hits for an \"id:\" key inside CHECKS[]'s own array literal.",
+      "evidence": "scripts/lib/step/plausibility.js's runValidatorEntries() executes each invariants[]/plausibility[] entry's OWN standalone sql field; scripts/analysis/parcel-sanity-audit.js's 42-entry CHECKS[] array (29 BOUND / 13 INVARIANT, 10 zone-aware, Fold B-7 recount) has no id field per entry as of R-T addendum commit 7 (2026-08-30) — cross-checked live, 0 hits for an \"id:\" key inside CHECKS[]'s own array literal.",
       "owner": {
         "kind": "followup",
         "ref": "review_followups.md (R-T addendum commit 7 filing, 2026-08-30); Fold A-4d"
@@ -1304,11 +1304,11 @@
     },
     {
       "id": "TRIPWIRE-T4T5",
-      "spec": "124 \u00a78",
+      "spec": "124 §8",
       "title": "run-step.mjs tripwires T4/T5 stay N/A-MANUAL for both converted ingest_linkage steps",
       "promised": "Fold A-4e (R-T addendum plan, 2026-08-29): run-step.mjs's tripwires migrate INTO descriptors' checks[]/invariants[] one step at a time as pilots convert; commit 7 must enumerate the specific still-N/A-MANUAL orphan tripwire IDs by name",
       "status": "NOT_STARTED",
-      "evidence": "scripts/validation/run-step.mjs runTripwires() (:286-287) hardcodes T4 (\"requires join-key knowledge per step\") and T5 (\"requires LEFT JOIN context per step\") as N/A-MANUAL unconditionally, regardless of which step runs. Both link_wsib and link_massing (the 2 converted steps carrying the ingest_linkage tripwire_profile) carry T4/T5 in their profile (scripts/validation/step-config.json); neither has a migrated descriptor equivalent as of R-T addendum commit 7 (2026-08-30). assert_schema's own sole tripwire (T12) has no orphan \u2014 it is a real computed check.",
+      "evidence": "scripts/validation/run-step.mjs runTripwires() (:286-287) hardcodes T4 (\"requires join-key knowledge per step\") and T5 (\"requires LEFT JOIN context per step\") as N/A-MANUAL unconditionally, regardless of which step runs. Both link_wsib and link_massing (the 2 converted steps carrying the ingest_linkage tripwire_profile) carry T4/T5 in their profile (scripts/validation/step-config.json); neither has a migrated descriptor equivalent as of R-T addendum commit 7 (2026-08-30). assert_schema's own sole tripwire (T12) has no orphan — it is a real computed check.",
       "owner": {
         "kind": "followup",
         "ref": "review_followups.md (R-T addendum commit 7 filing, 2026-08-30); Fold A-4e"
@@ -1321,11 +1321,11 @@
     },
     {
       "id": "R-W",
-      "spec": "124 \u00a72 Rule 2 addendum",
-      "title": "Compute must not branch on PostGIS availability \u2014 guards.requires is the only legal form",
-      "promised": "hasPostGIS/pg_extension/postgis_version branching (or a try/catch around a PostGIS-only call) inside compute is forbidden; guards.requires: {kind: extension, name: postgis, on_missing: fail} is the only legal form \u2014 three precedents: link_massing A-8, compute_centroids A-1(a), link_parcels A-1 (planned)",
+      "spec": "124 §2 Rule 2 addendum",
+      "title": "Compute must not branch on PostGIS availability — guards.requires is the only legal form",
+      "promised": "hasPostGIS/pg_extension/postgis_version branching (or a try/catch around a PostGIS-only call) inside compute is forbidden; guards.requires: {kind: extension, name: postgis, on_missing: fail} is the only legal form — three precedents: link_massing A-8, compute_centroids A-1(a), link_parcels A-1 (planned)",
       "status": "BUILT",
-      "evidence": "scripts/ast-grep-rules/compute-shape.yml compute-no-postgis-branch rule (this commit); wired through scripts/hooks/check-step-shape.mjs's always-blocking compute corpus with no separate wiring needed (the driver runs every rule in the file over scripts/lib/compute/**); proven RED-first on scripts/steps/_schema/fixtures/compute/bad-compute-shape.js's added ctx.hasPostGIS branch (all 9 compute-shape rules fire), GREEN on all 6 converted computes (assert-schema.js, compute-centroids.js, link-massing.js, link-parcel-addresses.js, link-wsib.js, load-ravines.js); src/tests/step-conformance.infra.test.ts COMPUTE_RULE_IDS asserts both directions (173/173 passing); Spec 124 \u00a72 Rule 2 addendum + \u00a75 register row R-W, Spec 122 rulings table row R-W (this commit)",
+      "evidence": "scripts/ast-grep-rules/compute-shape.yml compute-no-postgis-branch rule (this commit); wired through scripts/hooks/check-step-shape.mjs's always-blocking compute corpus with no separate wiring needed (the driver runs every rule in the file over scripts/lib/compute/**); proven RED-first on scripts/steps/_schema/fixtures/compute/bad-compute-shape.js's added ctx.hasPostGIS branch (all 9 compute-shape rules fire), GREEN on all 6 converted computes (assert-schema.js, compute-centroids.js, link-massing.js, link-parcel-addresses.js, link-wsib.js, load-ravines.js); src/tests/step-conformance.infra.test.ts COMPUTE_RULE_IDS asserts both directions (173/173 passing); Spec 124 §2 Rule 2 addendum + §5 register row R-W, Spec 122 rulings table row R-W (this commit)",
       "owner": {
         "kind": "wf",
         "ref": "WF6, docs(122_step_optimization) pilot7 ruling + R-W commit, 2026-08-30"
@@ -1338,11 +1338,11 @@
     },
     {
       "id": "PILOT7-LP",
-      "spec": "122 \u00a78.2",
-      "title": "Pilot 7 = link_parcels (LINK, 2nd member) \u2014 ruled 2026-08-30, implementation not started",
-      "promised": "\u00a78.2 pilot ORDER: 7 link_parcels (LINK, 2nd member) \u2014 ruled 2026-08-30, superseding the previously-tentative refresh_snapshot (RECORDER, forced single-member) placement at pilot 7; refresh_snapshot shifts to pilot 8, enrich_parcels to pilot 9 \u2014 the fix (link_parcels's Tier-3 spatial-tier join, CC-D2/RT-CC3) delivered INLINE by the conversion, rung (e)",
+      "spec": "122 §8.2",
+      "title": "Pilot 7 = link_parcels (LINK, 2nd member) — ruled 2026-08-30, implementation not started",
+      "promised": "§8.2 pilot ORDER: 7 link_parcels (LINK, 2nd member) — ruled 2026-08-30, superseding the previously-tentative refresh_snapshot (RECORDER, forced single-member) placement at pilot 7; refresh_snapshot shifts to pilot 8, enrich_parcels to pilot 9 — the fix (link_parcels's Tier-3 spatial-tier join, CC-D2/RT-CC3) delivered INLINE by the conversion, rung (e)",
       "status": "PARTIAL",
-      "evidence": "docs/reports/2026-08-30-pilot7-link-parcels-assessment.md \u00a70.9 (ruling text, verbatim-sourced) and \u00a70.8 item 7 (R-W filing); .cursor/pilot7_link_parcels_active_task.md (nine-commit plan, Fold A + Fold B rulings A-1..A-5 RULED, commits 1-9 sequenced, NOT yet executed \u2014 no descriptor, no compute, no commit landed for link_parcels); Spec 122 \u00a78.2 pilot ORDER paragraph amended this commit; .cursor/active_task.md operator ruling 2026-08-30 'finish everything but dont move forward with another plan' \u2014 plan locked, awaiting operator authorization to implement",
+      "evidence": "docs/reports/2026-08-30-pilot7-link-parcels-assessment.md §0.9 (ruling text, verbatim-sourced) and §0.8 item 7 (R-W filing); .cursor/pilot7_link_parcels_active_task.md (nine-commit plan, Fold A + Fold B rulings A-1..A-5 RULED, commits 1-9 sequenced, NOT yet executed — no descriptor, no compute, no commit landed for link_parcels); Spec 122 §8.2 pilot ORDER paragraph amended this commit; .cursor/active_task.md operator ruling 2026-08-30 'finish everything but dont move forward with another plan' — plan locked, awaiting operator authorization to implement",
       "owner": {
         "kind": "pilot",
         "ref": "pilot 7 (link_parcels)"
@@ -1355,14 +1355,14 @@
     },
     {
       "id": "VRD-SKIP",
-      "spec": "124 \u00a72 Rule 10",
+      "spec": "124 §2 Rule 10",
       "title": "a SELF_SKIPPED terminal must not verdict identically to a genuine PASS",
-      "promised": "the verdict is row-derived, never a parallel boolean, and a designed skip carries different evidentiary weight than a real PASS (Spec 48 \u00a73.5/\u00a73.6, Spec 79 \u00a710 C12 hidden-failure-tripwire)",
+      "promised": "the verdict is row-derived, never a parallel boolean, and a designed skip carries different evidentiary weight than a real PASS (Spec 48 §3.5/§3.6, Spec 79 §10 C12 hidden-failure-tripwire)",
       "status": "BUILT",
-      "evidence": "CLOSED 2026-09-09, WF3 VRD-SKIP, rung (b) of Spec 124 \u00a77's ladder. scripts/lib/step/index.js skipRecordsMeta's 'status' row now declares severity WARN with threshold 'ran' (was INFO/null); 'reason' stays a purely descriptive INFO row (R-H addendum). deriveVerdict and SEVERITY_RANK are UNCHANGED \u2014 the verdict reads WARN off the rows through the existing max-lattice, byte-identical on every non-skip path. Measured: `node scripts/analysis/step-validate.mjs --step=assert_schema --fast` reports Rule 10 `enforced-green` (was `enforced-red`/KNOWN-DEFECT-pinned); `--self-test-only` proves both directions (RED pre-fix, GREEN post-fix, in the same commit). Consumer sweep (Spec 124 \u00a72 table, 16 readers): zero runtime-consumer edits \u2014 check-chain-verdict.js's OK_STATUSES (:91) already contains 'completed_with_warnings', so a self-skip's chain status becomes completed_with_warnings (a deliberate, visible, non-halting behaviour delta, not a code change). Golden masters unaffected (0/128 captures carry skipped:true or self_skipped \u2014 skipRecordsMeta is unreachable from the happy path). review_followups.md's HIGH entry is RESOLVED (ruling: WARN over the filed 'SKIPPED' proposal, per operator ruling A5 \u2014 non-PASS only, no vocabulary amendment forced). Sibling `source-version.js#buildSkipGateRecordsMeta` (the ledger-gated skip) measured to exhibit the SAME PASS-on-skip defect on any of its first 3 consecutive skips (before its own consecutive_skips>=4 WARN threshold trips) but is NOT the identical one-row fix (5-row structure, its own escalation policy, one call site in compute-parcel-cost-estimates.js:619) \u2014 filed as its own HIGH followup (same defect class), not fixed in this commit.",
+      "evidence": "CLOSED 2026-09-09, WF3 VRD-SKIP, rung (b) of Spec 124 §7's ladder. scripts/lib/step/index.js skipRecordsMeta's 'status' row now declares severity WARN with threshold 'ran' (was INFO/null); 'reason' stays a purely descriptive INFO row (R-H addendum). deriveVerdict and SEVERITY_RANK are UNCHANGED — the verdict reads WARN off the rows through the existing max-lattice, byte-identical on every non-skip path. Measured: `node scripts/analysis/step-validate.mjs --step=assert_schema --fast` reports Rule 10 `enforced-green` (was `enforced-red`/KNOWN-DEFECT-pinned); `--self-test-only` proves both directions (RED pre-fix, GREEN post-fix, in the same commit). Consumer sweep (Spec 124 §2 table, 16 readers): zero runtime-consumer edits — check-chain-verdict.js's OK_STATUSES (:91) already contains 'completed_with_warnings', so a self-skip's chain status becomes completed_with_warnings (a deliberate, visible, non-halting behaviour delta, not a code change). Golden masters unaffected (0/128 captures carry skipped:true or self_skipped — skipRecordsMeta is unreachable from the happy path). review_followups.md's HIGH entry is RESOLVED (ruling: WARN over the filed 'SKIPPED' proposal, per operator ruling A5 — non-PASS only, no vocabulary amendment forced). Sibling `source-version.js#buildSkipGateRecordsMeta` (the ledger-gated skip) measured to exhibit the SAME PASS-on-skip defect on any of its first 3 consecutive skips (before its own consecutive_skips>=4 WARN threshold trips) but is NOT the identical one-row fix (5-row structure, its own escalation policy, one call site in compute-parcel-cost-estimates.js:619) — filed as its own HIGH followup (same defect class), not fixed in this commit.",
       "owner": {
         "kind": "wf",
-        "ref": "wf: WF3 VRD-SKIP, 2026-09-09 \u2014 .cursor/wf3_vrd_skip_active_task.md; fix site scripts/lib/step/index.js skipRecordsMeta (+ scripts/analysis/step-validate.mjs checkSelfSkipNeverPass/selfTest); see docs/reports/review_followups.md for the closed HIGH entry, the new HIGH sibling followup (buildSkipGateRecordsMeta, Ask B2), and the two filed MED followups (compute-trade-forecasts pass_or_warn residual; the pre-existing FreshnessTimeline SKIP mis-render)"
+        "ref": "wf: WF3 VRD-SKIP, 2026-09-09 — .cursor/wf3_vrd_skip_active_task.md; fix site scripts/lib/step/index.js skipRecordsMeta (+ scripts/analysis/step-validate.mjs checkSelfSkipNeverPass/selfTest); see docs/reports/review_followups.md for the closed HIGH entry, the new HIGH sibling followup (buildSkipGateRecordsMeta, Ask B2), and the two filed MED followups (compute-trade-forecasts pass_or_warn residual; the pre-existing FreshnessTimeline SKIP mis-render)"
       },
       "gate": {
         "kind": "nice_to_have",
@@ -1372,14 +1372,14 @@
     },
     {
       "id": "CRASH-BEHAV",
-      "spec": "124 \u00a72 Rule 12",
+      "spec": "124 §2 Rule 12",
       "title": "live SIGTERM-and-recover behavioural proof for LINK, LINK_KEYED, MATERIALIZE (and, in the abstract, INGEST/BACKFILL/RECORDER)",
       "promised": "the declared crash-recovery posture (recovery.interrupted) matches MEASURED runtime behaviour, not just static source reachability, for every shape whose runner could ever be asked to recover an interrupted destructive retraction",
       "status": "NOT_STARTED",
-      "evidence": "src/tests/db/step-crash-posture.db.test.ts (WF2 'Rules 10/11/12 mechanical checkers', C3, 2026-09-03) is WRITTEN \u2014 spawn link_wsib for real, SIGTERM once pipeline_runs reads 'running', assert the row stays 'running' and the next staleness.selectMode call resolves mode:'full', reason:'recover_interrupted_retraction' \u2014 but committed describe.skip-gated, BLOCKED: measured live that a real converted step spawned against the ephemeral BUILDO_TEST_DB testcontainer always refuses at scripts/lib/resolve-db.js's assertDbTarget ('connected to database \"buildo_test\", expected one of \"postgres\"') \u2014 every descriptor's database.assert_current_database is a single literal with no test-context override, and link-wsib.js's descriptor require() has no path-override hook either. Filed HIGH in docs/reports/review_followups.md ('WF2 Rule 12 behavioural half \u2014 no db.test.ts can spawn a REAL converted step against the ephemeral test container', 2026-09-03). The STATIC reachability half (scripts/analysis/step-validate.mjs's checkInterruptedPostureTruthful) + the existing fake-pool unit lock (src/tests/step-library.logic.test.ts) remain the enforced mechanisms for all three live force_full_on_next_run archetypes (link/link_massing, cascade/link_wsib, link_keyed/link_parcels) in the meantime.",
+      "evidence": "src/tests/db/step-crash-posture.db.test.ts (WF2 'Rules 10/11/12 mechanical checkers', C3, 2026-09-03) is WRITTEN — spawn link_wsib for real, SIGTERM once pipeline_runs reads 'running', assert the row stays 'running' and the next staleness.selectMode call resolves mode:'full', reason:'recover_interrupted_retraction' — but committed describe.skip-gated, BLOCKED: measured live that a real converted step spawned against the ephemeral BUILDO_TEST_DB testcontainer always refuses at scripts/lib/resolve-db.js's assertDbTarget ('connected to database \"buildo_test\", expected one of \"postgres\"') — every descriptor's database.assert_current_database is a single literal with no test-context override, and link-wsib.js's descriptor require() has no path-override hook either. Filed HIGH in docs/reports/review_followups.md ('WF2 Rule 12 behavioural half — no db.test.ts can spawn a REAL converted step against the ephemeral test container', 2026-09-03). The STATIC reachability half (scripts/analysis/step-validate.mjs's checkInterruptedPostureTruthful) + the existing fake-pool unit lock (src/tests/step-library.logic.test.ts) remain the enforced mechanisms for all three live force_full_on_next_run archetypes (link/link_massing, cascade/link_wsib, link_keyed/link_parcels) in the meantime.",
       "owner": {
         "kind": "followup",
-        "ref": "docs/reports/review_followups.md \u2014 'WF2 Rule 12 behavioural half \u2014 no db.test.ts can spawn a REAL converted step against the ephemeral test container' (HIGH, 2026-09-03): a scoped WF2/WF3 adds a genuine, reviewed test-context escape hatch to assertDbTarget, then un-skips step-crash-posture.db.test.ts and extends its pattern to link_massing (link) and link_parcels (link_keyed), parameterized rather than copy-pasted a third time"
+        "ref": "docs/reports/review_followups.md — 'WF2 Rule 12 behavioural half — no db.test.ts can spawn a REAL converted step against the ephemeral test container' (HIGH, 2026-09-03): a scoped WF2/WF3 adds a genuine, reviewed test-context escape hatch to assertDbTarget, then un-skips step-crash-posture.db.test.ts and extends its pattern to link_massing (link) and link_parcels (link_keyed), parameterized rather than copy-pasted a third time"
       },
       "gate": {
         "kind": "nice_to_have",
@@ -1389,11 +1389,11 @@
     },
     {
       "id": "ADMIN-1",
-      "spec": "124 \u00a72 Rule 3",
-      "title": "admin GROUPS reverse-coverage \u2014 every unclassified seed key gets a real group or a reviewed hidden reason",
+      "spec": "124 §2 Rule 3",
+      "title": "admin GROUPS reverse-coverage — every unclassified seed key gets a real group or a reviewed hidden reason",
       "promised": "unclassified count = 0",
       "status": "BUILT",
-      "evidence": "0 of 496 scripts/seeds/logic_variables.json keys carry admin.hidden === \"unclassified\" as of scripts/generate-logic-variable-groups.mjs (WF2 \"ADMIN-1 ratchet to zero\" batch 5, 2026-09-09) \u2014 refreshed by that generator on every regeneration (npm run logic-var-groups); high-water mark pinned at 0 in scripts/steps/_schema/admin-unclassified-high-water-mark.json (monotonic ratchet, src/tests/logic-var-admin-declarations.logic.test.ts). Closed in 5 reviewed batches (CoA chain 17, cost/archetype chain 19, lifecycle chain 10, coverage asserts + residue 14, lifecycle_seq_band_* family 220 \u2014 GlobalConfigCard.tsx's bespoke seq-band render path deleted in the same batch, single render path proven by an exactly-once-render fixture) \u2014 see .cursor/wf2_admin1_ratchet_to_zero_active_task.md. Batch 6 (this evidence) additionally RETIRED \"unclassified\" from the closed hidden-reason enum (derived|internal|deprecated|migration-only) \u2014 a new unclassified key is now a structural error, not merely ratcheted. review_followups.md \u2014 \"WF3 cloud-parity FIX 3 remediation \u2014 admin GROUPS reverse-coverage gap (2026-09-03)\" is the originating followup this item batches.",
+      "evidence": "0 of 496 scripts/seeds/logic_variables.json keys carry admin.hidden === \"unclassified\" as of scripts/generate-logic-variable-groups.mjs (WF2 \"ADMIN-1 ratchet to zero\" batch 5, 2026-09-09) — refreshed by that generator on every regeneration (npm run logic-var-groups); high-water mark pinned at 0 in scripts/steps/_schema/admin-unclassified-high-water-mark.json (monotonic ratchet, src/tests/logic-var-admin-declarations.logic.test.ts). Closed in 5 reviewed batches (CoA chain 17, cost/archetype chain 19, lifecycle chain 10, coverage asserts + residue 14, lifecycle_seq_band_* family 220 — GlobalConfigCard.tsx's bespoke seq-band render path deleted in the same batch, single render path proven by an exactly-once-render fixture) — see .cursor/wf2_admin1_ratchet_to_zero_active_task.md. Batch 6 (this evidence) additionally RETIRED \"unclassified\" from the closed hidden-reason enum (derived|internal|deprecated|migration-only) — a new unclassified key is now a structural error, not merely ratcheted. review_followups.md — \"WF3 cloud-parity FIX 3 remediation — admin GROUPS reverse-coverage gap (2026-09-03)\" is the originating followup this item batches.",
       "owner": {
         "kind": "wf",
         "ref": "wf: programme-ADMIN-1"
@@ -1408,11 +1408,11 @@
     },
     {
       "id": "EP-PIN-B45",
-      "spec": "78 \u00a7P3C.1/\u00a73.0b",
-      "title": "B4.5 pin \u2014 pass-4 comps UPDATE has no IS DISTINCT FROM; the comp_count IS NULL incremental predicate never refreshes",
-      "promised": "Spec 123 \u00a73.1: a KNOWN-DEFECT is pinned in its current wrong form, annotated with a Defect Ledger ID, and fixed in a separate commit after the conversion is green",
+      "spec": "78 §P3C.1/§3.0b",
+      "title": "B4.5 pin — pass-4 comps UPDATE has no IS DISTINCT FROM; the comp_count IS NULL incremental predicate never refreshes",
+      "promised": "Spec 123 §3.1: a KNOWN-DEFECT is pinned in its current wrong form, annotated with a Defect Ledger ID, and fixed in a separate commit after the conversion is green",
       "status": "BUILT",
-      "evidence": "docs/reports/defect-ledger.md EP-D1 row (PARTIAL \u2014 guard half CLOSED-in-commit, pilot9 commit 8 P2, peel 8x, 2026-09-08): buildComparableBuildsUpdateSql (scripts/lib/compute/enrich-parcels.js) now guards IS DISTINCT FROM over all 5 comp columns (comp_build_ratio_p50/comp_fsi_p50 cast ::numeric to avoid the float8-vs-NUMERIC trap, lessons.md:28); a genuinely unchanged parcel is skipped, not rewritten, on --full reruns. The never-refresh comp_count IS NULL incremental predicate (Half 2) remains \u2014 Fold G4 ruling: spec-supported as a disclaimed limitation (Spec 78 \u00a7P3C.1 states it explicitly), not a blocking defect, so this cutover_prereq is satisfied by Half 1's closure alone. Pin test flipped RED->GREEN in the new form (src/tests/steps/enrich_parcels/violations.test.ts, EP-D1/B4.5 FIXED). STATUS CLARIFICATION (pilot9 commit 8 P7, 2026-09-08): guard=BUILT (Half 1, IS DISTINCT FROM, closes real duplicate writes) vs invalidator=DECLARED-ONLY (Half 2 \u2014 commit 8 P2's Ask 3(a)/4 ruling replaced the disclaimed never-refresh predicate with a declared invalidator, outputs.invalidates[2] in scripts/enrich-parcels.descriptor.json: a permits row change within the rolling comps window makes pass-4's comp_count IS NULL scope stale \u2014 but nothing walks this array at runtime to scope an incremental run; the descriptor's own [2].when text says so directly, and scripts/lib/step/seam.js:6-12 confirms outputs.invalidates[] is schema-level only (claim #54's AJV requirement that the declaration exist), not a producer-consumer edge mechanism \u2014 grep of scripts/ and src/ for outputs.invalidates/.invalidates[ found zero runtime readers outside descriptor validation and that comment). This gate remains satisfied by the guard half alone (Fold G4 ruling, unchanged); the invalidator's declared-but-unwired state is a disclosed gap, not a blocker, tracked as claim #54 MED followup in docs/reports/review_followups.md.",
+      "evidence": "docs/reports/defect-ledger.md EP-D1 row (PARTIAL — guard half CLOSED-in-commit, pilot9 commit 8 P2, peel 8x, 2026-09-08): buildComparableBuildsUpdateSql (scripts/lib/compute/enrich-parcels.js) now guards IS DISTINCT FROM over all 5 comp columns (comp_build_ratio_p50/comp_fsi_p50 cast ::numeric to avoid the float8-vs-NUMERIC trap, lessons.md:28); a genuinely unchanged parcel is skipped, not rewritten, on --full reruns. The never-refresh comp_count IS NULL incremental predicate (Half 2) remains — Fold G4 ruling: spec-supported as a disclaimed limitation (Spec 78 §P3C.1 states it explicitly), not a blocking defect, so this cutover_prereq is satisfied by Half 1's closure alone. Pin test flipped RED->GREEN in the new form (src/tests/steps/enrich_parcels/violations.test.ts, EP-D1/B4.5 FIXED). STATUS CLARIFICATION (pilot9 commit 8 P7, 2026-09-08): guard=BUILT (Half 1, IS DISTINCT FROM, closes real duplicate writes) vs invalidator=DECLARED-ONLY (Half 2 — commit 8 P2's Ask 3(a)/4 ruling replaced the disclaimed never-refresh predicate with a declared invalidator, outputs.invalidates[2] in scripts/enrich-parcels.descriptor.json: a permits row change within the rolling comps window makes pass-4's comp_count IS NULL scope stale — but nothing walks this array at runtime to scope an incremental run; the descriptor's own [2].when text says so directly, and scripts/lib/step/seam.js:6-12 confirms outputs.invalidates[] is schema-level only (claim #54's AJV requirement that the declaration exist), not a producer-consumer edge mechanism — grep of scripts/ and src/ for outputs.invalidates/.invalidates[ found zero runtime readers outside descriptor validation and that comment). This gate remains satisfied by the guard half alone (Fold G4 ruling, unchanged); the invalidator's declared-but-unwired state is a disclosed gap, not a blocker, tracked as claim #54 MED followup in docs/reports/review_followups.md.",
       "owner": {
         "kind": "pilot",
         "ref": "pilot9_enrich_parcels"
@@ -1427,11 +1427,11 @@
     },
     {
       "id": "EP-PIN-D8",
-      "spec": "78 \u00a7P3C.2",
-      "title": "EP-D8 pin \u2014 comp_fsi_p50 has no structure_family/zone compatibility invariant",
-      "promised": "Spec 123 \u00a73.1: a KNOWN-DEFECT is pinned in its current wrong form, annotated with a Defect Ledger ID, and fixed in a separate commit after the conversion is green",
+      "spec": "78 §P3C.2",
+      "title": "EP-D8 pin — comp_fsi_p50 has no structure_family/zone compatibility invariant",
+      "promised": "Spec 123 §3.1: a KNOWN-DEFECT is pinned in its current wrong form, annotated with a Defect Ledger ID, and fixed in a separate commit after the conversion is green",
       "status": "BUILT",
-      "evidence": "docs/reports/defect-ledger.md EP-D8 row (CLOSED-in-commit, pilot9 commit 8 P4, peel 8y, 2026-09-08): buildCompCandidatesSql now computes comp_structure_type_known (TRUE only when the permit structure_type is genuinely classifiable as detached/townhouse/multiplex); buildComparableBuildsUpdateSql WHERE clause requires it on the generic all-family fallback branch, excluding unclassified/high-density comps (e.g. apartment permits) from matching a low-density subject via zoning_class equality alone. Pin test flipped RED->GREEN in the new form (src/tests/steps/enrich_parcels/violations.test.ts, EP-D8 FIXED). Spec 78 \u00a7Phase-3C gains a companion amendment stating the rule. Golden recapture (named cause EP-D8-FIX) deferred to commit 8 P6.",
+      "evidence": "docs/reports/defect-ledger.md EP-D8 row (CLOSED-in-commit, pilot9 commit 8 P4, peel 8y, 2026-09-08): buildCompCandidatesSql now computes comp_structure_type_known (TRUE only when the permit structure_type is genuinely classifiable as detached/townhouse/multiplex); buildComparableBuildsUpdateSql WHERE clause requires it on the generic all-family fallback branch, excluding unclassified/high-density comps (e.g. apartment permits) from matching a low-density subject via zoning_class equality alone. Pin test flipped RED->GREEN in the new form (src/tests/steps/enrich_parcels/violations.test.ts, EP-D8 FIXED). Spec 78 §Phase-3C gains a companion amendment stating the rule. Golden recapture (named cause EP-D8-FIX) deferred to commit 8 P6.",
       "owner": {
         "kind": "pilot",
         "ref": "pilot9_enrich_parcels"
@@ -1446,9 +1446,9 @@
     },
     {
       "id": "EP-PIN-D9",
-      "spec": "78 \u00a7P3C.2",
-      "title": "EP-D9 pin \u2014 pass-4 comps candidate selection has no deterministic tiebreak (comparable_builds jsonb instability)",
-      "promised": "Spec 123 \u00a73.1: a KNOWN-DEFECT is pinned in its current wrong form, annotated with a Defect Ledger ID, and fixed in a separate commit after the conversion is green",
+      "spec": "78 §P3C.2",
+      "title": "EP-D9 pin — pass-4 comps candidate selection has no deterministic tiebreak (comparable_builds jsonb instability)",
+      "promised": "Spec 123 §3.1: a KNOWN-DEFECT is pinned in its current wrong form, annotated with a Defect Ledger ID, and fixed in a separate commit after the conversion is green",
       "status": "BUILT",
       "evidence": "docs/reports/defect-ledger.md EP-D9 row (CLOSED-in-commit, pilot9 commit 8 P3, 2026-09-08): both comps ORDER BY clauses in the kNN candidate SELECT (scripts/lib/compute/enrich-parcels.js) now carry a deterministic secondary tiebreak (c.id inner kNN, near.id outer rank). Pin test flipped RED->GREEN in the new form (src/tests/steps/enrich_parcels/violations.test.ts, EP-D9 FIXED). Golden recapture (named cause EP-D9-FIX) deferred to commit 8 P6.",
       "owner": {
@@ -1465,11 +1465,11 @@
     },
     {
       "id": "EP-PIN-D10",
-      "spec": "122 \u00a73.0b",
-      "title": "EP-D10 pin \u2014 enrich_parcels_pass3_scope grows unbounded (append-only, never pruned)",
-      "promised": "Spec 123 \u00a73.1: a KNOWN-DEFECT is pinned in its current wrong form, annotated with a Defect Ledger ID, and fixed in a separate commit after the conversion is green",
+      "spec": "122 §3.0b",
+      "title": "EP-D10 pin — enrich_parcels_pass3_scope grows unbounded (append-only, never pruned)",
+      "promised": "Spec 123 §3.1: a KNOWN-DEFECT is pinned in its current wrong form, annotated with a Defect Ledger ID, and fixed in a separate commit after the conversion is green",
       "status": "BUILT",
-      "evidence": "docs/reports/defect-ledger.md EP-D10 row (CLOSED-in-commit, pilot9 commit 8 P1, 2026-09-08) \u2014 DELETE FROM enrich_parcels_pass3_scope WHERE consumed_at IS NOT NULL added to runPass5 (scripts/lib/compute/enrich-parcels.js), issued after consumePendingScope so every row this run could process has already been attempted before pruning; unconsumed rows (a per-row recovery error) are preserved. Pin test flipped RED->GREEN in the new form (src/tests/steps/enrich_parcels/violations.test.ts, EP-D10 FIXED). Full enrich_parcels test file green (49/49).",
+      "evidence": "docs/reports/defect-ledger.md EP-D10 row (CLOSED-in-commit, pilot9 commit 8 P1, 2026-09-08) — DELETE FROM enrich_parcels_pass3_scope WHERE consumed_at IS NOT NULL added to runPass5 (scripts/lib/compute/enrich-parcels.js), issued after consumePendingScope so every row this run could process has already been attempted before pruning; unconsumed rows (a per-row recovery error) are preserved. Pin test flipped RED->GREEN in the new form (src/tests/steps/enrich_parcels/violations.test.ts, EP-D10 FIXED). Full enrich_parcels test file green (49/49).",
       "owner": {
         "kind": "pilot",
         "ref": "pilot9_enrich_parcels"
@@ -1484,11 +1484,11 @@
     },
     {
       "id": "EP-PIN-D14",
-      "spec": "78 \u00a7P3A.1 / 122 \u00a73.0b",
-      "title": "EP-D14 pin \u2014 pass-5 D4' recovery walks unconsumed enrich_parcels_pass3_scope rows one at a time (full-scan UPDATE per parcel, redundant under --full)",
-      "promised": "Spec 123 \u00a73.1: a KNOWN-DEFECT is pinned in its current wrong form, annotated with a Defect Ledger ID, and fixed in a separate commit after the conversion is green",
+      "spec": "78 §P3A.1 / 122 §3.0b",
+      "title": "EP-D14 pin — pass-5 D4' recovery walks unconsumed enrich_parcels_pass3_scope rows one at a time (full-scan UPDATE per parcel, redundant under --full)",
+      "promised": "Spec 123 §3.1: a KNOWN-DEFECT is pinned in its current wrong form, annotated with a Defect Ledger ID, and fixed in a separate commit after the conversion is green",
       "status": "BUILT",
-      "evidence": "docs/reports/defect-ledger.md EP-D14 row (CLOSED-in-commit, WF3, 2026-09-09, C1) \u2014 consumePendingScope (scripts/lib/compute/enrich-parcels.js) rewritten: full=>one set-based UPDATE stamping consumed_at with NO recompute (errored parcels from this run's own stream excluded via stats.errorIds), !full=>batched ANY($1::int[]) recovery at enrich_parcels_scope_recovery_batch_size (default 1000) per round trip. Migration 246 (partial index on enrich_parcels_pass3_scope(parcel_id) WHERE consumed_at IS NULL) applied and DB-tested (C2). New pending_scope_parcels WARN check + 3 INFO rows. 3 locks proven RED (against the pre-fix per-parcel loop, git-stash-verified) then GREEN: query-count lock (2,500 pending parcels -> 1 UPDATE under --full / 3 batches under incremental, never 2,500), errored-id exclusion lock. Cloud-measured backlog: 439,130 unconsumed enrich_parcels_pass3_scope rows, one backend ACTIVE 23 min on a single per-parcel UPDATE (run 34400284685, pipeline_runs 4560). Golden recapture REQUIRED for fingerprint staleness \u2014 DEFERRED to the consolidated C6 recapture, not skipped; values measured unchanged (same computeOptimalConfig inputs/eligibility predicate/write SQL \u2014 only the recovery loop's statement count, the EP-D16 session timeout, and EP-D15 observability changed).",
+      "evidence": "docs/reports/defect-ledger.md EP-D14 row (CLOSED-in-commit, WF3, 2026-09-09, C1) — consumePendingScope (scripts/lib/compute/enrich-parcels.js) rewritten: full=>one set-based UPDATE stamping consumed_at with NO recompute (errored parcels from this run's own stream excluded via stats.errorIds), !full=>batched ANY($1::int[]) recovery at enrich_parcels_scope_recovery_batch_size (default 1000) per round trip. Migration 246 (partial index on enrich_parcels_pass3_scope(parcel_id) WHERE consumed_at IS NULL) applied and DB-tested (C2). New pending_scope_parcels WARN check + 3 INFO rows. 3 locks proven RED (against the pre-fix per-parcel loop, git-stash-verified) then GREEN: query-count lock (2,500 pending parcels -> 1 UPDATE under --full / 3 batches under incremental, never 2,500), errored-id exclusion lock. Cloud-measured backlog: 439,130 unconsumed enrich_parcels_pass3_scope rows, one backend ACTIVE 23 min on a single per-parcel UPDATE (run 34400284685, pipeline_runs 4560). Golden recapture REQUIRED for fingerprint staleness — DEFERRED to the consolidated C6 recapture, not skipped; values measured unchanged (same computeOptimalConfig inputs/eligibility predicate/write SQL — only the recovery loop's statement count, the EP-D16 session timeout, and EP-D15 observability changed).",
       "owner": {
         "kind": "pilot",
         "ref": "pilot9_enrich_parcels"
@@ -1503,11 +1503,11 @@
     },
     {
       "id": "EP-PIN-D17",
-      "spec": "124 \u00a77 / 48 \u00a73.5",
-      "title": "EP-D17 pin \u2014 parcels post-run checks are unbounded serial full scans over a bloat-inflated heap",
-      "promised": "Spec 123 \u00a73.1: a KNOWN-DEFECT is pinned in its current wrong form, annotated with a Defect Ledger ID, and fixed in a separate commit after the conversion is green",
+      "spec": "124 §7 / 48 §3.5",
+      "title": "EP-D17 pin — parcels post-run checks are unbounded serial full scans over a bloat-inflated heap",
+      "promised": "Spec 123 §3.1: a KNOWN-DEFECT is pinned in its current wrong form, annotated with a Defect Ledger ID, and fixed in a separate commit after the conversion is green",
       "status": "PARTIAL",
-      "evidence": "CODE BUILT, CLOUD UNVERIFIED \u2014 not yet BUILT because no green cloud run has exercised any of it. docs/reports/defect-ledger.md EP-D17 row \u2014 the 5 descriptor invariants[]/plausibility[] post checks now carry a declared statement_timeout ceiling (defaulted from step_post_check_statement_timeout_minutes when absent, never a hardcoded per-entry literal \u2014 output-panel fix F4) + a per-entry sys_-prefixed duration_ms INFO row (golden-scrub-safe, fix F1), and run in bounded concurrent batches (step_post_check_concurrency, default 4, fix F7) instead of serially; migration 247 sets parcels' autovacuum storage params per Spec 115 \u00a75's own pre-authorisation, DB-tested against a real Postgres (testcontainers). Operator structural ruling (2026-09-10) folded the execution.maintenance gap into this same WF3: step.schema.json's txn_scope conditional relaxed to admit \"step\" (RE-FREEZE #6), scripts/lib/step/plausibility.js gained a real runMaintenance executor (reads pg_stat_user_tables' dead_ratio, catalog-only, never a heap scan; compares against parcels_dead_tuple_ratio_warn_max; runs the declared VACUUM (ANALYZE) parcels, bound by its own declared ceiling, only when exceeded; emits a sys_-prefixed ran/skipped row) that now runs BEFORE the run-end post checks (output-panel fix F2, closing the self-defeating ordering an earlier draft shipped), and enrich_parcels' own descriptor now declares execution.maintenance plus a new parcels_dead_tuple_ratio plausibility bound reading POST-maintenance state. WHAT FLIPS THIS TO BUILT: (1) the pre-dispatch dead_ratio reading (operator must read pg_stat_user_tables for parcels \u2014 n_dead_tup, dead_ratio, pg_relation_size \u2014 immediately before the next chain-sources dispatch and record it here; NOT YET TAKEN, no SUPABASE_DATABASE_URL in this WF3's worktree) and (2) one green chain-sources cloud run exercising the reordered maintenance-then-checks path, migration 247 applied, and the 2 new logic_variables rows seeded (apply-logic-variables.js's ON CONFLICT DO NOTHING trap \u2014 verify VALUES, not the insert count). OPERATOR RULING 2026-09-11 (Spec 124 section 4, recorded in .cursor/pilot9_enrich_parcels_active_task.md \"Status 2026-09-11\"): gate.blocks re-pointed enrich_parcels -> assert_data_bounds (batch 1 lead step, per docs/reports/generated/122-conversion-roadmap.md). Rationale: the 2026-09-10 acceptance run 34506962436 (headSha 0820685d, pre-EP-D17) already proved CLOUDPARITY for enrich_parcels; EP-D17 is a COST fix (post-check ceilings + declared maintenance), not a correctness change, so a dedicated third 270-min cloud run to flip this item was refused. Its green-run proof rides batch 1's own R-AB acceptance run (one chain-sources run per archetype batch, mandatory anyway) \u2014 the item stays a cutover_prereq and now blocks the NEXT cutover instead. Pre-dispatch dead_ratio reading taken 2026-09-11 pre-dispatch = 0 (local reading after the Docker stack restart also 0, pg_stat counters reset). Local proof of the reordered maintenance-then-checks path: the commit-9 golden recapture at HEAD bc81ac84 (post/sources_run1.json, post/none_incremental.json) exercises runMaintenance + the 6th invariant parcels_dead_tuple_ratio against 486,530 parcels. CLOUD 2026-09-11 12:24Z: migration 247 APPLIED (apply-migrations run 34598594544, headSha bc81ac84, \"Running 247_parcels_autovacuum_storage_params.sql... OK (119ms)\", post-apply Verify 0 missing 0 drift, seeds 457/457 present); read-only verify via resolve-db against the pooler: schema_migrations count 244 incl. 247, pg_class.reloptions = autovacuum_vacuum_scale_factor=0.02 / autovacuum_analyze_scale_factor=0.01 / autovacuum_vacuum_cost_delay=0, pg_stat_user_tables parcels n_live_tup 583,259 / n_dead_tup 4 / dead_ratio 0.000 / last_autovacuum 2026-09-10 20:24Z / 6,559 MB, 0 stranded running rows. Remaining to BUILT: the one green chain-sources run (batch 1 acceptance). OPERATOR RULING 2026-09-11 (second, same day, Spec 124 section 4 \u2014 recommendation accepted): gate.blocks re-pointed assert_data_bounds -> enrich_centreline. CORRECTION of the earlier re-point: the ruled C4 batch-1 order (.cursor/c4_batching_entry_active_task.md section 3.2, mirrored by docs/reports/generated/122-conversion-roadmap.md) opens with assert_global_coverage, then assert_data_bounds \u2014 the \"batch 1 lead\" wording above was a misread of an alphabetical table row. More importantly, Spec 124 R-AB makes the chain-sources acceptance run a per-BATCH closing gate (one run proves every slug converted in the batch), so a cutover_prereq naming ANY batch-1 step would block that step's commit 9 before the run that flips this item can exist \u2014 the same deadlock shape that forced today's first re-point. The first C5 ENRICHER (enrich_centreline, per the generated roadmap) is the principled target: EP-D17's maintenance executor (runMaintenance) is the ENRICHER-owned path, so the next ENRICHER cutover is exactly where an unproven executor would bite; batch 1's acceptance run flips this item to BUILT long before that cutover. If assert_parcel_sanity is later ruled into C4 (Ask A1-bis) this target is unaffected.",
+      "evidence": "CODE BUILT, CLOUD UNVERIFIED — not yet BUILT because no green cloud run has exercised any of it. docs/reports/defect-ledger.md EP-D17 row — the 5 descriptor invariants[]/plausibility[] post checks now carry a declared statement_timeout ceiling (defaulted from step_post_check_statement_timeout_minutes when absent, never a hardcoded per-entry literal — output-panel fix F4) + a per-entry sys_-prefixed duration_ms INFO row (golden-scrub-safe, fix F1), and run in bounded concurrent batches (step_post_check_concurrency, default 4, fix F7) instead of serially; migration 247 sets parcels' autovacuum storage params per Spec 115 §5's own pre-authorisation, DB-tested against a real Postgres (testcontainers). Operator structural ruling (2026-09-10) folded the execution.maintenance gap into this same WF3: step.schema.json's txn_scope conditional relaxed to admit \"step\" (RE-FREEZE #6), scripts/lib/step/plausibility.js gained a real runMaintenance executor (reads pg_stat_user_tables' dead_ratio, catalog-only, never a heap scan; compares against parcels_dead_tuple_ratio_warn_max; runs the declared VACUUM (ANALYZE) parcels, bound by its own declared ceiling, only when exceeded; emits a sys_-prefixed ran/skipped row) that now runs BEFORE the run-end post checks (output-panel fix F2, closing the self-defeating ordering an earlier draft shipped), and enrich_parcels' own descriptor now declares execution.maintenance plus a new parcels_dead_tuple_ratio plausibility bound reading POST-maintenance state. WHAT FLIPS THIS TO BUILT: (1) the pre-dispatch dead_ratio reading (operator must read pg_stat_user_tables for parcels — n_dead_tup, dead_ratio, pg_relation_size — immediately before the next chain-sources dispatch and record it here; NOT YET TAKEN, no SUPABASE_DATABASE_URL in this WF3's worktree) and (2) one green chain-sources cloud run exercising the reordered maintenance-then-checks path, migration 247 applied, and the 2 new logic_variables rows seeded (apply-logic-variables.js's ON CONFLICT DO NOTHING trap — verify VALUES, not the insert count). OPERATOR RULING 2026-09-11 (Spec 124 section 4, recorded in .cursor/pilot9_enrich_parcels_active_task.md \"Status 2026-09-11\"): gate.blocks re-pointed enrich_parcels -> assert_data_bounds (batch 1 lead step, per docs/reports/generated/122-conversion-roadmap.md). Rationale: the 2026-09-10 acceptance run 34506962436 (headSha 0820685d, pre-EP-D17) already proved CLOUDPARITY for enrich_parcels; EP-D17 is a COST fix (post-check ceilings + declared maintenance), not a correctness change, so a dedicated third 270-min cloud run to flip this item was refused. Its green-run proof rides batch 1's own R-AB acceptance run (one chain-sources run per archetype batch, mandatory anyway) — the item stays a cutover_prereq and now blocks the NEXT cutover instead. Pre-dispatch dead_ratio reading taken 2026-09-11 pre-dispatch = 0 (local reading after the Docker stack restart also 0, pg_stat counters reset). Local proof of the reordered maintenance-then-checks path: the commit-9 golden recapture at HEAD bc81ac84 (post/sources_run1.json, post/none_incremental.json) exercises runMaintenance + the 6th invariant parcels_dead_tuple_ratio against 486,530 parcels. CLOUD 2026-09-11 12:24Z: migration 247 APPLIED (apply-migrations run 34598594544, headSha bc81ac84, \"Running 247_parcels_autovacuum_storage_params.sql... OK (119ms)\", post-apply Verify 0 missing 0 drift, seeds 457/457 present); read-only verify via resolve-db against the pooler: schema_migrations count 244 incl. 247, pg_class.reloptions = autovacuum_vacuum_scale_factor=0.02 / autovacuum_analyze_scale_factor=0.01 / autovacuum_vacuum_cost_delay=0, pg_stat_user_tables parcels n_live_tup 583,259 / n_dead_tup 4 / dead_ratio 0.000 / last_autovacuum 2026-09-10 20:24Z / 6,559 MB, 0 stranded running rows. Remaining to BUILT: the one green chain-sources run (batch 1 acceptance). OPERATOR RULING 2026-09-11 (second, same day, Spec 124 section 4 — recommendation accepted): gate.blocks re-pointed assert_data_bounds -> enrich_centreline. CORRECTION of the earlier re-point: the ruled C4 batch-1 order (.cursor/c4_batching_entry_active_task.md section 3.2, mirrored by docs/reports/generated/122-conversion-roadmap.md) opens with assert_global_coverage, then assert_data_bounds — the \"batch 1 lead\" wording above was a misread of an alphabetical table row. More importantly, Spec 124 R-AB makes the chain-sources acceptance run a per-BATCH closing gate (one run proves every slug converted in the batch), so a cutover_prereq naming ANY batch-1 step would block that step's commit 9 before the run that flips this item can exist — the same deadlock shape that forced today's first re-point. The first C5 ENRICHER (enrich_centreline, per the generated roadmap) is the principled target: EP-D17's maintenance executor (runMaintenance) is the ENRICHER-owned path, so the next ENRICHER cutover is exactly where an unproven executor would bite; batch 1's acceptance run flips this item to BUILT long before that cutover. If assert_parcel_sanity is later ruled into C4 (Ask A1-bis) this target is unaffected.",
       "owner": {
         "kind": "pilot",
         "ref": "pilot9_enrich_parcels"
@@ -1526,7 +1526,7 @@
       "title": "converted enrich_parcels per-pass timing within 25% of the legacy PRE goldens (KFM 7)",
       "promised": "the converted runEnrichPhase must not regress per-pass wall-clock timing vs the legacy script by more than 25% in either direction on any pass",
       "status": "BUILT",
-      "evidence": "Filed 2026-09-08 as EP-D11 (defect-ledger.md) after early POST capture attempts measured 1.6-2.9x per-pass slowdowns. REFUTED same day by a same-day, back-to-back comparator (legacy materialized from 7e75c50e^ via git show, run --full immediately after the converted run): total 2548.4s (legacy) vs 2543.6s (converted), ratio 1.00x, worst single pass 0.87x \u2014 well inside the 25% band. The earlier slowdowns traced to a 1.3M-row enrich_parcels_pass3_scope backlog (consumePendingScope has no batching/limit) plus live DB contention on a shared dev instance, both environmental, not a code regression. See docs/reports/golden/enrich_parcels/g2-comparator-report.md for the full column-level diff + per-pass timing table.",
+      "evidence": "Filed 2026-09-08 as EP-D11 (defect-ledger.md) after early POST capture attempts measured 1.6-2.9x per-pass slowdowns. REFUTED same day by a same-day, back-to-back comparator (legacy materialized from 7e75c50e^ via git show, run --full immediately after the converted run): total 2548.4s (legacy) vs 2543.6s (converted), ratio 1.00x, worst single pass 0.87x — well inside the 25% band. The earlier slowdowns traced to a 1.3M-row enrich_parcels_pass3_scope backlog (consumePendingScope has no batching/limit) plus live DB contention on a shared dev instance, both environmental, not a code regression. See docs/reports/golden/enrich_parcels/g2-comparator-report.md for the full column-level diff + per-pass timing table.",
       "owner": {
         "kind": "pilot",
         "ref": "pilot9_enrich_parcels"
@@ -1539,9 +1539,9 @@
     },
     {
       "id": "RM-1",
-      "spec": "122 \u00a710.3",
+      "spec": "122 §10.3",
       "title": "Conversion roadmap is generated + drift-guarded, never hand-maintained",
-      "promised": "the forward plan for all 55 remaining step conversions is a generated, drift-guarded artifact \u2014 archetype-grouped, risk-ascending \u2014 never prose that rots the way Spec 120 \u00a79.3 \u2464 and Spec 122 \u00a71.7 both did (2 undercounts on record)",
+      "promised": "the forward plan for all 55 remaining step conversions is a generated, drift-guarded artifact — archetype-grouped, risk-ascending — never prose that rots the way Spec 120 §9.3 ⑤ and Spec 122 §1.7 both did (2 undercounts on record)",
       "status": "BUILT",
       "evidence": "scripts/violations/generate-conversion-roadmap.mjs + scripts/steps/_schema/step-archetype-census.json + docs/reports/generated/122-conversion-roadmap.md + src/tests/conversion-roadmap.infra.test.ts (WF1 'conversion roadmap' commit 1, 2026-09-10)",
       "owner": {
@@ -1556,11 +1556,11 @@
     },
     {
       "id": "GOLD-PRE",
-      "spec": "122 \u00a75.3",
+      "spec": "122 §5.3",
       "title": "Golden PRE-side capture completeness enforced per declared chain",
       "promised": "G8's golden differential must be complete on BOTH the pre-image and the post-image side of every declared chain invocation, not the POST side alone",
       "status": "BUILT",
-      "evidence": "BUILT commit 3 (output-panel remediation, 2026-09-10). checkCaptures() (scripts/analysis/step-validate.mjs) now computes preInvocationsMissing (mirrors :704-706's POST-side derivedInvocations() match, for capturesIn(slug,'pre')); scoreG8 reds on any UNPINNED entry. Both-directions proven in selfTest() against synthetic pre/ shapes (RED: a genuinely missing capture for an unpinned slug; GREEN: the same gap, pinned). Two REAL, live gaps this checker itself found (never silent) are declared, cited exemptions in GOLD_PRE_KNOWN_GAPS: link_wsib sources::--full (docs/reports/golden/link_wsib/post/sources-full-forced-4.json has no pre/ match) and enrich_parcels none::[] (MED-3; docs/reports/review_followups.md 'GOLD-PRE's own live finding') \u2014 each fix-after tracked, neither hidden. blocks[] names the 5 C4 slugs FORWARD-declared (none are converted yet, so checkCutoverPrereqs is currently vacuous over them, same posture as STA-2/STA-3): the mechanism is built and live-tested; the precondition it will check is armed, not yet exercised.",
+      "evidence": "BUILT commit 3 (output-panel remediation, 2026-09-10). checkCaptures() (scripts/analysis/step-validate.mjs) now computes preInvocationsMissing (mirrors :704-706's POST-side derivedInvocations() match, for capturesIn(slug,'pre')); scoreG8 reds on any UNPINNED entry. Both-directions proven in selfTest() against synthetic pre/ shapes (RED: a genuinely missing capture for an unpinned slug; GREEN: the same gap, pinned). Two REAL, live gaps this checker itself found (never silent) are declared, cited exemptions in GOLD_PRE_KNOWN_GAPS: link_wsib sources::--full (docs/reports/golden/link_wsib/post/sources-full-forced-4.json has no pre/ match) and enrich_parcels none::[] (MED-3; docs/reports/review_followups.md 'GOLD-PRE's own live finding') — each fix-after tracked, neither hidden. blocks[] names the 5 C4 slugs FORWARD-declared (none are converted yet, so checkCutoverPrereqs is currently vacuous over them, same posture as STA-2/STA-3): the mechanism is built and live-tested; the precondition it will check is armed, not yet exercised.",
       "owner": {
         "kind": "wf",
         "ref": "wf: conversion-roadmap commit 3, 2026-09-10"
@@ -1579,14 +1579,14 @@
     },
     {
       "id": "C4-GATE",
-      "spec": "122 \u00a75.3 / C4 plan \u00a73.4",
-      "title": "C4 \"every chain\" capture gate is a CHECKER \u2014 completeness + freshness, both sides",
-      "promised": "C4 batching-entry plan \u00a73.4 + Fold A D-1: for every converted step S and every c in C(S) \u222a {none}, a PRE and a POST capture exist, the POST is current against the descriptor fingerprint, the PRE is committed (recoverable by git) before any re-run, and --compare shows zero unexplained diffs \u2014 enforced by checkers, never by discipline",
+      "spec": "122 §5.3 / C4 plan §3.4",
+      "title": "C4 \"every chain\" capture gate is a CHECKER — completeness + freshness, both sides",
+      "promised": "C4 batching-entry plan §3.4 + Fold A D-1: for every converted step S and every c in C(S) ∪ {none}, a PRE and a POST capture exist, the POST is current against the descriptor fingerprint, the PRE is committed (recoverable by git) before any re-run, and --compare shows zero unexplained diffs — enforced by checkers, never by discipline",
       "status": "BUILT",
-      "evidence": "BUILT 2026-09-11 (WF2 \"C4 step H \u2014 c4_chain_completeness_gate\", commits e49bd594 / 2f4bd3f7 + this one). Measured at HEAD 2c3dea53 before the WF: four of the five halves ALREADY lived in step-validate G8 \u2014 POST completeness (derivedInvocations from manifest.chains + chain_args + none \u2192 invocationsMissing), PRE completeness (GOLD-PRE, ec28216a, with 2 declared gaps), POST currency (R-C source_fingerprint \u2192 staleFingerprints; proved live by pilot 9 commit 9 flipping G8 0/3 \u2192 3/3), and the differential (unexplainedDiffs, deepest-leaf citation rule) \u2014 so the C4 plan \u00a73.4 sentence \"the completeness half is NOT enforced by a checker\" was stale. The missing half was D-1 FRESHNESS: (a) capture-step-golden.js --out was a bare writeFileSync (run 2 destroyed run 1 in place \u2014 pilot 9 commit 8 P6 did it to enrich_parcels/post/sources_run1.json) \u2192 commit 1 adds the overwrite guard (refuse unless --overwrite AND the file is recoverable by git; untracked/dirty refused even with the flag, operator ruling A1); (b) nothing locked \"PRE captures are committed before any re-run\" (R-AC) \u2192 commit 2 adds fast invariant #22 GOLD-PRE-FRESH (registry-scoped over converted[], blockedSlugs-scoped hard-stop like id 9; 38 PRE captures across 9 steps tracked+clean; live RED proven with an untracked probe file). ONE definition of \"recoverable\" (tracked in the INDEX + worktree == index \u2014 a staged-new file counts) is shared by both mechanisms via the harness's exported captureGitState/overwriteDecision, locked in src/tests/capture-harness-overwrite.infra.test.ts on a throwaway git repo (absent / committed-clean / staged-new / modified / staged-and-modified / untracked) and in step-validate selfTest() (GREEN / RED-untracked / RED-dirty / RED-none). Remaining declared gaps are captures to TAKE, not checker work: GOLD_PRE_KNOWN_GAPS = link_wsib sources --full, enrich_parcels none:: (MED-3).",
+      "evidence": "BUILT 2026-09-11 (WF2 \"C4 step H — c4_chain_completeness_gate\", commits e49bd594 / 2f4bd3f7 + this one). Measured at HEAD 2c3dea53 before the WF: four of the five halves ALREADY lived in step-validate G8 — POST completeness (derivedInvocations from manifest.chains + chain_args + none → invocationsMissing), PRE completeness (GOLD-PRE, ec28216a, with 2 declared gaps), POST currency (R-C source_fingerprint → staleFingerprints; proved live by pilot 9 commit 9 flipping G8 0/3 → 3/3), and the differential (unexplainedDiffs, deepest-leaf citation rule) — so the C4 plan §3.4 sentence \"the completeness half is NOT enforced by a checker\" was stale. The missing half was D-1 FRESHNESS: (a) capture-step-golden.js --out was a bare writeFileSync (run 2 destroyed run 1 in place — pilot 9 commit 8 P6 did it to enrich_parcels/post/sources_run1.json) → commit 1 adds the overwrite guard (refuse unless --overwrite AND the file is recoverable by git; untracked/dirty refused even with the flag, operator ruling A1); (b) nothing locked \"PRE captures are committed before any re-run\" (R-AC) → commit 2 adds fast invariant #22 GOLD-PRE-FRESH (registry-scoped over converted[], blockedSlugs-scoped hard-stop like id 9; 38 PRE captures across 9 steps tracked+clean; live RED proven with an untracked probe file). ONE definition of \"recoverable\" (tracked in the INDEX + worktree == index — a staged-new file counts) is shared by both mechanisms via the harness's exported captureGitState/overwriteDecision, locked in src/tests/capture-harness-overwrite.infra.test.ts on a throwaway git repo (absent / committed-clean / staged-new / modified / staged-and-modified / untracked) and in step-validate selfTest() (GREEN / RED-untracked / RED-dirty / RED-none). Remaining declared gaps are captures to TAKE, not checker work: GOLD_PRE_KNOWN_GAPS = link_wsib sources --full, enrich_parcels none:: (MED-3).",
       "owner": {
         "kind": "wf",
-        "ref": "C4 step H \u2014 c4_chain_completeness_gate (2026-09-11) \u2014 CLOSED"
+        "ref": "C4 step H — c4_chain_completeness_gate (2026-09-11) — CLOSED"
       },
       "gate": {
         "kind": "cutover_prereq",
@@ -1602,11 +1602,11 @@
     },
     {
       "id": "HB-1",
-      "spec": "124 \u00a72 Rule 12",
+      "spec": "124 §2 Rule 12",
       "title": "Heartbeat covers the WHOLE step, not only phase boundaries (EP-D15)",
       "promised": "every execution.phases[] entry of an ENRICHER-shaped step must be reachable by a progress emit (ctx.onProgress / the periodic heartbeat ticker), not only updated at phase boundaries",
       "status": "BUILT",
-      "evidence": "BUILT commit 3 (2026-09-10). checkHeartbeatWholeStep + heartbeatReachability (scripts/analysis/step-validate.mjs) statically verify runEnrichPhase wires ctx.onProgress into the rows-processed accumulator AND runs startHeartbeatTicker (EP-D15) \u2014 proven both directions in selfTest() (RED: no seam at all; RED: onProgress wired but no periodic ticker, the exact pre-EP-D15 defect shape; GREEN: the REAL scripts/lib/step/index.js source, live-verified). applies_when execution.shape==\"enrich\" scopes it to the one shape it can ever gate \u2014 0 converted steps match today (currently vacuous, mechanism proven and armed, same posture as STA-1/STA-2).",
+      "evidence": "BUILT commit 3 (2026-09-10). checkHeartbeatWholeStep + heartbeatReachability (scripts/analysis/step-validate.mjs) statically verify runEnrichPhase wires ctx.onProgress into the rows-processed accumulator AND runs startHeartbeatTicker (EP-D15) — proven both directions in selfTest() (RED: no seam at all; RED: onProgress wired but no periodic ticker, the exact pre-EP-D15 defect shape; GREEN: the REAL scripts/lib/step/index.js source, live-verified). applies_when execution.shape==\"enrich\" scopes it to the one shape it can ever gate — 0 converted steps match today (currently vacuous, mechanism proven and armed, same posture as STA-1/STA-2).",
       "owner": {
         "kind": "wf",
         "ref": "wf: conversion-roadmap commit 3, 2026-09-10"
@@ -1623,11 +1623,11 @@
     },
     {
       "id": "CEIL-1",
-      "spec": "124 \u00a72 Rule 12",
+      "spec": "124 §2 Rule 12",
       "title": "Statement/lock ceiling bound on EVERY phase incl. post_commit (EP-D16)",
       "promised": "every phase of an ENRICHER-shaped step, INCLUDING the dedicated post_commit client, must bind statement_timeout+lock_timeout before its first write",
       "status": "BUILT",
-      "evidence": "BUILT commit 3 (2026-09-10), SCOPED per MED-6 (output-panel remediation): checkStatementCeilingEveryPhase + statementCeilingReachability (scripts/analysis/step-validate.mjs) are a runner-level TOKEN-PRESENCE proof \u2014 they confirm runEnrichPhase's source contains a shared-txn `SET LOCAL statement_timeout`+`SET LOCAL lock_timeout` bind AND a `postClient`-scoped session-level `SET statement_timeout` bind (EP-D16) \u2014 not a per-phase, AST-verified proof that EVERY one of the 5 declared execution.phases[] individually binds before its own first write. Proven both directions in selfTest() at the token-presence level (RED: no bind at all; RED: shared-txn bound but post_commit's own client never binds; GREEN: the REAL source). The per-phase proof is filed as its own followup (docs/reports/review_followups.md, MED-6) rather than overclaimed here. applies_when execution.shape==\"enrich\" \u2014 currently vacuous (0 converted steps match), mechanism proven and armed.",
+      "evidence": "BUILT commit 3 (2026-09-10), SCOPED per MED-6 (output-panel remediation): checkStatementCeilingEveryPhase + statementCeilingReachability (scripts/analysis/step-validate.mjs) are a runner-level TOKEN-PRESENCE proof — they confirm runEnrichPhase's source contains a shared-txn `SET LOCAL statement_timeout`+`SET LOCAL lock_timeout` bind AND a `postClient`-scoped session-level `SET statement_timeout` bind (EP-D16) — not a per-phase, AST-verified proof that EVERY one of the 5 declared execution.phases[] individually binds before its own first write. Proven both directions in selfTest() at the token-presence level (RED: no bind at all; RED: shared-txn bound but post_commit's own client never binds; GREEN: the REAL source). The per-phase proof is filed as its own followup (docs/reports/review_followups.md, MED-6) rather than overclaimed here. applies_when execution.shape==\"enrich\" — currently vacuous (0 converted steps match), mechanism proven and armed.",
       "owner": {
         "kind": "wf",
         "ref": "wf: conversion-roadmap commit 3, 2026-09-10"
@@ -1644,8 +1644,8 @@
     },
     {
       "id": "CLOUD-PRE",
-      "spec": "123 \u00a76",
-      "title": "Pre-dispatch cloud-state checklist \u2014 table sizes, index presence, stranded running rows measured BEFORE a cutover attempt",
+      "spec": "123 §6",
+      "title": "Pre-dispatch cloud-state checklist — table sizes, index presence, stranded running rows measured BEFORE a cutover attempt",
       "promised": "cloud data state (table sizes, index presence, stranded `running` pipeline_runs rows) is measured before a cutover attempt is dispatched, not discovered afterward (the EP-D14 class: a committed fix whose cloud `--full` re-run has not yet landed)",
       "status": "NOT_STARTED",
       "evidence": "grep -n 'CLOUD-PRE\\|pre-dispatch' scripts/analysis/step-validate.mjs docs/runbook/README.md -> 0 hits. EP-D14's own cloud backlog measurement (439,130 unconsumed enrich_parcels_pass3_scope rows, one backend ACTIVE 23 min, docs/reports/defect-ledger.md EP-D14 row) was a one-off WF3 measurement, never a standing pre-dispatch checklist any future cutover runs automatically",
@@ -1661,11 +1661,11 @@
     },
     {
       "id": "ACC-1",
-      "spec": "122 \u00a77.2",
+      "spec": "122 §7.2",
       "title": "Acceptance is per-slug and row-derived, never a GitHub run tick",
-      "promised": "a chain-sources cloud run's acceptance is encoded per-slug in check-chain-verdict, row-derived from pipeline_runs/records_meta \u2014 never a single GH Actions green-checkmark standing in for every slug in the batch",
+      "promised": "a chain-sources cloud run's acceptance is encoded per-slug in check-chain-verdict, row-derived from pipeline_runs/records_meta — never a single GH Actions green-checkmark standing in for every slug in the batch",
       "status": "NOT_STARTED",
-      "evidence": "scripts/analysis/check-chain-verdict.js's OK_STATUSES-based acceptance (:91) is chain-scoped, not per-slug; grep -n 'per-slug acceptance\\|acceptance.*row-derived' scripts/analysis/check-chain-verdict.js docs/specs/01-pipeline/122_pipeline_step_optimization.md -> 0 hits. Directly load-bearing for Ask A5 (CLOUD ACCEPTANCE PER BATCH, Spec 124 \u00a75 R-PACE-2): that ruling's own guard text names this exact mechanism as not-yet-built",
+      "evidence": "scripts/analysis/check-chain-verdict.js's OK_STATUSES-based acceptance (:91) is chain-scoped, not per-slug; grep -n 'per-slug acceptance\\|acceptance.*row-derived' scripts/analysis/check-chain-verdict.js docs/specs/01-pipeline/122_pipeline_step_optimization.md -> 0 hits. Directly load-bearing for Ask A5 (CLOUD ACCEPTANCE PER BATCH, Spec 124 §5 R-PACE-2): that ruling's own guard text names this exact mechanism as not-yet-built",
       "owner": {
         "kind": "wf",
         "ref": "wf: unassigned"
@@ -1678,11 +1678,11 @@
     },
     {
       "id": "LAND-1",
-      "spec": "124 \u00a7R-8",
+      "spec": "124 §R-8",
       "title": "Landing discipline declared: derived-artifact regen, EOL normalisation, exact-command cloud-write allow rules",
       "promised": "landing discipline (working-tree hook, derived-artifact regeneration in the same commit, EOL normalisation, cloud writes needing exact-command allow rules) is declared as one artifact, not scattered tribal knowledge",
       "status": "NOT_STARTED",
-      "evidence": "no single declared artifact states the working-tree-hook + derived-artifact-regen + EOL-normalisation + cloud-write-allow-rule set together. tasks/lessons.md's 2026-09-09 CRLF/`git apply` lesson documents the EOL failure mode in prose; `programme-backlog.infra.test.ts`'s drift guard covers derived-artifact regen for ONE generator only \u2014 neither is Spec 124 \u00a7R-8's own declared register row",
+      "evidence": "no single declared artifact states the working-tree-hook + derived-artifact-regen + EOL-normalisation + cloud-write-allow-rule set together. tasks/lessons.md's 2026-09-09 CRLF/`git apply` lesson documents the EOL failure mode in prose; `programme-backlog.infra.test.ts`'s drift guard covers derived-artifact regen for ONE generator only — neither is Spec 124 §R-8's own declared register row",
       "owner": {
         "kind": "wf",
         "ref": "wf: unassigned"
@@ -1695,11 +1695,11 @@
     },
     {
       "id": "PH2-EXT",
-      "spec": "123 \u00a72",
-      "title": "PH-2 churn\u00d7complexity population widened from 27 sources steps to all 65 chain slugs",
-      "promised": "the churn\u00d7complexity risk quadrant (Spec 123 \u00a72/\u00a76 G2) covers every chain slug, not only the 27 domain `sources` steps \u2014 C6 today has NO risk data at all",
+      "spec": "123 §2",
+      "title": "PH-2 churn×complexity population widened from 27 sources steps to all 65 chain slugs",
+      "promised": "the churn×complexity risk quadrant (Spec 123 §2/§6 G2) covers every chain slug, not only the 27 domain `sources` steps — C6 today has NO risk data at all",
       "status": "NOT_STARTED",
-      "evidence": "docs/reports/generated/122-churn-complexity.md's own header: 'Population: 27 domain steps (manifest.chains.sources minus reconcile)'. This WF1's own docs/reports/generated/122-conversion-roadmap.md C6 section (36 files) renders every quadrant cell '\u2014' for that whole batch, confirming zero PH-2 coverage measured live, not assumed",
+      "evidence": "docs/reports/generated/122-churn-complexity.md's own header: 'Population: 27 domain steps (manifest.chains.sources minus reconcile)'. This WF1's own docs/reports/generated/122-conversion-roadmap.md C6 section (36 files) renders every quadrant cell '—' for that whole batch, confirming zero PH-2 coverage measured live, not assumed",
       "owner": {
         "kind": "wf",
         "ref": "wf: unassigned"
@@ -1712,11 +1712,11 @@
     },
     {
       "id": "ARCH-CENSUS",
-      "spec": "122 \u00a71.10",
+      "spec": "122 §1.10",
       "title": "Archetype declared for the 36 non-sources unconverted files (blocks any C6 ordering)",
-      "promised": "Spec 122 \u00a71.10's archetype census, today scoped to the 27 `sources` steps only, is widened to declare a real archetype for the 36 non-`sources` unconverted files (permits/coa/deep_scrapes/entities+wsib/orphan) \u2014 required before C6 can be archetype-grouped and risk-ordered the way C4/C5 are",
+      "promised": "Spec 122 §1.10's archetype census, today scoped to the 27 `sources` steps only, is widened to declare a real archetype for the 36 non-`sources` unconverted files (permits/coa/deep_scrapes/entities+wsib/orphan) — required before C6 can be archetype-grouped and risk-ordered the way C4/C5 are",
       "status": "NOT_STARTED",
-      "evidence": "scripts/steps/_schema/step-archetype-census.json (WF1 commit 1, 2026-09-10): 39 of its 58 entries carry archetype \"UNDECLARED\" \u2014 the 36 C6 files plus `reconcile` (chain-head). Seeding real archetypes for them is this item's own future WF, deliberately not built here (Ask A3's own ruling: one WF before C6 opens, not per-step at PH-0)",
+      "evidence": "scripts/steps/_schema/step-archetype-census.json (WF1 commit 1, 2026-09-10): 39 of its 58 entries carry archetype \"UNDECLARED\" — the 36 C6 files plus `reconcile` (chain-head). Seeding real archetypes for them is this item's own future WF, deliberately not built here (Ask A3's own ruling: one WF before C6 opens, not per-step at PH-0)",
       "owner": {
         "kind": "wf",
         "ref": "wf: unassigned"
@@ -1729,11 +1729,11 @@
     },
     {
       "id": "CLAIMS-MTX",
-      "spec": "123 \u00a75",
-      "title": "Claims \u00d7 steps matrix generated (plan-claims.mjs emits the 44/5/6 split today, not a per-step \u00d7 per-claim grid)",
-      "promised": "a generated per-step \u00d7 per-claim coverage grid (which of the 55 PER_STEP + universal claims each specific step satisfies), superseding the current aggregate-only 44-A/5-B/6-C split",
+      "spec": "123 §5",
+      "title": "Claims × steps matrix generated (plan-claims.mjs emits the 44/5/6 split today, not a per-step × per-claim grid)",
+      "promised": "a generated per-step × per-claim coverage grid (which of the 55 PER_STEP + universal claims each specific step satisfies), superseding the current aggregate-only 44-A/5-B/6-C split",
       "status": "NOT_STARTED",
-      "evidence": "scripts/violations/plan-claims.mjs --checklist emits docs/reports/generated/123-per-step-checklist.md's 55-claim aggregate split; grep -n 'per-step.*per-claim\\|claim.*matrix\\|grid' scripts/violations/plan-claims.mjs -> 0 hits \u2014 no per-step \u00d7 per-claim cross-tabulation exists",
+      "evidence": "scripts/violations/plan-claims.mjs --checklist emits docs/reports/generated/123-per-step-checklist.md's 55-claim aggregate split; grep -n 'per-step.*per-claim\\|claim.*matrix\\|grid' scripts/violations/plan-claims.mjs -> 0 hits — no per-step × per-claim cross-tabulation exists",
       "owner": {
         "kind": "followup",
         "ref": "review_followups.md (WF1 'conversion roadmap' filing, 2026-09-10)"
@@ -1746,11 +1746,11 @@
     },
     {
       "id": "POST-B1-1",
-      "spec": "124 R-AE / 122 \u00a75",
+      "spec": "124 R-AE / 122 §5",
       "title": "on_check_error \"fail_step\" enforced fleet-wide",
       "promised": "a throwing check with execution.on_check_error \"fail_step\" produces a FAIL row and halts the step; locked both directions with an injected throwing check",
       "status": "NOT_STARTED",
-      "evidence": "measured 2026-09-14 by Observability seat: injected throw caught by the step try/catch and downgraded to the declared WARN \u2014 plan .cursor/wf1_post_batch1_followups_active_task.md row POST-B1-1",
+      "evidence": "measured 2026-09-14 by Observability seat: injected throw caught by the step try/catch and downgraded to the declared WARN — plan .cursor/wf1_post_batch1_followups_active_task.md row POST-B1-1",
       "owner": {
         "kind": "followup",
         "ref": "review_followups.md: commit-8 HIGH row (verdict.js checkRow downgrades to WARN)"
@@ -1767,7 +1767,7 @@
       "title": "admin engine health reads the pipeline's declared write",
       "promised": "one engine-health compute: /api/quality consumes engine_health_snapshots (or a shared compute) with the 7 engine_health_* logic vars as thresholds; a 02-web-admin spec owns it",
       "status": "NOT_STARTED",
-      "evidence": "measured 2026-09-14: src/app/api/quality/route.ts:109-162 queries pg_stat_user_tables live with its own detectEngineHealthIssues; zero 02-web-admin specs mention engine health \u2014 plan .cursor/wf1_post_batch1_followups_active_task.md row POST-B1-2",
+      "evidence": "measured 2026-09-14: src/app/api/quality/route.ts:109-162 queries pg_stat_user_tables live with its own detectEngineHealthIssues; zero 02-web-admin specs mention engine health — plan .cursor/wf1_post_batch1_followups_active_task.md row POST-B1-2",
       "owner": {
         "kind": "followup",
         "ref": "review_followups.md:3544 family (HIGH admin duplicate compute)"
@@ -1780,11 +1780,11 @@
     },
     {
       "id": "POST-B1-3",
-      "spec": "49 \u00a7heartbeat / 124 R-AE",
+      "spec": "49 §heartbeat / 124 R-AE",
       "title": "engine_health_snapshots trend reader or retirement",
       "promised": "either the admin consumes the trend (closes the finding) or the write is retired and the Spec 49 heartbeat repoints to pipeline_runs",
       "status": "NOT_STARTED",
-      "evidence": "measured 2026-09-14: only readers are assert_global_coverage 25h heartbeat and funnel.ts model \u2014 plan .cursor/wf1_post_batch1_followups_active_task.md row POST-B1-3",
+      "evidence": "measured 2026-09-14: only readers are assert_global_coverage 25h heartbeat and funnel.ts model — plan .cursor/wf1_post_batch1_followups_active_task.md row POST-B1-3",
       "owner": {
         "kind": "followup",
         "ref": "review_followups.md:3544 (MED no trend reader)"
@@ -1801,7 +1801,7 @@
       "title": "lineage map free of the overlay-table artifact",
       "promised": "zoning_rooming_house_overlay no longer listed as consumed by >60 steps / produced by permits+coa loaders; Step Registry drops its >40-consumer filter",
       "status": "NOT_STARTED",
-      "evidence": "measured 2026-09-14 from docs/reference/data-lineage-map.md \u2014 plan .cursor/wf1_post_batch1_followups_active_task.md row POST-B1-4",
+      "evidence": "measured 2026-09-14 from docs/reference/data-lineage-map.md — plan .cursor/wf1_post_batch1_followups_active_task.md row POST-B1-4",
       "owner": {
         "kind": "followup",
         "ref": "review_followups.md:3456 (MED lineage anomaly)"
@@ -1818,7 +1818,7 @@
       "title": "run-chain-step-timeout kill-race test sequenced, not sleep-timed",
       "promised": "the child signals \"summary flushed\" before the kill is issued; zero load-flakes under the full hook",
       "status": "BUILT",
-      "evidence": "src/tests/run-chain-step-timeout.logic.test.ts summary-survives case: ceiling 0.01->0.05 min (3s) with the measured reason in-line; observed flaking 4x on 2026-09-14; 3/3 green isolated \u2014 landed in I3 commit 8",
+      "evidence": "src/tests/run-chain-step-timeout.logic.test.ts summary-survives case: ceiling 0.01->0.05 min (3s) with the measured reason in-line; observed flaking 4x on 2026-09-14; 3/3 green isolated — landed in I3 commit 8",
       "owner": {
         "kind": "followup",
         "ref": "review_followups.md:3457 (MED hook flake)"
@@ -1831,11 +1831,11 @@
     },
     {
       "id": "POST-B1-6",
-      "spec": "123 \u00a77 / step-validate",
+      "spec": "123 §7 / step-validate",
       "title": "deviations[] printed in the scorecard",
       "promised": "every deviations[] id of every converted slug appears in step-validate output so a deviated field is never descriptor-prose-only",
       "status": "NOT_STARTED",
-      "evidence": "measured 2026-09-14: deviations[] consumed only by step-validate G-4 on_invalid check \u2014 plan .cursor/wf1_post_batch1_followups_active_task.md row POST-B1-6",
+      "evidence": "measured 2026-09-14: deviations[] consumed only by step-validate G-4 on_invalid check — plan .cursor/wf1_post_batch1_followups_active_task.md row POST-B1-6",
       "owner": {
         "kind": "followup",
         "ref": "review_followups.md: commit-8 MED row (deviations read by no tooling)"
@@ -1848,11 +1848,11 @@
     },
     {
       "id": "POST-B1-7",
-      "spec": "54\u201362 source specs / 122 \u00a75",
+      "spec": "54–62 source specs / 122 §5",
       "title": "generated enforcement note per source spec",
       "promised": "each 5x_source_* spec carries a generated \"### Enforcement\" block listing the assert checks that guard its tables, derived from the assert descriptors and drift-locked like the system map",
       "status": "NOT_STARTED",
-      "evidence": "assert descriptors already declare checks[] per table/loader; no source spec cites them \u2014 plan .cursor/wf1_post_batch1_followups_active_task.md row POST-B1-7",
+      "evidence": "assert descriptors already declare checks[] per table/loader; no source spec cites them — plan .cursor/wf1_post_batch1_followups_active_task.md row POST-B1-7",
       "owner": {
         "kind": "followup",
         "ref": "operator direction 2026-09-14 (registry review)"
@@ -1869,7 +1869,7 @@
       "title": "one shared download helper with retry as logic vars",
       "promised": "load-neighbourhoods/-address-points/-parcels/-massing share scripts/lib download helper; retry count + backoff are registered logic variables",
       "status": "NOT_STARTED",
-      "evidence": "cloud chain-sources 34769829628 failed 2026-09-13 at step 17/28 on HTTP 502, no retry, 11 downstream steps skipped \u2014 plan .cursor/wf1_post_batch1_followups_active_task.md row POST-B1-8",
+      "evidence": "cloud chain-sources 34769829628 failed 2026-09-13 at step 17/28 on HTTP 502, no retry, 11 downstream steps skipped — plan .cursor/wf1_post_batch1_followups_active_task.md row POST-B1-8",
       "owner": {
         "kind": "followup",
         "ref": "review_followups.md:415 (refuted disposition + operator ruling: ride the LOAD conversion)"
@@ -1882,11 +1882,11 @@
     },
     {
       "id": "POST-B1-9",
-      "spec": "122 \u00a75.3",
+      "spec": "122 §5.3",
       "title": "single descriptorPathFor definition",
       "promised": "capture-step-golden.js imports seam.js descriptorPathFor; the private mirror is deleted",
       "status": "NOT_STARTED",
-      "evidence": "Guardian, WF3 I3a 2026-09-14 \u2014 plan .cursor/wf1_post_batch1_followups_active_task.md row POST-B1-9",
+      "evidence": "Guardian, WF3 I3a 2026-09-14 — plan .cursor/wf1_post_batch1_followups_active_task.md row POST-B1-9",
       "owner": {
         "kind": "followup",
         "ref": "review_followups.md:3459 (LOW)"
@@ -1903,7 +1903,7 @@
       "title": "captured_at freshness semantics documented",
       "promised": "Spec 49 + the assert_engine_health interpretation notes state that captured_at is not refreshed for unchanged tables (designed guarded upsert)",
       "status": "NOT_STARTED",
-      "evidence": "measured 2026-09-14 by Observability seat \u2014 plan .cursor/wf1_post_batch1_followups_active_task.md row POST-B1-10",
+      "evidence": "measured 2026-09-14 by Observability seat — plan .cursor/wf1_post_batch1_followups_active_task.md row POST-B1-10",
       "owner": {
         "kind": "followup",
         "ref": "review_followups.md: commit-8 LOW row"
@@ -1920,7 +1920,7 @@
       "title": "funnel mutation bounds match the fleet",
       "promised": "src/lib/admin/funnel.ts assert_engine_health bounds reflect ~90 tables, not [10,15]",
       "status": "NOT_STARTED",
-      "evidence": "measured 2026-09-14 \u2014 plan .cursor/wf1_post_batch1_followups_active_task.md row POST-B1-11",
+      "evidence": "measured 2026-09-14 — plan .cursor/wf1_post_batch1_followups_active_task.md row POST-B1-11",
       "owner": {
         "kind": "followup",
         "ref": "review_followups.md: commit-8 LOW row"
@@ -1933,14 +1933,129 @@
     },
     {
       "id": "POST-B1-12",
-      "spec": "123 \u00a77 G0 / registry",
+      "spec": "123 §7 G0 / registry",
       "title": "Step Registry generated in-repo",
       "promised": "scripts/analysis/step-registry.mjs + npm run step-registry emit docs/reports/generated/step-registry.html (owners, consumes, standard-step anatomy), drift-locked like the system map; the artifact is a publish of that file",
       "status": "NOT_STARTED",
-      "evidence": "artifact https://claude.ai/code/artifact/a1d287b8-b691-4907-a3c2-d256e2530089 v5 \u2014 plan .cursor/wf1_post_batch1_followups_active_task.md row POST-B1-12",
+      "evidence": "artifact https://claude.ai/code/artifact/a1d287b8-b691-4907-a3c2-d256e2530089 v5 — plan .cursor/wf1_post_batch1_followups_active_task.md row POST-B1-12",
       "owner": {
         "kind": "followup",
         "ref": "Step Registry artifact built 2026-09-14 from scratch scripts outside the repo"
+      },
+      "gate": {
+        "kind": "nice_to_have",
+        "blocks": []
+      },
+      "last_reviewed": "2026-09-14"
+    },
+    {
+      "id": "VEL-1",
+      "spec": "124 R-AG (proposed)",
+      "title": "Gate placement: full suite at pre-push, vitest related + fast invariants at pre-commit, live-DB infra tests in test:db",
+      "promised": "pre-commit runs typecheck + lint + vitest related <staged> + step-validate --staged --fast; the 10,437-test suite runs once per push and in CI; restore-db-class infra tests move to npm run test:db; hook composition locked by an infra test",
+      "status": "NOT_STARTED",
+      "evidence": "measured 2026-09-14: .husky/pre-commit ends in npm run test (~250 s, 10,437 tests); .husky/pre-push runs no suite; 9 hook runs per full-form step ≈ 40–45 min; 4 runs lost today to non-code causes — plan .cursor/wf2_conversion_velocity_active_task.md §1 — gate re-keyed 2026-09-14 from batching_prereq:[\"C5\"] (uncounted: blocksBatchingCount only reads \"batching\") to cutover_prereq naming every C5 slug, which checkCutoverPrereqs enforces",
+      "owner": {
+        "kind": "wf",
+        "ref": "wf: conversion velocity (R-AG)"
+      },
+      "gate": {
+        "kind": "cutover_prereq",
+        "blocks": [
+          "address_points",
+          "assert_parcel_sanity",
+          "compute_parcel_cost_estimates",
+          "enrich_centreline",
+          "enrich_heritage",
+          "enrich_ravines",
+          "load_centreline",
+          "load_heritage",
+          "load_wsib",
+          "load_zoning",
+          "massing",
+          "neighbourhoods",
+          "parcels",
+          "reconcile"
+        ]
+      },
+      "last_reviewed": "2026-09-14"
+    },
+    {
+      "id": "VEL-2",
+      "spec": "124 R-AH (proposed)",
+      "title": "Compressed 3-commit form is the default once an archetype has two full-form members",
+      "promised": "a plan for an eligible archetype uses the R-PACE-1 form unless the assessment report names a reason; step-validate invariant 23 gains the inverse check (eligible archetype + full-form plan + no reason = FAIL)",
+      "status": "NOT_STARTED",
+      "evidence": "measured 2026-09-14: eligible today ASSERT (3 members) and LINK (2); INGESTOR and ENRICHER each need one more full-form member before batch 2's remaining 7 + 4 go compressed — plan .cursor/wf2_conversion_velocity_active_task.md §1 — gate re-keyed 2026-09-14 from batching_prereq:[\"C5\"] (uncounted: blocksBatchingCount only reads \"batching\") to cutover_prereq naming every C5 slug, which checkCutoverPrereqs enforces",
+      "owner": {
+        "kind": "wf",
+        "ref": "wf: conversion velocity (R-AH)"
+      },
+      "gate": {
+        "kind": "cutover_prereq",
+        "blocks": [
+          "address_points",
+          "assert_parcel_sanity",
+          "compute_parcel_cost_estimates",
+          "enrich_centreline",
+          "enrich_heritage",
+          "enrich_ravines",
+          "load_centreline",
+          "load_heritage",
+          "load_wsib",
+          "load_zoning",
+          "massing",
+          "neighbourhoods",
+          "parcels",
+          "reconcile"
+        ]
+      },
+      "last_reviewed": "2026-09-14"
+    },
+    {
+      "id": "VEL-3",
+      "spec": "124 R-AI (proposed)",
+      "title": "Capture pairs only where sharing.varies_by_chain says the chain matters",
+      "promised": "one chain + standalone when the descriptor declares no chain-varying field; every chain when it does; the C4-GATE checker reads sharing.varies_by_chain instead of the manifest chain list",
+      "status": "NOT_STARTED",
+      "evidence": "measured 2026-09-14: assert_engine_health's 5 POST captures differ only in chain/ids (report §9.5); assert_data_bounds / assert_global_coverage declare per-chain scopes and keep every chain — plan .cursor/wf2_conversion_velocity_active_task.md §1",
+      "owner": {
+        "kind": "wf",
+        "ref": "wf: conversion velocity (R-AI)"
+      },
+      "gate": {
+        "kind": "nice_to_have",
+        "blocks": []
+      },
+      "last_reviewed": "2026-09-14"
+    },
+    {
+      "id": "POST-B1-14",
+      "spec": "122 §1.8",
+      "title": "Concern index audited against the 20-category correction",
+      "promised": "the 49-concern index in Spec 122 §1.8 re-mapped to the 20 schema categories (invariants/plausibility homes added), the \"unaudited against the 18→20 correction\" flag removed, and the mapper re-run",
+      "status": "NOT_STARTED",
+      "evidence": "Spec 122 §1.8 table row flags 44 category-homed concerns as unaudited since 2026-09-09; x-categories re-measured at 20 on 2026-09-14 — plan .cursor/wf1_post_batch1_followups_active_task.md",
+      "owner": {
+        "kind": "followup",
+        "ref": "Spec 122 §1.8 unaudited flag (2026-09-09)"
+      },
+      "gate": {
+        "kind": "nice_to_have",
+        "blocks": []
+      },
+      "last_reviewed": "2026-09-14"
+    },
+    {
+      "id": "POST-B1-15",
+      "spec": "122 §5.2",
+      "title": "Source-text test debt retired: 53 files / 85 readFileSync(scripts/*.js) assertions → descriptor/behaviour assertions",
+      "promised": "no fleet test asserts against a pipeline script's source text; each conversion stops paying the 30–50 min repoint (I3 commit 7 repointed 6 files)",
+      "status": "NOT_STARTED",
+      "evidence": "measured 2026-09-14: grep -rlE \"readFileSync\\([^)]*scripts/[^)]*\\.js\" src/tests → 53 files, 85 reads — plan .cursor/wf2_conversion_velocity_active_task.md §1",
+      "owner": {
+        "kind": "wf",
+        "ref": "wf: source-text test debt (POST-B1-15)"
       },
       "gate": {
         "kind": "nice_to_have",

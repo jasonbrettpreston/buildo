@@ -33,21 +33,21 @@ Remaining files: **52** (+ **1** pending) · remaining slugs: **54** (+ **1** pe
 
 | Archetype | File | Slug(s) | Chains (slots) | Quadrant | Write hints | Open cutover_prereq |
 |---|---|---|---|---|---|---|
-| ASSERT | `scripts/quality/assert-parcel-sanity.js` | assert_parcel_sanity | sources (1) | bottom-left | — | — |
-| ENRICHER | `scripts/enrich-centreline.js` | enrich_centreline | sources (1) | bottom-left | — | EP-PIN-D17 (enrich_centreline) |
-| ENRICHER | `scripts/enrich-heritage.js` | enrich_heritage | sources (1) | bottom-left | — | — |
-| ENRICHER | `scripts/enrich-ravines.js` | enrich_ravines | sources (1) | bottom-left | — | — |
-| ENRICHER | `scripts/compute-parcel-cost-estimates.js` | compute_parcel_cost_estimates | sources (1) | top-left | supports_dry_run | — |
-| INGESTOR | `scripts/load-address-points.js` | address_points | sources (1) | top-left | — | — |
-| INGESTOR | `scripts/load-centreline.js` | load_centreline | sources (1) | top-left | — | — |
-| INGESTOR | `scripts/load-heritage.js` | load_heritage | sources (1) | top-left | — | — |
-| INGESTOR | `scripts/load-zoning.js` | load_zoning | sources (1) | top-left | — | — |
-| INGESTOR | `scripts/load-massing.js` | massing | sources (1) | top-right | — | — |
-| INGESTOR | `scripts/load-neighbourhoods.js` | neighbourhoods | sources (1) | top-right | — | — |
-| INGESTOR | `scripts/load-parcels.js` | parcels | sources (1) | top-right | — | — |
-| INGESTOR | `scripts/load-wsib.js` | load_wsib | sources (1) | top-right | — | — |
+| ASSERT | `scripts/quality/assert-parcel-sanity.js` | assert_parcel_sanity | sources (1) | bottom-left | — | VEL-1 (assert_parcel_sanity); VEL-2 (assert_parcel_sanity) |
+| ENRICHER | `scripts/enrich-centreline.js` | enrich_centreline | sources (1) | bottom-left | — | EP-PIN-D17 (enrich_centreline); VEL-1 (enrich_centreline); VEL-2 (enrich_centreline) |
+| ENRICHER | `scripts/enrich-heritage.js` | enrich_heritage | sources (1) | bottom-left | — | VEL-1 (enrich_heritage); VEL-2 (enrich_heritage) |
+| ENRICHER | `scripts/enrich-ravines.js` | enrich_ravines | sources (1) | bottom-left | — | VEL-1 (enrich_ravines); VEL-2 (enrich_ravines) |
+| ENRICHER | `scripts/compute-parcel-cost-estimates.js` | compute_parcel_cost_estimates | sources (1) | top-left | supports_dry_run | VEL-1 (compute_parcel_cost_estimates); VEL-2 (compute_parcel_cost_estimates) |
+| INGESTOR | `scripts/load-address-points.js` | address_points | sources (1) | top-left | — | VEL-1 (address_points); VEL-2 (address_points) |
+| INGESTOR | `scripts/load-centreline.js` | load_centreline | sources (1) | top-left | — | VEL-1 (load_centreline); VEL-2 (load_centreline) |
+| INGESTOR | `scripts/load-heritage.js` | load_heritage | sources (1) | top-left | — | VEL-1 (load_heritage); VEL-2 (load_heritage) |
+| INGESTOR | `scripts/load-zoning.js` | load_zoning | sources (1) | top-left | — | VEL-1 (load_zoning); VEL-2 (load_zoning) |
+| INGESTOR | `scripts/load-massing.js` | massing | sources (1) | top-right | — | VEL-1 (massing); VEL-2 (massing) |
+| INGESTOR | `scripts/load-neighbourhoods.js` | neighbourhoods | sources (1) | top-right | — | VEL-1 (neighbourhoods); VEL-2 (neighbourhoods) |
+| INGESTOR | `scripts/load-parcels.js` | parcels | sources (1) | top-right | — | VEL-1 (parcels); VEL-2 (parcels) |
+| INGESTOR | `scripts/load-wsib.js` | load_wsib | sources (1) | top-right | — | VEL-1 (load_wsib); VEL-2 (load_wsib) |
 | RECORDER | `scripts/quality/assert-engine-health.js` | assert_engine_health [pending: shape_clean] | coa+deep_scrapes+permits+sources (4) | top-right | — | — |
-| UNDECLARED | `scripts/reconcile-runs.js` | reconcile | sources (1) | — | — | — |
+| UNDECLARED | `scripts/reconcile-runs.js` | reconcile | sources (1) | — | — | VEL-1 (reconcile); VEL-2 (reconcile) |
 
 <details><summary>C5 — why each archetype (census <code>reason</code>)</summary>
 
