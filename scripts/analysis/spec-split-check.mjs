@@ -247,7 +247,11 @@ function walkFiles(dir, out = []) {
 }
 
 const CITATION_SECTION_RE = /Spec\s+(119|120|121|122|123|124)\s+§([0-9]+[a-z]?(?:\.[0-9]+[a-z]?)*)/g;
-const CITATION_RULING_RE = /Spec\s+124\s+(R-[A-Z]+(?:\.[0-9]+)?)/g;
+// R-PACE-1 (Spec 124 R-PACE-1, WF "R-PACE-1 doc landing", 2026-09-13) widens
+// the amendment-suffix arm from dot-only (R-K.1/R-K.2) to dot-OR-hyphen
+// (R-PACE-1/R-PACE-2/R-PACE-3) — the PACE sub-scheme names its rows with a
+// hyphenated ordinal, not the register's own dotted-amendment convention.
+const CITATION_RULING_RE = /Spec\s+124\s+(R-[A-Z]+(?:[.-][0-9]+)?)/g;
 
 /** `{citation, specId, kind, file, line}[]` — `kind` is `'section'` or `'ruling'`. */
 export function collectCitations(roots = CITATION_ROOTS.map((r) => path.join(REPO_ROOT, r))) {
@@ -274,11 +278,11 @@ export function collectCitations(roots = CITATION_ROOTS.map((r) => path.join(REP
   return out;
 }
 
-/** Register-row ruling ids declared in Spec 124 §5 (`| R-X | ... |` table rows). */
+/** Register-row ruling ids declared in Spec 124 §5 (`| R-X | ... |` table rows). Mirrors CITATION_RULING_RE's dot-OR-hyphen amendment arm (R-PACE-1). */
 export function extractRegisterRulingIds(spec124Text) {
   const ids = new Set();
   for (const raw of lf(spec124Text).split('\n')) {
-    const m = /^\|\s*(R-[A-Z]+(?:\.[0-9]+)?)\s*\|/.exec(raw.trim());
+    const m = /^\|\s*(R-[A-Z]+(?:[.-][0-9]+)?)\s*\|/.exec(raw.trim());
     if (m) ids.add(m[1]);
   }
   return ids;

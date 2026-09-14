@@ -21,14 +21,15 @@
  * PLUS the fast invariants (the "fast descriptor gate" followup, subsumed here
  * per the operator's instruction) — always run, always cheap, no vitest/DB needed.
  * Ids 1/2/3/7/8/20/21 are per-row (one result per converted/pending slug); ids
- * 4/5/9/22 are registry-scoped (one result for the whole fleet — a fleet-integrity
+ * 4/5/9/22/23 are registry-scoped (one result for the whole fleet — a fleet-integrity
  * fact, not a property of any single step; 22 = GOLD-PRE-FRESH, C4 step H
- * 2026-09-11, hard-stop scoped to its `blockedSlugs` exactly like id 9). Id 6 is retired (superseded by G8/
+ * 2026-09-11; 23 = COMPRESSED-FORM-ELIGIBLE, Spec 124 R-PACE-1, 2026-09-13 —
+ * both hard-stop scoped to their own `blockedSlugs` exactly like id 9). Id 6 is retired (superseded by G8/
  * item iv, never reused). HIGH-2 (output-panel remediation, 2026-09-10): ids
  * 20/21 (not 10/11) — 1-13 is reserved so a fast invariant id can NEVER
  * collide with a Policy Coverage Matrix Rule number in a naive stdout scrape
  * (both tables render one row per "| N | ..." and the Fast Invariants table
- * comes first in the output). Currently 10 invariants, ids 1-5,7-9,20-21:
+ * comes first in the output). Currently 12 invariants, ids 1-5,7-9,20-23:
  *   1. database.min_migration <= migrations/*.sql COUNT (LW-D8 — a COUNT floor,
  *      never a filename number)
  *   2. every declared config.logic_variables[].name has a scripts/seeds/logic_variables.json entry
@@ -52,6 +53,15 @@
  *      the runner incl. the post_commit client (EP-D16) — same applies_when
  *      scoping as HB-1; MED-6 scopes this as a token-presence check, not a
  *      per-phase proof (see docs/reports/review_followups.md)
+ *   22. GOLD-PRE-FRESH (C4 step H, Spec 124 R-AC): every PRE golden capture of
+ *      every converted step is git-recoverable (tracked + worktree clean)
+ *   23. COMPRESSED-FORM-ELIGIBLE (Spec 124 R-PACE-1): a pending slug whose
+ *      assessment report declares the compressed 3-commit form (the literal
+ *      marker `**Commit form: compressed (R-PACE-1)**`) is eligible only when
+ *      its archetype's `template-freeze.json.archetype_profiles[A].proven`
+ *      is `true` AND >=2 `converted.json` entries already share archetype A;
+ *      not-applicable (vacuous pass) when the marker is absent or the pending
+ *      slug has no descriptor yet
  *
  * SPEC LINK: docs/specs/01-pipeline/123_step_opt_assessment_validation.md SS6 (gates),
  *            SS5.2 (per-step checklist), SS4.4 (checker self-test doctrine, SS12b.6)
@@ -142,6 +152,7 @@ const CONVERTED_PATH = path.join(REPO_ROOT, 'scripts/steps/_schema/converted.jso
 const MANIFEST_PATH = path.join(REPO_ROOT, 'scripts/manifest.json');
 const GOLDEN_ROOT = path.join(REPO_ROOT, 'docs/reports/golden');
 const DEFECT_LEDGER_PATH = path.join(REPO_ROOT, 'docs/reports/defect-ledger.md');
+const TEMPLATE_FREEZE_PATH = path.join(REPO_ROOT, 'scripts/steps/_schema/template-freeze.json');
 
 const validateLib = require(path.join(REPO_ROOT, 'scripts/lib/step/validate.js'));
 const harness = require(path.join(REPO_ROOT, 'scripts/analysis/capture-step-golden.js'));
@@ -447,6 +458,47 @@ export function checkPreCapturesRecoverable(preStates) {
     detail: violations.length
       ? `GOLD-PRE-FRESH: ${violations.length} unrecoverable PRE capture(s): ${violations.map((v) => `${v.file} (${v.why})`).join('; ')}`
       : `GOLD-PRE-FRESH: ${total} PRE capture(s) across ${preStates.length} converted step(s) all tracked + clean (git can restore every reference)`,
+  };
+}
+
+/**
+ * COMPRESSED-FORM-ELIGIBLE predicate (fast invariant #23, Spec 124 R-PACE-1,
+ * 2026-09-13). PURE — takes each pending slug's already-probed eligibility
+ * facts; the probes themselves (does a sibling descriptor exist? does the
+ * report declare the compressed-form marker? is the slug's archetype proven?
+ * how many converted.json entries already share it?) are done by the caller
+ * (fastInvariants), mirroring checkPreCapturesRecoverable's own split.
+ *
+ * A pending slug whose descriptor doesn't exist yet, or whose report never
+ * declares the marker, is NOT APPLICABLE (vacuous pass) — the compressed
+ * form is a choice a step's own assessment report makes, never assumed on
+ * its behalf. Only a DECLARED compressed-form slug is checked against the
+ * archetype-maturity precondition (Spec 124 R-PACE-1: >=2 converted.json
+ * entries share the archetype AND template-freeze.json declares it proven).
+ *
+ * @param {Array<{slug:string, descriptorExists:boolean, marker:boolean, archetypeProven:boolean, archetypeConvertedCount:number}>} rows
+ * @returns {{pass:boolean, blockedSlugs:string[], detail:string, violations:Array<{slug:string,why:string}>}}
+ */
+export function checkCompressedFormEligible(rows) {
+  const applicable = rows.filter((r) => r.descriptorExists && r.marker);
+  const violations = [];
+  for (const r of applicable) {
+    if (r.archetypeProven !== true) {
+      violations.push({ slug: r.slug, why: 'archetype_profiles[A].proven is not true' });
+    } else if (!(r.archetypeConvertedCount >= 2)) {
+      violations.push({ slug: r.slug, why: `only ${r.archetypeConvertedCount} converted.json entr${r.archetypeConvertedCount === 1 ? 'y' : 'ies'} share its archetype (<2)` });
+    }
+  }
+  const blockedSlugs = violations.map((v) => v.slug);
+  return {
+    pass: violations.length === 0,
+    blockedSlugs,
+    violations,
+    detail: violations.length
+      ? `COMPRESSED-FORM-ELIGIBLE: ${violations.length} pending slug(s) declare the compressed form (R-PACE-1) without eligibility: ${violations.map((v) => `${v.slug} (${v.why})`).join('; ')}`
+      : applicable.length
+        ? `COMPRESSED-FORM-ELIGIBLE: ${applicable.length} compressed-form declaration(s), all eligible (proven archetype, >=2 converted members)`
+        : `COMPRESSED-FORM-ELIGIBLE: not applicable (0 pending slugs declare the compressed form)`,
   };
 }
 
@@ -1081,6 +1133,68 @@ function fastInvariants(rows, converted, pending) {
       pass: fresh.pass,
       blockedSlugs: fresh.blockedSlugs,
       detail: fresh.detail,
+    });
+  }
+
+  // 23. COMPRESSED-FORM-ELIGIBLE (Spec 124 R-PACE-1, 2026-09-13). A pending
+  // slug's assessment report may declare the compressed 3-commit form only
+  // once its archetype has matured — proven AND >=2 converted[] entries
+  // share it. Registry-scoped (mirrors ids 4/5/9/22's shape): this is a
+  // fleet-wide eligibility fact keyed off EACH pending slug, not a property
+  // of the ONE step currently being validated; `blockedSlugs` scopes the
+  // hard-stop to the offending slug(s) only (`registryFailureBlocks` already
+  // honours any `(registry)` result shaped this way — no new special-case).
+  {
+    const manifestForPace = loadManifest();
+    const freezeProfiles = existsSync(TEMPLATE_FREEZE_PATH) ? (JSON.parse(readFileSync(TEMPLATE_FREEZE_PATH, 'utf8')).archetype_profiles || []) : [];
+    const provenByArchetype = new Map(freezeProfiles.map((p) => [p.archetype, p.proven === true]));
+    const archetypeCounts = new Map();
+    for (const relFile of converted) {
+      const descAbs = path.join(REPO_ROOT, harness.descriptorPathFor(relFile));
+      if (!existsSync(descAbs)) continue;
+      try {
+        const arch = (JSON.parse(readFileSync(descAbs, 'utf8')).identity || {}).archetype;
+        if (arch) archetypeCounts.set(arch, (archetypeCounts.get(arch) || 0) + 1);
+      } catch {
+        /* unparsable converted descriptor — not this invariant's concern, ids 9/others already cover descriptor shape */
+      }
+    }
+    const paceRows = [];
+    for (const relFile of pending) {
+      let slug;
+      try {
+        slug = slugFor(manifestForPace, relFile);
+      } catch {
+        continue; // unreachable pending entry — not this invariant's concern (mirrors id 5's guard)
+      }
+      const descAbs = path.join(REPO_ROOT, harness.descriptorPathFor(relFile));
+      const descriptorExists = existsSync(descAbs);
+      let archetype = null;
+      if (descriptorExists) {
+        try {
+          archetype = (JSON.parse(readFileSync(descAbs, 'utf8')).identity || {}).archetype || null;
+        } catch {
+          /* unparsable descriptor — archetype stays null, treated as not-proven below */
+        }
+      }
+      const reportPath = reportPathFor(slug);
+      const reportText = reportPath && existsSync(reportPath) ? readFileSync(reportPath, 'utf8') : '';
+      const marker = /\*\*Commit form: compressed \(R-PACE-1\)\*\*/.test(reportText);
+      paceRows.push({
+        slug,
+        descriptorExists,
+        marker,
+        archetypeProven: archetype ? provenByArchetype.get(archetype) === true : false,
+        archetypeConvertedCount: archetype ? (archetypeCounts.get(archetype) || 0) : 0,
+      });
+    }
+    const compressedEligible = checkCompressedFormEligible(paceRows);
+    results.push({
+      id: 23,
+      slug: '(registry)',
+      pass: compressedEligible.pass,
+      blockedSlugs: compressedEligible.blockedSlugs,
+      detail: compressedEligible.detail,
     });
   }
 
@@ -3036,6 +3150,25 @@ function selfTest() {
     // RED — a converted step with NO PRE capture at all is never a vacuous pass.
     const redNone = checkPreCapturesRecoverable([{ slug: 'c', files: [] }]);
     if (redNone.pass || JSON.stringify(redNone.blockedSlugs) !== '["c"]') throw new Error(`self-test FAILED: checkPreCapturesRecoverable must RED a converted step with no PRE capture on disk (${JSON.stringify(redNone)})`);
+  }
+  // COMPRESSED-FORM-ELIGIBLE (fast invariant #23, Spec 124 R-PACE-1,
+  // 2026-09-13) — checkCompressedFormEligible, proven both directions on
+  // in-memory fixture rows (the disk probes — descriptor existence, the
+  // report marker, template-freeze.json, converted.json archetype counts —
+  // are done by fastInvariants(); this predicate is pure over their output).
+  {
+    // GREEN — declares the compressed form, archetype proven, 2 converted members.
+    const eligible = checkCompressedFormEligible([{ slug: 'geocode_permits', descriptorExists: true, marker: true, archetypeProven: true, archetypeConvertedCount: 2 }]);
+    if (!eligible.pass || eligible.blockedSlugs.length !== 0) throw new Error(`self-test FAILED: checkCompressedFormEligible must PASS a declared compressed form whose archetype is proven with >=2 converted members (${JSON.stringify(eligible)})`);
+    // RED — declares the compressed form, archetype proven, but only 1 converted member.
+    const oneMember = checkCompressedFormEligible([{ slug: 'link_neighbourhoods', descriptorExists: true, marker: true, archetypeProven: true, archetypeConvertedCount: 1 }]);
+    if (oneMember.pass || JSON.stringify(oneMember.blockedSlugs) !== '["link_neighbourhoods"]') throw new Error(`self-test FAILED: checkCompressedFormEligible did not RED a compressed-form declaration on a 1-member archetype, scoped to its slug (${JSON.stringify(oneMember)})`);
+    // RED — declares the compressed form, 2+ converted members, but archetype not yet proven.
+    const unproven = checkCompressedFormEligible([{ slug: 'load_zoning', descriptorExists: true, marker: true, archetypeProven: false, archetypeConvertedCount: 5 }]);
+    if (unproven.pass || JSON.stringify(unproven.blockedSlugs) !== '["load_zoning"]') throw new Error(`self-test FAILED: checkCompressedFormEligible did not RED a compressed-form declaration on an unproven archetype (${JSON.stringify(unproven)})`);
+    // GREEN — no marker declared at all (report never chose the compressed form) is not applicable, never checked.
+    const noMarker = checkCompressedFormEligible([{ slug: 'assert_parcel_sanity', descriptorExists: true, marker: false, archetypeProven: false, archetypeConvertedCount: 0 }]);
+    if (!noMarker.pass || noMarker.blockedSlugs.length !== 0) throw new Error(`self-test FAILED: checkCompressedFormEligible must PASS (not-applicable) a pending slug that never declares the compressed-form marker (${JSON.stringify(noMarker)})`);
   }
   // GOLD-PRE (Spec 122 §5.3, WF1 "conversion roadmap" commit 3, 2026-09-10) —
   // checkCaptures'/scoreG8's new preInvocationsMissing half, proven both
