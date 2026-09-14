@@ -561,6 +561,7 @@ renovation→INT, mechanical→MEC; demolition/repair/other→null, `repair`→[
 - `src/lib/classification/permit-type-class.ts` — implementation file this spec already names in its body; declared explicitly 2026-09-14 (was only reaching the system map through the generator's whole-document fallback scan, which an explicit Target Files list suppresses)
 - `src/lib/classification/classifier.ts` — implementation file this spec already names in its body; declared explicitly 2026-09-14 (was only reaching the system map through the generator's whole-document fallback scan, which an explicit Target Files list suppresses)
 - `src/lib/classification/coa-trade-classifier.ts` — implementation file this spec already names in its body; declared explicitly 2026-09-14 (was only reaching the system map through the generator's whole-document fallback scan, which an explicit Target Files list suppresses)
+- `scripts/classify-scope.js` — this spec defines the scope vocabulary the script applies (its own `SPEC LINK: 80_taxonomies.md §scope` header, `scripts/classify-scope.js:4`); declared 2026-09-14 after the registry review found Spec 41 as its only owner
 
 ### Out-of-Scope Files
 - none
