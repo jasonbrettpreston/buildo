@@ -192,62 +192,16 @@ describe('ledger-window — finalizeStrandedRun (the write)', () => {
 // not that a live throw traverses it (see the .db test for that), and they
 // cannot prove anything at all about SIGKILL.
 // ---------------------------------------------------------------------------
-// ⚠️ RE-HOMED, NOT RETIRED (pilot 1, Spec 122 §5.1). `assert-schema` used to sit in this
-// list. Its conversion to the frozen 7-line shape makes an in-file window unsatisfiable —
-// there is no INSERT and no `finally` left in the step file to assert on — so the library
-// gained the window instead and the five source locks below follow it onto
-// scripts/lib/step/index.js. Every assertion is preserved; only the file it reads moved.
-// `assert-data-bounds` RE-HOMED the same way at its own conversion (batch1 I2 commit 7,
-// 2026-09-12) — the frozen 8-line shell has no INSERT/finally of its own either; the
-// shared library describe block below (`scripts/lib/step/index.js`) already covers it.
-const SCRIPTS: Array<[string, string]> = [
-  ['assert-engine-health', 'scripts/quality/assert-engine-health.js'],
-];
-
-describe.each(SCRIPTS)('%s — the INSERT→finalize window is wrapped', (slug, rel) => {
-  // ⚠️ CRLF normalization is load-bearing on a Windows checkout (core.autocrlf=true,
-  // no .gitattributes yet — P0b item 2). JS `.` and `$` do not match past a `\r`, so a
-  // `\n`-anchored regex over a CRLF file silently never matches and every lock below
-  // would pass vacuously. This was found live: the gap assertion below reported the
-  // comment lines it was supposed to have stripped.
-  const src = readFileSync(join(process.cwd(), rel), 'utf8').replace(/\r\n/g, '\n');
-
-  it('requires the shared ledger-window helper (one implementation, not three)', () => {
-    expect(src).toMatch(/require\(['"].*ledger-window['"]\)/);
-    expect(src).toMatch(/finalizeStrandedRun/);
-  });
-
-  it('the strand finalize runs in a `finally`, not on a happy path', () => {
-    // Anchored on the helper call site sitting inside a finally block.
-    expect(src).toMatch(/finally\s*\{[\s\S]{0,400}finalizeStrandedRun/);
-  });
-
-  it('tracks whether the NORMAL finalize landed (a bare finally would double-write)', () => {
-    expect(src).toMatch(/ledgerFinalized\s*=\s*false/);
-    expect(src).toMatch(/ledgerFinalized\s*=\s*true/);
-  });
-
-  it('captures the thrown error and RE-THROWS it (the window must not swallow a halt)', () => {
-    expect(src).toMatch(/catch\s*\(\s*\w+\s*\)\s*\{[\s\S]{0,300}windowError\s*=\s*\w+;[\s\S]{0,120}throw\s+\w+;/);
-  });
-
-  it('the window opens immediately after the INSERT block — nothing throwable in between', () => {
-    // The gap between `runId = res.rows[0].id` closing out and the `try {` must
-    // contain only declarations/comments. Anything else re-opens the hole.
-    const m = src.match(/runId = res\.rows\[0\]\.id;[\s\S]*?\n(\s*)try \{/);
-    expect(m, 'no INSERT→try window found').not.toBeNull();
-    const between = m![0];
-    // Only the INSERT's own catch, comments, and closing braces may sit here.
-    const code = between
-      .split('\n')
-      .slice(1, -1)
-      .map((l) => l.replace(/\/\/.*$/, '').trim())
-      .filter(Boolean)
-      .filter((l) => !/^[})\];]+$/.test(l));
-    const disallowed = code.filter((l) => !/^(pipeline\.log\.warn|\} catch|\})/.test(l));
-    expect(disallowed, `throwable statements between INSERT and try: ${JSON.stringify(disallowed)}`).toEqual([]);
-  });
-});
+// ⚠️ RE-HOMED, NOT RETIRED (pilot 1, Spec 122 §5.1). This per-script `describe.each` table
+// used to carry `assert-schema`, then `assert-data-bounds`, then `assert-engine-health` —
+// each one's conversion to the frozen shell makes an in-file window unsatisfiable (no
+// INSERT, no `finally` left in the step file), so the library gained the window instead and
+// the five source locks below RE-HOMED onto `scripts/lib/step/index.js`'s own describe block.
+// `assert-engine-health` was the last entry (batch1 I3 commit 7, 2026-09-14, AEH-IL-3's own
+// "preserved-in-runner" disposition, report §3.1) — every hand-rolled-ledger-window step in
+// this fleet has now retired to the shared library below. The per-script table and its
+// `describe.each` are removed entirely (nothing left to iterate); a future hand-rolled-ledger
+// step would re-add both, mirroring this history.
 
 // ---------------------------------------------------------------------------
 // The same five source locks, re-homed onto the step LIBRARY (pilot 1, commit 7).

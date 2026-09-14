@@ -325,7 +325,13 @@ const GROUP_ORDER = [
       "permits_bylaw_max_coverage_null_warn_pct",
       "permits_bylaw_max_fsi_null_warn_pct",
       "cost_outlier_count_warn_max",
-      "inspection_ancient_dates_count_warn_max"
+      "inspection_ancient_dates_count_warn_max",
+      "engine_health_dead_tuple_ratio_warn_max",
+      "engine_health_seq_scan_ratio_warn_max",
+      "engine_health_seq_scan_min_rows",
+      "engine_health_ping_pong_ratio_warn_max",
+      "engine_health_insp_dead_tuple_fail_pct",
+      "engine_health_insp_update_insert_fail_ratio"
     ]
   },
   {

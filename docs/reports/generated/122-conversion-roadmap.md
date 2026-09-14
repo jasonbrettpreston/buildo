@@ -46,7 +46,7 @@ Remaining files: **52** (+ **1** pending) · remaining slugs: **54** (+ **1** pe
 | INGESTOR | `scripts/load-neighbourhoods.js` | neighbourhoods | sources (1) | top-right | — | — |
 | INGESTOR | `scripts/load-parcels.js` | parcels | sources (1) | top-right | — | — |
 | INGESTOR | `scripts/load-wsib.js` | load_wsib | sources (1) | top-right | — | — |
-| RECORDER | `scripts/quality/assert-engine-health.js` | assert_engine_health [pending: red_suite] | coa+deep_scrapes+permits+sources (4) | top-right | — | — |
+| RECORDER | `scripts/quality/assert-engine-health.js` | assert_engine_health [pending: shape_clean] | coa+deep_scrapes+permits+sources (4) | top-right | — | — |
 | UNDECLARED | `scripts/reconcile-runs.js` | reconcile | sources (1) | — | — | — |
 
 <details><summary>C5 — why each archetype (census <code>reason</code>)</summary>

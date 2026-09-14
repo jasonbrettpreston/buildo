@@ -4886,5 +4886,65 @@
     "admin": {
       "group": "Data Quality Thresholds"
     }
+  },
+  "engine_health_dead_tuple_ratio_warn_max": {
+    "default": 0.10,
+    "type": "number",
+    "description": "assert-engine-health: per-table dead-tuple ratio (n_dead_tup / n_live_tup, tables with >= 1000 live rows only) WARN ceiling — ratio above this value warns and is also the auto-VACUUM ANALYZE trigger threshold. Ported verbatim from the pre-conversion DEAD_TUPLE_RATIO constant (0.10). CONSUMED by assert_engine_health.",
+    "min": 0,
+    "max": 1,
+    "admin": {
+      "group": "Data Quality Thresholds"
+    }
+  },
+  "engine_health_seq_scan_ratio_warn_max": {
+    "default": 0.80,
+    "type": "number",
+    "description": "assert-engine-health: per-table sequential-scan ratio (seq_scan / (seq_scan + idx_scan), tables with >= engine_health_seq_scan_min_rows live rows only) WARN ceiling. Ported verbatim from the pre-conversion SEQ_SCAN_RATIO constant (0.80). CONSUMED by assert_engine_health.",
+    "min": 0,
+    "max": 1,
+    "admin": {
+      "group": "Data Quality Thresholds"
+    }
+  },
+  "engine_health_seq_scan_min_rows": {
+    "default": 10000,
+    "type": "number",
+    "description": "assert-engine-health: minimum live-row count a table must have before its sequential-scan ratio is evaluated at all (small tables are legitimately seq-scan-dominant). Ported verbatim from the pre-conversion SEQ_SCAN_MIN_ROWS constant (10000). CONSUMED by assert_engine_health.",
+    "min": 0,
+    "max": 100000000,
+    "admin": {
+      "group": "Data Quality Thresholds"
+    }
+  },
+  "engine_health_ping_pong_ratio_warn_max": {
+    "default": 10,
+    "type": "number",
+    "description": "assert-engine-health: per-table cumulative update/insert ratio (n_tup_upd / n_tup_ins) WARN ceiling. Ported verbatim from the pre-conversion PING_PONG_RATIO constant, raised from 2 to 10 at 8c9e64d7 (2026-03-21) — dimensional tables naturally run 5-6x and the spec's own >2x bound (docs/specs/01-pipeline/41_chain_permits.md) produced chronic false-positive WARNs; that spec-vs-code drift is named, not silently resolved, at this conversion (spec-diff owed at cutover). CONSUMED by assert_engine_health.",
+    "min": 0,
+    "max": 10000,
+    "admin": {
+      "group": "Data Quality Thresholds"
+    }
+  },
+  "engine_health_insp_dead_tuple_fail_pct": {
+    "default": 10,
+    "type": "number",
+    "description": "assert-engine-health: permit_inspections (deep_scrapes chain) AND coa_applications (coa chain) dead-tuple percentage WARN ceiling — shared by both per-chain checks (AEH-IL-6: the two pre-conversion audit tables used the identical 10% bound, disagreeing only on displayed severity, never on value). Ported verbatim from the pre-conversion inspAuditTable/coaAuditTable dead_tuple_pct literal (10). CONSUMED by assert_engine_health.",
+    "min": 0,
+    "max": 100,
+    "admin": {
+      "group": "Data Quality Thresholds"
+    }
+  },
+  "engine_health_insp_update_insert_fail_ratio": {
+    "default": 5,
+    "type": "number",
+    "description": "assert-engine-health: permit_inspections (deep_scrapes chain) cumulative update/insert ratio WARN ceiling. Ported verbatim from the pre-conversion inspAuditTable update_insert_ratio literal (5) — genuinely distinct from the top-level engine_health_ping_pong_ratio_warn_max (10) for the conceptually same metric (AEH-D3, this conversion's own finding, kept as a separate variable rather than silently unified). CONSUMED by assert_engine_health.",
+    "min": 0,
+    "max": 10000,
+    "admin": {
+      "group": "Data Quality Thresholds"
+    }
   }
 }

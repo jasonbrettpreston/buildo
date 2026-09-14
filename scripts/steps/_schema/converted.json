@@ -83,10 +83,10 @@
   "pending": [
     {
       "file": "scripts/quality/assert-engine-health.js",
-      "registers_at": "C4 batch 1 I3 commit 3 (cutover)",
-      "reason": "PH-7 red suite landed commit 1 (nine-commit form — R-PACE-1 ineligible, RECORDER has 1 converted member) — src/tests/steps/assert_engine_health/violations.test.ts, 8 it.fails() call sites; Ask 1 archetype ruling RESOLVED 2026-09-14: RECORDER (operator ruling, docs/reports/2026-09-14-batch1-i3-assert-engine-health-assessment.md §2); descriptor/compute land commit 7 of the full nine-commit ledger, see .cursor/batch1_i3_assert_engine_health_active_task.md §2",
+      "registers_at": "C4 batch 1 I3 commit 9 (cutover)",
+      "reason": "Descriptor + compute + frozen shell all landed and shape-clean commit 7 (identity.archetype RECORDER, operator ruling 2026-09-14; execution.shape left undeclared — report §9.1, a newly-measured runtime-shape finding; all 8 checks[] severity WARN, non-blocking — report §9.2, resolves AEH-D3). Registers at C4 batch 1 I3 commit 9 (cutover, adds the converted.json.converted entry + deletes this pending row). See .cursor/batch1_i3_assert_engine_health_active_task.md §2 and docs/reports/2026-09-14-batch1-i3-assert-engine-health-assessment.md §9.",
       "declared": "2026-09-14",
-      "stage": "red_suite"
+      "stage": "shape_clean"
     }
   ]
 }

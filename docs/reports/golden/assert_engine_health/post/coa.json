@@ -1,0 +1,2016 @@
+{
+  "harness": "scripts/analysis/capture-step-golden.js",
+  "spec": "docs/specs/01-pipeline/122_pipeline_step_optimization.md §5.3",
+  "step": "scripts/quality/assert-engine-health.js",
+  "chain": "coa",
+  "git_head": "b41ca2d8c327829b5a7e1f930282e556041619e7",
+  "exit_code": 0,
+  "signal": null,
+  "summary": {
+    "records_total": 90,
+    "records_new": null,
+    "records_updated": 7,
+    "records_meta": {
+      "tables_checked": 90,
+      "tables_vacuumed": 0,
+      "records_updated": 7,
+      "engine_health": [
+        {
+          "table_name": "address_points",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 8,
+          "idx_scan": 4,
+          "seq_ratio": 0.6667
+        },
+        {
+          "table_name": "admin_audit_log",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 0,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "admin_backup_codes",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 0,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "admin_watchlist",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 0,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "archetype_cost_rates",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 0,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "building_footprints",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 16,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "coa_applications",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 34,
+          "idx_scan": 16,
+          "seq_ratio": 0.68
+        },
+        {
+          "table_name": "cost_estimates",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 48,
+          "idx_scan": 0,
+          "seq_ratio": 1
+        },
+        {
+          "table_name": "data_quality_snapshots",
+          "n_live_tup": 31,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 78,
+          "idx_scan": 32,
+          "seq_ratio": 0.7091
+        },
+        {
+          "table_name": "device_tokens",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 0,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "engine_health_snapshots",
+          "n_live_tup": 87,
+          "n_dead_tup": 4,
+          "dead_ratio": 0.046,
+          "seq_scan": 4,
+          "idx_scan": 540,
+          "seq_ratio": 0.0074
+        },
+        {
+          "table_name": "enrich_parcels_pass3_scope",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 0,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "entities",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 24,
+          "idx_scan": 12,
+          "seq_ratio": 0.6667
+        },
+        {
+          "table_name": "entitlements",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 0,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "entity_contacts",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 0,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "entity_projects",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 0,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "heritage_districts",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 0,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "heritage_properties",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 0,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "inspection_stage_map",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 0,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "lead_analytics",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 0,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "lead_parcels",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 14080,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "lead_products",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 0,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "lead_trades",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 0,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "lead_view_events",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 0,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "lead_views",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 0,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "lifecycle_status_history",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 0,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "lifecycle_transitions",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 0,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "logic_variables",
+          "n_live_tup": 6,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 23,
+          "idx_scan": 534,
+          "seq_ratio": 0.0413
+        },
+        {
+          "table_name": "mv_monthly_permit_stats",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 1,
+          "idx_scan": 0,
+          "seq_ratio": 1
+        },
+        {
+          "table_name": "neighbourhood_build_norms",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 0,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "neighbourhood_storey_norms",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 0,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "neighbourhoods",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 0,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "notification_dispatches",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 0,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "notifications",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 0,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "parcel_address_points",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 6,
+          "idx_scan": 2372240,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "parcel_buildings",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 12,
+          "idx_scan": 24,
+          "seq_ratio": 0.3333
+        },
+        {
+          "table_name": "parcels",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 200,
+          "idx_scan": 1094696,
+          "seq_ratio": 0.0002
+        },
+        {
+          "table_name": "permit_history",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 0,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "permit_inspections",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 16,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "permit_parcels",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 28,
+          "idx_scan": 16,
+          "seq_ratio": 0.6364
+        },
+        {
+          "table_name": "permit_phase_transitions",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 0,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "permit_products",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 0,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "permit_scrape_outcome_rollup",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 0,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "permit_scrape_outcomes",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 0,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "permit_trades",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 32,
+          "idx_scan": 0,
+          "seq_ratio": 1
+        },
+        {
+          "table_name": "permit_type_classifications",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 0,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "permits",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 105,
+          "idx_scan": 25402,
+          "seq_ratio": 0.0041
+        },
+        {
+          "table_name": "phase_calibration",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 0,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "phase_stay_calibration",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 0,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "pipeline_runs",
+          "n_live_tup": 1834,
+          "n_dead_tup": 1,
+          "dead_ratio": 0.0005,
+          "seq_scan": 0,
+          "idx_scan": 112,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "pipeline_schedules",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 0,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "product_groups",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 0,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "profiles",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 0,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "ravines",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 6,
+          "idx_scan": 0,
+          "seq_ratio": 1
+        },
+        {
+          "table_name": "schema_migrations",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 71,
+          "idx_scan": 0,
+          "seq_ratio": 1
+        },
+        {
+          "table_name": "schema_migrations",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 1,
+          "idx_scan": 0,
+          "seq_ratio": 1
+        },
+        {
+          "table_name": "schema_migrations",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 1,
+          "idx_scan": 0,
+          "seq_ratio": 1
+        },
+        {
+          "table_name": "schema_migrations",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 58,
+          "idx_scan": 0,
+          "seq_ratio": 1
+        },
+        {
+          "table_name": "scope_intensity_matrix",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 0,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "scraper_queue",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 0,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "spatial_ref_sys",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 134,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "stripe_webhook_events",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 0,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "subscribe_nonces",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 0,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "supplier_products",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 0,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "supplier_trades",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 0,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "suppliers",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 0,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "sync_runs",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 16,
+          "idx_scan": 0,
+          "seq_ratio": 1
+        },
+        {
+          "table_name": "toronto_centreline",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 0,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "tracked_projects",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 0,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "trade_configurations",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 23,
+          "idx_scan": 0,
+          "seq_ratio": 1
+        },
+        {
+          "table_name": "trade_forecasts",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 53088,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "trade_mapping_rules",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 0,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "trade_products",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 0,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "trade_sqft_rates",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 0,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "trade_suppliers",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 0,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "trades",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 0,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "universal_stream_catalog",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 0,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "universal_stream_trade_signals",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 0,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "user_profiles",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 0,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "wsib_registry",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 4,
+          "idx_scan": 12,
+          "seq_ratio": 0.25
+        },
+        {
+          "table_name": "zoning_building_setback_overlay",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 0,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "zoning_bylaw_areas",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 0,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "zoning_height_overlay",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 0,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "zoning_lot_coverage_overlay",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 0,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "zoning_parking_zone_overlay",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 0,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "zoning_policy_area_overlay",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 0,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "zoning_policy_road_overlay",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 0,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "zoning_priority_retail_overlay",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 0,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "zoning_queenstw_eat_overlay",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 0,
+          "seq_ratio": 0
+        },
+        {
+          "table_name": "zoning_rooming_house_overlay",
+          "n_live_tup": 0,
+          "n_dead_tup": 0,
+          "dead_ratio": 0,
+          "seq_scan": 0,
+          "idx_scan": 0,
+          "seq_ratio": 0
+        }
+      ],
+      "config": {
+        "engine_health_dead_tuple_ratio_warn_max": 0.1,
+        "engine_health_seq_scan_ratio_warn_max": 0.8,
+        "engine_health_seq_scan_min_rows": 10000,
+        "engine_health_ping_pong_ratio_warn_max": 10,
+        "engine_health_insp_dead_tuple_fail_pct": 10,
+        "engine_health_insp_update_insert_fail_ratio": 5
+      },
+      "terminal": "recorded_with_warnings",
+      "ledger_row": "chain_owned",
+      "chain_run_id": null,
+      "pool_errors": 0,
+      "checks_failed": 0,
+      "checks_warned": 1,
+      "warnings": [
+        "update_ping_pong_high: [{\"ins\":1,\"ratio\":15,\"table\":\"data_quality_snapshots\",\"upd\":15}]"
+      ],
+      "audit_table": {
+        "phase": 9,
+        "name": "Engine Health & Volume Volatility",
+        "verdict": "WARN",
+        "rows": [
+          {
+            "metric": "dead_tuple_ratio_high",
+            "value": [],
+            "threshold": "viol == 0",
+            "status": "PASS",
+            "source": "check"
+          },
+          {
+            "metric": "seq_scan_ratio_high",
+            "value": [],
+            "threshold": "viol == 0",
+            "status": "PASS",
+            "source": "check"
+          },
+          {
+            "metric": "update_ping_pong_high",
+            "value": [
+              {
+                "table": "data_quality_snapshots",
+                "ratio": 15,
+                "upd": 15,
+                "ins": 1
+              }
+            ],
+            "threshold": "viol == 0",
+            "status": "WARN",
+            "source": "check"
+          },
+          {
+            "metric": "coa_dead_tuple_pct",
+            "value": {
+              "live": 0,
+              "dead": 0,
+              "deadPct": 0,
+              "uiRatio": 0,
+              "lastAutovacuum": null
+            },
+            "threshold": "value_max 10",
+            "status": "PASS",
+            "source": "check"
+          },
+          {
+            "metric": "engine_health_write_failed",
+            "value": null,
+            "threshold": "viol == 0",
+            "status": "PASS",
+            "source": "check"
+          },
+          {
+            "metric": "engine_health_vacuum_failed",
+            "value": [],
+            "threshold": "viol == 0",
+            "status": "PASS",
+            "source": "check"
+          },
+          {
+            "metric": "duplicate_snapshot_key_count",
+            "value": 0,
+            "threshold": "viol == 0",
+            "status": "PASS",
+            "source": "invariant"
+          },
+          {
+            "metric": "sys_duplicate_snapshot_key_count_duration_ms",
+            "value": 2,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "sys_velocity_rows_sec",
+            "value": 291.26,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "sys_duration_ms",
+            "value": 309,
+            "threshold": null,
+            "status": "INFO"
+          }
+        ]
+      }
+    }
+  },
+  "summary_count": 1,
+  "meta": [
+    {
+      "reads": {
+        "pg_stat_user_tables": [
+          "relname",
+          "n_live_tup",
+          "n_dead_tup",
+          "seq_scan",
+          "idx_scan",
+          "n_tup_ins",
+          "n_tup_upd",
+          "last_autovacuum"
+        ],
+        "permit_inspections": [],
+        "coa_applications": []
+      },
+      "writes": {
+        "engine_health_snapshots": [
+          "n_live_tup",
+          "n_dead_tup",
+          "dead_ratio",
+          "seq_scan",
+          "idx_scan",
+          "seq_ratio"
+        ]
+      }
+    }
+  ],
+  "parse_errors": [],
+  "verdict": "WARN",
+  "ledger_status": [],
+  "stdout": "{\"level\":\"INFO\",\"tag\":\"[assert_engine_health]\",\"msg\":\"[assert_engine_health] target: assert_engine_health (descriptor.database) → database=postgres user=postgres migrations=244 (floor 48)\"}\nPIPELINE_SUMMARY:{\"records_total\":90,\"records_new\":null,\"records_updated\":7,\"records_meta\":{\"tables_checked\":90,\"tables_vacuumed\":0,\"records_updated\":7,\"engine_health\":[{\"table_name\":\"address_points\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":8,\"idx_scan\":4,\"seq_ratio\":0.6667},{\"table_name\":\"admin_audit_log\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"admin_backup_codes\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"admin_watchlist\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"archetype_cost_rates\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"building_footprints\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":16,\"seq_ratio\":0},{\"table_name\":\"coa_applications\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":34,\"idx_scan\":16,\"seq_ratio\":0.68},{\"table_name\":\"cost_estimates\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":48,\"idx_scan\":0,\"seq_ratio\":1},{\"table_name\":\"data_quality_snapshots\",\"n_live_tup\":31,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":78,\"idx_scan\":32,\"seq_ratio\":0.7091},{\"table_name\":\"device_tokens\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"engine_health_snapshots\",\"n_live_tup\":87,\"n_dead_tup\":4,\"dead_ratio\":0.046,\"seq_scan\":4,\"idx_scan\":540,\"seq_ratio\":0.0074},{\"table_name\":\"enrich_parcels_pass3_scope\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"entities\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":24,\"idx_scan\":12,\"seq_ratio\":0.6667},{\"table_name\":\"entitlements\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"entity_contacts\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"entity_projects\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"heritage_districts\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"heritage_properties\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"inspection_stage_map\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"lead_analytics\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"lead_parcels\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":14080,\"seq_ratio\":0},{\"table_name\":\"lead_products\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"lead_trades\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"lead_view_events\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"lead_views\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"lifecycle_status_history\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"lifecycle_transitions\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"logic_variables\",\"n_live_tup\":6,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":23,\"idx_scan\":534,\"seq_ratio\":0.0413},{\"table_name\":\"mv_monthly_permit_stats\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":1,\"idx_scan\":0,\"seq_ratio\":1},{\"table_name\":\"neighbourhood_build_norms\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"neighbourhood_storey_norms\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"neighbourhoods\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"notification_dispatches\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"notifications\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"parcel_address_points\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":6,\"idx_scan\":2372240,\"seq_ratio\":0},{\"table_name\":\"parcel_buildings\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":12,\"idx_scan\":24,\"seq_ratio\":0.3333},{\"table_name\":\"parcels\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":200,\"idx_scan\":1094696,\"seq_ratio\":0.0002},{\"table_name\":\"permit_history\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"permit_inspections\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":16,\"seq_ratio\":0},{\"table_name\":\"permit_parcels\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":28,\"idx_scan\":16,\"seq_ratio\":0.6364},{\"table_name\":\"permit_phase_transitions\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"permit_products\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"permit_scrape_outcome_rollup\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"permit_scrape_outcomes\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"permit_trades\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":32,\"idx_scan\":0,\"seq_ratio\":1},{\"table_name\":\"permit_type_classifications\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"permits\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":105,\"idx_scan\":25402,\"seq_ratio\":0.0041},{\"table_name\":\"phase_calibration\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"phase_stay_calibration\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"pipeline_runs\",\"n_live_tup\":1834,\"n_dead_tup\":1,\"dead_ratio\":0.0005,\"seq_scan\":0,\"idx_scan\":112,\"seq_ratio\":0},{\"table_name\":\"pipeline_schedules\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"product_groups\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"profiles\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"ravines\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":6,\"idx_scan\":0,\"seq_ratio\":1},{\"table_name\":\"schema_migrations\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":71,\"idx_scan\":0,\"seq_ratio\":1},{\"table_name\":\"schema_migrations\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":1,\"idx_scan\":0,\"seq_ratio\":1},{\"table_name\":\"schema_migrations\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":1,\"idx_scan\":0,\"seq_ratio\":1},{\"table_name\":\"schema_migrations\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":58,\"idx_scan\":0,\"seq_ratio\":1},{\"table_name\":\"scope_intensity_matrix\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"scraper_queue\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"spatial_ref_sys\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":134,\"seq_ratio\":0},{\"table_name\":\"stripe_webhook_events\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"subscribe_nonces\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"supplier_products\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"supplier_trades\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"suppliers\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"sync_runs\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":16,\"idx_scan\":0,\"seq_ratio\":1},{\"table_name\":\"toronto_centreline\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"tracked_projects\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"trade_configurations\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":23,\"idx_scan\":0,\"seq_ratio\":1},{\"table_name\":\"trade_forecasts\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":53088,\"seq_ratio\":0},{\"table_name\":\"trade_mapping_rules\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"trade_products\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"trade_sqft_rates\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"trade_suppliers\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"trades\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"universal_stream_catalog\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"universal_stream_trade_signals\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"user_profiles\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"wsib_registry\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":4,\"idx_scan\":12,\"seq_ratio\":0.25},{\"table_name\":\"zoning_building_setback_overlay\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"zoning_bylaw_areas\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"zoning_height_overlay\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"zoning_lot_coverage_overlay\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"zoning_parking_zone_overlay\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"zoning_policy_area_overlay\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"zoning_policy_road_overlay\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"zoning_priority_retail_overlay\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"zoning_queenstw_eat_overlay\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"zoning_rooming_house_overlay\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0}],\"config\":{\"engine_health_dead_tuple_ratio_warn_max\":0.1,\"engine_health_seq_scan_ratio_warn_max\":0.8,\"engine_health_seq_scan_min_rows\":10000,\"engine_health_ping_pong_ratio_warn_max\":10,\"engine_health_insp_dead_tuple_fail_pct\":10,\"engine_health_insp_update_insert_fail_ratio\":5},\"terminal\":\"recorded_with_warnings\",\"ledger_row\":\"chain_owned\",\"chain_run_id\":null,\"pool_errors\":0,\"checks_failed\":0,\"checks_warned\":1,\"warnings\":[\"update_ping_pong_high: [{\\\"ins\\\":1,\\\"ratio\\\":15,\\\"table\\\":\\\"data_quality_snapshots\\\",\\\"upd\\\":15}]\"],\"audit_table\":{\"phase\":9,\"name\":\"Engine Health & Volume Volatility\",\"verdict\":\"WARN\",\"rows\":[{\"metric\":\"dead_tuple_ratio_high\",\"value\":[],\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"seq_scan_ratio_high\",\"value\":[],\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"update_ping_pong_high\",\"value\":[{\"table\":\"data_quality_snapshots\",\"ratio\":15,\"upd\":15,\"ins\":1}],\"threshold\":\"viol == 0\",\"status\":\"WARN\",\"source\":\"check\"},{\"metric\":\"coa_dead_tuple_pct\",\"value\":{\"live\":0,\"dead\":0,\"deadPct\":0,\"uiRatio\":0,\"lastAutovacuum\":null},\"threshold\":\"value_max 10\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"engine_health_write_failed\",\"value\":null,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"engine_health_vacuum_failed\",\"value\":[],\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"duplicate_snapshot_key_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"invariant\"},{\"metric\":\"sys_duplicate_snapshot_key_count_duration_ms\",\"value\":2,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":291.26,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":309,\"threshold\":null,\"status\":\"INFO\"}]}}}\nPIPELINE_META:{\"reads\":{\"pg_stat_user_tables\":[\"relname\",\"n_live_tup\",\"n_dead_tup\",\"seq_scan\",\"idx_scan\",\"n_tup_ins\",\"n_tup_upd\",\"last_autovacuum\"],\"permit_inspections\":[],\"coa_applications\":[]},\"writes\":{\"engine_health_snapshots\":[\"n_live_tup\",\"n_dead_tup\",\"dead_ratio\",\"seq_scan\",\"idx_scan\",\"seq_ratio\"]}}\n\n[assert_engine_health] completed in 0.3s\n",
+  "stderr": "",
+  "pipeline_runs": [],
+  "pipeline_runs_max_id_before": 1875,
+  "table_state": [
+    {
+      "table": "engine_health_snapshots",
+      "row_count": 1269,
+      "content_hash": "f3e59c0882698dcc6e907a866e7c1ca2",
+      "order_by": "explicit",
+      "order_columns": [
+        "table_name",
+        "snapshot_date"
+      ],
+      "columns": [
+        "table_name",
+        "snapshot_date",
+        "n_live_tup",
+        "n_dead_tup",
+        "dead_ratio",
+        "seq_scan",
+        "idx_scan",
+        "seq_ratio"
+      ]
+    }
+  ],
+  "tables_source": "descriptor",
+  "table_row_ceiling": 100000,
+  "table_timing": {
+    "engine_health_snapshots": 5
+  },
+  "table_specs": {
+    "engine_health_snapshots": {
+      "columns": [
+        "table_name",
+        "snapshot_date",
+        "n_live_tup",
+        "n_dead_tup",
+        "dead_ratio",
+        "seq_scan",
+        "idx_scan",
+        "seq_ratio"
+      ],
+      "columns_source": "descriptor",
+      "order": [
+        "table_name",
+        "snapshot_date"
+      ],
+      "order_source": "descriptor"
+    }
+  },
+  "invariants": [
+    {
+      "name": "duplicate_snapshot_key_count",
+      "value": "0"
+    }
+  ],
+  "invariants_file": null,
+  "db_target": "postgresql://postgres:***@127.0.0.1:54322/postgres",
+  "runtime": "node",
+  "args": [],
+  "nondeterminism": [
+    "key:summary.records_meta.chain_run_id",
+    "pattern:duration_literal",
+    "row:sys_duplicate_snapshot_key_count_duration_ms",
+    "row:sys_duration_ms",
+    "row:sys_velocity_rows_sec"
+  ],
+  "normalised": {
+    "step": "scripts/quality/assert-engine-health.js",
+    "chain": "coa",
+    "exit_code": 0,
+    "summary": {
+      "records_meta": {
+        "audit_table": {
+          "name": "Engine Health & Volume Volatility",
+          "phase": 9,
+          "rows": [
+            {
+              "metric": "dead_tuple_ratio_high",
+              "source": "check",
+              "status": "PASS",
+              "threshold": "viol == 0",
+              "value": []
+            },
+            {
+              "metric": "seq_scan_ratio_high",
+              "source": "check",
+              "status": "PASS",
+              "threshold": "viol == 0",
+              "value": []
+            },
+            {
+              "metric": "update_ping_pong_high",
+              "source": "check",
+              "status": "WARN",
+              "threshold": "viol == 0",
+              "value": [
+                {
+                  "ins": 1,
+                  "ratio": 15,
+                  "table": "data_quality_snapshots",
+                  "upd": 15
+                }
+              ]
+            },
+            {
+              "metric": "coa_dead_tuple_pct",
+              "source": "check",
+              "status": "PASS",
+              "threshold": "value_max 10",
+              "value": {
+                "dead": 0,
+                "deadPct": 0,
+                "lastAutovacuum": null,
+                "live": 0,
+                "uiRatio": 0
+              }
+            },
+            {
+              "metric": "engine_health_write_failed",
+              "source": "check",
+              "status": "PASS",
+              "threshold": "viol == 0",
+              "value": null
+            },
+            {
+              "metric": "engine_health_vacuum_failed",
+              "source": "check",
+              "status": "PASS",
+              "threshold": "viol == 0",
+              "value": []
+            },
+            {
+              "metric": "duplicate_snapshot_key_count",
+              "source": "invariant",
+              "status": "PASS",
+              "threshold": "viol == 0",
+              "value": 0
+            }
+          ],
+          "verdict": "WARN"
+        },
+        "checks_failed": 0,
+        "checks_warned": 1,
+        "config": {
+          "engine_health_dead_tuple_ratio_warn_max": 0.1,
+          "engine_health_insp_dead_tuple_fail_pct": 10,
+          "engine_health_insp_update_insert_fail_ratio": 5,
+          "engine_health_ping_pong_ratio_warn_max": 10,
+          "engine_health_seq_scan_min_rows": 10000,
+          "engine_health_seq_scan_ratio_warn_max": 0.8
+        },
+        "engine_health": [
+          {
+            "dead_ratio": 0,
+            "idx_scan": 4,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0.6667,
+            "seq_scan": 8,
+            "table_name": "address_points"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "admin_audit_log"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "admin_backup_codes"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "admin_watchlist"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "archetype_cost_rates"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 16,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "building_footprints"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 16,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0.68,
+            "seq_scan": 34,
+            "table_name": "coa_applications"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 1,
+            "seq_scan": 48,
+            "table_name": "cost_estimates"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 32,
+            "n_dead_tup": 0,
+            "n_live_tup": 31,
+            "seq_ratio": 0.7091,
+            "seq_scan": 78,
+            "table_name": "data_quality_snapshots"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "device_tokens"
+          },
+          {
+            "dead_ratio": 0.046,
+            "idx_scan": 540,
+            "n_dead_tup": 4,
+            "n_live_tup": 87,
+            "seq_ratio": 0.0074,
+            "seq_scan": 4,
+            "table_name": "engine_health_snapshots"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "enrich_parcels_pass3_scope"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 12,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0.6667,
+            "seq_scan": 24,
+            "table_name": "entities"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "entitlements"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "entity_contacts"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "entity_projects"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "heritage_districts"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "heritage_properties"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "inspection_stage_map"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "lead_analytics"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 14080,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "lead_parcels"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "lead_products"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "lead_trades"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "lead_view_events"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "lead_views"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "lifecycle_status_history"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "lifecycle_transitions"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 534,
+            "n_dead_tup": 0,
+            "n_live_tup": 6,
+            "seq_ratio": 0.0413,
+            "seq_scan": 23,
+            "table_name": "logic_variables"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 1,
+            "seq_scan": 1,
+            "table_name": "mv_monthly_permit_stats"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "neighbourhood_build_norms"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "neighbourhood_storey_norms"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "neighbourhoods"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "notification_dispatches"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "notifications"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 2372240,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 6,
+            "table_name": "parcel_address_points"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 24,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0.3333,
+            "seq_scan": 12,
+            "table_name": "parcel_buildings"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 1094696,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0.0002,
+            "seq_scan": 200,
+            "table_name": "parcels"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "permit_history"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 16,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "permit_inspections"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 16,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0.6364,
+            "seq_scan": 28,
+            "table_name": "permit_parcels"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "permit_phase_transitions"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "permit_products"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "permit_scrape_outcome_rollup"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "permit_scrape_outcomes"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 1,
+            "seq_scan": 32,
+            "table_name": "permit_trades"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "permit_type_classifications"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 25402,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0.0041,
+            "seq_scan": 105,
+            "table_name": "permits"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "phase_calibration"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "phase_stay_calibration"
+          },
+          {
+            "dead_ratio": 0.0005,
+            "idx_scan": 112,
+            "n_dead_tup": 1,
+            "n_live_tup": 1834,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "pipeline_runs"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "pipeline_schedules"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "product_groups"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "profiles"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 1,
+            "seq_scan": 6,
+            "table_name": "ravines"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 1,
+            "seq_scan": 71,
+            "table_name": "schema_migrations"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 1,
+            "seq_scan": 1,
+            "table_name": "schema_migrations"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 1,
+            "seq_scan": 1,
+            "table_name": "schema_migrations"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 1,
+            "seq_scan": 58,
+            "table_name": "schema_migrations"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "scope_intensity_matrix"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "scraper_queue"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 134,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "spatial_ref_sys"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "stripe_webhook_events"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "subscribe_nonces"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "supplier_products"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "supplier_trades"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "suppliers"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 1,
+            "seq_scan": 16,
+            "table_name": "sync_runs"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "toronto_centreline"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "tracked_projects"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 1,
+            "seq_scan": 23,
+            "table_name": "trade_configurations"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 53088,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "trade_forecasts"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "trade_mapping_rules"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "trade_products"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "trade_sqft_rates"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "trade_suppliers"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "trades"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "universal_stream_catalog"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "universal_stream_trade_signals"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "user_profiles"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 12,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0.25,
+            "seq_scan": 4,
+            "table_name": "wsib_registry"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "zoning_building_setback_overlay"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "zoning_bylaw_areas"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "zoning_height_overlay"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "zoning_lot_coverage_overlay"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "zoning_parking_zone_overlay"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "zoning_policy_area_overlay"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "zoning_policy_road_overlay"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "zoning_priority_retail_overlay"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "zoning_queenstw_eat_overlay"
+          },
+          {
+            "dead_ratio": 0,
+            "idx_scan": 0,
+            "n_dead_tup": 0,
+            "n_live_tup": 0,
+            "seq_ratio": 0,
+            "seq_scan": 0,
+            "table_name": "zoning_rooming_house_overlay"
+          }
+        ],
+        "ledger_row": "chain_owned",
+        "pool_errors": 0,
+        "records_updated": 7,
+        "tables_checked": 90,
+        "tables_vacuumed": 0,
+        "terminal": "recorded_with_warnings",
+        "warnings": [
+          "update_ping_pong_high: [{\"ins\":1,\"ratio\":15,\"table\":\"data_quality_snapshots\",\"upd\":15}]"
+        ]
+      },
+      "records_new": null,
+      "records_total": 90,
+      "records_updated": 7
+    },
+    "summary_count": 1,
+    "meta": [
+      {
+        "reads": {
+          "coa_applications": [],
+          "permit_inspections": [],
+          "pg_stat_user_tables": [
+            "relname",
+            "n_live_tup",
+            "n_dead_tup",
+            "seq_scan",
+            "idx_scan",
+            "n_tup_ins",
+            "n_tup_upd",
+            "last_autovacuum"
+          ]
+        },
+        "writes": {
+          "engine_health_snapshots": [
+            "n_live_tup",
+            "n_dead_tup",
+            "dead_ratio",
+            "seq_scan",
+            "idx_scan",
+            "seq_ratio"
+          ]
+        }
+      }
+    ],
+    "parse_errors": [],
+    "pipeline_runs": [],
+    "stdout_lines": [
+      "{\"level\":\"INFO\",\"msg\":\"[assert_engine_health] target: assert_engine_health (descriptor.database) → database=postgres user=postgres migrations=244 (floor 48)\",\"tag\":\"[assert_engine_health]\"}",
+      "[assert_engine_health] completed in <DUR>"
+    ],
+    "table_state": [
+      {
+        "columns": [
+          "table_name",
+          "snapshot_date",
+          "n_live_tup",
+          "n_dead_tup",
+          "dead_ratio",
+          "seq_scan",
+          "idx_scan",
+          "seq_ratio"
+        ],
+        "content_hash": "f3e59c0882698dcc6e907a866e7c1ca2",
+        "order_by": "explicit",
+        "order_columns": [
+          "table_name",
+          "snapshot_date"
+        ],
+        "row_count": 1269,
+        "table": "engine_health_snapshots"
+      }
+    ],
+    "invariants": [
+      {
+        "name": "duplicate_snapshot_key_count",
+        "value": "0"
+      }
+    ]
+  },
+  "source_fingerprint": "d04cdd7cab15b63017fc3c8c0e0545a125c069efdf2a89c1f769413aef21f630",
+  "fingerprint_files": [
+    "scripts/lib/compute/assert-engine-health.js",
+    "scripts/quality/assert-engine-health.descriptor.json",
+    "scripts/quality/assert-engine-health.js"
+  ]
+}

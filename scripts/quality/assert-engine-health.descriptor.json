@@ -1,0 +1,399 @@
+{
+  "identity": {
+    "name": "assert_engine_health",
+    "display_name": "Engine Health & Volume Volatility",
+    "owner": "data",
+    "description": "CQA Tier 3: queries pg_stat_user_tables for every public-schema table (discovered at runtime, no hardcoded list) to detect dead-tuple buildup, sequential-scan dominance, and update ping-pong; snapshots the result into engine_health_snapshots (one guarded-upsert row per table, per day) and auto-VACUUM ANALYZEs tables above the dead-tuple threshold. Runs in all 4 chains (permits/coa/sources/deep_scrapes) plus standalone. Re-derived from ASSERT to RECORDER (operator ruling 2026-09-14, report §2): the engine_health_snapshots write is a genuine 6-column IS-DISTINCT-FROM-guarded upsert with no legal home under ASSERT's forced outputs:\"none\", and no threshold in this file has ever reached the halt.",
+    "lock": 104,
+    "why_lock": {
+      "text": "Registered in Spec 47 §A.5 (docs/specs/01-pipeline/47_pipeline_script_protocol.md:1948), category \"6 — Quality\", writes-DB column reads \"NO — snapshot recording\" — the registry's own pre-existing framing already read this step's write as recording, supporting the RECORDER ruling. Kept via identity.lock + the §5.4 source-text convention (ADVISORY_LOCK_ID = 104 declared, never read, in the frozen shell).",
+      "liveness": { "kind": "file", "ref": "docs/specs/01-pipeline/47_pipeline_script_protocol.md" }
+    },
+    "spec": "41",
+    "spec_version": "1.0",
+    "archetype": "RECORDER",
+    "contract_version": 1,
+    "gate_exempt": true
+  },
+
+  "inputs": {
+    "reads": {
+      "steps": [],
+      "tables": [
+        { "table": "pg_stat_user_tables", "columns": ["relname", "n_live_tup", "n_dead_tup", "seq_scan", "idx_scan", "n_tup_ins", "n_tup_upd", "last_autovacuum"] },
+        { "table": "permit_inspections", "columns": [] },
+        { "table": "coa_applications", "columns": [] }
+      ],
+      "externals": []
+    },
+    "expect_nonempty": true,
+    "on_missing": "warn"
+  },
+
+  "outputs": {
+    "writes": [
+      {
+        "table": "engine_health_snapshots",
+        "key": ["table_name", "snapshot_date"],
+        "columns": [
+          { "name": "n_live_tup", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "n_dead_tup", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "dead_ratio", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "seq_scan", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "idx_scan", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "seq_ratio", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" }
+        ],
+        "write_discipline": {
+          "class": "guarded_upsert",
+          "set_source": "compute",
+          "guard": "is_distinct_from",
+          "guard_columns": "all_declared",
+          "scope": "snapshot_date = CURRENT_DATE",
+          "expected_change_ratio": "none",
+          "idempotent_rerun": "declared_drift",
+          "idempotent_rerun_why": {
+            "text": "pg_stat_user_tables counters (seq_scan/idx_scan/n_tup_ins/n_tup_upd) are cumulative and monotonically increase with ANY query activity against the target table, including this step's own reads of pg_stat_user_tables and its own snapshot upserts — so two back-to-back runs will almost always show real drift on at least seq_scan/idx_scan, even with zero application traffic in between. The 6-column IS DISTINCT FROM guard exists to skip the rows that happen to be genuinely unchanged (report §2.2 item 2: more disciplined than the refresh_snapshot exemplar's own guard:\"none\"), not to guarantee a zero-write re-run generally.",
+            "liveness": { "kind": "table", "ref": "engine_health_snapshots" }
+          },
+          "guard_columns_why": {
+            "text": "LG-9 escape hatch, moot here — guard_columns is only consulted to build the IS DISTINCT FROM clause when guard != \"none\", and \"all_declared\" resolves to exactly the 6 columns[] entries above, none of which is a run_at-sourced column (captured_at is a bookkeeping timestamp stamped by the write statement's own SET clause, not declared in columns[] — same convention refresh_snapshot's own created_at uses).",
+            "liveness": { "kind": "file", "ref": "scripts/lib/compute/assert-engine-health.js" }
+          },
+          "txn_scope": "statement",
+          "why": {
+            "text": "One INSERT...ON CONFLICT (table_name, snapshot_date) DO UPDATE per discovered table, each statement autocommitted independently (no explicit BEGIN/COMMIT anywhere in the pre-conversion file, preserved verbatim) — write_inventory.statements counts the ONE distinct statement TEXT (UPSERT_SQL), executed once per row in the compute-owned loop, not once per invocation. The 6-column IS DISTINCT FROM guard is genuinely more disciplined than the RECORDER exemplar's own guard:\"none\" (report §2.2 item 2, §4.1 CONTRACT).",
+            "liveness": { "kind": "file", "ref": "scripts/lib/compute/assert-engine-health.js" }
+          }
+        },
+        "retract": "none",
+        "replay": "idempotent_upsert",
+        "source_key_policy": { "unique": true, "on_collision": "not_applicable", "key_space_migration": "none" }
+      }
+    ],
+    "cascades": "none",
+    "invalidates": [],
+    "publish": "direct",
+    "write_inventory": {
+      "statements": 1,
+      "why": {
+        "text": "ONE write statement — the single INSERT...ON CONFLICT (table_name, snapshot_date) DO UPDATE (UPSERT_SQL) — executed once per table pg_stat_user_tables discovers at runtime (today ~40+ rows per run), never batched into a single multi-row statement. write_inventory.statements counts distinct WRITE statement forms per step.schema.json's own convention (refresh_snapshot's identical framing), not invocation count.",
+        "liveness": { "kind": "file", "ref": "scripts/lib/compute/assert-engine-health.js" }
+      }
+    }
+  },
+
+  "staleness": {
+    "scope": "none",
+    "trigger": "none",
+    "mode_select": "none",
+    "checkpoint": "none",
+    "interval": "none",
+    "fingerprint": "derived",
+    "fingerprint_inputs": ["scripts/lib/compute/assert-engine-health.js"],
+    "logic_version": "v1-batch1-i3",
+    "on_fingerprint_change": "none"
+  },
+
+  "guards": {
+    "requires": [],
+    "srid": "none",
+    "empty_source": "none",
+    "schema_drift": "none"
+  },
+
+  "execution": {
+    "budget": "5m",
+    "txn_scope": "none",
+    "txn_budget": "none",
+    "chunked": false,
+    "statement_timeout": "none",
+    "step_timeout": "15m",
+    "batch": "none",
+    "needs_disk_mb": "none",
+    "partial_fill": "atomic",
+    "on_row_error": "fail_fast",
+    "on_batch_error": "fail_step",
+    "on_check_error": "fail_step",
+    "on_check_error_why": {
+      "text": "Every check reads a value this compute already measured (tableResults / insp / coa) — a check that throws is a library-or-compute defect, not an upstream condition. It must redden the run, not drop its row.",
+      "liveness": { "kind": "file", "ref": "scripts/lib/compute/assert-engine-health.js" }
+    },
+    "on_degrade": "none",
+    "criticality": "required",
+    "network": "none",
+    "invocation": {
+      "permits": { "argv": [], "env": { "PIPELINE_CHAIN": "permits" } },
+      "coa": { "argv": [], "env": { "PIPELINE_CHAIN": "coa" } },
+      "sources": { "argv": [], "env": { "PIPELINE_CHAIN": "sources" } },
+      "deep_scrapes": { "argv": [], "env": { "PIPELINE_CHAIN": "deep_scrapes" } }
+    },
+    "maintenance": "none"
+  },
+
+  "checks": [
+    {
+      "id": "dead_tuple_ratio_high",
+      "kind": "bound",
+      "expect": { "reports": "count of tables (live >= 1000 rows) whose dead-tuple ratio exceeds engine_health_dead_tuple_ratio_warn_max" },
+      "limit": "viol == 0",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "Ported by predicate from the pre-conversion file's generic per-table loop (:118-124, DEAD_TUPLE_RATIO=0.10). Never blocking — report §1.2 measured this threshold never reached the halt; declaring severity:FAIL here (rather than WARN) would introduce a real halt (RUN_STATUS.FAILED) this step never had.",
+        "liveness": { "kind": "table", "ref": "engine_health_snapshots" }
+      }
+    },
+    {
+      "id": "seq_scan_ratio_high",
+      "kind": "bound",
+      "expect": { "reports": "count of tables (live >= engine_health_seq_scan_min_rows) whose sequential-scan ratio exceeds engine_health_seq_scan_ratio_warn_max" },
+      "limit": "viol == 0",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "Ported by predicate from the pre-conversion file's generic per-table loop (:127-132, SEQ_SCAN_RATIO=0.80, SEQ_SCAN_MIN_ROWS=10000).",
+        "liveness": { "kind": "table", "ref": "engine_health_snapshots" }
+      }
+    },
+    {
+      "id": "update_ping_pong_high",
+      "kind": "bound",
+      "expect": { "reports": "count of tables whose cumulative update/insert ratio exceeds engine_health_ping_pong_ratio_warn_max" },
+      "limit": "viol == 0",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "Ported by predicate from the pre-conversion file's generic per-table loop (:134-139, PING_PONG_RATIO=10 — AEH-IL-1: raised from 2 to 10 at 8c9e64d7, 2026-03-21, because dimensional tables naturally run 5-6x and the spec's own >2x bound produced chronic false-positive WARNs; Spec 41's table still declares >2x, a spec-vs-code drift named at commit 1, resolved at commit 9's spec-diff, not silently here).",
+        "liveness": { "kind": "table", "ref": "engine_health_snapshots" }
+      }
+    },
+    {
+      "id": "insp_dead_tuple_pct",
+      "kind": "bound",
+      "expect": { "reports": "permit_inspections dead-tuple percentage" },
+      "limit": "value_max 10",
+      "limit_from_config": "engine_health_insp_dead_tuple_fail_pct",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "chains": ["deep_scrapes"],
+      "accept_until": "none",
+      "why": {
+        "text": "AEH-IL-5. Pre-conversion inspAuditTable (Phase 6, deep_scrapes-only) displayed this predicate as status:'FAIL' text (:222), but no threshold in the file — including this one — ever reached the halt (report §1.2, exhaustively measured: the ONLY throw site is the outer catch on a genuine exception). Declaring severity:\"FAIL\" here would introduce a REAL halt (RUN_STATUS.FAILED) this step never had — a genuine regression, not a verbatim port — so this check is declared WARN, resolving AEH-D3's FAIL-vs-WARN inconsistency (both insp and coa variants below now agree) rather than preserving the cosmetic label.",
+        "liveness": { "kind": "table", "ref": "permit_inspections" }
+      }
+    },
+    {
+      "id": "insp_update_insert_ratio",
+      "kind": "bound",
+      "expect": { "reports": "permit_inspections cumulative update/insert ratio" },
+      "limit": "value_max 5",
+      "limit_from_config": "engine_health_insp_update_insert_fail_ratio",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "chains": ["deep_scrapes"],
+      "accept_until": "none",
+      "why": {
+        "text": "AEH-IL-5/AEH-D3. Pre-conversion :223 disagreed with the top-level PING_PONG_RATIO=10 for the conceptually same update/insert-ratio metric (5x vs 10x) — this session's own finding, not silently unified: kept as its OWN distinct logic variable (engine_health_insp_update_insert_fail_ratio) rather than folded into engine_health_ping_pong_ratio_warn_max, since the two may legitimately want different sensitivity for one table vs the whole fleet (report §5 low-confidence #2). Never blocking, same reasoning as insp_dead_tuple_pct above.",
+        "liveness": { "kind": "table", "ref": "permit_inspections" }
+      }
+    },
+    {
+      "id": "coa_dead_tuple_pct",
+      "kind": "bound",
+      "expect": { "reports": "coa_applications dead-tuple percentage" },
+      "limit": "value_max 10",
+      "limit_from_config": "engine_health_insp_dead_tuple_fail_pct",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "chains": ["coa"],
+      "accept_until": "none",
+      "why": {
+        "text": "AEH-IL-6. Pre-conversion coaAuditTable (Phase 9, coa-only) used the IDENTICAL 10% bound as insp_dead_tuple_pct's own predicate (:255) but WARN severity, not FAIL — the two per-chain audit tables already disagreed only on severity, never on value. This check reuses engine_health_insp_dead_tuple_fail_pct's VALUE (per AEH-IL-6's own disposition: \"the SAME logic var ... with its OWN severity declared explicitly\") rather than declaring a 7th variable for an identical bound.",
+        "liveness": { "kind": "table", "ref": "coa_applications" }
+      }
+    },
+    {
+      "id": "engine_health_write_failed",
+      "kind": "bound",
+      "expect": { "reports": "1 if the engine_health_snapshots write loop stopped early on an error this run, else 0" },
+      "limit": "viol == 0",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "Nothing Hidden (Rule 1). Pre-conversion :185-188 caught this non-fatally with only a console.warn — invisible to records_meta. Preserved as non-fatal (table may not exist yet, report §4.1 CONTRACT) but now a visible WARN row rather than a silent console line.",
+        "liveness": { "kind": "table", "ref": "engine_health_snapshots" }
+      }
+    },
+    {
+      "id": "engine_health_vacuum_failed",
+      "kind": "bound",
+      "expect": { "reports": "count of tables whose VACUUM ANALYZE failed this run" },
+      "limit": "viol == 0",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "Nothing Hidden (Rule 1). Pre-conversion :151-153 caught each VACUUM failure non-fatally with only a console.warn per table — invisible to records_meta. Now a visible WARN row.",
+        "liveness": { "kind": "table", "ref": "engine_health_snapshots" }
+      }
+    }
+  ],
+
+  "invariants": [
+    {
+      "id": "duplicate_snapshot_key_count",
+      "sql": "SELECT count(*)::int AS c FROM (SELECT table_name, snapshot_date FROM engine_health_snapshots GROUP BY table_name, snapshot_date HAVING count(*) > 1) d",
+      "bound": "viol == 0", "severity": "WARN", "blocking": false, "when": "post",
+      "source": "invariant", "frequency": "every_run",
+      "last_measured": { "value": 0, "at": "2026-09-14T00:00:00.000Z", "commit": "PENDING", "cost_ms": 5, "sample_n": 1, "source_run": { "run_id": null, "chain": null, "event": "golden_capture" } },
+      "why": {
+        "text": "Mirrors the live UNIQUE(table_name, snapshot_date) DB constraint as a declared, observable check rather than an implicit reliance on the constraint alone (Rule 1, nothing hidden) — same convention refresh_snapshot's own duplicate_snapshot_date_count invariant uses.",
+        "liveness": { "kind": "table", "ref": "engine_health_snapshots" }
+      }
+    }
+  ],
+  "plausibility": "none",
+
+  "override": { "force_full": "none", "force_run": "none", "dry_run": "none" },
+
+  "emits": "none",
+
+  "deviations": [
+    {
+      "from": "execution.maintenance's closed per-named-table array shape (step.schema.json:1370-1387)",
+      "why": {
+        "text": "This step's VACUUM ANALYZE target set (vacuumTargets) is discovered AT RUNTIME from pg_stat_user_tables, not enumerable at descriptor-authoring time as execution.maintenance's array requires (one row per NAMED table) — forcing a static enumeration would silently reintroduce the hardcoded-list defect the step's own design explicitly rejects (:72-79, \"Discover all public-schema tables dynamically — no hardcoded list\"). Ask 2 / Fold 1 (binding, .cursor/batch1_i3_assert_engine_health_active_task.md): keep the chain-tail VACUUM loop verbatim, compute-owned, declared here via deviations[] rather than execution.maintenance — the SAME mechanism EP-D17's 2026-09-10 DEFER already established for this exact file (review_followups.md:3480: \"do NOT hoist the vacuum decision into the chain head, do NOT touch assert-engine-health.js or run-chain.js beyond the telemetry fold\"). Spec 43 (:142,:150) independently names this file as the deliberate, still-OPEN \"chain-tail VACUUM owner\".",
+        "liveness": { "kind": "file", "ref": "scripts/lib/compute/assert-engine-health.js" }
+      },
+      "adjudicated_by": "Fold 1 (grounder, 2026-09-13), .cursor/batch1_i3_assert_engine_health_active_task.md",
+      "date": "2026-09-13"
+    },
+    {
+      "from": "execution.shape — left undeclared rather than \"recorder\"",
+      "why": {
+        "text": "runRecorderPhase (scripts/lib/step/index.js) mechanically supports exactly ONE write statement per run (one buildRow/buildWriteSql/executeRecorderUpsert call) — this step's real write is N rows (one per runtime-discovered table) plus a separate VACUUM maintenance loop, a shape runRecorderPhase cannot express without a runtime-library change (a RE-FREEZE decision, out of this commit's authority per Operating Boundaries — step.schema.json is frozen). Leaving execution.shape undeclared matches the pattern the 3 live ASSERT descriptors already use (assert-data-bounds/assert-schema/assert-global-coverage): none of isIngestStep/isLinkStep/…/isRecorderStep/isEnrichStep match an undeclared shape (only isIngestStep keeps a legacy structural inference, gated on an external URL read this step has none of), so the runtime falls through to calling compute(ctx) directly with full ctx.pool access — exactly what this step's self-managed reads/writes/VACUUM loop needs. identity.archetype stays \"RECORDER\" (the operator's classification ruling); execution.shape is a separate, runtime-EXECUTION axis neither the red suite nor R-PACE-1's archetype-eligibility count reads.",
+        "liveness": { "kind": "file", "ref": "scripts/lib/compute/assert-engine-health.js" }
+      },
+      "adjudicated_by": "This commit (batch1 I3 commit 7) — a newly-measured architecture finding, reported rather than silently worked around; not yet operator-ratified as a general pattern.",
+      "date": "2026-09-14"
+    }
+  ],
+
+  "limitations": [
+    {
+      "what": "coa_dead_tuple_pct and insp_dead_tuple_pct share the SAME 10% config-driven bound (engine_health_insp_dead_tuple_fail_pct) but declare different severities is now retired — BOTH are WARN (see each check's own why). AEH-D3's original finding (FAIL vs WARN for the identical predicate) is therefore RESOLVED by this commit, not merely preserved — a deliberate call made to avoid introducing a genuine halt-on-FAIL regression, reported here rather than left for a later commit.",
+      "measured": "report §1.2 (exhaustive halt-path trace) + this commit's own re-derivation, both cited in checks[].why for insp_dead_tuple_pct/coa_dead_tuple_pct above.",
+      "check_id": "insp_dead_tuple_pct"
+    },
+    {
+      "what": "The insp/coa targeted follow-up queries (fetchInsUpdVac) now run ONLY when the corresponding chain's check is actually selected (ctx.checks), rather than unconditionally on every chain as the pre-conversion file did (:208-211/:242-245 ran regardless of CHAIN_ID; only the DISPLAY was chain-scoped). The reported values are identical when they run — this eliminates 1-2 wasted queries per invocation on chains that never displayed the result.",
+      "measured": "Pre-conversion :200-266 built both inspAuditTable and coaAuditTable unconditionally on every chain if the respective table row existed; only the meta-object IIFE (:278-293) selected which ONE to display.",
+      "check_id": "none"
+    }
+  ],
+
+  "interpretation": "none",
+
+  "recovery": {
+    "reset": "Re-running recomputes every table's live pg_stat_user_tables snapshot from scratch; the 6-column IS DISTINCT FROM guard only rewrites rows whose stats actually changed since the last capture, which IS the correct, and only, reset mechanism — there is no history to rebuild, every value is a fresh point-in-time read.",
+    "resume": "none",
+    "force": "none",
+    "rollback": "none",
+    "verify_clean": "none",
+    "cascades": "derived",
+    "interrupted": "none",
+    "interrupted_why": {
+      "text": "retract:\"none\" on the one write target — there is nothing for an interrupted run to leave half-retracted. A crashed mid-loop run simply leaves some tables' rows stale (or absent, for a brand-new table) until the next run recomputes them fresh; a re-run is the same normal-run behaviour, not a special recovery path.",
+      "liveness": { "kind": "check", "ref": "engine_health_write_failed" }
+    },
+    "before_image": "none",
+    "before_image_why": {
+      "text": "R-M's scope is destructive retraction (a DELETE, or an overwrite whose prior value cannot be re-derived) — this write is an idempotent keyed upsert, retract:\"none\", every column re-derived FRESH from the live pg_stat_user_tables catalog on every run. A stored snapshot row is itself just a point-in-time capture of a PRIOR live state, not a source of truth a before-image would protect; a re-run recovers identically to what a before-image could restore.",
+      "liveness": { "kind": "file", "ref": "scripts/lib/compute/assert-engine-health.js" }
+    }
+  },
+
+  "database": {
+    "class": "primary",
+    "min_migration": 48,
+    "assert_current_database": "postgres"
+  },
+
+  "counters": {
+    "records_total": { "source": "records_meta.tables_checked", "scoped_by": "step" },
+    "records_new": "none",
+    "records_updated": { "source": "records_meta.records_updated", "scoped_by": "step" }
+  },
+
+  "config": {
+    "logic_variables": [
+      { "name": "engine_health_dead_tuple_ratio_warn_max", "min": 0, "max": 1, "on_invalid": "fail" },
+      { "name": "engine_health_seq_scan_ratio_warn_max", "min": 0, "max": 1, "on_invalid": "fail" },
+      { "name": "engine_health_seq_scan_min_rows", "min": 0, "max": 100000000, "on_invalid": "fail" },
+      { "name": "engine_health_ping_pong_ratio_warn_max", "min": 0, "max": 10000, "on_invalid": "fail" },
+      { "name": "engine_health_insp_dead_tuple_fail_pct", "min": 0, "max": 100, "on_invalid": "fail" },
+      { "name": "engine_health_insp_update_insert_fail_ratio", "min": 0, "max": 10000, "on_invalid": "fail" }
+    ],
+    "validation": "strict",
+    "hoisted_above_gate": true,
+    "retired": []
+  },
+
+  "sharing": {
+    "chains": "derived",
+    "shared": "derived",
+    "slug_forms": "derived",
+    "varies_by_chain": {
+      "checks": "per_chain",
+      "phase": { "permits": 16, "coa": 9, "sources": 15, "deep_scrapes": 6 },
+      "audit_table": "per_chain",
+      "scope": "none"
+    },
+    "on_contention": "self_skip"
+  },
+
+  "terminals": [
+    {
+      "id": "recorded", "kind": "success", "status": "completed",
+      "records_meta": { "duration_ms": "int", "audit_table": "object", "terminal": "string" },
+      "why": { "text": "The normal, and only steady-state, outcome: every table is re-recorded every run. Verdict is PASS when no declared check reports a violation.", "liveness": { "kind": "check", "ref": "engine_health_write_failed" } }
+    },
+    {
+      "id": "recorded_with_warnings", "kind": "success", "status": "completed_with_warnings",
+      "records_meta": { "audit_table": "object", "terminal": "string" },
+      "why": { "text": "One or more declared checks report a WARN (a threshold breach, a write/VACUUM failure) and nothing FAILED — the run completed and wrote every table's row; the warning is in the table. All 8 declared checks are severity WARN by design (report §1.2 — no threshold in this step has ever halted anything).", "liveness": { "kind": "check", "ref": "dead_tuple_ratio_high" } }
+    },
+    {
+      "id": "lock_held_elsewhere", "kind": "skip_lock_contention", "status": "self_skipped",
+      "records_meta": { "skipped": "bool", "reason": "string" },
+      "why": { "text": "Advisory lock 104 is held by another process — a row-derived SKIP summary, never a bare SDK skip with no audit_table.", "liveness": { "kind": "file", "ref": "scripts/lib/step/index.js" } }
+    },
+    {
+      "id": "failed_config_out_of_bounds", "kind": "fail_error", "status": "failed",
+      "records_meta": { "audit_table": "object", "terminal": "string" },
+      "why": { "text": "One of the 6 declared logic_variables resolved outside its bounds under on_invalid:\"fail\". hoisted_above_gate puts this refusal ABOVE the advisory lock.", "liveness": { "kind": "file", "ref": "scripts/lib/step/config.js" } }
+    },
+    {
+      "id": "failed_exception", "kind": "fail_error", "status": "failed",
+      "records_meta": { "audit_table": "object", "terminal": "string" },
+      "why": { "text": "A genuine uncaught exception (DB connectivity, a malformed query in the table-discovery or stat-scan reads) — the ONLY thing that has ever halted this step (report §1.2). The per-table VACUUM and snapshot-write loops are NOT this terminal's trigger — both are non-fatal by design (engine_health_vacuum_failed / engine_health_write_failed WARN checks instead).", "liveness": { "kind": "check", "ref": "engine_health_vacuum_failed" } }
+    }
+  ]
+}

@@ -216,12 +216,66 @@ All boundary claims independently re-measured; two genuine NEW findings surfaced
 
 ---
 
+## 9. Commit 7 — descriptor + compute + frozen shell + POST differential (this session)
+
+### 9.1 Archetype-vs-runtime finding, newly measured this commit (not anticipated by commits 1-6)
+
+`identity.archetype: "RECORDER"` stands (operator ruling, §2 above) — but `execution.shape: "recorder"` (the runtime dispatch to `runRecorderPhase`, `scripts/lib/step/index.js:1971-2082`) does **not** fit this step. Measured this commit: `runRecorderPhase` executes exactly ONE write statement per run (`specs[0]`, one `compute.buildRow()`, one `compute.buildWriteSql()`, one `write.executeRecorderUpsert()` call with a single `RETURNING` row) — the shape `refresh_snapshot` (the exemplar) was built for. `assert_engine_health`'s real write is N rows (one per table `pg_stat_user_tables` discovers at runtime — measured 90 tables this session) plus a separate VACUUM ANALYZE maintenance loop over that same dynamic set — a shape `runRecorderPhase` cannot express without a runtime-library change (a RE-FREEZE decision: `step.schema.json` is frozen per Operating Boundaries, and Ask 1/Ask 2 already named schema-widening as out of this commit's authority).
+
+**Resolution, disclosed rather than silently worked around:** `execution.shape` is left undeclared — the SAME pattern the three live ASSERT descriptors already use (`assert-data-bounds`/`assert-schema`/`assert-global-coverage`, all `execution.shape` absent, confirmed by direct inspection this session: `node -e "require(...).execution.shape"` → `undefined` for all three). `isIngestStep`/`isLinkStep`/…/`isRecorderStep`/`isEnrichStep` (`scripts/lib/step/index.js:242-402`) all require `execution.shape === '<name>'` verbatim; only `isIngestStep` keeps a legacy structural inference (gated on an external URL read this step has none of). An undeclared shape therefore matches none of them, and the runtime falls through to calling `runnable.compute(stepCtx)` directly — `stepCtx.pool`/`.report`/`.checks`/`.config` are constructed identically regardless of branch (`index.js:3182-3233`), confirmed by this session's own live runs (all 5 invocations, exit 0). `identity.archetype` (a classification fact) and `execution.shape` (a runtime-execution fact) are different schema axes; neither the red suite (§ "archetype is one of the two Ask-1 candidates") nor R-PACE-1's `archetypeConvertedCount` reads `execution.shape`. Declared as TWO `deviations[]` entries in the descriptor (the VACUUM-loop deviation already anticipated by Ask 2, plus this newly-measured shape deviation) — filed, not ratified as a general pattern; a future RECORDER with the same N-row shape will hit the identical wall and should cite this commit.
+
+### 9.2 Severity resolution — AEH-D3 RESOLVED (not merely preserved)
+
+The pre-conversion `inspAuditTable`'s `status:'FAIL'` text (dead_tuple_pct, update_insert_ratio) was measured in commit 1 (report §1.2) to be cosmetic only — no threshold in the file, including those two, ever reached the halt. Declaring a literal `severity:"FAIL"` on a `checks[]` entry is not cosmetic under the step standard: a FAIL verdict with no `accept_until` entry drives `RUN_STATUS.FAILED` (`index.js`'s terminal-selection `verdict === 'FAIL' && unaccepted.length > 0` branch) — a genuine halt this step has never had, verified this session by re-reading that branch. Porting the old label as a declared `severity:"FAIL"` would therefore be an undisclosed regression, not a verbatim port. All 8 declared checks are `severity:"WARN"`, `blocking:false` — this **resolves** AEH-D3 (both `insp_dead_tuple_pct` and `coa_dead_tuple_pct` now agree at WARN) rather than preserving the inconsistency, a deliberate call made this commit and reported as such (not deferred, since leaving the FAIL label as a literal `severity:"FAIL"` was not a safe option to defer). AEH-D3/AEH-D4's spec-vs-code severity questions (Spec 41's own declared FAIL text) remain carried to commit 9's spec-diff, per commit 1's own disposition.
+
+### 9.3 Live verification — all 5 invocations, exit 0
+
+`node --env-file=.env scripts/analysis/capture-step-golden.js --step=scripts/quality/assert-engine-health.js --chain=<permits|coa|sources|deep_scrapes|none>` — every invocation ran the CONVERTED descriptor+compute+shell end-to-end against the live local Docker DB and exited 0: `permits` verdict=WARN, `coa` verdict=WARN, `sources` verdict=WARN, `deep_scrapes` verdict=WARN, `standalone` verdict=WARN — all 5 WARN from the SAME genuine condition (`update_ping_pong_high`: `data_quality_snapshots` measured 15 updates / 1 insert = 15.0x, exceeding `engine_health_ping_pong_ratio_warn_max`=10). `engine_health_snapshots` table_state: 1269 rows captured every invocation (90 tables × up to 14 days of history in the local DB), `duplicate_snapshot_key_count` invariant = 0 in all 5.
+
+### 9.4 AEH-D6 (NEW, this commit) — the permits/sources/standalone chain's own audit_table verdict never counted ping-pong pre-conversion; deep_scrapes/coa's per-chain tables never checked it either
+
+Every one of the 5 `--compare` runs (pre/post) shows `audit_table.verdict`: `PASS` → `WARN`, for the SAME underlying condition (`data_quality_snapshots` 15.0x ping-pong) that the PRE capture's own `stdout_lines`/`summary.records_meta.warnings` ALREADY detected and displayed (`"WARN: data_quality_snapshots — update ping-pong 15.0x"` is present in the PRE capture's `stdout_lines` for every chain). Root cause, re-derived this session: the pre-conversion file's per-chain audit-table builders (`permitsEngineRows`/`inspAuditTable`/`coaAuditTable`) never included the ping-pong predicate at all — only the generic top-level `warnings[]` array (feeding `records_meta.warnings`, NOT `audit_table.verdict`) ever saw it. A human reading only `records_meta.audit_table.verdict` (the row-derived, canonical verdict signal per Rule 10) would therefore have read PASS for a chain that was, in fact, warning — a genuine pre-existing Nothing-Hidden gap, not a defect introduced by this conversion. The new unified `checks[]` design (Rule 10: one row-derived verdict from ALL declared checks, no per-chain parallel booleans) necessarily surfaces it. Filed AEH-D6: OPEN · PIN, disposition CLOSED-BY-CONVERSION (the new design structurally cannot reproduce the old gap — every declared check, `update_ping_pong_high` included, feeds the same verdict lattice for every chain).
+
+| ID | Anchor | One-line | Status | Closes at |
+|---|---|---|---|---|
+| AEH-D6 | pre-conversion `:281-293` (`permitsEngineRows`), `:200-233`/`:235-266` (`inspAuditTable`/`coaAuditTable`) | The 3 per-chain audit-table builders never included the ping-pong predicate in their own verdict — only the generic `warnings[]`/console output saw it, so `audit_table.verdict` under-reported for every chain. Measured live: PRE capture stdout already shows the WARN text; PRE `audit_table.verdict`=PASS regardless. | CLOSED-BY-CONVERSION | commit 7 (this commit) — the new unified `checks[]`/row-derived verdict structurally includes it for every chain |
+
+### 9.5 Full diff-category explanation (163 differences in the largest capture, deep_scrapes; every leaf/bucket-word below covers ALL 5 captures — G8 "every diff named")
+
+| Category (deepest field / bucket word) | PRE | POST | Why (explained, not silently absorbed) |
+|---|---|---|---|
+| `invariants` (structural, `invariants[0]`) | absent | `{"name":"duplicate_snapshot_key_count","value":"0"}` | New declared `invariants[]` entry (§ descriptor) — 1 difference, purely additive. |
+| `meta.reads.coa_applications` / `meta.reads.permit_inspections` | absent | `[]` | `inputs.reads.tables[]` now declares these two tables (Nothing Hidden — the pre-conversion `emitMeta` never declared them even though the file read them for its own audit tables). |
+| `meta.reads.pg_stat_user_tables` (gains `last_autovacuum`) | 7 columns | 8 columns | `last_autovacuum` is read by `fetchInsUpdVac` (insp/coa follow-ups) — now declared, previously implicit. |
+| `meta.writes.engine_health_snapshots` (reordered, drops `table_name`) | `[table_name, n_live_tup, ..., seq_ratio]` | `[n_live_tup, ..., seq_ratio]` | `table_name` is the write target's KEY (declared under `outputs.writes[0].key`, not `columns[]`) — same convention `refresh_snapshot`'s own `snapshot_date` key exclusion uses. |
+| `stdout_lines` (structural, ~90-100 differences per capture) | per-table `console.log` dump (`"  OK: <table> — dead tuple ratio X%"` × ~90 lines) | structured `{"level":"INFO",...}` JSON log lines | Rule 2 (`compute-no-console` ast-grep rule) — narration moves to `ctx.log`, never a bare `console.*`. This single bucket accounts for the majority of each capture's raw difference count (permits 161 total, of which ~100 are `stdout_lines` rows alone). |
+| `summary.records_meta.audit_table.name` | `"Engine Health"` / `"CoA Engine Health"` | `"Engine Health & Volume Volatility"` | `identity.display_name`, declared once, same for every chain (was per-chain-hardcoded text before). |
+| `summary.records_meta.audit_table.phase` (standalone only) | `16` (the old `phaseMap[CHAIN_ID] \|\| 16` fallback) | `0` | `sharing.varies_by_chain.phase` declares no "standalone" key (matches `refresh_snapshot`'s own identical omission) — the generic library defaults an undeclared chain's phase to 0. An accepted, disclosed convention shared with the RECORDER exemplar, not a new gap. |
+| `summary.records_meta.audit_table.rows[N].metric/source/status/threshold/value` | old ad-hoc names (`tables_checked`, `tables_vacuumed`, `high_dead_ratio_tables`, `high_seq_scan_tables`, `live_rows`, `dead_rows`, `dead_tuple_pct`, `update_insert_ratio`, `last_autovacuum`) | new declared check ids (`dead_tuple_ratio_high`, `seq_scan_ratio_high`, `update_ping_pong_high`, `engine_health_write_failed`, `engine_health_vacuum_failed`, `coa_dead_tuple_pct`, `insp_dead_tuple_pct`, `insp_update_insert_ratio`) + `duplicate_snapshot_key_count` (invariant) | One-to-one remapping to the Rule-10-compliant declared `checks[]`/`invariants[]` ids; `source:"check"`/`"invariant"` is new library-stamped provenance (Nothing Hidden). |
+| `summary.records_meta.audit_table.verdict` | `PASS` | `WARN` | AEH-D6 above — a genuine pre-existing under-reporting gap, now closed by the row-derived design, not a regression. |
+| `summary.records_meta.config` | absent | the 6 resolved `engine_health_*` values | Rule 3 — every threshold this run actually used is now visible in `records_meta.config` (Nothing Hidden), previously invisible module-scope constants. |
+| `summary.records_meta.engine_health[N].{dead_ratio,idx_scan,n_dead_tup,n_live_tup,seq_scan,seq_ratio}` | one live snapshot | a later live snapshot | `pg_stat_user_tables` counters are cumulative/monotonic (`write_discipline.idempotent_rerun_why` in the descriptor) — PRE and POST were captured at genuinely different points in time on the SAME live local DB, so real drift on `seq_scan`/`idx_scan`/`n_live_tup`/`n_dead_tup` (and their derived ratios) between the two captures is expected, not a defect. Confirmed: every row that drifted is a table this session's own repeated invocations (5 POST runs plus the PRE run) themselves queried or wrote, which is exactly what a monotonic scan/tuple counter is expected to do. |
+| `summary.records_meta.ledger_row` / `pool_errors` / `terminal` | absent | `"chain_owned"`/`"owned"`, `0`, `"recorded_with_warnings"` | Generic library fields (AEH-IL-3: the ledger mechanism retires to the shared library, matching every other converted step's identical addition). |
+| `summary.records_meta.records_updated` (nested) | absent | `7`/`8` (varies by chain/time of capture) | New `records_meta` field feeding the declared `counters.records_updated` source path (§ descriptor `counters`). |
+| `summary.records_meta.warnings[0]` (rendering format) | hand-formatted string (`"data_quality_snapshots: update/insert ratio 15.0x (15 upd vs 1 ins)"`) | `"<check_id>: <JSON detail>"` (`renderValue`, `scripts/lib/step/verdict.js`) | Generic library message rendering (LM-D16 precedent) — same information, machine-parseable shape, not a content loss. |
+| `summary.records_updated` (top-level) | `2`/`5`/`6` (varies) | `7`/`8` (varies) | Same monotonic-drift reasoning as `engine_health[N]` above, plus the genuine fix below (`pipeline_runs.records_total`/`records_updated`). |
+| `table_state` (structural, `table_state[0]`) | absent | `engine_health_snapshots` row-count + content hash | New capability: the descriptor's declared `outputs.writes[]` lets `capture-step-golden.js` hash the write target — impossible before the descriptor existed. Not comparable to a PRE baseline that never had one. |
+| `pipeline_runs[0].error_message` (standalone only — the only chain with its own ledger row) | `"WARN: ..."` (the old code conflated a WARN message into the ERROR column) | `null` | Genuine fix: `error_message` now reserved for real errors; warnings live in `records_meta.warnings`/`audit_table` rows only (Nothing Hidden — the two concepts were previously conflated in one column). |
+| `pipeline_runs[0].records_total/records_new/records_updated` (standalone only) | `0`/`0`/`0` (the old ledger UPDATE never set these columns at all) | `90`/`null`/`7` | Genuine fix: the old file's own `UPDATE pipeline_runs SET completed_at=..., status=..., duration_ms=..., error_message=..., records_meta=...` never touched `records_total`/`records_new`/`records_updated` — the generic library's `deriveCounters` (sourced from `records_meta.tables_checked`/`records_meta.records_updated`, per the descriptor's declared `counters`) now stamps real values. |
+| `pipeline_runs[0].status` (standalone only) | `"completed"` | `"completed_with_warnings"` | Genuine fix, same root cause as AEH-D6 — the old binary `failed`/`completed` status vocabulary (report §1.2) never expressed a WARN-only run; the generic library's Spec 120 §3.2b-conformant status vocabulary does. |
+
+**Structural (array-shaped, no field name of their own) diff-count breakdown, all 5 captures:** the deep_scrapes capture's own 163 differences break down as roughly 97 differences in `stdout_lines` (the per-table console.log-to-structured-JSON-log rendering change, §9.5 above), 1 difference in `invariants` (the new `duplicate_snapshot_key_count` entry), 1 difference in `table_state` (the new write-target hash, impossible before the descriptor existed), and 3 differences in `rows` (new `audit_table.rows[]` entries for the 2 new declared checks plus 1 new invariant row) — the permits/coa/sources/standalone captures show the identical 4 structural buckets at slightly different counts (fewer per-chain checks means fewer `rows` differences on permits/sources/standalone; standalone additionally shows its own `pipeline_runs[0].*` differences, §9.5's dedicated rows above). Every one of these 4 structural buckets, and every named-field diff in the §9.5 table above, is explained.
+
+**Compare summary (5/5):** exit 0 all invocations; verdict WARN all 5 (same genuine `update_ping_pong_high` condition, pre-existing, now correctly surfaced per AEH-D6); `engine_health_snapshots` row count 1269 stable across all 5 (same live table, captured within the same session); 0 diffs left unexplained by the table above.
+
+---
+
 ## Validation scorecard (generated)
 
 > Generated by `node scripts/analysis/step-validate.mjs --step=assert_engine_health --write` — Spec 123 §6, ruling R-R (2026-08-29).
 > Regenerate with the same command; a stale block is a conformance-lock finding (`step-conformance.infra.test.ts`).
 
-**Score: 13/17** · G9 Reflection: PASS · G4d fence-lock coverage: PASS · G-shape: PASS · **Hard stop: YES (G8, Rule 1 (unpinned enforced-red), Rule 5 (unpinned enforced-red), Rule 6 (unpinned enforced-red), Rule 7 (unpinned enforced-red), Rule 8 (unpinned enforced-red), Rule 9 (unpinned enforced-red), Rule 13 (unpinned enforced-red))**
+**Score: 16/17** · G9 Reflection: PASS · G4d fence-lock coverage: PASS · G-shape: PASS · **Hard stop: no**
 
 | Gate | Score | Max | Detail |
 |---|---:|---:|---|
@@ -233,15 +287,22 @@ All boundary claims independently re-measured; two genuine NEW findings surfaced
 | G5 | 1 | 1 | db=true clock=true network=true argv/env=true |
 | G6 | 3 | 3 | 5 ledger row(s), 0 without CLOSED/PIN () |
 | G7 | 3 | 3 | file=true fences=0 it-count=29 RED-evidence=true |
-| G8 | 0 | 3 | missing-invocations=5 missing-pre-invocations=5 stale-fingerprints=0 unexplained-diffs=0 |
+| G8 | 3 | 3 | missing-invocations=0 missing-pre-invocations=0 stale-fingerprints=0 unexplained-diffs=0 |
 | G9 (binary) | PASS | — | heading=true low-confidence-table=true recurring-table=true |
 | G4d (fence<=lock) | PASS | — | fences=0 lock-it-count=29 |
-| G-shape | PASS | — | file-clean=null compute-clean=null |
+| G-shape | PASS | — | file-clean=null compute-clean=true |
 
 ### Fast invariants (always run — the fast descriptor gate)
 
 | # | Scope | Pass | Detail |
 |---|---|---|---|
+| 1 | assert_engine_health | PASS | min_migration=48 <= migrations count=244 |
+| 2 | assert_engine_health | PASS | 6 declared, missing from seeds: none |
+| 3 | assert_engine_health | PASS | retired=0 overlap-with-declared=none |
+| 7 | assert_engine_health | PASS | SPEC LINK header present=true |
+| 8 | assert_engine_health | PASS | G-4: 6 declared, 2 verdict-affecting, 0 violate on_invalid:fail with no deviations[] cover |
+| 20 | assert_engine_health | PASS | HB-1: execution.shape=null — HB-1 applies_when execution.shape=="enrich" only (RS-D-STA); not applicable, never a pass-by-omission |
+| 21 | assert_engine_health | PASS | CEIL-1: execution.shape=null — CEIL-1 applies_when execution.shape=="enrich" only (RS-D-STA); not applicable, never a pass-by-omission |
 | 4 | (registry) | PASS | overlap: none |
 | 5 | (registry) | PASS | clean (0 it.fails( call sites outside a declared pending slug) |
 | 9 | (registry) | PASS | clean (0 converted slugs blocked by an unmet cutover_prereq item; blocks batching: 0) |
@@ -249,32 +310,32 @@ All boundary claims independently re-measured; two genuine NEW findings surfaced
 | 23 | (registry) | PASS | COMPRESSED-FORM-ELIGIBLE: not applicable (0 pending slugs declare the compressed form) |
 
 ### Captures (item iv)
-- missing invocations (POST): permits::, coa::, sources::, deep_scrapes::, none::
-- missing invocations (PRE, GOLD-PRE): permits::, coa::, sources::, deep_scrapes::, none::
+- missing invocations (POST): none
+- missing invocations (PRE, GOLD-PRE): none
 - stale fingerprints: none
-- compare ran: false · diffs found: 0 · unexplained: 0
+- compare ran: true · diffs found: 860 · unexplained: 0
 
 ### Test suite (item iii)
-- 999/1016 passed (suite success=false)
+- 1002/1018 passed (suite success=true)
 
 ### Policy coverage matrix (item vi) — Spec 124 Rules 1-13
 
 | Rule | Name | Status | Note |
 |---|---|---|---|
-| 1 | Nothing hidden | enforced-red | G-1 schema-baseline: schema-baseline clean |
+| 1 | Nothing hidden | enforced-green | G-1 schema-baseline: schema-baseline clean |
 | 2 | Compute is just compute | enforced-green |  |
-| 3 | Tunables externalized | enforced-green | G-4: no descriptor |
+| 3 | Tunables externalized | enforced-green | G-4: 6 declared, 2 verdict-affecting, 0 violate on_invalid:fail with no deviations[] cover |
 | 4 | Compute rule declared | enforced-green | G-2: 2 preserved-in-compute row(s), 0 with no why/notes.json/checks[] grounding |
-| 5 | checks >= 1 | enforced-red |  |
-| 6 | Omission fails (20 categories) | enforced-red |  |
-| 7 | Archetype gates categories | enforced-red |  |
-| 8 | Per-target write discipline | enforced-red |  |
-| 9 | Banned write needs ledger (+ V7 no_retraction) | enforced-red |  |
+| 5 | checks >= 1 | enforced-green |  |
+| 6 | Omission fails (20 categories) | enforced-green |  |
+| 7 | Archetype gates categories | enforced-green |  |
+| 8 | Per-target write discipline | enforced-green |  |
+| 9 | Banned write needs ledger (+ V7 no_retraction) | enforced-green |  |
 | 10 | Verdict row-derived | enforced-green | (a) OK — 11 corpus file(s) scanned, 0 unsanctioned second derivations, 2 sanctioned hit(s) matched SANCTIONED_VERDICT_SITES · (b) OK — SELF_SKIPPED audit table folds to verdict=WARN (!= PASS), row-derived off 1 non-INFO row(s) — VRD-SKIP closed |
-| 11 | Phase-order re-derive (declared half, checkOrderGuaranteesCited) | enforced-green | no descriptor — G-3 completeness half stays open |
-| 12 | Truthful crash posture (R-B reachability, static + R-M before-image) | enforced-green | R-B (checkInterruptedPostureTruthful): no descriptor · R-M: prose-only (R-M/LG-17 describe not scoped to this step (vitest not run, or no before-image target)) |
-| 13 | A step validates itself | enforced-red | this run of step:validate IS the mechanism |
-| P3 | I/O cost adjudication (measured, not gated) | measured | descriptor=0B notes=0B checks=0 rows records_meta=(no capture) |
+| 11 | Phase-order re-derive (declared half, checkOrderGuaranteesCited) | enforced-green | no when:"pre_write" checks — vacuously nothing to cite — G-3 completeness half stays open |
+| 12 | Truthful crash posture (R-B reachability, static + R-M before-image) | enforced-green | R-B (checkInterruptedPostureTruthful): recovery.interrupted="none" — no reachability claim to verify · R-M: prose-only (R-M/LG-17 describe not scoped to this step (vitest not run, or no before-image target)) |
+| 13 | A step validates itself | enforced-green | this run of step:validate IS the mechanism |
+| P3 | I/O cost adjudication (measured, not gated) | measured | descriptor=25597B notes=0B checks=8 rows records_meta=13140B (newest post/ capture) |
 
-**Enforced-green: 6/14**
+**Enforced-green: 13/14**
 

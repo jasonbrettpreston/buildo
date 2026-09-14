@@ -8,36 +8,35 @@
 // SPEC LINK: docs/specs/01-pipeline/124_step_standard_policy.md §2 Rule 3 (every verdict-affecting
 //   bound is a registered logic_variables entry), register R-K/R-K.1/R-PACE-1
 //
-// Batch 1 I3 — `assert_engine_health`, compressed 3-commit form (R-PACE-1). Plan:
-// `.cursor/batch1_i3_assert_engine_health_active_task.md`. Assessment report (PH-0/3/5/6, commit ①):
-// `docs/reports/2026-09-14-batch1-i3-assert-engine-health-assessment.md` — §2 is the OPEN archetype
-// ruling (Ask 1: ASSERT-with-exception vs RECORDER) this file's it.fails() claims are written AROUND
-// (some genuinely cannot be asserted precisely until the operator rules — those check only the
-// artifact's EXISTENCE, not its archetype-specific shape, and are commented accordingly); §4.3/§4.4
-// is the AEH-D1..D5 defect ledger, every row OPEN · PIN, none fixed here; §3 is the PH-3 intent ledger
-// (AEH-IL-1..6), every row PROPOSED, none adjudicated here (Spec 123 §7.1: discoverer != adjudicator).
+// Batch 1 I3 — `assert_engine_health`, FULL NINE-COMMIT FORM (R-PACE-1 ineligible, RECORDER
+// has 1 converted member — see the assessment report's own ruling banner). Plan:
+// `.cursor/batch1_i3_assert_engine_health_active_task.md`. Assessment report:
+// `docs/reports/2026-09-14-batch1-i3-assert-engine-health-assessment.md` — §2 is the RESOLVED
+// archetype ruling (RECORDER, operator 2026-09-14); §4.3/§4.4 is the AEH-D1..D6 defect ledger
+// (AEH-D6 added at commit 7); §3 is the PH-3 intent ledger (AEH-IL-1..6); §9 is commit 7's own
+// descriptor+compute+frozen-shell+POST-differential section.
 //
-// ⚠️ EVERY CLAIM TEST MUST BE RED TODAY, AND RED FOR THE RIGHT REASON. Claims that read a FUTURE
-// artifact (the descriptor, the compute module — both land at commit ②, folded per R-PACE-1) open
-// with `artifact()` -> `expect(existsSync).toBe(true)`, so the failure names the missing artifact
-// rather than surfacing as an import/parse error. Genuinely-red claims are wrapped `it.fails(...)`
-// with a `// flips at: commit 2` comment — `it.fails()` INVERTS: the wrapped body genuinely throws
-// internally and vitest reports the wrapped test as PASSED; if a claim were NOT actually red, vitest
-// reports "expected test to fail but it passed," a real suite failure. A fully green run of this file
-// is therefore the proof every `it.fails()` claim is genuinely red today. Plain `it()` covers claims
-// testable TODAY: facts already true (lock 104 in the step file, the 4 chains + measured positions in
-// manifest.json, the 6 threshold literals — 4 top-level + 2 per-audit-table, report §4.4 — the
-// never-halts-on-threshold verdict shape, the report's sections/ledger rows, the converted.json
-// pending entry) and the 4 named G4d fences (AEH-IL-1 through AEH-IL-4), which run against the
-// CURRENT (pre-conversion) step source exactly as `assert_data_bounds`'s own I2 precedent — both
-// directions (fence intact / fence reverted) are provable today because the subject artifact (the
-// step file) already exists; only the descriptor/compute do not.
+// ── COMMIT 7 LANDED THIS SESSION ── descriptor + compute + frozen shell all land together
+// (mirrors `assert_data_bounds`'s own I2 commit-7 precedent, which also folded descriptor+
+// compute+shell into one commit and flipped its own 8 `it.fails()` in the same commit).
+// `identity.archetype: "RECORDER"` — resolved. `execution.shape` is left UNDECLARED (a newly
+// measured finding this commit, report §9.1: `runRecorderPhase` cannot express this step's
+// N-row/dynamic-table write + VACUUM loop; the runtime falls through to a direct `compute(ctx)`
+// call exactly like the 3 live ASSERT descriptors already do). All 8 declared `checks[]` are
+// `severity:"WARN"` — the pre-conversion 'FAIL' label was cosmetic (report §1.2/§9.2); porting
+// it literally would have introduced a genuine halt this step never had, so AEH-D3 is RESOLVED
+// (not merely preserved) at this commit. 7 of the 8 `it.fails()` below flip to plain `it()`;
+// the 8th (`<20 lines` frozen-shell line count) stays `it.fails()` — this step's shell is 35
+// lines (extensive SPEC LINK/why-frozen commentary, matching `refresh_snapshot`'s own 40-line
+// and `assert_data_bounds`'s own 34-line precedent shells, both also over the literal 20-line
+// bound) — genuinely still red, unchanged by this commit, carried to commit 9 per its own
+// "fully true only after cutover" comment (kept verbatim below).
 //
-// The artifacts this file asserts against (commit ②, `.cursor/batch1_i3_assert_engine_health_active_task.md`):
-//   scripts/quality/assert-engine-health.descriptor.json — new, archetype PER THE ASK 1 RULING
-//   scripts/lib/compute/assert-engine-health.js — new, dispatch table, ctx.report() only
-//   scripts/quality/assert-engine-health.js — commit ③'s frozen shell (pipeline.step(...))
-//   scripts/steps/_schema/converted.json — THIS commit's `pending` entry (stage: "red_suite")
+// The artifacts this file now asserts against (all landed commit 7):
+//   scripts/quality/assert-engine-health.descriptor.json — landed, archetype RECORDER
+//   scripts/lib/compute/assert-engine-health.js — landed, dispatch table, ctx.report() only
+//   scripts/quality/assert-engine-health.js — landed, the frozen shell (pipeline.step(...))
+//   scripts/steps/_schema/converted.json — `pending` entry advanced to stage "shape_clean"
 
 import { describe, it, expect } from 'vitest';
 import fs from 'fs';
@@ -93,7 +92,7 @@ function computeSource(): string {
 // ---------------------------------------------------------------------------
 
 describe('assert_engine_health — measured facts, true today (plain it)', () => {
-  it('advisory lock 104 is declared in the pre-conversion step file (Spec 47 §A.5)', () => {
+  it('advisory lock 104 is declared in the frozen shell (Spec 47 §A.5 — declared, never read, on purpose)', () => {
     expect(src()).toContain('ADVISORY_LOCK_ID = 104');
   });
 
@@ -114,44 +113,54 @@ describe('assert_engine_health — measured facts, true today (plain it)', () =>
     expect(deepScrapes.length).toBe(7);
   });
 
-  it('the 4 top-level threshold literals carry their measured values (report §1.1 claim 5)', () => {
-    expect(src()).toMatch(/DEAD_TUPLE_RATIO\s*=\s*0\.10/);
-    expect(src()).toMatch(/SEQ_SCAN_RATIO\s*=\s*0\.80/);
-    expect(src()).toMatch(/SEQ_SCAN_MIN_ROWS\s*=\s*10000/);
-    expect(src()).toMatch(/PING_PONG_RATIO\s*=\s*10/);
+  it('the 4 (now 6) top-level threshold literals are registered logic_variables with their measured seed defaults (Rule 3; report §1.1 claim 5, repointed off the retired module-scope constants at commit 7)', () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const seeds = require(abs('scripts/seeds/logic_variables.json')) as Record<string, { default: number }>;
+    expect(seeds.engine_health_dead_tuple_ratio_warn_max?.default).toBe(0.10);
+    expect(seeds.engine_health_seq_scan_ratio_warn_max?.default).toBe(0.80);
+    expect(seeds.engine_health_seq_scan_min_rows?.default).toBe(10000);
+    expect(seeds.engine_health_ping_pong_ratio_warn_max?.default).toBe(10);
+    // Consumed in compute via ctx.config, never a bare literal (ast-grep compute-no-literal-threshold).
+    const text = computeSource();
+    expect(text).toContain('config.engine_health_dead_tuple_ratio_warn_max');
+    expect(text).toContain('config.engine_health_seq_scan_ratio_warn_max');
+    expect(text).toContain('config.engine_health_seq_scan_min_rows');
+    expect(text).toContain('config.engine_health_ping_pong_ratio_warn_max');
   });
 
-  it('the 2 per-audit-table literals carry their measured values and their measured INCONSISTENCY (report §1.1 claim 6, AEH-D3/AEH-IL-5/6)', () => {
-    const text = src();
-    // inspAuditTable (Phase 6, deep_scrapes): FAIL at >=10% dead / >=5x update-insert
-    expect(text).toMatch(/deadPctNum >= 10 \? 'FAIL' : 'PASS'/);
-    expect(text).toMatch(/uiRatioNum >= 5 \? 'FAIL' : 'PASS'/);
-    // coaAuditTable (Phase 9, coa): WARN (not FAIL) at the SAME >=10% dead-tuple bound — the
-    // measured severity inconsistency for the identical predicate.
-    expect(text).toMatch(/coaDeadPctNum >= 10 \? 'WARN' : 'PASS'/);
+  it('the 2 per-audit-table literals are RESOLVED to WARN severity at commit 7 (AEH-D3/AEH-IL-5/6) — the pre-conversion FAIL label was cosmetic (report §1.2/§9.2), porting it literally would introduce a genuine halt this step never had', () => {
+    const d = loadDescriptor();
+    const insp = d.checks.find((c) => c.id === 'insp_dead_tuple_pct');
+    const coa = d.checks.find((c) => c.id === 'coa_dead_tuple_pct');
+    expect(insp, 'insp_dead_tuple_pct check missing').toBeDefined();
+    expect(coa, 'coa_dead_tuple_pct check missing').toBeDefined();
+    expect(insp!.severity, 'insp_dead_tuple_pct must be WARN, not the cosmetic pre-conversion FAIL label').toBe('WARN');
+    expect(coa!.severity).toBe('WARN');
+    expect(insp!.blocking).toBe(false);
+    expect(coa!.blocking).toBe(false);
+    // Both share the SAME config var (AEH-IL-6's own disposition: same value, own severity).
+    const insp2 = d.checks.find((c) => c.id === 'insp_update_insert_ratio');
+    expect(insp2, 'insp_update_insert_ratio check missing').toBeDefined();
+    expect(insp2!.severity).toBe('WARN');
   });
 
-  it('no threshold breach in this file ever reaches the step-level throw — only a genuine exception does (report §1.2, the load-bearing Ask 1 evidence)', () => {
-    const text = src();
-    // The only push sites into `errors[]` are the outer catch (never a threshold comparison).
-    const errorsPushSites = [...text.matchAll(/errors\.push\(/g)];
-    expect(errorsPushSites.length, 'errors[] must have exactly one push site (the outer catch, :191)').toBe(1);
-    // The throw is driven by hasErrors := errors.length > 0, never by warnings.length or a FAIL row.
-    expect(text).toMatch(/const hasErrors = errors\.length > 0;/);
-    expect(text).toMatch(/if \(hasErrors\) throw new Error\('Engine health check failed'\);/);
-    // The two 'FAIL'-capable audit tables (insp/coa) never feed `errors[]` or `hasErrors`.
-    expect(text.indexOf("hasFails ? 'FAIL'")).toBeGreaterThan(-1);
-    expect(text).not.toMatch(/hasFails\s*&&\s*errors\.push/);
+  it('no check declared by this step can drive RUN_STATUS.FAILED — every declared check is severity WARN, non-blocking (report §1.2/§9.2, the load-bearing never-halts-on-threshold contract, now expressed structurally rather than via the retired errors[]/hasErrors bookkeeping)', () => {
+    const d = loadDescriptor();
+    expect(d.checks.length).toBeGreaterThanOrEqual(6);
+    for (const c of d.checks) {
+      expect(c.severity, `check ${c.id} must not be FAIL-severity — a FAIL verdict with no accept_until drives RUN_STATUS.FAILED`).toBe('WARN');
+      expect(c.blocking, `check ${c.id} must be non-blocking`).toBe(false);
+    }
   });
 
-  it('no `new Date()` is written to the DB — only Date.now() for elapsed-ms (report §1.3, clock seam compliant)', () => {
-    const text = src();
+  it('no `new Date()` is written to the DB — only Date.now() for elapsed-ms (report §1.3, clock seam compliant; repointed to the compute at commit 7, also enforced fleet-wide by the compute-no-wall-clock ast-grep rule)', () => {
+    const text = computeSource();
     const newDateSites = [...text.matchAll(/new Date\(/g)];
-    expect(newDateSites.length, 'new Date() must not appear anywhere in this file').toBe(0);
+    expect(newDateSites.length, 'new Date() must not appear anywhere in the compute').toBe(0);
   });
 
-  it('the VACUUM ANALYZE target set is runtime-discovered, never a hardcoded table list (report §1.4/§4.1 CONTRACT)', () => {
-    const text = src();
+  it('the VACUUM ANALYZE target set is runtime-discovered, never a hardcoded table list (report §1.4/§4.1 CONTRACT; repointed to the compute at commit 7)', () => {
+    const text = computeSource();
     expect(text).toContain('Discover all public-schema tables dynamically — no hardcoded list');
     expect(text).not.toMatch(/const MONITORED_TABLES\s*=\s*\[['"]/); // not a literal array of table names
   });
@@ -192,7 +201,7 @@ describe('assert_engine_health — measured facts, true today (plain it)', () =>
     }
   });
 
-  it('converted.json declares this step pending at stage "red_suite" (R-K/R-K.1) — well-formed, and not double-registered in `converted`', () => {
+  it('converted.json declares this step pending at stage "shape_clean" (R-K.1) after commit 7 — well-formed, and not double-registered in `converted` (registration to `converted[]` is commit 9\'s own cutover)', () => {
     const doc = JSON.parse(fs.readFileSync(artifact(CONVERTED_REL), 'utf8')) as {
       converted: string[];
       pending: Array<{ file: string; registers_at: string; reason: string; declared: string; stage: string }>;
@@ -200,7 +209,7 @@ describe('assert_engine_health — measured facts, true today (plain it)', () =>
     expect(doc.converted, 'must not be double-registered while still pending').not.toContain(STEP_REL);
     const entry = doc.pending.find((p) => p.file === STEP_REL);
     expect(entry, `${CONVERTED_REL} has no pending entry for ${STEP_REL}`).toBeDefined();
-    expect(entry?.stage).toBe('red_suite');
+    expect(entry?.stage).toBe('shape_clean');
   });
 
   it('template-freeze.json shows BOTH ASSERT and RECORDER proven, with different converted-member counts — the measured R-PACE-1 consequence named in report §2 (Ask 1)', () => {
@@ -225,10 +234,16 @@ describe('assert_engine_health — measured facts, true today (plain it)', () =>
 });
 
 // ---------------------------------------------------------------------------
-// 2. G4d — the 4 named fences (AEH-IL-1 through AEH-IL-4), both directions, against the CURRENT
-//    (pre-conversion) step source. Provable today because the subject (the step file) already
-//    exists — mirrors assert_data_bounds's own I2 precedent (FENCES array).
+// 2. G4d — the 4 named fences (AEH-IL-1 through AEH-IL-4), both directions. REPOINTED at
+//    commit 7 from src() (the pre-conversion step file, now the frozen shell — none of this
+//    domain text survives there) to computeAndDescriptorSource() (the compute file + the
+//    descriptor's own JSON text, concatenated) — mirrors assert_data_bounds's own I2 commit-7
+//    precedent (6 G4d fences repointed from src() to computeAndFieldsSource()).
 // ---------------------------------------------------------------------------
+
+function computeAndDescriptorSource(): string {
+  return `${computeSource()}\n${JSON.stringify(loadDescriptor())}`;
+}
 
 interface Fence {
   name: string;
@@ -239,83 +254,75 @@ interface Fence {
 
 const FENCES: Fence[] = [
   {
-    name: 'AEH-IL-1 — PING_PONG_RATIO raised 2 -> 10 (8c9e64d7), operational-baseline rationale documented (bdcbb58a)',
+    name: 'AEH-IL-1 — PING_PONG_RATIO raised 2 -> 10 (8c9e64d7), operational-baseline rationale documented (bdcbb58a) — now the seed default + descriptor why-text, not a JS constant',
     commit: '8c9e64d7',
     detect: (t) => {
       const v: string[] = [];
-      if (!/PING_PONG_RATIO = 10/.test(t)) v.push('PING_PONG_RATIO is no longer 10');
-      if (!/review_followups\.md/.test(t)) v.push('the review_followups.md citation comment is gone');
+      if (!t.includes('engine_health_ping_pong_ratio_warn_max')) v.push('the ping-pong config var is gone');
+      if (!/review_followups/.test(t)) v.push('the review_followups.md citation is gone from the descriptor why-text');
+      if (!/raised from 2 to 10/.test(t)) v.push('the "raised from 2 to 10" rationale text is gone');
       return v;
     },
-    revert: (t) => t.replace(
-      /const PING_PONG_RATIO = 10;[^\n]*/,
-      "const PING_PONG_RATIO = 2;           // updates > 2x inserts",
-    ),
+    revert: (t) => t.replace(/engine_health_ping_pong_ratio_warn_max/g, 'REMOVED'),
   },
   {
-    name: 'AEH-IL-2 — vacuumTargets hoisted to `let` before the try block (9d9acf7a, scope-crash fix)',
+    name: 'AEH-IL-2 — vacuumTargets scope-crash fix (9d9acf7a): the runtime array is declared OUTSIDE any try block, at compute() top level, never reference-before-declaration across a catch boundary',
     commit: '9d9acf7a',
     detect: (t) => {
       const v: string[] = [];
-      // The declaration must exist, be a `let` (not `const`, which crashed pre-9d9acf7a), and
-      // precede the domain-discovery try block (`:71`) it is read/written inside of.
-      const declIdx = t.search(/let vacuumTargets = \[\];/);
-      const tryIdx = t.indexOf('    // Discover all public-schema tables dynamically');
-      if (declIdx === -1) v.push('vacuumTargets is no longer declared with `let`');
-      else if (tryIdx === -1 || !(declIdx < tryIdx)) v.push('vacuumTargets declaration no longer precedes the discovery try block');
+      // The new compute is a pure-function rewrite with no try/catch wrapping the
+      // domain-discovery path at all (report §4.1: preserved-in-compute, "the runtime
+      // array becomes an ordinary compute-scoped local" — matching assert_data_bounds's
+      // own IL-2-class disposition for its sibling scope fix). Verified: the declaration
+      // exists, and it precedes its own consuming loop (the VACUUM ANALYZE `for` loop) in
+      // source order — the same "declared where read, never inside a block it escapes"
+      // guarantee 9d9acf7a fixed, re-stated for the new structure.
+      const declIdx = t.indexOf('const vacuumTargets = tableResults.filter(');
+      const loopIdx = t.indexOf('for (const target of vacuumTargets)');
+      if (declIdx === -1) v.push('vacuumTargets is no longer a plain compute-scoped const');
+      else if (loopIdx === -1 || !(declIdx < loopIdx)) v.push('vacuumTargets declaration no longer precedes its own consuming loop');
       return v;
     },
-    revert: (t) => t.replace(/ {2}let vacuumTargets = \[\];\r?\n/, ''),
+    revert: (t) => t.replace('const vacuumTargets = tableResults.filter(', 'REMOVED = tableResults.filter('),
   },
   {
-    name: 'AEH-IL-3 — ledger-strand window (P3, f32b1485): the throw fires AFTER the finalize UPDATE, load-bearing ordering comment intact',
+    name: 'AEH-IL-3 — ledger-strand window (P3, f32b1485): the mechanism RETIRES TO THE SHARED LIBRARY at commit 7 (report §3.1 ACCEPT disposition) — this compute contains ZERO ledger code, matching refresh_snapshot\'s own identical retirement',
     commit: 'f32b1485',
     detect: (t) => {
       const v: string[] = [];
-      if (!/Load-bearing ordering; do not move the throw up\./.test(t)) v.push('the load-bearing-ordering comment is gone');
-      if (!/finalizeStrandedRun/.test(t)) v.push('finalizeStrandedRun is no longer imported/called');
-      const finalizeUpdateIdx = t.indexOf('ledgerFinalized = true');
-      const throwIdx = t.indexOf("throw new Error('Engine health check failed')");
-      if (finalizeUpdateIdx === -1 || throwIdx === -1 || !(finalizeUpdateIdx < throwIdx)) {
-        v.push('the finalize UPDATE no longer precedes the throw in source order');
-      }
+      if (t.includes('pipeline_runs')) v.push('compute must not touch pipeline_runs directly — the ledger is a library concern now');
+      if (t.includes('finalizeStrandedRun')) v.push('compute must not import/call finalizeStrandedRun directly — retired to the shared library');
       return v;
     },
-    revert: (t) => t.replace(
-      /\s*\/\/ NOTE: fires AFTER the finalize UPDATE above, so the row already carries the\s*\n\s*\/\/ real status\/errors — the window sees ledgerFinalized=true and does not\s*\n\s*\/\/ relabel it\. Load-bearing ordering; do not move the throw up\.\s*\n/,
-      '\n',
-    ),
+    revert: (t) => `${t}\nconst x = pipeline_runs; finalizeStrandedRun();`,
   },
   {
-    name: 'AEH-IL-4 — chain-aware per-chain audit_table dispatch (ab3dc8a1): exactly one table selected by CHAIN_ID',
+    name: 'AEH-IL-4 — chain-aware per-chain audit_table dispatch (ab3dc8a1): exactly the relevant check family is selected per chain — now declared data (checks[].chains), not a runtime IIFE dispatch',
     commit: 'ab3dc8a1',
     detect: (t) => {
       const v: string[] = [];
       for (const needle of [
-        "CHAIN_ID === 'deep_scrapes' && inspAuditTable",
-        "CHAIN_ID === 'coa' && coaAuditTable",
-        'const phaseMap = { permits: 16, sources: 15, coa: 9, deep_scrapes: 6 };',
+        '"id":"insp_dead_tuple_pct"', '"chains":["deep_scrapes"]',
+        '"id":"coa_dead_tuple_pct"', '"chains":["coa"]',
+        '"id":"insp_update_insert_ratio"',
       ]) {
-        if (!t.includes(needle)) v.push(`missing: ${needle}`);
+        if (!t.replace(/\s/g, '').includes(needle.replace(/\s/g, ''))) v.push(`missing: ${needle}`);
       }
       return v;
     },
-    revert: (t) => t.replace(
-      "if (CHAIN_ID === 'deep_scrapes' && inspAuditTable) return { audit_table: inspAuditTable };",
-      '// removed',
-    ),
+    revert: (t) => t.replace('"insp_dead_tuple_pct"', '"insp_dead_tuple_pct_removed"'),
   },
 ];
 
-describe('assert_engine_health — G4d fence locks (both directions, pre-conversion source)', () => {
+describe('assert_engine_health — G4d fence locks (both directions, repointed to compute+descriptor at commit 7)', () => {
   for (const fence of FENCES) {
     describe(`${fence.name} (${fence.commit})`, () => {
-      it('is intact in the current step source', () => {
-        expect(fence.detect(src()), `fence violated in the live file: ${fence.name}`).toEqual([]);
+      it('is intact in the compute+descriptor source', () => {
+        expect(fence.detect(computeAndDescriptorSource()), `fence violated: ${fence.name}`).toEqual([]);
       });
 
       it('a reverted copy is detected as violated (proves the detector is not vacuous)', () => {
-        expect(fence.detect(fence.revert(src())).length, `reverted text should trip ${fence.name}`).toBeGreaterThan(0);
+        expect(fence.detect(fence.revert(computeAndDescriptorSource())).length, `reverted text should trip ${fence.name}`).toBeGreaterThan(0);
       });
     });
   }
@@ -325,18 +332,19 @@ describe('assert_engine_health — G4d fence locks (both directions, pre-convers
 // 3. Genuinely RED today — flips at commit ② (descriptor + compute land, per the Ask 1 ruling)
 // ===========================================================================
 
-describe('assert_engine_health — genuinely red until commit ② (it.fails)', () => {
-  it.fails('the descriptor exists at all', () => { // flips at: commit 2
-    artifact(DESCRIPTOR_REL, 'lands at commit 2, after the Ask 1 archetype ruling');
+describe('assert_engine_health — landed at commit 7 (flipped from it.fails to plain it)', () => {
+  it('the descriptor exists at all', () => { // flipped: commit 7
+    artifact(DESCRIPTOR_REL, 'landed commit 7');
   });
 
-  it.fails('the descriptor declares an identity.archetype that is one of the two Ask-1 candidates, with lock 104', () => { // flips at: commit 2
+  it('the descriptor declares identity.archetype RECORDER (Ask 1 ruling), with lock 104', () => { // flipped: commit 7
     const d = loadDescriptor();
     expect(['ASSERT', 'RECORDER']).toContain(d.identity.archetype);
+    expect(d.identity.archetype).toBe('RECORDER');
     expect(d.identity.lock).toBe(104);
   });
 
-  it.fails('config.logic_variables declares the 6 tunables named in report §4.4 (4 top-level + 2 per-audit-table)', () => { // flips at: commit 2
+  it('config.logic_variables declares the 6 tunables named in report §4.4 (4 top-level + 2 per-audit-table)', () => { // flipped: commit 7
     const d = loadDescriptor();
     expect(d.config).not.toBe('none');
     const cfg = d.config as { logic_variables: Array<{ name: string }> };
@@ -353,29 +361,35 @@ describe('assert_engine_health — genuinely red until commit ② (it.fails)', (
     }
   });
 
-  it.fails('checks[] declares at least one check per measured metric family (dead tuple, seq scan, ping-pong, insp dead-tuple, insp update-ratio, coa dead-tuple)', () => { // flips at: commit 2
+  it('checks[] declares at least one check per measured metric family (dead tuple, seq scan, ping-pong, insp dead-tuple, insp update-ratio, coa dead-tuple)', () => { // flipped: commit 7
     const d = loadDescriptor();
     expect(d.checks.length).toBeGreaterThanOrEqual(6);
   });
 
-  it.fails('identity.gate_exempt is declared true (assert_* prefix, matches the live isInfraStep verdict, report §1.1 claim 10)', () => { // flips at: commit 2
+  it('identity.gate_exempt is declared true (assert_* prefix, matches the live isInfraStep verdict, report §1.1 claim 10)', () => { // flipped: commit 7
     const d = loadDescriptor() as unknown as { identity: { gate_exempt?: boolean } };
     expect(d.identity.gate_exempt).toBe(true);
   });
 
-  it.fails('the compute module exists and exports compute', () => { // flips at: commit 2
+  it('the compute module exists and exports compute', () => { // flipped: commit 7
     const text = computeSource();
     expect(text).toMatch(/module\.exports/);
   });
 
-  it.fails('the deviations[] entry for the VACUUM-tail mechanism cites the 2026-09-10 EP-D17 DEFER ruling verbatim (Ask 2, report §5 — NOT a grandfathered.json entry)', () => { // flips at: commit 2
+  it('the deviations[] entries cover both the VACUUM-tail mechanism (Ask 2, EP-D17 DEFER — NOT a grandfathered.json entry) and the newly-measured execution.shape gap (report §9.1)', () => { // flipped: commit 7
     const d = loadDescriptor() as unknown as { deviations: 'none' | Array<{ from: string; adjudicated_by: string }> };
     expect(d.deviations).not.toBe('none');
     const deviations = d.deviations as Array<{ from: string; adjudicated_by: string }>;
+    expect(deviations.length).toBeGreaterThanOrEqual(2);
     expect(deviations.some((dv) => /VACUUM|maintenance/i.test(dv.from))).toBe(true);
+    expect(deviations.some((dv) => /execution\.shape/i.test(dv.from))).toBe(true);
   });
 
-  it.fails('commit ③\'s frozen shell calls pipeline.step(...) while keeping the lock-104 constant (thin shell)', () => { // flips at: commit 2 (compute), fully true only after commit 3's cutover peel
+  // Still genuinely red at commit 7 — the shell is 35 lines (extensive SPEC LINK / why-frozen
+  // commentary), matching refresh_snapshot's own 40-line and assert_data_bounds's own 34-line
+  // precedent shells (both also over this literal 20-line bound). Kept it.fails() verbatim per
+  // its own "fully true only after commit 3's cutover peel" comment — carried to commit 9.
+  it.fails('the frozen shell calls pipeline.step(...) while keeping the lock-104 constant AND is under 20 lines (thin shell)', () => { // flips at: commit 9 (line-count bound, not the pipeline.step() call itself, which is already true)
     const text = src();
     expect(text).toMatch(/pipeline\.step\(/);
     expect(text.split('\n').length).toBeLessThan(20);

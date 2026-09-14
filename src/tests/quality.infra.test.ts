@@ -486,21 +486,26 @@ describe('DataFlowTile renders from live pipeline_meta', () => {
 // Engine Health (CQA Tier 3)
 // ---------------------------------------------------------------------------
 
+// COMMIT 7 REPOINT (batch1 I3, 2026-09-14): assert-engine-health.js is now the Spec 122
+// frozen shell; the domain logic (pg_stat_user_tables discovery, the guarded upsert, the
+// VACUUM ANALYZE loop) lives verbatim in scripts/lib/compute/assert-engine-health.js.
+// Mirrors assert-data-bounds's own I2 commit-7 precedent (§634 below), and assert_schema/
+// assert_global_coverage's identical prior RE-HOMEs in this same file.
 describe('Engine Health CQA Tier 3', () => {
-  it('assert-engine-health.js script uses Pipeline SDK pattern', () => {
+  it('the frozen shell uses the Pipeline SDK pattern (pipeline.step + descriptor + compute)', () => {
     const source = fs.readFileSync(
       path.join(__dirname, '../../scripts/quality/assert-engine-health.js'),
       'utf-8'
     );
     expect(source).toContain("require('../lib/pipeline')");
-    expect(source).toMatch(/pipeline\.emitSummary|PIPELINE_SUMMARY:/);
-    expect(source).toContain('pipeline.emitMeta');
-    expect(source).toContain('pipeline.run');
+    expect(source).toContain('pipeline.step(');
+    expect(source).toContain('assert-engine-health.descriptor.json');
+    expect(source).toContain("require('../lib/compute/assert-engine-health')");
   });
 
-  it('assert-engine-health.js queries pg_stat_user_tables', () => {
+  it('the compute queries pg_stat_user_tables', () => {
     const source = fs.readFileSync(
-      path.join(__dirname, '../../scripts/quality/assert-engine-health.js'),
+      path.join(__dirname, '../../scripts/lib/compute/assert-engine-health.js'),
       'utf-8'
     );
     expect(source).toContain('pg_stat_user_tables');
@@ -510,9 +515,9 @@ describe('Engine Health CQA Tier 3', () => {
     expect(source).toContain('idx_scan');
   });
 
-  it('assert-engine-health.js writes to engine_health_snapshots', () => {
+  it('the compute writes to engine_health_snapshots', () => {
     const source = fs.readFileSync(
-      path.join(__dirname, '../../scripts/quality/assert-engine-health.js'),
+      path.join(__dirname, '../../scripts/lib/compute/assert-engine-health.js'),
       'utf-8'
     );
     expect(source).toContain('engine_health_snapshots');
@@ -577,57 +582,55 @@ describe('Engine Health CQA Tier 3', () => {
     expect(source).toContain('pre.engine');
   });
 
-  it('UPSERT uses IS DISTINCT FROM guard to skip no-op updates', () => {
+  it('the guarded upsert uses IS DISTINCT FROM to skip no-op updates (6-column guard, more disciplined than the refresh_snapshot RECORDER exemplar\'s own guard:"none")', () => {
     const source = fs.readFileSync(
-      path.join(__dirname, '../../scripts/quality/assert-engine-health.js'),
+      path.join(__dirname, '../../scripts/lib/compute/assert-engine-health.js'),
       'utf-8'
     );
     expect(source).toContain('IS DISTINCT FROM');
   });
 
-  it('PIPELINE_SUMMARY includes records_updated field', () => {
+  it('the compute reports records_updated via ctx.report()\'s counters (Rule 10 — the descriptor\'s counters.records_updated sources records_meta.records_updated, not a hand-rolled PIPELINE_SUMMARY call)', () => {
     const source = fs.readFileSync(
-      path.join(__dirname, '../../scripts/quality/assert-engine-health.js'),
+      path.join(__dirname, '../../scripts/lib/compute/assert-engine-health.js'),
       'utf-8'
     );
-    // Match both raw PIPELINE_SUMMARY and pipeline.emitSummary() calls
-    const summaryMatch = source.match(/(?:PIPELINE_SUMMARY|emitSummary\().*?(\{[^}]+\})/);
-    expect(summaryMatch).toBeTruthy();
-    expect(summaryMatch![1]).toContain('records_updated');
+    expect(source).toContain('records_updated');
+    const descriptor = JSON.parse(fs.readFileSync(
+      path.join(__dirname, '../../scripts/quality/assert-engine-health.descriptor.json'),
+      'utf-8'
+    )) as { counters: { records_updated?: { source: string } } };
+    expect(descriptor.counters.records_updated?.source).toBe('records_meta.records_updated');
   });
 
-  it('auto-triggers VACUUM ANALYZE on tables exceeding dead tuple threshold', () => {
+  it('auto-triggers VACUUM ANALYZE on tables exceeding the dead-tuple threshold (now config-driven, Rule 3)', () => {
     const source = fs.readFileSync(
-      path.join(__dirname, '../../scripts/quality/assert-engine-health.js'),
+      path.join(__dirname, '../../scripts/lib/compute/assert-engine-health.js'),
       'utf-8'
     );
     expect(source).toContain('VACUUM ANALYZE');
+    expect(source).toContain('config.engine_health_dead_tuple_ratio_warn_max');
   });
 
-  it('vacuumTargets is declared before the outer try block (scope bug fix)', () => {
+  it('vacuumTargets is declared before its own consuming loop (AEH-IL-2, the 9d9acf7a scope-crash fix — re-stated for the pure-function rewrite, no try/catch spans the declaration)', () => {
     const source = fs.readFileSync(
-      path.join(__dirname, '../../scripts/quality/assert-engine-health.js'),
+      path.join(__dirname, '../../scripts/lib/compute/assert-engine-health.js'),
       'utf-8'
     );
-    // vacuumTargets must be declared with `let` before the outer try block (not `const` inside it)
-    // so it's accessible in meta construction after the catch
-    expect(source).toMatch(/let vacuumTargets\s*=\s*\[\]/);
-    // Must NOT have a `const vacuumTargets` (that would shadow the outer let)
-    expect(source).not.toMatch(/const vacuumTargets/);
+    const declIdx = source.indexOf('const vacuumTargets = tableResults.filter(');
+    const loopIdx = source.indexOf('for (const target of vacuumTargets)');
+    expect(declIdx).toBeGreaterThan(-1);
+    expect(loopIdx).toBeGreaterThan(-1);
+    expect(declIdx).toBeLessThan(loopIdx);
   });
 
-  it('recordsUpdated is declared before the outer try block (scope bug fix)', () => {
+  it('recordsUpdated is derived from the write loop and threaded through to records_meta/counters (scope bug fix, re-stated: no reference-before-assignment across a catch boundary)', () => {
     const source = fs.readFileSync(
-      path.join(__dirname, '../../scripts/quality/assert-engine-health.js'),
+      path.join(__dirname, '../../scripts/lib/compute/assert-engine-health.js'),
       'utf-8'
     );
-    // recordsUpdated must be hoisted before the outer try block so PIPELINE_SUMMARY can reference it
-    // Verify it appears alongside the other hoisted variables (vacuumTargets)
-    const vacIdx = source.indexOf('let vacuumTargets');
-    const recUpdIdx = source.indexOf('let recordsUpdated');
-    expect(recUpdIdx).toBeGreaterThan(-1);
-    // recordsUpdated should be near vacuumTargets (both hoisted before try)
-    expect(Math.abs(recUpdIdx - vacIdx)).toBeLessThan(100);
+    expect(source).toContain('recordsUpdated');
+    expect(source).toContain('records_updated: recordsUpdated');
   });
 });
 
