@@ -2062,6 +2062,40 @@
         "blocks": []
       },
       "last_reviewed": "2026-09-14"
+    },
+    {
+      "id": "SPECTBL-1",
+      "spec": "43 §2 / 42 §2 / 41 §2",
+      "title": "Chain-spec Step Breakdown tables reconciled to manifest.chains + drift-locked",
+      "promised": "every chain spec's ### Step Breakdown table states the live membership, position and script of manifest.chains[X], and the next drift cannot be committed",
+      "status": "BUILT",
+      "evidence": "BUILT 2026-09-15 (plan .cursor/wf2_spec43_step_table_active_task.md): src/tests/system-map.infra.test.ts 'chain-spec Step Breakdown tables' describe locks #/Slug/Script for all 6 chain specs vs scripts/manifest.json chains, both directions (RED before the fix named 10 membership + 37 position problems across 41/42/43, clean on 44/45/46); docs/specs/01-pipeline/43_chain_sources.md prepends reconcile + renumbers 2..28 and re-points 2 'Spec 48 §3.6' value-correctness miscitations; 42_chain_coa.md adds 6 missing steps (filing said 5 — compute_phase_calibration was also absent), drops 2 retired Phase-G rows, renumbers 1..16; 41_chain_permits.md adds dispatch_notifications at 30 and renumbers 31..33 (drift newly measured here, never filed). Positions derived by a node walk of manifest.chains, never hand-counted",
+      "owner": {
+        "kind": "wf",
+        "ref": "wf: chain-spec step tables (SPECTBL-1)"
+      },
+      "gate": {
+        "kind": "nice_to_have",
+        "blocks": []
+      },
+      "last_reviewed": "2026-09-15"
+    },
+    {
+      "id": "SPECTBL-GEN",
+      "spec": "122 batch-2 amendment item 5",
+      "title": "Step Breakdown tables generated rather than hand-authored",
+      "promised": "the derivable columns of a chain spec's step table are emitted by a tool the way 00_system_map.md is, with the Purpose/Writes-To prose re-homed into a sidecar",
+      "status": "NOT_STARTED",
+      "evidence": "DEFERRED by SPECTBL-1 (2026-09-15) on measurement: only 3 of the 5 columns (#/Slug/Script) are derivable from manifest.chains — Purpose and Writes-To are irreducible hand-authored prose (Spec 43 row 14 alone is a ~600-char paragraph carrying the WF2 P11-1 version-skip gate), so generating the table means re-homing that prose into a JSON sidecar, which under Spec 124 R-AA is a manifest-declared, tool-performed, --refresh-only content MOVE with budgets and stub gates. Every defect measured 2026-09-15 lived in the 3 derivable columns and is now closed by the lock. Build only if prose drift is ever measured (it has not been). Ruling to be recorded at batch-2 row 0.8",
+      "owner": {
+        "kind": "followup",
+        "ref": ".cursor/batch2_c5_active_task.md §Proposed policy amendments item 5 (batch-2 row 0.8)"
+      },
+      "gate": {
+        "kind": "nice_to_have",
+        "blocks": []
+      },
+      "last_reviewed": "2026-09-15"
     }
   ]
 }

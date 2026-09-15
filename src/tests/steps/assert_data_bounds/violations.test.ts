@@ -1,7 +1,10 @@
 // SPEC LINK: docs/specs/01-pipeline/44_chain_deep_scrapes.md §4 (Data bounds, assert_data_bounds —
 //   the plan's Target Spec; no system-map owner row exists for this file, see report §1.0)
 // SPEC LINK: docs/specs/01-pipeline/41_chain_permits.md, 42_chain_coa.md, 43_chain_sources.md
-//   (chain-owner specs; Spec 42 step 8/Spec 43 step 26 chain-position drift corrections land at commit 9)
+//   (chain-owner specs; assert_data_bounds' LIVE chain positions are permits 22 / coa 11 / sources 27 /
+//   deep_scrapes 5, derived from manifest.chains. The stale "Spec 42 step 8 / Spec 43 step 26" numbers
+//   this line used to carry were those specs' own drifted tables, reconciled by WF2 SPECTBL-1 2026-09-15
+//   and now locked by src/tests/system-map.infra.test.ts)
 // SPEC LINK: docs/specs/01-pipeline/122_pipeline_step_optimization.md §1.10 (ASSERT archetype —
 //   outputs/recovery/counters forced "none"), §5.3 (checks[] shape, 10 required fields)
 // SPEC LINK: docs/specs/01-pipeline/123_step_opt_assessment_validation.md §6 (gates), §7 commit 6

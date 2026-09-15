@@ -12,14 +12,17 @@ As a business user, I expect this daily pipeline to ingest 237K+ raw Toronto bui
 
 **Trigger:** `node scripts/run-chain.js permits` or `POST /api/admin/pipelines/chain_permits`
 **Schedule:** Daily
-**Steps:** 32 (sequential, stop-on-failure)
+**Steps:** 33 (sequential, stop-on-failure) — count DERIVED from `manifest.chains.permits`, single source of truth
 **Gate:** `permits` — if `records_new = 0`, downstream enrichment steps are skipped (infra steps still run)
 
 > **WF2 P6.5 (2026-07-07):** the step table below is a FULL re-derivation from
-> the live `manifest.chains.permits` array (32 entries). Prior revisions listed
+> the live `manifest.chains.permits` array (32 entries at that date). Prior revisions listed
 > 30 steps — they omitted `compute_storey_norms` + `compute_build_norms` (both
 > shipped with the max-build/norms epics) and still carried the retired
-> `create_pre_permits` row. The order/count here is authoritative.
+> `create_pre_permits` row.
+> **Superseded on the count by WF2 SPECTBL-1 (2026-09-15):** the chain has since gained
+> `dispatch_notifications` and stands at 33. The manifest, not this note, is authoritative —
+> and the lock named below now enforces that.
 
 ```
 assert_schema → permits → close_stale_permits → classify_permit_phase →
@@ -30,8 +33,10 @@ compute_cost_estimates → compute_timing_calibration_v2 →
 link_coa → refresh_snapshot → assert_data_bounds →
 assert_engine_health → classify_lifecycle_phase → assert_lifecycle_phase_distribution →
 compute_phase_calibration → compute_trade_forecasts → compute_opportunity_scores → update_tracked_projects →
-assert_entity_tracing → assert_global_coverage → backup_db
+dispatch_notifications → assert_entity_tracing → assert_global_coverage → backup_db
 ```
+
+**Table reconciled + drift-locked (WF2 SPECTBL-1, 2026-09-15, `.cursor/wf2_spec43_step_table_active_task.md`):** measured this session by a `node` walk of `manifest.chains.permits` (never hand-counted), this table omitted `dispatch_notifications` (live position **30**, Spec 101's ONE sender), which left its last three rows — `assert_entity_tracing`, `assert_global_coverage`, `backup_db` — numbered 30/31/32 against live 31/32/33, and the §2 count reading 32 against a live 33. This drift was **newly measured here and had never been filed** (unlike the Spec 42/43 tables, which were). Fixed: the row inserted at 30, the trailing three renumbered, the count and the flow diagram corrected. The `system-map.infra.test.ts` lock under `src/tests/` ("chain-spec Step Breakdown tables" describe) now locks the `#` / Slug / Script columns of all six chain tables against `manifest.chains`, both directions, in the existing pre-commit hook.
 
 > **WF3 2026-04-13:** v1 `compute_timing_calibration` removed from the chain.
 > The detail-page timing engine (spec 71, `src/features/leads/lib/timing.ts`)
@@ -71,9 +76,10 @@ assert_entity_tracing → assert_global_coverage → backup_db
 | 27 | `compute_trade_forecasts` | `compute-trade-forecasts.js` | Phase 4 flight tracker. **WF1 Phase C+F extension:** REKEYS writes on `lead_id`; source SQL UNION-extends to read both `permits` and `coa_applications` per Spec 42 §6.7. CoA-stage routing simplified (target always `bid_phase`; anchor priority `phase_started_at` → `decision_date` → `hearing_date` → application_date). | trade_forecasts (keyed on lead_id) |
 | 28 | `compute_opportunity_scores` | `compute-opportunity-scores.js` | **WF1 Phase C extension:** REKEYS writes on `lead_id` per Spec 81 §2. Math unchanged. CoA-stage scores produce real values post-Phase E. | trade_forecasts.opportunity_score |
 | 29 | `update_tracked_projects` | `update-tracked-projects.js` | CRM Assistant. **WF1 Phase C+F extension:** REKEYS on `lead_id`; adds CoA branch with stall thresholds (`coa_stall_threshold_p2_days`), hearing-date imminent window, decision-keyed auto-archive per Spec 82 §3 CoA Lead Handling. | tracked_projects, lead_analytics |
-| 30 | `assert_entity_tracing` | `quality/assert-entity-tracing.js` | Tier 3 CQA: for permits seen in the last 26 hours, checks coverage rate across 5 downstream tables/columns (permit_trades ≥95%, cost_estimates ≥90%, trade_forecasts ≥85%, lifecycle_phase ≥95%, opportunity_score >0 rate ≥80%). The `trade_forecasts` floor was temporarily relaxed to 0.30 during the rebuild and RESTORED to 0.85 in WF2 P6.5 (denominator is permit-scoped — CoA forecasts carry `permit_num` NULL and are excluded). Non-halting (observational). | pipeline_runs |
-| 31 | `assert_global_coverage` | `quality/assert-global-coverage.js` | Tier 3 CQA: field-level coverage profile for every step. One row per table.column in the denominator matrix. PASS/WARN/FAIL per configurable thresholds from logic_variables. Non-halting (observational). Uses advisory lock 111. | pipeline_runs |
-| 32 | `backup_db` | `backup-db.js` | OP4 daily logical backup as final maintenance step (Spec 112 §3). | — |
+| 30 | `dispatch_notifications` | `dispatch-notifications.js` | The ONE sender (P25 25A/25B, Spec 101). Reads the `notifications` queue written by the two enqueuers (`classify-lifecycle-phase.js`, `update-tracked-projects.js`) and delivers each eligible row to Expo EXACTLY ONCE per (user, lead, type, Toronto-date) via the `notification_dispatches` ledger — replacing the pre-P25 direct sender inside `classify-lifecycle-phase.js` (which double-sent) and activating Spec 82's queue (which no sender ever read). Inert until `logic_variables.notifications_dispatch_enabled = 1` (seeded OFF): while the kill-switch is off the step is a no-op SKIP, the intermediate-safe state. | notifications, notification_dispatches |
+| 31 | `assert_entity_tracing` | `quality/assert-entity-tracing.js` | Tier 3 CQA: for permits seen in the last 26 hours, checks coverage rate across 5 downstream tables/columns (permit_trades ≥95%, cost_estimates ≥90%, trade_forecasts ≥85%, lifecycle_phase ≥95%, opportunity_score >0 rate ≥80%). The `trade_forecasts` floor was temporarily relaxed to 0.30 during the rebuild and RESTORED to 0.85 in WF2 P6.5 (denominator is permit-scoped — CoA forecasts carry `permit_num` NULL and are excluded). Non-halting (observational). | pipeline_runs |
+| 32 | `assert_global_coverage` | `quality/assert-global-coverage.js` | Tier 3 CQA: field-level coverage profile for every step. One row per table.column in the denominator matrix. PASS/WARN/FAIL per configurable thresholds from logic_variables. Non-halting (observational). Uses advisory lock 111. | pipeline_runs |
+| 33 | `backup_db` | `backup-db.js` | OP4 daily logical backup as final maintenance step (Spec 112 §3). | — |
 
 **Cutover note (batch1 I3 commit 9, 2026-09-14, PH-0/§5 spec-diff obligation):** `assert_engine_health` (row 23) converted to the Spec 122 step standard, full nine-commit form (RECORDER archetype, Spec 124 R-AE — the `engine_health_snapshots` guarded upsert has no legal home under ASSERT's forced `outputs:"none"`). `scripts/quality/assert-engine-health.descriptor.json` is the behavioural contract from this commit forward; `scripts/lib/compute/assert-engine-health.js` holds the domain logic. See `docs/reports/2026-09-14-batch1-i3-assert-engine-health-assessment.md` §9 and `.cursor/batch1_i3_assert_engine_health_active_task.md` §2.
 
@@ -269,7 +275,7 @@ The decision lives in one pure exported function, `classifyHaltDecision()`.
 - `scripts/quality/assert-global-coverage.js` — step 32 `assert_global_coverage`
 - `scripts/backup-db.js` — step 33 `backup_db`
 - `scripts/quality/assert-lifecycle-phase-distribution.js` (wired at step 25)
-- `scripts/quality/assert-entity-tracing.js` (wired at step 30)
+- `scripts/quality/assert-entity-tracing.js` (wired at step 31)
 
 ### Out-of-Scope Files
 - `src/lib/classification/classifier.ts` — governed by trade classification step spec

@@ -1569,6 +1569,7 @@ Document the decision either way with a comment:
 - **Relies on:** `docs/specs/00_engineering_standards.md` §9 (pipeline & script safety), §5.5 (test-layer map — which layer a script/migration change must add)
 - **Consumed by:** Any WF1 that adds a new pipeline step
 - **Consumed by:** Any WF3 reviewing an existing script against the reference standard
+- `scripts/quality/assert-parcel-sanity.js` — named only as an entry in the §A.5 advisory-lock registry (lock **107**, the slot freed by the Phase-G retirement of `assert-pre-permit-aging`); its behaviour is governed by Spec 43. Listed **voluntarily**, to make `grep assert-parcel-sanity docs/specs` complete — **not** to close a Spec 124 R-AF gap: R-AF names Spec 47 among the cross-cutting architecture specs that are exempt readers ("they name every script by design"), and the enforcing lock in `system-map.infra.test.ts` skips Spec 47 accordingly, so no gap existed here (WF2 SPECTBL-1, 2026-09-15).
 
 ### Related AI-operator references (lazy-Read)
 - `docs/runbook/README.md` — runbook + one-off maintenance-script index + deploy-ordering rules (seed-before-code, migrate --verify, detached-run + chain-lock hazard, reset-then-drain). Read before running a chain, backfill, or reset.
