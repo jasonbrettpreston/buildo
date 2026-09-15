@@ -40,6 +40,13 @@ const ALLOWED_ROUTE_EXPORTS = new Set([
   'default',
 ]);
 
+// The first dynamic import of the Next.js route pulls the whole Next server graph: measured
+// 1.3 s in isolation but 24.9–30.4 s under the R-AG pre-push full suite (VITEST_MAX_FORKS=2,
+// 12-CPU host) — it timed out at the 15 s default on 4 of 6 pre-push runs on 2026-09-15 with
+// nothing else red. The cost is the import, not the assertion, so the budget is raised on
+// this ONE case; the second case reuses the module cache and keeps the default.
+const ROUTE_IMPORT_TIMEOUT_MS = 90_000;
+
 describe('App Health route — Next.js export allowlist (WF3 regression lock)', () => {
   it('exports ONLY canonical handler/config names — no test seams or helpers', async () => {
     const routeModule = await import('@/app/api/admin/app-health/route');
@@ -53,7 +60,7 @@ describe('App Health route — Next.js export allowlist (WF3 regression lock)', 
         `Move helpers/state/test-seams to a sibling module (./cache.ts pattern). ` +
         `Violations would block 'next build' at type-check time.`,
     ).toEqual([]);
-  }, 15000); // first dynamic import compiles the route (~14s on a loaded machine); 5s default flakes
+  }, ROUTE_IMPORT_TIMEOUT_MS); // was 15000 — see the measurement above; the import, not the assertion, is the cost
 
   it('exports the GET handler', async () => {
     const routeModule = await import('@/app/api/admin/app-health/route');
