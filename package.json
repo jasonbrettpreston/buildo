@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "test": "vitest run",
+    "test": "vitest run --exclude \"src/tests/db/**\" --exclude \"src/tests/enrich-heritage.infra.test.ts\" --exclude \"src/tests/enrich-ravines.infra.test.ts\" --exclude \"src/tests/load-ravines.infra.test.ts\" --exclude \"src/tests/restore-db.infra.test.ts\" --exclude \"src/tests/steps/link_massing/metamorphic.test.ts\" --exclude \"src/tests/steps/link_massing/nearest-determinism.test.ts\" --exclude \"src/tests/steps/link_massing/rung1-inline-wkt.test.ts\" --exclude \"src/tests/steps/link_parcel_addresses/metamorphic.test.ts\" --exclude \"src/tests/steps/link_parcel_addresses/rung1-inline-wkt.test.ts\"",
     "test:py": "python -m pytest scripts/tests",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
@@ -40,7 +40,7 @@
     "review:gemini": "node scripts/gemini-review.js",
     "review:deepseek": "node scripts/deepseek-review.js",
     "generate:script": "node scripts/generate-script.mjs",
-    "test:db": "BUILDO_TEST_DB=1 vitest run src/tests/db --no-file-parallelism",
+    "test:db": "BUILDO_TEST_DB=1 vitest run src/tests/db src/tests/enrich-heritage.infra.test.ts src/tests/enrich-ravines.infra.test.ts src/tests/load-ravines.infra.test.ts src/tests/restore-db.infra.test.ts src/tests/steps/link_massing/metamorphic.test.ts src/tests/steps/link_massing/nearest-determinism.test.ts src/tests/steps/link_massing/rung1-inline-wkt.test.ts src/tests/steps/link_parcel_addresses/metamorphic.test.ts src/tests/steps/link_parcel_addresses/rung1-inline-wkt.test.ts --no-file-parallelism",
     "test:property": "vitest run src/tests/property",
     "test:mutation": "stryker run",
     "test:mutation:dry": "stryker run --dryRunOnly"

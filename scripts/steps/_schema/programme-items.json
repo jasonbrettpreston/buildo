@@ -1953,8 +1953,8 @@
       "spec": "124 R-AG (proposed)",
       "title": "Gate placement: full suite at pre-push, vitest related + fast invariants at pre-commit, live-DB infra tests in test:db",
       "promised": "pre-commit runs typecheck + lint + vitest related <staged> + step-validate --staged --fast; the 10,437-test suite runs once per push and in CI; restore-db-class infra tests move to npm run test:db; hook composition locked by an infra test",
-      "status": "NOT_STARTED",
-      "evidence": "measured 2026-09-14: .husky/pre-commit ends in npm run test (~250 s, 10,437 tests); .husky/pre-push runs no suite; 9 hook runs per full-form step ≈ 40–45 min; 4 runs lost today to non-code causes — plan .cursor/wf2_conversion_velocity_active_task.md §1 — gate re-keyed 2026-09-14 from batching_prereq:[\"C5\"] (uncounted: blocksBatchingCount only reads \"batching\") to cutover_prereq naming every C5 slug, which checkCutoverPrereqs enforces",
+      "status": "BUILT",
+      "evidence": "BUILT this commit (velocity WF2, 2026-09-14): .husky/pre-commit = cheap gates + typecheck + lint + vitest related <staged>; .husky/pre-push = + full npm run test (VITEST_MAX_WORKERS=2); live-DB suites (restore-db.infra, enrich-heritage.infra, enrich-ravines.infra, load-ravines.infra, link_massing + link_parcel_addresses metamorphic/rung1) under npm run test:db; composition locked by src/tests/hooks-composition.infra.test.ts (11 tests, both directions); measured pre-commit on a docs-only stage 65.4 s (was ~300 s); CLAUDE.md PD #5 updated",
       "owner": {
         "kind": "wf",
         "ref": "wf: conversion velocity (R-AG)"
@@ -1985,8 +1985,8 @@
       "spec": "124 R-AH (proposed)",
       "title": "Compressed 3-commit form is the default once an archetype has two full-form members",
       "promised": "a plan for an eligible archetype uses the R-PACE-1 form unless the assessment report names a reason; step-validate invariant 23 gains the inverse check (eligible archetype + full-form plan + no reason = FAIL)",
-      "status": "NOT_STARTED",
-      "evidence": "measured 2026-09-14: eligible today ASSERT (3 members) and LINK (2); INGESTOR and ENRICHER each need one more full-form member before batch 2's remaining 7 + 4 go compressed — plan .cursor/wf2_conversion_velocity_active_task.md §1 — gate re-keyed 2026-09-14 from batching_prereq:[\"C5\"] (uncounted: blocksBatchingCount only reads \"batching\") to cutover_prereq naming every C5 slug, which checkCutoverPrereqs enforces",
+      "status": "BUILT",
+      "evidence": "BUILT this commit (velocity WF2, 2026-09-14): Spec 124 R-AH + step-validate fast invariant 24 COMPRESSED-FORM-DEFAULT (pending slug of an archetype with >=2 converted members must carry the compressed marker or a \"**Full form reason:**\" line; both directions in selfTest); Spec 123 §7 pointer",
       "owner": {
         "kind": "wf",
         "ref": "wf: conversion velocity (R-AH)"
@@ -2017,8 +2017,8 @@
       "spec": "124 R-AI (proposed)",
       "title": "Capture pairs only where sharing.varies_by_chain says the chain matters",
       "promised": "one chain + standalone when the descriptor declares no chain-varying field; every chain when it does; the C4-GATE checker reads sharing.varies_by_chain instead of the manifest chain list",
-      "status": "NOT_STARTED",
-      "evidence": "measured 2026-09-14: assert_engine_health's 5 POST captures differ only in chain/ids (report §9.5); assert_data_bounds / assert_global_coverage declare per-chain scopes and keep every chain — plan .cursor/wf2_conversion_velocity_active_task.md §1",
+      "status": "BUILT",
+      "evidence": "BUILT this commit (velocity WF2, 2026-09-14): Spec 124 R-AI + step-validate expectedCaptureChains reads sharing.varies_by_chain (all \"none\" => first chain + standalone; otherwise every chain); MEASURED VACUOUS TODAY — no converted descriptor declares all-\"none\" (assert_engine_health declares checks/audit_table per_chain), so the saving applies to future descriptors that declare honestly",
       "owner": {
         "kind": "wf",
         "ref": "wf: conversion velocity (R-AI)"

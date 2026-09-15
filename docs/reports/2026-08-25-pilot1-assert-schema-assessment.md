@@ -459,6 +459,7 @@ Batch1 I1's own cutover (`assert_global_coverage`, commit 9, R-K) registered 20 
 | 9 | (registry) | PASS | clean (0 converted slugs blocked by an unmet cutover_prereq item; blocks batching: 0) |
 | 22 | (registry) | PASS | GOLD-PRE-FRESH: 52 PRE capture(s) across 12 converted step(s) all tracked + clean (git can restore every reference) |
 | 23 | (registry) | PASS | COMPRESSED-FORM-ELIGIBLE: not applicable (0 pending slugs declare the compressed form) |
+| 24 | (registry) | PASS | COMPRESSED-FORM-DEFAULT: not applicable (0 pending slugs whose archetype is eligible) |
 
 ### Captures (item iv)
 - missing invocations (POST): none
@@ -467,7 +468,7 @@ Batch1 I1's own cutover (`assert_global_coverage`, commit 9, R-K) registered 20 
 - compare ran: true · diffs found: 239 · unexplained: 0
 
 ### Test suite (item iii)
-- 1008/1037 passed (suite success=false)
+- 1009/1037 passed (suite success=false)
 
 ### Policy coverage matrix (item vi) — Spec 124 Rules 1-13
 
@@ -486,7 +487,7 @@ Batch1 I1's own cutover (`assert_global_coverage`, commit 9, R-K) registered 20 
 | 11 | Phase-order re-derive (declared half, checkOrderGuaranteesCited) | enforced-green | no when:"pre_write" checks — vacuously nothing to cite — G-3 completeness half stays open |
 | 12 | Truthful crash posture (R-B reachability, static + R-M before-image) | enforced-green | R-B (checkInterruptedPostureTruthful): recovery.interrupted=null — no reachability claim to verify · R-M: prose-only (R-M/LG-17 describe not scoped to this step (vitest not run, or no before-image target)) |
 | 13 | A step validates itself | enforced-green | this run of step:validate IS the mechanism |
-| P3 | I/O cost adjudication (measured, not gated) | measured | descriptor=33885B notes=8992B checks=10 rows records_meta=1547B (newest post/ capture) |
+| P3 | I/O cost adjudication (measured, not gated) | measured | descriptor=34557B notes=8992B checks=10 rows records_meta=1547B (newest post/ capture) |
 
 **Enforced-green: 13/14**
 

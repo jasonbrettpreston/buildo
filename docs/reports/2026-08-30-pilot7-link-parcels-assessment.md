@@ -2207,6 +2207,7 @@ above).*
 | 9 | (registry) | PASS | clean (0 converted slugs blocked by an unmet cutover_prereq item; blocks batching: 0) |
 | 22 | (registry) | PASS | GOLD-PRE-FRESH: 52 PRE capture(s) across 12 converted step(s) all tracked + clean (git can restore every reference) |
 | 23 | (registry) | PASS | COMPRESSED-FORM-ELIGIBLE: not applicable (0 pending slugs declare the compressed form) |
+| 24 | (registry) | PASS | COMPRESSED-FORM-DEFAULT: not applicable (0 pending slugs whose archetype is eligible) |
 
 ### Captures (item iv)
 - missing invocations (POST): none
@@ -2215,7 +2216,7 @@ above).*
 - compare ran: true · diffs found: 249 · unexplained: 0
 
 ### Test suite (item iii)
-- 1014/1037 passed (suite success=false)
+- 1009/1037 passed (suite success=false)
 
 ### Policy coverage matrix (item vi) — Spec 124 Rules 1-13
 

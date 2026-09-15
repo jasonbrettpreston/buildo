@@ -10,9 +10,9 @@ Total items: **115**
 
 | status | count |
 |---|---|
-| ⬜ NOT_STARTED | 33 |
+| ⬜ NOT_STARTED | 30 |
 | ⚠️ PARTIAL | 16 |
-| ✅ BUILT | 62 |
+| ✅ BUILT | 65 |
 | ⏭️ SUPERSEDED | 4 |
 
 **blocks batching: 0**
@@ -45,8 +45,8 @@ Total items: **115**
 | `C4-GATE` | 122 §5.3 / C4 plan §3.4 | C4 "every chain" capture gate is a CHECKER — completeness + freshness, both sides | ✅ BUILT | wf: C4 step H — c4_chain_completeness_gate (2026-09-11) — CLOSED | assert_global_coverage, assert_data_bounds, assert_engine_health, link_neighbourhoods, geocode_permits | 2026-09-11 |
 | `HB-1` | 124 §2 Rule 12 | Heartbeat covers the WHOLE step, not only phase boundaries (EP-D15) | ✅ BUILT | wf: wf: conversion-roadmap commit 3, 2026-09-10 | — | 2026-09-10 |
 | `CEIL-1` | 124 §2 Rule 12 | Statement/lock ceiling bound on EVERY phase incl. post_commit (EP-D16) | ✅ BUILT | wf: wf: conversion-roadmap commit 3, 2026-09-10 | — | 2026-09-10 |
-| `VEL-1` | 124 R-AG (proposed) | Gate placement: full suite at pre-push, vitest related + fast invariants at pre-commit, live-DB infra tests in test:db | ⬜ NOT_STARTED | wf: wf: conversion velocity (R-AG) | address_points, assert_parcel_sanity, compute_parcel_cost_estimates, enrich_centreline, enrich_heritage, enrich_ravines, load_centreline, load_heritage, load_wsib, load_zoning, massing, neighbourhoods, parcels, reconcile | 2026-09-14 |
-| `VEL-2` | 124 R-AH (proposed) | Compressed 3-commit form is the default once an archetype has two full-form members | ⬜ NOT_STARTED | wf: wf: conversion velocity (R-AH) | address_points, assert_parcel_sanity, compute_parcel_cost_estimates, enrich_centreline, enrich_heritage, enrich_ravines, load_centreline, load_heritage, load_wsib, load_zoning, massing, neighbourhoods, parcels, reconcile | 2026-09-14 |
+| `VEL-1` | 124 R-AG (proposed) | Gate placement: full suite at pre-push, vitest related + fast invariants at pre-commit, live-DB infra tests in test:db | ✅ BUILT | wf: wf: conversion velocity (R-AG) | address_points, assert_parcel_sanity, compute_parcel_cost_estimates, enrich_centreline, enrich_heritage, enrich_ravines, load_centreline, load_heritage, load_wsib, load_zoning, massing, neighbourhoods, parcels, reconcile | 2026-09-14 |
+| `VEL-2` | 124 R-AH (proposed) | Compressed 3-commit form is the default once an archetype has two full-form members | ✅ BUILT | wf: wf: conversion velocity (R-AH) | address_points, assert_parcel_sanity, compute_parcel_cost_estimates, enrich_centreline, enrich_heritage, enrich_ravines, load_centreline, load_heritage, load_wsib, load_zoning, massing, neighbourhoods, parcels, reconcile | 2026-09-14 |
 
 ## Nice-to-have — real gap, not currently blocking (94)
 
@@ -143,7 +143,7 @@ Total items: **115**
 | `POST-B1-10` | 49 / descriptor interpretation | captured_at freshness semantics documented | ⬜ NOT_STARTED | followup: review_followups.md: commit-8 LOW row | — | 2026-09-14 |
 | `POST-B1-11` | 76 funnel.ts observability model | funnel mutation bounds match the fleet | ⬜ NOT_STARTED | followup: review_followups.md: commit-8 LOW row | — | 2026-09-14 |
 | `POST-B1-12` | 123 §7 G0 / registry | Step Registry generated in-repo | ⬜ NOT_STARTED | followup: Step Registry artifact built 2026-09-14 from scratch scripts outside the repo | — | 2026-09-14 |
-| `VEL-3` | 124 R-AI (proposed) | Capture pairs only where sharing.varies_by_chain says the chain matters | ⬜ NOT_STARTED | wf: wf: conversion velocity (R-AI) | — | 2026-09-14 |
+| `VEL-3` | 124 R-AI (proposed) | Capture pairs only where sharing.varies_by_chain says the chain matters | ✅ BUILT | wf: wf: conversion velocity (R-AI) | — | 2026-09-14 |
 | `POST-B1-14` | 122 §1.8 | Concern index audited against the 20-category correction | ⬜ NOT_STARTED | followup: Spec 122 §1.8 unaudited flag (2026-09-09) | — | 2026-09-14 |
 | `POST-B1-15` | 122 §5.2 | Source-text test debt retired: 53 files / 85 readFileSync(scripts/*.js) assertions → descriptor/behaviour assertions | ⬜ NOT_STARTED | wf: wf: source-text test debt (POST-B1-15) | — | 2026-09-14 |
 

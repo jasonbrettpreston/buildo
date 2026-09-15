@@ -23,13 +23,14 @@
  * Ids 1/2/3/7/8/20/21 are per-row (one result per converted/pending slug); ids
  * 4/5/9/22/23 are registry-scoped (one result for the whole fleet — a fleet-integrity
  * fact, not a property of any single step; 22 = GOLD-PRE-FRESH, C4 step H
- * 2026-09-11; 23 = COMPRESSED-FORM-ELIGIBLE, Spec 124 R-PACE-1, 2026-09-13 —
- * both hard-stop scoped to their own `blockedSlugs` exactly like id 9). Id 6 is retired (superseded by G8/
+ * 2026-09-11; 23 = COMPRESSED-FORM-ELIGIBLE, Spec 124 R-PACE-1, 2026-09-13;
+ * 24 = COMPRESSED-FORM-DEFAULT, Spec 124 R-AH, 2026-09-14 — all three hard-stop
+ * scoped to their own `blockedSlugs` exactly like id 9). Id 6 is retired (superseded by G8/
  * item iv, never reused). HIGH-2 (output-panel remediation, 2026-09-10): ids
  * 20/21 (not 10/11) — 1-13 is reserved so a fast invariant id can NEVER
  * collide with a Policy Coverage Matrix Rule number in a naive stdout scrape
  * (both tables render one row per "| N | ..." and the Fast Invariants table
- * comes first in the output). Currently 12 invariants, ids 1-5,7-9,20-23:
+ * comes first in the output). Currently 13 invariants, ids 1-5,7-9,20-24:
  *   1. database.min_migration <= migrations/*.sql COUNT (LW-D8 — a COUNT floor,
  *      never a filename number)
  *   2. every declared config.logic_variables[].name has a scripts/seeds/logic_variables.json entry
@@ -62,6 +63,13 @@
  *      is `true` AND >=2 `converted.json` entries already share archetype A;
  *      not-applicable (vacuous pass) when the marker is absent or the pending
  *      slug has no descriptor yet
+ *   24. COMPRESSED-FORM-DEFAULT (Spec 124 R-AH, 2026-09-14): the inverse of
+ *      #23 — a pending slug whose archetype is ALREADY eligible (proven AND
+ *      >=2 converted.json members, same eligibility #23 checks) but whose
+ *      assessment report declares NEITHER the compressed marker NOR a
+ *      literal `**Full form reason:**` line is FAIL — R-PACE-1 restated as
+ *      the default, not an option; not-applicable when no pending slug's
+ *      archetype has matured past the two-member threshold yet
  *
  * SPEC LINK: docs/specs/01-pipeline/123_step_opt_assessment_validation.md SS6 (gates),
  *            SS5.2 (per-step checklist), SS4.4 (checker self-test doctrine, SS12b.6)
@@ -503,6 +511,38 @@ export function checkCompressedFormEligible(rows) {
 }
 
 /**
+ * COMPRESSED-FORM-DEFAULT predicate (fast invariant #24, Spec 124 R-AH,
+ * 2026-09-14). PURE — the inverse of checkCompressedFormEligible above: once
+ * a pending slug's archetype has matured (proven AND >=2 converted.json
+ * members share it — the SAME eligibility test #23 enforces), R-AH restates
+ * the compressed form (R-PACE-1) as the DEFAULT, not an option — a full-form
+ * plan is legal only when the assessment report names a reason. A slug whose
+ * archetype has not yet matured, or that has no descriptor yet, is NOT
+ * APPLICABLE (vacuous pass) — this invariant only fires once the choice is
+ * genuinely live.
+ *
+ * @param {Array<{slug:string, descriptorExists:boolean, archetypeProven:boolean, archetypeConvertedCount:number, marker:boolean, reasonStated:boolean}>} rows
+ * @returns {{pass:boolean, blockedSlugs:string[], detail:string, violations:Array<{slug:string,why:string}>}}
+ */
+export function checkCompressedFormDefault(rows) {
+  const eligible = rows.filter((r) => r.descriptorExists && r.archetypeProven === true && r.archetypeConvertedCount >= 2);
+  const violations = eligible
+    .filter((r) => !r.marker && !r.reasonStated)
+    .map((r) => ({ slug: r.slug, why: 'archetype eligible for the compressed form (R-PACE-1) but the report declares neither the compressed marker nor a stated full-form reason' }));
+  const blockedSlugs = violations.map((v) => v.slug);
+  return {
+    pass: violations.length === 0,
+    blockedSlugs,
+    violations,
+    detail: violations.length
+      ? `COMPRESSED-FORM-DEFAULT: ${violations.length} eligible pending slug(s) plan full-form with no stated reason: ${violations.map((v) => v.slug).join(', ')}`
+      : eligible.length
+        ? `COMPRESSED-FORM-DEFAULT: ${eligible.length} eligible pending slug(s), all either compressed or carry a stated full-form reason`
+        : 'COMPRESSED-FORM-DEFAULT: not applicable (0 pending slugs whose archetype is eligible)',
+  };
+}
+
+/**
  * The cutover-prereq lock: for every slug already registered in
  * converted.json, every cutover_prereq item that names it (by gate.blocks)
  * must be status BUILT. A registered-but-still-blocked slug means a cutover
@@ -791,8 +831,38 @@ function runVitest() {
 // proves, off the SAME exported harness functions, so a red here and a red
 // there always agree — never two independent implementations of one gate).
 // ---------------------------------------------------------------------------
-function derivedInvocations(manifest, slug) {
-  const chains = Object.entries(manifest.chains).filter(([, slugs]) => slugs.includes(slug)).map(([id]) => id);
+/**
+ * R-AI (Spec 124, programme-items VEL-3) — the capture-set expectation reads
+ * the descriptor's `sharing.varies_by_chain` instead of blindly expecting
+ * every manifest chain. When ALL FOUR fields (checks/phase/audit_table/
+ * scope) are the literal `"none"`, the step's own checks/phase/audit/scope
+ * are declared identical no matter which chain invoked it, so ONE
+ * representative chain (the first, in `manifest.chains` declaration order,
+ * that includes this slug) + standalone covers the same ground a full
+ * per-chain sweep would. Any other combination — today, EVERY real
+ * descriptor, since `phase` is always a genuine per-chain map (the schema's
+ * `phase: "none"` const is legal but unexercised live) — keeps every chain,
+ * unchanged. PURE over the already-derived chain list, so `selfTest()` can
+ * exercise both arms in-memory without a live descriptor that happens to
+ * qualify.
+ *
+ * @param {string[]} chains — every manifest chain that includes this slug, in manifest.chains declaration order
+ * @param {{checks?:string, phase?:*, audit_table?:string, scope?:string}|undefined} variesByChain
+ * @returns {string[]}
+ */
+export function expectedCaptureChains(chains, variesByChain) {
+  if (chains.length <= 1) return chains;
+  const noChainVariance = !!variesByChain
+    && variesByChain.checks === 'none'
+    && variesByChain.phase === 'none'
+    && variesByChain.audit_table === 'none'
+    && variesByChain.scope === 'none';
+  return noChainVariance ? chains.slice(0, 1) : chains;
+}
+
+function derivedInvocations(manifest, slug, descriptor) {
+  const allChains = Object.entries(manifest.chains).filter(([, slugs]) => slugs.includes(slug)).map(([id]) => id);
+  const chains = expectedCaptureChains(allChains, descriptor && descriptor.sharing && descriptor.sharing.varies_by_chain);
   const scriptEntry = manifest.scripts[slug];
   const out = chains.map((chain) => ({ chain, args: [...((scriptEntry?.chain_args || {})[chain] || [])] }));
   out.push({ chain: 'none', args: [] });
@@ -854,7 +924,7 @@ function checkCaptures(row, descriptorInfo, computePath, report) {
   const manifest = loadManifest();
   const findings = { invocationsMissing: [], preInvocationsMissing: [], staleFingerprints: [], compareRan: false, diffs: [], unexplainedDiffs: [] };
 
-  const invocations = derivedInvocations(manifest, row.slug);
+  const invocations = derivedInvocations(manifest, row.slug, descriptorInfo && descriptorInfo.descriptor);
   const posts = capturesIn(row.slug, 'post');
   const postKeys = new Set(posts.filter((p) => p.doc).map((p) => invocationKey({ chain: String(p.doc.chain), args: p.doc.args || [] })));
   findings.invocationsMissing = invocations.filter((inv) => !postKeys.has(invocationKey(inv))).map(invocationKey);
@@ -1180,10 +1250,12 @@ function fastInvariants(rows, converted, pending) {
       const reportPath = reportPathFor(slug);
       const reportText = reportPath && existsSync(reportPath) ? readFileSync(reportPath, 'utf8') : '';
       const marker = /\*\*Commit form: compressed \(R-PACE-1\)\*\*/.test(reportText);
+      const reasonStated = /\*\*Full form reason:\*\*/.test(reportText);
       paceRows.push({
         slug,
         descriptorExists,
         marker,
+        reasonStated,
         archetypeProven: archetype ? provenByArchetype.get(archetype) === true : false,
         archetypeConvertedCount: archetype ? (archetypeCounts.get(archetype) || 0) : 0,
       });
@@ -1195,6 +1267,20 @@ function fastInvariants(rows, converted, pending) {
       pass: compressedEligible.pass,
       blockedSlugs: compressedEligible.blockedSlugs,
       detail: compressedEligible.detail,
+    });
+
+    // 24. COMPRESSED-FORM-DEFAULT (Spec 124 R-AH, 2026-09-14) — the inverse
+    // of #23, reusing the SAME paceRows probe (descriptorExists/marker/
+    // archetypeProven/archetypeConvertedCount + the new reasonStated field):
+    // a pending slug whose archetype is already eligible but whose report
+    // declares neither the marker nor a stated full-form reason is FAIL.
+    const compressedDefault = checkCompressedFormDefault(paceRows);
+    results.push({
+      id: 24,
+      slug: '(registry)',
+      pass: compressedDefault.pass,
+      blockedSlugs: compressedDefault.blockedSlugs,
+      detail: compressedDefault.detail,
     });
   }
 
@@ -3169,6 +3255,46 @@ function selfTest() {
     // GREEN — no marker declared at all (report never chose the compressed form) is not applicable, never checked.
     const noMarker = checkCompressedFormEligible([{ slug: 'assert_parcel_sanity', descriptorExists: true, marker: false, archetypeProven: false, archetypeConvertedCount: 0 }]);
     if (!noMarker.pass || noMarker.blockedSlugs.length !== 0) throw new Error(`self-test FAILED: checkCompressedFormEligible must PASS (not-applicable) a pending slug that never declares the compressed-form marker (${JSON.stringify(noMarker)})`);
+  }
+  // COMPRESSED-FORM-DEFAULT (fast invariant #24, Spec 124 R-AH, 2026-09-14) —
+  // checkCompressedFormDefault, the inverse of #23 above, proven both
+  // directions on in-memory fixture rows.
+  {
+    // RED — archetype eligible (proven, 2 converted members) but the report declares neither the marker nor a reason.
+    const noReason = checkCompressedFormDefault([{ slug: 'link_neighbourhoods', descriptorExists: true, marker: false, reasonStated: false, archetypeProven: true, archetypeConvertedCount: 2 }]);
+    if (noReason.pass || JSON.stringify(noReason.blockedSlugs) !== '["link_neighbourhoods"]') throw new Error(`self-test FAILED: checkCompressedFormDefault did not RED an eligible archetype's full-form plan with no stated reason (${JSON.stringify(noReason)})`);
+    // GREEN — archetype eligible, but the report declares the compressed marker.
+    const declaresCompressed = checkCompressedFormDefault([{ slug: 'geocode_permits', descriptorExists: true, marker: true, reasonStated: false, archetypeProven: true, archetypeConvertedCount: 2 }]);
+    if (!declaresCompressed.pass || declaresCompressed.blockedSlugs.length !== 0) throw new Error(`self-test FAILED: checkCompressedFormDefault must PASS an eligible archetype that declares the compressed marker (${JSON.stringify(declaresCompressed)})`);
+    // GREEN — archetype eligible, full-form, but the report states a named reason.
+    const statesReason = checkCompressedFormDefault([{ slug: 'load_zoning', descriptorExists: true, marker: false, reasonStated: true, archetypeProven: true, archetypeConvertedCount: 3 }]);
+    if (!statesReason.pass || statesReason.blockedSlugs.length !== 0) throw new Error(`self-test FAILED: checkCompressedFormDefault must PASS an eligible archetype's full-form plan that states a reason (${JSON.stringify(statesReason)})`);
+    // GREEN — archetype not yet eligible (only 1 converted member) is not applicable, never checked.
+    const notEligible = checkCompressedFormDefault([{ slug: 'assert_parcel_sanity', descriptorExists: true, marker: false, reasonStated: false, archetypeProven: true, archetypeConvertedCount: 1 }]);
+    if (!notEligible.pass || notEligible.blockedSlugs.length !== 0) throw new Error(`self-test FAILED: checkCompressedFormDefault must PASS (not-applicable) an archetype that has not yet matured (${JSON.stringify(notEligible)})`);
+  }
+  // expectedCaptureChains (Spec 124 R-AI, VEL-3, 2026-09-14) — the capture-set
+  // predicate `derivedInvocations` wires into checkCaptures, proven both
+  // directions in-memory (no live descriptor qualifies for the collapse arm
+  // today — `phase` is always a real per-chain map — so this is exercised
+  // purely on synthetic fixtures, mirroring checkFrozenSchemaConsistency's
+  // own 'aaa'/'bbb' synthetic-hash pattern above).
+  {
+    // GREEN (unchanged) — a real chain-varying descriptor (checks per_chain) keeps every chain.
+    const everyChain = expectedCaptureChains(['permits', 'coa', 'sources'], { checks: 'per_chain', phase: { permits: 1, coa: 1, sources: 1 }, audit_table: 'per_chain', scope: 'per_chain' });
+    if (JSON.stringify(everyChain) !== JSON.stringify(['permits', 'coa', 'sources'])) throw new Error(`self-test FAILED: expectedCaptureChains must keep every chain when varies_by_chain declares a real chain-varying field (${JSON.stringify(everyChain)})`);
+    // GREEN (unchanged) — the LIVE shape today: checks:"none" but phase is a real map — still every chain.
+    const liveShapeToday = expectedCaptureChains(['sources', 'permits'], { checks: 'none', phase: { sources: 8, permits: 9 }, audit_table: 'one', scope: 'none' });
+    if (JSON.stringify(liveShapeToday) !== JSON.stringify(['sources', 'permits'])) throw new Error(`self-test FAILED: expectedCaptureChains must keep every chain while phase is still a real per-chain map, even with checks:"none" (${JSON.stringify(liveShapeToday)})`);
+    // RED->collapse — every field literally "none": one representative chain only (first in declaration order).
+    const collapsed = expectedCaptureChains(['sources', 'permits'], { checks: 'none', phase: 'none', audit_table: 'none', scope: 'none' });
+    if (JSON.stringify(collapsed) !== JSON.stringify(['sources'])) throw new Error(`self-test FAILED: expectedCaptureChains must collapse to the first declared chain when every varies_by_chain field is "none" (${JSON.stringify(collapsed)})`);
+    // GREEN (unchanged) — a single-chain step has nothing to collapse either way.
+    const singleChain = expectedCaptureChains(['sources'], { checks: 'none', phase: 'none', audit_table: 'none', scope: 'none' });
+    if (JSON.stringify(singleChain) !== JSON.stringify(['sources'])) throw new Error(`self-test FAILED: expectedCaptureChains must pass a single-chain list through unchanged (${JSON.stringify(singleChain)})`);
+    // GREEN (unchanged) — no varies_by_chain object at all (undefined) is never collapsed.
+    const undeclared = expectedCaptureChains(['sources', 'permits'], undefined);
+    if (JSON.stringify(undeclared) !== JSON.stringify(['sources', 'permits'])) throw new Error(`self-test FAILED: expectedCaptureChains must keep every chain when varies_by_chain is undeclared (${JSON.stringify(undeclared)})`);
   }
   // GOLD-PRE (Spec 122 §5.3, WF1 "conversion roadmap" commit 3, 2026-09-10) —
   // checkCaptures'/scoreG8's new preInvocationsMissing half, proven both

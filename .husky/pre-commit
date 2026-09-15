@@ -1,2 +1,38 @@
 #!/bin/sh
-node scripts/analysis/step-churn-complexity.mjs --check && node scripts/steps/_schema/generate-template-freeze.mjs --check && node scripts/analysis/spec-split-check.mjs --check && node scripts/analysis/step-validate.mjs --staged --fast && npx lint-staged --allow-empty && bash scripts/hooks/validate-migrations.sh && bash scripts/hooks/check-migration-down-comments.sh && bash scripts/hooks/ast-grep-leads.sh && npm run typecheck && npm run lint && npm run test
+# Spec 124 R-AG (2026-09-14): pre-commit runs only the CHEAP gates — stages
+# 1-8 unchanged (static/staged checks) + typecheck + lint + `vitest related`
+# scoped to what THIS commit actually touches. The full Vitest suite moved to
+# pre-push (once per push, gating a whole landed group instead of every
+# commit) and still runs in CI (test.yml). Live-DB infra tests (files under
+# src/tests/db/, plus the handful of *.infra.test.ts that connect to a real
+# Postgres via src/tests/db/setup-testcontainer.ts's dbAvailable()/getTestPool
+# — restore-db.infra, enrich-heritage/enrich-ravines/load-ravines.infra, the
+# link_massing/link_parcel_addresses metamorphic + rung1-inline-wkt suites)
+# never run here at all — package.json's own "test" script excludes them
+# structurally, so even a developer with BUILDO_TEST_DB=1 exported globally
+# cannot have them fire on every commit; "npm run test:db" is their only
+# path. Pinned by src/tests/hooks-composition.infra.test.ts (both directions).
+node scripts/analysis/step-churn-complexity.mjs --check && \
+  node scripts/steps/_schema/generate-template-freeze.mjs --check && \
+  node scripts/analysis/spec-split-check.mjs --check && \
+  node scripts/analysis/step-validate.mjs --staged --fast && \
+  npx lint-staged --allow-empty && \
+  bash scripts/hooks/validate-migrations.sh && \
+  bash scripts/hooks/check-migration-down-comments.sh && \
+  bash scripts/hooks/ast-grep-leads.sh && \
+  npm run typecheck && \
+  npm run lint && \
+  RELATED_FILES="$(git diff --cached --name-only --diff-filter=ACMR | grep -E '^(src|scripts)/.*\.(ts|tsx|js|mjs)$' || true)" && \
+  if [ -z "$RELATED_FILES" ]; then
+    # Code Reviewer 2026-09-14: `vitest related` on a non-source file (package.json, a
+    # .md report, a JSON registry) falls back to a WIDE run of unrelated suites, not a
+    # skip — so only src/** and scripts/** source files are ever passed to it.
+    echo "pre-commit: no staged src/ or scripts/ source files — skipping the related-tests run"
+  else
+    # One path per line, xargs -d keeps paths with spaces intact (POSIX sh has no arrays).
+    # VITEST_MAX_FORKS is the real cap for vitest's default `forks` pool — VITEST_MAX_WORKERS
+    # is not read by vitest at all (measured 2026-09-14; a 4-fork run was OS-killed for memory).
+    # VITEST_MIN_FORKS=1 is required alongside the cap: vitest derives its default minForks from
+    # the CPU count (12 here) and throws "minThreads and maxThreads must not conflict" otherwise.
+    printf '%s\n' "$RELATED_FILES" | VITEST_MIN_FORKS=1 VITEST_MAX_FORKS=2 xargs -d '\n' npx vitest related --run
+  fi
