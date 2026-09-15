@@ -36,6 +36,8 @@ assert_staleness
 | 5 | `assert_data_bounds` | `quality/assert-data-bounds.js` | Inspection-scoped: NULL rates, ancient dates, ghost records | pipeline_runs |
 | 6 | `assert_engine_health` | `quality/assert-engine-health.js` | Dead tuple ratio + auto-vacuum (maintenance — runs before quality gates) | engine_health_snapshots |
 | 7 | `assert_staleness` | `quality/assert-staleness.js` | Monitor scrape freshness and stale permit detection | — |
+
+**Cutover note (batch1 I3 commit 9, 2026-09-14, PH-0/§5 spec-diff obligation):** `assert_engine_health` (row 6) converted to the Spec 122 step standard, full nine-commit form (RECORDER archetype, Spec 124 R-AE — the `engine_health_snapshots` guarded upsert has no legal home under ASSERT's forced `outputs:"none"`). `scripts/quality/assert-engine-health.descriptor.json` is the behavioural contract from this commit forward. Also corrects the plan's own PH-0 drift assumption: the frozen shell's `SPEC LINK` header block already names this spec (`docs/specs/01-pipeline/44_chain_deep_scrapes.md`) alongside 41/42/43 — the "4th invocation with no named SPEC LINK" gap the plan flagged at PH-0 was closed before this commit (measured `scripts/quality/assert-engine-health.js:6` this session), not a drift this commit needed to fix. See `docs/reports/2026-09-14-batch1-i3-assert-engine-health-assessment.md` §9 and `.cursor/batch1_i3_assert_engine_health_active_task.md` §0/§2.
 </architecture>
 
 ---

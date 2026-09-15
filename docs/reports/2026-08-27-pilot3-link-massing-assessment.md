@@ -515,7 +515,7 @@ Spec 124 §2 Rule 13's R-T addendum lands `invariants[]`/`plausibility[]` (5 net
 | 4 | (registry) | PASS | overlap: none |
 | 5 | (registry) | PASS | clean (0 it.fails( call sites outside a declared pending slug) |
 | 9 | (registry) | PASS | clean (0 converted slugs blocked by an unmet cutover_prereq item; blocks batching: 0) |
-| 22 | (registry) | PASS | GOLD-PRE-FRESH: 47 PRE capture(s) across 11 converted step(s) all tracked + clean (git can restore every reference) |
+| 22 | (registry) | PASS | GOLD-PRE-FRESH: 52 PRE capture(s) across 12 converted step(s) all tracked + clean (git can restore every reference) |
 | 23 | (registry) | PASS | COMPRESSED-FORM-ELIGIBLE: not applicable (0 pending slugs declare the compressed form) |
 
 ### Captures (item iv)
@@ -525,7 +525,7 @@ Spec 124 §2 Rule 13's R-T addendum lands `invariants[]`/`plausibility[]` (5 net
 - compare ran: true · diffs found: 434 · unexplained: 0
 
 ### Test suite (item iii)
-- 969/985 passed (suite success=true)
+- 1010/1037 passed (suite success=false)
 
 ### Policy coverage matrix (item vi) — Spec 124 Rules 1-13
 

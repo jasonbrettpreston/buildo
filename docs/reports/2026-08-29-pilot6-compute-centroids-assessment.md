@@ -1376,7 +1376,7 @@ gate reads it as EXPLAINED (cited by name) rather than silently passing or wrong
 | 4 | (registry) | PASS | overlap: none |
 | 5 | (registry) | PASS | clean (0 it.fails( call sites outside a declared pending slug) |
 | 9 | (registry) | PASS | clean (0 converted slugs blocked by an unmet cutover_prereq item; blocks batching: 0) |
-| 22 | (registry) | PASS | GOLD-PRE-FRESH: 47 PRE capture(s) across 11 converted step(s) all tracked + clean (git can restore every reference) |
+| 22 | (registry) | PASS | GOLD-PRE-FRESH: 52 PRE capture(s) across 12 converted step(s) all tracked + clean (git can restore every reference) |
 | 23 | (registry) | PASS | COMPRESSED-FORM-ELIGIBLE: not applicable (0 pending slugs declare the compressed form) |
 
 ### Captures (item iv)
@@ -1386,14 +1386,14 @@ gate reads it as EXPLAINED (cited by name) rather than silently passing or wrong
 - compare ran: true · diffs found: 67 · unexplained: 0
 
 ### Test suite (item iii)
-- SKIPPED or failed to run: --fast: vitest spawn skipped
+- 1013/1037 passed (suite success=false)
 
 ### Policy coverage matrix (item vi) — Spec 124 Rules 1-13
 
 | Rule | Name | Status | Note |
 |---|---|---|---|
 | 1 | Nothing hidden | enforced-green | G-1 schema-baseline: schema-baseline clean |
-| 2 | Compute is just compute | enforced-green | §5.5 describe not scoped to this step in the vitest run |
+| 2 | Compute is just compute | enforced-green |  |
 | 3 | Tunables externalized | enforced-green | G-4: 3 declared, 2 verdict-affecting, 0 violate on_invalid:fail with no deviations[] cover |
 | 4 | Compute rule declared | enforced-green | G-2: 2 preserved-in-compute row(s), 0 with no why/notes.json/checks[] grounding |
 | 5 | checks >= 1 | enforced-green |  |

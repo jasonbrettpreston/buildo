@@ -7,12 +7,12 @@
 
 ## Counts
 
-Remaining files: **52** (+ **1** pending) · remaining slugs: **54** (+ **1** pending)
+Remaining files: **52** (+ **0** pending) · remaining slugs: **54** (+ **0** pending)
 
 | Batch | Files | Slots |
 |---|---:|---:|
 | C4 | 2 | 4 |
-| C5 | 15 | 18 |
+| C5 | 14 | 14 |
 | C6 | 36 | 40 |
 
 ## C4 — archetype-grouped, risk-ascending
@@ -46,7 +46,6 @@ Remaining files: **52** (+ **1** pending) · remaining slugs: **54** (+ **1** pe
 | INGESTOR | `scripts/load-neighbourhoods.js` | neighbourhoods | sources (1) | top-right | — | VEL-1 (neighbourhoods); VEL-2 (neighbourhoods) |
 | INGESTOR | `scripts/load-parcels.js` | parcels | sources (1) | top-right | — | VEL-1 (parcels); VEL-2 (parcels) |
 | INGESTOR | `scripts/load-wsib.js` | load_wsib | sources (1) | top-right | — | VEL-1 (load_wsib); VEL-2 (load_wsib) |
-| RECORDER | `scripts/quality/assert-engine-health.js` | assert_engine_health [pending: shape_clean] | coa+deep_scrapes+permits+sources (4) | top-right | — | — |
 | UNDECLARED | `scripts/reconcile-runs.js` | reconcile | sources (1) | — | — | VEL-1 (reconcile); VEL-2 (reconcile) |
 
 <details><summary>C5 — why each archetype (census <code>reason</code>)</summary>
@@ -63,7 +62,6 @@ Remaining files: **52** (+ **1** pending) · remaining slugs: **54** (+ **1** pe
 - `scripts/load-parcels.js` (INGESTOR): Spec 122 §1.10 declared
 - `scripts/load-wsib.js` (INGESTOR): Spec 122 §1.10 declared
 - `scripts/load-zoning.js` (INGESTOR): Spec 122 §1.10 declared
-- `scripts/quality/assert-engine-health.js` (RECORDER): batch1 I3 (2026-09-14 operator ruling, Ask 1 RESOLVED): re-derives to RECORDER, not the ASSERT port default — the engine_health_snapshots guarded 6-column IS-DISTINCT-FROM upsert has no legal home under ASSERT (step.schema.json:1718 forces outputs:"none"), no threshold in the file ever reaches the halt (docs/reports/2026-09-14-batch1-i3-assert-engine-health-assessment.md §1.2/§2), and the admin panel computes engine health independently from pg_stat_user_tables (src/app/api/quality/route.ts:109-162) without reading this table at all. Consequence: RECORDER has 1 converted member (refresh_snapshot) so R-PACE-1's compressed form (floor >=2) is INELIGIBLE — this step reverts to the full Spec 123 §7 nine-commit form (see .cursor/batch1_i3_assert_engine_health_active_task.md §2).
 - `scripts/quality/assert-parcel-sanity.js` (ASSERT): Ask A1-bis: sources-only 1-slot ASSERT, ruled to join the C4 ASSERT group at conversion time; census still declares its true archetype under C5's own batch tag
 - `scripts/reconcile-runs.js` (UNDECLARED): chain-head infrastructure (Spec 122 §7.4 A3) — excluded from the PH-2 population and from the 8-archetype dispatch; STD-4 tracks its manifest-position promise separately, not this census
 
@@ -121,4 +119,4 @@ Remaining files: **52** (+ **1** pending) · remaining slugs: **54** (+ **1** pe
 
 ---
 
-*Totality (both directions, proven by `src/tests/conversion-roadmap.infra.test.ts`; slug-grain, IDENTITY HOLDS): **68** manifest.scripts slugs = **11** converted + **1** pending + **2** declared exemptions (Ask A2, excluded from the conversion programme entirely — never silently dropped, see the table above) + **54** remaining, each counted exactly once, in exactly one of C4/C5/C6/pending/exempted.*
+*Totality (both directions, proven by `src/tests/conversion-roadmap.infra.test.ts`; slug-grain, IDENTITY HOLDS): **68** manifest.scripts slugs = **12** converted + **0** pending + **2** declared exemptions (Ask A2, excluded from the conversion programme entirely — never silently dropped, see the table above) + **54** remaining, each counted exactly once, in exactly one of C4/C5/C6/pending/exempted.*

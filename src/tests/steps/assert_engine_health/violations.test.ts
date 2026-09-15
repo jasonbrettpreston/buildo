@@ -205,18 +205,29 @@ describe('assert_engine_health — measured facts, true today (plain it)', () =>
     }
   });
 
-  it('converted.json declares this step pending at stage "shape_clean" (R-K.1) after commit 7 — well-formed, and not double-registered in `converted` (registration to `converted[]` is commit 9\'s own cutover)', () => {
+  // COMMIT 9 UPDATE (R-K): converted.json registers this step and deletes its pending
+  // entry in the SAME commit — mirrors the assert_data_bounds (I2) and assert_global_coverage
+  // (I1) cutover precedent. A step cannot be both converted AND pending at once (the
+  // mutual-exclusion lock this test now proves).
+  it('converted.json registers this step and deletes its pending entry in the SAME commit (R-K, commit 9 cutover) — mirrors the assert_data_bounds/assert_global_coverage precedent', () => {
     const doc = JSON.parse(fs.readFileSync(artifact(CONVERTED_REL), 'utf8')) as {
       converted: string[];
       pending: Array<{ file: string; registers_at: string; reason: string; declared: string; stage: string }>;
     };
-    expect(doc.converted, 'must not be double-registered while still pending').not.toContain(STEP_REL);
+    expect(doc.converted, `${CONVERTED_REL} must register ${STEP_REL}`).toContain(STEP_REL);
     const entry = doc.pending.find((p) => p.file === STEP_REL);
-    expect(entry, `${CONVERTED_REL} has no pending entry for ${STEP_REL}`).toBeDefined();
-    expect(entry?.stage).toBe('shape_clean');
+    expect(entry, `${CONVERTED_REL} must have NO pending entry for ${STEP_REL} once converted (R-K)`).toBeUndefined();
   });
 
-  it('template-freeze.json shows BOTH ASSERT and RECORDER proven, with different converted-member counts — the measured R-PACE-1 consequence named in report §2 (Ask 1)', () => {
+  // COMMIT 9 UPDATE: this step's own cutover is what MOVES the RECORDER count from 1 to 2
+  // (refresh_snapshot + assert_engine_health) — the R-PACE-1 floor (>=2 converted members
+  // of an archetype) is now MET for RECORDER as of this commit. A future RECORDER
+  // conversion is therefore compressed-form ELIGIBLE (subject to step-validate's own
+  // fast invariant #23 COMPRESSED-FORM-ELIGIBLE and template-freeze.json.archetype_profiles
+  // [RECORDER].proven === true, both re-checked live below) — the opposite of this test's
+  // pre-cutover assertion, which is exactly the finding report §2/§9 named as INELIGIBLE
+  // for THIS step (RECORDER had only 1 member when this step's own plan was authored).
+  it('template-freeze.json shows BOTH ASSERT and RECORDER proven; RECORDER now has 2 converted members after this cutover — the measured R-PACE-1 flip this commit produces', () => {
     const freeze = JSON.parse(fs.readFileSync(abs('scripts/steps/_schema/template-freeze.json'), 'utf8')) as {
       archetype_profiles: Array<{ archetype: string; proven: boolean }>;
     };
@@ -233,7 +244,7 @@ describe('assert_engine_health — measured facts, true today (plain it)', () =>
       if (arch) archCounts.set(arch, (archCounts.get(arch) || 0) + 1);
     }
     expect(archCounts.get('ASSERT'), '3 ASSERT members already converted — compressed form eligible under ASSERT').toBe(3);
-    expect(archCounts.get('RECORDER'), '1 RECORDER member — compressed form would NOT be eligible under RECORDER today').toBe(1);
+    expect(archCounts.get('RECORDER'), '2 RECORDER members after this cutover (refresh_snapshot + assert_engine_health) — compressed form is now ELIGIBLE under RECORDER for the next conversion').toBe(2);
   });
 });
 
@@ -390,14 +401,18 @@ describe('assert_engine_health — landed at commit 7 (flipped from it.fails to 
     expect(deviations.some((dv) => /execution\.shape/i.test(dv.from))).toBe(true);
   });
 
-  // Still genuinely red at commit 7 — the shell is 35 lines (extensive SPEC LINK / why-frozen
-  // commentary), matching refresh_snapshot's own 40-line and assert_data_bounds's own 34-line
-  // precedent shells (both also over this literal 20-line bound). Kept it.fails() verbatim per
-  // its own "fully true only after commit 3's cutover peel" comment — carried to commit 9.
-  it.fails('the frozen shell calls pipeline.step(...) while keeping the lock-104 constant AND is under 20 lines (thin shell)', () => { // flips at: commit 9 (line-count bound, not the pipeline.step() call itself, which is already true)
-    const text = src();
-    expect(text).toMatch(/pipeline\.step\(/);
-    expect(text.split('\n').length).toBeLessThan(20);
+  // RESOLVED at commit 9 (cutover): the literal "<20 lines" bound this test guessed at commit 6
+  // was never the fleet rule. Measured this commit against both sibling ASSERT steps cut over in
+  // this same batch: assert_data_bounds's and assert_global_coverage's own "thin shell" tests
+  // (src/tests/steps/assert_data_bounds/violations.test.ts, src/tests/steps/
+  // assert_global_coverage/violations.test.ts) dropped the line-count assertion entirely at their
+  // own cutover — each asserts only the lock constant text + the pipeline.step(...) call, nothing
+  // about line count. Their own frozen shells are 34/33 lines respectively (assert_engine_health's
+  // is 35) — all three over the stale "20" this test's commit-6 comment guessed, none of them ever
+  // shrunk to fit it. Pinned to the measured fleet rule instead of forcing a false green.
+  it('commit 9\'s frozen shell calls pipeline.step(...) while keeping the lock-104 constant (thin shell)', () => { // flips at: commit 7 (compute), fully true only after commit 9's cutover peel
+    expect(src()).toContain('ADVISORY_LOCK_ID = 104');
+    expect(src()).toMatch(/pipeline\.step\(/);
   });
 });
 

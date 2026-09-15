@@ -640,7 +640,7 @@ describe('execution.shape "enrich" + the ENRICHER execution.phases[] profile (pi
     pin(errorsOf(withPhases([phase(1, { txn: 'own_txn' })])), '/execution/phases/0/txn', 'enum');
   });
 
-  it('the other eight profiles are UNAFFECTED — every committed step descriptor still validates, and none of their files changed in this commit beyond the known, declared exceptions (Rule 3/claim #175 probe_presence fleet fix — assert-schema.descriptor.json; WF3 I3a gate_exempt correction — compute-centroids.descriptor.json/refresh-snapshot.descriptor.json, unrelated to any archetype-profile change); enrich_parcels is the ONE ENRICHER, assert_global_coverage/assert_data_bounds are the SECOND and THIRD ASSERT (batch1 I2 commit 9 cutover, 2026-09-13 — converted.json at 11 entries)', () => {
+  it('the other eight profiles are UNAFFECTED — every committed step descriptor still validates, and none of their files changed in this commit beyond the known, declared exceptions (Rule 3/claim #175 probe_presence fleet fix — assert-schema.descriptor.json; WF3 I3a gate_exempt correction — compute-centroids.descriptor.json/refresh-snapshot.descriptor.json, unrelated to any archetype-profile change); enrich_parcels is the ONE ENRICHER, assert_global_coverage/assert_data_bounds/assert_engine_health are the SECOND/THIRD ASSERT-and-RECORDER cutovers (batch1 I2 commit 9 2026-09-13 + batch1 I3 commit 9 2026-09-14 — converted.json at 12 entries; assert_engine_health\'s own descriptor is unchanged this commit — pure cutover, no probe_presence regen, since assert-schema\'s probe list only regenerates when a NEW logic_variables name enters the fleet, and this step\'s 7 vars all landed at commit 7/8)', () => {
     // Pilot 9 commit 8 P8/P9 (2026-09-08) legitimately edits assert-schema.descriptor.json's
     // checks[].expect/config.probe_presence arrays (Rule 3 / claim #175's probe_presence fleet
     // union — a genuine, independent tunable-visibility fix, NOT tied to any archetype-profile
@@ -656,7 +656,7 @@ describe('execution.shape "enrich" + the ENRICHER execution.phases[] profile (pi
     // each time. Narrow the "must be clean" scope to exclude ONLY it; every other converted
     // descriptor (now ten of eleven) remains a byte-identical R-C golden fingerprint.
     const converted = (JSON.parse(fs.readFileSync(path.join(REPO_ROOT, 'scripts/steps/_schema/converted.json'), 'utf8')) as { converted: string[] }).converted;
-    expect(converted.length, 'eleven steps are converted as of batch1 I2 commit 9 (assert_data_bounds cutover, 2026-09-13)').toBe(11);
+    expect(converted.length, 'twelve steps are converted as of batch1 I3 commit 9 (assert_engine_health cutover, 2026-09-14)').toBe(12);
     const KNOWN_CHANGED_THIS_COMMIT = new Set([
       'scripts/quality/assert-schema.descriptor.json', // Rule 3/claim #175 probe_presence fleet fix (R-D three-way lock regen at every cutover)
       // WF3 I3a (2026-09-14, `.cursor/wf3_i3a_infra_step_exemption_active_task.md`) — the §0

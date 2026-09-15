@@ -350,13 +350,6 @@
       "reason": "Spec 122 §1.10's census covers only the 27 `sources` steps; this file is outside that scope — deferred to ARCH-CENSUS (Ask A3), a dedicated WF before C6 opens"
     },
     {
-      "slug": "assert_engine_health",
-      "file": "scripts/quality/assert-engine-health.js",
-      "archetype": "RECORDER",
-      "batch": "pending",
-      "reason": "batch1 I3 (2026-09-14 operator ruling, Ask 1 RESOLVED): re-derives to RECORDER, not the ASSERT port default — the engine_health_snapshots guarded 6-column IS-DISTINCT-FROM upsert has no legal home under ASSERT (step.schema.json:1718 forces outputs:\"none\"), no threshold in the file ever reaches the halt (docs/reports/2026-09-14-batch1-i3-assert-engine-health-assessment.md §1.2/§2), and the admin panel computes engine health independently from pg_stat_user_tables (src/app/api/quality/route.ts:109-162) without reading this table at all. Consequence: RECORDER has 1 converted member (refresh_snapshot) so R-PACE-1's compressed form (floor >=2) is INELIGIBLE — this step reverts to the full Spec 123 §7 nine-commit form (see .cursor/batch1_i3_assert_engine_health_active_task.md §2)."
-    },
-    {
       "slug": "assert_entity_tracing",
       "file": "scripts/quality/assert-entity-tracing.js",
       "archetype": "UNDECLARED",

@@ -107,7 +107,7 @@ describe('measured counts — independently re-derived, not transcribed from the
     expect(remainingSlugCount).toBe(54);
   });
 
-  it('the census file-count-by-batch matches the independently re-derived C4/C5/C6 split (C4=2, C5=14, C6=36; pending=1 — assert_engine_health\'s census row flipped batch:"C4" -> "pending" at batch1 I3 commit 1, 2026-09-14, mirroring the assert_data_bounds/I2 commit 6 precedent)', () => {
+  it('the census file-count-by-batch matches the independently re-derived C4/C5/C6 split (C4=2, C5=14, C6=36; pending=0 — assert_engine_health\'s census row deleted entirely at batch1 I3 commit 9, 2026-09-14, mirroring the assert_data_bounds/I2 commit 9 cutover precedent)', () => {
     const census = JSON.parse(fs.readFileSync(CENSUS_PATH, 'utf8')) as { entries: Array<{ slug: string; file: string; batch: string }> };
     const fileToSlugs = fileToSlugsMap();
     const convertedSet = new Set(CONVERTED);
@@ -127,15 +127,15 @@ describe('measured counts — independently re-derived, not transcribed from the
     const c6 = byBatch.get('C6')!;
     const pendingBatch = byBatch.get('pending')!;
     // assert_engine_health's census row flipped from batch:"C4" to batch:"pending" at
-    // batch1 I3 commit 1 (2026-09-14) — C4 dropped 3→2, pending rose 0→1. Its row is
-    // NOT deleted (unlike assert_data_bounds's own eventual cutover-commit deletion) —
-    // it stays present with batch:"pending" throughout the red_suite/descriptor/compute
-    // stages, per the same mechanism assert_data_bounds's own commit 6 used.
+    // batch1 I3 commit 1 (2026-09-14) — C4 dropped 3→2, pending rose 0→1 — then was
+    // DELETED ENTIRELY at commit 9 (this cutover), mirroring assert_data_bounds's own
+    // commit 9 (I2) census-row deletion: pending falls back to 0, C4 stays at 2 (the
+    // row was already out of C4 before deletion, so deletion does not restore it).
     expect(c4.size).toBe(2);
     // C5 itself is unaffected by this slug's move (it was never a C5 member) — the
     // census total gains 0 net rows (C4's loss is pending's gain, not C5's).
     expect(c5.size).toBe(14);
-    expect(pendingBatch.size).toBe(1);
+    expect(pendingBatch.size).toBe(0);
     expect(c6.size).toBe(36);
     expect(c4.size + c5.size + c6.size).toBe(remaining.length);
   });
@@ -186,10 +186,10 @@ describe('docs/reports/generated/122-conversion-roadmap.md — generated, drift-
     }
   });
 
-  it('the rendered table\'s counts agree with the independently re-derived counts above (52 remaining files, 1 pending — assert_engine_health red_suite, batch1 I3 commit 1)', () => {
+  it('the rendered table\'s counts agree with the independently re-derived counts above (52 remaining files, 0 pending — assert_engine_health registered in converted[] at batch1 I3 commit 9)', () => {
     const text = fs.readFileSync(GENERATED_PATH, 'utf8');
-    expect(text).toContain('Remaining files: **52** (+ **1** pending)');
-    expect(text).toContain('remaining slugs: **54** (+ **1** pending)');
+    expect(text).toContain('Remaining files: **52** (+ **0** pending)');
+    expect(text).toContain('remaining slugs: **54** (+ **0** pending)');
   });
 });
 
@@ -276,14 +276,14 @@ describe('buildRoadmap() — totality over the real committed data (HIGH-1: slug
     const files = rows.map((r) => r.file);
     expect(new Set(files).size, 'no file appears twice').toBe(files.length);
     expect(rows.filter((r) => !r.pending).length).toBe(52);
-    expect(rows.filter((r) => r.pending).length).toBe(1);
+    expect(rows.filter((r) => r.pending).length).toBe(0);
     for (const r of rows) {
       expect(['C4', 'C5', 'C6', 'pending']).toContain(r.batch);
       expect(r.pending).toBe(r.batch === 'pending');
     }
   });
 
-  it('HIGH-1: the 2 declared exemptions (inspections, coa_documents) are NOT silently dropped — 68 total manifest slugs = 11 converted + 1 pending + 2 exempted + 54 remaining (assert_engine_health red_suite, batch1 I3 commit 1)', async () => {
+  it('HIGH-1: the 2 declared exemptions (inspections, coa_documents) are NOT silently dropped — 68 total manifest slugs = 12 converted + 0 pending + 2 exempted + 54 remaining (assert_engine_health registered in converted[] at batch1 I3 commit 9)', async () => {
     const mod = (await import(pathToFileURL(GENERATOR).href)) as unknown as RoadmapModule;
     const args = await loadRealArgs(mod);
     expect(args.exemptions.map((e) => e.slug).sort()).toEqual(['coa_documents', 'inspections']);
@@ -292,8 +292,8 @@ describe('buildRoadmap() — totality over the real committed data (HIGH-1: slug
     const pendingSlugs = rows.filter((r) => r.pending).reduce((n, r) => n + r.slugs.length, 0);
     const totalSlugs = Object.keys(args.manifest.scripts).length;
     expect(totalSlugs).toBe(68);
-    expect(11 + pendingSlugs + args.exemptions.length + remainingSlugs).toBe(totalSlugs);
-    expect(pendingSlugs).toBe(1);
+    expect(12 + pendingSlugs + args.exemptions.length + remainingSlugs).toBe(totalSlugs);
+    expect(pendingSlugs).toBe(0);
     expect(remainingSlugs).toBe(54);
   });
 

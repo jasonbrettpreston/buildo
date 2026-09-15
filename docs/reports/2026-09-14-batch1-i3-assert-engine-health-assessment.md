@@ -304,12 +304,12 @@ Output panel on commit 7: Guardian PASS ×5; Code Reviewer 2 FAIL (R1, R2); Obse
 | G3 | 1 | 2 | table rows=8 vocab-hit rows=4 |
 | G4 | 2 | 2 | risk-class row with chance+impact found=true |
 | G5 | 1 | 1 | db=true clock=true network=true argv/env=true |
-| G6 | 3 | 3 | 5 ledger row(s), 0 without CLOSED/PIN () |
-| G7 | 3 | 3 | file=true fences=0 it-count=31 RED-evidence=true |
+| G6 | 3 | 3 | 6 ledger row(s), 0 without CLOSED/PIN () |
+| G7 | 3 | 3 | file=true fences=0 it-count=30 RED-evidence=true |
 | G8 | 3 | 3 | missing-invocations=0 missing-pre-invocations=0 stale-fingerprints=0 unexplained-diffs=0 |
 | G9 (binary) | PASS | — | heading=true low-confidence-table=true recurring-table=true |
-| G4d (fence<=lock) | PASS | — | fences=0 lock-it-count=31 |
-| G-shape | PASS | — | file-clean=null compute-clean=true |
+| G4d (fence<=lock) | PASS | — | fences=0 lock-it-count=30 |
+| G-shape | PASS | — | file-clean=true compute-clean=true |
 
 ### Fast invariants (always run — the fast descriptor gate)
 
@@ -325,7 +325,7 @@ Output panel on commit 7: Guardian PASS ×5; Code Reviewer 2 FAIL (R1, R2); Obse
 | 4 | (registry) | PASS | overlap: none |
 | 5 | (registry) | PASS | clean (0 it.fails( call sites outside a declared pending slug) |
 | 9 | (registry) | PASS | clean (0 converted slugs blocked by an unmet cutover_prereq item; blocks batching: 0) |
-| 22 | (registry) | PASS | GOLD-PRE-FRESH: 47 PRE capture(s) across 11 converted step(s) all tracked + clean (git can restore every reference) |
+| 22 | (registry) | PASS | GOLD-PRE-FRESH: 52 PRE capture(s) across 12 converted step(s) all tracked + clean (git can restore every reference) |
 | 23 | (registry) | PASS | COMPRESSED-FORM-ELIGIBLE: not applicable (0 pending slugs declare the compressed form) |
 
 ### Captures (item iv)
@@ -335,7 +335,7 @@ Output panel on commit 7: Guardian PASS ×5; Code Reviewer 2 FAIL (R1, R2); Obse
 - compare ran: true · diffs found: 874 · unexplained: 0
 
 ### Test suite (item iii)
-- 1004/1020 passed (suite success=true)
+- 1019/1037 passed (suite success=false)
 
 ### Policy coverage matrix (item vi) — Spec 124 Rules 1-13
 

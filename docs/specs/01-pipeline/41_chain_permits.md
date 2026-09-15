@@ -75,6 +75,8 @@ assert_entity_tracing → assert_global_coverage → backup_db
 | 31 | `assert_global_coverage` | `quality/assert-global-coverage.js` | Tier 3 CQA: field-level coverage profile for every step. One row per table.column in the denominator matrix. PASS/WARN/FAIL per configurable thresholds from logic_variables. Non-halting (observational). Uses advisory lock 111. | pipeline_runs |
 | 32 | `backup_db` | `backup-db.js` | OP4 daily logical backup as final maintenance step (Spec 112 §3). | — |
 
+**Cutover note (batch1 I3 commit 9, 2026-09-14, PH-0/§5 spec-diff obligation):** `assert_engine_health` (row 23) converted to the Spec 122 step standard, full nine-commit form (RECORDER archetype, Spec 124 R-AE — the `engine_health_snapshots` guarded upsert has no legal home under ASSERT's forced `outputs:"none"`). `scripts/quality/assert-engine-health.descriptor.json` is the behavioural contract from this commit forward; `scripts/lib/compute/assert-engine-health.js` holds the domain logic. See `docs/reports/2026-09-14-batch1-i3-assert-engine-health-assessment.md` §9 and `.cursor/batch1_i3_assert_engine_health_active_task.md` §2.
+
 **Lifecycle classifier (step 24)** runs synchronously. The classifier's
 incremental predicate (`last_seen_at > lifecycle_classified_at`) keeps
 re-runs cheap (~5-7 seconds when no rows are dirty). First-run backfill
@@ -178,9 +180,11 @@ for the round-trip correctness gate.
 ### Engine health (assert_engine_health)
 | Check | Source | Threshold | Level |
 |-------|--------|-----------|-------|
-| Dead tuple ratio | `pg_stat_user_tables` | > 10% | FAIL |
-| Sequential scan dominance | `pg_stat_user_tables` | > 80% on 10K+ tables | WARN |
-| Update ping-pong | `n_tup_upd / n_tup_ins` | > 2x | WARN |
+| Dead tuple ratio | `pg_stat_user_tables` | > `engine_health_dead_tuple_ratio_warn_max` (default 10%), tables with ≥ `engine_health_dead_tuple_min_rows` (default 1000) live rows only | WARN |
+| Sequential scan dominance | `pg_stat_user_tables` | > `engine_health_seq_scan_ratio_warn_max` (default 80%) on tables with ≥ `engine_health_seq_scan_min_rows` (default 10,000) rows | WARN |
+| Update ping-pong | `n_tup_upd / n_tup_ins` | > `engine_health_ping_pong_ratio_warn_max` (default 10x) | WARN |
+
+**AEH-D4, CLOSED (batch1 I3 commit 9, 2026-09-14):** the row above previously read "Dead tuple ratio... FAIL" and "Update ping-pong... > 2x" — both stale. Corrected against the measured, converted implementation (`docs/reports/2026-09-14-batch1-i3-assert-engine-health-assessment.md` §9.2): (a) the live code has never reached a halt on this check in either the pre- or post-conversion form — all 8 declared `checks[]` are `severity:"WARN"`, `blocking:false`; porting the old cosmetic `status:'FAIL'` label as a declared `severity:"FAIL"` would have introduced a genuine halt this step has never had, so the spec's "FAIL" claim is corrected to the measured "WARN" rather than the code changed to match a halt the step was never designed to have; (b) the ping-pong ratio's real threshold is `engine_health_ping_pong_ratio_warn_max` (a registered logic variable, default 10x, not the stale literal "2x" this table previously named); all three thresholds are now registered `config.logic_variables[]` entries (Spec 124 Rule 3), not module-scope literals. See `docs/reports/defect-ledger.md` AEH-D4.
 
 ### Phase distribution (assert_lifecycle_phase_distribution, step 25)
 **Halting posture is PER-FAILURE, not per-script (C1/D1, 2026-08-11).** Two classes may stop the

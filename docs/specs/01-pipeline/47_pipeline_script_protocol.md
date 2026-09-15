@@ -1945,7 +1945,7 @@ and registry-vs-code agreement.
 | **101** | `scripts/purge-lead-views.js` | RETIRED (P3-F6, Spec 112 rewrite 2026-07-20 — deleted outright; retention sweep absorbed into pg_cron `lead_views_retention_purge`, Spec 115 §5, migration 233) | — |
 | **102** | `scripts/quality/assert-schema.js` | 6 — Quality | NO — read-only probe |
 | **103** | `scripts/quality/assert-data-bounds.js` | 6 — Quality | NO — read-only probe |
-| **104** | `scripts/quality/assert-engine-health.js` | 6 — Quality | NO — snapshot recording |
+| **104** | `scripts/quality/assert-engine-health.js` | 6 — Quality | NO — snapshot recording (this column asks only "Writes Timestamps?" per the table header; measured, batch1 I3 commit 9, 2026-09-14: the step's real write is a guarded, 6-column `IS DISTINCT FROM` upsert to `engine_health_snapshots` — RECORDER archetype, Spec 124 R-AE — not a timestamp bump on an existing row, hence "NO" here, but not "no write") |
 | **105** | `scripts/quality/assert-network-health.js` | 6 — Quality | NO — read-only probe |
 | **106** | `scripts/quality/assert-staleness.js` | 6 — Quality | NO — read-only probe |
 | **107** | `scripts/quality/assert-pre-permit-aging.js` | RETIRED (Phase G; slot reused by assert-parcel-sanity) | — |

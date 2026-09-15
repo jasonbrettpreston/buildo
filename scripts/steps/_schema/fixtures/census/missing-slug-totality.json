@@ -325,13 +325,6 @@
       "reason": "C4 batching-entry §3.2 order 2"
     },
     {
-      "slug": "assert_engine_health",
-      "file": "scripts/quality/assert-engine-health.js",
-      "archetype": "ASSERT",
-      "batch": "C4",
-      "reason": "C4 batching-entry §3.2 order 3 — Fold A I-1/I-2 (CRITICAL): a genuine domain write (engine_health_snapshots) inside the ASSERT x-profile (outputs:\"none\" forced); PH-0 must re-derive this, not trust the port"
-    },
-    {
       "slug": "assert_entity_tracing",
       "file": "scripts/quality/assert-entity-tracing.js",
       "archetype": "UNDECLARED",
