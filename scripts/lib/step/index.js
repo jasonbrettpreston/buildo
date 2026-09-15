@@ -465,6 +465,39 @@ function acceptedCheckIds(descriptor) {
   return new Set(staleness.acceptAnomalies(descriptor).filter((a) => a.standing).map((a) => a.check_id));
 }
 
+/**
+ * Split the FAIL rows into "every FAIL that happened" and "the FAILs no standing
+ * `override.accept_anomaly` covers" — the ONE place that partition is computed, so
+ * the status cascade and the pre_write gate cannot disagree about what acceptance
+ * means (they did not before; this keeps it that way by construction).
+ *
+ * POST-B1-1 Guardian fold (operator ruling, 2026-09-15) — **an errored check QUERY is
+ * NEVER covered by acceptance.** `override.accept_anomaly[].why` prices a MEASURED
+ * anomaly ("when the city genuinely re-publishes the layer at a different size, an
+ * operator must be able to accept the drift for ONE run" — load-ravines
+ * `ravine_count_drift_pct`): the operator looked at a number and accepted it. A check
+ * whose query THREW measured nothing, so there is no anomaly to accept — the standing
+ * flag would silently convert "we could not look" into "we looked and it was fine",
+ * which is the Spec 121 §12b.6 green-because-it-never-looked class the whole verdict
+ * library exists to close. Such a row therefore stays in `unaccepted`, which makes the
+ * `COMPLETED_WITH_ERRORS` acceptance branch unreachable for it and lands the run on
+ * `FAILED` / terminal `fail_check`. The row is identified by the `errored: true` marker
+ * `scripts/lib/step/verdict.js` `checkRow` stamps on the errored arm ONLY (never a
+ * string-sniff of the row's rendered `value`, which is operator-facing prose).
+ *
+ * @param {Array<{metric:string,status:string,errored?:boolean}>} rows
+ * @param {Set<string>} accepted - `acceptedCheckIds(descriptor)`
+ * @returns {{failedIds:Set<string>, unaccepted:string[]}}
+ */
+function partitionFailedRows(rows, accepted) {
+  const failed = (rows || []).filter((r) => r.status === 'FAIL');
+  const failedIds = new Set(failed.map((r) => r.metric));
+  const unaccepted = [...new Set(
+    failed.filter((r) => r.errored === true || !accepted.has(r.metric)).map((r) => r.metric),
+  )];
+  return { failedIds, unaccepted };
+}
+
 function ledgerPipelineName(descriptor, chainId) {
   const inv = descriptor.execution.invocation;
   const declared = inv && inv !== 'none' ? Object.keys(inv)[0] : null;
@@ -2962,9 +2995,11 @@ function makePreWriteGate({ descriptor, chainId, stepCtx, compute, config }) {
     };
     await compute(probeCtx);
     const built = buildAuditTable(descriptor, chainId, observations, [], config, only);
-    const failed = built.rows
-      .filter((r) => r.status === 'FAIL' && !accepted.has(r.metric))
-      .map((r) => r.metric);
+    // ONE derivation of "which FAILs acceptance does not cover", shared with the
+    // status cascade below (§partitionFailedRows) — an errored check query is never
+    // accepted here either, or the gate would let a write proceed on the strength of
+    // a check that measured nothing.
+    const { unaccepted: failed } = partitionFailedRows(built.rows, accepted);
     return { abort: failed.length > 0, failed };
   };
 }
@@ -3072,6 +3107,41 @@ function durationRow(entryId, durationMs) {
     threshold: null,
     status: 'INFO',
   };
+}
+
+/**
+ * POST-B1-1 Observability fold (2026-09-15) — ONE FAIL row for a `pre_write` gate abort.
+ *
+ * The gate already did the right thing: an unaccepted FAIL among the `when:"pre_write"`
+ * checks means `write.executeWrite` is never called (§makePreWriteGate, the LR-D9 fence).
+ * What it did NOT do is SAY so on the audit table. The gate's own rows are discarded, the
+ * cascade scores only the FINAL pass's observations, and compute runs twice — so a check
+ * that threw on the gate pass and succeeded on the final pass skipped the entire write
+ * while the run ended `completed`/PASS with not one row recording it. Every runner
+ * produced `failedPreWrite` and `written.write_skipped_pre_write_fail`; until this fold
+ * NOTHING read either of them. A write-only field is not observability.
+ *
+ * One row, never one per failed id (the audit table's row count stays bounded by the
+ * check count — LR-D1's own rule). FAIL, so the ROW-DERIVED cascade fails the step with
+ * no new boolean and no second derivation. `errored: true` for the same reason an
+ * errored check row carries it: a gate that aborted measured a refusal, not an anomaly
+ * an operator could have looked at and accepted (§partitionFailedRows). Absent entirely
+ * when no gate aborted — a healthy run's audit table is unchanged, byte for byte.
+ *
+ * @param {Array<{failedPreWrite?:string[]}|null>} phaseResults - the per-shape runner results
+ * @returns {Array<object>} zero or one row
+ */
+function preWriteAbortRows(phaseResults) {
+  const aborted = (phaseResults || []).find((p) => p && Array.isArray(p.failedPreWrite) && p.failedPreWrite.length > 0);
+  if (!aborted) return [];
+  return [{
+    metric: 'pre_write_gate',
+    value: `aborted: ${aborted.failedPreWrite.join(', ')}`,
+    threshold: 'zero unaccepted FAIL rows among the when:"pre_write" checks',
+    status: 'FAIL',
+    source: 'gate',
+    errored: true,
+  }];
 }
 
 /** LW-D15 — the INFO audit row every `--dry-run` run carries, naming the posture explicitly (Rule 1: nothing hidden). */
@@ -3576,6 +3646,9 @@ async function runWithPool(runnable, pool, ctx) {
         // target (empty for every step but enrich_parcels today).
         ...postCheckDurationRows,
         ...maintenanceRows,
+        // POST-B1-1 Observability fold — the pre_write gate's abort, said out loud
+        // (§preWriteAbortRows). Absent on every run that did not abort.
+        ...preWriteAbortRows([ingest, link, linkKeyed, cascade, materialize, backfill, recorder, enrich]),
       ];
       const built = buildAuditTable(descriptor, chainId, observations, extraRows, configValues, onlyChecks, synthetic);
       // The counter SCOPE, per phase. §11's Counter Semantic Contract is a scoping
@@ -3606,9 +3679,8 @@ async function runWithPool(runnable, pool, ctx) {
       // acknowledged run COMPLETE, and never suppresses the FAIL row that made it
       // necessary. So the rows are read first, then the acceptance is applied to the
       // STATUS only — which is exactly the fence the L7c abort encodes.
-      const failedIds = new Set(built.rows.filter((r) => r.status === 'FAIL').map((r) => r.metric));
       const accepted = acceptedCheckIds(descriptor);
-      const unaccepted = [...failedIds].filter((id) => !accepted.has(id));
+      const { failedIds, unaccepted } = partitionFailedRows(built.rows, accepted);
       const verdict = built.audit_table.verdict;
       let terminal;
       if (ingest && ingest.skipped) {
@@ -3883,6 +3955,8 @@ module.exports = {
   runTierToConvergence,
   executeOrderedWrites,
   acceptedCheckIds,
+  partitionFailedRows,
+  preWriteAbortRows,
   makePreWriteGate,
   generateReset,
   assertBeforeImageDeclared,

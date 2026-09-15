@@ -114,21 +114,37 @@ describe('peel 8b — the must-fail sabotage battery (T1 failed_geometries, T2 c
     expect(built.warnings).toEqual(['failed_geometries: 5', 'compute_rate: 80%']);
   });
 
-  it('DIVERGENCE FIXTURE — a check that ERRORS: the retired hasWarns formula silently reads PASS (missing signal defaults to 0/100%), the row-derived cascade correctly escalates to the check\'s DECLARED severity (WARN) — this is the concrete case Rule 10 exists to close (verdict.js\'s own header: "a check the library could not evaluate NEVER reads as PASS")', () => {
+  // POST-B1-1 (WF3, 2026-09-15) — this fixture's EXPECTED VALUES moved WARN → FAIL, and
+  // the move is knowing, not incidental. The divergence this fixture exists to prove is
+  // unchanged and strengthened: the retired `hasWarns` formula still silently reads PASS
+  // on a missing signal, while the row-derived cascade still refuses to. What changed is
+  // WHERE the cascade lands an ERRORED check — `verdict.js checkRow` no longer falls
+  // through to the check's own declared severity (WARN for T1); this step declares
+  // `execution.on_check_error: "fail_step"` (compute-centroids.descriptor.json), and that
+  // declaration now MEANS a step failure, severity-independent. The old expectation was
+  // pinning the very defect POST-B1-1 closed (review_followups.md HIGH, I3 commit 8:
+  // an errored check was indistinguishable from a data-driven WARN). T1's R-H ruling —
+  // "a malformed geometry is a data-quality signal, not a reason to halt" — is untouched
+  // and still locked by the T1 SABOTAGE case above: it governs a check that MEASURED
+  // failures, not a check whose QUERY THREW.
+  it('DIVERGENCE FIXTURE — a check that ERRORS: the retired hasWarns formula silently reads PASS (missing signal defaults to 0/100%), the row-derived cascade correctly escalates — POST-B1-1: to FAIL, because this step DECLARES on_check_error "fail_step" — this is the concrete case Rule 10 exists to close (verdict.js\'s own header: "a check the library could not evaluate NEVER reads as PASS")', () => {
     // matched carries NO failed_geometries/parcels_processed/centroids_computed at all — the
     // shape a thrown query would leave ctx.matched in (only backlog_count survives a mid-phase
     // exception in runBackfillPhase's own try/catch-free single-statement path).
     const matched = {};
     // The OLD formula, run over this exact matched shape:
     expect(oldHasWarnsVerdict(matched as never), 'the retired formula silently reads PASS on a missing signal — defaulting failed=0, computeRate=100 vacuously').toBe('PASS');
+    // The declaration under test is the descriptor's own, not a fixture constant.
+    expect(DESCRIPTOR.execution.on_check_error, 'the fixture reads the DECLARED posture, never a transcribed one').toBe('fail_step');
     // The NEW cascade, told explicitly that failed_geometries ERRORED (never silently PASS):
     const erroredObservation: Observation = { error: new Error('post_sql query threw') };
     const built = buildRows(matched, { failed_geometries: erroredObservation });
     const row = built.rows.find((r: { metric: string }) => r.metric === 'failed_geometries');
-    expect(row.status, 'an errored check reads at its DECLARED severity (WARN for T1), never PASS').toBe('WARN');
+    expect(row.status, 'an errored check reads at the step\'s DECLARED on_check_error (fail_step ⇒ FAIL), never PASS').toBe('FAIL');
     expect(String(row.value)).toMatch(/^check errored: /);
-    expect(built.audit_table.verdict, 'DIVERGENCE: the retired formula said PASS, the row-derived cascade correctly says WARN').toBe('WARN');
-    expect(built.warnings[0]).toMatch(/^failed_geometries: check errored: /);
+    expect(built.audit_table.verdict, 'DIVERGENCE: the retired formula said PASS, the row-derived cascade says FAIL').toBe('FAIL');
+    expect(built.errors[0]).toMatch(/^failed_geometries: check errored: /);
+    expect(built.warnings, 'LPA-D6 severity-separation: an errored fail_step check is an ERROR, not a warning').toEqual([]);
   });
 
   it('every non-INFO check this step declares is covered by the battery above (T1, T2) or is explicitly named as out-of-scope for it (CC-D3\'s override_force_full_present, 2026-08-30 — a structural override-observability check, not a numeric bound this sabotage battery\'s shape can exercise)', () => {

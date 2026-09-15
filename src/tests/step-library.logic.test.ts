@@ -258,6 +258,202 @@ describe('the verdict is ROW-DERIVED, and all three values are reachable (§7.1,
     expect(build(withChecks([{ severity: 'FAIL' }], 'fail_step'), errored).rows[0].status).toBe('FAIL');
   });
 
+  // POST-B1-1 (WF3, 2026-09-15) — `fail_step` must MEAN a step failure.
+  //
+  // The test directly above locked `fail_step` only on a `severity: 'FAIL'` check,
+  // where the errored branch's severity FALL-THROUGH and the declared arm produce the
+  // same row — so the lock was green while the finding was true. Every check in the
+  // four assert fleets is WARN-severity, so a check query that THREW read as an
+  // ordinary WARN, indistinguishable from a data-driven warning except by reading the
+  // `value: "check errored: …"` string (review_followups.md HIGH, filed by I3 commit 8,
+  // 2026-09-14: `"fail_step" currently means nothing operationally`).
+  //
+  // `on_check_error` is declared ONCE PER STEP, not per check, so it is
+  // SEVERITY-INDEPENDENT in both directions: it outranks the check's own severity
+  // (WARN and INFO alike — a step that wants an errored check to be tolerated
+  // declares `warn_row`), and it never touches a check that did not error.
+  it('POST-B1-1 — fail_step yields a FAIL row on a WARN-severity check, and the row-derived cascade fails the step', () => {
+    const errored = { c0: { error: new Error('relation "parcels" does not exist') } };
+    const built = build(withChecks([{ severity: 'WARN' }], 'fail_step'), errored);
+    expect(String(built.rows[0].value)).toMatch(/^check errored: /);
+    expect(built.rows[0].status, 'the DECLARED on_check_error outranks the check severity').toBe('FAIL');
+    expect(built.audit_table.verdict).toBe('FAIL');
+    // Row-derived, never a parallel boolean: the verdict is exactly what the rows say.
+    expect(verdictLib.deriveVerdict(built.audit_table.rows)).toBe('FAIL');
+    // LPA-D6 severity-separated arrays: an errored fail_step check is an ERROR, so
+    // `checks_failed` (errors.length at the call site) counts it.
+    expect(built.errors[0]).toMatch(/^c0: check errored: /);
+    expect(built.warnings).toEqual([]);
+  });
+
+  it('POST-B1-1 (Q2) — fail_step outranks INFO too: an errored INFO-severity check is a FAIL row', () => {
+    const errored = { c0: { error: new Error('canceling statement due to statement timeout') } };
+    const built = build(withChecks([{ severity: 'INFO' }], 'fail_step'), errored);
+    expect(built.rows[0].status).toBe('FAIL');
+    expect(built.audit_table.verdict).toBe('FAIL');
+  });
+
+  it('POST-B1-1 — the other direction: a check that did NOT error is untouched by fail_step, at every severity', () => {
+    const d = withChecks([{ severity: 'WARN' }], 'fail_step');
+    expect(build(d, { c0: { violations: 0 } }).rows[0].status).toBe('PASS');
+    expect(build(d, { c0: { violations: 3 } }).rows[0].status).toBe('WARN');
+    expect(build(withChecks([{ severity: 'INFO' }], 'fail_step'), { c0: { violations: 3 } }).rows[0].status).toBe('INFO');
+    // …and a check the compute never reported still reads at its DECLARED severity —
+    // "not reported" is a different branch from "errored", and this fix does not move it.
+    expect(build(withChecks([{ severity: 'WARN' }], 'fail_step'), {}).rows[0].status).toBe('WARN');
+  });
+
+  it('POST-B1-1 — the INVERSE arms are unchanged: warn_row reads WARN and omit_row is still the declared fiction, at every severity', () => {
+    const errored = { c0: { error: new Error('CKAN unreachable') } };
+    for (const severity of ['INFO', 'WARN', 'FAIL']) {
+      expect(build(withChecks([{ severity }], 'warn_row'), errored).rows[0].status, severity).toBe('WARN');
+      expect(build(withChecks([{ severity }], 'omit_row'), errored).rows, severity).toHaveLength(0);
+    }
+  });
+
+  // POST-B1-1 Guardian fold (operator ruling, 2026-09-15) — `override.accept_anomaly`
+  // covers a MEASURED anomaly ONLY. Now that `fail_step` produces a real FAIL row, a
+  // standing accept flag on that check id would have walked the row straight into
+  // `index.js`'s acceptance branch (`verdict === 'FAIL' && unaccepted.length === 0 &&
+  // failedIds.size > 0` ⇒ COMPLETED_WITH_ERRORS), converting "the query threw, we
+  // measured nothing" into "an operator looked at the number and accepted it" — the
+  // green-because-it-never-looked class, re-entering through the acceptance door.
+  // The errored row therefore stays UNACCEPTED, so the run lands on FAILED /
+  // `fail_check`. Modelled on load-ravines' real `ravine_count_drift_pct` acceptance.
+  describe('POST-B1-1 Guardian fold — an errored check QUERY is never covered by override.accept_anomaly', () => {
+    const ACCEPT_ENV = 'RAVINE_ACCEPT_FEATURE_COUNT_DRIFT';
+    const ACCEPTED_CHECK = 'ravine_count_drift_pct';
+
+    afterEach(() => { delete process.env[ACCEPT_ENV]; });
+
+    /** The REAL acceptance set, read from the REAL descriptor + the REAL env flag. */
+    function standingAcceptance(): Set<string> {
+      process.env[ACCEPT_ENV] = '1';
+      const accepted = stepLib.acceptedCheckIds(LOAD_RAVINES);
+      expect(accepted.has(ACCEPTED_CHECK), 'the fixture must model a REAL standing acceptance').toBe(true);
+      return accepted;
+    }
+
+    it('the acceptance branch stays reachable for a MEASURED anomaly (the other direction — acceptance still works)', () => {
+      const rows = [{ metric: ACCEPTED_CHECK, value: 12.5, threshold: 'pct <= 5', status: 'FAIL' }];
+      const { failedIds, unaccepted } = stepLib.partitionFailedRows(rows, standingAcceptance());
+      expect(failedIds.size, 'the FAIL row is never suppressed — acceptance is a STATUS decision').toBe(1);
+      expect(unaccepted).toEqual([]);
+      // …which is exactly the index.js precondition for COMPLETED_WITH_ERRORS.
+      expect(unaccepted.length === 0 && failedIds.size > 0).toBe(true);
+    });
+
+    it('an ERRORED check with the SAME standing acceptance stays unaccepted ⇒ FAILED, never COMPLETED_WITH_ERRORS', () => {
+      const errored = verdictLib.checkRow(
+        { id: ACCEPTED_CHECK, severity: 'WARN', limit: 'pct <= 5' },
+        { error: new Error('canceling statement due to statement timeout') },
+        'fail_step',
+      );
+      expect(errored.status, 'precondition: the fold only bites once fail_step yields a FAIL row').toBe('FAIL');
+      const { failedIds, unaccepted } = stepLib.partitionFailedRows([errored], standingAcceptance());
+      expect(unaccepted, 'an errored query measured NOTHING — there is no anomaly to accept').toEqual([ACCEPTED_CHECK]);
+      expect(errored.errored, 'the row carries an explicit marker — never a value-string sniff').toBe(true);
+      // The acceptance branch is therefore UNREACHABLE for this row: index.js falls
+      // through to `verdict === 'FAIL'` ⇒ RUN_STATUS.FAILED, discriminator unaccepted[0].
+      expect(unaccepted.length === 0 && failedIds.size > 0, 'COMPLETED_WITH_ERRORS must be unreachable here').toBe(false);
+      expect(unaccepted[0]).toBe(ACCEPTED_CHECK);
+    });
+
+    it('the marker is declared-only-if-present — a non-errored row never carries it, so acceptance is untouched everywhere else', () => {
+      const clean = verdictLib.checkRow({ id: ACCEPTED_CHECK, severity: 'FAIL', limit: 'viol == 0' }, { violations: 2 }, 'fail_step');
+      expect(clean.status).toBe('FAIL');
+      expect('errored' in clean, 'no empty/null placeholder key on an ordinary row').toBe(false);
+      expect(stepLib.partitionFailedRows([clean], standingAcceptance()).unaccepted).toEqual([]);
+    });
+
+    it('a warn_row-errored row carries the marker too, and cannot reach acceptance at all (it is not a FAIL row)', () => {
+      const warned = verdictLib.checkRow({ id: ACCEPTED_CHECK, severity: 'FAIL', limit: 'viol == 0' }, { error: new Error('boom') }, 'warn_row');
+      expect(warned.status).toBe('WARN');
+      expect(warned.errored).toBe(true);
+      const { failedIds, unaccepted } = stepLib.partitionFailedRows([warned], standingAcceptance());
+      expect(failedIds.size).toBe(0);
+      expect(unaccepted).toEqual([]);
+    });
+
+    it('SYNTHETIC rows too — an errored invariants[]/plausibility[] entry is a FAIL row with the marker (buildAuditTable\'s syntheticOnCheckError path)', () => {
+      const d = withChecks([{ severity: 'WARN' }], 'fail_step');
+      const built = verdictLib.buildAuditTable(d, null, { c0: { violations: 0 } }, [], null, null, {
+        checks: [{ id: 'pb_rows_sane', severity: 'WARN', limit: 'value_min 1', source: 'plausibility' }],
+        observations: { pb_rows_sane: { error: new Error('relation "pb_rows" does not exist') } },
+      });
+      const synthetic = built.rows.find((r: Row & { errored?: boolean }) => r.metric === 'pb_rows_sane');
+      expect(synthetic.status, 'a synthetic errored entry runs the SAME checkRow path').toBe('FAIL');
+      expect(synthetic.errored).toBe(true);
+      expect(built.audit_table.verdict).toBe('FAIL');
+      expect(built.errors[0]).toMatch(/^pb_rows_sane: check errored: /);
+      // …and it is unacceptable even with a standing flag naming it.
+      const accepted = new Set(['pb_rows_sane']);
+      expect(stepLib.partitionFailedRows(built.rows, accepted).unaccepted).toEqual(['pb_rows_sane']);
+    });
+
+    // POST-B1-1 Observability fold (2026-09-15) — the pre_write gate ABORTS the write
+    // (correctly, now that an errored check FAILs), but the gate's own rows are
+    // discarded: the cascade scores only the FINAL pass's observations, compute runs
+    // twice, and `failedPreWrite` / `write_skipped_pre_write_fail` had NO consumer
+    // anywhere in the library. So a transient throw could skip the entire write while
+    // the run ended `completed`/PASS with not one row saying nothing was written —
+    // the same "green because it never looked" class, one layer up. The abort must
+    // therefore land ONE FAIL row on the final audit table (no boolean, no second
+    // cascade: the row is the failure).
+    it('OBSERVABILITY FOLD — a pre_write gate abort lands one FAIL row naming the gate and the failed ids, so the cascade fails the step', () => {
+      const failed = ['pending_scope_parcels'];
+      const rows = stepLib.preWriteAbortRows([null, { failedPreWrite: failed, written: { write_skipped_pre_write_fail: true } }, null]);
+      expect(rows, 'exactly one row — never one per failed id').toHaveLength(1);
+      expect(rows[0].metric).toBe('pre_write_gate');
+      expect(String(rows[0].value)).toBe('aborted: pending_scope_parcels');
+      expect(rows[0].status, 'the row IS the halt — the cascade reads it, nothing re-derives it').toBe('FAIL');
+      expect(rows[0].source).toBe('gate');
+      expect(rows[0].errored, 'an aborted gate is never accept_anomaly-able either').toBe(true);
+      // Row-derived end to end: FAIL row ⇒ verdict FAIL ⇒ index.js RUN_STATUS.FAILED,
+      // and the id stays unaccepted even with a standing flag naming it.
+      expect(verdictLib.deriveVerdict(rows)).toBe('FAIL');
+      expect(stepLib.partitionFailedRows(rows, new Set(['pre_write_gate'])).unaccepted).toEqual(['pre_write_gate']);
+    });
+
+    it('OBSERVABILITY FOLD — no abort, no row (declared-only-if-present): a healthy run\'s audit table is byte-unchanged', () => {
+      expect(stepLib.preWriteAbortRows([null, null, null])).toEqual([]);
+      expect(stepLib.preWriteAbortRows([{ failedPreWrite: [] }, { written: {} }])).toEqual([]);
+      expect(stepLib.preWriteAbortRows([])).toEqual([]);
+      expect(stepLib.preWriteAbortRows(undefined)).toEqual([]);
+    });
+
+    it('OBSERVABILITY FOLD — every runner that can abort feeds the row, and index.js actually consumes it', () => {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports -- matching this file's existing source-read idiom
+      const src = require('fs').readFileSync(join(process.cwd(), 'scripts/lib/step/index.js'), 'utf8') as string;
+      // 8 runners produce `failedPreWrite` on their abort path…
+      expect((src.match(/failedPreWrite: decision\.failed|failedPreWrite: gateDecision\.failed/g) || []).length).toBe(8);
+      // …and the assembled extraRows is the ONE consumer (before this fold: zero).
+      expect(src, 'failedPreWrite must not be write-only').toContain('...preWriteAbortRows([ingest, link, linkKeyed, cascade, materialize, backfill, recorder, enrich])');
+    });
+
+    it('index.js derives the partition in ONE place — no second, divergent acceptance filter', () => {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports -- matching this file's existing source-read idiom
+      const src = require('fs').readFileSync(join(process.cwd(), 'scripts/lib/step/index.js'), 'utf8') as string;
+      expect(src).toContain('partitionFailedRows(built.rows, accepted)');
+      expect(src, 'the status cascade must not re-derive acceptance inline').not.toMatch(/\[\.\.\.failedIds\]\.filter/);
+      expect(src, 'the pre_write gate must not re-derive acceptance inline').not.toMatch(/status === 'FAIL' && !accepted\.has/);
+    });
+  });
+
+  it('POST-B1-1 (Q1, Rule 12) — an on_check_error value the frozen enum forbids THROWS, never a silent severity fall-through', () => {
+    const check = { id: 'c0', severity: 'WARN', limit: 'viol == 0' };
+    const errored = { error: new Error('boom') };
+    expect(() => verdictLib.checkRow(check, errored, 'swallow_row')).toThrow(/on_check_error/);
+    expect(() => verdictLib.checkRow(check, errored, undefined)).toThrow(/on_check_error/);
+    // The three declarable arms are the ONLY non-throwing values.
+    for (const arm of ['fail_step', 'warn_row', 'omit_row']) {
+      expect(() => verdictLib.checkRow(check, errored, arm), arm).not.toThrow();
+    }
+    // A value the enum forbids is only ever a defect on the ERRORED path — a healthy
+    // check never consults it, and must not be made to throw by this guard.
+    expect(() => verdictLib.checkRow(check, { violations: 0 }, 'swallow_row')).not.toThrow();
+  });
+
   it('the SKIP path verdict is row-derived too — no hardcoded PASS', () => {
     const meta = stepLib.skipRecordsMeta(ASSERT_SCHEMA, 'advisory_lock_held_elsewhere');
     expect(meta.audit_table.name).toBe(ASSERT_SCHEMA.identity.display_name);

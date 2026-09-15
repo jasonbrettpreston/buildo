@@ -240,12 +240,22 @@ function checkRow(check, observation, onCheckError, config = null) {
   // fact, that this row's pre_write position was asserting a specific,
   // spec-cited "before X" promise. Absent on any check with no declared
   // order_guarantee (the common case) — never an empty/null placeholder key.
-  const row = (value, status) => ({
+  // POST-B1-1 Guardian fold (2026-09-15) — `errored` is an EXPLICIT marker, stamped
+  // only by the `observation.error` arm below, so a consumer never has to sniff the
+  // rendered `value` prose ("check errored: …") to tell "the query threw" from "the
+  // query measured something bad". `scripts/lib/step/index.js#partitionFailedRows`
+  // reads it to keep an errored row OUT of `override.accept_anomaly` — acceptance
+  // prices a MEASURED anomaly, and a check that threw measured nothing. Absent
+  // entirely on every other row (declared-only-if-present, matching `warn_threshold`
+  // and `order_guarantee` above) — never a `false` placeholder, so no healthy row's
+  // shape or golden-master hash moves.
+  const row = (value, status, errored = false) => ({
     metric: check.id,
     value,
     threshold,
     status,
     source: check.source || 'check',
+    ...(errored ? { errored: true } : {}),
     // RE-FREEZE #7 — the resolved (config-substituted) warn tier, present
     // ONLY when the check declares one (Nothing Hidden: the value in force,
     // not merely the fact a warn tier exists) — absent entirely otherwise,
@@ -258,8 +268,24 @@ function checkRow(check, observation, onCheckError, config = null) {
   if (observation && observation.error !== undefined && observation.error !== null) {
     const msg = observation.error instanceof Error ? observation.error.message : String(observation.error);
     if (onCheckError === 'omit_row') return null;
-    if (onCheckError === 'warn_row') return row(`check errored: ${msg}`, 'WARN');
-    return row(`check errored: ${msg}`, check.severity === 'INFO' ? 'INFO' : check.severity);
+    if (onCheckError === 'warn_row') return row(`check errored: ${msg}`, 'WARN', true);
+    // POST-B1-1 (WF3, 2026-09-15) — `fail_step` MEANS a step failure, severity-
+    // independent. Until this arm existed, `fail_step` was the FALL-THROUGH and
+    // inherited the check's own declared severity: every check in the four assert
+    // fleets is WARN-severity, so a check query that THREW read as an ordinary WARN,
+    // indistinguishable from a data-driven warning except by reading this row's own
+    // `value` string (review_followups.md HIGH, I3 commit 8, 2026-09-14 —
+    // `"fail_step" currently means nothing operationally`). No new boolean and no new
+    // halt path: the FAIL row IS the halt, because `deriveVerdict` is row-derived and
+    // `index.js` already maps verdict FAIL → RUN_STATUS.FAILED / `fail_check`.
+    // `on_check_error` is declared ONCE PER STEP, so it outranks the per-check
+    // severity (INFO included — a step that wants an errored check tolerated declares
+    // `warn_row`); a check that did NOT error never reaches this branch at all.
+    if (onCheckError === 'fail_step') return row(`check errored: ${msg}`, 'FAIL', true);
+    // Rule 12 (truthful crash) — the enum is `x-frozen` to exactly the three arms
+    // above, so anything else got here by bypassing descriptor validation. That is a
+    // defect, not a fourth mode: crash rather than silently pick a severity.
+    throw new Error(`on_check_error: unknown value ${JSON.stringify(onCheckError)} — the frozen enum is fail_step | warn_row | omit_row`);
   }
 
   if (observation === undefined || observation === null) {

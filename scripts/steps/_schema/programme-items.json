@@ -1749,17 +1749,17 @@
       "spec": "124 R-AE / 122 §5",
       "title": "on_check_error \"fail_step\" enforced fleet-wide",
       "promised": "a throwing check with execution.on_check_error \"fail_step\" produces a FAIL row and halts the step; locked both directions with an injected throwing check",
-      "status": "NOT_STARTED",
-      "evidence": "measured 2026-09-14 by Observability seat: injected throw caught by the step try/catch and downgraded to the declared WARN — plan .cursor/wf1_post_batch1_followups_active_task.md row POST-B1-1",
+      "status": "BUILT",
+      "evidence": "BUILT 2026-09-15 (WF3, plan .cursor/wf3_post_b1_1_on_check_error_active_task.md): scripts/lib/step/verdict.js:274 checkRow returns a FAIL row for on_check_error \"fail_step\" severity-independently (the FAIL row IS the halt — deriveVerdict is row-derived and scripts/lib/step/index.js maps verdict FAIL to RUN_STATUS.FAILED / terminal fail_check); an out-of-enum value throws (verdict.js:278, Rule 12). Locked BOTH directions in src/tests/step-library.logic.test.ts:275-322 (\"POST-B1-1 — fail_step yields a FAIL row on a WARN-severity check…\" proved RED before the fix: expected 'WARN' to be 'FAIL'; plus the INFO arm, the not-errored arm, the unchanged warn_row/omit_row arms at every severity, and the Rule 12 throw). Downstream lock re-pointed: src/tests/steps/compute_centroids/sabotage.logic.test.ts:130 DIVERGENCE FIXTURE now expects FAIL. Guardian fold (operator ruling, same WF): an errored check QUERY is never covered by override.accept_anomaly — acceptance prices a MEASURED anomaly, so checkRow stamps an explicit errored:true marker on the errored arm only (verdict.js row(), declared-only-if-present) and scripts/lib/step/index.js partitionFailedRows keeps such a row in unaccepted, making the COMPLETED_WITH_ERRORS acceptance branch unreachable for it (run lands on RUN_STATUS.FAILED / fail_check); ONE derivation now serves both the status cascade and the pre_write gate. Locked in src/tests/step-library.logic.test.ts (\"POST-B1-1 Guardian fold\" describe, 6 cases incl. the synthetic invariants/plausibility arm), RED first: expected [] to deeply equal [ 'ravine_count_drift_pct' ]. Observability fold (same WF): the pre_write gate's abort was write-only — 8 runners emitted failedPreWrite / written.write_skipped_pre_write_fail and NOTHING read either, so an errored when:\"pre_write\" check could skip the whole write while the run ended completed/PASS (compute runs twice; the cascade scores only the final pass). scripts/lib/step/index.js preWriteAbortRows now lands ONE FAIL row {metric:'pre_write_gate', value:'aborted: <ids>', source:'gate', errored:true} into extraRows, so the row-derived cascade fails the step; absent entirely when no gate aborted. Locked in the same describe (3 cases incl. both directions + an 8-runner producer count). NOT YET BUILT: the schema description sentence (scripts/steps/_schema/step.schema.json is byte-hash-frozen — any edit trips the R-E lock and needs a deliberate --refresh + Spec 122 §8 amendment, unauthorized here); semantics recorded in Spec 122 §7.3 row 1c and Spec 124 R-X instead",
       "owner": {
         "kind": "followup",
-        "ref": "review_followups.md: commit-8 HIGH row (verdict.js checkRow downgrades to WARN)"
+        "ref": "review_followups.md: commit-8 HIGH row (verdict.js checkRow downgrades to WARN) — CLOSED 2026-09-15"
       },
       "gate": {
         "kind": "nice_to_have",
         "blocks": []
       },
-      "last_reviewed": "2026-09-14"
+      "last_reviewed": "2026-09-15"
     },
     {
       "id": "POST-B1-2",
