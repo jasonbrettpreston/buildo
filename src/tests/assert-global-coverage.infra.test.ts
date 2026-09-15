@@ -46,8 +46,6 @@ const COMPUTE_PATH = path.join(REPO_ROOT, 'scripts', 'lib', 'compute', 'assert-g
 const FIELDS_PATH = path.join(REPO_ROOT, 'scripts', 'lib', 'assert-global-coverage-fields.js');
 const DESCRIPTOR_PATH = path.join(REPO_ROOT, 'scripts', 'quality', 'assert-global-coverage.descriptor.json');
 const MANIFEST_PATH = path.join(REPO_ROOT, 'scripts', 'manifest.json');
-const CHAIN_PERMITS_SPEC = path.join(REPO_ROOT, 'docs', 'specs', '01-pipeline', '41_chain_permits.md');
-const CHAIN_COA_SPEC = path.join(REPO_ROOT, 'docs', 'specs', '01-pipeline', '42_chain_coa.md');
 
 /** The frozen thin shell — SKELETON facts only (lock constant, pipeline.step call). */
 function src(): string {
@@ -423,16 +421,51 @@ describe('assert-global-coverage.js — WF3-D: SKIP_PHASES_SQL imported from sha
   });
 });
 
-describe('chain specs — step counts updated', () => {
-  it('41_chain_permits.md declares 32 steps', () => {
-    const content = fs.readFileSync(CHAIN_PERMITS_SPEC, 'utf8');
-    expect(content).toContain('32 (sequential');
+describe('chain specs — step counts DERIVED from manifest.chains, never retyped', () => {
+  // WF2 SPECTBL-1 follow-on, 2026-09-15: these two assertions used to pin the literals
+  // `32 (sequential` and `**Steps:** 12` — a retyped copy of a fleet count that the manifest
+  // already owns. They went red at pre-push the moment the chain specs were reconciled to the
+  // live chains (permits 32->33 with `dispatch_notifications`, coa 12->16). A count assertion
+  // that has to be hand-edited every time the chain changes is not a lock, it is a second
+  // source of truth — so the expected value is now READ from `manifest.chains[chain].length`
+  // and every chain spec carrying a `**Steps:** N` line is covered, not just 41 and 42.
+  // (No Spec 124 register row is cited here: the "fleet counts derived, never retyped" rule is
+  //  proposed, not ratified — the register ends at R-AI, and R-AJ..R-AM are batch-2 row 0.8's to
+  //  allocate. This lock stands on its own measured premise until then.)
+  const manifest = JSON.parse(fs.readFileSync(MANIFEST_PATH, 'utf8')) as { chains: Record<string, string[]> };
+  const CHAIN_SPEC: [chain: string, specFile: string][] = [
+    ['permits', '41_chain_permits.md'],
+    ['coa', '42_chain_coa.md'],
+    ['sources', '43_chain_sources.md'],
+    ['deep_scrapes', '44_chain_deep_scrapes.md'],
+    ['entities', '45_chain_entities.md'],
+    ['wsib', '46_wsib_enrichment.md'],
+  ];
+  const specText = (f: string) => fs.readFileSync(path.join(REPO_ROOT, 'docs', 'specs', '01-pipeline', f), 'utf8');
+
+  it('the chain -> spec map covers every manifest chain (a new chain cannot be silently skipped here)', () => {
+    expect(CHAIN_SPEC.map(([c]) => c).sort()).toEqual(Object.keys(manifest.chains).sort());
   });
 
-  it('42_chain_coa.md declares 12 steps (current state — target 22 per §6)', () => {
-    const content = fs.readFileSync(CHAIN_COA_SPEC, 'utf8');
-    expect(content).toMatch(/\*\*Steps:\*\*\s+12\b/);
-    expect(content).toContain('stop-on-failure');
+  for (const [chain, specFile] of CHAIN_SPEC) {
+    it(`${specFile} — its **Steps:** line states chains.${chain}.length`, () => {
+      const m = specText(specFile).match(/^\*\*Steps:\*\*\s+(\d+)\b/m);
+      expect(m, `${specFile} has no "**Steps:** N" line`).not.toBeNull();
+      expect(Number(m![1])).toBe(manifest.chains[chain]!.length);
+    });
+  }
+
+  it('41 and 42 keep their prose shape ("N (sequential", "stop-on-failure") — the reconciliation reworded the line, it did not drop the contract', () => {
+    expect(specText('41_chain_permits.md')).toContain(`${manifest.chains.permits!.length} (sequential`);
+    const coa = specText('42_chain_coa.md');
+    expect(coa).toMatch(new RegExp(`\\*\\*Steps:\\*\\*\\s+${manifest.chains.coa!.length}\\b`));
+    expect(coa).toContain('stop-on-failure');
+  });
+
+  it('RED direction — the derivation is not vacuous: a wrong count does NOT match the live spec line', () => {
+    const m = specText('41_chain_permits.md').match(/^\*\*Steps:\*\*\s+(\d+)\b/m);
+    expect(Number(m![1])).not.toBe(manifest.chains.permits!.length + 1);
+    expect(specText('41_chain_permits.md')).not.toContain(`${manifest.chains.permits!.length + 1} (sequential`);
   });
 });
 
