@@ -6,13 +6,13 @@
 
 ## Counts
 
-Total items: **115**
+Total items: **117**
 
 | status | count |
 |---|---|
-| ⬜ NOT_STARTED | 30 |
+| ⬜ NOT_STARTED | 28 |
 | ⚠️ PARTIAL | 16 |
-| ✅ BUILT | 65 |
+| ✅ BUILT | 69 |
 | ⏭️ SUPERSEDED | 4 |
 
 **blocks batching: 0**
@@ -48,7 +48,7 @@ Total items: **115**
 | `VEL-1` | 124 R-AG (proposed) | Gate placement: full suite at pre-push, vitest related + fast invariants at pre-commit, live-DB infra tests in test:db | ✅ BUILT | wf: wf: conversion velocity (R-AG) | address_points, assert_parcel_sanity, compute_parcel_cost_estimates, enrich_centreline, enrich_heritage, enrich_ravines, load_centreline, load_heritage, load_wsib, load_zoning, massing, neighbourhoods, parcels, reconcile | 2026-09-14 |
 | `VEL-2` | 124 R-AH (proposed) | Compressed 3-commit form is the default once an archetype has two full-form members | ✅ BUILT | wf: wf: conversion velocity (R-AH) | address_points, assert_parcel_sanity, compute_parcel_cost_estimates, enrich_centreline, enrich_heritage, enrich_ravines, load_centreline, load_heritage, load_wsib, load_zoning, massing, neighbourhoods, parcels, reconcile | 2026-09-14 |
 
-## Nice-to-have — real gap, not currently blocking (94)
+## Nice-to-have — real gap, not currently blocking (96)
 
 | id | spec | title | status | owner | blocks | last reviewed |
 |---|---|---|---|---|---|---|
@@ -131,8 +131,8 @@ Total items: **115**
 | `PH2-EXT` | 123 §2 | PH-2 churn×complexity population widened from 27 sources steps to all 65 chain slugs | ⬜ NOT_STARTED | wf: wf: unassigned | — | 2026-09-10 |
 | `ARCH-CENSUS` | 122 §1.10 | Archetype declared for the 36 non-sources unconverted files (blocks any C6 ordering) | ⬜ NOT_STARTED | wf: wf: unassigned | — | 2026-09-10 |
 | `CLAIMS-MTX` | 123 §5 | Claims × steps matrix generated (plan-claims.mjs emits the 44/5/6 split today, not a per-step × per-claim grid) | ⬜ NOT_STARTED | followup: review_followups.md (WF1 'conversion roadmap' filing, 2026-09-10) | — | 2026-09-10 |
-| `POST-B1-1` | 124 R-AE / 122 §5 | on_check_error "fail_step" enforced fleet-wide | ⬜ NOT_STARTED | followup: review_followups.md: commit-8 HIGH row (verdict.js checkRow downgrades to WARN) | — | 2026-09-14 |
-| `POST-B1-2` | 124 R-AE / 02-web-admin | admin engine health reads the pipeline's declared write | ⬜ NOT_STARTED | followup: review_followups.md:3544 family (HIGH admin duplicate compute) | — | 2026-09-14 |
+| `POST-B1-1` | 124 R-AE / 122 §5 | on_check_error "fail_step" enforced fleet-wide | ✅ BUILT | followup: review_followups.md: commit-8 HIGH row (verdict.js checkRow downgrades to WARN) — CLOSED 2026-09-15 | — | 2026-09-15 |
+| `POST-B1-2` | 124 R-AE / 02-web-admin | admin engine health reads the pipeline's declared write | ✅ BUILT | followup: review_followups.md:3544 family (HIGH admin duplicate compute) | — | 2026-09-15 |
 | `POST-B1-3` | 49 §heartbeat / 124 R-AE | engine_health_snapshots trend reader or retirement | ⬜ NOT_STARTED | followup: review_followups.md:3544 (MED no trend reader) | — | 2026-09-14 |
 | `POST-B1-4` | 40 lineage-docs generator (data-lineage-map.md) | lineage map free of the overlay-table artifact | ⬜ NOT_STARTED | followup: review_followups.md:3456 (MED lineage anomaly) | — | 2026-09-14 |
 | `POST-B1-5` | 120 pre-commit hook (run-chain-step-timeout.logic.test.ts) | run-chain-step-timeout kill-race test sequenced, not sleep-timed | ✅ BUILT | followup: review_followups.md:3457 (MED hook flake) | — | 2026-09-14 |
@@ -141,11 +141,13 @@ Total items: **115**
 | `POST-B1-8` | 43 / 124 rule 3 | one shared download helper with retry as logic vars | ⬜ NOT_STARTED | followup: review_followups.md:415 (refuted disposition + operator ruling: ride the LOAD conversion) | — | 2026-09-14 |
 | `POST-B1-9` | 122 §5.3 | single descriptorPathFor definition | ⬜ NOT_STARTED | followup: review_followups.md:3459 (LOW) | — | 2026-09-14 |
 | `POST-B1-10` | 49 / descriptor interpretation | captured_at freshness semantics documented | ⬜ NOT_STARTED | followup: review_followups.md: commit-8 LOW row | — | 2026-09-14 |
-| `POST-B1-11` | 76 funnel.ts observability model | funnel mutation bounds match the fleet | ⬜ NOT_STARTED | followup: review_followups.md: commit-8 LOW row | — | 2026-09-14 |
+| `POST-B1-11` | 76 funnel.ts observability model | funnel mutation bounds match the fleet | ✅ BUILT | followup: review_followups.md: commit-8 LOW row | — | 2026-09-15 |
 | `POST-B1-12` | 123 §7 G0 / registry | Step Registry generated in-repo | ⬜ NOT_STARTED | followup: Step Registry artifact built 2026-09-14 from scratch scripts outside the repo | — | 2026-09-14 |
 | `VEL-3` | 124 R-AI (proposed) | Capture pairs only where sharing.varies_by_chain says the chain matters | ✅ BUILT | wf: wf: conversion velocity (R-AI) | — | 2026-09-14 |
 | `POST-B1-14` | 122 §1.8 | Concern index audited against the 20-category correction | ⬜ NOT_STARTED | followup: Spec 122 §1.8 unaudited flag (2026-09-09) | — | 2026-09-14 |
 | `POST-B1-15` | 122 §5.2 | Source-text test debt retired: 53 files / 85 readFileSync(scripts/*.js) assertions → descriptor/behaviour assertions | ⬜ NOT_STARTED | wf: wf: source-text test debt (POST-B1-15) | — | 2026-09-14 |
+| `SPECTBL-1` | 43 §2 / 42 §2 / 41 §2 | Chain-spec Step Breakdown tables reconciled to manifest.chains + drift-locked | ✅ BUILT | wf: wf: chain-spec step tables (SPECTBL-1) | — | 2026-09-15 |
+| `SPECTBL-GEN` | 122 batch-2 amendment item 5 | Step Breakdown tables generated rather than hand-authored | ⬜ NOT_STARTED | followup: .cursor/batch2_c5_active_task.md §Proposed policy amendments item 5 (batch-2 row 0.8) | — | 2026-09-15 |
 
 ---
 

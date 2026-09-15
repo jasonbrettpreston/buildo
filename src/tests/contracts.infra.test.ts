@@ -99,6 +99,15 @@ interface Contracts {
     rate_addition_sqm: number;
     solar_adj_factor: number;
   };
+  engine_health: {
+    dead_tuple_ratio_warn_max: number;
+    dead_tuple_min_rows: number;
+    seq_scan_ratio_warn_max: number;
+    seq_scan_min_rows: number;
+    ping_pong_ratio_warn_max: number;
+    insp_dead_tuple_fail_pct: number;
+    insp_update_insert_fail_ratio: number;
+  };
   p16_gate: {
     recall_floor: number;
     prec_floor: number;
@@ -122,6 +131,27 @@ interface Rule {
   file: string;
   pattern: RegExp;
 }
+
+/**
+ * Regex source matching the source-literal forms of a contract number.
+ * `0.10` in a file parses back as `0.1`, and `3` may be written `3.0` — both
+ * sides have to match without a hand-written pattern per value.
+ */
+function numericLiteral(value: number): string {
+  const s = String(value).replace('.', '\\.');
+  return s.includes('\\.') ? `${s}0*` : `${s}(\\.0+)?`;
+}
+
+/** [_contracts.json key, logic_variables.variable_key] for the engine-health family. */
+const ENGINE_HEALTH_CONTRACT_KEYS: [keyof Contracts['engine_health'], string][] = [
+  ['dead_tuple_ratio_warn_max', 'engine_health_dead_tuple_ratio_warn_max'],
+  ['dead_tuple_min_rows', 'engine_health_dead_tuple_min_rows'],
+  ['seq_scan_ratio_warn_max', 'engine_health_seq_scan_ratio_warn_max'],
+  ['seq_scan_min_rows', 'engine_health_seq_scan_min_rows'],
+  ['ping_pong_ratio_warn_max', 'engine_health_ping_pong_ratio_warn_max'],
+  ['insp_dead_tuple_fail_pct', 'engine_health_insp_dead_tuple_fail_pct'],
+  ['insp_update_insert_fail_ratio', 'engine_health_insp_update_insert_fail_ratio'],
+];
 
 const rules: Rule[] = [
   // ---- distance / radius ----
@@ -498,6 +528,29 @@ const rules: Rule[] = [
     file: 'scripts/classify-permits.js',
     pattern: new RegExp(`INFERENCE_MEAN_FAIL\\s*=\\s*${contracts.p16_gate.mean_fail}\\b`),
   },
+  // ---- engine health threshold family (Spec 26 §3.4 / POST-B1-2) ----
+  // Two consumers per value: the seed the STEP ships with, and the admin's
+  // missing-row fallback. They diverged silently before POST-B1-2; this makes
+  // a future divergence a CI failure.
+  ...ENGINE_HEALTH_CONTRACT_KEYS.flatMap(([contractKey, variableKey]) => {
+    const value = contracts.engine_health[contractKey];
+    return [
+      {
+        name: `engine_health.${contractKey} → ${variableKey} seed JSON default`,
+        value,
+        file: 'scripts/seeds/logic_variables.json',
+        pattern: new RegExp(
+          `"${variableKey}":[\\s\\S]{0,40}"default":\\s*${numericLiteral(value)}\\b`,
+        ),
+      },
+      {
+        name: `engine_health.${contractKey} → ENGINE_HEALTH_DEFAULTS.${variableKey}`,
+        value,
+        file: 'src/lib/quality/types.ts',
+        pattern: new RegExp(`${variableKey}:\\s*${numericLiteral(value)}\\b`),
+      },
+    ];
+  }),
 ];
 
 describe('contracts.json — drift enforcement across spec/SQL/Zod/migration', () => {
@@ -512,6 +565,7 @@ describe('contracts.json — drift enforcement across spec/SQL/Zod/migration', (
     expect(contracts.build_norms).toBeDefined();
     expect(contracts.optimal_config).toBeDefined();
     expect(contracts.parcel_cost_model).toBeDefined();
+    expect(contracts.engine_health).toBeDefined();
   });
 
   it('permit pillar maxes sum to permit_total_max (spec 70 §4 invariant)', () => {

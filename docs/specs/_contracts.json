@@ -88,6 +88,16 @@
     "rate_addition_sqm": 4306,
     "solar_adj_factor": 0.75
   },
+  "engine_health": {
+    "$comment": "Spec 26 §3.4 / POST-B1-2 — the assert_engine_health threshold family. SEED-DEFAULT LITERAL LOCK (CF-2, the max_build.min_dimension precedent above): each value crosses scripts/seeds/logic_variables.json (what the step ships with) ↔ src/lib/quality/types.ts ENGINE_HEALTH_DEFAULTS (the admin's missing-row fallback). Before POST-B1-2 the admin carried its own literals and had drifted — its ping-pong ceiling was still 2 while the seed had been 10 since 8c9e64d7 (2026-03-21), and it had no dead_tuple_min_rows at all, so admin and pipeline disagreed about which tables count. These are admin-TUNABLE at runtime via logic_variables (Control Panel group \"Data Quality Thresholds\") — the lock governs the seed/default literals, not runtime values. Consumers for all rows: scripts/seeds/logic_variables.json + src/lib/quality/types.ts (both pinned by contracts.infra.test.ts; the admin-vs-seed equality is additionally pinned by quality.infra.test.ts).",
+    "dead_tuple_ratio_warn_max": 0.10,
+    "dead_tuple_min_rows": 1000,
+    "seq_scan_ratio_warn_max": 0.80,
+    "seq_scan_min_rows": 10000,
+    "ping_pong_ratio_warn_max": 10,
+    "insp_dead_tuple_fail_pct": 10,
+    "insp_update_insert_fail_ratio": 5
+  },
   "p16_gate": {
     "$comment": "Spec 80 §5.C / P16-D3 [FAB3] — the 16B lean-complement GO/NO-GO gate thresholds (scored on the held-out half of the 122-permit inspection corpus). recall_floor: recovering toward the 62.6% pre-P13-3 anchor; prec_floor: 10 pts off the 65.8% evidence baseline (a union necessarily dips precision); mean_lo/mean_hi: the target attached-trades/permit band (evidence-only is 6.0, pre-P13-3 16.6 is the inflation avoided). Consumer: scripts/analysis/p14-trade-attachment-evaluation.js (gateThresholds). 2026-07-10 GO: hold-out recall 61.4% / prec(insp) 70.5% / mean 10.2.",
     "recall_floor": 0.50,

@@ -810,11 +810,20 @@ export const STEP_EXPECTED_RANGES: Record<string, ExpectedRanges> = {
     mutations: { data_quality_snapshots: { ins: [0, 1], upd: [0, 1], del: [0, 0] } },
     row_delta: { data_quality_snapshots: [0, 1] },
   },
+  // POST-B1-11: bounds re-derived from the measured fleet. The step discovers
+  // every public-schema table at runtime (no hardcoded list) and writes ONE row
+  // per table, so records_total tracks the schema's table count: 87 on
+  // 2026-09-14, 87 on 2026-08-24, 86 on 2026-08-01, 91 on 2026-07-17. The old
+  // [10, 15] band predated runtime discovery and classified every healthy run
+  // 'anomaly' by ~6x. [50, 150] absorbs normal schema growth without going
+  // green on a collapse (a run that snapshots 40 tables is a real defect).
+  // The threshold is named, not quoted: the literal lives in the
+  // engine_health_dead_tuple_ratio_warn_max logic variable (Spec 26 §3.4).
   assert_engine_health: {
-    behavior: 'Queries pg_stat_user_tables for dead tuples, seq scans, and update ping-pong. Auto-VACUUMs tables exceeding 10% dead ratio. Snapshots to engine_health_snapshots.',
-    summary: { records_total: [10, 15], records_new: [0, 0], records_updated: [0, 15] },
-    mutations: { engine_health_snapshots: { ins: [0, 15], upd: [0, 15], del: [0, 0] } },
-    row_delta: { engine_health_snapshots: [0, 15] },
+    behavior: 'Discovers every public-schema table at runtime and records dead tuples, seq scans, and update ping-pong for each. Auto-VACUUMs tables exceeding the engine_health_dead_tuple_ratio_warn_max logic variable. Snapshots one row per table to engine_health_snapshots (87 tables measured 2026-09-14). The admin dashboard does NOT read that snapshot — /api/quality runs its own live pg_stat_user_tables query over a curated 11-table list (Spec 26 §3.4); the two share their thresholds, not their data.',
+    summary: { records_total: [50, 150], records_new: [0, 0], records_updated: [0, 150] },
+    mutations: { engine_health_snapshots: { ins: [0, 150], upd: [0, 150], del: [0, 0] } },
+    row_delta: { engine_health_snapshots: [0, 150] },
   },
   inspections: {
     behavior: 'Scrapes inspection stages from AIC portal via REST API. Weekly cadence, ~104K target permits across 5 types. Each run processes BATCH_SIZE permits (default 10).',

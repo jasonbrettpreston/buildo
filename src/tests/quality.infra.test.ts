@@ -1,10 +1,35 @@
 // Infra Layer Tests - Data quality API routes and snapshot table schema
-// SPEC LINK: docs/specs/28_data_quality_dashboard.md
-import { describe, it, expect, beforeAll } from 'vitest';
+// SPEC LINK: docs/specs/02-web-admin/26_admin_dashboard.md
+// (POST-B1-2: the previous link, docs/specs/28_data_quality_dashboard.md, has
+// never existed in this repo — a dangling SPEC LINK. Spec 26 owns
+// /api/quality, src/lib/quality/ and DataQualityDashboard.tsx; §3.4 is the
+// engine-health surface these tests lock.)
+import { describe, it, expect, beforeAll, beforeEach, vi } from 'vitest';
 import fs from 'fs';
 import path from 'path';
+import { NextRequest } from 'next/server';
 import type { DataQualityResponse } from '@/lib/quality/types';
+import * as qualityTypes from '@/lib/quality/types';
 import { createMockDataQualitySnapshot } from './factories';
+
+// ─── Mocks for the POST-B1-2 behavioural lock (only the dynamically-imported
+//     route module consumes these; every other test in this file is fs-based) ──
+const mockQuery = vi.fn();
+vi.mock('@/lib/db/client', () => ({
+  query: (...args: unknown[]) => mockQuery(...args),
+}));
+
+const mockLogError = vi.fn();
+const mockLogWarn = vi.fn();
+vi.mock('@/lib/logger', () => ({
+  logError: (...args: unknown[]) => mockLogError(...args),
+  logWarn: (...args: unknown[]) => mockLogWarn(...args),
+  logInfo: vi.fn(),
+}));
+
+vi.mock('@/lib/quality/metrics', () => ({
+  getQualityData: async () => ({ current: null, trends: [], lastUpdated: null }),
+}));
 
 describe('GET /api/quality Response Shape', () => {
   function validateQualityResponse(data: Record<string, unknown>): boolean {
@@ -631,6 +656,275 @@ describe('Engine Health CQA Tier 3', () => {
     );
     expect(source).toContain('recordsUpdated');
     expect(source).toContain('records_updated: recordsUpdated');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// POST-B1-2 — engine health has ONE threshold source
+// ---------------------------------------------------------------------------
+// Spec 26 §3.4 + Spec 124 R-AE. Before this lock the admin carried a SECOND,
+// independent engine-health implementation: its own live pg_stat_user_tables
+// query over a hardcoded 11-table list, and its own `ENGINE_HEALTH_THRESHOLDS`
+// literals. Measured 2026-09-15 against the live DB (migrations 244): the
+// admin's PING_PONG_RATIO was 2 while engine_health_ping_pong_ratio_warn_max
+// has been 10 since 8c9e64d7 (2026-03-21), and the admin had no counterpart at
+// all for engine_health_dead_tuple_min_rows (1000) — so it flagged small
+// tables the step deliberately skips. This describe pins BOTH directions: the
+// admin's defaults must be the seeded logic-variable defaults, and the step
+// must keep owning the discovery/compute side.
+describe('Engine health has ONE threshold source (POST-B1-2)', () => {
+  const ENGINE_HEALTH_LOGIC_VAR_KEYS = [
+    'engine_health_dead_tuple_ratio_warn_max',
+    'engine_health_dead_tuple_min_rows',
+    'engine_health_seq_scan_ratio_warn_max',
+    'engine_health_seq_scan_min_rows',
+    'engine_health_ping_pong_ratio_warn_max',
+    'engine_health_insp_dead_tuple_fail_pct',
+    'engine_health_insp_update_insert_fail_ratio',
+  ];
+
+  const seed = JSON.parse(
+    fs.readFileSync(path.join(__dirname, '../../scripts/seeds/logic_variables.json'), 'utf-8')
+  ) as Record<string, { default: number }>;
+
+  // Namespace import + cast: the retirement arm has to be able to ask for an
+  // export that must NOT exist, which a named import cannot express.
+  const mod = qualityTypes as unknown as Record<string, unknown>;
+  const defaults = mod.ENGINE_HEALTH_DEFAULTS as Record<string, number> | undefined;
+
+  const routeSource = fs.readFileSync(
+    path.join(__dirname, '../app/api/quality/route.ts'),
+    'utf-8'
+  );
+
+  it('exports ENGINE_HEALTH_DEFAULTS and has retired the ENGINE_HEALTH_THRESHOLDS literals', () => {
+    expect(defaults, 'src/lib/quality/types.ts must export ENGINE_HEALTH_DEFAULTS').toBeDefined();
+    expect(
+      mod.ENGINE_HEALTH_THRESHOLDS,
+      'ENGINE_HEALTH_THRESHOLDS is retired — the admin keys are the logic-variable names'
+    ).toBeUndefined();
+  });
+
+  it('declares a counterpart for all 7 engine_health_* logic variables', () => {
+    expect(Object.keys(defaults ?? {}).sort()).toEqual([...ENGINE_HEALTH_LOGIC_VAR_KEYS].sort());
+  });
+
+  it('every admin default equals the seeded logic-variable default (no second source of truth)', () => {
+    for (const key of ENGINE_HEALTH_LOGIC_VAR_KEYS) {
+      expect(seed[key], `${key} must be seeded in scripts/seeds/logic_variables.json`).toBeDefined();
+      expect(
+        defaults?.[key],
+        `${key}: the admin default must equal the seed default`
+      ).toBe(seed[key]?.default);
+    }
+  });
+
+  // The admin keeps its own LIVE read: liveness is load-bearing (the snapshot
+  // cadence measured 2026-09-15 is not daily — 09-14, 08-24, 08-01, 07-17) and
+  // the snapshot's 87-table scope cannot be published from an unauthenticated
+  // route. What POST-B1-2 retired is the second THRESHOLD source, not the query.
+  it('/api/quality keeps the live pg_stat_user_tables read and does NOT read engine_health_snapshots', () => {
+    expect(routeSource).toContain('pg_stat_user_tables');
+    expect(routeSource).not.toMatch(/FROM\s+engine_health_snapshots/);
+  });
+
+  it('/api/quality resolves the thresholds from logic_variables at request time', () => {
+    expect(routeSource).toContain('logic_variables');
+    expect(routeSource).toContain('variable_key = ANY($1)');
+  });
+
+  it('wires the resolved thresholds INTO the detector (not the default-arg call)', () => {
+    expect(routeSource).toMatch(/await loadEngineHealthThresholds\(\)/);
+    expect(routeSource).toMatch(
+      /detectEngineHealthIssues\(\s*engineHealthEntries\s*,\s*thresholds\s*\)/
+    );
+  });
+
+  it('INVERSE ARM (must stay GREEN): the step still owns discovery and still reads its thresholds from ctx.config', () => {
+    const compute = fs.readFileSync(
+      path.join(__dirname, '../../scripts/lib/compute/assert-engine-health.js'),
+      'utf-8'
+    );
+    expect(compute).toContain('pg_stat_user_tables');
+    expect(compute).toContain('config.engine_health_dead_tuple_ratio_warn_max');
+    expect(compute).toContain('config.engine_health_dead_tuple_min_rows');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// POST-B1-2 — BEHAVIOURAL lock on GET /api/quality
+// ---------------------------------------------------------------------------
+// The source-text locks above are necessary but not sufficient: a call site
+// reverted to `detectEngineHealthIssues(engineHealthEntries)` leaves every
+// grep-string in place (loadEngineHealthThresholds survives as dead code) and
+// stays green. These cases drive the real handler with a stubbed pool and
+// assert the threshold that came OUT is the one the DB put IN.
+describe('GET /api/quality — engine health uses the logic_variables threshold (POST-B1-2, behavioural)', () => {
+  /** One large, bloated table: 15% dead over 50K live rows. */
+  const bloatedStatRow = {
+    table_name: 'permits',
+    n_live_tup: '50000',
+    n_dead_tup: '7500',
+    seq_scan: '100',
+    idx_scan: '900',
+  };
+
+  /** Same table, comfortably UNDER the seeded 10% ceiling: 5% dead. */
+  const healthyStatRow = { ...bloatedStatRow, n_dead_tup: '2500' };
+
+  function seededLogicVarRows(overrides: Record<string, string> = {}) {
+    const defaults = qualityTypes.ENGINE_HEALTH_DEFAULTS as unknown as Record<string, number>;
+    return Object.keys(defaults).map((variable_key) => ({
+      variable_key,
+      variable_value: overrides[variable_key] ?? String(defaults[variable_key]),
+    }));
+  }
+
+  /**
+   * Routes by SQL text rather than call order, so an unrelated query added to
+   * the handler later cannot silently shift which stub a case is asserting on.
+   */
+  function stubPool(opts: {
+    statRows: Record<string, string>[];
+    logicVarRows: { variable_key: string; variable_value: string | null }[];
+  }) {
+    mockQuery.mockImplementation(async (text: string) => {
+      if (text.includes('pg_stat_user_tables')) return opts.statRows;
+      if (text.includes('logic_variables')) return opts.logicVarRows;
+      return [];
+    });
+  }
+
+  async function callRoute() {
+    const { GET } = await import('@/app/api/quality/route');
+    const res = await GET(new NextRequest('http://localhost/api/quality'));
+    return (await res.json()) as {
+      engineHealth: { table_name: string }[];
+      engineHealthAnomalies: { table: string; type: string; threshold: number }[];
+    };
+  }
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('applies the STUBBED logic-variable ceiling, not ENGINE_HEALTH_DEFAULTS', async () => {
+    // 5% dead is BELOW the seeded 10% default, so the only way an anomaly can
+    // appear is if the 2% row actually reached the detector.
+    stubPool({
+      statRows: [healthyStatRow],
+      logicVarRows: seededLogicVarRows({ engine_health_dead_tuple_ratio_warn_max: '0.02' }),
+    });
+
+    const body = await callRoute();
+
+    expect(body.engineHealthAnomalies).toHaveLength(1);
+    expect(body.engineHealthAnomalies[0]!.type).toBe('dead_tuples');
+    expect(body.engineHealthAnomalies[0]!.table).toBe('permits');
+    expect(body.engineHealthAnomalies[0]!.threshold).toBe(2);
+    expect(body.engineHealthAnomalies[0]!.threshold).not.toBe(
+      qualityTypes.ENGINE_HEALTH_DEFAULTS.engine_health_dead_tuple_ratio_warn_max * 100
+    );
+    expect(body.engineHealth).toHaveLength(1);
+    // A fully-seeded logic_variables table must produce no fallback noise.
+    expect(mockLogError).not.toHaveBeenCalled();
+    expect(mockLogWarn).not.toHaveBeenCalled();
+  });
+
+  it('a RELAXED logic-variable ceiling suppresses an anomaly the default would have raised', async () => {
+    // 15% dead is ABOVE the seeded 10% default — green here proves the default
+    // did not win.
+    stubPool({
+      statRows: [bloatedStatRow],
+      logicVarRows: seededLogicVarRows({ engine_health_dead_tuple_ratio_warn_max: '0.90' }),
+    });
+
+    const body = await callRoute();
+
+    expect(body.engineHealthAnomalies).toHaveLength(0);
+  });
+
+  /** The single aggregated fallback warning, if one was emitted. */
+  function fallbackWarning() {
+    const calls = mockLogWarn.mock.calls.filter(
+      (c) => (c[2] as { phase?: string } | undefined)?.phase === 'engine_health_thresholds'
+    );
+    expect(calls, 'the fallback is aggregated into exactly ONE logWarn').toHaveLength(1);
+    return {
+      message: calls[0]![1] as string,
+      fellBack: (calls[0]![2] as { fell_back: { variable_key: string; raw: string | null; fallback: number }[] })
+        .fell_back,
+    };
+  }
+
+  it('INVERSE: falls back to the seeded defaults when the rows are absent, in ONE aggregated warning', async () => {
+    stubPool({ statRows: [bloatedStatRow], logicVarRows: [] });
+
+    const body = await callRoute();
+
+    expect(body.engineHealthAnomalies).toHaveLength(1);
+    expect(body.engineHealthAnomalies[0]!.threshold).toBe(
+      qualityTypes.ENGINE_HEALTH_DEFAULTS.engine_health_dead_tuple_ratio_warn_max * 100
+    );
+    // Config ABSENCE is info-class, not error-class: no Sentry event, one
+    // warning naming every key that fell back. The fallback is never silent.
+    expect(mockLogError).not.toHaveBeenCalled();
+    const warning = fallbackWarning();
+    expect(warning.fellBack.map((f) => f.variable_key).sort()).toEqual(
+      Object.keys(qualityTypes.ENGINE_HEALTH_DEFAULTS).sort()
+    );
+    expect(warning.message).toContain('engine_health_dead_tuple_ratio_warn_max');
+    expect(warning.fellBack[0]).toMatchObject({
+      variable_key: 'engine_health_dead_tuple_ratio_warn_max',
+      fallback: qualityTypes.ENGINE_HEALTH_DEFAULTS.engine_health_dead_tuple_ratio_warn_max,
+    });
+  });
+
+  it('INVERSE: a non-numeric variable_value is rejected by the Zod boundary and named in the warning, never coerced', async () => {
+    stubPool({
+      statRows: [bloatedStatRow],
+      logicVarRows: seededLogicVarRows({ engine_health_dead_tuple_ratio_warn_max: 'not-a-number' }),
+    });
+
+    const body = await callRoute();
+
+    expect(body.engineHealthAnomalies[0]!.threshold).toBe(
+      qualityTypes.ENGINE_HEALTH_DEFAULTS.engine_health_dead_tuple_ratio_warn_max * 100
+    );
+    const warning = fallbackWarning();
+    expect(warning.fellBack).toHaveLength(1);
+    expect(warning.fellBack[0]).toMatchObject({
+      variable_key: 'engine_health_dead_tuple_ratio_warn_max',
+      raw: 'not-a-number',
+    });
+  });
+
+  it('INVERSE: a FAILED logic_variables query is error-class — logError, not the aggregated warning', async () => {
+    mockQuery.mockImplementation(async (text: string) => {
+      if (text.includes('pg_stat_user_tables')) return [bloatedStatRow];
+      if (text.includes('logic_variables')) throw new Error('relation "logic_variables" does not exist');
+      return [];
+    });
+
+    const body = await callRoute();
+
+    expect(body.engineHealthAnomalies[0]!.threshold).toBe(
+      qualityTypes.ENGINE_HEALTH_DEFAULTS.engine_health_dead_tuple_ratio_warn_max * 100
+    );
+    const errorCalls = mockLogError.mock.calls.filter(
+      (c) => (c[2] as { phase?: string } | undefined)?.phase === 'engine_health_thresholds'
+    );
+    expect(errorCalls).toHaveLength(1);
+    expect(mockLogWarn).not.toHaveBeenCalled();
+  });
+
+  it('no pg_stat rows → empty engine health, no anomalies, still 200', async () => {
+    stubPool({ statRows: [], logicVarRows: seededLogicVarRows() });
+
+    const body = await callRoute();
+
+    expect(body.engineHealth).toEqual([]);
+    expect(body.engineHealthAnomalies).toEqual([]);
   });
 });
 

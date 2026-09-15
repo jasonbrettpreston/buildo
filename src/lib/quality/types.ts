@@ -468,81 +468,139 @@ export interface EngineHealthAnomaly {
   detail: string;
 }
 
-/** Thresholds for engine health checks */
-export const ENGINE_HEALTH_THRESHOLDS = {
-  /** Flag tables where dead tuples exceed this ratio of live tuples */
-  DEAD_TUPLE_RATIO: 0.10,
-  /** Flag tables where sequential scans exceed this ratio (on large tables) */
-  SEQ_SCAN_RATIO: 0.80,
-  /** Minimum live tuples before seq_scan ratio is checked */
-  SEQ_SCAN_MIN_ROWS: 10000,
-  /** Flag when update count exceeds this multiple of insert count */
-  PING_PONG_RATIO: 2,
-} as const;
+/**
+ * The engine-health thresholds, keyed by their `logic_variables` variable_key.
+ *
+ * POST-B1-2 (Spec 26 §3.4): these keys are deliberately the logic-variable
+ * names and NOT prettified constants, so a reader cannot map the wrong literal
+ * onto the wrong variable. The single source of truth at runtime is the
+ * `logic_variables` table (admin-tunable via the Control Panel's "Data Quality
+ * Thresholds" group); this object is only the missing-row fallback, and
+ * `src/tests/quality.infra.test.ts` pins every value to
+ * `scripts/seeds/logic_variables.json` so the fallback cannot drift from the
+ * seed the step ships with.
+ *
+ * All 7 members of the `engine_health_*` family are declared even though the
+ * admin's `detectEngineHealthIssues` consumes only the first five: the two
+ * `*_insp_*` thresholds drive the step's per-chain `permit_inspections` /
+ * `coa_applications` checks, and declaring them here keeps the family whole —
+ * a newly-seeded engine_health_* variable fails the lock until the admin has
+ * consciously decided what to do with it.
+ */
+export interface EngineHealthThresholds {
+  /** Dead-tuple ratio (n_dead_tup / n_live_tup) WARN ceiling. */
+  engine_health_dead_tuple_ratio_warn_max: number;
+  /** Minimum live rows before the dead-tuple ratio is evaluated at all. */
+  engine_health_dead_tuple_min_rows: number;
+  /** Sequential-scan ratio (seq / (seq + idx)) WARN ceiling. */
+  engine_health_seq_scan_ratio_warn_max: number;
+  /** Minimum live rows before the seq-scan ratio is evaluated at all. */
+  engine_health_seq_scan_min_rows: number;
+  /** Cumulative update/insert ratio WARN ceiling (step-side check). */
+  engine_health_ping_pong_ratio_warn_max: number;
+  /** permit_inspections / coa_applications dead-tuple pct ceiling (step-side check). */
+  engine_health_insp_dead_tuple_fail_pct: number;
+  /** permit_inspections update/insert ratio ceiling (step-side check). */
+  engine_health_insp_update_insert_fail_ratio: number;
+}
+
+/** Fallback values, byte-identical to scripts/seeds/logic_variables.json. */
+export const ENGINE_HEALTH_DEFAULTS: EngineHealthThresholds = {
+  engine_health_dead_tuple_ratio_warn_max: 0.10,
+  engine_health_dead_tuple_min_rows: 1000,
+  engine_health_seq_scan_ratio_warn_max: 0.80,
+  engine_health_seq_scan_min_rows: 10000,
+  engine_health_ping_pong_ratio_warn_max: 10,
+  engine_health_insp_dead_tuple_fail_pct: 10,
+  engine_health_insp_update_insert_fail_ratio: 5,
+};
 
 /**
- * Detect engine health issues from pg_stat_user_tables data.
+ * Detect engine health issues from a `pg_stat_user_tables` reading.
  *
- * Checks:
- * 1. Dead tuple ratio > 10% (VACUUM not keeping up)
- * 2. Sequential scan ratio > 80% on tables with 10K+ rows (missing indexes)
- * 3. Update ping-pong: updates > 2x inserts (scripts re-touching unchanged rows)
+ * Checks (parity with `scripts/lib/compute/assert-engine-health.js`
+ * `buildTableResults`, which owns the same two predicates against `ctx.config`):
+ * 1. Dead tuple ratio above `engine_health_dead_tuple_ratio_warn_max`, on
+ *    tables with at least `engine_health_dead_tuple_min_rows` live rows.
+ * 2. Sequential scan ratio above `engine_health_seq_scan_ratio_warn_max`, on
+ *    tables with at least `engine_health_seq_scan_min_rows` live rows.
+ *
+ * Both ratios are RECOMPUTED here from the integer counters rather than read
+ * off `entry.dead_ratio` / `entry.seq_ratio`. Those fields are the 4-decimal
+ * ROUNDED display values; the step compares the unrounded quotient, so reading
+ * them would put the admin and the pipeline on opposite sides of a threshold
+ * for a band of ~5e-5 around it. Same inputs, same arithmetic, same verdict.
+ *
+ * The third pre-POST-B1-2 check (`update_ping_pong`) is RETIRED here. It was
+ * driven by a `pgStats` argument that the only production call site never
+ * passed, so it had never fired in the admin; and it cannot be served from
+ * `engine_health_snapshots`, which does not persist n_tup_ins / n_tup_upd. The
+ * check still runs where it belongs — `assert_engine_health` evaluates it every
+ * chain run against `engine_health_ping_pong_ratio_warn_max`. The
+ * `'update_ping_pong'` member of `EngineHealthAnomaly['type']` is intentionally
+ * kept: it is the shared anomaly vocabulary, and `computeSystemHealth` still
+ * renders it should a future reader feed it from the step's own WARN detail.
+ *
+ * @param entries   The latest snapshot rows.
+ * @param thresholds Resolved from `logic_variables` by the caller; falls back
+ *                   to the seeded defaults.
  */
 export function detectEngineHealthIssues(
   entries: EngineHealthEntry[],
-  pgStats?: Record<string, { ins: number; upd: number; del: number }>
+  thresholds: EngineHealthThresholds = ENGINE_HEALTH_DEFAULTS
 ): EngineHealthAnomaly[] {
   const anomalies: EngineHealthAnomaly[] = [];
 
   for (const entry of entries) {
-    // Check 1: Dead tuple ratio
-    if (entry.n_live_tup > 0 && entry.dead_ratio > ENGINE_HEALTH_THRESHOLDS.DEAD_TUPLE_RATIO) {
+    // Unrounded, exactly as compute/assert-engine-health.js buildTableResults.
+    const deadRatio = entry.n_live_tup > 0 ? entry.n_dead_tup / entry.n_live_tup : 0;
+    const totalScans = entry.seq_scan + entry.idx_scan;
+    const seqRatio = totalScans > 0 ? entry.seq_scan / totalScans : 0;
+
+    // Check 1: Dead tuple ratio, on tables big enough for it to mean anything.
+    if (
+      entry.n_live_tup >= thresholds.engine_health_dead_tuple_min_rows &&
+      deadRatio > thresholds.engine_health_dead_tuple_ratio_warn_max
+    ) {
       anomalies.push({
         table: entry.table_name,
         type: 'dead_tuples',
-        value: Math.round(entry.dead_ratio * 1000) / 10,
-        threshold: ENGINE_HEALTH_THRESHOLDS.DEAD_TUPLE_RATIO * 100,
-        detail: `${entry.n_dead_tup.toLocaleString()} dead tuples (${(entry.dead_ratio * 100).toFixed(1)}% of ${entry.n_live_tup.toLocaleString()} live)`,
+        value: Math.round(deadRatio * 1000) / 10,
+        threshold: thresholds.engine_health_dead_tuple_ratio_warn_max * 100,
+        detail: `${entry.n_dead_tup.toLocaleString()} dead tuples (${(deadRatio * 100).toFixed(1)}% of ${entry.n_live_tup.toLocaleString()} live)`,
       });
     }
 
     // Check 2: Sequential scan ratio on large tables
-    const totalScans = entry.seq_scan + entry.idx_scan;
     if (
-      entry.n_live_tup >= ENGINE_HEALTH_THRESHOLDS.SEQ_SCAN_MIN_ROWS &&
+      entry.n_live_tup >= thresholds.engine_health_seq_scan_min_rows &&
       totalScans > 0 &&
-      entry.seq_ratio > ENGINE_HEALTH_THRESHOLDS.SEQ_SCAN_RATIO
+      seqRatio > thresholds.engine_health_seq_scan_ratio_warn_max
     ) {
       anomalies.push({
         table: entry.table_name,
         type: 'seq_scan_heavy',
-        value: Math.round(entry.seq_ratio * 1000) / 10,
-        threshold: ENGINE_HEALTH_THRESHOLDS.SEQ_SCAN_RATIO * 100,
-        detail: `${entry.seq_scan} seq scans vs ${entry.idx_scan} idx scans (${(entry.seq_ratio * 100).toFixed(1)}% sequential)`,
+        value: Math.round(seqRatio * 1000) / 10,
+        threshold: thresholds.engine_health_seq_scan_ratio_warn_max * 100,
+        detail: `${entry.seq_scan} seq scans vs ${entry.idx_scan} idx scans (${(seqRatio * 100).toFixed(1)}% sequential)`,
       });
     }
   }
 
-  // Check 3: Update ping-pong from recent pipeline telemetry
-  if (pgStats) {
-    for (const [table, stats] of Object.entries(pgStats)) {
-      if (
-        stats.ins > 0 &&
-        stats.upd > ENGINE_HEALTH_THRESHOLDS.PING_PONG_RATIO * stats.ins
-      ) {
-        const ratio = Math.round((stats.upd / stats.ins) * 10) / 10;
-        anomalies.push({
-          table,
-          type: 'update_ping_pong',
-          value: ratio,
-          threshold: ENGINE_HEALTH_THRESHOLDS.PING_PONG_RATIO,
-          detail: `${stats.upd.toLocaleString()} updates vs ${stats.ins.toLocaleString()} inserts (${ratio}x ratio)`,
-        });
-      }
-    }
-  }
-
   return anomalies;
+}
+
+/**
+ * The engine-health slice of the `GET /api/quality` response.
+ *
+ * §10.3: the feature's types live in `src/lib/quality/`, not beside the route.
+ * There is deliberately no `asOf` field — the entries are read LIVE from
+ * `pg_stat_user_tables` on every request, so there is no staleness to declare
+ * (see Spec 26 §3.4 for why reading `engine_health_snapshots` was rejected).
+ */
+export interface EngineHealthPayload {
+  engineHealth: EngineHealthEntry[];
+  engineHealthAnomalies: EngineHealthAnomaly[];
 }
 
 // ---------------------------------------------------------------------------

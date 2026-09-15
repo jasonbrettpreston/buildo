@@ -1766,8 +1766,8 @@
       "spec": "124 R-AE / 02-web-admin",
       "title": "admin engine health reads the pipeline's declared write",
       "promised": "one engine-health compute: /api/quality consumes engine_health_snapshots (or a shared compute) with the 7 engine_health_* logic vars as thresholds; a 02-web-admin spec owns it",
-      "status": "NOT_STARTED",
-      "evidence": "measured 2026-09-14: src/app/api/quality/route.ts:109-162 queries pg_stat_user_tables live with its own detectEngineHealthIssues; zero 02-web-admin specs mention engine health — plan .cursor/wf1_post_batch1_followups_active_task.md row POST-B1-2",
+      "status": "BUILT",
+      "evidence": "src/app/api/quality/route.ts loadEngineHealthThresholds() - targeted 7-key logic_variables SELECT (variable_key = ANY($1)) behind a Zod NumericVariableValue boundary with a per-key seeded-default fallback + logError, injected as detectEngineHealthIssues(engineHealthEntries, thresholds); src/lib/quality/types.ts ENGINE_HEALTH_DEFAULTS (re-keyed to the variable_keys) + min_rows floor + unrounded-ratio parity with compute/assert-engine-health.js buildTableResults + EngineHealthPayload, update_ping_pong branch retired; docs/specs/02-web-admin/26_admin_dashboard.md 3.4. SCOPE NOTE: the live pg_stat_user_tables read and its curated 11-table list are KEPT - reading engine_health_snapshots was rejected (cadence not daily: 2026-09-14/08-24/08-01/07-17; 87-table scope is an unauthenticated-disclosure question) and filed as two new review_followups rows. Locked by src/tests/quality.infra.test.ts 'Engine health has ONE threshold source (POST-B1-2)' + its behavioural sibling (stubbed pool, asserts the emitted threshold is the stubbed logic-variable value) and docs/specs/_contracts.json engine_health via src/tests/contracts.infra.test.ts",
       "owner": {
         "kind": "followup",
         "ref": "review_followups.md:3544 family (HIGH admin duplicate compute)"
@@ -1776,7 +1776,7 @@
         "kind": "nice_to_have",
         "blocks": []
       },
-      "last_reviewed": "2026-09-14"
+      "last_reviewed": "2026-09-15"
     },
     {
       "id": "POST-B1-3",
@@ -1919,8 +1919,8 @@
       "spec": "76 funnel.ts observability model",
       "title": "funnel mutation bounds match the fleet",
       "promised": "src/lib/admin/funnel.ts assert_engine_health bounds reflect ~90 tables, not [10,15]",
-      "status": "NOT_STARTED",
-      "evidence": "measured 2026-09-14 — plan .cursor/wf1_post_batch1_followups_active_task.md row POST-B1-11",
+      "status": "BUILT",
+      "evidence": "src/lib/admin/funnel.ts assert_engine_health — records_total [50,150], records_updated [0,150], engine_health_snapshots ins/upd [0,150], row_delta [0,150]; behavior prose names engine_health_dead_tuple_ratio_warn_max instead of quoting 10%. Band from the measured fleet: 87 rows per snapshot_date on 2026-09-14 and 2026-08-24, 86 on 2026-08-01, 91 on 2026-07-17; pg_stat_user_tables public count = 87",
       "owner": {
         "kind": "followup",
         "ref": "review_followups.md: commit-8 LOW row"
@@ -1929,7 +1929,7 @@
         "kind": "nice_to_have",
         "blocks": []
       },
-      "last_reviewed": "2026-09-14"
+      "last_reviewed": "2026-09-15"
     },
     {
       "id": "POST-B1-12",

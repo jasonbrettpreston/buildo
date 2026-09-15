@@ -15,7 +15,7 @@ import {
   detectEngineHealthIssues,
   computeSystemHealth,
   SLA_TARGETS,
-  ENGINE_HEALTH_THRESHOLDS,
+  ENGINE_HEALTH_DEFAULTS,
 } from '@/lib/quality/types';
 import type { EngineHealthEntry } from '@/lib/quality/types';
 import { parseSnapshot } from '@/lib/quality/metrics';
@@ -1905,7 +1905,38 @@ describe('detectEngineHealthIssues', () => {
     expect(result).toHaveLength(1);
     expect(result[0]!.type).toBe('dead_tuples');
     expect(result[0]!.table).toBe('permits');
-    expect(result[0]!.value).toBeGreaterThan(ENGINE_HEALTH_THRESHOLDS.DEAD_TUPLE_RATIO * 100);
+    expect(result[0]!.value).toBeGreaterThan(
+      ENGINE_HEALTH_DEFAULTS.engine_health_dead_tuple_ratio_warn_max * 100
+    );
+  });
+
+  // POST-B1-2: the admin gained the step's engine_health_dead_tuple_min_rows
+  // floor. Before it, the admin gated on `n_live_tup > 0` and so warned about
+  // small tables that assert_engine_health deliberately skips (autovacuum
+  // handles them) — the two implementations disagreed on which tables count.
+  it('does not flag dead tuples below the engine_health_dead_tuple_min_rows floor (step parity)', () => {
+    const smallBloated: EngineHealthEntry = {
+      ...healthyEntry,
+      table_name: 'logic_variables',
+      n_live_tup: 500,
+      n_dead_tup: 200,
+      dead_ratio: 0.4,
+    };
+    expect(ENGINE_HEALTH_DEFAULTS.engine_health_dead_tuple_min_rows).toBe(1000);
+    const result = detectEngineHealthIssues([smallBloated]);
+    expect(result.filter((a) => a.type === 'dead_tuples')).toHaveLength(0);
+  });
+
+  it('flags dead tuples once the table is at or above the min-rows floor', () => {
+    const justOverFloor: EngineHealthEntry = {
+      ...healthyEntry,
+      table_name: 'pipeline_runs',
+      n_live_tup: 1500,
+      n_dead_tup: 600,
+      dead_ratio: 0.4,
+    };
+    const result = detectEngineHealthIssues([justOverFloor]);
+    expect(result.filter((a) => a.type === 'dead_tuples')).toHaveLength(1);
   });
 
   it('does not flag dead tuples on empty tables', () => {
@@ -1929,7 +1960,9 @@ describe('detectEngineHealthIssues', () => {
     const result = detectEngineHealthIssues([seqHeavy]);
     expect(result).toHaveLength(1);
     expect(result[0]!.type).toBe('seq_scan_heavy');
-    expect(result[0]!.value).toBeGreaterThan(ENGINE_HEALTH_THRESHOLDS.SEQ_SCAN_RATIO * 100);
+    expect(result[0]!.value).toBeGreaterThan(
+      ENGINE_HEALTH_DEFAULTS.engine_health_seq_scan_ratio_warn_max * 100
+    );
   });
 
   it('does not flag seq scan on small tables', () => {
@@ -1944,31 +1977,22 @@ describe('detectEngineHealthIssues', () => {
     expect(result.filter(a => a.type === 'seq_scan_heavy')).toHaveLength(0);
   });
 
-  it('flags update ping-pong from pgStats', () => {
-    const pgStats = {
-      permit_trades: { ins: 1000, upd: 5000, del: 0 },
-    };
-    const result = detectEngineHealthIssues([], pgStats);
-    expect(result).toHaveLength(1);
-    expect(result[0]!.type).toBe('update_ping_pong');
-    expect(result[0]!.table).toBe('permit_trades');
-    expect(result[0]!.value).toBe(5);
-  });
-
-  it('does not flag update ping-pong when ratio is below threshold', () => {
-    const pgStats = {
-      permits: { ins: 1000, upd: 1500, del: 0 },
-    };
-    const result = detectEngineHealthIssues([], pgStats);
-    expect(result).toHaveLength(0);
-  });
-
-  it('does not flag update ping-pong when inserts are zero', () => {
-    const pgStats = {
-      permits: { ins: 0, upd: 5000, del: 0 },
-    };
-    const result = detectEngineHealthIssues([], pgStats);
-    expect(result).toHaveLength(0);
+  // POST-B1-2 (Q2a): the update_ping_pong branch is RETIRED from the admin.
+  // Its `pgStats` argument was never supplied by the only production call site
+  // (route.ts passed one argument), so the branch had never fired; and
+  // engine_health_snapshots does not persist n_tup_ins / n_tup_upd, so it
+  // cannot be served from the pipeline's declared write. The check itself is
+  // NOT lost — assert_engine_health still evaluates it every chain run against
+  // engine_health_ping_pong_ratio_warn_max.
+  it('never emits update_ping_pong — the check is owned by assert_engine_health, not the admin', () => {
+    const entries: EngineHealthEntry[] = [
+      { ...healthyEntry, table_name: 'permits', n_dead_tup: 30000, dead_ratio: 0.127 },
+      { ...healthyEntry, table_name: 'entities', seq_scan: 950, idx_scan: 50, seq_ratio: 0.95 },
+    ];
+    const result = detectEngineHealthIssues(entries);
+    expect(result.filter((a) => a.type === 'update_ping_pong')).toHaveLength(0);
+    // The second positional parameter is now the threshold set, not pgStats.
+    expect(detectEngineHealthIssues.length).toBe(1);
   });
 
   it('can detect multiple anomalies across multiple tables', () => {
@@ -1976,12 +2000,41 @@ describe('detectEngineHealthIssues', () => {
       { ...healthyEntry, table_name: 'permits', n_dead_tup: 30000, dead_ratio: 0.127 },
       { ...healthyEntry, table_name: 'entities', seq_scan: 950, idx_scan: 50, seq_ratio: 0.95 },
     ];
-    const pgStats = {
-      permit_trades: { ins: 100, upd: 500, del: 0 },
+    const result = detectEngineHealthIssues(entries);
+    expect(result).toHaveLength(2);
+    expect(result.map(a => a.type).sort()).toEqual(['dead_tuples', 'seq_scan_heavy']);
+  });
+
+  // POST-B1-2: the thresholds are INJECTED (resolved from logic_variables by
+  // /api/quality), not read from a module literal. A caller that tightens the
+  // dead-tuple ceiling must see more anomalies from the same entries.
+  it('applies injected thresholds rather than the module defaults', () => {
+    const entry: EngineHealthEntry = { ...healthyEntry, n_dead_tup: 12000, dead_ratio: 0.05 };
+    expect(detectEngineHealthIssues([entry])).toHaveLength(0);
+
+    const tightened = detectEngineHealthIssues([entry], {
+      ...ENGINE_HEALTH_DEFAULTS,
+      engine_health_dead_tuple_ratio_warn_max: 0.01,
+    });
+    expect(tightened).toHaveLength(1);
+    expect(tightened[0]!.type).toBe('dead_tuples');
+    expect(tightened[0]!.threshold).toBe(1);
+  });
+
+  it('applies an injected min-rows floor', () => {
+    const entry: EngineHealthEntry = {
+      ...healthyEntry,
+      n_live_tup: 500,
+      n_dead_tup: 200,
+      dead_ratio: 0.4,
     };
-    const result = detectEngineHealthIssues(entries, pgStats);
-    expect(result).toHaveLength(3);
-    expect(result.map(a => a.type).sort()).toEqual(['dead_tuples', 'seq_scan_heavy', 'update_ping_pong']);
+    expect(detectEngineHealthIssues([entry])).toHaveLength(0);
+    expect(
+      detectEngineHealthIssues([entry], {
+        ...ENGINE_HEALTH_DEFAULTS,
+        engine_health_dead_tuple_min_rows: 100,
+      })
+    ).toHaveLength(1);
   });
 });
 
@@ -2029,12 +2082,20 @@ describe('computeSystemHealth with engine health anomalies', () => {
   });
 });
 
-describe('ENGINE_HEALTH_THRESHOLDS', () => {
-  it('has expected threshold values', () => {
-    expect(ENGINE_HEALTH_THRESHOLDS.DEAD_TUPLE_RATIO).toBe(0.10);
-    expect(ENGINE_HEALTH_THRESHOLDS.SEQ_SCAN_RATIO).toBe(0.80);
-    expect(ENGINE_HEALTH_THRESHOLDS.SEQ_SCAN_MIN_ROWS).toBe(10000);
-    expect(ENGINE_HEALTH_THRESHOLDS.PING_PONG_RATIO).toBe(2);
+describe('ENGINE_HEALTH_DEFAULTS', () => {
+  // The cross-file lock (defaults ↔ scripts/seeds/logic_variables.json ↔
+  // docs/specs/_contracts.json) lives in quality.infra.test.ts +
+  // contracts.infra.test.ts. This case pins the values a reader of THIS file
+  // would otherwise have to go looking for — note ping_pong is 10, not the
+  // pre-POST-B1-2 admin literal 2 (the step raised it at 8c9e64d7, 2026-03-21).
+  it('has the seeded logic-variable defaults', () => {
+    expect(ENGINE_HEALTH_DEFAULTS.engine_health_dead_tuple_ratio_warn_max).toBe(0.10);
+    expect(ENGINE_HEALTH_DEFAULTS.engine_health_dead_tuple_min_rows).toBe(1000);
+    expect(ENGINE_HEALTH_DEFAULTS.engine_health_seq_scan_ratio_warn_max).toBe(0.80);
+    expect(ENGINE_HEALTH_DEFAULTS.engine_health_seq_scan_min_rows).toBe(10000);
+    expect(ENGINE_HEALTH_DEFAULTS.engine_health_ping_pong_ratio_warn_max).toBe(10);
+    expect(ENGINE_HEALTH_DEFAULTS.engine_health_insp_dead_tuple_fail_pct).toBe(10);
+    expect(ENGINE_HEALTH_DEFAULTS.engine_health_insp_update_insert_fail_ratio).toBe(5);
   });
 });
 
