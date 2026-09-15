@@ -446,12 +446,16 @@ describe('step-validate.mjs — blocksBatchingCount honesty (G9)', () => {
 // 6. checkCutoverPrereqs / blockingItemsFor — the exported predicates, unit-level
 // ---------------------------------------------------------------------------
 //
-// step-validate.mjs runs its own CLI unconditionally at import time (a bare
-// `try { main(); } catch` at file end — by design, so a bad invocation exits
-// loudly rather than silently no-op'ing), so its exports cannot be safely
-// `import()`ed from a test process the way scripts/violations/*.mjs's pure
-// generators can (see the drift-guard describe above, which DOES import
-// generate-programme-backlog.mjs directly). The spawn-based fixture proof
+// step-validate.mjs USED to run its own CLI unconditionally at import time (a
+// bare `main().catch(...)` at file end), which is why this block mirrors the
+// predicate instead of importing it. Since VAL-9 (2026-09-15) that call is
+// guarded by `import.meta.url === pathToFileURL(process.argv[1]).href`, so the
+// module's pure exports ARE importable from a test process, exactly as
+// scripts/violations/*.mjs's generators are (see the drift-guard describe
+// above, which DOES import generate-programme-backlog.mjs directly), and
+// src/tests/step-conformance.infra.test.ts's VAL-9 describe imports
+// step-validate.mjs for real. This mirror is kept anyway — it is a fast,
+// DB-free, spawn-free lock on the LOGIC. The spawn-based fixture proof
 // above already exercises checkCutoverPrereqs()/blockingItemsFor() at full
 // fidelity (the real code path, real process boundary); this block re-states
 // the predicate in miniature so the LOGIC itself has a fast, DB-free,

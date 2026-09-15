@@ -149,7 +149,7 @@
 import { existsSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { spawnSync } from 'node:child_process';
 import { createRequire } from 'node:module';
 
@@ -757,9 +757,105 @@ function vitestEntry() {
 // (iii) vitest — one spawn for the whole run, not one per step (the shared
 // suites already loop over converted.json internally).
 // ---------------------------------------------------------------------------
+/**
+ * The FLEET-WIDE target set item (iii) harvests — one spawn per process, the
+ * same number in every step's report. Deliberately NOT narrowed to
+ * `src/tests/steps/<slug>/` as Spec 124 `:115` words the scope (VAL-9 Ask Q2,
+ * ruled 2026-09-15): `step-conformance` and `golden-fingerprint` are fleet-wide
+ * regardless, narrowing would cost one vitest spawn per step in `--all`, and a
+ * per-step number would be incomparable across reports. The rendered line says
+ * "fleet-wide" out loud instead of leaving a reader to infer it.
+ */
+export const VITEST_TARGETS = Object.freeze([
+  'src/tests/step-conformance.infra.test.ts',
+  'src/tests/golden-fingerprint.infra.test.ts',
+  'src/tests/steps/',
+]);
+
+/**
+ * VAL-9 (Spec 123 §6 + R-R `:317`; Spec 124 R-AG `:214`, 2026-09-15) — DERIVE
+ * the live-DB exclusion list from `package.json`'s own `scripts.test` string;
+ * never re-type it here.
+ *
+ * R-AG puts the live-DB tier under `npm run test:db` and excludes it from
+ * `npm run test` STRUCTURALLY, through that script's `--exclude` flags —
+ * "never merely conditional on whether a developer happens to have
+ * BUILDO_TEST_DB/DATABASE_URL exported". `runVitest()` passed no `--exclude` at
+ * all, so its positional DIRECTORY target `src/tests/steps/` straddled that
+ * tier boundary and harvested all five live-DB step suites. Measured 2026-09-15
+ * (`vitest list --filesOnly`, A/B over the identical positional targets): 22
+ * files without the exclusions, 17 with them, the 5 removed being exactly
+ * `link_massing/{metamorphic,nearest-determinism,rung1-inline-wkt}` and
+ * `link_parcel_addresses/{metamorphic,rung1-inline-wkt}` — which contribute 23
+ * tests and ALL 16 of the run's skips. So `--exclude` does bite for a directory
+ * target, and it removes the live-DB tier and nothing else.
+ *
+ * A second hand-maintained copy of that list living in this file is the
+ * cross-layer duplicate the engineering standards forbid: `package.json` stays
+ * the one owner, and `src/tests/step-conformance.infra.test.ts` asserts the
+ * tier boundary both directions.
+ *
+ * PURE over the script string, so `selfTest()` proves both directions in-memory
+ * with no spawn — and specifically with NO recursion: the non-`--fast` mode
+ * spawns `step-conformance.infra.test.ts` itself, so a lock that shelled this
+ * tool from inside that suite would recurse into itself (the measured hazard
+ * recorded in that file's own R-R/Rule 13 scope note).
+ *
+ * @param {string} testScript — `package.json`'s `scripts.test` string
+ * @returns {string[]} every `--exclude` pattern it declares, in declaration order
+ */
+export function deriveVitestExclusions(testScript) {
+  const out = [];
+  const re = /--exclude(?:=|\s+)(?:"([^"]*)"|'([^']*)'|([^\s"']+))/g;
+  let m;
+  while ((m = re.exec(String(testScript ?? '')))) {
+    const pattern = m[1] ?? m[2] ?? m[3];
+    if (pattern) out.push(pattern);
+  }
+  return out;
+}
+
+/**
+ * The child argv `runVitest()` spawns, built in ONE place so `selfTest()`
+ * exercises the same construction the real run uses rather than a parallel
+ * reimplementation of the same list. PURE.
+ *
+ * The WHOLE derived list is passed to the child, not only the patterns that
+ * intersect `VITEST_TARGETS`: that makes the harvested set "the tier
+ * `npm run test` owns" by construction, instead of by a filtering judgement in
+ * this file that could itself drift. The intersecting subset is returned
+ * separately as `scoped` because it — and only it — is the count worth
+ * rendering (the rest are inert against these targets).
+ *
+ * @param {string} testScript — `package.json`'s `scripts.test` string
+ * @param {string} outFile — the JSON report path the child writes
+ */
+export function vitestSpawnArgs(testScript, outFile) {
+  const exclusions = deriveVitestExclusions(testScript);
+  const scoped = exclusions.filter((p) => VITEST_TARGETS.some((t) => (t.endsWith('/') ? p.startsWith(t) : p === t)));
+  return {
+    targets: [...VITEST_TARGETS],
+    exclusions,
+    scoped,
+    argv: [
+      'run',
+      ...VITEST_TARGETS,
+      ...exclusions.flatMap((p) => ['--exclude', p]),
+      '--reporter=json',
+      `--outputFile=${outFile}`,
+    ],
+  };
+}
+
+function packageTestScript() {
+  const pkg = JSON.parse(readFileSync(path.join(REPO_ROOT, 'package.json'), 'utf8'));
+  return pkg.scripts?.test ?? '';
+}
+
 function runVitest() {
   const outFile = path.join(os.tmpdir(), `step-validate-vitest-${process.pid}.json`);
-  const targets = ['src/tests/step-conformance.infra.test.ts', 'src/tests/golden-fingerprint.infra.test.ts', 'src/tests/steps/'];
+  const plan = vitestSpawnArgs(packageTestScript(), outFile);
+  const targets = plan.targets;
   // WF3 "Rules 10-12 output panel remediation" commit 4 (found en route, not
   // filed further — the same class LW-D15's "found and fixed en route"
   // precedent covers). `step-validate.mjs` itself is routinely invoked as
@@ -787,7 +883,7 @@ function runVitest() {
   delete childEnv.SUPABASE_DATABASE_URL;
   const run = spawnSync(
     process.execPath,
-    [vitestEntry(), 'run', ...targets, '--reporter=json', `--outputFile=${outFile}`],
+    [vitestEntry(), ...plan.argv],
     { cwd: REPO_ROOT, encoding: 'utf8', timeout: 600_000, maxBuffer: 256 * 1024 * 1024, env: childEnv },
   );
   if (!existsSync(outFile)) {
@@ -801,7 +897,7 @@ function runVitest() {
   // guard exists to catch (found live via the DATABASE_URL issue above,
   // closed structurally rather than only by removing that one cause).
   if (parsed.numTotalTests === 0) {
-    return { ranOk: false, error: `vitest collected 0 tests across ${targets.join(', ')} (exit ${run.status}) — treated as a failed run, never a vacuous pass; stderr: ${(run.stderr || '').slice(0, 2000)}`, tests: [] };
+    return { ranOk: false, error: `vitest collected 0 tests across ${targets.join(', ')} minus ${plan.scoped.length} R-AG live-DB exclusion(s) (exit ${run.status}) — treated as a failed run, never a vacuous pass; stderr: ${(run.stderr || '').slice(0, 2000)}`, tests: [] };
   }
   const tests = [];
   for (const file of parsed.testResults || []) {
@@ -820,6 +916,20 @@ function runVitest() {
     numTotalTests: parsed.numTotalTests,
     numPassedTests: parsed.numPassedTests,
     numFailedTests: parsed.numFailedTests,
+    // VAL-9 — everything below exists so the rendered line is SELF-DESCRIBING.
+    // A bare "N/M passed (success=false)" told a reader nothing about which
+    // tests those were, how many files were looked at, or which tier was in
+    // scope; the Regression Guardian who filed this (review_followups.md
+    // "Test suite (item iii) line is not reproducible", 2026-09-14) could only
+    // say the numbers disagreed, never why.
+    numSkippedTests: parsed.numPendingTests ?? 0,
+    harvestedFiles: (parsed.testResults || []).length,
+    targets,
+    exclusions: plan.exclusions,
+    scopedExclusions: plan.scoped,
+    failing: tests
+      .filter((t) => t.status === 'failed')
+      .map((t) => ({ file: path.relative(REPO_ROOT, t.file).split(path.sep).join('/'), fullName: t.fullName })),
     success: parsed.success,
     tests,
   };
@@ -2715,7 +2825,27 @@ function renderScorecard(row, sc, matrix, captureFindings, vitestResult, invaria
   }
   lines.push('');
   lines.push('### Test suite (item iii)');
-  lines.push(vitestResult.ranOk ? `- ${vitestResult.numPassedTests}/${vitestResult.numTotalTests} passed (suite success=${vitestResult.success})` : `- SKIPPED or failed to run: ${vitestResult.error || '--fast'}`);
+  // VAL-9 (2026-09-15) — self-describing, not a bare count. R-R's stated
+  // purpose is that a reviewer RE-RUNS this command and reproduces the block;
+  // a lone "1009/1037 (success=false)" gave a reader who could not reproduce it
+  // nothing to go on, and a reader who did not try would take `success=false`
+  // for a red that existed at commit time. The target set, the R-AG exclusions,
+  // the harvested file count and — the whole point — any failing test id are
+  // now ON the artifact.
+  if (!vitestResult.ranOk) {
+    lines.push(`- SKIPPED or failed to run: ${vitestResult.error || '--fast'}`);
+  } else {
+    lines.push(`- ${vitestResult.numPassedTests}/${vitestResult.numTotalTests} passed (suite success=${vitestResult.success})`);
+    lines.push(`- harvested: ${vitestResult.harvestedFiles} file(s) from ${vitestResult.targets.length} FLEET-WIDE targets (${vitestResult.targets.join(', ')}) — one spawn per run, so every step's report carries this same number, by design`);
+    lines.push(`- excluded (R-AG live-DB tier, owned by \`npm run test:db\`, derived from package.json \`scripts.test\`): ${vitestResult.scopedExclusions.length ? `${vitestResult.scopedExclusions.length} — ${vitestResult.scopedExclusions.join(', ')}` : 'none'}`);
+    lines.push(`- skipped (declared but not run): ${vitestResult.numSkippedTests}`);
+    if (vitestResult.failing.length) {
+      lines.push(`- failing (${vitestResult.failing.length}):`);
+      for (const f of vitestResult.failing) lines.push(`  - ${f.file} > ${f.fullName}`);
+    } else {
+      lines.push('- failing: none');
+    }
+  }
   lines.push('');
   lines.push('### Policy coverage matrix (item vi) — Spec 124 Rules 1-13');
   lines.push('');
@@ -3539,6 +3669,64 @@ function selfTest() {
       throw new Error(`self-test FAILED: registryFailureBlocks(id 4, no blockedSlugs) did not hard-stop every slug (fleet-wide integrity check)`);
     }
   }
+  // VAL-9 (2026-09-15, Spec 123 §6/R-R + Spec 124 R-AG) — the harvested-target-set
+  // derivation, proven BOTH DIRECTIONS in-memory. PURE: no spawn, and above all
+  // no recursion — the non-`--fast` mode spawns step-conformance.infra.test.ts,
+  // so a lock that shelled this tool from inside that suite would recurse into
+  // itself (the measured hazard recorded in that file's R-R/Rule 13 scope note).
+  {
+    // RED — a `test` script with no `--exclude` derives nothing, and the argv it
+    // builds carries no exclusion at all. This is literally today's pre-fix
+    // behaviour: the bare directory target `src/tests/steps/` then harvests the
+    // live-DB tier `npm run test:db` owns.
+    const noExcludes = deriveVitestExclusions('vitest run');
+    if (noExcludes.length !== 0) {
+      throw new Error(`self-test FAILED: deriveVitestExclusions invented ${noExcludes.length} exclusion(s) from a script that declares none (${JSON.stringify(noExcludes)})`);
+    }
+    const redArgs = vitestSpawnArgs('vitest run', '/tmp/x.json');
+    if (redArgs.argv.includes('--exclude')) {
+      throw new Error(`self-test FAILED: vitestSpawnArgs emitted an --exclude for a script that declares none (${JSON.stringify(redArgs.argv)})`);
+    }
+    // GREEN — all three spellings npm scripts use in the wild: double-quoted,
+    // bare, and `--exclude=`. Order preserved.
+    const mixed = `vitest run --exclude "a/b.test.ts" --exclude c/d.test.ts --exclude='e/f.test.ts'`;
+    const derived = deriveVitestExclusions(mixed);
+    if (derived.join('|') !== 'a/b.test.ts|c/d.test.ts|e/f.test.ts') {
+      throw new Error(`self-test FAILED: deriveVitestExclusions lost or reordered a pattern (got ${JSON.stringify(derived)})`);
+    }
+    const greenArgs = vitestSpawnArgs(mixed, '/tmp/x.json');
+    for (const p of derived) {
+      const at = greenArgs.argv.indexOf(p);
+      if (at < 1 || greenArgs.argv[at - 1] !== '--exclude') {
+        throw new Error(`self-test FAILED: vitestSpawnArgs did not pass "${p}" as an --exclude pair (${JSON.stringify(greenArgs.argv)})`);
+      }
+    }
+    // PURE — two consecutive derivations over the same input are identical
+    // (the whole defect being repaired is a line that was not re-derivable).
+    if (JSON.stringify(deriveVitestExclusions(mixed)) !== JSON.stringify(deriveVitestExclusions(mixed))) {
+      throw new Error('self-test FAILED: deriveVitestExclusions is not a pure function of its input');
+    }
+    // LIVE — over the REAL package.json, not a fixture: the harvested set must
+    // actually shed the live-DB step suites, and the set must be non-empty or
+    // this whole guard is a vacuous pass.
+    const livePkg = JSON.parse(readFileSync(path.join(REPO_ROOT, 'package.json'), 'utf8'));
+    const live = vitestSpawnArgs(livePkg.scripts?.test ?? '', '/tmp/x.json');
+    if (live.scoped.length === 0) {
+      throw new Error(`self-test FAILED: package.json \`scripts.test\` declares no --exclude under ${VITEST_TARGETS.join(', ')} — either R-AG's structural exclusion was removed from the test script, or this derivation stopped matching it; a vacuous "0 excluded" must never read as clean`);
+    }
+    for (const p of live.scoped) {
+      const at = live.argv.indexOf(p);
+      if (at < 1 || live.argv[at - 1] !== '--exclude') {
+        throw new Error(`self-test FAILED: live R-AG exclusion "${p}" is not in the child argv as an --exclude pair (${JSON.stringify(live.argv)})`);
+      }
+      // Tier ownership: a file `npm run test` excludes and this validator now
+      // also excludes MUST be owned by `npm run test:db`, or R-AG's two-tier
+      // claim is false and the tests are simply unrun by anything.
+      if (!String(livePkg.scripts?.['test:db'] ?? '').includes(p)) {
+        throw new Error(`self-test FAILED: "${p}" is excluded from \`npm run test\` but is not named by \`npm run test:db\` — excluding it here would make it unrun by EVERY tier (R-AG, Spec 124 :214)`);
+      }
+    }
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -3722,7 +3910,21 @@ async function main() {
   }
 }
 
-main().catch((err) => {
-  console.error(`[step-validate] ${err.stack || err.message}`);
-  process.exit(2);
-});
+// VAL-9 Guardian fold (2026-09-15) — run the CLI ONLY when this file IS the
+// process entry point. Until now `main()` ran unconditionally at import time,
+// which is why every lock in `step-conformance.infra.test.ts` had to shell the
+// tool (`--self-test-only`, `--step … --fast`) and why the only wiring check
+// this task could write was a string scan for a symbol name — green even if
+// `runVitest()` stopped calling `vitestSpawnArgs()` entirely. Guarding it makes
+// the pure exports genuinely importable, so the wiring can be asserted
+// BEHAVIOURALLY. CLI behaviour is byte-identical: invoked as
+// `node scripts/analysis/step-validate.mjs …` (or with `-r dotenv/config`,
+// which does not change `process.argv[1]`), the condition holds and `main()`
+// runs exactly as before; the spawn-based locks are therefore unaffected.
+const INVOKED_AS_CLI = !!process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href;
+if (INVOKED_AS_CLI) {
+  main().catch((err) => {
+    console.error(`[step-validate] ${err.stack || err.message}`);
+    process.exit(2);
+  });
+}

@@ -36,6 +36,7 @@ import { execFileSync, spawnSync } from 'child_process';
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
+import { pathToFileURL } from 'url';
 import { stripComments } from './script-source-scan';
 
 const REPO_ROOT = path.resolve(__dirname, '../../');
@@ -2310,11 +2311,171 @@ describe('R-R / Rule 13 — the generated scorecard block is not stale (vitest-i
 });
 
 // ---------------------------------------------------------------------------
+// VAL-9 (Spec 123 §6 + R-R `:317`; Spec 124 R-AG `:214`, 2026-09-15) — the
+// "Test suite (item iii)" line must be RE-DERIVABLE by the reviewer R-R says
+// re-runs it. Half of why it was not: `runVitest()`'s positional DIRECTORY
+// target `src/tests/steps/` straddled the R-AG tier boundary and harvested the
+// five live-DB step suites that belong to `npm run test:db` — the only source
+// of the run's 16 skips. The exclusion list now comes from `package.json`'s own
+// `scripts.test`, so `npm run test` and this validator can never drift into two
+// hand-maintained copies of the same tier boundary.
+//
+// ⛔ Deliberately NOT a spawn of non-`--fast` step-validate: that mode runs THIS
+// file, so such a lock would recurse into itself (the R-R/Rule 13 scope note
+// above records that measured hazard). The derivation's own both-directions
+// RED/GREEN proofs live in `selfTest()` and are exercised through the
+// `--self-test-only` spawn below, exactly as Rules 10/11/12 are. Everything
+// else here is pure over the two npm scripts.
+// ---------------------------------------------------------------------------
+describe('VAL-9 / R-AG — the validator harvests only the tier `npm run test` owns', () => {
+  const STEP_VALIDATE = path.join(REPO_ROOT, 'scripts/analysis/step-validate.mjs');
+  const PKG = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, 'package.json'), 'utf8')) as { scripts?: Record<string, string> };
+  const TEST_SCRIPT = PKG.scripts?.test ?? '';
+  const TEST_DB_SCRIPT = PKG.scripts?.['test:db'] ?? '';
+  // `runVitest()`'s only DIRECTORY target — the one that can over-collect.
+  const HARVEST_DIR = 'src/tests/steps/';
+
+  /** The live-DB step suites, read straight off `test:db`'s own argument list — never a hand-typed list here. */
+  const liveDbStepSuites = TEST_DB_SCRIPT.split(/\s+/).filter((t) => t.startsWith(HARVEST_DIR));
+
+  /** Every `--exclude` spelling an npm script may legally use. */
+  function excludedBy(script: string, target: string): boolean {
+    return [`--exclude "${target}"`, `--exclude '${target}'`, `--exclude ${target}`, `--exclude="${target}"`, `--exclude='${target}'`, `--exclude=${target}`].some((form) => script.includes(form));
+  }
+
+  it('the live-DB step tier is non-empty (an empty list would make every assertion below a vacuous pass)', () => {
+    expect(liveDbStepSuites.length, `no "${HARVEST_DIR}*" targets found in package.json scripts["test:db"]`).toBeGreaterThan(0);
+  });
+
+  it('every live-DB step suite `npm run test:db` owns is STRUCTURALLY excluded from `npm run test` (R-AG :214 — never merely conditional on an exported DATABASE_URL)', () => {
+    const notExcluded = liveDbStepSuites.filter((t) => !excludedBy(TEST_SCRIPT, t));
+    expect(notExcluded, `these live-DB suites are owned by test:db but not --exclude'd from \`npm run test\`: ${notExcluded.join(', ')}`).toEqual([]);
+  });
+
+  it('RED canary — a live-DB suite dropped from `npm run test`\'s --exclude list IS caught (proves the predicate fires, not merely agrees)', () => {
+    const victim = liveDbStepSuites[0];
+    expect(victim, 'no live-DB step suite to tamper with').toBeDefined();
+    const tampered = TEST_SCRIPT.replace(`--exclude "${victim}"`, '');
+    expect(tampered, `the tamper did not change the script — the --exclude spelling for ${victim} changed`).not.toBe(TEST_SCRIPT);
+    expect(excludedBy(tampered, victim as string)).toBe(false);
+    expect(excludedBy(TEST_SCRIPT, victim as string)).toBe(true);
+  });
+
+  it('step-validate.mjs DERIVES that list instead of re-typing it (a second hand-maintained copy is the cross-layer duplicate the standards forbid)', () => {
+    const src = stripComments(fs.readFileSync(STEP_VALIDATE, 'utf8'));
+    const copied = liveDbStepSuites.filter((t) => src.includes(t));
+    expect(copied, `step-validate.mjs hand-types ${copied.join(', ')} — derive from package.json \`scripts.test\` via deriveVitestExclusions() instead`).toEqual([]);
+  });
+
+  // ---- BEHAVIOURAL, not a string scan (Guardian fold, 2026-09-15) ----------
+  // `main()` used to run unconditionally at import time, so the only wiring
+  // check available was `expect(src).toContain('deriveVitestExclusions')` —
+  // which stays GREEN even if `runVitest()` stops calling `vitestSpawnArgs()`.
+  // `main()` is now guarded by an entry-point check, so the pure exports are
+  // importable and the argv itself can be asserted.
+  async function loadValidator(): Promise<{
+    vitestSpawnArgs: (testScript: string, outFile: string) => { argv: string[]; targets: string[]; exclusions: string[]; scoped: string[] };
+    deriveVitestExclusions: (testScript: string) => string[];
+    VITEST_TARGETS: readonly string[];
+  }> {
+    return (await import(pathToFileURL(STEP_VALIDATE).href)) as never;
+  }
+
+  it('importing step-validate.mjs does NOT run its CLI (the entry-point guard — without it, nothing below can be asserted in-process)', async () => {
+    const mod = await loadValidator();
+    expect(typeof mod.vitestSpawnArgs).toBe('function');
+    expect(typeof mod.deriveVitestExclusions).toBe('function');
+    expect([...mod.VITEST_TARGETS]).toContain(HARVEST_DIR);
+  });
+
+  it('BEHAVIOURAL — the argv runVitest() spawns carries an `--exclude <path>` PAIR for every live-DB step suite `test:db` owns, and excludes no non-DB step suite', async () => {
+    const { vitestSpawnArgs } = await loadValidator();
+    const plan = vitestSpawnArgs(TEST_SCRIPT, '/tmp/val9-probe.json');
+    for (const t of liveDbStepSuites) {
+      const at = plan.argv.indexOf(t);
+      expect(at, `${t} does not appear in the child argv at all: ${plan.argv.join(' ')}`).toBeGreaterThan(0);
+      expect(plan.argv[at - 1], `${t} appears in the argv but not as an --exclude pair`).toBe('--exclude');
+    }
+    // Inverse direction — a REAL non-DB suite under the same directory target
+    // must survive, or the exclusion has over-reached and the harvest is a lie
+    // in the other direction.
+    const nonDb = 'src/tests/steps/link_massing/violations.test.ts';
+    expect(fs.existsSync(path.join(REPO_ROOT, nonDb)), `${nonDb} must exist for this inverse check to mean anything`).toBe(true);
+    expect(liveDbStepSuites).not.toContain(nonDb);
+    expect(plan.argv, `${nonDb} is owned by \`npm run test\` and must NOT be excluded from the harvest`).not.toContain(nonDb);
+    expect([...plan.scoped].sort()).toEqual([...liveDbStepSuites].sort());
+  });
+
+  it('RED (in memory) — a `scripts.test` with its --exclude flags stripped yields an argv with NO exclusion at all: exactly the pre-fix harvest, proven to differ from the real one', async () => {
+    const { vitestSpawnArgs } = await loadValidator();
+    const stripped = TEST_SCRIPT.replace(/--exclude(?:=|\s+)(?:"[^"]*"|'[^']*'|[^\s"']+)/g, '');
+    expect(stripped, 'the tamper changed nothing — package.json `scripts.test` no longer spells --exclude the way this test assumes').not.toBe(TEST_SCRIPT);
+    const red = vitestSpawnArgs(stripped, '/tmp/val9-probe.json');
+    expect(red.argv).not.toContain('--exclude');
+    expect(red.scoped).toEqual([]);
+    const green = vitestSpawnArgs(TEST_SCRIPT, '/tmp/val9-probe.json');
+    expect(green.scoped.length, 'the real script must derive a non-empty exclusion set, or the GREEN arm is vacuous').toBeGreaterThan(0);
+    expect(green.argv).not.toEqual(red.argv);
+  });
+
+  // ---- ANTI-RECURSION, executable (Integration fold, 2026-09-15) -----------
+  // `runVitest()` spawns THIS FILE. So any `step-validate` spawn from inside it
+  // that is not `--fast`/`--self-test-only` re-enters `runVitest()`, which
+  // re-runs this file, which spawns again — the unbounded recursion the R-R /
+  // Rule 13 scope note above records as MEASURED. That hazard has lived as a
+  // prose warning only; here it is enforced.
+  const SELF_PATH = path.join(REPO_ROOT, 'src/tests/step-conformance.infra.test.ts');
+
+  /** Every `node <STEP_VALIDATE> …` argument list this file spawns. PURE over the source. */
+  function stepValidateSpawnArgLists(src: string): string[] {
+    const out: string[] = [];
+    const re = /(?:spawnSync|execFileSync)\(\s*'node'\s*,\s*\[\s*STEP_VALIDATE\s*,([^\]]*)\]/g;
+    let m: RegExpExecArray | null;
+    while ((m = re.exec(src)) !== null) out.push(m[1] ?? '');
+    return out;
+  }
+  const nonFast = (argLists: string[]) => argLists.filter((a) => !a.includes('--fast') && !a.includes('--self-test-only'));
+
+  it('ANTI-RECURSION — every step-validate spawn in THIS file carries --fast or --self-test-only (a full-mode spawn would re-run this very suite)', () => {
+    const argLists = stepValidateSpawnArgLists(stripComments(fs.readFileSync(SELF_PATH, 'utf8')));
+    expect(argLists.length, 'found zero step-validate spawns to check — the scan stopped matching this file, which would make the guard vacuous').toBeGreaterThanOrEqual(5);
+    expect(nonFast(argLists), `these spawns omit --fast/--self-test-only and would recurse into this suite: ${nonFast(argLists).join(' | ')}`).toEqual([]);
+  });
+
+  it('RED — a non-fast step-validate spawn inserted into this file\'s source IS caught (proves the anti-recursion scan fires, not merely agrees)', () => {
+    const clean = stripComments(fs.readFileSync(SELF_PATH, 'utf8'));
+    // Assembled from fragments ON PURPOSE: written as one literal, this
+    // fixture would itself be a non-fast spawn in this file's own source and
+    // the assertion above would red on the test that proves it works.
+    const recursiveSpawnFixture = `const bad = spawn${'Sync'}('node', [STEP_VALIDATE, '--step=assert_schema'], {});`;
+    const tampered = `${clean}\n${recursiveSpawnFixture}\n`;
+    expect(nonFast(stepValidateSpawnArgLists(tampered)).length, 'the tampered source must expose exactly the one recursive spawn').toBe(1);
+    expect(nonFast(stepValidateSpawnArgLists(clean))).toEqual([]);
+  });
+
+  it('runVitest() actually SPAWNS that argv — the wiring itself, which a scan for the symbol name would not catch if the call were dropped', () => {
+    const src = stripComments(fs.readFileSync(STEP_VALIDATE, 'utf8'));
+    expect(src, 'runVitest() no longer builds its spawn plan with vitestSpawnArgs()').toMatch(/const\s+plan\s*=\s*vitestSpawnArgs\(/);
+    expect(src, 'runVitest() no longer spawns plan.argv — the derived exclusions would be built and then ignored').toMatch(/spawnSync\(\s*process\.execPath\s*,\s*\[\s*vitestEntry\(\)\s*,\s*\.\.\.plan\.argv\s*\]/);
+  });
+
+  it('`--self-test-only` passes — the RED/GREEN in-memory proofs for deriveVitestExclusions/vitestSpawnArgs (no-exclude RED, three-spelling GREEN, purity, live non-vacuity, live tier-ownership) all fire correctly', () => {
+    const run = spawnSync('node', [STEP_VALIDATE, '--self-test-only'], { cwd: REPO_ROOT, encoding: 'utf8', timeout: 30_000 });
+    expect(run.status, `self-test did not pass; stdout=${run.stdout}\nstderr=${run.stderr}`).toBe(0);
+    expect(run.stdout).toContain('self-test PASSED');
+  });
+});
+
+// ---------------------------------------------------------------------------
 // Rule 10 (Spec 124 §2 Rule 10, WF2 "Rules 10/11/12 mechanical checkers", C1)
 // — checkVerdictSingleSource, exercised two ways per the file's own testing
-// convention (step-validate.mjs runs its own CLI unconditionally at import
-// time, so it cannot be `import`ed directly — see programme-backlog.infra.
-// test.ts's own note on this): (1) `--self-test-only` spawns the REAL tool,
+// convention — which is spawn-based because it predates the entry-point guard,
+// NOT because importing is impossible: since VAL-9 (2026-09-15) `main()` runs
+// only when step-validate.mjs IS `process.argv[1]`, so its pure exports can be
+// `import`ed (the VAL-9 describe above does exactly that). The spawns below are
+// kept deliberately: they prove the REAL process boundary, and `--self-test-only`
+// is the only way to assert `selfTest()`'s own exit code. Two ways, then:
+// (1) `--self-test-only` spawns the REAL tool,
 // which runs `selfTest()` unconditionally BEFORE anything else — a failing
 // RED/GREEN assertion there throws and exits 2, so a passing spawn IS the
 // both-directions proof (Spec 121 §12b.6); (2) a real `--step` run's
@@ -2394,7 +2555,8 @@ describe('Rule 10 — verdict is row-derived from exactly one place (checkVerdic
 // ---------------------------------------------------------------------------
 // Rule 11 (Spec 124 §2 Rule 11, WF2 "Rules 10/11/12 mechanical checkers", C2)
 // — checkOrderGuaranteesCited, exercised the same two ways as Rule 10 above
-// (step-validate.mjs cannot be `import`ed directly). The `--self-test-only`
+// (spawn-based by convention and for the real process boundary; step-validate.mjs
+// IS importable since VAL-9's entry-point guard). The `--self-test-only`
 // spawn proves the RED/GREEN in-memory halves; the real `--step` runs prove
 // the disk-reading path against all three real descriptors that carry a
 // when:"pre_write" check.

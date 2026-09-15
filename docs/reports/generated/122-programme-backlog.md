@@ -6,23 +6,24 @@
 
 ## Counts
 
-Total items: **117**
+Total items: **118**
 
 | status | count |
 |---|---|
 | ⬜ NOT_STARTED | 28 |
 | ⚠️ PARTIAL | 16 |
-| ✅ BUILT | 69 |
+| ✅ BUILT | 70 |
 | ⏭️ SUPERSEDED | 4 |
 
 **blocks batching: 0**
 
-## Batching prerequisite — blocks "freeze after the eighth" (Spec 122 §8.2/§10.3) (5)
+## Batching prerequisite — blocks "freeze after the eighth" (Spec 122 §8.2/§10.3) (6)
 
 | id | spec | title | status | owner | blocks | last reviewed |
 |---|---|---|---|---|---|---|
 | `STD-7` | 122 §1.10 | archetype drives required-field profile, 8 archetypes dispatched | ✅ BUILT | pilot: pilot9_enrich_parcels | batching | 2026-09-10 |
 | `LDG-4` | 122 §6.3 | stepUpstreams(slug) derived from the ledger | ✅ BUILT | wf: wf: cross-step ledger (WF1), commits 1-6, 2026-09-03 | batching | 2026-09-03 |
+| `VAL-9` | 123 §6 R-R / 124 R-AG | the generated "Test suite (item iii)" line is re-derivable — the R-AG live-DB tier is out of runVitest()'s harvested set, and the line names what it harvested | ✅ BUILT | followup: docs/reports/review_followups.md — "MED | Regression Guardian, I3 commit 9 cutover (2026-09-14) | The regenerated assessment reports' 'Test suite (item iii)' line is not reproducible" | batching | 2026-09-15 |
 | `FREEZE-1` | 122 §8.2 | freeze precondition satisfied — the batching_prereq set is genuinely empty | ✅ BUILT | wf: wf: programme-FREEZE-1 (phase 2 commit 5, 2026-09-11) — CLOSED | batching | 2026-09-11 |
 | `WD-1` | 122 §1.4 | class-enum-without-write.js-branch lock | ✅ BUILT | wf: wf: programme-WD1, WD-1 WF5+WF2 commits 1-3 | batching | 2026-09-09 |
 | `ADMIN-1` | 124 §2 Rule 3 | admin GROUPS reverse-coverage — every unclassified seed key gets a real group or a reviewed hidden reason | ✅ BUILT | wf: wf: programme-ADMIN-1 | batching | 2026-09-09 |
