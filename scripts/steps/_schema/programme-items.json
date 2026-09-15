@@ -1986,7 +1986,7 @@
       "title": "Compressed 3-commit form is the default once an archetype has two full-form members",
       "promised": "a plan for an eligible archetype uses the R-PACE-1 form unless the assessment report names a reason; step-validate invariant 23 gains the inverse check (eligible archetype + full-form plan + no reason = FAIL)",
       "status": "BUILT",
-      "evidence": "BUILT this commit (velocity WF2, 2026-09-14): Spec 124 R-AH + step-validate fast invariant 24 COMPRESSED-FORM-DEFAULT (pending slug of an archetype with >=2 converted members must carry the compressed marker or a \"**Full form reason:**\" line; both directions in selfTest); Spec 123 §7 pointer",
+      "evidence": "BUILT c7964150: Spec 124 R-AH + scripts/analysis/step-validate.mjs:527 checkCompressedFormDefault = fast invariant 24 COMPRESSED-FORM-DEFAULT (a pending slug of an archetype with >=2 converted members must carry the compressed marker or a **Full form reason:** line; both directions in selfTest); Spec 123 §7 pointer next to the R-PACE-1 paragraph",
       "owner": {
         "kind": "wf",
         "ref": "wf: conversion velocity (R-AH)"
