@@ -1,0 +1,284 @@
+{
+  "kind": "SURFACE",
+  "status": "exists",
+  "docs": {
+    "purpose": "Asks the user which of two jobs they want the app to do for them: find brand-new work nearby, or keep track of projects they are already on. Two large cards, and tapping one moves straight on with no separate continue button. The choice changes the remaining setup steps and which screen they land on at the end.",
+    "data_story": "This surface reaches **no API contract at all** — every value it shows is local, passed in as a prop, or read from the device. It also holds client-side state in `onboardingStore`, which is the part a server-driven projection has to absorb or justify. It emits **no analytics event**, so nothing it does is currently countable.",
+    "under_126": "**REBUILD** — it holds Layer-3 state (`onboardingStore`), so a client decision has to be re-homed on the server before the projection can be honest. It renders through the WIZARD_STEP renderer (declared step index, advance condition, resume key and skip rule), reading no contract. It owns no component of its own, so its `owns.components[]` is an empty array — a legal answer, written down."
+  },
+  "evidence": {
+    "files": [
+      "mobile/app/(onboarding)/path.tsx:1"
+    ],
+    "contracts": [
+      "mobile/app/(onboarding)/path.tsx:1-59 — no /api/ string and no hook in the file"
+    ],
+    "tables": [
+      "mobile/app/(onboarding)/path.tsx:1-59 — reaches no table"
+    ],
+    "gate": [
+      "mobile/app/_layout.tsx:141-231"
+    ],
+    "states": [
+      "mobile/app/(onboarding)/path.tsx:12-57"
+    ],
+    "emits": [
+      "mobile/app/(onboarding)/path.tsx:1-59 — no track() call in the file"
+    ]
+  },
+  "identity": {
+    "id": "mobile_onboarding_path",
+    "route": "mobile/app/(onboarding)/path.tsx",
+    "archetype": "WIZARD_STEP",
+    "platforms": [
+      "mobile"
+    ],
+    "owns": {
+      "components": []
+    },
+    "owner": "unassigned (no CODEOWNERS file and no owner registry exists in the repo — measured 2026-09-15)",
+    "spec": "docs/specs/03-mobile/94_mobile_onboarding.md",
+    "spec_refs": [
+      "docs/specs/03-mobile/94_mobile_onboarding.md §5",
+      "docs/specs/03-mobile/94_mobile_onboarding.md §6",
+      "docs/specs/03-mobile/94_mobile_onboarding.md §10"
+    ],
+    "spec_version": "0-draft",
+    "versioning": {
+      "answer": "none",
+      "why": "It has no payload: two hard-coded cards, a local store write and a route push. Nothing downstream consumes a shape from it.",
+      "evidence": [
+        "mobile/app/(onboarding)/path.tsx:22-56"
+      ]
+    },
+    "ref": "S-032"
+  },
+  "inputs": {
+    "answer": "none",
+    "why": "One of the two onboarding steps the WIZARD_STEP profile anticipates that call no route at all — the copy is literal and the choice is the input.",
+    "evidence": [
+      "mobile/app/(onboarding)/path.tsx:1-59"
+    ],
+    "contract_ref": [],
+    "query_key": [],
+    "field_whitelist": [],
+    "tables": []
+  },
+  "outputs": {
+    "answer": "device_only",
+    "why": "Tapping a card writes selectedPath into the MMKV-persisted onboardingStore and navigates; the branch is never sent to the server, so a device wipe loses which path the user chose.",
+    "evidence": [
+      "mobile/app/(onboarding)/path.tsx:24-27",
+      "mobile/src/store/onboardingStore.ts:75-76"
+    ],
+    "contract_ref": [],
+    "tables": [],
+    "rollback": "none — the write is a local branch selector; re-entering the screen overwrites it.",
+    "invalidates": []
+  },
+  "state": {
+    "answer": "mmkv",
+    "why": "selectedPath is the only thing it owns, and it is MMKV-persisted so a cold boot mid-flow still knows whether the user is on the leads, tracking or realtor branch.",
+    "evidence": [
+      "mobile/app/(onboarding)/path.tsx:10",
+      "mobile/src/store/onboardingStore.ts:66-76"
+    ],
+    "fields": [
+      {
+        "name": "currentStep",
+        "owner_layer": "4a_mmkv",
+        "canonical_writer": "useOnboardingStore.setStep, called by each step before it navigates",
+        "authorized_readers": [
+          "shell_app_root"
+        ],
+        "bridge": "none",
+        "persistence": "mmkv",
+        "signout_reset": true
+      },
+      {
+        "name": "selectedPath",
+        "owner_layer": "4a_mmkv",
+        "canonical_writer": "mobile_onboarding_path (and profession, for the realtor shortcut)",
+        "authorized_readers": [
+          "mobile_onboarding_address",
+          "mobile_onboarding_supplier",
+          "mobile_onboarding_terms"
+        ],
+        "bridge": "none",
+        "persistence": "mmkv",
+        "signout_reset": true
+      }
+    ]
+  },
+  "staleness": {
+    "answer": "none",
+    "why": "Nothing server-owned is rendered.",
+    "evidence": [
+      "mobile/app/(onboarding)/path.tsx:12-57"
+    ],
+    "offline": "none"
+  },
+  "guards": {
+    "session": {
+      "answer": "authenticated",
+      "why": "The step is only reachable once AuthGate has a Supabase user whose server profile says onboarding_complete is false; PATCH /api/user-profile is an authenticated route.",
+      "evidence": [
+        "src/lib/auth/route-guard.ts:120-132",
+        "mobile/app/_layout.tsx:141-231",
+        "mobile/app/(onboarding)/path.tsx:1-59"
+      ]
+    },
+    "rls_class": {
+      "answer": "none",
+      "why": "It reaches no table.",
+      "evidence": [
+        "mobile/app/(onboarding)/path.tsx:1-59"
+      ]
+    },
+    "disclosure": "none",
+    "entitlement": "none",
+    "flag": "none",
+    "permission": "none",
+    "rate_bucket": "none"
+  },
+  "render": {
+    "targets": [
+      "screen"
+    ],
+    "projection": "grid",
+    "breakpoints": "mobile_first",
+    "export": "none",
+    "wizard": "UNRESEARCHED"
+  },
+  "checks": [
+    {
+      "id": "path_branch_lock",
+      "kind": "schema_declared",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "mobile/__tests__/onboarding.test.ts locks onboardingStore path selection and step advancement — the two values this screen exists to write."
+    },
+    {
+      "id": "path_a11y_label",
+      "kind": "a11y_label",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "why": "Both cards carry accessibilityRole=\"button\" and a descriptive label; this screen is fully labelled because it has exactly two targets."
+    }
+  ],
+  "invariants": "none",
+  "plausibility": "none",
+  "states": [
+    {
+      "name": "static",
+      "golden": "none"
+    }
+  ],
+  "errors": {
+    "answer": "none",
+    "why": "No async work happens: the handlers are a synchronous store write plus router.push, so no failure path exists.",
+    "evidence": [
+      "mobile/app/(onboarding)/path.tsx:23-46"
+    ]
+  },
+  "emits": {
+    "answer": "none",
+    "why": "The branch point of the whole onboarding funnel emits nothing, so the leads-vs-tracking split is unmeasurable.",
+    "evidence": [
+      "mobile/app/(onboarding)/path.tsx:1-59"
+    ],
+    "analytics": [],
+    "ledger_events": [],
+    "breadcrumbs": []
+  },
+  "offers": {
+    "answer": "none",
+    "why": "No sponsored placement is rendered: the only slot component in the Expo tree is SponsorSlot, and it returns null unless EXPO_PUBLIC_PARCEL_SPONSORS=1.",
+    "evidence": [
+      "mobile/src/components/parcel/SponsorSlot.tsx:16-20"
+    ]
+  },
+  "metering": {
+    "answer": "none",
+    "why": "Nothing here is counted: the Spec 126 §7 usage ledger table does not exist (grep for usage_events in the introspected drizzle schema returns 0 hits), and the only quota-shaped counter, user_profiles.lead_views_count, is incremented solely by POST /api/leads/view, which has no mobile caller.",
+    "evidence": [
+      "src/lib/db/generated/schema.ts — no usage_events table (grep, 2026-09-15)",
+      "src/app/api/leads/view/route.ts:110",
+      "src/features/leads/api/useLeadView.ts:25 — imported only by src/tests/useLeadView.logic.test.tsx"
+    ]
+  },
+  "config": {
+    "answer": "none",
+    "why": "The surface consumes no registered logic variable: the only server-side tunable in this path, user_profiles.radius_cap_km, is a per-user admin column, not a logic_variables row.",
+    "evidence": [
+      "src/lib/userProfile.schema.ts:40",
+      "src/app/api/user-profile/route.ts:328",
+      "docs/reference/logic-variables-registry.md — no radius_cap_km entry"
+    ],
+    "logic_variables": [],
+    "retired": []
+  },
+  "sharing": {
+    "answer": "none",
+    "why": "It renders no contract.",
+    "evidence": [
+      "mobile/app/(onboarding)/path.tsx:1-59"
+    ],
+    "surfaces": []
+  },
+  "a11y": {
+    "touch_target_min_px": 44,
+    "labels": "complete",
+    "dark_mode": "hardcoded",
+    "reduced_motion": "none",
+    "i18n": "none",
+    "safe_area": [
+      "top",
+      "bottom"
+    ]
+  },
+  "deviations": "none",
+  "limitations": [
+    {
+      "what": "The chosen path never reaches the server, so a reinstall mid-onboarding drops the user into a branch the server cannot reconstruct.",
+      "measured": "path.tsx writes only useOnboardingStore.setPath; user_profiles has no path column in CLIENT_SAFE_COLUMNS (src/lib/userProfile.schema.ts:85-112).",
+      "check_id": "path_branch_lock"
+    }
+  ],
+  "interpretation": "none",
+  "notes": "The only branch point in onboarding, and the only one whose choice never leaves the device: selectedPath lives in MMKV alone, so the server cannot reconstruct which of the three flows a user was in. Both cards are fully labelled, which makes this the most accessible screen in the mobile estate — because it has exactly two targets.",
+  "x-draft": {
+    "shard": "mobile-product",
+    "files": [
+      "mobile/app/(onboarding)/path.tsx"
+    ],
+    "loc": 59,
+    "call_idiom": "none",
+    "stores": [
+      "onboardingStore"
+    ],
+    "measured_states": [
+      "loaded"
+    ],
+    "measured_gate": {
+      "session": "required",
+      "entitlement": "none",
+      "flag": "none",
+      "permission": "none"
+    }
+  },
+  "programme": {
+    "scope": "platform_shared",
+    "phase": "UNRESEARCHED",
+    "why": "Onboarding writes `user_profiles` columns both products read; the flow is shared even though its copy is lead-gen-shaped today.",
+    "feature": "F11",
+    "build_order": 3113,
+    "leakage": "none",
+    "product_questions": "none",
+    "review": {
+      "status": "unreviewed"
+    }
+  }
+}

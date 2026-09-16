@@ -1,6 +1,20 @@
 # Spec 125 — Schema-Driven Metadata UI Engine (admin + web)
 
-> **Status: Draft** — operator-supplied blueprint, filed 2026-09-14 as the NEXT programme after the Spec 122 step conversion completes (see `.cursor/active_task.md`). Not authorized for implementation; a WF1 plan with PLAN LOCKED gates it. §0 (review notes) is grounded against the repo as of `fcdc58ba`; §1–§13 are the operator's document verbatim.
+> **Status: SUPERSEDED (2026-09-15) by Specs 126 / 127 / 128.**
+>
+> ⚠️ **AMENDMENT 2026-09-15 (WF1 "Spec 126/127/128 surface standard") — additive, nothing below is rewritten.** This document is retained as the origin record of the schema-driven-UI idea and as the provenance for §0's review notes. It is **no longer the spec to implement**, and §1–§13's mechanisms must not be planned from directly.
+>
+> | Where it goes | Spec |
+> |---|---|
+> | The contract — units, archetypes, the 20-category mirror, the seven arrows, the Supabase build-out, the usage ledger | **`docs/specs/02-web-admin/126_maxbld_surface_standard.md`** |
+> | The procedure — assessment, gates, the commit form, batching, the review panel | **`docs/specs/02-web-admin/127_surface_conversion_procedure.md`** |
+> | The policy — the rule set, the ruling register, the open asks | **`docs/specs/02-web-admin/128_surface_standard_policy.md`** |
+>
+> **What was carried over and what was DROPPED is enumerated in Spec 126 §0.1/§0.2**, each drop with its measured reason, rather than abandoned silently. The twelve drops in summary: the "18 categories" count (the schema requires **20**) · FlutterFlow (the client is Expo/React Native) · *"the database record **is** the specification"* (git is the source, Supabase holds a projection) · generating migrations from descriptors (`db:generate` is `drizzle-kit introspect` — the arrow already runs DB→TS) · the `FORM_INPUT`/`DATA_GRID` placeholder archetypes · the name `StepEngine` (→ `SurfaceEngine`; "step" stays the pipeline's unit) · the single `/workflow/[stepId]` dynamic route · the React Flow node-graph (deferred) · `dependency-cruiser` · `supagen` · §7 as engine scope (split into a product spec) · and *"treat the engine as a one-time core infrastructure build"* as a risk mitigation.
+>
+> **One finding §0 did not carry, added here because it invalidates a §1 mechanism:** **React Native has no Server Components.** §1's "Server-Side Rendering … Next.js Server Components" is true on web and **false on mobile**; the mobile half is a *fetched projection* plus build-time generation. See Spec 126 §5.3.
+>
+> *(Original status line, retained verbatim:)* **Status: Draft** — operator-supplied blueprint, filed 2026-09-14 as the NEXT programme after the Spec 122 step conversion completes (see `.cursor/active_task.md`). Not authorized for implementation; a WF1 plan with PLAN LOCKED gates it. §0 (review notes) is grounded against the repo as of `fcdc58ba`; §1–§13 are the operator's document verbatim.
 
 ## 0. Review notes (orchestrator, 2026-09-14 — measured, not inferred)
 

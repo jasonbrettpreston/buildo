@@ -1,0 +1,406 @@
+{
+  "kind": "SURFACE",
+  "status": "exists",
+  "docs": {
+    "purpose": "Everything known about one construction company. It shows contact details (phone, email, website and any other contacts found, each labelled with where it came from and whether it was verified), the Google star rating and review count, business-registry identifiers, and the full list of permits that company has taken out with address, status, estimated cost and issue date. Each permit links through to its own page.",
+    "data_story": "It reads nothing from the database directly. Every value arrives through one contract: `/api/builders/[id]`. Behind that contract, the data comes from `entities`, `entity_contacts`, `entity_projects` and `permits`.",
+    "under_126": "**RE-PROJECT** — it writes nothing and holds no Layer-3 store, so the move is short — the server already assembles the payload and only the rendering is client-side. It renders through the DETAIL renderer (one entity, a single-param query key, declared sections), reading by reference: `/api/builders/[id]`. It owns no component of its own, so its `owns.components[]` is an empty array — a legal answer, written down."
+  },
+  "evidence": {
+    "files": [
+      "src/app/builders/[id]/page.tsx:1"
+    ],
+    "contracts": [
+      "src/app/builders/[id]/page.tsx:73 — /api/builders/[id]"
+    ],
+    "tables": [
+      "src/app/api/builders/[id]/route.ts:24,39-46,52",
+      "src/lib/db/generated/schema.ts — entities, entityContacts",
+      "docs/reference/data-lineage-map.md:506,997"
+    ],
+    "gate": [
+      "src/lib/auth/route-guard.ts:67-77",
+      "src/lib/auth/route-guard.ts:182-191",
+      "src/tests/middleware.logic.test.ts:61"
+    ],
+    "states": [
+      "src/app/builders/[id]/page.tsx:80-86 (loading), :88-99 (miss), :103-244 (hit), :130-133 + :205-206 (empty sections)"
+    ],
+    "emits": [
+      "none — no captureEvent import in src/app/builders/[id]/page.tsx"
+    ]
+  },
+  "identity": {
+    "id": "web_builder_detail",
+    "route": "src/app/builders/[id]/page.tsx",
+    "archetype": "DETAIL",
+    "platforms": [
+      "web"
+    ],
+    "owns": {
+      "components": []
+    },
+    "owner": "web",
+    "spec": "UNRESEARCHED",
+    "spec_refs": [],
+    "spec_version": "0-draft",
+    "versioning": {
+      "answer": "none",
+      "why": "Nothing parses the payload and nothing else consumes this page; the same entities field drift the list page carries applies here, so there is no kept promise to break.",
+      "evidence": [
+        "src/app/builders/[id]/page.tsx:7-45",
+        "src/app/api/builders/[id]/route.ts:24"
+      ]
+    },
+    "ref": "S-067"
+  },
+  "inputs": {
+    "answer": "contract",
+    "why": "One bare fetch to /api/builders/[id] keyed on the route param — no hook, no query key, one request per id. field_whitelist is every key the page dereferences (src/app/builders/[id]/page.tsx:110-238); permit_type, work, city and ward are declared in the interface at :26-33 and never rendered.",
+    "evidence": [
+      "src/app/builders/[id]/page.tsx:67-78"
+    ],
+    "contract_ref": [
+      "/api/builders/[id]"
+    ],
+    "query_key": [
+      "id"
+    ],
+    "field_whitelist": [
+      "builder.id",
+      "builder.name",
+      "builder.name_normalized",
+      "builder.phone",
+      "builder.email",
+      "builder.website",
+      "builder.google_rating",
+      "builder.google_review_count",
+      "builder.obr_business_number",
+      "builder.wsib_status",
+      "builder.permit_count",
+      "builder.enriched_at",
+      "permits[].permit_num",
+      "permits[].revision_num",
+      "permits[].status",
+      "permits[].street_num",
+      "permits[].street_name",
+      "permits[].street_type",
+      "permits[].est_const_cost",
+      "permits[].issued_date",
+      "permits[].description",
+      "contacts[].id",
+      "contacts[].contact_type",
+      "contacts[].contact_value",
+      "contacts[].source",
+      "contacts[].verified"
+    ],
+    "tables": [
+      {
+        "table": "entities",
+        "columns": "all",
+        "producing_steps": [
+          "builders",
+          "enrich_named_builders",
+          "enrich_wsib_builders",
+          "link_wsib"
+        ],
+        "chain_position": "permits[5] · entities[1] · entities[0] · permits[6], sources[19]",
+        "owner_spec": "UNRESEARCHED",
+        "evidence": [
+          "src/app/api/builders/[id]/route.ts:24 — `SELECT * FROM entities WHERE id = $1`",
+          "docs/reference/data-lineage-map.md:506",
+          "scripts/manifest.json#chains"
+        ]
+      },
+      {
+        "table": "permits",
+        "columns": [
+          "permit_num",
+          "revision_num",
+          "permit_type",
+          "work",
+          "status",
+          "street_num",
+          "street_name",
+          "street_type",
+          "city",
+          "ward",
+          "est_const_cost",
+          "issued_date",
+          "description"
+        ],
+        "producing_steps": [
+          "classify_inspection_status",
+          "classify_lifecycle_phase",
+          "classify_permit_phase",
+          "classify_scope",
+          "classify_scope_class",
+          "classify_scope_tags",
+          "close_stale_permits",
+          "create_pre_permits",
+          "enrich_permits",
+          "geocode_permits",
+          "inspections",
+          "link_coa",
+          "link_neighbourhoods",
+          "link_similar",
+          "permits"
+        ],
+        "chain_position": "deep_scrapes[1] · permits[23], coa[12] · permits[3] · permits[4] · not-in-a-chain · not-in-a-chain · permits[2] · not-in-a-chain · permits[9] · permits[7], sources[3] · deep_scrapes[0] · permits[19], coa[8] · permits[10], sources[17] · permits[12] · permits[1]",
+        "owner_spec": "docs/specs/01-pipeline/30_pipeline_architecture.md",
+        "evidence": [
+          "src/app/api/builders/[id]/route.ts:39-46",
+          "docs/reference/data-lineage-map.md:997",
+          "scripts/manifest.json#chains"
+        ]
+      },
+      {
+        "table": "entity_projects",
+        "columns": [
+          "entity_id",
+          "permit_num",
+          "revision_num",
+          "role"
+        ],
+        "producing_steps": "UNRESEARCHED",
+        "chain_position": "UNRESEARCHED",
+        "owner_spec": "UNRESEARCHED",
+        "evidence": [
+          "src/app/api/builders/[id]/route.ts:43-44",
+          "UNRESEARCHED — entity_projects is not in docs/reference/data-lineage-map.md"
+        ]
+      },
+      {
+        "table": "entity_contacts",
+        "columns": "all",
+        "producing_steps": "UNRESEARCHED",
+        "chain_position": "UNRESEARCHED",
+        "owner_spec": "UNRESEARCHED",
+        "evidence": [
+          "src/app/api/builders/[id]/route.ts:52 — `SELECT * FROM entity_contacts`",
+          "src/lib/db/generated/schema.ts — entityContacts",
+          "UNRESEARCHED — entity_contacts is not in docs/reference/data-lineage-map.md"
+        ]
+      }
+    ]
+  },
+  "outputs": {
+    "answer": "none",
+    "why": "It writes nothing; every link is a navigation and there is no form.",
+    "evidence": [
+      "src/app/builders/[id]/page.tsx:103-244"
+    ],
+    "contract_ref": [],
+    "tables": []
+  },
+  "state": {
+    "answer": "none",
+    "why": "Two useState hooks (data, loading), both component-local and discarded on navigate; no store, no persistence, no matrix field.",
+    "evidence": [
+      "src/app/builders/[id]/page.tsx:69-70"
+    ],
+    "fields": []
+  },
+  "staleness": {
+    "answer": "live",
+    "why": "One fetch per id on mount with no cache layer — there is no TanStack query here, so nothing is served from the shell's cache.",
+    "evidence": [
+      "src/app/builders/[id]/page.tsx:72-78"
+    ],
+    "offline": "blocked"
+  },
+  "guards": {
+    "session": {
+      "answer": "authenticated",
+      "why": "Like /builders, the page path is whitelisted nowhere and reaches classifyRoute's fail-closed default; only the /api/builders CONTRACT is public.",
+      "evidence": [
+        "src/lib/auth/route-guard.ts:67-77",
+        "src/lib/auth/route-guard.ts:182-191",
+        "src/tests/middleware.logic.test.ts:61"
+      ]
+    },
+    "rls_class": {
+      "answer": "B",
+      "why": "All four tables are pipeline-owned and reached through the server-side pg pool — RLS on, zero policies, service-role only.",
+      "evidence": [
+        "src/app/api/builders/[id]/route.ts:2,24,38,51",
+        "docs/specs/00-architecture/114_rls_policy_catalog.md"
+      ]
+    },
+    "disclosure": "none",
+    "entitlement": "none",
+    "flag": "none",
+    "permission": "none",
+    "rate_bucket": "none"
+  },
+  "render": {
+    "targets": [
+      "screen"
+    ],
+    "projection": "detail",
+    "breakpoints": "mobile_first",
+    "export": "none"
+  },
+  "checks": [
+    {
+      "id": "web_builder_detail_field_whitelist_parity",
+      "kind": "field_whitelist_parity",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "The BuilderDetail interface names phone, email, wsib_status, enriched_at and obr_business_number; the entities table carries none of those five, and the route SELECTs * with no aliasing — the Contact Information and Business Registry sections can never populate from them."
+    },
+    {
+      "id": "web_builder_detail_query_key_single_param",
+      "kind": "query_key_hygiene",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "A DETAIL surface addresses one entity by one id; the effect depends on [id] alone and must stay that way so a re-render cannot refetch under a different shape."
+    },
+    {
+      "id": "web_builder_detail_error_is_not_found",
+      "kind": "error_state",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "A 500 and a 404 both leave data.builder undefined and both render \"Builder Not Found\" — the miss state and the error state need separating before either can be asserted."
+    }
+  ],
+  "invariants": "none",
+  "plausibility": "none",
+  "states": [
+    {
+      "name": "loading",
+      "golden": "none"
+    },
+    {
+      "name": "hit",
+      "golden": "none"
+    },
+    {
+      "name": "miss",
+      "golden": "none"
+    },
+    {
+      "name": "empty",
+      "golden": "none"
+    },
+    {
+      "name": "redirect",
+      "golden": "src/lib/auth/route-guard.ts:182-191"
+    }
+  ],
+  "errors": {
+    "answer": "inline",
+    "why": "A failed fetch is console.warn'd and then falls into the same \"Builder Not Found\" panel a genuine 404 renders — one inline block, no envelope parsing. A 404 has no entry in errors.classes because the closed class set (400/401/403/429/500/schema_drift/offline) has no 404 value — it is recorded as the `miss` state instead, which is exactly why a 500 rendering the same panel is a finding.",
+    "evidence": [
+      "src/app/builders/[id]/page.tsx:76,88-99"
+    ],
+    "classes": [
+      {
+        "class": "500",
+        "ui": "the same \"Builder Not Found\" panel"
+      },
+      {
+        "class": "offline",
+        "ui": "the same \"Builder Not Found\" panel"
+      }
+    ],
+    "no_retry": []
+  },
+  "emits": {
+    "answer": "none",
+    "why": "No captureEvent, no ledger row — viewing one builder's full contact set is not counted anywhere.",
+    "evidence": [
+      "src/app/builders/[id]/page.tsx:1-304"
+    ],
+    "analytics": [],
+    "ledger_events": [],
+    "breadcrumbs": []
+  },
+  "offers": {
+    "answer": "none",
+    "why": "No sponsored placement; the contact cards are all table rows.",
+    "evidence": [
+      "src/app/builders/[id]/page.tsx:129-171"
+    ]
+  },
+  "metering": {
+    "answer": "none",
+    "why": "No usage_events row is written for a builder view, even though the payload is the enriched contact set.",
+    "evidence": [
+      "src/app/builders/[id]/page.tsx:1-304"
+    ]
+  },
+  "config": {
+    "answer": "none",
+    "why": "The one bound in play, the 50-permit cap, is a literal LIMIT in the route rather than a registered logic variable.",
+    "evidence": [
+      "src/app/api/builders/[id]/route.ts:46"
+    ],
+    "logic_variables": [],
+    "retired": []
+  },
+  "sharing": {
+    "answer": "shared",
+    "why": "/api/builders/[id] is a PUBLIC_PREFIX serving the Expo client as well as this page.",
+    "evidence": [
+      "src/lib/auth/route-guard.ts:67-77",
+      "src/tests/middleware.logic.test.ts:61"
+    ],
+    "surfaces": [],
+    "varies_by_surface": "UNRESEARCHED"
+  },
+  "a11y": {
+    "touch_target_min_px": "UNRESEARCHED",
+    "labels": "partial",
+    "dark_mode": "none",
+    "reduced_motion": "none",
+    "i18n": "none",
+    "safe_area": "none"
+  },
+  "deviations": "none",
+  "limitations": [
+    {
+      "what": "The Contact Information and Business Registry sections are structurally unreachable from the entity row.",
+      "measured": "phone/email/wsib_status/enriched_at/obr_business_number are declared at src/app/builders/[id]/page.tsx:12-21 and absent from `entities` in src/lib/db/generated/schema.ts; only the entity_contacts rows (route.ts:52) can populate that section.",
+      "check_id": "web_builder_detail_field_whitelist_parity"
+    },
+    {
+      "what": "The permit list is silently capped.",
+      "measured": "src/app/api/builders/[id]/route.ts:46 — LIMIT 50; the heading renders `Permits (${data.permits.length})`, so a builder with more than 50 permits is shown a wrong count with no indication it was truncated.",
+      "check_id": "web_builder_detail_error_is_not_found"
+    }
+  ],
+  "interpretation": "none",
+  "notes": "No governing spec: this file appears in no system-map row (its sibling list page src/app/builders/page.tsx is listed under 37_entity_model.md, this one is not) and carries no SPEC LINK header. Same page-gated/API-public mismatch as the list page (Spec 126 line 304 names '/builders' and '/builders/[id]' together). No distinct error state - a failed fetch leaves data null and renders the same 'Builder Not Found' panel. Renders only the shared src/components/ui/Badge primitive, so no page-exclusive components. MEASURED 2026-09-15. Same entities field drift as the list page, one field worse: obr_business_number gates the whole Business Registry section and does not exist on the table, so that section never renders. The page renders `wsibLabel(b.wsib_status)` for every builder, and since the column is is_wsib_registered the badge reads \"WSIB Unknown\" universally. It imports src/components/ui/Badge.tsx, which this row does NOT claim in owns.components[] — Badge is also imported by src/app/permits/[id]/page.tsx and src/components/permits/PermitCard.tsx, so R-13 totality cannot be satisfied for it by any single surface; it is left unowned and raised rather than assigned by guess (Spec 128 §4 escalation). a11y.touch_target_min_px stays UNRESEARCHED for the same vocabulary reason as the other web rows.",
+  "x-draft": {
+    "shard": "web-product",
+    "files": [
+      "src/app/builders/[id]/page.tsx"
+    ],
+    "loc": 304,
+    "measured_states": [
+      "loading",
+      "not_found",
+      "loaded"
+    ],
+    "measured_gate": {
+      "session": "authenticated",
+      "why": "classifyRoute('/builders/123') reaches the fail-closed default. The PUBLIC_PREFIXES arm is the only near miss and it does not fire: the entry is '/api/builders', and '/builders/123'.startsWith('/api/builders') is false; '/permits/' likewise does not match. Not in PUBLIC_PATHS, does not start with '/dashboard' -> default 'authenticated'."
+    }
+  },
+  "programme": {
+    "scope": "estate_other",
+    "phase": "not_scheduled",
+    "why": "Builder/entity data for the lead-gen product. Inventoried only.",
+    "feature": "F92",
+    "build_order": 4193,
+    "leakage": "UNRESEARCHED",
+    "product_questions": "UNRESEARCHED",
+    "review": {
+      "status": "unreviewed"
+    }
+  }
+}

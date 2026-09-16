@@ -1,0 +1,1949 @@
+[
+  {
+    "kind": "JOB",
+    "status": "exists",
+    "docs": {
+      "purpose": "Each morning this job deletes records of which leads a user looked at once those records are older than the retention window the business has set. It exists to honour the privacy promise that viewing history is not kept forever. The window is not hardcoded: the job looks up the number of days in the admin-editable settings table, defaulting to 90 days if the setting is missing.",
+      "data_story": "It reads `logic_variables` and writes `lead_views`. It runs on `0 9 * * *`, unattended, with nobody watching — which is why its guard matters: pg_extension guard with a NOTICE-skip, measured in both migrations (233:78-81, 235:122-125); each re-schedule first unschedules by name from cron.job, making replay idempotent.",
+      "under_126": "Becomes a **JOB descriptor** of archetype `SCHEDULED` under its own `job.schema.json` (Spec 128 R-14) — declaring its schedule, its target, its idempotency posture, its behaviour when `pg_cron` is absent, and the audit row it writes. Nothing about how it runs changes; what changes is that those five answers stop living only in SQL and YAML."
+    },
+    "evidence": {
+      "files": [
+        "migrations/233_pg_cron_maintenance_catalog.sql:1",
+        "migrations/235_offboarding_sweep_hardening.sql:1"
+      ],
+      "contracts": [
+        "none — a pg_cron job takes no request and calls no API route"
+      ],
+      "tables": [
+        "migrations/235_offboarding_sweep_hardening.sql:136-139",
+        "docs/reference/data-lineage-map.md:646",
+        "docs/specs/00-architecture/114_rls_policy_catalog.md:108"
+      ],
+      "gate": [
+        "migrations/233_pg_cron_maintenance_catalog.sql:68-70",
+        "migrations/233_pg_cron_maintenance_catalog.sql:78-81",
+        "migrations/235_offboarding_sweep_hardening.sql:112-113,122-125"
+      ],
+      "states": [
+        "migrations/235_offboarding_sweep_hardening.sql:136-139 — one statement, no branch; the outcome is a row count nothing records"
+      ],
+      "emits": [
+        "migrations/235_offboarding_sweep_hardening.sql:136-139 — no INSERT of any kind",
+        "migrations/235_offboarding_sweep_hardening.sql:87-103 — the sibling job that DOES write one"
+      ]
+    },
+    "identity": {
+      "id": "job_lead_views_retention_purge",
+      "route": "migrations/233_pg_cron_maintenance_catalog.sql",
+      "archetype": "SCHEDULED",
+      "platforms": [],
+      "owns": {
+        "components": []
+      },
+      "owner": "pipeline",
+      "spec": "docs/specs/00-architecture/115_scheduling.md §5",
+      "spec_refs": [
+        "docs/specs/00-architecture/115_scheduling.md §5 (pg_cron job catalog — the lead_views_retention_purge row)",
+        "docs/specs/00-architecture/115_scheduling.md §5a (schema-qualified call-site rule)",
+        "UNRESEARCHED — Spec 115 §5 cites “Spec 70 §Database Schema (PIPEDA 90-day SLA)” for this window, but there is no Spec 70 lead-feed document: docs/specs/archive/70_frontend_platform_foundation.md is a different subject and the lead-feed specs are 91 (mobile) and 76 (admin). The citation is stale; the tree wins."
+      ],
+      "spec_version": "0-draft",
+      "versioning": {
+        "answer": "additive_only",
+        "why": "Migration 235 replaced the scheduled command in place (same name, same cron, a LIMIT 1 added) without touching what it deletes — the pattern is fix-forward re-schedule, never a breaking redefinition.",
+        "evidence": [
+          "migrations/235_offboarding_sweep_hardening.sql:115-143",
+          "migrations/233_pg_cron_maintenance_catalog.sql:95-102"
+        ]
+      },
+      "ref": "J-001"
+    },
+    "inputs": {
+      "answer": "app_outputs",
+      "why": "It reads the database directly, not through any contract: one scalar lookup of logic_variables for the retention window, then the lead_views rows past that horizon. logic_variables has no pipeline producer — it is admin-written — which is why producing_steps below is `none`, not a step list.",
+      "evidence": [
+        "migrations/235_offboarding_sweep_hardening.sql:136-139",
+        "docs/reference/data-lineage-map.md:646"
+      ],
+      "contract_ref": [],
+      "query_key": [],
+      "field_whitelist": [
+        "variable_value"
+      ],
+      "tables": [
+        {
+          "table": "logic_variables",
+          "columns": [
+            "variable_key",
+            "variable_value"
+          ],
+          "producing_steps": "none",
+          "chain_position": "n/a",
+          "owner_spec": "docs/specs/00-architecture/115_scheduling.md §5",
+          "evidence": [
+            "migrations/235_offboarding_sweep_hardening.sql:138-139",
+            "docs/reference/data-lineage-map.md:646 — table present, no pipeline producer listed",
+            "docs/reference/logic-variables-registry.md:155"
+          ]
+        },
+        {
+          "table": "lead_views",
+          "columns": [
+            "viewed_at"
+          ],
+          "producing_steps": "none",
+          "chain_position": "n/a",
+          "owner_spec": "UNRESEARCHED — see spec_refs; the Spec 70 citation in Spec 115 §5 does not resolve",
+          "evidence": [
+            "migrations/235_offboarding_sweep_hardening.sql:136-137",
+            "docs/reference/data-lineage-map.md — lead_views section carries no producing step",
+            "docs/specs/00-architecture/114_rls_policy_catalog.md:108 — lead_views is Class A"
+          ]
+        }
+      ]
+    },
+    "outputs": {
+      "answer": "UNRESEARCHED",
+      "why": "NOT ANSWERABLE from the closed set: outputs offers none | contract_only | optimistic_then_contract | device_only, all of which describe a client writing through an API. This job writes directly to the database with no contract in between. The substance is recorded in outputs.tables[]; the vocabulary gap is a Spec 128 §4 escalation (R-14: JOBs need job.schema.json). What it does: a single unqualified DELETE from public.lead_views of every row older than the configured window.",
+      "evidence": [
+        "migrations/235_offboarding_sweep_hardening.sql:136-139"
+      ],
+      "contract_ref": [],
+      "tables": [
+        {
+          "table": "lead_views",
+          "columns": [
+            "viewed_at"
+          ],
+          "producing_steps": "none",
+          "chain_position": "n/a",
+          "owner_spec": "UNRESEARCHED — see spec_refs; the Spec 70 citation in Spec 115 §5 does not resolve",
+          "evidence": [
+            "migrations/235_offboarding_sweep_hardening.sql:136-137",
+            "docs/specs/00-architecture/114_rls_policy_catalog.md:108"
+          ]
+        }
+      ]
+    },
+    "state": {
+      "answer": "server_only",
+      "why": "It keeps nothing between runs — the cutoff is recomputed from NOW() and the logic variable on every execution, so two consecutive runs share no state.",
+      "evidence": [
+        "migrations/235_offboarding_sweep_hardening.sql:136-139"
+      ],
+      "fields": []
+    },
+    "staleness": {
+      "answer": "none",
+      "why": "It displays nothing; freshness applies to what a surface shows, and this job has no viewer.",
+      "evidence": [
+        "migrations/235_offboarding_sweep_hardening.sql:133-140"
+      ],
+      "offline": "none"
+    },
+    "guards": {
+      "session": {
+        "answer": "UNRESEARCHED",
+        "why": "NOT ANSWERABLE from the closed set: guards.session offers anon | authenticated | entitled | admin, all of which describe an end-user principal. This runs with no request and no user — as the pg_cron job owner through a SECURITY DEFINER function, or as a GitHub Actions runner holding repository secrets. Spec 128 §4 escalation (Spec 128 R-14 already anticipates JOBs getting their own job.schema.json); recorded rather than mis-answered.",
+        "evidence": [
+          "migrations/233_pg_cron_maintenance_catalog.sql:74-111",
+          "docs/specs/00-architecture/115_scheduling.md §5"
+        ]
+      },
+      "rls_class": {
+        "answer": "A",
+        "why": "lead_views is one of the ten Class A uid tables (auth.uid() = user_id); logic_variables falls to Class B by the default rule. The job bypasses both — pg_cron executes the command as the job owner, not as an end-user role.",
+        "evidence": [
+          "docs/specs/00-architecture/114_rls_policy_catalog.md:108",
+          "docs/specs/00-architecture/114_rls_policy_catalog.md:52-53",
+          "docs/specs/00-architecture/114_rls_policy_catalog.md:75"
+        ]
+      },
+      "disclosure": "none",
+      "entitlement": "none",
+      "flag": "none",
+      "permission": "none",
+      "rate_bucket": "none"
+    },
+    "render": {
+      "targets": [
+        "screen"
+      ],
+      "projection": "none",
+      "breakpoints": "none",
+      "export": "none"
+    },
+    "checks": [
+      {
+        "id": "job_lead_views_purge_no_ledger_row",
+        "kind": "ledger_row_present",
+        "severity": "FAIL",
+        "blocking": false,
+        "when": "post",
+        "why": "Unlike its two hardened siblings, this job writes no pipeline_runs row — it is a bare DELETE in cron.schedule, and cron.job_run_details does not capture RAISE WARNING under default config, so a purge that silently stops deleting is invisible in the house observability surface."
+      },
+      {
+        "id": "job_lead_views_purge_idempotent_schedule",
+        "kind": "schema_declared",
+        "severity": "FAIL",
+        "blocking": false,
+        "when": "post",
+        "why": "Both migrations unschedule by name before re-scheduling, so a replay cannot leave two jobs of the same name racing each other over the same rows."
+      },
+      {
+        "id": "job_lead_views_purge_single_row_tunable",
+        "kind": "contract_parse",
+        "severity": "WARN",
+        "blocking": false,
+        "when": "post",
+        "why": "The LIMIT 1 added by 235 is the only thing standing between a duplicate lead_view_retention_days row and \"more than one row returned by a subquery\", which would kill the nightly purge silently — expected to be permanently unnecessary, and kept because its absence is unrecoverable."
+      }
+    ],
+    "invariants": [
+      {
+        "id": "lead_views_within_retention",
+        "sql": "SELECT count(*) FROM public.lead_views WHERE viewed_at < NOW() - make_interval(days => (SELECT COALESCE(variable_value::int, 90) FROM public.logic_variables WHERE variable_key = 'lead_view_retention_days' LIMIT 1))",
+        "severity": "FAIL",
+        "why": "The whole point of the job: after it runs, no lead_views row may be older than the configured window. A non-zero count means the schedule is not firing."
+      }
+    ],
+    "plausibility": "none",
+    "states": [
+      {
+        "name": "hit",
+        "golden": "none"
+      },
+      {
+        "name": "empty",
+        "golden": "none"
+      },
+      {
+        "name": "error",
+        "golden": "none"
+      }
+    ],
+    "errors": {
+      "answer": "none",
+      "why": "No error handling at all: the command is a bare DELETE with no exception arm and no failure row — a throw aborts the statement and leaves only a cron.job_run_details entry nobody watches.",
+      "evidence": [
+        "migrations/235_offboarding_sweep_hardening.sql:136-139"
+      ],
+      "classes": [],
+      "no_retry": []
+    },
+    "emits": {
+      "answer": "none",
+      "why": "Nothing durable. This is the one job in the catalog that writes no pipeline_runs row: 235 added one to offboarding_sweep_30day and 237 gave the prune one on success AND failure, but the purge was left as a bare DELETE.",
+      "evidence": [
+        "migrations/235_offboarding_sweep_hardening.sql:136-139",
+        "migrations/235_offboarding_sweep_hardening.sql:87-103",
+        "migrations/237_scrape_outcome_prune.sql:97-109"
+      ],
+      "analytics": [],
+      "ledger_events": [],
+      "breadcrumbs": []
+    },
+    "offers": {
+      "answer": "none",
+      "why": "A maintenance job renders no sponsored placement.",
+      "evidence": [
+        "migrations/235_offboarding_sweep_hardening.sql:136-139"
+      ]
+    },
+    "metering": {
+      "answer": "none",
+      "why": "It writes no usage_events row; deleting expired history is housekeeping, not a billable unit.",
+      "evidence": [
+        "migrations/235_offboarding_sweep_hardening.sql:136-139"
+      ]
+    },
+    "config": {
+      "answer": "logic_variables",
+      "why": "Its one tunable is a registered logic variable read at execution time, so an operator can change the retention window without a migration.",
+      "evidence": [
+        "docs/reference/logic-variables-registry.md:155",
+        "migrations/235_offboarding_sweep_hardening.sql:138-139"
+      ],
+      "logic_variables": [
+        {
+          "name": "lead_view_retention_days",
+          "min": 7,
+          "max": 365,
+          "on_invalid": "default",
+          "why": "COALESCE(variable_value::int, 90) — a missing or unreadable row falls back to the PIPEDA 90-day default rather than deleting nothing or deleting everything."
+        }
+      ],
+      "retired": [
+        "scripts/purge-lead-views.js — the retention half of the retired script, deleted at P3-F6 (ADR-007); it read this same variable"
+      ]
+    },
+    "sharing": {
+      "answer": "none",
+      "why": "It renders no contract. The variable it reads is shared, but a logic variable is configuration, not a contract.",
+      "evidence": [
+        "migrations/235_offboarding_sweep_hardening.sql:136-139"
+      ],
+      "surfaces": []
+    },
+    "a11y": {
+      "touch_target_min_px": "UNRESEARCHED",
+      "labels": "none",
+      "dark_mode": "none",
+      "reduced_motion": "none",
+      "i18n": "none",
+      "safe_area": "none"
+    },
+    "deviations": "none",
+    "limitations": [
+      {
+        "what": "A run that deletes nothing is indistinguishable from a run that never happened.",
+        "measured": "migrations/235_offboarding_sweep_hardening.sql:136-139 — a bare DELETE with no pipeline_runs insert; the only trace is cron.job_run_details, which 233:16-18 and 235:87-91 both record as not capturing RAISE WARNING under default config.",
+        "check_id": "job_lead_views_purge_no_ledger_row"
+      },
+      {
+        "what": "It is not scheduled at all on instances without pg_cron.",
+        "measured": "migrations/233_pg_cron_maintenance_catalog.sql:78-81 and migrations/235_offboarding_sweep_hardening.sql:122-125 — a pg_extension guard with a NOTICE-skip; Docker/CI postgis images therefore run no retention purge, by design.",
+        "check_id": "job_lead_views_purge_idempotent_schedule"
+      }
+    ],
+    "interpretation": "none",
+    "notes": "Re-scheduled unchanged-in-time by migration 235 (same `0 9 * * *`); 235's only change to the command is a defensive `LIMIT 1` on the logic_variables subquery so a duplicate `lead_view_retention_days` row cannot make the nightly purge throw. Reads the tunable via `variable_key = 'lead_view_retention_days'` with `COALESCE(variable_value::int, 90)`. MEASURED 2026-09-15: this is the only job in the pg_cron catalog with NO durable outcome record. Migration 235 added a pipeline_runs summary row to offboarding_sweep_30day for exactly the reason stated at 235:87-91 (cron.job_run_details does not capture RAISE WARNING under default config) and 237 gave the prune one on both success and failure — the purge was left as a bare DELETE and still is. guards.session and outputs.answer are UNRESEARCHED because the SURFACE vocabulary has no value for \"no principal\" or \"writes straight to the database\"; both are Spec 128 §4 escalations, not unmeasured facts. render.targets still reads [\"screen\"] because the schema requires at least one target from screen|pdf|csv|email and a job renders none — the same gap in a third place.",
+    "x-draft": {
+      "shard": "jobs",
+      "files": [
+        "migrations/233_pg_cron_maintenance_catalog.sql",
+        "migrations/235_offboarding_sweep_hardening.sql"
+      ],
+      "cron": "0 9 * * *",
+      "guarded_by": "pg_extension guard with a NOTICE-skip, measured in both migrations (233:78-81, 235:122-125); each re-schedule first unschedules by name from cron.job, making replay idempotent"
+    },
+    "programme": {
+      "scope": "estate_other",
+      "phase": "not_scheduled",
+      "why": "Lead generation — the other product. Spec 100 §1 states the parcel tool is \"not coupled to the Lead Feed, Flight Center, or LeadDetail\"; inventoried only.",
+      "feature": "F93",
+      "build_order": 4204,
+      "leakage": "UNRESEARCHED",
+      "product_questions": "UNRESEARCHED",
+      "review": {
+        "status": "unreviewed"
+      }
+    }
+  },
+  {
+    "kind": "JOB",
+    "status": "exists",
+    "docs": {
+      "purpose": "Every Monday morning this job deliberately introduces small bugs into a handful of high-stakes calculation files and checks whether the test suite notices. Tests that pass no matter what you break are not really testing anything, and this is how that rot gets caught. It also runs automatically on any pull request that touches one of those files, and blocks the merge if the score falls below the configured threshold.",
+      "data_story": "It reads no table and writes no table. It runs on `0 12 * * 1`, unattended, with nobody watching — which is why its guard matters: none — no environment/extension guard; the job is bounded by `timeout-minutes: 20` and the PR trigger is path-filtered to the mutation target files so it does not tax every PR.",
+      "under_126": "Becomes a **JOB descriptor** of archetype `SCHEDULED` under its own `job.schema.json` (Spec 128 R-14) — declaring its schedule, its target, its idempotency posture, its behaviour when `pg_cron` is absent, and the audit row it writes. Nothing about how it runs changes; what changes is that those five answers stop living only in SQL and YAML."
+    },
+    "evidence": {
+      "files": [
+        ".github/workflows/mutation.yml:1"
+      ],
+      "contracts": [
+        "none — a scheduled GitHub Actions workflow takes no request and calls no API route"
+      ],
+      "tables": [
+        "none — no SUPABASE_DATABASE_URL in its env and no database step"
+      ],
+      "gate": [
+        ".github/workflows/mutation.yml:34-38 — no secrets, no permissions block"
+      ],
+      "states": [
+        ".github/workflows/mutation.yml:50-59"
+      ],
+      "emits": [
+        ".github/workflows/mutation.yml:53-59 — a GitHub artifact, nothing durable"
+      ]
+    },
+    "identity": {
+      "id": "job_mutation_testing",
+      "route": ".github/workflows/mutation.yml",
+      "archetype": "SCHEDULED",
+      "platforms": [],
+      "owns": {
+        "components": []
+      },
+      "owner": "web",
+      "spec": "docs/specs/00_engineering_standards.md §12.13",
+      "spec_refs": [
+        "docs/specs/00_engineering_standards.md §12.13"
+      ],
+      "spec_version": "0-draft",
+      "versioning": {
+        "answer": "breaking_allowed",
+        "why": "Nothing consumes its output but a human reading the uploaded report; the threshold and the target list live in stryker.config.mjs and this workflow, and both move in one commit.",
+        "evidence": [
+          ".github/workflows/mutation.yml:10-11,21-29"
+        ]
+      },
+      "ref": "J-002"
+    },
+    "inputs": {
+      "answer": "none",
+      "why": "It reads no database and no contract: it checks out the repo, installs, and runs Stryker over three lib files and their three test files. Its only inputs are source files.",
+      "evidence": [
+        ".github/workflows/mutation.yml:22-27,40-51"
+      ],
+      "contract_ref": [],
+      "query_key": [],
+      "field_whitelist": [],
+      "tables": []
+    },
+    "outputs": {
+      "answer": "none",
+      "why": "It writes nothing anywhere persistent: the HTML report goes to reports/mutation/ and is uploaded as a 30-day GitHub artifact, and the only other effect is the job's own pass/fail.",
+      "evidence": [
+        ".github/workflows/mutation.yml:53-59"
+      ],
+      "contract_ref": [],
+      "tables": []
+    },
+    "state": {
+      "answer": "none",
+      "why": "A stateless CI job — each run starts from a fresh checkout and keeps nothing.",
+      "evidence": [
+        ".github/workflows/mutation.yml:39-51"
+      ],
+      "fields": []
+    },
+    "staleness": {
+      "answer": "none",
+      "why": "It displays nothing and reads no server data.",
+      "evidence": [
+        ".github/workflows/mutation.yml:34-59"
+      ],
+      "offline": "none"
+    },
+    "guards": {
+      "session": {
+        "answer": "UNRESEARCHED",
+        "why": "NOT ANSWERABLE from the closed set: guards.session offers anon | authenticated | entitled | admin, all of which describe an end-user principal. This runs with no request and no user — as the pg_cron job owner through a SECURITY DEFINER function, or as a GitHub Actions runner holding repository secrets. Spec 128 §4 escalation (Spec 128 R-14 already anticipates JOBs getting their own job.schema.json); recorded rather than mis-answered. This one holds no secrets at all — it is the only job in the shard with no credential of any kind.",
+        "evidence": [
+          ".github/workflows/mutation.yml:34-59"
+        ]
+      },
+      "rls_class": {
+        "answer": "none",
+        "why": "It reaches no table and opens no database connection — there is no SUPABASE_DATABASE_URL in its env.",
+        "evidence": [
+          ".github/workflows/mutation.yml:34-59"
+        ]
+      },
+      "disclosure": "none",
+      "entitlement": "none",
+      "flag": "none",
+      "permission": "none",
+      "rate_bucket": "none"
+    },
+    "render": {
+      "targets": [
+        "screen"
+      ],
+      "projection": "none",
+      "breakpoints": "none",
+      "export": "none"
+    },
+    "checks": [
+      {
+        "id": "job_mutation_threshold_lives_in_config",
+        "kind": "schema_declared",
+        "severity": "FAIL",
+        "blocking": false,
+        "when": "post",
+        "why": "The 75% mutation-score threshold is declared once, in stryker.config.mjs, and the workflow says so in its own header — a second copy here would be a second thing to forget to change."
+      },
+      {
+        "id": "job_mutation_pr_paths_match_targets",
+        "kind": "render_target_parity",
+        "severity": "FAIL",
+        "blocking": false,
+        "when": "post",
+        "why": "The pull_request paths filter must list every file Stryker mutates plus their tests, or a change to a mutation target ships without the per-PR run that exists to catch it."
+      },
+      {
+        "id": "job_mutation_report_always_uploaded",
+        "kind": "error_state",
+        "severity": "WARN",
+        "blocking": false,
+        "when": "post",
+        "why": "if: always() on the artifact upload is what makes a FAILING run diagnosable — the surviving mutants are only visible in the report, and a failed run is exactly when that report is needed."
+      }
+    ],
+    "invariants": "none",
+    "plausibility": "none",
+    "states": [
+      {
+        "name": "hit",
+        "golden": "none"
+      },
+      {
+        "name": "error",
+        "golden": "none"
+      }
+    ],
+    "errors": {
+      "answer": "none",
+      "why": "No error handling of its own — a run below threshold exits non-zero and reddens the job, which is the intended signal; the report still uploads because of if: always().",
+      "evidence": [
+        ".github/workflows/mutation.yml:50-59"
+      ],
+      "classes": [],
+      "no_retry": []
+    },
+    "emits": {
+      "answer": "none",
+      "why": "Nothing durable outside GitHub: no pipeline_runs row, no analytics event. The mutation score of a given week exists only in a 30-day artifact, so the trend this job exists to surface cannot be read after a month.",
+      "evidence": [
+        ".github/workflows/mutation.yml:53-59"
+      ],
+      "analytics": [],
+      "ledger_events": [],
+      "breadcrumbs": []
+    },
+    "offers": {
+      "answer": "none",
+      "why": "A CI workflow renders no sponsored placement.",
+      "evidence": [
+        ".github/workflows/mutation.yml:34-59"
+      ]
+    },
+    "metering": {
+      "answer": "none",
+      "why": "Nothing is counted.",
+      "evidence": [
+        ".github/workflows/mutation.yml:34-59"
+      ]
+    },
+    "config": {
+      "answer": "none",
+      "why": "Its tunables — the mutation-score threshold and the mutated file set — live in stryker.config.mjs, not in the logic-variable registry; a CI threshold is not an admin-editable runtime tunable.",
+      "evidence": [
+        ".github/workflows/mutation.yml:10-11,28"
+      ],
+      "logic_variables": [],
+      "retired": []
+    },
+    "sharing": {
+      "answer": "none",
+      "why": "It renders no contract.",
+      "evidence": [
+        ".github/workflows/mutation.yml:34-59"
+      ],
+      "surfaces": []
+    },
+    "a11y": {
+      "touch_target_min_px": "UNRESEARCHED",
+      "labels": "none",
+      "dark_mode": "none",
+      "reduced_motion": "none",
+      "i18n": "none",
+      "safe_area": "none"
+    },
+    "deviations": "none",
+    "limitations": [
+      {
+        "what": "The weekly trend it exists to surface is not retained.",
+        "measured": ".github/workflows/mutation.yml:58 — retention-days: 30, and nothing else records the score; a month-old run is unreadable.",
+        "check_id": "job_mutation_report_always_uploaded"
+      },
+      {
+        "what": "Its scope is three files.",
+        "measured": ".github/workflows/mutation.yml:22-24 — cost-model.ts, distance.ts and record-lead-view.ts are the only mutation targets; nothing else in the estate is mutation-tested.",
+        "check_id": "job_mutation_pr_paths_match_targets"
+      }
+    ],
+    "interpretation": "none",
+    "notes": "Touches no database: it runs `npm run test:mutation` (Stryker) and uploads reports/mutation/ as an artifact with 30-day retention. TREE/DOC DISAGREEMENT on the threshold: the workflow header comment says the run fails below 75%, while docs/specs/00_engineering_standards.md:381 says the score must stay >= 50%; neither number lives in the yml — stryker.config.mjs is the authority per the header. TREE/DOC DISAGREEMENT on the surface: the spec names 4 modules (cost-model.ts, distance.ts, record-lead-view.ts, builder-query.ts) but the yml's PR path filter lists only 3 sources + their 3 test siblings, with no builder-query entry. MEASURED 2026-09-15: the only row in this shard that touches no database and holds no credential, and the only one whose schedule is weekly (`0 12 * * 1`) rather than daily. Its three modes — Monday cron, per-PR on a changed target, and workflow_dispatch — are all live in the file, so the \"runs in two modes\" header comment at :4 undercounts by one. guards.session is a Spec 128 §4 vocabulary escalation, identical to the other five rows.",
+    "x-draft": {
+      "shard": "jobs",
+      "files": [
+        ".github/workflows/mutation.yml"
+      ],
+      "cron": "0 12 * * 1",
+      "guarded_by": "none — no environment/extension guard; the job is bounded by `timeout-minutes: 20` and the PR trigger is path-filtered to the mutation target files so it does not tax every PR"
+    },
+    "programme": {
+      "scope": "estate_other",
+      "phase": "not_scheduled",
+      "why": "A scheduled job serving the lead-gen estate or the CI harness. Inventoried so a job with no owner is visible, not to be converted in this programme.",
+      "feature": "F93",
+      "build_order": 4204,
+      "leakage": "UNRESEARCHED",
+      "product_questions": "UNRESEARCHED",
+      "review": {
+        "status": "unreviewed"
+      }
+    }
+  },
+  {
+    "kind": "JOB",
+    "status": "exists",
+    "docs": {
+      "purpose": "Every night this job rebuilds the pre-computed monthly permit summary that the admin dashboard reads, so the numbers shown there reflect the permits loaded earlier that day. It runs after the nightly permit-loading window so it never summarises a half-finished import. It rebuilds the summary in the background, so the dashboard stays readable the whole time it is working.",
+      "data_story": "It reads `permits` and writes `mv_monthly_permit_stats`. It runs on `30 14 * * *`, unattended, with nobody watching — which is why its guard matters: pg_extension guard with a NOTICE-skip, measured (migrations/233:78-81 — `IF NOT EXISTS (SELECT 1 FROM pg_extension WHERE extname = 'pg_cron')` then RAISE NOTICE and RETURN); plus an idempotent unschedule-by-name loop over cron.job before scheduling.",
+      "under_126": "Becomes a **JOB descriptor** of archetype `SCHEDULED` under its own `job.schema.json` (Spec 128 R-14) — declaring its schedule, its target, its idempotency posture, its behaviour when `pg_cron` is absent, and the audit row it writes. Nothing about how it runs changes; what changes is that those five answers stop living only in SQL and YAML."
+    },
+    "evidence": {
+      "files": [
+        "migrations/233_pg_cron_maintenance_catalog.sql:1"
+      ],
+      "contracts": [
+        "none — a pg_cron job takes no request and calls no API route"
+      ],
+      "tables": [
+        "migrations/034_mv_monthly_permit_stats.sql:8-19",
+        "src/lib/db/generated/schema.ts:2323",
+        "docs/reference/data-lineage-map.md:997"
+      ],
+      "gate": [
+        "migrations/233_pg_cron_maintenance_catalog.sql:78-81",
+        "migrations/233_pg_cron_maintenance_catalog.sql:83-88"
+      ],
+      "states": [
+        "migrations/233_pg_cron_maintenance_catalog.sql:89-93 — one statement, no branch"
+      ],
+      "emits": [
+        "migrations/233_pg_cron_maintenance_catalog.sql:89-93 — no INSERT of any kind"
+      ]
+    },
+    "identity": {
+      "id": "job_mv_monthly_permit_stats_refresh",
+      "route": "migrations/233_pg_cron_maintenance_catalog.sql",
+      "archetype": "SCHEDULED",
+      "platforms": [],
+      "owns": {
+        "components": []
+      },
+      "owner": "pipeline",
+      "spec": "docs/specs/00-architecture/115_scheduling.md §5",
+      "spec_refs": [
+        "docs/specs/00-architecture/115_scheduling.md §5 (pg_cron job catalog — the mv_monthly_permit_stats_refresh row, re-timed to 14:30 UTC on 2026-07-20)",
+        "docs/specs/02-web-admin/26_admin_dashboard.md — the dashboard that consumes the matview and tolerates staleness by design"
+      ],
+      "spec_version": "0-draft",
+      "versioning": {
+        "answer": "frozen",
+        "why": "CONCURRENTLY depends on the matview keeping its unique index (month, permit_type); changing the matview shape breaks the refresh, and migration 034 is pinned by a source-scan test.",
+        "evidence": [
+          "migrations/034_mv_monthly_permit_stats.sql:18-19",
+          "src/tests/market-metrics.logic.test.ts:19-29"
+        ]
+      },
+      "ref": "J-003"
+    },
+    "inputs": {
+      "answer": "app_outputs",
+      "why": "It re-reads the permits table — a pipeline-written table — through the matview definition; there is no contract and no parameter.",
+      "evidence": [
+        "migrations/034_mv_monthly_permit_stats.sql:8-16",
+        "migrations/233_pg_cron_maintenance_catalog.sql:89-93"
+      ],
+      "contract_ref": [],
+      "query_key": [],
+      "field_whitelist": [
+        "issued_date",
+        "permit_type",
+        "est_const_cost"
+      ],
+      "tables": [
+        {
+          "table": "permits",
+          "columns": [
+            "issued_date",
+            "permit_type",
+            "est_const_cost"
+          ],
+          "producing_steps": [
+            "classify_inspection_status",
+            "classify_lifecycle_phase",
+            "classify_permit_phase",
+            "classify_scope",
+            "classify_scope_class",
+            "classify_scope_tags",
+            "close_stale_permits",
+            "create_pre_permits",
+            "enrich_permits",
+            "geocode_permits",
+            "inspections",
+            "link_coa",
+            "link_neighbourhoods",
+            "link_similar",
+            "permits"
+          ],
+          "chain_position": "deep_scrapes[1] · permits[23], coa[12] · permits[3] · permits[4] · not-in-a-chain · not-in-a-chain · permits[2] · not-in-a-chain · permits[9] · permits[7], sources[3] · deep_scrapes[0] · permits[19], coa[8] · permits[10], sources[17] · permits[12] · permits[1]",
+          "owner_spec": "docs/specs/01-pipeline/30_pipeline_architecture.md",
+          "evidence": [
+            "migrations/034_mv_monthly_permit_stats.sql:14",
+            "docs/reference/data-lineage-map.md:997",
+            "scripts/manifest.json#chains"
+          ]
+        }
+      ]
+    },
+    "outputs": {
+      "answer": "UNRESEARCHED",
+      "why": "NOT ANSWERABLE from the closed set: outputs offers none | contract_only | optimistic_then_contract | device_only, all of which describe a client writing through an API. This job writes directly to the database with no contract in between. The substance is recorded in outputs.tables[]; the vocabulary gap is a Spec 128 §4 escalation (R-14: JOBs need job.schema.json). What it does: REFRESH MATERIALIZED VIEW CONCURRENTLY public.mv_monthly_permit_stats — it rewrites the matview and touches no base table.",
+      "evidence": [
+        "migrations/233_pg_cron_maintenance_catalog.sql:89-93"
+      ],
+      "contract_ref": [],
+      "tables": [
+        {
+          "table": "mv_monthly_permit_stats",
+          "columns": [
+            "month",
+            "permit_type",
+            "permit_count",
+            "total_value"
+          ],
+          "producing_steps": [
+            "mv_monthly_permit_stats_refresh"
+          ],
+          "chain_position": "n/a — a pg_cron job, not a chain step",
+          "owner_spec": "docs/specs/00-architecture/115_scheduling.md §5",
+          "evidence": [
+            "migrations/034_mv_monthly_permit_stats.sql:8-19",
+            "migrations/233_pg_cron_maintenance_catalog.sql:89-93",
+            "src/lib/db/generated/schema.ts:2323"
+          ]
+        }
+      ]
+    },
+    "state": {
+      "answer": "server_only",
+      "why": "The matview IS the state, and it is entirely server-side; the job holds nothing across runs.",
+      "evidence": [
+        "migrations/233_pg_cron_maintenance_catalog.sql:89-93"
+      ],
+      "fields": []
+    },
+    "staleness": {
+      "answer": "snapshot",
+      "why": "It is the thing that defines another surface's freshness: the market-metrics query reads the matview, so that page is exactly as fresh as this job's last nightly run.",
+      "evidence": [
+        "src/lib/market-metrics/queries.ts:83",
+        "migrations/233_pg_cron_maintenance_catalog.sql:89-93"
+      ],
+      "producing_step": "mv_monthly_permit_stats_refresh",
+      "offline": "none"
+    },
+    "guards": {
+      "session": {
+        "answer": "UNRESEARCHED",
+        "why": "NOT ANSWERABLE from the closed set: guards.session offers anon | authenticated | entitled | admin, all of which describe an end-user principal. This runs with no request and no user — as the pg_cron job owner through a SECURITY DEFINER function, or as a GitHub Actions runner holding repository secrets. Spec 128 §4 escalation (Spec 128 R-14 already anticipates JOBs getting their own job.schema.json); recorded rather than mis-answered.",
+        "evidence": [
+          "migrations/233_pg_cron_maintenance_catalog.sql:74-111"
+        ]
+      },
+      "rls_class": {
+        "answer": "B",
+        "why": "permits and the matview are both pipeline-owned — not Class A and not profiles, so Class B by the catalog's default rule: RLS on, zero policies, service-role only.",
+        "evidence": [
+          "docs/specs/00-architecture/114_rls_policy_catalog.md:52-53",
+          "docs/specs/00-architecture/114_rls_policy_catalog.md:75",
+          "docs/specs/00-architecture/114_rls_policy_catalog.md:205-214"
+        ]
+      },
+      "disclosure": "none",
+      "entitlement": "none",
+      "flag": "none",
+      "permission": "none",
+      "rate_bucket": "none"
+    },
+    "render": {
+      "targets": [
+        "screen"
+      ],
+      "projection": "none",
+      "breakpoints": "none",
+      "export": "none"
+    },
+    "checks": [
+      {
+        "id": "job_mv_refresh_unique_index_present",
+        "kind": "schema_declared",
+        "severity": "FAIL",
+        "blocking": true,
+        "when": "pre",
+        "why": "REFRESH ... CONCURRENTLY requires the matview to carry a unique index; idx_mv_monthly_month_type (month, permit_type) is that index and Spec 115 §5 records it as live-verified. Drop it and the nightly refresh starts erroring instead of degrading."
+      },
+      {
+        "id": "job_mv_refresh_no_ledger_row",
+        "kind": "ledger_row_present",
+        "severity": "FAIL",
+        "blocking": false,
+        "when": "post",
+        "why": "It writes no pipeline_runs row, so the freshness of the matview the market-metrics dashboard reads cannot be observed from the house observability surface — only from the matview contents themselves."
+      },
+      {
+        "id": "job_mv_refresh_after_nightly_window",
+        "kind": "freshness",
+        "severity": "WARN",
+        "blocking": false,
+        "when": "post",
+        "why": "14:30 UTC was chosen to land after the 11:00 UTC coa->permits window plus its ~3h worst case; if that window moves, this slot has to move with it, and the previous 09:30 slot was wrong for exactly this reason."
+      }
+    ],
+    "invariants": "none",
+    "plausibility": [
+      {
+        "id": "mv_monthly_no_future_months",
+        "sql": "SELECT count(*) FROM public.mv_monthly_permit_stats WHERE month > (CURRENT_DATE + INTERVAL '1 month')",
+        "severity": "WARN",
+        "why": "The matview groups by date_trunc of issued_date; a month beyond next month means a permit carries a future issue date, which is a source-data problem this aggregate would otherwise hide."
+      },
+      {
+        "id": "mv_monthly_value_non_negative",
+        "sql": "SELECT count(*) FROM public.mv_monthly_permit_stats WHERE total_value < 0",
+        "severity": "FAIL",
+        "why": "total_value is COALESCE(SUM(est_const_cost), 0); a negative total can only come from negative cost rows, which are not a legitimate value."
+      }
+    ],
+    "states": [
+      {
+        "name": "hit",
+        "golden": "none"
+      },
+      {
+        "name": "error",
+        "golden": "none"
+      }
+    ],
+    "errors": {
+      "answer": "none",
+      "why": "No exception handling: the scheduled command is the bare REFRESH statement, so a failure leaves yesterday's snapshot in place and a cron.job_run_details row nobody reads.",
+      "evidence": [
+        "migrations/233_pg_cron_maintenance_catalog.sql:89-93"
+      ],
+      "classes": [],
+      "no_retry": []
+    },
+    "emits": {
+      "answer": "none",
+      "why": "No pipeline_runs row and no audit row — the refresh is silent whether it succeeds or fails.",
+      "evidence": [
+        "migrations/233_pg_cron_maintenance_catalog.sql:89-93"
+      ],
+      "analytics": [],
+      "ledger_events": [],
+      "breadcrumbs": []
+    },
+    "offers": {
+      "answer": "none",
+      "why": "A matview refresh renders no sponsored placement.",
+      "evidence": [
+        "migrations/233_pg_cron_maintenance_catalog.sql:89-93"
+      ]
+    },
+    "metering": {
+      "answer": "none",
+      "why": "Nothing is counted.",
+      "evidence": [
+        "migrations/233_pg_cron_maintenance_catalog.sql:89-93"
+      ]
+    },
+    "config": {
+      "answer": "none",
+      "why": "No tunable at all — the schedule is a literal cron expression in the migration and the matview definition is fixed in 034.",
+      "evidence": [
+        "migrations/233_pg_cron_maintenance_catalog.sql:89-93",
+        "migrations/034_mv_monthly_permit_stats.sql:8-16"
+      ],
+      "logic_variables": [],
+      "retired": []
+    },
+    "sharing": {
+      "answer": "none",
+      "why": "It renders no contract; the matview it maintains is read by src/lib/market-metrics/queries.ts, which is a consumer of its output, not a shared contract of this job.",
+      "evidence": [
+        "src/lib/market-metrics/queries.ts:83"
+      ],
+      "surfaces": []
+    },
+    "a11y": {
+      "touch_target_min_px": "UNRESEARCHED",
+      "labels": "none",
+      "dark_mode": "none",
+      "reduced_motion": "none",
+      "i18n": "none",
+      "safe_area": "none"
+    },
+    "deviations": "none",
+    "limitations": [
+      {
+        "what": "The matview has no freshness signal of its own.",
+        "measured": "migrations/233_pg_cron_maintenance_catalog.sql:89-93 — the scheduled command is one REFRESH statement with no pipeline_runs insert; nothing on src/lib/market-metrics/queries.ts:83 can tell how old the aggregate is.",
+        "check_id": "job_mv_refresh_no_ledger_row"
+      },
+      {
+        "what": "It was net-new when scheduled — nothing refreshed this matview for the years between 034 and 233.",
+        "measured": "docs/specs/00-architecture/115_scheduling.md §5 records it as \"Net-new — no automated refresh exists in the codebase today (034 created it; nothing schedules its refresh)\".",
+        "check_id": "job_mv_refresh_after_nightly_window"
+      }
+    ],
+    "interpretation": "none",
+    "notes": "Command is `REFRESH MATERIALIZED VIEW CONCURRENTLY public.mv_monthly_permit_stats`; the reads_tables entry `permits` is measured from the matview definition at migrations/034_mv_monthly_permit_stats.sql:14. CONCURRENTLY is legal because of the unique index idx_mv_monthly_month_type. MEASURED 2026-09-15. The consumer is src/lib/market-metrics/queries.ts:83 (reached by the admin market-metrics route) — that is the surface whose staleness this job defines, and it has no way to see when the refresh last ran. The matview definition is migrations/034_mv_monthly_permit_stats.sql:8-16, introspected into src/lib/db/generated/schema.ts:2323, so the four columns above are read from the live database rather than typed from the migration. guards.session and outputs.answer are Spec 128 §4 vocabulary escalations, not unmeasured facts; render.targets keeps [\"screen\"] only because the schema requires one of screen|pdf|csv|email and a job renders none.",
+    "x-draft": {
+      "shard": "jobs",
+      "files": [
+        "migrations/233_pg_cron_maintenance_catalog.sql"
+      ],
+      "cron": "30 14 * * *",
+      "guarded_by": "pg_extension guard with a NOTICE-skip, measured (migrations/233:78-81 — `IF NOT EXISTS (SELECT 1 FROM pg_extension WHERE extname = 'pg_cron')` then RAISE NOTICE and RETURN); plus an idempotent unschedule-by-name loop over cron.job before scheduling"
+    },
+    "programme": {
+      "scope": "estate_other",
+      "phase": "not_scheduled",
+      "why": "Permit data for the lead-gen product. Inventoried only; it converts under the same standard in a later programme.",
+      "feature": "F93",
+      "build_order": 4204,
+      "leakage": "UNRESEARCHED",
+      "product_questions": "UNRESEARCHED",
+      "review": {
+        "status": "unreviewed"
+      }
+    }
+  },
+  {
+    "kind": "JOB",
+    "status": "exists",
+    "docs": {
+      "purpose": "When someone deletes their account, the data is not removed immediately — it is marked as deleted and kept for a 30-day grace period. This job runs daily to finish the job: it permanently removes every account whose grace period has expired, one account at a time. Accounts that cannot be removed because they authored admin audit records are deliberately skipped and reported, so a human can scrub them by hand rather than the whole sweep failing.",
+      "data_story": "It reads `user_profiles` and writes `auth.users` and `pipeline_runs`. It runs on `0 10 * * *`, unattended, with nobody watching — which is why its guard matters: pg_extension guard with a NOTICE-skip on the cron.schedule call only (migrations/233:78-81); the `public.offboarding_sweep_30day()` FUNCTION itself is created UNGUARDED so CI/Docker images without pg_cron can still test it. Function is SECURITY DEFINER with `SET search_path = pg_catalog` and REVOKE ALL from PUBLIC/anon/authenticated.",
+      "under_126": "Becomes a **JOB descriptor** of archetype `SCHEDULED` under its own `job.schema.json` (Spec 128 R-14) — declaring its schedule, its target, its idempotency posture, its behaviour when `pg_cron` is absent, and the audit row it writes. Nothing about how it runs changes; what changes is that those five answers stop living only in SQL and YAML."
+    },
+    "evidence": {
+      "files": [
+        "migrations/233_pg_cron_maintenance_catalog.sql:1",
+        "migrations/235_offboarding_sweep_hardening.sql:1"
+      ],
+      "contracts": [
+        "none — a pg_cron job takes no request and calls no API route"
+      ],
+      "tables": [
+        "migrations/235_offboarding_sweep_hardening.sql:57-61,66,92-103",
+        "docs/specs/00-architecture/114_rls_policy_catalog.md:107,209",
+        "migrations/233_pg_cron_maintenance_catalog.sql:28-30"
+      ],
+      "gate": [
+        "migrations/235_offboarding_sweep_hardening.sql:46-48",
+        "migrations/235_offboarding_sweep_hardening.sql:112-113",
+        "migrations/235_offboarding_sweep_hardening.sql:122-125"
+      ],
+      "states": [
+        "migrations/235_offboarding_sweep_hardening.sql:63-84 (per-user success / fence-skip / other-error), :92-103 (summary)",
+        "src/tests/db/offboarding-sweep.db.test.ts"
+      ],
+      "emits": [
+        "migrations/235_offboarding_sweep_hardening.sql:92-103",
+        "migrations/235_offboarding_sweep_hardening.sql:74,81"
+      ]
+    },
+    "identity": {
+      "id": "job_offboarding_sweep_30day",
+      "route": "migrations/233_pg_cron_maintenance_catalog.sql",
+      "archetype": "SCHEDULED",
+      "platforms": [],
+      "owns": {
+        "components": []
+      },
+      "owner": "pipeline",
+      "spec": "docs/specs/00-architecture/115_scheduling.md §5",
+      "spec_refs": [
+        "docs/specs/00-architecture/115_scheduling.md §5 (pg_cron job catalog — the offboarding_sweep_30day row, predicate rewritten by Schema-Fidelity F3/F4)",
+        "docs/specs/03-mobile/97_mobile_settings_notifications_offboarding.md §3.2 — the never-built Phase-2 sweep this implements",
+        "docs/specs/00-architecture/114_rls_policy_catalog.md:107 — user_profiles is Class A"
+      ],
+      "spec_version": "0-draft",
+      "versioning": {
+        "answer": "additive_only",
+        "why": "Migration 235 replaced the function body in place and kept the 233 signature verbatim — RETURNS TABLE (deleted_count int, skipped_count int) — adding a WHEN OTHERS arm and a pipeline_runs row without changing what a caller receives.",
+        "evidence": [
+          "migrations/235_offboarding_sweep_hardening.sql:30-32,44-45",
+          "migrations/233_pg_cron_maintenance_catalog.sql:33-34"
+        ]
+      },
+      "ref": "J-004"
+    },
+    "inputs": {
+      "answer": "app_outputs",
+      "why": "It reads one predicate off user_profiles — the accounts whose self-deletion passed the 30-day horizon — and nothing else; no contract, no parameter.",
+      "evidence": [
+        "migrations/235_offboarding_sweep_hardening.sql:57-61"
+      ],
+      "contract_ref": [],
+      "query_key": [],
+      "field_whitelist": [
+        "user_id",
+        "account_deleted_at"
+      ],
+      "tables": [
+        {
+          "table": "user_profiles",
+          "columns": [
+            "user_id",
+            "account_deleted_at"
+          ],
+          "producing_steps": "none",
+          "chain_position": "n/a",
+          "owner_spec": "migrations/114_user_profiles_mobile_columns.sql:32 — account_deleted_at, live-verified as the only place this timestamp lives",
+          "evidence": [
+            "migrations/235_offboarding_sweep_hardening.sql:57-61",
+            "docs/specs/00-architecture/115_scheduling.md §5",
+            "docs/specs/00-architecture/114_rls_policy_catalog.md:107 — Class A",
+            "migrations/233_pg_cron_maintenance_catalog.sql:28-30 — the partial index supporting this predicate"
+          ]
+        }
+      ]
+    },
+    "outputs": {
+      "answer": "UNRESEARCHED",
+      "why": "NOT ANSWERABLE from the closed set: outputs offers none | contract_only | optimistic_then_contract | device_only, all of which describe a client writing through an API. This job writes directly to the database with no contract in between. The substance is recorded in outputs.tables[]; the vocabulary gap is a Spec 128 §4 escalation (R-14: JOBs need job.schema.json). What it does: a per-user DELETE FROM auth.users, whose mig-229 CASCADE topology removes every user-owned row, plus one pipeline_runs summary row at the end.",
+      "evidence": [
+        "migrations/235_offboarding_sweep_hardening.sql:63-67,92-103"
+      ],
+      "contract_ref": [],
+      "tables": [
+        {
+          "table": "auth.users",
+          "columns": [
+            "id"
+          ],
+          "producing_steps": "none",
+          "chain_position": "n/a",
+          "owner_spec": "migrations/229_uid_uuid_fk_conversion.sql:96-106 — the CASCADE/RESTRICT topology",
+          "evidence": [
+            "migrations/235_offboarding_sweep_hardening.sql:66",
+            "migrations/235_offboarding_sweep_hardening.sql:64-65",
+            "docs/specs/00-architecture/115_scheduling.md §5"
+          ]
+        },
+        {
+          "table": "pipeline_runs",
+          "columns": [
+            "pipeline",
+            "started_at",
+            "completed_at",
+            "status",
+            "records_meta"
+          ],
+          "producing_steps": "none",
+          "chain_position": "n/a",
+          "owner_spec": "docs/specs/01-pipeline/48_pipeline_observability.md",
+          "evidence": [
+            "migrations/235_offboarding_sweep_hardening.sql:92-103",
+            "scripts/lib/step/ledger.js:62 — the SDK insert this mirrors",
+            "docs/specs/00-architecture/114_rls_policy_catalog.md:209 — Class B"
+          ]
+        }
+      ]
+    },
+    "state": {
+      "answer": "server_only",
+      "why": "Three loop-local variables (deleted, skipped, skipped_ids) live for one execution; the horizon is recomputed from NOW() each run, so nothing carries over.",
+      "evidence": [
+        "migrations/235_offboarding_sweep_hardening.sql:50-55"
+      ],
+      "fields": []
+    },
+    "staleness": {
+      "answer": "none",
+      "why": "It displays nothing.",
+      "evidence": [
+        "migrations/235_offboarding_sweep_hardening.sql:44-107"
+      ],
+      "offline": "none"
+    },
+    "guards": {
+      "session": {
+        "answer": "UNRESEARCHED",
+        "why": "NOT ANSWERABLE from the closed set: guards.session offers anon | authenticated | entitled | admin, all of which describe an end-user principal. This runs with no request and no user — as the pg_cron job owner through a SECURITY DEFINER function, or as a GitHub Actions runner holding repository secrets. Spec 128 §4 escalation (Spec 128 R-14 already anticipates JOBs getting their own job.schema.json); recorded rather than mis-answered.",
+        "evidence": [
+          "migrations/235_offboarding_sweep_hardening.sql:46-48,112-113"
+        ]
+      },
+      "rls_class": {
+        "answer": "A",
+        "why": "user_profiles is a Class A uid table (auth.uid() = user_id) and auth.users is its owner; the function is SECURITY DEFINER with search_path = pg_catalog, so it runs above both policies and is REVOKEd from anon and authenticated.",
+        "evidence": [
+          "docs/specs/00-architecture/114_rls_policy_catalog.md:107",
+          "migrations/235_offboarding_sweep_hardening.sql:46-48",
+          "migrations/235_offboarding_sweep_hardening.sql:112-113"
+        ]
+      },
+      "disclosure": "none",
+      "entitlement": "none",
+      "flag": "none",
+      "permission": "none",
+      "rate_bucket": "none"
+    },
+    "render": {
+      "targets": [
+        "screen"
+      ],
+      "projection": "none",
+      "breakpoints": "none",
+      "export": "none"
+    },
+    "checks": [
+      {
+        "id": "job_offboarding_per_user_isolation",
+        "kind": "error_state",
+        "severity": "FAIL",
+        "blocking": false,
+        "when": "post",
+        "why": "The loop must survive one bad user: the mig-229 admin_audit_log RESTRICT fence would abort a batch DELETE entirely, and the WHEN OTHERS arm 235 added covers every other single-row failure — without both, one audit-authoring account blocks every other eligible deletion."
+      },
+      {
+        "id": "job_offboarding_ledger_row_present",
+        "kind": "ledger_row_present",
+        "severity": "FAIL",
+        "blocking": false,
+        "when": "post",
+        "why": "The pipeline_runs row carrying deleted_count, skipped_count and skipped_user_ids is the ONLY durable record of a run — cron.job_run_details does not capture the RAISE WARNINGs under default config, so losing this insert makes the sweep invisible."
+      },
+      {
+        "id": "job_offboarding_search_path_pinned",
+        "kind": "schema_declared",
+        "severity": "FAIL",
+        "blocking": true,
+        "when": "pre",
+        "why": "SET search_path = pg_catalog with every reference schema-qualified means an unqualified name is a hard error at CREATE time rather than a silent hijack risk at call time — 235 tightened this from 233 deliberately."
+      }
+    ],
+    "invariants": [
+      {
+        "id": "offboarding_horizon_respected",
+        "sql": "SELECT count(*) FROM public.user_profiles WHERE account_deleted_at IS NOT NULL AND account_deleted_at < NOW() - INTERVAL '31 days'",
+        "severity": "WARN",
+        "why": "A day of slack past the 30-day horizon absorbs the daily cadence; a count that keeps growing means either the schedule is not firing or every remaining row is stuck behind the audit-log RESTRICT fence and needs the manual RTBF scrub."
+      }
+    ],
+    "plausibility": "none",
+    "states": [
+      {
+        "name": "hit",
+        "golden": "src/tests/db/offboarding-sweep.db.test.ts"
+      },
+      {
+        "name": "empty",
+        "golden": "src/tests/db/offboarding-sweep.db.test.ts"
+      },
+      {
+        "name": "partial",
+        "golden": "src/tests/db/offboarding-sweep.db.test.ts"
+      },
+      {
+        "name": "degraded",
+        "golden": "src/tests/db/offboarding-sweep.db.test.ts"
+      }
+    ],
+    "errors": {
+      "answer": "envelope",
+      "why": "A JOB has no UI, so `envelope` is read here as its structured-record analogue: per-row, inside the loop, a foreign_key_violation (the audit fence) and any other error are each caught, RAISE WARNING'd with the user id, counted as skipped and recorded in skipped_user_ids on the pipeline_runs row — the batch continues either way.",
+      "evidence": [
+        "migrations/235_offboarding_sweep_hardening.sql:68-84,92-103"
+      ],
+      "classes": [
+        {
+          "class": "500",
+          "ui": "RAISE WARNING plus a skipped_user_ids entry on the pipeline_runs summary row; the sweep continues"
+        }
+      ],
+      "no_retry": []
+    },
+    "emits": {
+      "answer": "ledger",
+      "why": "One pipeline_runs row per run, pipeline='offboarding_sweep', status='completed', carrying deleted_count, skipped_count and skipped_user_ids — added by 235 precisely because RAISE WARNING is not durable.",
+      "evidence": [
+        "migrations/235_offboarding_sweep_hardening.sql:87-103"
+      ],
+      "analytics": [],
+      "ledger_events": [],
+      "breadcrumbs": [
+        "RAISE WARNING 'offboarding_sweep_30day: user % skipped — admin_audit_log RESTRICT fence'",
+        "RAISE WARNING 'offboarding_sweep_30day: unexpected error for user %'"
+      ]
+    },
+    "offers": {
+      "answer": "none",
+      "why": "A deletion sweep renders no sponsored placement.",
+      "evidence": [
+        "migrations/235_offboarding_sweep_hardening.sql:44-107"
+      ]
+    },
+    "metering": {
+      "answer": "none",
+      "why": "It writes no usage_events row; the counts it reports go to pipeline_runs, not to the usage ledger.",
+      "evidence": [
+        "migrations/235_offboarding_sweep_hardening.sql:92-103"
+      ]
+    },
+    "config": {
+      "answer": "none",
+      "why": "The 30-day horizon is a literal INTERVAL in the function body, not a registered logic variable — unlike the sibling purge, whose window IS tunable. That asymmetry is measured, not assumed.",
+      "evidence": [
+        "migrations/235_offboarding_sweep_hardening.sql:61",
+        "migrations/235_offboarding_sweep_hardening.sql:138-139"
+      ],
+      "logic_variables": [],
+      "retired": []
+    },
+    "sharing": {
+      "answer": "none",
+      "why": "It renders no contract.",
+      "evidence": [
+        "migrations/235_offboarding_sweep_hardening.sql:44-107"
+      ],
+      "surfaces": []
+    },
+    "a11y": {
+      "touch_target_min_px": "UNRESEARCHED",
+      "labels": "none",
+      "dark_mode": "none",
+      "reduced_motion": "none",
+      "i18n": "none",
+      "safe_area": "none"
+    },
+    "deviations": "none",
+    "limitations": [
+      {
+        "what": "A user who ever authored an admin_audit_log row is never deleted by this job.",
+        "measured": "migrations/235_offboarding_sweep_hardening.sql:69-76 — the foreign_key_violation arm skips them and leaves them for a manual RTBF scrub; migration 229 makes admin_audit_log.admin_uid ON DELETE RESTRICT on purpose, so an audit trail outlives the account that wrote it.",
+        "check_id": "job_offboarding_per_user_isolation"
+      },
+      {
+        "what": "The retention horizon cannot be changed without a migration.",
+        "measured": "migrations/235_offboarding_sweep_hardening.sql:61 — INTERVAL '30 days' is a literal in the function body and appears nowhere in docs/reference/logic-variables-registry.md.",
+        "check_id": "job_offboarding_ledger_row_present"
+      }
+    ],
+    "interpretation": "none",
+    "notes": "Scheduled once in 233 (`0 10 * * *`); 235 replaces the function body only (CREATE OR REPLACE) and does NOT re-schedule this job. 235 adds a `WHEN OTHERS` per-user exception arm and a durable `pipeline_runs` summary row (pipeline='offboarding_sweep', status='completed', records_meta carrying deleted_count/skipped_count/skipped_user_ids) because pg_cron's job_run_details does not capture RAISE WARNING output. The auth.users DELETE cascades across the mig-229 topology; admin_audit_log is ON DELETE RESTRICT by design. MEASURED 2026-09-15. This is the catalog's best-instrumented job and the one the other two should be measured against: it is the only pg_cron job with a live DB test (src/tests/db/offboarding-sweep.db.test.ts) and one of two that write a pipeline_runs row. Its 30-day horizon is a literal while the sibling purge's window is a registered logic variable — a real asymmetry, recorded in config.why rather than smoothed over. guards.session and outputs.answer are Spec 128 §4 vocabulary escalations; outputs.tables[] carries the substance, including auth.users, which is the only cross-schema write in this shard.",
+    "x-draft": {
+      "shard": "jobs",
+      "files": [
+        "migrations/233_pg_cron_maintenance_catalog.sql",
+        "migrations/235_offboarding_sweep_hardening.sql"
+      ],
+      "cron": "0 10 * * *",
+      "guarded_by": "pg_extension guard with a NOTICE-skip on the cron.schedule call only (migrations/233:78-81); the `public.offboarding_sweep_30day()` FUNCTION itself is created UNGUARDED so CI/Docker images without pg_cron can still test it. Function is SECURITY DEFINER with `SET search_path = pg_catalog` and REVOKE ALL from PUBLIC/anon/authenticated."
+    },
+    "programme": {
+      "scope": "estate_other",
+      "phase": "not_scheduled",
+      "why": "A scheduled job serving the lead-gen estate or the CI harness. Inventoried so a job with no owner is visible, not to be converted in this programme.",
+      "feature": "F93",
+      "build_order": 4204,
+      "leakage": "UNRESEARCHED",
+      "product_questions": "UNRESEARCHED",
+      "review": {
+        "status": "unreviewed"
+      }
+    }
+  },
+  {
+    "kind": "JOB",
+    "status": "exists",
+    "docs": {
+      "purpose": "The scraper writes a diagnostic row every time it tries to fetch a permit, which would grow without bound. This job runs each morning to delete those raw diagnostic rows once they are more than 90 days old, but first folds them into a compact summary so the historical pattern of successes and failures is never lost. Delete and summarise happen in one all-or-nothing step, so the job can be re-run safely and can never double-count.",
+      "data_story": "It reads `permit_scrape_outcomes` and writes `permit_scrape_outcomes`, `permit_scrape_outcome_rollup` and `pipeline_runs`. It runs on `0 8 * * *`, unattended, with nobody watching — which is why its guard matters: pg_extension guard with a NOTICE-skip on the cron.schedule call only (migrations/237:127-130), with an idempotent unschedule-by-name loop; the `public.prune_permit_scrape_outcomes()` FUNCTION is created UNGUARDED (CI-testable), SECURITY DEFINER, `SET search_path = pg_catalog`, REVOKE ALL from PUBLIC/anon/authenticated.",
+      "under_126": "Becomes a **JOB descriptor** of archetype `SCHEDULED` under its own `job.schema.json` (Spec 128 R-14) — declaring its schedule, its target, its idempotency posture, its behaviour when `pg_cron` is absent, and the audit row it writes. Nothing about how it runs changes; what changes is that those five answers stop living only in SQL and YAML."
+    },
+    "evidence": {
+      "files": [
+        "migrations/237_scrape_outcome_prune.sql:1"
+      ],
+      "contracts": [
+        "none — a pg_cron job takes no request and calls no API route"
+      ],
+      "tables": [
+        "migrations/237_scrape_outcome_prune.sql:49-72,84-92,97-109",
+        "migrations/236_permit_scrape_outcomes.sql",
+        "docs/specs/00-architecture/114_rls_policy_catalog.md:209,214"
+      ],
+      "gate": [
+        "migrations/237_scrape_outcome_prune.sql:40-41",
+        "migrations/237_scrape_outcome_prune.sql:116-117",
+        "migrations/237_scrape_outcome_prune.sql:127-130"
+      ],
+      "states": [
+        "migrations/237_scrape_outcome_prune.sql:75-78 (counts), :79-95 (failure), :97-109 (summary)",
+        "src/tests/db/237_scrape_outcome_prune.db.test.ts"
+      ],
+      "emits": [
+        "migrations/237_scrape_outcome_prune.sql:84-92",
+        "migrations/237_scrape_outcome_prune.sql:97-109"
+      ]
+    },
+    "identity": {
+      "id": "job_permit_scrape_outcomes_prune",
+      "route": "migrations/237_scrape_outcome_prune.sql",
+      "archetype": "SCHEDULED",
+      "platforms": [],
+      "owns": {
+        "components": []
+      },
+      "owner": "pipeline",
+      "spec": "docs/specs/00-architecture/115_scheduling.md §5",
+      "spec_refs": [
+        "docs/specs/00-architecture/115_scheduling.md §5 (pg_cron job catalog — the permit_scrape_outcomes_prune row, operator ruling D1 2026-07-31)",
+        "docs/specs/01-pipeline/44_chain_deep_scrapes.md §3 (retention / rollup)",
+        "migrations/236_permit_scrape_outcomes.sql — the two tables this prunes and folds"
+      ],
+      "spec_version": "0-draft",
+      "versioning": {
+        "answer": "frozen",
+        "why": "The rollup's ON CONFLICT (permit_num, outcome, transport) key and the atomic CTE shape are pinned by a live DB test; changing either changes what a re-run does to already-folded rows.",
+        "evidence": [
+          "migrations/237_scrape_outcome_prune.sql:67",
+          "src/tests/db/237_scrape_outcome_prune.db.test.ts",
+          "docs/specs/00-architecture/115_scheduling.md §5"
+        ]
+      },
+      "ref": "J-005"
+    },
+    "inputs": {
+      "answer": "app_outputs",
+      "why": "It reads the raw scrape-outcome ledger past its 90-day horizon — five columns, selected by the DELETE ... RETURNING that also removes them. No contract, no parameter.",
+      "evidence": [
+        "migrations/237_scrape_outcome_prune.sql:49-53"
+      ],
+      "contract_ref": [],
+      "query_key": [],
+      "field_whitelist": [
+        "permit_num",
+        "year_seq",
+        "outcome",
+        "transport",
+        "observed_at"
+      ],
+      "tables": [
+        {
+          "table": "permit_scrape_outcomes",
+          "columns": [
+            "permit_num",
+            "year_seq",
+            "outcome",
+            "transport",
+            "observed_at"
+          ],
+          "producing_steps": "none",
+          "chain_position": "n/a",
+          "owner_spec": "docs/specs/01-pipeline/44_chain_deep_scrapes.md §3",
+          "evidence": [
+            "migrations/237_scrape_outcome_prune.sql:49-53",
+            "migrations/236_permit_scrape_outcomes.sql",
+            "docs/specs/00-architecture/114_rls_policy_catalog.md:214 — Class B"
+          ]
+        }
+      ]
+    },
+    "outputs": {
+      "answer": "UNRESEARCHED",
+      "why": "NOT ANSWERABLE from the closed set: outputs offers none | contract_only | optimistic_then_contract | device_only, all of which describe a client writing through an API. This job writes directly to the database with no contract in between. The substance is recorded in outputs.tables[]; the vocabulary gap is a Spec 128 §4 escalation (R-14: JOBs need job.schema.json). What it does: one atomic data-modifying CTE — DELETE ... RETURNING feeding an ON CONFLICT upsert into the rollup — plus a pipeline_runs row on success AND on failure.",
+      "evidence": [
+        "migrations/237_scrape_outcome_prune.sql:49-78,84-92,97-109"
+      ],
+      "contract_ref": [],
+      "tables": [
+        {
+          "table": "permit_scrape_outcomes",
+          "columns": [
+            "observed_at"
+          ],
+          "producing_steps": "none",
+          "chain_position": "n/a",
+          "owner_spec": "docs/specs/01-pipeline/44_chain_deep_scrapes.md §3",
+          "evidence": [
+            "migrations/237_scrape_outcome_prune.sql:50-51",
+            "docs/specs/00-architecture/114_rls_policy_catalog.md:214"
+          ]
+        },
+        {
+          "table": "permit_scrape_outcome_rollup",
+          "columns": [
+            "permit_num",
+            "outcome",
+            "transport",
+            "occurrences",
+            "first_at",
+            "last_at"
+          ],
+          "producing_steps": [
+            "permit_scrape_outcomes_prune"
+          ],
+          "chain_position": "n/a — a pg_cron job, not a chain step",
+          "owner_spec": "docs/specs/01-pipeline/44_chain_deep_scrapes.md §3",
+          "evidence": [
+            "migrations/237_scrape_outcome_prune.sql:56-72",
+            "docs/specs/00-architecture/114_rls_policy_catalog.md:214"
+          ]
+        },
+        {
+          "table": "pipeline_runs",
+          "columns": [
+            "pipeline",
+            "started_at",
+            "completed_at",
+            "status",
+            "records_meta"
+          ],
+          "producing_steps": "none",
+          "chain_position": "n/a",
+          "owner_spec": "docs/specs/01-pipeline/48_pipeline_observability.md",
+          "evidence": [
+            "migrations/237_scrape_outcome_prune.sql:84-92,97-109",
+            "docs/specs/00-architecture/114_rls_policy_catalog.md:209"
+          ]
+        }
+      ]
+    },
+    "state": {
+      "answer": "server_only",
+      "why": "The rollup IS the carried state — occurrences accumulate across runs via ON CONFLICT DO UPDATE, and the window is widened by LEAST/GREATEST rather than replaced.",
+      "evidence": [
+        "migrations/237_scrape_outcome_prune.sql:67-71"
+      ],
+      "fields": []
+    },
+    "staleness": {
+      "answer": "none",
+      "why": "It displays nothing.",
+      "evidence": [
+        "migrations/237_scrape_outcome_prune.sql:37-113"
+      ],
+      "offline": "none"
+    },
+    "guards": {
+      "session": {
+        "answer": "UNRESEARCHED",
+        "why": "NOT ANSWERABLE from the closed set: guards.session offers anon | authenticated | entitled | admin, all of which describe an end-user principal. This runs with no request and no user — as the pg_cron job owner through a SECURITY DEFINER function, or as a GitHub Actions runner holding repository secrets. Spec 128 §4 escalation (Spec 128 R-14 already anticipates JOBs getting their own job.schema.json); recorded rather than mis-answered.",
+        "evidence": [
+          "migrations/237_scrape_outcome_prune.sql:40-41,116-117"
+        ]
+      },
+      "rls_class": {
+        "answer": "B",
+        "why": "Both scrape-outcome tables and pipeline_runs are named Class B in the catalog's representative list — RLS on, zero policies, service-role only; the function is additionally SECURITY DEFINER and REVOKEd from anon and authenticated.",
+        "evidence": [
+          "docs/specs/00-architecture/114_rls_policy_catalog.md:209,214",
+          "migrations/237_scrape_outcome_prune.sql:40-41,116-117"
+        ]
+      },
+      "disclosure": "none",
+      "entitlement": "none",
+      "flag": "none",
+      "permission": "none",
+      "rate_bucket": "none"
+    },
+    "render": {
+      "targets": [
+        "screen"
+      ],
+      "projection": "none",
+      "breakpoints": "none",
+      "export": "none"
+    },
+    "checks": [
+      {
+        "id": "job_prune_atomic_delete_and_fold",
+        "kind": "schema_declared",
+        "severity": "FAIL",
+        "blocking": true,
+        "when": "pre",
+        "why": "The delete and the rollup are one data-modifying CTE precisely so a mid-failure rolls back both halves — split them and there is a window where diagnostic rows are gone and their counts were never folded."
+      },
+      {
+        "id": "job_prune_idempotent_replay",
+        "kind": "ledger_row_present",
+        "severity": "FAIL",
+        "blocking": false,
+        "when": "post",
+        "why": "occurrences accumulate only from rows deleted in THIS call, so a re-run prunes nothing new and cannot double-count — the property the operator D1 ruling rests on."
+      },
+      {
+        "id": "job_prune_null_permit_num_survives",
+        "kind": "contract_parse",
+        "severity": "FAIL",
+        "blocking": false,
+        "when": "post",
+        "why": "COALESCE(permit_num, year_seq) is what keeps the zero-resolution rows — the anomalies this ledger exists to capture — from vanishing silently at the horizon."
+      },
+      {
+        "id": "job_prune_failure_is_durable",
+        "kind": "error_state",
+        "severity": "FAIL",
+        "blocking": false,
+        "when": "post",
+        "why": "The WHEN OTHERS arm writes a status=failed pipeline_runs row before returning zeros; without it a rolled-back prune looks identical to a prune that found nothing to do."
+      }
+    ],
+    "invariants": [
+      {
+        "id": "scrape_outcomes_within_horizon",
+        "sql": "SELECT count(*) FROM public.permit_scrape_outcomes WHERE observed_at < now() - INTERVAL '91 days'",
+        "severity": "WARN",
+        "why": "One day of slack past the 90-day horizon absorbs the daily cadence; a growing count means the schedule is not firing or the prune is failing silently."
+      },
+      {
+        "id": "scrape_rollup_occurrences_positive",
+        "sql": "SELECT count(*) FROM public.permit_scrape_outcome_rollup WHERE occurrences < 1 OR last_at < first_at",
+        "severity": "FAIL",
+        "why": "occurrences only ever accumulates and the window only ever widens (LEAST/GREATEST); either condition means the upsert arithmetic is wrong."
+      }
+    ],
+    "plausibility": "none",
+    "states": [
+      {
+        "name": "hit",
+        "golden": "src/tests/db/237_scrape_outcome_prune.db.test.ts"
+      },
+      {
+        "name": "empty",
+        "golden": "src/tests/db/237_scrape_outcome_prune.db.test.ts"
+      },
+      {
+        "name": "error",
+        "golden": "src/tests/db/237_scrape_outcome_prune.db.test.ts"
+      }
+    ],
+    "errors": {
+      "answer": "envelope",
+      "why": "One WHEN OTHERS arm around the whole atomic statement: it RAISE WARNINGs, writes a status=failed pipeline_runs row carrying the first 500 characters of SQLERRM, and returns zeros — a structured, durable failure record rather than a swallowed one.",
+      "evidence": [
+        "migrations/237_scrape_outcome_prune.sql:79-95"
+      ],
+      "classes": [
+        {
+          "class": "500",
+          "ui": "a pipeline_runs row with status='failed' and records_meta.error = left(SQLERRM, 500)"
+        }
+      ],
+      "no_retry": []
+    },
+    "emits": {
+      "answer": "ledger",
+      "why": "A pipeline_runs row under pipeline='scrape_outcome_prune' on every run — completed with pruned_count/rollup_rows/retention_days, or failed with the error text.",
+      "evidence": [
+        "migrations/237_scrape_outcome_prune.sql:84-92,97-109"
+      ],
+      "analytics": [],
+      "ledger_events": [],
+      "breadcrumbs": [
+        "RAISE WARNING 'prune_permit_scrape_outcomes failed: %'"
+      ]
+    },
+    "offers": {
+      "answer": "none",
+      "why": "A retention job renders no sponsored placement.",
+      "evidence": [
+        "migrations/237_scrape_outcome_prune.sql:37-113"
+      ]
+    },
+    "metering": {
+      "answer": "none",
+      "why": "It writes no usage_events row; its counts go to pipeline_runs.",
+      "evidence": [
+        "migrations/237_scrape_outcome_prune.sql:97-109"
+      ]
+    },
+    "config": {
+      "answer": "none",
+      "why": "The 90-day horizon is a literal INTERVAL in the function body and is repeated as a literal 90 in records_meta.retention_days — it is not a registered logic variable, and Spec 115 §5 files its re-evaluation as a followup rather than making it tunable.",
+      "evidence": [
+        "migrations/237_scrape_outcome_prune.sql:51,107",
+        "docs/specs/00-architecture/115_scheduling.md §5"
+      ],
+      "logic_variables": [],
+      "retired": []
+    },
+    "sharing": {
+      "answer": "none",
+      "why": "It renders no contract.",
+      "evidence": [
+        "migrations/237_scrape_outcome_prune.sql:37-113"
+      ],
+      "surfaces": []
+    },
+    "a11y": {
+      "touch_target_min_px": "UNRESEARCHED",
+      "labels": "none",
+      "dark_mode": "none",
+      "reduced_motion": "none",
+      "i18n": "none",
+      "safe_area": "none"
+    },
+    "deviations": "none",
+    "limitations": [
+      {
+        "what": "The retention window is a literal in two places that must agree.",
+        "measured": "migrations/237_scrape_outcome_prune.sql:51 uses INTERVAL '90 days' for the cutoff and :107 writes retention_days = 90 into records_meta; nothing derives the second from the first.",
+        "check_id": "job_prune_failure_is_durable"
+      },
+      {
+        "what": "It is not scheduled on instances without pg_cron.",
+        "measured": "migrations/237_scrape_outcome_prune.sql:127-130 — a pg_extension guard with a NOTICE-skip; the FUNCTION is created unguarded so CI images can still test it.",
+        "check_id": "job_prune_atomic_delete_and_fold"
+      }
+    ],
+    "interpretation": "none",
+    "notes": "One atomic data-modifying CTE: DELETE ... RETURNING feeds an ON CONFLICT upsert into permit_scrape_outcome_rollup (occurrences += excluded, first_at = LEAST, last_at = GREATEST); permit_num-NULL rows fold under COALESCE(permit_num, year_seq). Writes a durable pipeline_runs row (pipeline='scrape_outcome_prune') on BOTH success ('completed') and failure ('failed'). 08:00 UTC is deliberately clear of the 09:00/10:00/14:30 jobs and the 15:00 UTC deep-scrapes window. MEASURED 2026-09-15. The most thoroughly instrumented job in the shard: atomic, idempotent, durable on both success and failure, and the only one whose failure path writes its own ledger row. It is also the only job whose retention window is NOT tunable while its nearest sibling (lead_views_retention_purge) reads one from logic_variables — measured, and left as a disagreement rather than harmonised. guards.session and outputs.answer are Spec 128 §4 vocabulary escalations; errors.answer is answered `envelope` because records_meta.error is a structured failure record, which is the closest legal reading of that value for a job with no HTTP response.",
+    "x-draft": {
+      "shard": "jobs",
+      "files": [
+        "migrations/237_scrape_outcome_prune.sql"
+      ],
+      "cron": "0 8 * * *",
+      "guarded_by": "pg_extension guard with a NOTICE-skip on the cron.schedule call only (migrations/237:127-130), with an idempotent unschedule-by-name loop; the `public.prune_permit_scrape_outcomes()` FUNCTION is created UNGUARDED (CI-testable), SECURITY DEFINER, `SET search_path = pg_catalog`, REVOKE ALL from PUBLIC/anon/authenticated"
+    },
+    "programme": {
+      "scope": "estate_other",
+      "phase": "not_scheduled",
+      "why": "Permit data for the lead-gen product. Inventoried only; it converts under the same standard in a later programme.",
+      "feature": "F93",
+      "build_order": 4204,
+      "leakage": "UNRESEARCHED",
+      "product_questions": "UNRESEARCHED",
+      "review": {
+        "status": "unreviewed"
+      }
+    }
+  },
+  {
+    "kind": "JOB",
+    "status": "exists",
+    "docs": {
+      "purpose": "Once a day this job checks that the data pipelines actually ran recently and that a database backup actually happened, and turns the build red if either is missing. It is the alarm for silence: a pipeline that stops running produces no error of its own, so something has to go looking. If the backup is missing and no permit run is currently in flight, the watchdog takes a backup itself, then re-checks and only then decides whether to raise the alarm.",
+      "data_story": "It reads `pipeline_runs` and writes no table. It runs on `45 18 * * *`, unattended, with nobody watching — which is why its guard matters: an explicit environment guard step that fails the job when SUPABASE_DATABASE_URL is empty or the Supabase CA cert file is missing (a missing GitHub secret interpolates to an empty string and does not fail a workflow on its own); plus `concurrency.group: ${{ github.workflow }}` with cancel-in-progress: false, and a `migrate.js --verify` pre-flight run as `continue-on-error: true` with an end-of-job escalation gate.",
+      "under_126": "Becomes a **JOB descriptor** of archetype `SCHEDULED` under its own `job.schema.json` (Spec 128 R-14) — declaring its schedule, its target, its idempotency posture, its behaviour when `pg_cron` is absent, and the audit row it writes. Nothing about how it runs changes; what changes is that those five answers stop living only in SQL and YAML."
+    },
+    "evidence": {
+      "files": [
+        ".github/workflows/pipeline-watchdog.yml:1"
+      ],
+      "contracts": [
+        "none — a scheduled GitHub Actions workflow takes no request and calls no API route"
+      ],
+      "tables": [
+        "scripts/check-pipeline-freshness.js:193-196",
+        "scripts/lib/step/ledger.js:62",
+        "docs/specs/00-architecture/114_rls_policy_catalog.md:209"
+      ],
+      "gate": [
+        ".github/workflows/pipeline-watchdog.yml:69-94",
+        ".github/workflows/pipeline-watchdog.yml:71-78"
+      ],
+      "states": [
+        ".github/workflows/pipeline-watchdog.yml:188-228",
+        "scripts/check-pipeline-freshness.js:249-291",
+        "src/tests/pipeline-watchdog-workflow.infra.test.ts:31-128"
+      ],
+      "emits": [
+        "scripts/check-pipeline-freshness.js:119-127 — $GITHUB_OUTPUT only, no table write"
+      ]
+    },
+    "identity": {
+      "id": "job_pipeline_watchdog",
+      "route": ".github/workflows/pipeline-watchdog.yml",
+      "archetype": "SCHEDULED",
+      "platforms": [],
+      "owns": {
+        "components": []
+      },
+      "owner": "pipeline",
+      "spec": "docs/specs/00-architecture/115_scheduling.md §2.5",
+      "spec_refs": [
+        "docs/specs/00-architecture/115_scheduling.md §2.5 (the freshness watchdog mandate)",
+        "docs/specs/00-architecture/115_scheduling.md §3",
+        "docs/specs/00-architecture/115_scheduling.md §4",
+        "docs/specs/00-architecture/112_backup_recovery.md §6 (the backup safety net)",
+        "docs/specs/00-architecture/112_backup_recovery.md §7",
+        "docs/specs/00-architecture/113_supabase_infrastructure.md §4",
+        "docs/specs/00-architecture/113_supabase_infrastructure.md §8",
+        "docs/specs/01-pipeline/118_deep_scrapes_execution_envelope.md §2 (the two-red geometry that moved the cron)"
+      ],
+      "spec_version": "0-draft",
+      "versioning": {
+        "answer": "frozen",
+        "why": "Its exit-code choreography, its cron slot and its freshness constants are all pinned by two test files in both directions — the cron must fire at or after 18:30 UTC, the redirects must stay absent, and BACKUP_SLUGS must equal exactly the two shapes.",
+        "evidence": [
+          "src/tests/pipeline-watchdog-workflow.infra.test.ts:31,64,90,109",
+          "src/tests/check-pipeline-freshness.logic.test.ts:43-51"
+        ]
+      },
+      "ref": "J-006"
+    },
+    "inputs": {
+      "answer": "app_outputs",
+      "why": "It reads exactly one table, pipeline_runs, asking two absence questions: has each applicable chain landed a RAN_STATUSES row inside its own window, and has a backup row landed inside 25h. No contract, no parameter.",
+      "evidence": [
+        "scripts/check-pipeline-freshness.js:193-196,11-31",
+        "scripts/check-pipeline-freshness.js:99-107"
+      ],
+      "contract_ref": [],
+      "query_key": [],
+      "field_whitelist": [
+        "id",
+        "pipeline",
+        "status",
+        "completed_at"
+      ],
+      "tables": [
+        {
+          "table": "pipeline_runs",
+          "columns": [
+            "id",
+            "pipeline",
+            "status",
+            "completed_at"
+          ],
+          "producing_steps": "none",
+          "chain_position": "n/a",
+          "owner_spec": "docs/specs/01-pipeline/48_pipeline_observability.md",
+          "evidence": [
+            "scripts/check-pipeline-freshness.js:193-196",
+            "scripts/lib/step/ledger.js:62 — the only INSERT into this table",
+            "docs/specs/00-architecture/114_rls_policy_catalog.md:209 — Class B"
+          ]
+        }
+      ]
+    },
+    "outputs": {
+      "answer": "none",
+      "why": "MEASURED: it writes nothing to any table. check-pipeline-freshness.js builds its own Pool and only SELECTs; the backup fallback runs scripts/backup-db.js, which is a legacy pipeline.run() script — and scripts/lib/pipeline.js's run() contains no pipeline_runs insert at all (the only INSERT in the SDK is scripts/lib/step/ledger.js:62, which backup-db.js does not use). Its output is an S3 object plus $GITHUB_OUTPUT lines.",
+      "evidence": [
+        "scripts/check-pipeline-freshness.js:119-127,193-196",
+        "scripts/backup-db.js:26,122",
+        "scripts/lib/pipeline.js:575-611",
+        "scripts/lib/step/ledger.js:62"
+      ],
+      "contract_ref": [],
+      "tables": []
+    },
+    "state": {
+      "answer": "server_only",
+      "why": "Three booleans passed between steps through $GITHUB_OUTPUT (chains_fresh, backup_fresh, permits_running) and nothing else; the script is invoked twice and shares no state between the two runs.",
+      "evidence": [
+        "scripts/check-pipeline-freshness.js:119-127,249-251",
+        ".github/workflows/pipeline-watchdog.yml:188-216"
+      ],
+      "fields": []
+    },
+    "staleness": {
+      "answer": "none",
+      "why": "It renders nothing. What it MEASURES is staleness — its own windows are 25h for chain_coa/chain_permits/backup, 26h for chain_entities, 204h for chain_sources and 33h/83h weekday-aware for chain_deep_scrapes.",
+      "evidence": [
+        "scripts/check-pipeline-freshness.js:97-107,171-178"
+      ],
+      "offline": "none"
+    },
+    "guards": {
+      "session": {
+        "answer": "UNRESEARCHED",
+        "why": "NOT ANSWERABLE from the closed set: guards.session offers anon | authenticated | entitled | admin, all of which describe an end-user principal. This runs with no request and no user — as the pg_cron job owner through a SECURITY DEFINER function, or as a GitHub Actions runner holding repository secrets. Spec 128 §4 escalation (Spec 128 R-14 already anticipates JOBs getting their own job.schema.json); recorded rather than mis-answered.",
+        "evidence": [
+          ".github/workflows/pipeline-watchdog.yml:71-78",
+          "docs/specs/00-architecture/115_scheduling.md §3"
+        ]
+      },
+      "rls_class": {
+        "answer": "B",
+        "why": "pipeline_runs is named in the catalog's representative Class B list; the workflow connects with SUPABASE_DATABASE_URL, a service credential, not an end-user role.",
+        "evidence": [
+          "docs/specs/00-architecture/114_rls_policy_catalog.md:209",
+          ".github/workflows/pipeline-watchdog.yml:73"
+        ]
+      },
+      "disclosure": "none",
+      "entitlement": "none",
+      "flag": "none",
+      "permission": "none",
+      "rate_bucket": "none"
+    },
+    "render": {
+      "targets": [
+        "screen"
+      ],
+      "projection": "none",
+      "breakpoints": "none",
+      "export": "none"
+    },
+    "checks": [
+      {
+        "id": "job_watchdog_recheck_is_the_verdict",
+        "kind": "error_state",
+        "severity": "FAIL",
+        "blocking": false,
+        "when": "post",
+        "why": "Only the FINAL freshness check determines the job conclusion — the first carries continue-on-error so the backup fallback can still run, and losing that asymmetry turns a recoverable staleness into a hard red before the safety net fires."
+      },
+      {
+        "id": "job_watchdog_fallback_not_gated_on_chains",
+        "kind": "ledger_row_present",
+        "severity": "FAIL",
+        "blocking": false,
+        "when": "post",
+        "why": "A stale chain is exactly when the backup safety net matters most; the chains_fresh term that used to gate the fallback suppressed it during the live 2026-08-03 incident (backups 50.7h stale against a 25h SLA)."
+      },
+      {
+        "id": "job_watchdog_permits_running_race_guard",
+        "kind": "schema_declared",
+        "severity": "FAIL",
+        "blocking": false,
+        "when": "post",
+        "why": "An in-flight permits chain may complete its own backup_db step moments later; without the permits_running guard a concurrent direct invocation double-runs the backup."
+      },
+      {
+        "id": "job_watchdog_backup_fallback_writes_a_ledger_row",
+        "kind": "ledger_row_present",
+        "severity": "FAIL",
+        "blocking": false,
+        "when": "post",
+        "why": "MEASURED FAILING: BACKUP_SLUGS is asserted to be exactly {backup_db, permits:backup_db} (check-pipeline-freshness.logic.test.ts:48-51), but the fallback invocation writes NO pipeline_runs row under either slug — pipeline.run() has no ledger insert — so the re-check after a successful fallback still reads backup_fresh=false."
+      },
+      {
+        "id": "job_watchdog_no_stdout_redirect",
+        "kind": "error_state",
+        "severity": "FAIL",
+        "blocking": false,
+        "when": "post",
+        "why": "The script self-writes its $GITHUB_OUTPUT lines; a >> redirect on the step swallowed stdout including the ::error annotations naming WHICH chain was stale, and the 2026-07-31 red run needed log archaeology because of it."
+      }
+    ],
+    "invariants": "none",
+    "plausibility": "none",
+    "states": [
+      {
+        "name": "hit",
+        "golden": "src/tests/check-pipeline-freshness.logic.test.ts:43"
+      },
+      {
+        "name": "degraded",
+        "golden": "src/tests/pipeline-watchdog-workflow.infra.test.ts:90"
+      },
+      {
+        "name": "error",
+        "golden": "src/tests/pipeline-watchdog-workflow.infra.test.ts:109"
+      },
+      {
+        "name": "partial",
+        "golden": "src/tests/check-pipeline-freshness.logic.test.ts:78"
+      }
+    ],
+    "errors": {
+      "answer": "none",
+      "why": "It has no error UI and no envelope: a DB-check failure is fail-loud (exit 1 with all three outputs false), and an unreachable database during a freshness check is itself the outage signal.",
+      "evidence": [
+        "scripts/check-pipeline-freshness.js:62-66,286-291"
+      ],
+      "classes": [
+        {
+          "class": "500",
+          "ui": "::error annotation, all outputs false, exit 1"
+        }
+      ],
+      "no_retry": []
+    },
+    "emits": {
+      "answer": "none",
+      "why": "It writes no pipeline_runs row of its own, so the watchdog's own liveness is unobservable from the house observability surface — the same structural blind spot it exists to close for the chains.",
+      "evidence": [
+        "scripts/check-pipeline-freshness.js:1-10",
+        "scripts/lib/pipeline.js:575-611"
+      ],
+      "analytics": [],
+      "ledger_events": [],
+      "breadcrumbs": [
+        "::error title=Pipeline freshness",
+        "::notice title=ET drift check",
+        "::error title=Missing migration or schema drift"
+      ]
+    },
+    "offers": {
+      "answer": "none",
+      "why": "A CI workflow renders no sponsored placement.",
+      "evidence": [
+        ".github/workflows/pipeline-watchdog.yml:52-228"
+      ]
+    },
+    "metering": {
+      "answer": "none",
+      "why": "Nothing is counted.",
+      "evidence": [
+        ".github/workflows/pipeline-watchdog.yml:52-228"
+      ]
+    },
+    "config": {
+      "answer": "none",
+      "why": "Every threshold is a JavaScript constant in check-pipeline-freshness.js — FRESHNESS_WINDOW_HOURS 25, CHAIN_WINDOWS_HOURS, and deepScrapesWindow's 33/83 — not a registered logic variable; they are pinned by tests instead.",
+      "evidence": [
+        "scripts/check-pipeline-freshness.js:97-107,171-178",
+        "src/tests/check-pipeline-freshness.logic.test.ts:43-51"
+      ],
+      "logic_variables": [],
+      "retired": []
+    },
+    "sharing": {
+      "answer": "none",
+      "why": "It renders no contract. pipeline_runs is read by other surfaces (the admin stats route, FreshnessTimeline) but that is a shared TABLE, not a shared contract of this job.",
+      "evidence": [
+        "scripts/check-pipeline-freshness.js:193-196",
+        "src/components/FreshnessTimeline.tsx"
+      ],
+      "surfaces": []
+    },
+    "a11y": {
+      "touch_target_min_px": "UNRESEARCHED",
+      "labels": "none",
+      "dark_mode": "none",
+      "reduced_motion": "none",
+      "i18n": "none",
+      "safe_area": "none"
+    },
+    "deviations": "none",
+    "limitations": [
+      {
+        "what": "The Spec 112 §6 backup fallback cannot satisfy the freshness re-check that follows it.",
+        "measured": "scripts/backup-db.js:26,122 uses pipeline.run() from scripts/lib/pipeline.js, whose run() (575-611) performs no pipeline_runs insert; the only SDK insert is scripts/lib/step/ledger.js:62, which backup-db.js does not use. BACKUP_SLUGS (check-pipeline-freshness.js:109) therefore matches nothing the fallback writes, and check-pipeline-freshness.js:20-25 claims the standalone backup_db row IS written by this invocation — a comment the tree contradicts.",
+        "check_id": "job_watchdog_backup_fallback_writes_a_ledger_row"
+      },
+      {
+        "what": "The watchdog cannot detect its own absence.",
+        "measured": "It writes no pipeline_runs row (scripts/check-pipeline-freshness.js:1-10 — a standalone CLI, not a pipeline.run() step), so a workflow that stops triggering is invisible in exactly the way it exists to make chain absence visible.",
+        "check_id": "job_watchdog_recheck_is_the_verdict"
+      },
+      {
+        "what": "chain_sources is checked with a 204h window against a chain that is disabled.",
+        "measured": "scripts/check-pipeline-freshness.js:101-106 — the comment records chain_sources as disabled_manually pending Phase B B6, with the window left un-re-derived.",
+        "check_id": "job_watchdog_no_stdout_redirect"
+      }
+    ],
+    "interpretation": "none",
+    "notes": "The schedule is LIVE (the yml header records that an earlier comment claiming it was inert went stale and was corrected in the WF3 F5 fold, 2026-08-15, which also moved the cron 15:30 -> 18:45 UTC). writes_tables is measured-EMPTY, not unknown: scripts/check-pipeline-freshness.js only SELECTs from pipeline_runs (:193), and scripts/backup-db.js contains no INSERT/UPDATE at all and uses the legacy `pipeline.run()` SDK, which writes no ledger row itself (pipeline_runs inserts live in scripts/lib/step/ledger.js:62, not on this path) — so the fallback backup writes S3, not a DB table. The yml header's mention of 'a standalone backup_db slug' row shape is a read-side tolerance in the freshness query, not a write this job performs. MEASURED 2026-09-15, one finding worth a WF3. The Spec 112 §6 backup safety net writes no ledger row: backup-db.js:122 calls pipeline.run('backup-db', ...) from the LEGACY SDK (scripts/lib/pipeline.js:575-611), which opens a pool, runs the body and ends the pool — it contains no INSERT INTO pipeline_runs. The only ledger insert in the SDK is scripts/lib/step/ledger.js:62, reached through scripts/lib/step/index.js, which backup-db.js does not require (grep count 0 for \"lib/step\"). So after the fallback runs successfully, the final freshness re-check still finds no row under either BACKUP_SLUGS value and reddens the job. check-pipeline-freshness.js:20-25 states the opposite in a comment (\"the standalone backup_db slug, written when this workflow invokes scripts/backup-db.js directly\") — the brief's trap 3, live. Separately: the workflow passes PIPELINE_CHAIN=pipeline-watchdog to every step, which is the env var the CONVERTED-step SDK reads to decide ledger-row ownership (scripts/lib/step/index.js:3299-3306) — harmless for backup-db.js today only because it is on the legacy path. Filed here rather than fixed: this shard is a census, not a change.",
+    "x-draft": {
+      "shard": "jobs",
+      "files": [
+        ".github/workflows/pipeline-watchdog.yml"
+      ],
+      "cron": "45 18 * * *",
+      "guarded_by": "an explicit environment guard step that fails the job when SUPABASE_DATABASE_URL is empty or the Supabase CA cert file is missing (a missing GitHub secret interpolates to an empty string and does not fail a workflow on its own); plus `concurrency.group: ${{ github.workflow }}` with cancel-in-progress: false, and a `migrate.js --verify` pre-flight run as `continue-on-error: true` with an end-of-job escalation gate"
+    },
+    "programme": {
+      "scope": "estate_other",
+      "phase": "not_scheduled",
+      "why": "A scheduled job serving the lead-gen estate or the CI harness. Inventoried so a job with no owner is visible, not to be converted in this programme.",
+      "feature": "F93",
+      "build_order": 4204,
+      "leakage": "UNRESEARCHED",
+      "product_questions": "UNRESEARCHED",
+      "review": {
+        "status": "unreviewed"
+      }
+    }
+  }
+]

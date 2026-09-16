@@ -1,0 +1,582 @@
+{
+  "kind": "SURFACE",
+  "status": "exists",
+  "docs": {
+    "purpose": "The full record for a single building permit. It shows the work described, status, cost and dates, which trades the classifier matched and how strongly, a photo of the property, the lot's size and shape, what can be built on it, a profile of the surrounding neighbourhood, the company doing the work, any related permits or Committee-of-Adjustment applications, and the history of changes to the record. This is the page a lead card opens into.",
+    "data_story": "It reads nothing from the database directly. Every value arrives through one contract: `/api/permits/[id]`. Behind that contract, the data comes from `building_footprints`, `coa_applications`, `entities`, `entity_projects`, `neighbourhoods`, `parcel_buildings`, `parcels`, `permit_history`, `permit_inspections`, `permit_parcels`, `permit_trades`, `permits` and `trades`.",
+    "under_126": "**RE-PROJECT** — it writes nothing and holds no Layer-3 store, so the move is short — the server already assembles the payload and only the rendering is client-side. It renders through the DETAIL renderer (one entity, a single-param query key, declared sections), reading by reference: `/api/permits/[id]`. Its `owns.components[]` declares `src/components/permits/PropertyPhoto.tsx`, `src/components/permits/NeighbourhoodProfile.tsx` and `src/components/permits/BuildingMassing.tsx`."
+  },
+  "evidence": {
+    "files": [
+      "src/app/permits/[id]/page.tsx:1",
+      "src/components/permits/PropertyPhoto.tsx:1",
+      "src/components/permits/NeighbourhoodProfile.tsx:1",
+      "src/components/permits/BuildingMassing.tsx:1"
+    ],
+    "contracts": [
+      "src/app/permits/[id]/page.tsx:85 — /api/permits/[id]"
+    ],
+    "tables": [
+      "src/app/api/permits/[id]/route.ts:42-63,104,118-119,128,138,152-153,172-177,190-191,205-207,272-273",
+      "docs/reference/data-lineage-map.md:997,973,1355,506,312",
+      "scripts/manifest.json#chains"
+    ],
+    "gate": [
+      "src/lib/auth/route-guard.ts:67-77",
+      "src/tests/middleware.logic.test.ts:92"
+    ],
+    "states": [
+      "src/app/permits/[id]/page.tsx:92-98 (loading), :100-111 (miss), :149,:173,:211,:300,:382,:420,:503 (per-section presence branches)"
+    ],
+    "emits": [
+      "none — no captureEvent import in the page or in its three owned components"
+    ]
+  },
+  "identity": {
+    "id": "web_permit_detail",
+    "route": "src/app/permits/[id]/page.tsx",
+    "archetype": "DETAIL",
+    "platforms": [
+      "web"
+    ],
+    "owns": {
+      "components": [
+        "src/components/permits/PropertyPhoto.tsx",
+        "src/components/permits/NeighbourhoodProfile.tsx",
+        "src/components/permits/BuildingMassing.tsx"
+      ]
+    },
+    "owner": "web",
+    "spec": "docs/specs/01-pipeline/37_entity_model.md",
+    "spec_refs": [
+      "docs/specs/01-pipeline/37_entity_model.md §2 (Auth Matrix — \"Anonymous: None\")",
+      "docs/specs/01-pipeline/37_entity_model.md §3 (Behavioral Contract)",
+      "docs/specs/00-architecture/00_system_map.md:39 — row 37 lists src/app/permits/[id]/page.tsx among its target files"
+    ],
+    "spec_version": "0-draft",
+    "versioning": {
+      "answer": "none",
+      "why": "The payload is typed as `permit: Record<string, unknown>` and read by string key at render time — nothing parses it, so no field can be said to be promised.",
+      "evidence": [
+        "src/app/permits/[id]/page.tsx:52,113-121"
+      ]
+    },
+    "ref": "S-070"
+  },
+  "inputs": {
+    "answer": "contract",
+    "why": "One bare fetch to /api/permits/[id] keyed on the composite permit id; the route fans out to twelve tables behind that single contract. field_whitelist is every key the page dereferences across its ten sections (src/app/permits/[id]/page.tsx:131-510); it is a whitelist BY MEASUREMENT only — the route itself projects three of its tables with SELECT *, so the wire payload is wider than this list.",
+    "evidence": [
+      "src/app/permits/[id]/page.tsx:84-90",
+      "src/app/api/permits/[id]/route.ts:104-273"
+    ],
+    "contract_ref": [
+      "/api/permits/[id]"
+    ],
+    "query_key": [
+      "id"
+    ],
+    "field_whitelist": [
+      "permit.permit_num",
+      "permit.status",
+      "permit.street_num",
+      "permit.street_name",
+      "permit.street_type",
+      "permit.city",
+      "permit.latitude",
+      "permit.longitude",
+      "permit.description",
+      "permit.scope_tags",
+      "permit.builder_name",
+      "trades[].trade_slug",
+      "trades[].trade_name",
+      "trades[].color",
+      "trades[].lead_score",
+      "trades[].confidence",
+      "trades[].phase",
+      "trades[].tier",
+      "inspections[].stage_name",
+      "inspections[].status",
+      "inspections[].inspection_date",
+      "inspections[].scraped_at",
+      "builder.id",
+      "builder.phone",
+      "builder.email",
+      "builder.website",
+      "builder.google_rating",
+      "builder.wsib_status",
+      "parcel.lot_size_sqft",
+      "parcel.lot_size_sqm",
+      "parcel.frontage_ft",
+      "parcel.depth_ft",
+      "parcel.feature_type",
+      "parcel.is_irregular",
+      "linkedPermits[].permit_num",
+      "linkedPermits[].revision_num",
+      "linkedPermits[].est_const_cost",
+      "coaApplications[].application_num",
+      "coaApplications[].decision",
+      "coaApplications[].decision_date",
+      "coaApplications[].hearing_date",
+      "coaApplications[].description",
+      "coaApplications[].applicant",
+      "coaApplications[].link_confidence",
+      "history[].field_name",
+      "history[].old_value",
+      "history[].new_value",
+      "history[].changed_at",
+      "massing",
+      "neighbourhood"
+    ],
+    "tables": [
+      {
+        "table": "permits",
+        "columns": "all",
+        "producing_steps": [
+          "classify_inspection_status",
+          "classify_lifecycle_phase",
+          "classify_permit_phase",
+          "classify_scope",
+          "classify_scope_class",
+          "classify_scope_tags",
+          "close_stale_permits",
+          "create_pre_permits",
+          "enrich_permits",
+          "geocode_permits",
+          "inspections",
+          "link_coa",
+          "link_neighbourhoods",
+          "link_similar",
+          "permits"
+        ],
+        "chain_position": "deep_scrapes[1] · permits[23], coa[12] · permits[3] · permits[4] · not-in-a-chain · not-in-a-chain · permits[2] · not-in-a-chain · permits[9] · permits[7], sources[3] · deep_scrapes[0] · permits[19], coa[8] · permits[10], sources[17] · permits[12] · permits[1]",
+        "owner_spec": "docs/specs/01-pipeline/30_pipeline_architecture.md",
+        "evidence": [
+          "src/app/api/permits/[id]/route.ts:104 — `SELECT * FROM permits`",
+          "docs/reference/data-lineage-map.md:997",
+          "scripts/manifest.json#chains"
+        ]
+      },
+      {
+        "table": "permit_trades",
+        "columns": "all",
+        "producing_steps": [
+          "backfill_realtor_permit_trades",
+          "classify_permits"
+        ],
+        "chain_position": "permits[16] · permits[13]",
+        "owner_spec": "UNRESEARCHED",
+        "evidence": [
+          "src/app/api/permits/[id]/route.ts:118-119",
+          "docs/reference/data-lineage-map.md:973",
+          "scripts/manifest.json#chains"
+        ]
+      },
+      {
+        "table": "trades",
+        "columns": [
+          "slug",
+          "name",
+          "icon",
+          "color"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "UNRESEARCHED",
+        "evidence": [
+          "src/app/api/permits/[id]/route.ts:118",
+          "docs/reference/data-lineage-map.md:1355 — table present, no pipeline producer listed"
+        ]
+      },
+      {
+        "table": "permit_history",
+        "columns": [
+          "field_name",
+          "old_value",
+          "new_value",
+          "changed_at"
+        ],
+        "producing_steps": "UNRESEARCHED",
+        "chain_position": "UNRESEARCHED",
+        "owner_spec": "UNRESEARCHED",
+        "evidence": [
+          "src/app/api/permits/[id]/route.ts:128",
+          "UNRESEARCHED — permit_history is not in docs/reference/data-lineage-map.md"
+        ]
+      },
+      {
+        "table": "entities",
+        "columns": "all",
+        "producing_steps": [
+          "builders",
+          "enrich_named_builders",
+          "enrich_wsib_builders",
+          "link_wsib"
+        ],
+        "chain_position": "permits[5] · entities[1] · entities[0] · permits[6], sources[19]",
+        "owner_spec": "UNRESEARCHED",
+        "evidence": [
+          "src/app/api/permits/[id]/route.ts:138 — `SELECT e.* FROM entities e`",
+          "docs/reference/data-lineage-map.md:506",
+          "scripts/manifest.json#chains"
+        ]
+      },
+      {
+        "table": "permit_parcels",
+        "columns": [
+          "match_type",
+          "confidence"
+        ],
+        "producing_steps": [
+          "link_parcels"
+        ],
+        "chain_position": "UNRESEARCHED",
+        "owner_spec": "UNRESEARCHED",
+        "evidence": [
+          "src/app/api/permits/[id]/route.ts:152-153",
+          "docs/reference/data-lineage-map.md — permit_parcels row",
+          "scripts/manifest.json#chains"
+        ]
+      },
+      {
+        "table": "parcels",
+        "columns": "all",
+        "producing_steps": "UNRESEARCHED",
+        "chain_position": "UNRESEARCHED",
+        "owner_spec": "docs/specs/01-pipeline/58_zoning_enrichment.md",
+        "evidence": [
+          "src/app/api/permits/[id]/route.ts:152 — `SELECT pa.*`",
+          "UNRESEARCHED — the parcels producer set is large and was not re-derived for this row"
+        ]
+      },
+      {
+        "table": "neighbourhoods",
+        "columns": [
+          "name",
+          "neighbourhood_id",
+          "avg_household_income",
+          "median_household_income"
+        ],
+        "producing_steps": "UNRESEARCHED",
+        "chain_position": "UNRESEARCHED",
+        "owner_spec": "UNRESEARCHED",
+        "evidence": [
+          "src/app/api/permits/[id]/route.ts:172-177"
+        ]
+      },
+      {
+        "table": "permit_inspections",
+        "columns": [
+          "stage_name",
+          "status",
+          "inspection_date",
+          "scraped_at"
+        ],
+        "producing_steps": [
+          "inspections"
+        ],
+        "chain_position": "deep_scrapes[0]",
+        "owner_spec": "docs/specs/01-pipeline/44_chain_deep_scrapes.md",
+        "evidence": [
+          "src/app/api/permits/[id]/route.ts:190-191",
+          "scripts/manifest.json#chains"
+        ]
+      },
+      {
+        "table": "parcel_buildings",
+        "columns": "UNRESEARCHED",
+        "producing_steps": "UNRESEARCHED",
+        "chain_position": "UNRESEARCHED",
+        "owner_spec": "UNRESEARCHED",
+        "evidence": [
+          "src/app/api/permits/[id]/route.ts:205-207"
+        ]
+      },
+      {
+        "table": "building_footprints",
+        "columns": [
+          "footprint_area_sqft",
+          "estimated_stories",
+          "max_height_m"
+        ],
+        "producing_steps": "UNRESEARCHED",
+        "chain_position": "UNRESEARCHED",
+        "owner_spec": "UNRESEARCHED",
+        "evidence": [
+          "src/app/api/permits/[id]/route.ts:205-207"
+        ]
+      },
+      {
+        "table": "coa_applications",
+        "columns": [
+          "application_num",
+          "decision",
+          "decision_date",
+          "hearing_date",
+          "description",
+          "applicant"
+        ],
+        "producing_steps": [
+          "classify_coa_scope",
+          "classify_coa_trades",
+          "classify_lifecycle_phase",
+          "coa",
+          "compute_coa_cost_estimates",
+          "enrich_coa_zoning",
+          "link_coa",
+          "link_coa_to_parcels"
+        ],
+        "chain_position": "coa[5] · coa[6] · permits[23], coa[12] · coa[1] · coa[7] · coa[4] · permits[19], coa[8] · coa[3]",
+        "owner_spec": "UNRESEARCHED",
+        "evidence": [
+          "src/app/api/permits/[id]/route.ts:42-63",
+          "docs/reference/data-lineage-map.md:312",
+          "scripts/manifest.json#chains"
+        ]
+      }
+    ]
+  },
+  "outputs": {
+    "answer": "none",
+    "why": "A read-only page — no form, no mutation, every interactive element is a link.",
+    "evidence": [
+      "src/app/permits/[id]/page.tsx:123-562"
+    ],
+    "contract_ref": [],
+    "tables": []
+  },
+  "state": {
+    "answer": "none",
+    "why": "Two useState hooks (data, loading) plus PropertyPhoto's imgError flag — all component-local, none persisted, none shared.",
+    "evidence": [
+      "src/app/permits/[id]/page.tsx:81-82",
+      "src/components/permits/PropertyPhoto.tsx:39"
+    ],
+    "fields": []
+  },
+  "staleness": {
+    "answer": "live",
+    "why": "One fetch per permit id on mount, no cache in between; the twelve-table fan-out runs on every page view.",
+    "evidence": [
+      "src/app/permits/[id]/page.tsx:84-90"
+    ],
+    "offline": "blocked"
+  },
+  "guards": {
+    "session": {
+      "answer": "anon",
+      "why": "`/permits/` is a PUBLIC_PREFIX, so a permit detail page is reachable with no session at all — the lock pins classifyRoute('/permits/123--01') === 'public'.",
+      "evidence": [
+        "src/lib/auth/route-guard.ts:67-77",
+        "src/tests/middleware.logic.test.ts:92"
+      ]
+    },
+    "rls_class": {
+      "answer": "B",
+      "why": "All twelve tables are pipeline-owned, reached through the server-side pg pool — RLS on, zero policies, service-role only.",
+      "evidence": [
+        "src/app/api/permits/[id]/route.ts:104-273",
+        "docs/specs/00-architecture/114_rls_policy_catalog.md"
+      ]
+    },
+    "disclosure": {
+      "fields": [
+        "permit row (all columns, via SELECT *)",
+        "builder entity row (all columns, via SELECT e.*)",
+        "parcel row (all columns, via SELECT pa.*)",
+        "neighbourhood income figures",
+        "inspection stage/status/date",
+        "CoA application + applicant name",
+        "linked permits",
+        "permit change history"
+      ],
+      "why": "The page is reachable with no session (PUBLIC_PREFIX `/permits/`) and three of its twelve queries are row spreads, so an anonymous visitor receives every column of the permit, the builder entity and the parcel — including the applicant name on any linked CoA application."
+    },
+    "entitlement": "none",
+    "flag": "none",
+    "permission": "none",
+    "rate_bucket": "none"
+  },
+  "render": {
+    "targets": [
+      "screen"
+    ],
+    "projection": "detail",
+    "breakpoints": "mobile_first",
+    "export": "none"
+  },
+  "checks": [
+    {
+      "id": "web_permit_detail_anon_disclosure",
+      "kind": "disclosure",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "why": "This is the only anonymous surface in the web product that projects a person-adjacent field (the CoA applicant name) and three full row spreads — the projected set has to be a named whitelist before it can be reviewed, not whatever SELECT * returns today."
+    },
+    {
+      "id": "web_permit_detail_builder_field_parity",
+      "kind": "field_whitelist_parity",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "The Builder section reads data.builder.phone, .email and .wsib_status; the entities table has primary_phone, primary_email and is_wsib_registered, and route.ts:138 is `SELECT e.*` with no aliasing — the same drift as the two builders pages, on a third surface."
+    },
+    {
+      "id": "web_permit_detail_error_is_not_found",
+      "kind": "error_state",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "A 500 and a genuine 404 both leave data.permit undefined and render \"Permit Not Found\"; on an anonymous page that also means a database outage looks like a bad permit number."
+    },
+    {
+      "id": "web_permit_detail_scope_tags_parse",
+      "kind": "contract_parse",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "why": "scope_tags is handled three ways (array, brace-delimited Postgres literal, else empty) because the payload shape is not pinned — the parse branches are a symptom worth keeping visible until the projection is declared."
+    }
+  ],
+  "invariants": "none",
+  "plausibility": "none",
+  "states": [
+    {
+      "name": "loading",
+      "golden": "none"
+    },
+    {
+      "name": "hit",
+      "golden": "none"
+    },
+    {
+      "name": "miss",
+      "golden": "none"
+    },
+    {
+      "name": "partial",
+      "golden": "none"
+    },
+    {
+      "name": "empty",
+      "golden": "none"
+    }
+  ],
+  "errors": {
+    "answer": "inline",
+    "why": "A failed fetch is console.warn'd and renders the same \"Permit Not Found\" block a 404 produces; the withApiEnvelope error envelope is never parsed. A 404 has no entry in errors.classes because the closed class set (400/401/403/429/500/schema_drift/offline) has no 404 value — it is recorded as the `miss` state instead, which is exactly why a 500 rendering the same panel is a finding.",
+    "evidence": [
+      "src/app/permits/[id]/page.tsx:88,100-111",
+      "src/lib/api/with-api-envelope.ts:41-51"
+    ],
+    "classes": [
+      {
+        "class": "500",
+        "ui": "the same \"Permit Not Found\" panel"
+      },
+      {
+        "class": "offline",
+        "ui": "the same \"Permit Not Found\" panel"
+      }
+    ],
+    "no_retry": []
+  },
+  "emits": {
+    "answer": "none",
+    "why": "No captureEvent and no ledger row — an anonymous view of a full permit dossier is not counted anywhere, which is also why nobody can tell how much this surface is used.",
+    "evidence": [
+      "src/app/permits/[id]/page.tsx:1-562"
+    ],
+    "analytics": [],
+    "ledger_events": [],
+    "breadcrumbs": []
+  },
+  "offers": {
+    "answer": "none",
+    "why": "No placement is rendered and no placement inventory table is read — on the estate's only anonymous content page.",
+    "evidence": [
+      "src/app/permits/[id]/page.tsx:123-562"
+    ]
+  },
+  "metering": {
+    "answer": "none",
+    "why": "No usage_events row. The property_view ledger event exists in the vocabulary and this is the surface it would describe, but nothing writes it here.",
+    "evidence": [
+      "src/app/permits/[id]/page.tsx:1-562"
+    ]
+  },
+  "config": {
+    "answer": "none",
+    "why": "No tunable — the linked-permit and history limits are literals inside the route.",
+    "evidence": [
+      "src/app/api/permits/[id]/route.ts:272-273"
+    ],
+    "logic_variables": [],
+    "retired": []
+  },
+  "sharing": {
+    "answer": "shared",
+    "why": "/api/permits/[id] is a PUBLIC_PREFIX explicitly so the Expo client can read it; this page is one of at least two renderers.",
+    "evidence": [
+      "src/lib/auth/route-guard.ts:67-77,169-170",
+      "src/tests/middleware.logic.test.ts:57"
+    ],
+    "surfaces": [],
+    "varies_by_surface": "UNRESEARCHED"
+  },
+  "a11y": {
+    "touch_target_min_px": "UNRESEARCHED",
+    "labels": "partial",
+    "dark_mode": "none",
+    "reduced_motion": "none",
+    "i18n": "none",
+    "safe_area": "none"
+  },
+  "deviations": "none",
+  "limitations": [
+    {
+      "what": "The anonymous projection is whatever three SELECT * queries return.",
+      "measured": "src/app/api/permits/[id]/route.ts:104 (permits), :138 (entities), :152 (parcels) are row spreads; the page is anon-reachable per route-guard.ts:67-77 and middleware.logic.test.ts:92.",
+      "check_id": "web_permit_detail_anon_disclosure"
+    },
+    {
+      "what": "The Builder section cannot show a phone, an email or a WSIB status.",
+      "measured": "Those three keys do not exist on `entities` in src/lib/db/generated/schema.ts; the section renders its \"Not available\" arms unconditionally.",
+      "check_id": "web_permit_detail_builder_field_parity"
+    }
+  ],
+  "interpretation": "none",
+  "notes": "Spec from system-map row 37, which lists src/app/permits/[id]/page.tsx. Spec 126 line 180 independently classifies this exact file as the DETAIL archetype exemplar (562L) and states states[] must include 'error' - it currently does not: a failed fetch leaves data null and falls into the same 'Permit Not Found' branch, so the requirement is unmet. The whole permit detail surface is PUBLIC (the '/permits/' PUBLIC_PREFIXES entry exists to serve the Expo mobile client), unlike /builders/[id]. PropertyPhoto, NeighbourhoodProfile and BuildingMassing are rendered by this page alone; Badge and ScoreBadge under src/components/ui/ are shared and excluded. MEASURED 2026-09-15. This is the web product's only anonymous content surface (PUBLIC_PREFIX `/permits/`, locked at middleware.logic.test.ts:92) and it is also the widest: twelve tables behind one contract, three of them read with SELECT *. Nothing meters it and nothing emits from it, so its usage is unknowable — the brief's \"plausible zero\" trap in its live form. It imports src/components/ui/Badge.tsx and src/components/ui/ScoreBadge.tsx, neither of which this row claims: both are also imported by src/components/permits/PermitCard.tsx (owned by web_dashboard), and Badge additionally by src/app/builders/[id]/page.tsx, so R-13 totality is unsatisfiable for them without a shared-primitive rule the vocabulary does not have. Left unowned and raised rather than assigned by guess. SPEC-VS-TREE: Spec 37 §2’s Auth Matrix says Anonymous access is \"None\", yet this page is listed among Spec 37’s own target files (system map:39) and is anon-reachable, projecting the full builder entity row plus the CoA applicant name. The tree wins; the disagreement is recorded here as the reason web_permit_detail_anon_disclosure is FAIL + blocking.",
+  "x-draft": {
+    "shard": "web-product",
+    "files": [
+      "src/app/permits/[id]/page.tsx",
+      "src/components/permits/PropertyPhoto.tsx",
+      "src/components/permits/NeighbourhoodProfile.tsx",
+      "src/components/permits/BuildingMassing.tsx"
+    ],
+    "loc": 912,
+    "measured_states": [
+      "loading",
+      "not_found",
+      "loaded"
+    ],
+    "measured_gate": {
+      "session": "public",
+      "why": "classifyRoute('/permits/20-101234--00') falls through the static/_next/api-auth/exact-api/api-admin/admin and AUTHENTICATED_API_ROUTES arms, then matches PUBLIC_PREFIXES - the entry '/permits/' is a prefix of the path - and returns 'public'. It never reaches PUBLIC_PATHS or the fail-closed default."
+    }
+  },
+  "programme": {
+    "scope": "estate_other",
+    "phase": "not_scheduled",
+    "why": "Permit data for the lead-gen product. Inventoried only; it converts under the same standard in a later programme.",
+    "feature": "F92",
+    "build_order": 4193,
+    "leakage": "UNRESEARCHED",
+    "product_questions": "UNRESEARCHED",
+    "review": {
+      "status": "unreviewed"
+    }
+  }
+}

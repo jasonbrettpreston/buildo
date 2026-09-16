@@ -1,0 +1,439 @@
+{
+  "kind": "SURFACE",
+  "status": "exists",
+  "docs": {
+    "purpose": "The five-tab bar every signed-in screen hangs off: feed, saved jobs, map, parcels, and settings. Before showing any of it, this layer checks whether the user's subscription is still good and puts up the upgrade screen instead when the trial has run out. It also carries the unread badge on the saved-jobs tab, slides the bar out of the way when the user scrolls down, and signs out anyone whose account is pending deletion.",
+    "data_story": "It reads nothing from the database directly. Every value arrives through one contract: `/api/user-profile`. Behind that contract, the data comes from `entitlements` and `user_profiles`, and writes land on `entitlements` and `user_profiles`. It also holds client-side state in `notificationStore`, `authStore`, `paywallStore` and `tabBarStore`, which is the part a server-driven projection has to absorb or justify.",
+    "under_126": "**REBUILD** — it holds Layer-3 state (`notificationStore`, `authStore`, `paywallStore` and `tabBarStore`) and drives writes, so a client decision has to be re-homed on the server before the projection can be honest. It renders through the SHELL renderer (declared routing branches, guards and child groups — a shell here is not inert), reading by reference: `/api/user-profile`. Its `owns.components[]` declares `mobile/src/components/onboarding/IncompleteBanner.tsx`."
+  },
+  "evidence": {
+    "files": [
+      "mobile/app/(app)/_layout.tsx:1",
+      "mobile/src/components/onboarding/IncompleteBanner.tsx:1"
+    ],
+    "contracts": [
+      "mobile/app/(app)/_layout.tsx:118"
+    ],
+    "tables": [
+      "src/app/api/user-profile/route.ts:51",
+      "migrations/228_entitlements.sql:21-35"
+    ],
+    "gate": [
+      "mobile/app/(app)/_layout.tsx:236-265"
+    ],
+    "states": [
+      "mobile/app/(app)/_layout.tsx:236-265",
+      "mobile/app/(app)/_layout.tsx:267-290"
+    ],
+    "emits": [
+      "mobile/app/(app)/_layout.tsx:165-176",
+      "mobile/app/(app)/_layout.tsx:200-203"
+    ]
+  },
+  "identity": {
+    "id": "shell_app_tabs",
+    "route": "mobile/app/(app)/_layout.tsx",
+    "archetype": "SHELL",
+    "platforms": [
+      "mobile"
+    ],
+    "owns": {
+      "components": [
+        "mobile/src/components/onboarding/IncompleteBanner.tsx"
+      ]
+    },
+    "owner": "unassigned (no CODEOWNERS file and no owner registry exists in the repo — measured 2026-09-15)",
+    "spec": "docs/specs/03-mobile/96_mobile_subscription.md",
+    "spec_refs": [
+      "docs/specs/03-mobile/96_mobile_subscription.md §10",
+      "docs/specs/03-mobile/96_mobile_subscription.md §9",
+      "docs/specs/03-mobile/91_mobile_lead_feed.md §2",
+      "docs/specs/03-mobile/99_mobile_state_architecture.md §6.5",
+      "docs/specs/03-mobile/92_mobile_engagement_hardware.md §4.4"
+    ],
+    "spec_version": "0-draft",
+    "versioning": {
+      "answer": "frozen",
+      "why": "It branches on the six-value subscription_status set, which is pinned by migration 228's chk_entitlements_status CHECK and mirrored in _contracts.json; a seventh value would fall through to the tab tree unnoticed, so the set is effectively frozen.",
+      "evidence": [
+        "migrations/228_entitlements.sql:34-35",
+        "src/lib/entitlements/index.ts:47-54",
+        "mobile/app/(app)/_layout.tsx:6-11"
+      ]
+    },
+    "ref": "S-046"
+  },
+  "inputs": {
+    "answer": "contract",
+    "why": "One contract decides whether five tabs exist at all: GET /api/user-profile supplies subscription_status (LEFT JOINed from the lead_gen entitlement row) and lead_views_count for the paywall copy.",
+    "evidence": [
+      "mobile/app/(app)/_layout.tsx:118",
+      "src/lib/entitlements/index.ts:68"
+    ],
+    "contract_ref": [
+      "/api/user-profile"
+    ],
+    "query_key": [
+      "user-profile"
+    ],
+    "field_whitelist": [
+      "subscription_status",
+      "lead_views_count",
+      "onboarding_complete"
+    ],
+    "tables": [
+      {
+        "table": "user_profiles",
+        "columns": [
+          "user_id",
+          "lead_views_count",
+          "onboarding_complete"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/03-mobile/95_mobile_user_profiles.md",
+        "evidence": [
+          "src/app/api/user-profile/route.ts:51",
+          "src/lib/userProfile.schema.ts:85-122",
+          "migrations/230_rls_class_a_entitlements.sql:62-68"
+        ]
+      },
+      {
+        "table": "entitlements",
+        "columns": [
+          "user_id",
+          "product",
+          "status",
+          "trial_started_at"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/00-architecture/116_multi_product_architecture.md",
+        "evidence": [
+          "src/app/api/user-profile/route.ts:51",
+          "src/lib/entitlements/index.ts:68",
+          "migrations/228_entitlements.sql:21-35",
+          "src/lib/entitlements/index.ts:68"
+        ]
+      }
+    ]
+  },
+  "outputs": {
+    "answer": "none",
+    "why": "A gate writes nothing. Its side effects are local — clearing the paywall store, invalidating caches, and calling authStore.signOut() on the pending-deletion branch.",
+    "evidence": [
+      "mobile/app/(app)/_layout.tsx:155-206"
+    ],
+    "contract_ref": [],
+    "tables": [],
+    "rollback": "n/a — no server write.",
+    "invalidates": [
+      "user-profile",
+      "leads"
+    ]
+  },
+  "state": {
+    "answer": "zustand",
+    "why": "It reads notificationStore.unreadFlightBoard for the tab badge, paywallStore.dismissed for the inline-blur branch, and drives the tab bar off-screen through the tabBarVisible shared value.",
+    "evidence": [
+      "mobile/app/(app)/_layout.tsx:120-122",
+      "mobile/app/(app)/_layout.tsx:60-66"
+    ],
+    "fields": [
+      {
+        "name": "unreadFlightBoard",
+        "owner_layer": "3_zustand",
+        "canonical_writer": "shell_app_root NotificationHandlers (increment) / this shell's focus listener (clear)",
+        "authorized_readers": [
+          "shell_app_tabs"
+        ],
+        "bridge": "none",
+        "persistence": "none",
+        "signout_reset": true
+      },
+      {
+        "name": "dismissed",
+        "owner_layer": "3_zustand",
+        "canonical_writer": "overlay_paywall \"Maybe later\"",
+        "authorized_readers": [
+          "shell_app_tabs",
+          "mobile_lead_feed",
+          "mobile_flight_board"
+        ],
+        "bridge": "none",
+        "persistence": "none",
+        "signout_reset": true
+      },
+      {
+        "name": "tabBarVisible",
+        "owner_layer": "5_shared_value",
+        "canonical_writer": "the scroll handlers in the feed and flight-board screens",
+        "authorized_readers": [
+          "shell_app_tabs"
+        ],
+        "bridge": "none",
+        "persistence": "none",
+        "signout_reset": false
+      }
+    ]
+  },
+  "staleness": {
+    "answer": "query_cache",
+    "why": "It gates on the shared 5-minute [\"user-profile\"] entry and re-invalidates it on every AppState foreground, which is the primary post-payment access-restoration path.",
+    "evidence": [
+      "mobile/app/(app)/_layout.tsx:137-146",
+      "mobile/src/hooks/useUserProfile.ts:67"
+    ],
+    "offline": "cached_projection",
+    "stale_time_ms": 300000,
+    "gc_time_ms": 86400000
+  },
+  "guards": {
+    "session": {
+      "answer": "entitled",
+      "why": "It is the entitlement gate for the whole app: trial/active/past_due/admin_managed render the tabs, expired renders the paywall or the inline blur, cancelled_pending_deletion signs the user out, and a null status renders the loading guard.",
+      "evidence": [
+        "mobile/app/(app)/_layout.tsx:236-265",
+        "src/lib/entitlements/index.ts:47-54"
+      ]
+    },
+    "rls_class": {
+      "answer": "A",
+      "why": "The status it gates on comes from the caller's own entitlements row, LEFT JOINed onto their own user_profiles row — both Class A, owner-scoped on auth.uid(); entitlements is select-only because the webhook and admin paths are its writers.",
+      "evidence": [
+        "migrations/230_rls_class_a_entitlements.sql:62-68",
+        "migrations/230_rls_class_a_entitlements.sql:36-39"
+      ]
+    },
+    "disclosure": "none",
+    "entitlement": {
+      "product": "lead_gen",
+      "statuses": [
+        "trial",
+        "active",
+        "past_due",
+        "admin_managed"
+      ],
+      "on_missing": "paywall"
+    },
+    "flag": "none",
+    "permission": "none",
+    "rate_bucket": "none — /api/user-profile calls no withRateLimit"
+  },
+  "render": {
+    "targets": [
+      "screen"
+    ],
+    "projection": "none",
+    "breakpoints": "mobile_first",
+    "export": "none",
+    "routing": "UNRESEARCHED"
+  },
+  "checks": [
+    {
+      "id": "tabs_status_coverage",
+      "kind": "auth_class_parity",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "why": "mobile/__tests__/subscriptionGate.test.ts asserts every one of the six subscription_status values reaches its declared branch, including the manufacturer/admin_managed case that must never see the paywall."
+    },
+    {
+      "id": "tabs_gate_stability",
+      "kind": "selector_atomicity",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "why": "Spec 99 §6.5 BANS gating on isFetching — it toggles on every refetch and remounts the whole tab tree (incident #3). subscriptionGate.test.ts asserts the broad gate omits isFetching and that the single expired-only carve-out is the sole exception."
+    },
+    {
+      "id": "tabs_no_paywall_flash",
+      "kind": "empty_state",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "why": "A null subscription_status must render SubscriptionLoadingGuard, never the paywall — Spec 96 §9 is explicit, and the expired-refetch carve-out exists to protect the post-payment transition."
+    },
+    {
+      "id": "tabs_deletion_once",
+      "kind": "selector_atomicity",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "deletedHandledRef makes the cancelled_pending_deletion sign-out fire at most once; without it a rapid AppState refetch returning the same status would race two signOut calls and two redirects."
+    },
+    {
+      "id": "tabs_unread_clear",
+      "kind": "ledger_row_present",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "why": "The unread dot clears on the flight-board tab FOCUS event, which fires on a tab tap and on a push deep link alike — the notification handler clears it too, so the two paths agree."
+    }
+  ],
+  "invariants": "none",
+  "plausibility": "none",
+  "states": [
+    {
+      "name": "loading",
+      "golden": "none"
+    },
+    {
+      "name": "unauthorized",
+      "golden": "none"
+    },
+    {
+      "name": "degraded",
+      "golden": "none"
+    },
+    {
+      "name": "hit",
+      "golden": "none"
+    },
+    {
+      "name": "redirect",
+      "golden": "none"
+    }
+  ],
+  "errors": {
+    "answer": "redirect",
+    "why": "A gate does not render errors: an unresolved status renders the loading guard, and the terminal case (cancelled_pending_deletion) signs the user out and replaces the route to sign-in.",
+    "evidence": [
+      "mobile/app/(app)/_layout.tsx:236-258",
+      "mobile/app/(app)/_layout.tsx:155-180"
+    ],
+    "classes": [
+      {
+        "class": "401",
+        "ui": "The profile query fails, subscription_status stays null, and the loading guard holds until AuthGate routes to sign-in."
+      },
+      {
+        "class": "offline",
+        "ui": "The cached profile gates as normal — a lapsed status cannot be discovered while offline."
+      }
+    ],
+    "no_retry": []
+  },
+  "emits": {
+    "answer": "events",
+    "why": "Two production events sit here — the forced sign-out on deletion and the expired→active conversion — plus a DEV-only route_decision; the conversion event is the closest thing the estate has to a revenue signal.",
+    "evidence": [
+      "mobile/app/(app)/_layout.tsx:165",
+      "mobile/app/(app)/_layout.tsx:200-203",
+      "mobile/src/lib/analytics.ts:121-132"
+    ],
+    "analytics": [
+      "cancelled_pending_deletion_signout",
+      "subscription_expired_to_active",
+      "route_decision (DEV-only)"
+    ],
+    "ledger_events": [],
+    "breadcrumbs": [
+      "logQueryInvalidate user-profile / leads"
+    ]
+  },
+  "offers": {
+    "answer": "none",
+    "why": "A navigation shell renders no sponsored content.",
+    "evidence": [
+      "mobile/app/(app)/_layout.tsx:267-290"
+    ]
+  },
+  "metering": {
+    "answer": "none",
+    "why": "Nothing here is counted: the Spec 126 §7 usage ledger table does not exist (grep for usage_events in the introspected drizzle schema returns 0 hits), and the only quota-shaped counter, user_profiles.lead_views_count, is incremented solely by POST /api/leads/view, which has no mobile caller.",
+    "evidence": [
+      "src/lib/db/generated/schema.ts — no usage_events table (grep, 2026-09-15)",
+      "src/app/api/leads/view/route.ts:110",
+      "src/features/leads/api/useLeadView.ts:25 — imported only by src/tests/useLeadView.logic.test.tsx"
+    ]
+  },
+  "config": {
+    "answer": "none",
+    "why": "The surface consumes no registered logic variable: the only server-side tunable in this path, user_profiles.radius_cap_km, is a per-user admin column, not a logic_variables row.",
+    "evidence": [
+      "src/lib/userProfile.schema.ts:40",
+      "src/app/api/user-profile/route.ts:328",
+      "docs/reference/logic-variables-registry.md — no radius_cap_km entry"
+    ],
+    "logic_variables": [],
+    "retired": []
+  },
+  "sharing": {
+    "answer": "shared",
+    "why": "It renders the same [\"user-profile\"] entry the root shell, settings, the feed and the filter sheet read — which is why an invalidate here changes what every one of them sees.",
+    "evidence": [
+      "mobile/app/(app)/_layout.tsx:137-146"
+    ],
+    "surfaces": [
+      "shell_app_root",
+      "mobile_settings",
+      "mobile_lead_feed",
+      "mobile_flight_board",
+      "overlay_lead_filter_sheet"
+    ]
+  },
+  "a11y": {
+    "touch_target_min_px": 60,
+    "labels": "partial",
+    "dark_mode": "hardcoded",
+    "reduced_motion": "ignored",
+    "i18n": "none",
+    "safe_area": "none"
+  },
+  "deviations": "none",
+  "limitations": [
+    {
+      "what": "The paywall it renders is headlined with lead_views_count, a counter nothing increments from the mobile app.",
+      "measured": "user_profiles.lead_views_count is written only by src/app/api/leads/view/route.ts:110; its only client hook, src/features/leads/api/useLeadView.ts, is imported solely by src/tests/useLeadView.logic.test.tsx. No mobile file references /api/leads/view.",
+      "check_id": "tabs_status_coverage"
+    },
+    {
+      "what": "The tab bar slides off-screen on scroll with a 200ms timing animation regardless of the OS reduce-motion setting.",
+      "measured": "mobile/app/(app)/_layout.tsx:61-66 — useDerivedValue + withTiming, no AccessibilityInfo check exists in mobile/.",
+      "check_id": "none — checks[].kind has no reduced-motion value; raised as a vocabulary escalation per Spec 128 §4"
+    }
+  ],
+  "interpretation": "none",
+  "notes": "This shell is the single most load-bearing gate in the mobile estate — five tabs, six subscription statuses, one contract. guards.entitlement.product is lead_gen rather than the schema's parcel_tool because migration 228's CHECK permits only lead_gen and flight_center.",
+  "x-draft": {
+    "shard": "mobile-product",
+    "files": [
+      "mobile/app/(app)/_layout.tsx",
+      "mobile/src/components/onboarding/IncompleteBanner.tsx"
+    ],
+    "loc": 291,
+    "call_idiom": "hook",
+    "stores": [
+      "notificationStore",
+      "authStore",
+      "paywallStore",
+      "tabBarStore"
+    ],
+    "measured_states": [
+      "loading_guard",
+      "expired_refetch_guard",
+      "pending_deletion_guard",
+      "paywall",
+      "tabs"
+    ],
+    "measured_gate": {
+      "session": "required",
+      "entitlement": "subscription_status",
+      "flag": "none",
+      "permission": "none"
+    }
+  },
+  "programme": {
+    "scope": "platform_shared",
+    "phase": "UNRESEARCHED",
+    "why": "A navigation shell. It routes and gates every product surface beneath it — converting it changes both products at once.",
+    "feature": "F14",
+    "build_order": 3143,
+    "leakage": "none",
+    "product_questions": "none",
+    "review": {
+      "status": "unreviewed"
+    }
+  }
+}

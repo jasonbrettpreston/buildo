@@ -56,6 +56,29 @@ table inventory is known-stale (Spec 113 G1 — missing `lead_view_events`, `sub
 minimum), and an enumerated Class B catalog would inherit that staleness as a live RLS gap. A
 definitional default-deny rule cannot go stale the same way (§6).
 
+
+> ⚠️ **AMENDMENT 2026-09-15 (WF1 "Spec 126/127/128 surface standard") — a FOURTH class. Additive: the three classes below are unchanged, and every existing table keeps its classification.**
+>
+> **Class D — owner-scoped by a NON-USER key.** A table whose rows belong to a principal that is **not** `auth.uid()`, scoped instead by a membership key such as `advertiser_id`. Policies take the form `USING (<owner_col> = current_<principal>_id())` and are generated from `scripts/seeds/roles.json` (Spec 126 §6.2).
+>
+> **Why the taxonomy needed widening rather than a workaround.** §2's classification is *definitional and closed* — Class A is one of the named user-owned tables, Class C is `profiles`, and **everything else is Class B by default**. An advertiser reading its own `offers` and `advertisers` rows is neither: it is not `auth.uid()`-owned (so not A), it is not deny-all service-role-only (so not B), and it is not `profiles` (so not C). Without class D it would have to ship as a Class-B table plus an API-layer filter — which is precisely the "the gate lives in code, not in the policy" posture RLS exists to retire.
+>
+> **First and only member today:** the `advertiser` principal, over the net-new `advertisers` and `offers` tables (neither exists yet — verified absent from `migrations/`). **Measured prior state:** zero `advertiser` hits across `migrations/`, `src/` and `scripts/`.
+>
+> **Consequences for the rest of this spec:** §9's role matrix gains an `advertiser` row and a Class D column (the class table becomes four); §8's naming convention is unchanged — scope stays one of `own` / `own_admin` / `admin`, with class D using `own` against its own owner column. **Ruled by the operator 2026-09-15**; recorded as Spec 128 §5 **R-10**.
+>
+> **AMENDMENT 2026-09-15 (b) — a FIFTH class, found by measurement rather than design.** Researching all 137 surfaces and contracts against this catalogue turned up a set of tables none of A, B, C or D can hold: **publicly readable REFERENCE data** — a closed, non-personal lookup set (trades, neighbourhoods, taxonomy rows) that an unauthenticated visitor must be able to SELECT and that only the pipeline may write.
+>
+> **Class E — publicly readable reference data.** `ENABLE ROW LEVEL SECURITY` plus exactly one policy: `FOR SELECT TO anon, authenticated USING (true)`. No INSERT, UPDATE or DELETE policy at any level; writes reach it as the table owner (the pipeline) only.
+>
+> **Why none of the existing four fits.** It is not `auth.uid()`-owned, so not **A**. It cannot be deny-all, because anon must read it — so not **B**, and this is the important one: under §2's default rule these tables are *currently* Class B, which is a **live contradiction** between the catalogue and the public routes that serve them. It is not `profiles`, so not **C**. It has no non-user owner key, so not **D**. §2's classification is definitional and closed, which is precisely why a fifth definition is the honest fix rather than a per-table exception.
+>
+> **Membership is a measurement, not a list to be invented:** the tables reached by a route whose `classifyRoute` class is `public`. That set is rendered per row in `docs/reports/generated/127-surface-registry.md` and declared as `guards.rls_class: "E"` in each contract descriptor.
+>
+> **Consequence for §9's matrix:** the `anon` row gains a Class E column reading *select-only*; every other cell is unchanged. **Consequence for §10:** the pgTAP Class B suite's schema-introspection test must exclude Class E tables, or it will report them as policy-bearing Class B violations.
+>
+> *(The three-class table below is retained verbatim.)*
+
 | Class | Definition | Count | RLS posture |
 |---|---|---|---|
 | **A — UID tables** | The 10 tables carrying a Firebase-uid-derived identity column, per **Decision D6** / Ground truth G9 | 10 | Owner-scoped (`auth.uid()`), two subtypes — see §3 |

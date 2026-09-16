@@ -1,0 +1,432 @@
+{
+  "kind": "CONTRACT",
+  "status": "exists",
+  "docs": {
+    "purpose": "Shows the admin team how many building-contractor records still need their contact details (phone, email, website) filled in, and lets an admin kick off a batch job that searches the web to fill in a batch of the missing ones.",
+    "data_story": "It reads 2 tables — `entities` and `wsib_registry` and writes `entities` and `entity_contacts`. Its response is an explicit pick-by-name projection of 6 fields, so a column added to a table upstream does not leak into the client by accident. **Nothing in this repository calls it.** That is the state this registry exists to make visible, not a claim that it is dead — a caller could be a bookmark, an external system, or a path built from variables. It mutates admin state and writes **no `admin_audit_log` row** — one of the nine measured gaps Phase 0 closes.",
+    "under_126": "Becomes a **CONTRACT descriptor** of archetype `COMMAND`. It declares the JOB it triggers (`job_ref`), its concurrency posture and the audit row it must write. Its `consumers[]` is the field that matters most here: today it is empty, and the orphan panel renders that as a red row rather than leaving it to be discovered years later."
+  },
+  "evidence": {
+    "files": [
+      "src/app/api/admin/builders/route.ts:1"
+    ],
+    "contracts": [
+      "src/app/api/admin/builders/route.ts:9 (GET export)",
+      "src/app/api/admin/builders/route.ts:48 (POST export)",
+      "src/lib/api/with-api-envelope.ts:27-52"
+    ],
+    "tables": [
+      "src/app/api/admin/builders/route.ts:17-25",
+      "src/lib/builders/enrichment.ts:178-182",
+      "src/lib/builders/enrichment.ts:46 — SELECT e.*",
+      "src/lib/builders/enrichment.ts:46-51",
+      "src/lib/builders/enrichment.ts:124",
+      "src/lib/builders/enrichment.ts:150",
+      "src/lib/builders/enrichment.ts:133-135",
+      "src/lib/db/generated/schema.ts — every table named here is present in the introspected drizzle schema"
+    ],
+    "gate": [
+      "src/lib/auth/route-guard.ts — admin prefix — classifyRoute matches pathname.startsWith('/api/admin/')",
+      "src/lib/auth/route-guard.ts:150-201 — classifyRoute executed 2026-09-15 with the concrete path → \"admin\"",
+      "no in-handler auth call in src/app/api/admin/builders/route.ts — src/middleware.ts is the only gate"
+    ],
+    "states": [
+      "hit: src/app/api/admin/builders/route.ts:28",
+      "error: src/app/api/admin/builders/route.ts:36-39"
+    ],
+    "emits": [
+      "src/app/api/admin/builders/route.ts — read in full; no Sentry breadcrumb, no analytics capture and no ledger INSERT"
+    ]
+  },
+  "identity": {
+    "id": "contract_admin_builders",
+    "route": "/api/admin/builders",
+    "archetype": "COMMAND",
+    "platforms": [
+      "web"
+    ],
+    "owns": {
+      "components": []
+    },
+    "owner": "Backend/Pipeline (CLAUDE.md §Domain Rules: `src/app/api/`)",
+    "spec": "docs/specs/01-pipeline/37_entity_model.md",
+    "spec_refs": [
+      "docs/specs/01-pipeline/37_entity_model.md — owns src/app/api/admin/builders/route.ts per docs/specs/00-architecture/00_system_map.md:39; the System Map row names no section, and the route file carries no SPEC LINK header"
+    ],
+    "spec_version": "0-draft",
+    "versioning": {
+      "answer": "none",
+      "why": "No call site anywhere in src/** or mobile/** (verified 2026-09-15 by an exact-path sweep that strips comment lines), so no consumer holds a compatibility promise to break.",
+      "evidence": [
+        "src/app/api/admin/builders/route.ts — no caller",
+        "src/lib/auth/route-guard.ts:150-201"
+      ]
+    },
+    "ref": "C-039"
+  },
+  "inputs": {
+    "answer": "app_outputs",
+    "why": "It reads 2 table(s) directly; 2 of them are materialised by named pipeline steps (builders, link_wsib), so its inputs are the pipeline's outputs rather than another contract.",
+    "evidence": [
+      "src/app/api/admin/builders/route.ts:17-25",
+      "src/lib/builders/enrichment.ts:178-182",
+      "src/lib/builders/enrichment.ts:46 — SELECT e.*",
+      "scripts/extract-builders.js",
+      "docs/reference/data-lineage-map.md:506",
+      "scripts/manifest.json#chains",
+      "docs/reference/data-lineage-map.md",
+      "src/lib/builders/enrichment.ts:46-51",
+      "scripts/link-wsib.js",
+      "docs/reference/data-lineage-map.md:1376"
+    ],
+    "contract_ref": [],
+    "query_key": [],
+    "field_whitelist": [
+      "total",
+      "enriched",
+      "unenriched",
+      "failed_count",
+      "message",
+      "failed"
+    ],
+    "tables": [
+      {
+        "table": "entities",
+        "columns": "all",
+        "producing_steps": [
+          "builders",
+          "enrich_named_builders",
+          "enrich_wsib_builders",
+          "link_wsib"
+        ],
+        "chain_position": "permits[5] · entities[1] · entities[0] · permits[6], sources[19]",
+        "owner_spec": "docs/specs/01-pipeline/41_chain_permits.md",
+        "evidence": [
+          "src/app/api/admin/builders/route.ts:17-25",
+          "src/lib/builders/enrichment.ts:178-182",
+          "src/lib/builders/enrichment.ts:46 — SELECT e.*",
+          "scripts/extract-builders.js",
+          "docs/reference/data-lineage-map.md:506",
+          "scripts/manifest.json#chains",
+          "docs/reference/data-lineage-map.md"
+        ]
+      },
+      {
+        "table": "wsib_registry",
+        "columns": [
+          "trade_name",
+          "legal_name",
+          "mailing_address",
+          "linked_entity_id"
+        ],
+        "producing_steps": [
+          "link_wsib",
+          "load_wsib"
+        ],
+        "chain_position": "permits[6], sources[19] · sources[18]",
+        "owner_spec": "docs/specs/01-pipeline/46_wsib_enrichment.md",
+        "evidence": [
+          "src/lib/builders/enrichment.ts:46-51",
+          "scripts/link-wsib.js",
+          "docs/reference/data-lineage-map.md:1376",
+          "scripts/manifest.json#chains",
+          "docs/reference/data-lineage-map.md"
+        ]
+      }
+    ]
+  },
+  "outputs": {
+    "answer": "contract_only",
+    "why": "This route IS the mutation contract: it writes 2 table(s) synchronously inside the request and returns the result — there is no optimistic client-side flip to reconcile.",
+    "evidence": [
+      "src/lib/builders/enrichment.ts:124",
+      "src/lib/builders/enrichment.ts:150",
+      "scripts/extract-builders.js",
+      "docs/reference/data-lineage-map.md:506",
+      "scripts/manifest.json#chains",
+      "docs/reference/data-lineage-map.md",
+      "src/lib/builders/enrichment.ts:133-135",
+      "docs/specs/00-architecture/00_system_map.md:39",
+      "docs/reference/data-lineage-map.md — no `## `entity_contacts`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)"
+    ],
+    "contract_ref": [],
+    "tables": [
+      {
+        "table": "entities",
+        "columns": [
+          "last_enriched_at"
+        ],
+        "producing_steps": [
+          "builders",
+          "enrich_named_builders",
+          "enrich_wsib_builders",
+          "link_wsib"
+        ],
+        "chain_position": "permits[5] · entities[1] · entities[0] · permits[6], sources[19]",
+        "owner_spec": "docs/specs/01-pipeline/41_chain_permits.md",
+        "evidence": [
+          "src/lib/builders/enrichment.ts:124",
+          "src/lib/builders/enrichment.ts:150",
+          "scripts/extract-builders.js",
+          "docs/reference/data-lineage-map.md:506",
+          "scripts/manifest.json#chains",
+          "docs/reference/data-lineage-map.md"
+        ]
+      },
+      {
+        "table": "entity_contacts",
+        "columns": [
+          "entity_id",
+          "contact_type",
+          "contact_value",
+          "source"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/01-pipeline/37_entity_model.md",
+        "evidence": [
+          "src/lib/builders/enrichment.ts:133-135",
+          "docs/specs/00-architecture/00_system_map.md:39",
+          "docs/reference/data-lineage-map.md — no `## `entity_contacts`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)"
+        ]
+      }
+    ]
+  },
+  "state": {
+    "answer": "server_only",
+    "why": "A CONTRACT holds no client state: every value is resolved per request on the server and nothing is cached in a client store by the route itself.",
+    "evidence": [
+      "src/app/api/admin/builders/route.ts:9 (GET export)",
+      "src/lib/api/with-api-envelope.ts:27-52"
+    ],
+    "fields": []
+  },
+  "staleness": {
+    "answer": "live",
+    "why": "Every read runs against the base tables on each request — there is no cache layer between the handler and the database.",
+    "evidence": [
+      "src/app/api/admin/builders/route.ts:17-25",
+      "src/lib/builders/enrichment.ts:178-182",
+      "src/lib/builders/enrichment.ts:46 — SELECT e.*",
+      "scripts/extract-builders.js"
+    ],
+    "offline": "none"
+  },
+  "guards": {
+    "session": {
+      "answer": "admin",
+      "why": "classifyRoute(\"/api/admin/builders\") returns \"admin\" (executed 2026-09-15); the handler adds no check of its own, so middleware is the only gate.",
+      "evidence": [
+        "src/lib/auth/route-guard.ts:150-201 — classifyRoute executed 2026-09-15 with the concrete path",
+        "src/middleware.ts — the only gate for this path (no in-handler auth call)"
+      ]
+    },
+    "rls_class": {
+      "answer": "B",
+      "why": "Every table it reaches has RLS enabled with zero policies — default deny for anon and authenticated; only the table owner and service_role get through.",
+      "evidence": [
+        "migrations/227_rls_class_b_default_deny.sql:49",
+        "migrations/227_rls_class_b_default_deny.sql:100",
+        "migrations/227_rls_class_b_default_deny.sql:50",
+        "docs/specs/00-architecture/114_rls_policy_catalog.md §2"
+      ]
+    },
+    "disclosure": "none",
+    "entitlement": "none",
+    "flag": "none",
+    "permission": "none",
+    "rate_bucket": "none"
+  },
+  "render": {
+    "targets": [
+      "screen"
+    ],
+    "projection": "none",
+    "breakpoints": "none",
+    "export": "none"
+  },
+  "checks": [
+    {
+      "id": "contract_admin_builders__auth_class_parity",
+      "kind": "auth_class_parity",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "why": "guards.session must equal classifyRoute(\"/api/admin/builders\"), executed 2026-09-15 → \"admin\"; there is no in-handler check, so a middleware change silently re-classes this route. No test file in src/tests/** imports this route — the parity is unlocked."
+    },
+    {
+      "id": "contract_admin_builders__error_envelope",
+      "kind": "error_state",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "why": "MEASURED DEVIATION, permanently non-zero until re-projected: GET returns a bare {total,enriched,unenriched,failed_count} at :28-33 and POST a bare {message,enriched,failed} at :58-62; both error paths return {error:'string'} at :37 and :66 with no code/data/meta. The local try/catch makes withApiEnvelope's 500 fallback  Retighten condition: the handler returns the envelope on every path."
+    },
+    {
+      "id": "contract_admin_builders__field_whitelist_parity",
+      "kind": "field_whitelist_parity",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "The response is an explicit pick-by-name of 6 field(s) (src/app/api/admin/builders/route.ts:28-33, src/app/api/admin/builders/route.ts:58-62), so a column added upstream cannot leak; this check set-equals the projection to inputs.field_whitelist."
+    },
+    {
+      "id": "contract_admin_builders__schema_declared",
+      "kind": "schema_declared",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "Every table and column declared in lineage.reads[]/writes[] must exist in src/lib/db/generated/schema.ts (drizzle-kit introspect of the live database); the registry generator checks this both directions."
+    },
+    {
+      "id": "contract_admin_builders__audit_row_missing",
+      "kind": "ledger_row_present",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "why": "MEASURED GAP, permanently non-zero: this admin route mutates entities, entity_contacts and writes NO admin_audit_log row — one of the measured audit gaps. Retighten condition: the handler writes an admin_audit_log row per accepted mutation."
+    }
+  ],
+  "invariants": "none",
+  "plausibility": "none",
+  "states": [
+    {
+      "name": "hit",
+      "golden": "none"
+    },
+    {
+      "name": "error",
+      "golden": "none"
+    }
+  ],
+  "errors": {
+    "answer": "envelope",
+    "why": "It returns a JSON error body, but NOT the standard envelope: GET returns a bare {total,enriched,unenriched,failed_count} at :28-33 and POST a bare {message,enriched,failed} at :58-62; both error paths return {error:'string'} at :37 and :66 with no code/data/meta. The local try/cat \"envelope\" is the closest member of the closed menu; the deviation is recorded in deviations[].",
+    "evidence": [
+      "src/lib/api/with-api-envelope.ts:27-52",
+      "src/app/api/admin/builders/route.ts:28-33",
+      "src/app/api/admin/builders/route.ts:36-39",
+      "src/app/api/admin/builders/route.ts:38 (500)",
+      "src/app/api/admin/builders/route.ts:67 (500)"
+    ],
+    "classes": [
+      {
+        "class": "500",
+        "ui": "{error:'Failed to fetch builder enrichment stats'} — src/app/api/admin/builders/route.ts:38"
+      }
+    ]
+  },
+  "emits": {
+    "answer": "none",
+    "why": "Nothing it does is currently countable: src/app/api/admin/builders/route.ts was read in full and contains no Sentry breadcrumb, no analytics capture and no ledger INSERT.",
+    "evidence": [
+      "src/app/api/admin/builders/route.ts — read in full; no Sentry breadcrumb, no analytics capture and no ledger INSERT"
+    ],
+    "analytics": [],
+    "ledger_events": [],
+    "breadcrumbs": []
+  },
+  "offers": {
+    "answer": "none",
+    "why": "It renders no sponsored placement: the offers and advertisers tables Spec 126 §2 specifies do not exist in migrations/ and nothing in this handler reads placement inventory.",
+    "evidence": [
+      "migrations/ — no CREATE TABLE offers / advertisers (grep 2026-09-15)",
+      "src/app/api/admin/builders/route.ts — read in full; no placement read"
+    ]
+  },
+  "metering": {
+    "answer": "none",
+    "why": "Nothing here is counted: no usage_events row (the table does not exist in the introspected schema) and no quota counter is written by this handler.",
+    "evidence": [
+      "src/app/api/admin/builders/route.ts — read in full 2026-09-15",
+      "src/lib/db/generated/schema.ts — no usage_events table"
+    ]
+  },
+  "config": {
+    "answer": "none",
+    "why": "It consumes no tunable: no logic_variables read and no env-var-driven threshold in the handler or the libs it calls.",
+    "evidence": [
+      "src/app/api/admin/builders/route.ts — read in full 2026-09-15; no loadMarketplaceConfigs / logic_variables read"
+    ],
+    "logic_variables": [],
+    "retired": []
+  },
+  "sharing": {
+    "answer": "none",
+    "why": "ORPHAN: an exact-path sweep of src/** and mobile/** on 2026-09-15 (comment lines stripped) found no call site. That is a measured absence, not proof the endpoint is dead — a caller could be a bookmark or an external system.",
+    "evidence": [
+      "src/app/api/admin/builders/route.ts — swept src/** and mobile/** for the exact path on 2026-09-15; zero call sites outside src/tests/**"
+    ],
+    "surfaces": []
+  },
+  "a11y": {
+    "touch_target_min_px": "UNRESEARCHED",
+    "labels": "none",
+    "dark_mode": "none",
+    "reduced_motion": "none",
+    "i18n": "none",
+    "safe_area": "none"
+  },
+  "deviations": [
+    {
+      "from": "docs/specs/00_engineering_standards.md §4.4 — all API routes return { data, error, meta }",
+      "why": "GET returns a bare {total,enriched,unenriched,failed_count} at :28-33 and POST a bare {message,enriched,failed} at :58-62; both error paths return {error:'string'} at :37 and :66 with no code/data/meta. The local try/catch makes withApiEnvelope's 500 fallback unreachable.",
+      "adjudicated_by": "not adjudicated — measured 2026-09-15 by reading the handler",
+      "date": "2026-09-15"
+    },
+    {
+      "from": "src/lib/auth/verify-admin.ts — every admin route calls verifyAdminAuth",
+      "why": "This admin route makes no in-handler verifyAdminAuth call; src/middleware.ts is the only gate and its own comment says the check is presence-only.",
+      "adjudicated_by": "not adjudicated — measured 2026-09-15",
+      "date": "2026-09-15"
+    },
+    {
+      "from": "docs/specs/00_engineering_standards.md §4.3 — never SELECT *, always project specific columns",
+      "why": "At least one query reads the whole row: entities.",
+      "adjudicated_by": "not adjudicated — measured 2026-09-15",
+      "date": "2026-09-15"
+    }
+  ],
+  "limitations": [
+    {
+      "what": "a11y.touch_target_min_px has no legal answer for a CONTRACT",
+      "measured": "The schema allows only UNRESEARCHED or an integer >= 44; a JSON endpoint has no touch target and the vocabulary has no \"n/a\". Left UNRESEARCHED and escalated per Spec 128 §4 rather than invented.",
+      "check_id": "contract_admin_builders__auth_class_parity"
+    },
+    {
+      "what": "no consumer, so no fan-out edge",
+      "measured": "The exact-path sweep of src/** and mobile/** (comment lines stripped) returned zero call sites on 2026-09-15.",
+      "check_id": "contract_admin_builders__auth_class_parity"
+    }
+  ],
+  "interpretation": "none",
+  "notes": "No SPEC LINK header. POST dynamically imports src/lib/builders/enrichment.ts, which reads entities LEFT JOIN wsib_registry, calls the external Serper search API, scrapes candidate sites, then UPDATEs entities and INSERTs entity_contacts in a transaction. No inline verifyAdminAuth call in this file — it relies solely on src/middleware.ts, and unlike control-panel/* that reliance is not documented inline. NO admin audit row for a mutating POST. No in-repo caller found. | MEASURED 2026-09-15: SELECT e.* at src/lib/builders/enrichment.ts:46 and UPDATE ... RETURNING * at :124 are whole-row reads behind a COMMAND route. The route mutates admin state and writes no admin_audit_log row. | Pagination: POST limit clamped to min(body.limit,200) default 50 at :51-53; GET returns aggregates only | Other guards / classification: middleware-only — the file imports no auth module (src/app/api/admin/builders/route.ts:1-4) | ORPHAN — zero call sites in src/** or mobile/** (sweep 2026-09-15, comment lines stripped). | No test file under src/tests/** imports this route.",
+  "x-draft": {
+    "shard": "contracts",
+    "files": [
+      "src/app/api/admin/builders/route.ts"
+    ],
+    "loc": 70,
+    "methods": [
+      "GET",
+      "POST"
+    ],
+    "consumers": [],
+    "writes_audit_row": false,
+    "consumers_verified": [],
+    "auth_class_executed": "admin",
+    "locking_tests": []
+  },
+  "programme": {
+    "scope": "estate_other",
+    "phase": "not_scheduled",
+    "why": "Builder/entity data for the lead-gen product. Inventoried only.",
+    "feature": "F92",
+    "build_order": 4192,
+    "leakage": "UNRESEARCHED",
+    "product_questions": "UNRESEARCHED",
+    "review": {
+      "status": "unreviewed"
+    }
+  }
+}

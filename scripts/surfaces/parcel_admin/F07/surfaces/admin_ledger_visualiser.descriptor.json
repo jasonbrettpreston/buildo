@@ -1,0 +1,468 @@
+{
+  "kind": "SURFACE",
+  "status": "new",
+  "docs": {
+    "purpose": "A diagram that traces any number a user sees back to the pipeline step that produced it and the exact run that last wrote it. When someone asks 'where did this figure come from and how old is it', this is the page that answers without a developer. It joins the pipeline's governed steps to the screens that render their output, pinned to the version of the step that ran.",
+    "data_story": "Nothing is built yet, so nothing is measured here. As specified it would read `pipeline_runs`, `app_outputs` and `usage_events` — of which `app_outputs` and `usage_events` do **not exist yet** and must be declared, migrated and drift-asserted before this page can render a single row.",
+    "under_126": "**NEW.** It does not exist; it is generated from descriptors from its first commit, through the REPORT renderer (read-only; `outputs` and `state` forced to `\"none\"`, a field whitelist that must equal the contract's). It is **100% generated** — which is the point: if the descriptor set is incomplete or an archetype profile is wrong, this page is visibly empty or visibly wrong on commit 1, and cannot be faked by hand."
+  },
+  "evidence": {
+    "files": [
+      "docs/reports/2026-09-15-spec126-admin-best-in-class.md §1.1 row 22 — NEW; no page exists"
+    ],
+    "contracts": [
+      "DESIGNED: GET /api/admin/ledger-seam — absent from the census, so it cannot appear in inputs.contract_ref"
+    ],
+    "tables": [
+      "src/lib/db/generated/schema.ts:1063 — pipeline_runs (exists)",
+      "docs/specs/02-web-admin/126_maxbld_surface_standard.md §6.3 rows 1-2 — app_outputs and usage_events (net-new)"
+    ],
+    "gate": [
+      "src/lib/auth/route-guard.ts:162"
+    ],
+    "states": [
+      "docs/specs/02-web-admin/127_surface_conversion_procedure.md §4.3"
+    ],
+    "emits": [
+      "docs/specs/02-web-admin/126_maxbld_surface_standard.md §2.2.1 P10 — append-only, read here and written elsewhere"
+    ]
+  },
+  "identity": {
+    "id": "admin_ledger_visualiser",
+    "archetype": "REPORT",
+    "platforms": [
+      "web"
+    ],
+    "owns": {
+      "components": [
+        "src/features/admin-registry/components/LedgerSeamGraph.tsx"
+      ]
+    },
+    "owner": "Admin domain (Spec 126 §14 Target Files) — no individual owner is named by Specs 126/127/128.",
+    "spec": "docs/specs/02-web-admin/126_maxbld_surface_standard.md",
+    "spec_refs": [
+      "docs/specs/02-web-admin/126_maxbld_surface_standard.md §2.2 group F — admin_ledger_visualiser REPORT (100% gen)",
+      "docs/specs/02-web-admin/126_maxbld_surface_standard.md §6.3.1 — app_outputs, written by a converted pipeline step at the END of chain sources",
+      "docs/specs/02-web-admin/126_maxbld_surface_standard.md §2.2.1 P10 — time-travel is the ledger: pipeline_runs + usage_events + admin_audit_log, all append-only",
+      "docs/specs/02-web-admin/126_maxbld_surface_standard.md §10 — observability and visualisation",
+      "docs/reports/2026-09-15-spec126-admin-best-in-class.md §1.1 row 22 · §3.2 — \"the one genuinely new join\", verdict BUILD"
+    ],
+    "spec_version": "0-draft",
+    "versioning": {
+      "answer": "none",
+      "why": "Nothing consumes this surface: it does not exist, so no compatibility promise can have been made. It gains one at its C9 cutover, when the golden pair is captured.",
+      "evidence": [
+        "docs/specs/02-web-admin/126_maxbld_surface_standard.md §2.2 — one of the 11 NEW admin surfaces",
+        "docs/specs/02-web-admin/127_surface_conversion_procedure.md §4.3 — the golden PAIR pins the shape"
+      ]
+    },
+    "ref": "S-010"
+  },
+  "inputs": {
+    "answer": "contract",
+    "why": "One designed QUERY contract assembles four things server-side: the run ledger, the app_outputs row a surface renders, the descriptor field inputs.reads.steps[].version_pin (a declaration, not a table) and the usage count. The join is computed on the server and drawn as inline SVG; per the §3.2 dependency ruling no graph library is adopted for a ≤120-node pan/zoom DAG.",
+    "evidence": [
+      "docs/reports/2026-09-15-spec126-admin-best-in-class.md §3.2 — the pipeline <-> app_outputs seam, verdict BUILD; inline SVG with a server-computed layered layout rather than react-flow",
+      "docs/specs/02-web-admin/126_maxbld_surface_standard.md §6.3.1 — app_outputs.built_at plus the surface's staleness block make freshness a declared property"
+    ],
+    "contract_ref": [],
+    "query_key": [
+      "admin",
+      "ledger-seam",
+      "subject_kind",
+      "subject_key"
+    ],
+    "field_whitelist": [
+      "surface_id",
+      "projection",
+      "subject_kind",
+      "subject_key",
+      "version",
+      "built_at",
+      "source_fingerprint",
+      "pipeline_run_id",
+      "step_slug",
+      "version_pin",
+      "run_status",
+      "run_completed_at",
+      "usage_7d"
+    ],
+    "tables": [
+      {
+        "table": "pipeline_runs",
+        "columns": [
+          "id",
+          "pipeline",
+          "started_at",
+          "completed_at",
+          "status",
+          "records_total",
+          "records_new",
+          "records_updated",
+          "error_message",
+          "duration_ms",
+          "records_meta"
+        ],
+        "producing_steps": [
+          "(every chain step — the Spec 47 SDK run ledger writes one row per run, so there is no single named producer)"
+        ],
+        "chain_position": "n/a — written by the SDK around every step in every chain",
+        "owner_spec": "docs/specs/01-pipeline/48_pipeline_observability.md",
+        "evidence": [
+          "src/lib/db/generated/schema.ts:1063 — the introspected pipeline_runs shape",
+          "scripts/lib/step/ledger.js:62 — INSERT INTO pipeline_runs (pipeline, started_at, status)",
+          "docs/reference/data-lineage-map.md:1205 — per-column producers: assert_schema and assert_data_bounds write checks_passed/checks_failed; assert_pre_permit_aging writes records_meta"
+        ]
+      },
+      {
+        "table": "app_outputs",
+        "columns": [
+          "subject_kind",
+          "subject_key",
+          "projection",
+          "version",
+          "payload",
+          "built_at",
+          "source_fingerprint",
+          "pipeline_run_id"
+        ],
+        "producing_steps": [
+          "materialize_app_outputs"
+        ],
+        "chain_position": "sources[END] — DESIGNED. Spec 126 §6.3.1 rules the step runs at the END of chain `sources`, after enrichment, so the projection is never built from a half-enriched corpus. No slot is claimed: scripts/manifest.json chains.sources holds 28 steps today and none of them is this one; registering it is Backend/Pipeline work, explicitly out of Spec 126 §14 Target Files.",
+        "owner_spec": "docs/specs/02-web-admin/126_maxbld_surface_standard.md §6.3.1",
+        "evidence": [
+          "docs/specs/02-web-admin/126_maxbld_surface_standard.md §6.3.1 — app_outputs is written by a converted pipeline step at the end of chain sources, not by an API route",
+          "scripts/manifest.json#chains.sources — 28 entries; no materialize_app_outputs"
+        ]
+      },
+      {
+        "table": "usage_events",
+        "columns": [
+          "event_id",
+          "user_id",
+          "session_id",
+          "product",
+          "event",
+          "subject_kind",
+          "subject_key",
+          "occurred_at",
+          "meta"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/02-web-admin/126_maxbld_surface_standard.md §7",
+        "evidence": [
+          "docs/specs/02-web-admin/126_maxbld_surface_standard.md §7 — usage_events is written at request time by the contract performing the metered action, never by a pipeline step",
+          "docs/specs/02-web-admin/126_maxbld_surface_standard.md §7.1 — the one anon insert policy, narrowed to event = 'offer_impression' with session_id IS NOT NULL"
+        ]
+      }
+    ]
+  },
+  "outputs": {
+    "answer": "none",
+    "why": "REPORT forces outputs to \"none\", and a replay view of append-only ledgers must never write to them — that is what makes \"what did this look like on date D\" answerable at all (P10).",
+    "evidence": [
+      "docs/specs/02-web-admin/126_maxbld_surface_standard.md §3.1 row 3 — REPORT: outputs.writes \"none\" ENFORCED",
+      "docs/specs/02-web-admin/126_maxbld_surface_standard.md §2.2.1 P10 — append-only with PK-as-dedup"
+    ],
+    "contract_ref": [],
+    "tables": []
+  },
+  "state": {
+    "answer": "none",
+    "why": "REPORT forces state to \"none\". The layer assignment is the descriptor's own dependency order, computed server-side, so the client holds no graph model.",
+    "evidence": [
+      "docs/specs/02-web-admin/126_maxbld_surface_standard.md §3.1 row 3",
+      "docs/reports/2026-09-15-spec126-admin-best-in-class.md §3.2 — \"the layer assignment is already the descriptor's dependency order\""
+    ]
+  },
+  "staleness": {
+    "answer": "snapshot",
+    "why": "What it renders IS a snapshot: app_outputs is a materialised projection whose freshness is the cadence of the step that wrote it, and the page shows built_at and pipeline_run_id rather than hiding the lag. That is Spec 126 §6.3.1's \"freshness becomes a declared property\" made visible.",
+    "evidence": [
+      "docs/specs/02-web-admin/126_maxbld_surface_standard.md §6.3.1 — app_outputs.built_at plus the surface's staleness block, with a checks[] freshness entry"
+    ],
+    "offline": "none",
+    "producing_step": "materialize_app_outputs"
+  },
+  "guards": {
+    "session": {
+      "answer": "admin",
+      "why": "An /admin/** page: classifyRoute returns \"admin\" for any pathname starting with /admin/, and \"admin\" is the profiles.is_admin flag checked in-predicate — there is no admin Postgres role.",
+      "evidence": [
+        "src/lib/auth/route-guard.ts:162 — pathname === \"/admin\" || pathname.startsWith(\"/admin/\") returns \"admin\"",
+        "src/lib/auth/route-guard.ts:159 — /api/admin/ returns \"admin\"",
+        "migrations/226_profiles_admin_bootstrap.sql:27 — is_admin BOOLEAN NOT NULL DEFAULT false",
+        "docs/specs/00-architecture/114_rls_policy_catalog.md §2 — admin is a column flag checked inside the policy predicate, not a role"
+      ]
+    },
+    "rls_class": {
+      "answer": "B",
+      "why": "Its two primary tables are Class B: pipeline_runs is named outright in Spec 114 §4's representative list, and app_outputs is service-role-write-only with no user-owned key, so Spec 114 §2's definitional default applies. Its third table, usage_events, is Class A on user_id — the category takes ONE value, so the mixed posture is stated here and rendered per-table in the lineage block.",
+      "evidence": [
+        "docs/specs/00-architecture/114_rls_policy_catalog.md §4 — pipeline_runs in the representative Class-B list",
+        "docs/specs/00-architecture/114_rls_policy_catalog.md §2 — everything not A/C/D is Class B by default, including tables added later",
+        "docs/specs/02-web-admin/126_maxbld_surface_standard.md §6.3 row 1 — app_outputs: writes are service-role only, no client insert/update",
+        "docs/specs/02-web-admin/126_maxbld_surface_standard.md §6.3 row 2 — usage_events is Class A on user_id plus one narrowed anon insert policy"
+      ]
+    },
+    "disclosure": "none",
+    "entitlement": "none",
+    "flag": "none",
+    "permission": "none",
+    "rate_bucket": "none"
+  },
+  "render": {
+    "targets": [
+      "screen"
+    ],
+    "projection": "detail",
+    "breakpoints": "desktop_first_md",
+    "export": "none"
+  },
+  "checks": [
+    {
+      "id": "ledgerviz_freshness",
+      "kind": "freshness",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "why": "The projection it reads is a snapshot with a declared bound; a run cadence slower than the bound is an expected, permanently non-zero operator signal, and the retighten condition is the step declaring its own cadence."
+    },
+    {
+      "id": "ledgerviz_contract_parse",
+      "kind": "contract_parse",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "app_outputs.payload is JSONB; a payload that no longer parses against the projection mirror must render as schema_drift, not as a node with an empty body."
+    },
+    {
+      "id": "ledgerviz_seam_edge_resolves",
+      "kind": "schema_declared",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "why": "Every edge claims \"this run wrote this row\": an app_outputs.pipeline_run_id with no pipeline_runs row makes the provenance claim false, so it gates the render rather than drawing a lie."
+    },
+    {
+      "id": "ledgerviz_error_state",
+      "kind": "error_state",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "A failed read must not render as \"this value has no provenance\"."
+    },
+    {
+      "id": "ledgerviz_empty_state",
+      "kind": "empty_state",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "Until the materialize_app_outputs step exists the table is empty, and the page must say \"the seam is not built yet\" rather than render a blank canvas."
+    },
+    {
+      "id": "ledgerviz_a11y_label",
+      "kind": "a11y_label",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "An SVG DAG needs a labelled node/edge list; the same payload also renders as a table."
+    }
+  ],
+  "invariants": [
+    {
+      "id": "ledgerviz_output_has_run",
+      "sql": "SELECT count(*) FROM app_outputs a WHERE a.pipeline_run_id IS NOT NULL AND NOT EXISTS (SELECT 1 FROM pipeline_runs p WHERE p.id = a.pipeline_run_id)",
+      "severity": "FAIL",
+      "why": "A projection row pointing at a run that does not exist breaks the provenance claim the whole page is for."
+    },
+    {
+      "id": "ledgerviz_built_at_not_future",
+      "sql": "SELECT count(*) FROM app_outputs WHERE built_at > now()",
+      "severity": "FAIL",
+      "why": "A future built_at means the writer used a wall clock instead of the DB clock — the Spec 47 §R3.5 rule — and it would make every freshness verdict on this page wrong."
+    }
+  ],
+  "plausibility": [
+    {
+      "id": "ledgerviz_projection_lag",
+      "sql": "SELECT percentile_disc(0.95) WITHIN GROUP (ORDER BY extract(epoch FROM (now() - built_at))/3600) FROM app_outputs",
+      "severity": "WARN",
+      "why": "The 95th-percentile age of the projection in hours: a step that runs at the END of chain sources should leave the corpus at roughly the chain's cadence, and a p95 far above it means the step is being skipped rather than failing loudly."
+    }
+  ],
+  "states": [
+    {
+      "name": "loading",
+      "golden": "none"
+    },
+    {
+      "name": "empty",
+      "golden": "none"
+    },
+    {
+      "name": "hit",
+      "golden": "none"
+    },
+    {
+      "name": "partial",
+      "golden": "none"
+    },
+    {
+      "name": "degraded",
+      "golden": "none"
+    },
+    {
+      "name": "error",
+      "golden": "none"
+    },
+    {
+      "name": "unauthorized",
+      "golden": "none"
+    }
+  ],
+  "errors": {
+    "answer": "envelope",
+    "why": "Every admin route handler is wrapped by withApiEnvelope, which returns { data, error, meta } with a sanitised code on any throw; the surface renders from that envelope.",
+    "evidence": [
+      "src/lib/api/with-api-envelope.ts:27 — withApiEnvelope always returns the { data, error, meta } envelope",
+      "src/lib/api/with-api-envelope.ts:40-45 — a PG SQLSTATE becomes DATABASE_ERROR; the raw message is never exposed"
+    ],
+    "classes": [
+      {
+        "class": "401",
+        "ui": "Redirect to sign-in — the route guard refuses before the page renders."
+      },
+      {
+        "class": "403",
+        "ui": "Full-page \"admin only\" block naming the is_admin requirement; no partial data."
+      },
+      {
+        "class": "500",
+        "ui": "Full-width error panel carrying the envelope error.code, with a retry control."
+      },
+      {
+        "class": "schema_drift",
+        "ui": "The row that failed to parse renders as a red schema_drift row; the rest still renders."
+      }
+    ],
+    "no_retry": [
+      "401",
+      "403"
+    ]
+  },
+  "emits": {
+    "answer": "none",
+    "why": "It replays three append-only ledgers and writes to none of them. R-12/B6 owes no admin_audit_log row because nothing mutates; R-23 owes no usage row because nothing here is metered.",
+    "evidence": [
+      "docs/specs/02-web-admin/126_maxbld_surface_standard.md §2.2.1 P10",
+      "docs/specs/02-web-admin/128_surface_standard_policy.md §3 rule B6"
+    ],
+    "analytics": [],
+    "ledger_events": [],
+    "breadcrumbs": []
+  },
+  "offers": {
+    "answer": "none",
+    "why": "A provenance graph renders no sponsored content.",
+    "evidence": [
+      "docs/specs/02-web-admin/126_maxbld_surface_standard.md §3.1 — SLOT is the archetype that renders inventory; this surface is not one",
+      "docs/specs/02-web-admin/128_surface_standard_policy.md §2 rule 6 — \"none\" is legal; silence is not"
+    ]
+  },
+  "metering": {
+    "answer": "none",
+    "why": "It renders a usage count; it writes no usage_events row and gates no quota.",
+    "evidence": [
+      "docs/specs/02-web-admin/126_maxbld_surface_standard.md §7"
+    ]
+  },
+  "config": {
+    "answer": "logic_variables",
+    "why": "The freshness bound and the graph node cap are the two numbers a human would argue about. §3.2 sizes the DAG at ≤120 nodes, which is a declared cap rather than an emergent one, so under Spec 128 rule 3 it is a registered variable.",
+    "evidence": [
+      "docs/specs/02-web-admin/128_surface_standard_policy.md §2 rule 3",
+      "docs/reports/2026-09-15-spec126-admin-best-in-class.md §3.2 — DAGs of <= 120 nodes with no layout interaction beyond pan/zoom",
+      "scripts/seeds/logic_variables.json — both keys are NET-NEW"
+    ],
+    "logic_variables": [
+      {
+        "name": "admin_ledger_freshness_warn_hours",
+        "min": 1,
+        "max": 720,
+        "on_invalid": "fail",
+        "why": "Verdict-affecting: it decides whether a projection renders as stale."
+      },
+      {
+        "name": "admin_ledger_graph_node_cap",
+        "min": 20,
+        "max": 500,
+        "on_invalid": "clamp",
+        "why": "A render budget, not a verdict: above the cap the graph degrades to the table projection, so clamping is honest and failing would be gratuitous."
+      }
+    ],
+    "retired": []
+  },
+  "sharing": {
+    "answer": "sole",
+    "why": "No other surface holds the pipeline-to-surface join; §3.2 calls it \"the one genuinely new join\" precisely because npm run lineage-docs stops at the pipeline boundary.",
+    "evidence": [
+      "docs/reports/2026-09-15-spec126-admin-best-in-class.md §3.2",
+      "docs/reference/data-lineage-map.md — column -> producer -> consumer, but no surface edge"
+    ],
+    "surfaces": []
+  },
+  "a11y": {
+    "touch_target_min_px": 44,
+    "labels": "complete",
+    "dark_mode": "none",
+    "reduced_motion": "none",
+    "i18n": "none",
+    "safe_area": "none"
+  },
+  "deviations": "none",
+  "limitations": [
+    {
+      "what": "The app_outputs half of the seam cannot render until a pipeline step exists to write it.",
+      "measured": "Spec 126 §6.3.1 rules that the step runs at the END of chain sources, and Spec 126 §14 Out-of-Scope Files puts registering it in scripts/manifest.json outside this spec: chains.sources holds 28 steps today and none is materialize_app_outputs. Until then the surface reads its existing contract and declares inputs.projection_source \"live\".",
+      "check_id": "ledgerviz_empty_state"
+    },
+    {
+      "what": "Whether app_outputs is even one of this surface's inputs is provisional.",
+      "measured": "The row's own prior note records AQ10: the report defers the shape of app_outputs to Specs 127/128 and assumes only that this surface reads whatever the seam turns out to be.",
+      "check_id": "ledgerviz_seam_edge_resolves"
+    },
+    {
+      "what": "The REPORT required-field profile in Spec 126 §3.1 mandates inputs.projection_source (the \"live\" -> app_outputs cutover flag Spec 126 §6.3.1 names by field), and surface.schema.json has no property for any of them (the top level and every category are additionalProperties:false).",
+      "measured": "Every allOf block in scripts/surfaces/_schema/surface.schema.json is `\"then\": true` — the archetype profiles are declared in prose in Spec 126 §3.1 and enforced by nothing, so these fields can neither be declared here nor caught missing.",
+      "check_id": "ledgerviz_freshness"
+    }
+  ],
+  "interpretation": "none",
+  "notes": "Report §1.1 row 22 and §3.2 (the pipeline <-> app_outputs seam, verdict BUILD — 'the one genuinely new join'). Its fourth input is the descriptor field inputs.reads.steps[].version_pin, which is not a table. VERIFIED: neither app_outputs nor usage_events has a CREATE TABLE in migrations/. Per AQ10 the report defers the shape of app_outputs to Specs 127/128 and assumes only that this surface reads whatever the seam turns out to be, so its inclusion here is provisional. Rendered as server-computed inline SVG per AQ6, not react-flow. DESIGNED, NOT MEASURED. guards.rls_class takes ONE value for a surface reading three tables of two different classes (pipeline_runs/app_outputs Class B, usage_events Class A); the mixed posture is stated in the why and rendered per-table in lineage. chain_position for app_outputs is the RULING (end of chain sources, Spec 126 §6.3.1), not a claimed slot — scripts/manifest.json chains.sources has 28 entries and none of them is this step.",
+  "x-draft": {
+    "shard": "admin-new",
+    "files": [],
+    "role": "admin",
+    "generated": "100%",
+    "net_new_tables": [
+      "app_outputs",
+      "usage_events"
+    ],
+    "designed": true
+  },
+  "programme": {
+    "scope": "parcel_admin",
+    "phase": "UNRESEARCHED",
+    "why": "A descriptor-native admin page generated from the same descriptors this programme produces; it exists to operate and observe the parcel product, not the lead estate.",
+    "feature": "F07",
+    "build_order": 2073,
+    "leakage": "none",
+    "product_questions": "none",
+    "review": {
+      "status": "unreviewed"
+    }
+  }
+}

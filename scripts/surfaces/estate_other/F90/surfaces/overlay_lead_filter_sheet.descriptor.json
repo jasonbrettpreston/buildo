@@ -1,0 +1,336 @@
+{
+  "kind": "SURFACE",
+  "status": "exists",
+  "docs": {
+    "purpose": "A panel that slides up from the bottom of the feed or the map letting the user pick how far out to look for work, from two kilometres up to fifty. Choosing a distance saves it to their profile immediately, so the same setting follows them onto other devices. A Done button closes the panel.",
+    "data_story": "It reads nothing from the database directly. Every value arrives through one contract: `/api/user-profile`. Behind that contract, the data comes from `entitlements` and `user_profiles`, and writes land on `entitlements` and `user_profiles`. It also holds client-side state in `filterStore`, which is the part a server-driven projection has to absorb or justify. It emits **no analytics event**, so nothing it does is currently countable.",
+    "under_126": "**REBUILD** — it holds Layer-3 state (`filterStore`) and drives writes, so a client decision has to be re-homed on the server before the projection can be honest. It renders through the FORM renderer (every field carrying its Spec 99 §3 ownership row as data, with a declared rollback), reading by reference: `/api/user-profile`. Its `owns.components[]` declares `mobile/src/components/feed/LeadFilterSheet.tsx`."
+  },
+  "evidence": {
+    "files": [
+      "mobile/src/components/feed/LeadFilterSheet.tsx:1"
+    ],
+    "contracts": [
+      "mobile/src/components/feed/LeadFilterSheet.tsx:27",
+      "mobile/src/hooks/usePatchProfile.ts:49"
+    ],
+    "tables": [
+      "src/app/api/user-profile/route.ts:393"
+    ],
+    "gate": [
+      "src/lib/auth/route-guard.ts:120-132",
+      "mobile/app/(app)/_layout.tsx:236-265"
+    ],
+    "states": [
+      "mobile/src/components/feed/LeadFilterSheet.tsx:34",
+      "mobile/src/components/feed/LeadFilterSheet.tsx:68-89"
+    ],
+    "emits": [
+      "mobile/src/components/feed/LeadFilterSheet.tsx:1-94 — no track() call in the file"
+    ]
+  },
+  "identity": {
+    "id": "overlay_lead_filter_sheet",
+    "route": "mobile/src/components/feed/LeadFilterSheet.tsx",
+    "archetype": "FORM",
+    "platforms": [
+      "mobile"
+    ],
+    "owns": {
+      "components": [
+        "mobile/src/components/feed/LeadFilterSheet.tsx"
+      ]
+    },
+    "owner": "unassigned (no CODEOWNERS file and no owner registry exists in the repo — measured 2026-09-15)",
+    "spec": "docs/specs/03-mobile/91_mobile_lead_feed.md",
+    "spec_refs": [
+      "docs/specs/03-mobile/91_mobile_lead_feed.md §4.2",
+      "docs/specs/03-mobile/99_mobile_state_architecture.md §4",
+      "docs/specs/03-mobile/99_mobile_state_architecture.md §9.16"
+    ],
+    "spec_version": "0-draft",
+    "versioning": {
+      "answer": "breaking_allowed",
+      "why": "It writes a single scalar (radius_km) through a shared in-repo mutation; every consumer of that field moves in the same commit.",
+      "evidence": [
+        "mobile/src/hooks/usePatchProfile.ts:44-88"
+      ]
+    },
+    "ref": "S-065"
+  },
+  "inputs": {
+    "answer": "props",
+    "why": "It takes `visible` and `onClose` from its parent screen and reads radiusKm from the store; its only contract traffic is outbound.",
+    "evidence": [
+      "mobile/src/components/feed/LeadFilterSheet.tsx:19-27"
+    ],
+    "contract_ref": [
+      "/api/user-profile"
+    ],
+    "query_key": [],
+    "field_whitelist": [
+      "visible",
+      "onClose"
+    ],
+    "tables": []
+  },
+  "outputs": {
+    "answer": "optimistic_then_contract",
+    "why": "Tapping a radius preset goes through usePatchProfile — the canonical Bridge B3 mutation — which flips filterStore first, PATCHes, rolls back on error and invalidates [\"user-profile\"] on settle; the pre-§9.16 version called setRadiusKm alone and lost the change on cold boot.",
+    "evidence": [
+      "mobile/src/components/feed/LeadFilterSheet.tsx:71",
+      "mobile/src/hooks/usePatchProfile.ts:56-82"
+    ],
+    "contract_ref": [
+      "/api/user-profile"
+    ],
+    "tables": [
+      {
+        "table": "user_profiles",
+        "columns": [
+          "user_id",
+          "radius_km",
+          "radius_cap_km"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/03-mobile/95_mobile_user_profiles.md",
+        "evidence": [
+          "src/app/api/user-profile/route.ts:393",
+          "src/app/api/user-profile/route.ts:328",
+          "src/lib/userProfile.schema.ts:85-122",
+          "migrations/230_rls_class_a_entitlements.sql:62-68"
+        ]
+      }
+    ],
+    "rollback": "usePatchProfile onError restores the [\"user-profile\"] snapshot captured in onMutate; the server may also clamp the value to radius_cap_km, which arrives on the invalidate.",
+    "invalidates": [
+      "user-profile"
+    ]
+  },
+  "state": {
+    "answer": "zustand",
+    "why": "It reads and writes filterStore.radiusKm — the MMKV-persisted local mirror of the server field — through the shared mutation rather than setting it directly.",
+    "evidence": [
+      "mobile/src/components/feed/LeadFilterSheet.tsx:26-27",
+      "mobile/src/store/filterStore.ts:121-122"
+    ],
+    "fields": [
+      {
+        "name": "radiusKm",
+        "owner_layer": "3_zustand",
+        "canonical_writer": "usePatchProfile (server round-trip, server may clamp)",
+        "authorized_readers": [
+          "mobile_lead_feed",
+          "mobile_map",
+          "mobile_settings",
+          "overlay_lead_filter_sheet"
+        ],
+        "bridge": "B3",
+        "persistence": "mmkv",
+        "signout_reset": true
+      }
+    ]
+  },
+  "staleness": {
+    "answer": "none",
+    "why": "It renders five hard-coded radius presets and the current selection from the store; no server projection appears in the sheet.",
+    "evidence": [
+      "mobile/src/components/feed/LeadFilterSheet.tsx:17",
+      "mobile/src/components/feed/LeadFilterSheet.tsx:68-89"
+    ],
+    "offline": "none"
+  },
+  "guards": {
+    "session": {
+      "answer": "authenticated",
+      "why": "It is mounted only inside the gated tab tree and writes through the authenticated /api/user-profile route.",
+      "evidence": [
+        "src/lib/auth/route-guard.ts:120-132",
+        "mobile/app/(app)/_layout.tsx:236-265"
+      ]
+    },
+    "rls_class": {
+      "answer": "A",
+      "why": "Its single write target is the caller's own user_profiles row.",
+      "evidence": [
+        "migrations/230_rls_class_a_entitlements.sql:62-68"
+      ]
+    },
+    "disclosure": "none",
+    "entitlement": {
+      "product": "lead_gen",
+      "statuses": [
+        "trial",
+        "active",
+        "past_due",
+        "admin_managed"
+      ],
+      "on_missing": "paywall"
+    },
+    "flag": "none",
+    "permission": "none",
+    "rate_bucket": "none — /api/user-profile calls no withRateLimit"
+  },
+  "render": {
+    "targets": [
+      "screen"
+    ],
+    "projection": "none",
+    "breakpoints": "mobile_first",
+    "export": "none"
+  },
+  "checks": [
+    {
+      "id": "filtersheet_b3_bridge",
+      "kind": "contract_parse",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "why": "Spec 99 §9.16: the radius write MUST round-trip through usePatchProfile; mobile/__tests__/usePatchProfile.test.ts and bridges.test.ts lock the optimistic-write/rollback/invalidate shape."
+    },
+    {
+      "id": "filtersheet_touch_target",
+      "kind": "touch_target",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "Every preset declares an inline minHeight of 44 and the Done action declares a 44x44 box plus hitSlop (LeadFilterSheet.tsx:54-55, 72)."
+    },
+    {
+      "id": "filtersheet_a11y_label",
+      "kind": "a11y_label",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "why": "The Done action is labelled; the five radius presets are not, so a screen reader announces five unnamed buttons."
+    }
+  ],
+  "invariants": "none",
+  "plausibility": "none",
+  "states": [
+    {
+      "name": "static",
+      "golden": "none"
+    },
+    {
+      "name": "hit",
+      "golden": "none"
+    }
+  ],
+  "errors": {
+    "answer": "none",
+    "why": "A failed radius PATCH is silent on this surface: usePatchProfile rolls the value back and the preset visibly un-highlights, but no message is rendered here.",
+    "evidence": [
+      "mobile/src/components/feed/LeadFilterSheet.tsx:71",
+      "mobile/src/hooks/usePatchProfile.ts:56-82"
+    ]
+  },
+  "emits": {
+    "answer": "none",
+    "why": "Changing the search radius — the single most feed-shaping action a user can take — emits no event.",
+    "evidence": [
+      "mobile/src/components/feed/LeadFilterSheet.tsx:1-94"
+    ],
+    "analytics": [],
+    "ledger_events": [],
+    "breadcrumbs": []
+  },
+  "offers": {
+    "answer": "none",
+    "why": "No sponsored placement is rendered: the only slot component in the Expo tree is SponsorSlot, and it returns null unless EXPO_PUBLIC_PARCEL_SPONSORS=1.",
+    "evidence": [
+      "mobile/src/components/parcel/SponsorSlot.tsx:16-20"
+    ]
+  },
+  "metering": {
+    "answer": "none",
+    "why": "Nothing here is counted: the Spec 126 §7 usage ledger table does not exist (grep for usage_events in the introspected drizzle schema returns 0 hits), and the only quota-shaped counter, user_profiles.lead_views_count, is incremented solely by POST /api/leads/view, which has no mobile caller.",
+    "evidence": [
+      "src/lib/db/generated/schema.ts — no usage_events table (grep, 2026-09-15)",
+      "src/app/api/leads/view/route.ts:110",
+      "src/features/leads/api/useLeadView.ts:25 — imported only by src/tests/useLeadView.logic.test.tsx"
+    ]
+  },
+  "config": {
+    "answer": "none",
+    "why": "The five presets [2,5,10,20,50] are a module constant; the sheet does import CONTRACTS.geo.default_radius_km from the shared cross-layer mirror, but only inside a ternary whose two branches render the same string.",
+    "evidence": [
+      "mobile/src/components/feed/LeadFilterSheet.tsx:17",
+      "mobile/src/components/feed/LeadFilterSheet.tsx:86",
+      "mobile/src/constants/contracts.ts:22-25"
+    ],
+    "logic_variables": [],
+    "retired": []
+  },
+  "sharing": {
+    "answer": "shared",
+    "why": "It writes the same /api/user-profile contract settings, onboarding and both shells use, and the field it writes is read by the feed and the map.",
+    "evidence": [
+      "mobile/src/hooks/usePatchProfile.ts:49"
+    ],
+    "surfaces": [
+      "mobile_settings",
+      "mobile_lead_feed",
+      "mobile_map",
+      "shell_app_root",
+      "shell_app_tabs"
+    ]
+  },
+  "a11y": {
+    "touch_target_min_px": 44,
+    "labels": "partial",
+    "dark_mode": "hardcoded",
+    "reduced_motion": "none",
+    "i18n": "none",
+    "safe_area": "none"
+  },
+  "deviations": "none",
+  "limitations": [
+    {
+      "what": "The sheet advertises itself as \"Filters\" but exposes exactly one filter — radius. Trade is set once in onboarding and immutable; nothing else is filterable.",
+      "measured": "LeadFilterSheet.tsx:46-90 renders one section; RADIUS_OPTIONS is the only option list in the file.",
+      "check_id": "filtersheet_b3_bridge"
+    },
+    {
+      "what": "The preset list [2,5,10,20,50] includes values below the settings slider's minimum of 10, so the two radius controls in the app disagree about the legal range.",
+      "measured": "LeadFilterSheet.tsx:17 RADIUS_OPTIONS = [2,5,10,20,50]; settings.tsx:304 Slider minimumValue={10}.",
+      "check_id": "filtersheet_touch_target"
+    }
+  ],
+  "interpretation": "none",
+  "notes": "Rendered by two surfaces (the feed tab and the map tab) but owned as its own census row rather than by either.",
+  "x-draft": {
+    "shard": "mobile-product",
+    "files": [
+      "mobile/src/components/feed/LeadFilterSheet.tsx"
+    ],
+    "loc": 94,
+    "call_idiom": "hook",
+    "stores": [
+      "filterStore"
+    ],
+    "measured_states": [
+      "hidden",
+      "open"
+    ],
+    "measured_gate": {
+      "session": "required",
+      "entitlement": "subscription_status",
+      "flag": "none",
+      "permission": "none"
+    }
+  },
+  "programme": {
+    "scope": "estate_other",
+    "phase": "not_scheduled",
+    "why": "Lead generation — the other product. Spec 100 §1 states the parcel tool is \"not coupled to the Lead Feed, Flight Center, or LeadDetail\"; inventoried only.",
+    "feature": "F90",
+    "build_order": 4173,
+    "leakage": "UNRESEARCHED",
+    "product_questions": "UNRESEARCHED",
+    "review": {
+      "status": "unreviewed"
+    }
+  }
+}

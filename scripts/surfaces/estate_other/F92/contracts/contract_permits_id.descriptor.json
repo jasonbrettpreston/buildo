@@ -1,0 +1,706 @@
+{
+  "kind": "CONTRACT",
+  "status": "exists",
+  "docs": {
+    "purpose": "Shows the full profile page for one building permit — or, for a pre-construction committee-of-adjustment application, a lighter equivalent view — covering its details, which trades it matters to, its change history, the builder, the property and neighbourhood it sits on, related permits, and inspection progress.",
+    "data_story": "It reads 13 tables — `coa_applications`, `permits`, `permit_trades`, `trades`, `permit_history`, `entities`, `entity_projects`, `permit_parcels`, `parcels`, `neighbourhoods`, `permit_inspections`, `parcel_buildings` and `building_footprints` and writes nothing. Its response shape is **unmeasured** as a pick-by-name whitelist — it passes rows through, spreads a row into a computed object, or assembles the payload dynamically, so there is no single list naming what leaves the server. It is called from 1 place: `web_permit_detail`.",
+    "under_126": "Becomes a **CONTRACT descriptor** of archetype `QUERY`. It declares its `database.reads[]` with named columns, its response projection as an explicit whitelist, its auth class, its rate bucket and its staleness — and `outputs.writes` is forced to `\"none\"`. Its `consumers[]` becomes the edge list of the fan-out graph — the join nothing in this estate holds today."
+  },
+  "evidence": {
+    "files": [
+      "src/app/api/permits/[id]/route.ts:1"
+    ],
+    "contracts": [
+      "src/app/api/permits/[id]/route.ts:13 (GET export)",
+      "src/lib/api/with-api-envelope.ts:27-52"
+    ],
+    "tables": [
+      "src/app/api/permits/[id]/route.ts:42-65",
+      "src/lib/coa/repository.ts:21-43",
+      "src/app/api/permits/[id]/route.ts:104 (SELECT * FROM permits)",
+      "src/app/api/permits/[id]/route.ts:272-277 (linked-permits query, same base number)",
+      "src/app/api/permits/[id]/route.ts:118-122 (SELECT pt.*)",
+      "src/app/api/permits/[id]/route.ts:118-120",
+      "src/app/api/permits/[id]/route.ts:128-131 (SELECT * FROM permit_history), ordered by changed_at, LIMIT 50",
+      "src/app/api/permits/[id]/route.ts:138 (SELECT e.* FROM entities e)",
+      "src/app/api/permits/[id]/route.ts:139-140",
+      "src/app/api/permits/[id]/route.ts:152-157",
+      "src/app/api/permits/[id]/route.ts:152 (SELECT pa.*), joined pa.id = pp.parcel_id at route.ts:154",
+      "src/app/api/permits/[id]/route.ts:172-177",
+      "src/app/api/permits/[id]/route.ts:190-193",
+      "src/app/api/permits/[id]/route.ts:205-210"
+    ],
+    "gate": [
+      "src/lib/auth/route-guard.ts — PUBLIC_PREFIXES — '/api/permits'",
+      "src/lib/auth/route-guard.ts:150-201 — classifyRoute executed 2026-09-15 with the concrete path → \"public\"",
+      "no in-handler auth call in src/app/api/permits/[id]/route.ts — src/middleware.ts is the only gate"
+    ],
+    "states": [
+      "hit: src/app/api/permits/[id]/route.ts:291-302",
+      "miss: src/app/api/permits/[id]/route.ts:109-114 (404 Permit not found) and route.ts:69-71 (404 Pre-Permit not found)",
+      "partial: src/app/api/permits/[id]/route.ts:149 parcel=null, :168 neighbourhood=null, :187 inspections=[], :201 massing=null, :268 linkedPermits=[], :284 coaApplications=[] — each section independently degrades while the response still returns 200",
+      "degraded: src/app/api/permits/[id]/route.ts:163-165, :182-184, :196-198, :250-252, :262-264, :279-281 — six catch blocks that swallow the failure with no log, so a genuine DB error is indistinguishable from 'no data' in the response",
+      "error: src/app/api/permits/[id]/route.ts:95-98 and :303-308"
+    ],
+    "emits": [
+      "src/app/api/permits/[id]/route.ts — read in full; no Sentry breadcrumb, no analytics capture and no ledger INSERT"
+    ]
+  },
+  "identity": {
+    "id": "contract_permits_id",
+    "route": "/api/permits/[id]",
+    "archetype": "QUERY",
+    "platforms": [
+      "web"
+    ],
+    "owns": {
+      "components": []
+    },
+    "owner": "Backend/Pipeline (CLAUDE.md §Domain Rules: `src/app/api/`)",
+    "spec": "docs/specs/00-architecture/06_permits_rest_api.md",
+    "spec_refs": [
+      "docs/specs/00-architecture/06_permits_rest_api.md — owns src/app/api/permits/[id]/route.ts per docs/specs/00-architecture/00_system_map.md:13; the System Map row names no section, and the route file carries no SPEC LINK header"
+    ],
+    "spec_version": "0-draft",
+    "versioning": {
+      "answer": "breaking_allowed",
+      "why": "Every consumer is in src/** and ships in the same Next.js deploy as the route, so a breaking change is one commit.",
+      "evidence": [
+        "src/app/permits/[id]/page.tsx:85"
+      ]
+    },
+    "ref": "C-061"
+  },
+  "inputs": {
+    "answer": "app_outputs",
+    "why": "It reads 13 table(s) directly; 10 of them are materialised by named pipeline steps (massing, classify_coa_scope, builders), so its inputs are the pipeline's outputs rather than another contract.",
+    "evidence": [
+      "src/app/api/permits/[id]/route.ts:205-208",
+      "scripts/load-massing.js",
+      "docs/reference/data-lineage-map.md:174",
+      "scripts/manifest.json#chains",
+      "docs/reference/data-lineage-map.md",
+      "src/app/api/permits/[id]/route.ts:42-65",
+      "src/lib/coa/repository.ts:21-43",
+      "scripts/classify-coa-scope.js",
+      "docs/reference/data-lineage-map.md:312"
+    ],
+    "contract_ref": [],
+    "query_key": [],
+    "field_whitelist": [
+      "permit",
+      "trades",
+      "history",
+      "builder",
+      "parcel",
+      "neighbourhood",
+      "linkedPermits",
+      "massing",
+      "coaApplications",
+      "inspections"
+    ],
+    "tables": [
+      {
+        "table": "building_footprints",
+        "columns": [
+          "footprint_area_sqft",
+          "estimated_stories",
+          "max_height_m",
+          "id"
+        ],
+        "producing_steps": [
+          "massing"
+        ],
+        "chain_position": "sources[14]",
+        "owner_spec": "docs/specs/01-pipeline/43_chain_sources.md",
+        "evidence": [
+          "src/app/api/permits/[id]/route.ts:205-208",
+          "scripts/load-massing.js",
+          "docs/reference/data-lineage-map.md:174",
+          "scripts/manifest.json#chains",
+          "docs/reference/data-lineage-map.md"
+        ]
+      },
+      {
+        "table": "coa_applications",
+        "columns": [
+          "id",
+          "application_number",
+          "address",
+          "street_num",
+          "street_name",
+          "ward",
+          "status",
+          "decision",
+          "decision_date",
+          "hearing_date",
+          "description",
+          "applicant",
+          "sub_type",
+          "linked_permit_num",
+          "linked_confidence",
+          "first_seen_at"
+        ],
+        "producing_steps": [
+          "classify_coa_scope",
+          "classify_coa_trades",
+          "classify_lifecycle_phase",
+          "coa",
+          "compute_coa_cost_estimates",
+          "enrich_coa_zoning",
+          "link_coa",
+          "link_coa_to_parcels"
+        ],
+        "chain_position": "coa[5] · coa[6] · permits[23], coa[12] · coa[1] · coa[7] · coa[4] · permits[19], coa[8] · coa[3]",
+        "owner_spec": "docs/specs/01-pipeline/42_chain_coa.md",
+        "evidence": [
+          "src/app/api/permits/[id]/route.ts:42-65",
+          "src/lib/coa/repository.ts:21-43",
+          "scripts/classify-coa-scope.js",
+          "docs/reference/data-lineage-map.md:312",
+          "scripts/manifest.json#chains",
+          "docs/reference/data-lineage-map.md"
+        ]
+      },
+      {
+        "table": "entities",
+        "columns": "all",
+        "producing_steps": [
+          "builders",
+          "enrich_named_builders",
+          "enrich_wsib_builders",
+          "link_wsib"
+        ],
+        "chain_position": "permits[5] · entities[1] · entities[0] · permits[6], sources[19]",
+        "owner_spec": "docs/specs/01-pipeline/41_chain_permits.md",
+        "evidence": [
+          "src/app/api/permits/[id]/route.ts:138 (SELECT e.* FROM entities e)",
+          "scripts/extract-builders.js",
+          "docs/reference/data-lineage-map.md:506",
+          "scripts/manifest.json#chains",
+          "docs/reference/data-lineage-map.md"
+        ]
+      },
+      {
+        "table": "entity_projects",
+        "columns": [
+          "entity_id",
+          "permit_num",
+          "revision_num",
+          "role"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/02-web-admin/76_lead_feed_health_dashboard.md",
+        "evidence": [
+          "src/app/api/permits/[id]/route.ts:139-140",
+          "docs/specs/00-architecture/00_system_map.md:93",
+          "docs/reference/data-lineage-map.md — no `## `entity_projects`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)"
+        ]
+      },
+      {
+        "table": "neighbourhoods",
+        "columns": [
+          "name",
+          "neighbourhood_id",
+          "avg_household_income",
+          "median_household_income",
+          "avg_individual_income",
+          "low_income_pct",
+          "tenure_owner_pct",
+          "tenure_renter_pct",
+          "period_of_construction",
+          "couples_pct",
+          "lone_parent_pct",
+          "married_pct",
+          "university_degree_pct",
+          "immigrant_pct",
+          "visible_minority_pct",
+          "english_knowledge_pct",
+          "top_mother_tongue",
+          "census_year",
+          "id"
+        ],
+        "producing_steps": [
+          "neighbourhoods"
+        ],
+        "chain_position": "sources[16]",
+        "owner_spec": "docs/specs/01-pipeline/43_chain_sources.md",
+        "evidence": [
+          "src/app/api/permits/[id]/route.ts:172-177",
+          "scripts/load-neighbourhoods.js",
+          "docs/reference/data-lineage-map.md:698",
+          "scripts/manifest.json#chains",
+          "docs/reference/data-lineage-map.md"
+        ]
+      },
+      {
+        "table": "parcel_buildings",
+        "columns": [
+          "is_primary",
+          "structure_type",
+          "parcel_id",
+          "building_id"
+        ],
+        "producing_steps": [
+          "link_massing"
+        ],
+        "chain_position": "permits[11], sources[15]",
+        "owner_spec": "docs/specs/01-pipeline/56_source_massing.md",
+        "evidence": [
+          "src/app/api/permits/[id]/route.ts:205-210",
+          "scripts/link-massing.js",
+          "docs/reference/data-lineage-map.md:744",
+          "scripts/manifest.json#chains",
+          "docs/reference/data-lineage-map.md"
+        ]
+      },
+      {
+        "table": "parcels",
+        "columns": "all",
+        "producing_steps": [
+          "compute_centroids",
+          "compute_parcel_cost_estimates",
+          "enrich_centreline",
+          "enrich_heritage",
+          "enrich_parcels",
+          "enrich_ravines",
+          "parcels"
+        ],
+        "chain_position": "sources[9] · sources[22] · sources[13] · sources[12] · sources[21] · sources[11] · sources[4]",
+        "owner_spec": "docs/specs/01-pipeline/43_chain_sources.md",
+        "evidence": [
+          "src/app/api/permits/[id]/route.ts:152 (SELECT pa.*), joined pa.id = pp.parcel_id at route.ts:154",
+          "scripts/compute-centroids.js",
+          "docs/reference/data-lineage-map.md:757",
+          "scripts/manifest.json#chains",
+          "docs/reference/data-lineage-map.md"
+        ]
+      },
+      {
+        "table": "permit_history",
+        "columns": "all",
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/00-architecture/01_database_schema.md",
+        "evidence": [
+          "src/app/api/permits/[id]/route.ts:128-131 (SELECT * FROM permit_history), ordered by changed_at, LIMIT 50",
+          "docs/specs/00-architecture/01_database_schema.md:17 (table inventory; Spec 114 §2 records this inventory as known-stale, so it is the owner of record, not a column-level source)",
+          "docs/reference/data-lineage-map.md — no `## `permit_history`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)"
+        ]
+      },
+      {
+        "table": "permit_inspections",
+        "columns": [
+          "stage_name",
+          "status",
+          "inspection_date",
+          "scraped_at",
+          "permit_num",
+          "created_at"
+        ],
+        "producing_steps": [
+          "inspections"
+        ],
+        "chain_position": "deep_scrapes[0]",
+        "owner_spec": "docs/specs/01-pipeline/44_chain_deep_scrapes.md",
+        "evidence": [
+          "src/app/api/permits/[id]/route.ts:190-193",
+          "scripts/aic-orchestrator.py",
+          "docs/reference/data-lineage-map.md:914",
+          "scripts/manifest.json#chains",
+          "docs/reference/data-lineage-map.md"
+        ]
+      },
+      {
+        "table": "permit_parcels",
+        "columns": [
+          "permit_num",
+          "revision_num",
+          "parcel_id",
+          "match_type",
+          "confidence"
+        ],
+        "producing_steps": [
+          "link_parcels"
+        ],
+        "chain_position": "permits[8], sources[10]",
+        "owner_spec": "docs/specs/01-pipeline/41_chain_permits.md",
+        "evidence": [
+          "src/app/api/permits/[id]/route.ts:152-157",
+          "scripts/link-parcels.js",
+          "docs/reference/data-lineage-map.md:925",
+          "scripts/manifest.json#chains",
+          "docs/reference/data-lineage-map.md"
+        ]
+      },
+      {
+        "table": "permit_trades",
+        "columns": [
+          "all",
+          "permit_num",
+          "revision_num",
+          "trade_id",
+          "lead_score"
+        ],
+        "producing_steps": [
+          "backfill_realtor_permit_trades",
+          "classify_permits"
+        ],
+        "chain_position": "permits[16] · permits[13]",
+        "owner_spec": "docs/specs/03-mobile/91_mobile_lead_feed.md",
+        "evidence": [
+          "src/app/api/permits/[id]/route.ts:118-122 (SELECT pt.*)",
+          "scripts/backfill-realtor-permit-trades.js",
+          "docs/reference/data-lineage-map.md:973",
+          "scripts/manifest.json#chains",
+          "docs/reference/data-lineage-map.md"
+        ]
+      },
+      {
+        "table": "permits",
+        "columns": "all",
+        "producing_steps": [
+          "classify_inspection_status",
+          "classify_lifecycle_phase",
+          "classify_permit_phase",
+          "classify_scope",
+          "classify_scope_class",
+          "classify_scope_tags",
+          "close_stale_permits",
+          "create_pre_permits",
+          "enrich_permits",
+          "geocode_permits",
+          "inspections",
+          "link_coa",
+          "link_neighbourhoods",
+          "link_similar",
+          "permits"
+        ],
+        "chain_position": "deep_scrapes[1] · permits[23], coa[12] · permits[3] · permits[4] · not-in-a-chain · not-in-a-chain · permits[2] · not-in-a-chain · permits[9] · permits[7], sources[3] · deep_scrapes[0] · permits[19], coa[8] · permits[10], sources[17] · permits[12] · permits[1]",
+        "owner_spec": "docs/specs/01-pipeline/41_chain_permits.md",
+        "evidence": [
+          "src/app/api/permits/[id]/route.ts:104 (SELECT * FROM permits)",
+          "src/app/api/permits/[id]/route.ts:272-277 (linked-permits query, same base number)",
+          "scripts/classify-inspection-status.js",
+          "docs/reference/data-lineage-map.md:997",
+          "scripts/manifest.json#chains",
+          "docs/reference/data-lineage-map.md"
+        ]
+      },
+      {
+        "table": "trades",
+        "columns": [
+          "id",
+          "slug",
+          "name",
+          "icon",
+          "color"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/01-pipeline/84_lifecycle_phase_engine.md",
+        "evidence": [
+          "src/app/api/permits/[id]/route.ts:118-120",
+          "docs/specs/00-architecture/00_system_map.md:71",
+          "docs/reference/data-lineage-map.md:1355 — table present, no pipeline producer listed",
+          "docs/reference/data-lineage-map.md — no `## `trades`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)"
+        ]
+      }
+    ]
+  },
+  "outputs": {
+    "answer": "none",
+    "why": "A QUERY contract writes nothing; the handler issues no INSERT/UPDATE/DELETE anywhere in the file or in the libs it calls.",
+    "evidence": [
+      "src/app/api/permits/[id]/route.ts — read in full 2026-09-15; no INSERT/UPDATE/DELETE reached"
+    ],
+    "contract_ref": [],
+    "tables": []
+  },
+  "state": {
+    "answer": "server_only",
+    "why": "A CONTRACT holds no client state: every value is resolved per request on the server and nothing is cached in a client store by the route itself.",
+    "evidence": [
+      "src/app/api/permits/[id]/route.ts:13 (GET export)",
+      "src/lib/api/with-api-envelope.ts:27-52"
+    ],
+    "fields": []
+  },
+  "staleness": {
+    "answer": "live",
+    "why": "Every read runs against the base tables on each request — there is no cache layer between the handler and the database.",
+    "evidence": [
+      "src/app/api/permits/[id]/route.ts:205-208",
+      "scripts/load-massing.js",
+      "docs/reference/data-lineage-map.md:174",
+      "scripts/manifest.json#chains"
+    ],
+    "offline": "none"
+  },
+  "guards": {
+    "session": {
+      "answer": "anon",
+      "why": "classifyRoute(\"/api/permits/X\") returns \"public\" (executed 2026-09-15); the handler adds no check of its own, so middleware is the only gate.",
+      "evidence": [
+        "src/lib/auth/route-guard.ts:150-201 — classifyRoute executed 2026-09-15 with the concrete path",
+        "src/middleware.ts — the only gate for this path (no in-handler auth call)"
+      ]
+    },
+    "rls_class": {
+      "answer": "B",
+      "why": "Every table it reaches has RLS enabled with zero policies — default deny for anon and authenticated; only the table owner and service_role get through.",
+      "evidence": [
+        "migrations/227_rls_class_b_default_deny.sql:45",
+        "migrations/227_rls_class_b_default_deny.sql:75",
+        "migrations/227_rls_class_b_default_deny.sql:73",
+        "migrations/227_rls_class_b_default_deny.sql:97",
+        "migrations/227_rls_class_b_default_deny.sql:68",
+        "migrations/227_rls_class_b_default_deny.sql:49",
+        "migrations/227_rls_class_b_default_deny.sql:51",
+        "migrations/227_rls_class_b_default_deny.sql:70",
+        "migrations/227_rls_class_b_default_deny.sql:67",
+        "migrations/227_rls_class_b_default_deny.sql:64",
+        "migrations/227_rls_class_b_default_deny.sql:69",
+        "migrations/227_rls_class_b_default_deny.sql:66",
+        "migrations/227_rls_class_b_default_deny.sql:44",
+        "docs/specs/00-architecture/114_rls_policy_catalog.md §2"
+      ]
+    },
+    "disclosure": {
+      "fields": [
+        "permit",
+        "trades",
+        "history",
+        "builder",
+        "parcel",
+        "neighbourhood",
+        "linkedPermits",
+        "massing",
+        "coaApplications",
+        "inspections"
+      ],
+      "why": "Reachable with no session at all (classifyRoute → public). These are the top-level fields an unauthenticated caller receives; at least one query is a whole-row SELECT *, so the projection is the table, not a whitelist."
+    },
+    "entitlement": "none",
+    "flag": "none",
+    "permission": "none",
+    "rate_bucket": "none"
+  },
+  "render": {
+    "targets": [
+      "screen"
+    ],
+    "projection": "none",
+    "breakpoints": "none",
+    "export": "none"
+  },
+  "checks": [
+    {
+      "id": "contract_permits_id__auth_class_parity",
+      "kind": "auth_class_parity",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "why": "guards.session must equal classifyRoute(\"/api/permits/X\"), executed 2026-09-15 → \"public\"; there is no in-handler check, so a middleware change silently re-classes this route. Locked by api.infra.test.ts, coa.logic.test.ts, neighbourhoods-fk-join.infra.test.ts."
+    },
+    {
+      "id": "contract_permits_id__error_envelope",
+      "kind": "error_state",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "why": "MEASURED DEVIATION, permanently non-zero until re-projected: No response in this file uses {data,error,meta}. Success is a flat 9- or 10-key object (route.ts:291-302 / :84-94); every error is a bare {error: '<string>'} (route.ts:24, :31, :70, :97, :111, :306). The envelope shape appears only on the wrapper's uncaught pa Retighten condition: the handler returns the envelope on every path."
+    },
+    {
+      "id": "contract_permits_id__field_whitelist_parity",
+      "kind": "field_whitelist_parity",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "why": "MEASURED: the projection is mixed (src/app/api/permits/[id]/route.ts:291-302 (top level named, but permit/trades/history/builder/parcel are whole SELECT * rows), src/app/api/permits/[id]/route.ts:235-247 (massing IS an explicit pick), src/app/api/permits/[id]/route.ts:84-94 (CoA branch: 9 keys, no `inspections`)), so a column added upstream reaches the client without a code change. Permanently non-zero until the response is an explicit pick; retighten condition: projection.kind === explicit_pick."
+    },
+    {
+      "id": "contract_permits_id__schema_declared",
+      "kind": "schema_declared",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "Every table and column declared in lineage.reads[]/writes[] must exist in src/lib/db/generated/schema.ts (drizzle-kit introspect of the live database); the registry generator checks this both directions."
+    },
+    {
+      "id": "contract_permits_id__anon_disclosure",
+      "kind": "disclosure",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "why": "classifyRoute returns \"public\": the field set in guards.disclosure is what an unauthenticated caller receives, and it must match the projection exactly — a field added to the projection is a new anonymous disclosure."
+    }
+  ],
+  "invariants": "none",
+  "plausibility": "none",
+  "states": [
+    {
+      "name": "hit",
+      "golden": "none"
+    },
+    {
+      "name": "miss",
+      "golden": "none"
+    },
+    {
+      "name": "partial",
+      "golden": "none"
+    },
+    {
+      "name": "degraded",
+      "golden": "none"
+    },
+    {
+      "name": "error",
+      "golden": "none"
+    }
+  ],
+  "errors": {
+    "answer": "envelope",
+    "why": "It returns a JSON error body, but NOT the standard envelope: No response in this file uses {data,error,meta}. Success is a flat 9- or 10-key object (route.ts:291-302 / :84-94); every error is a bare {error: '<string>'} (route.ts:24, :31, :70, :97, :111, :306). The envelope shape a \"envelope\" is the closest member of the closed menu; the deviation is recorded in deviations[].",
+    "evidence": [
+      "src/lib/api/with-api-envelope.ts:27-52",
+      "src/app/api/permits/[id]/route.ts:291-302",
+      "src/app/api/permits/[id]/route.ts:84-94",
+      "src/app/api/permits/[id]/route.ts:23-26",
+      "src/app/api/permits/[id]/route.ts:110-113",
+      "src/lib/api/with-api-envelope.ts:42",
+      "src/app/api/permits/[id]/route.ts:25 (400)",
+      "src/app/api/permits/[id]/route.ts:33 (400)",
+      "src/app/api/permits/[id]/route.ts:70 (404)",
+      "src/app/api/permits/[id]/route.ts:112 (404)"
+    ],
+    "classes": [
+      {
+        "class": "400",
+        "ui": "{error: 'Invalid permit ID format. Use: permitNum--revisionNum'} — parts.length !== 2 — src/app/api/permits/[id]/route.ts:25"
+      },
+      {
+        "class": "500",
+        "ui": "{error: 'Failed to fetch pre-permit'} — src/app/api/permits/[id]/route.ts:97"
+      }
+    ]
+  },
+  "emits": {
+    "answer": "none",
+    "why": "Nothing it does is currently countable: src/app/api/permits/[id]/route.ts was read in full and contains no Sentry breadcrumb, no analytics capture and no ledger INSERT.",
+    "evidence": [
+      "src/app/api/permits/[id]/route.ts — read in full; no Sentry breadcrumb, no analytics capture and no ledger INSERT"
+    ],
+    "analytics": [],
+    "ledger_events": [],
+    "breadcrumbs": []
+  },
+  "offers": {
+    "answer": "none",
+    "why": "It renders no sponsored placement: the offers and advertisers tables Spec 126 §2 specifies do not exist in migrations/ and nothing in this handler reads placement inventory.",
+    "evidence": [
+      "migrations/ — no CREATE TABLE offers / advertisers (grep 2026-09-15)",
+      "src/app/api/permits/[id]/route.ts — read in full; no placement read"
+    ]
+  },
+  "metering": {
+    "answer": "none",
+    "why": "Nothing here is counted: no usage_events row (the table does not exist in the introspected schema) and no quota counter is written by this handler.",
+    "evidence": [
+      "src/app/api/permits/[id]/route.ts — read in full 2026-09-15",
+      "src/lib/db/generated/schema.ts — no usage_events table"
+    ]
+  },
+  "config": {
+    "answer": "none",
+    "why": "It consumes no tunable: no logic_variables read and no env-var-driven threshold in the handler or the libs it calls.",
+    "evidence": [
+      "src/app/api/permits/[id]/route.ts — read in full 2026-09-15; no loadMarketplaceConfigs / logic_variables read"
+    ],
+    "logic_variables": [],
+    "retired": []
+  },
+  "sharing": {
+    "answer": "sole",
+    "why": "Exactly one call site renders it, so its projection serves one surface.",
+    "evidence": [
+      "src/app/permits/[id]/page.tsx:85"
+    ],
+    "surfaces": [
+      "src/app/permits/[id]/page.tsx:85"
+    ]
+  },
+  "a11y": {
+    "touch_target_min_px": "UNRESEARCHED",
+    "labels": "none",
+    "dark_mode": "none",
+    "reduced_motion": "none",
+    "i18n": "none",
+    "safe_area": "none"
+  },
+  "deviations": [
+    {
+      "from": "docs/specs/00_engineering_standards.md §4.4 — all API routes return { data, error, meta }",
+      "why": "No response in this file uses {data,error,meta}. Success is a flat 9- or 10-key object (route.ts:291-302 / :84-94); every error is a bare {error: '<string>'} (route.ts:24, :31, :70, :97, :111, :306). The envelope shape appears only on the wrapper's uncaught path (with-api-envelope.ts:41-50), which is unreachable for DB errors here because both branches have their own try/catch (route.ts:40-98, :10",
+      "adjudicated_by": "not adjudicated — measured 2026-09-15 by reading the handler",
+      "date": "2026-09-15"
+    },
+    {
+      "from": "docs/specs/00_engineering_standards.md §4.3 — never SELECT *, always project specific columns",
+      "why": "At least one query reads the whole row: permits, permit_history, entities, parcels.",
+      "adjudicated_by": "not adjudicated — measured 2026-09-15",
+      "date": "2026-09-15"
+    }
+  ],
+  "limitations": [
+    {
+      "what": "a11y.touch_target_min_px has no legal answer for a CONTRACT",
+      "measured": "The schema allows only UNRESEARCHED or an integer >= 44; a JSON endpoint has no touch target and the vocabulary has no \"n/a\". Left UNRESEARCHED and escalated per Spec 128 §4 rather than invented.",
+      "check_id": "contract_permits_id__auth_class_parity"
+    },
+    {
+      "what": "error classes outside the closed set are not representable: 404",
+      "measured": "The handler returns 404 at src/app/api/permits/[id]/route.ts:70, src/app/api/permits/[id]/route.ts:112; errors.classes[] admits only 400/401/403/429/500/schema_drift/offline.",
+      "check_id": "contract_permits_id__error_envelope"
+    }
+  ],
+  "interpretation": "none",
+  "notes": "No SPEC LINK header anywhere in the file. No explicit auth/session check in the handler itself — it is public by route-guard classification. Several secondary joins (parcels, neighbourhoods, permit_inspections, parcel_buildings/building_footprints, linked permits, CoA) are each wrapped in try/catch with comments like 'table may not exist yet' or 'non-fatal' — legacy defensive code that silently returns null/[] on failure rather than failing the request. Core permit and permit_history queries use SELECT *. Called via a template literal from src/app/permits/[id]/page.tsx. | MEASURED 2026-09-15: MOST SERIOUS DISCLOSURE IN THIS GROUP. `SELECT pa.*` (route.ts:152) returns EVERY column of `parcels` to an UNAUTHENTICATED caller. From src/lib/db/generated/schema.ts (parcels pgTable) that includes `parcel_cost_menu`, `cost_fb_total`, `cost_coa_total`, `cost_solar_total`, `cost_garden_suite_total`, `cost_laneway_suite_total`, `cost_garage_total`, `cost_gut_total`, `cost_addition_total`, `cost_kitchen_per_sqm`, `cost_bath_per_sqm`, `cost_basement_per_sqm`, `cost_basement_underpin_per_sqm`, `comparable_builds`, `nearby_builds_summary`, the whole `max_build_*`/`opt_*`/`bylaw_*` block, AND the `geometry`/`geom` PostGIS blobs. This is the EXACT payload that /api/parcels/lookup gates behind a session (401), an active-subscription check (403) and a rate limit, and that src/lib/admin/parcel-lookup.ts:32 deliberately excludes geometry from. Here the same data is free to anyone who knows a permit id, with no auth, no subscription check and no rate limit — a direct contradiction of Spec 100 §5 (docs/specs/03-mobile/100_mobile_parcel_cost_tool.md:111: 'the response is the proprietary cost model — a value payload we will not serve to a lapsed or deleted account'). Reported as a finding, not a fact about intent: I found no spec text authorizing it. SECOND disclosure: `SELECT * FROM permits` (route.ts:104) — all 171 columns incl. `owner`, `builder_name`, `est_const_cost`, `bid_value`, `latitude`, `longitude`, `raw_json`, `photo_url`, `lead_id`. THIRD: `SELECT e.*` from `entities` (route.ts:138) returns the full builder entity row; per docs/specs/00-architecture/01_database_schema.md:17 `entities` is the enriched-contact table, and src/lib/quality/metrics.ts:377-385 confirms it carries `primary_phone`, `primary_email`, `website`, `google_place_id`, `is_wsib_registered` — so builder CONTACT DETAILS are served anonymously. FOURTH: the neighbourhoods projection (route.ts:172-177) is explicit but exposes Census demographics (income, tenure, immigrant_pct, visible_minority_pct, top_mother_tongue) — aggregate open data, but attached to a specific address. CHECKLIST agreement: routes-index.json census_reads listed 13 tables (coa_applications, permits, permit_trades, trades, permit_history, entities, entity_projects, permit_parcels, parcels, neighbourhoods, permit_inspections, parcel_buildings, building_footprints) — all 13 confirmed, no extras, no misses. NOTE the response MUTATES the in-memory permit row before returning it: route.ts:260-261 back-fills permit.project_type and permit.scope_tags from classifyScope when the DB row lacks them — a computed value served as if stored, with no marker distinguishing it (the catch at route.ts:262-264 makes failure silent). The CoA branch (route.ts:38-99) returns a DIFFERENT top-level shape: 9 keys, missing `inspections` (route.ts:84-94 vs :291-302) — a consumer that reads `inspections` gets undefined for a COA- id. | Caching: none observed — no revalidate/dynamic export and no Cache-Control header in src/app/api/permits/[id]/route.ts:1-310 | Other guards / classification: PUBLIC: '/api/permits' prefix (src/lib/auth/route-guard.ts:70) matched at route-guard.ts:170 -> 'public'; middleware pass-through src/middleware.ts:43-45. Five silent-swallow catch blocks with empty bodies (route.ts:163-165, :182-184, :196-198, :250-252, :279-281) and one comment-only catch (route.ts:262-264) — each degrades a section to null/[] with",
+  "x-draft": {
+    "shard": "contracts",
+    "files": [
+      "src/app/api/permits/[id]/route.ts"
+    ],
+    "loc": 310,
+    "methods": [
+      "GET"
+    ],
+    "consumers": [
+      "web_permit_detail"
+    ],
+    "writes_audit_row": "n/a",
+    "consumers_verified": [
+      "src/app/permits/[id]/page.tsx:85"
+    ],
+    "auth_class_executed": "public",
+    "locking_tests": [
+      "src/tests/api.infra.test.ts",
+      "src/tests/coa.logic.test.ts",
+      "src/tests/neighbourhoods-fk-join.infra.test.ts"
+    ]
+  },
+  "programme": {
+    "scope": "estate_other",
+    "phase": "not_scheduled",
+    "why": "Permit data for the lead-gen product. Inventoried only; it converts under the same standard in a later programme.",
+    "feature": "F92",
+    "build_order": 4192,
+    "leakage": "UNRESEARCHED",
+    "product_questions": "UNRESEARCHED",
+    "review": {
+      "status": "unreviewed"
+    }
+  }
+}

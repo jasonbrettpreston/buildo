@@ -1,0 +1,461 @@
+{
+  "kind": "CONTRACT",
+  "status": "exists",
+  "docs": {
+    "purpose": "Receives payment-status events directly from the payment provider — checkout completed, subscription created, updated or cancelled, invoice paid or failed — and updates the corresponding user's paid-access status. This is the mechanism that actually turns a subscriber's access on or off after billing is processed.",
+    "data_story": "It reads 3 tables — `entitlements`, `user_profiles` and `logic_variables` and writes `stripe_webhook_events` and `entitlements`. Its response shape is **unmeasured** as a pick-by-name whitelist — it passes rows through, spreads a row into a computed object, or assembles the payload dynamically, so there is no single list naming what leaves the server. **Nothing in this repository calls it.** That is the state this registry exists to make visible, not a claim that it is dead — a caller could be a bookmark, an external system, or a path built from variables.",
+    "under_126": "Becomes a **CONTRACT descriptor** of archetype `WEBHOOK`. It declares its signature verification, its closed `events[]` set, its replay guard, its ordering watermark and its behaviour on an unknown event. Its `consumers[]` is the field that matters most here: today it is empty, and the orphan panel renders that as a red row rather than leaving it to be discovered years later."
+  },
+  "evidence": {
+    "files": [
+      "src/app/api/webhooks/stripe/route.ts:1"
+    ],
+    "contracts": [
+      "src/app/api/webhooks/stripe/route.ts:282 (POST export)",
+      "src/lib/api/with-api-envelope.ts:27-52"
+    ],
+    "tables": [
+      "src/app/api/webhooks/stripe/route.ts:384-387 — SELECT user_id FROM user_profiles WHERE stripe_customer_id = $1 LIMIT 1 (identity fallback when metadata carries no user_id)",
+      "src/app/api/webhooks/stripe/route.ts:432-435 — SELECT product FROM entitlements WHERE stripe_subscription_id = $1 LIMIT 1 (invoice.* product resolution)",
+      "src/lib/entitlements/index.ts:307-309 (variable_key = 'stripe_price_product_map'); call site src/app/api/webhooks/stripe/route.ts:450",
+      "src/app/api/webhooks/stripe/route.ts:337-342 — ON CONFLICT (event_id) DO NOTHING RETURNING event_id. Table DDL: migrations/114_user_profiles_mobile_columns.sql:93-96 (event_id TEXT PRIMARY KEY, processed_at default NOW()); event_type + stripe_customer_id added by migrations/221_stripe_webhook_events_correlation.sql:17-18",
+      "src/lib/entitlements/index.ts:162-173 — INSERT ... ON CONFLICT (user_id, product) DO UPDATE SET status, stripe_subscription_id = COALESCE(EXCLUDED.stripe_subscription_id, entitlements.stripe_subscription_id), current_period_end, last_stripe_event_at, updated_at, gated by three WHERE fences (:171-173); called at src/app/api/webhooks/stripe/route.ts:458-465",
+      "src/lib/db/generated/schema.ts — every table named here is present in the introspected drizzle schema"
+    ],
+    "gate": [
+      "src/lib/auth/route-guard.ts — PUBLIC_EXACT_API_PATHS — '/api/webhooks/stripe' (exact-match set, so sibling paths cannot inherit public)",
+      "src/lib/auth/route-guard.ts:150-201 — classifyRoute executed 2026-09-15 with the concrete path → \"public\"",
+      "in-handler: SIGNATURE: the stripe-signature header is required at src/app/api/webhooks/stripe/route.ts:283-286, and HMAC-verified by `stripe.webhooks.constructEvent(rawBody, signature, getWebhookSecret())` at :319; the secret is presence-guarded at :83-89 (throws if STRIPE_WEBHOOK_SECRET is unset, caught at :320 -> 400). REPLAY/IDEMPOTENCY: `INSERT INTO stripe_webhook_events (event_id, event_type, stripe_customer_id) VALUES ($1,$2,$3) ON CONFLICT (event_id) DO NOTHING RETURNING event_id` at :337-342, with `if (inserted.rowCount === 0) return;` at :343-348 — inside the same withTransaction as the entitlement upsert (:330), so a concurrent Stripe retry cannot apply the body twice. DoS: 1 MiB body cap at :310-313."
+    ],
+    "states": [
+      "hit: src/app/api/webhooks/stripe/route.ts:498 (200 { received: true } — emitted for applied events AND for every no-apply path)",
+      "unauthorized: src/app/api/webhooks/stripe/route.ts:283-286 (missing signature -> 400), :320-325 (invalid signature -> 400)",
+      "empty: src/app/api/webhooks/stripe/route.ts:297-299 (empty body -> 400)",
+      "miss: src/app/api/webhooks/stripe/route.ts:343-348 (duplicate event, early return), :350-356 (recognised-but-no-op / unknown event type), :390-401 (no user resolved), :402-411 (non-uuid user), :467-495 (no entitlements row applied — fenced/stale/superseded)",
+      "error: src/app/api/webhooks/stripe/route.ts:291-295 (400), :310-313 (413), :499-502 (500)",
+      "rate_limited: NOT REACHABLE — no rate limiter anywhere in the file (all 503 lines read); the only volume control is the 1 MiB body cap at :310-313"
+    ],
+    "emits": [
+      "ledger stripe_webhook_events INSERT at src/app/api/webhooks/stripe/route.ts:338 (one row per distinct Stripe event id — the dedup ledger)"
+    ]
+  },
+  "identity": {
+    "id": "contract_webhooks_stripe",
+    "route": "/api/webhooks/stripe",
+    "archetype": "WEBHOOK",
+    "platforms": [
+      "web"
+    ],
+    "owns": {
+      "components": []
+    },
+    "owner": "Backend/Pipeline (CLAUDE.md §Domain Rules: `src/app/api/`)",
+    "spec": "docs/specs/03-mobile/96_mobile_subscription.md",
+    "spec_refs": [
+      "docs/specs/03-mobile/96_mobile_subscription.md §10 Step 5 + docs/specs/00-architecture/116_multi_product_architecture.md §4 N2 + OD3/OD5 (src/app/api/webhooks/stripe/route.ts:1-2)"
+    ],
+    "spec_version": "0-draft",
+    "versioning": {
+      "answer": "none",
+      "why": "No call site anywhere in src/** or mobile/** (verified 2026-09-15 by an exact-path sweep that strips comment lines), so no consumer holds a compatibility promise to break.",
+      "evidence": [
+        "src/app/api/webhooks/stripe/route.ts — no caller",
+        "src/lib/auth/route-guard.ts:150-201"
+      ]
+    },
+    "ref": "C-038"
+  },
+  "inputs": {
+    "answer": "app_outputs",
+    "why": "It reads 3 table(s) directly; none is written by a pipeline step — they are written by API routes, jobs or migration seeds — but the input is still the database, not another contract.",
+    "evidence": [
+      "src/app/api/webhooks/stripe/route.ts:432-435 — SELECT product FROM entitlements WHERE stripe_subscription_id = $1 LIMIT 1 (invoice.* product resolution)",
+      "migrations/228_entitlements.sql:21",
+      "docs/reference/data-lineage-map.md — no `## `entitlements`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)",
+      "src/lib/entitlements/index.ts:307-309 (variable_key = 'stripe_price_product_map'); call site src/app/api/webhooks/stripe/route.ts:450",
+      "docs/specs/00-architecture/00_system_map.md:94",
+      "docs/reference/data-lineage-map.md:646 — table present, no pipeline producer listed",
+      "docs/reference/data-lineage-map.md — no `## `logic_variables`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)",
+      "src/app/api/webhooks/stripe/route.ts:384-387 — SELECT user_id FROM user_profiles WHERE stripe_customer_id = $1 LIMIT 1 (identity fallback when metadata carries no user_id)",
+      "docs/specs/00-architecture/00_system_map.md:80",
+      "docs/reference/data-lineage-map.md — no `## `user_profiles`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)"
+    ],
+    "contract_ref": [],
+    "query_key": [],
+    "field_whitelist": [
+      "received"
+    ],
+    "tables": [
+      {
+        "table": "entitlements",
+        "columns": [
+          "product"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/00-architecture/116_multi_product_architecture.md",
+        "evidence": [
+          "src/app/api/webhooks/stripe/route.ts:432-435 — SELECT product FROM entitlements WHERE stripe_subscription_id = $1 LIMIT 1 (invoice.* product resolution)",
+          "migrations/228_entitlements.sql:21",
+          "docs/reference/data-lineage-map.md — no `## `entitlements`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)"
+        ]
+      },
+      {
+        "table": "logic_variables",
+        "columns": [
+          "variable_value_json"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/02-web-admin/86_control_panel.md",
+        "evidence": [
+          "src/lib/entitlements/index.ts:307-309 (variable_key = 'stripe_price_product_map'); call site src/app/api/webhooks/stripe/route.ts:450",
+          "docs/specs/00-architecture/00_system_map.md:94",
+          "docs/reference/data-lineage-map.md:646 — table present, no pipeline producer listed",
+          "docs/reference/data-lineage-map.md — no `## `logic_variables`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)"
+        ]
+      },
+      {
+        "table": "user_profiles",
+        "columns": [
+          "user_id"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/02-web-admin/102_admin_notifications_tool.md",
+        "evidence": [
+          "src/app/api/webhooks/stripe/route.ts:384-387 — SELECT user_id FROM user_profiles WHERE stripe_customer_id = $1 LIMIT 1 (identity fallback when metadata carries no user_id)",
+          "docs/specs/00-architecture/00_system_map.md:80",
+          "docs/reference/data-lineage-map.md — no `## `user_profiles`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)"
+        ]
+      }
+    ]
+  },
+  "outputs": {
+    "answer": "contract_only",
+    "why": "This route IS the mutation contract: it writes 2 table(s) synchronously inside the request and returns the result — there is no optimistic client-side flip to reconcile.",
+    "evidence": [
+      "src/lib/entitlements/index.ts:162-173 — INSERT ... ON CONFLICT (user_id, product) DO UPDATE SET status, stripe_subscription_id = COALESCE(EXCLUDED.stripe_subscription_id, entitlements.stripe_subscription_id), current_period_end, last_stripe_event_at, updated_at, gated by three WHERE fences (:171-173); called at src/app/api/webhooks/stripe/route.ts:458-465",
+      "migrations/228_entitlements.sql:21",
+      "docs/reference/data-lineage-map.md — no `## `entitlements`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)",
+      "src/app/api/webhooks/stripe/route.ts:337-342 — ON CONFLICT (event_id) DO NOTHING RETURNING event_id. Table DDL: migrations/114_user_profiles_mobile_columns.sql:93-96 (event_id TEXT PRIMARY KEY, processed_at default NOW()); event_type + stripe_customer_id added by migrations/221_stripe_webhook_events_correlation.sql:17-18",
+      "migrations/114_user_profiles_mobile_columns.sql:93",
+      "docs/reference/data-lineage-map.md — no `## `stripe_webhook_events`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)"
+    ],
+    "contract_ref": [],
+    "tables": [
+      {
+        "table": "entitlements",
+        "columns": [
+          "user_id",
+          "product",
+          "status",
+          "stripe_subscription_id",
+          "current_period_end",
+          "last_stripe_event_at",
+          "created_at",
+          "updated_at"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/00-architecture/116_multi_product_architecture.md",
+        "evidence": [
+          "src/lib/entitlements/index.ts:162-173 — INSERT ... ON CONFLICT (user_id, product) DO UPDATE SET status, stripe_subscription_id = COALESCE(EXCLUDED.stripe_subscription_id, entitlements.stripe_subscription_id), current_period_end, last_stripe_event_at, updated_at, gated by three WHERE fences (:171-173); called at src/app/api/webhooks/stripe/route.ts:458-465",
+          "migrations/228_entitlements.sql:21",
+          "docs/reference/data-lineage-map.md — no `## `entitlements`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)"
+        ]
+      },
+      {
+        "table": "stripe_webhook_events",
+        "columns": [
+          "event_id",
+          "event_type",
+          "stripe_customer_id"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/03-mobile/95_mobile_user_profiles.md",
+        "evidence": [
+          "src/app/api/webhooks/stripe/route.ts:337-342 — ON CONFLICT (event_id) DO NOTHING RETURNING event_id. Table DDL: migrations/114_user_profiles_mobile_columns.sql:93-96 (event_id TEXT PRIMARY KEY, processed_at default NOW()); event_type + stripe_customer_id added by migrations/221_stripe_webhook_events_correlation.sql:17-18",
+          "migrations/114_user_profiles_mobile_columns.sql:93",
+          "docs/reference/data-lineage-map.md — no `## `stripe_webhook_events`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)"
+        ]
+      }
+    ]
+  },
+  "state": {
+    "answer": "server_only",
+    "why": "A CONTRACT holds no client state: every value is resolved per request on the server and nothing is cached in a client store by the route itself.",
+    "evidence": [
+      "src/app/api/webhooks/stripe/route.ts:282 (POST export)",
+      "src/lib/api/with-api-envelope.ts:27-52"
+    ],
+    "fields": []
+  },
+  "staleness": {
+    "answer": "live",
+    "why": "Every read runs against the base tables on each request — there is no cache layer between the handler and the database.",
+    "evidence": [
+      "src/app/api/webhooks/stripe/route.ts:432-435 — SELECT product FROM entitlements WHERE stripe_subscription_id = $1 LIMIT 1 (invoice.* product resolution)",
+      "migrations/228_entitlements.sql:21",
+      "docs/reference/data-lineage-map.md — no `## `entitlements`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)",
+      "src/lib/entitlements/index.ts:307-309 (variable_key = 'stripe_price_product_map'); call site src/app/api/webhooks/stripe/route.ts:450"
+    ],
+    "offline": "none"
+  },
+  "guards": {
+    "session": {
+      "answer": "anon",
+      "why": "classifyRoute(\"/api/webhooks/stripe\") returns \"public\" (executed 2026-09-15); no session is checked — the handler authenticates the caller by other means: SIGNATURE: the stripe-signature header is required at src/app/api/webhooks/stripe/route.ts:283-286, and HMAC-verified by `stripe.webhooks.constructEvent(rawBody",
+      "evidence": [
+        "src/lib/auth/route-guard.ts:150-201 — classifyRoute executed 2026-09-15 with the concrete path",
+        "SIGNATURE: the stripe-signature header is required at src/app/api/webhooks/stripe/route.ts:283-286, and HMAC-verified by `stripe.webhooks.constructEvent(rawBody, signature, getWebhookSecret())` at :319; the secret is presence-guarded at :83-89 (throws if STRIPE_WEBHOOK_SECRET is unset, caught at :320 -> 400). REPLAY/IDEMPOTENCY: `INSERT INTO stripe_webhook_events (event_id, event_type, stripe_customer_id) VALUES ($1,$2,$3) ON CONFLICT (event_id) DO NOTHING RETURNING event_id` at :337-342, with `if (inserted.rowCount === 0) return;` at :343-348 — inside the same withTransaction as the entitlement upsert (:330), so a concurrent Stripe retry cannot apply the body twice. DoS: 1 MiB body cap at :310-313."
+      ]
+    },
+    "rls_class": {
+      "answer": "A",
+      "why": "It reaches user-owned rows whose policies key on auth.uid(), alongside default-deny Class B pipeline tables. The route connects as the table owner (raw pg), which Spec 114 §9 makes owner-exempt from RLS — the class describes the data, not the gate this route passes.",
+      "evidence": [
+        "migrations/230_rls_class_a_entitlements.sql:48",
+        "migrations/230_rls_class_a_entitlements.sql:58",
+        "migrations/227_rls_class_b_default_deny.sql:61",
+        "migrations/227_rls_class_b_default_deny.sql:85",
+        "docs/specs/00-architecture/114_rls_policy_catalog.md §2"
+      ]
+    },
+    "disclosure": {
+      "fields": [
+        "received"
+      ],
+      "why": "Reachable with no session at all (classifyRoute → public). These are the top-level fields an unauthenticated caller receives."
+    },
+    "entitlement": "none",
+    "flag": "none",
+    "permission": "none",
+    "rate_bucket": "none"
+  },
+  "render": {
+    "targets": [
+      "screen"
+    ],
+    "projection": "none",
+    "breakpoints": "none",
+    "export": "none"
+  },
+  "checks": [
+    {
+      "id": "contract_webhooks_stripe__auth_class_parity",
+      "kind": "auth_class_parity",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "why": "guards.session must equal classifyRoute(\"/api/webhooks/stripe\"), executed 2026-09-15 → \"public\" plus the in-handler guard (SIGNATURE: the stripe-signature header is required at src/app/api/webhooks/stripe/route.ts:283-286, and HMAC-v). Locked by stripe-webhook-realsig.infra.test.ts, stripe-webhook-resubscriber.regression.test.ts, stripe-webhook.infra.test.ts, stripe-webhook.security.test.ts, user-profile-delete-stripe.infra.test.ts."
+    },
+    {
+      "id": "contract_webhooks_stripe__error_envelope",
+      "kind": "error_state",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "why": "MEASURED DEVIATION, permanently non-zero until re-projected: DELIBERATE and documented at :38-39: Stripe expects `{ received: true }`, not the data/error/meta envelope. Every error response is likewise a bare `{ error: <string> }` with no machine-readable code. withApiEnvelope IS applied (:282) so an escaping throw woul Retighten condition: the handler returns the envelope on every path."
+    },
+    {
+      "id": "contract_webhooks_stripe__field_whitelist_parity",
+      "kind": "field_whitelist_parity",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "The response is an explicit pick-by-name of 1 field(s) (src/app/api/webhooks/stripe/route.ts:498), so a column added upstream cannot leak; this check set-equals the projection to inputs.field_whitelist."
+    },
+    {
+      "id": "contract_webhooks_stripe__schema_declared",
+      "kind": "schema_declared",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "Every table and column declared in lineage.reads[]/writes[] must exist in src/lib/db/generated/schema.ts (drizzle-kit introspect of the live database); the registry generator checks this both directions."
+    },
+    {
+      "id": "contract_webhooks_stripe__anon_disclosure",
+      "kind": "disclosure",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "why": "classifyRoute returns \"public\": the field set in guards.disclosure is what an unauthenticated caller receives, and it must match the projection exactly — a field added to the projection is a new anonymous disclosure."
+    }
+  ],
+  "invariants": "none",
+  "plausibility": "none",
+  "states": [
+    {
+      "name": "hit",
+      "golden": "none"
+    },
+    {
+      "name": "unauthorized",
+      "golden": "none"
+    },
+    {
+      "name": "empty",
+      "golden": "none"
+    },
+    {
+      "name": "miss",
+      "golden": "none"
+    },
+    {
+      "name": "error",
+      "golden": "none"
+    },
+    {
+      "name": "rate_limited",
+      "golden": "none"
+    }
+  ],
+  "errors": {
+    "answer": "envelope",
+    "why": "It returns a JSON error body, but NOT the standard envelope: DELIBERATE and documented at :38-39: Stripe expects `{ received: true }`, not the data/error/meta envelope. Every error response is likewise a bare `{ error: <string> }` with no machine-readable code. withApiEnvelope IS  \"envelope\" is the closest member of the closed menu; the deviation is recorded in deviations[].",
+    "evidence": [
+      "src/lib/api/with-api-envelope.ts:27-52",
+      "src/app/api/webhooks/stripe/route.ts:498 (success -> { received: true })",
+      "src/app/api/webhooks/stripe/route.ts:285 ({ error: 'Missing signature' })",
+      "src/app/api/webhooks/stripe/route.ts:294 ({ error: 'Could not read body' })",
+      "src/app/api/webhooks/stripe/route.ts:298 ({ error: 'Empty body' })",
+      "src/app/api/webhooks/stripe/route.ts:312 ({ error: 'Payload too large' })",
+      "src/app/api/webhooks/stripe/route.ts:324 ({ error: 'Invalid signature' })",
+      "src/app/api/webhooks/stripe/route.ts:501 ({ error: 'Webhook processing failed' })",
+      "src/app/api/webhooks/stripe/route.ts:285 (400)",
+      "src/app/api/webhooks/stripe/route.ts:294 (400)",
+      "src/app/api/webhooks/stripe/route.ts:298 (400)",
+      "src/app/api/webhooks/stripe/route.ts:312 (413)"
+    ],
+    "classes": [
+      {
+        "class": "400",
+        "ui": "{ error: 'Missing signature' } — no stripe-signature header (:283-286) — src/app/api/webhooks/stripe/route.ts:285 (code (none — bare string))"
+      },
+      {
+        "class": "500",
+        "ui": "{ error: 'Webhook processing failed' } — transaction threw; Stripe WILL retry (:499-502) — src/app/api/webhooks/stripe/route.ts:501 (code (none — bare string))"
+      }
+    ]
+  },
+  "emits": {
+    "answer": "ledger",
+    "why": "It writes durable rows that count what happened (stripe_webhook_events INSERT at src/app/api/webhooks/stripe/route.ts:338 (one row per distinct Stripe event id — the dedup ledger)). NOTE: the closed emits.ledger_events[] vocabulary is the usage ledger (property_view · pdf_send · offer_impression · offer_click · export · parcel_id_translated); no member describes an audit or run row, so ledger_events stays empty — raised as a vocabulary gap.",
+    "evidence": [
+      "ledger stripe_webhook_events INSERT at src/app/api/webhooks/stripe/route.ts:338 (one row per distinct Stripe event id — the dedup ledger)"
+    ],
+    "analytics": [],
+    "ledger_events": [],
+    "breadcrumbs": []
+  },
+  "offers": {
+    "answer": "none",
+    "why": "It renders no sponsored placement: the offers and advertisers tables Spec 126 §2 specifies do not exist in migrations/ and nothing in this handler reads placement inventory.",
+    "evidence": [
+      "migrations/ — no CREATE TABLE offers / advertisers (grep 2026-09-15)",
+      "src/app/api/webhooks/stripe/route.ts — read in full; no placement read"
+    ]
+  },
+  "metering": {
+    "answer": "none",
+    "why": "Nothing here is counted: no usage_events row (the table does not exist in the introspected schema) and no quota counter is written by this handler.",
+    "evidence": [
+      "src/app/api/webhooks/stripe/route.ts — read in full 2026-09-15",
+      "src/lib/db/generated/schema.ts — no usage_events table"
+    ]
+  },
+  "config": {
+    "answer": "logic_variables",
+    "why": "It consumes 1 operator-editable tunable(s) from the logic_variables table rather than a literal in code.",
+    "evidence": [
+      "src/lib/entitlements/index.ts:308 (read); call site src/app/api/webhooks/stripe/route.ts:450",
+      "migrations/092_control_panel.sql:27"
+    ],
+    "logic_variables": [
+      {
+        "name": "stripe_price_product_map",
+        "on_invalid": "default",
+        "why": "mapped value must be a member of PRODUCTS ['lead_gen','flight_center'] (src/lib/entitlements/index.ts:39, checked :322); module-level TTL cache 60_000 ms (:281)"
+      }
+    ],
+    "retired": []
+  },
+  "sharing": {
+    "answer": "none",
+    "why": "ORPHAN: an exact-path sweep of src/** and mobile/** on 2026-09-15 (comment lines stripped) found no call site. That is a measured absence, not proof the endpoint is dead — a caller could be a bookmark or an external system.",
+    "evidence": [
+      "src/app/api/webhooks/stripe/route.ts — swept src/** and mobile/** for the exact path on 2026-09-15; zero call sites outside src/tests/**"
+    ],
+    "surfaces": []
+  },
+  "a11y": {
+    "touch_target_min_px": "UNRESEARCHED",
+    "labels": "none",
+    "dark_mode": "none",
+    "reduced_motion": "none",
+    "i18n": "none",
+    "safe_area": "none"
+  },
+  "deviations": [
+    {
+      "from": "docs/specs/00_engineering_standards.md §4.4 — all API routes return { data, error, meta }",
+      "why": "DELIBERATE and documented at :38-39: Stripe expects `{ received: true }`, not the data/error/meta envelope. Every error response is likewise a bare `{ error: <string> }` with no machine-readable code. withApiEnvelope IS applied (:282) so an escaping throw would emit the standard envelope (src/lib/api/with-api-envelope.ts:42/:48) — but the handler's own try/catch at :329-502 and :291/:317 covers ev",
+      "adjudicated_by": "not adjudicated — measured 2026-09-15 by reading the handler",
+      "date": "2026-09-15"
+    }
+  ],
+  "limitations": [
+    {
+      "what": "a11y.touch_target_min_px has no legal answer for a CONTRACT",
+      "measured": "The schema allows only UNRESEARCHED or an integer >= 44; a JSON endpoint has no touch target and the vocabulary has no \"n/a\". Left UNRESEARCHED and escalated per Spec 128 §4 rather than invented.",
+      "check_id": "contract_webhooks_stripe__auth_class_parity"
+    },
+    {
+      "what": "error classes outside the closed set are not representable: 413",
+      "measured": "The handler returns 413 at src/app/api/webhooks/stripe/route.ts:312; errors.classes[] admits only 400/401/403/429/500/schema_drift/offline.",
+      "check_id": "contract_webhooks_stripe__error_envelope"
+    },
+    {
+      "what": "no consumer, so no fan-out edge",
+      "measured": "The exact-path sweep of src/** and mobile/** (comment lines stripped) returned zero call sites on 2026-09-15.",
+      "check_id": "contract_webhooks_stripe__auth_class_parity"
+    }
+  ],
+  "interpretation": "none",
+  "notes": "Also cites docs/specs/00-architecture/116_multi_product_architecture.md §4. Verifies the Stripe-Signature header against STRIPE_WEBHOOK_SECRET before trusting any payload and enforces a 1MB body cap as a DoS guard on this public route. The dedup INSERT into stripe_webhook_events and the entitlements upsert run in one transaction so a provider retry cannot double-apply an event. The response body is the provider-required { received: true } shape, not the app's standard envelope. A safeLogError wrapper guarantees a logging failure can never roll back the dedup transaction, which would otherwise forge an infinite retry loop. consumers: [] is expected — the caller is Stripe itself, external to this repo. | MEASURED 2026-09-15: CLOSED SET OF HANDLED event.type VALUES (classifyEvent switch, :177-280) — 6 handled types plus a no-op default: (1) 'checkout.session.completed' :179 -> newStatus 'active', identity from client_reference_id ?? metadata.user_id (:194), product from session.metadata.product when it validates against PRODUCTS else the OD5 default (:190, :196-197, :424-428); (2) 'customer.subscription.created' :203 and (3) 'customer.subscription.updated' :204 -> newStatus via mapStripeSubStatus (:211; src/lib/stripe/client.ts:58-69: active->active, past_due->past_due, unpaid->expired, EVERYTHING ELSE INCLUDING 'canceled' -> null/no-op), price from items.data[0] (:217); (4) 'invoice.payment_succeeded' :224 -> 'active', resolveProductViaSubscription true (:238); (5) 'invoice.payment_failed' :241 -> 'past_due' (:244,:251); (6) 'customer.subscription.deleted' :254 -> 'expired' (:258) — the SOLE canonical access-revocation signal (:139-143, :207-210); (7) default :268-278 -> all-null outcome, dedup row committed, 200 no-op. COLUMN MUTATION ANSWER: this route mutates NO user_profiles column — user_profiles is READ ONLY (:384-387); the header states this explicitly at :371-373 and I verified it by reading all 503 lines. The entitlements columns it can write are the 8 listed in `writes`. TWO DEFECTS A REVIEWER MUST KNOW: (a) the safeLogError wrapper (:75-81) exists specifically so a throwing logger cannot roll back the dedup row and forge an infinite Stripe retry loop — but the logWarn calls at :439 and :445 run INSIDE that same transaction UNWRAPPED, as does resolvePriceProduct's logWarn (src/lib/entitlements/index.ts:317, :325) reached from :450; the stated fence is therefore incomplete. (b) the 413 check compares `rawBody.length` — a JavaScript string length in UTF-16 code units — against a constant named MAX_BODY_BYTES (:310-311), so multi-byte payloads are undercounted; and request.text() at :292 has already buffered the whole body before the check runs, so the cap does not bound peak memory (the comment at :306-309 concedes this). CENSUS AGREEMENT: matches exactly (reads entitlements + user_profiles + logic_variables; writes stripe_webhook_events + entitlements). | Idempotency: GUARDED — verdict: sound. The dedup INSERT (:337-342) and the entitlement upsert (:458) execute inside ONE withTransaction (:330), so (a) a concurrent Stripe retry that loses the ON CONFLICT race returns early at :343-348 and applies nothing, and (b) if the side effect throws, the dedup row rolls back WITH it and Stripe's retry can legitimately re-process. Three additional write-side fences live in the upsert's WHERE clause (src/lib/entitlements/index.ts:171-173): an out-of-order watermark keyed on Stripe's own event.created (route :457, NOT wall clock), a deletion fence (status IS DISTINCT FROM 'cancelled_pending_deletion'), and a superseded-subscription fence (non-'active' events apply only when stripe_subscription_id matches). CAVEAT worth flagging: the dedup row is COMMITTED even on the three no-apply paths — unknown/no-op event type (:350-356), no user resolved (:390-401) and non-uuid user (:402-411) — so those events are permanently consumed and Stripe will never retry them; this is deliberate (comments at :352-354, :391-393) but means an orphan even",
+  "x-draft": {
+    "shard": "contracts",
+    "files": [
+      "src/app/api/webhooks/stripe/route.ts"
+    ],
+    "loc": 503,
+    "methods": [
+      "POST"
+    ],
+    "consumers": [],
+    "writes_audit_row": false,
+    "consumers_verified": [],
+    "auth_class_executed": "public",
+    "locking_tests": [
+      "src/tests/stripe-webhook-realsig.infra.test.ts",
+      "src/tests/stripe-webhook-resubscriber.regression.test.ts",
+      "src/tests/stripe-webhook.infra.test.ts",
+      "src/tests/stripe-webhook.security.test.ts",
+      "src/tests/user-profile-delete-stripe.infra.test.ts"
+    ]
+  },
+  "programme": {
+    "scope": "platform_shared",
+    "phase": "UNRESEARCHED",
+    "why": "Used by both products and owned by neither.",
+    "feature": "F12",
+    "build_order": 3122,
+    "leakage": "none",
+    "product_questions": "none",
+    "review": {
+      "status": "unreviewed"
+    }
+  }
+}

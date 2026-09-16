@@ -1,0 +1,357 @@
+{
+  "kind": "CONTRACT",
+  "status": "exists",
+  "docs": {
+    "purpose": "Provides the searchable, paginated list of Committee of Adjustment (minor-variance) applications, optionally narrowed to ones linked to a specific building permit or sitting in a specific city ward.",
+    "data_story": "It reads 1 table — `coa_applications` and writes nothing. Its response shape is **unmeasured** as a pick-by-name whitelist — it passes rows through, spreads a row into a computed object, or assembles the payload dynamically, so there is no single list naming what leaves the server. **Nothing in this repository calls it.** That is the state this registry exists to make visible, not a claim that it is dead — a caller could be a bookmark, an external system, or a path built from variables.",
+    "under_126": "Becomes a **CONTRACT descriptor** of archetype `QUERY`. It declares its `database.reads[]` with named columns, its response projection as an explicit whitelist, its auth class, its rate bucket and its staleness — and `outputs.writes` is forced to `\"none\"`. Its `consumers[]` is the field that matters most here: today it is empty, and the orphan panel renders that as a red row rather than leaving it to be discovered years later."
+  },
+  "evidence": {
+    "files": [
+      "src/app/api/coa/route.ts:1"
+    ],
+    "contracts": [
+      "src/app/api/coa/route.ts:7 (GET export)",
+      "src/lib/api/with-api-envelope.ts:27-52"
+    ],
+    "tables": [
+      "src/app/api/coa/route.ts:36",
+      "src/app/api/coa/route.ts:43",
+      "src/lib/db/generated/schema.ts — every table named here is present in the introspected drizzle schema"
+    ],
+    "gate": [
+      "src/lib/auth/route-guard.ts — PUBLIC_PREFIXES — '/api/coa'",
+      "src/lib/auth/route-guard.ts:150-201 — classifyRoute executed 2026-09-15 with the concrete path → \"public\"",
+      "no in-handler auth call in src/app/api/coa/route.ts — src/middleware.ts is the only gate"
+    ],
+    "states": [
+      "hit: src/app/api/coa/route.ts:48-49 (rows returned as `applications`)",
+      "empty: src/app/api/coa/route.ts:46 (`countResult[0]?.count || '0'` -> total 0 with `applications: []`; there is no distinct 404 branch)",
+      "error: src/app/api/coa/route.ts:59-62"
+    ],
+    "emits": [
+      "src/app/api/coa/route.ts — read in full; no Sentry breadcrumb, no analytics capture and no ledger INSERT"
+    ]
+  },
+  "identity": {
+    "id": "contract_coa",
+    "route": "/api/coa",
+    "archetype": "QUERY",
+    "platforms": [
+      "web"
+    ],
+    "owns": {
+      "components": []
+    },
+    "owner": "Backend/Pipeline (CLAUDE.md §Domain Rules: `src/app/api/`)",
+    "spec": "UNRESEARCHED",
+    "spec_refs": [
+      "UNRESEARCHED — src/app/api/coa/route.ts carries no SPEC LINK header and no System Map row lists it (docs/specs/00-architecture/00_system_map.md, searched 2026-09-15); guessing the nearest spec would be an invention"
+    ],
+    "spec_version": "0-draft",
+    "versioning": {
+      "answer": "none",
+      "why": "No call site anywhere in src/** or mobile/** (verified 2026-09-15 by an exact-path sweep that strips comment lines), so no consumer holds a compatibility promise to break.",
+      "evidence": [
+        "src/app/api/coa/route.ts — no caller",
+        "src/lib/auth/route-guard.ts:150-201"
+      ]
+    },
+    "ref": "C-049"
+  },
+  "inputs": {
+    "answer": "app_outputs",
+    "why": "It reads 1 table(s) directly; 1 of them are materialised by named pipeline steps (classify_coa_scope), so its inputs are the pipeline's outputs rather than another contract.",
+    "evidence": [
+      "src/app/api/coa/route.ts:36",
+      "src/app/api/coa/route.ts:43",
+      "scripts/classify-coa-scope.js",
+      "docs/reference/data-lineage-map.md:312",
+      "scripts/manifest.json#chains",
+      "docs/reference/data-lineage-map.md"
+    ],
+    "contract_ref": [],
+    "query_key": [],
+    "field_whitelist": [
+      "applications",
+      "pagination"
+    ],
+    "tables": [
+      {
+        "table": "coa_applications",
+        "columns": "all",
+        "producing_steps": [
+          "classify_coa_scope",
+          "classify_coa_trades",
+          "classify_lifecycle_phase",
+          "coa",
+          "compute_coa_cost_estimates",
+          "enrich_coa_zoning",
+          "link_coa",
+          "link_coa_to_parcels"
+        ],
+        "chain_position": "coa[5] · coa[6] · permits[23], coa[12] · coa[1] · coa[7] · coa[4] · permits[19], coa[8] · coa[3]",
+        "owner_spec": "docs/specs/01-pipeline/42_chain_coa.md",
+        "evidence": [
+          "src/app/api/coa/route.ts:36",
+          "src/app/api/coa/route.ts:43",
+          "scripts/classify-coa-scope.js",
+          "docs/reference/data-lineage-map.md:312",
+          "scripts/manifest.json#chains",
+          "docs/reference/data-lineage-map.md"
+        ]
+      }
+    ]
+  },
+  "outputs": {
+    "answer": "none",
+    "why": "A QUERY contract writes nothing; the handler issues no INSERT/UPDATE/DELETE anywhere in the file or in the libs it calls.",
+    "evidence": [
+      "src/app/api/coa/route.ts — read in full 2026-09-15; no INSERT/UPDATE/DELETE reached"
+    ],
+    "contract_ref": [],
+    "tables": []
+  },
+  "state": {
+    "answer": "server_only",
+    "why": "A CONTRACT holds no client state: every value is resolved per request on the server and nothing is cached in a client store by the route itself.",
+    "evidence": [
+      "src/app/api/coa/route.ts:7 (GET export)",
+      "src/lib/api/with-api-envelope.ts:27-52"
+    ],
+    "fields": []
+  },
+  "staleness": {
+    "answer": "live",
+    "why": "Every read runs against the base tables on each request — there is no cache layer between the handler and the database.",
+    "evidence": [
+      "src/app/api/coa/route.ts:36",
+      "src/app/api/coa/route.ts:43",
+      "scripts/classify-coa-scope.js",
+      "docs/reference/data-lineage-map.md:312"
+    ],
+    "offline": "none"
+  },
+  "guards": {
+    "session": {
+      "answer": "anon",
+      "why": "classifyRoute(\"/api/coa\") returns \"public\" (executed 2026-09-15); the handler adds no check of its own, so middleware is the only gate.",
+      "evidence": [
+        "src/lib/auth/route-guard.ts:150-201 — classifyRoute executed 2026-09-15 with the concrete path",
+        "src/middleware.ts — the only gate for this path (no in-handler auth call)"
+      ]
+    },
+    "rls_class": {
+      "answer": "B",
+      "why": "Every table it reaches has RLS enabled with zero policies — default deny for anon and authenticated; only the table owner and service_role get through.",
+      "evidence": [
+        "migrations/227_rls_class_b_default_deny.sql:45",
+        "docs/specs/00-architecture/114_rls_policy_catalog.md §2"
+      ]
+    },
+    "disclosure": {
+      "fields": [
+        "applications",
+        "pagination"
+      ],
+      "why": "Reachable with no session at all (classifyRoute → public). These are the top-level fields an unauthenticated caller receives; at least one query is a whole-row SELECT *, so the projection is the table, not a whitelist."
+    },
+    "entitlement": "none",
+    "flag": "none",
+    "permission": "none",
+    "rate_bucket": "none"
+  },
+  "render": {
+    "targets": [
+      "screen"
+    ],
+    "projection": "none",
+    "breakpoints": "none",
+    "export": "none"
+  },
+  "checks": [
+    {
+      "id": "contract_coa__auth_class_parity",
+      "kind": "auth_class_parity",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "why": "guards.session must equal classifyRoute(\"/api/coa\"), executed 2026-09-15 → \"public\"; there is no in-handler check, so a middleware change silently re-classes this route. Locked by api.infra.test.ts."
+    },
+    {
+      "id": "contract_coa__error_envelope",
+      "kind": "error_state",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "why": "MEASURED DEVIATION, permanently non-zero until re-projected: GET success returns a bare `{applications, pagination}` object at :48-56 with NO data/error/meta keys. The 500 at :59-62 returns `{error: 'Failed to fetch CoA applications'}` — a bare string under `error`, not `{code,message}`. The only data/error/meta shape t Retighten condition: the handler returns the envelope on every path."
+    },
+    {
+      "id": "contract_coa__field_whitelist_parity",
+      "kind": "field_whitelist_parity",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "why": "MEASURED: the projection is row_spread (src/app/api/coa/route.ts:36, src/app/api/coa/route.ts:48-56), so a column added upstream reaches the client without a code change. Permanently non-zero until the response is an explicit pick; retighten condition: projection.kind === explicit_pick."
+    },
+    {
+      "id": "contract_coa__schema_declared",
+      "kind": "schema_declared",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "Every table and column declared in lineage.reads[]/writes[] must exist in src/lib/db/generated/schema.ts (drizzle-kit introspect of the live database); the registry generator checks this both directions."
+    },
+    {
+      "id": "contract_coa__anon_disclosure",
+      "kind": "disclosure",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "why": "classifyRoute returns \"public\": the field set in guards.disclosure is what an unauthenticated caller receives, and it must match the projection exactly — a field added to the projection is a new anonymous disclosure."
+    }
+  ],
+  "invariants": "none",
+  "plausibility": "none",
+  "states": [
+    {
+      "name": "hit",
+      "golden": "none"
+    },
+    {
+      "name": "empty",
+      "golden": "none"
+    },
+    {
+      "name": "error",
+      "golden": "none"
+    }
+  ],
+  "errors": {
+    "answer": "envelope",
+    "why": "It returns a JSON error body, but NOT the standard envelope: GET success returns a bare `{applications, pagination}` object at :48-56 with NO data/error/meta keys. The 500 at :59-62 returns `{error: 'Failed to fetch CoA applications'}` — a bare string under `error`, not `{code,mes \"envelope\" is the closest member of the closed menu; the deviation is recorded in deviations[].",
+    "evidence": [
+      "src/lib/api/with-api-envelope.ts:27-52",
+      "src/app/api/coa/route.ts:48-56",
+      "src/app/api/coa/route.ts:59-62",
+      "src/lib/api/with-api-envelope.ts:41-50",
+      "src/app/api/coa/route.ts:59 (500)",
+      "src/app/api/coa/route.ts:42 (500)",
+      "src/app/api/coa/route.ts:47 (500)"
+    ],
+    "classes": [
+      {
+        "class": "500",
+        "ui": "{error:'Failed to fetch CoA applications'} — src/app/api/coa/route.ts:59"
+      }
+    ]
+  },
+  "emits": {
+    "answer": "none",
+    "why": "Nothing it does is currently countable: src/app/api/coa/route.ts was read in full and contains no Sentry breadcrumb, no analytics capture and no ledger INSERT.",
+    "evidence": [
+      "src/app/api/coa/route.ts — read in full; no Sentry breadcrumb, no analytics capture and no ledger INSERT"
+    ],
+    "analytics": [],
+    "ledger_events": [],
+    "breadcrumbs": []
+  },
+  "offers": {
+    "answer": "none",
+    "why": "It renders no sponsored placement: the offers and advertisers tables Spec 126 §2 specifies do not exist in migrations/ and nothing in this handler reads placement inventory.",
+    "evidence": [
+      "migrations/ — no CREATE TABLE offers / advertisers (grep 2026-09-15)",
+      "src/app/api/coa/route.ts — read in full; no placement read"
+    ]
+  },
+  "metering": {
+    "answer": "none",
+    "why": "Nothing here is counted: no usage_events row (the table does not exist in the introspected schema) and no quota counter is written by this handler.",
+    "evidence": [
+      "src/app/api/coa/route.ts — read in full 2026-09-15",
+      "src/lib/db/generated/schema.ts — no usage_events table"
+    ]
+  },
+  "config": {
+    "answer": "none",
+    "why": "It consumes no tunable: no logic_variables read and no env-var-driven threshold in the handler or the libs it calls.",
+    "evidence": [
+      "src/app/api/coa/route.ts — read in full 2026-09-15; no loadMarketplaceConfigs / logic_variables read"
+    ],
+    "logic_variables": [],
+    "retired": []
+  },
+  "sharing": {
+    "answer": "none",
+    "why": "ORPHAN: an exact-path sweep of src/** and mobile/** on 2026-09-15 (comment lines stripped) found no call site. That is a measured absence, not proof the endpoint is dead — a caller could be a bookmark or an external system.",
+    "evidence": [
+      "src/app/api/coa/route.ts — swept src/** and mobile/** for the exact path on 2026-09-15; zero call sites outside src/tests/**"
+    ],
+    "surfaces": []
+  },
+  "a11y": {
+    "touch_target_min_px": "UNRESEARCHED",
+    "labels": "none",
+    "dark_mode": "none",
+    "reduced_motion": "none",
+    "i18n": "none",
+    "safe_area": "none"
+  },
+  "deviations": [
+    {
+      "from": "docs/specs/00_engineering_standards.md §4.4 — all API routes return { data, error, meta }",
+      "why": "GET success returns a bare `{applications, pagination}` object at :48-56 with NO data/error/meta keys. The 500 at :59-62 returns `{error: 'Failed to fetch CoA applications'}` — a bare string under `error`, not `{code,message}`. The only data/error/meta shape this route can emit is the wrapper's own 500 (with-api-envelope.ts:41-50), reachable only if something throws OUTSIDE the handler's own try (",
+      "adjudicated_by": "not adjudicated — measured 2026-09-15 by reading the handler",
+      "date": "2026-09-15"
+    },
+    {
+      "from": "docs/specs/00_engineering_standards.md §4.3 — never SELECT *, always project specific columns",
+      "why": "At least one query reads the whole row: coa_applications.",
+      "adjudicated_by": "not adjudicated — measured 2026-09-15",
+      "date": "2026-09-15"
+    }
+  ],
+  "limitations": [
+    {
+      "what": "a11y.touch_target_min_px has no legal answer for a CONTRACT",
+      "measured": "The schema allows only UNRESEARCHED or an integer >= 44; a JSON endpoint has no touch target and the vocabulary has no \"n/a\". Left UNRESEARCHED and escalated per Spec 128 §4 rather than invented.",
+      "check_id": "contract_coa__auth_class_parity"
+    },
+    {
+      "what": "no consumer, so no fan-out edge",
+      "measured": "The exact-path sweep of src/** and mobile/** (comment lines stripped) returned zero call sites on 2026-09-15.",
+      "check_id": "contract_coa__auth_class_parity"
+    }
+  ],
+  "interpretation": "none",
+  "notes": "No SPEC LINK header. SELECT * FROM coa_applications, whole row returned. When filtering by permit_num it applies an identity-link confidence floor (COA_IDENTITY_LINK_MIN_CONFIDENCE from src/lib/coa/link-confidence.ts) so only high-confidence permit-to-CoA links surface, not merely geographic associations. No in-repo caller found. | MEASURED 2026-09-15: DISCLOSURE: this route is PUBLIC (route-guard.ts:74 + :170) and does `SELECT *` on coa_applications (:36) — every column of the table is emitted to an unauthenticated caller with no projection, including whatever owner/applicant/valuation columns the table carries (the CoA detail SQL elsewhere reads estimated_cost, modeled_gfa_sqm, latitude, longitude, description, lifecycle_phase from this same table — see src/lib/leads/lead-detail-query.ts:280-303 — so those are among the fields exposed). Any column added to coa_applications by a future migration is auto-published. SELECT * flagged per instruction. // SQL STRING INTERPOLATION: `linked_confidence >= ${COA_IDENTITY_LINK_MIN_CONFIDENCE}` at :22 interpolates a module constant (0.85, src/lib/coa/link-confidence.ts:17) directly into the SQL text rather than binding it — not injectable today (it is a TS numeric literal, not user input) but it is an un-parameterised value in the WHERE. // The identity floor only applies when `permit_num` is supplied (:19-25); a `?ward=` or bare request returns ALL CoA rows with no confidence floor. // CENSUS: census_reads = ['coa_applications'] — VERIFIED, exact match, nothing missed. // logError at :58 passes no request identifiers, so a 500 cannot be traced to a specific query. | Caching: none observed — no Cache-Control header, no `export const revalidate`, no `export const dynamic` anywhere in the file (grep over the file returned only comment hits). | Pagination: limit clamped to <=100 at :12 (no lower bound); offset unclamped at :13; applied as `LIMIT $n OFFSET $n+1` at :38 with a separate COUNT(*) at :43. Response carries `{total, page, limit, total_pages}` at :50-55. | Other guards / classification: NO guard of any kind in the handler. Confirmed public by classifyRoute: PUBLIC_PREFIXES contains '/api/coa' (src/lib/auth/route-guard.ts:74) and the prefix test at src/lib/auth/route-guard.ts:170 returns 'public'; src/middleware.ts:43-45 passes public routes straight through. | ORPHAN — zero call sites in src/** or mobile/** (sweep 2026-09-15, comment lines stripped). | Locking tests: src/tests/api.infra.test.ts.",
+  "x-draft": {
+    "shard": "contracts",
+    "files": [
+      "src/app/api/coa/route.ts"
+    ],
+    "loc": 64,
+    "methods": [
+      "GET"
+    ],
+    "consumers": [],
+    "writes_audit_row": "n/a",
+    "consumers_verified": [],
+    "auth_class_executed": "public",
+    "locking_tests": [
+      "src/tests/api.infra.test.ts"
+    ]
+  },
+  "programme": {
+    "scope": "estate_other",
+    "phase": "not_scheduled",
+    "why": "Builder/entity data for the lead-gen product. Inventoried only.",
+    "feature": "F92",
+    "build_order": 4192,
+    "leakage": "UNRESEARCHED",
+    "product_questions": "UNRESEARCHED",
+    "review": {
+      "status": "unreviewed"
+    }
+  }
+}

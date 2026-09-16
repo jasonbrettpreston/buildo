@@ -1,0 +1,349 @@
+{
+  "kind": "CONTRACT",
+  "status": "exists",
+  "docs": {
+    "purpose": "During sign-up, shows a new user the admin-curated list of supplier names for the trade they chose, so they can pick their usual suppliers instead of typing them in.",
+    "data_story": "It reads 1 table — `trade_suppliers` and writes nothing. Its response is an explicit pick-by-name projection of 1 field, so a column added to a table upstream does not leak into the client by accident. It is called from 1 place: `mobile_onboarding_supplier`.",
+    "under_126": "Becomes a **CONTRACT descriptor** of archetype `QUERY`. It declares its `database.reads[]` with named columns, its response projection as an explicit whitelist, its auth class, its rate bucket and its staleness — and `outputs.writes` is forced to `\"none\"`. Its `consumers[]` becomes the edge list of the fan-out graph — the join nothing in this estate holds today."
+  },
+  "evidence": {
+    "files": [
+      "src/app/api/onboarding/suppliers/route.ts:1"
+    ],
+    "contracts": [
+      "src/app/api/onboarding/suppliers/route.ts:13 (GET export)",
+      "src/lib/api/with-api-envelope.ts:27-52"
+    ],
+    "tables": [
+      "src/app/api/onboarding/suppliers/route.ts:26",
+      "src/app/api/onboarding/suppliers/route.ts:28",
+      "src/app/api/onboarding/suppliers/route.ts:29",
+      "src/lib/db/generated/schema.ts — every table named here is present in the introspected drizzle schema"
+    ],
+    "gate": [
+      "src/lib/auth/route-guard.ts — fail-closed default — no arm matches '/api/onboarding'",
+      "src/lib/auth/route-guard.ts:150-201 — classifyRoute executed 2026-09-15 with the concrete path → \"authenticated\"",
+      "in-handler: getUserIdFromSession(request) at src/app/api/onboarding/suppliers/route.ts:14 — alias for getVerifiedUid (src/lib/auth/get-user.ts:215-216), revocation-checked GoTrue round-trip. Middleware: '/api/onboarding' is NOT in AUTHENTICATED_API_ROUTES (src/lib/auth/route-guard.ts:120-132) and not in any public list, so it falls through to classifyRoute's fail-closed default `return 'authenticated'` at src/lib/auth/route-guard.ts:191 — matching the file-header claim at route.ts:6."
+    ],
+    "states": [
+      "hit: src/app/api/onboarding/suppliers/route.ts:33",
+      "empty: src/app/api/onboarding/suppliers/route.ts:32-33 — rows.map over [] yields `{data:{suppliers:[]}}` with 200; the header at route.ts:4-5 states this is deliberate (client auto-skips) but the evidence is that no 404 branch exists",
+      "unauthorized: src/app/api/onboarding/suppliers/route.ts:16",
+      "error: src/app/api/onboarding/suppliers/route.ts:21 (400 missing trade) and :36 (500)"
+    ],
+    "emits": [
+      "src/app/api/onboarding/suppliers/route.ts — read in full; no Sentry breadcrumb, no analytics capture and no ledger INSERT"
+    ]
+  },
+  "identity": {
+    "id": "contract_onboarding_suppliers",
+    "route": "/api/onboarding/suppliers",
+    "archetype": "QUERY",
+    "platforms": [
+      "web",
+      "mobile"
+    ],
+    "owns": {
+      "components": []
+    },
+    "owner": "Cross-Domain (CLAUDE.md §Domain Rules: an API route consumed by the Expo app)",
+    "spec": "docs/specs/03-mobile/94_mobile_onboarding.md",
+    "spec_refs": [
+      "docs/specs/03-mobile/94_mobile_onboarding.md §10 Step 7b — src/app/api/onboarding/suppliers/route.ts:1"
+    ],
+    "spec_version": "0-draft",
+    "versioning": {
+      "answer": "additive_only",
+      "why": "At least one consumer is an installed Expo binary (mobile/) that does not redeploy with the server, so a removed or retyped field breaks shipped clients; adding fields does not.",
+      "evidence": [
+        "mobile/app/(onboarding)/supplier.tsx:49",
+        "mobile/app.json:5"
+      ]
+    },
+    "ref": "C-026"
+  },
+  "inputs": {
+    "answer": "app_outputs",
+    "why": "It reads 1 table(s) directly; none is written by a pipeline step — they are written by API routes, jobs or migration seeds — but the input is still the database, not another contract.",
+    "evidence": [
+      "src/app/api/onboarding/suppliers/route.ts:26",
+      "src/app/api/onboarding/suppliers/route.ts:28",
+      "src/app/api/onboarding/suppliers/route.ts:29",
+      "migrations/113_trade_suppliers.sql:9",
+      "docs/reference/data-lineage-map.md — no `## `trade_suppliers`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)"
+    ],
+    "contract_ref": [],
+    "query_key": [],
+    "field_whitelist": [
+      "name"
+    ],
+    "tables": [
+      {
+        "table": "trade_suppliers",
+        "columns": [
+          "name",
+          "trade_slug",
+          "active",
+          "display_order"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/03-mobile/94_mobile_onboarding.md",
+        "evidence": [
+          "src/app/api/onboarding/suppliers/route.ts:26",
+          "src/app/api/onboarding/suppliers/route.ts:28",
+          "src/app/api/onboarding/suppliers/route.ts:29",
+          "migrations/113_trade_suppliers.sql:9",
+          "docs/reference/data-lineage-map.md — no `## `trade_suppliers`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)"
+        ]
+      }
+    ]
+  },
+  "outputs": {
+    "answer": "none",
+    "why": "A QUERY contract writes nothing; the handler issues no INSERT/UPDATE/DELETE anywhere in the file or in the libs it calls.",
+    "evidence": [
+      "src/app/api/onboarding/suppliers/route.ts — read in full 2026-09-15; no INSERT/UPDATE/DELETE reached"
+    ],
+    "contract_ref": [],
+    "tables": []
+  },
+  "state": {
+    "answer": "server_only",
+    "why": "A CONTRACT holds no client state: every value is resolved per request on the server and nothing is cached in a client store by the route itself.",
+    "evidence": [
+      "src/app/api/onboarding/suppliers/route.ts:13 (GET export)",
+      "src/lib/api/with-api-envelope.ts:27-52"
+    ],
+    "fields": []
+  },
+  "staleness": {
+    "answer": "live",
+    "why": "Every read runs against the base tables on each request — there is no cache layer between the handler and the database.",
+    "evidence": [
+      "src/app/api/onboarding/suppliers/route.ts:26",
+      "src/app/api/onboarding/suppliers/route.ts:28",
+      "src/app/api/onboarding/suppliers/route.ts:29",
+      "migrations/113_trade_suppliers.sql:9"
+    ],
+    "offline": "none"
+  },
+  "guards": {
+    "session": {
+      "answer": "authenticated",
+      "why": "classifyRoute(\"/api/onboarding/suppliers\") returns \"authenticated\" (executed 2026-09-15); the handler re-verifies the caller in-process.",
+      "evidence": [
+        "src/lib/auth/route-guard.ts:150-201 — classifyRoute executed 2026-09-15 with the concrete path",
+        "getUserIdFromSession(request) at src/app/api/onboarding/suppliers/route.ts:14 — alias for getVerifiedUid (src/lib/auth/get-user.ts:215-216), revocation-checked GoTrue round-trip. Middleware: '/api/onboarding' is NOT in AUTHENTICATED_API_ROUTES (src/lib/auth/route-guard.ts:120-132) and not in any public list, so it falls through to classifyRoute's fail-closed default `return 'authenticated'` at src/lib/auth/route-guard.ts:191 — matching the file-header claim at route.ts:6."
+      ]
+    },
+    "rls_class": {
+      "answer": "B",
+      "why": "Every table it reaches has RLS enabled with zero policies — default deny for anon and authenticated; only the table owner and service_role get through.",
+      "evidence": [
+        "migrations/227_rls_class_b_default_deny.sql:96",
+        "docs/specs/00-architecture/114_rls_policy_catalog.md §2"
+      ]
+    },
+    "disclosure": "none",
+    "entitlement": "none",
+    "flag": "none",
+    "permission": "none",
+    "rate_bucket": "none"
+  },
+  "render": {
+    "targets": [
+      "screen"
+    ],
+    "projection": "none",
+    "breakpoints": "none",
+    "export": "none"
+  },
+  "checks": [
+    {
+      "id": "contract_onboarding_suppliers__auth_class_parity",
+      "kind": "auth_class_parity",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "why": "guards.session must equal classifyRoute(\"/api/onboarding/suppliers\"), executed 2026-09-15 → \"authenticated\" plus the in-handler guard (getUserIdFromSession(request) at src/app/api/onboarding/suppliers/route.ts:14 — alias for getVerifiedUid (src/). Locked by onboarding-suppliers.infra.test.ts."
+    },
+    {
+      "id": "contract_onboarding_suppliers__error_envelope",
+      "kind": "error_state",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "why": "MEASURED DEVIATION, permanently non-zero until re-projected: The 200 is a HALF-envelope: `{data:{suppliers}}` with no `error` and no `meta` key (route.ts:33). Errors are bare string-error objects: 401 `{error:'Unauthorized'}` (route.ts:16), 400 `{error:'trade query parameter is required'}` (route.ts:21), 500 `{error:'Fa Retighten condition: the handler returns the envelope on every path."
+    },
+    {
+      "id": "contract_onboarding_suppliers__field_whitelist_parity",
+      "kind": "field_whitelist_parity",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "The response is an explicit pick-by-name of 1 field(s) (src/app/api/onboarding/suppliers/route.ts:26, src/app/api/onboarding/suppliers/route.ts:32, src/app/api/onboarding/suppliers/route.ts:33), so a column added upstream cannot leak; this check set-equals the projection to inputs.field_whitelist."
+    },
+    {
+      "id": "contract_onboarding_suppliers__schema_declared",
+      "kind": "schema_declared",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "Every table and column declared in lineage.reads[]/writes[] must exist in src/lib/db/generated/schema.ts (drizzle-kit introspect of the live database); the registry generator checks this both directions."
+    }
+  ],
+  "invariants": "none",
+  "plausibility": "none",
+  "states": [
+    {
+      "name": "hit",
+      "golden": "none"
+    },
+    {
+      "name": "empty",
+      "golden": "none"
+    },
+    {
+      "name": "unauthorized",
+      "golden": "none"
+    },
+    {
+      "name": "error",
+      "golden": "none"
+    }
+  ],
+  "errors": {
+    "answer": "envelope",
+    "why": "It returns a JSON error body, but NOT the standard envelope: The 200 is a HALF-envelope: `{data:{suppliers}}` with no `error` and no `meta` key (route.ts:33). Errors are bare string-error objects: 401 `{error:'Unauthorized'}` (route.ts:16), 400 `{error:'trade query parameter is re \"envelope\" is the closest member of the closed menu; the deviation is recorded in deviations[].",
+    "evidence": [
+      "src/lib/api/with-api-envelope.ts:27-52",
+      "src/app/api/onboarding/suppliers/route.ts:33",
+      "src/app/api/onboarding/suppliers/route.ts:16",
+      "src/app/api/onboarding/suppliers/route.ts:21",
+      "src/app/api/onboarding/suppliers/route.ts:36",
+      "src/lib/api/with-api-envelope.ts:48",
+      "src/app/api/onboarding/suppliers/route.ts:16 (401)",
+      "src/app/api/onboarding/suppliers/route.ts:21 (400)",
+      "src/app/api/onboarding/suppliers/route.ts:36 (500)",
+      "src/app/api/onboarding/suppliers/route.ts:48 (500)"
+    ],
+    "classes": [
+      {
+        "class": "401",
+        "ui": "{error:'Unauthorized'} — src/app/api/onboarding/suppliers/route.ts:16 (code (none — string 'Unauthorized'))"
+      },
+      {
+        "class": "400",
+        "ui": "{error:'trade query parameter is required'} — src/app/api/onboarding/suppliers/route.ts:21 (code (none — string 'trade query parameter is required'))"
+      },
+      {
+        "class": "500",
+        "ui": "{error:'Failed to load suppliers'} — src/app/api/onboarding/suppliers/route.ts:36 (code (none — string 'Failed to load suppliers'))"
+      }
+    ]
+  },
+  "emits": {
+    "answer": "none",
+    "why": "Nothing it does is currently countable: src/app/api/onboarding/suppliers/route.ts was read in full and contains no Sentry breadcrumb, no analytics capture and no ledger INSERT.",
+    "evidence": [
+      "src/app/api/onboarding/suppliers/route.ts — read in full; no Sentry breadcrumb, no analytics capture and no ledger INSERT"
+    ],
+    "analytics": [],
+    "ledger_events": [],
+    "breadcrumbs": []
+  },
+  "offers": {
+    "answer": "none",
+    "why": "It renders no sponsored placement: the offers and advertisers tables Spec 126 §2 specifies do not exist in migrations/ and nothing in this handler reads placement inventory.",
+    "evidence": [
+      "migrations/ — no CREATE TABLE offers / advertisers (grep 2026-09-15)",
+      "src/app/api/onboarding/suppliers/route.ts — read in full; no placement read"
+    ]
+  },
+  "metering": {
+    "answer": "none",
+    "why": "Nothing here is counted: no usage_events row (the table does not exist in the introspected schema) and no quota counter is written by this handler.",
+    "evidence": [
+      "src/app/api/onboarding/suppliers/route.ts — read in full 2026-09-15",
+      "src/lib/db/generated/schema.ts — no usage_events table"
+    ]
+  },
+  "config": {
+    "answer": "none",
+    "why": "It consumes no tunable: no logic_variables read and no env-var-driven threshold in the handler or the libs it calls.",
+    "evidence": [
+      "src/app/api/onboarding/suppliers/route.ts — read in full 2026-09-15; no loadMarketplaceConfigs / logic_variables read"
+    ],
+    "logic_variables": [],
+    "retired": []
+  },
+  "sharing": {
+    "answer": "sole",
+    "why": "Exactly one call site renders it, so its projection serves one surface.",
+    "evidence": [
+      "mobile/app/(onboarding)/supplier.tsx:49"
+    ],
+    "surfaces": [
+      "mobile/app/(onboarding)/supplier.tsx:49"
+    ]
+  },
+  "a11y": {
+    "touch_target_min_px": "UNRESEARCHED",
+    "labels": "none",
+    "dark_mode": "none",
+    "reduced_motion": "none",
+    "i18n": "none",
+    "safe_area": "none"
+  },
+  "deviations": [
+    {
+      "from": "docs/specs/00_engineering_standards.md §4.4 — all API routes return { data, error, meta }",
+      "why": "The 200 is a HALF-envelope: `{data:{suppliers}}` with no `error` and no `meta` key (route.ts:33). Errors are bare string-error objects: 401 `{error:'Unauthorized'}` (route.ts:16), 400 `{error:'trade query parameter is required'}` (route.ts:21), 500 `{error:'Failed to load suppliers'}` (route.ts:36). Only withApiEnvelope's catch emits the full `{data,error:{code,message},meta}` (with-api-envelope.t",
+      "adjudicated_by": "not adjudicated — measured 2026-09-15 by reading the handler",
+      "date": "2026-09-15"
+    }
+  ],
+  "limitations": [
+    {
+      "what": "a11y.touch_target_min_px has no legal answer for a CONTRACT",
+      "measured": "The schema allows only UNRESEARCHED or an integer >= 44; a JSON endpoint has no touch target and the vocabulary has no \"n/a\". Left UNRESEARCHED and escalated per Spec 128 §4 rather than invented.",
+      "check_id": "contract_onboarding_suppliers__auth_class_parity"
+    }
+  ],
+  "interpretation": "none",
+  "notes": "Returns [] rather than 404 when no suppliers are seeded for a trade; the header states the mobile client auto-skips the supplier screen on an empty array. | MEASURED 2026-09-15: CENSUS AGREEMENT: census_reads ['trade_suppliers'] and census_writes [] both match. Reviewer notes: (1) `getUserIdFromSession` is called at route.ts:14, OUTSIDE the try block that starts at route.ts:24 — a throw there escapes to withApiEnvelope and returns the enveloped 500 instead of this route's bare `{error:'Failed to load suppliers'}`, so this single route has TWO different 500 shapes; (2) the verified uid is never used in the SQL — every authenticated user sees the same list; (3) `trade` is unvalidated beyond non-empty (route.ts:20) — no charset or length bound; (4) the 200 shape `{data:{suppliers}}` has `data` but no `error`/`meta`, so it is neither the bare shape the other notification routes use nor the full leads envelope. | Idempotency: N/A — GET, no writes (the route contains exactly one SQL statement, a SELECT at route.ts:26-29). | Caching: none observed — no revalidate/dynamic/Cache-Control/unstable_cache in src/app/api/onboarding/suppliers/route.ts:1-38. Note this is a static, per-trade, admin-curated list with no caching at all: every onboarding client hits the DB. | Other guards / classification: The `uid` is verified but never used in the query (route.ts:25-31) — the session is an access gate only; results are identical for every authenticated caller. | Locking tests: src/tests/onboarding-suppliers.infra.test.ts.",
+  "x-draft": {
+    "shard": "contracts",
+    "files": [
+      "src/app/api/onboarding/suppliers/route.ts"
+    ],
+    "loc": 38,
+    "methods": [
+      "GET"
+    ],
+    "consumers": [
+      "mobile_onboarding_supplier"
+    ],
+    "writes_audit_row": "n/a",
+    "consumers_verified": [
+      "mobile/app/(onboarding)/supplier.tsx:49"
+    ],
+    "auth_class_executed": "authenticated",
+    "locking_tests": [
+      "src/tests/onboarding-suppliers.infra.test.ts"
+    ]
+  },
+  "programme": {
+    "scope": "platform_shared",
+    "phase": "UNRESEARCHED",
+    "why": "Onboarding writes `user_profiles` columns both products read; the flow is shared even though its copy is lead-gen-shaped today.",
+    "feature": "F11",
+    "build_order": 3112,
+    "leakage": "none",
+    "product_questions": "none",
+    "review": {
+      "status": "unreviewed"
+    }
+  }
+}

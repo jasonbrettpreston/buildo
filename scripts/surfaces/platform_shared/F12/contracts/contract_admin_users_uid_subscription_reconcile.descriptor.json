@@ -1,0 +1,551 @@
+{
+  "kind": "CONTRACT",
+  "status": "exists",
+  "docs": {
+    "purpose": "Lets an admin check whether a user's stored subscription status has drifted out of sync with what the payment provider actually says — because a billing notification was missed — and then apply the provider's version as the correct one, per product, with a required reason logged for the record.",
+    "data_story": "It reads 2 tables — `user_profiles` and `entitlements` and writes `entitlements` and `admin_audit_log`. Its response shape is **unmeasured** as a pick-by-name whitelist — it passes rows through, spreads a row into a computed object, or assembles the payload dynamically, so there is no single list naming what leaves the server. It is called from 1 place: `admin_user_detail`.",
+    "under_126": "Becomes a **CONTRACT descriptor** of archetype `MUTATION`. It declares `database.writes[]` with a `write_discipline` per target (the Spec 122 vocabulary verbatim), its idempotency posture, its optimistic contract and its rollback. Its `consumers[]` becomes the edge list of the fan-out graph — the join nothing in this estate holds today."
+  },
+  "evidence": {
+    "files": [
+      "src/app/api/admin/users/[uid]/subscription/reconcile/route.ts:1"
+    ],
+    "contracts": [
+      "src/app/api/admin/users/[uid]/subscription/reconcile/route.ts:134 (GET export)",
+      "src/app/api/admin/users/[uid]/subscription/reconcile/route.ts:189 (POST export)",
+      "src/lib/api/with-api-envelope.ts:27-52"
+    ],
+    "tables": [
+      "src/app/api/admin/users/[uid]/subscription/reconcile/route.ts:71",
+      "src/app/api/admin/users/[uid]/subscription/reconcile/route.ts:85",
+      "src/lib/entitlements/index.ts:308",
+      "src/app/api/admin/users/[uid]/subscription/reconcile/route.ts:97 (deriveEffectiveStripeStatusByProduct(pool, ...))",
+      "src/lib/stripe/client.ts:130",
+      "src/lib/auth/verify-admin.ts:117-120",
+      "src/lib/auth/verify-admin.ts:198-201 (isProfileAdmin, called at route :211)",
+      "src/lib/admin/backup-codes.ts:116",
+      "src/lib/auth/verify-admin.ts:158",
+      "src/app/api/admin/users/[uid]/subscription/reconcile/route.ts:259-265",
+      "src/app/api/admin/users/[uid]/subscription/reconcile/route.ts:271",
+      "src/lib/admin/admin-audit.ts:72-73",
+      "src/lib/admin/backup-codes.ts:127",
+      "src/lib/db/generated/schema.ts — every table named here is present in the introspected drizzle schema"
+    ],
+    "gate": [
+      "src/lib/auth/route-guard.ts — admin prefix — classifyRoute matches pathname.startsWith('/api/admin/')",
+      "src/lib/auth/route-guard.ts:150-201 — classifyRoute executed 2026-09-15 with the concrete path → \"admin\"",
+      "in-handler: verifyAdminAuth at src/app/api/admin/users/[uid]/subscription/reconcile/route.ts:135 (GET) and :190 (POST); implementation src/lib/auth/verify-admin.ts:66"
+    ],
+    "states": [
+      "hit: src/app/api/admin/users/[uid]/subscription/reconcile/route.ts:163 and :290",
+      "empty: src/app/api/admin/users/[uid]/subscription/reconcile/route.ts:243 (no drift -> applied: [], meta.drift false) and :147-157 (no stripe customer -> products from stored rows only)",
+      "miss: src/app/api/admin/users/[uid]/subscription/reconcile/route.ts:142 and :216 (NOT_FOUND 404)",
+      "ambiguous: src/app/api/admin/users/[uid]/subscription/reconcile/route.ts:237 and :287 (CONFLICT 409 — protected state / concurrent change)",
+      "partial: src/app/api/admin/users/[uid]/subscription/reconcile/route.ts:266-270 — a per-product upsert fenced by the WHERE clause is skipped with no audit while sibling products still apply; :286-288 only 409s when NONE applied",
+      "degraded: src/app/api/admin/users/[uid]/subscription/reconcile/route.ts:171 and :295 (STRIPE_NOT_CONFIGURED 500)",
+      "unauthorized: src/app/api/admin/users/[uid]/subscription/reconcile/route.ts:136 and :191 -> :47-52; 403s at :184 and :212",
+      "error: src/app/api/admin/users/[uid]/subscription/reconcile/route.ts:172 and :297"
+    ],
+    "emits": [
+      "ledger admin_audit_log row per applied product at :271",
+      "src/app/api/admin/users/[uid]/subscription/reconcile/route.ts:271-283",
+      "src/lib/admin/admin-audit.ts:72-73"
+    ]
+  },
+  "identity": {
+    "id": "contract_admin_users_uid_subscription_reconcile",
+    "route": "/api/admin/users/[uid]/subscription/reconcile",
+    "archetype": "MUTATION",
+    "platforms": [
+      "web"
+    ],
+    "owns": {
+      "components": []
+    },
+    "owner": "Backend/Pipeline (CLAUDE.md §Domain Rules: `src/app/api/`)",
+    "spec": "docs/specs/02-web-admin/21_admin_user_management.md",
+    "spec_refs": [
+      "docs/specs/02-web-admin/21_admin_user_management.md §6 (Subscription-Ops); docs/specs/02-web-admin/20_stripe_web_checkout.md §7; docs/specs/00-architecture/116_multi_product_architecture.md §4 N2 + OD3/OD5 — src/app/api/admin/users/[uid]/subscription/reconcile/route.ts:1-3"
+    ],
+    "spec_version": "0-draft",
+    "versioning": {
+      "answer": "breaking_allowed",
+      "why": "Every consumer is in src/** and ships in the same Next.js deploy as the route, so a breaking change is one commit.",
+      "evidence": [
+        "src/app/admin/users/[uid]/SubscriptionOps.tsx:42",
+        "src/features/admin-users/api/useAdminUsers.ts:110,121"
+      ]
+    },
+    "ref": "C-021"
+  },
+  "inputs": {
+    "answer": "app_outputs",
+    "why": "It reads 5 table(s) directly; none is written by a pipeline step — they are written by API routes, jobs or migration seeds — but the input is still the database, not another contract.",
+    "evidence": [
+      "src/lib/admin/backup-codes.ts:116",
+      "src/lib/auth/verify-admin.ts:158",
+      "migrations/231_admin_backup_codes.sql:18",
+      "docs/reference/data-lineage-map.md — no `## `admin_backup_codes`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)",
+      "src/app/api/admin/users/[uid]/subscription/reconcile/route.ts:85",
+      "migrations/228_entitlements.sql:21",
+      "docs/reference/data-lineage-map.md — no `## `entitlements`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)",
+      "src/lib/entitlements/index.ts:308",
+      "src/app/api/admin/users/[uid]/subscription/reconcile/route.ts:97 (deriveEffectiveStripeStatusByProduct(pool, ...))",
+      "src/lib/stripe/client.ts:130"
+    ],
+    "contract_ref": [],
+    "query_key": [],
+    "field_whitelist": [
+      "GET data",
+      "GET meta: reconcilable, protected[]",
+      "POST data: products[], applied[] of {product, from, to}",
+      "POST meta: drift, audited"
+    ],
+    "tables": [
+      {
+        "table": "admin_backup_codes",
+        "columns": [
+          "id",
+          "code_hash",
+          "code_salt",
+          "user_id",
+          "used_at"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/00-architecture/13_authentication.md",
+        "evidence": [
+          "src/lib/admin/backup-codes.ts:116",
+          "src/lib/auth/verify-admin.ts:158",
+          "migrations/231_admin_backup_codes.sql:18",
+          "docs/reference/data-lineage-map.md — no `## `admin_backup_codes`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)"
+        ]
+      },
+      {
+        "table": "entitlements",
+        "columns": [
+          "product",
+          "status",
+          "user_id"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/00-architecture/116_multi_product_architecture.md",
+        "evidence": [
+          "src/app/api/admin/users/[uid]/subscription/reconcile/route.ts:85",
+          "migrations/228_entitlements.sql:21",
+          "docs/reference/data-lineage-map.md — no `## `entitlements`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)"
+        ]
+      },
+      {
+        "table": "logic_variables",
+        "columns": [
+          "variable_value_json",
+          "variable_key"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/02-web-admin/86_control_panel.md",
+        "evidence": [
+          "src/lib/entitlements/index.ts:308",
+          "src/app/api/admin/users/[uid]/subscription/reconcile/route.ts:97 (deriveEffectiveStripeStatusByProduct(pool, ...))",
+          "src/lib/stripe/client.ts:130",
+          "docs/specs/00-architecture/00_system_map.md:94",
+          "docs/reference/data-lineage-map.md — no `## `logic_variables`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)"
+        ]
+      },
+      {
+        "table": "profiles",
+        "columns": [
+          "id",
+          "is_admin"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/00-architecture/114_rls_policy_catalog.md",
+        "evidence": [
+          "src/lib/auth/verify-admin.ts:117-120",
+          "src/lib/auth/verify-admin.ts:198-201 (isProfileAdmin, called at route :211)",
+          "migrations/226_profiles_admin_bootstrap.sql:25",
+          "docs/reference/data-lineage-map.md — no `## `profiles`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)"
+        ]
+      },
+      {
+        "table": "user_profiles",
+        "columns": [
+          "stripe_customer_id",
+          "user_id"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/02-web-admin/102_admin_notifications_tool.md",
+        "evidence": [
+          "src/app/api/admin/users/[uid]/subscription/reconcile/route.ts:71",
+          "docs/specs/00-architecture/00_system_map.md:80",
+          "docs/reference/data-lineage-map.md — no `## `user_profiles`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)"
+        ]
+      }
+    ]
+  },
+  "outputs": {
+    "answer": "contract_only",
+    "why": "This route IS the mutation contract: it writes 3 table(s) synchronously inside the request and returns the result — there is no optimistic client-side flip to reconcile.",
+    "evidence": [
+      "src/app/api/admin/users/[uid]/subscription/reconcile/route.ts:271",
+      "src/lib/admin/admin-audit.ts:72-73",
+      "migrations/217_account_preset_supplier_admin_audit_log.sql:62",
+      "docs/reference/data-lineage-map.md — no `## `admin_audit_log`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)",
+      "src/lib/admin/backup-codes.ts:127",
+      "migrations/231_admin_backup_codes.sql:18",
+      "docs/reference/data-lineage-map.md — no `## `admin_backup_codes`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)",
+      "src/app/api/admin/users/[uid]/subscription/reconcile/route.ts:259-265",
+      "migrations/228_entitlements.sql:21",
+      "docs/reference/data-lineage-map.md — no `## `entitlements`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)"
+    ],
+    "contract_ref": [],
+    "tables": [
+      {
+        "table": "admin_audit_log",
+        "columns": [
+          "admin_uid",
+          "action",
+          "target_uid",
+          "old_value",
+          "new_value",
+          "reason"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/02-web-admin/21_admin_user_management.md",
+        "evidence": [
+          "src/app/api/admin/users/[uid]/subscription/reconcile/route.ts:271",
+          "src/lib/admin/admin-audit.ts:72-73",
+          "migrations/217_account_preset_supplier_admin_audit_log.sql:62",
+          "docs/reference/data-lineage-map.md — no `## `admin_audit_log`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)"
+        ]
+      },
+      {
+        "table": "admin_backup_codes",
+        "columns": [
+          "used_at"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/00-architecture/13_authentication.md",
+        "evidence": [
+          "src/lib/admin/backup-codes.ts:127",
+          "migrations/231_admin_backup_codes.sql:18",
+          "docs/reference/data-lineage-map.md — no `## `admin_backup_codes`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)"
+        ]
+      },
+      {
+        "table": "entitlements",
+        "columns": [
+          "user_id",
+          "product",
+          "status",
+          "last_stripe_event_at",
+          "created_at",
+          "updated_at"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/00-architecture/116_multi_product_architecture.md",
+        "evidence": [
+          "src/app/api/admin/users/[uid]/subscription/reconcile/route.ts:259-265",
+          "migrations/228_entitlements.sql:21",
+          "docs/reference/data-lineage-map.md — no `## `entitlements`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)"
+        ]
+      }
+    ]
+  },
+  "state": {
+    "answer": "server_only",
+    "why": "A CONTRACT holds no client state: every value is resolved per request on the server and nothing is cached in a client store by the route itself.",
+    "evidence": [
+      "src/app/api/admin/users/[uid]/subscription/reconcile/route.ts:134 (GET export)",
+      "src/lib/api/with-api-envelope.ts:27-52"
+    ],
+    "fields": []
+  },
+  "staleness": {
+    "answer": "live",
+    "why": "Every read runs against the base tables on each request — there is no cache layer between the handler and the database.",
+    "evidence": [
+      "src/lib/admin/backup-codes.ts:116",
+      "src/lib/auth/verify-admin.ts:158",
+      "migrations/231_admin_backup_codes.sql:18",
+      "docs/reference/data-lineage-map.md — no `## `admin_backup_codes`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)"
+    ],
+    "offline": "none"
+  },
+  "guards": {
+    "session": {
+      "answer": "admin",
+      "why": "classifyRoute(\"/api/admin/users/X/subscription/reconcile\") returns \"admin\" (executed 2026-09-15); the handler re-verifies the caller in-process.",
+      "evidence": [
+        "src/lib/auth/route-guard.ts:150-201 — classifyRoute executed 2026-09-15 with the concrete path",
+        "verifyAdminAuth at src/app/api/admin/users/[uid]/subscription/reconcile/route.ts:135 (GET) and :190 (POST); implementation src/lib/auth/verify-admin.ts:66"
+      ]
+    },
+    "rls_class": {
+      "answer": "A",
+      "why": "It reaches user-owned rows whose policies key on auth.uid(), alongside default-deny Class B pipeline tables. The route connects as the table owner (raw pg), which Spec 114 §9 makes owner-exempt from RLS — the class describes the data, not the gate this route passes.",
+      "evidence": [
+        "migrations/230_rls_class_a_entitlements.sql:48",
+        "migrations/230_rls_class_a_entitlements.sql:58",
+        "migrations/227_rls_class_b_default_deny.sql:61",
+        "migrations/226_profiles_admin_bootstrap.sql:48",
+        "migrations/230_rls_class_a_entitlements.sql:57",
+        "docs/specs/00-architecture/114_rls_policy_catalog.md §2"
+      ]
+    },
+    "disclosure": "none",
+    "entitlement": "none",
+    "flag": "none",
+    "permission": "none",
+    "rate_bucket": "none"
+  },
+  "render": {
+    "targets": [
+      "screen"
+    ],
+    "projection": "none",
+    "breakpoints": "none",
+    "export": "none"
+  },
+  "checks": [
+    {
+      "id": "contract_admin_users_uid_subscription_reconcile__auth_class_parity",
+      "kind": "auth_class_parity",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "why": "guards.session must equal classifyRoute(\"/api/admin/users/X/subscription/reconcile\"), executed 2026-09-15 → \"admin\" plus the in-handler guard (verifyAdminAuth at src/app/api/admin/users/[uid]/subscription/reconcile/route.ts:135 (GET) and :190 (POST); im). Locked by admin-subscription-ops.infra.test.ts."
+    },
+    {
+      "id": "contract_admin_users_uid_subscription_reconcile__error_envelope",
+      "kind": "error_state",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "Every declared error class returns the { data, error, meta } envelope of docs/specs/00_engineering_standards.md §4.4; expected to stay at zero deviations."
+    },
+    {
+      "id": "contract_admin_users_uid_subscription_reconcile__contract_parse",
+      "kind": "contract_parse",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "why": "Request input is parsed by ReconcileApplySchema (POST only) at src/app/api/admin/users/[uid]/subscription/reconcile/route.ts:203-205 before any query runs; a payload that fails the schema is refused, never coerced."
+    },
+    {
+      "id": "contract_admin_users_uid_subscription_reconcile__field_whitelist_parity",
+      "kind": "field_whitelist_parity",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "The response is an explicit pick-by-name of 4 field(s) (src/app/api/admin/users/[uid]/subscription/reconcile/route.ts:121-128, src/app/api/admin/users/[uid]/subscription/reconcile/route.ts:147-157, src/app/api/admin/users/[uid]/subscription/reconcile/route.ts:163-169, src/app/api/admin/users/[uid]/subscription/reconcile/route.ts:282, src/app/api/admin/users/[uid]/subscription/reconcile/route.ts:290-293), so a column added upstream cannot leak; this check set-equals the projection to inputs.field_whitelist."
+    },
+    {
+      "id": "contract_admin_users_uid_subscription_reconcile__schema_declared",
+      "kind": "schema_declared",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "Every table and column declared in lineage.reads[]/writes[] must exist in src/lib/db/generated/schema.ts (drizzle-kit introspect of the live database); the registry generator checks this both directions."
+    },
+    {
+      "id": "contract_admin_users_uid_subscription_reconcile__audit_row_present",
+      "kind": "ledger_row_present",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "Every accepted mutation writes an admin_audit_log row (src/app/api/admin/users/[uid]/subscription/reconcile/route.ts:271-283, src/lib/admin/admin-audit.ts:72-73); a mutation with no row is the gap Spec 126 §2.2 names."
+    }
+  ],
+  "invariants": "none",
+  "plausibility": "none",
+  "states": [
+    {
+      "name": "hit",
+      "golden": "none"
+    },
+    {
+      "name": "empty",
+      "golden": "none"
+    },
+    {
+      "name": "miss",
+      "golden": "none"
+    },
+    {
+      "name": "ambiguous",
+      "golden": "none"
+    },
+    {
+      "name": "partial",
+      "golden": "none"
+    },
+    {
+      "name": "degraded",
+      "golden": "none"
+    },
+    {
+      "name": "unauthorized",
+      "golden": "none"
+    },
+    {
+      "name": "error",
+      "golden": "none"
+    }
+  ],
+  "errors": {
+    "answer": "envelope",
+    "why": "Success and failure both arrive in the { data, error, meta } envelope of docs/specs/00_engineering_standards.md §4.4; withApiEnvelope is the outermost wrapper and converts any uncaught throw into the same shape.",
+    "evidence": [
+      "src/lib/api/with-api-envelope.ts:27-52",
+      "src/app/api/admin/users/[uid]/subscription/reconcile/route.ts:147-157",
+      "src/app/api/admin/users/[uid]/subscription/reconcile/route.ts:163-169",
+      "src/app/api/admin/users/[uid]/subscription/reconcile/route.ts:290-293",
+      "src/app/api/admin/users/[uid]/subscription/reconcile/route.ts:47-52",
+      "src/app/api/admin/users/[uid]/subscription/reconcile/route.ts:54-59",
+      "src/app/api/admin/users/[uid]/subscription/reconcile/route.ts:49 (401)",
+      "src/app/api/admin/users/[uid]/subscription/reconcile/route.ts:56 (500)",
+      "src/app/api/admin/users/[uid]/subscription/reconcile/route.ts:142 (404)",
+      "src/app/api/admin/users/[uid]/subscription/reconcile/route.ts:184 (403)"
+    ],
+    "classes": [
+      {
+        "class": "401",
+        "ui": "{data:null,error:{code,message},meta:null} — src/app/api/admin/users/[uid]/subscription/reconcile/route.ts:49 (code UNAUTHORIZED)"
+      },
+      {
+        "class": "500",
+        "ui": "{data:null,error:{code,message},meta:null} — hand-built NextResponse.json, returned at :171 and :295 — src/app/api/admin/users/[uid]/subscription/reconcile/route.ts:56 (code STRIPE_NOT_CONFIGURED)"
+      },
+      {
+        "class": "403",
+        "ui": "{data:null,error:{code,message},meta:null} — admin_key cannot mutate — src/app/api/admin/users/[uid]/subscription/reconcile/route.ts:184 (code FORBIDDEN)"
+      },
+      {
+        "class": "400",
+        "ui": "{data:null,error:{code,message},meta:null} — src/app/api/admin/users/[uid]/subscription/reconcile/route.ts:201 (code INVALID_JSON)"
+      }
+    ]
+  },
+  "emits": {
+    "answer": "ledger",
+    "why": "It writes durable rows that count what happened (admin_audit_log; admin_audit_log row per applied product at :271). NOTE: the closed emits.ledger_events[] vocabulary is the usage ledger (property_view · pdf_send · offer_impression · offer_click · export · parcel_id_translated); no member describes an audit or run row, so ledger_events stays empty — raised as a vocabulary gap.",
+    "evidence": [
+      "ledger admin_audit_log row per applied product at :271",
+      "src/app/api/admin/users/[uid]/subscription/reconcile/route.ts:271-283",
+      "src/lib/admin/admin-audit.ts:72-73"
+    ],
+    "analytics": [],
+    "ledger_events": [],
+    "breadcrumbs": []
+  },
+  "offers": {
+    "answer": "none",
+    "why": "It renders no sponsored placement: the offers and advertisers tables Spec 126 §2 specifies do not exist in migrations/ and nothing in this handler reads placement inventory.",
+    "evidence": [
+      "migrations/ — no CREATE TABLE offers / advertisers (grep 2026-09-15)",
+      "src/app/api/admin/users/[uid]/subscription/reconcile/route.ts — read in full; no placement read"
+    ]
+  },
+  "metering": {
+    "answer": "none",
+    "why": "Nothing here is counted: no usage_events row (the table does not exist in the introspected schema) and no quota counter is written by this handler.",
+    "evidence": [
+      "src/app/api/admin/users/[uid]/subscription/reconcile/route.ts — read in full 2026-09-15",
+      "src/lib/db/generated/schema.ts — no usage_events table"
+    ]
+  },
+  "config": {
+    "answer": "logic_variables",
+    "why": "It consumes 1 operator-editable tunable(s) from the logic_variables table rather than a literal in code.",
+    "evidence": [
+      "src/lib/entitlements/index.ts:308 (SELECT variable_value_json FROM logic_variables WHERE variable_key = 'stripe_price_product_map'), reached from route :97 -> src/lib/stripe/client.ts:130",
+      "migrations/092_control_panel.sql:27"
+    ],
+    "logic_variables": [
+      {
+        "name": "stripe_price_product_map",
+        "on_invalid": "default",
+        "why": "each mapped value must be a member of PRODUCTS = ['lead_gen','flight_center'] (src/lib/entitlements/index.ts:39, checked at :322)"
+      }
+    ],
+    "retired": []
+  },
+  "sharing": {
+    "answer": "shared",
+    "why": "2 call sites render it, so the projection is shared and a field removed here breaks more than one surface.",
+    "evidence": [
+      "src/app/admin/users/[uid]/SubscriptionOps.tsx:42",
+      "src/features/admin-users/api/useAdminUsers.ts:110,121"
+    ],
+    "surfaces": [
+      "src/app/admin/users/[uid]/SubscriptionOps.tsx:42",
+      "src/features/admin-users/api/useAdminUsers.ts:110,121"
+    ]
+  },
+  "a11y": {
+    "touch_target_min_px": "UNRESEARCHED",
+    "labels": "none",
+    "dark_mode": "none",
+    "reduced_motion": "none",
+    "i18n": "none",
+    "safe_area": "none"
+  },
+  "deviations": "none",
+  "limitations": [
+    {
+      "what": "a11y.touch_target_min_px has no legal answer for a CONTRACT",
+      "measured": "The schema allows only UNRESEARCHED or an integer >= 44; a JSON endpoint has no touch target and the vocabulary has no \"n/a\". Left UNRESEARCHED and escalated per Spec 128 §4 rather than invented.",
+      "check_id": "contract_admin_users_uid_subscription_reconcile__auth_class_parity"
+    },
+    {
+      "what": "error classes outside the closed set are not representable: 404, 409",
+      "measured": "The handler returns 404, 409 at src/app/api/admin/users/[uid]/subscription/reconcile/route.ts:142, src/app/api/admin/users/[uid]/subscription/reconcile/route.ts:216, src/app/api/admin/users/[uid]/subscription/reconcile/route.ts:237, src/app/api/admin/users/[uid]/subscription/reconcile/route.ts:287; errors.classes[] admits only 400/401/403/429/500/schema_drift/offline.",
+      "check_id": "contract_admin_users_uid_subscription_reconcile__error_envelope"
+    }
+  ],
+  "interpretation": "none",
+  "notes": "GET is a read-only drift report that also calls the live Stripe API (subscriptions.list — not a DB table) and never mutates. POST applies the provider truth per product in one transaction, writing one admin_audit_log row per product actually changed, and refuses (409) to touch protected states (deleted / admin_managed) both at read-check time and via a SQL WHERE fence against a concurrent change during the Stripe round trip. admin_key auth is forbidden from POST. Response is a dynamically built products/applied object, not a fixed pick-list. Also cites 20_stripe_web_checkout.md and 116_multi_product_architecture.md. Called via a template-literal base in SubscriptionOps.tsx. | MEASURED 2026-09-15: EXTERNAL SERVICE CALLS: Stripe only. getStripeClient() at :95 (src/lib/stripe/client.ts:22, throws StripeNotConfiguredError at :25 when STRIPE_SECRET_KEY is unset) and stripe.subscriptions.list({customer, status:'all', limit:100}) at :96 — reached from BOTH GET (:160) and POST (:227). No Firebase/Supabase Admin call, no PostHog track() (this mutation route emits NO analytics event, unlike /api/admin/users and /api/admin/users/[uid] — a telemetry gap against Spec 33 §11's 'EVERY state-mutating admin action emits track(...)' as quoted at src/lib/admin/analytics.ts:15-16). CENSUS CHECK: census_reads [user_profiles, entitlements] and census_writes [entitlements, admin_audit_log] confirmed; census MISSED `logic_variables` (read indirectly on every GET and POST via resolvePriceProduct, src/lib/entitlements/index.ts:308), and the usual `profiles` / admin_backup_codes admin-auth reads. No SELECT *. All SQL parameterised; no interpolation. Stripe network I/O is correctly kept outside withTransaction (:227 before :256). | Caching: none observed in the route. NOTE: a module-level ~60s TTL cache exists for the price->product map at src/lib/entitlements/index.ts:280-281 and :306-314, so a reconcile can act on an up-to-60s-stale operator mapping. | Other guards / classification: POST refuses authMethod==='admin_key' at :179-187 (403). Target-is-admin refused at :211-213 via isProfileAdmin (src/lib/auth/verify-admin.ts:196). Protected-status fence applied BOTH at read time (:124, :236-238) and at SQL level in the upsert WHERE (:265). CSRF Origin allowlist for POST at src/lib/auth/verify-admin.ts:70-78. MFA gate INERT unless ADMIN_MFA_ENFORCED (:143). | Locking tests: src/tests/admin-subscription-ops.infra.test.ts.",
+  "x-draft": {
+    "shard": "contracts",
+    "files": [
+      "src/app/api/admin/users/[uid]/subscription/reconcile/route.ts"
+    ],
+    "loc": 299,
+    "methods": [
+      "GET",
+      "POST"
+    ],
+    "consumers": [
+      "admin_user_detail"
+    ],
+    "writes_audit_row": true,
+    "consumers_verified": [
+      "src/app/admin/users/[uid]/SubscriptionOps.tsx:42",
+      "src/features/admin-users/api/useAdminUsers.ts:110,121"
+    ],
+    "auth_class_executed": "admin",
+    "locking_tests": [
+      "src/tests/admin-subscription-ops.infra.test.ts"
+    ]
+  },
+  "programme": {
+    "scope": "platform_shared",
+    "phase": "UNRESEARCHED",
+    "why": "The subscription and Stripe hand-off, which resolves an entitlement per PRODUCT — so it serves both and belongs to neither.",
+    "feature": "F12",
+    "build_order": 3122,
+    "leakage": "none",
+    "product_questions": "none",
+    "review": {
+      "status": "unreviewed"
+    }
+  }
+}

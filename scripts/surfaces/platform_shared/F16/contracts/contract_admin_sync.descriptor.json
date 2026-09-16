@@ -1,0 +1,642 @@
+{
+  "kind": "CONTRACT",
+  "status": "exists",
+  "docs": {
+    "purpose": "Shows an admin the history of the last twenty permit-data import runs, and lets them manually trigger a new import of permit data from a file already sitting on the server.",
+    "data_story": "It reads 5 tables — `sync_runs`, `trade_mapping_rules`, `trades`, `permit_type_classifications` and `permits` and writes `sync_runs`, `permits`, `permit_trades` and `permit_history`. Its response is an explicit pick-by-name projection of 12 fields, so a column added to a table upstream does not leak into the client by accident. **Nothing in this repository calls it.** That is the state this registry exists to make visible, not a claim that it is dead — a caller could be a bookmark, an external system, or a path built from variables. It mutates admin state and writes **no `admin_audit_log` row** — one of the nine measured gaps Phase 0 closes.",
+    "under_126": "Becomes a **CONTRACT descriptor** of archetype `COMMAND`. It declares the JOB it triggers (`job_ref`), its concurrency posture and the audit row it must write. Its `consumers[]` is the field that matters most here: today it is empty, and the orphan panel renders that as a red row rather than leaving it to be discovered years later."
+  },
+  "evidence": {
+    "files": [
+      "src/app/api/admin/sync/route.ts:1"
+    ],
+    "contracts": [
+      "src/app/api/admin/sync/route.ts:9 (GET export)",
+      "src/app/api/admin/sync/route.ts:37 (POST export)",
+      "src/lib/api/with-api-envelope.ts:27-52"
+    ],
+    "tables": [
+      "src/app/api/admin/sync/route.ts:12-19",
+      "src/lib/sync/process.ts:28 — `SELECT * FROM trade_mapping_rules WHERE is_active = true`",
+      "src/lib/sync/process.ts:45",
+      "src/lib/sync/process.ts:64-66",
+      "src/lib/sync/process.ts:97 — `SELECT * FROM permits WHERE permit_num = $1 AND revision_num = $2 LIMIT 1`, run once PER RECORD",
+      "src/lib/sync/process.ts:323-325",
+      "src/lib/sync/process.ts:351-361",
+      "src/lib/sync/process.ts:379-388",
+      "src/lib/sync/process.ts:162-175",
+      "src/lib/sync/process.ts:214-226",
+      "src/lib/sync/process.ts:285",
+      "src/lib/sync/process.ts:196-199",
+      "src/lib/sync/process.ts:269-272",
+      "src/lib/sync/process.ts:262"
+    ],
+    "gate": [
+      "src/lib/auth/route-guard.ts — admin prefix — classifyRoute matches pathname.startsWith('/api/admin/')",
+      "src/lib/auth/route-guard.ts:150-201 — classifyRoute executed 2026-09-15 with the concrete path → \"admin\"",
+      "no in-handler auth call in src/app/api/admin/sync/route.ts — src/middleware.ts is the only gate"
+    ],
+    "states": [
+      "hit: src/app/api/admin/sync/route.ts:22",
+      "empty: src/app/api/admin/sync/route.ts:22 with src/lib/db/client.ts:116 — no sync_runs rows yields {runs: []}",
+      "error: src/app/api/admin/sync/route.ts:27 (GET), :57 (POST)",
+      "partial: src/lib/sync/process.ts:375-402 — a mid-run failure still returns 200 {sync_run} with status='failed' and the partial counters, because runSync returns the failed row rather than throwing (:402); the route at :52 cannot distinguish it from a success except by reading sync_run.status",
+      "degraded: src/lib/sync/process.ts:42-51 + :134-143 — a missing trades.id=33 row makes checkRealtorAvailable return false and the whole run proceeds WITHOUT realtor classification, logged but invisible in the response",
+      "unauthorized: src/middleware.ts:115-120 only — this file has no 401 path"
+    ],
+    "emits": [
+      "ledger sync_runs row (one per POST)",
+      "ledger permit_history rows (one per changed field, per permit)"
+    ]
+  },
+  "identity": {
+    "id": "contract_admin_sync",
+    "route": "/api/admin/sync",
+    "archetype": "COMMAND",
+    "platforms": [
+      "web"
+    ],
+    "owns": {
+      "components": []
+    },
+    "owner": "Backend/Pipeline (CLAUDE.md §Domain Rules: `src/app/api/`)",
+    "spec": "UNRESEARCHED",
+    "spec_refs": [
+      "UNRESEARCHED — src/app/api/admin/sync/route.ts carries no SPEC LINK header and no System Map row lists it (docs/specs/00-architecture/00_system_map.md, searched 2026-09-15); guessing the nearest spec would be an invention"
+    ],
+    "spec_version": "0-draft",
+    "versioning": {
+      "answer": "none",
+      "why": "No call site anywhere in src/** or mobile/** (verified 2026-09-15 by an exact-path sweep that strips comment lines), so no consumer holds a compatibility promise to break.",
+      "evidence": [
+        "src/app/api/admin/sync/route.ts — no caller",
+        "src/lib/auth/route-guard.ts:150-201"
+      ]
+    },
+    "ref": "C-017"
+  },
+  "inputs": {
+    "answer": "app_outputs",
+    "why": "It reads 5 table(s) directly; 1 of them are materialised by named pipeline steps (classify_inspection_status), so its inputs are the pipeline's outputs rather than another contract.",
+    "evidence": [
+      "src/lib/sync/process.ts:64-66",
+      "migrations/120_permit_type_classifications.sql:62",
+      "docs/reference/data-lineage-map.md:990 — table present, no pipeline producer listed",
+      "docs/reference/data-lineage-map.md — no `## `permit_type_classifications`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)",
+      "src/lib/sync/process.ts:97 — `SELECT * FROM permits WHERE permit_num = $1 AND revision_num = $2 LIMIT 1`, run once PER RECORD",
+      "scripts/classify-inspection-status.js",
+      "docs/reference/data-lineage-map.md:997",
+      "scripts/manifest.json#chains",
+      "docs/reference/data-lineage-map.md",
+      "src/app/api/admin/sync/route.ts:12-19"
+    ],
+    "contract_ref": [],
+    "query_key": [],
+    "field_whitelist": [
+      "id",
+      "started_at",
+      "completed_at",
+      "status",
+      "records_total",
+      "records_new",
+      "records_updated",
+      "records_unchanged",
+      "records_errors",
+      "error_message",
+      "snapshot_path",
+      "duration_ms"
+    ],
+    "tables": [
+      {
+        "table": "permit_type_classifications",
+        "columns": [
+          "permit_type",
+          "class"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/01-pipeline/80_taxonomies.md",
+        "evidence": [
+          "src/lib/sync/process.ts:64-66",
+          "migrations/120_permit_type_classifications.sql:62",
+          "docs/reference/data-lineage-map.md:990 — table present, no pipeline producer listed",
+          "docs/reference/data-lineage-map.md — no `## `permit_type_classifications`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)"
+        ]
+      },
+      {
+        "table": "permits",
+        "columns": "all",
+        "producing_steps": [
+          "classify_inspection_status",
+          "classify_lifecycle_phase",
+          "classify_permit_phase",
+          "classify_scope",
+          "classify_scope_class",
+          "classify_scope_tags",
+          "close_stale_permits",
+          "create_pre_permits",
+          "enrich_permits",
+          "geocode_permits",
+          "inspections",
+          "link_coa",
+          "link_neighbourhoods",
+          "link_similar",
+          "permits"
+        ],
+        "chain_position": "deep_scrapes[1] · permits[23], coa[12] · permits[3] · permits[4] · not-in-a-chain · not-in-a-chain · permits[2] · not-in-a-chain · permits[9] · permits[7], sources[3] · deep_scrapes[0] · permits[19], coa[8] · permits[10], sources[17] · permits[12] · permits[1]",
+        "owner_spec": "docs/specs/01-pipeline/41_chain_permits.md",
+        "evidence": [
+          "src/lib/sync/process.ts:97 — `SELECT * FROM permits WHERE permit_num = $1 AND revision_num = $2 LIMIT 1`, run once PER RECORD",
+          "scripts/classify-inspection-status.js",
+          "docs/reference/data-lineage-map.md:997",
+          "scripts/manifest.json#chains",
+          "docs/reference/data-lineage-map.md"
+        ]
+      },
+      {
+        "table": "sync_runs",
+        "columns": [
+          "id",
+          "started_at",
+          "completed_at",
+          "status",
+          "records_total",
+          "records_new",
+          "records_updated",
+          "records_unchanged",
+          "records_errors",
+          "error_message",
+          "snapshot_path",
+          "duration_ms"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/00-architecture/115_scheduling.md",
+        "evidence": [
+          "src/app/api/admin/sync/route.ts:12-19",
+          "docs/specs/00-architecture/00_system_map.md:19",
+          "docs/reference/data-lineage-map.md:1254 — table present, no pipeline producer listed",
+          "docs/reference/data-lineage-map.md — no `## `sync_runs`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)"
+        ]
+      },
+      {
+        "table": "trade_mapping_rules",
+        "columns": "all",
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/00-architecture/01_database_schema.md",
+        "evidence": [
+          "src/lib/sync/process.ts:28 — `SELECT * FROM trade_mapping_rules WHERE is_active = true`",
+          "docs/specs/00-architecture/01_database_schema.md:17 (table inventory; Spec 114 §2 records this inventory as known-stale, so it is the owner of record, not a column-level source)",
+          "docs/reference/data-lineage-map.md:1333 — table present, no pipeline producer listed",
+          "docs/reference/data-lineage-map.md — no `## `trade_mapping_rules`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)"
+        ]
+      },
+      {
+        "table": "trades",
+        "columns": [
+          "id",
+          "slug"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/01-pipeline/84_lifecycle_phase_engine.md",
+        "evidence": [
+          "src/lib/sync/process.ts:45",
+          "docs/specs/00-architecture/00_system_map.md:71",
+          "docs/reference/data-lineage-map.md:1355 — table present, no pipeline producer listed",
+          "docs/reference/data-lineage-map.md — no `## `trades`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)"
+        ]
+      }
+    ]
+  },
+  "outputs": {
+    "answer": "contract_only",
+    "why": "This route IS the mutation contract: it writes 4 table(s) synchronously inside the request and returns the result — there is no optimistic client-side flip to reconcile.",
+    "evidence": [
+      "src/lib/sync/process.ts:249-252",
+      "docs/specs/00-architecture/01_database_schema.md:17 (table inventory; Spec 114 §2 records this inventory as known-stale, so it is the owner of record, not a column-level source)",
+      "docs/reference/data-lineage-map.md — no `## `permit_history`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)",
+      "src/lib/sync/process.ts:196-199",
+      "src/lib/sync/process.ts:269-272",
+      "src/lib/sync/process.ts:262",
+      "scripts/backfill-realtor-permit-trades.js",
+      "docs/reference/data-lineage-map.md:973",
+      "scripts/manifest.json#chains",
+      "docs/reference/data-lineage-map.md"
+    ],
+    "contract_ref": [],
+    "tables": [
+      {
+        "table": "permit_history",
+        "columns": [
+          "permit_num",
+          "revision_num",
+          "field_name",
+          "old_value",
+          "new_value",
+          "sync_run_id",
+          "changed_at"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/00-architecture/01_database_schema.md",
+        "evidence": [
+          "src/lib/sync/process.ts:249-252",
+          "docs/specs/00-architecture/01_database_schema.md:17 (table inventory; Spec 114 §2 records this inventory as known-stale, so it is the owner of record, not a column-level source)",
+          "docs/reference/data-lineage-map.md — no `## `permit_history`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)"
+        ]
+      },
+      {
+        "table": "permit_trades",
+        "columns": [
+          "permit_num",
+          "revision_num",
+          "trade_id",
+          "trade_slug",
+          "trade_name",
+          "tier",
+          "confidence",
+          "is_active",
+          "phase",
+          "lead_score"
+        ],
+        "producing_steps": [
+          "backfill_realtor_permit_trades",
+          "classify_permits"
+        ],
+        "chain_position": "permits[16] · permits[13]",
+        "owner_spec": "docs/specs/03-mobile/91_mobile_lead_feed.md",
+        "evidence": [
+          "src/lib/sync/process.ts:196-199",
+          "src/lib/sync/process.ts:269-272",
+          "src/lib/sync/process.ts:262",
+          "scripts/backfill-realtor-permit-trades.js",
+          "docs/reference/data-lineage-map.md:973",
+          "scripts/manifest.json#chains",
+          "docs/reference/data-lineage-map.md"
+        ]
+      },
+      {
+        "table": "permits",
+        "columns": [
+          "permit_num",
+          "revision_num",
+          "permit_type",
+          "structure_type",
+          "work",
+          "street_num",
+          "street_name",
+          "street_type",
+          "street_direction",
+          "city",
+          "postal",
+          "geo_id",
+          "building_type",
+          "category",
+          "application_date",
+          "issued_date",
+          "completed_date",
+          "status",
+          "description",
+          "est_const_cost",
+          "builder_name",
+          "owner",
+          "dwelling_units_created",
+          "dwelling_units_lost",
+          "ward",
+          "council_district",
+          "current_use",
+          "proposed_use",
+          "housing_units",
+          "storeys",
+          "data_hash",
+          "first_seen_at",
+          "last_seen_at",
+          "enriched_status"
+        ],
+        "producing_steps": [
+          "classify_inspection_status",
+          "classify_lifecycle_phase",
+          "classify_permit_phase",
+          "classify_scope",
+          "classify_scope_class",
+          "classify_scope_tags",
+          "close_stale_permits",
+          "create_pre_permits",
+          "enrich_permits",
+          "geocode_permits",
+          "inspections",
+          "link_coa",
+          "link_neighbourhoods",
+          "link_similar",
+          "permits"
+        ],
+        "chain_position": "deep_scrapes[1] · permits[23], coa[12] · permits[3] · permits[4] · not-in-a-chain · not-in-a-chain · permits[2] · not-in-a-chain · permits[9] · permits[7], sources[3] · deep_scrapes[0] · permits[19], coa[8] · permits[10], sources[17] · permits[12] · permits[1]",
+        "owner_spec": "docs/specs/01-pipeline/41_chain_permits.md",
+        "evidence": [
+          "src/lib/sync/process.ts:162-175",
+          "src/lib/sync/process.ts:214-226",
+          "src/lib/sync/process.ts:285",
+          "scripts/classify-inspection-status.js",
+          "docs/reference/data-lineage-map.md:997",
+          "scripts/manifest.json#chains",
+          "docs/reference/data-lineage-map.md"
+        ]
+      },
+      {
+        "table": "sync_runs",
+        "columns": [
+          "started_at",
+          "status",
+          "completed_at",
+          "records_total",
+          "records_new",
+          "records_updated",
+          "records_unchanged",
+          "records_errors",
+          "duration_ms",
+          "error_message"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/00-architecture/115_scheduling.md",
+        "evidence": [
+          "src/lib/sync/process.ts:323-325",
+          "src/lib/sync/process.ts:351-361",
+          "src/lib/sync/process.ts:379-388",
+          "docs/specs/00-architecture/00_system_map.md:19",
+          "docs/reference/data-lineage-map.md:1254 — table present, no pipeline producer listed",
+          "docs/reference/data-lineage-map.md — no `## `sync_runs`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)"
+        ]
+      }
+    ]
+  },
+  "state": {
+    "answer": "server_only",
+    "why": "A CONTRACT holds no client state: every value is resolved per request on the server and nothing is cached in a client store by the route itself.",
+    "evidence": [
+      "src/app/api/admin/sync/route.ts:9 (GET export)",
+      "src/lib/api/with-api-envelope.ts:27-52"
+    ],
+    "fields": []
+  },
+  "staleness": {
+    "answer": "live",
+    "why": "Every read runs against the base tables on each request — there is no cache layer between the handler and the database.",
+    "evidence": [
+      "src/lib/sync/process.ts:64-66",
+      "migrations/120_permit_type_classifications.sql:62",
+      "docs/reference/data-lineage-map.md:990 — table present, no pipeline producer listed",
+      "docs/reference/data-lineage-map.md — no `## `permit_type_classifications`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)"
+    ],
+    "offline": "none"
+  },
+  "guards": {
+    "session": {
+      "answer": "admin",
+      "why": "classifyRoute(\"/api/admin/sync\") returns \"admin\" (executed 2026-09-15); the handler adds no check of its own, so middleware is the only gate.",
+      "evidence": [
+        "src/lib/auth/route-guard.ts:150-201 — classifyRoute executed 2026-09-15 with the concrete path",
+        "src/middleware.ts — the only gate for this path (no in-handler auth call)"
+      ]
+    },
+    "rls_class": {
+      "answer": "B",
+      "why": "Every table it reaches has RLS enabled with zero policies — default deny for anon and authenticated; only the table owner and service_role get through.",
+      "evidence": [
+        "migrations/227_rls_class_b_default_deny.sql:89",
+        "migrations/227_rls_class_b_default_deny.sql:93",
+        "migrations/227_rls_class_b_default_deny.sql:97",
+        "migrations/227_rls_class_b_default_deny.sql:74",
+        "migrations/227_rls_class_b_default_deny.sql:75",
+        "migrations/227_rls_class_b_default_deny.sql:73",
+        "migrations/227_rls_class_b_default_deny.sql:68",
+        "docs/specs/00-architecture/114_rls_policy_catalog.md §2"
+      ]
+    },
+    "disclosure": "none",
+    "entitlement": "none",
+    "flag": "none",
+    "permission": "none",
+    "rate_bucket": "none"
+  },
+  "render": {
+    "targets": [
+      "screen"
+    ],
+    "projection": "none",
+    "breakpoints": "none",
+    "export": "none"
+  },
+  "checks": [
+    {
+      "id": "contract_admin_sync__auth_class_parity",
+      "kind": "auth_class_parity",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "why": "guards.session must equal classifyRoute(\"/api/admin/sync\"), executed 2026-09-15 → \"admin\"; there is no in-handler check, so a middleware change silently re-classes this route. No test file in src/tests/** imports this route — the parity is unlocked."
+    },
+    {
+      "id": "contract_admin_sync__error_envelope",
+      "kind": "error_state",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "why": "MEASURED DEVIATION, permanently non-zero until re-projected: Every handler-authored response is bare: GET returns {runs} at :22, POST returns {sync_run} at :52, and the three error responses return {error: <string>} at :25, :43, :55 — no data/error/meta keys anywhere. Both handlers have their own try/catch (:10, :38), s Retighten condition: the handler returns the envelope on every path."
+    },
+    {
+      "id": "contract_admin_sync__field_whitelist_parity",
+      "kind": "field_whitelist_parity",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "why": "MEASURED: the projection is mixed (src/app/api/admin/sync/route.ts:12-19 (GET: 12 explicitly named columns), src/app/api/admin/sync/route.ts:22, src/app/api/admin/sync/route.ts:52 with src/lib/sync/process.ts:325 and :361 (`RETURNING *` — the POST response spreads the whole sync_runs row)), so a column added upstream reaches the client without a code change. Permanently non-zero until the response is an explicit pick; retighten condition: projection.kind === explicit_pick."
+    },
+    {
+      "id": "contract_admin_sync__schema_declared",
+      "kind": "schema_declared",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "Every table and column declared in lineage.reads[]/writes[] must exist in src/lib/db/generated/schema.ts (drizzle-kit introspect of the live database); the registry generator checks this both directions."
+    },
+    {
+      "id": "contract_admin_sync__audit_row_missing",
+      "kind": "ledger_row_present",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "why": "MEASURED GAP, permanently non-zero: this admin route mutates sync_runs, permits, permit_trades, permit_history and writes NO admin_audit_log row — one of the measured audit gaps. Retighten condition: the handler writes an admin_audit_log row per accepted mutation."
+    }
+  ],
+  "invariants": "none",
+  "plausibility": "none",
+  "states": [
+    {
+      "name": "hit",
+      "golden": "none"
+    },
+    {
+      "name": "empty",
+      "golden": "none"
+    },
+    {
+      "name": "error",
+      "golden": "none"
+    },
+    {
+      "name": "partial",
+      "golden": "none"
+    },
+    {
+      "name": "degraded",
+      "golden": "none"
+    },
+    {
+      "name": "unauthorized",
+      "golden": "none"
+    }
+  ],
+  "errors": {
+    "answer": "envelope",
+    "why": "It returns a JSON error body, but NOT the standard envelope: Every handler-authored response is bare: GET returns {runs} at :22, POST returns {sync_run} at :52, and the three error responses return {error: <string>} at :25, :43, :55 — no data/error/meta keys anywhere. Both handler \"envelope\" is the closest member of the closed menu; the deviation is recorded in deviations[].",
+    "evidence": [
+      "src/lib/api/with-api-envelope.ts:27-52",
+      "src/app/api/admin/sync/route.ts:22",
+      "src/app/api/admin/sync/route.ts:52",
+      "src/app/api/admin/sync/route.ts:25-28",
+      "src/lib/api/with-api-envelope.ts:42",
+      "src/lib/api/with-api-envelope.ts:48",
+      "src/app/api/admin/sync/route.ts:45 (400)",
+      "src/app/api/admin/sync/route.ts:27 (500)",
+      "src/app/api/admin/sync/route.ts:57 (500)",
+      "src/app/api/admin/sync/route.ts:42 (500)"
+    ],
+    "classes": [
+      {
+        "class": "400",
+        "ui": "{error:'file_path is required and must be a string'} — src/app/api/admin/sync/route.ts:45"
+      },
+      {
+        "class": "500",
+        "ui": "{error:'Failed to fetch sync runs'} — src/app/api/admin/sync/route.ts:27"
+      }
+    ]
+  },
+  "emits": {
+    "answer": "ledger",
+    "why": "It writes durable rows that count what happened (sync_runs row (one per POST); permit_history rows (one per changed field, per permit)). NOTE: the closed emits.ledger_events[] vocabulary is the usage ledger (property_view · pdf_send · offer_impression · offer_click · export · parcel_id_translated); no member describes an audit or run row, so ledger_events stays empty — raised as a vocabulary gap.",
+    "evidence": [
+      "ledger sync_runs row (one per POST)",
+      "ledger permit_history rows (one per changed field, per permit)"
+    ],
+    "analytics": [],
+    "ledger_events": [],
+    "breadcrumbs": []
+  },
+  "offers": {
+    "answer": "none",
+    "why": "It renders no sponsored placement: the offers and advertisers tables Spec 126 §2 specifies do not exist in migrations/ and nothing in this handler reads placement inventory.",
+    "evidence": [
+      "migrations/ — no CREATE TABLE offers / advertisers (grep 2026-09-15)",
+      "src/app/api/admin/sync/route.ts — read in full; no placement read"
+    ]
+  },
+  "metering": {
+    "answer": "none",
+    "why": "Nothing here is counted: no usage_events row (the table does not exist in the introspected schema) and no quota counter is written by this handler.",
+    "evidence": [
+      "src/app/api/admin/sync/route.ts — read in full 2026-09-15",
+      "src/lib/db/generated/schema.ts — no usage_events table"
+    ]
+  },
+  "config": {
+    "answer": "none",
+    "why": "It consumes no tunable: no logic_variables read and no env-var-driven threshold in the handler or the libs it calls.",
+    "evidence": [
+      "src/app/api/admin/sync/route.ts — read in full 2026-09-15; no loadMarketplaceConfigs / logic_variables read"
+    ],
+    "logic_variables": [],
+    "retired": []
+  },
+  "sharing": {
+    "answer": "none",
+    "why": "ORPHAN: an exact-path sweep of src/** and mobile/** on 2026-09-15 (comment lines stripped) found no call site. That is a measured absence, not proof the endpoint is dead — a caller could be a bookmark or an external system.",
+    "evidence": [
+      "src/app/api/admin/sync/route.ts — swept src/** and mobile/** for the exact path on 2026-09-15; zero call sites outside src/tests/**"
+    ],
+    "surfaces": []
+  },
+  "a11y": {
+    "touch_target_min_px": "UNRESEARCHED",
+    "labels": "none",
+    "dark_mode": "none",
+    "reduced_motion": "none",
+    "i18n": "none",
+    "safe_area": "none"
+  },
+  "deviations": [
+    {
+      "from": "docs/specs/00_engineering_standards.md §4.4 — all API routes return { data, error, meta }",
+      "why": "Every handler-authored response is bare: GET returns {runs} at :22, POST returns {sync_run} at :52, and the three error responses return {error: <string>} at :25, :43, :55 — no data/error/meta keys anywhere. Both handlers have their own try/catch (:10, :38), so the enveloped wrapper responses (src/lib/api/with-api-envelope.ts:42, :48) are effectively unreachable.",
+      "adjudicated_by": "not adjudicated — measured 2026-09-15 by reading the handler",
+      "date": "2026-09-15"
+    },
+    {
+      "from": "src/lib/auth/verify-admin.ts — every admin route calls verifyAdminAuth",
+      "why": "This admin route makes no in-handler verifyAdminAuth call; src/middleware.ts is the only gate and its own comment says the check is presence-only.",
+      "adjudicated_by": "not adjudicated — measured 2026-09-15",
+      "date": "2026-09-15"
+    },
+    {
+      "from": "docs/specs/00_engineering_standards.md §4.3 — never SELECT *, always project specific columns",
+      "why": "At least one query reads the whole row: trade_mapping_rules, permits.",
+      "adjudicated_by": "not adjudicated — measured 2026-09-15",
+      "date": "2026-09-15"
+    }
+  ],
+  "limitations": [
+    {
+      "what": "a11y.touch_target_min_px has no legal answer for a CONTRACT",
+      "measured": "The schema allows only UNRESEARCHED or an integer >= 44; a JSON endpoint has no touch target and the vocabulary has no \"n/a\". Left UNRESEARCHED and escalated per Spec 128 §4 rather than invented.",
+      "check_id": "contract_admin_sync__auth_class_parity"
+    },
+    {
+      "what": "no consumer, so no fan-out edge",
+      "measured": "The exact-path sweep of src/** and mobile/** (comment lines stripped) returned zero call sites on 2026-09-15.",
+      "check_id": "contract_admin_sync__auth_class_parity"
+    }
+  ],
+  "interpretation": "none",
+  "notes": "No SPEC LINK and no verifyAdminAuth import — relies entirely on blanket route-guard.ts. POST accepts a raw file_path string from the body with no validation or allow-listing before it reaches runSync -> parsePermitsStream (src/lib/sync/process.ts, src/lib/sync/ingest.ts) — a local-file-path surface with no visible sanitization in this file. runSync executes the whole multi-record ingest synchronously in-process inside this one HTTP request, in contrast to pipelines/[slug], whose comments explain long-running work was deliberately moved off Vercel onto GitHub Actions. No writeAdminAudit despite being a bulk data-mutating operation. No in-repo caller found. | MEASURED 2026-09-15: FINDINGS, worst first. (1) ARBITRARY LOCAL FILE READ BEHIND NO ROUTE-LEVEL AUTH: POST (:37) takes `body.file_path` (:40), validates only that it is a non-empty string (:42), and passes it to runSync (:50) -> parsePermitsStream (src/lib/sync/process.ts:339) -> `createReadStream(filePath)` (src/lib/sync/ingest.ts:28). There is no verifyAdminAuth, no path confinement, no CSRF Origin check. Content is stream-JSON-parsed, so a non-matching file mostly errors rather than exfiltrating — but the open() itself is caller-controlled and the route is guarded only by src/middleware.ts:115's presence-only check. (2) MISSING GUARD generally: no verifyAdminAuth on either method, against src/lib/auth/verify-admin.ts:9-11's MUST. (3) SELECT * — TWO sites, both inside the POST path: src/lib/sync/process.ts:28 (trade_mapping_rules) and src/lib/sync/process.ts:97 (permits, executed once per record streamed, in batches of 5000 — src/lib/sync/ingest.ts:22). Columns recorded as 'all' for both. (4) POST returns `RETURNING *` sync_runs rows (src/lib/sync/process.ts:325, :361, :389) spread straight into the response at :52. (5) ENVELOPE DEVIATION: five bare responses (see envelope.deviations). (6) A failed sync returns HTTP 200 (src/lib/sync/process.ts:378-402 returns the failed row; route :52 wraps it) — a caller that checks only the status code sees success. (7) No audit row for a mutation that can rewrite the entire permits table. (8) CENSUS AGREES: census_reads [sync_runs, trade_mapping_rules, trades, permit_type_classifications, permits] and census_writes [sync_runs, permits, permit_trades, permit_history] are all confirmed at the lines above — nothing in the census is unfindable, nothing extra found. (9) DUPLICATE SURFACE: the census entry for /api/sync (src/app/api/sync/route.ts) declares an identical read/write set; I did NOT read that file (not in my six), so I am not asserting they are the same code — flagging the census-level identity only. (10) The $32 parameter duplication at src/lib/sync/process.ts:220 + :239-242 is deliberate and its reason is stated in code comments; the enriched_status CASE at :220 is the enforced behaviour. | Caching: none observed — no Cache-Control, revalidate, dynamic or in-process cache in the file. | Pagination: GET has a HARD `LIMIT 20` at src/app/api/admin/sync/route.ts:19 with no offset and no client control — it is a fixed cap, not pagination. POST has none. | ORPHAN — zero call sites in src/** or mobile/** (sweep 2026-09-15, comment lines stripped). | No test file under src/tests/** imports this route.",
+  "x-draft": {
+    "shard": "contracts",
+    "files": [
+      "src/app/api/admin/sync/route.ts"
+    ],
+    "loc": 60,
+    "methods": [
+      "GET",
+      "POST"
+    ],
+    "consumers": [],
+    "writes_audit_row": false,
+    "consumers_verified": [],
+    "auth_class_executed": "admin",
+    "locking_tests": []
+  },
+  "programme": {
+    "scope": "platform_shared",
+    "phase": "UNRESEARCHED",
+    "why": "Used by both products and owned by neither.",
+    "feature": "F16",
+    "build_order": 3162,
+    "leakage": "none",
+    "product_questions": "none",
+    "review": {
+      "status": "unreviewed"
+    }
+  }
+}

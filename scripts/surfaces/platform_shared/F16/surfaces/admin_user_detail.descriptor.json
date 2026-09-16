@@ -1,0 +1,611 @@
+{
+  "kind": "SURFACE",
+  "status": "exists",
+  "docs": {
+    "purpose": "One account, in full, with the controls to change it. Cards cover the profile, the subscription (including tools to compare the stored status against the payment provider, apply a correction, retry a failed cancellation, and view recent payment events), the persona-and-trades assignment, and a read-only summary of the account's notification devices, preferences and last message sent. Every change requires the operator to type a reason, and destructive ones go through a confirmation dialog. A banner warns when the account is inside its thirty-day deletion window and records that the operator looked.",
+    "data_story": "It reads nothing from the database directly. Every value arrives through 5 contracts: `/api/admin/users/[uid]`, `/api/admin/users/[uid]/subscription/reconcile`, `/api/admin/users/[uid]/subscription/retry-cancel`, `/api/admin/users/[uid]/subscription/events`, `/api/admin/notifications`. Behind those contracts, the data comes from `device_tokens`, `entitlements`, `lead_view_events`, `lead_views`, `logic_variables`, `notification_dispatches`, `notifications`, `stripe_webhook_events` and `user_profiles`, and writes land on `admin_audit_log`, `entitlements` and `user_profiles`.",
+    "under_126": "**REBUILD** — it drives writes, so a client decision has to be re-homed on the server before the projection can be honest. It renders through the DETAIL renderer (one entity, a single-param query key, declared sections), reading by reference: `/api/admin/users/[uid]`, `/api/admin/users/[uid]/subscription/reconcile`, `/api/admin/users/[uid]/subscription/retry-cancel`, `/api/admin/users/[uid]/subscription/events`, `/api/admin/notifications`. Its `owns.components[]` declares `src/components/admin/NotificationsCard.tsx`."
+  },
+  "evidence": {
+    "files": [
+      "src/app/admin/users/[uid]/page.tsx:1",
+      "src/app/admin/users/[uid]/SubscriptionOps.tsx:1",
+      "src/components/admin/NotificationsCard.tsx:1"
+    ],
+    "contracts": [
+      "src/app/api/admin/users/[uid]/route.ts:98",
+      "src/app/api/admin/users/[uid]/route.ts:172",
+      "src/app/api/admin/users/[uid]/subscription/reconcile/route.ts:189",
+      "src/app/api/admin/users/[uid]/subscription/retry-cancel/route.ts:50",
+      "src/app/api/admin/users/[uid]/subscription/events/route.ts:45",
+      "src/app/api/admin/notifications/route.ts:44"
+    ],
+    "tables": [
+      "src/app/api/admin/users/[uid]/route.ts:73",
+      "src/app/api/admin/users/[uid]/route.ts:244",
+      "src/lib/entitlements/index.ts:246",
+      "src/lib/admin/admin-audit.ts:72"
+    ],
+    "gate": [
+      "src/lib/auth/route-guard.ts:162",
+      "src/middleware.ts:95",
+      "src/app/api/admin/users/[uid]/route.ts:99",
+      "src/app/api/admin/users/[uid]/route.ts:173",
+      "src/app/api/admin/users/[uid]/route.ts:200"
+    ],
+    "states": [
+      "src/app/admin/users/[uid]/page.tsx:1",
+      "src/app/admin/users/[uid]/SubscriptionOps.tsx:1",
+      "src/tests/admin-subscription-ops.infra.test.ts:1"
+    ],
+    "emits": [
+      "src/features/admin-users/api/useAdminUsers.ts:132",
+      "src/app/api/admin/users/[uid]/route.ts:249"
+    ]
+  },
+  "identity": {
+    "id": "admin_user_detail",
+    "route": "src/app/admin/users/[uid]/page.tsx",
+    "archetype": "DETAIL",
+    "platforms": [
+      "web"
+    ],
+    "owns": {
+      "components": [
+        "src/components/admin/NotificationsCard.tsx"
+      ]
+    },
+    "owner": "UNRESEARCHED",
+    "spec": "docs/specs/02-web-admin/21_admin_user_management.md",
+    "spec_refs": [
+      "docs/specs/02-web-admin/21_admin_user_management.md §3.2",
+      "docs/specs/02-web-admin/21_admin_user_management.md §4",
+      "docs/specs/02-web-admin/21_admin_user_management.md §3.4",
+      "docs/specs/02-web-admin/21_admin_user_management.md §6",
+      "docs/specs/02-web-admin/21_admin_user_management.md §10"
+    ],
+    "spec_version": "0-draft",
+    "versioning": {
+      "answer": "additive_only",
+      "why": "The detail payload is a joined row projected by an explicit SQL column list and is read by two components; a field may be added, but removing one breaks the card that renders it and the PATCH branches keyed on it.",
+      "evidence": [
+        "src/app/api/admin/users/[uid]/route.ts:73",
+        "src/app/admin/users/[uid]/SubscriptionOps.tsx:1"
+      ]
+    },
+    "ref": "S-025"
+  },
+  "inputs": {
+    "answer": "contract",
+    "why": "Five contracts: the detail GET, the three subscription-ops reads, and the notifications contract the embedded card uses. The page queries nothing directly.",
+    "evidence": [
+      "src/app/api/admin/users/[uid]/route.ts:98",
+      "src/app/admin/users/[uid]/SubscriptionOps.tsx:1",
+      "src/components/admin/NotificationsCard.tsx:1"
+    ],
+    "contract_ref": [
+      "/api/admin/users/[uid]",
+      "/api/admin/users/[uid]/subscription/reconcile",
+      "/api/admin/users/[uid]/subscription/retry-cancel",
+      "/api/admin/users/[uid]/subscription/events",
+      "/api/admin/notifications"
+    ],
+    "query_key": [
+      "admin",
+      "users",
+      "uid"
+    ],
+    "field_whitelist": [
+      "user_id",
+      "email",
+      "phone_number",
+      "full_name",
+      "company_name",
+      "display_name",
+      "trade_slug",
+      "trade_slugs_override",
+      "account_preset",
+      "radius_km",
+      "radius_cap_km",
+      "location_mode",
+      "stripe_customer_id",
+      "stripe_cancel_failed_at",
+      "onboarding_complete",
+      "tos_accepted_at",
+      "account_deleted_at",
+      "lead_views_count",
+      "created_at",
+      "updated_at",
+      "subscription_status",
+      "trial_started_at",
+      "saved_count",
+      "view_events"
+    ],
+    "tables": [
+      {
+        "table": "user_profiles",
+        "columns": [
+          "user_id",
+          "email",
+          "phone_number",
+          "full_name",
+          "company_name",
+          "display_name",
+          "trade_slug",
+          "trade_slugs_override",
+          "account_preset",
+          "radius_km",
+          "radius_cap_km",
+          "location_mode",
+          "stripe_customer_id",
+          "stripe_cancel_failed_at",
+          "onboarding_complete",
+          "tos_accepted_at",
+          "account_deleted_at",
+          "lead_views_count",
+          "created_at",
+          "updated_at"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/00-architecture/114_rls_policy_catalog.md §3.1",
+        "evidence": [
+          "src/app/api/admin/users/[uid]/route.ts:73"
+        ]
+      },
+      {
+        "table": "entitlements",
+        "columns": [
+          "user_id",
+          "product",
+          "status",
+          "trial_started_at",
+          "last_stripe_event_at"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/00-architecture/116_multi_product_architecture.md",
+        "evidence": [
+          "src/app/api/admin/users/[uid]/route.ts:87",
+          "src/lib/entitlements/index.ts:116"
+        ]
+      },
+      {
+        "table": "lead_views",
+        "columns": [
+          "user_id",
+          "saved"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/00-architecture/114_rls_policy_catalog.md §3.1",
+        "evidence": [
+          "src/app/api/admin/users/[uid]/route.ts:112"
+        ]
+      },
+      {
+        "table": "lead_view_events",
+        "columns": [
+          "user_id"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/00-architecture/114_rls_policy_catalog.md §3.1",
+        "evidence": [
+          "src/app/api/admin/users/[uid]/route.ts:113"
+        ]
+      },
+      {
+        "table": "stripe_webhook_events",
+        "columns": [
+          "event_id",
+          "event_type",
+          "processed_at",
+          "stripe_customer_id"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/00-architecture/116_multi_product_architecture.md",
+        "evidence": [
+          "src/app/api/admin/users/[uid]/subscription/events/route.ts:80"
+        ]
+      },
+      {
+        "table": "logic_variables",
+        "columns": [
+          "variable_value_json"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/02-web-admin/86_control_panel.md §1",
+        "evidence": [
+          "src/lib/entitlements/index.ts:307"
+        ]
+      },
+      {
+        "table": "notification_dispatches",
+        "columns": [
+          "id",
+          "user_id",
+          "lead_id",
+          "type",
+          "toronto_date",
+          "push_token",
+          "expo_ticket_id",
+          "status",
+          "detail",
+          "dispatched_at"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/00-architecture/114_rls_policy_catalog.md §3.1",
+        "evidence": [
+          "src/app/api/admin/notifications/route.ts:69"
+        ]
+      },
+      {
+        "table": "device_tokens",
+        "columns": [
+          "push_token",
+          "platform",
+          "updated_at",
+          "user_id"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/00-architecture/114_rls_policy_catalog.md §3.1",
+        "evidence": [
+          "src/app/api/admin/notifications/route.ts:101"
+        ]
+      },
+      {
+        "table": "profiles",
+        "columns": [
+          "is_admin"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/00-architecture/114_rls_policy_catalog.md §5",
+        "evidence": [
+          "src/app/api/admin/users/[uid]/route.ts:99",
+          "src/lib/auth/verify-admin.ts:118"
+        ]
+      }
+    ]
+  },
+  "outputs": {
+    "answer": "contract_only",
+    "why": "Every mutation is a server round-trip inside a transaction that also writes its audit row; the UI waits for the refreshed row rather than flipping first.",
+    "evidence": [
+      "src/app/api/admin/users/[uid]/route.ts:172",
+      "src/app/api/admin/users/[uid]/route.ts:249",
+      "src/app/api/admin/users/[uid]/subscription/reconcile/route.ts:256"
+    ],
+    "contract_ref": [
+      "/api/admin/users/[uid]",
+      "/api/admin/users/[uid]/subscription/reconcile",
+      "/api/admin/users/[uid]/subscription/retry-cancel"
+    ],
+    "rollback": "There is no undo. set_trades, set_preset, extend_trial and revoke are reversed only by issuing the opposite mutation; delete is terminal — it nulls the PII columns, cancels the Stripe subscriptions and scrubs the old/new payloads of every prior audit row for that target.",
+    "invalidates": [
+      "admin.users.uid",
+      "admin.users.list"
+    ],
+    "tables": [
+      {
+        "table": "user_profiles",
+        "columns": [
+          "trade_slug",
+          "trade_slugs_override",
+          "account_preset",
+          "full_name",
+          "phone_number",
+          "email",
+          "backup_email",
+          "company_name",
+          "account_deleted_at",
+          "stripe_cancel_failed_at",
+          "updated_at"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/00-architecture/114_rls_policy_catalog.md §3.1",
+        "evidence": [
+          "src/app/api/admin/users/[uid]/route.ts:244",
+          "src/app/api/admin/users/[uid]/route.ts:361",
+          "src/app/api/admin/users/[uid]/subscription/retry-cancel/route.ts:94"
+        ]
+      },
+      {
+        "table": "entitlements",
+        "columns": [
+          "user_id",
+          "product",
+          "status",
+          "trial_started_at",
+          "last_stripe_event_at",
+          "created_at",
+          "updated_at"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/00-architecture/116_multi_product_architecture.md",
+        "evidence": [
+          "src/lib/entitlements/index.ts:246",
+          "src/lib/entitlements/index.ts:268",
+          "src/app/api/admin/users/[uid]/subscription/reconcile/route.ts:259"
+        ]
+      },
+      {
+        "table": "admin_audit_log",
+        "columns": [
+          "admin_uid",
+          "action",
+          "target_uid",
+          "old_value",
+          "new_value",
+          "reason"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/00-architecture/114_rls_policy_catalog.md §3.2",
+        "evidence": [
+          "src/lib/admin/admin-audit.ts:72",
+          "src/app/api/admin/users/[uid]/route.ts:249",
+          "src/app/api/admin/users/[uid]/route.ts:384"
+        ]
+      }
+    ]
+  },
+  "state": {
+    "answer": "query_cache",
+    "why": "One TanStack query per uid under the root provider plus mutation hooks; the filter store belongs to the directory, not to this page.",
+    "evidence": [
+      "src/features/admin-users/api/useAdminUsers.ts:113",
+      "src/app/providers.tsx:45"
+    ],
+    "fields": []
+  },
+  "staleness": {
+    "answer": "query_cache",
+    "why": "10s staleTime on the detail read, deliberately short because the operator is mutating the same row they are looking at.",
+    "evidence": [
+      "src/features/admin-users/api/useAdminUsers.ts:113"
+    ],
+    "stale_time_ms": 10000,
+    "offline": "cached_projection"
+  },
+  "guards": {
+    "session": {
+      "answer": "admin",
+      "why": "There is no admin Postgres role: classifyRoute sends every /admin/* path down the admin arm, and the real boundary is verifyAdminAuth reading profiles.is_admin on the route. Every handler verifies on its first line; PATCH and both subscription mutations additionally refuse the x-admin-key credential, guard against acting on another admin, and guard against the self-destructive case.",
+      "evidence": [
+        "src/lib/auth/route-guard.ts:162",
+        "src/middleware.ts:95",
+        "src/app/api/admin/users/[uid]/route.ts:99",
+        "src/app/api/admin/users/[uid]/route.ts:173"
+      ]
+    },
+    "rls_class": {
+      "answer": "A",
+      "why": "user_profiles, lead_views, lead_view_events, notification_dispatches and device_tokens are five of the ten auth.uid()-owned Class-A tables, and admin_audit_log is the admin-identity subtype; only the service role may read another user's rows.",
+      "evidence": [
+        "docs/specs/00-architecture/114_rls_policy_catalog.md:107",
+        "docs/specs/00-architecture/114_rls_policy_catalog.md:148"
+      ]
+    },
+    "disclosure": "none",
+    "entitlement": "none",
+    "flag": "none",
+    "permission": "none",
+    "rate_bucket": "none"
+  },
+  "render": {
+    "targets": [
+      "screen"
+    ],
+    "projection": "detail",
+    "breakpoints": "desktop_first_md",
+    "export": "none"
+  },
+  "checks": [
+    {
+      "id": "user_detail_every_mutation_audited",
+      "kind": "ledger_row_present",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "All five PATCH branches write exactly one admin_audit_log row INSIDE the same transaction as the mutation, and opening a deleted account is itself audited as view_deleted_account — this is the reference implementation the rest of the shard is measured against."
+    },
+    {
+      "id": "user_detail_pii_redacted_in_audit",
+      "kind": "disclosure",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "why": "full_name, phone_number, email, backup_email and company_name are replaced with <redacted> before the audit payload is written, so the audit table never becomes a second copy of the PII it records the deletion of."
+    },
+    {
+      "id": "user_detail_query_key_single_param",
+      "kind": "query_key_hygiene",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "A DETAIL surface keys on one uid, so the detail cache cannot be polluted by the directory's filter state."
+    },
+    {
+      "id": "user_detail_ops_degrade",
+      "kind": "error_state",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "The subscription-ops panel degrades to a notice when its three routes 404 rather than taking the whole detail page down — the ops_routes_missing state."
+    }
+  ],
+  "invariants": "none",
+  "plausibility": "none",
+  "states": [
+    {
+      "name": "loading",
+      "golden": "none"
+    },
+    {
+      "name": "hit",
+      "golden": "none"
+    },
+    {
+      "name": "degraded",
+      "golden": "none"
+    },
+    {
+      "name": "error",
+      "golden": "none"
+    }
+  ],
+  "errors": {
+    "answer": "toast",
+    "why": "Mutations surface sonner toasts and keep the row on screen; the deleted-account banner and the ops-missing notice render inline instead. Reconcile also answers 409 when the stored entitlement status is fenced; 409 has no member in the errors.classes vocabulary, so it is recorded in limitations instead of being mis-filed as a 400.",
+    "evidence": [
+      "src/app/admin/users/[uid]/page.tsx:1",
+      "src/app/admin/users/[uid]/SubscriptionOps.tsx:1"
+    ],
+    "classes": [
+      {
+        "class": "403",
+        "ui": "toast — acting on another admin, or with a non-session credential, is refused"
+      },
+      {
+        "class": "500",
+        "ui": "toast; the row stays rendered"
+      }
+    ]
+  },
+  "emits": {
+    "answer": "both",
+    "why": "The mutation hook emits admin_action_performed with the action name, and the server writes a durable admin_audit_log row per mutation — the only surface in the shard where an operator action is countable in both places.",
+    "evidence": [
+      "src/features/admin-users/api/useAdminUsers.ts:132",
+      "src/app/api/admin/users/[uid]/route.ts:249",
+      "src/lib/admin/admin-audit.ts:72"
+    ],
+    "analytics": [
+      "admin_action_performed"
+    ],
+    "ledger_events": [],
+    "breadcrumbs": []
+  },
+  "offers": {
+    "answer": "none",
+    "why": "An internal operator tool renders no sponsored placement; no offers/placements table is reached from any file it owns.",
+    "evidence": [
+      "src/app/admin/users/[uid]/page.tsx:1"
+    ]
+  },
+  "metering": {
+    "answer": "none",
+    "why": "Nothing here is billable or quota-bearing: no usage_events / ledger write is reached from this surface or its contracts.",
+    "evidence": [
+      "src/app/api/admin/users/[uid]/route.ts:98"
+    ]
+  },
+  "config": {
+    "answer": "logic_variables",
+    "why": "Reconcile resolves a Stripe price to a product through the stripe_price_product_map logic variable, behind a 60s TTL cache.",
+    "evidence": [
+      "src/lib/entitlements/index.ts:307",
+      "src/lib/entitlements/index.ts:281"
+    ],
+    "logic_variables": [
+      {
+        "name": "stripe_price_product_map",
+        "on_invalid": "fail",
+        "why": "It decides which product an entitlement row is written against, so a bad value must fail rather than silently defaulting a billing status."
+      }
+    ],
+    "retired": []
+  },
+  "sharing": {
+    "answer": "shared",
+    "why": "The detail GET shares its route with the PATCH mutation, and /api/admin/notifications is the Notifications tool's own contract, rendered here through NotificationsCard.",
+    "evidence": [
+      "src/app/api/admin/users/[uid]/route.ts:98",
+      "src/components/admin/NotificationsCard.tsx:1"
+    ],
+    "surfaces": [
+      "admin_notifications",
+      "admin_users"
+    ]
+  },
+  "a11y": {
+    "touch_target_min_px": "UNRESEARCHED",
+    "labels": "partial",
+    "dark_mode": "none",
+    "reduced_motion": "none",
+    "i18n": "none",
+    "safe_area": "none"
+  },
+  "deviations": "none",
+  "limitations": [
+    {
+      "what": "NotificationsCard is rendered only here but belongs to another spec",
+      "measured": "The file is owned by this surface under R-13 because this is its only renderer, while Spec 102 governs its behaviour — ownership and authorship diverge.",
+      "check_id": "user_detail_query_key_single_param"
+    },
+    {
+      "what": "SubscriptionOps.tsx lives under src/app/, not src/components/",
+      "measured": "143 lines beside the page file; it is the source of three of the five contracts but sits outside the component roots R-13 sweeps, so it can never appear in the unowned set.",
+      "check_id": "user_detail_query_key_single_param"
+    },
+    {
+      "what": "GET returns PII with no Cache-Control: no-store",
+      "measured": "The detail payload carries email, phone_number, full_name and stripe_customer_id and sets no cache header, unlike the POST on the directory route which does.",
+      "check_id": "user_detail_pii_redacted_in_audit"
+    },
+    {
+      "what": "touch_target_min_px has no legal answer for a desktop-only admin page",
+      "measured": "The schema allows only UNRESEARCHED or an integer >= 44, and nothing in this surface declares a 44px floor (grep for min-h-[44 / h-11 over its owned files returns nothing).",
+      "check_id": "none — vocabulary gap, escalated per Spec 128 §4"
+    },
+    {
+      "what": "The errors.classes vocabulary has no 409 member",
+      "measured": "POST /api/admin/users/[uid]/subscription/reconcile returns 409 on a drift conflict and on a fenced status; the closed set offers only 400/401/403/429/500/schema_drift/offline.",
+      "check_id": "none — vocabulary gap, escalated per Spec 128 §4"
+    }
+  ],
+  "interpretation": "none",
+  "notes": "SubscriptionOps.tsx (143L) sits beside the page under src/app/, not src/components/; it is included in files and loc because it is exclusive to this page and is the source of three of the five API paths. It degrades gracefully when its three subscription routes 404 (the 'ops_routes_missing' state) so the detail page never hard-fails while those routes land. NotificationsCard is rendered only here but is owned by the Notifications tool (Spec 102). The detail GET and the PATCH mutation share /api/admin/users/[uid]. identity.owner is UNRESEARCHED estate-wide: no owner registry exists in the tree, so naming one would be an invention rather than a measurement. a11y.touch_target_min_px is UNRESEARCHED because its vocabulary (UNRESEARCHED or an integer >= 44) has no member for a desktop-only admin page that declares no floor.",
+  "x-draft": {
+    "shard": "admin-existing",
+    "files": [
+      "src/app/admin/users/[uid]/page.tsx",
+      "src/app/admin/users/[uid]/SubscriptionOps.tsx",
+      "src/components/admin/NotificationsCard.tsx"
+    ],
+    "loc": 493,
+    "measured_states": [
+      "loading",
+      "error",
+      "loaded",
+      "deleted_banner",
+      "confirm_dialog",
+      "mutating",
+      "ops_routes_missing"
+    ],
+    "measured_gate": {
+      "session": "admin",
+      "why": "classifyRoute('/admin/users/abc123') matches the admin-pages arm via `pathname.startsWith('/admin/')` -> 'admin'."
+    }
+  },
+  "programme": {
+    "scope": "platform_shared",
+    "phase": "UNRESEARCHED",
+    "why": "An admin surface that operates the PLATFORM (users, entitlements, security, tunables, pipeline health) rather than either product specifically.",
+    "feature": "F16",
+    "build_order": 3163,
+    "leakage": "none",
+    "product_questions": "none",
+    "review": {
+      "status": "unreviewed"
+    }
+  }
+}

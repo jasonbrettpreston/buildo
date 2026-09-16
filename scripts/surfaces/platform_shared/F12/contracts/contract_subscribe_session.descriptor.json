@@ -1,0 +1,393 @@
+{
+  "kind": "CONTRACT",
+  "status": "exists",
+  "docs": {
+    "purpose": "Starts the subscribe flow for a signed-in user: checks they are not already subscribed, mid-cancellation or pending account deletion, then issues a short-lived single-use link to the checkout page so the URL is safe to share or log without exposing who the user is.",
+    "data_story": "It reads 2 tables — `user_profiles` and `entitlements` and writes `subscribe_nonces`. Its response shape is **unmeasured** as a pick-by-name whitelist — it passes rows through, spreads a row into a computed object, or assembles the payload dynamically, so there is no single list naming what leaves the server. It is called from 1 place: `mobile/src/hooks/useSubscribeCheckout.ts`.",
+    "under_126": "Becomes a **CONTRACT descriptor** of archetype `MUTATION`. It declares `database.writes[]` with a `write_discipline` per target (the Spec 122 vocabulary verbatim), its idempotency posture, its optimistic contract and its rollback. Its `consumers[]` becomes the edge list of the fan-out graph — the join nothing in this estate holds today."
+  },
+  "evidence": {
+    "files": [
+      "src/app/api/subscribe/session/route.ts:1"
+    ],
+    "contracts": [
+      "src/app/api/subscribe/session/route.ts:70 (POST export)",
+      "src/lib/api/with-api-envelope.ts:27-52"
+    ],
+    "tables": [
+      "src/app/api/subscribe/session/route.ts:102-105 (FOR UPDATE)",
+      "src/lib/entitlements/index.ts:115-118 (FOR UPDATE); call site src/app/api/subscribe/session/route.ts:119",
+      "src/app/api/subscribe/session/route.ts:146-153 (FOR UPDATE, WHERE user_id = $1 AND expires_at > NOW())",
+      "src/app/api/subscribe/session/route.ts:164-167 — expires_at comes from the DB column default NOW() + INTERVAL '15 minutes' (migrations/114_user_profiles_mobile_columns.sql:90)",
+      "src/lib/db/generated/schema.ts — every table named here is present in the introspected drizzle schema"
+    ],
+    "gate": [
+      "src/lib/auth/route-guard.ts — AUTHENTICATED_API_ROUTES prefix — '/api/subscribe'",
+      "src/lib/auth/route-guard.ts:150-201 — classifyRoute executed 2026-09-15 with the concrete path → \"authenticated\"",
+      "in-handler: getUserIdFromSession(request) at src/app/api/subscribe/session/route.ts:71; null -> 401 at :72-77 (delegates to getVerifiedUid, src/lib/auth/get-user.ts:215-217)."
+    ],
+    "states": [
+      "hit: src/app/api/subscribe/session/route.ts:230-233",
+      "unauthorized: src/app/api/subscribe/session/route.ts:72-77",
+      "error: src/app/api/subscribe/session/route.ts:171-180 (no profile -> 500), :234-240 (unexpected -> 500)",
+      "empty: src/app/api/subscribe/session/route.ts:181-228 — three distinct 400 states (deletion-blocked, past_due->portal, already-entitled)"
+    ],
+    "emits": [
+      "src/app/api/subscribe/session/route.ts — read in full; no Sentry breadcrumb, no analytics capture and no ledger INSERT"
+    ]
+  },
+  "identity": {
+    "id": "contract_subscribe_session",
+    "route": "/api/subscribe/session",
+    "archetype": "MUTATION",
+    "platforms": [
+      "web",
+      "mobile"
+    ],
+    "owns": {
+      "components": []
+    },
+    "owner": "Cross-Domain (CLAUDE.md §Domain Rules: an API route consumed by the Expo app)",
+    "spec": "docs/specs/03-mobile/96_mobile_subscription.md",
+    "spec_refs": [
+      "docs/specs/03-mobile/96_mobile_subscription.md §5 Paywall Screen + §10 Step 4b (src/app/api/subscribe/session/route.ts:1-2)"
+    ],
+    "spec_version": "0-draft",
+    "versioning": {
+      "answer": "additive_only",
+      "why": "At least one consumer is an installed Expo binary (mobile/) that does not redeploy with the server, so a removed or retyped field breaks shipped clients; adding fields does not.",
+      "evidence": [
+        "mobile/src/hooks/useSubscribeCheckout.ts:52",
+        "mobile/app.json:5"
+      ]
+    },
+    "ref": "C-032"
+  },
+  "inputs": {
+    "answer": "app_outputs",
+    "why": "It reads 3 table(s) directly; none is written by a pipeline step — they are written by API routes, jobs or migration seeds — but the input is still the database, not another contract.",
+    "evidence": [
+      "src/lib/entitlements/index.ts:115-118 (FOR UPDATE); call site src/app/api/subscribe/session/route.ts:119",
+      "migrations/228_entitlements.sql:21",
+      "docs/reference/data-lineage-map.md — no `## `entitlements`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)",
+      "src/app/api/subscribe/session/route.ts:146-153 (FOR UPDATE, WHERE user_id = $1 AND expires_at > NOW())",
+      "migrations/114_user_profiles_mobile_columns.sql:87",
+      "docs/reference/data-lineage-map.md — no `## `subscribe_nonces`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)",
+      "src/app/api/subscribe/session/route.ts:102-105 (FOR UPDATE)",
+      "docs/specs/00-architecture/00_system_map.md:80",
+      "docs/reference/data-lineage-map.md — no `## `user_profiles`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)"
+    ],
+    "contract_ref": [],
+    "query_key": [],
+    "field_whitelist": [
+      "url"
+    ],
+    "tables": [
+      {
+        "table": "entitlements",
+        "columns": [
+          "status",
+          "trial_started_at"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/00-architecture/116_multi_product_architecture.md",
+        "evidence": [
+          "src/lib/entitlements/index.ts:115-118 (FOR UPDATE); call site src/app/api/subscribe/session/route.ts:119",
+          "migrations/228_entitlements.sql:21",
+          "docs/reference/data-lineage-map.md — no `## `entitlements`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)"
+        ]
+      },
+      {
+        "table": "subscribe_nonces",
+        "columns": [
+          "nonce"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/03-mobile/95_mobile_user_profiles.md",
+        "evidence": [
+          "src/app/api/subscribe/session/route.ts:146-153 (FOR UPDATE, WHERE user_id = $1 AND expires_at > NOW())",
+          "migrations/114_user_profiles_mobile_columns.sql:87",
+          "docs/reference/data-lineage-map.md — no `## `subscribe_nonces`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)"
+        ]
+      },
+      {
+        "table": "user_profiles",
+        "columns": [
+          "account_deleted_at"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/02-web-admin/102_admin_notifications_tool.md",
+        "evidence": [
+          "src/app/api/subscribe/session/route.ts:102-105 (FOR UPDATE)",
+          "docs/specs/00-architecture/00_system_map.md:80",
+          "docs/reference/data-lineage-map.md — no `## `user_profiles`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)"
+        ]
+      }
+    ]
+  },
+  "outputs": {
+    "answer": "contract_only",
+    "why": "This route IS the mutation contract: it writes 1 table(s) synchronously inside the request and returns the result — there is no optimistic client-side flip to reconcile.",
+    "evidence": [
+      "src/app/api/subscribe/session/route.ts:164-167 — expires_at comes from the DB column default NOW() + INTERVAL '15 minutes' (migrations/114_user_profiles_mobile_columns.sql:90)",
+      "migrations/114_user_profiles_mobile_columns.sql:87",
+      "docs/reference/data-lineage-map.md — no `## `subscribe_nonces`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)"
+    ],
+    "contract_ref": [],
+    "tables": [
+      {
+        "table": "subscribe_nonces",
+        "columns": [
+          "nonce",
+          "user_id"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/03-mobile/95_mobile_user_profiles.md",
+        "evidence": [
+          "src/app/api/subscribe/session/route.ts:164-167 — expires_at comes from the DB column default NOW() + INTERVAL '15 minutes' (migrations/114_user_profiles_mobile_columns.sql:90)",
+          "migrations/114_user_profiles_mobile_columns.sql:87",
+          "docs/reference/data-lineage-map.md — no `## `subscribe_nonces`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)"
+        ]
+      }
+    ]
+  },
+  "state": {
+    "answer": "server_only",
+    "why": "A CONTRACT holds no client state: every value is resolved per request on the server and nothing is cached in a client store by the route itself.",
+    "evidence": [
+      "src/app/api/subscribe/session/route.ts:70 (POST export)",
+      "src/lib/api/with-api-envelope.ts:27-52"
+    ],
+    "fields": []
+  },
+  "staleness": {
+    "answer": "live",
+    "why": "Every read runs against the base tables on each request — there is no cache layer between the handler and the database.",
+    "evidence": [
+      "src/lib/entitlements/index.ts:115-118 (FOR UPDATE); call site src/app/api/subscribe/session/route.ts:119",
+      "migrations/228_entitlements.sql:21",
+      "docs/reference/data-lineage-map.md — no `## `entitlements`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)",
+      "src/app/api/subscribe/session/route.ts:146-153 (FOR UPDATE, WHERE user_id = $1 AND expires_at > NOW())"
+    ],
+    "offline": "none"
+  },
+  "guards": {
+    "session": {
+      "answer": "authenticated",
+      "why": "classifyRoute(\"/api/subscribe/session\") returns \"authenticated\" (executed 2026-09-15); the handler re-verifies the caller in-process.",
+      "evidence": [
+        "src/lib/auth/route-guard.ts:150-201 — classifyRoute executed 2026-09-15 with the concrete path",
+        "getUserIdFromSession(request) at src/app/api/subscribe/session/route.ts:71; null -> 401 at :72-77 (delegates to getVerifiedUid, src/lib/auth/get-user.ts:215-217)."
+      ]
+    },
+    "rls_class": {
+      "answer": "A",
+      "why": "It reaches user-owned rows whose policies key on auth.uid(). The route connects as the table owner (raw pg), which Spec 114 §9 makes owner-exempt from RLS — the class describes the data, not the gate this route passes.",
+      "evidence": [
+        "migrations/230_rls_class_a_entitlements.sql:48",
+        "migrations/230_rls_class_a_entitlements.sql:58",
+        "migrations/230_rls_class_a_entitlements.sql:51",
+        "docs/specs/00-architecture/114_rls_policy_catalog.md §2"
+      ]
+    },
+    "disclosure": "none",
+    "entitlement": "none",
+    "flag": "none",
+    "permission": "none",
+    "rate_bucket": "none"
+  },
+  "render": {
+    "targets": [
+      "screen"
+    ],
+    "projection": "none",
+    "breakpoints": "none",
+    "export": "none"
+  },
+  "checks": [
+    {
+      "id": "contract_subscribe_session__auth_class_parity",
+      "kind": "auth_class_parity",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "why": "guards.session must equal classifyRoute(\"/api/subscribe/session\"), executed 2026-09-15 → \"authenticated\" plus the in-handler guard (getUserIdFromSession(request) at src/app/api/subscribe/session/route.ts:71; null -> 401 at :72-77 (delegates t). Locked by subscribe-portal-session.infra.test.ts, subscribe-session.infra.test.ts, subscribe-session.security.test.ts."
+    },
+    {
+      "id": "contract_subscribe_session__error_envelope",
+      "kind": "error_state",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "Every declared error class returns the { data, error, meta } envelope of docs/specs/00_engineering_standards.md §4.4; expected to stay at zero deviations."
+    },
+    {
+      "id": "contract_subscribe_session__field_whitelist_parity",
+      "kind": "field_whitelist_parity",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "The response is an explicit pick-by-name of 1 field(s) (src/app/api/subscribe/session/route.ts:230-233 — SubscribeSessionResponse = { url: `${baseUrl}?nonce=${encodeURIComponent(nonce)}` }), so a column added upstream cannot leak; this check set-equals the projection to inputs.field_whitelist."
+    },
+    {
+      "id": "contract_subscribe_session__schema_declared",
+      "kind": "schema_declared",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "Every table and column declared in lineage.reads[]/writes[] must exist in src/lib/db/generated/schema.ts (drizzle-kit introspect of the live database); the registry generator checks this both directions."
+    }
+  ],
+  "invariants": "none",
+  "plausibility": "none",
+  "states": [
+    {
+      "name": "hit",
+      "golden": "none"
+    },
+    {
+      "name": "unauthorized",
+      "golden": "none"
+    },
+    {
+      "name": "error",
+      "golden": "none"
+    },
+    {
+      "name": "empty",
+      "golden": "none"
+    }
+  ],
+  "errors": {
+    "answer": "envelope",
+    "why": "Success and failure both arrive in the { data, error, meta } envelope of docs/specs/00_engineering_standards.md §4.4; withApiEnvelope is the outermost wrapper and converts any uncaught throw into the same shape.",
+    "evidence": [
+      "src/lib/api/with-api-envelope.ts:27-52",
+      "src/app/api/subscribe/session/route.ts:74",
+      "src/app/api/subscribe/session/route.ts:177",
+      "src/app/api/subscribe/session/route.ts:186-196",
+      "src/app/api/subscribe/session/route.ts:233",
+      "src/app/api/subscribe/session/route.ts:237",
+      "src/app/api/subscribe/session/route.ts:74 (401)",
+      "src/app/api/subscribe/session/route.ts:177 (500)",
+      "src/app/api/subscribe/session/route.ts:195 (400)",
+      "src/app/api/subscribe/session/route.ts:213 (400)"
+    ],
+    "classes": [
+      {
+        "class": "401",
+        "ui": "{data:null,error:{code,message},meta:null} — src/app/api/subscribe/session/route.ts:74 (code UNAUTHORIZED)"
+      },
+      {
+        "class": "500",
+        "ui": "{data:null,error:{code,message},meta:null} — authenticated user with no user_profiles row (data inconsistency, :171-180) — src/app/api/subscribe/session/route.ts:177 (code INTERNAL_ERROR)"
+      },
+      {
+        "class": "400",
+        "ui": "{data:null,error:{code,message},meta:null} — src/app/api/subscribe/session/route.ts:195 (code ACCOUNT_PENDING_DELETION)"
+      }
+    ]
+  },
+  "emits": {
+    "answer": "none",
+    "why": "Nothing it does is currently countable: src/app/api/subscribe/session/route.ts was read in full and contains no Sentry breadcrumb, no analytics capture and no ledger INSERT.",
+    "evidence": [
+      "src/app/api/subscribe/session/route.ts — read in full; no Sentry breadcrumb, no analytics capture and no ledger INSERT"
+    ],
+    "analytics": [],
+    "ledger_events": [],
+    "breadcrumbs": []
+  },
+  "offers": {
+    "answer": "none",
+    "why": "It renders no sponsored placement: the offers and advertisers tables Spec 126 §2 specifies do not exist in migrations/ and nothing in this handler reads placement inventory.",
+    "evidence": [
+      "migrations/ — no CREATE TABLE offers / advertisers (grep 2026-09-15)",
+      "src/app/api/subscribe/session/route.ts — read in full; no placement read"
+    ]
+  },
+  "metering": {
+    "answer": "none",
+    "why": "Nothing here is counted: no usage_events row (the table does not exist in the introspected schema) and no quota counter is written by this handler.",
+    "evidence": [
+      "src/app/api/subscribe/session/route.ts — read in full 2026-09-15",
+      "src/lib/db/generated/schema.ts — no usage_events table"
+    ]
+  },
+  "config": {
+    "answer": "none",
+    "why": "It consumes no tunable: no logic_variables read and no env-var-driven threshold in the handler or the libs it calls.",
+    "evidence": [
+      "src/app/api/subscribe/session/route.ts — read in full 2026-09-15; no loadMarketplaceConfigs / logic_variables read"
+    ],
+    "logic_variables": [],
+    "retired": []
+  },
+  "sharing": {
+    "answer": "sole",
+    "why": "Exactly one call site renders it, so its projection serves one surface.",
+    "evidence": [
+      "mobile/src/hooks/useSubscribeCheckout.ts:52"
+    ],
+    "surfaces": [
+      "mobile/src/hooks/useSubscribeCheckout.ts:52"
+    ]
+  },
+  "a11y": {
+    "touch_target_min_px": "UNRESEARCHED",
+    "labels": "none",
+    "dark_mode": "none",
+    "reduced_motion": "none",
+    "i18n": "none",
+    "safe_area": "none"
+  },
+  "deviations": "none",
+  "limitations": [
+    {
+      "what": "a11y.touch_target_min_px has no legal answer for a CONTRACT",
+      "measured": "The schema allows only UNRESEARCHED or an integer >= 44; a JSON endpoint has no touch target and the vocabulary has no \"n/a\". Left UNRESEARCHED and escalated per Spec 128 §4 rather than invented.",
+      "check_id": "contract_subscribe_session__auth_class_parity"
+    }
+  ],
+  "interpretation": "none",
+  "notes": "Uses FOR UPDATE row locks on both user_profiles and the (uid,'lead_gen') entitlements row inside one transaction to close a TOCTOU race against a concurrent webhook. Reuses an existing unexpired nonce rather than always inserting a new one (idempotent within the 15-minute window). Distinct 400 codes route already-entitled, past_due (to the portal) and deletion-pending users differently instead of a generic error. | MEASURED 2026-09-15: No Stripe call at all — this route only mints the nonce; the Stripe Checkout Session is created downstream by /api/subscribe/exchange. resolveCheckoutBaseUrl() (:37-48) THROWS in non-production when SUBSCRIBE_CHECKOUT_BASE_URL is unset; that throw is raised at :80 inside the try and lands on the generic 500 at :237. CENSUS AGREEMENT: matches (reads user_profiles + entitlements; writes subscribe_nonces) — plus an unlisted READ of subscribe_nonces at :146, which the census's read list omits. | Idempotency: Guarded and safe to repeat within the nonce window: a still-unexpired nonce for the same user is SELECTed FOR UPDATE and reused instead of inserting a new row (:146-156), so a double-tapped CTA returns the same URL and does not pollute the table. The FOR UPDATE at :151 serialises concurrent same-user calls. The INSERT (:164) is backstopped by the `nonce` PRIMARY KEY (migrations/114:88). | Caching: none observed — no Cache-Control header, no revalidate/dynamic export (full file read :1-241) | Entitlement posture: getEntitlementStatusForUpdate(client, uid, DEFAULT_PRODUCT) at src/app/api/subscribe/session/route.ts:119 -> `SELECT status, trial_started_at FROM entitlements WHERE user_id = $1 AND product = $2 FOR UPDATE` (src/lib/entitlements/index.ts:116). Three gates on the result: DELETION_BLOCKED_STATUSES {'cancelled_pending_deletion'} :68/:121-126; PORTAL_ROUTED_STATUSES {'past_due'} :61/:127-129; ALREADY_ENTITLED_STATUSES {'active','admin_managed'} :53/:130-132. Plus an account-level `account_deleted_at` gate on the row-locked user_profiles read at :102-118. | Other guards / classification: Nonce MINTING side of the single-use contract: an unexpired nonce is reused under FOR UPDATE (:146-156) rather than churning new rows; otherwise a fresh randomUUID() is inserted (:158,:164-167). No signature/replay guard (this route is session-authenticated). | Locking tests: src/tests/subscribe-portal-session.infra.test.ts, src/tests/subscribe-session.infra.test.ts, src/tests/subscribe-session.security.test.ts.",
+  "x-draft": {
+    "shard": "contracts",
+    "files": [
+      "src/app/api/subscribe/session/route.ts"
+    ],
+    "loc": 241,
+    "methods": [
+      "POST"
+    ],
+    "consumers": [
+      "mobile/src/hooks/useSubscribeCheckout.ts"
+    ],
+    "writes_audit_row": false,
+    "consumers_verified": [
+      "mobile/src/hooks/useSubscribeCheckout.ts:52"
+    ],
+    "auth_class_executed": "authenticated",
+    "locking_tests": [
+      "src/tests/subscribe-portal-session.infra.test.ts",
+      "src/tests/subscribe-session.infra.test.ts",
+      "src/tests/subscribe-session.security.test.ts"
+    ]
+  },
+  "programme": {
+    "scope": "platform_shared",
+    "phase": "UNRESEARCHED",
+    "why": "The subscription and Stripe hand-off, which resolves an entitlement per PRODUCT — so it serves both and belongs to neither.",
+    "feature": "F12",
+    "build_order": 3122,
+    "leakage": "none",
+    "product_questions": "none",
+    "review": {
+      "status": "unreviewed"
+    }
+  }
+}

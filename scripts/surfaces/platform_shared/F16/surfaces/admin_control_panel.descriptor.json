@@ -1,0 +1,480 @@
+{
+  "kind": "SURFACE",
+  "status": "exists",
+  "docs": {
+    "purpose": "Where an operator edits the tuning numbers the pipeline runs on - the platform-wide variables, the per-trade multipliers, and the scope-intensity grid - across three tabs. Edits are held as a draft until the operator presses apply, at which point a dialog shows exactly what is about to change; confirming saves the new values and then kicks off the downstream re-calculation.",
+    "data_story": "It reads nothing from the database directly. Every value arrives through 2 contracts: `/api/admin/control-panel/configs`, `/api/admin/control-panel/resync`. Behind those contracts, the data comes from `logic_variables`, `scope_intensity_matrix`, `trade_configurations` and `trade_sqft_rates`, and writes land on `logic_variables`, `scope_intensity_matrix`, `trade_configurations` and `trade_sqft_rates`.",
+    "under_126": "**REBUILD** — it drives writes, so a client decision has to be re-homed on the server before the projection can be honest. It renders through the FORM renderer (every field carrying its Spec 99 §3 ownership row as data, with a declared rollback), reading by reference: `/api/admin/control-panel/configs`, `/api/admin/control-panel/resync`. It owns no component of its own, so its `owns.components[]` is an empty array — a legal answer, written down."
+  },
+  "evidence": {
+    "files": [
+      "src/app/admin/control-panel/page.tsx:1",
+      "src/features/admin-controls/components/ControlPanelShell.tsx:36",
+      "src/app/admin/control-panel/error.tsx:1"
+    ],
+    "contracts": [
+      "src/app/api/admin/control-panel/configs/route.ts:34",
+      "src/app/api/admin/control-panel/configs/route.ts:55",
+      "src/app/api/admin/control-panel/resync/route.ts:41"
+    ],
+    "tables": [
+      "src/lib/admin/control-panel.ts:203",
+      "src/lib/admin/control-panel.ts:228",
+      "src/lib/admin/control-panel.ts:262",
+      "src/lib/admin/control-panel.ts:298",
+      "src/lib/admin/control-panel.ts:374"
+    ],
+    "gate": [
+      "src/lib/auth/route-guard.ts:162",
+      "src/middleware.ts:95",
+      "src/app/api/admin/control-panel/configs/route.ts:5"
+    ],
+    "states": [
+      "src/features/admin-controls/components/ControlPanelShell.tsx:36",
+      "src/tests/control-panel-shell.ui.test.tsx:2",
+      "src/tests/control-panel.ui.test.tsx:2"
+    ],
+    "emits": [
+      "src/features/admin-controls/lib/telemetry.ts:8",
+      "src/features/admin-controls/api/useUpdateConfigs.ts:12"
+    ]
+  },
+  "identity": {
+    "id": "admin_control_panel",
+    "route": "src/app/admin/control-panel/page.tsx",
+    "archetype": "FORM",
+    "platforms": [
+      "web"
+    ],
+    "owns": {
+      "components": []
+    },
+    "owner": "UNRESEARCHED",
+    "spec": "docs/specs/02-web-admin/86_control_panel.md",
+    "spec_refs": [
+      "docs/specs/02-web-admin/86_control_panel.md §1",
+      "docs/specs/02-web-admin/86_control_panel.md §3",
+      "docs/specs/02-web-admin/86_control_panel.md §5 Phase 4",
+      "docs/specs/02-web-admin/86_control_panel.md §5 Phase 6",
+      "docs/specs/00-architecture/114_rls_policy_catalog.md §4"
+    ],
+    "spec_version": "0-draft",
+    "versioning": {
+      "answer": "breaking_allowed",
+      "why": "Both contracts are called only from this feature folder, so a shape change lands in one commit; nothing external pins the payload.",
+      "evidence": [
+        "src/features/admin-controls/api/useGetConfigs.ts:36",
+        "src/app/api/admin/control-panel/configs/route.ts:34"
+      ]
+    },
+    "ref": "S-019"
+  },
+  "inputs": {
+    "answer": "contract",
+    "why": "The shell reads only GET /api/admin/control-panel/configs; no page file touches the database.",
+    "evidence": [
+      "src/features/admin-controls/api/useGetConfigs.ts:36",
+      "src/app/api/admin/control-panel/configs/route.ts:34"
+    ],
+    "contract_ref": [
+      "/api/admin/control-panel/configs",
+      "/api/admin/control-panel/resync"
+    ],
+    "query_key": [
+      "admin",
+      "control-panel",
+      "configs"
+    ],
+    "field_whitelist": [
+      "logic_variables",
+      "trade_configurations",
+      "trade_sqft_rates",
+      "scope_intensity_matrix"
+    ],
+    "tables": [
+      {
+        "table": "logic_variables",
+        "columns": [
+          "variable_key",
+          "variable_value",
+          "variable_value_json",
+          "description",
+          "updated_at"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/00-architecture/01_database_schema.md §3",
+        "evidence": [
+          "src/lib/admin/control-panel.ts:203"
+        ]
+      },
+      {
+        "table": "trade_configurations",
+        "columns": [
+          "trade_slug",
+          "bid_phase_cutoff",
+          "work_phase_target",
+          "imminent_window_days",
+          "allocation_pct",
+          "multiplier_bid",
+          "multiplier_work"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/00-architecture/01_database_schema.md §3",
+        "evidence": [
+          "src/lib/admin/control-panel.ts:228"
+        ]
+      },
+      {
+        "table": "trade_sqft_rates",
+        "columns": [
+          "base_rate_sqft",
+          "structure_complexity_factor"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/00-architecture/01_database_schema.md §3",
+        "evidence": [
+          "src/lib/admin/control-panel.ts:228"
+        ]
+      },
+      {
+        "table": "scope_intensity_matrix",
+        "columns": [
+          "permit_type",
+          "structure_type",
+          "gfa_allocation_percentage"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/00-architecture/01_database_schema.md §3",
+        "evidence": [
+          "src/lib/admin/control-panel.ts:262"
+        ]
+      }
+    ]
+  },
+  "outputs": {
+    "answer": "contract_only",
+    "why": "Apply sends the whole draft to PUT /configs and waits for rows_updated before the store leaves draft; nothing flips optimistically, and resync is fire-and-forget on top.",
+    "evidence": [
+      "src/app/api/admin/control-panel/configs/route.ts:55",
+      "src/lib/admin/control-panel.ts:284",
+      "src/app/api/admin/control-panel/resync/route.ts:41"
+    ],
+    "contract_ref": [
+      "/api/admin/control-panel/configs",
+      "/api/admin/control-panel/resync"
+    ],
+    "rollback": "There is no server-side undo. The client-side undo is resetDrafts() before Apply; after Apply the only rollback is a second Apply with the previous values, which the diff dialog shows before confirming.",
+    "invalidates": [
+      "admin.control-panel.configs"
+    ],
+    "tables": [
+      {
+        "table": "logic_variables",
+        "columns": [
+          "variable_value",
+          "variable_value_json",
+          "updated_at"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/00-architecture/01_database_schema.md §3",
+        "evidence": [
+          "src/lib/admin/control-panel.ts:298"
+        ]
+      },
+      {
+        "table": "trade_configurations",
+        "columns": [
+          "bid_phase_cutoff",
+          "work_phase_target",
+          "imminent_window_days",
+          "allocation_pct",
+          "multiplier_bid",
+          "multiplier_work",
+          "updated_at"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/00-architecture/01_database_schema.md §3",
+        "evidence": [
+          "src/lib/admin/control-panel.ts:336"
+        ]
+      },
+      {
+        "table": "trade_sqft_rates",
+        "columns": [
+          "base_rate_sqft",
+          "structure_complexity_factor",
+          "updated_at"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/00-architecture/01_database_schema.md §3",
+        "evidence": [
+          "src/lib/admin/control-panel.ts:359"
+        ]
+      },
+      {
+        "table": "scope_intensity_matrix",
+        "columns": [
+          "permit_type",
+          "structure_type",
+          "gfa_allocation_percentage",
+          "updated_at"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/00-architecture/01_database_schema.md §3",
+        "evidence": [
+          "src/lib/admin/control-panel.ts:374"
+        ]
+      },
+      {
+        "table": "pipeline_runs",
+        "columns": [
+          "pipeline",
+          "started_at",
+          "status"
+        ],
+        "producing_steps": [
+          "every_chain_step_via_sdk_run_ledger"
+        ],
+        "chain_position": "permits[0..32]",
+        "owner_spec": "docs/specs/01-pipeline/41_chain_permits.md",
+        "evidence": [
+          "src/app/api/admin/control-panel/resync/route.ts:51",
+          "scripts/lib/step/ledger.js:62"
+        ]
+      }
+    ]
+  },
+  "state": {
+    "answer": "zustand",
+    "why": "Layer 3 owns the edit: useAdminControlsStore holds draftConfig/productionConfig and computes the diff, on top of a Layer-2 TanStack query whose staleTime and gcTime are both 0 so the panel never shows a cached tuning value.",
+    "evidence": [
+      "src/features/admin-controls/store/useAdminControlsStore.ts:57",
+      "src/features/admin-controls/components/ControlPanelShell.tsx:36",
+      "src/features/admin-controls/api/useGetConfigs.ts:36"
+    ],
+    "fields": []
+  },
+  "staleness": {
+    "answer": "live",
+    "why": "The configs query sets staleTime 0 and gcTime 0 so every mount and window-focus re-reads the live table — the page-level QueryClient default of 30s never applies to it.",
+    "evidence": [
+      "src/features/admin-controls/api/useGetConfigs.ts:36",
+      "src/app/admin/control-panel/page.tsx:16",
+      "src/app/api/admin/control-panel/configs/route.ts:21"
+    ],
+    "stale_time_ms": 0,
+    "offline": "blocked"
+  },
+  "guards": {
+    "session": {
+      "answer": "admin",
+      "why": "classifyRoute gates the page, but this is the one admin pair in the shard where NEITHER route calls verifyAdminAuth — the only check left is the middleware presence test, which is explicitly not a cryptographic or is_admin check.",
+      "evidence": [
+        "src/lib/auth/route-guard.ts:162",
+        "src/middleware.ts:95",
+        "src/app/api/admin/control-panel/configs/route.ts:5",
+        "src/app/api/admin/control-panel/resync/route.ts:8",
+        "src/lib/auth/verify-admin.ts:8"
+      ]
+    },
+    "rls_class": {
+      "answer": "B",
+      "why": "logic_variables, trade_configurations, trade_sqft_rates and scope_intensity_matrix are none of the ten Class-A tables and are not profiles, so they are Class B by the §2 default: RLS on, zero policies, service-role only.",
+      "evidence": [
+        "docs/specs/00-architecture/114_rls_policy_catalog.md §2",
+        "docs/specs/00-architecture/114_rls_policy_catalog.md:75"
+      ]
+    },
+    "disclosure": "none",
+    "entitlement": "none",
+    "flag": "none",
+    "permission": "none",
+    "rate_bucket": "none"
+  },
+  "render": {
+    "targets": [
+      "screen"
+    ],
+    "projection": "detail",
+    "breakpoints": "none",
+    "export": "none"
+  },
+  "checks": [
+    {
+      "id": "control_panel_selector_atomicity",
+      "kind": "selector_atomicity",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "Every store read in the shell is a single-field selector rather than an object literal, which is what keeps a 400-row tuning grid from re-rendering on each keystroke."
+    },
+    {
+      "id": "control_panel_error_state",
+      "kind": "error_state",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "A failed apply must keep the draft and surface a toast rather than silently discarding the operator's edits; the control-panel UI suites lock the draft/apply/diff path."
+    },
+    {
+      "id": "control_panel_auth_class",
+      "kind": "auth_class_parity",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "why": "DECLARED AND CURRENTLY FAILING: guards.session says admin but neither configs nor resync calls verifyAdminAuth, so the contract's real auth class is \"any request middleware lets through\"."
+    }
+  ],
+  "invariants": "none",
+  "plausibility": "none",
+  "states": [
+    {
+      "name": "loading",
+      "golden": "none"
+    },
+    {
+      "name": "hit",
+      "golden": "none"
+    },
+    {
+      "name": "error",
+      "golden": "none"
+    }
+  ],
+  "errors": {
+    "answer": "toast",
+    "why": "Mutation failures raise a sonner toast and keep the draft on screen; only a render-time throw reaches the sibling error.tsx boundary.",
+    "evidence": [
+      "src/app/admin/control-panel/page.tsx:48",
+      "src/features/admin-controls/api/useUpdateConfigs.ts:12",
+      "src/app/admin/control-panel/error.tsx:1"
+    ],
+    "classes": [
+      {
+        "class": "400",
+        "ui": "toast with the validation detail; the draft is kept"
+      },
+      {
+        "class": "500",
+        "ui": "toast; the draft is kept"
+      }
+    ]
+  },
+  "emits": {
+    "answer": "events",
+    "why": "The feature wraps captureEvent in its own four-name whitelist and fires it on adjust, discard, save-failure and resync; nothing writes a usage ledger row.",
+    "evidence": [
+      "src/features/admin-controls/lib/telemetry.ts:8",
+      "src/features/admin-controls/api/useUpdateConfigs.ts:12",
+      "src/features/admin-controls/api/useTriggerPipeline.ts:10"
+    ],
+    "analytics": [
+      "admin_gravity_adjusted",
+      "admin_gravity_discarded",
+      "admin_gravity_save_failed",
+      "admin_pipeline_resync_triggered"
+    ],
+    "ledger_events": [],
+    "breadcrumbs": []
+  },
+  "offers": {
+    "answer": "none",
+    "why": "An internal operator tool renders no sponsored placement; no offers/placements table is reached from any file it owns.",
+    "evidence": [
+      "src/app/admin/control-panel/page.tsx:1"
+    ]
+  },
+  "metering": {
+    "answer": "none",
+    "why": "Nothing here is billable or quota-bearing: no usage_events / ledger write is reached from this surface or its contracts.",
+    "evidence": [
+      "src/app/api/admin/control-panel/configs/route.ts:55"
+    ]
+  },
+  "config": {
+    "answer": "none",
+    "why": "The logic variables are this surface's DATA, not its tunables — it edits the table rather than reading a bound from it, so it consumes no tunable of its own.",
+    "evidence": [
+      "src/lib/admin/control-panel.ts:203",
+      "src/lib/admin/control-panel.ts:298"
+    ],
+    "logic_variables": [],
+    "retired": []
+  },
+  "sharing": {
+    "answer": "sole",
+    "why": "Both contracts are called only from src/features/admin-controls; no other surface reads or writes them.",
+    "evidence": [
+      "src/features/admin-controls/api/useGetConfigs.ts:36",
+      "src/features/admin-controls/api/useUpdateConfigs.ts:12"
+    ],
+    "surfaces": []
+  },
+  "a11y": {
+    "touch_target_min_px": "UNRESEARCHED",
+    "labels": "partial",
+    "dark_mode": "none",
+    "reduced_motion": "none",
+    "i18n": "none",
+    "safe_area": "none"
+  },
+  "deviations": "none",
+  "limitations": [
+    {
+      "what": "Both of this surface's contracts mutate or expose the tuning tables with no per-route admin verification",
+      "measured": "Neither src/app/api/admin/control-panel/configs/route.ts nor .../resync/route.ts imports verifyAdminAuth; PUT /configs rewrites four tables and POST /resync spawns the whole permits chain behind the presence-only middleware check.",
+      "check_id": "control_panel_auth_class"
+    },
+    {
+      "what": "PUT /configs writes four tuning tables and POST /resync launches the pipeline with no admin_audit_log row",
+      "measured": "The only admin_audit_log writer in src/ is src/lib/admin/admin-audit.ts:72 and neither route imports it.",
+      "check_id": "none — no checks[] kind covers \"an admin mutation writes an admin_audit_log row\"; escalated per Spec 128 §4"
+    },
+    {
+      "what": "Three of the six measured UI states have no member in the states[] vocabulary",
+      "measured": "unsaved_changes, confirm_sync and saving are real render branches of the shell; the closed set offers only loading/empty/hit/miss/ambiguous/partial/degraded/error/offline/schema_drift/unauthorized/rate_limited/redirect/static.",
+      "check_id": "none — vocabulary gap, escalated per Spec 128 §4"
+    }
+  ],
+  "interpretation": "none",
+  "notes": "Thin page: all behaviour lives in src/features/admin-controls/ (ControlPanelShell 173L plus 8 sibling components, 1070L total, and the useGetConfigs/useUpdateConfigs/useTriggerPipeline hooks) - outside src/components/, so excluded from files per the stated rule, which is why loc is only 51. A sibling src/app/admin/control-panel/error.tsx error boundary also exists (not counted). This page creates its OWN QueryClient at module scope rather than using the root provider, unlike the other admin tools. DISAGREEMENT (tree wins): src/lib/auth/verify-admin.ts:8 states verifyAdminAuth is the FIRST LINE of every src/app/api/admin/**/route.ts (Spec 33 Sec 5), and the routes this surface calls do not import it at all - the only gate left is the presence-only middleware check, which middleware.ts:108 itself documents as non-cryptographic. identity.owner is UNRESEARCHED estate-wide: no owner registry exists in the tree, so naming one would be an invention rather than a measurement. a11y.touch_target_min_px is UNRESEARCHED because its vocabulary (UNRESEARCHED or an integer >= 44) has no member for a desktop-only admin page that declares no floor.",
+  "x-draft": {
+    "shard": "admin-existing",
+    "files": [
+      "src/app/admin/control-panel/page.tsx"
+    ],
+    "loc": 51,
+    "measured_states": [
+      "loading",
+      "error",
+      "loaded",
+      "unsaved_changes",
+      "confirm_sync",
+      "saving"
+    ],
+    "measured_gate": {
+      "session": "admin",
+      "why": "classifyRoute('/admin/control-panel') matches the admin-pages arm via `pathname.startsWith('/admin/')` -> 'admin'."
+    }
+  },
+  "programme": {
+    "scope": "platform_shared",
+    "phase": "UNRESEARCHED",
+    "why": "An admin surface that operates the PLATFORM (users, entitlements, security, tunables, pipeline health) rather than either product specifically.",
+    "feature": "F16",
+    "build_order": 3163,
+    "leakage": "none",
+    "product_questions": "none",
+    "review": {
+      "status": "unreviewed"
+    }
+  }
+}

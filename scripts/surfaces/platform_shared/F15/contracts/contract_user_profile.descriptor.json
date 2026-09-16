@@ -1,0 +1,546 @@
+{
+  "kind": "CONTRACT",
+  "status": "exists",
+  "docs": {
+    "purpose": "Lets a signed-in user view their own profile and free-trial status — viewing it auto-starts or auto-expires the trial as a side effect — and update profile fields such as name, phone, location, trade and notification preferences. A couple of one-time fields (trade selection, terms acceptance) can only be set once and then lock.",
+    "data_story": "It reads 2 tables — `user_profiles` and `entitlements` and writes `user_profiles` and `entitlements`. Its response is an explicit pick-by-name projection of 28 fields, so a column added to a table upstream does not leak into the client by accident. It is called from 8 places: `mobile/src/hooks/useUserProfile.ts`, `mobile/src/hooks/usePatchProfile.ts`, `mobile_onboarding_address`, `mobile_onboarding_complete`, `mobile_onboarding_profession`, `mobile_onboarding_supplier`, `mobile_onboarding_terms`, `web_subscribe_success`.",
+    "under_126": "Becomes a **CONTRACT descriptor** of archetype `MUTATION`. It declares `database.writes[]` with a `write_discipline` per target (the Spec 122 vocabulary verbatim), its idempotency posture, its optimistic contract and its rollback. Its `consumers[]` becomes the edge list of the fan-out graph — the join nothing in this estate holds today."
+  },
+  "evidence": {
+    "files": [
+      "src/app/api/user-profile/route.ts:1"
+    ],
+    "contracts": [
+      "src/app/api/user-profile/route.ts:53 (GET export)",
+      "src/app/api/user-profile/route.ts:122 (PATCH export)",
+      "src/lib/api/with-api-envelope.ts:27-52"
+    ],
+    "tables": [
+      "src/app/api/user-profile/route.ts:51 (PROFILE_SELECT_SQL) resolving CLIENT_SAFE_JOINED_SELECT at src/lib/userProfile.schema.ts:120-122 over CLIENT_SAFE_COLUMNS at src/lib/userProfile.schema.ts:85-112; executed at route :75, :371, :404",
+      "src/app/api/user-profile/route.ts:133-134 (PATCH pre-read)",
+      "src/app/api/user-profile/route.ts:143-144 (re-read after skeleton INSERT)",
+      "src/app/api/user-profile/route.ts:412-414 (race-loss read-back)",
+      "src/lib/subscription/expiration.ts:56-59 (EXISTS sub-select inside the fallback trial INSERT; called from route :72)",
+      "src/lib/userProfile.schema.ts:122 (`, e.status AS subscription_status, e.trial_started_at`)",
+      "src/lib/entitlements/index.ts:68 (LEAD_GEN_ENTITLEMENT_JOIN: LEFT JOIN entitlements e ON e.user_id = up.user_id AND e.product = 'lead_gen')",
+      "src/app/api/user-profile/route.ts:141 — INSERT INTO user_profiles (user_id) VALUES ($1) ON CONFLICT (user_id) DO NOTHING",
+      "src/app/api/user-profile/route.ts:392-395 — dynamic SET built at :298-356, updated_at appended at :375; per-column addField lines: trade_slug :306, full_name :307, phone_number :308, company_name :309, backup_email :310, default_tab :311, location_mode :312, home_base_lat :313, home_base_lng :314, home_base_lat/lng auto-null on gps_live :319-320, supplier_selection :322, onboarding_complete :323, tos_accepted_at :324, radius_km (capped) :332, new_lead_min_cost_tier :338, phase_changed :339, lifecycle_stalled_pref :340, start_date_urgent :341, notification_schedule :342, account_preset (server-derived, never client-supplied) :353-356",
+      "src/lib/subscription/expiration.ts:53-63 (GET-time fallback trial init, ON CONFLICT DO NOTHING); called at src/app/api/user-profile/route.ts:72",
+      "src/lib/entitlements/index.ts:200-202 (initTrialEntitlement, ON CONFLICT DO NOTHING); called at src/app/api/user-profile/route.ts:402",
+      "src/lib/subscription/expiration.ts:90-96 (trial -> expired after 14 days); called at src/app/api/user-profile/route.ts:73",
+      "src/lib/db/generated/schema.ts — every table named here is present in the introspected drizzle schema"
+    ],
+    "gate": [
+      "src/lib/auth/route-guard.ts — fail-closed default — no arm matches '/api/user-profile'",
+      "src/lib/auth/route-guard.ts:150-201 — classifyRoute executed 2026-09-15 with the concrete path → \"authenticated\"",
+      "in-handler: getUserIdFromSession(request) at src/app/api/user-profile/route.ts:54 (GET) and :123 (PATCH); null -> 401. Alias delegates to getVerifiedUid — revocation-checked GoTrue round-trip (src/lib/auth/get-user.ts:193-196, :215-217)."
+    ],
+    "states": [
+      "hit: src/app/api/user-profile/route.ts:109-112 (GET), :372 (PATCH no-writable-fields), :443 (PATCH)",
+      "miss: src/app/api/user-profile/route.ts:77-82 (GET, no profile row), :147-152 and :437-442 (PATCH)",
+      "unauthorized: src/app/api/user-profile/route.ts:55-60 (GET), :124-129 (PATCH)",
+      "error: src/app/api/user-profile/route.ts:113-119 (GET 500), :444-450 (PATCH 500), plus the seven PATCH 400 branches at :172, :183, :205, :245, :266, :292",
+      "conflict: src/app/api/user-profile/route.ts:408-428 (409 TRADE_RACE_LOST)"
+    ],
+    "emits": [
+      "src/app/api/user-profile/route.ts — read in full; no Sentry breadcrumb, no analytics capture and no ledger INSERT"
+    ]
+  },
+  "identity": {
+    "id": "contract_user_profile",
+    "route": "/api/user-profile",
+    "archetype": "MUTATION",
+    "platforms": [
+      "web",
+      "mobile"
+    ],
+    "owns": {
+      "components": []
+    },
+    "owner": "Cross-Domain (CLAUDE.md §Domain Rules: an API route consumed by the Expo app)",
+    "spec": "docs/specs/03-mobile/95_mobile_user_profiles.md",
+    "spec_refs": [
+      "docs/specs/03-mobile/95_mobile_user_profiles.md §5 API Contract, §6 Route Logic + docs/specs/03-mobile/96_mobile_subscription.md §10 Step 4 + docs/specs/00-architecture/116_multi_product_architecture.md §4 N2 + OD5 (src/app/api/user-profile/route.ts:1-3)"
+    ],
+    "spec_version": "0-draft",
+    "versioning": {
+      "answer": "additive_only",
+      "why": "At least one consumer is an installed Expo binary (mobile/) that does not redeploy with the server, so a removed or retyped field breaks shipped clients; adding fields does not.",
+      "evidence": [
+        "mobile/app/(onboarding)/address.tsx:55,122",
+        "mobile/app/(onboarding)/complete.tsx:71",
+        "mobile/app/(onboarding)/profession.tsx:48",
+        "mobile/app/(onboarding)/supplier.tsx:111",
+        "mobile/app/(onboarding)/terms.tsx:81,94",
+        "mobile/src/hooks/usePatchProfile.ts:49",
+        "mobile/src/hooks/useUserProfile.ts:38",
+        "mobile/app.json:5"
+      ]
+    },
+    "ref": "C-035"
+  },
+  "inputs": {
+    "answer": "app_outputs",
+    "why": "It reads 2 table(s) directly; none is written by a pipeline step — they are written by API routes, jobs or migration seeds — but the input is still the database, not another contract.",
+    "evidence": [
+      "src/lib/userProfile.schema.ts:122 (`, e.status AS subscription_status, e.trial_started_at`)",
+      "src/lib/entitlements/index.ts:68 (LEAD_GEN_ENTITLEMENT_JOIN: LEFT JOIN entitlements e ON e.user_id = up.user_id AND e.product = 'lead_gen')",
+      "migrations/228_entitlements.sql:21",
+      "docs/reference/data-lineage-map.md — no `## `entitlements`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)",
+      "src/app/api/user-profile/route.ts:51 (PROFILE_SELECT_SQL) resolving CLIENT_SAFE_JOINED_SELECT at src/lib/userProfile.schema.ts:120-122 over CLIENT_SAFE_COLUMNS at src/lib/userProfile.schema.ts:85-112; executed at route :75, :371, :404",
+      "src/app/api/user-profile/route.ts:133-134 (PATCH pre-read)",
+      "src/app/api/user-profile/route.ts:143-144 (re-read after skeleton INSERT)",
+      "src/app/api/user-profile/route.ts:412-414 (race-loss read-back)",
+      "src/lib/subscription/expiration.ts:56-59 (EXISTS sub-select inside the fallback trial INSERT; called from route :72)",
+      "docs/specs/00-architecture/00_system_map.md:80"
+    ],
+    "contract_ref": [],
+    "query_key": [],
+    "field_whitelist": [
+      "user_id",
+      "trade_slug",
+      "display_name",
+      "created_at",
+      "updated_at",
+      "full_name",
+      "phone_number",
+      "company_name",
+      "email",
+      "backup_email",
+      "default_tab",
+      "location_mode",
+      "home_base_lat",
+      "home_base_lng",
+      "radius_km",
+      "supplier_selection",
+      "lead_views_count",
+      "onboarding_complete",
+      "tos_accepted_at",
+      "account_deleted_at",
+      "account_preset",
+      "new_lead_min_cost_tier",
+      "phase_changed",
+      "lifecycle_stalled_pref",
+      "start_date_urgent",
+      "notification_schedule",
+      "subscription_status",
+      "trial_started_at"
+    ],
+    "tables": [
+      {
+        "table": "entitlements",
+        "columns": [
+          "status (aliased subscription_status)",
+          "trial_started_at"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/00-architecture/116_multi_product_architecture.md",
+        "evidence": [
+          "src/lib/userProfile.schema.ts:122 (`, e.status AS subscription_status, e.trial_started_at`)",
+          "src/lib/entitlements/index.ts:68 (LEAD_GEN_ENTITLEMENT_JOIN: LEFT JOIN entitlements e ON e.user_id = up.user_id AND e.product = 'lead_gen')",
+          "migrations/228_entitlements.sql:21",
+          "docs/reference/data-lineage-map.md — no `## `entitlements`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)"
+        ]
+      },
+      {
+        "table": "user_profiles",
+        "columns": [
+          "user_id",
+          "trade_slug",
+          "display_name",
+          "created_at",
+          "updated_at",
+          "full_name",
+          "phone_number",
+          "company_name",
+          "email",
+          "backup_email",
+          "default_tab",
+          "location_mode",
+          "home_base_lat",
+          "home_base_lng",
+          "radius_km",
+          "supplier_selection",
+          "lead_views_count",
+          "onboarding_complete",
+          "tos_accepted_at",
+          "account_deleted_at",
+          "account_preset",
+          "new_lead_min_cost_tier",
+          "phase_changed",
+          "lifecycle_stalled_pref",
+          "start_date_urgent",
+          "notification_schedule",
+          "radius_cap_km"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/02-web-admin/102_admin_notifications_tool.md",
+        "evidence": [
+          "src/app/api/user-profile/route.ts:51 (PROFILE_SELECT_SQL) resolving CLIENT_SAFE_JOINED_SELECT at src/lib/userProfile.schema.ts:120-122 over CLIENT_SAFE_COLUMNS at src/lib/userProfile.schema.ts:85-112; executed at route :75, :371, :404",
+          "src/app/api/user-profile/route.ts:133-134 (PATCH pre-read)",
+          "src/app/api/user-profile/route.ts:143-144 (re-read after skeleton INSERT)",
+          "src/app/api/user-profile/route.ts:412-414 (race-loss read-back)",
+          "src/lib/subscription/expiration.ts:56-59 (EXISTS sub-select inside the fallback trial INSERT; called from route :72)",
+          "docs/specs/00-architecture/00_system_map.md:80",
+          "docs/reference/data-lineage-map.md — no `## `user_profiles`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)"
+        ]
+      }
+    ]
+  },
+  "outputs": {
+    "answer": "contract_only",
+    "why": "This route IS the mutation contract: it writes 2 table(s) synchronously inside the request and returns the result — there is no optimistic client-side flip to reconcile.",
+    "evidence": [
+      "src/lib/subscription/expiration.ts:53-63 (GET-time fallback trial init, ON CONFLICT DO NOTHING); called at src/app/api/user-profile/route.ts:72",
+      "src/lib/entitlements/index.ts:200-202 (initTrialEntitlement, ON CONFLICT DO NOTHING); called at src/app/api/user-profile/route.ts:402",
+      "src/lib/subscription/expiration.ts:90-96 (trial -> expired after 14 days); called at src/app/api/user-profile/route.ts:73",
+      "migrations/228_entitlements.sql:21",
+      "docs/reference/data-lineage-map.md — no `## `entitlements`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)",
+      "src/app/api/user-profile/route.ts:141 — INSERT INTO user_profiles (user_id) VALUES ($1) ON CONFLICT (user_id) DO NOTHING",
+      "src/app/api/user-profile/route.ts:392-395 — dynamic SET built at :298-356, updated_at appended at :375; per-column addField lines: trade_slug :306, full_name :307, phone_number :308, company_name :309, backup_email :310, default_tab :311, location_mode :312, home_base_lat :313, home_base_lng :314, home_base_lat/lng auto-null on gps_live :319-320, supplier_selection :322, onboarding_complete :323, tos_accepted_at :324, radius_km (capped) :332, new_lead_min_cost_tier :338, phase_changed :339, lifecycle_stalled_pref :340, start_date_urgent :341, notification_schedule :342, account_preset (server-derived, never client-supplied) :353-356",
+      "docs/specs/00-architecture/00_system_map.md:80",
+      "docs/reference/data-lineage-map.md — no `## `user_profiles`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)"
+    ],
+    "contract_ref": [],
+    "tables": [
+      {
+        "table": "entitlements",
+        "columns": [
+          "user_id",
+          "product",
+          "status",
+          "trial_started_at",
+          "created_at",
+          "updated_at"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/00-architecture/116_multi_product_architecture.md",
+        "evidence": [
+          "src/lib/subscription/expiration.ts:53-63 (GET-time fallback trial init, ON CONFLICT DO NOTHING); called at src/app/api/user-profile/route.ts:72",
+          "src/lib/entitlements/index.ts:200-202 (initTrialEntitlement, ON CONFLICT DO NOTHING); called at src/app/api/user-profile/route.ts:402",
+          "src/lib/subscription/expiration.ts:90-96 (trial -> expired after 14 days); called at src/app/api/user-profile/route.ts:73",
+          "migrations/228_entitlements.sql:21",
+          "docs/reference/data-lineage-map.md — no `## `entitlements`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)"
+        ]
+      },
+      {
+        "table": "user_profiles",
+        "columns": [
+          "user_id",
+          "trade_slug",
+          "full_name",
+          "phone_number",
+          "company_name",
+          "backup_email",
+          "default_tab",
+          "location_mode",
+          "home_base_lat",
+          "home_base_lng",
+          "supplier_selection",
+          "onboarding_complete",
+          "tos_accepted_at",
+          "radius_km",
+          "new_lead_min_cost_tier",
+          "phase_changed",
+          "lifecycle_stalled_pref",
+          "start_date_urgent",
+          "notification_schedule",
+          "account_preset",
+          "updated_at"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/02-web-admin/102_admin_notifications_tool.md",
+        "evidence": [
+          "src/app/api/user-profile/route.ts:141 — INSERT INTO user_profiles (user_id) VALUES ($1) ON CONFLICT (user_id) DO NOTHING",
+          "src/app/api/user-profile/route.ts:392-395 — dynamic SET built at :298-356, updated_at appended at :375; per-column addField lines: trade_slug :306, full_name :307, phone_number :308, company_name :309, backup_email :310, default_tab :311, location_mode :312, home_base_lat :313, home_base_lng :314, home_base_lat/lng auto-null on gps_live :319-320, supplier_selection :322, onboarding_complete :323, tos_accepted_at :324, radius_km (capped) :332, new_lead_min_cost_tier :338, phase_changed :339, lifecycle_stalled_pref :340, start_date_urgent :341, notification_schedule :342, account_preset (server-derived, never client-supplied) :353-356",
+          "docs/specs/00-architecture/00_system_map.md:80",
+          "docs/reference/data-lineage-map.md — no `## `user_profiles`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)"
+        ]
+      }
+    ]
+  },
+  "state": {
+    "answer": "server_only",
+    "why": "A CONTRACT holds no client state: every value is resolved per request on the server and nothing is cached in a client store by the route itself.",
+    "evidence": [
+      "src/app/api/user-profile/route.ts:53 (GET export)",
+      "src/lib/api/with-api-envelope.ts:27-52"
+    ],
+    "fields": []
+  },
+  "staleness": {
+    "answer": "live",
+    "why": "Every read runs against the base tables on each request — there is no cache layer between the handler and the database.",
+    "evidence": [
+      "src/lib/userProfile.schema.ts:122 (`, e.status AS subscription_status, e.trial_started_at`)",
+      "src/lib/entitlements/index.ts:68 (LEAD_GEN_ENTITLEMENT_JOIN: LEFT JOIN entitlements e ON e.user_id = up.user_id AND e.product = 'lead_gen')",
+      "migrations/228_entitlements.sql:21",
+      "docs/reference/data-lineage-map.md — no `## `entitlements`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)"
+    ],
+    "offline": "none"
+  },
+  "guards": {
+    "session": {
+      "answer": "authenticated",
+      "why": "classifyRoute(\"/api/user-profile\") returns \"authenticated\" (executed 2026-09-15); the handler re-verifies the caller in-process.",
+      "evidence": [
+        "src/lib/auth/route-guard.ts:150-201 — classifyRoute executed 2026-09-15 with the concrete path",
+        "getUserIdFromSession(request) at src/app/api/user-profile/route.ts:54 (GET) and :123 (PATCH); null -> 401. Alias delegates to getVerifiedUid — revocation-checked GoTrue round-trip (src/lib/auth/get-user.ts:193-196, :215-217)."
+      ]
+    },
+    "rls_class": {
+      "answer": "A",
+      "why": "It reaches user-owned rows whose policies key on auth.uid(). The route connects as the table owner (raw pg), which Spec 114 §9 makes owner-exempt from RLS — the class describes the data, not the gate this route passes.",
+      "evidence": [
+        "migrations/230_rls_class_a_entitlements.sql:48",
+        "migrations/230_rls_class_a_entitlements.sql:58",
+        "docs/specs/00-architecture/114_rls_policy_catalog.md §2"
+      ]
+    },
+    "disclosure": "none",
+    "entitlement": "none",
+    "flag": "none",
+    "permission": "none",
+    "rate_bucket": "none"
+  },
+  "render": {
+    "targets": [
+      "screen"
+    ],
+    "projection": "none",
+    "breakpoints": "none",
+    "export": "none"
+  },
+  "checks": [
+    {
+      "id": "contract_user_profile__auth_class_parity",
+      "kind": "auth_class_parity",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "why": "guards.session must equal classifyRoute(\"/api/user-profile\"), executed 2026-09-15 → \"authenticated\" plus the in-handler guard (getUserIdFromSession(request) at src/app/api/user-profile/route.ts:54 (GET) and :123 (PATCH); null -> 401. Ali). Locked by user-profile-trial.infra.test.ts, user-profiles.infra.test.ts, user-profiles.security.test.ts."
+    },
+    {
+      "id": "contract_user_profile__error_envelope",
+      "kind": "error_state",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "Every declared error class returns the { data, error, meta } envelope of docs/specs/00_engineering_standards.md §4.4; expected to stay at zero deviations."
+    },
+    {
+      "id": "contract_user_profile__contract_parse",
+      "kind": "contract_parse",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "why": "Request input is parsed by UserProfileUpdateSchema at src/app/api/user-profile/route.ts:179 (safeParse) before any query runs; a payload that fails the schema is refused, never coerced."
+    },
+    {
+      "id": "contract_user_profile__field_whitelist_parity",
+      "kind": "field_whitelist_parity",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "The response is an explicit pick-by-name of 28 field(s) (src/lib/userProfile.schema.ts:85-112 (the 26 up.* columns, in this exact order), src/lib/userProfile.schema.ts:120-122 (joined SELECT appends e.status AS subscription_status and e.trial_started_at — fields 27 and 28), src/app/api/user-profile/route.ts:51 (PROFILE_SELECT_SQL), :109-112 (GET returns rows[0] as `data`), :443 (PATCH returns the same shape)), so a column added upstream cannot leak; this check set-equals the projection to inputs.field_whitelist."
+    },
+    {
+      "id": "contract_user_profile__schema_declared",
+      "kind": "schema_declared",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "Every table and column declared in lineage.reads[]/writes[] must exist in src/lib/db/generated/schema.ts (drizzle-kit introspect of the live database); the registry generator checks this both directions."
+    }
+  ],
+  "invariants": "none",
+  "plausibility": "none",
+  "states": [
+    {
+      "name": "hit",
+      "golden": "none"
+    },
+    {
+      "name": "miss",
+      "golden": "none"
+    },
+    {
+      "name": "unauthorized",
+      "golden": "none"
+    },
+    {
+      "name": "error",
+      "golden": "none"
+    }
+  ],
+  "errors": {
+    "answer": "envelope",
+    "why": "Success and failure both arrive in the { data, error, meta } envelope of docs/specs/00_engineering_standards.md §4.4; withApiEnvelope is the outermost wrapper and converts any uncaught throw into the same shape.",
+    "evidence": [
+      "src/lib/api/with-api-envelope.ts:27-52",
+      "src/app/api/user-profile/route.ts:57 (GET 401)",
+      "src/app/api/user-profile/route.ts:109-112 (GET 200)",
+      "src/app/api/user-profile/route.ts:372 (PATCH 200, no-op body)",
+      "src/app/api/user-profile/route.ts:443 (PATCH 200)",
+      "src/app/api/user-profile/route.ts:447 (PATCH 500)",
+      "src/app/api/user-profile/route.ts:58 (401)",
+      "src/app/api/user-profile/route.ts:80 (404)",
+      "src/app/api/user-profile/route.ts:102 (403)",
+      "src/app/api/user-profile/route.ts:117 (500)"
+    ],
+    "classes": [
+      {
+        "class": "401",
+        "ui": "{data:null,error:{code,message},meta:null} (GET) — src/app/api/user-profile/route.ts:58 (code UNAUTHORIZED)"
+      },
+      {
+        "class": "403",
+        "ui": "{data:null,error:{code,message,account_deleted_at,days_remaining},meta:null} (GET) — src/app/api/user-profile/route.ts:102 (code ACCOUNT_DELETED)"
+      },
+      {
+        "class": "500",
+        "ui": "{data:null,error:{code,message},meta:null} + Cache-Control: no-store (GET) — src/app/api/user-profile/route.ts:117 (code INTERNAL_ERROR)"
+      },
+      {
+        "class": "400",
+        "ui": "{data:null,error:{code,message},meta:null} — invalid JSON body (PATCH) — src/app/api/user-profile/route.ts:172 (code BAD_REQUEST)"
+      }
+    ]
+  },
+  "emits": {
+    "answer": "none",
+    "why": "Nothing it does is currently countable: src/app/api/user-profile/route.ts was read in full and contains no Sentry breadcrumb, no analytics capture and no ledger INSERT.",
+    "evidence": [
+      "src/app/api/user-profile/route.ts — read in full; no Sentry breadcrumb, no analytics capture and no ledger INSERT"
+    ],
+    "analytics": [],
+    "ledger_events": [],
+    "breadcrumbs": []
+  },
+  "offers": {
+    "answer": "none",
+    "why": "It renders no sponsored placement: the offers and advertisers tables Spec 126 §2 specifies do not exist in migrations/ and nothing in this handler reads placement inventory.",
+    "evidence": [
+      "migrations/ — no CREATE TABLE offers / advertisers (grep 2026-09-15)",
+      "src/app/api/user-profile/route.ts — read in full; no placement read"
+    ]
+  },
+  "metering": {
+    "answer": "none",
+    "why": "Nothing here is counted: no usage_events row (the table does not exist in the introspected schema) and no quota counter is written by this handler.",
+    "evidence": [
+      "src/app/api/user-profile/route.ts — read in full 2026-09-15",
+      "src/lib/db/generated/schema.ts — no usage_events table"
+    ]
+  },
+  "config": {
+    "answer": "none",
+    "why": "It consumes no tunable: no logic_variables read and no env-var-driven threshold in the handler or the libs it calls.",
+    "evidence": [
+      "src/app/api/user-profile/route.ts — read in full 2026-09-15; no loadMarketplaceConfigs / logic_variables read"
+    ],
+    "logic_variables": [],
+    "retired": []
+  },
+  "sharing": {
+    "answer": "shared",
+    "why": "8 call sites render it, so the projection is shared and a field removed here breaks more than one surface.",
+    "evidence": [
+      "src/app/subscribe/success/page.tsx:42",
+      "mobile/app/(onboarding)/address.tsx:55,122",
+      "mobile/app/(onboarding)/complete.tsx:71",
+      "mobile/app/(onboarding)/profession.tsx:48",
+      "mobile/app/(onboarding)/supplier.tsx:111",
+      "mobile/app/(onboarding)/terms.tsx:81,94",
+      "mobile/src/hooks/usePatchProfile.ts:49",
+      "mobile/src/hooks/useUserProfile.ts:38"
+    ],
+    "surfaces": [
+      "src/app/subscribe/success/page.tsx:42",
+      "mobile/app/(onboarding)/address.tsx:55,122",
+      "mobile/app/(onboarding)/complete.tsx:71",
+      "mobile/app/(onboarding)/profession.tsx:48",
+      "mobile/app/(onboarding)/supplier.tsx:111",
+      "mobile/app/(onboarding)/terms.tsx:81,94",
+      "mobile/src/hooks/usePatchProfile.ts:49",
+      "mobile/src/hooks/useUserProfile.ts:38"
+    ]
+  },
+  "a11y": {
+    "touch_target_min_px": "UNRESEARCHED",
+    "labels": "none",
+    "dark_mode": "none",
+    "reduced_motion": "none",
+    "i18n": "none",
+    "safe_area": "none"
+  },
+  "deviations": "none",
+  "limitations": [
+    {
+      "what": "a11y.touch_target_min_px has no legal answer for a CONTRACT",
+      "measured": "The schema allows only UNRESEARCHED or an integer >= 44; a JSON endpoint has no touch target and the vocabulary has no \"n/a\". Left UNRESEARCHED and escalated per Spec 128 §4 rather than invented.",
+      "check_id": "contract_user_profile__auth_class_parity"
+    },
+    {
+      "what": "error classes outside the closed set are not representable: 404, 409",
+      "measured": "The handler returns 404, 409 at src/app/api/user-profile/route.ts:80, src/app/api/user-profile/route.ts:151, src/app/api/user-profile/route.ts:426, src/app/api/user-profile/route.ts:440; errors.classes[] admits only 400/401/403/429/500/schema_drift/offline.",
+      "check_id": "contract_user_profile__error_envelope"
+    }
+  ],
+  "interpretation": "none",
+  "notes": "Also cites 96_mobile_subscription.md §10 Step 4 and 116_multi_product_architecture.md §4. GET issues writes as a side effect (trial fallback-init and trial expiration via src/lib/subscription/expiration.ts, which reads/writes entitlements and reads user_profiles), so the response sets Cache-Control: no-store. PATCH uses an atomic-precondition UPDATE (WHERE trade_slug IS NULL) to close a race on the immutable first write of trade_slug, returning 409 on race loss; tos_accepted_at is likewise immutable once set. The response whitelist replaced a prior SELECT * that leaked stripe_customer_id and admin-internal columns. | MEASURED 2026-09-15: GET PROJECTION IS EXACTLY 28 TOP-LEVEL FIELDS (26 from user_profiles + 2 from the LEFT JOINed lead_gen entitlements row), enumerated above. Deliberately EXCLUDED as internal (src/lib/userProfile.schema.ts:69-70): stripe_customer_id, radius_cap_km, trade_slugs_override. A zero-entitlement user serialises subscription_status: null and trial_started_at: null because the join is a LEFT JOIN (src/lib/entitlements/index.ts:68) — never an omitted key. PATCH can write 20 user_profiles columns, enumerated with per-line citations in `writes`; note account_preset (:355) is server-DERIVED via deriveAccountPreset (src/lib/classification/account-preset.ts:42-46) and only when the existing value is NULL (:353) — it is not in the Zod schema and cannot be set by a client. The GET fires two entitlement WRITES before the read (:72-73), which is why no-store is mandatory (:29-32). UNRESEARCHED: the census's claim that this route is reached from 8 consumers 'by two idioms' — I did not open any of the consumer files listed in routes-index.json (mobile hooks / onboarding screens / web_subscribe_success); that claim is unverified by me. CENSUS AGREEMENT on tables: matches (reads user_profiles + entitlements; writes user_profiles + entitlements). | Idempotency: GET is write-bearing but idempotent: applyFallbackTrialInitIfNeeded is an INSERT...SELECT gated by NOT EXISTS plus ON CONFLICT (user_id, product) DO NOTHING (src/lib/subscription/expiration.ts:60-62), and applyTrialExpirationIfNeeded only matches rows still in status='trial' past the 14-day window (src/lib/subscription/expiration.ts:92-95) — a second call matches nothing. PATCH is idempotent: all writes are absolute field assignments (:301-304), the trade_slug first-write is an atomic-precondition UPDATE that 409s the loser instead of overwriting (:384-386, :396-400), tos_accepted_at is immutable once set (:235-248), and initTrialEntitlement is ON CONFLICT DO NOTHING (src/lib/entitlements/index.ts:202). The user_profiles UPDATE and the trial INSERT share one transaction (:391-406). | Caching: GET: `Cache-Control: no-store` — constant at src/app/api/user-profile/route.ts:46, attached on the 404 (:80), the 403 (:102), the 200 (:111) and the 500 (:117). PATCH responses carry NO cache header (:372, :443, and every PATCH error branch). | Entitlement posture: No gate on access, but the route DRIVES the entitlement lifecycle: GET calls applyFallbackTrialInitIfNeeded (:72) and applyTrialExpirationIfNeeded (:73) before the SELECT; PATCH calls initTrialEntitlement on onboarding completion (:401-403, condition at :366-367). Account-state gates instead of entitlement gates: account_deleted_at -> 403 on GET (:86-104) and PATCH (:158-163). | Other guards / classification: Two immutability fences and one race fence: trade_slug is first-write-only and the write carries an atomic precondition `WHERE user_id = $1 AND trade_slug IS NULL` (:384-386) with rowCount 0 -> 409 (:396-400, :408-428); tos_accepted_at is immutable once set (:235-248); radius_km is clamped server-side to user_profiles.radius_cap_km via Math.min (:327-333). | Locking tests: src/tests/user-profile-trial.infra.test.ts, src/tests/user-profiles.infra.test.ts, src/tests/user-profiles.security.test.ts.",
+  "x-draft": {
+    "shard": "contracts",
+    "files": [
+      "src/app/api/user-profile/route.ts"
+    ],
+    "loc": 451,
+    "methods": [
+      "GET",
+      "PATCH"
+    ],
+    "consumers": [
+      "mobile/src/hooks/useUserProfile.ts",
+      "mobile/src/hooks/usePatchProfile.ts",
+      "mobile_onboarding_address",
+      "mobile_onboarding_complete",
+      "mobile_onboarding_profession",
+      "mobile_onboarding_supplier",
+      "mobile_onboarding_terms",
+      "web_subscribe_success"
+    ],
+    "writes_audit_row": false,
+    "consumers_verified": [
+      "src/app/subscribe/success/page.tsx:42",
+      "mobile/app/(onboarding)/address.tsx:55,122",
+      "mobile/app/(onboarding)/complete.tsx:71",
+      "mobile/app/(onboarding)/profession.tsx:48",
+      "mobile/app/(onboarding)/supplier.tsx:111",
+      "mobile/app/(onboarding)/terms.tsx:81,94",
+      "mobile/src/hooks/usePatchProfile.ts:49",
+      "mobile/src/hooks/useUserProfile.ts:38"
+    ],
+    "auth_class_executed": "authenticated",
+    "locking_tests": [
+      "src/tests/user-profile-trial.infra.test.ts",
+      "src/tests/user-profiles.infra.test.ts",
+      "src/tests/user-profiles.security.test.ts"
+    ]
+  },
+  "programme": {
+    "scope": "platform_shared",
+    "phase": "UNRESEARCHED",
+    "why": "Used by both products and owned by neither.",
+    "feature": "F15",
+    "build_order": 3152,
+    "leakage": "none",
+    "product_questions": "none",
+    "review": {
+      "status": "unreviewed"
+    }
+  }
+}

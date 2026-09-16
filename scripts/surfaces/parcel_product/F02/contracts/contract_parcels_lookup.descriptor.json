@@ -1,0 +1,728 @@
+{
+  "kind": "CONTRACT",
+  "status": "exists",
+  "docs": {
+    "purpose": "Lets a paying subscriber search for a property by address, or pick a specific close match, and see the estimated construction costs and nearby neighbourhood build activity for that property.",
+    "data_story": "It reads 6 tables — `parcels`, `address_points`, `parcel_address_points`, `coa_applications`, `user_profiles` and `entitlements` and writes nothing. Its response is an explicit pick-by-name projection of 24 fields, so a column added to a table upstream does not leak into the client by accident. It is called from 1 place: `mobile/src/hooks/useParcelLookup.ts`.",
+    "under_126": "Becomes a **CONTRACT descriptor** of archetype `QUERY`. It declares its `database.reads[]` with named columns, its response projection as an explicit whitelist, its auth class, its rate bucket and its staleness — and `outputs.writes` is forced to `\"none\"`. Its `consumers[]` becomes the edge list of the fan-out graph — the join nothing in this estate holds today."
+  },
+  "evidence": {
+    "files": [
+      "src/app/api/parcels/lookup/route.ts:1"
+    ],
+    "contracts": [
+      "src/app/api/parcels/lookup/route.ts:51 (GET export)",
+      "src/lib/api/with-api-envelope.ts:27-52"
+    ],
+    "tables": [
+      "src/lib/admin/parcel-lookup.ts:168-171",
+      "src/lib/admin/parcel-lookup.ts:195-203",
+      "src/lib/admin/parcel-lookup.ts:222-224",
+      "src/lib/admin/parcel-lookup.ts:113-121",
+      "src/lib/admin/parcel-lookup.ts:34-110",
+      "src/lib/admin/parcel-lookup.ts:159",
+      "src/lib/admin/parcel-lookup.ts:194-205",
+      "src/lib/admin/parcel-lookup.ts:197",
+      "src/lib/admin/parcel-lookup.ts:233-240",
+      "src/lib/auth/get-user-context.ts:99-101",
+      "src/lib/auth/get-user-context.ts:99-100",
+      "src/lib/entitlements/index.ts:68",
+      "src/lib/auth/get-user-context.ts:83-89",
+      "src/lib/db/generated/schema.ts — every table named here is present in the introspected drizzle schema"
+    ],
+    "gate": [
+      "src/lib/auth/route-guard.ts — AUTHENTICATED_API_ROUTES prefix — '/api/parcels'",
+      "src/lib/auth/route-guard.ts:150-201 — classifyRoute executed 2026-09-15 with the concrete path → \"authenticated\"",
+      "in-handler: getCurrentUserContext(request, pool) — src/app/api/parcels/lookup/route.ts:53 (FIRST await); implementation src/lib/auth/get-user-context.ts:59, uid from getClaimsUid (get-user-context.ts:68), profile+entitlement row at get-user-context.ts:93-103; null -> 401 at route.ts:54"
+    ],
+    "states": [
+      "hit: src/app/api/parcels/lookup/route.ts:101-106 (match + parcel payload); outcome label route.ts:112",
+      "ambiguous: src/lib/admin/parcel-lookup.ts:180-186 (>1 exact -> candidates, match null) surfaced at src/app/api/parcels/lookup/route.ts:86-88",
+      "miss: src/lib/admin/parcel-lookup.ts:163 (no street name) and src/app/api/parcels/lookup/route.ts:96 (unknown parcelId -> 200 match:null, parcel:null)",
+      "partial: src/lib/parcels/consumer-lookup.ts:77-79, 100-102, 111-113, 133-136 (tier-stratified safeParse degradation -> warnings[] entries, payload still returned)",
+      "degraded: src/app/api/parcels/lookup/route.ts:120-122 (slow_query logWarn above SLOW_QUERY_MS=500, route.ts:41)",
+      "unauthorized: src/app/api/parcels/lookup/route.ts:54 (401) and route.ts:59 (403 inactive subscription)",
+      "rate_limited: src/app/api/parcels/lookup/route.ts:76",
+      "error: src/app/api/parcels/lookup/route.ts:126-128"
+    ],
+    "emits": [
+      "src/app/api/parcels/lookup/route.ts — read in full; no Sentry breadcrumb, no analytics capture and no ledger INSERT"
+    ]
+  },
+  "identity": {
+    "id": "contract_parcels_lookup",
+    "route": "/api/parcels/lookup",
+    "archetype": "QUERY",
+    "platforms": [
+      "web",
+      "mobile"
+    ],
+    "owns": {
+      "components": []
+    },
+    "owner": "Cross-Domain (CLAUDE.md §Domain Rules: an API route consumed by the Expo app)",
+    "spec": "docs/specs/03-mobile/100_mobile_parcel_cost_tool.md",
+    "spec_refs": [
+      "docs/specs/03-mobile/100_mobile_parcel_cost_tool.md §3 (API) — src/app/api/parcels/lookup/route.ts:1; body also cites §2.6 (line 6), §90 §11 (line 8), §5 (line 9), §3.2 whitelist (line 11), §2.8 (line 13)"
+    ],
+    "spec_version": "0-draft",
+    "versioning": {
+      "answer": "additive_only",
+      "why": "At least one consumer is an installed Expo binary (mobile/) that does not redeploy with the server, so a removed or retyped field breaks shipped clients; adding fields does not.",
+      "evidence": [
+        "mobile/src/hooks/useParcelLookup.ts:34",
+        "mobile/app.json:5"
+      ]
+    },
+    "ref": "C-001"
+  },
+  "inputs": {
+    "answer": "app_outputs",
+    "why": "It reads 6 table(s) directly; 4 of them are materialised by named pipeline steps (address_points, classify_coa_scope, link_parcel_addresses), so its inputs are the pipeline's outputs rather than another contract.",
+    "evidence": [
+      "src/lib/admin/parcel-lookup.ts:194-205",
+      "scripts/load-address-points.js",
+      "docs/reference/data-lineage-map.md:133",
+      "scripts/manifest.json#chains",
+      "docs/reference/data-lineage-map.md",
+      "src/lib/admin/parcel-lookup.ts:233-240",
+      "scripts/classify-coa-scope.js",
+      "docs/reference/data-lineage-map.md:312"
+    ],
+    "contract_ref": [],
+    "query_key": [],
+    "field_whitelist": [
+      "match",
+      "candidates",
+      "warnings",
+      "parcel",
+      "costMenu",
+      "menu",
+      "scalars",
+      "areas",
+      "neighbourhood",
+      "summary",
+      "compStats",
+      "coaProjects",
+      "comparableBuilds",
+      "address",
+      "lot_sqm",
+      "frontage_m",
+      "distance_m",
+      "work_type",
+      "permit_gfa_sqm",
+      "permit_fsi",
+      "storeys",
+      "coa_decision",
+      "build_ratio",
+      "structure_family"
+    ],
+    "tables": [
+      {
+        "table": "address_points",
+        "columns": [
+          "address_point_id",
+          "address_full",
+          "linear_name_normalized",
+          "addr_num_normalized",
+          "address_status",
+          "maint_stage"
+        ],
+        "producing_steps": [
+          "address_points"
+        ],
+        "chain_position": "sources[2]",
+        "owner_spec": "docs/specs/01-pipeline/43_chain_sources.md",
+        "evidence": [
+          "src/lib/admin/parcel-lookup.ts:194-205",
+          "scripts/load-address-points.js",
+          "docs/reference/data-lineage-map.md:133",
+          "scripts/manifest.json#chains",
+          "docs/reference/data-lineage-map.md"
+        ]
+      },
+      {
+        "table": "coa_applications",
+        "columns": [
+          "application_number",
+          "address",
+          "status",
+          "decision",
+          "decision_date",
+          "hearing_date",
+          "description",
+          "project_type",
+          "modeled_gfa_sqm",
+          "estimated_cost",
+          "neighbourhood_id"
+        ],
+        "producing_steps": [
+          "classify_coa_scope",
+          "classify_coa_trades",
+          "classify_lifecycle_phase",
+          "coa",
+          "compute_coa_cost_estimates",
+          "enrich_coa_zoning",
+          "link_coa",
+          "link_coa_to_parcels"
+        ],
+        "chain_position": "coa[5] · coa[6] · permits[23], coa[12] · coa[1] · coa[7] · coa[4] · permits[19], coa[8] · coa[3]",
+        "owner_spec": "docs/specs/01-pipeline/42_chain_coa.md",
+        "evidence": [
+          "src/lib/admin/parcel-lookup.ts:233-240",
+          "scripts/classify-coa-scope.js",
+          "docs/reference/data-lineage-map.md:312",
+          "scripts/manifest.json#chains",
+          "docs/reference/data-lineage-map.md"
+        ]
+      },
+      {
+        "table": "entitlements",
+        "columns": [
+          "status",
+          "user_id",
+          "product"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/00-architecture/116_multi_product_architecture.md",
+        "evidence": [
+          "src/lib/auth/get-user-context.ts:99-100",
+          "src/lib/entitlements/index.ts:68",
+          "migrations/228_entitlements.sql:21",
+          "docs/reference/data-lineage-map.md — no `## `entitlements`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)"
+        ]
+      },
+      {
+        "table": "parcel_address_points",
+        "columns": [
+          "address_point_id",
+          "parcel_id"
+        ],
+        "producing_steps": [
+          "link_parcel_addresses"
+        ],
+        "chain_position": "sources[8]",
+        "owner_spec": "docs/specs/01-pipeline/54_source_address_points.md",
+        "evidence": [
+          "src/lib/admin/parcel-lookup.ts:197",
+          "migrations/162_address_points_expanded_fields_and_parcel_bridge.sql:82",
+          "docs/reference/data-lineage-map.md:736",
+          "scripts/manifest.json#chains",
+          "docs/reference/data-lineage-map.md"
+        ]
+      },
+      {
+        "table": "parcels",
+        "columns": [
+          "parcel_id",
+          "address_number",
+          "linear_name_full",
+          "addr_num_normalized",
+          "street_name_normalized",
+          "id",
+          "parcel_cost_menu",
+          "cost_fb_total",
+          "cost_coa_total",
+          "cost_solar_total",
+          "cost_garden_suite_total",
+          "cost_laneway_suite_total",
+          "cost_garage_total",
+          "cost_gut_total",
+          "cost_addition_total",
+          "cost_kitchen_per_sqm",
+          "cost_bath_per_sqm",
+          "cost_basement_per_sqm",
+          "cost_basement_underpin_per_sqm",
+          "lot_size_sqm",
+          "lot_size_sqft",
+          "opt_aor_gfa_sqm",
+          "opt_aor_storeys",
+          "opt_coa_gfa_sqm",
+          "opt_coa_storeys",
+          "max_buildable_gfa_sqm",
+          "max_buildable_footprint_sqm",
+          "imagery_roof_gfa_sqm",
+          "imagery_roof_footprint_sqm",
+          "cur_floor_gfa_sqm",
+          "max_newbuild_coa_gfa_sqm",
+          "nearby_builds_summary",
+          "comparable_builds",
+          "comp_count",
+          "comp_dominant_build",
+          "comp_build_ratio_p50",
+          "comp_fsi_p50",
+          "neighbourhood_id",
+          "neighbourhood_cost_premium",
+          "feature_type",
+          "date_effective",
+          "date_expiry",
+          "created_at",
+          "centroid_lat",
+          "centroid_lng",
+          "is_irregular",
+          "street_type_normalized",
+          "stated_area_raw",
+          "frontage_m",
+          "frontage_ft",
+          "depth_m",
+          "depth_ft",
+          "lot_size_confidence",
+          "lot_size_basis",
+          "lot_size_source",
+          "zoning_class",
+          "zoning_zn_string",
+          "zoning_gen_zone",
+          "zoning_holding",
+          "zone_status",
+          "bylaw_max_fsi",
+          "bylaw_max_coverage_pct",
+          "bylaw_max_height_m",
+          "bylaw_max_stories",
+          "bylaw_max_units",
+          "bylaw_max_density",
+          "bylaw_min_frontage_m",
+          "bylaw_min_area_sqm",
+          "bylaw_standard_setback_m",
+          "bylaw_pct_commercial_max",
+          "bylaw_pct_residential_max",
+          "bylaw_pct_employment_max",
+          "bylaw_pct_office_max",
+          "exception_number",
+          "exception_text",
+          "bylaw_chapter",
+          "bylaw_section",
+          "bylaw_exception_ref",
+          "in_policy_area",
+          "on_policy_road",
+          "in_rooming_house_overlay",
+          "in_parking_zone_overlay",
+          "in_building_setback_overlay",
+          "on_priority_retail",
+          "in_queenstw_eat_overlay",
+          "zoning_overlays",
+          "zoning_base_source_id",
+          "zoning_dominant_area_share",
+          "zoning_is_ambiguous",
+          "zoning_base_source_dataset_version",
+          "zoning_enriched_at",
+          "is_in_ravine_protection_area",
+          "ravine_distance_m",
+          "ravine_dataset_version_when_enriched",
+          "is_heritage_designated",
+          "heritage_designation_type",
+          "heritage_designation_date",
+          "heritage_dataset_version_when_enriched",
+          "is_corner_lot",
+          "is_through_lot",
+          "primary_frontage_street_name",
+          "centreline_dataset_version_when_enriched",
+          "abuts_laneway",
+          "existing_stories",
+          "existing_height_m",
+          "existing_width_m",
+          "existing_length_m",
+          "existing_structure_confidence",
+          "existing_other_structures_count",
+          "existing_other_structures_sqm",
+          "existing_greenspace_sqm",
+          "existing_data_quality_flag",
+          "cur_gfa_low_sqm",
+          "cur_gfa_high_sqm",
+          "cur_storeys_range",
+          "cur_gfa_band_basis",
+          "max_build_setback_basis",
+          "max_build_width_m",
+          "max_build_length_m",
+          "max_build_height_m",
+          "max_build_stories",
+          "max_build_basis",
+          "max_buildable_gfa_basis",
+          "max_build_confidence",
+          "envelope_constrained",
+          "envelope_constraint_reason",
+          "max_build_stories_basis",
+          "max_build_stories_aggressive",
+          "market_exceeds_bylaw",
+          "max_build_fsi",
+          "coa_fsi",
+          "realized_fsi_p90",
+          "massing_enriched_at",
+          "cur_basement_gfa_sqm",
+          "cur_storey_gfa_sqm",
+          "cur_interior_reno_gfa_sqm",
+          "cur_est_kitchen_gfa_sqm",
+          "cur_est_bath_gfa_sqm",
+          "cur_pot_2story_gfa_sqm",
+          "cur_pot_3story_gfa_sqm",
+          "cur_gfa_range_basis",
+          "garden_suite_fits",
+          "max_garden_suite_gfa_sqm",
+          "max_garage_gfa_sqm",
+          "garage_capacity_cars",
+          "garage_constraint_reason",
+          "garage_permission",
+          "max_laneway_suite_gfa_sqm",
+          "max_rear_suite_gfa_sqm",
+          "rear_suite_type",
+          "rear_suite_permission",
+          "opt_aor_units",
+          "opt_suite_type",
+          "opt_suite_fits_full",
+          "opt_binding_constraint",
+          "opt_config_confidence",
+          "optimal_config"
+        ],
+        "producing_steps": [
+          "compute_centroids",
+          "compute_parcel_cost_estimates",
+          "enrich_centreline",
+          "enrich_heritage",
+          "enrich_parcels",
+          "enrich_ravines",
+          "parcels"
+        ],
+        "chain_position": "sources[9] · sources[22] · sources[13] · sources[12] · sources[21] · sources[11] · sources[4]",
+        "owner_spec": "docs/specs/01-pipeline/43_chain_sources.md",
+        "evidence": [
+          "src/lib/admin/parcel-lookup.ts:168-171",
+          "src/lib/admin/parcel-lookup.ts:195-203",
+          "src/lib/admin/parcel-lookup.ts:222-224",
+          "src/lib/admin/parcel-lookup.ts:113-121",
+          "src/lib/admin/parcel-lookup.ts:34-110",
+          "src/lib/admin/parcel-lookup.ts:159",
+          "scripts/compute-centroids.js",
+          "docs/reference/data-lineage-map.md:757",
+          "scripts/manifest.json#chains",
+          "docs/reference/data-lineage-map.md"
+        ]
+      },
+      {
+        "table": "user_profiles",
+        "columns": [
+          "trade_slug",
+          "trade_slugs_override",
+          "display_name",
+          "user_id"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/02-web-admin/102_admin_notifications_tool.md",
+        "evidence": [
+          "src/lib/auth/get-user-context.ts:99-101",
+          "docs/specs/00-architecture/00_system_map.md:80",
+          "docs/reference/data-lineage-map.md — no `## `user_profiles`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)"
+        ]
+      }
+    ]
+  },
+  "outputs": {
+    "answer": "contract_only",
+    "why": "This route IS the mutation contract: it writes 1 table(s) synchronously inside the request and returns the result — there is no optimistic client-side flip to reconcile.",
+    "evidence": [
+      "src/lib/auth/get-user-context.ts:83-89",
+      "docs/specs/00-architecture/00_system_map.md:80",
+      "docs/reference/data-lineage-map.md — no `## `user_profiles`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)"
+    ],
+    "contract_ref": [],
+    "tables": [
+      {
+        "table": "user_profiles",
+        "columns": [
+          "user_id",
+          "trade_slug",
+          "display_name"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/02-web-admin/102_admin_notifications_tool.md",
+        "evidence": [
+          "src/lib/auth/get-user-context.ts:83-89",
+          "docs/specs/00-architecture/00_system_map.md:80",
+          "docs/reference/data-lineage-map.md — no `## `user_profiles`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)"
+        ]
+      }
+    ]
+  },
+  "state": {
+    "answer": "server_only",
+    "why": "A CONTRACT holds no client state: every value is resolved per request on the server and nothing is cached in a client store by the route itself.",
+    "evidence": [
+      "src/app/api/parcels/lookup/route.ts:51 (GET export)",
+      "src/lib/api/with-api-envelope.ts:27-52"
+    ],
+    "fields": []
+  },
+  "staleness": {
+    "answer": "live",
+    "why": "Every read runs against the base tables on each request — there is no cache layer between the handler and the database.",
+    "evidence": [
+      "src/lib/admin/parcel-lookup.ts:194-205",
+      "scripts/load-address-points.js",
+      "docs/reference/data-lineage-map.md:133",
+      "scripts/manifest.json#chains"
+    ],
+    "offline": "none"
+  },
+  "guards": {
+    "session": {
+      "answer": "entitled",
+      "why": "classifyRoute returns \"authenticated\", and the handler adds a server-side subscription gate: a session alone is refused unless subscription_status is in ACTIVE_SUBSCRIPTION_STATUSES.",
+      "evidence": [
+        "src/lib/auth/route-guard.ts:150-201 — classifyRoute executed 2026-09-15 with the concrete path",
+        "getCurrentUserContext(request, pool) — src/app/api/parcels/lookup/route.ts:53 (FIRST await); implementation src/lib/auth/get-user-context.ts:59, uid from getClaimsUid (get-user-context.ts:68), profile+entitlement row at get-user-context.ts:93-103; null -> 401 at route.ts:54",
+        "src/app/api/parcels/lookup/route.ts:47-60"
+      ]
+    },
+    "rls_class": {
+      "answer": "A",
+      "why": "It reaches user-owned rows whose policies key on auth.uid(), alongside default-deny Class B pipeline tables. The route connects as the table owner (raw pg), which Spec 114 §9 makes owner-exempt from RLS — the class describes the data, not the gate this route passes.",
+      "evidence": [
+        "migrations/227_rls_class_b_default_deny.sql:67",
+        "migrations/227_rls_class_b_default_deny.sql:42",
+        "migrations/227_rls_class_b_default_deny.sql:65",
+        "migrations/227_rls_class_b_default_deny.sql:45",
+        "migrations/230_rls_class_a_entitlements.sql:48",
+        "migrations/230_rls_class_a_entitlements.sql:58",
+        "docs/specs/00-architecture/114_rls_policy_catalog.md §2"
+      ]
+    },
+    "disclosure": "none",
+    "entitlement": "none",
+    "flag": "none",
+    "permission": "none",
+    "rate_bucket": "parcels-search:<uid> | parcels-lookup:<uid> (src/app/api/parcels/lookup/route.ts:72-75)"
+  },
+  "render": {
+    "targets": [
+      "screen"
+    ],
+    "projection": "none",
+    "breakpoints": "none",
+    "export": "none"
+  },
+  "checks": [
+    {
+      "id": "contract_parcels_lookup__auth_class_parity",
+      "kind": "auth_class_parity",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "why": "guards.session must equal classifyRoute(\"/api/parcels/lookup\"), executed 2026-09-15 → \"authenticated\" plus the in-handler guard (getCurrentUserContext(request, pool) — src/app/api/parcels/lookup/route.ts:53 (FIRST await); implementation sr). Locked by consumer-parcel-lookup.infra.test.ts."
+    },
+    {
+      "id": "contract_parcels_lookup__error_envelope",
+      "kind": "error_state",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "Every declared error class returns the { data, error, meta } envelope of docs/specs/00_engineering_standards.md §4.4; expected to stay at zero deviations."
+    },
+    {
+      "id": "contract_parcels_lookup__contract_parse",
+      "kind": "contract_parse",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "why": "Request input is parsed by ConsumerParcelLookupQuerySchema at src/app/api/parcels/lookup/route.ts:64 before any query runs; a payload that fails the schema is refused, never coerced."
+    },
+    {
+      "id": "contract_parcels_lookup__field_whitelist_parity",
+      "kind": "field_whitelist_parity",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "The response is an explicit pick-by-name of 4 field(s) (src/app/api/parcels/lookup/route.ts:85-90, src/app/api/parcels/lookup/route.ts:101-106, src/app/api/parcels/lookup/types.ts:94-101, src/lib/parcels/consumer-lookup.ts:139-157), so a column added upstream cannot leak; this check set-equals the projection to inputs.field_whitelist."
+    },
+    {
+      "id": "contract_parcels_lookup__schema_declared",
+      "kind": "schema_declared",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "Every table and column declared in lineage.reads[]/writes[] must exist in src/lib/db/generated/schema.ts (drizzle-kit introspect of the live database); the registry generator checks this both directions."
+    }
+  ],
+  "invariants": "none",
+  "plausibility": "none",
+  "states": [
+    {
+      "name": "hit",
+      "golden": "none"
+    },
+    {
+      "name": "ambiguous",
+      "golden": "none"
+    },
+    {
+      "name": "miss",
+      "golden": "none"
+    },
+    {
+      "name": "partial",
+      "golden": "none"
+    },
+    {
+      "name": "degraded",
+      "golden": "none"
+    },
+    {
+      "name": "unauthorized",
+      "golden": "none"
+    },
+    {
+      "name": "rate_limited",
+      "golden": "none"
+    },
+    {
+      "name": "error",
+      "golden": "none"
+    }
+  ],
+  "errors": {
+    "answer": "envelope",
+    "why": "Success and failure both arrive in the { data, error, meta } envelope of docs/specs/00_engineering_standards.md §4.4; withApiEnvelope is the outermost wrapper and converts any uncaught throw into the same shape.",
+    "evidence": [
+      "src/lib/api/with-api-envelope.ts:27-52",
+      "src/app/api/parcels/lookup/route.ts:125",
+      "src/features/leads/api/envelope.ts:50",
+      "src/features/leads/api/envelope.ts:82",
+      "src/lib/api/with-api-envelope.ts:42",
+      "src/lib/api/with-api-envelope.ts:48",
+      "src/app/api/parcels/lookup/route.ts:68 (400)",
+      "src/app/api/parcels/lookup/route.ts:54 (401)",
+      "src/app/api/parcels/lookup/route.ts:59 (403)",
+      "src/app/api/parcels/lookup/route.ts:76 (429)"
+    ],
+    "classes": [
+      {
+        "class": "400",
+        "ui": "{data:null,error:{code,message,details:zodError.flatten()},meta:null} — src/features/leads/api/error-mapping.ts:42-43 — src/app/api/parcels/lookup/route.ts:68 (code VALIDATION_FAILED)"
+      },
+      {
+        "class": "401",
+        "ui": "{data:null,error:{code,message},meta:null} — src/features/leads/api/error-mapping.ts:13 — src/app/api/parcels/lookup/route.ts:54 (code UNAUTHORIZED)"
+      },
+      {
+        "class": "403",
+        "ui": "{data:null,error:{code,message},meta:null} — src/features/leads/api/error-mapping.ts:28-29 — src/app/api/parcels/lookup/route.ts:59 (code SUBSCRIPTION_REQUIRED)"
+      },
+      {
+        "class": "429",
+        "ui": "{data:null,error:{code,message,details:{remaining}},meta:null} + header Retry-After: 60 — src/features/leads/api/error-mapping.ts:37-40 — src/app/api/parcels/lookup/route.ts:76 (code RATE_LIMITED)"
+      },
+      {
+        "class": "500",
+        "ui": "{data:null,error:{code,message},meta:null} — src/features/leads/api/error-mapping.ts:71-76 — src/app/api/parcels/lookup/route.ts:127 (code INTERNAL_ERROR)"
+      }
+    ]
+  },
+  "emits": {
+    "answer": "none",
+    "why": "Nothing it does is currently countable: src/app/api/parcels/lookup/route.ts was read in full and contains no Sentry breadcrumb, no analytics capture and no ledger INSERT.",
+    "evidence": [
+      "src/app/api/parcels/lookup/route.ts — read in full; no Sentry breadcrumb, no analytics capture and no ledger INSERT"
+    ],
+    "analytics": [],
+    "ledger_events": [],
+    "breadcrumbs": []
+  },
+  "offers": {
+    "answer": "none",
+    "why": "It renders no sponsored placement: the offers and advertisers tables Spec 126 §2 specifies do not exist in migrations/ and nothing in this handler reads placement inventory.",
+    "evidence": [
+      "migrations/ — no CREATE TABLE offers / advertisers (grep 2026-09-15)",
+      "src/app/api/parcels/lookup/route.ts — read in full; no placement read"
+    ]
+  },
+  "metering": {
+    "answer": "none",
+    "why": "DESIGNED, ABSENT: Spec 126 R-01 makes the parcel tool its own metered product, but this handler writes no counter and no usage_events row (the table does not exist). Nothing about a lookup is counted today.",
+    "evidence": [
+      "src/app/api/parcels/lookup/route.ts:41-129 — no counter write",
+      "src/lib/db/generated/schema.ts — no usage_events table",
+      "docs/specs/02-web-admin/126_maxbld_surface_standard.md §2"
+    ]
+  },
+  "config": {
+    "answer": "none",
+    "why": "It consumes no tunable: no logic_variables read and no env-var-driven threshold in the handler or the libs it calls.",
+    "evidence": [
+      "src/app/api/parcels/lookup/route.ts — read in full 2026-09-15; no loadMarketplaceConfigs / logic_variables read"
+    ],
+    "logic_variables": [],
+    "retired": []
+  },
+  "sharing": {
+    "answer": "sole",
+    "why": "Exactly one call site renders it, so its projection serves one surface.",
+    "evidence": [
+      "mobile/src/hooks/useParcelLookup.ts:34"
+    ],
+    "surfaces": [
+      "mobile/src/hooks/useParcelLookup.ts:34"
+    ]
+  },
+  "a11y": {
+    "touch_target_min_px": "UNRESEARCHED",
+    "labels": "none",
+    "dark_mode": "none",
+    "reduced_motion": "none",
+    "i18n": "none",
+    "safe_area": "none"
+  },
+  "deviations": "none",
+  "limitations": [
+    {
+      "what": "a11y.touch_target_min_px has no legal answer for a CONTRACT",
+      "measured": "The schema allows only UNRESEARCHED or an integer >= 44; a JSON endpoint has no touch target and the vocabulary has no \"n/a\". Left UNRESEARCHED and escalated per Spec 128 §4 rather than invented.",
+      "check_id": "contract_parcels_lookup__auth_class_parity"
+    }
+  ],
+  "interpretation": "none",
+  "notes": "The response is validated against a Zod .strict() schema (reusing the admin schemas in src/app/api/admin/parcels/lookup/types.ts) specifically to guarantee the proprietary Tier-3 diagnostic 'groups' data never reaches the consumer app. A 403 subscription gate runs before any DB work. assembleConsumerPayload (src/lib/parcels/consumer-lookup.ts) is a pure in-memory transform issuing no extra queries. user_profiles/entitlements come from the shared getCurrentUserContext auth helper. | MEASURED 2026-09-15: ACTIVE_SUBSCRIPTION_STATUSES = {'trial','active','past_due','admin_managed'} (route.ts:47-49). PASS: exactly those four. REFUSED: every other value, including NULL/absent (the `?? ''` coalesce at route.ts:58 makes a null status a refusal) — e.g. canceled, expired, incomplete, deleted, and any user with no `entitlements` row for product='lead_gen' (LEFT JOIN yields null, src/lib/entitlements/index.ts:68). HTTP status on refusal: 403, code SUBSCRIPTION_REQUIRED (route.ts:59 -> src/features/leads/api/error-mapping.ts:28-29). WHITELIST PARITY vs Spec 100 §3.2 (docs/specs/03-mobile/100_mobile_parcel_cost_tool.md:79-95): EXACT MATCH, no field in one and not the other. (a) areas: spec line 88 names 16 columns; CONSUMER_HEADLINE_COLS (src/lib/parcels/consumer-lookup.ts:33-41) is the same 16 in the same order. (b) costMenu.scalars: spec line 87 names 12; T1_COST_SCALAR_COLS (src/lib/admin/parcel-lookup.ts:35-39, iterated at consumer-lookup.ts:82) is the same 12. (c) comparableBuilds: spec line 92 names 11; CONSUMER_COMPARABLE_FIELDS (consumer-lookup.ts:44-47) is the same 11, and ConsumerComparableBuildSchema is .strict() (src/app/api/parcels/lookup/types.ts:69). (d) coaProjects: spec line 91 names 10; the fetchCoaProjects aliases (src/lib/admin/parcel-lookup.ts:233-236) are the same 10. (e) compStats: spec line 90 names 6; consumer-lookup.ts:146-151 emits the same 6. (f) No `groups` key: ConsumerParcelSchema has no groups member and is .strict() (types.ts:75-91) — assembleConsumerPayload never builds one (consumer-lookup.ts:140-156), unlike the admin assembleParcelPayload which does (src/lib/admin/parcel-lookup.ts:298-303, 322). CAVEATS a reviewer must know: (1) the SQL reads FAR more than the whitelist — fetchParcelById projects allMappedColumns() = every Tier-1/2/3 column incl. all zoning/heritage/existing-structure/scenario/accessory diagnostics (src/lib/admin/parcel-lookup.ts:222-224, 113-121). The whitelist is enforced only at the JS assembler + the .strict() boundary parse, not at the query. `geometry`/`geom` are excluded from the SELECT (EXCLUDED_COLS, parcel-lookup.ts:32). (2) The whitelist is COLUMN-level but NOT field-level INSIDE the two JSONB blobs: CostMenuSchema is z.record over CostLineSchema which is .passthrough() (src/app/api/admin/parcels/lookup/types.ts:40,43) and NearbyBuildsSummarySchema is .passthrough() (types.ts:62). Any additive key inside parcel_cost_menu or nearby_builds_summary reaches the client verbatim despite the outer .strict(). Spec 100:86 itself names `trades`/`products` per cost line, which CostLineSchema does not declare — they ride the passthrough. (3) get-user-context.ts:83-89 performs an INSERT into user_profiles, but ONLY under isDevMode() && uid==='dev-user'; isDevMode requires NODE_ENV!=='production' AND DEV_MODE==='true' (src/lib/auth/route-guard.ts:33), so it is unreachable in production. (4) routes-index.json CHECKLIST agreement: census_reads listed parcels, address_points, parcel_address_points, coa_applications, user_profiles, entitlements — all six confirmed. census_writes listed none; I found the dev-only user_profiles INSERT above (reachable only in dev), so the checklist is right for production. (5) Spec 100:56 claims the route-guard classifies '/api/parcels' as AUTHENTICATED — verified at src/lib/auth/route-guard.ts:127 + :165. | Caching: none observed — no `export const revalidate`/`dynamic`/`fetchCache` and no Cache-Control header set anywhere in src/app/api/parcels/lookup/route.ts:",
+  "x-draft": {
+    "shard": "contracts",
+    "files": [
+      "src/app/api/parcels/lookup/route.ts"
+    ],
+    "loc": 129,
+    "methods": [
+      "GET"
+    ],
+    "consumers": [
+      "mobile/src/hooks/useParcelLookup.ts"
+    ],
+    "writes_audit_row": false,
+    "consumers_verified": [
+      "mobile/src/hooks/useParcelLookup.ts:34"
+    ],
+    "auth_class_executed": "authenticated",
+    "locking_tests": [
+      "src/tests/consumer-parcel-lookup.infra.test.ts"
+    ]
+  },
+  "programme": {
+    "scope": "parcel_product",
+    "phase": "B1",
+    "why": "`/api/parcels/lookup` is the parcel product's only data contract: the consumer whitelist, the tier-stratified degradation and the entitlement gate all live here.",
+    "feature": "F02",
+    "build_order": 1022,
+    "leakage": [
+      {
+        "behaviour": "Its entitlement check reads `entitlements` joined on `product = 'lead_gen'`, because `chk_entitlements_product` admits only `lead_gen` and `flight_center`. The parcel product has no key of its own in the live database — Spec 128 R-01 rules that it should, and the CHECK widening has not landed.",
+        "evidence": [
+          "migrations/228_entitlements.sql:32-33",
+          "src/lib/entitlements/index.ts:39",
+          "src/lib/entitlements/index.ts:42-43"
+        ],
+        "owning_product": "lead_gen",
+        "disposition": "move-to-owner"
+      }
+    ],
+    "product_questions": "none",
+    "review": {
+      "status": "unreviewed"
+    }
+  }
+}

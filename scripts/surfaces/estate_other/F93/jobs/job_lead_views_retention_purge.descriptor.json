@@ -1,0 +1,332 @@
+{
+  "kind": "JOB",
+  "status": "exists",
+  "docs": {
+    "purpose": "Each morning this job deletes records of which leads a user looked at once those records are older than the retention window the business has set. It exists to honour the privacy promise that viewing history is not kept forever. The window is not hardcoded: the job looks up the number of days in the admin-editable settings table, defaulting to 90 days if the setting is missing.",
+    "data_story": "It reads `logic_variables` and writes `lead_views`. It runs on `0 9 * * *`, unattended, with nobody watching — which is why its guard matters: pg_extension guard with a NOTICE-skip, measured in both migrations (233:78-81, 235:122-125); each re-schedule first unschedules by name from cron.job, making replay idempotent.",
+    "under_126": "Becomes a **JOB descriptor** of archetype `SCHEDULED` under its own `job.schema.json` (Spec 128 R-14) — declaring its schedule, its target, its idempotency posture, its behaviour when `pg_cron` is absent, and the audit row it writes. Nothing about how it runs changes; what changes is that those five answers stop living only in SQL and YAML."
+  },
+  "evidence": {
+    "files": [
+      "migrations/233_pg_cron_maintenance_catalog.sql:1",
+      "migrations/235_offboarding_sweep_hardening.sql:1"
+    ],
+    "contracts": [
+      "none — a pg_cron job takes no request and calls no API route"
+    ],
+    "tables": [
+      "migrations/235_offboarding_sweep_hardening.sql:136-139",
+      "docs/reference/data-lineage-map.md:646",
+      "docs/specs/00-architecture/114_rls_policy_catalog.md:108"
+    ],
+    "gate": [
+      "migrations/233_pg_cron_maintenance_catalog.sql:68-70",
+      "migrations/233_pg_cron_maintenance_catalog.sql:78-81",
+      "migrations/235_offboarding_sweep_hardening.sql:112-113,122-125"
+    ],
+    "states": [
+      "migrations/235_offboarding_sweep_hardening.sql:136-139 — one statement, no branch; the outcome is a row count nothing records"
+    ],
+    "emits": [
+      "migrations/235_offboarding_sweep_hardening.sql:136-139 — no INSERT of any kind",
+      "migrations/235_offboarding_sweep_hardening.sql:87-103 — the sibling job that DOES write one"
+    ]
+  },
+  "identity": {
+    "id": "job_lead_views_retention_purge",
+    "route": "migrations/233_pg_cron_maintenance_catalog.sql",
+    "archetype": "SCHEDULED",
+    "platforms": [],
+    "owns": {
+      "components": []
+    },
+    "owner": "pipeline",
+    "spec": "docs/specs/00-architecture/115_scheduling.md §5",
+    "spec_refs": [
+      "docs/specs/00-architecture/115_scheduling.md §5 (pg_cron job catalog — the lead_views_retention_purge row)",
+      "docs/specs/00-architecture/115_scheduling.md §5a (schema-qualified call-site rule)",
+      "UNRESEARCHED — Spec 115 §5 cites “Spec 70 §Database Schema (PIPEDA 90-day SLA)” for this window, but there is no Spec 70 lead-feed document: docs/specs/archive/70_frontend_platform_foundation.md is a different subject and the lead-feed specs are 91 (mobile) and 76 (admin). The citation is stale; the tree wins."
+    ],
+    "spec_version": "0-draft",
+    "versioning": {
+      "answer": "additive_only",
+      "why": "Migration 235 replaced the scheduled command in place (same name, same cron, a LIMIT 1 added) without touching what it deletes — the pattern is fix-forward re-schedule, never a breaking redefinition.",
+      "evidence": [
+        "migrations/235_offboarding_sweep_hardening.sql:115-143",
+        "migrations/233_pg_cron_maintenance_catalog.sql:95-102"
+      ]
+    },
+    "ref": "J-001"
+  },
+  "inputs": {
+    "answer": "app_outputs",
+    "why": "It reads the database directly, not through any contract: one scalar lookup of logic_variables for the retention window, then the lead_views rows past that horizon. logic_variables has no pipeline producer — it is admin-written — which is why producing_steps below is `none`, not a step list.",
+    "evidence": [
+      "migrations/235_offboarding_sweep_hardening.sql:136-139",
+      "docs/reference/data-lineage-map.md:646"
+    ],
+    "contract_ref": [],
+    "query_key": [],
+    "field_whitelist": [
+      "variable_value"
+    ],
+    "tables": [
+      {
+        "table": "logic_variables",
+        "columns": [
+          "variable_key",
+          "variable_value"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/00-architecture/115_scheduling.md §5",
+        "evidence": [
+          "migrations/235_offboarding_sweep_hardening.sql:138-139",
+          "docs/reference/data-lineage-map.md:646 — table present, no pipeline producer listed",
+          "docs/reference/logic-variables-registry.md:155"
+        ]
+      },
+      {
+        "table": "lead_views",
+        "columns": [
+          "viewed_at"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "UNRESEARCHED — see spec_refs; the Spec 70 citation in Spec 115 §5 does not resolve",
+        "evidence": [
+          "migrations/235_offboarding_sweep_hardening.sql:136-137",
+          "docs/reference/data-lineage-map.md — lead_views section carries no producing step",
+          "docs/specs/00-architecture/114_rls_policy_catalog.md:108 — lead_views is Class A"
+        ]
+      }
+    ]
+  },
+  "outputs": {
+    "answer": "UNRESEARCHED",
+    "why": "NOT ANSWERABLE from the closed set: outputs offers none | contract_only | optimistic_then_contract | device_only, all of which describe a client writing through an API. This job writes directly to the database with no contract in between. The substance is recorded in outputs.tables[]; the vocabulary gap is a Spec 128 §4 escalation (R-14: JOBs need job.schema.json). What it does: a single unqualified DELETE from public.lead_views of every row older than the configured window.",
+    "evidence": [
+      "migrations/235_offboarding_sweep_hardening.sql:136-139"
+    ],
+    "contract_ref": [],
+    "tables": [
+      {
+        "table": "lead_views",
+        "columns": [
+          "viewed_at"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "UNRESEARCHED — see spec_refs; the Spec 70 citation in Spec 115 §5 does not resolve",
+        "evidence": [
+          "migrations/235_offboarding_sweep_hardening.sql:136-137",
+          "docs/specs/00-architecture/114_rls_policy_catalog.md:108"
+        ]
+      }
+    ]
+  },
+  "state": {
+    "answer": "server_only",
+    "why": "It keeps nothing between runs — the cutoff is recomputed from NOW() and the logic variable on every execution, so two consecutive runs share no state.",
+    "evidence": [
+      "migrations/235_offboarding_sweep_hardening.sql:136-139"
+    ],
+    "fields": []
+  },
+  "staleness": {
+    "answer": "none",
+    "why": "It displays nothing; freshness applies to what a surface shows, and this job has no viewer.",
+    "evidence": [
+      "migrations/235_offboarding_sweep_hardening.sql:133-140"
+    ],
+    "offline": "none"
+  },
+  "guards": {
+    "session": {
+      "answer": "UNRESEARCHED",
+      "why": "NOT ANSWERABLE from the closed set: guards.session offers anon | authenticated | entitled | admin, all of which describe an end-user principal. This runs with no request and no user — as the pg_cron job owner through a SECURITY DEFINER function, or as a GitHub Actions runner holding repository secrets. Spec 128 §4 escalation (Spec 128 R-14 already anticipates JOBs getting their own job.schema.json); recorded rather than mis-answered.",
+      "evidence": [
+        "migrations/233_pg_cron_maintenance_catalog.sql:74-111",
+        "docs/specs/00-architecture/115_scheduling.md §5"
+      ]
+    },
+    "rls_class": {
+      "answer": "A",
+      "why": "lead_views is one of the ten Class A uid tables (auth.uid() = user_id); logic_variables falls to Class B by the default rule. The job bypasses both — pg_cron executes the command as the job owner, not as an end-user role.",
+      "evidence": [
+        "docs/specs/00-architecture/114_rls_policy_catalog.md:108",
+        "docs/specs/00-architecture/114_rls_policy_catalog.md:52-53",
+        "docs/specs/00-architecture/114_rls_policy_catalog.md:75"
+      ]
+    },
+    "disclosure": "none",
+    "entitlement": "none",
+    "flag": "none",
+    "permission": "none",
+    "rate_bucket": "none"
+  },
+  "render": {
+    "targets": [
+      "screen"
+    ],
+    "projection": "none",
+    "breakpoints": "none",
+    "export": "none"
+  },
+  "checks": [
+    {
+      "id": "job_lead_views_purge_no_ledger_row",
+      "kind": "ledger_row_present",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "Unlike its two hardened siblings, this job writes no pipeline_runs row — it is a bare DELETE in cron.schedule, and cron.job_run_details does not capture RAISE WARNING under default config, so a purge that silently stops deleting is invisible in the house observability surface."
+    },
+    {
+      "id": "job_lead_views_purge_idempotent_schedule",
+      "kind": "schema_declared",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "Both migrations unschedule by name before re-scheduling, so a replay cannot leave two jobs of the same name racing each other over the same rows."
+    },
+    {
+      "id": "job_lead_views_purge_single_row_tunable",
+      "kind": "contract_parse",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "why": "The LIMIT 1 added by 235 is the only thing standing between a duplicate lead_view_retention_days row and \"more than one row returned by a subquery\", which would kill the nightly purge silently — expected to be permanently unnecessary, and kept because its absence is unrecoverable."
+    }
+  ],
+  "invariants": [
+    {
+      "id": "lead_views_within_retention",
+      "sql": "SELECT count(*) FROM public.lead_views WHERE viewed_at < NOW() - make_interval(days => (SELECT COALESCE(variable_value::int, 90) FROM public.logic_variables WHERE variable_key = 'lead_view_retention_days' LIMIT 1))",
+      "severity": "FAIL",
+      "why": "The whole point of the job: after it runs, no lead_views row may be older than the configured window. A non-zero count means the schedule is not firing."
+    }
+  ],
+  "plausibility": "none",
+  "states": [
+    {
+      "name": "hit",
+      "golden": "none"
+    },
+    {
+      "name": "empty",
+      "golden": "none"
+    },
+    {
+      "name": "error",
+      "golden": "none"
+    }
+  ],
+  "errors": {
+    "answer": "none",
+    "why": "No error handling at all: the command is a bare DELETE with no exception arm and no failure row — a throw aborts the statement and leaves only a cron.job_run_details entry nobody watches.",
+    "evidence": [
+      "migrations/235_offboarding_sweep_hardening.sql:136-139"
+    ],
+    "classes": [],
+    "no_retry": []
+  },
+  "emits": {
+    "answer": "none",
+    "why": "Nothing durable. This is the one job in the catalog that writes no pipeline_runs row: 235 added one to offboarding_sweep_30day and 237 gave the prune one on success AND failure, but the purge was left as a bare DELETE.",
+    "evidence": [
+      "migrations/235_offboarding_sweep_hardening.sql:136-139",
+      "migrations/235_offboarding_sweep_hardening.sql:87-103",
+      "migrations/237_scrape_outcome_prune.sql:97-109"
+    ],
+    "analytics": [],
+    "ledger_events": [],
+    "breadcrumbs": []
+  },
+  "offers": {
+    "answer": "none",
+    "why": "A maintenance job renders no sponsored placement.",
+    "evidence": [
+      "migrations/235_offboarding_sweep_hardening.sql:136-139"
+    ]
+  },
+  "metering": {
+    "answer": "none",
+    "why": "It writes no usage_events row; deleting expired history is housekeeping, not a billable unit.",
+    "evidence": [
+      "migrations/235_offboarding_sweep_hardening.sql:136-139"
+    ]
+  },
+  "config": {
+    "answer": "logic_variables",
+    "why": "Its one tunable is a registered logic variable read at execution time, so an operator can change the retention window without a migration.",
+    "evidence": [
+      "docs/reference/logic-variables-registry.md:155",
+      "migrations/235_offboarding_sweep_hardening.sql:138-139"
+    ],
+    "logic_variables": [
+      {
+        "name": "lead_view_retention_days",
+        "min": 7,
+        "max": 365,
+        "on_invalid": "default",
+        "why": "COALESCE(variable_value::int, 90) — a missing or unreadable row falls back to the PIPEDA 90-day default rather than deleting nothing or deleting everything."
+      }
+    ],
+    "retired": [
+      "scripts/purge-lead-views.js — the retention half of the retired script, deleted at P3-F6 (ADR-007); it read this same variable"
+    ]
+  },
+  "sharing": {
+    "answer": "none",
+    "why": "It renders no contract. The variable it reads is shared, but a logic variable is configuration, not a contract.",
+    "evidence": [
+      "migrations/235_offboarding_sweep_hardening.sql:136-139"
+    ],
+    "surfaces": []
+  },
+  "a11y": {
+    "touch_target_min_px": "UNRESEARCHED",
+    "labels": "none",
+    "dark_mode": "none",
+    "reduced_motion": "none",
+    "i18n": "none",
+    "safe_area": "none"
+  },
+  "deviations": "none",
+  "limitations": [
+    {
+      "what": "A run that deletes nothing is indistinguishable from a run that never happened.",
+      "measured": "migrations/235_offboarding_sweep_hardening.sql:136-139 — a bare DELETE with no pipeline_runs insert; the only trace is cron.job_run_details, which 233:16-18 and 235:87-91 both record as not capturing RAISE WARNING under default config.",
+      "check_id": "job_lead_views_purge_no_ledger_row"
+    },
+    {
+      "what": "It is not scheduled at all on instances without pg_cron.",
+      "measured": "migrations/233_pg_cron_maintenance_catalog.sql:78-81 and migrations/235_offboarding_sweep_hardening.sql:122-125 — a pg_extension guard with a NOTICE-skip; Docker/CI postgis images therefore run no retention purge, by design.",
+      "check_id": "job_lead_views_purge_idempotent_schedule"
+    }
+  ],
+  "interpretation": "none",
+  "notes": "Re-scheduled unchanged-in-time by migration 235 (same `0 9 * * *`); 235's only change to the command is a defensive `LIMIT 1` on the logic_variables subquery so a duplicate `lead_view_retention_days` row cannot make the nightly purge throw. Reads the tunable via `variable_key = 'lead_view_retention_days'` with `COALESCE(variable_value::int, 90)`. MEASURED 2026-09-15: this is the only job in the pg_cron catalog with NO durable outcome record. Migration 235 added a pipeline_runs summary row to offboarding_sweep_30day for exactly the reason stated at 235:87-91 (cron.job_run_details does not capture RAISE WARNING under default config) and 237 gave the prune one on both success and failure — the purge was left as a bare DELETE and still is. guards.session and outputs.answer are UNRESEARCHED because the SURFACE vocabulary has no value for \"no principal\" or \"writes straight to the database\"; both are Spec 128 §4 escalations, not unmeasured facts. render.targets still reads [\"screen\"] because the schema requires at least one target from screen|pdf|csv|email and a job renders none — the same gap in a third place.",
+  "x-draft": {
+    "shard": "jobs",
+    "files": [
+      "migrations/233_pg_cron_maintenance_catalog.sql",
+      "migrations/235_offboarding_sweep_hardening.sql"
+    ],
+    "cron": "0 9 * * *",
+    "guarded_by": "pg_extension guard with a NOTICE-skip, measured in both migrations (233:78-81, 235:122-125); each re-schedule first unschedules by name from cron.job, making replay idempotent"
+  },
+  "programme": {
+    "scope": "estate_other",
+    "phase": "not_scheduled",
+    "why": "Lead generation — the other product. Spec 100 §1 states the parcel tool is \"not coupled to the Lead Feed, Flight Center, or LeadDetail\"; inventoried only.",
+    "feature": "F93",
+    "build_order": 4204,
+    "leakage": "UNRESEARCHED",
+    "product_questions": "UNRESEARCHED",
+    "review": {
+      "status": "unreviewed"
+    }
+  }
+}

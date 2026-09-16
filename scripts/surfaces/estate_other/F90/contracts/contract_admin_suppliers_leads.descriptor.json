@@ -1,0 +1,510 @@
+{
+  "kind": "CONTRACT",
+  "status": "exists",
+  "docs": {
+    "purpose": "Serves a live preview of the sales leads — from building permits and committee-of-adjustment applications — that a specific supplier account would see, based on that supplier's registered trade categories, so an admin can check or demo what a given supplier's feed looks like.",
+    "data_story": "It reads 5 tables — `suppliers`, `supplier_trades`, `trades`, `lead_trades` and `trade_forecasts` and writes nothing. Its response is an explicit pick-by-name projection of 12 fields, so a column added to a table upstream does not leak into the client by accident. **Nothing in this repository calls it.** That is the state this registry exists to make visible, not a claim that it is dead — a caller could be a bookmark, an external system, or a path built from variables.",
+    "under_126": "Becomes a **CONTRACT descriptor** of archetype `QUERY`. It declares its `database.reads[]` with named columns, its response projection as an explicit whitelist, its auth class, its rate bucket and its staleness — and `outputs.writes` is forced to `\"none\"`. Its `consumers[]` is the field that matters most here: today it is empty, and the orphan panel renders that as a red row rather than leaving it to be discovered years later."
+  },
+  "evidence": {
+    "files": [
+      "src/app/api/admin/suppliers/leads/route.ts:1"
+    ],
+    "contracts": [
+      "src/app/api/admin/suppliers/leads/route.ts:32 (GET export)",
+      "src/lib/api/with-api-envelope.ts:27-52"
+    ],
+    "tables": [
+      "src/lib/admin/supplier-leads.ts:88",
+      "src/lib/admin/supplier-leads.ts:61",
+      "src/lib/admin/supplier-leads.ts:63",
+      "src/lib/admin/supplier-leads.ts:66",
+      "src/lib/admin/supplier-leads.ts:92-94",
+      "src/lib/admin/supplier-leads.ts:53",
+      "src/lib/admin/supplier-leads.ts:62",
+      "src/lib/admin/supplier-leads.ts:91-93",
+      "src/lib/admin/supplier-leads.ts:51-56",
+      "src/lib/admin/supplier-leads.ts:71",
+      "src/lib/admin/supplier-leads.ts:74",
+      "src/lib/admin/supplier-leads.ts:76",
+      "src/lib/admin/supplier-leads.ts:57-60",
+      "src/lib/admin/supplier-leads.ts:64-65"
+    ],
+    "gate": [
+      "src/lib/auth/route-guard.ts — admin prefix — classifyRoute matches pathname.startsWith('/api/admin/')",
+      "src/lib/auth/route-guard.ts:150-201 — classifyRoute executed 2026-09-15 with the concrete path → \"admin\"",
+      "in-handler: verifyAdminAuth at src/app/api/admin/suppliers/leads/route.ts:34 — first line of the handler"
+    ],
+    "states": [
+      "hit: src/app/api/admin/suppliers/leads/route.ts:70",
+      "empty: src/lib/admin/supplier-leads.ts:119 with :98 — a supplier that EXISTS but has no supplier_trades rows returns trades: [] and leads: [] at 200",
+      "miss: src/app/api/admin/suppliers/leads/route.ts:58-59 with src/lib/admin/supplier-leads.ts:89 — unknown supplier id -> 404",
+      "unauthorized: src/app/api/admin/suppliers/leads/route.ts:35-39",
+      "partial: src/lib/admin/supplier-leads.ts:64-65 — the LEFT JOIN on trade_forecasts means predicted_start / target_window / urgency / opportunity_score come back null for leads with no forecast row, served at 200 alongside fully-populated rows",
+      "error: src/app/api/admin/suppliers/leads/route.ts:76-77"
+    ],
+    "emits": [
+      "src/app/api/admin/suppliers/leads/route.ts — read in full; no Sentry breadcrumb, no analytics capture and no ledger INSERT"
+    ]
+  },
+  "identity": {
+    "id": "contract_admin_suppliers_leads",
+    "route": "/api/admin/suppliers/leads",
+    "archetype": "QUERY",
+    "platforms": [
+      "web"
+    ],
+    "owns": {
+      "components": []
+    },
+    "owner": "Backend/Pipeline (CLAUDE.md §Domain Rules: `src/app/api/`)",
+    "spec": "docs/specs/01-pipeline/87_supplier_audience.md",
+    "spec_refs": [
+      "docs/specs/01-pipeline/87_supplier_audience.md §v1.3 and docs/specs/02-web-admin/33_web_admin_engineering_protocol.md §5 + §13 — src/app/api/admin/suppliers/leads/route.ts:1-2"
+    ],
+    "spec_version": "0-draft",
+    "versioning": {
+      "answer": "none",
+      "why": "No call site anywhere in src/** or mobile/** (verified 2026-09-15 by an exact-path sweep that strips comment lines), so no consumer holds a compatibility promise to break.",
+      "evidence": [
+        "src/app/api/admin/suppliers/leads/route.ts — no caller",
+        "src/lib/auth/route-guard.ts:150-201"
+      ]
+    },
+    "ref": "C-046"
+  },
+  "inputs": {
+    "answer": "app_outputs",
+    "why": "It reads 7 table(s) directly; 2 of them are materialised by named pipeline steps (classify_coa_trades, compute_opportunity_scores), so its inputs are the pipeline's outputs rather than another contract.",
+    "evidence": [
+      "src/lib/auth/verify-admin.ts:158",
+      "src/lib/admin/backup-codes.ts:116-119 — reachable only when ADMIN_MFA_ENFORCED='true' and the caller presents x-admin-backup-code",
+      "migrations/231_admin_backup_codes.sql:18",
+      "docs/reference/data-lineage-map.md — no `## `admin_backup_codes`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)",
+      "src/lib/admin/supplier-leads.ts:51-56",
+      "src/lib/admin/supplier-leads.ts:63",
+      "src/lib/admin/supplier-leads.ts:71",
+      "src/lib/admin/supplier-leads.ts:74",
+      "src/lib/admin/supplier-leads.ts:76",
+      "scripts/classify-coa-trades.js"
+    ],
+    "contract_ref": [],
+    "query_key": [],
+    "field_whitelist": [
+      "supplier_id",
+      "trades",
+      "lead_id",
+      "lead_type",
+      "trade_slug",
+      "tier",
+      "confidence",
+      "attachment_basis",
+      "predicted_start",
+      "target_window",
+      "urgency",
+      "opportunity_score"
+    ],
+    "tables": [
+      {
+        "table": "admin_backup_codes",
+        "columns": [
+          "id",
+          "code_hash",
+          "code_salt",
+          "user_id",
+          "used_at"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/00-architecture/13_authentication.md",
+        "evidence": [
+          "src/lib/auth/verify-admin.ts:158",
+          "src/lib/admin/backup-codes.ts:116-119 — reachable only when ADMIN_MFA_ENFORCED='true' and the caller presents x-admin-backup-code",
+          "migrations/231_admin_backup_codes.sql:18",
+          "docs/reference/data-lineage-map.md — no `## `admin_backup_codes`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)"
+        ]
+      },
+      {
+        "table": "lead_trades",
+        "columns": [
+          "lead_id",
+          "trade_id",
+          "is_active",
+          "tier",
+          "confidence",
+          "attachment_basis",
+          "classified_at"
+        ],
+        "producing_steps": [
+          "classify_coa_trades"
+        ],
+        "chain_position": "coa[6]",
+        "owner_spec": "docs/specs/01-pipeline/42_chain_coa.md",
+        "evidence": [
+          "src/lib/admin/supplier-leads.ts:51-56",
+          "src/lib/admin/supplier-leads.ts:63",
+          "src/lib/admin/supplier-leads.ts:71",
+          "src/lib/admin/supplier-leads.ts:74",
+          "src/lib/admin/supplier-leads.ts:76",
+          "scripts/classify-coa-trades.js",
+          "docs/reference/data-lineage-map.md:584",
+          "scripts/manifest.json#chains",
+          "docs/reference/data-lineage-map.md"
+        ]
+      },
+      {
+        "table": "profiles",
+        "columns": [
+          "id",
+          "is_admin"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/00-architecture/114_rls_policy_catalog.md",
+        "evidence": [
+          "src/lib/auth/verify-admin.ts:117-120",
+          "migrations/226_profiles_admin_bootstrap.sql:25",
+          "docs/reference/data-lineage-map.md — no `## `profiles`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)"
+        ]
+      },
+      {
+        "table": "supplier_trades",
+        "columns": [
+          "supplier_id",
+          "trade_id"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/01-pipeline/87_supplier_audience.md",
+        "evidence": [
+          "src/lib/admin/supplier-leads.ts:61",
+          "src/lib/admin/supplier-leads.ts:63",
+          "src/lib/admin/supplier-leads.ts:66",
+          "src/lib/admin/supplier-leads.ts:92-94",
+          "migrations/213_supplier_trades.sql:21",
+          "docs/reference/data-lineage-map.md — no `## `supplier_trades`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)"
+        ]
+      },
+      {
+        "table": "suppliers",
+        "columns": [
+          "id"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/01-pipeline/87_supplier_audience.md",
+        "evidence": [
+          "src/lib/admin/supplier-leads.ts:88",
+          "migrations/183_suppliers_schema.sql:12",
+          "docs/reference/data-lineage-map.md — no `## `suppliers`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)"
+        ]
+      },
+      {
+        "table": "trade_forecasts",
+        "columns": [
+          "lead_id",
+          "trade_slug",
+          "predicted_start",
+          "target_window",
+          "urgency",
+          "opportunity_score"
+        ],
+        "producing_steps": [
+          "compute_opportunity_scores",
+          "compute_trade_forecasts"
+        ],
+        "chain_position": "permits[27] · permits[26]",
+        "owner_spec": "docs/specs/01-pipeline/41_chain_permits.md",
+        "evidence": [
+          "src/lib/admin/supplier-leads.ts:57-60",
+          "src/lib/admin/supplier-leads.ts:64-65",
+          "src/lib/admin/supplier-leads.ts:76",
+          "scripts/compute-opportunity-scores.js",
+          "docs/reference/data-lineage-map.md:1313",
+          "scripts/manifest.json#chains",
+          "docs/reference/data-lineage-map.md"
+        ]
+      },
+      {
+        "table": "trades",
+        "columns": [
+          "id",
+          "slug"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/01-pipeline/84_lifecycle_phase_engine.md",
+        "evidence": [
+          "src/lib/admin/supplier-leads.ts:53",
+          "src/lib/admin/supplier-leads.ts:62",
+          "src/lib/admin/supplier-leads.ts:91-93",
+          "docs/specs/00-architecture/00_system_map.md:71",
+          "docs/reference/data-lineage-map.md:1355 — table present, no pipeline producer listed",
+          "docs/reference/data-lineage-map.md — no `## `trades`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)"
+        ]
+      }
+    ]
+  },
+  "outputs": {
+    "answer": "none",
+    "why": "A QUERY contract writes nothing; the handler issues no INSERT/UPDATE/DELETE anywhere in the file or in the libs it calls.",
+    "evidence": [
+      "src/app/api/admin/suppliers/leads/route.ts — read in full 2026-09-15; no INSERT/UPDATE/DELETE reached"
+    ],
+    "contract_ref": [],
+    "tables": []
+  },
+  "state": {
+    "answer": "server_only",
+    "why": "A CONTRACT holds no client state: every value is resolved per request on the server and nothing is cached in a client store by the route itself.",
+    "evidence": [
+      "src/app/api/admin/suppliers/leads/route.ts:32 (GET export)",
+      "src/lib/api/with-api-envelope.ts:27-52"
+    ],
+    "fields": []
+  },
+  "staleness": {
+    "answer": "live",
+    "why": "Every read runs against the base tables on each request — there is no cache layer between the handler and the database.",
+    "evidence": [
+      "src/lib/auth/verify-admin.ts:158",
+      "src/lib/admin/backup-codes.ts:116-119 — reachable only when ADMIN_MFA_ENFORCED='true' and the caller presents x-admin-backup-code",
+      "migrations/231_admin_backup_codes.sql:18",
+      "docs/reference/data-lineage-map.md — no `## `admin_backup_codes`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)"
+    ],
+    "offline": "none"
+  },
+  "guards": {
+    "session": {
+      "answer": "admin",
+      "why": "classifyRoute(\"/api/admin/suppliers/leads\") returns \"admin\" (executed 2026-09-15); the handler re-verifies the caller in-process.",
+      "evidence": [
+        "src/lib/auth/route-guard.ts:150-201 — classifyRoute executed 2026-09-15 with the concrete path",
+        "verifyAdminAuth at src/app/api/admin/suppliers/leads/route.ts:34 — first line of the handler"
+      ]
+    },
+    "rls_class": {
+      "answer": "C",
+      "why": "It reaches the profiles table (self-read/self-update minus the escalation flag).",
+      "evidence": [
+        "migrations/227_rls_class_b_default_deny.sql:88",
+        "migrations/227_rls_class_b_default_deny.sql:87",
+        "migrations/227_rls_class_b_default_deny.sql:97",
+        "migrations/227_rls_class_b_default_deny.sql:58",
+        "migrations/227_rls_class_b_default_deny.sql:92",
+        "migrations/226_profiles_admin_bootstrap.sql:48",
+        "docs/specs/00-architecture/114_rls_policy_catalog.md §2"
+      ]
+    },
+    "disclosure": "none",
+    "entitlement": "none",
+    "flag": "none",
+    "permission": "none",
+    "rate_bucket": "none"
+  },
+  "render": {
+    "targets": [
+      "screen"
+    ],
+    "projection": "none",
+    "breakpoints": "none",
+    "export": "none"
+  },
+  "checks": [
+    {
+      "id": "contract_admin_suppliers_leads__auth_class_parity",
+      "kind": "auth_class_parity",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "why": "guards.session must equal classifyRoute(\"/api/admin/suppliers/leads\"), executed 2026-09-15 → \"admin\" plus the in-handler guard (verifyAdminAuth at src/app/api/admin/suppliers/leads/route.ts:34 — first line of the handler). No test file in src/tests/** imports this route — the parity is unlocked."
+    },
+    {
+      "id": "contract_admin_suppliers_leads__error_envelope",
+      "kind": "error_state",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "Every declared error class returns the { data, error, meta } envelope of docs/specs/00_engineering_standards.md §4.4; expected to stay at zero deviations."
+    },
+    {
+      "id": "contract_admin_suppliers_leads__contract_parse",
+      "kind": "contract_parse",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "why": "Request input is parsed by SupplierLeadsQuerySchema at src/app/api/admin/suppliers/leads/route.ts:43-47 (safeParse), rejected at :48 before any query runs; a payload that fails the schema is refused, never coerced."
+    },
+    {
+      "id": "contract_admin_suppliers_leads__field_whitelist_parity",
+      "kind": "field_whitelist_parity",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "The response is an explicit pick-by-name of 3 field(s) (src/lib/admin/supplier-leads.ts:50-60 (10 explicitly named SELECT expressions), src/lib/admin/supplier-leads.ts:119 (result object), src/app/api/admin/suppliers/leads/route.ts:70-75 (ok(result, meta) — meta carries count, limit, offset, coa_included)), so a column added upstream cannot leak; this check set-equals the projection to inputs.field_whitelist."
+    },
+    {
+      "id": "contract_admin_suppliers_leads__schema_declared",
+      "kind": "schema_declared",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "Every table and column declared in lineage.reads[]/writes[] must exist in src/lib/db/generated/schema.ts (drizzle-kit introspect of the live database); the registry generator checks this both directions."
+    }
+  ],
+  "invariants": "none",
+  "plausibility": "none",
+  "states": [
+    {
+      "name": "hit",
+      "golden": "none"
+    },
+    {
+      "name": "empty",
+      "golden": "none"
+    },
+    {
+      "name": "miss",
+      "golden": "none"
+    },
+    {
+      "name": "unauthorized",
+      "golden": "none"
+    },
+    {
+      "name": "partial",
+      "golden": "none"
+    },
+    {
+      "name": "error",
+      "golden": "none"
+    }
+  ],
+  "errors": {
+    "answer": "envelope",
+    "why": "Success and failure both arrive in the { data, error, meta } envelope of docs/specs/00_engineering_standards.md §4.4; withApiEnvelope is the outermost wrapper and converts any uncaught throw into the same shape.",
+    "evidence": [
+      "src/lib/api/with-api-envelope.ts:27-52",
+      "src/app/api/admin/suppliers/leads/route.ts:70-75",
+      "src/features/leads/api/envelope.ts:51",
+      "src/app/api/admin/suppliers/leads/route.ts:37",
+      "src/features/leads/api/envelope.ts:82",
+      "src/app/api/admin/suppliers/leads/route.ts:38 (401)",
+      "src/app/api/admin/suppliers/leads/route.ts:48 (400)",
+      "src/app/api/admin/suppliers/leads/route.ts:59 (404)",
+      "src/app/api/admin/suppliers/leads/route.ts:77 (500)"
+    ],
+    "classes": [
+      {
+        "class": "401",
+        "ui": "{data:null,error:{code,message},meta:null} — src/app/api/admin/suppliers/leads/route.ts:38 (code UNAUTHORIZED)"
+      },
+      {
+        "class": "400",
+        "ui": "{data:null,error:{code,message,details},meta:null} — src/app/api/admin/suppliers/leads/route.ts:48 (code VALIDATION_FAILED (via badRequestZod, src/features/leads/api/error-mapping.ts:43))"
+      },
+      {
+        "class": "500",
+        "ui": "{data:null,error:{code,message},meta:null} — src/app/api/admin/suppliers/leads/route.ts:77 (code INTERNAL_ERROR (via internalError, src/features/leads/api/error-mapping.ts:75))"
+      }
+    ]
+  },
+  "emits": {
+    "answer": "none",
+    "why": "Nothing it does is currently countable: src/app/api/admin/suppliers/leads/route.ts was read in full and contains no Sentry breadcrumb, no analytics capture and no ledger INSERT.",
+    "evidence": [
+      "src/app/api/admin/suppliers/leads/route.ts — read in full; no Sentry breadcrumb, no analytics capture and no ledger INSERT"
+    ],
+    "analytics": [],
+    "ledger_events": [],
+    "breadcrumbs": []
+  },
+  "offers": {
+    "answer": "none",
+    "why": "It renders no sponsored placement: the offers and advertisers tables Spec 126 §2 specifies do not exist in migrations/ and nothing in this handler reads placement inventory.",
+    "evidence": [
+      "migrations/ — no CREATE TABLE offers / advertisers (grep 2026-09-15)",
+      "src/app/api/admin/suppliers/leads/route.ts — read in full; no placement read"
+    ]
+  },
+  "metering": {
+    "answer": "none",
+    "why": "Nothing here is counted: no usage_events row (the table does not exist in the introspected schema) and no quota counter is written by this handler.",
+    "evidence": [
+      "src/app/api/admin/suppliers/leads/route.ts — read in full 2026-09-15",
+      "src/lib/db/generated/schema.ts — no usage_events table"
+    ]
+  },
+  "config": {
+    "answer": "none",
+    "why": "It consumes no tunable: no logic_variables read and no env-var-driven threshold in the handler or the libs it calls.",
+    "evidence": [
+      "src/app/api/admin/suppliers/leads/route.ts — read in full 2026-09-15; no loadMarketplaceConfigs / logic_variables read"
+    ],
+    "logic_variables": [],
+    "retired": []
+  },
+  "sharing": {
+    "answer": "none",
+    "why": "ORPHAN: an exact-path sweep of src/** and mobile/** on 2026-09-15 (comment lines stripped) found no call site. That is a measured absence, not proof the endpoint is dead — a caller could be a bookmark or an external system.",
+    "evidence": [
+      "src/app/api/admin/suppliers/leads/route.ts — swept src/** and mobile/** for the exact path on 2026-09-15; zero call sites outside src/tests/**"
+    ],
+    "surfaces": []
+  },
+  "a11y": {
+    "touch_target_min_px": "UNRESEARCHED",
+    "labels": "none",
+    "dark_mode": "none",
+    "reduced_motion": "none",
+    "i18n": "none",
+    "safe_area": "none"
+  },
+  "deviations": "none",
+  "limitations": [
+    {
+      "what": "a11y.touch_target_min_px has no legal answer for a CONTRACT",
+      "measured": "The schema allows only UNRESEARCHED or an integer >= 44; a JSON endpoint has no touch target and the vocabulary has no \"n/a\". Left UNRESEARCHED and escalated per Spec 128 §4 rather than invented.",
+      "check_id": "contract_admin_suppliers_leads__auth_class_parity"
+    },
+    {
+      "what": "error classes outside the closed set are not representable: 404",
+      "measured": "The handler returns 404 at src/app/api/admin/suppliers/leads/route.ts:59; errors.classes[] admits only 400/401/403/429/500/schema_drift/offline.",
+      "check_id": "contract_admin_suppliers_leads__error_envelope"
+    },
+    {
+      "what": "no consumer, so no fan-out edge",
+      "measured": "The exact-path sweep of src/** and mobile/** (comment lines stripped) returned zero call sites on 2026-09-15.",
+      "check_id": "contract_admin_suppliers_leads__auth_class_parity"
+    }
+  ],
+  "interpretation": "none",
+  "notes": "Deliberately an ADMIN-facing preview (verifyAdminAuth plus an explicit supplier_id param), not a supplier-authenticated endpoint — the header calls out that a true external supplier login is future scope. CoA-type leads are included only when the LEAD_FEED_DISABLE_COA env var is explicitly '0' (default keeps them off), mirroring the main lead feed's killswitch. No in-repo caller found. | MEASURED 2026-09-15: FINDINGS. (1) BEST-GUARDED of my six: verifyAdminAuth is genuinely the first line (:34), input is fully Zod-validated (types.ts:9-15), pagination is clamped, and the SQL is parameterised end-to-end (src/lib/admin/supplier-leads.ts:112-117). (2) CENSUS DISAGREEMENT: census_reads [suppliers, supplier_trades, trades, lead_trades, trade_forecasts] are ALL confirmed, but the census MISSES `profiles`, read on every request through verifyAdminAuth (src/lib/auth/verify-admin.ts:117-120), and the conditional `admin_backup_codes` read behind the MFA gate. census_writes [] is confirmed — I looked, this route writes nothing. (3) TRAP CHECK: `lead_type` at src/lib/admin/supplier-leads.ts:52 is a CASE expression alias, not a table; `st`, `t`, `lt`, `tf` (:61-65) are aliases for supplier_trades, trades, lead_trades and trade_forecasts respectively. (4) Two separate round-trips to establish existence then fetch (src/lib/admin/supplier-leads.ts:88 then :90, then :112) — three queries where the existence check could be folded in; not a correctness bug. (5) The 401 at :36-39 bypasses the err() helper (see envelope.deviations). (6) The `(lt.tier <= 1 OR lt.confidence > 0.55 OR lt.attachment_basis = 'inference')` predicate at src/lib/admin/supplier-leads.ts:71 embeds the literal 0.55 in SQL; the file header (:11-16) explains its history and FORBIDS raising inference-row confidence past it. That is a comment; the enforced code is the predicate at :71 — the 0.55 itself is a magic number in SQL, not a logic variable. (7) No SELECT *. | Caching: none observed — no Cache-Control, revalidate, dynamic or in-process cache in the route or in src/lib/admin/supplier-leads.ts. | Pagination: limit/offset WITH a clamp: src/app/api/admin/suppliers/leads/types.ts:13 caps limit at 200 (default 50) and :14 forces offset >= 0 (default 0); applied as `LIMIT $3 OFFSET $4` at src/lib/admin/supplier-leads.ts:77 and bound at :112-117. meta.count/limit/offset echoed at route :70-75. No total-count query, so a client cannot tell a last page from a full one. | Other guards / classification: LEAD_FEED_DISABLE_COA env killswitch at :54 — `!== '0'` means CoA leads are OFF unless the env var is exactly the string '0'; the value is passed as $2 into the SQL at src/lib/admin/supplier-leads.ts:74. No CSRF check applies (GET is not in MUTATING_METHODS, src/lib/auth/verify-admin.ts:45). MFA aal2 gate applies via src/lib/auth/verify-admin.ts:143-173 only when ADMIN_MFA_ENFORCED='true'. | ORPHAN — zero call sites in src/** or mobile/** (sweep 2026-09-15, comment lines stripped). | No test file under src/tests/** imports this route.",
+  "x-draft": {
+    "shard": "contracts",
+    "files": [
+      "src/app/api/admin/suppliers/leads/route.ts"
+    ],
+    "loc": 79,
+    "methods": [
+      "GET"
+    ],
+    "consumers": [],
+    "writes_audit_row": "n/a",
+    "consumers_verified": [],
+    "auth_class_executed": "admin",
+    "locking_tests": []
+  },
+  "programme": {
+    "scope": "estate_other",
+    "phase": "not_scheduled",
+    "why": "Lead generation — the other product. Spec 100 §1 states the parcel tool is \"not coupled to the Lead Feed, Flight Center, or LeadDetail\"; inventoried only.",
+    "feature": "F90",
+    "build_order": 4172,
+    "leakage": "UNRESEARCHED",
+    "product_questions": "UNRESEARCHED",
+    "review": {
+      "status": "unreviewed"
+    }
+  }
+}

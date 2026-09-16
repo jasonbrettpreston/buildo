@@ -1,0 +1,523 @@
+{
+  "kind": "CONTRACT",
+  "status": "exists",
+  "docs": {
+    "purpose": "Lets an admin view every tunable business setting the pricing and forecasting engine uses — cost rates, trade timing windows, scope allocation percentages — and save edits to them, which the pipeline picks up on its next run.",
+    "data_story": "It reads 4 tables — `logic_variables`, `trade_configurations`, `trade_sqft_rates` and `scope_intensity_matrix` and writes `logic_variables`, `trade_configurations`, `trade_sqft_rates` and `scope_intensity_matrix`. Its response is an explicit pick-by-name projection of 4 fields, so a column added to a table upstream does not leak into the client by accident. It is called from 2 places: `src/features/admin-controls/api/useGetConfigs.ts`, `src/features/admin-controls/api/useUpdateConfigs.ts`. It mutates admin state and writes **no `admin_audit_log` row** — one of the nine measured gaps Phase 0 closes.",
+    "under_126": "Becomes a **CONTRACT descriptor** of archetype `MUTATION`. It declares `database.writes[]` with a `write_discipline` per target (the Spec 122 vocabulary verbatim), its idempotency posture, its optimistic contract and its rollback. Its `consumers[]` becomes the edge list of the fan-out graph — the join nothing in this estate holds today."
+  },
+  "evidence": {
+    "files": [
+      "src/app/api/admin/control-panel/configs/route.ts:1"
+    ],
+    "contracts": [
+      "src/app/api/admin/control-panel/configs/route.ts:34 (GET export)",
+      "src/app/api/admin/control-panel/configs/route.ts:55 (PUT export)",
+      "src/lib/api/with-api-envelope.ts:27-52"
+    ],
+    "tables": [
+      "src/lib/admin/control-panel.ts:203-204",
+      "src/lib/admin/control-panel.ts:228-239",
+      "src/lib/admin/control-panel.ts:234-238",
+      "src/lib/admin/control-panel.ts:262-264",
+      "src/lib/admin/control-panel.ts:298-306",
+      "src/lib/admin/control-panel.ts:336-341",
+      "src/lib/admin/control-panel.ts:359-364",
+      "src/lib/admin/control-panel.ts:374-380",
+      "src/lib/db/generated/schema.ts — every table named here is present in the introspected drizzle schema"
+    ],
+    "gate": [
+      "src/lib/auth/route-guard.ts — admin prefix — classifyRoute matches pathname.startsWith('/api/admin/')",
+      "src/lib/auth/route-guard.ts:150-201 — classifyRoute executed 2026-09-15 with the concrete path → \"admin\"",
+      "no in-handler auth call in src/app/api/admin/control-panel/configs/route.ts — src/middleware.ts is the only gate"
+    ],
+    "states": [
+      "hit: src/app/api/admin/control-panel/configs/route.ts:37",
+      "error: src/app/api/admin/control-panel/configs/route.ts:43-46",
+      "schema_drift: src/app/api/admin/control-panel/configs/route.ts:63-72 — a payload that fails ConfigUpdatePayloadSchema is refused 400"
+    ],
+    "emits": [
+      "src/app/api/admin/control-panel/configs/route.ts — read in full; no Sentry breadcrumb, no analytics capture and no ledger INSERT"
+    ]
+  },
+  "identity": {
+    "id": "contract_admin_control_panel_configs",
+    "route": "/api/admin/control-panel/configs",
+    "archetype": "MUTATION",
+    "platforms": [
+      "web"
+    ],
+    "owns": {
+      "components": []
+    },
+    "owner": "Backend/Pipeline (CLAUDE.md §Domain Rules: `src/app/api/`)",
+    "spec": "docs/specs/02-web-admin/86_control_panel.md",
+    "spec_refs": [
+      "docs/specs/02-web-admin/86_control_panel.md §5 Phase 2 (src/app/api/admin/control-panel/configs/route.ts:6)"
+    ],
+    "spec_version": "0-draft",
+    "versioning": {
+      "answer": "breaking_allowed",
+      "why": "Every consumer is in src/** and ships in the same Next.js deploy as the route, so a breaking change is one commit.",
+      "evidence": [
+        "src/features/admin-controls/api/useGetConfigs.ts:12",
+        "src/features/admin-controls/api/useUpdateConfigs.ts:15"
+      ]
+    },
+    "ref": "C-004"
+  },
+  "inputs": {
+    "answer": "app_outputs",
+    "why": "It reads 4 table(s) directly; none is written by a pipeline step — they are written by API routes, jobs or migration seeds — but the input is still the database, not another contract.",
+    "evidence": [
+      "src/lib/admin/control-panel.ts:203-204",
+      "docs/specs/00-architecture/00_system_map.md:94",
+      "docs/reference/data-lineage-map.md:646 — table present, no pipeline producer listed",
+      "docs/reference/data-lineage-map.md — no `## `logic_variables`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)",
+      "src/lib/admin/control-panel.ts:262-264",
+      "migrations/096_surgical_valuation.sql:38",
+      "docs/reference/data-lineage-map.md:1235 — table present, no pipeline producer listed",
+      "docs/reference/data-lineage-map.md — no `## `scope_intensity_matrix`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)",
+      "src/lib/admin/control-panel.ts:228-239"
+    ],
+    "contract_ref": [],
+    "query_key": [],
+    "field_whitelist": [
+      "logicVariables",
+      "tradeConfigs",
+      "scopeMatrix",
+      "rows_updated"
+    ],
+    "tables": [
+      {
+        "table": "logic_variables",
+        "columns": [
+          "variable_key",
+          "variable_value",
+          "variable_value_json",
+          "description",
+          "updated_at"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/02-web-admin/86_control_panel.md",
+        "evidence": [
+          "src/lib/admin/control-panel.ts:203-204",
+          "docs/specs/00-architecture/00_system_map.md:94",
+          "docs/reference/data-lineage-map.md:646 — table present, no pipeline producer listed",
+          "docs/reference/data-lineage-map.md — no `## `logic_variables`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)"
+        ]
+      },
+      {
+        "table": "scope_intensity_matrix",
+        "columns": [
+          "permit_type",
+          "structure_type",
+          "gfa_allocation_percentage"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/product/future/83_lead_cost_model.md",
+        "evidence": [
+          "src/lib/admin/control-panel.ts:262-264",
+          "migrations/096_surgical_valuation.sql:38",
+          "docs/reference/data-lineage-map.md:1235 — table present, no pipeline producer listed",
+          "docs/reference/data-lineage-map.md — no `## `scope_intensity_matrix`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)"
+        ]
+      },
+      {
+        "table": "trade_configurations",
+        "columns": [
+          "trade_slug",
+          "bid_phase_cutoff",
+          "work_phase_target",
+          "imminent_window_days",
+          "allocation_pct",
+          "multiplier_bid",
+          "multiplier_work"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/02-web-admin/86_control_panel.md",
+        "evidence": [
+          "src/lib/admin/control-panel.ts:228-239",
+          "docs/specs/00-architecture/00_system_map.md:94",
+          "docs/reference/data-lineage-map.md:1302 — table present, no pipeline producer listed",
+          "docs/reference/data-lineage-map.md — no `## `trade_configurations`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)"
+        ]
+      },
+      {
+        "table": "trade_sqft_rates",
+        "columns": [
+          "base_rate_sqft",
+          "structure_complexity_factor",
+          "trade_slug"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/product/future/83_lead_cost_model.md",
+        "evidence": [
+          "src/lib/admin/control-panel.ts:234-238",
+          "migrations/096_surgical_valuation.sql:28",
+          "docs/reference/data-lineage-map.md:1347 — table present, no pipeline producer listed",
+          "docs/reference/data-lineage-map.md — no `## `trade_sqft_rates`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)"
+        ]
+      }
+    ]
+  },
+  "outputs": {
+    "answer": "contract_only",
+    "why": "This route IS the mutation contract: it writes 4 table(s) synchronously inside the request and returns the result — there is no optimistic client-side flip to reconcile.",
+    "evidence": [
+      "src/lib/admin/control-panel.ts:298-306",
+      "docs/specs/00-architecture/00_system_map.md:94",
+      "docs/reference/data-lineage-map.md:646 — table present, no pipeline producer listed",
+      "docs/reference/data-lineage-map.md — no `## `logic_variables`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)",
+      "src/lib/admin/control-panel.ts:374-380",
+      "migrations/096_surgical_valuation.sql:38",
+      "docs/reference/data-lineage-map.md:1235 — table present, no pipeline producer listed",
+      "docs/reference/data-lineage-map.md — no `## `scope_intensity_matrix`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)",
+      "src/lib/admin/control-panel.ts:336-341"
+    ],
+    "contract_ref": [],
+    "tables": [
+      {
+        "table": "logic_variables",
+        "columns": [
+          "variable_value",
+          "variable_value_json",
+          "updated_at"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/02-web-admin/86_control_panel.md",
+        "evidence": [
+          "src/lib/admin/control-panel.ts:298-306",
+          "docs/specs/00-architecture/00_system_map.md:94",
+          "docs/reference/data-lineage-map.md:646 — table present, no pipeline producer listed",
+          "docs/reference/data-lineage-map.md — no `## `logic_variables`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)"
+        ]
+      },
+      {
+        "table": "scope_intensity_matrix",
+        "columns": [
+          "permit_type",
+          "structure_type",
+          "gfa_allocation_percentage",
+          "updated_at"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/product/future/83_lead_cost_model.md",
+        "evidence": [
+          "src/lib/admin/control-panel.ts:374-380",
+          "migrations/096_surgical_valuation.sql:38",
+          "docs/reference/data-lineage-map.md:1235 — table present, no pipeline producer listed",
+          "docs/reference/data-lineage-map.md — no `## `scope_intensity_matrix`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)"
+        ]
+      },
+      {
+        "table": "trade_configurations",
+        "columns": [
+          "bid_phase_cutoff",
+          "work_phase_target",
+          "imminent_window_days",
+          "allocation_pct",
+          "multiplier_bid",
+          "multiplier_work",
+          "updated_at"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/02-web-admin/86_control_panel.md",
+        "evidence": [
+          "src/lib/admin/control-panel.ts:336-341",
+          "docs/specs/00-architecture/00_system_map.md:94",
+          "docs/reference/data-lineage-map.md:1302 — table present, no pipeline producer listed",
+          "docs/reference/data-lineage-map.md — no `## `trade_configurations`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)"
+        ]
+      },
+      {
+        "table": "trade_sqft_rates",
+        "columns": [
+          "base_rate_sqft",
+          "structure_complexity_factor",
+          "updated_at"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/product/future/83_lead_cost_model.md",
+        "evidence": [
+          "src/lib/admin/control-panel.ts:359-364",
+          "migrations/096_surgical_valuation.sql:28",
+          "docs/reference/data-lineage-map.md:1347 — table present, no pipeline producer listed",
+          "docs/reference/data-lineage-map.md — no `## `trade_sqft_rates`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)"
+        ]
+      }
+    ]
+  },
+  "state": {
+    "answer": "server_only",
+    "why": "A CONTRACT holds no client state: every value is resolved per request on the server and nothing is cached in a client store by the route itself.",
+    "evidence": [
+      "src/app/api/admin/control-panel/configs/route.ts:34 (GET export)",
+      "src/lib/api/with-api-envelope.ts:27-52"
+    ],
+    "fields": []
+  },
+  "staleness": {
+    "answer": "live",
+    "why": "Every read runs against the base tables on each request — there is no cache layer between the handler and the database.",
+    "evidence": [
+      "src/lib/admin/control-panel.ts:203-204",
+      "docs/specs/00-architecture/00_system_map.md:94",
+      "docs/reference/data-lineage-map.md:646 — table present, no pipeline producer listed",
+      "docs/reference/data-lineage-map.md — no `## `logic_variables`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)"
+    ],
+    "offline": "none"
+  },
+  "guards": {
+    "session": {
+      "answer": "admin",
+      "why": "classifyRoute(\"/api/admin/control-panel/configs\") returns \"admin\" (executed 2026-09-15); the handler adds no check of its own, so middleware is the only gate.",
+      "evidence": [
+        "src/lib/auth/route-guard.ts:150-201 — classifyRoute executed 2026-09-15 with the concrete path",
+        "src/middleware.ts — the only gate for this path (no in-handler auth call)"
+      ]
+    },
+    "rls_class": {
+      "answer": "B",
+      "why": "Every table it reaches has RLS enabled with zero policies — default deny for anon and authenticated; only the table owner and service_role get through.",
+      "evidence": [
+        "migrations/227_rls_class_b_default_deny.sql:61",
+        "migrations/227_rls_class_b_default_deny.sql:91",
+        "migrations/227_rls_class_b_default_deny.sql:95",
+        "migrations/227_rls_class_b_default_deny.sql:83",
+        "docs/specs/00-architecture/114_rls_policy_catalog.md §2"
+      ]
+    },
+    "disclosure": "none",
+    "entitlement": "none",
+    "flag": "none",
+    "permission": "none",
+    "rate_bucket": "none"
+  },
+  "render": {
+    "targets": [
+      "screen"
+    ],
+    "projection": "none",
+    "breakpoints": "none",
+    "export": "none"
+  },
+  "checks": [
+    {
+      "id": "contract_admin_control_panel_configs__auth_class_parity",
+      "kind": "auth_class_parity",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "why": "guards.session must equal classifyRoute(\"/api/admin/control-panel/configs\"), executed 2026-09-15 → \"admin\"; there is no in-handler check, so a middleware change silently re-classes this route. Locked by control-panel.api.infra.test.ts."
+    },
+    {
+      "id": "contract_admin_control_panel_configs__error_envelope",
+      "kind": "error_state",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "why": "MEASURED DEVIATION, permanently non-zero until re-projected: GET success omits `error` (:38); the 400 paths at :60 and :68-71 return {error:string} / {error,details} with no data/meta. The 500 paths ARE full envelopes (:44, :87). Retighten condition: the handler returns the envelope on every path."
+    },
+    {
+      "id": "contract_admin_control_panel_configs__contract_parse",
+      "kind": "contract_parse",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "why": "Request input is parsed by ConfigUpdatePayloadSchema at src/app/api/admin/control-panel/configs/route.ts:63 before any query runs; a payload that fails the schema is refused, never coerced."
+    },
+    {
+      "id": "contract_admin_control_panel_configs__field_whitelist_parity",
+      "kind": "field_whitelist_parity",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "The response is an explicit pick-by-name of 6 field(s) (src/app/api/admin/control-panel/configs/route.ts:37-40, src/app/api/admin/control-panel/configs/route.ts:76-83), so a column added upstream cannot leak; this check set-equals the projection to inputs.field_whitelist."
+    },
+    {
+      "id": "contract_admin_control_panel_configs__schema_declared",
+      "kind": "schema_declared",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "Every table and column declared in lineage.reads[]/writes[] must exist in src/lib/db/generated/schema.ts (drizzle-kit introspect of the live database); the registry generator checks this both directions."
+    },
+    {
+      "id": "contract_admin_control_panel_configs__audit_row_missing",
+      "kind": "ledger_row_present",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "why": "MEASURED GAP, permanently non-zero: this admin route mutates logic_variables, trade_configurations, trade_sqft_rates, scope_intensity_matrix and writes NO admin_audit_log row — one of the measured audit gaps. Retighten condition: the handler writes an admin_audit_log row per accepted mutation."
+    }
+  ],
+  "invariants": "none",
+  "plausibility": "none",
+  "states": [
+    {
+      "name": "hit",
+      "golden": "none"
+    },
+    {
+      "name": "error",
+      "golden": "none"
+    },
+    {
+      "name": "schema_drift",
+      "golden": "none"
+    }
+  ],
+  "errors": {
+    "answer": "envelope",
+    "why": "It returns a JSON error body, but NOT the standard envelope: GET success omits `error` (:38); the 400 paths at :60 and :68-71 return {error:string} / {error,details} with no data/meta. The 500 paths ARE full envelopes (:44, :87). \"envelope\" is the closest member of the closed menu; the deviation is recorded in deviations[].",
+    "evidence": [
+      "src/lib/api/with-api-envelope.ts:27-52",
+      "src/app/api/admin/control-panel/configs/route.ts:37-40",
+      "src/app/api/admin/control-panel/configs/route.ts:76-83",
+      "src/app/api/admin/control-panel/configs/route.ts:60 (400)",
+      "src/app/api/admin/control-panel/configs/route.ts:68 (400)",
+      "src/app/api/admin/control-panel/configs/route.ts:45 (500)",
+      "src/app/api/admin/control-panel/configs/route.ts:88 (500)"
+    ],
+    "classes": [
+      {
+        "class": "400",
+        "ui": "{error:string} — src/app/api/admin/control-panel/configs/route.ts:60"
+      },
+      {
+        "class": "500",
+        "ui": "{error:string,data:null,meta:null} — src/app/api/admin/control-panel/configs/route.ts:45"
+      }
+    ]
+  },
+  "emits": {
+    "answer": "none",
+    "why": "Nothing it does is currently countable: src/app/api/admin/control-panel/configs/route.ts was read in full and contains no Sentry breadcrumb, no analytics capture and no ledger INSERT.",
+    "evidence": [
+      "src/app/api/admin/control-panel/configs/route.ts — read in full; no Sentry breadcrumb, no analytics capture and no ledger INSERT"
+    ],
+    "analytics": [],
+    "ledger_events": [],
+    "breadcrumbs": []
+  },
+  "offers": {
+    "answer": "none",
+    "why": "It renders no sponsored placement: the offers and advertisers tables Spec 126 §2 specifies do not exist in migrations/ and nothing in this handler reads placement inventory.",
+    "evidence": [
+      "migrations/ — no CREATE TABLE offers / advertisers (grep 2026-09-15)",
+      "src/app/api/admin/control-panel/configs/route.ts — read in full; no placement read"
+    ]
+  },
+  "metering": {
+    "answer": "none",
+    "why": "Nothing here is counted: no usage_events row (the table does not exist in the introspected schema) and no quota counter is written by this handler.",
+    "evidence": [
+      "src/app/api/admin/control-panel/configs/route.ts — read in full 2026-09-15",
+      "src/lib/db/generated/schema.ts — no usage_events table"
+    ]
+  },
+  "config": {
+    "answer": "logic_variables",
+    "why": "It consumes 1 operator-editable tunable(s) from the logic_variables table rather than a literal in code.",
+    "evidence": [
+      "src/lib/admin/control-panel.ts:203-204",
+      "migrations/092_control_panel.sql:27"
+    ],
+    "logic_variables": [
+      {
+        "name": "every row of logic_variables (whole table, operator-editable)",
+        "on_invalid": "fail",
+        "why": "per-key, enforced by ConfigUpdatePayloadSchema"
+      }
+    ],
+    "retired": []
+  },
+  "sharing": {
+    "answer": "shared",
+    "why": "2 call sites render it, so the projection is shared and a field removed here breaks more than one surface.",
+    "evidence": [
+      "src/features/admin-controls/api/useGetConfigs.ts:12",
+      "src/features/admin-controls/api/useUpdateConfigs.ts:15"
+    ],
+    "surfaces": [
+      "src/features/admin-controls/api/useGetConfigs.ts:12",
+      "src/features/admin-controls/api/useUpdateConfigs.ts:15"
+    ]
+  },
+  "a11y": {
+    "touch_target_min_px": "UNRESEARCHED",
+    "labels": "none",
+    "dark_mode": "none",
+    "reduced_motion": "none",
+    "i18n": "none",
+    "safe_area": "none"
+  },
+  "deviations": [
+    {
+      "from": "docs/specs/00_engineering_standards.md §4.4 — all API routes return { data, error, meta }",
+      "why": "GET success omits `error` (:38); the 400 paths at :60 and :68-71 return {error:string} / {error,details} with no data/meta. The 500 paths ARE full envelopes (:44, :87).",
+      "adjudicated_by": "not adjudicated — measured 2026-09-15 by reading the handler",
+      "date": "2026-09-15"
+    },
+    {
+      "from": "src/lib/auth/verify-admin.ts — every admin route calls verifyAdminAuth",
+      "why": "This admin route makes no in-handler verifyAdminAuth call; src/middleware.ts is the only gate and its own comment says the check is presence-only.",
+      "adjudicated_by": "not adjudicated — measured 2026-09-15",
+      "date": "2026-09-15"
+    }
+  ],
+  "limitations": [
+    {
+      "what": "a11y.touch_target_min_px has no legal answer for a CONTRACT",
+      "measured": "The schema allows only UNRESEARCHED or an integer >= 44; a JSON endpoint has no touch target and the vocabulary has no \"n/a\". Left UNRESEARCHED and escalated per Spec 128 §4 rather than invented.",
+      "check_id": "contract_admin_control_panel_configs__auth_class_parity"
+    }
+  ],
+  "interpretation": "none",
+  "notes": "File comment states both GET and PUT are admin-gated by src/middleware.ts with no per-route check needed. PUT runs in one transaction with IS DISTINCT FROM guards on every UPDATE/UPSERT (WAL hygiene); scope_intensity_matrix uses INSERT ... ON CONFLICT. NO admin audit row for a mutating PUT. | MEASURED 2026-09-15: Every UPDATE carries an IS DISTINCT FROM guard (control-panel.ts:304-305, :332, :355, :380) so an unchanged payload writes no WAL — the idempotency posture is explicit and measured. PUT applies inside one transaction (applyConfigUpdate). | Caching: explicitly defeated — dynamic='force-dynamic' :21, fetchCache='force-no-store' :22, Cache-Control no-store headers :24-28 | Other guards / classification: middleware-only, asserted by the file's own header at :5 — the file imports no auth module | Locking tests: src/tests/control-panel.api.infra.test.ts.",
+  "x-draft": {
+    "shard": "contracts",
+    "files": [
+      "src/app/api/admin/control-panel/configs/route.ts"
+    ],
+    "loc": 91,
+    "methods": [
+      "GET",
+      "PUT"
+    ],
+    "consumers": [
+      "src/features/admin-controls/api/useGetConfigs.ts",
+      "src/features/admin-controls/api/useUpdateConfigs.ts"
+    ],
+    "writes_audit_row": false,
+    "consumers_verified": [
+      "src/features/admin-controls/api/useGetConfigs.ts:12",
+      "src/features/admin-controls/api/useUpdateConfigs.ts:15"
+    ],
+    "auth_class_executed": "admin",
+    "locking_tests": [
+      "src/tests/control-panel.api.infra.test.ts"
+    ]
+  },
+  "programme": {
+    "scope": "platform_shared",
+    "phase": "UNRESEARCHED",
+    "why": "Used by both products and owned by neither.",
+    "feature": "F16",
+    "build_order": 3162,
+    "leakage": "none",
+    "product_questions": "none",
+    "review": {
+      "status": "unreviewed"
+    }
+  }
+}

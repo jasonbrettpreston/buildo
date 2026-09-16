@@ -1,0 +1,273 @@
+{
+  "kind": "SURFACE",
+  "status": "exists",
+  "docs": {
+    "purpose": "The frosted stand-in cards shown to someone whose trial has ended and who dismissed the upgrade screen. It gives the feed and the saved-jobs board a populated shape so they do not look broken, while making clear the content is locked. No real job data is fetched or shown in this state.",
+    "data_story": "This surface reaches **no API contract at all** — every value it shows is local, passed in as a prop, or read from the device. It holds no client-side store, so there is no local copy of server state to keep in sync. It emits **no analytics event**, so nothing it does is currently countable.",
+    "under_126": "**RE-PROJECT** — it writes nothing and holds no Layer-3 store, so the move is short — the server already assembles the payload and only the rendering is client-side. It renders through the GATE renderer (a `statuses_handled[]` that must cover every value of the closed set it gates on), reading no contract. Its `owns.components[]` declares `mobile/src/components/paywall/BlurredFeedPlaceholder.tsx`."
+  },
+  "evidence": {
+    "files": [
+      "mobile/src/components/paywall/BlurredFeedPlaceholder.tsx:1"
+    ],
+    "contracts": [
+      "mobile/src/components/paywall/BlurredFeedPlaceholder.tsx:1-57 — renders locked placeholders INSTEAD of issuing /api/leads/feed"
+    ],
+    "tables": [
+      "mobile/src/components/paywall/BlurredFeedPlaceholder.tsx:1-57 — reaches no table"
+    ],
+    "gate": [
+      "mobile/app/(app)/index.tsx:69-75",
+      "mobile/app/(app)/flight-board.tsx:275-289"
+    ],
+    "states": [
+      "mobile/src/components/paywall/BlurredFeedPlaceholder.tsx:21",
+      "mobile/src/components/paywall/BlurredFeedPlaceholder.tsx:37-52"
+    ],
+    "emits": [
+      "mobile/src/components/paywall/BlurredFeedPlaceholder.tsx:1-57 — no track() call"
+    ]
+  },
+  "identity": {
+    "id": "overlay_blurred_feed_placeholder",
+    "route": "mobile/src/components/paywall/BlurredFeedPlaceholder.tsx",
+    "archetype": "GATE",
+    "platforms": [
+      "mobile"
+    ],
+    "owns": {
+      "components": [
+        "mobile/src/components/paywall/BlurredFeedPlaceholder.tsx"
+      ]
+    },
+    "owner": "unassigned (no CODEOWNERS file and no owner registry exists in the repo — measured 2026-09-15)",
+    "spec": "docs/specs/03-mobile/96_mobile_subscription.md",
+    "spec_refs": [
+      "docs/specs/03-mobile/96_mobile_subscription.md §9"
+    ],
+    "spec_version": "0-draft",
+    "versioning": {
+      "answer": "breaking_allowed",
+      "why": "One optional `count` prop, two in-repo consumers; a change is one commit.",
+      "evidence": [
+        "mobile/src/components/paywall/BlurredFeedPlaceholder.tsx:16-23"
+      ]
+    },
+    "ref": "S-064"
+  },
+  "inputs": {
+    "answer": "props",
+    "why": "Only `count` (default 6 for the feed shape, 4 for the board). It deliberately fetches nothing — the user has no entitlement to the data and skipping the request saves the round-trip.",
+    "evidence": [
+      "mobile/src/components/paywall/BlurredFeedPlaceholder.tsx:16-23",
+      "mobile/src/components/paywall/BlurredFeedPlaceholder.tsx:4-7"
+    ],
+    "contract_ref": [],
+    "query_key": [],
+    "field_whitelist": [
+      "count"
+    ],
+    "tables": []
+  },
+  "outputs": {
+    "answer": "none",
+    "why": "It renders N empty blurred boxes and nothing else.",
+    "evidence": [
+      "mobile/src/components/paywall/BlurredFeedPlaceholder.tsx:24-55"
+    ],
+    "contract_ref": [],
+    "tables": []
+  },
+  "state": {
+    "answer": "none",
+    "why": "No store, no query, no component state.",
+    "evidence": [
+      "mobile/src/components/paywall/BlurredFeedPlaceholder.tsx:23-55"
+    ],
+    "fields": []
+  },
+  "staleness": {
+    "answer": "none",
+    "why": "There is no data to be stale — that is the point of this surface.",
+    "evidence": [
+      "mobile/src/components/paywall/BlurredFeedPlaceholder.tsx:4-7"
+    ],
+    "offline": "none"
+  },
+  "guards": {
+    "session": {
+      "answer": "entitled",
+      "why": "It renders exactly when the user is signed in, subscription_status is expired AND they dismissed the full paywall — the inverse of the entitlement that grants content.",
+      "evidence": [
+        "mobile/app/(app)/index.tsx:69-70",
+        "mobile/app/(app)/flight-board.tsx:277"
+      ]
+    },
+    "rls_class": {
+      "answer": "none",
+      "why": "It reaches no table — and the surface it replaces would have.",
+      "evidence": [
+        "mobile/src/components/paywall/BlurredFeedPlaceholder.tsx:1-57"
+      ]
+    },
+    "disclosure": "none",
+    "entitlement": {
+      "product": "lead_gen",
+      "statuses": [
+        "expired"
+      ],
+      "on_missing": "paywall"
+    },
+    "flag": "none",
+    "permission": "none",
+    "rate_bucket": "none",
+    "statuses_handled": "UNRESEARCHED"
+  },
+  "render": {
+    "targets": [
+      "screen"
+    ],
+    "projection": "list",
+    "breakpoints": "mobile_first",
+    "export": "none"
+  },
+  "checks": [
+    {
+      "id": "blur_no_fetch",
+      "kind": "disclosure",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "why": "The lapsed-user branch must NOT issue /api/leads/feed: both parents return before calling the hook, so no lead data crosses the wire to an unentitled device — a blur over real data would be a disclosure defect, not a paywall."
+    },
+    {
+      "id": "blur_android_fallback",
+      "kind": "render_target_parity",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "expo-blur silently no-ops on Android below API 31, so the component renders a translucent dark overlay instead; without it the \"locked\" feel would simply vanish on older devices."
+    },
+    {
+      "id": "blur_empty_feel",
+      "kind": "empty_state",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "Spec 96 §9 requires at least four placeholders so the screen does not read as broken; the callers pass 6 and 4."
+    }
+  ],
+  "invariants": "none",
+  "plausibility": "none",
+  "states": [
+    {
+      "name": "static",
+      "golden": "none"
+    },
+    {
+      "name": "degraded",
+      "golden": "none"
+    }
+  ],
+  "errors": {
+    "answer": "none",
+    "why": "No async work and no failure path.",
+    "evidence": [
+      "mobile/src/components/paywall/BlurredFeedPlaceholder.tsx:23-55"
+    ]
+  },
+  "emits": {
+    "answer": "none",
+    "why": "The inline-blur state — a lapsed user still opening the app daily — is not instrumented at all.",
+    "evidence": [
+      "mobile/src/components/paywall/BlurredFeedPlaceholder.tsx:1-57"
+    ],
+    "analytics": [],
+    "ledger_events": [],
+    "breadcrumbs": []
+  },
+  "offers": {
+    "answer": "none",
+    "why": "No sponsored placement is rendered: the only slot component in the Expo tree is SponsorSlot, and it returns null unless EXPO_PUBLIC_PARCEL_SPONSORS=1.",
+    "evidence": [
+      "mobile/src/components/parcel/SponsorSlot.tsx:16-20"
+    ]
+  },
+  "metering": {
+    "answer": "none",
+    "why": "Nothing here is counted: the Spec 126 §7 usage ledger table does not exist (grep for usage_events in the introspected drizzle schema returns 0 hits), and the only quota-shaped counter, user_profiles.lead_views_count, is incremented solely by POST /api/leads/view, which has no mobile caller.",
+    "evidence": [
+      "src/lib/db/generated/schema.ts — no usage_events table (grep, 2026-09-15)",
+      "src/app/api/leads/view/route.ts:110",
+      "src/features/leads/api/useLeadView.ts:25 — imported only by src/tests/useLeadView.logic.test.tsx"
+    ]
+  },
+  "config": {
+    "answer": "none",
+    "why": "The surface consumes no registered logic variable: the only server-side tunable in this path, user_profiles.radius_cap_km, is a per-user admin column, not a logic_variables row.",
+    "evidence": [
+      "src/lib/userProfile.schema.ts:40",
+      "src/app/api/user-profile/route.ts:328",
+      "docs/reference/logic-variables-registry.md — no radius_cap_km entry"
+    ],
+    "logic_variables": [],
+    "retired": []
+  },
+  "sharing": {
+    "answer": "none",
+    "why": "It renders no contract; it exists precisely to avoid rendering one.",
+    "evidence": [
+      "mobile/src/components/paywall/BlurredFeedPlaceholder.tsx:4-7"
+    ],
+    "surfaces": []
+  },
+  "a11y": {
+    "touch_target_min_px": 44,
+    "labels": "none",
+    "dark_mode": "hardcoded",
+    "reduced_motion": "none",
+    "i18n": "none",
+    "safe_area": "none"
+  },
+  "deviations": "none",
+  "limitations": [
+    {
+      "what": "The placeholders are unlabelled and non-interactive, so a screen-reader user in the lapsed state hears nothing at all where the feed used to be.",
+      "measured": "grep -c \"accessibilityLabel|accessibilityRole\" BlurredFeedPlaceholder.tsx → 0; the only copy in the branch comes from the sibling InlineBlurBanner.",
+      "check_id": "blur_empty_feel"
+    }
+  ],
+  "interpretation": "none",
+  "notes": "InlineBlurBanner — the component that carries the actual explanatory copy in this branch — is rendered by the same two parents but has no census row and no owner (R-13 totality gap).",
+  "x-draft": {
+    "shard": "mobile-product",
+    "files": [
+      "mobile/src/components/paywall/BlurredFeedPlaceholder.tsx"
+    ],
+    "loc": 57,
+    "call_idiom": "none",
+    "stores": [],
+    "measured_states": [
+      "blur_supported",
+      "legacy_android_overlay_fallback"
+    ],
+    "measured_gate": {
+      "session": "required",
+      "entitlement": "subscription_status",
+      "flag": "none",
+      "permission": "none"
+    }
+  },
+  "programme": {
+    "scope": "estate_other",
+    "phase": "not_scheduled",
+    "why": "The other product. Inventoried only, fenced by Spec 128 R-03.",
+    "feature": "F92",
+    "build_order": 4193,
+    "leakage": "UNRESEARCHED",
+    "product_questions": "UNRESEARCHED",
+    "review": {
+      "status": "unreviewed"
+    }
+  }
+}

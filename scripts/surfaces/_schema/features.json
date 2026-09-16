@@ -1,0 +1,122 @@
+[
+  {
+    "id": "F01",
+    "name": "address-lookup",
+    "scope": "parcel_product",
+    "why": "Type an address, get matching lots. The parcel product's entry point."
+  },
+  {
+    "id": "F02",
+    "name": "parcel-report",
+    "scope": "parcel_product",
+    "why": "The lot report itself: envelope, cost menu, neighbourhood evidence. THE product."
+  },
+  {
+    "id": "F03",
+    "name": "pdf-export",
+    "scope": "parcel_product",
+    "why": "Send the report to a client as a PDF. Business requirement 2."
+  },
+  {
+    "id": "F04",
+    "name": "sponsor-placements",
+    "scope": "parcel_product",
+    "why": "Advertiser inventory rendered in a declared, disclosed slot. Business requirement 3."
+  },
+  {
+    "id": "F05",
+    "name": "metering-entitlement",
+    "scope": "parcel_product",
+    "why": "The metered lookup and the product gate in front of it. Business requirement 1."
+  },
+  {
+    "id": "F06",
+    "name": "web-front-door",
+    "scope": "parcel_product",
+    "why": "The MaxBLD consumer surface on Vercel. Business requirement 5."
+  },
+  {
+    "id": "F07",
+    "name": "app-outputs-materialisation",
+    "scope": "parcel_admin",
+    "why": "The projection the app reads, and the operator view of the step that builds it."
+  },
+  {
+    "id": "F08",
+    "name": "admin-parcel-operations",
+    "scope": "parcel_admin",
+    "why": "Operating the parcel product: the admin twin, advertiser accounts, placements, export audit."
+  },
+  {
+    "id": "F09",
+    "name": "surface-registry-drift",
+    "scope": "parcel_admin",
+    "why": "The descriptor-native pages: registry, fan-out, orphans, drift, roles."
+  },
+  {
+    "id": "F10",
+    "name": "auth-identity",
+    "scope": "platform_shared",
+    "why": "Sign-in, sign-up, confirmation, account linking. Third-party SDK; deliberately not converted."
+  },
+  {
+    "id": "F11",
+    "name": "onboarding",
+    "scope": "platform_shared",
+    "why": "The wizard that writes the shared user_profiles columns both products read."
+  },
+  {
+    "id": "F12",
+    "name": "subscription-billing",
+    "scope": "platform_shared",
+    "why": "Stripe hand-off, entitlement resolution, the paywall."
+  },
+  {
+    "id": "F13",
+    "name": "notifications",
+    "scope": "platform_shared",
+    "why": "Device tokens, preferences, dispatch."
+  },
+  {
+    "id": "F14",
+    "name": "navigation-shells",
+    "scope": "platform_shared",
+    "why": "The routing and gating containers every surface renders inside."
+  },
+  {
+    "id": "F15",
+    "name": "user-profile-settings",
+    "scope": "platform_shared",
+    "why": "The profile contract and the settings surface over it."
+  },
+  {
+    "id": "F16",
+    "name": "platform-admin",
+    "scope": "platform_shared",
+    "why": "Users, security, tunables, health, pipeline ops — the admin of the platform, not of a product."
+  },
+  {
+    "id": "F90",
+    "name": "lead-generation",
+    "scope": "estate_other",
+    "why": "The lead feed, saved leads, lead detail. The other product."
+  },
+  {
+    "id": "F91",
+    "name": "flight-center",
+    "scope": "estate_other",
+    "why": "The job board and job detail. The other product."
+  },
+  {
+    "id": "F92",
+    "name": "permits-builders-entities",
+    "scope": "estate_other",
+    "why": "Permit, builder and entity data serving lead-gen."
+  },
+  {
+    "id": "F93",
+    "name": "scheduled-jobs",
+    "scope": "estate_other",
+    "why": "Cron jobs and CI workflows with no product owner."
+  }
+]

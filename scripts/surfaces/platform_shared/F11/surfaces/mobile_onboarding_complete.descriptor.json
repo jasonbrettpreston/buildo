@@ -1,0 +1,355 @@
+{
+  "kind": "SURFACE",
+  "status": "exists",
+  "docs": {
+    "purpose": "The last setup screen for users who joined to find new work. Four elements fade up in sequence confirming their trade and telling them their feed is ready. The button marks setup as finished on the server and drops them into the lead feed; if that save fails they stay put with a retry message rather than being pushed forward into a half-configured app.",
+    "data_story": "It reads nothing from the database directly. Every value arrives through one contract: `/api/user-profile`. Behind that contract, the data comes from `entitlements` and `user_profiles`, and writes land on `entitlements` and `user_profiles`. It also holds client-side state in `filterStore`, which is the part a server-driven projection has to absorb or justify. It emits **no analytics event**, so nothing it does is currently countable.",
+    "under_126": "**REBUILD** — it holds Layer-3 state (`filterStore`) and drives writes, so a client decision has to be re-homed on the server before the projection can be honest. It renders through the WIZARD_STEP renderer (declared step index, advance condition, resume key and skip rule), reading by reference: `/api/user-profile`. It owns no component of its own, so its `owns.components[]` is an empty array — a legal answer, written down."
+  },
+  "evidence": {
+    "files": [
+      "mobile/app/(onboarding)/complete.tsx:1"
+    ],
+    "contracts": [
+      "mobile/app/(onboarding)/complete.tsx:71-74"
+    ],
+    "tables": [
+      "src/app/api/user-profile/route.ts:393"
+    ],
+    "gate": [
+      "src/lib/auth/route-guard.ts:120-132",
+      "mobile/app/_layout.tsx:141-231"
+    ],
+    "states": [
+      "mobile/app/(onboarding)/complete.tsx:116-134"
+    ],
+    "emits": [
+      "mobile/app/(onboarding)/complete.tsx:86 — logQueryInvalidate only; no track() call in the file"
+    ]
+  },
+  "identity": {
+    "id": "mobile_onboarding_complete",
+    "route": "mobile/app/(onboarding)/complete.tsx",
+    "archetype": "WIZARD_STEP",
+    "platforms": [
+      "mobile"
+    ],
+    "owns": {
+      "components": []
+    },
+    "owner": "unassigned (no CODEOWNERS file and no owner registry exists in the repo — measured 2026-09-15)",
+    "spec": "docs/specs/03-mobile/94_mobile_onboarding.md",
+    "spec_refs": [
+      "docs/specs/03-mobile/94_mobile_onboarding.md §5",
+      "docs/specs/03-mobile/94_mobile_onboarding.md §10",
+      "docs/specs/03-mobile/99_mobile_state_architecture.md §3.5",
+      "docs/specs/03-mobile/99_mobile_state_architecture.md §9.2"
+    ],
+    "spec_version": "0-draft",
+    "versioning": {
+      "answer": "frozen",
+      "why": "onboarding_complete is the single flag AuthGate routes on; its shape is pinned by the routing matrix tests rather than by a payload schema.",
+      "evidence": [
+        "mobile/app/(onboarding)/complete.tsx:73",
+        "mobile/__tests__/authGate.test.ts"
+      ]
+    },
+    "ref": "S-029"
+  },
+  "inputs": {
+    "answer": "contract",
+    "why": "The trade badge is derived from the MMKV-persisted filterStore slug through a compiled-in catalogue; the only contract traffic is the outbound completion PATCH.",
+    "evidence": [
+      "mobile/app/(onboarding)/complete.tsx:29-30",
+      "mobile/app/(onboarding)/complete.tsx:71-74"
+    ],
+    "contract_ref": [
+      "/api/user-profile"
+    ],
+    "query_key": [
+      "user-profile"
+    ],
+    "field_whitelist": [
+      "default_tab",
+      "onboarding_complete"
+    ],
+    "tables": [
+      {
+        "table": "user_profiles",
+        "columns": [
+          "user_id",
+          "default_tab",
+          "onboarding_complete"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/03-mobile/95_mobile_user_profiles.md",
+        "evidence": [
+          "src/app/api/user-profile/route.ts:393",
+          "src/lib/userProfile.schema.ts:85-122",
+          "migrations/230_rls_class_a_entitlements.sql:62-68"
+        ]
+      }
+    ]
+  },
+  "outputs": {
+    "answer": "contract_only",
+    "why": "The same discipline as terms: PATCH, await the [\"user-profile\"] invalidate, then router.replace — and deliberately NO local markComplete() write, because Spec 99 §9.2b made the server the sole source of truth after the dual-router loop incident.",
+    "evidence": [
+      "mobile/app/(onboarding)/complete.tsx:67-95"
+    ],
+    "contract_ref": [
+      "/api/user-profile"
+    ],
+    "tables": [
+      {
+        "table": "user_profiles",
+        "columns": [
+          "user_id",
+          "default_tab",
+          "onboarding_complete"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/03-mobile/95_mobile_user_profiles.md",
+        "evidence": [
+          "src/app/api/user-profile/route.ts:393",
+          "src/lib/userProfile.schema.ts:85-122",
+          "migrations/230_rls_class_a_entitlements.sql:62-68"
+        ]
+      }
+    ],
+    "rollback": "none — there is no local mirror to roll back; a failure renders \"Could not complete setup. Please try again.\" and the user retries on the same screen.",
+    "invalidates": [
+      "user-profile"
+    ]
+  },
+  "state": {
+    "answer": "mmkv",
+    "why": "It reads filterStore.tradeSlug (MMKV-persisted) for the badge and writes nothing local — the onboardingStore mirror this screen used to set was removed by Spec 99 §9.2b.",
+    "evidence": [
+      "mobile/app/(onboarding)/complete.tsx:26-30",
+      "mobile/app/(onboarding)/complete.tsx:76-77"
+    ],
+    "fields": [
+      {
+        "name": "tradeSlug",
+        "owner_layer": "3_zustand",
+        "canonical_writer": "mobile_onboarding_profession (read-only here)",
+        "authorized_readers": [
+          "mobile_onboarding_complete",
+          "mobile_lead_feed",
+          "mobile_map",
+          "mobile_settings"
+        ],
+        "bridge": "B2",
+        "persistence": "mmkv",
+        "signout_reset": true
+      }
+    ]
+  },
+  "staleness": {
+    "answer": "none",
+    "why": "Nothing server-owned is rendered — the badge comes from the local store and the copy is literal.",
+    "evidence": [
+      "mobile/app/(onboarding)/complete.tsx:98-120"
+    ],
+    "offline": "none"
+  },
+  "guards": {
+    "session": {
+      "answer": "authenticated",
+      "why": "Reachable only after AuthGate has a Supabase user whose server profile says onboarding_complete is false; PATCH /api/user-profile is an authenticated route.",
+      "evidence": [
+        "src/lib/auth/route-guard.ts:120-132",
+        "mobile/app/_layout.tsx:141-231",
+        "mobile/app/(onboarding)/complete.tsx:71"
+      ]
+    },
+    "rls_class": {
+      "answer": "A",
+      "why": "The one table in the path is the caller's own user_profiles row — Class A, policies keyed on auth.uid().",
+      "evidence": [
+        "migrations/230_rls_class_a_entitlements.sql:62-68"
+      ]
+    },
+    "disclosure": "none",
+    "entitlement": "none",
+    "flag": "none",
+    "permission": "none",
+    "rate_bucket": "none — /api/user-profile calls no withRateLimit"
+  },
+  "render": {
+    "targets": [
+      "screen"
+    ],
+    "projection": "none",
+    "breakpoints": "mobile_first",
+    "export": "none",
+    "wizard": "UNRESEARCHED"
+  },
+  "checks": [
+    {
+      "id": "complete_invalidate_before_navigate",
+      "kind": "freshness",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "why": "The awaited invalidate before router.replace is what stops AuthGate reading a 5-minute-stale onboarding_complete=false and bouncing the user back into onboarding."
+    },
+    {
+      "id": "complete_no_local_mirror",
+      "kind": "selector_atomicity",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "Spec 99 §9.2b removed markComplete(); mobile/__tests__/onboarding.test.ts asserts the store no longer carries markComplete/isComplete, which is what ended the dual-router loop."
+    },
+    {
+      "id": "complete_error_state",
+      "kind": "error_state",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "A failed completion PATCH renders an inline message and leaves the CTA retryable (complete.tsx:89-92, 116-118)."
+    }
+  ],
+  "invariants": "none",
+  "plausibility": "none",
+  "states": [
+    {
+      "name": "static",
+      "golden": "none"
+    },
+    {
+      "name": "loading",
+      "golden": "none"
+    },
+    {
+      "name": "error",
+      "golden": "none"
+    },
+    {
+      "name": "redirect",
+      "golden": "none"
+    }
+  ],
+  "errors": {
+    "answer": "inline",
+    "why": "One inline red line above the CTA; nothing navigates on failure.",
+    "evidence": [
+      "mobile/app/(onboarding)/complete.tsx:116-118"
+    ]
+  },
+  "emits": {
+    "answer": "none",
+    "why": "The terminal event of the whole onboarding funnel is not instrumented — there is no onboarding_completed analytics event anywhere in the tree.",
+    "evidence": [
+      "mobile/app/(onboarding)/complete.tsx:1-138",
+      "mobile/src/lib/analytics.ts:58-79"
+    ],
+    "analytics": [],
+    "ledger_events": [],
+    "breadcrumbs": []
+  },
+  "offers": {
+    "answer": "none",
+    "why": "No sponsored placement is rendered: the only slot component in the Expo tree is SponsorSlot, and it returns null unless EXPO_PUBLIC_PARCEL_SPONSORS=1.",
+    "evidence": [
+      "mobile/src/components/parcel/SponsorSlot.tsx:16-20"
+    ]
+  },
+  "metering": {
+    "answer": "none",
+    "why": "Nothing here is counted: the Spec 126 §7 usage ledger table does not exist (grep for usage_events in the introspected drizzle schema returns 0 hits), and the only quota-shaped counter, user_profiles.lead_views_count, is incremented solely by POST /api/leads/view, which has no mobile caller.",
+    "evidence": [
+      "src/lib/db/generated/schema.ts — no usage_events table (grep, 2026-09-15)",
+      "src/app/api/leads/view/route.ts:110",
+      "src/features/leads/api/useLeadView.ts:25 — imported only by src/tests/useLeadView.logic.test.tsx"
+    ]
+  },
+  "config": {
+    "answer": "none",
+    "why": "The surface consumes no registered logic variable: the only server-side tunable in this path, user_profiles.radius_cap_km, is a per-user admin column, not a logic_variables row.",
+    "evidence": [
+      "src/lib/userProfile.schema.ts:40",
+      "src/app/api/user-profile/route.ts:328",
+      "docs/reference/logic-variables-registry.md — no radius_cap_km entry"
+    ],
+    "logic_variables": [],
+    "retired": []
+  },
+  "sharing": {
+    "answer": "shared",
+    "why": "PATCH /api/user-profile is rendered by every onboarding step, both shells, settings and the filter sheet.",
+    "evidence": [
+      "mobile/src/hooks/usePatchProfile.ts:49",
+      "mobile/app/(onboarding)/complete.tsx:71"
+    ],
+    "surfaces": [
+      "mobile_onboarding_profession",
+      "mobile_onboarding_address",
+      "mobile_onboarding_supplier",
+      "mobile_onboarding_terms",
+      "mobile_onboarding_complete",
+      "mobile_settings",
+      "shell_app_root",
+      "shell_app_tabs"
+    ]
+  },
+  "a11y": {
+    "touch_target_min_px": 52,
+    "labels": "partial",
+    "dark_mode": "hardcoded",
+    "reduced_motion": "ignored",
+    "i18n": "none",
+    "safe_area": [
+      "top",
+      "bottom"
+    ]
+  },
+  "deviations": "none",
+  "limitations": [
+    {
+      "what": "The four staggered entry animations run unconditionally, ignoring the OS reduce-motion setting.",
+      "measured": "complete.tsx:42-48 fires withDelay/withTiming in a mount effect; no AccessibilityInfo check exists anywhere in mobile/.",
+      "check_id": "none — checks[].kind has no reduced-motion value; raised as a vocabulary escalation per Spec 128 §4"
+    }
+  ],
+  "interpretation": "none",
+  "notes": "Completion is the funnel event the business most needs and the one the estate does not emit: analytics.ts's ALLOWED_KEYS enumerates no onboarding event at all.",
+  "x-draft": {
+    "shard": "mobile-product",
+    "files": [
+      "mobile/app/(onboarding)/complete.tsx"
+    ],
+    "loc": 138,
+    "call_idiom": "direct",
+    "stores": [
+      "filterStore"
+    ],
+    "measured_states": [
+      "idle_animated_in",
+      "submitting",
+      "error_message"
+    ],
+    "measured_gate": {
+      "session": "required",
+      "entitlement": "none",
+      "flag": "none",
+      "permission": "none"
+    }
+  },
+  "programme": {
+    "scope": "platform_shared",
+    "phase": "UNRESEARCHED",
+    "why": "Onboarding writes `user_profiles` columns both products read; the flow is shared even though its copy is lead-gen-shaped today.",
+    "feature": "F11",
+    "build_order": 3113,
+    "leakage": "none",
+    "product_questions": "none",
+    "review": {
+      "status": "unreviewed"
+    }
+  }
+}

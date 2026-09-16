@@ -1,0 +1,468 @@
+{
+  "kind": "SURFACE",
+  "status": "new",
+  "docs": {
+    "purpose": "A single scrollable list of every pipeline run the system has recorded — what ran, when, whether it finished, and the per-run detail the pipeline itself wrote into its records_meta summary. Operators use it to answer 'did the nightly work actually happen, and what did it do' without opening a database client. It also covers the older sync_runs ledger, so the two histories read as one timeline.",
+    "data_story": "Nothing is built yet, so nothing is measured here. As specified it would read `pipeline_runs` and `sync_runs`.",
+    "under_126": "**NEW.** It does not exist; it is generated from descriptors from its first commit, through the LIST renderer (a collection with declared pagination, recycling and empty/offline states). It is **100% generated** — which is the point: if the descriptor set is incomplete or an archetype profile is wrong, this page is visibly empty or visibly wrong on commit 1, and cannot be faked by hand."
+  },
+  "evidence": {
+    "files": [
+      "docs/reports/2026-09-15-spec126-admin-best-in-class.md §1.1 row 5 — NEW; no page.tsx exists",
+      "src/components/FreshnessTimeline.tsx — the only reader of this data today"
+    ],
+    "contracts": [
+      "src/app/api/admin/pipelines/history/route.ts",
+      "src/app/api/admin/pipelines/runs/route.ts"
+    ],
+    "tables": [
+      "src/lib/db/generated/schema.ts:1063 — pipeline_runs",
+      "src/lib/db/generated/schema.ts:1159 — sync_runs",
+      "docs/specs/00-architecture/114_rls_policy_catalog.md §4 — both named in the representative Class-B list"
+    ],
+    "gate": [
+      "src/lib/auth/route-guard.ts:162"
+    ],
+    "states": [
+      "docs/specs/02-web-admin/126_maxbld_surface_standard.md §3.1 row 1 — LIST states[] must include empty and offline",
+      "docs/specs/02-web-admin/127_surface_conversion_procedure.md §4.3"
+    ],
+    "emits": [
+      "docs/reports/2026-09-15-spec126-admin-best-in-class.md §1.1 row 5 — Writes \"—\""
+    ]
+  },
+  "identity": {
+    "id": "admin_run_ledger",
+    "archetype": "LIST",
+    "platforms": [
+      "web"
+    ],
+    "owns": {
+      "components": [
+        "src/features/admin-registry/components/RunLedgerTable.tsx"
+      ]
+    },
+    "owner": "Admin domain (Spec 126 §14 Target Files) — no individual owner is named by Specs 126/127/128.",
+    "spec": "docs/specs/02-web-admin/126_maxbld_surface_standard.md",
+    "spec_refs": [
+      "docs/specs/02-web-admin/126_maxbld_surface_standard.md §2.2 group A — admin_run_ledger LIST (gen, NEW)",
+      "docs/specs/02-web-admin/126_maxbld_surface_standard.md §2.2.1 P10 — time-travel is the ledger (pipeline_runs + usage_events + admin_audit_log), not a snapshot table",
+      "docs/reports/2026-09-15-spec126-admin-best-in-class.md §1.1 row 5 · §3.1 — pipeline_runs (incl. records_meta) must be rendered UNMODIFIED",
+      "docs/specs/01-pipeline/48_pipeline_observability.md §3.6 — the records_meta producer/consumer contract"
+    ],
+    "spec_version": "0-draft",
+    "versioning": {
+      "answer": "none",
+      "why": "Nothing consumes this surface: it does not exist, so no compatibility promise can have been made. It gains one at its C9 cutover, when the golden pair is captured.",
+      "evidence": [
+        "docs/specs/02-web-admin/126_maxbld_surface_standard.md §2.2 — one of the 11 NEW admin surfaces",
+        "docs/specs/02-web-admin/127_surface_conversion_procedure.md §4.3 — the golden PAIR pins the shape"
+      ]
+    },
+    "ref": "S-015"
+  },
+  "inputs": {
+    "answer": "contract",
+    "why": "It reads the run ledger through the two admin contracts that already project it — /api/admin/pipelines/history and /api/admin/pipelines/runs — rather than opening a second path to pipeline_runs (P1: the admin is a projection, not a parallel data path).",
+    "evidence": [
+      "docs/specs/02-web-admin/126_maxbld_surface_standard.md §2.2.1 P1 — an admin page is the same descriptor with an admin audience, never a parallel data path",
+      "src/app/api/admin/pipelines/history/route.ts — the contract FreshnessTimeline.tsx already consumes",
+      "docs/reports/2026-09-15-spec126-admin-best-in-class.md §1.1 row 5 — today the only reader is FreshnessTimeline.tsx against /api/admin/pipelines/history"
+    ],
+    "contract_ref": [
+      "/api/admin/pipelines/history",
+      "/api/admin/pipelines/runs"
+    ],
+    "query_key": [
+      "admin",
+      "run-ledger",
+      "chain",
+      "status",
+      "since"
+    ],
+    "field_whitelist": [
+      "id",
+      "pipeline",
+      "started_at",
+      "completed_at",
+      "status",
+      "duration_ms",
+      "records_total",
+      "records_new",
+      "records_updated",
+      "error_message",
+      "records_meta"
+    ],
+    "tables": [
+      {
+        "table": "pipeline_runs",
+        "columns": [
+          "id",
+          "pipeline",
+          "started_at",
+          "completed_at",
+          "status",
+          "records_total",
+          "records_new",
+          "records_updated",
+          "error_message",
+          "duration_ms",
+          "records_meta"
+        ],
+        "producing_steps": [
+          "(every chain step — the Spec 47 SDK run ledger writes one row per run, so there is no single named producer)"
+        ],
+        "chain_position": "n/a — written by the SDK around every step in every chain",
+        "owner_spec": "docs/specs/01-pipeline/48_pipeline_observability.md",
+        "evidence": [
+          "src/lib/db/generated/schema.ts:1063 — the introspected pipeline_runs shape",
+          "scripts/lib/step/ledger.js:62 — INSERT INTO pipeline_runs (pipeline, started_at, status)",
+          "docs/reference/data-lineage-map.md:1205 — per-column producers: assert_schema and assert_data_bounds write checks_passed/checks_failed; assert_pre_permit_aging writes records_meta"
+        ]
+      },
+      {
+        "table": "sync_runs",
+        "columns": [
+          "id",
+          "started_at",
+          "completed_at",
+          "status",
+          "records_total",
+          "records_new",
+          "records_updated",
+          "records_unchanged",
+          "records_errors",
+          "error_message",
+          "snapshot_path",
+          "duration_ms"
+        ],
+        "producing_steps": [
+          "permits"
+        ],
+        "chain_position": "permits[1]",
+        "owner_spec": "docs/specs/01-pipeline/48_pipeline_observability.md",
+        "evidence": [
+          "src/lib/db/generated/schema.ts:1159 — the introspected sync_runs shape",
+          "scripts/load-permits.js:725 — INSERT INTO sync_runs (...)",
+          "scripts/manifest.json#chains.permits — slot 1 is `permits`, which is load-permits.js",
+          "docs/reference/data-lineage-map.md:1254 — sync_runs `*` consumed by refresh_snapshot"
+        ]
+      }
+    ]
+  },
+  "outputs": {
+    "answer": "none",
+    "why": "A ledger is append-only and this page only reads it; retiring a stranded `running` row is the stale-run reaper's job, which Spec 126 §2.2 gives its own surface (admin_stale_run_reaper) precisely so this one stays read-only.",
+    "evidence": [
+      "docs/reports/2026-09-15-spec126-admin-best-in-class.md §1.1 row 5 — Writes column is \"—\"",
+      "docs/reports/2026-09-15-spec126-admin-best-in-class.md §1.1 row 6 — the reaper is a separate FORM-console surface"
+    ],
+    "contract_ref": [],
+    "tables": []
+  },
+  "state": {
+    "answer": "server_only",
+    "why": "An RSC page: the chain/status/since filters live in the URL and the rows are streamed as HTML, so no client store or cache holds a copy of the ledger.",
+    "evidence": [
+      "docs/specs/02-web-admin/126_maxbld_surface_standard.md §5.3 — arrow 3, the web projection is RSC",
+      "docs/specs/02-web-admin/128_surface_standard_policy.md §2 rule 2 — the client is just glass"
+    ],
+    "fields": []
+  },
+  "staleness": {
+    "answer": "live",
+    "why": "Read on every request. A run ledger served from a cache would answer \"did the nightly work happen?\" with yesterday's answer, which is the one question this page exists for.",
+    "evidence": [
+      "scripts/lib/step/ledger.js:62 — the row is written at step start and updated at finish, so freshness is the run itself"
+    ],
+    "offline": "none"
+  },
+  "guards": {
+    "session": {
+      "answer": "admin",
+      "why": "An /admin/** page: classifyRoute returns \"admin\" for any pathname starting with /admin/, and \"admin\" is the profiles.is_admin flag checked in-predicate — there is no admin Postgres role.",
+      "evidence": [
+        "src/lib/auth/route-guard.ts:162 — pathname === \"/admin\" || pathname.startsWith(\"/admin/\") returns \"admin\"",
+        "src/lib/auth/route-guard.ts:159 — /api/admin/ returns \"admin\"",
+        "migrations/226_profiles_admin_bootstrap.sql:27 — is_admin BOOLEAN NOT NULL DEFAULT false",
+        "docs/specs/00-architecture/114_rls_policy_catalog.md §2 — admin is a column flag checked inside the policy predicate, not a role"
+      ]
+    },
+    "rls_class": {
+      "answer": "B",
+      "why": "Spec 114 §2 is definitional — everything that is not one of the 10 named Class-A tables, not profiles and not Class D is Class B by default, including tables added after that spec was written, which covers pipeline_runs and sync_runs — both named outright in Spec 114 §4's representative Class-B list. Class B is ENABLE ROW LEVEL SECURITY with zero policies, and per Spec 114 §4 Decision D1 the Next.js admin route connects as the table owner, so it is outside RLS enforcement entirely.",
+      "evidence": [
+        "docs/specs/00-architecture/114_rls_policy_catalog.md §2 — \"everything else is Class B by default — including tables added after this spec is written\"",
+        "docs/specs/00-architecture/114_rls_policy_catalog.md §4 — one ENABLE statement, no CREATE POLICY; admin/pipeline connections are RLS-exempt as table owner (D1)"
+      ]
+    },
+    "disclosure": "none",
+    "entitlement": "none",
+    "flag": "none",
+    "permission": "none",
+    "rate_bucket": "none"
+  },
+  "render": {
+    "targets": [
+      "screen"
+    ],
+    "projection": "list",
+    "breakpoints": "desktop_first_md",
+    "export": "none",
+    "list": "UNRESEARCHED"
+  },
+  "checks": [
+    {
+      "id": "runledger_contract_parse",
+      "kind": "contract_parse",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "records_meta is free-form JSONB written by 27 different steps; a row whose meta no longer parses must render as schema_drift rather than as an empty detail panel."
+    },
+    {
+      "id": "runledger_empty_state",
+      "kind": "empty_state",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "The LIST profile requires it, and an empty ledger means the chain did not run — the single most important thing this page can say."
+    },
+    {
+      "id": "runledger_offline_state",
+      "kind": "offline_state",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "why": "The LIST profile requires an offline state; a desktop admin page keeps no cached projection, so this is descriptive and no threshold could bound it."
+    },
+    {
+      "id": "runledger_error_state",
+      "kind": "error_state",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "A failed fetch must not render as \"no runs\"."
+    },
+    {
+      "id": "runledger_query_key_stable",
+      "kind": "query_key_hygiene",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "chain/status/since are parameters of a stable key array, never an object literal rebuilt each render."
+    },
+    {
+      "id": "runledger_field_whitelist_parity",
+      "kind": "field_whitelist_parity",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "Spec 126 §3.1 row A: the admin renders pipeline_runs UNMODIFIED — it may reveal more columns but may not derive a new one, so the surface whitelist must set-equal the contract projection."
+    },
+    {
+      "id": "runledger_freshness",
+      "kind": "freshness",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "why": "Permanently non-zero: a chain whose newest row is older than its declared cadence is an expected, recurring operator signal, not a defect of this page. Retighten condition is a scheduled-cadence declaration per chain."
+    }
+  ],
+  "invariants": [
+    {
+      "id": "runledger_no_negative_duration",
+      "sql": "SELECT count(*) FROM pipeline_runs WHERE duration_ms < 0 OR (completed_at IS NOT NULL AND completed_at < started_at)",
+      "severity": "FAIL",
+      "why": "A run that finished before it started is a clock or a write-order defect, and rendering it as a row would launder a broken ledger into a plausible timeline."
+    },
+    {
+      "id": "runledger_terminal_status_has_completed_at",
+      "sql": "SELECT count(*) FROM pipeline_runs WHERE status <> 'running' AND completed_at IS NULL",
+      "severity": "FAIL",
+      "why": "A terminal row with no completed_at cannot be ordered on a timeline, and the page would silently drop or mis-place it."
+    }
+  ],
+  "plausibility": [
+    {
+      "id": "runledger_stranded_running",
+      "sql": "SELECT count(*) FROM pipeline_runs WHERE status = 'running' AND started_at < now() - interval '6 hours'",
+      "severity": "WARN",
+      "why": "Stranded `running` rows are a measured, recurring condition in this estate and today they are only reaped as a side effect of a human loading GET /api/admin/stats — the page must show the number rather than let a page-load hide it."
+    }
+  ],
+  "states": [
+    {
+      "name": "loading",
+      "golden": "none"
+    },
+    {
+      "name": "empty",
+      "golden": "none"
+    },
+    {
+      "name": "hit",
+      "golden": "none"
+    },
+    {
+      "name": "degraded",
+      "golden": "none"
+    },
+    {
+      "name": "error",
+      "golden": "none"
+    },
+    {
+      "name": "unauthorized",
+      "golden": "none"
+    },
+    {
+      "name": "offline",
+      "golden": "none"
+    }
+  ],
+  "errors": {
+    "answer": "envelope",
+    "why": "Every admin route handler is wrapped by withApiEnvelope, which returns { data, error, meta } with a sanitised code on any throw; the surface renders from that envelope.",
+    "evidence": [
+      "src/lib/api/with-api-envelope.ts:27 — withApiEnvelope always returns the { data, error, meta } envelope",
+      "src/lib/api/with-api-envelope.ts:40-45 — a PG SQLSTATE becomes DATABASE_ERROR; the raw message is never exposed"
+    ],
+    "classes": [
+      {
+        "class": "401",
+        "ui": "Redirect to sign-in — the route guard refuses before the page renders."
+      },
+      {
+        "class": "403",
+        "ui": "Full-page \"admin only\" block naming the is_admin requirement; no partial data."
+      },
+      {
+        "class": "500",
+        "ui": "Full-width error panel carrying the envelope error.code, with a retry control."
+      },
+      {
+        "class": "schema_drift",
+        "ui": "The row that failed to parse renders as a red schema_drift row; the rest still renders."
+      }
+    ],
+    "no_retry": [
+      "401",
+      "403"
+    ]
+  },
+  "emits": {
+    "answer": "none",
+    "why": "It reads the ledger and writes nothing to any of the three (pipeline_runs, usage_events, admin_audit_log), so R-12/B6 owes no audit row and R-23 owes no usage row.",
+    "evidence": [
+      "docs/specs/02-web-admin/126_maxbld_surface_standard.md §2.2.1 P10 — the three append-only ledgers",
+      "docs/specs/02-web-admin/128_surface_standard_policy.md §3 rule B6"
+    ],
+    "analytics": [],
+    "ledger_events": [],
+    "breadcrumbs": []
+  },
+  "offers": {
+    "answer": "none",
+    "why": "An operator ledger renders no sponsored content; written down because an unwritten \"none\" is exactly what R-16 forbids.",
+    "evidence": [
+      "docs/specs/02-web-admin/126_maxbld_surface_standard.md §3.1 — SLOT is the archetype that renders inventory; this surface is not one",
+      "docs/specs/02-web-admin/128_surface_standard_policy.md §2 rule 6 — \"none\" is legal; silence is not"
+    ]
+  },
+  "metering": {
+    "answer": "none",
+    "why": "Nothing here is billable or quota-bearing and no usage_events row is written.",
+    "evidence": [
+      "docs/specs/02-web-admin/126_maxbld_surface_standard.md §7"
+    ]
+  },
+  "config": {
+    "answer": "logic_variables",
+    "why": "Three numbers a human would argue about — page size, the stranded-run age, and the per-chain freshness bound — so Spec 128 rule 3 makes each a registered variable rather than a constant in a component (the funnel.ts:154-158 five-hardcoded-SLA anti-pattern).",
+    "evidence": [
+      "docs/specs/02-web-admin/128_surface_standard_policy.md §2 rule 3",
+      "docs/specs/02-web-admin/126_maxbld_surface_standard.md §2.2.1 P4 — funnel.ts:154-166 hardcodes five SLA thresholds and an eight-slug literal",
+      "scripts/seeds/logic_variables.json — all three keys are NET-NEW"
+    ],
+    "logic_variables": [
+      {
+        "name": "admin_run_ledger_page_size",
+        "min": 10,
+        "max": 500,
+        "on_invalid": "fail",
+        "why": "Bounds the query that decides what the operator sees."
+      },
+      {
+        "name": "admin_run_stranded_hours",
+        "min": 1,
+        "max": 168,
+        "on_invalid": "fail",
+        "why": "Verdict-affecting: it decides whether a row renders as stranded, so a bad value must fail rather than default."
+      },
+      {
+        "name": "admin_run_freshness_warn_hours",
+        "min": 1,
+        "max": 720,
+        "on_invalid": "fail",
+        "why": "Verdict-affecting: it drives the freshness WARN."
+      }
+    ],
+    "retired": []
+  },
+  "sharing": {
+    "answer": "shared",
+    "why": "Both contracts are already rendered elsewhere — /api/admin/pipelines/history by FreshnessTimeline.tsx today — so this surface is a second projection of an existing contract rather than a new data path. That is the property P1 asks for.",
+    "evidence": [
+      "docs/reports/2026-09-15-spec126-admin-best-in-class.md §1.1 row 5 — FreshnessTimeline.tsx is the current sole reader",
+      "src/components/FreshnessTimeline.tsx"
+    ],
+    "surfaces": [
+      "admin_home"
+    ],
+    "varies_by_surface": "FreshnessTimeline renders the latest row per chain as a timeline; this surface renders every row as a list with its records_meta detail."
+  },
+  "a11y": {
+    "touch_target_min_px": 44,
+    "labels": "complete",
+    "dark_mode": "none",
+    "reduced_motion": "none",
+    "i18n": "none",
+    "safe_area": "none"
+  },
+  "deviations": "none",
+  "limitations": [
+    {
+      "what": "The LIST required-field profile in Spec 126 §3.1 mandates list.item_archetype, list.pagination and list.recycling, and surface.schema.json has no property for any of them (the top level and every category are additionalProperties:false).",
+      "measured": "Every allOf block in scripts/surfaces/_schema/surface.schema.json is `\"then\": true` — the archetype profiles are declared in prose in Spec 126 §3.1 and enforced by nothing, so these fields can neither be declared here nor caught missing.",
+      "check_id": "runledger_query_key_stable"
+    },
+    {
+      "what": "The stranded-`running` count this page renders can be reaped out from under it by an unrelated page load.",
+      "measured": "docs/reports/2026-09-15-spec126-admin-best-in-class.md §2.1 — reapStaleRunningRows() is called from exactly one site, GET /api/admin/stats:189, so the number moves when a human opens a different admin page rather than when a job runs.",
+      "check_id": "runledger_stranded_running"
+    }
+  ],
+  "interpretation": "none",
+  "notes": "Report §1.1 row 5: today the only reader of this data is src/components/FreshnessTimeline.tsx against /api/admin/pipelines/history (file confirmed present in the tree) — there is no ledger page. Both tables confirmed to exist (migrations/033_pipeline_runs.sql, migrations/003_sync_runs.sql). DESIGNED, NOT MEASURED — except the two tables, which exist and whose columns are read from the introspected drizzle schema. This is the ONLY row of the 11 whose inputs.contract_ref could be filled honestly: /api/admin/pipelines/history and /api/admin/pipelines/runs are both real census contracts. Note the second is one of the measured orphans (Spec 126 §2.2.1 P8 names /api/admin/pipelines/runs as having no call site of any kind) — this surface is its designed first caller, which is exactly what the orphan panel is for.",
+  "x-draft": {
+    "shard": "admin-new",
+    "files": [],
+    "role": "admin",
+    "generated": "100%",
+    "net_new_tables": [],
+    "designed": true
+  },
+  "programme": {
+    "scope": "parcel_admin",
+    "phase": "UNRESEARCHED",
+    "why": "Renders the run ledger the `app_outputs` recompute writes — the operator's view of the projection the parcel product reads.",
+    "feature": "F07",
+    "build_order": 2073,
+    "leakage": "none",
+    "product_questions": "none",
+    "review": {
+      "status": "unreviewed"
+    }
+  }
+}

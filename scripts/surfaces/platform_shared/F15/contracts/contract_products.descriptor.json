@@ -1,0 +1,291 @@
+{
+  "kind": "CONTRACT",
+  "status": "exists",
+  "docs": {
+    "purpose": "Returns the fixed list of construction product and material categories the app uses to classify permits, for populating a filter dropdown. No user data or database is involved.",
+    "data_story": "It touches no table at all. Its response shape is **unmeasured** as a pick-by-name whitelist — it passes rows through, spreads a row into a computed object, or assembles the payload dynamically, so there is no single list naming what leaves the server. **Nothing in this repository calls it.** That is the state this registry exists to make visible, not a claim that it is dead — a caller could be a bookmark, an external system, or a path built from variables.",
+    "under_126": "Becomes a **CONTRACT descriptor** of archetype `QUERY`. It declares its `database.reads[]` with named columns, its response projection as an explicit whitelist, its auth class, its rate bucket and its staleness — and `outputs.writes` is forced to `\"none\"`. Its `consumers[]` is the field that matters most here: today it is empty, and the orphan panel renders that as a red row rather than leaving it to be discovered years later."
+  },
+  "evidence": {
+    "files": [
+      "src/app/api/products/route.ts:1"
+    ],
+    "contracts": [
+      "src/app/api/products/route.ts:5 (GET export)",
+      "src/lib/api/with-api-envelope.ts:27-52"
+    ],
+    "tables": [
+      "src/app/api/products/route.ts — read in full 2026-09-15; the handler issues no SQL and reaches no table"
+    ],
+    "gate": [
+      "src/lib/auth/route-guard.ts — PUBLIC_PREFIXES — '/api/products'",
+      "src/lib/auth/route-guard.ts:150-201 — classifyRoute executed 2026-09-15 with the concrete path → \"public\"",
+      "no in-handler auth call in src/app/api/products/route.ts — src/middleware.ts is the only gate"
+    ],
+    "states": [
+      "hit: src/app/api/products/route.ts:6 — the only reachable outcome; PRODUCT_GROUPS is a non-empty module constant (src/lib/classification/products.ts:9-37), so `empty` is unreachable"
+    ],
+    "emits": [
+      "src/app/api/products/route.ts — read in full; no Sentry breadcrumb, no analytics capture and no ledger INSERT"
+    ]
+  },
+  "identity": {
+    "id": "contract_products",
+    "route": "/api/products",
+    "archetype": "QUERY",
+    "platforms": [
+      "web"
+    ],
+    "owns": {
+      "components": []
+    },
+    "owner": "Backend/Pipeline (CLAUDE.md §Domain Rules: `src/app/api/`)",
+    "spec": "UNRESEARCHED",
+    "spec_refs": [
+      "UNRESEARCHED — src/app/api/products/route.ts carries no SPEC LINK header and no System Map row lists it (docs/specs/00-architecture/00_system_map.md, searched 2026-09-15); guessing the nearest spec would be an invention"
+    ],
+    "spec_version": "0-draft",
+    "versioning": {
+      "answer": "none",
+      "why": "No call site anywhere in src/** or mobile/** (verified 2026-09-15 by an exact-path sweep that strips comment lines), so no consumer holds a compatibility promise to break.",
+      "evidence": [
+        "src/app/api/products/route.ts — no caller",
+        "src/lib/auth/route-guard.ts:150-201"
+      ]
+    },
+    "ref": "C-027"
+  },
+  "inputs": {
+    "answer": "none",
+    "why": "It reaches no table and no upstream contract — the response is assembled from constants in the route file itself.",
+    "evidence": [
+      "src/app/api/products/route.ts — read in full 2026-09-15; no SQL, no fetch to another contract"
+    ],
+    "contract_ref": [],
+    "query_key": [],
+    "field_whitelist": [
+      "products"
+    ],
+    "tables": []
+  },
+  "outputs": {
+    "answer": "none",
+    "why": "A QUERY contract writes nothing; the handler issues no INSERT/UPDATE/DELETE anywhere in the file or in the libs it calls.",
+    "evidence": [
+      "src/app/api/products/route.ts — read in full 2026-09-15; no INSERT/UPDATE/DELETE reached"
+    ],
+    "contract_ref": [],
+    "tables": []
+  },
+  "state": {
+    "answer": "server_only",
+    "why": "A CONTRACT holds no client state: every value is resolved per request on the server and nothing is cached in a client store by the route itself.",
+    "evidence": [
+      "src/app/api/products/route.ts:5 (GET export)",
+      "src/lib/api/with-api-envelope.ts:27-52"
+    ],
+    "fields": []
+  },
+  "staleness": {
+    "answer": "none",
+    "why": "It serves no server-stored data, so there is nothing that can be stale.",
+    "evidence": [
+      "src/app/api/products/route.ts — read in full 2026-09-15; no table read"
+    ],
+    "offline": "none"
+  },
+  "guards": {
+    "session": {
+      "answer": "anon",
+      "why": "classifyRoute(\"/api/products\") returns \"public\" (executed 2026-09-15); the handler adds no check of its own, so middleware is the only gate.",
+      "evidence": [
+        "src/lib/auth/route-guard.ts:150-201 — classifyRoute executed 2026-09-15 with the concrete path",
+        "src/middleware.ts — the only gate for this path (no in-handler auth call)"
+      ]
+    },
+    "rls_class": {
+      "answer": "none",
+      "why": "It reaches no table, so no RLS class applies.",
+      "evidence": [
+        "docs/specs/00-architecture/114_rls_policy_catalog.md §2"
+      ]
+    },
+    "disclosure": {
+      "fields": [
+        "products"
+      ],
+      "why": "Reachable with no session at all (classifyRoute → public). These are the top-level fields an unauthenticated caller receives."
+    },
+    "entitlement": "none",
+    "flag": "none",
+    "permission": "none",
+    "rate_bucket": "none"
+  },
+  "render": {
+    "targets": [
+      "screen"
+    ],
+    "projection": "none",
+    "breakpoints": "none",
+    "export": "none"
+  },
+  "checks": [
+    {
+      "id": "contract_products__auth_class_parity",
+      "kind": "auth_class_parity",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "why": "guards.session must equal classifyRoute(\"/api/products\"), executed 2026-09-15 → \"public\"; there is no in-handler check, so a middleware change silently re-classes this route. No test file in src/tests/** imports this route — the parity is unlocked."
+    },
+    {
+      "id": "contract_products__error_envelope",
+      "kind": "error_state",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "why": "MEASURED DEVIATION, permanently non-zero until re-projected: The handler returns {products} (route.ts:6) — no data/error/meta. The envelope shape exists only on the wrapper's uncaught path (with-api-envelope.ts:41-50), which is effectively unreachable: the handler does no I/O and cannot throw. Retighten condition: the handler returns the envelope on every path."
+    },
+    {
+      "id": "contract_products__field_whitelist_parity",
+      "kind": "field_whitelist_parity",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "why": "MEASURED: the projection is row_spread (src/app/api/products/route.ts:6 — PRODUCT_GROUPS returned verbatim; each element is {id, slug, name, sort_order, type} per src/lib/classification/products.ts:10-36), so a column added upstream reaches the client without a code change. Permanently non-zero until the response is an explicit pick; retighten condition: projection.kind === explicit_pick."
+    },
+    {
+      "id": "contract_products__anon_disclosure",
+      "kind": "disclosure",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "why": "classifyRoute returns \"public\": the field set in guards.disclosure is what an unauthenticated caller receives, and it must match the projection exactly — a field added to the projection is a new anonymous disclosure."
+    }
+  ],
+  "invariants": "none",
+  "plausibility": "none",
+  "states": [
+    {
+      "name": "hit",
+      "golden": "none"
+    }
+  ],
+  "errors": {
+    "answer": "envelope",
+    "why": "It returns a JSON error body, but NOT the standard envelope: The handler returns {products} (route.ts:6) — no data/error/meta. The envelope shape exists only on the wrapper's uncaught path (with-api-envelope.ts:41-50), which is effectively unreachable: the handler does no I/O and  \"envelope\" is the closest member of the closed menu; the deviation is recorded in deviations[].",
+    "evidence": [
+      "src/lib/api/with-api-envelope.ts:27-52",
+      "src/app/api/products/route.ts:6",
+      "src/lib/api/with-api-envelope.ts:42",
+      "src/lib/api/with-api-envelope.ts:48",
+      "src/app/api/products/route.ts:5 (500)"
+    ],
+    "classes": [
+      {
+        "class": "500",
+        "ui": "{data:null,error:{code,message},meta:null} — src/lib/api/with-api-envelope.ts:47-50. The only error path in the route; unreachable in practice since route.ts:6 performs no I/O. — src/app/api/products/route.ts:5 (code INTERNAL_ERROR)"
+      }
+    ]
+  },
+  "emits": {
+    "answer": "none",
+    "why": "Nothing it does is currently countable: src/app/api/products/route.ts was read in full and contains no Sentry breadcrumb, no analytics capture and no ledger INSERT.",
+    "evidence": [
+      "src/app/api/products/route.ts — read in full; no Sentry breadcrumb, no analytics capture and no ledger INSERT"
+    ],
+    "analytics": [],
+    "ledger_events": [],
+    "breadcrumbs": []
+  },
+  "offers": {
+    "answer": "none",
+    "why": "It renders no sponsored placement: the offers and advertisers tables Spec 126 §2 specifies do not exist in migrations/ and nothing in this handler reads placement inventory.",
+    "evidence": [
+      "migrations/ — no CREATE TABLE offers / advertisers (grep 2026-09-15)",
+      "src/app/api/products/route.ts — read in full; no placement read"
+    ]
+  },
+  "metering": {
+    "answer": "none",
+    "why": "Nothing here is counted: no usage_events row (the table does not exist in the introspected schema) and no quota counter is written by this handler.",
+    "evidence": [
+      "src/app/api/products/route.ts — read in full 2026-09-15",
+      "src/lib/db/generated/schema.ts — no usage_events table"
+    ]
+  },
+  "config": {
+    "answer": "none",
+    "why": "It consumes no tunable: no logic_variables read and no env-var-driven threshold in the handler or the libs it calls.",
+    "evidence": [
+      "src/app/api/products/route.ts — read in full 2026-09-15; no loadMarketplaceConfigs / logic_variables read"
+    ],
+    "logic_variables": [],
+    "retired": []
+  },
+  "sharing": {
+    "answer": "none",
+    "why": "ORPHAN: an exact-path sweep of src/** and mobile/** on 2026-09-15 (comment lines stripped) found no call site. That is a measured absence, not proof the endpoint is dead — a caller could be a bookmark or an external system.",
+    "evidence": [
+      "src/app/api/products/route.ts — swept src/** and mobile/** for the exact path on 2026-09-15; zero call sites outside src/tests/**"
+    ],
+    "surfaces": []
+  },
+  "a11y": {
+    "touch_target_min_px": "UNRESEARCHED",
+    "labels": "none",
+    "dark_mode": "none",
+    "reduced_motion": "none",
+    "i18n": "none",
+    "safe_area": "none"
+  },
+  "deviations": [
+    {
+      "from": "docs/specs/00_engineering_standards.md §4.4 — all API routes return { data, error, meta }",
+      "why": "The handler returns {products} (route.ts:6) — no data/error/meta. The envelope shape exists only on the wrapper's uncaught path (with-api-envelope.ts:41-50), which is effectively unreachable: the handler does no I/O and cannot throw.",
+      "adjudicated_by": "not adjudicated — measured 2026-09-15 by reading the handler",
+      "date": "2026-09-15"
+    }
+  ],
+  "limitations": [
+    {
+      "what": "a11y.touch_target_min_px has no legal answer for a CONTRACT",
+      "measured": "The schema allows only UNRESEARCHED or an integer >= 44; a JSON endpoint has no touch target and the vocabulary has no \"n/a\". Left UNRESEARCHED and escalated per Spec 128 §4 rather than invented.",
+      "check_id": "contract_products__auth_class_parity"
+    },
+    {
+      "what": "no consumer, so no fan-out edge",
+      "measured": "The exact-path sweep of src/** and mobile/** (comment lines stripped) returned zero call sites on 2026-09-15.",
+      "check_id": "contract_products__auth_class_parity"
+    }
+  ],
+  "interpretation": "none",
+  "notes": "A 7-line static stub: returns the hardcoded PRODUCT_GROUPS constant from src/lib/classification/products wrapped in withApiEnvelope. No DB access, no auth check. No in-repo caller found. | MEASURED 2026-09-15: NO DATABASE ACCESS. PRODUCT_GROUPS is a hardcoded module-level constant (src/lib/classification/products.ts:9-37) — 27 entries, 20 'material' / 4 'rental' / 3 'service'. This is the ONE route in this group where the empty `reads` list means 'I read every line of the route and its single import and there is no query call', not 'I did not look'. CHECKLIST agreement: routes-index.json lists census_reads [] and census_writes [] for /api/products — confirmed. Unauthenticated caller receives: a static taxonomy of product-group ids, slugs, display names, sort orders and types. No personal data, no valuations, no coordinates — NOT a disclosure finding. The only observation worth recording is that the response is {products: [...]} rather than the {data,error,meta} envelope the wrapper advertises (src/lib/api/with-api-envelope.ts:5-9), so a client that unwraps `.data` gets undefined on success and a populated `.error` only on the (unreachable) failure path. | Caching: none observed — no revalidate/dynamic export and no Cache-Control header in src/app/api/products/route.ts:1-7 (the payload is a module constant, so Next.js may still statically optimize it, but nothing in the file declares that) | Other guards / classification: PUBLIC: '/api/products' is in PUBLIC_PREFIXES (src/lib/auth/route-guard.ts:71), matched at route-guard.ts:170 -> 'public'; middleware pass-through src/middleware.ts:43-45 | ORPHAN — zero call sites in src/** or mobile/** (sweep 2026-09-15, comment lines stripped). | No test file under src/tests/** imports this route.",
+  "x-draft": {
+    "shard": "contracts",
+    "files": [
+      "src/app/api/products/route.ts"
+    ],
+    "loc": 7,
+    "methods": [
+      "GET"
+    ],
+    "consumers": [],
+    "writes_audit_row": "n/a",
+    "consumers_verified": [],
+    "auth_class_executed": "public",
+    "locking_tests": []
+  },
+  "programme": {
+    "scope": "platform_shared",
+    "phase": "UNRESEARCHED",
+    "why": "Used by both products and owned by neither.",
+    "feature": "F15",
+    "build_order": 3152,
+    "leakage": "none",
+    "product_questions": "none",
+    "review": {
+      "status": "unreviewed"
+    }
+  }
+}

@@ -1,0 +1,266 @@
+{
+  "kind": "SURFACE",
+  "status": "exists",
+  "docs": {
+    "purpose": "A holding screen for manufacturer accounts whose feed is configured by hand behind the scenes. It tells the user their account is being set up and that they will be emailed when it is ready, with a button to email support. There is nothing to do here and no way forward from inside the app.",
+    "data_story": "This surface reaches **no API contract at all** — every value it shows is local, passed in as a prop, or read from the device. It holds no client-side store, so there is no local copy of server state to keep in sync. It emits **no analytics event**, so nothing it does is currently countable.",
+    "under_126": "**RE-PROJECT** — it writes nothing and holds no Layer-3 store, so the move is short — the server already assembles the payload and only the rendering is client-side. It renders through the GATE renderer (a `statuses_handled[]` that must cover every value of the closed set it gates on), reading no contract. It owns no component of its own, so its `owns.components[]` is an empty array — a legal answer, written down."
+  },
+  "evidence": {
+    "files": [
+      "mobile/app/(onboarding)/manufacturer-hold.tsx:1"
+    ],
+    "contracts": [
+      "mobile/app/(onboarding)/manufacturer-hold.tsx:1-34 — no /api/ string and no hook in the file"
+    ],
+    "tables": [
+      "mobile/app/(onboarding)/manufacturer-hold.tsx:1-34 — reaches no table"
+    ],
+    "gate": [
+      "mobile/app/_layout.tsx:141-231",
+      "mobile/src/lib/auth/decideAuthGateRoute.ts"
+    ],
+    "states": [
+      "mobile/app/(onboarding)/manufacturer-hold.tsx:11-32"
+    ],
+    "emits": [
+      "mobile/app/(onboarding)/manufacturer-hold.tsx:1-34 — no track() call in the file"
+    ]
+  },
+  "identity": {
+    "id": "mobile_onboarding_manufacturer_hold",
+    "route": "mobile/app/(onboarding)/manufacturer-hold.tsx",
+    "archetype": "GATE",
+    "platforms": [
+      "mobile"
+    ],
+    "owns": {
+      "components": []
+    },
+    "owner": "unassigned (no CODEOWNERS file and no owner registry exists in the repo — measured 2026-09-15)",
+    "spec": "docs/specs/03-mobile/94_mobile_onboarding.md",
+    "spec_refs": [
+      "docs/specs/03-mobile/94_mobile_onboarding.md §7",
+      "docs/specs/03-mobile/96_mobile_subscription.md §8",
+      "docs/specs/03-mobile/99_mobile_state_architecture.md §5.3"
+    ],
+    "spec_version": "0-draft",
+    "versioning": {
+      "answer": "none",
+      "why": "A static holding page with no payload and no consumer.",
+      "evidence": [
+        "mobile/app/(onboarding)/manufacturer-hold.tsx:1-34"
+      ]
+    },
+    "ref": "S-031"
+  },
+  "inputs": {
+    "answer": "none",
+    "why": "It renders fixed copy and a mailto link; the account_preset that routes a user here is read by AuthGate, not by this screen.",
+    "evidence": [
+      "mobile/app/(onboarding)/manufacturer-hold.tsx:10-32",
+      "mobile/src/lib/auth/decideAuthGateRoute.ts"
+    ],
+    "contract_ref": [],
+    "query_key": [],
+    "field_whitelist": [],
+    "tables": []
+  },
+  "outputs": {
+    "answer": "device_only",
+    "why": "Its single action opens the system browser on a mailto: URL — no contract, no store, no server row.",
+    "evidence": [
+      "mobile/app/(onboarding)/manufacturer-hold.tsx:25"
+    ],
+    "contract_ref": [],
+    "tables": [],
+    "rollback": "n/a — nothing is written.",
+    "invalidates": []
+  },
+  "state": {
+    "answer": "none",
+    "why": "No store and no component state.",
+    "evidence": [
+      "mobile/app/(onboarding)/manufacturer-hold.tsx:10-32"
+    ],
+    "fields": []
+  },
+  "staleness": {
+    "answer": "none",
+    "why": "It displays no server data; it is a hold screen the admin releases out of band.",
+    "evidence": [
+      "mobile/app/(onboarding)/manufacturer-hold.tsx:16-22"
+    ],
+    "offline": "none"
+  },
+  "guards": {
+    "session": {
+      "answer": "authenticated",
+      "why": "AuthGate routes an authenticated user here when account_preset is manufacturer and onboarding_complete is false; the screen itself has no gate of its own.",
+      "evidence": [
+        "mobile/app/_layout.tsx:141-231",
+        "mobile/src/lib/auth/decideAuthGateRoute.ts"
+      ]
+    },
+    "rls_class": {
+      "answer": "none",
+      "why": "It reaches no table.",
+      "evidence": [
+        "mobile/app/(onboarding)/manufacturer-hold.tsx:1-34"
+      ]
+    },
+    "disclosure": "none",
+    "entitlement": "none",
+    "flag": "none",
+    "permission": "none",
+    "rate_bucket": "none",
+    "statuses_handled": "UNRESEARCHED"
+  },
+  "render": {
+    "targets": [
+      "screen"
+    ],
+    "projection": "none",
+    "breakpoints": "mobile_first",
+    "export": "none"
+  },
+  "checks": [
+    {
+      "id": "mfr_hold_routing_arm",
+      "kind": "auth_class_parity",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "mobile/__tests__/authGate.test.ts covers the manufacturer arm of the routing matrix — the only thing that can put a user on this screen."
+    },
+    {
+      "id": "mfr_hold_a11y_label",
+      "kind": "a11y_label",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "why": "The single Pressable carries both a role and a label, so this screen is fully labelled."
+    },
+    {
+      "id": "mfr_hold_no_push_token",
+      "kind": "ledger_row_present",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "why": "Deliberately NOT registering a push token here is the declared behaviour (file header): the user has not finished onboarding and the permission prompt has not fired."
+    }
+  ],
+  "invariants": "none",
+  "plausibility": "none",
+  "states": [
+    {
+      "name": "static",
+      "golden": "none"
+    }
+  ],
+  "errors": {
+    "answer": "none",
+    "why": "No async work and no failure path.",
+    "evidence": [
+      "mobile/app/(onboarding)/manufacturer-hold.tsx:24-31"
+    ]
+  },
+  "emits": {
+    "answer": "none",
+    "why": "A user parked on an admin-provisioning hold emits nothing, so how long they wait is not measurable from the client.",
+    "evidence": [
+      "mobile/app/(onboarding)/manufacturer-hold.tsx:1-34"
+    ],
+    "analytics": [],
+    "ledger_events": [],
+    "breadcrumbs": []
+  },
+  "offers": {
+    "answer": "none",
+    "why": "No sponsored placement is rendered: the only slot component in the Expo tree is SponsorSlot, and it returns null unless EXPO_PUBLIC_PARCEL_SPONSORS=1.",
+    "evidence": [
+      "mobile/src/components/parcel/SponsorSlot.tsx:16-20"
+    ]
+  },
+  "metering": {
+    "answer": "none",
+    "why": "Nothing here is counted: the Spec 126 §7 usage ledger table does not exist (grep for usage_events in the introspected drizzle schema returns 0 hits), and the only quota-shaped counter, user_profiles.lead_views_count, is incremented solely by POST /api/leads/view, which has no mobile caller.",
+    "evidence": [
+      "src/lib/db/generated/schema.ts — no usage_events table (grep, 2026-09-15)",
+      "src/app/api/leads/view/route.ts:110",
+      "src/features/leads/api/useLeadView.ts:25 — imported only by src/tests/useLeadView.logic.test.tsx"
+    ]
+  },
+  "config": {
+    "answer": "none",
+    "why": "The surface consumes no registered logic variable: the only server-side tunable in this path, user_profiles.radius_cap_km, is a per-user admin column, not a logic_variables row.",
+    "evidence": [
+      "src/lib/userProfile.schema.ts:40",
+      "src/app/api/user-profile/route.ts:328",
+      "docs/reference/logic-variables-registry.md — no radius_cap_km entry"
+    ],
+    "logic_variables": [],
+    "retired": []
+  },
+  "sharing": {
+    "answer": "none",
+    "why": "It renders no contract.",
+    "evidence": [
+      "mobile/app/(onboarding)/manufacturer-hold.tsx:1-34"
+    ],
+    "surfaces": []
+  },
+  "a11y": {
+    "touch_target_min_px": 52,
+    "labels": "complete",
+    "dark_mode": "hardcoded",
+    "reduced_motion": "none",
+    "i18n": "none",
+    "safe_area": [
+      "top",
+      "bottom",
+      "left",
+      "right"
+    ]
+  },
+  "deviations": "none",
+  "limitations": [
+    {
+      "what": "The screen promises an email (\"We'll email you when your custom feed is ready\") that the client cannot verify was ever sent.",
+      "measured": "The file header states the admin activates the account and a notification email is sent; the screen calls no contract that would confirm it.",
+      "check_id": "mfr_hold_routing_arm"
+    }
+  ],
+  "interpretation": "none",
+  "notes": "SafeAreaView is used with no `edges` prop here, which means all four edges are inset — unlike the app tabs, which pin edges={[\"top\"]}.",
+  "x-draft": {
+    "shard": "mobile-product",
+    "files": [
+      "mobile/app/(onboarding)/manufacturer-hold.tsx"
+    ],
+    "loc": 34,
+    "call_idiom": "none",
+    "stores": [],
+    "measured_states": [
+      "loaded"
+    ],
+    "measured_gate": {
+      "session": "required",
+      "entitlement": "none",
+      "flag": "none",
+      "permission": "none"
+    }
+  },
+  "programme": {
+    "scope": "platform_shared",
+    "phase": "UNRESEARCHED",
+    "why": "Onboarding writes `user_profiles` columns both products read; the flow is shared even though its copy is lead-gen-shaped today.",
+    "feature": "F11",
+    "build_order": 3113,
+    "leakage": "none",
+    "product_questions": "none",
+    "review": {
+      "status": "unreviewed"
+    }
+  }
+}

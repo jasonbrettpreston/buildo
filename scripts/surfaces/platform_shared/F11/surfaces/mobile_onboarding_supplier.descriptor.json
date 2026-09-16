@@ -1,0 +1,407 @@
+{
+  "kind": "SURFACE",
+  "status": "exists",
+  "docs": {
+    "purpose": "Optionally asks which supplier the user mainly buys from, offering a grid of the common names for their trade plus a free-text box for anything else. It can be skipped entirely. If there are no known suppliers for that trade, the screen skips itself automatically and the user never sees it.",
+    "data_story": "It reads nothing from the database directly. Every value arrives through 2 contracts: `/api/onboarding/suppliers`, `/api/user-profile`. Behind those contracts, the data comes from `entitlements`, `trade_suppliers` and `user_profiles`, and writes land on `entitlements` and `user_profiles`. It also holds client-side state in `onboardingStore` and `filterStore`, which is the part a server-driven projection has to absorb or justify. It emits **no analytics event**, so nothing it does is currently countable.",
+    "under_126": "**REBUILD** — it holds Layer-3 state (`onboardingStore` and `filterStore`) and drives writes, so a client decision has to be re-homed on the server before the projection can be honest. It renders through the WIZARD_STEP renderer (declared step index, advance condition, resume key and skip rule), reading by reference: `/api/onboarding/suppliers`, `/api/user-profile`. It owns no component of its own, so its `owns.components[]` is an empty array — a legal answer, written down."
+  },
+  "evidence": {
+    "files": [
+      "mobile/app/(onboarding)/supplier.tsx:1"
+    ],
+    "contracts": [
+      "mobile/app/(onboarding)/supplier.tsx:45-52",
+      "mobile/app/(onboarding)/supplier.tsx:111-114"
+    ],
+    "tables": [
+      "src/app/api/onboarding/suppliers/route.ts:25-31",
+      "src/app/api/user-profile/route.ts:393"
+    ],
+    "gate": [
+      "src/lib/auth/route-guard.ts:120-132",
+      "mobile/app/_layout.tsx:141-231"
+    ],
+    "states": [
+      "mobile/app/(onboarding)/supplier.tsx:59-66",
+      "mobile/app/(onboarding)/supplier.tsx:136-142"
+    ],
+    "emits": [
+      "mobile/app/(onboarding)/supplier.tsx:1-213 — no track() call in the file"
+    ]
+  },
+  "identity": {
+    "id": "mobile_onboarding_supplier",
+    "route": "mobile/app/(onboarding)/supplier.tsx",
+    "archetype": "WIZARD_STEP",
+    "platforms": [
+      "mobile"
+    ],
+    "owns": {
+      "components": []
+    },
+    "owner": "unassigned (no CODEOWNERS file and no owner registry exists in the repo — measured 2026-09-15)",
+    "spec": "docs/specs/03-mobile/94_mobile_onboarding.md",
+    "spec_refs": [
+      "docs/specs/03-mobile/94_mobile_onboarding.md §5",
+      "docs/specs/03-mobile/94_mobile_onboarding.md §6",
+      "docs/specs/01-pipeline/87_supplier_audience.md"
+    ],
+    "spec_version": "0-draft",
+    "versioning": {
+      "answer": "breaking_allowed",
+      "why": "The suppliers response is a bare { data: { suppliers: string[] } } with no Zod mirror on either side — a local interface only, so both ends move together in one commit.",
+      "evidence": [
+        "mobile/app/(onboarding)/supplier.tsx:21-23",
+        "src/app/api/onboarding/suppliers/route.ts:25-33"
+      ]
+    },
+    "ref": "S-034"
+  },
+  "inputs": {
+    "answer": "contract",
+    "why": "GET /api/onboarding/suppliers?trade= supplies the grid, keyed on the canonical filterStore.tradeSlug; the free-text \"Other\" box is the only non-contract input.",
+    "evidence": [
+      "mobile/app/(onboarding)/supplier.tsx:45-52",
+      "mobile/app/(onboarding)/supplier.tsx:34"
+    ],
+    "contract_ref": [
+      "/api/onboarding/suppliers",
+      "/api/user-profile"
+    ],
+    "query_key": [
+      "onboarding-suppliers",
+      "tradeSlug"
+    ],
+    "field_whitelist": [
+      "data.suppliers"
+    ],
+    "tables": [
+      {
+        "table": "trade_suppliers",
+        "columns": [
+          "trade_slug",
+          "name",
+          "display_order",
+          "active"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/01-pipeline/80_taxonomies.md",
+        "evidence": [
+          "src/app/api/onboarding/suppliers/route.ts:25-31",
+          "migrations/113_trade_suppliers.sql:23 — the rows are INSERTed by the migration seed",
+          "docs/reference/data-lineage-map.md — table absent from the generated map (checked 2026-09-15)"
+        ]
+      },
+      {
+        "table": "user_profiles",
+        "columns": [
+          "user_id",
+          "supplier_selection"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/03-mobile/95_mobile_user_profiles.md",
+        "evidence": [
+          "src/app/api/user-profile/route.ts:393",
+          "src/lib/userProfile.schema.ts:85-122",
+          "migrations/230_rls_class_a_entitlements.sql:62-68"
+        ]
+      }
+    ]
+  },
+  "outputs": {
+    "answer": "contract_only",
+    "why": "The selection PATCHes first and only then writes filterStore.setSupplierSelection; Skip deliberately writes nothing at all, so the step advances without a server round-trip.",
+    "evidence": [
+      "mobile/app/(onboarding)/supplier.tsx:105-134",
+      "mobile/app/(onboarding)/supplier.tsx:97-103"
+    ],
+    "contract_ref": [
+      "/api/user-profile"
+    ],
+    "tables": [
+      {
+        "table": "user_profiles",
+        "columns": [
+          "user_id",
+          "supplier_selection"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/03-mobile/95_mobile_user_profiles.md",
+        "evidence": [
+          "src/app/api/user-profile/route.ts:393",
+          "src/lib/userProfile.schema.ts:85-122",
+          "migrations/230_rls_class_a_entitlements.sql:62-68"
+        ]
+      }
+    ],
+    "rollback": "none needed — the local mirror is written only after the PATCH resolves; a failure renders \"Could not save. Please try again.\" and the step does not advance.",
+    "invalidates": []
+  },
+  "state": {
+    "answer": "mmkv",
+    "why": "It reads the MMKV-persisted filterStore.tradeSlug to key the query (so a cold boot mid-onboarding still resolves the right supplier list) and writes supplierSelection back into the same store.",
+    "evidence": [
+      "mobile/app/(onboarding)/supplier.tsx:27-34",
+      "mobile/app/(onboarding)/supplier.tsx:118"
+    ],
+    "fields": [
+      {
+        "name": "currentStep",
+        "owner_layer": "4a_mmkv",
+        "canonical_writer": "useOnboardingStore.setStep, called by each step before it navigates",
+        "authorized_readers": [
+          "shell_app_root"
+        ],
+        "bridge": "none",
+        "persistence": "mmkv",
+        "signout_reset": true
+      },
+      {
+        "name": "selectedPath",
+        "owner_layer": "4a_mmkv",
+        "canonical_writer": "mobile_onboarding_path (and profession, for the realtor shortcut)",
+        "authorized_readers": [
+          "mobile_onboarding_address",
+          "mobile_onboarding_supplier",
+          "mobile_onboarding_terms"
+        ],
+        "bridge": "none",
+        "persistence": "mmkv",
+        "signout_reset": true
+      },
+      {
+        "name": "supplierSelection",
+        "owner_layer": "3_zustand",
+        "canonical_writer": "this surface, after the PATCH confirms",
+        "authorized_readers": [
+          "mobile_settings"
+        ],
+        "bridge": "B3",
+        "persistence": "mmkv",
+        "signout_reset": true
+      }
+    ]
+  },
+  "staleness": {
+    "answer": "query_cache",
+    "why": "The supplier list inherits the global 5-minute staleTime — no per-hook override — which is harmless because the step is visited once.",
+    "evidence": [
+      "mobile/app/(onboarding)/supplier.tsx:45-52",
+      "mobile/src/lib/queryClient.ts:37-44"
+    ],
+    "offline": "blocked",
+    "stale_time_ms": 300000,
+    "gc_time_ms": 86400000
+  },
+  "guards": {
+    "session": {
+      "answer": "authenticated",
+      "why": "The step is only reachable once AuthGate has a Supabase user whose server profile says onboarding_complete is false; PATCH /api/user-profile is an authenticated route.",
+      "evidence": [
+        "src/lib/auth/route-guard.ts:120-132",
+        "mobile/app/_layout.tsx:141-231",
+        "src/app/api/onboarding/suppliers/route.ts:9"
+      ]
+    },
+    "rls_class": {
+      "answer": "B",
+      "why": "trade_suppliers is not in the Class-A list and is read as table owner through the route; the write target, user_profiles, is Class A.",
+      "evidence": [
+        "migrations/227_rls_class_b_default_deny.sql:42-110",
+        "migrations/230_rls_class_a_entitlements.sql:62-68"
+      ]
+    },
+    "disclosure": "none",
+    "entitlement": "none",
+    "flag": "none",
+    "permission": "none",
+    "rate_bucket": "none — neither /api/onboarding/suppliers nor /api/user-profile calls withRateLimit"
+  },
+  "render": {
+    "targets": [
+      "screen"
+    ],
+    "projection": "grid",
+    "breakpoints": "mobile_first",
+    "export": "none",
+    "wizard": "UNRESEARCHED"
+  },
+  "checks": [
+    {
+      "id": "supplier_auto_skip",
+      "kind": "empty_state",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "When the query resolves with zero suppliers the step auto-skips to the next screen rather than rendering an empty grid; the guard on selectedTrade prevents a premature skip while the store rehydrates (supplier.tsx:59-66)."
+    },
+    {
+      "id": "supplier_error_state",
+      "kind": "error_state",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "A failed PATCH renders \"Could not save. Please try again.\" above the CTA and the step does not advance (supplier.tsx:129-133, 183-185)."
+    },
+    {
+      "id": "supplier_contract_parse",
+      "kind": "contract_parse",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "why": "Measured absence: the response is typed with a local interface and read as data?.data?.suppliers ?? [] — a drifted shape becomes an empty list, which the auto-skip then treats as \"this trade has no suppliers\"."
+    }
+  ],
+  "invariants": "none",
+  "plausibility": "none",
+  "states": [
+    {
+      "name": "loading",
+      "golden": "none"
+    },
+    {
+      "name": "empty",
+      "golden": "none"
+    },
+    {
+      "name": "hit",
+      "golden": "none"
+    },
+    {
+      "name": "error",
+      "golden": "none"
+    }
+  ],
+  "errors": {
+    "answer": "inline",
+    "why": "One inline red line above the CTA; a failed supplier LIST fetch has no rendering at all and degrades into the auto-skip path.",
+    "evidence": [
+      "mobile/app/(onboarding)/supplier.tsx:183-185",
+      "mobile/app/(onboarding)/supplier.tsx:59-66"
+    ]
+  },
+  "emits": {
+    "answer": "none",
+    "why": "No event fires, so neither the supplier chosen nor the skip rate is measurable — which is the one thing Spec 87's supplier-audience work would need.",
+    "evidence": [
+      "mobile/app/(onboarding)/supplier.tsx:1-213"
+    ],
+    "analytics": [],
+    "ledger_events": [],
+    "breadcrumbs": []
+  },
+  "offers": {
+    "answer": "none",
+    "why": "No sponsored placement is rendered: the only slot component in the Expo tree is SponsorSlot, and it returns null unless EXPO_PUBLIC_PARCEL_SPONSORS=1.",
+    "evidence": [
+      "mobile/src/components/parcel/SponsorSlot.tsx:16-20"
+    ]
+  },
+  "metering": {
+    "answer": "none",
+    "why": "Nothing here is counted: the Spec 126 §7 usage ledger table does not exist (grep for usage_events in the introspected drizzle schema returns 0 hits), and the only quota-shaped counter, user_profiles.lead_views_count, is incremented solely by POST /api/leads/view, which has no mobile caller.",
+    "evidence": [
+      "src/lib/db/generated/schema.ts — no usage_events table (grep, 2026-09-15)",
+      "src/app/api/leads/view/route.ts:110",
+      "src/features/leads/api/useLeadView.ts:25 — imported only by src/tests/useLeadView.logic.test.tsx"
+    ]
+  },
+  "config": {
+    "answer": "none",
+    "why": "The surface consumes no registered logic variable: the only server-side tunable in this path, user_profiles.radius_cap_km, is a per-user admin column, not a logic_variables row.",
+    "evidence": [
+      "src/lib/userProfile.schema.ts:40",
+      "src/app/api/user-profile/route.ts:328",
+      "docs/reference/logic-variables-registry.md — no radius_cap_km entry"
+    ],
+    "logic_variables": [],
+    "retired": []
+  },
+  "sharing": {
+    "answer": "shared",
+    "why": "PATCH /api/user-profile is rendered by every onboarding step, both shells, settings and the filter sheet — it is the most-shared contract in the mobile estate.",
+    "evidence": [
+      "mobile/src/hooks/usePatchProfile.ts:49",
+      "mobile/app/(onboarding)/supplier.tsx:111"
+    ],
+    "surfaces": [
+      "mobile_onboarding_profession",
+      "mobile_onboarding_address",
+      "mobile_onboarding_supplier",
+      "mobile_onboarding_terms",
+      "mobile_onboarding_complete",
+      "mobile_settings",
+      "shell_app_root",
+      "shell_app_tabs",
+      "overlay_lead_filter_sheet",
+      "mobile_lead_feed"
+    ]
+  },
+  "a11y": {
+    "touch_target_min_px": 44,
+    "labels": "partial",
+    "dark_mode": "hardcoded",
+    "reduced_motion": "none",
+    "i18n": "none",
+    "safe_area": [
+      "top",
+      "bottom"
+    ]
+  },
+  "deviations": "none",
+  "limitations": [
+    {
+      "what": "A supplier-list fetch error is indistinguishable from \"this trade has no suppliers\": both land on the auto-skip.",
+      "measured": "supplier.tsx:45-66 never reads isError; suppliers defaults to [] and the effect fires router.replace on length 0.",
+      "check_id": "supplier_auto_skip"
+    },
+    {
+      "what": "Only the Confirm CTA carries an accessibility attribute (role); the supplier tiles, the Other field and Skip carry none.",
+      "measured": "grep -c \"accessibilityLabel|accessibilityRole\" mobile/app/(onboarding)/supplier.tsx → 1.",
+      "check_id": "supplier_error_state"
+    }
+  ],
+  "interpretation": "none",
+  "notes": "This is the only onboarding step with an inbound contract, and it reaches it with a useQuery whose queryFn is a bare fetchWithAuth — the PATCH on the same screen has no hook at all.",
+  "x-draft": {
+    "shard": "mobile-product",
+    "files": [
+      "mobile/app/(onboarding)/supplier.tsx"
+    ],
+    "loc": 213,
+    "call_idiom": "direct",
+    "stores": [
+      "onboardingStore",
+      "filterStore"
+    ],
+    "measured_states": [
+      "loading_spinner",
+      "auto_skip",
+      "list_loaded",
+      "patching",
+      "patch_error"
+    ],
+    "measured_gate": {
+      "session": "required",
+      "entitlement": "none",
+      "flag": "none",
+      "permission": "none"
+    }
+  },
+  "programme": {
+    "scope": "platform_shared",
+    "phase": "UNRESEARCHED",
+    "why": "Onboarding writes `user_profiles` columns both products read; the flow is shared even though its copy is lead-gen-shaped today.",
+    "feature": "F11",
+    "build_order": 3113,
+    "leakage": "none",
+    "product_questions": "none",
+    "review": {
+      "status": "unreviewed"
+    }
+  }
+}

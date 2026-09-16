@@ -1,0 +1,248 @@
+{
+  "kind": "SURFACE",
+  "status": "exists",
+  "docs": {
+    "purpose": "The operator's front page: a grid of ten tiles, each a doorway to one internal tool - data quality, market metrics, lead-feed testing, the parcel cost model, the flight centre watchlist, the configuration control panel, app health, user management, notifications, and security. It is navigation only; it loads no data of its own and shows no numbers.",
+    "data_story": "This surface reaches **no API contract at all** — every value it shows is local, passed in as a prop, or read from the device.",
+    "under_126": "**RE-PROJECT** — it writes nothing and holds no Layer-3 store, so the move is short — the server already assembles the payload and only the rendering is client-side. It renders through the STATIC renderer (content source and SEO, or a declared redirect alone), reading no contract. It owns no component of its own, so its `owns.components[]` is an empty array — a legal answer, written down."
+  },
+  "evidence": {
+    "files": [
+      "src/app/admin/page.tsx:17"
+    ],
+    "contracts": [
+      "src/app/admin/page.tsx:1"
+    ],
+    "tables": [
+      "src/app/admin/page.tsx:1"
+    ],
+    "gate": [
+      "src/lib/auth/route-guard.ts:162",
+      "src/middleware.ts:95"
+    ],
+    "states": [
+      "src/app/admin/page.tsx:17",
+      "src/tests/admin.ui.test.tsx:1"
+    ],
+    "emits": [
+      "src/app/admin/page.tsx:1"
+    ]
+  },
+  "identity": {
+    "id": "admin_home",
+    "route": "src/app/admin/page.tsx",
+    "archetype": "STATIC",
+    "platforms": [
+      "web"
+    ],
+    "owns": {
+      "components": []
+    },
+    "owner": "UNRESEARCHED",
+    "spec": "docs/specs/02-web-admin/26_admin_dashboard.md",
+    "spec_refs": [
+      "docs/specs/02-web-admin/26_admin_dashboard.md §3.1",
+      "docs/specs/02-web-admin/26_admin_dashboard.md §5",
+      "docs/specs/02-web-admin/76_lead_feed_health_dashboard.md §2.4"
+    ],
+    "spec_version": "0-draft",
+    "versioning": {
+      "answer": "none",
+      "why": "It renders no payload at all, so there is nothing for a consumer to depend on and no compatibility promise to make.",
+      "evidence": [
+        "src/app/admin/page.tsx:1"
+      ]
+    },
+    "ref": "S-021"
+  },
+  "inputs": {
+    "answer": "none",
+    "why": "It takes no input: a hand-written grid of ten links with no fetch, no hook and no props.",
+    "evidence": [
+      "src/app/admin/page.tsx:1",
+      "src/app/admin/page.tsx:17"
+    ],
+    "contract_ref": [],
+    "query_key": [],
+    "field_whitelist": [],
+    "tables": []
+  },
+  "outputs": {
+    "answer": "none",
+    "why": "Forced on STATIC, and true here: the file contains no mutation, no form and no action.",
+    "evidence": [
+      "src/app/admin/page.tsx:1"
+    ],
+    "contract_ref": [],
+    "tables": []
+  },
+  "state": {
+    "answer": "none",
+    "why": "No hook, no store, no useState — one unconditional render.",
+    "evidence": [
+      "src/app/admin/page.tsx:1"
+    ],
+    "fields": []
+  },
+  "staleness": {
+    "answer": "static",
+    "why": "The tile list is source code; it changes only when the file is deployed.",
+    "evidence": [
+      "src/app/admin/page.tsx:17"
+    ],
+    "offline": "none"
+  },
+  "guards": {
+    "session": {
+      "answer": "admin",
+      "why": "classifyRoute reaches the admin arm on the first disjunct — pathname === \"/admin\" — before any authenticated or public prefix is tried.",
+      "evidence": [
+        "src/lib/auth/route-guard.ts:162",
+        "src/middleware.ts:95"
+      ]
+    },
+    "rls_class": {
+      "answer": "none",
+      "why": "It reaches no table, so no policy class applies.",
+      "evidence": [
+        "src/app/admin/page.tsx:1"
+      ]
+    },
+    "disclosure": "none",
+    "entitlement": "none",
+    "flag": "none",
+    "permission": "none",
+    "rate_bucket": "none"
+  },
+  "render": {
+    "targets": [
+      "screen"
+    ],
+    "projection": "grid",
+    "breakpoints": "none",
+    "export": "none"
+  },
+  "checks": [
+    {
+      "id": "admin_home_link_targets_live",
+      "kind": "schema_declared",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "Every tile must point at a route that exists — the retired nested flight-center link was already repointed once, and a dangling tile is how an operator finds a 308 instead of a tool."
+    },
+    {
+      "id": "admin_home_a11y_label",
+      "kind": "a11y_label",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "why": "Each tile is a link whose accessible name is its visible heading; there are no explicit aria-labels, so the name depends entirely on the copy staying meaningful."
+    }
+  ],
+  "invariants": "none",
+  "plausibility": "none",
+  "states": [
+    {
+      "name": "static",
+      "golden": "none"
+    }
+  ],
+  "errors": {
+    "answer": "none",
+    "why": "Nothing can fail: no fetch, no boundary, no error.tsx sibling.",
+    "evidence": [
+      "src/app/admin/page.tsx:1"
+    ]
+  },
+  "emits": {
+    "answer": "none",
+    "why": "No captureEvent, no track, no ledger — a tile click is invisible to telemetry.",
+    "evidence": [
+      "src/app/admin/page.tsx:1"
+    ],
+    "analytics": [],
+    "ledger_events": [],
+    "breadcrumbs": []
+  },
+  "offers": {
+    "answer": "none",
+    "why": "An internal operator tool renders no sponsored placement; no offers/placements table is reached from any file it owns.",
+    "evidence": [
+      "src/app/admin/page.tsx:1"
+    ]
+  },
+  "metering": {
+    "answer": "none",
+    "why": "Nothing here is billable or quota-bearing: no usage_events / ledger write is reached from this surface or its contracts.",
+    "evidence": [
+      "src/app/admin/page.tsx:1"
+    ]
+  },
+  "config": {
+    "answer": "none",
+    "why": "No tunable of any kind is read; the tile list is a literal.",
+    "evidence": [
+      "src/app/admin/page.tsx:17"
+    ],
+    "logic_variables": [],
+    "retired": []
+  },
+  "sharing": {
+    "answer": "none",
+    "why": "It renders no contract.",
+    "evidence": [
+      "src/app/admin/page.tsx:1"
+    ],
+    "surfaces": []
+  },
+  "a11y": {
+    "touch_target_min_px": "UNRESEARCHED",
+    "labels": "partial",
+    "dark_mode": "none",
+    "reduced_motion": "ignored",
+    "i18n": "none",
+    "safe_area": "none"
+  },
+  "deviations": "none",
+  "limitations": [
+    {
+      "what": "The spec and the code describe different surfaces",
+      "measured": "Spec 26 §3.1 names /admin the Pipeline Dashboard and lists this file as its target, but the live page is a pure link hub with no pipeline panel.",
+      "check_id": "admin_home_link_targets_live"
+    },
+    {
+      "what": "Three of the fifteen admin routes have no tile",
+      "measured": "/admin/lead-feed/inspector and /admin/pipeline/step-output are reachable only by link from another page, and /admin/lead-feed/flight-center is a retired redirect.",
+      "check_id": "admin_home_link_targets_live"
+    }
+  ],
+  "interpretation": "none",
+  "notes": "Spec 26 Sec 3.1 names '/admin' the Pipeline Dashboard and its Target Files list src/app/admin/page.tsx, but the live page is a pure link hub with no pipeline panel - the spec and the code describe different surfaces. Spec 26 Sec 5 also records Spec 76 as sharing this file. Ten tiles vs the 15 admin routes measured here: /admin/lead-feed/inspector and /admin/pipeline/step-output are reached only from other pages, and /admin/lead-feed/flight-center is a retired redirect. identity.owner is UNRESEARCHED estate-wide: no owner registry exists in the tree, so naming one would be an invention rather than a measurement. a11y.touch_target_min_px is UNRESEARCHED because its vocabulary (UNRESEARCHED or an integer >= 44) has no member for a desktop-only admin page that declares no floor.",
+  "x-draft": {
+    "shard": "admin-existing",
+    "files": [
+      "src/app/admin/page.tsx"
+    ],
+    "loc": 165,
+    "measured_states": [
+      "static"
+    ],
+    "measured_gate": {
+      "session": "admin",
+      "why": "classifyRoute('/admin') reaches the admin-pages arm `pathname === '/admin' || pathname.startsWith('/admin/')` - the first disjunct matches exactly - and returns 'admin'. It is checked before every authenticated/public-prefix arm."
+    }
+  },
+  "programme": {
+    "scope": "platform_shared",
+    "phase": "UNRESEARCHED",
+    "why": "An admin surface that operates the PLATFORM (users, entitlements, security, tunables, pipeline health) rather than either product specifically.",
+    "feature": "F16",
+    "build_order": 3163,
+    "leakage": "none",
+    "product_questions": "none",
+    "review": {
+      "status": "unreviewed"
+    }
+  }
+}

@@ -1,0 +1,463 @@
+{
+  "kind": "SURFACE",
+  "status": "exists",
+  "docs": {
+    "purpose": "The operator's directory of every account. It searches by email, phone, name or company and filters by account persona, subscription status, trade, and whether a subscription cancellation failed at the payment provider. Results are paged by the server, and each row opens that account's detail page. A button opens a small form for creating a supplier or enterprise account directly.",
+    "data_story": "It reads nothing from the database directly. Every value arrives through one contract: `/api/admin/users`. Behind that contract, the data comes from `entitlements` and `user_profiles`, and writes land on `admin_audit_log`, `entitlements` and `user_profiles`.",
+    "under_126": "**REBUILD** — it drives writes, so a client decision has to be re-homed on the server before the projection can be honest. It renders through the LIST renderer (a collection with declared pagination, recycling and empty/offline states), reading by reference: `/api/admin/users`. It owns no component of its own, so its `owns.components[]` is an empty array — a legal answer, written down."
+  },
+  "evidence": {
+    "files": [
+      "src/app/admin/users/page.tsx:13",
+      "src/app/admin/users/page.tsx:18"
+    ],
+    "contracts": [
+      "src/app/api/admin/users/route.ts:61",
+      "src/app/api/admin/users/route.ts:140",
+      "src/features/admin-users/api/useAdminUsers.ts:100"
+    ],
+    "tables": [
+      "src/app/api/admin/users/route.ts:52",
+      "src/app/api/admin/users/route.ts:246",
+      "src/lib/entitlements/index.ts:223",
+      "src/lib/admin/admin-audit.ts:72"
+    ],
+    "gate": [
+      "src/lib/auth/route-guard.ts:162",
+      "src/middleware.ts:95",
+      "src/app/api/admin/users/route.ts:62",
+      "src/app/api/admin/users/route.ts:141"
+    ],
+    "states": [
+      "src/app/admin/users/page.tsx:18",
+      "src/tests/admin-users.infra.test.ts:1"
+    ],
+    "emits": [
+      "src/features/admin-users/api/useAdminUsers.ts:157"
+    ]
+  },
+  "identity": {
+    "id": "admin_users",
+    "route": "src/app/admin/users/page.tsx",
+    "archetype": "LIST",
+    "platforms": [
+      "web"
+    ],
+    "owns": {
+      "components": []
+    },
+    "owner": "UNRESEARCHED",
+    "spec": "docs/specs/02-web-admin/21_admin_user_management.md",
+    "spec_refs": [
+      "docs/specs/02-web-admin/21_admin_user_management.md §3.1",
+      "docs/specs/02-web-admin/21_admin_user_management.md §5",
+      "docs/specs/02-web-admin/21_admin_user_management.md §6",
+      "docs/specs/02-web-admin/21_admin_user_management.md §2"
+    ],
+    "spec_version": "0-draft",
+    "versioning": {
+      "answer": "additive_only",
+      "why": "GET returns the raw joined rows and the column whitelist lives in the SQL, so adding a column adds a field to every consumer; removing one breaks the directory table silently.",
+      "evidence": [
+        "src/app/api/admin/users/route.ts:52",
+        "src/app/api/admin/users/route.ts:117"
+      ]
+    },
+    "ref": "S-026"
+  },
+  "inputs": {
+    "answer": "contract",
+    "why": "One contract, with the filter set serialised into a query string by the directory hook; the page reads no table.",
+    "evidence": [
+      "src/features/admin-users/api/useAdminUsers.ts:100",
+      "src/app/api/admin/users/route.ts:61"
+    ],
+    "contract_ref": [
+      "/api/admin/users"
+    ],
+    "query_key": [
+      "admin",
+      "users",
+      "q",
+      "preset",
+      "subscription_status",
+      "trade_slug",
+      "stripe_cancel_failed",
+      "offset"
+    ],
+    "field_whitelist": [
+      "user_id",
+      "email",
+      "phone_number",
+      "full_name",
+      "company_name",
+      "trade_slug",
+      "trade_slugs_override",
+      "account_preset",
+      "subscription_status",
+      "onboarding_complete",
+      "account_deleted_at",
+      "created_at"
+    ],
+    "tables": [
+      {
+        "table": "user_profiles",
+        "columns": [
+          "user_id",
+          "email",
+          "phone_number",
+          "full_name",
+          "company_name",
+          "trade_slug",
+          "trade_slugs_override",
+          "account_preset",
+          "onboarding_complete",
+          "account_deleted_at",
+          "created_at",
+          "stripe_cancel_failed_at"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/00-architecture/114_rls_policy_catalog.md §3.1",
+        "evidence": [
+          "src/app/api/admin/users/route.ts:52",
+          "src/app/api/admin/users/route.ts:95"
+        ]
+      },
+      {
+        "table": "entitlements",
+        "columns": [
+          "user_id",
+          "product",
+          "status"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/00-architecture/116_multi_product_architecture.md",
+        "evidence": [
+          "src/lib/entitlements/index.ts:68"
+        ]
+      },
+      {
+        "table": "profiles",
+        "columns": [
+          "is_admin"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/00-architecture/114_rls_policy_catalog.md §5",
+        "evidence": [
+          "src/app/api/admin/users/route.ts:62",
+          "src/lib/auth/verify-admin.ts:118"
+        ]
+      }
+    ]
+  },
+  "outputs": {
+    "answer": "contract_only",
+    "why": "Create provisions the account server-side — GoTrue user, user_profiles row and an admin_managed entitlement in one transaction — and the directory waits for the created row plus its one-time reset link.",
+    "evidence": [
+      "src/app/api/admin/users/route.ts:140",
+      "src/app/api/admin/users/route.ts:244",
+      "src/app/api/admin/users/route.ts:287"
+    ],
+    "contract_ref": [
+      "/api/admin/users"
+    ],
+    "rollback": "The route deletes the freshly created GoTrue user if the transaction fails. There is no rollback once it commits: an unwanted account is retired through the detail page's delete branch, not undone here.",
+    "invalidates": [
+      "admin.users.list"
+    ],
+    "tables": [
+      {
+        "table": "user_profiles",
+        "columns": [
+          "user_id",
+          "email",
+          "company_name",
+          "account_preset",
+          "trade_slug",
+          "trade_slugs_override",
+          "radius_cap_km",
+          "onboarding_complete",
+          "updated_at"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/00-architecture/114_rls_policy_catalog.md §3.1",
+        "evidence": [
+          "src/app/api/admin/users/route.ts:246"
+        ]
+      },
+      {
+        "table": "entitlements",
+        "columns": [
+          "user_id",
+          "product",
+          "status",
+          "created_at",
+          "updated_at"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/00-architecture/116_multi_product_architecture.md",
+        "evidence": [
+          "src/lib/entitlements/index.ts:223",
+          "src/app/api/admin/users/route.ts:261"
+        ]
+      },
+      {
+        "table": "admin_audit_log",
+        "columns": [
+          "admin_uid",
+          "action",
+          "target_uid",
+          "new_value",
+          "reason"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/00-architecture/114_rls_policy_catalog.md §3.2",
+        "evidence": [
+          "src/lib/admin/admin-audit.ts:72",
+          "src/app/api/admin/users/route.ts:287"
+        ]
+      }
+    ]
+  },
+  "state": {
+    "answer": "zustand",
+    "why": "useUserDirectoryStore owns the filters and the paging offset (Layer 3) on top of the root provider's Layer-2 cache; offset is a raw row offset, not a page index.",
+    "evidence": [
+      "src/features/admin-users/store/useUserDirectoryStore.ts:37",
+      "src/app/admin/users/page.tsx:18"
+    ],
+    "fields": []
+  },
+  "staleness": {
+    "answer": "query_cache",
+    "why": "15s staleTime with a one-hour gcTime, so paging back to a previous filter set is instant while a directory left open still refreshes quickly.",
+    "evidence": [
+      "src/features/admin-users/api/useAdminUsers.ts:100"
+    ],
+    "stale_time_ms": 15000,
+    "gc_time_ms": 3600000,
+    "offline": "cached_projection"
+  },
+  "guards": {
+    "session": {
+      "answer": "admin",
+      "why": "There is no admin Postgres role: classifyRoute sends every /admin/* path down the admin arm, and the real boundary is verifyAdminAuth reading profiles.is_admin on the route. Both handlers verify on their first line and POST additionally refuses the x-admin-key credential, so an account cannot be provisioned by a CI token.",
+      "evidence": [
+        "src/lib/auth/route-guard.ts:162",
+        "src/middleware.ts:95",
+        "src/app/api/admin/users/route.ts:62",
+        "src/app/api/admin/users/route.ts:141"
+      ]
+    },
+    "rls_class": {
+      "answer": "A",
+      "why": "user_profiles is one of the ten auth.uid()-owned Class-A tables and admin_audit_log is the admin-identity subtype; a directory that lists every user's rows is only possible through the service role.",
+      "evidence": [
+        "docs/specs/00-architecture/114_rls_policy_catalog.md:107",
+        "docs/specs/00-architecture/114_rls_policy_catalog.md:148"
+      ]
+    },
+    "disclosure": "none",
+    "entitlement": "none",
+    "flag": "none",
+    "permission": "none",
+    "rate_bucket": "none"
+  },
+  "render": {
+    "targets": [
+      "screen"
+    ],
+    "projection": "list",
+    "breakpoints": "desktop_first_md",
+    "export": "none",
+    "list": "UNRESEARCHED"
+  },
+  "checks": [
+    {
+      "id": "users_create_audited",
+      "kind": "ledger_row_present",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "POST writes a create_account row to admin_audit_log naming the preset, the trades and whether an existing auth user was adopted."
+    },
+    {
+      "id": "users_reset_link_no_store",
+      "kind": "disclosure",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "why": "The create response carries a live password-reset link, so the route sets Cache-Control: no-store on it — the only response in the shard that does."
+    },
+    {
+      "id": "users_empty_state",
+      "kind": "empty_state",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "A filter set that matches nobody must render the declared empty state; the stripe_cancel_failed filter is a sweep surface whose normal answer is zero rows, and a blank table would read as a broken page."
+    },
+    {
+      "id": "users_selector_atomicity",
+      "kind": "selector_atomicity",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "why": "The page destructures the whole store in one call rather than reading atomic selectors, so any filter change re-renders the directory — acceptable at this size, named here so it is not mistaken for the Flight Center's pattern."
+    }
+  ],
+  "invariants": "none",
+  "plausibility": "none",
+  "states": [
+    {
+      "name": "loading",
+      "golden": "none"
+    },
+    {
+      "name": "empty",
+      "golden": "none"
+    },
+    {
+      "name": "hit",
+      "golden": "none"
+    },
+    {
+      "name": "error",
+      "golden": "none"
+    }
+  ],
+  "errors": {
+    "answer": "toast",
+    "why": "Create failures raise a sonner toast and keep the modal open with its input; a failed directory read renders inline in the table area.",
+    "evidence": [
+      "src/app/admin/users/page.tsx:13",
+      "src/features/admin-users/api/useAdminUsers.ts:157"
+    ],
+    "classes": [
+      {
+        "class": "400",
+        "ui": "toast with the validation detail; the modal stays open"
+      },
+      {
+        "class": "403",
+        "ui": "toast — a non-session credential cannot create an account"
+      }
+    ]
+  },
+  "emits": {
+    "answer": "both",
+    "why": "The create hook emits admin_action_performed with the account preset, and the route writes a durable create_account row to admin_audit_log.",
+    "evidence": [
+      "src/features/admin-users/api/useAdminUsers.ts:157",
+      "src/app/api/admin/users/route.ts:287"
+    ],
+    "analytics": [
+      "admin_action_performed"
+    ],
+    "ledger_events": [],
+    "breadcrumbs": []
+  },
+  "offers": {
+    "answer": "none",
+    "why": "An internal operator tool renders no sponsored placement; no offers/placements table is reached from any file it owns.",
+    "evidence": [
+      "src/app/admin/users/page.tsx:1"
+    ]
+  },
+  "metering": {
+    "answer": "none",
+    "why": "Nothing here is billable or quota-bearing: no usage_events / ledger write is reached from this surface or its contracts.",
+    "evidence": [
+      "src/app/api/admin/users/route.ts:61"
+    ]
+  },
+  "config": {
+    "answer": "none",
+    "why": "No logic_variables row is read on either arm; the presets and the radius cap are code constants.",
+    "evidence": [
+      "src/app/api/admin/users/route.ts:246"
+    ],
+    "logic_variables": [],
+    "retired": []
+  },
+  "sharing": {
+    "answer": "shared",
+    "why": "The directory row shape is the same joined user_profiles/entitlements projection the detail page reads, and every row links into that surface.",
+    "evidence": [
+      "src/app/api/admin/users/route.ts:52",
+      "src/app/api/admin/users/[uid]/route.ts:73"
+    ],
+    "surfaces": [
+      "admin_user_detail"
+    ]
+  },
+  "a11y": {
+    "touch_target_min_px": "UNRESEARCHED",
+    "labels": "partial",
+    "dark_mode": "none",
+    "reduced_motion": "none",
+    "i18n": "none",
+    "safe_area": "none"
+  },
+  "deviations": "none",
+  "limitations": [
+    {
+      "what": "The create audit row is written outside the provisioning transaction",
+      "measured": "The user_profiles/entitlements transaction commits first and the audit INSERT follows, so an audit failure leaves a committed provisioned account reported to the operator as a 500.",
+      "check_id": "users_create_audited"
+    },
+    {
+      "what": "GET returns the raw joined rows",
+      "measured": "The response is ok(rowsRes.rows, ...) — the column whitelist is enforced only by the SELECT list, so a widened SELECT widens the payload with no code change at the boundary.",
+      "check_id": "users_empty_state"
+    },
+    {
+      "what": "The measured create_modal_open state has no member in the states[] vocabulary",
+      "measured": "Opening the create dialog is a real render branch; the closed set has no modal/dialog member.",
+      "check_id": "none — vocabulary gap, escalated per Spec 128 §4"
+    },
+    {
+      "what": "touch_target_min_px has no legal answer for a desktop-only admin page",
+      "measured": "The schema allows only UNRESEARCHED or an integer >= 44, and nothing in this surface declares a 44px floor (grep for min-h-[44 / h-11 over its owned files returns nothing).",
+      "check_id": "none — vocabulary gap, escalated per Spec 128 §4"
+    }
+  ],
+  "interpretation": "none",
+  "notes": "/api/admin/users serves both GET (directory, built by a query-string helper in src/features/admin-users/api/useAdminUsers.ts) and POST (create). The filter state lives in a Zustand store (useUserDirectoryStore); `offset` is a raw row offset, not a page index. The stripe_cancel_failed filter is the Spec 21 Sec 6 sweep surface for accounts whose delete-time cancellation failed. Hooks and store live under src/features/, outside src/components/, so excluded from files. identity.owner is UNRESEARCHED estate-wide: no owner registry exists in the tree, so naming one would be an invention rather than a measurement. a11y.touch_target_min_px is UNRESEARCHED because its vocabulary (UNRESEARCHED or an integer >= 44) has no member for a desktop-only admin page that declares no floor. Across the whole estate only 6 of 20 mutating admin handlers write an admin_audit_log row (users POST, users/[uid] PATCH, the two subscription-ops POSTs, mfa/verify POST, mfa DELETE); the users surfaces are five of those six.",
+  "x-draft": {
+    "shard": "admin-existing",
+    "files": [
+      "src/app/admin/users/page.tsx"
+    ],
+    "loc": 262,
+    "measured_states": [
+      "loading",
+      "empty",
+      "error",
+      "loaded",
+      "create_modal_open"
+    ],
+    "measured_gate": {
+      "session": "admin",
+      "why": "classifyRoute('/admin/users') matches the admin-pages arm via `pathname.startsWith('/admin/')` -> 'admin'."
+    }
+  },
+  "programme": {
+    "scope": "platform_shared",
+    "phase": "UNRESEARCHED",
+    "why": "An admin surface that operates the PLATFORM (users, entitlements, security, tunables, pipeline health) rather than either product specifically.",
+    "feature": "F16",
+    "build_order": 3163,
+    "leakage": "none",
+    "product_questions": "none",
+    "review": {
+      "status": "unreviewed"
+    }
+  }
+}

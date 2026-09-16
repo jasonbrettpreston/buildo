@@ -1,0 +1,499 @@
+{
+  "kind": "CONTRACT",
+  "status": "exists",
+  "docs": {
+    "purpose": "Returns the current data-quality dashboard and its 30-day trend: permit, trade, property and committee-of-adjustment metrics, detected volume, schema and duration anomalies, recent pipeline failures, and live database health statistics — for staff monitoring system health.",
+    "data_story": "It reads 4 tables — `data_quality_snapshots`, `pipeline_runs`, `logic_variables` and `pg_stat_user_tables` and writes nothing. Its response shape is **unmeasured** as a pick-by-name whitelist — it passes rows through, spreads a row into a computed object, or assembles the payload dynamically, so there is no single list naming what leaves the server. It is called from 1 place: `admin_data_quality`.",
+    "under_126": "Becomes a **CONTRACT descriptor** of archetype `QUERY`. It declares its `database.reads[]` with named columns, its response projection as an explicit whitelist, its auth class, its rate bucket and its staleness — and `outputs.writes` is forced to `\"none\"`. Its `consumers[]` becomes the edge list of the fan-out graph — the join nothing in this estate holds today."
+  },
+  "evidence": {
+    "files": [
+      "src/app/api/quality/route.ts:1"
+    ],
+    "contracts": [
+      "src/app/api/quality/route.ts:106 (GET export)",
+      "src/lib/api/with-api-envelope.ts:27-52"
+    ],
+    "tables": [
+      "src/app/api/quality/route.ts:108 (getQualityData)",
+      "src/lib/quality/metrics.ts:274-277 (SELECT * ... ORDER BY snapshot_date DESC LIMIT 30)",
+      "src/app/api/quality/route.ts:127-154",
+      "src/app/api/quality/route.ts:174-184",
+      "src/app/api/quality/route.ts:61-64",
+      "src/app/api/quality/route.ts:224-231",
+      "src/lib/db/generated/schema.ts — every table named here is present in the introspected drizzle schema"
+    ],
+    "gate": [
+      "src/lib/auth/route-guard.ts — PUBLIC_PREFIXES — '/api/quality'",
+      "src/lib/auth/route-guard.ts:150-201 — classifyRoute executed 2026-09-15 with the concrete path → \"public\"",
+      "no in-handler auth call in src/app/api/quality/route.ts — src/middleware.ts is the only gate"
+    ],
+    "states": [
+      "hit: src/app/api/quality/route.ts:271-277",
+      "empty: src/app/api/quality/route.ts:111-121 (no trends -> anomalies [] and schemaDrift []) and route.ts:262-264 (data.current null -> health level 'red', issues ['No snapshot data'])",
+      "partial: src/app/api/quality/route.ts:163-165 (pipeline_runs unreadable -> durationAnomalies stays [], silently) and route.ts:191-193 (failures query fails -> logError, pipelineFailures stays [], response still 200)",
+      "degraded: src/app/api/quality/route.ts:254-259 (pg_stat_user_tables unreadable -> logError, engineHealth [] , response still 200) and route.ts:89-97 (thresholds fell back to seeded defaults -> one aggregated logWarn, no response marker)",
+      "error: src/app/api/quality/route.ts:278-284"
+    ],
+    "emits": [
+      "src/app/api/quality/route.ts — read in full; no Sentry breadcrumb, no analytics capture and no ledger INSERT"
+    ]
+  },
+  "identity": {
+    "id": "contract_quality",
+    "route": "/api/quality",
+    "archetype": "QUERY",
+    "platforms": [
+      "web"
+    ],
+    "owns": {
+      "components": []
+    },
+    "owner": "Backend/Pipeline (CLAUDE.md §Domain Rules: `src/app/api/`)",
+    "spec": "docs/specs/02-web-admin/26_admin_dashboard.md",
+    "spec_refs": [
+      "docs/specs/02-web-admin/26_admin_dashboard.md — owns src/app/api/quality/route.ts per docs/specs/00-architecture/00_system_map.md:87; the System Map row names no section, and the route file carries no SPEC LINK header"
+    ],
+    "spec_version": "0-draft",
+    "versioning": {
+      "answer": "breaking_allowed",
+      "why": "Every consumer is in src/** and ships in the same Next.js deploy as the route, so a breaking change is one commit.",
+      "evidence": [
+        "src/components/DataQualityDashboard.tsx:286"
+      ]
+    },
+    "ref": "C-028"
+  },
+  "inputs": {
+    "answer": "app_outputs",
+    "why": "It reads 4 table(s) directly; 2 of them are materialised by named pipeline steps (compute_cost_estimates, assert_data_bounds), so its inputs are the pipeline's outputs rather than another contract.",
+    "evidence": [
+      "src/app/api/quality/route.ts:108 (getQualityData)",
+      "src/lib/quality/metrics.ts:274-277 (SELECT * ... ORDER BY snapshot_date DESC LIMIT 30)",
+      "scripts/compute-cost-estimates.js",
+      "docs/reference/data-lineage-map.md:486",
+      "scripts/manifest.json#chains",
+      "docs/reference/data-lineage-map.md",
+      "src/app/api/quality/route.ts:61-64",
+      "docs/specs/00-architecture/00_system_map.md:94",
+      "docs/reference/data-lineage-map.md:646 — table present, no pipeline producer listed",
+      "docs/reference/data-lineage-map.md — no `## `logic_variables`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)"
+    ],
+    "contract_ref": [],
+    "query_key": [],
+    "field_whitelist": [
+      "current",
+      "trends",
+      "lastUpdated",
+      "anomalies",
+      "schemaDrift",
+      "health",
+      "engineHealth",
+      "engineHealthAnomalies"
+    ],
+    "tables": [
+      {
+        "table": "data_quality_snapshots",
+        "columns": "all",
+        "producing_steps": [
+          "compute_cost_estimates",
+          "refresh_snapshot"
+        ],
+        "chain_position": "permits[17] · permits[20], coa[9], sources[25], deep_scrapes[3]",
+        "owner_spec": "docs/specs/01-pipeline/41_chain_permits.md",
+        "evidence": [
+          "src/app/api/quality/route.ts:108 (getQualityData)",
+          "src/lib/quality/metrics.ts:274-277 (SELECT * ... ORDER BY snapshot_date DESC LIMIT 30)",
+          "scripts/compute-cost-estimates.js",
+          "docs/reference/data-lineage-map.md:486",
+          "scripts/manifest.json#chains",
+          "docs/reference/data-lineage-map.md"
+        ]
+      },
+      {
+        "table": "logic_variables",
+        "columns": [
+          "variable_key",
+          "variable_value"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/02-web-admin/86_control_panel.md",
+        "evidence": [
+          "src/app/api/quality/route.ts:61-64",
+          "docs/specs/00-architecture/00_system_map.md:94",
+          "docs/reference/data-lineage-map.md:646 — table present, no pipeline producer listed",
+          "docs/reference/data-lineage-map.md — no `## `logic_variables`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)"
+        ]
+      },
+      {
+        "table": "pg_stat_user_tables",
+        "columns": [
+          "relname",
+          "n_live_tup",
+          "n_dead_tup",
+          "seq_scan",
+          "idx_scan"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "n/a — PostgreSQL system catalog/view; no Buildo spec owns it",
+        "evidence": [
+          "src/app/api/quality/route.ts:224-231",
+          "https://www.postgresql.org/docs/current/catalogs.html (server-owned object, not a Buildo table)",
+          "docs/reference/data-lineage-map.md:1164 — table present, no pipeline producer listed",
+          "docs/reference/data-lineage-map.md — no `## `pg_stat_user_tables`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)"
+        ]
+      },
+      {
+        "table": "pipeline_runs",
+        "columns": [
+          "pipeline",
+          "duration_ms",
+          "status",
+          "started_at",
+          "records_meta",
+          "error_message"
+        ],
+        "producing_steps": [
+          "assert_data_bounds",
+          "assert_pre_permit_aging",
+          "assert_schema"
+        ],
+        "chain_position": "permits[21], coa[10], sources[26], deep_scrapes[4] · not-in-a-chain · permits[0], coa[0], sources[1]",
+        "owner_spec": "docs/specs/01-pipeline/41_chain_permits.md",
+        "evidence": [
+          "src/app/api/quality/route.ts:127-154",
+          "src/app/api/quality/route.ts:174-184",
+          "scripts/quality/assert-data-bounds.js",
+          "docs/reference/data-lineage-map.md:1205",
+          "scripts/manifest.json#chains",
+          "docs/reference/data-lineage-map.md"
+        ]
+      }
+    ]
+  },
+  "outputs": {
+    "answer": "none",
+    "why": "A QUERY contract writes nothing; the handler issues no INSERT/UPDATE/DELETE anywhere in the file or in the libs it calls.",
+    "evidence": [
+      "src/app/api/quality/route.ts — read in full 2026-09-15; no INSERT/UPDATE/DELETE reached"
+    ],
+    "contract_ref": [],
+    "tables": []
+  },
+  "state": {
+    "answer": "server_only",
+    "why": "A CONTRACT holds no client state: every value is resolved per request on the server and nothing is cached in a client store by the route itself.",
+    "evidence": [
+      "src/app/api/quality/route.ts:106 (GET export)",
+      "src/lib/api/with-api-envelope.ts:27-52"
+    ],
+    "fields": []
+  },
+  "staleness": {
+    "answer": "snapshot",
+    "why": "It serves a materialised projection (data_quality_snapshots); its freshness is that projection's refresh cadence, not the request's.",
+    "evidence": [
+      "src/app/api/quality/route.ts:108 (getQualityData)",
+      "src/lib/quality/metrics.ts:274-277 (SELECT * ... ORDER BY snapshot_date DESC LIMIT 30)",
+      "scripts/compute-cost-estimates.js",
+      "docs/reference/data-lineage-map.md:486",
+      "scripts/manifest.json#chains",
+      "docs/reference/data-lineage-map.md"
+    ],
+    "offline": "none",
+    "producing_step": "compute_cost_estimates"
+  },
+  "guards": {
+    "session": {
+      "answer": "anon",
+      "why": "classifyRoute(\"/api/quality\") returns \"public\" (executed 2026-09-15); the handler adds no check of its own, so middleware is the only gate.",
+      "evidence": [
+        "src/lib/auth/route-guard.ts:150-201 — classifyRoute executed 2026-09-15 with the concrete path",
+        "src/middleware.ts — the only gate for this path (no in-handler auth call)"
+      ]
+    },
+    "rls_class": {
+      "answer": "B",
+      "why": "Every table it reaches has RLS enabled with zero policies — default deny for anon and authenticated; only the table owner and service_role get through.",
+      "evidence": [
+        "migrations/227_rls_class_b_default_deny.sql:47",
+        "migrations/227_rls_class_b_default_deny.sql:78",
+        "migrations/227_rls_class_b_default_deny.sql:61",
+        "docs/specs/00-architecture/114_rls_policy_catalog.md §2"
+      ]
+    },
+    "disclosure": {
+      "fields": [
+        "current",
+        "trends",
+        "lastUpdated",
+        "anomalies",
+        "schemaDrift",
+        "health",
+        "engineHealth",
+        "engineHealthAnomalies"
+      ],
+      "why": "Reachable with no session at all (classifyRoute → public). These are the top-level fields an unauthenticated caller receives; at least one query is a whole-row SELECT *, so the projection is the table, not a whitelist."
+    },
+    "entitlement": "none",
+    "flag": "none",
+    "permission": "none",
+    "rate_bucket": "none"
+  },
+  "render": {
+    "targets": [
+      "screen"
+    ],
+    "projection": "none",
+    "breakpoints": "none",
+    "export": "none"
+  },
+  "checks": [
+    {
+      "id": "contract_quality__auth_class_parity",
+      "kind": "auth_class_parity",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "why": "guards.session must equal classifyRoute(\"/api/quality\"), executed 2026-09-15 → \"public\"; there is no in-handler check, so a middleware change silently re-classes this route. Locked by ledger-gate-callers.db.test.ts, quality.infra.test.ts."
+    },
+    {
+      "id": "contract_quality__error_envelope",
+      "kind": "error_state",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "why": "MEASURED DEVIATION, permanently non-zero until re-projected: Success spreads getQualityData()'s result plus four computed keys (route.ts:271-277) — no data/error/meta wrapper. The handler's 500 is a bare {error: '<string>'} (route.ts:281). The real envelope only appears on the wrapper's uncaught path (with-api-envelope. Retighten condition: the handler returns the envelope on every path."
+    },
+    {
+      "id": "contract_quality__contract_parse",
+      "kind": "contract_parse",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "why": "Request input is parsed by NumericVariableValue (response-side only, not request input) at src/app/api/quality/route.ts:77 before any query runs; a payload that fails the schema is refused, never coerced."
+    },
+    {
+      "id": "contract_quality__field_whitelist_parity",
+      "kind": "field_whitelist_parity",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "why": "MEASURED: the projection is mixed (src/app/api/quality/route.ts:271-277 (…data spread + 4 named keys + …enginePayload), src/lib/quality/metrics.ts:280-284 ({current, trends, lastUpdated}, each a SELECT * snapshot row), src/app/api/quality/route.ts:266-269 (enginePayload = {engineHealth, engineHealthAnomalies}), src/app/api/quality/route.ts:241-249 (engine entries ARE an explicit 7-field pick)), so a column added upstream reaches the client without a code change. Permanently non-zero until the response is an explicit pick; retighten condition: projection.kind === explicit_pick."
+    },
+    {
+      "id": "contract_quality__schema_declared",
+      "kind": "schema_declared",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "Every table and column declared in lineage.reads[]/writes[] must exist in src/lib/db/generated/schema.ts (drizzle-kit introspect of the live database); the registry generator checks this both directions."
+    },
+    {
+      "id": "contract_quality__anon_disclosure",
+      "kind": "disclosure",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "why": "classifyRoute returns \"public\": the field set in guards.disclosure is what an unauthenticated caller receives, and it must match the projection exactly — a field added to the projection is a new anonymous disclosure."
+    }
+  ],
+  "invariants": "none",
+  "plausibility": "none",
+  "states": [
+    {
+      "name": "hit",
+      "golden": "none"
+    },
+    {
+      "name": "empty",
+      "golden": "none"
+    },
+    {
+      "name": "partial",
+      "golden": "none"
+    },
+    {
+      "name": "degraded",
+      "golden": "none"
+    },
+    {
+      "name": "error",
+      "golden": "none"
+    }
+  ],
+  "errors": {
+    "answer": "envelope",
+    "why": "It returns a JSON error body, but NOT the standard envelope: Success spreads getQualityData()'s result plus four computed keys (route.ts:271-277) — no data/error/meta wrapper. The handler's 500 is a bare {error: '<string>'} (route.ts:281). The real envelope only appears on the wra \"envelope\" is the closest member of the closed menu; the deviation is recorded in deviations[].",
+    "evidence": [
+      "src/lib/api/with-api-envelope.ts:27-52",
+      "src/app/api/quality/route.ts:271-277",
+      "src/app/api/quality/route.ts:280-283",
+      "src/lib/api/with-api-envelope.ts:42",
+      "src/lib/api/with-api-envelope.ts:48",
+      "src/app/api/quality/route.ts:282 (500)",
+      "src/app/api/quality/route.ts:106 (500)"
+    ],
+    "classes": [
+      {
+        "class": "500",
+        "ui": "{error: 'Failed to fetch data quality metrics'} — src/app/api/quality/route.ts:282"
+      }
+    ]
+  },
+  "emits": {
+    "answer": "none",
+    "why": "Nothing it does is currently countable: src/app/api/quality/route.ts was read in full and contains no Sentry breadcrumb, no analytics capture and no ledger INSERT.",
+    "evidence": [
+      "src/app/api/quality/route.ts — read in full; no Sentry breadcrumb, no analytics capture and no ledger INSERT"
+    ],
+    "analytics": [],
+    "ledger_events": [],
+    "breadcrumbs": []
+  },
+  "offers": {
+    "answer": "none",
+    "why": "It renders no sponsored placement: the offers and advertisers tables Spec 126 §2 specifies do not exist in migrations/ and nothing in this handler reads placement inventory.",
+    "evidence": [
+      "migrations/ — no CREATE TABLE offers / advertisers (grep 2026-09-15)",
+      "src/app/api/quality/route.ts — read in full; no placement read"
+    ]
+  },
+  "metering": {
+    "answer": "none",
+    "why": "Nothing here is counted: no usage_events row (the table does not exist in the introspected schema) and no quota counter is written by this handler.",
+    "evidence": [
+      "src/app/api/quality/route.ts — read in full 2026-09-15",
+      "src/lib/db/generated/schema.ts — no usage_events table"
+    ]
+  },
+  "config": {
+    "answer": "logic_variables",
+    "why": "It consumes 7 operator-editable tunable(s) from the logic_variables table rather than a literal in code.",
+    "evidence": [
+      "src/app/api/quality/route.ts:55 (keys from ENGINE_HEALTH_DEFAULTS), src/lib/quality/types.ts:509",
+      "src/app/api/quality/route.ts:55, src/lib/quality/types.ts:510",
+      "src/app/api/quality/route.ts:55, src/lib/quality/types.ts:511",
+      "src/app/api/quality/route.ts:55, src/lib/quality/types.ts:512",
+      "src/app/api/quality/route.ts:55, src/lib/quality/types.ts:513",
+      "src/app/api/quality/route.ts:55, src/lib/quality/types.ts:514",
+      "src/app/api/quality/route.ts:55, src/lib/quality/types.ts:515",
+      "migrations/092_control_panel.sql:27"
+    ],
+    "logic_variables": [
+      {
+        "name": "engine_health_dead_tuple_ratio_warn_max",
+        "on_invalid": "default",
+        "why": "no min/max declared; only 'must parse as a finite number' (src/app/api/quality/route.ts:29-34). Seeded default 0.10 (src/lib/quality/types.ts:509)"
+      },
+      {
+        "name": "engine_health_dead_tuple_min_rows",
+        "on_invalid": "default",
+        "why": "finite-number only (src/app/api/quality/route.ts:29-34); default 1000"
+      },
+      {
+        "name": "engine_health_seq_scan_ratio_warn_max",
+        "on_invalid": "default",
+        "why": "finite-number only; default 0.80"
+      },
+      {
+        "name": "engine_health_seq_scan_min_rows",
+        "on_invalid": "default",
+        "why": "finite-number only; default 10000"
+      },
+      {
+        "name": "engine_health_ping_pong_ratio_warn_max",
+        "on_invalid": "default",
+        "why": "finite-number only; default 10"
+      },
+      {
+        "name": "engine_health_insp_dead_tuple_fail_pct",
+        "on_invalid": "default",
+        "why": "finite-number only; default 10"
+      },
+      {
+        "name": "engine_health_insp_update_insert_fail_ratio",
+        "on_invalid": "default",
+        "why": "finite-number only; default 5"
+      }
+    ],
+    "retired": []
+  },
+  "sharing": {
+    "answer": "sole",
+    "why": "Exactly one call site renders it, so its projection serves one surface.",
+    "evidence": [
+      "src/components/DataQualityDashboard.tsx:286"
+    ],
+    "surfaces": [
+      "src/components/DataQualityDashboard.tsx:286"
+    ]
+  },
+  "a11y": {
+    "touch_target_min_px": "UNRESEARCHED",
+    "labels": "none",
+    "dark_mode": "none",
+    "reduced_motion": "none",
+    "i18n": "none",
+    "safe_area": "none"
+  },
+  "deviations": [
+    {
+      "from": "docs/specs/00_engineering_standards.md §4.4 — all API routes return { data, error, meta }",
+      "why": "Success spreads getQualityData()'s result plus four computed keys (route.ts:271-277) — no data/error/meta wrapper. The handler's 500 is a bare {error: '<string>'} (route.ts:281). The real envelope only appears on the wrapper's uncaught path (with-api-envelope.ts:41-50), which the handler's own try/catch (route.ts:107-284) largely forecloses.",
+      "adjudicated_by": "not adjudicated — measured 2026-09-15 by reading the handler",
+      "date": "2026-09-15"
+    },
+    {
+      "from": "docs/specs/00_engineering_standards.md §4.3 — never SELECT *, always project specific columns",
+      "why": "At least one query reads the whole row: data_quality_snapshots.",
+      "adjudicated_by": "not adjudicated — measured 2026-09-15",
+      "date": "2026-09-15"
+    }
+  ],
+  "limitations": [
+    {
+      "what": "a11y.touch_target_min_px has no legal answer for a CONTRACT",
+      "measured": "The schema allows only UNRESEARCHED or an integer >= 44; a JSON endpoint has no touch target and the vocabulary has no \"n/a\". Left UNRESEARCHED and escalated per Spec 128 §4 rather than invented.",
+      "check_id": "contract_quality__auth_class_parity"
+    }
+  ],
+  "interpretation": "none",
+  "notes": "No SPEC LINK file path — inline comments reference 'Spec 26 §3.4' by number only, so spec is left unmeasured per the hard rule. This route is classified PUBLIC by route-guard.ts despite serving internal health data; the engine-health query is deliberately scoped to a curated 11-table allowlist rather than all public tables to avoid disclosing row counts for sensitive tables, with a disclosure ruling filed pending in docs/reports/review_followups.md. pg_stat_user_tables is a Postgres catalog view, not an application table. Engine-health thresholds are read from seven logic_variables keys with a loud aggregated warning fallback to module defaults. | MEASURED 2026-09-15: DISCLOSURE (unauthenticated): an anonymous caller receives (a) the ENTIRE latest data_quality_snapshots row plus the last 30 days of them via SELECT * (src/lib/quality/metrics.ts:274) — that is the full operational-metrics surface: total_permits, active_permits, builders_with_phone/email/website, coa_* counts, null_* counts, violation_* counts, last_sync_at/last_sync_status, sla_permits_ingestion_hours, and schema_column_counts (a per-table COLUMN COUNT for permits/builders/coa_applications/parcels/permit_trades/permit_parcels — src/lib/quality/metrics.ts:642-647), i.e. schema-shape reconnaissance; (b) pipeline INTERNALS — pipeline names and, for any pipeline whose latest run failed, the raw `error_message` verbatim (route.ts:186-190), which can carry stack/SQL fragments; (c) live pg_stat_user_tables row counts, dead-tuple counts and scan counts for 11 named tables (route.ts:224-234). No per-user or per-permit PII. The file itself flags the boundary it did NOT cross: route.ts:198-208 records that widening the engine-health scope from 11 to all 87 tables would publish row counts for admin_backup_codes, admin_audit_log, subscribe_nonces, stripe_webhook_events, profiles, user_profiles and device_tokens, and says it is blocked on an auth ruling. That is a comment (a claim), but the CODE corroborates it: the ANY($1) list at route.ts:232-234 contains only the 11 business tables. The exposure of `error_message` and `schema_column_counts` is the part no comment defends. CHECKLIST agreement: routes-index.json census_reads (data_quality_snapshots, pipeline_runs, logic_variables, pg_stat_user_tables) matches exactly. The 7 logic_variables are Zod-bounded only for finiteness, never for range — a seeded 0 or a negative value would pass NumericVariableValue (route.ts:29-34) and silently disable an anomaly check. | Caching: none observed — no revalidate/dynamic export and no Cache-Control header in src/app/api/quality/route.ts:1-285 | Other guards / classification: PUBLIC: '/api/quality' is in PUBLIC_PREFIXES (src/lib/auth/route-guard.ts:75), matched at route-guard.ts:170 -> 'public'; middleware pass-through src/middleware.ts:43-45. The file's own comments (route.ts:41-43, :204-205) state this and the code acts on it — the engine-health table list is deliberately curated to 11 tables (route.ts:232-234) rather than all 87. | Locking tests: src/tests/db/ledger-gate-callers.db.test.ts, src/tests/quality.infra.test.ts.",
+  "x-draft": {
+    "shard": "contracts",
+    "files": [
+      "src/app/api/quality/route.ts"
+    ],
+    "loc": 285,
+    "methods": [
+      "GET"
+    ],
+    "consumers": [
+      "admin_data_quality"
+    ],
+    "writes_audit_row": "n/a",
+    "consumers_verified": [
+      "src/components/DataQualityDashboard.tsx:286"
+    ],
+    "auth_class_executed": "public",
+    "locking_tests": [
+      "src/tests/db/ledger-gate-callers.db.test.ts",
+      "src/tests/quality.infra.test.ts"
+    ]
+  },
+  "programme": {
+    "scope": "platform_shared",
+    "phase": "UNRESEARCHED",
+    "why": "Used by both products and owned by neither.",
+    "feature": "F16",
+    "build_order": 3162,
+    "leakage": "none",
+    "product_questions": "none",
+    "review": {
+      "status": "unreviewed"
+    }
+  }
+}

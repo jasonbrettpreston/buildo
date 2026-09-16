@@ -1,0 +1,250 @@
+{
+  "kind": "SURFACE",
+  "status": "exists",
+  "docs": {
+    "purpose": "Holds the eight setup screens in order so the user can move forward and back through them. It deliberately makes no decision about when setup is finished or where to send the user next — that judgement belongs entirely to the outermost wrapper.",
+    "data_story": "This surface reaches **no API contract at all** — every value it shows is local, passed in as a prop, or read from the device. It holds no client-side store, so there is no local copy of server state to keep in sync. It emits **no analytics event**, so nothing it does is currently countable.",
+    "under_126": "**RE-PROJECT** — it writes nothing and holds no Layer-3 store, so the move is short — the server already assembles the payload and only the rendering is client-side. It renders through the SHELL renderer (declared routing branches, guards and child groups — a shell here is not inert), reading no contract. It owns no component of its own, so its `owns.components[]` is an empty array — a legal answer, written down."
+  },
+  "evidence": {
+    "files": [
+      "mobile/app/(onboarding)/_layout.tsx:1"
+    ],
+    "contracts": [
+      "mobile/app/(onboarding)/_layout.tsx:1-29 — a Stack with eight declared screens; no contract, no hook"
+    ],
+    "tables": [
+      "mobile/app/(onboarding)/_layout.tsx:1-29 — reaches no table"
+    ],
+    "gate": [
+      "mobile/app/(onboarding)/_layout.tsx:4-13",
+      "mobile/app/_layout.tsx:141-231"
+    ],
+    "states": [
+      "mobile/app/(onboarding)/_layout.tsx:18-27"
+    ],
+    "emits": [
+      "mobile/app/(onboarding)/_layout.tsx:1-29 — no track() call"
+    ]
+  },
+  "identity": {
+    "id": "shell_onboarding_stack",
+    "route": "mobile/app/(onboarding)/_layout.tsx",
+    "archetype": "SHELL",
+    "platforms": [
+      "mobile"
+    ],
+    "owns": {
+      "components": []
+    },
+    "owner": "unassigned (no CODEOWNERS file and no owner registry exists in the repo — measured 2026-09-15)",
+    "spec": "docs/specs/03-mobile/94_mobile_onboarding.md",
+    "spec_refs": [
+      "docs/specs/03-mobile/94_mobile_onboarding.md §10",
+      "docs/specs/03-mobile/93_mobile_auth.md §5",
+      "docs/specs/03-mobile/99_mobile_state_architecture.md §5.1"
+    ],
+    "spec_version": "0-draft",
+    "versioning": {
+      "answer": "none",
+      "why": "A declared screen list with no payload.",
+      "evidence": [
+        "mobile/app/(onboarding)/_layout.tsx:18-27"
+      ]
+    },
+    "ref": "S-048"
+  },
+  "inputs": {
+    "answer": "none",
+    "why": "It declares eight Stack.Screen children and takes nothing else.",
+    "evidence": [
+      "mobile/app/(onboarding)/_layout.tsx:18-27"
+    ],
+    "contract_ref": [],
+    "query_key": [],
+    "field_whitelist": [],
+    "tables": []
+  },
+  "outputs": {
+    "answer": "none",
+    "why": "A navigation container writes nothing — and specifically no longer writes a route, which is the point of the file.",
+    "evidence": [
+      "mobile/app/(onboarding)/_layout.tsx:4-13"
+    ],
+    "contract_ref": [],
+    "tables": []
+  },
+  "state": {
+    "answer": "none",
+    "why": "It holds no state. It used to read useOnboardingStore.isComplete and route on it; that read is what caused the dual-router loop.",
+    "evidence": [
+      "mobile/app/(onboarding)/_layout.tsx:4-13"
+    ],
+    "fields": []
+  },
+  "staleness": {
+    "answer": "none",
+    "why": "It renders no data.",
+    "evidence": [
+      "mobile/app/(onboarding)/_layout.tsx:1-29"
+    ],
+    "offline": "none"
+  },
+  "guards": {
+    "session": {
+      "answer": "authenticated",
+      "why": "The group is reachable only when AuthGate has a user with onboarding_complete false; the shell itself adds no guard — deliberately.",
+      "evidence": [
+        "mobile/app/_layout.tsx:141-231",
+        "mobile/app/(onboarding)/_layout.tsx:4-13"
+      ]
+    },
+    "rls_class": {
+      "answer": "none",
+      "why": "It reaches no table.",
+      "evidence": [
+        "mobile/app/(onboarding)/_layout.tsx:1-29"
+      ]
+    },
+    "disclosure": "none",
+    "entitlement": "none",
+    "flag": "none",
+    "permission": "none",
+    "rate_bucket": "none"
+  },
+  "render": {
+    "targets": [
+      "screen"
+    ],
+    "projection": "none",
+    "breakpoints": "mobile_first",
+    "export": "none",
+    "routing": "UNRESEARCHED"
+  },
+  "checks": [
+    {
+      "id": "onbstack_single_router",
+      "kind": "auth_class_parity",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "why": "This shell must NOT route. Its own header records the incident: a local `if (isComplete) router.replace` read the MMKV mirror while AuthGate read the server flag, and the two routers ping-ponged the user until React threw \"Maximum update depth exceeded\"."
+    },
+    {
+      "id": "onbstack_screen_membership",
+      "kind": "schema_declared",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "why": "The eight declared Stack.Screen names must match the eight files in mobile/app/(onboarding)/; nothing asserts this today, so a renamed file would fail only at navigation time."
+    }
+  ],
+  "invariants": "none",
+  "plausibility": "none",
+  "states": [
+    {
+      "name": "static",
+      "golden": "none"
+    }
+  ],
+  "errors": {
+    "answer": "none",
+    "why": "No async work, no failure path.",
+    "evidence": [
+      "mobile/app/(onboarding)/_layout.tsx:1-29"
+    ]
+  },
+  "emits": {
+    "answer": "none",
+    "why": "Nothing to emit.",
+    "evidence": [
+      "mobile/app/(onboarding)/_layout.tsx:1-29"
+    ],
+    "analytics": [],
+    "ledger_events": [],
+    "breadcrumbs": []
+  },
+  "offers": {
+    "answer": "none",
+    "why": "A navigation container renders no sponsored content.",
+    "evidence": [
+      "mobile/app/(onboarding)/_layout.tsx:1-29"
+    ]
+  },
+  "metering": {
+    "answer": "none",
+    "why": "Nothing here is counted: the Spec 126 §7 usage ledger table does not exist (grep for usage_events in the introspected drizzle schema returns 0 hits), and the only quota-shaped counter, user_profiles.lead_views_count, is incremented solely by POST /api/leads/view, which has no mobile caller.",
+    "evidence": [
+      "src/lib/db/generated/schema.ts — no usage_events table (grep, 2026-09-15)",
+      "src/app/api/leads/view/route.ts:110",
+      "src/features/leads/api/useLeadView.ts:25 — imported only by src/tests/useLeadView.logic.test.tsx"
+    ]
+  },
+  "config": {
+    "answer": "none",
+    "why": "The surface consumes no registered logic variable: the only server-side tunable in this path, user_profiles.radius_cap_km, is a per-user admin column, not a logic_variables row.",
+    "evidence": [
+      "src/lib/userProfile.schema.ts:40",
+      "src/app/api/user-profile/route.ts:328",
+      "docs/reference/logic-variables-registry.md — no radius_cap_km entry"
+    ],
+    "logic_variables": [],
+    "retired": []
+  },
+  "sharing": {
+    "answer": "none",
+    "why": "It renders no contract.",
+    "evidence": [
+      "mobile/app/(onboarding)/_layout.tsx:1-29"
+    ],
+    "surfaces": []
+  },
+  "a11y": {
+    "touch_target_min_px": 44,
+    "labels": "none",
+    "dark_mode": "none",
+    "reduced_motion": "none",
+    "i18n": "none",
+    "safe_area": "none"
+  },
+  "deviations": "none",
+  "limitations": [
+    {
+      "what": "The eight declared screen names are unlocked against the eight files on disk.",
+      "measured": "mobile/app/(onboarding)/_layout.tsx:19-26 lists profession/path/address/supplier/terms/complete/first-permit/manufacturer-hold; ls of the directory returns the same eight plus _layout.tsx.",
+      "check_id": "onbstack_screen_membership"
+    }
+  ],
+  "interpretation": "none",
+  "notes": "This file is a Chesterton's fence written down: its header explains why the routing effect it used to contain was removed and must not come back.",
+  "x-draft": {
+    "shard": "mobile-product",
+    "files": [
+      "mobile/app/(onboarding)/_layout.tsx"
+    ],
+    "loc": 29,
+    "call_idiom": "none",
+    "stores": [],
+    "measured_states": [
+      "loaded"
+    ],
+    "measured_gate": {
+      "session": "required",
+      "entitlement": "none",
+      "flag": "none",
+      "permission": "none"
+    }
+  },
+  "programme": {
+    "scope": "platform_shared",
+    "phase": "UNRESEARCHED",
+    "why": "Onboarding writes `user_profiles` columns both products read; the flow is shared even though its copy is lead-gen-shaped today.",
+    "feature": "F11",
+    "build_order": 3113,
+    "leakage": "none",
+    "product_questions": "none",
+    "review": {
+      "status": "unreviewed"
+    }
+  }
+}

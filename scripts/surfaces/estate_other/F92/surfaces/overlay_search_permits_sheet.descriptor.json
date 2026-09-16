@@ -1,0 +1,414 @@
+{
+  "kind": "SURFACE",
+  "status": "exists",
+  "docs": {
+    "purpose": "A panel that slides up from the saved-jobs board when the user taps the search button. They type an address or permit number, and tapping a result claims that job onto their board straight away with a confirming buzz. If the claim fails, a red message appears in the panel and the job is not added.",
+    "data_story": "It reads nothing from the database directly. Every value arrives through 2 contracts: `/api/leads/search`, `/api/leads/save`. Behind those contracts, the data comes from `entitlements`, `lead_views`, `permits` and `user_profiles`, and writes land on `lead_views`. It holds no client-side store, so there is no local copy of server state to keep in sync. It emits **no analytics event**, so nothing it does is currently countable.",
+    "under_126": "**REBUILD** — it drives writes, so a client decision has to be re-homed on the server before the projection can be honest. It renders through the SEARCH renderer (declared debounce, minimum query length, rate bucket and candidate shape), reading by reference: `/api/leads/search`, `/api/leads/save`. Its `owns.components[]` declares `mobile/src/components/feed/SearchPermitsSheet.tsx`."
+  },
+  "evidence": {
+    "files": [
+      "mobile/src/components/feed/SearchPermitsSheet.tsx:1"
+    ],
+    "contracts": [
+      "mobile/src/hooks/useSearchPermits.ts:10-11",
+      "mobile/src/components/feed/SearchPermitsSheet.tsx:47"
+    ],
+    "tables": [
+      "src/app/api/leads/search/route.ts:21-33",
+      "src/features/leads/lib/record-lead-view.ts:148-175"
+    ],
+    "gate": [
+      "src/lib/auth/route-guard.ts:120-132",
+      "src/app/api/leads/search/route.ts:43-45"
+    ],
+    "states": [
+      "mobile/src/components/feed/SearchPermitsSheet.tsx:145-155",
+      "mobile/src/components/feed/SearchPermitsSheet.tsx:115-119"
+    ],
+    "emits": [
+      "mobile/src/components/feed/SearchPermitsSheet.tsx:58 — logQueryInvalidate only; no track() call in the file"
+    ]
+  },
+  "identity": {
+    "id": "overlay_search_permits_sheet",
+    "route": "mobile/src/components/feed/SearchPermitsSheet.tsx",
+    "archetype": "SEARCH",
+    "platforms": [
+      "mobile"
+    ],
+    "owns": {
+      "components": [
+        "mobile/src/components/feed/SearchPermitsSheet.tsx"
+      ]
+    },
+    "owner": "unassigned (no CODEOWNERS file and no owner registry exists in the repo — measured 2026-09-15)",
+    "spec": "docs/specs/03-mobile/77_mobile_crm_flight_board.md",
+    "spec_refs": [
+      "docs/specs/03-mobile/77_mobile_crm_flight_board.md §3.1",
+      "docs/specs/03-mobile/91_mobile_lead_feed.md §4.3.1",
+      "docs/specs/03-mobile/99_mobile_state_architecture.md §7.2"
+    ],
+    "spec_version": "0-draft",
+    "versioning": {
+      "answer": "additive_only",
+      "why": "The search rows are parsed by a Zod mirror that throws to the ErrorBoundary on drift; the route returns a five-field projection that can grow but not shrink.",
+      "evidence": [
+        "mobile/src/hooks/useSearchPermits.ts:10-24",
+        "src/app/api/leads/search/route.ts:21-33"
+      ]
+    },
+    "ref": "S-066"
+  },
+  "inputs": {
+    "answer": "contract",
+    "why": "GET /api/leads/search?q= returns up to 20 permits ordered by last_seen_at; the sheet renders nothing else.",
+    "evidence": [
+      "mobile/src/hooks/useSearchPermits.ts:10-24",
+      "src/app/api/leads/search/route.ts:21-33"
+    ],
+    "contract_ref": [
+      "/api/leads/search",
+      "/api/leads/save"
+    ],
+    "query_key": [
+      "search-permits",
+      "q"
+    ],
+    "field_whitelist": [
+      "permit_num",
+      "revision_num",
+      "address",
+      "lifecycle_phase",
+      "status"
+    ],
+    "tables": [
+      {
+        "table": "permits",
+        "columns": [
+          "permit_num",
+          "revision_num",
+          "status",
+          "permit_type",
+          "description",
+          "street_num",
+          "street_name",
+          "neighbourhood_id",
+          "lifecycle_phase",
+          "lifecycle_stalled",
+          "latitude",
+          "longitude",
+          "location"
+        ],
+        "producing_steps": [
+          "permits",
+          "enrich_permits",
+          "geocode_permits",
+          "classify_lifecycle_phase",
+          "link_neighbourhoods"
+        ],
+        "chain_position": "permits[1]",
+        "owner_spec": "docs/specs/01-pipeline/41_chain_permits.md",
+        "evidence": [
+          "src/app/api/leads/search/route.ts:21-33",
+          "docs/reference/data-lineage-map.md:1001",
+          "scripts/manifest.json#chains.permits"
+        ]
+      }
+    ]
+  },
+  "outputs": {
+    "answer": "contract_only",
+    "why": "Claiming a permit POSTs /api/leads/save with saved:true and waits for the server before invalidating the flight board — no optimistic insert, because the board grouping is computed server-side.",
+    "evidence": [
+      "mobile/src/components/feed/SearchPermitsSheet.tsx:42-65"
+    ],
+    "contract_ref": [
+      "/api/leads/save"
+    ],
+    "tables": [
+      {
+        "table": "lead_views",
+        "columns": [
+          "user_id",
+          "lead_key",
+          "lead_type",
+          "permit_num",
+          "revision_num",
+          "trade_slug",
+          "saved"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/03-mobile/91_mobile_lead_feed.md",
+        "evidence": [
+          "src/features/leads/lib/record-lead-view.ts:148-175",
+          "docs/reference/data-lineage-map.md:602",
+          "migrations/230_rls_class_a_entitlements.sql:70-76"
+        ]
+      }
+    ],
+    "rollback": "none needed — nothing is written locally before the POST resolves; onError sets an inline claimError and the sheet stays open.",
+    "invalidates": [
+      "flight-board"
+    ]
+  },
+  "state": {
+    "answer": "query_cache",
+    "why": "It owns no store — the query text and the claim error are component state, and the only durable effect is the flight-board cache invalidate.",
+    "evidence": [
+      "mobile/src/components/feed/SearchPermitsSheet.tsx:25-27",
+      "mobile/src/components/feed/SearchPermitsSheet.tsx:59"
+    ],
+    "fields": []
+  },
+  "staleness": {
+    "answer": "query_cache",
+    "why": "useSearchPermits declares a 60-second staleTime because search results age quickly; there is no debounce, so the cache is the only thing limiting request volume.",
+    "evidence": [
+      "mobile/src/hooks/useSearchPermits.ts:2",
+      "mobile/src/hooks/useSearchPermits.ts:22"
+    ],
+    "offline": "blocked",
+    "stale_time_ms": 60000,
+    "gc_time_ms": 86400000
+  },
+  "guards": {
+    "session": {
+      "answer": "authenticated",
+      "why": "/api/leads/search is under the authenticated /api/leads prefix and the handler resolves a user context before querying.",
+      "evidence": [
+        "src/lib/auth/route-guard.ts:120-132",
+        "src/app/api/leads/search/route.ts:43-45"
+      ]
+    },
+    "rls_class": {
+      "answer": "B",
+      "why": "It reads permits, which is RLS-enabled with zero policies (default deny); the claim write lands on the Class-A lead_views table through the save route.",
+      "evidence": [
+        "migrations/227_rls_class_b_default_deny.sql:42-110",
+        "migrations/230_rls_class_a_entitlements.sql:70-76"
+      ]
+    },
+    "disclosure": "none",
+    "entitlement": {
+      "product": "lead_gen",
+      "statuses": [
+        "trial",
+        "active",
+        "past_due",
+        "admin_managed"
+      ],
+      "on_missing": "paywall"
+    },
+    "flag": "none",
+    "permission": "none",
+    "rate_bucket": "none on the search itself — src/app/api/leads/search/route.ts calls no withRateLimit; the claim POST uses leads-save:{uid} at 60/min"
+  },
+  "render": {
+    "targets": [
+      "screen"
+    ],
+    "projection": "list",
+    "breakpoints": "mobile_first",
+    "export": "none"
+  },
+  "checks": [
+    {
+      "id": "searchsheet_double_claim_guard",
+      "kind": "selector_atomicity",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "useMutation is not serialised, so a rapid double-tap would fire two parallel POSTs and could claim two different permits; the isPending guard at SearchPermitsSheet.tsx:72 is the fence."
+    },
+    {
+      "id": "searchsheet_lead_id_format",
+      "kind": "contract_parse",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "why": "The claim body must use the canonical `${permit_num}--${revision_num}` lead_id; the earlier `permit-${a}-${b}` shape was never parsed server-side and silently claimed nothing."
+    },
+    {
+      "id": "searchsheet_empty_state",
+      "kind": "empty_state",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "Two distinct empty renders — \"Type 2+ characters to search\" below the threshold and \"No permits found\" above it (SearchPermitsSheet.tsx:145-155)."
+    },
+    {
+      "id": "searchsheet_error_state",
+      "kind": "error_state",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "A failed claim renders an inline red block and is cleared when the sheet reopens, so a stale error is never shown on a fresh open."
+    },
+    {
+      "id": "searchsheet_a11y_label",
+      "kind": "a11y_label",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "Measured zero: the search field and every result row carry no accessibility attribute at all."
+    }
+  ],
+  "invariants": "none",
+  "plausibility": "none",
+  "states": [
+    {
+      "name": "loading",
+      "golden": "none"
+    },
+    {
+      "name": "hit",
+      "golden": "none"
+    },
+    {
+      "name": "empty",
+      "golden": "none"
+    },
+    {
+      "name": "error",
+      "golden": "none"
+    },
+    {
+      "name": "schema_drift",
+      "golden": "none"
+    }
+  ],
+  "errors": {
+    "answer": "inline",
+    "why": "A failed claim renders an inline red block above the results; a failed SEARCH renders nothing at all and looks like \"No permits found\".",
+    "evidence": [
+      "mobile/src/components/feed/SearchPermitsSheet.tsx:115-119",
+      "mobile/src/components/feed/SearchPermitsSheet.tsx:29"
+    ],
+    "classes": [
+      {
+        "class": "400",
+        "ui": "Inline \"Failed to claim job. Please try again.\""
+      },
+      {
+        "class": "500",
+        "ui": "Same inline claim error; a search 500 is invisible."
+      },
+      {
+        "class": "schema_drift",
+        "ui": "ZodError re-thrown to the root ErrorBoundary (useSearchPermits throwOnError)."
+      }
+    ],
+    "no_retry": []
+  },
+  "emits": {
+    "answer": "none",
+    "why": "Claiming a job from search — the act the whole flight board exists for — emits no analytics event; only the DEV-only query_invalidate breadcrumb fires.",
+    "evidence": [
+      "mobile/src/components/feed/SearchPermitsSheet.tsx:58",
+      "mobile/src/lib/queryTelemetry.ts:42"
+    ],
+    "analytics": [],
+    "ledger_events": [],
+    "breadcrumbs": []
+  },
+  "offers": {
+    "answer": "none",
+    "why": "No sponsored placement is rendered: the only slot component in the Expo tree is SponsorSlot, and it returns null unless EXPO_PUBLIC_PARCEL_SPONSORS=1.",
+    "evidence": [
+      "mobile/src/components/parcel/SponsorSlot.tsx:16-20"
+    ]
+  },
+  "metering": {
+    "answer": "none",
+    "why": "Nothing here is counted: the Spec 126 §7 usage ledger table does not exist (grep for usage_events in the introspected drizzle schema returns 0 hits), and the only quota-shaped counter, user_profiles.lead_views_count, is incremented solely by POST /api/leads/view, which has no mobile caller.",
+    "evidence": [
+      "src/lib/db/generated/schema.ts — no usage_events table (grep, 2026-09-15)",
+      "src/app/api/leads/view/route.ts:110",
+      "src/features/leads/api/useLeadView.ts:25 — imported only by src/tests/useLeadView.logic.test.tsx"
+    ]
+  },
+  "config": {
+    "answer": "none",
+    "why": "Its two tunables — the 2-character minimum and the 20-row LIMIT — are literals in the hook and the SQL, not registered logic variables, and there is no debounce at all.",
+    "evidence": [
+      "mobile/src/hooks/useSearchPermits.ts:17-20",
+      "src/app/api/leads/search/route.ts:32"
+    ],
+    "logic_variables": [],
+    "retired": [],
+    "debounce_ms": "UNRESEARCHED",
+    "min_query_len": "UNRESEARCHED"
+  },
+  "sharing": {
+    "answer": "shared",
+    "why": "GET /api/leads/search is exclusive to this sheet, but the claim POST is the same /api/leads/save contract the feed, the lead detail and the flight board all write through.",
+    "evidence": [
+      "mobile/src/components/feed/SearchPermitsSheet.tsx:47",
+      "mobile/src/hooks/useSaveLead.ts:27"
+    ],
+    "surfaces": [
+      "mobile_flight_board",
+      "mobile_lead_feed",
+      "mobile_lead_detail"
+    ]
+  },
+  "a11y": {
+    "touch_target_min_px": 44,
+    "labels": "none",
+    "dark_mode": "hardcoded",
+    "reduced_motion": "none",
+    "i18n": "none",
+    "safe_area": "none"
+  },
+  "deviations": "none",
+  "limitations": [
+    {
+      "what": "The search has no debounce and no rate limit: every keystroke past two characters issues a request the 60s cache may not cover, against a route with no withRateLimit.",
+      "measured": "useSearchPermits.ts:16-24 fires on the raw query; src/app/api/leads/search/route.ts imports no rate-limit helper — unlike /api/leads/feed, /api/leads/save and /api/parcels/lookup.",
+      "check_id": "searchsheet_double_claim_guard"
+    },
+    {
+      "what": "A failed search is indistinguishable from an empty result.",
+      "measured": "SearchPermitsSheet.tsx:29 destructures only { data, isFetching }; isError is never read.",
+      "check_id": "searchsheet_empty_state"
+    }
+  ],
+  "interpretation": "none",
+  "notes": "The parcel search screen debounces at 400ms against a 60/min bucket; this sheet, searching a much larger table, debounces not at all against no bucket. Both are SEARCH archetypes and the contrast is measured, not inferred.",
+  "x-draft": {
+    "shard": "mobile-product",
+    "files": [
+      "mobile/src/components/feed/SearchPermitsSheet.tsx"
+    ],
+    "loc": 161,
+    "call_idiom": "both",
+    "stores": [],
+    "measured_states": [
+      "prompt_type_more",
+      "fetching",
+      "results",
+      "empty_no_permits",
+      "claim_error"
+    ],
+    "measured_gate": {
+      "session": "required",
+      "entitlement": "subscription_status",
+      "flag": "none",
+      "permission": "none"
+    }
+  },
+  "programme": {
+    "scope": "estate_other",
+    "phase": "not_scheduled",
+    "why": "Permit data for the lead-gen product. Inventoried only; it converts under the same standard in a later programme.",
+    "feature": "F92",
+    "build_order": 4193,
+    "leakage": "UNRESEARCHED",
+    "product_questions": "UNRESEARCHED",
+    "review": {
+      "status": "unreviewed"
+    }
+  }
+}

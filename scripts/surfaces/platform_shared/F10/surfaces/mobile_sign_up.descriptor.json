@@ -1,0 +1,343 @@
+{
+  "kind": "SURFACE",
+  "status": "exists",
+  "docs": {
+    "purpose": "Where a new user creates an account with an email and password, confirming the password twice. Because email confirmation is switched on, after submitting they see a 'check your email' state with a button to send the link again if it never arrives. A phone sign-up path with a texted code and a recovery-email step exists in the code but is currently hidden.",
+    "data_story": "This surface reaches **no API contract at all** — every value it shows is local, passed in as a prop, or read from the device. It holds no client-side store, so there is no local copy of server state to keep in sync.",
+    "under_126": "**LEAVE ALONE — deliberately out of scope.** This screen talks to the Supabase Auth SDK, not to our contracts, so a descriptor would be describing someone else's protocol. Spec 126's Operating Boundaries fence it explicitly."
+  },
+  "evidence": {
+    "files": [
+      "mobile/app/(auth)/sign-up.tsx:1"
+    ],
+    "contracts": [
+      "mobile/app/(auth)/sign-up.tsx:106-110",
+      "mobile/app/(auth)/sign-up.tsx:156",
+      "mobile/app/(auth)/sign-up.tsx:185-189 — all Supabase Auth SDK; the screen reaches no /api/ route"
+    ],
+    "tables": [
+      "mobile/app/(auth)/sign-up.tsx — GoTrue writes auth.users; user_profiles is created later by the profile route's self-provision INSERT"
+    ],
+    "gate": [
+      "mobile/src/lib/featureFlags.ts:24-38",
+      "mobile/app/(auth)/sign-up.tsx:32"
+    ],
+    "states": [
+      "mobile/app/(auth)/sign-up.tsx:234-272",
+      "mobile/app/(auth)/sign-up.tsx:274-347",
+      "mobile/app/(auth)/sign-up.tsx:378-493"
+    ],
+    "emits": [
+      "mobile/app/(auth)/sign-up.tsx:76",
+      "mobile/app/(auth)/sign-up.tsx:112",
+      "mobile/app/(auth)/sign-up.tsx:221"
+    ]
+  },
+  "identity": {
+    "id": "mobile_sign_up",
+    "route": "mobile/app/(auth)/sign-up.tsx",
+    "archetype": "FORM",
+    "platforms": [
+      "mobile"
+    ],
+    "owns": {
+      "components": []
+    },
+    "owner": "unassigned (no CODEOWNERS file and no owner registry exists in the repo — measured 2026-09-15)",
+    "spec": "docs/specs/03-mobile/93_mobile_auth.md",
+    "spec_refs": [
+      "docs/specs/03-mobile/93_mobile_auth.md §4",
+      "docs/specs/03-mobile/93_mobile_auth.md §5",
+      "docs/specs/03-mobile/93_mobile_auth.md §2.2",
+      "docs/specs/03-mobile/95_mobile_user_profiles.md §4"
+    ],
+    "spec_version": "0-draft",
+    "versioning": {
+      "answer": "none",
+      "why": "It produces a Supabase user, not a payload; nothing in the repo consumes a shape from this screen.",
+      "evidence": [
+        "mobile/app/(auth)/sign-up.tsx:106-119"
+      ]
+    },
+    "ref": "S-038"
+  },
+  "inputs": {
+    "answer": "device",
+    "why": "Typed email/password/OTP/backup-email only; the screen calls no application contract and reads no server projection.",
+    "evidence": [
+      "mobile/app/(auth)/sign-up.tsx:38-57",
+      "mobile/app/(auth)/sign-up.tsx:94-127"
+    ],
+    "contract_ref": [],
+    "query_key": [],
+    "field_whitelist": [
+      "email",
+      "password",
+      "confirmPassword",
+      "phoneNumber",
+      "otp",
+      "backupEmail"
+    ],
+    "tables": []
+  },
+  "outputs": {
+    "answer": "device_only",
+    "why": "signUp() with confirmations ON returns session:null, so nothing is written anywhere the client can see until the emailed link is tapped; the phone branch creates the GoTrue user on verifyOtp.",
+    "evidence": [
+      "mobile/app/(auth)/sign-up.tsx:106-119",
+      "mobile/app/(auth)/sign-up.tsx:185-194"
+    ],
+    "contract_ref": [],
+    "tables": [],
+    "rollback": "none — a failed signUp leaves the form populated with an inline error; there is no partial server state to undo.",
+    "invalidates": []
+  },
+  "state": {
+    "answer": "none",
+    "why": "It owns no store: every value is component state, and the session (when one eventually arrives) is written by the root layout's auth listener.",
+    "evidence": [
+      "mobile/app/(auth)/sign-up.tsx:34-63",
+      "mobile/app/_layout.tsx:342-348"
+    ],
+    "fields": []
+  },
+  "staleness": {
+    "answer": "none",
+    "why": "No server projection is rendered.",
+    "evidence": [
+      "mobile/app/(auth)/sign-up.tsx:226-496"
+    ],
+    "offline": "none"
+  },
+  "guards": {
+    "session": {
+      "answer": "anon",
+      "why": "The unauthenticated registration entry point; it projects no server-sourced field.",
+      "evidence": [
+        "mobile/app/(auth)/sign-up.tsx:26-34",
+        "src/lib/auth/route-guard.ts:142-192"
+      ]
+    },
+    "rls_class": {
+      "answer": "none",
+      "why": "It reaches no application table.",
+      "evidence": [
+        "mobile/app/(auth)/sign-up.tsx:106-110"
+      ]
+    },
+    "disclosure": {
+      "fields": [],
+      "why": "Anonymous, but every rendered string is compiled-in copy; the only user-visible value is the email the user typed."
+    },
+    "entitlement": "none",
+    "flag": "PHONE_AUTH_ENABLED (mobile/src/lib/featureFlags.ts:24 — gates both the in-page toggle and the ?method=phone deep link)",
+    "permission": "none",
+    "rate_bucket": "none — GoTrue owns the signup and resend throttles; resendSignupConfirmation surfaces their message verbatim"
+  },
+  "render": {
+    "targets": [
+      "screen"
+    ],
+    "projection": "none",
+    "breakpoints": "mobile_first",
+    "export": "none"
+  },
+  "checks": [
+    {
+      "id": "signup_phone_gate",
+      "kind": "auth_class_parity",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "why": "phoneGate.coverage.test.ts locks entry points (b) and (c): the in-page toggle render AND the resolveSignUpMethod computation, so a stale ?method=phone deep link cannot enter a gated flow."
+    },
+    {
+      "id": "signup_awaiting_confirmation_state",
+      "kind": "empty_state",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "With confirmations ON, signUp resolves with session:null; the testID-tagged signup-check-email block plus the resend affordance is what stops the user being stranded on a dead form (sign-up.tsx:234-271)."
+    },
+    {
+      "id": "signup_resend_path",
+      "kind": "error_state",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "mobile/__tests__/confirmEmail.test.ts pins resendSignupConfirmation, which exists because mail-provider security scanners can consume the one-time PKCE code before the real tap."
+    },
+    {
+      "id": "signup_backup_email_persisted",
+      "kind": "ledger_row_present",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "Declared and NOT satisfied: the recovery email collected in the phone branch is never written anywhere. See limitations."
+    },
+    {
+      "id": "signup_a11y_label",
+      "kind": "a11y_label",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "why": "Eight attributes cover the headers and the submit buttons; the three email/password TextInputs carry testIDs but no accessibilityLabel."
+    }
+  ],
+  "invariants": "none",
+  "plausibility": "none",
+  "states": [
+    {
+      "name": "static",
+      "golden": "none"
+    },
+    {
+      "name": "loading",
+      "golden": "none"
+    },
+    {
+      "name": "partial",
+      "golden": "none"
+    },
+    {
+      "name": "error",
+      "golden": "none"
+    }
+  ],
+  "errors": {
+    "answer": "inline",
+    "why": "One inline red line per form section, mapped from the Supabase error code, plus an error haptic; nothing navigates on failure.",
+    "evidence": [
+      "mobile/app/(auth)/sign-up.tsx:87-92",
+      "mobile/app/(auth)/sign-up.tsx:343-345"
+    ],
+    "classes": [
+      {
+        "class": "400",
+        "ui": "mapSupabaseError copy inline (weak password, email in use, bad OTP); local validation messages use the same line."
+      },
+      {
+        "class": "429",
+        "ui": "GoTrue throttle copy; the resend affordance surfaces its own message string."
+      }
+    ],
+    "no_retry": []
+  },
+  "emits": {
+    "answer": "events",
+    "why": "Five events cover the screen view with its arrival method, both completion paths, and the phone attempt/failure/verify arc — codes only, never the credential.",
+    "evidence": [
+      "mobile/app/(auth)/sign-up.tsx:76",
+      "mobile/app/(auth)/sign-up.tsx:112",
+      "mobile/app/(auth)/sign-up.tsx:199",
+      "mobile/src/lib/analytics.ts:121-132"
+    ],
+    "analytics": [
+      "signup_screen_viewed",
+      "signup_completed",
+      "auth_method_attempted",
+      "auth_method_failed",
+      "auth_otp_verified"
+    ],
+    "ledger_events": [],
+    "breadcrumbs": []
+  },
+  "offers": {
+    "answer": "none",
+    "why": "No sponsored placement is rendered: the only slot component in the Expo tree is SponsorSlot, and it returns null unless EXPO_PUBLIC_PARCEL_SPONSORS=1.",
+    "evidence": [
+      "mobile/src/components/parcel/SponsorSlot.tsx:16-20"
+    ]
+  },
+  "metering": {
+    "answer": "none",
+    "why": "Nothing here is counted: the Spec 126 §7 usage ledger table does not exist (grep for usage_events in the introspected drizzle schema returns 0 hits), and the only quota-shaped counter, user_profiles.lead_views_count, is incremented solely by POST /api/leads/view, which has no mobile caller.",
+    "evidence": [
+      "src/lib/db/generated/schema.ts — no usage_events table (grep, 2026-09-15)",
+      "src/app/api/leads/view/route.ts:110",
+      "src/features/leads/api/useLeadView.ts:25 — imported only by src/tests/useLeadView.logic.test.tsx"
+    ]
+  },
+  "config": {
+    "answer": "none",
+    "why": "The surface consumes no registered logic variable: the only server-side tunable in this path, user_profiles.radius_cap_km, is a per-user admin column, not a logic_variables row.",
+    "evidence": [
+      "src/lib/userProfile.schema.ts:40",
+      "src/app/api/user-profile/route.ts:328",
+      "docs/reference/logic-variables-registry.md — no radius_cap_km entry"
+    ],
+    "logic_variables": [],
+    "retired": []
+  },
+  "sharing": {
+    "answer": "none",
+    "why": "It renders no application contract.",
+    "evidence": [
+      "mobile/app/(auth)/sign-up.tsx:106-110"
+    ],
+    "surfaces": []
+  },
+  "a11y": {
+    "touch_target_min_px": 52,
+    "labels": "partial",
+    "dark_mode": "hardcoded",
+    "reduced_motion": "none",
+    "i18n": "none",
+    "safe_area": [
+      "top",
+      "bottom",
+      "left",
+      "right"
+    ]
+  },
+  "deviations": "none",
+  "limitations": [
+    {
+      "what": "The phone branch's \"Recovery email — in case you lose phone access\" field is collected and then discarded: the submit handler fires an analytics event, closes the sheet, and writes the value nowhere.",
+      "measured": "sign-up.tsx:208-224 — handleSubmitBackupEmail validates the address, calls track('signup_completed'), closes the sheet and returns; there is no PATCH, no store write and no route param carrying backupEmail. user_profiles.backup_email stays null.",
+      "check_id": "signup_backup_email_persisted"
+    },
+    {
+      "what": "signup_completed fires for the phone branch at the backup-email step even though the GoTrue user was created one step earlier, so the two branches mark completion at different moments.",
+      "measured": "sign-up.tsx:112 fires it right after signUp for email; sign-up.tsx:221 fires it after the backup-email submit for phone.",
+      "check_id": "signup_phone_gate"
+    }
+  ],
+  "interpretation": "none",
+  "notes": "PhoneInputField and OtpInputField are rendered here and in sign-in, so neither surface owns them (R-13 totality gap). The whole phone branch is unreachable while PHONE_AUTH_ENABLED is false, which means the discarded-backup-email defect is currently latent rather than live.",
+  "x-draft": {
+    "shard": "mobile-product",
+    "files": [
+      "mobile/app/(auth)/sign-up.tsx"
+    ],
+    "loc": 498,
+    "call_idiom": "none",
+    "stores": [],
+    "measured_states": [
+      "email_form",
+      "awaiting_confirmation",
+      "phone_input_sheet",
+      "phone_otp_sheet",
+      "phone_backup_email_sheet",
+      "error_message"
+    ],
+    "measured_gate": {
+      "session": "none",
+      "entitlement": "none",
+      "flag": "PHONE_AUTH_ENABLED",
+      "permission": "none"
+    }
+  },
+  "programme": {
+    "scope": "platform_shared",
+    "phase": "UNRESEARCHED",
+    "why": "Authentication. It talks to the Supabase Auth SDK and gates entry to both products; no product owns it.",
+    "feature": "F10",
+    "build_order": 3103,
+    "leakage": "none",
+    "product_questions": "none",
+    "review": {
+      "status": "unreviewed"
+    }
+  }
+}

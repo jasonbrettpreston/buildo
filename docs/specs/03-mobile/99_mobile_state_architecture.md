@@ -6,6 +6,24 @@
 **Cross-references:** Spec 90 (Engineering Protocol §7), Spec 93 (Auth & AuthGate routing), Spec 94 (Onboarding), Spec 95 (User Profiles — server is canonical), Spec 96 (Subscription gate)
 **As-is audit:** `docs/reports/mobile_state_audit_2026-05-02.md`
 
+> ⚠️ **AMENDMENT 2026-09-15 (WF1 "Spec 126/127/128 surface standard") — max-server-side impact. Additive: no rule below is rewritten, and §3 stays normative.**
+>
+> Spec 126 makes Spec 90 §3's "Dumb Glass" prime directive *enforceable* rather than merely stated: under max-server-side the client renders a **fetched projection** — the server owns section order, labels, formatting decisions and which lines render — and the archetype component set draws it. That moves the Layer-2 / Layer-3 boundary in §2, and it does so in a direction this spec already anticipates.
+>
+> **Sections affected, and how:**
+>
+> | §  | Effect |
+> |---|---|
+> | **§2** (the five layers) | Layer 1 **grows** — canonical for the *projection*, not only the data. Layer 2's role is unchanged, but the cached object becomes a projected screen rather than a raw payload. Layer 3 **shrinks to device + ephemeral state only**. Layers 4a/4b and 5 are untouched, and §2.1's hard rules all still hold. |
+> | **§3** (the field ownership matrix) | Stays **normative**, and becomes **descriptor data**: the `Field / Server Type / Local Mirror / Owner Layer / Canonical Writer / Authorized Readers / Bridge` row is the SURFACE descriptor's `state` category verbatim (Spec 126 §4.1). Rows for fields that are Layer-3 *mirrors* of Layer-1 data retire as those mirrors collapse. Measured: **4 of the 7 stores are MMKV-persisted mirrors of server fields** — `filterStore` (139L) mirrors 6 `user_profiles` columns, `userProfileStore` (156L) mirrors 5 notification-preference columns. |
+> | **§4** (the six bridge patterns) | **B2** (TanStack→Zustand) and **B3** (Zustand→Server) retire *for the mirrored fields only*. B1 is unchanged and its query-key hygiene rule becomes a schema constraint: `inputs.query_key` is single-param on the DETAIL archetype. The six patterns are not reduced to four — they are unused for fields that no longer have a Layer-3 home. |
+> | **§7.7** (funnel ratio invariants) | Unchanged in substance; the per-method attempted/succeeded/failed contract becomes `emits.counters` with the ratio stated as a declared invariant, so the drift it warns about is checked rather than greppped. |
+> | **§8.6** (the schema-vs-matrix drift check) | **The gap is confirmed, not closed, by this amendment.** `mobile/scripts/check-spec99-matrix.mjs` exists and **nothing runs it** — re-verified 2026-09-15: no match in `.husky/`, `.github/`, `mobile/package.json` or `package.json`; `mobile/__tests__/spec99.mandates.lint.test.ts:335-346` only asserts the file *exists*. Wiring it into `mobile-ci.yml` is Spec 126 §12 phase **P0b**. |
+>
+> **What deliberately stays client-side** — these five are the boundary, and each is declared per surface rather than assumed: device state (GPS, push token, permission status) · optimistic UI (Spec 90 §3 encourages it by name) · the 24 h MMKV offline cache · animation/gesture (Layer 5, §2.1's hard rule) · navigation position (`expo-router` owns it). Anything else computed on the client is a Spec 128 rule-2 violation needing a dated `deviations[]` row.
+>
+> **The three auth screens are out of scope entirely** (1,302 lines): they talk to the Supabase Auth SDK, not to our contracts.
+
 ## 1. Goal & Anti-Patterns This Prevents
 
 **Goal:** A single normative document that, for every piece of mobile state, answers four questions:

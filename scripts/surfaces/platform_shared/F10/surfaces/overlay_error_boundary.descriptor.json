@@ -1,0 +1,296 @@
+{
+  "kind": "SURFACE",
+  "status": "exists",
+  "docs": {
+    "purpose": "The last line of defence when part of the app crashes. Instead of a white screen, the user sees a short 'something went wrong' message, the underlying error text, and a Try Again button that attempts to re-render. It wraps both the whole app and, separately, the signed-in tab area.",
+    "data_story": "This surface reaches **no API contract at all** — every value it shows is local, passed in as a prop, or read from the device. It holds no client-side store, so there is no local copy of server state to keep in sync. It emits **no analytics event**, so nothing it does is currently countable.",
+    "under_126": "**RE-PROJECT** — it writes nothing and holds no Layer-3 store, so the move is short — the server already assembles the payload and only the rendering is client-side. It renders through the GATE renderer (a `statuses_handled[]` that must cover every value of the closed set it gates on), reading no contract. Its `owns.components[]` declares `mobile/src/components/ErrorBoundary.tsx`."
+  },
+  "evidence": {
+    "files": [
+      "mobile/src/components/ErrorBoundary.tsx:1"
+    ],
+    "contracts": [
+      "mobile/src/components/ErrorBoundary.tsx:1-76 — no contract; it catches render errors"
+    ],
+    "tables": [
+      "mobile/src/components/ErrorBoundary.tsx:1-76 — reaches no table"
+    ],
+    "gate": [
+      "mobile/app/_layout.tsx:484-529",
+      "mobile/app/(app)/_layout.tsx:267-268"
+    ],
+    "states": [
+      "mobile/src/components/ErrorBoundary.tsx:48-74"
+    ],
+    "emits": [
+      "mobile/src/components/ErrorBoundary.tsx:27-42"
+    ]
+  },
+  "identity": {
+    "id": "overlay_error_boundary",
+    "route": "mobile/src/components/ErrorBoundary.tsx",
+    "archetype": "GATE",
+    "platforms": [
+      "mobile"
+    ],
+    "owns": {
+      "components": [
+        "mobile/src/components/ErrorBoundary.tsx"
+      ]
+    },
+    "owner": "unassigned (no CODEOWNERS file and no owner registry exists in the repo — measured 2026-09-15)",
+    "spec": "UNRESEARCHED",
+    "spec_refs": [
+      "docs/specs/03-mobile/99_mobile_state_architecture.md §7.1",
+      "docs/specs/03-mobile/99_mobile_state_architecture.md §9.5",
+      "docs/specs/03-mobile/90_mobile_engineering_protocol.md §13"
+    ],
+    "spec_version": "0-draft",
+    "versioning": {
+      "answer": "frozen",
+      "why": "It is mounted twice — around the whole app and around the tab tree — so a change to its contract changes the crash behaviour of every surface at once.",
+      "evidence": [
+        "mobile/app/_layout.tsx:484",
+        "mobile/app/(app)/_layout.tsx:267"
+      ]
+    },
+    "ref": "S-040"
+  },
+  "inputs": {
+    "answer": "props",
+    "why": "Children only. Its real input is a thrown render error, which React hands it through getDerivedStateFromError.",
+    "evidence": [
+      "mobile/src/components/ErrorBoundary.tsx:6-25"
+    ],
+    "contract_ref": [],
+    "query_key": [],
+    "field_whitelist": [
+      "children"
+    ],
+    "tables": []
+  },
+  "outputs": {
+    "answer": "none",
+    "why": "It writes nothing; its handleReset clears local error state and re-renders the children.",
+    "evidence": [
+      "mobile/src/components/ErrorBoundary.tsx:44-46"
+    ],
+    "contract_ref": [],
+    "tables": []
+  },
+  "state": {
+    "answer": "none",
+    "why": "A class component holding { hasError, errorMessage } — no store, no cache, no persistence.",
+    "evidence": [
+      "mobile/src/components/ErrorBoundary.tsx:10-19"
+    ],
+    "fields": []
+  },
+  "staleness": {
+    "answer": "none",
+    "why": "It renders no server data.",
+    "evidence": [
+      "mobile/src/components/ErrorBoundary.tsx:48-74"
+    ],
+    "offline": "none"
+  },
+  "guards": {
+    "session": {
+      "answer": "anon",
+      "why": "It wraps the entire tree including the unauthenticated auth group, so it must render with no session.",
+      "evidence": [
+        "mobile/app/_layout.tsx:484-529"
+      ]
+    },
+    "rls_class": {
+      "answer": "none",
+      "why": "It reaches no table.",
+      "evidence": [
+        "mobile/src/components/ErrorBoundary.tsx:1-76"
+      ]
+    },
+    "disclosure": {
+      "fields": [
+        "error.message"
+      ],
+      "why": "The caught error MESSAGE is rendered on screen to an unauthenticated principal; the component deliberately drops the full error object and componentStack, both of which can carry addresses and permit numbers."
+    },
+    "entitlement": "none",
+    "flag": "none",
+    "permission": "none",
+    "rate_bucket": "none",
+    "statuses_handled": "UNRESEARCHED"
+  },
+  "render": {
+    "targets": [
+      "screen"
+    ],
+    "projection": "none",
+    "breakpoints": "mobile_first",
+    "export": "none"
+  },
+  "checks": [
+    {
+      "id": "boundary_pii_sanitized",
+      "kind": "disclosure",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "why": "componentDidCatch logs the message only — never the error object or componentStack — because both can carry user PII (addresses, permit numbers, response bodies) into Sentry."
+    },
+    {
+      "id": "boundary_empty_diag_guard",
+      "kind": "error_state",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "dumpDiagnostics() returns '' in production, so the second console.error is guarded — without the guard every production crash would emit a blank line to Sentry (the Gemini §9.5 #2 / DeepSeek F6 consensus fix)."
+    },
+    {
+      "id": "boundary_schema_drift_target",
+      "kind": "contract_parse",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "This is where the feed, flight-board and search-sheet ZodErrors land: their hooks set throwOnError for ZodError specifically so a drifted payload becomes a visible boundary, not a silently empty list."
+    },
+    {
+      "id": "boundary_a11y_label",
+      "kind": "a11y_label",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "why": "The single TRY AGAIN action carries a role and a label."
+    }
+  ],
+  "invariants": "none",
+  "plausibility": "none",
+  "states": [
+    {
+      "name": "static",
+      "golden": "none"
+    },
+    {
+      "name": "error",
+      "golden": "none"
+    },
+    {
+      "name": "schema_drift",
+      "golden": "none"
+    }
+  ],
+  "errors": {
+    "answer": "boundary",
+    "why": "It IS the boundary — the only surface in the mobile estate whose declared error rendering is a React error boundary.",
+    "evidence": [
+      "mobile/src/components/ErrorBoundary.tsx:21-25",
+      "mobile/src/components/ErrorBoundary.tsx:48-71"
+    ]
+  },
+  "emits": {
+    "answer": "none",
+    "why": "It writes to console.error only; Sentry's JS handler is initialised in the root layout but this component does not call captureException itself.",
+    "evidence": [
+      "mobile/src/components/ErrorBoundary.tsx:27-42",
+      "mobile/app/_layout.tsx:52-57"
+    ],
+    "analytics": [],
+    "ledger_events": [],
+    "breadcrumbs": []
+  },
+  "offers": {
+    "answer": "none",
+    "why": "No sponsored placement is rendered: the only slot component in the Expo tree is SponsorSlot, and it returns null unless EXPO_PUBLIC_PARCEL_SPONSORS=1.",
+    "evidence": [
+      "mobile/src/components/parcel/SponsorSlot.tsx:16-20"
+    ]
+  },
+  "metering": {
+    "answer": "none",
+    "why": "Nothing here is counted: the Spec 126 §7 usage ledger table does not exist (grep for usage_events in the introspected drizzle schema returns 0 hits), and the only quota-shaped counter, user_profiles.lead_views_count, is incremented solely by POST /api/leads/view, which has no mobile caller.",
+    "evidence": [
+      "src/lib/db/generated/schema.ts — no usage_events table (grep, 2026-09-15)",
+      "src/app/api/leads/view/route.ts:110",
+      "src/features/leads/api/useLeadView.ts:25 — imported only by src/tests/useLeadView.logic.test.tsx"
+    ]
+  },
+  "config": {
+    "answer": "none",
+    "why": "The surface consumes no registered logic variable: the only server-side tunable in this path, user_profiles.radius_cap_km, is a per-user admin column, not a logic_variables row.",
+    "evidence": [
+      "src/lib/userProfile.schema.ts:40",
+      "src/app/api/user-profile/route.ts:328",
+      "docs/reference/logic-variables-registry.md — no radius_cap_km entry"
+    ],
+    "logic_variables": [],
+    "retired": []
+  },
+  "sharing": {
+    "answer": "none",
+    "why": "It renders no contract.",
+    "evidence": [
+      "mobile/src/components/ErrorBoundary.tsx:1-76"
+    ],
+    "surfaces": []
+  },
+  "a11y": {
+    "touch_target_min_px": 44,
+    "labels": "complete",
+    "dark_mode": "tokens",
+    "reduced_motion": "none",
+    "i18n": "none",
+    "safe_area": [
+      "top",
+      "bottom",
+      "left",
+      "right"
+    ]
+  },
+  "deviations": "none",
+  "limitations": [
+    {
+      "what": "The raw error message is rendered to the user verbatim, so a message that happens to embed an address or a permit number reaches the screen even though it is kept out of the logs.",
+      "measured": "ErrorBoundary.tsx:55-59 renders this.state.errorMessage; the sanitisation at :32 applies to the console/Sentry path only.",
+      "check_id": "boundary_pii_sanitized"
+    },
+    {
+      "what": "It is the only component in the mobile tree that uses the shared design tokens; every other surface writes literal zinc/amber Tailwind classes.",
+      "measured": "ErrorBoundary.tsx:51-67 uses bg-bg-feed / text-red-alert / text-text-muted / text-text-primary, defined at mobile/tailwind.config.js:8-20. grep for constants/tokens across mobile/ returns 0 importers.",
+      "check_id": "boundary_a11y_label"
+    }
+  ],
+  "interpretation": "none",
+  "notes": "a11y.dark_mode is \"tokens\" here and \"hardcoded\" on all 33 other mobile rows — this is the single measured token consumer in the Expo client. identity.spec stays UNRESEARCHED deliberately: ErrorBoundary.tsx has no SPEC LINK header (unlike every sibling under mobile/src/components/) and grep of docs/specs/00-architecture/00_system_map.md returns no ErrorBoundary row, so the governing spec genuinely does not exist yet. Spec 99 §7.1/§9.5 governs the dumpDiagnostics call it makes, which is a dependency, not ownership.",
+  "x-draft": {
+    "shard": "mobile-product",
+    "files": [
+      "mobile/src/components/ErrorBoundary.tsx"
+    ],
+    "loc": 76,
+    "call_idiom": "none",
+    "stores": [],
+    "measured_states": [
+      "pass_through_children",
+      "error_state"
+    ],
+    "measured_gate": {
+      "session": "none",
+      "entitlement": "none",
+      "flag": "none",
+      "permission": "none"
+    }
+  },
+  "programme": {
+    "scope": "platform_shared",
+    "phase": "UNRESEARCHED",
+    "why": "A cross-cutting overlay that renders over every surface of both products.",
+    "feature": "F10",
+    "build_order": 3103,
+    "leakage": "none",
+    "product_questions": "none",
+    "review": {
+      "status": "unreviewed"
+    }
+  }
+}

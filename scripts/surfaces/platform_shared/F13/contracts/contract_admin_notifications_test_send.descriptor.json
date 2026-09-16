@@ -1,0 +1,385 @@
+{
+  "kind": "CONTRACT",
+  "status": "exists",
+  "docs": {
+    "purpose": "Lets an admin send one real test push notification to a specific device or user to verify the notification pipeline works end to end, without it counting against that user's daily notification limit or appearing in the normal send history.",
+    "data_story": "It reads 1 table — `device_tokens` and writes nothing. Its response is an explicit pick-by-name projection of 6 fields, so a column added to a table upstream does not leak into the client by accident. It is called from 1 place: `admin_notifications`.",
+    "under_126": "Becomes a **CONTRACT descriptor** of archetype `COMMAND`. It declares the JOB it triggers (`job_ref`), its concurrency posture and the audit row it must write. Its `consumers[]` becomes the edge list of the fan-out graph — the join nothing in this estate holds today."
+  },
+  "evidence": {
+    "files": [
+      "src/app/api/admin/notifications/test-send/route.ts:1"
+    ],
+    "contracts": [
+      "src/app/api/admin/notifications/test-send/route.ts:43 (POST export)",
+      "src/lib/api/with-api-envelope.ts:27-52"
+    ],
+    "tables": [
+      "src/app/api/admin/notifications/test-send/route.ts:72",
+      "src/lib/auth/verify-admin.ts:117-120",
+      "src/lib/db/generated/schema.ts — every table named here is present in the introspected drizzle schema"
+    ],
+    "gate": [
+      "src/lib/auth/route-guard.ts — admin prefix — classifyRoute matches pathname.startsWith('/api/admin/')",
+      "src/lib/auth/route-guard.ts:150-201 — classifyRoute executed 2026-09-15 with the concrete path → \"admin\"",
+      "in-handler: verifyAdminAuth at src/app/api/admin/notifications/test-send/route.ts:44 (first line of handler)"
+    ],
+    "states": [
+      "hit: src/app/api/admin/notifications/test-send/route.ts:116-126 with data.sent true when ticket.status === 'ok' (:117)",
+      "degraded: src/app/api/admin/notifications/test-send/route.ts:117 — a non-ok Expo ticket (or tickets[] empty at :108) returns HTTP 200 with data.sent=false and the cause only in _debug.error_message (:123); the caller must read _debug to learn the send failed",
+      "miss: src/app/api/admin/notifications/test-send/route.ts:76-81 (404 NO_DEVICE when the user has no device_tokens row)",
+      "unauthorized: src/app/api/admin/notifications/test-send/route.ts:45-50",
+      "error: src/app/api/admin/notifications/test-send/route.ts:127-135 (502 SEND_FAILED — Expo non-2xx / top-level errors thrown at scripts/lib/push-dispatch.js:77 and :89)"
+    ],
+    "emits": [
+      "analytics admin_action_performed {action: notification_test_send, result: ok|error, duration_ms} — src/app/api/admin/notifications/test-send/route.ts:110-114 (distinct_id is the sha256-truncated admin uid, :28-30; property whitelist enforced at src/lib/admin/analytics.ts:46-55)",
+      "ledger NONE, deliberately — no notification_dispatches row and no notifications row. VERIFIED, not assumed: the route contains no INSERT (src/app/api/admin/notifications/test-send/route.ts:59-126) and the only delegate, sendPushChunk (scripts/lib/push-dispatch.js:68-101), performs an HTTPS POST to the Expo API and holds no DB handle (grep for INSERT/UPDATE/DELETE/pool.query/client.query in scripts/lib/push-dispatch.js returns nothing)."
+    ]
+  },
+  "identity": {
+    "id": "contract_admin_notifications_test_send",
+    "route": "/api/admin/notifications/test-send",
+    "archetype": "COMMAND",
+    "platforms": [
+      "web"
+    ],
+    "owns": {
+      "components": []
+    },
+    "owner": "Backend/Pipeline (CLAUDE.md §Domain Rules: `src/app/api/`)",
+    "spec": "docs/specs/02-web-admin/102_admin_notifications_tool.md",
+    "spec_refs": [
+      "src/app/api/admin/notifications/test-send/route.ts:1 — docs/specs/02-web-admin/102_admin_notifications_tool.md §2 + §3"
+    ],
+    "spec_version": "0-draft",
+    "versioning": {
+      "answer": "breaking_allowed",
+      "why": "Every consumer is in src/** and ships in the same Next.js deploy as the route, so a breaking change is one commit.",
+      "evidence": [
+        "src/components/admin/NotificationsTool.tsx:231"
+      ]
+    },
+    "ref": "C-007"
+  },
+  "inputs": {
+    "answer": "app_outputs",
+    "why": "It reads 2 table(s) directly; none is written by a pipeline step — they are written by API routes, jobs or migration seeds — but the input is still the database, not another contract.",
+    "evidence": [
+      "src/app/api/admin/notifications/test-send/route.ts:72",
+      "migrations/107_device_tokens.sql:10",
+      "docs/reference/data-lineage-map.md — no `## `device_tokens`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)",
+      "src/lib/auth/verify-admin.ts:117-120",
+      "migrations/226_profiles_admin_bootstrap.sql:25",
+      "docs/reference/data-lineage-map.md — no `## `profiles`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)"
+    ],
+    "contract_ref": [],
+    "query_key": [],
+    "field_whitelist": [
+      "sent",
+      "token",
+      "ticket_id",
+      "ticket_status",
+      "error_message",
+      "duration_ms"
+    ],
+    "tables": [
+      {
+        "table": "device_tokens",
+        "columns": [
+          "push_token",
+          "user_id",
+          "updated_at"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/03-mobile/92_mobile_engagement_hardware.md",
+        "evidence": [
+          "src/app/api/admin/notifications/test-send/route.ts:72",
+          "migrations/107_device_tokens.sql:10",
+          "docs/reference/data-lineage-map.md — no `## `device_tokens`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)"
+        ]
+      },
+      {
+        "table": "profiles",
+        "columns": [
+          "id",
+          "is_admin"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/00-architecture/114_rls_policy_catalog.md",
+        "evidence": [
+          "src/lib/auth/verify-admin.ts:117-120",
+          "migrations/226_profiles_admin_bootstrap.sql:25",
+          "docs/reference/data-lineage-map.md — no `## `profiles`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)"
+        ]
+      }
+    ]
+  },
+  "outputs": {
+    "answer": "none",
+    "why": "It writes no table: the side effect is out-of-process (a spawned chain / an external API call), so nothing in this database moves as a result of the request itself.",
+    "evidence": [
+      "src/app/api/admin/notifications/test-send/route.ts — read in full 2026-09-15; no INSERT/UPDATE/DELETE reached"
+    ],
+    "contract_ref": [],
+    "tables": []
+  },
+  "state": {
+    "answer": "server_only",
+    "why": "A CONTRACT holds no client state: every value is resolved per request on the server and nothing is cached in a client store by the route itself.",
+    "evidence": [
+      "src/app/api/admin/notifications/test-send/route.ts:43 (POST export)",
+      "src/lib/api/with-api-envelope.ts:27-52"
+    ],
+    "fields": []
+  },
+  "staleness": {
+    "answer": "live",
+    "why": "Every read runs against the base tables on each request — there is no cache layer between the handler and the database.",
+    "evidence": [
+      "src/app/api/admin/notifications/test-send/route.ts:72",
+      "migrations/107_device_tokens.sql:10",
+      "docs/reference/data-lineage-map.md — no `## `device_tokens`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)",
+      "src/lib/auth/verify-admin.ts:117-120"
+    ],
+    "offline": "none"
+  },
+  "guards": {
+    "session": {
+      "answer": "admin",
+      "why": "classifyRoute(\"/api/admin/notifications/test-send\") returns \"admin\" (executed 2026-09-15); the handler re-verifies the caller in-process.",
+      "evidence": [
+        "src/lib/auth/route-guard.ts:150-201 — classifyRoute executed 2026-09-15 with the concrete path",
+        "verifyAdminAuth at src/app/api/admin/notifications/test-send/route.ts:44 (first line of handler)"
+      ]
+    },
+    "rls_class": {
+      "answer": "A",
+      "why": "It reaches user-owned rows whose policies key on auth.uid(). The route connects as the table owner (raw pg), which Spec 114 §9 makes owner-exempt from RLS — the class describes the data, not the gate this route passes.",
+      "evidence": [
+        "migrations/230_rls_class_a_entitlements.sql:52",
+        "migrations/226_profiles_admin_bootstrap.sql:48",
+        "docs/specs/00-architecture/114_rls_policy_catalog.md §2"
+      ]
+    },
+    "disclosure": "none",
+    "entitlement": "none",
+    "flag": "none",
+    "permission": "none",
+    "rate_bucket": "none"
+  },
+  "render": {
+    "targets": [
+      "screen"
+    ],
+    "projection": "none",
+    "breakpoints": "none",
+    "export": "none"
+  },
+  "checks": [
+    {
+      "id": "contract_admin_notifications_test_send__auth_class_parity",
+      "kind": "auth_class_parity",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "why": "guards.session must equal classifyRoute(\"/api/admin/notifications/test-send\"), executed 2026-09-15 → \"admin\" plus the in-handler guard (verifyAdminAuth at src/app/api/admin/notifications/test-send/route.ts:44 (first line of handler)). Locked by admin-notifications.infra.test.ts."
+    },
+    {
+      "id": "contract_admin_notifications_test_send__error_envelope",
+      "kind": "error_state",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "Every declared error class returns the { data, error, meta } envelope of docs/specs/00_engineering_standards.md §4.4; expected to stay at zero deviations."
+    },
+    {
+      "id": "contract_admin_notifications_test_send__contract_parse",
+      "kind": "contract_parse",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "why": "Request input is parsed by bodySchema at src/app/api/admin/notifications/test-send/route.ts:60 before any query runs; a payload that fails the schema is refused, never coerced."
+    },
+    {
+      "id": "contract_admin_notifications_test_send__field_whitelist_parity",
+      "kind": "field_whitelist_parity",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "The response is an explicit pick-by-name of 4 field(s) (src/app/api/admin/notifications/test-send/route.ts:116-126 (data:{sent,token}; _debug:{ticket_id,ticket_status,error_message,duration_ms})), so a column added upstream cannot leak; this check set-equals the projection to inputs.field_whitelist."
+    },
+    {
+      "id": "contract_admin_notifications_test_send__schema_declared",
+      "kind": "schema_declared",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "Every table and column declared in lineage.reads[]/writes[] must exist in src/lib/db/generated/schema.ts (drizzle-kit introspect of the live database); the registry generator checks this both directions."
+    }
+  ],
+  "invariants": "none",
+  "plausibility": "none",
+  "states": [
+    {
+      "name": "hit",
+      "golden": "none"
+    },
+    {
+      "name": "degraded",
+      "golden": "none"
+    },
+    {
+      "name": "miss",
+      "golden": "none"
+    },
+    {
+      "name": "unauthorized",
+      "golden": "none"
+    },
+    {
+      "name": "error",
+      "golden": "none"
+    }
+  ],
+  "errors": {
+    "answer": "envelope",
+    "why": "Success and failure both arrive in the { data, error, meta } envelope of docs/specs/00_engineering_standards.md §4.4; withApiEnvelope is the outermost wrapper and converts any uncaught throw into the same shape.",
+    "evidence": [
+      "src/lib/api/with-api-envelope.ts:27-52",
+      "src/app/api/admin/notifications/test-send/route.ts:46-49",
+      "src/app/api/admin/notifications/test-send/route.ts:53-56",
+      "src/app/api/admin/notifications/test-send/route.ts:62-65",
+      "src/app/api/admin/notifications/test-send/route.ts:77-80",
+      "src/app/api/admin/notifications/test-send/route.ts:116-126",
+      "src/app/api/admin/notifications/test-send/route.ts:132-135",
+      "src/app/api/admin/notifications/test-send/route.ts:48 (401)",
+      "src/app/api/admin/notifications/test-send/route.ts:55 (403)",
+      "src/app/api/admin/notifications/test-send/route.ts:64 (400)",
+      "src/app/api/admin/notifications/test-send/route.ts:79 (404)"
+    ],
+    "classes": [
+      {
+        "class": "401",
+        "ui": "{data:null,error:{code,message},meta:null} — src/app/api/admin/notifications/test-send/route.ts:48 (code UNAUTHORIZED)"
+      },
+      {
+        "class": "403",
+        "ui": "{data:null,error:{code,message},meta:null} — src/app/api/admin/notifications/test-send/route.ts:55 (code SESSION_REQUIRED)"
+      },
+      {
+        "class": "400",
+        "ui": "{data:null,error:{code,message,details},meta:null} — src/app/api/admin/notifications/test-send/route.ts:64 (code VALIDATION_FAILED)"
+      },
+      {
+        "class": "500",
+        "ui": "{data:null,error:{code,message},meta:null} — withApiEnvelope fallback (src/lib/api/with-api-envelope.ts:40-49); unreachable for anything thrown inside the handler's own try at :59-127 — src/app/api/admin/notifications/test-send/route.ts:43 (code DATABASE_ERROR | INTERNAL_ERROR)"
+      }
+    ]
+  },
+  "emits": {
+    "answer": "both",
+    "why": "It both emits named observability events and writes durable rows a reviewer can count after the fact.",
+    "evidence": [
+      "analytics admin_action_performed {action: notification_test_send, result: ok|error, duration_ms} — src/app/api/admin/notifications/test-send/route.ts:110-114 (distinct_id is the sha256-truncated admin uid, :28-30; property whitelist enforced at src/lib/admin/analytics.ts:46-55)",
+      "ledger NONE, deliberately — no notification_dispatches row and no notifications row. VERIFIED, not assumed: the route contains no INSERT (src/app/api/admin/notifications/test-send/route.ts:59-126) and the only delegate, sendPushChunk (scripts/lib/push-dispatch.js:68-101), performs an HTTPS POST to the Expo API and holds no DB handle (grep for INSERT/UPDATE/DELETE/pool.query/client.query in scripts/lib/push-dispatch.js returns nothing)."
+    ],
+    "analytics": [
+      "admin_action_performed {action: notification_test_send, result: ok|error, duration_ms} — src/app/api/admin/notifications/test-send/route.ts:110-114 (distinct_id is the sha256-truncated admin uid, :28-30; property whitelist enforced at src/lib/admin/analytics.ts:46-55)"
+    ],
+    "ledger_events": [],
+    "breadcrumbs": []
+  },
+  "offers": {
+    "answer": "none",
+    "why": "It renders no sponsored placement: the offers and advertisers tables Spec 126 §2 specifies do not exist in migrations/ and nothing in this handler reads placement inventory.",
+    "evidence": [
+      "migrations/ — no CREATE TABLE offers / advertisers (grep 2026-09-15)",
+      "src/app/api/admin/notifications/test-send/route.ts — read in full; no placement read"
+    ]
+  },
+  "metering": {
+    "answer": "none",
+    "why": "Nothing here is counted: no usage_events row (the table does not exist in the introspected schema) and no quota counter is written by this handler.",
+    "evidence": [
+      "src/app/api/admin/notifications/test-send/route.ts — read in full 2026-09-15",
+      "src/lib/db/generated/schema.ts — no usage_events table"
+    ]
+  },
+  "config": {
+    "answer": "none",
+    "why": "It consumes no tunable: no logic_variables read and no env-var-driven threshold in the handler or the libs it calls.",
+    "evidence": [
+      "src/app/api/admin/notifications/test-send/route.ts — read in full 2026-09-15; no loadMarketplaceConfigs / logic_variables read"
+    ],
+    "logic_variables": [],
+    "retired": []
+  },
+  "sharing": {
+    "answer": "sole",
+    "why": "Exactly one call site renders it, so its projection serves one surface.",
+    "evidence": [
+      "src/components/admin/NotificationsTool.tsx:231"
+    ],
+    "surfaces": [
+      "src/components/admin/NotificationsTool.tsx:231"
+    ]
+  },
+  "a11y": {
+    "touch_target_min_px": "UNRESEARCHED",
+    "labels": "none",
+    "dark_mode": "none",
+    "reduced_motion": "none",
+    "i18n": "none",
+    "safe_area": "none"
+  },
+  "deviations": "none",
+  "limitations": [
+    {
+      "what": "a11y.touch_target_min_px has no legal answer for a CONTRACT",
+      "measured": "The schema allows only UNRESEARCHED or an integer >= 44; a JSON endpoint has no touch target and the vocabulary has no \"n/a\". Left UNRESEARCHED and escalated per Spec 128 §4 rather than invented.",
+      "check_id": "contract_admin_notifications_test_send__auth_class_parity"
+    },
+    {
+      "what": "error classes outside the closed set are not representable: 404, 502",
+      "measured": "The handler returns 404, 502 at src/app/api/admin/notifications/test-send/route.ts:79, src/app/api/admin/notifications/test-send/route.ts:134; errors.classes[] admits only 400/401/403/429/500/schema_drift/offline.",
+      "check_id": "contract_admin_notifications_test_send__error_envelope"
+    }
+  ],
+  "interpretation": "none",
+  "notes": "Deliberately writes NO DB rows (no notification_dispatches ledger row, no notifications queue row) so a test send does not consume the user's once-per-day dedup slot. Sends the real push by dynamically importing scripts/lib/push-dispatch.js (sendPushChunk), the same transport the production dispatcher uses. Requires authMethod === 'session' (403 for admin_key/dev_bypass shared identities). Mutating externally but writes no admin audit row. | MEASURED 2026-09-15: Census checklist: the one named table (device_tokens) VERIFIED. Census MISSED `profiles` (verifyAdminAuth, src/lib/auth/verify-admin.ts:117-120). FINDINGS: (1) DEFECT — malformed JSON returns 502 SEND_FAILED, not 400 (see input_validation above; request.json() at :60 is unguarded). (2) NO AUDIT ROW for a real side effect that reaches a user's device: only a PostHog event (:110-114), no admin_audit_log, and by design no notification_dispatches row (:10-12) — so an operator-sent push is invisible in the DB ledger. (3) An explicit push_token in the body bypasses the device_tokens lookup entirely (:69-70), so an admin can push to ANY Expo token, including one not belonging to any user of this system — there is no ownership check on the supplied token. (4) The error message returned on 502 is the raw Expo/transport error truncated to 300 chars (:133); the comment at :130-131 asserts it contains no secrets — a claim, not evidence, though the token is indeed in the request rather than the error. (5) The delegate is loaded by a deep relative dynamic import '../../../../../../scripts/lib/push-dispatch.js' (:88-90) — fragile to any route relocation and outside the src/ tree, so it escapes the src/-scoped ESLint rules named in CLAUDE.md §5. (6) The payload hard-codes notification_type LIFECYCLE_PHASE_CHANGED and _test_send:true (:99-103); the receiving client's handling of _test_send was not researched (out of scope for this route file). | Caching: none observed — no Cache-Control, no dynamic/revalidate, no in-process memo in route.ts:1-137 | Other guards / classification: CSRF Origin allowlist DOES apply (POST is in MUTATING_METHODS, src/lib/auth/verify-admin.ts:45, checked at :70-78, default-deny at :336). MFA gate inert unless ADMIN_MFA_ENFORCED=true (src/lib/auth/verify-admin.ts:143). No replay/nonce protection — the same body can be POSTed repeatedly. | Locking tests: src/tests/admin-notifications.infra.test.ts.",
+  "x-draft": {
+    "shard": "contracts",
+    "files": [
+      "src/app/api/admin/notifications/test-send/route.ts"
+    ],
+    "loc": 137,
+    "methods": [
+      "POST"
+    ],
+    "consumers": [
+      "admin_notifications"
+    ],
+    "writes_audit_row": "n/a",
+    "consumers_verified": [
+      "src/components/admin/NotificationsTool.tsx:231"
+    ],
+    "auth_class_executed": "admin",
+    "locking_tests": [
+      "src/tests/admin-notifications.infra.test.ts"
+    ]
+  },
+  "programme": {
+    "scope": "platform_shared",
+    "phase": "UNRESEARCHED",
+    "why": "Notifications: one device-token registry and one preference set across both products.",
+    "feature": "F13",
+    "build_order": 3132,
+    "leakage": "none",
+    "product_questions": "none",
+    "review": {
+      "status": "unreviewed"
+    }
+  }
+}

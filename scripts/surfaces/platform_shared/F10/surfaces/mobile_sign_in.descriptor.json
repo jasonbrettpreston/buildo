@@ -1,0 +1,391 @@
+{
+  "kind": "SURFACE",
+  "status": "exists",
+  "docs": {
+    "purpose": "The front door of the app. Returning users sign in with Apple, Google, or an email and password, and there is a phone code path built but currently switched off. If someone tries to sign in with a method attached to an email that already has an account, a sheet explains the clash and sends them back to pick their original method, after which the new method is attached automatically.",
+    "data_story": "This surface reaches **no API contract at all** — every value it shows is local, passed in as a prop, or read from the device. It holds no client-side store, so there is no local copy of server state to keep in sync.",
+    "under_126": "**LEAVE ALONE — deliberately out of scope.** This screen talks to the Supabase Auth SDK, not to our contracts, so a descriptor would be describing someone else's protocol. Spec 126's Operating Boundaries fence it explicitly."
+  },
+  "evidence": {
+    "files": [
+      "mobile/app/(auth)/sign-in.tsx:1",
+      "mobile/src/components/auth/GoogleSignInButton.tsx:1"
+    ],
+    "contracts": [
+      "mobile/app/(auth)/sign-in.tsx:260-266",
+      "mobile/app/(auth)/sign-in.tsx:324-330",
+      "mobile/app/(auth)/sign-in.tsx:365 — all Supabase Auth SDK calls; the screen reaches no /api/ route"
+    ],
+    "tables": [
+      "mobile/app/(auth)/sign-in.tsx — GoTrue writes auth.users/auth.sessions; no application table is touched from this screen"
+    ],
+    "gate": [
+      "mobile/src/lib/featureFlags.ts:24",
+      "mobile/app/(auth)/sign-in.tsx:487-503"
+    ],
+    "states": [
+      "mobile/app/(auth)/sign-in.tsx:466-521",
+      "mobile/app/(auth)/sign-in.tsx:523-578",
+      "mobile/app/(auth)/sign-in.tsx:645-693"
+    ],
+    "emits": [
+      "mobile/app/(auth)/sign-in.tsx:114",
+      "mobile/app/(auth)/sign-in.tsx:231",
+      "mobile/app/(auth)/sign-in.tsx:267",
+      "mobile/app/(auth)/sign-in.tsx:210"
+    ]
+  },
+  "identity": {
+    "id": "mobile_sign_in",
+    "route": "mobile/app/(auth)/sign-in.tsx",
+    "archetype": "FORM",
+    "platforms": [
+      "mobile"
+    ],
+    "owns": {
+      "components": [
+        "mobile/src/components/auth/GoogleSignInButton.tsx"
+      ]
+    },
+    "owner": "unassigned (no CODEOWNERS file and no owner registry exists in the repo — measured 2026-09-15)",
+    "spec": "docs/specs/03-mobile/93_mobile_auth.md",
+    "spec_refs": [
+      "docs/specs/03-mobile/93_mobile_auth.md §3.1",
+      "docs/specs/03-mobile/93_mobile_auth.md §3.2",
+      "docs/specs/03-mobile/93_mobile_auth.md §4",
+      "docs/specs/03-mobile/93_mobile_auth.md §5",
+      "docs/specs/03-mobile/93_mobile_auth.md §2.2"
+    ],
+    "spec_version": "0-draft",
+    "versioning": {
+      "answer": "none",
+      "why": "It exchanges provider ID tokens with GoTrue and renders nothing server-shaped; no in-repo consumer depends on a payload from this screen.",
+      "evidence": [
+        "mobile/app/(auth)/sign-in.tsx:260-266"
+      ]
+    },
+    "ref": "S-037"
+  },
+  "inputs": {
+    "answer": "device",
+    "why": "Every credential is device-sourced — the Apple credential from expo-apple-authentication, the Google idToken from the native SDK, or typed email/password/OTP; the screen calls no application contract.",
+    "evidence": [
+      "mobile/app/(auth)/sign-in.tsx:229-266",
+      "mobile/app/(auth)/sign-in.tsx:288-330",
+      "mobile/app/(auth)/sign-in.tsx:354-368"
+    ],
+    "contract_ref": [],
+    "query_key": [],
+    "field_whitelist": [
+      "email",
+      "password",
+      "phoneNumber",
+      "otp",
+      "appleIdToken",
+      "googleIdToken"
+    ],
+    "tables": []
+  },
+  "outputs": {
+    "answer": "device_only",
+    "why": "A successful sign-in writes a Supabase session into on-device AsyncStorage; the app's own API is not called until AuthGate mounts and fetches the profile.",
+    "evidence": [
+      "mobile/src/lib/supabase.ts:18-20",
+      "mobile/app/_layout.tsx:98-101"
+    ],
+    "contract_ref": [],
+    "tables": [],
+    "rollback": "none — an auth failure leaves no partial state; handleAuthError only sets an error message and fires an error haptic.",
+    "invalidates": []
+  },
+  "state": {
+    "answer": "securestore",
+    "why": "The durable output is the Supabase session the SDK persists on device; the screen itself holds only component state, and authStore is written by the onAuthStateChange listener in the root layout, not here.",
+    "evidence": [
+      "mobile/src/lib/supabase.ts:18-20",
+      "mobile/src/store/authStore.ts:137-179",
+      "mobile/app/_layout.tsx:342-348"
+    ],
+    "fields": [
+      {
+        "name": "accessToken",
+        "owner_layer": "4a_mmkv",
+        "canonical_writer": "authStore.setAuth, called from initSupabaseAuthListener — NOT from this screen",
+        "authorized_readers": [
+          "mobile_lead_feed",
+          "mobile_map",
+          "mobile_flight_job_detail",
+          "shell_app_root"
+        ],
+        "bridge": "B4",
+        "persistence": "mmkv",
+        "signout_reset": true
+      }
+    ]
+  },
+  "staleness": {
+    "answer": "none",
+    "why": "No server projection is rendered — the screen is a credential form.",
+    "evidence": [
+      "mobile/app/(auth)/sign-in.tsx:456-711"
+    ],
+    "offline": "none"
+  },
+  "guards": {
+    "session": {
+      "answer": "anon",
+      "why": "It is the unauthenticated entry point; it projects no server-sourced field, so there is nothing to disclose beyond the fixed wordmark copy.",
+      "evidence": [
+        "mobile/app/(auth)/sign-in.tsx:456-463",
+        "src/lib/auth/route-guard.ts:142-192"
+      ]
+    },
+    "rls_class": {
+      "answer": "none",
+      "why": "It reaches no application table; GoTrue owns the identity write.",
+      "evidence": [
+        "mobile/app/(auth)/sign-in.tsx:260-266"
+      ]
+    },
+    "disclosure": {
+      "fields": [],
+      "why": "Anonymous, but every rendered string is compiled-in copy — no server field is projected to an unauthenticated principal."
+    },
+    "entitlement": "none",
+    "flag": "PHONE_AUTH_ENABLED (mobile/src/lib/featureFlags.ts:24 — currently false)",
+    "permission": "none",
+    "rate_bucket": "none — no app route is called; GoTrue owns the SMS and password throttles"
+  },
+  "render": {
+    "targets": [
+      "screen"
+    ],
+    "projection": "none",
+    "breakpoints": "mobile_first",
+    "export": "none"
+  },
+  "checks": [
+    {
+      "id": "signin_phone_gate",
+      "kind": "auth_class_parity",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "why": "mobile/__tests__/phoneGate.coverage.test.ts locks all three D15 entry points; the OTP flow stays fully wired behind the flag, so an un-gated render would expose an unshipped auth method."
+    },
+    {
+      "id": "signin_apple_nonce",
+      "kind": "contract_parse",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "mobile/__tests__/appleAuth.test.ts locks the raw-nonce / SHA-256 hash contract; a silently swapped digest would break identity-token verification only at runtime."
+    },
+    {
+      "id": "signin_linking_email_guard",
+      "kind": "auth_class_parity",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "why": "linkingExpectedEmail (plus the emailFromIdToken fallback pinned by jwtClaims.test.ts) stops a Google/Apple identity being linked to an unrelated user's session if the user dismisses the sheet and signs in elsewhere."
+    },
+    {
+      "id": "signin_error_state",
+      "kind": "error_state",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "mapSupabaseError turns a provider code into user copy rendered inline under the active form; an unmapped code renders nothing, which is why the mapper is the lock."
+    },
+    {
+      "id": "signin_touch_target",
+      "kind": "touch_target",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "Every button declares min-h-[52px] and the Apple native button is pinned to height 52 (sign-in.tsx:472, 498, 511, 551)."
+    },
+    {
+      "id": "signin_a11y_label",
+      "kind": "a11y_label",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "why": "Nine attributes cover the method buttons and the submit; the email and password TextInputs carry testIDs but no accessibilityLabel."
+    }
+  ],
+  "invariants": "none",
+  "plausibility": "none",
+  "states": [
+    {
+      "name": "static",
+      "golden": "none"
+    },
+    {
+      "name": "loading",
+      "golden": "none"
+    },
+    {
+      "name": "error",
+      "golden": "none"
+    },
+    {
+      "name": "unauthorized",
+      "golden": "none"
+    },
+    {
+      "name": "ambiguous",
+      "golden": "none"
+    }
+  ],
+  "errors": {
+    "answer": "inline",
+    "why": "Every failure renders one inline red line under the active form, mapped from the Supabase error code; the account-linking case escalates to a bottom sheet instead.",
+    "evidence": [
+      "mobile/app/(auth)/sign-in.tsx:194-227",
+      "mobile/app/(auth)/sign-in.tsx:576-578"
+    ],
+    "classes": [
+      {
+        "class": "400",
+        "ui": "mapSupabaseError copy inline under the form (bad credentials, invalid OTP)."
+      },
+      {
+        "class": "401",
+        "ui": "Same inline copy — the screen never navigates on a failed credential."
+      },
+      {
+        "class": "429",
+        "ui": "GoTrue SMS/password throttle surfaces as mapped copy; there is no retry-after display."
+      }
+    ],
+    "no_retry": []
+  },
+  "emits": {
+    "answer": "events",
+    "why": "This is the most instrumented surface in the app — nine distinct events cover screen view, per-method attempt/success/failure, OTP verification and the three account-linking outcomes, with only the error CODE ever leaving the device.",
+    "evidence": [
+      "mobile/app/(auth)/sign-in.tsx:114",
+      "mobile/app/(auth)/sign-in.tsx:231",
+      "mobile/app/(auth)/sign-in.tsx:274",
+      "mobile/app/(auth)/sign-in.tsx:210",
+      "mobile/src/lib/analytics.ts:121-132"
+    ],
+    "analytics": [
+      "auth_screen_viewed",
+      "auth_method_attempted",
+      "auth_method_succeeded",
+      "auth_method_failed",
+      "auth_otp_verified",
+      "auth_otp_resend_requested",
+      "auth_account_link_shown",
+      "auth_account_link_completed",
+      "auth_account_link_failed"
+    ],
+    "ledger_events": [],
+    "breadcrumbs": [
+      "Sentry.captureException on a failed linkIdentity (sign-in.tsx:179)"
+    ]
+  },
+  "offers": {
+    "answer": "none",
+    "why": "No sponsored placement is rendered: the only slot component in the Expo tree is SponsorSlot, and it returns null unless EXPO_PUBLIC_PARCEL_SPONSORS=1.",
+    "evidence": [
+      "mobile/src/components/parcel/SponsorSlot.tsx:16-20"
+    ]
+  },
+  "metering": {
+    "answer": "none",
+    "why": "Nothing here is counted: the Spec 126 §7 usage ledger table does not exist (grep for usage_events in the introspected drizzle schema returns 0 hits), and the only quota-shaped counter, user_profiles.lead_views_count, is incremented solely by POST /api/leads/view, which has no mobile caller.",
+    "evidence": [
+      "src/lib/db/generated/schema.ts — no usage_events table (grep, 2026-09-15)",
+      "src/app/api/leads/view/route.ts:110",
+      "src/features/leads/api/useLeadView.ts:25 — imported only by src/tests/useLeadView.logic.test.tsx"
+    ]
+  },
+  "config": {
+    "answer": "none",
+    "why": "The surface consumes no registered logic variable: the only server-side tunable in this path, user_profiles.radius_cap_km, is a per-user admin column, not a logic_variables row.",
+    "evidence": [
+      "src/lib/userProfile.schema.ts:40",
+      "src/app/api/user-profile/route.ts:328",
+      "docs/reference/logic-variables-registry.md — no radius_cap_km entry"
+    ],
+    "logic_variables": [],
+    "retired": []
+  },
+  "sharing": {
+    "answer": "none",
+    "why": "It renders no application contract — the only network calls are Supabase Auth SDK calls.",
+    "evidence": [
+      "mobile/app/(auth)/sign-in.tsx:260-266",
+      "mobile/app/(auth)/sign-in.tsx:365"
+    ],
+    "surfaces": []
+  },
+  "a11y": {
+    "touch_target_min_px": 52,
+    "labels": "partial",
+    "dark_mode": "hardcoded",
+    "reduced_motion": "none",
+    "i18n": "none",
+    "safe_area": [
+      "top",
+      "bottom",
+      "left",
+      "right"
+    ]
+  },
+  "deviations": "none",
+  "limitations": [
+    {
+      "what": "PhoneInputField and OtpInputField are rendered by BOTH this surface and mobile_sign_up, so neither surface can own them under R-13 and the census has no row for them.",
+      "measured": "grep for the import path returns exactly mobile/app/(auth)/sign-in.tsx and mobile/app/(auth)/sign-up.tsx.",
+      "check_id": "signin_phone_gate"
+    },
+    {
+      "what": "The whole phone-OTP flow — sheet, OTP field, verifyOtp, resend cooldown — is live code behind a false constant, so it ships in every build and is never reachable.",
+      "measured": "mobile/src/lib/featureFlags.ts:24 PHONE_AUTH_ENABLED = false; the sheet and its handlers at sign-in.tsx:378-441 and :645-693 are unconditional.",
+      "check_id": "signin_phone_gate"
+    }
+  ],
+  "interpretation": "none",
+  "notes": "AccountLinkingSheet is rendered here but is its own census row, so it is not claimed in owns.components. GoogleSignin.configure runs at module load, which means importing this screen configures the native SDK as a side effect.",
+  "x-draft": {
+    "shard": "mobile-product",
+    "files": [
+      "mobile/app/(auth)/sign-in.tsx",
+      "mobile/src/components/auth/GoogleSignInButton.tsx"
+    ],
+    "loc": 713,
+    "call_idiom": "none",
+    "stores": [],
+    "measured_states": [
+      "idle_button_stack",
+      "email_form",
+      "phone_input_sheet",
+      "phone_otp_sheet",
+      "error_message",
+      "account_linking_sheet",
+      "per_method_loading"
+    ],
+    "measured_gate": {
+      "session": "none",
+      "entitlement": "none",
+      "flag": "PHONE_AUTH_ENABLED",
+      "permission": "none"
+    }
+  },
+  "programme": {
+    "scope": "platform_shared",
+    "phase": "UNRESEARCHED",
+    "why": "Authentication. It talks to the Supabase Auth SDK and gates entry to both products; no product owns it.",
+    "feature": "F10",
+    "build_order": 3103,
+    "leakage": "none",
+    "product_questions": "none",
+    "review": {
+      "status": "unreviewed"
+    }
+  }
+}

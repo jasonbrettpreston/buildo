@@ -1,0 +1,398 @@
+{
+  "kind": "SURFACE",
+  "status": "new",
+  "docs": {
+    "purpose": "A picture of which screens depend on which APIs, with each connecting line labelled by HOW the screen calls it. When one API is consumed by eleven different screens in two different styles, that is invisible in code review and obvious in this diagram. It is the page that shows an engineer they are about to change something eleven other places rely on.",
+    "data_story": "Nothing is built yet, so nothing is measured here. As specified it reads descriptor files and checker verdicts rather than database tables.",
+    "under_126": "**NEW.** It does not exist; it is generated from descriptors from its first commit, through the REPORT renderer (read-only; `outputs` and `state` forced to `\"none\"`, a field whitelist that must equal the contract's). It is **100% generated** — which is the point: if the descriptor set is incomplete or an archetype profile is wrong, this page is visibly empty or visibly wrong on commit 1, and cannot be faked by hand."
+  },
+  "evidence": {
+    "files": [
+      "docs/reports/2026-09-15-spec126-admin-best-in-class.md §3.3 — src/features/admin-registry/components/RegistryGraph.tsx is the designed renderer; no file exists"
+    ],
+    "contracts": [
+      "DESIGNED: GET /api/admin/surfaces/graph — absent from the census, so it cannot appear in inputs.contract_ref"
+    ],
+    "tables": [
+      "docs/specs/02-web-admin/126_maxbld_surface_standard.md §6.3 rows 8-9"
+    ],
+    "gate": [
+      "src/lib/auth/route-guard.ts:162"
+    ],
+    "states": [
+      "docs/specs/02-web-admin/127_surface_conversion_procedure.md §4.3"
+    ],
+    "emits": [
+      "docs/specs/02-web-admin/126_maxbld_surface_standard.md §3.1 row 3 — REPORT writes nothing"
+    ]
+  },
+  "identity": {
+    "id": "admin_contract_fanout",
+    "archetype": "REPORT",
+    "platforms": [
+      "web"
+    ],
+    "owns": {
+      "components": [
+        "src/features/admin-registry/components/RegistryGraph.tsx"
+      ]
+    },
+    "owner": "Admin domain (Spec 126 §14 Target Files) — no individual owner is named by Specs 126/127/128.",
+    "spec": "docs/specs/02-web-admin/126_maxbld_surface_standard.md",
+    "spec_refs": [
+      "docs/specs/02-web-admin/126_maxbld_surface_standard.md §2.2 group F — admin_contract_fanout REPORT (100% gen)",
+      "docs/specs/02-web-admin/126_maxbld_surface_standard.md §6.3 row 9 — contract_descriptors.descriptor->'consumers' is where the graph's edges live",
+      "docs/specs/02-web-admin/126_maxbld_surface_standard.md §10 — observability and visualisation",
+      "docs/reports/2026-09-15-spec126-admin-best-in-class.md §1.1 row 18 · §3.2 (verdict BUILD) · §3.3"
+    ],
+    "spec_version": "0-draft",
+    "versioning": {
+      "answer": "none",
+      "why": "Nothing consumes this surface: it does not exist, so no compatibility promise can have been made. It gains a promise at its C9 cutover, when its golden pair is captured.",
+      "evidence": [
+        "docs/specs/02-web-admin/126_maxbld_surface_standard.md §2.2 — listed among the 11 NEW admin surfaces",
+        "docs/specs/02-web-admin/127_surface_conversion_procedure.md §4.3 — the golden PAIR is what pins a shape"
+      ]
+    },
+    "ref": "S-007"
+  },
+  "inputs": {
+    "answer": "contract",
+    "why": "Its whole input is the join of contract_descriptors.descriptor->'consumers' against surface_descriptors.descriptor->'inputs'->'contract_ref', assembled server-side and served by one designed QUERY contract. It reads no product table at all.",
+    "evidence": [
+      "docs/specs/02-web-admin/126_maxbld_surface_standard.md §6.3 row 9 — consumers[] is the edge list",
+      "docs/reports/2026-09-15-spec126-admin-best-in-class.md §3.2 — the fan-out graph, verdict BUILD, no new dependency"
+    ],
+    "contract_ref": [],
+    "query_key": [
+      "admin",
+      "contract-fanout",
+      "contract_id"
+    ],
+    "field_whitelist": [
+      "contract_id",
+      "route",
+      "archetype",
+      "auth_class",
+      "consumer_surface_id",
+      "call_idiom",
+      "edge_count",
+      "layer"
+    ],
+    "tables": [
+      {
+        "table": "contract_descriptors",
+        "columns": [
+          "contract_id",
+          "archetype",
+          "descriptor",
+          "git_sha",
+          "seeded_at"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/02-web-admin/126_maxbld_surface_standard.md §6.3",
+        "evidence": [
+          "docs/specs/02-web-admin/126_maxbld_surface_standard.md §6.4 — written by scripts/seeds/apply-surface-descriptors.js at deploy (the apply-logic-variables.js mechanism), ON CONFLICT DO UPDATE keyed on git_sha; not a chain step",
+          "docs/specs/02-web-admin/126_maxbld_surface_standard.md §6.3 row 8/9/10 — the seeded projection of the git descriptors"
+        ]
+      },
+      {
+        "table": "surface_descriptors",
+        "columns": [
+          "surface_id",
+          "archetype",
+          "platforms",
+          "descriptor",
+          "git_sha",
+          "seeded_at"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/02-web-admin/126_maxbld_surface_standard.md §6.3",
+        "evidence": [
+          "docs/specs/02-web-admin/126_maxbld_surface_standard.md §6.4 — written by scripts/seeds/apply-surface-descriptors.js at deploy (the apply-logic-variables.js mechanism), ON CONFLICT DO UPDATE keyed on git_sha; not a chain step",
+          "docs/specs/02-web-admin/126_maxbld_surface_standard.md §6.3 row 8/9/10 — the seeded projection of the git descriptors"
+        ]
+      }
+    ]
+  },
+  "outputs": {
+    "answer": "none",
+    "why": "REPORT forces outputs to \"none\" (Spec 126 §3.1 row 3) and it is truthful here: a graph of declarations writes nothing back.",
+    "evidence": [
+      "docs/specs/02-web-admin/126_maxbld_surface_standard.md §3.1 row 3 — REPORT: outputs.writes \"none\" ENFORCED"
+    ],
+    "contract_ref": [],
+    "tables": []
+  },
+  "state": {
+    "answer": "none",
+    "why": "REPORT forces state to \"none\"; the layer assignment and the pan/zoom viewport are computed server-side and rendered as inline SVG, so no client store exists to hold anything.",
+    "evidence": [
+      "docs/specs/02-web-admin/126_maxbld_surface_standard.md §3.1 row 3 — REPORT MUST be \"none\" on outputs and state",
+      "docs/reports/2026-09-15-spec126-admin-best-in-class.md §3.2 dependency ruling — inline SVG with a server-computed layered layout, not react-flow"
+    ]
+  },
+  "staleness": {
+    "answer": "live",
+    "why": "Every edge is recomputed from the seeded descriptor rows on each request; there is no cache and no materialised graph table, so the picture cannot be older than the last deploy seed.",
+    "evidence": [
+      "docs/specs/02-web-admin/126_maxbld_surface_standard.md §6.4 — the seed runs at deploy and the drift lock is bidirectional"
+    ],
+    "offline": "none"
+  },
+  "guards": {
+    "session": {
+      "answer": "admin",
+      "why": "An /admin/** page: classifyRoute returns \"admin\" for any pathname starting with /admin/, and \"admin\" is the profiles.is_admin flag checked in-predicate, not a Postgres role.",
+      "evidence": [
+        "src/lib/auth/route-guard.ts:162 — pathname === \"/admin\" || pathname.startsWith(\"/admin/\") returns \"admin\"",
+        "src/lib/auth/route-guard.ts:159 — /api/admin/ returns \"admin\" for the contract half",
+        "migrations/226_profiles_admin_bootstrap.sql:27 — is_admin BOOLEAN NOT NULL DEFAULT false",
+        "docs/specs/00-architecture/114_rls_policy_catalog.md §2 — there is no admin Postgres role; admin is a column flag checked inside the policy predicate"
+      ]
+    },
+    "rls_class": {
+      "answer": "B",
+      "why": "Spec 114 §2 is definitional: everything that is not one of the 10 named Class-A tables, not profiles and not Class D is Class B by default, including tables added after that spec was written — which covers contract_descriptors and surface_descriptors. Class B is ENABLE ROW LEVEL SECURITY with zero policies, and per Spec 114 §4 / D1 the Next.js admin route connects as the table owner, so it is outside RLS enforcement entirely.",
+      "evidence": [
+        "docs/specs/00-architecture/114_rls_policy_catalog.md §2 — \"everything else is Class B by default — including tables added after this spec is written\"",
+        "docs/specs/00-architecture/114_rls_policy_catalog.md §4 — Class B is one ENABLE statement and no CREATE POLICY; admin/pipeline connections are RLS-exempt as table owner (Decision D1)"
+      ]
+    },
+    "disclosure": "none",
+    "entitlement": "none",
+    "flag": "none",
+    "permission": "none",
+    "rate_bucket": "none"
+  },
+  "render": {
+    "targets": [
+      "screen"
+    ],
+    "projection": "detail",
+    "breakpoints": "desktop_first_md",
+    "export": "none"
+  },
+  "checks": [
+    {
+      "id": "fanout_descriptor_parse",
+      "kind": "contract_parse",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "A descriptor that fails the generated mirror must render as a schema_drift node, because a node silently dropped from a fan-out graph is exactly the lie the graph exists to prevent."
+    },
+    {
+      "id": "fanout_no_dangling_edge",
+      "kind": "field_whitelist_parity",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "why": "An edge naming a contract or surface id that no descriptor declares makes the whole picture untrustworthy; the generator already refuses one, and the rendered graph must refuse it too."
+    },
+    {
+      "id": "fanout_auth_class_parity",
+      "kind": "auth_class_parity",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "R-18, and the edge label is where the mismatch shows: a surface gated authenticated reaching a public contract is the measured /builders defect, rendered as a red edge rather than left as archaeology."
+    },
+    {
+      "id": "fanout_empty_state",
+      "kind": "empty_state",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "Zero edges means the descriptor set is not seeded; it must say so rather than render an empty canvas that reads like \"no coupling exists\"."
+    },
+    {
+      "id": "fanout_error_state",
+      "kind": "error_state",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "Each declared error class renders its declared UI."
+    },
+    {
+      "id": "fanout_a11y_label",
+      "kind": "a11y_label",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "An SVG graph is unreadable to a screen reader without a labelled node/edge list; the same payload therefore also renders as a table."
+    }
+  ],
+  "invariants": [
+    {
+      "id": "fanout_consumers_resolve",
+      "sql": "SELECT count(*) FROM contract_descriptors c, jsonb_array_elements_text(c.descriptor->'consumers') AS s(id) WHERE NOT EXISTS (SELECT 1 FROM surface_descriptors d WHERE d.surface_id = s.id)",
+      "severity": "FAIL",
+      "why": "A consumers[] entry naming no seeded surface is a dangling edge — the one failure mode that makes a fan-out graph lie."
+    }
+  ],
+  "plausibility": [
+    {
+      "id": "fanout_max_degree",
+      "sql": "SELECT contract_id, jsonb_array_length(descriptor->'consumers') AS degree FROM contract_descriptors ORDER BY degree DESC LIMIT 5",
+      "severity": "WARN",
+      "why": "The measured worst case is /api/user-profile at 11 surfaces across 2 call idioms; a degree far above that is either a genuine coupling problem or a seeding bug, and either way a human must look."
+    }
+  ],
+  "states": [
+    {
+      "name": "loading",
+      "golden": "none"
+    },
+    {
+      "name": "empty",
+      "golden": "none"
+    },
+    {
+      "name": "hit",
+      "golden": "none"
+    },
+    {
+      "name": "error",
+      "golden": "none"
+    },
+    {
+      "name": "unauthorized",
+      "golden": "none"
+    }
+  ],
+  "errors": {
+    "answer": "envelope",
+    "why": "Every admin route handler is wrapped by withApiEnvelope, which returns { data, error, meta } with a sanitised code on any throw; the surface renders from that envelope rather than from a raw exception.",
+    "evidence": [
+      "src/lib/api/with-api-envelope.ts:27 — withApiEnvelope always returns the { data, error, meta } envelope",
+      "src/lib/api/with-api-envelope.ts:40-45 — a PG SQLSTATE becomes DATABASE_ERROR; the raw message is never exposed"
+    ],
+    "classes": [
+      {
+        "class": "401",
+        "ui": "Redirect to sign-in — the route guard refuses before the page renders."
+      },
+      {
+        "class": "403",
+        "ui": "Full-page \"admin only\" block naming the is_admin requirement; no partial data."
+      },
+      {
+        "class": "500",
+        "ui": "Full-width error panel carrying the envelope error.code, with a retry control."
+      },
+      {
+        "class": "schema_drift",
+        "ui": "The row that failed to parse renders as a red schema_drift row; the rest of the table still renders."
+      }
+    ],
+    "no_retry": [
+      "401",
+      "403"
+    ]
+  },
+  "emits": {
+    "answer": "none",
+    "why": "Read-only: no admin_audit_log row is owed because nothing mutates (R-12/B6 binds mutating routes), and nothing here is metered so R-23 does not apply.",
+    "evidence": [
+      "docs/specs/02-web-admin/128_surface_standard_policy.md §3 rule B6",
+      "docs/specs/02-web-admin/126_maxbld_surface_standard.md §3.1 row 3 — REPORT writes nothing"
+    ],
+    "analytics": [],
+    "ledger_events": [],
+    "breadcrumbs": []
+  },
+  "offers": {
+    "answer": "none",
+    "why": "It renders no sponsored content: it is an operator tool behind the admin flag, and Spec 126 §2.2 assigns SLOT to product surfaces only. Written down because \"none\" on offers is exactly the answer R-16 says must never be an omission.",
+    "evidence": [
+      "docs/specs/02-web-admin/126_maxbld_surface_standard.md §3.1 — SLOT is the archetype that renders inventory; this surface is not one",
+      "docs/specs/02-web-admin/128_surface_standard_policy.md §2 rule 6 — \"none\" is legal; silence is not"
+    ]
+  },
+  "metering": {
+    "answer": "none",
+    "why": "Nothing an operator does here is billable or quota-bearing, and it writes no usage_events row.",
+    "evidence": [
+      "docs/specs/02-web-admin/126_maxbld_surface_standard.md §7"
+    ]
+  },
+  "config": {
+    "answer": "logic_variables",
+    "why": "The only tunable is the degree above which an edge renders as a coupling warning — a number a human would argue about, so Spec 128 rule 3 makes it a registered variable rather than a constant in the renderer.",
+    "evidence": [
+      "docs/specs/02-web-admin/128_surface_standard_policy.md §2 rule 3",
+      "scripts/seeds/logic_variables.json — NET-NEW key, registered at Phase 1"
+    ],
+    "logic_variables": [
+      {
+        "name": "admin_fanout_degree_warn",
+        "min": 2,
+        "max": 50,
+        "on_invalid": "fail",
+        "why": "It decides a rendered verdict (warn vs not), so a bad value must fail rather than default silently."
+      }
+    ],
+    "retired": []
+  },
+  "sharing": {
+    "answer": "shared",
+    "why": "It renders the same descriptor join as admin_orphan_panel, inverted — one contract, two projections, which is the property MAX-SERVER-SIDE depends on and the reason the orphan panel costs almost no new engine code.",
+    "evidence": [
+      "docs/reports/2026-09-15-spec126-admin-best-in-class.md §3.2 — \"same query, no new dependency\"",
+      "docs/reports/2026-09-15-spec126-admin-best-in-class.md §1.1 row 19"
+    ],
+    "surfaces": [
+      "admin_orphan_panel"
+    ],
+    "varies_by_surface": "The fan-out projects contracts that HAVE consumers; the orphan panel projects the complement of the same join."
+  },
+  "a11y": {
+    "touch_target_min_px": 44,
+    "labels": "complete",
+    "dark_mode": "none",
+    "reduced_motion": "none",
+    "i18n": "none",
+    "safe_area": "none"
+  },
+  "deviations": "none",
+  "limitations": [
+    {
+      "what": "plausibility[] here is a distribution query over declarations, not a data-value bound.",
+      "measured": "REPORT requires plausibility >= 1 (Spec 126 §3.1 row 3), but this surface reads no product data — there is no field whose value could be implausible, only a graph whose shape could be. The entry is honest about being a shape check.",
+      "check_id": "fanout_max_degree"
+    },
+    {
+      "what": "The REPORT required-field profile in Spec 126 §3.1 mandates render.targets[] beyond \"screen\" and a per-target parity assertion, and surface.schema.json has no property for any of them (the top level and every category are additionalProperties:false).",
+      "measured": "Every allOf block in scripts/surfaces/_schema/surface.schema.json is `\"then\": true` — the archetype profiles are declared in prose in Spec 126 §3.1 and enforced by nothing, so these fields cannot be declared here and are not caught missing either.",
+      "check_id": "fanout_a11y_label"
+    }
+  ],
+  "interpretation": "none",
+  "notes": "Report §1.1 row 18 and §3.2 (verdict BUILD). Reads no DB table: its inputs are CONTRACT `consumers[]` joined against SURFACE `inputs.contract_ref[]`, i.e. descriptor files that do not exist in the tree yet. Measured defect it makes visible: the /api/user-profile 11-surface / 2-idiom fan-out, where one screen bypasses the canonical mutation hook (usePatchProfile, which has rollback) in favour of a raw fetchWithAuth — the edge label is what exposes it. Per §3.2's dependency ruling the graph is server-computed inline SVG, not react-flow (AQ6). DESIGNED, NOT MEASURED. The archetype is REPORT, so outputs and state are FORCED to \"none\" and plausibility must carry at least one entry — but this surface reads no product data, so its single plausibility entry is a graph-shape distribution rather than a value bound; that stretch is recorded in limitations rather than hidden. inputs.contract_ref is empty for the same generator reason as admin_surface_registry (a designed contract is a dangling edge and is refused at generate-surface-registry.mjs:195).",
+  "x-draft": {
+    "shard": "admin-new",
+    "files": [],
+    "role": "admin",
+    "generated": "100%",
+    "net_new_tables": [
+      "contract_descriptors",
+      "surface_descriptors"
+    ],
+    "designed": true
+  },
+  "programme": {
+    "scope": "parcel_admin",
+    "phase": "B1a",
+    "why": "A descriptor-native admin page generated from the same descriptors this programme produces; it exists to operate and observe the parcel product, not the lead estate.",
+    "feature": "F09",
+    "build_order": 2093,
+    "leakage": "none",
+    "product_questions": "none",
+    "review": {
+      "status": "unreviewed"
+    }
+  }
+}

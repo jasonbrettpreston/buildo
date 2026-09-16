@@ -62,6 +62,20 @@ Each item is a constraint on the Supabase-migration Phase 1 (web auth + schema) 
 
 ## 5. Open decisions (recommended defaults — override to change)
 
+> ⚠️ **AMENDMENT 2026-09-15 (WF1 "Spec 126/127/128 surface standard") — OD5 is RULED; the row below is retained verbatim as the record of the default that was overridden.**
+>
+> **Ruling (operator, 2026-09-15):** the Parcel Cost Tool is **its own metered product**, product key **`parcel_tool`** — exercising OD5's own stated override clause (*"Override if the parcel tool should gate separately from day one"*), not contradicting it. A **second** product, **`agent_reports`**, is ruled at the same time: an agent who sends a PDF report to a client is a `user` holding one more entitlement, **not** a new database role.
+>
+> **Landing site — one migration, three grep-locked sites, both keys together:**
+> 1. widen `CONSTRAINT chk_entitlements_product` (`migrations/228_entitlements.sql:32-33`) from `('lead_gen','flight_center')` to admit `'parcel_tool'` and `'agent_reports'` **in the same statement** — they are one change, and splitting them means two migrations against one CHECK;
+> 2. add each key to the `stripe_price_product_map` JSONB logic variable (seeded `'{}'` at `228:45-49`), per OD3's already-ruled one-Price-per-product fan-out;
+> 3. add each string to `docs/specs/_contracts.json` `schema.entitlement_products`, which `src/tests/contracts.infra.test.ts` grep-pins against `src/lib/entitlements/index.ts:39` `PRODUCTS`.
+>
+> **Consequential correction:** `src/lib/entitlements/index.ts:42-43`'s comment — *"OD5 (RULED): the shipped parcel tool + every Phase-1 gate folds into `lead_gen`"* — records the superseded default and is corrected in the same commit. `DEFAULT_PRODUCT` itself (the fail-soft target for an unmapped Stripe price) is a separate question and is **not** changed by this ruling.
+>
+> **N5 still holds:** product access is gated at the app/API layer by entitlement, **not** via RLS policies. See Spec 128 §5 R-01 and R-09, and Spec 126 §7.
+
+
 | ID | Decision | Recommended default | Reversible? | Notes |
 |---|---|---|---|---|
 | OD1 | Phone / OTP sign-in at launch | **DEFER** | Config-reversible | Deletes the SMS-provider dependency (Twilio/MessageBird/Vonage) and per-message cost; avoids A2P 10DLC / toll-free carrier registration lead time. Email + Google + Apple remain a complete surface. Override if the beta cohort skews SMS-first sole-operator trades. Spec 93 keeps the phone-OTP flow in code, gated off. *(= migration plan D15.)* |

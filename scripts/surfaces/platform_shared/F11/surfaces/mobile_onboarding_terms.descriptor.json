@@ -1,0 +1,392 @@
+{
+  "kind": "SURFACE",
+  "status": "exists",
+  "docs": {
+    "purpose": "Two tick boxes for the terms of service and the privacy policy, each linking out to the document in a browser. Both must be ticked before the button at the bottom becomes usable. Users who came in to find new work continue to a short celebration screen; users who came in to track existing jobs finish setup here and land straight on their board.",
+    "data_story": "It reads nothing from the database directly. Every value arrives through one contract: `/api/user-profile`. Behind that contract, the data comes from `entitlements` and `user_profiles`, and writes land on `entitlements` and `user_profiles`. It also holds client-side state in `onboardingStore` and `filterStore`, which is the part a server-driven projection has to absorb or justify. It emits **no analytics event**, so nothing it does is currently countable.",
+    "under_126": "**REBUILD** — it holds Layer-3 state (`onboardingStore` and `filterStore`) and drives writes, so a client decision has to be re-homed on the server before the projection can be honest. It renders through the WIZARD_STEP renderer (declared step index, advance condition, resume key and skip rule), reading by reference: `/api/user-profile`. It owns no component of its own, so its `owns.components[]` is an empty array — a legal answer, written down."
+  },
+  "evidence": {
+    "files": [
+      "mobile/app/(onboarding)/terms.tsx:1"
+    ],
+    "contracts": [
+      "mobile/app/(onboarding)/terms.tsx:81-84",
+      "mobile/app/(onboarding)/terms.tsx:94-101"
+    ],
+    "tables": [
+      "src/app/api/user-profile/route.ts:393"
+    ],
+    "gate": [
+      "src/lib/auth/route-guard.ts:120-132",
+      "mobile/app/_layout.tsx:141-231"
+    ],
+    "states": [
+      "mobile/app/(onboarding)/terms.tsx:170-192"
+    ],
+    "emits": [
+      "mobile/app/(onboarding)/terms.tsx:111 — logQueryInvalidate only; no track() call in the file"
+    ]
+  },
+  "identity": {
+    "id": "mobile_onboarding_terms",
+    "route": "mobile/app/(onboarding)/terms.tsx",
+    "archetype": "WIZARD_STEP",
+    "platforms": [
+      "mobile"
+    ],
+    "owns": {
+      "components": []
+    },
+    "owner": "unassigned (no CODEOWNERS file and no owner registry exists in the repo — measured 2026-09-15)",
+    "spec": "docs/specs/03-mobile/94_mobile_onboarding.md",
+    "spec_refs": [
+      "docs/specs/03-mobile/94_mobile_onboarding.md §4",
+      "docs/specs/03-mobile/94_mobile_onboarding.md §6",
+      "docs/specs/03-mobile/94_mobile_onboarding.md §10",
+      "docs/specs/03-mobile/99_mobile_state_architecture.md §4"
+    ],
+    "spec_version": "0-draft",
+    "versioning": {
+      "answer": "frozen",
+      "why": "tos_accepted_at is write-once behind a server TOS_IMMUTABLE fence, and the client reads the cached profile first so it does not even attempt a second write.",
+      "evidence": [
+        "mobile/app/(onboarding)/terms.tsx:79-85",
+        "src/lib/userProfile.schema.ts:124-145"
+      ]
+    },
+    "ref": "S-035"
+  },
+  "inputs": {
+    "answer": "contract",
+    "why": "It reads the already-cached [\"user-profile\"] entry to decide whether tos_accepted_at is already set, then PATCHes; the ToS and Privacy documents themselves open in the system browser, not in the app.",
+    "evidence": [
+      "mobile/app/(onboarding)/terms.tsx:79-85",
+      "mobile/app/(onboarding)/terms.tsx:19-20"
+    ],
+    "contract_ref": [
+      "/api/user-profile"
+    ],
+    "query_key": [
+      "user-profile"
+    ],
+    "field_whitelist": [
+      "tos_accepted_at",
+      "default_tab",
+      "location_mode",
+      "onboarding_complete"
+    ],
+    "tables": [
+      {
+        "table": "user_profiles",
+        "columns": [
+          "user_id",
+          "tos_accepted_at",
+          "default_tab",
+          "location_mode",
+          "onboarding_complete"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/03-mobile/95_mobile_user_profiles.md",
+        "evidence": [
+          "src/app/api/user-profile/route.ts:393",
+          "src/lib/userProfile.schema.ts:85-122",
+          "migrations/230_rls_class_a_entitlements.sql:62-68"
+        ]
+      }
+    ]
+  },
+  "outputs": {
+    "answer": "contract_only",
+    "why": "Path T finishes onboarding here: it PATCHes default_tab + location_mode + onboarding_complete, AWAITS the [\"user-profile\"] invalidate, and only then replaces the route — without the await AuthGate would read the pre-PATCH profile and bounce the user back into onboarding.",
+    "evidence": [
+      "mobile/app/(onboarding)/terms.tsx:94-113"
+    ],
+    "contract_ref": [
+      "/api/user-profile"
+    ],
+    "tables": [
+      {
+        "table": "user_profiles",
+        "columns": [
+          "user_id",
+          "tos_accepted_at",
+          "default_tab",
+          "location_mode",
+          "onboarding_complete"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/03-mobile/95_mobile_user_profiles.md",
+        "evidence": [
+          "src/app/api/user-profile/route.ts:393",
+          "src/lib/userProfile.schema.ts:85-122",
+          "migrations/230_rls_class_a_entitlements.sql:62-68"
+        ]
+      }
+    ],
+    "rollback": "none — no local mirror is written before the server confirms (Spec 99 §9.2b); a failure renders \"Setup failed. Please try again.\" and the user stays on the step.",
+    "invalidates": [
+      "user-profile"
+    ]
+  },
+  "state": {
+    "answer": "mmkv",
+    "why": "It reads onboardingStore.selectedPath to pick between the two completion routes and writes filterStore.locationMode on the Path-T branch; both stores are MMKV-persisted.",
+    "evidence": [
+      "mobile/app/(onboarding)/terms.tsx:48-57",
+      "mobile/app/(onboarding)/terms.tsx:102"
+    ],
+    "fields": [
+      {
+        "name": "currentStep",
+        "owner_layer": "4a_mmkv",
+        "canonical_writer": "useOnboardingStore.setStep",
+        "authorized_readers": [
+          "shell_app_root"
+        ],
+        "bridge": "none",
+        "persistence": "mmkv",
+        "signout_reset": true
+      },
+      {
+        "name": "selectedPath",
+        "owner_layer": "4a_mmkv",
+        "canonical_writer": "mobile_onboarding_path",
+        "authorized_readers": [
+          "mobile_onboarding_terms",
+          "mobile_onboarding_supplier",
+          "mobile_onboarding_address"
+        ],
+        "bridge": "none",
+        "persistence": "mmkv",
+        "signout_reset": true
+      }
+    ]
+  },
+  "staleness": {
+    "answer": "query_cache",
+    "why": "The only server value it reads is tos_accepted_at out of the 5-minute [\"user-profile\"] cache — which is exactly why the completion PATCH must await its own invalidate before navigating.",
+    "evidence": [
+      "mobile/app/(onboarding)/terms.tsx:79",
+      "mobile/src/lib/queryClient.ts:37-44",
+      "mobile/app/(onboarding)/terms.tsx:103-112"
+    ],
+    "offline": "blocked",
+    "stale_time_ms": 300000,
+    "gc_time_ms": 86400000
+  },
+  "guards": {
+    "session": {
+      "answer": "authenticated",
+      "why": "Reachable only after AuthGate has a Supabase user whose server profile says onboarding_complete is false; PATCH /api/user-profile is an authenticated route.",
+      "evidence": [
+        "src/lib/auth/route-guard.ts:120-132",
+        "mobile/app/_layout.tsx:141-231",
+        "mobile/app/(onboarding)/terms.tsx:81"
+      ]
+    },
+    "rls_class": {
+      "answer": "A",
+      "why": "The one table in the path is the caller's own user_profiles row — Class A, policies keyed on auth.uid().",
+      "evidence": [
+        "migrations/230_rls_class_a_entitlements.sql:62-68"
+      ]
+    },
+    "disclosure": "none",
+    "entitlement": "none",
+    "flag": "none",
+    "permission": "none",
+    "rate_bucket": "none — /api/user-profile calls no withRateLimit"
+  },
+  "render": {
+    "targets": [
+      "screen"
+    ],
+    "projection": "none",
+    "breakpoints": "mobile_first",
+    "export": "none",
+    "wizard": "UNRESEARCHED"
+  },
+  "checks": [
+    {
+      "id": "terms_tos_patch_guard",
+      "kind": "contract_parse",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "mobile/__tests__/terms.test.ts pins all five branches of the cache-read guard: skip the PATCH when tos_accepted_at is set, send it when null, send it on a cache miss."
+    },
+    {
+      "id": "terms_invalidate_before_navigate",
+      "kind": "freshness",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "why": "The completion PATCH awaits queryClient.invalidateQueries([\"user-profile\"]) BEFORE router.replace; without it AuthGate reads the stale onboarding_complete=false profile and bounces the user straight back (the WF2-B C1 finding, named in the file)."
+    },
+    {
+      "id": "terms_double_tap_guard",
+      "kind": "selector_atomicity",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "A synchronous useRef guard, not the React `disabled` prop, is what blocks the second of two rapid taps — the disabled prop only updates on the next render (terms.tsx:65-69)."
+    },
+    {
+      "id": "terms_touch_target",
+      "kind": "touch_target",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "Both checkboxes declare min-h-[44px] min-w-[44px] and the CTA declares min-h-[52px] (terms.tsx:33, 180)."
+    }
+  ],
+  "invariants": "none",
+  "plausibility": "none",
+  "states": [
+    {
+      "name": "static",
+      "golden": "none"
+    },
+    {
+      "name": "loading",
+      "golden": "none"
+    },
+    {
+      "name": "error",
+      "golden": "none"
+    },
+    {
+      "name": "redirect",
+      "golden": "none"
+    }
+  ],
+  "errors": {
+    "answer": "inline",
+    "why": "One inline red \"Setup failed. Please try again.\" under the checkboxes; the user stays on the step because the server PATCH did not commit.",
+    "evidence": [
+      "mobile/app/(onboarding)/terms.tsx:115-122",
+      "mobile/app/(onboarding)/terms.tsx:170-172"
+    ]
+  },
+  "emits": {
+    "answer": "none",
+    "why": "ToS acceptance — a compliance-relevant act — emits no analytics event; the only breadcrumb is the DEV-only query_invalidate from logQueryInvalidate.",
+    "evidence": [
+      "mobile/app/(onboarding)/terms.tsx:111",
+      "mobile/src/lib/queryTelemetry.ts:42"
+    ],
+    "analytics": [],
+    "ledger_events": [],
+    "breadcrumbs": []
+  },
+  "offers": {
+    "answer": "none",
+    "why": "No sponsored placement is rendered: the only slot component in the Expo tree is SponsorSlot, and it returns null unless EXPO_PUBLIC_PARCEL_SPONSORS=1.",
+    "evidence": [
+      "mobile/src/components/parcel/SponsorSlot.tsx:16-20"
+    ]
+  },
+  "metering": {
+    "answer": "none",
+    "why": "Nothing here is counted: the Spec 126 §7 usage ledger table does not exist (grep for usage_events in the introspected drizzle schema returns 0 hits), and the only quota-shaped counter, user_profiles.lead_views_count, is incremented solely by POST /api/leads/view, which has no mobile caller.",
+    "evidence": [
+      "src/lib/db/generated/schema.ts — no usage_events table (grep, 2026-09-15)",
+      "src/app/api/leads/view/route.ts:110",
+      "src/features/leads/api/useLeadView.ts:25 — imported only by src/tests/useLeadView.logic.test.tsx"
+    ]
+  },
+  "config": {
+    "answer": "none",
+    "why": "The surface consumes no registered logic variable: the only server-side tunable in this path, user_profiles.radius_cap_km, is a per-user admin column, not a logic_variables row.",
+    "evidence": [
+      "src/lib/userProfile.schema.ts:40",
+      "src/app/api/user-profile/route.ts:328",
+      "docs/reference/logic-variables-registry.md — no radius_cap_km entry"
+    ],
+    "logic_variables": [],
+    "retired": []
+  },
+  "sharing": {
+    "answer": "shared",
+    "why": "PATCH /api/user-profile is rendered by every onboarding step, both shells, settings and the filter sheet.",
+    "evidence": [
+      "mobile/src/hooks/usePatchProfile.ts:49",
+      "mobile/app/(onboarding)/terms.tsx:81"
+    ],
+    "surfaces": [
+      "mobile_onboarding_profession",
+      "mobile_onboarding_address",
+      "mobile_onboarding_supplier",
+      "mobile_onboarding_terms",
+      "mobile_onboarding_complete",
+      "mobile_settings",
+      "shell_app_root",
+      "shell_app_tabs"
+    ]
+  },
+  "a11y": {
+    "touch_target_min_px": 44,
+    "labels": "partial",
+    "dark_mode": "hardcoded",
+    "reduced_motion": "none",
+    "i18n": "none",
+    "safe_area": [
+      "top",
+      "bottom"
+    ]
+  },
+  "deviations": "none",
+  "limitations": [
+    {
+      "what": "The ToS and Privacy links are Text onPress handlers with no accessibilityRole, so a screen reader does not announce them as links.",
+      "measured": "terms.tsx:144-149 and :159-164 — inline <Text onPress> with className only.",
+      "check_id": "terms_touch_target"
+    },
+    {
+      "what": "Path T writes location_mode: \"gps_live\" on the user's behalf because it skipped the address step, without telling the user.",
+      "measured": "terms.tsx:94-101 PATCHes location_mode gps_live in the completion body; the rationale (a DB CHECK requires a value) is in the comment at :91-93.",
+      "check_id": "terms_tos_patch_guard"
+    }
+  ],
+  "interpretation": "none",
+  "notes": "This screen is one of two onboarding terminals: Path L/R continue to the animated complete screen, Path T finishes here and replaces straight to the flight board.",
+  "x-draft": {
+    "shard": "mobile-product",
+    "files": [
+      "mobile/app/(onboarding)/terms.tsx"
+    ],
+    "loc": 195,
+    "call_idiom": "direct",
+    "stores": [
+      "onboardingStore",
+      "filterStore"
+    ],
+    "measured_states": [
+      "unchecked_disabled",
+      "checked_enabled",
+      "submitting",
+      "error_message"
+    ],
+    "measured_gate": {
+      "session": "required",
+      "entitlement": "none",
+      "flag": "none",
+      "permission": "none"
+    }
+  },
+  "programme": {
+    "scope": "platform_shared",
+    "phase": "UNRESEARCHED",
+    "why": "Onboarding writes `user_profiles` columns both products read; the flow is shared even though its copy is lead-gen-shaped today.",
+    "feature": "F11",
+    "build_order": 3113,
+    "leakage": "none",
+    "product_questions": "none",
+    "review": {
+      "status": "unreviewed"
+    }
+  }
+}

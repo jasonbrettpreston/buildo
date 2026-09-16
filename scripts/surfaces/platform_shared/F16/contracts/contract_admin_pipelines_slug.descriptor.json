@@ -1,0 +1,421 @@
+{
+  "kind": "CONTRACT",
+  "status": "exists",
+  "docs": {
+    "purpose": "Lets an admin start one of the automated data-collection pipelines — permits, committee-of-adjustment applications, sources, entities, or deep scrapes — by triggering it on GitHub Actions, or cancel it while it is running.",
+    "data_story": "It reads 1 table — `pipeline_runs` and writes `pipeline_runs`. Its response is an explicit pick-by-name projection of 6 fields, so a column added to a table upstream does not leak into the client by accident. It is called from 1 place: `admin_data_quality`. It mutates admin state and writes **no `admin_audit_log` row** — one of the nine measured gaps Phase 0 closes.",
+    "under_126": "Becomes a **CONTRACT descriptor** of archetype `COMMAND`. It declares the JOB it triggers (`job_ref`), its concurrency posture and the audit row it must write. Its `consumers[]` becomes the edge list of the fan-out graph — the join nothing in this estate holds today."
+  },
+  "evidence": {
+    "files": [
+      "src/app/api/admin/pipelines/[slug]/route.ts:1"
+    ],
+    "contracts": [
+      "src/app/api/admin/pipelines/[slug]/route.ts:84 (POST export)",
+      "src/app/api/admin/pipelines/[slug]/route.ts:136 (DELETE export)",
+      "src/lib/api/with-api-envelope.ts:27-52"
+    ],
+    "tables": [
+      "src/app/api/admin/pipelines/[slug]/route.ts:71-77",
+      "src/lib/auth/verify-admin.ts:117-119",
+      "src/app/api/admin/pipelines/[slug]/route.ts:154-161",
+      "src/lib/db/generated/schema.ts — every table named here is present in the introspected drizzle schema"
+    ],
+    "gate": [
+      "src/lib/auth/route-guard.ts — admin prefix — classifyRoute matches pathname.startsWith('/api/admin/')",
+      "src/lib/auth/route-guard.ts:150-201 — classifyRoute executed 2026-09-15 with the concrete path → \"admin\"",
+      "in-handler: verifyAdminAuth at src/app/api/admin/pipelines/[slug]/route.ts:85 (POST) and :137 (DELETE)"
+    ],
+    "states": [
+      "hit: src/app/api/admin/pipelines/[slug]/route.ts:116 (dispatched) and :162-168 (cancelled)",
+      "ambiguous: src/app/api/admin/pipelines/[slug]/route.ts:106 (409 ALREADY_RUNNING)",
+      "degraded: src/app/api/admin/pipelines/[slug]/route.ts:108-112 (concurrency guard DB error is logged and swallowed — dispatch proceeds fail-open); src/lib/admin/github-dispatch.ts:127 (no in-flight GH run -> cancelled:false while the DB rows are still marked cancelled at route.ts:154-161)",
+      "unauthorized: src/app/api/admin/pipelines/[slug]/route.ts:86, :138",
+      "error: src/app/api/admin/pipelines/[slug]/route.ts:122-124, :174-176"
+    ],
+    "emits": [
+      "src/app/api/admin/pipelines/[slug]/route.ts — read in full; no Sentry breadcrumb, no analytics capture and no ledger INSERT"
+    ]
+  },
+  "identity": {
+    "id": "contract_admin_pipelines_slug",
+    "route": "/api/admin/pipelines/[slug]",
+    "archetype": "COMMAND",
+    "platforms": [
+      "web"
+    ],
+    "owns": {
+      "components": []
+    },
+    "owner": "Backend/Pipeline (CLAUDE.md §Domain Rules: `src/app/api/`)",
+    "spec": "docs/specs/02-web-admin/26_admin_dashboard.md",
+    "spec_refs": [
+      "docs/specs/02-web-admin/26_admin_dashboard.md — owns src/app/api/admin/pipelines/[slug]/route.ts per docs/specs/00-architecture/00_system_map.md:87; the System Map row names no section, and the route file carries no SPEC LINK header"
+    ],
+    "spec_version": "0-draft",
+    "versioning": {
+      "answer": "breaking_allowed",
+      "why": "Every consumer is in src/** and ships in the same Next.js deploy as the route, so a breaking change is one commit.",
+      "evidence": [
+        "src/components/DataQualityDashboard.tsx:329,370,420,440,459,476",
+        "src/components/FreshnessTimeline.tsx:419"
+      ]
+    },
+    "ref": "C-012"
+  },
+  "inputs": {
+    "answer": "app_outputs",
+    "why": "It reads 2 table(s) directly; 1 of them are materialised by named pipeline steps (assert_data_bounds), so its inputs are the pipeline's outputs rather than another contract.",
+    "evidence": [
+      "src/app/api/admin/pipelines/[slug]/route.ts:71-77",
+      "scripts/quality/assert-data-bounds.js",
+      "docs/reference/data-lineage-map.md:1205",
+      "scripts/manifest.json#chains",
+      "docs/reference/data-lineage-map.md",
+      "src/lib/auth/verify-admin.ts:117-119",
+      "migrations/226_profiles_admin_bootstrap.sql:25",
+      "docs/reference/data-lineage-map.md — no `## `profiles`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)"
+    ],
+    "contract_ref": [],
+    "query_key": [],
+    "field_whitelist": [
+      "status",
+      "pipeline",
+      "workflow",
+      "cancelled",
+      "gh_run_cancelled",
+      "gh_run_id"
+    ],
+    "tables": [
+      {
+        "table": "pipeline_runs",
+        "columns": [
+          "id",
+          "pipeline",
+          "status",
+          "started_at"
+        ],
+        "producing_steps": [
+          "assert_data_bounds",
+          "assert_pre_permit_aging",
+          "assert_schema"
+        ],
+        "chain_position": "permits[21], coa[10], sources[26], deep_scrapes[4] · not-in-a-chain · permits[0], coa[0], sources[1]",
+        "owner_spec": "docs/specs/01-pipeline/41_chain_permits.md",
+        "evidence": [
+          "src/app/api/admin/pipelines/[slug]/route.ts:71-77",
+          "scripts/quality/assert-data-bounds.js",
+          "docs/reference/data-lineage-map.md:1205",
+          "scripts/manifest.json#chains",
+          "docs/reference/data-lineage-map.md"
+        ]
+      },
+      {
+        "table": "profiles",
+        "columns": [
+          "id",
+          "is_admin"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/00-architecture/114_rls_policy_catalog.md",
+        "evidence": [
+          "src/lib/auth/verify-admin.ts:117-119",
+          "migrations/226_profiles_admin_bootstrap.sql:25",
+          "docs/reference/data-lineage-map.md — no `## `profiles`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)"
+        ]
+      }
+    ]
+  },
+  "outputs": {
+    "answer": "contract_only",
+    "why": "This route IS the mutation contract: it writes 1 table(s) synchronously inside the request and returns the result — there is no optimistic client-side flip to reconcile.",
+    "evidence": [
+      "src/app/api/admin/pipelines/[slug]/route.ts:154-161",
+      "scripts/quality/assert-data-bounds.js",
+      "docs/reference/data-lineage-map.md:1205",
+      "scripts/manifest.json#chains",
+      "docs/reference/data-lineage-map.md"
+    ],
+    "contract_ref": [],
+    "tables": [
+      {
+        "table": "pipeline_runs",
+        "columns": [
+          "status",
+          "error_message",
+          "completed_at"
+        ],
+        "producing_steps": [
+          "assert_data_bounds",
+          "assert_pre_permit_aging",
+          "assert_schema"
+        ],
+        "chain_position": "permits[21], coa[10], sources[26], deep_scrapes[4] · not-in-a-chain · permits[0], coa[0], sources[1]",
+        "owner_spec": "docs/specs/01-pipeline/41_chain_permits.md",
+        "evidence": [
+          "src/app/api/admin/pipelines/[slug]/route.ts:154-161",
+          "scripts/quality/assert-data-bounds.js",
+          "docs/reference/data-lineage-map.md:1205",
+          "scripts/manifest.json#chains",
+          "docs/reference/data-lineage-map.md"
+        ]
+      }
+    ]
+  },
+  "state": {
+    "answer": "server_only",
+    "why": "A CONTRACT holds no client state: every value is resolved per request on the server and nothing is cached in a client store by the route itself.",
+    "evidence": [
+      "src/app/api/admin/pipelines/[slug]/route.ts:84 (POST export)",
+      "src/lib/api/with-api-envelope.ts:27-52"
+    ],
+    "fields": []
+  },
+  "staleness": {
+    "answer": "live",
+    "why": "Every read runs against the base tables on each request — there is no cache layer between the handler and the database.",
+    "evidence": [
+      "src/app/api/admin/pipelines/[slug]/route.ts:71-77",
+      "scripts/quality/assert-data-bounds.js",
+      "docs/reference/data-lineage-map.md:1205",
+      "scripts/manifest.json#chains"
+    ],
+    "offline": "none"
+  },
+  "guards": {
+    "session": {
+      "answer": "admin",
+      "why": "classifyRoute(\"/api/admin/pipelines/X\") returns \"admin\" (executed 2026-09-15); the handler re-verifies the caller in-process.",
+      "evidence": [
+        "src/lib/auth/route-guard.ts:150-201 — classifyRoute executed 2026-09-15 with the concrete path",
+        "verifyAdminAuth at src/app/api/admin/pipelines/[slug]/route.ts:85 (POST) and :137 (DELETE)"
+      ]
+    },
+    "rls_class": {
+      "answer": "C",
+      "why": "It reaches the profiles table (self-read/self-update minus the escalation flag).",
+      "evidence": [
+        "migrations/227_rls_class_b_default_deny.sql:78",
+        "migrations/226_profiles_admin_bootstrap.sql:48",
+        "docs/specs/00-architecture/114_rls_policy_catalog.md §2"
+      ]
+    },
+    "disclosure": "none",
+    "entitlement": "none",
+    "flag": "none",
+    "permission": "none",
+    "rate_bucket": "none"
+  },
+  "render": {
+    "targets": [
+      "screen"
+    ],
+    "projection": "none",
+    "breakpoints": "none",
+    "export": "none"
+  },
+  "checks": [
+    {
+      "id": "contract_admin_pipelines_slug__auth_class_parity",
+      "kind": "auth_class_parity",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "why": "guards.session must equal classifyRoute(\"/api/admin/pipelines/X\"), executed 2026-09-15 → \"admin\" plus the in-handler guard (verifyAdminAuth at src/app/api/admin/pipelines/[slug]/route.ts:85 (POST) and :137 (DELETE)). Locked by admin-pipeline-dispatch.logic.test.ts, admin.ui.test.tsx, chain.logic.test.ts, inspections.logic.test.ts."
+    },
+    {
+      "id": "contract_admin_pipelines_slug__error_envelope",
+      "kind": "error_state",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "Every declared error class returns the { data, error, meta } envelope of docs/specs/00_engineering_standards.md §4.4; expected to stay at zero deviations."
+    },
+    {
+      "id": "contract_admin_pipelines_slug__field_whitelist_parity",
+      "kind": "field_whitelist_parity",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "The response is an explicit pick-by-name of 2 field(s) (src/app/api/admin/pipelines/[slug]/route.ts:116, src/app/api/admin/pipelines/[slug]/route.ts:162-168), so a column added upstream cannot leak; this check set-equals the projection to inputs.field_whitelist."
+    },
+    {
+      "id": "contract_admin_pipelines_slug__schema_declared",
+      "kind": "schema_declared",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "Every table and column declared in lineage.reads[]/writes[] must exist in src/lib/db/generated/schema.ts (drizzle-kit introspect of the live database); the registry generator checks this both directions."
+    },
+    {
+      "id": "contract_admin_pipelines_slug__audit_row_missing",
+      "kind": "ledger_row_present",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "why": "MEASURED GAP, permanently non-zero: this admin route mutates pipeline_runs and writes NO admin_audit_log row — one of the measured audit gaps. Retighten condition: the handler writes an admin_audit_log row per accepted mutation."
+    }
+  ],
+  "invariants": "none",
+  "plausibility": "none",
+  "states": [
+    {
+      "name": "hit",
+      "golden": "none"
+    },
+    {
+      "name": "ambiguous",
+      "golden": "none"
+    },
+    {
+      "name": "degraded",
+      "golden": "none"
+    },
+    {
+      "name": "unauthorized",
+      "golden": "none"
+    },
+    {
+      "name": "error",
+      "golden": "none"
+    }
+  ],
+  "errors": {
+    "answer": "envelope",
+    "why": "Success and failure both arrive in the { data, error, meta } envelope of docs/specs/00_engineering_standards.md §4.4; withApiEnvelope is the outermost wrapper and converts any uncaught throw into the same shape.",
+    "evidence": [
+      "src/lib/api/with-api-envelope.ts:27-52",
+      "src/app/api/admin/pipelines/[slug]/route.ts:44-46",
+      "src/app/api/admin/pipelines/[slug]/route.ts:47-49",
+      "src/app/api/admin/pipelines/[slug]/route.ts:50-52",
+      "src/lib/api/with-api-envelope.ts:41-50",
+      "src/app/api/admin/pipelines/[slug]/route.ts:51 (401)",
+      "src/app/api/admin/pipelines/[slug]/route.ts:91 (400)",
+      "src/app/api/admin/pipelines/[slug]/route.ts:143 (400)",
+      "src/app/api/admin/pipelines/[slug]/route.ts:106 (409)"
+    ],
+    "classes": [
+      {
+        "class": "401",
+        "ui": "{data:null,error:{code,message},meta:null} — src/app/api/admin/pipelines/[slug]/route.ts:51 (code UNAUTHORIZED)"
+      },
+      {
+        "class": "400",
+        "ui": "{data:null,error:{code,message},meta:null} — src/app/api/admin/pipelines/[slug]/route.ts:91 (code INVALID_SLUG)"
+      },
+      {
+        "class": "500",
+        "ui": "{data:null,error:{code,message},meta:null} — src/app/api/admin/pipelines/[slug]/route.ts:124 (code INTERNAL)"
+      }
+    ]
+  },
+  "emits": {
+    "answer": "none",
+    "why": "Nothing it does is currently countable: src/app/api/admin/pipelines/[slug]/route.ts was read in full and contains no Sentry breadcrumb, no analytics capture and no ledger INSERT.",
+    "evidence": [
+      "src/app/api/admin/pipelines/[slug]/route.ts — read in full; no Sentry breadcrumb, no analytics capture and no ledger INSERT"
+    ],
+    "analytics": [],
+    "ledger_events": [],
+    "breadcrumbs": []
+  },
+  "offers": {
+    "answer": "none",
+    "why": "It renders no sponsored placement: the offers and advertisers tables Spec 126 §2 specifies do not exist in migrations/ and nothing in this handler reads placement inventory.",
+    "evidence": [
+      "migrations/ — no CREATE TABLE offers / advertisers (grep 2026-09-15)",
+      "src/app/api/admin/pipelines/[slug]/route.ts — read in full; no placement read"
+    ]
+  },
+  "metering": {
+    "answer": "none",
+    "why": "Nothing here is counted: no usage_events row (the table does not exist in the introspected schema) and no quota counter is written by this handler.",
+    "evidence": [
+      "src/app/api/admin/pipelines/[slug]/route.ts — read in full 2026-09-15",
+      "src/lib/db/generated/schema.ts — no usage_events table"
+    ]
+  },
+  "config": {
+    "answer": "none",
+    "why": "It consumes no tunable: no logic_variables read and no env-var-driven threshold in the handler or the libs it calls.",
+    "evidence": [
+      "src/app/api/admin/pipelines/[slug]/route.ts — read in full 2026-09-15; no loadMarketplaceConfigs / logic_variables read"
+    ],
+    "logic_variables": [],
+    "retired": []
+  },
+  "sharing": {
+    "answer": "shared",
+    "why": "2 call sites render it, so the projection is shared and a field removed here breaks more than one surface.",
+    "evidence": [
+      "src/components/DataQualityDashboard.tsx:329,370,420,440,459,476",
+      "src/components/FreshnessTimeline.tsx:419"
+    ],
+    "surfaces": [
+      "src/components/DataQualityDashboard.tsx:329,370,420,440,459,476",
+      "src/components/FreshnessTimeline.tsx:419"
+    ]
+  },
+  "a11y": {
+    "touch_target_min_px": "UNRESEARCHED",
+    "labels": "none",
+    "dark_mode": "none",
+    "reduced_motion": "none",
+    "i18n": "none",
+    "safe_area": "none"
+  },
+  "deviations": "none",
+  "limitations": [
+    {
+      "what": "a11y.touch_target_min_px has no legal answer for a CONTRACT",
+      "measured": "The schema allows only UNRESEARCHED or an integer >= 44; a JSON endpoint has no touch target and the vocabulary has no \"n/a\". Left UNRESEARCHED and escalated per Spec 128 §4 rather than invented.",
+      "check_id": "contract_admin_pipelines_slug__auth_class_parity"
+    },
+    {
+      "what": "error classes outside the closed set are not representable: 409, 502, 503",
+      "measured": "The handler returns 409, 502, 503 at src/app/api/admin/pipelines/[slug]/route.ts:106, src/app/api/admin/pipelines/[slug]/route.ts:57, src/app/api/admin/pipelines/[slug]/route.ts:56; errors.classes[] admits only 400/401/403/429/500/schema_drift/offline.",
+      "check_id": "contract_admin_pipelines_slug__error_envelope"
+    }
+  ],
+  "interpretation": "none",
+  "notes": "NO writeAdminAudit anywhere in this file — dispatching or cancelling a pipeline run is unaudited. Only 5 chain slugs are dispatchable; individual-step runs are rejected on cloud. The pre-dispatch already-running guard fails OPEN on a DB error. DELETE marks ALL matching pipeline_runs rows (chain rows and their '<chain>:<step>%' scoped step rows) cancelled unconditionally, not gated on the GitHub cancel succeeding. Called via a template literal (`/api/admin/pipelines/${slug}`) from DataQualityDashboard.tsx. | MEASURED 2026-09-15: No `SPEC LINK` header; the file's doc comment references 'Spec 113 §8 / D8' at :12 (a comment, not a header directive) and src/lib/admin/github-dispatch.ts:3-4 carries the real SPEC LINK (Specs 115 §3/§8, 113 §8). Census (reads pipeline_runs / writes pipeline_runs) CONFIRMED; census missed `profiles` via the guard. Two behaviours a reviewer must know: (1) the 409 concurrency guard is deliberately FAIL-OPEN — a DB error on the probe is logged and the dispatch proceeds (:108-112), so double-dispatch is possible during a DB blip; (2) the pipeline_runs UPDATE at :154-161 is UNCONDITIONAL on the GitHub cancel succeeding (comment at :149-153 states this is intentional because run-chain.js polls its own row), so rows can be marked 'cancelled' while the GH run is not. The UPDATE's second predicate builds LIKE patterns by stripping the 'chain_' prefix (:160) — `chain_coa` -> `coa:%`, which will also match any future pipeline slug beginning `coa:`. `fail()` accepts an unconstrained number status (:47) unlike the shared err()'s ErrorStatus union. | Caching: none observed — no dynamic/revalidate/Cache-Control under src/app/api/admin/pipelines/ (grep returned nothing) | Other guards / classification: CSRF Origin allowlist DOES apply here (POST/DELETE are in MUTATING_METHODS, src/lib/auth/verify-admin.ts:45,70-78; allowlist parsed from ADMIN_ALLOWED_ORIGINS, default-deny at :336). Application-level concurrency guard (not a security guard): anyChainRunning() 409 at :105-107. MFA gate at src/lib/auth/verify-admin.ts:143-173 (inert unless ADMIN_MFA_ENFORCED). | Locking tests: src/tests/admin-pipeline-dispatch.logic.test.ts, src/tests/admin.ui.test.tsx, src/tests/chain.logic.test.ts, src/tests/inspections.logic.test.ts.",
+  "x-draft": {
+    "shard": "contracts",
+    "files": [
+      "src/app/api/admin/pipelines/[slug]/route.ts"
+    ],
+    "loc": 178,
+    "methods": [
+      "POST",
+      "DELETE"
+    ],
+    "consumers": [
+      "admin_data_quality"
+    ],
+    "writes_audit_row": false,
+    "consumers_verified": [
+      "src/components/DataQualityDashboard.tsx:329,370,420,440,459,476",
+      "src/components/FreshnessTimeline.tsx:419"
+    ],
+    "auth_class_executed": "admin",
+    "locking_tests": [
+      "src/tests/admin-pipeline-dispatch.logic.test.ts",
+      "src/tests/admin.ui.test.tsx",
+      "src/tests/chain.logic.test.ts",
+      "src/tests/inspections.logic.test.ts"
+    ]
+  },
+  "programme": {
+    "scope": "platform_shared",
+    "phase": "UNRESEARCHED",
+    "why": "Used by both products and owned by neither.",
+    "feature": "F16",
+    "build_order": 3162,
+    "leakage": "none",
+    "product_questions": "none",
+    "review": {
+      "status": "unreviewed"
+    }
+  }
+}

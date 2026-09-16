@@ -1,0 +1,489 @@
+{
+  "kind": "CONTRACT",
+  "status": "exists",
+  "docs": {
+    "purpose": "Shows an admin the log of push notifications sent to users, newest first and paginated, and — when a specific user is selected — that user's registered devices, notification preferences, and the current on/off switches for the notification system.",
+    "data_story": "It reads 5 tables — `notification_dispatches`, `notifications`, `device_tokens`, `user_profiles` and `logic_variables` and writes nothing. Its response shape is **unmeasured** as a pick-by-name whitelist — it passes rows through, spreads a row into a computed object, or assembles the payload dynamically, so there is no single list naming what leaves the server. It is called from 2 places: `admin_user_detail`, `admin_notifications`.",
+    "under_126": "Becomes a **CONTRACT descriptor** of archetype `QUERY`. It declares its `database.reads[]` with named columns, its response projection as an explicit whitelist, its auth class, its rate bucket and its staleness — and `outputs.writes` is forced to `\"none\"`. Its `consumers[]` becomes the edge list of the fan-out graph — the join nothing in this estate holds today."
+  },
+  "evidence": {
+    "files": [
+      "src/app/api/admin/notifications/route.ts:1"
+    ],
+    "contracts": [
+      "src/app/api/admin/notifications/route.ts:44 (GET export)",
+      "src/lib/api/with-api-envelope.ts:27-52"
+    ],
+    "tables": [
+      "src/app/api/admin/notifications/route.ts:69-73",
+      "src/app/api/admin/notifications/route.ts:81-82",
+      "src/app/api/admin/notifications/route.ts:88-89",
+      "src/app/api/admin/notifications/route.ts:74-79",
+      "src/app/api/admin/notifications/route.ts:101",
+      "src/app/api/admin/notifications/route.ts:105-107",
+      "src/app/api/admin/notifications/route.ts:125-127",
+      "src/lib/auth/verify-admin.ts:117-120",
+      "src/lib/db/generated/schema.ts — every table named here is present in the introspected drizzle schema"
+    ],
+    "gate": [
+      "src/lib/auth/route-guard.ts — admin prefix — classifyRoute matches pathname.startsWith('/api/admin/')",
+      "src/lib/auth/route-guard.ts:150-201 — classifyRoute executed 2026-09-15 with the concrete path → \"admin\"",
+      "in-handler: verifyAdminAuth at src/app/api/admin/notifications/route.ts:45 (first line of handler)"
+    ],
+    "states": [
+      "hit: src/app/api/admin/notifications/route.ts:136-140",
+      "empty: src/app/api/admin/notifications/route.ts:92 (total defaults to 0 via `?? '0'`) with dispatches derived from rows at :94 — an empty ledger is a valid 200",
+      "partial: src/app/api/admin/notifications/route.ts:97 (`user` stays null unless user_id is supplied) and :118 (`last_dispatch: dispatches[0] ?? null`); the LEFT JOIN LATERAL at :74-79 yields null title/body when no queue row matches",
+      "unauthorized: src/app/api/admin/notifications/route.ts:46-51",
+      "error: src/app/api/admin/notifications/route.ts:141-147"
+    ],
+    "emits": [
+      "src/app/api/admin/notifications/route.ts — read in full; no Sentry breadcrumb, no analytics capture and no ledger INSERT"
+    ]
+  },
+  "identity": {
+    "id": "contract_admin_notifications",
+    "route": "/api/admin/notifications",
+    "archetype": "QUERY",
+    "platforms": [
+      "web"
+    ],
+    "owns": {
+      "components": []
+    },
+    "owner": "Backend/Pipeline (CLAUDE.md §Domain Rules: `src/app/api/`)",
+    "spec": "docs/specs/02-web-admin/102_admin_notifications_tool.md",
+    "spec_refs": [
+      "src/app/api/admin/notifications/route.ts:1 — docs/specs/02-web-admin/102_admin_notifications_tool.md §2"
+    ],
+    "spec_version": "0-draft",
+    "versioning": {
+      "answer": "breaking_allowed",
+      "why": "Every consumer is in src/** and ships in the same Next.js deploy as the route, so a breaking change is one commit.",
+      "evidence": [
+        "src/components/admin/NotificationsCard.tsx:39",
+        "src/components/admin/NotificationsTool.tsx:67"
+      ]
+    },
+    "ref": "C-006"
+  },
+  "inputs": {
+    "answer": "app_outputs",
+    "why": "It reads 6 table(s) directly; 1 of them are materialised by named pipeline steps (classify_lifecycle_phase), so its inputs are the pipeline's outputs rather than another contract.",
+    "evidence": [
+      "src/app/api/admin/notifications/route.ts:101",
+      "migrations/107_device_tokens.sql:10",
+      "docs/reference/data-lineage-map.md — no `## `device_tokens`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)",
+      "src/app/api/admin/notifications/route.ts:125-127",
+      "docs/specs/00-architecture/00_system_map.md:94",
+      "docs/reference/data-lineage-map.md:646 — table present, no pipeline producer listed",
+      "docs/reference/data-lineage-map.md — no `## `logic_variables`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)",
+      "src/app/api/admin/notifications/route.ts:69-73",
+      "src/app/api/admin/notifications/route.ts:81-82",
+      "src/app/api/admin/notifications/route.ts:88-89"
+    ],
+    "contract_ref": [],
+    "query_key": [],
+    "field_whitelist": [
+      "data",
+      "error",
+      "meta"
+    ],
+    "tables": [
+      {
+        "table": "device_tokens",
+        "columns": [
+          "push_token",
+          "platform",
+          "updated_at",
+          "user_id"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/03-mobile/92_mobile_engagement_hardware.md",
+        "evidence": [
+          "src/app/api/admin/notifications/route.ts:101",
+          "migrations/107_device_tokens.sql:10",
+          "docs/reference/data-lineage-map.md — no `## `device_tokens`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)"
+        ]
+      },
+      {
+        "table": "logic_variables",
+        "columns": [
+          "variable_key",
+          "variable_value",
+          "variable_value_json"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/02-web-admin/86_control_panel.md",
+        "evidence": [
+          "src/app/api/admin/notifications/route.ts:125-127",
+          "docs/specs/00-architecture/00_system_map.md:94",
+          "docs/reference/data-lineage-map.md:646 — table present, no pipeline producer listed",
+          "docs/reference/data-lineage-map.md — no `## `logic_variables`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)"
+        ]
+      },
+      {
+        "table": "notification_dispatches",
+        "columns": [
+          "id",
+          "user_id",
+          "lead_id",
+          "type",
+          "toronto_date",
+          "push_token",
+          "expo_ticket_id",
+          "status",
+          "detail",
+          "dispatched_at"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/01-pipeline/101_notification_dispatch.md",
+        "evidence": [
+          "src/app/api/admin/notifications/route.ts:69-73",
+          "src/app/api/admin/notifications/route.ts:81-82",
+          "src/app/api/admin/notifications/route.ts:88-89",
+          "migrations/218_notification_dispatch_ledger.sql:26",
+          "docs/reference/data-lineage-map.md — no `## `notification_dispatches`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)"
+        ]
+      },
+      {
+        "table": "notifications",
+        "columns": [
+          "title",
+          "body",
+          "user_id",
+          "type",
+          "lead_id",
+          "created_at"
+        ],
+        "producing_steps": [
+          "classify_lifecycle_phase",
+          "update_tracked_projects"
+        ],
+        "chain_position": "permits[23], coa[12] · permits[28]",
+        "owner_spec": "docs/specs/01-pipeline/41_chain_permits.md",
+        "evidence": [
+          "src/app/api/admin/notifications/route.ts:74-79",
+          "scripts/classify-lifecycle-phase.js",
+          "docs/reference/data-lineage-map.md:723",
+          "scripts/manifest.json#chains",
+          "docs/reference/data-lineage-map.md"
+        ]
+      },
+      {
+        "table": "profiles",
+        "columns": [
+          "id",
+          "is_admin"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/00-architecture/114_rls_policy_catalog.md",
+        "evidence": [
+          "src/lib/auth/verify-admin.ts:117-120",
+          "migrations/226_profiles_admin_bootstrap.sql:25",
+          "docs/reference/data-lineage-map.md — no `## `profiles`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)"
+        ]
+      },
+      {
+        "table": "user_profiles",
+        "columns": [
+          "phase_changed",
+          "lifecycle_stalled_pref",
+          "start_date_urgent",
+          "notification_schedule",
+          "new_lead_min_cost_tier",
+          "user_id"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/02-web-admin/102_admin_notifications_tool.md",
+        "evidence": [
+          "src/app/api/admin/notifications/route.ts:105-107",
+          "docs/specs/00-architecture/00_system_map.md:80",
+          "docs/reference/data-lineage-map.md — no `## `user_profiles`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)"
+        ]
+      }
+    ]
+  },
+  "outputs": {
+    "answer": "none",
+    "why": "A QUERY contract writes nothing; the handler issues no INSERT/UPDATE/DELETE anywhere in the file or in the libs it calls.",
+    "evidence": [
+      "src/app/api/admin/notifications/route.ts — read in full 2026-09-15; no INSERT/UPDATE/DELETE reached"
+    ],
+    "contract_ref": [],
+    "tables": []
+  },
+  "state": {
+    "answer": "server_only",
+    "why": "A CONTRACT holds no client state: every value is resolved per request on the server and nothing is cached in a client store by the route itself.",
+    "evidence": [
+      "src/app/api/admin/notifications/route.ts:44 (GET export)",
+      "src/lib/api/with-api-envelope.ts:27-52"
+    ],
+    "fields": []
+  },
+  "staleness": {
+    "answer": "live",
+    "why": "Every read runs against the base tables on each request — there is no cache layer between the handler and the database.",
+    "evidence": [
+      "src/app/api/admin/notifications/route.ts:101",
+      "migrations/107_device_tokens.sql:10",
+      "docs/reference/data-lineage-map.md — no `## `device_tokens`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)",
+      "src/app/api/admin/notifications/route.ts:125-127"
+    ],
+    "offline": "none"
+  },
+  "guards": {
+    "session": {
+      "answer": "admin",
+      "why": "classifyRoute(\"/api/admin/notifications\") returns \"admin\" (executed 2026-09-15); the handler re-verifies the caller in-process.",
+      "evidence": [
+        "src/lib/auth/route-guard.ts:150-201 — classifyRoute executed 2026-09-15 with the concrete path",
+        "verifyAdminAuth at src/app/api/admin/notifications/route.ts:45 (first line of handler)"
+      ]
+    },
+    "rls_class": {
+      "answer": "A",
+      "why": "It reaches user-owned rows whose policies key on auth.uid(), alongside default-deny Class B pipeline tables. The route connects as the table owner (raw pg), which Spec 114 §9 makes owner-exempt from RLS — the class describes the data, not the gate this route passes.",
+      "evidence": [
+        "migrations/230_rls_class_a_entitlements.sql:55",
+        "migrations/230_rls_class_a_entitlements.sql:54",
+        "migrations/230_rls_class_a_entitlements.sql:52",
+        "migrations/230_rls_class_a_entitlements.sql:48",
+        "migrations/227_rls_class_b_default_deny.sql:61",
+        "migrations/226_profiles_admin_bootstrap.sql:48",
+        "docs/specs/00-architecture/114_rls_policy_catalog.md §2"
+      ]
+    },
+    "disclosure": "none",
+    "entitlement": "none",
+    "flag": "none",
+    "permission": "none",
+    "rate_bucket": "none"
+  },
+  "render": {
+    "targets": [
+      "screen"
+    ],
+    "projection": "none",
+    "breakpoints": "none",
+    "export": "none"
+  },
+  "checks": [
+    {
+      "id": "contract_admin_notifications__auth_class_parity",
+      "kind": "auth_class_parity",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "why": "guards.session must equal classifyRoute(\"/api/admin/notifications\"), executed 2026-09-15 → \"admin\" plus the in-handler guard (verifyAdminAuth at src/app/api/admin/notifications/route.ts:45 (first line of handler)). Locked by admin-notifications.infra.test.ts."
+    },
+    {
+      "id": "contract_admin_notifications__error_envelope",
+      "kind": "error_state",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "Every declared error class returns the { data, error, meta } envelope of docs/specs/00_engineering_standards.md §4.4; expected to stay at zero deviations."
+    },
+    {
+      "id": "contract_admin_notifications__contract_parse",
+      "kind": "contract_parse",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "why": "Request input is parsed by querySchema at src/app/api/admin/notifications/route.ts:54 before any query runs; a payload that fails the schema is refused, never coerced."
+    },
+    {
+      "id": "contract_admin_notifications__field_whitelist_parity",
+      "kind": "field_whitelist_parity",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "why": "MEASURED: the projection is mixed (src/app/api/admin/notifications/route.ts:94 (row_spread `{...r, push_token: maskPushToken(r.push_token)}` over the explicitly-selected DispatchRow columns), src/app/api/admin/notifications/route.ts:111-119 (explicit_pick for the per-user block: tokens/prefs/last_dispatch), src/app/api/admin/notifications/route.ts:136-140 (data:{dispatches,user}, meta:{total,limit,offset,gates})), so a column added upstream reaches the client without a code change. Permanently non-zero until the response is an explicit pick; retighten condition: projection.kind === explicit_pick."
+    },
+    {
+      "id": "contract_admin_notifications__schema_declared",
+      "kind": "schema_declared",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "Every table and column declared in lineage.reads[]/writes[] must exist in src/lib/db/generated/schema.ts (drizzle-kit introspect of the live database); the registry generator checks this both directions."
+    }
+  ],
+  "invariants": "none",
+  "plausibility": "none",
+  "states": [
+    {
+      "name": "hit",
+      "golden": "none"
+    },
+    {
+      "name": "empty",
+      "golden": "none"
+    },
+    {
+      "name": "partial",
+      "golden": "none"
+    },
+    {
+      "name": "unauthorized",
+      "golden": "none"
+    },
+    {
+      "name": "error",
+      "golden": "none"
+    }
+  ],
+  "errors": {
+    "answer": "envelope",
+    "why": "Success and failure both arrive in the { data, error, meta } envelope of docs/specs/00_engineering_standards.md §4.4; withApiEnvelope is the outermost wrapper and converts any uncaught throw into the same shape.",
+    "evidence": [
+      "src/lib/api/with-api-envelope.ts:27-52",
+      "src/app/api/admin/notifications/route.ts:47-50",
+      "src/app/api/admin/notifications/route.ts:56-59",
+      "src/app/api/admin/notifications/route.ts:136-140",
+      "src/app/api/admin/notifications/route.ts:144-147",
+      "src/app/api/admin/notifications/route.ts:49 (401)",
+      "src/app/api/admin/notifications/route.ts:58 (400)",
+      "src/app/api/admin/notifications/route.ts:146 (500)",
+      "src/app/api/admin/notifications/route.ts:44 (500)"
+    ],
+    "classes": [
+      {
+        "class": "401",
+        "ui": "{data:null,error:{code,message},meta:null} — src/app/api/admin/notifications/route.ts:49 (code UNAUTHORIZED)"
+      },
+      {
+        "class": "400",
+        "ui": "{data:null,error:{code,message,details},meta:null} — src/app/api/admin/notifications/route.ts:58 (code VALIDATION_FAILED)"
+      },
+      {
+        "class": "500",
+        "ui": "{data:null,error:{code,message},meta:null} — src/app/api/admin/notifications/route.ts:146 (code INTERNAL_ERROR)"
+      }
+    ]
+  },
+  "emits": {
+    "answer": "none",
+    "why": "Nothing it does is currently countable: src/app/api/admin/notifications/route.ts was read in full and contains no Sentry breadcrumb, no analytics capture and no ledger INSERT.",
+    "evidence": [
+      "src/app/api/admin/notifications/route.ts — read in full; no Sentry breadcrumb, no analytics capture and no ledger INSERT"
+    ],
+    "analytics": [],
+    "ledger_events": [],
+    "breadcrumbs": []
+  },
+  "offers": {
+    "answer": "none",
+    "why": "It renders no sponsored placement: the offers and advertisers tables Spec 126 §2 specifies do not exist in migrations/ and nothing in this handler reads placement inventory.",
+    "evidence": [
+      "migrations/ — no CREATE TABLE offers / advertisers (grep 2026-09-15)",
+      "src/app/api/admin/notifications/route.ts — read in full; no placement read"
+    ]
+  },
+  "metering": {
+    "answer": "none",
+    "why": "Nothing here is counted: no usage_events row (the table does not exist in the introspected schema) and no quota counter is written by this handler.",
+    "evidence": [
+      "src/app/api/admin/notifications/route.ts — read in full 2026-09-15",
+      "src/lib/db/generated/schema.ts — no usage_events table"
+    ]
+  },
+  "config": {
+    "answer": "logic_variables",
+    "why": "It consumes 3 operator-editable tunable(s) from the logic_variables table rather than a literal in code.",
+    "evidence": [
+      "src/app/api/admin/notifications/route.ts:127",
+      "migrations/092_control_panel.sql:27"
+    ],
+    "logic_variables": [
+      {
+        "name": "notifications_dispatch_enabled",
+        "on_invalid": "default",
+        "why": "Bounds are not declared at this call site; the posture recorded is what the code does on a bad value."
+      },
+      {
+        "name": "notifications_max_per_user_per_day",
+        "on_invalid": "default",
+        "why": "Bounds are not declared at this call site; the posture recorded is what the code does on a bad value."
+      },
+      {
+        "name": "notifications_disabled_types",
+        "on_invalid": "default",
+        "why": "Bounds are not declared at this call site; the posture recorded is what the code does on a bad value."
+      }
+    ],
+    "retired": []
+  },
+  "sharing": {
+    "answer": "shared",
+    "why": "2 call sites render it, so the projection is shared and a field removed here breaks more than one surface.",
+    "evidence": [
+      "src/components/admin/NotificationsCard.tsx:39",
+      "src/components/admin/NotificationsTool.tsx:67"
+    ],
+    "surfaces": [
+      "src/components/admin/NotificationsCard.tsx:39",
+      "src/components/admin/NotificationsTool.tsx:67"
+    ]
+  },
+  "a11y": {
+    "touch_target_min_px": "UNRESEARCHED",
+    "labels": "none",
+    "dark_mode": "none",
+    "reduced_motion": "none",
+    "i18n": "none",
+    "safe_area": "none"
+  },
+  "deviations": "none",
+  "limitations": [
+    {
+      "what": "a11y.touch_target_min_px has no legal answer for a CONTRACT",
+      "measured": "The schema allows only UNRESEARCHED or an integer >= 44; a JSON endpoint has no touch target and the vocabulary has no \"n/a\". Left UNRESEARCHED and escalated per Spec 128 §4 rather than invented.",
+      "check_id": "contract_admin_notifications__auth_class_parity"
+    }
+  ],
+  "interpretation": "none",
+  "notes": "Dispatch rows return as `{...r, push_token: maskPushToken(r.push_token)}` — a raw-row spread with one field redacted, not a whitelist. Push tokens are always masked to the last 6 characters before leaving the server. The 'gates' block is a READ-ONLY surface of three logic_variables kill-switch/throttle keys; the write path is the Control Panel tool, not this route. | MEASURED 2026-09-15: Census checklist: all 5 named tables VERIFIED. Census MISSED `profiles` (verifyAdminAuth, src/lib/auth/verify-admin.ts:117-120). FINDINGS: (1) The WHERE fragment is assembled by string concatenation at :63 and interpolated into the SQL at :80, but the value is bound as $3 (:64) — parameterised, not injectable; the fragment itself is a fixed literal. (2) TYPE SAFETY — the per-user block is typed `let user: unknown` at :97 and the prefs query at :104 is untyped (`pool.query` with no row generic), so prefs reaches the client unvalidated; there is no response-side Zod parse anywhere in this route, unlike the watchlist routes (contrast src/app/api/admin/leads/watchlist/route.ts:251). (3) Raw push_token IS selected from the DB (:70, :101) and masked only in JS (:94, :113 via src/lib/admin/mask-push-token.ts:7-15) — the header claim at :8-9 that the full token 'never leaves the server' is true of the HTTP response as written, but nothing structurally enforces it (no view, no column-level guard), so a future added projection could leak it. (4) The three kill-switch/throttle logic variables are surfaced with NO bounds, NO Zod validation and NO type check (:129-134) — a corrupted variable_value is echoed verbatim into meta.gates. (5) `last_dispatch` is taken from dispatches[0] (:118), i.e. the first row of the CURRENT PAGE — with offset>0 and a user_id filter it is the newest dispatch on that page, not the user's newest overall. (6) No SELECT * anywhere. (7) Two sequential awaits (:68 rows, then :86 count) rather than a Promise.all — an avoidable round trip. | Caching: none observed — no Cache-Control, no dynamic/revalidate, no in-process memo in route.ts:1-149 | Pagination: limit/offset. Zod-clamped limit [1,200] default 50 and offset >=0 default 0 at src/app/api/admin/notifications/route.ts:25-26; bound as $1/$2 in `LIMIT $1 OFFSET $2` at :82; `total` from a separate COUNT(*) at :86-92, returned in meta at :139. | Other guards / classification: No CSRF check (GET is not a mutating method, src/lib/auth/verify-admin.ts:45,70). MFA gate inert unless ADMIN_MFA_ENFORCED=true (src/lib/auth/verify-admin.ts:143). | Locking tests: src/tests/admin-notifications.infra.test.ts.",
+  "x-draft": {
+    "shard": "contracts",
+    "files": [
+      "src/app/api/admin/notifications/route.ts"
+    ],
+    "loc": 149,
+    "methods": [
+      "GET"
+    ],
+    "consumers": [
+      "admin_user_detail",
+      "admin_notifications"
+    ],
+    "writes_audit_row": "n/a",
+    "consumers_verified": [
+      "src/components/admin/NotificationsCard.tsx:39",
+      "src/components/admin/NotificationsTool.tsx:67"
+    ],
+    "auth_class_executed": "admin",
+    "locking_tests": [
+      "src/tests/admin-notifications.infra.test.ts"
+    ]
+  },
+  "programme": {
+    "scope": "platform_shared",
+    "phase": "UNRESEARCHED",
+    "why": "Notifications: one device-token registry and one preference set across both products.",
+    "feature": "F13",
+    "build_order": 3132,
+    "leakage": "none",
+    "product_questions": "none",
+    "review": {
+      "status": "unreviewed"
+    }
+  }
+}

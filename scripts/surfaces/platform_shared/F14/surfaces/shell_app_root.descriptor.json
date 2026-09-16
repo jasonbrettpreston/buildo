@@ -1,0 +1,516 @@
+{
+  "kind": "SURFACE",
+  "status": "exists",
+  "docs": {
+    "purpose": "The outermost wrapper every screen sits inside. It decides, on each launch, whether to send the user to sign-in, into setup, or into the app proper, based on what the server says about their account. It also catches confirmation links from email, handles incoming push notifications by showing an in-app banner or jumping to the right screen, and offers people whose account is scheduled for deletion a chance to reactivate it.",
+    "data_story": "It reads nothing from the database directly. Every value arrives through 2 contracts: `/api/user-profile`, `/api/user-profile/reactivate`. Behind those contracts, the data comes from `entitlements`, `logic_variables` and `user_profiles`, and writes land on `entitlements` and `user_profiles`. It also holds client-side state in `authStore`, `notificationStore` and `onboardingStore`, which is the part a server-driven projection has to absorb or justify.",
+    "under_126": "**REBUILD** — it holds Layer-3 state (`authStore`, `notificationStore` and `onboardingStore`) and drives writes, so a client decision has to be re-homed on the server before the projection can be honest. It renders through the SHELL renderer (declared routing branches, guards and child groups — a shell here is not inert), reading by reference: `/api/user-profile`, `/api/user-profile/reactivate`. Its `owns.components[]` declares `mobile/src/components/shared/NotificationToast.tsx`."
+  },
+  "evidence": {
+    "files": [
+      "mobile/app/_layout.tsx:1",
+      "mobile/src/components/shared/NotificationToast.tsx:1"
+    ],
+    "contracts": [
+      "mobile/src/hooks/useUserProfile.ts:38",
+      "mobile/app/_layout.tsx:263"
+    ],
+    "tables": [
+      "src/app/api/user-profile/route.ts:51",
+      "src/app/api/user-profile/reactivate/route.ts:139-170"
+    ],
+    "gate": [
+      "mobile/app/_layout.tsx:141-231",
+      "mobile/src/lib/auth/decideAuthGateRoute.ts"
+    ],
+    "states": [
+      "mobile/app/_layout.tsx:242-332",
+      "mobile/app/_layout.tsx:453-479"
+    ],
+    "emits": [
+      "mobile/app/_layout.tsx:186-195",
+      "mobile/app/_layout.tsx:213-216"
+    ]
+  },
+  "identity": {
+    "id": "shell_app_root",
+    "route": "mobile/app/_layout.tsx",
+    "archetype": "SHELL",
+    "platforms": [
+      "mobile"
+    ],
+    "owns": {
+      "components": [
+        "mobile/src/components/shared/NotificationToast.tsx"
+      ]
+    },
+    "owner": "unassigned (no CODEOWNERS file and no owner registry exists in the repo — measured 2026-09-15)",
+    "spec": "docs/specs/03-mobile/93_mobile_auth.md",
+    "spec_refs": [
+      "docs/specs/03-mobile/93_mobile_auth.md §3.6",
+      "docs/specs/03-mobile/93_mobile_auth.md §5",
+      "docs/specs/03-mobile/95_mobile_user_profiles.md §4",
+      "docs/specs/03-mobile/99_mobile_state_architecture.md §5.3",
+      "docs/specs/03-mobile/99_mobile_state_architecture.md §2.1",
+      "docs/specs/03-mobile/92_mobile_engagement_hardware.md §4.2"
+    ],
+    "spec_version": "0-draft",
+    "versioning": {
+      "answer": "frozen",
+      "why": "The routing matrix is a pure function with an exhaustiveness guard — adding an arm to AuthGateDecision without handling it is a compile error, and mobile/__tests__/authGate.test.ts covers every branch.",
+      "evidence": [
+        "mobile/src/lib/auth/decideAuthGateRoute.ts",
+        "mobile/app/_layout.tsx:217-226",
+        "mobile/__tests__/authGate.test.ts"
+      ]
+    },
+    "ref": "S-045"
+  },
+  "inputs": {
+    "answer": "contract",
+    "why": "Its routing decision is driven entirely by GET /api/user-profile (plus the Supabase session): onboarding_complete, account_preset and the 403 ACCOUNT_DELETED body are what select the arm.",
+    "evidence": [
+      "mobile/app/_layout.tsx:98-101",
+      "mobile/app/_layout.tsx:156-168"
+    ],
+    "contract_ref": [
+      "/api/user-profile",
+      "/api/user-profile/reactivate"
+    ],
+    "query_key": [
+      "user-profile"
+    ],
+    "field_whitelist": [
+      "user_id",
+      "onboarding_complete",
+      "account_preset",
+      "trade_slug",
+      "subscription_status",
+      "account_deleted_at"
+    ],
+    "tables": [
+      {
+        "table": "user_profiles",
+        "columns": [
+          "user_id",
+          "onboarding_complete",
+          "account_preset",
+          "trade_slug",
+          "account_deleted_at",
+          "lead_views_count"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/03-mobile/95_mobile_user_profiles.md",
+        "evidence": [
+          "src/app/api/user-profile/route.ts:51",
+          "src/lib/userProfile.schema.ts:85-122",
+          "migrations/230_rls_class_a_entitlements.sql:62-68"
+        ]
+      },
+      {
+        "table": "entitlements",
+        "columns": [
+          "user_id",
+          "product",
+          "status",
+          "trial_started_at"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/00-architecture/116_multi_product_architecture.md",
+        "evidence": [
+          "src/app/api/user-profile/route.ts:51",
+          "src/app/api/user-profile/reactivate/route.ts:139-158",
+          "migrations/228_entitlements.sql:21-35",
+          "src/lib/entitlements/index.ts:68"
+        ]
+      }
+    ]
+  },
+  "outputs": {
+    "answer": "contract_only",
+    "why": "Its one write is POST /api/user-profile/reactivate from the deletion-window modal, followed by an invalidate of [\"user-profile\"]; the push-token registration it triggers is delegated to registerPushToken.",
+    "evidence": [
+      "mobile/app/_layout.tsx:259-275",
+      "mobile/app/_layout.tsx:197-202"
+    ],
+    "contract_ref": [
+      "/api/user-profile/reactivate",
+      "/api/notifications/register"
+    ],
+    "tables": [
+      {
+        "table": "user_profiles",
+        "columns": [
+          "user_id",
+          "account_deleted_at"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/03-mobile/95_mobile_user_profiles.md",
+        "evidence": [
+          "src/app/api/user-profile/reactivate/route.ts:161",
+          "src/lib/userProfile.schema.ts:85-122",
+          "migrations/230_rls_class_a_entitlements.sql:62-68"
+        ]
+      },
+      {
+        "table": "entitlements",
+        "columns": [
+          "user_id",
+          "product",
+          "status",
+          "trial_started_at"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/00-architecture/116_multi_product_architecture.md",
+        "evidence": [
+          "src/app/api/user-profile/reactivate/route.ts:139-158",
+          "migrations/228_entitlements.sql:21-35",
+          "src/lib/entitlements/index.ts:68"
+        ]
+      },
+      {
+        "table": "device_tokens",
+        "columns": [
+          "user_id",
+          "push_token",
+          "platform",
+          "updated_at"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/03-mobile/92_mobile_engagement_hardware.md",
+        "evidence": [
+          "mobile/src/lib/pushTokens.ts:52",
+          "src/app/api/notifications/register/route.ts:41-44",
+          "src/app/api/notifications/register/route.ts:41-44",
+          "migrations/230_rls_class_a_entitlements.sql:88-94"
+        ]
+      }
+    ],
+    "rollback": "none — reactivation is a server-side state change with no optimistic local write; a failure sets reactivationError and leaves the modal open.",
+    "invalidates": [
+      "user-profile"
+    ]
+  },
+  "state": {
+    "answer": "mmkv",
+    "why": "It mounts the PersistQueryClientProvider that writes the whole TanStack cache to MMKV with a 24h maxAge — and the dehydrate predicate that EXCLUDES [\"user-profile\"], because that payload carries five PII fields and MMKV is unencrypted.",
+    "evidence": [
+      "mobile/app/_layout.tsx:486-520",
+      "mobile/src/lib/persistFilter.ts:27",
+      "mobile/src/lib/mmkvPersister.ts:11"
+    ],
+    "fields": [
+      {
+        "name": "user (auth session)",
+        "owner_layer": "4a_mmkv",
+        "canonical_writer": "initSupabaseAuthListener → authStore.setAuth",
+        "authorized_readers": [
+          "shell_app_root",
+          "shell_app_tabs",
+          "mobile_lead_feed",
+          "mobile_map"
+        ],
+        "bridge": "B4",
+        "persistence": "mmkv",
+        "signout_reset": true
+      },
+      {
+        "name": "unreadFlightBoard",
+        "owner_layer": "3_zustand",
+        "canonical_writer": "NotificationHandlers on a foreground flight_board notification",
+        "authorized_readers": [
+          "shell_app_tabs"
+        ],
+        "bridge": "none",
+        "persistence": "none",
+        "signout_reset": true
+      },
+      {
+        "name": "persisted query cache",
+        "owner_layer": "4a_mmkv",
+        "canonical_writer": "mmkvPersister via PersistQueryClientProvider",
+        "authorized_readers": [
+          "mobile_lead_feed",
+          "mobile_flight_board",
+          "mobile_settings",
+          "overlay_offline_banner"
+        ],
+        "bridge": "B1",
+        "persistence": "mmkv",
+        "signout_reset": true
+      }
+    ]
+  },
+  "staleness": {
+    "answer": "query_cache",
+    "why": "The profile that drives routing is the shared 5-minute [\"user-profile\"] entry; the buster string on the persister forces a one-time full cache flush at the deploy that introduced the PII exclusion.",
+    "evidence": [
+      "mobile/src/hooks/useUserProfile.ts:67",
+      "mobile/app/_layout.tsx:518"
+    ],
+    "offline": "cached_projection",
+    "stale_time_ms": 300000,
+    "gc_time_ms": 86400000
+  },
+  "guards": {
+    "session": {
+      "answer": "anon",
+      "why": "It is the only surface that runs before a session exists — it IS the session gate, routing an unauthenticated user to /(auth)/sign-in and an authenticated one onward.",
+      "evidence": [
+        "mobile/app/_layout.tsx:141-231",
+        "mobile/src/lib/auth/decideAuthGateRoute.ts"
+      ]
+    },
+    "rls_class": {
+      "answer": "A",
+      "why": "Its one read and its one write are both the caller's own user_profiles row, plus the device_tokens upsert — all Class A, owner-scoped on auth.uid().",
+      "evidence": [
+        "migrations/230_rls_class_a_entitlements.sql:62-68",
+        "migrations/230_rls_class_a_entitlements.sql:88-94"
+      ]
+    },
+    "disclosure": "none",
+    "entitlement": "none",
+    "flag": "none",
+    "permission": "notification",
+    "rate_bucket": "none — neither /api/user-profile nor /api/notifications/register calls withRateLimit"
+  },
+  "render": {
+    "targets": [
+      "screen"
+    ],
+    "projection": "none",
+    "breakpoints": "mobile_first",
+    "export": "none",
+    "routing": "UNRESEARCHED"
+  },
+  "checks": [
+    {
+      "id": "root_routing_matrix",
+      "kind": "auth_class_parity",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "why": "mobile/__tests__/authGate.test.ts covers every arm of the 9-arm matrix against the pure decideAuthGateRoute, and the switch carries a `never` exhaustiveness guard so a new arm cannot be added silently."
+    },
+    {
+      "id": "root_pii_not_persisted",
+      "kind": "disclosure",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "why": "shouldDehydrateQueryFn excludes [\"user-profile\"] from MMKV because that payload carries full_name/phone_number/company_name/email/backup_email and MMKV is written with no encryptionKey; mobile/__tests__/offline.test.ts imports the production predicate rather than a mirror so it cannot drift."
+    },
+    {
+      "id": "root_cache_buster",
+      "kind": "freshness",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "why": "The dehydrate filter only guards WRITES; on cold boot restoreClient would rehydrate the pre-fix blob including the PII query, so buster \"wf3-pii-strip-1\" forces a one-time removeClient on every existing install."
+    },
+    {
+      "id": "root_reactivation_event",
+      "kind": "ledger_row_present",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "reactivation_modal_shown is deliberately NOT __DEV__-gated — it is the compliance record that the user saw the 30-day deletion prompt. mobile/__tests__/accountDeletion.coverage.test.ts locks the side-effect half of that chain."
+    },
+    {
+      "id": "root_router_hygiene",
+      "kind": "selector_atomicity",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "mobile/__tests__/routerHygiene.lint.test.ts enforces Spec 99 §5.4: a useEffect with `router` in its deps may not call a Zustand hook — currentStep is read lazily with getState(), which is what ended the render loop in 6c5d085."
+    }
+  ],
+  "invariants": "none",
+  "plausibility": "none",
+  "states": [
+    {
+      "name": "loading",
+      "golden": "none"
+    },
+    {
+      "name": "redirect",
+      "golden": "none"
+    },
+    {
+      "name": "unauthorized",
+      "golden": "none"
+    },
+    {
+      "name": "error",
+      "golden": "none"
+    },
+    {
+      "name": "degraded",
+      "golden": "none"
+    }
+  ],
+  "errors": {
+    "answer": "inline",
+    "why": "A profile fetch failure renders a full-screen \"Could not load your profile.\" with a Retry instead of navigating; the 403 deletion case renders a modal; only an uncaught render error escapes to the ErrorBoundary it wraps everything in.",
+    "evidence": [
+      "mobile/app/_layout.tsx:314-333",
+      "mobile/app/_layout.tsx:246-311",
+      "mobile/app/_layout.tsx:484-529"
+    ],
+    "classes": [
+      {
+        "class": "401",
+        "ui": "apiClient refreshes the Supabase session once; a persistent 401 leaves the user on the sign-in route."
+      },
+      {
+        "class": "403",
+        "ui": "AccountDeletedError → the reactivation modal with the computed deletion date, Reactivate and Sign Out."
+      },
+      {
+        "class": "500",
+        "ui": "Full-screen \"Could not load your profile.\" + Retry (refetchQueries)."
+      },
+      {
+        "class": "offline",
+        "ui": "The persisted cache rehydrates and routing proceeds from the cached profile."
+      }
+    ],
+    "no_retry": [
+      "ApiError(403) AccountDeletedError",
+      "ApiError(404) new user",
+      "UserProfileSchemaError"
+    ]
+  },
+  "emits": {
+    "answer": "events",
+    "why": "route_decision is DEV-only (a user can cross gate boundaries many times per session), but reactivation_modal_shown fires in production because it is a PIPEDA-relevant record that the prompt was seen.",
+    "evidence": [
+      "mobile/app/_layout.tsx:186-195",
+      "mobile/app/_layout.tsx:211-216",
+      "mobile/src/lib/analytics.ts:121-132"
+    ],
+    "analytics": [
+      "route_decision (DEV-only)",
+      "reactivation_modal_shown"
+    ],
+    "ledger_events": [],
+    "breadcrumbs": [
+      "Sentry.captureMessage stale_profile_missing_user_id",
+      "Sentry.captureException registerPushToken on auth→app"
+    ]
+  },
+  "offers": {
+    "answer": "none",
+    "why": "A navigation shell renders no sponsored content.",
+    "evidence": [
+      "mobile/app/_layout.tsx:481-531"
+    ]
+  },
+  "metering": {
+    "answer": "none",
+    "why": "Nothing here is counted: the Spec 126 §7 usage ledger table does not exist (grep for usage_events in the introspected drizzle schema returns 0 hits), and the only quota-shaped counter, user_profiles.lead_views_count, is incremented solely by POST /api/leads/view, which has no mobile caller.",
+    "evidence": [
+      "src/lib/db/generated/schema.ts — no usage_events table (grep, 2026-09-15)",
+      "src/app/api/leads/view/route.ts:110",
+      "src/features/leads/api/useLeadView.ts:25 — imported only by src/tests/useLeadView.logic.test.tsx"
+    ]
+  },
+  "config": {
+    "answer": "none",
+    "why": "The surface consumes no registered logic variable: the only server-side tunable in this path, user_profiles.radius_cap_km, is a per-user admin column, not a logic_variables row.",
+    "evidence": [
+      "src/lib/userProfile.schema.ts:40",
+      "src/app/api/user-profile/route.ts:328",
+      "docs/reference/logic-variables-registry.md — no radius_cap_km entry"
+    ],
+    "logic_variables": [],
+    "retired": []
+  },
+  "sharing": {
+    "answer": "shared",
+    "why": "GET /api/user-profile is rendered by this shell, the tab shell, settings, the filter sheet and every onboarding step — one contract carrying the routing flag, the subscription status and the feed defaults.",
+    "evidence": [
+      "mobile/app/(app)/_layout.tsx:118",
+      "mobile/app/(app)/settings.tsx:80"
+    ],
+    "surfaces": [
+      "shell_app_tabs",
+      "mobile_settings",
+      "mobile_lead_feed",
+      "mobile_flight_board",
+      "overlay_lead_filter_sheet",
+      "mobile_onboarding_terms",
+      "mobile_onboarding_complete"
+    ]
+  },
+  "a11y": {
+    "touch_target_min_px": 52,
+    "labels": "none",
+    "dark_mode": "hardcoded",
+    "reduced_motion": "none",
+    "i18n": "none",
+    "safe_area": "none"
+  },
+  "deviations": "none",
+  "limitations": [
+    {
+      "what": "The reactivation modal's two buttons carry no accessibility label or role.",
+      "measured": "mobile/app/_layout.tsx:288-302 — TouchableOpacity with className only; grep for accessibilityLabel in the file returns 0.",
+      "check_id": "root_reactivation_event"
+    },
+    {
+      "what": "The deletion date shown to the user is computed on the device with a hardcoded en-CA locale and a client-side +30 days, not returned by the server.",
+      "measured": "_layout.tsx:247-253 — new Date(account_deleted_at), setDate(+30), toLocaleDateString('en-CA').",
+      "check_id": "root_routing_matrix"
+    }
+  ],
+  "interpretation": "none",
+  "notes": "This shell is not inert: it is the sole routing authority for the whole app (Spec 99 §5.1), the mount point of the persisted query cache, and the owner of the PII layer boundary. It also carries the email-confirm deep-link catcher, which is the only way mobile_auth_confirm is reachable.",
+  "x-draft": {
+    "shard": "mobile-product",
+    "files": [
+      "mobile/app/_layout.tsx",
+      "mobile/src/components/shared/NotificationToast.tsx"
+    ],
+    "loc": 530,
+    "call_idiom": "both",
+    "stores": [
+      "authStore",
+      "notificationStore",
+      "onboardingStore"
+    ],
+    "measured_states": [
+      "wait",
+      "stale_profile_guard",
+      "reactivation_modal",
+      "reactivation_error",
+      "profile_fetch_retry",
+      "navigate_null_render",
+      "foreground_toast"
+    ],
+    "measured_gate": {
+      "session": "none",
+      "entitlement": "none",
+      "flag": "none",
+      "permission": "notification"
+    }
+  },
+  "programme": {
+    "scope": "platform_shared",
+    "phase": "UNRESEARCHED",
+    "why": "A navigation shell. It routes and gates every product surface beneath it — converting it changes both products at once.",
+    "feature": "F14",
+    "build_order": 3143,
+    "leakage": "none",
+    "product_questions": "none",
+    "review": {
+      "status": "unreviewed"
+    }
+  }
+}

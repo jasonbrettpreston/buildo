@@ -1,0 +1,360 @@
+{
+  "kind": "CONTRACT",
+  "status": "exists",
+  "docs": {
+    "purpose": "Provides the searchable, role-filterable, sortable, paginated directory of all businesses in the system.",
+    "data_story": "It reads 2 tables — `entities` and `entity_projects` and writes nothing. Its response shape is **unmeasured** as a pick-by-name whitelist — it passes rows through, spreads a row into a computed object, or assembles the payload dynamically, so there is no single list naming what leaves the server. **Nothing in this repository calls it.** That is the state this registry exists to make visible, not a claim that it is dead — a caller could be a bookmark, an external system, or a path built from variables.",
+    "under_126": "Becomes a **CONTRACT descriptor** of archetype `QUERY`. It declares its `database.reads[]` with named columns, its response projection as an explicit whitelist, its auth class, its rate bucket and its staleness — and `outputs.writes` is forced to `\"none\"`. Its `consumers[]` is the field that matters most here: today it is empty, and the orphan panel renders that as a red row rather than leaving it to be discovered years later."
+  },
+  "evidence": {
+    "files": [
+      "src/app/api/entities/route.ts:1"
+    ],
+    "contracts": [
+      "src/app/api/entities/route.ts:5 (GET export)",
+      "src/lib/api/with-api-envelope.ts:27-52"
+    ],
+    "tables": [
+      "src/app/api/entities/route.ts:36",
+      "src/app/api/entities/route.ts:43",
+      "src/app/api/entities/route.ts:28",
+      "src/lib/db/generated/schema.ts — every table named here is present in the introspected drizzle schema"
+    ],
+    "gate": [
+      "src/lib/auth/route-guard.ts — fail-closed default — no PUBLIC_PREFIXES / PUBLIC_EXACT_API_PATHS / admin / AUTHENTICATED_API_ROUTES arm matches '/api/entities'",
+      "src/lib/auth/route-guard.ts:150-201 — classifyRoute executed 2026-09-15 with the concrete path → \"authenticated\"",
+      "no in-handler auth call in src/app/api/entities/route.ts — src/middleware.ts is the only gate"
+    ],
+    "states": [
+      "hit: src/app/api/entities/route.ts:48-49",
+      "empty: src/app/api/entities/route.ts:46 (COUNT 0 -> total 0, `entities: []`; no 404 branch exists)",
+      "error: src/lib/api/with-api-envelope.ts:41-50 (the route has no catch of its own)",
+      "unauthorized: src/middleware.ts:136-141 (401 from middleware for a session-less request, since classifyRoute returns 'authenticated' at src/lib/auth/route-guard.ts:191) — the handler itself never emits 401"
+    ],
+    "emits": [
+      "src/app/api/entities/route.ts — read in full; no Sentry breadcrumb, no analytics capture and no ledger INSERT"
+    ]
+  },
+  "identity": {
+    "id": "contract_entities",
+    "route": "/api/entities",
+    "archetype": "QUERY",
+    "platforms": [
+      "web"
+    ],
+    "owns": {
+      "components": []
+    },
+    "owner": "Backend/Pipeline (CLAUDE.md §Domain Rules: `src/app/api/`)",
+    "spec": "docs/specs/01-pipeline/37_entity_model.md",
+    "spec_refs": [
+      "docs/specs/01-pipeline/37_entity_model.md — owns src/app/api/entities/route.ts per docs/specs/00-architecture/00_system_map.md:39; the System Map row names no section, and the route file carries no SPEC LINK header"
+    ],
+    "spec_version": "0-draft",
+    "versioning": {
+      "answer": "none",
+      "why": "No call site anywhere in src/** or mobile/** (verified 2026-09-15 by an exact-path sweep that strips comment lines), so no consumer holds a compatibility promise to break.",
+      "evidence": [
+        "src/app/api/entities/route.ts — no caller",
+        "src/lib/auth/route-guard.ts:150-201"
+      ]
+    },
+    "ref": "C-050"
+  },
+  "inputs": {
+    "answer": "app_outputs",
+    "why": "It reads 2 table(s) directly; 1 of them are materialised by named pipeline steps (builders), so its inputs are the pipeline's outputs rather than another contract.",
+    "evidence": [
+      "src/app/api/entities/route.ts:36",
+      "src/app/api/entities/route.ts:43",
+      "scripts/extract-builders.js",
+      "docs/reference/data-lineage-map.md:506",
+      "scripts/manifest.json#chains",
+      "docs/reference/data-lineage-map.md",
+      "src/app/api/entities/route.ts:28",
+      "docs/specs/00-architecture/00_system_map.md:93",
+      "docs/reference/data-lineage-map.md — no `## `entity_projects`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)"
+    ],
+    "contract_ref": [],
+    "query_key": [],
+    "field_whitelist": [
+      "entities",
+      "pagination"
+    ],
+    "tables": [
+      {
+        "table": "entities",
+        "columns": "all",
+        "producing_steps": [
+          "builders",
+          "enrich_named_builders",
+          "enrich_wsib_builders",
+          "link_wsib"
+        ],
+        "chain_position": "permits[5] · entities[1] · entities[0] · permits[6], sources[19]",
+        "owner_spec": "docs/specs/01-pipeline/41_chain_permits.md",
+        "evidence": [
+          "src/app/api/entities/route.ts:36",
+          "src/app/api/entities/route.ts:43",
+          "scripts/extract-builders.js",
+          "docs/reference/data-lineage-map.md:506",
+          "scripts/manifest.json#chains",
+          "docs/reference/data-lineage-map.md"
+        ]
+      },
+      {
+        "table": "entity_projects",
+        "columns": [
+          "entity_id",
+          "role"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/02-web-admin/76_lead_feed_health_dashboard.md",
+        "evidence": [
+          "src/app/api/entities/route.ts:28",
+          "docs/specs/00-architecture/00_system_map.md:93",
+          "docs/reference/data-lineage-map.md — no `## `entity_projects`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)"
+        ]
+      }
+    ]
+  },
+  "outputs": {
+    "answer": "none",
+    "why": "A QUERY contract writes nothing; the handler issues no INSERT/UPDATE/DELETE anywhere in the file or in the libs it calls.",
+    "evidence": [
+      "src/app/api/entities/route.ts — read in full 2026-09-15; no INSERT/UPDATE/DELETE reached"
+    ],
+    "contract_ref": [],
+    "tables": []
+  },
+  "state": {
+    "answer": "server_only",
+    "why": "A CONTRACT holds no client state: every value is resolved per request on the server and nothing is cached in a client store by the route itself.",
+    "evidence": [
+      "src/app/api/entities/route.ts:5 (GET export)",
+      "src/lib/api/with-api-envelope.ts:27-52"
+    ],
+    "fields": []
+  },
+  "staleness": {
+    "answer": "live",
+    "why": "Every read runs against the base tables on each request — there is no cache layer between the handler and the database.",
+    "evidence": [
+      "src/app/api/entities/route.ts:36",
+      "src/app/api/entities/route.ts:43",
+      "scripts/extract-builders.js",
+      "docs/reference/data-lineage-map.md:506"
+    ],
+    "offline": "none"
+  },
+  "guards": {
+    "session": {
+      "answer": "authenticated",
+      "why": "classifyRoute(\"/api/entities\") returns \"authenticated\" (executed 2026-09-15); the handler adds no check of its own, so middleware is the only gate.",
+      "evidence": [
+        "src/lib/auth/route-guard.ts:150-201 — classifyRoute executed 2026-09-15 with the concrete path",
+        "src/middleware.ts — the only gate for this path (no in-handler auth call)"
+      ]
+    },
+    "rls_class": {
+      "answer": "B",
+      "why": "Every table it reaches has RLS enabled with zero policies — default deny for anon and authenticated; only the table owner and service_role get through.",
+      "evidence": [
+        "migrations/227_rls_class_b_default_deny.sql:49",
+        "migrations/227_rls_class_b_default_deny.sql:51",
+        "docs/specs/00-architecture/114_rls_policy_catalog.md §2"
+      ]
+    },
+    "disclosure": "none",
+    "entitlement": "none",
+    "flag": "none",
+    "permission": "none",
+    "rate_bucket": "none"
+  },
+  "render": {
+    "targets": [
+      "screen"
+    ],
+    "projection": "none",
+    "breakpoints": "none",
+    "export": "none"
+  },
+  "checks": [
+    {
+      "id": "contract_entities__auth_class_parity",
+      "kind": "auth_class_parity",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "why": "guards.session must equal classifyRoute(\"/api/entities\"), executed 2026-09-15 → \"authenticated\"; there is no in-handler check, so a middleware change silently re-classes this route. No test file in src/tests/** imports this route — the parity is unlocked."
+    },
+    {
+      "id": "contract_entities__error_envelope",
+      "kind": "error_state",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "why": "MEASURED DEVIATION, permanently non-zero until re-projected: GET returns a bare `{entities, pagination}` object at :48-56 with no data/error/meta keys. The handler has NO try/catch of its own, so every failure falls through to the wrapper's envelope 500 (with-api-envelope.ts:41-50) — meaning success and failure use two  Retighten condition: the handler returns the envelope on every path."
+    },
+    {
+      "id": "contract_entities__field_whitelist_parity",
+      "kind": "field_whitelist_parity",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "why": "MEASURED: the projection is row_spread (src/app/api/entities/route.ts:36, src/app/api/entities/route.ts:48-56), so a column added upstream reaches the client without a code change. Permanently non-zero until the response is an explicit pick; retighten condition: projection.kind === explicit_pick."
+    },
+    {
+      "id": "contract_entities__schema_declared",
+      "kind": "schema_declared",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "Every table and column declared in lineage.reads[]/writes[] must exist in src/lib/db/generated/schema.ts (drizzle-kit introspect of the live database); the registry generator checks this both directions."
+    }
+  ],
+  "invariants": "none",
+  "plausibility": "none",
+  "states": [
+    {
+      "name": "hit",
+      "golden": "none"
+    },
+    {
+      "name": "empty",
+      "golden": "none"
+    },
+    {
+      "name": "error",
+      "golden": "none"
+    },
+    {
+      "name": "unauthorized",
+      "golden": "none"
+    }
+  ],
+  "errors": {
+    "answer": "envelope",
+    "why": "It returns a JSON error body, but NOT the standard envelope: GET returns a bare `{entities, pagination}` object at :48-56 with no data/error/meta keys. The handler has NO try/catch of its own, so every failure falls through to the wrapper's envelope 500 (with-api-envelope.ts:41-50 \"envelope\" is the closest member of the closed menu; the deviation is recorded in deviations[].",
+    "evidence": [
+      "src/lib/api/with-api-envelope.ts:27-52",
+      "src/app/api/entities/route.ts:48-56",
+      "src/lib/api/with-api-envelope.ts:41-50",
+      "src/app/api/entities/route.ts:42 (500)",
+      "src/app/api/entities/route.ts:47 (500)"
+    ],
+    "classes": [
+      {
+        "class": "500",
+        "ui": "{data:null,error:{code,message},meta:null} — src/app/api/entities/route.ts:42 (code DATABASE_ERROR)"
+      }
+    ]
+  },
+  "emits": {
+    "answer": "none",
+    "why": "Nothing it does is currently countable: src/app/api/entities/route.ts was read in full and contains no Sentry breadcrumb, no analytics capture and no ledger INSERT.",
+    "evidence": [
+      "src/app/api/entities/route.ts — read in full; no Sentry breadcrumb, no analytics capture and no ledger INSERT"
+    ],
+    "analytics": [],
+    "ledger_events": [],
+    "breadcrumbs": []
+  },
+  "offers": {
+    "answer": "none",
+    "why": "It renders no sponsored placement: the offers and advertisers tables Spec 126 §2 specifies do not exist in migrations/ and nothing in this handler reads placement inventory.",
+    "evidence": [
+      "migrations/ — no CREATE TABLE offers / advertisers (grep 2026-09-15)",
+      "src/app/api/entities/route.ts — read in full; no placement read"
+    ]
+  },
+  "metering": {
+    "answer": "none",
+    "why": "Nothing here is counted: no usage_events row (the table does not exist in the introspected schema) and no quota counter is written by this handler.",
+    "evidence": [
+      "src/app/api/entities/route.ts — read in full 2026-09-15",
+      "src/lib/db/generated/schema.ts — no usage_events table"
+    ]
+  },
+  "config": {
+    "answer": "none",
+    "why": "It consumes no tunable: no logic_variables read and no env-var-driven threshold in the handler or the libs it calls.",
+    "evidence": [
+      "src/app/api/entities/route.ts — read in full 2026-09-15; no loadMarketplaceConfigs / logic_variables read"
+    ],
+    "logic_variables": [],
+    "retired": []
+  },
+  "sharing": {
+    "answer": "none",
+    "why": "ORPHAN: an exact-path sweep of src/** and mobile/** on 2026-09-15 (comment lines stripped) found no call site. That is a measured absence, not proof the endpoint is dead — a caller could be a bookmark or an external system.",
+    "evidence": [
+      "src/app/api/entities/route.ts — swept src/** and mobile/** for the exact path on 2026-09-15; zero call sites outside src/tests/**"
+    ],
+    "surfaces": []
+  },
+  "a11y": {
+    "touch_target_min_px": "UNRESEARCHED",
+    "labels": "none",
+    "dark_mode": "none",
+    "reduced_motion": "none",
+    "i18n": "none",
+    "safe_area": "none"
+  },
+  "deviations": [
+    {
+      "from": "docs/specs/00_engineering_standards.md §4.4 — all API routes return { data, error, meta }",
+      "why": "GET returns a bare `{entities, pagination}` object at :48-56 with no data/error/meta keys. The handler has NO try/catch of its own, so every failure falls through to the wrapper's envelope 500 (with-api-envelope.ts:41-50) — meaning success and failure use two DIFFERENT response shapes on this route.",
+      "adjudicated_by": "not adjudicated — measured 2026-09-15 by reading the handler",
+      "date": "2026-09-15"
+    },
+    {
+      "from": "docs/specs/00_engineering_standards.md §4.3 — never SELECT *, always project specific columns",
+      "why": "At least one query reads the whole row: entities.",
+      "adjudicated_by": "not adjudicated — measured 2026-09-15",
+      "date": "2026-09-15"
+    }
+  ],
+  "limitations": [
+    {
+      "what": "a11y.touch_target_min_px has no legal answer for a CONTRACT",
+      "measured": "The schema allows only UNRESEARCHED or an integer >= 44; a JSON endpoint has no touch target and the vocabulary has no \"n/a\". Left UNRESEARCHED and escalated per Spec 128 §4 rather than invented.",
+      "check_id": "contract_entities__auth_class_parity"
+    },
+    {
+      "what": "no consumer, so no fan-out edge",
+      "measured": "The exact-path sweep of src/** and mobile/** (comment lines stripped) returned zero call sites on 2026-09-15.",
+      "check_id": "contract_entities__auth_class_parity"
+    }
+  ],
+  "interpretation": "none",
+  "notes": "No SPEC LINK header. SELECT * FROM entities, whole row returned; the role filter uses a subquery against entity_projects with an explicit ::project_role_enum cast. Sort column whitelisted (ALLOWED_SORT) against injection, same pattern as /api/builders. No in-repo caller found. | MEASURED 2026-09-15: DISCLOSURE: `SELECT * FROM entities` at :36 — every entities column reaches the caller unprojected. The sibling route src/app/api/entities/[id]/route.ts:63-65 documents that entities/wsib_registry rows join reversibly to a business MAILING ADDRESS and refuses to log the entity id for PIPEDA reasons; this list endpoint nonetheless emits the whole row, in bulk, 100 at a time, to any caller who satisfies only a PRESENCE-level session check (middleware.ts:84-91 + :161-165 — no signature verification, and the handler adds none). The sort allow-list at :13 reveals some of the exposed columns: permit_count, legal_name, google_rating, last_enriched_at, first_seen_at; the [id] route's own projections confirm primary_phone / primary_email / website / photo_url also live on this table (src/features/leads/lib/get-lead-feed.ts:368-373). SELECT * flagged per instruction. // ORDER BY is string-interpolated at :37 but the value is allow-list-constrained at :13-14 and the direction is a closed ternary at :15 — not injectable as written; it is the one place a future edit to ALLOWED_SORT becomes a SQL surface. // No try/catch in the handler: an enum-cast failure on `?role=garbage` (:28) becomes a 500 DATABASE_ERROR rather than a 400. // CENSUS: census_reads = ['entities','entity_projects'] — both VERIFIED (entity_projects only inside the IN-subquery at :28). Nothing missed. | Caching: none observed — no Cache-Control, revalidate or dynamic export in the file. | Pagination: limit clamped <=100 at :9 (no lower bound), offset unclamped at :10, `LIMIT $n OFFSET $n+1` at :38, COUNT(*) at :43, `{total,page,limit,total_pages}` at :50-55. | Other guards / classification: NO guard inside the handler. classifyRoute('/api/entities'): it is NOT in PUBLIC_FILES/_next/api-auth (route-guard.ts:144-150), NOT in PUBLIC_EXACT_API_PATHS (:87-101), not /api/admin (:159), NOT matched by AUTHENTICATED_API_ROUTES (:120-132 — the list holds /api/sync, /api/quality/refresh, /api/notifications, /api/leads, /api/parcels, /api/subscribe), NOT matched by PUBLIC_PREFIXES (:67-77 — no /api/entities entry), not in PUBLIC_PATHS (:43-64), not /dashboard — so it falls to the FAIL-CLOSED default `return 'authenticated'` at route-guard.ts:191. CONFIRMED authenticated-by-default, as the brief hypothesised. Enforcement is middleware-only (src/middleware.ts:133-141) and is a PRESENCE check: a shape-valid 3-segment Bearer token (route-guard.ts:234-237) or any non-empty `sb-*-auth-token` cookie (middleware.ts:161-165) passes; middleware performs NO cryptographic verification (middleware.ts:84-89). | ORPHAN — zero call sites in src/** or mobile/** (sweep 2026-09-15, comment lines stripped). | No test file under src/tests/** imports this route.",
+  "x-draft": {
+    "shard": "contracts",
+    "files": [
+      "src/app/api/entities/route.ts"
+    ],
+    "loc": 57,
+    "methods": [
+      "GET"
+    ],
+    "consumers": [],
+    "writes_audit_row": "n/a",
+    "consumers_verified": [],
+    "auth_class_executed": "authenticated",
+    "locking_tests": []
+  },
+  "programme": {
+    "scope": "estate_other",
+    "phase": "not_scheduled",
+    "why": "Builder/entity data for the lead-gen product. Inventoried only.",
+    "feature": "F92",
+    "build_order": 4192,
+    "leakage": "UNRESEARCHED",
+    "product_questions": "UNRESEARCHED",
+    "review": {
+      "status": "unreviewed"
+    }
+  }
+}

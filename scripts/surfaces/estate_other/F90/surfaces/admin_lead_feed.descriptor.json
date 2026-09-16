@@ -1,0 +1,599 @@
+{
+  "kind": "SURFACE",
+  "status": "exists",
+  "docs": {
+    "purpose": "A testing bench where an operator pretends to be a tradesperson at a given map location and sees exactly which leads the backend would serve them, with the reasoning behind each result exposed. Results can be saved to the watchlist from here. The page also carries two signposts onward - to the standalone watchlist tool and to the detail inspectors.",
+    "data_story": "It reads nothing from the database directly. Every value arrives through 2 contracts: `/api/admin/leads/test-feed`, `/api/admin/leads/watchlist`. Behind those contracts, the data comes from `admin_watchlist`, `coa_applications`, `cost_estimates`, `entities`, `entity_projects`, `lead_trades`, `lead_views`, `neighbourhoods`, `permit_trades`, `permits`, `pg_extension`, `trade_forecasts`, `trades` and `wsib_registry`, and writes land on `admin_watchlist`.",
+    "under_126": "**REBUILD** — it drives writes, so a client decision has to be re-homed on the server before the projection can be honest. It renders through the SEARCH renderer (declared debounce, minimum query length, rate bucket and candidate shape), reading by reference: `/api/admin/leads/test-feed`, `/api/admin/leads/watchlist`. Its `owns.components[]` declares `src/components/admin/TestFeedTool.tsx`."
+  },
+  "evidence": {
+    "files": [
+      "src/app/admin/lead-feed/page.tsx:28",
+      "src/components/admin/TestFeedTool.tsx:1"
+    ],
+    "contracts": [
+      "src/app/api/admin/leads/test-feed/route.ts:42",
+      "src/app/api/admin/leads/watchlist/route.ts:211",
+      "src/app/api/admin/leads/watchlist/route.ts:265"
+    ],
+    "tables": [
+      "src/features/leads/lib/get-lead-feed.ts:700",
+      "src/app/api/admin/leads/watchlist/route.ts:121"
+    ],
+    "gate": [
+      "src/lib/auth/route-guard.ts:162",
+      "src/middleware.ts:95",
+      "src/app/api/admin/leads/test-feed/route.ts:46"
+    ],
+    "states": [
+      "src/components/admin/TestFeedTool.tsx:1",
+      "src/tests/TestFeedTool.ui.test.tsx:21"
+    ],
+    "emits": [
+      "src/components/admin/TestFeedTool.tsx:1"
+    ]
+  },
+  "identity": {
+    "id": "admin_lead_feed",
+    "route": "src/app/admin/lead-feed/page.tsx",
+    "archetype": "SEARCH",
+    "platforms": [
+      "web"
+    ],
+    "owns": {
+      "components": [
+        "src/components/admin/TestFeedTool.tsx"
+      ]
+    },
+    "owner": "UNRESEARCHED",
+    "spec": "docs/specs/02-web-admin/76_lead_feed_health_dashboard.md",
+    "spec_refs": [
+      "docs/specs/02-web-admin/76_lead_feed_health_dashboard.md §2.3",
+      "docs/specs/02-web-admin/76_lead_feed_health_dashboard.md §3.2",
+      "docs/specs/02-web-admin/76_lead_feed_health_dashboard.md §2.6",
+      "docs/specs/02-web-admin/76_lead_feed_health_dashboard.md §3.7"
+    ],
+    "spec_version": "0-draft",
+    "versioning": {
+      "answer": "breaking_allowed",
+      "why": "The test-feed payload is a debugging projection of the consumer feed with an extra _debug key; its only caller is this tool, so a change is one commit.",
+      "evidence": [
+        "src/app/api/admin/leads/test-feed/route.ts:122",
+        "src/components/admin/TestFeedTool.tsx:1"
+      ]
+    },
+    "ref": "S-055"
+  },
+  "inputs": {
+    "answer": "contract",
+    "why": "The tool simulates a geographic consumer query through GET /api/admin/leads/test-feed and additionally reads the watchlist to show which results are already saved.",
+    "evidence": [
+      "src/app/api/admin/leads/test-feed/route.ts:42",
+      "src/app/api/admin/leads/watchlist/route.ts:211"
+    ],
+    "contract_ref": [
+      "/api/admin/leads/test-feed",
+      "/api/admin/leads/watchlist"
+    ],
+    "query_key": [],
+    "field_whitelist": "UNRESEARCHED",
+    "tables": [
+      {
+        "table": "permits",
+        "columns": [
+          "permit_num",
+          "revision_num",
+          "status",
+          "permit_type",
+          "description",
+          "street_num",
+          "street_name",
+          "lifecycle_phase",
+          "lifecycle_stalled",
+          "latitude",
+          "longitude",
+          "location",
+          "neighbourhood_id",
+          "est_const_cost"
+        ],
+        "producing_steps": [
+          "permits",
+          "enrich_permits",
+          "classify_lifecycle_phase",
+          "geocode_permits",
+          "link_neighbourhoods"
+        ],
+        "chain_position": "permits[1]",
+        "owner_spec": "docs/specs/01-pipeline/41_chain_permits.md",
+        "evidence": [
+          "src/features/leads/lib/get-lead-feed.ts:121"
+        ]
+      },
+      {
+        "table": "permit_trades",
+        "columns": [
+          "phase",
+          "attachment_basis",
+          "permit_num",
+          "revision_num",
+          "trade_id",
+          "is_active",
+          "confidence"
+        ],
+        "producing_steps": [
+          "classify_permits",
+          "backfill_realtor_permit_trades"
+        ],
+        "chain_position": "permits[13]",
+        "owner_spec": "docs/specs/01-pipeline/41_chain_permits.md",
+        "evidence": [
+          "src/features/leads/lib/get-lead-feed.ts:191"
+        ]
+      },
+      {
+        "table": "trades",
+        "columns": [
+          "id",
+          "slug"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/00-architecture/01_database_schema.md §3",
+        "evidence": [
+          "src/features/leads/lib/get-lead-feed.ts:245"
+        ]
+      },
+      {
+        "table": "cost_estimates",
+        "columns": [
+          "cost_tier",
+          "estimated_cost"
+        ],
+        "producing_steps": [
+          "compute_cost_estimates",
+          "compute_coa_cost_estimates"
+        ],
+        "chain_position": "permits[17]",
+        "owner_spec": "docs/specs/01-pipeline/41_chain_permits.md",
+        "evidence": [
+          "src/features/leads/lib/get-lead-feed.ts:137"
+        ]
+      },
+      {
+        "table": "neighbourhoods",
+        "columns": [
+          "id",
+          "name"
+        ],
+        "producing_steps": [
+          "neighbourhoods"
+        ],
+        "chain_position": "sources[16]",
+        "owner_spec": "docs/specs/01-pipeline/43_chain_sources.md",
+        "evidence": [
+          "src/features/leads/lib/get-lead-feed.ts:133"
+        ]
+      },
+      {
+        "table": "lead_views",
+        "columns": [
+          "user_id",
+          "lead_key",
+          "saved",
+          "lead_type",
+          "permit_num",
+          "revision_num",
+          "trade_slug",
+          "entity_id"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/00-architecture/114_rls_policy_catalog.md §3.1",
+        "evidence": [
+          "src/features/leads/lib/get-lead-feed.ts:152"
+        ]
+      },
+      {
+        "table": "entities",
+        "columns": [
+          "id",
+          "legal_name",
+          "primary_phone",
+          "primary_email",
+          "website",
+          "photo_url"
+        ],
+        "producing_steps": [
+          "builders",
+          "link_wsib",
+          "enrich_named_builders",
+          "enrich_wsib_builders"
+        ],
+        "chain_position": "permits[5]",
+        "owner_spec": "docs/specs/00-architecture/01_database_schema.md §3",
+        "evidence": [
+          "src/features/leads/lib/get-lead-feed.ts:367"
+        ]
+      },
+      {
+        "table": "entity_projects",
+        "columns": [
+          "entity_id",
+          "role",
+          "permit_num",
+          "revision_num"
+        ],
+        "producing_steps": "UNRESEARCHED",
+        "chain_position": "UNRESEARCHED",
+        "owner_spec": "docs/specs/00-architecture/01_database_schema.md §3",
+        "evidence": [
+          "src/features/leads/lib/get-lead-feed.ts:436"
+        ]
+      },
+      {
+        "table": "wsib_registry",
+        "columns": [
+          "linked_entity_id",
+          "business_size",
+          "is_gta",
+          "last_enriched_at",
+          "website",
+          "primary_phone",
+          "id"
+        ],
+        "producing_steps": [
+          "load_wsib",
+          "link_wsib"
+        ],
+        "chain_position": "sources[18]",
+        "owner_spec": "docs/specs/01-pipeline/43_chain_sources.md",
+        "evidence": [
+          "src/features/leads/lib/get-lead-feed.ts:103"
+        ]
+      },
+      {
+        "table": "coa_applications",
+        "columns": [
+          "application_number",
+          "description",
+          "street_num",
+          "street_name",
+          "estimated_cost",
+          "lifecycle_phase",
+          "lifecycle_stalled",
+          "latitude",
+          "longitude",
+          "modeled_gfa_sqm",
+          "bid_value",
+          "neighbourhood_id"
+        ],
+        "producing_steps": [
+          "coa",
+          "link_coa",
+          "classify_lifecycle_phase",
+          "compute_coa_cost_estimates"
+        ],
+        "chain_position": "coa[1]",
+        "owner_spec": "docs/specs/01-pipeline/42_chain_coa.md",
+        "evidence": [
+          "src/features/leads/lib/get-lead-feed.ts:563"
+        ]
+      },
+      {
+        "table": "trade_forecasts",
+        "columns": [
+          "opportunity_score",
+          "target_window",
+          "predicted_start",
+          "lead_id",
+          "trade_slug"
+        ],
+        "producing_steps": [
+          "compute_trade_forecasts",
+          "compute_opportunity_scores"
+        ],
+        "chain_position": "permits[26]",
+        "owner_spec": "docs/specs/01-pipeline/41_chain_permits.md",
+        "evidence": [
+          "src/features/leads/lib/get-lead-feed.ts:632"
+        ]
+      },
+      {
+        "table": "pg_extension",
+        "columns": [
+          "extname"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/00-architecture/01_database_schema.md §3",
+        "evidence": [
+          "src/lib/admin/test-feed-utils.ts:66"
+        ]
+      },
+      {
+        "table": "admin_watchlist",
+        "columns": [
+          "id",
+          "admin_uid",
+          "lead_key",
+          "saved_at"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/00-architecture/114_rls_policy_catalog.md §3.2",
+        "evidence": [
+          "src/app/api/admin/leads/watchlist/route.ts:121"
+        ]
+      },
+      {
+        "table": "profiles",
+        "columns": [
+          "is_admin"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/00-architecture/114_rls_policy_catalog.md §5",
+        "evidence": [
+          "src/app/api/admin/leads/test-feed/route.ts:46",
+          "src/lib/auth/verify-admin.ts:118"
+        ]
+      }
+    ]
+  },
+  "outputs": {
+    "answer": "contract_only",
+    "why": "Saving a simulated result posts to the watchlist contract and waits for the server; the results list itself is never written.",
+    "evidence": [
+      "src/app/api/admin/leads/watchlist/route.ts:265",
+      "src/app/api/admin/leads/watchlist/route.ts:353"
+    ],
+    "contract_ref": [
+      "/api/admin/leads/watchlist"
+    ],
+    "rollback": "The INSERT is ON CONFLICT DO NOTHING, so a repeated save is a no-op; there is no undo beyond the Flight Center's bulk remove.",
+    "invalidates": [
+      "admin.watchlist"
+    ],
+    "tables": [
+      {
+        "table": "admin_watchlist",
+        "columns": [
+          "admin_uid",
+          "lead_type",
+          "lead_key",
+          "permit_num",
+          "revision_num",
+          "coa_application_number",
+          "address_snapshot"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/00-architecture/114_rls_policy_catalog.md §3.2",
+        "evidence": [
+          "src/app/api/admin/leads/watchlist/route.ts:353"
+        ]
+      }
+    ]
+  },
+  "state": {
+    "answer": "query_cache",
+    "why": "The shell is a server component; the client subtree holds its results through the root provider's TanStack cache and keeps no store of its own.",
+    "evidence": [
+      "src/app/admin/lead-feed/page.tsx:6",
+      "src/app/providers.tsx:45"
+    ],
+    "fields": []
+  },
+  "staleness": {
+    "answer": "query_cache",
+    "why": "It is served from the root persisted TanStack cache, which defaults to a 24h gcTime and an IndexedDB maxAge of the same 24h.",
+    "evidence": [
+      "src/features/leads/api/query-client.ts:42",
+      "src/features/leads/api/query-client.ts:82",
+      "src/app/providers.tsx:37"
+    ],
+    "offline": "cached_projection"
+  },
+  "guards": {
+    "session": {
+      "answer": "admin",
+      "why": "There is no admin Postgres role: classifyRoute sends every /admin/* path down the admin arm, and the real boundary is verifyAdminAuth reading profiles.is_admin on the route. Both contracts call it on their first line, and the watchlist write additionally refuses the x-admin-key credential.",
+      "evidence": [
+        "src/lib/auth/route-guard.ts:162",
+        "src/middleware.ts:95",
+        "src/app/api/admin/leads/test-feed/route.ts:46"
+      ]
+    },
+    "rls_class": {
+      "answer": "B",
+      "why": "The feed itself reads Class-B pipeline tables (permits, coa_applications, cost_estimates, trade_forecasts); the two Class-A tables it touches are lead_views, read as a saved-state join, and admin_watchlist, always scoped to the acting admin_uid.",
+      "evidence": [
+        "docs/specs/00-architecture/114_rls_policy_catalog.md §2",
+        "src/features/leads/lib/get-lead-feed.ts:152"
+      ]
+    },
+    "disclosure": "none",
+    "entitlement": "none",
+    "flag": "none",
+    "permission": "none",
+    "rate_bucket": "none"
+  },
+  "render": {
+    "targets": [
+      "screen"
+    ],
+    "projection": "list",
+    "breakpoints": "desktop_first_md",
+    "export": "none"
+  },
+  "checks": [
+    {
+      "id": "lead_feed_query_bounds",
+      "kind": "query_key_hygiene",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "why": "radius_km and limit are Zod-clamped to MAX_RADIUS_KM / MAX_FEED_LIMIT before the query runs — the only DoS bound this route has, since it carries no rate bucket."
+    },
+    {
+      "id": "lead_feed_empty_state",
+      "kind": "empty_state",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "A geographic query that matches nothing must render the declared empty state rather than a blank panel; the TestFeedTool suite locks it."
+    },
+    {
+      "id": "lead_feed_auth_class",
+      "kind": "auth_class_parity",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "why": "Both contracts verify admin on their first line, so the declared session class is the enforced one."
+    }
+  ],
+  "invariants": "none",
+  "plausibility": "none",
+  "states": [
+    {
+      "name": "loading",
+      "golden": "none"
+    },
+    {
+      "name": "empty",
+      "golden": "none"
+    },
+    {
+      "name": "hit",
+      "golden": "none"
+    },
+    {
+      "name": "error",
+      "golden": "none"
+    }
+  ],
+  "errors": {
+    "answer": "toast",
+    "why": "Save failures raise a sonner toast; a failed simulation renders inline in the results panel. There is no error.tsx sibling on this route.",
+    "evidence": [
+      "src/components/admin/TestFeedTool.tsx:1"
+    ],
+    "classes": [
+      {
+        "class": "400",
+        "ui": "inline validation message on the query form"
+      },
+      {
+        "class": "500",
+        "ui": "inline error in the results panel"
+      }
+    ]
+  },
+  "emits": {
+    "answer": "none",
+    "why": "Nothing it does is countable: TestFeedTool imports no captureEvent, and the test-feed route emits no analytics event either.",
+    "evidence": [
+      "src/components/admin/TestFeedTool.tsx:1",
+      "src/app/api/admin/leads/test-feed/route.ts:42"
+    ],
+    "analytics": [],
+    "ledger_events": [],
+    "breadcrumbs": []
+  },
+  "offers": {
+    "answer": "none",
+    "why": "An internal operator tool renders no sponsored placement; no offers/placements table is reached from any file it owns.",
+    "evidence": [
+      "src/components/admin/TestFeedTool.tsx:1"
+    ]
+  },
+  "metering": {
+    "answer": "none",
+    "why": "This is the admin simulation of a metered consumer feed, and it deliberately writes no usage_events row — the meter belongs to the consumer contract, not to the operator running a probe.",
+    "evidence": [
+      "src/app/api/admin/leads/test-feed/route.ts:42",
+      "src/features/leads/lib/get-lead-feed.ts:1042"
+    ]
+  },
+  "config": {
+    "answer": "none",
+    "why": "It reads no logic_variables row; its bounds are module constants Zod-clamps against.",
+    "evidence": [
+      "src/app/api/admin/leads/test-feed/route.ts:31"
+    ],
+    "logic_variables": [],
+    "retired": [],
+    "debounce_ms": "UNRESEARCHED",
+    "min_query_len": "UNRESEARCHED"
+  },
+  "sharing": {
+    "answer": "shared",
+    "why": "/api/admin/leads/watchlist is also the Flight Center's spine, and the test-feed route runs the same getLeadFeed query the consumer /api/leads/feed contract serves.",
+    "evidence": [
+      "src/app/api/admin/leads/test-feed/route.ts:91",
+      "src/features/leads/lib/get-lead-feed.ts:1042"
+    ],
+    "surfaces": [
+      "admin_flight_center"
+    ]
+  },
+  "a11y": {
+    "touch_target_min_px": "UNRESEARCHED",
+    "labels": "partial",
+    "dark_mode": "none",
+    "reduced_motion": "ignored",
+    "i18n": "none",
+    "safe_area": "none"
+  },
+  "deviations": "none",
+  "limitations": [
+    {
+      "what": "The response carries a fourth top-level key outside the envelope",
+      "measured": "GET /api/admin/leads/test-feed returns { data, error, meta, _debug } rather than the three-key envelope.",
+      "check_id": "lead_feed_auth_class"
+    },
+    {
+      "what": "The measured idle state has no member in the states[] vocabulary",
+      "measured": "Before the first simulated query the tool renders an idle form; the closed set has no idle member, so only loading/empty/hit/error are recorded.",
+      "check_id": "none — vocabulary gap, escalated per Spec 128 §4"
+    },
+    {
+      "what": "A SEARCH surface with no rate bucket",
+      "measured": "The rate limiter in src/lib/auth/rate-limit.ts is wired to the consumer leads routes only; this admin route has none.",
+      "check_id": "lead_feed_query_bounds"
+    }
+  ],
+  "interpretation": "none",
+  "notes": "The page shell is a server component; TestFeedTool is the client subtree. /api/admin/leads/watchlist is used here for both GET (which results are already saved) and POST (save). The 'More tools' card was repointed to /admin/flight-center so it does not dangle on the retired nested redirect. identity.owner is UNRESEARCHED estate-wide: no owner registry exists in the tree, so naming one would be an invention rather than a measurement. a11y.touch_target_min_px is UNRESEARCHED because its vocabulary (UNRESEARCHED or an integer >= 44) has no member for a desktop-only admin page that declares no floor.",
+  "x-draft": {
+    "shard": "admin-existing",
+    "files": [
+      "src/app/admin/lead-feed/page.tsx",
+      "src/components/admin/TestFeedTool.tsx"
+    ],
+    "loc": 595,
+    "measured_states": [
+      "idle",
+      "loading",
+      "empty",
+      "error",
+      "loaded"
+    ],
+    "measured_gate": {
+      "session": "admin",
+      "why": "classifyRoute('/admin/lead-feed') matches the admin-pages arm via `pathname.startsWith('/admin/')` -> 'admin'."
+    }
+  },
+  "programme": {
+    "scope": "estate_other",
+    "phase": "not_scheduled",
+    "why": "Lead generation — the other product. Spec 100 §1 states the parcel tool is \"not coupled to the Lead Feed, Flight Center, or LeadDetail\"; inventoried only.",
+    "feature": "F90",
+    "build_order": 4173,
+    "leakage": "UNRESEARCHED",
+    "product_questions": "UNRESEARCHED",
+    "review": {
+      "status": "unreviewed"
+    }
+  }
+}

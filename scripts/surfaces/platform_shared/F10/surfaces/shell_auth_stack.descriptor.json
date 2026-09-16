@@ -1,0 +1,235 @@
+{
+  "kind": "SURFACE",
+  "status": "exists",
+  "docs": {
+    "purpose": "The wrapper around the three signed-out screens: sign in, sign up, and the email-confirmation landing page. It does nothing but hold them in a stack and hide the default navigation header. Anyone can reach it, signed in or not.",
+    "data_story": "This surface reaches **no API contract at all** — every value it shows is local, passed in as a prop, or read from the device. It holds no client-side store, so there is no local copy of server state to keep in sync. It emits **no analytics event**, so nothing it does is currently countable.",
+    "under_126": "**RE-PROJECT** — it writes nothing and holds no Layer-3 store, so the move is short — the server already assembles the payload and only the rendering is client-side. It renders through the SHELL renderer (declared routing branches, guards and child groups — a shell here is not inert), reading no contract. It owns no component of its own, so its `owns.components[]` is an empty array — a legal answer, written down."
+  },
+  "evidence": {
+    "files": [
+      "mobile/app/(auth)/_layout.tsx:1"
+    ],
+    "contracts": [
+      "mobile/app/(auth)/_layout.tsx:1-6 — a 6-line Stack; no contract, no hook"
+    ],
+    "tables": [
+      "mobile/app/(auth)/_layout.tsx:1-6 — reaches no table"
+    ],
+    "gate": [
+      "mobile/app/(auth)/_layout.tsx:5 — no guard of its own; AuthGate in the root layout owns the boundary",
+      "mobile/app/_layout.tsx:141-231"
+    ],
+    "states": [
+      "mobile/app/(auth)/_layout.tsx:5"
+    ],
+    "emits": [
+      "mobile/app/(auth)/_layout.tsx:1-6 — no track() call"
+    ]
+  },
+  "identity": {
+    "id": "shell_auth_stack",
+    "route": "mobile/app/(auth)/_layout.tsx",
+    "archetype": "SHELL",
+    "platforms": [
+      "mobile"
+    ],
+    "owns": {
+      "components": []
+    },
+    "owner": "unassigned (no CODEOWNERS file and no owner registry exists in the repo — measured 2026-09-15)",
+    "spec": "docs/specs/03-mobile/93_mobile_auth.md",
+    "spec_refs": [
+      "docs/specs/03-mobile/93_mobile_auth.md §5",
+      "docs/specs/03-mobile/99_mobile_state_architecture.md §5.1"
+    ],
+    "spec_version": "0-draft",
+    "versioning": {
+      "answer": "none",
+      "why": "A headerless Stack with no props and no payload.",
+      "evidence": [
+        "mobile/app/(auth)/_layout.tsx:5"
+      ]
+    },
+    "ref": "S-047"
+  },
+  "inputs": {
+    "answer": "none",
+    "why": "The whole file is `<Stack screenOptions={{ headerShown: false }} />` — it takes nothing.",
+    "evidence": [
+      "mobile/app/(auth)/_layout.tsx:1-6"
+    ],
+    "contract_ref": [],
+    "query_key": [],
+    "field_whitelist": [],
+    "tables": []
+  },
+  "outputs": {
+    "answer": "none",
+    "why": "A navigation container writes nothing.",
+    "evidence": [
+      "mobile/app/(auth)/_layout.tsx:1-6"
+    ],
+    "contract_ref": [],
+    "tables": []
+  },
+  "state": {
+    "answer": "none",
+    "why": "It holds no state; expo-router owns the stack.",
+    "evidence": [
+      "mobile/app/(auth)/_layout.tsx:1-6"
+    ],
+    "fields": []
+  },
+  "staleness": {
+    "answer": "none",
+    "why": "It renders no data.",
+    "evidence": [
+      "mobile/app/(auth)/_layout.tsx:1-6"
+    ],
+    "offline": "none"
+  },
+  "guards": {
+    "session": {
+      "answer": "anon",
+      "why": "The auth group is the unauthenticated area; this shell adds no guard of its own — Spec 99 §5.1 gives one router per gate boundary and that router is AuthGate.",
+      "evidence": [
+        "mobile/app/(auth)/_layout.tsx:1-6",
+        "mobile/app/_layout.tsx:141-231"
+      ]
+    },
+    "rls_class": {
+      "answer": "none",
+      "why": "It reaches no table.",
+      "evidence": [
+        "mobile/app/(auth)/_layout.tsx:1-6"
+      ]
+    },
+    "disclosure": "none",
+    "entitlement": "none",
+    "flag": "none",
+    "permission": "none",
+    "rate_bucket": "none"
+  },
+  "render": {
+    "targets": [
+      "screen"
+    ],
+    "projection": "none",
+    "breakpoints": "mobile_first",
+    "export": "none",
+    "routing": "UNRESEARCHED"
+  },
+  "checks": [
+    {
+      "id": "authstack_no_second_router",
+      "kind": "auth_class_parity",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "why": "Spec 99 §5.1 — one router per gate boundary. This shell deliberately has no routing effect; the onboarding shell's comment records what happened the last time a group layout ran its own router."
+    }
+  ],
+  "invariants": "none",
+  "plausibility": "none",
+  "states": [
+    {
+      "name": "static",
+      "golden": "none"
+    }
+  ],
+  "errors": {
+    "answer": "none",
+    "why": "No async work, no failure path.",
+    "evidence": [
+      "mobile/app/(auth)/_layout.tsx:1-6"
+    ]
+  },
+  "emits": {
+    "answer": "none",
+    "why": "Nothing to emit — it renders a Stack.",
+    "evidence": [
+      "mobile/app/(auth)/_layout.tsx:1-6"
+    ],
+    "analytics": [],
+    "ledger_events": [],
+    "breadcrumbs": []
+  },
+  "offers": {
+    "answer": "none",
+    "why": "A navigation container renders no sponsored content.",
+    "evidence": [
+      "mobile/app/(auth)/_layout.tsx:1-6"
+    ]
+  },
+  "metering": {
+    "answer": "none",
+    "why": "Nothing here is counted: the Spec 126 §7 usage ledger table does not exist (grep for usage_events in the introspected drizzle schema returns 0 hits), and the only quota-shaped counter, user_profiles.lead_views_count, is incremented solely by POST /api/leads/view, which has no mobile caller.",
+    "evidence": [
+      "src/lib/db/generated/schema.ts — no usage_events table (grep, 2026-09-15)",
+      "src/app/api/leads/view/route.ts:110",
+      "src/features/leads/api/useLeadView.ts:25 — imported only by src/tests/useLeadView.logic.test.tsx"
+    ]
+  },
+  "config": {
+    "answer": "none",
+    "why": "The surface consumes no registered logic variable: the only server-side tunable in this path, user_profiles.radius_cap_km, is a per-user admin column, not a logic_variables row.",
+    "evidence": [
+      "src/lib/userProfile.schema.ts:40",
+      "src/app/api/user-profile/route.ts:328",
+      "docs/reference/logic-variables-registry.md — no radius_cap_km entry"
+    ],
+    "logic_variables": [],
+    "retired": []
+  },
+  "sharing": {
+    "answer": "none",
+    "why": "It renders no contract.",
+    "evidence": [
+      "mobile/app/(auth)/_layout.tsx:1-6"
+    ],
+    "surfaces": []
+  },
+  "a11y": {
+    "touch_target_min_px": 44,
+    "labels": "none",
+    "dark_mode": "none",
+    "reduced_motion": "none",
+    "i18n": "none",
+    "safe_area": "none"
+  },
+  "deviations": "none",
+  "limitations": "none",
+  "interpretation": "none",
+  "notes": "The smallest surface in the census at 6 lines. Its value is what it does NOT do: adding a router here is the regression the onboarding shell documents.",
+  "x-draft": {
+    "shard": "mobile-product",
+    "files": [
+      "mobile/app/(auth)/_layout.tsx"
+    ],
+    "loc": 6,
+    "call_idiom": "none",
+    "stores": [],
+    "measured_states": [
+      "loaded"
+    ],
+    "measured_gate": {
+      "session": "none",
+      "entitlement": "none",
+      "flag": "none",
+      "permission": "none"
+    }
+  },
+  "programme": {
+    "scope": "platform_shared",
+    "phase": "UNRESEARCHED",
+    "why": "Authentication. It talks to the Supabase Auth SDK and gates entry to both products; no product owns it.",
+    "feature": "F10",
+    "build_order": 3103,
+    "leakage": "none",
+    "product_questions": "none",
+    "review": {
+      "status": "unreviewed"
+    }
+  }
+}

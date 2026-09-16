@@ -1,0 +1,450 @@
+{
+  "kind": "SURFACE",
+  "status": "exists",
+  "docs": {
+    "purpose": "Where an administrator turns on two-factor sign-in for their own account. It shows whether a authenticator app is already registered, walks through adding one by displaying a setup code to scan and asking for the six digits back to prove it worked, and then shows a set of one-time backup codes. The setup code and the backup codes are shown exactly once - leaving the screen loses them for good. It also allows removing a registered device behind a confirmation.",
+    "data_story": "It reads nothing from the database directly. Every value arrives through 2 contracts: `/api/admin/security/mfa`, `/api/admin/security/mfa/verify`. Behind those contracts, the data comes from `admin_backup_codes`, and writes land on `admin_audit_log` and `admin_backup_codes`.",
+    "under_126": "**REBUILD** — it drives writes, so a client decision has to be re-homed on the server before the projection can be honest. It renders through the FORM renderer (every field carrying its Spec 99 §3 ownership row as data, with a declared rollback), reading by reference: `/api/admin/security/mfa`, `/api/admin/security/mfa/verify`. It owns no component of its own, so its `owns.components[]` is an empty array — a legal answer, written down."
+  },
+  "evidence": {
+    "files": [
+      "src/app/admin/security/page.tsx:1",
+      "src/features/admin-security/api/useAdminSecurity.ts:64"
+    ],
+    "contracts": [
+      "src/app/api/admin/security/mfa/route.ts:50",
+      "src/app/api/admin/security/mfa/route.ts:76",
+      "src/app/api/admin/security/mfa/route.ts:116",
+      "src/app/api/admin/security/mfa/verify/route.ts:44"
+    ],
+    "tables": [
+      "src/lib/admin/backup-codes.ts:95",
+      "src/lib/admin/backup-codes.ts:89",
+      "src/lib/admin/backup-codes.ts:77",
+      "src/lib/admin/admin-audit.ts:72"
+    ],
+    "gate": [
+      "src/lib/auth/route-guard.ts:162",
+      "src/middleware.ts:95",
+      "src/app/api/admin/security/mfa/route.ts:51",
+      "src/app/api/admin/security/mfa/route.ts:79",
+      "src/lib/auth/verify-admin.ts:143"
+    ],
+    "states": [
+      "src/app/admin/security/page.tsx:1",
+      "src/tests/admin-security.ui.test.tsx:36"
+    ],
+    "emits": [
+      "src/features/admin-security/api/useAdminSecurity.ts:74",
+      "src/features/admin-security/api/useAdminSecurity.ts:96",
+      "src/features/admin-security/api/useAdminSecurity.ts:122"
+    ]
+  },
+  "identity": {
+    "id": "admin_security",
+    "route": "src/app/admin/security/page.tsx",
+    "archetype": "FORM",
+    "platforms": [
+      "web"
+    ],
+    "owns": {
+      "components": []
+    },
+    "owner": "UNRESEARCHED",
+    "spec": "docs/specs/00-architecture/13_authentication.md",
+    "spec_refs": [
+      "docs/specs/00-architecture/13_authentication.md §3.6",
+      "docs/specs/00-architecture/13_authentication.md §3.7",
+      "docs/specs/00-architecture/13_authentication.md §4",
+      "docs/specs/00-architecture/13_authentication.md §4b"
+    ],
+    "spec_version": "0-draft",
+    "versioning": {
+      "answer": "frozen",
+      "why": "The enroll/verify/unenroll sequence is pinned by the GoTrue factor lifecycle on one side and the ten-row admin_backup_codes contract on the other; a shape change here forces a re-enrolment of every admin, so it is not a one-commit change.",
+      "evidence": [
+        "src/app/api/admin/security/mfa/route.ts:82",
+        "src/lib/admin/backup-codes.ts:73"
+      ]
+    },
+    "ref": "S-024"
+  },
+  "inputs": {
+    "answer": "contract",
+    "why": "Factor status, enrolment and verification all arrive through the two MFA contracts; the page reads no table and holds no server data of its own.",
+    "evidence": [
+      "src/features/admin-security/api/useAdminSecurity.ts:64",
+      "src/app/api/admin/security/mfa/route.ts:50"
+    ],
+    "contract_ref": [
+      "/api/admin/security/mfa",
+      "/api/admin/security/mfa/verify"
+    ],
+    "query_key": [
+      "admin",
+      "security",
+      "mfa"
+    ],
+    "field_whitelist": [
+      "id",
+      "friendly_name",
+      "status",
+      "created_at",
+      "backup_codes_remaining"
+    ],
+    "tables": [
+      {
+        "table": "admin_backup_codes",
+        "columns": [
+          "user_id",
+          "code_hash",
+          "code_salt",
+          "used_at"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/00-architecture/13_authentication.md §3.6",
+        "evidence": [
+          "src/lib/admin/backup-codes.ts:95",
+          "src/lib/admin/backup-codes.ts:77"
+        ]
+      },
+      {
+        "table": "profiles",
+        "columns": [
+          "is_admin"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/00-architecture/114_rls_policy_catalog.md §5",
+        "evidence": [
+          "src/app/api/admin/security/mfa/route.ts:51",
+          "src/lib/auth/verify-admin.ts:118"
+        ]
+      }
+    ]
+  },
+  "outputs": {
+    "answer": "contract_only",
+    "why": "Every step is a server round-trip that must succeed before the UI advances — GoTrue issues the factor, the verify call upgrades the session to aal2, and the ten backup codes are written in one transaction. Nothing flips optimistically, because a wrong guess here locks an operator out.",
+    "evidence": [
+      "src/app/api/admin/security/mfa/route.ts:82",
+      "src/app/api/admin/security/mfa/verify/route.ts:72",
+      "src/lib/admin/backup-codes.ts:73"
+    ],
+    "contract_ref": [
+      "/api/admin/security/mfa",
+      "/api/admin/security/mfa/verify"
+    ],
+    "rollback": "DELETE /api/admin/security/mfa unenrols the factor and deletes the backup codes, writing an mfa_unenrolled audit row. There is no rollback for the one-time material itself: the QR secret and the ten codes exist only in component state and are gone irrecoverably on unmount.",
+    "invalidates": [
+      "admin.security.mfa"
+    ],
+    "tables": [
+      {
+        "table": "admin_backup_codes",
+        "columns": [
+          "user_id",
+          "code_hash",
+          "code_salt"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/00-architecture/13_authentication.md §3.6",
+        "evidence": [
+          "src/lib/admin/backup-codes.ts:73",
+          "src/lib/admin/backup-codes.ts:77",
+          "src/lib/admin/backup-codes.ts:89"
+        ]
+      },
+      {
+        "table": "admin_audit_log",
+        "columns": [
+          "admin_uid",
+          "action",
+          "target_uid",
+          "old_value",
+          "new_value",
+          "reason"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/00-architecture/114_rls_policy_catalog.md §3.2",
+        "evidence": [
+          "src/lib/admin/admin-audit.ts:72",
+          "src/app/api/admin/security/mfa/verify/route.ts:89",
+          "src/app/api/admin/security/mfa/route.ts:138"
+        ]
+      }
+    ]
+  },
+  "state": {
+    "answer": "query_cache",
+    "why": "Factor status is a TanStack query at 10s staleTime; the one-time enrolment material is deliberately NOT in the cache — it lives in component state so it cannot be rehydrated from IndexedDB after the operator leaves the page.",
+    "evidence": [
+      "src/features/admin-security/api/useAdminSecurity.ts:64",
+      "src/app/admin/security/page.tsx:1"
+    ],
+    "fields": [
+      {
+        "name": "mfa_factors",
+        "owner_layer": "2_query_cache",
+        "canonical_writer": "GET /api/admin/security/mfa",
+        "authorized_readers": [
+          "src/app/admin/security/page.tsx"
+        ],
+        "bridge": "none",
+        "persistence": "none",
+        "signout_reset": true
+      },
+      {
+        "name": "enrolment_qr_secret",
+        "owner_layer": "1_server",
+        "canonical_writer": "POST /api/admin/security/mfa (GoTrue mfa.enroll)",
+        "authorized_readers": [
+          "src/app/admin/security/page.tsx"
+        ],
+        "bridge": "none",
+        "persistence": "none",
+        "signout_reset": true
+      },
+      {
+        "name": "backup_codes",
+        "owner_layer": "1_server",
+        "canonical_writer": "POST /api/admin/security/mfa/verify (replaceBackupCodes)",
+        "authorized_readers": [
+          "src/app/admin/security/page.tsx"
+        ],
+        "bridge": "none",
+        "persistence": "none",
+        "signout_reset": true
+      }
+    ]
+  },
+  "staleness": {
+    "answer": "query_cache",
+    "why": "10s staleTime — short, because the page must reflect an enrolment that just happened in the same session rather than a cached \"not enrolled\".",
+    "evidence": [
+      "src/features/admin-security/api/useAdminSecurity.ts:64"
+    ],
+    "stale_time_ms": 10000,
+    "offline": "blocked"
+  },
+  "guards": {
+    "session": {
+      "answer": "admin",
+      "why": "There is no admin Postgres role: classifyRoute sends every /admin/* path down the admin arm, and the real boundary is verifyAdminAuth reading profiles.is_admin on the route. All four handlers verify AND additionally require authMethod === \"session\", so neither the CI token nor the break-glass key can enrol, verify or unenrol a factor. verifyAdminAuth also becomes an aal2 check here once ADMIN_MFA_ENFORCED is true.",
+      "evidence": [
+        "src/lib/auth/route-guard.ts:162",
+        "src/middleware.ts:95",
+        "src/app/api/admin/security/mfa/route.ts:51",
+        "src/app/api/admin/security/mfa/route.ts:79"
+      ]
+    },
+    "rls_class": {
+      "answer": "A",
+      "why": "admin_audit_log is one of the two admin-identity Class-A tables (admin_uid-keyed, is_admin-gated, read-only); admin_backup_codes is outside the named ten, so Class B by the §2 default.",
+      "evidence": [
+        "docs/specs/00-architecture/114_rls_policy_catalog.md:148",
+        "docs/specs/00-architecture/114_rls_policy_catalog.md §2"
+      ]
+    },
+    "disclosure": "none",
+    "entitlement": "none",
+    "flag": "ADMIN_MFA_ENFORCED — when true, verifyAdminAuth additionally requires aal2 or a consumed backup code on every admin route",
+    "permission": "none",
+    "rate_bucket": "none"
+  },
+  "render": {
+    "targets": [
+      "screen"
+    ],
+    "projection": "detail",
+    "breakpoints": "desktop_first_md",
+    "export": "none"
+  },
+  "checks": [
+    {
+      "id": "security_session_only_credential",
+      "kind": "auth_class_parity",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "why": "All four handlers refuse any credential that is not a real session, so a CI token cannot enrol or unenrol a factor — a pre-request gate, not an assertion after the fact."
+    },
+    {
+      "id": "security_enrol_audited",
+      "kind": "ledger_row_present",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "Completing enrolment writes mfa_enrolled and unenrolling writes mfa_unenrolled to admin_audit_log; this is one of only two surfaces in the shard whose mutations land an audit row at all."
+    },
+    {
+      "id": "security_one_time_material_not_cached",
+      "kind": "disclosure",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "why": "The QR secret and the ten backup codes must never enter the query cache, because the root provider persists that cache to IndexedDB for 24 hours."
+    },
+    {
+      "id": "security_error_state",
+      "kind": "error_state",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "A wrong TOTP code must render inline and leave the factor pending rather than dropping the operator back to an unenrolled screen; the admin-security UI suite locks the sequence."
+    }
+  ],
+  "invariants": "none",
+  "plausibility": "none",
+  "states": [
+    {
+      "name": "loading",
+      "golden": "none"
+    },
+    {
+      "name": "hit",
+      "golden": "none"
+    },
+    {
+      "name": "error",
+      "golden": "none"
+    }
+  ],
+  "errors": {
+    "answer": "toast",
+    "why": "The mutation hooks raise sonner toasts on failure and the page keeps the step it was on; a failed status read renders inline instead.",
+    "evidence": [
+      "src/app/admin/security/page.tsx:1",
+      "src/features/admin-security/api/useAdminSecurity.ts:74"
+    ],
+    "classes": [
+      {
+        "class": "400",
+        "ui": "toast — wrong or expired TOTP code; the factor stays pending"
+      },
+      {
+        "class": "403",
+        "ui": "toast — a non-session credential is refused"
+      }
+    ]
+  },
+  "emits": {
+    "answer": "events",
+    "why": "Three admin_action_performed events fire from the hooks (enroll started, verify attempted, unenroll) and two of the three server actions additionally write an admin_audit_log row.",
+    "evidence": [
+      "src/features/admin-security/api/useAdminSecurity.ts:74",
+      "src/features/admin-security/api/useAdminSecurity.ts:96",
+      "src/features/admin-security/api/useAdminSecurity.ts:122"
+    ],
+    "analytics": [
+      "admin_action_performed"
+    ],
+    "ledger_events": [],
+    "breadcrumbs": []
+  },
+  "offers": {
+    "answer": "none",
+    "why": "An internal operator tool renders no sponsored placement; no offers/placements table is reached from any file it owns.",
+    "evidence": [
+      "src/app/admin/security/page.tsx:1"
+    ]
+  },
+  "metering": {
+    "answer": "none",
+    "why": "Nothing here is billable or quota-bearing: no usage_events / ledger write is reached from this surface or its contracts.",
+    "evidence": [
+      "src/app/api/admin/security/mfa/route.ts:50"
+    ]
+  },
+  "config": {
+    "answer": "none",
+    "why": "Its one switch, ADMIN_MFA_ENFORCED, is an environment variable rather than a registered logic variable, so there is no bounded tunable to declare.",
+    "evidence": [
+      "src/lib/auth/verify-admin.ts:143"
+    ],
+    "logic_variables": [],
+    "retired": []
+  },
+  "sharing": {
+    "answer": "sole",
+    "why": "Both MFA contracts have exactly one caller — this page's hooks in src/features/admin-security.",
+    "evidence": [
+      "src/features/admin-security/api/useAdminSecurity.ts:64"
+    ],
+    "surfaces": []
+  },
+  "a11y": {
+    "touch_target_min_px": "UNRESEARCHED",
+    "labels": "partial",
+    "dark_mode": "none",
+    "reduced_motion": "none",
+    "i18n": "none",
+    "safe_area": "none"
+  },
+  "deviations": "none",
+  "limitations": [
+    {
+      "what": "POST /api/admin/security/mfa (enroll) writes no audit row",
+      "measured": "Only the paired verify POST writes mfa_enrolled; starting an enrolment leaves no admin_audit_log trace of its own.",
+      "check_id": "security_enrol_audited"
+    },
+    {
+      "what": "The audit write is not transactional with the act it records",
+      "measured": "Both writeAdminAudit calls sit in a try/catch whose failure is logged and swallowed, so an unenroll can succeed with no audit row.",
+      "check_id": "security_enrol_audited"
+    },
+    {
+      "what": "Responses carrying one-time secrets set no Cache-Control: no-store",
+      "measured": "The enroll response returns the TOTP secret and URI and the verify response returns ten plaintext backup codes; neither sets a no-store header.",
+      "check_id": "security_one_time_material_not_cached"
+    },
+    {
+      "what": "Five of the eight measured UI states have no member in the states[] vocabulary",
+      "measured": "not_enrolled, enrolling, verifying, backup_codes_shown and confirm_unenroll are real render branches; the closed set offers none of them.",
+      "check_id": "none — vocabulary gap, escalated per Spec 128 §4"
+    },
+    {
+      "what": "touch_target_min_px has no legal answer for a desktop-only admin page",
+      "measured": "The schema allows only UNRESEARCHED or an integer >= 44, and nothing in this surface declares a 44px floor (grep for min-h-[44 / h-11 over its owned files returns nothing).",
+      "check_id": "none — vocabulary gap, escalated per Spec 128 §4"
+    }
+  ],
+  "interpretation": "none",
+  "notes": "Spec from the page's own SPEC LINK (13_authentication.md Sec 3.6, the MFA gate); the file appears in no system-map row. /api/admin/security/mfa carries GET (status), POST (enroll) and DELETE (unenroll, factor_id in the query string); /api/admin/security/mfa/verify is the POST confirm. One-time material is held only in local component state, never in the query cache - unmount discards it irrecoverably. The hooks live in src/features/admin-security/, outside src/components/, so excluded from files per the stated rule. identity.owner is UNRESEARCHED estate-wide: no owner registry exists in the tree, so naming one would be an invention rather than a measurement. a11y.touch_target_min_px is UNRESEARCHED because its vocabulary (UNRESEARCHED or an integer >= 44) has no member for a desktop-only admin page that declares no floor.",
+  "x-draft": {
+    "shard": "admin-existing",
+    "files": [
+      "src/app/admin/security/page.tsx"
+    ],
+    "loc": 293,
+    "measured_states": [
+      "loading",
+      "error",
+      "not_enrolled",
+      "enrolling",
+      "verifying",
+      "backup_codes_shown",
+      "enrolled",
+      "confirm_unenroll"
+    ],
+    "measured_gate": {
+      "session": "admin",
+      "why": "classifyRoute('/admin/security') matches the admin-pages arm via `pathname.startsWith('/admin/')` -> 'admin'. The page's own header comment additionally states each API call behind it runs verifyAdminAuth plus a session-mode check."
+    }
+  },
+  "programme": {
+    "scope": "platform_shared",
+    "phase": "UNRESEARCHED",
+    "why": "An admin surface that operates the PLATFORM (users, entitlements, security, tunables, pipeline health) rather than either product specifically.",
+    "feature": "F16",
+    "build_order": 3163,
+    "leakage": "none",
+    "product_questions": "none",
+    "review": {
+      "status": "unreviewed"
+    }
+  }
+}

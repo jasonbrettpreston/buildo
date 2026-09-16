@@ -1,0 +1,240 @@
+{
+  "kind": "SURFACE",
+  "status": "exists",
+  "docs": {
+    "purpose": "Where the payment provider sends the user if they back out of paying. It is a single reassuring message: no charge was made, and to try again they should return to the mobile app and tap the subscribe link. It fetches nothing and changes nothing.",
+    "data_story": "This surface reaches **no API contract at all** — every value it shows is local, passed in as a prop, or read from the device.",
+    "under_126": "**RE-PROJECT** — it writes nothing and holds no Layer-3 store, so the move is short — the server already assembles the payload and only the rendering is client-side. It renders through the STATIC renderer (content source and SEO, or a declared redirect alone), reading no contract. It owns no component of its own, so its `owns.components[]` is an empty array — a legal answer, written down."
+  },
+  "evidence": {
+    "files": [
+      "src/app/subscribe/cancel/page.tsx:1"
+    ],
+    "contracts": [
+      "none — no /api/ string and no fetch in src/app/subscribe/cancel/page.tsx"
+    ],
+    "tables": [
+      "none — no SQL, no db client import"
+    ],
+    "gate": [
+      "src/lib/auth/route-guard.ts:53",
+      "src/tests/subscribe-routes.logic.test.ts:31-35"
+    ],
+    "states": [
+      "src/app/subscribe/cancel/page.tsx:9-20 — one unconditional return"
+    ],
+    "emits": [
+      "none — no captureEvent import in src/app/subscribe/cancel/page.tsx"
+    ]
+  },
+  "identity": {
+    "id": "web_subscribe_cancel",
+    "route": "src/app/subscribe/cancel/page.tsx",
+    "archetype": "STATIC",
+    "platforms": [
+      "web"
+    ],
+    "owns": {
+      "components": []
+    },
+    "owner": "web",
+    "spec": "docs/specs/02-web-admin/20_stripe_web_checkout.md",
+    "spec_refs": [
+      "docs/specs/02-web-admin/20_stripe_web_checkout.md §3.2",
+      "docs/specs/02-web-admin/20_stripe_web_checkout.md §3.3"
+    ],
+    "spec_version": "0-draft",
+    "versioning": {
+      "answer": "none",
+      "why": "Twenty-two lines of static copy that nothing consumes and nothing parses.",
+      "evidence": [
+        "src/app/subscribe/cancel/page.tsx:8-21"
+      ]
+    },
+    "ref": "S-052"
+  },
+  "inputs": {
+    "answer": "none",
+    "why": "No fetch, no props, no search params — it is a server component with no interactivity at all, by the file's own design note and by the absence of any 'use client' directive.",
+    "evidence": [
+      "src/app/subscribe/cancel/page.tsx:1-22"
+    ],
+    "contract_ref": [],
+    "query_key": [],
+    "field_whitelist": [],
+    "tables": []
+  },
+  "outputs": {
+    "answer": "none",
+    "why": "The user backed out on the Stripe-hosted page: no charge was made and no state changed anywhere, here or server-side.",
+    "evidence": [
+      "src/app/subscribe/cancel/page.tsx:3-5"
+    ],
+    "contract_ref": [],
+    "tables": []
+  },
+  "state": {
+    "answer": "none",
+    "why": "No hook of any kind — it is a plain server component returning one tree.",
+    "evidence": [
+      "src/app/subscribe/cancel/page.tsx:8-21"
+    ],
+    "fields": []
+  },
+  "staleness": {
+    "answer": "static",
+    "why": "The copy changes only on redeploy; there is no server value on the page.",
+    "evidence": [
+      "src/app/subscribe/cancel/page.tsx:8-21"
+    ],
+    "offline": "none"
+  },
+  "guards": {
+    "session": {
+      "answer": "anon",
+      "why": "/subscribe/cancel is in PUBLIC_PATHS as a Stripe redirect target for a sessionless visitor, and the lock pins it public.",
+      "evidence": [
+        "src/lib/auth/route-guard.ts:53",
+        "src/tests/subscribe-routes.logic.test.ts:31-35"
+      ]
+    },
+    "rls_class": {
+      "answer": "none",
+      "why": "It reaches no table.",
+      "evidence": [
+        "src/app/subscribe/cancel/page.tsx:1-22"
+      ]
+    },
+    "disclosure": "none",
+    "entitlement": "none",
+    "flag": "none",
+    "permission": "none",
+    "rate_bucket": "none"
+  },
+  "render": {
+    "targets": [
+      "screen"
+    ],
+    "projection": "none",
+    "breakpoints": "mobile_first",
+    "export": "none"
+  },
+  "checks": [
+    {
+      "id": "web_subscribe_cancel_writes_nothing",
+      "kind": "ledger_row_present",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "why": "Purely descriptive and deliberately so: the page's whole contract is that abandoning checkout changes nothing, so the assertion worth keeping is that no row of any kind appears — there is no threshold to bound."
+    },
+    {
+      "id": "web_subscribe_cancel_is_reachable_anon",
+      "kind": "auth_class_parity",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "Stripe redirects here without a session; if the fail-closed default ever reclaims this path the visitor is bounced to /login from a payment flow they just abandoned."
+    }
+  ],
+  "invariants": "none",
+  "plausibility": "none",
+  "states": [
+    {
+      "name": "static",
+      "golden": "none"
+    }
+  ],
+  "errors": {
+    "answer": "none",
+    "why": "No fetch and no branch — no failure is reachable.",
+    "evidence": [
+      "src/app/subscribe/cancel/page.tsx:8-21"
+    ]
+  },
+  "emits": {
+    "answer": "none",
+    "why": "Nothing is emitted, so an abandoned checkout leaves no trace on the web side at all.",
+    "evidence": [
+      "src/app/subscribe/cancel/page.tsx:1-22"
+    ],
+    "analytics": [],
+    "ledger_events": [],
+    "breadcrumbs": []
+  },
+  "offers": {
+    "answer": "none",
+    "why": "No placement — the page has no inventory and no slot.",
+    "evidence": [
+      "src/app/subscribe/cancel/page.tsx:8-21"
+    ]
+  },
+  "metering": {
+    "answer": "none",
+    "why": "Nothing is counted.",
+    "evidence": [
+      "src/app/subscribe/cancel/page.tsx:1-22"
+    ]
+  },
+  "config": {
+    "answer": "none",
+    "why": "No tunable of any kind.",
+    "evidence": [
+      "src/app/subscribe/cancel/page.tsx:1-22"
+    ],
+    "logic_variables": [],
+    "retired": []
+  },
+  "sharing": {
+    "answer": "none",
+    "why": "It renders no contract.",
+    "evidence": [
+      "src/app/subscribe/cancel/page.tsx:1-22"
+    ],
+    "surfaces": []
+  },
+  "a11y": {
+    "touch_target_min_px": "UNRESEARCHED",
+    "labels": "none",
+    "dark_mode": "none",
+    "reduced_motion": "none",
+    "i18n": "none",
+    "safe_area": "none"
+  },
+  "deviations": "none",
+  "limitations": [
+    {
+      "what": "The page names a product that is being renamed.",
+      "measured": "src/app/subscribe/cancel/page.tsx:16-17 says \"return to the Buildo app\"; src/app/layout.tsx:6 and src/app/login/page.tsx:34 both say MaxBLD (Spec 117).",
+      "check_id": "web_subscribe_cancel_writes_nothing"
+    }
+  ],
+  "interpretation": "none",
+  "notes": "Server component, no interactivity, single unconditional render - hence states=['static'] rather than an empty array. Copy still says 'the Buildo app', pre-dating the Spec 117 MaxBLD rename. MEASURED 2026-09-15: the only web-product page with no 'use client' directive — a genuine server component (the file says so at :5 and the absence of the directive confirms it). a11y.labels is `none` rather than `complete` because the page has no interactive element and no label; touch_target_min_px stays UNRESEARCHED for the same reason the other rows do — the vocabulary has no value for \"no interactive target\".",
+  "x-draft": {
+    "shard": "web-product",
+    "files": [
+      "src/app/subscribe/cancel/page.tsx"
+    ],
+    "loc": 22,
+    "measured_states": [
+      "static"
+    ],
+    "measured_gate": {
+      "session": "public",
+      "why": "classifyRoute('/subscribe/cancel') matches the PUBLIC_PATHS exact entry '/subscribe/cancel' -> 'public'; every earlier arm (files, /_next/, /api/auth/, exact-public-API, /api/admin/, /admin, authenticated APIs, PUBLIC_PREFIXES) fails to match."
+    }
+  },
+  "programme": {
+    "scope": "platform_shared",
+    "phase": "UNRESEARCHED",
+    "why": "The subscription and Stripe hand-off, which resolves an entitlement per PRODUCT — so it serves both and belongs to neither.",
+    "feature": "F12",
+    "build_order": 3123,
+    "leakage": "none",
+    "product_questions": "none",
+    "review": {
+      "status": "unreviewed"
+    }
+  }
+}

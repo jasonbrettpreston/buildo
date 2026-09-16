@@ -1,0 +1,762 @@
+{
+  "kind": "CONTRACT",
+  "status": "exists",
+  "docs": {
+    "purpose": "Returns a trade contractor's personalised, ranked, paginated feed of nearby work opportunities — construction permits, builder profiles and, when enabled, committee-of-adjustment applications — scored on proximity, timing, project value and opportunity, so the contractor can find work worth bidding on near them.",
+    "data_story": "It reads 12 tables — `permits`, `permit_trades`, `trades`, `cost_estimates`, `neighbourhoods`, `lead_views`, `wsib_registry`, `entities`, `entity_projects`, `coa_applications`, `trade_forecasts` and `user_profiles` and writes nothing. Its response shape is **unmeasured** as a pick-by-name whitelist — it passes rows through, spreads a row into a computed object, or assembles the payload dynamically, so there is no single list naming what leaves the server. It is called from 1 place: `mobile/src/hooks/useLeadFeed.ts`.",
+    "under_126": "Becomes a **CONTRACT descriptor** of archetype `QUERY`. It declares its `database.reads[]` with named columns, its response projection as an explicit whitelist, its auth class, its rate bucket and its staleness — and `outputs.writes` is forced to `\"none\"`. Its `consumers[]` becomes the edge list of the fan-out graph — the join nothing in this estate holds today."
+  },
+  "evidence": {
+    "files": [
+      "src/app/api/leads/feed/route.ts:1"
+    ],
+    "contracts": [
+      "src/app/api/leads/feed/route.ts:39 (GET export)",
+      "src/lib/api/with-api-envelope.ts:27-52"
+    ],
+    "tables": [
+      "src/features/leads/lib/get-lead-feed.ts:121-145",
+      "src/features/leads/lib/get-lead-feed.ts:177-187",
+      "src/features/leads/lib/get-lead-feed.ts:243-252",
+      "src/features/leads/lib/get-lead-feed.ts:281-286",
+      "src/features/leads/lib/get-lead-feed.ts:351-358",
+      "src/features/leads/lib/get-lead-feed.ts:437-439",
+      "src/features/leads/lib/get-lead-feed.ts:483-485",
+      "src/features/leads/lib/get-lead-feed.ts:191-196",
+      "src/features/leads/lib/get-lead-feed.ts:242-244",
+      "src/features/leads/lib/get-lead-feed.ts:282-283",
+      "src/features/leads/lib/get-lead-feed.ts:440-444",
+      "src/features/leads/lib/get-lead-feed.ts:245",
+      "src/features/leads/lib/get-lead-feed.ts:281",
+      "src/features/leads/lib/get-lead-feed.ts:445"
+    ],
+    "gate": [
+      "src/lib/auth/route-guard.ts — AUTHENTICATED_API_ROUTES prefix — '/api/leads'",
+      "src/lib/auth/route-guard.ts:150-201 — classifyRoute executed 2026-09-15 with the concrete path → \"authenticated\"",
+      "in-handler: getCurrentUserContext(request, pool) at src/app/api/leads/feed/route.ts:50; null -> 401 at :53 (Bearer or Supabase cookie via getClaimsUid, src/lib/auth/get-user-context.ts:68)."
+    ],
+    "states": [
+      "hit: src/app/api/leads/feed/route.ts:190",
+      "empty: src/features/leads/lib/get-lead-feed.ts:1073-1080 (data: [] with count 0 and next_cursor null — still a 200 ok envelope)",
+      "partial: src/features/leads/lib/get-lead-feed.ts:1046-1048 (mapRow-dropped rows are filtered out of `data` while next_cursor is still computed from the raw row count at :1060)",
+      "degraded: src/app/api/leads/feed/route.ts:146 (LEAD_FEED_DISABLE_COA defaults to ON, so the CoA arm is absent from the SQL — get-lead-feed.ts:1041); also src/lib/auth/rate-limit.ts:107-116 (production with no Upstash silently degrades to a per-process limiter)",
+      "rate_limited: src/app/api/leads/feed/route.ts:110",
+      "unauthorized: src/app/api/leads/feed/route.ts:53",
+      "error: src/app/api/leads/feed/route.ts:195 (500); :63 (400 VALIDATION_FAILED); :73 (403); :96 (503 DEV_ENV_MISSING_POSTGIS)"
+    ],
+    "emits": [
+      "src/app/api/leads/feed/route.ts — read in full; no Sentry breadcrumb, no analytics capture and no ledger INSERT"
+    ]
+  },
+  "identity": {
+    "id": "contract_leads_feed",
+    "route": "/api/leads/feed",
+    "archetype": "QUERY",
+    "platforms": [
+      "web",
+      "mobile"
+    ],
+    "owns": {
+      "components": []
+    },
+    "owner": "Cross-Domain (CLAUDE.md §Domain Rules: an API route consumed by the Expo app)",
+    "spec": "docs/specs/03-mobile/71_lead_feed_discovery_interface.md",
+    "spec_refs": [
+      "src/app/api/leads/feed/route.ts:1 — '🔗 SPEC LINK: docs/specs/03-mobile/71_lead_feed_discovery_interface.md §API Endpoints'; the status matrix at :8-14 cites 'spec 70 §API Endpoints'"
+    ],
+    "spec_version": "0-draft",
+    "versioning": {
+      "answer": "additive_only",
+      "why": "At least one consumer is an installed Expo binary (mobile/) that does not redeploy with the server, so a removed or retyped field breaks shipped clients; adding fields does not.",
+      "evidence": [
+        "mobile/src/hooks/useLeadFeed.ts:32",
+        "mobile/app.json:5"
+      ]
+    },
+    "ref": "C-053"
+  },
+  "inputs": {
+    "answer": "app_outputs",
+    "why": "It reads 14 table(s) directly; 8 of them are materialised by named pipeline steps (classify_coa_scope, compute_coa_cost_estimates, builders), so its inputs are the pipeline's outputs rather than another contract.",
+    "evidence": [
+      "src/features/leads/lib/get-lead-feed.ts:563-577",
+      "src/features/leads/lib/get-lead-feed.ts:600-604",
+      "src/features/leads/lib/get-lead-feed.ts:619-628",
+      "src/features/leads/lib/get-lead-feed.ts:640-646",
+      "src/features/leads/lib/get-lead-feed.ts:668-687",
+      "scripts/classify-coa-scope.js",
+      "docs/reference/data-lineage-map.md:312",
+      "scripts/manifest.json#chains",
+      "docs/reference/data-lineage-map.md",
+      "src/features/leads/lib/get-lead-feed.ts:134-138"
+    ],
+    "contract_ref": [],
+    "query_key": [],
+    "field_whitelist": [
+      "data",
+      "error",
+      "meta"
+    ],
+    "tables": [
+      {
+        "table": "coa_applications",
+        "columns": [
+          "application_number",
+          "description",
+          "street_num",
+          "street_name",
+          "estimated_cost",
+          "lifecycle_phase",
+          "lifecycle_stalled",
+          "latitude",
+          "longitude",
+          "neighbourhood_id",
+          "bid_value",
+          "modeled_gfa_sqm"
+        ],
+        "producing_steps": [
+          "classify_coa_scope",
+          "classify_coa_trades",
+          "classify_lifecycle_phase",
+          "coa",
+          "compute_coa_cost_estimates",
+          "enrich_coa_zoning",
+          "link_coa",
+          "link_coa_to_parcels"
+        ],
+        "chain_position": "coa[5] · coa[6] · permits[23], coa[12] · coa[1] · coa[7] · coa[4] · permits[19], coa[8] · coa[3]",
+        "owner_spec": "docs/specs/01-pipeline/42_chain_coa.md",
+        "evidence": [
+          "src/features/leads/lib/get-lead-feed.ts:563-577",
+          "src/features/leads/lib/get-lead-feed.ts:600-604",
+          "src/features/leads/lib/get-lead-feed.ts:619-628",
+          "src/features/leads/lib/get-lead-feed.ts:640-646",
+          "src/features/leads/lib/get-lead-feed.ts:668-687",
+          "scripts/classify-coa-scope.js",
+          "docs/reference/data-lineage-map.md:312",
+          "scripts/manifest.json#chains",
+          "docs/reference/data-lineage-map.md"
+        ]
+      },
+      {
+        "table": "cost_estimates",
+        "columns": [
+          "permit_num",
+          "revision_num",
+          "cost_tier",
+          "estimated_cost"
+        ],
+        "producing_steps": [
+          "compute_coa_cost_estimates",
+          "compute_cost_estimates"
+        ],
+        "chain_position": "coa[7] · permits[17]",
+        "owner_spec": "docs/specs/01-pipeline/41_chain_permits.md",
+        "evidence": [
+          "src/features/leads/lib/get-lead-feed.ts:134-138",
+          "src/features/leads/lib/get-lead-feed.ts:246",
+          "src/features/leads/lib/get-lead-feed.ts:200-207",
+          "src/features/leads/lib/get-lead-feed.ts:351-353",
+          "src/features/leads/lib/get-lead-feed.ts:460-462",
+          "scripts/compute-cost-estimates.js",
+          "docs/reference/data-lineage-map.md:465",
+          "scripts/manifest.json#chains",
+          "docs/reference/data-lineage-map.md"
+        ]
+      },
+      {
+        "table": "entities",
+        "columns": [
+          "id",
+          "legal_name",
+          "primary_phone",
+          "primary_email",
+          "website",
+          "photo_url"
+        ],
+        "producing_steps": [
+          "builders",
+          "enrich_named_builders",
+          "enrich_wsib_builders",
+          "link_wsib"
+        ],
+        "chain_position": "permits[5] · entities[1] · entities[0] · permits[6], sources[19]",
+        "owner_spec": "docs/specs/01-pipeline/41_chain_permits.md",
+        "evidence": [
+          "src/features/leads/lib/get-lead-feed.ts:367-373",
+          "src/features/leads/lib/get-lead-feed.ts:435",
+          "src/features/leads/lib/get-lead-feed.ts:494-496",
+          "scripts/extract-builders.js",
+          "docs/reference/data-lineage-map.md:506",
+          "scripts/manifest.json#chains",
+          "docs/reference/data-lineage-map.md"
+        ]
+      },
+      {
+        "table": "entitlements",
+        "columns": [
+          "status",
+          "user_id",
+          "product"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/00-architecture/116_multi_product_architecture.md",
+        "evidence": [
+          "src/lib/entitlements/index.ts:68",
+          "src/lib/auth/get-user-context.ts:99-100",
+          "migrations/228_entitlements.sql:21",
+          "docs/reference/data-lineage-map.md — no `## `entitlements`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)"
+        ]
+      },
+      {
+        "table": "entity_projects",
+        "columns": [
+          "entity_id",
+          "role",
+          "permit_num",
+          "revision_num"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/02-web-admin/76_lead_feed_health_dashboard.md",
+        "evidence": [
+          "src/features/leads/lib/get-lead-feed.ts:436-439",
+          "docs/specs/00-architecture/00_system_map.md:93",
+          "docs/reference/data-lineage-map.md — no `## `entity_projects`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)"
+        ]
+      },
+      {
+        "table": "lead_views",
+        "columns": [
+          "user_id",
+          "lead_key",
+          "saved",
+          "lead_type",
+          "permit_num",
+          "revision_num",
+          "trade_slug",
+          "entity_id"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/01-pipeline/84_lifecycle_phase_engine.md",
+        "evidence": [
+          "src/features/leads/lib/get-lead-feed.ts:152-159",
+          "src/features/leads/lib/get-lead-feed.ts:274-280",
+          "src/features/leads/lib/get-lead-feed.ts:477-482",
+          "src/features/leads/lib/get-lead-feed.ts:581-588",
+          "src/features/leads/lib/get-lead-feed.ts:650-662",
+          "docs/specs/00-architecture/00_system_map.md:71",
+          "docs/reference/data-lineage-map.md:598 — table present, no pipeline producer listed",
+          "docs/reference/data-lineage-map.md — no `## `lead_views`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)"
+        ]
+      },
+      {
+        "table": "neighbourhoods",
+        "columns": [
+          "id",
+          "name"
+        ],
+        "producing_steps": [
+          "neighbourhoods"
+        ],
+        "chain_position": "sources[16]",
+        "owner_spec": "docs/specs/01-pipeline/43_chain_sources.md",
+        "evidence": [
+          "src/features/leads/lib/get-lead-feed.ts:133",
+          "src/features/leads/lib/get-lead-feed.ts:252",
+          "src/features/leads/lib/get-lead-feed.ts:573",
+          "src/features/leads/lib/get-lead-feed.ts:646",
+          "scripts/load-neighbourhoods.js",
+          "docs/reference/data-lineage-map.md:698",
+          "scripts/manifest.json#chains",
+          "docs/reference/data-lineage-map.md"
+        ]
+      },
+      {
+        "table": "permit_trades",
+        "columns": [
+          "permit_num",
+          "revision_num",
+          "trade_id",
+          "phase",
+          "is_active",
+          "confidence",
+          "attachment_basis"
+        ],
+        "producing_steps": [
+          "backfill_realtor_permit_trades",
+          "classify_permits"
+        ],
+        "chain_position": "permits[16] · permits[13]",
+        "owner_spec": "docs/specs/03-mobile/91_mobile_lead_feed.md",
+        "evidence": [
+          "src/features/leads/lib/get-lead-feed.ts:191-196",
+          "src/features/leads/lib/get-lead-feed.ts:242-244",
+          "src/features/leads/lib/get-lead-feed.ts:282-283",
+          "src/features/leads/lib/get-lead-feed.ts:440-444",
+          "scripts/backfill-realtor-permit-trades.js",
+          "docs/reference/data-lineage-map.md:973",
+          "scripts/manifest.json#chains",
+          "docs/reference/data-lineage-map.md"
+        ]
+      },
+      {
+        "table": "permits",
+        "columns": [
+          "permit_num",
+          "revision_num",
+          "status",
+          "permit_type",
+          "description",
+          "street_num",
+          "street_name",
+          "lifecycle_phase",
+          "lifecycle_stalled",
+          "latitude",
+          "longitude",
+          "location",
+          "neighbourhood_id",
+          "est_const_cost"
+        ],
+        "producing_steps": [
+          "classify_inspection_status",
+          "classify_lifecycle_phase",
+          "classify_permit_phase",
+          "classify_scope",
+          "classify_scope_class",
+          "classify_scope_tags",
+          "close_stale_permits",
+          "create_pre_permits",
+          "enrich_permits",
+          "geocode_permits",
+          "inspections",
+          "link_coa",
+          "link_neighbourhoods",
+          "link_similar",
+          "permits"
+        ],
+        "chain_position": "deep_scrapes[1] · permits[23], coa[12] · permits[3] · permits[4] · not-in-a-chain · not-in-a-chain · permits[2] · not-in-a-chain · permits[9] · permits[7], sources[3] · deep_scrapes[0] · permits[19], coa[8] · permits[10], sources[17] · permits[12] · permits[1]",
+        "owner_spec": "docs/specs/01-pipeline/41_chain_permits.md",
+        "evidence": [
+          "src/features/leads/lib/get-lead-feed.ts:121-145",
+          "src/features/leads/lib/get-lead-feed.ts:177-187",
+          "src/features/leads/lib/get-lead-feed.ts:243-252",
+          "src/features/leads/lib/get-lead-feed.ts:281-286",
+          "src/features/leads/lib/get-lead-feed.ts:351-358",
+          "src/features/leads/lib/get-lead-feed.ts:437-439",
+          "src/features/leads/lib/get-lead-feed.ts:483-485",
+          "scripts/classify-inspection-status.js",
+          "docs/reference/data-lineage-map.md:997",
+          "scripts/manifest.json#chains",
+          "docs/reference/data-lineage-map.md"
+        ]
+      },
+      {
+        "table": "pg_extension",
+        "columns": [
+          "extname"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "n/a — PostgreSQL system catalog/view; no Buildo spec owns it",
+        "evidence": [
+          "src/lib/admin/test-feed-utils.ts:65-67",
+          "src/app/api/leads/feed/route.ts:92",
+          "https://www.postgresql.org/docs/current/catalogs.html (server-owned object, not a Buildo table)",
+          "docs/reference/data-lineage-map.md — no `## `pg_extension`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)"
+        ]
+      },
+      {
+        "table": "trade_forecasts",
+        "columns": [
+          "lead_id",
+          "trade_slug",
+          "opportunity_score",
+          "target_window",
+          "predicted_start"
+        ],
+        "producing_steps": [
+          "compute_opportunity_scores",
+          "compute_trade_forecasts"
+        ],
+        "chain_position": "permits[27] · permits[26]",
+        "owner_spec": "docs/specs/01-pipeline/41_chain_permits.md",
+        "evidence": [
+          "src/features/leads/lib/get-lead-feed.ts:632",
+          "src/features/leads/lib/get-lead-feed.ts:642-643",
+          "src/features/leads/lib/get-lead-feed.ts:647-649",
+          "scripts/compute-opportunity-scores.js",
+          "docs/reference/data-lineage-map.md:1313",
+          "scripts/manifest.json#chains",
+          "docs/reference/data-lineage-map.md"
+        ]
+      },
+      {
+        "table": "trades",
+        "columns": [
+          "id",
+          "slug"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/01-pipeline/84_lifecycle_phase_engine.md",
+        "evidence": [
+          "src/features/leads/lib/get-lead-feed.ts:245",
+          "src/features/leads/lib/get-lead-feed.ts:281",
+          "src/features/leads/lib/get-lead-feed.ts:445",
+          "docs/specs/00-architecture/00_system_map.md:71",
+          "docs/reference/data-lineage-map.md:1355 — table present, no pipeline producer listed",
+          "docs/reference/data-lineage-map.md — no `## `trades`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)"
+        ]
+      },
+      {
+        "table": "user_profiles",
+        "columns": [
+          "user_id",
+          "trade_slug",
+          "trade_slugs_override",
+          "display_name"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/02-web-admin/102_admin_notifications_tool.md",
+        "evidence": [
+          "src/lib/auth/get-user-context.ts:99-101",
+          "docs/specs/00-architecture/00_system_map.md:80",
+          "docs/reference/data-lineage-map.md — no `## `user_profiles`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)"
+        ]
+      },
+      {
+        "table": "wsib_registry",
+        "columns": [
+          "linked_entity_id",
+          "business_size",
+          "is_gta",
+          "last_enriched_at",
+          "website",
+          "primary_phone",
+          "id"
+        ],
+        "producing_steps": [
+          "link_wsib",
+          "load_wsib"
+        ],
+        "chain_position": "permits[6], sources[19] · sources[18]",
+        "owner_spec": "docs/specs/01-pipeline/46_wsib_enrichment.md",
+        "evidence": [
+          "src/features/leads/lib/get-lead-feed.ts:103-113",
+          "scripts/link-wsib.js",
+          "docs/reference/data-lineage-map.md:1376",
+          "scripts/manifest.json#chains",
+          "docs/reference/data-lineage-map.md"
+        ]
+      }
+    ]
+  },
+  "outputs": {
+    "answer": "contract_only",
+    "why": "This route IS the mutation contract: it writes 1 table(s) synchronously inside the request and returns the result — there is no optimistic client-side flip to reconcile.",
+    "evidence": [
+      "src/lib/auth/get-user-context.ts:83-89",
+      "docs/specs/00-architecture/00_system_map.md:80",
+      "docs/reference/data-lineage-map.md — no `## `user_profiles`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)"
+    ],
+    "contract_ref": [],
+    "tables": [
+      {
+        "table": "user_profiles",
+        "columns": [
+          "user_id",
+          "trade_slug",
+          "display_name"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/02-web-admin/102_admin_notifications_tool.md",
+        "evidence": [
+          "src/lib/auth/get-user-context.ts:83-89",
+          "docs/specs/00-architecture/00_system_map.md:80",
+          "docs/reference/data-lineage-map.md — no `## `user_profiles`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)"
+        ]
+      }
+    ]
+  },
+  "state": {
+    "answer": "server_only",
+    "why": "A CONTRACT holds no client state: every value is resolved per request on the server and nothing is cached in a client store by the route itself.",
+    "evidence": [
+      "src/app/api/leads/feed/route.ts:39 (GET export)",
+      "src/lib/api/with-api-envelope.ts:27-52"
+    ],
+    "fields": []
+  },
+  "staleness": {
+    "answer": "live",
+    "why": "Every read runs against the base tables on each request — there is no cache layer between the handler and the database.",
+    "evidence": [
+      "src/features/leads/lib/get-lead-feed.ts:563-577",
+      "src/features/leads/lib/get-lead-feed.ts:600-604",
+      "src/features/leads/lib/get-lead-feed.ts:619-628",
+      "src/features/leads/lib/get-lead-feed.ts:640-646"
+    ],
+    "offline": "none"
+  },
+  "guards": {
+    "session": {
+      "answer": "authenticated",
+      "why": "classifyRoute(\"/api/leads/feed\") returns \"authenticated\" (executed 2026-09-15); the handler re-verifies the caller in-process.",
+      "evidence": [
+        "src/lib/auth/route-guard.ts:150-201 — classifyRoute executed 2026-09-15 with the concrete path",
+        "getCurrentUserContext(request, pool) at src/app/api/leads/feed/route.ts:50; null -> 401 at :53 (Bearer or Supabase cookie via getClaimsUid, src/lib/auth/get-user-context.ts:68)."
+      ]
+    },
+    "rls_class": {
+      "answer": "A",
+      "why": "It reaches user-owned rows whose policies key on auth.uid(), alongside default-deny Class B pipeline tables. The route connects as the table owner (raw pg), which Spec 114 §9 makes owner-exempt from RLS — the class describes the data, not the gate this route passes.",
+      "evidence": [
+        "migrations/227_rls_class_b_default_deny.sql:75",
+        "migrations/227_rls_class_b_default_deny.sql:73",
+        "migrations/227_rls_class_b_default_deny.sql:97",
+        "migrations/227_rls_class_b_default_deny.sql:46",
+        "migrations/227_rls_class_b_default_deny.sql:64",
+        "migrations/230_rls_class_a_entitlements.sql:49",
+        "migrations/227_rls_class_b_default_deny.sql:100",
+        "migrations/227_rls_class_b_default_deny.sql:49",
+        "migrations/227_rls_class_b_default_deny.sql:51",
+        "migrations/227_rls_class_b_default_deny.sql:45",
+        "migrations/227_rls_class_b_default_deny.sql:92",
+        "migrations/230_rls_class_a_entitlements.sql:48",
+        "migrations/230_rls_class_a_entitlements.sql:58",
+        "docs/specs/00-architecture/114_rls_policy_catalog.md §2"
+      ]
+    },
+    "disclosure": "none",
+    "entitlement": "none",
+    "flag": "none",
+    "permission": "none",
+    "rate_bucket": "leads-feed:<uid> (src/app/api/leads/feed/route.ts:104)"
+  },
+  "render": {
+    "targets": [
+      "screen"
+    ],
+    "projection": "none",
+    "breakpoints": "none",
+    "export": "none"
+  },
+  "checks": [
+    {
+      "id": "contract_leads_feed__auth_class_parity",
+      "kind": "auth_class_parity",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "why": "guards.session must equal classifyRoute(\"/api/leads/feed\"), executed 2026-09-15 → \"authenticated\" plus the in-handler guard (getCurrentUserContext(request, pool) at src/app/api/leads/feed/route.ts:50; null -> 401 at :53 (Bearer or Supa). Locked by api-leads-feed.infra.test.ts, contracts.infra.test.ts, test-feed.infra.test.ts."
+    },
+    {
+      "id": "contract_leads_feed__error_envelope",
+      "kind": "error_state",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "Every declared error class returns the { data, error, meta } envelope of docs/specs/00_engineering_standards.md §4.4; expected to stay at zero deviations."
+    },
+    {
+      "id": "contract_leads_feed__contract_parse",
+      "kind": "contract_parse",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "why": "Request input is parsed by leadFeedQuerySchema at src/app/api/leads/feed/route.ts:58-60 (safeParse over Object.fromEntries(request.nextUrl.searchParams)) before any query runs; a payload that fails the schema is refused, never coerced."
+    },
+    {
+      "id": "contract_leads_feed__field_whitelist_parity",
+      "kind": "field_whitelist_parity",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "The response is an explicit pick-by-name of 3 field(s) (src/app/api/leads/feed/route.ts:190, src/features/leads/lib/get-lead-feed.ts:1073-1080 (meta = {next_cursor, count, radius_km}), src/features/leads/lib/get-lead-feed.ts:862-986 (mapRow builds each item field-by-field; per-item base fields at :863-890, permit branch :905-924, coa branch :939-956, builder branch :968-985)), so a column added upstream cannot leak; this check set-equals the projection to inputs.field_whitelist."
+    },
+    {
+      "id": "contract_leads_feed__schema_declared",
+      "kind": "schema_declared",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "Every table and column declared in lineage.reads[]/writes[] must exist in src/lib/db/generated/schema.ts (drizzle-kit introspect of the live database); the registry generator checks this both directions."
+    }
+  ],
+  "invariants": "none",
+  "plausibility": "none",
+  "states": [
+    {
+      "name": "hit",
+      "golden": "none"
+    },
+    {
+      "name": "empty",
+      "golden": "none"
+    },
+    {
+      "name": "partial",
+      "golden": "none"
+    },
+    {
+      "name": "degraded",
+      "golden": "none"
+    },
+    {
+      "name": "rate_limited",
+      "golden": "none"
+    },
+    {
+      "name": "unauthorized",
+      "golden": "none"
+    },
+    {
+      "name": "error",
+      "golden": "none"
+    }
+  ],
+  "errors": {
+    "answer": "envelope",
+    "why": "Success and failure both arrive in the { data, error, meta } envelope of docs/specs/00_engineering_standards.md §4.4; withApiEnvelope is the outermost wrapper and converts any uncaught throw into the same shape.",
+    "evidence": [
+      "src/lib/api/with-api-envelope.ts:27-52",
+      "src/app/api/leads/feed/route.ts:190 (ok(result.data, result.meta))",
+      "src/features/leads/api/envelope.ts:50-53",
+      "src/features/leads/api/envelope.ts:82",
+      "src/app/api/leads/feed/route.ts:63 (400)",
+      "src/app/api/leads/feed/route.ts:53 (401)",
+      "src/app/api/leads/feed/route.ts:73 (403)",
+      "src/app/api/leads/feed/route.ts:110 (429)"
+    ],
+    "classes": [
+      {
+        "class": "400",
+        "ui": "{data:null,error:{code,message,details:<zodError.flatten()>},meta:null} — src/app/api/leads/feed/route.ts:63 (code VALIDATION_FAILED)"
+      },
+      {
+        "class": "401",
+        "ui": "{data:null,error:{code,message},meta:null} — src/app/api/leads/feed/route.ts:53 (code UNAUTHORIZED)"
+      },
+      {
+        "class": "403",
+        "ui": "{data:null,error:{code,message},meta:null} — src/app/api/leads/feed/route.ts:73 (code FORBIDDEN_TRADE_MISMATCH)"
+      },
+      {
+        "class": "429",
+        "ui": "{data:null,error:{code,message,details:{remaining}},meta:null} + Retry-After: 60 header — src/app/api/leads/feed/route.ts:110 (code RATE_LIMITED)"
+      },
+      {
+        "class": "500",
+        "ui": "{data:null,error:{code,message},meta:null} — src/app/api/leads/feed/route.ts:195 (code INTERNAL_ERROR)"
+      }
+    ]
+  },
+  "emits": {
+    "answer": "none",
+    "why": "Nothing it does is currently countable: src/app/api/leads/feed/route.ts was read in full and contains no Sentry breadcrumb, no analytics capture and no ledger INSERT.",
+    "evidence": [
+      "src/app/api/leads/feed/route.ts — read in full; no Sentry breadcrumb, no analytics capture and no ledger INSERT"
+    ],
+    "analytics": [],
+    "ledger_events": [],
+    "breadcrumbs": []
+  },
+  "offers": {
+    "answer": "none",
+    "why": "It renders no sponsored placement: the offers and advertisers tables Spec 126 §2 specifies do not exist in migrations/ and nothing in this handler reads placement inventory.",
+    "evidence": [
+      "migrations/ — no CREATE TABLE offers / advertisers (grep 2026-09-15)",
+      "src/app/api/leads/feed/route.ts — read in full; no placement read"
+    ]
+  },
+  "metering": {
+    "answer": "none",
+    "why": "Nothing here is counted: no usage_events row (the table does not exist in the introspected schema) and no quota counter is written by this handler.",
+    "evidence": [
+      "src/app/api/leads/feed/route.ts — read in full 2026-09-15",
+      "src/lib/db/generated/schema.ts — no usage_events table"
+    ]
+  },
+  "config": {
+    "answer": "none",
+    "why": "It consumes no tunable: no logic_variables read and no env-var-driven threshold in the handler or the libs it calls.",
+    "evidence": [
+      "src/app/api/leads/feed/route.ts — read in full 2026-09-15; no loadMarketplaceConfigs / logic_variables read"
+    ],
+    "logic_variables": [],
+    "retired": []
+  },
+  "sharing": {
+    "answer": "sole",
+    "why": "Exactly one call site renders it, so its projection serves one surface.",
+    "evidence": [
+      "mobile/src/hooks/useLeadFeed.ts:32"
+    ],
+    "surfaces": [
+      "mobile/src/hooks/useLeadFeed.ts:32"
+    ]
+  },
+  "a11y": {
+    "touch_target_min_px": "UNRESEARCHED",
+    "labels": "none",
+    "dark_mode": "none",
+    "reduced_motion": "none",
+    "i18n": "none",
+    "safe_area": "none"
+  },
+  "deviations": "none",
+  "limitations": [
+    {
+      "what": "a11y.touch_target_min_px has no legal answer for a CONTRACT",
+      "measured": "The schema allows only UNRESEARCHED or an integer >= 44; a JSON endpoint has no touch target and the vocabulary has no \"n/a\". Left UNRESEARCHED and escalated per Spec 128 §4 rather than invented.",
+      "check_id": "contract_leads_feed__auth_class_parity"
+    },
+    {
+      "what": "error classes outside the closed set are not representable: 503",
+      "measured": "The handler returns 503 at src/app/api/leads/feed/route.ts:96; errors.classes[] admits only 400/401/403/429/500/schema_drift/offline.",
+      "check_id": "contract_leads_feed__error_envelope"
+    }
+  ],
+  "interpretation": "none",
+  "notes": "The file's SPEC LINK cites docs/specs/03-mobile/71_lead_feed_discovery_interface.md, which does not exist — the real file is the archived path recorded here (verified by find). Thin handler; all logic delegates to getLeadFeed() in src/features/leads/lib/get-lead-feed.ts, which runs one large UNION ALL query (permit + builder candidates, plus a coa arm when the LEAD_FEED_DISABLE_COA killswitch is off) with cursor pagination. user_profiles is read indirectly via getCurrentUserContext, not this file's own SQL. Rate-limited to 30 req/min per user. A PostGIS pre-flight check returns a structured 503 in dev environments missing the extension. Logging is PIPEDA-conscious: lat/lng truncated to ~100m, and the DB-error path omits user_id/lat/lng entirely. | MEASURED 2026-09-15: AUTH CLASS: 'authenticated' (route-guard.ts:124 + :165-167). An authenticated caller with any trade receives, per item: full permit address parts + lat/lng + description, cost_estimates estimated_cost and cost_tier, competition_count, and — for BUILDER items — entities.legal_name, primary_phone, primary_email, website, photo_url and the WSIB business_size (get-lead-feed.ts:367-373, :369). That is contact PII for a business entity, served with no entitlement check (ctx.subscription_status is available at get-user-context.ts:149 and never consulted by this route). Radius is capped at 50 km (distance.ts:12) so the exposure is geographically bounded, but the cursor lets a caller page the whole radius 30 items at a time under a 30 req/min limit. // KILLSWITCH: `LEAD_FEED_DISABLE_COA !== '0'` at route.ts:146 means CoA leads are OFF unless the env var is exactly '0' (default-on fence, documented :131-145) — the 3-arm SQL at get-lead-feed.ts:700-704 is built at module load regardless, and a module-load throw at :709-716 refuses to boot if the injection regex misses. // The route comment at :192-193 claims 'none of the above should throw because every helper is documented as never-throws' — the code DISAGREES: getLeadFeed explicitly rethrows (get-lead-feed.ts:1094, and its own header at :5-8 says so), so the catch at :191 is a live path, not defensive-only. Recorded as a comment/code disagreement. // The in-memory rate limiter is per-process and, per its own header (rate-limit.ts:38-41), must not be used in serverless/multi-instance environments — but rate-limit.ts:107-116 routes production there when Upstash is unset, logging instead of failing. // CENSUS: all 12 census_reads VERIFIED (permits, permit_trades, trades, cost_estimates, neighbourhoods, lead_views, wsib_registry, entities, entity_projects, coa_applications, trade_forecasts, user_profiles). Census MISSED `entitlements` (get-user-context.ts:99-100 via src/lib/entitlements/index.ts:68) and `pg_extension` (test-feed-utils.ts:66 — note the census DID list pg_extension for /api/admin/leads/test-feed but not here, though the same helper runs). Census listed no writes; the dev-mode user_profiles INSERT (get-user-context.ts:83-89) is one. | Caching: none observed on the route — no Cache-Control, revalidate or dynamic export. One process-level cache exists downstream: isPostgisAvailable memoizes a successful check for the process lifetime (src/lib/admin/test-feed-utils.ts:55, :63, :68) and deliberately does not cache failures (:70-72). | Pagination: cursor-based, not limit/offset. limit is Zod-capped at 30 (schemas.ts:40-46) and re-clamped to [1,30] at get-lead-feed.ts:1004; the cursor is a (relevance_score, lead_type, lead_id) row-tuple comparison at get-lead-feed.ts:535-538 with ORDER BY … LIMIT $5 at :539-540; next_cursor is derived from res.rows.length === clampedLimit and the LAST RAW ROW (get-lead-feed.ts:1059-1069), deliberately NOT from the post-filter data length. | Rate bucket: leads-feed:<uid> (src/app/api/leads/feed/route.ts:104) | Entitlement posture: READ but NOT ENFORCED. `subscription_status` is resolved from the entitlements LEFT JOIN (src/lib/auth/get-user-context.ts:99-100, src/lib/entitlements/index",
+  "x-draft": {
+    "shard": "contracts",
+    "files": [
+      "src/app/api/leads/feed/route.ts"
+    ],
+    "loc": 197,
+    "methods": [
+      "GET"
+    ],
+    "consumers": [
+      "mobile/src/hooks/useLeadFeed.ts"
+    ],
+    "writes_audit_row": false,
+    "consumers_verified": [
+      "mobile/src/hooks/useLeadFeed.ts:32"
+    ],
+    "auth_class_executed": "authenticated",
+    "locking_tests": [
+      "src/tests/api-leads-feed.infra.test.ts",
+      "src/tests/contracts.infra.test.ts",
+      "src/tests/test-feed.infra.test.ts"
+    ]
+  },
+  "programme": {
+    "scope": "estate_other",
+    "phase": "not_scheduled",
+    "why": "Lead generation — the other product. Spec 100 §1 states the parcel tool is \"not coupled to the Lead Feed, Flight Center, or LeadDetail\"; inventoried only.",
+    "feature": "F90",
+    "build_order": 4172,
+    "leakage": "UNRESEARCHED",
+    "product_questions": "UNRESEARCHED",
+    "review": {
+      "status": "unreviewed"
+    }
+  }
+}

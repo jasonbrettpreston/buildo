@@ -1,0 +1,319 @@
+{
+  "kind": "SURFACE",
+  "status": "exists",
+  "docs": {
+    "purpose": "Where the payment provider sends the user after a successful payment. It confirms the payment was received, then checks the account a few times over about twelve seconds to see whether the upgrade has landed. If it has, it says so; if the check cannot run (the mobile hand-off visitor has no web login) or the upgrade has not appeared yet, it says the account will be active shortly and to return to the app. It never claims the account is active before the server confirms it, and never claims failure.",
+    "data_story": "It reads nothing from the database directly. Every value arrives through one contract: `/api/user-profile`. Behind that contract, the data comes from `entitlements` and `user_profiles`, and writes land on `entitlements` and `user_profiles`.",
+    "under_126": "**REBUILD** — it drives writes, so a client decision has to be re-homed on the server before the projection can be honest. It renders through the WIZARD_STEP renderer (declared step index, advance condition, resume key and skip rule), reading by reference: `/api/user-profile`. It owns no component of its own, so its `owns.components[]` is an empty array — a legal answer, written down."
+  },
+  "evidence": {
+    "files": [
+      "src/app/subscribe/success/page.tsx:1"
+    ],
+    "contracts": [
+      "src/app/subscribe/success/page.tsx:42 — GET /api/user-profile"
+    ],
+    "tables": [
+      "src/app/api/user-profile/route.ts — user_profiles, entitlements (measured in the CONTRACT shard row contract_user_profile)"
+    ],
+    "gate": [
+      "src/lib/auth/route-guard.ts:52",
+      "src/tests/subscribe-routes.logic.test.ts:31-35"
+    ],
+    "states": [
+      "src/app/subscribe/success/page.tsx:75-89 (polling), :90-100 (confirmed), :101-112 (pending)"
+    ],
+    "emits": [
+      "none — no captureEvent import in src/app/subscribe/success/page.tsx"
+    ]
+  },
+  "identity": {
+    "id": "web_subscribe_success",
+    "route": "src/app/subscribe/success/page.tsx",
+    "archetype": "WIZARD_STEP",
+    "platforms": [
+      "web"
+    ],
+    "owns": {
+      "components": []
+    },
+    "owner": "web",
+    "spec": "docs/specs/02-web-admin/20_stripe_web_checkout.md",
+    "spec_refs": [
+      "docs/specs/02-web-admin/20_stripe_web_checkout.md §3.2",
+      "docs/specs/02-web-admin/20_stripe_web_checkout.md §3.3",
+      "docs/specs/02-web-admin/20_stripe_web_checkout.md §4",
+      "docs/specs/03-mobile/96_mobile_subscription.md §6"
+    ],
+    "spec_version": "0-draft",
+    "versioning": {
+      "answer": "additive_only",
+      "why": "It reads exactly one field of the profile payload, subscription_status, and compares it against a closed set; a new status may be added to that set but removing the field breaks the poll silently.",
+      "evidence": [
+        "src/app/subscribe/success/page.tsx:26,50-56"
+      ]
+    },
+    "ref": "S-053"
+  },
+  "inputs": {
+    "answer": "contract",
+    "why": "A bounded poll of GET /api/user-profile — at most six attempts, two seconds apart, reading one field.",
+    "evidence": [
+      "src/app/subscribe/success/page.tsx:24-25,42,50-56"
+    ],
+    "contract_ref": [
+      "/api/user-profile"
+    ],
+    "query_key": [],
+    "field_whitelist": [
+      "subscription_status"
+    ],
+    "tables": [
+      {
+        "table": "user_profiles",
+        "columns": [
+          "subscription_status"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/02-web-admin/20_stripe_web_checkout.md §4",
+        "evidence": [
+          "src/app/subscribe/success/page.tsx:53",
+          "src/app/api/user-profile/route.ts",
+          "UNRESEARCHED — user_profiles is not in docs/reference/data-lineage-map.md; it is written by API routes and the Stripe webhook, not by a pipeline step"
+        ]
+      },
+      {
+        "table": "entitlements",
+        "columns": "UNRESEARCHED",
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/00-architecture/116_multi_product_architecture.md §4",
+        "evidence": [
+          "src/app/api/user-profile/route.ts — measured in the CONTRACT shard row contract_user_profile",
+          "UNRESEARCHED — entitlements is not in docs/reference/data-lineage-map.md"
+        ]
+      }
+    ]
+  },
+  "outputs": {
+    "answer": "none",
+    "why": "It only OBSERVES — activation truth lives in the Stripe webhook alone, and this page is explicit that it never claims the account is active until the server says so.",
+    "evidence": [
+      "src/app/subscribe/success/page.tsx:17-18,42"
+    ],
+    "contract_ref": [],
+    "tables": []
+  },
+  "state": {
+    "answer": "none",
+    "why": "One useState phase flag and a useRef start guard, both component-local; the cancelled closure variable is effect-scoped.",
+    "evidence": [
+      "src/app/subscribe/success/page.tsx:29-36"
+    ],
+    "fields": []
+  },
+  "staleness": {
+    "answer": "live",
+    "why": "Each of the six polls is an uncached GET; there is no query cache between the page and the route, so what it renders is the profile as of that request.",
+    "evidence": [
+      "src/app/subscribe/success/page.tsx:39-63"
+    ],
+    "stale_time_ms": 0,
+    "offline": "degraded"
+  },
+  "guards": {
+    "session": {
+      "answer": "anon",
+      "why": "/subscribe/success is in PUBLIC_PATHS because Stripe redirects a sessionless mobile-handoff visitor here; the lock pins it public alongside /subscribe and /subscribe/cancel.",
+      "evidence": [
+        "src/lib/auth/route-guard.ts:52",
+        "src/tests/subscribe-routes.logic.test.ts:31-35"
+      ]
+    },
+    "rls_class": {
+      "answer": "A",
+      "why": "The contract it polls reads the caller's own user_profiles row — user-owned, policies keyed on auth.uid(); a sessionless visitor gets 401 and the page stops polling.",
+      "evidence": [
+        "src/app/subscribe/success/page.tsx:43-48",
+        "docs/specs/00-architecture/114_rls_policy_catalog.md"
+      ]
+    },
+    "disclosure": {
+      "fields": [
+        "subscription_status"
+      ],
+      "why": "The page is anon-reachable, but the one field it reads is only ever returned to a caller who already holds a session for that profile — a sessionless visitor receives 401 and the field is never projected."
+    },
+    "entitlement": "none",
+    "flag": "none",
+    "permission": "none",
+    "rate_bucket": "none"
+  },
+  "render": {
+    "targets": [
+      "screen"
+    ],
+    "projection": "none",
+    "breakpoints": "mobile_first",
+    "export": "none",
+    "wizard": "UNRESEARCHED"
+  },
+  "checks": [
+    {
+      "id": "web_subscribe_success_401_stops_polling",
+      "kind": "auth_class_parity",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "The page is anon but the contract it polls is authenticated — the 401 arm must stop immediately on the first attempt, or a sessionless mobile-handoff visitor burns twelve seconds on a poll that can never resolve."
+    },
+    {
+      "id": "web_subscribe_success_never_claims_active",
+      "kind": "contract_parse",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "The confirmed copy may only render when subscription_status is in {active, admin_managed} as returned by the server; the webhook owns activation and this page must never assert it from a timer."
+    },
+    {
+      "id": "web_subscribe_success_bounded_poll",
+      "kind": "freshness",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "Six polls at two seconds is a twelve-second ceiling; an unbounded poll on a page a paying user sits on is how a spinner becomes permanent."
+    }
+  ],
+  "invariants": "none",
+  "plausibility": "none",
+  "states": [
+    {
+      "name": "loading",
+      "golden": "none"
+    },
+    {
+      "name": "hit",
+      "golden": "none"
+    },
+    {
+      "name": "partial",
+      "golden": "none"
+    },
+    {
+      "name": "unauthorized",
+      "golden": "none"
+    }
+  ],
+  "errors": {
+    "answer": "none",
+    "why": "There is deliberately no error state: a transient network failure is swallowed inside the loop so polling continues, and the terminal copy says \"active shortly\" rather than claiming a failure the webhook may be seconds from resolving.",
+    "evidence": [
+      "src/app/subscribe/success/page.tsx:59-61,101-111"
+    ],
+    "classes": [
+      {
+        "class": "401",
+        "ui": "the \"return to the app\" pending copy, rendered immediately"
+      },
+      {
+        "class": "500",
+        "ui": "swallowed; polling continues to the bound, then the pending copy"
+      },
+      {
+        "class": "offline",
+        "ui": "swallowed; polling continues to the bound, then the pending copy"
+      }
+    ],
+    "no_retry": []
+  },
+  "emits": {
+    "answer": "none",
+    "why": "Nothing is emitted at the moment a payment completes — no analytics event, no ledger row — so the conversion point of the paid funnel is uncountable from the web side.",
+    "evidence": [
+      "src/app/subscribe/success/page.tsx:1-116"
+    ],
+    "analytics": [],
+    "ledger_events": [],
+    "breadcrumbs": []
+  },
+  "offers": {
+    "answer": "none",
+    "why": "No sponsored placement on a payment-return page.",
+    "evidence": [
+      "src/app/subscribe/success/page.tsx:72-113"
+    ]
+  },
+  "metering": {
+    "answer": "none",
+    "why": "It writes no usage_events row; the subscription itself is metered by Stripe and reflected by the webhook.",
+    "evidence": [
+      "src/app/subscribe/success/page.tsx:17-18"
+    ]
+  },
+  "config": {
+    "answer": "none",
+    "why": "MAX_POLLS (6) and POLL_INTERVAL_MS (2000) are module constants in this file, not registered logic variables — they appear nowhere in docs/reference/logic-variables-registry.md.",
+    "evidence": [
+      "src/app/subscribe/success/page.tsx:24-25"
+    ],
+    "logic_variables": [],
+    "retired": []
+  },
+  "sharing": {
+    "answer": "shared",
+    "why": "/api/user-profile is one of the most widely rendered contracts in the estate — the CONTRACT shard records it as a MUTATION reached from many surfaces; this page is one read-only consumer of one of its fields.",
+    "evidence": [
+      "src/app/subscribe/success/page.tsx:42",
+      "scripts/surfaces/_schema/census/contracts.json — contract_user_profile"
+    ],
+    "surfaces": [],
+    "varies_by_surface": "This page projects a single field (subscription_status); other consumers read the full profile."
+  },
+  "a11y": {
+    "touch_target_min_px": "UNRESEARCHED",
+    "labels": "complete",
+    "dark_mode": "none",
+    "reduced_motion": "ignored",
+    "i18n": "none",
+    "safe_area": "none"
+  },
+  "deviations": "none",
+  "limitations": [
+    {
+      "what": "A web-session visitor whose webhook is slower than twelve seconds sees the same copy as a sessionless one.",
+      "measured": "src/app/subscribe/success/page.tsx:39-64 — after MAX_POLLS the phase is `pending` regardless of why, and there is no manual re-check control.",
+      "check_id": "web_subscribe_success_bounded_poll"
+    }
+  ],
+  "interpretation": "none",
+  "notes": "Bounded poll: 6 attempts x 2s. A 401 on the first poll (the sessionless mobile hand-off case) stops polling immediately and shows the 'pending' copy. /api/user-profile is not in PUBLIC_PATHS, PUBLIC_PREFIXES or PUBLIC_EXACT_API_PATHS, so classifyRoute gives it the fail-closed 'authenticated' class - that 401 is by design, not a bug. Activation truth lives in the Stripe webhook; this page only observes. MEASURED 2026-09-15. WIZARD_STEP fields, recorded here because the schema declares no wizard block: step 2 of 2; advances_on = a profile whose subscription_status is in {active, admin_managed}; resume_key = none; skip_when = the first poll returns 401 (the sessionless mobile-handoff visitor, for whom the app is the confirmation surface per Spec 96 §6); terminal = true. The page is anon-reachable but polls an authenticated contract on purpose — the 401 is a designed branch, not a defect, which is why the auth_class_parity check is written as \"the 401 arm must stop immediately\" rather than as a mismatch to fix.",
+  "x-draft": {
+    "shard": "web-product",
+    "files": [
+      "src/app/subscribe/success/page.tsx"
+    ],
+    "loc": 116,
+    "measured_states": [
+      "polling",
+      "confirmed",
+      "pending"
+    ],
+    "measured_gate": {
+      "session": "public",
+      "why": "classifyRoute('/subscribe/success') skips AUTHENTICATED_API_ROUTES ('/api/subscribe' is not a prefix of a non-/api path), skips PUBLIC_PREFIXES, then matches the PUBLIC_PATHS exact entry '/subscribe/success' -> 'public'."
+    }
+  },
+  "programme": {
+    "scope": "platform_shared",
+    "phase": "UNRESEARCHED",
+    "why": "The subscription and Stripe hand-off, which resolves an entitlement per PRODUCT — so it serves both and belongs to neither.",
+    "feature": "F12",
+    "build_order": 3123,
+    "leakage": "none",
+    "product_questions": "none",
+    "review": {
+      "status": "unreviewed"
+    }
+  }
+}

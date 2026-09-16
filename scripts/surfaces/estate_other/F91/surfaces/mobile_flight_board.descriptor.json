@@ -1,0 +1,583 @@
+{
+  "kind": "SURFACE",
+  "status": "exists",
+  "docs": {
+    "purpose": "The user's saved jobs, grouped into three urgency bands: needs action now, starting soon, and further out. Cards flash amber when the underlying permit has changed since the user last opened it. Swiping a card removes it with a three-second undo window, and a floating button opens a search to claim a new job onto the board. When the subscription has lapsed and the upgrade screen was dismissed, the board is replaced with blurred locked placeholders.",
+    "data_story": "It reads nothing from the database directly. Every value arrives through 3 contracts: `/api/leads/flight-board`, `/api/leads/save`, `/api/user-profile`. Behind those contracts, the data comes from `entitlements`, `lead_views`, `permits`, `trade_forecasts` and `user_profiles`, and writes land on `entitlements`, `lead_views` and `user_profiles`. It also holds client-side state in `tabBarStore`, `paywallStore` and `flightBoardSeenStore`, which is the part a server-driven projection has to absorb or justify.",
+    "under_126": "**REBUILD** — it holds Layer-3 state (`tabBarStore`, `paywallStore` and `flightBoardSeenStore`) and drives writes, so a client decision has to be re-homed on the server before the projection can be honest. It renders through the LIST renderer (a collection with declared pagination, recycling and empty/offline states), reading by reference: `/api/leads/flight-board`, `/api/leads/save`, `/api/user-profile`. Its `owns.components[]` declares `mobile/src/components/feed/FlightCard.tsx`, `mobile/src/components/feed/FlightCardSkeleton.tsx`, `mobile/src/components/feed/TemporalSectionHeader.tsx` and `mobile/src/components/feed/EmptyBoardState.tsx`."
+  },
+  "evidence": {
+    "files": [
+      "mobile/app/(app)/flight-board.tsx:1",
+      "mobile/src/components/feed/FlightCard.tsx:1",
+      "mobile/src/components/feed/FlightCardSkeleton.tsx:1",
+      "mobile/src/components/feed/TemporalSectionHeader.tsx:1",
+      "mobile/src/components/feed/EmptyBoardState.tsx:1"
+    ],
+    "contracts": [
+      "mobile/src/hooks/useFlightBoard.ts:13",
+      "mobile/src/hooks/useRemoveFromBoard.ts:22",
+      "mobile/src/hooks/useUserProfile.ts:38"
+    ],
+    "tables": [
+      "src/app/api/leads/flight-board/route.ts:57-62",
+      "src/features/leads/lib/record-lead-view.ts:148-175",
+      "src/lib/userProfile.schema.ts:85-122"
+    ],
+    "gate": [
+      "src/lib/auth/route-guard.ts:120-132",
+      "mobile/app/(app)/_layout.tsx:236-265",
+      "mobile/app/(app)/flight-board.tsx:275-289"
+    ],
+    "states": [
+      "mobile/app/(app)/flight-board.tsx:302-350",
+      "mobile/app/(app)/flight-board.tsx:392-412"
+    ],
+    "emits": [
+      "mobile/app/(app)/flight-board.tsx:123-127",
+      "mobile/src/lib/analytics.ts:121-132"
+    ]
+  },
+  "identity": {
+    "id": "mobile_flight_board",
+    "route": "mobile/app/(app)/flight-board.tsx",
+    "archetype": "LIST",
+    "platforms": [
+      "mobile"
+    ],
+    "owns": {
+      "components": [
+        "mobile/src/components/feed/FlightCard.tsx",
+        "mobile/src/components/feed/FlightCardSkeleton.tsx",
+        "mobile/src/components/feed/TemporalSectionHeader.tsx",
+        "mobile/src/components/feed/EmptyBoardState.tsx"
+      ]
+    },
+    "owner": "unassigned (no CODEOWNERS file and no owner registry exists in the repo — measured 2026-09-15)",
+    "spec": "docs/specs/03-mobile/77_mobile_crm_flight_board.md",
+    "spec_refs": [
+      "docs/specs/03-mobile/77_mobile_crm_flight_board.md §3.2",
+      "docs/specs/03-mobile/77_mobile_crm_flight_board.md §4.1",
+      "docs/specs/03-mobile/77_mobile_crm_flight_board.md §5",
+      "docs/specs/03-mobile/96_mobile_subscription.md §9"
+    ],
+    "spec_version": "0-draft",
+    "versioning": {
+      "answer": "additive_only",
+      "why": "FlightBoardResultSchema.parse() runs on every response; the schema tolerates added keys but its temporal_group enum and the non-nullable permit_num/lifecycle_stalled fields are pinned by mobile/__tests__/useFlightBoard.test.ts.",
+      "evidence": [
+        "mobile/src/hooks/useFlightBoard.ts:14",
+        "mobile/__tests__/useFlightBoard.test.ts:33-104"
+      ]
+    },
+    "ref": "S-059"
+  },
+  "inputs": {
+    "answer": "contract",
+    "why": "The board is one GET /api/leads/flight-board response; the only non-contract input is the MMKV last-seen map that decides which cards flash amber.",
+    "evidence": [
+      "mobile/src/hooks/useFlightBoard.ts:13",
+      "mobile/app/(app)/flight-board.tsx:244-257"
+    ],
+    "contract_ref": [
+      "/api/leads/flight-board",
+      "/api/leads/save",
+      "/api/user-profile"
+    ],
+    "query_key": [
+      "flight-board"
+    ],
+    "field_whitelist": [
+      "permit_num",
+      "revision_num",
+      "address",
+      "lifecycle_phase",
+      "lifecycle_stalled",
+      "predicted_start",
+      "p25_days",
+      "p75_days",
+      "temporal_group",
+      "updated_at"
+    ],
+    "tables": [
+      {
+        "table": "lead_views",
+        "columns": [
+          "user_id",
+          "lead_key",
+          "lead_type",
+          "permit_num",
+          "revision_num",
+          "trade_slug",
+          "saved"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/03-mobile/91_mobile_lead_feed.md",
+        "evidence": [
+          "src/app/api/leads/flight-board/route.ts:57-62",
+          "docs/reference/data-lineage-map.md:602",
+          "migrations/230_rls_class_a_entitlements.sql:70-76"
+        ]
+      },
+      {
+        "table": "permits",
+        "columns": [
+          "permit_num",
+          "revision_num",
+          "status",
+          "permit_type",
+          "description",
+          "street_num",
+          "street_name",
+          "neighbourhood_id",
+          "lifecycle_phase",
+          "lifecycle_stalled",
+          "latitude",
+          "longitude",
+          "location"
+        ],
+        "producing_steps": [
+          "permits",
+          "enrich_permits",
+          "geocode_permits",
+          "classify_lifecycle_phase",
+          "link_neighbourhoods"
+        ],
+        "chain_position": "permits[1]",
+        "owner_spec": "docs/specs/01-pipeline/41_chain_permits.md",
+        "evidence": [
+          "src/app/api/leads/flight-board/route.ts:57-62",
+          "docs/reference/data-lineage-map.md:1001",
+          "scripts/manifest.json#chains.permits"
+        ]
+      },
+      {
+        "table": "trade_forecasts",
+        "columns": [
+          "permit_num",
+          "revision_num",
+          "trade_slug",
+          "predicted_start",
+          "p25_days",
+          "p75_days",
+          "median_days",
+          "confidence",
+          "target_window",
+          "opportunity_score"
+        ],
+        "producing_steps": [
+          "compute_trade_forecasts",
+          "compute_opportunity_scores"
+        ],
+        "chain_position": "permits[26]",
+        "owner_spec": "docs/specs/01-pipeline/85_trade_forecast_engine.md",
+        "evidence": [
+          "src/app/api/leads/flight-board/route.ts:57-62",
+          "docs/reference/data-lineage-map.md:1317",
+          "scripts/manifest.json#chains.permits"
+        ]
+      },
+      {
+        "table": "user_profiles",
+        "columns": [
+          "user_id",
+          "trade_slug",
+          "onboarding_complete",
+          "account_preset",
+          "lead_views_count"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/03-mobile/95_mobile_user_profiles.md",
+        "evidence": [
+          "mobile/src/hooks/useUserProfile.ts:38",
+          "src/app/api/user-profile/route.ts:51",
+          "src/lib/userProfile.schema.ts:85-122",
+          "migrations/230_rls_class_a_entitlements.sql:62-68"
+        ]
+      },
+      {
+        "table": "entitlements",
+        "columns": [
+          "user_id",
+          "product",
+          "status",
+          "trial_started_at"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/00-architecture/116_multi_product_architecture.md",
+        "evidence": [
+          "src/app/api/user-profile/route.ts:51",
+          "migrations/228_entitlements.sql:21-35",
+          "src/lib/entitlements/index.ts:68"
+        ]
+      }
+    ]
+  },
+  "outputs": {
+    "answer": "optimistic_then_contract",
+    "why": "A swipe removes the card from the cached board immediately and holds the POST for a 3-second undo window; the mutation is force-committed on unmount and on pull-to-refresh so a pending delete is never silently abandoned.",
+    "evidence": [
+      "mobile/app/(app)/flight-board.tsx:172-213",
+      "mobile/app/(app)/flight-board.tsx:133-170",
+      "mobile/src/hooks/useRemoveFromBoard.ts:17-38"
+    ],
+    "contract_ref": [
+      "/api/leads/save"
+    ],
+    "tables": [
+      {
+        "table": "lead_views",
+        "columns": [
+          "user_id",
+          "lead_key",
+          "lead_type",
+          "permit_num",
+          "revision_num",
+          "trade_slug",
+          "saved"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/03-mobile/91_mobile_lead_feed.md",
+        "evidence": [
+          "src/features/leads/lib/record-lead-view.ts:148-175",
+          "docs/reference/data-lineage-map.md:602",
+          "migrations/230_rls_class_a_entitlements.sql:70-76"
+        ]
+      }
+    ],
+    "rollback": "The pre-swipe FlightBoardResult snapshot is written back with queryClient.setQueryData on mutation error (flight-board.tsx:147-151) and on Undo (flight-board.tsx:215-227).",
+    "invalidates": [
+      "flight-board"
+    ]
+  },
+  "state": {
+    "answer": "mmkv",
+    "why": "flightBoardSeenStore persists a permitId → updated_at map to MMKV under the Spec 77 §3.2 canonical key; it is the only thing that decides the amber flash, and it survives cold boot. paywallStore (in-memory) and the tabBar shared values sit alongside it.",
+    "evidence": [
+      "mobile/src/store/flightBoardSeenStore.ts:19-76",
+      "mobile/app/(app)/flight-board.tsx:244-257"
+    ],
+    "fields": [
+      {
+        "name": "seenMap",
+        "owner_layer": "4a_mmkv",
+        "canonical_writer": "useFlightBoardSeenStore.markSeen, called from the flight-job detail screen",
+        "authorized_readers": [
+          "mobile_flight_board"
+        ],
+        "bridge": "B5",
+        "persistence": "mmkv",
+        "signout_reset": true
+      },
+      {
+        "name": "dismissed",
+        "owner_layer": "3_zustand",
+        "canonical_writer": "PaywallScreen \"Maybe later\"",
+        "authorized_readers": [
+          "mobile_flight_board",
+          "mobile_lead_feed",
+          "shell_app_tabs"
+        ],
+        "bridge": "none",
+        "persistence": "none",
+        "signout_reset": true
+      }
+    ]
+  },
+  "staleness": {
+    "answer": "query_cache",
+    "why": "useFlightBoard overrides the global defaults with the Spec 77 §5 numbers — 30-second staleTime, 1-hour gcTime — so the board re-fetches far more eagerly than the lead feed.",
+    "evidence": [
+      "mobile/src/hooks/useFlightBoard.ts:21-22",
+      "docs/specs/03-mobile/77_mobile_crm_flight_board.md §5"
+    ],
+    "offline": "cached_projection",
+    "stale_time_ms": 30000,
+    "gc_time_ms": 3600000
+  },
+  "guards": {
+    "session": {
+      "answer": "authenticated",
+      "why": "/api/leads/flight-board sits under the `/api/leads` prefix that route-guard classifies `authenticated`; the handler resolves the uid with getCurrentUserContext before any query.",
+      "evidence": [
+        "src/lib/auth/route-guard.ts:120-132",
+        "src/app/api/leads/flight-board/route.ts:10"
+      ]
+    },
+    "rls_class": {
+      "answer": "A",
+      "why": "The board IS the user's own lead_views rows — a Class-A owner-scoped table whose policies key on auth.uid(); permits and trade_forecasts are joined in as Class-B default-deny reference data.",
+      "evidence": [
+        "migrations/230_rls_class_a_entitlements.sql:70-76",
+        "migrations/227_rls_class_b_default_deny.sql:42-110"
+      ]
+    },
+    "disclosure": "none",
+    "entitlement": {
+      "product": "lead_gen",
+      "statuses": [
+        "trial",
+        "active",
+        "past_due",
+        "admin_managed"
+      ],
+      "on_missing": "paywall"
+    },
+    "flag": "none",
+    "permission": "none",
+    "rate_bucket": "none — the flight-board route calls no withRateLimit (src/app/api/leads/flight-board/route.ts has no rate-limit import)"
+  },
+  "render": {
+    "targets": [
+      "screen"
+    ],
+    "projection": "list",
+    "breakpoints": "mobile_first",
+    "export": "none",
+    "list": "UNRESEARCHED"
+  },
+  "checks": [
+    {
+      "id": "board_contract_parse",
+      "kind": "contract_parse",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "mobile/__tests__/useFlightBoard.test.ts pins FlightBoardItemSchema/FlightBoardResultSchema including the temporal_group enum and the empty-array case."
+    },
+    {
+      "id": "board_query_key_hygiene",
+      "kind": "query_key_hygiene",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "why": "FLIGHT_BOARD_QUERY_KEY is a frozen module constant ([\"flight-board\"]) shared by the screen, the removal mutation and the search sheet — the cleanest key in the app; nothing can drift it."
+    },
+    {
+      "id": "board_empty_state",
+      "kind": "empty_state",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "boardData.length === 0 renders EmptyBoardState with a route back to the feed (flight-board.tsx:315-318); no render test covers it."
+    },
+    {
+      "id": "board_error_state",
+      "kind": "error_state",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "isError renders \"Failed to load board.\" plus a Retry (flight-board.tsx:308-314); the ZodError path instead throws to the ErrorBoundary via throwOnError."
+    },
+    {
+      "id": "board_offline_state",
+      "kind": "offline_state",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "OfflineBanner is mounted at flight-board.tsx:300 and mobile/__tests__/offline.test.ts locks the MMKV persister behind it."
+    },
+    {
+      "id": "board_seen_map_lock",
+      "kind": "freshness",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "mobile/__tests__/flightBoardSeenStore.test.ts locks the Spec 77 §3.2 rule that drives the amber flash — strict !== comparison, first-sight rows do not flash, sign-out resets the map."
+    },
+    {
+      "id": "board_a11y_partial",
+      "kind": "a11y_label",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "why": "Exactly one interactive element (the search FAB) is labelled; the cards, section headers and the UNDO action are not — expected to stay non-zero until a labelling pass runs."
+    }
+  ],
+  "invariants": "none",
+  "plausibility": "none",
+  "states": [
+    {
+      "name": "loading",
+      "golden": "none"
+    },
+    {
+      "name": "empty",
+      "golden": "none"
+    },
+    {
+      "name": "hit",
+      "golden": "none"
+    },
+    {
+      "name": "error",
+      "golden": "none"
+    },
+    {
+      "name": "offline",
+      "golden": "none"
+    },
+    {
+      "name": "schema_drift",
+      "golden": "none"
+    },
+    {
+      "name": "unauthorized",
+      "golden": "none"
+    }
+  ],
+  "errors": {
+    "answer": "inline",
+    "why": "A failed board fetch renders a centred \"Failed to load board.\" with a Retry inside the screen; a failed removal silently restores the snapshot with no user-visible message.",
+    "evidence": [
+      "mobile/app/(app)/flight-board.tsx:308-314",
+      "mobile/app/(app)/flight-board.tsx:147-151"
+    ],
+    "classes": [
+      {
+        "class": "401",
+        "ui": "One silent session refresh, then the inline \"Failed to load board.\" retry block."
+      },
+      {
+        "class": "500",
+        "ui": "Inline \"Failed to load board.\" + Retry."
+      },
+      {
+        "class": "schema_drift",
+        "ui": "ZodError re-thrown to the root ErrorBoundary (useFlightBoard throwOnError)."
+      },
+      {
+        "class": "offline",
+        "ui": "OfflineBanner + the MMKV-persisted board."
+      }
+    ],
+    "no_retry": []
+  },
+  "emits": {
+    "answer": "events",
+    "why": "flight_board_viewed is wrapped in `if (__DEV__)` so it never fires in a production build; the only production events from this screen come from the shared removal path, which emits none.",
+    "evidence": [
+      "mobile/app/(app)/flight-board.tsx:123-127",
+      "mobile/src/lib/analytics.ts:121-132"
+    ],
+    "analytics": [
+      "flight_board_viewed (DEV-only)"
+    ],
+    "ledger_events": [],
+    "breadcrumbs": []
+  },
+  "offers": {
+    "answer": "none",
+    "why": "No sponsored placement is rendered: the only slot component in the Expo tree is SponsorSlot, and it returns null unless EXPO_PUBLIC_PARCEL_SPONSORS=1.",
+    "evidence": [
+      "mobile/src/components/parcel/SponsorSlot.tsx:16-20"
+    ]
+  },
+  "metering": {
+    "answer": "none",
+    "why": "Nothing here is counted: the Spec 126 §7 usage ledger table does not exist (grep for usage_events in the introspected drizzle schema returns 0 hits), and the only quota-shaped counter, user_profiles.lead_views_count, is incremented solely by POST /api/leads/view, which has no mobile caller.",
+    "evidence": [
+      "src/lib/db/generated/schema.ts — no usage_events table (grep, 2026-09-15)",
+      "src/app/api/leads/view/route.ts:110",
+      "src/features/leads/api/useLeadView.ts:25 — imported only by src/tests/useLeadView.logic.test.tsx"
+    ]
+  },
+  "config": {
+    "answer": "none",
+    "why": "The surface consumes no registered logic variable: the only server-side tunable in this path, user_profiles.radius_cap_km, is a per-user admin column, not a logic_variables row.",
+    "evidence": [
+      "src/lib/userProfile.schema.ts:40",
+      "src/app/api/user-profile/route.ts:328",
+      "docs/reference/logic-variables-registry.md — no radius_cap_km entry"
+    ],
+    "logic_variables": [],
+    "retired": []
+  },
+  "sharing": {
+    "answer": "shared",
+    "why": "/api/leads/flight-board is also the cold-boot cache the flight-job detail screen reads first, and /api/leads/save is shared with the feed, the lead detail and the search sheet.",
+    "evidence": [
+      "mobile/app/(app)/[flight-job].tsx:130",
+      "mobile/src/components/feed/SearchPermitsSheet.tsx:47"
+    ],
+    "surfaces": [
+      "mobile_flight_job_detail",
+      "overlay_search_permits_sheet",
+      "mobile_lead_feed",
+      "mobile_lead_detail"
+    ]
+  },
+  "a11y": {
+    "touch_target_min_px": 56,
+    "labels": "partial",
+    "dark_mode": "hardcoded",
+    "reduced_motion": "ignored",
+    "i18n": "none",
+    "safe_area": [
+      "top"
+    ]
+  },
+  "deviations": "none",
+  "limitations": [
+    {
+      "what": "Only the FAB carries an accessible label; the cards, the section headers and the UNDO action are unlabelled.",
+      "measured": "grep -c \"accessibilityLabel|accessibilityRole\" flight-board.tsx → 2, both on the same FAB Pressable (flight-board.tsx:384-385).",
+      "check_id": "board_a11y_partial"
+    },
+    {
+      "what": "The production build emits nothing for this screen — its single analytics event is DEV-gated.",
+      "measured": "flight-board.tsx:124 `if (__DEV__) { track('flight_board_viewed'); }`.",
+      "check_id": "board_contract_parse"
+    }
+  ],
+  "interpretation": "none",
+  "notes": "flight_board_viewed is DEV-only, so the flight board has ZERO production telemetry. Removal is a POST to /api/leads/save with saved:false — not a DELETE — and the pending delete is force-committed on unmount and on pull-to-refresh. The undo snackbar UNDO target relies on hitSlop rather than a 44px box.",
+  "x-draft": {
+    "shard": "mobile-product",
+    "files": [
+      "mobile/app/(app)/flight-board.tsx",
+      "mobile/src/components/feed/FlightCard.tsx",
+      "mobile/src/components/feed/FlightCardSkeleton.tsx",
+      "mobile/src/components/feed/TemporalSectionHeader.tsx",
+      "mobile/src/components/feed/EmptyBoardState.tsx"
+    ],
+    "loc": 417,
+    "call_idiom": "hook",
+    "stores": [
+      "tabBarStore",
+      "paywallStore",
+      "flightBoardSeenStore"
+    ],
+    "measured_states": [
+      "inline_blur_locked",
+      "loading_skeletons",
+      "error_retry",
+      "empty_board",
+      "loaded",
+      "undo_snackbar_visible",
+      "refetching"
+    ],
+    "measured_gate": {
+      "session": "required",
+      "entitlement": "subscription_status",
+      "flag": "none",
+      "permission": "none"
+    }
+  },
+  "programme": {
+    "scope": "estate_other",
+    "phase": "not_scheduled",
+    "why": "Flight center — the other product. Fenced from the parcel tool by Spec 128 R-03; inventoried only.",
+    "feature": "F91",
+    "build_order": 4183,
+    "leakage": "UNRESEARCHED",
+    "product_questions": "UNRESEARCHED",
+    "review": {
+      "status": "unreviewed"
+    }
+  }
+}

@@ -1,0 +1,334 @@
+{
+  "kind": "SURFACE",
+  "status": "exists",
+  "docs": {
+    "purpose": "An operator's at-a-glance read on how the mobile and web apps are behaving. Five tiles show the crash rate over the last day, how many sign-in attempts succeed by method over the last week, how often a viewed lead gets saved, how often the paywall gets clicked, and how much cache-refresh chatter there was. Each tile links out to the deeper analytics tools, and a tile that cannot reach its data source says so with the reason instead of showing a wrong number.",
+    "data_story": "It reads nothing from the database directly. Every value arrives through one contract: `/api/admin/app-health`. Those contracts' own table reads are recorded on their rows.",
+    "under_126": "**RE-PROJECT** — it writes nothing and holds no Layer-3 store, so the move is short — the server already assembles the payload and only the rendering is client-side. It renders through the DASHBOARD renderer (tiles that each declare their own contract and degrade independently), reading by reference: `/api/admin/app-health`. Its `owns.components[]` declares `src/components/admin/HealthTile.tsx`."
+  },
+  "evidence": {
+    "files": [
+      "src/app/admin/app-health/page.tsx:1",
+      "src/components/admin/HealthTile.tsx:1",
+      "src/features/admin-app-health/api/useAppHealth.ts:35"
+    ],
+    "contracts": [
+      "src/app/api/admin/app-health/route.ts:82",
+      "src/features/admin-app-health/api/useAppHealth.ts:22"
+    ],
+    "tables": [
+      "src/app/api/admin/app-health/route.ts:85",
+      "src/lib/auth/verify-admin.ts:118"
+    ],
+    "gate": [
+      "src/lib/auth/route-guard.ts:162",
+      "src/middleware.ts:95",
+      "src/app/api/admin/app-health/route.ts:85"
+    ],
+    "states": [
+      "src/app/admin/app-health/page.tsx:95",
+      "src/components/admin/HealthTile.tsx:1",
+      "src/tests/admin-health-tile.ui.test.tsx:17"
+    ],
+    "emits": [
+      "src/app/admin/app-health/page.tsx:149",
+      "src/app/api/admin/app-health/route.ts:103"
+    ]
+  },
+  "identity": {
+    "id": "admin_app_health",
+    "route": "src/app/admin/app-health/page.tsx",
+    "archetype": "DASHBOARD",
+    "platforms": [
+      "web"
+    ],
+    "owns": {
+      "components": [
+        "src/components/admin/HealthTile.tsx"
+      ]
+    },
+    "owner": "UNRESEARCHED",
+    "spec": "docs/specs/02-web-admin/30_app_health_dashboard.md",
+    "spec_refs": [
+      "docs/specs/02-web-admin/30_app_health_dashboard.md §2.2",
+      "docs/specs/02-web-admin/30_app_health_dashboard.md §2.3",
+      "docs/specs/02-web-admin/30_app_health_dashboard.md §3",
+      "docs/specs/02-web-admin/30_app_health_dashboard.md §2.6",
+      "docs/specs/02-web-admin/33_web_admin_engineering_protocol.md §3"
+    ],
+    "spec_version": "0-draft",
+    "versioning": {
+      "answer": "breaking_allowed",
+      "why": "The only consumer is this page; the payload is Zod-parsed by the route itself before it leaves, so a shape change is one commit on both sides.",
+      "evidence": [
+        "src/app/api/admin/app-health/route.ts:199",
+        "src/features/admin-app-health/api/useAppHealth.ts:22"
+      ]
+    },
+    "ref": "S-018"
+  },
+  "inputs": {
+    "answer": "contract",
+    "why": "Every value arrives through one contract; the page issues no DB query and reads no projection table.",
+    "evidence": [
+      "src/features/admin-app-health/api/useAppHealth.ts:22",
+      "src/app/api/admin/app-health/route.ts:82"
+    ],
+    "contract_ref": [
+      "/api/admin/app-health"
+    ],
+    "query_key": [
+      "admin",
+      "app-health"
+    ],
+    "field_whitelist": [
+      "snapshot_at",
+      "tiles.crash_rate_24h",
+      "tiles.auth_conversion_7d",
+      "tiles.lead_save_funnel_7d",
+      "tiles.paywall_conversion_7d",
+      "tiles.cache_invalidation_24h"
+    ],
+    "tables": [
+      {
+        "table": "profiles",
+        "columns": [
+          "is_admin"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/00-architecture/114_rls_policy_catalog.md §5",
+        "evidence": [
+          "src/app/api/admin/app-health/route.ts:85",
+          "src/lib/auth/verify-admin.ts:118"
+        ]
+      }
+    ]
+  },
+  "outputs": {
+    "answer": "none",
+    "why": "The route exports GET only and the page posts nothing; the tiles are read-only links out to Sentry/PostHog.",
+    "evidence": [
+      "src/app/api/admin/app-health/route.ts:82",
+      "src/app/admin/app-health/page.tsx:149"
+    ],
+    "contract_ref": [],
+    "tables": []
+  },
+  "state": {
+    "answer": "query_cache",
+    "why": "One TanStack query; the page builds its own QueryClient per mount, so nothing it holds survives navigation and there is no Layer-3 store.",
+    "evidence": [
+      "src/app/admin/app-health/page.tsx:44",
+      "src/features/admin-app-health/api/useAppHealth.ts:35"
+    ],
+    "fields": []
+  },
+  "staleness": {
+    "answer": "query_cache",
+    "why": "staleTime and refetchInterval are both 60s, deliberately aligned to the route's own minute-boundary process cache, so the screen never shows a value fresher than the server has.",
+    "evidence": [
+      "src/features/admin-app-health/api/useAppHealth.ts:19",
+      "src/features/admin-app-health/api/useAppHealth.ts:38",
+      "src/app/api/admin/app-health/cache.ts:47"
+    ],
+    "stale_time_ms": 60000,
+    "offline": "blocked"
+  },
+  "guards": {
+    "session": {
+      "answer": "admin",
+      "why": "There is no admin Postgres role: classifyRoute sends every /admin/* path down the admin arm, and the real boundary is verifyAdminAuth reading profiles.is_admin on the route. This route calls it on the first line of GET.",
+      "evidence": [
+        "src/lib/auth/route-guard.ts:162",
+        "src/middleware.ts:95",
+        "src/app/api/admin/app-health/route.ts:85"
+      ]
+    },
+    "rls_class": {
+      "answer": "B",
+      "why": "The only table it reaches is profiles (Class C) through the guard; it reaches no data table of its own, and everything it renders comes from Sentry/PostHog over HTTP, so no policy class governs its payload.",
+      "evidence": [
+        "src/app/api/admin/app-health/route.ts:85",
+        "docs/specs/00-architecture/114_rls_policy_catalog.md §2"
+      ]
+    },
+    "disclosure": "none",
+    "entitlement": "none",
+    "flag": "none",
+    "permission": "none",
+    "rate_bucket": "none"
+  },
+  "render": {
+    "targets": [
+      "screen"
+    ],
+    "projection": "grid",
+    "breakpoints": "desktop_first_md",
+    "export": "none",
+    "tiles": "UNRESEARCHED",
+    "refresh": "UNRESEARCHED"
+  },
+  "checks": [
+    {
+      "id": "app_health_contract_parse",
+      "kind": "contract_parse",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "The route Zod-parses its own assembled payload before returning it, so a drifted tile shape fails at the boundary rather than rendering a wrong number."
+    },
+    {
+      "id": "app_health_tile_degrades",
+      "kind": "error_state",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "A tile that cannot reach its source renders muted with the reason instead of a number — locked by the HealthTile UI suite."
+    },
+    {
+      "id": "app_health_auth_class",
+      "kind": "auth_class_parity",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "pre",
+      "why": "guards.session admin must agree with the contract: GET calls verifyAdminAuth on its first line."
+    }
+  ],
+  "invariants": "none",
+  "plausibility": "none",
+  "states": [
+    {
+      "name": "loading",
+      "golden": "none"
+    },
+    {
+      "name": "hit",
+      "golden": "none"
+    },
+    {
+      "name": "degraded",
+      "golden": "none"
+    },
+    {
+      "name": "error",
+      "golden": "none"
+    }
+  ],
+  "errors": {
+    "answer": "inline",
+    "why": "A failed fetch renders a page-level error block in place of the grid, and a per-tile failure renders inside the tile; neither throws to a boundary (this route has no error.tsx sibling).",
+    "evidence": [
+      "src/app/admin/app-health/page.tsx:95",
+      "src/components/admin/HealthTile.tsx:1"
+    ],
+    "classes": [
+      {
+        "class": "401",
+        "ui": "the hook throws on a non-ok response and the page renders its error block"
+      },
+      {
+        "class": "500",
+        "ui": "same error block"
+      }
+    ]
+  },
+  "emits": {
+    "answer": "none",
+    "why": "Nothing it does is countable: neither the page nor HealthTile imports captureEvent or track, and the route emits Sentry breadcrumbs only (a log, not an event).",
+    "evidence": [
+      "src/app/admin/app-health/page.tsx:1",
+      "src/components/admin/HealthTile.tsx:1",
+      "src/app/api/admin/app-health/route.ts:103"
+    ],
+    "analytics": [],
+    "ledger_events": [],
+    "breadcrumbs": [
+      "app-health route breadcrumb (src/app/api/admin/app-health/route.ts:103)"
+    ]
+  },
+  "offers": {
+    "answer": "none",
+    "why": "An internal operator tool renders no sponsored placement; no offers/placements table is reached from any file it owns.",
+    "evidence": [
+      "src/app/admin/app-health/page.tsx:1"
+    ]
+  },
+  "metering": {
+    "answer": "none",
+    "why": "Nothing here is billable or quota-bearing: no usage_events / ledger write is reached from this surface or its contracts.",
+    "evidence": [
+      "src/app/api/admin/app-health/route.ts:82"
+    ]
+  },
+  "config": {
+    "answer": "none",
+    "why": "It consumes no tunable: the thresholds it renders are computed upstream in Sentry/PostHog, and the route reads no logic_variables row.",
+    "evidence": [
+      "src/app/api/admin/app-health/route.ts:82"
+    ],
+    "logic_variables": [],
+    "retired": []
+  },
+  "sharing": {
+    "answer": "sole",
+    "why": "/api/admin/app-health has exactly one caller in the tree — this page's hook.",
+    "evidence": [
+      "src/features/admin-app-health/api/useAppHealth.ts:22"
+    ],
+    "surfaces": []
+  },
+  "a11y": {
+    "touch_target_min_px": "UNRESEARCHED",
+    "labels": "partial",
+    "dark_mode": "none",
+    "reduced_motion": "ignored",
+    "i18n": "none",
+    "safe_area": "none"
+  },
+  "deviations": "none",
+  "limitations": [
+    {
+      "what": "touch_target_min_px has no legal answer for a desktop-only admin page",
+      "measured": "The schema allows only UNRESEARCHED or an integer >= 44; nothing in this surface declares a 44px floor (grep min-h-[44/h-11 over the two owned files returns nothing), and desktop-first admin has no such rule.",
+      "check_id": "none — vocabulary gap, escalated per Spec 128 §4"
+    },
+    {
+      "what": "The page header comment claims a server-rendered src/app/admin/layout.tsx wraps it",
+      "measured": "No admin layout file exists anywhere under src/app/admin/.",
+      "check_id": "none"
+    }
+  ],
+  "interpretation": "none",
+  "notes": "'tile_unavailable' is a real per-tile state in HealthTile (status==='unavailable' renders a muted tile with the reason - Spec 30 Sec 2.3), distinct from the page-wide error banner. The page's own header comment claims 'the surrounding admin layout (src/app/admin/layout.tsx) stays server-rendered' - that file does NOT exist; there is no admin layout in the tree. The data hook lives at src/features/admin-app-health/api/useAppHealth.ts (60s poll), outside src/components/ so excluded from files per the stated rule. identity.owner is UNRESEARCHED estate-wide: no owner registry exists in the tree, so naming one would be an invention rather than a measurement. a11y.touch_target_min_px is UNRESEARCHED because its vocabulary (UNRESEARCHED or an integer >= 44) has no member for a desktop-only admin page that declares no floor.",
+  "x-draft": {
+    "shard": "admin-existing",
+    "files": [
+      "src/app/admin/app-health/page.tsx",
+      "src/components/admin/HealthTile.tsx"
+    ],
+    "loc": 335,
+    "measured_states": [
+      "loading",
+      "error",
+      "loaded",
+      "tile_unavailable"
+    ],
+    "measured_gate": {
+      "session": "admin",
+      "why": "classifyRoute('/admin/app-health') matches the admin-pages arm via `pathname.startsWith('/admin/')` -> 'admin'."
+    }
+  },
+  "programme": {
+    "scope": "platform_shared",
+    "phase": "UNRESEARCHED",
+    "why": "An admin surface that operates the PLATFORM (users, entitlements, security, tunables, pipeline health) rather than either product specifically.",
+    "feature": "F16",
+    "build_order": 3163,
+    "leakage": "none",
+    "product_questions": "none",
+    "review": {
+      "status": "unreviewed"
+    }
+  }
+}

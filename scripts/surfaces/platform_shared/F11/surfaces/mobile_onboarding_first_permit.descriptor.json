@@ -1,0 +1,255 @@
+{
+  "kind": "SURFACE",
+  "status": "exists",
+  "docs": {
+    "purpose": "Offered only to users who said they mainly want to track existing projects. It invites them to add one job they are already working on so their board is not empty on arrival, with a skip option underneath. In the current build neither button actually adds anything — both simply move on to the terms screen.",
+    "data_story": "This surface reaches **no API contract at all** — every value it shows is local, passed in as a prop, or read from the device. It holds no client-side store, so there is no local copy of server state to keep in sync. It emits **no analytics event**, so nothing it does is currently countable.",
+    "under_126": "**RE-PROJECT** — it writes nothing and holds no Layer-3 store, so the move is short — the server already assembles the payload and only the rendering is client-side. It renders through the WIZARD_STEP renderer (declared step index, advance condition, resume key and skip rule), reading no contract. It owns no component of its own, so its `owns.components[]` is an empty array — a legal answer, written down."
+  },
+  "evidence": {
+    "files": [
+      "mobile/app/(onboarding)/first-permit.tsx:1"
+    ],
+    "contracts": [
+      "mobile/app/(onboarding)/first-permit.tsx:1-54 — no /api/ string and no hook in the file"
+    ],
+    "tables": [
+      "mobile/app/(onboarding)/first-permit.tsx:1-54 — reaches no table"
+    ],
+    "gate": [
+      "mobile/app/_layout.tsx:141-231"
+    ],
+    "states": [
+      "mobile/app/(onboarding)/first-permit.tsx:25-53"
+    ],
+    "emits": [
+      "mobile/app/(onboarding)/first-permit.tsx:1-54 — no track() call in the file"
+    ]
+  },
+  "identity": {
+    "id": "mobile_onboarding_first_permit",
+    "route": "mobile/app/(onboarding)/first-permit.tsx",
+    "archetype": "WIZARD_STEP",
+    "platforms": [
+      "mobile"
+    ],
+    "owns": {
+      "components": []
+    },
+    "owner": "unassigned (no CODEOWNERS file and no owner registry exists in the repo — measured 2026-09-15)",
+    "spec": "docs/specs/03-mobile/94_mobile_onboarding.md",
+    "spec_refs": [
+      "docs/specs/03-mobile/94_mobile_onboarding.md §6",
+      "docs/specs/03-mobile/94_mobile_onboarding.md §10",
+      "docs/specs/03-mobile/77_mobile_crm_flight_board.md §3.1"
+    ],
+    "spec_version": "0-draft",
+    "versioning": {
+      "answer": "none",
+      "why": "It is a stub with no payload and nothing downstream reads a shape from it.",
+      "evidence": [
+        "mobile/app/(onboarding)/first-permit.tsx:1-54"
+      ]
+    },
+    "ref": "S-030"
+  },
+  "inputs": {
+    "answer": "none",
+    "why": "The second of the two WIZARD_STEPs that call no route: both buttons are local navigation and the SearchPermitsSheet this step is supposed to host was never wired.",
+    "evidence": [
+      "mobile/app/(onboarding)/first-permit.tsx:13-23"
+    ],
+    "contract_ref": [],
+    "query_key": [],
+    "field_whitelist": [],
+    "tables": []
+  },
+  "outputs": {
+    "answer": "none",
+    "why": "Neither button writes anything. \"Yes, search now\" fires a success haptic and pushes to terms — the same destination as Skip — so no permit is ever claimed here.",
+    "evidence": [
+      "mobile/app/(onboarding)/first-permit.tsx:17-23"
+    ],
+    "contract_ref": [],
+    "tables": [],
+    "rollback": "n/a — nothing is written.",
+    "invalidates": []
+  },
+  "state": {
+    "answer": "none",
+    "why": "No store, no query, no component state — a two-button stub.",
+    "evidence": [
+      "mobile/app/(onboarding)/first-permit.tsx:10-24"
+    ],
+    "fields": []
+  },
+  "staleness": {
+    "answer": "none",
+    "why": "It displays no server data.",
+    "evidence": [
+      "mobile/app/(onboarding)/first-permit.tsx:25-53"
+    ],
+    "offline": "none"
+  },
+  "guards": {
+    "session": {
+      "answer": "authenticated",
+      "why": "Reachable only after AuthGate has a Supabase user whose server profile says onboarding_complete is false; PATCH /api/user-profile is an authenticated route.",
+      "evidence": [
+        "src/lib/auth/route-guard.ts:120-132",
+        "mobile/app/_layout.tsx:141-231",
+        "mobile/app/(onboarding)/first-permit.tsx:1-54"
+      ]
+    },
+    "rls_class": {
+      "answer": "none",
+      "why": "It reaches no table.",
+      "evidence": [
+        "mobile/app/(onboarding)/first-permit.tsx:1-54"
+      ]
+    },
+    "disclosure": "none",
+    "entitlement": "none",
+    "flag": "none",
+    "permission": "none",
+    "rate_bucket": "none"
+  },
+  "render": {
+    "targets": [
+      "screen"
+    ],
+    "projection": "none",
+    "breakpoints": "mobile_first",
+    "export": "none",
+    "wizard": "UNRESEARCHED"
+  },
+  "checks": [
+    {
+      "id": "firstpermit_stub_declared",
+      "kind": "empty_state",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "why": "Expected to stay non-zero until Spec 77's SearchPermitsSheet is wired here: the primary CTA is a placeholder that navigates instead of searching, and the file says so at :17-21."
+    },
+    {
+      "id": "firstpermit_a11y_label",
+      "kind": "a11y_label",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "why": "The primary CTA carries a role and a label; the Skip action carries neither."
+    }
+  ],
+  "invariants": "none",
+  "plausibility": "none",
+  "states": [
+    {
+      "name": "static",
+      "golden": "none"
+    }
+  ],
+  "errors": {
+    "answer": "none",
+    "why": "No async work and no failure path exists.",
+    "evidence": [
+      "mobile/app/(onboarding)/first-permit.tsx:13-23"
+    ]
+  },
+  "emits": {
+    "answer": "none",
+    "why": "No event fires, so the \"search now\" vs \"skip\" split — the only signal that would justify building the real step — is unmeasurable.",
+    "evidence": [
+      "mobile/app/(onboarding)/first-permit.tsx:1-54"
+    ],
+    "analytics": [],
+    "ledger_events": [],
+    "breadcrumbs": []
+  },
+  "offers": {
+    "answer": "none",
+    "why": "No sponsored placement is rendered: the only slot component in the Expo tree is SponsorSlot, and it returns null unless EXPO_PUBLIC_PARCEL_SPONSORS=1.",
+    "evidence": [
+      "mobile/src/components/parcel/SponsorSlot.tsx:16-20"
+    ]
+  },
+  "metering": {
+    "answer": "none",
+    "why": "Nothing here is counted: the Spec 126 §7 usage ledger table does not exist (grep for usage_events in the introspected drizzle schema returns 0 hits), and the only quota-shaped counter, user_profiles.lead_views_count, is incremented solely by POST /api/leads/view, which has no mobile caller.",
+    "evidence": [
+      "src/lib/db/generated/schema.ts — no usage_events table (grep, 2026-09-15)",
+      "src/app/api/leads/view/route.ts:110",
+      "src/features/leads/api/useLeadView.ts:25 — imported only by src/tests/useLeadView.logic.test.tsx"
+    ]
+  },
+  "config": {
+    "answer": "none",
+    "why": "The surface consumes no registered logic variable: the only server-side tunable in this path, user_profiles.radius_cap_km, is a per-user admin column, not a logic_variables row.",
+    "evidence": [
+      "src/lib/userProfile.schema.ts:40",
+      "src/app/api/user-profile/route.ts:328",
+      "docs/reference/logic-variables-registry.md — no radius_cap_km entry"
+    ],
+    "logic_variables": [],
+    "retired": []
+  },
+  "sharing": {
+    "answer": "none",
+    "why": "It renders no contract.",
+    "evidence": [
+      "mobile/app/(onboarding)/first-permit.tsx:1-54"
+    ],
+    "surfaces": []
+  },
+  "a11y": {
+    "touch_target_min_px": 44,
+    "labels": "partial",
+    "dark_mode": "hardcoded",
+    "reduced_motion": "none",
+    "i18n": "none",
+    "safe_area": [
+      "top",
+      "bottom"
+    ]
+  },
+  "deviations": "none",
+  "limitations": [
+    {
+      "what": "The primary CTA is a lie in the UX sense: \"Yes, search now →\" fires a SUCCESS haptic and navigates to the same screen as Skip, having searched nothing and claimed nothing.",
+      "measured": "first-permit.tsx:19-23 — handleSearchNow calls successNotification() then router.push('/(onboarding)/terms'), identical to handleSkip apart from the haptic.",
+      "check_id": "firstpermit_stub_declared"
+    }
+  ],
+  "interpretation": "none",
+  "notes": "Path T users reach this step and are told they can land on a populated flight board; the step cannot deliver that, because SearchPermitsSheet is never mounted here. The TODO at :17 is the only record.",
+  "x-draft": {
+    "shard": "mobile-product",
+    "files": [
+      "mobile/app/(onboarding)/first-permit.tsx"
+    ],
+    "loc": 54,
+    "call_idiom": "none",
+    "stores": [],
+    "measured_states": [
+      "loaded"
+    ],
+    "measured_gate": {
+      "session": "required",
+      "entitlement": "none",
+      "flag": "none",
+      "permission": "none"
+    }
+  },
+  "programme": {
+    "scope": "platform_shared",
+    "phase": "UNRESEARCHED",
+    "why": "Onboarding writes `user_profiles` columns both products read; the flow is shared even though its copy is lead-gen-shaped today.",
+    "feature": "F11",
+    "build_order": 3113,
+    "leakage": "none",
+    "product_questions": "none",
+    "review": {
+      "status": "unreviewed"
+    }
+  }
+}

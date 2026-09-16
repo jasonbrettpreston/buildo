@@ -1,0 +1,242 @@
+{
+  "kind": "SURFACE",
+  "status": "exists",
+  "docs": {
+    "purpose": "The public front door of the product. A visitor who has never signed in lands here and reads the pitch: the service watches Toronto building permits every day and matches them to a trade so contractors hear about jobs early. It shows three explainer cards, a list of the twenty trade categories covered, and buttons that send the visitor to sign in or straight to the live permit feed. Nothing on the page is personalised and it fetches no data.",
+    "data_story": "This surface reaches **no API contract at all** — every value it shows is local, passed in as a prop, or read from the device.",
+    "under_126": "**RE-PROJECT** — it writes nothing and holds no Layer-3 store, so the move is short — the server already assembles the payload and only the rendering is client-side. It renders through the STATIC renderer (content source and SEO, or a declared redirect alone), reading no contract. It owns no component of its own, so its `owns.components[]` is an empty array — a legal answer, written down."
+  },
+  "evidence": {
+    "files": [
+      "src/app/page.tsx:1"
+    ],
+    "contracts": [
+      "none — no /api/ string and no hook import in src/app/page.tsx"
+    ],
+    "tables": [
+      "none — no SQL, no db client import"
+    ],
+    "gate": [
+      "src/lib/auth/route-guard.ts:44",
+      "src/tests/middleware.logic.test.ts:30"
+    ],
+    "states": [
+      "src/app/page.tsx:8-105 — one unconditional return, no conditional branch"
+    ],
+    "emits": [
+      "none — no captureEvent import in src/app/page.tsx"
+    ]
+  },
+  "identity": {
+    "id": "web_landing",
+    "route": "src/app/page.tsx",
+    "archetype": "STATIC",
+    "platforms": [
+      "web"
+    ],
+    "owns": {
+      "components": []
+    },
+    "owner": "web",
+    "spec": "UNRESEARCHED",
+    "spec_refs": [],
+    "spec_version": "0-draft",
+    "versioning": {
+      "answer": "none",
+      "why": "Nothing consumes it — it is a leaf page with hardcoded copy and two links; no other surface reads its output.",
+      "evidence": [
+        "src/app/page.tsx:8-107"
+      ]
+    },
+    "ref": "S-005"
+  },
+  "inputs": {
+    "answer": "none",
+    "why": "Every string on the page is a literal in the file: the 20-trade list, the three feature cards and the \"237,000+\" headline are all hardcoded. No fetch, no /api/ string, no props.",
+    "evidence": [
+      "src/app/page.tsx:36-38,56-67,79-84"
+    ],
+    "contract_ref": [],
+    "query_key": [],
+    "field_whitelist": [],
+    "tables": []
+  },
+  "outputs": {
+    "answer": "none",
+    "why": "It writes nothing anywhere — the only handler is router.push('/dashboard').",
+    "evidence": [
+      "src/app/page.tsx:40-45"
+    ],
+    "contract_ref": [],
+    "tables": []
+  },
+  "state": {
+    "answer": "none",
+    "why": "It declares no useState and owns no Field Ownership Matrix field; the only hook is useRouter.",
+    "evidence": [
+      "src/app/page.tsx:5-6"
+    ],
+    "fields": []
+  },
+  "staleness": {
+    "answer": "static",
+    "why": "Its content changes only when this file is redeployed — including the \"237,000+\" and \"20 trades\" figures, which are typed into the JSX and not read from anywhere.",
+    "evidence": [
+      "src/app/page.tsx:36-38,76"
+    ],
+    "offline": "none"
+  },
+  "guards": {
+    "session": {
+      "answer": "anon",
+      "why": "PUBLIC_PATHS lists `/` explicitly and the middleware lock pins classifyRoute('/') === 'public'.",
+      "evidence": [
+        "src/lib/auth/route-guard.ts:44",
+        "src/tests/middleware.logic.test.ts:30"
+      ]
+    },
+    "rls_class": {
+      "answer": "none",
+      "why": "It reaches no table.",
+      "evidence": [
+        "src/app/page.tsx:1-116"
+      ]
+    },
+    "disclosure": "none",
+    "entitlement": "none",
+    "flag": "none",
+    "permission": "none",
+    "rate_bucket": "none"
+  },
+  "render": {
+    "targets": [
+      "screen"
+    ],
+    "projection": "none",
+    "breakpoints": "mobile_first",
+    "export": "none"
+  },
+  "checks": [
+    {
+      "id": "web_landing_touch_targets",
+      "kind": "touch_target",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "The \"Get Started\" anchor is px-4 py-2 on text-sm (20px line-box + 16px padding = 36px) and the hero button px-6 py-3 (20 + 24 = 44px) — the first is below the floor, so this needs an assertion rather than an assumption."
+    },
+    {
+      "id": "web_landing_brand_name",
+      "kind": "render_target_parity",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "why": "The header and footer render \"Buildo\" while the document title (layout.tsx:6) and the login page both render \"MaxBLD\" — the Spec 117 rename is half-applied and a parity check is what keeps that visible until it is finished."
+    }
+  ],
+  "invariants": "none",
+  "plausibility": "none",
+  "states": [
+    {
+      "name": "static",
+      "golden": "none"
+    }
+  ],
+  "errors": {
+    "answer": "none",
+    "why": "No fetch, no throw path and no error boundary under src/app/ outside admin — no error state is reachable.",
+    "evidence": [
+      "src/app/page.tsx:1-116"
+    ]
+  },
+  "emits": {
+    "answer": "none",
+    "why": "It calls no captureEvent and writes no ledger row; nothing about a landing-page visit is currently countable beyond PostHog's own autocapture.",
+    "evidence": [
+      "src/app/page.tsx:1-116"
+    ],
+    "analytics": [],
+    "ledger_events": [],
+    "breadcrumbs": []
+  },
+  "offers": {
+    "answer": "none",
+    "why": "It renders no sponsored placement; every card and chip is a literal in the file.",
+    "evidence": [
+      "src/app/page.tsx:56-91"
+    ]
+  },
+  "metering": {
+    "answer": "none",
+    "why": "No usage_events write and no quota.",
+    "evidence": [
+      "src/app/page.tsx:1-116"
+    ]
+  },
+  "config": {
+    "answer": "none",
+    "why": "No tunable at all — the 20 trade names and the permit count are literals, not logic variables.",
+    "evidence": [
+      "src/app/page.tsx:36-38,79-84"
+    ],
+    "logic_variables": [],
+    "retired": []
+  },
+  "sharing": {
+    "answer": "none",
+    "why": "It renders no contract.",
+    "evidence": [
+      "src/app/page.tsx:1-116"
+    ],
+    "surfaces": []
+  },
+  "a11y": {
+    "touch_target_min_px": "UNRESEARCHED",
+    "labels": "partial",
+    "dark_mode": "none",
+    "reduced_motion": "none",
+    "i18n": "none",
+    "safe_area": "none"
+  },
+  "deviations": "none",
+  "limitations": [
+    {
+      "what": "Two headline figures are hardcoded and cannot track reality.",
+      "measured": "\"237,000+ Toronto building permits\" and \"20 Trade Categories\" are string literals at src/app/page.tsx:36-38 and :76-84; the live counts come from /api/admin/stats and the trades table, neither of which this page reads.",
+      "check_id": "web_landing_brand_name"
+    },
+    {
+      "what": "The product name is inconsistent within one page load.",
+      "measured": "src/app/page.tsx:13 and :99 render \"Buildo\"; src/app/layout.tsx:6 sets the tab title to \"MaxBLD\"; src/app/login/page.tsx:34 renders \"MaxBLD\".",
+      "check_id": "web_landing_brand_name"
+    }
+  ],
+  "interpretation": "none",
+  "notes": "No governing feature spec found: the file appears in no row of docs/specs/00-architecture/00_system_map.md and carries no SPEC LINK header. Spec 126 (02-web-admin/126_maxbld_surface_standard.md) only references 'marketing/landing' generically at line 97 and line 667 as a future conversion target, which is not a governing spec. Copy still says 'Buildo', not the Spec 117 'MaxBLD' rename that src/app/layout.tsx and the login page already use. Single unconditional render - no loading/empty/error branches exist, hence states=['static'] rather than an empty array. MEASURED 2026-09-15: no SPEC LINK header on src/app/page.tsx and no System Map row names it, so identity.spec is UNRESEARCHED rather than a guess at the nearest dashboard spec. a11y.labels is `partial`: the two header anchors and the hero button carry visible text but the page has no landmark labelling and the SVG-free chips are decorative spans. a11y.touch_target_min_px stays UNRESEARCHED — the vocabulary admits only UNRESEARCHED or an integer >= 44, and the measured \"Get Started\" target is 36px, which the menu cannot express (Spec 128 §4 escalation).",
+  "x-draft": {
+    "shard": "web-product",
+    "files": [
+      "src/app/page.tsx"
+    ],
+    "loc": 116,
+    "measured_states": [
+      "static"
+    ],
+    "measured_gate": {
+      "session": "public",
+      "why": "classifyRoute('/') falls past the static-file, /_next/, /api/auth/, exact-public-API, /api/admin/, /admin, authenticated-API and PUBLIC_PREFIXES arms (none match a bare '/'), then matches the PUBLIC_PATHS exact list which contains '/' -> 'public'."
+    }
+  },
+  "programme": {
+    "scope": "parcel_product",
+    "phase": "UNRESEARCHED",
+    "why": "Business requirement 5, the MaxBLD web front door on Vercel. It markets lead-gen today and is the surface the consumer web projection replaces — it is parcel-product scope by destination, not by current content.",
+    "feature": "F06",
+    "build_order": 1063,
+    "leakage": "none",
+    "product_questions": "none",
+    "review": {
+      "status": "unreviewed"
+    }
+  }
+}

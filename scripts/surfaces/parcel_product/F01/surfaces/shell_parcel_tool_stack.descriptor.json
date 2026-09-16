@@ -1,0 +1,252 @@
+{
+  "kind": "SURFACE",
+  "status": "exists",
+  "docs": {
+    "purpose": "The thin wrapper that lets the parcels tab hold two screens in sequence: the address search, and the lot report you reach by tapping a result. It hides the default navigation header so each screen can draw its own. It makes no decisions about who is allowed in.",
+    "data_story": "This surface reaches **no API contract at all** — every value it shows is local, passed in as a prop, or read from the device. It holds no client-side store, so there is no local copy of server state to keep in sync. It emits **no analytics event**, so nothing it does is currently countable.",
+    "under_126": "**RE-PROJECT** — it writes nothing and holds no Layer-3 store, so the move is short — the server already assembles the payload and only the rendering is client-side. It renders through the SHELL renderer (declared routing branches, guards and child groups — a shell here is not inert), reading no contract. It owns no component of its own, so its `owns.components[]` is an empty array — a legal answer, written down."
+  },
+  "evidence": {
+    "files": [
+      "mobile/app/(app)/parcel-tool/_layout.tsx:1"
+    ],
+    "contracts": [
+      "mobile/app/(app)/parcel-tool/_layout.tsx:1-15 — a Stack with two screens; no contract, no hook"
+    ],
+    "tables": [
+      "mobile/app/(app)/parcel-tool/_layout.tsx:1-15 — reaches no table"
+    ],
+    "gate": [
+      "mobile/app/(app)/parcel-tool/_layout.tsx:4-5",
+      "mobile/app/(app)/_layout.tsx:236-265"
+    ],
+    "states": [
+      "mobile/app/(app)/parcel-tool/_layout.tsx:10-13"
+    ],
+    "emits": [
+      "mobile/app/(app)/parcel-tool/_layout.tsx:1-15 — no track() call"
+    ]
+  },
+  "identity": {
+    "id": "shell_parcel_tool_stack",
+    "route": "mobile/app/(app)/parcel-tool/_layout.tsx",
+    "archetype": "SHELL",
+    "platforms": [
+      "mobile"
+    ],
+    "owns": {
+      "components": []
+    },
+    "owner": "unassigned (no CODEOWNERS file and no owner registry exists in the repo — measured 2026-09-15)",
+    "spec": "docs/specs/03-mobile/100_mobile_parcel_cost_tool.md",
+    "spec_refs": [
+      "docs/specs/03-mobile/100_mobile_parcel_cost_tool.md §4",
+      "docs/specs/03-mobile/99_mobile_state_architecture.md §5.1"
+    ],
+    "spec_version": "0-draft",
+    "versioning": {
+      "answer": "none",
+      "why": "A two-screen Stack with no payload.",
+      "evidence": [
+        "mobile/app/(app)/parcel-tool/_layout.tsx:10-13"
+      ]
+    },
+    "ref": "S-004"
+  },
+  "inputs": {
+    "answer": "none",
+    "why": "It declares the index and [parcelId] screens and takes nothing else.",
+    "evidence": [
+      "mobile/app/(app)/parcel-tool/_layout.tsx:10-13"
+    ],
+    "contract_ref": [],
+    "query_key": [],
+    "field_whitelist": [],
+    "tables": []
+  },
+  "outputs": {
+    "answer": "none",
+    "why": "A navigation container writes nothing.",
+    "evidence": [
+      "mobile/app/(app)/parcel-tool/_layout.tsx:1-15"
+    ],
+    "contract_ref": [],
+    "tables": []
+  },
+  "state": {
+    "answer": "none",
+    "why": "No state; routing stays inside the Stack with no router.replace effects, per the note in the file.",
+    "evidence": [
+      "mobile/app/(app)/parcel-tool/_layout.tsx:4-5"
+    ],
+    "fields": []
+  },
+  "staleness": {
+    "answer": "none",
+    "why": "It renders no data.",
+    "evidence": [
+      "mobile/app/(app)/parcel-tool/_layout.tsx:1-15"
+    ],
+    "offline": "none"
+  },
+  "guards": {
+    "session": {
+      "answer": "entitled",
+      "why": "It inherits the tab gate: shell_app_tabs will not mount the tab tree at all unless subscription_status is trial/active/past_due/admin_managed, and the lookup route re-checks server-side.",
+      "evidence": [
+        "mobile/app/(app)/_layout.tsx:236-265",
+        "src/app/api/parcels/lookup/route.ts:47-60"
+      ]
+    },
+    "rls_class": {
+      "answer": "none",
+      "why": "The shell itself reaches no table; its children read parcels and coa_applications through the API.",
+      "evidence": [
+        "mobile/app/(app)/parcel-tool/_layout.tsx:1-15"
+      ]
+    },
+    "disclosure": "none",
+    "entitlement": {
+      "product": "lead_gen",
+      "statuses": [
+        "trial",
+        "active",
+        "past_due",
+        "admin_managed"
+      ],
+      "on_missing": "paywall"
+    },
+    "flag": "none",
+    "permission": "none",
+    "rate_bucket": "none"
+  },
+  "render": {
+    "targets": [
+      "screen"
+    ],
+    "projection": "none",
+    "breakpoints": "mobile_first",
+    "export": "none",
+    "routing": "UNRESEARCHED"
+  },
+  "checks": [
+    {
+      "id": "parcelstack_no_router_effect",
+      "kind": "auth_class_parity",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "why": "The file states the rule it follows: no router.replace effects here, because AuthGate and AppLayout own the gate boundaries (Spec 99 §5.1)."
+    },
+    {
+      "id": "parcelstack_headers_hidden",
+      "kind": "render_target_parity",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "why": "headerShown false means each child renders its own SafeAreaView header; a child that forgot would render under the status bar."
+    }
+  ],
+  "invariants": "none",
+  "plausibility": "none",
+  "states": [
+    {
+      "name": "static",
+      "golden": "none"
+    }
+  ],
+  "errors": {
+    "answer": "none",
+    "why": "No async work, no failure path.",
+    "evidence": [
+      "mobile/app/(app)/parcel-tool/_layout.tsx:1-15"
+    ]
+  },
+  "emits": {
+    "answer": "none",
+    "why": "Nothing to emit.",
+    "evidence": [
+      "mobile/app/(app)/parcel-tool/_layout.tsx:1-15"
+    ],
+    "analytics": [],
+    "ledger_events": [],
+    "breadcrumbs": []
+  },
+  "offers": {
+    "answer": "none",
+    "why": "A navigation container renders no sponsored content.",
+    "evidence": [
+      "mobile/app/(app)/parcel-tool/_layout.tsx:1-15"
+    ]
+  },
+  "metering": {
+    "answer": "none",
+    "why": "Nothing here is counted: the Spec 126 §7 usage ledger table does not exist (grep for usage_events in the introspected drizzle schema returns 0 hits), and the only quota-shaped counter, user_profiles.lead_views_count, is incremented solely by POST /api/leads/view, which has no mobile caller.",
+    "evidence": [
+      "src/lib/db/generated/schema.ts — no usage_events table (grep, 2026-09-15)",
+      "src/app/api/leads/view/route.ts:110",
+      "src/features/leads/api/useLeadView.ts:25 — imported only by src/tests/useLeadView.logic.test.tsx"
+    ]
+  },
+  "config": {
+    "answer": "none",
+    "why": "The surface consumes no registered logic variable: the only server-side tunable in this path, user_profiles.radius_cap_km, is a per-user admin column, not a logic_variables row.",
+    "evidence": [
+      "src/lib/userProfile.schema.ts:40",
+      "src/app/api/user-profile/route.ts:328",
+      "docs/reference/logic-variables-registry.md — no radius_cap_km entry"
+    ],
+    "logic_variables": [],
+    "retired": []
+  },
+  "sharing": {
+    "answer": "none",
+    "why": "It renders no contract.",
+    "evidence": [
+      "mobile/app/(app)/parcel-tool/_layout.tsx:1-15"
+    ],
+    "surfaces": []
+  },
+  "a11y": {
+    "touch_target_min_px": 44,
+    "labels": "none",
+    "dark_mode": "none",
+    "reduced_motion": "none",
+    "i18n": "none",
+    "safe_area": "none"
+  },
+  "deviations": "none",
+  "limitations": "none",
+  "interpretation": "none",
+  "notes": "The only nested Stack inside the tab tree — the Parcel Cost Tool is a standalone two-screen flow that happens to live behind a tab.",
+  "x-draft": {
+    "shard": "mobile-product",
+    "files": [
+      "mobile/app/(app)/parcel-tool/_layout.tsx"
+    ],
+    "loc": 15,
+    "call_idiom": "none",
+    "stores": [],
+    "measured_states": [
+      "loaded"
+    ],
+    "measured_gate": {
+      "session": "required",
+      "entitlement": "subscription_status",
+      "flag": "none",
+      "permission": "none"
+    }
+  },
+  "programme": {
+    "scope": "parcel_product",
+    "phase": "B2",
+    "why": "The navigation shell for the `parcel-tool` route group; it exists only to contain the parcel product and routes nothing else.",
+    "feature": "F01",
+    "build_order": 1013,
+    "leakage": "none",
+    "product_questions": "none",
+    "review": {
+      "status": "unreviewed"
+    }
+  }
+}

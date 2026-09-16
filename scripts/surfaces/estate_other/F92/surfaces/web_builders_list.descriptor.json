@@ -1,0 +1,331 @@
+{
+  "kind": "SURFACE",
+  "status": "exists",
+  "docs": {
+    "purpose": "A searchable directory of the construction companies found in the permit data. Each row gives the company name, how many permits it holds, its Google star rating when known, whether its workplace-insurance registration is active, and a phone number if one was found. A search box filters by name and the list is paged twenty at a time, ordered by permit count. Clicking a row opens that company's detail page.",
+    "data_story": "It reads nothing from the database directly. Every value arrives through one contract: `/api/builders`. Behind that contract, the data comes from `entities` and `entity_projects`.",
+    "under_126": "**RE-PROJECT** — it writes nothing and holds no Layer-3 store, so the move is short — the server already assembles the payload and only the rendering is client-side. It renders through the LIST renderer (a collection with declared pagination, recycling and empty/offline states), reading by reference: `/api/builders`. It owns no component of its own, so its `owns.components[]` is an empty array — a legal answer, written down."
+  },
+  "evidence": {
+    "files": [
+      "src/app/builders/page.tsx:1"
+    ],
+    "contracts": [
+      "src/app/builders/page.tsx:40 — /api/builders"
+    ],
+    "tables": [
+      "src/app/api/builders/route.ts:23-25,36,43",
+      "src/lib/db/generated/schema.ts — entities, entity_contacts",
+      "docs/reference/data-lineage-map.md:506"
+    ],
+    "gate": [
+      "src/lib/auth/route-guard.ts:67-77",
+      "src/lib/auth/route-guard.ts:182-191",
+      "src/tests/middleware.logic.test.ts:60-61"
+    ],
+    "states": [
+      "src/app/builders/page.tsx:82-96 (loading skeleton / empty), :98-127 (hit), :159-164 (Suspense fallback)"
+    ],
+    "emits": [
+      "none — no captureEvent import in src/app/builders/page.tsx"
+    ]
+  },
+  "identity": {
+    "id": "web_builders_list",
+    "route": "src/app/builders/page.tsx",
+    "archetype": "LIST",
+    "platforms": [
+      "web"
+    ],
+    "owns": {
+      "components": []
+    },
+    "owner": "web",
+    "spec": "docs/specs/01-pipeline/37_entity_model.md",
+    "spec_refs": [
+      "docs/specs/01-pipeline/37_entity_model.md §2 (Auth Matrix)",
+      "docs/specs/01-pipeline/37_entity_model.md §3 (Behavioral Contract — /api/builders as the entities + entity_projects role alias)",
+      "docs/specs/00-architecture/00_system_map.md:39 — row 37 lists src/app/builders/page.tsx among its target files"
+    ],
+    "spec_version": "0-draft",
+    "versioning": {
+      "answer": "none",
+      "why": "Nothing parses its payload — the page spreads whatever /api/builders returns into an interface it declares locally, and five of that interface's fields do not exist on the table, so there is no promise being kept to break.",
+      "evidence": [
+        "src/app/builders/page.tsx:6-18",
+        "src/app/api/builders/route.ts:36",
+        "src/lib/db/generated/schema.ts — entities"
+      ]
+    },
+    "ref": "S-068"
+  },
+  "inputs": {
+    "answer": "contract",
+    "why": "One bare fetch to /api/builders with limit/offset/sort_by/sort_order and an optional search — no hook, no query key. field_whitelist is what the page actually reads off each row (src/app/builders/page.tsx:99-124) — five of those seven keys do not exist on entities, which is the finding, not an omission.",
+    "evidence": [
+      "src/app/builders/page.tsx:30-48"
+    ],
+    "contract_ref": [
+      "/api/builders"
+    ],
+    "query_key": [],
+    "field_whitelist": [
+      "id",
+      "name",
+      "permit_count",
+      "google_rating",
+      "wsib_status",
+      "phone",
+      "enriched_at"
+    ],
+    "tables": [
+      {
+        "table": "entities",
+        "columns": "all",
+        "producing_steps": [
+          "builders",
+          "enrich_named_builders",
+          "enrich_wsib_builders",
+          "link_wsib"
+        ],
+        "chain_position": "permits[5] · entities[1] · entities[0] · permits[6], sources[19]",
+        "owner_spec": "UNRESEARCHED",
+        "evidence": [
+          "src/app/api/builders/route.ts:36 — `SELECT * FROM entities`",
+          "docs/reference/data-lineage-map.md:506",
+          "scripts/manifest.json#chains"
+        ]
+      },
+      {
+        "table": "entity_projects",
+        "columns": [
+          "entity_id",
+          "role"
+        ],
+        "producing_steps": "UNRESEARCHED",
+        "chain_position": "UNRESEARCHED",
+        "owner_spec": "UNRESEARCHED",
+        "evidence": [
+          "src/app/api/builders/route.ts:23-25 — the Builder-role subquery",
+          "UNRESEARCHED — entity_projects is not in docs/reference/data-lineage-map.md; its producer must be traced by hand"
+        ]
+      }
+    ]
+  },
+  "outputs": {
+    "answer": "none",
+    "why": "It writes nothing — search and pagination are local state only, and the URL is never updated.",
+    "evidence": [
+      "src/app/builders/page.tsx:20-50"
+    ],
+    "contract_ref": [],
+    "tables": []
+  },
+  "state": {
+    "answer": "none",
+    "why": "Five useState hooks (search, builders, total, loading, page) — all component-local, none persisted, none read elsewhere; the ?search= param seeds `search` once and is never written back.",
+    "evidence": [
+      "src/app/builders/page.tsx:21-28"
+    ],
+    "fields": []
+  },
+  "staleness": {
+    "answer": "live",
+    "why": "Every search keystroke and page change refires the fetch immediately; no cache and no debounce sit between the input and the route.",
+    "evidence": [
+      "src/app/builders/page.tsx:30-48,77"
+    ],
+    "offline": "degraded"
+  },
+  "guards": {
+    "session": {
+      "answer": "authenticated",
+      "why": "Nothing whitelists the `/builders` PAGE: `/api/builders` is a PUBLIC_PREFIX but the page path is not, so it falls through to the fail-closed default.",
+      "evidence": [
+        "src/lib/auth/route-guard.ts:67-77",
+        "src/lib/auth/route-guard.ts:182-191",
+        "src/tests/middleware.logic.test.ts:60-61"
+      ]
+    },
+    "rls_class": {
+      "answer": "B",
+      "why": "entities and entity_projects are pipeline-owned tables reached through the server-side pg pool in src/lib/db/client — RLS on, no policy, service-role only.",
+      "evidence": [
+        "src/app/api/builders/route.ts:2,36",
+        "docs/specs/00-architecture/114_rls_policy_catalog.md"
+      ]
+    },
+    "disclosure": "none",
+    "entitlement": "none",
+    "flag": "none",
+    "permission": "none",
+    "rate_bucket": "none"
+  },
+  "render": {
+    "targets": [
+      "screen"
+    ],
+    "projection": "list",
+    "breakpoints": "mobile_first",
+    "export": "none",
+    "list": "UNRESEARCHED"
+  },
+  "checks": [
+    {
+      "id": "web_builders_list_field_whitelist_parity",
+      "kind": "field_whitelist_parity",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "The page reads b.name, b.phone, b.email, b.wsib_status and b.enriched_at; the entities table has legal_name, primary_phone, primary_email, is_wsib_registered and last_enriched_at — the route SELECTs * and passes the mismatch straight through, so every one of those five renders undefined."
+    },
+    {
+      "id": "web_builders_list_no_row_spread",
+      "kind": "disclosure",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "`SELECT * FROM entities` ships every column of the row to the client, including linkedin_url, google_place_id and photo_validated_at that nothing on the page renders — a projection has to be a pick-by-name list."
+    },
+    {
+      "id": "web_builders_list_empty_vs_error",
+      "kind": "empty_state",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "A network failure lands in .catch(console.warn) and leaves builders as [], so the page shows \"No builders found / Try a different search term\" — the empty state and the error state are currently the same pixels."
+    }
+  ],
+  "invariants": "none",
+  "plausibility": "none",
+  "states": [
+    {
+      "name": "loading",
+      "golden": "none"
+    },
+    {
+      "name": "hit",
+      "golden": "none"
+    },
+    {
+      "name": "empty",
+      "golden": "none"
+    },
+    {
+      "name": "redirect",
+      "golden": "src/lib/auth/route-guard.ts:182-191"
+    }
+  ],
+  "errors": {
+    "answer": "none",
+    "why": "The only failure handling is `.catch((err) => console.warn(...))`; nothing is rendered, so a 500 is presented to the visitor as an empty result.",
+    "evidence": [
+      "src/app/builders/page.tsx:46"
+    ],
+    "classes": [
+      {
+        "class": "500",
+        "ui": "the empty state — \"No builders found\""
+      },
+      {
+        "class": "offline",
+        "ui": "the empty state — \"No builders found\""
+      }
+    ],
+    "no_retry": []
+  },
+  "emits": {
+    "answer": "none",
+    "why": "No captureEvent and no ledger row — a builder search is not countable.",
+    "evidence": [
+      "src/app/builders/page.tsx:1-169"
+    ],
+    "analytics": [],
+    "ledger_events": [],
+    "breadcrumbs": []
+  },
+  "offers": {
+    "answer": "none",
+    "why": "No sponsored placement; every card is a database row.",
+    "evidence": [
+      "src/app/builders/page.tsx:98-127"
+    ]
+  },
+  "metering": {
+    "answer": "none",
+    "why": "No usage_events write and no quota on builder lookups.",
+    "evidence": [
+      "src/app/builders/page.tsx:1-169"
+    ]
+  },
+  "config": {
+    "answer": "none",
+    "why": "The page size (`const limit = 20`) and the route's hard cap of 100 are literals, not registered logic variables.",
+    "evidence": [
+      "src/app/builders/page.tsx:28",
+      "src/app/api/builders/route.ts:11"
+    ],
+    "logic_variables": [],
+    "retired": []
+  },
+  "sharing": {
+    "answer": "shared",
+    "why": "/api/builders is also reached by the mobile client — route-guard lists it as a PUBLIC_PREFIX explicitly so the Expo app can read it without a session.",
+    "evidence": [
+      "src/lib/auth/route-guard.ts:67-77,169-170"
+    ],
+    "surfaces": [],
+    "varies_by_surface": "UNRESEARCHED"
+  },
+  "a11y": {
+    "touch_target_min_px": "UNRESEARCHED",
+    "labels": "partial",
+    "dark_mode": "none",
+    "reduced_motion": "ignored",
+    "i18n": "none",
+    "safe_area": "none"
+  },
+  "deviations": "none",
+  "limitations": [
+    {
+      "what": "Five of the eleven fields the page renders do not exist on the table it reads.",
+      "measured": "src/app/builders/page.tsx:7-17 declares name/phone/email/wsib_status/enriched_at; src/lib/db/generated/schema.ts `entities` has legal_name/primary_phone/primary_email/is_wsib_registered/last_enriched_at and no aliasing happens at src/app/api/builders/route.ts:36.",
+      "check_id": "web_builders_list_field_whitelist_parity"
+    },
+    {
+      "what": "Search fires one request per keystroke.",
+      "measured": "src/app/builders/page.tsx:77 sets state on every change and :30-48 refetches on every `search` change; there is no debounce and no rate bucket.",
+      "check_id": "web_builders_list_empty_vs_error"
+    }
+  ],
+  "interpretation": "none",
+  "notes": "Spec taken from the system map row 37, which lists src/app/builders/page.tsx among its files. Spec 126 lines 304 and 586 record this exact page as a measured auth mismatch: the page is 'authenticated' by fail-closed default while the /api/builders contract it reads is 'public' (PUBLIC_PREFIXES) - the page is behind a login, the data it renders is not. No error state: the fetch .catch only console.warns, leaving the empty state to stand in for a failure. MEASURED 2026-09-15, three findings. (1) FIELD DRIFT: the page renders b.name, b.phone, b.wsib_status and b.enriched_at, none of which exist on `entities` (schema.ts has legal_name, primary_phone, is_wsib_registered, last_enriched_at) — the route does `SELECT *` (route.ts:36) with no aliasing, so the builder name is blank on every card, the WSIB chip never appears and every row reads \"Pending\". permit_count, google_rating and website DO exist and render. (2) GATE ASYMMETRY: the /api/builders CONTRACT is public (PUBLIC_PREFIXES, locked at middleware.logic.test.ts:60-61) while the /builders PAGE is fail-closed `authenticated` — nothing whitelists the page path. (3) ROW SPREAD: `SELECT *` is the projection, so columns nothing renders (linkedin_url, google_place_id, photo_validated_at) reach the browser. (4) SPEC-VS-TREE: Spec 37 §2’s Auth Matrix says Anonymous access is \"None\", but /api/builders and /api/builders/[id] are both PUBLIC_PREFIXES, locked as public at middleware.logic.test.ts:60-61 — the contract is anon-readable while the spec says it is not. The tree wins; recorded, not reconciled. a11y.touch_target_min_px stays UNRESEARCHED — the pagination buttons measure px-3 py-1.5 = 32px, outside what the vocabulary can say.",
+  "x-draft": {
+    "shard": "web-product",
+    "files": [
+      "src/app/builders/page.tsx"
+    ],
+    "loc": 169,
+    "measured_states": [
+      "loading",
+      "empty",
+      "loaded"
+    ],
+    "measured_gate": {
+      "session": "authenticated",
+      "why": "classifyRoute('/builders') matches no arm above the default: not a PUBLIC_FILE, not /_next/ or /api/*, not '/admin' or '/admin/...', not in AUTHENTICATED_API_ROUTES, and the PUBLIC_PREFIXES check compares '/builders' against '/api/builders' (not a prefix of it) and '/permits/' (no match) - PUBLIC_PATHS does not list it and it does not start with '/dashboard', so it falls to the fail-closed default 'authenticated'."
+    }
+  },
+  "programme": {
+    "scope": "estate_other",
+    "phase": "not_scheduled",
+    "why": "Builder/entity data for the lead-gen product. Inventoried only.",
+    "feature": "F92",
+    "build_order": 4193,
+    "leakage": "UNRESEARCHED",
+    "product_questions": "UNRESEARCHED",
+    "review": {
+      "status": "unreviewed"
+    }
+  }
+}

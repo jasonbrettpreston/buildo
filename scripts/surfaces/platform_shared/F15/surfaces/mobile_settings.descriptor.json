@@ -1,0 +1,488 @@
+{
+  "kind": "SURFACE",
+  "status": "exists",
+  "docs": {
+    "purpose": "Where the user reviews their trade, changes how far out they want to see jobs, and chooses which alerts reach them and when. It also tells them if the phone's operating system is blocking notifications and offers a way to fix that, gives paying users a link into the billing portal to cancel or change payment, and holds the sign-out button.",
+    "data_story": "It reads nothing from the database directly. Every value arrives through 3 contracts: `/api/notifications/preferences`, `/api/user-profile`, `/api/subscribe/portal-session`. Behind those contracts, the data comes from `entitlements` and `user_profiles`, and writes land on `entitlements` and `user_profiles`. It also holds client-side state in `filterStore` and `authStore`, which is the part a server-driven projection has to absorb or justify. It emits **no analytics event**, so nothing it does is currently countable.",
+    "under_126": "**REBUILD** — it holds Layer-3 state (`filterStore` and `authStore`) and drives writes, so a client decision has to be re-homed on the server before the projection can be honest. It renders through the FORM renderer (every field carrying its Spec 99 §3 ownership row as data, with a declared rollback), reading by reference: `/api/notifications/preferences`, `/api/user-profile`, `/api/subscribe/portal-session`. It owns no component of its own, so its `owns.components[]` is an empty array — a legal answer, written down."
+  },
+  "evidence": {
+    "files": [
+      "mobile/app/(app)/settings.tsx:1"
+    ],
+    "contracts": [
+      "mobile/app/(app)/settings.tsx:229-238",
+      "mobile/app/(app)/settings.tsx:190-195",
+      "mobile/src/hooks/usePatchProfile.ts:49",
+      "mobile/src/hooks/usePortalSession.ts:47"
+    ],
+    "tables": [
+      "src/app/api/notifications/preferences/route.ts:48",
+      "src/app/api/notifications/preferences/route.ts:122-124",
+      "src/app/api/user-profile/route.ts:393",
+      "src/app/api/subscribe/portal-session/route.ts:45"
+    ],
+    "gate": [
+      "src/lib/auth/route-guard.ts:120-132",
+      "mobile/app/(app)/_layout.tsx:236-265",
+      "mobile/app/(app)/settings.tsx:82"
+    ],
+    "states": [
+      "mobile/app/(app)/settings.tsx:130-178",
+      "mobile/app/(app)/settings.tsx:323-327",
+      "mobile/app/(app)/settings.tsx:107-113"
+    ],
+    "emits": [
+      "mobile/app/(app)/settings.tsx:1-478 — no track() call in the file",
+      "mobile/app/(app)/settings.tsx:215"
+    ]
+  },
+  "identity": {
+    "id": "mobile_settings",
+    "route": "mobile/app/(app)/settings.tsx",
+    "archetype": "FORM",
+    "platforms": [
+      "mobile"
+    ],
+    "owns": {
+      "components": []
+    },
+    "owner": "unassigned (no CODEOWNERS file and no owner registry exists in the repo — measured 2026-09-15)",
+    "spec": "docs/specs/03-mobile/97_mobile_settings_notifications_offboarding.md",
+    "spec_refs": [
+      "docs/specs/03-mobile/92_mobile_engagement_hardware.md §2.3",
+      "docs/specs/03-mobile/93_mobile_auth.md §5",
+      "docs/specs/03-mobile/96_mobile_subscription.md §7",
+      "docs/specs/03-mobile/99_mobile_state_architecture.md §9.16"
+    ],
+    "spec_version": "0-draft",
+    "versioning": {
+      "answer": "breaking_allowed",
+      "why": "The notification-prefs payload has no Zod mirror on the client at all — settings.tsx casts the response to a local NotificationPrefs interface, so the contract is enforced only by TypeScript in this repo and both ends move together.",
+      "evidence": [
+        "mobile/app/(app)/settings.tsx:50-56",
+        "mobile/app/(app)/settings.tsx:232-235"
+      ]
+    },
+    "ref": "S-036"
+  },
+  "inputs": {
+    "answer": "contract",
+    "why": "Three contracts populate it: notification preferences (a bare fetchWithAuth, no hook), the user profile (radius + account_preset), and the Stripe portal session minted on demand; the OS permission status is the one device read.",
+    "evidence": [
+      "mobile/app/(app)/settings.tsx:229-238",
+      "mobile/src/hooks/useUserProfile.ts:38",
+      "mobile/app/(app)/settings.tsx:132-136"
+    ],
+    "contract_ref": [
+      "/api/notifications/preferences",
+      "/api/user-profile",
+      "/api/subscribe/portal-session"
+    ],
+    "query_key": [
+      "notification-prefs",
+      "user-profile",
+      "notification-permission"
+    ],
+    "field_whitelist": [
+      "new_lead_min_cost_tier",
+      "phase_changed",
+      "lifecycle_stalled_pref",
+      "start_date_urgent",
+      "notification_schedule",
+      "radius_km",
+      "account_preset",
+      "trade_slug"
+    ],
+    "tables": [
+      {
+        "table": "user_profiles",
+        "columns": [
+          "user_id",
+          "new_lead_min_cost_tier",
+          "phase_changed",
+          "lifecycle_stalled_pref",
+          "start_date_urgent",
+          "notification_schedule",
+          "radius_km",
+          "radius_cap_km",
+          "account_preset",
+          "stripe_customer_id"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/03-mobile/95_mobile_user_profiles.md",
+        "evidence": [
+          "src/app/api/notifications/preferences/route.ts:48",
+          "src/app/api/subscribe/portal-session/route.ts:45",
+          "src/lib/userProfile.schema.ts:85-122",
+          "migrations/230_rls_class_a_entitlements.sql:62-68"
+        ]
+      },
+      {
+        "table": "entitlements",
+        "columns": [
+          "user_id",
+          "product",
+          "status",
+          "trial_started_at"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/00-architecture/116_multi_product_architecture.md",
+        "evidence": [
+          "src/app/api/user-profile/route.ts:51",
+          "migrations/228_entitlements.sql:21-35",
+          "src/lib/entitlements/index.ts:68"
+        ]
+      }
+    ]
+  },
+  "outputs": {
+    "answer": "optimistic_then_contract",
+    "why": "Every toggle writes the [\"notification-prefs\"] cache first and PATCHes behind it; on failure the snapshot is restored and an error haptic fires — the pre-P25 version flipped the Switch and silently dropped the write.",
+    "evidence": [
+      "mobile/app/(app)/settings.tsx:196-218",
+      "mobile/src/hooks/usePatchProfile.ts:56-82"
+    ],
+    "contract_ref": [
+      "/api/notifications/preferences",
+      "/api/user-profile"
+    ],
+    "tables": [
+      {
+        "table": "user_profiles",
+        "columns": [
+          "user_id",
+          "new_lead_min_cost_tier",
+          "phase_changed",
+          "lifecycle_stalled_pref",
+          "start_date_urgent",
+          "notification_schedule",
+          "radius_km"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/03-mobile/95_mobile_user_profiles.md",
+        "evidence": [
+          "src/app/api/notifications/preferences/route.ts:122-124",
+          "src/app/api/user-profile/route.ts:393",
+          "src/lib/userProfile.schema.ts:85-122",
+          "migrations/230_rls_class_a_entitlements.sql:62-68"
+        ]
+      }
+    ],
+    "rollback": "usePatchPrefs onError restores the pre-mutation [\"notification-prefs\"] snapshot and fires errorNotification(); usePatchProfile restores the [\"user-profile\"] snapshot.",
+    "invalidates": [
+      "notification-prefs",
+      "user-profile",
+      "notification-permission"
+    ]
+  },
+  "state": {
+    "answer": "zustand",
+    "why": "tradeSlug and radiusKm are read from the MMKV-persisted filterStore (the canonical local mirror of the server profile) and sign-out goes through authStore; the slider's in-drag value is component state re-synced from the store on every change.",
+    "evidence": [
+      "mobile/app/(app)/settings.tsx:222-227",
+      "mobile/app/(app)/settings.tsx:243-257",
+      "mobile/src/store/filterStore.ts:121-122"
+    ],
+    "fields": [
+      {
+        "name": "radiusKm",
+        "owner_layer": "3_zustand",
+        "canonical_writer": "usePatchProfile (PATCH /api/user-profile, server may clamp to radius_cap_km)",
+        "authorized_readers": [
+          "mobile_settings",
+          "mobile_lead_feed",
+          "mobile_map",
+          "overlay_lead_filter_sheet"
+        ],
+        "bridge": "B3",
+        "persistence": "mmkv",
+        "signout_reset": true
+      },
+      {
+        "name": "tradeSlug",
+        "owner_layer": "3_zustand",
+        "canonical_writer": "filterStore.hydrate from the server profile (read-only on this screen)",
+        "authorized_readers": [
+          "mobile_settings",
+          "mobile_lead_feed",
+          "mobile_map"
+        ],
+        "bridge": "B2",
+        "persistence": "mmkv",
+        "signout_reset": true
+      },
+      {
+        "name": "notification prefs",
+        "owner_layer": "2_query_cache",
+        "canonical_writer": "usePatchPrefs optimistic write + PATCH /api/notifications/preferences",
+        "authorized_readers": [
+          "mobile_settings"
+        ],
+        "bridge": "B3",
+        "persistence": "mmkv",
+        "signout_reset": true
+      }
+    ]
+  },
+  "staleness": {
+    "answer": "query_cache",
+    "why": "Preferences carry a 60-second staleTime; the OS permission query deliberately uses staleTime 0 and is re-invalidated on every AppState foreground so a toggle flipped in system settings shows up immediately.",
+    "evidence": [
+      "mobile/app/(app)/settings.tsx:237",
+      "mobile/app/(app)/settings.tsx:132-145"
+    ],
+    "offline": "degraded",
+    "stale_time_ms": 60000,
+    "gc_time_ms": 86400000
+  },
+  "guards": {
+    "session": {
+      "answer": "authenticated",
+      "why": "/api/notifications and /api/user-profile are both authenticated prefixes; the portal-session route is under /api/subscribe, which is listed explicitly in AUTHENTICATED_API_ROUTES rather than relying on the fail-closed default.",
+      "evidence": [
+        "src/lib/auth/route-guard.ts:120-132"
+      ]
+    },
+    "rls_class": {
+      "answer": "A",
+      "why": "Everything it reads and writes is the user's own user_profiles row — Class A, policies keyed on auth.uid() for select/insert/update.",
+      "evidence": [
+        "migrations/230_rls_class_a_entitlements.sql:62-68"
+      ]
+    },
+    "disclosure": "none",
+    "entitlement": "none",
+    "flag": "none",
+    "permission": "notification",
+    "rate_bucket": "none — neither the preferences route nor the portal-session route calls withRateLimit"
+  },
+  "render": {
+    "targets": [
+      "screen"
+    ],
+    "projection": "list",
+    "breakpoints": "mobile_first",
+    "export": "none"
+  },
+  "checks": [
+    {
+      "id": "settings_prefs_rollback",
+      "kind": "error_state",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "A failed PATCH must visibly snap the Switch back and fire the error haptic; settings.tsx:205-212 implements it, and the \"silent visual lie\" it replaced is named in the file."
+    },
+    {
+      "id": "settings_permission_states",
+      "kind": "error_state",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "Three OS-permission renders exist — hidden when granted, re-prompt when canAskAgain, open-system-settings when blocked (settings.tsx:147-176)."
+    },
+    {
+      "id": "settings_a11y_label",
+      "kind": "a11y_label",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "why": "Nine accessibility attributes, the most of any screen — but the three Switches and the schedule segmented control carry none, so the count stays permanently below complete until those are labelled."
+    },
+    {
+      "id": "settings_touch_target",
+      "kind": "touch_target",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "Every tappable row declares an explicit minHeight of 44 or 52 in an inline style (settings.tsx:95, 163, 420) rather than relying on padding."
+    },
+    {
+      "id": "settings_contract_parse",
+      "kind": "contract_parse",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "why": "Measured absence: the preferences response is cast, not parsed — `(res as { prefs: NotificationPrefs }).prefs` at settings.tsx:235. A drifted server shape renders undefined toggles instead of throwing."
+    }
+  ],
+  "invariants": "none",
+  "plausibility": "none",
+  "states": [
+    {
+      "name": "loading",
+      "golden": "none"
+    },
+    {
+      "name": "hit",
+      "golden": "none"
+    },
+    {
+      "name": "degraded",
+      "golden": "none"
+    },
+    {
+      "name": "error",
+      "golden": "none"
+    },
+    {
+      "name": "offline",
+      "golden": "none"
+    }
+  ],
+  "errors": {
+    "answer": "inline",
+    "why": "Billing failures render an inline red line under the row with two distinct messages (no_customer vs generic); a failed preference PATCH signals through the rollback plus an error haptic and no text at all.",
+    "evidence": [
+      "mobile/app/(app)/settings.tsx:107-113",
+      "mobile/app/(app)/settings.tsx:205-212"
+    ],
+    "classes": [
+      {
+        "class": "401",
+        "ui": "apiClient refreshes once; a persistent 401 leaves the toggles on their rolled-back values with no message."
+      },
+      {
+        "class": "500",
+        "ui": "Preference toggle snaps back + error haptic; billing row shows \"Couldn't open billing — try again.\""
+      },
+      {
+        "class": "offline",
+        "ui": "OfflineBanner renders above the list; cached preferences stay readable and every PATCH rolls back."
+      }
+    ],
+    "no_retry": []
+  },
+  "emits": {
+    "answer": "none",
+    "why": "The most consequential screen in the app for churn — sign-out, billing, notification opt-out — emits no PostHog event of its own; signout_initiated is fired by authStore, not by this surface.",
+    "evidence": [
+      "mobile/app/(app)/settings.tsx:1-478",
+      "mobile/src/store/authStore.ts:152"
+    ],
+    "analytics": [],
+    "ledger_events": [],
+    "breadcrumbs": []
+  },
+  "offers": {
+    "answer": "none",
+    "why": "No sponsored placement is rendered: the only slot component in the Expo tree is SponsorSlot, and it returns null unless EXPO_PUBLIC_PARCEL_SPONSORS=1.",
+    "evidence": [
+      "mobile/src/components/parcel/SponsorSlot.tsx:16-20"
+    ]
+  },
+  "metering": {
+    "answer": "none",
+    "why": "Nothing here is counted: the Spec 126 §7 usage ledger table does not exist (grep for usage_events in the introspected drizzle schema returns 0 hits), and the only quota-shaped counter, user_profiles.lead_views_count, is incremented solely by POST /api/leads/view, which has no mobile caller.",
+    "evidence": [
+      "src/lib/db/generated/schema.ts — no usage_events table (grep, 2026-09-15)",
+      "src/app/api/leads/view/route.ts:110",
+      "src/features/leads/api/useLeadView.ts:25 — imported only by src/tests/useLeadView.logic.test.tsx"
+    ]
+  },
+  "config": {
+    "answer": "none",
+    "why": "The surface consumes no registered logic variable: the only server-side tunable in this path, user_profiles.radius_cap_km, is a per-user admin column, not a logic_variables row.",
+    "evidence": [
+      "src/lib/userProfile.schema.ts:40",
+      "src/app/api/user-profile/route.ts:328",
+      "docs/reference/logic-variables-registry.md — no radius_cap_km entry"
+    ],
+    "logic_variables": [],
+    "retired": []
+  },
+  "sharing": {
+    "answer": "shared",
+    "why": "/api/user-profile is the most-shared contract in the estate (both shells, the feed, the filter sheet and onboarding all render it); /api/notifications/preferences and /api/subscribe/portal-session are exclusive to this screen.",
+    "evidence": [
+      "mobile/app/(app)/_layout.tsx:118",
+      "mobile/app/_layout.tsx:98-101",
+      "mobile/src/hooks/usePatchProfile.ts:49"
+    ],
+    "surfaces": [
+      "shell_app_root",
+      "shell_app_tabs",
+      "mobile_lead_feed",
+      "overlay_lead_filter_sheet",
+      "mobile_onboarding_profession",
+      "mobile_onboarding_address",
+      "mobile_onboarding_supplier",
+      "mobile_onboarding_terms",
+      "mobile_onboarding_complete"
+    ]
+  },
+  "a11y": {
+    "touch_target_min_px": 44,
+    "labels": "partial",
+    "dark_mode": "hardcoded",
+    "reduced_motion": "none",
+    "i18n": "none",
+    "safe_area": [
+      "top"
+    ]
+  },
+  "deviations": "none",
+  "limitations": [
+    {
+      "what": "The Minimum Job Value slider is permanently disabled and labelled \"Coming soon\" — the NEW_HIGH_VALUE_LEAD notification it gates has no server implementation.",
+      "measured": "settings.tsx:337-364 renders the Slider with disabled + opacity-50 and an accessibilityState of {disabled:true}.",
+      "check_id": "settings_permission_states"
+    },
+    {
+      "what": "The preferences payload is type-cast rather than schema-parsed, so server drift degrades silently.",
+      "measured": "settings.tsx:232-235 — fetchWithAuth<{prefs: NotificationPrefs}> then a second `as` cast; no Zod schema exists for this contract.",
+      "check_id": "settings_contract_parse"
+    },
+    {
+      "what": "Delete Account is specified (Spec 97 §3) and referenced in the file header, but is not rendered — only Sign Out exists.",
+      "measured": "settings.tsx:7-11 documents the deletion order; the Account section at :451-474 contains a single Pressable, sign-out-button.",
+      "check_id": "settings_prefs_rollback"
+    }
+  ],
+  "interpretation": "none",
+  "notes": "Two of this screen's three contracts are reached with a bare fetchWithAuth and no hook (notification preferences GET and PATCH) — a hook-only sweep would report this surface as touching only /api/user-profile. mobile/src/components/settings/TradeReadOnlyRow.tsx has ZERO importers anywhere in the tree and is owned by no surface: the Trade row here is inlined at settings.tsx:287-290 instead.",
+  "x-draft": {
+    "shard": "mobile-product",
+    "files": [
+      "mobile/app/(app)/settings.tsx"
+    ],
+    "loc": 478,
+    "call_idiom": "both",
+    "stores": [
+      "filterStore",
+      "authStore"
+    ],
+    "measured_states": [
+      "prefs_loading",
+      "loaded",
+      "permission_row_can_ask_again",
+      "permission_row_blocked",
+      "permission_row_hidden_granted",
+      "billing_row_hidden_manufacturer",
+      "billing_error_no_customer",
+      "billing_error_generic"
+    ],
+    "measured_gate": {
+      "session": "required",
+      "entitlement": "subscription_status",
+      "flag": "none",
+      "permission": "notification"
+    }
+  },
+  "programme": {
+    "scope": "platform_shared",
+    "phase": "UNRESEARCHED",
+    "why": "User settings write shared `user_profiles` preference columns read by both products.",
+    "feature": "F15",
+    "build_order": 3153,
+    "leakage": "none",
+    "product_questions": "none",
+    "review": {
+      "status": "unreviewed"
+    }
+  }
+}

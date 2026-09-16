@@ -1,0 +1,512 @@
+{
+  "kind": "CONTRACT",
+  "status": "exists",
+  "docs": {
+    "purpose": "Loads the full details of one saved job for a tradesperson, used when a push notification opens the app straight to that job from closed. It shows the job's address, current construction phase and predicted timing, and only returns anything if that job is actually one the person has bookmarked.",
+    "data_story": "It reads 5 tables — `lead_views`, `permits`, `trade_forecasts`, `user_profiles` and `entitlements` and writes nothing. Its response is an explicit pick-by-name projection of 10 fields, so a column added to a table upstream does not leak into the client by accident. It is called from 2 places: `src/features/admin-flight-center/api/useFlightBoardDetail.ts`, `mobile/src/hooks/useFlightJobDetail.ts`.",
+    "under_126": "Becomes a **CONTRACT descriptor** of archetype `QUERY`. It declares its `database.reads[]` with named columns, its response projection as an explicit whitelist, its auth class, its rate bucket and its staleness — and `outputs.writes` is forced to `\"none\"`. Its `consumers[]` becomes the edge list of the fan-out graph — the join nothing in this estate holds today."
+  },
+  "evidence": {
+    "files": [
+      "src/app/api/leads/flight-board/detail/[id]/route.ts:1"
+    ],
+    "contracts": [
+      "src/app/api/leads/flight-board/detail/[id]/route.ts:74 (GET export)",
+      "src/lib/api/with-api-envelope.ts:27-52"
+    ],
+    "tables": [
+      "src/app/api/leads/flight-board/detail/[id]/route.ts:48-49",
+      "src/app/api/leads/flight-board/detail/[id]/route.ts:58",
+      "src/app/api/leads/flight-board/detail/[id]/route.ts:66-70",
+      "src/app/api/leads/flight-board/detail/[id]/route.ts:50-52",
+      "src/app/api/leads/flight-board/detail/[id]/route.ts:57",
+      "src/app/api/leads/flight-board/detail/[id]/route.ts:59-61",
+      "src/app/api/leads/flight-board/detail/[id]/route.ts:53-56",
+      "src/app/api/leads/flight-board/detail/[id]/route.ts:62-65",
+      "src/lib/auth/get-user-context.ts:99-101",
+      "src/lib/entitlements/index.ts:68",
+      "src/lib/auth/get-user-context.ts:99-100",
+      "src/lib/auth/get-user-context.ts:83-89",
+      "src/lib/db/generated/schema.ts — every table named here is present in the introspected drizzle schema"
+    ],
+    "gate": [
+      "src/lib/auth/route-guard.ts — AUTHENTICATED_API_ROUTES prefix — '/api/leads'",
+      "src/lib/auth/route-guard.ts:150-201 — classifyRoute executed 2026-09-15 with the concrete path → \"authenticated\"",
+      "in-handler: getCurrentUserContext(request, pool) at src/app/api/leads/flight-board/detail/[id]/route.ts:81; null -> 401 at :82."
+    ],
+    "states": [
+      "hit: src/app/api/leads/flight-board/detail/[id]/route.ts:119",
+      "miss: src/app/api/leads/flight-board/detail/[id]/route.ts:104-105 (404 'Job not on your flight board' — covers BOTH 'permit does not exist' and 'you have not saved it', deliberately per the header at :10-13)",
+      "partial: src/app/api/leads/flight-board/detail/[id]/route.ts:62-65 (the trade_forecasts LEFT JOIN yields null predicted_start / p25_days / p75_days when no forecast row exists for the selected trade; the row is still returned 200)",
+      "degraded: src/lib/leads/flight-board-temporal.ts:56-58 (null or <=0 opportunity_score forces temporal_group='on_the_horizon' regardless of predicted_start)",
+      "unauthorized: src/app/api/leads/flight-board/detail/[id]/route.ts:82",
+      "error: src/app/api/leads/flight-board/detail/[id]/route.ts:120-125 (500); :85 and :88 (400)"
+    ],
+    "emits": [
+      "src/app/api/leads/flight-board/detail/[id]/route.ts — read in full; no Sentry breadcrumb, no analytics capture and no ledger INSERT"
+    ]
+  },
+  "identity": {
+    "id": "contract_leads_flight_board_detail_id",
+    "route": "/api/leads/flight-board/detail/[id]",
+    "archetype": "QUERY",
+    "platforms": [
+      "web",
+      "mobile"
+    ],
+    "owns": {
+      "components": []
+    },
+    "owner": "Cross-Domain (CLAUDE.md §Domain Rules: an API route consumed by the Expo app)",
+    "spec": "docs/specs/03-mobile/77_mobile_crm_flight_board.md",
+    "spec_refs": [
+      "src/app/api/leads/flight-board/detail/[id]/route.ts:1 — 'SPEC LINK: docs/specs/03-mobile/77_mobile_crm_flight_board.md §3.3 Detailed Investigation View'"
+    ],
+    "spec_version": "0-draft",
+    "versioning": {
+      "answer": "additive_only",
+      "why": "At least one consumer is an installed Expo binary (mobile/) that does not redeploy with the server, so a removed or retyped field breaks shipped clients; adding fields does not.",
+      "evidence": [
+        "mobile/src/hooks/useFlightJobDetail.ts:34",
+        "mobile/app.json:5"
+      ]
+    },
+    "ref": "C-055"
+  },
+  "inputs": {
+    "answer": "app_outputs",
+    "why": "It reads 5 table(s) directly; 2 of them are materialised by named pipeline steps (classify_inspection_status, compute_opportunity_scores), so its inputs are the pipeline's outputs rather than another contract.",
+    "evidence": [
+      "src/lib/entitlements/index.ts:68",
+      "src/lib/auth/get-user-context.ts:99-100",
+      "migrations/228_entitlements.sql:21",
+      "docs/reference/data-lineage-map.md — no `## `entitlements`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)",
+      "src/app/api/leads/flight-board/detail/[id]/route.ts:48-49",
+      "src/app/api/leads/flight-board/detail/[id]/route.ts:58",
+      "src/app/api/leads/flight-board/detail/[id]/route.ts:66-70",
+      "docs/specs/00-architecture/00_system_map.md:71",
+      "docs/reference/data-lineage-map.md:598 — table present, no pipeline producer listed",
+      "docs/reference/data-lineage-map.md — no `## `lead_views`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)"
+    ],
+    "contract_ref": [],
+    "query_key": [],
+    "field_whitelist": [
+      "permit_num",
+      "revision_num",
+      "address",
+      "lifecycle_phase",
+      "lifecycle_stalled",
+      "predicted_start",
+      "p25_days",
+      "p75_days",
+      "temporal_group",
+      "updated_at"
+    ],
+    "tables": [
+      {
+        "table": "entitlements",
+        "columns": [
+          "status",
+          "user_id",
+          "product"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/00-architecture/116_multi_product_architecture.md",
+        "evidence": [
+          "src/lib/entitlements/index.ts:68",
+          "src/lib/auth/get-user-context.ts:99-100",
+          "migrations/228_entitlements.sql:21",
+          "docs/reference/data-lineage-map.md — no `## `entitlements`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)"
+        ]
+      },
+      {
+        "table": "lead_views",
+        "columns": [
+          "permit_num",
+          "revision_num",
+          "user_id",
+          "saved",
+          "lead_type"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/01-pipeline/84_lifecycle_phase_engine.md",
+        "evidence": [
+          "src/app/api/leads/flight-board/detail/[id]/route.ts:48-49",
+          "src/app/api/leads/flight-board/detail/[id]/route.ts:58",
+          "src/app/api/leads/flight-board/detail/[id]/route.ts:66-70",
+          "docs/specs/00-architecture/00_system_map.md:71",
+          "docs/reference/data-lineage-map.md:598 — table present, no pipeline producer listed",
+          "docs/reference/data-lineage-map.md — no `## `lead_views`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)"
+        ]
+      },
+      {
+        "table": "permits",
+        "columns": [
+          "permit_num",
+          "revision_num",
+          "street_num",
+          "street_name",
+          "lifecycle_phase",
+          "lifecycle_stalled",
+          "updated_at"
+        ],
+        "producing_steps": [
+          "classify_inspection_status",
+          "classify_lifecycle_phase",
+          "classify_permit_phase",
+          "classify_scope",
+          "classify_scope_class",
+          "classify_scope_tags",
+          "close_stale_permits",
+          "create_pre_permits",
+          "enrich_permits",
+          "geocode_permits",
+          "inspections",
+          "link_coa",
+          "link_neighbourhoods",
+          "link_similar",
+          "permits"
+        ],
+        "chain_position": "deep_scrapes[1] · permits[23], coa[12] · permits[3] · permits[4] · not-in-a-chain · not-in-a-chain · permits[2] · not-in-a-chain · permits[9] · permits[7], sources[3] · deep_scrapes[0] · permits[19], coa[8] · permits[10], sources[17] · permits[12] · permits[1]",
+        "owner_spec": "docs/specs/01-pipeline/41_chain_permits.md",
+        "evidence": [
+          "src/app/api/leads/flight-board/detail/[id]/route.ts:50-52",
+          "src/app/api/leads/flight-board/detail/[id]/route.ts:57",
+          "src/app/api/leads/flight-board/detail/[id]/route.ts:59-61",
+          "scripts/classify-inspection-status.js",
+          "docs/reference/data-lineage-map.md:997",
+          "scripts/manifest.json#chains",
+          "docs/reference/data-lineage-map.md"
+        ]
+      },
+      {
+        "table": "trade_forecasts",
+        "columns": [
+          "predicted_start",
+          "p25_days",
+          "p75_days",
+          "opportunity_score",
+          "permit_num",
+          "revision_num",
+          "trade_slug"
+        ],
+        "producing_steps": [
+          "compute_opportunity_scores",
+          "compute_trade_forecasts"
+        ],
+        "chain_position": "permits[27] · permits[26]",
+        "owner_spec": "docs/specs/01-pipeline/41_chain_permits.md",
+        "evidence": [
+          "src/app/api/leads/flight-board/detail/[id]/route.ts:53-56",
+          "src/app/api/leads/flight-board/detail/[id]/route.ts:62-65",
+          "scripts/compute-opportunity-scores.js",
+          "docs/reference/data-lineage-map.md:1313",
+          "scripts/manifest.json#chains",
+          "docs/reference/data-lineage-map.md"
+        ]
+      },
+      {
+        "table": "user_profiles",
+        "columns": [
+          "user_id",
+          "trade_slug",
+          "trade_slugs_override",
+          "display_name"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/02-web-admin/102_admin_notifications_tool.md",
+        "evidence": [
+          "src/lib/auth/get-user-context.ts:99-101",
+          "docs/specs/00-architecture/00_system_map.md:80",
+          "docs/reference/data-lineage-map.md — no `## `user_profiles`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)"
+        ]
+      }
+    ]
+  },
+  "outputs": {
+    "answer": "contract_only",
+    "why": "This route IS the mutation contract: it writes 1 table(s) synchronously inside the request and returns the result — there is no optimistic client-side flip to reconcile.",
+    "evidence": [
+      "src/lib/auth/get-user-context.ts:83-89",
+      "docs/specs/00-architecture/00_system_map.md:80",
+      "docs/reference/data-lineage-map.md — no `## `user_profiles`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)"
+    ],
+    "contract_ref": [],
+    "tables": [
+      {
+        "table": "user_profiles",
+        "columns": [
+          "user_id",
+          "trade_slug",
+          "display_name"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/02-web-admin/102_admin_notifications_tool.md",
+        "evidence": [
+          "src/lib/auth/get-user-context.ts:83-89",
+          "docs/specs/00-architecture/00_system_map.md:80",
+          "docs/reference/data-lineage-map.md — no `## `user_profiles`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)"
+        ]
+      }
+    ]
+  },
+  "state": {
+    "answer": "server_only",
+    "why": "A CONTRACT holds no client state: every value is resolved per request on the server and nothing is cached in a client store by the route itself.",
+    "evidence": [
+      "src/app/api/leads/flight-board/detail/[id]/route.ts:74 (GET export)",
+      "src/lib/api/with-api-envelope.ts:27-52"
+    ],
+    "fields": []
+  },
+  "staleness": {
+    "answer": "live",
+    "why": "Every read runs against the base tables on each request — there is no cache layer between the handler and the database.",
+    "evidence": [
+      "src/lib/entitlements/index.ts:68",
+      "src/lib/auth/get-user-context.ts:99-100",
+      "migrations/228_entitlements.sql:21",
+      "docs/reference/data-lineage-map.md — no `## `entitlements`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)"
+    ],
+    "offline": "none"
+  },
+  "guards": {
+    "session": {
+      "answer": "authenticated",
+      "why": "classifyRoute(\"/api/leads/flight-board/detail/X\") returns \"authenticated\" (executed 2026-09-15); the handler re-verifies the caller in-process.",
+      "evidence": [
+        "src/lib/auth/route-guard.ts:150-201 — classifyRoute executed 2026-09-15 with the concrete path",
+        "getCurrentUserContext(request, pool) at src/app/api/leads/flight-board/detail/[id]/route.ts:81; null -> 401 at :82."
+      ]
+    },
+    "rls_class": {
+      "answer": "A",
+      "why": "It reaches user-owned rows whose policies key on auth.uid(), alongside default-deny Class B pipeline tables. The route connects as the table owner (raw pg), which Spec 114 §9 makes owner-exempt from RLS — the class describes the data, not the gate this route passes.",
+      "evidence": [
+        "migrations/230_rls_class_a_entitlements.sql:49",
+        "migrations/227_rls_class_b_default_deny.sql:75",
+        "migrations/227_rls_class_b_default_deny.sql:92",
+        "migrations/230_rls_class_a_entitlements.sql:48",
+        "migrations/230_rls_class_a_entitlements.sql:58",
+        "docs/specs/00-architecture/114_rls_policy_catalog.md §2"
+      ]
+    },
+    "disclosure": "none",
+    "entitlement": "none",
+    "flag": "none",
+    "permission": "none",
+    "rate_bucket": "none"
+  },
+  "render": {
+    "targets": [
+      "screen"
+    ],
+    "projection": "none",
+    "breakpoints": "none",
+    "export": "none"
+  },
+  "checks": [
+    {
+      "id": "contract_leads_flight_board_detail_id__auth_class_parity",
+      "kind": "auth_class_parity",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "why": "guards.session must equal classifyRoute(\"/api/leads/flight-board/detail/X\"), executed 2026-09-15 → \"authenticated\" plus the in-handler guard (getCurrentUserContext(request, pool) at src/app/api/leads/flight-board/detail/[id]/route.ts:81; null -> 401 at). Locked by flight-board-roundtrip.db.test.ts, flight-board-detail.infra.test.ts."
+    },
+    {
+      "id": "contract_leads_flight_board_detail_id__error_envelope",
+      "kind": "error_state",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "Every declared error class returns the { data, error, meta } envelope of docs/specs/00_engineering_standards.md §4.4; expected to stay at zero deviations."
+    },
+    {
+      "id": "contract_leads_flight_board_detail_id__field_whitelist_parity",
+      "kind": "field_whitelist_parity",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "The response is an explicit pick-by-name of 10 field(s) (src/app/api/leads/flight-board/detail/[id]/route.ts:107-118, src/app/api/leads/flight-board/detail/[id]/types.ts:13-25), so a column added upstream cannot leak; this check set-equals the projection to inputs.field_whitelist."
+    },
+    {
+      "id": "contract_leads_flight_board_detail_id__schema_declared",
+      "kind": "schema_declared",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "Every table and column declared in lineage.reads[]/writes[] must exist in src/lib/db/generated/schema.ts (drizzle-kit introspect of the live database); the registry generator checks this both directions."
+    }
+  ],
+  "invariants": "none",
+  "plausibility": "none",
+  "states": [
+    {
+      "name": "hit",
+      "golden": "none"
+    },
+    {
+      "name": "miss",
+      "golden": "none"
+    },
+    {
+      "name": "partial",
+      "golden": "none"
+    },
+    {
+      "name": "degraded",
+      "golden": "none"
+    },
+    {
+      "name": "unauthorized",
+      "golden": "none"
+    },
+    {
+      "name": "error",
+      "golden": "none"
+    }
+  ],
+  "errors": {
+    "answer": "envelope",
+    "why": "Success and failure both arrive in the { data, error, meta } envelope of docs/specs/00_engineering_standards.md §4.4; withApiEnvelope is the outermost wrapper and converts any uncaught throw into the same shape.",
+    "evidence": [
+      "src/lib/api/with-api-envelope.ts:27-52",
+      "src/app/api/leads/flight-board/detail/[id]/route.ts:119 (ok(detail))",
+      "src/features/leads/api/envelope.ts:43",
+      "src/features/leads/api/envelope.ts:49-53",
+      "src/app/api/leads/flight-board/detail/[id]/route.ts:85 (400)",
+      "src/app/api/leads/flight-board/detail/[id]/route.ts:88 (400)",
+      "src/app/api/leads/flight-board/detail/[id]/route.ts:82 (401)",
+      "src/app/api/leads/flight-board/detail/[id]/route.ts:95 (403)"
+    ],
+    "classes": [
+      {
+        "class": "400",
+        "ui": "{data:null,error:{code,message},meta:null} — src/app/api/leads/flight-board/detail/[id]/route.ts:85 (code INVALID_LEAD_ID)"
+      },
+      {
+        "class": "401",
+        "ui": "{data:null,error:{code,message},meta:null} — src/app/api/leads/flight-board/detail/[id]/route.ts:82 (code UNAUTHORIZED)"
+      },
+      {
+        "class": "403",
+        "ui": "{data:null,error:{code,message},meta:null} — src/app/api/leads/flight-board/detail/[id]/route.ts:95 (code FORBIDDEN_TRADE_MISMATCH)"
+      },
+      {
+        "class": "500",
+        "ui": "{data:null,error:{code,message},meta:null} — src/app/api/leads/flight-board/detail/[id]/route.ts:121 (code INTERNAL_ERROR)"
+      }
+    ]
+  },
+  "emits": {
+    "answer": "none",
+    "why": "Nothing it does is currently countable: src/app/api/leads/flight-board/detail/[id]/route.ts was read in full and contains no Sentry breadcrumb, no analytics capture and no ledger INSERT.",
+    "evidence": [
+      "src/app/api/leads/flight-board/detail/[id]/route.ts — read in full; no Sentry breadcrumb, no analytics capture and no ledger INSERT"
+    ],
+    "analytics": [],
+    "ledger_events": [],
+    "breadcrumbs": []
+  },
+  "offers": {
+    "answer": "none",
+    "why": "It renders no sponsored placement: the offers and advertisers tables Spec 126 §2 specifies do not exist in migrations/ and nothing in this handler reads placement inventory.",
+    "evidence": [
+      "migrations/ — no CREATE TABLE offers / advertisers (grep 2026-09-15)",
+      "src/app/api/leads/flight-board/detail/[id]/route.ts — read in full; no placement read"
+    ]
+  },
+  "metering": {
+    "answer": "none",
+    "why": "Nothing here is counted: no usage_events row (the table does not exist in the introspected schema) and no quota counter is written by this handler.",
+    "evidence": [
+      "src/app/api/leads/flight-board/detail/[id]/route.ts — read in full 2026-09-15",
+      "src/lib/db/generated/schema.ts — no usage_events table"
+    ]
+  },
+  "config": {
+    "answer": "none",
+    "why": "It consumes no tunable: no logic_variables read and no env-var-driven threshold in the handler or the libs it calls.",
+    "evidence": [
+      "src/app/api/leads/flight-board/detail/[id]/route.ts — read in full 2026-09-15; no loadMarketplaceConfigs / logic_variables read"
+    ],
+    "logic_variables": [],
+    "retired": []
+  },
+  "sharing": {
+    "answer": "shared",
+    "why": "2 call sites render it, so the projection is shared and a field removed here breaks more than one surface.",
+    "evidence": [
+      "src/features/admin-flight-center/api/useFlightBoardDetail.ts:43",
+      "mobile/src/hooks/useFlightJobDetail.ts:34"
+    ],
+    "surfaces": [
+      "src/features/admin-flight-center/api/useFlightBoardDetail.ts:43",
+      "mobile/src/hooks/useFlightJobDetail.ts:34"
+    ]
+  },
+  "a11y": {
+    "touch_target_min_px": "UNRESEARCHED",
+    "labels": "none",
+    "dark_mode": "none",
+    "reduced_motion": "none",
+    "i18n": "none",
+    "safe_area": "none"
+  },
+  "deviations": "none",
+  "limitations": [
+    {
+      "what": "a11y.touch_target_min_px has no legal answer for a CONTRACT",
+      "measured": "The schema allows only UNRESEARCHED or an integer >= 44; a JSON endpoint has no touch target and the vocabulary has no \"n/a\". Left UNRESEARCHED and escalated per Spec 128 §4 rather than invented.",
+      "check_id": "contract_leads_flight_board_detail_id__auth_class_parity"
+    },
+    {
+      "what": "error classes outside the closed set are not representable: 404",
+      "measured": "The handler returns 404 at src/app/api/leads/flight-board/detail/[id]/route.ts:105; errors.classes[] admits only 400/401/403/429/500/schema_drift/offline.",
+      "check_id": "contract_leads_flight_board_detail_id__error_envelope"
+    }
+  ],
+  "interpretation": "none",
+  "notes": "The 404 for an unsaved or foreign permit id comes from the WHERE ownership filter, not a separate auth branch, per the file's own header. An optional trade_slug query param must be a member of the account's trade set or the route returns 403. user_profiles/entitlements are read via the shared getCurrentUserContext auth helper, not this handler's own SQL. Called via template literals from both web and mobile. | MEASURED 2026-09-15: AUTH CLASS: 'authenticated' (route-guard.ts:124 + :165-167) AND self-scoped via `lv.user_id = $1` at :66 — an authenticated caller can only read a permit they have themselves saved. Disclosed fields are the same narrow set as the list endpoint (address parts, lifecycle, forecast days) — no cost, income or contact data. // BEHAVIOURAL DIVERGENCE FROM THE LIST ENDPOINT: the list route auto-archives rows whose lifecycle_phase has passed the trade's work_phase (src/app/api/leads/flight-board/route.ts:104-108 using its local PHASE_INDEX at :21-27); THIS route applies no such filter — it has no PHASE_INDEX and no TRADE_TARGET_PHASE import (imports at :15-29). A permit archived out of the list therefore still resolves 200 here. That is arguably correct for the documented cold-boot deep-link use case (header :5-7), but it is an undocumented asymmetry between two endpoints the header says return 'the same shape as a single FlightBoardItem' (types.ts:4-5) — the shape matches; the membership rule does not. // `await (context as …).params` at :78 sits outside the try (:80), so a params rejection escapes to the wrapper and returns the DATABASE_ERROR/INTERNAL_ERROR envelope (with-api-envelope.ts:41-50) rather than this route's own internalError. // ctx.uid bound raw at :100 with no isUuid() guard (contrast src/app/api/leads/detail/[id]/route.ts:66). // CENSUS: census_reads = [lead_views, permits, trade_forecasts, user_profiles, entitlements] — all five VERIFIED. Census listed no writes; the dev-mode user_profiles INSERT (get-user-context.ts:83-89) is one. | Caching: none observed — no Cache-Control, revalidate or dynamic export in the file. | Entitlement posture: READ but NOT ENFORCED (src/lib/auth/get-user-context.ts:99-100; ctx.subscription_status never consulted here). | Other guards / classification: Trade-membership check at :94-96. Object-level authorization is the WHERE clause: `lv.user_id = $1 AND lv.permit_num = $2 AND lv.revision_num = $3 AND lv.saved = true AND lv.lead_type = 'permit'` at :66-70 — a permit the caller has not saved returns 404, not 403 (design stated in the file header at :10-13 and matched by the code at :104-105). ctx.uid is bound raw at :100 with no isUuid() normalization. | Locking tests: src/tests/db/flight-board-roundtrip.db.test.ts, src/tests/flight-board-detail.infra.test.ts.",
+  "x-draft": {
+    "shard": "contracts",
+    "files": [
+      "src/app/api/leads/flight-board/detail/[id]/route.ts"
+    ],
+    "loc": 126,
+    "methods": [
+      "GET"
+    ],
+    "consumers": [
+      "src/features/admin-flight-center/api/useFlightBoardDetail.ts",
+      "mobile/src/hooks/useFlightJobDetail.ts"
+    ],
+    "writes_audit_row": false,
+    "consumers_verified": [
+      "src/features/admin-flight-center/api/useFlightBoardDetail.ts:43",
+      "mobile/src/hooks/useFlightJobDetail.ts:34"
+    ],
+    "auth_class_executed": "authenticated",
+    "locking_tests": [
+      "src/tests/db/flight-board-roundtrip.db.test.ts",
+      "src/tests/flight-board-detail.infra.test.ts"
+    ]
+  },
+  "programme": {
+    "scope": "estate_other",
+    "phase": "not_scheduled",
+    "why": "Flight center — the other product. Fenced from the parcel tool by Spec 128 R-03; inventoried only.",
+    "feature": "F91",
+    "build_order": 4182,
+    "leakage": "UNRESEARCHED",
+    "product_questions": "UNRESEARCHED",
+    "review": {
+      "status": "unreviewed"
+    }
+  }
+}

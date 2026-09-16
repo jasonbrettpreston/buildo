@@ -1,0 +1,774 @@
+{
+  "kind": "SURFACE",
+  "status": "exists",
+  "docs": {
+    "purpose": "This is the main screen a tradesperson lands on. It shows a scrolling list of building permits near them that match their trade, pulled from the area and distance they set up. Each card can be tapped to open the full permit, or hearted to add it to their saved jobs. If their subscription has lapsed and they dismissed the upgrade screen, the list is replaced with blurred locked placeholders instead.",
+    "data_story": "It reads nothing from the database directly. Every value arrives through 3 contracts: `/api/leads/feed`, `/api/leads/save`, `/api/user-profile`. Behind those contracts, the data comes from `coa_applications`, `cost_estimates`, `entities`, `entitlements`, `entity_projects`, `lead_views`, `neighbourhoods`, `permit_trades`, `permits`, `trade_forecasts`, `trades`, `user_profiles` and `wsib_registry`, and writes land on `entitlements`, `lead_views` and `user_profiles`. It also holds client-side state in `filterStore`, `authStore`, `tabBarStore` and `paywallStore`, which is the part a server-driven projection has to absorb or justify.",
+    "under_126": "**REBUILD** — it holds Layer-3 state (`filterStore`, `authStore`, `tabBarStore` and `paywallStore`) and drives writes, so a client decision has to be re-homed on the server before the projection can be honest. It renders through the LIST renderer (a collection with declared pagination, recycling and empty/offline states), reading by reference: `/api/leads/feed`, `/api/leads/save`, `/api/user-profile`. Its `owns.components[]` declares `mobile/src/components/feed/LeadCard.tsx`, `mobile/src/components/feed/LeadCardSkeleton.tsx`, `mobile/src/components/feed/EmptyFeedState.tsx` and `mobile/src/components/feed/FilterTriggerRow.tsx`."
+  },
+  "evidence": {
+    "files": [
+      "mobile/app/(app)/index.tsx:1",
+      "mobile/src/components/feed/LeadCard.tsx:1",
+      "mobile/src/components/feed/LeadCardSkeleton.tsx:1",
+      "mobile/src/components/feed/EmptyFeedState.tsx:1",
+      "mobile/src/components/feed/FilterTriggerRow.tsx:1"
+    ],
+    "contracts": [
+      "mobile/src/hooks/useLeadFeed.ts:32",
+      "mobile/src/hooks/useSaveLead.ts:27",
+      "mobile/src/hooks/usePatchProfile.ts:49",
+      "mobile/src/hooks/useUserProfile.ts:38"
+    ],
+    "tables": [
+      "src/features/leads/lib/get-lead-feed.ts:243-282",
+      "src/features/leads/lib/get-lead-feed.ts:435-478",
+      "src/features/leads/lib/record-lead-view.ts:148-175",
+      "src/lib/userProfile.schema.ts:85-122"
+    ],
+    "gate": [
+      "src/lib/auth/route-guard.ts:120-132",
+      "mobile/app/(app)/_layout.tsx:236-265",
+      "mobile/app/(app)/index.tsx:69-75"
+    ],
+    "states": [
+      "mobile/app/(app)/index.tsx:171-208",
+      "mobile/app/(app)/index.tsx:236-248"
+    ],
+    "emits": [
+      "mobile/src/hooks/useSaveLead.ts:37",
+      "mobile/src/lib/analytics.ts:121-132"
+    ]
+  },
+  "identity": {
+    "id": "mobile_lead_feed",
+    "route": "mobile/app/(app)/index.tsx",
+    "archetype": "LIST",
+    "platforms": [
+      "mobile"
+    ],
+    "owns": {
+      "components": [
+        "mobile/src/components/feed/LeadCard.tsx",
+        "mobile/src/components/feed/LeadCardSkeleton.tsx",
+        "mobile/src/components/feed/EmptyFeedState.tsx",
+        "mobile/src/components/feed/FilterTriggerRow.tsx"
+      ]
+    },
+    "owner": "unassigned (no CODEOWNERS file and no owner registry exists in the repo — measured 2026-09-15)",
+    "spec": "docs/specs/03-mobile/91_mobile_lead_feed.md",
+    "spec_refs": [
+      "docs/specs/03-mobile/91_mobile_lead_feed.md §3",
+      "docs/specs/03-mobile/91_mobile_lead_feed.md §4.4",
+      "docs/specs/03-mobile/96_mobile_subscription.md §9",
+      "docs/specs/03-mobile/99_mobile_state_architecture.md §4"
+    ],
+    "spec_version": "0-draft",
+    "versioning": {
+      "answer": "additive_only",
+      "why": "The payload is parsed by a generated-by-hand Zod mirror that rejects unknown shapes only on required fields, so the server may add fields; removing or retyping one breaks LeadFeedResultSchema.parse and throws to the ErrorBoundary.",
+      "evidence": [
+        "mobile/src/lib/schemas.ts:1-120",
+        "mobile/src/hooks/useLeadFeed.ts:53",
+        "mobile/__tests__/useLeadFeed.test.ts:89-103"
+      ]
+    },
+    "ref": "S-062"
+  },
+  "inputs": {
+    "answer": "contract",
+    "why": "Every rendered value arrives through GET /api/leads/feed; the screen holds no direct DB or projection-table access (React Native has no server components).",
+    "evidence": [
+      "mobile/src/hooks/useLeadFeed.ts:32",
+      "mobile/app/(app)/index.tsx:77-86"
+    ],
+    "contract_ref": [
+      "/api/leads/feed",
+      "/api/leads/save",
+      "/api/user-profile"
+    ],
+    "query_key": [
+      "lead-feed",
+      "{lat,lng,tradeSlug,radiusKm}"
+    ],
+    "field_whitelist": [
+      "lead_id",
+      "lead_type",
+      "permit_num",
+      "revision_num",
+      "status",
+      "permit_type",
+      "description",
+      "street_num",
+      "street_name",
+      "neighbourhood_name",
+      "cost_tier",
+      "estimated_cost",
+      "lifecycle_phase",
+      "lifecycle_stalled",
+      "competition_count",
+      "is_saved",
+      "latitude",
+      "longitude",
+      "distance_m",
+      "proximity_score",
+      "timing_score",
+      "value_score",
+      "opportunity_score",
+      "timing_confidence",
+      "opportunity_type",
+      "attachment_basis",
+      "target_window"
+    ],
+    "tables": [
+      {
+        "table": "permits",
+        "columns": [
+          "permit_num",
+          "revision_num",
+          "status",
+          "permit_type",
+          "description",
+          "street_num",
+          "street_name",
+          "neighbourhood_id",
+          "lifecycle_phase",
+          "lifecycle_stalled",
+          "latitude",
+          "longitude",
+          "location"
+        ],
+        "producing_steps": [
+          "permits",
+          "enrich_permits",
+          "geocode_permits",
+          "classify_lifecycle_phase",
+          "link_neighbourhoods"
+        ],
+        "chain_position": "permits[1]",
+        "owner_spec": "docs/specs/01-pipeline/41_chain_permits.md",
+        "evidence": [
+          "src/features/leads/lib/get-lead-feed.ts:243-282",
+          "docs/reference/data-lineage-map.md:1001",
+          "scripts/manifest.json#chains.permits"
+        ]
+      },
+      {
+        "table": "permit_trades",
+        "columns": [
+          "permit_num",
+          "revision_num",
+          "trade_id",
+          "phase",
+          "is_active",
+          "confidence",
+          "attachment_basis"
+        ],
+        "producing_steps": [
+          "classify_permits"
+        ],
+        "chain_position": "permits[13]",
+        "owner_spec": "docs/specs/01-pipeline/80_taxonomies.md",
+        "evidence": [
+          "src/features/leads/lib/get-lead-feed.ts:243-282",
+          "docs/reference/data-lineage-map.md:977",
+          "scripts/manifest.json#chains.permits"
+        ]
+      },
+      {
+        "table": "trades",
+        "columns": [
+          "id",
+          "slug"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/01-pipeline/80_taxonomies.md",
+        "evidence": [
+          "src/features/leads/lib/get-lead-feed.ts:243-282",
+          "docs/reference/data-lineage-map.md:1359"
+        ]
+      },
+      {
+        "table": "cost_estimates",
+        "columns": [
+          "permit_num",
+          "revision_num",
+          "cost_tier",
+          "estimated_cost",
+          "cost_range_low",
+          "cost_range_high",
+          "effective_area_sqm"
+        ],
+        "producing_steps": [
+          "compute_cost_estimates"
+        ],
+        "chain_position": "permits[17]",
+        "owner_spec": "docs/specs/01-pipeline/83_lead_cost_model.md",
+        "evidence": [
+          "src/features/leads/lib/get-lead-feed.ts:243-282",
+          "docs/reference/data-lineage-map.md:469",
+          "scripts/manifest.json#chains.permits"
+        ]
+      },
+      {
+        "table": "neighbourhoods",
+        "columns": [
+          "id",
+          "name",
+          "avg_household_income",
+          "median_household_income",
+          "period_of_construction"
+        ],
+        "producing_steps": [
+          "neighbourhoods"
+        ],
+        "chain_position": "sources[16]",
+        "owner_spec": "docs/specs/01-pipeline/57_source_neighbourhoods.md",
+        "evidence": [
+          "src/features/leads/lib/get-lead-feed.ts:252",
+          "docs/reference/data-lineage-map.md:702",
+          "scripts/manifest.json#chains.sources"
+        ]
+      },
+      {
+        "table": "lead_views",
+        "columns": [
+          "user_id",
+          "lead_key",
+          "lead_type",
+          "permit_num",
+          "revision_num",
+          "trade_slug",
+          "saved"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/03-mobile/91_mobile_lead_feed.md",
+        "evidence": [
+          "src/features/leads/lib/get-lead-feed.ts:274-281",
+          "src/features/leads/lib/get-lead-feed.ts:152-159",
+          "docs/reference/data-lineage-map.md:602",
+          "migrations/230_rls_class_a_entitlements.sql:70-76"
+        ]
+      },
+      {
+        "table": "entities",
+        "columns": [
+          "id",
+          "legal_name",
+          "primary_phone",
+          "primary_email",
+          "website",
+          "is_wsib_registered"
+        ],
+        "producing_steps": [
+          "builders",
+          "link_wsib",
+          "enrich_named_builders",
+          "enrich_wsib_builders"
+        ],
+        "chain_position": "permits[5]",
+        "owner_spec": "docs/specs/01-pipeline/45_chain_entities.md",
+        "evidence": [
+          "src/features/leads/lib/get-lead-feed.ts:435",
+          "docs/reference/data-lineage-map.md:510",
+          "scripts/manifest.json#chains.permits"
+        ]
+      },
+      {
+        "table": "entity_projects",
+        "columns": [
+          "entity_id",
+          "role",
+          "permit_num",
+          "revision_num"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/01-pipeline/45_chain_entities.md",
+        "evidence": [
+          "src/features/leads/lib/get-lead-feed.ts:436",
+          "docs/reference/data-lineage-map.md — table absent from the generated map (checked 2026-09-15); the map is derived from every step's emitMeta, so absence means no in-chain writer declares it",
+          "scripts/backfill/migrate-entities.js — the only writer in scripts/ is a one-time backfill, never a chain step"
+        ]
+      },
+      {
+        "table": "wsib_registry",
+        "columns": [
+          "linked_entity_id",
+          "business_size"
+        ],
+        "producing_steps": [
+          "load_wsib",
+          "link_wsib"
+        ],
+        "chain_position": "sources[18]",
+        "owner_spec": "docs/specs/01-pipeline/52_source_wsib.md",
+        "evidence": [
+          "src/features/leads/lib/get-lead-feed.ts:107",
+          "src/features/leads/lib/get-lead-feed.ts:449",
+          "docs/reference/data-lineage-map.md:1380",
+          "scripts/manifest.json#chains.sources"
+        ]
+      },
+      {
+        "table": "user_profiles",
+        "columns": [
+          "user_id",
+          "trade_slug",
+          "radius_km",
+          "radius_cap_km",
+          "location_mode",
+          "home_base_lat",
+          "home_base_lng"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/03-mobile/95_mobile_user_profiles.md",
+        "evidence": [
+          "mobile/src/hooks/usePatchProfile.ts:49",
+          "src/app/api/user-profile/route.ts:393",
+          "src/lib/userProfile.schema.ts:85-122",
+          "migrations/230_rls_class_a_entitlements.sql:62-68"
+        ]
+      },
+      {
+        "table": "entitlements",
+        "columns": [
+          "user_id",
+          "product",
+          "status",
+          "trial_started_at"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/00-architecture/116_multi_product_architecture.md",
+        "evidence": [
+          "src/app/api/user-profile/route.ts:51",
+          "migrations/228_entitlements.sql:21-35",
+          "src/lib/entitlements/index.ts:68"
+        ]
+      }
+    ]
+  },
+  "outputs": {
+    "answer": "optimistic_then_contract",
+    "why": "The save heart flips the cached feed page first and reconciles: useSaveLead snapshots [\"lead-feed\"], writes is_saved optimistically, rolls the snapshot back onError, and invalidates onSettled; the radius widen goes through usePatchProfile with the same discipline.",
+    "evidence": [
+      "mobile/src/hooks/useSaveLead.ts:45-107",
+      "mobile/src/hooks/usePatchProfile.ts:56-82"
+    ],
+    "contract_ref": [
+      "/api/leads/save",
+      "/api/user-profile"
+    ],
+    "tables": [
+      {
+        "table": "lead_views",
+        "columns": [
+          "user_id",
+          "lead_key",
+          "lead_type",
+          "permit_num",
+          "revision_num",
+          "trade_slug",
+          "saved"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/03-mobile/91_mobile_lead_feed.md",
+        "evidence": [
+          "src/features/leads/lib/record-lead-view.ts:148-175",
+          "docs/reference/data-lineage-map.md:602",
+          "migrations/230_rls_class_a_entitlements.sql:70-76"
+        ]
+      },
+      {
+        "table": "user_profiles",
+        "columns": [
+          "user_id",
+          "radius_km"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/03-mobile/95_mobile_user_profiles.md",
+        "evidence": [
+          "src/app/api/user-profile/route.ts:393",
+          "src/lib/userProfile.schema.ts:85-122",
+          "migrations/230_rls_class_a_entitlements.sql:62-68"
+        ]
+      }
+    ],
+    "rollback": "useSaveLead onError restores the [\"lead-feed\"] page snapshot captured in onMutate; usePatchProfile restores the [\"user-profile\"] snapshot.",
+    "invalidates": [
+      "lead-feed",
+      "lead-detail",
+      "user-profile"
+    ]
+  },
+  "state": {
+    "answer": "zustand",
+    "why": "Beyond the TanStack cache it reads three Layer-3/5 stores — filterStore (radiusKm, tradeSlug, MMKV-persisted), authStore (accessToken gate) and the Reanimated tabBar shared values — plus paywallStore for the inline-blur branch.",
+    "evidence": [
+      "mobile/app/(app)/index.tsx:50-58",
+      "mobile/src/store/filterStore.ts:121-122",
+      "mobile/src/store/tabBarStore.ts:7-9",
+      "mobile/src/store/paywallStore.ts:5-32"
+    ],
+    "fields": [
+      {
+        "name": "radiusKm",
+        "owner_layer": "3_zustand",
+        "canonical_writer": "usePatchProfile (server round-trip)",
+        "authorized_readers": [
+          "mobile_lead_feed",
+          "mobile_map",
+          "mobile_settings",
+          "overlay_lead_filter_sheet"
+        ],
+        "bridge": "B3",
+        "persistence": "mmkv",
+        "signout_reset": true
+      },
+      {
+        "name": "tradeSlug",
+        "owner_layer": "3_zustand",
+        "canonical_writer": "filterStore.hydrate from useUserProfile",
+        "authorized_readers": [
+          "mobile_lead_feed",
+          "mobile_map",
+          "mobile_settings",
+          "mobile_onboarding_supplier"
+        ],
+        "bridge": "B2",
+        "persistence": "mmkv",
+        "signout_reset": true
+      },
+      {
+        "name": "tabBarVisible",
+        "owner_layer": "5_shared_value",
+        "canonical_writer": "useAnimatedScrollHandler in index.tsx/flight-board.tsx",
+        "authorized_readers": [
+          "shell_app_tabs"
+        ],
+        "bridge": "none",
+        "persistence": "none",
+        "signout_reset": false
+      }
+    ]
+  },
+  "staleness": {
+    "answer": "query_cache",
+    "why": "The feed inherits the global TanStack defaults — no per-hook override in useLeadFeed — so it is fresh for 5 minutes and garbage-collected after 24 hours, refetched on AppState foreground and on pull-to-refresh.",
+    "evidence": [
+      "mobile/src/lib/queryClient.ts:37-44",
+      "mobile/src/hooks/useLeadFeed.ts:39-54",
+      "mobile/src/lib/queryClient.ts:30-35"
+    ],
+    "offline": "cached_projection",
+    "stale_time_ms": 300000,
+    "gc_time_ms": 86400000
+  },
+  "guards": {
+    "session": {
+      "answer": "authenticated",
+      "why": "Every contract it reaches sits under the `/api/leads` or `/api/user-profile` prefix, which route-guard classifies `authenticated`; the client additionally gates the query on authStore.accessToken so nothing fires before Supabase resolves.",
+      "evidence": [
+        "src/lib/auth/route-guard.ts:120-132",
+        "mobile/app/(app)/index.tsx:57-58"
+      ]
+    },
+    "rls_class": {
+      "answer": "B",
+      "why": "The tables the feed reads — permits, permit_trades, trades, cost_estimates, neighbourhoods, entities, wsib_registry — are all RLS-enabled with zero policies (default deny, service-role/table-owner only); the single Class-A table in the path is lead_views, reached only through the API route.",
+      "evidence": [
+        "migrations/227_rls_class_b_default_deny.sql:42-110",
+        "migrations/230_rls_class_a_entitlements.sql:70-76"
+      ]
+    },
+    "disclosure": "none",
+    "entitlement": {
+      "product": "lead_gen",
+      "statuses": [
+        "trial",
+        "active",
+        "past_due",
+        "admin_managed"
+      ],
+      "on_missing": "paywall"
+    },
+    "flag": "none",
+    "permission": "location",
+    "rate_bucket": "leads-feed:{uid} — 30/min, 60s window"
+  },
+  "render": {
+    "targets": [
+      "screen"
+    ],
+    "projection": "list",
+    "breakpoints": "mobile_first",
+    "export": "none",
+    "list": "UNRESEARCHED"
+  },
+  "checks": [
+    {
+      "id": "feed_contract_parse",
+      "kind": "contract_parse",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "mobile/__tests__/useLeadFeed.test.ts and schemas.test.ts pin LeadFeedResultSchema field-by-field, including the rejection cases (bad target_window, negative competition_count, missing opportunity_score)."
+    },
+    {
+      "id": "feed_query_key_hygiene",
+      "kind": "query_key_hygiene",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "why": "The key is [\"lead-feed\", params] where params is an OBJECT literal rebuilt each render; it is stable only because useLeadFeed receives a memo-free object whose fields are primitives — no test pins this, so it stays WARN until a lock exists."
+    },
+    {
+      "id": "feed_empty_state",
+      "kind": "empty_state",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "Three distinct empty renders exist (no coords, no results, unreachable) at index.tsx:202-247; no render test covers them — the lock is the source-scan in spec99.mandates.lint.test.ts only."
+    },
+    {
+      "id": "feed_offline_state",
+      "kind": "offline_state",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "mobile/__tests__/offline.test.ts asserts the MMKV persister round-trip and the onlineManager/focusManager wiring that makes the cached feed render with no network."
+    },
+    {
+      "id": "feed_components_owned",
+      "kind": "components_owned",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "why": "LeadCard/LeadCardSkeleton/EmptyFeedState/FilterTriggerRow are rendered only here, but LeadCard itself renders the shared SaveButton, which no surface owns (see notes)."
+    },
+    {
+      "id": "feed_a11y_labels_absent",
+      "kind": "a11y_label",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "Measured zero: index.tsx, LeadCard.tsx and LeadCardSkeleton.tsx contain no accessibilityLabel or accessibilityRole at all, so the whole feed is unlabelled to a screen reader. Declared FAIL with no implementation yet."
+    },
+    {
+      "id": "feed_touch_target",
+      "kind": "touch_target",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "why": "The only interactive target inside a card is SaveButton, pinned to minWidth/minHeight 44 at SaveButton.tsx:71; the card press area is the full card. No automated measurement exists."
+    }
+  ],
+  "invariants": "none",
+  "plausibility": "none",
+  "states": [
+    {
+      "name": "loading",
+      "golden": "none"
+    },
+    {
+      "name": "empty",
+      "golden": "none"
+    },
+    {
+      "name": "hit",
+      "golden": "none"
+    },
+    {
+      "name": "error",
+      "golden": "none"
+    },
+    {
+      "name": "offline",
+      "golden": "none"
+    },
+    {
+      "name": "schema_drift",
+      "golden": "none"
+    },
+    {
+      "name": "unauthorized",
+      "golden": "none"
+    }
+  ],
+  "errors": {
+    "answer": "inline",
+    "why": "Network and HTTP failures render inline inside the list as EmptyFeedState reason=\"unreachable\" with a Retry; only a Zod parse failure escapes, re-thrown to the root ErrorBoundary by the hook's throwOnError.",
+    "evidence": [
+      "mobile/app/(app)/index.tsx:243-244",
+      "mobile/src/hooks/useLeadFeed.ts:53",
+      "mobile/src/lib/apiClient.ts:42-121"
+    ],
+    "classes": [
+      {
+        "class": "401",
+        "ui": "apiClient refreshes the Supabase session once and retries; a second 401 throws ApiError(401) and the list shows the unreachable empty state."
+      },
+      {
+        "class": "403",
+        "ui": "ACCOUNT_DELETED bodies become AccountDeletedError, which AuthGate turns into the reactivation modal; any other 403 shows the unreachable empty state."
+      },
+      {
+        "class": "429",
+        "ui": "RateLimitError renders the same unreachable empty state — the retry-after seconds are carried on the error but not displayed here."
+      },
+      {
+        "class": "500",
+        "ui": "Unreachable empty state with a Retry that calls refetch()."
+      },
+      {
+        "class": "schema_drift",
+        "ui": "ZodError re-thrown to the root ErrorBoundary (\"Something went wrong\" + TRY AGAIN)."
+      },
+      {
+        "class": "offline",
+        "ui": "OfflineBanner slides in above the list and the MMKV-persisted page renders."
+      }
+    ],
+    "no_retry": []
+  },
+  "emits": {
+    "answer": "events",
+    "why": "Saving from a card fires lead_saved/lead_unsaved through the shared useSaveLead mutation; the screen itself has no mount event, and no ledger table exists to write to.",
+    "evidence": [
+      "mobile/src/hooks/useSaveLead.ts:37",
+      "mobile/src/lib/analytics.ts:121-132"
+    ],
+    "analytics": [
+      "lead_saved",
+      "lead_unsaved"
+    ],
+    "ledger_events": [],
+    "breadcrumbs": [
+      "query_invalidate (DEV-only, via logQueryInvalidate)"
+    ]
+  },
+  "offers": {
+    "answer": "none",
+    "why": "No sponsored placement is rendered: the only slot component in the Expo tree is SponsorSlot, and it returns null unless EXPO_PUBLIC_PARCEL_SPONSORS=1.",
+    "evidence": [
+      "mobile/src/components/parcel/SponsorSlot.tsx:16-20"
+    ]
+  },
+  "metering": {
+    "answer": "none",
+    "why": "Nothing here is counted: the Spec 126 §7 usage ledger table does not exist (grep for usage_events in the introspected drizzle schema returns 0 hits), and the only quota-shaped counter, user_profiles.lead_views_count, is incremented solely by POST /api/leads/view, which has no mobile caller.",
+    "evidence": [
+      "src/lib/db/generated/schema.ts — no usage_events table (grep, 2026-09-15)",
+      "src/app/api/leads/view/route.ts:110",
+      "src/features/leads/api/useLeadView.ts:25 — imported only by src/tests/useLeadView.logic.test.tsx"
+    ]
+  },
+  "config": {
+    "answer": "none",
+    "why": "The surface consumes no registered logic variable: the only server-side tunable in this path, user_profiles.radius_cap_km, is a per-user admin column, not a logic_variables row.",
+    "evidence": [
+      "src/lib/userProfile.schema.ts:40",
+      "src/app/api/user-profile/route.ts:328",
+      "docs/reference/logic-variables-registry.md — no radius_cap_km entry"
+    ],
+    "logic_variables": [],
+    "retired": []
+  },
+  "sharing": {
+    "answer": "shared",
+    "why": "All three of its contracts are rendered elsewhere: /api/leads/feed by the map tab, /api/leads/save by the lead detail and the search sheet, /api/user-profile by both shells, settings and the filter sheet.",
+    "evidence": [
+      "mobile/app/(app)/map.tsx:42",
+      "mobile/app/(app)/[lead].tsx:46",
+      "mobile/src/components/feed/SearchPermitsSheet.tsx:47",
+      "mobile/app/(app)/_layout.tsx:118"
+    ],
+    "surfaces": [
+      "mobile_map",
+      "mobile_lead_detail",
+      "overlay_search_permits_sheet",
+      "overlay_lead_filter_sheet",
+      "mobile_settings",
+      "shell_app_root",
+      "shell_app_tabs"
+    ]
+  },
+  "a11y": {
+    "touch_target_min_px": 44,
+    "labels": "none",
+    "dark_mode": "hardcoded",
+    "reduced_motion": "ignored",
+    "i18n": "none",
+    "safe_area": [
+      "top"
+    ]
+  },
+  "deviations": "none",
+  "limitations": [
+    {
+      "what": "Not one interactive element on this screen carries an accessibilityLabel or accessibilityRole.",
+      "measured": "grep -c \"accessibilityLabel|accessibilityRole\" mobile/app/(app)/index.tsx → 0; LeadCard.tsx and LeadCardSkeleton.tsx are also 0.",
+      "check_id": "feed_a11y_labels_absent"
+    },
+    {
+      "what": "The tab-bar hide animation and the card entry animation run regardless of the OS reduce-motion setting.",
+      "measured": "No AccessibilityInfo / isReduceMotionEnabled call exists anywhere under mobile/ (grep, 2026-09-15).",
+      "check_id": "none — checks[].kind has no reduced-motion value; raised as a vocabulary escalation per Spec 128 §4"
+    }
+  ],
+  "interpretation": "none",
+  "notes": "The saved-heart on a card is SaveButton, which is rendered by BOTH this surface (through LeadCard) and mobile_lead_detail — R-13 totality has no owner for it and the census has no row for it. The x-draft measured_states list \"error_empty\" and \"empty_no_results\" as separate renders; both map to the single `empty` vocabulary value plus `error`, so the 9 measured branches collapse to 7 declared states.",
+  "x-draft": {
+    "shard": "mobile-product",
+    "files": [
+      "mobile/app/(app)/index.tsx",
+      "mobile/src/components/feed/LeadCard.tsx",
+      "mobile/src/components/feed/LeadCardSkeleton.tsx",
+      "mobile/src/components/feed/EmptyFeedState.tsx",
+      "mobile/src/components/feed/FilterTriggerRow.tsx"
+    ],
+    "loc": 264,
+    "call_idiom": "hook",
+    "stores": [
+      "filterStore",
+      "authStore",
+      "tabBarStore",
+      "paywallStore"
+    ],
+    "measured_states": [
+      "inline_blur_locked",
+      "location_loading",
+      "no_coords_empty",
+      "loading_skeletons",
+      "error_empty",
+      "empty_no_results",
+      "loaded",
+      "refetching",
+      "fetching_next_page"
+    ],
+    "measured_gate": {
+      "session": "required",
+      "entitlement": "subscription_status",
+      "flag": "none",
+      "permission": "location"
+    }
+  },
+  "programme": {
+    "scope": "estate_other",
+    "phase": "not_scheduled",
+    "why": "Lead generation — the other product. Spec 100 §1 states the parcel tool is \"not coupled to the Lead Feed, Flight Center, or LeadDetail\"; inventoried only.",
+    "feature": "F90",
+    "build_order": 4173,
+    "leakage": "UNRESEARCHED",
+    "product_questions": "UNRESEARCHED",
+    "review": {
+      "status": "unreviewed"
+    }
+  }
+}

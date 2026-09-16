@@ -1,0 +1,371 @@
+{
+  "kind": "SURFACE",
+  "status": "new",
+  "docs": {
+    "purpose": "A board showing the current verdict of every automated consistency check the project already runs — schema drift, contract drift, the system map, the mobile matrix, golden-file freshness. Those checks exist and pass or fail in CI today, but nothing displays the result where an operator would see it. A check nobody reads is a check nobody acts on, and this page is the reader.",
+    "data_story": "Nothing is built yet, so nothing is measured here. As specified it reads descriptor files and checker verdicts rather than database tables.",
+    "under_126": "**NEW.** It does not exist; it is generated from descriptors from its first commit, through the DASHBOARD renderer (tiles that each declare their own contract and degrade independently). It is **100% generated** — which is the point: if the descriptor set is incomplete or an archetype profile is wrong, this page is visibly empty or visibly wrong on commit 1, and cannot be faked by hand."
+  },
+  "evidence": {
+    "files": [
+      "docs/reports/2026-09-15-spec126-admin-best-in-class.md §1.1 row 20 — NEW; no page exists",
+      "mobile/scripts/check-spec99-matrix.mjs — a checker that exists and is wired to nothing",
+      "docs/reports/generated/ — nine generated artifacts, zero rendered"
+    ],
+    "contracts": [
+      "DESIGNED: GET /api/admin/drift — absent from the census, so it cannot appear in inputs.contract_ref"
+    ],
+    "tables": [
+      "docs/specs/02-web-admin/127_surface_conversion_procedure.md §5 — the fast invariants are explicitly no-DB, so lineage is empty by design"
+    ],
+    "gate": [
+      "src/lib/auth/route-guard.ts:162"
+    ],
+    "states": [
+      "docs/specs/02-web-admin/126_maxbld_surface_standard.md §3.1 row 7 — DASHBOARD requires states[] per tile"
+    ],
+    "emits": [
+      "docs/specs/02-web-admin/126_maxbld_surface_standard.md §3.1 row 7 — outputs \"none\" unless a tile declares a COMMAND"
+    ]
+  },
+  "identity": {
+    "id": "admin_drift_status",
+    "archetype": "DASHBOARD",
+    "platforms": [
+      "web"
+    ],
+    "owns": {
+      "components": [
+        "src/features/admin-registry/components/DriftTileGrid.tsx"
+      ]
+    },
+    "owner": "Admin domain (Spec 126 §14 Target Files) — no individual owner is named by Specs 126/127/128.",
+    "spec": "docs/specs/02-web-admin/126_maxbld_surface_standard.md",
+    "spec_refs": [
+      "docs/specs/02-web-admin/126_maxbld_surface_standard.md §2.2 group F — admin_drift_status DASHBOARD (100% gen)",
+      "docs/specs/02-web-admin/126_maxbld_surface_standard.md §2.2.1 P6 — drift is shown in-product, not only in CI; a checker with no reader is a checker nobody acts on",
+      "docs/specs/02-web-admin/127_surface_conversion_procedure.md §5 — the fast invariants (no DB, no vitest) this page re-executes",
+      "docs/reports/2026-09-15-spec126-admin-best-in-class.md §1.1 row 20 · §2 P6"
+    ],
+    "spec_version": "0-draft",
+    "versioning": {
+      "answer": "none",
+      "why": "Nothing consumes this surface: it does not exist, so no compatibility promise can have been made. It gains one at its C9 cutover, when the golden pair is captured.",
+      "evidence": [
+        "docs/specs/02-web-admin/126_maxbld_surface_standard.md §2.2 — one of the 11 NEW admin surfaces",
+        "docs/specs/02-web-admin/127_surface_conversion_procedure.md §4.3 — the golden PAIR pins the shape"
+      ]
+    },
+    "ref": "S-008"
+  },
+  "inputs": {
+    "answer": "contract",
+    "why": "Its tiles are checker verdicts, not table rows: one designed QUERY contract re-executes Spec 127 §5's fast invariants server-side and reads the committed generated artifacts under docs/reports/generated/. It reaches no database table at all.",
+    "evidence": [
+      "docs/specs/02-web-admin/127_surface_conversion_procedure.md §5 — the fast invariants are explicitly \"no DB, no vitest\"",
+      "docs/reports/2026-09-15-spec126-admin-best-in-class.md §2 P6 — nine generated reports exist under docs/reports/generated/ and zero are rendered by any admin page"
+    ],
+    "contract_ref": [],
+    "query_key": [
+      "admin",
+      "drift-status"
+    ],
+    "field_whitelist": [
+      "checker_id",
+      "verdict",
+      "severity",
+      "measured_at",
+      "detail",
+      "artifact_path",
+      "both_directions_proven"
+    ],
+    "tables": []
+  },
+  "outputs": {
+    "answer": "none",
+    "why": "DASHBOARD forces outputs to \"none\" unless a tile declares a COMMAND, and none does: re-running a checker is a CI action, not an admin button. Nothing is written, so R-12/B6 owes no audit row.",
+    "evidence": [
+      "docs/specs/02-web-admin/126_maxbld_surface_standard.md §3.1 row 7 — DASHBOARD: outputs.writes \"none\" unless a tile declares a COMMAND",
+      "docs/specs/02-web-admin/128_surface_standard_policy.md §3 rule B6"
+    ],
+    "contract_ref": [],
+    "tables": []
+  },
+  "state": {
+    "answer": "server_only",
+    "why": "Each tile is computed on the server and streamed; nothing is held client-side, which is what lets a tile fail without taking its neighbours down.",
+    "evidence": [
+      "docs/specs/02-web-admin/126_maxbld_surface_standard.md §3.1 row 7 — tiles each degrade independently",
+      "docs/specs/02-web-admin/126_maxbld_surface_standard.md §2.2.1 P11 — DataQualityDashboard.tsx fetches four contracts from one component with no per-tile degradation, which this archetype retires"
+    ]
+  },
+  "staleness": {
+    "answer": "live",
+    "why": "Every verdict is re-executed per request rather than read from a stored result. A cached drift verdict is precisely the failure P6 names: a checker whose answer nobody re-asks.",
+    "evidence": [
+      "docs/specs/02-web-admin/127_surface_conversion_procedure.md §5 — the fast invariants run in one command and cost no DB round trip"
+    ],
+    "offline": "none"
+  },
+  "guards": {
+    "session": {
+      "answer": "admin",
+      "why": "An /admin/** page: classifyRoute returns \"admin\" for any pathname starting with /admin/, and \"admin\" is the profiles.is_admin flag checked in-predicate — there is no admin Postgres role.",
+      "evidence": [
+        "src/lib/auth/route-guard.ts:162 — pathname === \"/admin\" || pathname.startsWith(\"/admin/\") returns \"admin\"",
+        "src/lib/auth/route-guard.ts:159 — /api/admin/ returns \"admin\"",
+        "migrations/226_profiles_admin_bootstrap.sql:27 — is_admin BOOLEAN NOT NULL DEFAULT false",
+        "docs/specs/00-architecture/114_rls_policy_catalog.md §2 — admin is a column flag checked inside the policy predicate, not a role"
+      ]
+    },
+    "rls_class": {
+      "answer": "none",
+      "why": "It reaches no database table — every tile is a re-executed checker over committed artifacts — so no Buildo RLS class applies.",
+      "evidence": [
+        "docs/specs/02-web-admin/127_surface_conversion_procedure.md §5 — fast invariants: no DB",
+        "docs/reports/2026-09-15-spec126-admin-best-in-class.md §1.1 row 20 — Reads column is checker verdicts, not tables"
+      ]
+    },
+    "disclosure": "none",
+    "entitlement": "none",
+    "flag": "none",
+    "permission": "none",
+    "rate_bucket": "none"
+  },
+  "render": {
+    "targets": [
+      "screen"
+    ],
+    "projection": "grid",
+    "breakpoints": "desktop_first_md",
+    "export": "none",
+    "tiles": "UNRESEARCHED",
+    "refresh": "UNRESEARCHED"
+  },
+  "checks": [
+    {
+      "id": "drift_contract_parse",
+      "kind": "contract_parse",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "A checker whose output shape changed must render as schema_drift on its own tile — a drift dashboard that silently drops a drifted checker is self-refuting."
+    },
+    {
+      "id": "drift_tile_error_state",
+      "kind": "error_state",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "A tile that cannot compute renders \"unavailable\" in place, never a blank cell and never taking the grid with it (Spec 128 rule 12: an unhandled state is a FAIL, not a blank screen)."
+    },
+    {
+      "id": "drift_empty_state",
+      "kind": "empty_state",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "Zero tiles means the checker registry is unseeded, which must not read as \"no drift\"."
+    },
+    {
+      "id": "drift_auth_class_parity",
+      "kind": "auth_class_parity",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "One of the tiles IS this check — census Q15, surface.guards.session vs contract.guards.auth_class — and Spec 126 §6.2 rule 3 puts it at FAIL."
+    },
+    {
+      "id": "drift_schema_declared",
+      "kind": "schema_declared",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "Rule 14's both-directions catalog assertion is a tile: a column live but undeclared fails exactly as a column declared but absent does."
+    },
+    {
+      "id": "drift_render_target_parity",
+      "kind": "render_target_parity",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "Rule 15's golden-pair equality is a tile too — the promise \"100% data parity\" is a diff, and this is where the diff is read."
+    },
+    {
+      "id": "drift_freshness",
+      "kind": "freshness",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "why": "Permanently non-zero while artifacts are regenerated on a commit cadence rather than a clock; the retighten condition is a per-artifact declared bound."
+    },
+    {
+      "id": "drift_a11y_label",
+      "kind": "a11y_label",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "A verdict conveyed only by tile colour is unreadable to a screen reader and to anyone with a colour-vision deficiency."
+    }
+  ],
+  "invariants": "none",
+  "plausibility": "none",
+  "states": [
+    {
+      "name": "loading",
+      "golden": "none"
+    },
+    {
+      "name": "hit",
+      "golden": "none"
+    },
+    {
+      "name": "partial",
+      "golden": "none"
+    },
+    {
+      "name": "degraded",
+      "golden": "none"
+    },
+    {
+      "name": "error",
+      "golden": "none"
+    },
+    {
+      "name": "unauthorized",
+      "golden": "none"
+    }
+  ],
+  "errors": {
+    "answer": "envelope",
+    "why": "Every admin route handler is wrapped by withApiEnvelope, which returns { data, error, meta } with a sanitised code on any throw; the surface renders from that envelope.",
+    "evidence": [
+      "src/lib/api/with-api-envelope.ts:27 — withApiEnvelope always returns the { data, error, meta } envelope",
+      "src/lib/api/with-api-envelope.ts:40-45 — a PG SQLSTATE becomes DATABASE_ERROR; the raw message is never exposed"
+    ],
+    "classes": [
+      {
+        "class": "401",
+        "ui": "Redirect to sign-in — the route guard refuses before the page renders."
+      },
+      {
+        "class": "403",
+        "ui": "Full-page \"admin only\" block naming the is_admin requirement; no partial data."
+      },
+      {
+        "class": "500",
+        "ui": "Full-width error panel carrying the envelope error.code, with a retry control."
+      },
+      {
+        "class": "schema_drift",
+        "ui": "The row that failed to parse renders as a red schema_drift row; the rest still renders."
+      }
+    ],
+    "no_retry": [
+      "401",
+      "403"
+    ]
+  },
+  "emits": {
+    "answer": "none",
+    "why": "Read-only: it writes no admin_audit_log row (nothing mutates) and no usage_events row (nothing is metered).",
+    "evidence": [
+      "docs/specs/02-web-admin/128_surface_standard_policy.md §3 rule B6",
+      "docs/specs/02-web-admin/126_maxbld_surface_standard.md §3.1 row 7"
+    ],
+    "analytics": [],
+    "ledger_events": [],
+    "breadcrumbs": []
+  },
+  "offers": {
+    "answer": "none",
+    "why": "A CI-verdict board renders no sponsored content.",
+    "evidence": [
+      "docs/specs/02-web-admin/126_maxbld_surface_standard.md §3.1 — SLOT is the archetype that renders inventory; this surface is not one",
+      "docs/specs/02-web-admin/128_surface_standard_policy.md §2 rule 6 — \"none\" is legal; silence is not"
+    ]
+  },
+  "metering": {
+    "answer": "none",
+    "why": "Nothing an operator does here is billable or quota-bearing.",
+    "evidence": [
+      "docs/specs/02-web-admin/126_maxbld_surface_standard.md §7"
+    ]
+  },
+  "config": {
+    "answer": "logic_variables",
+    "why": "The poll interval and the artifact staleness bound are the two numbers a human would argue about; under Spec 128 rule 3 both are registered variables with bounds rather than constants in the tile grid.",
+    "evidence": [
+      "docs/specs/02-web-admin/128_surface_standard_policy.md §2 rule 3",
+      "scripts/seeds/logic_variables.json — both keys are NET-NEW"
+    ],
+    "logic_variables": [
+      {
+        "name": "admin_drift_poll_ms",
+        "min": 5000,
+        "max": 600000,
+        "on_invalid": "default",
+        "why": "A bad poll interval degrades refresh rate but changes no verdict, so it falls back to its declared default rather than failing the page."
+      },
+      {
+        "name": "admin_drift_artifact_stale_hours",
+        "min": 1,
+        "max": 720,
+        "on_invalid": "fail",
+        "why": "Verdict-affecting: it decides whether a generated artifact renders as stale."
+      }
+    ],
+    "retired": []
+  },
+  "sharing": {
+    "answer": "sole",
+    "why": "No other surface renders checker verdicts — that absence is the measured defect (nine generated reports, zero readers) this page exists to close.",
+    "evidence": [
+      "docs/reports/2026-09-15-spec126-admin-best-in-class.md §2 P6 — mobile/scripts/check-spec99-matrix.mjs is wired to nothing; nine generated reports, zero rendered"
+    ],
+    "surfaces": []
+  },
+  "a11y": {
+    "touch_target_min_px": 44,
+    "labels": "complete",
+    "dark_mode": "none",
+    "reduced_motion": "none",
+    "i18n": "none",
+    "safe_area": "none"
+  },
+  "deviations": "none",
+  "limitations": [
+    {
+      "what": "The DASHBOARD required-field profile in Spec 126 §3.1 mandates tiles[] each with its own contract_ref and degrade_independently, plus refresh.poll_ms and per-tile states[], and surface.schema.json has no property for any of them (the top level and every category are additionalProperties:false).",
+      "measured": "Every allOf block in scripts/surfaces/_schema/surface.schema.json is `\"then\": true` — the archetype profiles are declared in prose in Spec 126 §3.1 and enforced by nothing, so these fields can neither be declared here nor caught missing.",
+      "check_id": "drift_tile_error_state"
+    },
+    {
+      "what": "plausibility is \"none\" on a surface whose whole job is verdicts.",
+      "measured": "plausibility takes declarative SQL only, and a checker verdict has no SQL expression — the same reason R-34 keeps ad/layout policy in checks[] rather than plausibility[]. The verdicts are therefore checks[] entries, which is where they belong.",
+      "check_id": "drift_schema_declared"
+    }
+  ],
+  "interpretation": "none",
+  "notes": "Report §1.1 row 20: reads checker verdicts (surface-validate, contracts.infra.test.ts, system-map.infra.test.ts, check-spec99-matrix.mjs, golden freshness) — not DB tables. Measured defect it makes visible: mobile/scripts/check-spec99-matrix.mjs exists (CONFIRMED in the tree, 170 lines) and is wired to nothing — no match in .husky, .github, or either package.json — and nine generated reports sit in docs/reports/generated/ (CONFIRMED present) with zero of them rendered by any admin page. Also renders census Q15 at severity FAIL: surface.guards.session vs contract.guards.auth_class. DESIGNED, NOT MEASURED. Reaches no table, so lineage is empty by design and guards.rls_class is \"none\". TWO PROFILE FIELDS HAVE NO HOME: DASHBOARD requires tiles[] with per-tile contract_ref + degrade_independently and refresh.poll_ms (Spec 126 §3.1 row 7), and surface.schema.json declares no property for any of them while every allOf block is \"then\": true — so the archetype profile is prose in one place and enforced in none. Recorded in limitations rather than faked with an invented field.",
+  "x-draft": {
+    "shard": "admin-new",
+    "files": [],
+    "role": "admin",
+    "generated": "100%",
+    "net_new_tables": [],
+    "designed": true
+  },
+  "programme": {
+    "scope": "parcel_admin",
+    "phase": "B1a",
+    "why": "A descriptor-native admin page generated from the same descriptors this programme produces; it exists to operate and observe the parcel product, not the lead estate.",
+    "feature": "F09",
+    "build_order": 2093,
+    "leakage": "none",
+    "product_questions": "none",
+    "review": {
+      "status": "unreviewed"
+    }
+  }
+}

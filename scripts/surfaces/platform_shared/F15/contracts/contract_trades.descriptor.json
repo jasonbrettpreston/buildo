@@ -1,0 +1,282 @@
+{
+  "kind": "CONTRACT",
+  "status": "exists",
+  "docs": {
+    "purpose": "Returns the fixed list of construction trades — electrical, plumbing, roofing and so on — the app uses to classify permits, for populating a filter dropdown. No user data or database is involved.",
+    "data_story": "It touches no table at all. Its response shape is **unmeasured** as a pick-by-name whitelist — it passes rows through, spreads a row into a computed object, or assembles the payload dynamically, so there is no single list naming what leaves the server. It is called from 1 place: `web_dashboard`.",
+    "under_126": "Becomes a **CONTRACT descriptor** of archetype `QUERY`. It declares its `database.reads[]` with named columns, its response projection as an explicit whitelist, its auth class, its rate bucket and its staleness — and `outputs.writes` is forced to `\"none\"`. Its `consumers[]` becomes the edge list of the fan-out graph — the join nothing in this estate holds today."
+  },
+  "evidence": {
+    "files": [
+      "src/app/api/trades/route.ts:1"
+    ],
+    "contracts": [
+      "src/app/api/trades/route.ts:5 (GET export)",
+      "src/lib/api/with-api-envelope.ts:27-52"
+    ],
+    "tables": [
+      "src/app/api/trades/route.ts — read in full 2026-09-15; the handler issues no SQL and reaches no table"
+    ],
+    "gate": [
+      "src/lib/auth/route-guard.ts — PUBLIC_PREFIXES — '/api/trades'",
+      "src/lib/auth/route-guard.ts:150-201 — classifyRoute executed 2026-09-15 with the concrete path → \"public\"",
+      "no in-handler auth call in src/app/api/trades/route.ts — src/middleware.ts is the only gate"
+    ],
+    "states": [
+      "hit: src/app/api/trades/route.ts:6 — the only reachable response; always 200"
+    ],
+    "emits": [
+      "src/app/api/trades/route.ts — read in full; no Sentry breadcrumb, no analytics capture and no ledger INSERT"
+    ]
+  },
+  "identity": {
+    "id": "contract_trades",
+    "route": "/api/trades",
+    "archetype": "QUERY",
+    "platforms": [
+      "web"
+    ],
+    "owns": {
+      "components": []
+    },
+    "owner": "Backend/Pipeline (CLAUDE.md §Domain Rules: `src/app/api/`)",
+    "spec": "docs/specs/00-architecture/06_permits_rest_api.md",
+    "spec_refs": [
+      "docs/specs/00-architecture/06_permits_rest_api.md — owns src/app/api/trades/route.ts per docs/specs/00-architecture/00_system_map.md:13; the System Map row names no section, and the route file carries no SPEC LINK header"
+    ],
+    "spec_version": "0-draft",
+    "versioning": {
+      "answer": "breaking_allowed",
+      "why": "Every consumer is in src/** and ships in the same Next.js deploy as the route, so a breaking change is one commit.",
+      "evidence": [
+        "src/components/search/FilterPanel.tsx:102"
+      ]
+    },
+    "ref": "C-034"
+  },
+  "inputs": {
+    "answer": "none",
+    "why": "It reaches no table and no upstream contract — the response is assembled from constants in the route file itself.",
+    "evidence": [
+      "src/app/api/trades/route.ts — read in full 2026-09-15; no SQL, no fetch to another contract"
+    ],
+    "contract_ref": [],
+    "query_key": [],
+    "field_whitelist": [
+      "trades"
+    ],
+    "tables": []
+  },
+  "outputs": {
+    "answer": "none",
+    "why": "A QUERY contract writes nothing; the handler issues no INSERT/UPDATE/DELETE anywhere in the file or in the libs it calls.",
+    "evidence": [
+      "src/app/api/trades/route.ts — read in full 2026-09-15; no INSERT/UPDATE/DELETE reached"
+    ],
+    "contract_ref": [],
+    "tables": []
+  },
+  "state": {
+    "answer": "server_only",
+    "why": "A CONTRACT holds no client state: every value is resolved per request on the server and nothing is cached in a client store by the route itself.",
+    "evidence": [
+      "src/app/api/trades/route.ts:5 (GET export)",
+      "src/lib/api/with-api-envelope.ts:27-52"
+    ],
+    "fields": []
+  },
+  "staleness": {
+    "answer": "none",
+    "why": "It serves no server-stored data, so there is nothing that can be stale.",
+    "evidence": [
+      "src/app/api/trades/route.ts — read in full 2026-09-15; no table read"
+    ],
+    "offline": "none"
+  },
+  "guards": {
+    "session": {
+      "answer": "anon",
+      "why": "classifyRoute(\"/api/trades\") returns \"public\" (executed 2026-09-15); the handler adds no check of its own, so middleware is the only gate.",
+      "evidence": [
+        "src/lib/auth/route-guard.ts:150-201 — classifyRoute executed 2026-09-15 with the concrete path",
+        "src/middleware.ts — the only gate for this path (no in-handler auth call)"
+      ]
+    },
+    "rls_class": {
+      "answer": "none",
+      "why": "It reaches no table, so no RLS class applies.",
+      "evidence": [
+        "docs/specs/00-architecture/114_rls_policy_catalog.md §2"
+      ]
+    },
+    "disclosure": {
+      "fields": [
+        "trades"
+      ],
+      "why": "Reachable with no session at all (classifyRoute → public). These are the top-level fields an unauthenticated caller receives."
+    },
+    "entitlement": "none",
+    "flag": "none",
+    "permission": "none",
+    "rate_bucket": "none"
+  },
+  "render": {
+    "targets": [
+      "screen"
+    ],
+    "projection": "none",
+    "breakpoints": "none",
+    "export": "none"
+  },
+  "checks": [
+    {
+      "id": "contract_trades__auth_class_parity",
+      "kind": "auth_class_parity",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "why": "guards.session must equal classifyRoute(\"/api/trades\"), executed 2026-09-15 → \"public\"; there is no in-handler check, so a middleware change silently re-classes this route. No test file in src/tests/** imports this route — the parity is unlocked."
+    },
+    {
+      "id": "contract_trades__error_envelope",
+      "kind": "error_state",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "why": "MEASURED DEVIATION, permanently non-zero until re-projected: Returns the bare shape `{ trades: [...] }`, not `{ data, error, meta }`. The withApiEnvelope wrapper is applied (:5) but only affects the throw path (src/lib/api/with-api-envelope.ts:47-50), which this handler cannot reach — it has no awaited work and no error Retighten condition: the handler returns the envelope on every path."
+    },
+    {
+      "id": "contract_trades__field_whitelist_parity",
+      "kind": "field_whitelist_parity",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "The response is an explicit pick-by-name of 1 field(s) (src/app/api/trades/route.ts:6), so a column added upstream cannot leak; this check set-equals the projection to inputs.field_whitelist."
+    },
+    {
+      "id": "contract_trades__anon_disclosure",
+      "kind": "disclosure",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "why": "classifyRoute returns \"public\": the field set in guards.disclosure is what an unauthenticated caller receives, and it must match the projection exactly — a field added to the projection is a new anonymous disclosure."
+    }
+  ],
+  "invariants": "none",
+  "plausibility": "none",
+  "states": [
+    {
+      "name": "hit",
+      "golden": "none"
+    }
+  ],
+  "errors": {
+    "answer": "envelope",
+    "why": "It returns a JSON error body, but NOT the standard envelope: Returns the bare shape `{ trades: [...] }`, not `{ data, error, meta }`. The withApiEnvelope wrapper is applied (:5) but only affects the throw path (src/lib/api/with-api-envelope.ts:47-50), which this handler cannot rea \"envelope\" is the closest member of the closed menu; the deviation is recorded in deviations[].",
+    "evidence": [
+      "src/lib/api/with-api-envelope.ts:27-52",
+      "src/app/api/trades/route.ts:6 — NextResponse.json({ trades: TRADES })"
+    ]
+  },
+  "emits": {
+    "answer": "none",
+    "why": "Nothing it does is currently countable: src/app/api/trades/route.ts was read in full and contains no Sentry breadcrumb, no analytics capture and no ledger INSERT.",
+    "evidence": [
+      "src/app/api/trades/route.ts — read in full; no Sentry breadcrumb, no analytics capture and no ledger INSERT"
+    ],
+    "analytics": [],
+    "ledger_events": [],
+    "breadcrumbs": []
+  },
+  "offers": {
+    "answer": "none",
+    "why": "It renders no sponsored placement: the offers and advertisers tables Spec 126 §2 specifies do not exist in migrations/ and nothing in this handler reads placement inventory.",
+    "evidence": [
+      "migrations/ — no CREATE TABLE offers / advertisers (grep 2026-09-15)",
+      "src/app/api/trades/route.ts — read in full; no placement read"
+    ]
+  },
+  "metering": {
+    "answer": "none",
+    "why": "Nothing here is counted: no usage_events row (the table does not exist in the introspected schema) and no quota counter is written by this handler.",
+    "evidence": [
+      "src/app/api/trades/route.ts — read in full 2026-09-15",
+      "src/lib/db/generated/schema.ts — no usage_events table"
+    ]
+  },
+  "config": {
+    "answer": "none",
+    "why": "It consumes no tunable: no logic_variables read and no env-var-driven threshold in the handler or the libs it calls.",
+    "evidence": [
+      "src/app/api/trades/route.ts — read in full 2026-09-15; no loadMarketplaceConfigs / logic_variables read"
+    ],
+    "logic_variables": [],
+    "retired": []
+  },
+  "sharing": {
+    "answer": "sole",
+    "why": "Exactly one call site renders it, so its projection serves one surface.",
+    "evidence": [
+      "src/components/search/FilterPanel.tsx:102"
+    ],
+    "surfaces": [
+      "src/components/search/FilterPanel.tsx:102"
+    ]
+  },
+  "a11y": {
+    "touch_target_min_px": "UNRESEARCHED",
+    "labels": "none",
+    "dark_mode": "none",
+    "reduced_motion": "none",
+    "i18n": "none",
+    "safe_area": "none"
+  },
+  "deviations": [
+    {
+      "from": "docs/specs/00_engineering_standards.md §4.4 — all API routes return { data, error, meta }",
+      "why": "Returns the bare shape `{ trades: [...] }`, not `{ data, error, meta }`. The withApiEnvelope wrapper is applied (:5) but only affects the throw path (src/lib/api/with-api-envelope.ts:47-50), which this handler cannot reach — it has no awaited work and no error branch.",
+      "adjudicated_by": "not adjudicated — measured 2026-09-15 by reading the handler",
+      "date": "2026-09-15"
+    }
+  ],
+  "limitations": [
+    {
+      "what": "a11y.touch_target_min_px has no legal answer for a CONTRACT",
+      "measured": "The schema allows only UNRESEARCHED or an integer >= 44; a JSON endpoint has no touch target and the vocabulary has no \"n/a\". Left UNRESEARCHED and escalated per Spec 128 §4 rather than invented.",
+      "check_id": "contract_trades__auth_class_parity"
+    }
+  ],
+  "interpretation": "none",
+  "notes": "A 7-line static stub: returns the hardcoded TRADES constant from src/lib/classification/trades wrapped in withApiEnvelope. No DB access, no auth check. | MEASURED 2026-09-15: HONEST DESCRIPTION: 7 lines total. It does NOT query the `trades` database table and does not re-export another handler. It serialises the in-memory TypeScript constant `TRADES` imported from src/lib/classification/trades.ts:2 — a hardcoded array literal declared at src/lib/classification/trades.ts:17 and closed at :62, containing 36 entries (counted: ids 1-34, 36, 37 — id 35 is absent and id 30 'temporary-fencing' carries kind:'deprecated' at :49). Each entry has the shape { id, slug, name, icon, color, sort_order, kind, seq, cost_basis }. CENSUS AGREEMENT: routes-index.json lists census_reads [] and census_writes [] — correct; the empty `reads`/`writes` arrays above mean I read the file and the module it imports and confirmed there is no SQL. | Idempotency: N/A — read-only, zero writes, and zero database access (entire file read). | Caching: none observed — no Cache-Control header, no revalidate/dynamic export (entire 7-line file read) | No test file under src/tests/** imports this route.",
+  "x-draft": {
+    "shard": "contracts",
+    "files": [
+      "src/app/api/trades/route.ts"
+    ],
+    "loc": 7,
+    "methods": [
+      "GET"
+    ],
+    "consumers": [
+      "web_dashboard"
+    ],
+    "writes_audit_row": "n/a",
+    "consumers_verified": [
+      "src/components/search/FilterPanel.tsx:102"
+    ],
+    "auth_class_executed": "public",
+    "locking_tests": []
+  },
+  "programme": {
+    "scope": "platform_shared",
+    "phase": "UNRESEARCHED",
+    "why": "Used by both products and owned by neither.",
+    "feature": "F15",
+    "build_order": 3152,
+    "leakage": "none",
+    "product_questions": "none",
+    "review": {
+      "status": "unreviewed"
+    }
+  }
+}

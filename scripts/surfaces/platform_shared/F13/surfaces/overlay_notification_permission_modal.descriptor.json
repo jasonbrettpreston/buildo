@@ -1,0 +1,314 @@
+{
+  "kind": "SURFACE",
+  "status": "exists",
+  "docs": {
+    "purpose": "A panel shown once, right after a user saves their first job, asking whether they would like alerts when their saved jobs change. Saying yes then triggers the phone's own permission prompt; saying 'maybe later' dismisses it without asking the operating system anything. Both choices are given the same visual weight so neither feels like the forced option.",
+    "data_story": "This surface reaches **no API contract at all** — every value it shows is local, passed in as a prop, or read from the device. It holds no client-side store, so there is no local copy of server state to keep in sync. It emits **no analytics event**, so nothing it does is currently countable.",
+    "under_126": "**RE-PROJECT** — it writes nothing and holds no Layer-3 store, so the move is short — the server already assembles the payload and only the rendering is client-side. It renders through the GATE renderer (a `statuses_handled[]` that must cover every value of the closed set it gates on), reading no contract. Its `owns.components[]` declares `mobile/src/components/shared/NotificationPermissionModal.tsx`."
+  },
+  "evidence": {
+    "files": [
+      "mobile/src/components/shared/NotificationPermissionModal.tsx:1"
+    ],
+    "contracts": [
+      "mobile/src/components/shared/NotificationPermissionModal.tsx:1-96 — props only",
+      "mobile/src/lib/pushTokens.ts:52 — the parent callback POSTs /api/notifications/register"
+    ],
+    "tables": [
+      "src/app/api/notifications/register/route.ts:41-44"
+    ],
+    "gate": [
+      "mobile/src/components/shared/SaveButton.tsx:59-62",
+      "mobile/src/lib/pushTokens.ts:32-38"
+    ],
+    "states": [
+      "mobile/src/components/shared/NotificationPermissionModal.tsx:51-62"
+    ],
+    "emits": [
+      "mobile/src/components/shared/NotificationPermissionModal.tsx:1-96 — no track() call"
+    ]
+  },
+  "identity": {
+    "id": "overlay_notification_permission_modal",
+    "route": "mobile/src/components/shared/NotificationPermissionModal.tsx",
+    "archetype": "GATE",
+    "platforms": [
+      "mobile"
+    ],
+    "owns": {
+      "components": [
+        "mobile/src/components/shared/NotificationPermissionModal.tsx"
+      ]
+    },
+    "owner": "unassigned (no CODEOWNERS file and no owner registry exists in the repo — measured 2026-09-15)",
+    "spec": "docs/specs/03-mobile/92_mobile_engagement_hardware.md",
+    "spec_refs": [
+      "docs/specs/03-mobile/92_mobile_engagement_hardware.md §4.1",
+      "docs/specs/03-mobile/90_mobile_engineering_protocol.md §5"
+    ],
+    "spec_version": "0-draft",
+    "versioning": {
+      "answer": "breaking_allowed",
+      "why": "Three props, one in-repo consumer (SaveButton); a change is one commit.",
+      "evidence": [
+        "mobile/src/components/shared/NotificationPermissionModal.tsx:19-23"
+      ]
+    },
+    "ref": "S-041"
+  },
+  "inputs": {
+    "answer": "props",
+    "why": "visible/onAllow/onDismiss only — the MMKV once-per-device gate that decides whether it appears lives in pushTokens, not here.",
+    "evidence": [
+      "mobile/src/components/shared/NotificationPermissionModal.tsx:19-23",
+      "mobile/src/lib/pushTokens.ts:32-38"
+    ],
+    "contract_ref": [],
+    "query_key": [],
+    "field_whitelist": [
+      "visible",
+      "onAllow",
+      "onDismiss"
+    ],
+    "tables": []
+  },
+  "outputs": {
+    "answer": "device_only",
+    "why": "Allow fires the parent callback, which requests the OS permission and — if granted — registers the Expo push token; the modal itself only closes.",
+    "evidence": [
+      "mobile/src/components/shared/NotificationPermissionModal.tsx:38-44",
+      "mobile/src/components/shared/SaveButton.tsx:85-89",
+      "mobile/src/lib/pushTokens.ts:60-70"
+    ],
+    "contract_ref": [
+      "/api/notifications/register"
+    ],
+    "tables": [
+      {
+        "table": "device_tokens",
+        "columns": [
+          "user_id",
+          "push_token",
+          "platform",
+          "updated_at"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/03-mobile/92_mobile_engagement_hardware.md",
+        "evidence": [
+          "src/app/api/notifications/register/route.ts:41-44",
+          "src/app/api/notifications/register/route.ts:41-44",
+          "migrations/230_rls_class_a_entitlements.sql:88-94"
+        ]
+      }
+    ],
+    "rollback": "none — a denied OS permission is terminal for this prompt; the settings screen is the documented re-request path.",
+    "invalidates": [
+      "notification-permission"
+    ]
+  },
+  "state": {
+    "answer": "mmkv",
+    "why": "Its once-per-device contract is an MMKV flag (hasAskedPermission / markAskedPermission) written by SaveButton before the modal opens, so a dismissal is permanent for this entry point.",
+    "evidence": [
+      "mobile/src/lib/pushTokens.ts:32-38",
+      "mobile/src/components/shared/SaveButton.tsx:59-62"
+    ],
+    "fields": [
+      {
+        "name": "hasAskedPermission",
+        "owner_layer": "4a_mmkv",
+        "canonical_writer": "SaveButton on the first save",
+        "authorized_readers": [
+          "overlay_notification_permission_modal"
+        ],
+        "bridge": "none",
+        "persistence": "mmkv",
+        "signout_reset": false
+      }
+    ]
+  },
+  "staleness": {
+    "answer": "none",
+    "why": "It renders fixed copy; the OS permission status it precedes is read by the settings screen, not here.",
+    "evidence": [
+      "mobile/src/components/shared/NotificationPermissionModal.tsx:63-93"
+    ],
+    "offline": "none"
+  },
+  "guards": {
+    "session": {
+      "answer": "authenticated",
+      "why": "It can only appear after a save, which requires a session; the registration route is under the authenticated /api/notifications prefix.",
+      "evidence": [
+        "src/lib/auth/route-guard.ts:120-132",
+        "mobile/src/components/shared/SaveButton.tsx:51-62"
+      ]
+    },
+    "rls_class": {
+      "answer": "A",
+      "why": "Its downstream write lands on device_tokens — Class A, select/insert/update policies keyed on auth.uid() because the register route upserts.",
+      "evidence": [
+        "migrations/230_rls_class_a_entitlements.sql:88-94"
+      ]
+    },
+    "disclosure": "none",
+    "entitlement": "none",
+    "flag": "none",
+    "permission": "notification",
+    "rate_bucket": "none — /api/notifications/register calls no withRateLimit; the ON CONFLICT upsert makes repeat registration idempotent",
+    "statuses_handled": "UNRESEARCHED"
+  },
+  "render": {
+    "targets": [
+      "screen"
+    ],
+    "projection": "none",
+    "breakpoints": "mobile_first",
+    "export": "none"
+  },
+  "checks": [
+    {
+      "id": "permmodal_once_per_device",
+      "kind": "ledger_row_present",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "why": "markAskedPermission is written BEFORE the modal opens, so the double-permission pre-prompt fires at most once per install even if the user force-quits mid-prompt."
+    },
+    {
+      "id": "permmodal_not_coercive",
+      "kind": "disclosure",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "Both paths carry equal visual weight (bordered containers) so the double-permission pattern offers a genuine choice rather than a dark pattern; the file says so at :12-13."
+    },
+    {
+      "id": "permmodal_a11y_label",
+      "kind": "a11y_label",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "why": "Both actions carry a role, a label and an explicit minHeight 44."
+    }
+  ],
+  "invariants": "none",
+  "plausibility": "none",
+  "states": [
+    {
+      "name": "static",
+      "golden": "none"
+    },
+    {
+      "name": "hit",
+      "golden": "none"
+    }
+  ],
+  "errors": {
+    "answer": "none",
+    "why": "No failure path is rendered: a denied OS permission simply closes the sheet, and a failed token registration is swallowed upstream.",
+    "evidence": [
+      "mobile/src/components/shared/NotificationPermissionModal.tsx:38-49",
+      "mobile/src/lib/pushTokens.ts:60-70"
+    ]
+  },
+  "emits": {
+    "answer": "none",
+    "why": "Neither Allow nor Maybe Later is instrumented, so the opt-in rate of the double-permission pattern is unmeasurable.",
+    "evidence": [
+      "mobile/src/components/shared/NotificationPermissionModal.tsx:1-96"
+    ],
+    "analytics": [],
+    "ledger_events": [],
+    "breadcrumbs": []
+  },
+  "offers": {
+    "answer": "none",
+    "why": "No sponsored placement is rendered: the only slot component in the Expo tree is SponsorSlot, and it returns null unless EXPO_PUBLIC_PARCEL_SPONSORS=1.",
+    "evidence": [
+      "mobile/src/components/parcel/SponsorSlot.tsx:16-20"
+    ]
+  },
+  "metering": {
+    "answer": "none",
+    "why": "Nothing here is counted: the Spec 126 §7 usage ledger table does not exist (grep for usage_events in the introspected drizzle schema returns 0 hits), and the only quota-shaped counter, user_profiles.lead_views_count, is incremented solely by POST /api/leads/view, which has no mobile caller.",
+    "evidence": [
+      "src/lib/db/generated/schema.ts — no usage_events table (grep, 2026-09-15)",
+      "src/app/api/leads/view/route.ts:110",
+      "src/features/leads/api/useLeadView.ts:25 — imported only by src/tests/useLeadView.logic.test.tsx"
+    ]
+  },
+  "config": {
+    "answer": "none",
+    "why": "The surface consumes no registered logic variable: the only server-side tunable in this path, user_profiles.radius_cap_km, is a per-user admin column, not a logic_variables row.",
+    "evidence": [
+      "src/lib/userProfile.schema.ts:40",
+      "src/app/api/user-profile/route.ts:328",
+      "docs/reference/logic-variables-registry.md — no radius_cap_km entry"
+    ],
+    "logic_variables": [],
+    "retired": []
+  },
+  "sharing": {
+    "answer": "shared",
+    "why": "POST /api/notifications/register is reached from here via SaveButton and independently from the root shell on the auth→app transition.",
+    "evidence": [
+      "mobile/src/lib/pushTokens.ts:52",
+      "mobile/app/_layout.tsx:197-202"
+    ],
+    "surfaces": [
+      "shell_app_root",
+      "mobile_settings"
+    ]
+  },
+  "a11y": {
+    "touch_target_min_px": 44,
+    "labels": "complete",
+    "dark_mode": "hardcoded",
+    "reduced_motion": "none",
+    "i18n": "none",
+    "safe_area": "none"
+  },
+  "deviations": "none",
+  "limitations": [
+    {
+      "what": "The MMKV flag is written before the OS prompt, so a user who force-quits between the two never sees the pre-prompt again from this entry point.",
+      "measured": "SaveButton.tsx:59-62 calls markAskedPermission() then setShowPermModal(true); the settings re-prompt row (settings.tsx:130-177) is the documented recovery.",
+      "check_id": "permmodal_once_per_device"
+    }
+  ],
+  "interpretation": "none",
+  "notes": "This overlay is mounted by SaveButton, which is itself unowned under R-13 (rendered by both LeadCard and the lead-detail CTA) — so the chain from a first save to a push registration passes through a component no surface claims.",
+  "x-draft": {
+    "shard": "mobile-product",
+    "files": [
+      "mobile/src/components/shared/NotificationPermissionModal.tsx"
+    ],
+    "loc": 96,
+    "call_idiom": "none",
+    "stores": [],
+    "measured_states": [
+      "hidden",
+      "open"
+    ],
+    "measured_gate": {
+      "session": "required",
+      "entitlement": "none",
+      "flag": "none",
+      "permission": "notification"
+    }
+  },
+  "programme": {
+    "scope": "platform_shared",
+    "phase": "UNRESEARCHED",
+    "why": "Notifications: one device-token registry and one preference set across both products.",
+    "feature": "F13",
+    "build_order": 3133,
+    "leakage": "none",
+    "product_questions": "none",
+    "review": {
+      "status": "unreviewed"
+    }
+  }
+}

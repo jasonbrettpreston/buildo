@@ -1,0 +1,306 @@
+{
+  "kind": "CONTRACT",
+  "status": "exists",
+  "docs": {
+    "purpose": "Powers the admin App Health Dashboard: pulls together five live health signals about the mobile app (crash rate, sign-in success rate, how often people save a lead after viewing one, how often they convert on the paywall, and cache-refresh activity) so the team can see at a glance whether the app is working properly for users.",
+    "data_story": "It touches no table at all. Its response is an explicit pick-by-name projection of 6 fields, so a column added to a table upstream does not leak into the client by accident. It is called from 1 place: `src/features/admin-app-health/api/useAppHealth.ts`.",
+    "under_126": "Becomes a **CONTRACT descriptor** of archetype `QUERY`. It declares its `database.reads[]` with named columns, its response projection as an explicit whitelist, its auth class, its rate bucket and its staleness — and `outputs.writes` is forced to `\"none\"`. Its `consumers[]` becomes the edge list of the fan-out graph — the join nothing in this estate holds today."
+  },
+  "evidence": {
+    "files": [
+      "src/app/api/admin/app-health/route.ts:1"
+    ],
+    "contracts": [
+      "src/app/api/admin/app-health/route.ts:82 (GET export)",
+      "src/lib/api/with-api-envelope.ts:27-52"
+    ],
+    "tables": [
+      "src/app/api/admin/app-health/route.ts — read in full 2026-09-15; the handler issues no SQL and reaches no table"
+    ],
+    "gate": [
+      "src/lib/auth/route-guard.ts — admin prefix — classifyRoute matches pathname.startsWith('/api/admin/')",
+      "src/lib/auth/route-guard.ts:150-201 — classifyRoute executed 2026-09-15 with the concrete path → \"admin\"",
+      "in-handler: verifyAdminAuth at src/app/api/admin/app-health/route.ts:85"
+    ],
+    "states": [
+      "hit: src/app/api/admin/app-health/route.ts:147",
+      "degraded: src/app/api/admin/app-health/route.ts:78 — a failed tile settles to {status:'unavailable'} and the rest render",
+      "error: src/app/api/admin/app-health/route.ts:134-144",
+      "unauthorized: src/app/api/admin/app-health/route.ts:86-94"
+    ],
+    "emits": [
+      "Sentry breadcrumb aggregator_cache_hit",
+      "Sentry breadcrumb aggregator_evaluated"
+    ]
+  },
+  "identity": {
+    "id": "contract_admin_app_health",
+    "route": "/api/admin/app-health",
+    "archetype": "QUERY",
+    "platforms": [
+      "web"
+    ],
+    "owns": {
+      "components": []
+    },
+    "owner": "Backend/Pipeline (CLAUDE.md §Domain Rules: `src/app/api/`)",
+    "spec": "docs/specs/02-web-admin/30_app_health_dashboard.md",
+    "spec_refs": [
+      "docs/specs/02-web-admin/30_app_health_dashboard.md §2.2 + §2.6 (src/app/api/admin/app-health/route.ts:1)"
+    ],
+    "spec_version": "0-draft",
+    "versioning": {
+      "answer": "breaking_allowed",
+      "why": "Every consumer is in src/** and ships in the same Next.js deploy as the route, so a breaking change is one commit.",
+      "evidence": [
+        "src/features/admin-app-health/api/useAppHealth.ts:22"
+      ]
+    },
+    "ref": "C-003"
+  },
+  "inputs": {
+    "answer": "UNRESEARCHED",
+    "why": "ESCALATION (Spec 128 §4): it reads no table and no contract — every value comes from the Sentry REST API and the PostHog query API. The closed menu (contract · app_outputs · device · props · none) has no member for \"an external SaaS API\", and \"none\" would be false.",
+    "evidence": [
+      "src/app/api/admin/app-health/route.ts:164-176",
+      "src/lib/admin/sentry-client.ts",
+      "src/lib/admin/posthog-client.ts"
+    ],
+    "contract_ref": [],
+    "query_key": [],
+    "field_whitelist": [
+      "snapshot_at",
+      "tiles.crash_rate_24h",
+      "tiles.auth_conversion_7d",
+      "tiles.lead_save_funnel_7d",
+      "tiles.paywall_conversion_7d",
+      "tiles.cache_invalidation_24h"
+    ],
+    "tables": []
+  },
+  "outputs": {
+    "answer": "none",
+    "why": "A QUERY contract writes nothing; the handler issues no INSERT/UPDATE/DELETE anywhere in the file or in the libs it calls.",
+    "evidence": [
+      "src/app/api/admin/app-health/route.ts — read in full 2026-09-15; no INSERT/UPDATE/DELETE reached"
+    ],
+    "contract_ref": [],
+    "tables": []
+  },
+  "state": {
+    "answer": "server_only",
+    "why": "A CONTRACT holds no client state: every value is resolved per request on the server and nothing is cached in a client store by the route itself.",
+    "evidence": [
+      "src/app/api/admin/app-health/route.ts:82 (GET export)",
+      "src/lib/api/with-api-envelope.ts:27-52"
+    ],
+    "fields": []
+  },
+  "staleness": {
+    "answer": "UNRESEARCHED",
+    "why": "ESCALATION (Spec 128 §4): served from a 60s in-process minute-boundary memo of two external SaaS APIs. The menu has live · query_cache (TanStack) · snapshot (a pipeline-written projection) · static · none, and none of them describes an in-process TTL over a third-party API.",
+    "evidence": [
+      "src/app/api/admin/app-health/route.ts:100-123",
+      "src/app/api/admin/app-health/cache.ts"
+    ],
+    "offline": "none"
+  },
+  "guards": {
+    "session": {
+      "answer": "admin",
+      "why": "classifyRoute(\"/api/admin/app-health\") returns \"admin\" (executed 2026-09-15); the handler re-verifies the caller in-process.",
+      "evidence": [
+        "src/lib/auth/route-guard.ts:150-201 — classifyRoute executed 2026-09-15 with the concrete path",
+        "verifyAdminAuth at src/app/api/admin/app-health/route.ts:85"
+      ]
+    },
+    "rls_class": {
+      "answer": "none",
+      "why": "It reaches no table, so no RLS class applies.",
+      "evidence": [
+        "docs/specs/00-architecture/114_rls_policy_catalog.md §2"
+      ]
+    },
+    "disclosure": "none",
+    "entitlement": "none",
+    "flag": "none",
+    "permission": "none",
+    "rate_bucket": "none"
+  },
+  "render": {
+    "targets": [
+      "screen"
+    ],
+    "projection": "none",
+    "breakpoints": "none",
+    "export": "none"
+  },
+  "checks": [
+    {
+      "id": "contract_admin_app_health__auth_class_parity",
+      "kind": "auth_class_parity",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "why": "guards.session must equal classifyRoute(\"/api/admin/app-health\"), executed 2026-09-15 → \"admin\" plus the in-handler guard (verifyAdminAuth at src/app/api/admin/app-health/route.ts:85). Locked by admin-app-health-route-exports.logic.test.ts, admin-app-health.infra.test.ts."
+    },
+    {
+      "id": "contract_admin_app_health__error_envelope",
+      "kind": "error_state",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "Every declared error class returns the { data, error, meta } envelope of docs/specs/00_engineering_standards.md §4.4; expected to stay at zero deviations."
+    },
+    {
+      "id": "contract_admin_app_health__field_whitelist_parity",
+      "kind": "field_whitelist_parity",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "The response is an explicit pick-by-name of 6 field(s) (src/app/api/admin/app-health/route.ts:178-193), so a column added upstream cannot leak; this check set-equals the projection to inputs.field_whitelist."
+    }
+  ],
+  "invariants": "none",
+  "plausibility": "none",
+  "states": [
+    {
+      "name": "hit",
+      "golden": "none"
+    },
+    {
+      "name": "degraded",
+      "golden": "none"
+    },
+    {
+      "name": "error",
+      "golden": "none"
+    },
+    {
+      "name": "unauthorized",
+      "golden": "none"
+    }
+  ],
+  "errors": {
+    "answer": "envelope",
+    "why": "Success and failure both arrive in the { data, error, meta } envelope of docs/specs/00_engineering_standards.md §4.4; withApiEnvelope is the outermost wrapper and converts any uncaught throw into the same shape.",
+    "evidence": [
+      "src/lib/api/with-api-envelope.ts:27-52",
+      "src/app/api/admin/app-health/route.ts:186-193",
+      "src/app/api/admin/app-health/route.ts:87-94",
+      "src/app/api/admin/app-health/route.ts:93 (401)",
+      "src/app/api/admin/app-health/route.ts:143 (500)"
+    ],
+    "classes": [
+      {
+        "class": "401",
+        "ui": "{data:null,error:{code,message},meta:null} — src/app/api/admin/app-health/route.ts:93 (code UNAUTHORIZED)"
+      },
+      {
+        "class": "500",
+        "ui": "{data:null,error:{code,message},meta:null} — src/app/api/admin/app-health/route.ts:143 (code INTERNAL_ERROR)"
+      }
+    ]
+  },
+  "emits": {
+    "answer": "events",
+    "why": "It emits named observability events only — Sentry breadcrumbs and/or PostHog captures; it writes no ledger row.",
+    "evidence": [
+      "Sentry breadcrumb aggregator_cache_hit",
+      "Sentry breadcrumb aggregator_evaluated"
+    ],
+    "analytics": [],
+    "ledger_events": [],
+    "breadcrumbs": [
+      "aggregator_cache_hit",
+      "aggregator_evaluated"
+    ]
+  },
+  "offers": {
+    "answer": "none",
+    "why": "It renders no sponsored placement: the offers and advertisers tables Spec 126 §2 specifies do not exist in migrations/ and nothing in this handler reads placement inventory.",
+    "evidence": [
+      "migrations/ — no CREATE TABLE offers / advertisers (grep 2026-09-15)",
+      "src/app/api/admin/app-health/route.ts — read in full; no placement read"
+    ]
+  },
+  "metering": {
+    "answer": "none",
+    "why": "Nothing here is counted: no usage_events row (the table does not exist in the introspected schema) and no quota counter is written by this handler.",
+    "evidence": [
+      "src/app/api/admin/app-health/route.ts — read in full 2026-09-15",
+      "src/lib/db/generated/schema.ts — no usage_events table"
+    ]
+  },
+  "config": {
+    "answer": "none",
+    "why": "It consumes no tunable: no logic_variables read and no env-var-driven threshold in the handler or the libs it calls.",
+    "evidence": [
+      "src/app/api/admin/app-health/route.ts — read in full 2026-09-15; no loadMarketplaceConfigs / logic_variables read"
+    ],
+    "logic_variables": [],
+    "retired": []
+  },
+  "sharing": {
+    "answer": "sole",
+    "why": "Exactly one call site renders it, so its projection serves one surface.",
+    "evidence": [
+      "src/features/admin-app-health/api/useAppHealth.ts:22"
+    ],
+    "surfaces": [
+      "src/features/admin-app-health/api/useAppHealth.ts:22"
+    ]
+  },
+  "a11y": {
+    "touch_target_min_px": "UNRESEARCHED",
+    "labels": "none",
+    "dark_mode": "none",
+    "reduced_motion": "none",
+    "i18n": "none",
+    "safe_area": "none"
+  },
+  "deviations": "none",
+  "limitations": [
+    {
+      "what": "a11y.touch_target_min_px has no legal answer for a CONTRACT",
+      "measured": "The schema allows only UNRESEARCHED or an integer >= 44; a JSON endpoint has no touch target and the vocabulary has no \"n/a\". Left UNRESEARCHED and escalated per Spec 128 §4 rather than invented.",
+      "check_id": "contract_admin_app_health__auth_class_parity"
+    }
+  ],
+  "interpretation": "none",
+  "notes": "Reads NO database tables — every tile comes from the Sentry REST API (src/lib/admin/sentry-client.ts) or PostHog HogQL (src/lib/admin/posthog-client.ts) via Promise.allSettled, each tile degrading independently to {status:'unavailable'}. Response cached in-process for 60s. GET-only, so writes_audit_row is trivially false. | MEASURED 2026-09-15: Reads NO database table. Every tile comes from the Sentry REST API (src/lib/admin/sentry-client.ts) or PostHog (src/lib/admin/posthog-client.ts) through Promise.all over settle() (:164-176), each tile degrading independently. Response envelope is Zod-parsed before return (:199-207). | Caching: in-process minute-boundary TTL, promise-shared for dog-pile defence (src/app/api/admin/app-health/route.ts:100-123, src/app/api/admin/app-health/cache.ts) | Locking tests: src/tests/admin-app-health-route-exports.logic.test.ts, src/tests/admin-app-health.infra.test.ts.",
+  "x-draft": {
+    "shard": "contracts",
+    "files": [
+      "src/app/api/admin/app-health/route.ts"
+    ],
+    "loc": 228,
+    "methods": [
+      "GET"
+    ],
+    "consumers": [
+      "src/features/admin-app-health/api/useAppHealth.ts"
+    ],
+    "writes_audit_row": "n/a",
+    "consumers_verified": [
+      "src/features/admin-app-health/api/useAppHealth.ts:22"
+    ],
+    "auth_class_executed": "admin",
+    "locking_tests": [
+      "src/tests/admin-app-health-route-exports.logic.test.ts",
+      "src/tests/admin-app-health.infra.test.ts"
+    ]
+  },
+  "programme": {
+    "scope": "platform_shared",
+    "phase": "UNRESEARCHED",
+    "why": "Used by both products and owned by neither.",
+    "feature": "F16",
+    "build_order": 3162,
+    "leakage": "none",
+    "product_questions": "none",
+    "review": {
+      "status": "unreviewed"
+    }
+  }
+}

@@ -1,0 +1,262 @@
+{
+  "kind": "SURFACE",
+  "status": "exists",
+  "docs": {
+    "purpose": "A plain full-screen spinner shown in the moment before the app knows whether the user's subscription is still valid. Its whole job is to make sure the upgrade screen never flashes up at someone who is actually a paying customer. It is also reused when the app is briefly unsure which user's data it is holding.",
+    "data_story": "This surface reaches **no API contract at all** — every value it shows is local, passed in as a prop, or read from the device. It holds no client-side store, so there is no local copy of server state to keep in sync. It emits **no analytics event**, so nothing it does is currently countable.",
+    "under_126": "**RE-PROJECT** — it writes nothing and holds no Layer-3 store, so the move is short — the server already assembles the payload and only the rendering is client-side. It renders through the GATE renderer (a `statuses_handled[]` that must cover every value of the closed set it gates on), reading no contract. Its `owns.components[]` declares `mobile/src/components/paywall/SubscriptionLoadingGuard.tsx`."
+  },
+  "evidence": {
+    "files": [
+      "mobile/src/components/paywall/SubscriptionLoadingGuard.tsx:1"
+    ],
+    "contracts": [
+      "mobile/src/components/paywall/SubscriptionLoadingGuard.tsx:1-19 — no contract, no props"
+    ],
+    "tables": [
+      "mobile/src/components/paywall/SubscriptionLoadingGuard.tsx:1-19 — reaches no table"
+    ],
+    "gate": [
+      "mobile/app/(app)/_layout.tsx:236-258",
+      "mobile/app/_layout.tsx:242-244"
+    ],
+    "states": [
+      "mobile/src/components/paywall/SubscriptionLoadingGuard.tsx:14-18"
+    ],
+    "emits": [
+      "mobile/src/components/paywall/SubscriptionLoadingGuard.tsx:13 — trackRender only, DEV-gated inside stateDebug"
+    ]
+  },
+  "identity": {
+    "id": "overlay_subscription_loading_guard",
+    "route": "mobile/src/components/paywall/SubscriptionLoadingGuard.tsx",
+    "archetype": "GATE",
+    "platforms": [
+      "mobile"
+    ],
+    "owns": {
+      "components": [
+        "mobile/src/components/paywall/SubscriptionLoadingGuard.tsx"
+      ]
+    },
+    "owner": "unassigned (no CODEOWNERS file and no owner registry exists in the repo — measured 2026-09-15)",
+    "spec": "docs/specs/03-mobile/96_mobile_subscription.md",
+    "spec_refs": [
+      "docs/specs/03-mobile/96_mobile_subscription.md §9",
+      "docs/specs/03-mobile/99_mobile_state_architecture.md §6.5",
+      "docs/specs/03-mobile/99_mobile_state_architecture.md §7.1"
+    ],
+    "spec_version": "0-draft",
+    "versioning": {
+      "answer": "frozen",
+      "why": "It takes no props and is the declared render for four distinct gate branches across two shells; its shape cannot change without changing all four.",
+      "evidence": [
+        "mobile/app/(app)/_layout.tsx:236-258",
+        "mobile/app/_layout.tsx:242-244"
+      ]
+    },
+    "ref": "S-044"
+  },
+  "inputs": {
+    "answer": "none",
+    "why": "A props-free spinner; every branching decision is made by the shells that mount it.",
+    "evidence": [
+      "mobile/src/components/paywall/SubscriptionLoadingGuard.tsx:12-18"
+    ],
+    "contract_ref": [],
+    "query_key": [],
+    "field_whitelist": [],
+    "tables": []
+  },
+  "outputs": {
+    "answer": "none",
+    "why": "It renders a spinner and writes nothing.",
+    "evidence": [
+      "mobile/src/components/paywall/SubscriptionLoadingGuard.tsx:14-18"
+    ],
+    "contract_ref": [],
+    "tables": []
+  },
+  "state": {
+    "answer": "none",
+    "why": "No store, no query, no component state — only the DEV-only render counter.",
+    "evidence": [
+      "mobile/src/components/paywall/SubscriptionLoadingGuard.tsx:13"
+    ],
+    "fields": []
+  },
+  "staleness": {
+    "answer": "none",
+    "why": "It exists precisely because the data it would show has not resolved.",
+    "evidence": [
+      "mobile/src/components/paywall/SubscriptionLoadingGuard.tsx:4-7"
+    ],
+    "offline": "none"
+  },
+  "guards": {
+    "session": {
+      "answer": "authenticated",
+      "why": "All four mount points sit behind a resolved Supabase user: three in the tab shell's subscription gate and one in AuthGate's stale-profile branch.",
+      "evidence": [
+        "mobile/app/(app)/_layout.tsx:236-258",
+        "mobile/app/_layout.tsx:242-244"
+      ]
+    },
+    "rls_class": {
+      "answer": "none",
+      "why": "It reaches no table.",
+      "evidence": [
+        "mobile/src/components/paywall/SubscriptionLoadingGuard.tsx:1-19"
+      ]
+    },
+    "disclosure": "none",
+    "entitlement": "none",
+    "flag": "none",
+    "permission": "none",
+    "rate_bucket": "none",
+    "statuses_handled": "UNRESEARCHED"
+  },
+  "render": {
+    "targets": [
+      "screen"
+    ],
+    "projection": "none",
+    "breakpoints": "mobile_first",
+    "export": "none"
+  },
+  "checks": [
+    {
+      "id": "loadingguard_no_paywall_flash",
+      "kind": "empty_state",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "why": "Spec 96 §9: the paywall must NEVER flash while subscription_status is unresolved. This surface is the declared render for that window, and subscriptionGate.test.ts asserts it."
+    },
+    {
+      "id": "loadingguard_stale_profile",
+      "kind": "auth_class_parity",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "why": "AuthGate mounts it on wait-stale-profile — a UID change mid-fetch or a corrupted cache — so the previous user's UI is never shown to the next one."
+    },
+    {
+      "id": "loadingguard_render_count",
+      "kind": "selector_atomicity",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "why": "trackRender feeds the Spec 99 §7.1 debug hub; a spike in this component's render count is the signature of the §6.5 gate-flapping incident."
+    }
+  ],
+  "invariants": "none",
+  "plausibility": "none",
+  "states": [
+    {
+      "name": "loading",
+      "golden": "none"
+    }
+  ],
+  "errors": {
+    "answer": "none",
+    "why": "No failure path exists; it is what renders while a failure has not yet been determined.",
+    "evidence": [
+      "mobile/src/components/paywall/SubscriptionLoadingGuard.tsx:12-18"
+    ]
+  },
+  "emits": {
+    "answer": "none",
+    "why": "trackRender is a DEV-only diagnostic counter, not an analytics event; nothing reaches PostHog.",
+    "evidence": [
+      "mobile/src/components/paywall/SubscriptionLoadingGuard.tsx:13",
+      "mobile/src/lib/debug/stateDebug.ts"
+    ],
+    "analytics": [],
+    "ledger_events": [],
+    "breadcrumbs": []
+  },
+  "offers": {
+    "answer": "none",
+    "why": "No sponsored placement is rendered: the only slot component in the Expo tree is SponsorSlot, and it returns null unless EXPO_PUBLIC_PARCEL_SPONSORS=1.",
+    "evidence": [
+      "mobile/src/components/parcel/SponsorSlot.tsx:16-20"
+    ]
+  },
+  "metering": {
+    "answer": "none",
+    "why": "Nothing here is counted: the Spec 126 §7 usage ledger table does not exist (grep for usage_events in the introspected drizzle schema returns 0 hits), and the only quota-shaped counter, user_profiles.lead_views_count, is incremented solely by POST /api/leads/view, which has no mobile caller.",
+    "evidence": [
+      "src/lib/db/generated/schema.ts — no usage_events table (grep, 2026-09-15)",
+      "src/app/api/leads/view/route.ts:110",
+      "src/features/leads/api/useLeadView.ts:25 — imported only by src/tests/useLeadView.logic.test.tsx"
+    ]
+  },
+  "config": {
+    "answer": "none",
+    "why": "The surface consumes no registered logic variable: the only server-side tunable in this path, user_profiles.radius_cap_km, is a per-user admin column, not a logic_variables row.",
+    "evidence": [
+      "src/lib/userProfile.schema.ts:40",
+      "src/app/api/user-profile/route.ts:328",
+      "docs/reference/logic-variables-registry.md — no radius_cap_km entry"
+    ],
+    "logic_variables": [],
+    "retired": []
+  },
+  "sharing": {
+    "answer": "none",
+    "why": "It renders no contract.",
+    "evidence": [
+      "mobile/src/components/paywall/SubscriptionLoadingGuard.tsx:1-19"
+    ],
+    "surfaces": []
+  },
+  "a11y": {
+    "touch_target_min_px": 44,
+    "labels": "none",
+    "dark_mode": "hardcoded",
+    "reduced_motion": "ignored",
+    "i18n": "none",
+    "safe_area": "none"
+  },
+  "deviations": "none",
+  "limitations": [
+    {
+      "what": "An unlabelled spinner is the whole screen: a screen-reader user gets no announcement that the app is waiting, and there is no timeout after which it says something else.",
+      "measured": "SubscriptionLoadingGuard.tsx:14-18 renders a bare ActivityIndicator with no accessibilityLabel and no timer.",
+      "check_id": "loadingguard_no_paywall_flash"
+    }
+  ],
+  "interpretation": "none",
+  "notes": "Nineteen lines that gate five tabs: it is the declared render for four separate branches (null status, expired-refetch carve-out, pending deletion, stale profile), which is why its \"why\" matters more than its code.",
+  "x-draft": {
+    "shard": "mobile-product",
+    "files": [
+      "mobile/src/components/paywall/SubscriptionLoadingGuard.tsx"
+    ],
+    "loc": 19,
+    "call_idiom": "none",
+    "stores": [],
+    "measured_states": [
+      "loaded"
+    ],
+    "measured_gate": {
+      "session": "required",
+      "entitlement": "none",
+      "flag": "none",
+      "permission": "none"
+    }
+  },
+  "programme": {
+    "scope": "platform_shared",
+    "phase": "UNRESEARCHED",
+    "why": "The subscription and Stripe hand-off, which resolves an entitlement per PRODUCT — so it serves both and belongs to neither.",
+    "feature": "F12",
+    "build_order": 3123,
+    "leakage": "none",
+    "product_questions": "none",
+    "review": {
+      "status": "unreviewed"
+    }
+  }
+}

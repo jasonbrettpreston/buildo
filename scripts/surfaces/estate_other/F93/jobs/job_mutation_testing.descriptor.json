@@ -1,0 +1,248 @@
+{
+  "kind": "JOB",
+  "status": "exists",
+  "docs": {
+    "purpose": "Every Monday morning this job deliberately introduces small bugs into a handful of high-stakes calculation files and checks whether the test suite notices. Tests that pass no matter what you break are not really testing anything, and this is how that rot gets caught. It also runs automatically on any pull request that touches one of those files, and blocks the merge if the score falls below the configured threshold.",
+    "data_story": "It reads no table and writes no table. It runs on `0 12 * * 1`, unattended, with nobody watching — which is why its guard matters: none — no environment/extension guard; the job is bounded by `timeout-minutes: 20` and the PR trigger is path-filtered to the mutation target files so it does not tax every PR.",
+    "under_126": "Becomes a **JOB descriptor** of archetype `SCHEDULED` under its own `job.schema.json` (Spec 128 R-14) — declaring its schedule, its target, its idempotency posture, its behaviour when `pg_cron` is absent, and the audit row it writes. Nothing about how it runs changes; what changes is that those five answers stop living only in SQL and YAML."
+  },
+  "evidence": {
+    "files": [
+      ".github/workflows/mutation.yml:1"
+    ],
+    "contracts": [
+      "none — a scheduled GitHub Actions workflow takes no request and calls no API route"
+    ],
+    "tables": [
+      "none — no SUPABASE_DATABASE_URL in its env and no database step"
+    ],
+    "gate": [
+      ".github/workflows/mutation.yml:34-38 — no secrets, no permissions block"
+    ],
+    "states": [
+      ".github/workflows/mutation.yml:50-59"
+    ],
+    "emits": [
+      ".github/workflows/mutation.yml:53-59 — a GitHub artifact, nothing durable"
+    ]
+  },
+  "identity": {
+    "id": "job_mutation_testing",
+    "route": ".github/workflows/mutation.yml",
+    "archetype": "SCHEDULED",
+    "platforms": [],
+    "owns": {
+      "components": []
+    },
+    "owner": "web",
+    "spec": "docs/specs/00_engineering_standards.md §12.13",
+    "spec_refs": [
+      "docs/specs/00_engineering_standards.md §12.13"
+    ],
+    "spec_version": "0-draft",
+    "versioning": {
+      "answer": "breaking_allowed",
+      "why": "Nothing consumes its output but a human reading the uploaded report; the threshold and the target list live in stryker.config.mjs and this workflow, and both move in one commit.",
+      "evidence": [
+        ".github/workflows/mutation.yml:10-11,21-29"
+      ]
+    },
+    "ref": "J-002"
+  },
+  "inputs": {
+    "answer": "none",
+    "why": "It reads no database and no contract: it checks out the repo, installs, and runs Stryker over three lib files and their three test files. Its only inputs are source files.",
+    "evidence": [
+      ".github/workflows/mutation.yml:22-27,40-51"
+    ],
+    "contract_ref": [],
+    "query_key": [],
+    "field_whitelist": [],
+    "tables": []
+  },
+  "outputs": {
+    "answer": "none",
+    "why": "It writes nothing anywhere persistent: the HTML report goes to reports/mutation/ and is uploaded as a 30-day GitHub artifact, and the only other effect is the job's own pass/fail.",
+    "evidence": [
+      ".github/workflows/mutation.yml:53-59"
+    ],
+    "contract_ref": [],
+    "tables": []
+  },
+  "state": {
+    "answer": "none",
+    "why": "A stateless CI job — each run starts from a fresh checkout and keeps nothing.",
+    "evidence": [
+      ".github/workflows/mutation.yml:39-51"
+    ],
+    "fields": []
+  },
+  "staleness": {
+    "answer": "none",
+    "why": "It displays nothing and reads no server data.",
+    "evidence": [
+      ".github/workflows/mutation.yml:34-59"
+    ],
+    "offline": "none"
+  },
+  "guards": {
+    "session": {
+      "answer": "UNRESEARCHED",
+      "why": "NOT ANSWERABLE from the closed set: guards.session offers anon | authenticated | entitled | admin, all of which describe an end-user principal. This runs with no request and no user — as the pg_cron job owner through a SECURITY DEFINER function, or as a GitHub Actions runner holding repository secrets. Spec 128 §4 escalation (Spec 128 R-14 already anticipates JOBs getting their own job.schema.json); recorded rather than mis-answered. This one holds no secrets at all — it is the only job in the shard with no credential of any kind.",
+      "evidence": [
+        ".github/workflows/mutation.yml:34-59"
+      ]
+    },
+    "rls_class": {
+      "answer": "none",
+      "why": "It reaches no table and opens no database connection — there is no SUPABASE_DATABASE_URL in its env.",
+      "evidence": [
+        ".github/workflows/mutation.yml:34-59"
+      ]
+    },
+    "disclosure": "none",
+    "entitlement": "none",
+    "flag": "none",
+    "permission": "none",
+    "rate_bucket": "none"
+  },
+  "render": {
+    "targets": [
+      "screen"
+    ],
+    "projection": "none",
+    "breakpoints": "none",
+    "export": "none"
+  },
+  "checks": [
+    {
+      "id": "job_mutation_threshold_lives_in_config",
+      "kind": "schema_declared",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "The 75% mutation-score threshold is declared once, in stryker.config.mjs, and the workflow says so in its own header — a second copy here would be a second thing to forget to change."
+    },
+    {
+      "id": "job_mutation_pr_paths_match_targets",
+      "kind": "render_target_parity",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "The pull_request paths filter must list every file Stryker mutates plus their tests, or a change to a mutation target ships without the per-PR run that exists to catch it."
+    },
+    {
+      "id": "job_mutation_report_always_uploaded",
+      "kind": "error_state",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "why": "if: always() on the artifact upload is what makes a FAILING run diagnosable — the surviving mutants are only visible in the report, and a failed run is exactly when that report is needed."
+    }
+  ],
+  "invariants": "none",
+  "plausibility": "none",
+  "states": [
+    {
+      "name": "hit",
+      "golden": "none"
+    },
+    {
+      "name": "error",
+      "golden": "none"
+    }
+  ],
+  "errors": {
+    "answer": "none",
+    "why": "No error handling of its own — a run below threshold exits non-zero and reddens the job, which is the intended signal; the report still uploads because of if: always().",
+    "evidence": [
+      ".github/workflows/mutation.yml:50-59"
+    ],
+    "classes": [],
+    "no_retry": []
+  },
+  "emits": {
+    "answer": "none",
+    "why": "Nothing durable outside GitHub: no pipeline_runs row, no analytics event. The mutation score of a given week exists only in a 30-day artifact, so the trend this job exists to surface cannot be read after a month.",
+    "evidence": [
+      ".github/workflows/mutation.yml:53-59"
+    ],
+    "analytics": [],
+    "ledger_events": [],
+    "breadcrumbs": []
+  },
+  "offers": {
+    "answer": "none",
+    "why": "A CI workflow renders no sponsored placement.",
+    "evidence": [
+      ".github/workflows/mutation.yml:34-59"
+    ]
+  },
+  "metering": {
+    "answer": "none",
+    "why": "Nothing is counted.",
+    "evidence": [
+      ".github/workflows/mutation.yml:34-59"
+    ]
+  },
+  "config": {
+    "answer": "none",
+    "why": "Its tunables — the mutation-score threshold and the mutated file set — live in stryker.config.mjs, not in the logic-variable registry; a CI threshold is not an admin-editable runtime tunable.",
+    "evidence": [
+      ".github/workflows/mutation.yml:10-11,28"
+    ],
+    "logic_variables": [],
+    "retired": []
+  },
+  "sharing": {
+    "answer": "none",
+    "why": "It renders no contract.",
+    "evidence": [
+      ".github/workflows/mutation.yml:34-59"
+    ],
+    "surfaces": []
+  },
+  "a11y": {
+    "touch_target_min_px": "UNRESEARCHED",
+    "labels": "none",
+    "dark_mode": "none",
+    "reduced_motion": "none",
+    "i18n": "none",
+    "safe_area": "none"
+  },
+  "deviations": "none",
+  "limitations": [
+    {
+      "what": "The weekly trend it exists to surface is not retained.",
+      "measured": ".github/workflows/mutation.yml:58 — retention-days: 30, and nothing else records the score; a month-old run is unreadable.",
+      "check_id": "job_mutation_report_always_uploaded"
+    },
+    {
+      "what": "Its scope is three files.",
+      "measured": ".github/workflows/mutation.yml:22-24 — cost-model.ts, distance.ts and record-lead-view.ts are the only mutation targets; nothing else in the estate is mutation-tested.",
+      "check_id": "job_mutation_pr_paths_match_targets"
+    }
+  ],
+  "interpretation": "none",
+  "notes": "Touches no database: it runs `npm run test:mutation` (Stryker) and uploads reports/mutation/ as an artifact with 30-day retention. TREE/DOC DISAGREEMENT on the threshold: the workflow header comment says the run fails below 75%, while docs/specs/00_engineering_standards.md:381 says the score must stay >= 50%; neither number lives in the yml — stryker.config.mjs is the authority per the header. TREE/DOC DISAGREEMENT on the surface: the spec names 4 modules (cost-model.ts, distance.ts, record-lead-view.ts, builder-query.ts) but the yml's PR path filter lists only 3 sources + their 3 test siblings, with no builder-query entry. MEASURED 2026-09-15: the only row in this shard that touches no database and holds no credential, and the only one whose schedule is weekly (`0 12 * * 1`) rather than daily. Its three modes — Monday cron, per-PR on a changed target, and workflow_dispatch — are all live in the file, so the \"runs in two modes\" header comment at :4 undercounts by one. guards.session is a Spec 128 §4 vocabulary escalation, identical to the other five rows.",
+  "x-draft": {
+    "shard": "jobs",
+    "files": [
+      ".github/workflows/mutation.yml"
+    ],
+    "cron": "0 12 * * 1",
+    "guarded_by": "none — no environment/extension guard; the job is bounded by `timeout-minutes: 20` and the PR trigger is path-filtered to the mutation target files so it does not tax every PR"
+  },
+  "programme": {
+    "scope": "estate_other",
+    "phase": "not_scheduled",
+    "why": "A scheduled job serving the lead-gen estate or the CI harness. Inventoried so a job with no owner is visible, not to be converted in this programme.",
+    "feature": "F93",
+    "build_order": 4204,
+    "leakage": "UNRESEARCHED",
+    "product_questions": "UNRESEARCHED",
+    "review": {
+      "status": "unreviewed"
+    }
+  }
+}

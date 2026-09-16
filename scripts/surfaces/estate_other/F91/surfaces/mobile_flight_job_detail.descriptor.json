@@ -1,0 +1,447 @@
+{
+  "kind": "SURFACE",
+  "status": "exists",
+  "docs": {
+    "purpose": "Opens one saved job from the user's board, or straight from a push notification. It shows the address, permit number, status badges for delayed and urgent jobs, and an animated timeline bar showing the predicted start date with best-case and worst-case dates either side. Opening the screen also marks the job as seen, which quiets the amber update flash back on the board.",
+    "data_story": "It reads nothing from the database directly. Every value arrives through 2 contracts: `/api/leads/flight-board`, `/api/leads/flight-board/detail/[id]`. Behind those contracts, the data comes from `entitlements`, `lead_views`, `permits`, `trade_forecasts` and `user_profiles`. It also holds client-side state in `flightBoardSeenStore`, which is the part a server-driven projection has to absorb or justify.",
+    "under_126": "**REBUILD** — it holds Layer-3 state (`flightBoardSeenStore`), so a client decision has to be re-homed on the server before the projection can be honest. It renders through the DETAIL renderer (one entity, a single-param query key, declared sections), reading by reference: `/api/leads/flight-board`, `/api/leads/flight-board/detail/[id]`. It owns no component of its own, so its `owns.components[]` is an empty array — a legal answer, written down."
+  },
+  "evidence": {
+    "files": [
+      "mobile/app/(app)/[flight-job].tsx:1"
+    ],
+    "contracts": [
+      "mobile/src/hooks/useFlightBoard.ts:13",
+      "mobile/src/hooks/useFlightJobDetail.ts:33-34"
+    ],
+    "tables": [
+      "src/app/api/leads/flight-board/detail/[id]/route.ts:58-62",
+      "src/app/api/leads/flight-board/route.ts:57-62"
+    ],
+    "gate": [
+      "src/lib/auth/route-guard.ts:120-132",
+      "mobile/app/(app)/_layout.tsx:236-265",
+      "mobile/src/hooks/useFlightJobDetail.ts:73-83"
+    ],
+    "states": [
+      "mobile/app/(app)/[flight-job].tsx:199-216",
+      "mobile/app/(app)/[flight-job].tsx:259-271"
+    ],
+    "emits": [
+      "mobile/app/(app)/[flight-job].tsx:165-171"
+    ]
+  },
+  "identity": {
+    "id": "mobile_flight_job_detail",
+    "route": "mobile/app/(app)/[flight-job].tsx",
+    "archetype": "DETAIL",
+    "platforms": [
+      "mobile"
+    ],
+    "owns": {
+      "components": []
+    },
+    "owner": "unassigned (no CODEOWNERS file and no owner registry exists in the repo — measured 2026-09-15)",
+    "spec": "docs/specs/03-mobile/77_mobile_crm_flight_board.md",
+    "spec_refs": [
+      "docs/specs/03-mobile/77_mobile_crm_flight_board.md §3.3",
+      "docs/specs/03-mobile/77_mobile_crm_flight_board.md §3.3.1",
+      "docs/specs/03-mobile/99_mobile_state_architecture.md §4"
+    ],
+    "spec_version": "0-draft",
+    "versioning": {
+      "answer": "additive_only",
+      "why": "The cold-boot fallback parses the same FlightBoardDetail shape the list item satisfies, so the two payloads must stay structurally compatible; adding a field is safe, removing one breaks both readers.",
+      "evidence": [
+        "mobile/src/hooks/useFlightJobDetail.ts:33-45",
+        "mobile/app/(app)/[flight-job].tsx:147-148"
+      ]
+    },
+    "ref": "S-060"
+  },
+  "inputs": {
+    "answer": "contract",
+    "why": "It first tries to find the permit inside the already-cached [\"flight-board\"] result and only calls GET /api/leads/flight-board/detail/:id when the board resolved without a hit — a push-notification cold-boot path.",
+    "evidence": [
+      "mobile/app/(app)/[flight-job].tsx:130-150",
+      "mobile/src/hooks/useFlightJobDetail.ts:73-83"
+    ],
+    "contract_ref": [
+      "/api/leads/flight-board",
+      "/api/leads/flight-board/detail/[id]"
+    ],
+    "query_key": [
+      "flight-job-detail",
+      "id"
+    ],
+    "field_whitelist": [
+      "permit_num",
+      "revision_num",
+      "address",
+      "lifecycle_phase",
+      "lifecycle_stalled",
+      "predicted_start",
+      "p25_days",
+      "p75_days",
+      "updated_at"
+    ],
+    "tables": [
+      {
+        "table": "lead_views",
+        "columns": [
+          "user_id",
+          "lead_key",
+          "lead_type",
+          "permit_num",
+          "revision_num",
+          "trade_slug",
+          "saved"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/03-mobile/91_mobile_lead_feed.md",
+        "evidence": [
+          "src/app/api/leads/flight-board/detail/[id]/route.ts:58-62",
+          "docs/reference/data-lineage-map.md:602",
+          "migrations/230_rls_class_a_entitlements.sql:70-76"
+        ]
+      },
+      {
+        "table": "permits",
+        "columns": [
+          "permit_num",
+          "revision_num",
+          "status",
+          "permit_type",
+          "description",
+          "street_num",
+          "street_name",
+          "neighbourhood_id",
+          "lifecycle_phase",
+          "lifecycle_stalled",
+          "latitude",
+          "longitude",
+          "location"
+        ],
+        "producing_steps": [
+          "permits",
+          "enrich_permits",
+          "geocode_permits",
+          "classify_lifecycle_phase",
+          "link_neighbourhoods"
+        ],
+        "chain_position": "permits[1]",
+        "owner_spec": "docs/specs/01-pipeline/41_chain_permits.md",
+        "evidence": [
+          "src/app/api/leads/flight-board/detail/[id]/route.ts:58-62",
+          "docs/reference/data-lineage-map.md:1001",
+          "scripts/manifest.json#chains.permits"
+        ]
+      },
+      {
+        "table": "trade_forecasts",
+        "columns": [
+          "permit_num",
+          "revision_num",
+          "trade_slug",
+          "predicted_start",
+          "p25_days",
+          "p75_days",
+          "median_days",
+          "confidence",
+          "target_window",
+          "opportunity_score"
+        ],
+        "producing_steps": [
+          "compute_trade_forecasts",
+          "compute_opportunity_scores"
+        ],
+        "chain_position": "permits[26]",
+        "owner_spec": "docs/specs/01-pipeline/85_trade_forecast_engine.md",
+        "evidence": [
+          "src/app/api/leads/flight-board/detail/[id]/route.ts:58-62",
+          "docs/reference/data-lineage-map.md:1317",
+          "scripts/manifest.json#chains.permits"
+        ]
+      }
+    ]
+  },
+  "outputs": {
+    "answer": "device_only",
+    "why": "Opening the screen writes the permit's updated_at into the MMKV last-seen map so the parent board stops flashing amber; no contract is called and no server row changes.",
+    "evidence": [
+      "mobile/app/(app)/[flight-job].tsx:155-159",
+      "mobile/src/store/flightBoardSeenStore.ts:55-76"
+    ],
+    "contract_ref": [],
+    "tables": [],
+    "rollback": "none — markSeen is a monotonic local write with no server counterpart to roll back.",
+    "invalidates": []
+  },
+  "state": {
+    "answer": "mmkv",
+    "why": "Its only owned state is the flightBoardSeenStore entry it writes on mount; the forecast gauge uses Reanimated shared values, which are Layer-5 UI-only.",
+    "evidence": [
+      "mobile/app/(app)/[flight-job].tsx:155-159",
+      "mobile/app/(app)/[flight-job].tsx:48-50"
+    ],
+    "fields": [
+      {
+        "name": "seenMap[permitId]",
+        "owner_layer": "4a_mmkv",
+        "canonical_writer": "this surface (markSeen on mount)",
+        "authorized_readers": [
+          "mobile_flight_board"
+        ],
+        "bridge": "B5",
+        "persistence": "mmkv",
+        "signout_reset": true
+      }
+    ]
+  },
+  "staleness": {
+    "answer": "query_cache",
+    "why": "The cache-hit path reuses the board's 30-second entry; the cold-boot fallback query declares its own 60-second staleTime.",
+    "evidence": [
+      "mobile/src/hooks/useFlightJobDetail.ts:81",
+      "mobile/src/hooks/useFlightBoard.ts:21"
+    ],
+    "offline": "cached_projection",
+    "stale_time_ms": 60000,
+    "gc_time_ms": 86400000
+  },
+  "guards": {
+    "session": {
+      "answer": "authenticated",
+      "why": "The route is under `/api/leads`; the hook additionally refuses to fire until authStore holds an accessToken so a cold-boot deep link cannot 401.",
+      "evidence": [
+        "src/lib/auth/route-guard.ts:120-132",
+        "mobile/src/hooks/useFlightJobDetail.ts:9-12"
+      ]
+    },
+    "rls_class": {
+      "answer": "A",
+      "why": "The detail row is one of the user's own lead_views rows joined to permits/trade_forecasts; lead_views carries the auth.uid() owner policies.",
+      "evidence": [
+        "migrations/230_rls_class_a_entitlements.sql:70-76",
+        "src/app/api/leads/flight-board/detail/[id]/route.ts:58-62"
+      ]
+    },
+    "disclosure": "none",
+    "entitlement": {
+      "product": "lead_gen",
+      "statuses": [
+        "trial",
+        "active",
+        "past_due",
+        "admin_managed"
+      ],
+      "on_missing": "paywall"
+    },
+    "flag": "none",
+    "permission": "none",
+    "rate_bucket": "none — the flight-board detail route calls no withRateLimit"
+  },
+  "render": {
+    "targets": [
+      "screen"
+    ],
+    "projection": "detail",
+    "breakpoints": "mobile_first",
+    "export": "none"
+  },
+  "checks": [
+    {
+      "id": "flightjob_contract_parse",
+      "kind": "contract_parse",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "mobile/__tests__/useFlightJobDetail.test.ts pins the detail payload and the retry guard that must not burn retries on deterministic 404s."
+    },
+    {
+      "id": "flightjob_query_key_hygiene",
+      "kind": "query_key_hygiene",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "The key is the single-param [\"flight-job-detail\", id] the DETAIL archetype requires — one scalar, no object literal."
+    },
+    {
+      "id": "flightjob_error_state",
+      "kind": "error_state",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "Both the board query and the fallback resolving without a hit render \"Job not found in board.\" ([flight-job].tsx:213-215); a skeleton covers the in-flight window so the push deep link never flashes not-found."
+    },
+    {
+      "id": "flightjob_seen_write",
+      "kind": "freshness",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "The markSeen write is what quietens the parent board's amber flash; flightBoardSeenStore.test.ts locks the comparison rule this write feeds."
+    }
+  ],
+  "invariants": "none",
+  "plausibility": "none",
+  "states": [
+    {
+      "name": "loading",
+      "golden": "none"
+    },
+    {
+      "name": "hit",
+      "golden": "none"
+    },
+    {
+      "name": "miss",
+      "golden": "none"
+    },
+    {
+      "name": "degraded",
+      "golden": "none"
+    }
+  ],
+  "errors": {
+    "answer": "inline",
+    "why": "There is no error branch at all — a failed fallback fetch and a genuine 404 collapse into the same inline \"Job not found in board.\" message.",
+    "evidence": [
+      "mobile/app/(app)/[flight-job].tsx:209-215"
+    ],
+    "classes": [
+      {
+        "class": "500",
+        "ui": "Inline \"Job not found in board.\" — a server failure is indistinguishable from a miss on this screen."
+      },
+      {
+        "class": "schema_drift",
+        "ui": "FlightJobDetailSchemaError: not retried, rendered as the same inline \"Job not found in board.\"."
+      }
+    ],
+    "no_retry": [
+      "ApiError(400)",
+      "ApiError(404)",
+      "AccountDeletedError",
+      "RateLimitError",
+      "FlightJobDetailSchemaError"
+    ]
+  },
+  "emits": {
+    "answer": "events",
+    "why": "flight_job_detail_viewed fires once per resolved permit (deps gated on permit_num/revision_num) and is NOT DEV-gated, unlike its parent board screen.",
+    "evidence": [
+      "mobile/app/(app)/[flight-job].tsx:165-171",
+      "mobile/src/lib/analytics.ts:121-132"
+    ],
+    "analytics": [
+      "flight_job_detail_viewed"
+    ],
+    "ledger_events": [],
+    "breadcrumbs": []
+  },
+  "offers": {
+    "answer": "none",
+    "why": "No sponsored placement is rendered: the only slot component in the Expo tree is SponsorSlot, and it returns null unless EXPO_PUBLIC_PARCEL_SPONSORS=1.",
+    "evidence": [
+      "mobile/src/components/parcel/SponsorSlot.tsx:16-20"
+    ]
+  },
+  "metering": {
+    "answer": "none",
+    "why": "Nothing here is counted: the Spec 126 §7 usage ledger table does not exist (grep for usage_events in the introspected drizzle schema returns 0 hits), and the only quota-shaped counter, user_profiles.lead_views_count, is incremented solely by POST /api/leads/view, which has no mobile caller.",
+    "evidence": [
+      "src/lib/db/generated/schema.ts — no usage_events table (grep, 2026-09-15)",
+      "src/app/api/leads/view/route.ts:110",
+      "src/features/leads/api/useLeadView.ts:25 — imported only by src/tests/useLeadView.logic.test.tsx"
+    ]
+  },
+  "config": {
+    "answer": "none",
+    "why": "The surface consumes no registered logic variable: the only server-side tunable in this path, user_profiles.radius_cap_km, is a per-user admin column, not a logic_variables row.",
+    "evidence": [
+      "src/lib/userProfile.schema.ts:40",
+      "src/app/api/user-profile/route.ts:328",
+      "docs/reference/logic-variables-registry.md — no radius_cap_km entry"
+    ],
+    "logic_variables": [],
+    "retired": []
+  },
+  "sharing": {
+    "answer": "shared",
+    "why": "Its primary read is the flight board's own cache entry; only the cold-boot /detail/:id route is exclusive to this surface.",
+    "evidence": [
+      "mobile/app/(app)/[flight-job].tsx:130",
+      "mobile/src/hooks/useFlightJobDetail.ts:34"
+    ],
+    "surfaces": [
+      "mobile_flight_board"
+    ]
+  },
+  "a11y": {
+    "touch_target_min_px": 44,
+    "labels": "partial",
+    "dark_mode": "hardcoded",
+    "reduced_motion": "ignored",
+    "i18n": "none",
+    "safe_area": [
+      "top"
+    ]
+  },
+  "deviations": "none",
+  "limitations": [
+    {
+      "what": "A failed fetch is rendered as \"Job not found in board.\" — an error is presented to the user as a miss.",
+      "measured": "[flight-job].tsx:209-215 has one non-loading fallback branch keyed on `!item`; detailQuery.isError is never read.",
+      "check_id": "flightjob_error_state"
+    },
+    {
+      "what": "The p25/p75 gauge springs open on every mount regardless of the OS reduce-motion setting.",
+      "measured": "[flight-job].tsx:69-76 calls withSpring unconditionally; no AccessibilityInfo check exists in mobile/.",
+      "check_id": "none — checks[].kind has no reduced-motion value; raised as a vocabulary escalation per Spec 128 §4"
+    },
+    {
+      "what": "The screen's dominant failure — HTTP 404 from GET /api/leads/flight-board/detail/:id — cannot be declared: errors.classes has no 404 value.",
+      "measured": "surface.schema.json errors.classes enum = 400/401/403/429/500/schema_drift/offline (checked 2026-09-15); the route returns 404 for a permit not on the user's board.",
+      "check_id": "none — vocabulary escalation per Spec 128 §4"
+    }
+  ],
+  "interpretation": "none",
+  "notes": "The screen defends against an inverted server forecast (p75 < p25) by swapping the bounds so the bar width is never negative ([flight-job].tsx:52-58) — a client-side guard compensating for a server-side invariant nobody asserts in SQL.",
+  "x-draft": {
+    "shard": "mobile-product",
+    "files": [
+      "mobile/app/(app)/[flight-job].tsx"
+    ],
+    "loc": 291,
+    "call_idiom": "hook",
+    "stores": [
+      "flightBoardSeenStore"
+    ],
+    "measured_states": [
+      "loading_skeleton",
+      "not_found",
+      "loaded_with_forecast",
+      "loaded_no_forecast"
+    ],
+    "measured_gate": {
+      "session": "required",
+      "entitlement": "subscription_status",
+      "flag": "none",
+      "permission": "none"
+    }
+  },
+  "programme": {
+    "scope": "estate_other",
+    "phase": "not_scheduled",
+    "why": "Flight center — the other product. Fenced from the parcel tool by Spec 128 R-03; inventoried only.",
+    "feature": "F91",
+    "build_order": 4183,
+    "leakage": "UNRESEARCHED",
+    "product_questions": "UNRESEARCHED",
+    "review": {
+      "status": "unreviewed"
+    }
+  }
+}

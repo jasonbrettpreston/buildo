@@ -1,0 +1,455 @@
+{
+  "kind": "CONTRACT",
+  "status": "exists",
+  "docs": {
+    "purpose": "Shows the detail page for one building contractor: their profile information, the permits they have worked on as builder, and any contact details other users have contributed about them.",
+    "data_story": "It reads 4 tables — `entities`, `permits`, `entity_projects` and `entity_contacts` and writes nothing. Its response shape is **unmeasured** as a pick-by-name whitelist — it passes rows through, spreads a row into a computed object, or assembles the payload dynamically, so there is no single list naming what leaves the server. It is called from 1 place: `web_builder_detail`.",
+    "under_126": "Becomes a **CONTRACT descriptor** of archetype `QUERY`. It declares its `database.reads[]` with named columns, its response projection as an explicit whitelist, its auth class, its rate bucket and its staleness — and `outputs.writes` is forced to `\"none\"`. Its `consumers[]` becomes the edge list of the fan-out graph — the join nothing in this estate holds today."
+  },
+  "evidence": {
+    "files": [
+      "src/app/api/builders/[id]/route.ts:1"
+    ],
+    "contracts": [
+      "src/app/api/builders/[id]/route.ts:6 (GET export)",
+      "src/lib/api/with-api-envelope.ts:27-52"
+    ],
+    "tables": [
+      "src/app/api/builders/[id]/route.ts:24",
+      "src/app/api/builders/[id]/route.ts:39-41",
+      "src/app/api/builders/[id]/route.ts:43-44",
+      "src/app/api/builders/[id]/route.ts:52",
+      "src/lib/db/generated/schema.ts — every table named here is present in the introspected drizzle schema"
+    ],
+    "gate": [
+      "src/lib/auth/route-guard.ts — PUBLIC_PREFIXES — '/api/builders'",
+      "src/lib/auth/route-guard.ts:150-201 — classifyRoute executed 2026-09-15 with the concrete path → \"public\"",
+      "no in-handler auth call in src/app/api/builders/[id]/route.ts — src/middleware.ts is the only gate"
+    ],
+    "states": [
+      "hit: src/app/api/builders/[id]/route.ts:58",
+      "miss: src/app/api/builders/[id]/route.ts:28-33 (404)",
+      "empty: src/app/api/builders/[id]/route.ts:58-62 — a found builder with permits [] and/or contacts [] is a 200",
+      "partial: src/app/api/builders/[id]/route.ts:46 — permits truncated at LIMIT 50 with no meta flag",
+      "error: src/app/api/builders/[id]/route.ts:63-68; plus the 400 at :14-19"
+    ],
+    "emits": [
+      "src/app/api/builders/[id]/route.ts — read in full; no Sentry breadcrumb, no analytics capture and no ledger INSERT"
+    ]
+  },
+  "identity": {
+    "id": "contract_builders_id",
+    "route": "/api/builders/[id]",
+    "archetype": "QUERY",
+    "platforms": [
+      "web"
+    ],
+    "owns": {
+      "components": []
+    },
+    "owner": "Backend/Pipeline (CLAUDE.md §Domain Rules: `src/app/api/`)",
+    "spec": "docs/specs/01-pipeline/37_entity_model.md",
+    "spec_refs": [
+      "docs/specs/01-pipeline/37_entity_model.md — owns src/app/api/builders/[id]/route.ts per docs/specs/00-architecture/00_system_map.md:39; the System Map row names no section, and the route file carries no SPEC LINK header"
+    ],
+    "spec_version": "0-draft",
+    "versioning": {
+      "answer": "breaking_allowed",
+      "why": "Every consumer is in src/** and ships in the same Next.js deploy as the route, so a breaking change is one commit.",
+      "evidence": [
+        "src/app/builders/[id]/page.tsx:73"
+      ]
+    },
+    "ref": "C-048"
+  },
+  "inputs": {
+    "answer": "app_outputs",
+    "why": "It reads 4 table(s) directly; 2 of them are materialised by named pipeline steps (builders, classify_inspection_status), so its inputs are the pipeline's outputs rather than another contract.",
+    "evidence": [
+      "src/app/api/builders/[id]/route.ts:24",
+      "scripts/extract-builders.js",
+      "docs/reference/data-lineage-map.md:506",
+      "scripts/manifest.json#chains",
+      "docs/reference/data-lineage-map.md",
+      "src/app/api/builders/[id]/route.ts:52",
+      "docs/specs/00-architecture/00_system_map.md:39",
+      "docs/reference/data-lineage-map.md — no `## `entity_contacts`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)",
+      "src/app/api/builders/[id]/route.ts:43-44",
+      "docs/specs/00-architecture/00_system_map.md:93"
+    ],
+    "contract_ref": [],
+    "query_key": [],
+    "field_whitelist": [
+      "builder",
+      "permits[] — explicit pick of 13 permits columns (:39-41)",
+      "contacts[]"
+    ],
+    "tables": [
+      {
+        "table": "entities",
+        "columns": "all",
+        "producing_steps": [
+          "builders",
+          "enrich_named_builders",
+          "enrich_wsib_builders",
+          "link_wsib"
+        ],
+        "chain_position": "permits[5] · entities[1] · entities[0] · permits[6], sources[19]",
+        "owner_spec": "docs/specs/01-pipeline/41_chain_permits.md",
+        "evidence": [
+          "src/app/api/builders/[id]/route.ts:24",
+          "scripts/extract-builders.js",
+          "docs/reference/data-lineage-map.md:506",
+          "scripts/manifest.json#chains",
+          "docs/reference/data-lineage-map.md"
+        ]
+      },
+      {
+        "table": "entity_contacts",
+        "columns": "all",
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/01-pipeline/37_entity_model.md",
+        "evidence": [
+          "src/app/api/builders/[id]/route.ts:52",
+          "docs/specs/00-architecture/00_system_map.md:39",
+          "docs/reference/data-lineage-map.md — no `## `entity_contacts`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)"
+        ]
+      },
+      {
+        "table": "entity_projects",
+        "columns": [
+          "permit_num",
+          "revision_num",
+          "entity_id",
+          "role"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/02-web-admin/76_lead_feed_health_dashboard.md",
+        "evidence": [
+          "src/app/api/builders/[id]/route.ts:43-44",
+          "docs/specs/00-architecture/00_system_map.md:93",
+          "docs/reference/data-lineage-map.md — no `## `entity_projects`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)"
+        ]
+      },
+      {
+        "table": "permits",
+        "columns": [
+          "permit_num",
+          "revision_num",
+          "permit_type",
+          "work",
+          "status",
+          "street_num",
+          "street_name",
+          "street_type",
+          "city",
+          "ward",
+          "est_const_cost",
+          "issued_date",
+          "description"
+        ],
+        "producing_steps": [
+          "classify_inspection_status",
+          "classify_lifecycle_phase",
+          "classify_permit_phase",
+          "classify_scope",
+          "classify_scope_class",
+          "classify_scope_tags",
+          "close_stale_permits",
+          "create_pre_permits",
+          "enrich_permits",
+          "geocode_permits",
+          "inspections",
+          "link_coa",
+          "link_neighbourhoods",
+          "link_similar",
+          "permits"
+        ],
+        "chain_position": "deep_scrapes[1] · permits[23], coa[12] · permits[3] · permits[4] · not-in-a-chain · not-in-a-chain · permits[2] · not-in-a-chain · permits[9] · permits[7], sources[3] · deep_scrapes[0] · permits[19], coa[8] · permits[10], sources[17] · permits[12] · permits[1]",
+        "owner_spec": "docs/specs/01-pipeline/41_chain_permits.md",
+        "evidence": [
+          "src/app/api/builders/[id]/route.ts:39-41",
+          "scripts/classify-inspection-status.js",
+          "docs/reference/data-lineage-map.md:997",
+          "scripts/manifest.json#chains",
+          "docs/reference/data-lineage-map.md"
+        ]
+      }
+    ]
+  },
+  "outputs": {
+    "answer": "none",
+    "why": "A QUERY contract writes nothing; the handler issues no INSERT/UPDATE/DELETE anywhere in the file or in the libs it calls.",
+    "evidence": [
+      "src/app/api/builders/[id]/route.ts — read in full 2026-09-15; no INSERT/UPDATE/DELETE reached"
+    ],
+    "contract_ref": [],
+    "tables": []
+  },
+  "state": {
+    "answer": "server_only",
+    "why": "A CONTRACT holds no client state: every value is resolved per request on the server and nothing is cached in a client store by the route itself.",
+    "evidence": [
+      "src/app/api/builders/[id]/route.ts:6 (GET export)",
+      "src/lib/api/with-api-envelope.ts:27-52"
+    ],
+    "fields": []
+  },
+  "staleness": {
+    "answer": "live",
+    "why": "Every read runs against the base tables on each request — there is no cache layer between the handler and the database.",
+    "evidence": [
+      "src/app/api/builders/[id]/route.ts:24",
+      "scripts/extract-builders.js",
+      "docs/reference/data-lineage-map.md:506",
+      "scripts/manifest.json#chains"
+    ],
+    "offline": "none"
+  },
+  "guards": {
+    "session": {
+      "answer": "anon",
+      "why": "classifyRoute(\"/api/builders/X\") returns \"public\" (executed 2026-09-15); the handler adds no check of its own, so middleware is the only gate.",
+      "evidence": [
+        "src/lib/auth/route-guard.ts:150-201 — classifyRoute executed 2026-09-15 with the concrete path",
+        "src/middleware.ts — the only gate for this path (no in-handler auth call)"
+      ]
+    },
+    "rls_class": {
+      "answer": "B",
+      "why": "Every table it reaches has RLS enabled with zero policies — default deny for anon and authenticated; only the table owner and service_role get through.",
+      "evidence": [
+        "migrations/227_rls_class_b_default_deny.sql:49",
+        "migrations/227_rls_class_b_default_deny.sql:75",
+        "migrations/227_rls_class_b_default_deny.sql:51",
+        "migrations/227_rls_class_b_default_deny.sql:50",
+        "docs/specs/00-architecture/114_rls_policy_catalog.md §2"
+      ]
+    },
+    "disclosure": {
+      "fields": [
+        "builder",
+        "permits[] — explicit pick of 13 permits columns (:39-41)",
+        "contacts[]"
+      ],
+      "why": "Reachable with no session at all (classifyRoute → public). These are the top-level fields an unauthenticated caller receives; at least one query is a whole-row SELECT *, so the projection is the table, not a whitelist."
+    },
+    "entitlement": "none",
+    "flag": "none",
+    "permission": "none",
+    "rate_bucket": "none"
+  },
+  "render": {
+    "targets": [
+      "screen"
+    ],
+    "projection": "none",
+    "breakpoints": "none",
+    "export": "none"
+  },
+  "checks": [
+    {
+      "id": "contract_builders_id__auth_class_parity",
+      "kind": "auth_class_parity",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "why": "guards.session must equal classifyRoute(\"/api/builders/X\"), executed 2026-09-15 → \"public\"; there is no in-handler check, so a middleware change silently re-classes this route. No test file in src/tests/** imports this route — the parity is unlocked."
+    },
+    {
+      "id": "contract_builders_id__error_envelope",
+      "kind": "error_state",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "why": "MEASURED DEVIATION, permanently non-zero until re-projected: GET returns a bare object {builder, permits, contacts} at :58-62 with no data/error/meta keys. All three error paths are bare {error:string}: 400 at :15-18, 404 at :30-32, 500 at :65-68. withApiEnvelope (:6) only shapes throws that escape the try (src/lib/api/ Retighten condition: the handler returns the envelope on every path."
+    },
+    {
+      "id": "contract_builders_id__field_whitelist_parity",
+      "kind": "field_whitelist_parity",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "why": "MEASURED: the projection is mixed (src/app/api/builders/[id]/route.ts:24, src/app/api/builders/[id]/route.ts:39-41, src/app/api/builders/[id]/route.ts:52, src/app/api/builders/[id]/route.ts:58-62, docs/specs/00-architecture/01_database_schema.md:483-503, docs/specs/00-architecture/01_database_schema.md:521-532), so a column added upstream reaches the client without a code change. Permanently non-zero until the response is an explicit pick; retighten condition: projection.kind === explicit_pick."
+    },
+    {
+      "id": "contract_builders_id__schema_declared",
+      "kind": "schema_declared",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "Every table and column declared in lineage.reads[]/writes[] must exist in src/lib/db/generated/schema.ts (drizzle-kit introspect of the live database); the registry generator checks this both directions."
+    },
+    {
+      "id": "contract_builders_id__anon_disclosure",
+      "kind": "disclosure",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "why": "classifyRoute returns \"public\": the field set in guards.disclosure is what an unauthenticated caller receives, and it must match the projection exactly — a field added to the projection is a new anonymous disclosure."
+    }
+  ],
+  "invariants": "none",
+  "plausibility": "none",
+  "states": [
+    {
+      "name": "hit",
+      "golden": "none"
+    },
+    {
+      "name": "miss",
+      "golden": "none"
+    },
+    {
+      "name": "empty",
+      "golden": "none"
+    },
+    {
+      "name": "partial",
+      "golden": "none"
+    },
+    {
+      "name": "error",
+      "golden": "none"
+    }
+  ],
+  "errors": {
+    "answer": "envelope",
+    "why": "It returns a JSON error body, but NOT the standard envelope: GET returns a bare object {builder, permits, contacts} at :58-62 with no data/error/meta keys. All three error paths are bare {error:string}: 400 at :15-18, 404 at :30-32, 500 at :65-68. withApiEnvelope (:6) only shapes  \"envelope\" is the closest member of the closed menu; the deviation is recorded in deviations[].",
+    "evidence": [
+      "src/lib/api/with-api-envelope.ts:27-52",
+      "src/app/api/builders/[id]/route.ts:58-62",
+      "src/app/api/builders/[id]/route.ts:15-18",
+      "src/app/api/builders/[id]/route.ts:30-32",
+      "src/app/api/builders/[id]/route.ts:65-68",
+      "src/app/api/builders/[id]/route.ts:17 (400)",
+      "src/app/api/builders/[id]/route.ts:31 (404)",
+      "src/app/api/builders/[id]/route.ts:67 (500)",
+      "src/app/api/builders/[id]/route.ts:0 (500)"
+    ],
+    "classes": [
+      {
+        "class": "400",
+        "ui": "{error:string} — src/app/api/builders/[id]/route.ts:17 (code (none — body is {error:'Invalid builder ID'}, no code field))"
+      },
+      {
+        "class": "500",
+        "ui": "{error:string} — src/app/api/builders/[id]/route.ts:67 (code (none — body is {error:'Failed to fetch builder'}, no code field))"
+      }
+    ]
+  },
+  "emits": {
+    "answer": "none",
+    "why": "Nothing it does is currently countable: src/app/api/builders/[id]/route.ts was read in full and contains no Sentry breadcrumb, no analytics capture and no ledger INSERT.",
+    "evidence": [
+      "src/app/api/builders/[id]/route.ts — read in full; no Sentry breadcrumb, no analytics capture and no ledger INSERT"
+    ],
+    "analytics": [],
+    "ledger_events": [],
+    "breadcrumbs": []
+  },
+  "offers": {
+    "answer": "none",
+    "why": "It renders no sponsored placement: the offers and advertisers tables Spec 126 §2 specifies do not exist in migrations/ and nothing in this handler reads placement inventory.",
+    "evidence": [
+      "migrations/ — no CREATE TABLE offers / advertisers (grep 2026-09-15)",
+      "src/app/api/builders/[id]/route.ts — read in full; no placement read"
+    ]
+  },
+  "metering": {
+    "answer": "none",
+    "why": "Nothing here is counted: no usage_events row (the table does not exist in the introspected schema) and no quota counter is written by this handler.",
+    "evidence": [
+      "src/app/api/builders/[id]/route.ts — read in full 2026-09-15",
+      "src/lib/db/generated/schema.ts — no usage_events table"
+    ]
+  },
+  "config": {
+    "answer": "none",
+    "why": "It consumes no tunable: no logic_variables read and no env-var-driven threshold in the handler or the libs it calls.",
+    "evidence": [
+      "src/app/api/builders/[id]/route.ts — read in full 2026-09-15; no loadMarketplaceConfigs / logic_variables read"
+    ],
+    "logic_variables": [],
+    "retired": []
+  },
+  "sharing": {
+    "answer": "sole",
+    "why": "Exactly one call site renders it, so its projection serves one surface.",
+    "evidence": [
+      "src/app/builders/[id]/page.tsx:73"
+    ],
+    "surfaces": [
+      "src/app/builders/[id]/page.tsx:73"
+    ]
+  },
+  "a11y": {
+    "touch_target_min_px": "UNRESEARCHED",
+    "labels": "none",
+    "dark_mode": "none",
+    "reduced_motion": "none",
+    "i18n": "none",
+    "safe_area": "none"
+  },
+  "deviations": [
+    {
+      "from": "docs/specs/00_engineering_standards.md §4.4 — all API routes return { data, error, meta }",
+      "why": "GET returns a bare object {builder, permits, contacts} at :58-62 with no data/error/meta keys. All three error paths are bare {error:string}: 400 at :15-18, 404 at :30-32, 500 at :65-68. withApiEnvelope (:6) only shapes throws that escape the try (src/lib/api/with-api-envelope.ts:29-31); note the 400 at :14-19 is returned BEFORE the try opens at :21, so it is outside the local catch.",
+      "adjudicated_by": "not adjudicated — measured 2026-09-15 by reading the handler",
+      "date": "2026-09-15"
+    },
+    {
+      "from": "docs/specs/00_engineering_standards.md §4.3 — never SELECT *, always project specific columns",
+      "why": "At least one query reads the whole row: entities, entity_contacts.",
+      "adjudicated_by": "not adjudicated — measured 2026-09-15",
+      "date": "2026-09-15"
+    }
+  ],
+  "limitations": [
+    {
+      "what": "a11y.touch_target_min_px has no legal answer for a CONTRACT",
+      "measured": "The schema allows only UNRESEARCHED or an integer >= 44; a JSON endpoint has no touch target and the vocabulary has no \"n/a\". Left UNRESEARCHED and escalated per Spec 128 §4 rather than invented.",
+      "check_id": "contract_builders_id__auth_class_parity"
+    },
+    {
+      "what": "error classes outside the closed set are not representable: 404",
+      "measured": "The handler returns 404 at src/app/api/builders/[id]/route.ts:31; errors.classes[] admits only 400/401/403/429/500/schema_drift/offline.",
+      "check_id": "contract_builders_id__error_envelope"
+    }
+  ],
+  "interpretation": "none",
+  "notes": "No SPEC LINK header. Uses SELECT * on entities and entity_contacts (whole row, not a whitelist); the response is a plain object literal { builder, permits, contacts } wrapping full rows. Called via a template literal from src/app/builders/[id]/page.tsx. | MEASURED 2026-09-15: DISCLOSURE FINDING (PUBLIC, unauthenticated — src/lib/auth/route-guard.ts:72): TWO SELECT * queries. (1) `SELECT * FROM entities WHERE id = $1` at :24 exposes all 19 entities columns including primary_phone, primary_email, website, linkedin_url, google_place_id, name_normalized. (2) `SELECT * FROM entity_contacts WHERE entity_id = $1` at :52 exposes all 8 columns of the USER-CONTRIBUTED contacts table — contact_type, contact_value (a phone/email, per the column's own name and the comment at :50), source, contributed_by, verified (docs/specs/00-architecture/01_database_schema.md:521-532). `contributed_by` is an attribution field disclosed to anonymous callers, and `contact_value` is unverified user-submitted contact data served with no `verified` filter — the query has no WHERE on verified (:52-55). This is the most severe disclosure of the seven routes I covered. Also disclosed: permit-level commercial data (est_const_cost, description, street_num/name/type, ward) at :39-41. Flagged per instruction: SELECT * usage. All three queries are parameterised; there is no string interpolation into SQL in this file. Aliases resolved: `p` = permits (:42), `ep` = entity_projects (:43) — both real tables. No SPEC LINK header — the file starts at the import at :1. NO EXTERNAL SERVICE CALLS (no Stripe, no Firebase/Supabase). CENSUS CHECK: census_reads [entities, permits, entity_projects, entity_contacts] confirmed exactly; census_writes [] confirmed (no INSERT/UPDATE/DELETE in the file). | Caching: none observed — no Cache-Control header, no revalidate/dynamic export in the file | Other guards / classification: NO GUARD AT ALL. Classified PUBLIC by the '/api/builders' prefix at src/lib/auth/route-guard.ts:72 (startsWith match at src/lib/auth/route-guard.ts:170), so an unauthenticated caller reaches the handler. | No test file under src/tests/** imports this route.",
+  "x-draft": {
+    "shard": "contracts",
+    "files": [
+      "src/app/api/builders/[id]/route.ts"
+    ],
+    "loc": 70,
+    "methods": [
+      "GET"
+    ],
+    "consumers": [
+      "web_builder_detail"
+    ],
+    "writes_audit_row": "n/a",
+    "consumers_verified": [
+      "src/app/builders/[id]/page.tsx:73"
+    ],
+    "auth_class_executed": "public",
+    "locking_tests": []
+  },
+  "programme": {
+    "scope": "estate_other",
+    "phase": "not_scheduled",
+    "why": "Builder/entity data for the lead-gen product. Inventoried only.",
+    "feature": "F92",
+    "build_order": 4192,
+    "leakage": "UNRESEARCHED",
+    "product_questions": "UNRESEARCHED",
+    "review": {
+      "status": "unreviewed"
+    }
+  }
+}

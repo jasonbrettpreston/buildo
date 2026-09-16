@@ -1,0 +1,408 @@
+{
+  "kind": "CONTRACT",
+  "status": "exists",
+  "docs": {
+    "purpose": "Lets a user see and change their notification settings: which kinds of alerts they receive (new leads above a cost threshold, construction phase changes, stalled jobs, urgent start dates) and what time of day they want them delivered.",
+    "data_story": "It reads 1 table — `user_profiles` and writes `user_profiles`. Its response is an explicit pick-by-name projection of 5 fields, so a column added to a table upstream does not leak into the client by accident. It is called from 1 place: `mobile_settings`.",
+    "under_126": "Becomes a **CONTRACT descriptor** of archetype `MUTATION`. It declares `database.writes[]` with a `write_discipline` per target (the Spec 122 vocabulary verbatim), its idempotency posture, its optimistic contract and its rollback. Its `consumers[]` becomes the edge list of the fan-out graph — the join nothing in this estate holds today."
+  },
+  "evidence": {
+    "files": [
+      "src/app/api/notifications/preferences/route.ts:1"
+    ],
+    "contracts": [
+      "src/app/api/notifications/preferences/route.ts:35 (GET export)",
+      "src/app/api/notifications/preferences/route.ts:70 (PATCH export)",
+      "src/lib/api/with-api-envelope.ts:27-52"
+    ],
+    "tables": [
+      "src/app/api/notifications/preferences/route.ts:32",
+      "src/app/api/notifications/preferences/route.ts:33",
+      "src/app/api/notifications/preferences/route.ts:48",
+      "src/app/api/notifications/preferences/route.ts:122",
+      "src/app/api/notifications/preferences/route.ts:124",
+      "src/app/api/notifications/preferences/route.ts:106-110",
+      "src/app/api/notifications/preferences/route.ts:115",
+      "src/lib/db/generated/schema.ts — every table named here is present in the introspected drizzle schema"
+    ],
+    "gate": [
+      "src/lib/auth/route-guard.ts — AUTHENTICATED_API_ROUTES prefix — '/api/notifications'",
+      "src/lib/auth/route-guard.ts:150-201 — classifyRoute executed 2026-09-15 with the concrete path → \"authenticated\"",
+      "in-handler: getUserIdFromSession(request) at src/app/api/notifications/preferences/route.ts:37 (GET) and :72 (PATCH) — alias for getVerifiedUid (src/lib/auth/get-user.ts:215-216), the revocation-checked GoTrue round-trip. Middleware classifies /api/notifications/* 'authenticated' via the '/api/notifications' prefix (src/lib/auth/route-guard.ts:123, prefix match at route-guard.ts:165)."
+    ],
+    "states": [
+      "hit: src/app/api/notifications/preferences/route.ts:63 (row found, route.ts:54)",
+      "degraded: src/app/api/notifications/preferences/route.ts:55-61 — no user_profiles row exists, so the route synthesizes canonical defaults and still answers 200; the client cannot distinguish stored prefs from defaults",
+      "unauthorized: src/app/api/notifications/preferences/route.ts:39, :74",
+      "error: src/app/api/notifications/preferences/route.ts:80 (400 bad body), :66 / :138 (500)",
+      "miss: src/app/api/notifications/preferences/route.ts:132 — 404 branch, self-documented as effectively unreachable (route.ts:129-131)"
+    ],
+    "emits": [
+      "src/app/api/notifications/preferences/route.ts — read in full; no Sentry breadcrumb, no analytics capture and no ledger INSERT"
+    ]
+  },
+  "identity": {
+    "id": "contract_notifications_preferences",
+    "route": "/api/notifications/preferences",
+    "archetype": "MUTATION",
+    "platforms": [
+      "web",
+      "mobile"
+    ],
+    "owns": {
+      "components": []
+    },
+    "owner": "Cross-Domain (CLAUDE.md §Domain Rules: an API route consumed by the Expo app)",
+    "spec": "docs/specs/03-mobile/92_mobile_engagement_hardware.md",
+    "spec_refs": [
+      "docs/specs/03-mobile/92_mobile_engagement_hardware.md §2.3; docs/specs/03-mobile/99_mobile_state_architecture.md §9.14 — src/app/api/notifications/preferences/route.ts:1-2"
+    ],
+    "spec_version": "0-draft",
+    "versioning": {
+      "answer": "additive_only",
+      "why": "At least one consumer is an installed Expo binary (mobile/) that does not redeploy with the server, so a removed or retyped field breaks shipped clients; adding fields does not.",
+      "evidence": [
+        "mobile/app/(app)/settings.tsx:192,233",
+        "mobile/app.json:5"
+      ]
+    },
+    "ref": "C-024"
+  },
+  "inputs": {
+    "answer": "app_outputs",
+    "why": "It reads 1 table(s) directly; none is written by a pipeline step — they are written by API routes, jobs or migration seeds — but the input is still the database, not another contract.",
+    "evidence": [
+      "src/app/api/notifications/preferences/route.ts:32",
+      "src/app/api/notifications/preferences/route.ts:33",
+      "src/app/api/notifications/preferences/route.ts:48",
+      "docs/specs/00-architecture/00_system_map.md:80",
+      "docs/reference/data-lineage-map.md — no `## `user_profiles`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)"
+    ],
+    "contract_ref": [],
+    "query_key": [],
+    "field_whitelist": [
+      "new_lead_min_cost_tier",
+      "phase_changed",
+      "lifecycle_stalled_pref",
+      "start_date_urgent",
+      "notification_schedule"
+    ],
+    "tables": [
+      {
+        "table": "user_profiles",
+        "columns": [
+          "new_lead_min_cost_tier",
+          "phase_changed",
+          "lifecycle_stalled_pref",
+          "start_date_urgent",
+          "notification_schedule",
+          "user_id"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/02-web-admin/102_admin_notifications_tool.md",
+        "evidence": [
+          "src/app/api/notifications/preferences/route.ts:32",
+          "src/app/api/notifications/preferences/route.ts:33",
+          "src/app/api/notifications/preferences/route.ts:48",
+          "docs/specs/00-architecture/00_system_map.md:80",
+          "docs/reference/data-lineage-map.md — no `## `user_profiles`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)"
+        ]
+      }
+    ]
+  },
+  "outputs": {
+    "answer": "contract_only",
+    "why": "This route IS the mutation contract: it writes 1 table(s) synchronously inside the request and returns the result — there is no optimistic client-side flip to reconcile.",
+    "evidence": [
+      "src/app/api/notifications/preferences/route.ts:122",
+      "src/app/api/notifications/preferences/route.ts:124",
+      "src/app/api/notifications/preferences/route.ts:106-110",
+      "src/app/api/notifications/preferences/route.ts:115",
+      "docs/specs/00-architecture/00_system_map.md:80",
+      "docs/reference/data-lineage-map.md — no `## `user_profiles`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)"
+    ],
+    "contract_ref": [],
+    "tables": [
+      {
+        "table": "user_profiles",
+        "columns": [
+          "user_id",
+          "new_lead_min_cost_tier",
+          "phase_changed",
+          "lifecycle_stalled_pref",
+          "start_date_urgent",
+          "notification_schedule",
+          "updated_at"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/02-web-admin/102_admin_notifications_tool.md",
+        "evidence": [
+          "src/app/api/notifications/preferences/route.ts:122",
+          "src/app/api/notifications/preferences/route.ts:124",
+          "src/app/api/notifications/preferences/route.ts:106-110",
+          "src/app/api/notifications/preferences/route.ts:115",
+          "docs/specs/00-architecture/00_system_map.md:80",
+          "docs/reference/data-lineage-map.md — no `## `user_profiles`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)"
+        ]
+      }
+    ]
+  },
+  "state": {
+    "answer": "server_only",
+    "why": "A CONTRACT holds no client state: every value is resolved per request on the server and nothing is cached in a client store by the route itself.",
+    "evidence": [
+      "src/app/api/notifications/preferences/route.ts:35 (GET export)",
+      "src/lib/api/with-api-envelope.ts:27-52"
+    ],
+    "fields": []
+  },
+  "staleness": {
+    "answer": "live",
+    "why": "Every read runs against the base tables on each request — there is no cache layer between the handler and the database.",
+    "evidence": [
+      "src/app/api/notifications/preferences/route.ts:32",
+      "src/app/api/notifications/preferences/route.ts:33",
+      "src/app/api/notifications/preferences/route.ts:48",
+      "docs/specs/00-architecture/00_system_map.md:80"
+    ],
+    "offline": "none"
+  },
+  "guards": {
+    "session": {
+      "answer": "authenticated",
+      "why": "classifyRoute(\"/api/notifications/preferences\") returns \"authenticated\" (executed 2026-09-15); the handler re-verifies the caller in-process.",
+      "evidence": [
+        "src/lib/auth/route-guard.ts:150-201 — classifyRoute executed 2026-09-15 with the concrete path",
+        "getUserIdFromSession(request) at src/app/api/notifications/preferences/route.ts:37 (GET) and :72 (PATCH) — alias for getVerifiedUid (src/lib/auth/get-user.ts:215-216), the revocation-checked GoTrue round-trip. Middleware classifies /api/notifications/* 'authenticated' via the '/api/notifications' prefix (src/lib/auth/route-guard.ts:123, prefix match at route-guard.ts:165)."
+      ]
+    },
+    "rls_class": {
+      "answer": "A",
+      "why": "It reaches user-owned rows whose policies key on auth.uid(). The route connects as the table owner (raw pg), which Spec 114 §9 makes owner-exempt from RLS — the class describes the data, not the gate this route passes.",
+      "evidence": [
+        "migrations/230_rls_class_a_entitlements.sql:48",
+        "docs/specs/00-architecture/114_rls_policy_catalog.md §2"
+      ]
+    },
+    "disclosure": "none",
+    "entitlement": "none",
+    "flag": "none",
+    "permission": "none",
+    "rate_bucket": "none"
+  },
+  "render": {
+    "targets": [
+      "screen"
+    ],
+    "projection": "none",
+    "breakpoints": "none",
+    "export": "none"
+  },
+  "checks": [
+    {
+      "id": "contract_notifications_preferences__auth_class_parity",
+      "kind": "auth_class_parity",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "why": "guards.session must equal classifyRoute(\"/api/notifications/preferences\"), executed 2026-09-15 → \"authenticated\" plus the in-handler guard (getUserIdFromSession(request) at src/app/api/notifications/preferences/route.ts:37 (GET) and :72 (PATCH) — ali). Locked by notifications.infra.test.ts."
+    },
+    {
+      "id": "contract_notifications_preferences__error_envelope",
+      "kind": "error_state",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "why": "MEASURED DEVIATION, permanently non-zero until re-projected: Handler-built responses are bare: GET 200 `{prefs}` (route.ts:63); 401 `{error:'Unauthorized'}` — string error (route.ts:39, :74); 400 `{error:'Invalid preferences', details}` (route.ts:80-83); 404 `{error:'User profile not found'}` (route.ts:132); 500 `{error Retighten condition: the handler returns the envelope on every path."
+    },
+    {
+      "id": "contract_notifications_preferences__contract_parse",
+      "kind": "contract_parse",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "why": "Request input is parsed by NotificationPrefsSchema at src/app/api/notifications/preferences/route.ts:78 before any query runs; a payload that fails the schema is refused, never coerced."
+    },
+    {
+      "id": "contract_notifications_preferences__field_whitelist_parity",
+      "kind": "field_whitelist_parity",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "The response is an explicit pick-by-name of 5 field(s) (src/app/api/notifications/preferences/route.ts:32, src/app/api/notifications/preferences/route.ts:48, src/app/api/notifications/preferences/route.ts:63), so a column added upstream cannot leak; this check set-equals the projection to inputs.field_whitelist."
+    },
+    {
+      "id": "contract_notifications_preferences__schema_declared",
+      "kind": "schema_declared",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "Every table and column declared in lineage.reads[]/writes[] must exist in src/lib/db/generated/schema.ts (drizzle-kit introspect of the live database); the registry generator checks this both directions."
+    }
+  ],
+  "invariants": "none",
+  "plausibility": "none",
+  "states": [
+    {
+      "name": "hit",
+      "golden": "none"
+    },
+    {
+      "name": "degraded",
+      "golden": "none"
+    },
+    {
+      "name": "unauthorized",
+      "golden": "none"
+    },
+    {
+      "name": "error",
+      "golden": "none"
+    },
+    {
+      "name": "miss",
+      "golden": "none"
+    }
+  ],
+  "errors": {
+    "answer": "envelope",
+    "why": "It returns a JSON error body, but NOT the standard envelope: Handler-built responses are bare: GET 200 `{prefs}` (route.ts:63); 401 `{error:'Unauthorized'}` — string error (route.ts:39, :74); 400 `{error:'Invalid preferences', details}` (route.ts:80-83); 404 `{error:'User profile  \"envelope\" is the closest member of the closed menu; the deviation is recorded in deviations[].",
+    "evidence": [
+      "src/lib/api/with-api-envelope.ts:27-52",
+      "src/app/api/notifications/preferences/route.ts:63",
+      "src/app/api/notifications/preferences/route.ts:39",
+      "src/app/api/notifications/preferences/route.ts:66",
+      "src/app/api/notifications/preferences/route.ts:135",
+      "src/lib/api/with-api-envelope.ts:48",
+      "src/app/api/notifications/preferences/route.ts:39 (401)",
+      "src/app/api/notifications/preferences/route.ts:74 (401)",
+      "src/app/api/notifications/preferences/route.ts:80 (400)",
+      "src/app/api/notifications/preferences/route.ts:132 (404)"
+    ],
+    "classes": [
+      {
+        "class": "401",
+        "ui": "{error:'Unauthorized'} — src/app/api/notifications/preferences/route.ts:39 (code (none — string 'Unauthorized'))"
+      },
+      {
+        "class": "400",
+        "ui": "{error:'Invalid preferences', details: ZodError.flatten()} — src/app/api/notifications/preferences/route.ts:80 (code (none — string 'Invalid preferences'))"
+      },
+      {
+        "class": "500",
+        "ui": "{error:'Internal server error'} — src/app/api/notifications/preferences/route.ts:66 (code (none — string 'Internal server error'))"
+      }
+    ]
+  },
+  "emits": {
+    "answer": "none",
+    "why": "Nothing it does is currently countable: src/app/api/notifications/preferences/route.ts was read in full and contains no Sentry breadcrumb, no analytics capture and no ledger INSERT.",
+    "evidence": [
+      "src/app/api/notifications/preferences/route.ts — read in full; no Sentry breadcrumb, no analytics capture and no ledger INSERT"
+    ],
+    "analytics": [],
+    "ledger_events": [],
+    "breadcrumbs": []
+  },
+  "offers": {
+    "answer": "none",
+    "why": "It renders no sponsored placement: the offers and advertisers tables Spec 126 §2 specifies do not exist in migrations/ and nothing in this handler reads placement inventory.",
+    "evidence": [
+      "migrations/ — no CREATE TABLE offers / advertisers (grep 2026-09-15)",
+      "src/app/api/notifications/preferences/route.ts — read in full; no placement read"
+    ]
+  },
+  "metering": {
+    "answer": "none",
+    "why": "Nothing here is counted: no usage_events row (the table does not exist in the introspected schema) and no quota counter is written by this handler.",
+    "evidence": [
+      "src/app/api/notifications/preferences/route.ts — read in full 2026-09-15",
+      "src/lib/db/generated/schema.ts — no usage_events table"
+    ]
+  },
+  "config": {
+    "answer": "none",
+    "why": "It consumes no tunable: no logic_variables read and no env-var-driven threshold in the handler or the libs it calls.",
+    "evidence": [
+      "src/app/api/notifications/preferences/route.ts — read in full 2026-09-15; no loadMarketplaceConfigs / logic_variables read"
+    ],
+    "logic_variables": [],
+    "retired": []
+  },
+  "sharing": {
+    "answer": "sole",
+    "why": "Exactly one call site renders it, so its projection serves one surface.",
+    "evidence": [
+      "mobile/app/(app)/settings.tsx:192,233"
+    ],
+    "surfaces": [
+      "mobile/app/(app)/settings.tsx:192,233"
+    ]
+  },
+  "a11y": {
+    "touch_target_min_px": "UNRESEARCHED",
+    "labels": "none",
+    "dark_mode": "none",
+    "reduced_motion": "none",
+    "i18n": "none",
+    "safe_area": "none"
+  },
+  "deviations": [
+    {
+      "from": "docs/specs/00_engineering_standards.md §4.4 — all API routes return { data, error, meta }",
+      "why": "Handler-built responses are bare: GET 200 `{prefs}` (route.ts:63); 401 `{error:'Unauthorized'}` — string error (route.ts:39, :74); 400 `{error:'Invalid preferences', details}` (route.ts:80-83); 404 `{error:'User profile not found'}` (route.ts:132); 500 `{error:'Internal server error'}` (route.ts:66, :138); PATCH 200 `{success:true}` (route.ts:113, :135). Only withApiEnvelope's catch emits `{data,e",
+      "adjudicated_by": "not adjudicated — measured 2026-09-15 by reading the handler",
+      "date": "2026-09-15"
+    }
+  ],
+  "limitations": [
+    {
+      "what": "a11y.touch_target_min_px has no legal answer for a CONTRACT",
+      "measured": "The schema allows only UNRESEARCHED or an integer >= 44; a JSON endpoint has no touch target and the vocabulary has no \"n/a\". Left UNRESEARCHED and escalated per Spec 128 §4 rather than invented.",
+      "check_id": "contract_notifications_preferences__auth_class_parity"
+    },
+    {
+      "what": "error classes outside the closed set are not representable: 404",
+      "measured": "The handler returns 404 at src/app/api/notifications/preferences/route.ts:132; errors.classes[] admits only 400/401/403/429/500/schema_drift/offline.",
+      "check_id": "contract_notifications_preferences__error_envelope"
+    }
+  ],
+  "interpretation": "none",
+  "notes": "Header also cites docs/specs/03-mobile/99_mobile_state_architecture.md §9.14. GET falls back to a hardcoded defaults object when no user_profiles row exists yet, rather than 404/empty. PATCH uses INSERT ... ON CONFLICT (user_id) DO UPDATE so a first-ever PATCH creates the row instead of 404ing — a documented behavioural-parity fix versus the old plain UPDATE. | MEASURED 2026-09-15: CENSUS AGREEMENT: census_reads ['user_profiles'] and census_writes ['user_profiles'] both match. FINDING a reviewer must know: the PATCH upsert can CREATE a `user_profiles` row containing only `user_id` plus whatever prefs the client sent (route.ts:122-124) — with NO trade_slug and NO trade_slugs_override. Such a row makes getCurrentUserContext return null (set.length === 0 at src/lib/auth/get-user-context.ts:134-141), so a brand-new user who toggles a notification switch before onboarding gets a profile row that 401s every /api/leads/* route while /api/notifications/preferences keeps working. Second finding: NotificationPrefsSchema is not .strict() (route.ts:24-30) — unknown keys are silently dropped, the opposite of the .strict() convention the leads schemas use (src/features/leads/api/schemas.ts:108). Third: the doc-comment at route.ts:7-9 claims migration 117 flattened these from JSONB; I did NOT verify that against migrations/ — treat it as a claim, not evidence. | Idempotency: Guarded. `INSERT INTO user_profiles (user_id) VALUES ($1) ON CONFLICT (user_id) DO UPDATE SET <only the fields the client sent>, updated_at = NOW()` (route.ts:122-124, SET assembled at :106-115). A repeat PATCH with the same body converges to the same column values; `updated_at` is unconditionally refreshed (route.ts:115) with no IS DISTINCT FROM guard, so the timestamp moves on every replay even when nothing changed. Empty payload is a true no-op (route.ts:112-114). | Caching: none observed — no revalidate/dynamic/Cache-Control/unstable_cache in src/app/api/notifications/preferences/route.ts:1-140 | Other guards / classification: Both queries are keyed on the session userId (route.ts:48, :101/:122) — no client-supplied user_id anywhere. The SET clause is assembled from a fixed whitelist of five hard-coded column names (route.ts:106-110) via addField (route.ts:102-105), so the dynamic SQL cannot take a client-controlled identifier; only the VALUES are parameterized placeholders. | Locking tests: src/tests/notifications.infra.test.ts.",
+  "x-draft": {
+    "shard": "contracts",
+    "files": [
+      "src/app/api/notifications/preferences/route.ts"
+    ],
+    "loc": 140,
+    "methods": [
+      "GET",
+      "PATCH"
+    ],
+    "consumers": [
+      "mobile_settings"
+    ],
+    "writes_audit_row": false,
+    "consumers_verified": [
+      "mobile/app/(app)/settings.tsx:192,233"
+    ],
+    "auth_class_executed": "authenticated",
+    "locking_tests": [
+      "src/tests/notifications.infra.test.ts"
+    ]
+  },
+  "programme": {
+    "scope": "platform_shared",
+    "phase": "UNRESEARCHED",
+    "why": "Notifications: one device-token registry and one preference set across both products.",
+    "feature": "F13",
+    "build_order": 3132,
+    "leakage": "none",
+    "product_questions": "none",
+    "review": {
+      "status": "unreviewed"
+    }
+  }
+}

@@ -1,0 +1,447 @@
+{
+  "kind": "SURFACE",
+  "status": "exists",
+  "docs": {
+    "purpose": "Search any Toronto address and see everything the system knows about that property, in a fixed three-tier order: first the renovation cost menu and headline areas, then the neighbourhood picture including nearby projects awaiting a committee decision and comparable buildings, then nine collapsed groups holding every remaining field. If the address matches several parcels it offers the candidates to choose from. It only displays stored values - it calculates nothing itself - and is the operator prototype of a future consumer-facing property screen.",
+    "data_story": "It reads nothing from the database directly. Every value arrives through one contract: `/api/admin/parcels/lookup`. Behind that contract, the data comes from `address_points`, `coa_applications`, `parcel_address_points` and `parcels`.",
+    "under_126": "**RE-PROJECT** — it writes nothing and holds no Layer-3 store, so the move is short — the server already assembles the payload and only the rendering is client-side. It renders through the SEARCH renderer (declared debounce, minimum query length, rate bucket and candidate shape), reading by reference: `/api/admin/parcels/lookup`. Its `owns.components[]` declares `src/components/admin/ParcelCostTool.tsx` and `src/components/admin/GenericFieldRenderer.tsx`."
+  },
+  "evidence": {
+    "files": [
+      "src/app/admin/parcel-cost/page.tsx:15",
+      "src/components/admin/ParcelCostTool.tsx:142",
+      "src/components/admin/GenericFieldRenderer.tsx:58",
+      "src/app/admin/parcel-cost/error.tsx:1"
+    ],
+    "contracts": [
+      "src/app/api/admin/parcels/lookup/route.ts:34",
+      "src/app/api/admin/parcels/lookup/types.ts:15"
+    ],
+    "tables": [
+      "src/lib/admin/parcel-lookup.ts:167",
+      "src/lib/admin/parcel-lookup.ts:194",
+      "src/lib/admin/parcel-lookup.ts:221",
+      "src/lib/admin/parcel-lookup.ts:232"
+    ],
+    "gate": [
+      "src/lib/auth/route-guard.ts:162",
+      "src/middleware.ts:95",
+      "src/app/api/admin/parcels/lookup/route.ts:36"
+    ],
+    "states": [
+      "src/components/admin/ParcelCostTool.tsx:142",
+      "src/tests/ParcelCostTool.ui.test.tsx:31"
+    ],
+    "emits": [
+      "src/components/admin/ParcelCostTool.tsx:142",
+      "src/components/admin/ParcelCostTool.tsx:397"
+    ]
+  },
+  "identity": {
+    "id": "admin_parcel_cost",
+    "route": "src/app/admin/parcel-cost/page.tsx",
+    "archetype": "SEARCH",
+    "platforms": [
+      "web"
+    ],
+    "owns": {
+      "components": [
+        "src/components/admin/ParcelCostTool.tsx",
+        "src/components/admin/GenericFieldRenderer.tsx"
+      ]
+    },
+    "owner": "UNRESEARCHED",
+    "spec": "docs/specs/02-web-admin/89_parcel_cost_model_tool.md",
+    "spec_refs": [
+      "docs/specs/02-web-admin/89_parcel_cost_model_tool.md §2",
+      "docs/specs/02-web-admin/89_parcel_cost_model_tool.md §3",
+      "docs/specs/02-web-admin/89_parcel_cost_model_tool.md §4",
+      "docs/specs/02-web-admin/89_parcel_cost_model_tool.md §5"
+    ],
+    "spec_version": "0-draft",
+    "versioning": {
+      "answer": "additive_only",
+      "why": "The column-to-group mapping in §4 is normative and the response is parsed through ParcelLookupResponseSchema, so a group may gain a column but a removed or renamed one breaks the declared mapping.",
+      "evidence": [
+        "src/app/api/admin/parcels/lookup/route.ts:101",
+        "docs/specs/02-web-admin/89_parcel_cost_model_tool.md §4"
+      ]
+    },
+    "ref": "S-012"
+  },
+  "inputs": {
+    "answer": "contract",
+    "why": "One contract taking either an address or a parcelId, XOR-enforced by its Zod schema; the tool touches no table.",
+    "evidence": [
+      "src/features/admin-flight-center/api/useParcelLookup.ts:77",
+      "src/app/api/admin/parcels/lookup/types.ts:15"
+    ],
+    "contract_ref": [
+      "/api/admin/parcels/lookup"
+    ],
+    "query_key": [
+      "admin",
+      "parcel-lookup"
+    ],
+    "field_whitelist": [
+      "parcel_cost_menu",
+      "identity",
+      "lot_address",
+      "zoning",
+      "heritage_ravine_centreline",
+      "existing_structure",
+      "max_build",
+      "scenarios",
+      "accessory",
+      "optimal_config",
+      "neighbourhood",
+      "coa_applications",
+      "candidates"
+    ],
+    "tables": [
+      {
+        "table": "parcels",
+        "columns": [
+          "parcel_id",
+          "id",
+          "address_number",
+          "linear_name_full",
+          "addr_num_normalized",
+          "street_name_normalized",
+          "parcel_cost_menu"
+        ],
+        "producing_steps": [
+          "parcels",
+          "enrich_parcels",
+          "compute_centroids",
+          "compute_parcel_cost_estimates",
+          "enrich_heritage",
+          "enrich_ravines",
+          "enrich_centreline"
+        ],
+        "chain_position": "sources[4]",
+        "owner_spec": "docs/specs/01-pipeline/43_chain_sources.md",
+        "evidence": [
+          "src/lib/admin/parcel-lookup.ts:167",
+          "src/lib/admin/parcel-lookup.ts:221"
+        ]
+      },
+      {
+        "table": "address_points",
+        "columns": [
+          "address_full",
+          "address_point_id",
+          "linear_name_normalized",
+          "addr_num_normalized",
+          "address_status",
+          "maint_stage"
+        ],
+        "producing_steps": [
+          "address_points"
+        ],
+        "chain_position": "sources[2]",
+        "owner_spec": "docs/specs/01-pipeline/54_source_address_points.md",
+        "evidence": [
+          "src/lib/admin/parcel-lookup.ts:194"
+        ]
+      },
+      {
+        "table": "parcel_address_points",
+        "columns": [
+          "address_point_id",
+          "parcel_id"
+        ],
+        "producing_steps": [
+          "link_parcel_addresses"
+        ],
+        "chain_position": "sources[8]",
+        "owner_spec": "docs/specs/01-pipeline/54_source_address_points.md",
+        "evidence": [
+          "src/lib/admin/parcel-lookup.ts:197"
+        ]
+      },
+      {
+        "table": "coa_applications",
+        "columns": [
+          "application_number",
+          "address",
+          "status",
+          "decision",
+          "decision_date",
+          "hearing_date",
+          "description",
+          "project_type",
+          "modeled_gfa_sqm",
+          "estimated_cost",
+          "neighbourhood_id"
+        ],
+        "producing_steps": [
+          "coa",
+          "link_coa",
+          "classify_coa_scope",
+          "compute_coa_cost_estimates"
+        ],
+        "chain_position": "coa[1]",
+        "owner_spec": "docs/specs/01-pipeline/42_chain_coa.md",
+        "evidence": [
+          "src/lib/admin/parcel-lookup.ts:232"
+        ]
+      },
+      {
+        "table": "profiles",
+        "columns": [
+          "is_admin"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/00-architecture/114_rls_policy_catalog.md §5",
+        "evidence": [
+          "src/app/api/admin/parcels/lookup/route.ts:36",
+          "src/lib/auth/verify-admin.ts:118"
+        ]
+      }
+    ]
+  },
+  "outputs": {
+    "answer": "none",
+    "why": "The module header declares the lookup READ-ONLY and the route exports GET only; the tool has no form that writes.",
+    "evidence": [
+      "src/lib/admin/parcel-lookup.ts:10",
+      "src/app/api/admin/parcels/lookup/route.ts:34"
+    ],
+    "contract_ref": [],
+    "tables": []
+  },
+  "state": {
+    "answer": "query_cache",
+    "why": "One TanStack query under the root provider; expansion state is local component state and there is no Layer-3 store.",
+    "evidence": [
+      "src/features/admin-flight-center/api/useParcelLookup.ts:77",
+      "src/app/providers.tsx:45"
+    ],
+    "fields": []
+  },
+  "staleness": {
+    "answer": "query_cache",
+    "why": "60s staleTime on the lookup; because the page runs under the ROOT provider the result is also persisted to IndexedDB for 24h, so a reload with no network still renders the last parcel.",
+    "evidence": [
+      "src/features/admin-flight-center/api/useParcelLookup.ts:77",
+      "src/features/leads/api/query-client.ts:82"
+    ],
+    "stale_time_ms": 60000,
+    "offline": "cached_projection"
+  },
+  "guards": {
+    "session": {
+      "answer": "admin",
+      "why": "There is no admin Postgres role: classifyRoute sends every /admin/* path down the admin arm, and the real boundary is verifyAdminAuth reading profiles.is_admin on the route. Note the neighbouring consumer prefix /api/parcels classifies as authenticated; this page calls /api/admin/parcels/lookup, which takes the /api/admin/ arm and verifies on its first line.",
+      "evidence": [
+        "src/lib/auth/route-guard.ts:162",
+        "src/middleware.ts:95",
+        "src/app/api/admin/parcels/lookup/route.ts:36"
+      ]
+    },
+    "rls_class": {
+      "answer": "B",
+      "why": "parcels, address_points, parcel_address_points and coa_applications are none of the ten Class-A tables and are not profiles, so Class B by the §2 default.",
+      "evidence": [
+        "docs/specs/00-architecture/114_rls_policy_catalog.md §2"
+      ]
+    },
+    "disclosure": "none",
+    "entitlement": "none",
+    "flag": "none",
+    "permission": "none",
+    "rate_bucket": "none"
+  },
+  "render": {
+    "targets": [
+      "screen"
+    ],
+    "projection": "detail",
+    "breakpoints": "desktop_first_md",
+    "export": "none"
+  },
+  "checks": [
+    {
+      "id": "parcel_cost_field_whitelist",
+      "kind": "field_whitelist_parity",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "The ~130-column projection is built from the normative §4 group lists rather than SELECT *, and geometry columns are explicitly excluded — the column list IS the whitelist, so any drift between it and the rendered groups is a defect."
+    },
+    {
+      "id": "parcel_cost_ambiguous_state",
+      "kind": "empty_state",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "No-exact-match-with-candidates and no-parcel-found are different answers and must render differently; the ParcelCostTool suite locks both."
+    },
+    {
+      "id": "parcel_cost_absence_is_not_a_verdict",
+      "kind": "render_target_parity",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "Spec 89 §2.3: a missing cost-menu line must not render as \"does not fit\" — an absent value and a negative verdict are not the same projection."
+    },
+    {
+      "id": "parcel_cost_query_log_hygiene",
+      "kind": "disclosure",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "why": "The search telemetry sends only the query LENGTH, never the address typed; the route's access log records the parcel id, not the raw q."
+    }
+  ],
+  "invariants": "none",
+  "plausibility": "none",
+  "states": [
+    {
+      "name": "loading",
+      "golden": "none"
+    },
+    {
+      "name": "empty",
+      "golden": "none"
+    },
+    {
+      "name": "ambiguous",
+      "golden": "none"
+    },
+    {
+      "name": "hit",
+      "golden": "none"
+    },
+    {
+      "name": "error",
+      "golden": "none"
+    }
+  ],
+  "errors": {
+    "answer": "inline",
+    "why": "Lookup failures render inline under the search box and the panel keeps its previous parcel; only a render throw reaches the sibling error.tsx boundary.",
+    "evidence": [
+      "src/components/admin/ParcelCostTool.tsx:142",
+      "src/app/admin/parcel-cost/error.tsx:1"
+    ],
+    "classes": [
+      {
+        "class": "400",
+        "ui": "inline validation message on the search box"
+      },
+      {
+        "class": "500",
+        "ui": "inline error under the search box"
+      }
+    ]
+  },
+  "emits": {
+    "answer": "events",
+    "why": "Two read-surface events fire from the tool — one per executed search, one per group expansion — and neither carries the address typed.",
+    "evidence": [
+      "src/components/admin/ParcelCostTool.tsx:142",
+      "src/components/admin/ParcelCostTool.tsx:397"
+    ],
+    "analytics": [
+      "admin_parcel_lookup_searched",
+      "admin_parcel_group_expanded"
+    ],
+    "ledger_events": [],
+    "breadcrumbs": []
+  },
+  "offers": {
+    "answer": "none",
+    "why": "An internal operator tool renders no sponsored placement; no offers/placements table is reached from any file it owns.",
+    "evidence": [
+      "src/components/admin/ParcelCostTool.tsx:1"
+    ]
+  },
+  "metering": {
+    "answer": "none",
+    "why": "This is the admin prototype of the future metered consumer parcel screen, and it writes no usage_events row — the meter belongs to the consumer contract when that surface ships.",
+    "evidence": [
+      "src/app/api/admin/parcels/lookup/route.ts:34",
+      "src/app/admin/parcel-cost/page.tsx:3"
+    ]
+  },
+  "config": {
+    "answer": "none",
+    "why": "The route reads no logic_variables row; the group mapping and the exclusions are module constants declared against Spec 89 §4.",
+    "evidence": [
+      "src/lib/admin/parcel-lookup.ts:32",
+      "src/lib/admin/parcel-lookup.ts:52"
+    ],
+    "logic_variables": [],
+    "retired": [],
+    "debounce_ms": "UNRESEARCHED",
+    "min_query_len": "UNRESEARCHED"
+  },
+  "sharing": {
+    "answer": "sole",
+    "why": "/api/admin/parcels/lookup has one caller in the tree; the consumer sibling /api/parcels/lookup is a different route with its own rate limit.",
+    "evidence": [
+      "src/features/admin-flight-center/api/useParcelLookup.ts:77",
+      "src/app/api/parcels/lookup/route.ts:1"
+    ],
+    "surfaces": []
+  },
+  "a11y": {
+    "touch_target_min_px": 44,
+    "labels": "partial",
+    "dark_mode": "none",
+    "reduced_motion": "ignored",
+    "i18n": "none",
+    "safe_area": "none"
+  },
+  "deviations": "none",
+  "limitations": [
+    {
+      "what": "A SEARCH surface with no rate bucket, unlike its consumer sibling",
+      "measured": "src/app/api/parcels/lookup/route.ts rate-limits; the admin route does not import the limiter at all. Its only bounds are the 3-120 character Zod range on q and the LIMIT 11/20 on the two candidate queries.",
+      "check_id": "parcel_cost_query_log_hygiene"
+    },
+    {
+      "what": "Two sub-objects inside the payload are not individually whitelisted by the schema",
+      "measured": "groups is typed z.record(z.string(), z.unknown()) and CostLineSchema is .passthrough(), so the column list in parcel-lookup.ts is the only whitelist those values have.",
+      "check_id": "parcel_cost_field_whitelist"
+    }
+  ],
+  "interpretation": "none",
+  "notes": "'candidates' is a genuine distinct state (no exact match but disambiguation options returned) separate from 'empty' ('No parcel found for that address'). GenericFieldRenderer is reached only through ParcelCostTool. A sibling src/app/admin/parcel-cost/error.tsx boundary exists (not counted in loc). Spec 89 Sec 2.3 records the rule that an absent cost-menu line does not mean 'does not fit'. identity.owner is UNRESEARCHED estate-wide: no owner registry exists in the tree, so naming one would be an invention rather than a measurement. a11y.touch_target_min_px is UNRESEARCHED because its vocabulary (UNRESEARCHED or an integer >= 44) has no member for a desktop-only admin page that declares no floor.",
+  "x-draft": {
+    "shard": "admin-existing",
+    "files": [
+      "src/app/admin/parcel-cost/page.tsx",
+      "src/components/admin/ParcelCostTool.tsx",
+      "src/components/admin/GenericFieldRenderer.tsx"
+    ],
+    "loc": 526,
+    "measured_states": [
+      "idle",
+      "loading",
+      "error",
+      "empty",
+      "candidates",
+      "loaded"
+    ],
+    "measured_gate": {
+      "session": "admin",
+      "why": "classifyRoute('/admin/parcel-cost') matches the admin-pages arm via `pathname.startsWith('/admin/')` -> 'admin'. Note the neighbouring consumer contract prefix '/api/parcels' is in AUTHENTICATED_API_ROUTES, but this page calls '/api/admin/parcels/lookup', which classifies 'admin' via the '/api/admin/' arm."
+    }
+  },
+  "programme": {
+    "scope": "parcel_admin",
+    "phase": "B1",
+    "why": "The admin twin of the pilot's contract — the third projection of one payload, and the fastest refutation of \"one contract, N projections\" if the model is wrong.",
+    "feature": "F08",
+    "build_order": 2083,
+    "leakage": "none",
+    "product_questions": "none",
+    "review": {
+      "status": "unreviewed"
+    }
+  }
+}

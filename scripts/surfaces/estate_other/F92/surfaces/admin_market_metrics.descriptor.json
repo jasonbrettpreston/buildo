@@ -1,0 +1,392 @@
+{
+  "kind": "SURFACE",
+  "status": "exists",
+  "docs": {
+    "purpose": "A monthly read on the Toronto construction market for an operator. It opens with headline numbers - permits and dollar value this month against the same month last year, plus the busiest company - then charts twelve months of activity split by permit type and by residential versus commercial, lead volumes across all twenty trades with a year-ago comparison, the mix of work scopes, and which income tiers of neighbourhood are seeing residential permits.",
+    "data_story": "It reads nothing from the database directly. Every value arrives through one contract: `/api/admin/market-metrics`. Behind that contract, the data comes from `mv_monthly_permit_stats`, `neighbourhoods`, `permits` and `trades`.",
+    "under_126": "**RE-PROJECT** — it writes nothing and holds no Layer-3 store, so the move is short — the server already assembles the payload and only the rendering is client-side. It renders through the REPORT renderer (read-only; `outputs` and `state` forced to `\"none\"`, a field whitelist that must equal the contract's), reading by reference: `/api/admin/market-metrics`. It owns no component of its own, so its `owns.components[]` is an empty array — a legal answer, written down."
+  },
+  "evidence": {
+    "files": [
+      "src/app/admin/market-metrics/page.tsx:1",
+      "src/app/admin/market-metrics/page.tsx:5"
+    ],
+    "contracts": [
+      "src/app/api/admin/market-metrics/route.ts:14",
+      "src/app/api/admin/market-metrics/route.ts:28"
+    ],
+    "tables": [
+      "src/lib/market-metrics/queries.ts:19",
+      "src/lib/market-metrics/queries.ts:82",
+      "src/lib/market-metrics/queries.ts:336"
+    ],
+    "gate": [
+      "src/lib/auth/route-guard.ts:162",
+      "src/middleware.ts:95",
+      "src/app/api/admin/market-metrics/route.ts:14"
+    ],
+    "states": [
+      "src/app/admin/market-metrics/page.tsx:1",
+      "src/tests/market-metrics.logic.test.ts:1"
+    ],
+    "emits": [
+      "src/app/admin/market-metrics/page.tsx:1"
+    ]
+  },
+  "identity": {
+    "id": "admin_market_metrics",
+    "route": "src/app/admin/market-metrics/page.tsx",
+    "archetype": "REPORT",
+    "platforms": [
+      "web"
+    ],
+    "owns": {
+      "components": []
+    },
+    "owner": "UNRESEARCHED",
+    "spec": "docs/specs/02-web-admin/26_admin_dashboard.md",
+    "spec_refs": [
+      "docs/specs/02-web-admin/26_admin_dashboard.md §3.3",
+      "docs/specs/02-web-admin/26_admin_dashboard.md §4",
+      "docs/specs/02-web-admin/26_admin_dashboard.md §5"
+    ],
+    "spec_version": "0-draft",
+    "versioning": {
+      "answer": "breaking_allowed",
+      "why": "The six-key payload is typed by interfaces declared inside the page file itself and has exactly one caller, so a shape change is one commit with no Zod mirror to bump.",
+      "evidence": [
+        "src/app/admin/market-metrics/page.tsx:5",
+        "src/app/api/admin/market-metrics/route.ts:28"
+      ]
+    },
+    "ref": "S-058"
+  },
+  "inputs": {
+    "answer": "contract",
+    "why": "One contract, fetched with a bare fetch inside useEffect rather than a named hook — the hook-only sweep would have missed this page entirely.",
+    "evidence": [
+      "src/app/admin/market-metrics/page.tsx:3",
+      "src/app/api/admin/market-metrics/route.ts:14"
+    ],
+    "contract_ref": [
+      "/api/admin/market-metrics"
+    ],
+    "query_key": [],
+    "field_whitelist": [
+      "kpi",
+      "activity",
+      "trades",
+      "residential_vs_commercial",
+      "scope_tags",
+      "neighbourhoods"
+    ],
+    "tables": [
+      {
+        "table": "permits",
+        "columns": [
+          "issued_date",
+          "est_const_cost",
+          "builder_name",
+          "permit_type",
+          "scope_tags",
+          "neighbourhood_id"
+        ],
+        "producing_steps": [
+          "permits",
+          "enrich_permits",
+          "classify_scope",
+          "classify_scope_tags",
+          "classify_scope_class",
+          "link_neighbourhoods"
+        ],
+        "chain_position": "permits[1]",
+        "owner_spec": "docs/specs/01-pipeline/41_chain_permits.md",
+        "evidence": [
+          "src/lib/market-metrics/queries.ts:19",
+          "src/lib/market-metrics/queries.ts:344"
+        ]
+      },
+      {
+        "table": "mv_monthly_permit_stats",
+        "columns": [
+          "month",
+          "permit_type",
+          "permit_count",
+          "total_value"
+        ],
+        "producing_steps": "UNRESEARCHED",
+        "chain_position": "UNRESEARCHED",
+        "owner_spec": "docs/specs/00-architecture/01_database_schema.md §3 (Materialized Views)",
+        "evidence": [
+          "src/lib/market-metrics/queries.ts:82"
+        ]
+      },
+      {
+        "table": "permit_trades",
+        "columns": [
+          "trade_id",
+          "permit_num",
+          "revision_num"
+        ],
+        "producing_steps": [
+          "classify_permits",
+          "backfill_realtor_permit_trades"
+        ],
+        "chain_position": "permits[13]",
+        "owner_spec": "docs/specs/01-pipeline/41_chain_permits.md",
+        "evidence": [
+          "src/lib/market-metrics/queries.ts:143"
+        ]
+      },
+      {
+        "table": "trades",
+        "columns": [
+          "id",
+          "slug",
+          "name",
+          "color",
+          "sort_order"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/00-architecture/01_database_schema.md §3",
+        "evidence": [
+          "src/lib/market-metrics/queries.ts:183"
+        ]
+      },
+      {
+        "table": "neighbourhoods",
+        "columns": [
+          "id",
+          "name",
+          "avg_household_income"
+        ],
+        "producing_steps": [
+          "neighbourhoods"
+        ],
+        "chain_position": "sources[16]",
+        "owner_spec": "docs/specs/01-pipeline/43_chain_sources.md",
+        "evidence": [
+          "src/lib/market-metrics/queries.ts:336"
+        ]
+      }
+    ]
+  },
+  "outputs": {
+    "answer": "none",
+    "why": "Forced on REPORT and true here: the route exports GET only and the page has no form or action.",
+    "evidence": [
+      "src/app/api/admin/market-metrics/route.ts:14"
+    ],
+    "contract_ref": [],
+    "tables": []
+  },
+  "state": {
+    "answer": "none",
+    "why": "It owns no state in any declared layer — no TanStack query, no store, no persistence; the payload lives in component useState for the life of the mount, which Spec 99 §3 has no row for.",
+    "evidence": [
+      "src/app/admin/market-metrics/page.tsx:3"
+    ],
+    "fields": []
+  },
+  "staleness": {
+    "answer": "live",
+    "why": "Each mount issues one uncached fetch straight to the database; there is no cache layer, no polling and no revalidate directive on the route.",
+    "evidence": [
+      "src/app/admin/market-metrics/page.tsx:3",
+      "src/app/api/admin/market-metrics/route.ts:14"
+    ],
+    "stale_time_ms": 0,
+    "offline": "blocked"
+  },
+  "guards": {
+    "session": {
+      "answer": "admin",
+      "why": "The page is on the /admin/* arm, but its contract does NOT import verifyAdminAuth — the only gate left is the presence-only middleware check, so the declared class is stronger than the enforced one.",
+      "evidence": [
+        "src/lib/auth/route-guard.ts:162",
+        "src/middleware.ts:95",
+        "src/app/api/admin/market-metrics/route.ts:14",
+        "src/lib/auth/verify-admin.ts:8"
+      ]
+    },
+    "rls_class": {
+      "answer": "B",
+      "why": "permits, permit_trades, trades, neighbourhoods and the monthly materialized view are none of the ten Class-A tables and are not profiles, so Class B by the §2 default.",
+      "evidence": [
+        "docs/specs/00-architecture/114_rls_policy_catalog.md §2"
+      ]
+    },
+    "disclosure": "none",
+    "entitlement": "none",
+    "flag": "none",
+    "permission": "none",
+    "rate_bucket": "none"
+  },
+  "render": {
+    "targets": [
+      "screen"
+    ],
+    "projection": "list",
+    "breakpoints": "desktop_first_md",
+    "export": "none"
+  },
+  "checks": [
+    {
+      "id": "market_metrics_field_whitelist",
+      "kind": "field_whitelist_parity",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "The route assembles six named keys and every sub-payload is an explicit pick in queries.ts, so the surface's field set must set-equal the contract's projection rather than drifting behind a row spread."
+    },
+    {
+      "id": "market_metrics_empty_state",
+      "kind": "empty_state",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "Empty is per-section here: a chart with no rows renders \"No data\" while the rest of the report still renders, so a blank page is a defect not an empty result."
+    },
+    {
+      "id": "market_metrics_auth_class",
+      "kind": "auth_class_parity",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "why": "DECLARED AND CURRENTLY FAILING: guards.session admin is not enforced by the contract, which calls no verifyAdminAuth."
+    }
+  ],
+  "invariants": "none",
+  "plausibility": "none",
+  "states": [
+    {
+      "name": "loading",
+      "golden": "none"
+    },
+    {
+      "name": "empty",
+      "golden": "none"
+    },
+    {
+      "name": "hit",
+      "golden": "none"
+    },
+    {
+      "name": "error",
+      "golden": "none"
+    }
+  ],
+  "errors": {
+    "answer": "inline",
+    "why": "A failed fetch renders an error block in place of the report; the route's own failure path returns a bare { error } rather than the envelope, so there is nothing structured to render from.",
+    "evidence": [
+      "src/app/admin/market-metrics/page.tsx:3",
+      "src/app/api/admin/market-metrics/route.ts:39"
+    ],
+    "classes": [
+      {
+        "class": "500",
+        "ui": "inline error block replacing the report"
+      }
+    ]
+  },
+  "emits": {
+    "answer": "none",
+    "why": "No captureEvent, no track, no ledger — the page imports nothing from the observability layer.",
+    "evidence": [
+      "src/app/admin/market-metrics/page.tsx:1"
+    ],
+    "analytics": [],
+    "ledger_events": [],
+    "breadcrumbs": []
+  },
+  "offers": {
+    "answer": "none",
+    "why": "An internal operator tool renders no sponsored placement; no offers/placements table is reached from any file it owns.",
+    "evidence": [
+      "src/app/admin/market-metrics/page.tsx:1"
+    ]
+  },
+  "metering": {
+    "answer": "none",
+    "why": "Nothing here is billable or quota-bearing: no usage_events / ledger write is reached from this surface or its contracts.",
+    "evidence": [
+      "src/app/api/admin/market-metrics/route.ts:14"
+    ]
+  },
+  "config": {
+    "answer": "none",
+    "why": "It reads no logic_variables row; every band and threshold in the report is a literal in queries.ts.",
+    "evidence": [
+      "src/lib/market-metrics/queries.ts:19"
+    ],
+    "logic_variables": [],
+    "retired": []
+  },
+  "sharing": {
+    "answer": "sole",
+    "why": "/api/admin/market-metrics has exactly one caller in the tree — this page.",
+    "evidence": [
+      "src/app/admin/market-metrics/page.tsx:3"
+    ],
+    "surfaces": []
+  },
+  "a11y": {
+    "touch_target_min_px": "UNRESEARCHED",
+    "labels": "partial",
+    "dark_mode": "none",
+    "reduced_motion": "none",
+    "i18n": "none",
+    "safe_area": "none"
+  },
+  "deviations": "none",
+  "limitations": [
+    {
+      "what": "A REPORT with no plausibility check",
+      "measured": "Nothing in the tree bounds the numbers this page renders — no SQL plausibility assertion exists for the KPI, activity or neighbourhood payloads, so plausibility is honestly \"none\" rather than a declared set.",
+      "check_id": "market_metrics_field_whitelist"
+    },
+    {
+      "what": "Every chart is hand-rolled from divs and inline SVG",
+      "measured": "No charting library is imported anywhere in the 462-line page, so axis labels and series names have no library-provided accessible structure.",
+      "check_id": "market_metrics_empty_state"
+    },
+    {
+      "what": "touch_target_min_px has no legal answer for a desktop-only admin page",
+      "measured": "The schema allows only UNRESEARCHED or an integer >= 44, and nothing in this surface declares a 44px floor (grep for min-h-[44 / h-11 over its owned files returns nothing).",
+      "check_id": "none — vocabulary gap, escalated per Spec 128 §4"
+    }
+  ],
+  "interpretation": "none",
+  "notes": "Spec 26 Sec 3.3 covers this route by name and its Target Files list both the page and /api/admin/market-metrics/route.ts. 'empty' is per-section: individual charts render 'No data' when their array is empty while the rest of the report still renders. All charts are hand-rolled with divs/SVG - no charting library is imported. DISAGREEMENT (tree wins): src/lib/auth/verify-admin.ts:8 states verifyAdminAuth is the FIRST LINE of every src/app/api/admin/**/route.ts (Spec 33 Sec 5), and the routes this surface calls do not import it at all - the only gate left is the presence-only middleware check, which middleware.ts:108 itself documents as non-cryptographic. identity.owner is UNRESEARCHED estate-wide: no owner registry exists in the tree, so naming one would be an invention rather than a measurement. a11y.touch_target_min_px is UNRESEARCHED because its vocabulary (UNRESEARCHED or an integer >= 44) has no member for a desktop-only admin page that declares no floor.",
+  "x-draft": {
+    "shard": "admin-existing",
+    "files": [
+      "src/app/admin/market-metrics/page.tsx"
+    ],
+    "loc": 462,
+    "measured_states": [
+      "loading",
+      "error",
+      "empty",
+      "loaded"
+    ],
+    "measured_gate": {
+      "session": "admin",
+      "why": "classifyRoute('/admin/market-metrics') matches the admin-pages arm via `pathname.startsWith('/admin/')` -> 'admin'."
+    }
+  },
+  "programme": {
+    "scope": "estate_other",
+    "phase": "not_scheduled",
+    "why": "The other product. Inventoried only, fenced by Spec 128 R-03.",
+    "feature": "F92",
+    "build_order": 4193,
+    "leakage": "UNRESEARCHED",
+    "product_questions": "UNRESEARCHED",
+    "review": {
+      "status": "unreviewed"
+    }
+  }
+}

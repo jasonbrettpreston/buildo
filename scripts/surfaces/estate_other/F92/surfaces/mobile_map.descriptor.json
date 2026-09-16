@@ -1,0 +1,443 @@
+{
+  "kind": "SURFACE",
+  "status": "exists",
+  "docs": {
+    "purpose": "Shows the same nearby permits as the feed, but plotted as coloured pins on a full-screen map instead of a list. Tapping a pin opens that permit's detail page. A small settings button in the corner opens the same distance filter used on the feed. When the user's location is unknown the map centres on downtown Toronto.",
+    "data_story": "It reads nothing from the database directly. Every value arrives through one contract: `/api/leads/feed`. Behind that contract, the data comes from `coa_applications`, `cost_estimates`, `entities`, `entity_projects`, `lead_views`, `neighbourhoods`, `permit_trades`, `permits`, `trade_forecasts`, `trades`, `user_profiles` and `wsib_registry`. It also holds client-side state in `filterStore` and `authStore`, which is the part a server-driven projection has to absorb or justify. It emits **no analytics event**, so nothing it does is currently countable.",
+    "under_126": "**REBUILD** — it holds Layer-3 state (`filterStore` and `authStore`), so a client decision has to be re-homed on the server before the projection can be honest. It renders through the LIST renderer (a collection with declared pagination, recycling and empty/offline states), reading by reference: `/api/leads/feed`. Its `owns.components[]` declares `mobile/src/components/feed/LeadMapPane.tsx`."
+  },
+  "evidence": {
+    "files": [
+      "mobile/app/(app)/map.tsx:1",
+      "mobile/src/components/feed/LeadMapPane.tsx:1"
+    ],
+    "contracts": [
+      "mobile/app/(app)/map.tsx:42",
+      "mobile/src/hooks/useLeadFeed.ts:32"
+    ],
+    "tables": [
+      "src/features/leads/lib/get-lead-feed.ts:243-282",
+      "src/features/leads/lib/get-lead-feed.ts:243-282"
+    ],
+    "gate": [
+      "src/lib/auth/route-guard.ts:120-132",
+      "mobile/app/(app)/_layout.tsx:236-265",
+      "mobile/app/(app)/map.tsx:34-40"
+    ],
+    "states": [
+      "mobile/app/(app)/map.tsx:46-68",
+      "mobile/app/(app)/map.tsx:100-116"
+    ],
+    "emits": [
+      "mobile/app/(app)/map.tsx:1-119 — no track() call in the file"
+    ]
+  },
+  "identity": {
+    "id": "mobile_map",
+    "route": "mobile/app/(app)/map.tsx",
+    "archetype": "LIST",
+    "platforms": [
+      "mobile"
+    ],
+    "owns": {
+      "components": [
+        "mobile/src/components/feed/LeadMapPane.tsx"
+      ]
+    },
+    "owner": "unassigned (no CODEOWNERS file and no owner registry exists in the repo — measured 2026-09-15)",
+    "spec": "docs/specs/03-mobile/91_mobile_lead_feed.md",
+    "spec_refs": [
+      "docs/specs/03-mobile/91_mobile_lead_feed.md §4.2",
+      "docs/specs/03-mobile/99_mobile_state_architecture.md §6.1"
+    ],
+    "spec_version": "0-draft",
+    "versioning": {
+      "answer": "additive_only",
+      "why": "It renders the same LeadFeedResult payload as the feed tab and is bound by the same Zod mirror; a removed field breaks both surfaces together.",
+      "evidence": [
+        "mobile/src/lib/schemas.ts:1-120",
+        "mobile/app/(app)/map.tsx:46-55"
+      ]
+    },
+    "ref": "S-063"
+  },
+  "inputs": {
+    "answer": "contract",
+    "why": "It re-reads the identical [\"lead-feed\", params] query the feed tab populates — no second contract, no device-only source beyond the GPS fix that parameterises the key.",
+    "evidence": [
+      "mobile/app/(app)/map.tsx:37-42",
+      "mobile/src/hooks/useLeadFeed.ts:32"
+    ],
+    "contract_ref": [
+      "/api/leads/feed"
+    ],
+    "query_key": [
+      "lead-feed",
+      "{lat,lng,tradeSlug,radiusKm}"
+    ],
+    "field_whitelist": [
+      "lead_id",
+      "lead_type",
+      "latitude",
+      "longitude",
+      "lifecycle_phase",
+      "address",
+      "opportunity_score"
+    ],
+    "tables": [
+      {
+        "table": "permits",
+        "columns": [
+          "permit_num",
+          "revision_num",
+          "status",
+          "permit_type",
+          "description",
+          "street_num",
+          "street_name",
+          "neighbourhood_id",
+          "lifecycle_phase",
+          "lifecycle_stalled",
+          "latitude",
+          "longitude",
+          "location"
+        ],
+        "producing_steps": [
+          "permits",
+          "enrich_permits",
+          "geocode_permits",
+          "classify_lifecycle_phase",
+          "link_neighbourhoods"
+        ],
+        "chain_position": "permits[1]",
+        "owner_spec": "docs/specs/01-pipeline/41_chain_permits.md",
+        "evidence": [
+          "src/features/leads/lib/get-lead-feed.ts:243-282",
+          "docs/reference/data-lineage-map.md:1001",
+          "scripts/manifest.json#chains.permits"
+        ]
+      },
+      {
+        "table": "permit_trades",
+        "columns": [
+          "permit_num",
+          "revision_num",
+          "trade_id",
+          "phase",
+          "is_active",
+          "confidence",
+          "attachment_basis"
+        ],
+        "producing_steps": [
+          "classify_permits"
+        ],
+        "chain_position": "permits[13]",
+        "owner_spec": "docs/specs/01-pipeline/80_taxonomies.md",
+        "evidence": [
+          "src/features/leads/lib/get-lead-feed.ts:243-282",
+          "docs/reference/data-lineage-map.md:977",
+          "scripts/manifest.json#chains.permits"
+        ]
+      },
+      {
+        "table": "trades",
+        "columns": [
+          "id",
+          "slug"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/01-pipeline/80_taxonomies.md",
+        "evidence": [
+          "src/features/leads/lib/get-lead-feed.ts:243-282",
+          "docs/reference/data-lineage-map.md:1359"
+        ]
+      },
+      {
+        "table": "cost_estimates",
+        "columns": [
+          "permit_num",
+          "revision_num",
+          "cost_tier",
+          "estimated_cost",
+          "cost_range_low",
+          "cost_range_high",
+          "effective_area_sqm"
+        ],
+        "producing_steps": [
+          "compute_cost_estimates"
+        ],
+        "chain_position": "permits[17]",
+        "owner_spec": "docs/specs/01-pipeline/83_lead_cost_model.md",
+        "evidence": [
+          "src/features/leads/lib/get-lead-feed.ts:243-282",
+          "docs/reference/data-lineage-map.md:469",
+          "scripts/manifest.json#chains.permits"
+        ]
+      },
+      {
+        "table": "neighbourhoods",
+        "columns": [
+          "id",
+          "name",
+          "avg_household_income",
+          "median_household_income",
+          "period_of_construction"
+        ],
+        "producing_steps": [
+          "neighbourhoods"
+        ],
+        "chain_position": "sources[16]",
+        "owner_spec": "docs/specs/01-pipeline/57_source_neighbourhoods.md",
+        "evidence": [
+          "src/features/leads/lib/get-lead-feed.ts:252",
+          "docs/reference/data-lineage-map.md:702",
+          "scripts/manifest.json#chains.sources"
+        ]
+      },
+      {
+        "table": "lead_views",
+        "columns": [
+          "user_id",
+          "lead_key",
+          "lead_type",
+          "permit_num",
+          "revision_num",
+          "trade_slug",
+          "saved"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/03-mobile/91_mobile_lead_feed.md",
+        "evidence": [
+          "src/features/leads/lib/get-lead-feed.ts:274-281",
+          "docs/reference/data-lineage-map.md:602",
+          "migrations/230_rls_class_a_entitlements.sql:70-76"
+        ]
+      }
+    ]
+  },
+  "outputs": {
+    "answer": "none",
+    "why": "The map writes nothing: its only interactions are opening the filter sheet (which owns its own write) and pushing to the lead detail route.",
+    "evidence": [
+      "mobile/app/(app)/map.tsx:70-116"
+    ],
+    "contract_ref": [],
+    "tables": []
+  },
+  "state": {
+    "answer": "zustand",
+    "why": "radiusKm and tradeSlug come from the MMKV-persisted filterStore and the query is gated on authStore.accessToken; the only component state is the filter-sheet open boolean.",
+    "evidence": [
+      "mobile/app/(app)/map.tsx:30-35",
+      "mobile/src/store/filterStore.ts:121-122"
+    ],
+    "fields": []
+  },
+  "staleness": {
+    "answer": "query_cache",
+    "why": "Same cache entry as the feed tab — global 5-minute staleTime, 24-hour gcTime; the map never issues its own refetch.",
+    "evidence": [
+      "mobile/src/lib/queryClient.ts:37-44",
+      "mobile/app/(app)/map.tsx:42"
+    ],
+    "offline": "cached_projection",
+    "stale_time_ms": 300000,
+    "gc_time_ms": 86400000
+  },
+  "guards": {
+    "session": {
+      "answer": "authenticated",
+      "why": "Every contract it reaches sits under the `/api/leads` or `/api/user-profile` prefix, which route-guard classifies `authenticated`; the client additionally gates the query on authStore.accessToken so nothing fires before Supabase resolves.",
+      "evidence": [
+        "src/lib/auth/route-guard.ts:120-132",
+        "mobile/app/(app)/map.tsx:34"
+      ]
+    },
+    "rls_class": {
+      "answer": "B",
+      "why": "It reaches the same default-deny pipeline tables as the feed through the same route; nothing user-owned is read except lead_views inside the API layer.",
+      "evidence": [
+        "migrations/227_rls_class_b_default_deny.sql:42-110"
+      ]
+    },
+    "disclosure": "none",
+    "entitlement": {
+      "product": "lead_gen",
+      "statuses": [
+        "trial",
+        "active",
+        "past_due",
+        "admin_managed"
+      ],
+      "on_missing": "paywall"
+    },
+    "flag": "none",
+    "permission": "location",
+    "rate_bucket": "leads-feed:{uid} — 30/min, 60s window (shared bucket with the feed tab)"
+  },
+  "render": {
+    "targets": [
+      "screen"
+    ],
+    "projection": "map",
+    "breakpoints": "mobile_first",
+    "export": "none",
+    "list": "UNRESEARCHED"
+  },
+  "checks": [
+    {
+      "id": "map_contract_parse",
+      "kind": "contract_parse",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "It consumes the payload the feed schema tests already pin (mobile/__tests__/schemas.test.ts, useLeadFeed.test.ts); no map-specific parse exists because there is no map-specific contract."
+    },
+    {
+      "id": "map_empty_state",
+      "kind": "empty_state",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "why": "Measured absence: when the feed returns zero permits the map renders an empty Toronto view with no copy at all — there is no empty state to lock."
+    },
+    {
+      "id": "map_offline_state",
+      "kind": "offline_state",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "OfflineBanner is mounted inside the overlay SafeAreaView (map.tsx:113) and mobile/__tests__/offline.test.ts locks the persister that backs it."
+    }
+  ],
+  "invariants": "none",
+  "plausibility": "none",
+  "states": [
+    {
+      "name": "hit",
+      "golden": "none"
+    },
+    {
+      "name": "empty",
+      "golden": "none"
+    },
+    {
+      "name": "offline",
+      "golden": "none"
+    }
+  ],
+  "errors": {
+    "answer": "none",
+    "why": "The screen destructures only `data` from useLeadFeed — isError is never read, so a failed feed fetch renders an empty map with no error affordance.",
+    "evidence": [
+      "mobile/app/(app)/map.tsx:42"
+    ]
+  },
+  "emits": {
+    "answer": "none",
+    "why": "No track() call exists in map.tsx; tab focus is not instrumented and marker taps emit nothing.",
+    "evidence": [
+      "mobile/app/(app)/map.tsx:1-119"
+    ],
+    "analytics": [],
+    "ledger_events": [],
+    "breadcrumbs": []
+  },
+  "offers": {
+    "answer": "none",
+    "why": "No sponsored placement is rendered: the only slot component in the Expo tree is SponsorSlot, and it returns null unless EXPO_PUBLIC_PARCEL_SPONSORS=1.",
+    "evidence": [
+      "mobile/src/components/parcel/SponsorSlot.tsx:16-20"
+    ]
+  },
+  "metering": {
+    "answer": "none",
+    "why": "Nothing here is counted: the Spec 126 §7 usage ledger table does not exist (grep for usage_events in the introspected drizzle schema returns 0 hits), and the only quota-shaped counter, user_profiles.lead_views_count, is incremented solely by POST /api/leads/view, which has no mobile caller.",
+    "evidence": [
+      "src/lib/db/generated/schema.ts — no usage_events table (grep, 2026-09-15)",
+      "src/app/api/leads/view/route.ts:110",
+      "src/features/leads/api/useLeadView.ts:25 — imported only by src/tests/useLeadView.logic.test.tsx"
+    ]
+  },
+  "config": {
+    "answer": "none",
+    "why": "The surface consumes no registered logic variable: the only server-side tunable in this path, user_profiles.radius_cap_km, is a per-user admin column, not a logic_variables row.",
+    "evidence": [
+      "src/lib/userProfile.schema.ts:40",
+      "src/app/api/user-profile/route.ts:328",
+      "docs/reference/logic-variables-registry.md — no radius_cap_km entry"
+    ],
+    "logic_variables": [],
+    "retired": []
+  },
+  "sharing": {
+    "answer": "shared",
+    "why": "It is the second renderer of /api/leads/feed — the property MAX-SERVER-SIDE depends on, since one projection already feeds two visually different surfaces.",
+    "evidence": [
+      "mobile/app/(app)/index.tsx:86",
+      "mobile/app/(app)/map.tsx:42"
+    ],
+    "surfaces": [
+      "mobile_lead_feed"
+    ],
+    "varies_by_surface": "The map consumes only the geo + phase subset of the payload and drops every permit whose latitude or longitude is null."
+  },
+  "a11y": {
+    "touch_target_min_px": 44,
+    "labels": "partial",
+    "dark_mode": "hardcoded",
+    "reduced_motion": "none",
+    "i18n": "none",
+    "safe_area": [
+      "top"
+    ]
+  },
+  "deviations": "none",
+  "limitations": [
+    {
+      "what": "A feed error is invisible on the map: the screen shows an empty Toronto region instead of an error state.",
+      "measured": "map.tsx:42 destructures `{ data }` only — isError/isLoading are never read.",
+      "check_id": "map_empty_state"
+    }
+  ],
+  "interpretation": "none",
+  "notes": "This surface renders three components it does not own — LeadMapPane (owned here), plus LeadFilterSheet and OfflineBanner which are their own census rows. The 44x44 filter FAB is the measured minimum touch target (map.tsx:106).",
+  "x-draft": {
+    "shard": "mobile-product",
+    "files": [
+      "mobile/app/(app)/map.tsx",
+      "mobile/src/components/feed/LeadMapPane.tsx"
+    ],
+    "loc": 119,
+    "call_idiom": "hook",
+    "stores": [
+      "filterStore",
+      "authStore"
+    ],
+    "measured_states": [
+      "loaded_with_markers",
+      "loaded_default_region",
+      "filter_sheet_open"
+    ],
+    "measured_gate": {
+      "session": "required",
+      "entitlement": "subscription_status",
+      "flag": "none",
+      "permission": "location"
+    }
+  },
+  "programme": {
+    "scope": "estate_other",
+    "phase": "not_scheduled",
+    "why": "A lead-gen surface. Inventoried only.",
+    "feature": "F92",
+    "build_order": 4193,
+    "leakage": "UNRESEARCHED",
+    "product_questions": "UNRESEARCHED",
+    "review": {
+      "status": "unreviewed"
+    }
+  }
+}

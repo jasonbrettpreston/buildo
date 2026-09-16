@@ -1,0 +1,499 @@
+{
+  "kind": "SURFACE",
+  "status": "exists",
+  "docs": {
+    "purpose": "The full story of one building lot, assembled for a homeowner or buyer. It shows the lot size and how much floor area can legally be built, a menu of what different kinds of work would cost, a summary of what neighbours have built, real nearby examples with their density and build type, and any applications currently in front of the committee of adjustment. Nothing on this page can be edited or saved; it only reads.",
+    "data_story": "It reads nothing from the database directly. Every value arrives through one contract: `/api/parcels/lookup`. Behind that contract, the data comes from `address_points`, `coa_applications`, `entitlements`, `parcel_address_points`, `parcels` and `user_profiles`. It holds no client-side store, so there is no local copy of server state to keep in sync. It emits **no analytics event**, so nothing it does is currently countable.",
+    "under_126": "**RE-PROJECT** — it writes nothing and holds no Layer-3 store, so the move is short — the server already assembles the payload and only the rendering is client-side. It renders through the REPORT renderer (read-only; `outputs` and `state` forced to `\"none\"`, a field whitelist that must equal the contract's), reading by reference: `/api/parcels/lookup`. It owns no component of its own, so its `owns.components[]` is an empty array — a legal answer, written down."
+  },
+  "evidence": {
+    "files": [
+      "mobile/app/(app)/parcel-tool/[parcelId].tsx:1"
+    ],
+    "contracts": [
+      "mobile/src/hooks/useParcelLookup.ts:75-83",
+      "mobile/app/(app)/parcel-tool/[parcelId].tsx:75"
+    ],
+    "tables": [
+      "src/lib/admin/parcel-lookup.ts:222-226",
+      "src/lib/admin/parcel-lookup.ts:230-243",
+      "src/lib/parcels/consumer-lookup.ts:254-320"
+    ],
+    "gate": [
+      "src/app/api/parcels/lookup/route.ts:47-60",
+      "src/app/api/parcels/lookup/route.ts:71-76"
+    ],
+    "states": [
+      "mobile/app/(app)/parcel-tool/[parcelId].tsx:88-110",
+      "mobile/app/(app)/parcel-tool/[parcelId].tsx:147-160"
+    ],
+    "emits": [
+      "mobile/app/(app)/parcel-tool/[parcelId].tsx:1-231 — no track() call in the file"
+    ]
+  },
+  "identity": {
+    "id": "mobile_parcel_detail",
+    "route": "mobile/app/(app)/parcel-tool/[parcelId].tsx",
+    "archetype": "REPORT",
+    "platforms": [
+      "mobile"
+    ],
+    "owns": {
+      "components": []
+    },
+    "owner": "unassigned (no CODEOWNERS file and no owner registry exists in the repo — measured 2026-09-15)",
+    "spec": "docs/specs/03-mobile/100_mobile_parcel_cost_tool.md",
+    "spec_refs": [
+      "docs/specs/03-mobile/100_mobile_parcel_cost_tool.md §4",
+      "docs/specs/03-mobile/100_mobile_parcel_cost_tool.md §3.2",
+      "docs/specs/03-mobile/100_mobile_parcel_cost_tool.md §8",
+      "docs/specs/01-pipeline/88_parcel_cost_model.md",
+      "docs/specs/02-web-admin/126_maxbld_surface_standard.md §11"
+    ],
+    "spec_version": "0-draft",
+    "versioning": {
+      "answer": "frozen",
+      "why": "The parcel object is .strict() on the server AND re-parsed .strict() on the client; Spec 100 §3.2 calls the field set a WHITELIST and §6 requires a test to enforce it, so any shape change is a coordinated break.",
+      "evidence": [
+        "src/app/api/parcels/lookup/types.ts:72-90",
+        "src/app/api/parcels/lookup/route.ts:125",
+        "docs/specs/03-mobile/100_mobile_parcel_cost_tool.md §3.2"
+      ]
+    },
+    "ref": "S-001"
+  },
+  "inputs": {
+    "answer": "contract",
+    "why": "One GET /api/parcels/lookup?parcelId= supplies the entire report — envelope headlines, the cost menu, the neighbourhood picture and the CoA list; nothing is computed on the device beyond unit formatting.",
+    "evidence": [
+      "mobile/src/hooks/useParcelLookup.ts:75-83",
+      "mobile/app/(app)/parcel-tool/[parcelId].tsx:112-116"
+    ],
+    "contract_ref": [
+      "/api/parcels/lookup"
+    ],
+    "query_key": [
+      "parcel-lookup",
+      "parcelId"
+    ],
+    "field_whitelist": [
+      "parcel.parcelId",
+      "parcel.costMenu.menu",
+      "parcel.costMenu.scalars",
+      "parcel.areas.lot_size_sqm",
+      "parcel.areas.lot_size_sqft",
+      "parcel.areas.max_buildable_gfa_sqm",
+      "parcel.areas.max_buildable_footprint_sqm",
+      "parcel.areas.opt_aor_gfa_sqm",
+      "parcel.areas.opt_aor_storeys",
+      "parcel.areas.opt_coa_gfa_sqm",
+      "parcel.areas.opt_coa_storeys",
+      "parcel.areas.max_build_stories",
+      "parcel.areas.max_build_fsi",
+      "parcel.areas.coa_fsi",
+      "parcel.areas.envelope_constrained",
+      "parcel.areas.envelope_constraint_reason",
+      "parcel.neighbourhood.summary",
+      "parcel.neighbourhood.compStats",
+      "parcel.neighbourhood.comparableBuilds",
+      "parcel.neighbourhood.coaProjects",
+      "match.address",
+      "warnings"
+    ],
+    "tables": [
+      {
+        "table": "parcels",
+        "columns": "all",
+        "producing_steps": [
+          "parcels",
+          "enrich_parcels",
+          "compute_parcel_cost_estimates",
+          "compute_centroids",
+          "enrich_centreline",
+          "enrich_heritage",
+          "enrich_ravines"
+        ],
+        "chain_position": "sources[4]",
+        "owner_spec": "docs/specs/01-pipeline/55_source_parcels.md",
+        "evidence": [
+          "src/lib/admin/parcel-lookup.ts:222-226",
+          "src/lib/admin/parcel-lookup.ts:112-121",
+          "docs/reference/data-lineage-map.md:761",
+          "scripts/manifest.json#chains.sources"
+        ]
+      },
+      {
+        "table": "coa_applications",
+        "columns": [
+          "application_number",
+          "address",
+          "status",
+          "decision",
+          "decision_date",
+          "hearing_date",
+          "description",
+          "project_type",
+          "modeled_gfa_sqm",
+          "estimated_cost",
+          "neighbourhood_id"
+        ],
+        "producing_steps": [
+          "coa",
+          "link_coa_to_parcels",
+          "classify_coa_scope",
+          "compute_coa_cost_estimates"
+        ],
+        "chain_position": "coa[1]",
+        "owner_spec": "docs/specs/01-pipeline/42_chain_coa.md",
+        "evidence": [
+          "src/lib/admin/parcel-lookup.ts:232-241",
+          "docs/reference/data-lineage-map.md:316",
+          "scripts/manifest.json#chains.coa"
+        ]
+      }
+    ]
+  },
+  "outputs": {
+    "answer": "none",
+    "why": "REPORT: read-only by construction. The screen has no mutation, no store write and no device write — the SponsorSlot it reserves returns null rather than recording an impression.",
+    "evidence": [
+      "mobile/app/(app)/parcel-tool/[parcelId].tsx:72-231",
+      "mobile/src/components/parcel/SponsorSlot.tsx:16-20"
+    ],
+    "contract_ref": [],
+    "tables": []
+  },
+  "state": {
+    "answer": "none",
+    "why": "Explicitly stateless — the file header declares \"Read-only; NO Layer-3 store\", and the only hook is useParcelLookup.",
+    "evidence": [
+      "mobile/app/(app)/parcel-tool/[parcelId].tsx:5",
+      "mobile/app/(app)/parcel-tool/[parcelId].tsx:72-75"
+    ],
+    "fields": []
+  },
+  "staleness": {
+    "answer": "query_cache",
+    "why": "A 60-second staleTime on [\"parcel-lookup\", parcelId]; behind the contract the numbers are a pipeline projection whose real freshness is the sources chain cadence, which the client cannot see.",
+    "evidence": [
+      "mobile/src/hooks/useParcelLookup.ts:78-82",
+      "scripts/manifest.json#chains.sources"
+    ],
+    "offline": "cached_projection",
+    "stale_time_ms": 60000,
+    "gc_time_ms": 86400000,
+    "producing_step": "compute_parcel_cost_estimates"
+  },
+  "guards": {
+    "session": {
+      "answer": "entitled",
+      "why": "Spec 100 §5: the proprietary cost model is gated server-side — an inactive subscription gets 403 before any DB work, even if a stale client bypasses the UI gate.",
+      "evidence": [
+        "src/app/api/parcels/lookup/route.ts:56-60"
+      ]
+    },
+    "rls_class": {
+      "answer": "B",
+      "why": "parcels and coa_applications are RLS-enabled with zero policies (Class B, default deny); the route reads them as table owner.",
+      "evidence": [
+        "migrations/227_rls_class_b_default_deny.sql:42-110"
+      ]
+    },
+    "disclosure": "none",
+    "entitlement": {
+      "product": "lead_gen",
+      "statuses": [
+        "trial",
+        "active",
+        "past_due",
+        "admin_managed"
+      ],
+      "on_missing": "403"
+    },
+    "flag": "none",
+    "permission": "none",
+    "rate_bucket": "parcels-lookup:{uid} — 30/min, 60s window (separate from the search bucket so heavy typing cannot exhaust the detail budget)"
+  },
+  "render": {
+    "targets": [
+      "screen"
+    ],
+    "projection": "detail",
+    "breakpoints": "mobile_first",
+    "export": "none"
+  },
+  "checks": [
+    {
+      "id": "parceldetail_contract_parse",
+      "kind": "contract_parse",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "mobile/__tests__/useParcelLookup.test.ts pins the hit, the 200-miss and the drift throw; src/tests/consumer-parcel-lookup.infra.test.ts pins the server side of the same shape."
+    },
+    {
+      "id": "parceldetail_field_whitelist_parity",
+      "kind": "field_whitelist_parity",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "why": "Spec 100 §3.2 names the whitelist and the .strict() boundary parse at route.ts:125 rejects any Tier-3 `groups` leak before the payload leaves the server."
+    },
+    {
+      "id": "parceldetail_absent_vs_nofit",
+      "kind": "empty_state",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "mobile/__tests__/parcelCostFormat.test.ts locks costLineState so an absent line renders \"n/a\" and a non-fitting line renders \"doesn't fit this lot\" — conflating them would tell a homeowner their lot cannot take a build it can."
+    },
+    {
+      "id": "parceldetail_maxbuild_basis_label",
+      "kind": "render_target_parity",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "maxBuildBasisLabel relabels the max_build line \"maximum envelope\" when the value fell back to opt_aor; parcelCostFormat.test.ts pins it so the card never presents a fallback as a computed optimum."
+    },
+    {
+      "id": "parceldetail_offers_disclosure",
+      "kind": "disclosure",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "why": "The reserved SponsorSlot returns null in v1, so there is nothing to disclose today; the check is declared now so the first sponsor render cannot ship without the advertising label."
+    },
+    {
+      "id": "parceldetail_a11y_label",
+      "kind": "a11y_label",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "Measured zero accessibility attributes on the screen, including the back button; declared FAIL with no implementation."
+    }
+  ],
+  "invariants": "none",
+  "plausibility": [
+    {
+      "id": "parcel_menu_absent_is_not_nofit",
+      "sql": "SELECT count(*) FROM parcels WHERE parcel_cost_menu IS NULL",
+      "severity": "INFO",
+      "why": "A null cost menu must render \"Cost menu not yet computed\", never \"doesn't fit this lot\" — absent is not the same as fits:false (Spec 100 §4). The count is descriptive: it is the size of the not-yet-computed tail, not a defect count."
+    },
+    {
+      "id": "parcel_fsi_bound",
+      "sql": "SELECT count(*) FROM parcels WHERE max_build_fsi IS NOT NULL AND (max_build_fsi <= 0 OR max_build_fsi > 5)",
+      "severity": "FAIL",
+      "why": "The detail screen prints max_build_fsi verbatim as a headline; a borrowed-from-a-sliver FSI is the exact class of defect the parcel sanity audit was built for, and this screen has no client-side bound."
+    },
+    {
+      "id": "parcel_gfa_within_lot",
+      "sql": "SELECT count(*) FROM parcels WHERE max_buildable_footprint_sqm IS NOT NULL AND lot_size_sqm IS NOT NULL AND max_buildable_footprint_sqm > lot_size_sqm",
+      "severity": "FAIL",
+      "why": "Footprint can never exceed the lot it sits on; the screen renders both headlines side by side, so a violation is visible to the user before it is visible to us."
+    }
+  ],
+  "states": [
+    {
+      "name": "loading",
+      "golden": "none"
+    },
+    {
+      "name": "hit",
+      "golden": "none"
+    },
+    {
+      "name": "miss",
+      "golden": "none"
+    },
+    {
+      "name": "partial",
+      "golden": "none"
+    },
+    {
+      "name": "error",
+      "golden": "none"
+    },
+    {
+      "name": "unauthorized",
+      "golden": "none"
+    }
+  ],
+  "errors": {
+    "answer": "inline",
+    "why": "One inline block covers both failures, with copy that distinguishes them: \"Could not load this parcel\" on isError, \"No parcel found.\" when the lookup returned a clean miss.",
+    "evidence": [
+      "mobile/app/(app)/parcel-tool/[parcelId].tsx:99-110"
+    ],
+    "classes": [
+      {
+        "class": "403",
+        "ui": "Inline \"Could not load this parcel. Pull back and try again.\" — the subscription refusal is not named to the user."
+      },
+      {
+        "class": "429",
+        "ui": "Same inline error block; the retry-after seconds the search screen renders are dropped here."
+      },
+      {
+        "class": "500",
+        "ui": "Same inline error block."
+      },
+      {
+        "class": "schema_drift",
+        "ui": "ParcelLookupSchemaError — not retried, same inline error block."
+      }
+    ],
+    "no_retry": [
+      "ApiError(400)",
+      "ApiError(403)",
+      "RateLimitError",
+      "AccountDeletedError",
+      "ParcelLookupSchemaError"
+    ]
+  },
+  "emits": {
+    "answer": "none",
+    "why": "Nothing about opening a parcel report is countable: no PostHog event, no ledger row, and no usage_events table exists to receive one — which for the pilot REPORT of Spec 126 §11 is the gap the standard exists to close.",
+    "evidence": [
+      "mobile/app/(app)/parcel-tool/[parcelId].tsx:1-231",
+      "docs/specs/02-web-admin/126_maxbld_surface_standard.md §7"
+    ],
+    "analytics": [],
+    "ledger_events": [],
+    "breadcrumbs": []
+  },
+  "offers": {
+    "answer": "slots",
+    "why": "The layout claims a named sponsor region (Spec 100 §8) even though v1 renders null — the position is reserved so the first sponsor ships into a declared slot rather than a new one.",
+    "evidence": [
+      "mobile/app/(app)/parcel-tool/[parcelId].tsx:227",
+      "mobile/src/components/parcel/SponsorSlot.tsx:10-20"
+    ],
+    "placement": "detail_footer",
+    "inventory_source": "none yet — no placements table exists; the slot is flag-gated off (EXPO_PUBLIC_PARCEL_SPONSORS)",
+    "targeting": [],
+    "disclosure": {
+      "check_id": "parceldetail_offers_disclosure",
+      "severity": "FAIL",
+      "blocking": true
+    },
+    "max_slots": 1
+  },
+  "metering": {
+    "answer": "none",
+    "why": "Nothing here is counted: the Spec 126 §7 usage ledger table does not exist (grep for usage_events in the introspected drizzle schema returns 0 hits), and the only quota-shaped counter, user_profiles.lead_views_count, is incremented solely by POST /api/leads/view, which has no mobile caller.",
+    "evidence": [
+      "src/lib/db/generated/schema.ts — no usage_events table (grep, 2026-09-15)",
+      "src/app/api/leads/view/route.ts:110",
+      "src/features/leads/api/useLeadView.ts:25 — imported only by src/tests/useLeadView.logic.test.tsx"
+    ]
+  },
+  "config": {
+    "answer": "none",
+    "why": "The surface consumes no registered logic variable: the only server-side tunable in this path, user_profiles.radius_cap_km, is a per-user admin column, not a logic_variables row.",
+    "evidence": [
+      "src/lib/userProfile.schema.ts:40",
+      "src/app/api/user-profile/route.ts:328",
+      "docs/reference/logic-variables-registry.md — no radius_cap_km entry"
+    ],
+    "logic_variables": [],
+    "retired": []
+  },
+  "sharing": {
+    "answer": "shared",
+    "why": "It is the parcelId branch of the same route the search screen calls with q — the two surfaces share one contract, one schema and one server-side subscription gate.",
+    "evidence": [
+      "src/app/api/parcels/lookup/route.ts:80-83"
+    ],
+    "surfaces": [
+      "mobile_parcel_search"
+    ],
+    "varies_by_surface": "The detail branch skips address resolution entirely (route.ts:81-83) and is the only branch that assembles the parcel payload."
+  },
+  "a11y": {
+    "touch_target_min_px": 44,
+    "labels": "none",
+    "dark_mode": "hardcoded",
+    "reduced_motion": "none",
+    "i18n": "none",
+    "safe_area": [
+      "top"
+    ]
+  },
+  "deviations": "none",
+  "limitations": [
+    {
+      "what": "The route SELECTs every mapped parcels column — Tier 1, Tier 2 AND all Tier-3 diagnostic groups — and only then drops Tier 3 at the .strict() response parse.",
+      "measured": "src/lib/admin/parcel-lookup.ts:222 builds the SELECT from allMappedColumns(), which is T1 + T2 + every T3_GROUPS key; EXCLUDED_COLS is only geometry/geom.",
+      "check_id": "parceldetail_field_whitelist_parity"
+    },
+    {
+      "what": "Nothing on this screen carries an accessibility label, including the back chevron.",
+      "measured": "grep -c \"accessibilityLabel|accessibilityRole\" mobile/app/(app)/parcel-tool/[parcelId].tsx → 0.",
+      "check_id": "parceldetail_a11y_label"
+    },
+    {
+      "what": "The report has no freshness surface: the numbers are a pipeline projection and the screen shows no \"as of\" date.",
+      "measured": "The payload carries no computed_at and the screen renders none; freshness is the sources-chain cadence (compute_parcel_cost_estimates at sources[22]).",
+      "check_id": "parceldetail_contract_parse"
+    }
+  ],
+  "interpretation": "none",
+  "notes": "inputs.tables[parcels].columns is \"all\" deliberately: the projection reads the whole row minus geometry/geom, which is itself the finding — the whitelist is enforced at serialisation, not at the query. This is the Spec 126 §11 pilot REPORT, so its plausibility[] entries are written as real SQL rather than \"none\". SponsorSlot is NOT claimed here — it is its own census row (overlay_sponsor_slot), so this surface owns no component files.",
+  "x-draft": {
+    "shard": "mobile-product",
+    "files": [
+      "mobile/app/(app)/parcel-tool/[parcelId].tsx"
+    ],
+    "loc": 231,
+    "call_idiom": "hook",
+    "stores": [],
+    "measured_states": [
+      "loading_spinner",
+      "error_or_not_found",
+      "loaded",
+      "cost_menu_absent",
+      "cost_line_no_fit",
+      "cost_line_na"
+    ],
+    "measured_gate": {
+      "session": "required",
+      "entitlement": "subscription_status",
+      "flag": "none",
+      "permission": "none"
+    }
+  },
+  "programme": {
+    "scope": "parcel_product",
+    "phase": "B1",
+    "why": "The pilot. `mobile/app/(app)/parcel-tool/[parcelId].tsx`, governed by Spec 100, gated by the parcel entitlement (`parcel_tool`, R-01) and the surface the metered lookup, the PDF target and the sponsor slot all hang off.",
+    "pilot": true,
+    "feature": "F02",
+    "build_order": 1023,
+    "leakage": [
+      {
+        "behaviour": "Gated by the GLOBAL `subscription_status`, which is the lead-gen subscription, rather than by a parcel-tool entitlement. A user paying for lead generation gets the parcel product free; a user who wanted only the parcel product cannot buy it.",
+        "evidence": [
+          "src/app/api/parcels/lookup/route.ts:46-59",
+          "migrations/228_entitlements.sql:32-33"
+        ],
+        "owning_product": "lead_gen",
+        "disposition": "move-to-owner"
+      }
+    ],
+    "product_questions": [
+      {
+        "question": "Is a report that \"derives nothing new\" the product a MaxBLD customer is buying? Every value is an existing pipeline column re-presented; the tool adds no scenario, no comparison and no saved state.",
+        "measured": "Spec 100 §1 states it explicitly: \"It derives nothing new.\" The surface writes nothing, saves nothing and has no Layer-3 store.",
+        "evidence": [
+          "docs/specs/03-mobile/100_mobile_parcel_cost_tool.md:14",
+          "mobile/app/(app)/parcel-tool/[parcelId].tsx:5"
+        ],
+        "spec_says": "By design, and the design is what makes it the lowest-risk pilot. The question is whether the shipped product should stay that way once the standard is proven."
+      }
+    ],
+    "review": {
+      "status": "unreviewed"
+    }
+  }
+}

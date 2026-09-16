@@ -31,6 +31,13 @@ You must strictly adhere to the following stack:
 * **Framework:** Expo SDK (React Native) utilizing Expo Router.
 * **Core Native UI:** `react-native-reanimated` v3 and `react-native-gesture-handler` (required for 60fps animations and swipe gestures).
 * **Styling:** NativeWind v4 (Tailwind CSS for React Native).
+> ⚠️ **AMENDMENT 2026-09-15 (WF1 "Spec 126/127/128 surface standard") — two measured prose-vs-code drifts in this section. Additive; the original lines are retained below, unedited.**
+>
+> 1. **Auth is Supabase, not Firebase.** Measured: `mobile/package.json` declares `@supabase/supabase-js 2.110.7` and **no `@react-native-firebase/*` dependency at all**. The "Firebase Auth via `@react-native-firebase/auth`" line below predates the Supabase migration (Spec 113) and was never updated. Token persistence via Keychain/Keystore is still accurate in substance — it is the provider that is wrong.
+> 2. **There is no monorepo and no `packages/shared-types`.** Measured: no workspace of that name exists in either tree. Zod schemas are **transcribed per tree** today, which is precisely the defect Spec 126 §5.2 closes by *generating* the mobile mirror from the CONTRACT descriptor — the parcel cost contract is currently declared at **four** sites and locked at **one**, and the two Zod declarations disagree in strictness (`src/app/api/parcels/lookup/types.ts` uses `.strict()` six times; `mobile/src/lib/schemas.ts` uses `.passthrough()`/`z.record` five times — the client is looser than the server it mirrors).
+>
+> **§3's "Dumb Glass" prime directive is unaffected and is reinforced** — Spec 126 §5.3 makes it enforceable rather than merely stated, and preserves its optimistic-UI carve-out verbatim.
+
 * **Auth:** Firebase Auth via `@react-native-firebase/auth` (native module). Native Keychain (iOS) / Keystore (Android) handles token persistence; Play Integrity (Android) and APN silent-push (iOS) handle phone-auth bot prevention — no JS-rendered reCAPTCHA. Native dev build required (Spec 98); Expo Go is not supported.
 * **Server State:** `@tanstack/react-query` (v5).
 * **Client State:** `zustand` v5.

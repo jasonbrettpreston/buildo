@@ -1,0 +1,3659 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://buildo.local/schemas/surface.schema.json",
+  "title": "SURFACE descriptor — DRAFT",
+  "x-status": "DRAFT",
+  "x-frozen": false,
+  "x-authored": "2026-09-15",
+  "x-amended": "2026-09-15 — post-research fold: the gaps the researchers hit, closed; the archetype profiles made REAL",
+  "$comment": "DRAFT — NOT FROZEN, NOT WIRED TO ANY RUNTIME. SPEC LINK: docs/specs/02-web-admin/126_maxbld_surface_standard.md §3, §4 (the 21 categories) · §128 R-02 (archetype gates fields), R-13 (owns.components), R-16 (\"none\" carries a why), R-34 (ad policy is checks[], never plausibility[]). EVERY category below answers from a CLOSED menu, on the step.schema.json idiom: \"none\" is a legal ANSWER and never a legal omission; every enum value carries its meaning in its own description; every answer carries a `why` and an `evidence` list. \"UNRESEARCHED\" is a first-class value on every vocabulary so an unresearched estate is COUNTABLE rather than blank — docs/reports/generated/127-surface-registry.md renders the count per row and in its summary. Under Spec 122 R2 the SCHEMA is canonical and prose menus are generated FROM it; that applies here the moment this file is ratified. Ratification is Phase 1. DO NOT set x-frozen true without the freeze artifact and its lock (Spec 124 R-X). ONE SOURCE RULE: this schema is the single source. From it come the TypeScript types (src/lib/surfaces/generated/surface-descriptor.d.ts), the runtime validator the engine and the tests share, the migration assertions, the API contracts, the web/mobile/admin projections, the generated registry, and the Supabase seed. Nothing downstream is hand-written, and nothing downstream is a second declaration. DRAFT SENTINEL: a field marked `x-draft-optional: true` may carry the literal \"UNRESEARCHED\" while the estate is being researched. The registry counts every one of them. No other field may.",
+  "type": "object",
+  "additionalProperties": false,
+  "x-categories": [
+    "identity",
+    "inputs",
+    "outputs",
+    "state",
+    "staleness",
+    "guards",
+    "render",
+    "checks",
+    "invariants",
+    "plausibility",
+    "states",
+    "errors",
+    "emits",
+    "offers",
+    "metering",
+    "config",
+    "sharing",
+    "a11y",
+    "deviations",
+    "limitations",
+    "interpretation"
+  ],
+  "required": [
+    "programme",
+    "kind",
+    "status",
+    "docs",
+    "evidence",
+    "identity",
+    "inputs",
+    "outputs",
+    "state",
+    "staleness",
+    "guards",
+    "render",
+    "checks",
+    "invariants",
+    "plausibility",
+    "states",
+    "errors",
+    "emits",
+    "offers",
+    "metering",
+    "config",
+    "sharing",
+    "a11y",
+    "deviations",
+    "limitations",
+    "interpretation"
+  ],
+  "definitions": {
+    "unresearched": {
+      "const": "UNRESEARCHED",
+      "description": "Nobody has researched this field yet. It is an explicit, countable state — never a blank, never a guess."
+    },
+    "why": {
+      "type": "string",
+      "minLength": 1,
+      "description": "One line saying WHY this answer, in the author's own words. Required on every answer that is not self-evident, and always required on \"none\"."
+    },
+    "evidence": {
+      "x-draft-optional": true,
+      "description": "Citations for this answer: `path:line`, `migrations/NNN_x.sql:line`, or a spec §anchor. A claim with no citation is UNRESEARCHED, whatever it says.",
+      "oneOf": [
+        {
+          "const": "UNRESEARCHED",
+          "description": "Nobody has cited this answer yet. Counted by the registry."
+        },
+        {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 3
+          }
+        }
+      ]
+    },
+    "filePath": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^(src|mobile|scripts|docs|migrations)/"
+    },
+    "tableRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "table",
+        "columns",
+        "producing_steps",
+        "evidence"
+      ],
+      "properties": {
+        "table": {
+          "type": "string",
+          "minLength": 1
+        },
+        "columns": {
+          "oneOf": [
+            {
+              "const": "UNRESEARCHED",
+              "description": "The column subset this entry actually touches has not been researched. The table's FULL column list still renders, from the introspected schema."
+            },
+            {
+              "const": "all",
+              "description": "It reads the whole row — which for a projection is itself a finding."
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "The named columns this entry touches. These are checked against the introspected drizzle schema."
+            }
+          ]
+        },
+        "producing_steps": {
+          "oneOf": [
+            {
+              "const": "UNRESEARCHED",
+              "description": "Which pipeline step writes this table has not been researched."
+            },
+            {
+              "const": "none",
+              "description": "No pipeline step writes it — it is written by an API route, a job, or a migration seed."
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Chain step slugs that WRITE this table, from docs/reference/data-lineage-map.md and the steps' own outputs.writes."
+            }
+          ]
+        },
+        "chain_position": {
+          "anyOf": [
+            {
+              "const": "UNRESEARCHED",
+              "description": "Where in its chain the producing step runs has not been researched."
+            },
+            {
+              "const": "n/a",
+              "description": "No producing step, so no chain position."
+            },
+            {
+              "type": "string",
+              "description": "e.g. `sources[14]` — the chain and slot, from scripts/manifest.json."
+            }
+          ]
+        },
+        "owner_spec": {
+          "type": "string",
+          "description": "The spec that owns this table, or UNRESEARCHED."
+        },
+        "evidence": {
+          "type": "array",
+          "description": "Citations for this answer: `path:line`, `migrations/NNN_x.sql:line`, or a spec §anchor. A claim with no citation is UNRESEARCHED, whatever it says.",
+          "items": {
+            "type": "string",
+            "minLength": 3
+          }
+        }
+      }
+    },
+    "check": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "kind",
+        "severity",
+        "blocking",
+        "why"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "kind": {
+          "oneOf": [
+            {
+              "const": "contract_parse",
+              "description": "The payload parses against the generated Zod mirror of its contract."
+            },
+            {
+              "const": "query_key_hygiene",
+              "description": "The query key is a stable parameterized array, single-param where the archetype demands it."
+            },
+            {
+              "const": "empty_state",
+              "description": "An empty result renders the declared empty state, not a blank screen."
+            },
+            {
+              "const": "error_state",
+              "description": "Each declared error class renders its declared UI."
+            },
+            {
+              "const": "offline_state",
+              "description": "With no network the cached projection renders."
+            },
+            {
+              "const": "touch_target",
+              "description": "Every interactive target meets the 44x44 floor."
+            },
+            {
+              "const": "a11y_label",
+              "description": "Every interactive element carries an accessible label."
+            },
+            {
+              "const": "selector_atomicity",
+              "description": "Store selectors are atomic — no object literal returning a new reference each render."
+            },
+            {
+              "const": "field_whitelist_parity",
+              "description": "The surface's field whitelist set-equals its contract's projection."
+            },
+            {
+              "const": "auth_class_parity",
+              "description": "guards.session agrees with every referenced contract's auth class (R-18)."
+            },
+            {
+              "const": "disclosure",
+              "description": "A sponsored placement is labelled as advertising (R-17: severity FAIL, blocking true, when pre)."
+            },
+            {
+              "const": "ledger_row_present",
+              "description": "A declared metering block actually writes its ledger row (R-23)."
+            },
+            {
+              "const": "render_target_parity",
+              "description": "Every declared render target projects the same shared field set (rule 15)."
+            },
+            {
+              "const": "schema_declared",
+              "description": "Every declared column/index/policy exists in the live catalog, both directions (rule 14)."
+            },
+            {
+              "const": "components_owned",
+              "description": "Every component file is owned by exactly one surface (R-13)."
+            },
+            {
+              "const": "freshness",
+              "description": "The projection it reads is not older than its declared bound."
+            }
+          ]
+        },
+        "severity": {
+          "oneOf": [
+            {
+              "const": "FAIL",
+              "description": "A defect. Expected to be zero; a non-zero count is a bug, not a signal."
+            },
+            {
+              "const": "WARN",
+              "description": "Expected to be permanently non-zero, with a declared machine-observable retighten condition (Spec 124 R-H)."
+            },
+            {
+              "const": "INFO",
+              "description": "Purely descriptive; no threshold could bound it. The why must say so."
+            }
+          ]
+        },
+        "blocking": {
+          "type": "boolean",
+          "description": "ORTHOGONAL to severity. blocking:true forces when:\"pre\" — a pre-render gate rather than a post-render assertion."
+        },
+        "when": {
+          "oneOf": [
+            {
+              "const": "pre",
+              "description": "Runs before the surface renders. Required when blocking is true."
+            },
+            {
+              "const": "post",
+              "description": "Runs after render, against what was produced."
+            }
+          ]
+        },
+        "why": {
+          "type": "string",
+          "minLength": 1,
+          "description": "One line saying WHY this answer, in the author's own words. Required on every answer that is not self-evident, and always required on \"none\"."
+        }
+      }
+    },
+    "sqlCheck": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "sql",
+        "severity",
+        "why"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sql": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Declarative SQL. This is why ad/layout policy can never live here (R-34) — a layout rule has no SQL expression."
+        },
+        "severity": {
+          "enum": [
+            "FAIL",
+            "WARN",
+            "INFO"
+          ]
+        },
+        "why": {
+          "type": "string",
+          "minLength": 1,
+          "description": "One line saying WHY this answer, in the author's own words. Required on every answer that is not self-evident, and always required on \"none\"."
+        },
+        "duration_ms": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "ceiling",
+            "measured_against"
+          ],
+          "properties": {
+            "ceiling": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "measured_against": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Spec 128 rule B3: stated against production scale and production heap state, never a local single sample."
+            }
+          }
+        }
+      }
+    }
+  },
+  "properties": {
+    "identity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "archetype",
+        "platforms",
+        "owns",
+        "owner",
+        "spec",
+        "spec_version",
+        "versioning",
+        "ref"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9_]+$"
+        },
+        "route": {
+          "type": "string"
+        },
+        "archetype": {
+          "x-frozen": false,
+          "description": "LOAD-BEARING (R-02): selects the allOf required-field profile. Not a renderer label.",
+          "oneOf": [
+            {
+              "const": "LIST",
+              "description": "A scrollable collection of like things."
+            },
+            {
+              "const": "DETAIL",
+              "description": "One entity, addressed by id."
+            },
+            {
+              "const": "REPORT",
+              "description": "A read-only assembled report. Writes nothing."
+            },
+            {
+              "const": "SEARCH",
+              "description": "A query box producing candidates."
+            },
+            {
+              "const": "FORM",
+              "description": "Captures and writes user input."
+            },
+            {
+              "const": "WIZARD_STEP",
+              "description": "One ordered step of a flow with resume and skip rules."
+            },
+            {
+              "const": "DASHBOARD",
+              "description": "Tiles that each fetch and degrade independently."
+            },
+            {
+              "const": "GATE",
+              "description": "Renders a block, guard, permission prompt or error instead of content."
+            },
+            {
+              "const": "SLOT",
+              "description": "A sponsored placement drawn from table-backed inventory."
+            },
+            {
+              "const": "STATIC",
+              "description": "Content or a redirect, with no data fetch."
+            },
+            {
+              "const": "SHELL",
+              "description": "A navigation container that routes and guards its children."
+            },
+            {
+              "const": "QUERY",
+              "description": "CONTRACT: a read-only endpoint. outputs forced \"none\"."
+            },
+            {
+              "const": "MUTATION",
+              "description": "CONTRACT: writes, with a declared discipline per target."
+            },
+            {
+              "const": "WEBHOOK",
+              "description": "CONTRACT: called by an external system; verification, closed events, replay guard."
+            },
+            {
+              "const": "COMMAND",
+              "description": "CONTRACT: triggers a JOB or an external action rather than returning data."
+            },
+            {
+              "const": "EXPORT",
+              "description": "CONTRACT: emits a file through the same projection, parity asserted by golden."
+            },
+            {
+              "const": "TRANSLATION",
+              "description": "CONTRACT: declares an id mapping and nothing else. No surface (R-32)."
+            },
+            {
+              "const": "SCHEDULED",
+              "description": "JOB: runs on a cron."
+            }
+          ]
+        },
+        "platforms": {
+          "type": "array",
+          "minItems": 0,
+          "uniqueItems": true,
+          "items": {
+            "oneOf": [
+              {
+                "const": "web",
+                "description": "Renders in the Next.js App Router, server-side (RSC) on Vercel."
+              },
+              {
+                "const": "mobile",
+                "description": "Renders in the Expo/React Native client as a fetched projection — RN has no Server Components."
+              },
+              {
+                "const": "pdf",
+                "description": "Renders to a PDF through the same projection; parity asserted by golden (rule 15)."
+              }
+            ]
+          }
+        },
+        "owns": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "components"
+          ],
+          "properties": {
+            "components": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/filePath"
+              },
+              "description": "R-13: the component files this surface and ONLY this surface renders. Totality both directions — every file in src/components/** and mobile/src/components/** appears exactly once. An independently routable or independently gated component is PROMOTED to its own surface instead. [] is a legal answer."
+            }
+          }
+        },
+        "owner": {
+          "type": "string",
+          "minLength": 1
+        },
+        "spec": {
+          "type": "string",
+          "minLength": 1,
+          "description": "The governing spec path, or UNRESEARCHED."
+        },
+        "spec_refs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Spec section anchors this row is grounded in, e.g. `docs/specs/03-mobile/100_mobile_parcel_cost_tool.md §3.2`."
+        },
+        "spec_version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "versioning": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "answer",
+            "why",
+            "evidence"
+          ],
+          "properties": {
+            "answer": {
+              "oneOf": [
+                {
+                  "const": "UNRESEARCHED",
+                  "description": "Nobody has researched this field yet. It is an explicit, countable state — never a blank, never a guess."
+                },
+                {
+                  "const": "additive_only",
+                  "description": "Fields may be added; none removed or retyped without a new spec_version."
+                },
+                {
+                  "const": "breaking_allowed",
+                  "description": "Consumers are all in-repo and move together; a breaking change is one commit."
+                },
+                {
+                  "const": "frozen",
+                  "description": "The shape is pinned by a golden and a lock; changing it forces a recapture."
+                },
+                {
+                  "const": "none",
+                  "description": "Nothing consumes it yet, so no compatibility promise exists."
+                }
+              ],
+              "x-draft-optional": true
+            },
+            "why": {
+              "type": "string",
+              "minLength": 1,
+              "description": "One line saying WHY this answer, in the author's own words. Required on every answer that is not self-evident, and always required on \"none\"."
+            },
+            "evidence": {
+              "x-draft-optional": true,
+              "description": "Citations for this answer: `path:line`, `migrations/NNN_x.sql:line`, or a spec §anchor. A claim with no citation is UNRESEARCHED, whatever it says.",
+              "oneOf": [
+                {
+                  "const": "UNRESEARCHED",
+                  "description": "Nobody has cited this answer yet. Counted by the registry."
+                },
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 3
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "ref": {
+          "type": "string",
+          "pattern": "^[SCJ]-[0-9]{3}$",
+          "description": "The stable short handle a human uses in conversation and in the legend — S-001 for a surface, C-001 for a contract, J-001 for a job. `identity.id` stays the readable slug because it is load-bearing across filenames, cross-references and the emitted tree; this is the citable index beside it."
+        }
+      }
+    },
+    "inputs": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "answer",
+        "why",
+        "evidence"
+      ],
+      "properties": {
+        "answer": {
+          "oneOf": [
+            {
+              "const": "UNRESEARCHED",
+              "description": "Nobody has researched this field yet. It is an explicit, countable state — never a blank, never a guess."
+            },
+            {
+              "const": "contract",
+              "description": "Every value arrives through one or more declared API contracts."
+            },
+            {
+              "const": "app_outputs",
+              "description": "It reads the materialised projection table written by a pipeline step — the MAX-SERVER-SIDE form."
+            },
+            {
+              "const": "device",
+              "description": "Its inputs are device state only (GPS, permission status, push token)."
+            },
+            {
+              "const": "props",
+              "description": "It is driven entirely by props from its parent surface."
+            },
+            {
+              "const": "none",
+              "description": "It takes no input at all."
+            }
+          ],
+          "x-draft-optional": true
+        },
+        "why": {
+          "type": "string",
+          "minLength": 1,
+          "description": "One line saying WHY this answer, in the author's own words. Required on every answer that is not self-evident, and always required on \"none\"."
+        },
+        "evidence": {
+          "x-draft-optional": true,
+          "description": "Citations for this answer: `path:line`, `migrations/NNN_x.sql:line`, or a spec §anchor. A claim with no citation is UNRESEARCHED, whatever it says.",
+          "oneOf": [
+            {
+              "const": "UNRESEARCHED",
+              "description": "Nobody has cited this answer yet. Counted by the registry."
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 3
+              }
+            }
+          ]
+        },
+        "contract_ref": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Ids or route paths into the CONTRACT registry. NEVER an inline schema. An entry may point at a contract whose own `status` is `designed`; the registry renders that edge DASHED rather than refusing it, so a surface can declare the contract it will need."
+        },
+        "query_key": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "field_whitelist": {
+          "oneOf": [
+            {
+              "const": "UNRESEARCHED"
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          ],
+          "x-draft-optional": true
+        },
+        "tables": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/tableRef"
+          },
+          "description": "Full lineage for every table reached, including the producing pipeline step."
+        }
+      }
+    },
+    "outputs": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "answer",
+        "why",
+        "evidence"
+      ],
+      "properties": {
+        "answer": {
+          "x-draft-optional": true,
+          "anyOf": [
+            {
+              "const": "UNRESEARCHED",
+              "description": "Nobody has researched this field yet. It is an explicit, countable state — never a blank, never a guess."
+            },
+            {
+              "const": "none",
+              "description": "It writes nothing. Forced on REPORT, GATE, SLOT, STATIC and SHELL."
+            },
+            {
+              "const": "contract_only",
+              "description": "It writes through a declared MUTATION contract and waits for the server."
+            },
+            {
+              "const": "optimistic_then_contract",
+              "description": "It flips the UI first and reconciles — the one client-side write Spec 90 §3 encourages by name."
+            },
+            {
+              "const": "device_only",
+              "description": "It writes device state only — a permission, a token, a cached preference."
+            },
+            {
+              "const": "direct_db",
+              "description": "Writes straight to the database with no contract in between — the honest answer for a JOB and for a pipeline step. It is deliberately NOT available to a SURFACE: a screen that writes directly is the defect this standard exists to retire."
+            }
+          ]
+        },
+        "why": {
+          "type": "string",
+          "minLength": 1,
+          "description": "One line saying WHY this answer, in the author's own words. Required on every answer that is not self-evident, and always required on \"none\"."
+        },
+        "evidence": {
+          "x-draft-optional": true,
+          "description": "Citations for this answer: `path:line`, `migrations/NNN_x.sql:line`, or a spec §anchor. A claim with no citation is UNRESEARCHED, whatever it says.",
+          "oneOf": [
+            {
+              "const": "UNRESEARCHED",
+              "description": "Nobody has cited this answer yet. Counted by the registry."
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 3
+              }
+            }
+          ]
+        },
+        "contract_ref": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "rollback": {
+          "type": "string"
+        },
+        "invalidates": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "tables": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/tableRef"
+          }
+        }
+      }
+    },
+    "state": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "answer",
+        "why",
+        "evidence"
+      ],
+      "properties": {
+        "answer": {
+          "oneOf": [
+            {
+              "const": "UNRESEARCHED",
+              "description": "Nobody has researched this field yet. It is an explicit, countable state — never a blank, never a guess."
+            },
+            {
+              "const": "server_only",
+              "description": "All state is server-owned; the client holds no copy."
+            },
+            {
+              "const": "query_cache",
+              "description": "Cached server state in TanStack Query — Layer 2 only."
+            },
+            {
+              "const": "zustand",
+              "description": "A Layer-3 store holds genuinely local UX state."
+            },
+            {
+              "const": "mmkv",
+              "description": "Persisted unencrypted on device (Layer 4a)."
+            },
+            {
+              "const": "securestore",
+              "description": "Persisted encrypted (Layer 4b) — credentials only."
+            },
+            {
+              "const": "shared_value",
+              "description": "Reanimated SharedValue; UI-only, never gates routing (Layer 5)."
+            },
+            {
+              "const": "none",
+              "description": "It holds no state of its own. Forced on REPORT."
+            }
+          ],
+          "x-draft-optional": true
+        },
+        "why": {
+          "type": "string",
+          "minLength": 1,
+          "description": "One line saying WHY this answer, in the author's own words. Required on every answer that is not self-evident, and always required on \"none\"."
+        },
+        "evidence": {
+          "x-draft-optional": true,
+          "description": "Citations for this answer: `path:line`, `migrations/NNN_x.sql:line`, or a spec §anchor. A claim with no citation is UNRESEARCHED, whatever it says.",
+          "oneOf": [
+            {
+              "const": "UNRESEARCHED",
+              "description": "Nobody has cited this answer yet. Counted by the registry."
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 3
+              }
+            }
+          ]
+        },
+        "fields": {
+          "type": "array",
+          "description": "Spec 99 §3's normative matrix as data — one row per field.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "owner_layer",
+              "canonical_writer",
+              "authorized_readers",
+              "bridge",
+              "persistence",
+              "signout_reset"
+            ],
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "owner_layer": {
+                "enum": [
+                  "1_server",
+                  "2_query_cache",
+                  "3_zustand",
+                  "4a_mmkv",
+                  "4b_securestore",
+                  "5_shared_value"
+                ]
+              },
+              "canonical_writer": {
+                "type": "string"
+              },
+              "authorized_readers": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "bridge": {
+                "enum": [
+                  "B1",
+                  "B2",
+                  "B3",
+                  "B4",
+                  "B5",
+                  "B6",
+                  "none"
+                ]
+              },
+              "persistence": {
+                "enum": [
+                  "mmkv",
+                  "securestore",
+                  "none"
+                ]
+              },
+              "signout_reset": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      }
+    },
+    "staleness": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "answer",
+        "why",
+        "evidence"
+      ],
+      "properties": {
+        "answer": {
+          "oneOf": [
+            {
+              "const": "UNRESEARCHED",
+              "description": "Nobody has researched this field yet. It is an explicit, countable state — never a blank, never a guess."
+            },
+            {
+              "const": "live",
+              "description": "Read on every request; no caching layer between the surface and the database."
+            },
+            {
+              "const": "query_cache",
+              "description": "Served from the TanStack cache under a declared TTL, refetched on the declared triggers."
+            },
+            {
+              "const": "snapshot",
+              "description": "Served from a materialised projection written by a named pipeline step; freshness is that step's cadence."
+            },
+            {
+              "const": "static",
+              "description": "Build-time content that does not change between deploys."
+            },
+            {
+              "const": "none",
+              "description": "It displays no server data, so staleness does not apply."
+            }
+          ],
+          "x-draft-optional": true
+        },
+        "why": {
+          "type": "string",
+          "minLength": 1,
+          "description": "One line saying WHY this answer, in the author's own words. Required on every answer that is not self-evident, and always required on \"none\"."
+        },
+        "evidence": {
+          "x-draft-optional": true,
+          "description": "Citations for this answer: `path:line`, `migrations/NNN_x.sql:line`, or a spec §anchor. A claim with no citation is UNRESEARCHED, whatever it says.",
+          "oneOf": [
+            {
+              "const": "UNRESEARCHED",
+              "description": "Nobody has cited this answer yet. Counted by the registry."
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 3
+              }
+            }
+          ]
+        },
+        "stale_time_ms": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "gc_time_ms": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "producing_step": {
+          "type": "string",
+          "description": "For `snapshot`: the step slug whose run defines freshness."
+        },
+        "offline": {
+          "oneOf": [
+            {
+              "const": "UNRESEARCHED",
+              "description": "Nobody has researched this field yet. It is an explicit, countable state — never a blank, never a guess."
+            },
+            {
+              "const": "cached_projection",
+              "description": "The last projection renders from the on-device cache."
+            },
+            {
+              "const": "degraded",
+              "description": "It renders with a declared subset and says so."
+            },
+            {
+              "const": "blocked",
+              "description": "It refuses to render and shows the offline state."
+            },
+            {
+              "const": "none",
+              "description": "Offline is not a reachable state for this entry."
+            }
+          ],
+          "x-draft-optional": true
+        }
+      }
+    },
+    "guards": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "session",
+        "rls_class",
+        "entitlement",
+        "flag",
+        "permission",
+        "rate_bucket"
+      ],
+      "properties": {
+        "session": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "answer",
+            "why",
+            "evidence"
+          ],
+          "properties": {
+            "answer": {
+              "x-draft-optional": true,
+              "anyOf": [
+                {
+                  "const": "UNRESEARCHED",
+                  "description": "Nobody has researched this field yet. It is an explicit, countable state — never a blank, never a guess."
+                },
+                {
+                  "const": "anon",
+                  "description": "Reachable with no session at all. Requires a disclosure block naming the exact projected field set (R-16)."
+                },
+                {
+                  "const": "authenticated",
+                  "description": "Any signed-in user."
+                },
+                {
+                  "const": "entitled",
+                  "description": "A signed-in user holding a named entitlement product in an allowed status."
+                },
+                {
+                  "const": "admin",
+                  "description": "The profiles.is_admin flag, checked in the policy predicate — there is no admin Postgres role."
+                },
+                {
+                  "const": "role",
+                  "description": "A named non-user principal scoped by a membership key rather than auth.uid() — today only `advertiser` (Spec 128 R-10, RLS class D). The name goes in `role_name`."
+                },
+                {
+                  "const": "system",
+                  "description": "No session at all, and no end user: a JOB running as the service role or the table owner. Distinct from `anon`, which IS an end user."
+                }
+              ]
+            },
+            "why": {
+              "type": "string",
+              "minLength": 1,
+              "description": "One line saying WHY this answer, in the author's own words. Required on every answer that is not self-evident, and always required on \"none\"."
+            },
+            "evidence": {
+              "x-draft-optional": true,
+              "description": "Citations for this answer: `path:line`, `migrations/NNN_x.sql:line`, or a spec §anchor. A claim with no citation is UNRESEARCHED, whatever it says.",
+              "oneOf": [
+                {
+                  "const": "UNRESEARCHED",
+                  "description": "Nobody has cited this answer yet. Counted by the registry."
+                },
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 3
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "rls_class": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "answer",
+            "why",
+            "evidence"
+          ],
+          "properties": {
+            "answer": {
+              "x-draft-optional": true,
+              "anyOf": [
+                {
+                  "const": "UNRESEARCHED",
+                  "description": "Nobody has researched this field yet. It is an explicit, countable state — never a blank, never a guess."
+                },
+                {
+                  "const": "A",
+                  "description": "User-owned rows, policies keyed on auth.uid()."
+                },
+                {
+                  "const": "B",
+                  "description": "RLS enabled with ZERO policies — default deny, service-role only. The default for anything not named A, C or D."
+                },
+                {
+                  "const": "C",
+                  "description": "The profiles table: self-read and self-update minus the escalation flag, trigger-guarded."
+                },
+                {
+                  "const": "D",
+                  "description": "Owner-scoped by a NON-user key such as advertiser_id (Spec 114 §2 amendment, R-10)."
+                },
+                {
+                  "const": "none",
+                  "description": "It reaches no table, so no class applies."
+                },
+                {
+                  "const": "E",
+                  "description": "Publicly readable REFERENCE data — a closed, non-personal lookup set (trades, neighbourhoods, taxonomy rows) that anon may SELECT and nobody but the pipeline may write. MEASURED as a genuine gap: Spec 114 §2 is definitionally closed, and none of its three classes fits — it is not auth.uid()-owned (not A), it cannot be deny-all because anon must read it (not B), and it is not `profiles` (not C). Landed by a dated amendment to Spec 114 §2 alongside class D."
+                },
+                {
+                  "const": "system",
+                  "description": "Reached only by the service role or the table owner — a JOB or a pipeline step. No end-user principal reaches it at all, so no policy expresses the access."
+                }
+              ]
+            },
+            "why": {
+              "type": "string",
+              "minLength": 1,
+              "description": "One line saying WHY this answer, in the author's own words. Required on every answer that is not self-evident, and always required on \"none\"."
+            },
+            "evidence": {
+              "x-draft-optional": true,
+              "description": "Citations for this answer: `path:line`, `migrations/NNN_x.sql:line`, or a spec §anchor. A claim with no citation is UNRESEARCHED, whatever it says.",
+              "oneOf": [
+                {
+                  "const": "UNRESEARCHED",
+                  "description": "Nobody has cited this answer yet. Counted by the registry."
+                },
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 3
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "disclosure": {
+          "oneOf": [
+            {
+              "const": "UNRESEARCHED"
+            },
+            {
+              "const": "none",
+              "description": "No unauthenticated exposure to disclose."
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "fields",
+                "why"
+              ],
+              "properties": {
+                "fields": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "why": {
+                  "type": "string",
+                  "minLength": 1,
+                  "description": "One line saying WHY this answer, in the author's own words. Required on every answer that is not self-evident, and always required on \"none\"."
+                }
+              }
+            }
+          ],
+          "x-draft-optional": true
+        },
+        "entitlement": {
+          "oneOf": [
+            {
+              "const": "UNRESEARCHED"
+            },
+            {
+              "const": "none",
+              "description": "No product gate."
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "product",
+                "statuses",
+                "on_missing"
+              ],
+              "properties": {
+                "product": {
+                  "oneOf": [
+                    {
+                      "const": "lead_gen",
+                      "description": "The shipped lead-generation product."
+                    },
+                    {
+                      "const": "flight_center",
+                      "description": "The flight-centre product."
+                    },
+                    {
+                      "const": "parcel_tool",
+                      "description": "The parcel/lot tool as its own metered product (R-01)."
+                    },
+                    {
+                      "const": "agent_reports",
+                      "description": "Agent report sharing — an entitlement, never a DB role (R-09)."
+                    }
+                  ]
+                },
+                "statuses": {
+                  "type": "array",
+                  "items": {
+                    "enum": [
+                      "trial",
+                      "active",
+                      "past_due",
+                      "expired",
+                      "cancelled_pending_deletion",
+                      "admin_managed"
+                    ]
+                  }
+                },
+                "on_missing": {
+                  "oneOf": [
+                    {
+                      "const": "402",
+                      "description": "Payment required."
+                    },
+                    {
+                      "const": "403",
+                      "description": "Forbidden."
+                    },
+                    {
+                      "const": "paywall",
+                      "description": "Render the paywall surface instead of the content."
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "x-draft-optional": true
+        },
+        "flag": {
+          "x-draft-optional": true,
+          "anyOf": [
+            {
+              "const": "UNRESEARCHED"
+            },
+            {
+              "const": "none"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "permission": {
+          "oneOf": [
+            {
+              "const": "UNRESEARCHED",
+              "description": "Nobody has researched this field yet. It is an explicit, countable state — never a blank, never a guess."
+            },
+            {
+              "const": "location",
+              "description": "Requires the device location permission."
+            },
+            {
+              "const": "notification",
+              "description": "Requires the push notification permission."
+            },
+            {
+              "const": "none",
+              "description": "Requires no device permission."
+            }
+          ],
+          "x-draft-optional": true
+        },
+        "rate_bucket": {
+          "x-draft-optional": true,
+          "anyOf": [
+            {
+              "const": "UNRESEARCHED"
+            },
+            {
+              "const": "none"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "role_name": {
+          "x-draft-optional": true,
+          "anyOf": [
+            {
+              "const": "UNRESEARCHED",
+              "description": "Nobody has researched this yet. Counted by the registry."
+            },
+            {
+              "type": "string",
+              "description": "The named principal when `session` is `role` — e.g. `advertiser`."
+            }
+          ]
+        },
+        "statuses_handled": {
+          "x-draft-optional": true,
+          "anyOf": [
+            {
+              "const": "UNRESEARCHED",
+              "description": "Nobody has researched this yet. Counted by the registry."
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          ]
+        }
+      }
+    },
+    "render": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "targets",
+        "projection",
+        "breakpoints",
+        "export"
+      ],
+      "properties": {
+        "targets": {
+          "anyOf": [
+            {
+              "const": "none",
+              "description": "Renders nothing at all — the correct answer for a CONTRACT and a JOB. It is not an omission and not an oversight."
+            },
+            {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "oneOf": [
+                  {
+                    "const": "screen",
+                    "description": "Rendered on screen."
+                  },
+                  {
+                    "const": "pdf",
+                    "description": "Rendered into a PDF document."
+                  },
+                  {
+                    "const": "csv",
+                    "description": "Emitted as a CSV export."
+                  },
+                  {
+                    "const": "email",
+                    "description": "Rendered into an email body."
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "projection": {
+          "oneOf": [
+            {
+              "const": "UNRESEARCHED",
+              "description": "Nobody has researched this field yet. It is an explicit, countable state — never a blank, never a guess."
+            },
+            {
+              "const": "list",
+              "description": "A vertical collection."
+            },
+            {
+              "const": "map",
+              "description": "The same payload drawn on a map — a projection, NOT an archetype."
+            },
+            {
+              "const": "grid",
+              "description": "A tiled collection."
+            },
+            {
+              "const": "detail",
+              "description": "One entity laid out in sections."
+            },
+            {
+              "const": "none",
+              "description": "Nothing is projected."
+            }
+          ],
+          "x-draft-optional": true
+        },
+        "breakpoints": {
+          "oneOf": [
+            {
+              "const": "UNRESEARCHED",
+              "description": "Nobody has researched this field yet. It is an explicit, countable state — never a blank, never a guess."
+            },
+            {
+              "const": "desktop_first_md",
+              "description": "Admin convention: base classes are desktop, md:/lg: adjust down."
+            },
+            {
+              "const": "mobile_first",
+              "description": "Expo convention: base classes are mobile."
+            },
+            {
+              "const": "none",
+              "description": "Not a responsive surface."
+            }
+          ],
+          "x-draft-optional": true
+        },
+        "export": {
+          "oneOf": [
+            {
+              "const": "UNRESEARCHED",
+              "description": "Nobody has researched this field yet. It is an explicit, countable state — never a blank, never a guess."
+            },
+            {
+              "const": "pdf",
+              "description": "Exports to PDF through the same projection; parity asserted by golden."
+            },
+            {
+              "const": "csv",
+              "description": "Exports to CSV."
+            },
+            {
+              "const": "none",
+              "description": "No export path."
+            }
+          ],
+          "x-draft-optional": true
+        },
+        "list": {
+          "x-draft-optional": true,
+          "anyOf": [
+            {
+              "const": "UNRESEARCHED",
+              "description": "Nobody has researched this yet. Counted by the registry."
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "item_archetype",
+                "pagination",
+                "recycling"
+              ],
+              "properties": {
+                "item_archetype": {
+                  "x-draft-optional": true,
+                  "anyOf": [
+                    {
+                      "const": "UNRESEARCHED",
+                      "description": "Nobody has researched this yet. Counted by the registry."
+                    },
+                    {
+                      "type": "string"
+                    }
+                  ]
+                },
+                "pagination": {
+                  "x-draft-optional": true,
+                  "anyOf": [
+                    {
+                      "const": "UNRESEARCHED",
+                      "description": "Nobody has researched this yet. Counted by the registry."
+                    },
+                    {
+                      "enum": [
+                        "cursor",
+                        "offset",
+                        "none"
+                      ]
+                    }
+                  ]
+                },
+                "recycling": {
+                  "x-draft-optional": true,
+                  "anyOf": [
+                    {
+                      "const": "UNRESEARCHED",
+                      "description": "Nobody has researched this yet. Counted by the registry."
+                    },
+                    {
+                      "type": "string"
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "tiles": {
+          "x-draft-optional": true,
+          "anyOf": [
+            {
+              "const": "UNRESEARCHED",
+              "description": "Nobody has researched this yet. Counted by the registry."
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "id",
+                  "contract_ref",
+                  "degrade_independently"
+                ],
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "contract_ref": {
+                    "type": "string"
+                  },
+                  "degrade_independently": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        "refresh": {
+          "x-draft-optional": true,
+          "anyOf": [
+            {
+              "const": "UNRESEARCHED",
+              "description": "Nobody has researched this yet. Counted by the registry."
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "poll_ms"
+              ],
+              "properties": {
+                "poll_ms": {
+                  "x-draft-optional": true,
+                  "anyOf": [
+                    {
+                      "const": "UNRESEARCHED",
+                      "description": "Nobody has researched this yet. Counted by the registry."
+                    },
+                    {
+                      "type": "integer",
+                      "minimum": 0
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "wizard": {
+          "x-draft-optional": true,
+          "anyOf": [
+            {
+              "const": "UNRESEARCHED",
+              "description": "Nobody has researched this yet. Counted by the registry."
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "step_index",
+                "advances_on",
+                "resume_key",
+                "skip_when",
+                "terminal"
+              ],
+              "properties": {
+                "step_index": {
+                  "x-draft-optional": true,
+                  "anyOf": [
+                    {
+                      "const": "UNRESEARCHED",
+                      "description": "Nobody has researched this yet. Counted by the registry."
+                    },
+                    {
+                      "type": "integer",
+                      "minimum": 0
+                    }
+                  ]
+                },
+                "advances_on": {
+                  "x-draft-optional": true,
+                  "anyOf": [
+                    {
+                      "const": "UNRESEARCHED",
+                      "description": "Nobody has researched this yet. Counted by the registry."
+                    },
+                    {
+                      "type": "string"
+                    }
+                  ]
+                },
+                "resume_key": {
+                  "x-draft-optional": true,
+                  "anyOf": [
+                    {
+                      "const": "UNRESEARCHED",
+                      "description": "Nobody has researched this yet. Counted by the registry."
+                    },
+                    {
+                      "type": "string"
+                    }
+                  ]
+                },
+                "skip_when": {
+                  "x-draft-optional": true,
+                  "anyOf": [
+                    {
+                      "const": "UNRESEARCHED",
+                      "description": "Nobody has researched this yet. Counted by the registry."
+                    },
+                    {
+                      "type": "string"
+                    }
+                  ]
+                },
+                "terminal": {
+                  "x-draft-optional": true,
+                  "anyOf": [
+                    {
+                      "const": "UNRESEARCHED",
+                      "description": "Nobody has researched this yet. Counted by the registry."
+                    },
+                    {
+                      "type": "boolean"
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "redirect": {
+          "x-draft-optional": true,
+          "anyOf": [
+            {
+              "const": "UNRESEARCHED",
+              "description": "Nobody has researched this yet. Counted by the registry."
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "routing": {
+          "x-draft-optional": true,
+          "anyOf": [
+            {
+              "const": "UNRESEARCHED",
+              "description": "Nobody has researched this yet. Counted by the registry."
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "branches"
+              ],
+              "properties": {
+                "branches": {
+                  "x-draft-optional": true,
+                  "anyOf": [
+                    {
+                      "const": "UNRESEARCHED",
+                      "description": "Nobody has researched this yet. Counted by the registry."
+                    },
+                    {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "checks": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/definitions/check"
+      },
+      "description": "THE ONE CATEGORY THAT MAY NEVER BE \"none\" (Spec 128 rule 5)."
+    },
+    "invariants": {
+      "oneOf": [
+        {
+          "const": "UNRESEARCHED"
+        },
+        {
+          "const": "none"
+        },
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/sqlCheck"
+          }
+        }
+      ],
+      "x-draft-optional": true
+    },
+    "plausibility": {
+      "oneOf": [
+        {
+          "const": "UNRESEARCHED"
+        },
+        {
+          "const": "none"
+        },
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/sqlCheck"
+          }
+        }
+      ],
+      "description": "Declarative SQL only. Ad/layout policy is a checks[] entry and the placements table, never here (R-34).",
+      "x-draft-optional": true
+    },
+    "states": {
+      "oneOf": [
+        {
+          "const": "UNRESEARCHED"
+        },
+        {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "golden"
+            ],
+            "properties": {
+              "name": {
+                "oneOf": [
+                  {
+                    "const": "loading",
+                    "description": "Waiting on the first response."
+                  },
+                  {
+                    "const": "empty",
+                    "description": "A successful response with nothing in it."
+                  },
+                  {
+                    "const": "hit",
+                    "description": "A successful response with content."
+                  },
+                  {
+                    "const": "miss",
+                    "description": "A successful response that found nothing — a result, not an error."
+                  },
+                  {
+                    "const": "ambiguous",
+                    "description": "Several candidates, none chosen."
+                  },
+                  {
+                    "const": "partial",
+                    "description": "Some declared tiers resolved and some did not."
+                  },
+                  {
+                    "const": "degraded",
+                    "description": "A lower tier failed; the surface says so and renders the rest."
+                  },
+                  {
+                    "const": "error",
+                    "description": "An unrecoverable failure with a declared UI."
+                  },
+                  {
+                    "const": "offline",
+                    "description": "No network; the cached projection or the offline state."
+                  },
+                  {
+                    "const": "schema_drift",
+                    "description": "The payload failed to parse against the generated mirror."
+                  },
+                  {
+                    "const": "unauthorized",
+                    "description": "Session or entitlement refused."
+                  },
+                  {
+                    "const": "rate_limited",
+                    "description": "The rate bucket refused."
+                  },
+                  {
+                    "const": "redirect",
+                    "description": "It renders nothing and navigates."
+                  },
+                  {
+                    "const": "static",
+                    "description": "One unconditional render."
+                  }
+                ]
+              },
+              "golden": {
+                "x-draft-optional": true,
+                "anyOf": [
+                  {
+                    "const": "UNRESEARCHED"
+                  },
+                  {
+                    "const": "none",
+                    "description": "No golden pinned yet — legal while converting, illegal at cutover."
+                  },
+                  {
+                    "type": "string"
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ],
+      "x-draft-optional": true
+    },
+    "errors": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "answer",
+        "why",
+        "evidence"
+      ],
+      "properties": {
+        "answer": {
+          "oneOf": [
+            {
+              "const": "UNRESEARCHED",
+              "description": "Nobody has researched this field yet. It is an explicit, countable state — never a blank, never a guess."
+            },
+            {
+              "const": "envelope",
+              "description": "Errors arrive in the standard { data, error, meta } envelope and render from it."
+            },
+            {
+              "const": "redirect",
+              "description": "On failure it navigates elsewhere rather than rendering an error."
+            },
+            {
+              "const": "toast",
+              "description": "A transient toast; the surface keeps its previous content."
+            },
+            {
+              "const": "inline",
+              "description": "An inline message beside the thing that failed."
+            },
+            {
+              "const": "boundary",
+              "description": "It throws to a React error boundary."
+            },
+            {
+              "const": "none",
+              "description": "No error path is reachable."
+            }
+          ],
+          "x-draft-optional": true
+        },
+        "why": {
+          "type": "string",
+          "minLength": 1,
+          "description": "One line saying WHY this answer, in the author's own words. Required on every answer that is not self-evident, and always required on \"none\"."
+        },
+        "evidence": {
+          "x-draft-optional": true,
+          "description": "Citations for this answer: `path:line`, `migrations/NNN_x.sql:line`, or a spec §anchor. A claim with no citation is UNRESEARCHED, whatever it says.",
+          "oneOf": [
+            {
+              "const": "UNRESEARCHED",
+              "description": "Nobody has cited this answer yet. Counted by the registry."
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 3
+              }
+            }
+          ]
+        },
+        "classes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "class",
+              "ui"
+            ],
+            "properties": {
+              "class": {
+                "enum": [
+                  "400",
+                  "401",
+                  "403",
+                  "429",
+                  "500",
+                  "schema_drift",
+                  "offline",
+                  "404"
+                ]
+              },
+              "ui": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        },
+        "no_retry": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "emits": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "answer",
+        "why",
+        "evidence"
+      ],
+      "properties": {
+        "answer": {
+          "oneOf": [
+            {
+              "const": "UNRESEARCHED",
+              "description": "Nobody has researched this field yet. It is an explicit, countable state — never a blank, never a guess."
+            },
+            {
+              "const": "events",
+              "description": "It emits named analytics events from the whitelist."
+            },
+            {
+              "const": "ledger",
+              "description": "It writes rows to the usage ledger."
+            },
+            {
+              "const": "both",
+              "description": "It emits analytics events AND writes ledger rows."
+            },
+            {
+              "const": "none",
+              "description": "Nothing it does is currently countable. On a metered surface this is a rule-9 violation (R-23)."
+            }
+          ],
+          "x-draft-optional": true
+        },
+        "why": {
+          "type": "string",
+          "minLength": 1,
+          "description": "One line saying WHY this answer, in the author's own words. Required on every answer that is not self-evident, and always required on \"none\"."
+        },
+        "evidence": {
+          "x-draft-optional": true,
+          "description": "Citations for this answer: `path:line`, `migrations/NNN_x.sql:line`, or a spec §anchor. A claim with no citation is UNRESEARCHED, whatever it says.",
+          "oneOf": [
+            {
+              "const": "UNRESEARCHED",
+              "description": "Nobody has cited this answer yet. Counted by the registry."
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 3
+              }
+            }
+          ]
+        },
+        "analytics": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "ledger_events": {
+          "type": "array",
+          "items": {
+            "oneOf": [
+              {
+                "const": "property_view",
+                "description": "A metered view of one property."
+              },
+              {
+                "const": "pdf_send",
+                "description": "A report shared as a PDF."
+              },
+              {
+                "const": "offer_impression",
+                "description": "A sponsored placement was rendered — the one event an anon principal may write."
+              },
+              {
+                "const": "offer_click",
+                "description": "A sponsored placement was tapped."
+              },
+              {
+                "const": "export",
+                "description": "A CSV or PDF was produced."
+              },
+              {
+                "const": "parcel_id_translated",
+                "description": "The fenced id-translation seam was used (R-32)."
+              }
+            ]
+          }
+        },
+        "breadcrumbs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "offers": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "answer",
+        "why",
+        "evidence"
+      ],
+      "properties": {
+        "answer": {
+          "oneOf": [
+            {
+              "const": "UNRESEARCHED",
+              "description": "Nobody has researched this field yet. It is an explicit, countable state — never a blank, never a guess."
+            },
+            {
+              "const": "slots",
+              "description": "It renders one or more sponsored placements from table-backed inventory."
+            },
+            {
+              "const": "none",
+              "description": "It renders no sponsored content."
+            }
+          ],
+          "x-draft-optional": true
+        },
+        "why": {
+          "type": "string",
+          "minLength": 1,
+          "description": "One line saying WHY this answer, in the author's own words. Required on every answer that is not self-evident, and always required on \"none\"."
+        },
+        "evidence": {
+          "x-draft-optional": true,
+          "description": "Citations for this answer: `path:line`, `migrations/NNN_x.sql:line`, or a spec §anchor. A claim with no citation is UNRESEARCHED, whatever it says.",
+          "oneOf": [
+            {
+              "const": "UNRESEARCHED",
+              "description": "Nobody has cited this answer yet. Counted by the registry."
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 3
+              }
+            }
+          ]
+        },
+        "placement": {
+          "type": "string"
+        },
+        "inventory_source": {
+          "type": "string",
+          "description": "A TABLE name, never a literal list."
+        },
+        "targeting": {
+          "type": "array",
+          "items": {
+            "oneOf": [
+              {
+                "const": "neighbourhood",
+                "description": "By neighbourhood."
+              },
+              {
+                "const": "zone",
+                "description": "By zoning code."
+              },
+              {
+                "const": "work_type",
+                "description": "By type of work."
+              },
+              {
+                "const": "cost_band",
+                "description": "By cost band."
+              }
+            ]
+          }
+        },
+        "disclosure": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "check_id",
+            "severity",
+            "blocking"
+          ],
+          "properties": {
+            "check_id": {
+              "type": "string"
+            },
+            "severity": {
+              "const": "FAIL"
+            },
+            "blocking": {
+              "const": true
+            }
+          },
+          "description": "R-17/R-34, ruled by the operator 2026-09-15. FAIL and blocking are SEPARATE fields because they are orthogonal; blocking true forces when:\"pre\". Legal basis: Competition Act s.74.01 and the Competition Bureau native-advertising guidance; FTC Native Advertising Guide (2015), 16 CFR Part 255."
+        },
+        "null_when_off": {
+          "const": true
+        },
+        "max_slots": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "metering": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "answer",
+        "why",
+        "evidence"
+      ],
+      "properties": {
+        "answer": {
+          "oneOf": [
+            {
+              "const": "UNRESEARCHED",
+              "description": "Nobody has researched this field yet. It is an explicit, countable state — never a blank, never a guess."
+            },
+            {
+              "const": "metered",
+              "description": "A billable or quota-bearing action that writes a usage_events row."
+            },
+            {
+              "const": "observed",
+              "description": "Counted for observability only; no quota and no billing."
+            },
+            {
+              "const": "none",
+              "description": "Nothing here is counted."
+            }
+          ],
+          "x-draft-optional": true
+        },
+        "why": {
+          "type": "string",
+          "minLength": 1,
+          "description": "One line saying WHY this answer, in the author's own words. Required on every answer that is not self-evident, and always required on \"none\"."
+        },
+        "evidence": {
+          "x-draft-optional": true,
+          "description": "Citations for this answer: `path:line`, `migrations/NNN_x.sql:line`, or a spec §anchor. A claim with no citation is UNRESEARCHED, whatever it says.",
+          "oneOf": [
+            {
+              "const": "UNRESEARCHED",
+              "description": "Nobody has cited this answer yet. Counted by the registry."
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 3
+              }
+            }
+          ]
+        },
+        "unit": {
+          "type": "string"
+        },
+        "product": {
+          "enum": [
+            "lead_gen",
+            "flight_center",
+            "parcel_tool",
+            "agent_reports"
+          ]
+        },
+        "ledger_event": {
+          "type": "string"
+        },
+        "subject_kind": {
+          "oneOf": [
+            {
+              "const": "parcel_ref",
+              "description": "parcels.parcel_id, the VARCHAR(20) municipal id (R-04)."
+            },
+            {
+              "const": "parcel_pk",
+              "description": "parcels.id, the SERIAL (R-04)."
+            },
+            {
+              "const": "permit_rev",
+              "description": "A permit number plus revision."
+            },
+            {
+              "const": "offer_id",
+              "description": "One sponsored offer."
+            }
+          ]
+        },
+        "quota_from_config": {
+          "type": "string"
+        },
+        "on_exceeded": {
+          "oneOf": [
+            {
+              "const": "402",
+              "description": "Payment required."
+            },
+            {
+              "const": "403",
+              "description": "Forbidden."
+            },
+            {
+              "const": "paywall",
+              "description": "Render the paywall."
+            }
+          ]
+        }
+      }
+    },
+    "config": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "answer",
+        "why",
+        "evidence"
+      ],
+      "properties": {
+        "answer": {
+          "oneOf": [
+            {
+              "const": "UNRESEARCHED",
+              "description": "Nobody has researched this field yet. It is an explicit, countable state — never a blank, never a guess."
+            },
+            {
+              "const": "logic_variables",
+              "description": "Every tunable is a registered logic variable with bounds and an on_invalid posture."
+            },
+            {
+              "const": "none",
+              "description": "It consumes no tunable at all."
+            }
+          ],
+          "x-draft-optional": true
+        },
+        "why": {
+          "type": "string",
+          "minLength": 1,
+          "description": "One line saying WHY this answer, in the author's own words. Required on every answer that is not self-evident, and always required on \"none\"."
+        },
+        "evidence": {
+          "x-draft-optional": true,
+          "description": "Citations for this answer: `path:line`, `migrations/NNN_x.sql:line`, or a spec §anchor. A claim with no citation is UNRESEARCHED, whatever it says.",
+          "oneOf": [
+            {
+              "const": "UNRESEARCHED",
+              "description": "Nobody has cited this answer yet. Counted by the registry."
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 3
+              }
+            }
+          ]
+        },
+        "logic_variables": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "on_invalid"
+            ],
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "min": {
+                "type": "number"
+              },
+              "max": {
+                "type": "number"
+              },
+              "on_invalid": {
+                "oneOf": [
+                  {
+                    "const": "fail",
+                    "description": "MANDATORY for a verdict- or write-affecting variable."
+                  },
+                  {
+                    "const": "default",
+                    "description": "Fall back to the declared default, with a why."
+                  },
+                  {
+                    "const": "clamp",
+                    "description": "Clamp into bounds, with a why."
+                  }
+                ]
+              },
+              "why": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "retired": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "debounce_ms": {
+          "x-draft-optional": true,
+          "anyOf": [
+            {
+              "const": "UNRESEARCHED",
+              "description": "Nobody has researched this yet. Counted by the registry."
+            },
+            {
+              "type": "integer",
+              "minimum": 0
+            }
+          ]
+        },
+        "min_query_len": {
+          "x-draft-optional": true,
+          "anyOf": [
+            {
+              "const": "UNRESEARCHED",
+              "description": "Nobody has researched this yet. Counted by the registry."
+            },
+            {
+              "type": "integer",
+              "minimum": 0
+            }
+          ]
+        }
+      }
+    },
+    "sharing": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "answer",
+        "why",
+        "evidence"
+      ],
+      "properties": {
+        "answer": {
+          "oneOf": [
+            {
+              "const": "UNRESEARCHED",
+              "description": "Nobody has researched this field yet. It is an explicit, countable state — never a blank, never a guess."
+            },
+            {
+              "const": "sole",
+              "description": "This surface is the only renderer of its contracts."
+            },
+            {
+              "const": "shared",
+              "description": "Its contracts are rendered by other surfaces too — the property MAX-SERVER-SIDE depends on."
+            },
+            {
+              "const": "none",
+              "description": "It renders no contract."
+            }
+          ],
+          "x-draft-optional": true
+        },
+        "why": {
+          "type": "string",
+          "minLength": 1,
+          "description": "One line saying WHY this answer, in the author's own words. Required on every answer that is not self-evident, and always required on \"none\"."
+        },
+        "evidence": {
+          "x-draft-optional": true,
+          "description": "Citations for this answer: `path:line`, `migrations/NNN_x.sql:line`, or a spec §anchor. A claim with no citation is UNRESEARCHED, whatever it says.",
+          "oneOf": [
+            {
+              "const": "UNRESEARCHED",
+              "description": "Nobody has cited this answer yet. Counted by the registry."
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 3
+              }
+            }
+          ]
+        },
+        "surfaces": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "varies_by_surface": {
+          "type": "string"
+        },
+        "varies_by_target": {
+          "type": "string"
+        }
+      }
+    },
+    "a11y": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "touch_target_min_px",
+        "labels",
+        "dark_mode",
+        "reduced_motion",
+        "i18n"
+      ],
+      "properties": {
+        "touch_target_min_px": {
+          "x-draft-optional": true,
+          "description": "The smallest interactive target, in px. The floor is 44 (WCAG 2.5.5 / the platform HIGs). `n/a` is legal for a CONTRACT, a JOB, and a desktop-only admin page — and REQUIRES a why, because \"nothing here is tapped\" is a claim.",
+          "anyOf": [
+            {
+              "const": "UNRESEARCHED",
+              "description": "Nobody has researched this yet. Counted by the registry."
+            },
+            {
+              "const": "n/a",
+              "description": "Nothing on this entry is tapped: it renders no interactive target (CONTRACT, JOB), or it is a desktop-only admin surface with a stated why."
+            },
+            {
+              "type": "integer",
+              "minimum": 1,
+              "description": "The measured minimum. BELOW 44 is a FINDING, not a setting — record it and file it."
+            }
+          ]
+        },
+        "labels": {
+          "oneOf": [
+            {
+              "const": "UNRESEARCHED",
+              "description": "Nobody has researched this field yet. It is an explicit, countable state — never a blank, never a guess."
+            },
+            {
+              "const": "complete",
+              "description": "Every interactive element carries an accessible label."
+            },
+            {
+              "const": "partial",
+              "description": "Some do; the gap is named in limitations."
+            },
+            {
+              "const": "none",
+              "description": "No accessible labels."
+            }
+          ],
+          "x-draft-optional": true
+        },
+        "dark_mode": {
+          "oneOf": [
+            {
+              "const": "UNRESEARCHED",
+              "description": "Nobody has researched this field yet. It is an explicit, countable state — never a blank, never a guess."
+            },
+            {
+              "const": "tokens",
+              "description": "Uses the shared dark-mode tokens."
+            },
+            {
+              "const": "hardcoded",
+              "description": "Colours are hardcoded — a defect to name."
+            },
+            {
+              "const": "none",
+              "description": "Not themed."
+            }
+          ],
+          "x-draft-optional": true
+        },
+        "reduced_motion": {
+          "oneOf": [
+            {
+              "const": "UNRESEARCHED",
+              "description": "Nobody has researched this field yet. It is an explicit, countable state — never a blank, never a guess."
+            },
+            {
+              "const": "honoured",
+              "description": "Animation respects the reduced-motion setting."
+            },
+            {
+              "const": "ignored",
+              "description": "It does not."
+            },
+            {
+              "const": "none",
+              "description": "No animation."
+            }
+          ],
+          "x-draft-optional": true
+        },
+        "i18n": {
+          "oneOf": [
+            {
+              "const": "UNRESEARCHED",
+              "description": "Nobody has researched this field yet. It is an explicit, countable state — never a blank, never a guess."
+            },
+            {
+              "const": "none",
+              "description": "English only. The estate has ZERO i18n machinery measured — this is the honest answer today (ASK-11)."
+            },
+            {
+              "const": "locale_aware",
+              "description": "Formats numbers, dates and units by locale."
+            },
+            {
+              "const": "translated",
+              "description": "Strings come from a translation catalogue."
+            }
+          ],
+          "x-draft-optional": true
+        },
+        "safe_area": {
+          "oneOf": [
+            {
+              "const": "UNRESEARCHED"
+            },
+            {
+              "const": "none"
+            },
+            {
+              "type": "array",
+              "items": {
+                "enum": [
+                  "top",
+                  "bottom",
+                  "left",
+                  "right"
+                ]
+              }
+            }
+          ],
+          "x-draft-optional": true
+        },
+        "touch_target_why": {
+          "x-draft-optional": true,
+          "anyOf": [
+            {
+              "const": "UNRESEARCHED",
+              "description": "Nobody has researched this yet. Counted by the registry."
+            },
+            {
+              "type": "string"
+            }
+          ]
+        }
+      }
+    },
+    "deviations": {
+      "oneOf": [
+        {
+          "const": "UNRESEARCHED"
+        },
+        {
+          "const": "none"
+        },
+        {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "from",
+              "why",
+              "adjudicated_by",
+              "date"
+            ],
+            "properties": {
+              "from": {
+                "type": "string"
+              },
+              "why": {
+                "type": "string"
+              },
+              "adjudicated_by": {
+                "type": "string"
+              },
+              "date": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      ],
+      "x-draft-optional": true
+    },
+    "limitations": {
+      "oneOf": [
+        {
+          "const": "UNRESEARCHED"
+        },
+        {
+          "const": "none"
+        },
+        {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "what",
+              "measured",
+              "check_id"
+            ],
+            "properties": {
+              "what": {
+                "type": "string"
+              },
+              "measured": {
+                "type": "string"
+              },
+              "check_id": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      ],
+      "x-draft-optional": true
+    },
+    "interpretation": {
+      "oneOf": [
+        {
+          "const": "UNRESEARCHED"
+        },
+        {
+          "const": "none"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "notes_file"
+          ],
+          "properties": {
+            "notes_file": {
+              "type": "string"
+            },
+            "cap": {
+              "const": 12
+            }
+          }
+        }
+      ],
+      "x-draft-optional": true
+    },
+    "kind": {
+      "oneOf": [
+        {
+          "const": "SURFACE",
+          "description": "Something that renders — a screen, a page, an overlay, a navigation shell."
+        },
+        {
+          "const": "CONTRACT",
+          "description": "One API route: its request, its response projection, the tables it touches."
+        },
+        {
+          "const": "JOB",
+          "description": "Server work with no screen and no request."
+        }
+      ]
+    },
+    "status": {
+      "oneOf": [
+        {
+          "const": "exists",
+          "description": "The code is in the tree today; this descriptor records what is there."
+        },
+        {
+          "const": "new",
+          "description": "Specified, not built. Nothing is measured."
+        },
+        {
+          "const": "generated",
+          "description": "Rendered from descriptors rather than hand-written, from its first commit."
+        },
+        {
+          "const": "designed",
+          "description": "Specified in enough detail to be referenced — a contract a surface already points at — but not built. An edge to a `designed` thing renders DASHED rather than being refused: a plan that cannot name its own future contracts is not a plan."
+        }
+      ]
+    },
+    "docs": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "purpose",
+        "data_story",
+        "under_126"
+      ],
+      "description": "The human half of the descriptor. It is part of the contract, not a comment on it: a descriptor nobody can read is a descriptor nobody reviews.",
+      "properties": {
+        "purpose": {
+          "type": "string",
+          "minLength": 20,
+          "description": "What it does, for whom, in language a non-engineer reads."
+        },
+        "data_story": {
+          "type": "string",
+          "minLength": 20,
+          "description": "What it reads and writes, and why."
+        },
+        "under_126": {
+          "type": "string",
+          "minLength": 20,
+          "description": "What changes under this standard: RE-PROJECT / REBUILD / NEW / LEAVE ALONE, which archetype renderer, which contracts."
+        }
+      }
+    },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "files",
+        "contracts",
+        "tables",
+        "gate",
+        "states",
+        "emits"
+      ],
+      "description": "Citations for the claims this descriptor makes. `path:line`, `migrations/NNN.sql:line`, or a spec §anchor. A claim with no citation is UNRESEARCHED whatever it says.",
+      "properties": {
+        "files": {
+          "x-draft-optional": true,
+          "oneOf": [
+            {
+              "const": "UNRESEARCHED",
+              "description": "Nobody has cited this yet."
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          ]
+        },
+        "contracts": {
+          "x-draft-optional": true,
+          "oneOf": [
+            {
+              "const": "UNRESEARCHED",
+              "description": "Nobody has cited this yet."
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          ]
+        },
+        "tables": {
+          "x-draft-optional": true,
+          "oneOf": [
+            {
+              "const": "UNRESEARCHED",
+              "description": "Nobody has cited this yet."
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          ]
+        },
+        "gate": {
+          "x-draft-optional": true,
+          "oneOf": [
+            {
+              "const": "UNRESEARCHED",
+              "description": "Nobody has cited this yet."
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          ]
+        },
+        "states": {
+          "x-draft-optional": true,
+          "oneOf": [
+            {
+              "const": "UNRESEARCHED",
+              "description": "Nobody has cited this yet."
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          ]
+        },
+        "emits": {
+          "x-draft-optional": true,
+          "oneOf": [
+            {
+              "const": "UNRESEARCHED",
+              "description": "Nobody has cited this yet."
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          ]
+        }
+      }
+    },
+    "notes": {
+      "type": "string",
+      "description": "Anything measured that a reviewer should know — a defect, a stub, a disagreement between a document and the tree."
+    },
+    "x-draft": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "DRAFT-ONLY carrier for measured facts that have not yet been folded into a category (raw file list, line counts, the shard a row came from). Retired with the shards; nothing downstream may read it."
+    },
+    "programme": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "scope",
+        "feature",
+        "build_order",
+        "phase",
+        "why",
+        "review"
+      ],
+      "description": "WHICH PROGRAMME this entry belongs to. Without it the registry is an undifferentiated list of 137 things and a reader cannot tell the parcel cost tool from the lead-gen estate it happens to share a repository with.",
+      "properties": {
+        "scope": {
+          "oneOf": [
+            {
+              "const": "parcel_product",
+              "description": "The MaxBLD parcel cost tool ITSELF — the surfaces, contracts, tables and jobs a customer touches, plus the five business requirements that hang off it: the metered lookup, the PDF sent to a client, the ad placements, and the Vercel web front door. Governed by Spec 100 and Spec 126; this is the programme."
+            },
+            {
+              "const": "parcel_admin",
+              "description": "The admin surfaces that OPERATE the parcel product — usage and entitlements, placements and advertiser accounts, the PDF audit, the app_outputs recompute, and the descriptor-native registry/drift/roles pages. Governed by Spec 126; converts with the product, not after it."
+            },
+            {
+              "const": "platform_shared",
+              "description": "Used by BOTH products and owned by neither: auth, the user profile, the subscription and Stripe hand-off, entitlements, notifications, and the navigation shells. Converting one of these changes both products, which is why it is its own scope rather than being filed under whichever one noticed it first."
+            },
+            {
+              "const": "estate_other",
+              "description": "The OTHER product — lead generation, the flight center, the lead feed, permit and job detail, builders and entities. INVENTORIED ONLY. It is fenced from the parcel tool by Spec 128 R-03, it converts under the same standard in a later programme, and it appears here so that a shared contract or an orphan is visible rather than hidden."
+            }
+          ]
+        },
+        "phase": {
+          "x-draft-optional": true,
+          "anyOf": [
+            {
+              "const": "UNRESEARCHED",
+              "description": "Not yet placed in a batch."
+            },
+            {
+              "const": "not_scheduled",
+              "description": "Deliberately unscheduled — `estate_other` by default, and anything Spec 127 §4.4 does not batch."
+            },
+            {
+              "type": "string",
+              "description": "The Spec 127 §4.4 batch id: B1, B1a, B2, B3, B4, B5, or a phase id such as P1."
+            }
+          ]
+        },
+        "pilot": {
+          "type": "boolean",
+          "description": "True on exactly ONE surface — the property preview, the pilot of the whole programme (Spec 126 §11)."
+        },
+        "why": {
+          "type": "string",
+          "minLength": 10,
+          "description": "One line saying why this scope, measured: the screen path, the product key, the entitlement, or the Spec 100 §1 fence."
+        },
+        "feature": {
+          "description": "The FEATURE MODULE this belongs to. Spec 125 §2's recommendation, made mechanical: descriptors are grouped by feature so a feature is a unit of REMOVAL — deleting it deletes a known set of surfaces, contracts and tables, and the registry says which.",
+          "oneOf": [
+            {
+              "const": "F01",
+              "description": "address-lookup (parcel_product) — Type an address, get matching lots. The parcel product's entry point."
+            },
+            {
+              "const": "F02",
+              "description": "parcel-report (parcel_product) — The lot report itself: envelope, cost menu, neighbourhood evidence. THE product."
+            },
+            {
+              "const": "F03",
+              "description": "pdf-export (parcel_product) — Send the report to a client as a PDF. Business requirement 2."
+            },
+            {
+              "const": "F04",
+              "description": "sponsor-placements (parcel_product) — Advertiser inventory rendered in a declared, disclosed slot. Business requirement 3."
+            },
+            {
+              "const": "F05",
+              "description": "metering-entitlement (parcel_product) — The metered lookup and the product gate in front of it. Business requirement 1."
+            },
+            {
+              "const": "F06",
+              "description": "web-front-door (parcel_product) — The MaxBLD consumer surface on Vercel. Business requirement 5."
+            },
+            {
+              "const": "F07",
+              "description": "app-outputs-materialisation (parcel_admin) — The projection the app reads, and the operator view of the step that builds it."
+            },
+            {
+              "const": "F08",
+              "description": "admin-parcel-operations (parcel_admin) — Operating the parcel product: the admin twin, advertiser accounts, placements, export audit."
+            },
+            {
+              "const": "F09",
+              "description": "surface-registry-drift (parcel_admin) — The descriptor-native pages: registry, fan-out, orphans, drift, roles."
+            },
+            {
+              "const": "F10",
+              "description": "auth-identity (platform_shared) — Sign-in, sign-up, confirmation, account linking. Third-party SDK; deliberately not converted."
+            },
+            {
+              "const": "F11",
+              "description": "onboarding (platform_shared) — The wizard that writes the shared user_profiles columns both products read."
+            },
+            {
+              "const": "F12",
+              "description": "subscription-billing (platform_shared) — Stripe hand-off, entitlement resolution, the paywall."
+            },
+            {
+              "const": "F13",
+              "description": "notifications (platform_shared) — Device tokens, preferences, dispatch."
+            },
+            {
+              "const": "F14",
+              "description": "navigation-shells (platform_shared) — The routing and gating containers every surface renders inside."
+            },
+            {
+              "const": "F15",
+              "description": "user-profile-settings (platform_shared) — The profile contract and the settings surface over it."
+            },
+            {
+              "const": "F16",
+              "description": "platform-admin (platform_shared) — Users, security, tunables, health, pipeline ops — the admin of the platform, not of a product."
+            },
+            {
+              "const": "F90",
+              "description": "lead-generation (estate_other) — The lead feed, saved leads, lead detail. The other product."
+            },
+            {
+              "const": "F91",
+              "description": "flight-center (estate_other) — The job board and job detail. The other product."
+            },
+            {
+              "const": "F92",
+              "description": "permits-builders-entities (estate_other) — Permit, builder and entity data serving lead-gen."
+            },
+            {
+              "const": "F93",
+              "description": "scheduled-jobs (estate_other) — Cron jobs and CI workflows with no product owner."
+            }
+          ]
+        },
+        "build_order": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "DERIVED, not chosen: scope rank (A<B<C<D) × 1000 + feature rank × 10 + kind rank, where kind rank orders tables-before-contracts-before-surfaces-before-admin. It answers \"what must exist before this can be built\", and it is the order the review queue renders in."
+        },
+        "leakage": {
+          "description": "Behaviour inside this row that belongs to the OTHER product and merely lives here today. Recorded, NEVER deleted: a behaviour nobody wrote down is a behaviour nobody can knowingly retire (Spec 124 §4, the Chesterton's-Fence rule).",
+          "oneOf": [
+            {
+              "const": "none",
+              "description": "Swept and none found. An answer, not an omission."
+            },
+            {
+              "const": "UNRESEARCHED",
+              "description": "Not yet swept."
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "behaviour",
+                  "evidence",
+                  "owning_product",
+                  "disposition"
+                ],
+                "properties": {
+                  "behaviour": {
+                    "type": "string",
+                    "minLength": 10
+                  },
+                  "evidence": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 3
+                    }
+                  },
+                  "owning_product": {
+                    "enum": [
+                      "lead_gen",
+                      "flight_center",
+                      "platform"
+                    ]
+                  },
+                  "disposition": {
+                    "oneOf": [
+                      {
+                        "const": "move-to-owner",
+                        "description": "Relocate it to the product that owns it."
+                      },
+                      {
+                        "const": "duplicate-locally",
+                        "description": "Give the parcel product its own copy so the coupling goes away."
+                      },
+                      {
+                        "const": "keep-and-declare",
+                        "description": "Genuinely shared; declare the dependency rather than hide it."
+                      },
+                      {
+                        "const": "needs-ruling",
+                        "description": "The operator decides. Rendered in the consolidated list."
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          ]
+        },
+        "product_questions": {
+          "description": "Where the MEASURED behaviour contradicts what a MaxBLD user would reasonably expect. Not a defect (the code may match its spec exactly) and not a proposal — a question for the operator, with the evidence attached.",
+          "oneOf": [
+            {
+              "const": "none",
+              "description": "Swept and none found."
+            },
+            {
+              "const": "UNRESEARCHED",
+              "description": "Not yet swept."
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "question",
+                  "measured",
+                  "evidence"
+                ],
+                "properties": {
+                  "question": {
+                    "type": "string",
+                    "minLength": 10
+                  },
+                  "measured": {
+                    "type": "string",
+                    "minLength": 10
+                  },
+                  "evidence": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 3
+                    }
+                  },
+                  "spec_says": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        "review": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "status"
+          ],
+          "description": "The fine-tooth-comb pass. Every A/B/C row gets a review card in docs/reports/generated/127-surface-review-queue.md, rendered in build order.",
+          "properties": {
+            "status": {
+              "oneOf": [
+                {
+                  "const": "unreviewed",
+                  "description": "Nobody has walked the question set against it."
+                },
+                {
+                  "const": "reviewed",
+                  "description": "Walked, and it is right as recorded."
+                },
+                {
+                  "const": "needs_change",
+                  "description": "Walked, and something must change — the notes say what."
+                }
+              ]
+            },
+            "reviewer": {
+              "type": "string"
+            },
+            "date": {
+              "type": "string"
+            },
+            "notes": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "x-profile": "LIST — a scrollable collection. render.list (item archetype, pagination, recycling) is REQUIRED, as are inputs.contract_ref and states.",
+      "if": {
+        "properties": {
+          "identity": {
+            "properties": {
+              "archetype": {
+                "const": "LIST"
+              }
+            }
+          }
+        },
+        "required": [
+          "identity"
+        ]
+      },
+      "then": {
+        "properties": {
+          "render": {
+            "required": [
+              "list"
+            ]
+          }
+        },
+        "required": [
+          "render",
+          "inputs",
+          "states"
+        ]
+      }
+    },
+    {
+      "x-profile": "DETAIL — one entity by id. inputs.query_key must be single-param (Spec 99 §4 hygiene, as schema); states must include error.",
+      "if": {
+        "properties": {
+          "identity": {
+            "properties": {
+              "archetype": {
+                "const": "DETAIL"
+              }
+            }
+          }
+        },
+        "required": [
+          "identity"
+        ]
+      },
+      "then": {
+        "properties": {
+          "inputs": {
+            "required": [
+              "query_key"
+            ]
+          }
+        },
+        "required": [
+          "inputs",
+          "states"
+        ]
+      }
+    },
+    {
+      "x-profile": "REPORT — read-only. outputs and state are FORCED to \"none\"; inputs.field_whitelist is REQUIRED and must equal the contract's; plausibility and render.targets are declared.",
+      "if": {
+        "properties": {
+          "identity": {
+            "properties": {
+              "archetype": {
+                "const": "REPORT"
+              }
+            }
+          }
+        },
+        "required": [
+          "identity"
+        ]
+      },
+      "then": {
+        "properties": {
+          "outputs": {
+            "properties": {
+              "answer": {
+                "const": "none"
+              }
+            },
+            "required": [
+              "answer"
+            ]
+          },
+          "state": {
+            "properties": {
+              "answer": {
+                "const": "none"
+              }
+            },
+            "required": [
+              "answer"
+            ]
+          },
+          "inputs": {
+            "required": [
+              "field_whitelist"
+            ]
+          }
+        },
+        "required": [
+          "outputs",
+          "state",
+          "inputs",
+          "plausibility",
+          "render"
+        ]
+      }
+    },
+    {
+      "x-profile": "SEARCH — a query box. config.debounce_ms, config.min_query_len and guards.rate_bucket are REQUIRED; never log the raw query.",
+      "if": {
+        "properties": {
+          "identity": {
+            "properties": {
+              "archetype": {
+                "const": "SEARCH"
+              }
+            }
+          }
+        },
+        "required": [
+          "identity"
+        ]
+      },
+      "then": {
+        "properties": {
+          "config": {
+            "required": [
+              "debounce_ms",
+              "min_query_len"
+            ]
+          },
+          "guards": {
+            "required": [
+              "rate_bucket"
+            ]
+          }
+        },
+        "required": [
+          "config",
+          "guards"
+        ]
+      }
+    },
+    {
+      "x-profile": "FORM — writes user input. outputs.contract_ref and outputs.rollback are REQUIRED; state.fields carry the Spec 99 §3 row as data.",
+      "if": {
+        "properties": {
+          "identity": {
+            "properties": {
+              "archetype": {
+                "const": "FORM"
+              }
+            }
+          }
+        },
+        "required": [
+          "identity"
+        ]
+      },
+      "then": {
+        "properties": {
+          "outputs": {
+            "required": [
+              "contract_ref",
+              "rollback"
+            ]
+          }
+        },
+        "required": [
+          "outputs",
+          "state",
+          "states"
+        ]
+      }
+    },
+    {
+      "x-profile": "WIZARD_STEP — one ordered step. render.wizard (step_index, advances_on, resume_key, skip_when, terminal) is REQUIRED.",
+      "if": {
+        "properties": {
+          "identity": {
+            "properties": {
+              "archetype": {
+                "const": "WIZARD_STEP"
+              }
+            }
+          }
+        },
+        "required": [
+          "identity"
+        ]
+      },
+      "then": {
+        "properties": {
+          "render": {
+            "required": [
+              "wizard"
+            ]
+          }
+        },
+        "required": [
+          "render"
+        ]
+      }
+    },
+    {
+      "x-profile": "DASHBOARD — tiles that degrade independently. render.tiles and render.refresh are REQUIRED — a tile grid with no per-tile degradation is the measured DataQualityDashboard defect.",
+      "if": {
+        "properties": {
+          "identity": {
+            "properties": {
+              "archetype": {
+                "const": "DASHBOARD"
+              }
+            }
+          }
+        },
+        "required": [
+          "identity"
+        ]
+      },
+      "then": {
+        "properties": {
+          "render": {
+            "required": [
+              "tiles",
+              "refresh"
+            ]
+          }
+        },
+        "required": [
+          "render"
+        ]
+      }
+    },
+    {
+      "x-profile": "GATE — renders a block instead of content. guards.statuses_handled is REQUIRED and must cover every value of the closed set it gates on. outputs.answer is narrowed to none | device_only | contract_only — AMENDED 2026-09-15 from a blanket \"none\" after research measured three legitimate writers: an auth-confirm screen writing a session to on-device storage, a permission modal registering a push token, and the paywall POSTing a checkout session. What a GATE may never do is write optimistically or write the database directly.",
+      "if": {
+        "properties": {
+          "identity": {
+            "properties": {
+              "archetype": {
+                "const": "GATE"
+              }
+            }
+          }
+        },
+        "required": [
+          "identity"
+        ]
+      },
+      "then": {
+        "properties": {
+          "outputs": {
+            "properties": {
+              "answer": {
+                "enum": [
+                  "none",
+                  "device_only",
+                  "contract_only"
+                ]
+              }
+            },
+            "required": [
+              "answer"
+            ]
+          },
+          "guards": {
+            "required": [
+              "statuses_handled"
+            ]
+          }
+        },
+        "required": [
+          "outputs",
+          "guards"
+        ]
+      }
+    },
+    {
+      "x-profile": "SLOT — a sponsored placement. offers may NOT be \"none\"; its disclosure carries severity FAIL and blocking true as SEPARATE fields (R-17/R-34); outputs forced \"none\".",
+      "if": {
+        "properties": {
+          "identity": {
+            "properties": {
+              "archetype": {
+                "const": "SLOT"
+              }
+            }
+          }
+        },
+        "required": [
+          "identity"
+        ]
+      },
+      "then": {
+        "properties": {
+          "outputs": {
+            "properties": {
+              "answer": {
+                "const": "none"
+              }
+            },
+            "required": [
+              "answer"
+            ]
+          },
+          "offers": {
+            "properties": {
+              "answer": {
+                "not": {
+                  "const": "none"
+                }
+              }
+            }
+          }
+        },
+        "required": [
+          "outputs",
+          "offers"
+        ]
+      }
+    },
+    {
+      "x-profile": "STATIC — content or a redirect. outputs.answer forced \"none\"; state.answer narrowed to none | mmkv — AMENDED 2026-09-15 after research measured the offline banner caching its last connectivity state on device. A STATIC surface still fetches nothing.",
+      "if": {
+        "properties": {
+          "identity": {
+            "properties": {
+              "archetype": {
+                "const": "STATIC"
+              }
+            }
+          }
+        },
+        "required": [
+          "identity"
+        ]
+      },
+      "then": {
+        "properties": {
+          "outputs": {
+            "properties": {
+              "answer": {
+                "const": "none"
+              }
+            },
+            "required": [
+              "answer"
+            ]
+          },
+          "state": {
+            "properties": {
+              "answer": {
+                "enum": [
+                  "none",
+                  "mmkv"
+                ]
+              }
+            },
+            "required": [
+              "answer"
+            ]
+          }
+        },
+        "required": [
+          "outputs",
+          "state"
+        ]
+      }
+    },
+    {
+      "x-profile": "SHELL — a navigation container. render.routing.branches is REQUIRED — a shell here is NOT inert; one is the sole subscription gate for five tabs and another the sole routing authority.",
+      "if": {
+        "properties": {
+          "identity": {
+            "properties": {
+              "archetype": {
+                "const": "SHELL"
+              }
+            }
+          }
+        },
+        "required": [
+          "identity"
+        ]
+      },
+      "then": {
+        "properties": {
+          "render": {
+            "required": [
+              "routing"
+            ]
+          }
+        },
+        "required": [
+          "render"
+        ]
+      }
+    },
+    {
+      "x-profile": "kind SURFACE takes only a SURFACE archetype.",
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "SURFACE"
+          }
+        },
+        "required": [
+          "kind"
+        ]
+      },
+      "then": {
+        "properties": {
+          "identity": {
+            "properties": {
+              "archetype": {
+                "enum": [
+                  "LIST",
+                  "DETAIL",
+                  "REPORT",
+                  "SEARCH",
+                  "FORM",
+                  "WIZARD_STEP",
+                  "DASHBOARD",
+                  "GATE",
+                  "SLOT",
+                  "STATIC",
+                  "SHELL"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "x-profile": "kind CONTRACT takes only a CONTRACT archetype, and renders nothing.",
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "CONTRACT"
+          }
+        },
+        "required": [
+          "kind"
+        ]
+      },
+      "then": {
+        "properties": {
+          "identity": {
+            "properties": {
+              "archetype": {
+                "enum": [
+                  "QUERY",
+                  "MUTATION",
+                  "WEBHOOK",
+                  "COMMAND",
+                  "EXPORT",
+                  "TRANSLATION"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "x-profile": "kind JOB takes only a JOB archetype, and has no platform.",
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "JOB"
+          }
+        },
+        "required": [
+          "kind"
+        ]
+      },
+      "then": {
+        "properties": {
+          "identity": {
+            "properties": {
+              "archetype": {
+                "enum": [
+                  "SCHEDULED"
+                ]
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}

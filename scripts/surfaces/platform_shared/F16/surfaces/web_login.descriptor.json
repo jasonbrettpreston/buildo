@@ -1,0 +1,305 @@
+{
+  "kind": "SURFACE",
+  "status": "exists",
+  "docs": {
+    "purpose": "Where a visitor signs in or creates an account. It offers email-and-password sign-in, a sign-up form that also collects a name and whether the account is an individual or a company, and a Google sign-in button. Administrators with two-factor turned on get a second box asking for the six-digit code from their authenticator app. When the visitor was bounced here from a page that needed a login, it sends them back to that page afterwards, and only to pages on this site.",
+    "data_story": "This surface reaches **no API contract at all** — every value it shows is local, passed in as a prop, or read from the device.",
+    "under_126": "**RE-PROJECT** — it writes nothing and holds no Layer-3 store, so the move is short — the server already assembles the payload and only the rendering is client-side. It renders through the GATE renderer (a `statuses_handled[]` that must cover every value of the closed set it gates on), reading no contract. Its `owns.components[]` declares `src/components/auth/LoginForm.tsx`."
+  },
+  "evidence": {
+    "files": [
+      "src/app/login/page.tsx:1",
+      "src/components/auth/LoginForm.tsx:1"
+    ],
+    "contracts": [
+      "src/lib/supabase/actions.ts — signInAction/signUpAction/mfaChallengeAction/mfaVerifyAction (Server Actions, not /api routes)",
+      "src/lib/supabase/browser.ts — signInWithOAuth, redirectTo /auth/callback",
+      "src/app/auth/callback/route.ts — the server-side code exchange"
+    ],
+    "tables": [
+      "none — no SQL and no db client import in either file; the actions reach GoTrue, not a public table"
+    ],
+    "gate": [
+      "src/lib/auth/route-guard.ts:45",
+      "src/tests/middleware.logic.test.ts:34",
+      "src/lib/auth/route-guard.ts:32-34",
+      "src/middleware.ts:49-77"
+    ],
+    "states": [
+      "src/components/auth/LoginForm.tsx:138 (MFA view), :196 (sign-in view), :240 (signup fields), :310-314 (loading labels)",
+      "src/app/login/page.tsx:40-52 (dev-bypass branch)"
+    ],
+    "emits": [
+      "none — no captureEvent import in src/app/login/page.tsx or src/components/auth/LoginForm.tsx"
+    ]
+  },
+  "identity": {
+    "id": "web_login",
+    "route": "src/app/login/page.tsx",
+    "archetype": "GATE",
+    "platforms": [
+      "web"
+    ],
+    "owns": {
+      "components": [
+        "src/components/auth/LoginForm.tsx"
+      ]
+    },
+    "owner": "web",
+    "spec": "docs/specs/00-architecture/13_authentication.md",
+    "spec_refs": [
+      "docs/specs/00-architecture/13_authentication.md §3.3",
+      "docs/specs/00-architecture/13_authentication.md §3.6",
+      "docs/specs/00-architecture/13_authentication.md §4",
+      "docs/specs/00-architecture/13_authentication.md §4a",
+      "docs/specs/00-architecture/13_authentication.md §3.5"
+    ],
+    "spec_version": "0-draft",
+    "versioning": {
+      "answer": "frozen",
+      "why": "Its two behaviours are pinned by goldens both directions — the MFA step-up flow and the plain sign-in path each have a rendering test; changing the shape forces a recapture.",
+      "evidence": [
+        "src/tests/LoginForm.ui.test.tsx:48,87"
+      ]
+    },
+    "ref": "S-050"
+  },
+  "inputs": {
+    "answer": "contract",
+    "why": "Everything it needs arrives through four Server Actions in src/lib/supabase/actions.ts (signIn/signUp/mfaChallenge/mfaVerify) plus the browser client’s signInWithOAuth. contract_ref is empty because none of those five is an /api route and none has a row in the CONTRACT registry — the census counts route files, and this surface reaches none.",
+    "evidence": [
+      "src/components/auth/LoginForm.tsx:32-33,66-67,93,98,123-126"
+    ],
+    "contract_ref": [],
+    "query_key": [],
+    "field_whitelist": [
+      "email",
+      "password",
+      "name",
+      "accountType",
+      "mfaCode"
+    ],
+    "tables": []
+  },
+  "outputs": {
+    "answer": "contract_only",
+    "why": "It writes only through the Server Actions and waits for the result before advancing — the credentials never produce a client-writable cookie, and the OAuth path only navigates away. contract_ref is empty for the same reason as inputs: a Server Action is not a CONTRACT-registry row.",
+    "evidence": [
+      "src/components/auth/LoginForm.tsx:6-14,64-76,93-104,123-130"
+    ],
+    "contract_ref": [],
+    "rollback": "none — a failed action sets an error string and leaves the form exactly as it was; nothing was optimistically applied to roll back.",
+    "invalidates": [],
+    "tables": []
+  },
+  "state": {
+    "answer": "none",
+    "why": "Seven useState hooks hold form fields and the MFA challenge, all component-local and all discarded on navigate; no Field Ownership Matrix field is owned, nothing persists, no store.",
+    "evidence": [
+      "src/components/auth/LoginForm.tsx:41-56",
+      "src/app/login/page.tsx:20-28"
+    ],
+    "fields": []
+  },
+  "staleness": {
+    "answer": "none",
+    "why": "It displays no server-held value — only what the visitor typed and what the last action returned.",
+    "evidence": [
+      "src/components/auth/LoginForm.tsx:41-56"
+    ],
+    "offline": "blocked"
+  },
+  "guards": {
+    "session": {
+      "answer": "anon",
+      "why": "`/login` is in PUBLIC_PATHS and the lock pins classifyRoute('/login') === 'public'; a signed-in visitor is never bounced away from it.",
+      "evidence": [
+        "src/lib/auth/route-guard.ts:45",
+        "src/tests/middleware.logic.test.ts:34"
+      ]
+    },
+    "rls_class": {
+      "answer": "none",
+      "why": "The page reaches no table; the Server Actions it calls talk to GoTrue (auth.users), not to a policy-bearing public table.",
+      "evidence": [
+        "src/components/auth/LoginForm.tsx:32-33"
+      ]
+    },
+    "disclosure": "none",
+    "entitlement": "none",
+    "flag": "NEXT_PUBLIC_DEV_MODE",
+    "permission": "none",
+    "rate_bucket": "none",
+    "statuses_handled": "UNRESEARCHED"
+  },
+  "render": {
+    "targets": [
+      "screen"
+    ],
+    "projection": "none",
+    "breakpoints": "mobile_first",
+    "export": "none"
+  },
+  "checks": [
+    {
+      "id": "web_login_open_redirect",
+      "kind": "auth_class_parity",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "why": "safeRedirectPath is the only thing between the middleware's ?redirect= bounce and an open redirect — it rejects absolute, protocol-relative and backslash forms, and both call sites (dev bypass and onSuccess) must keep going through it."
+    },
+    {
+      "id": "web_login_mfa_step_up",
+      "kind": "error_state",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "signInAction only ever reaches aal1; if the mfaRequired branch stops opening the TOTP challenge, an admin silently stays at aal1 and every /api/admin/* call 401s with nothing in the UI saying why — the exact 2026-07-20 defect."
+    },
+    {
+      "id": "web_login_dev_flag_is_cosmetic",
+      "kind": "disclosure",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "why": "The page reads NEXT_PUBLIC_DEV_MODE (client-inlined) while the middleware gate reads the server-only DEV_MODE AND NODE_ENV !== production — the button leaking into a prod bundle must stay harmless, which is a property of the middleware, not of this page."
+    }
+  ],
+  "invariants": "none",
+  "plausibility": "none",
+  "states": [
+    {
+      "name": "static",
+      "golden": "src/tests/LoginForm.ui.test.tsx:48"
+    },
+    {
+      "name": "loading",
+      "golden": "none"
+    },
+    {
+      "name": "error",
+      "golden": "src/tests/LoginForm.ui.test.tsx:48"
+    },
+    {
+      "name": "unauthorized",
+      "golden": "src/tests/LoginForm.ui.test.tsx:87"
+    },
+    {
+      "name": "redirect",
+      "golden": "none"
+    }
+  ],
+  "errors": {
+    "answer": "inline",
+    "why": "Every failure sets an error string rendered as a <p className=\"text-sm text-red-600\"> beside the form — the plain path and the MFA path each have their own.",
+    "evidence": [
+      "src/components/auth/LoginForm.tsx:168,301-303"
+    ],
+    "classes": [
+      {
+        "class": "401",
+        "ui": "inline red text under the form, carrying the action's own message"
+      },
+      {
+        "class": "500",
+        "ui": "inline red text reading \"Authentication failed\" / \"Verification failed\""
+      }
+    ],
+    "no_retry": [
+      "mfaVerifyAction — a fresh challenge is minted per attempt rather than retrying the old one"
+    ]
+  },
+  "emits": {
+    "answer": "none",
+    "why": "No captureEvent call and no ledger write anywhere in the page or the form — a sign-in, a sign-up and a failed MFA attempt are all currently uncountable from this surface.",
+    "evidence": [
+      "src/app/login/page.tsx:1-63",
+      "src/components/auth/LoginForm.tsx:1-344"
+    ],
+    "analytics": [],
+    "ledger_events": [],
+    "breadcrumbs": []
+  },
+  "offers": {
+    "answer": "none",
+    "why": "No sponsored placement on an auth surface.",
+    "evidence": [
+      "src/components/auth/LoginForm.tsx:196-343"
+    ]
+  },
+  "metering": {
+    "answer": "none",
+    "why": "No usage_events row and no quota — authentication is not a metered product here.",
+    "evidence": [
+      "src/components/auth/LoginForm.tsx:1-344"
+    ]
+  },
+  "config": {
+    "answer": "none",
+    "why": "The one tunable-looking value, the 6-digit code length, is a literal `maxLength={6}` and a `mfaCode.length !== 6` guard, not a registered logic variable.",
+    "evidence": [
+      "src/components/auth/LoginForm.tsx:160,172"
+    ],
+    "logic_variables": [],
+    "retired": []
+  },
+  "sharing": {
+    "answer": "sole",
+    "why": "The four Server Actions are imported by this component and nothing else in src/app or src/components; they have no CONTRACT row, so no other surface can be sharing them.",
+    "evidence": [
+      "src/components/auth/LoginForm.tsx:32"
+    ],
+    "surfaces": []
+  },
+  "a11y": {
+    "touch_target_min_px": "UNRESEARCHED",
+    "labels": "complete",
+    "dark_mode": "none",
+    "reduced_motion": "none",
+    "i18n": "none",
+    "safe_area": "none"
+  },
+  "deviations": "none",
+  "limitations": [
+    {
+      "what": "A backup code cannot be used to complete sign-in.",
+      "measured": "Spec 13 §4a makes backup codes a per-request x-admin-backup-code header consumed inside /api/admin/* (verify-admin.ts); there is no GoTrue primitive to mint an aal2 session from one, so the MFA view points the operator elsewhere instead of offering a field.",
+      "check_id": "web_login_mfa_step_up"
+    }
+  ],
+  "interpretation": "none",
+  "notes": "Empty calls[] is measured, not unlooked: LoginForm reaches the server through Next.js Server Actions (signInAction / signUpAction / mfaChallengeAction / mfaVerifyAction in src/lib/supabase/actions.ts) and the Supabase browser SDK's signInWithOAuth - no /api/* path is fetched anywhere in either file. The 'Continue as Dev' button renders only when NEXT_PUBLIC_DEV_MODE=true; the middleware's real bypass reads the server-only DEV_MODE AND NODE_ENV!=='production' (route-guard.ts isDevMode), so the button is cosmetic. Redirect target is guarded by safeRedirectPath (rejects absolute, protocol-relative and backslash forms). MEASURED 2026-09-15: the page holds TWO independently-gated views (credential form and TOTP challenge) but they are one component and one route, so R-13 keeps them one surface rather than promoting the challenge. guards.flag records NEXT_PUBLIC_DEV_MODE because it is what THIS page reads (login/page.tsx:7); the security-bearing flag is the server-only DEV_MODE + NODE_ENV pair in route-guard.ts:32-34 — the two are deliberately different vars and the disagreement is the point, not a defect. a11y.touch_target_min_px stays UNRESEARCHED: the submit buttons measure px-4 py-2.5 on text-sm = 40px, which the vocabulary (UNRESEARCHED or an integer >= 44) cannot express.",
+  "x-draft": {
+    "shard": "web-product",
+    "files": [
+      "src/app/login/page.tsx",
+      "src/components/auth/LoginForm.tsx"
+    ],
+    "loc": 407,
+    "measured_states": [
+      "idle",
+      "submitting",
+      "error",
+      "mfa_challenge",
+      "mfa_submitting",
+      "mfa_error"
+    ],
+    "measured_gate": {
+      "session": "public",
+      "why": "classifyRoute('/login') reaches the PUBLIC_PATHS exact-list arm - '/login' is the second entry - and returns 'public'. No earlier arm matches ('/login' is not a PUBLIC_FILE, not under /_next/ or /api/, not '/admin' or '/admin/...', and no PUBLIC_PREFIXES entry is a prefix of it)."
+    }
+  },
+  "programme": {
+    "scope": "platform_shared",
+    "phase": "UNRESEARCHED",
+    "why": "Used by both products and owned by neither.",
+    "feature": "F16",
+    "build_order": 3163,
+    "leakage": "none",
+    "product_questions": "none",
+    "review": {
+      "status": "unreviewed"
+    }
+  }
+}

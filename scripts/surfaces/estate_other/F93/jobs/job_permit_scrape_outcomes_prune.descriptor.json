@@ -1,0 +1,368 @@
+{
+  "kind": "JOB",
+  "status": "exists",
+  "docs": {
+    "purpose": "The scraper writes a diagnostic row every time it tries to fetch a permit, which would grow without bound. This job runs each morning to delete those raw diagnostic rows once they are more than 90 days old, but first folds them into a compact summary so the historical pattern of successes and failures is never lost. Delete and summarise happen in one all-or-nothing step, so the job can be re-run safely and can never double-count.",
+    "data_story": "It reads `permit_scrape_outcomes` and writes `permit_scrape_outcomes`, `permit_scrape_outcome_rollup` and `pipeline_runs`. It runs on `0 8 * * *`, unattended, with nobody watching — which is why its guard matters: pg_extension guard with a NOTICE-skip on the cron.schedule call only (migrations/237:127-130), with an idempotent unschedule-by-name loop; the `public.prune_permit_scrape_outcomes()` FUNCTION is created UNGUARDED (CI-testable), SECURITY DEFINER, `SET search_path = pg_catalog`, REVOKE ALL from PUBLIC/anon/authenticated.",
+    "under_126": "Becomes a **JOB descriptor** of archetype `SCHEDULED` under its own `job.schema.json` (Spec 128 R-14) — declaring its schedule, its target, its idempotency posture, its behaviour when `pg_cron` is absent, and the audit row it writes. Nothing about how it runs changes; what changes is that those five answers stop living only in SQL and YAML."
+  },
+  "evidence": {
+    "files": [
+      "migrations/237_scrape_outcome_prune.sql:1"
+    ],
+    "contracts": [
+      "none — a pg_cron job takes no request and calls no API route"
+    ],
+    "tables": [
+      "migrations/237_scrape_outcome_prune.sql:49-72,84-92,97-109",
+      "migrations/236_permit_scrape_outcomes.sql",
+      "docs/specs/00-architecture/114_rls_policy_catalog.md:209,214"
+    ],
+    "gate": [
+      "migrations/237_scrape_outcome_prune.sql:40-41",
+      "migrations/237_scrape_outcome_prune.sql:116-117",
+      "migrations/237_scrape_outcome_prune.sql:127-130"
+    ],
+    "states": [
+      "migrations/237_scrape_outcome_prune.sql:75-78 (counts), :79-95 (failure), :97-109 (summary)",
+      "src/tests/db/237_scrape_outcome_prune.db.test.ts"
+    ],
+    "emits": [
+      "migrations/237_scrape_outcome_prune.sql:84-92",
+      "migrations/237_scrape_outcome_prune.sql:97-109"
+    ]
+  },
+  "identity": {
+    "id": "job_permit_scrape_outcomes_prune",
+    "route": "migrations/237_scrape_outcome_prune.sql",
+    "archetype": "SCHEDULED",
+    "platforms": [],
+    "owns": {
+      "components": []
+    },
+    "owner": "pipeline",
+    "spec": "docs/specs/00-architecture/115_scheduling.md §5",
+    "spec_refs": [
+      "docs/specs/00-architecture/115_scheduling.md §5 (pg_cron job catalog — the permit_scrape_outcomes_prune row, operator ruling D1 2026-07-31)",
+      "docs/specs/01-pipeline/44_chain_deep_scrapes.md §3 (retention / rollup)",
+      "migrations/236_permit_scrape_outcomes.sql — the two tables this prunes and folds"
+    ],
+    "spec_version": "0-draft",
+    "versioning": {
+      "answer": "frozen",
+      "why": "The rollup's ON CONFLICT (permit_num, outcome, transport) key and the atomic CTE shape are pinned by a live DB test; changing either changes what a re-run does to already-folded rows.",
+      "evidence": [
+        "migrations/237_scrape_outcome_prune.sql:67",
+        "src/tests/db/237_scrape_outcome_prune.db.test.ts",
+        "docs/specs/00-architecture/115_scheduling.md §5"
+      ]
+    },
+    "ref": "J-005"
+  },
+  "inputs": {
+    "answer": "app_outputs",
+    "why": "It reads the raw scrape-outcome ledger past its 90-day horizon — five columns, selected by the DELETE ... RETURNING that also removes them. No contract, no parameter.",
+    "evidence": [
+      "migrations/237_scrape_outcome_prune.sql:49-53"
+    ],
+    "contract_ref": [],
+    "query_key": [],
+    "field_whitelist": [
+      "permit_num",
+      "year_seq",
+      "outcome",
+      "transport",
+      "observed_at"
+    ],
+    "tables": [
+      {
+        "table": "permit_scrape_outcomes",
+        "columns": [
+          "permit_num",
+          "year_seq",
+          "outcome",
+          "transport",
+          "observed_at"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/01-pipeline/44_chain_deep_scrapes.md §3",
+        "evidence": [
+          "migrations/237_scrape_outcome_prune.sql:49-53",
+          "migrations/236_permit_scrape_outcomes.sql",
+          "docs/specs/00-architecture/114_rls_policy_catalog.md:214 — Class B"
+        ]
+      }
+    ]
+  },
+  "outputs": {
+    "answer": "UNRESEARCHED",
+    "why": "NOT ANSWERABLE from the closed set: outputs offers none | contract_only | optimistic_then_contract | device_only, all of which describe a client writing through an API. This job writes directly to the database with no contract in between. The substance is recorded in outputs.tables[]; the vocabulary gap is a Spec 128 §4 escalation (R-14: JOBs need job.schema.json). What it does: one atomic data-modifying CTE — DELETE ... RETURNING feeding an ON CONFLICT upsert into the rollup — plus a pipeline_runs row on success AND on failure.",
+    "evidence": [
+      "migrations/237_scrape_outcome_prune.sql:49-78,84-92,97-109"
+    ],
+    "contract_ref": [],
+    "tables": [
+      {
+        "table": "permit_scrape_outcomes",
+        "columns": [
+          "observed_at"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/01-pipeline/44_chain_deep_scrapes.md §3",
+        "evidence": [
+          "migrations/237_scrape_outcome_prune.sql:50-51",
+          "docs/specs/00-architecture/114_rls_policy_catalog.md:214"
+        ]
+      },
+      {
+        "table": "permit_scrape_outcome_rollup",
+        "columns": [
+          "permit_num",
+          "outcome",
+          "transport",
+          "occurrences",
+          "first_at",
+          "last_at"
+        ],
+        "producing_steps": [
+          "permit_scrape_outcomes_prune"
+        ],
+        "chain_position": "n/a — a pg_cron job, not a chain step",
+        "owner_spec": "docs/specs/01-pipeline/44_chain_deep_scrapes.md §3",
+        "evidence": [
+          "migrations/237_scrape_outcome_prune.sql:56-72",
+          "docs/specs/00-architecture/114_rls_policy_catalog.md:214"
+        ]
+      },
+      {
+        "table": "pipeline_runs",
+        "columns": [
+          "pipeline",
+          "started_at",
+          "completed_at",
+          "status",
+          "records_meta"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/01-pipeline/48_pipeline_observability.md",
+        "evidence": [
+          "migrations/237_scrape_outcome_prune.sql:84-92,97-109",
+          "docs/specs/00-architecture/114_rls_policy_catalog.md:209"
+        ]
+      }
+    ]
+  },
+  "state": {
+    "answer": "server_only",
+    "why": "The rollup IS the carried state — occurrences accumulate across runs via ON CONFLICT DO UPDATE, and the window is widened by LEAST/GREATEST rather than replaced.",
+    "evidence": [
+      "migrations/237_scrape_outcome_prune.sql:67-71"
+    ],
+    "fields": []
+  },
+  "staleness": {
+    "answer": "none",
+    "why": "It displays nothing.",
+    "evidence": [
+      "migrations/237_scrape_outcome_prune.sql:37-113"
+    ],
+    "offline": "none"
+  },
+  "guards": {
+    "session": {
+      "answer": "UNRESEARCHED",
+      "why": "NOT ANSWERABLE from the closed set: guards.session offers anon | authenticated | entitled | admin, all of which describe an end-user principal. This runs with no request and no user — as the pg_cron job owner through a SECURITY DEFINER function, or as a GitHub Actions runner holding repository secrets. Spec 128 §4 escalation (Spec 128 R-14 already anticipates JOBs getting their own job.schema.json); recorded rather than mis-answered.",
+      "evidence": [
+        "migrations/237_scrape_outcome_prune.sql:40-41,116-117"
+      ]
+    },
+    "rls_class": {
+      "answer": "B",
+      "why": "Both scrape-outcome tables and pipeline_runs are named Class B in the catalog's representative list — RLS on, zero policies, service-role only; the function is additionally SECURITY DEFINER and REVOKEd from anon and authenticated.",
+      "evidence": [
+        "docs/specs/00-architecture/114_rls_policy_catalog.md:209,214",
+        "migrations/237_scrape_outcome_prune.sql:40-41,116-117"
+      ]
+    },
+    "disclosure": "none",
+    "entitlement": "none",
+    "flag": "none",
+    "permission": "none",
+    "rate_bucket": "none"
+  },
+  "render": {
+    "targets": [
+      "screen"
+    ],
+    "projection": "none",
+    "breakpoints": "none",
+    "export": "none"
+  },
+  "checks": [
+    {
+      "id": "job_prune_atomic_delete_and_fold",
+      "kind": "schema_declared",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "why": "The delete and the rollup are one data-modifying CTE precisely so a mid-failure rolls back both halves — split them and there is a window where diagnostic rows are gone and their counts were never folded."
+    },
+    {
+      "id": "job_prune_idempotent_replay",
+      "kind": "ledger_row_present",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "occurrences accumulate only from rows deleted in THIS call, so a re-run prunes nothing new and cannot double-count — the property the operator D1 ruling rests on."
+    },
+    {
+      "id": "job_prune_null_permit_num_survives",
+      "kind": "contract_parse",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "COALESCE(permit_num, year_seq) is what keeps the zero-resolution rows — the anomalies this ledger exists to capture — from vanishing silently at the horizon."
+    },
+    {
+      "id": "job_prune_failure_is_durable",
+      "kind": "error_state",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "The WHEN OTHERS arm writes a status=failed pipeline_runs row before returning zeros; without it a rolled-back prune looks identical to a prune that found nothing to do."
+    }
+  ],
+  "invariants": [
+    {
+      "id": "scrape_outcomes_within_horizon",
+      "sql": "SELECT count(*) FROM public.permit_scrape_outcomes WHERE observed_at < now() - INTERVAL '91 days'",
+      "severity": "WARN",
+      "why": "One day of slack past the 90-day horizon absorbs the daily cadence; a growing count means the schedule is not firing or the prune is failing silently."
+    },
+    {
+      "id": "scrape_rollup_occurrences_positive",
+      "sql": "SELECT count(*) FROM public.permit_scrape_outcome_rollup WHERE occurrences < 1 OR last_at < first_at",
+      "severity": "FAIL",
+      "why": "occurrences only ever accumulates and the window only ever widens (LEAST/GREATEST); either condition means the upsert arithmetic is wrong."
+    }
+  ],
+  "plausibility": "none",
+  "states": [
+    {
+      "name": "hit",
+      "golden": "src/tests/db/237_scrape_outcome_prune.db.test.ts"
+    },
+    {
+      "name": "empty",
+      "golden": "src/tests/db/237_scrape_outcome_prune.db.test.ts"
+    },
+    {
+      "name": "error",
+      "golden": "src/tests/db/237_scrape_outcome_prune.db.test.ts"
+    }
+  ],
+  "errors": {
+    "answer": "envelope",
+    "why": "One WHEN OTHERS arm around the whole atomic statement: it RAISE WARNINGs, writes a status=failed pipeline_runs row carrying the first 500 characters of SQLERRM, and returns zeros — a structured, durable failure record rather than a swallowed one.",
+    "evidence": [
+      "migrations/237_scrape_outcome_prune.sql:79-95"
+    ],
+    "classes": [
+      {
+        "class": "500",
+        "ui": "a pipeline_runs row with status='failed' and records_meta.error = left(SQLERRM, 500)"
+      }
+    ],
+    "no_retry": []
+  },
+  "emits": {
+    "answer": "ledger",
+    "why": "A pipeline_runs row under pipeline='scrape_outcome_prune' on every run — completed with pruned_count/rollup_rows/retention_days, or failed with the error text.",
+    "evidence": [
+      "migrations/237_scrape_outcome_prune.sql:84-92,97-109"
+    ],
+    "analytics": [],
+    "ledger_events": [],
+    "breadcrumbs": [
+      "RAISE WARNING 'prune_permit_scrape_outcomes failed: %'"
+    ]
+  },
+  "offers": {
+    "answer": "none",
+    "why": "A retention job renders no sponsored placement.",
+    "evidence": [
+      "migrations/237_scrape_outcome_prune.sql:37-113"
+    ]
+  },
+  "metering": {
+    "answer": "none",
+    "why": "It writes no usage_events row; its counts go to pipeline_runs.",
+    "evidence": [
+      "migrations/237_scrape_outcome_prune.sql:97-109"
+    ]
+  },
+  "config": {
+    "answer": "none",
+    "why": "The 90-day horizon is a literal INTERVAL in the function body and is repeated as a literal 90 in records_meta.retention_days — it is not a registered logic variable, and Spec 115 §5 files its re-evaluation as a followup rather than making it tunable.",
+    "evidence": [
+      "migrations/237_scrape_outcome_prune.sql:51,107",
+      "docs/specs/00-architecture/115_scheduling.md §5"
+    ],
+    "logic_variables": [],
+    "retired": []
+  },
+  "sharing": {
+    "answer": "none",
+    "why": "It renders no contract.",
+    "evidence": [
+      "migrations/237_scrape_outcome_prune.sql:37-113"
+    ],
+    "surfaces": []
+  },
+  "a11y": {
+    "touch_target_min_px": "UNRESEARCHED",
+    "labels": "none",
+    "dark_mode": "none",
+    "reduced_motion": "none",
+    "i18n": "none",
+    "safe_area": "none"
+  },
+  "deviations": "none",
+  "limitations": [
+    {
+      "what": "The retention window is a literal in two places that must agree.",
+      "measured": "migrations/237_scrape_outcome_prune.sql:51 uses INTERVAL '90 days' for the cutoff and :107 writes retention_days = 90 into records_meta; nothing derives the second from the first.",
+      "check_id": "job_prune_failure_is_durable"
+    },
+    {
+      "what": "It is not scheduled on instances without pg_cron.",
+      "measured": "migrations/237_scrape_outcome_prune.sql:127-130 — a pg_extension guard with a NOTICE-skip; the FUNCTION is created unguarded so CI images can still test it.",
+      "check_id": "job_prune_atomic_delete_and_fold"
+    }
+  ],
+  "interpretation": "none",
+  "notes": "One atomic data-modifying CTE: DELETE ... RETURNING feeds an ON CONFLICT upsert into permit_scrape_outcome_rollup (occurrences += excluded, first_at = LEAST, last_at = GREATEST); permit_num-NULL rows fold under COALESCE(permit_num, year_seq). Writes a durable pipeline_runs row (pipeline='scrape_outcome_prune') on BOTH success ('completed') and failure ('failed'). 08:00 UTC is deliberately clear of the 09:00/10:00/14:30 jobs and the 15:00 UTC deep-scrapes window. MEASURED 2026-09-15. The most thoroughly instrumented job in the shard: atomic, idempotent, durable on both success and failure, and the only one whose failure path writes its own ledger row. It is also the only job whose retention window is NOT tunable while its nearest sibling (lead_views_retention_purge) reads one from logic_variables — measured, and left as a disagreement rather than harmonised. guards.session and outputs.answer are Spec 128 §4 vocabulary escalations; errors.answer is answered `envelope` because records_meta.error is a structured failure record, which is the closest legal reading of that value for a job with no HTTP response.",
+  "x-draft": {
+    "shard": "jobs",
+    "files": [
+      "migrations/237_scrape_outcome_prune.sql"
+    ],
+    "cron": "0 8 * * *",
+    "guarded_by": "pg_extension guard with a NOTICE-skip on the cron.schedule call only (migrations/237:127-130), with an idempotent unschedule-by-name loop; the `public.prune_permit_scrape_outcomes()` FUNCTION is created UNGUARDED (CI-testable), SECURITY DEFINER, `SET search_path = pg_catalog`, REVOKE ALL from PUBLIC/anon/authenticated"
+  },
+  "programme": {
+    "scope": "estate_other",
+    "phase": "not_scheduled",
+    "why": "Permit data for the lead-gen product. Inventoried only; it converts under the same standard in a later programme.",
+    "feature": "F93",
+    "build_order": 4204,
+    "leakage": "UNRESEARCHED",
+    "product_questions": "UNRESEARCHED",
+    "review": {
+      "status": "unreviewed"
+    }
+  }
+}

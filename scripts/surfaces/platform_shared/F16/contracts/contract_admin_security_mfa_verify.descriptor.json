@@ -1,0 +1,441 @@
+{
+  "kind": "CONTRACT",
+  "status": "exists",
+  "docs": {
+    "purpose": "Completes an admin's two-factor setup by checking the six-digit code from their authenticator app; on success it upgrades their login session to a higher trust level and issues one-time backup codes for use if they lose their device.",
+    "data_story": "It touches no table at all and writes `admin_backup_codes` and `admin_audit_log`. Its response is an explicit pick-by-name projection of 2 fields, so a column added to a table upstream does not leak into the client by accident. It is called from 1 place: `src/features/admin-security/api/useAdminSecurity.ts`.",
+    "under_126": "Becomes a **CONTRACT descriptor** of archetype `MUTATION`. It declares `database.writes[]` with a `write_discipline` per target (the Spec 122 vocabulary verbatim), its idempotency posture, its optimistic contract and its rollback. Its `consumers[]` becomes the edge list of the fan-out graph — the join nothing in this estate holds today."
+  },
+  "evidence": {
+    "files": [
+      "src/app/api/admin/security/mfa/verify/route.ts:1"
+    ],
+    "contracts": [
+      "src/app/api/admin/security/mfa/verify/route.ts:44 (POST export)",
+      "src/lib/api/with-api-envelope.ts:27-52"
+    ],
+    "tables": [
+      "src/lib/auth/verify-admin.ts:117-120",
+      "src/lib/auth/verify-admin.ts:158",
+      "src/lib/admin/backup-codes.ts:116-119",
+      "src/app/api/admin/security/mfa/verify/route.ts:86",
+      "src/lib/admin/backup-codes.ts:73",
+      "src/lib/admin/backup-codes.ts:76-79",
+      "src/lib/admin/backup-codes.ts:127-130",
+      "src/app/api/admin/security/mfa/verify/route.ts:89-97",
+      "src/lib/admin/admin-audit.ts:72-73",
+      "src/lib/db/generated/schema.ts — every table named here is present in the introspected drizzle schema"
+    ],
+    "gate": [
+      "src/lib/auth/route-guard.ts — admin prefix — classifyRoute matches pathname.startsWith('/api/admin/')",
+      "src/lib/auth/route-guard.ts:150-201 — classifyRoute executed 2026-09-15 with the concrete path → \"admin\"",
+      "in-handler: verifyAdminAuth at src/app/api/admin/security/mfa/verify/route.ts:45 — first line"
+    ],
+    "states": [
+      "hit: src/app/api/admin/security/mfa/verify/route.ts:106",
+      "unauthorized: src/app/api/admin/security/mfa/verify/route.ts:46",
+      "error: src/app/api/admin/security/mfa/verify/route.ts:69 (challenge failed), :80 (verify failed)",
+      "partial: src/app/api/admin/security/mfa/verify/route.ts:98-103 — the factor IS verified and 10 code rows ARE stored, but the audit INSERT threw; 200 is still returned",
+      "ambiguous: src/app/api/admin/security/mfa/verify/route.ts:47-49 — 403 FORBIDDEN for a valid admin_key/dev_bypass admin, not a permission failure"
+    ],
+    "emits": [
+      "analytics admin_mfa_enrolled",
+      "ledger admin_audit_log row, action='mfa_enrolled'",
+      "src/app/api/admin/security/mfa/verify/route.ts:89-97 (writeAdminAudit, action 'mfa_enrolled')",
+      "src/lib/admin/admin-audit.ts:72-73 (the INSERT)"
+    ]
+  },
+  "identity": {
+    "id": "contract_admin_security_mfa_verify",
+    "route": "/api/admin/security/mfa/verify",
+    "archetype": "MUTATION",
+    "platforms": [
+      "web"
+    ],
+    "owns": {
+      "components": []
+    },
+    "owner": "Backend/Pipeline (CLAUDE.md §Domain Rules: `src/app/api/`)",
+    "spec": "docs/specs/00-architecture/13_authentication.md",
+    "spec_refs": [
+      "docs/specs/00-architecture/13_authentication.md §3.6, docs/specs/02-web-admin/33_web_admin_engineering_protocol.md §5 + §8.1 + §13, .cursor/phase1_plan.md Item 6 / P1-F4.3 — src/app/api/admin/security/mfa/verify/route.ts:1-3"
+    ],
+    "spec_version": "0-draft",
+    "versioning": {
+      "answer": "breaking_allowed",
+      "why": "Every consumer is in src/** and ships in the same Next.js deploy as the route, so a breaking change is one commit.",
+      "evidence": [
+        "src/features/admin-security/api/useAdminSecurity.ts:87"
+      ]
+    },
+    "ref": "C-015"
+  },
+  "inputs": {
+    "answer": "app_outputs",
+    "why": "It reads 2 table(s) directly; none is written by a pipeline step — they are written by API routes, jobs or migration seeds — but the input is still the database, not another contract.",
+    "evidence": [
+      "src/lib/auth/verify-admin.ts:158",
+      "src/lib/admin/backup-codes.ts:116-119",
+      "migrations/231_admin_backup_codes.sql:18",
+      "docs/reference/data-lineage-map.md — no `## `admin_backup_codes`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)",
+      "src/lib/auth/verify-admin.ts:117-120",
+      "migrations/226_profiles_admin_bootstrap.sql:25",
+      "docs/reference/data-lineage-map.md — no `## `profiles`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)"
+    ],
+    "contract_ref": [],
+    "query_key": [],
+    "field_whitelist": [
+      "verified",
+      "backup_codes"
+    ],
+    "tables": [
+      {
+        "table": "admin_backup_codes",
+        "columns": [
+          "id",
+          "code_hash",
+          "code_salt",
+          "user_id",
+          "used_at"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/00-architecture/13_authentication.md",
+        "evidence": [
+          "src/lib/auth/verify-admin.ts:158",
+          "src/lib/admin/backup-codes.ts:116-119",
+          "migrations/231_admin_backup_codes.sql:18",
+          "docs/reference/data-lineage-map.md — no `## `admin_backup_codes`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)"
+        ]
+      },
+      {
+        "table": "profiles",
+        "columns": [
+          "id",
+          "is_admin"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/00-architecture/114_rls_policy_catalog.md",
+        "evidence": [
+          "src/lib/auth/verify-admin.ts:117-120",
+          "migrations/226_profiles_admin_bootstrap.sql:25",
+          "docs/reference/data-lineage-map.md — no `## `profiles`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)"
+        ]
+      }
+    ]
+  },
+  "outputs": {
+    "answer": "contract_only",
+    "why": "This route IS the mutation contract: it writes 2 table(s) synchronously inside the request and returns the result — there is no optimistic client-side flip to reconcile.",
+    "evidence": [
+      "src/app/api/admin/security/mfa/verify/route.ts:89-97",
+      "src/lib/admin/admin-audit.ts:72-73",
+      "migrations/217_account_preset_supplier_admin_audit_log.sql:62",
+      "docs/reference/data-lineage-map.md — no `## `admin_audit_log`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)",
+      "src/app/api/admin/security/mfa/verify/route.ts:86",
+      "src/lib/admin/backup-codes.ts:73",
+      "src/lib/admin/backup-codes.ts:76-79",
+      "src/lib/auth/verify-admin.ts:158",
+      "src/lib/admin/backup-codes.ts:127-130",
+      "migrations/231_admin_backup_codes.sql:18"
+    ],
+    "contract_ref": [],
+    "tables": [
+      {
+        "table": "admin_audit_log",
+        "columns": [
+          "admin_uid",
+          "action",
+          "target_uid",
+          "old_value",
+          "new_value",
+          "reason"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/02-web-admin/21_admin_user_management.md",
+        "evidence": [
+          "src/app/api/admin/security/mfa/verify/route.ts:89-97",
+          "src/lib/admin/admin-audit.ts:72-73",
+          "migrations/217_account_preset_supplier_admin_audit_log.sql:62",
+          "docs/reference/data-lineage-map.md — no `## `admin_audit_log`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)"
+        ]
+      },
+      {
+        "table": "admin_backup_codes",
+        "columns": [
+          "user_id",
+          "code_hash",
+          "code_salt",
+          "used_at"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/00-architecture/13_authentication.md",
+        "evidence": [
+          "src/app/api/admin/security/mfa/verify/route.ts:86",
+          "src/lib/admin/backup-codes.ts:73",
+          "src/lib/admin/backup-codes.ts:76-79",
+          "src/lib/auth/verify-admin.ts:158",
+          "src/lib/admin/backup-codes.ts:127-130",
+          "migrations/231_admin_backup_codes.sql:18",
+          "docs/reference/data-lineage-map.md — no `## `admin_backup_codes`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)"
+        ]
+      }
+    ]
+  },
+  "state": {
+    "answer": "server_only",
+    "why": "A CONTRACT holds no client state: every value is resolved per request on the server and nothing is cached in a client store by the route itself.",
+    "evidence": [
+      "src/app/api/admin/security/mfa/verify/route.ts:44 (POST export)",
+      "src/lib/api/with-api-envelope.ts:27-52"
+    ],
+    "fields": []
+  },
+  "staleness": {
+    "answer": "live",
+    "why": "Every read runs against the base tables on each request — there is no cache layer between the handler and the database.",
+    "evidence": [
+      "src/lib/auth/verify-admin.ts:158",
+      "src/lib/admin/backup-codes.ts:116-119",
+      "migrations/231_admin_backup_codes.sql:18",
+      "docs/reference/data-lineage-map.md — no `## `admin_backup_codes`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)"
+    ],
+    "offline": "none"
+  },
+  "guards": {
+    "session": {
+      "answer": "admin",
+      "why": "classifyRoute(\"/api/admin/security/mfa/verify\") returns \"admin\" (executed 2026-09-15); the handler re-verifies the caller in-process.",
+      "evidence": [
+        "src/lib/auth/route-guard.ts:150-201 — classifyRoute executed 2026-09-15 with the concrete path",
+        "verifyAdminAuth at src/app/api/admin/security/mfa/verify/route.ts:45 — first line"
+      ]
+    },
+    "rls_class": {
+      "answer": "A",
+      "why": "It reaches user-owned rows whose policies key on auth.uid(). The route connects as the table owner (raw pg), which Spec 114 §9 makes owner-exempt from RLS — the class describes the data, not the gate this route passes.",
+      "evidence": [
+        "migrations/226_profiles_admin_bootstrap.sql:48",
+        "migrations/230_rls_class_a_entitlements.sql:57",
+        "docs/specs/00-architecture/114_rls_policy_catalog.md §2"
+      ]
+    },
+    "disclosure": "none",
+    "entitlement": "none",
+    "flag": "none",
+    "permission": "none",
+    "rate_bucket": "none"
+  },
+  "render": {
+    "targets": [
+      "screen"
+    ],
+    "projection": "none",
+    "breakpoints": "none",
+    "export": "none"
+  },
+  "checks": [
+    {
+      "id": "contract_admin_security_mfa_verify__auth_class_parity",
+      "kind": "auth_class_parity",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "why": "guards.session must equal classifyRoute(\"/api/admin/security/mfa/verify\"), executed 2026-09-15 → \"admin\" plus the in-handler guard (verifyAdminAuth at src/app/api/admin/security/mfa/verify/route.ts:45 — first line). No test file in src/tests/** imports this route — the parity is unlocked."
+    },
+    {
+      "id": "contract_admin_security_mfa_verify__error_envelope",
+      "kind": "error_state",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "Every declared error class returns the { data, error, meta } envelope of docs/specs/00_engineering_standards.md §4.4; expected to stay at zero deviations."
+    },
+    {
+      "id": "contract_admin_security_mfa_verify__contract_parse",
+      "kind": "contract_parse",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "why": "Request input is parsed by VerifyBodySchema at src/app/api/admin/security/mfa/verify/route.ts:57 (safeParse), rejected at :58 before any query runs; a payload that fails the schema is refused, never coerced."
+    },
+    {
+      "id": "contract_admin_security_mfa_verify__field_whitelist_parity",
+      "kind": "field_whitelist_parity",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "The response is an explicit pick-by-name of 2 field(s) (src/app/api/admin/security/mfa/verify/route.ts:106), so a column added upstream cannot leak; this check set-equals the projection to inputs.field_whitelist."
+    },
+    {
+      "id": "contract_admin_security_mfa_verify__schema_declared",
+      "kind": "schema_declared",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "Every table and column declared in lineage.reads[]/writes[] must exist in src/lib/db/generated/schema.ts (drizzle-kit introspect of the live database); the registry generator checks this both directions."
+    },
+    {
+      "id": "contract_admin_security_mfa_verify__audit_row_present",
+      "kind": "ledger_row_present",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "Every accepted mutation writes an admin_audit_log row (src/app/api/admin/security/mfa/verify/route.ts:89-97 (writeAdminAudit, action 'mfa_enrolled'), src/lib/admin/admin-audit.ts:72-73 (the INSERT)); a mutation with no row is the gap Spec 126 §2.2 names."
+    }
+  ],
+  "invariants": "none",
+  "plausibility": "none",
+  "states": [
+    {
+      "name": "hit",
+      "golden": "none"
+    },
+    {
+      "name": "unauthorized",
+      "golden": "none"
+    },
+    {
+      "name": "error",
+      "golden": "none"
+    },
+    {
+      "name": "partial",
+      "golden": "none"
+    },
+    {
+      "name": "ambiguous",
+      "golden": "none"
+    }
+  ],
+  "errors": {
+    "answer": "envelope",
+    "why": "Success and failure both arrive in the { data, error, meta } envelope of docs/specs/00_engineering_standards.md §4.4; withApiEnvelope is the outermost wrapper and converts any uncaught throw into the same shape.",
+    "evidence": [
+      "src/lib/api/with-api-envelope.ts:27-52",
+      "src/app/api/admin/security/mfa/verify/route.ts:106",
+      "src/features/leads/api/envelope.ts:51",
+      "src/features/leads/api/envelope.ts:82",
+      "src/app/api/admin/security/mfa/verify/route.ts:46 (401)",
+      "src/app/api/admin/security/mfa/verify/route.ts:48 (403)",
+      "src/app/api/admin/security/mfa/verify/route.ts:55 (400)",
+      "src/app/api/admin/security/mfa/verify/route.ts:58 (400)"
+    ],
+    "classes": [
+      {
+        "class": "401",
+        "ui": "{data:null,error:{code,message},meta:null} — src/app/api/admin/security/mfa/verify/route.ts:46 (code UNAUTHORIZED)"
+      },
+      {
+        "class": "403",
+        "ui": "{data:null,error:{code,message},meta:null} — src/app/api/admin/security/mfa/verify/route.ts:48 (code FORBIDDEN)"
+      },
+      {
+        "class": "400",
+        "ui": "{data:null,error:{code,message},meta:null} — src/app/api/admin/security/mfa/verify/route.ts:55 (code BAD_REQUEST)"
+      }
+    ]
+  },
+  "emits": {
+    "answer": "both",
+    "why": "It both emits named observability events and writes durable rows a reviewer can count after the fact.",
+    "evidence": [
+      "analytics admin_mfa_enrolled",
+      "ledger admin_audit_log row, action='mfa_enrolled'",
+      "src/app/api/admin/security/mfa/verify/route.ts:89-97 (writeAdminAudit, action 'mfa_enrolled')",
+      "src/lib/admin/admin-audit.ts:72-73 (the INSERT)"
+    ],
+    "analytics": [
+      "admin_mfa_enrolled"
+    ],
+    "ledger_events": [],
+    "breadcrumbs": []
+  },
+  "offers": {
+    "answer": "none",
+    "why": "It renders no sponsored placement: the offers and advertisers tables Spec 126 §2 specifies do not exist in migrations/ and nothing in this handler reads placement inventory.",
+    "evidence": [
+      "migrations/ — no CREATE TABLE offers / advertisers (grep 2026-09-15)",
+      "src/app/api/admin/security/mfa/verify/route.ts — read in full; no placement read"
+    ]
+  },
+  "metering": {
+    "answer": "none",
+    "why": "Nothing here is counted: no usage_events row (the table does not exist in the introspected schema) and no quota counter is written by this handler.",
+    "evidence": [
+      "src/app/api/admin/security/mfa/verify/route.ts — read in full 2026-09-15",
+      "src/lib/db/generated/schema.ts — no usage_events table"
+    ]
+  },
+  "config": {
+    "answer": "none",
+    "why": "It consumes no tunable: no logic_variables read and no env-var-driven threshold in the handler or the libs it calls.",
+    "evidence": [
+      "src/app/api/admin/security/mfa/verify/route.ts — read in full 2026-09-15; no loadMarketplaceConfigs / logic_variables read"
+    ],
+    "logic_variables": [],
+    "retired": []
+  },
+  "sharing": {
+    "answer": "sole",
+    "why": "Exactly one call site renders it, so its projection serves one surface.",
+    "evidence": [
+      "src/features/admin-security/api/useAdminSecurity.ts:87"
+    ],
+    "surfaces": [
+      "src/features/admin-security/api/useAdminSecurity.ts:87"
+    ]
+  },
+  "a11y": {
+    "touch_target_min_px": "UNRESEARCHED",
+    "labels": "none",
+    "dark_mode": "none",
+    "reduced_motion": "none",
+    "i18n": "none",
+    "safe_area": "none"
+  },
+  "deviations": "none",
+  "limitations": [
+    {
+      "what": "a11y.touch_target_min_px has no legal answer for a CONTRACT",
+      "measured": "The schema allows only UNRESEARCHED or an integer >= 44; a JSON endpoint has no touch target and the vocabulary has no \"n/a\". Left UNRESEARCHED and escalated per Spec 128 §4 rather than invented.",
+      "check_id": "contract_admin_security_mfa_verify__auth_class_parity"
+    }
+  ],
+  "interpretation": "none",
+  "notes": "writeAdminAudit is called for 'mfa_enrolled' after backup codes are issued. Challenge/verify goes through Supabase Auth (GoTrue), not a raw table read. replaceBackupCodes deletes all existing rows for the user and inserts 10 fresh hashed rows in one transaction. An audit-write failure here is deliberately swallowed (logged, not thrown) because the factor is already verified and the codes already stored — a 500 would strand a live enrollment and hide the one-time plaintext codes. Requires authMethod === 'session'. | MEASURED 2026-09-15: FINDINGS. (1) CENSUS DISAGREEMENT: census_reads is [] for this route, but it DOES read — `profiles` on every request through verifyAdminAuth (src/lib/auth/verify-admin.ts:117-120), and `admin_backup_codes` through consumeBackupCode when ADMIN_MFA_ENFORCED='true' (src/lib/admin/backup-codes.ts:116). census_writes [admin_backup_codes, admin_audit_log] is confirmed; the admin_backup_codes write is a DELETE+10×INSERT pair inside one transaction (src/lib/admin/backup-codes.ts:72-81), not a single statement. (2) Audit failure swallowed at :98-103 with the reason stated at :99-101 — deliberate, so a caller cannot tell an audited enrollment from an unaudited one. (3) The 10 PLAINTEXT backup codes are returned in the body at :106 — by design (:83-85), stored only as sha256(salt:code) (src/lib/admin/backup-codes.ts:52-56). (4) NO RATE LIMIT on a 6-digit TOTP verify endpoint (:72-76). Brute-force resistance is entirely delegated to Supabase GoTrue; nothing in this repo throttles :44. Worth a reviewer's attention even though the code path is deliberate. (5) Backup-code hashing uses sha256, not a KDF — src/lib/admin/backup-codes.ts:16-24 argues the case explicitly (64-bit server-generated one-time codes). Comment, not evidence; the code is at :52-56. (6) No SELECT *; all SQL parameterised. | Caching: none observed — no Cache-Control, revalidate, dynamic or in-process cache in the file. | Other guards / classification: CSRF Origin allowlist (POST is a MUTATING_METHOD) via src/lib/auth/verify-admin.ts:45 + :70-78, default-deny at :336. MFA aal2 gate src/lib/auth/verify-admin.ts:143-173, inert unless ADMIN_MFA_ENFORCED='true'. TOTP challenge/verify is done server-side against GoTrue at :63 and :72-76 — the 6-digit code is never compared in this repo. | No test file under src/tests/** imports this route.",
+  "x-draft": {
+    "shard": "contracts",
+    "files": [
+      "src/app/api/admin/security/mfa/verify/route.ts"
+    ],
+    "loc": 107,
+    "methods": [
+      "POST"
+    ],
+    "consumers": [
+      "src/features/admin-security/api/useAdminSecurity.ts"
+    ],
+    "writes_audit_row": true,
+    "consumers_verified": [
+      "src/features/admin-security/api/useAdminSecurity.ts:87"
+    ],
+    "auth_class_executed": "admin",
+    "locking_tests": []
+  },
+  "programme": {
+    "scope": "platform_shared",
+    "phase": "UNRESEARCHED",
+    "why": "Used by both products and owned by neither.",
+    "feature": "F16",
+    "build_order": 3162,
+    "leakage": "none",
+    "product_questions": "none",
+    "review": {
+      "status": "unreviewed"
+    }
+  }
+}

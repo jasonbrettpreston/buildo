@@ -1,0 +1,266 @@
+{
+  "kind": "SURFACE",
+  "status": "exists",
+  "docs": {
+    "purpose": "The outermost wrapper every web page renders inside. It sets the browser tab title and description for the whole site and switches on two background services that all pages then share: a cache that remembers fetched data between page visits, and the usage-tracking hookup. It shows nothing of its own - visitors never see it as a page.",
+    "data_story": "This surface reaches **no API contract at all** — every value it shows is local, passed in as a prop, or read from the device.",
+    "under_126": "**RE-PROJECT** — it writes nothing and holds no Layer-3 store, so the move is short — the server already assembles the payload and only the rendering is client-side. It renders through the SHELL renderer (declared routing branches, guards and child groups — a shell here is not inert), reading no contract. Its `owns.components[]` declares `src/components/observability/PostHogProvider.tsx`."
+  },
+  "evidence": {
+    "files": [
+      "src/app/layout.tsx:1",
+      "src/app/providers.tsx:1",
+      "src/components/observability/PostHogProvider.tsx:1"
+    ],
+    "contracts": [
+      "none — no /api/ string and no hook import in any of the three files (src/app/layout.tsx, src/app/providers.tsx, src/components/observability/PostHogProvider.tsx)"
+    ],
+    "tables": [
+      "none — no SQL and no db client import in any of the three files"
+    ],
+    "gate": [
+      "src/lib/auth/route-guard.ts:43-64",
+      "src/tests/middleware.logic.test.ts:30"
+    ],
+    "states": [
+      "src/app/layout.tsx:15-21 — one unconditional return, no branch"
+    ],
+    "emits": [
+      "src/components/observability/PostHogProvider.tsx:8-10",
+      "src/lib/observability/capture.ts:101-127"
+    ]
+  },
+  "identity": {
+    "id": "shell_web_root",
+    "route": "src/app/layout.tsx",
+    "archetype": "SHELL",
+    "platforms": [
+      "web"
+    ],
+    "owns": {
+      "components": [
+        "src/components/observability/PostHogProvider.tsx"
+      ]
+    },
+    "owner": "web",
+    "spec": "docs/specs/archive/75_lead_feed_implementation_guide.md",
+    "spec_refs": [
+      "docs/specs/archive/75_lead_feed_implementation_guide.md §11 Phase 3 (the provider composition)",
+      "docs/specs/archive/75_lead_feed_implementation_guide.md §7a",
+      "docs/specs/archive/75_lead_feed_implementation_guide.md §13",
+      "docs/specs/02-web-admin/126_maxbld_surface_standard.md §3.1 (the SHELL archetype)"
+    ],
+    "spec_version": "0-draft",
+    "versioning": {
+      "answer": "breaking_allowed",
+      "why": "Its only consumers are the pages in this same repo; changing the provider composition is one commit with no external contract to keep.",
+      "evidence": [
+        "src/app/layout.tsx:18",
+        "src/app/providers.tsx:43-48",
+        "src/app/providers.tsx:2 — the SPEC LINK header"
+      ]
+    },
+    "ref": "S-049"
+  },
+  "inputs": {
+    "answer": "none",
+    "why": "It fetches nothing and takes only `children`; PostHogProvider's effect calls initObservability() and returns its children untouched.",
+    "evidence": [
+      "src/app/layout.tsx:10-21",
+      "src/components/observability/PostHogProvider.tsx:7-11"
+    ],
+    "contract_ref": [],
+    "query_key": [],
+    "field_whitelist": [],
+    "tables": []
+  },
+  "outputs": {
+    "answer": "device_only",
+    "why": "The only write is browser-local: PostHog's init writes its own cookies/localStorage, and the TanStack persister writes the `buildo-leads-cache` IndexedDB key. No contract, no table.",
+    "evidence": [
+      "src/app/providers.tsx:29-30,45",
+      "src/features/leads/api/query-client.ts:79-83",
+      "src/lib/observability/capture.ts:116"
+    ],
+    "contract_ref": [],
+    "tables": []
+  },
+  "state": {
+    "answer": "query_cache",
+    "why": "It constructs and mounts the process-wide TanStack QueryClient (staleTime 60s, gcTime 24h) plus the IndexedDB persister — Layer 2, and the only state this surface owns.",
+    "evidence": [
+      "src/app/providers.tsx:29-30,45-47",
+      "src/features/leads/api/query-client.ts:41-58,82-83"
+    ],
+    "fields": []
+  },
+  "staleness": {
+    "answer": "none",
+    "why": "It displays no server value of its own; the 60s staleTime it configures belongs to whichever descendant runs a query.",
+    "evidence": [
+      "src/app/layout.tsx:15-21",
+      "src/features/leads/api/query-client.ts:57"
+    ],
+    "stale_time_ms": 60000,
+    "gc_time_ms": 86400000,
+    "offline": "none"
+  },
+  "guards": {
+    "session": {
+      "answer": "anon",
+      "why": "It wraps every route, including the public ones, so it renders for a visitor with no session at all — classifyRoute('/') is 'public'.",
+      "evidence": [
+        "src/lib/auth/route-guard.ts:43-64",
+        "src/tests/middleware.logic.test.ts:30",
+        "src/app/layout.tsx:15-21"
+      ]
+    },
+    "rls_class": {
+      "answer": "none",
+      "why": "It reaches no table, so no policy class applies.",
+      "evidence": [
+        "src/app/layout.tsx:1-22",
+        "src/app/providers.tsx:1-49"
+      ]
+    },
+    "disclosure": "none",
+    "entitlement": "none",
+    "flag": "none",
+    "permission": "none",
+    "rate_bucket": "none"
+  },
+  "render": {
+    "targets": [
+      "screen"
+    ],
+    "projection": "none",
+    "breakpoints": "none",
+    "export": "none",
+    "routing": "UNRESEARCHED"
+  },
+  "checks": [
+    {
+      "id": "shell_web_root_owns_posthog_provider",
+      "kind": "components_owned",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "PostHogProvider.tsx is rendered only by providers.tsx, which only layout.tsx renders — R-13 totality for that file rests entirely on this row claiming it."
+    },
+    {
+      "id": "shell_web_root_persist_options_stable",
+      "kind": "selector_atomicity",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "persistOptions is hoisted to module scope precisely so the provider does not receive a fresh object each render (the Phase 3-i adversarial finding); an inline literal here reintroduces the rehydration loop."
+    }
+  ],
+  "invariants": "none",
+  "plausibility": "none",
+  "states": [
+    {
+      "name": "static",
+      "golden": "none"
+    }
+  ],
+  "errors": {
+    "answer": "none",
+    "why": "It performs no fetch and declares no error.tsx — the three error boundaries in this app are all under src/app/admin/, so a throw below this layout reaches Next's built-in handler, not anything this surface declares.",
+    "evidence": [
+      "src/app/layout.tsx:1-22",
+      "src/app/admin/control-panel/error.tsx:1",
+      "src/app/admin/flight-center/error.tsx:1",
+      "src/app/admin/parcel-cost/error.tsx:1"
+    ]
+  },
+  "emits": {
+    "answer": "events",
+    "why": "PostHogProvider's effect calls initObservability(), which boots posthog-js and drains the pre-init queue — every captureEvent() in the app depends on this surface having run.",
+    "evidence": [
+      "src/components/observability/PostHogProvider.tsx:8-10",
+      "src/lib/observability/capture.ts:101,116,122-127,150-162"
+    ],
+    "analytics": [],
+    "ledger_events": [],
+    "breadcrumbs": []
+  },
+  "offers": {
+    "answer": "none",
+    "why": "It renders no sponsored placement and reads no placement inventory.",
+    "evidence": [
+      "src/app/layout.tsx:15-21"
+    ]
+  },
+  "metering": {
+    "answer": "none",
+    "why": "It writes no usage_events row and gates no quota.",
+    "evidence": [
+      "src/app/layout.tsx:1-22",
+      "src/app/providers.tsx:1-49"
+    ]
+  },
+  "config": {
+    "answer": "none",
+    "why": "Its two tunables (CACHE_MAX_AGE_MS, CACHE_BUSTER) plus DEFAULT_STALE_MS/DEFAULT_GC_MS are TypeScript module constants, not registered logic variables — they appear nowhere in docs/reference/logic-variables-registry.md.",
+    "evidence": [
+      "src/features/leads/api/query-client.ts:41-42,82-83"
+    ],
+    "logic_variables": [],
+    "retired": []
+  },
+  "sharing": {
+    "answer": "none",
+    "why": "It renders no contract, so there is nothing for another surface to share.",
+    "evidence": [
+      "src/app/layout.tsx:15-21"
+    ],
+    "surfaces": []
+  },
+  "a11y": {
+    "touch_target_min_px": "UNRESEARCHED",
+    "labels": "none",
+    "dark_mode": "none",
+    "reduced_motion": "none",
+    "i18n": "none",
+    "safe_area": "none"
+  },
+  "deviations": "none",
+  "limitations": [
+    {
+      "what": "The TanStack QueryClient + IndexedDB persister this shell mounts has no web-product consumer.",
+      "measured": "grep for useQuery/useMutation/@tanstack across src/ returns admin pages, src/features/admin-*, src/features/leads/api/useLeadView.ts and this file — none of the ten web-product surfaces.",
+      "check_id": "shell_web_root_persist_options_stable"
+    }
+  ],
+  "interpretation": "none",
+  "notes": "The spec cited is the SPEC LINK header on src/app/providers.tsx (Sec 11 Phase 3) and governs the provider composition (PersistQueryClientProvider + PostHogProvider) only; src/app/layout.tsx itself carries no SPEC LINK and appears in no system-map row. providers.tsx and PostHogProvider.tsx are included in files because the layout is the only thing that renders them; providers.tsx sits under src/app/, not src/components/. The tab title reads 'MaxBLD' (Spec 117 rename) while src/app/page.tsx still says 'Buildo'. No /api call: PostHogProvider only calls initObservability() from src/lib/observability/capture. MEASURED 2026-09-15: the QueryClient/persister this shell mounts is consumed by ZERO web-product surfaces — every one of the other nine uses bare fetch + useState (grep useQuery|useMutation|@tanstack across src/ hits only admin pages, src/features/admin-*, src/features/leads/api/useLeadView.ts and providers.tsx itself). guards.session is answered `anon` on the reachability axis (it renders for a sessionless visitor at `/`, route-guard.ts:43-64 + middleware.logic.test.ts:30); the x-draft note below is about classifyRoute, which takes a pathname the root layout does not have — both facts stand, they answer different questions. a11y.touch_target_min_px stays UNRESEARCHED because the vocabulary admits only UNRESEARCHED or an integer >= 44 and this surface has no interactive target at all — there is no \"n/a\" value to write (Spec 128 §4 escalation). SPEC PATH CORRECTED 2026-09-15: the SPEC LINK headers on src/app/providers.tsx:2 and src/components/observability/PostHogProvider.tsx:2 both cite docs/specs/03-mobile/75_lead_feed_implementation_guide.md, which does not exist — docs/specs/03-mobile/ holds 77 and 90-100 only, and the file lives at docs/specs/archive/75_lead_feed_implementation_guide.md. identity.spec now points at the file that is actually in the tree; the two stale in-code citations are recorded here rather than edited, because this shard is a census.",
+  "x-draft": {
+    "shard": "web-product",
+    "files": [
+      "src/app/layout.tsx",
+      "src/app/providers.tsx",
+      "src/components/observability/PostHogProvider.tsx"
+    ],
+    "loc": 83,
+    "measured_states": [
+      "static"
+    ],
+    "measured_gate": {
+      "session": "unmeasured",
+      "why": "Not classifiable: classifyRoute takes a URL pathname and the root layout has no pathname of its own - it wraps every route from 'public' (/) through 'admin' (/admin/*) simultaneously, so no single arm of the function applies."
+    }
+  },
+  "programme": {
+    "scope": "platform_shared",
+    "phase": "UNRESEARCHED",
+    "why": "A navigation shell. It routes and gates every product surface beneath it — converting it changes both products at once.",
+    "feature": "F14",
+    "build_order": 3143,
+    "leakage": "none",
+    "product_questions": "none",
+    "review": {
+      "status": "unreviewed"
+    }
+  }
+}

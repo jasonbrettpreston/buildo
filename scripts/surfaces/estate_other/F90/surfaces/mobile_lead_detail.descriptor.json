@@ -1,0 +1,571 @@
+{
+  "kind": "SURFACE",
+  "status": "exists",
+  "docs": {
+    "purpose": "Opens one building permit in full after the user taps a card in the feed. It shows the address, an opportunity score, the predicted start date with a best/worst range, the estimated build cost, the projected square footage, the surrounding neighbourhood's income profile, and the description of the work. A bar pinned to the bottom lets the user save the job to their tracked list. If a refresh fails but older data is cached, the old data stays on screen with a warning strip rather than blanking out.",
+    "data_story": "It reads nothing from the database directly. Every value arrives through 2 contracts: `/api/leads/detail/[id]`, `/api/leads/save`. Behind those contracts, the data comes from `coa_applications`, `cost_estimates`, `entitlements`, `lead_views`, `neighbourhoods`, `permits`, `trade_forecasts` and `user_profiles`, and writes land on `lead_views`. It holds no client-side store, so there is no local copy of server state to keep in sync.",
+    "under_126": "**REBUILD** — it drives writes, so a client decision has to be re-homed on the server before the projection can be honest. It renders through the DETAIL renderer (one entity, a single-param query key, declared sections), reading by reference: `/api/leads/detail/[id]`, `/api/leads/save`. It owns no component of its own, so its `owns.components[]` is an empty array — a legal answer, written down."
+  },
+  "evidence": {
+    "files": [
+      "mobile/app/(app)/[lead].tsx:1"
+    ],
+    "contracts": [
+      "mobile/src/hooks/useLeadDetail.ts:37-38",
+      "mobile/src/hooks/useSaveLead.ts:27"
+    ],
+    "tables": [
+      "src/lib/leads/lead-detail-query.ts:105-127",
+      "src/features/leads/lib/record-lead-view.ts:148-175"
+    ],
+    "gate": [
+      "src/lib/auth/route-guard.ts:120-132",
+      "mobile/app/(app)/_layout.tsx:236-265"
+    ],
+    "states": [
+      "mobile/app/(app)/[lead].tsx:102-104",
+      "mobile/app/(app)/[lead].tsx:125-160"
+    ],
+    "emits": [
+      "mobile/app/(app)/[lead].tsx:57-63",
+      "mobile/src/hooks/useSaveLead.ts:37"
+    ]
+  },
+  "identity": {
+    "id": "mobile_lead_detail",
+    "route": "mobile/app/(app)/[lead].tsx",
+    "archetype": "DETAIL",
+    "platforms": [
+      "mobile"
+    ],
+    "owns": {
+      "components": [
+        "mobile/src/components/feed/OpportunityRing.tsx"
+      ]
+    },
+    "owner": "unassigned (no CODEOWNERS file and no owner registry exists in the repo — measured 2026-09-15)",
+    "spec": "docs/specs/03-mobile/91_mobile_lead_feed.md",
+    "spec_refs": [
+      "docs/specs/03-mobile/91_mobile_lead_feed.md §4.3",
+      "docs/specs/03-mobile/91_mobile_lead_feed.md §4.3.1",
+      "docs/specs/01-pipeline/83_lead_cost_model.md §2",
+      "docs/specs/01-pipeline/85_trade_forecast_engine.md §2",
+      "docs/specs/01-pipeline/57_source_neighbourhoods.md §2"
+    ],
+    "spec_version": "0-draft",
+    "versioning": {
+      "answer": "frozen",
+      "why": "useLeadDetail throws a dedicated LeadDetailSchemaError when is_saved is missing — an explicit deploy-skew tripwire pinned by mobile/__tests__/useLeadDetail.test.ts:109; the response shape cannot lose a field without a client release.",
+      "evidence": [
+        "mobile/src/hooks/useLeadDetail.ts:37-55",
+        "mobile/__tests__/useLeadDetail.test.ts:109-134"
+      ]
+    },
+    "ref": "S-061"
+  },
+  "inputs": {
+    "answer": "contract",
+    "why": "One GET /api/leads/detail/:id supplies every section — cost, square footage, target date, neighbourhood profile and the saved flag; the pre-Spec-99 queryClient cache-walk this screen used instead was removed.",
+    "evidence": [
+      "mobile/src/hooks/useLeadDetail.ts:37-38",
+      "mobile/app/(app)/[lead].tsx:52"
+    ],
+    "contract_ref": [
+      "/api/leads/detail/[id]",
+      "/api/leads/save"
+    ],
+    "query_key": [
+      "lead-detail",
+      "id"
+    ],
+    "field_whitelist": [
+      "lead_id",
+      "lead_type",
+      "address",
+      "permit_num",
+      "revision_num",
+      "opportunity_score",
+      "target_window",
+      "lifecycle_stalled",
+      "competition_count",
+      "is_saved",
+      "predicted_start",
+      "p25_days",
+      "p75_days",
+      "applicant",
+      "work_description",
+      "cost.estimated",
+      "cost.tier",
+      "cost.range_low",
+      "cost.range_high",
+      "cost.modeled_gfa_sqm",
+      "neighbourhood.name",
+      "neighbourhood.avg_household_income",
+      "neighbourhood.median_household_income",
+      "neighbourhood.period_of_construction"
+    ],
+    "tables": [
+      {
+        "table": "permits",
+        "columns": [
+          "permit_num",
+          "revision_num",
+          "status",
+          "permit_type",
+          "description",
+          "street_num",
+          "street_name",
+          "neighbourhood_id",
+          "lifecycle_phase",
+          "lifecycle_stalled",
+          "latitude",
+          "longitude",
+          "location"
+        ],
+        "producing_steps": [
+          "permits",
+          "enrich_permits",
+          "geocode_permits",
+          "classify_lifecycle_phase",
+          "link_neighbourhoods"
+        ],
+        "chain_position": "permits[1]",
+        "owner_spec": "docs/specs/01-pipeline/41_chain_permits.md",
+        "evidence": [
+          "src/lib/leads/lead-detail-query.ts:105-127",
+          "docs/reference/data-lineage-map.md:1001",
+          "scripts/manifest.json#chains.permits"
+        ]
+      },
+      {
+        "table": "cost_estimates",
+        "columns": [
+          "permit_num",
+          "revision_num",
+          "cost_tier",
+          "estimated_cost",
+          "cost_range_low",
+          "cost_range_high",
+          "effective_area_sqm"
+        ],
+        "producing_steps": [
+          "compute_cost_estimates"
+        ],
+        "chain_position": "permits[17]",
+        "owner_spec": "docs/specs/01-pipeline/83_lead_cost_model.md",
+        "evidence": [
+          "src/lib/leads/lead-detail-query.ts:106-108",
+          "docs/reference/data-lineage-map.md:469",
+          "scripts/manifest.json#chains.permits"
+        ]
+      },
+      {
+        "table": "neighbourhoods",
+        "columns": [
+          "id",
+          "name",
+          "avg_household_income",
+          "median_household_income",
+          "period_of_construction"
+        ],
+        "producing_steps": [
+          "neighbourhoods"
+        ],
+        "chain_position": "sources[16]",
+        "owner_spec": "docs/specs/01-pipeline/57_source_neighbourhoods.md",
+        "evidence": [
+          "src/lib/leads/lead-detail-query.ts:109-110",
+          "docs/reference/data-lineage-map.md:702",
+          "scripts/manifest.json#chains.sources"
+        ]
+      },
+      {
+        "table": "trade_forecasts",
+        "columns": [
+          "permit_num",
+          "revision_num",
+          "trade_slug",
+          "predicted_start",
+          "p25_days",
+          "p75_days",
+          "median_days",
+          "confidence",
+          "target_window",
+          "opportunity_score"
+        ],
+        "producing_steps": [
+          "compute_trade_forecasts",
+          "compute_opportunity_scores"
+        ],
+        "chain_position": "permits[26]",
+        "owner_spec": "docs/specs/01-pipeline/85_trade_forecast_engine.md",
+        "evidence": [
+          "src/lib/leads/lead-detail-query.ts:111-114",
+          "docs/reference/data-lineage-map.md:1317",
+          "scripts/manifest.json#chains.permits"
+        ]
+      },
+      {
+        "table": "lead_views",
+        "columns": [
+          "user_id",
+          "lead_key",
+          "lead_type",
+          "permit_num",
+          "revision_num",
+          "trade_slug",
+          "saved"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/03-mobile/91_mobile_lead_feed.md",
+        "evidence": [
+          "src/lib/leads/lead-detail-query.ts:115-127",
+          "docs/reference/data-lineage-map.md:602",
+          "migrations/230_rls_class_a_entitlements.sql:70-76"
+        ]
+      },
+      {
+        "table": "coa_applications",
+        "columns": [
+          "application_number",
+          "address",
+          "description",
+          "decision",
+          "project_type",
+          "modeled_gfa_sqm",
+          "estimated_cost"
+        ],
+        "producing_steps": [
+          "coa",
+          "link_coa_to_parcels",
+          "classify_coa_scope",
+          "compute_coa_cost_estimates"
+        ],
+        "chain_position": "coa[1]",
+        "owner_spec": "docs/specs/01-pipeline/42_chain_coa.md",
+        "evidence": [
+          "src/lib/leads/lead-detail-query.ts:304-322",
+          "docs/reference/data-lineage-map.md:316",
+          "scripts/manifest.json#chains.coa"
+        ]
+      }
+    ]
+  },
+  "outputs": {
+    "answer": "optimistic_then_contract",
+    "why": "The sticky-CTA heart flips both the [\"lead-feed\"] pages and the [\"lead-detail\", id] entry before the POST lands, then invalidates both on settle so a cold-boot deep link and the list agree.",
+    "evidence": [
+      "mobile/src/hooks/useSaveLead.ts:45-107",
+      "mobile/app/(app)/[lead].tsx:391-396"
+    ],
+    "contract_ref": [
+      "/api/leads/save"
+    ],
+    "tables": [
+      {
+        "table": "lead_views",
+        "columns": [
+          "user_id",
+          "lead_key",
+          "lead_type",
+          "permit_num",
+          "revision_num",
+          "trade_slug",
+          "saved"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/03-mobile/91_mobile_lead_feed.md",
+        "evidence": [
+          "src/features/leads/lib/record-lead-view.ts:148-175",
+          "docs/reference/data-lineage-map.md:602",
+          "migrations/230_rls_class_a_entitlements.sql:70-76"
+        ]
+      }
+    ],
+    "rollback": "useSaveLead onError replays the feed-page snapshot and the lead-detail snapshot captured in onMutate.",
+    "invalidates": [
+      "lead-feed",
+      "lead-detail"
+    ]
+  },
+  "state": {
+    "answer": "query_cache",
+    "why": "The screen owns no store at all — every value comes from the [\"lead-detail\", id] cache entry; the only local state is the SaveButton's Reanimated pulse.",
+    "evidence": [
+      "mobile/app/(app)/[lead].tsx:43-63",
+      "mobile/src/components/shared/SaveButton.tsx:33"
+    ],
+    "fields": []
+  },
+  "staleness": {
+    "answer": "query_cache",
+    "why": "useLeadDetail sets a 60-second staleTime and inherits the 24-hour gcTime; on a refetch failure the screen keeps rendering the cached detail behind a \"Showing last loaded\" banner rather than blanking.",
+    "evidence": [
+      "mobile/src/hooks/useLeadDetail.ts:83",
+      "mobile/app/(app)/[lead].tsx:102",
+      "mobile/src/lib/queryClient.ts:37-44"
+    ],
+    "offline": "degraded",
+    "stale_time_ms": 60000,
+    "gc_time_ms": 86400000
+  },
+  "guards": {
+    "session": {
+      "answer": "authenticated",
+      "why": "/api/leads/detail/:id is under the `/api/leads` authenticated prefix and the handler resolves the uid before querying.",
+      "evidence": [
+        "src/lib/auth/route-guard.ts:120-132",
+        "src/app/api/leads/detail/[id]/route.ts:23"
+      ]
+    },
+    "rls_class": {
+      "answer": "B",
+      "why": "The detail row is pipeline reference data (permits, cost_estimates, neighbourhoods, trade_forecasts) — all Class-B default-deny; only the is_saved lateral touches the Class-A lead_views table.",
+      "evidence": [
+        "migrations/227_rls_class_b_default_deny.sql:42-110",
+        "migrations/230_rls_class_a_entitlements.sql:70-76"
+      ]
+    },
+    "disclosure": "none",
+    "entitlement": {
+      "product": "lead_gen",
+      "statuses": [
+        "trial",
+        "active",
+        "past_due",
+        "admin_managed"
+      ],
+      "on_missing": "paywall"
+    },
+    "flag": "none",
+    "permission": "none",
+    "rate_bucket": "none — the lead-detail route calls no withRateLimit"
+  },
+  "render": {
+    "targets": [
+      "screen"
+    ],
+    "projection": "detail",
+    "breakpoints": "mobile_first",
+    "export": "none"
+  },
+  "checks": [
+    {
+      "id": "leaddetail_contract_parse",
+      "kind": "contract_parse",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "mobile/__tests__/useLeadDetail.test.ts parses a well-formed response, asserts percent-encoding of the id segment, and asserts the LeadDetailSchemaError deploy-skew throw."
+    },
+    {
+      "id": "leaddetail_query_key_hygiene",
+      "kind": "query_key_hygiene",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "The key is the single-scalar [\"lead-detail\", id] the DETAIL archetype requires, and useSaveLead mutates that exact key."
+    },
+    {
+      "id": "leaddetail_error_state",
+      "kind": "error_state",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "Three distinct renders exist and are testID-tagged: lead-detail-skeleton, lead-detail-not-found and lead-detail-stale-banner ([lead].tsx:126-159)."
+    },
+    {
+      "id": "leaddetail_field_whitelist_parity",
+      "kind": "field_whitelist_parity",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "why": "The screen renders a section only when at least one leaf is non-null, so its rendered field set is a SUBSET of the contract projection — parity is by inspection, not by a generated check."
+    },
+    {
+      "id": "leaddetail_a11y_label",
+      "kind": "a11y_label",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "why": "Five accessibility attributes exist (back button role+label twice, address header role); the SaveButton in the sticky CTA carries a testID but no accessibilityLabel."
+    }
+  ],
+  "invariants": "none",
+  "plausibility": "none",
+  "states": [
+    {
+      "name": "loading",
+      "golden": "none"
+    },
+    {
+      "name": "hit",
+      "golden": "none"
+    },
+    {
+      "name": "miss",
+      "golden": "none"
+    },
+    {
+      "name": "degraded",
+      "golden": "none"
+    },
+    {
+      "name": "error",
+      "golden": "none"
+    }
+  ],
+  "errors": {
+    "answer": "inline",
+    "why": "A first-load failure renders the testID-tagged not-found block; a refetch failure over existing content renders an amber \"Showing last loaded — refetch failed.\" banner instead of discarding the detail.",
+    "evidence": [
+      "mobile/app/(app)/[lead].tsx:132-159",
+      "mobile/src/hooks/useLeadDetail.ts:57-73"
+    ],
+    "classes": [
+      {
+        "class": "400",
+        "ui": "Not-found block (\"This permit is no longer available\") — no retry, the id is malformed."
+      },
+      {
+        "class": "429",
+        "ui": "Not-found block; the retry guard deliberately does not burn retries against a throttle."
+      },
+      {
+        "class": "500",
+        "ui": "Retried up to 3 times, then the not-found block (or the stale banner if a cached detail exists)."
+      },
+      {
+        "class": "schema_drift",
+        "ui": "LeadDetailSchemaError — reported to Sentry, not retried, rendered as the not-found block."
+      }
+    ],
+    "no_retry": [
+      "ApiError(400)",
+      "ApiError(404)",
+      "AccountDeletedError",
+      "RateLimitError",
+      "LeadDetailSchemaError"
+    ]
+  },
+  "emits": {
+    "answer": "events",
+    "why": "lead_detail_viewed fires once per resolved lead and the save toggle fires lead_saved/lead_unsaved from the shared mutation; no ledger row is written because no usage ledger table exists.",
+    "evidence": [
+      "mobile/app/(app)/[lead].tsx:57-63",
+      "mobile/src/hooks/useSaveLead.ts:37"
+    ],
+    "analytics": [
+      "lead_detail_viewed",
+      "lead_saved",
+      "lead_unsaved"
+    ],
+    "ledger_events": [],
+    "breadcrumbs": []
+  },
+  "offers": {
+    "answer": "none",
+    "why": "No sponsored placement is rendered: the only slot component in the Expo tree is SponsorSlot, and it returns null unless EXPO_PUBLIC_PARCEL_SPONSORS=1.",
+    "evidence": [
+      "mobile/src/components/parcel/SponsorSlot.tsx:16-20"
+    ]
+  },
+  "metering": {
+    "answer": "none",
+    "why": "Nothing here is counted: the Spec 126 §7 usage ledger table does not exist (grep for usage_events in the introspected drizzle schema returns 0 hits), and the only quota-shaped counter, user_profiles.lead_views_count, is incremented solely by POST /api/leads/view, which has no mobile caller.",
+    "evidence": [
+      "src/lib/db/generated/schema.ts — no usage_events table (grep, 2026-09-15)",
+      "src/app/api/leads/view/route.ts:110",
+      "src/features/leads/api/useLeadView.ts:25 — imported only by src/tests/useLeadView.logic.test.tsx"
+    ]
+  },
+  "config": {
+    "answer": "none",
+    "why": "The surface consumes no registered logic variable: the only server-side tunable in this path, user_profiles.radius_cap_km, is a per-user admin column, not a logic_variables row.",
+    "evidence": [
+      "src/lib/userProfile.schema.ts:40",
+      "src/app/api/user-profile/route.ts:328",
+      "docs/reference/logic-variables-registry.md — no radius_cap_km entry"
+    ],
+    "logic_variables": [],
+    "retired": []
+  },
+  "sharing": {
+    "answer": "shared",
+    "why": "/api/leads/detail/:id is exclusive to this surface, but /api/leads/save is rendered by the feed, the flight board and the search sheet, and the same optimistic mutation mirrors into all of them.",
+    "evidence": [
+      "mobile/src/hooks/useSaveLead.ts:45-107"
+    ],
+    "surfaces": [
+      "mobile_lead_feed",
+      "mobile_flight_board",
+      "overlay_search_permits_sheet"
+    ],
+    "varies_by_surface": "Only this surface reads the cost / square-footage / neighbourhood blocks; the feed card projects the ranked-score subset of a different contract."
+  },
+  "a11y": {
+    "touch_target_min_px": 44,
+    "labels": "partial",
+    "dark_mode": "hardcoded",
+    "reduced_motion": "ignored",
+    "i18n": "none",
+    "safe_area": [
+      "top"
+    ]
+  },
+  "deviations": "none",
+  "limitations": [
+    {
+      "what": "The sticky save CTA has no accessible label — only a testID.",
+      "measured": "[lead].tsx:390-396 passes testID=\"save-button-detail\"; SaveButton.tsx:67-72 sets no accessibilityLabel or accessibilityRole.",
+      "check_id": "leaddetail_a11y_label"
+    },
+    {
+      "what": "CoA leads are declared in the payload type but 404 from the backend, so the lead_type union is effectively single-valued on this screen.",
+      "measured": "[lead].tsx:67-70 narrows lead_type to \"permit\" with an inline comment citing Spec 91 §4.3.1.",
+      "check_id": "leaddetail_contract_parse"
+    },
+    {
+      "what": "The 404 case — which is also how every CoA lead resolves today — cannot be declared: errors.classes has no 404 value.",
+      "measured": "surface.schema.json errors.classes enum = 400/401/403/429/500/schema_drift/offline; mobile/__tests__/useLeadDetail.test.ts:148 pins the no-retry-on-404 behaviour that has no descriptor home.",
+      "check_id": "none — vocabulary escalation per Spec 128 §4"
+    }
+  ],
+  "interpretation": "none",
+  "notes": "This is the only mobile surface that renders OpportunityRing, so it owns it. SaveButton is rendered here AND inside LeadCard (owned by mobile_lead_feed) — R-13 totality leaves it unowned.",
+  "x-draft": {
+    "shard": "mobile-product",
+    "files": [
+      "mobile/app/(app)/[lead].tsx"
+    ],
+    "loc": 401,
+    "call_idiom": "hook",
+    "stores": [],
+    "measured_states": [
+      "loading_skeleton",
+      "not_found",
+      "stale_banner_over_content",
+      "loaded"
+    ],
+    "measured_gate": {
+      "session": "required",
+      "entitlement": "subscription_status",
+      "flag": "none",
+      "permission": "none"
+    }
+  },
+  "programme": {
+    "scope": "estate_other",
+    "phase": "not_scheduled",
+    "why": "Lead generation — the other product. Spec 100 §1 states the parcel tool is \"not coupled to the Lead Feed, Flight Center, or LeadDetail\"; inventoried only.",
+    "feature": "F90",
+    "build_order": 4173,
+    "leakage": "UNRESEARCHED",
+    "product_questions": "UNRESEARCHED",
+    "review": {
+      "status": "unreviewed"
+    }
+  }
+}

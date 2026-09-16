@@ -1,0 +1,364 @@
+{
+  "kind": "SURFACE",
+  "status": "exists",
+  "docs": {
+    "purpose": "A plain row browser over whatever table a chosen pipeline step writes to. The operator arrives with a step already selected (usually from the freshness timeline's inspect link), pages through the rows fifty at a time, and can narrow them by typing a field name and value then pressing apply. Rows that carry a permit identity link straight through to the per-record inspector. It is read-only.",
+    "data_story": "It reads nothing from the database directly. Every value arrives through one contract: `/api/admin/pipeline/step-output`. Behind that contract, the data comes from `information_schema.columns` and `pg_class`.",
+    "under_126": "**RE-PROJECT** — it writes nothing and holds no Layer-3 store, so the move is short — the server already assembles the payload and only the rendering is client-side. It renders through the LIST renderer (a collection with declared pagination, recycling and empty/offline states), reading by reference: `/api/admin/pipeline/step-output`. Its `owns.components[]` declares `src/components/admin/StepOutputInspector.tsx`."
+  },
+  "evidence": {
+    "files": [
+      "src/app/admin/pipeline/step-output/page.tsx:14",
+      "src/components/admin/StepOutputInspector.tsx:1"
+    ],
+    "contracts": [
+      "src/app/api/admin/pipeline/step-output/route.ts:27",
+      "src/features/admin-flight-center/api/useStepOutput.ts:88"
+    ],
+    "tables": [
+      "src/lib/admin/manifest-utils.ts:71",
+      "src/lib/admin/step-output-query.ts:55",
+      "src/lib/admin/step-output-query.ts:80"
+    ],
+    "gate": [
+      "src/lib/auth/route-guard.ts:162",
+      "src/middleware.ts:95",
+      "src/app/api/admin/pipeline/step-output/route.ts:29"
+    ],
+    "states": [
+      "src/components/admin/StepOutputInspector.tsx:1",
+      "src/tests/StepOutputInspector.ui.test.tsx:34"
+    ],
+    "emits": [
+      "src/app/api/admin/pipeline/step-output/route.ts:71"
+    ]
+  },
+  "identity": {
+    "id": "admin_pipeline_step_output",
+    "route": "src/app/admin/pipeline/step-output/page.tsx",
+    "archetype": "LIST",
+    "platforms": [
+      "web"
+    ],
+    "owns": {
+      "components": [
+        "src/components/admin/StepOutputInspector.tsx"
+      ]
+    },
+    "owner": "UNRESEARCHED",
+    "spec": "UNRESEARCHED",
+    "spec_refs": [
+      "UNRESEARCHED"
+    ],
+    "spec_version": "0-draft",
+    "versioning": {
+      "answer": "none",
+      "why": "The payload is whatever columns the target table has, chosen at request time from the manifest, so there is no fixed shape for a consumer to depend on.",
+      "evidence": [
+        "src/lib/admin/step-output-query.ts:39",
+        "src/lib/admin/manifest-utils.ts:32"
+      ]
+    },
+    "ref": "S-023"
+  },
+  "inputs": {
+    "answer": "contract",
+    "why": "One contract; the table it reads is chosen at request time from the step manifest rather than named by the client.",
+    "evidence": [
+      "src/features/admin-flight-center/api/useStepOutput.ts:88",
+      "src/lib/admin/manifest-utils.ts:32"
+    ],
+    "contract_ref": [
+      "/api/admin/pipeline/step-output"
+    ],
+    "query_key": [
+      "admin",
+      "step-output"
+    ],
+    "field_whitelist": "UNRESEARCHED",
+    "tables": [
+      {
+        "table": "information_schema.columns",
+        "columns": [
+          "column_name",
+          "data_type"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/00-architecture/01_database_schema.md §3",
+        "evidence": [
+          "src/lib/admin/manifest-utils.ts:71"
+        ]
+      },
+      {
+        "table": "pg_class",
+        "columns": [
+          "reltuples"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/00-architecture/01_database_schema.md §3",
+        "evidence": [
+          "src/lib/admin/step-output-query.ts:55"
+        ]
+      },
+      {
+        "table": "(dynamic) manifest.scripts[slug].telemetry_tables[0]",
+        "columns": "all",
+        "producing_steps": [
+          "the_step_whose_slug_is_requested"
+        ],
+        "chain_position": "varies with the requested slug",
+        "owner_spec": "docs/specs/01-pipeline/40_pipeline_system.md",
+        "evidence": [
+          "src/lib/admin/manifest-utils.ts:32",
+          "src/lib/admin/step-output-query.ts:80"
+        ]
+      },
+      {
+        "table": "profiles",
+        "columns": [
+          "is_admin"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/00-architecture/114_rls_policy_catalog.md §5",
+        "evidence": [
+          "src/app/api/admin/pipeline/step-output/route.ts:29",
+          "src/lib/auth/verify-admin.ts:118"
+        ]
+      }
+    ]
+  },
+  "outputs": {
+    "answer": "none",
+    "why": "GET only, inside a transaction that issues SELECTs alone under a 15s statement timeout.",
+    "evidence": [
+      "src/app/api/admin/pipeline/step-output/route.ts:27",
+      "src/lib/admin/step-output-query.ts:48"
+    ],
+    "contract_ref": [],
+    "tables": []
+  },
+  "state": {
+    "answer": "query_cache",
+    "why": "One TanStack query under the root provider; the slug comes from the URL search params, not from a store.",
+    "evidence": [
+      "src/features/admin-flight-center/api/useStepOutput.ts:88",
+      "src/app/admin/pipeline/step-output/page.tsx:14"
+    ],
+    "fields": []
+  },
+  "staleness": {
+    "answer": "query_cache",
+    "why": "60s staleTime under the root persisted cache — long enough that a step finishing mid-inspection is not reflected until a refetch, which is the point: it is a row browser, not a monitor.",
+    "evidence": [
+      "src/features/admin-flight-center/api/useStepOutput.ts:88",
+      "src/features/leads/api/query-client.ts:82"
+    ],
+    "stale_time_ms": 60000,
+    "offline": "cached_projection"
+  },
+  "guards": {
+    "session": {
+      "answer": "admin",
+      "why": "There is no admin Postgres role: classifyRoute sends every /admin/* path down the admin arm, and the real boundary is verifyAdminAuth reading profiles.is_admin on the route. It verifies on the first line and then logs the acting uid with the slug, table, limit and offset as an access trail.",
+      "evidence": [
+        "src/lib/auth/route-guard.ts:162",
+        "src/middleware.ts:95",
+        "src/app/api/admin/pipeline/step-output/route.ts:29"
+      ]
+    },
+    "rls_class": {
+      "answer": "B",
+      "why": "Every reachable table is a pipeline/enrichment table — Class B by the §2 default — and the five user-owned Class-A tables are kept out by an explicit PII exclusion list rather than by policy.",
+      "evidence": [
+        "src/lib/admin/manifest-utils.ts:16",
+        "docs/specs/00-architecture/114_rls_policy_catalog.md §2"
+      ]
+    },
+    "disclosure": "none",
+    "entitlement": "none",
+    "flag": "none",
+    "permission": "none",
+    "rate_bucket": "none"
+  },
+  "render": {
+    "targets": [
+      "screen"
+    ],
+    "projection": "list",
+    "breakpoints": "desktop_first_md",
+    "export": "none",
+    "list": "UNRESEARCHED"
+  },
+  "checks": [
+    {
+      "id": "step_output_pii_excluded",
+      "kind": "disclosure",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "why": "lead_views, tracked_projects, lead_analytics, notifications and notification_dispatches are excluded from the inspectable set before any query runs — a pre-render gate, because the alternative is dumping a user-owned table into an admin browser."
+    },
+    {
+      "id": "step_output_statement_timeout",
+      "kind": "freshness",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "why": "The read runs under SET LOCAL statement_timeout = 15000, so an unbounded browse of a 500K-row table fails fast instead of holding a connection."
+    },
+    {
+      "id": "step_output_empty_state",
+      "kind": "empty_state",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "A step whose table is empty must say so rather than render a headerless grid; the StepOutputInspector suite locks it."
+    }
+  ],
+  "invariants": "none",
+  "plausibility": "none",
+  "states": [
+    {
+      "name": "loading",
+      "golden": "none"
+    },
+    {
+      "name": "empty",
+      "golden": "none"
+    },
+    {
+      "name": "hit",
+      "golden": "none"
+    },
+    {
+      "name": "error",
+      "golden": "none"
+    }
+  ],
+  "errors": {
+    "answer": "envelope",
+    "why": "Every path returns the { data, error, meta } envelope with a code — badRequestZod, notFound and internalError all come from the shared helpers — and the inspector renders from it.",
+    "evidence": [
+      "src/app/api/admin/pipeline/step-output/route.ts:76",
+      "src/features/leads/api/envelope.ts:44"
+    ],
+    "classes": [
+      {
+        "class": "400",
+        "ui": "envelope error rendered above the grid"
+      },
+      {
+        "class": "500",
+        "ui": "envelope error rendered above the grid"
+      }
+    ]
+  },
+  "emits": {
+    "answer": "none",
+    "why": "Nothing here is countable: the route writes a structured access log line naming the uid and slug (a log, not an event or a ledger row) and neither the page nor the inspector imports captureEvent.",
+    "evidence": [
+      "src/app/api/admin/pipeline/step-output/route.ts:71",
+      "src/components/admin/StepOutputInspector.tsx:1"
+    ],
+    "analytics": [],
+    "ledger_events": [],
+    "breadcrumbs": [
+      "step-output fetched (uid, slug, table, limit, offset, filtered)"
+    ]
+  },
+  "offers": {
+    "answer": "none",
+    "why": "An internal operator tool renders no sponsored placement; no offers/placements table is reached from any file it owns.",
+    "evidence": [
+      "src/components/admin/StepOutputInspector.tsx:1"
+    ]
+  },
+  "metering": {
+    "answer": "none",
+    "why": "Nothing here is billable or quota-bearing: no usage_events / ledger write is reached from this surface or its contracts.",
+    "evidence": [
+      "src/app/api/admin/pipeline/step-output/route.ts:27"
+    ]
+  },
+  "config": {
+    "answer": "none",
+    "why": "It reads no logic_variables row; the allow-list and the PII exclusions are declared in manifest-utils.ts against scripts/manifest.json.",
+    "evidence": [
+      "src/lib/admin/manifest-utils.ts:16",
+      "src/lib/admin/manifest-utils.ts:32"
+    ],
+    "logic_variables": [],
+    "retired": []
+  },
+  "sharing": {
+    "answer": "sole",
+    "why": "/api/admin/pipeline/step-output has one caller — this page, reached by the FreshnessTimeline \"Inspect output\" link rather than from the /admin tile grid.",
+    "evidence": [
+      "src/features/admin-flight-center/api/useStepOutput.ts:88",
+      "src/app/admin/pipeline/step-output/page.tsx:3"
+    ],
+    "surfaces": []
+  },
+  "a11y": {
+    "touch_target_min_px": "UNRESEARCHED",
+    "labels": "partial",
+    "dark_mode": "none",
+    "reduced_motion": "none",
+    "i18n": "none",
+    "safe_area": "none"
+  },
+  "deviations": "none",
+  "limitations": [
+    {
+      "what": "The governing spec cannot be named",
+      "measured": "Both the page and the inspector carry a SPEC LINK to docs/specs/01-pipeline/26_*.md §3.1 and no file matching 26_* exists in that directory; neither file appears in any system-map row, and the only live references treat the inspector as DEFERRED (Spec 49:255) or as a form-pattern precedent (Spec 33:79).",
+      "check_id": "step_output_pii_excluded"
+    },
+    {
+      "what": "The projection is a table-level allow-list, not a column-level whitelist",
+      "measured": "Rows are returned with every column of the target table; the only filter is the manifest allow-list plus the five-table PII exclusion.",
+      "check_id": "step_output_pii_excluded"
+    },
+    {
+      "what": "touch_target_min_px has no legal answer for a desktop-only admin page",
+      "measured": "The schema allows only UNRESEARCHED or an integer >= 44, and nothing in this surface declares a 44px floor (grep for min-h-[44 / h-11 over its owned files returns nothing).",
+      "check_id": "none — vocabulary gap, escalated per Spec 128 §4"
+    }
+  ],
+  "interpretation": "none",
+  "notes": "Spec marked unmeasured because the SPEC LINK headers on BOTH the page and StepOutputInspector.tsx cite `docs/specs/01-pipeline/26_*.md Sec 3.1`, and no file matching 26_* exists in docs/specs/01-pipeline/ (26_admin_dashboard.md lives in 02-web-admin and contains no step-output content). Neither file appears in any system-map row. The only live references are 01-pipeline/49_data_completeness_profiling.md line 255, which lists 'the Step-Output row Inspector' as DEFERRED to a design brief, and 33_web_admin_engineering_protocol.md line 79, which cites it only as a form-pattern precedent. Reached by link, not from the /admin tile grid. identity.owner is UNRESEARCHED estate-wide: no owner registry exists in the tree, so naming one would be an invention rather than a measurement. a11y.touch_target_min_px is UNRESEARCHED because its vocabulary (UNRESEARCHED or an integer >= 44) has no member for a desktop-only admin page that declares no floor.",
+  "x-draft": {
+    "shard": "admin-existing",
+    "files": [
+      "src/app/admin/pipeline/step-output/page.tsx",
+      "src/components/admin/StepOutputInspector.tsx"
+    ],
+    "loc": 214,
+    "measured_states": [
+      "idle",
+      "loading",
+      "empty",
+      "error",
+      "loaded"
+    ],
+    "measured_gate": {
+      "session": "admin",
+      "why": "classifyRoute('/admin/pipeline/step-output') matches the admin-pages arm via `pathname.startsWith('/admin/')` -> 'admin'."
+    }
+  },
+  "programme": {
+    "scope": "platform_shared",
+    "phase": "UNRESEARCHED",
+    "why": "An admin surface that operates the PLATFORM (users, entitlements, security, tunables, pipeline health) rather than either product specifically.",
+    "feature": "F16",
+    "build_order": 3163,
+    "leakage": "none",
+    "product_questions": "none",
+    "review": {
+      "status": "unreviewed"
+    }
+  }
+}

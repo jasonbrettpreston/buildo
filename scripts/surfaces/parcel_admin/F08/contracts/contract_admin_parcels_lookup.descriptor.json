@@ -1,0 +1,791 @@
+{
+  "kind": "CONTRACT",
+  "status": "exists",
+  "docs": {
+    "purpose": "Lets an admin look up one property by address or internal ID and see everything the system has calculated about it — zoning limits, buildable size, renovation and addition cost estimates, and nearby comparable committee-of-adjustment decisions. This is the data behind the admin Parcel Cost Model Tool.",
+    "data_story": "It reads 4 tables — `parcels`, `address_points`, `parcel_address_points` and `coa_applications` and writes nothing. Its response is an explicit pick-by-name projection of 157 fields, so a column added to a table upstream does not leak into the client by accident. It is called from 1 place: `src/features/admin-flight-center/api/useParcelLookup.ts`.",
+    "under_126": "Becomes a **CONTRACT descriptor** of archetype `QUERY`. It declares its `database.reads[]` with named columns, its response projection as an explicit whitelist, its auth class, its rate bucket and its staleness — and `outputs.writes` is forced to `\"none\"`. Its `consumers[]` becomes the edge list of the fan-out graph — the join nothing in this estate holds today."
+  },
+  "evidence": {
+    "files": [
+      "src/app/api/admin/parcels/lookup/route.ts:1"
+    ],
+    "contracts": [
+      "src/app/api/admin/parcels/lookup/route.ts:34 (GET export)",
+      "src/lib/api/with-api-envelope.ts:27-52"
+    ],
+    "tables": [
+      "src/lib/admin/parcel-lookup.ts:167-172",
+      "src/lib/admin/parcel-lookup.ts:159",
+      "src/lib/admin/parcel-lookup.ts:221-228",
+      "src/lib/admin/parcel-lookup.ts:113-121",
+      "src/lib/admin/parcel-lookup.ts:34-110",
+      "src/lib/admin/parcel-lookup.ts:194-205",
+      "src/lib/admin/parcel-lookup.ts:197",
+      "src/lib/admin/parcel-lookup.ts:232-241",
+      "src/lib/auth/verify-admin.ts:117-119",
+      "src/lib/db/generated/schema.ts — every table named here is present in the introspected drizzle schema"
+    ],
+    "gate": [
+      "src/lib/auth/route-guard.ts — admin prefix — classifyRoute matches pathname.startsWith('/api/admin/')",
+      "src/lib/auth/route-guard.ts:150-201 — classifyRoute executed 2026-09-15 with the concrete path → \"admin\"",
+      "in-handler: verifyAdminAuth at src/app/api/admin/parcels/lookup/route.ts:36 (first line of handler)"
+    ],
+    "states": [
+      "hit: src/app/api/admin/parcels/lookup/route.ts:76-81",
+      "ambiguous: src/lib/admin/parcel-lookup.ts:180-186 (candidates[] returned, match null)",
+      "miss: src/app/api/admin/parcels/lookup/route.ts:71 (dangling parcelId) and src/lib/admin/parcel-lookup.ts:163 (unparseable street)",
+      "partial: src/lib/admin/parcel-lookup.ts:291-294 (some CoA rows dropped, warning added)",
+      "degraded: src/lib/admin/parcel-lookup.ts:261-264 and :281-284 (jsonb drift -> tier null + warnings[])",
+      "unauthorized: src/app/api/admin/parcels/lookup/route.ts:38-41",
+      "error: src/app/api/admin/parcels/lookup/route.ts:103"
+    ],
+    "emits": [
+      "Sentry breadcrumb slow_query"
+    ]
+  },
+  "identity": {
+    "id": "contract_admin_parcels_lookup",
+    "route": "/api/admin/parcels/lookup",
+    "archetype": "QUERY",
+    "platforms": [
+      "web"
+    ],
+    "owns": {
+      "components": []
+    },
+    "owner": "Backend/Pipeline (CLAUDE.md §Domain Rules: `src/app/api/`)",
+    "spec": "docs/specs/02-web-admin/89_parcel_cost_model_tool.md",
+    "spec_refs": [
+      "docs/specs/02-web-admin/89_parcel_cost_model_tool.md §3 (API) at src/app/api/admin/parcels/lookup/route.ts:1; docs/specs/02-web-admin/33_web_admin_engineering_protocol.md §5 + §12 + §13 at :2"
+    ],
+    "spec_version": "0-draft",
+    "versioning": {
+      "answer": "breaking_allowed",
+      "why": "Every consumer is in src/** and ships in the same Next.js deploy as the route, so a breaking change is one commit.",
+      "evidence": [
+        "src/features/admin-flight-center/api/useParcelLookup.ts:44"
+      ]
+    },
+    "ref": "C-002"
+  },
+  "inputs": {
+    "answer": "app_outputs",
+    "why": "It reads 5 table(s) directly; 4 of them are materialised by named pipeline steps (address_points, classify_coa_scope, link_parcel_addresses), so its inputs are the pipeline's outputs rather than another contract.",
+    "evidence": [
+      "src/lib/admin/parcel-lookup.ts:194-205",
+      "scripts/load-address-points.js",
+      "docs/reference/data-lineage-map.md:133",
+      "scripts/manifest.json#chains",
+      "docs/reference/data-lineage-map.md",
+      "src/lib/admin/parcel-lookup.ts:232-241",
+      "scripts/classify-coa-scope.js",
+      "docs/reference/data-lineage-map.md:312"
+    ],
+    "contract_ref": [],
+    "query_key": [],
+    "field_whitelist": [
+      "parcel_cost_menu",
+      "cost_fb_total",
+      "cost_coa_total",
+      "cost_solar_total",
+      "cost_garden_suite_total",
+      "cost_laneway_suite_total",
+      "cost_garage_total",
+      "cost_gut_total",
+      "cost_addition_total",
+      "cost_kitchen_per_sqm",
+      "cost_bath_per_sqm",
+      "cost_basement_per_sqm",
+      "cost_basement_underpin_per_sqm",
+      "lot_size_sqm",
+      "lot_size_sqft",
+      "opt_aor_gfa_sqm",
+      "opt_aor_storeys",
+      "opt_coa_gfa_sqm",
+      "opt_coa_storeys",
+      "max_buildable_gfa_sqm",
+      "max_buildable_footprint_sqm",
+      "imagery_roof_gfa_sqm",
+      "imagery_roof_footprint_sqm",
+      "cur_floor_gfa_sqm",
+      "max_newbuild_coa_gfa_sqm",
+      "nearby_builds_summary",
+      "comparable_builds",
+      "comp_count",
+      "comp_dominant_build",
+      "comp_build_ratio_p50",
+      "comp_fsi_p50",
+      "neighbourhood_id",
+      "neighbourhood_cost_premium",
+      "id",
+      "parcel_id",
+      "feature_type",
+      "date_effective",
+      "date_expiry",
+      "created_at",
+      "centroid_lat",
+      "centroid_lng",
+      "is_irregular",
+      "address_number",
+      "linear_name_full",
+      "addr_num_normalized",
+      "street_name_normalized",
+      "street_type_normalized",
+      "stated_area_raw",
+      "frontage_m",
+      "frontage_ft",
+      "depth_m",
+      "depth_ft",
+      "lot_size_confidence",
+      "lot_size_basis",
+      "lot_size_source",
+      "zoning_class",
+      "zoning_zn_string",
+      "zoning_gen_zone",
+      "zoning_holding",
+      "zone_status",
+      "bylaw_max_fsi",
+      "bylaw_max_coverage_pct",
+      "bylaw_max_height_m",
+      "bylaw_max_stories",
+      "bylaw_max_units",
+      "bylaw_max_density",
+      "bylaw_min_frontage_m",
+      "bylaw_min_area_sqm",
+      "bylaw_standard_setback_m",
+      "bylaw_pct_commercial_max",
+      "bylaw_pct_residential_max",
+      "bylaw_pct_employment_max",
+      "bylaw_pct_office_max",
+      "exception_number",
+      "exception_text",
+      "bylaw_chapter",
+      "bylaw_section",
+      "bylaw_exception_ref",
+      "in_policy_area",
+      "on_policy_road",
+      "in_rooming_house_overlay",
+      "in_parking_zone_overlay",
+      "in_building_setback_overlay",
+      "on_priority_retail",
+      "in_queenstw_eat_overlay",
+      "zoning_overlays",
+      "zoning_base_source_id",
+      "zoning_dominant_area_share",
+      "zoning_is_ambiguous",
+      "zoning_base_source_dataset_version",
+      "zoning_enriched_at",
+      "is_in_ravine_protection_area",
+      "ravine_distance_m",
+      "ravine_dataset_version_when_enriched",
+      "is_heritage_designated",
+      "heritage_designation_type",
+      "heritage_designation_date",
+      "heritage_dataset_version_when_enriched",
+      "is_corner_lot",
+      "is_through_lot",
+      "primary_frontage_street_name",
+      "centreline_dataset_version_when_enriched",
+      "abuts_laneway",
+      "existing_stories",
+      "existing_height_m",
+      "existing_width_m",
+      "existing_length_m",
+      "existing_structure_confidence",
+      "existing_other_structures_count",
+      "existing_other_structures_sqm",
+      "existing_greenspace_sqm",
+      "existing_data_quality_flag",
+      "cur_gfa_low_sqm",
+      "cur_gfa_high_sqm",
+      "cur_storeys_range",
+      "cur_gfa_band_basis",
+      "max_build_setback_basis",
+      "max_build_width_m",
+      "max_build_length_m",
+      "max_build_height_m",
+      "max_build_stories",
+      "max_build_basis",
+      "max_buildable_gfa_basis",
+      "max_build_confidence",
+      "envelope_constrained",
+      "envelope_constraint_reason",
+      "max_build_stories_basis",
+      "max_build_stories_aggressive",
+      "market_exceeds_bylaw",
+      "max_build_fsi",
+      "coa_fsi",
+      "realized_fsi_p90",
+      "massing_enriched_at",
+      "cur_basement_gfa_sqm",
+      "cur_storey_gfa_sqm",
+      "cur_interior_reno_gfa_sqm",
+      "cur_est_kitchen_gfa_sqm",
+      "cur_est_bath_gfa_sqm",
+      "cur_pot_2story_gfa_sqm",
+      "cur_pot_3story_gfa_sqm",
+      "cur_gfa_range_basis",
+      "garden_suite_fits",
+      "max_garden_suite_gfa_sqm",
+      "max_garage_gfa_sqm",
+      "garage_capacity_cars",
+      "garage_constraint_reason",
+      "garage_permission",
+      "max_laneway_suite_gfa_sqm",
+      "max_rear_suite_gfa_sqm",
+      "rear_suite_type",
+      "rear_suite_permission",
+      "opt_aor_units",
+      "opt_suite_type",
+      "opt_suite_fits_full",
+      "opt_binding_constraint",
+      "opt_config_confidence",
+      "optimal_config"
+    ],
+    "tables": [
+      {
+        "table": "address_points",
+        "columns": [
+          "address_point_id",
+          "address_full",
+          "linear_name_normalized",
+          "addr_num_normalized",
+          "address_status",
+          "maint_stage"
+        ],
+        "producing_steps": [
+          "address_points"
+        ],
+        "chain_position": "sources[2]",
+        "owner_spec": "docs/specs/01-pipeline/43_chain_sources.md",
+        "evidence": [
+          "src/lib/admin/parcel-lookup.ts:194-205",
+          "scripts/load-address-points.js",
+          "docs/reference/data-lineage-map.md:133",
+          "scripts/manifest.json#chains",
+          "docs/reference/data-lineage-map.md"
+        ]
+      },
+      {
+        "table": "coa_applications",
+        "columns": [
+          "application_number",
+          "address",
+          "status",
+          "decision",
+          "decision_date",
+          "hearing_date",
+          "description",
+          "project_type",
+          "modeled_gfa_sqm",
+          "estimated_cost",
+          "neighbourhood_id"
+        ],
+        "producing_steps": [
+          "classify_coa_scope",
+          "classify_coa_trades",
+          "classify_lifecycle_phase",
+          "coa",
+          "compute_coa_cost_estimates",
+          "enrich_coa_zoning",
+          "link_coa",
+          "link_coa_to_parcels"
+        ],
+        "chain_position": "coa[5] · coa[6] · permits[23], coa[12] · coa[1] · coa[7] · coa[4] · permits[19], coa[8] · coa[3]",
+        "owner_spec": "docs/specs/01-pipeline/42_chain_coa.md",
+        "evidence": [
+          "src/lib/admin/parcel-lookup.ts:232-241",
+          "scripts/classify-coa-scope.js",
+          "docs/reference/data-lineage-map.md:312",
+          "scripts/manifest.json#chains",
+          "docs/reference/data-lineage-map.md"
+        ]
+      },
+      {
+        "table": "parcel_address_points",
+        "columns": [
+          "address_point_id",
+          "parcel_id"
+        ],
+        "producing_steps": [
+          "link_parcel_addresses"
+        ],
+        "chain_position": "sources[8]",
+        "owner_spec": "docs/specs/01-pipeline/54_source_address_points.md",
+        "evidence": [
+          "src/lib/admin/parcel-lookup.ts:197",
+          "migrations/162_address_points_expanded_fields_and_parcel_bridge.sql:82",
+          "docs/reference/data-lineage-map.md:736",
+          "scripts/manifest.json#chains",
+          "docs/reference/data-lineage-map.md"
+        ]
+      },
+      {
+        "table": "parcels",
+        "columns": [
+          "parcel_id",
+          "addr_num_normalized",
+          "street_name_normalized",
+          "address_number",
+          "linear_name_full",
+          "parcel_cost_menu",
+          "cost_fb_total",
+          "cost_coa_total",
+          "cost_solar_total",
+          "cost_garden_suite_total",
+          "cost_laneway_suite_total",
+          "cost_garage_total",
+          "cost_gut_total",
+          "cost_addition_total",
+          "cost_kitchen_per_sqm",
+          "cost_bath_per_sqm",
+          "cost_basement_per_sqm",
+          "cost_basement_underpin_per_sqm",
+          "lot_size_sqm",
+          "lot_size_sqft",
+          "opt_aor_gfa_sqm",
+          "opt_aor_storeys",
+          "opt_coa_gfa_sqm",
+          "opt_coa_storeys",
+          "max_buildable_gfa_sqm",
+          "max_buildable_footprint_sqm",
+          "imagery_roof_gfa_sqm",
+          "imagery_roof_footprint_sqm",
+          "cur_floor_gfa_sqm",
+          "max_newbuild_coa_gfa_sqm",
+          "nearby_builds_summary",
+          "comparable_builds",
+          "comp_count",
+          "comp_dominant_build",
+          "comp_build_ratio_p50",
+          "comp_fsi_p50",
+          "neighbourhood_id",
+          "neighbourhood_cost_premium",
+          "id",
+          "feature_type",
+          "date_effective",
+          "date_expiry",
+          "created_at",
+          "centroid_lat",
+          "centroid_lng",
+          "is_irregular",
+          "street_type_normalized",
+          "stated_area_raw",
+          "frontage_m",
+          "frontage_ft",
+          "depth_m",
+          "depth_ft",
+          "lot_size_confidence",
+          "lot_size_basis",
+          "lot_size_source",
+          "zoning_class",
+          "zoning_zn_string",
+          "zoning_gen_zone",
+          "zoning_holding",
+          "zone_status",
+          "bylaw_max_fsi",
+          "bylaw_max_coverage_pct",
+          "bylaw_max_height_m",
+          "bylaw_max_stories",
+          "bylaw_max_units",
+          "bylaw_max_density",
+          "bylaw_min_frontage_m",
+          "bylaw_min_area_sqm",
+          "bylaw_standard_setback_m",
+          "bylaw_pct_commercial_max",
+          "bylaw_pct_residential_max",
+          "bylaw_pct_employment_max",
+          "bylaw_pct_office_max",
+          "exception_number",
+          "exception_text",
+          "bylaw_chapter",
+          "bylaw_section",
+          "bylaw_exception_ref",
+          "in_policy_area",
+          "on_policy_road",
+          "in_rooming_house_overlay",
+          "in_parking_zone_overlay",
+          "in_building_setback_overlay",
+          "on_priority_retail",
+          "in_queenstw_eat_overlay",
+          "zoning_overlays",
+          "zoning_base_source_id",
+          "zoning_dominant_area_share",
+          "zoning_is_ambiguous",
+          "zoning_base_source_dataset_version",
+          "zoning_enriched_at",
+          "is_in_ravine_protection_area",
+          "ravine_distance_m",
+          "ravine_dataset_version_when_enriched",
+          "is_heritage_designated",
+          "heritage_designation_type",
+          "heritage_designation_date",
+          "heritage_dataset_version_when_enriched",
+          "is_corner_lot",
+          "is_through_lot",
+          "primary_frontage_street_name",
+          "centreline_dataset_version_when_enriched",
+          "abuts_laneway",
+          "existing_stories",
+          "existing_height_m",
+          "existing_width_m",
+          "existing_length_m",
+          "existing_structure_confidence",
+          "existing_other_structures_count",
+          "existing_other_structures_sqm",
+          "existing_greenspace_sqm",
+          "existing_data_quality_flag",
+          "cur_gfa_low_sqm",
+          "cur_gfa_high_sqm",
+          "cur_storeys_range",
+          "cur_gfa_band_basis",
+          "max_build_setback_basis",
+          "max_build_width_m",
+          "max_build_length_m",
+          "max_build_height_m",
+          "max_build_stories",
+          "max_build_basis",
+          "max_buildable_gfa_basis",
+          "max_build_confidence",
+          "envelope_constrained",
+          "envelope_constraint_reason",
+          "max_build_stories_basis",
+          "max_build_stories_aggressive",
+          "market_exceeds_bylaw",
+          "max_build_fsi",
+          "coa_fsi",
+          "realized_fsi_p90",
+          "massing_enriched_at",
+          "cur_basement_gfa_sqm",
+          "cur_storey_gfa_sqm",
+          "cur_interior_reno_gfa_sqm",
+          "cur_est_kitchen_gfa_sqm",
+          "cur_est_bath_gfa_sqm",
+          "cur_pot_2story_gfa_sqm",
+          "cur_pot_3story_gfa_sqm",
+          "cur_gfa_range_basis",
+          "garden_suite_fits",
+          "max_garden_suite_gfa_sqm",
+          "max_garage_gfa_sqm",
+          "garage_capacity_cars",
+          "garage_constraint_reason",
+          "garage_permission",
+          "max_laneway_suite_gfa_sqm",
+          "max_rear_suite_gfa_sqm",
+          "rear_suite_type",
+          "rear_suite_permission",
+          "opt_aor_units",
+          "opt_suite_type",
+          "opt_suite_fits_full",
+          "opt_binding_constraint",
+          "opt_config_confidence",
+          "optimal_config"
+        ],
+        "producing_steps": [
+          "compute_centroids",
+          "compute_parcel_cost_estimates",
+          "enrich_centreline",
+          "enrich_heritage",
+          "enrich_parcels",
+          "enrich_ravines",
+          "parcels"
+        ],
+        "chain_position": "sources[9] · sources[22] · sources[13] · sources[12] · sources[21] · sources[11] · sources[4]",
+        "owner_spec": "docs/specs/01-pipeline/43_chain_sources.md",
+        "evidence": [
+          "src/lib/admin/parcel-lookup.ts:167-172",
+          "src/lib/admin/parcel-lookup.ts:159",
+          "src/lib/admin/parcel-lookup.ts:221-228",
+          "src/lib/admin/parcel-lookup.ts:113-121",
+          "src/lib/admin/parcel-lookup.ts:34-110",
+          "scripts/compute-centroids.js",
+          "docs/reference/data-lineage-map.md:757",
+          "scripts/manifest.json#chains",
+          "docs/reference/data-lineage-map.md"
+        ]
+      },
+      {
+        "table": "profiles",
+        "columns": [
+          "id",
+          "is_admin"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/00-architecture/114_rls_policy_catalog.md",
+        "evidence": [
+          "src/lib/auth/verify-admin.ts:117-119",
+          "migrations/226_profiles_admin_bootstrap.sql:25",
+          "docs/reference/data-lineage-map.md — no `## `profiles`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)"
+        ]
+      }
+    ]
+  },
+  "outputs": {
+    "answer": "none",
+    "why": "A QUERY contract writes nothing; the handler issues no INSERT/UPDATE/DELETE anywhere in the file or in the libs it calls.",
+    "evidence": [
+      "src/app/api/admin/parcels/lookup/route.ts — read in full 2026-09-15; no INSERT/UPDATE/DELETE reached"
+    ],
+    "contract_ref": [],
+    "tables": []
+  },
+  "state": {
+    "answer": "server_only",
+    "why": "A CONTRACT holds no client state: every value is resolved per request on the server and nothing is cached in a client store by the route itself.",
+    "evidence": [
+      "src/app/api/admin/parcels/lookup/route.ts:34 (GET export)",
+      "src/lib/api/with-api-envelope.ts:27-52"
+    ],
+    "fields": []
+  },
+  "staleness": {
+    "answer": "live",
+    "why": "Every read runs against the base tables on each request — there is no cache layer between the handler and the database.",
+    "evidence": [
+      "src/lib/admin/parcel-lookup.ts:194-205",
+      "scripts/load-address-points.js",
+      "docs/reference/data-lineage-map.md:133",
+      "scripts/manifest.json#chains"
+    ],
+    "offline": "none"
+  },
+  "guards": {
+    "session": {
+      "answer": "admin",
+      "why": "classifyRoute(\"/api/admin/parcels/lookup\") returns \"admin\" (executed 2026-09-15); the handler re-verifies the caller in-process.",
+      "evidence": [
+        "src/lib/auth/route-guard.ts:150-201 — classifyRoute executed 2026-09-15 with the concrete path",
+        "verifyAdminAuth at src/app/api/admin/parcels/lookup/route.ts:36 (first line of handler)"
+      ]
+    },
+    "rls_class": {
+      "answer": "C",
+      "why": "It reaches the profiles table (self-read/self-update minus the escalation flag).",
+      "evidence": [
+        "migrations/227_rls_class_b_default_deny.sql:67",
+        "migrations/227_rls_class_b_default_deny.sql:42",
+        "migrations/227_rls_class_b_default_deny.sql:65",
+        "migrations/227_rls_class_b_default_deny.sql:45",
+        "migrations/226_profiles_admin_bootstrap.sql:48",
+        "docs/specs/00-architecture/114_rls_policy_catalog.md §2"
+      ]
+    },
+    "disclosure": "none",
+    "entitlement": "none",
+    "flag": "none",
+    "permission": "none",
+    "rate_bucket": "none"
+  },
+  "render": {
+    "targets": [
+      "screen"
+    ],
+    "projection": "none",
+    "breakpoints": "none",
+    "export": "none"
+  },
+  "checks": [
+    {
+      "id": "contract_admin_parcels_lookup__auth_class_parity",
+      "kind": "auth_class_parity",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "why": "guards.session must equal classifyRoute(\"/api/admin/parcels/lookup\"), executed 2026-09-15 → \"admin\" plus the in-handler guard (verifyAdminAuth at src/app/api/admin/parcels/lookup/route.ts:36 (first line of handler)). Locked by parcel-lookup.infra.test.ts."
+    },
+    {
+      "id": "contract_admin_parcels_lookup__error_envelope",
+      "kind": "error_state",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "Every declared error class returns the { data, error, meta } envelope of docs/specs/00_engineering_standards.md §4.4; expected to stay at zero deviations."
+    },
+    {
+      "id": "contract_admin_parcels_lookup__contract_parse",
+      "kind": "contract_parse",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "why": "Request input is parsed by ParcelLookupQuerySchema at src/app/api/admin/parcels/lookup/route.ts:45 before any query runs; a payload that fails the schema is refused, never coerced."
+    },
+    {
+      "id": "contract_admin_parcels_lookup__field_whitelist_parity",
+      "kind": "field_whitelist_parity",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "The response is an explicit pick-by-name of 4 field(s) (src/app/api/admin/parcels/lookup/route.ts:59-65, src/app/api/admin/parcels/lookup/route.ts:76-81, src/app/api/admin/parcels/lookup/types.ts:144-149), so a column added upstream cannot leak; this check set-equals the projection to inputs.field_whitelist."
+    },
+    {
+      "id": "contract_admin_parcels_lookup__schema_declared",
+      "kind": "schema_declared",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "Every table and column declared in lineage.reads[]/writes[] must exist in src/lib/db/generated/schema.ts (drizzle-kit introspect of the live database); the registry generator checks this both directions."
+    }
+  ],
+  "invariants": "none",
+  "plausibility": "none",
+  "states": [
+    {
+      "name": "hit",
+      "golden": "none"
+    },
+    {
+      "name": "ambiguous",
+      "golden": "none"
+    },
+    {
+      "name": "miss",
+      "golden": "none"
+    },
+    {
+      "name": "partial",
+      "golden": "none"
+    },
+    {
+      "name": "degraded",
+      "golden": "none"
+    },
+    {
+      "name": "unauthorized",
+      "golden": "none"
+    },
+    {
+      "name": "error",
+      "golden": "none"
+    }
+  ],
+  "errors": {
+    "answer": "envelope",
+    "why": "Success and failure both arrive in the { data, error, meta } envelope of docs/specs/00_engineering_standards.md §4.4; withApiEnvelope is the outermost wrapper and converts any uncaught throw into the same shape.",
+    "evidence": [
+      "src/lib/api/with-api-envelope.ts:27-52",
+      "src/app/api/admin/parcels/lookup/route.ts:38-41",
+      "src/app/api/admin/parcels/lookup/route.ts:101",
+      "src/features/leads/api/envelope.ts:50-53",
+      "src/features/leads/api/envelope.ts:82",
+      "src/lib/api/with-api-envelope.ts:41-50",
+      "src/app/api/admin/parcels/lookup/route.ts:40 (401)",
+      "src/app/api/admin/parcels/lookup/route.ts:49 (400)",
+      "src/app/api/admin/parcels/lookup/route.ts:103 (500)",
+      "src/app/api/admin/parcels/lookup/route.ts:42 (500)"
+    ],
+    "classes": [
+      {
+        "class": "401",
+        "ui": "{data:null,error:{code,message},meta:null} — src/app/api/admin/parcels/lookup/route.ts:40 (code UNAUTHORIZED)"
+      },
+      {
+        "class": "400",
+        "ui": "{data:null,error:{code,message,details:zodError.flatten()},meta:null} (src/features/leads/api/error-mapping.ts:42-43 -> src/features/leads/api/envelope.ts:78-82) — src/app/api/admin/parcels/lookup/route.ts:49 (code VALIDATION_FAILED)"
+      },
+      {
+        "class": "500",
+        "ui": "{data:null,error:{code,message},meta:null} (src/features/leads/api/error-mapping.ts:71-76) — src/app/api/admin/parcels/lookup/route.ts:103 (code INTERNAL_ERROR)"
+      }
+    ]
+  },
+  "emits": {
+    "answer": "events",
+    "why": "It emits named observability events only — Sentry breadcrumbs and/or PostHog captures; it writes no ledger row.",
+    "evidence": [
+      "Sentry breadcrumb slow_query"
+    ],
+    "analytics": [],
+    "ledger_events": [],
+    "breadcrumbs": [
+      "slow_query"
+    ]
+  },
+  "offers": {
+    "answer": "none",
+    "why": "It renders no sponsored placement: the offers and advertisers tables Spec 126 §2 specifies do not exist in migrations/ and nothing in this handler reads placement inventory.",
+    "evidence": [
+      "migrations/ — no CREATE TABLE offers / advertisers (grep 2026-09-15)",
+      "src/app/api/admin/parcels/lookup/route.ts — read in full; no placement read"
+    ]
+  },
+  "metering": {
+    "answer": "none",
+    "why": "Nothing here is counted: no usage_events row (the table does not exist in the introspected schema) and no quota counter is written by this handler.",
+    "evidence": [
+      "src/app/api/admin/parcels/lookup/route.ts — read in full 2026-09-15",
+      "src/lib/db/generated/schema.ts — no usage_events table"
+    ]
+  },
+  "config": {
+    "answer": "none",
+    "why": "It consumes no tunable: no logic_variables read and no env-var-driven threshold in the handler or the libs it calls.",
+    "evidence": [
+      "src/app/api/admin/parcels/lookup/route.ts — read in full 2026-09-15; no loadMarketplaceConfigs / logic_variables read"
+    ],
+    "logic_variables": [],
+    "retired": []
+  },
+  "sharing": {
+    "answer": "sole",
+    "why": "Exactly one call site renders it, so its projection serves one surface.",
+    "evidence": [
+      "src/features/admin-flight-center/api/useParcelLookup.ts:44"
+    ],
+    "surfaces": [
+      "src/features/admin-flight-center/api/useParcelLookup.ts:44"
+    ]
+  },
+  "a11y": {
+    "touch_target_min_px": "UNRESEARCHED",
+    "labels": "none",
+    "dark_mode": "none",
+    "reduced_motion": "none",
+    "i18n": "none",
+    "safe_area": "none"
+  },
+  "deviations": "none",
+  "limitations": [
+    {
+      "what": "a11y.touch_target_min_px has no legal answer for a CONTRACT",
+      "measured": "The schema allows only UNRESEARCHED or an integer >= 44; a JSON endpoint has no touch target and the vocabulary has no \"n/a\". Left UNRESEARCHED and escalated per Spec 128 §4 rather than invented.",
+      "check_id": "contract_admin_parcels_lookup__auth_class_parity"
+    }
+  ],
+  "interpretation": "none",
+  "notes": "Business logic lives in src/lib/admin/parcel-lookup.ts. The projection is allMappedColumns() — a genuinely explicit single-source-of-truth named-column whitelist (Spec 89 §4) used both to build the parcels SELECT and to drive the tiered response; geometry/geom columns are EXCLUDED_COLS and never selected. Tier-1/Tier-2 JSONB fields are Zod safeParse'd and degrade to null plus a warnings[] entry rather than a 500. | MEASURED 2026-09-15: Census checklist (parcels, address_points, parcel_address_points, coa_applications) fully CONFIRMED in code. Census MISSED `profiles` — read by the shared verifyAdminAuth guard the route calls (src/lib/auth/verify-admin.ts:117-119); the same omission applies to every route that calls the guard. No SELECT *; the parcel projection is ~160 explicitly-named columns built from static lists (src/lib/admin/parcel-lookup.ts:113-121) and quote-guarded by ident() (:124-127). All SQL parameterized. The typeahead query's projection is built by string .replaceAll on a module constant (src/lib/admin/parcel-lookup.ts:195) — the constant is static, no user input reaches it, but it is textual SQL assembly worth a reviewer's eye. `resolveAddress(q!)` at route.ts:57 uses a non-null assertion whose safety rests entirely on the schema's superRefine XOR. | Caching: none observed — no `export const dynamic|revalidate|runtime` and no Cache-Control header anywhere under src/app/api/admin/parcels/ (grep returned nothing); no in-process memo in src/lib/admin/parcel-lookup.ts | Other guards / classification: CI credential path (constant-time CI_ADMIN_TOKEN compare + CI_ADMIN_ALLOWED_IPS) at src/lib/auth/verify-admin.ts:89-103; MFA/aal2 gate + x-admin-backup-code alternative at src/lib/auth/verify-admin.ts:143-173 (INERT unless ADMIN_MFA_ENFORCED==='true', src/lib/auth/verify-admin.ts:143); CSRF Origin allowlist applies only to POST/PATCH/PUT/DELETE (src/lib/auth/verify-admin.ts:45,70) so it does NOT fire for this GET; dev bypass at src/lib/auth/verify-admin.ts:81-83 | Locking tests: src/tests/parcel-lookup.infra.test.ts.",
+  "x-draft": {
+    "shard": "contracts",
+    "files": [
+      "src/app/api/admin/parcels/lookup/route.ts"
+    ],
+    "loc": 105,
+    "methods": [
+      "GET"
+    ],
+    "consumers": [
+      "src/features/admin-flight-center/api/useParcelLookup.ts"
+    ],
+    "writes_audit_row": "n/a",
+    "consumers_verified": [
+      "src/features/admin-flight-center/api/useParcelLookup.ts:44"
+    ],
+    "auth_class_executed": "admin",
+    "locking_tests": [
+      "src/tests/parcel-lookup.infra.test.ts"
+    ]
+  },
+  "programme": {
+    "scope": "parcel_admin",
+    "phase": "B1",
+    "why": "The admin-side parcel resolver: a near-superset of the consumer contract over the same subject (and a measured 326-vs-159-line duplication).",
+    "feature": "F08",
+    "build_order": 2082,
+    "leakage": "none",
+    "product_questions": "none",
+    "review": {
+      "status": "unreviewed"
+    }
+  }
+}

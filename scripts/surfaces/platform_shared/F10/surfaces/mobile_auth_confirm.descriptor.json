@@ -1,0 +1,293 @@
+{
+  "kind": "SURFACE",
+  "status": "exists",
+  "docs": {
+    "purpose": "The landing spot when someone taps the confirmation link in their sign-up email. It quietly exchanges the one-time code from the link for a real session and, when that works, the app routes them onward on its own. When it fails it explains which of two things went wrong: the link expired or was already used, or the link was opened on a different device than the one they signed up on.",
+    "data_story": "This surface reaches **no API contract at all** — every value it shows is local, passed in as a prop, or read from the device. It holds no client-side store, so there is no local copy of server state to keep in sync. It emits **no analytics event**, so nothing it does is currently countable.",
+    "under_126": "**LEAVE ALONE — deliberately out of scope.** This screen talks to the Supabase Auth SDK, not to our contracts, so a descriptor would be describing someone else's protocol. Spec 126's Operating Boundaries fence it explicitly."
+  },
+  "evidence": {
+    "files": [
+      "mobile/app/(auth)/confirm.tsx:1"
+    ],
+    "contracts": [
+      "mobile/app/(auth)/confirm.tsx:45",
+      "mobile/src/lib/confirmEmail.ts:61-70 — supabase.auth.exchangeCodeForSession, no app contract"
+    ],
+    "tables": [
+      "mobile/src/lib/confirmEmail.ts:65 — GoTrue writes auth.users/auth.sessions; no application table is touched"
+    ],
+    "gate": [
+      "mobile/app/(auth)/confirm.tsx:35-49",
+      "mobile/app/_layout.tsx:360-378"
+    ],
+    "states": [
+      "mobile/app/(auth)/confirm.tsx:51-62",
+      "mobile/app/(auth)/confirm.tsx:64-90"
+    ],
+    "emits": [
+      "mobile/app/(auth)/confirm.tsx:1-91 — no track() call in the file"
+    ]
+  },
+  "identity": {
+    "id": "mobile_auth_confirm",
+    "route": "mobile/app/(auth)/confirm.tsx",
+    "archetype": "GATE",
+    "platforms": [
+      "mobile"
+    ],
+    "owns": {
+      "components": []
+    },
+    "owner": "unassigned (no CODEOWNERS file and no owner registry exists in the repo — measured 2026-09-15)",
+    "spec": "docs/specs/03-mobile/93_mobile_auth.md",
+    "spec_refs": [
+      "docs/specs/03-mobile/93_mobile_auth.md §5",
+      "docs/specs/03-mobile/99_mobile_state_architecture.md §5.1"
+    ],
+    "spec_version": "0-draft",
+    "versioning": {
+      "answer": "none",
+      "why": "Its only input is a one-time PKCE code in a route param and its only output is a Supabase session; nothing consumes a shape from this screen.",
+      "evidence": [
+        "mobile/app/(auth)/confirm.tsx:29-49"
+      ]
+    },
+    "ref": "S-027"
+  },
+  "inputs": {
+    "answer": "props",
+    "why": "The `?code=` param is handed to it by the root layout's EmailConfirmLinkCatcher, which is the only thing that can route here; the screen reaches no API contract and no device sensor.",
+    "evidence": [
+      "mobile/app/(auth)/confirm.tsx:29",
+      "mobile/app/(auth)/confirm.tsx:38",
+      "mobile/app/_layout.tsx:367-371"
+    ],
+    "contract_ref": [],
+    "query_key": [],
+    "field_whitelist": [
+      "code"
+    ],
+    "tables": []
+  },
+  "outputs": {
+    "answer": "device_only",
+    "why": "A successful exchange writes a Supabase session into the auth client's on-device AsyncStorage; the app's own API is never called from this screen.",
+    "evidence": [
+      "mobile/src/lib/confirmEmail.ts:65",
+      "mobile/src/lib/supabase.ts:18-20"
+    ],
+    "contract_ref": [],
+    "tables": [],
+    "rollback": "none — the PKCE code is single-use; a failed exchange is terminal and the screen offers a route back to sign-in rather than a retry.",
+    "invalidates": []
+  },
+  "state": {
+    "answer": "none",
+    "why": "It holds only React component state (`status`) and a single-use ref guard — the state vocabulary has no value for component-local useState, so the honest answer is that it owns no Layer 2-5 state.",
+    "evidence": [
+      "mobile/app/(auth)/confirm.tsx:30-33"
+    ],
+    "fields": []
+  },
+  "staleness": {
+    "answer": "none",
+    "why": "No server projection is displayed — the screen is a spinner and two terminal messages.",
+    "evidence": [
+      "mobile/app/(auth)/confirm.tsx:51-90"
+    ],
+    "offline": "none"
+  },
+  "guards": {
+    "session": {
+      "answer": "anon",
+      "why": "It is reachable with no session at all — establishing one is the point. It projects no data field, so there is nothing to disclose.",
+      "evidence": [
+        "mobile/app/(auth)/confirm.tsx:27-49",
+        "mobile/app/_layout.tsx:360-378"
+      ]
+    },
+    "rls_class": {
+      "answer": "none",
+      "why": "It reaches no application table; the session write is GoTrue's.",
+      "evidence": [
+        "mobile/src/lib/confirmEmail.ts:65"
+      ]
+    },
+    "disclosure": {
+      "fields": [],
+      "why": "Anonymous, but it renders no server-sourced field at all — only fixed copy and the outcome of the code exchange."
+    },
+    "entitlement": "none",
+    "flag": "none",
+    "permission": "none",
+    "rate_bucket": "none — no app route is called; GoTrue owns the exchange throttle",
+    "statuses_handled": "UNRESEARCHED"
+  },
+  "render": {
+    "targets": [
+      "screen"
+    ],
+    "projection": "none",
+    "breakpoints": "mobile_first",
+    "export": "none"
+  },
+  "checks": [
+    {
+      "id": "confirm_error_states",
+      "kind": "error_state",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "mobile/__tests__/confirmEmail.test.ts locks BOTH declared failure reasons — generic invalid/expired and the PKCE same-device case — which the screen renders with different copy and different testIDs."
+    },
+    {
+      "id": "confirm_single_use_guard",
+      "kind": "selector_atomicity",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "attemptedRef makes the exchange fire exactly once; a second attempt would burn a one-time code on a fast-refresh or a param identity change (confirm.tsx:33-37)."
+    },
+    {
+      "id": "confirm_deeplink_parse",
+      "kind": "contract_parse",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "confirmEmail.test.ts pins parseConfirmDeepLink, the pure parser the root-layout catcher uses to decide whether a URL belongs to this screen at all."
+    },
+    {
+      "id": "confirm_a11y_label",
+      "kind": "a11y_label",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "why": "The single Pressable carries a role and a label; there is nothing else to label."
+    }
+  ],
+  "invariants": "none",
+  "plausibility": "none",
+  "states": [
+    {
+      "name": "loading",
+      "golden": "none"
+    },
+    {
+      "name": "error",
+      "golden": "none"
+    },
+    {
+      "name": "redirect",
+      "golden": "none"
+    }
+  ],
+  "errors": {
+    "answer": "inline",
+    "why": "Both failures render full-screen inline copy with a route back to sign-in; there is no envelope because no app API is called.",
+    "evidence": [
+      "mobile/app/(auth)/confirm.tsx:64-90"
+    ]
+  },
+  "emits": {
+    "answer": "none",
+    "why": "Email confirmation — the last step of the sign-up funnel — emits no event, so the drop-off between signup_completed and a live session is invisible.",
+    "evidence": [
+      "mobile/app/(auth)/confirm.tsx:1-91",
+      "mobile/app/(auth)/sign-up.tsx:112"
+    ],
+    "analytics": [],
+    "ledger_events": [],
+    "breadcrumbs": []
+  },
+  "offers": {
+    "answer": "none",
+    "why": "No sponsored placement is rendered: the only slot component in the Expo tree is SponsorSlot, and it returns null unless EXPO_PUBLIC_PARCEL_SPONSORS=1.",
+    "evidence": [
+      "mobile/src/components/parcel/SponsorSlot.tsx:16-20"
+    ]
+  },
+  "metering": {
+    "answer": "none",
+    "why": "Nothing here is counted: the Spec 126 §7 usage ledger table does not exist (grep for usage_events in the introspected drizzle schema returns 0 hits), and the only quota-shaped counter, user_profiles.lead_views_count, is incremented solely by POST /api/leads/view, which has no mobile caller.",
+    "evidence": [
+      "src/lib/db/generated/schema.ts — no usage_events table (grep, 2026-09-15)",
+      "src/app/api/leads/view/route.ts:110",
+      "src/features/leads/api/useLeadView.ts:25 — imported only by src/tests/useLeadView.logic.test.tsx"
+    ]
+  },
+  "config": {
+    "answer": "none",
+    "why": "The surface consumes no registered logic variable: the only server-side tunable in this path, user_profiles.radius_cap_km, is a per-user admin column, not a logic_variables row.",
+    "evidence": [
+      "src/lib/userProfile.schema.ts:40",
+      "src/app/api/user-profile/route.ts:328",
+      "docs/reference/logic-variables-registry.md — no radius_cap_km entry"
+    ],
+    "logic_variables": [],
+    "retired": []
+  },
+  "sharing": {
+    "answer": "none",
+    "why": "It renders no contract.",
+    "evidence": [
+      "mobile/app/(auth)/confirm.tsx:1-91"
+    ],
+    "surfaces": []
+  },
+  "a11y": {
+    "touch_target_min_px": 52,
+    "labels": "complete",
+    "dark_mode": "hardcoded",
+    "reduced_motion": "none",
+    "i18n": "none",
+    "safe_area": [
+      "top",
+      "bottom",
+      "left",
+      "right"
+    ]
+  },
+  "deviations": "none",
+  "limitations": [
+    {
+      "what": "On success the screen never navigates — it keeps the spinner and waits for AuthGate to route away, so a routing regression would present as a permanent \"Confirming your email…\".",
+      "measured": "confirm.tsx:45-48 — the ok branch deliberately does nothing, with a comment saying AuthGate routes away.",
+      "check_id": "confirm_error_states"
+    }
+  ],
+  "interpretation": "none",
+  "notes": "Its route is reachable only via the root layout's Linking listener: expo-router maps maxbld://auth/confirm to /auth/confirm, which no file inside the (auth) group can match, so the catcher re-routes into /(auth)/confirm.",
+  "x-draft": {
+    "shard": "mobile-product",
+    "files": [
+      "mobile/app/(auth)/confirm.tsx"
+    ],
+    "loc": 91,
+    "call_idiom": "none",
+    "stores": [],
+    "measured_states": [
+      "exchanging",
+      "error_invalid",
+      "error_same_device"
+    ],
+    "measured_gate": {
+      "session": "none",
+      "entitlement": "none",
+      "flag": "none",
+      "permission": "none"
+    }
+  },
+  "programme": {
+    "scope": "platform_shared",
+    "phase": "UNRESEARCHED",
+    "why": "Authentication. It talks to the Supabase Auth SDK and gates entry to both products; no product owns it.",
+    "feature": "F10",
+    "build_order": 3103,
+    "leakage": "none",
+    "product_questions": "none",
+    "review": {
+      "status": "unreviewed"
+    }
+  }
+}

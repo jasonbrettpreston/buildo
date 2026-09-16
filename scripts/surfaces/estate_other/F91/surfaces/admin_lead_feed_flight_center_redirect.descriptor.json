@@ -1,0 +1,234 @@
+{
+  "kind": "SURFACE",
+  "status": "exists",
+  "docs": {
+    "purpose": "A leftover address from an earlier version of the watchlist tool. Anyone who follows an old link or bookmark is sent permanently to the current watchlist page instead. Nothing is displayed here at all.",
+    "data_story": "This surface reaches **no API contract at all** — every value it shows is local, passed in as a prop, or read from the device.",
+    "under_126": "**RE-PROJECT** — it writes nothing and holds no Layer-3 store, so the move is short — the server already assembles the payload and only the rendering is client-side. It renders through the STATIC renderer (content source and SEO, or a declared redirect alone), reading no contract. It owns no component of its own, so its `owns.components[]` is an empty array — a legal answer, written down."
+  },
+  "evidence": {
+    "files": [
+      "src/app/admin/lead-feed/flight-center/page.tsx:9",
+      "src/app/admin/lead-feed/flight-center/page.tsx:12"
+    ],
+    "contracts": [
+      "src/app/admin/lead-feed/flight-center/page.tsx:1"
+    ],
+    "tables": [
+      "src/app/admin/lead-feed/flight-center/page.tsx:1"
+    ],
+    "gate": [
+      "src/lib/auth/route-guard.ts:162",
+      "src/middleware.ts:95"
+    ],
+    "states": [
+      "src/app/admin/lead-feed/flight-center/page.tsx:12"
+    ],
+    "emits": [
+      "src/app/admin/lead-feed/flight-center/page.tsx:1"
+    ]
+  },
+  "identity": {
+    "id": "admin_lead_feed_flight_center_redirect",
+    "route": "src/app/admin/lead-feed/flight-center/page.tsx",
+    "archetype": "STATIC",
+    "platforms": [
+      "web"
+    ],
+    "owns": {
+      "components": []
+    },
+    "owner": "UNRESEARCHED",
+    "spec": "docs/specs/02-web-admin/36_flight_center_tool.md",
+    "spec_refs": [
+      "docs/specs/02-web-admin/36_flight_center_tool.md §2",
+      "docs/specs/02-web-admin/76_lead_feed_health_dashboard.md §3.4"
+    ],
+    "spec_version": "0-draft",
+    "versioning": {
+      "answer": "frozen",
+      "why": "A 308 is a permanent promise to every client that cached it; changing the target is a breaking change to URLs already in the wild, which is why permanentRedirect was chosen over redirect().",
+      "evidence": [
+        "src/app/admin/lead-feed/flight-center/page.tsx:3",
+        "src/app/admin/lead-feed/flight-center/page.tsx:12"
+      ]
+    },
+    "ref": "S-056"
+  },
+  "inputs": {
+    "answer": "none",
+    "why": "Thirteen lines with one call and no parameters — it reads nothing at all.",
+    "evidence": [
+      "src/app/admin/lead-feed/flight-center/page.tsx:11"
+    ],
+    "contract_ref": [],
+    "query_key": [],
+    "field_whitelist": [],
+    "tables": []
+  },
+  "outputs": {
+    "answer": "none",
+    "why": "It writes nothing; the function's return type is never.",
+    "evidence": [
+      "src/app/admin/lead-feed/flight-center/page.tsx:11"
+    ],
+    "contract_ref": [],
+    "tables": []
+  },
+  "state": {
+    "answer": "none",
+    "why": "It never renders, so it can hold nothing.",
+    "evidence": [
+      "src/app/admin/lead-feed/flight-center/page.tsx:11"
+    ],
+    "fields": []
+  },
+  "staleness": {
+    "answer": "none",
+    "why": "It displays no server data.",
+    "evidence": [
+      "src/app/admin/lead-feed/flight-center/page.tsx:12"
+    ],
+    "offline": "none"
+  },
+  "guards": {
+    "session": {
+      "answer": "admin",
+      "why": "The /admin/* arm runs in middleware BEFORE the component, so an unauthenticated visitor is bounced to login and never reaches the redirect at all.",
+      "evidence": [
+        "src/lib/auth/route-guard.ts:162",
+        "src/middleware.ts:95"
+      ]
+    },
+    "rls_class": {
+      "answer": "none",
+      "why": "It reaches no table.",
+      "evidence": [
+        "src/app/admin/lead-feed/flight-center/page.tsx:1"
+      ]
+    },
+    "disclosure": "none",
+    "entitlement": "none",
+    "flag": "none",
+    "permission": "none",
+    "rate_bucket": "none"
+  },
+  "render": {
+    "targets": [
+      "screen"
+    ],
+    "projection": "none",
+    "breakpoints": "none",
+    "export": "none"
+  },
+  "checks": [
+    {
+      "id": "flight_center_redirect_single_board",
+      "kind": "schema_declared",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "why": "The declared reason this file exists is that two parallel flight boards must never coexist — if the nested route ever renders UI again instead of redirecting, that invariant is broken."
+    }
+  ],
+  "invariants": "none",
+  "plausibility": "none",
+  "states": [
+    {
+      "name": "redirect",
+      "golden": "none"
+    }
+  ],
+  "errors": {
+    "answer": "redirect",
+    "why": "It has no failure mode of its own: the only thing it does is navigate.",
+    "evidence": [
+      "src/app/admin/lead-feed/flight-center/page.tsx:12"
+    ]
+  },
+  "emits": {
+    "answer": "none",
+    "why": "A permanentRedirect throws a Next.js control-flow signal; nothing is logged, counted or breadcrumbed.",
+    "evidence": [
+      "src/app/admin/lead-feed/flight-center/page.tsx:12"
+    ],
+    "analytics": [],
+    "ledger_events": [],
+    "breadcrumbs": []
+  },
+  "offers": {
+    "answer": "none",
+    "why": "An internal operator tool renders no sponsored placement; no offers/placements table is reached from any file it owns.",
+    "evidence": [
+      "src/app/admin/lead-feed/flight-center/page.tsx:1"
+    ]
+  },
+  "metering": {
+    "answer": "none",
+    "why": "Nothing here is billable or quota-bearing: no usage_events / ledger write is reached from this surface or its contracts.",
+    "evidence": [
+      "src/app/admin/lead-feed/flight-center/page.tsx:1"
+    ]
+  },
+  "config": {
+    "answer": "none",
+    "why": "The target path is a literal; nothing is tunable.",
+    "evidence": [
+      "src/app/admin/lead-feed/flight-center/page.tsx:12"
+    ],
+    "logic_variables": [],
+    "retired": []
+  },
+  "sharing": {
+    "answer": "none",
+    "why": "It renders no contract.",
+    "evidence": [
+      "src/app/admin/lead-feed/flight-center/page.tsx:1"
+    ],
+    "surfaces": []
+  },
+  "a11y": {
+    "touch_target_min_px": "UNRESEARCHED",
+    "labels": "none",
+    "dark_mode": "none",
+    "reduced_motion": "none",
+    "i18n": "none",
+    "safe_area": "none"
+  },
+  "deviations": "none",
+  "limitations": [
+    {
+      "what": "a11y.labels is \"none\" because there is nothing to label",
+      "measured": "The file renders no element at all; \"none\" here means no interactive surface exists, not that labels are missing from one.",
+      "check_id": "flight_center_redirect_single_board"
+    }
+  ],
+  "interpretation": "none",
+  "notes": "13-line permanentRedirect only - no UI whatsoever, which is why the archetype is STATIC. Uses permanentRedirect (308) rather than redirect() (307) deliberately, because the move is permanent and next.config.ts has no redirects() block to extend; the stated reason is that two parallel flight boards must never coexist. The function's return type is `never`. identity.owner is UNRESEARCHED estate-wide: no owner registry exists in the tree, so naming one would be an invention rather than a measurement. a11y.touch_target_min_px is UNRESEARCHED because its vocabulary (UNRESEARCHED or an integer >= 44) has no member for a desktop-only admin page that declares no floor.",
+  "x-draft": {
+    "shard": "admin-existing",
+    "files": [
+      "src/app/admin/lead-feed/flight-center/page.tsx"
+    ],
+    "loc": 13,
+    "measured_states": [
+      "redirect"
+    ],
+    "measured_gate": {
+      "session": "admin",
+      "why": "classifyRoute('/admin/lead-feed/flight-center') matches the admin-pages arm via `pathname.startsWith('/admin/')` -> 'admin'. The redirect happens after the guard, so an unauthenticated visitor is bounced to login before ever reaching it."
+    }
+  },
+  "programme": {
+    "scope": "estate_other",
+    "phase": "not_scheduled",
+    "why": "Flight center — the other product. Fenced from the parcel tool by Spec 128 R-03; inventoried only.",
+    "feature": "F91",
+    "build_order": 4183,
+    "leakage": "UNRESEARCHED",
+    "product_questions": "UNRESEARCHED",
+    "review": {
+      "status": "unreviewed"
+    }
+  }
+}

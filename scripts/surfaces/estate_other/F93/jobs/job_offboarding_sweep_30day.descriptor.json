@@ -1,0 +1,338 @@
+{
+  "kind": "JOB",
+  "status": "exists",
+  "docs": {
+    "purpose": "When someone deletes their account, the data is not removed immediately — it is marked as deleted and kept for a 30-day grace period. This job runs daily to finish the job: it permanently removes every account whose grace period has expired, one account at a time. Accounts that cannot be removed because they authored admin audit records are deliberately skipped and reported, so a human can scrub them by hand rather than the whole sweep failing.",
+    "data_story": "It reads `user_profiles` and writes `auth.users` and `pipeline_runs`. It runs on `0 10 * * *`, unattended, with nobody watching — which is why its guard matters: pg_extension guard with a NOTICE-skip on the cron.schedule call only (migrations/233:78-81); the `public.offboarding_sweep_30day()` FUNCTION itself is created UNGUARDED so CI/Docker images without pg_cron can still test it. Function is SECURITY DEFINER with `SET search_path = pg_catalog` and REVOKE ALL from PUBLIC/anon/authenticated.",
+    "under_126": "Becomes a **JOB descriptor** of archetype `SCHEDULED` under its own `job.schema.json` (Spec 128 R-14) — declaring its schedule, its target, its idempotency posture, its behaviour when `pg_cron` is absent, and the audit row it writes. Nothing about how it runs changes; what changes is that those five answers stop living only in SQL and YAML."
+  },
+  "evidence": {
+    "files": [
+      "migrations/233_pg_cron_maintenance_catalog.sql:1",
+      "migrations/235_offboarding_sweep_hardening.sql:1"
+    ],
+    "contracts": [
+      "none — a pg_cron job takes no request and calls no API route"
+    ],
+    "tables": [
+      "migrations/235_offboarding_sweep_hardening.sql:57-61,66,92-103",
+      "docs/specs/00-architecture/114_rls_policy_catalog.md:107,209",
+      "migrations/233_pg_cron_maintenance_catalog.sql:28-30"
+    ],
+    "gate": [
+      "migrations/235_offboarding_sweep_hardening.sql:46-48",
+      "migrations/235_offboarding_sweep_hardening.sql:112-113",
+      "migrations/235_offboarding_sweep_hardening.sql:122-125"
+    ],
+    "states": [
+      "migrations/235_offboarding_sweep_hardening.sql:63-84 (per-user success / fence-skip / other-error), :92-103 (summary)",
+      "src/tests/db/offboarding-sweep.db.test.ts"
+    ],
+    "emits": [
+      "migrations/235_offboarding_sweep_hardening.sql:92-103",
+      "migrations/235_offboarding_sweep_hardening.sql:74,81"
+    ]
+  },
+  "identity": {
+    "id": "job_offboarding_sweep_30day",
+    "route": "migrations/233_pg_cron_maintenance_catalog.sql",
+    "archetype": "SCHEDULED",
+    "platforms": [],
+    "owns": {
+      "components": []
+    },
+    "owner": "pipeline",
+    "spec": "docs/specs/00-architecture/115_scheduling.md §5",
+    "spec_refs": [
+      "docs/specs/00-architecture/115_scheduling.md §5 (pg_cron job catalog — the offboarding_sweep_30day row, predicate rewritten by Schema-Fidelity F3/F4)",
+      "docs/specs/03-mobile/97_mobile_settings_notifications_offboarding.md §3.2 — the never-built Phase-2 sweep this implements",
+      "docs/specs/00-architecture/114_rls_policy_catalog.md:107 — user_profiles is Class A"
+    ],
+    "spec_version": "0-draft",
+    "versioning": {
+      "answer": "additive_only",
+      "why": "Migration 235 replaced the function body in place and kept the 233 signature verbatim — RETURNS TABLE (deleted_count int, skipped_count int) — adding a WHEN OTHERS arm and a pipeline_runs row without changing what a caller receives.",
+      "evidence": [
+        "migrations/235_offboarding_sweep_hardening.sql:30-32,44-45",
+        "migrations/233_pg_cron_maintenance_catalog.sql:33-34"
+      ]
+    },
+    "ref": "J-004"
+  },
+  "inputs": {
+    "answer": "app_outputs",
+    "why": "It reads one predicate off user_profiles — the accounts whose self-deletion passed the 30-day horizon — and nothing else; no contract, no parameter.",
+    "evidence": [
+      "migrations/235_offboarding_sweep_hardening.sql:57-61"
+    ],
+    "contract_ref": [],
+    "query_key": [],
+    "field_whitelist": [
+      "user_id",
+      "account_deleted_at"
+    ],
+    "tables": [
+      {
+        "table": "user_profiles",
+        "columns": [
+          "user_id",
+          "account_deleted_at"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "migrations/114_user_profiles_mobile_columns.sql:32 — account_deleted_at, live-verified as the only place this timestamp lives",
+        "evidence": [
+          "migrations/235_offboarding_sweep_hardening.sql:57-61",
+          "docs/specs/00-architecture/115_scheduling.md §5",
+          "docs/specs/00-architecture/114_rls_policy_catalog.md:107 — Class A",
+          "migrations/233_pg_cron_maintenance_catalog.sql:28-30 — the partial index supporting this predicate"
+        ]
+      }
+    ]
+  },
+  "outputs": {
+    "answer": "UNRESEARCHED",
+    "why": "NOT ANSWERABLE from the closed set: outputs offers none | contract_only | optimistic_then_contract | device_only, all of which describe a client writing through an API. This job writes directly to the database with no contract in between. The substance is recorded in outputs.tables[]; the vocabulary gap is a Spec 128 §4 escalation (R-14: JOBs need job.schema.json). What it does: a per-user DELETE FROM auth.users, whose mig-229 CASCADE topology removes every user-owned row, plus one pipeline_runs summary row at the end.",
+    "evidence": [
+      "migrations/235_offboarding_sweep_hardening.sql:63-67,92-103"
+    ],
+    "contract_ref": [],
+    "tables": [
+      {
+        "table": "auth.users",
+        "columns": [
+          "id"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "migrations/229_uid_uuid_fk_conversion.sql:96-106 — the CASCADE/RESTRICT topology",
+        "evidence": [
+          "migrations/235_offboarding_sweep_hardening.sql:66",
+          "migrations/235_offboarding_sweep_hardening.sql:64-65",
+          "docs/specs/00-architecture/115_scheduling.md §5"
+        ]
+      },
+      {
+        "table": "pipeline_runs",
+        "columns": [
+          "pipeline",
+          "started_at",
+          "completed_at",
+          "status",
+          "records_meta"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/01-pipeline/48_pipeline_observability.md",
+        "evidence": [
+          "migrations/235_offboarding_sweep_hardening.sql:92-103",
+          "scripts/lib/step/ledger.js:62 — the SDK insert this mirrors",
+          "docs/specs/00-architecture/114_rls_policy_catalog.md:209 — Class B"
+        ]
+      }
+    ]
+  },
+  "state": {
+    "answer": "server_only",
+    "why": "Three loop-local variables (deleted, skipped, skipped_ids) live for one execution; the horizon is recomputed from NOW() each run, so nothing carries over.",
+    "evidence": [
+      "migrations/235_offboarding_sweep_hardening.sql:50-55"
+    ],
+    "fields": []
+  },
+  "staleness": {
+    "answer": "none",
+    "why": "It displays nothing.",
+    "evidence": [
+      "migrations/235_offboarding_sweep_hardening.sql:44-107"
+    ],
+    "offline": "none"
+  },
+  "guards": {
+    "session": {
+      "answer": "UNRESEARCHED",
+      "why": "NOT ANSWERABLE from the closed set: guards.session offers anon | authenticated | entitled | admin, all of which describe an end-user principal. This runs with no request and no user — as the pg_cron job owner through a SECURITY DEFINER function, or as a GitHub Actions runner holding repository secrets. Spec 128 §4 escalation (Spec 128 R-14 already anticipates JOBs getting their own job.schema.json); recorded rather than mis-answered.",
+      "evidence": [
+        "migrations/235_offboarding_sweep_hardening.sql:46-48,112-113"
+      ]
+    },
+    "rls_class": {
+      "answer": "A",
+      "why": "user_profiles is a Class A uid table (auth.uid() = user_id) and auth.users is its owner; the function is SECURITY DEFINER with search_path = pg_catalog, so it runs above both policies and is REVOKEd from anon and authenticated.",
+      "evidence": [
+        "docs/specs/00-architecture/114_rls_policy_catalog.md:107",
+        "migrations/235_offboarding_sweep_hardening.sql:46-48",
+        "migrations/235_offboarding_sweep_hardening.sql:112-113"
+      ]
+    },
+    "disclosure": "none",
+    "entitlement": "none",
+    "flag": "none",
+    "permission": "none",
+    "rate_bucket": "none"
+  },
+  "render": {
+    "targets": [
+      "screen"
+    ],
+    "projection": "none",
+    "breakpoints": "none",
+    "export": "none"
+  },
+  "checks": [
+    {
+      "id": "job_offboarding_per_user_isolation",
+      "kind": "error_state",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "The loop must survive one bad user: the mig-229 admin_audit_log RESTRICT fence would abort a batch DELETE entirely, and the WHEN OTHERS arm 235 added covers every other single-row failure — without both, one audit-authoring account blocks every other eligible deletion."
+    },
+    {
+      "id": "job_offboarding_ledger_row_present",
+      "kind": "ledger_row_present",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "The pipeline_runs row carrying deleted_count, skipped_count and skipped_user_ids is the ONLY durable record of a run — cron.job_run_details does not capture the RAISE WARNINGs under default config, so losing this insert makes the sweep invisible."
+    },
+    {
+      "id": "job_offboarding_search_path_pinned",
+      "kind": "schema_declared",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "why": "SET search_path = pg_catalog with every reference schema-qualified means an unqualified name is a hard error at CREATE time rather than a silent hijack risk at call time — 235 tightened this from 233 deliberately."
+    }
+  ],
+  "invariants": [
+    {
+      "id": "offboarding_horizon_respected",
+      "sql": "SELECT count(*) FROM public.user_profiles WHERE account_deleted_at IS NOT NULL AND account_deleted_at < NOW() - INTERVAL '31 days'",
+      "severity": "WARN",
+      "why": "A day of slack past the 30-day horizon absorbs the daily cadence; a count that keeps growing means either the schedule is not firing or every remaining row is stuck behind the audit-log RESTRICT fence and needs the manual RTBF scrub."
+    }
+  ],
+  "plausibility": "none",
+  "states": [
+    {
+      "name": "hit",
+      "golden": "src/tests/db/offboarding-sweep.db.test.ts"
+    },
+    {
+      "name": "empty",
+      "golden": "src/tests/db/offboarding-sweep.db.test.ts"
+    },
+    {
+      "name": "partial",
+      "golden": "src/tests/db/offboarding-sweep.db.test.ts"
+    },
+    {
+      "name": "degraded",
+      "golden": "src/tests/db/offboarding-sweep.db.test.ts"
+    }
+  ],
+  "errors": {
+    "answer": "envelope",
+    "why": "A JOB has no UI, so `envelope` is read here as its structured-record analogue: per-row, inside the loop, a foreign_key_violation (the audit fence) and any other error are each caught, RAISE WARNING'd with the user id, counted as skipped and recorded in skipped_user_ids on the pipeline_runs row — the batch continues either way.",
+    "evidence": [
+      "migrations/235_offboarding_sweep_hardening.sql:68-84,92-103"
+    ],
+    "classes": [
+      {
+        "class": "500",
+        "ui": "RAISE WARNING plus a skipped_user_ids entry on the pipeline_runs summary row; the sweep continues"
+      }
+    ],
+    "no_retry": []
+  },
+  "emits": {
+    "answer": "ledger",
+    "why": "One pipeline_runs row per run, pipeline='offboarding_sweep', status='completed', carrying deleted_count, skipped_count and skipped_user_ids — added by 235 precisely because RAISE WARNING is not durable.",
+    "evidence": [
+      "migrations/235_offboarding_sweep_hardening.sql:87-103"
+    ],
+    "analytics": [],
+    "ledger_events": [],
+    "breadcrumbs": [
+      "RAISE WARNING 'offboarding_sweep_30day: user % skipped — admin_audit_log RESTRICT fence'",
+      "RAISE WARNING 'offboarding_sweep_30day: unexpected error for user %'"
+    ]
+  },
+  "offers": {
+    "answer": "none",
+    "why": "A deletion sweep renders no sponsored placement.",
+    "evidence": [
+      "migrations/235_offboarding_sweep_hardening.sql:44-107"
+    ]
+  },
+  "metering": {
+    "answer": "none",
+    "why": "It writes no usage_events row; the counts it reports go to pipeline_runs, not to the usage ledger.",
+    "evidence": [
+      "migrations/235_offboarding_sweep_hardening.sql:92-103"
+    ]
+  },
+  "config": {
+    "answer": "none",
+    "why": "The 30-day horizon is a literal INTERVAL in the function body, not a registered logic variable — unlike the sibling purge, whose window IS tunable. That asymmetry is measured, not assumed.",
+    "evidence": [
+      "migrations/235_offboarding_sweep_hardening.sql:61",
+      "migrations/235_offboarding_sweep_hardening.sql:138-139"
+    ],
+    "logic_variables": [],
+    "retired": []
+  },
+  "sharing": {
+    "answer": "none",
+    "why": "It renders no contract.",
+    "evidence": [
+      "migrations/235_offboarding_sweep_hardening.sql:44-107"
+    ],
+    "surfaces": []
+  },
+  "a11y": {
+    "touch_target_min_px": "UNRESEARCHED",
+    "labels": "none",
+    "dark_mode": "none",
+    "reduced_motion": "none",
+    "i18n": "none",
+    "safe_area": "none"
+  },
+  "deviations": "none",
+  "limitations": [
+    {
+      "what": "A user who ever authored an admin_audit_log row is never deleted by this job.",
+      "measured": "migrations/235_offboarding_sweep_hardening.sql:69-76 — the foreign_key_violation arm skips them and leaves them for a manual RTBF scrub; migration 229 makes admin_audit_log.admin_uid ON DELETE RESTRICT on purpose, so an audit trail outlives the account that wrote it.",
+      "check_id": "job_offboarding_per_user_isolation"
+    },
+    {
+      "what": "The retention horizon cannot be changed without a migration.",
+      "measured": "migrations/235_offboarding_sweep_hardening.sql:61 — INTERVAL '30 days' is a literal in the function body and appears nowhere in docs/reference/logic-variables-registry.md.",
+      "check_id": "job_offboarding_ledger_row_present"
+    }
+  ],
+  "interpretation": "none",
+  "notes": "Scheduled once in 233 (`0 10 * * *`); 235 replaces the function body only (CREATE OR REPLACE) and does NOT re-schedule this job. 235 adds a `WHEN OTHERS` per-user exception arm and a durable `pipeline_runs` summary row (pipeline='offboarding_sweep', status='completed', records_meta carrying deleted_count/skipped_count/skipped_user_ids) because pg_cron's job_run_details does not capture RAISE WARNING output. The auth.users DELETE cascades across the mig-229 topology; admin_audit_log is ON DELETE RESTRICT by design. MEASURED 2026-09-15. This is the catalog's best-instrumented job and the one the other two should be measured against: it is the only pg_cron job with a live DB test (src/tests/db/offboarding-sweep.db.test.ts) and one of two that write a pipeline_runs row. Its 30-day horizon is a literal while the sibling purge's window is a registered logic variable — a real asymmetry, recorded in config.why rather than smoothed over. guards.session and outputs.answer are Spec 128 §4 vocabulary escalations; outputs.tables[] carries the substance, including auth.users, which is the only cross-schema write in this shard.",
+  "x-draft": {
+    "shard": "jobs",
+    "files": [
+      "migrations/233_pg_cron_maintenance_catalog.sql",
+      "migrations/235_offboarding_sweep_hardening.sql"
+    ],
+    "cron": "0 10 * * *",
+    "guarded_by": "pg_extension guard with a NOTICE-skip on the cron.schedule call only (migrations/233:78-81); the `public.offboarding_sweep_30day()` FUNCTION itself is created UNGUARDED so CI/Docker images without pg_cron can still test it. Function is SECURITY DEFINER with `SET search_path = pg_catalog` and REVOKE ALL from PUBLIC/anon/authenticated."
+  },
+  "programme": {
+    "scope": "estate_other",
+    "phase": "not_scheduled",
+    "why": "A scheduled job serving the lead-gen estate or the CI harness. Inventoried so a job with no owner is visible, not to be converted in this programme.",
+    "feature": "F93",
+    "build_order": 4204,
+    "leakage": "UNRESEARCHED",
+    "product_questions": "UNRESEARCHED",
+    "review": {
+      "status": "unreviewed"
+    }
+  }
+}

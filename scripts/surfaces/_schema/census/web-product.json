@@ -1,0 +1,3473 @@
+[
+  {
+    "kind": "SURFACE",
+    "status": "exists",
+    "docs": {
+      "purpose": "The outermost wrapper every web page renders inside. It sets the browser tab title and description for the whole site and switches on two background services that all pages then share: a cache that remembers fetched data between page visits, and the usage-tracking hookup. It shows nothing of its own - visitors never see it as a page.",
+      "data_story": "This surface reaches **no API contract at all** — every value it shows is local, passed in as a prop, or read from the device.",
+      "under_126": "**RE-PROJECT** — it writes nothing and holds no Layer-3 store, so the move is short — the server already assembles the payload and only the rendering is client-side. It renders through the SHELL renderer (declared routing branches, guards and child groups — a shell here is not inert), reading no contract. Its `owns.components[]` declares `src/components/observability/PostHogProvider.tsx`."
+    },
+    "evidence": {
+      "files": [
+        "src/app/layout.tsx:1",
+        "src/app/providers.tsx:1",
+        "src/components/observability/PostHogProvider.tsx:1"
+      ],
+      "contracts": [
+        "none — no /api/ string and no hook import in any of the three files (src/app/layout.tsx, src/app/providers.tsx, src/components/observability/PostHogProvider.tsx)"
+      ],
+      "tables": [
+        "none — no SQL and no db client import in any of the three files"
+      ],
+      "gate": [
+        "src/lib/auth/route-guard.ts:43-64",
+        "src/tests/middleware.logic.test.ts:30"
+      ],
+      "states": [
+        "src/app/layout.tsx:15-21 — one unconditional return, no branch"
+      ],
+      "emits": [
+        "src/components/observability/PostHogProvider.tsx:8-10",
+        "src/lib/observability/capture.ts:101-127"
+      ]
+    },
+    "identity": {
+      "id": "shell_web_root",
+      "route": "src/app/layout.tsx",
+      "archetype": "SHELL",
+      "platforms": [
+        "web"
+      ],
+      "owns": {
+        "components": [
+          "src/components/observability/PostHogProvider.tsx"
+        ]
+      },
+      "owner": "web",
+      "spec": "docs/specs/archive/75_lead_feed_implementation_guide.md",
+      "spec_refs": [
+        "docs/specs/archive/75_lead_feed_implementation_guide.md §11 Phase 3 (the provider composition)",
+        "docs/specs/archive/75_lead_feed_implementation_guide.md §7a",
+        "docs/specs/archive/75_lead_feed_implementation_guide.md §13",
+        "docs/specs/02-web-admin/126_maxbld_surface_standard.md §3.1 (the SHELL archetype)"
+      ],
+      "spec_version": "0-draft",
+      "versioning": {
+        "answer": "breaking_allowed",
+        "why": "Its only consumers are the pages in this same repo; changing the provider composition is one commit with no external contract to keep.",
+        "evidence": [
+          "src/app/layout.tsx:18",
+          "src/app/providers.tsx:43-48",
+          "src/app/providers.tsx:2 — the SPEC LINK header"
+        ]
+      },
+      "ref": "S-049"
+    },
+    "inputs": {
+      "answer": "none",
+      "why": "It fetches nothing and takes only `children`; PostHogProvider's effect calls initObservability() and returns its children untouched.",
+      "evidence": [
+        "src/app/layout.tsx:10-21",
+        "src/components/observability/PostHogProvider.tsx:7-11"
+      ],
+      "contract_ref": [],
+      "query_key": [],
+      "field_whitelist": [],
+      "tables": []
+    },
+    "outputs": {
+      "answer": "device_only",
+      "why": "The only write is browser-local: PostHog's init writes its own cookies/localStorage, and the TanStack persister writes the `buildo-leads-cache` IndexedDB key. No contract, no table.",
+      "evidence": [
+        "src/app/providers.tsx:29-30,45",
+        "src/features/leads/api/query-client.ts:79-83",
+        "src/lib/observability/capture.ts:116"
+      ],
+      "contract_ref": [],
+      "tables": []
+    },
+    "state": {
+      "answer": "query_cache",
+      "why": "It constructs and mounts the process-wide TanStack QueryClient (staleTime 60s, gcTime 24h) plus the IndexedDB persister — Layer 2, and the only state this surface owns.",
+      "evidence": [
+        "src/app/providers.tsx:29-30,45-47",
+        "src/features/leads/api/query-client.ts:41-58,82-83"
+      ],
+      "fields": []
+    },
+    "staleness": {
+      "answer": "none",
+      "why": "It displays no server value of its own; the 60s staleTime it configures belongs to whichever descendant runs a query.",
+      "evidence": [
+        "src/app/layout.tsx:15-21",
+        "src/features/leads/api/query-client.ts:57"
+      ],
+      "stale_time_ms": 60000,
+      "gc_time_ms": 86400000,
+      "offline": "none"
+    },
+    "guards": {
+      "session": {
+        "answer": "anon",
+        "why": "It wraps every route, including the public ones, so it renders for a visitor with no session at all — classifyRoute('/') is 'public'.",
+        "evidence": [
+          "src/lib/auth/route-guard.ts:43-64",
+          "src/tests/middleware.logic.test.ts:30",
+          "src/app/layout.tsx:15-21"
+        ]
+      },
+      "rls_class": {
+        "answer": "none",
+        "why": "It reaches no table, so no policy class applies.",
+        "evidence": [
+          "src/app/layout.tsx:1-22",
+          "src/app/providers.tsx:1-49"
+        ]
+      },
+      "disclosure": "none",
+      "entitlement": "none",
+      "flag": "none",
+      "permission": "none",
+      "rate_bucket": "none"
+    },
+    "render": {
+      "targets": [
+        "screen"
+      ],
+      "projection": "none",
+      "breakpoints": "none",
+      "export": "none",
+      "routing": "UNRESEARCHED"
+    },
+    "checks": [
+      {
+        "id": "shell_web_root_owns_posthog_provider",
+        "kind": "components_owned",
+        "severity": "FAIL",
+        "blocking": false,
+        "when": "post",
+        "why": "PostHogProvider.tsx is rendered only by providers.tsx, which only layout.tsx renders — R-13 totality for that file rests entirely on this row claiming it."
+      },
+      {
+        "id": "shell_web_root_persist_options_stable",
+        "kind": "selector_atomicity",
+        "severity": "FAIL",
+        "blocking": false,
+        "when": "post",
+        "why": "persistOptions is hoisted to module scope precisely so the provider does not receive a fresh object each render (the Phase 3-i adversarial finding); an inline literal here reintroduces the rehydration loop."
+      }
+    ],
+    "invariants": "none",
+    "plausibility": "none",
+    "states": [
+      {
+        "name": "static",
+        "golden": "none"
+      }
+    ],
+    "errors": {
+      "answer": "none",
+      "why": "It performs no fetch and declares no error.tsx — the three error boundaries in this app are all under src/app/admin/, so a throw below this layout reaches Next's built-in handler, not anything this surface declares.",
+      "evidence": [
+        "src/app/layout.tsx:1-22",
+        "src/app/admin/control-panel/error.tsx:1",
+        "src/app/admin/flight-center/error.tsx:1",
+        "src/app/admin/parcel-cost/error.tsx:1"
+      ]
+    },
+    "emits": {
+      "answer": "events",
+      "why": "PostHogProvider's effect calls initObservability(), which boots posthog-js and drains the pre-init queue — every captureEvent() in the app depends on this surface having run.",
+      "evidence": [
+        "src/components/observability/PostHogProvider.tsx:8-10",
+        "src/lib/observability/capture.ts:101,116,122-127,150-162"
+      ],
+      "analytics": [],
+      "ledger_events": [],
+      "breadcrumbs": []
+    },
+    "offers": {
+      "answer": "none",
+      "why": "It renders no sponsored placement and reads no placement inventory.",
+      "evidence": [
+        "src/app/layout.tsx:15-21"
+      ]
+    },
+    "metering": {
+      "answer": "none",
+      "why": "It writes no usage_events row and gates no quota.",
+      "evidence": [
+        "src/app/layout.tsx:1-22",
+        "src/app/providers.tsx:1-49"
+      ]
+    },
+    "config": {
+      "answer": "none",
+      "why": "Its two tunables (CACHE_MAX_AGE_MS, CACHE_BUSTER) plus DEFAULT_STALE_MS/DEFAULT_GC_MS are TypeScript module constants, not registered logic variables — they appear nowhere in docs/reference/logic-variables-registry.md.",
+      "evidence": [
+        "src/features/leads/api/query-client.ts:41-42,82-83"
+      ],
+      "logic_variables": [],
+      "retired": []
+    },
+    "sharing": {
+      "answer": "none",
+      "why": "It renders no contract, so there is nothing for another surface to share.",
+      "evidence": [
+        "src/app/layout.tsx:15-21"
+      ],
+      "surfaces": []
+    },
+    "a11y": {
+      "touch_target_min_px": "UNRESEARCHED",
+      "labels": "none",
+      "dark_mode": "none",
+      "reduced_motion": "none",
+      "i18n": "none",
+      "safe_area": "none"
+    },
+    "deviations": "none",
+    "limitations": [
+      {
+        "what": "The TanStack QueryClient + IndexedDB persister this shell mounts has no web-product consumer.",
+        "measured": "grep for useQuery/useMutation/@tanstack across src/ returns admin pages, src/features/admin-*, src/features/leads/api/useLeadView.ts and this file — none of the ten web-product surfaces.",
+        "check_id": "shell_web_root_persist_options_stable"
+      }
+    ],
+    "interpretation": "none",
+    "notes": "The spec cited is the SPEC LINK header on src/app/providers.tsx (Sec 11 Phase 3) and governs the provider composition (PersistQueryClientProvider + PostHogProvider) only; src/app/layout.tsx itself carries no SPEC LINK and appears in no system-map row. providers.tsx and PostHogProvider.tsx are included in files because the layout is the only thing that renders them; providers.tsx sits under src/app/, not src/components/. The tab title reads 'MaxBLD' (Spec 117 rename) while src/app/page.tsx still says 'Buildo'. No /api call: PostHogProvider only calls initObservability() from src/lib/observability/capture. MEASURED 2026-09-15: the QueryClient/persister this shell mounts is consumed by ZERO web-product surfaces — every one of the other nine uses bare fetch + useState (grep useQuery|useMutation|@tanstack across src/ hits only admin pages, src/features/admin-*, src/features/leads/api/useLeadView.ts and providers.tsx itself). guards.session is answered `anon` on the reachability axis (it renders for a sessionless visitor at `/`, route-guard.ts:43-64 + middleware.logic.test.ts:30); the x-draft note below is about classifyRoute, which takes a pathname the root layout does not have — both facts stand, they answer different questions. a11y.touch_target_min_px stays UNRESEARCHED because the vocabulary admits only UNRESEARCHED or an integer >= 44 and this surface has no interactive target at all — there is no \"n/a\" value to write (Spec 128 §4 escalation). SPEC PATH CORRECTED 2026-09-15: the SPEC LINK headers on src/app/providers.tsx:2 and src/components/observability/PostHogProvider.tsx:2 both cite docs/specs/03-mobile/75_lead_feed_implementation_guide.md, which does not exist — docs/specs/03-mobile/ holds 77 and 90-100 only, and the file lives at docs/specs/archive/75_lead_feed_implementation_guide.md. identity.spec now points at the file that is actually in the tree; the two stale in-code citations are recorded here rather than edited, because this shard is a census.",
+    "x-draft": {
+      "shard": "web-product",
+      "files": [
+        "src/app/layout.tsx",
+        "src/app/providers.tsx",
+        "src/components/observability/PostHogProvider.tsx"
+      ],
+      "loc": 83,
+      "measured_states": [
+        "static"
+      ],
+      "measured_gate": {
+        "session": "unmeasured",
+        "why": "Not classifiable: classifyRoute takes a URL pathname and the root layout has no pathname of its own - it wraps every route from 'public' (/) through 'admin' (/admin/*) simultaneously, so no single arm of the function applies."
+      }
+    },
+    "programme": {
+      "scope": "platform_shared",
+      "phase": "UNRESEARCHED",
+      "why": "A navigation shell. It routes and gates every product surface beneath it — converting it changes both products at once.",
+      "feature": "F14",
+      "build_order": 3143,
+      "leakage": "none",
+      "product_questions": "none",
+      "review": {
+        "status": "unreviewed"
+      }
+    }
+  },
+  {
+    "kind": "SURFACE",
+    "status": "exists",
+    "docs": {
+      "purpose": "Everything known about one construction company. It shows contact details (phone, email, website and any other contacts found, each labelled with where it came from and whether it was verified), the Google star rating and review count, business-registry identifiers, and the full list of permits that company has taken out with address, status, estimated cost and issue date. Each permit links through to its own page.",
+      "data_story": "It reads nothing from the database directly. Every value arrives through one contract: `/api/builders/[id]`. Behind that contract, the data comes from `entities`, `entity_contacts`, `entity_projects` and `permits`.",
+      "under_126": "**RE-PROJECT** — it writes nothing and holds no Layer-3 store, so the move is short — the server already assembles the payload and only the rendering is client-side. It renders through the DETAIL renderer (one entity, a single-param query key, declared sections), reading by reference: `/api/builders/[id]`. It owns no component of its own, so its `owns.components[]` is an empty array — a legal answer, written down."
+    },
+    "evidence": {
+      "files": [
+        "src/app/builders/[id]/page.tsx:1"
+      ],
+      "contracts": [
+        "src/app/builders/[id]/page.tsx:73 — /api/builders/[id]"
+      ],
+      "tables": [
+        "src/app/api/builders/[id]/route.ts:24,39-46,52",
+        "src/lib/db/generated/schema.ts — entities, entityContacts",
+        "docs/reference/data-lineage-map.md:506,997"
+      ],
+      "gate": [
+        "src/lib/auth/route-guard.ts:67-77",
+        "src/lib/auth/route-guard.ts:182-191",
+        "src/tests/middleware.logic.test.ts:61"
+      ],
+      "states": [
+        "src/app/builders/[id]/page.tsx:80-86 (loading), :88-99 (miss), :103-244 (hit), :130-133 + :205-206 (empty sections)"
+      ],
+      "emits": [
+        "none — no captureEvent import in src/app/builders/[id]/page.tsx"
+      ]
+    },
+    "identity": {
+      "id": "web_builder_detail",
+      "route": "src/app/builders/[id]/page.tsx",
+      "archetype": "DETAIL",
+      "platforms": [
+        "web"
+      ],
+      "owns": {
+        "components": []
+      },
+      "owner": "web",
+      "spec": "UNRESEARCHED",
+      "spec_refs": [],
+      "spec_version": "0-draft",
+      "versioning": {
+        "answer": "none",
+        "why": "Nothing parses the payload and nothing else consumes this page; the same entities field drift the list page carries applies here, so there is no kept promise to break.",
+        "evidence": [
+          "src/app/builders/[id]/page.tsx:7-45",
+          "src/app/api/builders/[id]/route.ts:24"
+        ]
+      },
+      "ref": "S-067"
+    },
+    "inputs": {
+      "answer": "contract",
+      "why": "One bare fetch to /api/builders/[id] keyed on the route param — no hook, no query key, one request per id. field_whitelist is every key the page dereferences (src/app/builders/[id]/page.tsx:110-238); permit_type, work, city and ward are declared in the interface at :26-33 and never rendered.",
+      "evidence": [
+        "src/app/builders/[id]/page.tsx:67-78"
+      ],
+      "contract_ref": [
+        "/api/builders/[id]"
+      ],
+      "query_key": [
+        "id"
+      ],
+      "field_whitelist": [
+        "builder.id",
+        "builder.name",
+        "builder.name_normalized",
+        "builder.phone",
+        "builder.email",
+        "builder.website",
+        "builder.google_rating",
+        "builder.google_review_count",
+        "builder.obr_business_number",
+        "builder.wsib_status",
+        "builder.permit_count",
+        "builder.enriched_at",
+        "permits[].permit_num",
+        "permits[].revision_num",
+        "permits[].status",
+        "permits[].street_num",
+        "permits[].street_name",
+        "permits[].street_type",
+        "permits[].est_const_cost",
+        "permits[].issued_date",
+        "permits[].description",
+        "contacts[].id",
+        "contacts[].contact_type",
+        "contacts[].contact_value",
+        "contacts[].source",
+        "contacts[].verified"
+      ],
+      "tables": [
+        {
+          "table": "entities",
+          "columns": "all",
+          "producing_steps": [
+            "builders",
+            "enrich_named_builders",
+            "enrich_wsib_builders",
+            "link_wsib"
+          ],
+          "chain_position": "permits[5] · entities[1] · entities[0] · permits[6], sources[19]",
+          "owner_spec": "UNRESEARCHED",
+          "evidence": [
+            "src/app/api/builders/[id]/route.ts:24 — `SELECT * FROM entities WHERE id = $1`",
+            "docs/reference/data-lineage-map.md:506",
+            "scripts/manifest.json#chains"
+          ]
+        },
+        {
+          "table": "permits",
+          "columns": [
+            "permit_num",
+            "revision_num",
+            "permit_type",
+            "work",
+            "status",
+            "street_num",
+            "street_name",
+            "street_type",
+            "city",
+            "ward",
+            "est_const_cost",
+            "issued_date",
+            "description"
+          ],
+          "producing_steps": [
+            "classify_inspection_status",
+            "classify_lifecycle_phase",
+            "classify_permit_phase",
+            "classify_scope",
+            "classify_scope_class",
+            "classify_scope_tags",
+            "close_stale_permits",
+            "create_pre_permits",
+            "enrich_permits",
+            "geocode_permits",
+            "inspections",
+            "link_coa",
+            "link_neighbourhoods",
+            "link_similar",
+            "permits"
+          ],
+          "chain_position": "deep_scrapes[1] · permits[23], coa[12] · permits[3] · permits[4] · not-in-a-chain · not-in-a-chain · permits[2] · not-in-a-chain · permits[9] · permits[7], sources[3] · deep_scrapes[0] · permits[19], coa[8] · permits[10], sources[17] · permits[12] · permits[1]",
+          "owner_spec": "docs/specs/01-pipeline/30_pipeline_architecture.md",
+          "evidence": [
+            "src/app/api/builders/[id]/route.ts:39-46",
+            "docs/reference/data-lineage-map.md:997",
+            "scripts/manifest.json#chains"
+          ]
+        },
+        {
+          "table": "entity_projects",
+          "columns": [
+            "entity_id",
+            "permit_num",
+            "revision_num",
+            "role"
+          ],
+          "producing_steps": "UNRESEARCHED",
+          "chain_position": "UNRESEARCHED",
+          "owner_spec": "UNRESEARCHED",
+          "evidence": [
+            "src/app/api/builders/[id]/route.ts:43-44",
+            "UNRESEARCHED — entity_projects is not in docs/reference/data-lineage-map.md"
+          ]
+        },
+        {
+          "table": "entity_contacts",
+          "columns": "all",
+          "producing_steps": "UNRESEARCHED",
+          "chain_position": "UNRESEARCHED",
+          "owner_spec": "UNRESEARCHED",
+          "evidence": [
+            "src/app/api/builders/[id]/route.ts:52 — `SELECT * FROM entity_contacts`",
+            "src/lib/db/generated/schema.ts — entityContacts",
+            "UNRESEARCHED — entity_contacts is not in docs/reference/data-lineage-map.md"
+          ]
+        }
+      ]
+    },
+    "outputs": {
+      "answer": "none",
+      "why": "It writes nothing; every link is a navigation and there is no form.",
+      "evidence": [
+        "src/app/builders/[id]/page.tsx:103-244"
+      ],
+      "contract_ref": [],
+      "tables": []
+    },
+    "state": {
+      "answer": "none",
+      "why": "Two useState hooks (data, loading), both component-local and discarded on navigate; no store, no persistence, no matrix field.",
+      "evidence": [
+        "src/app/builders/[id]/page.tsx:69-70"
+      ],
+      "fields": []
+    },
+    "staleness": {
+      "answer": "live",
+      "why": "One fetch per id on mount with no cache layer — there is no TanStack query here, so nothing is served from the shell's cache.",
+      "evidence": [
+        "src/app/builders/[id]/page.tsx:72-78"
+      ],
+      "offline": "blocked"
+    },
+    "guards": {
+      "session": {
+        "answer": "authenticated",
+        "why": "Like /builders, the page path is whitelisted nowhere and reaches classifyRoute's fail-closed default; only the /api/builders CONTRACT is public.",
+        "evidence": [
+          "src/lib/auth/route-guard.ts:67-77",
+          "src/lib/auth/route-guard.ts:182-191",
+          "src/tests/middleware.logic.test.ts:61"
+        ]
+      },
+      "rls_class": {
+        "answer": "B",
+        "why": "All four tables are pipeline-owned and reached through the server-side pg pool — RLS on, zero policies, service-role only.",
+        "evidence": [
+          "src/app/api/builders/[id]/route.ts:2,24,38,51",
+          "docs/specs/00-architecture/114_rls_policy_catalog.md"
+        ]
+      },
+      "disclosure": "none",
+      "entitlement": "none",
+      "flag": "none",
+      "permission": "none",
+      "rate_bucket": "none"
+    },
+    "render": {
+      "targets": [
+        "screen"
+      ],
+      "projection": "detail",
+      "breakpoints": "mobile_first",
+      "export": "none"
+    },
+    "checks": [
+      {
+        "id": "web_builder_detail_field_whitelist_parity",
+        "kind": "field_whitelist_parity",
+        "severity": "FAIL",
+        "blocking": false,
+        "when": "post",
+        "why": "The BuilderDetail interface names phone, email, wsib_status, enriched_at and obr_business_number; the entities table carries none of those five, and the route SELECTs * with no aliasing — the Contact Information and Business Registry sections can never populate from them."
+      },
+      {
+        "id": "web_builder_detail_query_key_single_param",
+        "kind": "query_key_hygiene",
+        "severity": "FAIL",
+        "blocking": false,
+        "when": "post",
+        "why": "A DETAIL surface addresses one entity by one id; the effect depends on [id] alone and must stay that way so a re-render cannot refetch under a different shape."
+      },
+      {
+        "id": "web_builder_detail_error_is_not_found",
+        "kind": "error_state",
+        "severity": "FAIL",
+        "blocking": false,
+        "when": "post",
+        "why": "A 500 and a 404 both leave data.builder undefined and both render \"Builder Not Found\" — the miss state and the error state need separating before either can be asserted."
+      }
+    ],
+    "invariants": "none",
+    "plausibility": "none",
+    "states": [
+      {
+        "name": "loading",
+        "golden": "none"
+      },
+      {
+        "name": "hit",
+        "golden": "none"
+      },
+      {
+        "name": "miss",
+        "golden": "none"
+      },
+      {
+        "name": "empty",
+        "golden": "none"
+      },
+      {
+        "name": "redirect",
+        "golden": "src/lib/auth/route-guard.ts:182-191"
+      }
+    ],
+    "errors": {
+      "answer": "inline",
+      "why": "A failed fetch is console.warn'd and then falls into the same \"Builder Not Found\" panel a genuine 404 renders — one inline block, no envelope parsing. A 404 has no entry in errors.classes because the closed class set (400/401/403/429/500/schema_drift/offline) has no 404 value — it is recorded as the `miss` state instead, which is exactly why a 500 rendering the same panel is a finding.",
+      "evidence": [
+        "src/app/builders/[id]/page.tsx:76,88-99"
+      ],
+      "classes": [
+        {
+          "class": "500",
+          "ui": "the same \"Builder Not Found\" panel"
+        },
+        {
+          "class": "offline",
+          "ui": "the same \"Builder Not Found\" panel"
+        }
+      ],
+      "no_retry": []
+    },
+    "emits": {
+      "answer": "none",
+      "why": "No captureEvent, no ledger row — viewing one builder's full contact set is not counted anywhere.",
+      "evidence": [
+        "src/app/builders/[id]/page.tsx:1-304"
+      ],
+      "analytics": [],
+      "ledger_events": [],
+      "breadcrumbs": []
+    },
+    "offers": {
+      "answer": "none",
+      "why": "No sponsored placement; the contact cards are all table rows.",
+      "evidence": [
+        "src/app/builders/[id]/page.tsx:129-171"
+      ]
+    },
+    "metering": {
+      "answer": "none",
+      "why": "No usage_events row is written for a builder view, even though the payload is the enriched contact set.",
+      "evidence": [
+        "src/app/builders/[id]/page.tsx:1-304"
+      ]
+    },
+    "config": {
+      "answer": "none",
+      "why": "The one bound in play, the 50-permit cap, is a literal LIMIT in the route rather than a registered logic variable.",
+      "evidence": [
+        "src/app/api/builders/[id]/route.ts:46"
+      ],
+      "logic_variables": [],
+      "retired": []
+    },
+    "sharing": {
+      "answer": "shared",
+      "why": "/api/builders/[id] is a PUBLIC_PREFIX serving the Expo client as well as this page.",
+      "evidence": [
+        "src/lib/auth/route-guard.ts:67-77",
+        "src/tests/middleware.logic.test.ts:61"
+      ],
+      "surfaces": [],
+      "varies_by_surface": "UNRESEARCHED"
+    },
+    "a11y": {
+      "touch_target_min_px": "UNRESEARCHED",
+      "labels": "partial",
+      "dark_mode": "none",
+      "reduced_motion": "none",
+      "i18n": "none",
+      "safe_area": "none"
+    },
+    "deviations": "none",
+    "limitations": [
+      {
+        "what": "The Contact Information and Business Registry sections are structurally unreachable from the entity row.",
+        "measured": "phone/email/wsib_status/enriched_at/obr_business_number are declared at src/app/builders/[id]/page.tsx:12-21 and absent from `entities` in src/lib/db/generated/schema.ts; only the entity_contacts rows (route.ts:52) can populate that section.",
+        "check_id": "web_builder_detail_field_whitelist_parity"
+      },
+      {
+        "what": "The permit list is silently capped.",
+        "measured": "src/app/api/builders/[id]/route.ts:46 — LIMIT 50; the heading renders `Permits (${data.permits.length})`, so a builder with more than 50 permits is shown a wrong count with no indication it was truncated.",
+        "check_id": "web_builder_detail_error_is_not_found"
+      }
+    ],
+    "interpretation": "none",
+    "notes": "No governing spec: this file appears in no system-map row (its sibling list page src/app/builders/page.tsx is listed under 37_entity_model.md, this one is not) and carries no SPEC LINK header. Same page-gated/API-public mismatch as the list page (Spec 126 line 304 names '/builders' and '/builders/[id]' together). No distinct error state - a failed fetch leaves data null and renders the same 'Builder Not Found' panel. Renders only the shared src/components/ui/Badge primitive, so no page-exclusive components. MEASURED 2026-09-15. Same entities field drift as the list page, one field worse: obr_business_number gates the whole Business Registry section and does not exist on the table, so that section never renders. The page renders `wsibLabel(b.wsib_status)` for every builder, and since the column is is_wsib_registered the badge reads \"WSIB Unknown\" universally. It imports src/components/ui/Badge.tsx, which this row does NOT claim in owns.components[] — Badge is also imported by src/app/permits/[id]/page.tsx and src/components/permits/PermitCard.tsx, so R-13 totality cannot be satisfied for it by any single surface; it is left unowned and raised rather than assigned by guess (Spec 128 §4 escalation). a11y.touch_target_min_px stays UNRESEARCHED for the same vocabulary reason as the other web rows.",
+    "x-draft": {
+      "shard": "web-product",
+      "files": [
+        "src/app/builders/[id]/page.tsx"
+      ],
+      "loc": 304,
+      "measured_states": [
+        "loading",
+        "not_found",
+        "loaded"
+      ],
+      "measured_gate": {
+        "session": "authenticated",
+        "why": "classifyRoute('/builders/123') reaches the fail-closed default. The PUBLIC_PREFIXES arm is the only near miss and it does not fire: the entry is '/api/builders', and '/builders/123'.startsWith('/api/builders') is false; '/permits/' likewise does not match. Not in PUBLIC_PATHS, does not start with '/dashboard' -> default 'authenticated'."
+      }
+    },
+    "programme": {
+      "scope": "estate_other",
+      "phase": "not_scheduled",
+      "why": "Builder/entity data for the lead-gen product. Inventoried only.",
+      "feature": "F92",
+      "build_order": 4193,
+      "leakage": "UNRESEARCHED",
+      "product_questions": "UNRESEARCHED",
+      "review": {
+        "status": "unreviewed"
+      }
+    }
+  },
+  {
+    "kind": "SURFACE",
+    "status": "exists",
+    "docs": {
+      "purpose": "A searchable directory of the construction companies found in the permit data. Each row gives the company name, how many permits it holds, its Google star rating when known, whether its workplace-insurance registration is active, and a phone number if one was found. A search box filters by name and the list is paged twenty at a time, ordered by permit count. Clicking a row opens that company's detail page.",
+      "data_story": "It reads nothing from the database directly. Every value arrives through one contract: `/api/builders`. Behind that contract, the data comes from `entities` and `entity_projects`.",
+      "under_126": "**RE-PROJECT** — it writes nothing and holds no Layer-3 store, so the move is short — the server already assembles the payload and only the rendering is client-side. It renders through the LIST renderer (a collection with declared pagination, recycling and empty/offline states), reading by reference: `/api/builders`. It owns no component of its own, so its `owns.components[]` is an empty array — a legal answer, written down."
+    },
+    "evidence": {
+      "files": [
+        "src/app/builders/page.tsx:1"
+      ],
+      "contracts": [
+        "src/app/builders/page.tsx:40 — /api/builders"
+      ],
+      "tables": [
+        "src/app/api/builders/route.ts:23-25,36,43",
+        "src/lib/db/generated/schema.ts — entities, entity_contacts",
+        "docs/reference/data-lineage-map.md:506"
+      ],
+      "gate": [
+        "src/lib/auth/route-guard.ts:67-77",
+        "src/lib/auth/route-guard.ts:182-191",
+        "src/tests/middleware.logic.test.ts:60-61"
+      ],
+      "states": [
+        "src/app/builders/page.tsx:82-96 (loading skeleton / empty), :98-127 (hit), :159-164 (Suspense fallback)"
+      ],
+      "emits": [
+        "none — no captureEvent import in src/app/builders/page.tsx"
+      ]
+    },
+    "identity": {
+      "id": "web_builders_list",
+      "route": "src/app/builders/page.tsx",
+      "archetype": "LIST",
+      "platforms": [
+        "web"
+      ],
+      "owns": {
+        "components": []
+      },
+      "owner": "web",
+      "spec": "docs/specs/01-pipeline/37_entity_model.md",
+      "spec_refs": [
+        "docs/specs/01-pipeline/37_entity_model.md §2 (Auth Matrix)",
+        "docs/specs/01-pipeline/37_entity_model.md §3 (Behavioral Contract — /api/builders as the entities + entity_projects role alias)",
+        "docs/specs/00-architecture/00_system_map.md:39 — row 37 lists src/app/builders/page.tsx among its target files"
+      ],
+      "spec_version": "0-draft",
+      "versioning": {
+        "answer": "none",
+        "why": "Nothing parses its payload — the page spreads whatever /api/builders returns into an interface it declares locally, and five of that interface's fields do not exist on the table, so there is no promise being kept to break.",
+        "evidence": [
+          "src/app/builders/page.tsx:6-18",
+          "src/app/api/builders/route.ts:36",
+          "src/lib/db/generated/schema.ts — entities"
+        ]
+      },
+      "ref": "S-068"
+    },
+    "inputs": {
+      "answer": "contract",
+      "why": "One bare fetch to /api/builders with limit/offset/sort_by/sort_order and an optional search — no hook, no query key. field_whitelist is what the page actually reads off each row (src/app/builders/page.tsx:99-124) — five of those seven keys do not exist on entities, which is the finding, not an omission.",
+      "evidence": [
+        "src/app/builders/page.tsx:30-48"
+      ],
+      "contract_ref": [
+        "/api/builders"
+      ],
+      "query_key": [],
+      "field_whitelist": [
+        "id",
+        "name",
+        "permit_count",
+        "google_rating",
+        "wsib_status",
+        "phone",
+        "enriched_at"
+      ],
+      "tables": [
+        {
+          "table": "entities",
+          "columns": "all",
+          "producing_steps": [
+            "builders",
+            "enrich_named_builders",
+            "enrich_wsib_builders",
+            "link_wsib"
+          ],
+          "chain_position": "permits[5] · entities[1] · entities[0] · permits[6], sources[19]",
+          "owner_spec": "UNRESEARCHED",
+          "evidence": [
+            "src/app/api/builders/route.ts:36 — `SELECT * FROM entities`",
+            "docs/reference/data-lineage-map.md:506",
+            "scripts/manifest.json#chains"
+          ]
+        },
+        {
+          "table": "entity_projects",
+          "columns": [
+            "entity_id",
+            "role"
+          ],
+          "producing_steps": "UNRESEARCHED",
+          "chain_position": "UNRESEARCHED",
+          "owner_spec": "UNRESEARCHED",
+          "evidence": [
+            "src/app/api/builders/route.ts:23-25 — the Builder-role subquery",
+            "UNRESEARCHED — entity_projects is not in docs/reference/data-lineage-map.md; its producer must be traced by hand"
+          ]
+        }
+      ]
+    },
+    "outputs": {
+      "answer": "none",
+      "why": "It writes nothing — search and pagination are local state only, and the URL is never updated.",
+      "evidence": [
+        "src/app/builders/page.tsx:20-50"
+      ],
+      "contract_ref": [],
+      "tables": []
+    },
+    "state": {
+      "answer": "none",
+      "why": "Five useState hooks (search, builders, total, loading, page) — all component-local, none persisted, none read elsewhere; the ?search= param seeds `search` once and is never written back.",
+      "evidence": [
+        "src/app/builders/page.tsx:21-28"
+      ],
+      "fields": []
+    },
+    "staleness": {
+      "answer": "live",
+      "why": "Every search keystroke and page change refires the fetch immediately; no cache and no debounce sit between the input and the route.",
+      "evidence": [
+        "src/app/builders/page.tsx:30-48,77"
+      ],
+      "offline": "degraded"
+    },
+    "guards": {
+      "session": {
+        "answer": "authenticated",
+        "why": "Nothing whitelists the `/builders` PAGE: `/api/builders` is a PUBLIC_PREFIX but the page path is not, so it falls through to the fail-closed default.",
+        "evidence": [
+          "src/lib/auth/route-guard.ts:67-77",
+          "src/lib/auth/route-guard.ts:182-191",
+          "src/tests/middleware.logic.test.ts:60-61"
+        ]
+      },
+      "rls_class": {
+        "answer": "B",
+        "why": "entities and entity_projects are pipeline-owned tables reached through the server-side pg pool in src/lib/db/client — RLS on, no policy, service-role only.",
+        "evidence": [
+          "src/app/api/builders/route.ts:2,36",
+          "docs/specs/00-architecture/114_rls_policy_catalog.md"
+        ]
+      },
+      "disclosure": "none",
+      "entitlement": "none",
+      "flag": "none",
+      "permission": "none",
+      "rate_bucket": "none"
+    },
+    "render": {
+      "targets": [
+        "screen"
+      ],
+      "projection": "list",
+      "breakpoints": "mobile_first",
+      "export": "none",
+      "list": "UNRESEARCHED"
+    },
+    "checks": [
+      {
+        "id": "web_builders_list_field_whitelist_parity",
+        "kind": "field_whitelist_parity",
+        "severity": "FAIL",
+        "blocking": false,
+        "when": "post",
+        "why": "The page reads b.name, b.phone, b.email, b.wsib_status and b.enriched_at; the entities table has legal_name, primary_phone, primary_email, is_wsib_registered and last_enriched_at — the route SELECTs * and passes the mismatch straight through, so every one of those five renders undefined."
+      },
+      {
+        "id": "web_builders_list_no_row_spread",
+        "kind": "disclosure",
+        "severity": "FAIL",
+        "blocking": false,
+        "when": "post",
+        "why": "`SELECT * FROM entities` ships every column of the row to the client, including linkedin_url, google_place_id and photo_validated_at that nothing on the page renders — a projection has to be a pick-by-name list."
+      },
+      {
+        "id": "web_builders_list_empty_vs_error",
+        "kind": "empty_state",
+        "severity": "FAIL",
+        "blocking": false,
+        "when": "post",
+        "why": "A network failure lands in .catch(console.warn) and leaves builders as [], so the page shows \"No builders found / Try a different search term\" — the empty state and the error state are currently the same pixels."
+      }
+    ],
+    "invariants": "none",
+    "plausibility": "none",
+    "states": [
+      {
+        "name": "loading",
+        "golden": "none"
+      },
+      {
+        "name": "hit",
+        "golden": "none"
+      },
+      {
+        "name": "empty",
+        "golden": "none"
+      },
+      {
+        "name": "redirect",
+        "golden": "src/lib/auth/route-guard.ts:182-191"
+      }
+    ],
+    "errors": {
+      "answer": "none",
+      "why": "The only failure handling is `.catch((err) => console.warn(...))`; nothing is rendered, so a 500 is presented to the visitor as an empty result.",
+      "evidence": [
+        "src/app/builders/page.tsx:46"
+      ],
+      "classes": [
+        {
+          "class": "500",
+          "ui": "the empty state — \"No builders found\""
+        },
+        {
+          "class": "offline",
+          "ui": "the empty state — \"No builders found\""
+        }
+      ],
+      "no_retry": []
+    },
+    "emits": {
+      "answer": "none",
+      "why": "No captureEvent and no ledger row — a builder search is not countable.",
+      "evidence": [
+        "src/app/builders/page.tsx:1-169"
+      ],
+      "analytics": [],
+      "ledger_events": [],
+      "breadcrumbs": []
+    },
+    "offers": {
+      "answer": "none",
+      "why": "No sponsored placement; every card is a database row.",
+      "evidence": [
+        "src/app/builders/page.tsx:98-127"
+      ]
+    },
+    "metering": {
+      "answer": "none",
+      "why": "No usage_events write and no quota on builder lookups.",
+      "evidence": [
+        "src/app/builders/page.tsx:1-169"
+      ]
+    },
+    "config": {
+      "answer": "none",
+      "why": "The page size (`const limit = 20`) and the route's hard cap of 100 are literals, not registered logic variables.",
+      "evidence": [
+        "src/app/builders/page.tsx:28",
+        "src/app/api/builders/route.ts:11"
+      ],
+      "logic_variables": [],
+      "retired": []
+    },
+    "sharing": {
+      "answer": "shared",
+      "why": "/api/builders is also reached by the mobile client — route-guard lists it as a PUBLIC_PREFIX explicitly so the Expo app can read it without a session.",
+      "evidence": [
+        "src/lib/auth/route-guard.ts:67-77,169-170"
+      ],
+      "surfaces": [],
+      "varies_by_surface": "UNRESEARCHED"
+    },
+    "a11y": {
+      "touch_target_min_px": "UNRESEARCHED",
+      "labels": "partial",
+      "dark_mode": "none",
+      "reduced_motion": "ignored",
+      "i18n": "none",
+      "safe_area": "none"
+    },
+    "deviations": "none",
+    "limitations": [
+      {
+        "what": "Five of the eleven fields the page renders do not exist on the table it reads.",
+        "measured": "src/app/builders/page.tsx:7-17 declares name/phone/email/wsib_status/enriched_at; src/lib/db/generated/schema.ts `entities` has legal_name/primary_phone/primary_email/is_wsib_registered/last_enriched_at and no aliasing happens at src/app/api/builders/route.ts:36.",
+        "check_id": "web_builders_list_field_whitelist_parity"
+      },
+      {
+        "what": "Search fires one request per keystroke.",
+        "measured": "src/app/builders/page.tsx:77 sets state on every change and :30-48 refetches on every `search` change; there is no debounce and no rate bucket.",
+        "check_id": "web_builders_list_empty_vs_error"
+      }
+    ],
+    "interpretation": "none",
+    "notes": "Spec taken from the system map row 37, which lists src/app/builders/page.tsx among its files. Spec 126 lines 304 and 586 record this exact page as a measured auth mismatch: the page is 'authenticated' by fail-closed default while the /api/builders contract it reads is 'public' (PUBLIC_PREFIXES) - the page is behind a login, the data it renders is not. No error state: the fetch .catch only console.warns, leaving the empty state to stand in for a failure. MEASURED 2026-09-15, three findings. (1) FIELD DRIFT: the page renders b.name, b.phone, b.wsib_status and b.enriched_at, none of which exist on `entities` (schema.ts has legal_name, primary_phone, is_wsib_registered, last_enriched_at) — the route does `SELECT *` (route.ts:36) with no aliasing, so the builder name is blank on every card, the WSIB chip never appears and every row reads \"Pending\". permit_count, google_rating and website DO exist and render. (2) GATE ASYMMETRY: the /api/builders CONTRACT is public (PUBLIC_PREFIXES, locked at middleware.logic.test.ts:60-61) while the /builders PAGE is fail-closed `authenticated` — nothing whitelists the page path. (3) ROW SPREAD: `SELECT *` is the projection, so columns nothing renders (linkedin_url, google_place_id, photo_validated_at) reach the browser. (4) SPEC-VS-TREE: Spec 37 §2’s Auth Matrix says Anonymous access is \"None\", but /api/builders and /api/builders/[id] are both PUBLIC_PREFIXES, locked as public at middleware.logic.test.ts:60-61 — the contract is anon-readable while the spec says it is not. The tree wins; recorded, not reconciled. a11y.touch_target_min_px stays UNRESEARCHED — the pagination buttons measure px-3 py-1.5 = 32px, outside what the vocabulary can say.",
+    "x-draft": {
+      "shard": "web-product",
+      "files": [
+        "src/app/builders/page.tsx"
+      ],
+      "loc": 169,
+      "measured_states": [
+        "loading",
+        "empty",
+        "loaded"
+      ],
+      "measured_gate": {
+        "session": "authenticated",
+        "why": "classifyRoute('/builders') matches no arm above the default: not a PUBLIC_FILE, not /_next/ or /api/*, not '/admin' or '/admin/...', not in AUTHENTICATED_API_ROUTES, and the PUBLIC_PREFIXES check compares '/builders' against '/api/builders' (not a prefix of it) and '/permits/' (no match) - PUBLIC_PATHS does not list it and it does not start with '/dashboard', so it falls to the fail-closed default 'authenticated'."
+      }
+    },
+    "programme": {
+      "scope": "estate_other",
+      "phase": "not_scheduled",
+      "why": "Builder/entity data for the lead-gen product. Inventoried only.",
+      "feature": "F92",
+      "build_order": 4193,
+      "leakage": "UNRESEARCHED",
+      "product_questions": "UNRESEARCHED",
+      "review": {
+        "status": "unreviewed"
+      }
+    }
+  },
+  {
+    "kind": "SURFACE",
+    "status": "exists",
+    "docs": {
+      "purpose": "The main signed-in screen for browsing permit leads. Along the top it shows seven counters - total permits, active permits, new this week, upcoming pre-permits, and three Committee-of-Adjustment counts. Below that a filter panel narrows the feed by trade and other criteria, and the feed itself lists matching permits as cards the user can open. Intended for a signed-in user hunting for work, not for operators.",
+      "data_story": "It reads nothing from the database directly. Every value arrives through 3 contracts: `/api/admin/stats`, `/api/permits`, `/api/trades`. Behind those contracts, the data comes from `address_points`, `building_footprints`, `coa_applications`, `entities`, `information_schema.columns`, `lead_views`, `neighbourhoods`, `notifications`, `parcel_buildings`, `parcels`, `permit_parcels`, `permit_trades`, `permits`, `pg_class`, `pipeline_runs`, `pipeline_schedules`, `sync_runs`, `trade_mapping_rules`, `trades` and `wsib_registry`, and writes land on `pipeline_runs`.",
+      "under_126": "**REBUILD** — it drives writes, so a client decision has to be re-homed on the server before the projection can be honest. It renders through the DASHBOARD renderer (tiles that each declare their own contract and degrade independently), reading by reference: `/api/admin/stats`, `/api/permits`, `/api/trades`. Its `owns.components[]` declares `src/components/permits/PermitFeed.tsx`, `src/components/permits/PermitCard.tsx`, `src/components/search/FilterPanel.tsx` and `src/components/layout/MobileNav.tsx`."
+    },
+    "evidence": {
+      "files": [
+        "src/app/dashboard/page.tsx:1",
+        "src/components/permits/PermitFeed.tsx:1",
+        "src/components/permits/PermitCard.tsx:1",
+        "src/components/search/FilterPanel.tsx:1",
+        "src/components/layout/MobileNav.tsx:1"
+      ],
+      "contracts": [
+        "src/app/dashboard/page.tsx:14 — /api/admin/stats",
+        "src/components/permits/PermitFeed.tsx:50 — /api/permits",
+        "src/components/search/FilterPanel.tsx:102 — /api/trades"
+      ],
+      "tables": [
+        "src/app/api/admin/stats/route.ts:12-16",
+        "docs/reference/data-lineage-map.md:997,973,1355,312,506",
+        "scripts/manifest.json#chains"
+      ],
+      "gate": [
+        "src/lib/auth/route-guard.ts:176-180",
+        "src/tests/middleware.logic.test.ts:87",
+        "src/middleware.ts:133-146"
+      ],
+      "states": [
+        "src/app/dashboard/page.tsx:53-83 (tile `--` fallbacks)",
+        "src/components/permits/PermitFeed.tsx:41 (loading)",
+        "src/tests/dashboard.ui.test.tsx:13-53"
+      ],
+      "emits": [
+        "none — no captureEvent import in the page or in any of its four owned components"
+      ]
+    },
+    "identity": {
+      "id": "web_dashboard",
+      "route": "src/app/dashboard/page.tsx",
+      "archetype": "DASHBOARD",
+      "platforms": [
+        "web"
+      ],
+      "owns": {
+        "components": [
+          "src/components/permits/PermitFeed.tsx",
+          "src/components/permits/PermitCard.tsx",
+          "src/components/search/FilterPanel.tsx",
+          "src/components/layout/MobileNav.tsx"
+        ]
+      },
+      "owner": "web",
+      "spec": "UNRESEARCHED",
+      "spec_refs": [
+        "docs/specs/02-web-admin/26_admin_dashboard.md §3.4"
+      ],
+      "spec_version": "0-draft",
+      "versioning": {
+        "answer": "additive_only",
+        "why": "The stats payload is guarded field-by-field by isValidDashboardStats, which rejects any shape missing one of its six numeric fields — removing or retyping a field breaks the guard and blanks the row to `--`.",
+        "evidence": [
+          "src/lib/admin/dashboard-stats.ts:1",
+          "src/tests/dashboard.ui.test.tsx:44-53"
+        ]
+      },
+      "ref": "S-069"
+    },
+    "inputs": {
+      "answer": "contract",
+      "why": "Three contracts, two of them reached by a component rather than by the page: /api/admin/stats from the page itself, /api/permits from PermitFeed and /api/trades from FilterPanel. All three are bare fetch calls — there is no hook to trace.",
+      "evidence": [
+        "src/app/dashboard/page.tsx:14",
+        "src/components/permits/PermitFeed.tsx:50",
+        "src/components/search/FilterPanel.tsx:102"
+      ],
+      "contract_ref": [
+        "/api/admin/stats",
+        "/api/permits",
+        "/api/trades"
+      ],
+      "query_key": [],
+      "field_whitelist": [
+        "total_permits",
+        "active_permits",
+        "permits_this_week",
+        "coa_total",
+        "coa_linked",
+        "coa_upcoming"
+      ],
+      "tables": [
+        {
+          "table": "permits",
+          "columns": [
+            "permit_num",
+            "revision_num",
+            "status",
+            "issued_date",
+            "est_const_cost",
+            "street_num",
+            "street_name",
+            "street_type"
+          ],
+          "producing_steps": [
+            "classify_inspection_status",
+            "classify_lifecycle_phase",
+            "classify_permit_phase",
+            "classify_scope",
+            "classify_scope_class",
+            "classify_scope_tags",
+            "close_stale_permits",
+            "create_pre_permits",
+            "enrich_permits",
+            "geocode_permits",
+            "inspections",
+            "link_coa",
+            "link_neighbourhoods",
+            "link_similar",
+            "permits"
+          ],
+          "chain_position": "deep_scrapes[1] · permits[23], coa[12] · permits[3] · permits[4] · not-in-a-chain · not-in-a-chain · permits[2] · not-in-a-chain · permits[9] · permits[7], sources[3] · deep_scrapes[0] · permits[19], coa[8] · permits[10], sources[17] · permits[12] · permits[1]",
+          "owner_spec": "docs/specs/01-pipeline/30_pipeline_architecture.md",
+          "evidence": [
+            "src/app/api/admin/stats/route.ts:12-16",
+            "src/components/permits/PermitFeed.tsx:50",
+            "docs/reference/data-lineage-map.md:997",
+            "scripts/manifest.json#chains"
+          ]
+        },
+        {
+          "table": "permit_trades",
+          "columns": "UNRESEARCHED",
+          "producing_steps": [
+            "backfill_realtor_permit_trades",
+            "classify_permits"
+          ],
+          "chain_position": "permits[16] · permits[13]",
+          "owner_spec": "UNRESEARCHED",
+          "evidence": [
+            "src/components/permits/PermitFeed.tsx:50",
+            "docs/reference/data-lineage-map.md:973",
+            "scripts/manifest.json#chains"
+          ]
+        },
+        {
+          "table": "trades",
+          "columns": [
+            "slug",
+            "name",
+            "icon",
+            "color"
+          ],
+          "producing_steps": "none",
+          "chain_position": "n/a",
+          "owner_spec": "UNRESEARCHED",
+          "evidence": [
+            "src/components/search/FilterPanel.tsx:102",
+            "docs/reference/data-lineage-map.md:1355 — table present, no pipeline producer listed"
+          ]
+        },
+        {
+          "table": "coa_applications",
+          "columns": "UNRESEARCHED",
+          "producing_steps": [
+            "classify_coa_scope",
+            "classify_coa_trades",
+            "classify_lifecycle_phase",
+            "coa",
+            "compute_coa_cost_estimates",
+            "enrich_coa_zoning",
+            "link_coa",
+            "link_coa_to_parcels"
+          ],
+          "chain_position": "coa[5] · coa[6] · permits[23], coa[12] · coa[1] · coa[7] · coa[4] · permits[19], coa[8] · coa[3]",
+          "owner_spec": "UNRESEARCHED",
+          "evidence": [
+            "src/app/dashboard/page.tsx:74-82",
+            "src/app/api/admin/stats/route.ts:12",
+            "docs/reference/data-lineage-map.md:312",
+            "scripts/manifest.json#chains"
+          ]
+        },
+        {
+          "table": "entities",
+          "columns": "UNRESEARCHED",
+          "producing_steps": [
+            "builders",
+            "enrich_named_builders",
+            "enrich_wsib_builders",
+            "link_wsib"
+          ],
+          "chain_position": "permits[5] · entities[1] · entities[0] · permits[6], sources[19]",
+          "owner_spec": "UNRESEARCHED",
+          "evidence": [
+            "src/app/api/admin/stats/route.ts:12",
+            "docs/reference/data-lineage-map.md:506",
+            "scripts/manifest.json#chains"
+          ]
+        },
+        {
+          "table": "pipeline_runs",
+          "columns": "UNRESEARCHED",
+          "producing_steps": "none",
+          "chain_position": "n/a",
+          "owner_spec": "docs/specs/01-pipeline/48_pipeline_observability.md",
+          "evidence": [
+            "src/app/api/admin/stats/route.ts:12 — chain_freshness block",
+            "scripts/lib/step/ledger.js:62 — the only INSERT into this table"
+          ]
+        }
+      ]
+    },
+    "outputs": {
+      "answer": "none",
+      "why": "The page itself writes nothing. Note that its GET to /api/admin/stats reaches reapStaleRunningRows, which DOES update pipeline_runs server-side — a side effect of the contract, not of this surface.",
+      "evidence": [
+        "src/app/dashboard/page.tsx:14-18",
+        "src/app/api/admin/stats/route.ts:7"
+      ],
+      "contract_ref": [],
+      "tables": []
+    },
+    "state": {
+      "answer": "none",
+      "why": "Two useState hooks (filters, stats) plus PermitFeed's five — all component-local, none persisted, none read by another surface, so no Field Ownership Matrix field is owned here.",
+      "evidence": [
+        "src/app/dashboard/page.tsx:10-11",
+        "src/components/permits/PermitFeed.tsx:40-44"
+      ],
+      "fields": []
+    },
+    "staleness": {
+      "answer": "live",
+      "why": "Every tile and the feed refetch from the route on mount with no cache between them — the page uses bare fetch, not TanStack Query, so the shell's 60s staleTime never applies to it.",
+      "evidence": [
+        "src/app/dashboard/page.tsx:13-18",
+        "src/components/permits/PermitFeed.tsx:50,62"
+      ],
+      "offline": "degraded"
+    },
+    "guards": {
+      "session": {
+        "answer": "authenticated",
+        "why": "classifyRoute('/dashboard') is 'authenticated' — it is not in PUBLIC_PATHS, and the middleware redirects a sessionless visitor to /login?redirect=/dashboard.",
+        "evidence": [
+          "src/lib/auth/route-guard.ts:176-180",
+          "src/tests/middleware.logic.test.ts:87",
+          "src/middleware.ts:133-146"
+        ]
+      },
+      "rls_class": {
+        "answer": "B",
+        "why": "Every table behind its three contracts is pipeline-owned and reached by the server-side pg pool through src/lib/db/client, not by a user-scoped Supabase client — default-deny with no policy, service-role only.",
+        "evidence": [
+          "src/app/api/admin/stats/route.ts:2",
+          "src/app/api/permits/route.ts",
+          "docs/specs/00-architecture/114_rls_policy_catalog.md"
+        ]
+      },
+      "disclosure": "none",
+      "entitlement": "none",
+      "flag": "none",
+      "permission": "none",
+      "rate_bucket": "none"
+    },
+    "render": {
+      "targets": [
+        "screen"
+      ],
+      "projection": "list",
+      "breakpoints": "mobile_first",
+      "export": "none",
+      "tiles": "UNRESEARCHED",
+      "refresh": "UNRESEARCHED"
+    },
+    "checks": [
+      {
+        "id": "web_dashboard_auth_class_parity",
+        "kind": "auth_class_parity",
+        "severity": "FAIL",
+        "blocking": false,
+        "when": "post",
+        "why": "The page is `authenticated` but one of its three contracts, /api/admin/stats, classifies as `admin` — the two do not agree, and today the mismatch is invisible only because that route carries no verifyAdminAuth of its own."
+      },
+      {
+        "id": "web_dashboard_stats_payload_guard",
+        "kind": "contract_parse",
+        "severity": "FAIL",
+        "blocking": false,
+        "when": "post",
+        "why": "isValidDashboardStats must reject every non-stats shape (route 500, envelope 500, null, partial, null-field) — the unguarded setStats(data) white-screened the whole page on .toLocaleString() of undefined."
+      },
+      {
+        "id": "web_dashboard_tiles_degrade_independently",
+        "kind": "empty_state",
+        "severity": "FAIL",
+        "blocking": false,
+        "when": "post",
+        "why": "A failed stats fetch must leave the seven tiles reading `--` while FilterPanel and PermitFeed keep rendering from their own separate fetches; the .catch(() => {}) is what makes that true and it must stay."
+      }
+    ],
+    "invariants": "none",
+    "plausibility": "none",
+    "states": [
+      {
+        "name": "loading",
+        "golden": "none"
+      },
+      {
+        "name": "hit",
+        "golden": "src/tests/dashboard.ui.test.tsx:148"
+      },
+      {
+        "name": "empty",
+        "golden": "src/tests/dashboard.ui.test.tsx:171"
+      },
+      {
+        "name": "degraded",
+        "golden": "src/tests/dashboard.ui.test.tsx:13"
+      },
+      {
+        "name": "redirect",
+        "golden": "src/tests/middleware.logic.test.ts:87"
+      }
+    ],
+    "errors": {
+      "answer": "none",
+      "why": "Neither failure path renders anything: the stats fetch ends in `.catch(() => {})` and a non-ok response sets null, so a 500 and a healthy-but-empty database are indistinguishable — both show `--`.",
+      "evidence": [
+        "src/app/dashboard/page.tsx:15-17"
+      ],
+      "classes": [
+        {
+          "class": "500",
+          "ui": "tiles fall back to `--`; no message is shown"
+        },
+        {
+          "class": "offline",
+          "ui": "tiles fall back to `--`; no message is shown"
+        }
+      ],
+      "no_retry": [
+        "/api/admin/stats — fetched once on mount, never retried"
+      ]
+    },
+    "emits": {
+      "answer": "none",
+      "why": "No captureEvent and no ledger write — a dashboard view, a filter change and a feed page turn are all uncountable from this surface.",
+      "evidence": [
+        "src/app/dashboard/page.tsx:1-123",
+        "src/components/permits/PermitFeed.tsx:1-147"
+      ],
+      "analytics": [],
+      "ledger_events": [],
+      "breadcrumbs": []
+    },
+    "offers": {
+      "answer": "none",
+      "why": "No placement is rendered and no placement inventory table is read.",
+      "evidence": [
+        "src/app/dashboard/page.tsx:48-93"
+      ]
+    },
+    "metering": {
+      "answer": "none",
+      "why": "It writes no usage_events row; the lead_views meter belongs to the mobile feed, not to this page.",
+      "evidence": [
+        "src/app/dashboard/page.tsx:1-123"
+      ]
+    },
+    "config": {
+      "answer": "none",
+      "why": "Its one tunable, the feed page size, is a literal inside PermitFeed rather than a registered logic variable.",
+      "evidence": [
+        "src/components/permits/PermitFeed.tsx:40-50"
+      ],
+      "logic_variables": [],
+      "retired": []
+    },
+    "sharing": {
+      "answer": "shared",
+      "why": "/api/permits is also rendered by the mobile feed and /api/trades by FilterPanel wherever it is mounted; /api/admin/stats is additionally rendered by the admin dashboard.",
+      "evidence": [
+        "src/components/permits/PermitFeed.tsx:50",
+        "src/components/search/FilterPanel.tsx:102",
+        "src/app/api/admin/stats/route.ts:12"
+      ],
+      "surfaces": [
+        "admin_dashboard"
+      ],
+      "varies_by_surface": "The admin dashboard reads the full stats payload; this page projects six of its fields into seven tiles, one of which (CoA Unlinked) is computed client-side as coa_total - coa_linked.",
+      "varies_by_target": "screen only"
+    },
+    "a11y": {
+      "touch_target_min_px": "UNRESEARCHED",
+      "labels": "partial",
+      "dark_mode": "none",
+      "reduced_motion": "none",
+      "i18n": "none",
+      "safe_area": "none"
+    },
+    "deviations": "none",
+    "limitations": [
+      {
+        "what": "A failed stats fetch is indistinguishable from an empty database.",
+        "measured": "src/app/dashboard/page.tsx:15-17 — a non-ok response resolves to null and the catch arm is empty, so both render `--`.",
+        "check_id": "web_dashboard_tiles_degrade_independently"
+      },
+      {
+        "what": "A non-admin signed-in user is served admin-scoped counts.",
+        "measured": "/api/admin/stats classifies as `admin` (middleware.logic.test.ts:68) but carries no verifyAdminAuth (grep count 0 in src/app/api/admin/stats/route.ts), and the middleware admin arm is a session-presence check only (src/middleware.ts:115-121).",
+        "check_id": "web_dashboard_auth_class_parity"
+      }
+    ],
+    "interpretation": "none",
+    "notes": "No governing spec: absent from every system-map row and no SPEC LINK header. A signed-in NON-admin page that calls /api/admin/stats - classifyRoute puts /api/admin/* in the 'admin' class, so the stats fetch will 401 for a plain authenticated user; the page swallows it (.catch(() => {})) and the counters render as '--'. That swallow is also why there is no error state. PermitCard is reached only via PermitFeed. MobileNav is rendered only by this page. MEASURED 2026-09-15, two disagreements recorded. (1) AUTH-CLASS: the page is `authenticated` but /api/admin/stats is `admin`; it works today only because that route has no verifyAdminAuth (grep count 0) and the middleware admin arm checks session PRESENCE, so any signed-in non-admin gets the admin counts. (2) A GET WITH A WRITE: /api/admin/stats calls reapStaleRunningRows (route.ts:7), so this page's read updates pipeline_runs — recorded on outputs.why rather than in outputs.tables because the write belongs to the contract. Also measured: this page uses bare fetch + useState throughout, never TanStack Query, so the QueryClient the root shell mounts is inert for it. a11y.touch_target_min_px stays UNRESEARCHED — the pagination buttons are px-3 py-1.5 on text-sm = 32px, a value the vocabulary (UNRESEARCHED or integer >= 44) cannot express.",
+    "x-draft": {
+      "shard": "web-product",
+      "files": [
+        "src/app/dashboard/page.tsx",
+        "src/components/permits/PermitFeed.tsx",
+        "src/components/permits/PermitCard.tsx",
+        "src/components/search/FilterPanel.tsx",
+        "src/components/layout/MobileNav.tsx"
+      ],
+      "loc": 980,
+      "measured_states": [
+        "loading",
+        "empty",
+        "loaded"
+      ],
+      "measured_gate": {
+        "session": "authenticated",
+        "why": "classifyRoute('/dashboard') matches no public or admin arm, is not in AUTHENTICATED_API_ROUTES, no PUBLIC_PREFIXES entry is a prefix of it, and it is not in PUBLIC_PATHS - it then hits the explicit `pathname.startsWith('/dashboard')` arm and returns 'authenticated'."
+      }
+    },
+    "programme": {
+      "scope": "estate_other",
+      "phase": "not_scheduled",
+      "why": "A lead-gen surface. Inventoried only.",
+      "feature": "F92",
+      "build_order": 4193,
+      "leakage": "UNRESEARCHED",
+      "product_questions": "UNRESEARCHED",
+      "review": {
+        "status": "unreviewed"
+      }
+    }
+  },
+  {
+    "kind": "SURFACE",
+    "status": "exists",
+    "docs": {
+      "purpose": "The public front door of the product. A visitor who has never signed in lands here and reads the pitch: the service watches Toronto building permits every day and matches them to a trade so contractors hear about jobs early. It shows three explainer cards, a list of the twenty trade categories covered, and buttons that send the visitor to sign in or straight to the live permit feed. Nothing on the page is personalised and it fetches no data.",
+      "data_story": "This surface reaches **no API contract at all** — every value it shows is local, passed in as a prop, or read from the device.",
+      "under_126": "**RE-PROJECT** — it writes nothing and holds no Layer-3 store, so the move is short — the server already assembles the payload and only the rendering is client-side. It renders through the STATIC renderer (content source and SEO, or a declared redirect alone), reading no contract. It owns no component of its own, so its `owns.components[]` is an empty array — a legal answer, written down."
+    },
+    "evidence": {
+      "files": [
+        "src/app/page.tsx:1"
+      ],
+      "contracts": [
+        "none — no /api/ string and no hook import in src/app/page.tsx"
+      ],
+      "tables": [
+        "none — no SQL, no db client import"
+      ],
+      "gate": [
+        "src/lib/auth/route-guard.ts:44",
+        "src/tests/middleware.logic.test.ts:30"
+      ],
+      "states": [
+        "src/app/page.tsx:8-105 — one unconditional return, no conditional branch"
+      ],
+      "emits": [
+        "none — no captureEvent import in src/app/page.tsx"
+      ]
+    },
+    "identity": {
+      "id": "web_landing",
+      "route": "src/app/page.tsx",
+      "archetype": "STATIC",
+      "platforms": [
+        "web"
+      ],
+      "owns": {
+        "components": []
+      },
+      "owner": "web",
+      "spec": "UNRESEARCHED",
+      "spec_refs": [],
+      "spec_version": "0-draft",
+      "versioning": {
+        "answer": "none",
+        "why": "Nothing consumes it — it is a leaf page with hardcoded copy and two links; no other surface reads its output.",
+        "evidence": [
+          "src/app/page.tsx:8-107"
+        ]
+      },
+      "ref": "S-005"
+    },
+    "inputs": {
+      "answer": "none",
+      "why": "Every string on the page is a literal in the file: the 20-trade list, the three feature cards and the \"237,000+\" headline are all hardcoded. No fetch, no /api/ string, no props.",
+      "evidence": [
+        "src/app/page.tsx:36-38,56-67,79-84"
+      ],
+      "contract_ref": [],
+      "query_key": [],
+      "field_whitelist": [],
+      "tables": []
+    },
+    "outputs": {
+      "answer": "none",
+      "why": "It writes nothing anywhere — the only handler is router.push('/dashboard').",
+      "evidence": [
+        "src/app/page.tsx:40-45"
+      ],
+      "contract_ref": [],
+      "tables": []
+    },
+    "state": {
+      "answer": "none",
+      "why": "It declares no useState and owns no Field Ownership Matrix field; the only hook is useRouter.",
+      "evidence": [
+        "src/app/page.tsx:5-6"
+      ],
+      "fields": []
+    },
+    "staleness": {
+      "answer": "static",
+      "why": "Its content changes only when this file is redeployed — including the \"237,000+\" and \"20 trades\" figures, which are typed into the JSX and not read from anywhere.",
+      "evidence": [
+        "src/app/page.tsx:36-38,76"
+      ],
+      "offline": "none"
+    },
+    "guards": {
+      "session": {
+        "answer": "anon",
+        "why": "PUBLIC_PATHS lists `/` explicitly and the middleware lock pins classifyRoute('/') === 'public'.",
+        "evidence": [
+          "src/lib/auth/route-guard.ts:44",
+          "src/tests/middleware.logic.test.ts:30"
+        ]
+      },
+      "rls_class": {
+        "answer": "none",
+        "why": "It reaches no table.",
+        "evidence": [
+          "src/app/page.tsx:1-116"
+        ]
+      },
+      "disclosure": "none",
+      "entitlement": "none",
+      "flag": "none",
+      "permission": "none",
+      "rate_bucket": "none"
+    },
+    "render": {
+      "targets": [
+        "screen"
+      ],
+      "projection": "none",
+      "breakpoints": "mobile_first",
+      "export": "none"
+    },
+    "checks": [
+      {
+        "id": "web_landing_touch_targets",
+        "kind": "touch_target",
+        "severity": "FAIL",
+        "blocking": false,
+        "when": "post",
+        "why": "The \"Get Started\" anchor is px-4 py-2 on text-sm (20px line-box + 16px padding = 36px) and the hero button px-6 py-3 (20 + 24 = 44px) — the first is below the floor, so this needs an assertion rather than an assumption."
+      },
+      {
+        "id": "web_landing_brand_name",
+        "kind": "render_target_parity",
+        "severity": "WARN",
+        "blocking": false,
+        "when": "post",
+        "why": "The header and footer render \"Buildo\" while the document title (layout.tsx:6) and the login page both render \"MaxBLD\" — the Spec 117 rename is half-applied and a parity check is what keeps that visible until it is finished."
+      }
+    ],
+    "invariants": "none",
+    "plausibility": "none",
+    "states": [
+      {
+        "name": "static",
+        "golden": "none"
+      }
+    ],
+    "errors": {
+      "answer": "none",
+      "why": "No fetch, no throw path and no error boundary under src/app/ outside admin — no error state is reachable.",
+      "evidence": [
+        "src/app/page.tsx:1-116"
+      ]
+    },
+    "emits": {
+      "answer": "none",
+      "why": "It calls no captureEvent and writes no ledger row; nothing about a landing-page visit is currently countable beyond PostHog's own autocapture.",
+      "evidence": [
+        "src/app/page.tsx:1-116"
+      ],
+      "analytics": [],
+      "ledger_events": [],
+      "breadcrumbs": []
+    },
+    "offers": {
+      "answer": "none",
+      "why": "It renders no sponsored placement; every card and chip is a literal in the file.",
+      "evidence": [
+        "src/app/page.tsx:56-91"
+      ]
+    },
+    "metering": {
+      "answer": "none",
+      "why": "No usage_events write and no quota.",
+      "evidence": [
+        "src/app/page.tsx:1-116"
+      ]
+    },
+    "config": {
+      "answer": "none",
+      "why": "No tunable at all — the 20 trade names and the permit count are literals, not logic variables.",
+      "evidence": [
+        "src/app/page.tsx:36-38,79-84"
+      ],
+      "logic_variables": [],
+      "retired": []
+    },
+    "sharing": {
+      "answer": "none",
+      "why": "It renders no contract.",
+      "evidence": [
+        "src/app/page.tsx:1-116"
+      ],
+      "surfaces": []
+    },
+    "a11y": {
+      "touch_target_min_px": "UNRESEARCHED",
+      "labels": "partial",
+      "dark_mode": "none",
+      "reduced_motion": "none",
+      "i18n": "none",
+      "safe_area": "none"
+    },
+    "deviations": "none",
+    "limitations": [
+      {
+        "what": "Two headline figures are hardcoded and cannot track reality.",
+        "measured": "\"237,000+ Toronto building permits\" and \"20 Trade Categories\" are string literals at src/app/page.tsx:36-38 and :76-84; the live counts come from /api/admin/stats and the trades table, neither of which this page reads.",
+        "check_id": "web_landing_brand_name"
+      },
+      {
+        "what": "The product name is inconsistent within one page load.",
+        "measured": "src/app/page.tsx:13 and :99 render \"Buildo\"; src/app/layout.tsx:6 sets the tab title to \"MaxBLD\"; src/app/login/page.tsx:34 renders \"MaxBLD\".",
+        "check_id": "web_landing_brand_name"
+      }
+    ],
+    "interpretation": "none",
+    "notes": "No governing feature spec found: the file appears in no row of docs/specs/00-architecture/00_system_map.md and carries no SPEC LINK header. Spec 126 (02-web-admin/126_maxbld_surface_standard.md) only references 'marketing/landing' generically at line 97 and line 667 as a future conversion target, which is not a governing spec. Copy still says 'Buildo', not the Spec 117 'MaxBLD' rename that src/app/layout.tsx and the login page already use. Single unconditional render - no loading/empty/error branches exist, hence states=['static'] rather than an empty array. MEASURED 2026-09-15: no SPEC LINK header on src/app/page.tsx and no System Map row names it, so identity.spec is UNRESEARCHED rather than a guess at the nearest dashboard spec. a11y.labels is `partial`: the two header anchors and the hero button carry visible text but the page has no landmark labelling and the SVG-free chips are decorative spans. a11y.touch_target_min_px stays UNRESEARCHED — the vocabulary admits only UNRESEARCHED or an integer >= 44, and the measured \"Get Started\" target is 36px, which the menu cannot express (Spec 128 §4 escalation).",
+    "x-draft": {
+      "shard": "web-product",
+      "files": [
+        "src/app/page.tsx"
+      ],
+      "loc": 116,
+      "measured_states": [
+        "static"
+      ],
+      "measured_gate": {
+        "session": "public",
+        "why": "classifyRoute('/') falls past the static-file, /_next/, /api/auth/, exact-public-API, /api/admin/, /admin, authenticated-API and PUBLIC_PREFIXES arms (none match a bare '/'), then matches the PUBLIC_PATHS exact list which contains '/' -> 'public'."
+      }
+    },
+    "programme": {
+      "scope": "parcel_product",
+      "phase": "UNRESEARCHED",
+      "why": "Business requirement 5, the MaxBLD web front door on Vercel. It markets lead-gen today and is the surface the consumer web projection replaces — it is parcel-product scope by destination, not by current content.",
+      "feature": "F06",
+      "build_order": 1063,
+      "leakage": "none",
+      "product_questions": "none",
+      "review": {
+        "status": "unreviewed"
+      }
+    }
+  },
+  {
+    "kind": "SURFACE",
+    "status": "exists",
+    "docs": {
+      "purpose": "Where a visitor signs in or creates an account. It offers email-and-password sign-in, a sign-up form that also collects a name and whether the account is an individual or a company, and a Google sign-in button. Administrators with two-factor turned on get a second box asking for the six-digit code from their authenticator app. When the visitor was bounced here from a page that needed a login, it sends them back to that page afterwards, and only to pages on this site.",
+      "data_story": "This surface reaches **no API contract at all** — every value it shows is local, passed in as a prop, or read from the device.",
+      "under_126": "**RE-PROJECT** — it writes nothing and holds no Layer-3 store, so the move is short — the server already assembles the payload and only the rendering is client-side. It renders through the GATE renderer (a `statuses_handled[]` that must cover every value of the closed set it gates on), reading no contract. Its `owns.components[]` declares `src/components/auth/LoginForm.tsx`."
+    },
+    "evidence": {
+      "files": [
+        "src/app/login/page.tsx:1",
+        "src/components/auth/LoginForm.tsx:1"
+      ],
+      "contracts": [
+        "src/lib/supabase/actions.ts — signInAction/signUpAction/mfaChallengeAction/mfaVerifyAction (Server Actions, not /api routes)",
+        "src/lib/supabase/browser.ts — signInWithOAuth, redirectTo /auth/callback",
+        "src/app/auth/callback/route.ts — the server-side code exchange"
+      ],
+      "tables": [
+        "none — no SQL and no db client import in either file; the actions reach GoTrue, not a public table"
+      ],
+      "gate": [
+        "src/lib/auth/route-guard.ts:45",
+        "src/tests/middleware.logic.test.ts:34",
+        "src/lib/auth/route-guard.ts:32-34",
+        "src/middleware.ts:49-77"
+      ],
+      "states": [
+        "src/components/auth/LoginForm.tsx:138 (MFA view), :196 (sign-in view), :240 (signup fields), :310-314 (loading labels)",
+        "src/app/login/page.tsx:40-52 (dev-bypass branch)"
+      ],
+      "emits": [
+        "none — no captureEvent import in src/app/login/page.tsx or src/components/auth/LoginForm.tsx"
+      ]
+    },
+    "identity": {
+      "id": "web_login",
+      "route": "src/app/login/page.tsx",
+      "archetype": "GATE",
+      "platforms": [
+        "web"
+      ],
+      "owns": {
+        "components": [
+          "src/components/auth/LoginForm.tsx"
+        ]
+      },
+      "owner": "web",
+      "spec": "docs/specs/00-architecture/13_authentication.md",
+      "spec_refs": [
+        "docs/specs/00-architecture/13_authentication.md §3.3",
+        "docs/specs/00-architecture/13_authentication.md §3.6",
+        "docs/specs/00-architecture/13_authentication.md §4",
+        "docs/specs/00-architecture/13_authentication.md §4a",
+        "docs/specs/00-architecture/13_authentication.md §3.5"
+      ],
+      "spec_version": "0-draft",
+      "versioning": {
+        "answer": "frozen",
+        "why": "Its two behaviours are pinned by goldens both directions — the MFA step-up flow and the plain sign-in path each have a rendering test; changing the shape forces a recapture.",
+        "evidence": [
+          "src/tests/LoginForm.ui.test.tsx:48,87"
+        ]
+      },
+      "ref": "S-050"
+    },
+    "inputs": {
+      "answer": "contract",
+      "why": "Everything it needs arrives through four Server Actions in src/lib/supabase/actions.ts (signIn/signUp/mfaChallenge/mfaVerify) plus the browser client’s signInWithOAuth. contract_ref is empty because none of those five is an /api route and none has a row in the CONTRACT registry — the census counts route files, and this surface reaches none.",
+      "evidence": [
+        "src/components/auth/LoginForm.tsx:32-33,66-67,93,98,123-126"
+      ],
+      "contract_ref": [],
+      "query_key": [],
+      "field_whitelist": [
+        "email",
+        "password",
+        "name",
+        "accountType",
+        "mfaCode"
+      ],
+      "tables": []
+    },
+    "outputs": {
+      "answer": "contract_only",
+      "why": "It writes only through the Server Actions and waits for the result before advancing — the credentials never produce a client-writable cookie, and the OAuth path only navigates away. contract_ref is empty for the same reason as inputs: a Server Action is not a CONTRACT-registry row.",
+      "evidence": [
+        "src/components/auth/LoginForm.tsx:6-14,64-76,93-104,123-130"
+      ],
+      "contract_ref": [],
+      "rollback": "none — a failed action sets an error string and leaves the form exactly as it was; nothing was optimistically applied to roll back.",
+      "invalidates": [],
+      "tables": []
+    },
+    "state": {
+      "answer": "none",
+      "why": "Seven useState hooks hold form fields and the MFA challenge, all component-local and all discarded on navigate; no Field Ownership Matrix field is owned, nothing persists, no store.",
+      "evidence": [
+        "src/components/auth/LoginForm.tsx:41-56",
+        "src/app/login/page.tsx:20-28"
+      ],
+      "fields": []
+    },
+    "staleness": {
+      "answer": "none",
+      "why": "It displays no server-held value — only what the visitor typed and what the last action returned.",
+      "evidence": [
+        "src/components/auth/LoginForm.tsx:41-56"
+      ],
+      "offline": "blocked"
+    },
+    "guards": {
+      "session": {
+        "answer": "anon",
+        "why": "`/login` is in PUBLIC_PATHS and the lock pins classifyRoute('/login') === 'public'; a signed-in visitor is never bounced away from it.",
+        "evidence": [
+          "src/lib/auth/route-guard.ts:45",
+          "src/tests/middleware.logic.test.ts:34"
+        ]
+      },
+      "rls_class": {
+        "answer": "none",
+        "why": "The page reaches no table; the Server Actions it calls talk to GoTrue (auth.users), not to a policy-bearing public table.",
+        "evidence": [
+          "src/components/auth/LoginForm.tsx:32-33"
+        ]
+      },
+      "disclosure": "none",
+      "entitlement": "none",
+      "flag": "NEXT_PUBLIC_DEV_MODE",
+      "permission": "none",
+      "rate_bucket": "none",
+      "statuses_handled": "UNRESEARCHED"
+    },
+    "render": {
+      "targets": [
+        "screen"
+      ],
+      "projection": "none",
+      "breakpoints": "mobile_first",
+      "export": "none"
+    },
+    "checks": [
+      {
+        "id": "web_login_open_redirect",
+        "kind": "auth_class_parity",
+        "severity": "FAIL",
+        "blocking": true,
+        "when": "pre",
+        "why": "safeRedirectPath is the only thing between the middleware's ?redirect= bounce and an open redirect — it rejects absolute, protocol-relative and backslash forms, and both call sites (dev bypass and onSuccess) must keep going through it."
+      },
+      {
+        "id": "web_login_mfa_step_up",
+        "kind": "error_state",
+        "severity": "FAIL",
+        "blocking": false,
+        "when": "post",
+        "why": "signInAction only ever reaches aal1; if the mfaRequired branch stops opening the TOTP challenge, an admin silently stays at aal1 and every /api/admin/* call 401s with nothing in the UI saying why — the exact 2026-07-20 defect."
+      },
+      {
+        "id": "web_login_dev_flag_is_cosmetic",
+        "kind": "disclosure",
+        "severity": "WARN",
+        "blocking": false,
+        "when": "post",
+        "why": "The page reads NEXT_PUBLIC_DEV_MODE (client-inlined) while the middleware gate reads the server-only DEV_MODE AND NODE_ENV !== production — the button leaking into a prod bundle must stay harmless, which is a property of the middleware, not of this page."
+      }
+    ],
+    "invariants": "none",
+    "plausibility": "none",
+    "states": [
+      {
+        "name": "static",
+        "golden": "src/tests/LoginForm.ui.test.tsx:48"
+      },
+      {
+        "name": "loading",
+        "golden": "none"
+      },
+      {
+        "name": "error",
+        "golden": "src/tests/LoginForm.ui.test.tsx:48"
+      },
+      {
+        "name": "unauthorized",
+        "golden": "src/tests/LoginForm.ui.test.tsx:87"
+      },
+      {
+        "name": "redirect",
+        "golden": "none"
+      }
+    ],
+    "errors": {
+      "answer": "inline",
+      "why": "Every failure sets an error string rendered as a <p className=\"text-sm text-red-600\"> beside the form — the plain path and the MFA path each have their own.",
+      "evidence": [
+        "src/components/auth/LoginForm.tsx:168,301-303"
+      ],
+      "classes": [
+        {
+          "class": "401",
+          "ui": "inline red text under the form, carrying the action's own message"
+        },
+        {
+          "class": "500",
+          "ui": "inline red text reading \"Authentication failed\" / \"Verification failed\""
+        }
+      ],
+      "no_retry": [
+        "mfaVerifyAction — a fresh challenge is minted per attempt rather than retrying the old one"
+      ]
+    },
+    "emits": {
+      "answer": "none",
+      "why": "No captureEvent call and no ledger write anywhere in the page or the form — a sign-in, a sign-up and a failed MFA attempt are all currently uncountable from this surface.",
+      "evidence": [
+        "src/app/login/page.tsx:1-63",
+        "src/components/auth/LoginForm.tsx:1-344"
+      ],
+      "analytics": [],
+      "ledger_events": [],
+      "breadcrumbs": []
+    },
+    "offers": {
+      "answer": "none",
+      "why": "No sponsored placement on an auth surface.",
+      "evidence": [
+        "src/components/auth/LoginForm.tsx:196-343"
+      ]
+    },
+    "metering": {
+      "answer": "none",
+      "why": "No usage_events row and no quota — authentication is not a metered product here.",
+      "evidence": [
+        "src/components/auth/LoginForm.tsx:1-344"
+      ]
+    },
+    "config": {
+      "answer": "none",
+      "why": "The one tunable-looking value, the 6-digit code length, is a literal `maxLength={6}` and a `mfaCode.length !== 6` guard, not a registered logic variable.",
+      "evidence": [
+        "src/components/auth/LoginForm.tsx:160,172"
+      ],
+      "logic_variables": [],
+      "retired": []
+    },
+    "sharing": {
+      "answer": "sole",
+      "why": "The four Server Actions are imported by this component and nothing else in src/app or src/components; they have no CONTRACT row, so no other surface can be sharing them.",
+      "evidence": [
+        "src/components/auth/LoginForm.tsx:32"
+      ],
+      "surfaces": []
+    },
+    "a11y": {
+      "touch_target_min_px": "UNRESEARCHED",
+      "labels": "complete",
+      "dark_mode": "none",
+      "reduced_motion": "none",
+      "i18n": "none",
+      "safe_area": "none"
+    },
+    "deviations": "none",
+    "limitations": [
+      {
+        "what": "A backup code cannot be used to complete sign-in.",
+        "measured": "Spec 13 §4a makes backup codes a per-request x-admin-backup-code header consumed inside /api/admin/* (verify-admin.ts); there is no GoTrue primitive to mint an aal2 session from one, so the MFA view points the operator elsewhere instead of offering a field.",
+        "check_id": "web_login_mfa_step_up"
+      }
+    ],
+    "interpretation": "none",
+    "notes": "Empty calls[] is measured, not unlooked: LoginForm reaches the server through Next.js Server Actions (signInAction / signUpAction / mfaChallengeAction / mfaVerifyAction in src/lib/supabase/actions.ts) and the Supabase browser SDK's signInWithOAuth - no /api/* path is fetched anywhere in either file. The 'Continue as Dev' button renders only when NEXT_PUBLIC_DEV_MODE=true; the middleware's real bypass reads the server-only DEV_MODE AND NODE_ENV!=='production' (route-guard.ts isDevMode), so the button is cosmetic. Redirect target is guarded by safeRedirectPath (rejects absolute, protocol-relative and backslash forms). MEASURED 2026-09-15: the page holds TWO independently-gated views (credential form and TOTP challenge) but they are one component and one route, so R-13 keeps them one surface rather than promoting the challenge. guards.flag records NEXT_PUBLIC_DEV_MODE because it is what THIS page reads (login/page.tsx:7); the security-bearing flag is the server-only DEV_MODE + NODE_ENV pair in route-guard.ts:32-34 — the two are deliberately different vars and the disagreement is the point, not a defect. a11y.touch_target_min_px stays UNRESEARCHED: the submit buttons measure px-4 py-2.5 on text-sm = 40px, which the vocabulary (UNRESEARCHED or an integer >= 44) cannot express.",
+    "x-draft": {
+      "shard": "web-product",
+      "files": [
+        "src/app/login/page.tsx",
+        "src/components/auth/LoginForm.tsx"
+      ],
+      "loc": 407,
+      "measured_states": [
+        "idle",
+        "submitting",
+        "error",
+        "mfa_challenge",
+        "mfa_submitting",
+        "mfa_error"
+      ],
+      "measured_gate": {
+        "session": "public",
+        "why": "classifyRoute('/login') reaches the PUBLIC_PATHS exact-list arm - '/login' is the second entry - and returns 'public'. No earlier arm matches ('/login' is not a PUBLIC_FILE, not under /_next/ or /api/, not '/admin' or '/admin/...', and no PUBLIC_PREFIXES entry is a prefix of it)."
+      }
+    },
+    "programme": {
+      "scope": "platform_shared",
+      "phase": "UNRESEARCHED",
+      "why": "Used by both products and owned by neither.",
+      "feature": "F16",
+      "build_order": 3163,
+      "leakage": "none",
+      "product_questions": "none",
+      "review": {
+        "status": "unreviewed"
+      }
+    }
+  },
+  {
+    "kind": "SURFACE",
+    "status": "exists",
+    "docs": {
+      "purpose": "The full record for a single building permit. It shows the work described, status, cost and dates, which trades the classifier matched and how strongly, a photo of the property, the lot's size and shape, what can be built on it, a profile of the surrounding neighbourhood, the company doing the work, any related permits or Committee-of-Adjustment applications, and the history of changes to the record. This is the page a lead card opens into.",
+      "data_story": "It reads nothing from the database directly. Every value arrives through one contract: `/api/permits/[id]`. Behind that contract, the data comes from `building_footprints`, `coa_applications`, `entities`, `entity_projects`, `neighbourhoods`, `parcel_buildings`, `parcels`, `permit_history`, `permit_inspections`, `permit_parcels`, `permit_trades`, `permits` and `trades`.",
+      "under_126": "**RE-PROJECT** — it writes nothing and holds no Layer-3 store, so the move is short — the server already assembles the payload and only the rendering is client-side. It renders through the DETAIL renderer (one entity, a single-param query key, declared sections), reading by reference: `/api/permits/[id]`. Its `owns.components[]` declares `src/components/permits/PropertyPhoto.tsx`, `src/components/permits/NeighbourhoodProfile.tsx` and `src/components/permits/BuildingMassing.tsx`."
+    },
+    "evidence": {
+      "files": [
+        "src/app/permits/[id]/page.tsx:1",
+        "src/components/permits/PropertyPhoto.tsx:1",
+        "src/components/permits/NeighbourhoodProfile.tsx:1",
+        "src/components/permits/BuildingMassing.tsx:1"
+      ],
+      "contracts": [
+        "src/app/permits/[id]/page.tsx:85 — /api/permits/[id]"
+      ],
+      "tables": [
+        "src/app/api/permits/[id]/route.ts:42-63,104,118-119,128,138,152-153,172-177,190-191,205-207,272-273",
+        "docs/reference/data-lineage-map.md:997,973,1355,506,312",
+        "scripts/manifest.json#chains"
+      ],
+      "gate": [
+        "src/lib/auth/route-guard.ts:67-77",
+        "src/tests/middleware.logic.test.ts:92"
+      ],
+      "states": [
+        "src/app/permits/[id]/page.tsx:92-98 (loading), :100-111 (miss), :149,:173,:211,:300,:382,:420,:503 (per-section presence branches)"
+      ],
+      "emits": [
+        "none — no captureEvent import in the page or in its three owned components"
+      ]
+    },
+    "identity": {
+      "id": "web_permit_detail",
+      "route": "src/app/permits/[id]/page.tsx",
+      "archetype": "DETAIL",
+      "platforms": [
+        "web"
+      ],
+      "owns": {
+        "components": [
+          "src/components/permits/PropertyPhoto.tsx",
+          "src/components/permits/NeighbourhoodProfile.tsx",
+          "src/components/permits/BuildingMassing.tsx"
+        ]
+      },
+      "owner": "web",
+      "spec": "docs/specs/01-pipeline/37_entity_model.md",
+      "spec_refs": [
+        "docs/specs/01-pipeline/37_entity_model.md §2 (Auth Matrix — \"Anonymous: None\")",
+        "docs/specs/01-pipeline/37_entity_model.md §3 (Behavioral Contract)",
+        "docs/specs/00-architecture/00_system_map.md:39 — row 37 lists src/app/permits/[id]/page.tsx among its target files"
+      ],
+      "spec_version": "0-draft",
+      "versioning": {
+        "answer": "none",
+        "why": "The payload is typed as `permit: Record<string, unknown>` and read by string key at render time — nothing parses it, so no field can be said to be promised.",
+        "evidence": [
+          "src/app/permits/[id]/page.tsx:52,113-121"
+        ]
+      },
+      "ref": "S-070"
+    },
+    "inputs": {
+      "answer": "contract",
+      "why": "One bare fetch to /api/permits/[id] keyed on the composite permit id; the route fans out to twelve tables behind that single contract. field_whitelist is every key the page dereferences across its ten sections (src/app/permits/[id]/page.tsx:131-510); it is a whitelist BY MEASUREMENT only — the route itself projects three of its tables with SELECT *, so the wire payload is wider than this list.",
+      "evidence": [
+        "src/app/permits/[id]/page.tsx:84-90",
+        "src/app/api/permits/[id]/route.ts:104-273"
+      ],
+      "contract_ref": [
+        "/api/permits/[id]"
+      ],
+      "query_key": [
+        "id"
+      ],
+      "field_whitelist": [
+        "permit.permit_num",
+        "permit.status",
+        "permit.street_num",
+        "permit.street_name",
+        "permit.street_type",
+        "permit.city",
+        "permit.latitude",
+        "permit.longitude",
+        "permit.description",
+        "permit.scope_tags",
+        "permit.builder_name",
+        "trades[].trade_slug",
+        "trades[].trade_name",
+        "trades[].color",
+        "trades[].lead_score",
+        "trades[].confidence",
+        "trades[].phase",
+        "trades[].tier",
+        "inspections[].stage_name",
+        "inspections[].status",
+        "inspections[].inspection_date",
+        "inspections[].scraped_at",
+        "builder.id",
+        "builder.phone",
+        "builder.email",
+        "builder.website",
+        "builder.google_rating",
+        "builder.wsib_status",
+        "parcel.lot_size_sqft",
+        "parcel.lot_size_sqm",
+        "parcel.frontage_ft",
+        "parcel.depth_ft",
+        "parcel.feature_type",
+        "parcel.is_irregular",
+        "linkedPermits[].permit_num",
+        "linkedPermits[].revision_num",
+        "linkedPermits[].est_const_cost",
+        "coaApplications[].application_num",
+        "coaApplications[].decision",
+        "coaApplications[].decision_date",
+        "coaApplications[].hearing_date",
+        "coaApplications[].description",
+        "coaApplications[].applicant",
+        "coaApplications[].link_confidence",
+        "history[].field_name",
+        "history[].old_value",
+        "history[].new_value",
+        "history[].changed_at",
+        "massing",
+        "neighbourhood"
+      ],
+      "tables": [
+        {
+          "table": "permits",
+          "columns": "all",
+          "producing_steps": [
+            "classify_inspection_status",
+            "classify_lifecycle_phase",
+            "classify_permit_phase",
+            "classify_scope",
+            "classify_scope_class",
+            "classify_scope_tags",
+            "close_stale_permits",
+            "create_pre_permits",
+            "enrich_permits",
+            "geocode_permits",
+            "inspections",
+            "link_coa",
+            "link_neighbourhoods",
+            "link_similar",
+            "permits"
+          ],
+          "chain_position": "deep_scrapes[1] · permits[23], coa[12] · permits[3] · permits[4] · not-in-a-chain · not-in-a-chain · permits[2] · not-in-a-chain · permits[9] · permits[7], sources[3] · deep_scrapes[0] · permits[19], coa[8] · permits[10], sources[17] · permits[12] · permits[1]",
+          "owner_spec": "docs/specs/01-pipeline/30_pipeline_architecture.md",
+          "evidence": [
+            "src/app/api/permits/[id]/route.ts:104 — `SELECT * FROM permits`",
+            "docs/reference/data-lineage-map.md:997",
+            "scripts/manifest.json#chains"
+          ]
+        },
+        {
+          "table": "permit_trades",
+          "columns": "all",
+          "producing_steps": [
+            "backfill_realtor_permit_trades",
+            "classify_permits"
+          ],
+          "chain_position": "permits[16] · permits[13]",
+          "owner_spec": "UNRESEARCHED",
+          "evidence": [
+            "src/app/api/permits/[id]/route.ts:118-119",
+            "docs/reference/data-lineage-map.md:973",
+            "scripts/manifest.json#chains"
+          ]
+        },
+        {
+          "table": "trades",
+          "columns": [
+            "slug",
+            "name",
+            "icon",
+            "color"
+          ],
+          "producing_steps": "none",
+          "chain_position": "n/a",
+          "owner_spec": "UNRESEARCHED",
+          "evidence": [
+            "src/app/api/permits/[id]/route.ts:118",
+            "docs/reference/data-lineage-map.md:1355 — table present, no pipeline producer listed"
+          ]
+        },
+        {
+          "table": "permit_history",
+          "columns": [
+            "field_name",
+            "old_value",
+            "new_value",
+            "changed_at"
+          ],
+          "producing_steps": "UNRESEARCHED",
+          "chain_position": "UNRESEARCHED",
+          "owner_spec": "UNRESEARCHED",
+          "evidence": [
+            "src/app/api/permits/[id]/route.ts:128",
+            "UNRESEARCHED — permit_history is not in docs/reference/data-lineage-map.md"
+          ]
+        },
+        {
+          "table": "entities",
+          "columns": "all",
+          "producing_steps": [
+            "builders",
+            "enrich_named_builders",
+            "enrich_wsib_builders",
+            "link_wsib"
+          ],
+          "chain_position": "permits[5] · entities[1] · entities[0] · permits[6], sources[19]",
+          "owner_spec": "UNRESEARCHED",
+          "evidence": [
+            "src/app/api/permits/[id]/route.ts:138 — `SELECT e.* FROM entities e`",
+            "docs/reference/data-lineage-map.md:506",
+            "scripts/manifest.json#chains"
+          ]
+        },
+        {
+          "table": "permit_parcels",
+          "columns": [
+            "match_type",
+            "confidence"
+          ],
+          "producing_steps": [
+            "link_parcels"
+          ],
+          "chain_position": "UNRESEARCHED",
+          "owner_spec": "UNRESEARCHED",
+          "evidence": [
+            "src/app/api/permits/[id]/route.ts:152-153",
+            "docs/reference/data-lineage-map.md — permit_parcels row",
+            "scripts/manifest.json#chains"
+          ]
+        },
+        {
+          "table": "parcels",
+          "columns": "all",
+          "producing_steps": "UNRESEARCHED",
+          "chain_position": "UNRESEARCHED",
+          "owner_spec": "docs/specs/01-pipeline/58_zoning_enrichment.md",
+          "evidence": [
+            "src/app/api/permits/[id]/route.ts:152 — `SELECT pa.*`",
+            "UNRESEARCHED — the parcels producer set is large and was not re-derived for this row"
+          ]
+        },
+        {
+          "table": "neighbourhoods",
+          "columns": [
+            "name",
+            "neighbourhood_id",
+            "avg_household_income",
+            "median_household_income"
+          ],
+          "producing_steps": "UNRESEARCHED",
+          "chain_position": "UNRESEARCHED",
+          "owner_spec": "UNRESEARCHED",
+          "evidence": [
+            "src/app/api/permits/[id]/route.ts:172-177"
+          ]
+        },
+        {
+          "table": "permit_inspections",
+          "columns": [
+            "stage_name",
+            "status",
+            "inspection_date",
+            "scraped_at"
+          ],
+          "producing_steps": [
+            "inspections"
+          ],
+          "chain_position": "deep_scrapes[0]",
+          "owner_spec": "docs/specs/01-pipeline/44_chain_deep_scrapes.md",
+          "evidence": [
+            "src/app/api/permits/[id]/route.ts:190-191",
+            "scripts/manifest.json#chains"
+          ]
+        },
+        {
+          "table": "parcel_buildings",
+          "columns": "UNRESEARCHED",
+          "producing_steps": "UNRESEARCHED",
+          "chain_position": "UNRESEARCHED",
+          "owner_spec": "UNRESEARCHED",
+          "evidence": [
+            "src/app/api/permits/[id]/route.ts:205-207"
+          ]
+        },
+        {
+          "table": "building_footprints",
+          "columns": [
+            "footprint_area_sqft",
+            "estimated_stories",
+            "max_height_m"
+          ],
+          "producing_steps": "UNRESEARCHED",
+          "chain_position": "UNRESEARCHED",
+          "owner_spec": "UNRESEARCHED",
+          "evidence": [
+            "src/app/api/permits/[id]/route.ts:205-207"
+          ]
+        },
+        {
+          "table": "coa_applications",
+          "columns": [
+            "application_num",
+            "decision",
+            "decision_date",
+            "hearing_date",
+            "description",
+            "applicant"
+          ],
+          "producing_steps": [
+            "classify_coa_scope",
+            "classify_coa_trades",
+            "classify_lifecycle_phase",
+            "coa",
+            "compute_coa_cost_estimates",
+            "enrich_coa_zoning",
+            "link_coa",
+            "link_coa_to_parcels"
+          ],
+          "chain_position": "coa[5] · coa[6] · permits[23], coa[12] · coa[1] · coa[7] · coa[4] · permits[19], coa[8] · coa[3]",
+          "owner_spec": "UNRESEARCHED",
+          "evidence": [
+            "src/app/api/permits/[id]/route.ts:42-63",
+            "docs/reference/data-lineage-map.md:312",
+            "scripts/manifest.json#chains"
+          ]
+        }
+      ]
+    },
+    "outputs": {
+      "answer": "none",
+      "why": "A read-only page — no form, no mutation, every interactive element is a link.",
+      "evidence": [
+        "src/app/permits/[id]/page.tsx:123-562"
+      ],
+      "contract_ref": [],
+      "tables": []
+    },
+    "state": {
+      "answer": "none",
+      "why": "Two useState hooks (data, loading) plus PropertyPhoto's imgError flag — all component-local, none persisted, none shared.",
+      "evidence": [
+        "src/app/permits/[id]/page.tsx:81-82",
+        "src/components/permits/PropertyPhoto.tsx:39"
+      ],
+      "fields": []
+    },
+    "staleness": {
+      "answer": "live",
+      "why": "One fetch per permit id on mount, no cache in between; the twelve-table fan-out runs on every page view.",
+      "evidence": [
+        "src/app/permits/[id]/page.tsx:84-90"
+      ],
+      "offline": "blocked"
+    },
+    "guards": {
+      "session": {
+        "answer": "anon",
+        "why": "`/permits/` is a PUBLIC_PREFIX, so a permit detail page is reachable with no session at all — the lock pins classifyRoute('/permits/123--01') === 'public'.",
+        "evidence": [
+          "src/lib/auth/route-guard.ts:67-77",
+          "src/tests/middleware.logic.test.ts:92"
+        ]
+      },
+      "rls_class": {
+        "answer": "B",
+        "why": "All twelve tables are pipeline-owned, reached through the server-side pg pool — RLS on, zero policies, service-role only.",
+        "evidence": [
+          "src/app/api/permits/[id]/route.ts:104-273",
+          "docs/specs/00-architecture/114_rls_policy_catalog.md"
+        ]
+      },
+      "disclosure": {
+        "fields": [
+          "permit row (all columns, via SELECT *)",
+          "builder entity row (all columns, via SELECT e.*)",
+          "parcel row (all columns, via SELECT pa.*)",
+          "neighbourhood income figures",
+          "inspection stage/status/date",
+          "CoA application + applicant name",
+          "linked permits",
+          "permit change history"
+        ],
+        "why": "The page is reachable with no session (PUBLIC_PREFIX `/permits/`) and three of its twelve queries are row spreads, so an anonymous visitor receives every column of the permit, the builder entity and the parcel — including the applicant name on any linked CoA application."
+      },
+      "entitlement": "none",
+      "flag": "none",
+      "permission": "none",
+      "rate_bucket": "none"
+    },
+    "render": {
+      "targets": [
+        "screen"
+      ],
+      "projection": "detail",
+      "breakpoints": "mobile_first",
+      "export": "none"
+    },
+    "checks": [
+      {
+        "id": "web_permit_detail_anon_disclosure",
+        "kind": "disclosure",
+        "severity": "FAIL",
+        "blocking": true,
+        "when": "pre",
+        "why": "This is the only anonymous surface in the web product that projects a person-adjacent field (the CoA applicant name) and three full row spreads — the projected set has to be a named whitelist before it can be reviewed, not whatever SELECT * returns today."
+      },
+      {
+        "id": "web_permit_detail_builder_field_parity",
+        "kind": "field_whitelist_parity",
+        "severity": "FAIL",
+        "blocking": false,
+        "when": "post",
+        "why": "The Builder section reads data.builder.phone, .email and .wsib_status; the entities table has primary_phone, primary_email and is_wsib_registered, and route.ts:138 is `SELECT e.*` with no aliasing — the same drift as the two builders pages, on a third surface."
+      },
+      {
+        "id": "web_permit_detail_error_is_not_found",
+        "kind": "error_state",
+        "severity": "FAIL",
+        "blocking": false,
+        "when": "post",
+        "why": "A 500 and a genuine 404 both leave data.permit undefined and render \"Permit Not Found\"; on an anonymous page that also means a database outage looks like a bad permit number."
+      },
+      {
+        "id": "web_permit_detail_scope_tags_parse",
+        "kind": "contract_parse",
+        "severity": "WARN",
+        "blocking": false,
+        "when": "post",
+        "why": "scope_tags is handled three ways (array, brace-delimited Postgres literal, else empty) because the payload shape is not pinned — the parse branches are a symptom worth keeping visible until the projection is declared."
+      }
+    ],
+    "invariants": "none",
+    "plausibility": "none",
+    "states": [
+      {
+        "name": "loading",
+        "golden": "none"
+      },
+      {
+        "name": "hit",
+        "golden": "none"
+      },
+      {
+        "name": "miss",
+        "golden": "none"
+      },
+      {
+        "name": "partial",
+        "golden": "none"
+      },
+      {
+        "name": "empty",
+        "golden": "none"
+      }
+    ],
+    "errors": {
+      "answer": "inline",
+      "why": "A failed fetch is console.warn'd and renders the same \"Permit Not Found\" block a 404 produces; the withApiEnvelope error envelope is never parsed. A 404 has no entry in errors.classes because the closed class set (400/401/403/429/500/schema_drift/offline) has no 404 value — it is recorded as the `miss` state instead, which is exactly why a 500 rendering the same panel is a finding.",
+      "evidence": [
+        "src/app/permits/[id]/page.tsx:88,100-111",
+        "src/lib/api/with-api-envelope.ts:41-51"
+      ],
+      "classes": [
+        {
+          "class": "500",
+          "ui": "the same \"Permit Not Found\" panel"
+        },
+        {
+          "class": "offline",
+          "ui": "the same \"Permit Not Found\" panel"
+        }
+      ],
+      "no_retry": []
+    },
+    "emits": {
+      "answer": "none",
+      "why": "No captureEvent and no ledger row — an anonymous view of a full permit dossier is not counted anywhere, which is also why nobody can tell how much this surface is used.",
+      "evidence": [
+        "src/app/permits/[id]/page.tsx:1-562"
+      ],
+      "analytics": [],
+      "ledger_events": [],
+      "breadcrumbs": []
+    },
+    "offers": {
+      "answer": "none",
+      "why": "No placement is rendered and no placement inventory table is read — on the estate's only anonymous content page.",
+      "evidence": [
+        "src/app/permits/[id]/page.tsx:123-562"
+      ]
+    },
+    "metering": {
+      "answer": "none",
+      "why": "No usage_events row. The property_view ledger event exists in the vocabulary and this is the surface it would describe, but nothing writes it here.",
+      "evidence": [
+        "src/app/permits/[id]/page.tsx:1-562"
+      ]
+    },
+    "config": {
+      "answer": "none",
+      "why": "No tunable — the linked-permit and history limits are literals inside the route.",
+      "evidence": [
+        "src/app/api/permits/[id]/route.ts:272-273"
+      ],
+      "logic_variables": [],
+      "retired": []
+    },
+    "sharing": {
+      "answer": "shared",
+      "why": "/api/permits/[id] is a PUBLIC_PREFIX explicitly so the Expo client can read it; this page is one of at least two renderers.",
+      "evidence": [
+        "src/lib/auth/route-guard.ts:67-77,169-170",
+        "src/tests/middleware.logic.test.ts:57"
+      ],
+      "surfaces": [],
+      "varies_by_surface": "UNRESEARCHED"
+    },
+    "a11y": {
+      "touch_target_min_px": "UNRESEARCHED",
+      "labels": "partial",
+      "dark_mode": "none",
+      "reduced_motion": "none",
+      "i18n": "none",
+      "safe_area": "none"
+    },
+    "deviations": "none",
+    "limitations": [
+      {
+        "what": "The anonymous projection is whatever three SELECT * queries return.",
+        "measured": "src/app/api/permits/[id]/route.ts:104 (permits), :138 (entities), :152 (parcels) are row spreads; the page is anon-reachable per route-guard.ts:67-77 and middleware.logic.test.ts:92.",
+        "check_id": "web_permit_detail_anon_disclosure"
+      },
+      {
+        "what": "The Builder section cannot show a phone, an email or a WSIB status.",
+        "measured": "Those three keys do not exist on `entities` in src/lib/db/generated/schema.ts; the section renders its \"Not available\" arms unconditionally.",
+        "check_id": "web_permit_detail_builder_field_parity"
+      }
+    ],
+    "interpretation": "none",
+    "notes": "Spec from system-map row 37, which lists src/app/permits/[id]/page.tsx. Spec 126 line 180 independently classifies this exact file as the DETAIL archetype exemplar (562L) and states states[] must include 'error' - it currently does not: a failed fetch leaves data null and falls into the same 'Permit Not Found' branch, so the requirement is unmet. The whole permit detail surface is PUBLIC (the '/permits/' PUBLIC_PREFIXES entry exists to serve the Expo mobile client), unlike /builders/[id]. PropertyPhoto, NeighbourhoodProfile and BuildingMassing are rendered by this page alone; Badge and ScoreBadge under src/components/ui/ are shared and excluded. MEASURED 2026-09-15. This is the web product's only anonymous content surface (PUBLIC_PREFIX `/permits/`, locked at middleware.logic.test.ts:92) and it is also the widest: twelve tables behind one contract, three of them read with SELECT *. Nothing meters it and nothing emits from it, so its usage is unknowable — the brief's \"plausible zero\" trap in its live form. It imports src/components/ui/Badge.tsx and src/components/ui/ScoreBadge.tsx, neither of which this row claims: both are also imported by src/components/permits/PermitCard.tsx (owned by web_dashboard), and Badge additionally by src/app/builders/[id]/page.tsx, so R-13 totality is unsatisfiable for them without a shared-primitive rule the vocabulary does not have. Left unowned and raised rather than assigned by guess. SPEC-VS-TREE: Spec 37 §2’s Auth Matrix says Anonymous access is \"None\", yet this page is listed among Spec 37’s own target files (system map:39) and is anon-reachable, projecting the full builder entity row plus the CoA applicant name. The tree wins; the disagreement is recorded here as the reason web_permit_detail_anon_disclosure is FAIL + blocking.",
+    "x-draft": {
+      "shard": "web-product",
+      "files": [
+        "src/app/permits/[id]/page.tsx",
+        "src/components/permits/PropertyPhoto.tsx",
+        "src/components/permits/NeighbourhoodProfile.tsx",
+        "src/components/permits/BuildingMassing.tsx"
+      ],
+      "loc": 912,
+      "measured_states": [
+        "loading",
+        "not_found",
+        "loaded"
+      ],
+      "measured_gate": {
+        "session": "public",
+        "why": "classifyRoute('/permits/20-101234--00') falls through the static/_next/api-auth/exact-api/api-admin/admin and AUTHENTICATED_API_ROUTES arms, then matches PUBLIC_PREFIXES - the entry '/permits/' is a prefix of the path - and returns 'public'. It never reaches PUBLIC_PATHS or the fail-closed default."
+      }
+    },
+    "programme": {
+      "scope": "estate_other",
+      "phase": "not_scheduled",
+      "why": "Permit data for the lead-gen product. Inventoried only; it converts under the same standard in a later programme.",
+      "feature": "F92",
+      "build_order": 4193,
+      "leakage": "UNRESEARCHED",
+      "product_questions": "UNRESEARCHED",
+      "review": {
+        "status": "unreviewed"
+      }
+    }
+  },
+  {
+    "kind": "SURFACE",
+    "status": "exists",
+    "docs": {
+      "purpose": "The hand-off page between the mobile app and the payment provider. A user who taps subscribe in the app arrives here with a one-time code in the web address and no web login; the page trades that code for a payment page and sends the browser straight on to it, showing only a spinner while it works. If the code is missing, already used, or older than fifteen minutes, it shows one honest message telling the user to go back to the app and start again.",
+      "data_story": "It reads nothing from the database directly. Every value arrives through one contract: `/api/subscribe/exchange`. Behind that contract, the data comes from `logic_variables` and `user_profiles`, and writes land on `subscribe_nonces` and `user_profiles`.",
+      "under_126": "**REBUILD** — it drives writes, so a client decision has to be re-homed on the server before the projection can be honest. It renders through the WIZARD_STEP renderer (declared step index, advance condition, resume key and skip rule), reading by reference: `/api/subscribe/exchange`. It owns no component of its own, so its `owns.components[]` is an empty array — a legal answer, written down."
+    },
+    "evidence": {
+      "files": [
+        "src/app/subscribe/page.tsx:1"
+      ],
+      "contracts": [
+        "src/app/subscribe/page.tsx:42 — POST /api/subscribe/exchange"
+      ],
+      "tables": [
+        "src/app/api/subscribe/exchange/route.ts — user_profiles, logic_variables (measured in the CONTRACT shard row contract_subscribe_exchange)"
+      ],
+      "gate": [
+        "src/lib/auth/route-guard.ts:51",
+        "src/lib/auth/route-guard.ts:87-101",
+        "src/tests/subscribe-routes.logic.test.ts:31-35"
+      ],
+      "states": [
+        "src/app/subscribe/page.tsx:64-79 (error), :81-92 (working), :98-104 (Suspense fallback)"
+      ],
+      "emits": [
+        "none — no captureEvent import in src/app/subscribe/page.tsx"
+      ]
+    },
+    "identity": {
+      "id": "web_subscribe",
+      "route": "src/app/subscribe/page.tsx",
+      "archetype": "WIZARD_STEP",
+      "platforms": [
+        "web"
+      ],
+      "owns": {
+        "components": []
+      },
+      "owner": "web",
+      "spec": "docs/specs/02-web-admin/20_stripe_web_checkout.md",
+      "spec_refs": [
+        "docs/specs/02-web-admin/20_stripe_web_checkout.md §3.2",
+        "docs/specs/02-web-admin/20_stripe_web_checkout.md §3.1",
+        "docs/specs/02-web-admin/20_stripe_web_checkout.md §3.3",
+        "docs/specs/03-mobile/96_mobile_subscription.md §6"
+      ],
+      "spec_version": "0-draft",
+      "versioning": {
+        "answer": "frozen",
+        "why": "The nonce exchange is pinned in both directions by the route-class lock and three infra/security tests; changing the handoff shape forces a recapture of all of them.",
+        "evidence": [
+          "src/tests/subscribe-routes.logic.test.ts:31-35",
+          "src/tests/subscribe-exchange.infra.test.ts:1",
+          "src/tests/subscribe-session.security.test.ts:1"
+        ]
+      },
+      "ref": "S-051"
+    },
+    "inputs": {
+      "answer": "contract",
+      "why": "Its only input is the `?nonce=` query param, POSTed straight to /api/subscribe/exchange — the nonce IS the credential, because this visitor has no web session.",
+      "evidence": [
+        "src/app/subscribe/page.tsx:24-25,42-46",
+        "src/lib/auth/route-guard.ts:87-101"
+      ],
+      "contract_ref": [
+        "/api/subscribe/exchange"
+      ],
+      "query_key": [
+        "nonce"
+      ],
+      "field_whitelist": [
+        "url"
+      ],
+      "tables": [
+        {
+          "table": "user_profiles",
+          "columns": "UNRESEARCHED",
+          "producing_steps": "none",
+          "chain_position": "n/a",
+          "owner_spec": "docs/specs/02-web-admin/20_stripe_web_checkout.md §3.2",
+          "evidence": [
+            "src/app/api/subscribe/exchange/route.ts — reached via the exchange handler",
+            "UNRESEARCHED — user_profiles is not in docs/reference/data-lineage-map.md; it is written by API routes and the Stripe webhook, not by a pipeline step"
+          ]
+        },
+        {
+          "table": "logic_variables",
+          "columns": "UNRESEARCHED",
+          "producing_steps": "none",
+          "chain_position": "n/a",
+          "owner_spec": "UNRESEARCHED",
+          "evidence": [
+            "src/app/api/subscribe/exchange/route.ts — reached via the exchange handler",
+            "docs/reference/data-lineage-map.md:646 — table present, no pipeline producer listed"
+          ]
+        }
+      ]
+    },
+    "outputs": {
+      "answer": "contract_only",
+      "why": "It POSTs the nonce and does nothing else — consumption, authorization and Stripe session creation are all server-side; the page holds no secret and makes no decision.",
+      "evidence": [
+        "src/app/subscribe/page.tsx:5-11,42-56"
+      ],
+      "contract_ref": [
+        "/api/subscribe/exchange"
+      ],
+      "rollback": "none — the nonce is single-use and consumed server-side; a failed exchange is unrecoverable from this page by design, and the app mints a fresh nonce instead.",
+      "invalidates": [],
+      "tables": []
+    },
+    "state": {
+      "answer": "none",
+      "why": "One useState phase flag plus a useRef re-entry guard — both component-local, both gone on navigate; the ref exists because React 18 StrictMode would otherwise double-POST a single-use nonce.",
+      "evidence": [
+        "src/app/subscribe/page.tsx:26-29,31-33"
+      ],
+      "fields": []
+    },
+    "staleness": {
+      "answer": "none",
+      "why": "It shows no server data — only a spinner or one error message; the exchange result is a redirect, not a rendered value.",
+      "evidence": [
+        "src/app/subscribe/page.tsx:64-92"
+      ],
+      "offline": "blocked"
+    },
+    "guards": {
+      "session": {
+        "answer": "anon",
+        "why": "/subscribe is in PUBLIC_PATHS and /api/subscribe/exchange is in PUBLIC_EXACT_API_PATHS — deliberately exact-match so the sibling /api/subscribe/session and /portal-session stay authenticated.",
+        "evidence": [
+          "src/lib/auth/route-guard.ts:51,87-101",
+          "src/tests/subscribe-routes.logic.test.ts:31-35",
+          "src/tests/subscribe-routes.logic.test.ts:27-29"
+        ]
+      },
+      "rls_class": {
+        "answer": "A",
+        "why": "Behind the contract the exchange resolves a user_profiles row — a user-owned table whose policies key on auth.uid(); the page reaches it only through the service-side handler, holding a nonce instead of a session.",
+        "evidence": [
+          "docs/specs/00-architecture/114_rls_policy_catalog.md",
+          "src/app/api/subscribe/exchange/route.ts"
+        ]
+      },
+      "disclosure": {
+        "fields": [
+          "url"
+        ],
+        "why": "The only field this anonymous page receives is the Stripe-hosted checkout URL, and it is validated to start with https:// before being navigated to."
+      },
+      "entitlement": "none",
+      "flag": "none",
+      "permission": "none",
+      "rate_bucket": "none"
+    },
+    "render": {
+      "targets": [
+        "screen"
+      ],
+      "projection": "none",
+      "breakpoints": "mobile_first",
+      "export": "none",
+      "wizard": "UNRESEARCHED"
+    },
+    "checks": [
+      {
+        "id": "web_subscribe_single_post",
+        "kind": "contract_parse",
+        "severity": "FAIL",
+        "blocking": true,
+        "when": "pre",
+        "why": "The nonce is single-use, so the startedRef guard must survive StrictMode's double-invoked effect — a second POST consume-fails and strands a paying user on the error state."
+      },
+      {
+        "id": "web_subscribe_https_only_redirect",
+        "kind": "disclosure",
+        "severity": "FAIL",
+        "blocking": true,
+        "when": "pre",
+        "why": "window.location.assign is driven by a server-supplied string; the `url.startsWith(\"https://\")` test is the only thing preventing this page from being an open redirect primitive."
+      },
+      {
+        "id": "web_subscribe_one_honest_error",
+        "kind": "error_state",
+        "severity": "FAIL",
+        "blocking": false,
+        "when": "post",
+        "why": "Every non-200 — expired, consumed, unknown nonce, or a named config 500 — has to land on the one \"invalid or expired\" copy that tells the user to mint a fresh link, never on a blank spinner."
+      }
+    ],
+    "invariants": "none",
+    "plausibility": "none",
+    "states": [
+      {
+        "name": "loading",
+        "golden": "none"
+      },
+      {
+        "name": "redirect",
+        "golden": "none"
+      },
+      {
+        "name": "error",
+        "golden": "none"
+      }
+    ],
+    "errors": {
+      "answer": "inline",
+      "why": "One honest error state for every failure class: a full-page message telling the visitor to return to the app and mint a fresh link. The envelope is not parsed — only res.ok and the url shape are.",
+      "evidence": [
+        "src/app/subscribe/page.tsx:47-60,64-79"
+      ],
+      "classes": [
+        {
+          "class": "400",
+          "ui": "the \"checkout link is invalid or has expired\" page"
+        },
+        {
+          "class": "500",
+          "ui": "the same page — a config gap is not distinguished from a bad nonce"
+        },
+        {
+          "class": "offline",
+          "ui": "the same page, via the catch arm"
+        }
+      ],
+      "no_retry": [
+        "/api/subscribe/exchange — the nonce is single-use, so a retry cannot succeed"
+      ]
+    },
+    "emits": {
+      "answer": "none",
+      "why": "No captureEvent, no ledger row — the handoff step of the paid funnel emits nothing, so a drop-off between the app's CTA and Stripe is invisible from this surface.",
+      "evidence": [
+        "src/app/subscribe/page.tsx:1-108"
+      ],
+      "analytics": [],
+      "ledger_events": [],
+      "breadcrumbs": []
+    },
+    "offers": {
+      "answer": "none",
+      "why": "A checkout handoff page renders no sponsored placement.",
+      "evidence": [
+        "src/app/subscribe/page.tsx:64-92"
+      ]
+    },
+    "metering": {
+      "answer": "none",
+      "why": "The page writes no usage_events row; billing is Stripe's and the entitlement is the webhook's.",
+      "evidence": [
+        "src/app/subscribe/page.tsx:1-108",
+        "docs/specs/02-web-admin/20_stripe_web_checkout.md §4"
+      ]
+    },
+    "config": {
+      "answer": "none",
+      "why": "The page itself reads no tunable. The nonce TTL it describes (\"expire after 15 minutes\") is enforced server-side in the exchange route, not here — this copy is a claim about the route, not a value this page holds.",
+      "evidence": [
+        "src/app/subscribe/page.tsx:71-75"
+      ],
+      "logic_variables": [],
+      "retired": []
+    },
+    "sharing": {
+      "answer": "sole",
+      "why": "/api/subscribe/exchange is reached by this page and nothing else — the exact-match public listing exists precisely to keep it that narrow.",
+      "evidence": [
+        "src/lib/auth/route-guard.ts:87-101",
+        "src/app/subscribe/page.tsx:42"
+      ],
+      "surfaces": []
+    },
+    "a11y": {
+      "touch_target_min_px": "UNRESEARCHED",
+      "labels": "complete",
+      "dark_mode": "none",
+      "reduced_motion": "ignored",
+      "i18n": "none",
+      "safe_area": "none"
+    },
+    "deviations": "none",
+    "limitations": [
+      {
+        "what": "A configuration failure and an expired nonce are shown identically.",
+        "measured": "src/app/subscribe/page.tsx:47-50 branches on res.ok only; the route's named 500s carry distinguishing codes that this page discards.",
+        "check_id": "web_subscribe_one_honest_error"
+      },
+      {
+        "what": "The spinner is unconditional animation.",
+        "measured": "src/app/subscribe/page.tsx:85 and :101 use animate-spin with no prefers-reduced-motion arm anywhere in the file or in src/app/globals.css.",
+        "check_id": "web_subscribe_one_honest_error"
+      }
+    ],
+    "interpretation": "none",
+    "notes": "The endpoint it calls, /api/subscribe/exchange, is itself in PUBLIC_EXACT_API_PATHS (exact-match, checked before the '/api/subscribe' authenticated prefix) precisely so a sessionless hand-off visitor can reach it; sibling routes such as /api/subscribe/session stay authenticated. A startedRef guard stops React StrictMode's double-invoke from consuming the single-use code twice. MEASURED 2026-09-15. The WIZARD_STEP profile's step_index/advances_on/resume_key/skip_when/terminal fields have no home in the current schema (it declares no wizard block), so they are recorded here instead: step 1 of 2 in the web half of the handoff; advances_on = a 200 carrying an https:// url; resume_key = none, the nonce is single-use and a resume mints a fresh one from the app; skip_when = never; terminal = false (Stripe returns the visitor to /subscribe/success or /subscribe/cancel). The page copy says \"Return to the Buildo app\" while the estate is mid-rename to MaxBLD (layout.tsx:6) — the same half-applied Spec 117 rename the landing page carries.",
+    "x-draft": {
+      "shard": "web-product",
+      "files": [
+        "src/app/subscribe/page.tsx"
+      ],
+      "loc": 108,
+      "measured_states": [
+        "working",
+        "error"
+      ],
+      "measured_gate": {
+        "session": "public",
+        "why": "classifyRoute('/subscribe') is NOT caught by the AUTHENTICATED_API_ROUTES arm (that list's '/api/subscribe' entry only matches '/api/subscribe' or '/api/subscribe/...'), no PUBLIC_PREFIXES entry is a prefix of it, and it then matches the PUBLIC_PATHS exact list which contains '/subscribe' -> 'public'."
+      }
+    },
+    "programme": {
+      "scope": "platform_shared",
+      "phase": "UNRESEARCHED",
+      "why": "The subscription and Stripe hand-off, which resolves an entitlement per PRODUCT — so it serves both and belongs to neither.",
+      "feature": "F12",
+      "build_order": 3123,
+      "leakage": "none",
+      "product_questions": "none",
+      "review": {
+        "status": "unreviewed"
+      }
+    }
+  },
+  {
+    "kind": "SURFACE",
+    "status": "exists",
+    "docs": {
+      "purpose": "Where the payment provider sends the user if they back out of paying. It is a single reassuring message: no charge was made, and to try again they should return to the mobile app and tap the subscribe link. It fetches nothing and changes nothing.",
+      "data_story": "This surface reaches **no API contract at all** — every value it shows is local, passed in as a prop, or read from the device.",
+      "under_126": "**RE-PROJECT** — it writes nothing and holds no Layer-3 store, so the move is short — the server already assembles the payload and only the rendering is client-side. It renders through the STATIC renderer (content source and SEO, or a declared redirect alone), reading no contract. It owns no component of its own, so its `owns.components[]` is an empty array — a legal answer, written down."
+    },
+    "evidence": {
+      "files": [
+        "src/app/subscribe/cancel/page.tsx:1"
+      ],
+      "contracts": [
+        "none — no /api/ string and no fetch in src/app/subscribe/cancel/page.tsx"
+      ],
+      "tables": [
+        "none — no SQL, no db client import"
+      ],
+      "gate": [
+        "src/lib/auth/route-guard.ts:53",
+        "src/tests/subscribe-routes.logic.test.ts:31-35"
+      ],
+      "states": [
+        "src/app/subscribe/cancel/page.tsx:9-20 — one unconditional return"
+      ],
+      "emits": [
+        "none — no captureEvent import in src/app/subscribe/cancel/page.tsx"
+      ]
+    },
+    "identity": {
+      "id": "web_subscribe_cancel",
+      "route": "src/app/subscribe/cancel/page.tsx",
+      "archetype": "STATIC",
+      "platforms": [
+        "web"
+      ],
+      "owns": {
+        "components": []
+      },
+      "owner": "web",
+      "spec": "docs/specs/02-web-admin/20_stripe_web_checkout.md",
+      "spec_refs": [
+        "docs/specs/02-web-admin/20_stripe_web_checkout.md §3.2",
+        "docs/specs/02-web-admin/20_stripe_web_checkout.md §3.3"
+      ],
+      "spec_version": "0-draft",
+      "versioning": {
+        "answer": "none",
+        "why": "Twenty-two lines of static copy that nothing consumes and nothing parses.",
+        "evidence": [
+          "src/app/subscribe/cancel/page.tsx:8-21"
+        ]
+      },
+      "ref": "S-052"
+    },
+    "inputs": {
+      "answer": "none",
+      "why": "No fetch, no props, no search params — it is a server component with no interactivity at all, by the file's own design note and by the absence of any 'use client' directive.",
+      "evidence": [
+        "src/app/subscribe/cancel/page.tsx:1-22"
+      ],
+      "contract_ref": [],
+      "query_key": [],
+      "field_whitelist": [],
+      "tables": []
+    },
+    "outputs": {
+      "answer": "none",
+      "why": "The user backed out on the Stripe-hosted page: no charge was made and no state changed anywhere, here or server-side.",
+      "evidence": [
+        "src/app/subscribe/cancel/page.tsx:3-5"
+      ],
+      "contract_ref": [],
+      "tables": []
+    },
+    "state": {
+      "answer": "none",
+      "why": "No hook of any kind — it is a plain server component returning one tree.",
+      "evidence": [
+        "src/app/subscribe/cancel/page.tsx:8-21"
+      ],
+      "fields": []
+    },
+    "staleness": {
+      "answer": "static",
+      "why": "The copy changes only on redeploy; there is no server value on the page.",
+      "evidence": [
+        "src/app/subscribe/cancel/page.tsx:8-21"
+      ],
+      "offline": "none"
+    },
+    "guards": {
+      "session": {
+        "answer": "anon",
+        "why": "/subscribe/cancel is in PUBLIC_PATHS as a Stripe redirect target for a sessionless visitor, and the lock pins it public.",
+        "evidence": [
+          "src/lib/auth/route-guard.ts:53",
+          "src/tests/subscribe-routes.logic.test.ts:31-35"
+        ]
+      },
+      "rls_class": {
+        "answer": "none",
+        "why": "It reaches no table.",
+        "evidence": [
+          "src/app/subscribe/cancel/page.tsx:1-22"
+        ]
+      },
+      "disclosure": "none",
+      "entitlement": "none",
+      "flag": "none",
+      "permission": "none",
+      "rate_bucket": "none"
+    },
+    "render": {
+      "targets": [
+        "screen"
+      ],
+      "projection": "none",
+      "breakpoints": "mobile_first",
+      "export": "none"
+    },
+    "checks": [
+      {
+        "id": "web_subscribe_cancel_writes_nothing",
+        "kind": "ledger_row_present",
+        "severity": "INFO",
+        "blocking": false,
+        "when": "post",
+        "why": "Purely descriptive and deliberately so: the page's whole contract is that abandoning checkout changes nothing, so the assertion worth keeping is that no row of any kind appears — there is no threshold to bound."
+      },
+      {
+        "id": "web_subscribe_cancel_is_reachable_anon",
+        "kind": "auth_class_parity",
+        "severity": "FAIL",
+        "blocking": false,
+        "when": "post",
+        "why": "Stripe redirects here without a session; if the fail-closed default ever reclaims this path the visitor is bounced to /login from a payment flow they just abandoned."
+      }
+    ],
+    "invariants": "none",
+    "plausibility": "none",
+    "states": [
+      {
+        "name": "static",
+        "golden": "none"
+      }
+    ],
+    "errors": {
+      "answer": "none",
+      "why": "No fetch and no branch — no failure is reachable.",
+      "evidence": [
+        "src/app/subscribe/cancel/page.tsx:8-21"
+      ]
+    },
+    "emits": {
+      "answer": "none",
+      "why": "Nothing is emitted, so an abandoned checkout leaves no trace on the web side at all.",
+      "evidence": [
+        "src/app/subscribe/cancel/page.tsx:1-22"
+      ],
+      "analytics": [],
+      "ledger_events": [],
+      "breadcrumbs": []
+    },
+    "offers": {
+      "answer": "none",
+      "why": "No placement — the page has no inventory and no slot.",
+      "evidence": [
+        "src/app/subscribe/cancel/page.tsx:8-21"
+      ]
+    },
+    "metering": {
+      "answer": "none",
+      "why": "Nothing is counted.",
+      "evidence": [
+        "src/app/subscribe/cancel/page.tsx:1-22"
+      ]
+    },
+    "config": {
+      "answer": "none",
+      "why": "No tunable of any kind.",
+      "evidence": [
+        "src/app/subscribe/cancel/page.tsx:1-22"
+      ],
+      "logic_variables": [],
+      "retired": []
+    },
+    "sharing": {
+      "answer": "none",
+      "why": "It renders no contract.",
+      "evidence": [
+        "src/app/subscribe/cancel/page.tsx:1-22"
+      ],
+      "surfaces": []
+    },
+    "a11y": {
+      "touch_target_min_px": "UNRESEARCHED",
+      "labels": "none",
+      "dark_mode": "none",
+      "reduced_motion": "none",
+      "i18n": "none",
+      "safe_area": "none"
+    },
+    "deviations": "none",
+    "limitations": [
+      {
+        "what": "The page names a product that is being renamed.",
+        "measured": "src/app/subscribe/cancel/page.tsx:16-17 says \"return to the Buildo app\"; src/app/layout.tsx:6 and src/app/login/page.tsx:34 both say MaxBLD (Spec 117).",
+        "check_id": "web_subscribe_cancel_writes_nothing"
+      }
+    ],
+    "interpretation": "none",
+    "notes": "Server component, no interactivity, single unconditional render - hence states=['static'] rather than an empty array. Copy still says 'the Buildo app', pre-dating the Spec 117 MaxBLD rename. MEASURED 2026-09-15: the only web-product page with no 'use client' directive — a genuine server component (the file says so at :5 and the absence of the directive confirms it). a11y.labels is `none` rather than `complete` because the page has no interactive element and no label; touch_target_min_px stays UNRESEARCHED for the same reason the other rows do — the vocabulary has no value for \"no interactive target\".",
+    "x-draft": {
+      "shard": "web-product",
+      "files": [
+        "src/app/subscribe/cancel/page.tsx"
+      ],
+      "loc": 22,
+      "measured_states": [
+        "static"
+      ],
+      "measured_gate": {
+        "session": "public",
+        "why": "classifyRoute('/subscribe/cancel') matches the PUBLIC_PATHS exact entry '/subscribe/cancel' -> 'public'; every earlier arm (files, /_next/, /api/auth/, exact-public-API, /api/admin/, /admin, authenticated APIs, PUBLIC_PREFIXES) fails to match."
+      }
+    },
+    "programme": {
+      "scope": "platform_shared",
+      "phase": "UNRESEARCHED",
+      "why": "The subscription and Stripe hand-off, which resolves an entitlement per PRODUCT — so it serves both and belongs to neither.",
+      "feature": "F12",
+      "build_order": 3123,
+      "leakage": "none",
+      "product_questions": "none",
+      "review": {
+        "status": "unreviewed"
+      }
+    }
+  },
+  {
+    "kind": "SURFACE",
+    "status": "exists",
+    "docs": {
+      "purpose": "Where the payment provider sends the user after a successful payment. It confirms the payment was received, then checks the account a few times over about twelve seconds to see whether the upgrade has landed. If it has, it says so; if the check cannot run (the mobile hand-off visitor has no web login) or the upgrade has not appeared yet, it says the account will be active shortly and to return to the app. It never claims the account is active before the server confirms it, and never claims failure.",
+      "data_story": "It reads nothing from the database directly. Every value arrives through one contract: `/api/user-profile`. Behind that contract, the data comes from `entitlements` and `user_profiles`, and writes land on `entitlements` and `user_profiles`.",
+      "under_126": "**REBUILD** — it drives writes, so a client decision has to be re-homed on the server before the projection can be honest. It renders through the WIZARD_STEP renderer (declared step index, advance condition, resume key and skip rule), reading by reference: `/api/user-profile`. It owns no component of its own, so its `owns.components[]` is an empty array — a legal answer, written down."
+    },
+    "evidence": {
+      "files": [
+        "src/app/subscribe/success/page.tsx:1"
+      ],
+      "contracts": [
+        "src/app/subscribe/success/page.tsx:42 — GET /api/user-profile"
+      ],
+      "tables": [
+        "src/app/api/user-profile/route.ts — user_profiles, entitlements (measured in the CONTRACT shard row contract_user_profile)"
+      ],
+      "gate": [
+        "src/lib/auth/route-guard.ts:52",
+        "src/tests/subscribe-routes.logic.test.ts:31-35"
+      ],
+      "states": [
+        "src/app/subscribe/success/page.tsx:75-89 (polling), :90-100 (confirmed), :101-112 (pending)"
+      ],
+      "emits": [
+        "none — no captureEvent import in src/app/subscribe/success/page.tsx"
+      ]
+    },
+    "identity": {
+      "id": "web_subscribe_success",
+      "route": "src/app/subscribe/success/page.tsx",
+      "archetype": "WIZARD_STEP",
+      "platforms": [
+        "web"
+      ],
+      "owns": {
+        "components": []
+      },
+      "owner": "web",
+      "spec": "docs/specs/02-web-admin/20_stripe_web_checkout.md",
+      "spec_refs": [
+        "docs/specs/02-web-admin/20_stripe_web_checkout.md §3.2",
+        "docs/specs/02-web-admin/20_stripe_web_checkout.md §3.3",
+        "docs/specs/02-web-admin/20_stripe_web_checkout.md §4",
+        "docs/specs/03-mobile/96_mobile_subscription.md §6"
+      ],
+      "spec_version": "0-draft",
+      "versioning": {
+        "answer": "additive_only",
+        "why": "It reads exactly one field of the profile payload, subscription_status, and compares it against a closed set; a new status may be added to that set but removing the field breaks the poll silently.",
+        "evidence": [
+          "src/app/subscribe/success/page.tsx:26,50-56"
+        ]
+      },
+      "ref": "S-053"
+    },
+    "inputs": {
+      "answer": "contract",
+      "why": "A bounded poll of GET /api/user-profile — at most six attempts, two seconds apart, reading one field.",
+      "evidence": [
+        "src/app/subscribe/success/page.tsx:24-25,42,50-56"
+      ],
+      "contract_ref": [
+        "/api/user-profile"
+      ],
+      "query_key": [],
+      "field_whitelist": [
+        "subscription_status"
+      ],
+      "tables": [
+        {
+          "table": "user_profiles",
+          "columns": [
+            "subscription_status"
+          ],
+          "producing_steps": "none",
+          "chain_position": "n/a",
+          "owner_spec": "docs/specs/02-web-admin/20_stripe_web_checkout.md §4",
+          "evidence": [
+            "src/app/subscribe/success/page.tsx:53",
+            "src/app/api/user-profile/route.ts",
+            "UNRESEARCHED — user_profiles is not in docs/reference/data-lineage-map.md; it is written by API routes and the Stripe webhook, not by a pipeline step"
+          ]
+        },
+        {
+          "table": "entitlements",
+          "columns": "UNRESEARCHED",
+          "producing_steps": "none",
+          "chain_position": "n/a",
+          "owner_spec": "docs/specs/00-architecture/116_multi_product_architecture.md §4",
+          "evidence": [
+            "src/app/api/user-profile/route.ts — measured in the CONTRACT shard row contract_user_profile",
+            "UNRESEARCHED — entitlements is not in docs/reference/data-lineage-map.md"
+          ]
+        }
+      ]
+    },
+    "outputs": {
+      "answer": "none",
+      "why": "It only OBSERVES — activation truth lives in the Stripe webhook alone, and this page is explicit that it never claims the account is active until the server says so.",
+      "evidence": [
+        "src/app/subscribe/success/page.tsx:17-18,42"
+      ],
+      "contract_ref": [],
+      "tables": []
+    },
+    "state": {
+      "answer": "none",
+      "why": "One useState phase flag and a useRef start guard, both component-local; the cancelled closure variable is effect-scoped.",
+      "evidence": [
+        "src/app/subscribe/success/page.tsx:29-36"
+      ],
+      "fields": []
+    },
+    "staleness": {
+      "answer": "live",
+      "why": "Each of the six polls is an uncached GET; there is no query cache between the page and the route, so what it renders is the profile as of that request.",
+      "evidence": [
+        "src/app/subscribe/success/page.tsx:39-63"
+      ],
+      "stale_time_ms": 0,
+      "offline": "degraded"
+    },
+    "guards": {
+      "session": {
+        "answer": "anon",
+        "why": "/subscribe/success is in PUBLIC_PATHS because Stripe redirects a sessionless mobile-handoff visitor here; the lock pins it public alongside /subscribe and /subscribe/cancel.",
+        "evidence": [
+          "src/lib/auth/route-guard.ts:52",
+          "src/tests/subscribe-routes.logic.test.ts:31-35"
+        ]
+      },
+      "rls_class": {
+        "answer": "A",
+        "why": "The contract it polls reads the caller's own user_profiles row — user-owned, policies keyed on auth.uid(); a sessionless visitor gets 401 and the page stops polling.",
+        "evidence": [
+          "src/app/subscribe/success/page.tsx:43-48",
+          "docs/specs/00-architecture/114_rls_policy_catalog.md"
+        ]
+      },
+      "disclosure": {
+        "fields": [
+          "subscription_status"
+        ],
+        "why": "The page is anon-reachable, but the one field it reads is only ever returned to a caller who already holds a session for that profile — a sessionless visitor receives 401 and the field is never projected."
+      },
+      "entitlement": "none",
+      "flag": "none",
+      "permission": "none",
+      "rate_bucket": "none"
+    },
+    "render": {
+      "targets": [
+        "screen"
+      ],
+      "projection": "none",
+      "breakpoints": "mobile_first",
+      "export": "none",
+      "wizard": "UNRESEARCHED"
+    },
+    "checks": [
+      {
+        "id": "web_subscribe_success_401_stops_polling",
+        "kind": "auth_class_parity",
+        "severity": "FAIL",
+        "blocking": false,
+        "when": "post",
+        "why": "The page is anon but the contract it polls is authenticated — the 401 arm must stop immediately on the first attempt, or a sessionless mobile-handoff visitor burns twelve seconds on a poll that can never resolve."
+      },
+      {
+        "id": "web_subscribe_success_never_claims_active",
+        "kind": "contract_parse",
+        "severity": "FAIL",
+        "blocking": false,
+        "when": "post",
+        "why": "The confirmed copy may only render when subscription_status is in {active, admin_managed} as returned by the server; the webhook owns activation and this page must never assert it from a timer."
+      },
+      {
+        "id": "web_subscribe_success_bounded_poll",
+        "kind": "freshness",
+        "severity": "FAIL",
+        "blocking": false,
+        "when": "post",
+        "why": "Six polls at two seconds is a twelve-second ceiling; an unbounded poll on a page a paying user sits on is how a spinner becomes permanent."
+      }
+    ],
+    "invariants": "none",
+    "plausibility": "none",
+    "states": [
+      {
+        "name": "loading",
+        "golden": "none"
+      },
+      {
+        "name": "hit",
+        "golden": "none"
+      },
+      {
+        "name": "partial",
+        "golden": "none"
+      },
+      {
+        "name": "unauthorized",
+        "golden": "none"
+      }
+    ],
+    "errors": {
+      "answer": "none",
+      "why": "There is deliberately no error state: a transient network failure is swallowed inside the loop so polling continues, and the terminal copy says \"active shortly\" rather than claiming a failure the webhook may be seconds from resolving.",
+      "evidence": [
+        "src/app/subscribe/success/page.tsx:59-61,101-111"
+      ],
+      "classes": [
+        {
+          "class": "401",
+          "ui": "the \"return to the app\" pending copy, rendered immediately"
+        },
+        {
+          "class": "500",
+          "ui": "swallowed; polling continues to the bound, then the pending copy"
+        },
+        {
+          "class": "offline",
+          "ui": "swallowed; polling continues to the bound, then the pending copy"
+        }
+      ],
+      "no_retry": []
+    },
+    "emits": {
+      "answer": "none",
+      "why": "Nothing is emitted at the moment a payment completes — no analytics event, no ledger row — so the conversion point of the paid funnel is uncountable from the web side.",
+      "evidence": [
+        "src/app/subscribe/success/page.tsx:1-116"
+      ],
+      "analytics": [],
+      "ledger_events": [],
+      "breadcrumbs": []
+    },
+    "offers": {
+      "answer": "none",
+      "why": "No sponsored placement on a payment-return page.",
+      "evidence": [
+        "src/app/subscribe/success/page.tsx:72-113"
+      ]
+    },
+    "metering": {
+      "answer": "none",
+      "why": "It writes no usage_events row; the subscription itself is metered by Stripe and reflected by the webhook.",
+      "evidence": [
+        "src/app/subscribe/success/page.tsx:17-18"
+      ]
+    },
+    "config": {
+      "answer": "none",
+      "why": "MAX_POLLS (6) and POLL_INTERVAL_MS (2000) are module constants in this file, not registered logic variables — they appear nowhere in docs/reference/logic-variables-registry.md.",
+      "evidence": [
+        "src/app/subscribe/success/page.tsx:24-25"
+      ],
+      "logic_variables": [],
+      "retired": []
+    },
+    "sharing": {
+      "answer": "shared",
+      "why": "/api/user-profile is one of the most widely rendered contracts in the estate — the CONTRACT shard records it as a MUTATION reached from many surfaces; this page is one read-only consumer of one of its fields.",
+      "evidence": [
+        "src/app/subscribe/success/page.tsx:42",
+        "scripts/surfaces/_schema/census/contracts.json — contract_user_profile"
+      ],
+      "surfaces": [],
+      "varies_by_surface": "This page projects a single field (subscription_status); other consumers read the full profile."
+    },
+    "a11y": {
+      "touch_target_min_px": "UNRESEARCHED",
+      "labels": "complete",
+      "dark_mode": "none",
+      "reduced_motion": "ignored",
+      "i18n": "none",
+      "safe_area": "none"
+    },
+    "deviations": "none",
+    "limitations": [
+      {
+        "what": "A web-session visitor whose webhook is slower than twelve seconds sees the same copy as a sessionless one.",
+        "measured": "src/app/subscribe/success/page.tsx:39-64 — after MAX_POLLS the phase is `pending` regardless of why, and there is no manual re-check control.",
+        "check_id": "web_subscribe_success_bounded_poll"
+      }
+    ],
+    "interpretation": "none",
+    "notes": "Bounded poll: 6 attempts x 2s. A 401 on the first poll (the sessionless mobile hand-off case) stops polling immediately and shows the 'pending' copy. /api/user-profile is not in PUBLIC_PATHS, PUBLIC_PREFIXES or PUBLIC_EXACT_API_PATHS, so classifyRoute gives it the fail-closed 'authenticated' class - that 401 is by design, not a bug. Activation truth lives in the Stripe webhook; this page only observes. MEASURED 2026-09-15. WIZARD_STEP fields, recorded here because the schema declares no wizard block: step 2 of 2; advances_on = a profile whose subscription_status is in {active, admin_managed}; resume_key = none; skip_when = the first poll returns 401 (the sessionless mobile-handoff visitor, for whom the app is the confirmation surface per Spec 96 §6); terminal = true. The page is anon-reachable but polls an authenticated contract on purpose — the 401 is a designed branch, not a defect, which is why the auth_class_parity check is written as \"the 401 arm must stop immediately\" rather than as a mismatch to fix.",
+    "x-draft": {
+      "shard": "web-product",
+      "files": [
+        "src/app/subscribe/success/page.tsx"
+      ],
+      "loc": 116,
+      "measured_states": [
+        "polling",
+        "confirmed",
+        "pending"
+      ],
+      "measured_gate": {
+        "session": "public",
+        "why": "classifyRoute('/subscribe/success') skips AUTHENTICATED_API_ROUTES ('/api/subscribe' is not a prefix of a non-/api path), skips PUBLIC_PREFIXES, then matches the PUBLIC_PATHS exact entry '/subscribe/success' -> 'public'."
+      }
+    },
+    "programme": {
+      "scope": "platform_shared",
+      "phase": "UNRESEARCHED",
+      "why": "The subscription and Stripe hand-off, which resolves an entitlement per PRODUCT — so it serves both and belongs to neither.",
+      "feature": "F12",
+      "build_order": 3123,
+      "leakage": "none",
+      "product_questions": "none",
+      "review": {
+        "status": "unreviewed"
+      }
+    }
+  }
+]

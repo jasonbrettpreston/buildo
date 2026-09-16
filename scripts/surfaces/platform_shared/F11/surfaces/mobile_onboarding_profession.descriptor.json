@@ -1,0 +1,383 @@
+{
+  "kind": "SURFACE",
+  "status": "exists",
+  "docs": {
+    "purpose": "The first setup question: what trade do you work in. The user picks one from a long grouped list, then a sheet slides up warning that this choice cannot be changed later without deleting the account, and asks them to confirm. Once saved, plumbers and similar trades go on to choose how they will use the app, while real-estate agents skip straight to setting their territory.",
+    "data_story": "It reads nothing from the database directly. Every value arrives through one contract: `/api/user-profile`. Behind that contract, the data comes from `entitlements` and `user_profiles`, and writes land on `entitlements` and `user_profiles`. It also holds client-side state in `onboardingStore` and `filterStore`, which is the part a server-driven projection has to absorb or justify. It emits **no analytics event**, so nothing it does is currently countable.",
+    "under_126": "**REBUILD** — it holds Layer-3 state (`onboardingStore` and `filterStore`) and drives writes, so a client decision has to be re-homed on the server before the projection can be honest. It renders through the WIZARD_STEP renderer (declared step index, advance condition, resume key and skip rule), reading by reference: `/api/user-profile`. It owns no component of its own, so its `owns.components[]` is an empty array — a legal answer, written down."
+  },
+  "evidence": {
+    "files": [
+      "mobile/app/(onboarding)/profession.tsx:1"
+    ],
+    "contracts": [
+      "mobile/app/(onboarding)/profession.tsx:48-51"
+    ],
+    "tables": [
+      "src/app/api/user-profile/route.ts:393",
+      "src/app/api/user-profile/route.ts:413-431"
+    ],
+    "gate": [
+      "src/lib/auth/route-guard.ts:120-132",
+      "mobile/app/_layout.tsx:141-231"
+    ],
+    "states": [
+      "mobile/app/(onboarding)/profession.tsx:93-113",
+      "mobile/app/(onboarding)/profession.tsx:147-199"
+    ],
+    "emits": [
+      "mobile/app/(onboarding)/profession.tsx:1-202 — no track() call in the file"
+    ]
+  },
+  "identity": {
+    "id": "mobile_onboarding_profession",
+    "route": "mobile/app/(onboarding)/profession.tsx",
+    "archetype": "WIZARD_STEP",
+    "platforms": [
+      "mobile"
+    ],
+    "owns": {
+      "components": []
+    },
+    "owner": "unassigned (no CODEOWNERS file and no owner registry exists in the repo — measured 2026-09-15)",
+    "spec": "docs/specs/03-mobile/94_mobile_onboarding.md",
+    "spec_refs": [
+      "docs/specs/03-mobile/94_mobile_onboarding.md §3",
+      "docs/specs/03-mobile/94_mobile_onboarding.md §10",
+      "docs/specs/03-mobile/95_mobile_user_profiles.md §6",
+      "docs/specs/03-mobile/99_mobile_state_architecture.md §9.3"
+    ],
+    "spec_version": "0-draft",
+    "versioning": {
+      "answer": "frozen",
+      "why": "trade_slug is first-write-only and immutable thereafter — the server enforces it with a WHERE trade_slug IS NULL UPDATE, so the step can never be replayed with a different value.",
+      "evidence": [
+        "src/lib/userProfile.schema.ts:126-129",
+        "src/app/api/user-profile/route.ts:378-393"
+      ]
+    },
+    "ref": "S-033"
+  },
+  "inputs": {
+    "answer": "contract",
+    "why": "The trade list itself is a hard-coded client catalogue (TRADE_SECTIONS), so the only contract traffic is the outbound PATCH — this step reads nothing from the server.",
+    "evidence": [
+      "mobile/src/lib/onboarding/tradeData.ts",
+      "mobile/app/(onboarding)/profession.tsx:16"
+    ],
+    "contract_ref": [
+      "/api/user-profile"
+    ],
+    "query_key": [],
+    "field_whitelist": [
+      "trade_slug"
+    ],
+    "tables": [
+      {
+        "table": "user_profiles",
+        "columns": [
+          "user_id",
+          "trade_slug"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/03-mobile/95_mobile_user_profiles.md",
+        "evidence": [
+          "src/app/api/user-profile/route.ts:393",
+          "src/lib/userProfile.schema.ts:85-122",
+          "migrations/230_rls_class_a_entitlements.sql:62-68"
+        ]
+      }
+    ]
+  },
+  "outputs": {
+    "answer": "contract_only",
+    "why": "Nothing is written locally until the server confirms: the PATCH runs first, and only on success does it set filterStore.tradeSlug and advance the step — a 400 that says \"already\" is treated as success so a retry after a dropped network is safe.",
+    "evidence": [
+      "mobile/app/(onboarding)/profession.tsx:43-80"
+    ],
+    "contract_ref": [
+      "/api/user-profile"
+    ],
+    "tables": [
+      {
+        "table": "user_profiles",
+        "columns": [
+          "user_id",
+          "trade_slug"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/03-mobile/95_mobile_user_profiles.md",
+        "evidence": [
+          "src/app/api/user-profile/route.ts:393",
+          "src/lib/userProfile.schema.ts:85-122",
+          "migrations/230_rls_class_a_entitlements.sql:62-68"
+        ]
+      }
+    ],
+    "rollback": "none needed — no local mirror is written before the server confirms (the §9.2b discipline); a failure leaves the sheet open with \"Could not save trade.\"",
+    "invalidates": []
+  },
+  "state": {
+    "answer": "mmkv",
+    "why": "Two MMKV-persisted stores are written — onboardingStore (step/path) and filterStore (tradeSlug, the canonical local mirror per Spec 99 §9.3) — so a cold boot mid-onboarding resumes on the right step.",
+    "evidence": [
+      "mobile/app/(onboarding)/profession.tsx:31-32",
+      "mobile/src/store/onboardingStore.ts:75-76",
+      "mobile/src/store/filterStore.ts:121-122"
+    ],
+    "fields": [
+      {
+        "name": "currentStep",
+        "owner_layer": "4a_mmkv",
+        "canonical_writer": "useOnboardingStore.setStep, called by each step before it navigates",
+        "authorized_readers": [
+          "shell_app_root"
+        ],
+        "bridge": "none",
+        "persistence": "mmkv",
+        "signout_reset": true
+      },
+      {
+        "name": "selectedPath",
+        "owner_layer": "4a_mmkv",
+        "canonical_writer": "mobile_onboarding_path (and profession, for the realtor shortcut)",
+        "authorized_readers": [
+          "mobile_onboarding_address",
+          "mobile_onboarding_supplier",
+          "mobile_onboarding_terms"
+        ],
+        "bridge": "none",
+        "persistence": "mmkv",
+        "signout_reset": true
+      },
+      {
+        "name": "tradeSlug",
+        "owner_layer": "3_zustand",
+        "canonical_writer": "this surface, after the PATCH confirms",
+        "authorized_readers": [
+          "mobile_lead_feed",
+          "mobile_map",
+          "mobile_settings",
+          "mobile_onboarding_supplier",
+          "mobile_onboarding_complete"
+        ],
+        "bridge": "B3",
+        "persistence": "mmkv",
+        "signout_reset": true
+      }
+    ]
+  },
+  "staleness": {
+    "answer": "none",
+    "why": "It renders a compiled-in trade catalogue and the user's own selection; no server data is displayed, so there is nothing to go stale.",
+    "evidence": [
+      "mobile/app/(onboarding)/profession.tsx:124-131"
+    ],
+    "offline": "none"
+  },
+  "guards": {
+    "session": {
+      "answer": "authenticated",
+      "why": "The step is only reachable once AuthGate has a Supabase user whose server profile says onboarding_complete is false; PATCH /api/user-profile is an authenticated route.",
+      "evidence": [
+        "src/lib/auth/route-guard.ts:120-132",
+        "mobile/app/_layout.tsx:141-231",
+        "mobile/app/(onboarding)/profession.tsx:48"
+      ]
+    },
+    "rls_class": {
+      "answer": "A",
+      "why": "The one table in the path is the caller's own user_profiles row — Class A, self-select/self-insert/self-update policies keyed on auth.uid().",
+      "evidence": [
+        "migrations/230_rls_class_a_entitlements.sql:62-68"
+      ]
+    },
+    "disclosure": "none",
+    "entitlement": "none",
+    "flag": "none",
+    "permission": "none",
+    "rate_bucket": "none — /api/user-profile calls no withRateLimit"
+  },
+  "render": {
+    "targets": [
+      "screen"
+    ],
+    "projection": "list",
+    "breakpoints": "mobile_first",
+    "export": "none",
+    "wizard": "UNRESEARCHED"
+  },
+  "checks": [
+    {
+      "id": "profession_immutability",
+      "kind": "schema_declared",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "why": "trade_slug is a once-only write; the server's WHERE trade_slug IS NULL makes a concurrent second write land rowCount 0 rather than silently overwrite, and the confirmation sheet warns the user it cannot be changed."
+    },
+    {
+      "id": "profession_error_state",
+      "kind": "error_state",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "A failed PATCH renders \"Could not save trade. Please try again.\" inside the still-open confirmation sheet (profession.tsx:171-173) instead of navigating."
+    },
+    {
+      "id": "profession_touch_target",
+      "kind": "touch_target",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "Every trade row declares min-h-[52px] and the two sheet actions declare 52 and 44 (profession.tsx:101-102, 179, 194)."
+    },
+    {
+      "id": "profession_a11y_label",
+      "kind": "a11y_label",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "why": "The rows carry accessibilityRole=\"radio\" with a selected state and the CTA is labelled, but the \"Go Back\" action in the sheet has neither."
+    }
+  ],
+  "invariants": "none",
+  "plausibility": "none",
+  "states": [
+    {
+      "name": "static",
+      "golden": "none"
+    },
+    {
+      "name": "loading",
+      "golden": "none"
+    },
+    {
+      "name": "error",
+      "golden": "none"
+    }
+  ],
+  "errors": {
+    "answer": "inline",
+    "why": "The PATCH failure message renders inline inside the confirmation sheet; there is no toast and no navigation away.",
+    "evidence": [
+      "mobile/app/(onboarding)/profession.tsx:171-173"
+    ]
+  },
+  "emits": {
+    "answer": "none",
+    "why": "No funnel event fires for the single most consequential irreversible choice in onboarding — the trade the whole feed is keyed on.",
+    "evidence": [
+      "mobile/app/(onboarding)/profession.tsx:1-202"
+    ],
+    "analytics": [],
+    "ledger_events": [],
+    "breadcrumbs": []
+  },
+  "offers": {
+    "answer": "none",
+    "why": "No sponsored placement is rendered: the only slot component in the Expo tree is SponsorSlot, and it returns null unless EXPO_PUBLIC_PARCEL_SPONSORS=1.",
+    "evidence": [
+      "mobile/src/components/parcel/SponsorSlot.tsx:16-20"
+    ]
+  },
+  "metering": {
+    "answer": "none",
+    "why": "Nothing here is counted: the Spec 126 §7 usage ledger table does not exist (grep for usage_events in the introspected drizzle schema returns 0 hits), and the only quota-shaped counter, user_profiles.lead_views_count, is incremented solely by POST /api/leads/view, which has no mobile caller.",
+    "evidence": [
+      "src/lib/db/generated/schema.ts — no usage_events table (grep, 2026-09-15)",
+      "src/app/api/leads/view/route.ts:110",
+      "src/features/leads/api/useLeadView.ts:25 — imported only by src/tests/useLeadView.logic.test.tsx"
+    ]
+  },
+  "config": {
+    "answer": "none",
+    "why": "The surface consumes no registered logic variable: the only server-side tunable in this path, user_profiles.radius_cap_km, is a per-user admin column, not a logic_variables row.",
+    "evidence": [
+      "src/lib/userProfile.schema.ts:40",
+      "src/app/api/user-profile/route.ts:328",
+      "docs/reference/logic-variables-registry.md — no radius_cap_km entry"
+    ],
+    "logic_variables": [],
+    "retired": []
+  },
+  "sharing": {
+    "answer": "shared",
+    "why": "PATCH /api/user-profile is rendered by every onboarding step, both shells, settings and the filter sheet — it is the most-shared contract in the mobile estate.",
+    "evidence": [
+      "mobile/src/hooks/usePatchProfile.ts:49",
+      "mobile/app/(onboarding)/profession.tsx:48"
+    ],
+    "surfaces": [
+      "mobile_onboarding_profession",
+      "mobile_onboarding_address",
+      "mobile_onboarding_supplier",
+      "mobile_onboarding_terms",
+      "mobile_onboarding_complete",
+      "mobile_settings",
+      "shell_app_root",
+      "shell_app_tabs",
+      "overlay_lead_filter_sheet",
+      "mobile_lead_feed"
+    ]
+  },
+  "a11y": {
+    "touch_target_min_px": 44,
+    "labels": "partial",
+    "dark_mode": "hardcoded",
+    "reduced_motion": "none",
+    "i18n": "none",
+    "safe_area": [
+      "top"
+    ]
+  },
+  "deviations": "none",
+  "limitations": [
+    {
+      "what": "The trade catalogue is compiled into the app, so adding a trade server-side does not reach an installed client.",
+      "measured": "profession.tsx:16 imports TRADE_SECTIONS from mobile/src/lib/onboarding/tradeData.ts; there is no trades contract on this screen.",
+      "check_id": "profession_immutability"
+    }
+  ],
+  "interpretation": "none",
+  "notes": "This step calls the API with a bare fetchWithAuth and no hook — one of the five onboarding screens the brief warns a hook-only sweep would miss. It also treats a 400 whose message contains \"already\" as success, which makes the PATCH idempotent across a network retry.",
+  "x-draft": {
+    "shard": "mobile-product",
+    "files": [
+      "mobile/app/(onboarding)/profession.tsx"
+    ],
+    "loc": 202,
+    "call_idiom": "direct",
+    "stores": [
+      "onboardingStore",
+      "filterStore"
+    ],
+    "measured_states": [
+      "list_no_selection",
+      "list_selected",
+      "confirm_sheet",
+      "patching",
+      "patch_error"
+    ],
+    "measured_gate": {
+      "session": "required",
+      "entitlement": "none",
+      "flag": "none",
+      "permission": "none"
+    }
+  },
+  "programme": {
+    "scope": "platform_shared",
+    "phase": "UNRESEARCHED",
+    "why": "Onboarding writes `user_profiles` columns both products read; the flow is shared even though its copy is lead-gen-shaped today.",
+    "feature": "F11",
+    "build_order": 3113,
+    "leakage": "none",
+    "product_questions": "none",
+    "review": {
+      "status": "unreviewed"
+    }
+  }
+}

@@ -1,0 +1,269 @@
+{
+  "kind": "SURFACE",
+  "status": "exists",
+  "docs": {
+    "purpose": "A panel that appears when someone tries to sign in with a new method using an email that already has an account. It explains the clash and asks them to sign in with whatever method they originally used, after which the new one gets attached automatically. For security reasons it deliberately never reveals which method the existing account uses.",
+    "data_story": "This surface reaches **no API contract at all** — every value it shows is local, passed in as a prop, or read from the device. It holds no client-side store, so there is no local copy of server state to keep in sync. It emits **no analytics event**, so nothing it does is currently countable.",
+    "under_126": "**RE-PROJECT** — it writes nothing and holds no Layer-3 store, so the move is short — the server already assembles the payload and only the rendering is client-side. It renders through the GATE renderer (a `statuses_handled[]` that must cover every value of the closed set it gates on), reading no contract. Its `owns.components[]` declares `mobile/src/components/auth/AccountLinkingSheet.tsx`."
+  },
+  "evidence": {
+    "files": [
+      "mobile/src/components/auth/AccountLinkingSheet.tsx:1"
+    ],
+    "contracts": [
+      "mobile/src/components/auth/AccountLinkingSheet.tsx:1-89 — props only; no /api/ string and no hook"
+    ],
+    "tables": [
+      "mobile/src/components/auth/AccountLinkingSheet.tsx:1-89 — reaches no table"
+    ],
+    "gate": [
+      "mobile/app/(auth)/sign-in.tsx:194-227"
+    ],
+    "states": [
+      "mobile/src/components/auth/AccountLinkingSheet.tsx:43-52"
+    ],
+    "emits": [
+      "mobile/app/(auth)/sign-in.tsx:210 — auth_account_link_shown is emitted by the PARENT, not by this component"
+    ]
+  },
+  "identity": {
+    "id": "overlay_account_linking_sheet",
+    "route": "mobile/src/components/auth/AccountLinkingSheet.tsx",
+    "archetype": "GATE",
+    "platforms": [
+      "mobile"
+    ],
+    "owns": {
+      "components": [
+        "mobile/src/components/auth/AccountLinkingSheet.tsx"
+      ]
+    },
+    "owner": "unassigned (no CODEOWNERS file and no owner registry exists in the repo — measured 2026-09-15)",
+    "spec": "docs/specs/03-mobile/93_mobile_auth.md",
+    "spec_refs": [
+      "docs/specs/03-mobile/93_mobile_auth.md §3.2",
+      "docs/specs/03-mobile/93_mobile_auth.md §4"
+    ],
+    "spec_version": "0-draft",
+    "versioning": {
+      "answer": "breaking_allowed",
+      "why": "A three-prop presentational sheet with one in-repo consumer (sign-in); a prop change is one commit.",
+      "evidence": [
+        "mobile/src/components/auth/AccountLinkingSheet.tsx:15-19"
+      ]
+    },
+    "ref": "S-039"
+  },
+  "inputs": {
+    "answer": "props",
+    "why": "newMethod, onLinkPress and onDismiss are its entire input surface; it deliberately does NOT know the existing method, because Supabase has no fetchSignInMethodsForEmail equivalent by anti-enumeration design.",
+    "evidence": [
+      "mobile/src/components/auth/AccountLinkingSheet.tsx:15-19",
+      "mobile/src/components/auth/AccountLinkingSheet.tsx:1-9"
+    ],
+    "contract_ref": [],
+    "query_key": [],
+    "field_whitelist": [
+      "newMethod",
+      "onLinkPress",
+      "onDismiss"
+    ],
+    "tables": []
+  },
+  "outputs": {
+    "answer": "none",
+    "why": "It renders copy and calls two callbacks; the linkIdentity call and its telemetry live in the parent screen.",
+    "evidence": [
+      "mobile/src/components/auth/AccountLinkingSheet.tsx:64-82",
+      "mobile/app/(auth)/sign-in.tsx:164-190"
+    ],
+    "contract_ref": [],
+    "tables": []
+  },
+  "state": {
+    "answer": "none",
+    "why": "It holds a sheet ref and forwards imperative expand/close; there is no store and no query.",
+    "evidence": [
+      "mobile/src/components/auth/AccountLinkingSheet.tsx:28-33"
+    ],
+    "fields": []
+  },
+  "staleness": {
+    "answer": "none",
+    "why": "It renders no server data.",
+    "evidence": [
+      "mobile/src/components/auth/AccountLinkingSheet.tsx:53-83"
+    ],
+    "offline": "none"
+  },
+  "guards": {
+    "session": {
+      "answer": "anon",
+      "why": "It appears mid-sign-in, before a session exists — the whole point is that the user could not authenticate with the method they tried.",
+      "evidence": [
+        "mobile/app/(auth)/sign-in.tsx:194-227"
+      ]
+    },
+    "rls_class": {
+      "answer": "none",
+      "why": "It reaches no table.",
+      "evidence": [
+        "mobile/src/components/auth/AccountLinkingSheet.tsx:1-89"
+      ]
+    },
+    "disclosure": {
+      "fields": [
+        "newMethod"
+      ],
+      "why": "The only value shown to an unauthenticated principal is the method they themselves just attempted; the existing method is deliberately withheld to avoid account enumeration."
+    },
+    "entitlement": "none",
+    "flag": "none",
+    "permission": "none",
+    "rate_bucket": "none",
+    "statuses_handled": "UNRESEARCHED"
+  },
+  "render": {
+    "targets": [
+      "screen"
+    ],
+    "projection": "none",
+    "breakpoints": "mobile_first",
+    "export": "none"
+  },
+  "checks": [
+    {
+      "id": "linking_no_enumeration",
+      "kind": "disclosure",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "why": "The copy may name ONLY the attempted method. Naming the existing one would turn a failed sign-in into an account-enumeration oracle — the reason the Firebase-era existingMethod prop and providerName() mapper were removed."
+    },
+    {
+      "id": "linking_email_guard",
+      "kind": "auth_class_parity",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "why": "The parent holds linkingExpectedEmail so a dismissed sheet followed by a different sign-in cannot link the pending identity to an unrelated user; mobile/__tests__/jwtClaims.test.ts keeps the fallback decode armed when Apple withholds the email."
+    },
+    {
+      "id": "linking_a11y_label",
+      "kind": "a11y_label",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "why": "Both actions carry a role and a label, and the secondary action declares minHeight 44 — this sheet is fully labelled."
+    }
+  ],
+  "invariants": "none",
+  "plausibility": "none",
+  "states": [
+    {
+      "name": "static",
+      "golden": "none"
+    },
+    {
+      "name": "unauthorized",
+      "golden": "none"
+    }
+  ],
+  "errors": {
+    "answer": "none",
+    "why": "It renders no error of its own — it IS the rendering of one, raised by the parent from an email_exists rejection.",
+    "evidence": [
+      "mobile/app/(auth)/sign-in.tsx:194-227"
+    ]
+  },
+  "emits": {
+    "answer": "none",
+    "why": "The three link events fire from the parent screen; the component emits nothing itself.",
+    "evidence": [
+      "mobile/app/(auth)/sign-in.tsx:149",
+      "mobile/app/(auth)/sign-in.tsx:170",
+      "mobile/app/(auth)/sign-in.tsx:182"
+    ],
+    "analytics": [],
+    "ledger_events": [],
+    "breadcrumbs": []
+  },
+  "offers": {
+    "answer": "none",
+    "why": "No sponsored placement is rendered: the only slot component in the Expo tree is SponsorSlot, and it returns null unless EXPO_PUBLIC_PARCEL_SPONSORS=1.",
+    "evidence": [
+      "mobile/src/components/parcel/SponsorSlot.tsx:16-20"
+    ]
+  },
+  "metering": {
+    "answer": "none",
+    "why": "Nothing here is counted: the Spec 126 §7 usage ledger table does not exist (grep for usage_events in the introspected drizzle schema returns 0 hits), and the only quota-shaped counter, user_profiles.lead_views_count, is incremented solely by POST /api/leads/view, which has no mobile caller.",
+    "evidence": [
+      "src/lib/db/generated/schema.ts — no usage_events table (grep, 2026-09-15)",
+      "src/app/api/leads/view/route.ts:110",
+      "src/features/leads/api/useLeadView.ts:25 — imported only by src/tests/useLeadView.logic.test.tsx"
+    ]
+  },
+  "config": {
+    "answer": "none",
+    "why": "The surface consumes no registered logic variable: the only server-side tunable in this path, user_profiles.radius_cap_km, is a per-user admin column, not a logic_variables row.",
+    "evidence": [
+      "src/lib/userProfile.schema.ts:40",
+      "src/app/api/user-profile/route.ts:328",
+      "docs/reference/logic-variables-registry.md — no radius_cap_km entry"
+    ],
+    "logic_variables": [],
+    "retired": []
+  },
+  "sharing": {
+    "answer": "none",
+    "why": "It renders no contract.",
+    "evidence": [
+      "mobile/src/components/auth/AccountLinkingSheet.tsx:1-89"
+    ],
+    "surfaces": []
+  },
+  "a11y": {
+    "touch_target_min_px": 44,
+    "labels": "complete",
+    "dark_mode": "hardcoded",
+    "reduced_motion": "none",
+    "i18n": "none",
+    "safe_area": "none"
+  },
+  "deviations": "none",
+  "limitations": "none",
+  "interpretation": "none",
+  "notes": "A rare case where the absence of information is the feature: the sheet cannot name the user's original provider because Supabase Auth has no lookup for it, which is itself the anti-enumeration posture.",
+  "x-draft": {
+    "shard": "mobile-product",
+    "files": [
+      "mobile/src/components/auth/AccountLinkingSheet.tsx"
+    ],
+    "loc": 89,
+    "call_idiom": "none",
+    "stores": [],
+    "measured_states": [
+      "hidden",
+      "open"
+    ],
+    "measured_gate": {
+      "session": "none",
+      "entitlement": "none",
+      "flag": "none",
+      "permission": "none"
+    }
+  },
+  "programme": {
+    "scope": "platform_shared",
+    "phase": "UNRESEARCHED",
+    "why": "Authentication. It talks to the Supabase Auth SDK and gates entry to both products; no product owns it.",
+    "feature": "F10",
+    "build_order": 3103,
+    "leakage": "none",
+    "product_questions": "none",
+    "review": {
+      "status": "unreviewed"
+    }
+  }
+}

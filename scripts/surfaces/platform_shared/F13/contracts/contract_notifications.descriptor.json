@@ -1,0 +1,397 @@
+{
+  "kind": "CONTRACT",
+  "status": "exists",
+  "docs": {
+    "purpose": "Shows a user their own notification inbox, optionally filtered to unread only, and lets them mark one notification or all of their notifications as read.",
+    "data_story": "It reads 1 table — `notifications` and writes `notifications`. Its response shape is **unmeasured** as a pick-by-name whitelist — it passes rows through, spreads a row into a computed object, or assembles the payload dynamically, so there is no single list naming what leaves the server. **Nothing in this repository calls it.** That is the state this registry exists to make visible, not a claim that it is dead — a caller could be a bookmark, an external system, or a path built from variables.",
+    "under_126": "Becomes a **CONTRACT descriptor** of archetype `MUTATION`. It declares `database.writes[]` with a `write_discipline` per target (the Spec 122 vocabulary verbatim), its idempotency posture, its optimistic contract and its rollback. Its `consumers[]` is the field that matters most here: today it is empty, and the orphan panel renders that as a red row rather than leaving it to be discovered years later."
+  },
+  "evidence": {
+    "files": [
+      "src/app/api/notifications/route.ts:1"
+    ],
+    "contracts": [
+      "src/app/api/notifications/route.ts:19 (GET export)",
+      "src/app/api/notifications/route.ts:76 (PATCH export)",
+      "src/lib/api/with-api-envelope.ts:27-52"
+    ],
+    "tables": [
+      "src/app/api/notifications/route.ts:46",
+      "src/app/api/notifications/route.ts:47",
+      "src/app/api/notifications/route.ts:48",
+      "src/app/api/notifications/route.ts:54",
+      "src/app/api/notifications/route.ts:67",
+      "src/app/api/notifications/route.ts:87",
+      "src/app/api/notifications/route.ts:97",
+      "src/lib/db/generated/schema.ts — every table named here is present in the introspected drizzle schema"
+    ],
+    "gate": [
+      "src/lib/auth/route-guard.ts — AUTHENTICATED_API_ROUTES exact — '/api/notifications'",
+      "src/lib/auth/route-guard.ts:150-201 — classifyRoute executed 2026-09-15 with the concrete path → \"authenticated\"",
+      "in-handler: getUserIdFromSession(request) at src/app/api/notifications/route.ts:20 (GET) and :77 (PATCH). That alias is `getVerifiedUid` (src/lib/auth/get-user.ts:215-216), i.e. the REVOCATION-CHECKED GoTrue round-trip (get-user.ts:193-196 -> resolveUid(request,'user') -> supabase.auth.getUser, get-user.ts:102/128) — a stronger check than the leads routes' getClaimsUid. Middleware also classifies /api/notifications as 'authenticated' (src/lib/auth/route-guard.ts:123)."
+    ],
+    "states": [
+      "hit: src/app/api/notifications/route.ts:59",
+      "empty: src/app/api/notifications/route.ts:60 — `rows` is [] with total 0; no 404 branch",
+      "unauthorized: src/app/api/notifications/route.ts:22 and :79",
+      "error: src/app/api/notifications/route.ts:103 (400 invalid action) and src/lib/api/with-api-envelope.ts:48 (unhandled throw, e.g. malformed PATCH JSON at route.ts:82)",
+      "ambiguous: src/app/api/notifications/route.ts:100 — `{success:true}` is returned whether or not the row existed or belonged to the caller (the WHERE at :97 just matches nothing)"
+    ],
+    "emits": [
+      "src/app/api/notifications/route.ts — read in full; no Sentry breadcrumb, no analytics capture and no ledger INSERT"
+    ]
+  },
+  "identity": {
+    "id": "contract_notifications",
+    "route": "/api/notifications",
+    "archetype": "MUTATION",
+    "platforms": [
+      "web"
+    ],
+    "owns": {
+      "components": []
+    },
+    "owner": "Backend/Pipeline (CLAUDE.md §Domain Rules: `src/app/api/`)",
+    "spec": "docs/specs/01-pipeline/101_notification_dispatch.md",
+    "spec_refs": [
+      "docs/specs/01-pipeline/101_notification_dispatch.md §3 (Auth Matrix) — src/app/api/notifications/route.ts:1"
+    ],
+    "spec_version": "0-draft",
+    "versioning": {
+      "answer": "none",
+      "why": "No call site anywhere in src/** or mobile/** (verified 2026-09-15 by an exact-path sweep that strips comment lines), so no consumer holds a compatibility promise to break.",
+      "evidence": [
+        "src/app/api/notifications/route.ts — no caller",
+        "src/lib/auth/route-guard.ts:150-201"
+      ]
+    },
+    "ref": "C-023"
+  },
+  "inputs": {
+    "answer": "app_outputs",
+    "why": "It reads 1 table(s) directly; 1 of them are materialised by named pipeline steps (classify_lifecycle_phase), so its inputs are the pipeline's outputs rather than another contract.",
+    "evidence": [
+      "src/app/api/notifications/route.ts:46",
+      "src/app/api/notifications/route.ts:47",
+      "src/app/api/notifications/route.ts:48",
+      "src/app/api/notifications/route.ts:54",
+      "src/app/api/notifications/route.ts:67",
+      "scripts/classify-lifecycle-phase.js",
+      "docs/reference/data-lineage-map.md:723",
+      "scripts/manifest.json#chains",
+      "docs/reference/data-lineage-map.md"
+    ],
+    "contract_ref": [],
+    "query_key": [],
+    "field_whitelist": [
+      "notifications",
+      "total",
+      "unread_count"
+    ],
+    "tables": [
+      {
+        "table": "notifications",
+        "columns": "all",
+        "producing_steps": [
+          "classify_lifecycle_phase",
+          "update_tracked_projects"
+        ],
+        "chain_position": "permits[23], coa[12] · permits[28]",
+        "owner_spec": "docs/specs/01-pipeline/41_chain_permits.md",
+        "evidence": [
+          "src/app/api/notifications/route.ts:46",
+          "src/app/api/notifications/route.ts:47",
+          "src/app/api/notifications/route.ts:48",
+          "src/app/api/notifications/route.ts:54",
+          "src/app/api/notifications/route.ts:67",
+          "scripts/classify-lifecycle-phase.js",
+          "docs/reference/data-lineage-map.md:723",
+          "scripts/manifest.json#chains",
+          "docs/reference/data-lineage-map.md"
+        ]
+      }
+    ]
+  },
+  "outputs": {
+    "answer": "contract_only",
+    "why": "This route IS the mutation contract: it writes 1 table(s) synchronously inside the request and returns the result — there is no optimistic client-side flip to reconcile.",
+    "evidence": [
+      "src/app/api/notifications/route.ts:87",
+      "src/app/api/notifications/route.ts:97",
+      "scripts/classify-lifecycle-phase.js",
+      "docs/reference/data-lineage-map.md:723",
+      "scripts/manifest.json#chains",
+      "docs/reference/data-lineage-map.md"
+    ],
+    "contract_ref": [],
+    "tables": [
+      {
+        "table": "notifications",
+        "columns": [
+          "is_read"
+        ],
+        "producing_steps": [
+          "classify_lifecycle_phase",
+          "update_tracked_projects"
+        ],
+        "chain_position": "permits[23], coa[12] · permits[28]",
+        "owner_spec": "docs/specs/01-pipeline/41_chain_permits.md",
+        "evidence": [
+          "src/app/api/notifications/route.ts:87",
+          "src/app/api/notifications/route.ts:97",
+          "scripts/classify-lifecycle-phase.js",
+          "docs/reference/data-lineage-map.md:723",
+          "scripts/manifest.json#chains",
+          "docs/reference/data-lineage-map.md"
+        ]
+      }
+    ]
+  },
+  "state": {
+    "answer": "server_only",
+    "why": "A CONTRACT holds no client state: every value is resolved per request on the server and nothing is cached in a client store by the route itself.",
+    "evidence": [
+      "src/app/api/notifications/route.ts:19 (GET export)",
+      "src/lib/api/with-api-envelope.ts:27-52"
+    ],
+    "fields": []
+  },
+  "staleness": {
+    "answer": "live",
+    "why": "Every read runs against the base tables on each request — there is no cache layer between the handler and the database.",
+    "evidence": [
+      "src/app/api/notifications/route.ts:46",
+      "src/app/api/notifications/route.ts:47",
+      "src/app/api/notifications/route.ts:48",
+      "src/app/api/notifications/route.ts:54"
+    ],
+    "offline": "none"
+  },
+  "guards": {
+    "session": {
+      "answer": "authenticated",
+      "why": "classifyRoute(\"/api/notifications\") returns \"authenticated\" (executed 2026-09-15); the handler re-verifies the caller in-process.",
+      "evidence": [
+        "src/lib/auth/route-guard.ts:150-201 — classifyRoute executed 2026-09-15 with the concrete path",
+        "getUserIdFromSession(request) at src/app/api/notifications/route.ts:20 (GET) and :77 (PATCH). That alias is `getVerifiedUid` (src/lib/auth/get-user.ts:215-216), i.e. the REVOCATION-CHECKED GoTrue round-trip (get-user.ts:193-196 -> resolveUid(request,'user') -> supabase.auth.getUser, get-user.ts:102/128) — a stronger check than the leads routes' getClaimsUid. Middleware also classifies /api/notifications as 'authenticated' (src/lib/auth/route-guard.ts:123)."
+      ]
+    },
+    "rls_class": {
+      "answer": "A",
+      "why": "It reaches user-owned rows whose policies key on auth.uid(). The route connects as the table owner (raw pg), which Spec 114 §9 makes owner-exempt from RLS — the class describes the data, not the gate this route passes.",
+      "evidence": [
+        "migrations/230_rls_class_a_entitlements.sql:54",
+        "docs/specs/00-architecture/114_rls_policy_catalog.md §2"
+      ]
+    },
+    "disclosure": "none",
+    "entitlement": "none",
+    "flag": "none",
+    "permission": "none",
+    "rate_bucket": "none"
+  },
+  "render": {
+    "targets": [
+      "screen"
+    ],
+    "projection": "none",
+    "breakpoints": "none",
+    "export": "none"
+  },
+  "checks": [
+    {
+      "id": "contract_notifications__auth_class_parity",
+      "kind": "auth_class_parity",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "why": "guards.session must equal classifyRoute(\"/api/notifications\"), executed 2026-09-15 → \"authenticated\" plus the in-handler guard (getUserIdFromSession(request) at src/app/api/notifications/route.ts:20 (GET) and :77 (PATCH). That alias is `g). No test file in src/tests/** imports this route — the parity is unlocked."
+    },
+    {
+      "id": "contract_notifications__error_envelope",
+      "kind": "error_state",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "why": "MEASURED DEVIATION, permanently non-zero until re-projected: Every response the handler itself builds is BARE, not enveloped: GET 200 returns `{notifications, total, unread_count}` (route.ts:59-73); 401 returns `{error:'Unauthorized'}` where `error` is a STRING, not `{code,message}` (route.ts:22, :79); PATCH 200 returns Retighten condition: the handler returns the envelope on every path."
+    },
+    {
+      "id": "contract_notifications__field_whitelist_parity",
+      "kind": "field_whitelist_parity",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "why": "MEASURED: the projection is row_spread (src/app/api/notifications/route.ts:59, src/app/api/notifications/route.ts:60, src/app/api/notifications/route.ts:46), so a column added upstream reaches the client without a code change. Permanently non-zero until the response is an explicit pick; retighten condition: projection.kind === explicit_pick."
+    },
+    {
+      "id": "contract_notifications__schema_declared",
+      "kind": "schema_declared",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "Every table and column declared in lineage.reads[]/writes[] must exist in src/lib/db/generated/schema.ts (drizzle-kit introspect of the live database); the registry generator checks this both directions."
+    }
+  ],
+  "invariants": "none",
+  "plausibility": "none",
+  "states": [
+    {
+      "name": "hit",
+      "golden": "none"
+    },
+    {
+      "name": "empty",
+      "golden": "none"
+    },
+    {
+      "name": "unauthorized",
+      "golden": "none"
+    },
+    {
+      "name": "error",
+      "golden": "none"
+    },
+    {
+      "name": "ambiguous",
+      "golden": "none"
+    }
+  ],
+  "errors": {
+    "answer": "envelope",
+    "why": "It returns a JSON error body, but NOT the standard envelope: Every response the handler itself builds is BARE, not enveloped: GET 200 returns `{notifications, total, unread_count}` (route.ts:59-73); 401 returns `{error:'Unauthorized'}` where `error` is a STRING, not `{code,message \"envelope\" is the closest member of the closed menu; the deviation is recorded in deviations[].",
+    "evidence": [
+      "src/lib/api/with-api-envelope.ts:27-52",
+      "src/app/api/notifications/route.ts:59",
+      "src/app/api/notifications/route.ts:22",
+      "src/app/api/notifications/route.ts:92",
+      "src/app/api/notifications/route.ts:103",
+      "src/lib/api/with-api-envelope.ts:42",
+      "src/lib/api/with-api-envelope.ts:48",
+      "src/app/api/notifications/route.ts:22 (401)",
+      "src/app/api/notifications/route.ts:79 (401)",
+      "src/app/api/notifications/route.ts:103 (400)",
+      "src/app/api/notifications/route.ts:42 (500)"
+    ],
+    "classes": [
+      {
+        "class": "401",
+        "ui": "{error:'Unauthorized'} — src/app/api/notifications/route.ts:22 (code (none — string body 'Unauthorized'))"
+      },
+      {
+        "class": "400",
+        "ui": "{error:'Invalid action'} — src/app/api/notifications/route.ts:103 (code (none — string body 'Invalid action'))"
+      },
+      {
+        "class": "500",
+        "ui": "{data:null,error:{code,message},meta:null} — src/lib/api/with-api-envelope.ts:42; reachable because the handler has NO try/catch of its own — src/app/api/notifications/route.ts:42 (code DATABASE_ERROR)"
+      }
+    ]
+  },
+  "emits": {
+    "answer": "none",
+    "why": "Nothing it does is currently countable: src/app/api/notifications/route.ts was read in full and contains no Sentry breadcrumb, no analytics capture and no ledger INSERT.",
+    "evidence": [
+      "src/app/api/notifications/route.ts — read in full; no Sentry breadcrumb, no analytics capture and no ledger INSERT"
+    ],
+    "analytics": [],
+    "ledger_events": [],
+    "breadcrumbs": []
+  },
+  "offers": {
+    "answer": "none",
+    "why": "It renders no sponsored placement: the offers and advertisers tables Spec 126 §2 specifies do not exist in migrations/ and nothing in this handler reads placement inventory.",
+    "evidence": [
+      "migrations/ — no CREATE TABLE offers / advertisers (grep 2026-09-15)",
+      "src/app/api/notifications/route.ts — read in full; no placement read"
+    ]
+  },
+  "metering": {
+    "answer": "none",
+    "why": "Nothing here is counted: no usage_events row (the table does not exist in the introspected schema) and no quota counter is written by this handler.",
+    "evidence": [
+      "src/app/api/notifications/route.ts — read in full 2026-09-15",
+      "src/lib/db/generated/schema.ts — no usage_events table"
+    ]
+  },
+  "config": {
+    "answer": "none",
+    "why": "It consumes no tunable: no logic_variables read and no env-var-driven threshold in the handler or the libs it calls.",
+    "evidence": [
+      "src/app/api/notifications/route.ts — read in full 2026-09-15; no loadMarketplaceConfigs / logic_variables read"
+    ],
+    "logic_variables": [],
+    "retired": []
+  },
+  "sharing": {
+    "answer": "none",
+    "why": "ORPHAN: an exact-path sweep of src/** and mobile/** on 2026-09-15 (comment lines stripped) found no call site. That is a measured absence, not proof the endpoint is dead — a caller could be a bookmark or an external system.",
+    "evidence": [
+      "src/app/api/notifications/route.ts — swept src/** and mobile/** for the exact path on 2026-09-15; zero call sites outside src/tests/**"
+    ],
+    "surfaces": []
+  },
+  "a11y": {
+    "touch_target_min_px": "UNRESEARCHED",
+    "labels": "none",
+    "dark_mode": "none",
+    "reduced_motion": "none",
+    "i18n": "none",
+    "safe_area": "none"
+  },
+  "deviations": [
+    {
+      "from": "docs/specs/00_engineering_standards.md §4.4 — all API routes return { data, error, meta }",
+      "why": "Every response the handler itself builds is BARE, not enveloped: GET 200 returns `{notifications, total, unread_count}` (route.ts:59-73); 401 returns `{error:'Unauthorized'}` where `error` is a STRING, not `{code,message}` (route.ts:22, :79); PATCH 200 returns `{updated:N}` (route.ts:92) or `{success:true}` (route.ts:100); 400 returns `{error:'Invalid action'}` (route.ts:103). Only the withApiEnve",
+      "adjudicated_by": "not adjudicated — measured 2026-09-15 by reading the handler",
+      "date": "2026-09-15"
+    },
+    {
+      "from": "docs/specs/00_engineering_standards.md §4.3 — never SELECT *, always project specific columns",
+      "why": "At least one query reads the whole row: notifications.",
+      "adjudicated_by": "not adjudicated — measured 2026-09-15",
+      "date": "2026-09-15"
+    }
+  ],
+  "limitations": [
+    {
+      "what": "a11y.touch_target_min_px has no legal answer for a CONTRACT",
+      "measured": "The schema allows only UNRESEARCHED or an integer >= 44; a JSON endpoint has no touch target and the vocabulary has no \"n/a\". Left UNRESEARCHED and escalated per Spec 128 §4 rather than invented.",
+      "check_id": "contract_notifications__auth_class_parity"
+    },
+    {
+      "what": "no consumer, so no fan-out edge",
+      "measured": "The exact-path sweep of src/** and mobile/** (comment lines stripped) returned zero call sites on 2026-09-15.",
+      "check_id": "contract_notifications__auth_class_parity"
+    }
+  ],
+  "interpretation": "none",
+  "notes": "The header documents a since-fixed IDOR: the handler previously trusted a client-supplied user_id query param and now derives identity only from the verified session. GET uses SELECT * FROM notifications, so the response field surface is unrestricted at the SQL level. No in-repo caller found — the mobile app reads its inbox elsewhere; this route appears unused. | MEASURED 2026-09-15: CENSUS AGREEMENT: census_reads ['notifications'] and census_writes ['notifications'] both match. `SELECT *` at route.ts:46 — columns recorded as \"all\"; the response therefore leaks any column later added to `notifications` straight to the client. Findings a reviewer must know: (1) three separate round-trips per GET (rows :45, COUNT :53, unread COUNT :66) with the third executed INSIDE the JSON object literal (route.ts:64-72) — it runs even on the unreadOnly=false path only, but the nesting makes the cost invisible; (2) `paramIdx` is a `const` set to 2 (route.ts:37) and the `unreadOnly` branch pushes a literal predicate, not a parameter (route.ts:40) — correct today, but the shape invites an off-by-one if another filter is added; (3) PATCH has no Zod and no JSON try/catch (route.ts:82), so a malformed body is a 500, not a 400; (4) response shapes are bare, not enveloped, despite the withApiEnvelope wrapper (see envelope.deviations). | Idempotency: PATCH is state-convergent, not count-stable. `mark_all_read`: `UPDATE notifications SET is_read = true WHERE user_id = $1 AND is_read = false RETURNING id` (route.ts:87-89) — the `AND is_read = false` predicate IS the guard, so a replay writes zero rows, but the response `{updated: result.length}` (route.ts:92) returns N on the first call and 0 on the replay. `mark_read`: `UPDATE notifications SET is_read = true WHERE id = $1 AND user_id = $2` (route.ts:97) has NO is_read guard — it re-writes the same value on every replay (no IS DISTINCT FROM), and always answers `{success:true}` (route.ts:100) even when rowCount is 0. | Caching: none observed — no revalidate/dynamic/Cache-Control/unstable_cache in src/app/api/notifications/route.ts:1-104 | Pagination: limit clamped to [1,100] at src/app/api/notifications/route.ts:31 (default 50, NaN->50); offset clamped to [0,100000] at route.ts:33 (default 0, NaN->0). Bound as $2/$3 at route.ts:49-50. ORDER BY created_at DESC (route.ts:48) is not a unique key, so page boundaries can repeat/skip rows sharing a created_at. | Other guards / classification: IDOR fix: every query is bound to the session uid, never a client-supplied user_id (route.ts:35-36, :67, :90, :98; rationale at route.ts:6-11 — comment, not evidence; the evidence is the SQL at those lines). PATCH mark_read is scoped `WHERE id = $1 AND user_id = $2` (route.ts:97), so a foreign notification_id silently updates 0 rows and still returns `{success:true}` (route.ts:100). | ORPHAN — zero call sites in src/** or mobile/** (sweep 2026-09-15, comment lines stripped). | No test file under src/tests/** imports this route.",
+  "x-draft": {
+    "shard": "contracts",
+    "files": [
+      "src/app/api/notifications/route.ts"
+    ],
+    "loc": 104,
+    "methods": [
+      "GET",
+      "PATCH"
+    ],
+    "consumers": [],
+    "writes_audit_row": false,
+    "consumers_verified": [],
+    "auth_class_executed": "authenticated",
+    "locking_tests": []
+  },
+  "programme": {
+    "scope": "platform_shared",
+    "phase": "UNRESEARCHED",
+    "why": "Notifications: one device-token registry and one preference set across both products.",
+    "feature": "F13",
+    "build_order": 3132,
+    "leakage": "none",
+    "product_questions": "none",
+    "review": {
+      "status": "unreviewed"
+    }
+  }
+}

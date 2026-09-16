@@ -1,0 +1,398 @@
+{
+  "kind": "SURFACE",
+  "status": "new",
+  "docs": {
+    "purpose": "A grid of who is allowed to see and change what — every role down one axis, every table and route across the other. It is built by asking the live database what its access rules actually are and re-running the app's own route classifier, rather than by reading what a migration file claims. That distinction is the whole point: this page shows the permissions that are really in force, and flags any place where the declared intent and the live database disagree.",
+    "data_story": "Nothing is built yet, so nothing is measured here. As specified it would read `pg_policies`.",
+    "under_126": "**NEW.** It does not exist; it is generated from descriptors from its first commit, through the REPORT renderer (read-only; `outputs` and `state` forced to `\"none\"`, a field whitelist that must equal the contract's). It is **100% generated** — which is the point: if the descriptor set is incomplete or an archetype profile is wrong, this page is visibly empty or visibly wrong on commit 1, and cannot be faked by hand."
+  },
+  "evidence": {
+    "files": [
+      "docs/reports/2026-09-15-spec126-admin-best-in-class.md §1.1 row 21 — NEW; no page exists",
+      "src/lib/auth/route-guard.ts:139-162 — classifyRoute, re-executed by the contract"
+    ],
+    "contracts": [
+      "DESIGNED: GET /api/admin/roles — absent from the census, so it cannot appear in inputs.contract_ref"
+    ],
+    "tables": [
+      "pg_policies (Postgres system catalog view)",
+      "migrations/226_profiles_admin_bootstrap.sql",
+      "migrations/227_rls_class_b_default_deny.sql",
+      "migrations/230_rls_class_a_entitlements.sql",
+      "migrations/231_admin_backup_codes.sql"
+    ],
+    "gate": [
+      "src/lib/auth/route-guard.ts:162",
+      "migrations/226_profiles_admin_bootstrap.sql:27"
+    ],
+    "states": [
+      "docs/specs/02-web-admin/127_surface_conversion_procedure.md §4.3"
+    ],
+    "emits": [
+      "docs/specs/02-web-admin/126_maxbld_surface_standard.md §6.2 rule 4"
+    ]
+  },
+  "identity": {
+    "id": "admin_role_matrix",
+    "archetype": "REPORT",
+    "platforms": [
+      "web"
+    ],
+    "owns": {
+      "components": [
+        "src/features/admin-registry/components/RegistryMatrix.tsx"
+      ]
+    },
+    "owner": "Admin domain (Spec 126 §14 Target Files) — no individual owner is named by Specs 126/127/128.",
+    "spec": "docs/specs/02-web-admin/126_maxbld_surface_standard.md",
+    "spec_refs": [
+      "docs/specs/02-web-admin/126_maxbld_surface_standard.md §6.2 — RLS as descriptor data: classes, roles, and the role matrix",
+      "docs/specs/02-web-admin/126_maxbld_surface_standard.md §6.2 rule 3 — the assertion reads the LIVE catalog (pg_policies / pg_class.relrowsecurity / pg_roles), never the migration text",
+      "docs/specs/02-web-admin/126_maxbld_surface_standard.md §6.2 R-11 — migration 226's D5 renders as a declared OPEN row on /admin/roles, never as an omission",
+      "docs/specs/00-architecture/114_rls_policy_catalog.md §2 — the four classes, incl. the 2026-09-15 Class D amendment",
+      "docs/specs/00-architecture/114_rls_policy_catalog.md §8 — policy naming <table>_<operation>_<scope>",
+      "docs/reports/2026-09-15-spec126-admin-best-in-class.md §1.1 row 21 · §4"
+    ],
+    "spec_version": "0-draft",
+    "versioning": {
+      "answer": "none",
+      "why": "Nothing consumes this surface: it does not exist, so no compatibility promise can have been made. It gains one at its C9 cutover, when the golden pair is captured.",
+      "evidence": [
+        "docs/specs/02-web-admin/126_maxbld_surface_standard.md §2.2 — one of the 11 NEW admin surfaces",
+        "docs/specs/02-web-admin/127_surface_conversion_procedure.md §4.3 — the golden PAIR pins the shape"
+      ]
+    },
+    "route": "/admin/roles",
+    "ref": "S-014"
+  },
+  "inputs": {
+    "answer": "contract",
+    "why": "Three inputs joined by one designed QUERY contract: the net-new scripts/seeds/roles.json declaration, the LIVE pg_policies catalog view, and a server-side re-execution of classifyRoute() over all 61 route paths. Not one of the three is a migration file — reading the migration text back would be the declaration restated, not an assertion.",
+    "evidence": [
+      "docs/specs/02-web-admin/126_maxbld_surface_standard.md §6.2 rule 3 — reads pg_policies / pg_class.relrowsecurity / pg_roles plus a re-execution of classifyRoute() over all 61 route paths",
+      "docs/specs/02-web-admin/128_surface_standard_policy.md §2.2 rule 14 — a declared schema is asserted against the live catalog, never against its own migration",
+      "src/lib/auth/route-guard.ts:139-162 — classifyRoute, the function the contract re-executes"
+    ],
+    "contract_ref": [],
+    "query_key": [
+      "admin",
+      "role-matrix"
+    ],
+    "field_whitelist": [
+      "table_name",
+      "rls_enabled",
+      "class",
+      "owner_col",
+      "role",
+      "verbs",
+      "policy_name",
+      "scope",
+      "declared_in_seed",
+      "live_in_catalog",
+      "verdict",
+      "why_none"
+    ],
+    "tables": [
+      {
+        "table": "pg_policies",
+        "columns": [
+          "schemaname",
+          "tablename",
+          "policyname",
+          "permissive",
+          "roles",
+          "cmd",
+          "qual",
+          "with_check"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/00-architecture/114_rls_policy_catalog.md §8 — policy naming; §9 — the role matrix",
+        "evidence": [
+          "docs/specs/02-web-admin/126_maxbld_surface_standard.md §6.2 rule 3 — the assertion reads the LIVE catalog (pg_policies, pg_class.relrowsecurity, pg_roles), never the migration text",
+          "docs/specs/00-architecture/114_rls_policy_catalog.md §2 — spatial_ref_sys precedent: a Postgres/extension-owned catalog object is out of scope for the Buildo class taxonomy"
+        ]
+      }
+    ]
+  },
+  "outputs": {
+    "answer": "none",
+    "why": "REPORT forces outputs to \"none\", and it is truthful: a policy is changed by a reviewed migration, never by a button on a page (Spec 126 §6.2 rule 4 — the generator EMITS a migration for human review; it does not apply one).",
+    "evidence": [
+      "docs/specs/02-web-admin/126_maxbld_surface_standard.md §3.1 row 3 — REPORT: outputs.writes \"none\" ENFORCED",
+      "docs/specs/02-web-admin/126_maxbld_surface_standard.md §6.2 rule 4 — the generator emits a migration for human review; it does not apply one"
+    ],
+    "contract_ref": [],
+    "tables": []
+  },
+  "state": {
+    "answer": "none",
+    "why": "REPORT forces state to \"none\". The grid is assembled server-side from the live catalog on each request; a client copy of an access-control matrix is a stale copy of the one thing that must never be stale.",
+    "evidence": [
+      "docs/specs/02-web-admin/126_maxbld_surface_standard.md §3.1 row 3 — REPORT MUST be \"none\" on outputs and state"
+    ]
+  },
+  "staleness": {
+    "answer": "live",
+    "why": "Read from pg_policies on every request. Spec 126 §6.2 rule 3 is explicit that the source is the live catalog; anything cached would render a guarantee the database might no longer hold.",
+    "evidence": [
+      "docs/specs/02-web-admin/126_maxbld_surface_standard.md §6.2 rule 3"
+    ],
+    "offline": "none"
+  },
+  "guards": {
+    "session": {
+      "answer": "admin",
+      "why": "An /admin/** page: classifyRoute returns \"admin\" for any pathname starting with /admin/, and \"admin\" is the profiles.is_admin flag checked in-predicate — there is no admin Postgres role.",
+      "evidence": [
+        "src/lib/auth/route-guard.ts:162 — pathname === \"/admin\" || pathname.startsWith(\"/admin/\") returns \"admin\"",
+        "src/lib/auth/route-guard.ts:159 — /api/admin/ returns \"admin\"",
+        "migrations/226_profiles_admin_bootstrap.sql:27 — is_admin BOOLEAN NOT NULL DEFAULT false",
+        "docs/specs/00-architecture/114_rls_policy_catalog.md §2 — admin is a column flag checked inside the policy predicate, not a role"
+      ]
+    },
+    "rls_class": {
+      "answer": "none",
+      "why": "Its only table is pg_policies, a Postgres system catalog view rather than a Buildo application table. Spec 114 §2 already sets that precedent for spatial_ref_sys — extension/system-owned objects are out of scope for the class taxonomy — so no class applies.",
+      "evidence": [
+        "docs/specs/00-architecture/114_rls_policy_catalog.md §2 — spatial_ref_sys is \"flagged, not classified ... out of scope for this catalog\"",
+        "docs/specs/02-web-admin/126_maxbld_surface_standard.md §6.2 rule 3 — the catalog views are read as evidence, not owned as data"
+      ]
+    },
+    "disclosure": "none",
+    "entitlement": "none",
+    "flag": "none",
+    "permission": "none",
+    "rate_bucket": "none"
+  },
+  "render": {
+    "targets": [
+      "screen"
+    ],
+    "projection": "grid",
+    "breakpoints": "desktop_first_md",
+    "export": "none"
+  },
+  "checks": [
+    {
+      "id": "rolematrix_seed_vs_live_both_ways",
+      "kind": "schema_declared",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "why": "Spec 126 §6.2 rule 3: it FAILS on a table with RLS enabled and no declared class, a policy live but not in the seed, and a seed row with no live policy. Bidirectional, and it gates the render because a half-true access matrix is worse than none."
+    },
+    {
+      "id": "rolematrix_auth_class_parity",
+      "kind": "auth_class_parity",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "The fourth failure condition of the same rule: surface.guards.session must equal contract.guards.auth_class. The measured defect is /builders gated authenticated while /api/builders is public via PUBLIC_PREFIXES:71 — the page is behind a login, the data it renders is not."
+    },
+    {
+      "id": "rolematrix_every_role_written",
+      "kind": "field_whitelist_parity",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "Spec 126 §6.2 rule 2: every role in the closed set appears on every row, including the ones whose answer is \"none\" with a why_none — an unwritten \"none\" is most dangerous exactly here."
+    },
+    {
+      "id": "rolematrix_d5_open_row",
+      "kind": "disclosure",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "R-11: migration 226's own comment records that prevent_is_admin_self_escalation is bypassable by the table owner. The page must render D5 as a declared OPEN row; a matrix that renders a guarantee the DB does not enforce is worse than no matrix."
+    },
+    {
+      "id": "rolematrix_error_state",
+      "kind": "error_state",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "If the catalog read fails the page must say so; an empty grid would read as \"no policies exist\", which is the most dangerous possible false negative on this page."
+    },
+    {
+      "id": "rolematrix_a11y_label",
+      "kind": "a11y_label",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "A grant/deny grid conveyed by cell colour alone is unreadable without labels."
+    }
+  ],
+  "invariants": [
+    {
+      "id": "rolematrix_policy_naming",
+      "sql": "SELECT count(*) FROM pg_policies WHERE schemaname = 'public' AND policyname !~ '^[a-z0-9_]+_(select|insert|update|delete)_(own|own_admin|admin)$'",
+      "severity": "FAIL",
+      "why": "Spec 114 §8 fixes the name as <table>_<operation>_<scope>; a policy outside that shape cannot be joined to a seed row, so it would render as an orphan of the matrix rather than as itself."
+    },
+    {
+      "id": "rolematrix_rls_enabled_has_class",
+      "sql": "SELECT count(*) FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace WHERE n.nspname = 'public' AND c.relrowsecurity AND c.relname NOT IN (SELECT tablename FROM pg_policies WHERE schemaname='public')",
+      "severity": "INFO",
+      "why": "This count is Class B by construction — RLS enabled with zero policies IS the deny-all posture — so it is descriptive, not a threshold; naming it stops a reviewer reading a large number as a gap."
+    }
+  ],
+  "plausibility": [
+    {
+      "id": "rolematrix_policy_count_band",
+      "sql": "SELECT count(*) FROM pg_policies WHERE schemaname = 'public'",
+      "severity": "WARN",
+      "why": "Measured today: 26 CREATE POLICY statements (2 in migration 226, 24 in 230, 0 in 231). A live count far below that means policies were dropped; far above means someone created them outside the reviewed-migration path, which Spec 126 §6.2 rule 4 exists to prevent."
+    },
+    {
+      "id": "rolematrix_rls_enabled_band",
+      "sql": "SELECT count(*) FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace WHERE n.nspname='public' AND c.relrowsecurity",
+      "severity": "WARN",
+      "why": "Measured today: 87 ENABLE ROW LEVEL SECURITY lines, 69 of them migration 227's Class-B default-deny sweep. A drop here is a table that quietly lost its default deny."
+    }
+  ],
+  "states": [
+    {
+      "name": "loading",
+      "golden": "none"
+    },
+    {
+      "name": "hit",
+      "golden": "none"
+    },
+    {
+      "name": "partial",
+      "golden": "none"
+    },
+    {
+      "name": "error",
+      "golden": "none"
+    },
+    {
+      "name": "unauthorized",
+      "golden": "none"
+    }
+  ],
+  "errors": {
+    "answer": "envelope",
+    "why": "Every admin route handler is wrapped by withApiEnvelope, which returns { data, error, meta } with a sanitised code on any throw; the surface renders from that envelope.",
+    "evidence": [
+      "src/lib/api/with-api-envelope.ts:27 — withApiEnvelope always returns the { data, error, meta } envelope",
+      "src/lib/api/with-api-envelope.ts:40-45 — a PG SQLSTATE becomes DATABASE_ERROR; the raw message is never exposed"
+    ],
+    "classes": [
+      {
+        "class": "401",
+        "ui": "Redirect to sign-in — the route guard refuses before the page renders."
+      },
+      {
+        "class": "403",
+        "ui": "Full-page \"admin only\" block naming the is_admin requirement; no partial data."
+      },
+      {
+        "class": "500",
+        "ui": "Full-width error panel carrying the envelope error.code, with a retry control."
+      },
+      {
+        "class": "schema_drift",
+        "ui": "The row that failed to parse renders as a red schema_drift row; the rest still renders."
+      }
+    ],
+    "no_retry": [
+      "401",
+      "403"
+    ]
+  },
+  "emits": {
+    "answer": "none",
+    "why": "Read-only: it changes no policy and writes no row, so R-12/B6 owes no admin_audit_log entry and nothing here is metered.",
+    "evidence": [
+      "docs/specs/02-web-admin/126_maxbld_surface_standard.md §6.2 rule 4 — the generator emits a migration for human review; it does not apply one",
+      "docs/specs/02-web-admin/128_surface_standard_policy.md §3 rule B6"
+    ],
+    "analytics": [],
+    "ledger_events": [],
+    "breadcrumbs": []
+  },
+  "offers": {
+    "answer": "none",
+    "why": "An access-control matrix renders no sponsored content.",
+    "evidence": [
+      "docs/specs/02-web-admin/126_maxbld_surface_standard.md §3.1 — SLOT is the archetype that renders inventory; this surface is not one",
+      "docs/specs/02-web-admin/128_surface_standard_policy.md §2 rule 6 — \"none\" is legal; silence is not"
+    ]
+  },
+  "metering": {
+    "answer": "none",
+    "why": "Nothing here is billable or quota-bearing and no usage_events row is written.",
+    "evidence": [
+      "docs/specs/02-web-admin/126_maxbld_surface_standard.md §7"
+    ]
+  },
+  "config": {
+    "answer": "none",
+    "why": "It consumes no tunable at all: every value it renders is either a live catalog fact or a seed declaration, and there is no threshold in between. Written down because Spec 128 rule 6 makes an unwritten \"none\" an omission.",
+    "evidence": [
+      "docs/specs/02-web-admin/126_maxbld_surface_standard.md §6.2 — the matrix is a seed file plus the live catalog; no number is interpolated",
+      "docs/specs/02-web-admin/128_surface_standard_policy.md §2 rule 6"
+    ],
+    "logic_variables": [],
+    "retired": []
+  },
+  "sharing": {
+    "answer": "sole",
+    "why": "Nothing else in the estate renders the role/policy join — Spec 126 §2.2.1 P7 names that absence outright (\"nothing in the estate holds that join\").",
+    "evidence": [
+      "docs/specs/02-web-admin/126_maxbld_surface_standard.md §2.2.1 P7"
+    ],
+    "surfaces": []
+  },
+  "a11y": {
+    "touch_target_min_px": 44,
+    "labels": "complete",
+    "dark_mode": "none",
+    "reduced_motion": "none",
+    "i18n": "none",
+    "safe_area": "none"
+  },
+  "deviations": "none",
+  "limitations": [
+    {
+      "what": "The page renders a guarantee that migration 226 records as not fully enforced.",
+      "measured": "docs/specs/02-web-admin/126_maxbld_surface_standard.md §6.2 — migration 226's own comment states the prevent_is_admin_self_escalation trigger is bypassable by the table owner, with the proper fix (REVOKE UPDATE(is_admin) FROM app_role) filed as post-launch D5. R-11 requires this render as a declared OPEN row.",
+      "check_id": "rolematrix_d5_open_row"
+    },
+    {
+      "what": "The existing RLS suite that would corroborate this page is not wired to CI.",
+      "measured": "docs/specs/02-web-admin/126_maxbld_surface_standard.md §6.2 — supabase/tests/rls_class_{a,b,c}.test.sql run under `supabase test db`, which appears in no package.json script and no workflow; the runbook records it as release-gating, not per-commit (ASK-08). The lock therefore lands as a vitest .db test under BUILDO_TEST_DB=1.",
+      "check_id": "rolematrix_seed_vs_live_both_ways"
+    },
+    {
+      "what": "scripts/seeds/roles.json — one of the page's three inputs — does not exist.",
+      "measured": "VERIFIED in the tree: scripts/seeds/ holds only apply-logic-variables.js, lineage-meta-snapshot.json, logic_variables.json, universal_stream_catalog.json and universal_stream_trade_signals.json.",
+      "check_id": "rolematrix_seed_vs_live_both_ways"
+    }
+  ],
+  "interpretation": "none",
+  "notes": "Report §1.1 row 21 and §4. Inputs are a NEW seed file scripts/seeds/roles.json (VERIFIED ABSENT from the tree — scripts/seeds/ holds only apply-logic-variables.js, lineage-meta-snapshot.json, logic_variables.json, universal_stream_catalog.json, universal_stream_trade_signals.json) joined against the live pg_policies catalog view (a Postgres system view, not a project table, so it is not a net-new table) and a re-execution of classifyRoute from src/lib/auth/route-guard.ts (file CONFIRMED present, 238 lines). Measured defect it makes visible: /builders is gated `authenticated` by fail-closed default while /api/builders is public via PUBLIC_PREFIXES:71 — the page is behind a login, the data it renders is not. Per AQ5, migration 226's post-launch D5 (REVOKE UPDATE(is_admin)) must render as a declared OPEN row, not an omission. DESIGNED, NOT MEASURED. guards.rls_class is \"none\" because pg_policies is a Postgres catalog view, not a Buildo table — Spec 114 §2 sets that precedent for spatial_ref_sys. The route /admin/roles is set because Spec 126 §6.2 R-11 names it. Two of the page's three inputs do not exist yet (scripts/seeds/roles.json and the designed contract), which is recorded in limitations rather than papered over.",
+  "x-draft": {
+    "shard": "admin-new",
+    "files": [],
+    "role": "admin",
+    "generated": "100%",
+    "net_new_tables": [],
+    "designed": true
+  },
+  "programme": {
+    "scope": "parcel_admin",
+    "phase": "B1a",
+    "why": "A descriptor-native admin page generated from the same descriptors this programme produces; it exists to operate and observe the parcel product, not the lead estate.",
+    "feature": "F09",
+    "build_order": 2093,
+    "leakage": "none",
+    "product_questions": "none",
+    "review": {
+      "status": "unreviewed"
+    }
+  }
+}

@@ -1,0 +1,329 @@
+{
+  "kind": "JOB",
+  "status": "exists",
+  "docs": {
+    "purpose": "Every night this job rebuilds the pre-computed monthly permit summary that the admin dashboard reads, so the numbers shown there reflect the permits loaded earlier that day. It runs after the nightly permit-loading window so it never summarises a half-finished import. It rebuilds the summary in the background, so the dashboard stays readable the whole time it is working.",
+    "data_story": "It reads `permits` and writes `mv_monthly_permit_stats`. It runs on `30 14 * * *`, unattended, with nobody watching — which is why its guard matters: pg_extension guard with a NOTICE-skip, measured (migrations/233:78-81 — `IF NOT EXISTS (SELECT 1 FROM pg_extension WHERE extname = 'pg_cron')` then RAISE NOTICE and RETURN); plus an idempotent unschedule-by-name loop over cron.job before scheduling.",
+    "under_126": "Becomes a **JOB descriptor** of archetype `SCHEDULED` under its own `job.schema.json` (Spec 128 R-14) — declaring its schedule, its target, its idempotency posture, its behaviour when `pg_cron` is absent, and the audit row it writes. Nothing about how it runs changes; what changes is that those five answers stop living only in SQL and YAML."
+  },
+  "evidence": {
+    "files": [
+      "migrations/233_pg_cron_maintenance_catalog.sql:1"
+    ],
+    "contracts": [
+      "none — a pg_cron job takes no request and calls no API route"
+    ],
+    "tables": [
+      "migrations/034_mv_monthly_permit_stats.sql:8-19",
+      "src/lib/db/generated/schema.ts:2323",
+      "docs/reference/data-lineage-map.md:997"
+    ],
+    "gate": [
+      "migrations/233_pg_cron_maintenance_catalog.sql:78-81",
+      "migrations/233_pg_cron_maintenance_catalog.sql:83-88"
+    ],
+    "states": [
+      "migrations/233_pg_cron_maintenance_catalog.sql:89-93 — one statement, no branch"
+    ],
+    "emits": [
+      "migrations/233_pg_cron_maintenance_catalog.sql:89-93 — no INSERT of any kind"
+    ]
+  },
+  "identity": {
+    "id": "job_mv_monthly_permit_stats_refresh",
+    "route": "migrations/233_pg_cron_maintenance_catalog.sql",
+    "archetype": "SCHEDULED",
+    "platforms": [],
+    "owns": {
+      "components": []
+    },
+    "owner": "pipeline",
+    "spec": "docs/specs/00-architecture/115_scheduling.md §5",
+    "spec_refs": [
+      "docs/specs/00-architecture/115_scheduling.md §5 (pg_cron job catalog — the mv_monthly_permit_stats_refresh row, re-timed to 14:30 UTC on 2026-07-20)",
+      "docs/specs/02-web-admin/26_admin_dashboard.md — the dashboard that consumes the matview and tolerates staleness by design"
+    ],
+    "spec_version": "0-draft",
+    "versioning": {
+      "answer": "frozen",
+      "why": "CONCURRENTLY depends on the matview keeping its unique index (month, permit_type); changing the matview shape breaks the refresh, and migration 034 is pinned by a source-scan test.",
+      "evidence": [
+        "migrations/034_mv_monthly_permit_stats.sql:18-19",
+        "src/tests/market-metrics.logic.test.ts:19-29"
+      ]
+    },
+    "ref": "J-003"
+  },
+  "inputs": {
+    "answer": "app_outputs",
+    "why": "It re-reads the permits table — a pipeline-written table — through the matview definition; there is no contract and no parameter.",
+    "evidence": [
+      "migrations/034_mv_monthly_permit_stats.sql:8-16",
+      "migrations/233_pg_cron_maintenance_catalog.sql:89-93"
+    ],
+    "contract_ref": [],
+    "query_key": [],
+    "field_whitelist": [
+      "issued_date",
+      "permit_type",
+      "est_const_cost"
+    ],
+    "tables": [
+      {
+        "table": "permits",
+        "columns": [
+          "issued_date",
+          "permit_type",
+          "est_const_cost"
+        ],
+        "producing_steps": [
+          "classify_inspection_status",
+          "classify_lifecycle_phase",
+          "classify_permit_phase",
+          "classify_scope",
+          "classify_scope_class",
+          "classify_scope_tags",
+          "close_stale_permits",
+          "create_pre_permits",
+          "enrich_permits",
+          "geocode_permits",
+          "inspections",
+          "link_coa",
+          "link_neighbourhoods",
+          "link_similar",
+          "permits"
+        ],
+        "chain_position": "deep_scrapes[1] · permits[23], coa[12] · permits[3] · permits[4] · not-in-a-chain · not-in-a-chain · permits[2] · not-in-a-chain · permits[9] · permits[7], sources[3] · deep_scrapes[0] · permits[19], coa[8] · permits[10], sources[17] · permits[12] · permits[1]",
+        "owner_spec": "docs/specs/01-pipeline/30_pipeline_architecture.md",
+        "evidence": [
+          "migrations/034_mv_monthly_permit_stats.sql:14",
+          "docs/reference/data-lineage-map.md:997",
+          "scripts/manifest.json#chains"
+        ]
+      }
+    ]
+  },
+  "outputs": {
+    "answer": "UNRESEARCHED",
+    "why": "NOT ANSWERABLE from the closed set: outputs offers none | contract_only | optimistic_then_contract | device_only, all of which describe a client writing through an API. This job writes directly to the database with no contract in between. The substance is recorded in outputs.tables[]; the vocabulary gap is a Spec 128 §4 escalation (R-14: JOBs need job.schema.json). What it does: REFRESH MATERIALIZED VIEW CONCURRENTLY public.mv_monthly_permit_stats — it rewrites the matview and touches no base table.",
+    "evidence": [
+      "migrations/233_pg_cron_maintenance_catalog.sql:89-93"
+    ],
+    "contract_ref": [],
+    "tables": [
+      {
+        "table": "mv_monthly_permit_stats",
+        "columns": [
+          "month",
+          "permit_type",
+          "permit_count",
+          "total_value"
+        ],
+        "producing_steps": [
+          "mv_monthly_permit_stats_refresh"
+        ],
+        "chain_position": "n/a — a pg_cron job, not a chain step",
+        "owner_spec": "docs/specs/00-architecture/115_scheduling.md §5",
+        "evidence": [
+          "migrations/034_mv_monthly_permit_stats.sql:8-19",
+          "migrations/233_pg_cron_maintenance_catalog.sql:89-93",
+          "src/lib/db/generated/schema.ts:2323"
+        ]
+      }
+    ]
+  },
+  "state": {
+    "answer": "server_only",
+    "why": "The matview IS the state, and it is entirely server-side; the job holds nothing across runs.",
+    "evidence": [
+      "migrations/233_pg_cron_maintenance_catalog.sql:89-93"
+    ],
+    "fields": []
+  },
+  "staleness": {
+    "answer": "snapshot",
+    "why": "It is the thing that defines another surface's freshness: the market-metrics query reads the matview, so that page is exactly as fresh as this job's last nightly run.",
+    "evidence": [
+      "src/lib/market-metrics/queries.ts:83",
+      "migrations/233_pg_cron_maintenance_catalog.sql:89-93"
+    ],
+    "producing_step": "mv_monthly_permit_stats_refresh",
+    "offline": "none"
+  },
+  "guards": {
+    "session": {
+      "answer": "UNRESEARCHED",
+      "why": "NOT ANSWERABLE from the closed set: guards.session offers anon | authenticated | entitled | admin, all of which describe an end-user principal. This runs with no request and no user — as the pg_cron job owner through a SECURITY DEFINER function, or as a GitHub Actions runner holding repository secrets. Spec 128 §4 escalation (Spec 128 R-14 already anticipates JOBs getting their own job.schema.json); recorded rather than mis-answered.",
+      "evidence": [
+        "migrations/233_pg_cron_maintenance_catalog.sql:74-111"
+      ]
+    },
+    "rls_class": {
+      "answer": "B",
+      "why": "permits and the matview are both pipeline-owned — not Class A and not profiles, so Class B by the catalog's default rule: RLS on, zero policies, service-role only.",
+      "evidence": [
+        "docs/specs/00-architecture/114_rls_policy_catalog.md:52-53",
+        "docs/specs/00-architecture/114_rls_policy_catalog.md:75",
+        "docs/specs/00-architecture/114_rls_policy_catalog.md:205-214"
+      ]
+    },
+    "disclosure": "none",
+    "entitlement": "none",
+    "flag": "none",
+    "permission": "none",
+    "rate_bucket": "none"
+  },
+  "render": {
+    "targets": [
+      "screen"
+    ],
+    "projection": "none",
+    "breakpoints": "none",
+    "export": "none"
+  },
+  "checks": [
+    {
+      "id": "job_mv_refresh_unique_index_present",
+      "kind": "schema_declared",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "why": "REFRESH ... CONCURRENTLY requires the matview to carry a unique index; idx_mv_monthly_month_type (month, permit_type) is that index and Spec 115 §5 records it as live-verified. Drop it and the nightly refresh starts erroring instead of degrading."
+    },
+    {
+      "id": "job_mv_refresh_no_ledger_row",
+      "kind": "ledger_row_present",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "It writes no pipeline_runs row, so the freshness of the matview the market-metrics dashboard reads cannot be observed from the house observability surface — only from the matview contents themselves."
+    },
+    {
+      "id": "job_mv_refresh_after_nightly_window",
+      "kind": "freshness",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "why": "14:30 UTC was chosen to land after the 11:00 UTC coa->permits window plus its ~3h worst case; if that window moves, this slot has to move with it, and the previous 09:30 slot was wrong for exactly this reason."
+    }
+  ],
+  "invariants": "none",
+  "plausibility": [
+    {
+      "id": "mv_monthly_no_future_months",
+      "sql": "SELECT count(*) FROM public.mv_monthly_permit_stats WHERE month > (CURRENT_DATE + INTERVAL '1 month')",
+      "severity": "WARN",
+      "why": "The matview groups by date_trunc of issued_date; a month beyond next month means a permit carries a future issue date, which is a source-data problem this aggregate would otherwise hide."
+    },
+    {
+      "id": "mv_monthly_value_non_negative",
+      "sql": "SELECT count(*) FROM public.mv_monthly_permit_stats WHERE total_value < 0",
+      "severity": "FAIL",
+      "why": "total_value is COALESCE(SUM(est_const_cost), 0); a negative total can only come from negative cost rows, which are not a legitimate value."
+    }
+  ],
+  "states": [
+    {
+      "name": "hit",
+      "golden": "none"
+    },
+    {
+      "name": "error",
+      "golden": "none"
+    }
+  ],
+  "errors": {
+    "answer": "none",
+    "why": "No exception handling: the scheduled command is the bare REFRESH statement, so a failure leaves yesterday's snapshot in place and a cron.job_run_details row nobody reads.",
+    "evidence": [
+      "migrations/233_pg_cron_maintenance_catalog.sql:89-93"
+    ],
+    "classes": [],
+    "no_retry": []
+  },
+  "emits": {
+    "answer": "none",
+    "why": "No pipeline_runs row and no audit row — the refresh is silent whether it succeeds or fails.",
+    "evidence": [
+      "migrations/233_pg_cron_maintenance_catalog.sql:89-93"
+    ],
+    "analytics": [],
+    "ledger_events": [],
+    "breadcrumbs": []
+  },
+  "offers": {
+    "answer": "none",
+    "why": "A matview refresh renders no sponsored placement.",
+    "evidence": [
+      "migrations/233_pg_cron_maintenance_catalog.sql:89-93"
+    ]
+  },
+  "metering": {
+    "answer": "none",
+    "why": "Nothing is counted.",
+    "evidence": [
+      "migrations/233_pg_cron_maintenance_catalog.sql:89-93"
+    ]
+  },
+  "config": {
+    "answer": "none",
+    "why": "No tunable at all — the schedule is a literal cron expression in the migration and the matview definition is fixed in 034.",
+    "evidence": [
+      "migrations/233_pg_cron_maintenance_catalog.sql:89-93",
+      "migrations/034_mv_monthly_permit_stats.sql:8-16"
+    ],
+    "logic_variables": [],
+    "retired": []
+  },
+  "sharing": {
+    "answer": "none",
+    "why": "It renders no contract; the matview it maintains is read by src/lib/market-metrics/queries.ts, which is a consumer of its output, not a shared contract of this job.",
+    "evidence": [
+      "src/lib/market-metrics/queries.ts:83"
+    ],
+    "surfaces": []
+  },
+  "a11y": {
+    "touch_target_min_px": "UNRESEARCHED",
+    "labels": "none",
+    "dark_mode": "none",
+    "reduced_motion": "none",
+    "i18n": "none",
+    "safe_area": "none"
+  },
+  "deviations": "none",
+  "limitations": [
+    {
+      "what": "The matview has no freshness signal of its own.",
+      "measured": "migrations/233_pg_cron_maintenance_catalog.sql:89-93 — the scheduled command is one REFRESH statement with no pipeline_runs insert; nothing on src/lib/market-metrics/queries.ts:83 can tell how old the aggregate is.",
+      "check_id": "job_mv_refresh_no_ledger_row"
+    },
+    {
+      "what": "It was net-new when scheduled — nothing refreshed this matview for the years between 034 and 233.",
+      "measured": "docs/specs/00-architecture/115_scheduling.md §5 records it as \"Net-new — no automated refresh exists in the codebase today (034 created it; nothing schedules its refresh)\".",
+      "check_id": "job_mv_refresh_after_nightly_window"
+    }
+  ],
+  "interpretation": "none",
+  "notes": "Command is `REFRESH MATERIALIZED VIEW CONCURRENTLY public.mv_monthly_permit_stats`; the reads_tables entry `permits` is measured from the matview definition at migrations/034_mv_monthly_permit_stats.sql:14. CONCURRENTLY is legal because of the unique index idx_mv_monthly_month_type. MEASURED 2026-09-15. The consumer is src/lib/market-metrics/queries.ts:83 (reached by the admin market-metrics route) — that is the surface whose staleness this job defines, and it has no way to see when the refresh last ran. The matview definition is migrations/034_mv_monthly_permit_stats.sql:8-16, introspected into src/lib/db/generated/schema.ts:2323, so the four columns above are read from the live database rather than typed from the migration. guards.session and outputs.answer are Spec 128 §4 vocabulary escalations, not unmeasured facts; render.targets keeps [\"screen\"] only because the schema requires one of screen|pdf|csv|email and a job renders none.",
+  "x-draft": {
+    "shard": "jobs",
+    "files": [
+      "migrations/233_pg_cron_maintenance_catalog.sql"
+    ],
+    "cron": "30 14 * * *",
+    "guarded_by": "pg_extension guard with a NOTICE-skip, measured (migrations/233:78-81 — `IF NOT EXISTS (SELECT 1 FROM pg_extension WHERE extname = 'pg_cron')` then RAISE NOTICE and RETURN); plus an idempotent unschedule-by-name loop over cron.job before scheduling"
+  },
+  "programme": {
+    "scope": "estate_other",
+    "phase": "not_scheduled",
+    "why": "Permit data for the lead-gen product. Inventoried only; it converts under the same standard in a later programme.",
+    "feature": "F93",
+    "build_order": 4204,
+    "leakage": "UNRESEARCHED",
+    "product_questions": "UNRESEARCHED",
+    "review": {
+      "status": "unreviewed"
+    }
+  }
+}

@@ -1,0 +1,356 @@
+{
+  "kind": "CONTRACT",
+  "status": "exists",
+  "docs": {
+    "purpose": "Gives an admin a searchable, paginated table of past pipeline runs, filterable by pipeline name and status and carrying a total count, for browsing full run history rather than just the latest run.",
+    "data_story": "It reads 1 table — `pipeline_runs` and writes nothing. Its response is an explicit pick-by-name projection of 10 fields, so a column added to a table upstream does not leak into the client by accident. **Nothing in this repository calls it.** That is the state this registry exists to make visible, not a claim that it is dead — a caller could be a bookmark, an external system, or a path built from variables.",
+    "under_126": "Becomes a **CONTRACT descriptor** of archetype `QUERY`. It declares its `database.reads[]` with named columns, its response projection as an explicit whitelist, its auth class, its rate bucket and its staleness — and `outputs.writes` is forced to `\"none\"`. Its `consumers[]` is the field that matters most here: today it is empty, and the orphan panel renders that as a red row rather than leaving it to be discovered years later."
+  },
+  "evidence": {
+    "files": [
+      "src/app/api/admin/pipelines/runs/route.ts:1"
+    ],
+    "contracts": [
+      "src/app/api/admin/pipelines/runs/route.ts:31 (GET export)",
+      "src/lib/api/with-api-envelope.ts:27-52"
+    ],
+    "tables": [
+      "src/app/api/admin/pipelines/runs/route.ts:42-48",
+      "src/app/api/admin/pipelines/runs/route.ts:52-54",
+      "src/lib/db/generated/schema.ts — every table named here is present in the introspected drizzle schema"
+    ],
+    "gate": [
+      "src/lib/auth/route-guard.ts — admin prefix — classifyRoute matches pathname.startsWith('/api/admin/')",
+      "src/lib/auth/route-guard.ts:150-201 — classifyRoute executed 2026-09-15 with the concrete path → \"admin\"",
+      "no in-handler auth call in src/app/api/admin/pipelines/runs/route.ts — src/middleware.ts is the only gate"
+    ],
+    "states": [
+      "hit: src/app/api/admin/pipelines/runs/route.ts:59-64",
+      "empty: src/app/api/admin/pipelines/runs/route.ts:60-61 (runs: [] with total 0 when the filters match nothing)",
+      "error: src/lib/api/with-api-envelope.ts:41-50 (only via the wrapper — the handler itself has no catch)"
+    ],
+    "emits": [
+      "src/app/api/admin/pipelines/runs/route.ts — read in full; no Sentry breadcrumb, no analytics capture and no ledger INSERT"
+    ]
+  },
+  "identity": {
+    "id": "contract_admin_pipelines_runs",
+    "route": "/api/admin/pipelines/runs",
+    "archetype": "QUERY",
+    "platforms": [
+      "web"
+    ],
+    "owns": {
+      "components": []
+    },
+    "owner": "Backend/Pipeline (CLAUDE.md §Domain Rules: `src/app/api/`)",
+    "spec": "UNRESEARCHED",
+    "spec_refs": [
+      "UNRESEARCHED — src/app/api/admin/pipelines/runs/route.ts carries no SPEC LINK header and no System Map row lists it (docs/specs/00-architecture/00_system_map.md, searched 2026-09-15); guessing the nearest spec would be an invention"
+    ],
+    "spec_version": "0-draft",
+    "versioning": {
+      "answer": "none",
+      "why": "No call site anywhere in src/** or mobile/** (verified 2026-09-15 by an exact-path sweep that strips comment lines), so no consumer holds a compatibility promise to break.",
+      "evidence": [
+        "src/app/api/admin/pipelines/runs/route.ts — no caller",
+        "src/lib/auth/route-guard.ts:150-201"
+      ]
+    },
+    "ref": "C-010"
+  },
+  "inputs": {
+    "answer": "app_outputs",
+    "why": "It reads 1 table(s) directly; 1 of them are materialised by named pipeline steps (assert_data_bounds), so its inputs are the pipeline's outputs rather than another contract.",
+    "evidence": [
+      "src/app/api/admin/pipelines/runs/route.ts:42-48",
+      "src/app/api/admin/pipelines/runs/route.ts:52-54",
+      "scripts/quality/assert-data-bounds.js",
+      "docs/reference/data-lineage-map.md:1205",
+      "scripts/manifest.json#chains",
+      "docs/reference/data-lineage-map.md"
+    ],
+    "contract_ref": [],
+    "query_key": [],
+    "field_whitelist": [
+      "id",
+      "pipeline",
+      "started_at",
+      "completed_at",
+      "status",
+      "duration_ms",
+      "error_message",
+      "records_total",
+      "records_new",
+      "records_updated"
+    ],
+    "tables": [
+      {
+        "table": "pipeline_runs",
+        "columns": [
+          "id",
+          "pipeline",
+          "started_at",
+          "completed_at",
+          "status",
+          "duration_ms",
+          "error_message",
+          "records_total",
+          "records_new",
+          "records_updated"
+        ],
+        "producing_steps": [
+          "assert_data_bounds",
+          "assert_pre_permit_aging",
+          "assert_schema"
+        ],
+        "chain_position": "permits[21], coa[10], sources[26], deep_scrapes[4] · not-in-a-chain · permits[0], coa[0], sources[1]",
+        "owner_spec": "docs/specs/01-pipeline/41_chain_permits.md",
+        "evidence": [
+          "src/app/api/admin/pipelines/runs/route.ts:42-48",
+          "src/app/api/admin/pipelines/runs/route.ts:52-54",
+          "scripts/quality/assert-data-bounds.js",
+          "docs/reference/data-lineage-map.md:1205",
+          "scripts/manifest.json#chains",
+          "docs/reference/data-lineage-map.md"
+        ]
+      }
+    ]
+  },
+  "outputs": {
+    "answer": "none",
+    "why": "A QUERY contract writes nothing; the handler issues no INSERT/UPDATE/DELETE anywhere in the file or in the libs it calls.",
+    "evidence": [
+      "src/app/api/admin/pipelines/runs/route.ts — read in full 2026-09-15; no INSERT/UPDATE/DELETE reached"
+    ],
+    "contract_ref": [],
+    "tables": []
+  },
+  "state": {
+    "answer": "server_only",
+    "why": "A CONTRACT holds no client state: every value is resolved per request on the server and nothing is cached in a client store by the route itself.",
+    "evidence": [
+      "src/app/api/admin/pipelines/runs/route.ts:31 (GET export)",
+      "src/lib/api/with-api-envelope.ts:27-52"
+    ],
+    "fields": []
+  },
+  "staleness": {
+    "answer": "live",
+    "why": "Every read runs against the base tables on each request — there is no cache layer between the handler and the database.",
+    "evidence": [
+      "src/app/api/admin/pipelines/runs/route.ts:42-48",
+      "src/app/api/admin/pipelines/runs/route.ts:52-54",
+      "scripts/quality/assert-data-bounds.js",
+      "docs/reference/data-lineage-map.md:1205"
+    ],
+    "offline": "none"
+  },
+  "guards": {
+    "session": {
+      "answer": "admin",
+      "why": "classifyRoute(\"/api/admin/pipelines/runs\") returns \"admin\" (executed 2026-09-15); the handler adds no check of its own, so middleware is the only gate.",
+      "evidence": [
+        "src/lib/auth/route-guard.ts:150-201 — classifyRoute executed 2026-09-15 with the concrete path",
+        "src/middleware.ts — the only gate for this path (no in-handler auth call)"
+      ]
+    },
+    "rls_class": {
+      "answer": "B",
+      "why": "Every table it reaches has RLS enabled with zero policies — default deny for anon and authenticated; only the table owner and service_role get through.",
+      "evidence": [
+        "migrations/227_rls_class_b_default_deny.sql:78",
+        "docs/specs/00-architecture/114_rls_policy_catalog.md §2"
+      ]
+    },
+    "disclosure": "none",
+    "entitlement": "none",
+    "flag": "none",
+    "permission": "none",
+    "rate_bucket": "none"
+  },
+  "render": {
+    "targets": [
+      "screen"
+    ],
+    "projection": "none",
+    "breakpoints": "none",
+    "export": "none"
+  },
+  "checks": [
+    {
+      "id": "contract_admin_pipelines_runs__auth_class_parity",
+      "kind": "auth_class_parity",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "why": "guards.session must equal classifyRoute(\"/api/admin/pipelines/runs\"), executed 2026-09-15 → \"admin\"; there is no in-handler check, so a middleware change silently re-classes this route. Locked by api.infra.test.ts, quality.infra.test.ts."
+    },
+    {
+      "id": "contract_admin_pipelines_runs__error_envelope",
+      "kind": "error_state",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "why": "MEASURED DEVIATION, permanently non-zero until re-projected: Success returns a bare `{runs, total, limit, offset}` at :59-64 with no data/error/meta keys. The handler has NO try/catch and NO error branch of its own, so the ONLY failure response is the wrapper's, which IS enveloped ({data:null,error:{code,message},meta:n Retighten condition: the handler returns the envelope on every path."
+    },
+    {
+      "id": "contract_admin_pipelines_runs__field_whitelist_parity",
+      "kind": "field_whitelist_parity",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "why": "MEASURED: the projection is row_spread (src/app/api/admin/pipelines/runs/route.ts:59-64), so a column added upstream reaches the client without a code change. Permanently non-zero until the response is an explicit pick; retighten condition: projection.kind === explicit_pick."
+    },
+    {
+      "id": "contract_admin_pipelines_runs__schema_declared",
+      "kind": "schema_declared",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "Every table and column declared in lineage.reads[]/writes[] must exist in src/lib/db/generated/schema.ts (drizzle-kit introspect of the live database); the registry generator checks this both directions."
+    }
+  ],
+  "invariants": "none",
+  "plausibility": "none",
+  "states": [
+    {
+      "name": "hit",
+      "golden": "none"
+    },
+    {
+      "name": "empty",
+      "golden": "none"
+    },
+    {
+      "name": "error",
+      "golden": "none"
+    }
+  ],
+  "errors": {
+    "answer": "envelope",
+    "why": "It returns a JSON error body, but NOT the standard envelope: Success returns a bare `{runs, total, limit, offset}` at :59-64 with no data/error/meta keys. The handler has NO try/catch and NO error branch of its own, so the ONLY failure response is the wrapper's, which IS enveloped \"envelope\" is the closest member of the closed menu; the deviation is recorded in deviations[].",
+    "evidence": [
+      "src/lib/api/with-api-envelope.ts:27-52",
+      "src/app/api/admin/pipelines/runs/route.ts:59-64",
+      "src/lib/api/with-api-envelope.ts:41-50",
+      "src/app/api/admin/pipelines/runs/route.ts:42 (500)",
+      "src/app/api/admin/pipelines/runs/route.ts:48 (500)"
+    ],
+    "classes": [
+      {
+        "class": "500",
+        "ui": "{data:null,error:{code,message},meta:null} — src/lib/api/with-api-envelope.ts:40-44 (pg SQLSTATE path; this is the path a negative LIMIT takes) — src/app/api/admin/pipelines/runs/route.ts:42 (code DATABASE_ERROR)"
+      }
+    ]
+  },
+  "emits": {
+    "answer": "none",
+    "why": "Nothing it does is currently countable: src/app/api/admin/pipelines/runs/route.ts was read in full and contains no Sentry breadcrumb, no analytics capture and no ledger INSERT.",
+    "evidence": [
+      "src/app/api/admin/pipelines/runs/route.ts — read in full; no Sentry breadcrumb, no analytics capture and no ledger INSERT"
+    ],
+    "analytics": [],
+    "ledger_events": [],
+    "breadcrumbs": []
+  },
+  "offers": {
+    "answer": "none",
+    "why": "It renders no sponsored placement: the offers and advertisers tables Spec 126 §2 specifies do not exist in migrations/ and nothing in this handler reads placement inventory.",
+    "evidence": [
+      "migrations/ — no CREATE TABLE offers / advertisers (grep 2026-09-15)",
+      "src/app/api/admin/pipelines/runs/route.ts — read in full; no placement read"
+    ]
+  },
+  "metering": {
+    "answer": "none",
+    "why": "Nothing here is counted: no usage_events row (the table does not exist in the introspected schema) and no quota counter is written by this handler.",
+    "evidence": [
+      "src/app/api/admin/pipelines/runs/route.ts — read in full 2026-09-15",
+      "src/lib/db/generated/schema.ts — no usage_events table"
+    ]
+  },
+  "config": {
+    "answer": "none",
+    "why": "It consumes no tunable: no logic_variables read and no env-var-driven threshold in the handler or the libs it calls.",
+    "evidence": [
+      "src/app/api/admin/pipelines/runs/route.ts — read in full 2026-09-15; no loadMarketplaceConfigs / logic_variables read"
+    ],
+    "logic_variables": [],
+    "retired": []
+  },
+  "sharing": {
+    "answer": "none",
+    "why": "ORPHAN: an exact-path sweep of src/** and mobile/** on 2026-09-15 (comment lines stripped) found no call site. That is a measured absence, not proof the endpoint is dead — a caller could be a bookmark or an external system.",
+    "evidence": [
+      "src/app/api/admin/pipelines/runs/route.ts — swept src/** and mobile/** for the exact path on 2026-09-15; zero call sites outside src/tests/**"
+    ],
+    "surfaces": []
+  },
+  "a11y": {
+    "touch_target_min_px": "UNRESEARCHED",
+    "labels": "none",
+    "dark_mode": "none",
+    "reduced_motion": "none",
+    "i18n": "none",
+    "safe_area": "none"
+  },
+  "deviations": [
+    {
+      "from": "docs/specs/00_engineering_standards.md §4.4 — all API routes return { data, error, meta }",
+      "why": "Success returns a bare `{runs, total, limit, offset}` at :59-64 with no data/error/meta keys. The handler has NO try/catch and NO error branch of its own, so the ONLY failure response is the wrapper's, which IS enveloped ({data:null,error:{code,message},meta:null} at src/lib/api/with-api-envelope.ts:42/48) — success and failure therefore have incompatible shapes.",
+      "adjudicated_by": "not adjudicated — measured 2026-09-15 by reading the handler",
+      "date": "2026-09-15"
+    },
+    {
+      "from": "src/lib/auth/verify-admin.ts — every admin route calls verifyAdminAuth",
+      "why": "This admin route makes no in-handler verifyAdminAuth call; src/middleware.ts is the only gate and its own comment says the check is presence-only.",
+      "adjudicated_by": "not adjudicated — measured 2026-09-15",
+      "date": "2026-09-15"
+    }
+  ],
+  "limitations": [
+    {
+      "what": "a11y.touch_target_min_px has no legal answer for a CONTRACT",
+      "measured": "The schema allows only UNRESEARCHED or an integer >= 44; a JSON endpoint has no touch target and the vocabulary has no \"n/a\". Left UNRESEARCHED and escalated per Spec 128 §4 rather than invented.",
+      "check_id": "contract_admin_pipelines_runs__auth_class_parity"
+    },
+    {
+      "what": "no consumer, so no fan-out edge",
+      "measured": "The exact-path sweep of src/** and mobile/** (comment lines stripped) returned zero call sites on 2026-09-15.",
+      "check_id": "contract_admin_pipelines_runs__auth_class_parity"
+    }
+  ],
+  "interpretation": "none",
+  "notes": "No SPEC LINK header or spec citation anywhere in the file. No verifyAdminAuth import — relies entirely on blanket route-guard.ts middleware, unlike step-output / pipelines[slug] / mfa / suppliers-leads which check explicitly as defense in depth. No in-repo caller found. | MEASURED 2026-09-15: FINDING (missing guard): no verifyAdminAuth — same exposure as /history; a presence-only middleware cookie is the entire gate (src/middleware.ts:106-115). FINDING (unclamped pagination): `?limit=-5` survives Math.min(-5,100) = -5 and reaches `LIMIT $3` at :48 -> Postgres rejects a negative LIMIT, which the wrapper turns into a 500 DATABASE_ERROR; `?offset=-1` behaves the same. Note also `?limit=0` silently becomes 25 because `0 || 25` is 25. FINDING (envelope): bare success body vs enveloped wrapper error. FINDING (possible orphan): routes-index.json records `consumers: []` for this route and a repo-wide search was NOT performed to refute that — see UNRESEARCHED below. Census (pipeline_runs) CONFIRMED; no other table is read. `runs` is the raw pg row array (row_spread), though the SELECT list is explicit so no SELECT * disclosure. | Caching: none observed — no dynamic/revalidate/Cache-Control (grep over src/app/api/admin/pipelines/ returned nothing) | Pagination: limit = Math.min(parseInt(limit ?? '25',10) || 25, 100) at src/app/api/admin/pipelines/runs/route.ts:35; offset = parseInt(offset ?? '0',10) || 0 at :36; bound as $3/$4 at :48. Upper clamp only — no lower clamp (see notes). | ORPHAN — zero call sites in src/** or mobile/** (sweep 2026-09-15, comment lines stripped). | Locking tests: src/tests/api.infra.test.ts, src/tests/quality.infra.test.ts.",
+  "x-draft": {
+    "shard": "contracts",
+    "files": [
+      "src/app/api/admin/pipelines/runs/route.ts"
+    ],
+    "loc": 65,
+    "methods": [
+      "GET"
+    ],
+    "consumers": [],
+    "writes_audit_row": "n/a",
+    "consumers_verified": [],
+    "auth_class_executed": "admin",
+    "locking_tests": [
+      "src/tests/api.infra.test.ts",
+      "src/tests/quality.infra.test.ts"
+    ]
+  },
+  "programme": {
+    "scope": "platform_shared",
+    "phase": "UNRESEARCHED",
+    "why": "Used by both products and owned by neither.",
+    "feature": "F16",
+    "build_order": 3162,
+    "leakage": "none",
+    "product_questions": "none",
+    "review": {
+      "status": "unreviewed"
+    }
+  }
+}

@@ -1,0 +1,404 @@
+{
+  "kind": "SURFACE",
+  "status": "new",
+  "docs": {
+    "purpose": "The same screen-to-API map as the fan-out page, inverted: it lists the APIs nothing calls and the screens backed by no declared API. Dead code that still runs, still has tests and still costs money is the thing this page is for. Every row is a decision waiting to be made — keep it and wire it up, or delete it.",
+    "data_story": "Nothing is built yet, so nothing is measured here. As specified it reads descriptor files and checker verdicts rather than database tables.",
+    "under_126": "**NEW.** It does not exist; it is generated from descriptors from its first commit, through the LIST renderer (a collection with declared pagination, recycling and empty/offline states). It is **100% generated** — which is the point: if the descriptor set is incomplete or an archetype profile is wrong, this page is visibly empty or visibly wrong on commit 1, and cannot be faked by hand."
+  },
+  "evidence": {
+    "files": [
+      "docs/reports/2026-09-15-spec126-admin-best-in-class.md §3.3 — the designed renderer set; no file exists in the tree"
+    ],
+    "contracts": [
+      "DESIGNED: GET /api/admin/surfaces/orphans — absent from the census"
+    ],
+    "tables": [
+      "docs/specs/02-web-admin/126_maxbld_surface_standard.md §6.3 rows 8-9"
+    ],
+    "gate": [
+      "src/lib/auth/route-guard.ts:162"
+    ],
+    "states": [
+      "docs/specs/02-web-admin/127_surface_conversion_procedure.md §4.3",
+      "docs/specs/02-web-admin/126_maxbld_surface_standard.md §3.1 row 1 — LIST states[] must include empty and offline"
+    ],
+    "emits": [
+      "docs/reports/2026-09-15-spec126-admin-best-in-class.md §1.1 row 19 — Writes \"—\""
+    ]
+  },
+  "identity": {
+    "id": "admin_orphan_panel",
+    "archetype": "LIST",
+    "platforms": [
+      "web"
+    ],
+    "owns": {
+      "components": [
+        "src/features/admin-registry/components/RegistryOrphanTable.tsx"
+      ]
+    },
+    "owner": "Admin domain (Spec 126 §14 Target Files) — no individual owner is named by Specs 126/127/128.",
+    "spec": "docs/specs/02-web-admin/126_maxbld_surface_standard.md",
+    "spec_refs": [
+      "docs/specs/02-web-admin/126_maxbld_surface_standard.md §2.2 group F — admin_orphan_panel LIST (100% gen)",
+      "docs/specs/02-web-admin/126_maxbld_surface_standard.md §2.2.1 P8 — orphans are a first-class rendered concept",
+      "docs/specs/02-web-admin/126_maxbld_surface_standard.md §6.3 row 9 — the fan-out and orphan joins, both derived from consumers[]",
+      "docs/reports/2026-09-15-spec126-admin-best-in-class.md §1.1 row 19 · §2 P8 · §3.2 (verdict BUILD)"
+    ],
+    "spec_version": "0-draft",
+    "versioning": {
+      "answer": "none",
+      "why": "Nothing consumes this surface: it does not exist, so no compatibility promise can have been made. It gains a promise at its C9 cutover, when its golden pair is captured.",
+      "evidence": [
+        "docs/specs/02-web-admin/126_maxbld_surface_standard.md §2.2 — listed among the 11 NEW admin surfaces",
+        "docs/specs/02-web-admin/127_surface_conversion_procedure.md §4.3 — the golden PAIR is what pins a shape"
+      ]
+    },
+    "ref": "S-011"
+  },
+  "inputs": {
+    "answer": "contract",
+    "why": "The same descriptor join as the fan-out graph, inverted: contracts whose consumers[] is empty, and surfaces whose inputs.contract_ref is empty. One designed QUERY contract serves both projections.",
+    "evidence": [
+      "docs/reports/2026-09-15-spec126-admin-best-in-class.md §3.2 — \"same query, no new dependency\"",
+      "docs/specs/02-web-admin/126_maxbld_surface_standard.md §6.3 row 9"
+    ],
+    "contract_ref": [],
+    "query_key": [
+      "admin",
+      "orphans",
+      "kind"
+    ],
+    "field_whitelist": [
+      "kind",
+      "id",
+      "route",
+      "archetype",
+      "loc",
+      "test_count",
+      "consumers_count",
+      "first_seen_git_sha",
+      "disposition"
+    ],
+    "tables": [
+      {
+        "table": "contract_descriptors",
+        "columns": [
+          "contract_id",
+          "archetype",
+          "descriptor",
+          "git_sha",
+          "seeded_at"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/02-web-admin/126_maxbld_surface_standard.md §6.3",
+        "evidence": [
+          "docs/specs/02-web-admin/126_maxbld_surface_standard.md §6.4 — written by scripts/seeds/apply-surface-descriptors.js at deploy (the apply-logic-variables.js mechanism), ON CONFLICT DO UPDATE keyed on git_sha; not a chain step",
+          "docs/specs/02-web-admin/126_maxbld_surface_standard.md §6.3 row 8/9/10 — the seeded projection of the git descriptors"
+        ]
+      },
+      {
+        "table": "surface_descriptors",
+        "columns": [
+          "surface_id",
+          "archetype",
+          "platforms",
+          "descriptor",
+          "git_sha",
+          "seeded_at"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/02-web-admin/126_maxbld_surface_standard.md §6.3",
+        "evidence": [
+          "docs/specs/02-web-admin/126_maxbld_surface_standard.md §6.4 — written by scripts/seeds/apply-surface-descriptors.js at deploy (the apply-logic-variables.js mechanism), ON CONFLICT DO UPDATE keyed on git_sha; not a chain step",
+          "docs/specs/02-web-admin/126_maxbld_surface_standard.md §6.3 row 8/9/10 — the seeded projection of the git descriptors"
+        ]
+      }
+    ]
+  },
+  "outputs": {
+    "answer": "none",
+    "why": "It lists decisions waiting to be made; it does not take them. Retiring or wiring up an orphan is a code change in its own WF3, not a button here — which is why no admin_audit_log row is owed.",
+    "evidence": [
+      "docs/reports/2026-09-15-spec126-admin-best-in-class.md §1.1 row 19 — Writes column is \"—\"",
+      "docs/specs/02-web-admin/128_surface_standard_policy.md §3 rule B6"
+    ],
+    "contract_ref": [],
+    "tables": []
+  },
+  "state": {
+    "answer": "server_only",
+    "why": "An RSC page; the kind filter lives in the URL. Nothing is cached client-side because the join is cheap and the answer must never be stale when someone is about to delete a route.",
+    "evidence": [
+      "docs/specs/02-web-admin/126_maxbld_surface_standard.md §5.3 — arrow 3, RSC"
+    ],
+    "fields": []
+  },
+  "staleness": {
+    "answer": "live",
+    "why": "Recomputed per request from the seeded descriptors. A stale orphan list is worse than none: it is how a route that just gained a caller still reads as dead.",
+    "evidence": [
+      "docs/specs/02-web-admin/126_maxbld_surface_standard.md §6.4"
+    ],
+    "offline": "none"
+  },
+  "guards": {
+    "session": {
+      "answer": "admin",
+      "why": "An /admin/** page: classifyRoute returns \"admin\" for any pathname starting with /admin/, and \"admin\" is the profiles.is_admin flag checked in-predicate, not a Postgres role.",
+      "evidence": [
+        "src/lib/auth/route-guard.ts:162 — pathname === \"/admin\" || pathname.startsWith(\"/admin/\") returns \"admin\"",
+        "src/lib/auth/route-guard.ts:159 — /api/admin/ returns \"admin\" for the contract half",
+        "migrations/226_profiles_admin_bootstrap.sql:27 — is_admin BOOLEAN NOT NULL DEFAULT false",
+        "docs/specs/00-architecture/114_rls_policy_catalog.md §2 — there is no admin Postgres role; admin is a column flag checked inside the policy predicate"
+      ]
+    },
+    "rls_class": {
+      "answer": "B",
+      "why": "Spec 114 §2 is definitional: everything that is not one of the 10 named Class-A tables, not profiles and not Class D is Class B by default, including tables added after that spec was written — which covers contract_descriptors and surface_descriptors. Class B is ENABLE ROW LEVEL SECURITY with zero policies, and per Spec 114 §4 / D1 the Next.js admin route connects as the table owner, so it is outside RLS enforcement entirely.",
+      "evidence": [
+        "docs/specs/00-architecture/114_rls_policy_catalog.md §2 — \"everything else is Class B by default — including tables added after this spec is written\"",
+        "docs/specs/00-architecture/114_rls_policy_catalog.md §4 — Class B is one ENABLE statement and no CREATE POLICY; admin/pipeline connections are RLS-exempt as table owner (Decision D1)"
+      ]
+    },
+    "disclosure": "none",
+    "entitlement": "none",
+    "flag": "none",
+    "permission": "none",
+    "rate_bucket": "none"
+  },
+  "render": {
+    "targets": [
+      "screen"
+    ],
+    "projection": "list",
+    "breakpoints": "desktop_first_md",
+    "export": "none",
+    "list": "UNRESEARCHED"
+  },
+  "checks": [
+    {
+      "id": "orphan_descriptor_parse",
+      "kind": "contract_parse",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "A row that fails to parse must render as schema_drift; an orphan quietly dropped from the orphan panel is the defect repeating inside its own detector."
+    },
+    {
+      "id": "orphan_empty_state",
+      "kind": "empty_state",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "Zero orphans is a claim (\"I looked and there are none\"), and it must be distinguishable from an unseeded registry — the plausible-zero trap the estate has already paid for."
+    },
+    {
+      "id": "orphan_offline_state",
+      "kind": "offline_state",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "why": "The LIST profile requires an offline state; on a desktop-only admin page there is no cached projection to render, so this is descriptive and no threshold could bound it."
+    },
+    {
+      "id": "orphan_error_state",
+      "kind": "error_state",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "A 500 must not read as \"no orphans\"."
+    },
+    {
+      "id": "orphan_query_key_stable",
+      "kind": "query_key_hygiene",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "The kind filter is a parameter of a stable key array, not an object literal."
+    },
+    {
+      "id": "orphan_components_owned",
+      "kind": "components_owned",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "R-13 direction 2: a component file owned by no surface is the UI-side orphan, and it belongs on this page rather than only in the generator's \"Unowned components\" section."
+    }
+  ],
+  "invariants": [
+    {
+      "id": "orphan_join_is_total",
+      "sql": "SELECT count(*) FROM contract_descriptors c WHERE c.descriptor->'consumers' IS NULL",
+      "severity": "FAIL",
+      "why": "A contract whose consumers[] is NULL rather than [] is unmeasured, not orphaned; conflating the two is how a live route gets deleted."
+    }
+  ],
+  "plausibility": [
+    {
+      "id": "orphan_count_band",
+      "sql": "SELECT count(*) FROM contract_descriptors c WHERE jsonb_array_length(coalesce(c.descriptor->'consumers','[]'::jsonb)) = 0",
+      "severity": "WARN",
+      "why": "Two independent sweeps disagree on the orphan count today (17 vs the report's admin-side 8 of 29) — ASK-13 — so the count is rendered with its band rather than asserted, and a sudden move to 0 or to 61 means the seed, not the estate, changed."
+    }
+  ],
+  "states": [
+    {
+      "name": "loading",
+      "golden": "none"
+    },
+    {
+      "name": "empty",
+      "golden": "none"
+    },
+    {
+      "name": "hit",
+      "golden": "none"
+    },
+    {
+      "name": "error",
+      "golden": "none"
+    },
+    {
+      "name": "unauthorized",
+      "golden": "none"
+    },
+    {
+      "name": "offline",
+      "golden": "none"
+    }
+  ],
+  "errors": {
+    "answer": "envelope",
+    "why": "Every admin route handler is wrapped by withApiEnvelope, which returns { data, error, meta } with a sanitised code on any throw; the surface renders from that envelope rather than from a raw exception.",
+    "evidence": [
+      "src/lib/api/with-api-envelope.ts:27 — withApiEnvelope always returns the { data, error, meta } envelope",
+      "src/lib/api/with-api-envelope.ts:40-45 — a PG SQLSTATE becomes DATABASE_ERROR; the raw message is never exposed"
+    ],
+    "classes": [
+      {
+        "class": "401",
+        "ui": "Redirect to sign-in — the route guard refuses before the page renders."
+      },
+      {
+        "class": "403",
+        "ui": "Full-page \"admin only\" block naming the is_admin requirement; no partial data."
+      },
+      {
+        "class": "500",
+        "ui": "Full-width error panel carrying the envelope error.code, with a retry control."
+      },
+      {
+        "class": "schema_drift",
+        "ui": "The row that failed to parse renders as a red schema_drift row; the rest of the table still renders."
+      }
+    ],
+    "no_retry": [
+      "401",
+      "403"
+    ]
+  },
+  "emits": {
+    "answer": "none",
+    "why": "Read-only; nothing mutates, so R-12/B6 owes no admin_audit_log row, and nothing is metered.",
+    "evidence": [
+      "docs/specs/02-web-admin/128_surface_standard_policy.md §3 rule B6"
+    ],
+    "analytics": [],
+    "ledger_events": [],
+    "breadcrumbs": []
+  },
+  "offers": {
+    "answer": "none",
+    "why": "It renders no sponsored content: it is an operator tool behind the admin flag, and Spec 126 §2.2 assigns SLOT to product surfaces only. Written down because \"none\" on offers is exactly the answer R-16 says must never be an omission.",
+    "evidence": [
+      "docs/specs/02-web-admin/126_maxbld_surface_standard.md §3.1 — SLOT is the archetype that renders inventory; this surface is not one",
+      "docs/specs/02-web-admin/128_surface_standard_policy.md §2 rule 6 — \"none\" is legal; silence is not"
+    ]
+  },
+  "metering": {
+    "answer": "none",
+    "why": "It renders a count; it writes no usage_events row and gates no quota.",
+    "evidence": [
+      "docs/specs/02-web-admin/126_maxbld_surface_standard.md §7"
+    ]
+  },
+  "config": {
+    "answer": "logic_variables",
+    "why": "The page size is the only tunable; the orphan predicate itself is a declaration (consumers[] empty), not a threshold, so there is nothing else to externalise.",
+    "evidence": [
+      "docs/specs/02-web-admin/128_surface_standard_policy.md §2 rule 3",
+      "scripts/seeds/logic_variables.json — NET-NEW key"
+    ],
+    "logic_variables": [
+      {
+        "name": "admin_orphan_page_size",
+        "min": 10,
+        "max": 500,
+        "on_invalid": "fail",
+        "why": "It bounds the query that decides what an operator sees; a bad value silently truncates the list."
+      }
+    ],
+    "retired": []
+  },
+  "sharing": {
+    "answer": "shared",
+    "why": "Same contract as admin_contract_fanout — the inverted projection of one join. That is the \"one contract, N projections\" property stated as data.",
+    "evidence": [
+      "docs/reports/2026-09-15-spec126-admin-best-in-class.md §3.2"
+    ],
+    "surfaces": [
+      "admin_contract_fanout"
+    ],
+    "varies_by_surface": "This projection is the complement: the rows the fan-out graph has no edge for."
+  },
+  "a11y": {
+    "touch_target_min_px": 44,
+    "labels": "complete",
+    "dark_mode": "none",
+    "reduced_motion": "none",
+    "i18n": "none",
+    "safe_area": "none"
+  },
+  "deviations": "none",
+  "limitations": [
+    {
+      "what": "The LIST required-field profile in Spec 126 §3.1 mandates list.item_archetype, list.pagination and list.recycling, and surface.schema.json has no property for any of them (the top level and every category are additionalProperties:false).",
+      "measured": "Every allOf block in scripts/surfaces/_schema/surface.schema.json is `\"then\": true` — the archetype profiles are declared in prose in Spec 126 §3.1 and enforced by nothing, so these fields cannot be declared here and are not caught missing either.",
+      "check_id": "orphan_query_key_stable"
+    },
+    {
+      "what": "The orphan count this page renders is contested.",
+      "measured": "Spec 126 §2.2.1 P8 records two sweeps disagreeing — 5 of 29 /api/admin/* uncalled by one count, 8 of 29 by the report's, and the census's own 17-contract list adds pipelines/history and pipelines/schedules. Reconciling them is ASK-13 and is explicitly NOT resolved by Spec 126.",
+      "check_id": "orphan_count_band"
+    }
+  ],
+  "interpretation": "none",
+  "notes": "Report §1.1 row 19 and §3.2 (verdict BUILD, 'same query, no new dependency'). Reads no DB table — the same descriptor join as admin_contract_fanout, inverted. Measured defects it makes visible: the 17 zero-call-site contracts and 13 no-contract surfaces, with /api/leads/view as row 1 (153L, a live atomic-CTE meter, whitelisted in route-guard.ts:122, 44 test cases across 9 describe blocks, zero production callers, and a consequently unreachable paywall branch at PaywallScreen.tsx:153); plus the admin-side re-measurement of 8 of 29 /api/admin/* route files with no static caller. DESIGNED, NOT MEASURED. UNDECIDED: the orphan COUNT itself is ASK-13 (two sweeps disagree, 5 vs 8 of 29 admin routes, plus a 17-contract census list) and Spec 126 §2.2.1 P8 states outright that \"that disagreement is not resolved here\" — so the page renders the count with its band rather than asserting one. The `offline` state is declared because the LIST profile requires it, at severity INFO: a desktop admin page has no cached projection, so the honest posture is descriptive, not a threshold.",
+  "x-draft": {
+    "shard": "admin-new",
+    "files": [],
+    "role": "admin",
+    "generated": "100%",
+    "net_new_tables": [
+      "contract_descriptors",
+      "surface_descriptors"
+    ],
+    "designed": true
+  },
+  "programme": {
+    "scope": "parcel_admin",
+    "phase": "B1a",
+    "why": "A descriptor-native admin page generated from the same descriptors this programme produces; it exists to operate and observe the parcel product, not the lead estate.",
+    "feature": "F09",
+    "build_order": 2093,
+    "leakage": "none",
+    "product_questions": "none",
+    "review": {
+      "status": "unreviewed"
+    }
+  }
+}

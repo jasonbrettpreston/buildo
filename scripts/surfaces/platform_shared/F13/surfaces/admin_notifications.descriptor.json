@@ -1,0 +1,448 @@
+{
+  "kind": "SURFACE",
+  "status": "exists",
+  "docs": {
+    "purpose": "The operator's window on push notifications. It lists what was sent, to whom, when and of what type, with device identifiers partly hidden, and lets the operator fire a real test notification to a chosen device and see the delivery receipt. It also shows, read-only, whether notifications are currently switched off or throttled, linking to the control panel for the one place those settings can actually be changed.",
+    "data_story": "It reads nothing from the database directly. Every value arrives through 2 contracts: `/api/admin/notifications`, `/api/admin/notifications/test-send`. Behind those contracts, the data comes from `device_tokens`, `logic_variables`, `notification_dispatches`, `notifications` and `user_profiles`.",
+    "under_126": "**RE-PROJECT** — it writes nothing and holds no Layer-3 store, so the move is short — the server already assembles the payload and only the rendering is client-side. It renders through the LIST renderer (a collection with declared pagination, recycling and empty/offline states), reading by reference: `/api/admin/notifications`, `/api/admin/notifications/test-send`. Its `owns.components[]` declares `src/components/admin/NotificationsTool.tsx`."
+  },
+  "evidence": {
+    "files": [
+      "src/app/admin/notifications/page.tsx:8",
+      "src/components/admin/NotificationsTool.tsx:10"
+    ],
+    "contracts": [
+      "src/app/api/admin/notifications/route.ts:44",
+      "src/app/api/admin/notifications/test-send/route.ts:43"
+    ],
+    "tables": [
+      "src/app/api/admin/notifications/route.ts:69",
+      "src/app/api/admin/notifications/route.ts:101",
+      "src/app/api/admin/notifications/route.ts:125",
+      "src/app/api/admin/notifications/test-send/route.ts:71"
+    ],
+    "gate": [
+      "src/lib/auth/route-guard.ts:162",
+      "src/middleware.ts:95",
+      "src/app/api/admin/notifications/route.ts:45",
+      "src/app/api/admin/notifications/test-send/route.ts:44"
+    ],
+    "states": [
+      "src/components/admin/NotificationsTool.tsx:1",
+      "src/tests/admin-notifications.infra.test.ts:1"
+    ],
+    "emits": [
+      "src/components/admin/NotificationsTool.tsx:10",
+      "src/app/api/admin/notifications/test-send/route.ts:110"
+    ]
+  },
+  "identity": {
+    "id": "admin_notifications",
+    "route": "src/app/admin/notifications/page.tsx",
+    "archetype": "LIST",
+    "platforms": [
+      "web"
+    ],
+    "owns": {
+      "components": [
+        "src/components/admin/NotificationsTool.tsx"
+      ]
+    },
+    "owner": "UNRESEARCHED",
+    "spec": "docs/specs/02-web-admin/102_admin_notifications_tool.md",
+    "spec_refs": [
+      "docs/specs/02-web-admin/102_admin_notifications_tool.md §2",
+      "docs/specs/02-web-admin/102_admin_notifications_tool.md §3",
+      "docs/specs/02-web-admin/102_admin_notifications_tool.md §4",
+      "docs/specs/02-web-admin/86_control_panel.md §1"
+    ],
+    "spec_version": "0-draft",
+    "versioning": {
+      "answer": "breaking_allowed",
+      "why": "Both contracts are called only from this tool and the user-detail card; nothing outside the repo consumes them, so a shape change is one commit.",
+      "evidence": [
+        "src/app/api/admin/notifications/route.ts:136",
+        "src/components/admin/NotificationsCard.tsx:1"
+      ]
+    },
+    "ref": "S-022"
+  },
+  "inputs": {
+    "answer": "contract",
+    "why": "The dispatch log, the device tokens, the user preferences and the three kill-switch values all arrive through GET /api/admin/notifications.",
+    "evidence": [
+      "src/app/api/admin/notifications/route.ts:44",
+      "src/app/api/admin/notifications/route.ts:136"
+    ],
+    "contract_ref": [
+      "/api/admin/notifications",
+      "/api/admin/notifications/test-send"
+    ],
+    "query_key": [],
+    "field_whitelist": [
+      "dispatches",
+      "user",
+      "total",
+      "limit",
+      "offset",
+      "gates"
+    ],
+    "tables": [
+      {
+        "table": "notification_dispatches",
+        "columns": [
+          "id",
+          "user_id",
+          "lead_id",
+          "type",
+          "toronto_date",
+          "push_token",
+          "expo_ticket_id",
+          "status",
+          "detail",
+          "dispatched_at"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/00-architecture/114_rls_policy_catalog.md §3.1",
+        "evidence": [
+          "src/app/api/admin/notifications/route.ts:69"
+        ]
+      },
+      {
+        "table": "notifications",
+        "columns": [
+          "title",
+          "body",
+          "user_id",
+          "type",
+          "lead_id",
+          "created_at"
+        ],
+        "producing_steps": [
+          "classify_lifecycle_phase",
+          "update_tracked_projects"
+        ],
+        "chain_position": "permits[23]",
+        "owner_spec": "docs/specs/00-architecture/01_database_schema.md §3",
+        "evidence": [
+          "src/app/api/admin/notifications/route.ts:75"
+        ]
+      },
+      {
+        "table": "device_tokens",
+        "columns": [
+          "push_token",
+          "platform",
+          "updated_at",
+          "user_id"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/00-architecture/114_rls_policy_catalog.md §3.1",
+        "evidence": [
+          "src/app/api/admin/notifications/route.ts:101",
+          "src/app/api/admin/notifications/test-send/route.ts:71"
+        ]
+      },
+      {
+        "table": "user_profiles",
+        "columns": [
+          "phase_changed",
+          "lifecycle_stalled_pref",
+          "start_date_urgent",
+          "notification_schedule",
+          "new_lead_min_cost_tier"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/00-architecture/114_rls_policy_catalog.md §3.1",
+        "evidence": [
+          "src/app/api/admin/notifications/route.ts:105"
+        ]
+      },
+      {
+        "table": "logic_variables",
+        "columns": [
+          "variable_key",
+          "variable_value",
+          "variable_value_json"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/02-web-admin/86_control_panel.md §1",
+        "evidence": [
+          "src/app/api/admin/notifications/route.ts:125"
+        ]
+      },
+      {
+        "table": "profiles",
+        "columns": [
+          "is_admin"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/00-architecture/114_rls_policy_catalog.md §5",
+        "evidence": [
+          "src/app/api/admin/notifications/route.ts:45",
+          "src/lib/auth/verify-admin.ts:118"
+        ]
+      }
+    ]
+  },
+  "outputs": {
+    "answer": "contract_only",
+    "why": "Test-send posts and waits; it deliberately writes NO notification_dispatches or notifications row, so the log it sits beside stays a record of real dispatches only.",
+    "evidence": [
+      "src/app/api/admin/notifications/test-send/route.ts:43",
+      "src/app/api/admin/notifications/test-send/route.ts:10",
+      "src/app/api/admin/notifications/test-send/route.ts:93"
+    ],
+    "contract_ref": [
+      "/api/admin/notifications/test-send"
+    ],
+    "rollback": "None is possible — the side effect is a push already delivered to a device. The only guard is that the route refuses any credential other than a real session.",
+    "invalidates": [],
+    "tables": []
+  },
+  "state": {
+    "answer": "query_cache",
+    "why": "It runs under the root PersistQueryClientProvider with no store of its own; the page itself is force-dynamic so the shell is never statically cached.",
+    "evidence": [
+      "src/app/admin/notifications/page.tsx:8",
+      "src/app/providers.tsx:45"
+    ],
+    "fields": []
+  },
+  "staleness": {
+    "answer": "live",
+    "why": "The page declares dynamic = force-dynamic and the route sets no cache directive, so the dispatch log is read on every request.",
+    "evidence": [
+      "src/app/admin/notifications/page.tsx:8",
+      "src/app/api/admin/notifications/route.ts:44"
+    ],
+    "stale_time_ms": 0,
+    "offline": "cached_projection"
+  },
+  "guards": {
+    "session": {
+      "answer": "admin",
+      "why": "There is no admin Postgres role: classifyRoute sends every /admin/* path down the admin arm, and the real boundary is verifyAdminAuth reading profiles.is_admin on the route. Both contracts call it on their first line, and test-send additionally requires authMethod === \"session\", so neither a CI token nor a break-glass key can fire a push.",
+      "evidence": [
+        "src/lib/auth/route-guard.ts:162",
+        "src/middleware.ts:95",
+        "src/app/api/admin/notifications/route.ts:45",
+        "src/app/api/admin/notifications/test-send/route.ts:44"
+      ]
+    },
+    "rls_class": {
+      "answer": "A",
+      "why": "notification_dispatches, notifications, device_tokens and user_profiles are four of the ten Class-A auth.uid()-owned tables; the admin reads them through the service role, which is the only principal a Class-A policy lets past for another user's rows.",
+      "evidence": [
+        "docs/specs/00-architecture/114_rls_policy_catalog.md:107",
+        "docs/specs/00-architecture/114_rls_policy_catalog.md:114"
+      ]
+    },
+    "disclosure": "none",
+    "entitlement": "none",
+    "flag": "none",
+    "permission": "none",
+    "rate_bucket": "none"
+  },
+  "render": {
+    "targets": [
+      "screen"
+    ],
+    "projection": "list",
+    "breakpoints": "none",
+    "export": "none",
+    "list": "UNRESEARCHED"
+  },
+  "checks": [
+    {
+      "id": "notifications_push_token_masked",
+      "kind": "disclosure",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "why": "Every push token leaves the route masked, on both the dispatch rows and the device list — an unmasked token in an admin payload is a credential leak, so this is a pre-render gate."
+    },
+    {
+      "id": "notifications_one_write_path",
+      "kind": "schema_declared",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "The kill-switch and throttle values render read-only and deep-link to the Control Panel, so logic_variables keeps exactly one write path rather than two."
+    },
+    {
+      "id": "notifications_empty_state",
+      "kind": "empty_state",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "A day with no dispatches must render the declared empty state, not a blank table that reads as a broken page."
+    }
+  ],
+  "invariants": "none",
+  "plausibility": "none",
+  "states": [
+    {
+      "name": "loading",
+      "golden": "none"
+    },
+    {
+      "name": "empty",
+      "golden": "none"
+    },
+    {
+      "name": "hit",
+      "golden": "none"
+    },
+    {
+      "name": "error",
+      "golden": "none"
+    }
+  ],
+  "errors": {
+    "answer": "envelope",
+    "why": "Every failure path on both contracts returns the { data, error, meta } envelope with a code, and the tool renders from it.",
+    "evidence": [
+      "src/app/api/admin/notifications/route.ts:145",
+      "src/app/api/admin/notifications/test-send/route.ts:133"
+    ],
+    "classes": [
+      {
+        "class": "403",
+        "ui": "envelope error — a non-session credential cannot test-send"
+      },
+      {
+        "class": "500",
+        "ui": "envelope error rendered in the panel"
+      }
+    ]
+  },
+  "emits": {
+    "answer": "events",
+    "why": "Read telemetry is deliberately omitted (the log renders no PII), but the test-send route emits admin_action_performed to PostHog with a hashed admin uid. That is the only trace a real push leaves.",
+    "evidence": [
+      "src/components/admin/NotificationsTool.tsx:10",
+      "src/app/api/admin/notifications/test-send/route.ts:110"
+    ],
+    "analytics": [
+      "admin_action_performed"
+    ],
+    "ledger_events": [],
+    "breadcrumbs": []
+  },
+  "offers": {
+    "answer": "none",
+    "why": "An internal operator tool renders no sponsored placement; no offers/placements table is reached from any file it owns.",
+    "evidence": [
+      "src/components/admin/NotificationsTool.tsx:1"
+    ]
+  },
+  "metering": {
+    "answer": "none",
+    "why": "Nothing here is billable or quota-bearing: no usage_events / ledger write is reached from this surface or its contracts.",
+    "evidence": [
+      "src/app/api/admin/notifications/route.ts:44"
+    ]
+  },
+  "config": {
+    "answer": "logic_variables",
+    "why": "It renders three tunables read-only as the dispatch kill-switch status panel; the write path for all three is the Spec 86 Control Panel, not this page.",
+    "evidence": [
+      "src/app/api/admin/notifications/route.ts:125",
+      "docs/specs/02-web-admin/102_admin_notifications_tool.md §2"
+    ],
+    "logic_variables": [
+      {
+        "name": "notifications_dispatch_enabled",
+        "on_invalid": "default",
+        "why": "Rendered as status only; an absent row shows the seeded default rather than failing the page."
+      },
+      {
+        "name": "notifications_max_per_user_per_day",
+        "on_invalid": "default",
+        "why": "Same — display-only on this surface."
+      },
+      {
+        "name": "notifications_disabled_types",
+        "on_invalid": "default",
+        "why": "Same — display-only on this surface."
+      }
+    ],
+    "retired": []
+  },
+  "sharing": {
+    "answer": "shared",
+    "why": "/api/admin/notifications is also read by NotificationsCard, which renders inside the user-detail page.",
+    "evidence": [
+      "src/components/admin/NotificationsCard.tsx:1",
+      "src/app/admin/users/[uid]/page.tsx:1"
+    ],
+    "surfaces": [
+      "admin_user_detail"
+    ]
+  },
+  "a11y": {
+    "touch_target_min_px": "UNRESEARCHED",
+    "labels": "partial",
+    "dark_mode": "none",
+    "reduced_motion": "none",
+    "i18n": "none",
+    "safe_area": "none"
+  },
+  "deviations": "none",
+  "limitations": [
+    {
+      "what": "POST /api/admin/notifications/test-send delivers a real push with no admin_audit_log row",
+      "measured": "The route emits a PostHog track() only; it does not import src/lib/admin/admin-audit.ts, so an operator-triggered push to a real user's device leaves no audit row.",
+      "check_id": "none — no checks[] kind covers \"an admin mutation writes an admin_audit_log row\"; escalated per Spec 128 §4"
+    },
+    {
+      "what": "The response carries a fourth top-level key outside the envelope",
+      "measured": "test-send returns { data, error, meta, _debug }.",
+      "check_id": "notifications_push_token_masked"
+    },
+    {
+      "what": "touch_target_min_px has no legal answer for a desktop-only admin page",
+      "measured": "The schema allows only UNRESEARCHED or an integer >= 44, and nothing in this surface declares a 44px floor (grep for min-h-[44 / h-11 over its owned files returns nothing).",
+      "check_id": "none — vocabulary gap, escalated per Spec 128 §4"
+    }
+  ],
+  "interpretation": "none",
+  "notes": "Archetype LIST for the dispatch log, which is the page's spine; it also embeds a small test-send FORM and a read-only status panel. Deliberately read-only on the kill-switch/throttle values so there is one write path for logic_variables (the Spec 86 Control Panel), not two. The page sets `export const dynamic = 'force-dynamic'`. identity.owner is UNRESEARCHED estate-wide: no owner registry exists in the tree, so naming one would be an invention rather than a measurement. a11y.touch_target_min_px is UNRESEARCHED because its vocabulary (UNRESEARCHED or an integer >= 44) has no member for a desktop-only admin page that declares no floor. AUDIT FINDING: POST /api/admin/notifications/test-send delivers a real push to a real device with no admin_audit_log row - only a PostHog track().",
+  "x-draft": {
+    "shard": "admin-existing",
+    "files": [
+      "src/app/admin/notifications/page.tsx",
+      "src/components/admin/NotificationsTool.tsx"
+    ],
+    "loc": 296,
+    "measured_states": [
+      "loading",
+      "empty",
+      "error",
+      "loaded",
+      "sending"
+    ],
+    "measured_gate": {
+      "session": "admin",
+      "why": "classifyRoute('/admin/notifications') matches the admin-pages arm via `pathname.startsWith('/admin/')` -> 'admin'."
+    }
+  },
+  "programme": {
+    "scope": "platform_shared",
+    "phase": "UNRESEARCHED",
+    "why": "Notifications: one device-token registry and one preference set across both products.",
+    "feature": "F13",
+    "build_order": 3133,
+    "leakage": "none",
+    "product_questions": "none",
+    "review": {
+      "status": "unreviewed"
+    }
+  }
+}

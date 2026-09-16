@@ -1,0 +1,475 @@
+{
+  "kind": "SURFACE",
+  "status": "exists",
+  "docs": {
+    "purpose": "The full-screen message a user meets when their free trial has run out. It tells them how many jobs they viewed during the trial and offers a button that opens a checkout page in a browser. They can also dismiss it and keep browsing with everything blurred out. If they have already paid and nothing has changed, a link appears after a minute to re-check their status.",
+    "data_story": "It reads nothing from the database directly. Every value arrives through one contract: `/api/subscribe/session`. Behind that contract, the data comes from `entitlements` and `user_profiles`, and writes land on `subscribe_nonces`. It also holds client-side state in `paywallStore`, which is the part a server-driven projection has to absorb or justify.",
+    "under_126": "**REBUILD** — it holds Layer-3 state (`paywallStore`) and drives writes, so a client decision has to be re-homed on the server before the projection can be honest. It renders through the GATE renderer (a `statuses_handled[]` that must cover every value of the closed set it gates on), reading by reference: `/api/subscribe/session`. Its `owns.components[]` declares `mobile/src/components/paywall/PaywallScreen.tsx`."
+  },
+  "evidence": {
+    "files": [
+      "mobile/src/components/paywall/PaywallScreen.tsx:1"
+    ],
+    "contracts": [
+      "mobile/src/hooks/useSubscribeCheckout.ts:52",
+      "mobile/src/components/paywall/PaywallScreen.tsx:130"
+    ],
+    "tables": [
+      "src/app/api/subscribe/session/route.ts:103",
+      "src/app/api/subscribe/session/route.ts:147-166",
+      "src/app/api/user-profile/route.ts:51"
+    ],
+    "gate": [
+      "mobile/app/(app)/_layout.tsx:263-265",
+      "src/app/api/subscribe/session/route.ts:103-138"
+    ],
+    "states": [
+      "mobile/src/components/paywall/PaywallScreen.tsx:153-169",
+      "mobile/src/components/paywall/PaywallScreen.tsx:210-233"
+    ],
+    "emits": [
+      "mobile/src/components/paywall/PaywallScreen.tsx:79",
+      "mobile/src/components/paywall/PaywallScreen.tsx:112",
+      "mobile/src/components/paywall/PaywallScreen.tsx:198"
+    ]
+  },
+  "identity": {
+    "id": "overlay_paywall",
+    "route": "mobile/src/components/paywall/PaywallScreen.tsx",
+    "archetype": "GATE",
+    "platforms": [
+      "mobile"
+    ],
+    "owns": {
+      "components": [
+        "mobile/src/components/paywall/PaywallScreen.tsx"
+      ]
+    },
+    "owner": "unassigned (no CODEOWNERS file and no owner registry exists in the repo — measured 2026-09-15)",
+    "spec": "docs/specs/03-mobile/96_mobile_subscription.md",
+    "spec_refs": [
+      "docs/specs/03-mobile/96_mobile_subscription.md §9",
+      "docs/specs/03-mobile/96_mobile_subscription.md §10",
+      "docs/specs/03-mobile/96_mobile_subscription.md §5",
+      "docs/specs/03-mobile/99_mobile_state_architecture.md §7.6"
+    ],
+    "spec_version": "0-draft",
+    "versioning": {
+      "answer": "frozen",
+      "why": "The checkout response is parsed by SubscribeSessionResponseSchema against a server type file the hook names by path; the comment at useSubscribeCheckout.ts:25 spells out that the server type must change first.",
+      "evidence": [
+        "mobile/src/hooks/useSubscribeCheckout.ts:21-28",
+        "mobile/src/hooks/useSubscribeCheckout.ts:53"
+      ]
+    },
+    "ref": "S-043"
+  },
+  "inputs": {
+    "answer": "props",
+    "why": "Its only render input is the leadViewsCount prop the tab shell passes from the already-fetched profile; the checkout contract is outbound, fired on tap.",
+    "evidence": [
+      "mobile/src/components/paywall/PaywallScreen.tsx:29-41",
+      "mobile/app/(app)/_layout.tsx:264"
+    ],
+    "contract_ref": [
+      "/api/subscribe/session"
+    ],
+    "query_key": [
+      "user-profile"
+    ],
+    "field_whitelist": [
+      "lead_views_count",
+      "subscription_status"
+    ],
+    "tables": [
+      {
+        "table": "user_profiles",
+        "columns": [
+          "user_id",
+          "lead_views_count",
+          "account_deleted_at"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/03-mobile/95_mobile_user_profiles.md",
+        "evidence": [
+          "src/app/api/user-profile/route.ts:51",
+          "src/app/api/subscribe/session/route.ts:103",
+          "src/lib/userProfile.schema.ts:85-122",
+          "migrations/230_rls_class_a_entitlements.sql:62-68"
+        ]
+      },
+      {
+        "table": "entitlements",
+        "columns": [
+          "user_id",
+          "product",
+          "status",
+          "trial_started_at"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/00-architecture/116_multi_product_architecture.md",
+        "evidence": [
+          "src/app/api/subscribe/session/route.ts:138",
+          "src/lib/entitlements/index.ts:109-119",
+          "migrations/228_entitlements.sql:21-35",
+          "src/lib/entitlements/index.ts:68"
+        ]
+      },
+      {
+        "table": "subscribe_nonces",
+        "columns": [
+          "nonce",
+          "user_id"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/03-mobile/96_mobile_subscription.md",
+        "evidence": [
+          "src/app/api/subscribe/session/route.ts:147-166",
+          "src/app/api/subscribe/session/route.ts:147-166",
+          "migrations/230_rls_class_a_entitlements.sql:81-87"
+        ]
+      }
+    ]
+  },
+  "outputs": {
+    "answer": "contract_only",
+    "why": "Tapping the CTA POSTs /api/subscribe/session, which mints a single-use nonce row and returns a web checkout URL; the app then opens the system browser and waits for the webhook plus the AppState re-fetch — it never marks itself paid.",
+    "evidence": [
+      "mobile/src/hooks/useSubscribeCheckout.ts:49-62",
+      "src/app/api/subscribe/session/route.ts:147-166"
+    ],
+    "contract_ref": [
+      "/api/subscribe/session"
+    ],
+    "tables": [
+      {
+        "table": "subscribe_nonces",
+        "columns": [
+          "nonce",
+          "user_id"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/03-mobile/96_mobile_subscription.md",
+        "evidence": [
+          "src/app/api/subscribe/session/route.ts:165",
+          "src/app/api/subscribe/session/route.ts:147-166",
+          "migrations/230_rls_class_a_entitlements.sql:81-87"
+        ]
+      }
+    ],
+    "rollback": "none — the nonce is server-minted and single-use; a failed open sets a typed local error and fires the error haptic rather than undoing anything.",
+    "invalidates": [
+      "user-profile"
+    ]
+  },
+  "state": {
+    "answer": "zustand",
+    "why": "It owns paywallStore.dismissed, which is deliberately NOT persisted so a returning user meets the full paywall again rather than the inline blur.",
+    "evidence": [
+      "mobile/src/store/paywallStore.ts:5-38",
+      "mobile/src/components/paywall/PaywallScreen.tsx:42"
+    ],
+    "fields": [
+      {
+        "name": "dismissed",
+        "owner_layer": "3_zustand",
+        "canonical_writer": "this surface (\"Maybe later\")",
+        "authorized_readers": [
+          "shell_app_tabs",
+          "mobile_lead_feed",
+          "mobile_flight_board"
+        ],
+        "bridge": "none",
+        "persistence": "none",
+        "signout_reset": true
+      }
+    ]
+  },
+  "staleness": {
+    "answer": "query_cache",
+    "why": "The status it exists to react to is the shared 5-minute [\"user-profile\"] entry; the 60-second \"Refresh status\" link is a manual invalidate for the webhook-delay case.",
+    "evidence": [
+      "mobile/src/components/paywall/PaywallScreen.tsx:125-136",
+      "mobile/src/components/paywall/PaywallScreen.tsx:34"
+    ],
+    "offline": "degraded",
+    "stale_time_ms": 300000,
+    "gc_time_ms": 86400000
+  },
+  "guards": {
+    "session": {
+      "answer": "authenticated",
+      "why": "Only an authenticated user can reach it (the tab shell mounts it), and /api/subscribe/session is under the explicitly-listed /api/subscribe authenticated prefix — the sibling /api/subscribe/exchange is the exact-match public exception.",
+      "evidence": [
+        "src/lib/auth/route-guard.ts:120-132",
+        "src/lib/auth/route-guard.ts:87-101"
+      ]
+    },
+    "rls_class": {
+      "answer": "A",
+      "why": "It reads its own user_profiles/entitlements rows and mints its own subscribe_nonces row — all Class A, owner-scoped on auth.uid(), with subscribe_nonces carrying select/insert/delete policies because exchange consumes by DELETE.",
+      "evidence": [
+        "migrations/230_rls_class_a_entitlements.sql:81-87"
+      ]
+    },
+    "disclosure": "none",
+    "entitlement": {
+      "product": "lead_gen",
+      "statuses": [
+        "expired"
+      ],
+      "on_missing": "paywall"
+    },
+    "flag": "EXPO_PUBLIC_PAYWALL_CTA_NEUTRAL (PaywallScreen.tsx:39 — swaps the CTA copy for the App Store Guideline 3.1.1 case)",
+    "permission": "none",
+    "rate_bucket": "none — /api/subscribe/session calls no withRateLimit; the FOR UPDATE row lock is what serialises concurrent taps",
+    "statuses_handled": "UNRESEARCHED"
+  },
+  "render": {
+    "targets": [
+      "screen"
+    ],
+    "projection": "none",
+    "breakpoints": "mobile_first",
+    "export": "none"
+  },
+  "checks": [
+    {
+      "id": "paywall_store_machine",
+      "kind": "contract_parse",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "mobile/__tests__/paywallStore.test.ts pins the dismiss/reset transitions the tab shell branches on."
+    },
+    {
+      "id": "paywall_not_persisted",
+      "kind": "offline_state",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "Spec 96 §9 is explicit that dismissal must not survive a relaunch; paywallStore is a plain create() with no persist middleware, unlike every other store in the app."
+    },
+    {
+      "id": "paywall_fade_pointer_events",
+      "kind": "touch_target",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "The mount fade sets pointerEvents=\"none\" until the withTiming completion callback fires through runOnJS, so a fast-tapping user cannot fire the CTA mid-fade (app/(app)/_layout.tsx:92-111)."
+    },
+    {
+      "id": "paywall_funnel_events",
+      "kind": "ledger_row_present",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "paywall_shown and subscribe_button_clicked are production events; paywall_dismissed is DEV-only by the §7.3 frequency-split rule, so the dismissal rate is not measurable in production."
+    },
+    {
+      "id": "paywall_count_zero_copy",
+      "kind": "empty_state",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "leadViewsCount === 0 renders alternative copy instead of \"0 leads\", which matters because that counter is structurally zero for every mobile user (see limitations)."
+    }
+  ],
+  "invariants": "none",
+  "plausibility": "none",
+  "states": [
+    {
+      "name": "static",
+      "golden": "none"
+    },
+    {
+      "name": "empty",
+      "golden": "none"
+    },
+    {
+      "name": "loading",
+      "golden": "none"
+    },
+    {
+      "name": "degraded",
+      "golden": "none"
+    },
+    {
+      "name": "unauthorized",
+      "golden": "none"
+    }
+  ],
+  "errors": {
+    "answer": "toast",
+    "why": "Closest legal value, and a stretch: a failed checkout produces an error HAPTIC and nothing visual at all — transient like a toast, keeping the previous content, but with no message. The typed error useSubscribeCheckout stores is never read by this surface.",
+    "evidence": [
+      "mobile/src/components/paywall/PaywallScreen.tsx:117-122",
+      "mobile/src/hooks/useSubscribeCheckout.ts:63-80"
+    ],
+    "classes": [
+      {
+        "class": "400",
+        "ui": "already_active — no visible message; the error haptic fires and the CTA stays."
+      },
+      {
+        "class": "401",
+        "ui": "unauthorized — same silent haptic."
+      },
+      {
+        "class": "500",
+        "ui": "unknown — captured to Sentry, then the same silent haptic."
+      },
+      {
+        "class": "offline",
+        "ui": "NetworkError — same silent haptic; the \"Refresh status\" link is the only recovery affordance."
+      }
+    ],
+    "no_retry": []
+  },
+  "emits": {
+    "answer": "events",
+    "why": "Three funnel events — shown, CTA tapped (fired on tap, before the async resolves, so it measures intent), and dismissed (DEV-only); no ledger row is written because no usage ledger table exists.",
+    "evidence": [
+      "mobile/src/components/paywall/PaywallScreen.tsx:79",
+      "mobile/src/components/paywall/PaywallScreen.tsx:112",
+      "mobile/src/components/paywall/PaywallScreen.tsx:197-199"
+    ],
+    "analytics": [
+      "paywall_shown",
+      "subscribe_button_clicked",
+      "paywall_dismissed (DEV-only)"
+    ],
+    "ledger_events": [],
+    "breadcrumbs": [
+      "Sentry.captureException useSubscribeCheckout (unknown class only)"
+    ]
+  },
+  "offers": {
+    "answer": "none",
+    "why": "No sponsored placement is rendered: the only slot component in the Expo tree is SponsorSlot, and it returns null unless EXPO_PUBLIC_PARCEL_SPONSORS=1.",
+    "evidence": [
+      "mobile/src/components/parcel/SponsorSlot.tsx:16-20"
+    ]
+  },
+  "metering": {
+    "answer": "none",
+    "why": "Nothing here is counted: the Spec 126 §7 usage ledger table does not exist (grep for usage_events in the introspected drizzle schema returns 0 hits), and the only quota-shaped counter, user_profiles.lead_views_count, is incremented solely by POST /api/leads/view, which has no mobile caller.",
+    "evidence": [
+      "src/lib/db/generated/schema.ts — no usage_events table (grep, 2026-09-15)",
+      "src/app/api/leads/view/route.ts:110",
+      "src/features/leads/api/useLeadView.ts:25 — imported only by src/tests/useLeadView.logic.test.tsx"
+    ]
+  },
+  "config": {
+    "answer": "none",
+    "why": "Its one tunable, the 60-second refresh reveal, is a module constant (REVEAL_REFRESH_AFTER_MS) rather than a registered logic variable.",
+    "evidence": [
+      "mobile/src/components/paywall/PaywallScreen.tsx:34"
+    ],
+    "logic_variables": [],
+    "retired": []
+  },
+  "sharing": {
+    "answer": "sole",
+    "why": "POST /api/subscribe/session is rendered by this surface and nothing else in the mobile estate.",
+    "evidence": [
+      "mobile/src/hooks/useSubscribeCheckout.ts:52"
+    ],
+    "surfaces": []
+  },
+  "a11y": {
+    "touch_target_min_px": 44,
+    "labels": "complete",
+    "dark_mode": "hardcoded",
+    "reduced_motion": "ignored",
+    "i18n": "none",
+    "safe_area": [
+      "top",
+      "bottom",
+      "left",
+      "right"
+    ]
+  },
+  "deviations": "none",
+  "limitations": [
+    {
+      "what": "The headline number — \"N leads viewed in your 14-day trial\" — is structurally zero for every mobile user, because the only writer of lead_views_count has no mobile caller.",
+      "measured": "user_profiles.lead_views_count is incremented only at src/app/api/leads/view/route.ts:110; its hook src/features/leads/api/useLeadView.ts is imported only by src/tests/useLeadView.logic.test.tsx; no file under mobile/ references /api/leads/view.",
+      "check_id": "paywall_count_zero_copy"
+    },
+    {
+      "what": "A failed checkout tells the user nothing: the typed error from useSubscribeCheckout is never rendered on this screen.",
+      "measured": "PaywallScreen.tsx:44 destructures only { openCheckout, isLoading }; the hook's `error` field is read by the settings billing row but not here.",
+      "check_id": "paywall_funnel_events"
+    },
+    {
+      "what": "Five staggered entry animations plus the 400ms refresh reveal run regardless of the OS reduce-motion setting.",
+      "measured": "PaywallScreen.tsx:57-86 — withDelay/withTiming in mount effects; no AccessibilityInfo call exists in mobile/.",
+      "check_id": "none — checks[].kind has no reduced-motion value; raised as a vocabulary escalation per Spec 128 §4"
+    }
+  ],
+  "interpretation": "none",
+  "notes": "This is a GATE whose entitlement statuses are the INVERSE of every other gated surface: it renders precisely when status is expired. The checkout is a web hand-off — the nonce in the URL is the credential, which is why /api/subscribe/exchange is an exact-match public path while its siblings stay authenticated.",
+  "x-draft": {
+    "shard": "mobile-product",
+    "files": [
+      "mobile/src/components/paywall/PaywallScreen.tsx"
+    ],
+    "loc": 237,
+    "call_idiom": "hook",
+    "stores": [
+      "paywallStore"
+    ],
+    "measured_states": [
+      "staggered_entry",
+      "count_shown",
+      "count_zero_copy",
+      "checkout_loading",
+      "refresh_link_revealed",
+      "refreshing",
+      "refresh_no_change"
+    ],
+    "measured_gate": {
+      "session": "required",
+      "entitlement": "subscription_status",
+      "flag": "EXPO_PUBLIC_PAYWALL_CTA_NEUTRAL",
+      "permission": "none"
+    }
+  },
+  "programme": {
+    "scope": "platform_shared",
+    "phase": "UNRESEARCHED",
+    "why": "The subscription and Stripe hand-off, which resolves an entitlement per PRODUCT — so it serves both and belongs to neither.",
+    "feature": "F12",
+    "build_order": 3123,
+    "leakage": [
+      {
+        "behaviour": "Renders trial copy from `user_profiles.lead_views_count` — a lead-gen counter — on a paywall that also stands in front of the parcel product. The counter is structurally 0 (its only writer has no caller), so every trial user sees the zero-state copy regardless of which product they came from.",
+        "evidence": [
+          "mobile/src/components/paywall/PaywallScreen.tsx:153",
+          "src/app/api/leads/view/route.ts:100-114",
+          "src/features/leads/api/useLeadView.ts:77"
+        ],
+        "owning_product": "lead_gen",
+        "disposition": "needs-ruling"
+      }
+    ],
+    "product_questions": [
+      {
+        "question": "Should the trial paywall tell a parcel-tool user how many LEADS they have viewed? The copy is lead-gen framing on a gate that also stands in front of the parcel product.",
+        "measured": "The `{N} leads` branch is unreachable in production because the counter never increments, so every trial user sees the zero-state copy — which hides the question rather than answering it.",
+        "evidence": [
+          "mobile/src/components/paywall/PaywallScreen.tsx:153"
+        ],
+        "spec_says": "Spec 95 §2.2.1 designs the trial view counter. Spec 128 R-08 retires the meter in favour of `usage_events`, which makes this copy a product decision rather than a bug fix."
+      }
+    ],
+    "review": {
+      "status": "unreviewed"
+    }
+  }
+}

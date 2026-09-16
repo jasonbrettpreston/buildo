@@ -1,0 +1,495 @@
+{
+  "kind": "CONTRACT",
+  "status": "exists",
+  "docs": {
+    "purpose": "Lets a user who deleted their account within the last 30 days restore it, giving back exactly the access their real current subscription status supports for each product — rather than assuming they are still subscribed.",
+    "data_story": "It reads 2 tables — `user_profiles` and `logic_variables` and writes `entitlements` and `user_profiles`. Its response is an explicit pick-by-name projection of 28 fields, so a column added to a table upstream does not leak into the client by accident. It is called from 1 place: `shell_app_root`.",
+    "under_126": "Becomes a **CONTRACT descriptor** of archetype `MUTATION`. It declares `database.writes[]` with a `write_discipline` per target (the Spec 122 vocabulary verbatim), its idempotency posture, its optimistic contract and its rollback. Its `consumers[]` becomes the edge list of the fan-out graph — the join nothing in this estate holds today."
+  },
+  "evidence": {
+    "files": [
+      "src/app/api/user-profile/reactivate/route.ts:1"
+    ],
+    "contracts": [
+      "src/app/api/user-profile/reactivate/route.ts:26 (POST export)",
+      "src/lib/api/with-api-envelope.ts:27-52"
+    ],
+    "tables": [
+      "src/app/api/user-profile/reactivate/route.ts:41-43",
+      "src/app/api/user-profile/reactivate/route.ts:24 (PROFILE_SELECT_SQL) resolving src/lib/userProfile.schema.ts:85-112 + :120-122; executed at :168",
+      "src/lib/entitlements/index.ts:68 (LEAD_GEN_ENTITLEMENT_JOIN)",
+      "src/lib/userProfile.schema.ts:122",
+      "call site src/app/api/user-profile/reactivate/route.ts:24, :168",
+      "src/lib/entitlements/index.ts:307-309 (variable_key = 'stripe_price_product_map') reached via resolvePriceProduct at src/lib/stripe/client.ts:130, called from deriveEffectiveStripeStatusByProduct at src/app/api/user-profile/reactivate/route.ts:101",
+      "src/lib/entitlements/index.ts:223-226 (INSERT ... ON CONFLICT (user_id, product) DO UPDATE SET status, updated_at); called for manufacturers at src/app/api/user-profile/reactivate/route.ts:135 with status 'admin_managed'",
+      "src/app/api/user-profile/reactivate/route.ts:138-143 (per-product live-Stripe restore, WHERE user_id = $1 AND product = $2)",
+      "src/app/api/user-profile/reactivate/route.ts:151-156 — catch-all: SET status = 'expired' WHERE user_id = $1 AND status = 'cancelled_pending_deletion'",
+      "src/app/api/user-profile/reactivate/route.ts:160-167 — SET account_deleted_at = NULL, stripe_cancel_failed_at = NULL, updated_at = NOW()",
+      "src/lib/db/generated/schema.ts — every table named here is present in the introspected drizzle schema"
+    ],
+    "gate": [
+      "src/lib/auth/route-guard.ts — fail-closed default — no arm matches '/api/user-profile'",
+      "src/lib/auth/route-guard.ts:150-201 — classifyRoute executed 2026-09-15 with the concrete path → \"authenticated\"",
+      "in-handler: getUserIdFromSession(request) at src/app/api/user-profile/reactivate/route.ts:27; null -> 401 at :28-33 (delegates to getVerifiedUid, src/lib/auth/get-user.ts:215-217)."
+    ],
+    "states": [
+      "hit: src/app/api/user-profile/reactivate/route.ts:172",
+      "unauthorized: src/app/api/user-profile/reactivate/route.ts:28-33",
+      "miss: src/app/api/user-profile/reactivate/route.ts:45-50 (no profile row -> 404)",
+      "error: src/app/api/user-profile/reactivate/route.ts:54-59 (400 NOT_DELETED), :63-68 (400 RECOVERY_WINDOW_EXPIRED), :173-179 (500)"
+    ],
+    "emits": [
+      "src/app/api/user-profile/reactivate/route.ts — read in full; no Sentry breadcrumb, no analytics capture and no ledger INSERT"
+    ]
+  },
+  "identity": {
+    "id": "contract_user_profile_reactivate",
+    "route": "/api/user-profile/reactivate",
+    "archetype": "MUTATION",
+    "platforms": [
+      "web",
+      "mobile"
+    ],
+    "owns": {
+      "components": []
+    },
+    "owner": "Cross-Domain (CLAUDE.md §Domain Rules: an API route consumed by the Expo app)",
+    "spec": "docs/specs/03-mobile/95_mobile_user_profiles.md",
+    "spec_refs": [
+      "docs/specs/03-mobile/95_mobile_user_profiles.md §5 API Contract §6.4 Reactivation + docs/specs/00-architecture/116_multi_product_architecture.md §4 N2 + OD3/OD5 (src/app/api/user-profile/reactivate/route.ts:1-2)"
+    ],
+    "spec_version": "0-draft",
+    "versioning": {
+      "answer": "additive_only",
+      "why": "At least one consumer is an installed Expo binary (mobile/) that does not redeploy with the server, so a removed or retyped field breaks shipped clients; adding fields does not.",
+      "evidence": [
+        "mobile/app/_layout.tsx:263",
+        "mobile/app.json:5"
+      ]
+    },
+    "ref": "C-037"
+  },
+  "inputs": {
+    "answer": "app_outputs",
+    "why": "It reads 3 table(s) directly; none is written by a pipeline step — they are written by API routes, jobs or migration seeds — but the input is still the database, not another contract.",
+    "evidence": [
+      "src/lib/entitlements/index.ts:68 (LEAD_GEN_ENTITLEMENT_JOIN)",
+      "src/lib/userProfile.schema.ts:122",
+      "call site src/app/api/user-profile/reactivate/route.ts:24, :168",
+      "migrations/228_entitlements.sql:21",
+      "docs/reference/data-lineage-map.md — no `## `entitlements`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)",
+      "src/lib/entitlements/index.ts:307-309 (variable_key = 'stripe_price_product_map') reached via resolvePriceProduct at src/lib/stripe/client.ts:130, called from deriveEffectiveStripeStatusByProduct at src/app/api/user-profile/reactivate/route.ts:101",
+      "docs/specs/00-architecture/00_system_map.md:94",
+      "docs/reference/data-lineage-map.md:646 — table present, no pipeline producer listed",
+      "docs/reference/data-lineage-map.md — no `## `logic_variables`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)",
+      "src/app/api/user-profile/reactivate/route.ts:41-43"
+    ],
+    "contract_ref": [],
+    "query_key": [],
+    "field_whitelist": [
+      "user_id",
+      "trade_slug",
+      "display_name",
+      "created_at",
+      "updated_at",
+      "full_name",
+      "phone_number",
+      "company_name",
+      "email",
+      "backup_email",
+      "default_tab",
+      "location_mode",
+      "home_base_lat",
+      "home_base_lng",
+      "radius_km",
+      "supplier_selection",
+      "lead_views_count",
+      "onboarding_complete",
+      "tos_accepted_at",
+      "account_deleted_at",
+      "account_preset",
+      "new_lead_min_cost_tier",
+      "phase_changed",
+      "lifecycle_stalled_pref",
+      "start_date_urgent",
+      "notification_schedule",
+      "subscription_status",
+      "trial_started_at"
+    ],
+    "tables": [
+      {
+        "table": "entitlements",
+        "columns": [
+          "status (aliased subscription_status)",
+          "trial_started_at"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/00-architecture/116_multi_product_architecture.md",
+        "evidence": [
+          "src/lib/entitlements/index.ts:68 (LEAD_GEN_ENTITLEMENT_JOIN)",
+          "src/lib/userProfile.schema.ts:122",
+          "call site src/app/api/user-profile/reactivate/route.ts:24, :168",
+          "migrations/228_entitlements.sql:21",
+          "docs/reference/data-lineage-map.md — no `## `entitlements`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)"
+        ]
+      },
+      {
+        "table": "logic_variables",
+        "columns": [
+          "variable_value_json"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/02-web-admin/86_control_panel.md",
+        "evidence": [
+          "src/lib/entitlements/index.ts:307-309 (variable_key = 'stripe_price_product_map') reached via resolvePriceProduct at src/lib/stripe/client.ts:130, called from deriveEffectiveStripeStatusByProduct at src/app/api/user-profile/reactivate/route.ts:101",
+          "docs/specs/00-architecture/00_system_map.md:94",
+          "docs/reference/data-lineage-map.md:646 — table present, no pipeline producer listed",
+          "docs/reference/data-lineage-map.md — no `## `logic_variables`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)"
+        ]
+      },
+      {
+        "table": "user_profiles",
+        "columns": [
+          "account_deleted_at",
+          "account_preset",
+          "stripe_customer_id",
+          "user_id",
+          "trade_slug",
+          "display_name",
+          "created_at",
+          "updated_at",
+          "full_name",
+          "phone_number",
+          "company_name",
+          "email",
+          "backup_email",
+          "default_tab",
+          "location_mode",
+          "home_base_lat",
+          "home_base_lng",
+          "radius_km",
+          "supplier_selection",
+          "lead_views_count",
+          "onboarding_complete",
+          "tos_accepted_at",
+          "new_lead_min_cost_tier",
+          "phase_changed",
+          "lifecycle_stalled_pref",
+          "start_date_urgent",
+          "notification_schedule"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/02-web-admin/102_admin_notifications_tool.md",
+        "evidence": [
+          "src/app/api/user-profile/reactivate/route.ts:41-43",
+          "src/app/api/user-profile/reactivate/route.ts:24 (PROFILE_SELECT_SQL) resolving src/lib/userProfile.schema.ts:85-112 + :120-122; executed at :168",
+          "docs/specs/00-architecture/00_system_map.md:80",
+          "docs/reference/data-lineage-map.md — no `## `user_profiles`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)"
+        ]
+      }
+    ]
+  },
+  "outputs": {
+    "answer": "contract_only",
+    "why": "This route IS the mutation contract: it writes 2 table(s) synchronously inside the request and returns the result — there is no optimistic client-side flip to reconcile.",
+    "evidence": [
+      "src/lib/entitlements/index.ts:223-226 (INSERT ... ON CONFLICT (user_id, product) DO UPDATE SET status, updated_at); called for manufacturers at src/app/api/user-profile/reactivate/route.ts:135 with status 'admin_managed'",
+      "src/app/api/user-profile/reactivate/route.ts:138-143 (per-product live-Stripe restore, WHERE user_id = $1 AND product = $2)",
+      "src/app/api/user-profile/reactivate/route.ts:151-156 — catch-all: SET status = 'expired' WHERE user_id = $1 AND status = 'cancelled_pending_deletion'",
+      "migrations/228_entitlements.sql:21",
+      "docs/reference/data-lineage-map.md — no `## `entitlements`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)",
+      "src/app/api/user-profile/reactivate/route.ts:160-167 — SET account_deleted_at = NULL, stripe_cancel_failed_at = NULL, updated_at = NOW()",
+      "docs/specs/00-architecture/00_system_map.md:80",
+      "docs/reference/data-lineage-map.md — no `## `user_profiles`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)"
+    ],
+    "contract_ref": [],
+    "tables": [
+      {
+        "table": "entitlements",
+        "columns": [
+          "user_id",
+          "product",
+          "status",
+          "created_at",
+          "updated_at",
+          "last_stripe_event_at"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/00-architecture/116_multi_product_architecture.md",
+        "evidence": [
+          "src/lib/entitlements/index.ts:223-226 (INSERT ... ON CONFLICT (user_id, product) DO UPDATE SET status, updated_at); called for manufacturers at src/app/api/user-profile/reactivate/route.ts:135 with status 'admin_managed'",
+          "src/app/api/user-profile/reactivate/route.ts:138-143 (per-product live-Stripe restore, WHERE user_id = $1 AND product = $2)",
+          "src/app/api/user-profile/reactivate/route.ts:151-156 — catch-all: SET status = 'expired' WHERE user_id = $1 AND status = 'cancelled_pending_deletion'",
+          "migrations/228_entitlements.sql:21",
+          "docs/reference/data-lineage-map.md — no `## `entitlements`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)"
+        ]
+      },
+      {
+        "table": "user_profiles",
+        "columns": [
+          "account_deleted_at",
+          "stripe_cancel_failed_at",
+          "updated_at"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/02-web-admin/102_admin_notifications_tool.md",
+        "evidence": [
+          "src/app/api/user-profile/reactivate/route.ts:160-167 — SET account_deleted_at = NULL, stripe_cancel_failed_at = NULL, updated_at = NOW()",
+          "docs/specs/00-architecture/00_system_map.md:80",
+          "docs/reference/data-lineage-map.md — no `## `user_profiles`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)"
+        ]
+      }
+    ]
+  },
+  "state": {
+    "answer": "server_only",
+    "why": "A CONTRACT holds no client state: every value is resolved per request on the server and nothing is cached in a client store by the route itself.",
+    "evidence": [
+      "src/app/api/user-profile/reactivate/route.ts:26 (POST export)",
+      "src/lib/api/with-api-envelope.ts:27-52"
+    ],
+    "fields": []
+  },
+  "staleness": {
+    "answer": "live",
+    "why": "Every read runs against the base tables on each request — there is no cache layer between the handler and the database.",
+    "evidence": [
+      "src/lib/entitlements/index.ts:68 (LEAD_GEN_ENTITLEMENT_JOIN)",
+      "src/lib/userProfile.schema.ts:122",
+      "call site src/app/api/user-profile/reactivate/route.ts:24, :168",
+      "migrations/228_entitlements.sql:21"
+    ],
+    "offline": "none"
+  },
+  "guards": {
+    "session": {
+      "answer": "authenticated",
+      "why": "classifyRoute(\"/api/user-profile/reactivate\") returns \"authenticated\" (executed 2026-09-15); the handler re-verifies the caller in-process.",
+      "evidence": [
+        "src/lib/auth/route-guard.ts:150-201 — classifyRoute executed 2026-09-15 with the concrete path",
+        "getUserIdFromSession(request) at src/app/api/user-profile/reactivate/route.ts:27; null -> 401 at :28-33 (delegates to getVerifiedUid, src/lib/auth/get-user.ts:215-217)."
+      ]
+    },
+    "rls_class": {
+      "answer": "A",
+      "why": "It reaches user-owned rows whose policies key on auth.uid(), alongside default-deny Class B pipeline tables. The route connects as the table owner (raw pg), which Spec 114 §9 makes owner-exempt from RLS — the class describes the data, not the gate this route passes.",
+      "evidence": [
+        "migrations/230_rls_class_a_entitlements.sql:48",
+        "migrations/230_rls_class_a_entitlements.sql:58",
+        "migrations/227_rls_class_b_default_deny.sql:61",
+        "docs/specs/00-architecture/114_rls_policy_catalog.md §2"
+      ]
+    },
+    "disclosure": "none",
+    "entitlement": "none",
+    "flag": "none",
+    "permission": "none",
+    "rate_bucket": "none"
+  },
+  "render": {
+    "targets": [
+      "screen"
+    ],
+    "projection": "none",
+    "breakpoints": "none",
+    "export": "none"
+  },
+  "checks": [
+    {
+      "id": "contract_user_profile_reactivate__auth_class_parity",
+      "kind": "auth_class_parity",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "why": "guards.session must equal classifyRoute(\"/api/user-profile/reactivate\"), executed 2026-09-15 → \"authenticated\" plus the in-handler guard (getUserIdFromSession(request) at src/app/api/user-profile/reactivate/route.ts:27; null -> 401 at :28-33 (deleg). Locked by reactivate-stripe.infra.test.ts, user-profiles.infra.test.ts."
+    },
+    {
+      "id": "contract_user_profile_reactivate__error_envelope",
+      "kind": "error_state",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "Every declared error class returns the { data, error, meta } envelope of docs/specs/00_engineering_standards.md §4.4; expected to stay at zero deviations."
+    },
+    {
+      "id": "contract_user_profile_reactivate__field_whitelist_parity",
+      "kind": "field_whitelist_parity",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "The response is an explicit pick-by-name of 28 field(s) (src/app/api/user-profile/reactivate/route.ts:24 (same CLIENT_SAFE_JOINED_SELECT as /api/user-profile), src/lib/userProfile.schema.ts:85-112, :120-122, src/app/api/user-profile/reactivate/route.ts:168, :172), so a column added upstream cannot leak; this check set-equals the projection to inputs.field_whitelist."
+    },
+    {
+      "id": "contract_user_profile_reactivate__schema_declared",
+      "kind": "schema_declared",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "Every table and column declared in lineage.reads[]/writes[] must exist in src/lib/db/generated/schema.ts (drizzle-kit introspect of the live database); the registry generator checks this both directions."
+    }
+  ],
+  "invariants": "none",
+  "plausibility": "none",
+  "states": [
+    {
+      "name": "hit",
+      "golden": "none"
+    },
+    {
+      "name": "unauthorized",
+      "golden": "none"
+    },
+    {
+      "name": "miss",
+      "golden": "none"
+    },
+    {
+      "name": "error",
+      "golden": "none"
+    }
+  ],
+  "errors": {
+    "answer": "envelope",
+    "why": "Success and failure both arrive in the { data, error, meta } envelope of docs/specs/00_engineering_standards.md §4.4; withApiEnvelope is the outermost wrapper and converts any uncaught throw into the same shape.",
+    "evidence": [
+      "src/lib/api/with-api-envelope.ts:27-52",
+      "src/app/api/user-profile/reactivate/route.ts:30",
+      "src/app/api/user-profile/reactivate/route.ts:47",
+      "src/app/api/user-profile/reactivate/route.ts:56",
+      "src/app/api/user-profile/reactivate/route.ts:172",
+      "src/app/api/user-profile/reactivate/route.ts:176",
+      "src/app/api/user-profile/reactivate/route.ts:30 (401)",
+      "src/app/api/user-profile/reactivate/route.ts:47 (404)",
+      "src/app/api/user-profile/reactivate/route.ts:56 (400)",
+      "src/app/api/user-profile/reactivate/route.ts:65 (400)"
+    ],
+    "classes": [
+      {
+        "class": "401",
+        "ui": "{data:null,error:{code,message},meta:null} — src/app/api/user-profile/reactivate/route.ts:30 (code UNAUTHORIZED)"
+      },
+      {
+        "class": "400",
+        "ui": "{data:null,error:{code,message},meta:null} — src/app/api/user-profile/reactivate/route.ts:56 (code NOT_DELETED)"
+      },
+      {
+        "class": "500",
+        "ui": "{data:null,error:{code,message},meta:null} — src/app/api/user-profile/reactivate/route.ts:176 (code INTERNAL_ERROR)"
+      }
+    ]
+  },
+  "emits": {
+    "answer": "none",
+    "why": "Nothing it does is currently countable: src/app/api/user-profile/reactivate/route.ts was read in full and contains no Sentry breadcrumb, no analytics capture and no ledger INSERT.",
+    "evidence": [
+      "src/app/api/user-profile/reactivate/route.ts — read in full; no Sentry breadcrumb, no analytics capture and no ledger INSERT"
+    ],
+    "analytics": [],
+    "ledger_events": [],
+    "breadcrumbs": []
+  },
+  "offers": {
+    "answer": "none",
+    "why": "It renders no sponsored placement: the offers and advertisers tables Spec 126 §2 specifies do not exist in migrations/ and nothing in this handler reads placement inventory.",
+    "evidence": [
+      "migrations/ — no CREATE TABLE offers / advertisers (grep 2026-09-15)",
+      "src/app/api/user-profile/reactivate/route.ts — read in full; no placement read"
+    ]
+  },
+  "metering": {
+    "answer": "none",
+    "why": "Nothing here is counted: no usage_events row (the table does not exist in the introspected schema) and no quota counter is written by this handler.",
+    "evidence": [
+      "src/app/api/user-profile/reactivate/route.ts — read in full 2026-09-15",
+      "src/lib/db/generated/schema.ts — no usage_events table"
+    ]
+  },
+  "config": {
+    "answer": "logic_variables",
+    "why": "It consumes 1 operator-editable tunable(s) from the logic_variables table rather than a literal in code.",
+    "evidence": [
+      "src/lib/entitlements/index.ts:308 (read); reached from src/app/api/user-profile/reactivate/route.ts:101",
+      "migrations/092_control_panel.sql:27"
+    ],
+    "logic_variables": [
+      {
+        "name": "stripe_price_product_map",
+        "on_invalid": "default",
+        "why": "mapped value must be a member of PRODUCTS ['lead_gen','flight_center'] (src/lib/entitlements/index.ts:39, checked :322)"
+      }
+    ],
+    "retired": []
+  },
+  "sharing": {
+    "answer": "sole",
+    "why": "Exactly one call site renders it, so its projection serves one surface.",
+    "evidence": [
+      "mobile/app/_layout.tsx:263"
+    ],
+    "surfaces": [
+      "mobile/app/_layout.tsx:263"
+    ]
+  },
+  "a11y": {
+    "touch_target_min_px": "UNRESEARCHED",
+    "labels": "none",
+    "dark_mode": "none",
+    "reduced_motion": "none",
+    "i18n": "none",
+    "safe_area": "none"
+  },
+  "deviations": "none",
+  "limitations": [
+    {
+      "what": "a11y.touch_target_min_px has no legal answer for a CONTRACT",
+      "measured": "The schema allows only UNRESEARCHED or an integer >= 44; a JSON endpoint has no touch target and the vocabulary has no \"n/a\". Left UNRESEARCHED and escalated per Spec 128 §4 rather than invented.",
+      "check_id": "contract_user_profile_reactivate__auth_class_parity"
+    },
+    {
+      "what": "error classes outside the closed set are not representable: 404",
+      "measured": "The handler returns 404 at src/app/api/user-profile/reactivate/route.ts:47; errors.classes[] admits only 400/401/403/429/500/schema_drift/offline.",
+      "check_id": "contract_user_profile_reactivate__error_envelope"
+    }
+  ],
+  "interpretation": "none",
+  "notes": "Also cites docs/specs/00-architecture/116_multi_product_architecture.md §4. Blocks reactivation after the 30-day window. For non-manufacturer accounts it calls Stripe subscriptions.list and derives real per-product status via deriveEffectiveStripeStatusByProduct in src/lib/stripe/client.ts, which itself reads logic_variables through resolvePriceProduct; a Stripe outage is loud-non-fatal and falls back to the 'expired' catch-all. Response uses the same CLIENT_SAFE_JOINED_SELECT whitelist as GET /api/user-profile (src/lib/userProfile.schema.ts) so no internal or PII columns leak. | MEASURED 2026-09-15: The Stripe read is LOUD-NON-FATAL: a throw is caught at :102-107 and restoredByProduct is reset to an empty Map, so every product falls through to the 'expired' catch-all (:151-156) and the account is still restored — a 200 here does not prove the live subscription status was consulted. `last_stripe_event_at = NOW()` is re-stamped (not cleared) on every touched row (:140, :153) — the rationale at :117-129 is that NULL would disable the webhook's out-of-order watermark (src/lib/entitlements/index.ts:171). The logic_variables read is INDIRECT (route -> deriveEffectiveStripeStatusByProduct -> resolvePriceProduct), which is why it is easy to miss. CENSUS AGREEMENT: matches (reads user_profiles + logic_variables; writes entitlements + user_profiles) — the census read list omits entitlements, which IS read via the LEFT JOIN at :24/:168. | Idempotency: Effectively guarded by state: after a successful call account_deleted_at is NULL, so a replay falls into the NOT_DELETED 400 at :54-59 and writes nothing. Within one call, every entitlement write is an absolute assignment inside a single transaction with the user_profiles UPDATE (:130-170); the catch-all is predicate-scoped to rows still in 'cancelled_pending_deletion' (:154) so ordering is safe. NOTE: the Stripe read happens BEFORE the transaction (:93-108, deliberate per the comment at :89-90), so a concurrent subscription change between the read and the write is not serialised. | Caching: none observed — no Cache-Control header, no revalidate/dynamic export (full file read :1-180) | Entitlement posture: No entitlement gate on entry; the route WRITES entitlement statuses. State gates instead: the profile must be in a deleted state (account_deleted_at non-null, :54-59) and within the 30-day recovery window (:61-68). A non-UUID uid skips every entitlement write (:133, guard defined src/lib/entitlements/index.ts:70-75). | Locking tests: src/tests/reactivate-stripe.infra.test.ts, src/tests/user-profiles.infra.test.ts.",
+  "x-draft": {
+    "shard": "contracts",
+    "files": [
+      "src/app/api/user-profile/reactivate/route.ts"
+    ],
+    "loc": 180,
+    "methods": [
+      "POST"
+    ],
+    "consumers": [
+      "shell_app_root"
+    ],
+    "writes_audit_row": false,
+    "consumers_verified": [
+      "mobile/app/_layout.tsx:263"
+    ],
+    "auth_class_executed": "authenticated",
+    "locking_tests": [
+      "src/tests/reactivate-stripe.infra.test.ts",
+      "src/tests/user-profiles.infra.test.ts"
+    ]
+  },
+  "programme": {
+    "scope": "platform_shared",
+    "phase": "UNRESEARCHED",
+    "why": "Used by both products and owned by neither.",
+    "feature": "F15",
+    "build_order": 3152,
+    "leakage": "none",
+    "product_questions": "none",
+    "review": {
+      "status": "unreviewed"
+    }
+  }
+}

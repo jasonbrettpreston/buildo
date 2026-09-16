@@ -1,0 +1,452 @@
+{
+  "kind": "SURFACE",
+  "status": "exists",
+  "docs": {
+    "purpose": "The main signed-in screen for browsing permit leads. Along the top it shows seven counters - total permits, active permits, new this week, upcoming pre-permits, and three Committee-of-Adjustment counts. Below that a filter panel narrows the feed by trade and other criteria, and the feed itself lists matching permits as cards the user can open. Intended for a signed-in user hunting for work, not for operators.",
+    "data_story": "It reads nothing from the database directly. Every value arrives through 3 contracts: `/api/admin/stats`, `/api/permits`, `/api/trades`. Behind those contracts, the data comes from `address_points`, `building_footprints`, `coa_applications`, `entities`, `information_schema.columns`, `lead_views`, `neighbourhoods`, `notifications`, `parcel_buildings`, `parcels`, `permit_parcels`, `permit_trades`, `permits`, `pg_class`, `pipeline_runs`, `pipeline_schedules`, `sync_runs`, `trade_mapping_rules`, `trades` and `wsib_registry`, and writes land on `pipeline_runs`.",
+    "under_126": "**REBUILD** — it drives writes, so a client decision has to be re-homed on the server before the projection can be honest. It renders through the DASHBOARD renderer (tiles that each declare their own contract and degrade independently), reading by reference: `/api/admin/stats`, `/api/permits`, `/api/trades`. Its `owns.components[]` declares `src/components/permits/PermitFeed.tsx`, `src/components/permits/PermitCard.tsx`, `src/components/search/FilterPanel.tsx` and `src/components/layout/MobileNav.tsx`."
+  },
+  "evidence": {
+    "files": [
+      "src/app/dashboard/page.tsx:1",
+      "src/components/permits/PermitFeed.tsx:1",
+      "src/components/permits/PermitCard.tsx:1",
+      "src/components/search/FilterPanel.tsx:1",
+      "src/components/layout/MobileNav.tsx:1"
+    ],
+    "contracts": [
+      "src/app/dashboard/page.tsx:14 — /api/admin/stats",
+      "src/components/permits/PermitFeed.tsx:50 — /api/permits",
+      "src/components/search/FilterPanel.tsx:102 — /api/trades"
+    ],
+    "tables": [
+      "src/app/api/admin/stats/route.ts:12-16",
+      "docs/reference/data-lineage-map.md:997,973,1355,312,506",
+      "scripts/manifest.json#chains"
+    ],
+    "gate": [
+      "src/lib/auth/route-guard.ts:176-180",
+      "src/tests/middleware.logic.test.ts:87",
+      "src/middleware.ts:133-146"
+    ],
+    "states": [
+      "src/app/dashboard/page.tsx:53-83 (tile `--` fallbacks)",
+      "src/components/permits/PermitFeed.tsx:41 (loading)",
+      "src/tests/dashboard.ui.test.tsx:13-53"
+    ],
+    "emits": [
+      "none — no captureEvent import in the page or in any of its four owned components"
+    ]
+  },
+  "identity": {
+    "id": "web_dashboard",
+    "route": "src/app/dashboard/page.tsx",
+    "archetype": "DASHBOARD",
+    "platforms": [
+      "web"
+    ],
+    "owns": {
+      "components": [
+        "src/components/permits/PermitFeed.tsx",
+        "src/components/permits/PermitCard.tsx",
+        "src/components/search/FilterPanel.tsx",
+        "src/components/layout/MobileNav.tsx"
+      ]
+    },
+    "owner": "web",
+    "spec": "UNRESEARCHED",
+    "spec_refs": [
+      "docs/specs/02-web-admin/26_admin_dashboard.md §3.4"
+    ],
+    "spec_version": "0-draft",
+    "versioning": {
+      "answer": "additive_only",
+      "why": "The stats payload is guarded field-by-field by isValidDashboardStats, which rejects any shape missing one of its six numeric fields — removing or retyping a field breaks the guard and blanks the row to `--`.",
+      "evidence": [
+        "src/lib/admin/dashboard-stats.ts:1",
+        "src/tests/dashboard.ui.test.tsx:44-53"
+      ]
+    },
+    "ref": "S-069"
+  },
+  "inputs": {
+    "answer": "contract",
+    "why": "Three contracts, two of them reached by a component rather than by the page: /api/admin/stats from the page itself, /api/permits from PermitFeed and /api/trades from FilterPanel. All three are bare fetch calls — there is no hook to trace.",
+    "evidence": [
+      "src/app/dashboard/page.tsx:14",
+      "src/components/permits/PermitFeed.tsx:50",
+      "src/components/search/FilterPanel.tsx:102"
+    ],
+    "contract_ref": [
+      "/api/admin/stats",
+      "/api/permits",
+      "/api/trades"
+    ],
+    "query_key": [],
+    "field_whitelist": [
+      "total_permits",
+      "active_permits",
+      "permits_this_week",
+      "coa_total",
+      "coa_linked",
+      "coa_upcoming"
+    ],
+    "tables": [
+      {
+        "table": "permits",
+        "columns": [
+          "permit_num",
+          "revision_num",
+          "status",
+          "issued_date",
+          "est_const_cost",
+          "street_num",
+          "street_name",
+          "street_type"
+        ],
+        "producing_steps": [
+          "classify_inspection_status",
+          "classify_lifecycle_phase",
+          "classify_permit_phase",
+          "classify_scope",
+          "classify_scope_class",
+          "classify_scope_tags",
+          "close_stale_permits",
+          "create_pre_permits",
+          "enrich_permits",
+          "geocode_permits",
+          "inspections",
+          "link_coa",
+          "link_neighbourhoods",
+          "link_similar",
+          "permits"
+        ],
+        "chain_position": "deep_scrapes[1] · permits[23], coa[12] · permits[3] · permits[4] · not-in-a-chain · not-in-a-chain · permits[2] · not-in-a-chain · permits[9] · permits[7], sources[3] · deep_scrapes[0] · permits[19], coa[8] · permits[10], sources[17] · permits[12] · permits[1]",
+        "owner_spec": "docs/specs/01-pipeline/30_pipeline_architecture.md",
+        "evidence": [
+          "src/app/api/admin/stats/route.ts:12-16",
+          "src/components/permits/PermitFeed.tsx:50",
+          "docs/reference/data-lineage-map.md:997",
+          "scripts/manifest.json#chains"
+        ]
+      },
+      {
+        "table": "permit_trades",
+        "columns": "UNRESEARCHED",
+        "producing_steps": [
+          "backfill_realtor_permit_trades",
+          "classify_permits"
+        ],
+        "chain_position": "permits[16] · permits[13]",
+        "owner_spec": "UNRESEARCHED",
+        "evidence": [
+          "src/components/permits/PermitFeed.tsx:50",
+          "docs/reference/data-lineage-map.md:973",
+          "scripts/manifest.json#chains"
+        ]
+      },
+      {
+        "table": "trades",
+        "columns": [
+          "slug",
+          "name",
+          "icon",
+          "color"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "UNRESEARCHED",
+        "evidence": [
+          "src/components/search/FilterPanel.tsx:102",
+          "docs/reference/data-lineage-map.md:1355 — table present, no pipeline producer listed"
+        ]
+      },
+      {
+        "table": "coa_applications",
+        "columns": "UNRESEARCHED",
+        "producing_steps": [
+          "classify_coa_scope",
+          "classify_coa_trades",
+          "classify_lifecycle_phase",
+          "coa",
+          "compute_coa_cost_estimates",
+          "enrich_coa_zoning",
+          "link_coa",
+          "link_coa_to_parcels"
+        ],
+        "chain_position": "coa[5] · coa[6] · permits[23], coa[12] · coa[1] · coa[7] · coa[4] · permits[19], coa[8] · coa[3]",
+        "owner_spec": "UNRESEARCHED",
+        "evidence": [
+          "src/app/dashboard/page.tsx:74-82",
+          "src/app/api/admin/stats/route.ts:12",
+          "docs/reference/data-lineage-map.md:312",
+          "scripts/manifest.json#chains"
+        ]
+      },
+      {
+        "table": "entities",
+        "columns": "UNRESEARCHED",
+        "producing_steps": [
+          "builders",
+          "enrich_named_builders",
+          "enrich_wsib_builders",
+          "link_wsib"
+        ],
+        "chain_position": "permits[5] · entities[1] · entities[0] · permits[6], sources[19]",
+        "owner_spec": "UNRESEARCHED",
+        "evidence": [
+          "src/app/api/admin/stats/route.ts:12",
+          "docs/reference/data-lineage-map.md:506",
+          "scripts/manifest.json#chains"
+        ]
+      },
+      {
+        "table": "pipeline_runs",
+        "columns": "UNRESEARCHED",
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/01-pipeline/48_pipeline_observability.md",
+        "evidence": [
+          "src/app/api/admin/stats/route.ts:12 — chain_freshness block",
+          "scripts/lib/step/ledger.js:62 — the only INSERT into this table"
+        ]
+      }
+    ]
+  },
+  "outputs": {
+    "answer": "none",
+    "why": "The page itself writes nothing. Note that its GET to /api/admin/stats reaches reapStaleRunningRows, which DOES update pipeline_runs server-side — a side effect of the contract, not of this surface.",
+    "evidence": [
+      "src/app/dashboard/page.tsx:14-18",
+      "src/app/api/admin/stats/route.ts:7"
+    ],
+    "contract_ref": [],
+    "tables": []
+  },
+  "state": {
+    "answer": "none",
+    "why": "Two useState hooks (filters, stats) plus PermitFeed's five — all component-local, none persisted, none read by another surface, so no Field Ownership Matrix field is owned here.",
+    "evidence": [
+      "src/app/dashboard/page.tsx:10-11",
+      "src/components/permits/PermitFeed.tsx:40-44"
+    ],
+    "fields": []
+  },
+  "staleness": {
+    "answer": "live",
+    "why": "Every tile and the feed refetch from the route on mount with no cache between them — the page uses bare fetch, not TanStack Query, so the shell's 60s staleTime never applies to it.",
+    "evidence": [
+      "src/app/dashboard/page.tsx:13-18",
+      "src/components/permits/PermitFeed.tsx:50,62"
+    ],
+    "offline": "degraded"
+  },
+  "guards": {
+    "session": {
+      "answer": "authenticated",
+      "why": "classifyRoute('/dashboard') is 'authenticated' — it is not in PUBLIC_PATHS, and the middleware redirects a sessionless visitor to /login?redirect=/dashboard.",
+      "evidence": [
+        "src/lib/auth/route-guard.ts:176-180",
+        "src/tests/middleware.logic.test.ts:87",
+        "src/middleware.ts:133-146"
+      ]
+    },
+    "rls_class": {
+      "answer": "B",
+      "why": "Every table behind its three contracts is pipeline-owned and reached by the server-side pg pool through src/lib/db/client, not by a user-scoped Supabase client — default-deny with no policy, service-role only.",
+      "evidence": [
+        "src/app/api/admin/stats/route.ts:2",
+        "src/app/api/permits/route.ts",
+        "docs/specs/00-architecture/114_rls_policy_catalog.md"
+      ]
+    },
+    "disclosure": "none",
+    "entitlement": "none",
+    "flag": "none",
+    "permission": "none",
+    "rate_bucket": "none"
+  },
+  "render": {
+    "targets": [
+      "screen"
+    ],
+    "projection": "list",
+    "breakpoints": "mobile_first",
+    "export": "none",
+    "tiles": "UNRESEARCHED",
+    "refresh": "UNRESEARCHED"
+  },
+  "checks": [
+    {
+      "id": "web_dashboard_auth_class_parity",
+      "kind": "auth_class_parity",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "The page is `authenticated` but one of its three contracts, /api/admin/stats, classifies as `admin` — the two do not agree, and today the mismatch is invisible only because that route carries no verifyAdminAuth of its own."
+    },
+    {
+      "id": "web_dashboard_stats_payload_guard",
+      "kind": "contract_parse",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "isValidDashboardStats must reject every non-stats shape (route 500, envelope 500, null, partial, null-field) — the unguarded setStats(data) white-screened the whole page on .toLocaleString() of undefined."
+    },
+    {
+      "id": "web_dashboard_tiles_degrade_independently",
+      "kind": "empty_state",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "A failed stats fetch must leave the seven tiles reading `--` while FilterPanel and PermitFeed keep rendering from their own separate fetches; the .catch(() => {}) is what makes that true and it must stay."
+    }
+  ],
+  "invariants": "none",
+  "plausibility": "none",
+  "states": [
+    {
+      "name": "loading",
+      "golden": "none"
+    },
+    {
+      "name": "hit",
+      "golden": "src/tests/dashboard.ui.test.tsx:148"
+    },
+    {
+      "name": "empty",
+      "golden": "src/tests/dashboard.ui.test.tsx:171"
+    },
+    {
+      "name": "degraded",
+      "golden": "src/tests/dashboard.ui.test.tsx:13"
+    },
+    {
+      "name": "redirect",
+      "golden": "src/tests/middleware.logic.test.ts:87"
+    }
+  ],
+  "errors": {
+    "answer": "none",
+    "why": "Neither failure path renders anything: the stats fetch ends in `.catch(() => {})` and a non-ok response sets null, so a 500 and a healthy-but-empty database are indistinguishable — both show `--`.",
+    "evidence": [
+      "src/app/dashboard/page.tsx:15-17"
+    ],
+    "classes": [
+      {
+        "class": "500",
+        "ui": "tiles fall back to `--`; no message is shown"
+      },
+      {
+        "class": "offline",
+        "ui": "tiles fall back to `--`; no message is shown"
+      }
+    ],
+    "no_retry": [
+      "/api/admin/stats — fetched once on mount, never retried"
+    ]
+  },
+  "emits": {
+    "answer": "none",
+    "why": "No captureEvent and no ledger write — a dashboard view, a filter change and a feed page turn are all uncountable from this surface.",
+    "evidence": [
+      "src/app/dashboard/page.tsx:1-123",
+      "src/components/permits/PermitFeed.tsx:1-147"
+    ],
+    "analytics": [],
+    "ledger_events": [],
+    "breadcrumbs": []
+  },
+  "offers": {
+    "answer": "none",
+    "why": "No placement is rendered and no placement inventory table is read.",
+    "evidence": [
+      "src/app/dashboard/page.tsx:48-93"
+    ]
+  },
+  "metering": {
+    "answer": "none",
+    "why": "It writes no usage_events row; the lead_views meter belongs to the mobile feed, not to this page.",
+    "evidence": [
+      "src/app/dashboard/page.tsx:1-123"
+    ]
+  },
+  "config": {
+    "answer": "none",
+    "why": "Its one tunable, the feed page size, is a literal inside PermitFeed rather than a registered logic variable.",
+    "evidence": [
+      "src/components/permits/PermitFeed.tsx:40-50"
+    ],
+    "logic_variables": [],
+    "retired": []
+  },
+  "sharing": {
+    "answer": "shared",
+    "why": "/api/permits is also rendered by the mobile feed and /api/trades by FilterPanel wherever it is mounted; /api/admin/stats is additionally rendered by the admin dashboard.",
+    "evidence": [
+      "src/components/permits/PermitFeed.tsx:50",
+      "src/components/search/FilterPanel.tsx:102",
+      "src/app/api/admin/stats/route.ts:12"
+    ],
+    "surfaces": [
+      "admin_dashboard"
+    ],
+    "varies_by_surface": "The admin dashboard reads the full stats payload; this page projects six of its fields into seven tiles, one of which (CoA Unlinked) is computed client-side as coa_total - coa_linked.",
+    "varies_by_target": "screen only"
+  },
+  "a11y": {
+    "touch_target_min_px": "UNRESEARCHED",
+    "labels": "partial",
+    "dark_mode": "none",
+    "reduced_motion": "none",
+    "i18n": "none",
+    "safe_area": "none"
+  },
+  "deviations": "none",
+  "limitations": [
+    {
+      "what": "A failed stats fetch is indistinguishable from an empty database.",
+      "measured": "src/app/dashboard/page.tsx:15-17 — a non-ok response resolves to null and the catch arm is empty, so both render `--`.",
+      "check_id": "web_dashboard_tiles_degrade_independently"
+    },
+    {
+      "what": "A non-admin signed-in user is served admin-scoped counts.",
+      "measured": "/api/admin/stats classifies as `admin` (middleware.logic.test.ts:68) but carries no verifyAdminAuth (grep count 0 in src/app/api/admin/stats/route.ts), and the middleware admin arm is a session-presence check only (src/middleware.ts:115-121).",
+      "check_id": "web_dashboard_auth_class_parity"
+    }
+  ],
+  "interpretation": "none",
+  "notes": "No governing spec: absent from every system-map row and no SPEC LINK header. A signed-in NON-admin page that calls /api/admin/stats - classifyRoute puts /api/admin/* in the 'admin' class, so the stats fetch will 401 for a plain authenticated user; the page swallows it (.catch(() => {})) and the counters render as '--'. That swallow is also why there is no error state. PermitCard is reached only via PermitFeed. MobileNav is rendered only by this page. MEASURED 2026-09-15, two disagreements recorded. (1) AUTH-CLASS: the page is `authenticated` but /api/admin/stats is `admin`; it works today only because that route has no verifyAdminAuth (grep count 0) and the middleware admin arm checks session PRESENCE, so any signed-in non-admin gets the admin counts. (2) A GET WITH A WRITE: /api/admin/stats calls reapStaleRunningRows (route.ts:7), so this page's read updates pipeline_runs — recorded on outputs.why rather than in outputs.tables because the write belongs to the contract. Also measured: this page uses bare fetch + useState throughout, never TanStack Query, so the QueryClient the root shell mounts is inert for it. a11y.touch_target_min_px stays UNRESEARCHED — the pagination buttons are px-3 py-1.5 on text-sm = 32px, a value the vocabulary (UNRESEARCHED or integer >= 44) cannot express.",
+  "x-draft": {
+    "shard": "web-product",
+    "files": [
+      "src/app/dashboard/page.tsx",
+      "src/components/permits/PermitFeed.tsx",
+      "src/components/permits/PermitCard.tsx",
+      "src/components/search/FilterPanel.tsx",
+      "src/components/layout/MobileNav.tsx"
+    ],
+    "loc": 980,
+    "measured_states": [
+      "loading",
+      "empty",
+      "loaded"
+    ],
+    "measured_gate": {
+      "session": "authenticated",
+      "why": "classifyRoute('/dashboard') matches no public or admin arm, is not in AUTHENTICATED_API_ROUTES, no PUBLIC_PREFIXES entry is a prefix of it, and it is not in PUBLIC_PATHS - it then hits the explicit `pathname.startsWith('/dashboard')` arm and returns 'authenticated'."
+    }
+  },
+  "programme": {
+    "scope": "estate_other",
+    "phase": "not_scheduled",
+    "why": "A lead-gen surface. Inventoried only.",
+    "feature": "F92",
+    "build_order": 4193,
+    "leakage": "UNRESEARCHED",
+    "product_questions": "UNRESEARCHED",
+    "review": {
+      "status": "unreviewed"
+    }
+  }
+}

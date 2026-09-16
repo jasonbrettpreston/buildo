@@ -1,0 +1,461 @@
+{
+  "kind": "SURFACE",
+  "status": "new",
+  "docs": {
+    "purpose": "The place an operator creates and manages the businesses that pay to advertise in the product — a builder or designer who buys a sponsored slot. It lists every advertiser account with a detail view for each one, and it is where an account is set up, edited, and deactivated. Nothing like it exists today because the product has never had a paying advertiser.",
+    "data_story": "Nothing is built yet, so nothing is measured here. As specified it would read `advertisers` — of which `advertisers` does **not exist yet** and must be declared, migrated and drift-asserted before this page can render a single row.",
+    "under_126": "**NEW.** It does not exist; it is generated from descriptors from its first commit, through the LIST renderer (a collection with declared pagination, recycling and empty/offline states). It is **100% generated** — which is the point: if the descriptor set is incomplete or an archetype profile is wrong, this page is visibly empty or visibly wrong on commit 1, and cannot be faked by hand."
+  },
+  "evidence": {
+    "files": [
+      "docs/reports/2026-09-15-spec126-admin-best-in-class.md §1.1 row 13 — NEW; no advertisers/offers/ad_slots table exists anywhere in migrations/"
+    ],
+    "contracts": [
+      "DESIGNED: GET + POST + PATCH /api/admin/advertisers — absent from the census, so it cannot appear in inputs.contract_ref or outputs.contract_ref"
+    ],
+    "tables": [
+      "docs/specs/02-web-admin/126_maxbld_surface_standard.md §6.3 row 4 — advertisers (net-new)",
+      "src/lib/db/generated/schema.ts:1812 — admin_audit_log (exists)"
+    ],
+    "gate": [
+      "src/lib/auth/route-guard.ts:162",
+      "docs/specs/00-architecture/114_rls_policy_catalog.md §2 amendment — Class D, USING (advertiser_id = current_advertiser_id())"
+    ],
+    "states": [
+      "docs/specs/02-web-admin/126_maxbld_surface_standard.md §3.1 row 1 — LIST states[] must include empty and offline"
+    ],
+    "emits": [
+      "src/lib/admin/admin-audit.ts:66 — the centralised audit writer",
+      "docs/specs/02-web-admin/128_surface_standard_policy.md §3 rule B6"
+    ]
+  },
+  "identity": {
+    "id": "admin_advertiser_accounts",
+    "archetype": "LIST",
+    "platforms": [
+      "web"
+    ],
+    "owns": {
+      "components": [
+        "src/features/admin-registry/components/AdvertiserAccountTable.tsx"
+      ]
+    },
+    "owner": "Admin domain (Spec 126 §14 Target Files) — no individual owner is named by Specs 126/127/128.",
+    "spec": "docs/specs/02-web-admin/126_maxbld_surface_standard.md",
+    "spec_refs": [
+      "docs/specs/02-web-admin/126_maxbld_surface_standard.md §2.2 group D — admin_advertiser_accounts LIST+DETAIL (gen, NEW)",
+      "docs/specs/02-web-admin/126_maxbld_surface_standard.md §6.3 row 4 — advertisers: the membership row the advertiser role is scoped by",
+      "docs/specs/02-web-admin/126_maxbld_surface_standard.md §6.2 — the advertiser role and Class D",
+      "docs/specs/02-web-admin/128_surface_standard_policy.md §3 rule B6 / §5 R-12 — every admin mutation writes exactly one admin_audit_log row",
+      "docs/specs/00-architecture/114_rls_policy_catalog.md §2 amendment 2026-09-15 — Class D",
+      "docs/reports/2026-09-15-spec126-admin-best-in-class.md §1.1 row 13"
+    ],
+    "spec_version": "0-draft",
+    "versioning": {
+      "answer": "none",
+      "why": "Nothing consumes this surface: it does not exist, so no compatibility promise can have been made. It gains one at its C9 cutover, when the golden pair is captured.",
+      "evidence": [
+        "docs/specs/02-web-admin/126_maxbld_surface_standard.md §2.2 — one of the 11 NEW admin surfaces",
+        "docs/specs/02-web-admin/127_surface_conversion_procedure.md §4.3 — the golden PAIR pins the shape"
+      ]
+    },
+    "ref": "S-006"
+  },
+  "inputs": {
+    "answer": "contract",
+    "why": "One designed contract over the advertisers table: the list projection for the collection and a single-parameter lookup by advertiser_id for the detail half. Nothing is derived client-side — the active/inactive verdict is a column, not a computed one.",
+    "evidence": [
+      "docs/specs/02-web-admin/126_maxbld_surface_standard.md §6.3 row 4 — PK (advertiser_id); name, contact_user_id, active BOOLEAN; lookup by advertiser_id at policy-evaluation time",
+      "docs/specs/02-web-admin/126_maxbld_surface_standard.md §2.2.1 P2 — the admin may reveal more fields; it may not derive differently"
+    ],
+    "contract_ref": [],
+    "query_key": [
+      "admin",
+      "advertisers",
+      "advertiser_id"
+    ],
+    "field_whitelist": [
+      "advertiser_id",
+      "name",
+      "contact_user_id",
+      "active"
+    ],
+    "tables": [
+      {
+        "table": "advertisers",
+        "columns": [
+          "advertiser_id",
+          "name",
+          "contact_user_id",
+          "active"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/02-web-admin/126_maxbld_surface_standard.md §6.3 row 4",
+        "evidence": [
+          "docs/specs/02-web-admin/126_maxbld_surface_standard.md §6.3 — the table, its key shape, its RLS posture and the read that justifies its index",
+          "docs/specs/02-web-admin/126_maxbld_surface_standard.md §6.1 — declare-and-assert: it does not exist until a hand-authored migration lands it"
+        ]
+      }
+    ]
+  },
+  "outputs": {
+    "answer": "contract_only",
+    "why": "Create, edit and deactivate all go through a declared MUTATION contract and wait for the server: an operator toggling an advertiser off is a revenue-affecting act, so there is no optimistic flip to reconcile. Each write pairs with exactly one admin_audit_log row in the same request.",
+    "evidence": [
+      "docs/specs/02-web-admin/126_maxbld_surface_standard.md §3.1 — MUTATION declares database.writes[] with the Spec 122 §1.4 write_discipline vocabulary verbatim",
+      "docs/specs/02-web-admin/128_surface_standard_policy.md §3 rule B6 — an unaudited admin mutation blocks conversion of the surface that calls it",
+      "src/lib/admin/admin-audit.ts:66 — writeAdminAudit, the centralised writer this surface reuses"
+    ],
+    "contract_ref": [],
+    "rollback": "None is needed: outputs are contract_only, so nothing is applied locally before the server confirms. On a non-2xx envelope the row keeps its server value and the error renders inline beside the field that failed.",
+    "invalidates": [
+      "admin|advertisers",
+      "admin|placements",
+      "admin|surface-registry"
+    ],
+    "tables": [
+      {
+        "table": "advertisers",
+        "columns": [
+          "advertiser_id",
+          "name",
+          "contact_user_id",
+          "active"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/02-web-admin/126_maxbld_surface_standard.md §6.3 row 4",
+        "evidence": [
+          "docs/specs/02-web-admin/126_maxbld_surface_standard.md §6.3 — the table, its key shape, its RLS posture and the read that justifies its index",
+          "docs/specs/02-web-admin/126_maxbld_surface_standard.md §6.1 — declare-and-assert: it does not exist until a hand-authored migration lands it"
+        ]
+      },
+      {
+        "table": "admin_audit_log",
+        "columns": [
+          "id",
+          "admin_uid",
+          "action",
+          "target_uid",
+          "old_value",
+          "new_value",
+          "reason",
+          "created_at"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/02-web-admin/26_admin_dashboard.md",
+        "evidence": [
+          "src/lib/db/generated/schema.ts:1812 — the introspected shape, incl. policy admin_audit_log_select_admin",
+          "src/lib/admin/admin-audit.ts:72 — INSERT INTO admin_audit_log (admin_uid, action, target_uid, old_value, new_value, reason)",
+          "src/lib/admin/admin-audit.ts:58 — its own header: an unaudited admin mutation is a compliance hole",
+          "docs/specs/02-web-admin/128_surface_standard_policy.md §3 rule B6 / §5 R-12 — an unaudited admin mutation blocks conversion of the surface that calls it"
+        ]
+      }
+    ]
+  },
+  "state": {
+    "answer": "server_only",
+    "why": "The list and the detail are server-rendered; the only client state is the open/closed edit panel, which is UX position rather than data. No store holds an advertiser row.",
+    "evidence": [
+      "docs/specs/02-web-admin/128_surface_standard_policy.md §2 rule 2 / §2.1 — the client is just glass; the five carve-outs are device state, optimistic UI, offline cache, animation and nav position, and only the last applies here"
+    ],
+    "fields": []
+  },
+  "staleness": {
+    "answer": "live",
+    "why": "Read per request. An operator editing an account must be looking at its current state, and the table is small enough that caching would buy nothing and cost correctness.",
+    "evidence": [
+      "docs/specs/02-web-admin/126_maxbld_surface_standard.md §6.3 row 4 — the index is justified by the policy-evaluation lookup, not by a list-scan cost"
+    ],
+    "offline": "none"
+  },
+  "guards": {
+    "session": {
+      "answer": "admin",
+      "why": "An /admin/** page: classifyRoute returns \"admin\" for any pathname starting with /admin/, and \"admin\" is the profiles.is_admin flag checked in-predicate — there is no admin Postgres role.",
+      "evidence": [
+        "src/lib/auth/route-guard.ts:162 — pathname === \"/admin\" || pathname.startsWith(\"/admin/\") returns \"admin\"",
+        "src/lib/auth/route-guard.ts:159 — /api/admin/ returns \"admin\"",
+        "migrations/226_profiles_admin_bootstrap.sql:27 — is_admin BOOLEAN NOT NULL DEFAULT false",
+        "docs/specs/00-architecture/114_rls_policy_catalog.md §2 — admin is a column flag checked inside the policy predicate, not a role"
+      ]
+    },
+    "rls_class": {
+      "answer": "D",
+      "why": "`advertisers` are the first and only members of Class D — owner-scoped by a NON-user key, advertiser_id via a membership row, with policies of the form USING (advertiser_id = current_advertiser_id()). Spec 114 §2's 2026-09-15 amendment added the class precisely because an advertiser reading its own rows is neither auth.uid()-owned (not A), nor deny-all service-role-only (not B), nor profiles (not C).",
+      "evidence": [
+        "docs/specs/00-architecture/114_rls_policy_catalog.md §2 amendment 2026-09-15 — Class D, owner-scoped by a non-user key; ruled by the operator, recorded as Spec 128 §5 R-10",
+        "docs/specs/02-web-admin/126_maxbld_surface_standard.md §6.2 — advertiser is a real role and the reason a fourth class must exist",
+        "docs/specs/02-web-admin/126_maxbld_surface_standard.md §6.3 rows 4 and 6 — advertisers and offers, Class D"
+      ]
+    },
+    "disclosure": "none",
+    "entitlement": "none",
+    "flag": "none",
+    "permission": "none",
+    "rate_bucket": "none"
+  },
+  "render": {
+    "targets": [
+      "screen"
+    ],
+    "projection": "list",
+    "breakpoints": "desktop_first_md",
+    "export": "none",
+    "list": "UNRESEARCHED"
+  },
+  "checks": [
+    {
+      "id": "advertisers_audit_row_present",
+      "kind": "ledger_row_present",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "why": "R-12 / Spec 128 §3 rule B6: every admin mutation writes exactly one admin_audit_log row and an audit failure fails the request. It is blocking because 9 of the 15 mutating admin routes measured today write no row at all, and the pre-batch rule says an unaudited mutation blocks conversion of the surface that calls it."
+    },
+    {
+      "id": "advertisers_schema_declared",
+      "kind": "schema_declared",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "why": "Rule 14: advertisers does not exist yet, so every declared column, type, nullability, index and Class-D policy is asserted against the live catalog both directions before the page writes a row."
+    },
+    {
+      "id": "advertisers_auth_class_parity",
+      "kind": "auth_class_parity",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "R-18: this surface is admin, but the same advertisers table is also read by the advertiser principal through Class D — a mutation contract that drifted to authenticated would hand an advertiser its own edit button."
+    },
+    {
+      "id": "advertisers_empty_state",
+      "kind": "empty_state",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "The product has never had a paying advertiser, so empty is the expected first state and must read as \"none yet\", not as a failed load."
+    },
+    {
+      "id": "advertisers_error_state",
+      "kind": "error_state",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "A failed write must render inline beside the field, never as a silent no-op — Spec 128 rule 12, an unhandled state is a FAIL."
+    },
+    {
+      "id": "advertisers_offline_state",
+      "kind": "offline_state",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "why": "The LIST profile requires it; a desktop admin page keeps no cached projection, so the answer is descriptive."
+    },
+    {
+      "id": "advertisers_query_key_stable",
+      "kind": "query_key_hygiene",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "The detail half is a single-parameter key by advertiser_id, per the DETAIL hygiene rule."
+    },
+    {
+      "id": "advertisers_field_whitelist_parity",
+      "kind": "field_whitelist_parity",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "contact_user_id points at a person; the projection must be an explicit pick-by-name whitelist that set-equals the contract, never a row spread."
+    }
+  ],
+  "invariants": [
+    {
+      "id": "advertisers_contact_resolves",
+      "sql": "SELECT count(*) FROM advertisers a WHERE a.contact_user_id IS NOT NULL AND NOT EXISTS (SELECT 1 FROM profiles p WHERE p.id = a.contact_user_id)",
+      "severity": "FAIL",
+      "why": "An advertiser whose contact points at no profile cannot be reached, and the account would look managed while being unreachable."
+    },
+    {
+      "id": "advertisers_mutation_audited",
+      "sql": "SELECT count(*) FROM admin_audit_log WHERE action LIKE 'advertiser.%' AND admin_uid IS NULL",
+      "severity": "FAIL",
+      "why": "R-12 as data: an audit row with no acting admin is an unattributable mutation, which is the compliance hole admin-audit.ts's own header names."
+    }
+  ],
+  "plausibility": [
+    {
+      "id": "advertisers_active_band",
+      "sql": "SELECT count(*) FILTER (WHERE active), count(*) FROM advertisers",
+      "severity": "WARN",
+      "why": "Zero active advertisers with a non-zero total is either a correct business state or a deactivation bug, and the two are indistinguishable from a single count — the same plausible-zero trap the estate has already paid for."
+    }
+  ],
+  "states": [
+    {
+      "name": "loading",
+      "golden": "none"
+    },
+    {
+      "name": "empty",
+      "golden": "none"
+    },
+    {
+      "name": "hit",
+      "golden": "none"
+    },
+    {
+      "name": "error",
+      "golden": "none"
+    },
+    {
+      "name": "unauthorized",
+      "golden": "none"
+    },
+    {
+      "name": "offline",
+      "golden": "none"
+    }
+  ],
+  "errors": {
+    "answer": "envelope",
+    "why": "Every admin route handler is wrapped by withApiEnvelope, which returns { data, error, meta } with a sanitised code on any throw; the surface renders from that envelope.",
+    "evidence": [
+      "src/lib/api/with-api-envelope.ts:27 — withApiEnvelope always returns the { data, error, meta } envelope",
+      "src/lib/api/with-api-envelope.ts:40-45 — a PG SQLSTATE becomes DATABASE_ERROR; the raw message is never exposed"
+    ],
+    "classes": [
+      {
+        "class": "401",
+        "ui": "Redirect to sign-in — the route guard refuses before the page renders."
+      },
+      {
+        "class": "403",
+        "ui": "Full-page \"admin only\" block naming the is_admin requirement; no partial data."
+      },
+      {
+        "class": "500",
+        "ui": "Full-width error panel carrying the envelope error.code, with a retry control."
+      },
+      {
+        "class": "schema_drift",
+        "ui": "The row that failed to parse renders as a red schema_drift row; the rest still renders."
+      }
+    ],
+    "no_retry": [
+      "401",
+      "403"
+    ]
+  },
+  "emits": {
+    "answer": "ledger",
+    "why": "Every create, edit and deactivate writes exactly one admin_audit_log row through the centralised writeAdminAudit (values passed through redactPii, so the row records THAT a field changed, never the value). It writes no usage_events row, because managing an advertiser is not a metered product action.",
+    "evidence": [
+      "docs/specs/02-web-admin/128_surface_standard_policy.md §3 rule B6 / §5 R-12",
+      "src/lib/admin/admin-audit.ts:66-79 — writeAdminAudit with redactPii on old_value/new_value",
+      "src/lib/admin/admin-audit.ts:58 — \"an unaudited admin mutation is a compliance hole\""
+    ],
+    "analytics": [],
+    "ledger_events": [],
+    "breadcrumbs": [
+      "admin_audit_log: action advertiser.create | advertiser.update | advertiser.deactivate, target_uid = advertiser_id, old_value/new_value redacted"
+    ]
+  },
+  "offers": {
+    "answer": "none",
+    "why": "It manages the businesses that buy sponsored slots; it renders none of their creative. SLOT is the archetype that renders inventory, and this surface is not one.",
+    "evidence": [
+      "docs/specs/02-web-admin/126_maxbld_surface_standard.md §3.1 — SLOT is the archetype that renders inventory; this surface is not one",
+      "docs/specs/02-web-admin/128_surface_standard_policy.md §2 rule 6 — \"none\" is legal; silence is not"
+    ]
+  },
+  "metering": {
+    "answer": "none",
+    "why": "An operator managing an advertiser account is not a billable or quota-bearing product action, so no usage_events row is written. The advertiser-facing meter is the impression/click pair on advertiser_self_metrics.",
+    "evidence": [
+      "docs/specs/02-web-admin/126_maxbld_surface_standard.md §7 — usage_events counts product actions, and its closed event vocabulary contains no admin-management event"
+    ]
+  },
+  "config": {
+    "answer": "logic_variables",
+    "why": "Page size is the only tunable; the active/inactive rule is a column, not a threshold, so there is nothing else to externalise under Spec 128 rule 3.",
+    "evidence": [
+      "docs/specs/02-web-admin/128_surface_standard_policy.md §2 rule 3",
+      "scripts/seeds/logic_variables.json — NET-NEW key"
+    ],
+    "logic_variables": [
+      {
+        "name": "admin_advertisers_page_size",
+        "min": 10,
+        "max": 500,
+        "on_invalid": "fail",
+        "why": "Bounds the query that decides what the operator sees."
+      }
+    ],
+    "retired": []
+  },
+  "sharing": {
+    "answer": "shared",
+    "why": "The advertisers table is read by two principals through Class D: this admin surface (wide projection, write access) and the advertiser's own metrics dashboard (own row only). One contract, two projections across a trust boundary — which is the property Spec 126 §6.2 rule 5 says must hold.",
+    "evidence": [
+      "docs/specs/02-web-admin/126_maxbld_surface_standard.md §6.2 rule 5 — the admin reads the same tables through RLS, and admin-only columns are excluded by the response projection, not by a second table"
+    ],
+    "surfaces": [
+      "advertiser_self_metrics"
+    ],
+    "varies_by_surface": "The admin projection includes contact_user_id and the write verbs; the advertiser projection is its own row, read-only."
+  },
+  "a11y": {
+    "touch_target_min_px": 44,
+    "labels": "complete",
+    "dark_mode": "none",
+    "reduced_motion": "none",
+    "i18n": "none",
+    "safe_area": "none"
+  },
+  "deviations": "none",
+  "limitations": [
+    {
+      "what": "The admin_audit_log row this surface writes cannot be named in emits.ledger_events[].",
+      "measured": "surface.schema.json's emits.ledger_events[] is closed to property_view · pdf_send · offer_impression · offer_click · export · parcel_id_translated — all usage_events events. admin_audit_log is a second append-only ledger (Spec 126 §2.2.1 P10 names all three by name) with no token, so emits.answer is \"ledger\" and the audit row is carried in breadcrumbs[] plus a ledger_row_present check.",
+      "check_id": "advertisers_audit_row_present"
+    },
+    {
+      "what": "The LIST required-field profile in Spec 126 §3.1 mandates list.item_archetype, list.pagination and list.recycling — and, for the DETAIL half, sections[], and surface.schema.json has no property for any of them (the top level and every category are additionalProperties:false).",
+      "measured": "Every allOf block in scripts/surfaces/_schema/surface.schema.json is `\"then\": true` — the archetype profiles are declared in prose in Spec 126 §3.1 and enforced by nothing, so these fields can neither be declared here nor caught missing.",
+      "check_id": "advertisers_query_key_stable"
+    },
+    {
+      "what": "The row is emitted as LIST although Spec 126 §2.2 assigns it \"LIST + DETAIL\".",
+      "measured": "identity.archetype is a single closed value in surface.schema.json; there is no composite. LIST is the nearest single value and the DETAIL half is declared through query_key (single-parameter by advertiser_id) and the detail states, not by a second row.",
+      "check_id": "advertisers_query_key_stable"
+    }
+  ],
+  "interpretation": "none",
+  "notes": "Report §1.1 row 13 gives the archetype as 'LIST + DETAIL'; emitted here as LIST (the enum's nearest single value) with the DETAIL half recorded in this note. VERIFIED AGAINST THE TREE: no CREATE TABLE for advertisers, offers or ad_slots exists anywhere in migrations/ — the report's claim holds. DESIGNED, NOT MEASURED. This is one of the two rows that MUTATE, so R-12/B6 binds: emits.answer is \"ledger\" and the audit row is blocking. But admin_audit_log has NO token in the closed emits.ledger_events[] vocabulary (property_view · pdf_send · offer_impression · offer_click · export · parcel_id_translated are all usage_events events), so the row is carried in breadcrumbs[] plus a ledger_row_present check and the gap is filed in limitations.",
+  "x-draft": {
+    "shard": "admin-new",
+    "files": [],
+    "role": "admin",
+    "generated": "100%",
+    "net_new_tables": [
+      "advertisers"
+    ],
+    "designed": true
+  },
+  "programme": {
+    "scope": "parcel_admin",
+    "phase": "UNRESEARCHED",
+    "why": "Operates the ad-placement half of the parcel product (business requirement 3) — advertiser accounts, the closed placement vocabulary, and the advertiser's own scoped metrics.",
+    "feature": "F04",
+    "build_order": 2043,
+    "leakage": "none",
+    "product_questions": "none",
+    "review": {
+      "status": "unreviewed"
+    }
+  }
+}

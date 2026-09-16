@@ -1,0 +1,402 @@
+{
+  "kind": "SURFACE",
+  "status": "exists",
+  "docs": {
+    "purpose": "Asks where the user works from, so the app knows which permits are nearby. They can type an address and confirm it, or hand over live location so the app follows them around. Addresses outside Toronto are refused with an offer to use the nearest covered area instead, and a confirmed address is rounded off to a coarse grid rather than stored precisely.",
+    "data_story": "It reads nothing from the database directly. Every value arrives through one contract: `/api/user-profile`. Behind that contract, the data comes from `entitlements` and `user_profiles`, and writes land on `entitlements` and `user_profiles`. It also holds client-side state in `onboardingStore` and `filterStore`, which is the part a server-driven projection has to absorb or justify. It emits **no analytics event**, so nothing it does is currently countable.",
+    "under_126": "**REBUILD** — it holds Layer-3 state (`onboardingStore` and `filterStore`) and drives writes, so a client decision has to be re-homed on the server before the projection can be honest. It renders through the WIZARD_STEP renderer (declared step index, advance condition, resume key and skip rule), reading by reference: `/api/user-profile`. It owns no component of its own, so its `owns.components[]` is an empty array — a legal answer, written down."
+  },
+  "evidence": {
+    "files": [
+      "mobile/app/(onboarding)/address.tsx:1"
+    ],
+    "contracts": [
+      "mobile/app/(onboarding)/address.tsx:55-58",
+      "mobile/app/(onboarding)/address.tsx:122-125"
+    ],
+    "tables": [
+      "src/app/api/user-profile/route.ts:393"
+    ],
+    "gate": [
+      "mobile/app/(onboarding)/address.tsx:112-118",
+      "src/lib/auth/route-guard.ts:120-132"
+    ],
+    "states": [
+      "mobile/app/(onboarding)/address.tsx:195-265"
+    ],
+    "emits": [
+      "mobile/app/(onboarding)/address.tsx:1-270 — no track() call in the file"
+    ]
+  },
+  "identity": {
+    "id": "mobile_onboarding_address",
+    "route": "mobile/app/(onboarding)/address.tsx",
+    "archetype": "WIZARD_STEP",
+    "platforms": [
+      "mobile"
+    ],
+    "owns": {
+      "components": []
+    },
+    "owner": "unassigned (no CODEOWNERS file and no owner registry exists in the repo — measured 2026-09-15)",
+    "spec": "docs/specs/03-mobile/94_mobile_onboarding.md",
+    "spec_refs": [
+      "docs/specs/03-mobile/94_mobile_onboarding.md §4",
+      "docs/specs/03-mobile/94_mobile_onboarding.md §5",
+      "docs/specs/03-mobile/94_mobile_onboarding.md §8",
+      "docs/specs/03-mobile/99_mobile_state_architecture.md §9.3"
+    ],
+    "spec_version": "0-draft",
+    "versioning": {
+      "answer": "frozen",
+      "why": "location_mode is constrained by a DB CHECK and a Zod enum of exactly gps_live | home_base_fixed; the server guard rejects a profile completion without one, so the value set is not extendable from the client.",
+      "evidence": [
+        "src/lib/userProfile.schema.ts:135",
+        "mobile/app/(onboarding)/terms.tsx:91-101"
+      ]
+    },
+    "ref": "S-028"
+  },
+  "inputs": {
+    "answer": "device",
+    "why": "Both branches are device-sourced: expo-location geocodes the typed address on-device and the Live GPS branch reads the foreground permission — the contract traffic is outbound only.",
+    "evidence": [
+      "mobile/app/(onboarding)/address.tsx:80",
+      "mobile/app/(onboarding)/address.tsx:114"
+    ],
+    "contract_ref": [
+      "/api/user-profile"
+    ],
+    "query_key": [],
+    "field_whitelist": [
+      "home_base_lat",
+      "home_base_lng",
+      "location_mode"
+    ],
+    "tables": [
+      {
+        "table": "user_profiles",
+        "columns": [
+          "user_id",
+          "home_base_lat",
+          "home_base_lng",
+          "location_mode"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/03-mobile/95_mobile_user_profiles.md",
+        "evidence": [
+          "src/app/api/user-profile/route.ts:393",
+          "src/lib/userProfile.schema.ts:85-122",
+          "migrations/230_rls_class_a_entitlements.sql:62-68"
+        ]
+      }
+    ]
+  },
+  "outputs": {
+    "answer": "contract_only",
+    "why": "The PATCH goes first in both branches and the local filterStore mirror is written only after it resolves — the GPS branch deliberately PATCHes location_mode BEFORE navigating so a drop-off still leaves the server consistent.",
+    "evidence": [
+      "mobile/app/(onboarding)/address.tsx:51-71",
+      "mobile/app/(onboarding)/address.tsx:119-135"
+    ],
+    "contract_ref": [
+      "/api/user-profile"
+    ],
+    "tables": [
+      {
+        "table": "user_profiles",
+        "columns": [
+          "user_id",
+          "home_base_lat",
+          "home_base_lng",
+          "location_mode"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/03-mobile/95_mobile_user_profiles.md",
+        "evidence": [
+          "src/app/api/user-profile/route.ts:393",
+          "src/lib/userProfile.schema.ts:85-122",
+          "migrations/230_rls_class_a_entitlements.sql:62-68"
+        ]
+      }
+    ],
+    "rollback": "none needed — no local write precedes the server confirmation; a failure renders \"Could not save location. Please try again.\" and the user stays on the step.",
+    "invalidates": []
+  },
+  "state": {
+    "answer": "mmkv",
+    "why": "It writes filterStore.homeBaseLocation and locationMode (MMKV-persisted, the canonical local mirror) plus the onboardingStore step, after the server confirms.",
+    "evidence": [
+      "mobile/app/(onboarding)/address.tsx:45-46",
+      "mobile/app/(onboarding)/address.tsx:60-62"
+    ],
+    "fields": [
+      {
+        "name": "currentStep",
+        "owner_layer": "4a_mmkv",
+        "canonical_writer": "useOnboardingStore.setStep, called by each step before it navigates",
+        "authorized_readers": [
+          "shell_app_root"
+        ],
+        "bridge": "none",
+        "persistence": "mmkv",
+        "signout_reset": true
+      },
+      {
+        "name": "selectedPath",
+        "owner_layer": "4a_mmkv",
+        "canonical_writer": "mobile_onboarding_path (and profession, for the realtor shortcut)",
+        "authorized_readers": [
+          "mobile_onboarding_address",
+          "mobile_onboarding_supplier",
+          "mobile_onboarding_terms"
+        ],
+        "bridge": "none",
+        "persistence": "mmkv",
+        "signout_reset": true
+      },
+      {
+        "name": "homeBaseLocation",
+        "owner_layer": "3_zustand",
+        "canonical_writer": "this surface, after PATCH /api/user-profile confirms",
+        "authorized_readers": [
+          "mobile_lead_feed",
+          "mobile_map",
+          "mobile_parcel_search"
+        ],
+        "bridge": "B3",
+        "persistence": "mmkv",
+        "signout_reset": true
+      }
+    ]
+  },
+  "staleness": {
+    "answer": "none",
+    "why": "Everything rendered is typed by the user or resolved on-device; no server projection appears on the screen.",
+    "evidence": [
+      "mobile/app/(onboarding)/address.tsx:137-266"
+    ],
+    "offline": "none"
+  },
+  "guards": {
+    "session": {
+      "answer": "authenticated",
+      "why": "The step is only reachable once AuthGate has a Supabase user whose server profile says onboarding_complete is false; PATCH /api/user-profile is an authenticated route.",
+      "evidence": [
+        "src/lib/auth/route-guard.ts:120-132",
+        "mobile/app/_layout.tsx:141-231",
+        "mobile/app/(onboarding)/address.tsx:55"
+      ]
+    },
+    "rls_class": {
+      "answer": "A",
+      "why": "The one table in the path is the caller's own user_profiles row — Class A, self-select/self-insert/self-update policies keyed on auth.uid().",
+      "evidence": [
+        "migrations/230_rls_class_a_entitlements.sql:62-68"
+      ]
+    },
+    "disclosure": "none",
+    "entitlement": "none",
+    "flag": "none",
+    "permission": "location",
+    "rate_bucket": "none — /api/user-profile calls no withRateLimit"
+  },
+  "render": {
+    "targets": [
+      "screen"
+    ],
+    "projection": "none",
+    "breakpoints": "mobile_first",
+    "export": "none",
+    "wizard": "UNRESEARCHED"
+  },
+  "checks": [
+    {
+      "id": "address_bounds_guard",
+      "kind": "schema_declared",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "why": "mobile/__tests__/onboarding.test.ts locks isInsideToronto and snapToGrid including the post-snap re-validation — an out-of-bounds home base would key the feed query to a region with no permits."
+    },
+    {
+      "id": "address_permission_denied_state",
+      "kind": "error_state",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "A denied location permission renders an explainer with both escapes — open system settings, or fall back to a fixed address (address.tsx:242-261)."
+    },
+    {
+      "id": "address_error_state",
+      "kind": "error_state",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "Three distinct failure renders: address not found, outside Toronto (with a nearest-centroid offer), and PATCH failure (address.tsx:83-92, 196-207, 263-265)."
+    },
+    {
+      "id": "address_touch_target",
+      "kind": "touch_target",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "Every action declares min-h-[52px] or min-h-[44px] explicitly (address.tsx:186, 200, 217, 233, 250, 256)."
+    }
+  ],
+  "invariants": "none",
+  "plausibility": "none",
+  "states": [
+    {
+      "name": "static",
+      "golden": "none"
+    },
+    {
+      "name": "loading",
+      "golden": "none"
+    },
+    {
+      "name": "miss",
+      "golden": "none"
+    },
+    {
+      "name": "error",
+      "golden": "none"
+    },
+    {
+      "name": "unauthorized",
+      "golden": "none"
+    }
+  ],
+  "errors": {
+    "answer": "inline",
+    "why": "Three inline blocks — an amber bounds banner with a centroid offer, a red permission explainer, and a red PATCH failure line; nothing navigates away on failure.",
+    "evidence": [
+      "mobile/app/(onboarding)/address.tsx:196-265"
+    ]
+  },
+  "emits": {
+    "answer": "none",
+    "why": "No event marks the location step, so the GPS-vs-fixed split and the out-of-Toronto drop-off are both unmeasurable.",
+    "evidence": [
+      "mobile/app/(onboarding)/address.tsx:1-270"
+    ],
+    "analytics": [],
+    "ledger_events": [],
+    "breadcrumbs": []
+  },
+  "offers": {
+    "answer": "none",
+    "why": "No sponsored placement is rendered: the only slot component in the Expo tree is SponsorSlot, and it returns null unless EXPO_PUBLIC_PARCEL_SPONSORS=1.",
+    "evidence": [
+      "mobile/src/components/parcel/SponsorSlot.tsx:16-20"
+    ]
+  },
+  "metering": {
+    "answer": "none",
+    "why": "Nothing here is counted: the Spec 126 §7 usage ledger table does not exist (grep for usage_events in the introspected drizzle schema returns 0 hits), and the only quota-shaped counter, user_profiles.lead_views_count, is incremented solely by POST /api/leads/view, which has no mobile caller.",
+    "evidence": [
+      "src/lib/db/generated/schema.ts — no usage_events table (grep, 2026-09-15)",
+      "src/app/api/leads/view/route.ts:110",
+      "src/features/leads/api/useLeadView.ts:25 — imported only by src/tests/useLeadView.logic.test.tsx"
+    ]
+  },
+  "config": {
+    "answer": "none",
+    "why": "The surface consumes no registered logic variable: the only server-side tunable in this path, user_profiles.radius_cap_km, is a per-user admin column, not a logic_variables row.",
+    "evidence": [
+      "src/lib/userProfile.schema.ts:40",
+      "src/app/api/user-profile/route.ts:328",
+      "docs/reference/logic-variables-registry.md — no radius_cap_km entry"
+    ],
+    "logic_variables": [],
+    "retired": []
+  },
+  "sharing": {
+    "answer": "shared",
+    "why": "PATCH /api/user-profile is rendered by every onboarding step, both shells, settings and the filter sheet — it is the most-shared contract in the mobile estate.",
+    "evidence": [
+      "mobile/src/hooks/usePatchProfile.ts:49",
+      "mobile/app/(onboarding)/address.tsx:55"
+    ],
+    "surfaces": [
+      "mobile_onboarding_profession",
+      "mobile_onboarding_address",
+      "mobile_onboarding_supplier",
+      "mobile_onboarding_terms",
+      "mobile_onboarding_complete",
+      "mobile_settings",
+      "shell_app_root",
+      "shell_app_tabs",
+      "overlay_lead_filter_sheet",
+      "mobile_lead_feed"
+    ]
+  },
+  "a11y": {
+    "touch_target_min_px": 44,
+    "labels": "partial",
+    "dark_mode": "hardcoded",
+    "reduced_motion": "none",
+    "i18n": "none",
+    "safe_area": [
+      "top",
+      "bottom"
+    ]
+  },
+  "deviations": "none",
+  "limitations": [
+    {
+      "what": "Only one of the seven interactive elements carries an accessibility attribute (the Live GPS button's role); the address field, the search CTA and the three recovery actions carry none.",
+      "measured": "grep -c \"accessibilityLabel|accessibilityRole\" mobile/app/(onboarding)/address.tsx → 1.",
+      "check_id": "address_touch_target"
+    },
+    {
+      "what": "Geocoding runs on-device through expo-location, so the resolved coordinate depends on the OS provider rather than on our address_points corpus.",
+      "measured": "address.tsx:80 calls Location.geocodeAsync(inputText); no /api/parcels or address_points lookup is used here.",
+      "check_id": "address_bounds_guard"
+    }
+  ],
+  "interpretation": "none",
+  "notes": "Coordinates are snapped to a ~500m grid before the PATCH (snapToGrid), so the stored home base is deliberately coarse — a privacy posture worth reading alongside the parcel-tool log-hygiene rule.",
+  "x-draft": {
+    "shard": "mobile-product",
+    "files": [
+      "mobile/app/(onboarding)/address.tsx"
+    ],
+    "loc": 270,
+    "call_idiom": "direct",
+    "stores": [
+      "onboardingStore",
+      "filterStore"
+    ],
+    "measured_states": [
+      "idle",
+      "geocoding",
+      "bounds_error_with_centroid_offer",
+      "pending_coord_confirm",
+      "gps_permission_denied",
+      "patching",
+      "patch_error"
+    ],
+    "measured_gate": {
+      "session": "required",
+      "entitlement": "none",
+      "flag": "none",
+      "permission": "location"
+    }
+  },
+  "programme": {
+    "scope": "platform_shared",
+    "phase": "UNRESEARCHED",
+    "why": "Onboarding writes `user_profiles` columns both products read; the flow is shared even though its copy is lead-gen-shaped today.",
+    "feature": "F11",
+    "build_order": 3113,
+    "leakage": "none",
+    "product_questions": "none",
+    "review": {
+      "status": "unreviewed"
+    }
+  }
+}

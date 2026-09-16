@@ -1,0 +1,508 @@
+{
+  "kind": "CONTRACT",
+  "status": "exists",
+  "docs": {
+    "purpose": "Records that a user opened, saved or un-saved a specific job or builder lead. The first time a free-trial user views a given permit it counts against their limited monthly allowance of lead views. It also returns how many other tradespeople are currently interested in the same lead.",
+    "data_story": "It reads 3 tables — `lead_views`, `user_profiles` and `entitlements` and writes `lead_view_events`, `user_profiles` and `lead_views`. Its response is an explicit pick-by-name projection of 1 field, so a column added to a table upstream does not leak into the client by accident. It is called from 1 place: `src/features/leads/api/useLeadView.ts`.",
+    "under_126": "Becomes a **CONTRACT descriptor** of archetype `MUTATION`. It declares `database.writes[]` with a `write_discipline` per target (the Spec 122 vocabulary verbatim), its idempotency posture, its optimistic contract and its rollback. Its `consumers[]` becomes the edge list of the fan-out graph — the join nothing in this estate holds today."
+  },
+  "evidence": {
+    "files": [
+      "src/app/api/leads/view/route.ts:1"
+    ],
+    "contracts": [
+      "src/app/api/leads/view/route.ts:36 (POST export)",
+      "src/lib/api/with-api-envelope.ts:27-52"
+    ],
+    "tables": [
+      "src/lib/auth/get-user-context.ts:99",
+      "src/lib/auth/get-user-context.ts:101",
+      "src/lib/entitlements/index.ts:68",
+      "src/features/leads/lib/record-lead-view.ts:184",
+      "src/features/leads/lib/record-lead-view.ts:186",
+      "src/features/leads/lib/record-lead-view.ts:188",
+      "src/app/api/leads/view/route.ts:104",
+      "src/app/api/leads/view/route.ts:105",
+      "src/app/api/leads/view/route.ts:106",
+      "src/app/api/leads/view/route.ts:109",
+      "src/app/api/leads/view/route.ts:110",
+      "src/app/api/leads/view/route.ts:111",
+      "src/lib/auth/get-user-context.ts:84",
+      "src/lib/auth/get-user-context.ts:87"
+    ],
+    "gate": [
+      "src/lib/auth/route-guard.ts — AUTHENTICATED_API_ROUTES prefix — '/api/leads'",
+      "src/lib/auth/route-guard.ts:150-201 — classifyRoute executed 2026-09-15 with the concrete path → \"authenticated\"",
+      "in-handler: getCurrentUserContext(request, pool) at src/app/api/leads/view/route.ts:41 -> getClaimsUid (src/lib/auth/get-user.ts:184), Bearer-or-sb-cookie, local JWKS claims check (NOT revocation-checked). Middleware classifies /api/leads/* 'authenticated' (src/lib/auth/route-guard.ts:124)."
+    ],
+    "states": [
+      "hit: src/app/api/leads/view/route.ts:145",
+      "unauthorized: src/app/api/leads/view/route.ts:42",
+      "rate_limited: src/app/api/leads/view/route.ts:89",
+      "error: src/app/api/leads/view/route.ts:125 (recordLeadView ok:false, src/features/leads/lib/record-lead-view.ts:204) and route.ts:150",
+      "partial: src/app/api/leads/view/route.ts:102-114 vs :121 — the counter query and the recordLeadView upsert are separate, untransacted statements. If recordLeadView fails after the counter succeeded, the caller gets a 500 (route.ts:125) while lead_view_events/lead_views_count are already committed.",
+      "degraded: src/features/leads/lib/record-lead-view.ts:126 — competition_count read is deliberately outside the write transaction and can be stale by 1-2"
+    ],
+    "emits": [
+      "ledger lead_view_events INSERT at src/app/api/leads/view/route.ts:104 (dedup PK (user_id, permit_num, revision_num), route.ts:106)",
+      "ledger lead_views UPSERT at src/features/leads/lib/record-lead-view.ts:148 (view branch) / :166 (save/unsave branch)"
+    ]
+  },
+  "identity": {
+    "id": "contract_leads_view",
+    "route": "/api/leads/view",
+    "archetype": "MUTATION",
+    "platforms": [
+      "web"
+    ],
+    "owns": {
+      "components": []
+    },
+    "owner": "Backend/Pipeline (CLAUDE.md §Domain Rules: `src/app/api/`)",
+    "spec": "docs/specs/03-mobile/71_lead_feed_discovery_interface.md",
+    "spec_refs": [
+      "docs/specs/03-mobile/71_lead_feed_discovery_interface.md §API Endpoints — src/app/api/leads/view/route.ts:1"
+    ],
+    "spec_version": "0-draft",
+    "versioning": {
+      "answer": "breaking_allowed",
+      "why": "Every consumer is in src/** and ships in the same Next.js deploy as the route, so a breaking change is one commit.",
+      "evidence": [
+        "src/features/leads/api/useLeadView.ts:25"
+      ]
+    },
+    "ref": "C-058"
+  },
+  "inputs": {
+    "answer": "app_outputs",
+    "why": "It reads 3 table(s) directly; none is written by a pipeline step — they are written by API routes, jobs or migration seeds — but the input is still the database, not another contract.",
+    "evidence": [
+      "src/lib/auth/get-user-context.ts:99",
+      "src/lib/entitlements/index.ts:68",
+      "migrations/228_entitlements.sql:21",
+      "docs/reference/data-lineage-map.md — no `## `entitlements`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)",
+      "src/features/leads/lib/record-lead-view.ts:184",
+      "src/features/leads/lib/record-lead-view.ts:186",
+      "src/features/leads/lib/record-lead-view.ts:188",
+      "docs/specs/00-architecture/00_system_map.md:71",
+      "docs/reference/data-lineage-map.md:598 — table present, no pipeline producer listed",
+      "docs/reference/data-lineage-map.md — no `## `lead_views`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)"
+    ],
+    "contract_ref": [],
+    "query_key": [],
+    "field_whitelist": [
+      "competition_count"
+    ],
+    "tables": [
+      {
+        "table": "entitlements",
+        "columns": [
+          "status",
+          "user_id",
+          "product"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/00-architecture/116_multi_product_architecture.md",
+        "evidence": [
+          "src/lib/auth/get-user-context.ts:99",
+          "src/lib/entitlements/index.ts:68",
+          "migrations/228_entitlements.sql:21",
+          "docs/reference/data-lineage-map.md — no `## `entitlements`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)"
+        ]
+      },
+      {
+        "table": "lead_views",
+        "columns": [
+          "user_id",
+          "lead_key",
+          "trade_slug",
+          "viewed_at"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/01-pipeline/84_lifecycle_phase_engine.md",
+        "evidence": [
+          "src/features/leads/lib/record-lead-view.ts:184",
+          "src/features/leads/lib/record-lead-view.ts:186",
+          "src/features/leads/lib/record-lead-view.ts:188",
+          "docs/specs/00-architecture/00_system_map.md:71",
+          "docs/reference/data-lineage-map.md:598 — table present, no pipeline producer listed",
+          "docs/reference/data-lineage-map.md — no `## `lead_views`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)"
+        ]
+      },
+      {
+        "table": "user_profiles",
+        "columns": [
+          "trade_slug",
+          "trade_slugs_override",
+          "display_name",
+          "user_id"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/02-web-admin/102_admin_notifications_tool.md",
+        "evidence": [
+          "src/lib/auth/get-user-context.ts:99",
+          "src/lib/auth/get-user-context.ts:101",
+          "docs/specs/00-architecture/00_system_map.md:80",
+          "docs/reference/data-lineage-map.md — no `## `user_profiles`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)"
+        ]
+      }
+    ]
+  },
+  "outputs": {
+    "answer": "contract_only",
+    "why": "This route IS the mutation contract: it writes 3 table(s) synchronously inside the request and returns the result — there is no optimistic client-side flip to reconcile.",
+    "evidence": [
+      "src/app/api/leads/view/route.ts:104",
+      "src/app/api/leads/view/route.ts:105",
+      "src/app/api/leads/view/route.ts:106",
+      "migrations/114_user_profiles_mobile_columns.sql:75",
+      "docs/reference/data-lineage-map.md — no `## `lead_view_events`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)",
+      "src/features/leads/lib/record-lead-view.ts:148",
+      "src/features/leads/lib/record-lead-view.ts:152",
+      "src/features/leads/lib/record-lead-view.ts:166",
+      "src/features/leads/lib/record-lead-view.ts:173",
+      "docs/specs/00-architecture/00_system_map.md:71"
+    ],
+    "contract_ref": [],
+    "tables": [
+      {
+        "table": "lead_view_events",
+        "columns": [
+          "user_id",
+          "permit_num",
+          "revision_num"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/03-mobile/95_mobile_user_profiles.md",
+        "evidence": [
+          "src/app/api/leads/view/route.ts:104",
+          "src/app/api/leads/view/route.ts:105",
+          "src/app/api/leads/view/route.ts:106",
+          "migrations/114_user_profiles_mobile_columns.sql:75",
+          "docs/reference/data-lineage-map.md — no `## `lead_view_events`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)"
+        ]
+      },
+      {
+        "table": "lead_views",
+        "columns": [
+          "user_id",
+          "lead_key",
+          "lead_type",
+          "permit_num",
+          "revision_num",
+          "entity_id",
+          "trade_slug",
+          "viewed_at",
+          "saved",
+          "saved_at"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/01-pipeline/84_lifecycle_phase_engine.md",
+        "evidence": [
+          "src/features/leads/lib/record-lead-view.ts:148",
+          "src/features/leads/lib/record-lead-view.ts:152",
+          "src/features/leads/lib/record-lead-view.ts:166",
+          "src/features/leads/lib/record-lead-view.ts:173",
+          "docs/specs/00-architecture/00_system_map.md:71",
+          "docs/reference/data-lineage-map.md:598 — table present, no pipeline producer listed",
+          "docs/reference/data-lineage-map.md — no `## `lead_views`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)"
+        ]
+      },
+      {
+        "table": "user_profiles",
+        "columns": [
+          "lead_views_count",
+          "user_id",
+          "trade_slug",
+          "display_name"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/02-web-admin/102_admin_notifications_tool.md",
+        "evidence": [
+          "src/app/api/leads/view/route.ts:109",
+          "src/app/api/leads/view/route.ts:110",
+          "src/app/api/leads/view/route.ts:111",
+          "src/lib/auth/get-user-context.ts:84",
+          "src/lib/auth/get-user-context.ts:87",
+          "docs/specs/00-architecture/00_system_map.md:80",
+          "docs/reference/data-lineage-map.md — no `## `user_profiles`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)"
+        ]
+      }
+    ]
+  },
+  "state": {
+    "answer": "server_only",
+    "why": "A CONTRACT holds no client state: every value is resolved per request on the server and nothing is cached in a client store by the route itself.",
+    "evidence": [
+      "src/app/api/leads/view/route.ts:36 (POST export)",
+      "src/lib/api/with-api-envelope.ts:27-52"
+    ],
+    "fields": []
+  },
+  "staleness": {
+    "answer": "live",
+    "why": "Every read runs against the base tables on each request — there is no cache layer between the handler and the database.",
+    "evidence": [
+      "src/lib/auth/get-user-context.ts:99",
+      "src/lib/entitlements/index.ts:68",
+      "migrations/228_entitlements.sql:21",
+      "docs/reference/data-lineage-map.md — no `## `entitlements`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)"
+    ],
+    "offline": "none"
+  },
+  "guards": {
+    "session": {
+      "answer": "authenticated",
+      "why": "classifyRoute(\"/api/leads/view\") returns \"authenticated\" (executed 2026-09-15); the handler re-verifies the caller in-process.",
+      "evidence": [
+        "src/lib/auth/route-guard.ts:150-201 — classifyRoute executed 2026-09-15 with the concrete path",
+        "getCurrentUserContext(request, pool) at src/app/api/leads/view/route.ts:41 -> getClaimsUid (src/lib/auth/get-user.ts:184), Bearer-or-sb-cookie, local JWKS claims check (NOT revocation-checked). Middleware classifies /api/leads/* 'authenticated' (src/lib/auth/route-guard.ts:124)."
+      ]
+    },
+    "rls_class": {
+      "answer": "A",
+      "why": "It reaches user-owned rows whose policies key on auth.uid(). The route connects as the table owner (raw pg), which Spec 114 §9 makes owner-exempt from RLS — the class describes the data, not the gate this route passes.",
+      "evidence": [
+        "migrations/230_rls_class_a_entitlements.sql:48",
+        "migrations/230_rls_class_a_entitlements.sql:58",
+        "migrations/230_rls_class_a_entitlements.sql:49",
+        "migrations/230_rls_class_a_entitlements.sql:50",
+        "docs/specs/00-architecture/114_rls_policy_catalog.md §2"
+      ]
+    },
+    "disclosure": "none",
+    "entitlement": "none",
+    "flag": "none",
+    "permission": "none",
+    "rate_bucket": "leads-view:<uid> (src/app/api/leads/view/route.ts:85)"
+  },
+  "render": {
+    "targets": [
+      "screen"
+    ],
+    "projection": "none",
+    "breakpoints": "none",
+    "export": "none"
+  },
+  "checks": [
+    {
+      "id": "contract_leads_view__auth_class_parity",
+      "kind": "auth_class_parity",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "why": "guards.session must equal classifyRoute(\"/api/leads/view\"), executed 2026-09-15 → \"authenticated\" plus the in-handler guard (getCurrentUserContext(request, pool) at src/app/api/leads/view/route.ts:41 -> getClaimsUid (src/lib/auth/get-u). Locked by api-leads-view.infra.test.ts, contracts.infra.test.ts."
+    },
+    {
+      "id": "contract_leads_view__error_envelope",
+      "kind": "error_state",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "Every declared error class returns the { data, error, meta } envelope of docs/specs/00_engineering_standards.md §4.4; expected to stay at zero deviations."
+    },
+    {
+      "id": "contract_leads_view__contract_parse",
+      "kind": "contract_parse",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "why": "Request input is parsed by leadViewBodySchema at src/app/api/leads/view/route.ts:69 before any query runs; a payload that fails the schema is refused, never coerced."
+    },
+    {
+      "id": "contract_leads_view__field_whitelist_parity",
+      "kind": "field_whitelist_parity",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "The response is an explicit pick-by-name of 3 field(s) (src/app/api/leads/view/route.ts:145, src/features/leads/api/envelope.ts:51), so a column added upstream cannot leak; this check set-equals the projection to inputs.field_whitelist."
+    },
+    {
+      "id": "contract_leads_view__schema_declared",
+      "kind": "schema_declared",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "Every table and column declared in lineage.reads[]/writes[] must exist in src/lib/db/generated/schema.ts (drizzle-kit introspect of the live database); the registry generator checks this both directions."
+    }
+  ],
+  "invariants": "none",
+  "plausibility": "none",
+  "states": [
+    {
+      "name": "hit",
+      "golden": "none"
+    },
+    {
+      "name": "unauthorized",
+      "golden": "none"
+    },
+    {
+      "name": "rate_limited",
+      "golden": "none"
+    },
+    {
+      "name": "error",
+      "golden": "none"
+    },
+    {
+      "name": "partial",
+      "golden": "none"
+    },
+    {
+      "name": "degraded",
+      "golden": "none"
+    }
+  ],
+  "errors": {
+    "answer": "envelope",
+    "why": "Success and failure both arrive in the { data, error, meta } envelope of docs/specs/00_engineering_standards.md §4.4; withApiEnvelope is the outermost wrapper and converts any uncaught throw into the same shape.",
+    "evidence": [
+      "src/lib/api/with-api-envelope.ts:27-52",
+      "src/app/api/leads/view/route.ts:145",
+      "src/features/leads/api/envelope.ts:50",
+      "src/features/leads/api/envelope.ts:82",
+      "src/lib/api/with-api-envelope.ts:48",
+      "src/app/api/leads/view/route.ts:42 (401)",
+      "src/app/api/leads/view/route.ts:52 (415)",
+      "src/app/api/leads/view/route.ts:67 (400)",
+      "src/app/api/leads/view/route.ts:70 (400)"
+    ],
+    "classes": [
+      {
+        "class": "401",
+        "ui": "{data:null,error:{code,message},meta:null} — src/app/api/leads/view/route.ts:42 (code UNAUTHORIZED)"
+      },
+      {
+        "class": "400",
+        "ui": "{data:null,error:{code,message},meta:null} — src/app/api/leads/view/route.ts:67 (code INVALID_JSON)"
+      },
+      {
+        "class": "403",
+        "ui": "{data:null,error:{code,message},meta:null} — src/app/api/leads/view/route.ts:79 (code FORBIDDEN_TRADE_MISMATCH)"
+      },
+      {
+        "class": "429",
+        "ui": "{data:null,error:{code,message,details:{remaining}},meta:null} + Retry-After (src/features/leads/api/error-mapping.ts:37-40) — src/app/api/leads/view/route.ts:89 (code RATE_LIMITED)"
+      },
+      {
+        "class": "500",
+        "ui": "{data:null,error:{code,message},meta:null} — src/app/api/leads/view/route.ts:125 (code INTERNAL_ERROR)"
+      }
+    ]
+  },
+  "emits": {
+    "answer": "ledger",
+    "why": "It writes durable rows that count what happened (lead_view_events INSERT at src/app/api/leads/view/route.ts:104 (dedup PK (user_id, permit_num, revision_num), route.ts:106); lead_views UPSERT at src/features/leads/lib/record-lead-view.ts:148 (view branch) / :166 (save/unsave branch)). NOTE: the closed emits.ledger_events[] vocabulary is the usage ledger (property_view · pdf_send · offer_impression · offer_click · export · parcel_id_translated); no member describes an audit or run row, so ledger_events stays empty — raised as a vocabulary gap.",
+    "evidence": [
+      "ledger lead_view_events INSERT at src/app/api/leads/view/route.ts:104 (dedup PK (user_id, permit_num, revision_num), route.ts:106)",
+      "ledger lead_views UPSERT at src/features/leads/lib/record-lead-view.ts:148 (view branch) / :166 (save/unsave branch)"
+    ],
+    "analytics": [],
+    "ledger_events": [],
+    "breadcrumbs": []
+  },
+  "offers": {
+    "answer": "none",
+    "why": "It renders no sponsored placement: the offers and advertisers tables Spec 126 §2 specifies do not exist in migrations/ and nothing in this handler reads placement inventory.",
+    "evidence": [
+      "migrations/ — no CREATE TABLE offers / advertisers (grep 2026-09-15)",
+      "src/app/api/leads/view/route.ts — read in full; no placement read"
+    ]
+  },
+  "metering": {
+    "answer": "metered",
+    "why": "Quota-bearing: it increments user_profiles.lead_views_count for a trial user, gated on the lead_view_events dedup INSERT in the same CTE. It writes NO usage_events row — that table does not exist in the introspected schema; Spec 126 §2 designs it as the one new ledger (designed, not built).",
+    "evidence": [
+      "src/app/api/leads/view/route.ts:101-114",
+      "src/lib/db/generated/schema.ts — no usage_events table",
+      "docs/specs/02-web-admin/126_maxbld_surface_standard.md §2"
+    ],
+    "unit": "lead view",
+    "product": "lead_gen",
+    "ledger_event": "property_view (DESIGNED — not written today)",
+    "subject_kind": "permit_rev"
+  },
+  "config": {
+    "answer": "none",
+    "why": "It consumes no tunable: no logic_variables read and no env-var-driven threshold in the handler or the libs it calls.",
+    "evidence": [
+      "src/app/api/leads/view/route.ts — read in full 2026-09-15; no loadMarketplaceConfigs / logic_variables read"
+    ],
+    "logic_variables": [],
+    "retired": []
+  },
+  "sharing": {
+    "answer": "sole",
+    "why": "Exactly one call site renders it, so its projection serves one surface.",
+    "evidence": [
+      "src/features/leads/api/useLeadView.ts:25"
+    ],
+    "surfaces": [
+      "src/features/leads/api/useLeadView.ts:25"
+    ]
+  },
+  "a11y": {
+    "touch_target_min_px": "UNRESEARCHED",
+    "labels": "none",
+    "dark_mode": "none",
+    "reduced_motion": "none",
+    "i18n": "none",
+    "safe_area": "none"
+  },
+  "deviations": "none",
+  "limitations": [
+    {
+      "what": "a11y.touch_target_min_px has no legal answer for a CONTRACT",
+      "measured": "The schema allows only UNRESEARCHED or an integer >= 44; a JSON endpoint has no touch target and the vocabulary has no \"n/a\". Left UNRESEARCHED and escalated per Spec 128 §4 rather than invented.",
+      "check_id": "contract_leads_view__auth_class_parity"
+    },
+    {
+      "what": "error classes outside the closed set are not representable: 415",
+      "measured": "The handler returns 415 at src/app/api/leads/view/route.ts:52; errors.classes[] admits only 400/401/403/429/500/schema_drift/offline.",
+      "check_id": "contract_leads_view__error_envelope"
+    }
+  ],
+  "interpretation": "none",
+  "notes": "The file's SPEC LINK cites docs/specs/03-mobile/71_lead_feed_discovery_interface.md, which does not exist — the real file is the archived path recorded here (verified by find). The trial-view counter (only when action='view', lead_type='permit', subscription_status='trial') uses an atomic CTE — INSERT INTO lead_view_events ... ON CONFLICT DO NOTHING RETURNING 1, then UPDATE user_profiles ... WHERE EXISTS (SELECT 1 FROM ins) — avoiding a double increment on a race between two concurrent views of the same permit. The main upsert/count logic is delegated to src/features/leads/lib/record-lead-view.ts. | MEASURED 2026-09-15: SPEC 126 §1 CALLER CLAIM — VERIFIED TRUE (no production caller). I grepped `src/**` and `mobile/**` for the literal `/api/leads/view` and for `leads/view`. In src/ the only fetch call site is src/features/leads/api/useLeadView.ts:25 (`fetch('/api/leads/view', {method:'POST', ...})`). I then grepped the whole repo for `useLeadView`: the ONLY importer is src/tests/useLeadView.logic.test.tsx:12. No component, page, or other hook imports it (src/features/leads/api/query-client.ts:10 mentions it in a comment only — a comment, not evidence of a call). In mobile/ there is NO reference at all: `grep -o 'api/leads/[a-z-]*' mobile/src mobile/app` returns only feed, save, flight-board, detail, search — never `view` (mobile/src/hooks/useSaveLead.ts:27, useRemoveFromBoard.ts:21-22, SearchPermitsSheet.tsx:46-47 all hit /api/leads/save instead). VERDICT: the route is reachable only from tests; src/features/leads/api/useLeadView.ts is itself dead outside tests. COUNTER COLUMNS: `user_profiles.lead_views_count`, incremented by +1 at src/app/api/leads/view/route.ts:110 (UPDATE at :109, WHERE user_id = $1 at :111), gated on `EXISTS (SELECT 1 FROM ins)` at :112 where `ins` is the lead_view_events INSERT CTE at :103-108. The whole block is additionally gated on action==='view' AND lead_type==='permit' AND ctx.subscription_status==='trial' (route.ts:101). So the estate's only usage meter is: (a) behind a dead caller, and (b) behind a trial-only + permit-only + view-action-only triple gate. CENSUS AGREEMENT: census_reads (lead_views, user_profiles, entitlements) and census_writes (lead_view_events, user_profiles, lead_views) both match what I read. Aliases resolved: the `ins` in `EXISTS (SELECT 1 FROM ins)` (route.ts:112) is the CTE at route.ts:103, NOT a table — the real table is lead_view_events (route.ts:104). | Idempotency: Guarded, and the guard is the interesting part. (1) The trial counter is replay-safe by construction: `INSERT INTO lead_view_events ... ON CONFLICT (user_id, permit_num, revision_num) DO NOTHING RETURNING 1` (src/app/api/leads/view/route.ts:104-107) feeds a CTE, and the `UPDATE user_profiles SET lead_views_count = lead_views_count + 1` only fires `AND EXISTS (SELECT 1 FROM ins)` (route.ts:112) — so a second POST for the same (user, permit, revision) inserts nothing and increments nothing, forever. (2) The lead_views write is an UPSERT on (user_id, lead_key, trade_slug): the view branch sets only `viewed_at = NOW()` (src/features/leads/lib/record-lead-view.ts:152-153), the save branch forces saved/saved_at (record-lead-view.ts:173-175). No IS DISTINCT FROM guard — timestamps move on every replay; the row state does not. | Caching: none observed — no revalidate/dynamic/Cache-Control/unstable_cache in src/app/api/leads/view/route.ts:1-152 | Rate bucket: leads-view:<uid> (src/app/api/leads/view/route.ts:85) | Entitlement posture: NOT an access gate. `ctx.subscription_status` is sourced from the entitlements LEFT JOIN (src/lib/auth/get-user-context.ts:99, join text src/lib/entitlements/index.ts:68) and is read only at src/app/api/leads/view/route.ts:101 to decide whether the TRIAL VIEW COUNTER fires. A non-trial user is served identically minus the counter. | Other guards / classification: Trade-membership authorization at src/app/api/leads/view/route.ts:78 — the body trade_slug must be a member of ctx.trade_slugs ",
+  "x-draft": {
+    "shard": "contracts",
+    "files": [
+      "src/app/api/leads/view/route.ts"
+    ],
+    "loc": 152,
+    "methods": [
+      "POST"
+    ],
+    "consumers": [
+      "src/features/leads/api/useLeadView.ts"
+    ],
+    "writes_audit_row": false,
+    "consumers_verified": [
+      "src/features/leads/api/useLeadView.ts:25"
+    ],
+    "auth_class_executed": "authenticated",
+    "locking_tests": [
+      "src/tests/api-leads-view.infra.test.ts",
+      "src/tests/contracts.infra.test.ts"
+    ]
+  },
+  "programme": {
+    "scope": "estate_other",
+    "phase": "not_scheduled",
+    "why": "Lead generation — the other product. Spec 100 §1 states the parcel tool is \"not coupled to the Lead Feed, Flight Center, or LeadDetail\"; inventoried only.",
+    "feature": "F90",
+    "build_order": 4172,
+    "leakage": "UNRESEARCHED",
+    "product_questions": "UNRESEARCHED",
+    "review": {
+      "status": "unreviewed"
+    }
+  }
+}

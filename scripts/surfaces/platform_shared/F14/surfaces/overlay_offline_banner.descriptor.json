@@ -1,0 +1,294 @@
+{
+  "kind": "SURFACE",
+  "status": "exists",
+  "docs": {
+    "purpose": "A thin amber strip that slides into view at the top of a screen when the phone loses its connection. It tells the user they are offline and how long ago the data they are looking at was last refreshed, which matters when someone is making a real decision from a cached list. When there is no cached data at all it says so instead.",
+    "data_story": "This surface reaches **no API contract at all** — every value it shows is local, passed in as a prop, or read from the device. It holds no client-side store, so there is no local copy of server state to keep in sync. It emits **no analytics event**, so nothing it does is currently countable.",
+    "under_126": "**RE-PROJECT** — it writes nothing and holds no Layer-3 store, so the move is short — the server already assembles the payload and only the rendering is client-side. It renders through the STATIC renderer (content source and SEO, or a declared redirect alone), reading no contract. Its `owns.components[]` declares `mobile/src/components/shared/OfflineBanner.tsx`."
+  },
+  "evidence": {
+    "files": [
+      "mobile/src/components/shared/OfflineBanner.tsx:1"
+    ],
+    "contracts": [
+      "mobile/src/components/shared/OfflineBanner.tsx:1-81 — no contract; NetInfo + the MMKV persist timestamp"
+    ],
+    "tables": [
+      "mobile/src/components/shared/OfflineBanner.tsx:1-81 — reaches no table"
+    ],
+    "gate": [
+      "mobile/src/components/shared/OfflineBanner.tsx:42-43"
+    ],
+    "states": [
+      "mobile/src/components/shared/OfflineBanner.tsx:53-59",
+      "mobile/src/components/shared/OfflineBanner.tsx:74-76"
+    ],
+    "emits": [
+      "mobile/src/components/shared/OfflineBanner.tsx:1-81 — no track() call"
+    ]
+  },
+  "identity": {
+    "id": "overlay_offline_banner",
+    "route": "mobile/src/components/shared/OfflineBanner.tsx",
+    "archetype": "STATIC",
+    "platforms": [
+      "mobile"
+    ],
+    "owns": {
+      "components": [
+        "mobile/src/components/shared/OfflineBanner.tsx"
+      ]
+    },
+    "owner": "unassigned (no CODEOWNERS file and no owner registry exists in the repo — measured 2026-09-15)",
+    "spec": "docs/specs/03-mobile/90_mobile_engineering_protocol.md",
+    "spec_refs": [
+      "docs/specs/03-mobile/77_mobile_crm_flight_board.md §4.2",
+      "docs/specs/03-mobile/90_mobile_engineering_protocol.md §12"
+    ],
+    "spec_version": "0-draft",
+    "versioning": {
+      "answer": "breaking_allowed",
+      "why": "It takes no props and has four in-repo consumers that all move together.",
+      "evidence": [
+        "mobile/src/components/shared/OfflineBanner.tsx:41"
+      ]
+    },
+    "ref": "S-042"
+  },
+  "inputs": {
+    "answer": "device",
+    "why": "Two device reads: NetInfo.isConnected and the MMKV timestamp of the last TanStack cache write. It calls no contract.",
+    "evidence": [
+      "mobile/src/components/shared/OfflineBanner.tsx:42",
+      "mobile/src/lib/mmkvPersister.ts:70-75"
+    ],
+    "contract_ref": [],
+    "query_key": [],
+    "field_whitelist": [
+      "NetInfo.isConnected",
+      "tq-last-updated"
+    ],
+    "tables": []
+  },
+  "outputs": {
+    "answer": "none",
+    "why": "It renders a banner and writes nothing.",
+    "evidence": [
+      "mobile/src/components/shared/OfflineBanner.tsx:67-79"
+    ],
+    "contract_ref": [],
+    "tables": []
+  },
+  "state": {
+    "answer": "mmkv",
+    "why": "Its whole value is the MMKV persist timestamp — \"Offline mode. Last updated N min ago.\" — which it re-reads on each offline transition rather than on mount, so the copy reflects when connectivity dropped.",
+    "evidence": [
+      "mobile/src/components/shared/OfflineBanner.tsx:49-58",
+      "mobile/src/lib/mmkvPersister.ts:41-43"
+    ],
+    "fields": [
+      {
+        "name": "tq-last-updated",
+        "owner_layer": "4a_mmkv",
+        "canonical_writer": "mmkvPersister.persistClient",
+        "authorized_readers": [
+          "overlay_offline_banner"
+        ],
+        "bridge": "B1",
+        "persistence": "mmkv",
+        "signout_reset": false
+      }
+    ]
+  },
+  "staleness": {
+    "answer": "query_cache",
+    "why": "It is the UI of staleness: it reports how old the persisted TanStack projection is, against a 24-hour maxAge.",
+    "evidence": [
+      "mobile/src/lib/mmkvPersister.ts:70-75",
+      "mobile/app/_layout.tsx:491"
+    ],
+    "offline": "degraded",
+    "gc_time_ms": 86400000
+  },
+  "guards": {
+    "session": {
+      "answer": "authenticated",
+      "why": "It is mounted on the four gated tab screens only; the auth and onboarding groups do not render it.",
+      "evidence": [
+        "mobile/app/(app)/index.tsx:221",
+        "mobile/app/(app)/flight-board.tsx:300",
+        "mobile/app/(app)/map.tsx:113",
+        "mobile/app/(app)/settings.tsx:279"
+      ]
+    },
+    "rls_class": {
+      "answer": "none",
+      "why": "It reaches no table.",
+      "evidence": [
+        "mobile/src/components/shared/OfflineBanner.tsx:1-81"
+      ]
+    },
+    "disclosure": "none",
+    "entitlement": "none",
+    "flag": "none",
+    "permission": "none",
+    "rate_bucket": "none"
+  },
+  "render": {
+    "targets": [
+      "screen"
+    ],
+    "projection": "none",
+    "breakpoints": "mobile_first",
+    "export": "none"
+  },
+  "checks": [
+    {
+      "id": "offlinebanner_timestamp",
+      "kind": "freshness",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "Spec 77 §4.2 requires the last-updated context because field users make real-money decisions from the cached feed; mobile/__tests__/offline.test.ts covers the persister round-trip that supplies it."
+    },
+    {
+      "id": "offlinebanner_no_cache_copy",
+      "kind": "empty_state",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "A first install with no persisted cache renders \"Offline mode. No cached data.\" rather than a blank timestamp (OfflineBanner.tsx:74-76)."
+    },
+    {
+      "id": "offlinebanner_a11y_label",
+      "kind": "a11y_label",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "why": "The banner is non-interactive and unlabelled; a screen reader may not announce the connectivity change at all."
+    }
+  ],
+  "invariants": "none",
+  "plausibility": "none",
+  "states": [
+    {
+      "name": "static",
+      "golden": "none"
+    },
+    {
+      "name": "offline",
+      "golden": "none"
+    },
+    {
+      "name": "empty",
+      "golden": "none"
+    }
+  ],
+  "errors": {
+    "answer": "none",
+    "why": "It has no failure path; an unknown NetInfo state (isConnected null) collapses to \"online\" and the banner stays collapsed.",
+    "evidence": [
+      "mobile/src/components/shared/OfflineBanner.tsx:42-43"
+    ]
+  },
+  "emits": {
+    "answer": "none",
+    "why": "Going offline is not instrumented, so how often field users work from cache is unknown.",
+    "evidence": [
+      "mobile/src/components/shared/OfflineBanner.tsx:1-81"
+    ],
+    "analytics": [],
+    "ledger_events": [],
+    "breadcrumbs": []
+  },
+  "offers": {
+    "answer": "none",
+    "why": "No sponsored placement is rendered: the only slot component in the Expo tree is SponsorSlot, and it returns null unless EXPO_PUBLIC_PARCEL_SPONSORS=1.",
+    "evidence": [
+      "mobile/src/components/parcel/SponsorSlot.tsx:16-20"
+    ]
+  },
+  "metering": {
+    "answer": "none",
+    "why": "Nothing here is counted: the Spec 126 §7 usage ledger table does not exist (grep for usage_events in the introspected drizzle schema returns 0 hits), and the only quota-shaped counter, user_profiles.lead_views_count, is incremented solely by POST /api/leads/view, which has no mobile caller.",
+    "evidence": [
+      "src/lib/db/generated/schema.ts — no usage_events table (grep, 2026-09-15)",
+      "src/app/api/leads/view/route.ts:110",
+      "src/features/leads/api/useLeadView.ts:25 — imported only by src/tests/useLeadView.logic.test.tsx"
+    ]
+  },
+  "config": {
+    "answer": "none",
+    "why": "The surface consumes no registered logic variable: the only server-side tunable in this path, user_profiles.radius_cap_km, is a per-user admin column, not a logic_variables row.",
+    "evidence": [
+      "src/lib/userProfile.schema.ts:40",
+      "src/app/api/user-profile/route.ts:328",
+      "docs/reference/logic-variables-registry.md — no radius_cap_km entry"
+    ],
+    "logic_variables": [],
+    "retired": []
+  },
+  "sharing": {
+    "answer": "none",
+    "why": "It renders no contract.",
+    "evidence": [
+      "mobile/src/components/shared/OfflineBanner.tsx:1-81"
+    ],
+    "surfaces": []
+  },
+  "a11y": {
+    "touch_target_min_px": 44,
+    "labels": "none",
+    "dark_mode": "hardcoded",
+    "reduced_motion": "ignored",
+    "i18n": "none",
+    "safe_area": "none"
+  },
+  "deviations": "none",
+  "limitations": [
+    {
+      "what": "It is rendered on four screens but not on the two parcel-tool screens, so a lapsed connection is invisible inside the Parcel Cost Tool.",
+      "measured": "grep for the OfflineBanner import returns index.tsx, flight-board.tsx, map.tsx and settings.tsx only; parcel-tool/index.tsx and parcel-tool/[parcelId].tsx do not import it.",
+      "check_id": "offlinebanner_timestamp"
+    },
+    {
+      "what": "The 250ms height+opacity animation runs regardless of the OS reduce-motion setting.",
+      "measured": "OfflineBanner.tsx:53-59 — withTiming on every transition; no AccessibilityInfo call exists in mobile/.",
+      "check_id": "none — checks[].kind has no reduced-motion value; raised as a vocabulary escalation per Spec 128 §4"
+    }
+  ],
+  "interpretation": "none",
+  "notes": "The header comment records a 2026-04-23 design-audit decision that the banner appears on ALL FOUR pillars; the Parcel Cost Tool shipped later as a fifth tab and was never added, so the document and the tree disagree.",
+  "x-draft": {
+    "shard": "mobile-product",
+    "files": [
+      "mobile/src/components/shared/OfflineBanner.tsx"
+    ],
+    "loc": 81,
+    "call_idiom": "none",
+    "stores": [],
+    "measured_states": [
+      "collapsed_online",
+      "expanded_offline_with_timestamp",
+      "expanded_offline_no_cache"
+    ],
+    "measured_gate": {
+      "session": "required",
+      "entitlement": "none",
+      "flag": "none",
+      "permission": "none"
+    }
+  },
+  "programme": {
+    "scope": "platform_shared",
+    "phase": "UNRESEARCHED",
+    "why": "A cross-cutting overlay that renders over every surface of both products.",
+    "feature": "F14",
+    "build_order": 3143,
+    "leakage": "none",
+    "product_questions": "none",
+    "review": {
+      "status": "unreviewed"
+    }
+  }
+}

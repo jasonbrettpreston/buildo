@@ -21,6 +21,59 @@ Source: `.cursor/wf3_enrich_parcels_pass3_backlog_active_task.md`, implemented 2
 
 ---
 
+## Spec 126 surface research (2026-09-15)
+
+Source: the six-shard research pass over all 137 surfaces, contracts and jobs (`scripts/surfaces/_schema/census/*.json`, rendered at `docs/reports/generated/127-surface-registry.md`). Every row below was **measured while researching a descriptor field**, not sought out — which is the argument for the registry: these had all been green for months.
+
+Filed, not fixed, per the discoverer≠adjudicator rule (Spec 124 §4.2). **A different party adjudicates each.**
+
+### A. Proposed **security WF3 — admin per-route guard + public `SELECT *` projection** (one finding, many sites)
+
+The auth and disclosure defects share one root cause and one fix shape: **a route's guard and its projection are nobody's declared property**, so both drift silently. Grouping them is deliberate — fixing them as one WF3 lets one reviewer hold the whole trust boundary at once.
+
+| Severity | Site | Item |
+|----------|------|------|
+| **HIGH** | `src/app/api/permits/[id]/route.ts` | **A public route serves the whole `parcels` row.** The handler spreads the joined parcel record into its response rather than projecting by name, so Tier-3 diagnostic columns that the *parcel lookup* route gates behind an entitlement leave this one **unauthenticated**. Two routes over the same table, two different disclosure postures, and only one of them declared. Fix: an explicit pick-by-name projection, and a `checks[]` entry asserting the response key set equals the declared whitelist. |
+| **HIGH** | `src/app/api/builders/[id]/route.ts` | **Serves every `entity_contacts` row for the entity.** Contact rows are the most sensitive non-account data in the estate and the route applies no projection and no gate. Fix as above; decide explicitly which contact fields are public. |
+| **HIGH** | 11 `/api/admin/**` routes with **no `verifyAdminAuth(request)` call**, relying solely on the blanket middleware — contrary to `.claude/domain-admin.md`'s *"the FIRST line of every `/api/admin/**` handler… Per-route guard, NOT middleware"*: `admin/stats`, `admin/rules`, `admin/sync`, `admin/builders`, `admin/market-metrics`, `admin/pipelines/runs`, `admin/pipelines/status`, `admin/pipelines/history`, `admin/pipelines/schedules`, **`admin/control-panel/configs`** and **`admin/control-panel/resync`**. The two control-panel routes are the serious pair: `configs` PUT rewrites `logic_variables` plus three more tunable tables. Defence-in-depth is inconsistent rather than absent — but "the middleware will catch it" is exactly the assumption a route-group refactor breaks silently. |
+| **HIGH** | 7 admin mutations that write **no `admin_audit_log` row** (a subset of the nine already filed as Spec 128 R-12, re-measured here against the same route set): `control-panel/configs` PUT · `control-panel/resync` POST · `pipelines/[slug]` POST/DELETE · `pipelines/schedules` PUT/PATCH · `rules` POST/PATCH · `leads/watchlist` POST/DELETE · `notifications/test-send` POST. `src/lib/admin/admin-audit.ts`'s own header calls an unaudited admin mutation *"a compliance hole"*. |
+| **MED** | `src/app/api/admin/stats/route.ts` | **A GET that writes.** Every poll calls `reapStaleRunningRows()`, which `UPDATE`s `pipeline_runs` to auto-fail stale rows — an unaudited side-effect write on a nominally read-only endpoint, and the *only* thing that ever runs the reaper (Spec 128 `ASK-12`: it belongs in a JOB). A GET with a write is also uncacheable in a way nothing declares. |
+| **MED** | `src/app/api/leads/search/route.ts` | **No debounce contract and no rate limit** on a user-facing search endpoint. The SEARCH archetype makes `config.debounce_ms`, `config.min_query_len` and `guards.rate_bucket` mandatory precisely because this is the shape that gets abused. |
+
+**Proposed disposition:** ONE WF3, Cross-Domain, with a Security seat on the panel (Spec 08 §10.2 — it fires on auth/PII surfaces). Deliverables: `verifyAdminAuth` on all 11; explicit projections on the two public routes; audit rows on the 7; a lock asserting *every* mutating `/api/admin/**` export both guards and audits; the reaper moved to a JOB.
+
+### B. Dead code and unreachable behaviour
+
+| Severity | Site | Item |
+|----------|------|------|
+| **HIGH** | `src/features/leads/api/useLeadView.ts:77` · `src/app/api/leads/view/route.ts` · `mobile/src/components/paywall/PaywallScreen.tsx:153` | **The dead meter, re-confirmed by the research pass.** `useLeadView` has no caller outside its own test; the route's atomic CTE therefore never runs; `user_profiles.lead_views_count` is **structurally 0**; and the paywall's `leadViewsCount > 0` branch is unreachable in production, so every trial user sees the zero-state copy. 44 test cases pass over a meter nothing invokes. Already ruled: Spec 128 **R-08** retires it in favour of `usage_events`. **Needs a WF3 to execute the retirement**, including the paywall copy. |
+| **MED** | `mobile/app/(auth)/sign-up.tsx` | **The phone-path recovery email is discarded.** The submit handler closes the sheet without persisting it, so a phone-only account has no recovery address despite the UI collecting one. Compounding: `signup_completed` fires **before** email confirmation, so the funnel over-counts. |
+| **MED** | `mobile/scripts/check-spec99-matrix.mjs` | **A checker wired to nothing** — no match in `.husky/`, `.github/`, or either `package.json`; `spec99.mandates.lint.test.ts:335-346` only asserts the file *exists*. Already scheduled as Spec 126 §12 **P0b**; re-confirmed here. |
+
+### C. Schema and contract truthfulness
+
+| Severity | Site | Item |
+|----------|------|------|
+| **HIGH** | the builders page + `/api/builders` | **Five columns the builder page renders are absent from `entities`.** The route's `SELECT *` hides it: the fields arrive `undefined` and render as blanks rather than failing. A projection by name would have made this a type error on day one. This is the single clearest argument in the ledger for pick-by-name projections. |
+| **MED** | `docs/specs/00-architecture/112_backup_recovery.md` §6 | **The backup safety net writes no ledger row**, despite its own comment describing one. `scripts/backup-db.js` contains no INSERT/UPDATE and runs on the legacy SDK path, which writes no `pipeline_runs` row itself. The comment is a claim; the code is the fact. |
+| **MED** | **28 envelope deviations** — routes that do not return the standard `{ data, error, meta }` envelope (`withApiEnvelope` + handler-built `ok(data, meta)`), contrary to `docs/specs/00_engineering_standards.md` §4.4 and `.claude/domain-admin.md`. Measured per route in the registry; the full list is the set of `CONTRACT` rows whose `errors.answer` is not `envelope`. A client cannot write one error path when a quarter of the estate answers differently. |
+
+### D. Ownership and accessibility
+
+| Severity | Site | Item |
+|----------|------|------|
+| **MED** | `src/components/admin/LeadDetailInspector.tsx` (727L) · `lead-inspector/CoaClassificationPanel.tsx` (586L) · `lead-inspector/LifecycleTimelinePanel.tsx` (316L) | **Shared between two surfaces, therefore owned by neither.** Spec 128 **R-13** requires every component file to appear in exactly one surface's `owns.components[]`; a file rendered by both `admin_flight_center` and `admin_lead_feed_inspector` has no legal owner under that rule. Either it is promoted to its own surface, or one surface owns it and the other references it. 1,629 lines are currently unowned for this reason. |
+| **LOW** | `src/components/ui/Badge.tsx` · `src/components/ui/ScoreBadge.tsx` | Same class, smaller: shared leaf components with no declared owner. Candidates for a declared shared-primitive exemption rather than promotion — which is itself a ruling nobody has made. |
+| **MED** | mobile, multiple | **Touch targets measured at 32–40 px against the 44 px floor.** The floor is WCAG 2.5.5 and both platform HIGs. Recorded in the descriptors as measured values, not normalised upward: a number below the floor is a **finding**, not a setting (Spec 128 `ASK-19`). |
+
+### E. Method note
+
+Three further defects surfaced by the pass are already filed above under *"Spec 126 WF1"* (the vacuous G0 lock, the stale migration-number reservation, the disagreeing orphan sweeps) and are not duplicated here.
+
+**Total: 16 defect rows across 5 groups**, of which 6 are proposed as one security WF3 (group A).
+
+---
+
 ## Spec 126 WF1 (surface standard authoring) — findings filed, not fixed (2026-09-15)
 
 Source: WF1 "Specs 126/127/128, the MaxBLD Surface Standard" (`.cursor/wf1_spec126_128_active_task.md`), grounder fold. These are defects in **another programme's** artifacts, found while authoring; filed rather than fixed, per the discoverer≠adjudicator rule (Spec 124 §4.2).

@@ -1,0 +1,937 @@
+{
+  "kind": "SURFACE",
+  "status": "exists",
+  "docs": {
+    "purpose": "An operator's project watchlist. Saved permits and Committee-of-Adjustment items are grouped into three bands - needs attention, starting soon, and further out - and paged; a search box finds any Toronto address to add, tick-boxes allow removing several at once behind a confirmation, and clicking a row opens a side panel with the full record plus a prominent header saying whether the project looks delayed and when it is expected to start. Nothing is auto-archived: finished projects stay until an operator deletes them.",
+    "data_story": "It reads nothing from the database directly. Every value arrives through 3 contracts: `/api/admin/leads/watchlist`, `/api/admin/leads/watchlist/search`, `/api/admin/leads/inspect/[id]`. Behind those contracts, the data comes from `admin_watchlist`, `building_footprints`, `coa_applications`, `cost_estimates`, `entities`, `lead_trades`, `lead_views`, `lifecycle_status_history`, `logic_variables`, `neighbourhoods`, `parcel_buildings`, `parcels`, `permit_parcels`, `permit_phase_transitions`, `permit_trades`, `permits`, `phase_stay_calibration`, `scope_intensity_matrix`, `trade_forecasts`, `trades` and `universal_stream_catalog`, and writes land on `admin_watchlist`.",
+    "under_126": "**REBUILD** — it drives writes, so a client decision has to be re-homed on the server before the projection can be honest. It renders through the LIST renderer (a collection with declared pagination, recycling and empty/offline states), reading by reference: `/api/admin/leads/watchlist`, `/api/admin/leads/watchlist/search`, `/api/admin/leads/inspect/[id]`. Its `owns.components[]` declares `src/components/admin/FlightCenterTool.tsx` and `src/components/admin/SearchPermitsModal.tsx`."
+  },
+  "evidence": {
+    "files": [
+      "src/app/admin/flight-center/page.tsx:45",
+      "src/components/admin/FlightCenterTool.tsx:242",
+      "src/components/admin/SearchPermitsModal.tsx:56",
+      "src/app/admin/flight-center/error.tsx:1"
+    ],
+    "contracts": [
+      "src/app/api/admin/leads/watchlist/route.ts:211",
+      "src/app/api/admin/leads/watchlist/route.ts:265",
+      "src/app/api/admin/leads/watchlist/route.ts:383",
+      "src/app/api/admin/leads/watchlist/search/route.ts:80",
+      "src/app/api/admin/leads/inspect/[id]/route.ts:39"
+    ],
+    "tables": [
+      "src/app/api/admin/leads/watchlist/route.ts:121",
+      "src/app/api/admin/leads/watchlist/route.ts:353",
+      "src/lib/leads/lead-inspect-query.ts:117"
+    ],
+    "gate": [
+      "src/lib/auth/route-guard.ts:162",
+      "src/middleware.ts:95",
+      "src/app/api/admin/leads/watchlist/route.ts:213",
+      "src/app/api/admin/leads/watchlist/route.ts:270"
+    ],
+    "states": [
+      "src/components/admin/FlightCenterTool.tsx:242",
+      "src/tests/admin-flight-center.ui.test.tsx:19",
+      "src/tests/search-permits-modal.ui.test.tsx:15"
+    ],
+    "emits": [
+      "src/components/admin/FlightCenterTool.tsx:273",
+      "src/features/admin-flight-center/api/useBulkSaveToWatchlist.ts:68",
+      "src/features/admin-flight-center/api/useBulkDeleteFromWatchlist.ts:70"
+    ]
+  },
+  "identity": {
+    "id": "admin_flight_center",
+    "route": "src/app/admin/flight-center/page.tsx",
+    "archetype": "LIST",
+    "platforms": [
+      "web"
+    ],
+    "owns": {
+      "components": [
+        "src/components/admin/FlightCenterTool.tsx",
+        "src/components/admin/SearchPermitsModal.tsx"
+      ]
+    },
+    "owner": "UNRESEARCHED",
+    "spec": "docs/specs/02-web-admin/36_flight_center_tool.md",
+    "spec_refs": [
+      "docs/specs/02-web-admin/36_flight_center_tool.md §2",
+      "docs/specs/02-web-admin/36_flight_center_tool.md §3",
+      "docs/specs/02-web-admin/36_flight_center_tool.md §4",
+      "docs/specs/02-web-admin/36_flight_center_tool.md §4a",
+      "docs/specs/02-web-admin/76_lead_feed_health_dashboard.md §3.5"
+    ],
+    "spec_version": "0-draft",
+    "versioning": {
+      "answer": "additive_only",
+      "why": "Both payloads are parsed through non-strict Zod mirrors, so an added field is stripped harmlessly while a removed or retyped one fails the parse — additive is the only safe direction without bumping spec_version.",
+      "evidence": [
+        "src/lib/admin/watchlist-schemas.ts:15",
+        "src/app/api/admin/leads/watchlist/route.ts:251"
+      ]
+    },
+    "ref": "S-054"
+  },
+  "inputs": {
+    "answer": "contract",
+    "why": "Three admin contracts through named hooks; the tool touches no table itself.",
+    "evidence": [
+      "src/features/admin-flight-center/api/useWatchlist.ts:46",
+      "src/features/admin-flight-center/api/useWatchlistSearch.ts:50",
+      "src/features/admin-flight-center/api/useLeadInspect.ts:98"
+    ],
+    "contract_ref": [
+      "/api/admin/leads/watchlist",
+      "/api/admin/leads/watchlist/search",
+      "/api/admin/leads/inspect/[id]"
+    ],
+    "query_key": [
+      "admin",
+      "watchlist"
+    ],
+    "field_whitelist": [
+      "id",
+      "lead_type",
+      "lead_key",
+      "permit_num",
+      "revision_num",
+      "coa_application_number",
+      "address_snapshot",
+      "saved_at",
+      "temporal_group"
+    ],
+    "tables": [
+      {
+        "table": "admin_watchlist",
+        "columns": [
+          "id",
+          "admin_uid",
+          "lead_type",
+          "lead_key",
+          "permit_num",
+          "revision_num",
+          "coa_application_number",
+          "address_snapshot",
+          "saved_at"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/00-architecture/114_rls_policy_catalog.md §3.2",
+        "evidence": [
+          "src/app/api/admin/leads/watchlist/route.ts:121"
+        ]
+      },
+      {
+        "table": "permits",
+        "columns": [
+          "street_num",
+          "street_name",
+          "lifecycle_phase",
+          "lifecycle_stalled",
+          "permit_num",
+          "revision_num",
+          "last_seen_at"
+        ],
+        "producing_steps": [
+          "permits",
+          "enrich_permits",
+          "classify_lifecycle_phase",
+          "classify_permit_phase"
+        ],
+        "chain_position": "permits[1]",
+        "owner_spec": "docs/specs/01-pipeline/41_chain_permits.md",
+        "evidence": [
+          "src/app/api/admin/leads/watchlist/route.ts:130",
+          "src/app/api/admin/leads/watchlist/search/route.ts:41"
+        ]
+      },
+      {
+        "table": "coa_applications",
+        "columns": [
+          "application_number",
+          "address",
+          "lifecycle_phase",
+          "lifecycle_stalled",
+          "last_seen_at"
+        ],
+        "producing_steps": [
+          "coa",
+          "link_coa",
+          "classify_lifecycle_phase"
+        ],
+        "chain_position": "coa[1]",
+        "owner_spec": "docs/specs/01-pipeline/42_chain_coa.md",
+        "evidence": [
+          "src/app/api/admin/leads/watchlist/route.ts:173",
+          "src/app/api/admin/leads/watchlist/search/route.ts:56"
+        ]
+      },
+      {
+        "table": "trade_forecasts",
+        "columns": [
+          "predicted_start",
+          "p25_days",
+          "p75_days",
+          "opportunity_score",
+          "lead_id",
+          "trade_slug"
+        ],
+        "producing_steps": [
+          "compute_trade_forecasts",
+          "compute_opportunity_scores"
+        ],
+        "chain_position": "permits[26]",
+        "owner_spec": "docs/specs/01-pipeline/41_chain_permits.md",
+        "evidence": [
+          "src/app/api/admin/leads/watchlist/route.ts:145"
+        ]
+      },
+      {
+        "table": "permit_trades",
+        "columns": [
+          "permit_num",
+          "revision_num",
+          "is_active",
+          "trade_id"
+        ],
+        "producing_steps": [
+          "classify_permits",
+          "backfill_realtor_permit_trades"
+        ],
+        "chain_position": "permits[13]",
+        "owner_spec": "docs/specs/01-pipeline/41_chain_permits.md",
+        "evidence": [
+          "src/app/api/admin/leads/watchlist/route.ts:151"
+        ]
+      },
+      {
+        "table": "lead_trades",
+        "columns": [
+          "lead_id",
+          "is_active",
+          "trade_id"
+        ],
+        "producing_steps": [
+          "classify_coa_trades"
+        ],
+        "chain_position": "coa[6]",
+        "owner_spec": "docs/specs/01-pipeline/42_chain_coa.md",
+        "evidence": [
+          "src/app/api/admin/leads/watchlist/route.ts:191"
+        ]
+      },
+      {
+        "table": "permits",
+        "columns": [
+          "permit_num",
+          "revision_num",
+          "permit_type",
+          "structure_type",
+          "status",
+          "enriched_status",
+          "street_num",
+          "street_name",
+          "street_type",
+          "latitude",
+          "longitude",
+          "application_date",
+          "issued_date",
+          "completed_date",
+          "work",
+          "description",
+          "builder_name",
+          "owner",
+          "est_const_cost",
+          "last_seen_at",
+          "first_seen_at",
+          "linked_coa_application_number",
+          "project_type",
+          "scope_tags",
+          "storeys",
+          "lifecycle_phase",
+          "lifecycle_stalled",
+          "lifecycle_classified_at",
+          "phase_started_at",
+          "updated_at",
+          "neighbourhood_id"
+        ],
+        "producing_steps": [
+          "permits",
+          "enrich_permits",
+          "classify_permit_phase",
+          "classify_lifecycle_phase",
+          "link_neighbourhoods",
+          "geocode_permits",
+          "classify_scope",
+          "classify_scope_tags",
+          "classify_scope_class",
+          "link_coa",
+          "link_similar",
+          "close_stale_permits",
+          "classify_inspection_status",
+          "create_pre_permits",
+          "inspections"
+        ],
+        "chain_position": "permits[1]",
+        "owner_spec": "docs/specs/01-pipeline/41_chain_permits.md",
+        "evidence": [
+          "src/lib/leads/lead-inspect-query.ts:117"
+        ]
+      },
+      {
+        "table": "cost_estimates",
+        "columns": [
+          "cost_source",
+          "is_geometric_override",
+          "estimated_cost",
+          "modeled_gfa_sqm",
+          "trade_contract_values",
+          "effective_area_sqm"
+        ],
+        "producing_steps": [
+          "compute_cost_estimates",
+          "compute_coa_cost_estimates"
+        ],
+        "chain_position": "permits[17]",
+        "owner_spec": "docs/specs/01-pipeline/41_chain_permits.md",
+        "evidence": [
+          "src/lib/leads/lead-inspect-query.ts:136"
+        ]
+      },
+      {
+        "table": "permit_parcels",
+        "columns": [
+          "parcel_id",
+          "permit_num",
+          "revision_num",
+          "confidence"
+        ],
+        "producing_steps": [
+          "link_parcels"
+        ],
+        "chain_position": "permits[8], sources[10]",
+        "owner_spec": "docs/specs/01-pipeline/43_chain_sources.md",
+        "evidence": [
+          "src/lib/leads/lead-inspect-query.ts:176"
+        ]
+      },
+      {
+        "table": "parcels",
+        "columns": [
+          "lot_size_sqm",
+          "centroid_lat",
+          "centroid_lng",
+          "id"
+        ],
+        "producing_steps": [
+          "parcels",
+          "enrich_parcels",
+          "compute_centroids",
+          "compute_parcel_cost_estimates",
+          "enrich_heritage",
+          "enrich_ravines",
+          "enrich_centreline"
+        ],
+        "chain_position": "sources[4]",
+        "owner_spec": "docs/specs/01-pipeline/43_chain_sources.md",
+        "evidence": [
+          "src/lib/leads/lead-inspect-query.ts:146"
+        ]
+      },
+      {
+        "table": "parcel_buildings",
+        "columns": [
+          "building_id",
+          "parcel_id",
+          "is_primary",
+          "confidence"
+        ],
+        "producing_steps": [
+          "link_massing"
+        ],
+        "chain_position": "permits[11], sources[15]",
+        "owner_spec": "docs/specs/01-pipeline/43_chain_sources.md",
+        "evidence": [
+          "src/lib/leads/lead-inspect-query.ts:185"
+        ]
+      },
+      {
+        "table": "building_footprints",
+        "columns": [
+          "footprint_area_sqm",
+          "max_height_m",
+          "id"
+        ],
+        "producing_steps": [
+          "massing"
+        ],
+        "chain_position": "sources[14]",
+        "owner_spec": "docs/specs/01-pipeline/43_chain_sources.md",
+        "evidence": [
+          "src/lib/leads/lead-inspect-query.ts:155"
+        ]
+      },
+      {
+        "table": "neighbourhoods",
+        "columns": [
+          "id",
+          "name",
+          "avg_household_income",
+          "period_of_construction"
+        ],
+        "producing_steps": [
+          "neighbourhoods"
+        ],
+        "chain_position": "sources[16]",
+        "owner_spec": "docs/specs/01-pipeline/43_chain_sources.md",
+        "evidence": [
+          "src/lib/leads/lead-inspect-query.ts:159"
+        ]
+      },
+      {
+        "table": "scope_intensity_matrix",
+        "columns": [
+          "gfa_allocation_percentage",
+          "permit_type",
+          "structure_type"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/02-web-admin/86_control_panel.md §3",
+        "evidence": [
+          "src/lib/leads/lead-inspect-query.ts:212"
+        ]
+      },
+      {
+        "table": "lead_views",
+        "columns": [
+          "user_id",
+          "lead_key",
+          "saved",
+          "lead_type"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/00-architecture/114_rls_policy_catalog.md §3.1",
+        "evidence": [
+          "src/lib/leads/lead-inspect-query.ts:166"
+        ]
+      },
+      {
+        "table": "permit_trades",
+        "columns": [
+          "trade_id",
+          "confidence",
+          "permit_num",
+          "revision_num"
+        ],
+        "producing_steps": [
+          "classify_permits",
+          "backfill_realtor_permit_trades"
+        ],
+        "chain_position": "permits[13]",
+        "owner_spec": "docs/specs/01-pipeline/41_chain_permits.md",
+        "evidence": [
+          "src/lib/leads/lead-inspect-query.ts:225"
+        ]
+      },
+      {
+        "table": "trades",
+        "columns": [
+          "id",
+          "slug",
+          "name"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/00-architecture/01_database_schema.md §3",
+        "evidence": [
+          "src/lib/leads/lead-inspect-query.ts:225"
+        ]
+      },
+      {
+        "table": "trade_forecasts",
+        "columns": [
+          "trade_slug",
+          "target_window",
+          "urgency",
+          "predicted_start",
+          "p25_days",
+          "p75_days",
+          "opportunity_score"
+        ],
+        "producing_steps": [
+          "compute_trade_forecasts",
+          "compute_opportunity_scores"
+        ],
+        "chain_position": "permits[26]",
+        "owner_spec": "docs/specs/01-pipeline/41_chain_permits.md",
+        "evidence": [
+          "src/lib/leads/lead-inspect-query.ts:233"
+        ]
+      },
+      {
+        "table": "entities",
+        "columns": [
+          "legal_name",
+          "name_normalized",
+          "is_wsib_registered"
+        ],
+        "producing_steps": [
+          "builders",
+          "link_wsib",
+          "enrich_named_builders",
+          "enrich_wsib_builders"
+        ],
+        "chain_position": "permits[5]",
+        "owner_spec": "docs/specs/00-architecture/01_database_schema.md §3",
+        "evidence": [
+          "src/lib/leads/lead-inspect-query.ts:363"
+        ]
+      },
+      {
+        "table": "logic_variables",
+        "columns": [
+          "variable_value_json"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/02-web-admin/86_control_panel.md §1",
+        "evidence": [
+          "src/lib/leads/lead-inspect-query.ts:291"
+        ]
+      },
+      {
+        "table": "permit_phase_transitions",
+        "columns": [
+          "from_phase",
+          "to_phase",
+          "transitioned_at"
+        ],
+        "producing_steps": [
+          "classify_lifecycle_phase"
+        ],
+        "chain_position": "permits[23]",
+        "owner_spec": "docs/specs/01-pipeline/41_chain_permits.md",
+        "evidence": [
+          "src/lib/leads/lead-inspect-query.ts:374"
+        ]
+      },
+      {
+        "table": "phase_stay_calibration",
+        "columns": [
+          "phase",
+          "median_days",
+          "p25_days",
+          "p75_days",
+          "sample_size",
+          "permit_type"
+        ],
+        "producing_steps": [
+          "compute_phase_calibration"
+        ],
+        "chain_position": "permits[25]",
+        "owner_spec": "docs/specs/01-pipeline/41_chain_permits.md",
+        "evidence": [
+          "src/lib/leads/lead-inspect-query.ts:384"
+        ]
+      },
+      {
+        "table": "coa_applications",
+        "columns": [
+          "application_number",
+          "coa_type_class",
+          "project_type",
+          "scope_tags",
+          "description",
+          "structure_type",
+          "decision",
+          "decision_date",
+          "hearing_date",
+          "estimated_cost",
+          "cost_source",
+          "modeled_gfa_sqm",
+          "lifecycle_seq",
+          "lifecycle_group",
+          "lifecycle_block",
+          "lifecycle_stage",
+          "bid_value",
+          "linked_permit_num",
+          "linked_confidence"
+        ],
+        "producing_steps": [
+          "coa",
+          "link_coa",
+          "link_coa_to_parcels",
+          "classify_coa_scope",
+          "classify_coa_trades",
+          "compute_coa_cost_estimates",
+          "enrich_coa_zoning",
+          "classify_lifecycle_phase"
+        ],
+        "chain_position": "coa[1]",
+        "owner_spec": "docs/specs/01-pipeline/42_chain_coa.md",
+        "evidence": [
+          "src/lib/leads/lead-inspect-query.ts:666"
+        ]
+      },
+      {
+        "table": "universal_stream_catalog",
+        "columns": [
+          "seq",
+          "group_label",
+          "group_color",
+          "group_icon",
+          "block_label",
+          "block_color",
+          "block_icon",
+          "stage_label",
+          "stage_color",
+          "stage_icon"
+        ],
+        "producing_steps": "UNRESEARCHED",
+        "chain_position": "UNRESEARCHED",
+        "owner_spec": "docs/specs/00-architecture/01_database_schema.md §3",
+        "evidence": [
+          "src/lib/leads/lead-inspect-query.ts:685"
+        ]
+      },
+      {
+        "table": "lifecycle_status_history",
+        "columns": [
+          "lead_id",
+          "decision",
+          "transitioned_at",
+          "from_status",
+          "to_status",
+          "event_date",
+          "id"
+        ],
+        "producing_steps": [
+          "classify_lifecycle_phase",
+          "coa",
+          "permits"
+        ],
+        "chain_position": "permits[23], coa[12]",
+        "owner_spec": "docs/specs/01-pipeline/42_chain_coa.md",
+        "evidence": [
+          "src/lib/leads/lead-inspect-query.ts:694"
+        ]
+      },
+      {
+        "table": "lead_trades",
+        "columns": [
+          "trade_id",
+          "confidence",
+          "lead_id"
+        ],
+        "producing_steps": [
+          "classify_coa_trades"
+        ],
+        "chain_position": "coa[6]",
+        "owner_spec": "docs/specs/01-pipeline/42_chain_coa.md",
+        "evidence": [
+          "src/lib/leads/lead-inspect-query.ts:707"
+        ]
+      },
+      {
+        "table": "profiles",
+        "columns": [
+          "is_admin"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/00-architecture/114_rls_policy_catalog.md §5",
+        "evidence": [
+          "src/app/api/admin/leads/watchlist/route.ts:213",
+          "src/lib/auth/verify-admin.ts:118"
+        ]
+      }
+    ]
+  },
+  "outputs": {
+    "answer": "optimistic_then_contract",
+    "why": "Bulk save and bulk remove fire their telemetry and flip the list in onMutate, then reconcile against the server response.",
+    "evidence": [
+      "src/features/admin-flight-center/api/useBulkSaveToWatchlist.ts:68",
+      "src/features/admin-flight-center/api/useBulkDeleteFromWatchlist.ts:70",
+      "src/app/api/admin/leads/watchlist/route.ts:353"
+    ],
+    "contract_ref": [
+      "/api/admin/leads/watchlist"
+    ],
+    "rollback": "The mutation hooks restore the previous cache snapshot on error and re-raise as a toast; the server row is unchanged because the INSERT is ON CONFLICT DO NOTHING and the DELETE is scoped to the acting admin_uid.",
+    "invalidates": [
+      "admin.watchlist"
+    ],
+    "tables": [
+      {
+        "table": "admin_watchlist",
+        "columns": [
+          "admin_uid",
+          "lead_type",
+          "lead_key",
+          "permit_num",
+          "revision_num",
+          "coa_application_number",
+          "address_snapshot",
+          "id"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/00-architecture/114_rls_policy_catalog.md §3.2",
+        "evidence": [
+          "src/app/api/admin/leads/watchlist/route.ts:353",
+          "src/app/api/admin/leads/watchlist/route.ts:420"
+        ]
+      }
+    ]
+  },
+  "state": {
+    "answer": "zustand",
+    "why": "useFlightCenterStore owns the selection set, the drawer and the search box (Layer 3, atomic selectors) on top of the root PersistQueryClientProvider's Layer-2 cache.",
+    "evidence": [
+      "src/features/admin-flight-center/store/useFlightCenterStore.ts:57",
+      "src/components/admin/FlightCenterTool.tsx:249",
+      "src/app/providers.tsx:45"
+    ],
+    "fields": []
+  },
+  "staleness": {
+    "answer": "query_cache",
+    "why": "The board and the inspect drawer both hold a 30s staleTime; because this page uses the ROOT provider the cache is also persisted to IndexedDB for 24h, which is what makes an offline reload render the last board rather than an error.",
+    "evidence": [
+      "src/features/admin-flight-center/api/useWatchlist.ts:46",
+      "src/features/admin-flight-center/api/useLeadInspect.ts:98",
+      "src/features/leads/api/query-client.ts:82"
+    ],
+    "stale_time_ms": 30000,
+    "offline": "cached_projection"
+  },
+  "guards": {
+    "session": {
+      "answer": "admin",
+      "why": "There is no admin Postgres role: classifyRoute sends every /admin/* path down the admin arm, and the real boundary is verifyAdminAuth reading profiles.is_admin on the route. All three contracts call it on their first line, and the two mutating arms additionally refuse the x-admin-key credential so a break-glass token cannot write a watchlist row.",
+      "evidence": [
+        "src/lib/auth/route-guard.ts:162",
+        "src/middleware.ts:95",
+        "src/app/api/admin/leads/watchlist/route.ts:213",
+        "src/app/api/admin/leads/watchlist/route.ts:270"
+      ]
+    },
+    "rls_class": {
+      "answer": "A",
+      "why": "admin_watchlist is one of the two admin-identity Class-A tables: admin_uid-keyed, is_admin plus own-row in the policy predicate — which is exactly why every query here is scoped by admin_uid.",
+      "evidence": [
+        "docs/specs/00-architecture/114_rls_policy_catalog.md:147",
+        "src/app/api/admin/leads/watchlist/route.ts:161"
+      ]
+    },
+    "disclosure": "none",
+    "entitlement": "none",
+    "flag": "none",
+    "permission": "none",
+    "rate_bucket": "none"
+  },
+  "render": {
+    "targets": [
+      "screen"
+    ],
+    "projection": "list",
+    "breakpoints": "desktop_first_md",
+    "export": "none",
+    "list": "UNRESEARCHED"
+  },
+  "checks": [
+    {
+      "id": "flight_center_contract_parse",
+      "kind": "contract_parse",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "Both list and search responses are parsed through their Zod mirrors before render, so an extra column is stripped rather than leaking into the projection."
+    },
+    {
+      "id": "flight_center_selector_atomicity",
+      "kind": "selector_atomicity",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "Every store read is a single-field selector, which is what stops a bulk selection re-rendering the whole board."
+    },
+    {
+      "id": "flight_center_empty_state",
+      "kind": "empty_state",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "An empty watchlist renders the declared empty state rather than a blank board; the flight-center UI suite locks it."
+    },
+    {
+      "id": "flight_center_auth_class",
+      "kind": "auth_class_parity",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "why": "Session admin is genuinely enforced here: all three contracts verify on the first line and the writes additionally refuse the admin_key path."
+    }
+  ],
+  "invariants": "none",
+  "plausibility": "none",
+  "states": [
+    {
+      "name": "loading",
+      "golden": "none"
+    },
+    {
+      "name": "empty",
+      "golden": "none"
+    },
+    {
+      "name": "hit",
+      "golden": "none"
+    },
+    {
+      "name": "error",
+      "golden": "none"
+    }
+  ],
+  "errors": {
+    "answer": "toast",
+    "why": "A failed bulk save or delete raises a sonner toast and rolls the list back; a render throw falls to the sibling error.tsx boundary.",
+    "evidence": [
+      "src/features/admin-flight-center/api/useBulkSaveToWatchlist.ts:27",
+      "src/app/admin/flight-center/error.tsx:1"
+    ],
+    "classes": [
+      {
+        "class": "403",
+        "ui": "toast — the admin_key credential is refused on writes"
+      },
+      {
+        "class": "500",
+        "ui": "toast plus cache rollback"
+      }
+    ]
+  },
+  "emits": {
+    "answer": "events",
+    "why": "Read interactions emit captureEvent only; the two mutations emit a Sentry breadcrumb plus admin_action_performed before the network call. No usage ledger row is written anywhere.",
+    "evidence": [
+      "src/components/admin/FlightCenterTool.tsx:273",
+      "src/components/admin/SearchPermitsModal.tsx:77",
+      "src/features/admin-flight-center/api/useBulkSaveToWatchlist.ts:68"
+    ],
+    "analytics": [
+      "admin_watchlist_inspect_opened",
+      "admin_watchlist_searched",
+      "admin_action_performed"
+    ],
+    "ledger_events": [],
+    "breadcrumbs": [
+      "bulk save to watchlist",
+      "bulk delete from watchlist"
+    ]
+  },
+  "offers": {
+    "answer": "none",
+    "why": "An internal operator tool renders no sponsored placement; no offers/placements table is reached from any file it owns.",
+    "evidence": [
+      "src/components/admin/FlightCenterTool.tsx:1"
+    ]
+  },
+  "metering": {
+    "answer": "none",
+    "why": "Nothing here is billable or quota-bearing: no usage_events / ledger write is reached from this surface or its contracts.",
+    "evidence": [
+      "src/app/api/admin/leads/watchlist/route.ts:211"
+    ]
+  },
+  "config": {
+    "answer": "logic_variables",
+    "why": "The inspect drawer reads one tunable — income_premium_tiers — out of logic_variables to band the neighbourhood income it shows.",
+    "evidence": [
+      "src/lib/leads/lead-inspect-query.ts:291"
+    ],
+    "logic_variables": [
+      {
+        "name": "income_premium_tiers",
+        "on_invalid": "default",
+        "why": "A display band, not a verdict or a write, so an absent row degrades the panel rather than failing the request."
+      }
+    ],
+    "retired": []
+  },
+  "sharing": {
+    "answer": "shared",
+    "why": "/api/admin/leads/inspect/[id] is rendered by this drawer AND by the lead-feed inspector page, and /api/admin/leads/watchlist is also read and written from the lead-feed page.",
+    "evidence": [
+      "src/features/admin-flight-center/api/useLeadInspect.ts:98",
+      "src/app/admin/lead-feed/inspector/page.tsx:1",
+      "src/components/admin/TestFeedTool.tsx:1"
+    ],
+    "surfaces": [
+      "admin_lead_feed_inspector",
+      "admin_lead_feed"
+    ]
+  },
+  "a11y": {
+    "touch_target_min_px": "UNRESEARCHED",
+    "labels": "partial",
+    "dark_mode": "none",
+    "reduced_motion": "ignored",
+    "i18n": "none",
+    "safe_area": "none"
+  },
+  "deviations": "none",
+  "limitations": [
+    {
+      "what": "POST and DELETE on /api/admin/leads/watchlist mutate with no admin_audit_log row",
+      "measured": "Both arms write admin_watchlist and emit only a Sentry breadcrumb plus a PostHog track(); neither imports src/lib/admin/admin-audit.ts.",
+      "check_id": "none — no checks[] kind covers \"an admin mutation writes an admin_audit_log row\"; escalated per Spec 128 §4"
+    },
+    {
+      "what": "LeadDetailInspector.tsx and its two lead-inspector panels are owned by no surface",
+      "measured": "1,629 lines under src/components/admin/ are rendered by BOTH this drawer and admin_lead_feed_inspector, so R-13 exclusive ownership cannot name an owner without a false claim; they render in the registry's Unowned components section.",
+      "check_id": "none — R-13 needs a promotion rule for a genuinely shared component"
+    }
+  ],
+  "interpretation": "none",
+  "notes": "The detail drawer renders src/components/admin/LeadDetailInspector.tsx (727L) and, through it, lead-inspector/CoaClassificationPanel.tsx (586L) + LifecycleTimelinePanel.tsx (316L) - 1629 further lines EXCLUDED from files and loc because admin/lead-feed/inspector renders the same component, so they are not exclusive to this page. /api/admin/leads/watchlist carries GET (list), POST (bulk save, via SearchPermitsModal) and DELETE (bulk remove). A sibling error.tsx boundary exists (not counted). This is the live Flight Center; the nested /admin/lead-feed/flight-center is its retired redirect. R-13 FINDING: LeadDetailInspector.tsx + lead-inspector/CoaClassificationPanel.tsx + LifecycleTimelinePanel.tsx (1,629L) are rendered by BOTH this surface and admin_lead_feed_inspector, so no surface can claim exclusive ownership without a false claim; they stay in the registry Unowned components section until R-13 gains a promotion rule for a genuinely shared component. identity.owner is UNRESEARCHED estate-wide: no owner registry exists in the tree, so naming one would be an invention rather than a measurement. a11y.touch_target_min_px is UNRESEARCHED because its vocabulary (UNRESEARCHED or an integer >= 44) has no member for a desktop-only admin page that declares no floor.",
+  "x-draft": {
+    "shard": "admin-existing",
+    "files": [
+      "src/app/admin/flight-center/page.tsx",
+      "src/components/admin/FlightCenterTool.tsx",
+      "src/components/admin/SearchPermitsModal.tsx"
+    ],
+    "loc": 814,
+    "measured_states": [
+      "loading",
+      "empty",
+      "error",
+      "loaded",
+      "confirm_delete",
+      "drawer_open"
+    ],
+    "measured_gate": {
+      "session": "admin",
+      "why": "classifyRoute('/admin/flight-center') matches the admin-pages arm via `pathname.startsWith('/admin/')` -> 'admin'."
+    }
+  },
+  "programme": {
+    "scope": "estate_other",
+    "phase": "not_scheduled",
+    "why": "Flight center — the other product. Fenced from the parcel tool by Spec 128 R-03; inventoried only.",
+    "feature": "F91",
+    "build_order": 4183,
+    "leakage": "UNRESEARCHED",
+    "product_questions": "UNRESEARCHED",
+    "review": {
+      "status": "unreviewed"
+    }
+  }
+}

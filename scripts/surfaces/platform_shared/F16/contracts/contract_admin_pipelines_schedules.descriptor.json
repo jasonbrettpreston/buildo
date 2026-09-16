@@ -1,0 +1,391 @@
+{
+  "kind": "CONTRACT",
+  "status": "exists",
+  "docs": {
+    "purpose": "Lets an admin view and change how often each pipeline is scheduled to run — daily, weekly, quarterly — and turn a pipeline's schedule on or off.",
+    "data_story": "It reads 1 table — `pipeline_schedules` and writes `pipeline_schedules`. Its response is an explicit pick-by-name projection of 5 fields, so a column added to a table upstream does not leak into the client by accident. It is called from 1 place: `admin_data_quality`. It mutates admin state and writes **no `admin_audit_log` row** — one of the nine measured gaps Phase 0 closes.",
+    "under_126": "Becomes a **CONTRACT descriptor** of archetype `MUTATION`. It declares `database.writes[]` with a `write_discipline` per target (the Spec 122 vocabulary verbatim), its idempotency posture, its optimistic contract and its rollback. Its `consumers[]` becomes the edge list of the fan-out graph — the join nothing in this estate holds today."
+  },
+  "evidence": {
+    "files": [
+      "src/app/api/admin/pipelines/schedules/route.ts:1"
+    ],
+    "contracts": [
+      "src/app/api/admin/pipelines/schedules/route.ts:9 (GET export)",
+      "src/app/api/admin/pipelines/schedules/route.ts:25 (PUT export)",
+      "src/app/api/admin/pipelines/schedules/route.ts:77 (PATCH export)",
+      "src/lib/api/with-api-envelope.ts:27-52"
+    ],
+    "tables": [
+      "src/app/api/admin/pipelines/schedules/route.ts:12",
+      "src/app/api/admin/pipelines/schedules/route.ts:56-59",
+      "src/app/api/admin/pipelines/schedules/route.ts:96-101",
+      "src/lib/db/generated/schema.ts — every table named here is present in the introspected drizzle schema"
+    ],
+    "gate": [
+      "src/lib/auth/route-guard.ts — admin prefix — classifyRoute matches pathname.startsWith('/api/admin/')",
+      "src/lib/auth/route-guard.ts:150-201 — classifyRoute executed 2026-09-15 with the concrete path → \"admin\"",
+      "in-handler: No CSRF/Origin check on the two MUTATING methods. The Origin allowlist lives inside verifyAdminAuth (src/lib/auth/verify-admin.ts:70-78), which this file never calls — so PUT and PATCH have no CSRF protection at all."
+    ],
+    "states": [
+      "hit: src/app/api/admin/pipelines/schedules/route.ts:14, :66, :104",
+      "empty: src/app/api/admin/pipelines/schedules/route.ts:11-14 (an empty table yields schedules: [] with a 200)",
+      "miss: src/app/api/admin/pipelines/schedules/route.ts:62-63 (PUT 404 when no row matches)",
+      "error: src/app/api/admin/pipelines/schedules/route.ts:17, :69, :107"
+    ],
+    "emits": [
+      "src/app/api/admin/pipelines/schedules/route.ts — read in full; no Sentry breadcrumb, no analytics capture and no ledger INSERT"
+    ]
+  },
+  "identity": {
+    "id": "contract_admin_pipelines_schedules",
+    "route": "/api/admin/pipelines/schedules",
+    "archetype": "MUTATION",
+    "platforms": [
+      "web"
+    ],
+    "owns": {
+      "components": []
+    },
+    "owner": "Backend/Pipeline (CLAUDE.md §Domain Rules: `src/app/api/`)",
+    "spec": "docs/specs/00-architecture/115_scheduling.md",
+    "spec_refs": [
+      "docs/specs/00-architecture/115_scheduling.md — owns src/app/api/admin/pipelines/schedules/route.ts per docs/specs/00-architecture/00_system_map.md:19; the System Map row names no section, and the route file carries no SPEC LINK header"
+    ],
+    "spec_version": "0-draft",
+    "versioning": {
+      "answer": "breaking_allowed",
+      "why": "Every consumer is in src/** and ships in the same Next.js deploy as the route, so a breaking change is one commit.",
+      "evidence": [
+        "src/components/DataQualityDashboard.tsx:459,476"
+      ]
+    },
+    "ref": "C-011"
+  },
+  "inputs": {
+    "answer": "app_outputs",
+    "why": "It reads 1 table(s) directly; none is written by a pipeline step — they are written by API routes, jobs or migration seeds — but the input is still the database, not another contract.",
+    "evidence": [
+      "src/app/api/admin/pipelines/schedules/route.ts:12",
+      "docs/specs/00-architecture/00_system_map.md:19",
+      "docs/reference/data-lineage-map.md — no `## `pipeline_schedules`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)"
+    ],
+    "contract_ref": [],
+    "query_key": [],
+    "field_whitelist": [
+      "pipeline",
+      "cadence",
+      "cron_expression",
+      "enabled",
+      "updated_at"
+    ],
+    "tables": [
+      {
+        "table": "pipeline_schedules",
+        "columns": [
+          "pipeline",
+          "cadence",
+          "cron_expression",
+          "enabled",
+          "updated_at"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/00-architecture/115_scheduling.md",
+        "evidence": [
+          "src/app/api/admin/pipelines/schedules/route.ts:12",
+          "docs/specs/00-architecture/00_system_map.md:19",
+          "docs/reference/data-lineage-map.md — no `## `pipeline_schedules`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)"
+        ]
+      }
+    ]
+  },
+  "outputs": {
+    "answer": "contract_only",
+    "why": "This route IS the mutation contract: it writes 1 table(s) synchronously inside the request and returns the result — there is no optimistic client-side flip to reconcile.",
+    "evidence": [
+      "src/app/api/admin/pipelines/schedules/route.ts:56-59",
+      "src/app/api/admin/pipelines/schedules/route.ts:96-101",
+      "docs/specs/00-architecture/00_system_map.md:19",
+      "docs/reference/data-lineage-map.md — no `## `pipeline_schedules`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)"
+    ],
+    "contract_ref": [],
+    "tables": [
+      {
+        "table": "pipeline_schedules",
+        "columns": [
+          "cadence",
+          "updated_at",
+          "pipeline",
+          "enabled",
+          "chain_id"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/00-architecture/115_scheduling.md",
+        "evidence": [
+          "src/app/api/admin/pipelines/schedules/route.ts:56-59",
+          "src/app/api/admin/pipelines/schedules/route.ts:96-101",
+          "docs/specs/00-architecture/00_system_map.md:19",
+          "docs/reference/data-lineage-map.md — no `## `pipeline_schedules`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)"
+        ]
+      }
+    ]
+  },
+  "state": {
+    "answer": "server_only",
+    "why": "A CONTRACT holds no client state: every value is resolved per request on the server and nothing is cached in a client store by the route itself.",
+    "evidence": [
+      "src/app/api/admin/pipelines/schedules/route.ts:9 (GET export)",
+      "src/lib/api/with-api-envelope.ts:27-52"
+    ],
+    "fields": []
+  },
+  "staleness": {
+    "answer": "live",
+    "why": "Every read runs against the base tables on each request — there is no cache layer between the handler and the database.",
+    "evidence": [
+      "src/app/api/admin/pipelines/schedules/route.ts:12",
+      "docs/specs/00-architecture/00_system_map.md:19",
+      "docs/reference/data-lineage-map.md — no `## `pipeline_schedules`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)"
+    ],
+    "offline": "none"
+  },
+  "guards": {
+    "session": {
+      "answer": "admin",
+      "why": "classifyRoute(\"/api/admin/pipelines/schedules\") returns \"admin\" (executed 2026-09-15); no session is checked — the handler authenticates the caller by other means: No CSRF/Origin check on the two MUTATING methods. The Origin allowlist lives inside verifyAdminAuth (src/lib/auth/verify-admin.ts:70-78), which this file never ",
+      "evidence": [
+        "src/lib/auth/route-guard.ts:150-201 — classifyRoute executed 2026-09-15 with the concrete path",
+        "No CSRF/Origin check on the two MUTATING methods. The Origin allowlist lives inside verifyAdminAuth (src/lib/auth/verify-admin.ts:70-78), which this file never calls — so PUT and PATCH have no CSRF protection at all."
+      ]
+    },
+    "rls_class": {
+      "answer": "B",
+      "why": "Every table it reaches has RLS enabled with zero policies — default deny for anon and authenticated; only the table owner and service_role get through.",
+      "evidence": [
+        "migrations/227_rls_class_b_default_deny.sql:79",
+        "docs/specs/00-architecture/114_rls_policy_catalog.md §2"
+      ]
+    },
+    "disclosure": "none",
+    "entitlement": "none",
+    "flag": "none",
+    "permission": "none",
+    "rate_bucket": "none"
+  },
+  "render": {
+    "targets": [
+      "screen"
+    ],
+    "projection": "none",
+    "breakpoints": "none",
+    "export": "none"
+  },
+  "checks": [
+    {
+      "id": "contract_admin_pipelines_schedules__auth_class_parity",
+      "kind": "auth_class_parity",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "why": "guards.session must equal classifyRoute(\"/api/admin/pipelines/schedules\"), executed 2026-09-15 → \"admin\" plus the in-handler guard (No CSRF/Origin check on the two MUTATING methods. The Origin allowlist lives inside verifyAdminAuth (src/lib/a). Locked by admin.ui.test.tsx, migration-095.infra.test.ts, quality.infra.test.ts."
+    },
+    {
+      "id": "contract_admin_pipelines_schedules__error_envelope",
+      "kind": "error_state",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "why": "MEASURED DEVIATION, permanently non-zero until re-projected: All nine responses are bare objects. Successes: `{schedules}` :14, `{updated}` :66, `{updated}` :104. Errors: `{error:<string>}` at :17, :31, :52, :63, :69, :83, :107 — a plain string, no code, no data/meta. Each method's body is fully inside its own try/catch Retighten condition: the handler returns the envelope on every path."
+    },
+    {
+      "id": "contract_admin_pipelines_schedules__field_whitelist_parity",
+      "kind": "field_whitelist_parity",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "why": "MEASURED: the projection is mixed (src/app/api/admin/pipelines/schedules/route.ts:14, src/app/api/admin/pipelines/schedules/route.ts:66, src/app/api/admin/pipelines/schedules/route.ts:104), so a column added upstream reaches the client without a code change. Permanently non-zero until the response is an explicit pick; retighten condition: projection.kind === explicit_pick."
+    },
+    {
+      "id": "contract_admin_pipelines_schedules__schema_declared",
+      "kind": "schema_declared",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "Every table and column declared in lineage.reads[]/writes[] must exist in src/lib/db/generated/schema.ts (drizzle-kit introspect of the live database); the registry generator checks this both directions."
+    },
+    {
+      "id": "contract_admin_pipelines_schedules__audit_row_missing",
+      "kind": "ledger_row_present",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "why": "MEASURED GAP, permanently non-zero: this admin route mutates pipeline_schedules and writes NO admin_audit_log row — one of the measured audit gaps. Retighten condition: the handler writes an admin_audit_log row per accepted mutation."
+    }
+  ],
+  "invariants": "none",
+  "plausibility": "none",
+  "states": [
+    {
+      "name": "hit",
+      "golden": "none"
+    },
+    {
+      "name": "empty",
+      "golden": "none"
+    },
+    {
+      "name": "miss",
+      "golden": "none"
+    },
+    {
+      "name": "error",
+      "golden": "none"
+    }
+  ],
+  "errors": {
+    "answer": "envelope",
+    "why": "It returns a JSON error body, but NOT the standard envelope: All nine responses are bare objects. Successes: `{schedules}` :14, `{updated}` :66, `{updated}` :104. Errors: `{error:<string>}` at :17, :31, :52, :63, :69, :83, :107 — a plain string, no code, no data/meta. Each method' \"envelope\" is the closest member of the closed menu; the deviation is recorded in deviations[].",
+    "evidence": [
+      "src/lib/api/with-api-envelope.ts:27-52",
+      "src/app/api/admin/pipelines/schedules/route.ts:14",
+      "src/app/api/admin/pipelines/schedules/route.ts:66",
+      "src/app/api/admin/pipelines/schedules/route.ts:104",
+      "src/app/api/admin/pipelines/schedules/route.ts:17",
+      "src/app/api/admin/pipelines/schedules/route.ts:31",
+      "src/app/api/admin/pipelines/schedules/route.ts:31 (400)",
+      "src/app/api/admin/pipelines/schedules/route.ts:52 (400)",
+      "src/app/api/admin/pipelines/schedules/route.ts:83 (400)",
+      "src/app/api/admin/pipelines/schedules/route.ts:63 (404)"
+    ],
+    "classes": [
+      {
+        "class": "400",
+        "ui": "{error:\"pipeline and cadence are required\"} — src/app/api/admin/pipelines/schedules/route.ts:31"
+      },
+      {
+        "class": "500",
+        "ui": "{error:\"Failed to fetch schedules\"} — src/app/api/admin/pipelines/schedules/route.ts:17"
+      }
+    ]
+  },
+  "emits": {
+    "answer": "none",
+    "why": "Nothing it does is currently countable: src/app/api/admin/pipelines/schedules/route.ts was read in full and contains no Sentry breadcrumb, no analytics capture and no ledger INSERT.",
+    "evidence": [
+      "src/app/api/admin/pipelines/schedules/route.ts — read in full; no Sentry breadcrumb, no analytics capture and no ledger INSERT"
+    ],
+    "analytics": [],
+    "ledger_events": [],
+    "breadcrumbs": []
+  },
+  "offers": {
+    "answer": "none",
+    "why": "It renders no sponsored placement: the offers and advertisers tables Spec 126 §2 specifies do not exist in migrations/ and nothing in this handler reads placement inventory.",
+    "evidence": [
+      "migrations/ — no CREATE TABLE offers / advertisers (grep 2026-09-15)",
+      "src/app/api/admin/pipelines/schedules/route.ts — read in full; no placement read"
+    ]
+  },
+  "metering": {
+    "answer": "none",
+    "why": "Nothing here is counted: no usage_events row (the table does not exist in the introspected schema) and no quota counter is written by this handler.",
+    "evidence": [
+      "src/app/api/admin/pipelines/schedules/route.ts — read in full 2026-09-15",
+      "src/lib/db/generated/schema.ts — no usage_events table"
+    ]
+  },
+  "config": {
+    "answer": "none",
+    "why": "It consumes no tunable: no logic_variables read and no env-var-driven threshold in the handler or the libs it calls.",
+    "evidence": [
+      "src/app/api/admin/pipelines/schedules/route.ts — read in full 2026-09-15; no loadMarketplaceConfigs / logic_variables read"
+    ],
+    "logic_variables": [],
+    "retired": []
+  },
+  "sharing": {
+    "answer": "sole",
+    "why": "Exactly one call site renders it, so its projection serves one surface.",
+    "evidence": [
+      "src/components/DataQualityDashboard.tsx:459,476"
+    ],
+    "surfaces": [
+      "src/components/DataQualityDashboard.tsx:459,476"
+    ]
+  },
+  "a11y": {
+    "touch_target_min_px": "UNRESEARCHED",
+    "labels": "none",
+    "dark_mode": "none",
+    "reduced_motion": "none",
+    "i18n": "none",
+    "safe_area": "none"
+  },
+  "deviations": [
+    {
+      "from": "docs/specs/00_engineering_standards.md §4.4 — all API routes return { data, error, meta }",
+      "why": "All nine responses are bare objects. Successes: `{schedules}` :14, `{updated}` :66, `{updated}` :104. Errors: `{error:<string>}` at :17, :31, :52, :63, :69, :83, :107 — a plain string, no code, no data/meta. Each method's body is fully inside its own try/catch, so the withApiEnvelope wrapper's catch is unreachable on all three.",
+      "adjudicated_by": "not adjudicated — measured 2026-09-15 by reading the handler",
+      "date": "2026-09-15"
+    },
+    {
+      "from": "src/lib/auth/verify-admin.ts — every admin route calls verifyAdminAuth",
+      "why": "This admin route makes no in-handler verifyAdminAuth call; src/middleware.ts is the only gate and its own comment says the check is presence-only.",
+      "adjudicated_by": "not adjudicated — measured 2026-09-15",
+      "date": "2026-09-15"
+    }
+  ],
+  "limitations": [
+    {
+      "what": "a11y.touch_target_min_px has no legal answer for a CONTRACT",
+      "measured": "The schema allows only UNRESEARCHED or an integer >= 44; a JSON endpoint has no touch target and the vocabulary has no \"n/a\". Left UNRESEARCHED and escalated per Spec 128 §4 rather than invented.",
+      "check_id": "contract_admin_pipelines_schedules__auth_class_parity"
+    },
+    {
+      "what": "error classes outside the closed set are not representable: 404",
+      "measured": "The handler returns 404 at src/app/api/admin/pipelines/schedules/route.ts:63; errors.classes[] admits only 400/401/403/429/500/schema_drift/offline.",
+      "check_id": "contract_admin_pipelines_schedules__error_envelope"
+    }
+  ],
+  "interpretation": "none",
+  "notes": "PUT (change cadence) and PATCH (toggle enabled) both mutate pipeline_schedules with NO writeAdminAudit call — schedule changes are unaudited. No docs/specs/ path cited (only an inline migration-095 / WF3-02 comment). No verifyAdminAuth import. PATCH's upsert relies on Postgres index inference matching the expression unique index (pipeline, COALESCE(chain_id,'__ALL__')), called out in-comment as fragile if not phrased identically. | MEASURED 2026-09-15: FINDING (missing guard, highest severity in this batch): two WRITE methods on an admin route with no verifyAdminAuth and therefore no admin check AND no CSRF Origin check — the only gate is the middleware presence check that its own comment says a garbage cookie passes (src/middleware.ts:106-114, :158-159). Any signed-in non-admin can change pipeline cadences and enable/disable pipelines. FINDING (PUT/PATCH asymmetry): PUT 404s an unknown pipeline (:62-63) but PATCH UPSERTs, so an arbitrary string creates a brand-new pipeline_schedules row with a hardcoded cadence 'Daily' (:96-97) — unbounded row creation from unvalidated input. FINDING (envelope): bare objects, string `error`, no codes. FINDING (dead wrapper): per-method try/catch makes withApiEnvelope's catch unreachable. FINDING (typing): `body` at :27/:79 is implicitly any. PATCH returns `{updated: result[0]}` at :104 without checking result.length, unlike PUT at :62. Census (reads+writes pipeline_schedules) CONFIRMED, and the census MISSED the `chain_id` column participating in the ON CONFLICT expression index at :98. No SELECT *. | Caching: none observed — no dynamic/revalidate/Cache-Control (grep over src/app/api/admin/pipelines/ returned nothing) | Other guards / classification: No CSRF/Origin check on the two MUTATING methods. The Origin allowlist lives inside verifyAdminAuth (src/lib/auth/verify-admin.ts:70-78), which this file never calls — so PUT and PATCH have no CSRF protection at all. | Locking tests: src/tests/admin.ui.test.tsx, src/tests/migration-095.infra.test.ts, src/tests/quality.infra.test.ts.",
+  "x-draft": {
+    "shard": "contracts",
+    "files": [
+      "src/app/api/admin/pipelines/schedules/route.ts"
+    ],
+    "loc": 109,
+    "methods": [
+      "GET",
+      "PUT",
+      "PATCH"
+    ],
+    "consumers": [
+      "admin_data_quality"
+    ],
+    "writes_audit_row": false,
+    "consumers_verified": [
+      "src/components/DataQualityDashboard.tsx:459,476"
+    ],
+    "auth_class_executed": "admin",
+    "locking_tests": [
+      "src/tests/admin.ui.test.tsx",
+      "src/tests/migration-095.infra.test.ts",
+      "src/tests/quality.infra.test.ts"
+    ]
+  },
+  "programme": {
+    "scope": "platform_shared",
+    "phase": "UNRESEARCHED",
+    "why": "Used by both products and owned by neither.",
+    "feature": "F16",
+    "build_order": 3162,
+    "leakage": "none",
+    "product_questions": "none",
+    "review": {
+      "status": "unreviewed"
+    }
+  }
+}

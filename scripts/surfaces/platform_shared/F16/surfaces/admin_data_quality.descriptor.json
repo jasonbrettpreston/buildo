@@ -1,0 +1,806 @@
+{
+  "kind": "SURFACE",
+  "status": "exists",
+  "docs": {
+    "purpose": "The operator's view of how healthy the data itself is: how much of each source has been matched, how confident those matches are, how fresh each feed is against its target schedule, and where records drop out of the funnel between stages. It also lists every pipeline job with its last run, lets the operator start or stop a job and edit its schedule, and offers a timeline per job with its recent run history.",
+    "data_story": "It reads nothing from the database directly. Every value arrives through 6 contracts: `/api/quality`, `/api/admin/stats`, `/api/admin/pipelines/status`, `/api/admin/pipelines/[slug]`, `/api/admin/pipelines/schedules`, `/api/admin/pipelines/history`. Behind those contracts, the data comes from `address_points`, `building_footprints`, `coa_applications`, `data_quality_snapshots`, `entities`, `information_schema.columns`, `lead_views`, `logic_variables`, `neighbourhoods`, `notifications`, `parcel_buildings`, `parcels`, `permit_parcels`, `permit_trades`, `permits`, `pg_class`, `pg_stat_user_tables`, `pipeline_runs`, `pipeline_schedules`, `sync_runs`, `trade_mapping_rules`, `trades` and `wsib_registry`, and writes land on `pipeline_runs` and `pipeline_schedules`.",
+    "under_126": "**REBUILD** — it drives writes, so a client decision has to be re-homed on the server before the projection can be honest. It renders through the DASHBOARD renderer (tiles that each declare their own contract and degrade independently), reading by reference: `/api/quality`, `/api/admin/stats`, `/api/admin/pipelines/status`, `/api/admin/pipelines/[slug]`, `/api/admin/pipelines/schedules`, `/api/admin/pipelines/history`. Its `owns.components[]` declares `src/components/DataQualityDashboard.tsx`, `src/components/FreshnessTimeline.tsx`, `src/components/funnel/FunnelPanels.tsx` and `src/components/ScheduleEditModal.tsx`."
+  },
+  "evidence": {
+    "files": [
+      "src/app/admin/data-quality/page.tsx:30",
+      "src/components/DataQualityDashboard.tsx:261",
+      "src/components/FreshnessTimeline.tsx:1",
+      "src/components/funnel/FunnelPanels.tsx:1",
+      "src/components/ScheduleEditModal.tsx:1"
+    ],
+    "contracts": [
+      "src/components/DataQualityDashboard.tsx:288",
+      "src/app/api/quality/route.ts:106",
+      "src/app/api/admin/stats/route.ts:12",
+      "src/app/api/admin/pipelines/status/route.ts:16",
+      "src/app/api/admin/pipelines/[slug]/route.ts:84",
+      "src/app/api/admin/pipelines/schedules/route.ts:25",
+      "src/app/api/admin/pipelines/history/route.ts:31"
+    ],
+    "tables": [
+      "src/lib/quality/metrics.ts:273",
+      "src/app/api/admin/stats/route.ts:53",
+      "src/app/api/admin/pipelines/status/route.ts:43",
+      "src/app/api/admin/pipelines/schedules/route.ts:12"
+    ],
+    "gate": [
+      "src/lib/auth/route-guard.ts:162",
+      "src/middleware.ts:95",
+      "src/lib/auth/route-guard.ts:75"
+    ],
+    "states": [
+      "src/components/DataQualityDashboard.tsx:261",
+      "src/tests/admin.ui.test.tsx:1691",
+      "src/tests/FreshnessTimeline.ui.test.tsx:1"
+    ],
+    "emits": [
+      "src/components/DataQualityDashboard.tsx:261",
+      "src/components/FreshnessTimeline.tsx:156"
+    ]
+  },
+  "identity": {
+    "id": "admin_data_quality",
+    "route": "src/app/admin/data-quality/page.tsx",
+    "archetype": "DASHBOARD",
+    "platforms": [
+      "web"
+    ],
+    "owns": {
+      "components": [
+        "src/components/DataQualityDashboard.tsx",
+        "src/components/FreshnessTimeline.tsx",
+        "src/components/funnel/FunnelPanels.tsx",
+        "src/components/ScheduleEditModal.tsx"
+      ]
+    },
+    "owner": "UNRESEARCHED",
+    "spec": "docs/specs/02-web-admin/26_admin_dashboard.md",
+    "spec_refs": [
+      "docs/specs/02-web-admin/26_admin_dashboard.md §3.4",
+      "docs/specs/02-web-admin/26_admin_dashboard.md §4",
+      "docs/specs/02-web-admin/26_admin_dashboard.md §5",
+      "docs/specs/01-pipeline/48_pipeline_observability.md §3.6"
+    ],
+    "spec_version": "0-draft",
+    "versioning": {
+      "answer": "none",
+      "why": "Nothing pins these payload shapes: five of the six contracts return bare hand-rolled objects with no Zod mirror on either side, so there is no compatibility promise to keep.",
+      "evidence": [
+        "src/app/api/quality/route.ts:271",
+        "src/app/api/admin/stats/route.ts:413",
+        "src/app/api/admin/pipelines/schedules/route.ts:14"
+      ]
+    },
+    "ref": "S-020"
+  },
+  "inputs": {
+    "answer": "contract",
+    "why": "Six contracts, all reached with bare fetch() rather than a named hook — the dashboard holds no query client at all.",
+    "evidence": [
+      "src/components/DataQualityDashboard.tsx:288",
+      "src/components/DataQualityDashboard.tsx:369"
+    ],
+    "contract_ref": [
+      "/api/quality",
+      "/api/admin/stats",
+      "/api/admin/pipelines/status",
+      "/api/admin/pipelines/[slug]",
+      "/api/admin/pipelines/schedules",
+      "/api/admin/pipelines/history"
+    ],
+    "query_key": [],
+    "field_whitelist": "UNRESEARCHED",
+    "tables": [
+      {
+        "table": "data_quality_snapshots",
+        "columns": "all",
+        "producing_steps": [
+          "refresh_snapshot",
+          "compute_cost_estimates"
+        ],
+        "chain_position": "permits[20], coa[9], sources[25], deep_scrapes[3]",
+        "owner_spec": "docs/specs/00-architecture/01_database_schema.md §3",
+        "evidence": [
+          "src/lib/quality/metrics.ts:273"
+        ]
+      },
+      {
+        "table": "logic_variables",
+        "columns": [
+          "variable_key",
+          "variable_value"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/00-architecture/01_database_schema.md §3",
+        "evidence": [
+          "src/app/api/quality/route.ts:61"
+        ]
+      },
+      {
+        "table": "pipeline_runs",
+        "columns": [
+          "pipeline",
+          "started_at",
+          "completed_at",
+          "status",
+          "duration_ms",
+          "error_message",
+          "records_total",
+          "records_new",
+          "records_updated",
+          "records_meta"
+        ],
+        "producing_steps": [
+          "every_chain_step_via_sdk_run_ledger"
+        ],
+        "chain_position": "permits[0..32]",
+        "owner_spec": "docs/specs/01-pipeline/41_chain_permits.md",
+        "evidence": [
+          "src/app/api/admin/stats/route.ts:217",
+          "src/app/api/admin/pipelines/status/route.ts:43",
+          "scripts/lib/step/ledger.js:62"
+        ]
+      },
+      {
+        "table": "pipeline_schedules",
+        "columns": [
+          "pipeline",
+          "cadence",
+          "cron_expression",
+          "enabled",
+          "updated_at"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/00-architecture/01_database_schema.md §3",
+        "evidence": [
+          "src/app/api/admin/pipelines/schedules/route.ts:12",
+          "scripts/seed-pipeline-schedules.js:57"
+        ]
+      },
+      {
+        "table": "permits",
+        "columns": [
+          "first_seen_at",
+          "status",
+          "builder_name",
+          "neighbourhood_id",
+          "latitude",
+          "scope_source"
+        ],
+        "producing_steps": [
+          "permits",
+          "enrich_permits",
+          "classify_permit_phase",
+          "classify_lifecycle_phase",
+          "link_neighbourhoods",
+          "geocode_permits",
+          "classify_scope",
+          "classify_scope_tags",
+          "classify_scope_class",
+          "link_coa",
+          "link_similar",
+          "close_stale_permits",
+          "classify_inspection_status",
+          "create_pre_permits",
+          "inspections"
+        ],
+        "chain_position": "permits[1]",
+        "owner_spec": "docs/specs/01-pipeline/41_chain_permits.md",
+        "evidence": [
+          "src/app/api/admin/stats/route.ts:53"
+        ]
+      },
+      {
+        "table": "coa_applications",
+        "columns": [
+          "decision",
+          "linked_permit_num",
+          "linked_confidence",
+          "decision_date",
+          "hearing_date"
+        ],
+        "producing_steps": [
+          "coa",
+          "link_coa",
+          "link_coa_to_parcels",
+          "classify_coa_scope",
+          "classify_coa_trades",
+          "compute_coa_cost_estimates",
+          "enrich_coa_zoning",
+          "classify_lifecycle_phase"
+        ],
+        "chain_position": "coa[1]",
+        "owner_spec": "docs/specs/01-pipeline/42_chain_coa.md",
+        "evidence": [
+          "src/app/api/admin/stats/route.ts:91"
+        ]
+      },
+      {
+        "table": "entities",
+        "columns": [
+          "primary_phone",
+          "primary_email"
+        ],
+        "producing_steps": [
+          "builders",
+          "link_wsib",
+          "enrich_named_builders",
+          "enrich_wsib_builders"
+        ],
+        "chain_position": "permits[5]",
+        "owner_spec": "docs/specs/00-architecture/01_database_schema.md §3",
+        "evidence": [
+          "src/app/api/admin/stats/route.ts:56"
+        ]
+      },
+      {
+        "table": "trades",
+        "columns": [
+          "id"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/00-architecture/01_database_schema.md §3",
+        "evidence": [
+          "src/app/api/admin/stats/route.ts:59"
+        ]
+      },
+      {
+        "table": "trade_mapping_rules",
+        "columns": [
+          "is_active"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/00-architecture/01_database_schema.md §3",
+        "evidence": [
+          "src/app/api/admin/stats/route.ts:62"
+        ]
+      },
+      {
+        "table": "sync_runs",
+        "columns": [
+          "started_at"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/00-architecture/01_database_schema.md §3",
+        "evidence": [
+          "src/app/api/admin/stats/route.ts:69"
+        ]
+      },
+      {
+        "table": "notifications",
+        "columns": [
+          "is_sent"
+        ],
+        "producing_steps": [
+          "classify_lifecycle_phase",
+          "update_tracked_projects"
+        ],
+        "chain_position": "permits[23]",
+        "owner_spec": "docs/specs/00-architecture/01_database_schema.md §3",
+        "evidence": [
+          "src/app/api/admin/stats/route.ts:72"
+        ]
+      },
+      {
+        "table": "permit_parcels",
+        "columns": [
+          "permit_num",
+          "revision_num",
+          "parcel_id"
+        ],
+        "producing_steps": [
+          "link_parcels"
+        ],
+        "chain_position": "permits[8], sources[10]",
+        "owner_spec": "docs/specs/01-pipeline/43_chain_sources.md",
+        "evidence": [
+          "src/app/api/admin/stats/route.ts:83"
+        ]
+      },
+      {
+        "table": "permit_trades",
+        "columns": [
+          "permit_num",
+          "revision_num"
+        ],
+        "producing_steps": [
+          "classify_permits",
+          "backfill_realtor_permit_trades"
+        ],
+        "chain_position": "permits[13]",
+        "owner_spec": "docs/specs/01-pipeline/41_chain_permits.md",
+        "evidence": [
+          "src/app/api/admin/stats/route.ts:112"
+        ]
+      },
+      {
+        "table": "address_points",
+        "columns": [
+          "id"
+        ],
+        "producing_steps": [
+          "address_points"
+        ],
+        "chain_position": "sources[2]",
+        "owner_spec": "docs/specs/01-pipeline/54_source_address_points.md",
+        "evidence": [
+          "src/app/api/admin/stats/route.ts:122"
+        ]
+      },
+      {
+        "table": "parcels",
+        "columns": [
+          "id"
+        ],
+        "producing_steps": [
+          "parcels",
+          "enrich_parcels",
+          "compute_centroids",
+          "compute_parcel_cost_estimates",
+          "enrich_heritage",
+          "enrich_ravines",
+          "enrich_centreline"
+        ],
+        "chain_position": "sources[4]",
+        "owner_spec": "docs/specs/01-pipeline/43_chain_sources.md",
+        "evidence": [
+          "src/app/api/admin/stats/route.ts:126"
+        ]
+      },
+      {
+        "table": "building_footprints",
+        "columns": [
+          "id"
+        ],
+        "producing_steps": [
+          "massing"
+        ],
+        "chain_position": "sources[14]",
+        "owner_spec": "docs/specs/01-pipeline/43_chain_sources.md",
+        "evidence": [
+          "src/app/api/admin/stats/route.ts:130"
+        ]
+      },
+      {
+        "table": "parcel_buildings",
+        "columns": [
+          "parcel_id"
+        ],
+        "producing_steps": [
+          "link_massing"
+        ],
+        "chain_position": "permits[11], sources[15]",
+        "owner_spec": "docs/specs/01-pipeline/43_chain_sources.md",
+        "evidence": [
+          "src/app/api/admin/stats/route.ts:134"
+        ]
+      },
+      {
+        "table": "neighbourhoods",
+        "columns": [
+          "id"
+        ],
+        "producing_steps": [
+          "neighbourhoods"
+        ],
+        "chain_position": "sources[16]",
+        "owner_spec": "docs/specs/01-pipeline/43_chain_sources.md",
+        "evidence": [
+          "src/app/api/admin/stats/route.ts:144"
+        ]
+      },
+      {
+        "table": "wsib_registry",
+        "columns": [
+          "linked_entity_id",
+          "trade_name"
+        ],
+        "producing_steps": [
+          "load_wsib",
+          "link_wsib"
+        ],
+        "chain_position": "sources[18]",
+        "owner_spec": "docs/specs/01-pipeline/43_chain_sources.md",
+        "evidence": [
+          "src/app/api/admin/stats/route.ts:162"
+        ]
+      },
+      {
+        "table": "lead_views",
+        "columns": [
+          "saved"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/00-architecture/114_rls_policy_catalog.md §3.1",
+        "evidence": [
+          "src/app/api/admin/stats/route.ts:182"
+        ]
+      },
+      {
+        "table": "pg_stat_user_tables",
+        "columns": [
+          "relname",
+          "n_live_tup",
+          "n_dead_tup",
+          "seq_scan",
+          "idx_scan"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/02-web-admin/26_admin_dashboard.md §3.4",
+        "evidence": [
+          "src/app/api/quality/route.ts:224"
+        ]
+      },
+      {
+        "table": "information_schema.columns",
+        "columns": [
+          "table_name",
+          "column_name"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/00-architecture/01_database_schema.md §3",
+        "evidence": [
+          "src/app/api/admin/stats/route.ts:377"
+        ]
+      },
+      {
+        "table": "pg_class",
+        "columns": [
+          "relname",
+          "reltuples",
+          "relkind"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/00-architecture/01_database_schema.md §3",
+        "evidence": [
+          "src/app/api/admin/stats/route.ts:395"
+        ]
+      }
+    ]
+  },
+  "outputs": {
+    "answer": "contract_only",
+    "why": "Start/stop a chain and edit a schedule are real server writes the dashboard waits on; nothing flips optimistically. Note the reads are not clean either — GET /api/admin/stats itself UPDATEs pipeline_runs through the stale-run reaper.",
+    "evidence": [
+      "src/app/api/admin/pipelines/[slug]/route.ts:84",
+      "src/app/api/admin/pipelines/[slug]/route.ts:154",
+      "src/app/api/admin/pipelines/schedules/route.ts:56",
+      "src/app/api/admin/stats/route.ts:189",
+      "src/lib/admin/reap-stale-runs.ts:26"
+    ],
+    "contract_ref": [
+      "/api/admin/pipelines/[slug]",
+      "/api/admin/pipelines/schedules",
+      "/api/admin/stats"
+    ],
+    "rollback": "None. A dispatched chain can only be cancelled by the DELETE arm; a schedule edit is overwritten by another edit. Neither write is reversible from the UI.",
+    "invalidates": [],
+    "tables": [
+      {
+        "table": "pipeline_runs",
+        "columns": [
+          "status",
+          "error_message",
+          "completed_at"
+        ],
+        "producing_steps": [
+          "every_chain_step_via_sdk_run_ledger"
+        ],
+        "chain_position": "permits[0..32]",
+        "owner_spec": "docs/specs/01-pipeline/41_chain_permits.md",
+        "evidence": [
+          "src/app/api/admin/pipelines/[slug]/route.ts:154",
+          "src/lib/admin/reap-stale-runs.ts:26"
+        ]
+      },
+      {
+        "table": "pipeline_schedules",
+        "columns": [
+          "pipeline",
+          "cadence",
+          "enabled",
+          "updated_at"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/00-architecture/01_database_schema.md §3",
+        "evidence": [
+          "src/app/api/admin/pipelines/schedules/route.ts:56",
+          "src/app/api/admin/pipelines/schedules/route.ts:96"
+        ]
+      }
+    ]
+  },
+  "state": {
+    "answer": "none",
+    "why": "It holds no state in any of the five declared layers: no TanStack query, no store, no persistence — every value lives in component useState for the life of the mount. Spec 99's matrix has no row for that, which is the honest gap here.",
+    "evidence": [
+      "src/components/DataQualityDashboard.tsx:261",
+      "src/components/DataQualityDashboard.tsx:288"
+    ],
+    "fields": []
+  },
+  "staleness": {
+    "answer": "live",
+    "why": "Every read is an uncached fetch straight to the database; while a chain is running it re-polls the lightweight status endpoint every 5s, and a freshly triggered slug is held \"dispatching\" for a 90s grace window until its pipeline_runs row lands.",
+    "evidence": [
+      "src/components/DataQualityDashboard.tsx:95",
+      "src/components/DataQualityDashboard.tsx:412",
+      "src/components/DataQualityDashboard.tsx:276"
+    ],
+    "stale_time_ms": 0,
+    "offline": "blocked"
+  },
+  "guards": {
+    "session": {
+      "answer": "admin",
+      "why": "The page is behind the /admin/* arm, but four of its six contracts never call verifyAdminAuth and one of them, /api/quality, is deliberately PUBLIC — an admin-gated page mixing a public contract with admin ones.",
+      "evidence": [
+        "src/lib/auth/route-guard.ts:162",
+        "src/middleware.ts:95",
+        "src/lib/auth/route-guard.ts:75",
+        "src/app/api/admin/stats/route.ts:12",
+        "src/app/api/admin/pipelines/schedules/route.ts:25"
+      ]
+    },
+    "rls_class": {
+      "answer": "B",
+      "why": "Everything it reaches — pipeline_runs, pipeline_schedules, permits, parcels, the catalog views — is outside the ten Class-A tables and is not profiles, so Class B by the §2 default; lead_views (Class A) is touched only as a COUNT(*) inside the stats route.",
+      "evidence": [
+        "docs/specs/00-architecture/114_rls_policy_catalog.md §2",
+        "src/app/api/admin/stats/route.ts:182"
+      ]
+    },
+    "disclosure": {
+      "fields": [
+        "current",
+        "trends",
+        "lastUpdated",
+        "anomalies",
+        "schemaDrift",
+        "health",
+        "engine_health"
+      ],
+      "why": "/api/quality is classified public, so this exact projection — whole data_quality_snapshots rows plus pipeline failure messages and pg_stat table statistics — is readable with no session at all."
+    },
+    "entitlement": "none",
+    "flag": "none",
+    "permission": "none",
+    "rate_bucket": "none"
+  },
+  "render": {
+    "targets": [
+      "screen"
+    ],
+    "projection": "list",
+    "breakpoints": "desktop_first_md",
+    "export": "none",
+    "tiles": "UNRESEARCHED",
+    "refresh": "UNRESEARCHED"
+  },
+  "checks": [
+    {
+      "id": "data_quality_pipeline_registry_parity",
+      "kind": "schema_declared",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "The timeline's PIPELINE_REGISTRY / PIPELINE_CHAINS / NON_TOGGLEABLE_SLUGS must agree with manifest.chains; the admin UI suite imports them directly and locks that agreement."
+    },
+    {
+      "id": "data_quality_pii_excluded",
+      "kind": "disclosure",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "why": "The timeline keeps an explicit PII set (lead_views, tracked_projects, lead_analytics) out of the inspectable tables, and /api/quality is public, so the exclusion is a pre-render gate not a post-hoc assertion."
+    },
+    {
+      "id": "data_quality_error_state",
+      "kind": "error_state",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "The two top-level reads use separate abort controllers on a 10s timeout so a slow /api/quality degrades to a message rather than taking /api/admin/stats down with it."
+    },
+    {
+      "id": "data_quality_auth_class",
+      "kind": "auth_class_parity",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "why": "DECLARED AND CURRENTLY FAILING: the surface declares admin, but /api/admin/stats, /pipelines/status, /pipelines/schedules and /pipelines/history call no verifyAdminAuth, and /api/quality is public by design."
+    }
+  ],
+  "invariants": "none",
+  "plausibility": "none",
+  "states": [
+    {
+      "name": "loading",
+      "golden": "none"
+    },
+    {
+      "name": "hit",
+      "golden": "none"
+    },
+    {
+      "name": "error",
+      "golden": "none"
+    }
+  ],
+  "errors": {
+    "answer": "inline",
+    "why": "Failures render as banner/row-level messages inside the dashboard (including a per-pipeline error list) and the page keeps whatever it already had; there is no error.tsx sibling and no toast.",
+    "evidence": [
+      "src/components/DataQualityDashboard.tsx:268",
+      "src/components/DataQualityDashboard.tsx:288"
+    ],
+    "classes": [
+      {
+        "class": "offline",
+        "ui": "the abort/timeout branch sets a message and the poll cycle is skipped"
+      },
+      {
+        "class": "500",
+        "ui": "inline error text; previously fetched panels stay rendered"
+      }
+    ]
+  },
+  "emits": {
+    "answer": "none",
+    "why": "Nothing it does is countable: no file it owns imports captureEvent or track, and starting a whole pipeline chain from here leaves no analytics event and no audit row.",
+    "evidence": [
+      "src/components/DataQualityDashboard.tsx:1",
+      "src/components/FreshnessTimeline.tsx:1",
+      "src/app/api/admin/pipelines/[slug]/route.ts:84"
+    ],
+    "analytics": [],
+    "ledger_events": [],
+    "breadcrumbs": []
+  },
+  "offers": {
+    "answer": "none",
+    "why": "An internal operator tool renders no sponsored placement; no offers/placements table is reached from any file it owns.",
+    "evidence": [
+      "src/components/DataQualityDashboard.tsx:1"
+    ]
+  },
+  "metering": {
+    "answer": "none",
+    "why": "Nothing here is billable or quota-bearing: no usage_events / ledger write is reached from this surface or its contracts.",
+    "evidence": [
+      "src/app/api/admin/stats/route.ts:12"
+    ]
+  },
+  "config": {
+    "answer": "logic_variables",
+    "why": "Engine health runs off ONE threshold source: the seven engine_health_* rows, read by a targeted 7-key SELECT because the route is public, with a single aggregated logWarn when a row is absent rather than seven Sentry events.",
+    "evidence": [
+      "src/app/api/quality/route.ts:54",
+      "src/app/api/quality/route.ts:61",
+      "docs/specs/02-web-admin/26_admin_dashboard.md §3.4"
+    ],
+    "logic_variables": [
+      {
+        "name": "engine_health_dead_tuple_min_rows",
+        "on_invalid": "default",
+        "why": "An absent or unparseable row falls back to the seeded module default and is named in one aggregated warn."
+      },
+      {
+        "name": "engine_health_dead_tuple_ratio_warn_max",
+        "on_invalid": "default",
+        "why": "Same fallback posture — this is a display threshold, not a write-affecting bound."
+      },
+      {
+        "name": "engine_health_insp_dead_tuple_fail_pct",
+        "on_invalid": "default",
+        "why": "Same fallback posture."
+      },
+      {
+        "name": "engine_health_insp_update_insert_fail_ratio",
+        "on_invalid": "default",
+        "why": "Same fallback posture."
+      },
+      {
+        "name": "engine_health_ping_pong_ratio_warn_max",
+        "on_invalid": "default",
+        "why": "Same fallback posture."
+      },
+      {
+        "name": "engine_health_seq_scan_min_rows",
+        "on_invalid": "default",
+        "why": "Same fallback posture."
+      },
+      {
+        "name": "engine_health_seq_scan_ratio_warn_max",
+        "on_invalid": "default",
+        "why": "Same fallback posture."
+      }
+    ],
+    "retired": []
+  },
+  "sharing": {
+    "answer": "shared",
+    "why": "/api/quality is a public contract with other callers, and /api/admin/pipelines/status is also polled from here while /api/admin/stats is the general admin stats read; only the schedules and history arms are sole to this page.",
+    "evidence": [
+      "src/lib/auth/route-guard.ts:75",
+      "src/app/api/admin/pipelines/status/route.ts:7"
+    ],
+    "surfaces": []
+  },
+  "a11y": {
+    "touch_target_min_px": "UNRESEARCHED",
+    "labels": "partial",
+    "dark_mode": "none",
+    "reduced_motion": "ignored",
+    "i18n": "none",
+    "safe_area": "none"
+  },
+  "deviations": "none",
+  "limitations": [
+    {
+      "what": "GET /api/admin/stats performs a write",
+      "measured": "It awaits reapStaleStaleRunningRows, which UPDATEs pipeline_runs to failed — a mutation on a GET, with no verifyAdminAuth and no audit row.",
+      "check_id": "data_quality_auth_class"
+    },
+    {
+      "what": "PUT and PATCH on /api/admin/pipelines/schedules mutate with neither admin verification nor an audit row",
+      "measured": "The file imports no verifyAdminAuth, so it also gets no CSRF Origin check, and PATCH creates a row for any caller-supplied pipeline string.",
+      "check_id": "none — no checks[] kind covers \"an admin mutation writes an admin_audit_log row\"; escalated per Spec 128 §4"
+    },
+    {
+      "what": "The largest surface in the shard holds all its state in component useState",
+      "measured": "2,482 lines across five files with no TanStack query and no store; Spec 99 §3 has no layer row for component state, so state.answer had to be recorded as \"none\".",
+      "check_id": "none — vocabulary gap, escalated per Spec 128 §4"
+    }
+  ],
+  "interpretation": "none",
+  "notes": "Spec chosen from system-map row 26, whose Target Files list DataQualityDashboard.tsx and FreshnessTimeline.tsx (the page file itself is in no row and has no SPEC LINK header). Largest web surface measured at 2482 lines, 1432 of them in FreshnessTimeline alone. FunnelPanels is reached only via FreshnessTimeline, ScheduleEditModal only via DataQualityDashboard. /api/admin/pipelines/[slug] is a template-literal path used with both POST (start) and DELETE (stop). Mixes a public contract (/api/quality) with admin ones on an admin-gated page. DISAGREEMENT (tree wins): src/lib/auth/verify-admin.ts:8 states verifyAdminAuth is the FIRST LINE of every src/app/api/admin/**/route.ts (Spec 33 Sec 5), and the routes this surface calls do not import it at all - the only gate left is the presence-only middleware check, which middleware.ts:108 itself documents as non-cryptographic. Four of its six contracts (stats, pipelines/status, pipelines/schedules, pipelines/history) skip it, and /api/quality is deliberately PUBLIC. Separately, GET /api/admin/stats MUTATES: it awaits reapStaleRunningRows, which UPDATEs pipeline_runs to failed. identity.owner is UNRESEARCHED estate-wide: no owner registry exists in the tree, so naming one would be an invention rather than a measurement. a11y.touch_target_min_px is UNRESEARCHED because its vocabulary (UNRESEARCHED or an integer >= 44) has no member for a desktop-only admin page that declares no floor.",
+  "x-draft": {
+    "shard": "admin-existing",
+    "files": [
+      "src/app/admin/data-quality/page.tsx",
+      "src/components/DataQualityDashboard.tsx",
+      "src/components/FreshnessTimeline.tsx",
+      "src/components/funnel/FunnelPanels.tsx",
+      "src/components/ScheduleEditModal.tsx"
+    ],
+    "loc": 2482,
+    "measured_states": [
+      "loading",
+      "error",
+      "loaded"
+    ],
+    "measured_gate": {
+      "session": "admin",
+      "why": "classifyRoute('/admin/data-quality') matches the admin-pages arm via `pathname.startsWith('/admin/')` -> 'admin'."
+    }
+  },
+  "programme": {
+    "scope": "platform_shared",
+    "phase": "UNRESEARCHED",
+    "why": "An admin surface that operates the PLATFORM (users, entitlements, security, tunables, pipeline health) rather than either product specifically.",
+    "feature": "F16",
+    "build_order": 3163,
+    "leakage": "none",
+    "product_questions": "none",
+    "review": {
+      "status": "unreviewed"
+    }
+  }
+}
