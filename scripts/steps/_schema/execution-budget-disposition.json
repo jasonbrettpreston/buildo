@@ -46,9 +46,10 @@
     "      clock > the manifest step ceiling > the per-phase deadline. A ladder whose",
     "      rungs invert is the defect this WF3 closed, re-armed."
   ],
-
-  "menu": ["executed", "descriptive"],
-
+  "menu": [
+    "executed",
+    "descriptive"
+  ],
   "declarations": {
     "statement_timeout": {
       "disposition": "executed",
@@ -59,7 +60,6 @@
       },
       "why": "Already live before this WF3 — listed here so the registry covers the WHOLE duration family and an orphan/missing-row check is meaningful in both directions."
     },
-
     "step_timeout": {
       "disposition": "executed",
       "executor": {
@@ -74,6 +74,7 @@
       "pending": [
         "compute_centroids",
         "link_massing",
+        "link_neighbourhoods",
         "link_parcel_addresses",
         "link_parcels",
         "link_wsib",
@@ -85,23 +86,32 @@
       ],
       "pending_why": "Measured 2026-09-15: 12 converted descriptors declare execution.step_timeout; only refresh_snapshot had the manifest counterpart that executes it. enrich_parcels is wired by this WF3 because it is the step whose declaration was measured inert against a real 300-min kill. The remaining ten are a DECLARED gap, not a silent one — filed in docs/reports/review_followups.md; wiring them is its own WF2 (each ceiling needs its own measured duration, and a ceiling set below a step's real runtime turns a healthy run into a failure)."
     },
-
     "budget": {
       "disposition": "descriptive",
       "why": "No executor exists anywhere in scripts/ (grep -rn '\\.budget' scripts/lib/ => zero hits, 2026-09-15). It documents the step's INTENDED wall-clock envelope for a human sizing a CI ceiling; nothing measures a run against it and nothing aborts on it. Kept (not removed) per R-X: a declaration with a disposition is legible; a deleted field is a silent loss of the sizing intent. The ENFORCED ceiling for a step is manifest.scripts[slug].step_timeout_minutes (see step_timeout above) — budget is the number an operator reads when choosing that one."
     },
-
     "txn_budget": {
       "disposition": "descriptive",
       "why": "No executor exists anywhere in scripts/ (grep -rn 'txn_budget' scripts/lib/ => zero hits, 2026-09-15). It documents how much of `budget` the step's own transaction is expected to hold open — the number that matters for vacuum-horizon reasoning (enrich_parcels' EP-D17 maintenance ruling is exactly this arithmetic done by hand). Enforcing it would require a transaction-scoped deadline distinct from the per-phase one EP-PHASE-DEADLINE built; that is a separate WF and is filed, not smuggled in here."
     }
   },
-
   "ladder": {
     "$why": "Spec 118 §3's stop-mechanism hierarchy for enrich_parcels, after EP-PHASE-DEADLINE. Each rung must be strictly tighter than the one outside it, or the outer rung is the only one that can ever fire — which is precisely the 2026-09-15 incident (the GH wall clock was the entire enforcement stack).",
     "step": "enrich_parcels",
-    "outer_ci_minutes": { "value": 300, "source": ".github/workflows/chain-sources.yml", "key": "SOURCES_STEP_TIMEOUT_MINUTES" },
-    "step_ceiling_minutes": { "value": 180, "source": "scripts/manifest.json", "key": "scripts.enrich_parcels.step_timeout_minutes" },
-    "phase_deadline_minutes": { "value": 75, "source": "scripts/seeds/logic_variables.json", "key": "enrich_parcels_pass_statement_timeout_minutes" }
+    "outer_ci_minutes": {
+      "value": 300,
+      "source": ".github/workflows/chain-sources.yml",
+      "key": "SOURCES_STEP_TIMEOUT_MINUTES"
+    },
+    "step_ceiling_minutes": {
+      "value": 180,
+      "source": "scripts/manifest.json",
+      "key": "scripts.enrich_parcels.step_timeout_minutes"
+    },
+    "phase_deadline_minutes": {
+      "value": 75,
+      "source": "scripts/seeds/logic_variables.json",
+      "key": "enrich_parcels_pass_statement_timeout_minutes"
+    }
   }
 }

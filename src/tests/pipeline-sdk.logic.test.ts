@@ -1118,7 +1118,8 @@ describe('Pipeline SDK', () => {
       'classify-permits.js',
       'classify-scope.js',
       'geocode-permits.js',
-      'link-neighbourhoods.js',
+      // link-neighbourhoods.js RE-HOMED (Spec 122 §5.1 conversion, batch-2 I4,
+      // 2026-09-16) alongside the five below — same treatment, same successor lock.
       // link-massing.js / link-wsib.js / compute-centroids.js / link-parcels.js /
       // refresh-snapshot.js RE-HOMED (Spec 122 §5.1 conversion, pilots 3 + 4 + 6 +
       // 7 + 8): a converted step calls pipeline.step(), never pipeline.run(), and
@@ -1204,8 +1205,17 @@ describe('Pipeline SDK', () => {
     // above — descriptor.counters.records_updated.source = "written.e1.updated" is the
     // successor lock (src/tests/chain.logic.test.ts "link_parcels: the permit_parcels
     // mutation count is a NAMED audit row" + this file's own §5.2 conformance battery).
+    // link-neighbourhoods.js RE-HOMED (batch-2 I4, 2026-09-16): identical treatment to
+    // link-massing.js and link-parcels.js above. The frozen shell spells no counter at
+    // all; `descriptor.counters.records_updated.source = "written.e1.updated"` is the
+    // successor declaration, and it now has TWO successor locks rather than one —
+    // src/tests/chain.logic.test.ts's re-homed §11 Counter Semantic Contract assertion
+    // (which reads that declaration), and src/tests/step-library.logic.test.ts's
+    // `runLinkColumnPhase counter arithmetic` fake-pool test, which EXECUTES the runner
+    // with changed=25 / no_match=15 and asserts `written.e1.updated === 25`. The second
+    // one exists because every other lock on this arithmetic was a static read, and the
+    // golden differential cannot reach it (the measured eligible scope is 0).
     const LINKING_SCRIPTS = [
-      'link-neighbourhoods.js',
       'link-coa.js',
       'link-similar.js',
     ];
@@ -1299,10 +1309,20 @@ describe('Pipeline SDK', () => {
       expect(plan.guard_columns).not.toContain('linked_at');
     });
 
-    // §9.3 — link-neighbourhoods.js update must guard against no-op updates
-    it('link-neighbourhoods.js UPDATE has IS DISTINCT FROM guard', () => {
-      const content = fs.readFileSync(path.join(scriptDir, 'link-neighbourhoods.js'), 'utf-8');
-      expect(content).toContain('IS DISTINCT FROM');
+    // §9.3 — RE-HOMED (batch-2 I4, 2026-09-16). The guard left the shell with the rest of
+    // the body; it is DECLARED now, and the declaration is the thing worth locking.
+    // ⚠️ The declaration also records that the guard is VACUOUS under this step's own scope
+    // (`neighbourhood_id IS NULL` admits only NULL rows, and `NULL IS DISTINCT FROM <non-null>`
+    // is always true), so what actually delivers `idempotent_rerun: "zero_writes"` is the
+    // scope emptying. Asserting the declared guard is still right — it is defence-in-depth
+    // that becomes load-bearing the moment anything widens the scope — but a reader should
+    // not mistake this lock for proof of idempotency.
+    it('link_neighbourhoods declares the IS DISTINCT FROM guard on its own write target (fence 7a147377, re-homed onto the descriptor at conversion)', () => {
+      const d = JSON.parse(fs.readFileSync(path.join(scriptDir, 'link-neighbourhoods.descriptor.json'), 'utf-8'));
+      expect(d.outputs.writes).toHaveLength(1);
+      expect(d.outputs.writes[0].write_discipline.guard).toBe('is_distinct_from');
+      expect(d.outputs.writes[0].write_discipline.guard_columns).toEqual(['neighbourhood_id']);
+      expect(d.outputs.writes[0].write_discipline.guard_why.text).toContain('7a147377');
     });
 
     // §9.3 — geocode-permits.js update must guard against identical coordinate writes
@@ -1853,9 +1873,19 @@ describe('Pipeline SDK', () => {
       expect(compute.buildUpdateSql()).toMatch(/ST_Centroid/);
     });
 
-    it('link-neighbourhoods.js uses ST_Contains when PostGIS is available', () => {
-      const content = fsSpatial.readFileSync(path.join(scriptDirSpatial, 'link-neighbourhoods.js'), 'utf-8');
-      expect(content).toMatch(/ST_Contains/);
+    // RE-HOMED (batch-2 I4, 2026-09-16), exactly as link_parcels was below: the SQL moved
+    // to the compute's pure text builder. "when PostGIS is available" is also retired as a
+    // framing — there is no availability branch left to be on the right side of (LN-D2).
+    it('link_neighbourhoods uses ST_Contains — from the compute that builds the statement, not the frozen shell', () => {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports -- the real compute
+      const compute = require('../../scripts/lib/compute/link-neighbourhoods.js');
+      // eslint-disable-next-line @typescript-eslint/no-require-imports -- the real descriptor
+      const descriptor = require('../../scripts/link-neighbourhoods.descriptor.json');
+      const sql = compute.buildMatchSql(descriptor, null, 'incremental');
+      expect(sql.update_sql).toMatch(/ST_Contains/);
+      // and the containment is against the PostGIS geom column, never the GeoJSON one (LN-D5)
+      expect(sql.update_sql).toMatch(/ST_Contains\(n\.geom,/);
+      expect(compute.CORPUS_FILTER).toBe('geom IS NOT NULL');
     });
 
     // RE-HOMED (pilot 7, 2026-08-30): the SQL moved to the compute's pure text builder
@@ -1884,11 +1914,29 @@ describe('Pipeline SDK', () => {
       // "Detects availability" was the shape of a step that SELECTS AN ALGORITHM from the
       // probe; a converted step has no second algorithm to select, so detection became a
       // hard precondition — a stronger property, asserted next.
-      const scripts = ['link-neighbourhoods.js'];
+      // link-neighbourhoods.js RE-HOMED (batch-2 I4, 2026-09-16) and the list is now EMPTY:
+      // every step that used to DETECT PostGIS has been converted to REQUIRE it. Kept as an
+      // empty loop with this note rather than deleted, so the next step that reintroduces a
+      // detection branch has an obvious home — and so the emptiness is a recorded fact
+      // rather than a silently vanished assertion.
+      const scripts: string[] = [];
       for (const script of scripts) {
         const content = fsSpatial.readFileSync(path.join(scriptDirSpatial, script), 'utf-8');
         expect(content).toMatch(/hasPostGIS|pg_extension.*postgis/i);
       }
+      expect(scripts, 'if a step is added back here, it is declaring a second algorithm behind a probe — see Spec 124 Rule 2 R-W').toHaveLength(0);
+    });
+
+    it('link_neighbourhoods REQUIRES PostGIS rather than detecting it (LN-D2, Ask 2 ruling 2026-09-16: the FIFTH application of the link_massing A-8 / compute_centroids A-1(a) / link_parcels A-1 / link_parcels LP-D9 precedent, Spec 124 R-W)', () => {
+      const d = JSON.parse(fsSpatial.readFileSync(path.join(scriptDirSpatial, 'link-neighbourhoods.descriptor.json'), 'utf-8'));
+      const ext = d.guards.requires.find((r: { kind: string; name: string }) => r.kind === 'extension' && r.name === 'postgis');
+      expect(ext, 'postgis must be a declared precondition, not a runtime probe').toBeTruthy();
+      expect(ext.on_missing).toBe('fail');
+      // and the compute must carry no probe at all (the ast-grep rule enforces this too)
+      // eslint-disable-next-line @typescript-eslint/no-require-imports -- read as TEXT on purpose
+      const computeSrc = require('fs').readFileSync(path.join(scriptDirSpatial, 'lib/compute/link-neighbourhoods.js'), 'utf-8')
+        .replace(/\/\*[\s\S]*?\*\//g, ' ');
+      expect(computeSrc).not.toMatch(/pg_extension/);
     });
 
     it('link_parcels REQUIRES PostGIS rather than detecting it (A-1 RULED, pilot 7: third application of the link_massing A-8 / compute_centroids A-1(a) precedent, Spec 124 R-W)', () => {
@@ -1982,17 +2030,19 @@ describe('Pipeline SDK', () => {
       const fs2 = require('fs');
       const scriptDir2 = path.resolve(__dirname, '../../scripts');
 
-      it('link-neighbourhoods.js emits summary/meta on early return (0 permits)', () => {
-        const source = fs2.readFileSync(path.join(scriptDir2, 'link-neighbourhoods.js'), 'utf-8');
-        // Find the early-exit block ("No permits to link")
-        const earlyExitIdx = source.indexOf('No permits to link');
-        expect(earlyExitIdx).toBeGreaterThan(-1);
-        // The emitSummary/emitMeta must come BEFORE the early return, not only after the main loop
-        const beforeEarlyExit = source.slice(0, earlyExitIdx);
-        const afterEarlyExit = source.slice(earlyExitIdx, source.indexOf('return;', earlyExitIdx) + 10);
-        const fullEarlyBlock = beforeEarlyExit.slice(beforeEarlyExit.lastIndexOf('if (totalPermits')) + afterEarlyExit;
-        expect(fullEarlyBlock).toMatch(/emitSummary/);
-        expect(fullEarlyBlock).toMatch(/emitMeta/);
+      it('link_neighbourhoods still emits summary + meta on the zero-eligible path (fence bd9e67ab, re-homed onto the declaration at conversion)', () => {
+        // RE-HOMED (batch-2 I4, 2026-09-16). The hand-written early-exit block that emitted a
+        // duplicate summary + meta pair — with its OWN copy of the phase expression, which is
+        // exactly what could drift — is gone; the library derives both from the declaration.
+        // eslint-disable-next-line @typescript-eslint/no-require-imports -- the real descriptor
+        const d = require('../../scripts/link-neighbourhoods.descriptor.json');
+        const t = d.terminals.find((x: { id: string }) => x.id === 'no_eligible_permits');
+        expect(t, 'the zero-eligible outcome must still be a DECLARED terminal').toBeTruthy();
+        expect(t.kind).toBe('success');
+        expect(t.records_meta.audit_table).toBe('object');
+        expect(t.why.text).toContain('bd9e67ab');
+        // the per-chain phase the old duplicate block hand-wrote is now declared ONCE
+        expect(d.sharing.varies_by_chain.phase).toEqual({ permits: 8, sources: 10 });
       });
 
       it('load-wsib.js emits summary/meta when no --file arg in chain context', () => {

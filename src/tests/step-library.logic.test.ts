@@ -3341,6 +3341,114 @@ describe('R-B (LW-D20 / LG-19) — interrupted-retraction reader, fake-pool lock
 });
 
 // ---------------------------------------------------------------------------
+// I4 / e37eaab9 — runLinkColumnPhase's counter ARITHMETIC, executed.
+//
+// THE GAP THIS CLOSES (Regression Guardian, OUTPUT panel, 2026-09-16). Every other lock
+// on this runner's counters is a STATIC read: `chain.logic.test.ts`'s re-homed §11
+// assertion reads the descriptor's declared `source` string, and the step's own
+// `violations.test.ts` greps `index.js` for literal source text. NONE of them execute the
+// runner. The golden differential cannot either — the measured estate's eligible scope is
+// 0, so every capture reads `records_updated: 0`, which is exactly what the conversion's
+// own assessment says out loud. So if a future edit reintroduced
+// `written.e1.updated = changed + matched.no_match` — the literal arithmetic fence
+// e37eaab9 exists to forbid, and the one a null-counter bug already slipped past once in
+// this same conversion — nothing currently green would catch it.
+//
+// This is the fake-pool lifecycle test `runCascadePhase`/`runMaterializePhase` already
+// have and this runner did not, with `changed < eligible` so the two candidate formulas
+// give DIFFERENT answers and the assertion can tell them apart.
+// ---------------------------------------------------------------------------
+describe('I4 — runLinkColumnPhase counter arithmetic (fence e37eaab9, executed not grepped)', () => {
+  const CORPUS = 158;
+  const ELIGIBLE = 40;      // pre-write eligible count
+  const CHANGED = 25;       // rows the containment UPDATE actually stamped
+  const NO_MATCH = 15;      // still NULL and unmatchable, read POST-write
+
+  function linkColumnDescriptor() {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports -- the real descriptor, not a fixture copy
+    const descriptor = clone(require(join(process.cwd(), 'scripts/link-neighbourhoods.descriptor.json')));
+    // Neutralise the DB-probing preconditions and the staleness trigger: this test is about
+    // the counter arithmetic, and it calls the runner directly (no AJV gate on the clone).
+    descriptor.guards.requires = [];
+    descriptor.staleness.trigger = 'none';
+    return descriptor;
+  }
+
+  function linkColumnPool() {
+    return dryRunFakePool((text: string) => {
+      if (/FROM neighbourhoods WHERE geom IS NOT NULL/.test(text) && /count\(\*\)::int AS n/.test(text)) {
+        return { rows: [{ n: CORPUS }] };
+      }
+      if (/count\(\*\)::int AS total FROM permits/.test(text)) return { rows: [{ total: ELIGIBLE }] };
+      if (/^UPDATE permits p SET neighbourhood_id/.test(text)) {
+        // `executeSetBasedJoinUpdate` reads rowCount, which dryRunFakePool does not model —
+        // the rowCount assertion rides on the real executor below, so this only needs to
+        // not throw. The runner's own `changed` comes from the stubbed executor.
+        return { rows: [], rowCount: CHANGED };
+      }
+      if (/AS no_match_remaining/.test(text)) {
+        return { rows: [{ linked: 240947, total: 254082, negative_ids: 0, no_match_remaining: NO_MATCH, neighbourhoods_loaded: CORPUS }] };
+      }
+      return undefined;
+    });
+  }
+
+  it('records_total counts what was IN SCOPE at write time (changed + no_match_remaining), never the pre-write eligible count — and records_updated is the stamped count ALONE', async () => {
+    const descriptor = linkColumnDescriptor();
+    const pool = linkColumnPool();
+    // eslint-disable-next-line @typescript-eslint/no-require-imports -- the real compute, not a fixture
+    const compute = require(join(process.cwd(), 'scripts/lib/compute/link-neighbourhoods.js'));
+    const result = await stepLib.runLinkColumnPhase({
+      descriptor, pool, compute, config: {}, chainId: null,
+      log: NOOP_LOG, tag: '[link_neighbourhoods]', preWriteGate: null,
+    });
+
+    // THE FENCE: the success counter is the stamped count alone. `changed + no_match` here
+    // is 40 — numerically equal to the pre-write eligible count, which is why ELIGIBLE was
+    // chosen to equal that sum: it makes the WRONG formula for `updated` (the e37eaab9
+    // regression) produce 40 and the right one produce 25, unmistakably.
+    expect(result.written.e1.updated, 'records_updated must be the stamped count, never stamped + unmatched').toBe(CHANGED);
+    expect(result.written.e1.rows_changed).toBe(CHANGED);
+
+    // …and `scanned` is the POST-write snapshot sum, so it can never read below `updated`.
+    expect(result.written.e1.scanned).toBe(CHANGED + NO_MATCH);
+    expect(result.written.e1.scanned).toBeGreaterThanOrEqual(result.written.e1.updated);
+    expect(result.matched.permits_processed).toBe(CHANGED + NO_MATCH);
+    expect(result.matched.permits_linked).toBe(CHANGED);
+    expect(result.matched.no_match).toBe(NO_MATCH);
+
+    // the pre-write eligible count survives as its OWN observation, never as the counter
+    expect(result.matched.permits_eligible).toBe(ELIGIBLE);
+
+    // the two corpus fields stay distinct — the `_before_write` row's whole point
+    expect(result.matched.neighbourhoods_loaded_before_write).toBe(CORPUS);
+    expect(result.matched.neighbourhoods_loaded).toBe(CORPUS);
+
+    // a class-N target can never INSERT, so records_new is structurally 0
+    expect(result.written.e1.inserted).toBe(0);
+  });
+
+  it('the post-write scalars are read strictly — a renamed/missing column THROWS rather than rendering as a healthy zero', async () => {
+    const descriptor = linkColumnDescriptor();
+    // the cumulative query answers with a MISPELLED alias, the LW-D18 drift shape
+    const pool = dryRunFakePool((text: string) => {
+      if (/count\(\*\)::int AS n/.test(text)) return { rows: [{ n: CORPUS }] };
+      if (/count\(\*\)::int AS total FROM permits/.test(text)) return { rows: [{ total: 0 }] };
+      if (/AS no_match_remaining/.test(text)) {
+        return { rows: [{ linked: 1, total: 1, negative_ids: 0, no_match_remainingg: 0, neighbourhoods_loaded: CORPUS }] };
+      }
+      return undefined;
+    });
+    // eslint-disable-next-line @typescript-eslint/no-require-imports -- the real compute, not a fixture
+    const compute = require(join(process.cwd(), 'scripts/lib/compute/link-neighbourhoods.js'));
+    await expect(stepLib.runLinkColumnPhase({
+      descriptor, pool, compute, config: {}, chainId: null,
+      log: NOOP_LOG, tag: '[link_neighbourhoods]', preWriteGate: null,
+    })).rejects.toThrow(/no "no_match_remaining" column/);
+  });
+});
+
+// ---------------------------------------------------------------------------
 // STA-3 (WF1 "state tables reset", 2026-09-03) — the three destructive-reset
 // guards in scripts/lib/step/reset.js, each proven refused-when-bad and
 // permitted-when-good. Not wired into any live descriptor today (STA-2's own

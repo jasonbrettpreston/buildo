@@ -206,6 +206,20 @@ const EXPECTED_LOGIC_VAR_KEYS = [
   'link_massing_link_rate_fail_pct',
   'link_massing_centroid_confidence',
   'link_massing_nearest_confidence',
+  // batch-2 I4 (link_neighbourhoods, LINK 3/3, 2026-09-16) — the same P4-externalization
+  // class again: pre-conversion the WARN floor (95) and the FAIL floor (50) were bare
+  // literals at scripts/link-neighbourhoods.js:346, each spelled TWICE (the comparison and
+  // a duplicated render string), and the no-match population had no bound at all. All three
+  // are seeded and rendered under a new GROUPS entry, "Neighbourhood Linking". The two rate
+  // floors are verdict bounds reached through `checks[].limit_from_config` (declared
+  // `pct >= N`, the direct floor form — NOT link_massing's/link_parcels' complement
+  // encoding, which those rows use only because their own bounds predate `pct >=`).
+  // The no-match ceiling bounds a WARN-only observational row and carries on_invalid
+  // "clamp"; its default is 0 because 0 is what it MEASURES (every coordinate-bearing
+  // permit is linked), never because zero was assumed.
+  'link_neighbourhoods_link_rate_warn_pct',
+  'link_neighbourhoods_link_rate_fail_pct',
+  'link_neighbourhoods_no_match_warn_count',
   'wsib_fuzzy_match_threshold',       // E20
   // C1 pilot 4 (link_wsib, MATCHER, 2026-08-28) — T2-T8. Same P4-externalization class
   // as link_massing's trio above: T2 is the verdict-bound link-rate floor (LW-D1, reached
