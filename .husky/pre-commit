@@ -34,5 +34,9 @@ node scripts/analysis/step-churn-complexity.mjs --check && \
     # is not read by vitest at all (measured 2026-09-14; a 4-fork run was OS-killed for memory).
     # VITEST_MIN_FORKS=1 is required alongside the cap: vitest derives its default minForks from
     # the CPU count (12 here) and throws "minThreads and maxThreads must not conflict" otherwise.
-    printf '%s\n' "$RELATED_FILES" | VITEST_MIN_FORKS=1 VITEST_MAX_FORKS=2 xargs -d '\n' npx vitest related --run
+    printf '%s\n' "$RELATED_FILES" |    # ONE fork for `related` (2026-09-16, I5 commit 9): at two forks the step-conformance suite
+    # (498 tests) died on `[vitest-worker]: Timeout calling "onTaskUpdate"` on FOUR consecutive
+    # attempts with zero test failures; at one fork it passed 498/498 in 281 s. Pre-push keeps two.
+    printf '%s
+' "$RELATED_FILES" | VITEST_MIN_FORKS=1 VITEST_MAX_FORKS=1 xargs -d '\n' npx vitest related --run
   fi

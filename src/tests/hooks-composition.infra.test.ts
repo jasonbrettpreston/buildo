@@ -78,8 +78,13 @@ describe('hooks-composition (R-AG) — pre-commit', () => {
     // Code Reviewer 2026-09-14: VITEST_MAX_WORKERS is not read by vitest 2.x (forks pool) —
     // every "capped" run was uncapped; a 4-fork suite was OS-killed for memory. And
     // `vitest related <non-source file>` falls back to a WIDE run, so the filter is load-bearing.
+    // 2026-09-16 (I5 commit 9): pre-commit `related` runs at ONE fork — at two forks the
+    // 498-test step-conformance suite died on `[vitest-worker]: Timeout calling "onTaskUpdate"`
+    // four times running with zero test failures; at one fork it passed 498/498 in 281 s.
+    // Pre-push (the full suite) keeps two.
+    expect(stripComments(PRE_COMMIT)).toMatch(/\bVITEST_MAX_FORKS=1\b/);
+    expect(stripComments(PRE_PUSH)).toMatch(/\bVITEST_MAX_FORKS=2\b/);
     for (const hook of [PRE_COMMIT, PRE_PUSH]) {
-      expect(stripComments(hook)).toMatch(/\bVITEST_MAX_FORKS=2\b/);
       expect(stripComments(hook)).not.toMatch(/VITEST_MAX_WORKERS/);
     }
     expect(stripComments(PRE_COMMIT)).toMatch(/grep -E '\^\(src\|scripts\)\/\.\*\\\.\(ts\|tsx\|js\|mjs\)\$'/);
@@ -102,12 +107,12 @@ describe('hooks-composition (R-AG) — pre-commit', () => {
   });
 
   it('RED — a tampered pre-commit that reintroduces a bare `vitest run` is caught by invokesFullSuite', () => {
-    const tampered = PRE_COMMIT.replace(/VITEST_MAX_FORKS=2 xargs -d '\\n' npx vitest related --run/, 'npx vitest run');
+    const tampered = PRE_COMMIT.replace(/VITEST_MAX_FORKS=1 xargs -d '\\n' npx vitest related --run/, 'npx vitest run');
     expect(invokesFullSuite(tampered)).toBe(true);
   });
 
   it('RED — a tampered pre-commit with `vitest related` stripped out entirely is caught by invokesVitestRelated', () => {
-    const tampered = PRE_COMMIT.replace(/VITEST_MAX_FORKS=2 xargs -d '\\n' npx vitest related --run/, 'true');
+    const tampered = PRE_COMMIT.replace(/VITEST_MAX_FORKS=1 xargs -d '\\n' npx vitest related --run/, 'true');
     expect(invokesVitestRelated(tampered)).toBe(false);
   });
 });
