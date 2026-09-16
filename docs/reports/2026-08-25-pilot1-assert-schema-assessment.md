@@ -468,18 +468,14 @@ Batch1 I1's own cutover (`assert_global_coverage`, commit 9, R-K) registered 20 
 - compare ran: true · diffs found: 239 · unexplained: 0
 
 ### Test suite (item iii)
-- 1025/1025 passed (suite success=true)
-- harvested: 17 file(s) from 3 FLEET-WIDE targets (src/tests/step-conformance.infra.test.ts, src/tests/golden-fingerprint.infra.test.ts, src/tests/steps/) — one spawn per run, so every step's report carries this same number, by design
-- excluded (R-AG live-DB tier, owned by `npm run test:db`, derived from package.json `scripts.test`): 5 — src/tests/steps/link_massing/metamorphic.test.ts, src/tests/steps/link_massing/nearest-determinism.test.ts, src/tests/steps/link_massing/rung1-inline-wkt.test.ts, src/tests/steps/link_parcel_addresses/metamorphic.test.ts, src/tests/steps/link_parcel_addresses/rung1-inline-wkt.test.ts
-- skipped (declared but not run): 0
-- failing: none
+- SKIPPED or failed to run: --fast: vitest spawn skipped
 
 ### Policy coverage matrix (item vi) — Spec 124 Rules 1-13
 
 | Rule | Name | Status | Note |
 |---|---|---|---|
 | 1 | Nothing hidden | enforced-green | G-1 schema-baseline: schema-baseline clean |
-| 2 | Compute is just compute | enforced-green |  |
+| 2 | Compute is just compute | enforced-green | §5.5 describe not scoped to this step in the vitest run |
 | 3 | Tunables externalized | enforced-green | G-4: 3 declared, 0 verdict-affecting, 0 violate on_invalid:fail with no deviations[] cover |
 | 4 | Compute rule declared | enforced-green | G-2: 6 preserved-in-compute row(s), 0 with no why/notes.json/checks[] grounding |
 | 5 | checks >= 1 | enforced-green |  |
@@ -491,7 +487,7 @@ Batch1 I1's own cutover (`assert_global_coverage`, commit 9, R-K) registered 20 
 | 11 | Phase-order re-derive (declared half, checkOrderGuaranteesCited) | enforced-green | no when:"pre_write" checks — vacuously nothing to cite — G-3 completeness half stays open |
 | 12 | Truthful crash posture (R-B reachability, static + R-M before-image) | enforced-green | R-B (checkInterruptedPostureTruthful): recovery.interrupted=null — no reachability claim to verify · R-M: prose-only (R-M/LG-17 describe not scoped to this step (vitest not run, or no before-image target)) |
 | 13 | A step validates itself | enforced-green | this run of step:validate IS the mechanism |
-| P3 | I/O cost adjudication (measured, not gated) | measured | descriptor=34557B notes=8992B checks=10 rows records_meta=1547B (newest post/ capture) |
+| P3 | I/O cost adjudication (measured, not gated) | measured | descriptor=34251B notes=8992B checks=10 rows records_meta=1547B (newest post/ capture) |
 
 **Enforced-green: 13/14**
 

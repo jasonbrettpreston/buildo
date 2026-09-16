@@ -665,6 +665,19 @@ describe('execution.shape "enrich" + the ENRICHER execution.phases[] profile (pi
       // refresh_snapshot name match). A value correction, not an archetype-profile change.
       'scripts/compute-centroids.descriptor.json',
       'scripts/refresh-snapshot.descriptor.json',
+      // WF3 EP-PASS3-BACKLOG / EP-PHASE-DEADLINE (2026-09-15,
+      // `.cursor/wf3_enrich_parcels_pass3_backlog_active_task.md`) — the ENRICHER's own
+      // descriptor gains ONE config tunable (`enrich_parcels_scope_retire_after_hours`,
+      // the step-start scope-retirement window; Rule 3 — the bound is an admin logic
+      // variable, never a literal) and THREE checks[] rows making that retirement
+      // observable (`scope_backlog_at_step_start`, `scope_retired_rows`,
+      // `scope_retired_cohorts` — Spec 48 §3.6: a DELETE of 443,023 rows that no row
+      // records is invisible). Additive only: no existing check's id, severity, blocking
+      // or `when` is touched — in particular `pending_scope_parcels` keeps its WARN /
+      // `blocking:false` / `when:"pre_write"` ruling (EP-D14 + R-H/LM-D6, Spec 48 §4.9)
+      // unchanged, and the new backlog row deliberately SHARES its bound rather than
+      // introducing a second source of truth for the same population.
+      'scripts/enrich-parcels.descriptor.json',
     ]);
     const descriptorPaths = converted.map((f) => f.replace(/\.js$/, '.descriptor.json'));
     const enrichers: string[] = [];

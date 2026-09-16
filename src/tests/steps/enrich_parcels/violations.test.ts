@@ -721,6 +721,11 @@ describe('runEnrichPhase (LG-28) — logic tests against a fake pool', () => {
       writeSkipped: boolean; skipped?: boolean;
     }>;
     isEnrichStep: (d: unknown) => boolean;
+    // EP-PHASE-DEADLINE / EP-PASS3-BACKLOG Observability fold — the two extraRow builders
+    // runWithPool feeds into buildAuditTable, exercised directly so the ROW SHAPE is locked
+    // without standing up the whole runWithPool/ledger path.
+    phaseDeadlineRows: (results: Array<Record<string, unknown>>) => Array<Record<string, unknown>>;
+    scopeRetireFailureRows: (results: Array<Record<string, unknown>>) => Array<Record<string, unknown>>;
   };
 
   interface FakePoolOpts {
@@ -735,6 +740,36 @@ describe('runEnrichPhase (LG-28) — logic tests against a fake pool', () => {
     const sql: string[] = [];
     const params: unknown[][] = [];
     const innerLockAcquired = opts.innerLockAcquired !== false;
+    // EP-PHASE-DEADLINE (WF3, 2026-09-15) — the fixture's own cancel bus. A real
+    // `pg_cancel_backend(pid)` is issued on a SEPARATE connection and aborts whatever
+    // statement the TARGET backend has in flight with SQLSTATE 57014; a JS `throw` from a
+    // timer cannot do that (the in-flight `client.query` keeps running to completion). This
+    // models the Postgres side of that contract: every `pg_cancel_backend` issued on ANY
+    // connection of this pool is recorded and every registered waiter is woken, so a pass
+    // fixture can race its own simulated long statement against the cancel and reject with
+    // the real 57014 shape the runner's existing wrapper catches.
+    const cancels: number[] = [];
+    const cancelWaiters: Array<(pid: number) => void> = [];
+    const noteCancel = (text: string, values?: unknown[]) => {
+      if (!/pg_cancel_backend/.test(text)) return;
+      const pid = Number((values && values[0]) ?? -1);
+      cancels.push(pid);
+      for (const w of cancelWaiters.splice(0)) w(pid);
+    };
+    /**
+     * Resolves on a cancel issued AFTER `after` cancels had already been seen.
+     *
+     * Guardian fold (2026-09-15) — the generation counter models real Postgres semantics
+     * and is load-bearing, not bookkeeping: a cancel request applies to whatever statement
+     * the backend has IN FLIGHT when it arrives. One that lands while the backend is idle
+     * between statements is CONSUMED and does NOT carry over to the next statement. Without
+     * the counter a fixture statement would spuriously "see" an earlier, already-absorbed
+     * cancel, and the re-arm lock below would pass against a single-shot implementation.
+     */
+    const onCancel = (after = 0) => new Promise<number>((resolve) => {
+      if (cancels.length > after) { resolve(cancels[cancels.length - 1]!); return; }
+      cancelWaiters.push(resolve);
+    });
     // Fold B2 / coordinator addendum (commit 7e/2) — SHOW statement_timeout must read back
     // the LAST SET LOCAL value issued on the SAME client, never a config-value inspection
     // (Spec 122 §7.2's own live-session assertion). The top-level pool.query has NO session
@@ -762,6 +797,7 @@ describe('runEnrichPhase (LG-28) — logic tests against a fake pool', () => {
     const record = async (text: string, values?: unknown[]) => {
       sql.push(text);
       params.push(values ?? []);
+      noteCancel(text, values);
       return answer(text);
     };
     // Every connect()-ed client, in creation order — lets a test reach back into a SPECIFIC
@@ -773,6 +809,8 @@ describe('runEnrichPhase (LG-28) — logic tests against a fake pool', () => {
       sql,
       params,
       clients,
+      cancels,
+      onCancel,
       query: record,
       // Each connect() call is its own SESSION: a distinct, closed-over statementTimeoutMs
       // that only THIS client's own SET LOCAL statement_timeout can move — the mechanism the
@@ -791,6 +829,7 @@ describe('runEnrichPhase (LG-28) — logic tests against a fake pool', () => {
         const clientQuery = async (text: string, values?: unknown[]) => {
           sql.push(text);
           params.push(values ?? []);
+          noteCancel(text, values);
           const localMatch = /^SET LOCAL statement_timeout = (\d+)$/.exec(text);
           if (localMatch) localTimeoutMs = Number(localMatch[1]);
           const sessionMatch = /^SET statement_timeout = (\d+)$/.exec(text);
@@ -845,17 +884,24 @@ describe('runEnrichPhase (LG-28) — logic tests against a fake pool', () => {
     readZoningContract: (pool: unknown) => Promise<{ layers: Record<string, boolean>; partial: boolean; baseCommittedAfterOverlayFailed: boolean }>;
     computeDeferScope: (pool: unknown, threshold: number) => Promise<{ scope_count: number; threshold: number; ratio: number; perPass: Record<string, number> }>;
     computeAggregateRecordsUpdated: () => number;
+    retireStaleScope: (client: unknown, opts: Record<string, unknown>) => Promise<Record<string, number>>;
     passes: Array<{ name: string; txn: string; run: (client: unknown, ctx: Record<string, unknown>, config: Record<string, unknown>) => Promise<FakePassResult> }>;
   }
 
   /** Records every phase invocation `{name, txn}` in call order — the phase-ordering witness. */
-  function fakeCompute(passLog: Array<{ name: string; txn: string }>, opts: { deferScopeCount?: number; passImpl?: Record<string, (client: unknown, ctx: Record<string, unknown>) => Promise<FakePassResult>> } = {}): FakeCompute {
+  function fakeCompute(passLog: Array<{ name: string; txn: string }>, opts: { deferScopeCount?: number; passImpl?: Record<string, (client: unknown, ctx: Record<string, unknown>) => Promise<FakePassResult>>; retireStaleScope?: (client: unknown, o: Record<string, unknown>) => Promise<Record<string, number>> } = {}): FakeCompute {
     const names = ['zoning', 'max_build', 'existing_structure', 'comparable_builds', 'optimal_config'];
     return {
       OVERLAY_LAYERS: [],
       readZoningContract: async () => ({ layers: { base: true }, partial: false, baseCommittedAfterOverlayFailed: false }),
       computeDeferScope: async () => ({ scope_count: opts.deferScopeCount ?? 0, threshold: 1000, ratio: 0, perPass: {} }),
       computeAggregateRecordsUpdated: () => 0,
+      // EP-PASS3-BACKLOG (WF3, 2026-09-15) — the step-start stale-cohort retirement. The
+      // fake returns the shape the runner folds into `matched`; the REAL SQL/predicate
+      // behaviour is locked separately against a fake client in the
+      // "retireStaleScope" describe block below (this fixture only proves the runner
+      // CALLS it, before the shared transaction opens).
+      retireStaleScope: opts.retireStaleScope ?? (async () => ({ backlog_rows: 0, backlog_cohorts: 0, retired_rows: 0, retired_cohorts: 0 })),
       passes: names.map((name, i) => ({
         name,
         txn: i < 4 ? 'shared' : 'post_commit',
@@ -879,6 +925,7 @@ describe('runEnrichPhase (LG-28) — logic tests against a fake pool', () => {
       enrich_parcels_heartbeat_minutes: 60,
       enrich_parcels_defer_threshold_rows: 1000,
       enrich_parcels_pass5_stream_batch_size: 137,
+      enrich_parcels_scope_retire_after_hours: 24,
     },
     chainId: null,
     log: { info: () => {}, warn: () => {}, error: () => {} },
@@ -936,6 +983,314 @@ describe('runEnrichPhase (LG-28) — logic tests against a fake pool', () => {
     const lockTimeouts = pool.sql.filter((s) => /^SET LOCAL lock_timeout = /.test(s));
     expect(sharedStatementTimeouts).toEqual(Array(4).fill('SET LOCAL statement_timeout = 300000'));
     expect(lockTimeouts).toEqual(Array(4).fill('SET LOCAL lock_timeout = 30000'));
+  });
+
+  // -------------------------------------------------------------------------
+  // EP-PHASE-DEADLINE (WF3, .cursor/wf3_enrich_parcels_pass3_backlog_active_task.md C2,
+  // 2026-09-15) — `execution.phases[].timeout_minutes_from_config` was executed ONLY as a
+  // Postgres `SET LOCAL statement_timeout`, a PER-STATEMENT bound re-armed on every
+  // statement. A phase issuing N statements was therefore bounded at N x the declared
+  // value, never at the declared value: measured on cloud run 34971921328, the
+  // `existing_structure` phase (5 statements, `scripts/lib/compute/enrich-parcels.js`
+  // runPass3) ran 94.4 min against a declared 75 min bound whose EFFECTIVE ceiling was
+  // 375 min — the timeout was never capable of firing, and the only thing that stopped
+  // the run was the GH Actions 300-min wall clock (`chain-sources.yml:60,116`).
+  //
+  // The pair below is the both-directions lock: (e) statements each UNDER the bound whose
+  // SUM exceeds it must abort, and (f) a phase that finishes under the bound must NOT be
+  // cancelled (proving the deadline is not simply always firing, and that its timer is
+  // cleared per phase rather than leaking into the next one).
+  // -------------------------------------------------------------------------
+  /**
+   * A simulated long-running statement: resolves after `ms`, or rejects with the REAL
+   * SQLSTATE 57014 shape the instant `pg_cancel_backend` is issued against this pool —
+   * exactly what Postgres does to whatever statement the cancelled backend has in flight.
+   */
+  const statementTaking = (pool: ReturnType<typeof fakePool>, ms: number) => {
+    // Snapshotted at call time: only a cancel issued while THIS statement is in flight can
+    // abort it (see `onCancel`'s note on the generation counter).
+    const baseline = pool.cancels.length;
+    return new Promise<void>((resolve, reject) => {
+      const t = setTimeout(resolve, ms);
+      void pool.onCancel(baseline).then(() => {
+        clearTimeout(t);
+        reject(Object.assign(new Error('canceling statement due to user request'), { code: '57014' }));
+      });
+    });
+  };
+
+  /** A statement that CANNOT be cancelled — models the backend being idle when a cancel lands. */
+  const statementIgnoringCancel = (ms: number) => new Promise<void>((resolve) => { setTimeout(resolve, ms); });
+
+  it('(e) EP-PHASE-DEADLINE — a shared phase whose statements are EACH under the declared bound but whose SUM exceeds it is cancelled at the wall-clock deadline and fails LOUD, naming the phase, the phase_deadline kind and the elapsed ms', async () => {
+    const passLog: Array<{ name: string; txn: string }> = [];
+    const pool = fakePool();
+    const compute = fakeCompute(passLog, {
+      passImpl: {
+        // Two statements, each 80ms (well under the 120ms declared bound) — neither can
+        // ever trip `SET LOCAL statement_timeout`, which is re-armed per statement. Their
+        // SUM is 160ms, which is what a PHASE bound must catch and a statement bound cannot.
+        existing_structure: async (client: unknown) => {
+          const c = client as { query: (t: string, v?: unknown[]) => Promise<unknown> };
+          await c.query('SELECT 1 /* stmt A */');
+          await statementTaking(pool, 80);
+          await c.query('SELECT 1 /* stmt B */');
+          await statementTaking(pool, 80);
+          return { scoped: 0, updated: 0, updatedIds: [] };
+        },
+      },
+    });
+    const args = baseArgs(fixtureDescriptor(), pool, compute);
+    // 0.002 min * 60000 = 120ms — the DECLARED bound, read through the SAME
+    // `timeout_minutes_from_config` seam production uses, never a test-only constant.
+    (args.config as Record<string, unknown>).fixture_pass_timeout_minutes = 0.002;
+    // The abort is RETURNED, not thrown (Observability fold — see the dedicated audit-table
+    // lock below for why); the message is the same one the throw carried.
+    const res = await stepLib.runEnrichPhase(args as never) as Record<string, unknown>;
+    expect((res.phaseDeadline as { message: string } | null)?.message)
+      .toMatch(/existing_structure aborted by phase_deadline after \d+ms/);
+    // The cancel went to the backend pid the runner captured from the phase's OWN client
+    // (`SELECT pg_backend_pid()`, fixture value 4242) — a JS throw from a timer could not
+    // have interrupted the in-flight statement at all.
+    expect(pool.cancels, 'exactly one pg_cancel_backend, against the captured phase pid').toEqual([4242]);
+    // ...and it was issued on a DIFFERENT connection than the phase's own (a cancel sent
+    // down the very session that is blocked could never be delivered). clients[0] is the
+    // pre-acquired, autocommit heartbeat client; the shared-txn phase client is clients[1].
+    expect(pool.sql.some((s) => /pg_cancel_backend/.test(s))).toBe(true);
+    // The phases BEFORE the deadlined one completed normally — the deadline is per phase.
+    expect(passLog.map((p) => p.name)).toEqual(['zoning', 'max_build', 'existing_structure']);
+  });
+
+  it('(f) EP-PHASE-DEADLINE inverse — a phase that finishes under the declared bound is never cancelled, and its timer is cleared so a LATER phase never inherits it', async () => {
+    const passLog: Array<{ name: string; txn: string }> = [];
+    const pool = fakePool();
+    const compute = fakeCompute(passLog);
+    const args = baseArgs(fixtureDescriptor(), pool, compute);
+    // A deliberately TIGHT 300ms bound with instant passes: if the per-phase timer were
+    // not cleared in the phase's own `finally`, the four phases' armed timers would still
+    // be live and would cancel a later phase (or leak past the step entirely).
+    (args.config as Record<string, unknown>).fixture_pass_timeout_minutes = 0.005;
+    const res = await stepLib.runEnrichPhase(args as never);
+    expect(res.writeSkipped).toBe(false);
+    expect(passLog.map((p) => p.name)).toEqual(['zoning', 'max_build', 'existing_structure', 'comparable_builds', 'optimal_config']);
+    expect(pool.cancels, 'no phase exceeded its bound, so nothing may be cancelled').toEqual([]);
+    // Held well past the tightest armed deadline: a leaked timer would fire here.
+    await new Promise((r) => setTimeout(r, 400));
+    expect(pool.cancels, 'no timer leaked past its own phase').toEqual([]);
+  });
+
+  it('(Guardian fold) EP-PHASE-DEADLINE re-arm — a cancel that lands while the backend is IDLE between statements is a Postgres no-op, so the deadline RE-ISSUES it until something is actually cancelled; the next statement dies and the run still reports phase_deadline', async () => {
+    const passLog: Array<{ name: string; txn: string }> = [];
+    const pool = fakePool();
+    const compute = fakeCompute(passLog, {
+      passImpl: {
+        existing_structure: async (client: unknown) => {
+          const c = client as { query: (t: string, v?: unknown[]) => Promise<unknown> };
+          await c.query('SELECT 1 /* stmt A */');
+          // The deadline (120ms) fires here, while this statement cannot be cancelled —
+          // the backend-is-idle case. A single-shot timer's ONLY cancel is absorbed and
+          // the phase runs on unbounded with `fired()` stuck true, so whatever 57014
+          // eventually arrives is mislabelled `phase_deadline`: a deadline that reports
+          // success while enforcing nothing. RED against that implementation, because
+          // statement B below then runs its full 3s and the phase SUCCEEDS.
+          await statementIgnoringCancel(200);
+          await c.query('SELECT 1 /* stmt B */');
+          await statementTaking(pool, 3000);
+          return { scoped: 0, updated: 0, updatedIds: [] };
+        },
+      },
+    });
+    const args = baseArgs(fixtureDescriptor(), pool, compute);
+    (args.config as Record<string, unknown>).fixture_pass_timeout_minutes = 0.002; // 120ms
+    const res = await stepLib.runEnrichPhase(args as never) as Record<string, unknown>;
+    expect((res.phaseDeadline as { message: string } | null)?.message)
+      .toMatch(/existing_structure aborted by phase_deadline after \d+ms/);
+    // MORE than one cancel: the first was absorbed by the uncancellable statement, the
+    // re-arm issued the one that actually landed. Exactly one would mean no re-arm.
+    expect(pool.cancels.length, 'the cancel must be re-issued until it lands').toBeGreaterThan(1);
+    expect(new Set(pool.cancels), 'every re-issued cancel targets the SAME captured pid').toEqual(new Set([4242]));
+  });
+
+  it('(Observability fold) EP-PHASE-DEADLINE — a deadline abort is LOUD ON THE AUDIT TABLE: the runner returns a phaseDeadline payload instead of escaping to the outer catch, phaseDeadlineRows renders one errored FAIL row, and the post_commit phase is skipped', async () => {
+    const passLog: Array<{ name: string; txn: string }> = [];
+    const pool = fakePool();
+    const compute = fakeCompute(passLog, {
+      passImpl: {
+        existing_structure: async (client: unknown) => {
+          const c = client as { query: (t: string, v?: unknown[]) => Promise<unknown> };
+          await c.query('SELECT 1 /* stmt A */');
+          await statementTaking(pool, 80);
+          await c.query('SELECT 1 /* stmt B */');
+          await statementTaking(pool, 80);
+          return { scoped: 0, updated: 0, updatedIds: [] };
+        },
+      },
+    });
+    const args = baseArgs(fixtureDescriptor(), pool, compute);
+    (args.config as Record<string, unknown>).fixture_pass_timeout_minutes = 0.002;
+    // NOT a rejection any more — that is the whole point. Before this fold the wrapped
+    // 57014 escaped runEnrichPhase to runWithPool's outer catch, which sets status=FAILED
+    // and an error_message but builds NO records_meta and NO audit_table at all: the one
+    // run the deadline fired on was the one run whose own record said nothing about why.
+    const res = await stepLib.runEnrichPhase(args as never) as Record<string, unknown>;
+    const d = res.phaseDeadline as { phase: string; txn: string; elapsedMs: number; boundMinutes: number; message: string };
+    expect(d, 'the abort must be returned, not thrown').toBeTruthy();
+    expect(d.phase).toBe('existing_structure');
+    expect(d.txn).toBe('shared');
+    expect(d.elapsedMs).toBeGreaterThan(0);
+    expect(d.message).toMatch(/aborted by phase_deadline after \d+ms \(declared bound 0\.002min\)/);
+    // The post_commit phase is skipped — the shared txn rolled back, so pass 5 would be
+    // recomputing against columns that no longer hold the work it derives from.
+    expect(passLog.map((p) => p.name)).toEqual(['zoning', 'max_build', 'existing_structure']);
+    // ...and `matched` is still built, so the step-start retirement's OWN counters — all
+    // three `when:"post"` checks — still reach the audit table on the FAIL path. A killed
+    // run records what it retired; that is the only reason the retirement was moved to
+    // step start in the first place, and it would be undone if the abort path dropped the
+    // counts. (Idempotency/Integration fold, 2026-09-15.)
+    expect(res.matched).toMatchObject({
+      scope_backlog_at_step_start: 0,
+      scope_retired_rows: 0,
+      scope_retired_cohorts: 0,
+    });
+    // The two flags that would NARROW `onlyChecks` away from `when:"post"` in runWithPool
+    // (§ the enrich branch of the runner dispatch) are both false on this path — which is
+    // what actually keeps those three rows scoreable. If a future change routes the
+    // deadline through `writeSkipped`, the counts silently stop being recorded.
+    expect(res.writeSkipped, 'a narrowed run would drop every when:"post" row, retirement counts included').toBe(false);
+    expect(res.deferred).toBe(false);
+    // The row itself: one errored FAIL row, source 'gate' — the POST-B1-1 idiom, so the
+    // row-derived cascade (never a parallel boolean) produces the FAIL verdict.
+    const rows = stepLib.phaseDeadlineRows([res]);
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toMatchObject({ metric: 'phase_deadline', status: 'FAIL', source: 'gate', errored: true });
+    expect(rows[0]!.value).toMatch(/existing_structure \(shared\) aborted after \d+ms/);
+    expect(rows[0]!.threshold).toMatch(/declared 0\.002min bound/);
+    // Both directions: a healthy run adds NO row, so a clean audit table is unchanged.
+    expect(stepLib.phaseDeadlineRows([{ phaseDeadline: null }])).toEqual([]);
+  });
+
+  it('(Observability fold) EP-PHASE-DEADLINE — the post_commit phase (optimal_config, the phase cloud run 4911 actually died in) is armed too, with the same re-arm and the same loud row', async () => {
+    const passLog: Array<{ name: string; txn: string }> = [];
+    const pool = fakePool();
+    const compute = fakeCompute(passLog, {
+      passImpl: {
+        optimal_config: async (client: unknown) => {
+          const c = client as { query: (t: string, v?: unknown[]) => Promise<unknown> };
+          await c.query('SELECT 1 /* batch A */');
+          await statementTaking(pool, 80);
+          await c.query('SELECT 1 /* batch B */');
+          await statementTaking(pool, 80);
+          return { scoped: 0, updated: 0, updatedIds: [] };
+        },
+      },
+    });
+    const args = baseArgs(fixtureDescriptor(), pool, compute);
+    // Pass 5's OWN declared bound (enrich_parcels_pass5_timeout_minutes in production) —
+    // its session-level SET statement_timeout is still PER STATEMENT over a batched loop,
+    // so it bounds one batch, never the pass. 120ms here.
+    (args.config as Record<string, unknown>).fixture_pass5_timeout_minutes = 0.002;
+    const res = await stepLib.runEnrichPhase(args as never) as Record<string, unknown>;
+    const d = res.phaseDeadline as { phase: string; txn: string };
+    expect(d, 'the post_commit phase must be deadlined too').toBeTruthy();
+    expect(d.phase).toBe('optimal_config');
+    expect(d.txn).toBe('post_commit');
+    expect(pool.cancels).toContain(4242);
+    // All four shared phases completed first — the deadline is per phase, and pass 5's
+    // own bound is a different config key from theirs.
+    expect(passLog.map((p) => p.name)).toEqual(['zoning', 'max_build', 'existing_structure', 'comparable_builds', 'optimal_config']);
+  });
+
+  it('EP-PASS3-BACKLOG — the stale-cohort retirement runs at STEP START, before the shared transaction opens (never at the end of pass 5, where a killed run never reaches it), and its counts reach the audit observations', async () => {
+    const passLog: Array<{ name: string; txn: string }> = [];
+    const pool = fakePool();
+    let sqlLenAtRetire = -1;
+    let retireOpts: Record<string, unknown> | null = null;
+    const compute = fakeCompute(passLog, {
+      retireStaleScope: async (_client: unknown, o: Record<string, unknown>) => {
+        sqlLenAtRetire = pool.sql.length;
+        retireOpts = o;
+        return { backlog_rows: 886046, backlog_cohorts: 2, retired_rows: 443023, retired_cohorts: 1 };
+      },
+    });
+    const res = await stepLib.runEnrichPhase(baseArgs(fixtureDescriptor(), pool, compute) as never);
+    expect(sqlLenAtRetire, 'retireStaleScope must have been called').toBeGreaterThanOrEqual(0);
+    const beginIndex = pool.sql.indexOf('BEGIN');
+    expect(beginIndex, 'the shared transaction must have opened').toBeGreaterThanOrEqual(0);
+    expect(sqlLenAtRetire, 'the retirement runs BEFORE the shared txn BEGIN — autocommit, its own statement').toBeLessThanOrEqual(beginIndex);
+    // The retention window is the admin logic variable, never a literal (Spec 124 Rule 3).
+    expect(retireOpts!.retireAfterHours).toBe(24);
+    // A 443,023-row DELETE must be LOUD — three row-derived counters, never a silent DELETE.
+    expect(res.matched.scope_backlog_at_step_start).toBe(886046);
+    expect(res.matched.scope_retired_rows).toBe(443023);
+    expect(res.matched.scope_retired_cohorts).toBe(1);
+  });
+
+  it('EP-PASS3-BACKLOG — a retirement failure is hygiene, not the run\'s purpose: it is logged and the step CONTINUES (fail-open on the guard, never fail-open on the phase)', async () => {
+    const passLog: Array<{ name: string; txn: string }> = [];
+    const pool = fakePool();
+    const errors: string[] = [];
+    const compute = fakeCompute(passLog, {
+      retireStaleScope: async () => { throw new Error('scope retire boom'); },
+    });
+    const args = baseArgs(fixtureDescriptor(), pool, compute);
+    args.log = { info: () => {}, warn: () => {}, error: (_t: string, m: string) => { errors.push(m); } } as never;
+    const res = await stepLib.runEnrichPhase(args as never) as Record<string, unknown>;
+    expect(passLog.map((p) => p.name)).toEqual(['zoning', 'max_build', 'existing_structure', 'comparable_builds', 'optimal_config']);
+    expect(errors.join(' ')).toMatch(/scope retire boom/);
+    // Null, never 0 — "the retirement did not run" and "the retirement retired nothing"
+    // are different states and must not render identically in the audit table.
+    expect(res.matched).toMatchObject({ scope_retired_rows: null, scope_backlog_at_step_start: null });
+    // (Observability fold) A LOG LINE IS NOT OBSERVABILITY. The failure carries onto the
+    // audit table as its own errored row — WARN, not FAIL, because the retirement is
+    // fail-open hygiene by an authorized plan ruling and may not halt the run; `errored`
+    // all the same, because the instrument THREW rather than measured, which is exactly
+    // the distinction override.accept_anomaly must not be allowed to blur.
+    const rows = stepLib.scopeRetireFailureRows([res]);
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toMatchObject({ metric: 'scope_retire_failed', status: 'WARN', source: 'gate', errored: true });
+    expect(rows[0]!.value).toMatch(/scope retirement errored: scope retire boom/);
+    expect(stepLib.scopeRetireFailureRows([{ scopeRetireError: null }]), 'no row on a healthy run').toEqual([]);
+  });
+
+  it('(Observability fold) EP-PASS3-BACKLOG — when the retirement threw, scope_backlog_at_step_start is left UNREPORTED so it resolves to its DECLARED severity (WARN, "not reported by compute"), never to a PASS built on a measurement that never happened', () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports -- the real CJS compute
+    const ep = require(path.join(REPO_ROOT, 'scripts/lib/compute/enrich-parcels.js')) as {
+      checks: Record<string, (ctx: Record<string, unknown>) => void>;
+    };
+    const reported: Array<[string, unknown]> = [];
+    const ctx = (matched: Record<string, unknown>) => ({ matched, report: (id: string, o: unknown) => reported.push([id, o]) });
+
+    // Retirement threw => the counter is null => NOTHING is reported. checkRow then renders
+    // "not reported by compute" at the check's declared severity (WARN). Reporting
+    // {violations: 0} would render PASS off a number nobody took; reporting {error} would
+    // hit this step's on_check_error:"fail_step" (severity-INDEPENDENT, POST-B1-1) and HALT
+    // the run, contradicting the fail-open ruling — so neither is used.
+    ep.checks.scope_backlog_at_step_start!(ctx({ scope_backlog_at_step_start: null }) as never);
+    expect(reported, 'a failed instrument reports NOTHING, so it can never read PASS').toEqual([]);
+
+    // The healthy direction, so the skip above is not simply always-on.
+    ep.checks.scope_backlog_at_step_start!(ctx({ scope_backlog_at_step_start: 886046 }) as never);
+    expect(reported).toEqual([['scope_backlog_at_step_start', { violations: 886046, detail: 886046 }]]);
+  });
+
+  it('(Observability fold) EP-PASS3-BACKLOG — the retention WINDOW and the CUTOFF timestamp travel on the retirement rows themselves, so a reader of the audit table can tell "nothing was old enough" from "the window is misconfigured"', () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports -- the real CJS compute
+    const ep = require(path.join(REPO_ROOT, 'scripts/lib/compute/enrich-parcels.js')) as {
+      checks: Record<string, (ctx: Record<string, unknown>) => void>;
+    };
+    const reported: Array<[string, { violations: number; detail: unknown }]> = [];
+    const matched = {
+      scope_retired_rows: 0,
+      scope_retired_cohorts: 0,
+      scope_retire_window: { hours: 24, cutoff_at: new Date('2026-09-14T18:10:00.000Z') },
+    };
+    const ctx = { matched, report: (id: string, o: { violations: number; detail: unknown }) => reported.push([id, o]) };
+    ep.checks.scope_retired_rows!(ctx as never);
+    ep.checks.scope_retired_cohorts!(ctx as never);
+    expect(reported.map(([, o]) => o.detail)).toEqual([
+      '0 (window 24h, cutoff 2026-09-14T18:10:00.000Z)',
+      '0 (window 24h, cutoff 2026-09-14T18:10:00.000Z)',
+    ]);
   });
 
   // RETARGETED from src/tests/enrich-parcels-stall-hardening.logic.test.ts (retired, pilot 9

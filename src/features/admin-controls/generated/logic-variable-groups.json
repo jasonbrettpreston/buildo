@@ -326,6 +326,7 @@
       "enrich_parcels_pass5_timeout_minutes",
       "enrich_parcels_defer_threshold_rows",
       "enrich_parcels_scope_recovery_batch_size",
+      "enrich_parcels_scope_retire_after_hours",
       "step_post_check_statement_timeout_minutes",
       "step_post_check_concurrency",
       "parcels_maintenance_timeout_minutes"

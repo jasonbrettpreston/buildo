@@ -1720,6 +1720,116 @@ async function countScopeRows(client, whereSql) {
   return rows[0].n;
 }
 
+// ===========================================================================
+// EP-PASS3-BACKLOG (WF3, .cursor/wf3_enrich_parcels_pass3_backlog_active_task.md C1,
+// 2026-09-15) — the step-start stale-cohort floor under enrich_parcels_pass3_scope.
+// ===========================================================================
+
+/**
+ * Retire UNCONSUMED scope rows left behind by runs that never reached pass 5.
+ *
+ * THE RULING THIS EXECUTES IS ALREADY MADE — it is not re-litigated here.
+ * `scripts/one-time/wf3-prune-pass3-scope.js` (EP-D14, run once by hand on 2026-09-09)
+ * carries it in full: under `--full` (the only live cloud invocation) an unconsumed row
+ * belonging to a terminal prior run is **stale, not pending recovery**. Either the parcel is
+ * no longer eligible — the next `--full`'s own hand-off INSERT will not re-spool it — or it
+ * is still eligible, in which case the next `--full`'s own stream recomputes it in the same
+ * invocation. Neither case needs the stale row; deleting it is byte-identical to the legacy
+ * per-parcel loop's output, and the one-off's own header records that "nothing here is
+ * load-bearing to preserve". What was missing was only that NOTHING DID IT AUTOMATICALLY:
+ * the one-off runs when a human notices, so the backlog was unbounded between incidents.
+ * This makes the existing ruling ROUTINE. The one-off script stays — it is the operator's
+ * incident tool and its dated backup/restore path has no equivalent here, deliberately.
+ *
+ * FENCES (Regression Guardian §3), each knowingly preserved:
+ *  1. `run_id <> $1` — THIS run's own cohort is never touched, so the `errorIds` carve-out
+ *     (`parcel_id <> ALL($3::int[])` at :1509/:1684, the marker that lets a future run
+ *     genuinely retry a parcel whose engine threw in this run's stream) is untouched by
+ *     construction rather than by a second, parallel exclusion list.
+ *  2. The one-off's F3 refusal, encoded in SQL instead of in a human's head: retire nothing
+ *     while ANY OTHER `enrich_parcels` invocation shows `running`. `r.id <> $3` is
+ *     LOAD-BEARING — this step's own `pipeline_runs` row reads `running` for its entire
+ *     lifetime, so without the exclusion the guard would always block and this whole
+ *     function would be dead code. (Operator ruling 2026-09-15, plan Q4: a row stuck
+ *     `running` for hours is NOT auto-closed here. A hygiene DELETE must not be the thing
+ *     that decides a run is dead — that is the §3b reaper's job, filed separately. The
+ *     consequence is accepted and honest: while a stranded row exists, retirement is
+ *     blocked and `scope_retired_rows` reads 0 with the backlog still reported.)
+ *  3. Disjoint from the EP-D10 end-of-pass-5 prune by predicate: that one is
+ *     `consumed_at IS NOT NULL`, this one is `consumed_at IS NULL`. No overlap, no
+ *     double-count, both directions locked in enrich-parcels-optconfig.logic.test.ts.
+ *
+ * The age cutoff is derived IN SQL from two bound parameters — the runner's injected DB clock
+ * (`pipeline.getDbTimestamp`) minus the tunable — never with `new Date(...)` here (Rule 2 /
+ * §5.5's compute-no-wall-clock rule: compute stays JUST compute, the clock is the runner's),
+ * and never as a `now() - interval '24 hours'` SQL literal: the
+ * window is an admin logic variable (`enrich_parcels_scope_retire_after_hours`, Rule 3 —
+ * nothing hidden), and a literal would make the tunable inert. Note `created_at DEFAULT
+ * now()` returns the TRANSACTION start timestamp and the hand-off INSERT runs inside the
+ * shared txn, so this clock dates the shared txn's BEGIN, not the insert — still a usable
+ * clock for a 24 h window (a `--full` run is ~3.5-5 h end to end), but it is the txn clock.
+ *
+ * @param {import('pg').Pool|import('pg').PoolClient} client - autocommit; NOT inside the shared txn
+ * @param {{runId: number, ownRunId: number|null, retireAfterHours: number, now: Date}} opts
+ * @returns {Promise<{backlog_rows: number, backlog_cohorts: number, retired_rows: number, retired_cohorts: number}>}
+ */
+async function retireStaleScope(client, opts) {
+  const { runId, ownRunId = null, retireAfterHours, now } = opts || {};
+  if (!Number.isFinite(retireAfterHours) || retireAfterHours <= 0) {
+    throw new Error(`${TAG} retireStaleScope: retention window must be a positive finite number of hours, got ${retireAfterHours} — check enrich_parcels_scope_retire_after_hours in logic_variables`);
+  }
+  if (!(now instanceof Date) || Number.isNaN(now.getTime())) {
+    throw new Error(`${TAG} retireStaleScope: opts.now must be the runner's DB clock (pipeline.getDbTimestamp), got ${String(now)}`);
+  }
+  // Observed BEFORE the DELETE, so the audit rows reconcile:
+  // retired + surviving = backlog_at_step_start (Reality-Check §4 invariant).
+  // The cutoff is returned BY THE DATABASE (derived from the injected clock and the
+  // tunable, the same two parameters the DELETE below uses) so the window that was actually
+  // in force travels onto the audit table with the counts — a reader of the rows alone can
+  // then tell a 0 that means "nothing was old enough" from a 0 that means "the window is
+  // misconfigured". Never re-derived in JS, which would be a second source of truth.
+  const observed = await client.query(
+    `SELECT count(*)::int AS backlog_rows, count(DISTINCT run_id)::int AS backlog_cohorts,
+            ($1::timestamptz - ($2::numeric * interval '1 hour')) AS cutoff_at
+       FROM enrich_parcels_pass3_scope WHERE consumed_at IS NULL`,
+    [now, retireAfterHours],
+  );
+  // ONE statement: the guard, the age bound and the counting all commit or none do, so a
+  // run that dies mid-retirement can never leave a half-retired cohort (idempotent on
+  // replay — a second call simply matches nothing).
+  //
+  // The cutoff is DERIVED IN SQL from two bound parameters — the runner's injected clock
+  // ($2, `pipeline.getDbTimestamp`) minus the tunable ($4) — rather than computed here with
+  // `new Date(...)`: compute stays JUST compute (Rule 2, §5.5's compute-no-wall-clock rule,
+  // enforced by step-conformance.infra.test.ts), and a bare `now() - interval '24 hours'`
+  // literal would make the admin logic variable inert (Rule 3, nothing hidden). Both halves
+  // arrive as parameters; neither is a literal and neither is read from this process's clock.
+  const retired = await client.query(
+    `WITH victims AS (
+       DELETE FROM enrich_parcels_pass3_scope s
+        WHERE s.consumed_at IS NULL
+          AND s.run_id <> $1
+          AND s.created_at < ($2::timestamptz - ($4::numeric * interval '1 hour'))
+          AND NOT EXISTS (
+            SELECT 1 FROM pipeline_runs r
+             WHERE r.status = 'running'
+               AND r.pipeline LIKE '%enrich_parcels'
+               AND ($3::bigint IS NULL OR r.id <> $3))
+       RETURNING s.run_id
+     )
+     SELECT count(*)::int AS retired_rows, count(DISTINCT run_id)::int AS retired_cohorts FROM victims`,
+    [runId, now, ownRunId, retireAfterHours],
+  );
+  return {
+    backlog_rows: observed.rows[0].backlog_rows,
+    backlog_cohorts: observed.rows[0].backlog_cohorts,
+    retired_rows: retired.rows[0].retired_rows,
+    retired_cohorts: retired.rows[0].retired_cohorts,
+    retire_after_hours: retireAfterHours,
+    cutoff_at: observed.rows[0].cutoff_at,
+  };
+}
+
 async function countUnconsumedBacklog(client) {
   const { rows } = await client.query(
     `SELECT count(DISTINCT parcel_id)::int AS n FROM enrich_parcels_pass3_scope WHERE consumed_at IS NULL`,
@@ -1796,6 +1906,44 @@ function opt_aor_without_max_gfa(ctx) {
  *  IS the assertion; there is no runtime metric to additionally report here. */
 function pass5_post_commit_read_order(ctx) {
   ctx.report('pass5_post_commit_read_order', { violations: 0, detail: 'post_commit — see checks[].order_guarantee' });
+}
+
+// EP-PASS3-BACKLOG (WF3 C1, 2026-09-15) — three checks observing the step-start retirement.
+// Row-derived straight off retireStaleScope's own counts; NULL is passed THROUGH, never
+// coerced to 0 with `|| 0` the way every counter above does, because "the retirement did not
+// run" and "the retirement retired nothing" are different states (Spec 48 §3.6 — the NULL-is-
+// not-zero clause this WF3 added).
+function scope_backlog_at_step_start(ctx) {
+  const n = ctx.matched.scope_backlog_at_step_start;
+  // Observability fold (2026-09-15) — DELIBERATELY UNREPORTED when the retirement threw.
+  // `checkRow` renders an unreported check as "not reported by compute" at its DECLARED
+  // severity (WARN here), which is the honest reading: the instrument did not run, so
+  // there is no measurement. Reporting `{violations: 0}` would have rendered PASS off a
+  // number that was never taken; reporting `{error}` would hit this step's
+  // `on_check_error: "fail_step"` and HALT the run, contradicting the authorized
+  // fail-open ruling for the retirement. The failure itself is not lost — it gets its own
+  // errored WARN row (§scopeRetireFailureRows, scripts/lib/step/index.js).
+  if (n == null) return;
+  ctx.report('scope_backlog_at_step_start', { violations: n, detail: n });
+}
+
+function retireWindowSuffix(ctx) {
+  const w = ctx.matched.scope_retire_window || {};
+  if (w.hours == null) return '';
+  const cutoff = w.cutoff_at instanceof Date ? w.cutoff_at.toISOString() : String(w.cutoff_at);
+  return ` (window ${w.hours}h, cutoff ${cutoff})`;
+}
+
+function scope_retired_rows(ctx) {
+  const n = ctx.matched.scope_retired_rows;
+  // The WINDOW travels with the COUNT, on the row itself — otherwise a reader of the audit
+  // table cannot distinguish "nothing was old enough" from "the window is misconfigured".
+  ctx.report('scope_retired_rows', { violations: 0, detail: n == null ? null : `${n}${retireWindowSuffix(ctx)}` });
+}
+
+function scope_retired_cohorts(ctx) {
+  const n = ctx.matched.scope_retired_cohorts;
+  ctx.report('scope_retired_cohorts', { violations: 0, detail: n == null ? null : `${n}${retireWindowSuffix(ctx)}` });
 }
 
 // EP-D14 (WF3 C1) — four checks observing the rewritten consumePendingScope.
@@ -1941,6 +2089,9 @@ const CHECKS = {
   opt_aor_envelope_capped_count,
   opt_config_citywide_fallback_count,
   enrich_parcels_duration_ms,
+  scope_backlog_at_step_start,
+  scope_retired_rows,
+  scope_retired_cohorts,
   pending_scope_parcels,
   scope_recovery_recovered_count,
   scope_recovery_batches,
@@ -2057,6 +2208,8 @@ Object.assign(module.exports, {
   flushOptConfigBatch,
   consumePendingScope,
   runPass5,
+  // scope hygiene (EP-PASS3-BACKLOG)
+  retireStaleScope,
   // defer scope
   countScopeRows,
   countUnconsumedBacklog,

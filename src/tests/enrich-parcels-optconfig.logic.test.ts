@@ -7,6 +7,8 @@
 //  - the write-column list + the select SQL shape (scopeWhere, citywide CROSS JOIN, eligibility gate)
 
 import { describe, expect, it } from 'vitest';
+import fs from 'fs';
+import path from 'path';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const ep = require('../../scripts/lib/compute/enrich-parcels.js');
@@ -229,3 +231,137 @@ describe('D#5 — computeAggregateRecordsUpdated (distinct-parcels-touched, NOT 
 //     "recordHeartbeat / captureStallDiagnostic / startStallTicker (LG-28, fake pool)" block, and
 //     the LOUD 57014/55P03 rethrow + heartbeat-issued-per-shared-phase behaviours are proven
 //     against the real runEnrichPhase in src/tests/steps/enrich_parcels/violations.test.ts.
+
+// ---------------------------------------------------------------------------
+// EP-PASS3-BACKLOG (WF3, .cursor/wf3_enrich_parcels_pass3_backlog_active_task.md C1,
+// 2026-09-15) — `enrich_parcels_pass3_scope` had no expiry. Both the own-run stamp and the
+// EP-D10 prune are the LAST things pass 5 does, so a run killed INSIDE pass 5 adds a full
+// ~443,023-row cohort that no later run ever retires: measured on cloud 2026-09-15,
+// 886,046 rows across 2 cohorts, 100% unconsumed, nothing ever consumed. `retireStaleScope`
+// puts a floor under that, at STEP START, applying the ruling EP-D14's own one-off
+// (`scripts/one-time/wf3-prune-pass3-scope.js`) already made and a human already executed
+// once by hand — an unconsumed row from a terminal prior run is STALE, not pending
+// recovery, and deleting it is byte-identical to the legacy per-parcel loop's output.
+//
+// Fences preserved (Regression Guardian §3, stated for each):
+//   1. `run_id <> $1` — THIS run's own rows (including a parcel that threw in THIS run's
+//      own stream, the `errorIds` fence at enrich-parcels.js:1509/1684) are NEVER touched.
+//   2. The F3 refusal of the one-off script — retirement is skipped outright while ANY
+//      OTHER `enrich_parcels` `pipeline_runs` row reads `running`. Encoded in SQL rather
+//      than in a human's head; `r.id <> ownRunId` is load-bearing, because THIS run's own
+//      ledger row is itself `running` for its entire lifetime.
+//   3. The EP-D10 end-of-pass-5 prune (`consumed_at IS NOT NULL`) is untouched and cannot
+//      double-count: this DELETE is `consumed_at IS NULL`-only — the two are disjoint.
+// ---------------------------------------------------------------------------
+describe('retireStaleScope (EP-PASS3-BACKLOG) — the step-start stale-cohort floor', () => {
+  interface FakeClientOpts { liveEnrichRun?: boolean; backlogRows?: number; backlogCohorts?: number }
+
+  /**
+   * Models the DELETE's own `NOT EXISTS` guard in JS so the predicate is proven, not
+   * merely grepped: the fixture decides whether a live foreign `enrich_parcels` run
+   * exists and answers the single retirement statement accordingly.
+   */
+  function fakeClient(opts: FakeClientOpts = {}) {
+    const sql: string[] = [];
+    const params: unknown[][] = [];
+    const cohort = { rows: opts.backlogRows ?? 443023, cohorts: opts.backlogCohorts ?? 1 };
+    return {
+      sql,
+      params,
+      query: async (text: string, values?: unknown[]) => {
+        sql.push(text);
+        params.push(values ?? []);
+        if (/backlog_rows/.test(text)) {
+          return { rows: [{ backlog_rows: cohort.rows, backlog_cohorts: cohort.cohorts }] };
+        }
+        if (/DELETE FROM enrich_parcels_pass3_scope/.test(text)) {
+          const blocked = opts.liveEnrichRun === true;
+          return { rows: [{ retired_rows: blocked ? 0 : cohort.rows, retired_cohorts: blocked ? 0 : cohort.cohorts }] };
+        }
+        return { rows: [] };
+      },
+    };
+  }
+
+  const baseOpts = { runId: 1789480558, ownRunId: 4911, retireAfterHours: 24, now: new Date('2026-09-15T18:10:00.000Z') };
+
+  it('(a) a foreign unconsumed cohort older than the tunable, with NO live enrich_parcels run, is retired — and the counts are row-derived, never inferred', async () => {
+    const client = fakeClient({ liveEnrichRun: false });
+    const res = await ep.retireStaleScope(client, baseOpts);
+    expect(res.retired_rows).toBe(443023);
+    expect(res.retired_cohorts).toBe(1);
+    // §4 Reality-Check reconciliation: the pre-DELETE observation is taken FIRST, so
+    // `retired + surviving = backlog_at_start` is checkable from the audit rows alone.
+    expect(res.backlog_rows).toBe(443023);
+    const del = client.sql.find((s) => /DELETE FROM enrich_parcels_pass3_scope/.test(s))!;
+    expect(del, 'the DELETE must be issued').toBeTruthy();
+    // Fence 1 — this run's own rows are excluded by run_id, unconditionally.
+    expect(del).toMatch(/run_id\s*<>\s*\$1/);
+    // Fence 3 — unconsumed-only; the EP-D10 prune owns the consumed half.
+    expect(del).toMatch(/consumed_at IS NULL/);
+    expect(del).not.toMatch(/consumed_at IS NOT NULL/);
+    // The age bound is derived in SQL from TWO BOUND PARAMETERS — the runner's injected DB
+    // clock minus the tunable. Never `new Date(...)` in compute (Rule 2 / §5.5's
+    // compute-no-wall-clock rule, enforced by step-conformance.infra.test.ts), and never a
+    // `now() - interval '24 hours'` literal, which would make the admin logic variable inert
+    // (Rule 3). Both halves must be parameters; neither may be a literal.
+    expect(del).toMatch(/created_at\s*<\s*\(\$2::timestamptz\s*-\s*\(\$4::numeric\s*\*\s*interval '1 hour'\)\)/);
+    expect(del, 'no bare now() — the clock is injected, never read inside compute').not.toMatch(/\bnow\(\)/);
+    // The ONLY interval literal permitted is the unit multiplier `interval '1 hour'`; a
+    // literal window (`interval '24 hours'`) would make the admin logic variable inert.
+    expect(del.match(/interval '[^']*'/g), 'the only interval literal may be the unit multiplier').toEqual(["interval '1 hour'"]);
+    const delParams = client.params[client.sql.indexOf(del)]!;
+    expect(delParams[0]).toBe(1789480558);
+    expect(delParams[1], 'the injected DB clock, passed through verbatim').toEqual(new Date('2026-09-15T18:10:00.000Z'));
+    expect(delParams[2]).toBe(4911);
+    expect(delParams[3], 'the tunable, as a bound parameter').toBe(24);
+  });
+
+  it('(b) the SAME cohort with a live foreign enrich_parcels running row retires ZERO rows — the one-off script F3 refusal, encoded in SQL', async () => {
+    const client = fakeClient({ liveEnrichRun: true });
+    const res = await ep.retireStaleScope(client, baseOpts);
+    expect(res.retired_rows).toBe(0);
+    expect(res.retired_cohorts).toBe(0);
+    // The backlog is still OBSERVED (and therefore still reported) even when nothing is
+    // retired — a blocked retirement must not also blind the run to the backlog.
+    expect(res.backlog_rows).toBe(443023);
+    const del = client.sql.find((s) => /DELETE FROM enrich_parcels_pass3_scope/.test(s))!;
+    expect(del).toMatch(/NOT EXISTS/);
+    expect(del).toMatch(/pipeline_runs/);
+    expect(del).toMatch(/status\s*=\s*'running'/);
+    // Fence 2's load-bearing half: THIS run's own ledger row reads `running` for its whole
+    // lifetime, so without this exclusion the guard would ALWAYS block and the retirement
+    // would be dead code that no test not modelling the ledger could ever catch.
+    expect(del, 'the guard must exclude the running step OWN ledger row').toMatch(/r\.id\s*<>\s*\$3/);
+  });
+
+  it('(c) the window reaches the DELETE as the TUNABLE\'s own value, so a cohort YOUNGER than it cannot match — 12 h binds 12, not the 24 h default', async () => {
+    const client = fakeClient();
+    await ep.retireStaleScope(client, { ...baseOpts, retireAfterHours: 12 });
+    const idx = client.sql.findIndex((s) => /DELETE FROM enrich_parcels_pass3_scope/.test(s));
+    expect(client.params[idx]![3]).toBe(12);
+    expect(client.params[idx]![1], 'the clock half is unchanged — only the window moved').toEqual(new Date('2026-09-15T18:10:00.000Z'));
+  });
+
+  it('(g) an absent/invalid retention window THROWS, naming the logic variable (LM-D15 — a declared var with no row is a hard stop, never a silent default)', async () => {
+    const client = fakeClient();
+    await expect(ep.retireStaleScope(client, { ...baseOpts, retireAfterHours: undefined }))
+      .rejects.toThrow(/enrich_parcels_scope_retire_after_hours/);
+    await expect(ep.retireStaleScope(client, { ...baseOpts, retireAfterHours: 0 }))
+      .rejects.toThrow(/enrich_parcels_scope_retire_after_hours/);
+    expect(client.sql.some((s) => /DELETE/.test(s)), 'nothing may be deleted on a bad window').toBe(false);
+  });
+
+  it('RED against monotonic growth — the retirement is the ONLY mechanism that removes an unconsumed row; the EP-D10 prune (consumed_at IS NOT NULL) provably cannot reach one', async () => {
+    const client = fakeClient();
+    await ep.retireStaleScope(client, baseOpts);
+    const del = client.sql.find((s) => /DELETE FROM enrich_parcels_pass3_scope/.test(s))!;
+    // The two DELETEs partition the table on `consumed_at` — proven by predicate, not prose.
+    expect(/consumed_at IS NULL/.test(del) && !/consumed_at IS NOT NULL/.test(del)).toBe(true);
+    const epSrc = fs.readFileSync(path.join(__dirname, '../../scripts/lib/compute/enrich-parcels.js'), 'utf8');
+    const deletes = epSrc.split('DELETE FROM enrich_parcels_pass3_scope').slice(1).map((s) => s.slice(0, 200));
+    expect(deletes.length, 'exactly two DELETEs against the scope table: the EP-D10 consumed prune and this retirement').toBe(2);
+    expect(deletes.filter((d) => /consumed_at IS NOT NULL/.test(d)).length, 'the EP-D10 prune reaches ONLY consumed rows').toBe(1);
+    expect(deletes.filter((d) => /consumed_at IS NULL/.test(d) && !/consumed_at IS NOT NULL/.test(d)).length, 'the retirement reaches ONLY unconsumed rows').toBe(1);
+  });
+});

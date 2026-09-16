@@ -4387,6 +4387,16 @@
       "group": "Source Ingestion"
     }
   },
+  "enrich_parcels_scope_retire_after_hours": {
+    "default": 24,
+    "type": "number",
+    "min": 1,
+    "max": 720,
+    "description": "WF3 EP-PASS3-BACKLOG (2026-09-15, .cursor/wf3_enrich_parcels_pass3_backlog_active_task.md C1). Retention window for UNCONSUMED enrich_parcels_pass3_scope rows belonging to a PRIOR run. At step start (before the shared transaction opens) enrich_parcels DELETEs foreign unconsumed rows whose created_at is older than this many hours, and only while no OTHER enrich_parcels invocation shows status='running' (the one-off prune script's F3 guard, encoded in SQL). 24 h chosen because a --full chain-sources run is ~3.5-5 h: 24 h clears yesterday's corpse before today's dispatch and cannot touch a same-day run. Note created_at DEFAULT now() returns the TRANSACTION start timestamp and the hand-off INSERT runs inside the shared txn, so this window is measured from the shared txn's BEGIN. Cloud-measured 2026-09-15: 886,046 rows across 2 cohorts, 100% unconsumed, because both the stamp and the EP-D10 prune are the LAST things pass 5 does and neither killed run reached them. CONSUMED by scripts/lib/compute/enrich-parcels.js retireStaleScope, via scripts/lib/step/index.js runEnrichPhase.",
+    "admin": {
+      "group": "Source Ingestion"
+    }
+  },
   "enrich_parcels_pending_scope_warn_max": {
     "default": 50000,
     "type": "number",

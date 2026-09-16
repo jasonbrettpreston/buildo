@@ -185,6 +185,48 @@ the INFO counter still emits as `value: 0`. Removing the row when value is zero 
 common observability anti-pattern — it makes "ledger pathway healthy with no work" and
 "ledger pathway broken" indistinguishable.
 
+**NULL is not zero, and the distinction is load-bearing** _(NEW 2026-09-15 — WF3
+EP-PASS3-BACKLOG)_. The rule above says an INFO counter emits `value: 0` rather than
+disappearing. It does **not** license writing `0` for an instrument that did not run. A
+counter whose producing operation was skipped or threw emits `null`: "the retirement did not
+run" and "the retirement retired nothing" are different states with different remedies, and
+collapsing them into `0` reproduces exactly the indistinguishability the zero-row rule
+exists to prevent, one level up. `enrich_parcels`' `scope_retired_rows` is the worked
+example — `0` when the F3 live-run guard legitimately blocked the DELETE, `null` when the
+retirement itself failed and was logged and swallowed.
+
+#### The silent-timeout class: a per-statement bound is not a phase bound _(NEW 2026-09-15 — WF3 EP-PHASE-DEADLINE)_
+
+A declaration that reads as enforcement and enforces nothing is a §3.6 silence defect, not a
+documentation defect: the pipeline's own records say the work was bounded, and nothing bounded
+it. The canonical instance, measured on cloud chain-sources run 34971921328 (`main@824ef357`,
+2026-09-15):
+
+`execution.phases[].timeout_minutes_from_config` was executed as a Postgres
+`SET LOCAL statement_timeout`. Postgres **re-arms `statement_timeout` on every statement** —
+it never accumulates across a phase or a transaction. So a phase issuing N statements was
+bounded at `N × the declared value`, never at the declared value. `enrich_parcels`'
+`existing_structure` phase issues five statements against a declared 75-minute bound: an
+effective 375-minute ceiling. It ran 94 minutes. The timeout was never close to firing and
+was never *capable* of firing; the step died at the GitHub Actions 300-minute wall clock,
+which was the entire live enforcement stack. The code's own comment asserted the four
+shared-txn passes were "each a single set-based SQL statement", which is false for two of
+them and is very likely why the per-statement guard was believed to be a phase guard.
+
+**The rule.** `SET LOCAL statement_timeout` is a correct and real *per-statement* fence and is
+kept. A **phase** bound requires a wall-clock deadline that issues `pg_cancel_backend(pid)`
+from a **separate connection** — a JS `throw` from a timer cannot interrupt an in-flight
+`client.query`, so the statement would run to completion and the abort would arrive minutes
+late, which is observationally the same defect. The cancel surfaces as SQLSTATE 57014, the
+same code the existing loud wrapper already catches, so the abort names the phase, the kind
+(`phase_deadline`, distinguished from `statement_timeout` by whether the deadline fired) and
+the elapsed ms — no new error path, no parallel boolean.
+
+**The corollary, for every declared bound:** a declaration with no live executor must carry a
+disposition (Spec 124 §5 R-X / R-AJ), and a stop-mechanism ladder (Spec 118 §3) must tighten
+strictly inwards — CI wall clock > per-step ceiling > per-phase deadline. A ladder whose rungs
+invert has exactly one live rung, and it is the outermost one.
+
 ### 3.7 First-deploy spike pattern for new ledger writers _(NEW 2026-05-18 — Phase I.1 fold)_
 
 When a new Tier 3 ledger writer ships, the **first chain run after deploy** produces a

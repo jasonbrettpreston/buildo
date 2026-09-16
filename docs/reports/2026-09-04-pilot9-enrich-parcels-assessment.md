@@ -912,10 +912,10 @@ byte-identical, 0 unexplained).
 | G4 | 2 | 2 | risk-class row with chance+impact found=true |
 | G5 | 1 | 1 | db=true clock=true network=true argv/env=true |
 | G6 | 3 | 3 | 18 ledger row(s), 0 without CLOSED/PIN () |
-| G7 | 3 | 3 | file=true fences=3 it-count=71 RED-evidence=true |
+| G7 | 3 | 3 | file=true fences=3 it-count=81 RED-evidence=true |
 | G8 | 3 | 3 | missing-invocations=0 missing-pre-invocations=0 stale-fingerprints=0 unexplained-diffs=0 |
 | G9 (binary) | PASS | — | heading=true low-confidence-table=true recurring-table=true |
-| G4d (fence<=lock) | PASS | — | fences=3 lock-it-count=71 |
+| G4d (fence<=lock) | PASS | — | fences=3 lock-it-count=81 |
 | G-shape | PASS | — | file-clean=true compute-clean=true |
 
 ### Fast invariants (always run — the fast descriptor gate)
@@ -923,10 +923,10 @@ byte-identical, 0 unexplained).
 | # | Scope | Pass | Detail |
 |---|---|---|---|
 | 1 | enrich_parcels | PASS | min_migration=237 <= migrations count=244 |
-| 2 | enrich_parcels | PASS | 44 declared, missing from seeds: none |
+| 2 | enrich_parcels | PASS | 45 declared, missing from seeds: none |
 | 3 | enrich_parcels | PASS | retired=0 overlap-with-declared=none |
 | 7 | enrich_parcels | PASS | SPEC LINK header present=true |
-| 8 | enrich_parcels | PASS | G-4: 44 declared, 3 verdict-affecting, 0 violate on_invalid:fail with no deviations[] cover |
+| 8 | enrich_parcels | PASS | G-4: 45 declared, 3 verdict-affecting, 0 violate on_invalid:fail with no deviations[] cover |
 | 20 | enrich_parcels | PASS | HB-1: runner=runEnrichPhase: runner-level token presence (MED-6, not a per-phase proof): source contains an onProgress seam token AND a startHeartbeatTicker( call token — the periodic ticker covers every phase uniformly by construction once present, independent of any single phase's own boundary, but ticker start/stop lifecycle is not independently verified here |
 | 21 | enrich_parcels | PASS | CEIL-1: runner=runEnrichPhase: runner-level token presence (MED-6, not a per-phase proof): source contains a SET LOCAL statement_timeout/lock_timeout token pair AND a postClient-scoped SET statement_timeout token (EP-D16) — the per-phase claim itself is filed as its own followup |
 | 4 | (registry) | PASS | overlap: none |
@@ -940,22 +940,18 @@ byte-identical, 0 unexplained).
 - missing invocations (POST): none
 - missing invocations (PRE, GOLD-PRE): none
 - stale fingerprints: none
-- compare ran: true · diffs found: 573 · unexplained: 0
+- compare ran: true · diffs found: 583 · unexplained: 0
 
 ### Test suite (item iii)
-- 1025/1025 passed (suite success=true)
-- harvested: 17 file(s) from 3 FLEET-WIDE targets (src/tests/step-conformance.infra.test.ts, src/tests/golden-fingerprint.infra.test.ts, src/tests/steps/) — one spawn per run, so every step's report carries this same number, by design
-- excluded (R-AG live-DB tier, owned by `npm run test:db`, derived from package.json `scripts.test`): 5 — src/tests/steps/link_massing/metamorphic.test.ts, src/tests/steps/link_massing/nearest-determinism.test.ts, src/tests/steps/link_massing/rung1-inline-wkt.test.ts, src/tests/steps/link_parcel_addresses/metamorphic.test.ts, src/tests/steps/link_parcel_addresses/rung1-inline-wkt.test.ts
-- skipped (declared but not run): 0
-- failing: none
+- SKIPPED or failed to run: --fast: vitest spawn skipped
 
 ### Policy coverage matrix (item vi) — Spec 124 Rules 1-13
 
 | Rule | Name | Status | Note |
 |---|---|---|---|
 | 1 | Nothing hidden | enforced-green | G-1 schema-baseline: schema-baseline clean |
-| 2 | Compute is just compute | enforced-green |  |
-| 3 | Tunables externalized | enforced-green | G-4: 44 declared, 3 verdict-affecting, 0 violate on_invalid:fail with no deviations[] cover |
+| 2 | Compute is just compute | enforced-green | §5.5 describe not scoped to this step in the vitest run |
+| 3 | Tunables externalized | enforced-green | G-4: 45 declared, 3 verdict-affecting, 0 violate on_invalid:fail with no deviations[] cover |
 | 4 | Compute rule declared | enforced-green | G-2: 5 preserved-in-compute row(s), 0 with no why/notes.json/checks[] grounding |
 | 5 | checks >= 1 | enforced-green |  |
 | 6 | Omission fails (20 categories) | enforced-green |  |
@@ -966,7 +962,7 @@ byte-identical, 0 unexplained).
 | 11 | Phase-order re-derive (declared half, checkOrderGuaranteesCited) | enforced-green | 2 when:"pre_write" check(s), 0 order_guarantee violation(s) — G-3 completeness half stays open |
 | 12 | Truthful crash posture (R-B reachability, static + R-M before-image) | enforced-green | R-B (checkInterruptedPostureTruthful): shape=enrich runner=runEnrichPhase: no staleness.ledgerGatedSkip/selectMode on this path (ENRICHER's own scope-defer archetype, Spec 122 §3.0b); calls staleness.detectInterruptedRetraction directly and folds interruptedRetraction.interrupted into the full/incremental decision before any pass runs · R-M: prose-only (R-M/LG-17 describe not scoped to this step (vitest not run, or no before-image target)) |
 | 13 | A step validates itself | enforced-green | this run of step:validate IS the mechanism |
-| P3 | I/O cost adjudication (measured, not gated) | measured | descriptor=78961B notes=11481B checks=28 rows records_meta=7654B (newest post/ capture) |
+| P3 | I/O cost adjudication (measured, not gated) | measured | descriptor=82109B notes=11481B checks=31 rows records_meta=8110B (newest post/ capture) |
 
 **Enforced-green: 13/14**
 

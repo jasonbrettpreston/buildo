@@ -2214,6 +2214,13 @@ async function captureStallDiagnostic(writer, runId, pid) {
  * @param {() => number|null} getPid
  * @returns {() => void}
  */
+/**
+ * EP-PHASE-DEADLINE (Guardian fold, 2026-09-15) — the CEILING on the phase deadline's
+ * cancel-retry cadence. See `startPhaseDeadline` for why a retry exists at all and why
+ * this is a derived constant rather than an admin logic variable.
+ */
+const PHASE_DEADLINE_RECANCEL_MS = 5000;
+
 function startStallTicker(writer, runId, intervalMs, getPid) {
   if (!intervalMs || intervalMs <= 0) return () => {};
   let fired = false;
@@ -2226,6 +2233,102 @@ function startStallTicker(writer, runId, intervalMs, getPid) {
   }, intervalMs * 2);
   if (typeof timer.unref === 'function') timer.unref();
   return () => clearInterval(timer);
+}
+
+/**
+ * EP-PHASE-DEADLINE (WF3, .cursor/wf3_enrich_parcels_pass3_backlog_active_task.md C2,
+ * 2026-09-15) — a WALL-CLOCK deadline for one PHASE, as opposed to the per-STATEMENT
+ * `SET LOCAL statement_timeout` the phase loop also issues (kept — it is a correct and
+ * real per-statement fence, just not a phase bound).
+ *
+ * WHY A CANCEL AND NOT A JS `throw`: a `throw` from a timer cannot interrupt an in-flight
+ * `client.query` — the statement would run to completion inside the shared transaction and
+ * the abort would arrive minutes late, which is indistinguishable from the defect being
+ * fixed. `pg_cancel_backend(pid)` is how Postgres is told: it aborts whatever statement the
+ * target backend has in flight with SQLSTATE **57014**, the SAME code the phase loop's
+ * existing loud wrapper already catches — so this adds NO new error path and NO new boolean.
+ *
+ * WHY CANCEL AND NOT TERMINATE (plan Q2, operator ruling 2026-09-15): `pg_cancel_backend`
+ * rolls the transaction back cleanly and leaves the pooled client recoverable;
+ * `pg_terminate_backend` destroys the connection mid-`withTransaction` with a far less
+ * predictable error shape. Rule 12's truthful-crash posture is satisfied either way by the
+ * loud, phase-named error the wrapper builds.
+ *
+ * WHY A SEPARATE CONNECTION: a cancel sent down the very session that is blocked could never
+ * be delivered. `cancelClient` is the caller's already-open, autocommit, held-for-the-whole-
+ * call heartbeat client (EP-D12) — never a fresh `pool.query()` checkout, which can queue
+ * behind the phase's own long-held connection under cloud's Supavisor ceiling (the exact
+ * starvation EP-D12 measured on `pipeline_runs` row 4429).
+ *
+ * FAIL-OPEN ON THE GUARD, NEVER ON THE PHASE: a failed cancel dispatch is logged and
+ * swallowed — the phase then runs unbounded exactly as it did before this fix, which is
+ * strictly no worse than the status quo. It must never be the thing that kills a healthy run.
+ *
+ * @param {{query: Function}} cancelClient - a connection OTHER than the phase's own
+ * @param {number|null} pid - the phase backend's pid (`SELECT pg_backend_pid()`)
+ * @param {number} timeoutMs - the declared phase bound, in ms; <= 0 arms nothing (INERT)
+ * @param {{phase: string, tag: string, log: {warn: Function, error: Function}}} meta
+ * @returns {{stop: Function, fired: Function}} `fired()` reports whether the deadline
+ *   elapsed, so the caller can name `phase_deadline` (not `statement_timeout`) on the 57014.
+ */
+function startPhaseDeadline(cancelClient, pid, timeoutMs, meta) {
+  let fired = false;
+  let stopped = false;
+  let armTimer = null;
+  let recancelTimer = null;
+  const stop = () => {
+    stopped = true;
+    if (armTimer) clearTimeout(armTimer);
+    if (recancelTimer) clearInterval(recancelTimer);
+  };
+  if (!timeoutMs || timeoutMs <= 0 || pid == null || !cancelClient) {
+    return { stop: () => {}, fired: () => fired };
+  }
+  const issueCancel = () => {
+    Promise.resolve(cancelClient.query('SELECT pg_cancel_backend($1)', [pid])).catch((err) => {
+      // The guard failed, not the phase. Loud in the log, never thrown: rethrowing from a
+      // timer callback is an unhandled rejection that would take the process down for a
+      // reason unrelated to the work. `log.error(tag, ERR, ctx)` — the SECOND argument is
+      // the Error itself (scripts/lib/pipeline.js:288), which is what preserves `stack`
+      // and `error_type`; passing a pre-rendered string there silently drops both.
+      meta.log.error(meta.tag, err, { phase: meta.phase, guard: 'phase_deadline', pid, note: 'cancel dispatch failed — the phase now runs unbounded, as it did before EP-PHASE-DEADLINE' });
+    });
+  };
+  // Guardian fold (2026-09-15) — RE-ARM, because ONE cancel is not a deadline.
+  // `pg_cancel_backend` cancels whatever statement the target backend has IN FLIGHT. A
+  // cancel that lands while the backend is IDLE — between two of the phase's statements,
+  // which is the whole population this deadline exists for (a phase whose statements each
+  // finish under the bound but sum past it is by definition a phase that spends time
+  // between statements) — is a NO-OP that Postgres simply consumes. With a single-shot
+  // timer that leaves the worst possible state: `fired()` is true, nothing re-arms, the
+  // phase runs on unbounded, and whatever 57014 eventually arrives (a genuine
+  // PER-STATEMENT timeout, hours later) is mislabelled `phase_deadline` — a deadline that
+  // reports success while enforcing nothing, which is the exact §3.6 silence class this
+  // whole change closes. So the cancel is RE-ISSUED until the phase promise settles and
+  // `stop()` runs in its `finally`.
+  //
+  // The cadence is DERIVED, not declared: `min(5s, max(50ms, bound/4))`. It is a guard's
+  // retry interval, not a bound — deliberately NOT a new admin logic variable, because it
+  // changes nothing observable (the DEADLINE is the tunable; the cadence only decides
+  // whether the abort lands within 5 s of it against a 75-minute bound) and Rule 3's
+  // externalization is for values that change what the step does or decides. Deriving it
+  // from the bound also keeps it honest under a tiny test bound instead of hard-coding a
+  // production-scale constant a unit lock would have to wait out.
+  const recancelMs = Math.min(PHASE_DEADLINE_RECANCEL_MS, Math.max(50, Math.round(timeoutMs / 4)));
+  armTimer = setTimeout(() => {
+    if (stopped) return;
+    fired = true;
+    meta.log.warn(meta.tag, `phase ${meta.phase} exceeded its declared ${Math.round(timeoutMs / 60000)}min bound — cancelling backend ${pid}`);
+    issueCancel();
+    recancelTimer = setInterval(() => {
+      if (stopped) return;
+      meta.log.warn(meta.tag, `phase ${meta.phase} still running after the deadline cancel (the backend was idle when it landed, or the statement restarted) — re-issuing pg_cancel_backend(${pid})`);
+      issueCancel();
+    }, recancelMs);
+    if (typeof recancelTimer.unref === 'function') recancelTimer.unref();
+  }, timeoutMs);
+  if (typeof armTimer.unref === 'function') armTimer.unref();
+  return { stop, fired: () => fired };
 }
 
 /**
@@ -2450,6 +2553,60 @@ async function runEnrichPhase({ descriptor, pool, compute, config, chainId, log,
   const passRaw = {};
   let scopeInsertCount = 0;
   let sharedTxnLockDenied = false;
+  // Observability fold — set by whichever phase loop's deadline fired; consumed by the
+  // normal return below and turned into an audit row by runWithPool (§phaseDeadlineRows).
+  let phaseDeadlineInfo = null;
+
+  // ── EP-PASS3-BACKLOG (WF3, .cursor/wf3_enrich_parcels_pass3_backlog_active_task.md C1,
+  // 2026-09-15) — RETIRE STALE FOREIGN SCOPE COHORTS AT STEP START.
+  //
+  // The scope hand-off ledger had no expiry. Its only consumer (`consumePendingScope`) and
+  // its only pruner (the EP-D10 `consumed_at IS NOT NULL` DELETE) both sit at the END of
+  // pass 5, so a run killed INSIDE pass 5 adds a full ~443,023-row cohort that no later run
+  // ever retires: measured on cloud 2026-09-15, 886,046 rows / 2 cohorts / 100% unconsumed,
+  // nothing ever consumed. Net effect per killed run: +443,023 permanently-unconsumed rows,
+  // -0. The descriptor's own `pending_scope_parcels` WARN (bound 50,000) was 8.9x exceeded
+  // and never fired — a check that only emits on runs that SUCCEED cannot report a condition
+  // created by runs that FAIL.
+  //
+  // Run HERE — before the shared transaction opens, autocommit, its own statement — for two
+  // reasons: (1) a run that dies in pass 5 has already done the hygiene, which is the whole
+  // point; (2) the hand-off INSERT is deliberately INSIDE the shared txn (so a crash between
+  // COMMIT and pass 5's read never silently drops scope-deferred work — Guardian fence 3),
+  // and a DELETE joined into that same transaction would extend its xmin horizon for no gain.
+  //
+  // FAIL-OPEN: the retirement is hygiene, not the run's purpose. A failure is logged and the
+  // step continues; the counters stay NULL, never 0 — "the retirement did not run" and "the
+  // retirement retired nothing" are different states and must not render identically in the
+  // audit table (Spec 48 §3.6).
+  let scopeRetire = { backlog_rows: null, backlog_cohorts: null, retired_rows: null, retired_cohorts: null, retire_after_hours: null, cutoff_at: null };
+  let scopeRetireError = null;
+  const hasScopeLedger = specs.some((s) => s.write_discipline && s.write_discipline.class === 'insert_only_no_retraction');
+  if (hasScopeLedger) {
+    try {
+      scopeRetire = await compute.retireStaleScope(pool, {
+        runId: scopeRunId,
+        ownRunId,
+        retireAfterHours: Number(config.enrich_parcels_scope_retire_after_hours),
+        now: runAt,
+      });
+      if (scopeRetire.retired_rows > 0) {
+        log.warn(tag, `scope retirement: ${scopeRetire.retired_rows} unconsumed rows across ${scopeRetire.retired_cohorts} stale cohort(s) retired (backlog at step start: ${scopeRetire.backlog_rows})`);
+      }
+    } catch (err) {
+      // `log.error(tag, ERR, ctx)` — the Error is the SECOND argument
+      // (scripts/lib/pipeline.js:288); that is what preserves `stack` and the
+      // auto-classified `error_type`. A rendered string there drops both silently.
+      log.error(tag, err, { phase: 'scope_retire', note: 'scope retirement failed — continuing; the backlog is unchanged and every retirement counter reads NULL, not 0' });
+      scopeRetire = { backlog_rows: null, backlog_cohorts: null, retired_rows: null, retired_cohorts: null, retire_after_hours: null, cutoff_at: null };
+      // Observability fold (2026-09-15) — a log line is not observability. The failure
+      // gets its OWN errored WARN row on the audit table (§scopeRetireFailureRows), and
+      // `scope_backlog_at_step_start` is deliberately left UNREPORTED so it resolves to
+      // "not reported by compute" at its DECLARED severity (WARN) rather than to a PASS
+      // built on a measurement that never happened.
+      scopeRetireError = err;
+    }
+  }
 
   // WF3 enrich_parcels double-run incident (2026-09-07) — the GENERIC outer lock
   // (`runWithPool`'s `withAdvisoryLock(pool, descriptor.identity.lock, ...)`, §4.1 ②)
@@ -2524,11 +2681,26 @@ async function runEnrichPhase({ descriptor, pool, compute, config, chainId, log,
       if (timeoutMs > 0) await client.query(`SET LOCAL statement_timeout = ${timeoutMs}`);
       if (lockTimeoutMs > 0) await client.query(`SET LOCAL lock_timeout = ${lockTimeoutMs}`);
       const passSpec = passByName(phase.name);
-      // F5 (output panel) — onProgress added for parity with post_commit's own passCtx; the 4
-      // shared-txn passes are each a single set-based SQL statement with no natural
-      // per-batch progress point, so none call it today — the whole-step ticker still
-      // advances last_heartbeat_at every tick regardless (its own tick does not require a
-      // progress update, only a live phase name), closing the silence gap by itself.
+      // F5 (output panel) — onProgress added for parity with post_commit's own passCtx; none
+      // of the four shared-txn passes calls it today — the whole-step ticker still advances
+      // last_heartbeat_at every tick regardless (its own tick does not require a progress
+      // update, only a live phase name), closing the silence gap by itself.
+      //
+      // CORRECTED (EP-PHASE-DEADLINE, WF3 2026-09-15) — this comment previously read "the 4
+      // shared-txn passes are each a single set-based SQL statement with no natural per-batch
+      // progress point". That was FALSE, and the false premise is why a per-STATEMENT timeout
+      // was believed to be a phase bound. Counted in scripts/lib/compute/enrich-parcels.js:
+      //   zoning             (runPass1) — DROP TEMP + CREATE TEMP + stats + UPDATE
+      //   max_build          (runPass2) — DROP TEMP + CREATE TEMP + stats + UPDATE + stamp
+      //   existing_structure (runPass3, :987-1009) — FIVE statements: DROP TABLE, the
+      //                       CREATE TEMP TABLE, the 16-way COUNT(*) FILTER stats query, the
+      //                       parcels UPDATE, the scenario UPDATE
+      //   comparable_builds  (runPass4) — EIGHT statements
+      // Postgres re-arms `statement_timeout` on EVERY statement, so a declared 75-min bound
+      // gave existing_structure an effective 375-min ceiling and comparable_builds 600 —
+      // neither was ever capable of firing. `SET LOCAL statement_timeout` is a correct
+      // PER-STATEMENT guard and is KEPT; it is not, and never was, a phase bound. The
+      // wall-clock phase deadline armed below is what bounds the phase.
       const passCtx = { full, scopeWhere: 'TRUE', staleOverlays, clock, log, config, scopeRunId, onProgress: (n) => { rowsProcessed = n; } };
       // WF3 enrich_parcels stall incident (2026-09-07, orchestrator observation) — Spec 48 §3.6
       // silence class: with NO per-phase log line, a `--full` run's own stdout goes silent from
@@ -2542,6 +2714,11 @@ async function runEnrichPhase({ descriptor, pool, compute, config, chainId, log,
       currentPhaseName = phase.name;
       await recordHeartbeat(heartbeatClient, ownRunId, phase.name, rowsProcessed);
       const stopTicker = startStallTicker(heartbeatClient, ownRunId, heartbeatMs, () => pid);
+      // EP-PHASE-DEADLINE — the phase bound the declaration always claimed to be. Armed
+      // from the SAME `timeout_minutes_from_config` value the `SET LOCAL` above uses (one
+      // declared number, two scopes: per statement AND per phase), on the heartbeat client
+      // (a connection distinct from `client`, which is the one that will be cancelled).
+      const deadline = startPhaseDeadline(heartbeatClient, pid, timeoutMs, { phase: phase.name, tag, log });
       try {
         // WF3 stall commit 1 — a SET LOCAL-triggered abort dies LOUD with the
         // phase's OWN name (Spec 115 §2.2 fail-safe-loud), never a bare
@@ -2551,9 +2728,23 @@ async function runEnrichPhase({ descriptor, pool, compute, config, chainId, log,
             return await passSpec.run(client, passCtx, config);
           } catch (err) {
             if (err && (err.code === '57014' || err.code === '55P03')) {
-              const kind = err.code === '57014' ? 'statement_timeout' : 'lock_timeout';
-              const wrapped = new Error(`${tag} ${phase.name} aborted by ${kind}: ${err.message}`);
+              // EP-PHASE-DEADLINE — a cancel and a statement timeout arrive as the SAME
+              // SQLSTATE (57014). `deadline.fired()` is what distinguishes them, and the
+              // distinction is the whole diagnostic value: "this ONE statement ran past
+              // 75min" and "this PHASE's statements summed past 75min" are different
+              // defects with different remedies. The elapsed ms is named because the
+              // declared bound alone does not say how far past it the phase got.
+              const kind = err.code === '55P03'
+                ? 'lock_timeout'
+                : (deadline.fired() ? 'phase_deadline' : 'statement_timeout');
+              const elapsedMs = Date.now() - phaseStartMs;
+              const wrapped = new Error(`${tag} ${phase.name} aborted by ${kind} after ${elapsedMs}ms (declared bound ${timeoutMinutes}min): ${err.message}`);
               wrapped.code = err.code;
+              // Not a boolean flag — the PAYLOAD the audit row is built from, consumed by
+              // the `.catch` below (Guardian fold: no write-only fields).
+              if (kind === 'phase_deadline') {
+                wrapped.phaseDeadline = { phase: phase.name, txn: 'shared', elapsedMs, boundMinutes: timeoutMinutes, message: wrapped.message };
+              }
               wrapped.cause = err;
               throw wrapped;
             }
@@ -2561,6 +2752,11 @@ async function runEnrichPhase({ descriptor, pool, compute, config, chainId, log,
           }
         })();
       } finally {
+        // Cleared on EVERY exit path, success or throw — an un-cleared timer would fire
+        // against a pid that is no longer running THIS phase's statement (the (f) inverse
+        // lock in src/tests/steps/enrich_parcels/violations.test.ts holds the step open
+        // past the tightest armed deadline to prove no timer leaks past its own phase).
+        deadline.stop();
         stopTicker();
       }
       // F5 (output panel) — the real cumulative step-level count, never the literal `1`
@@ -2590,9 +2786,34 @@ async function runEnrichPhase({ descriptor, pool, compute, config, chainId, log,
   }).catch((err) => {
     // The inner lock-denial signal above stops here — a clean, honest self-skip
     // (mirrors the outer `withAdvisoryLock`'s own `{acquired:false}` semantics),
-    // never a crash. Every OTHER error (a genuine pass failure, a 57014/55P03
-    // timeout) is rethrown UNCHANGED.
+    // never a crash. Every OTHER error (a genuine pass failure, a 55P03 lock
+    // timeout, a per-STATEMENT 57014) is rethrown UNCHANGED.
     if (err && err.advisoryLockDenied) { sharedTxnLockDenied = true; return; }
+    // Observability fold (2026-09-15) — A PHASE-DEADLINE ABORT IS LOUD *ON THE AUDIT
+    // TABLE*, not merely loud in the process's exit code. Until this arm existed the
+    // wrapped 57014 escaped all the way to `runWithPool`'s outer catch, which sets
+    // `status = FAILED` and an `error_message` but builds NO `records_meta` and NO
+    // `audit_table` at all — so the run that the deadline fired on was the ONE run whose
+    // own record said nothing about why, and `scope_backlog_at_step_start` (a
+    // `when:"post"` check) could only ever surface on this path. The abort is captured
+    // here, the post_commit loop is skipped, and the normal return below still builds
+    // `matched` — from a transaction that ROLLED BACK, so every write counter honestly
+    // reads 0. `runWithPool` turns this into one `errored: true` FAIL row
+    // (§phaseDeadlineRows), and the row-derived cascade does the rest — a FAIL verdict then
+    // yields RUN_STATUS.FAILED plus the `fail_check` terminal, with the error_message
+    // preserved. No new boolean, no second derivation, no swallowed halt.
+    // (Deliberately phrased so the word above is never followed by a colon or an equals
+    // sign: Rule 10's own checker, `step-validate.mjs`'s VERDICT_SITE_RE, scans this
+    // library for verdict DERIVATIONS by text and cannot tell a sentence from an
+    // assignment — prose shaped like one reads as an unsanctioned second derivation and
+    // hard-stops EVERY scorecard in the estate, not just this step's. Found by the
+    // Idempotency/Integration fold, 2026-09-15; the checker's own blind spot is filed.)
+    //
+    // This CONSUMES `wrapped.phaseDeadline` (Guardian fold: no write-only fields). Only
+    // a deadline abort carries it; an ordinary per-statement 57014 does not and is
+    // rethrown unchanged, exactly as before — the generic raw-throw gap stays DECLARED,
+    // untouched by this fold.
+    if (err && err.phaseDeadline) { phaseDeadlineInfo = err.phaseDeadline; return; }
     throw err;
   });
   if (sharedTxnLockDenied) {
@@ -2614,7 +2835,11 @@ async function runEnrichPhase({ descriptor, pool, compute, config, chainId, log,
   // is reserved for writes — the two must never be the same object, or a write issued
   // mid-stream queues behind the open cursor and hangs forever (H1, proven live).
   try {
-  for (const phase of postCommitPhases) {
+  // Observability fold — a shared-txn phase that blew its deadline STOPS THE STEP. The
+  // transaction rolled back, so pass 5 would be recomputing against un-enriched columns;
+  // running it anyway would spend another hour producing values derived from work that no
+  // longer exists. The audit table is still built below, with the abort row on it.
+  for (const phase of (phaseDeadlineInfo ? [] : postCommitPhases)) {
     const passSpec = passByName(phase.name);
     const timeoutMinutes = Number(config[phase.timeout_minutes_from_config]);
     const timeoutMs = Math.round(timeoutMinutes * 60000);
@@ -2723,15 +2948,32 @@ async function runEnrichPhase({ descriptor, pool, compute, config, chainId, log,
       currentPhaseName = phase.name;
       await recordHeartbeat(heartbeatClient, ownRunId, phase.name, rowsProcessed);
       const stopTicker = startStallTicker(heartbeatClient, ownRunId, heartbeatMs, () => pid);
+      // EP-PHASE-DEADLINE (Observability fold, 2026-09-15) — the post_commit phase gets the
+      // SAME wall-clock deadline (and the same re-arm) as the shared-txn phases. It is the
+      // phase cloud run 4911 actually died in: `optimal_config` survived >1,900 s past its
+      // declared 60-min bound because EP-D16's session-level `SET statement_timeout` is
+      // still PER STATEMENT over a batched loop — it bounds one batch, never the pass.
+      // Arming it here is strictly additive to that guard, not a replacement: `flushBatch`'s
+      // own per-batch `SET LOCAL` and the session-level `SET`/restore path (EP-D16 F1,
+      // Guardian fence 5) are untouched. A cancel that lands mid-`flushBatch` aborts that
+      // batch, which ROLLBACKs and rethrows through the same wrapper; batches already
+      // COMMITted stay committed, exactly as any other pass-5 failure.
+      const deadline = startPhaseDeadline(heartbeatClient, pid, timeoutMs, { phase: phase.name, tag, log });
       try {
         passRaw[phase.name] = await (async () => {
           try {
             return await passSpec.run(postClient, passCtx, config);
           } catch (err) {
             if (err && (err.code === '57014' || err.code === '55P03')) {
-              const kind = err.code === '57014' ? 'statement_timeout' : 'lock_timeout';
-              const wrapped = new Error(`${tag} ${phase.name} aborted by ${kind}: ${err.message}`);
+              const kind = err.code === '55P03'
+                ? 'lock_timeout'
+                : (deadline.fired() ? 'phase_deadline' : 'statement_timeout');
+              const elapsedMs = Date.now() - phaseStartMs;
+              const wrapped = new Error(`${tag} ${phase.name} aborted by ${kind} after ${elapsedMs}ms (declared bound ${timeoutMinutes}min): ${err.message}`);
               wrapped.code = err.code;
+              if (kind === 'phase_deadline') {
+                wrapped.phaseDeadline = { phase: phase.name, txn: 'post_commit', elapsedMs, boundMinutes: timeoutMinutes, message: wrapped.message };
+              }
               wrapped.cause = err;
               throw wrapped;
             }
@@ -2739,6 +2981,7 @@ async function runEnrichPhase({ descriptor, pool, compute, config, chainId, log,
           }
         })();
       } finally {
+        deadline.stop();
         stopTicker();
       }
       // F5 (output panel) — the real cumulative step-level count, never the literal `1`
@@ -2792,7 +3035,13 @@ async function runEnrichPhase({ descriptor, pool, compute, config, chainId, log,
         lockDenied: true,
       };
     }
-    throw err;
+    // Observability fold — same contract as the shared-txn `.catch` above: a phase-deadline
+    // abort falls through to the normal return so the audit table is still BUILT (with
+    // whatever passes 1-4 committed before it, which on this path is real, committed work),
+    // and runWithPool renders it as one errored FAIL row. Every other error is rethrown
+    // UNCHANGED.
+    if (err && err.phaseDeadline) { phaseDeadlineInfo = err.phaseDeadline; }
+    else throw err;
   }
 
   // ── STEP-LEVEL POST CHECKS — the fully-committed parcels table, on `pool` ──
@@ -2833,6 +3082,19 @@ async function runEnrichPhase({ descriptor, pool, compute, config, chainId, log,
     opt_aor_envelope_capped_count: optCfg.envelope_capped || 0,
     opt_config_citywide_fallback_count: optCfg.citywide || 0,
     enrich_parcels_duration_ms: Date.now() - t0,
+    // EP-PASS3-BACKLOG (WF3 C1, 2026-09-15) — the step-start retirement, made LOUD. A DELETE
+    // of 443,023 rows that no row records is invisible (Spec 48 §3.6). The three counters
+    // reconcile by construction: `retired + surviving = scope_backlog_at_step_start`, and
+    // `pending_scope_parcels` below (observed at pass-5 start, AFTER this retirement) is the
+    // surviving half — a retirement that does not reconcile against it is a defect.
+    scope_backlog_at_step_start: scopeRetire.backlog_rows,
+    scope_retired_rows: scopeRetire.retired_rows,
+    scope_retired_cohorts: scopeRetire.retired_cohorts,
+    // Observability fold — the WINDOW travels WITH the count, so a reader of the audit
+    // table alone can tell a 0 that means "nothing was old enough" from a 0 that means
+    // "the window is misconfigured". Both halves are DB-derived (the cutoff is computed
+    // in the retirement's own SQL from the injected clock), never re-derived here.
+    scope_retire_window: { hours: scopeRetire.retire_after_hours, cutoff_at: scopeRetire.cutoff_at },
     // EP-D14 (WF3 C1) — observability for the set-based/batched D4' recovery rewrite.
     pending_scope_parcels: optCfg.pending_scope_count || 0,
     scope_recovery_recovered_count: optCfg.scope_recovery_recovered_count || 0,
@@ -2889,6 +3151,11 @@ async function runEnrichPhase({ descriptor, pool, compute, config, chainId, log,
     overrides,
     writeSkipped: false,
     skipped: false,
+    // Observability fold — both are CONSUMED by runWithPool's `extraRows`
+    // (§phaseDeadlineRows / §scopeRetireFailureRows); neither is a write-only field.
+    // Null on every healthy run, so a healthy audit table is unchanged byte for byte.
+    phaseDeadline: phaseDeadlineInfo,
+    scopeRetireError,
   };
   } finally {
     // F5 (output panel) — the whole-step periodic heartbeat ticker stops before the
@@ -3139,6 +3406,66 @@ function preWriteAbortRows(phaseResults) {
     value: `aborted: ${aborted.failedPreWrite.join(', ')}`,
     threshold: 'zero unaccepted FAIL rows among the when:"pre_write" checks',
     status: 'FAIL',
+    source: 'gate',
+    errored: true,
+  }];
+}
+
+/**
+ * EP-PHASE-DEADLINE (Observability fold, 2026-09-15) — the phase-deadline abort, said out
+ * loud ON THE AUDIT TABLE. Exactly the `preWriteAbortRows` idiom above (POST-B1-1): one
+ * `errored: true` FAIL row, `source: 'gate'`, so the ROW-DERIVED cascade fails the step
+ * with no new boolean and no second derivation — `errored` also keeps it out of
+ * `override.accept_anomaly`, because a deadline measured a REFUSAL, not an anomaly an
+ * operator could have looked at and accepted (§partitionFailedRows).
+ *
+ * Before this, the wrapped 57014 escaped to `runWithPool`'s outer catch, which sets
+ * `status = FAILED` and an `error_message` but builds NO `records_meta` and NO
+ * `audit_table` — so the one run the deadline fired on was the one run whose own record
+ * said nothing about why. Absent entirely when no deadline fired.
+ *
+ * @param {Array<{phaseDeadline?:{phase:string,txn:string,elapsedMs:number,boundMinutes:number}}|null>} phaseResults
+ * @returns {Array<object>} zero or one row
+ */
+function phaseDeadlineRows(phaseResults) {
+  const hit = (phaseResults || []).find((p) => p && p.phaseDeadline);
+  if (!hit) return [];
+  const d = hit.phaseDeadline;
+  return [{
+    metric: 'phase_deadline',
+    value: `${d.phase} (${d.txn}) aborted after ${d.elapsedMs}ms`,
+    threshold: `each phase completes within its declared ${d.boundMinutes}min bound`,
+    status: 'FAIL',
+    source: 'gate',
+    errored: true,
+  }];
+}
+
+/**
+ * EP-PASS3-BACKLOG (Observability fold, 2026-09-15) — the step-start scope retirement is
+ * FAIL-OPEN by an authorized plan ruling ("the retirement is hygiene, not the run's
+ * purpose"), so its failure may not fail the step. WARN, not FAIL, for exactly that
+ * reason — and `errored: true` all the same, because the instrument threw rather than
+ * measured, which is the distinction `accept_anomaly` must not be allowed to blur.
+ *
+ * This is why the failure does NOT travel as `ctx.report(id, {error})`: this step declares
+ * `execution.on_check_error: "fail_step"`, which is severity-INDEPENDENT (POST-B1-1), so
+ * that route would turn a hygiene failure into a halted run and contradict the ruling.
+ * `scope_backlog_at_step_start` is instead left UNREPORTED, which `checkRow` renders as
+ * "not reported by compute" at its DECLARED severity (WARN) — never PASS, never a halt.
+ *
+ * @param {Array<{scopeRetireError?:Error|null}|null>} phaseResults
+ * @returns {Array<object>} zero or one row
+ */
+function scopeRetireFailureRows(phaseResults) {
+  const hit = (phaseResults || []).find((p) => p && p.scopeRetireError);
+  if (!hit) return [];
+  const msg = hit.scopeRetireError instanceof Error ? hit.scopeRetireError.message : String(hit.scopeRetireError);
+  return [{
+    metric: 'scope_retire_failed',
+    value: `step-start scope retirement errored: ${msg}`,
+    threshold: 'the retirement runs, or says so — the backlog counters are NULL, not 0',
+    status: 'WARN',
     source: 'gate',
     errored: true,
   }];
@@ -3649,8 +3976,18 @@ async function runWithPool(runnable, pool, ctx) {
         // POST-B1-1 Observability fold — the pre_write gate's abort, said out loud
         // (§preWriteAbortRows). Absent on every run that did not abort.
         ...preWriteAbortRows([ingest, link, linkKeyed, cascade, materialize, backfill, recorder, enrich]),
+        // EP-PHASE-DEADLINE / EP-PASS3-BACKLOG Observability fold — the deadline abort and
+        // the fail-open retirement failure, each said out loud on the audit table rather
+        // than only in a log line. Both absent on every healthy run.
+        ...phaseDeadlineRows([enrich]),
+        ...scopeRetireFailureRows([enrich]),
       ];
       const built = buildAuditTable(descriptor, chainId, observations, extraRows, configValues, onlyChecks, synthetic);
+      // Observability fold — the deadline abort no longer THROWS (that is what cost the run
+      // its audit table), so the ledger's `error_message` must be set here instead. Same
+      // text the throw carried, so a reader of `pipeline_runs` sees no change in what the
+      // failure says — only that the audit table now exists alongside it.
+      if (enrich && enrich.phaseDeadline) errorMessage = enrich.phaseDeadline.message;
       // The counter SCOPE, per phase. §11's Counter Semantic Contract is a scoping
       // contract before it is a naming one: `written.e2.inserted` is only meaningful
       // because `written` is keyed BY DECLARED TARGET (LG-5), so "records_new" can mean
@@ -3951,12 +4288,15 @@ module.exports = {
   recordHeartbeat,
   captureStallDiagnostic,
   startStallTicker,
+  startPhaseDeadline,
   streamOverClient,
   runTierToConvergence,
   executeOrderedWrites,
   acceptedCheckIds,
   partitionFailedRows,
   preWriteAbortRows,
+  phaseDeadlineRows,
+  scopeRetireFailureRows,
   makePreWriteGate,
   generateReset,
   assertBeforeImageDeclared,

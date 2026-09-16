@@ -1,0 +1,107 @@
+{
+  "$comment": [
+    "EP-PHASE-DEADLINE (WF3, 2026-09-15) — THE R-X DISPOSITION REGISTRY FOR THE",
+    "`execution.*` DURATION DECLARATIONS (Spec 124 §5 R-X).",
+    "",
+    "Spec 124 R-X: 'a frozen declaration that has no live executor is a declaration,",
+    "not a deletion — it must carry a disposition row, never silently drift.' R-X's",
+    "own text names the generalization this file builds: its existing registry",
+    "(`write-class-disposition.json`) covers ONLY `outputs.write_discipline.class`",
+    "and `sharing.on_contention`, and extending it to the other `execution.*`",
+    "postures was recorded there as 'not yet built'.",
+    "",
+    "The founding measurement (cloud run 34971921528 / 34971921328, main@824ef357,",
+    "2026-09-15): `enrich_parcels` declares `budget:150m`, `txn_budget:130m` and",
+    "`step_timeout:180m`. A repo-wide grep found ZERO executors for any of the three",
+    "— `grep -rn 'txn_budget|\\.budget' scripts/lib/` returns nothing at all, and the",
+    "only `step_timeout` consumer (`run-chain.js`, `Number(scriptEntry.",
+    "step_timeout_minutes || 0)`) reads `scripts/manifest.json`, NOT the descriptor.",
+    "The declarations read as enforcement to every reader and enforce nothing. The",
+    "run that exposed this died at the GitHub Actions 300-min wall clock, the ONLY",
+    "live element of the whole declared ladder.",
+    "",
+    "CLOSED MENU — a row's `disposition` is exactly one of:",
+    "  * `executed`    — a named, live executor consumes the declaration. The row",
+    "                    MUST cite `executor.file` + `executor.anchor`, and the lock",
+    "                    greps the anchor out of the file rather than trusting this",
+    "                    registry's own prose.",
+    "  * `descriptive` — documentation only: the value is declared, is NOT enforced,",
+    "                    and SAYS SO. A `descriptive` row MUST be named in Spec 124's",
+    "                    own R-X disposition table, so a reader of the spec (not just",
+    "                    of this file) learns the declaration is inert.",
+    "There is no third value. An invented one is RED.",
+    "",
+    "Both directions are locked by src/tests/execution-budget-disposition.infra.test.ts:",
+    "  (1) every `execution.*` duration key any LIVE descriptor declares has a row",
+    "      here, and no row here is an orphan;",
+    "  (2) every `executed` row's cited executor anchor resolves in its cited file;",
+    "  (3) `step_timeout`'s own wiring is drift-locked BOTH ways: for every slug in",
+    "      `wired[]`, the descriptor's declared duration and `manifest.scripts[slug].",
+    "      step_timeout_minutes` must agree in minutes; every other converted step",
+    "      declaring `step_timeout` must appear in `pending[]`, so the ten steps whose",
+    "      declaration is still inert are a DECLARED, dated gap rather than an",
+    "      invisible one;",
+    "  (4) every `descriptive` row is named in Spec 124's R-X disposition table;",
+    "  (5) `enrich_parcels`' stop-mechanism LADDER holds (Spec 118 §3): the CI wall",
+    "      clock > the manifest step ceiling > the per-phase deadline. A ladder whose",
+    "      rungs invert is the defect this WF3 closed, re-armed."
+  ],
+
+  "menu": ["executed", "descriptive"],
+
+  "declarations": {
+    "statement_timeout": {
+      "disposition": "executed",
+      "executor": {
+        "file": "scripts/lib/step/index.js",
+        "anchor": "parseDurationMs(descriptor.execution.statement_timeout)",
+        "role": "the post-check ceiling fallback for a step that declares no step_post_check_statement_timeout_minutes tunable; also read per-entry by scripts/lib/step/plausibility.js"
+      },
+      "why": "Already live before this WF3 — listed here so the registry covers the WHOLE duration family and an orphan/missing-row check is meaningful in both directions."
+    },
+
+    "step_timeout": {
+      "disposition": "executed",
+      "executor": {
+        "file": "scripts/run-chain.js",
+        "anchor": "Number(scriptEntry.step_timeout_minutes || 0)",
+        "role": "Spec 118 §3 layer 3 — run-chain arms a per-step SIGTERM ceiling from manifest.scripts[slug].step_timeout_minutes; absent/0 is INERT (run-chain.js's own docblock). The descriptor's execution.step_timeout is the DECLARATION; the manifest key is the EXECUTION, and (3) below is what keeps the two from drifting apart."
+      },
+      "wired": {
+        "refresh_snapshot": 15,
+        "enrich_parcels": 180
+      },
+      "pending": [
+        "compute_centroids",
+        "link_massing",
+        "link_parcel_addresses",
+        "link_parcels",
+        "link_wsib",
+        "load_ravines",
+        "assert_data_bounds",
+        "assert_engine_health",
+        "assert_global_coverage",
+        "assert_schema"
+      ],
+      "pending_why": "Measured 2026-09-15: 12 converted descriptors declare execution.step_timeout; only refresh_snapshot had the manifest counterpart that executes it. enrich_parcels is wired by this WF3 because it is the step whose declaration was measured inert against a real 300-min kill. The remaining ten are a DECLARED gap, not a silent one — filed in docs/reports/review_followups.md; wiring them is its own WF2 (each ceiling needs its own measured duration, and a ceiling set below a step's real runtime turns a healthy run into a failure)."
+    },
+
+    "budget": {
+      "disposition": "descriptive",
+      "why": "No executor exists anywhere in scripts/ (grep -rn '\\.budget' scripts/lib/ => zero hits, 2026-09-15). It documents the step's INTENDED wall-clock envelope for a human sizing a CI ceiling; nothing measures a run against it and nothing aborts on it. Kept (not removed) per R-X: a declaration with a disposition is legible; a deleted field is a silent loss of the sizing intent. The ENFORCED ceiling for a step is manifest.scripts[slug].step_timeout_minutes (see step_timeout above) — budget is the number an operator reads when choosing that one."
+    },
+
+    "txn_budget": {
+      "disposition": "descriptive",
+      "why": "No executor exists anywhere in scripts/ (grep -rn 'txn_budget' scripts/lib/ => zero hits, 2026-09-15). It documents how much of `budget` the step's own transaction is expected to hold open — the number that matters for vacuum-horizon reasoning (enrich_parcels' EP-D17 maintenance ruling is exactly this arithmetic done by hand). Enforcing it would require a transaction-scoped deadline distinct from the per-phase one EP-PHASE-DEADLINE built; that is a separate WF and is filed, not smuggled in here."
+    }
+  },
+
+  "ladder": {
+    "$why": "Spec 118 §3's stop-mechanism hierarchy for enrich_parcels, after EP-PHASE-DEADLINE. Each rung must be strictly tighter than the one outside it, or the outer rung is the only one that can ever fire — which is precisely the 2026-09-15 incident (the GH wall clock was the entire enforcement stack).",
+    "step": "enrich_parcels",
+    "outer_ci_minutes": { "value": 300, "source": ".github/workflows/chain-sources.yml", "key": "SOURCES_STEP_TIMEOUT_MINUTES" },
+    "step_ceiling_minutes": { "value": 180, "source": "scripts/manifest.json", "key": "scripts.enrich_parcels.step_timeout_minutes" },
+    "phase_deadline_minutes": { "value": 75, "source": "scripts/seeds/logic_variables.json", "key": "enrich_parcels_pass_statement_timeout_minutes" }
+  }
+}

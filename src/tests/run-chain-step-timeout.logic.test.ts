@@ -30,12 +30,38 @@ const SRC = readFileSync(join(process.cwd(), 'scripts/run-chain.js'), 'utf8');
 const MANIFEST = JSON.parse(readFileSync(join(process.cwd(), 'scripts/manifest.json'), 'utf8'));
 
 describe('run-chain.js — WF3 F2 step-timeout plumbing (Spec 118 §3/§7.2)', () => {
-  it('manifest.scripts.refresh_snapshot carries step_timeout_minutes: 15 (the proven pathological step, and ONLY it)', () => {
+  // FENCE KNOWINGLY WIDENED — EP-PHASE-DEADLINE (WF3, 2026-09-15). This assertion read
+  // `['refresh_snapshot']` from `766424fe` onward: "the proven pathological step, and ONLY
+  // it". The scoping was never squeamishness — its reason is written out in
+  // chain-sources-workflow.infra.test.ts:36-45 ("NOT raised: per-step
+  // step_timeout_minutes ... the evidence base establishes those statistics are poisoned
+  // by the 39-day strand (link_parcels read 2,447 min against a 0.3-min median). A
+  // per-step axe set from poisoned data kills healthy steps."). That reason still stands
+  // for the other ten steps declaring `execution.step_timeout`, which is why they remain
+  // INERT and are carried as a DECLARED gap in
+  // `scripts/steps/_schema/execution-budget-disposition.json`'s `pending[]` rather than
+  // wired blind. It does NOT stand for `enrich_parcels`, which now has its own clean
+  // measurements: a COMPLETED run at 142.7 min (pipeline_runs 4588, 2026-09-10
+  // 18:02:40 -> 20:25:21) and a run KILLED at the 300-min CI wall clock (gh run
+  // 34971921328, 2026-09-15, main@824ef357) having spent 94.4 min in one phase against a
+  // declared 75-min bound that was structurally incapable of firing. 180 clears the
+  // 142.7-min completion by 37.3 min and sits 120 min below the CI ceiling — the middle
+  // rung of the Spec 118 §3 ladder (CI 300 > step 180 > phase 75), which is locked
+  // rung-by-rung from each rung's own source file in
+  // src/tests/execution-budget-disposition.infra.test.ts. Note the chain-level high-water
+  // in that sibling file (181.9 min, 11 cloud runs, 2026-07-07) is the WHOLE CHAIN, not
+  // this step — cited here only because it is the number that fence was set against.
+  it('manifest step_timeout_minutes is declared for exactly the steps with a clean measured ceiling — refresh_snapshot (15) and enrich_parcels (180)', () => {
     expect(MANIFEST.scripts.refresh_snapshot.step_timeout_minutes).toBe(15);
+    expect(MANIFEST.scripts.enrich_parcels.step_timeout_minutes).toBe(180);
     const withTimeout = Object.entries(MANIFEST.scripts as Record<string, { step_timeout_minutes?: number }>)
       .filter(([, entry]) => entry.step_timeout_minutes !== undefined)
-      .map(([slug]) => slug);
-    expect(withTimeout).toEqual(['refresh_snapshot']);
+      .map(([slug]) => slug)
+      .sort();
+    expect(
+      withTimeout,
+      'a THIRD step gained a run-chain ceiling: that is a fence, not a default. Wire one only with its own measured completion high-water (a ceiling below a step\'s real runtime turns a healthy run into a failure — chain-sources-workflow.infra.test.ts:36-45), and register it in scripts/steps/_schema/execution-budget-disposition.json wired[] so the descriptor/manifest drift lock covers it.',
+    ).toEqual(['enrich_parcels', 'refresh_snapshot']);
   });
 
   it('the executor reads step_timeout_minutes from the CURRENT step\'s manifest entry', () => {

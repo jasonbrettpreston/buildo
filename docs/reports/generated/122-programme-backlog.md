@@ -6,13 +6,13 @@
 
 ## Counts
 
-Total items: **118**
+Total items: **120**
 
 | status | count |
 |---|---|
 | ⬜ NOT_STARTED | 28 |
 | ⚠️ PARTIAL | 16 |
-| ✅ BUILT | 70 |
+| ✅ BUILT | 72 |
 | ⏭️ SUPERSEDED | 4 |
 
 **blocks batching: 0**
@@ -49,7 +49,7 @@ Total items: **118**
 | `VEL-1` | 124 R-AG (proposed) | Gate placement: full suite at pre-push, vitest related + fast invariants at pre-commit, live-DB infra tests in test:db | ✅ BUILT | wf: wf: conversion velocity (R-AG) | address_points, assert_parcel_sanity, compute_parcel_cost_estimates, enrich_centreline, enrich_heritage, enrich_ravines, load_centreline, load_heritage, load_wsib, load_zoning, massing, neighbourhoods, parcels, reconcile | 2026-09-14 |
 | `VEL-2` | 124 R-AH (proposed) | Compressed 3-commit form is the default once an archetype has two full-form members | ✅ BUILT | wf: wf: conversion velocity (R-AH) | address_points, assert_parcel_sanity, compute_parcel_cost_estimates, enrich_centreline, enrich_heritage, enrich_ravines, load_centreline, load_heritage, load_wsib, load_zoning, massing, neighbourhoods, parcels, reconcile | 2026-09-14 |
 
-## Nice-to-have — real gap, not currently blocking (96)
+## Nice-to-have — real gap, not currently blocking (98)
 
 | id | spec | title | status | owner | blocks | last reviewed |
 |---|---|---|---|---|---|---|
@@ -125,6 +125,8 @@ Total items: **118**
 | `VRD-SKIP` | 124 §2 Rule 10 | a SELF_SKIPPED terminal must not verdict identically to a genuine PASS | ✅ BUILT | wf: wf: WF3 VRD-SKIP, 2026-09-09 — .cursor/wf3_vrd_skip_active_task.md; fix site scripts/lib/step/index.js skipRecordsMeta (+ scripts/analysis/step-validate.mjs checkSelfSkipNeverPass/selfTest); see docs/reports/review_followups.md for the closed HIGH entry, the new HIGH sibling followup (buildSkipGateRecordsMeta, Ask B2), and the two filed MED followups (compute-trade-forecasts pass_or_warn residual; the pre-existing FreshnessTimeline SKIP mis-render) | — | 2026-09-09 |
 | `CRASH-BEHAV` | 124 §2 Rule 12 | live SIGTERM-and-recover behavioural proof for LINK, LINK_KEYED, MATERIALIZE (and, in the abstract, INGEST/BACKFILL/RECORDER) | ⬜ NOT_STARTED | followup: docs/reports/review_followups.md — 'WF2 Rule 12 behavioural half — no db.test.ts can spawn a REAL converted step against the ephemeral test container' (HIGH, 2026-09-03): a scoped WF2/WF3 adds a genuine, reviewed test-context escape hatch to assertDbTarget, then un-skips step-crash-posture.db.test.ts and extends its pattern to link_massing (link) and link_parcels (link_keyed), parameterized rather than copy-pasted a third time | — | 2026-09-03 |
 | `EP-PIN-PERF` | 122 (WF3 enrich_parcels double-run/lock-fix commit chain) | converted enrich_parcels per-pass timing within 25% of the legacy PRE goldens (KFM 7) | ✅ BUILT | pilot: pilot9_enrich_parcels | — | 2026-09-08 |
+| `EP-PHASE-DEADLINE` | 124 §5 R-AJ | execution.phases[] timeout is a per-STATEMENT bound, not a phase bound; execution.step_timeout/budget/txn_budget had no executor at all | ✅ BUILT | wf: wf: EP-PHASE-DEADLINE (WF3, 2026-09-15) | — | 2026-09-15 |
+| `EP-PASS3-BACKLOG` | 122 §3.0b | enrich_parcels_pass3_scope accretes a full ~443K-row cohort per killed run and nothing ever retires it | ✅ BUILT | wf: wf: EP-PASS3-BACKLOG (WF3, 2026-09-15) | — | 2026-09-15 |
 | `RM-1` | 122 §10.3 | Conversion roadmap is generated + drift-guarded, never hand-maintained | ✅ BUILT | wf: wf: conversion-roadmap (this plan) | — | 2026-09-10 |
 | `CLOUD-PRE` | 123 §6 | Pre-dispatch cloud-state checklist — table sizes, index presence, stranded running rows measured BEFORE a cutover attempt | ⬜ NOT_STARTED | wf: wf: unassigned | — | 2026-09-10 |
 | `ACC-1` | 122 §7.2 | Acceptance is per-slug and row-derived, never a GitHub run tick | ⬜ NOT_STARTED | wf: wf: unassigned | — | 2026-09-10 |
