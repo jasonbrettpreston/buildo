@@ -13,8 +13,11 @@
 # scoped to each commit's own staged files — the FULL Vitest suite runs HERE
 # instead, once per push (gating a whole landed group rather than every
 # commit), and still runs in CI (test.yml) as the non-skippable backstop.
-# Capped at 2 forks (VITEST_MAX_FORKS — the variable vitest's default `forks`
+# Capped at ONE fork (VITEST_MAX_FORKS — the variable vitest's default `forks`
 # pool actually reads; VITEST_MAX_WORKERS is NOT read by vitest, measured
-# 2026-09-14) — matches the pre-commit `vitest related` cap and the hook-history
-# lesson (a 4-fork run was OS-killed for low memory, tasks/lessons.md).
-node scripts/analysis/step-validate.mjs --staged --fast && node scripts/analysis/spec-split-check.mjs --check && npm run typecheck && VITEST_MIN_FORKS=1 VITEST_MAX_FORKS=2 npm run test
+# 2026-09-14). Was 2 until 2026-09-16 (I5 cutover): at two forks the 498-test
+# step-conformance suite dies on `[vitest-worker]: Timeout calling "onTaskUpdate"`
+# with ZERO test failures — 4 pre-commit attempts and then this push, deterministic;
+# at one fork it passes. Matches the pre-commit `vitest related` cap and the
+# hook-history lesson (a 4-fork run was OS-killed for low memory, tasks/lessons.md).
+node scripts/analysis/step-validate.mjs --staged --fast && node scripts/analysis/spec-split-check.mjs --check && npm run typecheck && VITEST_MIN_FORKS=1 VITEST_MAX_FORKS=1 npm run test

@@ -81,9 +81,10 @@ describe('hooks-composition (R-AG) — pre-commit', () => {
     // 2026-09-16 (I5 commit 9): pre-commit `related` runs at ONE fork — at two forks the
     // 498-test step-conformance suite died on `[vitest-worker]: Timeout calling "onTaskUpdate"`
     // four times running with zero test failures; at one fork it passed 498/498 in 281 s.
-    // Pre-push (the full suite) keeps two.
+    // Pre-push followed the same day: the full suite at two forks hit the same timeout on the
+    // same file (push of 7853342f, 2 errors / 0 failures), so BOTH hooks pin one fork.
     expect(stripComments(PRE_COMMIT)).toMatch(/\bVITEST_MAX_FORKS=1\b/);
-    expect(stripComments(PRE_PUSH)).toMatch(/\bVITEST_MAX_FORKS=2\b/);
+    expect(stripComments(PRE_PUSH)).toMatch(/\bVITEST_MAX_FORKS=1\b/);
     for (const hook of [PRE_COMMIT, PRE_PUSH]) {
       expect(stripComments(hook)).not.toMatch(/VITEST_MAX_WORKERS/);
     }
@@ -129,7 +130,7 @@ describe('hooks-composition (R-AG) — pre-push', () => {
   });
 
   it('RED — a tampered pre-push with the full-suite invocation stripped is caught', () => {
-    const tampered = PRE_PUSH.replace(/VITEST_MAX_FORKS=2 npm run test\b/, 'true');
+    const tampered = PRE_PUSH.replace(/VITEST_MAX_FORKS=1 npm run test\b/, 'true');
     expect(invokesFullSuite(tampered)).toBe(false);
   });
 });
