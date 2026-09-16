@@ -341,21 +341,49 @@ The `ins: [0,0]` / `row_delta: [0,0]` half of the same block is the machine-read
 
 ---
 
-## 4. Panel roster — who ran, at PLAN altitude (accretes through commit 9)
+## 4. §PH-5 — Seam map (G5, commit 3)
+
+> Every boundary across which this step touches something it does not own, with the library phase that owns it after conversion. Derived from the 188-line read, not from the manifest.
+
+| Seam | What crosses it | Sites | Library home after conversion |
+|---|---|---|---|
+| **DB seam** | One `pg.Pool`, supplied by `pipeline.run`. **5 execution sites** (`:42` before-counts SELECT · `:62` `address_points` COUNT · `:74` W1 on the txn `client` · `:93` W2 on the same client · `:108` after-counts SELECT) across **2 tables** (`permits` read+written, `address_points` read only). The step creates no pool of its own (`grep -c 'new Pool'` = 0) | `:42`, `:62`, `:74`, `:93`, `:108` | `inputs.reads.tables` (2 tables, 9 columns) + `outputs.writes[]` (2 targets, class N and class O). The transaction boundary is `execution.txn_scope: "step"` with both `phases[].txn: "shared"` — one `withTransaction`, two statements, no `post_commit` |
+| **Clock seam** | `RUN_AT = await pipeline.getDbTimestamp(pool)` — the **database's** clock, captured **before any write** and bound as `$1::timestamptz` into W1's `geocoded_at`. `Date.now()` also appears twice, but only for elapsed-time arithmetic (`durationMs`), never for a value written to the DB — which is exactly the Spec 47 §R3.5 split | `:36` (DB clock) · `:37`, `:123` (elapsed only) | `staleness.trigger[{signal: "always", position: "pre_compute"}]`; the runner captures RUN_AT pre-compute, inside the lock. `outputs.writes[0].columns[geocoded_at].source: "run_at"` is what tells the guard machinery to keep it OUT of `guard_columns` (fence F2 / B-7) |
+| **Network seam** | **NONE.** `grep -ciE 'google\|fetch\(\|https?://\|axios\|node-fetch'` = **0**. This is the measured refutation of the Google-Maps-fallback prose carried by all three governing specs (§1.6) — there is no egress, no API key, no quota, and no retry, because there is no network call | — | `execution.network: "none"` and `inputs.reads.externals: []`, both truthful. Declared as `limitations[]` **GP-L4** so the spec drift is visible from the descriptor as well as from the commit-9 spec diff |
+| **argv / env seam** | **argv: NONE** — `grep -cE 'process\.argv\|isFullMode\|--full'` = **0** across all 19 commits; `manifest.supports_full: true` has never had a reader (fence F10 / GP-L1). **env: exactly ONE** — `process.env.PIPELINE_CHAIN` at `:164`, read once, solely to pick the audit-table phase number (6 on permits, 3 on sources). It is a chain **identifier**, not an override: it changes no scope, no predicate and no threshold | `:164` | `execution.invocation.{permits,sources}.argv: []`; `staleness.mode_select: "none"`; all three `override.*` fields `"none"`; and the env read becomes `sharing.varies_by_chain.phase = {permits: 6, sources: 3}` — an explicit map rather than a ternary, **measured against 40 live ledger rows** (§2.5) |
+| **Cross-chain producer seam** ⚠ | `address_points`, produced by `load-address-points.js` — a **sources-only** step. On the `permits` chain the declared producer **never runs**, so the permits-chain invocation reads whatever the last sources run left behind | `:62`, `:79-86` | `inputs.reads.steps: [{step: "address_points", version_pin: "gte"}]`. The edge is declared because Rule 1 requires it, and it **will WARN permanently on every permits chain-end from the moment `address_points` converts** — `deriveSeamPairs` has no chain filter, `chainId = 'sources'` is a parameter default, and `chain-end-synthesis.mjs` passes the live chain (re-executed, §4.2 INT-6). No `chains` qualifier exists on `inputs.reads.steps[]` today, so **Ask A3 resolves to its fallback: the accepted WARN is filed** in `review_followups.md` this commit |
+| **Advisory-lock seam** | `withAdvisoryLock(pool, 5, …)` with `if (!lockResult.acquired) return;`. Genuinely contended: both chains run this step under the same lock id, and ledger run 1518 is a recorded `skipped` | `:183-186` | `identity.lock: 5` + `sharing.on_contention: "self_skip"` + the `lock_held_elsewhere` terminal. `skipRecordsMeta()` is descriptor-generic and emits the skip's status row at **WARN** against threshold `'ran'`, so an all-INFO table cannot fold to a bare PASS (VRD-SKIP / LG-29) |
+| **Error seam** | **NONE in the file** — `grep -c 'try {'` = 0, `grep -c catch` = 0, `grep -c 'process.exit'` = 0. Every failure propagates whole to `pipeline.run`. Nothing to port and nothing to lose | — | The boundary becomes the library's: `execution.on_batch_error` / `on_check_error` = `fail_step`, `criticality: "required"`, `on_row_error: "fail_fast"` (a set-based statement has no survivable per-row error — the whole statement fails). Compute contains no error handling and no logging (Rule 2) |
+| **Test seam** ⚠ | `geocodePermits(pool, opts)`'s `opts.withTransaction` override — a **calling convention**, not a data boundary, and the entire mechanism of `src/tests/geocode-permits.infra.test.ts` | `:34-35` | **No descriptor category owns this.** Retired with the exported function; the guarantee it proved moves to `execution.phases[].txn: "shared"` and the test is re-pointed at the library's own two-phase shared-transaction path at **commit 6** (§1.8d). Named here because a seam map that lists only data boundaries is how the plan walked past it |
+
+### 4.1 Non-determinism inventory — declared BEFORE the first differential (R-C, commit 5's precondition)
+
+| # | Source of variance | Disposition |
+|---|---|---|
+| ND-1 | `geocoded_at` = RUN_AT — a new value on every run | **Excluded from the projection.** `capture-step-golden.js`'s `deriveTableSpecs` would auto-INCLUDE it (`written: "step"`, not `db_default`) — the identical trap pilot 3 hit with `link_massing` / `linked_at` — so commit 5 passes `--table-columns=permits:permit_num,revision_num,latitude,longitude` **explicitly, on both sides** |
+| ND-2 | `records_meta.duration_ms` and the `${identity.name}_duration_ms` telemetry key | Excluded — wall-clock |
+| ND-3 | Physical row order | Projected **ordered by the declared key** `(permit_num, revision_num)` via `--table-order`, never the heap order |
+| ND-4 | **`address_points` content is an UNCONTROLLED INPUT** | A sources run reloading `address_points` between PRE and POST legitimately changes W1's output. Captures are taken with no chain running (`node scripts/check-chain-running.js`) and the `address_points` row count (**525,346** at commit 1) is recorded beside each capture |
+| ND-5 | `permits` is **254,082 rows — over the 100,000-row capture ceiling**, and at commit 5 no descriptor exists to derive a projection from | The PRE captures must carry `--tables` / `--table-columns` / `--table-order` explicitly (a projection bypasses the ceiling), and the POST captures must repeat them **identically** or the pair is incomparable. Not named in the plan's §8; added by the Integration seat (§5.2 INT-9) |
+| ND-6 | Concurrent permits load between the before-counts SELECT and the transaction | Structural, not excludable — it is the same race fences F6 and F7 exist for. Captures are taken solo, which removes it in practice |
+
+---
+
+## 5. Panel roster — who ran, at PLAN altitude (accretes through commit 9)
 
 Spec 08 §6.4, both altitudes mandatory. I5 is a FULL-form first member, so the full roster stands (plan §10). PLAN seats dispatched at commit 1; findings and their adjudications are recorded at the commit that closes each.
 
 | Seat | Agent / instrument | Status at commit 1 |
 |---|---|---|
-| Integration | `general-purpose`, main tree | **REPORTED — 1 REFUTED (plan §0.3), 3 NEW runner findings, 3 capture hazards; see §4.2** |
-| Regression Guardian | `regression-guardian`, main tree | **REPORTED, commit 1 — 2 FAIL, 1 REFUTED-correction, 1 STALE, 1 INTENT-UNKNOWN; see §4.1** |
-| Observability | `observability-reviewer` | **REPORTED — 4 PASS, 1 FAIL (§11 counter scoping under the landed runner), 1 unfiled silence class; see §4.3** |
+| Integration | `general-purpose`, main tree | **REPORTED — 1 REFUTED (plan §0.3), 3 NEW runner findings, 3 capture hazards; see §5.2** |
+| Regression Guardian | `regression-guardian`, main tree | **REPORTED, commit 1 — 2 FAIL, 1 REFUTED-correction, 1 STALE, 1 INTENT-UNKNOWN; see §5.1** |
+| Observability | `observability-reviewer` | **REPORTED — 4 PASS, 1 FAIL (§11 counter scoping under the landed runner), 1 unfiled silence class; see §5.3** |
 | Reality-Check | `pipeline-reality-check`, main tree | commit 5 (plan altitude on the plausibility bound; §2.3 is its input) |
 | Idempotency Lens | `general-purpose`, main tree | commit 5 |
 | DeepSeek lens set ×4 | `npm run review:deepseek` | commits 2 / 7 |
 | Gemini | `npm run review:gemini` | OUTPUT altitude |
 
-### 4.1 Regression Guardian — PLAN altitude, findings and adjudications (commit 1)
+### 5.1 Regression Guardian — PLAN altitude, findings and adjudications (commit 1)
 
 The seat walked all 19 commits, recovered a why for every construct, and ruled on the 13 B-guarantees. **Every finding below was re-executed by this pass before being acted on**; none was adopted on the seat's word alone.
 
@@ -372,7 +400,7 @@ The seat walked all 19 commits, recovered a why for every construct, and ruled o
 
 The seat also raised a caveat this pass endorses: `write.js`'s class-N executor is **descriptive, not generative** for the scope string — the SQL text is compute-authored, so the CASE fence's survival depends entirely on `scripts/lib/compute/geocode-permits.js` reproducing it byte-for-byte. *"Descriptor says the right thing" ≠ "compute did the right thing"* — verified at OUTPUT altitude (commit 7c), not at plan altitude.
 
-### 4.2 Integration — PLAN altitude (commit 1). **The plan's §0.3 is REFUTED and Ask A2's closure is incomplete.**
+### 5.2 Integration — PLAN altitude (commit 1). **The plan's §0.3 is REFUTED and Ask A2's closure is incomplete.**
 
 | # | Finding | Grounder re-execution | Disposition |
 |---|---|---|---|
@@ -387,7 +415,7 @@ The seat also raised a caveat this pass endorses: `write.js`'s class-N executor 
 | **INT-9** | **Capture hazard 2 — `permits` (254,082 rows) exceeds the 100,000-row capture ceiling**, and at commit 5 there is no descriptor to derive a projection from, so the PRE captures must carry `--tables` / `--table-columns` / `--table-order` explicitly and the POST captures must repeat them **identically** or the pair is incomparable | same | **ACCEPTED.** Flag parity becomes part of the commit-5 capture log |
 | **INT-10** | **Capture hazard 3 — W2 is a zero-row statement today**, so all three golden pairs will record `zombies_cleaned: 0`, no before-image file will be written, and the class-O path / `recovery.before_image: "generated"` / B-8 / B-9 are **untestable by the differential** | Independently measured by this pass at commit 1 (§2.2: W2's target population = 0) | **ACCEPTED, and already stated** (§2.4). The proof moves to an executed fake-pool lifecycle test of `ctx.retract` → before-image → `executeSetBasedClear` at commit 6 — the same remedy `a062eb79` had to build for I4 |
 
-### 4.3 Observability — PLAN altitude (commit 1)
+### 5.3 Observability — PLAN altitude (commit 1)
 
 | # | Finding | Grounder re-execution | Disposition |
 |---|---|---|---|
@@ -400,7 +428,7 @@ The seat also raised a caveat this pass endorses: `write.js`'s class-N executor 
 
 ---
 
-## 5. ⛔ PREMISE REFUTED — commit 7c/7d is BLOCKED on a 0.10 follow-up, and I5 must not close it itself
+## 6. ⛔ PREMISE REFUTED — commit 7c/7d is BLOCKED on a 0.10 follow-up, and I5 must not close it itself
 
 Two seats reached this independently, from opposite directions (Integration by tracing `d7668b8a`'s diff, Observability by tracing the counter's resolution path), and **this pass re-executed both**. The plan's §0b gate — *"commit 7d may not start until 0.10 has landed"* — is satisfied in letter and **not in substance**: `d7668b8a` generalised the **pre-phase hooks** (`enrich_hooks.contract_read`, `enrich_hooks.defer_scope`, `heartbeat_minutes_from_config`, `lock_timeout_ms_from_config`, the `${identity.name}_duration_ms` telemetry key), the **write seams** (`ctx.retract` → `writeBeforeImage` → `executeSetBasedClear`; `ctx.joinUpdate` → `executeSetBasedJoinUpdate`) and the **per-target `written[]` counters** — all of which I5 genuinely needs and now has, including a deliverable B-9. It did **not** generalise the **post-phase region**:
 
