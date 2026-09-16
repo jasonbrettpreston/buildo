@@ -57,15 +57,16 @@ These 8 transformation steps run in multiple chains — they can't live inside a
 ---
 
 ### Link Neighbourhoods (`link-neighbourhoods.js`)
-**Method:** Turf.js `booleanPointInPolygon` for 158 neighbourhood boundaries
+**Method:** PostGIS `ST_Contains` against `neighbourhoods.geom`, over the GiST index `idx_neighbourhoods_geom_gist` — ONE set-based join UPDATE, no per-permit loop. CONVERTED step (Spec 122 batch-2 I4, 2026-09-16): `scripts/link-neighbourhoods.js` is the frozen shell; the logic lives in `scripts/lib/compute/link-neighbourhoods.js` and `scripts/link-neighbourhoods.descriptor.json`.
 
-1. Load all 158 neighbourhood polygons as Turf features
-2. For each permit with coordinates: test against each polygon
-3. Update `permits.neighbourhood_id` (sentinel `-1` for unmatched)
+1. Load and COUNT the neighbourhood polygon corpus (`geom IS NOT NULL`), gated at the `sources_neighbourhoods_floor` registry row before any write is issued
+2. Select the eligible permits — `neighbourhood_id IS NULL AND latitude IS NOT NULL AND longitude IS NOT NULL`
+3. Update `permits.neighbourhood_id` from the containing polygon's `neighbourhoods.id` in ONE set-based join UPDATE
+4. Report the CUMULATIVE link rate and the unmatched tail as their own declared check rows
 
-**Edge Cases:** No coordinates → skipped. N+1 query pattern (individual UPDATE per permit — known perf issue).
+**Edge Cases:** a permit with no coordinates is outside the eligibility scope and is never walked — it is neither stamped nor counted as work (the pre-conversion step counted a wider `coords OR parcel geometry` set it could not process, LN-D6). An unmatched geocoded permit is left NULL and counted by the `no_neighbourhood_match` row; the `-1` no-match sentinel is RETIRED (unwriteable under `fk_permits_neighbourhoods`, LN-D1), as is the Turf.js fallback branch (LN-D2). A missing PostGIS extension, `neighbourhoods.geom`, GiST index or FK HALTS the step (`guards.requires`, `on_missing: "fail"`) rather than silently answering with a second algorithm.
 
-**Testing:** `neighbourhood.logic.test.ts`
+**Testing:** `neighbourhood.logic.test.ts`, `src/tests/steps/link_neighbourhoods/violations.test.ts`
 
 ---
 

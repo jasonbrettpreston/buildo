@@ -185,10 +185,10 @@ describe('template-freeze.json — the frozen categories/runners match the live 
     expect(ARTIFACT.archetype_profiles.every((p) => p.proven)).toBe(true);
   });
 
-  it('LINK is honestly recorded with 2 shapes (link, link_keyed) — a real branch not shown by Spec 124 §9\'s own 1-row-per-archetype table', () => {
+  it('LINK is honestly recorded with 3 shapes (link, link_column, link_keyed) — a real branch not shown by Spec 124 §9\'s own 1-row-per-archetype table', () => {
     const link = ARTIFACT.archetype_profiles.find((p) => p.archetype === 'LINK');
-    expect(link?.shapes.sort()).toEqual(['link', 'link_keyed']);
-    expect(link?.runners.sort()).toEqual(['runLinkKeyedPhase', 'runLinkPhase']);
+    expect(link?.shapes.sort()).toEqual(['link', 'link_column', 'link_keyed']);
+    expect(link?.runners.sort()).toEqual(['runLinkColumnPhase', 'runLinkKeyedPhase', 'runLinkPhase']);
   });
 });
 

@@ -13,7 +13,7 @@
     "preserved, live tier refreshed) or `--refresh` (frozen tier re-derived, frozen_at := HEAD)."
   ],
   "contract_version": 1,
-  "frozen_at": "2ba8e705aed5bc22f01637961564ec62a87cc54a",
+  "frozen_at": "a062eb79feaee59a9ce21ff07f291ac4a6433a2b",
   "frozen_after_pilot": 9,
   "schema_sha256": "0ae07c62cf6a1b5470ffe4a0f91aa25e15c7ecff8b309fdd7bbe33e830c14baa",
   "categories": [
@@ -61,11 +61,13 @@
       "archetype": "LINK",
       "shapes": [
         "link",
-        "link_keyed"
+        "link_keyed",
+        "link_column"
       ],
       "runners": [
         "runLinkPhase",
-        "runLinkKeyedPhase"
+        "runLinkKeyedPhase",
+        "runLinkColumnPhase"
       ],
       "first_step": "link_massing",
       "proven": true

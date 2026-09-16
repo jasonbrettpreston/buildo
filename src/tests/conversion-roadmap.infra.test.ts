@@ -112,7 +112,7 @@ describe('measured counts — independently re-derived, not transcribed from the
     return map;
   }
 
-  it('50 remaining files, 53 remaining slugs (excluding the 12 converted, 1 pending, the 1 python-exempt file and the 1 RUNNER-owned exemption — `reconcile`, Spec 124 R-AP, 2026-09-15)', () => {
+  it('50 remaining files, 52 remaining slugs (excluding the 13 converted, 0 pending, the 1 python-exempt file and the 1 RUNNER-owned exemption — `reconcile`, Spec 124 R-AP, 2026-09-15)', () => {
     const fileToSlugs = fileToSlugsMap();
     const convertedSet = new Set(CONVERTED);
     const pendingSet = new Set(PENDING_FILES);
@@ -126,7 +126,7 @@ describe('measured counts — independently re-derived, not transcribed from the
     expect(remainingSlugCount).toBe(52);
   });
 
-  it('the census file-count-by-batch matches the independently re-derived C4/C5/C6 split (C4=1, C5=13 — `reconcile` left C5 for the R-AP RUNNER-owned exemption, 2026-09-15 — C6=36; pending=1 — link_neighbourhoods, batch-2 I4 commit 1, 2026-09-16; assert_engine_health\'s own row was deleted entirely at batch1 I3 commit 9, 2026-09-14, mirroring the assert_data_bounds/I2 commit 9 cutover precedent)', () => {
+  it('the census file-count-by-batch matches the independently re-derived C4/C5/C6 split (C4=1, C5=13 — `reconcile` left C5 for the R-AP RUNNER-owned exemption, 2026-09-15 — C6=36; pending=0 — link_neighbourhoods was pending from batch-2 I4 commit 1 and converted at commit 3, both on 2026-09-16; assert_engine_health\'s own row was deleted entirely at batch1 I3 commit 9, 2026-09-14, mirroring the assert_data_bounds/I2 commit 9 cutover precedent)', () => {
     const census = JSON.parse(fs.readFileSync(CENSUS_PATH, 'utf8')) as { entries: Array<{ slug: string; file: string; batch: string; status?: string }> };
     const fileToSlugs = fileToSlugsMap();
     const convertedSet = new Set(CONVERTED);
@@ -167,7 +167,10 @@ describe('measured counts — independently re-derived, not transcribed from the
     // C5 itself is unaffected by this slug's move (it was never a C5 member) — the
     // census total gains 0 net rows (C4's loss is pending's gain, not C5's).
     expect(c5.size).toBe(13);
-    expect(pendingBatch.size).toBe(1);
+    // 1 -> 0 at the I4 CUTOVER (commit 3): the row is RETAINED with `status: "converted"`
+    // (Spec 124 R-AO) rather than deleted, but `byBatch` counts only rows the roadmap still
+    // treats as pending work, and a converted row is no longer that.
+    expect(pendingBatch.size).toBe(0);
     expect(c6.size).toBe(36);
     expect(c4.size + c5.size + c6.size).toBe(remaining.length);
   });
@@ -345,7 +348,7 @@ describe('buildRoadmap() — totality over the real committed data (HIGH-1: slug
     }
   });
 
-  it('HIGH-1 + R-AP: the 3 declared exemptions (inspections, coa_documents, reconcile) are NOT silently dropped — 68 total manifest slugs = 12 converted + 1 pending + 3 exempted + 52 remaining', async () => {
+  it('HIGH-1 + R-AP: the 3 declared exemptions (inspections, coa_documents, reconcile) are NOT silently dropped — 68 total manifest slugs = 13 converted + 0 pending + 3 exempted + 52 remaining', async () => {
     const mod = (await import(pathToFileURL(GENERATOR).href)) as unknown as RoadmapModule;
     const args = await loadRealArgs(mod);
     expect(args.exemptions.map((e) => e.slug).sort()).toEqual(['coa_documents', 'inspections', 'reconcile']);
@@ -358,7 +361,7 @@ describe('buildRoadmap() — totality over the real committed data (HIGH-1: slug
     const convertedSlugCount = CONVERTED.length;
     expect(totalSlugs).toBe(68);
     expect(convertedSlugCount + pendingSlugs + args.exemptions.length + remainingSlugs).toBe(totalSlugs);
-    expect(pendingSlugs).toBe(1);
+    expect(pendingSlugs).toBe(0);
     expect(remainingSlugs).toBe(52);
   });
 

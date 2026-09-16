@@ -706,6 +706,12 @@ describe('execution.shape "enrich" + the ENRICHER execution.phases[] profile (pi
       // unchanged, and the new backlog row deliberately SHARES its bound rather than
       // introducing a second source of truth for the same population.
       'scripts/enrich-parcels.descriptor.json',
+      // batch-2 I4 cutover (2026-09-16): link_neighbourhoods's descriptor changes in its
+      // OWN cutover commit, and it has to — Rule 11's `order_guarantee.anchor` cited the
+      // exact Spec 60 sentence that same commit DELETES (it described the retired `-1`
+      // sentinel). `checkOrderGuaranteesCited` resolves an anchor by a whole-file substring
+      // test, so the spec amendment and the re-point are inseparable.
+      'scripts/link-neighbourhoods.descriptor.json',
     ]);
     const descriptorPaths = converted.map((f) => f.replace(/\.js$/, '.descriptor.json'));
     const enrichers: string[] = [];

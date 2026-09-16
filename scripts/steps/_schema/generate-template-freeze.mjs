@@ -290,7 +290,7 @@ function deriveSchema() {
 const RUNNER_TO_SHAPE = {
   runIngestPhase: 'ingest',
   runLinkPhase: 'link',
-  // RE-FREEZE #6 (I4, 2026-09-16, Ask 1 ruling (B) FORK) — the 9th runner,
+  // RE-FREEZE #9 (I4, 2026-09-16, Ask 1 ruling (B) FORK) — the 9th runner,
   // link_neighbourhoods' own `execution.shape: "link_column"`.
   runLinkColumnPhase: 'link_column',
   runLinkKeyedPhase: 'link_keyed',

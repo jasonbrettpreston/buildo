@@ -11,18 +11,20 @@
 // I4 — `link_neighbourhoods`, the LINK archetype's THIRD and last member.
 // COMPRESSED 3-commit form (R-PACE-1 / Spec 124 R-AH).
 //
-// ⚠️ THIS FILE IS **RED** AT COMMIT ①, ON PURPOSE (Spec 123 §7, PH-7 "prove red first").
-// Every claim about an artifact that commit ② or ③ produces — the compute module, the
-// frozen shell, the `link_column` runner + shape enum, the `converted[]` registration,
-// the amended Spec 60/43 text — is written as `it.fails(...)`. They are REAL assertions
-// that REALLY fail today; vitest reports a failing `it.fails` as a PASS and, crucially,
-// reports it as a FAILURE the moment the claim becomes true. So each one flips to a plain
-// `it()` in the commit that makes it true, and a premature flip is caught by the suite
-// itself rather than by a reviewer's memory.
+// THIS FILE WAS **RED FIRST** (Spec 123 §7, PH-7). At commit ① it carried 10 `it.fails(...)`
+// claims about artifacts commits ② and ③ had not yet produced — the compute module, the
+// frozen shell, the `link_column` runner + shape enum, the `converted[]` registration, the
+// amended Spec 60/43 text. Each was a REAL assertion that REALLY failed; vitest reports a
+// failing `it.fails` as a pass and, crucially, as a FAILURE the moment the claim comes true,
+// so each flipped to a plain `it()` in the commit that earned it and a premature flip would
+// have reddened the suite. AS OF COMMIT ③ ALL TEN HAVE FLIPPED and none remain — which is
+// the point: the RED evidence is in the git history (commits `2f704d8f` → `230176c9` → the
+// cutover), not in a permanently-failing assertion.
 //
-// Everything asserted with a plain `it()` is TRUE AS OF COMMIT ①: the descriptor, the
-// notes.json fences, the three seeded logic variables, the defect-ledger rows, and the
-// `pending` registration all land in that commit.
+// One claim the plan filed as RED was NOT one: the Rule 11 `order_guarantee` anchor
+// resolved at commit ① already and had to STAY resolving, so it is a standing `it()` that
+// reds if commit ③ amends Spec 60 without re-pointing the anchor in the same commit. It did
+// both, and it is still green.
 //
 // THIS FILE IS DB-FREE BY CONVENTION (matches every other `violations.test.ts` in this
 // programme). Every live number it cites was measured against the local dev DB on
@@ -515,14 +517,11 @@ describe('defect-ledger.md carries the LN-D* rows with a closed-vocabulary statu
 // ---------------------------------------------------------------------------
 // R-K.1 — the pending-stage registration
 // ---------------------------------------------------------------------------
-describe('converted.json — link-neighbourhoods.js is PENDING at shape_clean', () => {
-  it('the entry exists with exactly the five required keys, stage shape_clean (advanced at commit ② when the compute + runner landed), and the file is NOT yet in converted[]', () => {
+describe('converted.json — link-neighbourhoods.js is REGISTERED (cutover landed at commit ③, per R-K)', () => {
+  it('R-K mutual exclusion: the file is in converted[] and NO pending entry survives — registration and deletion in the SAME commit', () => {
     const c = readJson<{ converted: string[]; pending: Array<Record<string, string>> }>(CONVERTED_REL);
-    const entry = c.pending.find((p) => p.file === STEP_REL);
-    expect(entry, `no pending entry for ${STEP_REL}`).toBeTruthy();
-    expect(Object.keys(entry ?? {}).sort()).toEqual(['declared', 'file', 'reason', 'registers_at', 'stage']);
-    expect(entry?.stage).toBe('shape_clean');
-    expect(c.converted).not.toContain(STEP_REL);
+    expect(c.converted).toContain(STEP_REL);
+    expect(c.pending.some((p) => p.file === STEP_REL), 'a surviving pending entry after cutover is a stale declaration').toBe(false);
   });
 });
 
@@ -660,13 +659,13 @@ describe('RED (commit ②) — the frozen shell and the link_column runner', () 
 });
 
 describe('RED (commit ③) — cutover and the spec diff', () => {
-  it.fails('FUTURE, flips at commit ③ — R-K mutual exclusion: the file is registered in converted[] and its pending entry is deleted in the SAME commit', () => {
+  it('LANDED at commit ③ — R-K mutual exclusion: the file is registered in converted[] and its pending entry is deleted in the SAME commit', () => {
     const c = readJson<{ converted: string[]; pending: Array<{ file: string }> }>(CONVERTED_REL);
     expect(c.converted).toContain(STEP_REL);
     expect(c.pending.some((p) => p.file === STEP_REL)).toBe(false);
   });
 
-  it.fails('FUTURE, flips at commit ③ — Spec 60 §"Link Neighbourhoods" no longer states the three measurably-false things (Turf.js as THE method, the `-1` sentinel, the retired N+1 query pattern)', () => {
+  it('LANDED at commit ③ — Spec 60 §"Link Neighbourhoods" no longer states the three measurably-false things (Turf.js as THE method, the `-1` sentinel, the retired N+1 query pattern)', () => {
     const spec = readText(SPEC60_REL);
     const start = spec.indexOf('### Link Neighbourhoods');
     expect(start).toBeGreaterThan(-1);
@@ -676,7 +675,7 @@ describe('RED (commit ③) — cutover and the spec diff', () => {
     expect(section).not.toMatch(/No coordinates → skipped/);
   });
 
-  it.fails('FUTURE, flips at commit ③ — Spec 43\'s sources-chain row no longer repeats the retired N+1 claim', () => {
+  it('LANDED at commit ③ — Spec 43\'s sources-chain row no longer repeats the retired N+1 claim', () => {
     const spec = readText(SPEC43_REL);
     const row = spec.split('\n').find((l) => l.includes('| `link_neighbourhoods` |'));
     expect(row, 'the link_neighbourhoods row is missing from Spec 43').toBeTruthy();

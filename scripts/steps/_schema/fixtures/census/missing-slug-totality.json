@@ -228,8 +228,10 @@
       "slug": "link_neighbourhoods",
       "file": "scripts/link-neighbourhoods.js",
       "archetype": "LINK",
-      "batch": "C4",
-      "reason": "C4 batching-entry §3.2 order 4 — LINK 3rd/last member"
+      "batch": "pending",
+      "reason": "RETAINED at cutover per Spec 124 R-AO. Archetype and batch are the census's OWN pre-cutover values, kept verbatim (`archetype: \"LINK\"` from the original C4 batching entry, `batch: \"pending\"` as flipped at commit 1) and never re-derived from the descriptor — a copy of the descriptor would make fast invariant #25 compare a value to itself. Original C4 reason: \"C4 batching-entry §3.2 order 4 — LINK 3rd/last member\".",
+      "status": "converted",
+      "converted_at": "commit-3"
     },
     {
       "slug": "link_similar",

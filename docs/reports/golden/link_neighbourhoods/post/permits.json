@@ -3,7 +3,7 @@
   "spec": "docs/specs/01-pipeline/122_pipeline_step_optimization.md §5.3",
   "step": "scripts/link-neighbourhoods.js",
   "chain": "permits",
-  "git_head": "230176c9840bc87b70a8b8b9dc1902b635b8df46",
+  "git_head": "a062eb79feaee59a9ce21ff07f291ac4a6433a2b",
   "exit_code": 0,
   "signal": null,
   "summary": {
@@ -11,7 +11,7 @@
     "records_new": 0,
     "records_updated": 0,
     "records_meta": {
-      "duration_ms": 1946,
+      "duration_ms": 1439,
       "code_version": "v1-postgis-containment",
       "permits_processed": 0,
       "permits_linked": 0,
@@ -47,8 +47,8 @@
             "status": "PASS",
             "source": "check",
             "order_guarantee": {
-              "anchor": "3. Update `permits.neighbourhood_id` (sentinel `-1` for unmatched)",
-              "guarantee": "the neighbourhood polygon corpus is loaded and counted BEFORE any permits.neighbourhood_id write is issued — Spec 60's own numbered contract orders the boundary load (step 1) ahead of the stamp (step 3), and with an empty corpus every eligible permit would be walked, matched against nothing, and left NULL while the run still reported a completed terminal."
+              "anchor": "3. Update `permits.neighbourhood_id` from the containing polygon's `neighbourhoods.id` in ONE set-based join UPDATE",
+              "guarantee": "the neighbourhood polygon corpus is loaded and counted BEFORE any permits.neighbourhood_id write is issued — Spec 60's own numbered contract orders the boundary load (step 1) ahead of the stamp (step 3), and with an empty corpus every eligible permit would be walked, matched against nothing, and left NULL while the run still reported a completed terminal. ANCHOR RE-POINTED at the cutover commit, in the SAME commit that amended the spec: the previous anchor was the literal sentence `3. Update `permits.neighbourhood_id` (sentinel `-1` for unmatched)`, which the amendment DELETES because it described the retired sentinel (LN-D1). `checkOrderGuaranteesCited` resolves an anchor by a plain whole-file substring test with no normalisation and no section scoping, and Spec 60 has no `60a_` appendix to fall back to, so a spec amendment without this re-point in the same commit reds Rule 11 and the step's own standing anchor lock."
             }
           },
           {
@@ -145,31 +145,31 @@
           },
           {
             "metric": "sys_neighbourhood_id_orphans_duration_ms",
-            "value": 225,
+            "value": 48,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "sys_negative_neighbourhood_ids_duration_ms",
-            "value": 82,
+            "value": 18,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "sys_linked_permit_outside_its_own_neighbourhood_duration_ms",
-            "value": 5846,
+            "value": 5830,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "sys_stamped_permits_with_null_coordinates_duration_ms",
-            "value": 5810,
+            "value": 5822,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "sys_neighbourhood_id_unreachable_no_coords_duration_ms",
-            "value": 377,
+            "value": 198,
             "threshold": null,
             "status": "INFO"
           },
@@ -181,7 +181,7 @@
           },
           {
             "metric": "sys_duration_ms",
-            "value": 8035,
+            "value": 7321,
             "threshold": null,
             "status": "INFO"
           }
@@ -217,10 +217,10 @@
   "parse_errors": [],
   "verdict": "WARN",
   "ledger_status": [],
-  "stdout": "{\"level\":\"INFO\",\"tag\":\"[link_neighbourhoods]\",\"msg\":\"[link_neighbourhoods] target: link_neighbourhoods (descriptor.database) → database=postgres user=postgres migrations=244 (floor 106)\"}\n{\"level\":\"INFO\",\"tag\":\"[link_neighbourhoods]\",\"msg\":\"permits: 0 permit(s) in scope at write time, 0 stamped, 0 matched no polygon (pre-write eligible count was 0)\"}\nPIPELINE_SUMMARY:{\"records_total\":0,\"records_new\":0,\"records_updated\":0,\"records_meta\":{\"duration_ms\":1946,\"code_version\":\"v1-postgis-containment\",\"permits_processed\":0,\"permits_linked\":0,\"no_match_count\":0,\"neighbourhoods_loaded\":158,\"config\":{\"sources_neighbourhoods_floor\":158,\"link_neighbourhoods_link_rate_warn_pct\":95,\"link_neighbourhoods_link_rate_fail_pct\":50,\"link_neighbourhoods_no_match_warn_count\":0},\"terminal\":\"linked_with_warnings\",\"ledger_row\":\"chain_owned\",\"chain_run_id\":null,\"pool_errors\":0,\"checks_failed\":0,\"checks_warned\":4,\"warnings\":[\"link_rate: 94.83040908053304\",\"linked_permit_outside_its_own_neighbourhood: 5138\",\"stamped_permits_with_null_coordinates: 9017\",\"neighbourhood_id_unreachable_no_coords: 1493\"],\"audit_table\":{\"phase\":8,\"name\":\"Neighbourhood Linking\",\"verdict\":\"WARN\",\"rows\":[{\"metric\":\"neighbourhoods_loaded_before_write\",\"value\":158,\"threshold\":\"value_min 158\",\"status\":\"PASS\",\"source\":\"check\",\"order_guarantee\":{\"anchor\":\"3. Update `permits.neighbourhood_id` (sentinel `-1` for unmatched)\",\"guarantee\":\"the neighbourhood polygon corpus is loaded and counted BEFORE any permits.neighbourhood_id write is issued — Spec 60's own numbered contract orders the boundary load (step 1) ahead of the stamp (step 3), and with an empty corpus every eligible permit would be walked, matched against nothing, and left NULL while the run still reported a completed terminal.\"}},{\"metric\":\"permits_processed\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"neighbourhoods_loaded\",\"value\":158,\"threshold\":\"value_min 158\",\"status\":\"PASS\",\"source\":\"check\",\"warn_threshold\":\"value_min 1\"},{\"metric\":\"run_linked\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"link_rate\",\"value\":94.83040908053304,\"threshold\":\"pct >= 95\",\"status\":\"WARN\",\"source\":\"check\"},{\"metric\":\"link_rate_floor\",\"value\":94.83040908053304,\"threshold\":\"pct >= 50\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"no_neighbourhood_match\",\"value\":0,\"threshold\":\"viol <= 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"sentinel_residue\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"write_privilege\",\"value\":\"bypassrls=true policies=0 rls_enabled=true\",\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"neighbourhood_id_orphans\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"invariant\"},{\"metric\":\"negative_neighbourhood_ids\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"invariant\"},{\"metric\":\"linked_permit_outside_its_own_neighbourhood\",\"value\":5138,\"threshold\":\"viol == 0\",\"status\":\"WARN\",\"source\":\"plausibility\"},{\"metric\":\"stamped_permits_with_null_coordinates\",\"value\":9017,\"threshold\":\"viol == 0\",\"status\":\"WARN\",\"source\":\"plausibility\"},{\"metric\":\"neighbourhood_id_unreachable_no_coords\",\"value\":1493,\"threshold\":\"viol == 0\",\"status\":\"WARN\",\"source\":\"plausibility\"},{\"metric\":\"sys_neighbourhood_id_orphans_duration_ms\",\"value\":225,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_negative_neighbourhood_ids_duration_ms\",\"value\":82,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_linked_permit_outside_its_own_neighbourhood_duration_ms\",\"value\":5846,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_stamped_permits_with_null_coordinates_duration_ms\",\"value\":5810,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_neighbourhood_id_unreachable_no_coords_duration_ms\",\"value\":377,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":8035,\"threshold\":null,\"status\":\"INFO\"}]}}}\nPIPELINE_META:{\"reads\":{\"permits\":[\"permit_num\",\"revision_num\",\"latitude\",\"longitude\",\"neighbourhood_id\"],\"neighbourhoods\":[\"id\",\"neighbourhood_id\",\"name\",\"geom\"]},\"writes\":{\"permits\":[\"neighbourhood_id\"]}}\n\n[link_neighbourhoods] completed in 8.0s\n",
+  "stdout": "{\"level\":\"INFO\",\"tag\":\"[link_neighbourhoods]\",\"msg\":\"[link_neighbourhoods] target: link_neighbourhoods (descriptor.database) → database=postgres user=postgres migrations=244 (floor 106)\"}\n{\"level\":\"INFO\",\"tag\":\"[link_neighbourhoods]\",\"msg\":\"permits: 0 permit(s) in scope at write time, 0 stamped, 0 matched no polygon (pre-write eligible count was 0)\"}\nPIPELINE_SUMMARY:{\"records_total\":0,\"records_new\":0,\"records_updated\":0,\"records_meta\":{\"duration_ms\":1439,\"code_version\":\"v1-postgis-containment\",\"permits_processed\":0,\"permits_linked\":0,\"no_match_count\":0,\"neighbourhoods_loaded\":158,\"config\":{\"sources_neighbourhoods_floor\":158,\"link_neighbourhoods_link_rate_warn_pct\":95,\"link_neighbourhoods_link_rate_fail_pct\":50,\"link_neighbourhoods_no_match_warn_count\":0},\"terminal\":\"linked_with_warnings\",\"ledger_row\":\"chain_owned\",\"chain_run_id\":null,\"pool_errors\":0,\"checks_failed\":0,\"checks_warned\":4,\"warnings\":[\"link_rate: 94.83040908053304\",\"linked_permit_outside_its_own_neighbourhood: 5138\",\"stamped_permits_with_null_coordinates: 9017\",\"neighbourhood_id_unreachable_no_coords: 1493\"],\"audit_table\":{\"phase\":8,\"name\":\"Neighbourhood Linking\",\"verdict\":\"WARN\",\"rows\":[{\"metric\":\"neighbourhoods_loaded_before_write\",\"value\":158,\"threshold\":\"value_min 158\",\"status\":\"PASS\",\"source\":\"check\",\"order_guarantee\":{\"anchor\":\"3. Update `permits.neighbourhood_id` from the containing polygon's `neighbourhoods.id` in ONE set-based join UPDATE\",\"guarantee\":\"the neighbourhood polygon corpus is loaded and counted BEFORE any permits.neighbourhood_id write is issued — Spec 60's own numbered contract orders the boundary load (step 1) ahead of the stamp (step 3), and with an empty corpus every eligible permit would be walked, matched against nothing, and left NULL while the run still reported a completed terminal. ANCHOR RE-POINTED at the cutover commit, in the SAME commit that amended the spec: the previous anchor was the literal sentence `3. Update `permits.neighbourhood_id` (sentinel `-1` for unmatched)`, which the amendment DELETES because it described the retired sentinel (LN-D1). `checkOrderGuaranteesCited` resolves an anchor by a plain whole-file substring test with no normalisation and no section scoping, and Spec 60 has no `60a_` appendix to fall back to, so a spec amendment without this re-point in the same commit reds Rule 11 and the step's own standing anchor lock.\"}},{\"metric\":\"permits_processed\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"neighbourhoods_loaded\",\"value\":158,\"threshold\":\"value_min 158\",\"status\":\"PASS\",\"source\":\"check\",\"warn_threshold\":\"value_min 1\"},{\"metric\":\"run_linked\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"link_rate\",\"value\":94.83040908053304,\"threshold\":\"pct >= 95\",\"status\":\"WARN\",\"source\":\"check\"},{\"metric\":\"link_rate_floor\",\"value\":94.83040908053304,\"threshold\":\"pct >= 50\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"no_neighbourhood_match\",\"value\":0,\"threshold\":\"viol <= 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"sentinel_residue\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"write_privilege\",\"value\":\"bypassrls=true policies=0 rls_enabled=true\",\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"neighbourhood_id_orphans\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"invariant\"},{\"metric\":\"negative_neighbourhood_ids\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"invariant\"},{\"metric\":\"linked_permit_outside_its_own_neighbourhood\",\"value\":5138,\"threshold\":\"viol == 0\",\"status\":\"WARN\",\"source\":\"plausibility\"},{\"metric\":\"stamped_permits_with_null_coordinates\",\"value\":9017,\"threshold\":\"viol == 0\",\"status\":\"WARN\",\"source\":\"plausibility\"},{\"metric\":\"neighbourhood_id_unreachable_no_coords\",\"value\":1493,\"threshold\":\"viol == 0\",\"status\":\"WARN\",\"source\":\"plausibility\"},{\"metric\":\"sys_neighbourhood_id_orphans_duration_ms\",\"value\":48,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_negative_neighbourhood_ids_duration_ms\",\"value\":18,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_linked_permit_outside_its_own_neighbourhood_duration_ms\",\"value\":5830,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_stamped_permits_with_null_coordinates_duration_ms\",\"value\":5822,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_neighbourhood_id_unreachable_no_coords_duration_ms\",\"value\":198,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":7321,\"threshold\":null,\"status\":\"INFO\"}]}}}\nPIPELINE_META:{\"reads\":{\"permits\":[\"permit_num\",\"revision_num\",\"latitude\",\"longitude\",\"neighbourhood_id\"],\"neighbourhoods\":[\"id\",\"neighbourhood_id\",\"name\",\"geom\"]},\"writes\":{\"permits\":[\"neighbourhood_id\"]}}\n\n[link_neighbourhoods] completed in 7.3s\n",
   "stderr": "",
   "pipeline_runs": [],
-  "pipeline_runs_max_id_before": 1886,
+  "pipeline_runs_max_id_before": 1890,
   "table_state": [
     {
       "table": "permits",
@@ -242,7 +242,7 @@
   "tables_source": "descriptor",
   "table_row_ceiling": 100000,
   "table_timing": {
-    "permits": 4313
+    "permits": 927
   },
   "table_specs": {
     "permits": {
@@ -322,8 +322,8 @@
             {
               "metric": "neighbourhoods_loaded_before_write",
               "order_guarantee": {
-                "anchor": "3. Update `permits.neighbourhood_id` (sentinel `-1` for unmatched)",
-                "guarantee": "the neighbourhood polygon corpus is loaded and counted BEFORE any permits.neighbourhood_id write is issued — Spec 60's own numbered contract orders the boundary load (step 1) ahead of the stamp (step 3), and with an empty corpus every eligible permit would be walked, matched against nothing, and left NULL while the run still reported a completed terminal."
+                "anchor": "3. Update `permits.neighbourhood_id` from the containing polygon's `neighbourhoods.id` in ONE set-based join UPDATE",
+                "guarantee": "the neighbourhood polygon corpus is loaded and counted BEFORE any permits.neighbourhood_id write is issued — Spec 60's own numbered contract orders the boundary load (step 1) ahead of the stamp (step 3), and with an empty corpus every eligible permit would be walked, matched against nothing, and left NULL while the run still reported a completed terminal. ANCHOR RE-POINTED at the cutover commit, in the SAME commit that amended the spec: the previous anchor was the literal sentence `3. Update `permits.neighbourhood_id` (sentinel `-1` for unmatched)`, which the amendment DELETES because it described the retired sentinel (LN-D1). `checkOrderGuaranteesCited` resolves an anchor by a plain whole-file substring test with no normalisation and no section scoping, and Spec 60 has no `60a_` appendix to fall back to, so a spec amendment without this re-point in the same commit reds Rule 11 and the step's own standing anchor lock."
               },
               "source": "check",
               "status": "PASS",
@@ -537,7 +537,7 @@
       }
     ]
   },
-  "source_fingerprint": "ee2d2949a832a2ae25f3175a99313bf711e241e0fd6543f9d49dee3a2c545eef",
+  "source_fingerprint": "f7a7effa10bb9038d1e12e7812bcf127646af6f00b0b908c5d78d9ca17d29282",
   "fingerprint_files": [
     "scripts/lib/compute/link-neighbourhoods.js",
     "scripts/link-neighbourhoods.descriptor.json",

@@ -193,9 +193,9 @@
       "chains": "all",
       "accept_until": "none",
       "order_guarantee": {
-        "guarantee": "the neighbourhood polygon corpus is loaded and counted BEFORE any permits.neighbourhood_id write is issued — Spec 60's own numbered contract orders the boundary load (step 1) ahead of the stamp (step 3), and with an empty corpus every eligible permit would be walked, matched against nothing, and left NULL while the run still reported a completed terminal.",
+        "guarantee": "the neighbourhood polygon corpus is loaded and counted BEFORE any permits.neighbourhood_id write is issued — Spec 60's own numbered contract orders the boundary load (step 1) ahead of the stamp (step 3), and with an empty corpus every eligible permit would be walked, matched against nothing, and left NULL while the run still reported a completed terminal. ANCHOR RE-POINTED at the cutover commit, in the SAME commit that amended the spec: the previous anchor was the literal sentence `3. Update `permits.neighbourhood_id` (sentinel `-1` for unmatched)`, which the amendment DELETES because it described the retired sentinel (LN-D1). `checkOrderGuaranteesCited` resolves an anchor by a plain whole-file substring test with no normalisation and no section scoping, and Spec 60 has no `60a_` appendix to fall back to, so a spec amendment without this re-point in the same commit reds Rule 11 and the step's own standing anchor lock.",
         "spec_ref": "docs/specs/01-pipeline/60_shared_steps.md",
-        "anchor": "3. Update `permits.neighbourhood_id` (sentinel `-1` for unmatched)"
+        "anchor": "3. Update `permits.neighbourhood_id` from the containing polygon's `neighbourhoods.id` in ONE set-based join UPDATE"
       },
       "why": {
         "text": "Promotes the pre-conversion `neighbourhoods_loaded` audit row (:343) from a post-hoc observation to a pre_write gate. Pre-conversion the count was taken at :80 and only REPORTED at :343 — after every write had already been issued — so a zero-polygon run wrote nothing and verdicted FAIL with the damage (a fully-walked, fully-unmatched eligible tail) already done.",
