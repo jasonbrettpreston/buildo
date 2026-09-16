@@ -7,7 +7,10 @@
     "lock": 5,
     "why_lock": {
       "text": "Lock 5 is Spec 47 §A.5's registry id (row 5, category '4 — Load/Ingest', 'Writes Timestamps? YES — geocoded_at'), not a spec number. Assigned by 745a1b4d (Bundle G Wave 4 advisory-lock retrofit) and unchanged since; kept textually per Spec 122 §5.4 so the registry loop (src/tests/pipeline-advisory-lock.infra.test.ts) stays green across the conversion.",
-      "liveness": { "kind": "spec", "ref": "docs/specs/01-pipeline/47_pipeline_script_protocol.md" }
+      "liveness": {
+        "kind": "spec",
+        "ref": "docs/specs/01-pipeline/47_pipeline_script_protocol.md"
+      }
     },
     "spec": "60",
     "spec_version": "1.0",
@@ -15,39 +18,84 @@
     "contract_version": 1,
     "gate_exempt": false
   },
-
   "inputs": {
     "reads": {
       "steps": [
-        { "step": "address_points", "version_pin": "gte" }
+        {
+          "step": "address_points",
+          "version_pin": "gte"
+        }
       ],
       "tables": [
-        { "table": "permits", "columns": ["permit_num", "revision_num", "geo_id", "latitude", "longitude", "geocoded_at"] },
-        { "table": "address_points", "columns": ["address_point_id", "latitude", "longitude"] }
+        {
+          "table": "permits",
+          "columns": [
+            "permit_num",
+            "revision_num",
+            "geo_id",
+            "latitude",
+            "longitude",
+            "geocoded_at"
+          ]
+        },
+        {
+          "table": "address_points",
+          "columns": [
+            "address_point_id",
+            "latitude",
+            "longitude"
+          ]
+        }
       ],
       "externals": []
     },
     "expect_nonempty": true,
     "on_missing": "warn"
   },
-
   "outputs": {
     "writes": [
       {
         "table": "permits",
-        "key": ["permit_num", "revision_num"],
+        "key": [
+          "permit_num",
+          "revision_num"
+        ],
         "columns": [
-          { "name": "latitude", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
-          { "name": "longitude", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
-          { "name": "geocoded_at", "vocabulary": "none", "written": "step", "bind": "value", "source": "run_at" }
+          {
+            "name": "latitude",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "longitude",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "geocoded_at",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "run_at"
+          }
         ],
         "write_discipline": {
           "class": "set_based_join_update",
           "guard": "is_distinct_from",
-          "guard_columns": ["latitude", "longitude"],
+          "guard_columns": [
+            "latitude",
+            "longitude"
+          ],
           "guard_columns_why": {
             "text": "LG-9, the run-clock trap, live here and NOT moot. geocoded_at declares source:\"run_at\" — it is DISTINCT FROM its stored value on every run, so guard_columns:\"all_declared\" (or any expansion including it) would rewrite every permit carrying a numeric geo_id on every run. The pre-conversion SQL guards on exactly two columns (32da93c5, 'add IS DISTINCT FROM guard to geocode-permits UPDATE'); the explicit two-column list is the verbatim port, never a generic expansion.",
-            "liveness": { "kind": "file", "ref": "scripts/lib/step/write.js" }
+            "liveness": {
+              "kind": "file",
+              "ref": "scripts/lib/step/write.js"
+            }
           },
           "scope": "p.geo_id IS NOT NULL AND p.geo_id != '' AND p.geo_id ~ '^[0-9]+$' AND ap.address_point_id = CASE WHEN p.geo_id ~ '^[0-9]+$' THEN p.geo_id::INTEGER END",
           "expected_change_ratio": "none",
@@ -55,46 +103,92 @@
           "txn_scope": "step",
           "why": {
             "text": "The join predicate carries a live fence: the redundant-looking `CASE WHEN p.geo_id ~ '^[0-9]+$' THEN p.geo_id::INTEGER END` exists because PostgreSQL may reorder WHERE conditions and evaluate the ::INTEGER cast before the regex, crashing the statement on a non-numeric geo_id (d24c964c). The CASE expression makes the ordering structural rather than textual. It MUST be ported verbatim into compute — a generator that emits `p.geo_id::INTEGER` guarded only by a sibling regex predicate reproduces the exact crash the fence retired. The scope is NOT narrowed by `latitude IS NULL`: every permit with a numeric geo_id is re-joined every run and the IS DISTINCT FROM guard, not a lineage predicate, is what makes the write cheap (see staleness.scope:\"all\").",
-            "liveness": { "kind": "file", "ref": "scripts/lib/compute/geocode-permits.js" }
+            "liveness": {
+              "kind": "file",
+              "ref": "scripts/lib/compute/geocode-permits.js"
+            }
           }
         },
         "retract": "none",
         "replay": "idempotent_upsert",
-        "source_key_policy": { "unique": true, "on_collision": "not_applicable", "key_space_migration": "none" }
+        "source_key_policy": {
+          "unique": true,
+          "on_collision": "not_applicable",
+          "key_space_migration": "none"
+        }
       },
       {
         "table": "permits",
-        "key": ["permit_num", "revision_num"],
+        "key": [
+          "permit_num",
+          "revision_num"
+        ],
         "columns": [
-          { "name": "latitude", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute", "set_value": null },
-          { "name": "longitude", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute", "set_value": null },
-          { "name": "geocoded_at", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute", "set_value": null }
+          {
+            "name": "latitude",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute",
+            "set_value": null
+          },
+          {
+            "name": "longitude",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute",
+            "set_value": null
+          },
+          {
+            "name": "geocoded_at",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute",
+            "set_value": null
+          }
         ],
         "write_discipline": {
           "class": "set_based_null_retract",
           "guard": "is_distinct_from",
-          "guard_columns": ["latitude"],
+          "guard_columns": [
+            "latitude"
+          ],
           "guard_columns_why": {
             "text": "The pre-conversion SQL's `latitude IS NOT NULL` term IS an IS-DISTINCT-FROM-NULL guard on latitude, split out of the scope so the class-O codegen reproduces the statement equivalently (the link_wsib LG-16 precedent, whose scope is `match_confidence = $1` and whose guard is over `linked_entity_id`). The equivalence is PROVEN BY EXECUTION, not assumed: `latitude IS NOT NULL` and `latitude IS DISTINCT FROM NULL` were run side by side over all 254,082 live permits and over a three-row VALUES table including NULL — 231,930 each, ZERO disagreements. geocoded_at stays OUT of guard_columns: it is written as the literal NULL here (not the run clock), but including it would widen the generated predicate and change the statement — a behaviour change forbidden at conversion (Spec 123 §1.1). ⚠️ DECLARED DIVERGENCE, found by the Integration plan seat and locked rather than tolerated: `write.js#buildBeforeImageSelectSql` builds the before-image SELECT from `plan.scope` ONLY and does NOT append the guard clause, so the before image is a strict SUPERSET of the rows the retraction touches — it carries every row matching `(geo_id IS NULL OR geo_id = '') AND geocoded_at IS NOT NULL`, including any whose latitude is already NULL and which the statement therefore skips. On this database the divergence is unobservable (both sets measure 0 rows), and a superset before-image is the safe direction for an audit trail; it is declared here, and locked both ways by src/tests/steps/geocode_permits/violations.test.ts's DECLARED DIVERGENCE case, so moving `latitude IS NOT NULL` back into `scope` reds the suite and forces this note to be retired in the same commit.",
-            "liveness": { "kind": "file", "ref": "scripts/lib/step/write.js" }
+            "liveness": {
+              "kind": "file",
+              "ref": "scripts/lib/step/write.js"
+            }
           },
           "scope": "(geo_id IS NULL OR geo_id = '') AND geocoded_at IS NOT NULL",
           "expected_change_ratio": "none",
           "idempotent_rerun": "zero_writes",
           "idempotent_rerun_why": {
             "text": "After the retraction fires, the row's latitude is NULL and geocoded_at is NULL, so BOTH the guard and the scope exclude it permanently — a second run over the same population changes 0 rows. Unlike link_wsib's tier-3 repair (declared_drift), this retraction has a self-extinguishing target.",
-            "liveness": { "kind": "check", "ref": "zombies_cleaned" }
+            "liveness": {
+              "kind": "check",
+              "ref": "zombies_cleaned"
+            }
           },
           "txn_scope": "step",
           "why": {
             "text": "The zombie-coordinate cleanup (d24c964c). A permit whose geo_id the city removed from the feed keeps coordinates that no longer trace to any address point. `geocoded_at IS NOT NULL` is a LOAD-BEARING narrowing, not a convenience: it confines the retraction to rows THIS step geocoded, so coordinates set by any other means are never wiped. Class O rather than set_based_scoped so every place this step retracts is greppable by class name and the 'never DELETE' lock has a class to assert against (LG-16).",
-            "liveness": { "kind": "file", "ref": "scripts/lib/compute/geocode-permits.js" }
+            "liveness": {
+              "kind": "file",
+              "ref": "scripts/lib/compute/geocode-permits.js"
+            }
           }
         },
         "retract": "all",
         "retract_when": "always",
         "replay": "idempotent_upsert",
-        "source_key_policy": { "unique": true, "on_collision": "not_applicable", "key_space_migration": "none" }
+        "source_key_policy": {
+          "unique": true,
+          "on_collision": "not_applicable",
+          "key_space_migration": "none"
+        }
       }
     ],
     "cascades": "none",
@@ -110,15 +204,20 @@
       "statements": 2,
       "why": {
         "text": "Exactly two write statements per invocation, in every mode and on every chain: the join UPDATE then the null-retraction UPDATE, both inside ONE pipeline.withTransaction. There is no batching, no per-tier repetition and no mode-conditional third statement — the step has no full/incremental split at all (staleness.mode_select \"none\").",
-        "liveness": { "kind": "file", "ref": "scripts/lib/compute/geocode-permits.js" }
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/geocode-permits.js"
+        }
       }
     }
   },
-
   "staleness": {
     "scope": "all",
     "trigger": [
-      { "signal": "always", "position": "pre_compute" }
+      {
+        "signal": "always",
+        "position": "pre_compute"
+      }
     ],
     "mode_select": "none",
     "checkpoint": "none",
@@ -130,14 +229,12 @@
     "logic_version": "v1-address-point-geo-id-join",
     "on_fingerprint_change": "none"
   },
-
   "guards": {
     "requires": [],
     "srid": "none",
     "empty_source": "none",
     "schema_drift": "none"
   },
-
   "execution": {
     "shape": "enrich",
     "heartbeat_minutes_from_config": "geocode_permits_heartbeat_minutes",
@@ -177,23 +274,37 @@
     "on_check_error": "fail_step",
     "on_check_error_why": {
       "text": "Every declared check reads a count the library already measured in the same run — a check that throws is a library defect, not an upstream data condition, and must redden the run rather than drop its row (the compute_centroids precedent).",
-      "liveness": { "kind": "file", "ref": "scripts/lib/step/index.js" }
+      "liveness": {
+        "kind": "file",
+        "ref": "scripts/lib/step/index.js"
+      }
     },
     "on_degrade": "none",
     "criticality": "required",
     "network": "none",
     "invocation": {
-      "permits": { "argv": [], "env": { "PIPELINE_CHAIN": "permits" } },
-      "sources": { "argv": [], "env": { "PIPELINE_CHAIN": "sources" } }
+      "permits": {
+        "argv": [],
+        "env": {
+          "PIPELINE_CHAIN": "permits"
+        }
+      },
+      "sources": {
+        "argv": [],
+        "env": {
+          "PIPELINE_CHAIN": "sources"
+        }
+      }
     },
     "maintenance": "none"
   },
-
   "checks": [
     {
       "id": "total_permits",
       "kind": "field_coverage",
-      "expect": { "reports": "COUNT(*) FROM permits after both writes — the denominator geocode_coverage divides by" },
+      "expect": {
+        "reports": "COUNT(*) FROM permits after both writes — the denominator geocode_coverage divides by"
+      },
       "limit": "viol == 0",
       "severity": "INFO",
       "blocking": false,
@@ -202,13 +313,18 @@
       "accept_until": "none",
       "why": {
         "text": "Ported by name from the pre-conversion audit row. Read AFTER the writes on purpose: d24c964c's own 'Fix read-skew: use after.total as denominator for coverage metric' moved this from the pre-run count, because a permits load running concurrently made the pre/post denominators disagree and the coverage percentage jump.",
-        "liveness": { "kind": "table", "ref": "permits" }
+        "liveness": {
+          "kind": "table",
+          "ref": "permits"
+        }
       }
     },
     {
       "id": "already_geocoded",
       "kind": "field_coverage",
-      "expect": { "reports": "permits with BOTH latitude and longitude non-NULL, measured BEFORE this run's writes" },
+      "expect": {
+        "reports": "permits with BOTH latitude and longitude non-NULL, measured BEFORE this run's writes"
+      },
       "limit": "viol == 0",
       "severity": "INFO",
       "blocking": false,
@@ -217,13 +333,18 @@
       "accept_until": "none",
       "why": {
         "text": "Ported by name. Declared when:\"pre\" because it is genuinely the pre-run reading — the one audit row on this step that is not measured after the transaction commits, and the row that makes newly_geocoded interpretable.",
-        "liveness": { "kind": "table", "ref": "permits" }
+        "liveness": {
+          "kind": "table",
+          "ref": "permits"
+        }
       }
     },
     {
       "id": "newly_geocoded",
       "kind": "field_coverage",
-      "expect": { "reports": "rowCount of the phase-1 join UPDATE — records_updated's own source" },
+      "expect": {
+        "reports": "rowCount of the phase-1 join UPDATE — records_updated's own source"
+      },
       "limit": "viol == 0",
       "severity": "INFO",
       "blocking": false,
@@ -232,13 +353,18 @@
       "accept_until": "none",
       "why": {
         "text": "Ported by name from the pre-conversion `updated` counter. Named 'newly_geocoded' but it counts rows whose coordinates CHANGED, which includes a re-geocode of a permit whose geo_id now resolves elsewhere — the name is the pinned contract (src/lib/admin/funnel.ts reads this step's summary), the semantics are stated here.",
-        "liveness": { "kind": "table", "ref": "permits" }
+        "liveness": {
+          "kind": "table",
+          "ref": "permits"
+        }
       }
     },
     {
       "id": "total_geocoded",
       "kind": "field_coverage",
-      "expect": { "reports": "permits with BOTH latitude and longitude non-NULL after both writes — geocode_coverage's numerator" },
+      "expect": {
+        "reports": "permits with BOTH latitude and longitude non-NULL after both writes — geocode_coverage's numerator"
+      },
       "limit": "viol == 0",
       "severity": "INFO",
       "blocking": false,
@@ -247,13 +373,18 @@
       "accept_until": "none",
       "why": {
         "text": "Ported by name. Together with total_permits it is the only pair from which geocode_coverage can be re-derived by a reader of the audit table alone.",
-        "liveness": { "kind": "table", "ref": "permits" }
+        "liveness": {
+          "kind": "table",
+          "ref": "permits"
+        }
       }
     },
     {
       "id": "geocode_coverage",
       "kind": "bound",
-      "expect": { "of": "total_geocoded / total_permits as a percentage" },
+      "expect": {
+        "of": "total_geocoded / total_permits as a percentage"
+      },
       "limit": "pct >= 95",
       "limit_from_config": "geocode_permits_coverage_warn_pct",
       "severity": "WARN",
@@ -264,13 +395,18 @@
       "retighten_when": "GP-D1 is adjudicated, and the mechanics below are the CORRECTED ones — an earlier draft's version was refuted by re-execution at the Regression Guardian plan seat. fcd6ff68 (2026-03-21) introduced BOTH the row literal and the audit_table.verdict comparison at 95. 4de16d00 (2026-03-27) measured 90.9% live coverage, called the ungeocodable tail 'a permanent data gap', and lowered the threshold 95 -> 85 — but its diff touches exactly ONE line, the ROW literal; the verdict comparison was left reading '< 95' and has NEVER been lowered, so the emitted verdict never changed and the step kept WARNing throughout the five days the fix stood. d24c964c (2026-04-01) then reconciled the row back up under 'Align audit threshold to 95% to match verdict threshold (was 85%)', which is an accurate description of what it did and NOT the reckless restoration the draft alleged. Net: the coverage gate has been evaluated at 95 for its entire life, the one measurement ever taken against it landed on the wrong one of two duplicated literals and achieved nothing, and nothing in the tree afterwards records that a measurement was ever taken — which is why Rule 10's parallel-boolean class is a silent-no-op-fix risk and not only a disagreement risk. RE-MEASURED 2026-09-16: coverage = 231,930 / 254,082 = 91.2816%, and 15 of the last 40 pipeline_runs rows carrying an audit verdict are WARN with ZERO PASS, so 'it WARNs on every run' is a measurement rather than an inference. The structural ceiling is 1 - 7,660/254,082 = 96.99% (the no_geo_id tail can never be geocoded by a geo_id equijoin), so 95 leaves about 2 points of headroom against a metric 3.7 points below it. The externalised default is seeded at 95 so the conversion commits are a genuine zero-diff; the VALUE ruling is its own peel (GP-D1 in docs/reports/defect-ledger.md) and its value is 90 — the measured coverage floored to the nearest 5 below, never 85 restored by transcription, which would repeat 4de16d00's own error with the sign flipped.",
       "why": {
         "text": "Rule 3 (Spec 124 §2): the sole literal threshold this step consumes, now `geocode_permits_coverage_warn_pct`, verdict-affecting, on_invalid:\"fail\" (Rule 3 / R-G). WARN not FAIL and never INFO: a metric expected to stand permanently below its bound is WARN with a declared retighten condition (Spec 124 Rule 10 R-H addendum; Spec 48 §4.9). src/lib/admin/funnel.ts:39 names this exact metric id as the `auditMetric` for the 'Address Matching' funnel stage — renaming it breaks an admin consumer.",
-        "liveness": { "kind": "file", "ref": "src/lib/admin/funnel.ts" }
+        "liveness": {
+          "kind": "file",
+          "ref": "src/lib/admin/funnel.ts"
+        }
       }
     },
     {
       "id": "no_geo_id",
       "kind": "field_coverage",
-      "expect": { "reports": "permits with latitude NULL and no usable geo_id — the structurally ungeocodable tail" },
+      "expect": {
+        "reports": "permits with latitude NULL and no usable geo_id — the structurally ungeocodable tail"
+      },
       "limit": "viol == 0",
       "severity": "INFO",
       "blocking": false,
@@ -279,13 +415,18 @@
       "accept_until": "none",
       "why": {
         "text": "Ported by name. This is the population 4de16d00 called a permanent data gap; it is the reason geocode_coverage can never reach 100 and the reason its bound is a WARN with a retighten condition rather than a FAIL.",
-        "liveness": { "kind": "table", "ref": "permits" }
+        "liveness": {
+          "kind": "table",
+          "ref": "permits"
+        }
       }
     },
     {
       "id": "zombies_cleaned",
       "kind": "field_coverage",
-      "expect": { "reports": "rowCount of the phase-2 null-retraction UPDATE" },
+      "expect": {
+        "reports": "rowCount of the phase-2 null-retraction UPDATE"
+      },
       "limit": "viol == 0",
       "severity": "INFO",
       "blocking": false,
@@ -294,13 +435,18 @@
       "accept_until": "none",
       "why": {
         "text": "Ported by name (added by e37eaab9 alongside backlog_remaining). Spec 47 §11's own worked example of the audit_table overflow pattern names this row verbatim: 'Cleanup operations — e.g., zombie coordinate resets in geocode-permits. Goes in audit_table as zombies_cleaned.' It is the only visibility the retraction has.",
-        "liveness": { "kind": "spec", "ref": "docs/specs/01-pipeline/47_pipeline_script_protocol.md" }
+        "liveness": {
+          "kind": "spec",
+          "ref": "docs/specs/01-pipeline/47_pipeline_script_protocol.md"
+        }
       }
     },
     {
       "id": "backlog_remaining",
       "kind": "field_coverage",
-      "expect": { "reports": "max(0, pre-run to_geocode - newly_geocoded) — permits still holding a geo_id with no coordinates" },
+      "expect": {
+        "reports": "max(0, pre-run to_geocode - newly_geocoded) — permits still holding a geo_id with no coordinates"
+      },
       "limit": "viol == 0",
       "severity": "INFO",
       "blocking": false,
@@ -309,11 +455,13 @@
       "accept_until": "none",
       "why": {
         "text": "Ported by name (e37eaab9). Spec 47 §11 names this row too, and names the rule it exists to enforce: 'Pre-run backlog sizes — e.g. before.to_geocode in geocode-permits. Goes in audit_table as backlog_remaining. MUST NOT be used as records_total.' The Math.max(0, ...) floor is deliberate and pinned: the subtrahend is a post-transaction rowCount against a pre-transaction count, so a concurrent permits load can make the difference negative.",
-        "liveness": { "kind": "spec", "ref": "docs/specs/01-pipeline/47_pipeline_script_protocol.md" }
+        "liveness": {
+          "kind": "spec",
+          "ref": "docs/specs/01-pipeline/47_pipeline_script_protocol.md"
+        }
       }
     }
   ],
-
   "invariants": [
     {
       "id": "lat_xor_lng_null_count",
@@ -330,11 +478,18 @@
         "commit": "i5-commit-1",
         "cost_ms": 480,
         "sample_n": 4,
-        "source_run": { "run_id": null, "chain": null, "event": "manual_timing" }
+        "source_run": {
+          "run_id": null,
+          "chain": null,
+          "event": "manual_timing"
+        }
       },
       "why": {
         "text": "The two coordinate columns are written and cleared TOGETHER by both of this step's targets — W1 sets latitude and longitude from one joined address_points row, W2 nulls both — so exactly one of them being NULL is not a degraded state, it is evidence that something other than this step's two statements has touched them. There is no CHECK constraint enforcing it: `permits.latitude`/`longitude` are independently nullable columns (migration 001), so this bound is the only thing that would notice. Declared FAIL rather than WARN because the condition has no benign reading, and non-blocking because a mid-chain halt would strand the downstream linkers on a partially-geocoded table without fixing anything. MEASURED 0 across 4 timings in 2 sessions over all 254,082 rows.",
-        "liveness": { "kind": "column", "ref": "permits.latitude" }
+        "liveness": {
+          "kind": "column",
+          "ref": "permits.latitude"
+        }
       }
     },
     {
@@ -352,15 +507,21 @@
         "commit": "i5-commit-1",
         "cost_ms": 440,
         "sample_n": 4,
-        "source_run": { "run_id": null, "chain": null, "event": "manual_timing" }
+        "source_run": {
+          "run_id": null,
+          "chain": null,
+          "event": "manual_timing"
+        }
       },
       "why": {
         "text": "This is W2's own completeness statement, read AFTER W2 has run: the zombie retraction's declared scope is exactly `(geo_id IS NULL OR geo_id = '') AND geocoded_at IS NOT NULL`, so a non-zero count post-commit means the retraction did not fire over its own declared population — the statement was skipped, the phase did not run, or the scope drifted from the declaration. It is the ONLY row-level evidence that the destructive half of this step happened at all, and it earns its place precisely because the golden differential cannot supply that evidence: W2's target population is 0 on this database (measured), so `zombies_cleaned` reads 0 in every capture whether the retraction executes or is silently skipped. MEASURED 0 across 4 timings in 2 sessions; corroborated by the fact that `geocoded_at IS NOT NULL` (231,930) equals the count of coordinate-bearing permits exactly, i.e. every coordinate in the table was written by this step.",
-        "liveness": { "kind": "check", "ref": "zombies_cleaned" }
+        "liveness": {
+          "kind": "check",
+          "ref": "zombies_cleaned"
+        }
       }
     }
   ],
-
   "plausibility": [
     {
       "id": "coords_outside_toronto_bbox_count",
@@ -378,25 +539,28 @@
         "commit": "i5-commit-1",
         "cost_ms": 235,
         "sample_n": 4,
-        "source_run": { "run_id": null, "chain": null, "event": "manual_timing" }
+        "source_run": {
+          "run_id": null,
+          "chain": null,
+          "event": "manual_timing"
+        }
       },
       "why": {
         "text": "The Reality-Check-shaped bound this step has never had, and the only declared artifact anywhere in its blast radius that reads the VALUES rather than the code. Every other check on this step counts rows — coverage, backlog, zombies — and all of them stay green when a geo_id typo resolves to a VALID address point at the wrong address: the coordinate is populated, non-NULL, joined, guarded, counted, and wrong. That is the class no code reviewer and no coverage metric can see, because the row looks exactly like a correct one. A bounding box cannot catch a same-street error, and does not claim to; what it catches is the tail where a bad id lands far away, which is where a digit transposition in a 6-7 digit ADDRESS_POINT_ID most often lands. MEASURED 0 at 235ms median over 4 timings in 2 sessions, cheap enough for every_run; the same box measured over address_points itself also returns 0, which is what separates \"this step placed a permit outside Toronto\" from \"the corpus it joins to contains one\".",
-        "liveness": { "kind": "column", "ref": "permits.latitude" }
+        "liveness": {
+          "kind": "column",
+          "ref": "permits.latitude"
+        }
       }
     }
   ],
-
   "override": {
     "force_full": "none",
     "force_run": "none",
     "dry_run": "none"
   },
-
   "emits": "none",
-
   "deviations": "none",
-
   "limitations": [
     {
       "what": "GP-L1 — `manifest.scripts.geocode_permits.supports_full: true` is a DEAD DECLARATION. The file reads no argv at all (zero `process.argv` sites, zero `pipeline.isFullMode()` calls), no chain passes it `--full` (the manifest entry carries no chain_args, and Spec 43:71 states the sources chain does not pass --full to this step), and there is no second algorithm a full mode could select. Declared here rather than silently dropped; `staleness.mode_select` is \"none\" and `override.force_full` is \"none\", both truthful.",
@@ -419,12 +583,10 @@
       "check_id": "none"
     }
   ],
-
   "interpretation": {
     "file": "geocode-permits.notes.json",
     "entries": 11
   },
-
   "recovery": {
     "reset": "No TRUNCATE or rebuild path exists and none is needed. Phase 1's scope is unnarrowed (staleness.scope \"all\"), so a plain re-run re-evaluates every permit carrying a numeric geo_id and repairs any coordinate that disagrees with its address point; phase 2 re-clears any zombie that reappeared. Nulling permits.latitude by hand is NOT a reset mechanism — it does not re-admit a row phase 1 would otherwise skip, because phase 1 never skipped it.",
     "resume": "none",
@@ -432,31 +594,38 @@
     "rollback": "none",
     "verify_clean": "none",
     "cascades": "derived",
-    "interrupted": "none",
+    "interrupted": "force_full_on_next_run",
     "interrupted_why": {
-      "text": "Both writes share ONE pipeline.withTransaction (WF3-S2, 3e44218a — the regression lock is src/tests/geocode-permits.infra.test.ts, which injects a failure on the 2nd UPDATE and asserts the 1st rolls back). A run killed mid-transaction therefore leaves permits exactly as it found them: there is no half-retracted state for a next run to detect, and no force_full_on_next_run posture to declare. This is the opposite of the link_massing incident Rule 12 exists for, where the retraction and the rebuild were separately committed.",
-      "liveness": { "kind": "file", "ref": "src/tests/geocode-permits.infra.test.ts" }
+      "text": "BOTH HALVES OF THE TRUTH, because the short answer and the declared answer differ and a reader deserves to see why. THE STATE: both writes share ONE pipeline.withTransaction (WF3-S2, 3e44218a; execution.txn_scope \"step\", both phases txn \"shared\", no post_commit; the regression lock is src/tests/geocode-permits.infra.test.ts, which injects a failure on the 2nd UPDATE and asserts the 1st rolls back). A run killed mid-transaction therefore leaves permits exactly as it found them: there is NO half-retracted state, which is the direct opposite of the link_massing incident Rule 12 exists for, where the retraction and the rebuild were separately committed. On state alone the answer would be \"none\". THE DECLARATION IS STILL force_full_on_next_run, and it is not a concession to a checker: it is REACHABLE and it is ACCURATE. Reachable, measured — runEnrichPhase calls staleness.detectInterruptedRetraction directly and folds interruptedRetraction.interrupted into the full/incremental decision BEFORE any pass runs, so the posture has a live consumer on this shape (unlike the LN-D9 class, where a declared full mode issued the identical statement and promised a relink it could not perform). Accurate, structurally — this step has NO incremental scope at all: phase 1 re-joins EVERY permit carrying a numeric geo_id on every run (staleness.scope \"all\", both phases scope \"full\"), so \"the next run does a full pass\" is a promise this step keeps unconditionally, on every run, interrupted or not. It is therefore the STRONGER of the two postures and cannot under-promise recovery; \"none\" would have been the narrower truth about STATE while saying nothing about what the next run does. NOTED, and filed rather than worked around: checkInterruptedPostureTruthful currently requires this value from ANY target declaring retract:\"all\", with no applies_when distinguishing a retraction that shares the step transaction (this step) from one that can be separately committed (link_massing, link_parcels, both txn_scope \"batch\"). That narrowing is a fleet-checker change and belongs to its own WF, not to a conversion commit — see docs/reports/review_followups.md.",
+      "liveness": {
+        "kind": "file",
+        "ref": "src/tests/geocode-permits.infra.test.ts"
+      }
     },
     "before_image": "generated",
     "before_image_why": {
       "text": "R-M (2026-08-28, LG-17): outputs.writes[1] is a set_based_null_retract, so the runner writes the keys and the three nulled columns of every row it is about to retract to docs/reports/golden/geocode_permits/before-image/<RUN_AT>-<target>.jsonl BEFORE issuing the statement. It is the only audit trail of a destroyed coordinate — the retraction is scoped to rows whose geo_id has already vanished upstream, so the pre-image cannot be reconstructed from the table afterwards.",
-      "liveness": { "kind": "file", "ref": "scripts/lib/step/write.js" }
+      "liveness": {
+        "kind": "file",
+        "ref": "scripts/lib/step/write.js"
+      }
     }
   },
-
   "database": {
     "class": "primary",
     "min_migration": 18,
     "assert_current_database": "postgres"
   },
-
   "counters": {
     "records_total": {
       "source": "matched.compute.newly_geocoded",
       "scoped_by": "step",
       "why": {
         "text": "DECLARE THE ROOT THAT RESOLVES (batch-2 Phase 0.10b). For an enrich shape the runner resolves counters.<slot>.source against {matched, written, records_meta}, so `matched.compute.<name>` and `written.e<N>.<slot>` both resolve while a BARE `compute.*` resolves NULL — enrich_parcels' own three counters have read null since its conversion for exactly that reason (filed HIGH 2026-09-16). This step's compute returns the W1 rowCount under BOTH `matched.newly_geocoded` (which the audit row of that id reads) and `matched.compute.newly_geocoded` (which this counter reads): the check id and the counter source are two different contracts over one measurement, and every value under `matched.compute` is finite-or-throw at the runner.",
-        "liveness": { "kind": "file", "ref": "scripts/lib/step/index.js" }
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/step/index.js"
+        }
       }
     },
     "records_new": {
@@ -464,7 +633,10 @@
       "scoped_by": "step",
       "why": {
         "text": "This step INSERTs nothing — both write targets are UPDATEs on rows load_permits owns, and class N's own executor structurally refuses any statement text containing INSERT INTO or ON CONFLICT (JOIN_UPDATE_FORBIDDEN_RE, scripts/lib/step/write.js), so the 0 is enforced rather than merely expected. `matched.compute.records_new_aggregate` is a declared finite literal 0 rather than an omitted key, because an omitted source resolves null and null reads as \"not counted\" instead of as the zero it is (Spec 48 §3.6). records_new is structurally 0, pinned from the pre-conversion emitSummary. e37eaab9 (§11 Counter Semantic Contract) is the fence that set records_total = updated rather than the pre-run backlog; Spec 47 §11 names this step's `before.to_geocode` as the canonical example of a value that MUST NOT be records_total.",
-        "liveness": { "kind": "spec", "ref": "docs/specs/01-pipeline/47_pipeline_script_protocol.md" }
+        "liveness": {
+          "kind": "spec",
+          "ref": "docs/specs/01-pipeline/47_pipeline_script_protocol.md"
+        }
       }
     },
     "records_updated": {
@@ -472,84 +644,134 @@
       "scoped_by": "step",
       "why": {
         "text": "records_total and records_updated are DELIBERATELY the same number and both EXCLUDE the phase-2 retraction's rowCount, which is carried on its own audit row (zombies_cleaned) instead. Pinned verbatim from e37eaab9's §11 remediation; scoped_by:\"step\" therefore does not mean every write target contributes.",
-        "liveness": { "kind": "check", "ref": "zombies_cleaned" }
+        "liveness": {
+          "kind": "check",
+          "ref": "zombies_cleaned"
+        }
       }
     }
   },
-
   "config": {
     "logic_variables": [
-      { "name": "geocode_permits_coverage_warn_pct", "min": 0, "max": 100, "on_invalid": "fail" },
-      { "name": "geocode_permits_heartbeat_minutes", "min": 1, "max": 60, "on_invalid": "fail" },
-      { "name": "geocode_permits_lock_timeout_ms", "min": 0, "max": 3600000, "on_invalid": "fail" }
+      {
+        "name": "geocode_permits_coverage_warn_pct",
+        "min": 0,
+        "max": 100,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "geocode_permits_heartbeat_minutes",
+        "min": 1,
+        "max": 60,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "geocode_permits_lock_timeout_ms",
+        "min": 0,
+        "max": 3600000,
+        "on_invalid": "fail"
+      }
     ],
     "validation": "strict",
     "hoisted_above_gate": true,
     "retired": []
   },
-
   "sharing": {
     "chains": "derived",
     "shared": "derived",
     "slug_forms": "derived",
     "varies_by_chain": {
       "checks": "none",
-      "phase": { "permits": 6, "sources": 3 },
+      "phase": {
+        "permits": 6,
+        "sources": 3
+      },
       "audit_table": "one",
       "scope": "none"
     },
     "on_contention": "self_skip"
   },
-
   "terminals": [
     {
       "id": "geocoded",
       "kind": "success",
       "status": "completed",
-      "records_meta": { "duration_ms": "int", "audit_table": "object", "terminal": "string" },
+      "records_meta": {
+        "duration_ms": "int",
+        "audit_table": "object",
+        "terminal": "string"
+      },
       "why": {
         "text": "Both statements ran and geocode_coverage met its bound. Reachable only on a database whose coverage is at or above the configured threshold — not the live steady state (see the geocoded_with_warnings terminal).",
-        "liveness": { "kind": "check", "ref": "geocode_coverage" }
+        "liveness": {
+          "kind": "check",
+          "ref": "geocode_coverage"
+        }
       }
     },
     {
       "id": "geocoded_with_warnings",
       "kind": "success",
       "status": "completed_with_warnings",
-      "records_meta": { "duration_ms": "int", "audit_table": "object", "terminal": "string" },
+      "records_meta": {
+        "duration_ms": "int",
+        "audit_table": "object",
+        "terminal": "string"
+      },
       "why": {
         "text": "Both statements ran and geocode_coverage stands below its bound — the steady state on the live database while GP-D1 is unadjudicated (4de16d00 measured 90.9% against a 95 threshold). The WARN is the point: it is visible on every run rather than silently absorbed.",
-        "liveness": { "kind": "check", "ref": "geocode_coverage" }
+        "liveness": {
+          "kind": "check",
+          "ref": "geocode_coverage"
+        }
       }
     },
     {
       "id": "lock_held_elsewhere",
       "kind": "skip_lock_contention",
       "status": "self_skipped",
-      "records_meta": { "skipped": "bool", "reason": "string" },
+      "records_meta": {
+        "skipped": "bool",
+        "reason": "string"
+      },
       "why": {
         "text": "Advisory lock 5 is held by another process — geocode_permits runs in BOTH the permits and sources chains, so this is a genuinely reachable terminal whenever the two overlap, not a theoretical one. Row-derived SKIP summary (VRD-SKIP: the skip's own status row is WARN against threshold 'ran', never a bare PASS).",
-        "liveness": { "kind": "file", "ref": "scripts/lib/step/index.js" }
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/step/index.js"
+        }
       }
     },
     {
       "id": "failed_config_out_of_bounds",
       "kind": "fail_error",
       "status": "failed",
-      "records_meta": { "audit_table": "object", "terminal": "string" },
+      "records_meta": {
+        "audit_table": "object",
+        "terminal": "string"
+      },
       "why": {
         "text": "geocode_permits_coverage_warn_pct resolved absent or outside [0,100] under on_invalid:\"fail\". hoisted_above_gate:true puts this refusal ABOVE the advisory lock, so an invalid threshold can never hide behind a green self_skipped summary (the link_wsib A1/A2 fence).",
-        "liveness": { "kind": "file", "ref": "scripts/lib/step/config.js" }
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/step/config.js"
+        }
       }
     },
     {
       "id": "failed_write_error",
       "kind": "fail_error",
       "status": "failed",
-      "records_meta": { "audit_table": "object", "terminal": "string" },
+      "records_meta": {
+        "audit_table": "object",
+        "terminal": "string"
+      },
       "why": {
         "text": "Either statement threw inside the shared transaction — including the non-numeric-geo_id cast crash the CASE-expression fence retired. The transaction rolls back whole, so the permits table is never left with phase 1 applied and phase 2 not (3e44218a, and the regression lock that proves it).",
-        "liveness": { "kind": "file", "ref": "src/tests/geocode-permits.infra.test.ts" }
+        "liveness": {
+          "kind": "file",
+          "ref": "src/tests/geocode-permits.infra.test.ts"
+        }
       }
     }
   ]

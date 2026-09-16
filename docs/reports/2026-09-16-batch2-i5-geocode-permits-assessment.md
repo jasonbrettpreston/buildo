@@ -614,6 +614,31 @@ The handed-down sequence reads *… → 7d shell → 8 PRE captures*. A "PRE" ca
 
 And the capture is still, by construction, unable to prove the write — §2.4 said so before anything was captured, and nothing since has changed it: W1's guard admits 0 rows, W2's scope is empty, so all three pairs record `zombies_cleaned: 0` and diff clean whether or not the conversion works. **The proof lives in the fence locks and in the executed `ctx.retract → writeBeforeImage → executeSetBasedClear` ordering test**, which asserts the SELECT is issued before the UPDATE against a recording fake client. That test is the reason this step's violations suite carries more weight than its differential.
 
+### 9.6 RED-first evidence (G7) — what the suite asserted before the artifact existed
+
+`src/tests/steps/geocode_permits/violations.test.ts` landed at the folded commit 5 carrying **three `it.fails(...)` claims about artifacts that did not exist**, each a real assertion that really failed. Vitest reports a failing `it.fails` as a pass and, the moment the claim comes true, as a **RED** — so a premature flip reddens the suite and each flip is forced into the commit that earns it:
+
+| Claim | Asserted at commit 5 (RED) | Flipped |
+|---|---|---|
+| F1 — `buildGeocodeSql()` carries the `CASE … ::INTEGER END` cast guard verbatim beside its sibling regex, and the bare cast appears nowhere | `Cannot find module …/lib/compute/geocode-permits.js` | **7c** |
+| F2 (SQL half) — the statement guards `latitude`/`longitude`, and `geocoded_at` appears exactly once, in the SET clause | same | **7c** |
+| compute module — `passes[]` matches the declared phase names in order, `computePostPhase` is exported under the name the descriptor declares, and Rule 2 holds | same | **7c** |
+| frozen shell — `module.exports = pipeline.step(descriptor, compute)`, `ADVISORY_LOCK_ID = 5` as source text, and no `withTransaction`/`emitSummary`/`UPDATE permits` left | still **RED** at 7c | 7d |
+| registration — the file is in `converted[]` and its `pending` entry is gone | still **RED** | 9 |
+
+**One of those flips found a real defect in this suite's own first cut, and it is recorded rather than quietly fixed.** The compute-module case asserted Rule 2 by scanning the raw file for banned tokens, and it went RED at 7c on the compute's **own docblock** — the sentence that says *"No pool creation, no logging, no `process.env`, no wall clock"*. A banned-token scan that cannot tell code from prose reports the sentence promising the rule as a violation of it. This is the LG-29 scanner class exactly (`step-validate.mjs#checkNoSecondDerivation` flagging a docblock phrase as a hand-rolled verdict assignment). Fixed by stripping comments before the scan, with the always-blocking parse-based enforcement left where it belongs, in `scripts/ast-grep-rules/compute-shape.yml`.
+
+### 9.7 Rule 12 — the crash posture, and the checker gap underneath it
+
+`checkInterruptedPostureTruthful` reds any target declaring `retract: "all"` unless `recovery.interrupted === "force_full_on_next_run"`. The draft declared `"none"`, arguing — correctly — that both writes share one transaction, so a killed run leaves **no half-retracted state** and there is nothing to recover. Measured, both readings were tested before either was adopted:
+
+* `interrupted: "none"` → Rule 12 `enforced-red`, `hard-stop=true`.
+* `interrupted: "force_full_on_next_run"` → Rule 12 `enforced-green`, and the checker's reachability arm reports *"shape=enrich runner=runEnrichPhase: … calls `staleness.detectInterruptedRetraction` directly and folds `interruptedRetraction.interrupted` into the full/incremental decision before any pass runs"*.
+
+**The declaration is `force_full_on_next_run`, and it is not a concession to the checker.** It is REACHABLE (the runner has the live consumer, measured above — unlike the LN-D9 class, where a declared full mode issued the identical statement and promised a relink it could not perform) and it is ACCURATE (this step has no incremental scope at all: phase 1 re-joins every permit carrying a numeric `geo_id` on every run, so *"the next run does a full pass"* is a promise it keeps unconditionally). It is the **stronger** of the two postures and cannot under-promise recovery; `"none"` was the narrower truth about *state* while saying nothing about what the next run does. Both halves are written into `recovery.interrupted_why` so the reasoning is readable from the descriptor, not reconstructed from this report.
+
+**The gap underneath is real and is filed, not fixed here:** the checker has no `applies_when` distinguishing a retraction that shares the step transaction (this step: `txn_scope "step"`, all phases `shared`, no `post_commit`) from one that can be separately committed (`link_massing`, `link_parcels` — both `txn_scope "batch"`, measured). That is the RS-D-STA class — a gate authored against one archetype's incident now reaching a shape whose declared transaction defeats its premise — and narrowing a fleet checker is a shared-infrastructure change that belongs to its own WF, never smuggled into a conversion commit (Spec 123 §1.1).
+
 ---
 
 ## §R. Reflection

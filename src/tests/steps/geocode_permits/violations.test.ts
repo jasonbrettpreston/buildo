@@ -76,7 +76,7 @@ describe('geocode_permits — fence locks (G4d: one per notes.json fences[])', (
   });
 
   // ── F1 ────────────────────────────────────────────────────────────────────
-  it.fails('F1 (d24c964c) — buildGeocodeSql() carries the CASE cast guard VERBATIM, beside the sibling regex predicate [flips at commit 7c]', () => {
+  it('F1 (d24c964c) — buildGeocodeSql() carries the CASE cast guard VERBATIM, beside the sibling regex predicate [flipped at commit 7c]', () => {
     // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-explicit-any -- the CJS compute module this commit is about
     const compute: any = require(path.join(REPO_ROOT, COMPUTE_REL));
     const sql = compute.buildGeocodeSql();
@@ -103,7 +103,7 @@ describe('geocode_permits — fence locks (G4d: one per notes.json fences[])', (
     expect(w0.write_discipline.guard_columns).not.toBe('all_declared');
   });
 
-  it.fails('F2 (32da93c5) — the SQL half: the statement guards latitude and longitude and mentions geocoded_at only as a SET target [flips at commit 7c]', () => {
+  it('F2 (32da93c5) — the SQL half: the statement guards latitude and longitude and mentions geocoded_at only as a SET target [flipped at commit 7c]', () => {
     // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-explicit-any -- the CJS compute module this commit is about
     const compute: any = require(path.join(REPO_ROOT, COMPUTE_REL));
     const sql = compute.buildGeocodeSql();
@@ -126,7 +126,22 @@ describe('geocode_permits — fence locks (G4d: one per notes.json fences[])', (
     // The shape is ONE FIELD away from wrong: enrich_parcels, the only prior ENRICHER,
     // declares post_commit on its pass 5. A post_commit here would retire B-4 silently.
     expect(JSON.stringify(phases)).not.toContain('post_commit');
-    expect(descriptor.recovery.interrupted).toBe('none');
+    // ⚠️ THIS ASSERTION CAUGHT ITS OWN AUTHOR. Its first cut read `.toBe('none')`, because on
+    // STATE alone that is the truth: one shared transaction means a killed run leaves no
+    // half-retracted state, so there is nothing for a next run to recover. It went RED at
+    // commit 7c when `recovery.interrupted` moved to `force_full_on_next_run` — the right
+    // outcome, and the reason the value is pinned here at all. The posture is the STRONGER
+    // one and was verified REACHABLE before being adopted (runEnrichPhase folds
+    // staleness.detectInterruptedRetraction into the full/incremental decision before any
+    // pass runs) and ACCURATE (this step has no incremental scope: every run re-joins every
+    // permit carrying a numeric geo_id, so "the next run does a full pass" is kept
+    // unconditionally). `recovery.interrupted_why` carries both halves; §9.7 of the
+    // assessment carries the checker gap underneath it.
+    expect(descriptor.recovery.interrupted).toBe('force_full_on_next_run');
+    // What the transaction fence itself guarantees, and what must NOT drift: the posture may
+    // be the stronger one, but it must never become the excuse for splitting the two writes.
+    expect(descriptor.execution.txn_scope).toBe('step');
+    expect(descriptor.recovery.interrupted_why.text).toMatch(/no half-retracted state/i);
   });
 
   // ── F4 ────────────────────────────────────────────────────────────────────
@@ -258,7 +273,7 @@ describe('geocode_permits — Spec 47 §11, which names this step twice', () => 
 });
 
 describe('geocode_permits — the artifacts later commits owe (RED FIRST)', () => {
-  it.fails('the compute module exists and its passes[] match the declared phases, in order [flips at commit 7c]', () => {
+  it('the compute module exists and its passes[] match the declared phases, in order [flipped at commit 7c]', () => {
     expect(exists(COMPUTE_REL)).toBe(true);
     // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-explicit-any -- the CJS compute module this commit is about
     const compute: any = require(path.join(REPO_ROOT, COMPUTE_REL));
@@ -268,11 +283,22 @@ describe('geocode_permits — the artifacts later commits owe (RED FIRST)', () =
     for (const p of compute.passes) expect(p.txn).toBe('shared');
     // The hook the descriptor declares must be exported under exactly that name.
     expect(typeof compute[descriptor.execution.enrich_hooks.post_phase]).toBe('function');
-    // Rule 2 — compute is just compute.
-    const src = read(COMPUTE_REL);
+    // Rule 2 — compute is just compute. COMMENT-STRIPPED FIRST, and that is not a
+    // convenience: the first cut of this assertion scanned the raw file and reddened on the
+    // module's own docblock, which says in prose "No pool creation, no logging, no
+    // `process.env`, no wall clock". A banned-token scan that cannot tell code from prose
+    // reports the sentence promising the rule as a violation of it — the same class as
+    // LG-29's verdict-scanner false positive (`step-validate.mjs#checkNoSecondDerivation`
+    // flagging a docblock phrase). The always-blocking enforcement lives in
+    // scripts/ast-grep-rules/compute-shape.yml, which parses; this is the cheap sibling
+    // lock and it must at least not lie.
+    const src = read(COMPUTE_REL)
+      .replace(/\/\*[\s\S]*?\*\//g, '')
+      .replace(/(^|[^:])\/\/[^\n]*/g, '$1');
     expect(src).not.toMatch(/require\(['"]\.\.\/pipeline['"]\)/);
     expect(src).not.toMatch(/process\.env/);
     expect(src).not.toMatch(/Date\.now\(\)/);
+    expect(src).not.toMatch(/console\./);
   });
 
   it.fails('the shell is FROZEN onto pipeline.step and declares ADVISORY_LOCK_ID 5 as source text [flips at commit 7d]', () => {
