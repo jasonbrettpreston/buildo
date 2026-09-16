@@ -266,6 +266,25 @@ function fmtScalar(v) {
   return String(v);
 }
 
+/**
+ * The stable anchor for an entry is its REF, not its heading text: a heading can be
+ * reworded, a ref cannot. Every detail section emits `<a id="s-001"></a>` and every
+ * mention anywhere in the document links to it, so the registry is navigable rather
+ * than merely ordered.
+ */
+function refAnchor(ref) { return String(ref).toLowerCase(); }
+
+/** Render one entry as a link, wherever it is mentioned. */
+function refLink(r, label) {
+  return `[\`${r.ref}\`](#${refAnchor(r.ref)})${label === false ? '' : ` \`${label || r.id}\``}`;
+}
+
+/** Look an entry up by id and render it as a link; falls back to plain code if unknown. */
+function linkById(rows, id, label) {
+  const r = rows.find((x) => x.id === id);
+  return r ? refLink(r, label) : `\`${id}\``;
+}
+
 function anchor(s) {
   return String(s).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 }
@@ -374,7 +393,7 @@ function legend(rows) {
     L.push('| id | type | name | archetype | feature | build | researched | detail |');
     L.push('|---|---|---|---|---|---:|---:|---|');
     for (const r of g) {
-      L.push(`| \`${r.ref}\` | ${KIND_LABEL[r.kind]} | \`${r.id}\`${r.pilot ? ' **(pilot)**' : ''} | \`${r.archetype}\` | \`${r.feature}\` ${featName[r.feature] || ''} | ${r.build_order} | ${pct(r)} | [detail](#${anchor(r.id)}) |`);
+      L.push(`| [\`${r.ref}\`](#${refAnchor(r.ref)}) | ${KIND_LABEL[r.kind]} | \`${r.id}\`${r.pilot ? ' **(pilot)**' : ''} | \`${r.archetype}\` | \`${r.feature}\` ${featName[r.feature] || ''} | ${r.build_order} | ${pct(r)} | [detail](#${refAnchor(r.ref)}) |`);
     }
     L.push('');
   }
@@ -385,7 +404,7 @@ function legend(rows) {
   L.push('');
   L.push('| id | type | name | archetype | feature |');
   L.push('|---|---|---|---|---|');
-  for (const r of d) L.push(`| \`${r.ref}\` | ${KIND_LABEL[r.kind]} | \`${r.id}\` | \`${r.archetype}\` | \`${r.feature}\` ${featName[r.feature] || ''} |`);
+  for (const r of d) L.push(`| <a id="${refAnchor(r.ref)}"></a>\`${r.ref}\` | ${KIND_LABEL[r.kind]} | \`${r.id}\` | \`${r.archetype}\` | \`${r.feature}\` ${featName[r.feature] || ''} |`);
   L.push('');
   L.push('</details>');
   L.push('');
@@ -399,8 +418,8 @@ function featuresSection(rows, cols) {
   L.push('');
   L.push('Spec 125 §2 recommends building schemas **by feature, so a feature can be removed**. That only means something if the estate can say what removal costs. Each row below is a unit of deletion: its entries, its contracts, and the tables that would be left with no reader.');
   L.push('');
-  L.push('| Feature | Scope | Entries | Contracts | Tables reached | Removing it deletes |');
-  L.push('|---|---|---:|---:|---:|---|');
+  L.push('| Feature | Scope | Entries (linked, in build order) | Contracts | Tables reached | Removing it deletes |');
+  L.push('|---|---|---|---:|---:|---|');
   for (const f of feats) {
     const g = rows.filter((r) => r.feature === f.id);
     const contracts = g.filter((r) => r.kind === 'CONTRACT');
@@ -410,7 +429,10 @@ function featuresSection(rows, cols) {
     const deletes = g.length === 0
       ? '**nothing — the feature is specified and nothing implements it yet.** That is the finding, not an error.'
       : `${g.length} descriptor(s)${contracts.length ? `, ${contracts.length} contract(s)` : ''}${owned.length ? `, and would orphan ${owned.length} table(s): ${owned.map((t) => `\`${t}\``).join(' · ')}` : ', and would orphan no table — every table it touches is shared'}`;
-    L.push(`| **${f.id}** ${f.name} | \`${f.scope}\` | ${g.length} | ${contracts.length} | ${tables.size} | ${deletes} |`);
+    const members = g.length
+      ? g.slice().sort((a, b) => a.build_order - b.build_order).map((r) => refLink(r, false)).join(' · ')
+      : '—';
+    L.push(`| **${f.id}** ${f.name} | \`${f.scope}\` | ${members} | ${contracts.length} | ${tables.size} | ${deletes} |`);
   }
   L.push('');
   L.push('The emitted descriptor tree mirrors this exactly — `scripts/surfaces/<scope>/<feature>/<kind>/<id>.descriptor.json` — so removing a feature is removing a directory, and the `--check` arm reports precisely what went with it.');
@@ -430,7 +452,7 @@ function consolidated(rows) {
     L.push('| Entry | Behaviour | Owning product | Proposed | Evidence |');
     L.push('|---|---|---|---|---|');
     for (const r of leaks) for (const k of r.leakage) {
-      L.push(`| \`${r.ref}\` \`${r.id}\` | ${k.behaviour} | \`${k.owning_product}\` | \`${k.disposition}\` | ${k.evidence.map((e) => `\`${e}\``).join(' · ')} |`);
+      L.push(`| ${refLink(r)} | ${k.behaviour} | \`${k.owning_product}\` | \`${k.disposition}\` | ${k.evidence.map((e) => `\`${e}\``).join(' · ')} |`);
     }
   }
   L.push('');
@@ -444,7 +466,7 @@ function consolidated(rows) {
   let i = 0;
   for (const r of qs) for (const q of r.product_questions) {
     i += 1;
-    L.push(`**Q${i} — \`${r.ref}\` \`${r.id}\`.** ${q.question}`);
+    L.push(`**Q${i} — ${refLink(r)}.** ${q.question}`);
     L.push('');
     L.push(`- **Measured:** ${q.measured}`);
     if (q.spec_says) L.push(`- **The spec says:** ${q.spec_says}`);
@@ -474,7 +496,7 @@ function scopeSummary(rows, cols) {
   L.push('');
   const pilot = rows.find((r) => r.pilot);
   if (pilot) {
-    L.push(`**The pilot is \`${pilot.id}\`** — ${String(pilot.purpose).split(/(?<=\.)\s/)[0]} It is the one surface in the estate marked \`programme.pilot: true\`.`);
+    L.push(`**The pilot is ${refLink(pilot)}** — ${String(pilot.purpose).split(/(?<=\.)\s/)[0]} It is the one surface in the estate marked \`programme.pilot: true\`.`);
     L.push('');
   }
   L.push('### 2.5 How the parcel product hangs together');
@@ -512,6 +534,13 @@ function scopeSummary(rows, cols) {
   L.push(legend(rows));
   L.push(featuresSection(rows, cols));
   L.push(consolidated(rows));
+  L.push('**The entries in that diagram, linked:** ' + [
+    'mobile_parcel_search', 'mobile_parcel_detail', 'web_landing', 'overlay_sponsor_slot',
+    'contract_parcels_lookup', 'admin_run_ledger', 'admin_export_audit', 'admin_placements',
+    'admin_advertiser_accounts', 'advertiser_self_metrics', 'admin_surface_registry',
+    'admin_contract_fanout', 'admin_orphan_panel', 'admin_drift_status', 'admin_role_matrix',
+  ].map((id) => linkById(rows, id)).join(' · ') + '.');
+  L.push('');
   L.push('**Four of those tables do not exist yet** — `app_outputs`, `usage_events`, `offers`, `placements`, `pdf_exports` are net-new (§4 marks each one). That is the honest state: the product is specified, the admin that operates it is specified, and the substrate under both is still to be declared, migrated and drift-asserted.');
   L.push('');
   return L.join('\n');
@@ -1014,17 +1043,19 @@ function render(rows, cats, archetypes, cols, unowned, owner) {
     L.push('');
     continue;
   }
-  for (const a of archOrder) {
-    const group = scoped.filter((r) => r.archetype === a);
-    if (group.length === 0) continue;
-    L.push(`#### ${a} (${group.length})`);
-    L.push('');
-    const platforms = [...new Set(group.map((r) => (r.platforms || []).join('+') || 'server'))].sort();
-    for (const pf of platforms) {
-      const sub = group.filter((r) => ((r.platforms || []).join('+') || 'server') === pf);
-      if (platforms.length > 1) { L.push(`##### platforms: \`${pf}\` (${sub.length})`); L.push(''); }
-      for (const r of sub.sort((x, y) => x.id.localeCompare(y.id))) {
-        L.push(`###### \`${r.id}\`${r.pilot ? ' — **THE PILOT**' : ''}`);
+  // Ordered EXACTLY as the §2.6 legend — scope, then type (kind rank), then build_order
+  // — so a reader walking the detail sections walks them in build order, and a
+  // dependency is read before the things that depend on it. The archetype is stated on
+  // every row's facts line rather than used as a grouping heading, because grouping by
+  // archetype and ordering by build order are different documents.
+  {
+    const ordered = scoped.slice().sort((x, y) => x.build_order - y.build_order || x.id.localeCompare(y.id));
+    {
+      const sub = ordered;
+      for (const r of sub) {
+        L.push(`<a id="${refAnchor(r.ref)}"></a>`);
+        L.push('');
+        L.push(`###### \`${r.ref}\` \`${r.id}\`${r.pilot ? ' — **THE PILOT**' : ''}`);
         L.push('');
         L.push(`**Programme.** \`${r.ref}\` · scope \`${r.scope}\` · feature \`${r.feature}\` · build order ${r.build_order} · batch ${r.phase === 'UNRESEARCHED' ? '**UNRESEARCHED**' : `\`${r.phase}\``} · review \`${(r.review && r.review.status) || 'unreviewed'}\`${r.pilot ? ' · **pilot of the whole programme**' : ''} — ${r.scope_why}`);
         L.push('');
@@ -1289,7 +1320,7 @@ export function buildQueue(rows, cols) {
   L.push('| # | id | entry | scope | feature | build | review |');
   L.push('|---:|---|---|---|---|---:|---|');
   q.forEach((r, i) => {
-    L.push(`| ${i + 1} | \`${r.ref}\` | [\`${r.id}\`](#${anchor(`card-${r.id}`)}) | \`${r.scope}\` | \`${r.feature}\` | ${r.build_order} | \`${(r.review && r.review.status) || 'unreviewed'}\` |`);
+    L.push(`| ${i + 1} | [\`${r.ref}\`](#${refAnchor(`card-${r.ref}`)}) | [\`${r.id}\`](#${refAnchor(`card-${r.ref}`)}) | \`${r.scope}\` | \`${r.feature}\` | ${r.build_order} | \`${(r.review && r.review.status) || 'unreviewed'}\` |`);
   });
   L.push('');
   L.push('---');
@@ -1297,7 +1328,11 @@ export function buildQueue(rows, cols) {
 
   q.forEach((r, i) => {
     const d = r._descriptor;
+    L.push(`<a id="${refAnchor(`card-${r.ref}`)}"></a>`);
+    L.push('');
     L.push(`## Card ${i + 1} — \`${r.ref}\` \`${r.id}\`${r.pilot ? ' — **THE PILOT**' : ''}`);
+    L.push('');
+    L.push(`Registry detail: [\`${r.ref}\`](../../../docs/reports/generated/127-surface-registry.md#${refAnchor(r.ref)}) \`${r.id}\`.`);
     L.push('');
     L.push(`\`${r.kind}\` · \`${r.archetype}\` · scope \`${r.scope}\` · feature \`${r.feature}\` ${featName[r.feature] || ''} · build order ${r.build_order} · batch ${r.phase} · **review: \`${(r.review && r.review.status) || 'unreviewed'}\`**${r.review && r.review.reviewer ? ` (${r.review.reviewer}, ${r.review.date})` : ''}`);
     if (r.review && r.review.notes) { L.push(''); L.push(`> ${r.review.notes}`); }

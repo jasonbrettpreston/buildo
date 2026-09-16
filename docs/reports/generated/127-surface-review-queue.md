@@ -14,101 +14,105 @@ Every card answers the **same nine questions** from the descriptor, with the evi
 
 | # | id | entry | scope | feature | build | review |
 |---:|---|---|---|---|---:|---|
-| 1 | `S-002` | [`mobile_parcel_search`](#card-mobile-parcel-search) | `parcel_product` | `F01` | 1013 | `unreviewed` |
-| 2 | `S-004` | [`shell_parcel_tool_stack`](#card-shell-parcel-tool-stack) | `parcel_product` | `F01` | 1013 | `unreviewed` |
-| 3 | `C-001` | [`contract_parcels_lookup`](#card-contract-parcels-lookup) | `parcel_product` | `F02` | 1022 | `unreviewed` |
-| 4 | `S-001` | [`mobile_parcel_detail`](#card-mobile-parcel-detail) | `parcel_product` | `F02` | 1023 | `unreviewed` |
-| 5 | `S-003` | [`overlay_sponsor_slot`](#card-overlay-sponsor-slot) | `parcel_product` | `F04` | 1043 | `unreviewed` |
-| 6 | `S-005` | [`web_landing`](#card-web-landing) | `parcel_product` | `F06` | 1063 | `unreviewed` |
-| 7 | `S-009` | [`admin_export_audit`](#card-admin-export-audit) | `parcel_admin` | `F03` | 2033 | `unreviewed` |
-| 8 | `S-006` | [`admin_advertiser_accounts`](#card-admin-advertiser-accounts) | `parcel_admin` | `F04` | 2043 | `unreviewed` |
-| 9 | `S-013` | [`admin_placements`](#card-admin-placements) | `parcel_admin` | `F04` | 2043 | `unreviewed` |
-| 10 | `S-017` | [`advertiser_self_metrics`](#card-advertiser-self-metrics) | `parcel_admin` | `F04` | 2043 | `unreviewed` |
-| 11 | `S-010` | [`admin_ledger_visualiser`](#card-admin-ledger-visualiser) | `parcel_admin` | `F07` | 2073 | `unreviewed` |
-| 12 | `S-015` | [`admin_run_ledger`](#card-admin-run-ledger) | `parcel_admin` | `F07` | 2073 | `unreviewed` |
-| 13 | `C-002` | [`contract_admin_parcels_lookup`](#card-contract-admin-parcels-lookup) | `parcel_admin` | `F08` | 2082 | `unreviewed` |
-| 14 | `S-012` | [`admin_parcel_cost`](#card-admin-parcel-cost) | `parcel_admin` | `F08` | 2083 | `unreviewed` |
-| 15 | `S-007` | [`admin_contract_fanout`](#card-admin-contract-fanout) | `parcel_admin` | `F09` | 2093 | `unreviewed` |
-| 16 | `S-008` | [`admin_drift_status`](#card-admin-drift-status) | `parcel_admin` | `F09` | 2093 | `unreviewed` |
-| 17 | `S-011` | [`admin_orphan_panel`](#card-admin-orphan-panel) | `parcel_admin` | `F09` | 2093 | `unreviewed` |
-| 18 | `S-014` | [`admin_role_matrix`](#card-admin-role-matrix) | `parcel_admin` | `F09` | 2093 | `unreviewed` |
-| 19 | `S-016` | [`admin_surface_registry`](#card-admin-surface-registry) | `parcel_admin` | `F09` | 2093 | `unreviewed` |
-| 20 | `S-027` | [`mobile_auth_confirm`](#card-mobile-auth-confirm) | `platform_shared` | `F10` | 3103 | `unreviewed` |
-| 21 | `S-037` | [`mobile_sign_in`](#card-mobile-sign-in) | `platform_shared` | `F10` | 3103 | `unreviewed` |
-| 22 | `S-038` | [`mobile_sign_up`](#card-mobile-sign-up) | `platform_shared` | `F10` | 3103 | `unreviewed` |
-| 23 | `S-039` | [`overlay_account_linking_sheet`](#card-overlay-account-linking-sheet) | `platform_shared` | `F10` | 3103 | `unreviewed` |
-| 24 | `S-040` | [`overlay_error_boundary`](#card-overlay-error-boundary) | `platform_shared` | `F10` | 3103 | `unreviewed` |
-| 25 | `S-047` | [`shell_auth_stack`](#card-shell-auth-stack) | `platform_shared` | `F10` | 3103 | `unreviewed` |
-| 26 | `C-026` | [`contract_onboarding_suppliers`](#card-contract-onboarding-suppliers) | `platform_shared` | `F11` | 3112 | `unreviewed` |
-| 27 | `S-028` | [`mobile_onboarding_address`](#card-mobile-onboarding-address) | `platform_shared` | `F11` | 3113 | `unreviewed` |
-| 28 | `S-029` | [`mobile_onboarding_complete`](#card-mobile-onboarding-complete) | `platform_shared` | `F11` | 3113 | `unreviewed` |
-| 29 | `S-030` | [`mobile_onboarding_first_permit`](#card-mobile-onboarding-first-permit) | `platform_shared` | `F11` | 3113 | `unreviewed` |
-| 30 | `S-031` | [`mobile_onboarding_manufacturer_hold`](#card-mobile-onboarding-manufacturer-hold) | `platform_shared` | `F11` | 3113 | `unreviewed` |
-| 31 | `S-032` | [`mobile_onboarding_path`](#card-mobile-onboarding-path) | `platform_shared` | `F11` | 3113 | `unreviewed` |
-| 32 | `S-033` | [`mobile_onboarding_profession`](#card-mobile-onboarding-profession) | `platform_shared` | `F11` | 3113 | `unreviewed` |
-| 33 | `S-034` | [`mobile_onboarding_supplier`](#card-mobile-onboarding-supplier) | `platform_shared` | `F11` | 3113 | `unreviewed` |
-| 34 | `S-035` | [`mobile_onboarding_terms`](#card-mobile-onboarding-terms) | `platform_shared` | `F11` | 3113 | `unreviewed` |
-| 35 | `S-048` | [`shell_onboarding_stack`](#card-shell-onboarding-stack) | `platform_shared` | `F11` | 3113 | `unreviewed` |
-| 36 | `C-020` | [`contract_admin_users_uid_subscription_events`](#card-contract-admin-users-uid-subscription-events) | `platform_shared` | `F12` | 3122 | `unreviewed` |
-| 37 | `C-021` | [`contract_admin_users_uid_subscription_reconcile`](#card-contract-admin-users-uid-subscription-reconcile) | `platform_shared` | `F12` | 3122 | `unreviewed` |
-| 38 | `C-022` | [`contract_admin_users_uid_subscription_retry_cancel`](#card-contract-admin-users-uid-subscription-retry-cancel) | `platform_shared` | `F12` | 3122 | `unreviewed` |
-| 39 | `C-030` | [`contract_subscribe_exchange`](#card-contract-subscribe-exchange) | `platform_shared` | `F12` | 3122 | `unreviewed` |
-| 40 | `C-031` | [`contract_subscribe_portal_session`](#card-contract-subscribe-portal-session) | `platform_shared` | `F12` | 3122 | `unreviewed` |
-| 41 | `C-032` | [`contract_subscribe_session`](#card-contract-subscribe-session) | `platform_shared` | `F12` | 3122 | `unreviewed` |
-| 42 | `C-038` | [`contract_webhooks_stripe`](#card-contract-webhooks-stripe) | `platform_shared` | `F12` | 3122 | `unreviewed` |
-| 43 | `S-043` | [`overlay_paywall`](#card-overlay-paywall) | `platform_shared` | `F12` | 3123 | `unreviewed` |
-| 44 | `S-044` | [`overlay_subscription_loading_guard`](#card-overlay-subscription-loading-guard) | `platform_shared` | `F12` | 3123 | `unreviewed` |
-| 45 | `S-051` | [`web_subscribe`](#card-web-subscribe) | `platform_shared` | `F12` | 3123 | `unreviewed` |
-| 46 | `S-052` | [`web_subscribe_cancel`](#card-web-subscribe-cancel) | `platform_shared` | `F12` | 3123 | `unreviewed` |
-| 47 | `S-053` | [`web_subscribe_success`](#card-web-subscribe-success) | `platform_shared` | `F12` | 3123 | `unreviewed` |
-| 48 | `C-006` | [`contract_admin_notifications`](#card-contract-admin-notifications) | `platform_shared` | `F13` | 3132 | `unreviewed` |
-| 49 | `C-007` | [`contract_admin_notifications_test_send`](#card-contract-admin-notifications-test-send) | `platform_shared` | `F13` | 3132 | `unreviewed` |
-| 50 | `C-023` | [`contract_notifications`](#card-contract-notifications) | `platform_shared` | `F13` | 3132 | `unreviewed` |
-| 51 | `C-024` | [`contract_notifications_preferences`](#card-contract-notifications-preferences) | `platform_shared` | `F13` | 3132 | `unreviewed` |
-| 52 | `C-025` | [`contract_notifications_register`](#card-contract-notifications-register) | `platform_shared` | `F13` | 3132 | `unreviewed` |
-| 53 | `S-022` | [`admin_notifications`](#card-admin-notifications) | `platform_shared` | `F13` | 3133 | `unreviewed` |
-| 54 | `S-041` | [`overlay_notification_permission_modal`](#card-overlay-notification-permission-modal) | `platform_shared` | `F13` | 3133 | `unreviewed` |
-| 55 | `S-042` | [`overlay_offline_banner`](#card-overlay-offline-banner) | `platform_shared` | `F14` | 3143 | `unreviewed` |
-| 56 | `S-045` | [`shell_app_root`](#card-shell-app-root) | `platform_shared` | `F14` | 3143 | `unreviewed` |
-| 57 | `S-046` | [`shell_app_tabs`](#card-shell-app-tabs) | `platform_shared` | `F14` | 3143 | `unreviewed` |
-| 58 | `S-049` | [`shell_web_root`](#card-shell-web-root) | `platform_shared` | `F14` | 3143 | `unreviewed` |
-| 59 | `C-027` | [`contract_products`](#card-contract-products) | `platform_shared` | `F15` | 3152 | `unreviewed` |
-| 60 | `C-034` | [`contract_trades`](#card-contract-trades) | `platform_shared` | `F15` | 3152 | `unreviewed` |
-| 61 | `C-035` | [`contract_user_profile`](#card-contract-user-profile) | `platform_shared` | `F15` | 3152 | `unreviewed` |
-| 62 | `C-036` | [`contract_user_profile_delete`](#card-contract-user-profile-delete) | `platform_shared` | `F15` | 3152 | `unreviewed` |
-| 63 | `C-037` | [`contract_user_profile_reactivate`](#card-contract-user-profile-reactivate) | `platform_shared` | `F15` | 3152 | `unreviewed` |
-| 64 | `S-036` | [`mobile_settings`](#card-mobile-settings) | `platform_shared` | `F15` | 3153 | `unreviewed` |
-| 65 | `C-003` | [`contract_admin_app_health`](#card-contract-admin-app-health) | `platform_shared` | `F16` | 3162 | `unreviewed` |
-| 66 | `C-004` | [`contract_admin_control_panel_configs`](#card-contract-admin-control-panel-configs) | `platform_shared` | `F16` | 3162 | `unreviewed` |
-| 67 | `C-005` | [`contract_admin_control_panel_resync`](#card-contract-admin-control-panel-resync) | `platform_shared` | `F16` | 3162 | `unreviewed` |
-| 68 | `C-008` | [`contract_admin_pipeline_step_output`](#card-contract-admin-pipeline-step-output) | `platform_shared` | `F16` | 3162 | `unreviewed` |
-| 69 | `C-009` | [`contract_admin_pipelines_history`](#card-contract-admin-pipelines-history) | `platform_shared` | `F16` | 3162 | `unreviewed` |
-| 70 | `C-010` | [`contract_admin_pipelines_runs`](#card-contract-admin-pipelines-runs) | `platform_shared` | `F16` | 3162 | `unreviewed` |
-| 71 | `C-011` | [`contract_admin_pipelines_schedules`](#card-contract-admin-pipelines-schedules) | `platform_shared` | `F16` | 3162 | `unreviewed` |
-| 72 | `C-012` | [`contract_admin_pipelines_slug`](#card-contract-admin-pipelines-slug) | `platform_shared` | `F16` | 3162 | `unreviewed` |
-| 73 | `C-013` | [`contract_admin_pipelines_status`](#card-contract-admin-pipelines-status) | `platform_shared` | `F16` | 3162 | `unreviewed` |
-| 74 | `C-014` | [`contract_admin_security_mfa`](#card-contract-admin-security-mfa) | `platform_shared` | `F16` | 3162 | `unreviewed` |
-| 75 | `C-015` | [`contract_admin_security_mfa_verify`](#card-contract-admin-security-mfa-verify) | `platform_shared` | `F16` | 3162 | `unreviewed` |
-| 76 | `C-016` | [`contract_admin_stats`](#card-contract-admin-stats) | `platform_shared` | `F16` | 3162 | `unreviewed` |
-| 77 | `C-017` | [`contract_admin_sync`](#card-contract-admin-sync) | `platform_shared` | `F16` | 3162 | `unreviewed` |
-| 78 | `C-018` | [`contract_admin_users`](#card-contract-admin-users) | `platform_shared` | `F16` | 3162 | `unreviewed` |
-| 79 | `C-019` | [`contract_admin_users_uid`](#card-contract-admin-users-uid) | `platform_shared` | `F16` | 3162 | `unreviewed` |
-| 80 | `C-028` | [`contract_quality`](#card-contract-quality) | `platform_shared` | `F16` | 3162 | `unreviewed` |
-| 81 | `C-029` | [`contract_quality_refresh`](#card-contract-quality-refresh) | `platform_shared` | `F16` | 3162 | `unreviewed` |
-| 82 | `C-033` | [`contract_sync`](#card-contract-sync) | `platform_shared` | `F16` | 3162 | `unreviewed` |
-| 83 | `S-018` | [`admin_app_health`](#card-admin-app-health) | `platform_shared` | `F16` | 3163 | `unreviewed` |
-| 84 | `S-019` | [`admin_control_panel`](#card-admin-control-panel) | `platform_shared` | `F16` | 3163 | `unreviewed` |
-| 85 | `S-020` | [`admin_data_quality`](#card-admin-data-quality) | `platform_shared` | `F16` | 3163 | `unreviewed` |
-| 86 | `S-021` | [`admin_home`](#card-admin-home) | `platform_shared` | `F16` | 3163 | `unreviewed` |
-| 87 | `S-023` | [`admin_pipeline_step_output`](#card-admin-pipeline-step-output) | `platform_shared` | `F16` | 3163 | `unreviewed` |
-| 88 | `S-024` | [`admin_security`](#card-admin-security) | `platform_shared` | `F16` | 3163 | `unreviewed` |
-| 89 | `S-025` | [`admin_user_detail`](#card-admin-user-detail) | `platform_shared` | `F16` | 3163 | `unreviewed` |
-| 90 | `S-026` | [`admin_users`](#card-admin-users) | `platform_shared` | `F16` | 3163 | `unreviewed` |
-| 91 | `S-050` | [`web_login`](#card-web-login) | `platform_shared` | `F16` | 3163 | `unreviewed` |
+| 1 | [`S-002`](#card-s-002) | [`mobile_parcel_search`](#card-s-002) | `parcel_product` | `F01` | 1013 | `unreviewed` |
+| 2 | [`S-004`](#card-s-004) | [`shell_parcel_tool_stack`](#card-s-004) | `parcel_product` | `F01` | 1013 | `unreviewed` |
+| 3 | [`C-001`](#card-c-001) | [`contract_parcels_lookup`](#card-c-001) | `parcel_product` | `F02` | 1022 | `unreviewed` |
+| 4 | [`S-001`](#card-s-001) | [`mobile_parcel_detail`](#card-s-001) | `parcel_product` | `F02` | 1023 | `unreviewed` |
+| 5 | [`S-003`](#card-s-003) | [`overlay_sponsor_slot`](#card-s-003) | `parcel_product` | `F04` | 1043 | `unreviewed` |
+| 6 | [`S-005`](#card-s-005) | [`web_landing`](#card-s-005) | `parcel_product` | `F06` | 1063 | `unreviewed` |
+| 7 | [`S-009`](#card-s-009) | [`admin_export_audit`](#card-s-009) | `parcel_admin` | `F03` | 2033 | `unreviewed` |
+| 8 | [`S-006`](#card-s-006) | [`admin_advertiser_accounts`](#card-s-006) | `parcel_admin` | `F04` | 2043 | `unreviewed` |
+| 9 | [`S-013`](#card-s-013) | [`admin_placements`](#card-s-013) | `parcel_admin` | `F04` | 2043 | `unreviewed` |
+| 10 | [`S-017`](#card-s-017) | [`advertiser_self_metrics`](#card-s-017) | `parcel_admin` | `F04` | 2043 | `unreviewed` |
+| 11 | [`S-010`](#card-s-010) | [`admin_ledger_visualiser`](#card-s-010) | `parcel_admin` | `F07` | 2073 | `unreviewed` |
+| 12 | [`S-015`](#card-s-015) | [`admin_run_ledger`](#card-s-015) | `parcel_admin` | `F07` | 2073 | `unreviewed` |
+| 13 | [`C-002`](#card-c-002) | [`contract_admin_parcels_lookup`](#card-c-002) | `parcel_admin` | `F08` | 2082 | `unreviewed` |
+| 14 | [`S-012`](#card-s-012) | [`admin_parcel_cost`](#card-s-012) | `parcel_admin` | `F08` | 2083 | `unreviewed` |
+| 15 | [`S-007`](#card-s-007) | [`admin_contract_fanout`](#card-s-007) | `parcel_admin` | `F09` | 2093 | `unreviewed` |
+| 16 | [`S-008`](#card-s-008) | [`admin_drift_status`](#card-s-008) | `parcel_admin` | `F09` | 2093 | `unreviewed` |
+| 17 | [`S-011`](#card-s-011) | [`admin_orphan_panel`](#card-s-011) | `parcel_admin` | `F09` | 2093 | `unreviewed` |
+| 18 | [`S-014`](#card-s-014) | [`admin_role_matrix`](#card-s-014) | `parcel_admin` | `F09` | 2093 | `unreviewed` |
+| 19 | [`S-016`](#card-s-016) | [`admin_surface_registry`](#card-s-016) | `parcel_admin` | `F09` | 2093 | `unreviewed` |
+| 20 | [`S-027`](#card-s-027) | [`mobile_auth_confirm`](#card-s-027) | `platform_shared` | `F10` | 3103 | `unreviewed` |
+| 21 | [`S-037`](#card-s-037) | [`mobile_sign_in`](#card-s-037) | `platform_shared` | `F10` | 3103 | `unreviewed` |
+| 22 | [`S-038`](#card-s-038) | [`mobile_sign_up`](#card-s-038) | `platform_shared` | `F10` | 3103 | `unreviewed` |
+| 23 | [`S-039`](#card-s-039) | [`overlay_account_linking_sheet`](#card-s-039) | `platform_shared` | `F10` | 3103 | `unreviewed` |
+| 24 | [`S-040`](#card-s-040) | [`overlay_error_boundary`](#card-s-040) | `platform_shared` | `F10` | 3103 | `unreviewed` |
+| 25 | [`S-047`](#card-s-047) | [`shell_auth_stack`](#card-s-047) | `platform_shared` | `F10` | 3103 | `unreviewed` |
+| 26 | [`C-026`](#card-c-026) | [`contract_onboarding_suppliers`](#card-c-026) | `platform_shared` | `F11` | 3112 | `unreviewed` |
+| 27 | [`S-028`](#card-s-028) | [`mobile_onboarding_address`](#card-s-028) | `platform_shared` | `F11` | 3113 | `unreviewed` |
+| 28 | [`S-029`](#card-s-029) | [`mobile_onboarding_complete`](#card-s-029) | `platform_shared` | `F11` | 3113 | `unreviewed` |
+| 29 | [`S-030`](#card-s-030) | [`mobile_onboarding_first_permit`](#card-s-030) | `platform_shared` | `F11` | 3113 | `unreviewed` |
+| 30 | [`S-031`](#card-s-031) | [`mobile_onboarding_manufacturer_hold`](#card-s-031) | `platform_shared` | `F11` | 3113 | `unreviewed` |
+| 31 | [`S-032`](#card-s-032) | [`mobile_onboarding_path`](#card-s-032) | `platform_shared` | `F11` | 3113 | `unreviewed` |
+| 32 | [`S-033`](#card-s-033) | [`mobile_onboarding_profession`](#card-s-033) | `platform_shared` | `F11` | 3113 | `unreviewed` |
+| 33 | [`S-034`](#card-s-034) | [`mobile_onboarding_supplier`](#card-s-034) | `platform_shared` | `F11` | 3113 | `unreviewed` |
+| 34 | [`S-035`](#card-s-035) | [`mobile_onboarding_terms`](#card-s-035) | `platform_shared` | `F11` | 3113 | `unreviewed` |
+| 35 | [`S-048`](#card-s-048) | [`shell_onboarding_stack`](#card-s-048) | `platform_shared` | `F11` | 3113 | `unreviewed` |
+| 36 | [`C-020`](#card-c-020) | [`contract_admin_users_uid_subscription_events`](#card-c-020) | `platform_shared` | `F12` | 3122 | `unreviewed` |
+| 37 | [`C-021`](#card-c-021) | [`contract_admin_users_uid_subscription_reconcile`](#card-c-021) | `platform_shared` | `F12` | 3122 | `unreviewed` |
+| 38 | [`C-022`](#card-c-022) | [`contract_admin_users_uid_subscription_retry_cancel`](#card-c-022) | `platform_shared` | `F12` | 3122 | `unreviewed` |
+| 39 | [`C-030`](#card-c-030) | [`contract_subscribe_exchange`](#card-c-030) | `platform_shared` | `F12` | 3122 | `unreviewed` |
+| 40 | [`C-031`](#card-c-031) | [`contract_subscribe_portal_session`](#card-c-031) | `platform_shared` | `F12` | 3122 | `unreviewed` |
+| 41 | [`C-032`](#card-c-032) | [`contract_subscribe_session`](#card-c-032) | `platform_shared` | `F12` | 3122 | `unreviewed` |
+| 42 | [`C-038`](#card-c-038) | [`contract_webhooks_stripe`](#card-c-038) | `platform_shared` | `F12` | 3122 | `unreviewed` |
+| 43 | [`S-043`](#card-s-043) | [`overlay_paywall`](#card-s-043) | `platform_shared` | `F12` | 3123 | `unreviewed` |
+| 44 | [`S-044`](#card-s-044) | [`overlay_subscription_loading_guard`](#card-s-044) | `platform_shared` | `F12` | 3123 | `unreviewed` |
+| 45 | [`S-051`](#card-s-051) | [`web_subscribe`](#card-s-051) | `platform_shared` | `F12` | 3123 | `unreviewed` |
+| 46 | [`S-052`](#card-s-052) | [`web_subscribe_cancel`](#card-s-052) | `platform_shared` | `F12` | 3123 | `unreviewed` |
+| 47 | [`S-053`](#card-s-053) | [`web_subscribe_success`](#card-s-053) | `platform_shared` | `F12` | 3123 | `unreviewed` |
+| 48 | [`C-006`](#card-c-006) | [`contract_admin_notifications`](#card-c-006) | `platform_shared` | `F13` | 3132 | `unreviewed` |
+| 49 | [`C-007`](#card-c-007) | [`contract_admin_notifications_test_send`](#card-c-007) | `platform_shared` | `F13` | 3132 | `unreviewed` |
+| 50 | [`C-023`](#card-c-023) | [`contract_notifications`](#card-c-023) | `platform_shared` | `F13` | 3132 | `unreviewed` |
+| 51 | [`C-024`](#card-c-024) | [`contract_notifications_preferences`](#card-c-024) | `platform_shared` | `F13` | 3132 | `unreviewed` |
+| 52 | [`C-025`](#card-c-025) | [`contract_notifications_register`](#card-c-025) | `platform_shared` | `F13` | 3132 | `unreviewed` |
+| 53 | [`S-022`](#card-s-022) | [`admin_notifications`](#card-s-022) | `platform_shared` | `F13` | 3133 | `unreviewed` |
+| 54 | [`S-041`](#card-s-041) | [`overlay_notification_permission_modal`](#card-s-041) | `platform_shared` | `F13` | 3133 | `unreviewed` |
+| 55 | [`S-042`](#card-s-042) | [`overlay_offline_banner`](#card-s-042) | `platform_shared` | `F14` | 3143 | `unreviewed` |
+| 56 | [`S-045`](#card-s-045) | [`shell_app_root`](#card-s-045) | `platform_shared` | `F14` | 3143 | `unreviewed` |
+| 57 | [`S-046`](#card-s-046) | [`shell_app_tabs`](#card-s-046) | `platform_shared` | `F14` | 3143 | `unreviewed` |
+| 58 | [`S-049`](#card-s-049) | [`shell_web_root`](#card-s-049) | `platform_shared` | `F14` | 3143 | `unreviewed` |
+| 59 | [`C-027`](#card-c-027) | [`contract_products`](#card-c-027) | `platform_shared` | `F15` | 3152 | `unreviewed` |
+| 60 | [`C-034`](#card-c-034) | [`contract_trades`](#card-c-034) | `platform_shared` | `F15` | 3152 | `unreviewed` |
+| 61 | [`C-035`](#card-c-035) | [`contract_user_profile`](#card-c-035) | `platform_shared` | `F15` | 3152 | `unreviewed` |
+| 62 | [`C-036`](#card-c-036) | [`contract_user_profile_delete`](#card-c-036) | `platform_shared` | `F15` | 3152 | `unreviewed` |
+| 63 | [`C-037`](#card-c-037) | [`contract_user_profile_reactivate`](#card-c-037) | `platform_shared` | `F15` | 3152 | `unreviewed` |
+| 64 | [`S-036`](#card-s-036) | [`mobile_settings`](#card-s-036) | `platform_shared` | `F15` | 3153 | `unreviewed` |
+| 65 | [`C-003`](#card-c-003) | [`contract_admin_app_health`](#card-c-003) | `platform_shared` | `F16` | 3162 | `unreviewed` |
+| 66 | [`C-004`](#card-c-004) | [`contract_admin_control_panel_configs`](#card-c-004) | `platform_shared` | `F16` | 3162 | `unreviewed` |
+| 67 | [`C-005`](#card-c-005) | [`contract_admin_control_panel_resync`](#card-c-005) | `platform_shared` | `F16` | 3162 | `unreviewed` |
+| 68 | [`C-008`](#card-c-008) | [`contract_admin_pipeline_step_output`](#card-c-008) | `platform_shared` | `F16` | 3162 | `unreviewed` |
+| 69 | [`C-009`](#card-c-009) | [`contract_admin_pipelines_history`](#card-c-009) | `platform_shared` | `F16` | 3162 | `unreviewed` |
+| 70 | [`C-010`](#card-c-010) | [`contract_admin_pipelines_runs`](#card-c-010) | `platform_shared` | `F16` | 3162 | `unreviewed` |
+| 71 | [`C-011`](#card-c-011) | [`contract_admin_pipelines_schedules`](#card-c-011) | `platform_shared` | `F16` | 3162 | `unreviewed` |
+| 72 | [`C-012`](#card-c-012) | [`contract_admin_pipelines_slug`](#card-c-012) | `platform_shared` | `F16` | 3162 | `unreviewed` |
+| 73 | [`C-013`](#card-c-013) | [`contract_admin_pipelines_status`](#card-c-013) | `platform_shared` | `F16` | 3162 | `unreviewed` |
+| 74 | [`C-014`](#card-c-014) | [`contract_admin_security_mfa`](#card-c-014) | `platform_shared` | `F16` | 3162 | `unreviewed` |
+| 75 | [`C-015`](#card-c-015) | [`contract_admin_security_mfa_verify`](#card-c-015) | `platform_shared` | `F16` | 3162 | `unreviewed` |
+| 76 | [`C-016`](#card-c-016) | [`contract_admin_stats`](#card-c-016) | `platform_shared` | `F16` | 3162 | `unreviewed` |
+| 77 | [`C-017`](#card-c-017) | [`contract_admin_sync`](#card-c-017) | `platform_shared` | `F16` | 3162 | `unreviewed` |
+| 78 | [`C-018`](#card-c-018) | [`contract_admin_users`](#card-c-018) | `platform_shared` | `F16` | 3162 | `unreviewed` |
+| 79 | [`C-019`](#card-c-019) | [`contract_admin_users_uid`](#card-c-019) | `platform_shared` | `F16` | 3162 | `unreviewed` |
+| 80 | [`C-028`](#card-c-028) | [`contract_quality`](#card-c-028) | `platform_shared` | `F16` | 3162 | `unreviewed` |
+| 81 | [`C-029`](#card-c-029) | [`contract_quality_refresh`](#card-c-029) | `platform_shared` | `F16` | 3162 | `unreviewed` |
+| 82 | [`C-033`](#card-c-033) | [`contract_sync`](#card-c-033) | `platform_shared` | `F16` | 3162 | `unreviewed` |
+| 83 | [`S-018`](#card-s-018) | [`admin_app_health`](#card-s-018) | `platform_shared` | `F16` | 3163 | `unreviewed` |
+| 84 | [`S-019`](#card-s-019) | [`admin_control_panel`](#card-s-019) | `platform_shared` | `F16` | 3163 | `unreviewed` |
+| 85 | [`S-020`](#card-s-020) | [`admin_data_quality`](#card-s-020) | `platform_shared` | `F16` | 3163 | `unreviewed` |
+| 86 | [`S-021`](#card-s-021) | [`admin_home`](#card-s-021) | `platform_shared` | `F16` | 3163 | `unreviewed` |
+| 87 | [`S-023`](#card-s-023) | [`admin_pipeline_step_output`](#card-s-023) | `platform_shared` | `F16` | 3163 | `unreviewed` |
+| 88 | [`S-024`](#card-s-024) | [`admin_security`](#card-s-024) | `platform_shared` | `F16` | 3163 | `unreviewed` |
+| 89 | [`S-025`](#card-s-025) | [`admin_user_detail`](#card-s-025) | `platform_shared` | `F16` | 3163 | `unreviewed` |
+| 90 | [`S-026`](#card-s-026) | [`admin_users`](#card-s-026) | `platform_shared` | `F16` | 3163 | `unreviewed` |
+| 91 | [`S-050`](#card-s-050) | [`web_login`](#card-s-050) | `platform_shared` | `F16` | 3163 | `unreviewed` |
 
 ---
 
+<a id="card-s-002"></a>
+
 ## Card 1 — `S-002` `mobile_parcel_search`
+
+Registry detail: [`S-002`](../../../docs/reports/generated/127-surface-registry.md#s-002) `mobile_parcel_search`.
 
 `SURFACE` · `SEARCH` · scope `parcel_product` · feature `F01` address-lookup · build order 1013 · batch B2 · **review: `unreviewed`**
 
@@ -157,7 +161,11 @@ It is 1 of 2 entr(ies) in feature `F01`. It owns no component. Every table it to
 
 ---
 
+<a id="card-s-004"></a>
+
 ## Card 2 — `S-004` `shell_parcel_tool_stack`
+
+Registry detail: [`S-004`](../../../docs/reports/generated/127-surface-registry.md#s-004) `shell_parcel_tool_stack`.
 
 `SURFACE` · `SHELL` · scope `parcel_product` · feature `F01` address-lookup · build order 1013 · batch B2 · **review: `unreviewed`**
 
@@ -199,7 +207,11 @@ It is 1 of 2 entr(ies) in feature `F01`. It owns no component. Every table it to
 
 ---
 
+<a id="card-c-001"></a>
+
 ## Card 3 — `C-001` `contract_parcels_lookup`
+
+Registry detail: [`C-001`](../../../docs/reports/generated/127-surface-registry.md#c-001) `contract_parcels_lookup`.
 
 `CONTRACT` · `QUERY` · scope `parcel_product` · feature `F02` parcel-report · build order 1022 · batch B1 · **review: `unreviewed`**
 
@@ -249,7 +261,11 @@ It is 1 of 2 entr(ies) in feature `F02`. It owns no component. Every table it to
 
 ---
 
+<a id="card-s-001"></a>
+
 ## Card 4 — `S-001` `mobile_parcel_detail` — **THE PILOT**
+
+Registry detail: [`S-001`](../../../docs/reports/generated/127-surface-registry.md#s-001) `mobile_parcel_detail`.
 
 `SURFACE` · `REPORT` · scope `parcel_product` · feature `F02` parcel-report · build order 1023 · batch B1 · **review: `unreviewed`**
 
@@ -296,7 +312,11 @@ It is 1 of 2 entr(ies) in feature `F02`. It owns no component. Every table it to
 
 ---
 
+<a id="card-s-003"></a>
+
 ## Card 5 — `S-003` `overlay_sponsor_slot`
+
+Registry detail: [`S-003`](../../../docs/reports/generated/127-surface-registry.md#s-003) `overlay_sponsor_slot`.
 
 `SURFACE` · `SLOT` · scope `parcel_product` · feature `F04` sponsor-placements · build order 1043 · batch B1 · **review: `unreviewed`**
 
@@ -338,7 +358,11 @@ It is 1 of 4 entr(ies) in feature `F04`. Removing it deletes 1 owned component(s
 
 ---
 
+<a id="card-s-005"></a>
+
 ## Card 6 — `S-005` `web_landing`
+
+Registry detail: [`S-005`](../../../docs/reports/generated/127-surface-registry.md#s-005) `web_landing`.
 
 `SURFACE` · `STATIC` · scope `parcel_product` · feature `F06` web-front-door · build order 1063 · batch UNRESEARCHED · **review: `unreviewed`**
 
@@ -380,7 +404,11 @@ It is 1 of 1 entr(ies) in feature `F06`. It owns no component. Every table it to
 
 ---
 
+<a id="card-s-009"></a>
+
 ## Card 7 — `S-009` `admin_export_audit`
+
+Registry detail: [`S-009`](../../../docs/reports/generated/127-surface-registry.md#s-009) `admin_export_audit`.
 
 `SURFACE` · `LIST` · scope `parcel_admin` · feature `F03` pdf-export · build order 2033 · batch UNRESEARCHED · **review: `unreviewed`**
 
@@ -425,7 +453,11 @@ It is 1 of 1 entr(ies) in feature `F03`. Removing it deletes 1 owned component(s
 
 ---
 
+<a id="card-s-006"></a>
+
 ## Card 8 — `S-006` `admin_advertiser_accounts`
+
+Registry detail: [`S-006`](../../../docs/reports/generated/127-surface-registry.md#s-006) `admin_advertiser_accounts`.
 
 `SURFACE` · `LIST` · scope `parcel_admin` · feature `F04` sponsor-placements · build order 2043 · batch UNRESEARCHED · **review: `unreviewed`**
 
@@ -471,7 +503,11 @@ It is 1 of 4 entr(ies) in feature `F04`. Removing it deletes 1 owned component(s
 
 ---
 
+<a id="card-s-013"></a>
+
 ## Card 9 — `S-013` `admin_placements`
+
+Registry detail: [`S-013`](../../../docs/reports/generated/127-surface-registry.md#s-013) `admin_placements`.
 
 `SURFACE` · `FORM` · scope `parcel_admin` · feature `F04` sponsor-placements · build order 2043 · batch UNRESEARCHED · **review: `unreviewed`**
 
@@ -519,7 +555,11 @@ It is 1 of 4 entr(ies) in feature `F04`. Removing it deletes 1 owned component(s
 
 ---
 
+<a id="card-s-017"></a>
+
 ## Card 10 — `S-017` `advertiser_self_metrics`
+
+Registry detail: [`S-017`](../../../docs/reports/generated/127-surface-registry.md#s-017) `advertiser_self_metrics`.
 
 `SURFACE` · `DASHBOARD` · scope `parcel_admin` · feature `F04` sponsor-placements · build order 2043 · batch UNRESEARCHED · **review: `unreviewed`**
 
@@ -565,7 +605,11 @@ It is 1 of 4 entr(ies) in feature `F04`. Removing it deletes 1 owned component(s
 
 ---
 
+<a id="card-s-010"></a>
+
 ## Card 11 — `S-010` `admin_ledger_visualiser`
+
+Registry detail: [`S-010`](../../../docs/reports/generated/127-surface-registry.md#s-010) `admin_ledger_visualiser`.
 
 `SURFACE` · `REPORT` · scope `parcel_admin` · feature `F07` app-outputs-materialisation · build order 2073 · batch UNRESEARCHED · **review: `unreviewed`**
 
@@ -611,7 +655,11 @@ It is 1 of 2 entr(ies) in feature `F07`. Removing it deletes 1 owned component(s
 
 ---
 
+<a id="card-s-015"></a>
+
 ## Card 12 — `S-015` `admin_run_ledger`
+
+Registry detail: [`S-015`](../../../docs/reports/generated/127-surface-registry.md#s-015) `admin_run_ledger`.
 
 `SURFACE` · `LIST` · scope `parcel_admin` · feature `F07` app-outputs-materialisation · build order 2073 · batch UNRESEARCHED · **review: `unreviewed`**
 
@@ -656,7 +704,11 @@ It is 1 of 2 entr(ies) in feature `F07`. Removing it deletes 1 owned component(s
 
 ---
 
+<a id="card-c-002"></a>
+
 ## Card 13 — `C-002` `contract_admin_parcels_lookup`
+
+Registry detail: [`C-002`](../../../docs/reports/generated/127-surface-registry.md#c-002) `contract_admin_parcels_lookup`.
 
 `CONTRACT` · `QUERY` · scope `parcel_admin` · feature `F08` admin-parcel-operations · build order 2082 · batch B1 · **review: `unreviewed`**
 
@@ -704,7 +756,11 @@ It is 1 of 2 entr(ies) in feature `F08`. It owns no component. Every table it to
 
 ---
 
+<a id="card-s-012"></a>
+
 ## Card 14 — `S-012` `admin_parcel_cost`
+
+Registry detail: [`S-012`](../../../docs/reports/generated/127-surface-registry.md#s-012) `admin_parcel_cost`.
 
 `SURFACE` · `SEARCH` · scope `parcel_admin` · feature `F08` admin-parcel-operations · build order 2083 · batch B1 · **review: `unreviewed`**
 
@@ -752,7 +808,11 @@ It is 1 of 2 entr(ies) in feature `F08`. Removing it deletes 2 owned component(s
 
 ---
 
+<a id="card-s-007"></a>
+
 ## Card 15 — `S-007` `admin_contract_fanout`
+
+Registry detail: [`S-007`](../../../docs/reports/generated/127-surface-registry.md#s-007) `admin_contract_fanout`.
 
 `SURFACE` · `REPORT` · scope `parcel_admin` · feature `F09` surface-registry-drift · build order 2093 · batch B1a · **review: `unreviewed`**
 
@@ -797,7 +857,11 @@ It is 1 of 5 entr(ies) in feature `F09`. Removing it deletes 1 owned component(s
 
 ---
 
+<a id="card-s-008"></a>
+
 ## Card 16 — `S-008` `admin_drift_status`
+
+Registry detail: [`S-008`](../../../docs/reports/generated/127-surface-registry.md#s-008) `admin_drift_status`.
 
 `SURFACE` · `DASHBOARD` · scope `parcel_admin` · feature `F09` surface-registry-drift · build order 2093 · batch B1a · **review: `unreviewed`**
 
@@ -839,7 +903,11 @@ It is 1 of 5 entr(ies) in feature `F09`. Removing it deletes 1 owned component(s
 
 ---
 
+<a id="card-s-011"></a>
+
 ## Card 17 — `S-011` `admin_orphan_panel`
+
+Registry detail: [`S-011`](../../../docs/reports/generated/127-surface-registry.md#s-011) `admin_orphan_panel`.
 
 `SURFACE` · `LIST` · scope `parcel_admin` · feature `F09` surface-registry-drift · build order 2093 · batch B1a · **review: `unreviewed`**
 
@@ -884,7 +952,11 @@ It is 1 of 5 entr(ies) in feature `F09`. Removing it deletes 1 owned component(s
 
 ---
 
+<a id="card-s-014"></a>
+
 ## Card 18 — `S-014` `admin_role_matrix`
+
+Registry detail: [`S-014`](../../../docs/reports/generated/127-surface-registry.md#s-014) `admin_role_matrix`.
 
 `SURFACE` · `REPORT` · scope `parcel_admin` · feature `F09` surface-registry-drift · build order 2093 · batch B1a · **review: `unreviewed`**
 
@@ -928,7 +1000,11 @@ It is 1 of 5 entr(ies) in feature `F09`. Removing it deletes 1 owned component(s
 
 ---
 
+<a id="card-s-016"></a>
+
 ## Card 19 — `S-016` `admin_surface_registry`
+
+Registry detail: [`S-016`](../../../docs/reports/generated/127-surface-registry.md#s-016) `admin_surface_registry`.
 
 `SURFACE` · `LIST` · scope `parcel_admin` · feature `F09` surface-registry-drift · build order 2093 · batch B1a · **review: `unreviewed`**
 
@@ -975,7 +1051,11 @@ It is 1 of 5 entr(ies) in feature `F09`. Removing it deletes 1 owned component(s
 
 ---
 
+<a id="card-s-027"></a>
+
 ## Card 20 — `S-027` `mobile_auth_confirm`
+
+Registry detail: [`S-027`](../../../docs/reports/generated/127-surface-registry.md#s-027) `mobile_auth_confirm`.
 
 `SURFACE` · `GATE` · scope `platform_shared` · feature `F10` auth-identity · build order 3103 · batch UNRESEARCHED · **review: `unreviewed`**
 
@@ -1017,7 +1097,11 @@ It is 1 of 6 entr(ies) in feature `F10`. It owns no component. Every table it to
 
 ---
 
+<a id="card-s-037"></a>
+
 ## Card 21 — `S-037` `mobile_sign_in`
+
+Registry detail: [`S-037`](../../../docs/reports/generated/127-surface-registry.md#s-037) `mobile_sign_in`.
 
 `SURFACE` · `FORM` · scope `platform_shared` · feature `F10` auth-identity · build order 3103 · batch UNRESEARCHED · **review: `unreviewed`**
 
@@ -1059,7 +1143,11 @@ It is 1 of 6 entr(ies) in feature `F10`. Removing it deletes 1 owned component(s
 
 ---
 
+<a id="card-s-038"></a>
+
 ## Card 22 — `S-038` `mobile_sign_up`
+
+Registry detail: [`S-038`](../../../docs/reports/generated/127-surface-registry.md#s-038) `mobile_sign_up`.
 
 `SURFACE` · `FORM` · scope `platform_shared` · feature `F10` auth-identity · build order 3103 · batch UNRESEARCHED · **review: `unreviewed`**
 
@@ -1101,7 +1189,11 @@ It is 1 of 6 entr(ies) in feature `F10`. It owns no component. Every table it to
 
 ---
 
+<a id="card-s-039"></a>
+
 ## Card 23 — `S-039` `overlay_account_linking_sheet`
+
+Registry detail: [`S-039`](../../../docs/reports/generated/127-surface-registry.md#s-039) `overlay_account_linking_sheet`.
 
 `SURFACE` · `GATE` · scope `platform_shared` · feature `F10` auth-identity · build order 3103 · batch UNRESEARCHED · **review: `unreviewed`**
 
@@ -1143,7 +1235,11 @@ It is 1 of 6 entr(ies) in feature `F10`. Removing it deletes 1 owned component(s
 
 ---
 
+<a id="card-s-040"></a>
+
 ## Card 24 — `S-040` `overlay_error_boundary`
+
+Registry detail: [`S-040`](../../../docs/reports/generated/127-surface-registry.md#s-040) `overlay_error_boundary`.
 
 `SURFACE` · `GATE` · scope `platform_shared` · feature `F10` auth-identity · build order 3103 · batch UNRESEARCHED · **review: `unreviewed`**
 
@@ -1185,7 +1281,11 @@ It is 1 of 6 entr(ies) in feature `F10`. Removing it deletes 1 owned component(s
 
 ---
 
+<a id="card-s-047"></a>
+
 ## Card 25 — `S-047` `shell_auth_stack`
+
+Registry detail: [`S-047`](../../../docs/reports/generated/127-surface-registry.md#s-047) `shell_auth_stack`.
 
 `SURFACE` · `SHELL` · scope `platform_shared` · feature `F10` auth-identity · build order 3103 · batch UNRESEARCHED · **review: `unreviewed`**
 
@@ -1227,7 +1327,11 @@ It is 1 of 6 entr(ies) in feature `F10`. It owns no component. Every table it to
 
 ---
 
+<a id="card-c-026"></a>
+
 ## Card 26 — `C-026` `contract_onboarding_suppliers`
+
+Registry detail: [`C-026`](../../../docs/reports/generated/127-surface-registry.md#c-026) `contract_onboarding_suppliers`.
 
 `CONTRACT` · `QUERY` · scope `platform_shared` · feature `F11` onboarding · build order 3112 · batch UNRESEARCHED · **review: `unreviewed`**
 
@@ -1271,7 +1375,11 @@ It is 1 of 10 entr(ies) in feature `F11`. It owns no component. Every table it t
 
 ---
 
+<a id="card-s-028"></a>
+
 ## Card 27 — `S-028` `mobile_onboarding_address`
+
+Registry detail: [`S-028`](../../../docs/reports/generated/127-surface-registry.md#s-028) `mobile_onboarding_address`.
 
 `SURFACE` · `WIZARD_STEP` · scope `platform_shared` · feature `F11` onboarding · build order 3113 · batch UNRESEARCHED · **review: `unreviewed`**
 
@@ -1316,7 +1424,11 @@ It is 1 of 10 entr(ies) in feature `F11`. It owns no component. Every table it t
 
 ---
 
+<a id="card-s-029"></a>
+
 ## Card 28 — `S-029` `mobile_onboarding_complete`
+
+Registry detail: [`S-029`](../../../docs/reports/generated/127-surface-registry.md#s-029) `mobile_onboarding_complete`.
 
 `SURFACE` · `WIZARD_STEP` · scope `platform_shared` · feature `F11` onboarding · build order 3113 · batch UNRESEARCHED · **review: `unreviewed`**
 
@@ -1361,7 +1473,11 @@ It is 1 of 10 entr(ies) in feature `F11`. It owns no component. Every table it t
 
 ---
 
+<a id="card-s-030"></a>
+
 ## Card 29 — `S-030` `mobile_onboarding_first_permit`
+
+Registry detail: [`S-030`](../../../docs/reports/generated/127-surface-registry.md#s-030) `mobile_onboarding_first_permit`.
 
 `SURFACE` · `WIZARD_STEP` · scope `platform_shared` · feature `F11` onboarding · build order 3113 · batch UNRESEARCHED · **review: `unreviewed`**
 
@@ -1403,7 +1519,11 @@ It is 1 of 10 entr(ies) in feature `F11`. It owns no component. Every table it t
 
 ---
 
+<a id="card-s-031"></a>
+
 ## Card 30 — `S-031` `mobile_onboarding_manufacturer_hold`
+
+Registry detail: [`S-031`](../../../docs/reports/generated/127-surface-registry.md#s-031) `mobile_onboarding_manufacturer_hold`.
 
 `SURFACE` · `GATE` · scope `platform_shared` · feature `F11` onboarding · build order 3113 · batch UNRESEARCHED · **review: `unreviewed`**
 
@@ -1445,7 +1565,11 @@ It is 1 of 10 entr(ies) in feature `F11`. It owns no component. Every table it t
 
 ---
 
+<a id="card-s-032"></a>
+
 ## Card 31 — `S-032` `mobile_onboarding_path`
+
+Registry detail: [`S-032`](../../../docs/reports/generated/127-surface-registry.md#s-032) `mobile_onboarding_path`.
 
 `SURFACE` · `WIZARD_STEP` · scope `platform_shared` · feature `F11` onboarding · build order 3113 · batch UNRESEARCHED · **review: `unreviewed`**
 
@@ -1487,7 +1611,11 @@ It is 1 of 10 entr(ies) in feature `F11`. It owns no component. Every table it t
 
 ---
 
+<a id="card-s-033"></a>
+
 ## Card 32 — `S-033` `mobile_onboarding_profession`
+
+Registry detail: [`S-033`](../../../docs/reports/generated/127-surface-registry.md#s-033) `mobile_onboarding_profession`.
 
 `SURFACE` · `WIZARD_STEP` · scope `platform_shared` · feature `F11` onboarding · build order 3113 · batch UNRESEARCHED · **review: `unreviewed`**
 
@@ -1532,7 +1660,11 @@ It is 1 of 10 entr(ies) in feature `F11`. It owns no component. Every table it t
 
 ---
 
+<a id="card-s-034"></a>
+
 ## Card 33 — `S-034` `mobile_onboarding_supplier`
+
+Registry detail: [`S-034`](../../../docs/reports/generated/127-surface-registry.md#s-034) `mobile_onboarding_supplier`.
 
 `SURFACE` · `WIZARD_STEP` · scope `platform_shared` · feature `F11` onboarding · build order 3113 · batch UNRESEARCHED · **review: `unreviewed`**
 
@@ -1578,7 +1710,11 @@ It is 1 of 10 entr(ies) in feature `F11`. It owns no component. Every table it t
 
 ---
 
+<a id="card-s-035"></a>
+
 ## Card 34 — `S-035` `mobile_onboarding_terms`
+
+Registry detail: [`S-035`](../../../docs/reports/generated/127-surface-registry.md#s-035) `mobile_onboarding_terms`.
 
 `SURFACE` · `WIZARD_STEP` · scope `platform_shared` · feature `F11` onboarding · build order 3113 · batch UNRESEARCHED · **review: `unreviewed`**
 
@@ -1623,7 +1759,11 @@ It is 1 of 10 entr(ies) in feature `F11`. It owns no component. Every table it t
 
 ---
 
+<a id="card-s-048"></a>
+
 ## Card 35 — `S-048` `shell_onboarding_stack`
+
+Registry detail: [`S-048`](../../../docs/reports/generated/127-surface-registry.md#s-048) `shell_onboarding_stack`.
 
 `SURFACE` · `SHELL` · scope `platform_shared` · feature `F11` onboarding · build order 3113 · batch UNRESEARCHED · **review: `unreviewed`**
 
@@ -1665,7 +1805,11 @@ It is 1 of 10 entr(ies) in feature `F11`. It owns no component. Every table it t
 
 ---
 
+<a id="card-c-020"></a>
+
 ## Card 36 — `C-020` `contract_admin_users_uid_subscription_events`
+
+Registry detail: [`C-020`](../../../docs/reports/generated/127-surface-registry.md#c-020) `contract_admin_users_uid_subscription_events`.
 
 `CONTRACT` · `QUERY` · scope `platform_shared` · feature `F12` subscription-billing · build order 3122 · batch UNRESEARCHED · **review: `unreviewed`**
 
@@ -1714,7 +1858,11 @@ It is 1 of 12 entr(ies) in feature `F12`. It owns no component. Every table it t
 
 ---
 
+<a id="card-c-021"></a>
+
 ## Card 37 — `C-021` `contract_admin_users_uid_subscription_reconcile`
+
+Registry detail: [`C-021`](../../../docs/reports/generated/127-surface-registry.md#c-021) `contract_admin_users_uid_subscription_reconcile`.
 
 `CONTRACT` · `MUTATION` · scope `platform_shared` · feature `F12` subscription-billing · build order 3122 · batch UNRESEARCHED · **review: `unreviewed`**
 
@@ -1765,7 +1913,11 @@ It is 1 of 12 entr(ies) in feature `F12`. It owns no component. Every table it t
 
 ---
 
+<a id="card-c-022"></a>
+
 ## Card 38 — `C-022` `contract_admin_users_uid_subscription_retry_cancel`
+
+Registry detail: [`C-022`](../../../docs/reports/generated/127-surface-registry.md#c-022) `contract_admin_users_uid_subscription_retry_cancel`.
 
 `CONTRACT` · `MUTATION` · scope `platform_shared` · feature `F12` subscription-billing · build order 3122 · batch UNRESEARCHED · **review: `unreviewed`**
 
@@ -1814,7 +1966,11 @@ It is 1 of 12 entr(ies) in feature `F12`. It owns no component. Every table it t
 
 ---
 
+<a id="card-c-030"></a>
+
 ## Card 39 — `C-030` `contract_subscribe_exchange`
+
+Registry detail: [`C-030`](../../../docs/reports/generated/127-surface-registry.md#c-030) `contract_subscribe_exchange`.
 
 `CONTRACT` · `MUTATION` · scope `platform_shared` · feature `F12` subscription-billing · build order 3122 · batch UNRESEARCHED · **review: `unreviewed`**
 
@@ -1861,7 +2017,11 @@ It is 1 of 12 entr(ies) in feature `F12`. It owns no component. Every table it t
 
 ---
 
+<a id="card-c-031"></a>
+
 ## Card 40 — `C-031` `contract_subscribe_portal_session`
+
+Registry detail: [`C-031`](../../../docs/reports/generated/127-surface-registry.md#c-031) `contract_subscribe_portal_session`.
 
 `CONTRACT` · `COMMAND` · scope `platform_shared` · feature `F12` subscription-billing · build order 3122 · batch UNRESEARCHED · **review: `unreviewed`**
 
@@ -1905,7 +2065,11 @@ It is 1 of 12 entr(ies) in feature `F12`. It owns no component. Every table it t
 
 ---
 
+<a id="card-c-032"></a>
+
 ## Card 41 — `C-032` `contract_subscribe_session`
+
+Registry detail: [`C-032`](../../../docs/reports/generated/127-surface-registry.md#c-032) `contract_subscribe_session`.
 
 `CONTRACT` · `MUTATION` · scope `platform_shared` · feature `F12` subscription-billing · build order 3122 · batch UNRESEARCHED · **review: `unreviewed`**
 
@@ -1952,7 +2116,11 @@ It is 1 of 12 entr(ies) in feature `F12`. It owns no component. Every table it t
 
 ---
 
+<a id="card-c-038"></a>
+
 ## Card 42 — `C-038` `contract_webhooks_stripe`
+
+Registry detail: [`C-038`](../../../docs/reports/generated/127-surface-registry.md#c-038) `contract_webhooks_stripe`.
 
 `CONTRACT` · `WEBHOOK` · scope `platform_shared` · feature `F12` subscription-billing · build order 3122 · batch UNRESEARCHED · **review: `unreviewed`**
 
@@ -2000,7 +2168,11 @@ It is 1 of 12 entr(ies) in feature `F12`. It owns no component. Every table it t
 
 ---
 
+<a id="card-s-043"></a>
+
 ## Card 43 — `S-043` `overlay_paywall`
+
+Registry detail: [`S-043`](../../../docs/reports/generated/127-surface-registry.md#s-043) `overlay_paywall`.
 
 `SURFACE` · `GATE` · scope `platform_shared` · feature `F12` subscription-billing · build order 3123 · batch UNRESEARCHED · **review: `unreviewed`**
 
@@ -2049,7 +2221,11 @@ It is 1 of 12 entr(ies) in feature `F12`. Removing it deletes 1 owned component(
 
 ---
 
+<a id="card-s-044"></a>
+
 ## Card 44 — `S-044` `overlay_subscription_loading_guard`
+
+Registry detail: [`S-044`](../../../docs/reports/generated/127-surface-registry.md#s-044) `overlay_subscription_loading_guard`.
 
 `SURFACE` · `GATE` · scope `platform_shared` · feature `F12` subscription-billing · build order 3123 · batch UNRESEARCHED · **review: `unreviewed`**
 
@@ -2091,7 +2267,11 @@ It is 1 of 12 entr(ies) in feature `F12`. Removing it deletes 1 owned component(
 
 ---
 
+<a id="card-s-051"></a>
+
 ## Card 45 — `S-051` `web_subscribe`
+
+Registry detail: [`S-051`](../../../docs/reports/generated/127-surface-registry.md#s-051) `web_subscribe`.
 
 `SURFACE` · `WIZARD_STEP` · scope `platform_shared` · feature `F12` subscription-billing · build order 3123 · batch UNRESEARCHED · **review: `unreviewed`**
 
@@ -2136,7 +2316,11 @@ It is 1 of 12 entr(ies) in feature `F12`. It owns no component. Every table it t
 
 ---
 
+<a id="card-s-052"></a>
+
 ## Card 46 — `S-052` `web_subscribe_cancel`
+
+Registry detail: [`S-052`](../../../docs/reports/generated/127-surface-registry.md#s-052) `web_subscribe_cancel`.
 
 `SURFACE` · `STATIC` · scope `platform_shared` · feature `F12` subscription-billing · build order 3123 · batch UNRESEARCHED · **review: `unreviewed`**
 
@@ -2178,7 +2362,11 @@ It is 1 of 12 entr(ies) in feature `F12`. It owns no component. Every table it t
 
 ---
 
+<a id="card-s-053"></a>
+
 ## Card 47 — `S-053` `web_subscribe_success`
+
+Registry detail: [`S-053`](../../../docs/reports/generated/127-surface-registry.md#s-053) `web_subscribe_success`.
 
 `SURFACE` · `WIZARD_STEP` · scope `platform_shared` · feature `F12` subscription-billing · build order 3123 · batch UNRESEARCHED · **review: `unreviewed`**
 
@@ -2223,7 +2411,11 @@ It is 1 of 12 entr(ies) in feature `F12`. It owns no component. Every table it t
 
 ---
 
+<a id="card-c-006"></a>
+
 ## Card 48 — `C-006` `contract_admin_notifications`
+
+Registry detail: [`C-006`](../../../docs/reports/generated/127-surface-registry.md#c-006) `contract_admin_notifications`.
 
 `CONTRACT` · `QUERY` · scope `platform_shared` · feature `F13` notifications · build order 3132 · batch UNRESEARCHED · **review: `unreviewed`**
 
@@ -2272,7 +2464,11 @@ It is 1 of 7 entr(ies) in feature `F13`. It owns no component. Every table it to
 
 ---
 
+<a id="card-c-007"></a>
+
 ## Card 49 — `C-007` `contract_admin_notifications_test_send`
+
+Registry detail: [`C-007`](../../../docs/reports/generated/127-surface-registry.md#c-007) `contract_admin_notifications_test_send`.
 
 `CONTRACT` · `COMMAND` · scope `platform_shared` · feature `F13` notifications · build order 3132 · batch UNRESEARCHED · **review: `unreviewed`**
 
@@ -2317,7 +2513,11 @@ It is 1 of 7 entr(ies) in feature `F13`. It owns no component. Every table it to
 
 ---
 
+<a id="card-c-023"></a>
+
 ## Card 50 — `C-023` `contract_notifications`
+
+Registry detail: [`C-023`](../../../docs/reports/generated/127-surface-registry.md#c-023) `contract_notifications`.
 
 `CONTRACT` · `MUTATION` · scope `platform_shared` · feature `F13` notifications · build order 3132 · batch UNRESEARCHED · **review: `unreviewed`**
 
@@ -2362,7 +2562,11 @@ It is 1 of 7 entr(ies) in feature `F13`. It owns no component. Every table it to
 
 ---
 
+<a id="card-c-024"></a>
+
 ## Card 51 — `C-024` `contract_notifications_preferences`
+
+Registry detail: [`C-024`](../../../docs/reports/generated/127-surface-registry.md#c-024) `contract_notifications_preferences`.
 
 `CONTRACT` · `MUTATION` · scope `platform_shared` · feature `F13` notifications · build order 3132 · batch UNRESEARCHED · **review: `unreviewed`**
 
@@ -2407,7 +2611,11 @@ It is 1 of 7 entr(ies) in feature `F13`. It owns no component. Every table it to
 
 ---
 
+<a id="card-c-025"></a>
+
 ## Card 52 — `C-025` `contract_notifications_register`
+
+Registry detail: [`C-025`](../../../docs/reports/generated/127-surface-registry.md#c-025) `contract_notifications_register`.
 
 `CONTRACT` · `MUTATION` · scope `platform_shared` · feature `F13` notifications · build order 3132 · batch UNRESEARCHED · **review: `unreviewed`**
 
@@ -2451,7 +2659,11 @@ It is 1 of 7 entr(ies) in feature `F13`. It owns no component. Every table it to
 
 ---
 
+<a id="card-s-022"></a>
+
 ## Card 53 — `S-022` `admin_notifications`
+
+Registry detail: [`S-022`](../../../docs/reports/generated/127-surface-registry.md#s-022) `admin_notifications`.
 
 `SURFACE` · `LIST` · scope `platform_shared` · feature `F13` notifications · build order 3133 · batch UNRESEARCHED · **review: `unreviewed`**
 
@@ -2500,7 +2712,11 @@ It is 1 of 7 entr(ies) in feature `F13`. Removing it deletes 1 owned component(s
 
 ---
 
+<a id="card-s-041"></a>
+
 ## Card 54 — `S-041` `overlay_notification_permission_modal`
+
+Registry detail: [`S-041`](../../../docs/reports/generated/127-surface-registry.md#s-041) `overlay_notification_permission_modal`.
 
 `SURFACE` · `GATE` · scope `platform_shared` · feature `F13` notifications · build order 3133 · batch UNRESEARCHED · **review: `unreviewed`**
 
@@ -2544,7 +2760,11 @@ It is 1 of 7 entr(ies) in feature `F13`. Removing it deletes 1 owned component(s
 
 ---
 
+<a id="card-s-042"></a>
+
 ## Card 55 — `S-042` `overlay_offline_banner`
+
+Registry detail: [`S-042`](../../../docs/reports/generated/127-surface-registry.md#s-042) `overlay_offline_banner`.
 
 `SURFACE` · `STATIC` · scope `platform_shared` · feature `F14` navigation-shells · build order 3143 · batch UNRESEARCHED · **review: `unreviewed`**
 
@@ -2586,7 +2806,11 @@ It is 1 of 4 entr(ies) in feature `F14`. Removing it deletes 1 owned component(s
 
 ---
 
+<a id="card-s-045"></a>
+
 ## Card 56 — `S-045` `shell_app_root`
+
+Registry detail: [`S-045`](../../../docs/reports/generated/127-surface-registry.md#s-045) `shell_app_root`.
 
 `SURFACE` · `SHELL` · scope `platform_shared` · feature `F14` navigation-shells · build order 3143 · batch UNRESEARCHED · **review: `unreviewed`**
 
@@ -2634,7 +2858,11 @@ It is 1 of 4 entr(ies) in feature `F14`. Removing it deletes 1 owned component(s
 
 ---
 
+<a id="card-s-046"></a>
+
 ## Card 57 — `S-046` `shell_app_tabs`
+
+Registry detail: [`S-046`](../../../docs/reports/generated/127-surface-registry.md#s-046) `shell_app_tabs`.
 
 `SURFACE` · `SHELL` · scope `platform_shared` · feature `F14` navigation-shells · build order 3143 · batch UNRESEARCHED · **review: `unreviewed`**
 
@@ -2679,7 +2907,11 @@ It is 1 of 4 entr(ies) in feature `F14`. Removing it deletes 1 owned component(s
 
 ---
 
+<a id="card-s-049"></a>
+
 ## Card 58 — `S-049` `shell_web_root`
+
+Registry detail: [`S-049`](../../../docs/reports/generated/127-surface-registry.md#s-049) `shell_web_root`.
 
 `SURFACE` · `SHELL` · scope `platform_shared` · feature `F14` navigation-shells · build order 3143 · batch UNRESEARCHED · **review: `unreviewed`**
 
@@ -2721,7 +2953,11 @@ It is 1 of 4 entr(ies) in feature `F14`. Removing it deletes 1 owned component(s
 
 ---
 
+<a id="card-c-027"></a>
+
 ## Card 59 — `C-027` `contract_products`
+
+Registry detail: [`C-027`](../../../docs/reports/generated/127-surface-registry.md#c-027) `contract_products`.
 
 `CONTRACT` · `QUERY` · scope `platform_shared` · feature `F15` user-profile-settings · build order 3152 · batch UNRESEARCHED · **review: `unreviewed`**
 
@@ -2763,7 +2999,11 @@ It is 1 of 6 entr(ies) in feature `F15`. It owns no component. Every table it to
 
 ---
 
+<a id="card-c-034"></a>
+
 ## Card 60 — `C-034` `contract_trades`
+
+Registry detail: [`C-034`](../../../docs/reports/generated/127-surface-registry.md#c-034) `contract_trades`.
 
 `CONTRACT` · `QUERY` · scope `platform_shared` · feature `F15` user-profile-settings · build order 3152 · batch UNRESEARCHED · **review: `unreviewed`**
 
@@ -2805,7 +3045,11 @@ It is 1 of 6 entr(ies) in feature `F15`. It owns no component. Every table it to
 
 ---
 
+<a id="card-c-035"></a>
+
 ## Card 61 — `C-035` `contract_user_profile`
+
+Registry detail: [`C-035`](../../../docs/reports/generated/127-surface-registry.md#c-035) `contract_user_profile`.
 
 `CONTRACT` · `MUTATION` · scope `platform_shared` · feature `F15` user-profile-settings · build order 3152 · batch UNRESEARCHED · **review: `unreviewed`**
 
@@ -2852,7 +3096,11 @@ It is 1 of 6 entr(ies) in feature `F15`. It owns no component. Every table it to
 
 ---
 
+<a id="card-c-036"></a>
+
 ## Card 62 — `C-036` `contract_user_profile_delete`
+
+Registry detail: [`C-036`](../../../docs/reports/generated/127-surface-registry.md#c-036) `contract_user_profile_delete`.
 
 `CONTRACT` · `MUTATION` · scope `platform_shared` · feature `F15` user-profile-settings · build order 3152 · batch UNRESEARCHED · **review: `unreviewed`**
 
@@ -2898,7 +3146,11 @@ It is 1 of 6 entr(ies) in feature `F15`. It owns no component. Every table it to
 
 ---
 
+<a id="card-c-037"></a>
+
 ## Card 63 — `C-037` `contract_user_profile_reactivate`
+
+Registry detail: [`C-037`](../../../docs/reports/generated/127-surface-registry.md#c-037) `contract_user_profile_reactivate`.
 
 `CONTRACT` · `MUTATION` · scope `platform_shared` · feature `F15` user-profile-settings · build order 3152 · batch UNRESEARCHED · **review: `unreviewed`**
 
@@ -2946,7 +3198,11 @@ It is 1 of 6 entr(ies) in feature `F15`. It owns no component. Every table it to
 
 ---
 
+<a id="card-s-036"></a>
+
 ## Card 64 — `S-036` `mobile_settings`
+
+Registry detail: [`S-036`](../../../docs/reports/generated/127-surface-registry.md#s-036) `mobile_settings`.
 
 `SURFACE` · `FORM` · scope `platform_shared` · feature `F15` user-profile-settings · build order 3153 · batch UNRESEARCHED · **review: `unreviewed`**
 
@@ -2992,7 +3248,11 @@ It is 1 of 6 entr(ies) in feature `F15`. It owns no component. Every table it to
 
 ---
 
+<a id="card-c-003"></a>
+
 ## Card 65 — `C-003` `contract_admin_app_health`
+
+Registry detail: [`C-003`](../../../docs/reports/generated/127-surface-registry.md#c-003) `contract_admin_app_health`.
 
 `CONTRACT` · `QUERY` · scope `platform_shared` · feature `F16` platform-admin · build order 3162 · batch UNRESEARCHED · **review: `unreviewed`**
 
@@ -3034,7 +3294,11 @@ It is 1 of 27 entr(ies) in feature `F16`. It owns no component. Every table it t
 
 ---
 
+<a id="card-c-004"></a>
+
 ## Card 66 — `C-004` `contract_admin_control_panel_configs`
+
+Registry detail: [`C-004`](../../../docs/reports/generated/127-surface-registry.md#c-004) `contract_admin_control_panel_configs`.
 
 `CONTRACT` · `MUTATION` · scope `platform_shared` · feature `F16` platform-admin · build order 3162 · batch UNRESEARCHED · **review: `unreviewed`**
 
@@ -3085,7 +3349,11 @@ It is 1 of 27 entr(ies) in feature `F16`. It owns no component. Every table it t
 
 ---
 
+<a id="card-c-005"></a>
+
 ## Card 67 — `C-005` `contract_admin_control_panel_resync`
+
+Registry detail: [`C-005`](../../../docs/reports/generated/127-surface-registry.md#c-005) `contract_admin_control_panel_resync`.
 
 `CONTRACT` · `COMMAND` · scope `platform_shared` · feature `F16` platform-admin · build order 3162 · batch UNRESEARCHED · **review: `unreviewed`**
 
@@ -3127,7 +3395,11 @@ It is 1 of 27 entr(ies) in feature `F16`. It owns no component. Every table it t
 
 ---
 
+<a id="card-c-008"></a>
+
 ## Card 68 — `C-008` `contract_admin_pipeline_step_output`
+
+Registry detail: [`C-008`](../../../docs/reports/generated/127-surface-registry.md#c-008) `contract_admin_pipeline_step_output`.
 
 `CONTRACT` · `QUERY` · scope `platform_shared` · feature `F16` platform-admin · build order 3162 · batch UNRESEARCHED · **review: `unreviewed`**
 
@@ -3175,7 +3447,11 @@ It is 1 of 27 entr(ies) in feature `F16`. It owns no component. It is the ONLY r
 
 ---
 
+<a id="card-c-009"></a>
+
 ## Card 69 — `C-009` `contract_admin_pipelines_history`
+
+Registry detail: [`C-009`](../../../docs/reports/generated/127-surface-registry.md#c-009) `contract_admin_pipelines_history`.
 
 `CONTRACT` · `QUERY` · scope `platform_shared` · feature `F16` platform-admin · build order 3162 · batch UNRESEARCHED · **review: `unreviewed`**
 
@@ -3219,7 +3495,11 @@ It is 1 of 27 entr(ies) in feature `F16`. It owns no component. Every table it t
 
 ---
 
+<a id="card-c-010"></a>
+
 ## Card 70 — `C-010` `contract_admin_pipelines_runs`
+
+Registry detail: [`C-010`](../../../docs/reports/generated/127-surface-registry.md#c-010) `contract_admin_pipelines_runs`.
 
 `CONTRACT` · `QUERY` · scope `platform_shared` · feature `F16` platform-admin · build order 3162 · batch UNRESEARCHED · **review: `unreviewed`**
 
@@ -3263,7 +3543,11 @@ It is 1 of 27 entr(ies) in feature `F16`. It owns no component. Every table it t
 
 ---
 
+<a id="card-c-011"></a>
+
 ## Card 71 — `C-011` `contract_admin_pipelines_schedules`
+
+Registry detail: [`C-011`](../../../docs/reports/generated/127-surface-registry.md#c-011) `contract_admin_pipelines_schedules`.
 
 `CONTRACT` · `MUTATION` · scope `platform_shared` · feature `F16` platform-admin · build order 3162 · batch UNRESEARCHED · **review: `unreviewed`**
 
@@ -3308,7 +3592,11 @@ It is 1 of 27 entr(ies) in feature `F16`. It owns no component. Every table it t
 
 ---
 
+<a id="card-c-012"></a>
+
 ## Card 72 — `C-012` `contract_admin_pipelines_slug`
+
+Registry detail: [`C-012`](../../../docs/reports/generated/127-surface-registry.md#c-012) `contract_admin_pipelines_slug`.
 
 `CONTRACT` · `COMMAND` · scope `platform_shared` · feature `F16` platform-admin · build order 3162 · batch UNRESEARCHED · **review: `unreviewed`**
 
@@ -3354,7 +3642,11 @@ It is 1 of 27 entr(ies) in feature `F16`. It owns no component. Every table it t
 
 ---
 
+<a id="card-c-013"></a>
+
 ## Card 73 — `C-013` `contract_admin_pipelines_status`
+
+Registry detail: [`C-013`](../../../docs/reports/generated/127-surface-registry.md#c-013) `contract_admin_pipelines_status`.
 
 `CONTRACT` · `QUERY` · scope `platform_shared` · feature `F16` platform-admin · build order 3162 · batch UNRESEARCHED · **review: `unreviewed`**
 
@@ -3398,7 +3690,11 @@ It is 1 of 27 entr(ies) in feature `F16`. It owns no component. Every table it t
 
 ---
 
+<a id="card-c-014"></a>
+
 ## Card 74 — `C-014` `contract_admin_security_mfa`
+
+Registry detail: [`C-014`](../../../docs/reports/generated/127-surface-registry.md#c-014) `contract_admin_security_mfa`.
 
 `CONTRACT` · `MUTATION` · scope `platform_shared` · feature `F16` platform-admin · build order 3162 · batch UNRESEARCHED · **review: `unreviewed`**
 
@@ -3445,7 +3741,11 @@ It is 1 of 27 entr(ies) in feature `F16`. It owns no component. Every table it t
 
 ---
 
+<a id="card-c-015"></a>
+
 ## Card 75 — `C-015` `contract_admin_security_mfa_verify`
+
+Registry detail: [`C-015`](../../../docs/reports/generated/127-surface-registry.md#c-015) `contract_admin_security_mfa_verify`.
 
 `CONTRACT` · `MUTATION` · scope `platform_shared` · feature `F16` platform-admin · build order 3162 · batch UNRESEARCHED · **review: `unreviewed`**
 
@@ -3492,7 +3792,11 @@ It is 1 of 27 entr(ies) in feature `F16`. It owns no component. Every table it t
 
 ---
 
+<a id="card-c-016"></a>
+
 ## Card 76 — `C-016` `contract_admin_stats`
+
+Registry detail: [`C-016`](../../../docs/reports/generated/127-surface-registry.md#c-016) `contract_admin_stats`.
 
 `CONTRACT` · `QUERY` · scope `platform_shared` · feature `F16` platform-admin · build order 3162 · batch UNRESEARCHED · **review: `unreviewed`**
 
@@ -3557,7 +3861,11 @@ It is 1 of 27 entr(ies) in feature `F16`. It owns no component. Every table it t
 
 ---
 
+<a id="card-c-017"></a>
+
 ## Card 77 — `C-017` `contract_admin_sync`
+
+Registry detail: [`C-017`](../../../docs/reports/generated/127-surface-registry.md#c-017) `contract_admin_sync`.
 
 `CONTRACT` · `COMMAND` · scope `platform_shared` · feature `F16` platform-admin · build order 3162 · batch UNRESEARCHED · **review: `unreviewed`**
 
@@ -3609,7 +3917,11 @@ It is 1 of 27 entr(ies) in feature `F16`. It owns no component. Every table it t
 
 ---
 
+<a id="card-c-018"></a>
+
 ## Card 78 — `C-018` `contract_admin_users`
+
+Registry detail: [`C-018`](../../../docs/reports/generated/127-surface-registry.md#c-018) `contract_admin_users`.
 
 `CONTRACT` · `MUTATION` · scope `platform_shared` · feature `F16` platform-admin · build order 3162 · batch UNRESEARCHED · **review: `unreviewed`**
 
@@ -3660,7 +3972,11 @@ It is 1 of 27 entr(ies) in feature `F16`. It owns no component. Every table it t
 
 ---
 
+<a id="card-c-019"></a>
+
 ## Card 79 — `C-019` `contract_admin_users_uid`
+
+Registry detail: [`C-019`](../../../docs/reports/generated/127-surface-registry.md#c-019) `contract_admin_users_uid`.
 
 `CONTRACT` · `MUTATION` · scope `platform_shared` · feature `F16` platform-admin · build order 3162 · batch UNRESEARCHED · **review: `unreviewed`**
 
@@ -3713,7 +4029,11 @@ It is 1 of 27 entr(ies) in feature `F16`. It owns no component. Every table it t
 
 ---
 
+<a id="card-c-028"></a>
+
 ## Card 80 — `C-028` `contract_quality`
+
+Registry detail: [`C-028`](../../../docs/reports/generated/127-surface-registry.md#c-028) `contract_quality`.
 
 `CONTRACT` · `QUERY` · scope `platform_shared` · feature `F16` platform-admin · build order 3162 · batch UNRESEARCHED · **review: `unreviewed`**
 
@@ -3760,7 +4080,11 @@ It is 1 of 27 entr(ies) in feature `F16`. It owns no component. Every table it t
 
 ---
 
+<a id="card-c-029"></a>
+
 ## Card 81 — `C-029` `contract_quality_refresh`
+
+Registry detail: [`C-029`](../../../docs/reports/generated/127-surface-registry.md#c-029) `contract_quality_refresh`.
 
 `CONTRACT` · `COMMAND` · scope `platform_shared` · feature `F16` platform-admin · build order 3162 · batch UNRESEARCHED · **review: `unreviewed`**
 
@@ -3814,7 +4138,11 @@ It is 1 of 27 entr(ies) in feature `F16`. It owns no component. Every table it t
 
 ---
 
+<a id="card-c-033"></a>
+
 ## Card 82 — `C-033` `contract_sync`
+
+Registry detail: [`C-033`](../../../docs/reports/generated/127-surface-registry.md#c-033) `contract_sync`.
 
 `CONTRACT` · `COMMAND` · scope `platform_shared` · feature `F16` platform-admin · build order 3162 · batch UNRESEARCHED · **review: `unreviewed`**
 
@@ -3866,7 +4194,11 @@ It is 1 of 27 entr(ies) in feature `F16`. It owns no component. Every table it t
 
 ---
 
+<a id="card-s-018"></a>
+
 ## Card 83 — `S-018` `admin_app_health`
+
+Registry detail: [`S-018`](../../../docs/reports/generated/127-surface-registry.md#s-018) `admin_app_health`.
 
 `SURFACE` · `DASHBOARD` · scope `platform_shared` · feature `F16` platform-admin · build order 3163 · batch UNRESEARCHED · **review: `unreviewed`**
 
@@ -3910,7 +4242,11 @@ It is 1 of 27 entr(ies) in feature `F16`. Removing it deletes 1 owned component(
 
 ---
 
+<a id="card-s-019"></a>
+
 ## Card 84 — `S-019` `admin_control_panel`
+
+Registry detail: [`S-019`](../../../docs/reports/generated/127-surface-registry.md#s-019) `admin_control_panel`.
 
 `SURFACE` · `FORM` · scope `platform_shared` · feature `F16` platform-admin · build order 3163 · batch UNRESEARCHED · **review: `unreviewed`**
 
@@ -3962,7 +4298,11 @@ It is 1 of 27 entr(ies) in feature `F16`. It owns no component. Every table it t
 
 ---
 
+<a id="card-s-020"></a>
+
 ## Card 85 — `S-020` `admin_data_quality`
+
+Registry detail: [`S-020`](../../../docs/reports/generated/127-surface-registry.md#s-020) `admin_data_quality`.
 
 `SURFACE` · `DASHBOARD` · scope `platform_shared` · feature `F16` platform-admin · build order 3163 · batch UNRESEARCHED · **review: `unreviewed`**
 
@@ -4030,7 +4370,11 @@ It is 1 of 27 entr(ies) in feature `F16`. Removing it deletes 4 owned component(
 
 ---
 
+<a id="card-s-021"></a>
+
 ## Card 86 — `S-021` `admin_home`
+
+Registry detail: [`S-021`](../../../docs/reports/generated/127-surface-registry.md#s-021) `admin_home`.
 
 `SURFACE` · `STATIC` · scope `platform_shared` · feature `F16` platform-admin · build order 3163 · batch UNRESEARCHED · **review: `unreviewed`**
 
@@ -4072,7 +4416,11 @@ It is 1 of 27 entr(ies) in feature `F16`. It owns no component. Every table it t
 
 ---
 
+<a id="card-s-023"></a>
+
 ## Card 87 — `S-023` `admin_pipeline_step_output`
+
+Registry detail: [`S-023`](../../../docs/reports/generated/127-surface-registry.md#s-023) `admin_pipeline_step_output`.
 
 `SURFACE` · `LIST` · scope `platform_shared` · feature `F16` platform-admin · build order 3163 · batch UNRESEARCHED · **review: `unreviewed`**
 
@@ -4119,7 +4467,11 @@ It is 1 of 27 entr(ies) in feature `F16`. Removing it deletes 1 owned component(
 
 ---
 
+<a id="card-s-024"></a>
+
 ## Card 88 — `S-024` `admin_security`
+
+Registry detail: [`S-024`](../../../docs/reports/generated/127-surface-registry.md#s-024) `admin_security`.
 
 `SURFACE` · `FORM` · scope `platform_shared` · feature `F16` platform-admin · build order 3163 · batch UNRESEARCHED · **review: `unreviewed`**
 
@@ -4166,7 +4518,11 @@ It is 1 of 27 entr(ies) in feature `F16`. It owns no component. Every table it t
 
 ---
 
+<a id="card-s-025"></a>
+
 ## Card 89 — `S-025` `admin_user_detail`
+
+Registry detail: [`S-025`](../../../docs/reports/generated/127-surface-registry.md#s-025) `admin_user_detail`.
 
 `SURFACE` · `DETAIL` · scope `platform_shared` · feature `F16` platform-admin · build order 3163 · batch UNRESEARCHED · **review: `unreviewed`**
 
@@ -4221,7 +4577,11 @@ It is 1 of 27 entr(ies) in feature `F16`. Removing it deletes 1 owned component(
 
 ---
 
+<a id="card-s-026"></a>
+
 ## Card 90 — `S-026` `admin_users`
+
+Registry detail: [`S-026`](../../../docs/reports/generated/127-surface-registry.md#s-026) `admin_users`.
 
 `SURFACE` · `LIST` · scope `platform_shared` · feature `F16` platform-admin · build order 3163 · batch UNRESEARCHED · **review: `unreviewed`**
 
@@ -4270,7 +4630,11 @@ It is 1 of 27 entr(ies) in feature `F16`. It owns no component. Every table it t
 
 ---
 
+<a id="card-s-050"></a>
+
 ## Card 91 — `S-050` `web_login`
+
+Registry detail: [`S-050`](../../../docs/reports/generated/127-surface-registry.md#s-050) `web_login`.
 
 `SURFACE` · `GATE` · scope `platform_shared` · feature `F16` platform-admin · build order 3163 · batch UNRESEARCHED · **review: `unreviewed`**
 
