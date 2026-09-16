@@ -22,8 +22,23 @@ vi.mock('@/lib/auth/verify-admin', () => ({
   verifyAdminAuth: vi.fn(),
 }));
 
-vi.mock('@/lib/db/client', () => ({
-  pool: { query: vi.fn() },
+vi.mock('@/lib/db/client', () => {
+  const query = vi.fn();
+  return {
+    pool: { query },
+    // WF3 SEC-1: the POST/DELETE mutations now run inside a transaction so the
+    // admin_audit_log row commits atomically with the write (Spec 33 §8.1).
+    // The fake hands the callback a client backed by the SAME mocked query, so
+    // every existing assertion on `pool.query` (call order vs telemetry, the
+    // ANY($2) dedupe, the RETURNING rowcount) still observes the real SQL.
+    withTransaction: vi.fn(async (fn: (c: { query: unknown }) => unknown) => fn({ query })),
+  };
+});
+
+// The audit write is asserted on its own below; here it is stubbed so the
+// mutation assertions stay about the mutation.
+vi.mock('@/lib/admin/admin-audit', () => ({
+  writeAdminAudit: vi.fn().mockResolvedValue(undefined),
 }));
 
 vi.mock('@/lib/logger', () => ({
@@ -154,13 +169,24 @@ describe('watchlist routes — auth gates (§8.2 + [PF1])', () => {
     expect(res.status).toBe(200);
   });
 
-  it('[PF1] dev_bypass writes are permitted (dev-local sentinel rows)', async () => {
+  it('[PF1, WIDENED 2026-09-15] dev_bypass writes are now REFUSED (403), not permitted', async () => {
+    // FENCE KNOWINGLY RETIRED, not overlooked. The original [PF1] decision
+    // deliberately permitted dev_bypass writes ("single-dev local; rows land
+    // under 'dev-user'"). WF3 SEC-1 makes these mutations write an
+    // admin_audit_log row in the SAME transaction, and
+    // `admin_audit_log.admin_uid` is UUID NOT NULL — 'dev-user' is not a
+    // UUID, so the write could only raise 22P02 inside the transaction and
+    // surface as a rolled-back 500. A clean 403 naming the reason is strictly
+    // better, and Spec 33 §8.1 ("per-admin identity ONLY on the session
+    // path") covers both shared sentinels equally.
+    // Operator cost, named: local dev-mode admin mutations now need a real
+    // admin session.
     mockedVerify.mockResolvedValueOnce(DEV_CTX);
-    mockedQuery.mockResolvedValueOnce({ rows: [{ id: 1 }], rowCount: 1 } as never);
     const res = await POST(
       makeRequest({ method: 'POST', body: { items: [{ lead_type: 'permit', permit_num: 'X', revision_num: '00' }] } }),
     );
-    expect(res.status).toBe(200);
+    expect(res.status).toBe(403);
+    expect(mockedQuery).not.toHaveBeenCalled();
   });
 
   it('session GET → 200 with {data, meta} envelope', async () => {

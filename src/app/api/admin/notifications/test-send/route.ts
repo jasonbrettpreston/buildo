@@ -18,7 +18,9 @@ import { z } from 'zod';
 import { pool } from '@/lib/db/client';
 import { logError } from '@/lib/logger';
 import { withApiEnvelope } from '@/lib/api/with-api-envelope';
+import { unauthorized, sessionRequired } from '@/lib/admin/admin-responses';
 import { verifyAdminAuth } from '@/lib/auth/verify-admin';
+import { writeAdminAudit } from '@/lib/admin/admin-audit';
 import { track } from '@/lib/admin/analytics';
 import { maskPushToken } from '@/lib/admin/mask-push-token';
 
@@ -42,19 +44,9 @@ const bodySchema = z.object({
 
 export const POST = withApiEnvelope(async function POST(request: NextRequest) {
   const adminCtx = await verifyAdminAuth(request);
-  if (!adminCtx) {
-    return NextResponse.json(
-      { data: null, error: { code: 'UNAUTHORIZED', message: 'Admin auth required' }, meta: null },
-      { status: 401 },
-    );
-  }
+  if (!adminCtx) return unauthorized();
   // Side-effecting send → per-admin identity required (Spec 33 §8.1).
-  if (adminCtx.authMethod !== 'session') {
-    return NextResponse.json(
-      { data: null, error: { code: 'SESSION_REQUIRED', message: 'Test-send requires a per-admin session (admin_key/dev_bypass are shared identities)' }, meta: null },
-      { status: 403 },
-    );
-  }
+  if (adminCtx.authMethod !== 'session') return sessionRequired(adminCtx, '/api/admin/notifications/test-send');
 
   try {
     const parsed = bodySchema.safeParse(await request.json());
@@ -80,6 +72,23 @@ export const POST = withApiEnvelope(async function POST(request: NextRequest) {
         );
       }
     }
+
+    // Audit BEFORE the send (Spec 33 §8.1 / Spec 128 R-12). A push is an
+    // external, irreversible side effect with no transaction to enclose the
+    // audit row in — recording the intent first means the only possible
+    // failure is a logged send that did not happen, never a send nobody can
+    // attribute. The token is MASKED, never logged raw (the row is a
+    // PII-FACT record, admin-audit.ts header invariant 1).
+    await writeAdminAudit(
+      {
+        adminUid: adminCtx.uid,
+        action: 'notification_test_send',
+        targetUid: user_id ?? null,
+        newValue: { token: maskPushToken(targetToken), title },
+        reason: 'Admin sent a test push notification',
+      },
+      pool,
+    );
 
     // The REAL transport — the same hardened module the chain dispatcher uses
     // (scripts/lib/push-dispatch.js; allowJs import). A canonical

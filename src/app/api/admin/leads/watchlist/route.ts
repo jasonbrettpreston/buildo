@@ -35,7 +35,8 @@ import * as Sentry from '@sentry/nextjs';
 import { z } from 'zod';
 import { withApiEnvelope } from '@/lib/api/with-api-envelope';
 import { verifyAdminAuth, type AdminContext } from '@/lib/auth/verify-admin';
-import { pool } from '@/lib/db/client';
+import { pool, withTransaction } from '@/lib/db/client';
+import { writeAdminAudit } from '@/lib/admin/admin-audit';
 import { ok, err } from '@/features/leads/api/envelope';
 import { badRequestZod, internalError } from '@/features/leads/api/error-mapping';
 import { logInfo, logWarn } from '@/lib/logger';
@@ -67,15 +68,30 @@ function unauthorizedEnvelope(): NextResponse {
 
 /**
  * [PF1] session-write guard. Mutations require the stable per-admin session
- * uid; the shared 'admin-key' sentinel gets 403 FORBIDDEN. dev_bypass writes
- * are permitted (single-dev local; rows land under 'dev-user').
+ * uid; the shared sentinels get 403 FORBIDDEN.
+ *
+ * WIDENED 2026-09-15 (WF3 SEC-1) from `authMethod === 'admin_key'` to
+ * `authMethod !== 'session'`. The original [PF1] fence deliberately PERMITTED
+ * dev_bypass writes ("single-dev local; rows land under 'dev-user'"). That
+ * fence is knowingly retired, not overlooked: these mutations now write an
+ * `admin_audit_log` row in the same transaction, and `admin_audit_log.
+ * admin_uid` is UUID NOT NULL. 'dev-user' is not a UUID, so a dev_bypass
+ * write could no longer succeed — it would raise 22P02 inside the transaction
+ * and surface as a 500. A clean 403 naming the reason is strictly better than
+ * a rolled-back 500, and Spec 33 §8.1's rule ("per-admin identity ONLY on the
+ * session path") covers both sentinels equally. Operator cost, named: local
+ * dev-mode admin mutations now require a real admin session.
  */
 function forbiddenNonSessionWrite(ctx: AdminContext): NextResponse | null {
-  if (ctx.authMethod === 'admin_key') {
-    logWarn(TAG, 'admin_key mutation rejected — watchlist writes require a session admin', {
+  if (ctx.authMethod !== 'session') {
+    logWarn(TAG, 'non-session mutation rejected — watchlist writes require a session admin', {
       authMethod: ctx.authMethod,
     });
-    return err('FORBIDDEN', 'Watchlist mutations require a session admin (admin_key writes are not permitted)', 403);
+    return err(
+      'FORBIDDEN',
+      'Watchlist mutations require a session admin (shared credentials cannot be audited)',
+      403,
+    );
   }
   return null;
 }
@@ -349,15 +365,31 @@ export const POST = withApiEnvelope(async function POST(request: NextRequest) {
           return `($1, $${base + 1}, $${base + 2}, $${base + 3}, $${base + 4}, $${base + 5}, $${base + 6})`;
         })
         .join(', ');
-      const insertRes = await pool.query(
-        `INSERT INTO admin_watchlist
-           (admin_uid, lead_type, lead_key, permit_num, revision_num, coa_application_number, address_snapshot)
-         VALUES ${valuesSql}
-         ON CONFLICT (admin_uid, lead_key) DO NOTHING
-         RETURNING id`,
-        params,
-      );
-      added = insertRes.rowCount ?? 0;
+      // The INSERT and its admin_audit_log row commit together (Spec 33 §8.1 /
+      // Spec 128 R-12): `writeAdminAudit` takes the transaction client as its
+      // executor, so a failing audit rolls the save back rather than leaving
+      // an unattributable mutation behind.
+      added = await withTransaction(async (client) => {
+        const insertRes = await client.query(
+          `INSERT INTO admin_watchlist
+             (admin_uid, lead_type, lead_key, permit_num, revision_num, coa_application_number, address_snapshot)
+           VALUES ${valuesSql}
+           ON CONFLICT (admin_uid, lead_key) DO NOTHING
+           RETURNING id`,
+          params,
+        );
+        await writeAdminAudit(
+          {
+            adminUid: adminCtx.uid,
+            action: 'watchlist_bulk_save',
+            targetUid: null,
+            newValue: { lead_keys: valid.map((v) => v.lead_key) },
+            reason: 'Admin saved leads to the Flight Center watchlist',
+          },
+          client,
+        );
+        return insertRes.rowCount ?? 0;
+      });
     }
 
     const response: BulkSaveResponse = {
@@ -416,12 +448,26 @@ export const DELETE = withApiEnvelope(async function DELETE(request: NextRequest
     });
 
     // HARD delete, admin_uid-scoped — a guessed foreign id is inert.
-    const delRes = await pool.query(
-      `DELETE FROM admin_watchlist WHERE admin_uid = $1 AND id = ANY($2::int[]) RETURNING id`,
-      [adminCtx.uid, ids],
-    );
+    // The DELETE and its admin_audit_log row commit together (Spec 33 §8.1).
+    const deleted = await withTransaction(async (client) => {
+      const delRes = await client.query(
+        `DELETE FROM admin_watchlist WHERE admin_uid = $1 AND id = ANY($2::int[]) RETURNING id`,
+        [adminCtx.uid, ids],
+      );
+      await writeAdminAudit(
+        {
+          adminUid: adminCtx.uid,
+          action: 'watchlist_bulk_delete',
+          targetUid: null,
+          oldValue: { watchlist_ids: ids },
+          reason: 'Admin removed leads from the Flight Center watchlist',
+        },
+        client,
+      );
+      return delRes.rowCount ?? 0;
+    });
 
-    const response = { deleted: delRes.rowCount ?? 0 };
+    const response = { deleted };
     logInfo(TAG, 'watchlist bulk delete', { uid: adminCtx.uid, ...response });
     return ok(BulkDeleteResponseSchema.parse(response));
   } catch (cause) {
