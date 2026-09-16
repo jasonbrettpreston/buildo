@@ -933,8 +933,8 @@ byte-identical, 0 unexplained).
 | 5 | (registry) | PASS | clean (0 it.fails( call sites outside a declared pending slug) |
 | 9 | (registry) | PASS | clean (0 converted slugs blocked by an unmet cutover_prereq item; blocks batching: 0) |
 | 22 | (registry) | PASS | GOLD-PRE-FRESH: 52 PRE capture(s) across 12 converted step(s) all tracked + clean (git can restore every reference) |
-| 23 | (registry) | PASS | COMPRESSED-FORM-ELIGIBLE: not applicable (0 pending slugs declare the compressed form) |
-| 24 | (registry) | PASS | COMPRESSED-FORM-DEFAULT: not applicable (0 pending slugs whose archetype is eligible) |
+| 23 | (registry) | PASS | COMPRESSED-FORM-ELIGIBLE: 1 compressed-form declaration(s), all eligible (proven archetype, >=2 converted members) |
+| 24 | (registry) | PASS | COMPRESSED-FORM-DEFAULT: 1 eligible pending slug(s), all either compressed or carry a stated full-form reason |
 | 25 | (registry) | PASS | ARCHETYPE-PARITY: 12 converted slug(s) — 4 compared against a retained census row (all agree), 8 with no retained row (census arm n/a, pre-R-AO cutovers); every archetype has a declared freeze profile |
 
 ### Captures (item iv)
@@ -944,18 +944,14 @@ byte-identical, 0 unexplained).
 - compare ran: true · diffs found: 583 · unexplained: 0
 
 ### Test suite (item iii)
-- 1041/1041 passed (suite success=true)
-- harvested: 17 file(s) from 3 FLEET-WIDE targets (src/tests/step-conformance.infra.test.ts, src/tests/golden-fingerprint.infra.test.ts, src/tests/steps/) — one spawn per run, so every step's report carries this same number, by design
-- excluded (R-AG live-DB tier, owned by `npm run test:db`, derived from package.json `scripts.test`): 5 — src/tests/steps/link_massing/metamorphic.test.ts, src/tests/steps/link_massing/nearest-determinism.test.ts, src/tests/steps/link_massing/rung1-inline-wkt.test.ts, src/tests/steps/link_parcel_addresses/metamorphic.test.ts, src/tests/steps/link_parcel_addresses/rung1-inline-wkt.test.ts
-- skipped (declared but not run): 0
-- failing: none
+- SKIPPED or failed to run: --fast: vitest spawn skipped
 
 ### Policy coverage matrix (item vi) — Spec 124 Rules 1-13
 
 | Rule | Name | Status | Note |
 |---|---|---|---|
 | 1 | Nothing hidden | enforced-green | G-1 schema-baseline: schema-baseline clean |
-| 2 | Compute is just compute | enforced-green |  |
+| 2 | Compute is just compute | enforced-green | §5.5 describe not scoped to this step in the vitest run |
 | 3 | Tunables externalized | enforced-green | G-4: 45 declared, 3 verdict-affecting, 0 violate on_invalid:fail with no deviations[] cover |
 | 4 | Compute rule declared | enforced-green | G-2: 5 preserved-in-compute row(s), 0 with no why/notes.json/checks[] grounding |
 | 5 | checks >= 1 | enforced-green |  |

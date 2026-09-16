@@ -1169,6 +1169,36 @@
       "group": "Spatial & Massing"
     }
   },
+  "link_neighbourhoods_link_rate_warn_pct": {
+    "default": 95,
+    "type": "number",
+    "description": "Minimum CUMULATIVE neighbourhood link rate (%) below which the link_rate check WARNs. The declared form is `pct >= 95` — the FLOOR form the MATCHER pilot added to verdict.js's PCT_RE. ⚠️ Do NOT \"fix\" this to a complement (e.g. 5): two older LINK steps store their own link-rate bound as an UNLINKED CEILING because their rows use `pct <=`, which was the only direction available when they were written. This row uses `pct >=`, so the value here is the link-rate floor itself, exactly as the pre-conversion literal spelled it. CONSUMED by link_neighbourhoods via checks[].limit_from_config. Externalizes the bare literal 95 in the pre-conversion `nhoodLinkRate >= 95 ? 'PASS' : ...` at scripts/link-neighbourhoods.js:346, PLUS the duplicated '>= 95%' render string beside it. MEASURED AT CONVERSION 2026-09-16 and shipped RED ON PURPOSE: the rate is 94.83% (240,947 of 254,082 permits) because the denominator is ALL permits while 22,152 of them carry no coordinates and this step's own eligibility predicate can therefore never touch one; over the 231,930 coordinate-bearing permits the same numerator reads 100.00%. 11 of the 12 recorded runs carrying this audit row (2026-03-21 to 2026-07-17) verdicted WARN on it. That denominator defect is PINNED, not fixed here (Spec 123 §3.1 — changing it inside the conversion would be an undeclared differential diff); it is ledgered LN-D7 and carries its own retighten_when on the check.",
+    "min": 0,
+    "max": 100,
+    "admin": {
+      "group": "Neighbourhood Linking"
+    }
+  },
+  "link_neighbourhoods_link_rate_fail_pct": {
+    "default": 50,
+    "type": "number",
+    "description": "Minimum CUMULATIVE neighbourhood link rate (%) below which the run FAILs — the catastrophic-collapse arm, declared as its OWN check row (link_rate_floor) rather than a computed severity inside link_rate, because Spec 124 Rule 10 derives the verdict from rows and two bounds on one metric are two rows. Externalizes the bare literal 50 in the pre-conversion `nhoodLinkRate < 50 ? 'FAIL' : 'WARN'`. Live headroom is large (the rate is 94.83%), which is the same standing finding every link-rate floor in this registry carries: the floor cannot fire before the damage. Declared form `pct >= 50`. CONSUMED by link_neighbourhoods via checks[].limit_from_config.",
+    "min": 0,
+    "max": 100,
+    "admin": {
+      "group": "Neighbourhood Linking"
+    }
+  },
+  "link_neighbourhoods_no_match_warn_count": {
+    "default": 0,
+    "type": "number",
+    "description": "Maximum number of geocoded permits a run may walk whose point falls inside NO neighbourhood polygon before link_neighbourhoods's no_neighbourhood_match check WARNs. CONSUMED by link_neighbourhoods via checks[].limit_from_config, substituted into `viol <= 0`. Pre-conversion this population had NO bound at all — it was an INFO row (scripts/link-neighbourhoods.js:347) beside a `-1` sentinel write that made it write-once, so it vanished from every later run. With the sentinel retired (LN-D1) the same permits are re-walked every run, so the counter stops being descriptive and becomes the standing cost signal, which Rule 10's R-H addendum makes WARN-with-a-retighten-condition, never INFO-by-taste. The default is 0 because 0 is what it MEASURES today (2026-09-16: every one of the 231,930 coordinate-bearing permits is linked, so the tail is genuinely empty) — not because zero is assumed. on_invalid is `clamp`, not `fail`: this bounds a WARN-only observational counter that moves no write and no verdict beyond its own row, so an out-of-range admin edit should degrade the signal rather than halt two chains.",
+    "min": 0,
+    "max": 1000000,
+    "admin": {
+      "group": "Neighbourhood Linking"
+    }
+  },
   "link_parcel_addresses_batch_size": {
     "default": 1000,
     "type": "number",
@@ -4760,7 +4790,7 @@
   "sources_neighbourhoods_floor": {
     "default": 158,
     "type": "number",
-    "description": "assert-data-bounds: neighbourhoods row-count FAIL floor (IL-9, e3dad53d/b4e3d56e). CONSUMED by assert_data_bounds.",
+    "description": "assert-data-bounds: neighbourhoods row-count FAIL floor (IL-9, e3dad53d/b4e3d56e). SHARED ACROSS TWO STEPS DELIBERATELY (I4 Ask 5 ruling, 2026-09-16): 158 is ONE municipal boundary count, and a second registry row for the same fact would be a second source of truth for it (Rule 1, one home per concern). The un-prefixed shared-variable precedent is spatial_match_max_distance_m / spatial_match_confidence, which a converted LINK step consumes without owning the name. NOTE for a future editor: the two consumers must keep IDENTICAL min/max bounds, because one of them declares on_invalid \"fail\" with hoisted_above_gate true, so an admin edit legal for one step would halt the other above its advisory lock in two chains. CONSUMED by assert_data_bounds and by link_neighbourhoods (via checks[].limit_from_config on both neighbourhoods_loaded_before_write and neighbourhoods_loaded).",
     "min": 1,
     "max": 1000,
     "admin": {

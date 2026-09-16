@@ -258,6 +258,14 @@ const GROUP_ORDER = [
     ]
   },
   {
+    "label": "Neighbourhood Linking",
+    "keys": [
+      "link_neighbourhoods_link_rate_warn_pct",
+      "link_neighbourhoods_link_rate_fail_pct",
+      "link_neighbourhoods_no_match_warn_count"
+    ]
+  },
+  {
     "label": "Parcel Linking",
     "keys": [
       "spatial_match_max_distance_m",

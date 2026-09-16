@@ -81,5 +81,13 @@
     "scripts/quality/assert-data-bounds.js",
     "scripts/quality/assert-engine-health.js"
   ],
-  "pending": []
+  "pending": [
+    {
+      "file": "scripts/link-neighbourhoods.js",
+      "registers_at": "commit 3",
+      "reason": "I4 (batch-2 Phase 0.9, LINK 3/3) under the COMPRESSED 3-commit form (R-PACE-1). Commit 1 lands the assessment report, the defect-ledger rows LN-D1..LN-D9, the descriptor + notes.json, the 3 new logic variables and the RED violations suite. Commit 2 forks runLinkColumnPhase, widens the x-frozen execution.shape enum to link_column, ports the compute and freezes the shell. Commit 3 registers this file in converted[], deletes this entry in the SAME commit (R-K mutual exclusion), amends Spec 60 + Spec 43 and re-points the rotted order_guarantee anchor.",
+      "declared": "2026-09-16",
+      "stage": "descriptor_only"
+    }
+  ]
 }

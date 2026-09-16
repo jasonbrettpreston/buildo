@@ -1,0 +1,136 @@
+{
+  "$comment": [
+    "Spec 120 §3.4-§3.4b — the INTERPRETATION file for link_neighbourhoods (PH-0 DRAFT,",
+    "2026-09-15). Everything here lived ONLY as a source comment, a git commit subject, or a",
+    "migration body before this assessment, and would have been lost with the 375 lines it is",
+    "attached to. Capped at 12 entries by step.schema.json; 7 declared.",
+    "",
+    "MEASURED 2026-09-16 at commit ① against the live local DB (`postgres` @ 127.0.0.1:54322,",
+    "244 migrations applied, postgis 3.3.7). Every `measured` block below now carries a real",
+    "value and the query that produced it; none is guessed (CLAUDE.md Prime Directive #10).",
+    "Two draft ASSUMPTIONS were refuted by those measurements and are corrected in place:",
+    "the polygon corpus is NOT non-overlapping, and the no-match tail is currently EMPTY.",
+    "An EIGHTH fence (e37eaab9) was found by the Regression Guardian at the plan panel and",
+    "added; the draft declared 7."
+  ],
+  "contract_version": 1,
+
+  "read_this_way": [
+    {
+      "note": "The `-1` no-match sentinel this file advertises in its own header docblock CANNOT BE WRITTEN and has not been writeable for over a year. Two independent commits killed it and neither noticed: 76dcca28 swapped `parseInt(dbId, 10)` for `safeParsePositiveInt(dbId, 'neighbourhood_id')` at the one call site that binds the sentinel bucket (safe-math throws on a negative), and 7edb231e's migration 109 added a VALIDATED FK from permits.neighbourhood_id to neighbourhoods.id (a SERIAL, so no negative row exists) after NULLing every orphan already stamped. Read every sentinel mention in the source — the docblock, the two `updates[-1]` branches, the 'Mark unmatched permits with -1' comment — as ARCHAEOLOGY, not as behaviour.",
+      "measured": { "value": "0 — confirmed: not one negative id exists, and none can", "date": "2026-09-16", "query": "SELECT count(*) FROM permits WHERE neighbourhood_id < 0" }
+    },
+    {
+      "note": "The step counts a wider eligible set than it processes. `totalPermits` LEFT JOINs permit_parcels and parcels and counts permits with EITHER coordinates OR a linked parcel geometry; the PostGIS UPDATE — the branch every real run takes — touches only permits with coordinates. A permit with a parcel but no geocode is therefore counted as work on every run, never done, and never stamped. Reading `permits_processed` against `totalPermits` as a completion ratio is reading two different populations.",
+      "measured": { "value": "1493 — counted as work on EVERY run, processable by no surviving code path; now declared as the plausibility row neighbourhood_id_unreachable_no_coords", "date": "2026-09-16", "query": "SELECT count(DISTINCT (p.permit_num, p.revision_num)) FROM permits p LEFT JOIN permit_parcels pp ON pp.permit_num = p.permit_num AND pp.revision_num = p.revision_num LEFT JOIN parcels pa ON pa.id = pp.parcel_id WHERE p.neighbourhood_id IS NULL AND (p.latitude IS NULL OR p.longitude IS NULL) AND pa.geometry IS NOT NULL" }
+    }
+  ],
+
+  "known_normal": [
+    {
+      "note": "A non-zero `no_neighbourhood_match` is expected and permanent, not a regression. A permit geocoded to a point in Lake Ontario, on the municipal boundary line itself, or just outside it, is contained by no neighbourhood polygon and never will be. Pre-conversion the `-1` sentinel made this population write-once so it vanished from every subsequent run's counter; with the sentinel unwriteable it is re-walked every run and the counter reports the standing tail, not the run's arrivals. That is why the check is WARN with a retighten_when and not INFO.",
+      "measured": { "value": "0 — REFUTES this note’s own premise as written: there is NO standing no-match tail today. All 231,930 coordinate-bearing permits are linked, so no_neighbourhood_match reads 0 and the WARN is green. The note stands as a statement of what the counter MEANS once a genuinely unmatchable permit arrives (a point in the lake, or outside the municipal boundary), not as a description of a population that exists right now.", "date": "2026-09-16", "query": "SELECT count(*) FROM permits p WHERE p.neighbourhood_id IS NULL AND p.latitude IS NOT NULL AND p.longitude IS NOT NULL" }
+    }
+  ],
+
+  "known_bad": [
+    {
+      "note": "Nothing invalidates permits.neighbourhood_id. The incremental predicate asks whether a value EXISTS, never whether it is still RIGHT, so a permit re-geocoded by geocode_permits after it was stamped keeps its old neighbourhood forever, and a boundary reload by the neighbourhoods INGESTOR corrects nothing already stamped. This is the same defect class Spec 121 §4.3 uses compute_centroids to illustrate. The descriptor's outputs.invalidates[] declares the obligation; no code in the tree meets it. The plausibility row `linked_permit_outside_its_own_neighbourhood` is the direct countable measure.",
+      "measured": { "value": "5138 of 231,930 stamped coordinate-bearing permits (2.215%). Distance profile is BIMODAL, not a boundary-precision tail: 2 rows <1m, 40 at 1-10m, 630 at 10-100m, 791 at 100m-1km, 3675 beyond 1km, max 26,211m. 5124 of 5138 (99.7%) share first_seen_at = 2026-02 and one geocoded_at batch. 1027 of the 2192 permits ever stamped Weston (47%) are not inside Weston. Two root causes tested and REFUTED: Weston geom is not corrupt (2.57 km^2, near the 3.14 km^2 median); it is not an id/neighbourhood_id column swap (9 of 5138). Mechanism unidentified — not asserted.", "date": "2026-09-16", "query": "SELECT count(*) FROM permits p JOIN neighbourhoods n ON n.id = p.neighbourhood_id WHERE p.latitude IS NOT NULL AND p.longitude IS NOT NULL AND n.geom IS NOT NULL AND NOT ST_Contains(n.geom, ST_SetSRID(ST_MakePoint(p.longitude::float, p.latitude::float), 4326))" }
+    }
+  ],
+
+  "blind_spots": [
+    {
+      "what": "Polygon overlap has no declared tiebreak in either branch. The retired JS branch took the FIRST containing polygon in an unordered SELECT's row order and broke; the PostGIS UPDATE ... FROM takes whichever matching row the planner emits last, with no ORDER BY anywhere. The draft asserted Toronto's 158 neighbourhoods are nominally non-overlapping and the ambiguous population therefore empty; MEASURED at commit ①, the first half is FALSE (50 overlapping pairs) and the second half is true for a reason the draft did not give (the overlaps are sub-square-metre topology slivers that no permit point lands in). The same greatest-overlap question is already filed MED against link_massing.",
+      "detected_by": "none — a static reading of the SQL, not a runtime check",
+      "measured": { "value": "50 overlapping PAIRS — the draft’s ‘nominally non-overlapping, expected empty’ premise is REFUTED. But the consequence is nil: every overlap is a topology sliver (min 0.0005 m^2, max 0.56 m^2, mean 0.06 m^2, all 50 under 1 m^2, ~3 m^2 in total across 158 polygons), and a direct count of permits whose own point is contained by MORE THAN ONE polygon returns 0. So the undeclared tiebreak is unexercised in fact while being genuinely reachable in principle — which is why this stays an open blind spot rather than being closed as impossible.", "date": "2026-09-16", "query": "SELECT count(*) FROM (SELECT a.id FROM neighbourhoods a JOIN neighbourhoods b ON b.id > a.id WHERE a.geom IS NOT NULL AND b.geom IS NOT NULL AND ST_Overlaps(a.geom, b.geom)) d  /* consequence: SELECT count(*) FROM (SELECT p.permit_num FROM permits p JOIN neighbourhoods n ON n.geom IS NOT NULL AND ST_Contains(n.geom, ST_SetSRID(ST_MakePoint(p.longitude::float, p.latitude::float),4326)) WHERE p.latitude IS NOT NULL AND p.longitude IS NOT NULL GROUP BY 1,p.revision_num HAVING count(*)>1) d = 0 */" }
+    },
+    {
+      "what": "The two pre-conversion branches disagree about which polygons exist. The loader query filters `geometry IS NOT NULL` (the GeoJSON column) while the PostGIS path filters `n.geom IS NOT NULL`. The `neighbourhoods_loaded` audit row therefore counts the GeoJSON-bearing corpus while the run matched against the geom-bearing one — a row that can read a healthy 158 during a run that matched against fewer polygons, with nothing in the telemetry saying so.",
+      "detected_by": "none — the emitted row cannot distinguish the two corpora",
+      "measured": { "value": "geojson 158 / postgis 158 / total 158 — the two corpora agree EXACTLY today (0 rows geojson-only, 0 rows postgis-only), so the divergence this blind spot names is latent, never yet realised. It stays declared because nothing enforces the agreement: the loader writes both columns and a drift repair could null either one independently.", "date": "2026-09-16", "query": "SELECT count(*) FILTER (WHERE geometry IS NOT NULL) AS geojson, count(*) FILTER (WHERE geom IS NOT NULL) AS postgis, count(*) AS total FROM neighbourhoods" }
+    }
+  ],
+
+  "suspicious_if": [
+    {
+      "signal": "`neighbourhoods_loaded` moves off its declared floor at all. This corpus is a municipal boundary file reloaded by the neighbourhoods INGESTOR; it changes only when the City publishes a new boundary set, which is a years-scale event. A change between two consecutive runs with no load_neighbourhoods run in between means the loader partially wrote, or a geom column was nulled by drift repair — never that the City redistricted overnight.",
+      "check": "neighbourhoods_loaded",
+      "measured": { "value": "158 — exactly the declared floor (sources_neighbourhoods_floor default 158)", "date": "2026-09-16", "query": "SELECT count(*) FROM neighbourhoods WHERE geom IS NOT NULL" }
+    }
+  ],
+
+  "decisions": [
+    {
+      "note": "The fence the `-1` sentinel actually defended (4699730f, `infinite loop fix + BBOX + observability`) is defended TWICE today, which is why retiring the sentinel does not reopen it. The original infinite loop was a batch loop whose SELECT re-fetched the same unmatched rows forever because nothing about them changed. Two weeks later b1102cdb replaced that SELECT with a composite keyset cursor — `(p.permit_num, p.revision_num) > ($2, $3)` with a matching ORDER BY — so forward progress no longer depends on the eligible set shrinking. The sentinel's SECOND purpose, bounding re-work on the permanently unmatchable tail, is genuinely lost and is declared as the standing `no_neighbourhood_match` WARN rather than dropped silently."
+    },
+    {
+      "note": "Neither existing LINK runner fits this step. `runLinkPhase` pages an integer `lastId` over a surrogate `id` column that `permits` does not have, and hard-codes a `parcels_*` counter vocabulary. `runLinkKeyedPhase` has the right composite `(permit_num, revision_num)` cursor but is structurally, not cosmetically, bound to link_parcels: it destructures TWO write plans unconditionally (`const upsertPlan = plans[0]` / `const deletePlan = plans[1]`, and `deleteBeforeImagePlan` dereferences `deletePlan.table` before the loop) where this step declares ONE; it normalises `street_num`/`street_name`/`street_type` off every batch row, columns this step neither reads nor declares; and it calls `compute.classifyPrimary`/`classifySpatialContainment`/`classifySpatialFallback` by name across a fixed four-strategy cascade with its own `address_points_exact`/`exact_legacy`/`name_only`/`spatial_polygon`/`street_type_mismatch` counter block. ASK 1 RULED (operator, 2026-09-16): **(B) FORK** — a third runner `runLinkColumnPhase` and a new `execution.shape: \"link_column\"`, following the LG-21 ratified fork-over-share precedent already applied at pilots 4, 5, 6 and 7. Widening `runLinkKeyedPhase` would make a CONVERTED step's golden captures collateral for an unconverted step's convenience, which is the inversion the template freeze exists to prevent. The descriptor carries `shape: \"link_keyed\"` through commit ① only because `link_column` does not exist in the frozen enum until commit ② widens it."
+    }
+  ],
+
+  "counts": {
+    "open_blind_spots": 2,
+    "unpromoted_suspicious_if": 0
+  },
+
+  "fences": [
+    {
+      "const": "the audit table's link_rate is CUMULATIVE over all permits, never the run's own matched/walked ratio",
+      "value": "checks[].link_rate + link_rate_floor, both reading the post-write cumulative query",
+      "incident": "A run-scoped rate is meaningless in incremental mode: a run that links 3 of 3 newly-geocoded arrivals reads 100% while the estate sits far below the floor, so a genuine collapse is invisible for as long as arrivals keep matching. e53cdcf5 replaced the run-scoped rate with the cumulative one for exactly this reason.",
+      "commit": "e53cdcf5",
+      "lock_test": "src/tests/steps/link_neighbourhoods/violations.test.ts"
+    },
+    {
+      "const": "the UPDATE carries an IS DISTINCT FROM guard on neighbourhood_id",
+      "value": "write_discipline.guard = is_distinct_from, guard_columns = [neighbourhood_id]",
+      "incident": "Before this guard the batched UPDATE re-stamped every row it touched. permits is the estate's most heavily consumed table; a no-op re-stamp is the D-5 class this programme already paid for once on parcel_buildings, where an unguarded run re-scoped a downstream enricher from 1,395 rows to 485,135.",
+      "commit": "7a147377",
+      "lock_test": "src/tests/steps/link_neighbourhoods/violations.test.ts"
+    },
+    {
+      "const": "the batch loop advances on a composite keyset cursor over (permit_num, revision_num), with a matching ORDER BY",
+      "value": "staleness.checkpoint = {cursor: \"permit_num,revision_num\", ordered: true}",
+      "incident": "The pre-b1102cdb loop re-fetched the same unmatched rows forever because nothing about them changed and the predicate was unordered. This cursor is what makes forward progress independent of the eligible set shrinking — and therefore what makes retiring the `-1` sentinel safe (see decisions[0]).",
+      "commit": "b1102cdb",
+      "lock_test": "src/tests/steps/link_neighbourhoods/violations.test.ts"
+    },
+    {
+      "const": "the verdict is derived from the audit rows, never from a parallel boolean",
+      "value": "the library's deriveVerdict over checks[] rows; no verdict expression survives in compute",
+      "incident": "The pre-bd1f0e61 verdict was a hand-rolled parallel boolean that could NEVER emit FAIL and would have ignored any future FAIL-grade row. bd1f0e61 replaced it with a row cascade inside this file; the conversion removes even that local copy, because Rule 10 makes scripts/lib/step/verdict.js the only place a verdict is computed.",
+      "commit": "bd1f0e61",
+      "lock_test": "src/tests/steps/link_neighbourhoods/violations.test.ts"
+    },
+    {
+      "const": "the early-exit path still emits both a summary and PIPELINE_META",
+      "value": "terminals[].no_eligible_permits, with records_meta declared",
+      "incident": "bd9e67ab fixed linker steps that returned early on an empty eligible set without emitting meta, which the data-quality dashboard read as a missing step rather than a completed no-op. The pre-conversion file satisfies this with a hand-written duplicate emit block carrying its OWN phase expression; the library now derives one from the declaration, so the two can no longer drift apart.",
+      "commit": "bd9e67ab",
+      "lock_test": "src/tests/steps/link_neighbourhoods/violations.test.ts"
+    },
+    {
+      "const": "advisory lock 92, transaction-level, acquired before any read of the polygon corpus",
+      "value": "identity.lock = 92",
+      "incident": "c1ef0b73's Bundle G Wave 2 retrofit assigned locks to the link scripts from the next-free range per Spec 47 §A.5. This step runs in BOTH the permits and sources chains, so contention is a live path with recorded skips across the link family, not a theoretical one. The registry in src/tests/pipeline-advisory-lock.infra.test.ts is the uniqueness authority.",
+      "commit": "c1ef0b73",
+      "lock_test": "src/tests/pipeline-advisory-lock.infra.test.ts"
+    },
+    {
+      "const": "permits.neighbourhood_id is referentially constrained to neighbourhoods.id",
+      "value": "guards.requires fk_permits_neighbourhoods, on_missing fail",
+      "incident": "Migration 109 added the FK NOT VALID, NULLed 13 orphans in step 4b, then VALIDATEd. That constraint is now the sole mechanism enforcing the `-1` sentinel's retirement — declaring it as a required precondition is what turns a code deletion into an enforced invariant, and dropping it silently would make the sentinel writeable again.",
+      "commit": "7edb231e",
+      "lock_test": "src/tests/db/109_fk_hardening.db.test.ts"
+    },
+    {
+      "const": "records_updated counts LINKED permits only — a no-match is never summed into a success counter",
+      "value": "counters.records_updated = written.e1.updated, scoped_by [permit_num, revision_num]; the no-match tail reports through its OWN row, no_neighbourhood_match",
+      "incident": "b1102cdb set `records_updated: linked + noMatch`, inflating the generic success counter with a failure count. e37eaab9 reverted it 17 days later as one of five §11 counter-misuse fixes across the permit pipeline, and pinned it with a SOURCE-STRING assertion in src/tests/chain.logic.test.ts's §11 Counter Semantic Contract block. That lock reads scripts/link-neighbourhoods.js as text, so its `not.toMatch(/records_updated\\s*:\\s*linked\\s*\\+\\s*noMatch/)` half would go VACUOUSLY GREEN the moment the conversion empties the shell — the string it hunts stops existing whether or not the contract holds. Found by the Regression Guardian at the plan panel; absent from the PH-0 draft's own 7. The converted form preserves the contract STRUCTURALLY (one write target, so written.e1.updated cannot absorb the tail), and the lock is re-homed onto the declaration at commit ②.",
+      "commit": "e37eaab9",
+      "lock_test": "src/tests/steps/link_neighbourhoods/violations.test.ts"
+    }
+  ]
+}
