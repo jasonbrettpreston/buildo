@@ -301,7 +301,7 @@ describe('geocode_permits — the artifacts later commits owe (RED FIRST)', () =
     expect(src).not.toMatch(/console\./);
   });
 
-  it.fails('the shell is FROZEN onto pipeline.step and declares ADVISORY_LOCK_ID 5 as source text [flips at commit 7d]', () => {
+  it('the shell is FROZEN onto pipeline.step and declares ADVISORY_LOCK_ID 5 as source text [flipped at commit 7d]', () => {
     const src = read(STEP_REL);
     expect(src).toContain('module.exports = pipeline.step(descriptor, compute);');
     expect(src).toContain('const ADVISORY_LOCK_ID = 5;');

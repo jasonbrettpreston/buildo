@@ -639,6 +639,44 @@ And the capture is still, by construction, unable to prove the write — §2.4 s
 
 **The gap underneath is real and is filed, not fixed here:** the checker has no `applies_when` distinguishing a retraction that shares the step transaction (this step: `txn_scope "step"`, all phases `shared`, no `post_commit`) from one that can be separately committed (`link_massing`, `link_parcels` — both `txn_scope "batch"`, measured). That is the RS-D-STA class — a gate authored against one archetype's incident now reaching a shape whose declared transaction defeats its premise — and narrowing a fleet checker is a shared-infrastructure change that belongs to its own WF, never smuggled into a conversion commit (Spec 123 §1.1).
 
+### 9.8 THE DIFFERENTIAL — 3 pairs, 36 / 36 / 38 diffs, every one classified
+
+`capture-step-golden.js --compare` on each pair. **Nothing about the DATA moved:**
+
+| Axis | permits | sources | standalone |
+|---|---|---|---|
+| `permits` table hash (projected, key-ordered) | `d293118b` → `d293118b` | identical | identical |
+| All 10 declared invariant scalars | **identical** | **identical** | **identical** |
+| `records_total` / `records_new` / `records_updated` | `0 / 0 / 0` → `0 / 0 / 0` | identical | identical |
+| `audit_table.verdict` | `WARN` → `WARN` | identical | identical |
+| The 8 pre-conversion audit rows, by id, in order, with their values and statuses | **identical** | **identical** | **identical** |
+| exit code | `0` → `0` | identical | identical |
+
+The `0 / 0 / 0` is the load-bearing one: it proves the `matched.compute.*` counter sources **resolve**, which is the exact thing that was `null` for every ENRICHER before 0.10b and is still `null` for `enrich_parcels` today.
+
+**Every diff falls into six classes, and none is a data change:**
+
+| Class | Count | What | Disposition |
+|---|---|---|---|
+| **A — stdout** | 6 lines/pair | The shell's own `[geocode-permits]` log lines are replaced by the library's `[geocode_permits]` target banner and per-phase start/complete lines | **Structural, caused by this change, expected.** The 188-line shell that printed them no longer exists |
+| **B — audit-row shape** | ~24/pair | Every row gains `source: "check"`; `threshold` moves `null` → the literal limit string; `geocode_coverage.value` loses its hand-rounded `'91.3%'` string for the raw `91.28155477365574` | **The accepted fleet pattern**, verified by the Observability seat against I4's already-committed goldens. `audit_table.name` is `"Permit Geocoding"` on BOTH sides — the one place I4 set `display_name` to match and the I5 draft did not, corrected at commit 7b (§6.3 OBS-2) |
+| **C — three NEW audit rows** | 3 + 3 `sys_*` | `lat_xor_lng_null_count` and `geocoded_at_set_but_no_geo_id_count` (`source: "invariant"`) and `coords_outside_toronto_bbox_count` (`source: "plausibility"`), each `PASS` at 0, plus their own `sys_*_duration_ms` timing rows | **DECLARED, not incidental** — the plan's commit-5 obligation and Ask A5. They enter `buildAuditTable` as synthetic selected checks (Fold A-2) and are tagged by `source`, so the eight ported rows stay distinguishable. This is the one place the conversion is deliberately NOT zero-diff, and §6 of the plan is why: a ninth *check* row would have been a behaviour change, but a declared invariant is the mechanism the standard provides for exactly this |
+| **D — `records_meta` gains library-standard keys** | 9/pair | `code_version`, `config` (all three resolved variables, visible), `ledger_row`, `pool_errors`, `checks_failed`, `checks_warned`, `terminal`, `warnings`, `address_points_loaded` | **Structural.** `terminal: "geocoded_with_warnings"` is the declared live steady state being selected correctly, and `config` makes the three tunables readable from the run itself |
+| **E — `meta.reads.permits` gains `geocoded_at`** | 1/pair | The pre-conversion `emitMeta` declared 5 read columns; the descriptor declares 6 | **MORE TRUTHFUL, and the diff is the point.** W2's scope reads `geocoded_at`; the hand-written `emitMeta` list simply omitted it. The conversion did not add a read, it stopped under-declaring one |
+| **F — standalone only** | 2 | `audit_table.phase` **6 → 0**, and a `pipeline_runs` row appears | Both explained below |
+
+**F1 — the standalone audit phase, 6 → 0.** `verdict.js#resolvePhase` returns the chain's own number when `PIPELINE_CHAIN` is set (permits **6 → 6**, sources **3 → 3**, both unchanged) and, for a standalone run, returns a value only when *every* chain agrees — otherwise **0**, by deliberate design: *"Standalone: unambiguous only when every chain agrees."* This step's map is `{permits: 6, sources: 3}`, which disagree. The pre-conversion `6` was not a decision; it was the else-branch of `(PIPELINE_CHAIN === 'sources') ? 3 : 6`, and the plan's own §8 flagged it in advance — *"the audit phase falls to the ternary's else-branch, 6 — the same number as permits. Note this in the capture log so a reviewer does not read it as a permits capture."* The library refuses to guess where the ternary silently picked. **Explained, and confined to an invocation neither chain uses:** both production invocations pass `PIPELINE_CHAIN`, and both are byte-identical.
+
+**F2 — the standalone `pipeline_runs` row.** The converted step declares `ledger_row: "owned"` and writes its own row (`status: completed_with_warnings`); the pre-conversion standalone capture recorded none. An in-chain run correctly writes none on both sides (`run-chain` owns it), which is why permits and sources show no such diff. The converted behaviour is the library standard and is strictly more observable.
+
+**The two families that have no field NAME to cite, acknowledged explicitly with their counts.** Across the three pairs the comparator reports **110 differences** in total. Of those, **18 differences** fall under `stdout_lines` — six per pair, indices 0–5 — and they are class A in full: the 188-line shell that printed `[geocode-permits] Starting permit geocoding`, `Before`, `Address points loaded`, `Running bulk UPDATEs (atomic)...` and `Geocoding complete` no longer exists, and the library prints its own target banner plus a start/complete line per declared phase in their place. Not one of the eighteen carries a measured value; every number those log lines used to print is now an audit row or a `records_meta` key, which is where a consumer can actually read it. A further **9 differences** fall under `audit_table.rows` at indices 8, 9 and 10 — three per pair, and they are class C in full: they are whole NEW row objects, not changed fields, namely the two declared `invariants[]` entries and the one `plausibility[]` entry, each `PASS` at 0 and each tagged with its own `source` (`invariant` / `plausibility`) so it can never be mistaken for one of the eight ported `check` rows, which keep indices 0–7, their ids, their order, their values and their statuses. Both families are structural consequences of the conversion, both were predicted before the captures were taken, and neither moves a measurement.
+
+**What the differential CANNOT prove, said again because it has not changed:** W1's guard admitted 0 rows and W2's target population was 0 on both sides, so `zombies_cleaned` reads 0 in all six captures and the `permits` hash would be identical whether or not the write works. The proof of the write is the four fence locks, the re-pointed atomicity lock (now four cases, including the two the pre-conversion seam could not assert), and the `geocoded_at_set_but_no_geo_id_count` invariant — which is the only row-level evidence, on any run, that the destructive half executed over its own declared population.
+
+### 9.9 One library gap the differential surfaced, filed not fixed
+
+Both POST captures log `phase geocode starting (shared txn, timeout NaNmin)`. `execution.phases[].timeout_minutes_from_config` is declared `"none"` — truthfully, this step consumes no phase timeout — but that field is **not** routed through 0.10b's `resolveInterval`, so the runner evaluates `Number(config["none"])` → `NaN`, prints it, and arms nothing. Behaviourally correct (the pre-conversion step had no timeout either) and cosmetically wrong, but the real finding is the asymmetry: `heartbeat_minutes_from_config` and `lock_timeout_ms_from_config` **throw** on a non-finite resolution, while a **typo** in `timeout_minutes_from_config` is indistinguishable from the literal `"none"` — the exact silent-disable class ER-D1 retired, still open one field over. Filed.
+
 ---
 
 ## §R. Reflection

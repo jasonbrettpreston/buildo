@@ -714,9 +714,8 @@ describe('PIPELINE_SUMMARY convention', () => {
     'extract-builders.js',
     'classify-permits.js',
     'classify-scope.js',
-    'geocode-permits.js',
-    // link-neighbourhoods.js RE-HOMED (Spec 122 §5.1 conversion, batch-2 I4, 2026-09-16)
-    // alongside the five below.
+    // geocode-permits.js RE-HOMED (Spec 122 §5.1 conversion, batch-2 I5, 2026-09-16)
+    // and link-neighbourhoods.js RE-HOMED (batch-2 I4, same day), alongside the five below.
     // link-massing.js / link-wsib.js / compute-centroids.js / link-parcels.js /
     // refresh-snapshot.js RE-HOMED (Spec 122 §5.1 conversion, pilots 3 + 4 + 6 + 7
     // + 8) — same treatment as assert_schema at pilot 1: a converted step spells
@@ -932,9 +931,8 @@ describe('PIPELINE_META convention', () => {
     'extract-builders.js',
     'classify-permits.js',
     'classify-scope.js',
-    'geocode-permits.js',
-    // link-neighbourhoods.js RE-HOMED (Spec 122 §5.1 conversion, batch-2 I4, 2026-09-16)
-    // alongside the five below.
+    // geocode-permits.js RE-HOMED (Spec 122 §5.1 conversion, batch-2 I5, 2026-09-16)
+    // and link-neighbourhoods.js RE-HOMED (batch-2 I4, same day), alongside the five below.
     // link-massing.js / link-wsib.js / compute-centroids.js / link-parcels.js /
     // refresh-snapshot.js RE-HOMED (Spec 122 §5.1 conversion, pilots 3 + 4 + 6 + 7
     // + 8) — same treatment as assert_schema at pilot 1: a converted step spells
@@ -1565,12 +1563,34 @@ describe('§11 Counter Semantic Contract — emitSummary uses primary-entity cou
     expect(content).toContain('dem_tag_fixes');
   });
 
-  it('geocode-permits: records_total uses `updated` (geocoded today), not pre-run backlog', () => {
-    const content = src('geocode-permits.js');
-    // Must NOT use before.to_geocode as records_total
-    expect(content).not.toMatch(/records_total\s*:[^,}]+to_geocode/);
-    // Must have zombies_cleaned in audit_table
-    expect(content).toContain('zombies_cleaned');
+  // RE-HOMED at the I5 conversion (2026-09-16), following the link_neighbourhoods precedent
+  // immediately below — and this one matters more than most, because Spec 47 §11 names THIS
+  // STEP BY NAME, TWICE, as its own worked example.
+  //
+  // The assertion used to read `scripts/geocode-permits.js` AS TEXT: `not.toMatch(/records_
+  // total\s*:[^,}]+to_geocode/)` plus `toContain('zombies_cleaned')`. The conversion empties
+  // that file, so the negative would have passed because the string it hunts STOPPED
+  // EXISTING, not because fence `e37eaab9`'s contract still holds — vacuously green forever.
+  // Both halves now read the descriptor's own declarations.
+  //
+  // §11: "Pre-run backlog sizes — e.g. `before.to_geocode` in `geocode-permits` … MUST NOT be
+  // used as `records_total`" and "Cleanup operations — e.g. zombie coordinate resets in
+  // `geocode-permits`. Goes in `audit_table` as `zombies_cleaned`."
+  it('geocode-permits: records_total uses the geocode rowCount, never the pre-run backlog, and the retraction reports through its own audit row (fence e37eaab9 / Spec 47 §11, re-homed onto the descriptor at conversion)', () => {
+    const d = JSON.parse(
+      fs.readFileSync(path.resolve(__dirname, '../../scripts/geocode-permits.descriptor.json'), 'utf-8'),
+    ) as {
+      counters: { records_total: { source: string }; records_updated: { source: string } };
+      checks: Array<{ id: string }>;
+    };
+    // Half one — the backlog may not be the counter, under any spelling.
+    expect(d.counters.records_total.source).not.toMatch(/to_geocode|backlog/);
+    expect(d.counters.records_total.source).toBe('matched.compute.newly_geocoded');
+    // Half two — the retraction's rowCount is EXCLUDED from the generic counters and reports
+    // through its own declared row, which must therefore exist.
+    expect(d.counters.records_updated.source).not.toMatch(/zombie|retract/);
+    expect(d.checks.map((c) => c.id)).toContain('zombies_cleaned');
+    expect(d.checks.map((c) => c.id)).toContain('backlog_remaining');
   });
 
   // RE-HOMED at the I4 conversion (2026-09-16), and the re-homing is the point.

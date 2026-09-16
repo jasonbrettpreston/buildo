@@ -1117,9 +1117,9 @@ describe('Pipeline SDK', () => {
       'load-massing.js',
       'classify-permits.js',
       'classify-scope.js',
-      'geocode-permits.js',
-      // link-neighbourhoods.js RE-HOMED (Spec 122 §5.1 conversion, batch-2 I4,
-      // 2026-09-16) alongside the five below — same treatment, same successor lock.
+      // geocode-permits.js RE-HOMED (Spec 122 §5.1 conversion, batch-2 I5, 2026-09-16)
+      // and link-neighbourhoods.js RE-HOMED (batch-2 I4, same day), alongside the five
+      // below — same treatment, same successor lock.
       // link-massing.js / link-wsib.js / compute-centroids.js / link-parcels.js /
       // refresh-snapshot.js RE-HOMED (Spec 122 §5.1 conversion, pilots 3 + 4 + 6 +
       // 7 + 8): a converted step calls pipeline.step(), never pipeline.run(), and
@@ -1325,10 +1325,37 @@ describe('Pipeline SDK', () => {
       expect(d.outputs.writes[0].write_discipline.guard_why.text).toContain('7a147377');
     });
 
-    // §9.3 — geocode-permits.js update must guard against identical coordinate writes
-    it('geocode-permits.js UPDATE has IS DISTINCT FROM guard on coordinates', () => {
-      const content = fs.readFileSync(path.join(scriptDir, 'geocode-permits.js'), 'utf-8');
-      expect(content).toContain('IS DISTINCT FROM');
+    // §9.3 — geocode-permits update must guard against identical coordinate writes.
+    //
+    // RE-HOMED at the I5 conversion (2026-09-16), following the I4 precedent, and the
+    // re-homing is the point. This assertion used to read `scripts/geocode-permits.js` AS
+    // TEXT for the literal 'IS DISTINCT FROM'. The conversion empties that file (188 lines →
+    // a require + `pipeline.step()`), so the original would have gone VACUOUSLY GREEN or
+    // vacuously red off a string that simply stopped existing — a lock that outlives the code
+    // it polices. The contract is unchanged; what changes is where it is read from.
+    //
+    // It is now read from BOTH halves, because either alone can be satisfied while the fence
+    // is gone: the descriptor's declared `guard_columns` (what the library will enforce) AND
+    // the compute's actual statement text (what is really issued — class N is DESCRIPTIVE
+    // ONLY, so `write.js` generates nothing here and the SQL is compute-authored). The
+    // two-column list is itself the fence (`32da93c5`): `geocoded_at` is `source: "run_at"`,
+    // distinct from its stored value on every run, so guarding on it would rewrite every
+    // permit carrying a numeric geo_id, every run — the LG-9 trap, live on this step.
+    it('geocode-permits UPDATE has IS DISTINCT FROM guard on coordinates, and on those two columns ONLY (fence 32da93c5, re-homed onto the descriptor + compute at conversion)', () => {
+      const d = JSON.parse(fs.readFileSync(path.join(scriptDir, 'geocode-permits.descriptor.json'), 'utf-8')) as {
+        outputs: { writes: Array<{ write_discipline: { guard: string; guard_columns: string[] } }> };
+      };
+      const w0 = d.outputs.writes[0]!;
+      expect(w0.write_discipline.guard).toBe('is_distinct_from');
+      expect(w0.write_discipline.guard_columns).toEqual(['latitude', 'longitude']);
+
+      // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-explicit-any -- the real CJS compute module
+      const compute: any = require('../../scripts/lib/compute/geocode-permits.js');
+      const sql: string = compute.buildGeocodeSql();
+      expect(sql).toContain('IS DISTINCT FROM');
+      expect(sql).toContain('p.latitude IS DISTINCT FROM ap.latitude');
+      expect(sql).toContain('p.longitude IS DISTINCT FROM ap.longitude');
+      expect(sql).not.toMatch(/geocoded_at\s+IS DISTINCT FROM/);
     });
 
     // §9.3 — classify-permits.js upsert must always update classified_at (no sticky record bug)

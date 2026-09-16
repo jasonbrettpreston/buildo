@@ -33,7 +33,7 @@ Remaining files: **49** (+ **1** pending) · remaining slugs: **51** (+ **1** pe
 | ENRICHER | `scripts/enrich-centreline.js` | enrich_centreline | sources (1) | bottom-left | — | EP-PIN-D17 (enrich_centreline); CLOUD-PRE (enrich_centreline) |
 | ENRICHER | `scripts/enrich-heritage.js` | enrich_heritage | sources (1) | bottom-left | — | CLOUD-PRE (enrich_heritage) |
 | ENRICHER | `scripts/enrich-ravines.js` | enrich_ravines | sources (1) | bottom-left | — | CLOUD-PRE (enrich_ravines) |
-| ENRICHER | `scripts/geocode-permits.js` | geocode_permits [pending: descriptor_only] | permits+sources (2) | bottom-left | supports_full | — |
+| ENRICHER | `scripts/geocode-permits.js` | geocode_permits [pending: runner_wired] | permits+sources (2) | bottom-left | supports_full | — |
 | ENRICHER | `scripts/compute-parcel-cost-estimates.js` | compute_parcel_cost_estimates | sources (1) | top-left | supports_dry_run | CLOUD-PRE (compute_parcel_cost_estimates) |
 | INGESTOR | `scripts/load-address-points.js` | address_points | sources (1) | top-left | — | CLOUD-PRE (address_points); SEAM-CHAIN-1 (address_points) |
 | INGESTOR | `scripts/load-centreline.js` | load_centreline | sources (1) | top-left | — | CLOUD-PRE (load_centreline) |
