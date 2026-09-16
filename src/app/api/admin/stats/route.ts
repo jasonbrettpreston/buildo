@@ -1,15 +1,39 @@
+import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 import { query } from '@/lib/db/client';
 import { logError } from '@/lib/logger';
 import { PIPELINE_TABLE_MAP } from '@/lib/admin/funnel';
 import { withApiEnvelope } from '@/lib/api/with-api-envelope';
+import { unauthorized } from '@/lib/admin/admin-responses';
 import { COA_IDENTITY_LINK_MIN_CONFIDENCE } from '@/lib/coa/link-confidence';
-import { reapStaleRunningRows } from '@/lib/admin/reap-stale-runs';
+import { verifyAdminAuth } from '@/lib/auth/verify-admin';
 
 /**
  * GET /api/admin/stats - Return system-wide statistics for the admin dashboard.
+ *
+ * Read-only by contract: this handler performs NO writes. The
+ * `reapStaleRunningRows()` call that used to sit between the count queries and
+ * the freshness block was removed 2026-09-15 (WF3 SEC-1, Spec 128 ASK-12) —
+ * reaping stale `pipeline_runs` rows is a SCHEDULED job, not a side effect of
+ * a dashboard page load. `scripts/reconcile-runs.js` is already Step 0 of the
+ * `sources` chain (Spec 122 §7.4) and is the more authoritative reaper.
+ * `src/lib/admin/reap-stale-runs.ts` and its DB test are RETAINED — the
+ * ASK-12 JOB descriptor will call them.
+ *
+ * NAMED RESIDUAL (filed, not fixed here): `reconcile` writes `crashed` rather
+ * than `failed`, and is heartbeat-unaware (`reap-stale-runs.ts:18-21`), so
+ * until the JOB lands a converted step's long-but-healthy pass has a
+ * different interim reaper posture than it did under the GET.
  */
-export const GET = withApiEnvelope(async function GET() {
+export const GET = withApiEnvelope(async function GET(request: NextRequest) {
+  // Spec 33 §8 — per-route admin guard, FIRST statement. Until 2026-09-15
+  // this route had none, and `src/app/dashboard/page.tsx:14` (an
+  // 'authenticated'-class page for ANY signed-in consumer) fetches it: every
+  // ordinary user's browser crossed the admin boundary and was served the
+  // full estate stats payload.
+  const adminCtx = await verifyAdminAuth(request);
+  if (!adminCtx) return unauthorized();
+
   try {
     // Run all count queries in parallel for performance
     const [
@@ -185,8 +209,6 @@ export const GET = withApiEnvelope(async function GET() {
         'SELECT COUNT(*)::text AS count FROM lead_views WHERE saved = true'
       ).catch(() => [{ count: '0' }]),
     ]);
-
-    await reapStaleRunningRows();
 
     // Pipeline freshness: last run per pipeline from pipeline_runs table (extended with observability)
     const pipelineLastRun: Record<string, {

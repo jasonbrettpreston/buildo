@@ -131,10 +131,38 @@ handler is supposed to terminalize the row and has now failed to do so across tw
 dispatches. What remains is a *dashboard lie* — `/api/admin/pipelines/status` reports the chain as
 actively running with no age filter — plus a poisoned "last run" read.
 
-**Do NOT wait for a reaper.** There is no scheduled one. `src/app/api/admin/stats/route.ts:188-199`
-opportunistically fails rows older than 2h, but only when a human loads the admin dashboard, so it
-may not fire for weeks (rows 2158/2179 sat 42h). It also has a filed defect: its 2h threshold is
-shorter than a legitimate `chain_deep_scrapes` slice (~150 min).
+**Do NOT wait for a reaper.** There is still no scheduled one (Spec 128 ASK-12 rules a `SCHEDULED`
+JOB, before P4 — not yet built). **Updated 2026-09-15 (WF3 SEC-1):** the opportunistic
+`GET /api/admin/stats` reaper that used to fail rows older than 2h on a human page load is
+**DELETED** — a dashboard GET must not write. The sole reaper is now `scripts/reconcile-runs.js`,
+Step 0 of the `sources` chain: it runs on the weekday `sources` cron only, writes `crashed` (not
+`failed`), and is heartbeat-unaware. Worse for this procedure, it sits DOWNSTREAM of
+`scripts/check-chain-running.js`, so a stranded `chain_sources` row makes every dispatch skip
+before reconcile can reap it (filed HIGH). **Clear the row by hand, below — never by re-dispatching.**
+No wedge results from waiting: `scripts/lib/source-version.js` E-R2 makes an unterminated upstream
+row force the consumer to RUN, so the cost is lost skip-savings, never skipped work.
+
+**Local dev, admin panel (WF3 SEC-1, 2026-09-15):** admin **MUTATIONS** now require a real admin
+session. `dev_bypass` (and the CI `x-admin-key` path) keep READS on all admin routes but get
+**403 `SESSION_REQUIRED`** on every POST/PUT/PATCH/DELETE — `admin_audit_log.admin_uid` is
+`UUID NOT NULL` and the `'dev-user'`/`'admin-key'` sentinels cannot be recorded, so an
+unattributable mutation is refused rather than run unaudited (Spec 33 §8.1).
+
+**To keep admin mutations working locally, set `DEV_ADMIN_UID`** (Integration fold, same day): in
+dev mode only, that variable resolves the bypass to a real UUID returned with `session` semantics,
+so mutations run and their audit rows are attributable — dev keeps its write surface under a
+**known audited identity** instead of a shared sentinel. **It must be the id of a REAL local
+`auth.users` row whose `profiles.is_admin` is true** (`scripts/bootstrap-first-admin.js` provisions
+exactly that against the local stack): `admin_audit_log.admin_uid` carries an FK to `auth.users`
+(`migrations/229:104-106`), so a made-up UUID raises `23503` inside the mutation transaction and
+rolls the mutation back. Unset or non-UUID → the original `'dev-user'` sentinel and the 403 above.
+Production cannot reach this path (`isDevMode()` requires `DEV_MODE=true` AND
+`NODE_ENV !== 'production'`, and the branch re-checks `NODE_ENV` itself).
+
+**Deploy precondition:** `ADMIN_ALLOWED_ORIGINS` must be set in every deployed environment. It is
+now an 8th critical in `scripts/verify-vercel-env.js` — `verifyAdminAuth`'s Spec 33 §13 CSRF gate
+default-DENIES on an empty allowlist, and the symptom of an unset value is **every admin button
+returning 401** on an otherwise-green build.
 
 **Procedure** — identify, then close with a guarded UPDATE. Use `SUPABASE_DATABASE_URL` explicitly;
 a bare `createPool()` targets the LOCAL Docker DB (three wrong-DB incidents, `tasks/lessons.md`).

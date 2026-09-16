@@ -158,13 +158,24 @@ pipeline.run('load-wsib', async (pool) => {
   // happy-path-only finalize (below) left the row wedged at status='running'
   // forever. Since link-wsib.js's UPSTREAM_SLUGS includes load_wsib, a
   // stranded row satisfies COALESCE(completed_at,'infinity') > anchor
-  // PERMANENTLY, forcing link_wsib to RUN on every future evaluation and
-  // silently disabling the B3 gate's savings for that consumer — invisible
-  // unless a human loads the admin dashboard (the reaper at
-  // src/app/api/admin/stats/route.ts:188-199 only fires on a page load, never
-  // under unattended cron). Reproduced by real fault injection; the wedge
-  // persisted across 5 simulated later runs (measured 19 real occurrences,
-  // masked by that same reaper — Phase B B6.6).
+  // PERMANENTLY (source-version.js E-R2 — an unterminated upstream row forces
+  // the consumer to RUN), silently disabling the B3 gate's savings for that
+  // consumer. Reproduced by real fault injection; the wedge persisted across 5
+  // simulated later runs (measured 19 real occurrences — Phase B B6.6).
+  //
+  // ⚠️ MITIGATION RE-STATED 2026-09-15 (WF3 SEC-1). This block used to name
+  // the admin-stats reaper (`src/app/api/admin/stats/route.ts:188-199`, "only
+  // fires on a page load") as the thing that had been masking those 19 rows.
+  // That call site is DELETED — a dashboard GET must not write. The sole
+  // reaper is now `scripts/reconcile-runs.js`, Step 0 of the `sources` chain:
+  // weekly-cron cadence rather than any-page-load, heartbeat-unaware, and
+  // sitting DOWNSTREAM of `check-chain-running.js` (a stranded `chain_sources`
+  // row makes dispatches skip until that guard's 12 h TTL expires — filed HIGH
+  // in `docs/reports/review_followups.md`). None of that weakens THIS
+  // try/finally, which is the real fix: the row is finalized by the process
+  // that opened it, so no reaper is needed on this path at all. The failure
+  // direction of a stranded row remains lost savings (forced RUN), never
+  // skipped work.
   let finalizeStatus = 'failed'; // pessimistic default — flipped to 'completed' only after real success
   let finalizeTotal = 0;
   let finalizeNew = 0;

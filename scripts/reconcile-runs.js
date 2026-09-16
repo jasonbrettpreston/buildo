@@ -13,18 +13,45 @@
  * means the process died before anything could." `scripts/lib/step/ledger.js`
  * finalizes from a `finally`, and a `finally` by definition only runs while the
  * process is still alive — so it can only ever legitimately write `failed`, and
- * it THROWS if asked for `crashed` (ledger.js:83-87). The rows a dead process
+ * it THROWS if asked for `crashed` (`ledger.js:89`, the
+ * `finalizeLedgerRow refuses to write 'crashed'` guard — line number
+ * re-measured 2026-09-15; the previous `:83-87` citation had drifted ~3 lines.
+ * Cite by the greppable message, not the line). The rows a dead process
  * left behind in `running` are therefore nobody's but this step's.
  *
- * ⚠️ WHAT THIS REPLACES. `src/app/api/admin/stats/route.ts:188-199` has been
- * auto-failing orphaned `running` rows older than 2 hours — but only when a human
- * loads the admin stats page, and it writes `failed`, which is the exact
- * conflation above. It masked 19 stranded rows for months (filed 2026-08-23,
- * `514568fa`). Under unattended cron those rows wedge Phase B's run-ledger gates
- * permanently, because a gate that reads "the previous run is still running"
- * never fires. A chain step needs no page-load. The admin reaper is left in place
- * for now — retiring it is its own Cross-Domain change with its own regression
- * lock, and two reapers racing is harmless: this one's WHERE clause is a subset.
+ * ⚠️ WHAT THIS REPLACED — AND, AS OF 2026-09-15, WHAT IT NOW SOLELY OWNS.
+ * `GET /api/admin/stats` used to auto-fail orphaned `running` rows older than
+ * 2 hours, but only when a human loaded the admin stats page, and it wrote
+ * `failed` — the exact conflation above. It masked 19 stranded rows for months
+ * (filed 2026-08-23, `514568fa`).
+ *
+ * That call site is **DELETED** (WF3 SEC-1, Spec 128 ASK-12 Q2(a)): a dashboard
+ * GET must not write. The sentence this block used to carry — "the admin reaper
+ * is left in place for now… two reapers racing is harmless" — is now FALSE and
+ * is replaced by the current truth:
+ *
+ *   • **This file is the SOLE reaper.** There is no second one.
+ *   • **Sources-chain only, weekly.** It reaps when `manifest.chains.sources`
+ *     runs (weekday-scheduled cron), not on demand. The retired admin reaper
+ *     fired on any page load, so the interim cadence is COARSER, not finer.
+ *   • **Heartbeat-unaware.** `src/lib/admin/reap-stale-runs.ts:10-21` grew a
+ *     30-minute `records_meta.last_heartbeat_at` widening so a long-but-healthy
+ *     converted pass is not reaped out from under itself; this step has no such
+ *     arm and still reaps on elapsed wall-clock alone. Named, not fixed.
+ *   • **The guard PRECEDES this step** — `scripts/check-chain-running.js` runs
+ *     before chain Step 0, so a stranded `chain_sources` row makes every
+ *     dispatch skip until the guard's own 12 h TTL expires: the reaper sits
+ *     downstream of the gate it would open. Filed HIGH in
+ *     `docs/reports/review_followups.md`; operator workaround is to clear the
+ *     row before dispatching, never by re-dispatching (runbook §3b).
+ *   • **No wedge, though.** A stranded row does NOT silently disable a
+ *     run-ledger gate: `scripts/lib/source-version.js` E-R2 makes an
+ *     unterminated upstream row force the consumer to **RUN**, so the failure
+ *     direction is lost savings, never skipped work.
+ *
+ * `reapStaleRunningRows` + `src/tests/db/admin-stats-reaper.db.test.ts` are
+ * RETAINED (and locked as present) for the ASK-12 `SCHEDULED` JOB to call —
+ * that JOB, not this step, is the ruled long-run home.
  *
  * ⚠️ `published_batch` ROLLBACK IS DECLARED BUT NOT ARMED. §7.4 also assigns this
  * step the `published_batch` rollback, which is otherwise ownerless. The table
@@ -52,11 +79,22 @@ const { z } = require('zod');
 const ADVISORY_LOCK_ID = 124;
 
 // §R4 — the one knob, validated upfront. A run is "stranded" once it has been
-// `running` longer than this. 120 minutes matches the admin reaper's 2 hours
-// (stats/route.ts:194) deliberately: this step must not reap rows that reaper
-// would have considered live, or the two disagree about what "dead" means.
-// The longest measured chain step is well inside an hour; the margin is for a
+// `running` longer than this.
+//
+// 120 minutes was chosen to MATCH the admin reaper's 2 hours so the two could
+// not disagree about what "dead" means. That reaper's call site is gone (WF3
+// SEC-1, 2026-09-15) and this step is now the sole reaper, so the value is no
+// longer a matching constraint — it is RETAINED on its own merits and the
+// justification is restated rather than left citing a deleted call site: the
+// longest measured chain step is well inside an hour, and the margin is for a
 // cloud runner that stalls rather than dies.
+//
+// ⚠️ The threshold this value must NOT silently diverge from is now
+// `src/lib/admin/reap-stale-runs.ts`'s SAME 2-hour no-heartbeat rule, which the
+// ASK-12 `SCHEDULED` JOB will carry. That helper additionally spares a row
+// whose `records_meta.last_heartbeat_at` is fresh within 30 minutes; this step
+// does not. Until the JOB lands, a converted step making genuine progress past
+// 2 h with a live heartbeat is safe from the helper and NOT safe from here.
 const ConfigSchema = z.object({
   strandedAfterMinutes: z.number().int().min(1).max(60 * 24 * 7),
 });
