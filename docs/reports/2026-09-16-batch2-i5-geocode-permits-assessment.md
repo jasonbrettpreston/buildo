@@ -1,5 +1,17 @@
 # Batch 2 I5 Assessment — `geocode_permits`
 
+> ## ⛔ STATUS: STOPPED AT COMMIT 4 — three plan premises refuted by measurement
+>
+> This conversion ran commits **1–4** (PH-0 boundary freeze · PH-3 Intent Ledger + `GP-D1` filed · PH-5 seam map · PH-6 classification + risk class) and **stops there**, at a fully clean boundary: `converted.json.pending: []`, `step-validate --all --fast` exit 0 with `hard-stop=false` on all 13 steps, full `npm run test` green. **No descriptor, no compute, no shell, no captures, no registration.** See **§7** for the blocker and **§7.2** for why the boundary is commit 4 and not commit 6.
+>
+> | # | Plan premise | Measured reality |
+> |---|---|---|
+> | 1 | §0b / §3.1 / Ask A2: *"0.10 (`d7668b8a`) unblocks commit 7d"* | **Partially true only.** The runner's pre-phase hooks, write seams and per-target counters are generic; `scripts/lib/step/index.js:3430-3510` is still hardcoded to `enrich_parcels` — an unguarded `compute.computeAggregateRecordsUpdated` call that throws **after COMMIT**, and a `matched` literal with no `newly_geocoded` key and no per-phase contribution seam, so `records_total`/`records_updated` would resolve **`null` forever**. Found independently by two seats, re-executed here |
+> | 2 | §0.3: *"Draft descriptor, validated directly → **PASS — no throw**"* | **FALSE at HEAD.** `d7668b8a` made `execution.heartbeat_minutes_from_config` and `lock_timeout_ms_from_config` **required** on the ENRICHER profile; `validateDescriptor` throws on both. Plan §5's *"one variable, and only one"* is FAIL — ruled to **3** variables (§6.2 INT-2) |
+> | 3 | §9 commit 5: *"`stage: "red_suite"` … excludes G7/G8/G9 + Rules 4/11/12 from the hard stop, so early registration manufactures no false red"* | **FALSE.** Those exclusions belong to `descriptor_only`; `red_suite` is *deliberately absent* from the exclusion table. Applied, measured (`hard-stop=true`, `REAL EXIT=1`), and **reverted**. §7.1 |
+>
+> A fourth, smaller correction rides along: the plan's `GP-D1` mechanics were wrong in a way that makes the defect **worse**, not weaker (§2.6).
+
 **Full form reason:** the ENRICHER archetype has **one** converted member (`enrich_parcels`), so R-AH / R-PACE-1 eligibility (`template-freeze.json.archetype_profiles[ENRICHER].proven === true` **AND** ≥ 2 `converted.json` members sharing the archetype) is **NOT MET** — measured, §1.2b. The compressed form is therefore unavailable, not declined; `step-validate.mjs` fast invariant #24 (COMPRESSED-FORM-DEFAULT) is **vacuous** for this slug. This conversion is the archetype's SECOND member: it is the commit-9 cutover here that makes ENRICHER compressed-eligible and turns batch 2's Phase 2 from *1 full + 3 compressed* into *4 compressed*.
 
 **Governing plan:** `.cursor/i5_geocode_permits_active_task.md` (Status: Implementation, AUTHORIZED 2026-09-16, all six Asks at their stated defaults — A1 `identity.spec = "60"` · A2 CLOSED by batch-2 row 0.10 (`d7668b8a`) · A3 declare the edge **and** file the accepted WARN · A4 re-measure GP-D1 at commit 1 and floor to the nearest 5 below · A5 add the Toronto-bbox plausibility row · A6 one push per step).
@@ -139,7 +151,7 @@ The plan's §0.3 measured `validateDescriptor()` against the draft **in the tree
 | `src/tests/execution-budget-disposition.infra.test.ts` | *"`geocode_permits` declares `execution.step_timeout` with no manifest wiring and is absent from the registry's `pending[]` list — an undeclared inert declaration is exactly what R-X forbids"* |
 | `src/tests/write-class-disposition.infra.test.ts` | `checkOnContentionBannedDeclared` fleet count `expected 13, received 14` |
 
-Moving `scripts/geocode-permits.{descriptor,notes}.json` out of the repo (they are held in the session scratchpad until commit 7b) turns all three green in 2.1 s. **The baseline at HEAD `1a48520b` is therefore genuinely clean: 3 failed / 420 passed becomes 423 passed, and the repo owed no pre-existing red.**
+Moving `scripts/geocode-permits.{descriptor,notes}.json` out of the repo turns all three green in 2.1 s. **Where the drafts live, so the next attempt does not re-author them:** `.claude/worktrees/agent-a486632e47faebf18/scripts/geocode-permits.descriptor.json` (27,632 B) and `…/geocode-permits.notes.json` (13,596 B) — the planning worktree that produced them under R-AC. They must NOT be copied into `scripts/` until commit 7b, and when they are, they need the two `execution.*_from_config` fields §6.2 INT-1 measured as newly required. **The baseline at HEAD `1a48520b` is therefore genuinely clean: 3 failed / 420 passed becomes 423 passed, and the repo owed no pre-existing red.**
 
 Two consequences, both now binding:
 
@@ -316,7 +328,7 @@ The `ins: [0,0]` / `row_delta: [0,0]` half of the same block is the machine-read
 >
 > Full 19-commit archaeology (Regression Guardian seat, re-executed): `67057269` (creation — raw `pg.Pool`, ONE update, `CAST(p.geo_id AS INTEGER)` with **no** CASE, no zombie cleanup, no lock) → `8287291e` → `412927ca` → `6d20c449` → `bd06751d` → `0ef23550` (SDK migration) → `32da93c5` → `59d63070` → `fcd6ff68` (audit_table born, threshold 95) → `5baaed5a` → `4de16d00` → `d24c964c` → `3e44218a` → `745a1b4d` → `46275ef1` → `67711003` → `e37eaab9` → `f69b561d` → `da6db77a`. **11 of 19 are `fix(`** (57.9 %), and the fixes cluster almost entirely in *the correctness of the numbers this step reports*, not in the join it performs — five of the eleven move a counter or a threshold.
 
-| # | Construct | Recovered why (`git show`, verbatim where quoted) | Commit | Disposition |
+| # | Construct | Recovered why (`git show`, verbatim where quoted) | Commit | Disposition — one of `preserved-in-runner` / `preserved-in-validator` / `preserved-in-compute` / `encoded-as-descriptor-field` / `encoded-as-deviation` / `knowingly-retired` |
 |---|---|---|---|---|
 | F1 | `CASE WHEN p.geo_id ~ '^[0-9]+$' THEN p.geo_id::INTEGER END` inside the join predicate, beside a sibling regex term | *"CASE expression guarantees regex validation before INTEGER cast (PostgreSQL can reorder WHERE conditions, crashing on non-numeric geo_id)"*. **Live, not theoretical: 6 rows carry a non-numeric `geo_id` today** (§2.1) | `d24c964c` | **preserved-in-compute** — ported verbatim into `outputs.writes[0].write_discipline.scope`; the rule is written down in that target's `why` and again in `notes.json` `fences[0]`, and locked by `checks[]`-adjacent fence tests at commit 6. ⚠ `write.js`'s class-N executor is **descriptive, not generative** for the scope string (the SQL text is compute-authored), so this fence's survival is a **commit-7c** verification, not a plan-altitude one |
 | F2 | `IS DISTINCT FROM` over `latitude`/`longitude` **only** — never `geocoded_at` | *"add IS DISTINCT FROM guard to geocode-permits UPDATE … **Eliminates ~6,001 ghost updates per sources pipeline run**"*. The pre-fix predicate was `p.latitude IS NULL`, i.e. a one-column existence test, not a change test | `32da93c5` | **encoded-as-descriptor-field** — `guard_columns: ["latitude","longitude"]` with a mandatory `guard_columns_why` naming the LG-9 run-clock trap: `geocoded_at` is `source: "run_at"` and is DISTINCT FROM its stored value on *every* run, so `all_declared` would rewrite all 246,416 numeric-`geo_id` permits every run |
@@ -485,7 +497,61 @@ Consequences for I5, in order of when they bite:
 * **`computeAggregateRecordsUpdated` made optional and guarded**, exactly as `contract_read` and `defer_scope` already are;
 * the three `parcels` COUNT queries and the five literal pass names **moved behind the same declaration**, so an enrich step that does not touch `parcels` does not scan it three times per run.
 
-**Stopping point.** Commits 1–6 are unaffected: they are report, ledger, follow-ups, seam map, classification, registration, PRE captures and the red suite — none of them wires the runner. **This conversion therefore runs to commit 6 and stops at that boundary**, in the `pending` / `stage: "red_suite"` state R-K.1 designed for exactly this, which is green and which every prior step has occupied. Commit 7 resumes when the follow-up lands.
+### 7.1 A THIRD refuted premise — `stage: "red_suite"` grants NO hard-stop exclusions, so the plan's commit-5 reorder is unworkable
+
+The plan's commit-5 row says the early `pending` registration is safe because *"`stage: "red_suite"` … its stage-gating excludes G7/G8/G9 + Rules 4/11/12 from the hard stop, so early registration manufactures no false red."* **That is false, and the validator's own source says so in a comment written to prevent this exact misreading** (`scripts/analysis/step-validate.mjs:2004-2015`):
+
+```js
+const STAGE_HARDSTOP_EXCLUSIONS = {
+  // red_suite and shape_clean are deliberately ABSENT — they fall through to
+  // the `{gates:[], rules:[]}` default below …
+  descriptor_only: { gates: ['G7','G8','G9'], rules: [4,11,12] },
+  compute_ported:  { gates: ['G8','G9'],      rules: [] },
+  runner_wired:    { gates: ['G9'],           rules: [] },
+  shape_clean_pending_recapture: { gates: ['G8'], rules: [] },
+};
+```
+
+The exclusions the plan attributes to `red_suite` belong to **`descriptor_only`**. Measured by execution, with the `pending` entry and the census flip actually applied to the tree:
+
+```
+$ node scripts/analysis/step-validate.mjs --all --fast ; echo REAL EXIT=$?
+[step-validate] geocode_permits (pending) — 10/17, hard-stop=true
+    (G7, G8, Rule 1, Rule 5, Rule 6, Rule 7, Rule 8, Rule 9, Rule 13 — all unpinned enforced-red)
+REAL EXIT=1
+```
+
+And the red is **not** curable by landing the violations suite at commit 6: Rules 5/6/7/8/9/13 read `enforced-red` for the single reason *"no descriptor"*, and the descriptor cannot land before commit 7b (§1.8b). **Any registration at any point before the descriptor exists produces `hard-stop=true`.**
+
+This did not bite the twelve prior conversions because the pre-commit hook runs `step-validate.mjs --staged --fast`, which resolves **no step** from a staged registry JSON and exits 0 — measured, with the registration staged. Their `red_suite` entries passed the *hook*; nobody ran `--all`. This conversion's operating constraint is the stricter one — **`--all --fast` exit 0 and `hard-stop=false` on every step before EACH commit** — and the two are jointly unsatisfiable for an in-flight pending slug.
+
+**Consequence: the registration was applied, measured, and REVERTED.** `converted.json.pending` is back to `[]`, the census row is back to `batch: "C4"`, and `--all --fast` is back to exit 0 with `hard-stop=false` on all 13.
+
+### 7.2 Stopping point — **commit 4**, not commit 6
+
+The three refutations compose, and they move the honest boundary earlier than §7's first reading suggested:
+
+1. **Commits 7c–9 cannot land at all** (§7): the runner's post-phase region is still `enrich_parcels`-specific, and closing it is a 0.10 follow-up WF with its own Guardian gate, explicitly outside this plan's Operating Boundaries.
+2. **Commit 5's registration cannot satisfy the stated gate** (§7.1), and commit 6's suite does not cure it.
+3. Landing commit 5's PRE captures *without* registration would forfeit the only reason the plan reordered them (`#22` / G8 cannot gate an unregistered slug), and would pair captures taken today against POST captures taken after an unbounded delay — precisely the ND-4 hazard this report declared before capturing anything.
+
+So the conversion stops at **commit 4**, which is a fully clean boundary: `converted.json.pending: []`, `step-validate --all --fast` exit 0 with `hard-stop=false` on all 13 steps, the full `npm run test` suite green, and nothing on disk that any fleet scanner can see. **The repo is in exactly the state the next agent's own entry gate expects** — which is the whole point of stopping here rather than two commits further in. Commits 1–4 stand on their own: the measured boundary freeze, the corrected `GP-D1`, the 18-construct Intent Ledger, the eight-seam map with its non-determinism inventory, and the risk-class-B classification. Commit 5 resumes when the 0.10 follow-up lands — and it resumes knowing all three of these walls in advance instead of hitting them one at a time.
+
+---
+
+## 8. §12 — Cross-Domain handoff (no admin file was edited)
+
+Domain Mode was **Cross-Domain** because this step's output is bound into the admin surface by **id**, not merely by value. Measured at commit 1, and unchanged by commits 1–4 (which touch only `docs/reports/**`):
+
+| Consumer | Binding | State after commits 1–4 |
+|---|---|---|
+| `src/lib/admin/funnel.ts:39` | `{id: 'address_matching', name: 'Address Matching', statusSlug: 'geocode_permits', triggerSlug: 'geocode_permits', yieldFields: ['latitude','longitude'], auditMetric: 'geocode_coverage'}` — the audit-row **id** `geocode_coverage` is the contract, not just its value | **Untouched.** The id is ported verbatim in the drafted `checks[]` and a rename would be a consumer break (B-13). The rename risk is recorded; nothing has moved |
+| `src/lib/admin/funnel.ts:724-731` | `summary: {records_total: [0,500], records_new: [0,500], records_updated: [0,100]}` · `mutations.permits {ins:[0,0], upd:[0,500], del:[0,0]}` · `row_delta.permits [0,0]` | **One live finding, FILED not fixed** (§2.8): `records_updated ≤ 100` and `records_total ≤ 500` are **already breached by seven of the last forty PRE-conversion runs** (169 / 369 / 530 / 669 / 1193 / 1284 / 8465). Pre-existing, not caused by this work; re-tightening or widening an admin bound is an Admin-domain change. In `review_followups.md`, MED |
+| `src/lib/admin/funnel.ts:561`, `:842` | `{summary: 'Matches permit addresses to address points for lat/lng coordinates', table: 'permits'}` and the slug→table map | **Untouched.** Note for whoever owns the prose: the summary sentence repeats the stale "matches permit **addresses**" framing (§1.6) — the step matches on `geo_id`, never on an address string. Cosmetic, no consumer branches on it |
+| `src/lib/parcels/geometry.ts:244` | A prose claim: *"Mirrors the WHERE clause logic in scripts/geocode-permits.js"* | **Untouched, and now a named coupling.** `parseGeoId` re-implements the `geo_id` numeric test that fence F1's `CASE` expression guards in SQL. If the compute ever changes that predicate, this is the sibling that silently disagrees. Recorded here because a prose "mirrors" comment is the weakest possible link between two implementations of one rule |
+| Spec 26 | Names `funnel.ts`, not the script — the contact is via `funnel.ts`, already a Spec 26 Target File | No R-AF obligation (§1.1) |
+
+**Obligation carried forward, unchanged:** commit 9 must verify the emitted `audit_table` diff is empty against the PRE captures on **both** chains, and file — not fix — any funnel expectation bound the re-measured live values fall outside. One such bound is already filed. **No admin file was edited by commits 1–4 and none should be edited by commits 5–9.**
 
 ---
 
@@ -512,4 +578,7 @@ Consequences for I5, in order of when they bite:
 | S5 | **An admin expectation bound can be broken by history, not by the change under review.** `funnel.ts`'s `records_updated ≤ 100` is breached by 5 of the last 40 pre-conversion runs. A Cross-Domain handoff has to distinguish "the conversion broke this" from "this was already broken" before it files anything | every Cross-Domain step whose consumer declares numeric expectations |
 | S6 | **A draft artifact in the working tree is part of the tree, and the fleet suites read the tree.** `validateDescriptor()` passing on a drafted descriptor says nothing about whether the descriptor may *exist* yet; three fleet suites red on its mere presence. "The draft validates" and "the draft may sit here" are different claims and only the first was measured | every conversion's PH-0 → commit-6 window; and generally, any registry-backed artifact whose existence is itself a registered fact |
 | S7 | **A fence can be a calling convention, and a calling convention has no descriptor field.** `opts.withTransaction` is the load-bearing seam of this step's only regression lock, and every category in the 20-category descriptor is about *data* — reads, writes, guards, counters. Nothing in the standard has a home for "this function's signature is a test seam", so the Intent Ledger walked straight past it | every conversion replacing an exported function with a frozen shell: enumerate the **exported surface** as a fence class of its own, not just the SQL and the counters |
+| S9 | **A shared runner generalised for its first second-member is generic in the half the author was looking at.** `d7668b8a` correctly generalised everything upstream of the phases — hooks, config resolution, write seams, per-target counters — and left the post-phase summary region a hand-written literal for the one step that existed. The tell was in its own commit message: *"post-phase counters iterate declared targets — I5 with 2 targets no longer throws"*. "No longer throws" and "emits the right number" are different claims, and only the first was made | every "generalise the runner for archetype member 2" WF: the acceptance test is **the second member actually running**, not the first member's goldens still hashing equal |
+| S10 | **A stage vocabulary's exclusions are not what the stage's NAME implies, and the plan quoted the name.** `red_suite` sounds like "the permissive early stage"; it is the one stage in the table with *no* exclusions, and the table says so in a comment written to prevent exactly this misreading. The plan attributed `descriptor_only`'s exclusion set to it | every plan that leans on a declared vocabulary's behaviour: quote the table, not the name — and run the gate once with the value actually applied before writing the commit that depends on it |
+| S11 | **A hook that scopes by staged files and an invariant that scopes by "all" are different gates, and twelve conversions passed only the first.** Every prior `red_suite` registration went green through `step-validate --staged --fast`, which resolves no step from a staged registry JSON. `--all --fast` on the same tree exits 1. Nobody was wrong; nobody had run the stricter gate | any programme that tightens its own entry gate mid-flight: re-run the new gate against the *existing* green states before assuming they stay green |
 | S8 | **A measured fix that lands on the wrong one of two literals is worse than one that gets reverted.** `4de16d00` measured 90.9 %, changed the row, missed the verdict, and left no trace in the tree that a measurement had ever been taken — so five days later a reconciliation commit correctly "aligned" the row back, and the measurement vanished with it | every Rule-10 parallel-boolean site: a duplicated threshold is not just a disagreement risk, it is a *silent-no-op-fix* risk |
