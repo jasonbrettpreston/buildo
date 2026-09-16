@@ -76,6 +76,7 @@ Replace the fragmented `builders` table with a unified `entities` hub and `entit
 - `src/app/api/permits/[id]/route.ts` — Builder lookup via entity_projects
 - `src/app/api/builders/route.ts` — Alias querying entities
 - `src/app/api/builders/[id]/route.ts` — Alias querying entities
+- `src/lib/api/public-projections.ts` — **the entity column allow-list every public reader shares** (`ENTITY_PUBLIC_COLS`, `ENTITY_CONTACT_PUBLIC_COLS`). Added 2026-09-15 (WF3 SEC-1): these routes ran `SELECT *` / `SELECT e.*` against a 19-column `entities` on unauthenticated `PUBLIC_PREFIXES` paths, so `primary_phone` / `primary_email` / `linkedin_url` were bulk-harvestable through the paginated list. ONE allow-list across `/api/entities`, `/api/entities/[id]`, `/api/builders`, `/api/builders/[id]` and the `builder` sub-object of `/api/permits/[id]` is what keeps the documented “`/api/builders` is an alias of the entity endpoint” contract true by construction. Response-level key-set equality is locked in `src/tests/public-projection-response.infra.test.ts`; the source scan in `src/tests/api.infra.test.ts`.
 - `src/app/api/admin/builders/route.ts` — Stats from entities
 - `src/app/api/entities/route.ts` — Primary entity list API
 - `src/app/api/entities/[id]/route.ts` — Entity detail + portfolio

@@ -9,6 +9,15 @@ import { mapCoaToPermitDto } from '@/lib/coa/pre-permits';
 import { COA_IDENTITY_LINK_MIN_CONFIDENCE } from '@/lib/coa/link-confidence';
 import type { CoaApplication } from '@/lib/coa/types';
 import { withApiEnvelope } from '@/lib/api/with-api-envelope';
+import {
+  PERMIT_DETAIL_COLS,
+  PERMIT_TRADE_COLS,
+  PERMIT_HISTORY_COLS,
+  PARCEL_PUBLIC_COLS,
+  ENTITY_PUBLIC_COLS,
+  qualify,
+  selectList,
+} from '@/lib/api/public-projections';
 
 export const GET = withApiEnvelope(async function GET(
   request: NextRequest,
@@ -99,9 +108,10 @@ export const GET = withApiEnvelope(async function GET(
   }
 
   try {
-    // Fetch permit
+    // Fetch permit — §4.3 explicit allow-list, never `SELECT *`.
     const permits = await query(
-      'SELECT * FROM permits WHERE permit_num = $1 AND revision_num = $2',
+      `SELECT ${selectList(PERMIT_DETAIL_COLS)} FROM permits
+       WHERE permit_num = $1 AND revision_num = $2`,
       [permitNum, revisionNum]
     );
 
@@ -115,7 +125,7 @@ export const GET = withApiEnvelope(async function GET(
 
     // Fetch trade matches
     const trades = await query(
-      `SELECT pt.*, t.slug as trade_slug, t.name as trade_name, t.icon, t.color
+      `SELECT ${qualify(PERMIT_TRADE_COLS, 'pt')}, t.slug as trade_slug, t.name as trade_name, t.icon, t.color
        FROM permit_trades pt
        JOIN trades t ON t.id = pt.trade_id
        WHERE pt.permit_num = $1 AND pt.revision_num = $2
@@ -123,9 +133,10 @@ export const GET = withApiEnvelope(async function GET(
       [permitNum, revisionNum]
     );
 
-    // Fetch change history
+    // Fetch change history — §4.3 explicit allow-list; the page renders
+    // exactly these four fields.
     const history = await query(
-      `SELECT * FROM permit_history
+      `SELECT ${selectList(PERMIT_HISTORY_COLS)} FROM permit_history
        WHERE permit_num = $1 AND revision_num = $2
        ORDER BY changed_at DESC
        LIMIT 50`,
@@ -134,8 +145,9 @@ export const GET = withApiEnvelope(async function GET(
 
     // Fetch builder info via entity_projects junction
     let builder = null;
+    // §4.3 explicit allow-list — same entity vocabulary as /api/builders/[id].
     const builderEntities = await query(
-      `SELECT e.* FROM entities e
+      `SELECT ${qualify(ENTITY_PUBLIC_COLS, 'e')} FROM entities e
        JOIN entity_projects ep ON ep.entity_id = e.id
        WHERE ep.permit_num = $1 AND ep.revision_num = $2 AND ep.role = 'Builder'
        LIMIT 1`,
@@ -148,8 +160,15 @@ export const GET = withApiEnvelope(async function GET(
     // Fetch parcel info if linked (graceful fallback if tables don't exist yet)
     let parcel = null;
     try {
+      // §4.3 explicit allow-list — THE disclosure fix of this WF3. `SELECT
+      // pa.*` served all 158 `parcels` columns on an UNAUTHENTICATED route:
+      // `parcel_cost_menu` and the twelve `cost_*` scalars (the paid payload
+      // Spec 100 §5 gates behind Bearer auth + a server-side subscription
+      // check on /api/parcels/lookup), the raw PostGIS `geometry`/`geom`
+      // polygons, and ~129 undeclared zoning / heritage / ravine /
+      // `existing_*` / `opt_*` / `max_build_*` internals. The page renders 6.
       const parcels = await query(
-        `SELECT pa.*, pp.match_type, pp.confidence AS link_confidence
+        `SELECT ${qualify(PARCEL_PUBLIC_COLS, 'pa')}, pp.match_type, pp.confidence AS link_confidence
          FROM permit_parcels pp
          JOIN parcels pa ON pa.id = pp.parcel_id
          WHERE pp.permit_num = $1 AND pp.revision_num = $2

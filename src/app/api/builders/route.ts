@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/client';
 import { logError } from '@/lib/logger';
 import { withApiEnvelope } from '@/lib/api/with-api-envelope';
+import { ENTITY_PUBLIC_COLS, selectList } from '@/lib/api/public-projections';
 
 export const GET = withApiEnvelope(async function GET(request: NextRequest) {
   try {
@@ -32,8 +33,13 @@ export const GET = withApiEnvelope(async function GET(request: NextRequest) {
 
     const where = `WHERE ${conditions.join(' AND ')}`;
 
+    // §4.3 — explicit allow-list, never `SELECT *`. `/api/builders` is an
+    // ALIAS of the entity endpoint, so it shares ENTITY_PUBLIC_COLS: one
+    // vocabulary keeps the documented alias contract true by construction.
+    // Sorting still works on `legal_name` / `last_enriched_at` even though
+    // ORDER BY may reference a column outside the select list.
     const rows = await query(
-      `SELECT * FROM entities ${where}
+      `SELECT ${selectList(ENTITY_PUBLIC_COLS)} FROM entities ${where}
        ORDER BY ${sort} ${sortOrder}
        LIMIT $${paramIdx} OFFSET $${paramIdx + 1}`,
       [...params, limit, offset]

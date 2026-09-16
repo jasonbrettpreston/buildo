@@ -3,6 +3,7 @@ import { query } from '@/lib/db/client';
 import { logError } from '@/lib/logger';
 import { withApiEnvelope } from '@/lib/api/with-api-envelope';
 import { COA_IDENTITY_LINK_MIN_CONFIDENCE } from '@/lib/coa/link-confidence';
+import { COA_PUBLIC_COLS, selectList } from '@/lib/api/public-projections';
 
 export const GET = withApiEnvelope(async function GET(request: NextRequest) {
   try {
@@ -32,8 +33,12 @@ export const GET = withApiEnvelope(async function GET(request: NextRequest) {
 
     const where = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
 
+    // §4.3 — explicit allow-list, never `SELECT *`. `coa_applications` has
+    // grown to 146 columns; this route is unauthenticated (PUBLIC_PREFIXES),
+    // so every pipeline column the chain adds would otherwise be published on
+    // the next deploy with no code change. See lib/api/public-projections.ts.
     const rows = await query(
-      `SELECT * FROM coa_applications ${where}
+      `SELECT ${selectList(COA_PUBLIC_COLS)} FROM coa_applications ${where}
        ORDER BY hearing_date DESC NULLS LAST
        LIMIT $${paramIdx} OFFSET $${paramIdx + 1}`,
       [...params, limit, offset]

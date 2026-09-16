@@ -80,6 +80,8 @@ interface ConsumerParcelLookupResponse {
 
 The response is an **explicit allow-list**, not a deny-list. A future Tier-2 column MUST NOT leak by default; the assembler picks each field by name and the infra test fails on any unlisted key (and on the presence of `groups` or any Spec 89 Tier-3 diagnostic column name).
 
+> **Cross-reference (added 2026-09-15, WF3 SEC-1): `/api/permits/[id]` is the SECOND reader of `parcels`, and it is unauthenticated.** This whitelist gated the paid payload on `/api/parcels/lookup` (Bearer + a server-side subscription 403) while `/api/permits/[id]` — a `PUBLIC_PREFIXES` route with no auth at all — served `SELECT pa.*`: all 158 `parcels` columns, `parcel_cost_menu` and the twelve `cost_*` scalars included. §5's promise ("we will not serve this to a lapsed or deleted account even if a stale client bypasses the UI gate") was true of this route and false of the estate. That route now projects `PARCEL_PUBLIC_COLS` (`src/lib/api/public-projections.ts`), a 9-column dimensional set with a negative-control lock asserting no `cost_*` / `parcel_cost_menu` / `geom*` / `opt_*` / `max_build_*` key can enter it. **Any future reader of `parcels` owes the same explicit allow-list** — two gated readers and one open one is the failure mode this cross-reference exists to prevent.
+
 - **`match`** — `parcelId`, `matchType`, `address`.
 - **`candidates[]`** — `parcelId`, `address`.
 - **`warnings[]`** — human strings.

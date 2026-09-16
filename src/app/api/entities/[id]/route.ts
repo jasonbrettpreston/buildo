@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/client';
 import { logError } from '@/lib/logger';
 import { withApiEnvelope } from '@/lib/api/with-api-envelope';
+import { ENTITY_PUBLIC_COLS, selectList } from '@/lib/api/public-projections';
 
 export const GET = withApiEnvelope(async function GET(
   request: NextRequest,
@@ -19,8 +20,10 @@ export const GET = withApiEnvelope(async function GET(
   }
 
   try {
+    // §4.3 — explicit allow-list, never `SELECT *`. Same vocabulary as the
+    // list route and the /api/builders alias (lib/api/public-projections.ts).
     const entities = await query(
-      'SELECT * FROM entities WHERE id = $1',
+      `SELECT ${selectList(ENTITY_PUBLIC_COLS)} FROM entities WHERE id = $1`,
       [entityId]
     );
 

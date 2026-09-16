@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/client';
 import { withApiEnvelope } from '@/lib/api/with-api-envelope';
+import { ENTITY_PUBLIC_COLS, selectList } from '@/lib/api/public-projections';
 
 export const GET = withApiEnvelope(async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
@@ -32,8 +33,11 @@ export const GET = withApiEnvelope(async function GET(request: NextRequest) {
 
   const where = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
 
+  // §4.3 — explicit allow-list, never `SELECT *`. Drops `primary_phone` /
+  // `primary_email` / `linkedin_url`: this route is unauthenticated and
+  // paginated, so `SELECT *` made the entity contact book bulk-harvestable.
   const rows = await query(
-    `SELECT * FROM entities ${where}
+    `SELECT ${selectList(ENTITY_PUBLIC_COLS)} FROM entities ${where}
      ORDER BY ${sort} ${sortOrder}
      LIMIT $${paramIdx} OFFSET $${paramIdx + 1}`,
     [...params, limit, offset]

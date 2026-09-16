@@ -2,6 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/client';
 import { logError } from '@/lib/logger';
 import { withApiEnvelope } from '@/lib/api/with-api-envelope';
+import {
+  ENTITY_PUBLIC_COLS,
+  ENTITY_CONTACT_PUBLIC_COLS,
+  selectList,
+} from '@/lib/api/public-projections';
 
 export const GET = withApiEnvelope(async function GET(
   request: NextRequest,
@@ -19,9 +24,9 @@ export const GET = withApiEnvelope(async function GET(
   }
 
   try {
-    // Fetch entity
+    // Fetch entity — §4.3 explicit allow-list, never `SELECT *`.
     const entities = await query(
-      'SELECT * FROM entities WHERE id = $1',
+      `SELECT ${selectList(ENTITY_PUBLIC_COLS)} FROM entities WHERE id = $1`,
       [entityId]
     );
 
@@ -47,9 +52,13 @@ export const GET = withApiEnvelope(async function GET(
       [entityId]
     );
 
-    // Fetch user-contributed contacts
+    // Fetch user-contributed contacts — §4.3 explicit allow-list. Drops
+    // `entity_id` (already the request parameter), `contributed_by` (names
+    // the contributing user) and `created_at`; the page renders none of the
+    // three. ORDER BY still sorts on `created_at` — a column may be ordered
+    // by without being selected.
     const contacts = await query(
-      `SELECT * FROM entity_contacts
+      `SELECT ${selectList(ENTITY_CONTACT_PUBLIC_COLS)} FROM entity_contacts
        WHERE entity_id = $1
        ORDER BY created_at DESC`,
       [entityId]

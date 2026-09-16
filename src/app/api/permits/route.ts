@@ -4,6 +4,7 @@ import { logError } from '@/lib/logger';
 import type { PermitFilter } from '@/lib/permits/types';
 import { getUpcomingLeads } from '@/lib/coa/pre-permits';
 import { withApiEnvelope } from '@/lib/api/with-api-envelope';
+import { PERMIT_LIST_COLS, qualify } from '@/lib/api/public-projections';
 
 export const GET = withApiEnvelope(async function GET(request: NextRequest) {
   const params = request.nextUrl.searchParams;
@@ -134,9 +135,12 @@ export const GET = withApiEnvelope(async function GET(request: NextRequest) {
     );
     const total = parseInt(countResult[0]?.total ?? '0', 10);
 
-    // Get paginated results
+    // Get paginated results — §4.3 explicit allow-list, never `SELECT p.*`.
+    // `permits` has 171 columns; the feed renders 17 of them. The dropped set
+    // includes `raw_json` (the entire upstream record), `owner`, `data_hash`,
+    // `location` (PostGIS) and every lifecycle/zoning/matched internal.
     const permits = await query(
-      `SELECT p.* FROM permits p ${joinClause} ${whereClause}
+      `SELECT ${qualify(PERMIT_LIST_COLS, 'p')} FROM permits p ${joinClause} ${whereClause}
        ORDER BY p.${sortBy} ${sortOrder} NULLS LAST
        LIMIT $${paramIdx++} OFFSET $${paramIdx++}`,
       [...values, limit, offset]
