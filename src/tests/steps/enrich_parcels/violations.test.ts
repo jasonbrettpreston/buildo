@@ -2350,7 +2350,7 @@ describe('execution.enrich_hooks / heartbeat + lock-timeout from config (batch-2
     }
   });
 
-  it('BEHAVIOUR PARITY — the runner calls the two DECLARED hooks, in the pre-0.10 order, with the pre-0.10 arguments (contract read on the pool; defer scope on the pool + the resolved threshold), both before phase 1', async () => {
+  it('BEHAVIOUR PARITY — the runner calls the THREE DECLARED hooks, in the pre-0.10 order, with the pre-0.10 arguments (contract read on the pool; defer scope on the pool + the resolved threshold), the two pre-phase ones before phase 1 and post_phase exactly once after it', async () => {
     // eslint-disable-next-line @typescript-eslint/no-require-imports -- exercising the real CJS library
     const stepLib = require(path.join(REPO_ROOT, 'scripts/lib/step/index.js')) as {
       runEnrichPhase: (a: Record<string, unknown>) => Promise<unknown>;
@@ -2376,6 +2376,11 @@ describe('execution.enrich_hooks / heartbeat + lock-timeout from config (batch-2
       readZoningContract: async (p: unknown) => { calls.push(`readZoningContract(${p === pool ? 'pool' : 'OTHER'})`); return { layers: {} }; },
       computeDeferScope: async (p: unknown, threshold: number) => { calls.push(`computeDeferScope(${p === pool ? 'pool' : 'OTHER'},${threshold})`); return { scope_count: 0, threshold, ratio: 0 }; },
       computeAggregateRecordsUpdated: () => 0,
+      // batch-2 Phase 0.10b — the THIRD declared hook. Recorded in the same `calls` log as
+      // its two siblings, which is what makes the ordering claim in the assertion below a
+      // measurement rather than a comment: the two pre-phase hooks fire BEFORE phase 1, and
+      // `post_phase` fires exactly ONCE, AFTER it.
+      computePostPhase: async (p: unknown) => { calls.push(`computePostPhase(${p === pool ? 'pool' : 'OTHER'})`); return { matched: { zone_class_pct: 0 }, compute: { total_parcels_scanned: 0, records_new_aggregate: 0, records_updated_aggregate: 0 } }; },
       retireStaleScope: async () => ({ backlog_rows: 0, backlog_cohorts: 0, retired_rows: 0, retired_cohorts: 0 }),
       passes: [{ name: 'zoning', txn: 'shared', run: async () => { calls.push('phase:zoning'); return { scoped: 0, updated: 0, updatedIds: [] }; } }],
     };
@@ -2397,6 +2402,98 @@ describe('execution.enrich_hooks / heartbeat + lock-timeout from config (batch-2
       preWriteGate: null,
       ownRunId: 4242,
     });
-    expect(calls).toEqual(['readZoningContract(pool)', 'computeDeferScope(pool,1000)', 'phase:zoning']);
+    expect(calls).toEqual(['readZoningContract(pool)', 'computeDeferScope(pool,1000)', 'phase:zoning', 'computePostPhase(pool)']);
   });
+
+  it('M5 (batch-2 Phase 0.10b) — computePostPhase reproduces the RETIRED runner literal exactly: the same 21 domain keys from the same expressions, and the same 3-key aggregate block', async () => {
+    // The INVERSE arm of the 0.10b seam. `src/tests/step-library.logic.test.ts`'s
+    // M1-M6 prove the runner no longer needs `enrich_parcels`' vocabulary; this proves
+    // `enrich_parcels` still emits every byte of it. The goldens are the whole-run
+    // proof; this is the per-KEY one they cannot give (a golden diff says "this number
+    // moved", not "this key is sourced from the pass field it was always sourced from").
+    //
+    // eslint-disable-next-line @typescript-eslint/no-require-imports -- exercising the real CJS compute module
+    const ep = require(path.join(REPO_ROOT, 'scripts/lib/compute/enrich-parcels.js')) as {
+      computePostPhase: (pool: unknown, ctx: { passRaw: Record<string, unknown> }) => Promise<{ matched: Record<string, unknown>; compute: Record<string, number> }>;
+    };
+    // The three step-level COUNTs, answered with DISTINCT values so a swapped
+    // assignment is visible rather than coincidentally equal.
+    const counts = [{ n: 1000 }, { n: 966 }, { n: 7 }];
+    let i = 0;
+    const pool = { query: async () => ({ rows: [counts[i++]!] }) };
+    const passRaw = {
+      zoning: { updated: 11, scoped: 1200, ambiguous: 2, fsiSourceNulled: 3, updatedIds: [1, 2] },
+      max_build: { updated: 13, zero_link_ghost_cnt: 4, coverage_defaulted_cnt: 5, box_excluded_cnt: 6, heritage_mislink_cnt: 7, ravine_constrained_cnt: 8, updatedIds: [2, 3] },
+      existing_structure: { updated: 17, mislinked: 9, scenarioUpdated: 19, updatedIds: [4], scenarioUpdatedIds: [5] },
+      comparable_builds: { candidates: 23, updated: 29, zero_comps: 31 },
+      optimal_config: {
+        updated: 37, errors: 41, envelope_capped: 43, citywide: 47,
+        pending_scope_count: 53, scope_recovery_recovered_count: 59, scope_recovery_batches: 61,
+        scope_stamped_without_recompute_count: 67, genuineIds: new Set([6, 7]),
+      },
+    };
+    const res = await ep.computePostPhase(pool, { passRaw });
+
+    // (1) The key SET is exactly the retired literal's domain half — no key added, none dropped.
+    expect(Object.keys(res.matched).sort()).toEqual([
+      'comp_candidate_pool', 'comp_zero_comps_count', 'comparable_builds_enriched_count',
+      'existing_mislinked_footprint_count', 'existing_structure_enriched_count',
+      'heritage_mislink_footprint_count', 'massing_zero_link_ghost',
+      'max_build_box_excluded_count', 'max_build_coverage_defaulted_count', 'max_build_enriched_count',
+      'opt_aor_envelope_capped_count', 'opt_aor_without_max_gfa', 'opt_config_citywide_fallback_count',
+      'opt_config_engine_errors', 'optimal_config_enriched_count',
+      'parcels_ambiguous_zone_count', 'parcels_enriched_count', 'pending_scope_parcels',
+      'ravine_constrained_count', 'scenario_enriched_count',
+      'scope_recovery_batches', 'scope_recovery_recovered_count', 'scope_stamped_without_recompute_count',
+      'zone_class_pct', 'zoning_fsi_source_nulled_count',
+    ].sort());
+
+    // (2) Every value comes from the pass field it always came from.
+    expect(res.matched).toEqual({
+      zone_class_pct: 96.6, // round(1000 * 966 / 1000) / 10 — the SECOND count over the FIRST
+      opt_config_engine_errors: 41,
+      opt_aor_without_max_gfa: 7, // the THIRD count, straight through
+      parcels_enriched_count: 11,
+      parcels_ambiguous_zone_count: { ambiguous: 2, scoped: 1200 },
+      zoning_fsi_source_nulled_count: 3,
+      max_build_enriched_count: 13,
+      massing_zero_link_ghost: 4,
+      max_build_coverage_defaulted_count: 5,
+      max_build_box_excluded_count: 6,
+      heritage_mislink_footprint_count: 7,
+      ravine_constrained_count: 8,
+      existing_structure_enriched_count: 17,
+      existing_mislinked_footprint_count: 9,
+      scenario_enriched_count: 19,
+      comp_candidate_pool: 23,
+      comparable_builds_enriched_count: 29,
+      comp_zero_comps_count: 31,
+      optimal_config_enriched_count: 37,
+      opt_aor_envelope_capped_count: 43,
+      opt_config_citywide_fallback_count: 47,
+      pending_scope_parcels: 53,
+      scope_recovery_recovered_count: 59,
+      scope_recovery_batches: 61,
+      scope_stamped_without_recompute_count: 67,
+    });
+
+    // (3) The aggregate block keeps `enrich_parcels`' OWN key names (the runner never
+    // mints `records_scanned_aggregate` over them) and the distinct-union semantics:
+    // {1,2} u {2,3} u {4} u {5} u {6,7} = 7 ids, pass 4 deliberately excluded.
+    expect(res.compute).toEqual({ total_parcels_scanned: 1000, records_new_aggregate: 0, records_updated_aggregate: 7 });
+
+    // (4) Rule 2 — the hook OBSERVES, it does not write. Three SELECTs, nothing else.
+    expect(i, 'exactly the three step-level COUNTs the retired region ran').toBe(3);
+
+    // (5) The empty-table guard the retired expression carried survives the move:
+    // a zero `parcels` total must render 0, never NaN (which would make the
+    // zone_class_pct check unevaluable rather than failing).
+    let j = 0;
+    const zeroCounts = [{ n: 0 }, { n: 0 }, { n: 0 }];
+    const zeroPool = { query: async () => ({ rows: [zeroCounts[j++]!] }) };
+    const zeroRes = await ep.computePostPhase(zeroPool, { passRaw: {} });
+    expect(zeroRes.matched.zone_class_pct).toBe(0);
+    expect(Number.isNaN(zeroRes.matched.zone_class_pct as number)).toBe(false);
+  });
+
 });

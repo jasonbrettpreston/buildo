@@ -3697,15 +3697,24 @@ describe('recordHeartbeat / captureStallDiagnostic / startStallTicker (LG-28, fa
 //    `violations.test.ts` owns the hook-parity half (L3) — that one IS an
 //    enrich_parcels claim.
 //
-//    FIXTURE NOTE (measured, filed): the fixture descriptors below declare
-//    FIVE write targets even where one would do, because `runEnrichPhase`'s
-//    counter block still assigns `written[write.targetKey(0..4)]` from five
-//    hardcoded pass-result names (`zoning`/`max_build`/`existing_structure`/
-//    `comparable_builds`/`optimal_config`). A 4-target ENRICHER throws
-//    `TypeError` there. That is a SEPARATE genericity gap from the four this
-//    row closes — filed HIGH in docs/reports/review_followups.md rather than
-//    fixed here (a correct fix needs a descriptor-declared counter mapping, not
-//    a silent `if (target) ...` skip, which would be Rule 1's own failure mode).
+//    FIXTURE NOTE — CORRECTED at batch-2 Phase 0.10b (2026-09-16). It used to
+//    read: "the fixture descriptors below declare FIVE write targets even where
+//    one would do, because runEnrichPhase's counter block still assigns
+//    written[write.targetKey(0..4)] from five hardcoded pass-result names … a
+//    4-target ENRICHER throws TypeError there." That was true when it was
+//    written and STOPPED being true inside the very commit that wrote it: the
+//    0.10 fold (see the L9 block further down this file) replaced those fifteen
+//    assignments with a loop over `execution.phases[]` keyed by each entry's own
+//    `writes_ref`, and 0.10b then moved the five pass-name lookups out of the
+//    `matched` build into the step's own declared `post_phase` hook. The
+//    five-target fixtures below are now merely OVER-SPECIFIED, not required —
+//    harmless, and left alone rather than re-cut, because re-cutting them would
+//    churn a dozen unrelated assertions for no behaviour. The genuinely
+//    remaining hardcoding is the two CLASS-BASED targets (`set_based_scoped`,
+//    `insert_only_no_retraction`), which NO `execution.phases[]` entry declares
+//    a `writes_ref` for, so the loop structurally cannot reach them — filed MED,
+//    stated in place at the call site, and skipped entirely for a step that
+//    declares neither class.
 // ---------------------------------------------------------------------------
 
 describe('runEnrichPhase — the GENERIC ENRICHER runner (batch-2 Phase 0.10)', () => {
@@ -4207,3 +4216,290 @@ describe('runEnrichPhase — per-target counters come from execution.phases[].wr
     expect(res.written[keys[1]!]).toMatchObject({ scanned: 11, updated: 11, rows_changed: 11 });
   });
 });
+
+// ---------------------------------------------------------------------------
+// batch-2 Phase 0.10b — THE POST-PHASE SEAM (`execution.enrich_hooks.post_phase`)
+//
+// 0.10 generalised `runEnrichPhase`'s PRE-phase hooks, its write seams and its
+// per-target `written[]` counters. It did NOT generalise the POST-phase region,
+// and I5 (`geocode_permits`) stopped at commit 4 on the consequence. Measured at
+// `e074df3d`, before this row:
+//
+//   * three unconditional `SELECT COUNT(*) … FROM parcels` queries ran for EVERY
+//     enrich-shaped step (only `enrich_parcels` could use any of them);
+//   * `matched` was a hand-written ~30-key `enrich_parcels` literal built from five
+//     LITERAL pass names, with no per-step contribution seam — so a second
+//     ENRICHER's `counters.records_total.source: "matched.<its own key>"` resolved
+//     NULL forever (Spec 48 §3.6, Spec 79 C11);
+//   * `compute.computeAggregateRecordsUpdated(…)` was called with NO function guard,
+//     unlike `contract_read`/`defer_scope`, which do guard — so an ENRICHER whose
+//     compute lacks that export died at `TypeError` AFTER every pass had run and,
+//     on a shared-txn step, AFTER COMMIT.
+//
+// The locks below prove both directions. Their `enrich_parcels` inverse arm —
+// "the declared hook produces the SAME object the retired literal did" — lives in
+// src/tests/steps/enrich_parcels/violations.test.ts, because that is an
+// `enrich_parcels` claim and these are claims about a step that is NOT it.
+// ---------------------------------------------------------------------------
+
+describe('runEnrichPhase — the POST-PHASE seam (batch-2 Phase 0.10b)', () => {
+  interface FakeClient { query: (text: string, values?: unknown[]) => Promise<unknown>; release: () => void }
+
+  function poolP() {
+    const sql: string[] = [];
+    const clients: FakeClient[] = [];
+    const answer = (text: string) => {
+      if (/pg_backend_pid/.test(text)) return { rows: [{ pid: 4242 }] };
+      if (/pg_try_advisory(?:_xact)?_lock\(\$1, \$2\)/.test(text)) return { rows: [{ acquired: true }] };
+      // Deliberately NOT stubbed: the whole point of M1 is that a step with no
+      // post_phase hook must never issue this query, so an answer here would hide
+      // the defect rather than expose it. (`{rows: []}` below makes the retired
+      // code's `.then(r => r.rows[0].n)` throw, which is the RED.)
+      return { rows: [], rowCount: 0 };
+    };
+    const record = async (text: string) => { sql.push(text); return answer(text); };
+    return {
+      sql,
+      query: record,
+      connect: async () => { const c: FakeClient = { query: record, release: () => {} }; clients.push(c); return c; },
+    };
+  }
+
+  /** The `geocode_permits` shape: two targets, two phases, NO class-based target. */
+  const baseDescriptor = () => ({
+    identity: { name: 'fixture_post_phase', lock: 987656, archetype: 'ENRICHER', spec: '999' },
+    outputs: {
+      writes: [
+        { table: 'fixture_a', key: 'id', write_discipline: { class: 'set_based_join_update' } },
+        { table: 'fixture_b', key: 'id', write_discipline: { class: 'temp_materialize' } },
+      ],
+    },
+    execution: {
+      shape: 'enrich',
+      heartbeat_minutes_from_config: 'fixture_heartbeat_minutes',
+      lock_timeout_ms_from_config: 'fixture_lock_timeout_ms',
+      phases: [
+        { name: 'geocode', order: 1, txn: 'shared', writes_ref: 0, scope: 'full', timeout_minutes_from_config: 'fixture_pass_timeout_minutes' },
+        { name: 'backfill_geom', order: 2, txn: 'shared', writes_ref: 1, scope: 'full', timeout_minutes_from_config: 'fixture_pass_timeout_minutes' },
+      ],
+      invocation: { sources: { argv: [], env: {} } },
+    },
+    guards: { requires: [] },
+    recovery: 'none',
+    override: { force_full: 'none', force_run: 'none', dry_run: 'none' },
+    checks: [],
+  });
+
+  /**
+   * A compute WITHOUT `computeAggregateRecordsUpdated` — which is the point. Before
+   * 0.10b every ENRICHER had to export it or die after COMMIT; the four pre-existing
+   * fake computes in this repo all stub it, which is exactly why no test reddened on
+   * the real defect.
+   */
+  const bareCompute = (results: Record<string, Record<string, unknown>>, passLog?: string[], names: string[] = ['geocode', 'backfill_geom']) => ({
+    passes: names.map((name) => ({
+      name,
+      txn: 'shared',
+      run: async () => { if (passLog) passLog.push(name); return results[name] ?? {}; },
+    })),
+  });
+
+  const argsP = (descriptor: Record<string, unknown>, pool: ReturnType<typeof poolP>, compute: unknown, extraConfig: Record<string, unknown> = {}) => ({
+    descriptor,
+    pool,
+    compute,
+    config: { fixture_pass_timeout_minutes: 5, fixture_heartbeat_minutes: 60, fixture_lock_timeout_ms: 0, ...extraConfig },
+    chainId: null,
+    log: { info: () => {}, warn: () => {}, error: () => {} },
+    tag: '[fixture_post_phase]',
+    clockNow: new Date('2026-09-15T00:00:00.000Z'),
+    preWriteGate: null,
+    ownRunId: 4242,
+  });
+
+  it('M1 — an ENRICHER with NO post_phase hook and NO aggregate helper runs to completion, issues no `parcels` query, and still emits FINITE counters', async () => {
+    const pool = poolP();
+    const res = await stepLib.runEnrichPhase(argsP(baseDescriptor(), pool, bareCompute({
+      geocode: { scoped: 120, updated: 90 },
+      backfill_geom: { scoped: 40, updated: 35 },
+    })) as never) as { matched: Record<string, unknown>; written: Record<string, { scanned: number; inserted: number; updated: number }> };
+
+    // RED at e074df3d: `TypeError: Cannot read properties of undefined (reading 'n')`
+    // from the first `parcels` COUNT, and — with that stubbed — `TypeError:
+    // compute.computeAggregateRecordsUpdated is not a function`, both thrown after
+    // the shared transaction had already COMMITted.
+    expect(pool.sql.some((t) => /FROM parcels/.test(t)), 'a step that does not read `parcels` must not be made to COUNT it three times').toBe(false);
+
+    const agg = res.matched.compute as Record<string, number>;
+    expect(agg, '`matched.compute` is the declared counter-source root — never absent').toBeDefined();
+    // DERIVED from the declared per-target counters, not invented: 120+40 scanned,
+    // 0 inserted (neither pass reports one), 90+35 updated.
+    expect(agg).toEqual({ records_scanned_aggregate: 160, records_new_aggregate: 0, records_updated_aggregate: 125 });
+    for (const [k, v] of Object.entries(agg)) {
+      expect(Number.isFinite(v), `compute.${k} must be a finite number, not null — NULL is not zero (Spec 48 §3.6)`).toBe(true);
+    }
+    // And the generic runner-owned keys are all still there.
+    expect(Object.keys(res.matched)).toContain('fixture_post_phase_duration_ms');
+    expect(res.matched.passes).toBeDefined();
+  });
+
+  it('M1b — a declared post_phase hook OWNS `matched.compute`, key names included; the derived fallback does not overwrite it', async () => {
+    const pool = poolP();
+    const compute = {
+      ...bareCompute({ geocode: { scoped: 120, updated: 90 }, backfill_geom: { scoped: 40, updated: 35 } }),
+      myPostPhase: async () => ({
+        matched: { newly_geocoded: 77, zombies_cleaned: 4 },
+        compute: { total_permits_scanned: 254082, records_new_aggregate: 0, records_updated_aggregate: 77 },
+      }),
+    };
+    const d = baseDescriptor() as unknown as Record<string, unknown>;
+    (d.execution as Record<string, unknown>).enrich_hooks = { post_phase: 'myPostPhase' };
+    const res = await stepLib.runEnrichPhase(argsP(d, pool, compute) as never) as { matched: Record<string, unknown> };
+
+    // THE POINT OF THE ROW: a second ENRICHER's own key reaches `matched`, so
+    // `counters.records_total.source: "matched.newly_geocoded"` resolves to 77
+    // instead of null forever.
+    expect(res.matched.newly_geocoded).toBe(77);
+    expect(res.matched.zombies_cleaned).toBe(4);
+    expect(res.matched.compute).toEqual({ total_permits_scanned: 254082, records_new_aggregate: 0, records_updated_aggregate: 77 });
+    // The step's own vocabulary survives — the runner does not mint `records_scanned_aggregate`
+    // over the top of a block the step declared.
+    expect(Object.keys(res.matched.compute as object)).not.toContain('records_scanned_aggregate');
+  });
+
+  it('M1c — a hook that returns `matched` but NO `compute` still gets a derived, finite aggregate', async () => {
+    const pool = poolP();
+    const compute = {
+      ...bareCompute({ geocode: { scoped: 10, updated: 6 }, backfill_geom: { updated: 2 } }),
+      myPostPhase: async () => ({ matched: { newly_geocoded: 6 } }),
+    };
+    const d = baseDescriptor() as unknown as Record<string, unknown>;
+    (d.execution as Record<string, unknown>).enrich_hooks = { post_phase: 'myPostPhase' };
+    const res = await stepLib.runEnrichPhase(argsP(d, pool, compute) as never) as { matched: Record<string, unknown> };
+    expect(res.matched.newly_geocoded).toBe(6);
+    expect(res.matched.compute).toEqual({ records_scanned_aggregate: 12, records_new_aggregate: 0, records_updated_aggregate: 8 });
+  });
+
+  it('M1d — the derived aggregate sums the DECLARED-phase targets only, so a class-based stamp target cannot double-count rows its own phases already reported', async () => {
+    // Output-panel Integration seat, 2026-09-16. `enrich_parcels` declares SEVEN write
+    // targets but only FIVE are named by an `execution.phases[].writes_ref`; the two
+    // class-based ones are filled AFTER the phase loop by the runner's own stampsIdx /
+    // scopeIdx blocks, and the stamp target's `updated` is `zoning.updated +
+    // max_build.updated` — rows already counted on those two phases' own targets. Summing
+    // every declared write would double-count them under the SAME key name a hook fills
+    // with a distinct-id UNION: one key, two semantics. RED before the fix: 90 + 35 + 125
+    // = 250 updated (the stamp target counted twice).
+    const pool = poolP();
+    const d = baseDescriptor() as unknown as Record<string, unknown>;
+    (d.outputs as { writes: unknown[] }).writes.push({ table: 'fixture_stamp', key: 'id', write_discipline: { class: 'set_based_scoped' } });
+    const ph = (d.execution as { phases: Array<{ name: string }> }).phases;
+    ph[0]!.name = 'zoning';
+    ph[1]!.name = 'max_build';
+    const res = await stepLib.runEnrichPhase(argsP(d, pool, bareCompute({
+      // the stampsIdx block reads these two LITERAL pass names (the narrowed, filed residue),
+      // so name the passes accordingly to make the target non-zero and the hazard reachable.
+      zoning: { scoped: 120, updated: 90 },
+      max_build: { scoped: 40, updated: 35 },
+    }, undefined, ['zoning', 'max_build'])) as never) as {
+      matched: Record<string, unknown>; written: Record<string, { updated: number }>;
+    };
+    // The stamp target IS filled — the runner-owned block still runs, unchanged …
+    const stampKey = Object.keys(res.written).filter((k) => /^e\d+$/.test(k)).sort()[2]!;
+    expect(res.written[stampKey]!.updated, 'stampsIdx still fills the class-based target').toBe(125);
+    // … and it is EXCLUDED from the aggregate, because no phase declares it.
+    expect(res.matched.compute).toEqual({ records_scanned_aggregate: 160, records_new_aggregate: 0, records_updated_aggregate: 125 });
+  });
+
+  it('M2 — a DECLARED-but-not-exported post_phase is a NAMED throw raised BEFORE the first phase, never a TypeError after COMMIT', async () => {
+    const pool = poolP();
+    const passLog: string[] = [];
+    const d = baseDescriptor() as unknown as Record<string, unknown>;
+    (d.execution as Record<string, unknown>).enrich_hooks = { post_phase: 'computeNoSuchThing' };
+    await expect(stepLib.runEnrichPhase(argsP(d, pool, bareCompute({}, passLog)) as never))
+      .rejects.toThrow(/execution\.enrich_hooks\.post_phase names "computeNoSuchThing"[\s\S]*does not export/);
+    // The half that makes it a fix rather than a rename: NOTHING ran.
+    expect(passLog, 'the throw must land before the first phase, not after the transaction has committed').toEqual([]);
+    expect(pool.sql.some((t) => /BEGIN/i.test(t)), 'no transaction was opened').toBe(false);
+  });
+
+  it('M2b — the literal "none", like an omitted field, disables the hook rather than naming an export', async () => {
+    const pool = poolP();
+    const d = baseDescriptor() as unknown as Record<string, unknown>;
+    (d.execution as Record<string, unknown>).enrich_hooks = { post_phase: 'none' };
+    const res = await stepLib.runEnrichPhase(argsP(d, pool, bareCompute({ geocode: { updated: 1 } })) as never) as { matched: Record<string, unknown> };
+    expect((res.matched.compute as Record<string, number>).records_updated_aggregate).toBe(1);
+  });
+
+  it('M3 — a hook returning a RUNNER-OWNED key is a named throw, never a silent overwrite in either direction', async () => {
+    for (const key of ['passes', 'compute', 'before_image', 'fixture_post_phase_duration_ms', 'scope_retired_rows']) {
+      const pool = poolP();
+      const compute = {
+        ...bareCompute({ geocode: { updated: 1 } }),
+        myPostPhase: async () => ({ matched: { [key]: 'hijacked' } }),
+      };
+      const d = baseDescriptor() as unknown as Record<string, unknown>;
+      (d.execution as Record<string, unknown>).enrich_hooks = { post_phase: 'myPostPhase' };
+      await expect(stepLib.runEnrichPhase(argsP(d, pool, compute) as never), `"${key}" is runner-owned`)
+        .rejects.toThrow(new RegExp(`returned the key "${key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}", which the RUNNER owns`));
+    }
+  });
+
+  it('M4 — a non-finite value anywhere in the hook\'s `compute` block is a named throw, not a counter that silently resolves to null', async () => {
+    for (const bad of [undefined, null, NaN, '77', Infinity]) {
+      const pool = poolP();
+      const compute = {
+        ...bareCompute({ geocode: { updated: 1 } }),
+        myPostPhase: async () => ({ compute: { records_updated_aggregate: bad } }),
+      };
+      const d = baseDescriptor() as unknown as Record<string, unknown>;
+      (d.execution as Record<string, unknown>).enrich_hooks = { post_phase: 'myPostPhase' };
+      await expect(stepLib.runEnrichPhase(argsP(d, pool, compute) as never), `${String(bad)} is not a finite number`)
+        .rejects.toThrow(/returned compute\.records_updated_aggregate = .*which is not a finite number/);
+    }
+  });
+
+  it('M4b — a hook returning a non-object, or a non-object `matched`/`compute`, is a named throw', async () => {
+    const cases: Array<[unknown, RegExp]> = [
+      [[1, 2], /returned an array[\s\S]*plain object/],
+      ['nope', /returned "nope"[\s\S]*plain object/],
+      [{ matched: [1] }, /`matched` that is not a plain object[\s\S]*an array/],
+      [{ compute: 5 }, /`compute` block that is not a plain object/],
+    ];
+    for (const [ret, re] of cases) {
+      const pool = poolP();
+      const compute = { ...bareCompute({ geocode: { updated: 1 } }), myPostPhase: async () => ret };
+      const d = baseDescriptor() as unknown as Record<string, unknown>;
+      (d.execution as Record<string, unknown>).enrich_hooks = { post_phase: 'myPostPhase' };
+      await expect(stepLib.runEnrichPhase(argsP(d, pool, compute) as never), String(JSON.stringify(ret))).rejects.toThrow(re);
+    }
+  });
+
+  it('M6 — the four `scope_*` retirement keys are gated on the DECLARED scope-ledger write class, not emitted as four permanent nulls', async () => {
+    // (a) no `insert_only_no_retraction` target ⇒ the keys are ABSENT, not null.
+    const poolA = poolP();
+    const resA = await stepLib.runEnrichPhase(argsP(baseDescriptor(), poolA, bareCompute({ geocode: { updated: 1 } })) as never) as { matched: Record<string, unknown> };
+    for (const k of ['scope_backlog_at_step_start', 'scope_retired_rows', 'scope_retired_cohorts', 'scope_retire_window']) {
+      expect(Object.keys(resA.matched), `${k} describes a mechanism this step does not have`).not.toContain(k);
+    }
+
+    // (b) declare one ⇒ all four are present, carrying the retirement's own numbers.
+    // NOTE (filed, not fixed here): the retention window is still read from the
+    // HARDCODED key `config.enrich_parcels_scope_retire_after_hours` — the same
+    // Rule-3 class 0.10 retired for the heartbeat and the lock timeout, surviving
+    // here because `hasScopeLedger` gates it and `enrich_parcels` is the only step
+    // that has ever declared that write class.
+    const poolB = poolP();
+    const d = baseDescriptor() as unknown as Record<string, unknown>;
+    (d.outputs as { writes: unknown[] }).writes.push({ table: 'fixture_scope', key: 'id', write_discipline: { class: 'insert_only_no_retraction' } });
+    const compute = {
+      ...bareCompute({ geocode: { updated: 1 } }),
+      retireStaleScope: async () => ({ backlog_rows: 8, backlog_cohorts: 2, retired_rows: 5, retired_cohorts: 1, retire_after_hours: 24, cutoff_at: new Date('2026-09-14T00:00:00.000Z') }),
+    };
+    const resB = await stepLib.runEnrichPhase(argsP(d, poolB, compute, { enrich_parcels_scope_retire_after_hours: 24 }) as never) as { matched: Record<string, unknown> };
+    expect(resB.matched.scope_backlog_at_step_start).toBe(8);
+    expect(resB.matched.scope_retired_rows).toBe(5);
+    expect(resB.matched.scope_retired_cohorts).toBe(1);
+    expect(resB.matched.scope_retire_window).toEqual({ hours: 24, cutoff_at: new Date('2026-09-14T00:00:00.000Z') });
+  });
+});
+

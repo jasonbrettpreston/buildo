@@ -425,7 +425,8 @@
     "lock_timeout_ms_from_config": "enrich_parcels_lock_timeout_ms",
     "enrich_hooks": {
       "contract_read": "readZoningContract",
-      "defer_scope": { "export": "computeDeferScope", "threshold_from_config": "enrich_parcels_defer_threshold_rows" }
+      "defer_scope": { "export": "computeDeferScope", "threshold_from_config": "enrich_parcels_defer_threshold_rows" },
+      "post_phase": "computePostPhase"
     },
     "phases": [
       { "name": "zoning", "order": 1, "txn": "shared", "writes_ref": 0, "scope": "incremental", "invalidator_ref": 1, "timeout_minutes_from_config": "enrich_parcels_pass_statement_timeout_minutes" },

@@ -153,7 +153,7 @@ Total items: **123**
 | `POST-B1-15` | 122 §5.2 | Source-text test debt retired: 53 files / 85 readFileSync(scripts/*.js) assertions → descriptor/behaviour assertions; fleet counts derived from converted.json, never retyped (Spec 124 R-AN) | ⬜ NOT_STARTED | wf: wf: source-text test debt (POST-B1-15) | — | 2026-09-15 |
 | `SPECTBL-1` | 43 §2 / 42 §2 / 41 §2 | Chain-spec Step Breakdown tables reconciled to manifest.chains + drift-locked | ✅ BUILT | wf: wf: chain-spec step tables (SPECTBL-1) | — | 2026-09-15 |
 | `SPECTBL-GEN` | 122 batch-2 amendment item 5 | Step Breakdown tables generated rather than hand-authored | ⬜ NOT_STARTED | followup: .cursor/batch2_c5_active_task.md §Proposed policy amendments item 5 (batch-2 row 0.8) | — | 2026-09-15 |
-| `ENR-1` | 122 §1.10 | runEnrichPhase is a GENERIC ENRICHER runner, not enrich_parcels with a front door | ✅ BUILT | followup: docs/reports/review_followups.md - WF2 batch-2 Phase 0.10 section, the matched-telemetry MED row | — | 2026-09-15 |
+| `ENR-1` | 122 §1.10 | runEnrichPhase is a GENERIC ENRICHER runner, not enrich_parcels with a front door | ✅ BUILT | followup: docs/reports/review_followups.md - WF2 batch-2 Phase 0.10b section, the class-based-target MED row (the 0.10 matched-telemetry MED row it supersedes is CLOSED) | — | 2026-09-16 |
 
 ---
 

@@ -2,7 +2,7 @@
 <!-- Source of truth: scripts/steps/_schema/step.schema.json (operator ruling R2). -->
 <!-- Regenerate: node scripts/violations/schema-to-vocab.mjs docs/reports/generated/122-vocabulary.md -->
 
-# The step contract — 20 categories, 457 declarable fields
+# The step contract — 20 categories, 458 declarable fields
 
 **Contract version 1 · status `v0-unfrozen-until-C3`.** The schema is canonical; this document is generated from it. Editing this file changes nothing.
 
@@ -19,7 +19,7 @@
 | 3 | `outputs` | 93 | 25 | 2 |
 | 4 | `staleness` | 25 | 7 | 0 |
 | 5 | `guards` | 21 | 7 | 0 |
-| 6 | `execution` | 67 | 15 | 1 |
+| 6 | `execution` | 68 | 15 | 1 |
 | 7 | `checks` | 31 | 6 | 0 |
 | 8 | `invariants` | 33 | 6 | 0 |
 | 9 | `plausibility` | 36 | 7 | 0 |
@@ -359,11 +359,12 @@ Grandfathered, never legal for a new step: an existing step must be able to decl
 | `batch` | `none` \| integer >= 1 | † |
 | `heartbeat_minutes_from_config` | string | — |
 | `lock_timeout_ms_from_config` | string | — |
-| `enrich_hooks` | object {contract_read, defer_scope} | — |
+| `enrich_hooks` | object {contract_read, defer_scope, post_phase} | — |
 | `enrich_hooks.contract_read` | string | — |
 | `enrich_hooks.defer_scope` | object {export, threshold_from_config} | — |
 | `enrich_hooks.defer_scope.export` | string | † |
 | `enrich_hooks.defer_scope.threshold_from_config` | string | † |
+| `enrich_hooks.post_phase` | string | — |
 | `batch_size_from_config` | string | — |
 | `needs_disk_mb` | `none` \| integer >= 1 | † |
 | `partial_fill` | `atomic` · `batched` · `staged` · `mixed` · `none` | † ! |

@@ -2633,6 +2633,100 @@ async function* streamOverClient(client, sql, params = [], options = {}) {
 }
 
 /**
+ * `matched.compute` — the DECLARED counter-source root for an ENRICHER (batch-2 Phase 0.10b).
+ *
+ * `counters.<slot>.source: "compute.<name>"` resolves against this block, so a value that is
+ * absent or non-finite makes the counter read as "not counted" rather than as the number it
+ * is: NULL is not zero (Spec 48 §3.6), and a declared counter that can only ever resolve to
+ * null is a measurement nobody takes (Spec 79 C11).
+ *
+ * A `post_phase` hook that returns its own `compute` block owns it ENTIRELY — including the
+ * KEY NAMES, because `total_parcels_scanned` is `enrich_parcels` vocabulary and a generic
+ * runner has no business minting a name for a step it knows nothing about. Every value is
+ * checked FINITE, not merely present.
+ *
+ * A step with no hook, or a hook that returns no `compute`, gets the block DERIVED from the
+ * declared per-target `written[]` counters the phase loop has just folded.
+ *
+ * ⚠️ The sum runs over the DISTINCT `execution.phases[].writes_ref` set — the targets a phase
+ * actually DECLARES — not over every `outputs.writes[]` entry, and the difference is a real
+ * defect rather than a nicety (output-panel Integration seat, 2026-09-16). The two CLASS-BASED
+ * targets (`set_based_scoped`, `insert_only_no_retraction`) are filled AFTER the phase loop by
+ * the runner's own `stampsIdx`/`scopeIdx` blocks, and the stamp target's `updated` is
+ * `zoning.updated + max_build.updated` — rows ALREADY counted on those two phases' own targets.
+ * Summing every declared write would therefore double-count them, under the SAME key name
+ * (`records_updated_aggregate`) a hook fills with a distinct-id UNION — one key, two semantics,
+ * selected by whether a hook happens to be declared. That is a §11 counter-semantics collision,
+ * so the derivation takes the declared-phase set and says so here.
+ *
+ * Derived rather than left absent on purpose: the fallback exists so a counter source can never
+ * resolve to null BY ACCIDENT, which is exactly how this region failed before 0.10b.
+ *
+ * ⚠️ AND KNOW WHICH ROOT ACTUALLY RESOLVES. `counters.<slot>.source` resolves against
+ * `{matched, written, records_meta}` for this shape, so `matched.compute.records_updated_aggregate`
+ * and `written.e<N>.updated` BOTH resolve (measured), while a bare `compute.*` resolves NULL for
+ * EVERY ENRICHER — `enrich_parcels` included, whose own three declared counters have read null
+ * since conversion for exactly this reason (filed HIGH, deliberately not fixed in 0.10b because
+ * fixing it moves the emitted summary). Declare `matched.compute.*` or `written.*`, never a bare
+ * `compute.*`, until that filing closes.
+ */
+function resolveEnrichAggregate(postPhase, written, phases, specs, tag) {
+  if (postPhase.compute !== undefined) {
+    const block = postPhase.compute;
+    if (block === null || typeof block !== 'object' || Array.isArray(block)) {
+      throw new Error(
+        `${tag} execution.enrich_hooks.post_phase returned a \`compute\` block that is not a plain object `
+        + `(${Array.isArray(block) ? 'an array' : JSON.stringify(block)}). It is the root every `
+        + '`counters.<slot>.source: "compute.*"` declaration resolves against.',
+      );
+    }
+    for (const [k, v] of Object.entries(block)) {
+      if (!Number.isFinite(v)) {
+        throw new Error(
+          `${tag} execution.enrich_hooks.post_phase returned compute.${k} = ${JSON.stringify(v)}, which is not a `
+          + 'finite number. A counter whose declared source resolves to a non-number reads as "not counted" rather '
+          + 'than as the number it is (Spec 48 §3.6) — report a real measurement, or do not declare the key.',
+        );
+      }
+    }
+    return block;
+  }
+  let scanned = 0;
+  let inserted = 0;
+  let updated = 0;
+  const declaredRefs = [...new Set((phases || []).map((p) => p.writes_ref))].sort((a, b) => a - b);
+  for (const i of declaredRefs) {
+    const key = write.targetKey(i);
+    const c = written[key];
+    if (!c) {
+      throw new Error(
+        `${tag} cannot derive matched.compute: execution.phases[] declares writes_ref ${i}, which has no counter `
+        + `block at written.${key} (this descriptor declares ${specs.length} write target(s)). The runner builds `
+        + 'one per declared target before the phases run, so this is a library invariant break.',
+      );
+    }
+    scanned += c.scanned || 0;
+    inserted += c.inserted || 0;
+    updated += c.updated || 0;
+  }
+  const derived = {
+    records_scanned_aggregate: scanned,
+    records_new_aggregate: inserted,
+    records_updated_aggregate: updated,
+  };
+  for (const [k, v] of Object.entries(derived)) {
+    if (!Number.isFinite(v)) {
+      throw new Error(
+        `${tag} derived matched.compute.${k} is ${JSON.stringify(v)}, not a finite number — a per-target counter `
+        + 'carried a non-numeric value into the aggregate. Fail loud rather than emit a counter source that '
+        + 'silently resolves to null (Spec 48 §3.6).',
+      );
+    }
+  }
+  return derived;
+}
+
+/**
  * THE ENRICH PHASE (LG-28, ENRICHER pilot 9, `enrich_parcels`, `execution.shape:"enrich"`,
  * Ask 1/Ask 2 RULING).
  *
@@ -2671,8 +2765,15 @@ async function* streamOverClient(client, sql, params = [], options = {}) {
  *                                 above) — Spec 78 §P3A.1's "a same-txn read would be
  *                                 invisible" guarantee, declared as this step's one
  *                                 `pre_write` `order_guarantee`
- *   STEP-LEVEL POST CHECKS        `zone_class_pct` / `opt_aor_without_max_gfa` — read
- *                                 the now-fully-committed `parcels` table on `pool`
+ *   STEP-LEVEL POST PHASE         `execution.enrich_hooks.post_phase` (batch-2 Phase
+ *                                 0.10b) — the STEP's own compute export, called ONCE on
+ *                                 `pool` after the last phase has committed, returning
+ *                                 `{matched, compute}`. This runner owns `passes`,
+ *                                 `before_image`, `<slug>_duration_ms` and the four
+ *                                 `scope_*` retirement keys, and NOTHING else; every
+ *                                 domain observation is the step's. No hook ⇒ the
+ *                                 `compute` aggregate block is DERIVED from the declared
+ *                                 per-target counters, finite-or-throw, never left null
  *
  * @returns {Promise<object>} `{deferred, matched, written, prior, overrides, writeSkipped, skipped}`
  */
@@ -2722,6 +2823,18 @@ async function runEnrichPhase({ descriptor, pool, compute, config, chainId, log,
     }
     return fn;
   };
+
+  // batch-2 Phase 0.10b — the POST-phase hook is RESOLVED HERE, beside its two siblings,
+  // and CALLED at the very end of the run. That split IS the row. Until 0.10b the
+  // post-phase region called `compute.computeAggregateRecordsUpdated(...)` with no guard at
+  // all — unlike `contract_read`/`defer_scope`, which do guard — so an ENRICHER whose
+  // compute lacks that export died at `TypeError: compute.computeAggregateRecordsUpdated is
+  // not a function` AFTER every pass had run and, on a shared-txn step, AFTER COMMIT. That
+  // is the worst place in the whole runner to fail. Resolving the NAME above the work makes
+  // a mis-declared hook a named throw before anything happens; guarding it lazily at the
+  // call site would only have moved the crash a few lines.
+  const postPhaseHook = hooks.post_phase && hooks.post_phase !== 'none' ? hooks.post_phase : null;
+  const postPhaseFn = postPhaseHook ? resolveHook(postPhaseHook, 'execution.enrich_hooks.post_phase') : null;
 
   // ── Spec 58 §9/§11 consumer protocol — HALTS on a missing/failed producer ────
   const contractHook = hooks.contract_read && hooks.contract_read !== 'none' ? hooks.contract_read : null;
@@ -3427,80 +3540,102 @@ async function runEnrichPhase({ descriptor, pool, compute, config, chainId, log,
     else throw err;
   }
 
-  // ── STEP-LEVEL POST CHECKS — the fully-committed parcels table, on `pool` ──
-  const totalParcels = await pool.query('SELECT COUNT(*)::int AS n FROM parcels WHERE geom IS NOT NULL').then((r) => r.rows[0].n);
-  const withZone = await pool.query('SELECT COUNT(*)::int AS n FROM parcels WHERE zoning_class IS NOT NULL').then((r) => r.rows[0].n);
-  const zonePct = totalParcels ? Math.round((1000 * withZone) / totalParcels) / 10 : 0;
-  const optAorWithoutMaxGfa = await pool.query(
-    'SELECT COUNT(*)::int AS n FROM parcels WHERE opt_aor_gfa_sqm IS NOT NULL AND max_buildable_gfa_sqm IS NULL',
-  ).then((r) => r.rows[0].n);
+  // ── STEP-LEVEL POST PHASE — the fully-committed tables, on `pool` ─────────
+  //
+  // batch-2 Phase 0.10b. Everything between here and the `matched` assembly used to be
+  // ~80 lines of `enrich_parcels`: three unconditional `SELECT COUNT(*) … FROM parcels`
+  // queries every ENRICHER paid for and only one could use, five pass-result lookups by
+  // LITERAL pass name (a step whose passes are named anything else got five `{}`s and a
+  // row of zeros), a hand-written ~30-key `matched` literal with no per-step contribution
+  // seam, and an UNGUARDED `compute.computeAggregateRecordsUpdated(...)`. 0.10 generalised
+  // the PRE-phase hooks, the write seams and the per-target counters; this completes the
+  // same job for the post-phase, by the same mechanism — a DECLARED, optional compute
+  // export — rather than by a second, differently-shaped one.
+  //
+  // Called HERE, outside the try/catch above, on purpose and unchanged from the retired
+  // code's position: a phase-deadline abort falls THROUGH to this point so the audit table
+  // is still BUILT over whatever passes committed before it.
+  //
+  // ⚠️ HONEST LIMIT ON THE FIX (output-panel Observability seat, 2026-09-16, MED — stated
+  // rather than glossed). Resolving the hook NAME above the phases fixes the failure mode
+  // that actually bit: a mis-DECLARED hook now throws before any work. But the three
+  // SHAPE validations below — reserved-key collision, non-object return, non-finite
+  // `compute.*` — can only fire once the hook has RUN, which is here, after COMMIT. They
+  // are three NEW failure surfaces this row introduces (no validation of a hook's return
+  // value existed before it), and a raw throw from this position inherits the library's
+  // DECLARED GAP: `runWithPool` never assigns `recordsMeta` on that path, so the ledger
+  // row carries `status='failed'` + `error_message` and ZERO audit rows — unlike the two
+  // purpose-built post-commit precedents beside it (`phaseDeadlineRows`,
+  // `scopeRetireFailureRows`), which synthesize a row precisely so an operator can read
+  // one. That gap is archetype-generic, accepted and pinned
+  // (`src/tests/step-library.logic.test.ts` — "DECLARED GAP: a raw compute throw emits
+  // ZERO audit rows"), so it is not widened here; but it is not closed here either, and a
+  // hook author should know that a malformed return costs the run its audit table.
+  const postPhase = postPhaseFn
+    ? await postPhaseFn(pool, { passRaw, specs, full, runAt, config, descriptor, staleOverlays })
+    : {};
+  if (postPhase === null || typeof postPhase !== 'object' || Array.isArray(postPhase)) {
+    throw new Error(
+      `${tag} execution.enrich_hooks.post_phase ("${postPhaseHook}") returned `
+      + `${Array.isArray(postPhase) ? 'an array' : JSON.stringify(postPhase)}. The contract is a plain object `
+      + '`{matched?, compute?}`; anything else has no declared meaning (Rule 1).',
+    );
+  }
 
-  const zoning = passRaw.zoning || {};
-  const maxBuild = passRaw.max_build || {};
-  const existing = passRaw.existing_structure || {};
-  const comps = passRaw.comparable_builds || {};
-  const optCfg = passRaw.optimal_config || {};
-  const genuineIds = optCfg.genuineIds ? [...optCfg.genuineIds] : [];
+  // The RUNNER owns these keys and ONLY these. A hook returning one of them would either be
+  // silently overwritten or silently overwrite the runner, and both are a declaration that
+  // lies — so a collision THROWS, naming the key, rather than picking a winner in silence.
+  const runnerOwnedMatchedKeys = new Set([
+    'passes', 'compute', 'before_image', `${descriptor.identity.name}_duration_ms`,
+    'scope_backlog_at_step_start', 'scope_retired_rows', 'scope_retired_cohorts', 'scope_retire_window',
+  ]);
+  const hookMatched = postPhase.matched === undefined ? {} : postPhase.matched;
+  if (hookMatched === null || typeof hookMatched !== 'object' || Array.isArray(hookMatched)) {
+    throw new Error(
+      `${tag} execution.enrich_hooks.post_phase returned a \`matched\` that is not a plain object `
+      + `(${Array.isArray(hookMatched) ? 'an array' : JSON.stringify(hookMatched)}).`,
+    );
+  }
+  for (const k of Object.keys(hookMatched)) {
+    if (runnerOwnedMatchedKeys.has(k)) {
+      throw new Error(
+        `${tag} execution.enrich_hooks.post_phase returned the key "${k}", which the RUNNER owns and fills `
+        + 'itself. A step cannot contribute a runner-owned observation and the runner must not silently '
+        + 'discard one a step reported (Rule 1) — rename the key.',
+      );
+    }
+  }
 
   const matched = {
-    zone_class_pct: zonePct,
-    opt_config_engine_errors: optCfg.errors || 0,
-    opt_aor_without_max_gfa: optAorWithoutMaxGfa,
-    parcels_enriched_count: zoning.updated || 0,
-    parcels_ambiguous_zone_count: { ambiguous: zoning.ambiguous || 0, scoped: zoning.scoped || 0 },
-    zoning_fsi_source_nulled_count: zoning.fsiSourceNulled || 0,
-    max_build_enriched_count: maxBuild.updated || 0,
-    massing_zero_link_ghost: maxBuild.zero_link_ghost_cnt || 0,
-    max_build_coverage_defaulted_count: maxBuild.coverage_defaulted_cnt || 0,
-    max_build_box_excluded_count: maxBuild.box_excluded_cnt || 0,
-    heritage_mislink_footprint_count: maxBuild.heritage_mislink_cnt || 0,
-    ravine_constrained_count: maxBuild.ravine_constrained_cnt || 0,
-    existing_structure_enriched_count: existing.updated || 0,
-    existing_mislinked_footprint_count: existing.mislinked || 0,
-    scenario_enriched_count: existing.scenarioUpdated || 0,
-    comp_candidate_pool: comps.candidates || 0,
-    comparable_builds_enriched_count: comps.updated || 0,
-    comp_zero_comps_count: comps.zero_comps || 0,
-    optimal_config_enriched_count: optCfg.updated || 0,
-    opt_aor_envelope_capped_count: optCfg.envelope_capped || 0,
-    opt_config_citywide_fallback_count: optCfg.citywide || 0,
+    ...hookMatched,
     // batch-2 Phase 0.10 — derived from identity.name, never the literal slug (the
     // defer-return above does the same). Byte-identical for `enrich_parcels`.
     [`${descriptor.identity.name}_duration_ms`]: Date.now() - t0,
-    // EP-PASS3-BACKLOG (WF3 C1, 2026-09-15) — the step-start retirement, made LOUD. A DELETE
-    // of 443,023 rows that no row records is invisible (Spec 48 §3.6). The three counters
-    // reconcile by construction: `retired + surviving = scope_backlog_at_step_start`, and
-    // `pending_scope_parcels` below (observed at pass-5 start, AFTER this retirement) is the
-    // surviving half — a retirement that does not reconcile against it is a defect.
-    scope_backlog_at_step_start: scopeRetire.backlog_rows,
-    scope_retired_rows: scopeRetire.retired_rows,
-    scope_retired_cohorts: scopeRetire.retired_cohorts,
+    passes: passRaw,
+  };
+
+  // EP-PASS3-BACKLOG (WF3 C1, 2026-09-15) — the step-start retirement, made LOUD. A DELETE
+  // of 443,023 rows that no row records is invisible (Spec 48 §3.6). The three counters
+  // reconcile by construction: `retired + surviving = scope_backlog_at_step_start`, and
+  // `pending_scope_parcels` — which `execution.enrich_hooks.post_phase` now contributes,
+  // observed at pass-5 start, AFTER this retirement — is the surviving half; a retirement
+  // that does not reconcile against it is a defect.
+  //
+  // 0.10b — gated on `hasScopeLedger`, the SAME declared write-class predicate that gates
+  // the retirement itself (above). `enrich_parcels` declares that target, so all four keys
+  // and all four values are unchanged, INCLUDING the failure path where every one of them
+  // is deliberately NULL rather than 0. A step with no scope ledger stops emitting four
+  // permanent nulls for a mechanism it does not have.
+  if (hasScopeLedger) {
+    matched.scope_backlog_at_step_start = scopeRetire.backlog_rows;
+    matched.scope_retired_rows = scopeRetire.retired_rows;
+    matched.scope_retired_cohorts = scopeRetire.retired_cohorts;
     // Observability fold — the WINDOW travels WITH the count, so a reader of the audit
     // table alone can tell a 0 that means "nothing was old enough" from a 0 that means
     // "the window is misconfigured". Both halves are DB-derived (the cutoff is computed
     // in the retirement's own SQL from the injected clock), never re-derived here.
-    scope_retire_window: { hours: scopeRetire.retire_after_hours, cutoff_at: scopeRetire.cutoff_at },
-    // EP-D14 (WF3 C1) — observability for the set-based/batched D4' recovery rewrite.
-    pending_scope_parcels: optCfg.pending_scope_count || 0,
-    scope_recovery_recovered_count: optCfg.scope_recovery_recovered_count || 0,
-    scope_recovery_batches: optCfg.scope_recovery_batches || 0,
-    scope_stamped_without_recompute_count: optCfg.scope_stamped_without_recompute_count || 0,
-    passes: passRaw,
-    // D#5 — the honest aggregate, computed by compute's own pure helper (never
-    // re-derived here) — feeds counters.records_updated via config.counters'
-    // "compute.records_updated_aggregate" source.
-    compute: {
-      total_parcels_scanned: totalParcels,
-      records_new_aggregate: 0,
-      records_updated_aggregate: compute.computeAggregateRecordsUpdated({
-        zoningIds: zoning.updatedIds,
-        maxBuildIds: maxBuild.updatedIds,
-        existingIds: existing.updatedIds,
-        scenarioIds: existing.scenarioUpdatedIds,
-        optConfigGenuineIds: genuineIds,
-      }),
-    },
-  };
+    matched.scope_retire_window = { hours: scopeRetire.retire_after_hours, cutoff_at: scopeRetire.cutoff_at };
+  }
 
   // batch-2 Phase 0.10 — the before-image artifacts the class-O seam persisted, if
   // any. Added ONLY when non-empty, on purpose: a step that retracts nothing (every
@@ -3554,6 +3689,18 @@ async function runEnrichPhase({ descriptor, pool, compute, config, chainId, log,
     written[key].updated += passUpdated;
     written[key].rows_changed += passUpdated;
   }
+  // ⚠️ RESIDUE, NARROWED AND NAMED (batch-2 Phase 0.10b). The two CLASS-BASED targets
+  // below are declared by NO `execution.phases[]` entry — nothing names a `writes_ref` for
+  // them — so the declaration-driven loop above structurally cannot reach them, and the two
+  // literal `enrich_parcels` pass names they need survive here. 0.10 retired fifteen such
+  // hardcoded assignments and 0.10b retired the five pass-name lookups in the `matched`
+  // build; these two are what is left, and they are stated rather than hidden. The honest
+  // fix is a declared "which passes feed this class-based target" source in the descriptor,
+  // which is its own schema field and its own re-freeze — filed MED, not smuggled in here.
+  // For a step that declares neither class both blocks are skipped entirely (`findIndex`
+  // returns -1), so this residue costs a non-`enrich_parcels` ENRICHER nothing.
+  const zoning = passRaw.zoning || {};
+  const maxBuild = passRaw.max_build || {};
   const stampsIdx = specs.findIndex((s) => s.write_discipline.class === 'set_based_scoped');
   if (stampsIdx >= 0) {
     written[write.targetKey(stampsIdx)].updated = (zoning.updated || 0) + (maxBuild.updated || 0);
@@ -3564,6 +3711,22 @@ async function runEnrichPhase({ descriptor, pool, compute, config, chainId, log,
     written[write.targetKey(scopeIdx)].inserted = scopeInsertCount;
     written[write.targetKey(scopeIdx)].rows_changed = scopeInsertCount;
   }
+
+  // ── `matched.compute` — THE DECLARED COUNTER-SOURCE ROOT ──────────────────
+  // Assigned HERE, after the per-target fold above, because the derived arm reads the
+  // numbers that fold produces. See resolveEnrichAggregate for the contract; the short
+  // version is that on THIS path the block is never absent and never carries a non-finite
+  // value, because a counter whose declared source resolves to nothing reads as "not
+  // counted" rather than as the number it is (Spec 48 §3.6, Spec 79 C11).
+  //
+  // "THIS path" is meant literally (output-panel Integration seat, 2026-09-16): the four
+  // EARLY returns above — scope-defer, pre-write-gate abort, shared-txn lock denied,
+  // post_commit lock denied — return a `matched` with no `compute` block at all, so their
+  // counters resolve null. That is correct and deliberate: each is a zero-work path where
+  // "not counted" is the honest reading, and adding a block there would move the deferred
+  // return's shape. The guarantee is scoped to the normal completion and the
+  // phase-deadline fall-through, which are the paths that actually did work.
+  matched.compute = resolveEnrichAggregate(postPhase, written, phases, specs, tag);
 
   return {
     deferred: false,

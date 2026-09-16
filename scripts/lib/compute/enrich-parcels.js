@@ -1870,14 +1870,110 @@ function computeAggregateRecordsUpdated({ zoningIds, maxBuildIds, existingIds, s
 }
 
 // ===========================================================================
+// `execution.enrich_hooks.post_phase` — THE STEP-LEVEL POST-PHASE OBSERVATION BLOCK
+// (batch-2 Phase 0.10b).
+//
+// Every line below used to live INSIDE `runEnrichPhase`, where it was the reason that
+// runner was not an ENRICHER runner at all but `enrich_parcels` with a descriptor-shaped
+// front door: three unconditional `SELECT COUNT(*) … FROM parcels` queries that every
+// enrich-shaped step paid for and only this one could use, five pass-result lookups by
+// LITERAL pass name (a step whose passes are named anything else got five `{}`s and a row
+// of zeros), and an UNGUARDED `computeAggregateRecordsUpdated` call that made this file's
+// export MANDATORY for every future ENRICHER — thrown as a `TypeError` after every pass had
+// run and, on a shared-txn step, after COMMIT.
+//
+// Nothing here is new and nothing here is re-derived: every expression is the retired
+// literal's, verbatim, which is what makes `enrich_parcels`' emitted rows and counters
+// byte-identical across this move (Spec 123 §1.1 — the goldens are the proof, not this
+// comment). Rule 2 is respected in the same way `readZoningContract` respects it: this is
+// an OBSERVATION the step declares and the runner calls by name, not a policy the compute
+// invents — the runner still owns `passes`, `before_image`, `<slug>_duration_ms` and the
+// four `scope_*` retirement keys, and refuses to let this function contribute any of them.
+//
+// @param {object} pool - the step's pool, AFTER the last phase has committed
+// @param {{passRaw: object}} ctx - the runner's per-pass result map (plus specs/full/
+//        runAt/config/descriptor/staleOverlays, unused here and deliberately not destructured
+//        so a future field cannot silently become load-bearing)
+// @returns {Promise<{matched: object, compute: object}>}
+// ===========================================================================
+
+async function computePostPhase(pool, { passRaw }) {
+  const totalParcels = await pool.query('SELECT COUNT(*)::int AS n FROM parcels WHERE geom IS NOT NULL').then((r) => r.rows[0].n);
+  const withZone = await pool.query('SELECT COUNT(*)::int AS n FROM parcels WHERE zoning_class IS NOT NULL').then((r) => r.rows[0].n);
+  const zonePct = totalParcels ? Math.round((1000 * withZone) / totalParcels) / 10 : 0;
+  const optAorWithoutMaxGfa = await pool.query(
+    'SELECT COUNT(*)::int AS n FROM parcels WHERE opt_aor_gfa_sqm IS NOT NULL AND max_buildable_gfa_sqm IS NULL',
+  ).then((r) => r.rows[0].n);
+
+  const zoning = passRaw.zoning || {};
+  const maxBuild = passRaw.max_build || {};
+  const existing = passRaw.existing_structure || {};
+  const comps = passRaw.comparable_builds || {};
+  const optCfg = passRaw.optimal_config || {};
+  const genuineIds = optCfg.genuineIds ? [...optCfg.genuineIds] : [];
+
+  return {
+    matched: {
+      zone_class_pct: zonePct,
+      opt_config_engine_errors: optCfg.errors || 0,
+      opt_aor_without_max_gfa: optAorWithoutMaxGfa,
+      parcels_enriched_count: zoning.updated || 0,
+      parcels_ambiguous_zone_count: { ambiguous: zoning.ambiguous || 0, scoped: zoning.scoped || 0 },
+      zoning_fsi_source_nulled_count: zoning.fsiSourceNulled || 0,
+      max_build_enriched_count: maxBuild.updated || 0,
+      massing_zero_link_ghost: maxBuild.zero_link_ghost_cnt || 0,
+      max_build_coverage_defaulted_count: maxBuild.coverage_defaulted_cnt || 0,
+      max_build_box_excluded_count: maxBuild.box_excluded_cnt || 0,
+      heritage_mislink_footprint_count: maxBuild.heritage_mislink_cnt || 0,
+      ravine_constrained_count: maxBuild.ravine_constrained_cnt || 0,
+      existing_structure_enriched_count: existing.updated || 0,
+      existing_mislinked_footprint_count: existing.mislinked || 0,
+      scenario_enriched_count: existing.scenarioUpdated || 0,
+      comp_candidate_pool: comps.candidates || 0,
+      comparable_builds_enriched_count: comps.updated || 0,
+      comp_zero_comps_count: comps.zero_comps || 0,
+      optimal_config_enriched_count: optCfg.updated || 0,
+      opt_aor_envelope_capped_count: optCfg.envelope_capped || 0,
+      opt_config_citywide_fallback_count: optCfg.citywide || 0,
+      // EP-D14 (WF3 C1) — observability for the set-based/batched D4' recovery rewrite.
+      // `pending_scope_parcels` is observed at pass-5 start, AFTER the step-start scope
+      // retirement the RUNNER performs, and is the surviving half of that retirement's
+      // reconciliation (`retired + surviving = scope_backlog_at_step_start`).
+      pending_scope_parcels: optCfg.pending_scope_count || 0,
+      scope_recovery_recovered_count: optCfg.scope_recovery_recovered_count || 0,
+      scope_recovery_batches: optCfg.scope_recovery_batches || 0,
+      scope_stamped_without_recompute_count: optCfg.scope_stamped_without_recompute_count || 0,
+    },
+    // D#5 — the honest aggregate, computed by this module's own pure helper (never
+    // re-derived by the runner) — feeds counters.records_updated via the descriptor's
+    // "compute.records_updated_aggregate" source. `records_new_aggregate` is a literal 0
+    // because this step INSERTs no `parcels` row: every pass is an UPDATE.
+    compute: {
+      total_parcels_scanned: totalParcels,
+      records_new_aggregate: 0,
+      records_updated_aggregate: computeAggregateRecordsUpdated({
+        zoningIds: zoning.updatedIds,
+        maxBuildIds: maxBuild.updatedIds,
+        existingIds: existing.updatedIds,
+        scenarioIds: existing.scenarioUpdatedIds,
+        optConfigGenuineIds: genuineIds,
+      }),
+    },
+  };
+}
+
+// ===========================================================================
 // Checks — one function per declared check, dispatch keys === descriptor.checks[].id, in descriptor
 // order (§5.5 (1)/(4), enforced by src/tests/step-conformance.infra.test.ts's generic compute-pairs
 // corpus scan). Each reads `ctx.matched.<id>` — a flat object the runner assembles, ONE ENTRY PER
 // CHECK ID, from the 5 passes' own returned stats (e.g. `matched.massing_zero_link_ghost =
 // mbResult.zero_link_ghost_cnt`) plus the two step-level queries the legacy main() ran inline
 // (zone_class_pct, opt_aor_without_max_gfa) and the step's own wall-clock duration. This mirrors every
-// other converted step's `ctx.matched` convention (refresh-snapshot.js, link-parcels.js) — the actual
-// assembly is the runner's job (commit 7d), not this file's. These functions ARE the dispatch loop's
+// other converted step's `ctx.matched` convention (refresh-snapshot.js, link-parcels.js). Since
+// batch-2 Phase 0.10b the DOMAIN half of that assembly is THIS file's `computePostPhase`, declared as
+// `execution.enrich_hooks.post_phase` and called once by the runner; the runner still owns `passes`,
+// `before_image`, `<slug>_duration_ms` and the four `scope_*` retirement keys, and refuses a hook that
+// tries to contribute one of them. These functions ARE the dispatch loop's
 // targets: `compute(ctx)` (module.exports, below) iterates `ctx.checks` and calls `CHECKS[id](ctx)` —
 // each function below reports via `ctx.report(id, observation)`, and the runner's generic
 // `scripts/lib/step/verdict.js#deriveVerdict` (Rule 10) does the audit-row/verdict-cascade routing,
@@ -2161,7 +2257,11 @@ async function compute(ctx) {
 // same static properties every other converted compute module attaches (refresh-snapshot.js,
 // link-parcels.js, …) — `runnable.compute` is both called directly (checks dispatch) AND handed
 // into runEnrichPhase as the `compute` arg it reads `.passes[]`/`.readZoningContract`/
-// `.computeDeferScope`/`.computeAggregateRecordsUpdated` off of.
+// `.computeDeferScope`/`.computePostPhase` off of — the last three BY THE NAME THIS STEP'S
+// DESCRIPTOR DECLARES in `execution.enrich_hooks`, never by a literal in the runner
+// (batch-2 Phase 0.10 / 0.10b). `.computeAggregateRecordsUpdated` is no longer read by the
+// runner at all: `.computePostPhase` calls it here, which is what makes it this step's
+// helper rather than a mandatory export for every future ENRICHER.
 module.exports = compute;
 Object.assign(module.exports, {
   compute,
@@ -2216,6 +2316,8 @@ Object.assign(module.exports, {
   computeDeferScope,
   // aggregate
   computeAggregateRecordsUpdated,
+  // post phase (execution.enrich_hooks.post_phase)
+  computePostPhase,
   // dispatch
   passes,
 });
