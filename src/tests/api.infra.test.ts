@@ -644,7 +644,15 @@ describe('Middleware Route Protection', () => {
     expect(verifyAdminSrc).toContain('CI_ADMIN_TOKEN');
   });
 
-  it('admin API routes are protected by middleware classification', async () => {
+  it('admin API routes are CLASSIFIED as admin (labelling only — enforcement is locked by the per-route guard scan below)', async () => {
+    // RENAMED 2026-09-15 (WF3 SEC-1). The old name — "protected by middleware
+    // classification" — asserted a LABEL and read as coverage of the trust
+    // boundary for months while 11 of 29 admin routes had no guard at all.
+    // classifyRoute() returning 'admin' means the path is labelled; the
+    // middleware's admin arm then performs a PRESENCE check only (any
+    // non-empty sb-*-auth-token cookie, or any x-admin-key header VALUE,
+    // passes). Enforcement lives in verifyAdminAuth as the first statement of
+    // every handler — see "Admin route guard is enforced per-route" below.
     const guard = await import('@/lib/auth/route-guard');
     expect(guard.classifyRoute('/api/admin/stats')).toBe('admin');
     expect(guard.classifyRoute('/api/admin/sync')).toBe('admin');
@@ -871,6 +879,428 @@ describe('migration 112 — notification_prefs column repair (P2 regression)', (
     if (!fs.existsSync(migPath)) return;
     const sql = fs.readFileSync(migPath, 'utf-8');
     expect(sql).toMatch(/--\s*ALLOW-DESTRUCTIVE/i);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// WF3 SEC-1 — the trust boundary as a DECLARED, EXECUTABLE property
+// SPEC LINKS: docs/specs/02-web-admin/33_web_admin_engineering_protocol.md §8 + §8.1
+//             docs/specs/00_engineering_standards.md §4.3 (never SELECT *) + §4.4
+//
+// These four locks exist because NOTHING in this suite could turn red on
+// either drift: the pre-existing coverage over these routes asserted route
+// CLASSIFICATION (a label) and file TEXT, never ENFORCEMENT. A missing
+// `verifyAdminAuth`, a missing `writeAdminAudit`, a `SELECT *` on a public
+// route and a write inside a GET were all invisible.
+// ---------------------------------------------------------------------------
+
+/**
+ * Strip `//` and block comments so a source scan reads CODE, not the prose
+ * that explains it — these routes now carry comments quoting the very
+ * `SELECT *` / `reapStaleRunningRows` shapes they retired.
+ */
+function stripComments(src: string): string {
+  return src.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
+}
+
+/** Handler export spans of a route.ts, keyed by HTTP method. */
+function adminHandlerBodies(src: string): Array<{ method: string; body: string }> {
+  const starts: Array<{ method: string; idx: number }> = [];
+  const re = /export\s+const\s+(GET|POST|PUT|PATCH|DELETE)\s*=/g;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(src)) !== null) starts.push({ method: m[1]!, idx: m.index });
+  return starts.map((s, i) => {
+    const end = i + 1 < starts.length ? starts[i + 1]!.idx : src.length;
+    const decl = src.slice(s.idx, end);
+    const braceIdx = decl.indexOf('{', decl.indexOf(')'));
+    return { method: s.method, body: braceIdx === -1 ? decl : decl.slice(braceIdx + 1) };
+  });
+}
+
+/** The first line of real code in a handler body (comments/blank lines skipped). */
+function firstStatementOf(body: string): string {
+  let inBlockComment = false;
+  for (const raw of body.split('\n')) {
+    const line = raw.trim();
+    if (!line) continue;
+    if (inBlockComment) {
+      if (line.includes('*/')) inBlockComment = false;
+      continue;
+    }
+    if (line.startsWith('/*')) {
+      if (!line.includes('*/')) inBlockComment = true;
+      continue;
+    }
+    if (line.startsWith('//')) continue;
+    return line;
+  }
+  return '';
+}
+
+/** Exports whose FIRST statement is not the verifyAdminAuth call. */
+function unguardedExports(src: string, label: string): string[] {
+  return adminHandlerBodies(src)
+    .filter((h) => !/verifyAdminAuth\s*\(/.test(firstStatementOf(h.body)))
+    .map((h) => `${label} ${h.method}`);
+}
+
+describe('Admin route guard is enforced per-route, not by middleware (Spec 33 §8)', () => {
+  const adminApiDir = path.join(__dirname, '../app/api/admin');
+
+  it('every /api/admin/** handler export calls verifyAdminAuth as its FIRST statement', () => {
+    const offenders: string[] = [];
+    for (const file of findRouteFiles(adminApiDir)) {
+      const rel = path.relative(adminApiDir, file).replace(/\\/g, '/');
+      offenders.push(...unguardedExports(fs.readFileSync(file, 'utf-8'), rel));
+    }
+    // Spec 33 §8: "verifyAdminAuth as the FIRST line of every /api/admin/**
+    // handler — per-route guard, NOT middleware (middleware is bypassable)."
+    expect(offenders).toEqual([]);
+  });
+
+  it('no admin route declares a handler as `export async function` — the scans only see `export const`', () => {
+    // BLIND SPOT, closed 2026-09-15 (Code Reviewer fold F2). Both source scans
+    // parse `export const GET = …` spans. Next.js accepts
+    // `export async function GET(…)` equally, and such a handler would be
+    // INVISIBLE to every guard/audit/session-gate assertion above — it would
+    // simply not appear in `adminHandlerBodies`, so an unguarded, unaudited
+    // mutation could ship with all five locks green. Rather than teach the
+    // parser a second shape (two grammars, two chances to drift), the estate
+    // declares ONE: `export const NAME = withApiEnvelope(...)`. This lock is
+    // what makes the other scans' coverage total rather than merely likely.
+    const FUNCTION_DECL = /export\s+(async\s+)?function\s+(GET|POST|PUT|PATCH|DELETE)\s*\(/;
+    const offenders: string[] = [];
+    for (const file of findRouteFiles(adminApiDir)) {
+      const rel = path.relative(adminApiDir, file).replace(/\\/g, '/');
+      const src = stripComments(fs.readFileSync(file, 'utf-8'));
+      const m = FUNCTION_DECL.exec(src);
+      if (m) offenders.push(`${rel} ${m[2]}`);
+    }
+    expect(offenders).toEqual([]);
+  });
+
+  it('INVERSE ARM — that scan catches an `export async function POST(` declaration', () => {
+    // Scratch fixture: the exact shape the estate must not contain. Proves the
+    // assertion above can fail, and that `adminHandlerBodies` is blind to it —
+    // which is precisely why the declaration-shape lock has to exist.
+    const FUNCTION_DECL = /export\s+(async\s+)?function\s+(GET|POST|PUT|PATCH|DELETE)\s*\(/;
+    const fixture = `
+      export async function POST(request: NextRequest) {
+        await pool.query('DELETE FROM everything');
+        return NextResponse.json({ data: null, error: null, meta: null });
+      }
+    `;
+    expect(FUNCTION_DECL.test(stripComments(fixture))).toBe(true);
+    // …and the guard/audit scans genuinely cannot see it (the blind spot).
+    expect(adminHandlerBodies(fixture)).toEqual([]);
+    expect(unguardedExports(fixture, 'fixture/route.ts')).toEqual([]);
+    // The `export const` form the estate uses IS seen.
+    const conforming = `export const POST = withApiEnvelope(async function POST(request: NextRequest) { return x; });`;
+    expect(FUNCTION_DECL.test(conforming)).toBe(false);
+    expect(adminHandlerBodies(conforming)).toHaveLength(1);
+  });
+
+  it('INVERSE ARM — the scan detects a handler that does NOT guard (proves it can fail)', () => {
+    const unguardedFixture = `
+      export const POST = withApiEnvelope(async function POST(request: NextRequest) {
+        // no guard here
+        const body = await request.json();
+        return NextResponse.json({ data: body, error: null, meta: null });
+      });
+    `;
+    expect(unguardedExports(unguardedFixture, 'fixture/route.ts')).toEqual(['fixture/route.ts POST']);
+
+    const guardedFixture = `
+      export const POST = withApiEnvelope(async function POST(request: NextRequest) {
+        const adminCtx = await verifyAdminAuth(request);
+        if (!adminCtx) return unauthorized();
+        return NextResponse.json({ data: null, error: null, meta: null });
+      });
+    `;
+    expect(unguardedExports(guardedFixture, 'fixture/route.ts')).toEqual([]);
+  });
+
+  it('the classification test above is LABELLING only — enforcement is locked by the scan', async () => {
+    // Kept deliberately (it is the only coverage of middleware classification),
+    // but renamed + annotated: classifyRoute proves the path is LABELLED
+    // 'admin'; it proves nothing about whether anything ENFORCES that label.
+    // The presence-only admin arm of src/middleware.ts passes any request
+    // carrying a non-empty sb-*-auth-token cookie OR any x-admin-key header
+    // value — see the integration lock in admin-route-guard.infra.test.ts.
+    const guard = await import('@/lib/auth/route-guard');
+    expect(guard.classifyRoute('/api/admin/control-panel/configs')).toBe('admin');
+  });
+});
+
+describe('Admin mutations are audited (Spec 128 R-12 / Spec 33 §8.1)', () => {
+  const adminApiDir = path.join(__dirname, '../app/api/admin');
+
+  // PRE-EXISTING gaps this WF3 deliberately did NOT close (fold-simplicity —
+  // they are outside its declared 9-file scope) and did NOT hide. Each is
+  // filed in docs/reports/review_followups.md. The assertions below compare
+  // against these EXACT lists, so the locks stay red-capable in both
+  // directions: a NEW unaudited/ungated mutation fails, and closing one of
+  // these fails too until the list is updated.
+  const AUDIT_GAPS_FILED = [
+    // MFA factor ENROLMENT for the calling admin's own account. Self-service
+    // on one's own credential, not an admin-on-subject mutation; the DELETE
+    // (factor removal) IS audited. Filed MED.
+    'security/mfa/route.ts POST',
+  ];
+  const SESSION_GATE_GAPS_FILED = [
+    // These four ARE audited, but their guard is the narrower
+    // `authMethod === 'admin_key'` shape (the same fence the watchlist
+    // carried until this WF3): `dev_bypass` still reaches the mutation, and
+    // its 'dev-user' sentinel then hits `admin_audit_log.admin_uid` UUID NOT
+    // NULL and raises 22P02 INSIDE the transaction — a 500 where a 403 is
+    // correct. Pre-existing, same finding class, filed HIGH.
+    'users/route.ts POST',
+    'users/[uid]/route.ts PATCH',
+    'users/[uid]/subscription/reconcile/route.ts POST',
+    'users/[uid]/subscription/retry-cancel/route.ts POST',
+  ];
+
+  it('every mutating /api/admin/** export writes an admin_audit_log row', () => {
+    const offenders: string[] = [];
+    for (const file of findRouteFiles(adminApiDir)) {
+      const rel = path.relative(adminApiDir, file).replace(/\\/g, '/');
+      const src = fs.readFileSync(file, 'utf-8');
+      for (const h of adminHandlerBodies(src)) {
+        if (h.method === 'GET') continue;
+        if (!/writeAdminAudit\s*\(/.test(h.body)) offenders.push(`${rel} ${h.method}`);
+      }
+    }
+    // An unaudited admin mutation is a compliance hole (admin-audit.ts:56-58)
+    // and blocks Spec 126 surface conversion (Spec 128 R-12).
+    expect(offenders).toEqual(AUDIT_GAPS_FILED);
+  });
+
+  it('every mutating /api/admin/** export refuses the shared non-session sentinels', () => {
+    // Q1(a): admin_audit_log.admin_uid is UUID NOT NULL, while verifyAdminAuth
+    // returns the NON-UUID sentinels 'admin-key' / 'dev-user' for the
+    // admin_key / dev_bypass methods. Auditing such a mutation would raise
+    // 22P02 INSIDE the transaction — an unattributable mutation is refused
+    // (403) rather than executed unaudited or crashed at 500.
+    const offenders: string[] = [];
+    for (const file of findRouteFiles(adminApiDir)) {
+      const rel = path.relative(adminApiDir, file).replace(/\\/g, '/');
+      const src = fs.readFileSync(file, 'utf-8');
+      // The gate is EITHER written inline in the handler, OR delegated to a
+      // named guard helper declared in the SAME file — in which case that
+      // file must itself carry the literal comparison, so the delegation
+      // cannot hide a weaker predicate (e.g. the pre-2026-09-15 watchlist
+      // helper, which only refused `admin_key` and let `dev_bypass` through).
+      const fileDeclaresGate = /authMethod\s*!==\s*'session'/.test(src);
+      for (const h of adminHandlerBodies(src)) {
+        if (h.method === 'GET') continue;
+        const inline = /authMethod\s*!==\s*'session'/.test(h.body);
+        const delegated =
+          fileDeclaresGate && /(sessionRequired|forbiddenNonSessionWrite)\s*\(/.test(h.body);
+        if (!inline && !delegated) offenders.push(`${rel} ${h.method}`);
+      }
+    }
+    expect(offenders).toEqual(SESSION_GATE_GAPS_FILED);
+  });
+
+  it('every mutating /api/admin/** export is Origin-gated by the shared guard (Spec 33 §13 CSRF)', () => {
+    // The 8 mutations newly guarded by WF3 SEC-1 do not carry their own CSRF
+    // check — they INHERIT it. `verifyAdminAuth` opens with the §13 gate
+    // (`src/lib/auth/verify-admin.ts`: MUTATING_METHODS → `isOriginAllowed`),
+    // which runs BEFORE dev-mode, before the CI-token compare and before the
+    // session read, and `isOriginAllowed` DEFAULT-DENIES when
+    // `ADMIN_ALLOWED_ORIGINS` is unset or unparseable. So "is this mutation
+    // Origin-gated?" reduces to "is `verifyAdminAuth` its first statement?" —
+    // which is exactly what the guard scan above proves, for every export.
+    // This test pins the two properties that make that inheritance valid, so
+    // a future edit cannot quietly move the CSRF gate below an early return
+    // or turn the default-deny into a default-allow.
+    const guardSrc = fs.readFileSync(path.join(__dirname, '../lib/auth/verify-admin.ts'), 'utf-8');
+
+    // (a) the gate is armed for exactly the state-mutating methods…
+    expect(guardSrc).toMatch(/MUTATING_METHODS\s*=\s*new Set\(\['POST',\s*'PATCH',\s*'PUT',\s*'DELETE'\]\)/);
+    // …and fires BEFORE isDevMode() and before the CI-token compare.
+    const csrfIdx = guardSrc.indexOf('if (!isOriginAllowed(request))');
+    const devIdx = guardSrc.indexOf('if (isDevMode())');
+    const ciIdx = guardSrc.indexOf("request.headers.get('x-admin-key')");
+    expect(csrfIdx).toBeGreaterThan(-1);
+    expect(csrfIdx).toBeLessThan(devIdx);
+    expect(csrfIdx).toBeLessThan(ciIdx);
+
+    // (b) default-deny on misconfiguration — a missing/empty allowlist must
+    // refuse, never admit. `ADMIN_ALLOWED_ORIGINS` is therefore a DEPLOY
+    // PRECONDITION, enforced by scripts/verify-vercel-env.js.
+    expect(guardSrc).toContain('if (allowed.length === 0) return false;');
+    expect(guardSrc).toContain("if (!originHeader) return false;");
+
+    // (c) and every mutating admin export actually routes through it (the
+    // same predicate as the guard scan, restated on the CSRF axis so this
+    // lock fails on its own terms rather than only via the guard lock).
+    const offenders: string[] = [];
+    for (const file of findRouteFiles(adminApiDir)) {
+      const rel = path.relative(adminApiDir, file).replace(/\\/g, '/');
+      const src = fs.readFileSync(file, 'utf-8');
+      for (const h of adminHandlerBodies(src)) {
+        if (h.method === 'GET') continue;
+        if (!/verifyAdminAuth\s*\(/.test(firstStatementOf(h.body))) offenders.push(`${rel} ${h.method}`);
+      }
+    }
+    expect(offenders).toEqual([]);
+  });
+
+  it('INVERSE ARM — the Origin-gate scan detects a mutation that bypasses the guard', () => {
+    const bypassing = `
+      export const POST = withApiEnvelope(async function POST(request: NextRequest) {
+        const body = await request.json();
+        const adminCtx = await verifyAdminAuth(request);
+        if (!adminCtx) return unauthorized();
+        return NextResponse.json({ data: body, error: null, meta: null });
+      });
+    `;
+    // Guard present, but NOT first — the body is read before the CSRF gate.
+    expect(unguardedExports(bypassing, 'fixture/route.ts')).toEqual(['fixture/route.ts POST']);
+  });
+
+  it('INVERSE ARM — the audit scan detects an unaudited mutation', () => {
+    const src = `
+      export const PATCH = withApiEnvelope(async function PATCH(request: NextRequest) {
+        const adminCtx = await verifyAdminAuth(request);
+        await pool.query('UPDATE things SET x = 1');
+        return NextResponse.json({ data: null, error: null, meta: null });
+      });
+    `;
+    const bodies = adminHandlerBodies(src).filter((h) => h.method !== 'GET');
+    expect(bodies).toHaveLength(1);
+    expect(/writeAdminAudit\s*\(/.test(bodies[0]!.body)).toBe(false);
+  });
+});
+
+describe('GET /api/admin/stats performs no writes (reaper moved to reconcile Step 0)', () => {
+  it('stats route contains no reapStaleRunningRows call and no reaper import', () => {
+    const src = stripComments(
+      fs.readFileSync(path.join(__dirname, '../app/api/admin/stats/route.ts'), 'utf-8'),
+    );
+    // Spec 128 ASK-12: the reaper is a SCHEDULED JOB, not a side effect of a
+    // dashboard GET. `scripts/reconcile-runs.js` is already Step 0 of the
+    // `sources` chain (Spec 122 §7.4) and is the more authoritative reaper.
+    // (The route's own header comment still NAMES the removal and its named
+    // residual — hence the comment strip: the lock reads code, the comment
+    // carries the reason.)
+    expect(src).not.toContain('reapStaleRunningRows');
+    expect(src).not.toContain('reap-stale-runs');
+  });
+
+  it('stats route issues no UPDATE/INSERT/DELETE statement', () => {
+    const src = stripComments(
+      fs.readFileSync(path.join(__dirname, '../app/api/admin/stats/route.ts'), 'utf-8'),
+    );
+    expect(src).not.toMatch(/\b(UPDATE|INSERT\s+INTO|DELETE\s+FROM)\s+\w/);
+  });
+
+  it('INVERSE ARM — the write scan detects a GET that mutates', () => {
+    const fixture = `
+      export const GET = withApiEnvelope(async function GET(request: NextRequest) {
+        await reapStaleRunningRows();
+        return NextResponse.json({ data: null, error: null, meta: null });
+      });
+    `;
+    expect(stripComments(fixture)).toContain('reapStaleRunningRows');
+  });
+
+  it('the reaper helper and its DB test are RETAINED for the future JOB', () => {
+    expect(fs.existsSync(path.join(__dirname, '../lib/admin/reap-stale-runs.ts'))).toBe(true);
+    expect(fs.existsSync(path.join(__dirname, 'db/admin-stats-reaper.db.test.ts'))).toBe(true);
+  });
+});
+
+describe('Public data routes project explicit allow-lists, never SELECT * (§4.3)', () => {
+  const PROJECTED_ROUTES = [
+    'permits/[id]/route.ts',
+    'permits/route.ts',
+    'builders/[id]/route.ts',
+    'builders/route.ts',
+    'coa/route.ts',
+    'entities/route.ts',
+    'entities/[id]/route.ts',
+  ];
+
+  function readRoute(rel: string): string {
+    return fs.readFileSync(path.join(__dirname, '../app/api', rel), 'utf-8');
+  }
+
+  it('no public route selects a wildcard from a base table', () => {
+    const offenders: string[] = [];
+    for (const rel of PROJECTED_ROUTES) {
+      const src = stripComments(readRoute(rel));
+      // `SELECT *`, `SELECT pa.*`, `SELECT e.*`, `SELECT p.*` — every shape
+      // that hands a caller every column the table happens to have today.
+      if (/SELECT\s+(?:\w+\.)?\*/i.test(src)) offenders.push(rel);
+    }
+    expect(offenders).toEqual([]);
+  });
+
+  it('INVERSE ARM — the wildcard scan detects a `SELECT pa.*` (proves it can fail)', () => {
+    const fixture = `
+      const rows = await query(\`SELECT pa.*, pp.match_type FROM parcels pa\`);
+    `;
+    expect(/SELECT\s+(?:\w+\.)?\*/i.test(stripComments(fixture))).toBe(true);
+    const projected = `
+      const rows = await query(\`SELECT pa.id, pa.lot_size_sqft FROM parcels pa\`);
+    `;
+    expect(/SELECT\s+(?:\w+\.)?\*/i.test(stripComments(projected))).toBe(false);
+  });
+
+  it('every public route sources its columns from the shared allow-list module', () => {
+    const offenders: string[] = [];
+    for (const rel of PROJECTED_ROUTES) {
+      if (!readRoute(rel).includes("@/lib/api/public-projections")) offenders.push(rel);
+    }
+    expect(offenders).toEqual([]);
+  });
+
+  it('NEGATIVE CONTROL — the parcel allow-list serves no cost, menu or geometry column', async () => {
+    const { PARCEL_PUBLIC_COLS } = await import('@/lib/api/public-projections');
+    // Spec 100 §5: the paid parcel-cost payload is gated behind Bearer auth
+    // + a server-side subscription check on /api/parcels/lookup. Until this
+    // lock existed, /api/permits/[id] (PUBLIC_PREFIXES, no auth at all)
+    // served all 158 parcels columns — the cost menu, the cost scalars and
+    // the raw PostGIS polygons included.
+    const leaked = PARCEL_PUBLIC_COLS.filter((c) =>
+      /^(cost_|parcel_cost_menu$|geom|opt_|max_build_|comparable_builds$|neighbourhood_cost_premium$)/.test(c),
+    );
+    expect(leaked).toEqual([]);
+  });
+
+  it('NEGATIVE CONTROL — the entity allow-list serves no direct-contact PII column', async () => {
+    const { ENTITY_PUBLIC_COLS } = await import('@/lib/api/public-projections');
+    const leaked = ENTITY_PUBLIC_COLS.filter((c) =>
+      ['primary_phone', 'primary_email', 'linkedin_url'].includes(c),
+    );
+    expect(leaked).toEqual([]);
+  });
+
+  it('the parcel allow-list still satisfies the declared ParcelResponse contract', async () => {
+    const { PARCEL_PUBLIC_COLS } = await import('@/lib/api/public-projections');
+    // The 9 keys validateParcelShape (above) declares, minus the two the
+    // JOIN supplies (match_type, link_confidence), must all survive.
+    for (const required of [
+      'lot_size_sqft', 'lot_size_sqm', 'frontage_ft', 'frontage_m',
+      'depth_ft', 'depth_m', 'feature_type',
+    ]) {
+      expect(PARCEL_PUBLIC_COLS).toContain(required);
+    }
+    // `id` is load-bearing: the massing block queries parcel_buildings by it.
+    expect(PARCEL_PUBLIC_COLS).toContain('id');
+  });
+
+  it('the COA allow-list stays aligned with the COA- branch of /api/permits/[id]', async () => {
+    const { COA_PUBLIC_COLS } = await import('@/lib/api/public-projections');
+    const detailSrc = readRoute('permits/[id]/route.ts');
+    // Every column the COA- detail branch projects by name must be servable
+    // by the list route too — one CoA vocabulary, two entry points.
+    for (const col of ['application_number', 'sub_type', 'linked_permit_num', 'linked_confidence']) {
+      expect(COA_PUBLIC_COLS).toContain(col);
+      expect(detailSrc).toContain(col);
+    }
   });
 });
 

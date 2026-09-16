@@ -71,7 +71,8 @@ This document outlines the strict engineering standards, stability rules, and de
 ## 🔐 4. Security & API Contracts
 
 ### 4.1 Route Guarding
-- **Rule:** All endpoints within `src/app/api/` must be analyzed for protection via the `src/middleware.ts` configuration. Never leave administrative routes unprotected.
+- **Rule:** All endpoints within `src/app/api/` must be analyzed for protection. Never leave administrative routes unprotected.
+- **Rule (amended 2026-09-15, WF3 SEC-1):** `src/middleware.ts` is a **presence-only pre-filter, not the gate**. Its admin/API arm performs no authorization: it passes any request carrying a non-empty `sb-*-auth-token` cookie (of any shape) OR any `x-admin-key` header value (the secret comparison lives solely in `verify-admin.ts` mode 2 — the P1-F4 break-glass transport decision, 2026-07-19), and Spec 13 §3.5 states plainly that middleware performs no cryptographic verification. The **authoritative gate for every `/api/admin/**` route is `verifyAdminAuth(request)` as the FIRST statement of the handler** (Spec 33 §8). Measured 2026-09-15: 11 of 29 admin routes relied on the middleware and had no guard at all — two of them said so in a header comment. Enforcement is locked by the source scan in `src/tests/api.infra.test.ts` (*"every /api/admin/** handler export calls verifyAdminAuth as its FIRST statement"*), plus an integration lock in `src/tests/admin-route-guard.infra.test.ts` proving an `x-admin-key: anything` request no longer reaches a handler. Route **classification** (`classifyRoute` returning `'admin'`) is a label; it enforces nothing.
 
 ### 4.2 Parameterization
 - **Rule:** Raw SQL statements must utilize Drizzle parameterized queries to prevent SQL injection. String concatenation for dynamic queries (especially via `order by` or search terms) is forbidden unless rigorously validated against a static whitelist.
@@ -246,7 +247,8 @@ Before presenting "PLAN LOCKED", the plan MUST address each applicable item belo
 - [ ] Consistent response envelope: `{ data, error, meta }` (§4.4)
 - [ ] Overarching try-catch with `logError(tag, err, context)` (§2.2, §6.1)
 - [ ] Unhappy-path test cases listed: 400, 404, 500 (§2.1)
-- [ ] Route guarded in `src/middleware.ts` (§4.1)
+- [ ] Route guarded by `verifyAdminAuth(request)` as the handler's FIRST statement — middleware is a presence-only pre-filter, never the gate (§4.1, Spec 33 §8)
+- [ ] Every mutating admin export writes an `admin_audit_log` row inside the mutation's own transaction, and refuses the shared non-session sentinels with 403 (§4.1, Spec 33 §8.1, Spec 128 R-12)
 - [ ] No `.env` secrets exposed to client components (§4.3)
 - [ ] Returns projected fields only, not `SELECT *` (§4.3)
 - [ ] No client-specific assumptions in response shape (§4.4)

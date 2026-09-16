@@ -1,7 +1,10 @@
+import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 import { query } from '@/lib/db/client';
 import { logError } from '@/lib/logger';
 import { withApiEnvelope } from '@/lib/api/with-api-envelope';
+import { unauthorized } from '@/lib/admin/admin-responses';
+import { verifyAdminAuth } from '@/lib/auth/verify-admin';
 
 /**
  * GET /api/admin/pipelines/status — Lightweight pipeline status for polling.
@@ -13,7 +16,11 @@ import { withApiEnvelope } from '@/lib/api/with-api-envelope';
  * Used by DataQualityDashboard polling loop to update runningPipelines
  * without timing out during heavy pipeline execution.
  */
-export const GET = withApiEnvelope(async function GET() {
+export const GET = withApiEnvelope(async function GET(request: NextRequest) {
+  // Spec 33 §8 — per-route admin guard, FIRST statement.
+  const adminCtx = await verifyAdminAuth(request);
+  if (!adminCtx) return unauthorized();
+
   try {
     const pipelineLastRun: Record<string, {
       last_run_at: string | null;

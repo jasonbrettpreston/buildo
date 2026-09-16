@@ -25,6 +25,27 @@ vi.mock('@/lib/logger', () => ({
   logWarn: vi.fn(),
 }));
 
+// ─── Mock the admin guard ──────────────────────────────────────────────────────
+// WF3 SEC-1 (2026-09-15): both exports now call `verifyAdminAuth` as their
+// FIRST statement (Spec 33 §8). Until then this file's header claimed the
+// routes were "admin-gated by src/middleware.ts (no per-route check needed)",
+// which was wrong — the middleware admin arm only PRESENCE-checks a
+// credential. These cases are about the handler's own behaviour, so the guard
+// is stubbed to a session admin here; its ENFORCEMENT is locked separately in
+// src/tests/admin-route-guard.infra.test.ts (real guard, no mock) and
+// src/tests/admin-mutation-audit.infra.test.ts (401/403/400/500 paths).
+vi.mock('@/lib/auth/verify-admin', () => ({
+  verifyAdminAuth: vi
+    .fn()
+    .mockResolvedValue({ uid: '11111111-2222-3333-4444-555555555555', authMethod: 'session' }),
+}));
+
+// The audit row is asserted in admin-mutation-audit.infra.test.ts; here it is
+// stubbed so these cases stay about the config apply itself.
+vi.mock('@/lib/admin/admin-audit', () => ({
+  writeAdminAudit: vi.fn().mockResolvedValue(undefined),
+}));
+
 // ─────────────────────────────────────────────────────────────────────────────
 
 const mockGetRequest = () => new NextRequest('http://localhost/api/admin/control-panel/configs');

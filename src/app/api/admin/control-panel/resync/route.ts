@@ -5,16 +5,32 @@
  * (Steps 14-24 of the permits chain). Returns immediately with the step list;
  * the chain runs in the background and is tracked in pipeline_runs.
  *
- * Admin-gated by src/middleware.ts (no per-route check needed).
+ * Auth: `verifyAdminAuth` is the FIRST statement (Spec 33 §8 — "per-route
+ * guard, NOT middleware").
+ *
+ * REPLACES the header line this file carried until 2026-09-15: "Admin-gated by
+ * src/middleware.ts (no per-route check needed)." The middleware's admin/API
+ * arm performs a PRESENCE check only (`src/middleware.ts:115`) — any
+ * `x-admin-key` header value, or any non-empty `sb-*-auth-token` cookie,
+ * passes. This endpoint `spawn`s `node scripts/run-chain.js permits`, so
+ * "no per-route check needed" meant an unauthenticated caller could start the
+ * whole permits chain.
+ *
  * SPEC LINK: docs/specs/02-web-admin/86_control_panel.md §5 Phase 6
+ *            docs/specs/02-web-admin/33_web_admin_engineering_protocol.md §8 + §8.1
  */
 
+import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 import { spawn } from 'child_process';
 import path from 'path';
 import fs from 'fs';
+import { pool } from '@/lib/db/client';
 import { logError } from '@/lib/logger';
 import { withApiEnvelope } from '@/lib/api/with-api-envelope';
+import { unauthorized, sessionRequired } from '@/lib/admin/admin-responses';
+import { verifyAdminAuth } from '@/lib/auth/verify-admin';
+import { writeAdminAudit } from '@/lib/admin/admin-audit';
 
 // Prevent Next.js from caching the resync response — each POST must hit the server.
 export const dynamic = 'force-dynamic';
@@ -38,8 +54,29 @@ const RESYNC_STEPS = [
   'update_tracked_projects',
 ] as const;
 
-export const POST = withApiEnvelope(async function POST() {
+export const POST = withApiEnvelope(async function POST(request: NextRequest) {
+  const adminCtx = await verifyAdminAuth(request);
+  if (!adminCtx) return unauthorized();
+  // Spec 33 §8.1 — `admin_audit_log.admin_uid` is UUID NOT NULL; the shared
+  // 'admin-key' / 'dev-user' sentinels cannot be recorded, so an
+  // unattributable chain trigger is refused rather than run unaudited.
+  if (adminCtx.authMethod !== 'session') return sessionRequired(adminCtx, '/api/admin/control-panel/resync');
+
   const triggeredAt = new Date().toISOString();
+
+  // Audit BEFORE the spawn — a background chain run has no transaction to
+  // enclose the audit row in, and an untraceable chain trigger is exactly the
+  // compliance hole Spec 128 R-12 names.
+  await writeAdminAudit(
+    {
+      adminUid: adminCtx.uid,
+      action: 'pipeline_resync_trigger',
+      targetUid: null,
+      newValue: { steps: [...RESYNC_STEPS], triggered_at: triggeredAt },
+      reason: 'Admin triggered a Gravity-config downstream resync',
+    },
+    pool,
+  );
 
   // Fire-and-forget: spawn the permits chain in the background.
   // The chain orchestrator (run-chain.js) handles pipeline_runs tracking,

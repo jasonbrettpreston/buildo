@@ -1,15 +1,32 @@
 #!/usr/bin/env node
 /**
  * verify-vercel-env — env-only pre-deploy verification for the Vercel-deployed
- * Next.js app. Standalone CLI, NOT a `pipeline.run()` chain step (it runs as a
- * Vercel build step / CI pre-step, BEFORE any app code executes) — same
+ * Next.js app. Standalone CLI, NOT a `pipeline.run()` chain step — same
  * "outside the Spec 47 skeleton" category as `scripts/migrate.js`,
  * `scripts/restore-db.js`, and `scripts/check-chain-running.js`.
  *
+ * ⚠️ HOW IT IS INVOKED — corrected 2026-09-15 (WF3 SEC-1 Integration fold).
+ * This header used to say the script "runs as a Vercel build step / CI
+ * pre-step" and that "the build step / CI job is responsible for invoking
+ * this". MEASURED: NOTHING invoked it. `grep -rn verify-vercel-env` across
+ * `package.json`, `.github/workflows/` and `vercel.json` returned only this
+ * file and its own logic test. Every deploy-gate claim made about this script
+ * — including the `ADMIN_ALLOWED_ORIGINS` precondition added the same day —
+ * was aspirational.
+ *
+ * It is now WIRED: `package.json` → `"prebuild": "node scripts/verify-vercel-env.js"`.
+ * npm runs `prebuild` automatically before `build`, so every `vercel build`
+ * (and every `next build` in CI) passes through this check and a failing exit
+ * code stops the deploy. `shouldGate()` (below) arms it on `VERCEL` or `CI`
+ * and SKIPS with a printed line otherwise, so a developer's local
+ * `npm run build` still works without production secrets — a skip that
+ * announces itself, never a silent pass.
+ *
  * Reads `process.env` ONLY — there is no `vercel env pull` dual mode (SEC-3 /
- * Gemini MED: one code path, no pulled-secret file written to disk). The build
- * step / CI job is responsible for invoking this with the target environment's
- * variables already in `process.env`.
+ * Gemini MED: one code path, no pulled-secret file written to disk). Off
+ * Vercel it loads `dotenv` first (local/CI convenience, mirroring
+ * `check-chain-running.js:42`); ON Vercel it never does, so a repo `.env`
+ * cannot shadow the platform's injected values.
  *
  * Five checks (Spec 113 §3 / §3.2 / §5):
  *   (a) PRESENCE — every runtime-critical var is present & non-empty, and
@@ -76,6 +93,16 @@ const REQUIRED_PRESENT = [
   // asymmetric-JWT (sb_*) projects — absent, the Supabase server factory is
   // dead while the build ships green.
   'SUPABASE_SECRET_KEY',
+  // 8th critical (WF3 SEC-1, 2026-09-15): the Spec 33 §13 CSRF allowlist.
+  // `verifyAdminAuth` runs `isOriginAllowed` as its FIRST act on every
+  // POST/PATCH/PUT/DELETE, and that check DEFAULT-DENIES on misconfiguration
+  // (`src/lib/auth/verify-admin.ts`: `if (allowed.length === 0) return false`).
+  // With this var unset, EVERY admin mutation 401s — the whole admin panel's
+  // write surface is dead while the build ships green. That was survivable
+  // while 11 admin routes had no guard at all; as of WF3 SEC-1 all 29 are
+  // guarded, so the blast radius went from "some buttons" to "all buttons"
+  // and the var became a hard deploy precondition rather than a nice-to-have.
+  'ADMIN_ALLOWED_ORIGINS',
 ];
 
 // Groups where ANY ONE of the listed vars satisfies the requirement.
@@ -555,7 +582,53 @@ function printReport(result) {
   }
 }
 
+/**
+ * Should this invocation actually gate the build?
+ *
+ * Integration fold, 2026-09-15: until now this script's header CLAIMED it "runs
+ * as a Vercel build step" and nothing invoked it — `grep -rn verify-vercel-env`
+ * over package.json, .github/workflows and vercel.json returned NOTHING. The
+ * claim is now made true by the `prebuild` npm script, which means this file
+ * runs on EVERY `next build`, local ones included. A developer's laptop has no
+ * `STRIPE_WEBHOOK_SECRET` and should not need one to run `next build`, so the
+ * gate arms only where a real deploy is happening:
+ *
+ *   • `VERCEL` set  → ARM. Vercel sets it on every build, for all three envs.
+ *   • `CI` set      → ARM. A CI job asserting deploy-readiness.
+ *   • neither       → SKIP, exit 0, with a printed line. A silent skip and a
+ *                     silent pass are indistinguishable, which is the failure
+ *                     mode this whole script exists to prevent.
+ *
+ * `VERIFY_VERCEL_ENV=1` forces the gate on anywhere (so the skip path itself is
+ * testable, and an operator can run the check by hand); `VERIFY_VERCEL_ENV=0`
+ * forces it off (documented escape hatch for a broken deploy, never the default).
+ */
+function shouldGate(env = process.env) {
+  if (env.VERIFY_VERCEL_ENV === '0') return { gate: false, reason: 'VERIFY_VERCEL_ENV=0 (explicitly disabled)' };
+  if (env.VERIFY_VERCEL_ENV === '1') return { gate: true, reason: 'VERIFY_VERCEL_ENV=1 (forced)' };
+  if (env.VERCEL) return { gate: true, reason: 'VERCEL is set (deploy build)' };
+  if (env.CI) return { gate: true, reason: 'CI is set' };
+  return { gate: false, reason: 'not a Vercel/CI build (local `next build`)' };
+}
+
 function run() {
+  const { gate, reason } = shouldGate(process.env);
+  if (!gate) {
+    console.log(`[verify-vercel-env] SKIP — ${reason}. Set VERIFY_VERCEL_ENV=1 to run it here.`);
+    process.exitCode = 0;
+    return;
+  }
+  // dotenv ONLY off-platform: on Vercel the variables are already in
+  // `process.env` and a repo `.env` must never shadow them (it is bound to
+  // this repo's CLOUD project — the wrong-DB class of incident). Mirrors
+  // scripts/check-chain-running.js:42's `if (!process.env.GITHUB_ACTIONS)`.
+  if (!process.env.VERCEL) {
+    try {
+      require('dotenv').config();
+    } catch (err) {
+      console.warn(`[verify-vercel-env] dotenv not loaded (${err.message}) — reading process.env as-is`);
+    }
+  }
   const targetEnv = resolveTargetEnv(process.argv.slice(2), process.env);
   const result = evaluateEnv(process.env, targetEnv);
   printReport(result);
@@ -584,5 +657,6 @@ module.exports = {
   classifyPoolMax,
   evaluateEnv,
   resolveTargetEnv,
+  shouldGate,
   run,
 };

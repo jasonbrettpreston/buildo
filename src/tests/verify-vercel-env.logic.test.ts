@@ -18,6 +18,7 @@ const vve = require('../../scripts/verify-vercel-env.js') as {
   classifyPublicVar: (name: string, value: string) => { verdict: 'allow' | 'flag'; reason: string };
   decodeJwtRole: (value: string) => string | null;
   resolveTargetEnv: (argv: string[], env: Record<string, string | undefined>) => string;
+  shouldGate: (env: Record<string, string | undefined>) => { gate: boolean; reason: string };
   PUBLIC_VAR_NAME_ALLOWLIST: string[];
   PUBLIC_VAR_NAME_PREFIX_ALLOW: string[];
   PG_POOL_MAX_PROD_CEILING: number;
@@ -61,6 +62,11 @@ function validEnv(): Record<string, string | undefined> {
     // F1g fold: the deployed pool always targets non-loopback — the CA cert
     // group (inline PEM on Vercel) is required or the build/runtime fail-closes.
     SUPABASE_CA_CERT: '-----BEGIN CERTIFICATE-----\nTESTPEM\n-----END CERTIFICATE-----',
+    // 8th critical (WF3 SEC-1, 2026-09-15): the Spec 33 §13 CSRF allowlist.
+    // `isOriginAllowed` default-DENIES when it parses to an empty list, and it
+    // is the first act of `verifyAdminAuth` on every mutating method — so an
+    // unset value 401s every admin mutation on an otherwise-green build.
+    ADMIN_ALLOWED_ORIGINS: 'https://admin.buildo.example',
   };
 }
 
@@ -79,6 +85,7 @@ describe('verify-vercel-env — evaluateEnv presence (Spec 113 §3/§3.2)', () =
     'RESEND_API_KEY',
     'CRON_SECRET',
     'SUPABASE_SECRET_KEY', // 7th critical, operator-ruled 2026-07-22
+    'ADMIN_ALLOWED_ORIGINS', // 8th critical, WF3 SEC-1 2026-09-15
   ];
   for (const missing of criticals) {
     it(`fails when the critical var ${missing} is absent`, () => {
@@ -206,13 +213,69 @@ describe('verify-vercel-env — C4 env-scoping (Spec 113 §3.2: MFA/Sentry hard-
     expect(vve.evaluateEnv(env, 'production').ok).toBe(false);
   });
 
-  it('the REQUIRED_PRESENT criticals (7 incl. SUPABASE_SECRET_KEY, ruled 2026-07-22) still hard-fail on EVERY env — only MFA/Sentry are scoped', () => {
+  it('ADMIN_ALLOWED_ORIGINS is a HARD deploy precondition — without it EVERY admin mutation 401s (WF3 SEC-1)', () => {
+    // Both directions. Present in the valid fixture => green (the all-passing
+    // case above). Absent => a named error on EVERY environment, because
+    // `isOriginAllowed` default-denies identically in all of them — this is
+    // not a production-scoped SHOULD like the Sentry DSN.
+    for (const target of ['production', 'preview', 'development'] as const) {
+      const env = validEnv();
+      delete env.ADMIN_ALLOWED_ORIGINS;
+      const result = vve.evaluateEnv(env, target);
+      expect(result.ok, `${target} must fail without ADMIN_ALLOWED_ORIGINS`).toBe(false);
+      expect(
+        result.findings.some((f) => f.level === 'error' && f.name === 'ADMIN_ALLOWED_ORIGINS'),
+      ).toBe(true);
+    }
+    // An EMPTY value is as fatal as an absent one — `parseAllowedOrigins`
+    // drops empty entries, so '' yields the same empty allowlist.
+    const empty = validEnv();
+    empty.ADMIN_ALLOWED_ORIGINS = '';
+    expect(vve.evaluateEnv(empty, 'production').ok).toBe(false);
+  });
+
+  it('the REQUIRED_PRESENT criticals (8 incl. ADMIN_ALLOWED_ORIGINS, WF3 SEC-1 2026-09-15) still hard-fail on EVERY env — only MFA/Sentry are scoped', () => {
     const env = validEnv();
     delete env.STRIPE_WEBHOOK_SECRET;
     delete env.ADMIN_MFA_ENFORCED; // warn-only on preview — must not mask the Stripe error
     const result = vve.evaluateEnv(env, 'preview');
     expect(result.ok).toBe(false);
     expect(result.findings.some((f) => f.level === 'error' && f.name === 'STRIPE_WEBHOOK_SECRET')).toBe(true);
+  });
+});
+
+describe('verify-vercel-env — the deploy gate is actually WIRED (Integration fold)', () => {
+  // Measured 2026-09-15: this script's header claimed it "runs as a Vercel
+  // build step" and NOTHING invoked it — `grep -rn verify-vercel-env` over
+  // package.json / .github/workflows / vercel.json returned only the script
+  // and this test. Every deploy-gate claim, including the same day's
+  // ADMIN_ALLOWED_ORIGINS precondition, was aspirational. These two locks are
+  // what make the claim true and keep it true.
+  it('package.json runs the verifier as `prebuild`, so npm gates every build', () => {
+    const pkg = JSON.parse(
+      fs.readFileSync(path.resolve(__dirname, '../../package.json'), 'utf-8'),
+    ) as { scripts: Record<string, string> };
+    expect(pkg.scripts.prebuild).toBeDefined();
+    expect(pkg.scripts.prebuild).toContain('scripts/verify-vercel-env.js');
+    // npm's lifecycle only fires `prebuild` for a script literally named
+    // `build` — renaming it would silently unhook the gate.
+    expect(pkg.scripts.build).toBeDefined();
+  });
+
+  it('shouldGate arms on a deploy and SKIPS a local build — both directions', () => {
+    // ARM: the two platform signals, plus the explicit override.
+    expect(vve.shouldGate({ VERCEL: '1' }).gate).toBe(true);
+    expect(vve.shouldGate({ CI: 'true' }).gate).toBe(true);
+    expect(vve.shouldGate({ VERIFY_VERCEL_ENV: '1' }).gate).toBe(true);
+    // SKIP: a developer's `npm run build` must not need production secrets…
+    const local = vve.shouldGate({});
+    expect(local.gate).toBe(false);
+    // …but the skip must SAY SO — a silent skip and a silent pass are
+    // indistinguishable, which is the failure this whole script exists to
+    // prevent.
+    expect(local.reason).toBeTruthy();
+    // The documented escape hatch wins over the platform signal.
+    expect(vve.shouldGate({ VERCEL: '1', VERIFY_VERCEL_ENV: '0' }).gate).toBe(false);
   });
 });
 

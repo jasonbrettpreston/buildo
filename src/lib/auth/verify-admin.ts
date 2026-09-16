@@ -77,8 +77,52 @@ export async function verifyAdminAuth(
     }
   }
 
-  // 1. Dev mode bypass — unchanged.
+  // 1. Dev mode bypass.
+  //
+  // WF3 SEC-1 Integration fold (2026-09-15): SEC-1 made every admin mutation
+  // write an `admin_audit_log` row and refuse any non-`session` auth method,
+  // which left local dev with a DEAD admin write surface — `isDevMode()`
+  // returned the `'dev-user'` sentinel, every mutation 403'd, and there was no
+  // way to exercise an admin button locally at all.
+  //
+  // RULED: in dev mode ONLY, the bypass may resolve to a SEEDED DEV-ADMIN
+  // IDENTITY — a real UUID in `DEV_ADMIN_UID` — returned with `session`
+  // semantics, so mutations run and their audit rows carry a genuine,
+  // attributable `admin_uid`. Audit integrity holds; the dev operator is just
+  // a known identity rather than a shared sentinel.
+  //
+  // ⚠️ MEASURED PRECONDITION, and it is stronger than "seed a profiles row":
+  // `admin_audit_log.admin_uid` is UUID NOT NULL **with
+  // `fk_admin_audit_log_admin → auth.users(id) ON DELETE RESTRICT`**
+  // (migration 229:104-106 — the plan's §0.4 measured the type and MISSED the
+  // FK). `profiles.id` FKs to `auth.users(id)` too (migration 226:25). So
+  // `DEV_ADMIN_UID` must be the id of a REAL local `auth.users` row with
+  // `profiles.is_admin = true` — exactly what `scripts/bootstrap-first-admin.js`
+  // provisions against the local stack. A made-up UUID does NOT silently
+  // half-work: the audit INSERT raises 23503 INSIDE the mutation transaction
+  // and the whole mutation rolls back. Loud, not silent — the correct failure.
+  //
+  // Unset or malformed → the ORIGINAL sentinel, byte-identical to the previous
+  // behaviour (mutations 403, reads fine). Opt-in, never a default.
+  //
+  // PRODUCTION IS UNREACHABLE by construction: `isDevMode()` already requires
+  // BOTH `DEV_MODE === 'true'` AND `NODE_ENV !== 'production'` (route-guard.ts
+  // — the two-flag defense Spec 13 §4a names), so no single misconfigured var
+  // can turn `DEV_ADMIN_UID` into a production admin. The explicit
+  // `NODE_ENV !== 'production'` re-check below is deliberate belt-and-braces
+  // on a credential-shaped feature, and is locked in both directions.
   if (isDevMode()) {
+    const devAdminUid = process.env.DEV_ADMIN_UID;
+    if (
+      process.env.NODE_ENV !== 'production' &&
+      devAdminUid &&
+      isUuid(devAdminUid)
+    ) {
+      return { uid: devAdminUid, authMethod: 'session' };
+    }
+    if (devAdminUid && !isUuid(devAdminUid)) {
+      logWarn('[auth/verify-admin]', 'DEV_ADMIN_UID is set but is not a UUID — falling back to the dev sentinel (admin mutations will 403)', {});
+    }
     return { uid: 'dev-user', authMethod: 'dev_bypass' };
   }
 

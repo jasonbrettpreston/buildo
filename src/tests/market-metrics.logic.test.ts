@@ -351,13 +351,19 @@ describe('MarketMetrics response shape', () => {
 // ── Query extraction guardrails ─────────────────────────────────────
 
 describe('Query extraction', () => {
-  it('route.ts is a thin handler (< 50 lines)', () => {
+  it('route.ts is a thin handler (< 65 lines) and contains no SQL', () => {
     const src = fs.readFileSync(
       path.resolve('src/app/api/admin/market-metrics/route.ts'),
       'utf-8'
     );
+    // Budget raised 50 → 65 on 2026-09-15 (WF3 SEC-1): the route gained its
+    // Spec 33 §8 `verifyAdminAuth` guard and the sanitized 401 envelope, ~13
+    // lines that are auth, not query logic. The fence this guardrail actually
+    // owns — "the queries live in queries.ts, not in the handler" — is now
+    // asserted DIRECTLY rather than inferred from a line count.
     const lines = src.split('\n').length;
-    expect(lines).toBeLessThan(50);
+    expect(lines).toBeLessThan(65);
+    expect(src).not.toMatch(/\bSELECT\b|\bFROM\s+\w/i);
   });
 
   it('queries.ts exports all 7 query functions', async () => {

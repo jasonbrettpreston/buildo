@@ -1,12 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { query } from '@/lib/db/client';
+import { query, withTransaction } from '@/lib/db/client';
 import { logError } from '@/lib/logger';
 import { withApiEnvelope } from '@/lib/api/with-api-envelope';
+import { unauthorized, sessionRequired } from '@/lib/admin/admin-responses';
+import { verifyAdminAuth } from '@/lib/auth/verify-admin';
+import { writeAdminAudit } from '@/lib/admin/admin-audit';
 
 /**
  * GET /api/admin/pipelines/schedules - Return all pipeline schedules.
  */
-export const GET = withApiEnvelope(async function GET() {
+export const GET = withApiEnvelope(async function GET(request: NextRequest) {
+  const adminCtx = await verifyAdminAuth(request);
+  if (!adminCtx) return unauthorized();
+
   try {
     const rows = await query<{ pipeline: string; cadence: string; cron_expression: string | null; enabled: boolean; updated_at: string }>(
       `SELECT pipeline, cadence, cron_expression, enabled, updated_at FROM pipeline_schedules ORDER BY pipeline`
@@ -23,6 +29,10 @@ export const GET = withApiEnvelope(async function GET() {
  * Body: { pipeline: string, cadence: string }
  */
 export const PUT = withApiEnvelope(async function PUT(request: NextRequest) {
+  const adminCtx = await verifyAdminAuth(request);
+  if (!adminCtx) return unauthorized();
+  if (adminCtx.authMethod !== 'session') return sessionRequired(adminCtx, '/api/admin/pipelines/schedules');
+
   try {
     const body = await request.json();
     const { pipeline, cadence } = body;
@@ -52,12 +62,36 @@ export const PUT = withApiEnvelope(async function PUT(request: NextRequest) {
       return NextResponse.json({ error: `cadence must be one of: ${validCadences.join(', ')}` }, { status: 400 });
     }
 
-    const result = await query<{ pipeline: string; cadence: string }>(
-      `UPDATE pipeline_schedules SET cadence = $1, updated_at = NOW()
-       WHERE pipeline = $2
-       RETURNING pipeline, cadence`,
-      [cadence, pipeline]
-    );
+    // The UPDATE and its audit row commit together (Spec 33 §8.1): an update
+    // that commits before a failing audit write is an unrecoverable
+    // compliance hole (admin-audit.ts:56-58). `writeAdminAudit` takes the
+    // transaction client as its executor.
+    const result = await withTransaction(async (client) => {
+      const before = await client.query<{ cadence: string }>(
+        `SELECT cadence FROM pipeline_schedules WHERE pipeline = $1`,
+        [pipeline],
+      );
+      const updated = await client.query<{ pipeline: string; cadence: string }>(
+        `UPDATE pipeline_schedules SET cadence = $1, updated_at = NOW()
+         WHERE pipeline = $2
+         RETURNING pipeline, cadence`,
+        [cadence, pipeline],
+      );
+      if (updated.rows.length > 0) {
+        await writeAdminAudit(
+          {
+            adminUid: adminCtx.uid,
+            action: 'pipeline_schedule_cadence_update',
+            targetUid: null,
+            oldValue: { pipeline, cadence: before.rows[0]?.cadence ?? null },
+            newValue: { pipeline, cadence },
+            reason: 'Admin changed a pipeline schedule cadence',
+          },
+          client,
+        );
+      }
+      return updated.rows;
+    });
 
     if (result.length === 0) {
       return NextResponse.json({ error: `Pipeline "${pipeline}" not found` }, { status: 404 });
@@ -75,6 +109,10 @@ export const PUT = withApiEnvelope(async function PUT(request: NextRequest) {
  * Body: { pipeline: string, enabled: boolean }
  */
 export const PATCH = withApiEnvelope(async function PATCH(request: NextRequest) {
+  const adminCtx = await verifyAdminAuth(request);
+  if (!adminCtx) return unauthorized();
+  if (adminCtx.authMethod !== 'session') return sessionRequired(adminCtx, '/api/admin/pipelines/schedules');
+
   try {
     const body = await request.json();
     const { pipeline, enabled } = body;
@@ -92,14 +130,33 @@ export const PATCH = withApiEnvelope(async function PATCH(request: NextRequest) 
     // + compute-timing-calibration-v2.js for phase_calibration.
     // Admin UI continues to write chain_id = NULL (global); explicit
     // per-chain scoping is future WF1 scope.
-    const result = await query<{ pipeline: string; enabled: boolean }>(
-      `INSERT INTO pipeline_schedules (pipeline, cadence, enabled, updated_at)
-       VALUES ($2, 'Daily', $1, NOW())
-       ON CONFLICT (pipeline, COALESCE(chain_id, '__ALL__'))
-         DO UPDATE SET enabled = $1, updated_at = NOW()
-       RETURNING pipeline, enabled`,
-      [enabled, pipeline]
-    );
+    // Upsert + audit row commit together (Spec 33 §8.1).
+    const result = await withTransaction(async (client) => {
+      const before = await client.query<{ enabled: boolean }>(
+        `SELECT enabled FROM pipeline_schedules WHERE pipeline = $1`,
+        [pipeline],
+      );
+      const upserted = await client.query<{ pipeline: string; enabled: boolean }>(
+        `INSERT INTO pipeline_schedules (pipeline, cadence, enabled, updated_at)
+         VALUES ($2, 'Daily', $1, NOW())
+         ON CONFLICT (pipeline, COALESCE(chain_id, '__ALL__'))
+           DO UPDATE SET enabled = $1, updated_at = NOW()
+         RETURNING pipeline, enabled`,
+        [enabled, pipeline],
+      );
+      await writeAdminAudit(
+        {
+          adminUid: adminCtx.uid,
+          action: 'pipeline_schedule_enabled_toggle',
+          targetUid: null,
+          oldValue: { pipeline, enabled: before.rows[0]?.enabled ?? null },
+          newValue: { pipeline, enabled },
+          reason: 'Admin toggled a pipeline schedule',
+        },
+        client,
+      );
+      return upserted.rows;
+    });
 
     return NextResponse.json({ updated: result[0] });
   } catch (err) {

@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { query } from '@/lib/db/client';
+import { query, pool, withTransaction } from '@/lib/db/client';
 import { logError } from '@/lib/logger';
 import { withApiEnvelope } from '@/lib/api/with-api-envelope';
+import { unauthorized, sessionRequired } from '@/lib/admin/admin-responses';
 import { verifyAdminAuth } from '@/lib/auth/verify-admin';
+import { writeAdminAudit } from '@/lib/admin/admin-audit';
 import { dispatchWorkflow, cancelWorkflowRun, GithubDispatchError } from '@/lib/admin/github-dispatch';
 
 /**
@@ -47,9 +49,10 @@ function ok(data: unknown, status = 200): NextResponse {
 function fail(code: string, message: string, status: number): NextResponse {
   return NextResponse.json({ data: null, error: { code, message }, meta: null }, { status });
 }
-function unauthorized(): NextResponse {
-  return fail('UNAUTHORIZED', 'Admin auth required', 401);
-}
+// `unauthorized()` / `sessionRequired()` come from '@/lib/admin/admin-responses'
+// (one definition for the whole admin estate). Their envelope is identical to
+// this file's local `fail()` output — `{ data: null, error: { code, message },
+// meta: null }` — so no response shape changed when the local copies went.
 /** Map a GithubDispatchError to an HTTP status: config→500, network→503, upstream GitHub→502. */
 function ghStatus(err: GithubDispatchError): number {
   if (err.code === 'NO_TOKEN' || err.code === 'NO_REPO') return 500;
@@ -84,6 +87,7 @@ async function anyChainRunning(chains: string[]): Promise<boolean> {
 export const POST = withApiEnvelope(async function POST(request: NextRequest, context?: unknown) {
   const adminCtx = await verifyAdminAuth(request);
   if (!adminCtx) return unauthorized();
+  if (adminCtx.authMethod !== 'session') return sessionRequired(adminCtx, `/api/admin/pipelines/${await slugParam(context)}`);
 
   const slug = await slugParam(context);
   const workflowFile = CHAIN_WORKFLOWS[slug];
@@ -112,6 +116,19 @@ export const POST = withApiEnvelope(async function POST(request: NextRequest, co
   }
 
   try {
+    // Audit BEFORE the dispatch: the run happens on a GitHub runner, outside
+    // any transaction we own. Recorded intent with no dispatch is the safe
+    // failure direction; a chain run nobody can attribute is the R-12 hole.
+    await writeAdminAudit(
+      {
+        adminUid: adminCtx.uid,
+        action: 'pipeline_dispatch',
+        targetUid: null,
+        newValue: { pipeline: slug, workflow: workflowFile },
+        reason: 'Admin dispatched a chain workflow',
+      },
+      pool,
+    );
     await dispatchWorkflow(workflowFile);
     return ok({ status: 'dispatched', pipeline: slug, workflow: workflowFile });
   } catch (err) {
@@ -136,6 +153,7 @@ export const POST = withApiEnvelope(async function POST(request: NextRequest, co
 export const DELETE = withApiEnvelope(async function DELETE(request: NextRequest, context?: unknown) {
   const adminCtx = await verifyAdminAuth(request);
   if (!adminCtx) return unauthorized();
+  if (adminCtx.authMethod !== 'session') return sessionRequired(adminCtx, `/api/admin/pipelines/${await slugParam(context)}`);
 
   const slug = await slugParam(context);
   const workflowFile = CHAIN_WORKFLOWS[slug];
@@ -151,14 +169,33 @@ export const DELETE = withApiEnvelope(async function DELETE(request: NextRequest
     // maps to the `coa:%` LIKE pattern. This DB flag is itself a cancel signal —
     // run-chain.js polls its own row between steps and self-aborts on 'cancelled'
     // (so the mark is intentionally unconditional, not gated on the GH-run cancel).
-    const result = await query<{ id: number }>(
-      `UPDATE pipeline_runs
-          SET status = 'cancelled', error_message = 'Cancelled by user', completed_at = NOW()
-        WHERE status IN ('running', 'queued')
-          AND (pipeline = ANY($1) OR pipeline LIKE ANY($2))
-        RETURNING id`,
-      [chains, chains.map((c) => `${c.replace(/^chain_/, '')}:%`)],
-    );
+    // The row-marking UPDATE and its audit row commit together (Spec 33 §8.1).
+    const result = await withTransaction(async (client) => {
+      const marked = await client.query<{ id: number }>(
+        `UPDATE pipeline_runs
+            SET status = 'cancelled', error_message = 'Cancelled by user', completed_at = NOW()
+          WHERE status IN ('running', 'queued')
+            AND (pipeline = ANY($1) OR pipeline LIKE ANY($2))
+          RETURNING id`,
+        [chains, chains.map((c) => `${c.replace(/^chain_/, '')}:%`)],
+      );
+      await writeAdminAudit(
+        {
+          adminUid: adminCtx.uid,
+          action: 'pipeline_cancel',
+          targetUid: null,
+          newValue: {
+            pipeline: slug,
+            workflow: workflowFile,
+            cancelled_run_ids: marked.rows.map((r) => r.id),
+            gh_run_cancelled: cancelled,
+          },
+          reason: 'Admin cancelled an in-flight chain run',
+        },
+        client,
+      );
+      return marked.rows;
+    });
     return ok({
       cancelled: result.length,
       gh_run_cancelled: cancelled,

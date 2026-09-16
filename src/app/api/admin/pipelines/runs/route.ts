@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/client';
 import { withApiEnvelope } from '@/lib/api/with-api-envelope';
+import { unauthorized } from '@/lib/admin/admin-responses';
+import { verifyAdminAuth } from '@/lib/auth/verify-admin';
 
 interface PipelineRunRow {
   id: number;
@@ -29,6 +31,10 @@ interface PipelineRunRow {
  *   offset    — pagination offset, default 0
  */
 export const GET = withApiEnvelope(async function GET(request: NextRequest) {
+  // Spec 33 §8 — per-route admin guard, FIRST statement (before params).
+  const adminCtx = await verifyAdminAuth(request);
+  if (!adminCtx) return unauthorized();
+
   const { searchParams } = new URL(request.url);
   const pipeline = searchParams.get('pipeline');
   const status = searchParams.get('status');
