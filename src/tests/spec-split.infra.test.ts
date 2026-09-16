@@ -139,6 +139,53 @@ describe('spec-split-check.mjs — six arms, RED via the REAL CLI on an isolated
     expect(declared.dangling.length).toBe(0);
   });
 
+  // Spec 124 §5 R-AM (batch-2 Phase 0.8, 2026-09-15) — THE RULING-ID HALF of
+  // arm (iii), ratified as a register row and locked here.
+  //
+  // The MECHANISM already shipped (CITATION_RULING_RE + extractRegisterRulingIds,
+  // `Spec 124 R-<letter>` resolved against §5's `| R-X | ... |` rows) — batch-2's
+  // plan proposed "extend spec-split-check's census from #anchors to R-xx ids"
+  // and that premise is REFUTED: measured 2026-09-15, arm (iii) already censused
+  // 2472 citations with 0 dangling, ruling ids included. What was missing was the
+  // POLICY row (the rule existed only as tool behaviour) and this both-directions
+  // lock on the ruling arm specifically — the section arm above never exercised
+  // `kind: 'ruling'` at all. The class is live and has bitten twice: R-PACE-1 was
+  // cited as "Spec 124 R-AA" (the spec-move rule, unrelated) in Spec 122 §8.3 and
+  // in batch1 I2's commit-9 message, and the register itself records `R-S` as a
+  // promised id that was never written.
+  it('RED/GREEN — a `Spec 124 R-xx` ruling citation resolves against the §5 register, both directions', async () => {
+    const mod = await import(GENERATOR);
+    const specTexts: Record<string, string> = {};
+    for (const [id, file] of Object.entries(SPEC_FILES)) {
+      specTexts[id] = fs.readFileSync(path.join(SPEC_DIR, file), 'utf8');
+    }
+    const ids = mod.extractRegisterRulingIds(specTexts['124']);
+    // GREEN — every id batch-2 Phase 0.8 allocated must resolve NOW, off a REAL
+    // §5 row, not a fixture. (The plan's own draft named `R-AM` as the dangling
+    // case; the block shifted one letter when the concurrent enrich-runner WF took
+    // R-AK, so the ratified block is R-AL..R-AP — recorded, not silently renumbered.)
+    expect(ids.has('R-AN'), 'R-AN must be a real §5 register row after batch-2 Phase 0.8').toBe(true);
+    for (const real of ['R-AL', 'R-AM', 'R-AN', 'R-AO', 'R-AP']) {
+      expect(ids.has(real), `${real} must be a real §5 register row`).toBe(true);
+    }
+    // The recorded never-written id stays never-written (Spec 124 `:218`) — a
+    // silent fill would be exactly the rot this rule forbids.
+    expect(ids.has('R-S'), 'R-S is recorded as never-written and must not be silently filled').toBe(false);
+    const resolves = mod.checkCitationsResolve(
+      [{ citation: 'Spec 124 R-AN', specId: '124', kind: 'ruling' as const, file: 'fixture.md', line: 1 }],
+      specTexts,
+      [],
+    );
+    expect(resolves.dangling.length, JSON.stringify(resolves.dangling)).toBe(0);
+    // RED — an unallocated ruling id dangles, and `known_dangling` is the only
+    // way to carry one knowingly.
+    const bogus = [{ citation: 'Spec 124 R-ZZZ', specId: '124', kind: 'ruling' as const, file: 'fixture.md', line: 1 }];
+    expect(mod.checkCitationsResolve(bogus, specTexts, []).dangling.length).toBe(1);
+    expect(
+      mod.checkCitationsResolve(bogus, specTexts, [{ citation: 'Spec 124 R-ZZZ', sites: 1, why: 'fixture', owner: 'x', declared: '2026-09-15' }]).dangling.length,
+    ).toBe(0);
+  });
+
   it('RED — bad-undeclared-move.md: a 122a "(moved from ...)" heading with no moves[] row fails --check', () => {
     const appendixPath = path.join(fixture.dir, SPEC_FILES['122a']!);
     fs.appendFileSync(

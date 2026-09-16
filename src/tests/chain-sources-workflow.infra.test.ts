@@ -121,3 +121,53 @@ describe('chain-sources.yml — regression locks on what the ceiling change must
     expect(activeLines).toMatch(/SUPABASE_CA_CERT_PATH/);
   });
 });
+
+// ---------------------------------------------------------------------------
+// Spec 124 §5 R-AL (batch-2 Phase 0.8, 2026-09-15) — A CLOUD ACCEPTANCE
+// DISPATCH IS PINNED AND ITS GRADED COMMIT IS NEVER INFERRED.
+//
+// RED BEFORE THE FIX (measured 2026-09-15, `.cursor/batch2_c5_active_task.md`
+// §0.9 row 1): chain-sources.yml carried a bare `actions/checkout@v4` with no
+// `ref:`, no `expected_sha` input and no headSha assertion anywhere — the whole
+// file matched /headSha|expected_sha/ zero times. Runs 34964116903 and
+// 34916671708 both graded `headSha 17058af7` while the local HEAD was
+// `824ef357`, and EP-D13's "assert gh run view <id> --json headSha equals git
+// rev-parse HEAD" existed only as prose in tasks/lessons.md. Each of the four
+// assertions below fails against that pre-fix file.
+//
+// The inverse direction is enforced by the guard itself, not by a mock: the
+// unpinned path must NOT fail the job (the scheduled cron carries no input), so
+// the test below pins that the failure arms are both conditional on a non-empty
+// expected_sha / a real drift, and that the unpinned case still emits a notice.
+// ---------------------------------------------------------------------------
+describe('chain-sources.yml — R-AL: the dispatch-pinning guard', () => {
+  it('workflow_dispatch declares an `expected_sha` input (the dispatcher names the commit; the workflow cannot see a local HEAD)', () => {
+    expect(activeLines).toMatch(/workflow_dispatch:/);
+    expect(activeLines).toMatch(/expected_sha:/);
+    expect(activeLines).toMatch(/required:\s*false/);
+  });
+
+  it('a guard step asserts the checked-out tree IS github.sha and fails loudly on drift', () => {
+    expect(activeLines).toMatch(/Guard\s+—\s+dispatch is pinned \(R-AL/);
+    expect(activeLines).toMatch(/CHECKED_OUT="\$\(git rev-parse HEAD\)"/);
+    expect(activeLines).toMatch(/::error::checkout drift/);
+  });
+
+  it('a declared expected_sha that does not match the graded commit fails the job BEFORE the chain runs', () => {
+    expect(activeLines).toMatch(/::error::pinned dispatch mismatch/);
+    const guardIdx = activeLines.indexOf('Guard — dispatch is pinned');
+    const chainIdx = activeLines.indexOf('node scripts/run-chain.js sources');
+    expect(guardIdx).toBeGreaterThan(-1);
+    expect(chainIdx).toBeGreaterThan(-1);
+    expect(guardIdx, 'the pin guard must run before the chain, never after it has written rows').toBeLessThan(chainIdx);
+  });
+
+  it('the unpinned path is never silent — the graded commit is always echoed, and an unpinned run is warned as NOT an R-AB acceptance run', () => {
+    expect(activeLines).toMatch(/::notice title=Graded commit::/);
+    expect(activeLines).toMatch(/::warning title=Unpinned dispatch::/);
+    expect(activeLines).toMatch(/NOT valid as an R-AB acceptance run/);
+    // The unpinned arm must not be a failure arm: `exit 1` appears only under
+    // the two genuine mismatch branches, never under the empty-input branch.
+    expect(activeLines).toMatch(/if \[ -z "\$EXPECTED_SHA" \]; then\s*\n\s*echo "::warning/);
+  });
+});

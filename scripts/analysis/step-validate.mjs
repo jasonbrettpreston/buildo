@@ -21,10 +21,11 @@
  * PLUS the fast invariants (the "fast descriptor gate" followup, subsumed here
  * per the operator's instruction) — always run, always cheap, no vitest/DB needed.
  * Ids 1/2/3/7/8/20/21 are per-row (one result per converted/pending slug); ids
- * 4/5/9/22/23 are registry-scoped (one result for the whole fleet — a fleet-integrity
+ * 4/5/9/22/23/24/25 are registry-scoped (one result for the whole fleet — a fleet-integrity
  * fact, not a property of any single step; 22 = GOLD-PRE-FRESH, C4 step H
  * 2026-09-11; 23 = COMPRESSED-FORM-ELIGIBLE, Spec 124 R-PACE-1, 2026-09-13;
- * 24 = COMPRESSED-FORM-DEFAULT, Spec 124 R-AH, 2026-09-14 — all three hard-stop
+ * 24 = COMPRESSED-FORM-DEFAULT, Spec 124 R-AH, 2026-09-14; 25 = ARCHETYPE-PARITY,
+ * Spec 124 R-AO, 2026-09-15 — all hard-stop
  * scoped to their own `blockedSlugs` exactly like id 9). Id 6 is retired (superseded by G8/
  * item iv, never reused). HIGH-2 (output-panel remediation, 2026-09-10): ids
  * 20/21 (not 10/11) — 1-13 is reserved so a fast invariant id can NEVER
@@ -70,6 +71,15 @@
  *      literal `**Full form reason:**` line is FAIL — R-PACE-1 restated as
  *      the default, not an option; not-applicable when no pending slug's
  *      archetype has matured past the two-member threshold yet
+ *   25. ARCHETYPE-PARITY (Spec 124 R-AO, 2026-09-15): a step's archetype is
+ *      PROVISIONAL until PH-0 re-derives it from the code — so once the step
+ *      IS converted, its census row and its own descriptor's
+ *      identity.archetype must agree, the census row may no longer read
+ *      UNDECLARED, the archetype must have a declared template-freeze.json
+ *      profile, and a converted slug may not also be a declared census
+ *      exemption (R-AP). Provenance: assert_engine_health, censused ASSERT,
+ *      measured RECORDER at PH-0 (R-AE) — which forced I3's mid-flight revert
+ *      from the compressed form to the full nine-commit form (331f97ad)
  *
  * SPEC LINK: docs/specs/01-pipeline/123_step_opt_assessment_validation.md SS6 (gates),
  *            SS5.2 (per-step checklist), SS4.4 (checker self-test doctrine, SS12b.6)
@@ -539,6 +549,70 @@ export function checkCompressedFormDefault(rows) {
       : eligible.length
         ? `COMPRESSED-FORM-DEFAULT: ${eligible.length} eligible pending slug(s), all either compressed or carry a stated full-form reason`
         : 'COMPRESSED-FORM-DEFAULT: not applicable (0 pending slugs whose archetype is eligible)',
+  };
+}
+
+/**
+ * ARCHETYPE-PARITY predicate (fast invariant #25, Spec 124 R-AO, batch-2
+ * Phase 0.8, 2026-09-15). PURE.
+ *
+ * R-AO rules that a step's archetype is PROVISIONAL until PH-0 re-derives it
+ * from the code, and that the plan's commit-form declaration is provisional
+ * with it. This is the lock on the OTHER end of that rule: once the step is
+ * converted, the provisional value must have been reconciled. Four ways a
+ * converted slug fails, each a real, measured failure mode:
+ *
+ *   (a) no descriptor archetype at all — a converted step with no identity;
+ *   (b) a census row that still says UNDECLARED — the provisional value was
+ *       never reconciled after PH-0 measured the real one;
+ *   (c) a census row that disagrees with the descriptor — the `assert_engine_
+ *       health` case (censused ASSERT, measured RECORDER at PH-0, R-AE), which
+ *       cost I3 a mid-flight revert from the compressed form (331f97ad);
+ *   (d) an archetype with no declared `template-freeze.json` profile — a step
+ *       converted onto an archetype the freeze does not know about.
+ *
+ * A converted slug that is ALSO a declared census exemption (Spec 124 R-AP) is
+ * a contradiction and fails too — a RUNNER-owned concern has no descriptor.
+ *
+ * @param {Array<{slug:string, descriptorArchetype:string|null, censusArchetype:string|null, exempted:boolean, knownArchetype:boolean}>} rows
+ * @returns {{pass:boolean, blockedSlugs:string[], detail:string, violations:Array<{slug:string,why:string}>}}
+ */
+export function checkArchetypeParity(rows) {
+  const violations = [];
+  for (const r of rows) {
+    if (r.exempted) {
+      violations.push({ slug: r.slug, why: 'is registered in converted.json AND declared a census exemption (R-AP) — a converted step has a descriptor; an exempted one does not' });
+      continue;
+    }
+    if (!r.descriptorArchetype) {
+      violations.push({ slug: r.slug, why: 'is converted but its descriptor declares no identity.archetype' });
+      continue;
+    }
+    if (r.censusArchetype === 'UNDECLARED') {
+      violations.push({ slug: r.slug, why: 'is converted but its census row still reads archetype "UNDECLARED" — the provisional value was never reconciled against PH-0 (R-AO)' });
+      continue;
+    }
+    if (r.censusArchetype && r.censusArchetype !== r.descriptorArchetype) {
+      violations.push({ slug: r.slug, why: `census archetype "${r.censusArchetype}" disagrees with the descriptor's "${r.descriptorArchetype}" (R-AO: PH-0 re-derives, the census follows)` });
+      continue;
+    }
+    if (!r.knownArchetype) {
+      violations.push({ slug: r.slug, why: `descriptor archetype "${r.descriptorArchetype}" has no template-freeze.json archetype_profiles[] entry` });
+    }
+  }
+  const blockedSlugs = violations.map((v) => v.slug);
+  return {
+    pass: violations.length === 0,
+    blockedSlugs,
+    violations,
+    detail: violations.length
+      ? `ARCHETYPE-PARITY: ${violations.length} converted slug(s) whose archetype does not reconcile: ${violations.map((v) => `${v.slug} (${v.why})`).join('; ')}`
+      // Honest about REACH, not just about pass/fail: a slug with no retained
+      // census row (R-AO retention post-dates pilots 1-9 / batch 1) is checked
+      // for the descriptor/freeze-profile arms only — its census arm is
+      // not-applicable, and saying "census and descriptor agree" for it would be
+      // the vacuous-green claim this invariant exists to stop.
+      : `ARCHETYPE-PARITY: ${rows.length} converted slug(s) — ${rows.filter((r) => r.censusArchetype).length} compared against a retained census row (all agree), ${rows.filter((r) => !r.censusArchetype).length} with no retained row (census arm n/a, pre-R-AO cutovers); every archetype has a declared freeze profile`,
   };
 }
 
@@ -1391,6 +1465,61 @@ function fastInvariants(rows, converted, pending) {
       pass: compressedDefault.pass,
       blockedSlugs: compressedDefault.blockedSlugs,
       detail: compressedDefault.detail,
+    });
+
+    // 25. ARCHETYPE-PARITY (Spec 124 R-AO, batch-2 Phase 0.8, 2026-09-15) —
+    // a step's archetype is PROVISIONAL until PH-0 re-derives it from the
+    // code, and the commit-form declaration is provisional with it. Once a
+    // step IS converted, the census and its own descriptor must agree, and
+    // the descriptor's archetype must be one the freeze actually declares a
+    // profile for. Provenance: `assert_engine_health` was censused ASSERT and
+    // measured RECORDER at PH-0 (R-AE) — which made RECORDER a 1-member
+    // archetype, made R-PACE-1 ineligible, and forced I3 to revert from the
+    // compressed form to the full nine-commit form mid-flight (331f97ad).
+    const knownArchetypes = new Set(freezeProfiles.map((p) => p.archetype).filter(Boolean));
+    let censusEntries = [];
+    let censusExemptions = [];
+    try {
+      const censusRaw = JSON.parse(readFileSync(path.join(REPO_ROOT, 'scripts/steps/_schema/step-archetype-census.json'), 'utf8'));
+      censusEntries = Array.isArray(censusRaw.entries) ? censusRaw.entries : [];
+      censusExemptions = Array.isArray(censusRaw.exemptions) ? censusRaw.exemptions : [];
+    } catch {
+      /* census unreadable — conversion-roadmap.infra.test.ts owns that failure; this invariant reports what it can see */
+    }
+    const censusBySlug = new Map(censusEntries.map((e) => [e.slug, e.archetype]));
+    const exemptSlugs = new Set(censusExemptions.map((e) => e.slug));
+    const parityRows = [];
+    for (const relFile of converted) {
+      let slug;
+      try {
+        slug = slugFor(manifestForPace, relFile);
+      } catch {
+        continue;
+      }
+      const descAbs = path.join(REPO_ROOT, harness.descriptorPathFor(relFile));
+      let descriptorArchetype = null;
+      if (existsSync(descAbs)) {
+        try {
+          descriptorArchetype = (JSON.parse(readFileSync(descAbs, 'utf8')).identity || {}).archetype || null;
+        } catch {
+          /* unparsable — reported below as a null archetype, never a silent pass */
+        }
+      }
+      parityRows.push({
+        slug,
+        descriptorArchetype,
+        censusArchetype: censusBySlug.has(slug) ? censusBySlug.get(slug) : null,
+        exempted: exemptSlugs.has(slug),
+        knownArchetype: descriptorArchetype ? knownArchetypes.has(descriptorArchetype) : false,
+      });
+    }
+    const parity = checkArchetypeParity(parityRows);
+    results.push({
+      id: 25,
+      slug: '(registry)',
+      pass: parity.pass,
+      blockedSlugs: parity.blockedSlugs,
+      detail: parity.detail,
     });
   }
 
@@ -3402,6 +3531,31 @@ function selfTest() {
     // GREEN — archetype not yet eligible (only 1 converted member) is not applicable, never checked.
     const notEligible = checkCompressedFormDefault([{ slug: 'assert_parcel_sanity', descriptorExists: true, marker: false, reasonStated: false, archetypeProven: true, archetypeConvertedCount: 1 }]);
     if (!notEligible.pass || notEligible.blockedSlugs.length !== 0) throw new Error(`self-test FAILED: checkCompressedFormDefault must PASS (not-applicable) an archetype that has not yet matured (${JSON.stringify(notEligible)})`);
+  }
+  // ARCHETYPE-PARITY (fast invariant #25, Spec 124 R-AO, 2026-09-15) —
+  // checkArchetypeParity, proven both directions on in-memory fixture rows
+  // (the disk probes — converted.json, each descriptor's identity.archetype,
+  // the census row, template-freeze's profiles — are done by fastInvariants();
+  // this predicate is pure over their output).
+  {
+    // GREEN — converted, descriptor archetype known, no census row left behind.
+    const green = checkArchetypeParity([{ slug: 'assert_schema', descriptorArchetype: 'ASSERT', censusArchetype: null, exempted: false, knownArchetype: true }]);
+    if (!green.pass || green.blockedSlugs.length !== 0) throw new Error(`self-test FAILED: checkArchetypeParity must PASS a converted slug whose descriptor archetype is declared and whose census row is gone (${JSON.stringify(green)})`);
+    // RED — the assert_engine_health case: census says ASSERT, PH-0 measured RECORDER (R-AE).
+    const drift = checkArchetypeParity([{ slug: 'assert_engine_health', descriptorArchetype: 'RECORDER', censusArchetype: 'ASSERT', exempted: false, knownArchetype: true }]);
+    if (drift.pass || JSON.stringify(drift.blockedSlugs) !== '["assert_engine_health"]') throw new Error(`self-test FAILED: checkArchetypeParity did not RED a census/descriptor archetype disagreement scoped to its slug (${JSON.stringify(drift)})`);
+    // RED — converted but the census row still reads UNDECLARED (never reconciled after PH-0).
+    const undeclared = checkArchetypeParity([{ slug: 'load_zoning', descriptorArchetype: 'INGESTOR', censusArchetype: 'UNDECLARED', exempted: false, knownArchetype: true }]);
+    if (undeclared.pass || !undeclared.detail.includes('never reconciled')) throw new Error(`self-test FAILED: checkArchetypeParity did not RED a converted slug whose census row still reads UNDECLARED (${JSON.stringify(undeclared)})`);
+    // RED — converted with no identity.archetype at all.
+    const noArch = checkArchetypeParity([{ slug: 'massing', descriptorArchetype: null, censusArchetype: null, exempted: false, knownArchetype: false }]);
+    if (noArch.pass || !noArch.detail.includes('no identity.archetype')) throw new Error(`self-test FAILED: checkArchetypeParity did not RED a converted slug with no descriptor archetype (${JSON.stringify(noArch)})`);
+    // RED — an archetype the freeze declares no profile for.
+    const unknown = checkArchetypeParity([{ slug: 'parcels', descriptorArchetype: 'LOADER', censusArchetype: null, exempted: false, knownArchetype: false }]);
+    if (unknown.pass || !unknown.detail.includes('no template-freeze.json archetype_profiles')) throw new Error(`self-test FAILED: checkArchetypeParity did not RED an archetype with no declared freeze profile (${JSON.stringify(unknown)})`);
+    // RED — converted AND declared a census exemption (R-AP) is a contradiction.
+    const bothWays = checkArchetypeParity([{ slug: 'reconcile', descriptorArchetype: 'RECORDER', censusArchetype: null, exempted: true, knownArchetype: true }]);
+    if (bothWays.pass || !bothWays.detail.includes('declared a census exemption')) throw new Error(`self-test FAILED: checkArchetypeParity did not RED a slug that is both converted and exempted (${JSON.stringify(bothWays)})`);
   }
   // expectedCaptureChains (Spec 124 R-AI, VEL-3, 2026-09-14) — the capture-set
   // predicate `derivedInvocations` wires into checkCaptures, proven both

@@ -177,8 +177,20 @@ export function buildRoadmap({ manifest, convertedInfo, census, exemptions, prog
     if (entry.file !== ex.file) {
       throw new Error(`step-archetype-census.json exemptions: slug "${ex.slug}" declares file ${JSON.stringify(ex.file)} but manifest.scripts says ${JSON.stringify(entry.file)}`);
     }
-    if (entry.file && !entry.file.endsWith('.py') && ex.reason !== 'no_file') {
+    // Spec 124 §5 R-AP (batch-2 Phase 0.8, 2026-09-15) — the THIRD exemption
+    // class. `runner_owned` is the ONLY reason that may name a real JS file:
+    // the concern is owned by THE RUNNER (Spec 122 §4/§7.3 row 4/§7.4 A3), so
+    // there is no per-step descriptor, no identity.archetype, no x-profile.
+    // Both directions are enforced here — a non-`runner_owned` exemption with a
+    // real JS file still throws (the pre-R-AP behaviour, unchanged), and a
+    // `runner_owned` exemption with NO JS file throws too, so the new class can
+    // never become a silent catch-all for the no_file/python cases.
+    const hasRealJsFile = Boolean(entry.file) && !entry.file.endsWith('.py');
+    if (hasRealJsFile && ex.reason !== 'no_file' && ex.reason !== 'runner_owned') {
       throw new Error(`step-archetype-census.json exemptions: slug "${ex.slug}" has a real JS file (${entry.file}) — not eligible for a "${ex.reason}" exemption`);
+    }
+    if (ex.reason === 'runner_owned' && !hasRealJsFile) {
+      throw new Error(`step-archetype-census.json exemptions: slug "${ex.slug}" declares the R-AP "runner_owned" exemption but has no real JS file (${JSON.stringify(entry.file)}) — that is a "no_file"/python exemption, not a RUNNER-owned concern`);
     }
     if (exemptedSlugs.has(ex.slug)) throw new Error(`step-archetype-census.json exemptions: duplicate slug "${ex.slug}"`);
     exemptedSlugs.add(ex.slug);
@@ -204,6 +216,21 @@ export function buildRoadmap({ manifest, convertedInfo, census, exemptions, prog
     if (!entry) throw new Error(`step-archetype-census.json: slug "${e.slug}" has no manifest.scripts entry`);
     if (entry.file !== e.file) {
       throw new Error(`step-archetype-census.json: slug "${e.slug}" declares file "${e.file}" but manifest.scripts says "${entry.file}"`);
+    }
+    // RETENTION (Spec 124 R-AO, 2026-09-15) — `status: "converted"` marks a row
+    // kept THROUGH cutover so fast invariant #25 has a second, independently
+    // authored archetype to compare the descriptor against. Both directions: the
+    // claim must match converted.json, and a plain row may not name a converted
+    // file (that would be a cutover that forgot to flip the status).
+    const isConvertedFile = convertedSet.has(e.file);
+    if (e.status === 'converted' && !isConvertedFile) {
+      throw new Error(`step-archetype-census.json: slug "${e.slug}" declares status:"converted" but ${e.file} is not in converted.json's converted[]`);
+    }
+    if (e.status !== 'converted' && isConvertedFile) {
+      throw new Error(`step-archetype-census.json: slug "${e.slug}" (${e.file}) IS converted but its census row carries no status:"converted" — cutover RETAINS the row and flips the status (Spec 124 R-AO); it neither deletes it nor leaves it looking unconverted`);
+    }
+    if ((e.status === 'converted') !== Boolean(e.converted_at)) {
+      throw new Error(`step-archetype-census.json: slug "${e.slug}" — status:"converted" and converted_at are declared together or not at all`);
     }
     censusBySlug.set(e.slug, e);
   }
@@ -285,6 +312,10 @@ export function buildRoadmap({ manifest, convertedInfo, census, exemptions, prog
     }
   }
   for (const row of census) {
+    // A RETAINED row (status:"converted", R-AO) is deliberately not a remaining
+    // file — it is the retained pre-cutover archetype #25 checks against. Every
+    // OTHER row must still correspond to a remaining/pending file.
+    if (row.status === 'converted') continue;
     if (!seenSlugs.has(row.slug)) throw new Error(`step-archetype-census.json: row for slug "${row.slug}" does not correspond to any remaining/pending manifest file (stale row)`);
   }
 
@@ -418,7 +449,7 @@ export function render(rows, manifest, exemptions = [], convertedInfo = { conver
   parts.push('*C6 chain-bucket counts (files):* ' + c6Order.map((c) => `${c}=${byChainBucket.get(c).length}`).join(' · '));
   parts.push('');
 
-  parts.push('## Declared exemptions (Ask A2) — manifest slugs with NO JS file, excluded by ruling, never silently dropped');
+  parts.push('## Declared exemptions (Ask A2 + Spec 124 R-AP) — manifest slugs with NO JS file, and RUNNER-owned concerns, excluded by ruling, never silently dropped');
   parts.push('');
   parts.push('| Slug | File | Reason | Ruling | Scope |');
   parts.push('|---|---|---|---|---|');

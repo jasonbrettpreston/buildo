@@ -655,8 +655,36 @@ describe('execution.shape "enrich" + the ENRICHER execution.phases[] profile (pi
     // guessed 106→115 or the brief's guessed 106→124) — the same ONE known, declared exception
     // each time. Narrow the "must be clean" scope to exclude ONLY it; every other converted
     // descriptor (now ten of eleven) remains a byte-identical R-C golden fingerprint.
-    const converted = (JSON.parse(fs.readFileSync(path.join(REPO_ROOT, 'scripts/steps/_schema/converted.json'), 'utf8')) as { converted: string[] }).converted;
-    expect(converted.length, 'twelve steps are converted as of batch1 I3 commit 9 (assert_engine_health cutover, 2026-09-14)').toBe(12);
+    const convertedJson = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, 'scripts/steps/_schema/converted.json'), 'utf8')) as {
+      converted: string[];
+      pending?: Array<{ file: string }>;
+    };
+    const converted = convertedJson.converted;
+    // Spec 124 R-AN (batch-2 Phase 0.8, 2026-09-15) — fleet counts are DERIVED,
+    // never retyped. This line used to read `.toBe(12)`, hand-edited at every
+    // cutover (10 -> 11 at I2, 11 -> 12 at I3) and therefore a second source of
+    // truth for a number `converted.json` already owns. The assertion that
+    // actually carries weight is the TOTALITY one below: the set of registered
+    // descriptors is exactly the set of descriptors on disk (minus the declared
+    // `pending` ones), so a descriptor that lands without registration — or a
+    // registration with no descriptor — is red, at any fleet size.
+    expect(converted.length, 'converted.json is never empty — an empty fleet would make every assertion below vacuous').toBeGreaterThan(0);
+    const descriptorsOnDisk: string[] = [];
+    (function walk(dir: string) {
+      for (const ent of fs.readdirSync(dir, { withFileTypes: true })) {
+        // `scripts/surfaces/**` holds the Spec 126/127 SURFACE descriptor family
+        // (a different schema, its own registry) — not step descriptors.
+        if (ent.name === 'node_modules' || ent.name === '_schema' || ent.name === 'fixtures' || ent.name === 'surfaces') continue;
+        const full = path.join(dir, ent.name);
+        if (ent.isDirectory()) walk(full);
+        else if (ent.name.endsWith('.descriptor.json')) descriptorsOnDisk.push(path.relative(REPO_ROOT, full).replace(/\\/g, '/'));
+      }
+    })(path.join(REPO_ROOT, 'scripts'));
+    const pendingDescriptors = new Set((convertedJson.pending ?? []).map((p) => p.file.replace(/\\/g, '/').replace(/\.js$/, '.descriptor.json')));
+    expect(
+      descriptorsOnDisk.filter((d) => !pendingDescriptors.has(d)).sort(),
+      'every step descriptor on disk is registered in converted.json (and vice versa) — a descriptor that lands unregistered, or a registration with no descriptor, is a structural defect',
+    ).toEqual(converted.map((f) => f.replace(/\\/g, '/').replace(/\.js$/, '.descriptor.json')).sort());
     const KNOWN_CHANGED_THIS_COMMIT = new Set([
       'scripts/quality/assert-schema.descriptor.json', // Rule 3/claim #175 probe_presence fleet fix (R-D three-way lock regen at every cutover)
       // WF3 I3a (2026-09-14, `.cursor/wf3_i3a_infra_step_exemption_active_task.md`) — the §0

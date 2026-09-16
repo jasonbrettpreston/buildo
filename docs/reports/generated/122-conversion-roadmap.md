@@ -7,12 +7,12 @@
 
 ## Counts
 
-Remaining files: **52** (+ **0** pending) · remaining slugs: **54** (+ **0** pending)
+Remaining files: **51** (+ **0** pending) · remaining slugs: **53** (+ **0** pending)
 
 | Batch | Files | Slots |
 |---|---:|---:|
 | C4 | 2 | 4 |
-| C5 | 14 | 14 |
+| C5 | 13 | 13 |
 | C6 | 36 | 40 |
 
 ## C4 — archetype-grouped, risk-ascending
@@ -33,20 +33,19 @@ Remaining files: **52** (+ **0** pending) · remaining slugs: **54** (+ **0** pe
 
 | Archetype | File | Slug(s) | Chains (slots) | Quadrant | Write hints | Open cutover_prereq |
 |---|---|---|---|---|---|---|
-| ASSERT | `scripts/quality/assert-parcel-sanity.js` | assert_parcel_sanity | sources (1) | bottom-left | — | — |
-| ENRICHER | `scripts/enrich-centreline.js` | enrich_centreline | sources (1) | bottom-left | — | EP-PIN-D17 (enrich_centreline) |
-| ENRICHER | `scripts/enrich-heritage.js` | enrich_heritage | sources (1) | bottom-left | — | — |
-| ENRICHER | `scripts/enrich-ravines.js` | enrich_ravines | sources (1) | bottom-left | — | — |
-| ENRICHER | `scripts/compute-parcel-cost-estimates.js` | compute_parcel_cost_estimates | sources (1) | top-left | supports_dry_run | — |
-| INGESTOR | `scripts/load-address-points.js` | address_points | sources (1) | top-left | — | — |
-| INGESTOR | `scripts/load-centreline.js` | load_centreline | sources (1) | top-left | — | — |
-| INGESTOR | `scripts/load-heritage.js` | load_heritage | sources (1) | top-left | — | — |
-| INGESTOR | `scripts/load-zoning.js` | load_zoning | sources (1) | top-left | — | — |
-| INGESTOR | `scripts/load-massing.js` | massing | sources (1) | top-right | — | — |
-| INGESTOR | `scripts/load-neighbourhoods.js` | neighbourhoods | sources (1) | top-right | — | — |
-| INGESTOR | `scripts/load-parcels.js` | parcels | sources (1) | top-right | — | — |
-| INGESTOR | `scripts/load-wsib.js` | load_wsib | sources (1) | top-right | — | — |
-| UNDECLARED | `scripts/reconcile-runs.js` | reconcile | sources (1) | — | — | — |
+| ASSERT | `scripts/quality/assert-parcel-sanity.js` | assert_parcel_sanity | sources (1) | bottom-left | — | CLOUD-PRE (assert_parcel_sanity) |
+| ENRICHER | `scripts/enrich-centreline.js` | enrich_centreline | sources (1) | bottom-left | — | EP-PIN-D17 (enrich_centreline); CLOUD-PRE (enrich_centreline) |
+| ENRICHER | `scripts/enrich-heritage.js` | enrich_heritage | sources (1) | bottom-left | — | CLOUD-PRE (enrich_heritage) |
+| ENRICHER | `scripts/enrich-ravines.js` | enrich_ravines | sources (1) | bottom-left | — | CLOUD-PRE (enrich_ravines) |
+| ENRICHER | `scripts/compute-parcel-cost-estimates.js` | compute_parcel_cost_estimates | sources (1) | top-left | supports_dry_run | CLOUD-PRE (compute_parcel_cost_estimates) |
+| INGESTOR | `scripts/load-address-points.js` | address_points | sources (1) | top-left | — | CLOUD-PRE (address_points); SEAM-CHAIN-1 (address_points) |
+| INGESTOR | `scripts/load-centreline.js` | load_centreline | sources (1) | top-left | — | CLOUD-PRE (load_centreline) |
+| INGESTOR | `scripts/load-heritage.js` | load_heritage | sources (1) | top-left | — | CLOUD-PRE (load_heritage) |
+| INGESTOR | `scripts/load-zoning.js` | load_zoning | sources (1) | top-left | — | CLOUD-PRE (load_zoning) |
+| INGESTOR | `scripts/load-massing.js` | massing | sources (1) | top-right | — | CLOUD-PRE (massing) |
+| INGESTOR | `scripts/load-neighbourhoods.js` | neighbourhoods | sources (1) | top-right | — | CLOUD-PRE (neighbourhoods) |
+| INGESTOR | `scripts/load-parcels.js` | parcels | sources (1) | top-right | — | CLOUD-PRE (parcels) |
+| INGESTOR | `scripts/load-wsib.js` | load_wsib | sources (1) | top-right | — | CLOUD-PRE (load_wsib) |
 
 <details><summary>C5 — why each archetype (census <code>reason</code>)</summary>
 
@@ -63,7 +62,6 @@ Remaining files: **52** (+ **0** pending) · remaining slugs: **54** (+ **0** pe
 - `scripts/load-wsib.js` (INGESTOR): Spec 122 §1.10 declared
 - `scripts/load-zoning.js` (INGESTOR): Spec 122 §1.10 declared
 - `scripts/quality/assert-parcel-sanity.js` (ASSERT): Ask A1-bis: sources-only 1-slot ASSERT, ruled to join the C4 ASSERT group at conversion time; census still declares its true archetype under C5's own batch tag
-- `scripts/reconcile-runs.js` (UNDECLARED): chain-head infrastructure (Spec 122 §7.4 A3) — excluded from the PH-2 population and from the 8-archetype dispatch; STD-4 tracks its manifest-position promise separately, not this census
 
 </details>
 
@@ -110,13 +108,14 @@ Remaining files: **52** (+ **0** pending) · remaining slugs: **54** (+ **0** pe
 
 *C6 chain-bucket counts (files):* permits=23 · coa=6 · deep_scrapes=3 · entities_wsib=2 · orphan=2
 
-## Declared exemptions (Ask A2) — manifest slugs with NO JS file, excluded by ruling, never silently dropped
+## Declared exemptions (Ask A2 + Spec 124 R-AP) — manifest slugs with NO JS file, and RUNNER-owned concerns, excluded by ruling, never silently dropped
 
 | Slug | File | Reason | Ruling | Scope |
 |---|---|---|---|---|
 | coa_documents | `null` | no_file | n/a — no exemption WF was needed | manifest.scripts.coa_documents.coming_soon=true, file:null; nothing exists yet to convert |
 | inspections | `scripts/aic-orchestrator.py` | python_step_excluded | operator 2026-09-10 | out of the JS step standard; stays on its own runner — EXCLUDED from the conversion programme entirely, not deferred to the deep_scrapes batch or any future WF |
+| reconcile | `scripts/reconcile-runs.js` | runner_owned | Spec 124 §5 R-AP (batch-2 Phase 0.8, 2026-09-15) — grounded in Spec 122 §4 (RUNNER owns reconcile), §7.3 concern row 4 ("Reconcile the previous run | RUNNER | nothing declared") and §7.4 A3 (a reconcile step at the head of manifest.chains.sources) | THIRD exemption class: the slug HAS a real JS file, but the concern it implements is RUNNER-owned — Spec 122 §4 says of RUNNER concerns "nothing is declared per step, and a step cannot opt out", so there is no per-step descriptor to write, no identity.archetype in step.schema.json's 8-value enum to pick, and no x-profile/required-field set. Excluded from the PH-2 population, the 8-archetype dispatch and the C5 conversion count (C5 = 13 conversions, not 14). NOT gate_exempt data (that is scripts/refresh-snapshot.descriptor.json's declared run-chain skip, 9a667a06) and NOT a no_file/python exemption — a distinct, named class. STD-4 tracks its manifest-position promise separately, not this census. |
 
 ---
 
-*Totality (both directions, proven by `src/tests/conversion-roadmap.infra.test.ts`; slug-grain, IDENTITY HOLDS): **68** manifest.scripts slugs = **12** converted + **0** pending + **2** declared exemptions (Ask A2, excluded from the conversion programme entirely — never silently dropped, see the table above) + **54** remaining, each counted exactly once, in exactly one of C4/C5/C6/pending/exempted.*
+*Totality (both directions, proven by `src/tests/conversion-roadmap.infra.test.ts`; slug-grain, IDENTITY HOLDS): **68** manifest.scripts slugs = **12** converted + **0** pending + **3** declared exemptions (Ask A2, excluded from the conversion programme entirely — never silently dropped, see the table above) + **53** remaining, each counted exactly once, in exactly one of C4/C5/C6/pending/exempted.*

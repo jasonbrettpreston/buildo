@@ -61,13 +61,18 @@ describe('step-archetype-census.json — schema validity', () => {
     expect(ok, JSON.stringify(validate.errors, null, 2)).toBe(true);
   });
 
-  it('declares exemptions[] (Ask A2) — never empty, one row per non-JS/null-file manifest slug', () => {
+  it('declares exemptions[] (Ask A2 + Spec 124 R-AP) — never empty, one row per non-JS/null-file manifest slug PLUS the RUNNER-owned class', () => {
     const data = JSON.parse(fs.readFileSync(CENSUS_PATH, 'utf8')) as { exemptions: Array<{ slug: string; reason: string }> };
     expect(data.exemptions.length).toBeGreaterThan(0);
     const slugs = data.exemptions.map((e) => e.slug).sort();
-    expect(slugs).toEqual(['coa_documents', 'inspections']);
+    // Spec 124 R-AP (batch-2 Phase 0.8, 2026-09-15): the totality lock moves 2 -> 3.
+    // `reconcile` is NOT a conversion and NOT a no-JS-file exemption — it is the
+    // third, named class: a RUNNER-owned concern (Spec 122 §4/§7.3 row 4/§7.4 A3).
+    expect(slugs).toEqual(['coa_documents', 'inspections', 'reconcile']);
     const inspections = data.exemptions.find((e) => e.slug === 'inspections');
     expect(inspections?.reason).toBe('python_step_excluded');
+    const reconcile = data.exemptions.find((e) => e.slug === 'reconcile');
+    expect(reconcile?.reason).toBe('runner_owned');
   });
 
   it('declares at least one entry (an empty census is never a vacuous pass)', () => {
@@ -88,27 +93,37 @@ describe('step-archetype-census.json — schema validity', () => {
 //    Step 0 of the executor's own instructions demanded.
 // ---------------------------------------------------------------------------
 describe('measured counts — independently re-derived, not transcribed from the plan', () => {
+  // Spec 124 R-AP: a `runner_owned` exemption names a REAL JS file, so this
+  // independent re-derivation must subtract the declared exemption set, not just
+  // the python/null-file ones — otherwise it would re-count `reconcile` as a
+  // remaining conversion the roadmap no longer carries. Derived from the census
+  // (R-AN: never a retyped slug list).
+  const EXEMPT_SLUGS = new Set(
+    (JSON.parse(fs.readFileSync(CENSUS_PATH, 'utf8')) as { exemptions: Array<{ slug: string }> }).exemptions.map((e) => e.slug),
+  );
+
   function fileToSlugsMap(): Record<string, string[]> {
     const map: Record<string, string[]> = {};
     for (const [slug, e] of Object.entries(manifest.scripts)) {
       if (!e.file || e.file.endsWith('.py')) continue;
+      if (EXEMPT_SLUGS.has(slug)) continue;
       (map[e.file] = map[e.file] || []).push(slug);
     }
     return map;
   }
 
-  it('52 remaining files, 54 remaining slugs (excluding the 11 converted — assert_engine_health red_suite, batch1 I3 commit 1, 2026-09-14, R-K.1 — 1 pending, and the 1 python-exempt file)', () => {
+  it('51 remaining files, 53 remaining slugs (excluding the 12 converted, 0 pending, the 1 python-exempt file and the 1 RUNNER-owned exemption — `reconcile`, Spec 124 R-AP, 2026-09-15)', () => {
     const fileToSlugs = fileToSlugsMap();
     const convertedSet = new Set(CONVERTED);
     const pendingSet = new Set(PENDING_FILES);
     const remaining = Object.keys(fileToSlugs).filter((f) => !convertedSet.has(f) && !pendingSet.has(f));
     const remainingSlugCount = remaining.reduce((n, f) => n + (fileToSlugs[f]?.length ?? 0), 0);
-    expect(remaining.length).toBe(52);
-    expect(remainingSlugCount).toBe(54);
+    expect(remaining.length).toBe(51);
+    expect(remainingSlugCount).toBe(53);
   });
 
-  it('the census file-count-by-batch matches the independently re-derived C4/C5/C6 split (C4=2, C5=14, C6=36; pending=0 — assert_engine_health\'s census row deleted entirely at batch1 I3 commit 9, 2026-09-14, mirroring the assert_data_bounds/I2 commit 9 cutover precedent)', () => {
-    const census = JSON.parse(fs.readFileSync(CENSUS_PATH, 'utf8')) as { entries: Array<{ slug: string; file: string; batch: string }> };
+  it('the census file-count-by-batch matches the independently re-derived C4/C5/C6 split (C4=2, C5=13 — `reconcile` left C5 for the R-AP RUNNER-owned exemption, 2026-09-15 — C6=36; pending=0 — assert_engine_health\'s census row deleted entirely at batch1 I3 commit 9, 2026-09-14, mirroring the assert_data_bounds/I2 commit 9 cutover precedent)', () => {
+    const census = JSON.parse(fs.readFileSync(CENSUS_PATH, 'utf8')) as { entries: Array<{ slug: string; file: string; batch: string; status?: string }> };
     const fileToSlugs = fileToSlugsMap();
     const convertedSet = new Set(CONVERTED);
     const pendingSet = new Set(PENDING_FILES);
@@ -120,6 +135,12 @@ describe('measured counts — independently re-derived, not transcribed from the
       ['pending', new Set<string>()],
     ]);
     for (const e of census.entries) {
+      // Spec 124 R-AO retention (2026-09-15): a status:"converted" row is kept
+      // THROUGH cutover so fast invariant #25 has an independently-authored
+      // archetype to compare the descriptor against. It carries its PRE-cutover
+      // `batch` verbatim (never rewritten), so it must not be counted against the
+      // REMAINING batch split this test re-derives — the file is already converted.
+      if (e.status === 'converted') continue;
       byBatch.get(e.batch)?.add(e.file);
     }
     const c4 = byBatch.get('C4')!;
@@ -134,7 +155,7 @@ describe('measured counts — independently re-derived, not transcribed from the
     expect(c4.size).toBe(2);
     // C5 itself is unaffected by this slug's move (it was never a C5 member) — the
     // census total gains 0 net rows (C4's loss is pending's gain, not C5's).
-    expect(c5.size).toBe(14);
+    expect(c5.size).toBe(13);
     expect(pendingBatch.size).toBe(0);
     expect(c6.size).toBe(36);
     expect(c4.size + c5.size + c6.size).toBe(remaining.length);
@@ -186,10 +207,32 @@ describe('docs/reports/generated/122-conversion-roadmap.md — generated, drift-
     }
   });
 
-  it('the rendered table\'s counts agree with the independently re-derived counts above (52 remaining files, 0 pending — assert_engine_health registered in converted[] at batch1 I3 commit 9)', () => {
+  // Spec 124 R-AN (2026-09-15) — fleet counts are DERIVED from the committed
+  // registries (manifest.scripts minus converted.json minus the census's
+  // declared exemptions), never retyped per cutover. Before this the two
+  // literals `**52**`/`**54**` had to be hand-edited at every single cutover;
+  // they went red at R-AP for exactly that reason and not because the roadmap
+  // was wrong. The PREMISE of the assertion is unchanged: the rendered header
+  // must agree with a count this test derives for itself.
+  it('the rendered table\'s counts agree with the independently re-derived counts above (derived, never retyped — R-AN)', () => {
     const text = fs.readFileSync(GENERATED_PATH, 'utf8');
-    expect(text).toContain('Remaining files: **52** (+ **0** pending)');
-    expect(text).toContain('remaining slugs: **54** (+ **0** pending)');
+    const census = JSON.parse(fs.readFileSync(CENSUS_PATH, 'utf8')) as { exemptions: Array<{ slug: string }> };
+    const exemptSlugs = new Set(census.exemptions.map((e) => e.slug));
+    const convertedSet = new Set(CONVERTED);
+    const pendingSet = new Set(PENDING_FILES);
+    const fileToSlugs: Record<string, string[]> = {};
+    for (const [slug, e] of Object.entries(manifest.scripts)) {
+      if (!e.file || e.file.endsWith('.py') || exemptSlugs.has(slug)) continue;
+      (fileToSlugs[e.file] = fileToSlugs[e.file] || []).push(slug);
+    }
+    const remainingFiles = Object.keys(fileToSlugs).filter((f) => !convertedSet.has(f) && !pendingSet.has(f));
+    const remainingSlugs = remainingFiles.reduce((n, f) => n + (fileToSlugs[f]?.length ?? 0), 0);
+    const pendingFiles = Object.keys(fileToSlugs).filter((f) => pendingSet.has(f));
+    const pendingSlugs = pendingFiles.reduce((n, f) => n + (fileToSlugs[f]?.length ?? 0), 0);
+    expect(text).toContain(`Remaining files: **${remainingFiles.length}** (+ **${pendingFiles.length}** pending)`);
+    expect(text).toContain(`remaining slugs: **${remainingSlugs}** (+ **${pendingSlugs}** pending)`);
+    // Never a vacuous pass: the derivation must still be measuring a real fleet.
+    expect(remainingFiles.length).toBeGreaterThan(40);
   });
 });
 
@@ -275,29 +318,40 @@ describe('buildRoadmap() — totality over the real committed data (HIGH-1: slug
 
     const files = rows.map((r) => r.file);
     expect(new Set(files).size, 'no file appears twice').toBe(files.length);
-    expect(rows.filter((r) => !r.pending).length).toBe(52);
-    expect(rows.filter((r) => r.pending).length).toBe(0);
+    // R-AN: derived from the same registries the generator reads, never retyped.
+    const exemptSlugs = new Set(args.exemptions.map((e) => (e as { slug: string }).slug));
+    const convertedSet = new Set(args.convertedInfo.converted);
+    const expectedFiles = new Set(
+      Object.entries(args.manifest.scripts)
+        .filter(([slug, e]) => e.file && !e.file.endsWith('.py') && !exemptSlugs.has(slug) && !convertedSet.has(e.file))
+        .map(([, e]) => e.file as string),
+    );
+    expect(rows.length).toBe(expectedFiles.size);
+    expect(rows.filter((r) => r.pending).length).toBe(args.convertedInfo.pending.length);
     for (const r of rows) {
       expect(['C4', 'C5', 'C6', 'pending']).toContain(r.batch);
       expect(r.pending).toBe(r.batch === 'pending');
     }
   });
 
-  it('HIGH-1: the 2 declared exemptions (inspections, coa_documents) are NOT silently dropped — 68 total manifest slugs = 12 converted + 0 pending + 2 exempted + 54 remaining (assert_engine_health registered in converted[] at batch1 I3 commit 9)', async () => {
+  it('HIGH-1 + R-AP: the 3 declared exemptions (inspections, coa_documents, reconcile) are NOT silently dropped — 68 total manifest slugs = 12 converted + 0 pending + 3 exempted + 53 remaining', async () => {
     const mod = (await import(pathToFileURL(GENERATOR).href)) as unknown as RoadmapModule;
     const args = await loadRealArgs(mod);
-    expect(args.exemptions.map((e) => e.slug).sort()).toEqual(['coa_documents', 'inspections']);
+    expect(args.exemptions.map((e) => e.slug).sort()).toEqual(['coa_documents', 'inspections', 'reconcile']);
     const rows = mod.buildRoadmap(args);
     const remainingSlugs = rows.filter((r) => !r.pending).reduce((n, r) => n + r.slugs.length, 0);
     const pendingSlugs = rows.filter((r) => r.pending).reduce((n, r) => n + r.slugs.length, 0);
     const totalSlugs = Object.keys(args.manifest.scripts).length;
+    // Spec 124 R-AN (2026-09-15): the converted count is DERIVED from
+    // converted.json, never retyped per cutover.
+    const convertedSlugCount = CONVERTED.length;
     expect(totalSlugs).toBe(68);
-    expect(12 + pendingSlugs + args.exemptions.length + remainingSlugs).toBe(totalSlugs);
+    expect(convertedSlugCount + pendingSlugs + args.exemptions.length + remainingSlugs).toBe(totalSlugs);
     expect(pendingSlugs).toBe(0);
-    expect(remainingSlugs).toBe(54);
+    expect(remainingSlugs).toBe(53);
   });
 
-  it('the rendered report never silently drops the 2 exemptions — both appear in the Declared exemptions table and the totality sentence states IDENTITY HOLDS', async () => {
+  it('the rendered report never silently drops the 3 exemptions — all appear in the Declared exemptions table and the totality sentence states IDENTITY HOLDS', async () => {
     const mod = (await import(pathToFileURL(GENERATOR).href)) as unknown as RoadmapModule;
     const args = await loadRealArgs(mod);
     const rows = mod.buildRoadmap(args);
@@ -307,6 +361,8 @@ describe('buildRoadmap() — totality over the real committed data (HIGH-1: slug
     expect(rendered).toContain('python_step_excluded');
     expect(rendered).toContain('coa_documents');
     expect(rendered).toContain('no_file');
+    expect(rendered).toContain('reconcile');
+    expect(rendered).toContain('runner_owned');
     expect(rendered).toContain('IDENTITY HOLDS');
     expect(rendered).not.toContain('IDENTITY VIOLATED');
   });
@@ -329,10 +385,162 @@ describe('buildRoadmap() — both directions on declared exemptions (HIGH-1)', (
     expect(() => mod.buildRoadmap(badFile)).toThrow(/slug "inspections" declares file.*but manifest.scripts says/);
   });
 
-  it('GREEN — the real, committed exemptions (2: inspections, coa_documents) never throw', async () => {
+  it('GREEN — the real, committed exemptions (3: inspections, coa_documents, reconcile) never throw', async () => {
     const mod = (await import(pathToFileURL(GENERATOR).href)) as unknown as RoadmapModule;
     const args = await loadRealArgs(mod);
     expect(() => mod.buildRoadmap(args)).not.toThrow();
-    expect(REAL_CENSUS.exemptions).toHaveLength(2);
+    expect(REAL_CENSUS.exemptions).toHaveLength(3);
   });
+});
+
+// ---------------------------------------------------------------------------
+// Spec 124 §5 R-AP (batch-2 Phase 0.8, 2026-09-15) — the RUNNER-owned exemption
+// class, proven BOTH directions. The lock exists because the class is the only
+// exemption reason allowed to name a real JS file: without the inverse arm it
+// would degrade into a catch-all that silently absorbs the no_file/python cases,
+// and without the forward arm the pre-R-AP "real JS file is never exempt" rule
+// would still refuse `reconcile`.
+// ---------------------------------------------------------------------------
+describe('buildRoadmap() — the R-AP RUNNER-owned exemption class, both directions', () => {
+  it('RED (pre-R-AP behaviour, preserved) — an exemption naming a real JS file with any OTHER reason still throws', async () => {
+    const mod = (await import(pathToFileURL(GENERATOR).href)) as unknown as RoadmapModule;
+    const args = await loadRealArgs(mod);
+    const wrongReason = {
+      ...args,
+      exemptions: args.exemptions.map((e) => (e.slug === 'reconcile' ? { ...e, reason: 'chain_head_infrastructure' } : e)),
+    };
+    expect(() => mod.buildRoadmap(wrongReason)).toThrow(/slug "reconcile" has a real JS file .* not eligible for a "chain_head_infrastructure" exemption/);
+  });
+
+  it('RED (the inverse) — a `runner_owned` exemption on a slug with NO real JS file throws, so the class can never absorb a no_file/python case', async () => {
+    const mod = (await import(pathToFileURL(GENERATOR).href)) as unknown as RoadmapModule;
+    const args = await loadRealArgs(mod);
+    const absorbed = {
+      ...args,
+      exemptions: args.exemptions.map((e) => (e.slug === 'inspections' ? { ...e, reason: 'runner_owned' } : e)),
+    };
+    expect(() => mod.buildRoadmap(absorbed)).toThrow(/slug "inspections" declares the R-AP "runner_owned" exemption but has no real JS file/);
+  });
+
+  it('RED (totality) — dropping the `reconcile` exemption without restoring its census row throws, so the slug can never silently vanish', async () => {
+    const mod = (await import(pathToFileURL(GENERATOR).href)) as unknown as RoadmapModule;
+    const args = await loadRealArgs(mod);
+    const dropped = { ...args, exemptions: args.exemptions.filter((e) => e.slug !== 'reconcile') };
+    expect(() => mod.buildRoadmap(dropped)).toThrow(/no census row for remaining slug "reconcile"/);
+  });
+
+  it('GREEN — `reconcile` is exempted, therefore absent from every rendered C4/C5/C6 batch row (it is not a conversion)', async () => {
+    const mod = (await import(pathToFileURL(GENERATOR).href)) as unknown as RoadmapModule;
+    const args = await loadRealArgs(mod);
+    const rows = mod.buildRoadmap(args);
+    expect(rows.some((r) => r.slugs.includes('reconcile'))).toBe(false);
+    const c5 = rows.filter((r) => r.batch === 'C5');
+    expect(c5).toHaveLength(13);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Spec 124 R-AO RETENTION + fast invariant #25 ARCHETYPE-PARITY — reachability.
+//
+// THE INTEGRATION FINDING (HIGH, 2026-09-15): #25 was UNREACHABLE for the very
+// case R-AO exists for. Commit 9 DELETED a slug's census row, so `censusArchetype`
+// was null for every converted slug and the comparison arm never ran — proved by
+// swapping `load_ravines` to a valid-but-wrong ASSERT, which still PASSED.
+//
+// THE FIX: cutover RETAINS the row (`status: "converted"` + `converted_at`) instead
+// of deleting it, so the census keeps an INDEPENDENTLY-AUTHORED archetype for #25
+// to compare the descriptor against. The retained value is the census's own
+// pre-cutover value, read verbatim from git history — never re-derived from the
+// descriptor, which would make #25 compare a value to itself.
+//
+// MEASURED LIMIT, recorded rather than papered over: only FOUR of the twelve
+// converted slugs have a pre-cutover archetype anywhere in git history
+// (`enrich_parcels` ENRICHER, `assert_global_coverage` ASSERT, `assert_data_bounds`
+// ASSERT, `assert_engine_health` RECORDER). The census was authored 2026-09-10 as
+// "the currently-unconverted files", so the other eight were ALREADY converted and
+// never had a row. Restoring rows for them would fabricate the exact second copy
+// this census's own header forbids, so they carry none, and #25's census arm stays
+// not-applicable for them. Every batch-2 cutover from here on retains its row.
+// ---------------------------------------------------------------------------
+describe('Spec 124 R-AO — the retained census row makes #25 ARCHETYPE-PARITY reachable', () => {
+  const census = () => JSON.parse(fs.readFileSync(CENSUS_PATH, 'utf8')) as {
+    entries: Array<{ slug: string; file: string; archetype: string; status?: string; converted_at?: string }>;
+  };
+
+  it('every retained row names a genuinely converted file, and every converted file with a row is retained (both directions, on the REAL census)', () => {
+    const retained = census().entries.filter((e) => e.status === 'converted');
+    expect(retained.length, 'the retention mechanism is not a dead declaration').toBeGreaterThan(0);
+    const convertedSet = new Set(CONVERTED);
+    for (const r of retained) {
+      expect(convertedSet.has(r.file), `${r.slug}: status "converted" but ${r.file} is not in converted.json`).toBe(true);
+      expect(r.converted_at, `${r.slug}: a retention claim carries the cutover commit that makes it checkable`).toBeTruthy();
+    }
+    for (const e of census().entries) {
+      if (convertedSet.has(e.file)) expect(e.status, `${e.slug}: a converted file's census row must be marked retained, never left looking unconverted`).toBe('converted');
+    }
+  });
+
+  it('GREEN — checkArchetypeParity passes against the REAL census + REAL descriptors, and is NOT vacuous (>=1 retained row is actually compared)', async () => {
+    const mod = (await import(pathToFileURL(path.join(REPO_ROOT, 'scripts/analysis/step-validate.mjs')).href)) as unknown as {
+      checkArchetypeParity: (rows: unknown[]) => { pass: boolean; blockedSlugs: string[]; detail: string };
+    };
+    const rows = realParityRows();
+    expect(rows.filter((r) => r.censusArchetype !== null).length, 'at least one converted slug must have a retained census row, or this invariant is vacuous').toBeGreaterThan(0);
+    const result = mod.checkArchetypeParity(rows);
+    expect(result.pass, result.detail).toBe(true);
+  });
+
+  it('RED — a VALID-BUT-WRONG retained archetype (a real enum value, just not the one this step measured) is caught, scoped to its slug', async () => {
+    const mod = (await import(pathToFileURL(path.join(REPO_ROOT, 'scripts/analysis/step-validate.mjs')).href)) as unknown as {
+      checkArchetypeParity: (rows: unknown[]) => { pass: boolean; blockedSlugs: string[]; detail: string };
+    };
+    const rows = realParityRows();
+    const victim = rows.find((r) => r.censusArchetype !== null)!;
+    const wrong = victim.descriptorArchetype === 'ASSERT' ? 'LINK' : 'ASSERT';
+    const swapped = rows.map((r) => (r.slug === victim.slug ? { ...r, censusArchetype: wrong } : r));
+    const result = mod.checkArchetypeParity(swapped);
+    expect(result.pass, 'a valid-but-wrong retained archetype must NOT pass — this is the arm that was unreachable before R-AO retention').toBe(false);
+    expect(result.blockedSlugs).toEqual([victim.slug]);
+    expect(result.detail).toMatch(/disagrees with the descriptor/);
+  });
+
+  it('RED — the generator refuses to render a valid-but-wrong retained archetype (real CLI, committed fixture)', () => {
+    let threw = false;
+    let stderr = '';
+    try {
+      execFileSync('node', [GENERATOR, '--check'], {
+        cwd: REPO_ROOT,
+        encoding: 'utf8',
+        stdio: 'pipe',
+        env: { ...process.env, BUILDO_CENSUS_PATH: BAD_MISMATCH_FIXTURE },
+      });
+    } catch (err) {
+      threw = true;
+      stderr = String((err as { stderr?: string }).stderr ?? '') + String((err as { message?: string }).message ?? '');
+    }
+    expect(threw).toBe(true);
+    expect(stderr).toMatch(/link_wsib[\s\S]*declares archetype "LINK"[\s\S]*real descriptor says "MATCHER"/);
+  });
+
+  /** The exact rows fastInvariants() builds for #25, read from the real tree. */
+  function realParityRows() {
+    const c = census();
+    const bySlug = new Map(c.entries.map((e) => [e.slug, e.archetype]));
+    const freeze = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, 'scripts/steps/_schema/template-freeze.json'), 'utf8')) as {
+      archetype_profiles?: Array<{ archetype: string }>;
+    };
+    const known = new Set((freeze.archetype_profiles ?? []).map((p) => p.archetype));
+    return CONVERTED.map((file) => {
+      const slug = Object.entries(manifest.scripts).find(([, e]) => e.file === file)?.[0] as string;
+      const descPath = path.join(REPO_ROOT, file.replace(/\.js$/, '.descriptor.json'));
+      const descriptorArchetype = (JSON.parse(fs.readFileSync(descPath, 'utf8')) as { identity?: { archetype?: string } }).identity?.archetype ?? null;
+      return {
+        slug,
+        descriptorArchetype,
+        censusArchetype: bySlug.has(slug) ? (bySlug.get(slug) as string) : null,
+        exempted: false,
+        knownArchetype: descriptorArchetype ? known.has(descriptorArchetype) : false,
+      };
+    });
+  }
 });

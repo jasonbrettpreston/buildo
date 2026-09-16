@@ -6,13 +6,13 @@
 
 ## Counts
 
-Total items: **120**
+Total items: **123**
 
 | status | count |
 |---|---|
-| ⬜ NOT_STARTED | 28 |
+| ⬜ NOT_STARTED | 29 |
 | ⚠️ PARTIAL | 16 |
-| ✅ BUILT | 72 |
+| ✅ BUILT | 74 |
 | ⏭️ SUPERSEDED | 4 |
 
 **blocks batching: 0**
@@ -28,7 +28,7 @@ Total items: **120**
 | `WD-1` | 122 §1.4 | class-enum-without-write.js-branch lock | ✅ BUILT | wf: wf: programme-WD1, WD-1 WF5+WF2 commits 1-3 | batching | 2026-09-09 |
 | `ADMIN-1` | 124 §2 Rule 3 | admin GROUPS reverse-coverage — every unclassified seed key gets a real group or a reviewed hidden reason | ✅ BUILT | wf: wf: programme-ADMIN-1 | batching | 2026-09-09 |
 
-## Cutover prerequisite — blocks a specific pilot slug registering in converted.json (16)
+## Cutover prerequisite — blocks a specific pilot slug registering in converted.json (18)
 
 | id | spec | title | status | owner | blocks | last reviewed |
 |---|---|---|---|---|---|---|
@@ -46,10 +46,12 @@ Total items: **120**
 | `C4-GATE` | 122 §5.3 / C4 plan §3.4 | C4 "every chain" capture gate is a CHECKER — completeness + freshness, both sides | ✅ BUILT | wf: C4 step H — c4_chain_completeness_gate (2026-09-11) — CLOSED | assert_global_coverage, assert_data_bounds, assert_engine_health, link_neighbourhoods, geocode_permits | 2026-09-11 |
 | `HB-1` | 124 §2 Rule 12 | Heartbeat covers the WHOLE step, not only phase boundaries (EP-D15) | ✅ BUILT | wf: wf: conversion-roadmap commit 3, 2026-09-10 | — | 2026-09-10 |
 | `CEIL-1` | 124 §2 Rule 12 | Statement/lock ceiling bound on EVERY phase incl. post_commit (EP-D16) | ✅ BUILT | wf: wf: conversion-roadmap commit 3, 2026-09-10 | — | 2026-09-10 |
+| `CLOUD-PRE` | 123 §6 | Pre-dispatch cloud-state checklist — table sizes, index presence, stranded running rows measured BEFORE a cutover attempt | ⬜ NOT_STARTED | wf: wf: unassigned | assert_parcel_sanity, enrich_ravines, enrich_heritage, enrich_centreline, compute_parcel_cost_estimates, address_points, load_centreline, load_zoning, load_heritage, load_wsib, massing, parcels, neighbourhoods | 2026-09-15 |
 | `VEL-1` | 124 R-AG (proposed) | Gate placement: full suite at pre-push, vitest related + fast invariants at pre-commit, live-DB infra tests in test:db | ✅ BUILT | wf: wf: conversion velocity (R-AG) | address_points, assert_parcel_sanity, compute_parcel_cost_estimates, enrich_centreline, enrich_heritage, enrich_ravines, load_centreline, load_heritage, load_wsib, load_zoning, massing, neighbourhoods, parcels, reconcile | 2026-09-14 |
 | `VEL-2` | 124 R-AH (proposed) | Compressed 3-commit form is the default once an archetype has two full-form members | ✅ BUILT | wf: wf: conversion velocity (R-AH) | address_points, assert_parcel_sanity, compute_parcel_cost_estimates, enrich_centreline, enrich_heritage, enrich_ravines, load_centreline, load_heritage, load_wsib, load_zoning, massing, neighbourhoods, parcels, reconcile | 2026-09-14 |
+| `SEAM-CHAIN-1` | 122 §6.5 | seam checks are scoped to the chain they run in | ⬜ NOT_STARTED | followup: docs/reports/review_followups.md — WF2 batch-2 Phase 0.10 section, the seam.js MED row | address_points | 2026-09-15 |
 
-## Nice-to-have — real gap, not currently blocking (98)
+## Nice-to-have — real gap, not currently blocking (99)
 
 | id | spec | title | status | owner | blocks | last reviewed |
 |---|---|---|---|---|---|---|
@@ -128,7 +130,6 @@ Total items: **120**
 | `EP-PHASE-DEADLINE` | 124 §5 R-AJ | execution.phases[] timeout is a per-STATEMENT bound, not a phase bound; execution.step_timeout/budget/txn_budget had no executor at all | ✅ BUILT | wf: wf: EP-PHASE-DEADLINE (WF3, 2026-09-15) | — | 2026-09-15 |
 | `EP-PASS3-BACKLOG` | 122 §3.0b | enrich_parcels_pass3_scope accretes a full ~443K-row cohort per killed run and nothing ever retires it | ✅ BUILT | wf: wf: EP-PASS3-BACKLOG (WF3, 2026-09-15) | — | 2026-09-15 |
 | `RM-1` | 122 §10.3 | Conversion roadmap is generated + drift-guarded, never hand-maintained | ✅ BUILT | wf: wf: conversion-roadmap (this plan) | — | 2026-09-10 |
-| `CLOUD-PRE` | 123 §6 | Pre-dispatch cloud-state checklist — table sizes, index presence, stranded running rows measured BEFORE a cutover attempt | ⬜ NOT_STARTED | wf: wf: unassigned | — | 2026-09-10 |
 | `ACC-1` | 122 §7.2 | Acceptance is per-slug and row-derived, never a GitHub run tick | ⬜ NOT_STARTED | wf: wf: unassigned | — | 2026-09-10 |
 | `LAND-1` | 124 §R-8 | Landing discipline declared: derived-artifact regen, EOL normalisation, exact-command cloud-write allow rules | ⬜ NOT_STARTED | wf: wf: unassigned | — | 2026-09-10 |
 | `PH2-EXT` | 123 §2 | PH-2 churn×complexity population widened from 27 sources steps to all 65 chain slugs | ⬜ NOT_STARTED | wf: wf: unassigned | — | 2026-09-10 |
@@ -147,10 +148,12 @@ Total items: **120**
 | `POST-B1-11` | 76 funnel.ts observability model | funnel mutation bounds match the fleet | ✅ BUILT | followup: review_followups.md: commit-8 LOW row | — | 2026-09-15 |
 | `POST-B1-12` | 123 §7 G0 / registry | Step Registry generated in-repo | ⬜ NOT_STARTED | followup: Step Registry artifact built 2026-09-14 from scratch scripts outside the repo | — | 2026-09-14 |
 | `VEL-3` | 124 R-AI (proposed) | Capture pairs only where sharing.varies_by_chain says the chain matters | ✅ BUILT | wf: wf: conversion velocity (R-AI) | — | 2026-09-14 |
-| `POST-B1-14` | 122 §1.8 | Concern index audited against the 20-category correction | ⬜ NOT_STARTED | followup: Spec 122 §1.8 unaudited flag (2026-09-09) | — | 2026-09-14 |
-| `POST-B1-15` | 122 §5.2 | Source-text test debt retired: 53 files / 85 readFileSync(scripts/*.js) assertions → descriptor/behaviour assertions | ⬜ NOT_STARTED | wf: wf: source-text test debt (POST-B1-15) | — | 2026-09-14 |
+| `POST-B1-13` | 122 §10.3 | STD-1 evidence names the real x-categories count (20, not 18) | ✅ BUILT | followup: batch-1 follow-ups table row POST-B1-13 (content landed b3acc6d1) | — | 2026-09-15 |
+| `POST-B1-14` | 122 §1.8 | Concern index audited against the 20-category correction | ⬜ NOT_STARTED | followup: Spec 122 §1.8 unaudited flag (2026-09-09) | — | 2026-09-15 |
+| `POST-B1-15` | 122 §5.2 | Source-text test debt retired: 53 files / 85 readFileSync(scripts/*.js) assertions → descriptor/behaviour assertions; fleet counts derived from converted.json, never retyped (Spec 124 R-AN) | ⬜ NOT_STARTED | wf: wf: source-text test debt (POST-B1-15) | — | 2026-09-15 |
 | `SPECTBL-1` | 43 §2 / 42 §2 / 41 §2 | Chain-spec Step Breakdown tables reconciled to manifest.chains + drift-locked | ✅ BUILT | wf: wf: chain-spec step tables (SPECTBL-1) | — | 2026-09-15 |
 | `SPECTBL-GEN` | 122 batch-2 amendment item 5 | Step Breakdown tables generated rather than hand-authored | ⬜ NOT_STARTED | followup: .cursor/batch2_c5_active_task.md §Proposed policy amendments item 5 (batch-2 row 0.8) | — | 2026-09-15 |
+| `ENR-1` | 122 §1.10 | runEnrichPhase is a GENERIC ENRICHER runner, not enrich_parcels with a front door | ✅ BUILT | followup: docs/reports/review_followups.md - WF2 batch-2 Phase 0.10 section, the matched-telemetry MED row | — | 2026-09-15 |
 
 ---
 

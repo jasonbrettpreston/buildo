@@ -1701,16 +1701,30 @@
       "title": "Pre-dispatch cloud-state checklist — table sizes, index presence, stranded running rows measured BEFORE a cutover attempt",
       "promised": "cloud data state (table sizes, index presence, stranded `running` pipeline_runs rows) is measured before a cutover attempt is dispatched, not discovered afterward (the EP-D14 class: a committed fix whose cloud `--full` re-run has not yet landed)",
       "status": "NOT_STARTED",
-      "evidence": "grep -n 'CLOUD-PRE\\|pre-dispatch' scripts/analysis/step-validate.mjs docs/runbook/README.md -> 0 hits. EP-D14's own cloud backlog measurement (439,130 unconsumed enrich_parcels_pass3_scope rows, one backend ACTIVE 23 min, docs/reports/defect-ledger.md EP-D14 row) was a one-off WF3 measurement, never a standing pre-dispatch checklist any future cutover runs automatically",
+      "evidence": "grep -n 'CLOUD-PRE\\|pre-dispatch' scripts/analysis/step-validate.mjs docs/runbook/README.md -> 0 hits. EP-D14's own cloud backlog measurement (439,130 unconsumed enrich_parcels_pass3_scope rows, one backend ACTIVE 23 min, docs/reports/defect-ledger.md EP-D14 row) was a one-off WF3 measurement, never a standing pre-dispatch checklist any future cutover runs automatically | PROMOTED nice_to_have -> cutover_prereq 2026-09-15 (batch-2 Phase 0.7), SCOPED to the 13 C5 slugs and to no already-converted slug (registry invariant #9 would red otherwise). Grounding, measured: scripts/lib/step/config.js THROWS per LM-D15 when a descriptor declares a logic variable with no logic_variables ROW ('a seed default exists ... but a seed is BOOTSTRAP ONLY'), and scripts/seeds/apply-logic-variables.js is the applier. Every C5 step declares new tunables (Rule 3), so batch 2 is the batch that pays for an unseeded cloud. Spec 123 §7.2 A5 already names the seeding step in the pre-dispatch checklist; until this promotion the discipline was UNENFORCED (gate nice_to_have, blocks []).",
       "owner": {
         "kind": "wf",
         "ref": "wf: unassigned"
       },
       "gate": {
-        "kind": "nice_to_have",
-        "blocks": []
+        "kind": "cutover_prereq",
+        "blocks": [
+          "assert_parcel_sanity",
+          "enrich_ravines",
+          "enrich_heritage",
+          "enrich_centreline",
+          "compute_parcel_cost_estimates",
+          "address_points",
+          "load_centreline",
+          "load_zoning",
+          "load_heritage",
+          "load_wsib",
+          "massing",
+          "parcels",
+          "neighbourhoods"
+        ]
       },
-      "last_reviewed": "2026-09-10"
+      "last_reviewed": "2026-09-15"
     },
     {
       "id": "ACC-1",
@@ -2083,12 +2097,29 @@
       "last_reviewed": "2026-09-14"
     },
     {
+      "id": "POST-B1-13",
+      "spec": "122 §10.3",
+      "title": "STD-1 evidence names the real x-categories count (20, not 18)",
+      "promised": "every row of the batch-1 follow-ups table is also a programme-items.json item — the registry and the plan are ONE list, never two",
+      "status": "BUILT",
+      "evidence": "REGISTERED (not struck) at batch-2 Phase 0.7, 2026-09-15. The row existed in .cursor/wf1_post_batch1_followups_active_task.md's table with NO programme-items.json row, contradicting that plan's own header claim. Its CONTENT already landed in b3acc6d1 ('STD-1 evidence corrected 18->20 x-categories') and is verifiable in this file: STD-1's evidence string reads 'x-categories (20 entries - re-measured 2026-09-14, the earlier \"18 entries\" was a stale count; POST-B1-13)'. Registered BUILT rather than struck so the table/registry reconciliation is provable from the registry alone.",
+      "owner": {
+        "kind": "followup",
+        "ref": "batch-1 follow-ups table row POST-B1-13 (content landed b3acc6d1)"
+      },
+      "gate": {
+        "kind": "nice_to_have",
+        "blocks": []
+      },
+      "last_reviewed": "2026-09-15"
+    },
+    {
       "id": "POST-B1-14",
       "spec": "122 §1.8",
       "title": "Concern index audited against the 20-category correction",
       "promised": "the 49-concern index in Spec 122 §1.8 re-mapped to the 20 schema categories (invariants/plausibility homes added), the \"unaudited against the 18→20 correction\" flag removed, and the mapper re-run",
       "status": "NOT_STARTED",
-      "evidence": "Spec 122 §1.8 table row flags 44 category-homed concerns as unaudited since 2026-09-09; x-categories re-measured at 20 on 2026-09-14 — plan .cursor/wf1_post_batch1_followups_active_task.md",
+      "evidence": "Spec 122 §1.8 table row flags 44 category-homed concerns as unaudited since 2026-09-09; x-categories re-measured at 20 on 2026-09-14 — plan .cursor/wf1_post_batch1_followups_active_task.md | Batch-2 Phase 0.7 (2026-09-15): this item was REGISTERED but absent from the batch-1 follow-ups table, the mirror image of POST-B1-13. Its row now exists in docs/reports/review_followups.md (the tracked follow-ups ledger) so the registry and a tracked table are one list; the untracked .cursor plan table was deliberately NOT edited (read-only context for this WF).",
       "owner": {
         "kind": "followup",
         "ref": "Spec 122 §1.8 unaudited flag (2026-09-09)"
@@ -2097,15 +2128,15 @@
         "kind": "nice_to_have",
         "blocks": []
       },
-      "last_reviewed": "2026-09-14"
+      "last_reviewed": "2026-09-15"
     },
     {
       "id": "POST-B1-15",
       "spec": "122 §5.2",
-      "title": "Source-text test debt retired: 53 files / 85 readFileSync(scripts/*.js) assertions → descriptor/behaviour assertions",
-      "promised": "no fleet test asserts against a pipeline script's source text; each conversion stops paying the 30–50 min repoint (I3 commit 7 repointed 6 files)",
+      "title": "Source-text test debt retired: 53 files / 85 readFileSync(scripts/*.js) assertions → descriptor/behaviour assertions; fleet counts derived from converted.json, never retyped (Spec 124 R-AN)",
+      "promised": "no fleet test asserts against a pipeline script's source text; each conversion stops paying the 30–50 min repoint (I3 commit 7 repointed 6 files); and no test retypes a fleet COUNT that converted.json / manifest.scripts / the census exemptions already own",
       "status": "NOT_STARTED",
-      "evidence": "measured 2026-09-14: grep -rlE \"readFileSync\\([^)]*scripts/[^)]*\\.js\" src/tests → 53 files, 85 reads — plan .cursor/wf2_conversion_velocity_active_task.md §1",
+      "evidence": "measured 2026-09-14: grep -rlE \"readFileSync\\([^)]*scripts/[^)]*\\.js\" src/tests → 53 files, 85 reads — plan .cursor/wf2_conversion_velocity_active_task.md §1 | FOLDED + PULLED FORWARD at batch-2 Phase 0.7 (2026-09-15): the fleet-count half (review_followups LOW, Regression Guardian I3 commit 9) is ratified as Spec 124 R-AN and its lock LANDED in the same change - conversion-roadmap.infra.test.ts derives remaining files/slugs and the exemption set from the registries, step-schema.logic.test.ts's toBe(12) count canary became a descriptor-set TOTALITY assertion, step-seam.logic.test.ts's toHaveLength(6) derives from its own named-edge list. Batch 2 would otherwise have retyped these 13 more times. The item stays NOT_STARTED because its LARGER half - the 53 files / 85 readFileSync(scripts/*.js) source-text reads - is untouched.",
       "owner": {
         "kind": "wf",
         "ref": "wf: source-text test debt (POST-B1-15)"
@@ -2114,7 +2145,7 @@
         "kind": "nice_to_have",
         "blocks": []
       },
-      "last_reviewed": "2026-09-14"
+      "last_reviewed": "2026-09-15"
     },
     {
       "id": "SPECTBL-1",
@@ -2139,7 +2170,7 @@
       "title": "Step Breakdown tables generated rather than hand-authored",
       "promised": "the derivable columns of a chain spec's step table are emitted by a tool the way 00_system_map.md is, with the Purpose/Writes-To prose re-homed into a sidecar",
       "status": "NOT_STARTED",
-      "evidence": "DEFERRED by SPECTBL-1 (2026-09-15) on measurement: only 3 of the 5 columns (#/Slug/Script) are derivable from manifest.chains — Purpose and Writes-To are irreducible hand-authored prose (Spec 43 row 14 alone is a ~600-char paragraph carrying the WF2 P11-1 version-skip gate), so generating the table means re-homing that prose into a JSON sidecar, which under Spec 124 R-AA is a manifest-declared, tool-performed, --refresh-only content MOVE with budgets and stub gates. Every defect measured 2026-09-15 lived in the 3 derivable columns and is now closed by the lock. Build only if prose drift is ever measured (it has not been). Ruling to be recorded at batch-2 row 0.8",
+      "evidence": "DEFERRED by SPECTBL-1 (2026-09-15) on measurement: only 3 of the 5 columns (#/Slug/Script) are derivable from manifest.chains — Purpose and Writes-To are irreducible hand-authored prose (Spec 43 row 14 alone is a ~600-char paragraph carrying the WF2 P11-1 version-skip gate), so generating the table means re-homing that prose into a JSON sidecar, which under Spec 124 R-AA is a manifest-declared, tool-performed, --refresh-only content MOVE with budgets and stub gates. Every defect measured 2026-09-15 lived in the 3 derivable columns and is now closed by the lock. Build only if prose drift is ever measured (it has not been). Ruling to be recorded at batch-2 row 0.8 | Batch-2 Phase 0.8 (2026-09-15) reviewed amendment item 5 (a chain spec's step table is a generated, drift-locked artifact) and files NO new Spec 124 register row: SPECTBL-1 already DELIVERED the drift lock - src/tests/assert-global-coverage.infra.test.ts 'chain specs - step counts DERIVED from manifest.chains, never retyped' reads the expected count from manifest.chains[chain].length for all six chain specs. What remains is GENERATION of the table body (this item), a tool change, not a policy question. Cross-referenced, not re-ruled.",
       "owner": {
         "kind": "followup",
         "ref": ".cursor/batch2_c5_active_task.md §Proposed policy amendments item 5 (batch-2 row 0.8)"

@@ -429,9 +429,11 @@ describe('chain specs — step counts DERIVED from manifest.chains, never retype
   // that has to be hand-edited every time the chain changes is not a lock, it is a second
   // source of truth — so the expected value is now READ from `manifest.chains[chain].length`
   // and every chain spec carrying a `**Steps:** N` line is covered, not just 41 and 42.
-  // (No Spec 124 register row is cited here: the "fleet counts derived, never retyped" rule is
-  //  proposed, not ratified — the register ends at R-AI, and R-AJ..R-AM are batch-2 row 0.8's to
-  //  allocate. This lock stands on its own measured premise until then.)
+  // RATIFIED 2026-09-15 as **Spec 124 R-AN** (batch-2 Phase 0.8): "fleet counts are DERIVED
+  // from the registries that own them, never retyped into a test." This lock is one of that
+  // row's cited instances — SPECTBL-1 delivered it here before the rule existed, and batch-2
+  // row 0.8 cross-referenced rather than re-ruling it (no new register row for amendment
+  // item 5; what remains is GENERATING the table body, programme item SPECTBL-GEN).
   const manifest = JSON.parse(fs.readFileSync(MANIFEST_PATH, 'utf8')) as { chains: Record<string, string[]> };
   const CHAIN_SPEC: [chain: string, specFile: string][] = [
     ['permits', '41_chain_permits.md'],

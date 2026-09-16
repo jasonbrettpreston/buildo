@@ -199,18 +199,25 @@ describe('runSeamChecks — one row per derived pair', () => {
   // 'link_parcels:link_parcel_addresses' < 'refresh_snapshot:link_massing' <
   // 'refresh_snapshot:link_parcels' < 'refresh_snapshot:link_wsib'. Pilot 9 commit 9
   // (2026-09-11) adds 'enrich_parcels:link_massing', which sorts FIRST — 5 -> 6.
-  it('runs all 6 live pairs against the REAL registry and returns one row each', async () => {
+  // Spec 124 R-AN (batch-2 Phase 0.8, 2026-09-15): the CONTENT list below is the
+  // deliberate literal R-AN permits — it names the actual declared edges, and a
+  // wrong edge is a real defect, not a bookkeeping number. What is NOT retyped
+  // any more is the COUNT: it is derived from this same list, so a cutover that
+  // adds an edge fails on the edge it added, not on an arithmetic mismatch.
+  const EXPECTED_SEAM_METRICS = [
+    'seam_link_massing_before_enrich_parcels',
+    'seam_compute_centroids_before_link_massing',
+    'seam_link_parcel_addresses_before_link_parcels',
+    'seam_link_massing_before_refresh_snapshot',
+    'seam_link_parcels_before_refresh_snapshot',
+    'seam_link_wsib_before_refresh_snapshot',
+  ];
+
+  it('runs every live pair against the REAL registry and returns one row each', async () => {
     const pool = fakeSeamPool([], []);
     const rows = await seam.runSeamChecks(pool, { chainId: 'sources' });
-    expect(rows).toHaveLength(6);
-    expect(rows.map((r) => r?.metric)).toEqual([
-      'seam_link_massing_before_enrich_parcels',
-      'seam_compute_centroids_before_link_massing',
-      'seam_link_parcel_addresses_before_link_parcels',
-      'seam_link_massing_before_refresh_snapshot',
-      'seam_link_parcels_before_refresh_snapshot',
-      'seam_link_wsib_before_refresh_snapshot',
-    ]);
+    expect(rows).toHaveLength(EXPECTED_SEAM_METRICS.length);
+    expect(rows.map((r) => r?.metric)).toEqual(EXPECTED_SEAM_METRICS);
     for (const row of rows) {
       expect(row?.status).toBe('WARN'); // no history in this fake pool
     }

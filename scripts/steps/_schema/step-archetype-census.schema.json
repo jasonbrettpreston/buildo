@@ -19,7 +19,7 @@
       "type": "array",
       "minItems": 1,
       "items": { "$ref": "#/definitions/exemption" },
-      "description": "Ask A2 (operator ruling, 2026-09-10): a manifest.scripts entry with no JS file to convert at all (a `.py` step, or a `coming_soon` entry with file:null) is DECLARED here, explicitly, rather than silently dropped from the file-grain totality this census/roadmap otherwise enforces. Rendered in its own 'Declared exemptions' table by the generator and folded into the totality count so '65 manifest slugs = 8 converted + 1 pending + N exempted + 55 remaining' is provably exhaustive, never just the 55."
+      "description": "A manifest.scripts slug the conversion programme will never convert is DECLARED here, explicitly, rather than silently dropped from the totality this census/roadmap otherwise enforces. TWO grounds, not one. (a) Ask A2 (operator ruling, 2026-09-10) — no JS file to convert at all: a `.py` step (`python_step_excluded`), or a `coming_soon` entry with file:null (`no_file`). (b) Spec 124 §5 R-AP (2026-09-15) — `runner_owned`: the JS file EXISTS, but the concern it implements belongs to THE RUNNER (Spec 122 §4 / §7.3 concern row 4 / §7.4 A3), which declares nothing per step and cannot be opted out of, so there is no descriptor, no identity.archetype and no x-profile to write. `runner_owned` is the ONLY reason permitted to name a real JS file, and generate-conversion-roadmap.mjs enforces that both directions. Rendered in its own 'Declared exemptions' table by the generator and folded into a slug-grain totality identity — `<manifest slugs> = <converted> + <pending> + <exempted> + <remaining>`, every term DERIVED from its own registry (Spec 124 R-AN), never retyped — so the count is provably exhaustive rather than just the remainder."
     }
   },
   "definitions": {
@@ -39,8 +39,8 @@
         },
         "reason": {
           "type": "string",
-          "enum": ["python_step_excluded", "no_file"],
-          "description": "python_step_excluded = operator ruling 2026-09-10: the Python step (aic-orchestrator.py) is EXCLUDED from the conversion programme entirely — not deferred to any future batch, out of the JS step standard's scope by design, stays on its own runner. no_file = a coming_soon manifest entry with file:null — nothing exists yet to convert."
+          "enum": ["python_step_excluded", "no_file", "runner_owned"],
+          "description": "python_step_excluded = operator ruling 2026-09-10: the Python step (aic-orchestrator.py) is EXCLUDED from the conversion programme entirely — not deferred to any future batch, out of the JS step standard's scope by design, stays on its own runner. no_file = a coming_soon manifest entry with file:null — nothing exists yet to convert. runner_owned = Spec 124 §5 R-AP (2026-09-15): the slug HAS a real JS file, but the concern it implements is owned by THE RUNNER (Spec 122 §4 / §7.3 concern row 4 / §7.4 A3) — \"nothing is declared per step, and a step cannot opt out\" — so there is no per-step descriptor, no identity.archetype in step.schema.json's 8-value enum, and no x-profile. It is the ONLY reason that may name a real JS file, and the generator throws both directions (a real JS file under any other reason; a runner_owned row with no real JS file)."
         },
         "ruling": {
           "type": "string",
@@ -83,6 +83,16 @@
           "type": "string",
           "minLength": 1,
           "description": "Why this archetype (or UNDECLARED) — a spec citation, a real descriptor path, or 'deferred to ARCH-CENSUS (Ask A3)'. Required for every row, real archetype or not — mirrors programme-items.json's evidence requirement: a NOT_STARTED/UNDECLARED row still needs the measurement that PROVES the absence, never empty."
+        },
+        "status": {
+          "type": "string",
+          "enum": ["converted"],
+          "description": "RETENTION (Spec 124 §5 R-AO, added 2026-09-15). Absent = a remaining/pending row, the original shape. `\"converted\"` = the row was RETAINED through cutover instead of deleted. Before this, commit 9 DELETED a slug's census row, which made fast invariant #25 ARCHETYPE-PARITY unreachable for its own founding case: with no row left, `censusArchetype` is null for every converted slug and a valid-but-wrong archetype passes silently (proved by swapping `load_ravines` to ASSERT — still PASS). A retained row's `archetype` is the census's OWN pre-cutover value and MUST NOT be re-derived from the descriptor: the whole point is that #25 compares two independently-authored facts. The generator enforces both directions — a `\"converted\"` row whose file is not in converted.json throws, and a row with no `status` whose file IS converted throws."
+        },
+        "converted_at": {
+          "type": "string",
+          "minLength": 7,
+          "description": "The commit-9 cutover SHA this row was converted at (short or full). Required whenever `status` is `\"converted\"`, forbidden otherwise — a retention claim carries the commit that makes it checkable."
         }
       }
     }

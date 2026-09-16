@@ -12,7 +12,25 @@ on:
   # Phase 4.3 activation — uncomment (Spec 115 §3)
   schedule:
     - cron: '0 13 * * 0'   # ~8 AM ET Sunday, weekly (Spec 115 §2 table row 2; §2.1 DST note)
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      expected_sha:
+        # Spec 124 §5 R-AL (batch-2 Phase 0.8, 2026-09-15) — A CLOUD ACCEPTANCE
+        # DISPATCH IS PINNED. EP-D13 (`tasks/lessons.md`) already required
+        # `gh run view <id> --json headSha` to equal `git rev-parse HEAD` before
+        # any verdict is read, but that rule lived only as prose: on 2026-09-15
+        # runs 34964116903 and 34916671708 both graded `headSha 17058af7` while
+        # the local HEAD was `824ef357` — the dispatcher had not pushed, and
+        # nothing in the workflow could tell. The workflow cannot see the
+        # dispatcher's local HEAD, so the dispatcher DECLARES it here and the
+        # guard below refuses the run when the two disagree. Dispatch with:
+        #   gh workflow run chain-sources.yml -f expected_sha=$(git rev-parse HEAD)
+        # Left empty (the scheduled path, and any deliberately-unpinned manual
+        # run) the guard does not fail — it prints the sha it IS grading, loudly,
+        # so a verdict is never read against an unnamed commit.
+        description: 'Commit SHA this dispatch is pinned to (R-AL). Pass $(git rev-parse HEAD) for an acceptance run; leave empty for an unpinned manual run.'
+        required: false
+        type: string
 
 jobs:
   sources:
@@ -63,6 +81,34 @@ jobs:
       cancel-in-progress: false       # future rename can't drift the concurrency group out of sync
     steps:
       - uses: actions/checkout@v4
+
+      # Spec 124 §5 R-AL (batch-2 Phase 0.8, 2026-09-15) — the dispatch-pinning
+      # guard. Two arms, both loud, neither inferable from a GitHub green tick:
+      #   (1) the checkout really is `github.sha` (no ref drift between the
+      #       event and the tree this job grades);
+      #   (2) if the dispatcher declared `expected_sha`, it MATCHES — otherwise
+      #       the job fails here, before a single step writes a ledger row, so
+      #       an acceptance verdict can never be read off a stale `main`.
+      # The unpinned path is not silent: the sha being graded is always echoed
+      # as a notice, which is the fact EP-D13 asks a human to check by hand.
+      - name: Guard — dispatch is pinned (R-AL / EP-D13)
+        id: pin_guard
+        env:
+          EXPECTED_SHA: ${{ inputs.expected_sha }}
+        run: |
+          CHECKED_OUT="$(git rev-parse HEAD)"
+          echo "::notice title=Graded commit::this run grades ${CHECKED_OUT} (github.sha=${{ github.sha }}, event=${{ github.event_name }})"
+          if [ "$CHECKED_OUT" != "${{ github.sha }}" ]; then
+            echo "::error::checkout drift — the working tree is ${CHECKED_OUT} but the event names ${{ github.sha }}. Refusing to grade a tree the event did not name (Spec 124 R-AL)."
+            exit 1
+          fi
+          if [ -n "$EXPECTED_SHA" ] && [ "$EXPECTED_SHA" != "$CHECKED_OUT" ]; then
+            echo "::error::pinned dispatch mismatch — expected_sha=${EXPECTED_SHA} but this run grades ${CHECKED_OUT}. The dispatcher's HEAD was never pushed, or a newer commit landed first. Push, then re-dispatch (Spec 124 R-AL / EP-D13)."
+            exit 1
+          fi
+          if [ -z "$EXPECTED_SHA" ]; then
+            echo "::warning title=Unpinned dispatch::no expected_sha was declared — this run is NOT valid as an R-AB acceptance run. Re-dispatch with -f expected_sha=\$(git rev-parse HEAD) to pin it."
+          fi
 
       - uses: actions/setup-node@v4
         with:

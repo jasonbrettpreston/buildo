@@ -1,5 +1,10 @@
 {
-  "$comment": "FIXTURE (conversion-roadmap.infra.test.ts) — real census entries with the geocode_permits row deleted. Proves buildRoadmap() throws on totality (a remaining slug with no census row).",
+  "$comment": [
+    "KNOWN-BAD FIXTURE — do not \"fix\". A byte-copy of step-archetype-census.json with the",
+    "`geocode_permits` row DELETED. Proves the totality arm: a remaining manifest slug with no census",
+    "row throws instead of silently omitting itself from the rendered table.",
+    "Regenerate from the live census whenever the census changes shape."
+  ],
   "contract_version": 1,
   "entries": [
     {
@@ -318,25 +323,11 @@
       "reason": "Spec 122 §1.10's census covers only the 27 `sources` steps; this file is outside that scope — deferred to ARCH-CENSUS (Ask A3), a dedicated WF before C6 opens"
     },
     {
-      "slug": "assert_data_bounds",
-      "file": "scripts/quality/assert-data-bounds.js",
-      "archetype": "ASSERT",
-      "batch": "C4",
-      "reason": "C4 batching-entry §3.2 order 2"
-    },
-    {
       "slug": "assert_entity_tracing",
       "file": "scripts/quality/assert-entity-tracing.js",
       "archetype": "UNDECLARED",
       "batch": "C6",
       "reason": "Spec 122 §1.10's census covers only the 27 `sources` steps; this file is outside that scope — deferred to ARCH-CENSUS (Ask A3), a dedicated WF before C6 opens"
-    },
-    {
-      "slug": "assert_global_coverage",
-      "file": "scripts/quality/assert-global-coverage.js",
-      "archetype": "ASSERT",
-      "batch": "C4",
-      "reason": "C4 batching-entry §3.2 order 1 — assert_schema is the ASSERT precedent (pilot 1)"
     },
     {
       "slug": "assert_lifecycle_phase_distribution",
@@ -374,13 +365,6 @@
       "reason": "Spec 122 §1.10's census covers only the 27 `sources` steps; this file is outside that scope — deferred to ARCH-CENSUS (Ask A3), a dedicated WF before C6 opens"
     },
     {
-      "slug": "reconcile",
-      "file": "scripts/reconcile-runs.js",
-      "archetype": "UNDECLARED",
-      "batch": "C5",
-      "reason": "chain-head infrastructure (Spec 122 §7.4 A3) — excluded from the PH-2 population and from the 8-archetype dispatch; STD-4 tracks its manifest-position promise separately, not this census"
-    },
-    {
       "slug": "update_tracked_projects",
       "file": "scripts/update-tracked-projects.js",
       "archetype": "UNDECLARED",
@@ -392,7 +376,36 @@
       "file": "scripts/enrich-parcels.js",
       "archetype": "ENRICHER",
       "batch": "pending",
-      "reason": "scripts/enrich-parcels.descriptor.json identity.archetype (real descriptor already lands, commit 7b) — registered here under provenance rule 2 until pilot 9 commit 9 adds it to converted.json's own converted[] array, at which point provenance rule 1 (the descriptor itself) supersedes this row"
+      "reason": "RETAINED at cutover per Spec 124 R-AO (retention added 2026-09-15). Archetype and batch are the census's OWN pre-cutover values, read verbatim from git history (last commit carrying this row: 9f2afcb6, 2026-09-10); the row was deleted at 3c1f1923 (pilot 9 commit 9) and is restored here unchanged, never re-derived from the descriptor - a copy of the descriptor would make fast invariant #25 compare a value to itself.",
+      "status": "converted",
+      "converted_at": "3c1f1923"
+    },
+    {
+      "slug": "assert_global_coverage",
+      "file": "scripts/quality/assert-global-coverage.js",
+      "archetype": "ASSERT",
+      "batch": "pending",
+      "reason": "RETAINED at cutover per Spec 124 R-AO. Pre-cutover values read verbatim from git history (last commit carrying this row: 272d8ae0, 2026-09-11); deleted at d851c66e (batch1 I1 commit 9), restored here unchanged.",
+      "status": "converted",
+      "converted_at": "d851c66e"
+    },
+    {
+      "slug": "assert_data_bounds",
+      "file": "scripts/quality/assert-data-bounds.js",
+      "archetype": "ASSERT",
+      "batch": "pending",
+      "reason": "RETAINED at cutover per Spec 124 R-AO. Pre-cutover values read verbatim from git history (last commit carrying this row: 58c35378, 2026-09-12); deleted at 096f30c9 (batch1 I2 commit 9), restored here unchanged.",
+      "status": "converted",
+      "converted_at": "096f30c9"
+    },
+    {
+      "slug": "assert_engine_health",
+      "file": "scripts/quality/assert-engine-health.js",
+      "archetype": "RECORDER",
+      "batch": "pending",
+      "reason": "RETAINED at cutover per Spec 124 R-AO - and this is the row R-AO exists for. MEASURED across every commit that ever carried it: the census read ASSERT from its creation (9f2afcb6, 2026-09-10) through 6bf28e88 (2026-09-14), was CORRECTED to RECORDER at 331f97ad (the same commit that reverted batch1 I3 from the compressed form to the full nine-commit form, because RECORDER had one member and R-PACE-1 was therefore ineligible), and was deleted at 65c92d7f. The retained value is the corrected one, RECORDER, matching the descriptor PH-0 measured; the four-day ASSERT window is recorded here so the cost of the provisional value is not lost with the row.",
+      "status": "converted",
+      "converted_at": "65c92d7f"
     }
   ],
   "exemptions": [
@@ -409,6 +422,13 @@
       "reason": "no_file",
       "ruling": "n/a — no exemption WF was needed",
       "scope": "manifest.scripts.coa_documents.coming_soon=true, file:null; nothing exists yet to convert"
+    },
+    {
+      "slug": "reconcile",
+      "file": "scripts/reconcile-runs.js",
+      "reason": "runner_owned",
+      "ruling": "Spec 124 §5 R-AP (batch-2 Phase 0.8, 2026-09-15) — grounded in Spec 122 §4 (RUNNER owns reconcile), §7.3 concern row 4 (\"Reconcile the previous run | RUNNER | nothing declared\") and §7.4 A3 (a reconcile step at the head of manifest.chains.sources)",
+      "scope": "THIRD exemption class: the slug HAS a real JS file, but the concern it implements is RUNNER-owned — Spec 122 §4 says of RUNNER concerns \"nothing is declared per step, and a step cannot opt out\", so there is no per-step descriptor to write, no identity.archetype in step.schema.json's 8-value enum to pick, and no x-profile/required-field set. Excluded from the PH-2 population, the 8-archetype dispatch and the C5 conversion count (C5 = 13 conversions, not 14). NOT gate_exempt data (that is scripts/refresh-snapshot.descriptor.json's declared run-chain skip, 9a667a06) and NOT a no_file/python exemption — a distinct, named class. STD-4 tracks its manifest-position promise separately, not this census."
     }
   ]
 }
