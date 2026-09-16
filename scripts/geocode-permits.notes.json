@@ -1,0 +1,144 @@
+{
+  "$comment": [
+    "Spec 120 §3.4-§3.4b — the INTERPRETATION file for geocode_permits, capped at 12",
+    "prose entries. Everything here lived ONLY as a source comment, a git commit message,",
+    "or a plan/report section before this conversion.",
+    "",
+    "Every `measured` block below carries a REAL value taken against the live dev DB on",
+    "2026-09-16 (batch-2 Phase 0.9 step I5, commit 1), with the query that produced it",
+    "stated beside it. The draft authored in the isolated planning worktree declared all",
+    "of them PENDING-MEASUREMENT; none of those placeholders survived into this file."
+  ],
+  "contract_version": 1,
+  "read_this_way": [
+    {
+      "note": "The steady state is a ZERO-WORK run that still reads WARN. `newly_geocoded` is 0 whenever no permits load has introduced a new geo_id (src/lib/admin/funnel.ts:725 states this as the step's expected behaviour in the admin UI: 'Steady-state: 0 geocoded (all already done)'), while `geocode_coverage` stands permanently below its 95 bound because of the structurally ungeocodable tail (see known_normal). Reading a run's records_meta on THIS step, expect records_total == records_updated == newly_geocoded == 0 and a WARN verdict — that combination is health, not degradation.",
+      "measured": {
+        "value": "MEASURED 2026-09-16: 65 ledger rows total (2026-03-03 to 2026-07-17), under BOTH slug forms `permits:geocode_permits` and `sources:geocode_permits`. Over the last 40: records_updated is 0 on 33 of them, and the seven non-zero runs read 169 / 369 / 530 / 669 / 1193 / 1284 / 8465. Verdict distribution: WARN x15, no audit table x25 (skips and pre-audit-table history) — and ZERO PASS. The zero-work-plus-WARN combination this note describes is 33/40 of observed reality, not a hypothesis.",
+        "date": "2026-09-16",
+        "query": "SELECT started_at, status, records_total, records_updated, records_meta->'audit_table'->'verdict' FROM pipeline_runs WHERE pipeline LIKE '%geocode_permits%' OR pipeline LIKE '%geocode-permits%' ORDER BY started_at DESC LIMIT 40"
+      }
+    },
+    {
+      "note": "`phase` means two different things on this step and they must never be conflated. `sharing.varies_by_chain.phase` is the DASHBOARD phase number of the emitted audit table — 6 on the permits chain, 3 on sources — and it was a `process.env.PIPELINE_CHAIN === 'sources' ? 3 : 6` ternary before conversion, exactly the anti-pattern step.schema.json's own `phase` description names ('a map cannot disagree with itself'). It is NOT the manifest step position, which is 8 of 33 on permits and 4 of 28 on sources.",
+      "measured": {
+        "value": "audit phases {permits: 6, sources: 3}; manifest positions {permits: 8/33, sources: 4/28}",
+        "date": "2026-09-15",
+        "query": "node -e over scripts/manifest.json chains + the ternary at scripts/geocode-permits.js's audit_table.phase"
+      }
+    }
+  ],
+  "known_normal": [
+    {
+      "note": "The ungeocodable tail is PERMANENT BY DESIGN, not a backlog. `no_geo_id` counts permits the city's feed gives no ADDRESS_POINT_ID for; they can never be geocoded by this step because this step has exactly one method — a geo_id equijoin against address_points. 4de16d00's own commit body states it in those words: 'The ~9% ungeocoded permits have addresses that don't match any Toronto address point — a permanent data gap.' This is why `geocode_coverage` is WARN with a retighten condition rather than FAIL, and why `backlog_remaining` is the honest progress signal instead of `no_geo_id`.",
+      "measured": {
+        "value": "MEASURED 2026-09-16, never transcribed: total 254,082 · both-coords non-NULL 231,930 · coverage 91.2816% · no_geo_id (the permanent tail) 7,660 · has_geo_id_no_match 14,492. The 2026-03-27 reading at 4de16d00 was 90.9%, so the metric has moved +0.38 points in five and a half months and has not converged on 95. The structural ceiling is 1 - 7,660/254,082 = 96.99%: the tail is not a backlog and cannot be worked off by this step, which has exactly one method.",
+        "date": "2026-09-16",
+        "query": "SELECT count(*) AS total, count(*) FILTER (WHERE latitude IS NOT NULL AND longitude IS NOT NULL) AS geocoded, count(*) FILTER (WHERE latitude IS NULL AND (geo_id IS NULL OR geo_id = '')) AS no_geo_id, count(*) FILTER (WHERE latitude IS NULL AND geo_id IS NOT NULL AND geo_id != '') AS has_geo_id_no_match FROM permits"
+      }
+    }
+  ],
+  "known_bad": [
+    {
+      "note": "GP-D1 — the coverage gate has been evaluated at 95 for its ENTIRE life, the one measurement ever taken against it landed on the wrong one of two duplicated literals and achieved nothing, and nothing in the tree afterwards records that a measurement was ever taken. CORRECTED at the Regression Guardian plan seat and re-executed: an earlier draft of this note said `4de16d00` lowered the threshold and `d24c964c` 'silently retired the measurement and restored the false WARN'. That is wrong. `fcd6ff68` (2026-03-21) introduced BOTH literals at 95. `4de16d00` (2026-03-27) measured 90.9% coverage, called the tail 'a permanent data gap', and changed exactly ONE line — the ROW literal, 95 -> 85 — leaving the `audit_table.verdict` comparison reading '< 95', where it had always been and where it remains. So the emitted verdict NEVER changed, the step kept WARNing through all five days the fix stood, and `d24c964c`'s 'Align audit threshold to 95% to match verdict threshold (was 85%)' is an accurate description of a correct reconciliation, not a reckless restoration. The defect is SHARPER for the correction, not weaker: a measured fix that lands on the wrong one of two duplicated literals is worse than one that gets reverted, because it leaves no trace that a measurement happened. This is Rule 10's parallel-boolean class as a silent-no-op-fix risk, not merely a disagreement risk. PINNED at 95 through the conversion (Spec 123 §1.1/§3.1); the value ruling is its own peel and its value is 90.",
+      "measured": {
+        "value": "RE-EXECUTED 2026-09-16, both directions. `git show 4de16d00:scripts/geocode-permits.js` line 118 reads `verdict: geocodeCoverage < 95 ? 'WARN' : 'PASS'`; `git show fcd6ff68:scripts/geocode-permits.js` line 118 reads the SAME literal six days earlier; and `git show 4de16d00 -- scripts/geocode-permits.js` emits exactly one -/+ pair, both on the `geocode_coverage` ROW. Live: coverage = 231,930 / 254,082 = 91.2816%, and 15 of the last 40 ledger rows carrying an audit verdict are WARN with ZERO PASS.",
+        "date": "2026-09-16",
+        "query": "git show 4de16d00:scripts/geocode-permits.js | grep -n verdict  ·  git show 4de16d00 -- scripts/geocode-permits.js | grep -E '^[-+].*(95|85)'"
+      }
+    }
+  ],
+  "blind_spots": [
+    {
+      "what": "`has_geo_id_no_match` — permits that DO hold a usable geo_id but matched no address point — is measured every run, logged, and put in records_meta, and has NO audit row. It is the only number that separates 'the address_points corpus is stale or short-loaded' from 'these permits were never geocodable', which is precisely the degradation 4de16d00 said the coverage threshold exists to catch. The threshold therefore watches a number (coverage) that mixes the two populations, while the number that would disambiguate them is invisible to the verdict.",
+      "measured": {
+        "value": "MEASURED 2026-09-16: 14,492 permits hold a usable geo_id and still have no coordinates. The number is GROWING monotonically across the ledger window — 14,407 -> 14,411 -> 14,431 -> 14,440 -> 14,454 -> 14,492 over the last six runs that recorded it — and not one of those increments is visible to any audit row or to the verdict, because this measurement has no checks[] entry. It is emitted into records_meta and read by nobody.",
+        "date": "2026-09-16",
+        "query": "SELECT count(*) FROM permits WHERE latitude IS NULL AND geo_id IS NOT NULL AND geo_id != ''"
+      }
+    },
+    {
+      "what": "Nothing on this step observes the FRESHNESS or SIZE of address_points beyond a log line. `address_points_loaded` is logged, never made an audit row, and `guards.empty_source` is \"none\" — an address_points table truncated to zero rows produces a run that geocodes nothing, retracts nothing, emits PASS-or-WARN exactly as a healthy steady-state run does, and is distinguishable only by a log line no verdict reads. `inputs.expect_nonempty: true` declares the expectation; no check enforces it.",
+      "measured": {
+        "value": "MEASURED 2026-09-16: address_points holds 525,346 rows, against 246,416 permits carrying a numeric geo_id. The COUNT costs 207ms, so a bound on it would be affordable at every_run — the blind spot is a choice not to declare one, not a cost. Filed as peel candidate P4 in docs/reports/review_followups.md rather than left as a note with no forward path.",
+        "date": "2026-09-16",
+        "query": "SELECT count(*) FROM address_points"
+      }
+    }
+  ],
+  "suspicious_if": [
+    {
+      "signal": "`zombies_cleaned` is large on a run that follows no permits load. The retraction fires only on permits whose geo_id VANISHED upstream; a large number without a corresponding load means either the feed dropped a block of ADDRESS_POINT_IDs or a load wrote empty strings where it previously wrote ids. Check the before-image JSONL (recovery.before_image: generated) before assuming the data was bad to begin with — after the retraction commits, the prior coordinates exist nowhere else.",
+      "check": "zombies_cleaned",
+      "measured": {
+        "value": "MEASURED 2026-09-16 over the last 40 ledger rows: zombies_cleaned is 0 on every run in the window except ONE (3, run id 1107, 2026-06-11). The live target population is 0 today — `(geo_id IS NULL OR geo_id = '') AND latitude IS NOT NULL AND geocoded_at IS NOT NULL` returns 0 rows — so the retraction currently has nothing to do, and any non-zero value at all is the signal this entry describes. Note the corollary for capture review: `zombies_cleaned` reads 0 in every golden pair, so the goldens cannot distinguish a retraction that ran from one that was skipped.",
+        "date": "2026-09-16",
+        "query": "SELECT started_at, records_meta->>'zombies_cleaned' FROM pipeline_runs WHERE pipeline LIKE '%geocode_permits%' ORDER BY started_at DESC LIMIT 40"
+      }
+    },
+    {
+      "signal": "`newly_geocoded` is large on a run that follows no permits load. Phase 1 re-joins EVERY permit with a numeric geo_id on every run (there is no `latitude IS NULL` narrowing) and writes only where the IS DISTINCT FROM guard fires, so a large count with a flat backlog means stored coordinates are MOVING — an address_points reload that shifted points, not new permits being geocoded. The metric's name ('newly') invites the wrong reading.",
+      "check": "newly_geocoded",
+      "measured": {
+        "value": "MEASURED 2026-09-16: records_updated is 0 on 33 of the last 40 runs; the seven non-zero values are 169 / 369 / 530 / 669 / 1193 / 1284 / 8465. W1's guard admits 0 rows RIGHT NOW (the full join re-evaluated live against the IS DISTINCT FROM guard returns 0), so the step is in a converged steady state and a large newly_geocoded on the next run means stored coordinates MOVED, not that new permits arrived.",
+        "date": "2026-09-16",
+        "query": "SELECT started_at, records_updated, records_meta->'audit_table'->'rows' FROM pipeline_runs WHERE pipeline LIKE '%geocode_permits%' ORDER BY started_at DESC LIMIT 20"
+      }
+    }
+  ],
+  "decisions": [
+    {
+      "note": "`records_total` and `records_updated` are the SAME number and both EXCLUDE the phase-2 retraction. That is a §11 counter-scoping decision made by e37eaab9, not an omission: records_total had been the pre-run backlog (`to_geocode`), which inflated it on every run and made it a queue depth rather than a work count. Spec 47 §11 now names this step twice as its own worked example — `before.to_geocode` 'MUST NOT be used as records_total', and zombie resets belong 'in audit_table as zombies_cleaned'. Both dispositions are carried verbatim into `counters` and `checks[]`."
+    },
+    {
+      "note": "This step has NO incremental scope and therefore needs NO invalidator — and that is a design, not the centroid defect (claim #54). Phase 1's WHERE clause contains no lineage predicate at all: every permit with a numeric geo_id is re-joined on every run, and the two-column IS DISTINCT FROM guard is what makes the write cheap. A changed geo_id is picked up on the very next run with no *_enriched_at stamp, no trigger and no backfill. `staleness.scope` is declared \"all\" and both `execution.phases[]` declare `scope: \"full\"` so a reader cannot mistake the absent invalidator for an unexpressed lineage gap; `outputs.invalidates` carries one documentary entry saying exactly this."
+    },
+    {
+      "note": "The pre-run `to_geocode` count (`latitude IS NULL AND geo_id IS NOT NULL AND geo_id != ''`) is a REPORTING scope only. It feeds `backlog_remaining` and nothing else — in particular it is NOT the UPDATE's scope, and the partial index named for this step (`idx_permits_needs_geocode`, `WHERE geocoded_at IS NULL`) matches neither the reporting scope nor either statement's predicate. Three different 'needs geocoding' definitions coexist; the descriptor states which one each artifact uses."
+    }
+  ],
+  "fences": [
+    {
+      "const": "the `CASE WHEN p.geo_id ~ '^[0-9]+$' THEN p.geo_id::INTEGER END` join expression, alongside the sibling `p.geo_id ~ '^[0-9]+$'` predicate",
+      "value": "outputs.writes[0].write_discipline.scope, ported verbatim into compute",
+      "incident": "PostgreSQL may reorder WHERE conditions and evaluate the ::INTEGER cast BEFORE the regex, crashing the whole statement on the first non-numeric geo_id. The CASE makes the ordering structural instead of textual. It looks redundant beside the regex predicate and is not.",
+      "commit": "d24c964c",
+      "lock_test": "src/tests/steps/geocode_permits/violations.test.ts"
+    },
+    {
+      "const": "the IS DISTINCT FROM guard over latitude/longitude ONLY, never over geocoded_at",
+      "value": "outputs.writes[0].write_discipline.guard_columns: [latitude, longitude]",
+      "incident": "32da93c5 added the guard to an unguarded blanket UPDATE. geocoded_at is declared source:\"run_at\" — DISTINCT FROM its stored value on every run — so expanding the guard over it (or declaring guard_columns \"all_declared\") rewrites every permit carrying a numeric geo_id, every run. This is the LG-9 trap, live rather than moot on this step.",
+      "commit": "32da93c5",
+      "lock_test": "src/tests/steps/geocode_permits/violations.test.ts"
+    },
+    {
+      "const": "both UPDATEs share ONE transaction",
+      "value": "execution.txn_scope \"step\"; both execution.phases[] declare txn \"shared\"",
+      "incident": "The two statements were bare pool.query calls, justified by a source comment reading 'Single UPDATE is inherently atomic — no transaction wrapper needed'. There are two, and a dashboard read between them observed coordinates that disagreed with the zombie-cleanup state. d24c964c had REMOVED a transaction wrapper ('Remove redundant transaction wrapper') twelve days before 3e44218a put it back with the measurement — the comment was the fence's own refutation.",
+      "commit": "3e44218a",
+      "lock_test": "src/tests/geocode-permits.infra.test.ts"
+    },
+    {
+      "const": "the zombie retraction is narrowed by `geocoded_at IS NOT NULL`",
+      "value": "outputs.writes[1].write_discipline.scope",
+      "incident": "Without it the retraction wipes coordinates set by ANY means, not just this step's. d24c964c's own body states the reason: 'guarded by geocoded_at IS NOT NULL to avoid wiping other geocoding sources'. Load-bearing even though no second geocoding source exists in the tree today — it is what makes adding one safe.",
+      "commit": "d24c964c",
+      "lock_test": "src/tests/steps/geocode_permits/violations.test.ts"
+    }
+  ],
+  "counts": {
+    "open_blind_spots": 2,
+    "unpromoted_suspicious_if": 2
+  },
+  "review_notes": [
+    {
+      "note": "Read the two write targets as ONE transaction, never independently. Phase 1 fills coordinates for permits that HAVE a geo_id; phase 2 clears them for permits that LOST one. Their scopes are complementary by construction — `geo_id IS NOT NULL AND geo_id != ''` versus `geo_id IS NULL OR geo_id = ''` — so no row is ever touched by both in the same run, and a reviewer asking 'could the retraction undo the geocode?' gets the answer from the scopes, not from the ordering.",
+      "measured": {
+        "value": "2 declared write targets, both on permits, executed in declaration order inside one pipeline.withTransaction; write_inventory.statements = 2",
+        "date": "2026-09-15",
+        "query": "read of scripts/geocode-permits.js:72-101 (the withTransaction block) + scripts/geocode-permits.descriptor.json outputs.writes"
+      }
+    }
+  ]
+}

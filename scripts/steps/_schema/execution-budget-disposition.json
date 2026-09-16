@@ -72,19 +72,20 @@
         "enrich_parcels": 180
       },
       "pending": [
+        "assert_data_bounds",
+        "assert_engine_health",
+        "assert_global_coverage",
+        "assert_schema",
         "compute_centroids",
+        "geocode_permits",
         "link_massing",
         "link_neighbourhoods",
         "link_parcel_addresses",
         "link_parcels",
         "link_wsib",
-        "load_ravines",
-        "assert_data_bounds",
-        "assert_engine_health",
-        "assert_global_coverage",
-        "assert_schema"
+        "load_ravines"
       ],
-      "pending_why": "Measured 2026-09-15: 12 converted descriptors declare execution.step_timeout; only refresh_snapshot had the manifest counterpart that executes it. enrich_parcels is wired by this WF3 because it is the step whose declaration was measured inert against a real 300-min kill. The remaining ten are a DECLARED gap, not a silent one — filed in docs/reports/review_followups.md; wiring them is its own WF2 (each ceiling needs its own measured duration, and a ceiling set below a step's real runtime turns a healthy run into a failure)."
+      "pending_why": "Measured 2026-09-15: 12 converted descriptors declare execution.step_timeout; only refresh_snapshot had the manifest counterpart that executes it. enrich_parcels is wired by this WF3 because it is the step whose declaration was measured inert against a real 300-min kill. The remaining ten are a DECLARED gap, not a silent one — filed in docs/reports/review_followups.md; wiring them is its own WF2 (each ceiling needs its own measured duration, and a ceiling set below a step's real runtime turns a healthy run into a failure). UPDATED 2026-09-16 (batch-2 Phase 0.9 I5): geocode_permits joins the list at the folded commit 5 — its descriptor declares execution.step_timeout \"15m\" and manifest.scripts.geocode_permits carries no step_timeout_minutes (measured), so the declaration is INERT exactly like the other eleven. Not wired here on purpose: a ceiling needs its OWN measured duration, and one set below a step's real runtime converts a healthy run into a failure. This step's honest number is not yet known — its 65 recorded runs predate per-step duration capture on this branch — so it is DECLARED pending rather than guessed."
     },
     "budget": {
       "disposition": "descriptive",

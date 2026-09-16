@@ -82,5 +82,13 @@
     "scripts/quality/assert-engine-health.js",
     "scripts/link-neighbourhoods.js"
   ],
-  "pending": []
+  "pending": [
+    {
+      "file": "scripts/geocode-permits.js",
+      "registers_at": "batch 2 Phase 0.9 I5 commit 9 (cutover)",
+      "reason": "FULL nine-commit form — ENRICHER had ONE converted member at plan time, so R-AH/R-PACE-1 eligibility was NOT MET (measured); this conversion is the second member and its cutover is what makes the archetype compressed-eligible for batch 2 Phase 2's four. Commits 5 + 6 + 7a are FOLDED into one (the I5 STOP ruling, 2026-09-16): stage enters at descriptor_only rather than red_suite because STAGE_HARDSTOP_EXCLUSIONS deliberately gives red_suite NO exclusions, so a registered red_suite entry with no descriptor on disk REDs G7/G8/Rules 1/5/6/7/8/9/13 under the `--all --fast` gate this programme now requires before every commit. Landing the violations suite and the descriptor together is I4's own precedent and needs no change to the validator's exclusion table. Remaining: 7c the compute (-> compute_ported), 7d the frozen shell (-> runner_wired), then the PRE/POST capture pair and the differential (-> shape_clean), then commit 9 DELETES this entry in the same commit that appends the file to converted[] (R-K mutual exclusion).",
+      "declared": "2026-09-16",
+      "stage": "descriptor_only"
+    }
+  ]
 }

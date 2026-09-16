@@ -60,6 +60,14 @@ describe('deltaExceeds50pct — Delta Guard utility', () => {
 // ─────────────────────────────────────────────────────────────────────────────
 
 const EXPECTED_LOGIC_VAR_KEYS = [
+  // batch-2 Phase 0.9 I5 (2026-09-16) — geocode_permits' three. THREE and not one: the
+  // coverage bound is the step's only pre-conversion literal (Rule 3), and the other two are
+  // REQUIRED on the ENRICHER profile by d7668b8a's x-profile amendment. Declaring the literal
+  // "none" for either would have been legal and would have re-created the ER-D1 silence 0.10
+  // had just paid to remove, so both name real, seeded, admin-visible variables.
+  'geocode_permits_coverage_warn_pct', // I5 (2026-09-16) — the ONLY literal threshold the pre-conversion file contained (95, twice); shipped RED on purpose, ledgered GP-D1
+  'geocode_permits_heartbeat_minutes', // I5 (2026-09-16) — execution.heartbeat_minutes_from_config; a non-finite resolution THROWS rather than silently disabling the ticker
+  'geocode_permits_lock_timeout_ms', // I5 (2026-09-16) — execution.lock_timeout_ms_from_config; the shared txn holds a full re-join plus a destructive retraction on a table five steps read
   'enrich_parcels_defer_threshold_rows', // Spec 43/47 §8.7 — B2 per-pass scope-defer threshold (R3-B8)
   'enrich_parcels_heartbeat_minutes', // WF3 cloud-parity FIX 3.2b (2026-09-03) — optimal-config stream progress heartbeat interval
   'enrich_parcels_pass_statement_timeout_minutes', // WF3 enrich_parcels stall commit 1 (2026-09-03) — bounded, LOUD SET LOCAL statement_timeout for passes 1-4

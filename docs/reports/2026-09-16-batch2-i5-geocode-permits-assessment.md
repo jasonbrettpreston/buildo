@@ -1,8 +1,8 @@
 # Batch 2 I5 Assessment — `geocode_permits`
 
-> ## ⛔ STATUS: STOPPED AT COMMIT 4 — three plan premises refuted by measurement
+> ## ▶ STATUS: RESUMED at the folded commit 5 — the stop is CLOSED, §7 is superseded by §9
 >
-> This conversion ran commits **1–4** (PH-0 boundary freeze · PH-3 Intent Ledger + `GP-D1` filed · PH-5 seam map · PH-6 classification + risk class) and **stops there**, at a fully clean boundary: `converted.json.pending: []`, `step-validate --all --fast` exit 0 with `hard-stop=false` on all 13 steps, full `npm run test` green. **No descriptor, no compute, no shell, no captures, no registration.** See **§7** for the blocker and **§7.2** for why the boundary is commit 4 and not commit 6.
+> Commits **1–4** ran on 2026-09-16 and stopped at a clean boundary because three plan premises were refuted by measurement (table below). **Batch-2 row 0.10b (`13ee7669`) then landed the ENRICHER post-phase seam**, which closes premise 1, and the orchestrator ruled premises 2 and 3. The conversion **resumed at the folded commit 5** and §9 is the record of the resumed work. §7 is kept verbatim as the stop's own evidence — it is not deleted, because the three refutations are the most reusable thing this step produced.
 >
 > | # | Plan premise | Measured reality |
 > |---|---|---|
@@ -11,6 +11,8 @@
 > | 3 | §9 commit 5: *"`stage: "red_suite"` … excludes G7/G8/G9 + Rules 4/11/12 from the hard stop, so early registration manufactures no false red"* | **FALSE.** Those exclusions belong to `descriptor_only`; `red_suite` is *deliberately absent* from the exclusion table. Applied, measured (`hard-stop=true`, `REAL EXIT=1`), and **reverted**. §7.1 |
 >
 > A fourth, smaller correction rides along: the plan's `GP-D1` mechanics were wrong in a way that makes the defect **worse**, not weaker (§2.6).
+>
+> **How each resolved:** (1) CLOSED by `13ee7669` (0.10b) — `execution.enrich_hooks.post_phase`, a declared step-level export called once after COMMIT, with `matched` merged under a runner-owned-key refusal and `matched.compute` finite-or-throw. (2) RULED — **three** logic variables, not one. (3) RULED **by ordering, not code** — commits 5 + 6 + 7a fold into ONE that registers `pending` at `stage: "descriptor_only"` and lands the red suite **and** the descriptor together; the validator's exclusion table is untouched. **A FOURTH ordering constraint was then measured during the resume and is recorded in §9.1** — the seeds cannot be deferred to 7b either.
 
 **Full form reason:** the ENRICHER archetype has **one** converted member (`enrich_parcels`), so R-AH / R-PACE-1 eligibility (`template-freeze.json.archetype_profiles[ENRICHER].proven === true` **AND** ≥ 2 `converted.json` members sharing the archetype) is **NOT MET** — measured, §1.2b. The compressed form is therefore unavailable, not declined; `step-validate.mjs` fast invariant #24 (COMPRESSED-FORM-DEFAULT) is **vacuous** for this slug. This conversion is the archetype's SECOND member: it is the commit-9 cutover here that makes ENRICHER compressed-eligible and turns batch 2's Phase 2 from *1 full + 3 compressed* into *4 compressed*.
 
@@ -552,6 +554,65 @@ Domain Mode was **Cross-Domain** because this step's output is bound into the ad
 | Spec 26 | Names `funnel.ts`, not the script — the contact is via `funnel.ts`, already a Spec 26 Target File | No R-AF obligation (§1.1) |
 
 **Obligation carried forward, unchanged:** commit 9 must verify the emitted `audit_table` diff is empty against the PRE captures on **both** chains, and file — not fix — any funnel expectation bound the re-measured live values fall outside. One such bound is already filed. **No admin file was edited by commits 1–4 and none should be edited by commits 5–9.**
+
+---
+
+## 9. RESUMED — the folded commit 5 onward (supersedes §7)
+
+### 9.1 A FOURTH measured ordering constraint — the seeds cannot be deferred to 7b either
+
+The resume sequence handed down was *folded commit 5 → 7b (seeds ×3 + registry regen) → 7c compute → 7d shell → captures → 9 cutover*. Executed, the seeds half does not survive contact:
+
+```
+$ node scripts/analysis/step-validate.mjs --all --fast
+| 2 | geocode_permits | FAIL | 3 declared, missing from seeds:
+      geocode_permits_coverage_warn_pct, geocode_permits_heartbeat_minutes, geocode_permits_lock_timeout_ms
+[step-validate] geocode_permits (pending) — 11/17, hard-stop=true (fast invariant)   REAL EXIT=1
+```
+
+**Fast invariant #2 requires every `config.logic_variables[].name` to have a seed row in the SAME tree as the descriptor.** A descriptor landing at commit 5 with its seeds at 7b leaves the tree hard-stopping in between — the identical class as premise 3, one field over. **The seeds, the `GROUP_ORDER` entries and the regenerated registry therefore FOLD INTO commit 5 as well**, which is exactly what I4's own commit 1 did (descriptor + 3 seed rows + `GROUP_ORDER` + the regenerated groups JSON, one commit). Flagged as a deviation from the handed-down sequence, for the same reason the other three are recorded: it is a measurement, not a preference. With the fold applied, `--all --fast` is **exit 0, `hard-stop=false` on all 14** and `geocode_permits` scores **11/17** at `descriptor_only`.
+
+### 9.2 The four fleet suites a registration reds — predicted, then measured
+
+The Integration seat's `a062eb79` checklist (§6.2 INT-7's neighbour) named them in advance. All four fired, exactly as predicted, and all four are repaired in the folded commit:
+
+| Suite | What broke | Repair |
+|---|---|---|
+| `conversion-roadmap.infra.test.ts` | `buildRoadmap` **throws** when a file is in `pending[]` while its census row still names a batch | census `batch: "C4"` → `"pending"`, roadmap regenerated, and four counts repinned: remaining files 50 → **49**, remaining slugs 52 → **51**, `c4.size` 1 → **0** (C4's LAST member — the batch is now empty, which is it closing, not a stale count), `pendingBatch.size` 0 → **1** |
+| `control-panel.logic.test.ts` | three new logic variables are "extra keys beyond the expected set" | the three added to `EXPECTED_LOGIC_VAR_KEYS` with a note on why there are three and not one |
+| `execution-budget-disposition.infra.test.ts` | `execution.step_timeout: "15m"` declared with no `manifest.scripts.geocode_permits.step_timeout_minutes` — an inert declaration, which R-X forbids unless the slug is named in the registry's `pending[]` | appended to `declarations.step_timeout.pending` (11 → 12) with a `pending_why` stating that this step's honest ceiling is **not yet known** — its 65 recorded runs predate per-step duration capture on this branch — so it is declared pending rather than guessed |
+| `write-class-disposition.infra.test.ts` | the `on_contention` fleet pin is **descriptor-scoped**, so it moves the instant a descriptor file lands | 13 → **14**, with the comment extended to say that explicitly |
+
+### 9.3 The ENRICHER seam, as coded against
+
+`execution.enrich_hooks.post_phase: "computePostPhase"`, plus the two fields `d7668b8a` made required on the profile. The load-bearing detail is **which root resolves**: the runner resolves `counters.<slot>.source` against `{matched, written, records_meta}`, so `matched.compute.<name>` and `written.e<N>.<slot>` resolve while a **bare `compute.*` resolves NULL for every ENRICHER** — `enrich_parcels`' own three counters have read null since its conversion for exactly that reason (filed HIGH by 0.10b, deliberately not fixed there because fixing it moves the emitted summary). This step therefore declares:
+
+```
+records_total   -> matched.compute.newly_geocoded
+records_new     -> matched.compute.records_new_aggregate   (a finite literal 0, never omitted)
+records_updated -> matched.compute.records_updated_aggregate
+```
+
+and `computePostPhase` returns `newly_geocoded` **twice** — once as a `matched` key, which the audit row of that id reads, and once under `matched.compute`, which the counter source reads. Two contracts over one measurement, and the violations suite locks both (a bare `compute.*` source reds it).
+
+Spec 47 §11 is honoured as declared: `records_total` is W1's rowCount and never `before.to_geocode`; W2's rowCount is **excluded** from `records_updated` and carried on `zombies_cleaned` alone.
+
+### 9.4 The before-image is a DECLARED SUPERSET of the retraction
+
+`write.js#buildBeforeImageSelectSql` builds the before-image SELECT from `plan.scope` **only** and does not append the guard clause. W2's decomposition puts `latitude IS NOT NULL` into `guard_columns` (an IS-DISTINCT-FROM-NULL guard) and leaves `(geo_id IS NULL OR geo_id = '') AND geocoded_at IS NOT NULL` in `scope`, so the before image carries rows the retraction skips. Measured, the generated statement is:
+
+```sql
+UPDATE permits SET latitude = null, longitude = null, geocoded_at = null
+WHERE (geo_id IS NULL OR geo_id = '') AND geocoded_at IS NOT NULL AND (latitude IS DISTINCT FROM null);
+```
+
+`latitude IS NOT NULL` ≡ `latitude IS DISTINCT FROM NULL` was **proven by execution** over all 254,082 live rows (231,930 each, zero disagreements) before the decomposition was accepted. The divergence is unobservable on this database (both sets measure 0 rows), a superset before-image is the safe direction for an audit trail, and it is **declared in `guard_columns_why` and locked both ways** by the violations suite's DECLARED DIVERGENCE case — so moving `latitude IS NOT NULL` back into `scope` reds the suite and forces the note to be retired in the same commit. Found by the Integration plan seat; not silently tolerated.
+
+### 9.5 PRE captures must precede the shell — an ordering correction, stated
+
+The handed-down sequence reads *… → 7d shell → 8 PRE captures*. A "PRE" capture taken after the shell is wired captures the **converted** behaviour, because `capture-step-golden.js` spawns whatever `scripts/geocode-permits.js` is on disk. The differential would then compare converted against converted and be vacuous in a second, worse way. **The PRE captures therefore land after 7c (compute present, shell still legacy) and before 7d**, which is I4's own precedent (`2ba8e705` PRE captures, then `230176c9` compute + shell + POST). The descriptor's `fingerprint_inputs` names only `scripts/lib/compute/geocode-permits.js`, so the fingerprint is stable across 7d and the pair stays comparable.
+
+And the capture is still, by construction, unable to prove the write — §2.4 said so before anything was captured, and nothing since has changed it: W1's guard admits 0 rows, W2's scope is empty, so all three pairs record `zombies_cleaned: 0` and diff clean whether or not the conversion works. **The proof lives in the fence locks and in the executed `ctx.retract → writeBeforeImage → executeSetBasedClear` ordering test**, which asserts the SELECT is issued before the UPDATE against a recording fake client. That test is the reason this step's violations suite carries more weight than its differential.
 
 ---
 

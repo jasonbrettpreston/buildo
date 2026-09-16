@@ -7,23 +7,21 @@
 
 ## Counts
 
-Remaining files: **50** (+ **0** pending) · remaining slugs: **52** (+ **0** pending)
+Remaining files: **49** (+ **1** pending) · remaining slugs: **51** (+ **1** pending)
 
 | Batch | Files | Slots |
 |---|---:|---:|
-| C4 | 1 | 2 |
-| C5 | 13 | 13 |
+| C4 | 0 | 0 |
+| C5 | 14 | 15 |
 | C6 | 36 | 40 |
 
 ## C4 — archetype-grouped, risk-ascending
 
 | Archetype | File | Slug(s) | Chains (slots) | Quadrant | Write hints | Open cutover_prereq |
 |---|---|---|---|---|---|---|
-| ENRICHER | `scripts/geocode-permits.js` | geocode_permits | permits+sources (2) | bottom-left | supports_full | — |
 
 <details><summary>C4 — why each archetype (census <code>reason</code>)</summary>
 
-- `scripts/geocode-permits.js` (ENRICHER): C4 batching-entry §3.2 order 5
 
 </details>
 
@@ -35,6 +33,7 @@ Remaining files: **50** (+ **0** pending) · remaining slugs: **52** (+ **0** pe
 | ENRICHER | `scripts/enrich-centreline.js` | enrich_centreline | sources (1) | bottom-left | — | EP-PIN-D17 (enrich_centreline); CLOUD-PRE (enrich_centreline) |
 | ENRICHER | `scripts/enrich-heritage.js` | enrich_heritage | sources (1) | bottom-left | — | CLOUD-PRE (enrich_heritage) |
 | ENRICHER | `scripts/enrich-ravines.js` | enrich_ravines | sources (1) | bottom-left | — | CLOUD-PRE (enrich_ravines) |
+| ENRICHER | `scripts/geocode-permits.js` | geocode_permits [pending: descriptor_only] | permits+sources (2) | bottom-left | supports_full | — |
 | ENRICHER | `scripts/compute-parcel-cost-estimates.js` | compute_parcel_cost_estimates | sources (1) | top-left | supports_dry_run | CLOUD-PRE (compute_parcel_cost_estimates) |
 | INGESTOR | `scripts/load-address-points.js` | address_points | sources (1) | top-left | — | CLOUD-PRE (address_points); SEAM-CHAIN-1 (address_points) |
 | INGESTOR | `scripts/load-centreline.js` | load_centreline | sources (1) | top-left | — | CLOUD-PRE (load_centreline) |
@@ -51,6 +50,7 @@ Remaining files: **50** (+ **0** pending) · remaining slugs: **52** (+ **0** pe
 - `scripts/enrich-centreline.js` (ENRICHER): Spec 122 §1.10 declared
 - `scripts/enrich-heritage.js` (ENRICHER): Spec 122 §1.10 declared
 - `scripts/enrich-ravines.js` (ENRICHER): Spec 122 §1.10 declared
+- `scripts/geocode-permits.js` (ENRICHER): IN FLIGHT — batch 2 Phase 0.9 I5, registered in converted.json.pending at the folded commit 5 with stage descriptor_only. Flipped C4 -> pending in that commit because `buildRoadmap` THROWS when a file sits in converted.json.pending[] while its census row still names a batch (the I4 lesson, a062eb79: 11 failures in conversion-roadmap.infra.test.ts, caused by commit 1 declaring a new step and found only by the FULL npm run test, never by `vitest related`). Original C4 reason, kept verbatim: "C4 batching-entry §3.2 order 5".
 - `scripts/load-address-points.js` (INGESTOR): Spec 122 §1.10 declared
 - `scripts/load-centreline.js` (INGESTOR): Spec 122 §1.10 declared
 - `scripts/load-heritage.js` (INGESTOR): Spec 122 §1.10 declared
@@ -116,4 +116,4 @@ Remaining files: **50** (+ **0** pending) · remaining slugs: **52** (+ **0** pe
 
 ---
 
-*Totality (both directions, proven by `src/tests/conversion-roadmap.infra.test.ts`; slug-grain, IDENTITY HOLDS): **68** manifest.scripts slugs = **13** converted + **0** pending + **3** declared exemptions (Ask A2, excluded from the conversion programme entirely — never silently dropped, see the table above) + **52** remaining, each counted exactly once, in exactly one of C4/C5/C6/pending/exempted.*
+*Totality (both directions, proven by `src/tests/conversion-roadmap.infra.test.ts`; slug-grain, IDENTITY HOLDS): **68** manifest.scripts slugs = **13** converted + **1** pending + **3** declared exemptions (Ask A2, excluded from the conversion programme entirely — never silently dropped, see the table above) + **51** remaining, each counted exactly once, in exactly one of C4/C5/C6/pending/exempted.*

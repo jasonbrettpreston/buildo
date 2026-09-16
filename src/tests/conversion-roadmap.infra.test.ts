@@ -112,7 +112,7 @@ describe('measured counts — independently re-derived, not transcribed from the
     return map;
   }
 
-  it('50 remaining files, 52 remaining slugs (excluding the 13 converted, 0 pending, the 1 python-exempt file and the 1 RUNNER-owned exemption — `reconcile`, Spec 124 R-AP, 2026-09-15)', () => {
+  it('49 remaining files, 51 remaining slugs (excluding the 13 converted, 1 pending, the 1 python-exempt file and the 1 RUNNER-owned exemption — `reconcile`, Spec 124 R-AP, 2026-09-15)', () => {
     const fileToSlugs = fileToSlugsMap();
     const convertedSet = new Set(CONVERTED);
     const pendingSet = new Set(PENDING_FILES);
@@ -122,11 +122,15 @@ describe('measured counts — independently re-derived, not transcribed from the
     // commit 1 (2026-09-16), so its file leaves the remaining set. ONE slug, not two: the
     // roadmap keys `fileToSlugs` off `manifest.scripts`, where this file appears once — its
     // two CHAIN memberships (permits, sources) are not two script entries.
-    expect(remaining.length).toBe(50);
-    expect(remainingSlugCount).toBe(52);
+    // 50 -> 49 files and 52 -> 51 slugs: geocode_permits joined `pending[]` at the batch-2 I5
+    // FOLDED commit 5 (2026-09-16). Same one-slug-not-two arithmetic, and for the same reason
+    // — this step is ALSO a two-chain member (permits 8/33, sources 4/28) with a single
+    // `manifest.scripts` entry.
+    expect(remaining.length).toBe(49);
+    expect(remainingSlugCount).toBe(51);
   });
 
-  it('the census file-count-by-batch matches the independently re-derived C4/C5/C6 split (C4=1, C5=13 — `reconcile` left C5 for the R-AP RUNNER-owned exemption, 2026-09-15 — C6=36; pending=0 — link_neighbourhoods was pending from batch-2 I4 commit 1 and converted at commit 3, both on 2026-09-16; assert_engine_health\'s own row was deleted entirely at batch1 I3 commit 9, 2026-09-14, mirroring the assert_data_bounds/I2 commit 9 cutover precedent)', () => {
+  it('the census file-count-by-batch matches the independently re-derived C4/C5/C6 split (C4=0, C5=13 — `reconcile` left C5 for the R-AP RUNNER-owned exemption, 2026-09-15 — C6=36; pending=1 — geocode_permits flipped C4 -> pending at the batch-2 I5 folded commit 5, 2026-09-16, leaving C4 empty; link_neighbourhoods was pending from batch-2 I4 commit 1 and converted at commit 3, both on 2026-09-16; assert_engine_health\'s own row was deleted entirely at batch1 I3 commit 9, 2026-09-14, mirroring the assert_data_bounds/I2 commit 9 cutover precedent)', () => {
     const census = JSON.parse(fs.readFileSync(CENSUS_PATH, 'utf8')) as { entries: Array<{ slug: string; file: string; batch: string; status?: string }> };
     const fileToSlugs = fileToSlugsMap();
     const convertedSet = new Set(CONVERTED);
@@ -163,14 +167,21 @@ describe('measured counts — independently re-derived, not transcribed from the
     // caught it because the pre-commit hook runs `vitest related` on STAGED files only and
     // this suite is related to neither the census nor converted.json by import. Found by the
     // Integration seat at the OUTPUT panel; fixed in its own commit.
-    expect(c4.size).toBe(1);
+    // 1 -> 0: geocode_permits was C4's LAST member and flipped to `pending` at the batch-2 I5
+    // folded commit 5 (2026-09-16), the same move link_neighbourhoods made at I4 commit 1 and
+    // assert_engine_health at batch1 I3 commit 1. C4 is now EMPTY, which is the batch closing,
+    // not a count going stale — every one of its five steps has been converted or is in flight.
+    expect(c4.size).toBe(0);
     // C5 itself is unaffected by this slug's move (it was never a C5 member) — the
     // census total gains 0 net rows (C4's loss is pending's gain, not C5's).
     expect(c5.size).toBe(13);
     // 1 -> 0 at the I4 CUTOVER (commit 3): the row is RETAINED with `status: "converted"`
     // (Spec 124 R-AO) rather than deleted, but `byBatch` counts only rows the roadmap still
     // treats as pending work, and a converted row is no longer that.
-    expect(pendingBatch.size).toBe(0);
+    // 0 -> 1 at the batch-2 I5 FOLDED commit 5 (2026-09-16): geocode_permits' row is the
+    // one in flight. It falls back to 0 at that step's own cutover, when the row is RETAINED
+    // with `status: "converted"` (Spec 124 R-AO) and therefore stops counting as pending work.
+    expect(pendingBatch.size).toBe(1);
     expect(c6.size).toBe(36);
     expect(c4.size + c5.size + c6.size).toBe(remaining.length);
   });
@@ -361,8 +372,8 @@ describe('buildRoadmap() — totality over the real committed data (HIGH-1: slug
     const convertedSlugCount = CONVERTED.length;
     expect(totalSlugs).toBe(68);
     expect(convertedSlugCount + pendingSlugs + args.exemptions.length + remainingSlugs).toBe(totalSlugs);
-    expect(pendingSlugs).toBe(0);
-    expect(remainingSlugs).toBe(52);
+    expect(pendingSlugs).toBe(1);
+    expect(remainingSlugs).toBe(51);
   });
 
   it('the rendered report never silently drops the 3 exemptions — all appear in the Declared exemptions table and the totality sentence states IDENTITY HOLDS', async () => {

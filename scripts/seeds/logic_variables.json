@@ -4247,6 +4247,36 @@
       "group": "Source Ingestion"
     }
   },
+  "geocode_permits_coverage_warn_pct": {
+    "default": 95,
+    "type": "number",
+    "min": 0,
+    "max": 100,
+    "description": "Minimum permit geocode coverage (%) below which the geocode_coverage check WARNs. Declared form `pct >= 95`, the floor form. CONSUMED by geocode_permits via checks[].limit_from_config. Externalizes the ONLY literal threshold the pre-conversion scripts/geocode-permits.js contained — the 95 that appeared TWICE, once as the audit row's `>= 95%` render string plus its status comparison at :142 and once as a second, independent verdict comparison at :166 (the Rule 10 parallel boolean the conversion retires by construction). SEEDED AT 95 ON PURPOSE so the conversion commits are a genuine zero-diff. SHIPPED RED, and the reason is GP-D1: measured 2026-09-16, coverage is 91.2816% (231,930 of 254,082) and 15 of the last 40 ledger rows carrying an audit verdict read WARN with ZERO PASS. The gate has been evaluated at 95 for its entire life and the one measurement ever taken against it — 4de16d00's 90.9% reading, which lowered the threshold to 85 — changed only ONE of the two literals, leaving the verdict comparison at 95, so it never took effect and was correctly reconciled away five days later by d24c964c. The structural ceiling is 96.99% (the 7,660-row no_geo_id tail can never be geocoded by a geo_id equijoin). The VALUE ruling is its own peel and its value is 90, the measured coverage floored to the nearest 5 below — never 85 restored by transcription. Ledgered GP-D1.",
+    "admin": {
+      "group": "Source Ingestion"
+    }
+  },
+  "geocode_permits_heartbeat_minutes": {
+    "default": 5,
+    "type": "number",
+    "min": 1,
+    "max": 60,
+    "description": "How often (wall-clock minutes) the ENRICHER runner writes a progress heartbeat while geocode_permits' two phases hold the shared transaction. REQUIRED on the ENRICHER profile since d7668b8a (batch-2 Phase 0.10): execution.heartbeat_minutes_from_config names this key, and the runner's resolveInterval THROWS on a non-finite resolution rather than silently disabling the ticker — which is ER-D1, the defect 0.10 closed (a hardcoded enrich_parcels key resolved NaN for any other step, `if (!intervalMs) return () => {}` swallowed it, and last_heartbeat_at stayed NULL for the whole run with no warning, no audit row and no throw). DECLARED AS A REAL VARIABLE RATHER THAN THE LITERAL \"none\" (I5 ruling, 2026-09-16): \"none\" is a legal declared disable, but choosing it one commit after 0.10 paid to remove the same silence would re-create it by declaration instead of by accident. Default 5 mirrors enrich_parcels_heartbeat_minutes. CONSUMED by scripts/geocode-permits.js.",
+    "admin": {
+      "group": "Source Ingestion"
+    }
+  },
+  "geocode_permits_lock_timeout_ms": {
+    "default": 1800000,
+    "type": "number",
+    "min": 0,
+    "max": 3600000,
+    "description": "Bounded, LOUD `SET LOCAL lock_timeout` (ms) for geocode_permits' shared transaction. REQUIRED on the ENRICHER profile since d7668b8a; execution.lock_timeout_ms_from_config names this key and a non-finite resolution THROWS. Genuinely load-bearing for this step rather than ceremonial: it runs in BOTH the permits and sources chains under one advisory lock (id 5), and its phase-1 statement is a full re-join of all 246,416 numeric-geo_id permits against the 525,346-row address_points table inside a transaction that also holds a destructive retraction — so a heavyweight-lock wait here blocks a table five other steps read. 0 = disabled (inherit the connection's own setting). Default 1800000 (30 min) mirrors enrich_parcels_lock_timeout_ms. CONSUMED by scripts/geocode-permits.js.",
+    "admin": {
+      "group": "Source Ingestion"
+    }
+  },
   "enrich_parcels_heartbeat_minutes": {
     "default": 5,
     "type": "number",
