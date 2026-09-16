@@ -198,6 +198,77 @@ Both real surfaces (mobile, Spec 74 web tokens) are dark-mode-only today — the
 | **maxbld.ca marketing site (future)** | Full brand-primary | Not built yet. When built: full §3/§4 system, likely the first surface that actually NEEDS the typography work deferred in §4.1/§4.2 to be done for real (marketing pages carry more brand weight than a utility app). |
 | **Store listings (App Store / Play Store)** | Full brand-primary, ties to Spec 116 §E7 | App name, icon, screenshots all need the real mark (§5) and the renamed identity (§8 OD-B4) before listing — cannot ship "MaxBLD" store metadata pointing at a "Buildo"-branded icon/binary. |
 
+### 6.1 Surface application — S-002 `mobile_parcel_search`
+
+The first surface to apply this brand deliberately rather than inherit it. Registry entry: [`S-002`](../../reports/generated/127-surface-registry.md#s-002) `mobile_parcel_search`; review card in `docs/reports/generated/127-surface-review-queue.md`; archetype **SEARCH** per `docs/specs/02-web-admin/126_maxbld_surface_standard.md` §3.1; the surface's own spec is `docs/specs/03-mobile/100_mobile_parcel_cost_tool.md` §4. Descriptor: `scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json`. Implementation: `mobile/app/(app)/parcel-tool/index.tsx`.
+
+**These are not new brand tokens.** Every value below is a surface-scoped *shade* of a role already ratified in §3.2 — the primary is `#f59e0b`, unchanged and unchangeable here. §3.3 explicitly declines to force byte-identical hex across surfaces, and §7's both-files-same-commit rule governs the §3.2 table, which this section does not touch. That is why these live as NativeWind arbitrary-value classes in `mobile/src/constants/parcelSearch.ts` (`PARCEL_SEARCH_TOKENS`) rather than as new entries in `mobile/tailwind.config.js`: adding them to the config would make them brand tokens and would then owe `src/app/globals.css` the same edit.
+
+| Role in §3.2 | §3.2 value | S-002 value | Where it is used |
+|---|---|---|---|
+| Neutral 950 — background | `#09090b` | `#0e0e10` | the screen ground behind the centred search |
+| Neutral 900 — card | `#18181b` | `#18181b` *(identical)* | the search field surface; candidate rows |
+| Neutral 900 ↔ 800 | `#18181b` / `#27272a` | `#161618` (chip) · `#27272a` (chip pressed) | suggestion chips |
+| Neutral 700 — border | `#3f3f46` | `#2e2e33` (search field) · `#2a2a2c` (rows) · `#353437` (chips) | softer than the feed's card borders, because this surface is a single focused control rather than a scanning list |
+| **Primary** | `#f59e0b` | `#f59e0b` **unchanged** | wordmark accent, spinner, highlighted differing text, the retry button's fill |
+| On-primary | *(new role)* | `#472a00` | text and icon ON an amber fill — the AA-safe pairing §3.5 requires when amber is a background rather than a foreground |
+
+One value from the originating mockup has **no home here and is deliberately absent: the `#131315` bottom-navigation bar.** S-002 does not render a navigation bar (see "Layout"), so carrying a token for one would be a token with no consumer.
+| Text secondary | `#a1a1aa` (zinc-400) | `#a1a1aa` *(identical)* | tagline, chip labels, parcel ids, the miss copy |
+
+**Typography — state of reality, not aspiration.** §1.2 and §4.2 record, measured, that `sans: Inter` and `mono: SpaceMono` are declared in `mobile/tailwind.config.js` but **no font file is loaded anywhere in `mobile/`** — no `assets/fonts/`, no `useFonts`, no `Font.loadAsync`. `font-sans` and `font-mono` therefore resolve to the platform system font today, and any claim that this surface ships Inter 400–900 or JetBrains Mono would be false. S-002 accordingly commits to the **hierarchy**, per §4.2's consistency rule, and not to a family:
+
+| Element | Class | Intent |
+|---|---|---|
+| Wordmark | `text-2xl font-bold tracking-tight` | H2-weight, the one display element on the screen |
+| Tagline | `font-mono text-[11px] tracking-widest uppercase` | the caption/metadata step; mono because it reads as a label, not prose |
+| Search input | `text-base` | body |
+| Candidate address | `text-base`, differing run at `font-semibold` + primary | body, with the diff carrying the emphasis rather than a second size |
+| Parcel id / chip label | `font-mono text-[11px]` | data step — mono for identifiers, per §4.1's "Data / numeric" row |
+
+Resolving §4.2's option (a) *load the fonts* vs (b) *adopt system-font formally* remains open and is **not** decided by this section. If (a) lands, this surface needs no change beyond the family names.
+
+**Layout.** Centred "Google-style" column, `max-width: 448` (`SEARCH_MAX_WIDTH`), mobile-first, safe-area top edge. The surface does **not** draw a bottom navigation bar: the bottom bar in this product is owned by `shell_app_tabs` (`S-046`, `mobile/app/(app)/_layout.tsx`), which carries five tabs — Lead Feed, Flight Board, Map, Parcels, Settings — at 83px (iOS) / 60px (Android). S-002 reserves that height in its scroll content instead, so a duplicate 64px bar is a **defect**, not a style choice. Minimum touch target 44px throughout, per §3.5's accessibility posture and the descriptor's `a11y.touch_target_min_px`.
+
+### 6.2 Surface application — S-004 `shell_parcel_tool_stack` (the product shelf)
+
+Registry entry: [`S-004`](../../reports/generated/127-surface-registry.md#s-004); archetype **SHELL**. Implementation: `mobile/app/(app)/parcel-tool/_layout.tsx`, with the shelf itself at `mobile/src/components/parcel/ParcelShelf.tsx` (declared in the surface's `owns.components`). Tokens in `PARCEL_SHELF_HEX`.
+
+This is the **only navigation inside MaxBLD** — three tabs, Lookup · Tracked Lots · Account. The five-tab bar belonging to the other product is hidden for every route in this group; rendering a second navigation bar inside the parcel product is a **defect**, not a style choice.
+
+| Token | Value | §3.2 role | Used for |
+|---|---|---|---|
+| `screen` | `#0e0e10` | Neutral 950 | the ground behind the shelf, matching §6.1 |
+| `shelf` | `rgba(19,19,21,0.95)` | Neutral 950–900 | the shelf bar (`#131315` at 95%) |
+| `border` | `#27272a` | Neutral 800 | the top border |
+| *active* | `#f59e0b` | **Primary — unchanged** | the active tab: filled icon + semibold 11px label |
+| `inactive` | `#9ca3af` | Text secondary | inactive icon + 400-weight label |
+
+**Layout.** Shelf height 82, `paddingBottom: max(24, safe-area bottom inset)`, 44px minimum targets, and an Android ripple of `rgba(245,158,11,0.12)`. The active tab is derived from the route, never from local state, so a deep link lights the right tab. Every tab announces itself as "`<name>` tab, active". Icons are `lucide-react-native` `Compass` / `Bookmark` / `User` — see §6.3 for why the originally-specified icon package is not used.
+
+### 6.3 Surface application — S-072 `mobile_tracked_lots`
+
+Registry entry: [`S-072`](../../reports/generated/127-surface-registry.md#s-072) `mobile_tracked_lots`; archetype **LIST** per `docs/specs/02-web-admin/126_maxbld_surface_standard.md` §3.1; contract `C-062 contract_parcels_tracked`; feature module **F17 `tracked-lots`**. Implementation: `mobile/app/(app)/parcel-tool/tracked.tsx`, with `mobile/src/components/parcel/TrackedLotRow.tsx` and `TrackedLotsHeader.tsx` (both declared in the surface's `owns.components`).
+
+This is the first MaxBLD surface that **stacks three layers** — a sticky header, a meta row, and a scrolling list of cards — so it needs two container levels where §6.1's search surface needed one. Tokens live in `TRACKED_LOTS_HEX` (`mobile/src/constants/parcelSearch.ts`), one definition site each, and again as surface-scoped shades rather than new §3.2 brand tokens, so §7's both-files-same-commit rule is not triggered.
+
+| Token | Value | §3.2 role | Used for |
+|---|---|---|---|
+| `surface` | `#131315` | Neutral 950–900 | screen ground and the sticky header |
+| `containerLow` | `#1c1b1d` | Neutral 900 | the lot card |
+| `containerHigh` | `#2a2a2c` | Neutral 800 | pressed card, chip fills, the undo toast |
+| `outlineVariant` | `#353437` | Neutral 700 border | card borders, the header rule, the row divider |
+| `primary` | `#f59e0b` | **Primary — unchanged** | the MAX COA BUILD figure, Manage/Done, UNDO |
+| `outline` | `#a08e7a` | *(new — warm neutral)* | the mono jurisdiction line, chevrons, the stub notice |
+| `tertiary` | `#56e5a9` | *(new — affirmative)* | the "new nearby CoA ruling" badge, **only on a definite YES** |
+| `error` | `#ffb4ab` | Semantic error (§3.2 `#ef4444`, lightened for dark ground) | the row delete affordance and the error state |
+
+**`tertiary` is reserved, not decorative.** It fires only when the ruling is literally `true`. The field it describes has **no backing column** — it is derived, and nothing computes it yet — so a `null` renders as an em dash in the neutral chip, never as a green "NO" and never as a green anything. Spending the one affirmative colour on an uncomputed field would be the visual form of the same lie the descriptor's blocking check exists to prevent.
+
+**Layout.** Sticky header (bookmark + title + Manage/Done + account), meta row (`N Tracked Lots` pluralised, jurisdiction in mono amber at `letterSpacing: 1.2`), then a `FlatList` of cards at 14px radius with 10px gaps. Numeric figures use `fontVariant: ['tabular-nums']` so the m² columns align down the list. The list reserves `PARCEL_SHELF_HEIGHT` plus 32 at the bottom, and the undo toast floats one step above the shelf — S-072 draws **no navigation of its own**; the three-tab shelf belongs to S-004 (§6.2).
+
+**Icons** follow the same substitution as §6.2: the specification named `@expo/vector-icons` Ionicons, which is not a declared dependency, so these are `lucide-react-native` — `Bookmark`, `SlidersHorizontal`, `User`, `Gavel`, `Trash2`, `ChevronRight`.
+
 ## 7. Token single-source rule
 
 Brand tokens live in exactly two places today, and MUST be updated together:

@@ -1,0 +1,259 @@
+{
+  "kind": "SURFACE",
+  "status": "exists",
+  "docs": {
+    "purpose": "The Account tab of the MaxBLD product shell. It is where MaxBLD account settings will live. There is nothing to manage yet, and it says so rather than showing an empty form.",
+    "data_story": "It reaches **no API contract** and reads no table — there is nothing behind it yet, and it invents nothing. It holds no client store. It emits **no analytics event**, so nothing it does is currently countable.",
+    "under_126": "**REBUILD** — it is a placeholder for a capability the parcel product does not have yet, so there is nothing to re-project until its contract exists. It renders through the STATIC renderer. It owns no component of its own, so its `owns.components[]` is an empty array."
+  },
+  "evidence": {
+    "files": [
+      "mobile/app/(app)/parcel-tool/account.tsx:1"
+    ],
+    "contracts": [
+      "mobile/app/(app)/parcel-tool/account.tsx:1-53 — reaches no contract"
+    ],
+    "tables": [
+      "mobile/app/(app)/parcel-tool/account.tsx:1-53 — reaches no table"
+    ],
+    "gate": [
+      "mobile/app/(app)/_layout.tsx:236-265",
+      "mobile/app/(app)/parcel-tool/_layout.tsx:122-128"
+    ],
+    "states": [
+      "mobile/app/(app)/parcel-tool/account.tsx:1-53 — one unconditional render"
+    ],
+    "emits": [
+      "mobile/app/(app)/parcel-tool/account.tsx:1-53 — no track() call"
+    ]
+  },
+  "identity": {
+    "id": "mobile_parcel_account",
+    "route": "mobile/app/(app)/parcel-tool/account.tsx",
+    "archetype": "STATIC",
+    "platforms": [
+      "mobile"
+    ],
+    "owns": {
+      "components": []
+    },
+    "owner": "unassigned (no CODEOWNERS file and no owner registry exists in the repo — measured 2026-09-16)",
+    "spec": "docs/specs/03-mobile/100_mobile_parcel_cost_tool.md",
+    "spec_refs": [
+      "docs/specs/03-mobile/100_mobile_parcel_cost_tool.md §4",
+      "docs/specs/00-architecture/116_multi_product_architecture.md (OD5)",
+      "docs/specs/00-architecture/117_maxbld_brand.md §6.1"
+    ],
+    "spec_version": "0-draft",
+    "versioning": {
+      "answer": "none",
+      "why": "It renders no payload.",
+      "evidence": [
+        "mobile/app/(app)/parcel-tool/account.tsx:1-53"
+      ]
+    },
+    "ref": "S-073"
+  },
+  "inputs": {
+    "answer": "none",
+    "why": "It takes nothing — no route param, no hook, no store.",
+    "evidence": [
+      "mobile/app/(app)/parcel-tool/account.tsx:1-53"
+    ],
+    "contract_ref": [],
+    "query_key": [],
+    "field_whitelist": [],
+    "tables": []
+  },
+  "outputs": {
+    "answer": "none",
+    "why": "A placeholder writes nothing.",
+    "evidence": [
+      "mobile/app/(app)/parcel-tool/account.tsx:1-53"
+    ],
+    "contract_ref": [],
+    "tables": []
+  },
+  "state": {
+    "answer": "none",
+    "why": "No store, no local state.",
+    "evidence": [
+      "mobile/app/(app)/parcel-tool/account.tsx:1-53"
+    ],
+    "fields": []
+  },
+  "staleness": {
+    "answer": "none",
+    "why": "It renders no server data.",
+    "evidence": [
+      "mobile/app/(app)/parcel-tool/account.tsx:1-53"
+    ],
+    "offline": "none"
+  },
+  "guards": {
+    "session": {
+      "answer": "entitled",
+      "why": "It inherits the tab gate and the parcel-tool Stack; the tab tree does not mount unless subscription_status is trial/active/past_due/admin_managed.",
+      "evidence": [
+        "mobile/app/(app)/_layout.tsx:236-265"
+      ]
+    },
+    "rls_class": {
+      "answer": "none",
+      "why": "It reaches no table.",
+      "evidence": [
+        "mobile/app/(app)/parcel-tool/account.tsx:1-53"
+      ]
+    },
+    "disclosure": "none",
+    "entitlement": {
+      "product": "lead_gen",
+      "statuses": [
+        "trial",
+        "active",
+        "past_due",
+        "admin_managed"
+      ],
+      "on_missing": "paywall"
+    },
+    "flag": "none",
+    "permission": "none",
+    "rate_bucket": "none"
+  },
+  "render": {
+    "targets": [
+      "screen"
+    ],
+    "projection": "none",
+    "breakpoints": "mobile_first",
+    "export": "none"
+  },
+  "checks": [
+    {
+      "id": "mobile_parcel_account_stub_is_visible",
+      "kind": "empty_state",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "why": "While this tab has nothing behind it, it must SAY so rather than render blank or fake a state. The permanently non-zero condition is the placeholder itself; the retighten condition is machine-observable — the check flips to FAIL the day mobile/app/(app)/parcel-tool/account.tsx reads a contract, because at that point an explanatory placeholder is a defect."
+    }
+  ],
+  "invariants": "none",
+  "plausibility": "none",
+  "states": [
+    {
+      "name": "static",
+      "golden": "none"
+    },
+    {
+      "name": "empty",
+      "golden": "none"
+    }
+  ],
+  "errors": {
+    "answer": "none",
+    "why": "No async work, so no failure path.",
+    "evidence": [
+      "mobile/app/(app)/parcel-tool/account.tsx:1-53"
+    ]
+  },
+  "emits": {
+    "answer": "none",
+    "why": "Nothing to emit yet.",
+    "evidence": [
+      "mobile/app/(app)/parcel-tool/account.tsx:1-53"
+    ],
+    "analytics": [],
+    "ledger_events": [],
+    "breadcrumbs": []
+  },
+  "offers": {
+    "answer": "none",
+    "why": "No sponsored placement is rendered.",
+    "evidence": [
+      "mobile/app/(app)/parcel-tool/account.tsx:1-53"
+    ]
+  },
+  "metering": {
+    "answer": "none",
+    "why": "Nothing here is counted. The Spec 126 §7 usage ledger table does not exist (grep for usage_events in the introspected drizzle schema returns 0 hits), and the parcel product has no quota, credit or view counter of its own — no metering column, no ledger row, no consumption event. Measured 2026-09-16.",
+    "evidence": [
+      "src/lib/db/generated/schema.ts — no usage_events table (grep, 2026-09-16)",
+      "src/app/api/parcels/lookup/route.ts:113-119 — the only record of a lookup is a log line; it increments nothing"
+    ]
+  },
+  "config": {
+    "answer": "none",
+    "why": "No tunable; it reserves the shelf height and nothing else.",
+    "evidence": [
+      "mobile/src/constants/parcelSearch.ts:86 — PARCEL_SHELF_HEIGHT"
+    ],
+    "logic_variables": [],
+    "retired": []
+  },
+  "sharing": {
+    "answer": "none",
+    "why": "It renders no contract.",
+    "evidence": [
+      "mobile/app/(app)/parcel-tool/account.tsx:1-53"
+    ],
+    "surfaces": []
+  },
+  "a11y": {
+    "touch_target_min_px": "n/a",
+    "labels": "complete",
+    "dark_mode": "hardcoded",
+    "reduced_motion": "none",
+    "i18n": "none",
+    "safe_area": [
+      "top"
+    ]
+  },
+  "deviations": [
+    {
+      "from": "Spec 126 §3.1 — a registered SURFACE renders real content",
+      "why": "Registered as `status: exists` while being a placeholder. The route is real and reachable from the shelf; the capability behind it is not built. Recorded as a deviation rather than `status: designed`, because `designed` would claim nothing is built and the route is.",
+      "adjudicated_by": "operator ruling 2026-09-16 (c) — \"create minimal placeholder screens under the stack if none exist\"",
+      "date": "2026-09-16"
+    }
+  ],
+  "limitations": [
+    {
+      "what": "Nothing is built behind the Account tab; the screen states that rather than rendering blank.",
+      "measured": "mobile/app/(app)/parcel-tool/account.tsx reaches no contract and no table (grep: no hook import, no fetch).",
+      "check_id": "mobile_parcel_account_stub_is_visible"
+    }
+  ],
+  "interpretation": "none",
+  "notes": "The census was checked for something to reuse: S-036 `mobile_settings` (mobile/app/(app)/settings.tsx) is the only account-shaped mobile surface, and it is a LEAD-GEN screen — it sits in the five-tab shell and its content is trade selection, lead notification preferences and the lead-gen subscription. Reusing it would import lead-gen concepts straight into scope A, which Spec 116 OD5 — MaxBLD is its own product; nothing in scope `parcel_product` may reference a lead-gen concept forbids, so MaxBLD gets its own Account surface. It deliberately shows NOTHING about the account yet: the entitlement this product actually runs on today is the lead-gen one (see S-002 `programme.product_questions[0]`), and rendering a subscription state here would be showing the user a lead-gen fact about themselves.",
+  "x-draft": {
+    "shard": "mobile-product",
+    "files": [
+      "mobile/app/(app)/parcel-tool/account.tsx"
+    ],
+    "loc": 53,
+    "call_idiom": "none",
+    "stores": [],
+    "measured_states": [
+      "empty_placeholder"
+    ],
+    "measured_gate": {
+      "session": "required",
+      "entitlement": "subscription_status",
+      "flag": "none",
+      "permission": "none"
+    }
+  },
+  "programme": {
+    "scope": "parcel_product",
+    "phase": "B2",
+    "why": "A tab of the MaxBLD product shelf, created by operator ruling 2026-09-16 (c) so all three tabs resolve to a real route.",
+    "feature": "F01",
+    "build_order": 1013,
+    "leakage": "none",
+    "product_questions": "none",
+    "review": {
+      "status": "unreviewed"
+    }
+  }
+}

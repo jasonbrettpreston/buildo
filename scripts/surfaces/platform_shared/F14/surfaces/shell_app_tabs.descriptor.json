@@ -395,7 +395,7 @@
     }
   ],
   "interpretation": "none",
-  "notes": "This shell is the single most load-bearing gate in the mobile estate — five tabs, six subscription statuses, one contract. guards.entitlement.product is lead_gen rather than the schema's parcel_tool because migration 228's CHECK permits only lead_gen and flight_center.",
+  "notes": "This shell is the single most load-bearing gate in the mobile estate — five tabs, six subscription statuses, one contract. guards.entitlement.product is lead_gen rather than the schema's parcel_tool because migration 228's CHECK permits only lead_gen and flight_center.\n\nSELF-HIDING FOR THE MaxBLD PRODUCT (operator ruling 2026-09-16 (c)). This five-tab bar belongs to the LEAD-GEN app. It is NOT rendered while a `parcel-tool` route is focused, because that group is the MaxBLD product and has its own three-tab shelf (S-004 `shell_parcel_tool_stack`: Lookup, Tracked Lots, Account). The decision is a pure function of the focused route — `shouldHideAppTabBar` (mobile/src/lib/appShell.ts:29), consumed in the custom tabBar wrapper at mobile/app/(app)/_layout.tsx:69. The parcel-tool group deliberately STAYS inside `(app)` so it remains behind the subscription gate at mobile/app/(app)/_layout.tsx:236-265; hiding the bar was chosen over moving the group for that reason.",
   "x-draft": {
     "shard": "mobile-product",
     "files": [

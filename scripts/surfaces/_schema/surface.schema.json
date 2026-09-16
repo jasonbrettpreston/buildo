@@ -2984,6 +2984,10 @@
               "description": "platform-admin (platform_shared) — Users, security, tunables, health, pipeline ops — the admin of the platform, not of a product."
             },
             {
+              "const": "F17",
+              "description": "tracked-lots (parcel_product) — Keep an eye on specific lots: the user’s own saved parcels, their envelope figures, and whether a CoA ruling has landed near them. Its own feature module so it is removable as a unit — one table, one contract, one surface — and so it shares nothing with the lead-gen save machinery (Spec 116 OD5)."
+            },
+            {
               "const": "F90",
               "description": "lead-generation (estate_other) — The lead feed, saved leads, lead detail. The other product."
             },

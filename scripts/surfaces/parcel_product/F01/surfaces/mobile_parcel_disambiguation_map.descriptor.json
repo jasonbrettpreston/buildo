@@ -1,0 +1,289 @@
+{
+  "kind": "SURFACE",
+  "status": "exists",
+  "docs": {
+    "purpose": "The map you land on when an address does not resolve to exactly one lot. Three ways to get here: the address is linked to several lots (a corner, severed or ranged property), the address exists but no lot is linked to it, or what was typed is an intersection rather than an address. In each case it is supposed to draw the lots on a map and let you tap the one you meant, and say plainly when nothing is linked rather than quietly picking the nearest polygon. Today it is a STUB: the route, the navigation and the three explanations are real, and the map is not drawn yet.",
+    "data_story": "It reads nothing from the database directly, and today it reads no contract either — it renders from its two route parameters. The map it is specified to draw needs parcel GEOMETRY, which is exactly what `/api/parcels/lookup` does not return: the consumer parcel payload is a `.strict()` whitelist of cost menu, areas and neighbourhood, with no polygon, no centroid and no address-point id. That gap is the reason this is a stub and not a screen. It emits **no analytics event**, so nothing it does is currently countable.",
+    "under_126": "**REBUILD** — it is specified against a contract that does not exist yet, so there is nothing to re-project until the geometry is served. It renders through the LIST renderer with `render.projection: map`: a map is a projection of a collection, not an archetype, which is the same call already made for `mobile_map`. It owns no component of its own, so its `owns.components[]` is an empty array — a legal answer, written down."
+  },
+  "evidence": {
+    "files": [
+      "mobile/app/(app)/parcel-tool/disambiguate.tsx:1"
+    ],
+    "contracts": [
+      "mobile/app/(app)/parcel-tool/disambiguate.tsx:1-82 — reaches no contract; the geometry it needs is not served"
+    ],
+    "tables": [
+      "mobile/app/(app)/parcel-tool/disambiguate.tsx:1-82 — reaches no table"
+    ],
+    "gate": [
+      "mobile/app/(app)/_layout.tsx:236-265",
+      "mobile/app/(app)/parcel-tool/_layout.tsx:15-19"
+    ],
+    "states": [
+      "mobile/app/(app)/parcel-tool/disambiguate.tsx:34 — const COPY: Record<ParcelMatchType, string>",
+      "mobile/app/(app)/parcel-tool/disambiguate.tsx:64 — testID parcel-disambiguate-stub"
+    ],
+    "emits": [
+      "mobile/app/(app)/parcel-tool/disambiguate.tsx:1-82 — no track() call"
+    ]
+  },
+  "identity": {
+    "id": "mobile_parcel_disambiguation_map",
+    "route": "mobile/app/(app)/parcel-tool/disambiguate.tsx",
+    "archetype": "LIST",
+    "platforms": [
+      "mobile"
+    ],
+    "owns": {
+      "components": []
+    },
+    "owner": "unassigned (no CODEOWNERS file and no owner registry exists in the repo — measured 2026-09-16)",
+    "spec": "docs/specs/03-mobile/100_mobile_parcel_cost_tool.md",
+    "spec_refs": [
+      "docs/specs/03-mobile/100_mobile_parcel_cost_tool.md §2.6",
+      "docs/specs/03-mobile/100_mobile_parcel_cost_tool.md §4",
+      "docs/specs/02-web-admin/126_maxbld_surface_standard.md §3.1"
+    ],
+    "spec_version": "0-draft",
+    "versioning": {
+      "answer": "none",
+      "why": "It reads no payload today; its two route params are the whole of its input.",
+      "evidence": [
+        "mobile/app/(app)/parcel-tool/disambiguate.tsx:44 — useLocalSearchParams<{ q, kind }>"
+      ]
+    },
+    "ref": "S-071"
+  },
+  "inputs": {
+    "answer": "none",
+    "why": "Two route params, `q` and `kind`, pushed by the SEARCH surface. No hook, no query, no table. The contract it will need does not exist yet.",
+    "evidence": [
+      "mobile/app/(app)/parcel-tool/disambiguate.tsx:44 — useLocalSearchParams<{ q, kind }>",
+      "mobile/app/(app)/parcel-tool/disambiguate.tsx:47 — const matchType = isParcelMatchType(kind) ? kind : null",
+      "mobile/src/lib/parcelSearchMatch.ts:136-152 — export function parcelSearchRoute"
+    ],
+    "contract_ref": [],
+    "query_key": [],
+    "field_whitelist": [],
+    "tables": []
+  },
+  "outputs": {
+    "answer": "none",
+    "why": "A disambiguation view writes nothing; the only action it will have is choosing a lot to open.",
+    "evidence": [
+      "mobile/app/(app)/parcel-tool/disambiguate.tsx:1-82"
+    ],
+    "contract_ref": [],
+    "tables": []
+  },
+  "state": {
+    "answer": "none",
+    "why": "No store and no local state — everything it renders comes from the two route params.",
+    "evidence": [
+      "mobile/app/(app)/parcel-tool/disambiguate.tsx:44-47 — the two route params are the whole of its state"
+    ],
+    "fields": []
+  },
+  "staleness": {
+    "answer": "none",
+    "why": "It renders no server data yet.",
+    "evidence": [
+      "mobile/app/(app)/parcel-tool/disambiguate.tsx:1-82"
+    ],
+    "offline": "none"
+  },
+  "guards": {
+    "session": {
+      "answer": "entitled",
+      "why": "It inherits the tab gate and the parcel-tool Stack: shell_app_tabs will not mount the tab tree at all unless subscription_status is trial/active/past_due/admin_managed.",
+      "evidence": [
+        "mobile/app/(app)/_layout.tsx:236-265",
+        "src/app/api/parcels/lookup/route.ts:47-60"
+      ]
+    },
+    "rls_class": {
+      "answer": "none",
+      "why": "The stub reaches no table. The geometry it will need is not served by any route today.",
+      "evidence": [
+        "mobile/app/(app)/parcel-tool/disambiguate.tsx:1-82"
+      ]
+    },
+    "disclosure": "none",
+    "entitlement": {
+      "product": "lead_gen",
+      "statuses": [
+        "trial",
+        "active",
+        "past_due",
+        "admin_managed"
+      ],
+      "on_missing": "paywall"
+    },
+    "flag": "none",
+    "permission": "none",
+    "rate_bucket": "none"
+  },
+  "render": {
+    "targets": [
+      "screen"
+    ],
+    "projection": "map",
+    "breakpoints": "mobile_first",
+    "export": "none",
+    "list": {
+      "item_archetype": "parcel polygon + one line of lot facts (frontage, area, zoning class)",
+      "pagination": "none",
+      "recycling": "none — the candidate set is bounded by the address, not by scrolling"
+    }
+  },
+  "checks": [
+    {
+      "id": "parceldisambig_no_silent_fallback",
+      "kind": "empty_state",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "why": "operator ruling 2026-09-16 (match TYPE, never count): the unlinked case must render a VISIBLE \"no lot is linked to this address\" state. Picking the nearest polygon and presenting it as the answer is explicitly forbidden, and it is the kind of thing that is invisible once shipped — hence blocking, not advisory. The paired lock upstream is mobile/__tests__/parcelSearchMatch.test.ts, which asserts a zero-candidate response derives `no_match` and never `unlinked`."
+    },
+    {
+      "id": "parceldisambig_stub_is_visible",
+      "kind": "render_target_parity",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "why": "While this surface is a stub it must SAY it is a stub. The permanently non-zero condition is the stub itself; the retighten condition is machine-observable — the check flips to FAIL the day the route renders a MapView, because at that point an explanatory placeholder is a defect rather than an honest state."
+    }
+  ],
+  "invariants": "none",
+  "plausibility": "none",
+  "states": [
+    {
+      "name": "static",
+      "golden": "none"
+    },
+    {
+      "name": "empty",
+      "golden": "none"
+    },
+    {
+      "name": "offline",
+      "golden": "none"
+    }
+  ],
+  "errors": {
+    "answer": "none",
+    "why": "No async work in the stub, so no failure path yet.",
+    "evidence": [
+      "mobile/app/(app)/parcel-tool/disambiguate.tsx:1-82"
+    ]
+  },
+  "emits": {
+    "answer": "none",
+    "why": "Nothing to emit yet.",
+    "evidence": [
+      "mobile/app/(app)/parcel-tool/disambiguate.tsx:1-82"
+    ],
+    "analytics": [],
+    "ledger_events": [],
+    "breadcrumbs": []
+  },
+  "offers": {
+    "answer": "none",
+    "why": "No sponsored placement is rendered.",
+    "evidence": [
+      "mobile/app/(app)/parcel-tool/disambiguate.tsx:1-82"
+    ]
+  },
+  "metering": {
+    "answer": "none",
+    "why": "Nothing here is counted: the Spec 126 §7 usage ledger table does not exist and this surface reaches no route.",
+    "evidence": [
+      "src/lib/db/generated/schema.ts — no usage_events table (grep, 2026-09-15)",
+      "mobile/app/(app)/parcel-tool/disambiguate.tsx:1-82"
+    ]
+  },
+  "config": {
+    "answer": "none",
+    "why": "The stub has no tunable. The map it will become inherits the SEARCH candidate cap from S-002.",
+    "evidence": [
+      "mobile/app/(app)/parcel-tool/disambiguate.tsx:1-82",
+      "mobile/src/constants/parcelSearch.ts:33 — SEARCH_CANDIDATE_LIMIT"
+    ],
+    "logic_variables": [],
+    "retired": []
+  },
+  "sharing": {
+    "answer": "none",
+    "why": "It renders no contract today.",
+    "evidence": [
+      "mobile/app/(app)/parcel-tool/disambiguate.tsx:1-82"
+    ],
+    "surfaces": []
+  },
+  "a11y": {
+    "touch_target_min_px": 44,
+    "labels": "complete",
+    "dark_mode": "hardcoded",
+    "reduced_motion": "none",
+    "i18n": "none",
+    "safe_area": [
+      "top"
+    ]
+  },
+  "deviations": [
+    {
+      "from": "Spec 126 §3.1 — a registered SURFACE renders its declared projection",
+      "why": "Registered as `status: exists` while being a STUB. The route, the navigation contract and the three explanations are real and in the tree; the `map` projection is not drawn. Recorded as a deviation rather than carrying `status: designed`, because `designed` would claim nothing is built and something is — and the alternative, leaving the three map outcomes to dead-end silently on the SEARCH surface, is worse than a stub that says so.",
+      "adjudicated_by": "operator ruling 2026-09-16 §2 — \"otherwise stub the route with the correct navigation + the descriptor\"",
+      "date": "2026-09-16"
+    }
+  ],
+  "limitations": [
+    {
+      "what": "The map is not drawn. Two independent reasons, both measured: there is no parcel-polygon map component in the Expo tree to reuse, and the contract serves no geometry to draw.",
+      "measured": "grep -rn \"Polygon\" mobile/src mobile/app returns nothing — LeadMapPane.tsx renders Marker circles only. ConsumerParcelSchema (src/app/api/parcels/lookup/types.ts:75-91) is .strict() over costMenu + areas + neighbourhood: no polygon, no centroid, no address-point id.",
+      "check_id": "parceldisambig_stub_is_visible"
+    },
+    {
+      "what": "Two of its three entry paths cannot fire yet. `multi_parcel` and `unlinked` are not derivable from the current lookup response, so only the `intersection` path reaches this route today.",
+      "measured": "src/app/api/admin/parcels/lookup/types.ts:123 — matchType is [exact|typeahead|direct]; mobile/src/lib/parcelSearchMatch.ts:98-123 derives only unique / text_candidates / intersection / no_match.",
+      "check_id": "parceldisambig_no_silent_fallback"
+    }
+  ],
+  "interpretation": "none",
+  "notes": "Created by operator ruling 2026-09-16 (match TYPE, never count), which separated the map disambiguation from the SEARCH surface on the grounds that it reads parcel geometry and S-002 does not. Archetype is LIST, not a new \"MAP\" archetype, because Spec 126 §3.1 defines a map as a `render.projection` — the same call already made for `mobile_map`. This is the next surface to build; it is blocked on the API change recorded in S-002’s limitations.",
+  "x-draft": {
+    "shard": "mobile-product",
+    "files": [
+      "mobile/app/(app)/parcel-tool/disambiguate.tsx"
+    ],
+    "loc": 82,
+    "call_idiom": "none",
+    "stores": [],
+    "measured_states": [
+      "multi_parcel_stub",
+      "unlinked_stub",
+      "intersection_stub",
+      "unknown_kind_stub"
+    ],
+    "measured_gate": {
+      "session": "required",
+      "entitlement": "subscription_status",
+      "flag": "none",
+      "permission": "none"
+    }
+  },
+  "programme": {
+    "scope": "parcel_product",
+    "phase": "B2",
+    "why": "The map half of the parcel tool’s entry flow — same Spec 100 feature, same address lookup, reached when the address does not resolve to exactly one lot.",
+    "feature": "F01",
+    "build_order": 1013,
+    "leakage": "none",
+    "product_questions": "none",
+    "review": {
+      "status": "unreviewed"
+    }
+  }
+}

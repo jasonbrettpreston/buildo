@@ -32,6 +32,7 @@ import { lightImpact } from '@/lib/haptics';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { SubscriptionLoadingGuard } from '@/components/paywall/SubscriptionLoadingGuard';
 import { PaywallScreen } from '@/components/paywall/PaywallScreen';
+import { shouldHideAppTabBar } from '@/lib/appShell';
 import { trackRender, useDepsTracker } from '@/lib/debug/stateDebug';
 import { track } from '@/lib/analytics';
 import { logQueryInvalidate } from '@/lib/queryTelemetry';
@@ -64,6 +65,8 @@ function AnimatedTabBar(props: BottomTabBarProps) {
   const animatedTabBarStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: tabBarOffset.value }],
   }));
+  // Hooks above run unconditionally; only the render is skipped.
+  if (shouldHideAppTabBar(props.state.routes[props.state.index]?.name)) return null;
   return (
     <Animated.View
       style={[

@@ -2,29 +2,31 @@
   "kind": "SURFACE",
   "status": "exists",
   "docs": {
-    "purpose": "The thin wrapper that lets the parcels tab hold two screens in sequence: the address search, and the lot report you reach by tapping a result. It hides the default navigation header so each screen can draw its own. It makes no decisions about who is allowed in.",
-    "data_story": "This surface reaches **no API contract at all** — every value it shows is local, passed in as a prop, or read from the device. It holds no client-side store, so there is no local copy of server state to keep in sync. It emits **no analytics event**, so nothing it does is currently countable.",
-    "under_126": "**RE-PROJECT** — it writes nothing and holds no Layer-3 store, so the move is short — the server already assembles the payload and only the rendering is client-side. It renders through the SHELL renderer (declared routing branches, guards and child groups — a shell here is not inert), reading no contract. It owns no component of its own, so its `owns.components[]` is an empty array — a legal answer, written down."
+    "purpose": "The MaxBLD product shell. It holds the parcel tool’s screens in sequence — the address lookup, the lot report you reach by tapping a result, the map view for an address that does not resolve to one lot — and it draws the three-tab shelf that is the only navigation a MaxBLD user sees: Lookup, Tracked Lots, Account. It hides the default navigation header so each screen can draw its own, and it makes sure no navigation from any other product appears inside MaxBLD. It makes no decisions about who is allowed in.",
+    "data_story": "This surface reaches **no API contract at all** — every value it shows is local or read from the route. It holds no client-side store: the highlighted tab is derived from the current path, not remembered. It emits **no analytics event**, so nothing it does is currently countable.",
+    "under_126": "**RE-PROJECT** — it writes nothing and holds no Layer-3 store, so the move is short. It renders through the SHELL renderer (declared routing branches, guards and child groups — a shell here is not inert), reading no contract. It now owns exactly one component — `mobile/src/components/parcel/ParcelShelf.tsx`, the three-tab shelf — declared in `owns.components[]` and rendered by nothing else (R-13)."
   },
   "evidence": {
     "files": [
-      "mobile/app/(app)/parcel-tool/_layout.tsx:1"
+      "mobile/app/(app)/parcel-tool/_layout.tsx:1",
+      "mobile/src/components/parcel/ParcelShelf.tsx:1 — the three-tab shelf this surface owns and nothing else renders"
     ],
     "contracts": [
-      "mobile/app/(app)/parcel-tool/_layout.tsx:1-15 — a Stack with two screens; no contract, no hook"
+      "mobile/app/(app)/parcel-tool/_layout.tsx:1-65 — a Stack plus the shelf; no contract, no hook"
     ],
     "tables": [
-      "mobile/app/(app)/parcel-tool/_layout.tsx:1-15 — reaches no table"
+      "mobile/app/(app)/parcel-tool/_layout.tsx:1-65 — reaches no table"
     ],
     "gate": [
-      "mobile/app/(app)/parcel-tool/_layout.tsx:4-5",
-      "mobile/app/(app)/_layout.tsx:236-265"
+      "mobile/app/(app)/_layout.tsx:236-265 — the subscription gate this group deliberately stays behind",
+      "mobile/app/(app)/parcel-tool/_layout.tsx:14-27"
     ],
     "states": [
-      "mobile/app/(app)/parcel-tool/_layout.tsx:10-13"
+      "mobile/app/(app)/parcel-tool/_layout.tsx:55-61 — the five Stack screens",
+      "mobile/src/components/parcel/ParcelShelf.tsx:71 — export function ParcelShelf"
     ],
     "emits": [
-      "mobile/app/(app)/parcel-tool/_layout.tsx:1-15 — no track() call"
+      "mobile/app/(app)/parcel-tool/_layout.tsx:1-65 — no track() call"
     ]
   },
   "identity": {
@@ -35,7 +37,9 @@
       "mobile"
     ],
     "owns": {
-      "components": []
+      "components": [
+        "mobile/src/components/parcel/ParcelShelf.tsx"
+      ]
     },
     "owner": "unassigned (no CODEOWNERS file and no owner registry exists in the repo — measured 2026-09-15)",
     "spec": "docs/specs/03-mobile/100_mobile_parcel_cost_tool.md",
@@ -48,16 +52,18 @@
       "answer": "none",
       "why": "A two-screen Stack with no payload.",
       "evidence": [
-        "mobile/app/(app)/parcel-tool/_layout.tsx:10-13"
+        "mobile/app/(app)/parcel-tool/_layout.tsx:55-61"
       ]
     },
     "ref": "S-004"
   },
   "inputs": {
     "answer": "none",
-    "why": "It declares the index and [parcelId] screens and takes nothing else.",
+    "why": "It declares the index, [parcelId], disambiguate, tracked and account screens, and reads the current pathname to decide which tab is lit. Nothing else.",
     "evidence": [
-      "mobile/app/(app)/parcel-tool/_layout.tsx:10-13"
+      "mobile/app/(app)/parcel-tool/_layout.tsx:55-61",
+      "mobile/app/(app)/parcel-tool/_layout.tsx:41-43 — usePathname + activeParcelTab",
+      "mobile/src/lib/parcelSearchMatch.ts:258 — export function activeParcelTab"
     ],
     "contract_ref": [],
     "query_key": [],
@@ -75,9 +81,10 @@
   },
   "state": {
     "answer": "none",
-    "why": "No state; routing stays inside the Stack with no router.replace effects, per the note in the file.",
+    "why": "No store and no local state for navigation: the active tab is DERIVED from the route (operator ruling 2026-09-16 (c)), so a deep link straight into a lot lights the right tab and the highlight cannot drift out of step with where the user actually is.",
     "evidence": [
-      "mobile/app/(app)/parcel-tool/_layout.tsx:4-5"
+      "mobile/app/(app)/parcel-tool/_layout.tsx:41-43",
+      "mobile/src/lib/parcelSearchMatch.ts:258 — export function activeParcelTab"
     ],
     "fields": []
   },
@@ -85,7 +92,7 @@
     "answer": "none",
     "why": "It renders no data.",
     "evidence": [
-      "mobile/app/(app)/parcel-tool/_layout.tsx:1-15"
+      "mobile/app/(app)/parcel-tool/_layout.tsx:1-65"
     ],
     "offline": "none"
   },
@@ -102,7 +109,7 @@
       "answer": "none",
       "why": "The shell itself reaches no table; its children read parcels and coa_applications through the API.",
       "evidence": [
-        "mobile/app/(app)/parcel-tool/_layout.tsx:1-15"
+        "mobile/app/(app)/parcel-tool/_layout.tsx:1-65"
       ]
     },
     "disclosure": "none",
@@ -127,7 +134,15 @@
     "projection": "none",
     "breakpoints": "mobile_first",
     "export": "none",
-    "routing": "UNRESEARCHED"
+    "routing": {
+      "branches": [
+        "index",
+        "[parcelId]",
+        "disambiguate",
+        "tracked",
+        "account"
+      ]
+    }
   },
   "checks": [
     {
@@ -145,6 +160,22 @@
       "blocking": false,
       "when": "post",
       "why": "headerShown false means each child renders its own SafeAreaView header; a child that forgot would render under the status bar."
+    },
+    {
+      "id": "parcelstack_three_tabs_only",
+      "kind": "render_target_parity",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "why": "operator ruling 2026-09-16 (c): inside the MaxBLD product exactly three tabs are visible — Lookup, Tracked Lots, Account. The five-tab lead-gen bar (S-046) must be hidden for every parcel-tool route. Blocking because a regression shows lead-gen navigation inside a product that has no lead-gen concepts, which is the OD5 violation itself. Locked by `shouldHideAppTabBar` (mobile/src/lib/appShell.ts:29, consumed at mobile/app/(app)/_layout.tsx:69) and by the \"five-tab lead-gen bar is hidden\" describe block in mobile/__tests__/parcelSearchMatch.test.ts."
+    },
+    {
+      "id": "parcelstack_active_tab_from_route",
+      "kind": "render_target_parity",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "The lit tab is derived from the pathname, never from local state, so a deep link into a lot lights Lookup rather than nothing (mobile/src/lib/parcelSearchMatch.ts:258). The test table covers index, tracked, account, a parcel id, disambiguate and the group-prefixed forms."
     }
   ],
   "invariants": "none",
@@ -159,14 +190,14 @@
     "answer": "none",
     "why": "No async work, no failure path.",
     "evidence": [
-      "mobile/app/(app)/parcel-tool/_layout.tsx:1-15"
+      "mobile/app/(app)/parcel-tool/_layout.tsx:1-65"
     ]
   },
   "emits": {
     "answer": "none",
     "why": "Nothing to emit.",
     "evidence": [
-      "mobile/app/(app)/parcel-tool/_layout.tsx:1-15"
+      "mobile/app/(app)/parcel-tool/_layout.tsx:1-65"
     ],
     "analytics": [],
     "ledger_events": [],
@@ -176,16 +207,15 @@
     "answer": "none",
     "why": "A navigation container renders no sponsored content.",
     "evidence": [
-      "mobile/app/(app)/parcel-tool/_layout.tsx:1-15"
+      "mobile/app/(app)/parcel-tool/_layout.tsx:1-65"
     ]
   },
   "metering": {
     "answer": "none",
-    "why": "Nothing here is counted: the Spec 126 §7 usage ledger table does not exist (grep for usage_events in the introspected drizzle schema returns 0 hits), and the only quota-shaped counter, user_profiles.lead_views_count, is incremented solely by POST /api/leads/view, which has no mobile caller.",
+    "why": "Nothing here is counted. The Spec 126 §7 usage ledger table does not exist (grep for usage_events in the introspected drizzle schema returns 0 hits), and the parcel product has no quota, credit or view counter of its own — no metering column, no ledger row, no consumption event. Measured 2026-09-16.",
     "evidence": [
-      "src/lib/db/generated/schema.ts — no usage_events table (grep, 2026-09-15)",
-      "src/app/api/leads/view/route.ts:110",
-      "src/features/leads/api/useLeadView.ts:25 — imported only by src/tests/useLeadView.logic.test.tsx"
+      "src/lib/db/generated/schema.ts — no usage_events table (grep, 2026-09-16)",
+      "src/app/api/parcels/lookup/route.ts:113-119 — the only record of a lookup is a log line; it increments nothing"
     ]
   },
   "config": {
@@ -203,28 +233,31 @@
     "answer": "none",
     "why": "It renders no contract.",
     "evidence": [
-      "mobile/app/(app)/parcel-tool/_layout.tsx:1-15"
+      "mobile/app/(app)/parcel-tool/_layout.tsx:1-65"
     ],
     "surfaces": []
   },
   "a11y": {
     "touch_target_min_px": 44,
-    "labels": "none",
-    "dark_mode": "none",
+    "labels": "complete",
+    "dark_mode": "hardcoded",
     "reduced_motion": "none",
     "i18n": "none",
-    "safe_area": "none"
+    "safe_area": [
+      "bottom"
+    ]
   },
   "deviations": "none",
   "limitations": "none",
   "interpretation": "none",
-  "notes": "The only nested Stack inside the tab tree — the Parcel Cost Tool is a standalone two-screen flow that happens to live behind a tab.",
+  "notes": "THE MaxBLD PRODUCT SHELL. This is the shell that owns the three-tab shelf — Lookup, Tracked Lots, Account (operator ruling 2026-09-16 (c)). The five-tab bar (Lead Feed, Flight Board, Map, Parcels, Settings) is S-046 `shell_app_tabs` at mobile/app/(app)/_layout.tsx and belongs to the LEAD-GEN app; it is hidden for every route in this group.\n\nWHY HIDDEN RATHER THAN ESCAPED. Two ways to stop the five-tab bar rendering here: (1) move the `parcel-tool` group out of `(app)`, or (2) hide the bar while a parcel-tool route is focused. (1) was REJECTED on a measured ground: mobile/app/(app)/_layout.tsx:236-265 is where the SUBSCRIPTION GATE lives — it returns SubscriptionLoadingGuard / PaywallScreen / a forced sign-out BEFORE it renders <Tabs>, so leaving the group would take the parcel product out from behind that gate, a security regression, and would additionally rewrite every `/(app)/parcel-tool/...` href, the descriptors and the Maestro flows. (2) was taken: S-046 already renders its bar through a custom `tabBar` wrapper, so the hide is one route-derived decision (`shouldHideAppTabBar`, mobile/src/lib/appShell.ts:29) with the gate untouched.\n\nSHELF COMPONENT. The shelf is extracted to `mobile/src/components/parcel/ParcelShelf.tsx` rather than drawn inline, so `owns.components` names a real file that R-13 totality can account for exactly once, and so the shelf is testable on its own.\n\nICONS. The shelf was specified with @expo/vector-icons Ionicons (compass / bookmark-outline / person-outline). That package is not a declared dependency of mobile/ and has zero usages; `lucide-react-native` is the established icon layer. Compass / Bookmark / User are its equivalents, with the active tab’s icon filled.",
   "x-draft": {
     "shard": "mobile-product",
     "files": [
-      "mobile/app/(app)/parcel-tool/_layout.tsx"
+      "mobile/app/(app)/parcel-tool/_layout.tsx",
+      "mobile/src/components/parcel/ParcelShelf.tsx"
     ],
-    "loc": 15,
+    "loc": 162,
     "call_idiom": "none",
     "stores": [],
     "measured_states": [

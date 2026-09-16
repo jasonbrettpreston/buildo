@@ -2,17 +2,19 @@
   "kind": "SURFACE",
   "status": "exists",
   "docs": {
-    "purpose": "A search box where someone types a Toronto street address and gets back matching lots to open. Typing pauses briefly before searching so exploratory typing does not hammer the server, and at least three characters are required. If the user's saved home base is outside Toronto they see a gentle note that coverage is Toronto-only, and if they search too fast they are told how many seconds to wait.",
-    "data_story": "It reads nothing from the database directly. Every value arrives through one contract: `/api/parcels/lookup`. Behind that contract, the data comes from `address_points`, `coa_applications`, `entitlements`, `parcel_address_points`, `parcels` and `user_profiles`. It also holds client-side state in `filterStore`, which is the part a server-driven projection has to absorb or justify. It emits **no analytics event**, so nothing it does is currently countable.",
-    "under_126": "**REBUILD** — it holds Layer-3 state (`filterStore`), so a client decision has to be re-homed on the server before the projection can be honest. It renders through the SEARCH renderer (declared debounce, minimum query length, rate bucket and candidate shape), reading by reference: `/api/parcels/lookup`. It owns no component of its own, so its `owns.components[]` is an empty array — a legal answer, written down."
+    "purpose": "A search box where someone types a Toronto street address and gets back the lot. Typing pauses briefly before searching so exploratory typing does not hammer the server, and at least three characters are required. Lots are only available in Toronto: an address in another municipality is refused on the spot, before any request is sent, and told so plainly. What happens after that is decided by the MATCH TYPE, never by how many rows came back: one lot opens straight away; several text matches show a short list with the differing part of each address highlighted, and past ten it asks for a house number instead; an address linked to several lots, an address with no lot, and an intersection all hand off to the map surface. Being rate-limited, being out of subscription, and finding nothing are three different things on screen, and it says which one happened.",
+    "data_story": "It reads nothing from the database directly. Every value arrives through one contract: `/api/parcels/lookup`. Behind that contract, the data comes from `address_points`, `parcel_address_points` and `parcels` — the lot corpus — plus `entitlements` for the access check. It holds no client store at all: the query text and its debounce live in component state, and the Toronto-only rule is computed from the typed address. It emits **no analytics event**, so nothing it does is currently countable.",
+    "under_126": "**RE-PROJECT** — it no longer holds ANY Layer-3 state: the cross-product filter-store read is deleted (operator ruling 2026-09-16 (b), recorded in notes), so the only client state left is the query text and its debounce, which a server-driven projection absorbs without an argument. That is a downgrade from REBUILD, and it is the direct result of removing that read. It renders through the SEARCH renderer, whose two declared tunables are closed rather than unresearched: `config.debounce_ms` 400 and `config.min_query_len` 3, both externalised in `mobile/src/constants/parcelSearch.ts`. It reads by reference: `/api/parcels/lookup`. It owns no component of its own, so its `owns.components[]` is an empty array — a legal answer, written down. The branch logic and the Toronto-only rule live in `mobile/src/lib/parcelSearchMatch.ts`, a pure module."
   },
   "evidence": {
     "files": [
-      "mobile/app/(app)/parcel-tool/index.tsx:1"
+      "mobile/app/(app)/parcel-tool/index.tsx:1",
+      "mobile/src/lib/parcelSearchMatch.ts:1 — the match-type branch, extracted so it is testable without a renderer",
+      "mobile/src/constants/parcelSearch.ts:1 — config.debounce_ms / config.min_query_len / the candidate cap"
     ],
     "contracts": [
-      "mobile/src/hooks/useParcelLookup.ts:34",
-      "mobile/app/(app)/parcel-tool/index.tsx:30"
+      "mobile/src/hooks/useParcelLookup.ts:34 — fetchWithAuth(`/api/parcels/lookup?${qs}`)",
+      "mobile/app/(app)/parcel-tool/index.tsx:76 — useParcelSearch(debounced)"
     ],
     "tables": [
       "src/lib/admin/parcel-lookup.ts:196-199",
@@ -24,11 +26,12 @@
       "src/lib/auth/route-guard.ts:120-132"
     ],
     "states": [
-      "mobile/app/(app)/parcel-tool/index.tsx:47-48",
-      "mobile/app/(app)/parcel-tool/index.tsx:81-111"
+      "mobile/app/(app)/parcel-tool/index.tsx:84-92 — const outcome = deriveMatchType(...) / const candidates",
+      "mobile/app/(app)/parcel-tool/index.tsx:127-134 — retryAfter / isEntitlementRefusal / isSchemaDrift / isUnexpectedError",
+      "mobile/src/lib/parcelSearchMatch.ts:98 — export function deriveMatchType"
     ],
     "emits": [
-      "mobile/app/(app)/parcel-tool/index.tsx:1-115 — no track() call in the file",
+      "mobile/app/(app)/parcel-tool/index.tsx:1-312 — no track() call in the file",
       "src/app/api/parcels/lookup/route.ts:113-119"
     ]
   },
@@ -64,10 +67,12 @@
   },
   "inputs": {
     "answer": "contract",
-    "why": "Typing produces one debounced GET /api/parcels/lookup?q=; the only local input is the stored home-base coordinate, read purely to decide whether to show the Toronto-coverage hint.",
+    "why": "Typing produces one debounced GET /api/parcels/lookup?q=. There is no local input at all: the owner’s location is irrelevant to MaxBLD. The query STRING is read twice by pure helpers — once by `isOutsideToronto` for the Toronto-only rule, once by `isIntersectionQuery`, because the server has no intersection parsing at all.",
     "evidence": [
-      "mobile/src/hooks/useParcelLookup.ts:59-69",
-      "mobile/app/(app)/parcel-tool/index.tsx:22-34"
+      "mobile/src/hooks/useParcelLookup.ts:59-69 — export function useParcelSearch",
+      "mobile/app/(app)/parcel-tool/index.tsx:77-78 — isOutsideToronto gates the hook; a refused query is never sent",
+      "mobile/src/lib/parcelSearchMatch.ts:91 — export function isOutsideToronto",
+      "mobile/src/lib/parcelSearchMatch.ts:85 — export function isIntersectionQuery"
     ],
     "contract_ref": [
       "/api/parcels/lookup"
@@ -155,40 +160,26 @@
     "answer": "none",
     "why": "A SEARCH surface here writes nothing: the only action is router.push to the detail route with the chosen parcelId.",
     "evidence": [
-      "mobile/app/(app)/parcel-tool/index.tsx:42-44"
+      "mobile/app/(app)/parcel-tool/index.tsx:94-101 — const goToParcel = useCallback"
     ],
     "contract_ref": [],
     "tables": []
   },
   "state": {
-    "answer": "zustand",
-    "why": "It reads filterStore.homeBaseLocation (MMKV-persisted) for the coverage hint; the query text and its debounce live in component useState, which the state vocabulary has no value for.",
+    "answer": "none",
+    "why": "The lead-gen filter-store read is deleted. The query text and its debounce live in component useState, which the state vocabulary has no value for, and nothing else is held.",
     "evidence": [
-      "mobile/app/(app)/parcel-tool/index.tsx:19-28",
-      "mobile/src/store/filterStore.ts:121-122"
+      "mobile/app/(app)/parcel-tool/index.tsx:64-65 — const [input, setInput] / const [debounced, setDebounced]",
+      "mobile/app/(app)/parcel-tool/index.tsx — no useFilterStore import remains (grep)"
     ],
-    "fields": [
-      {
-        "name": "homeBaseLocation",
-        "owner_layer": "3_zustand",
-        "canonical_writer": "mobile_onboarding_address via PATCH /api/user-profile then filterStore.setHomeBaseLocation",
-        "authorized_readers": [
-          "mobile_parcel_search",
-          "mobile_lead_feed",
-          "mobile_map"
-        ],
-        "bridge": "B2",
-        "persistence": "mmkv",
-        "signout_reset": true
-      }
-    ]
+    "fields": []
   },
   "staleness": {
     "answer": "query_cache",
     "why": "useParcelSearch declares a 60-second staleTime; the 400ms debounce upstream is what actually protects the 60/min bucket, not the cache.",
     "evidence": [
-      "mobile/src/hooks/useParcelLookup.ts:62-67",
-      "mobile/app/(app)/parcel-tool/index.tsx:25-28"
+      "mobile/src/hooks/useParcelLookup.ts:62-67 — staleTime: 60_000",
+      "mobile/app/(app)/parcel-tool/index.tsx:70-74 — the SEARCH_DEBOUNCE_MS useEffect"
     ],
     "offline": "blocked",
     "stale_time_ms": 60000,
@@ -240,7 +231,7 @@
       "severity": "FAIL",
       "blocking": false,
       "when": "post",
-      "why": "mobile/__tests__/useParcelLookup.test.ts parses a hit, asserts a miss is a valid 200 result rather than an error, and asserts ParcelLookupSchemaError on a drifted shape."
+      "why": "mobile/__tests__/useParcelLookup.test.ts parses a hit, asserts a miss is a valid 200 result rather than an error, and asserts ParcelLookupSchemaError on a drifted shape. mobile/__tests__/parcelSearchMatch.test.ts then locks what the screen DOES with each parsed shape."
     },
     {
       "id": "parcelsearch_cross_contract",
@@ -256,7 +247,7 @@
       "severity": "FAIL",
       "blocking": false,
       "when": "post",
-      "why": "Two distinct empty renders are testID-tagged — parcel-search-empty (>=3 chars, no match) and the \"type at least 3 characters\" prompt (index.tsx:101-111)."
+      "why": "Three distinct non-result renders are testID-tagged and mutually exclusive: `parcel-search-empty` (>= min length, nothing found), `parcel-search-prompt` (\"type at least N characters\"), and `parcel-search-refine` (the candidate cap was reached — ask for a house number). See mobile/app/(app)/parcel-tool/index.tsx:287, :297, :304."
     },
     {
       "id": "parcelsearch_log_hygiene",
@@ -264,7 +255,7 @@
       "severity": "FAIL",
       "blocking": true,
       "when": "pre",
-      "why": "Spec 100 §2.8 forbids logging the raw address query; the route logs uid/outcome/parcelId/matchType/duration only (route.ts:113-119). A raw-q log would leak what a user is looking at buying."
+      "why": "Spec 100 §2.8 forbids logging the raw address query; the route logs uid/outcome/parcelId/matchType/duration only (src/app/api/parcels/lookup/route.ts:113-119). A raw-q log would leak what a user is looking at buying. The client side of the same rule: the screen emits no analytics event at all, so the query text cannot leave the device by that path either (mobile/app/(app)/parcel-tool/index.tsx — no track() call)."
     },
     {
       "id": "parcelsearch_rate_limited_state",
@@ -272,7 +263,39 @@
       "severity": "FAIL",
       "blocking": false,
       "when": "post",
-      "why": "A RateLimitError renders the testID-tagged parcel-search-ratelimit line with the server's retry-after seconds (index.tsx:81-85) — the only screen in the app that surfaces retry-after to the user."
+      "why": "A RateLimitError renders the testID-tagged `parcel-search-ratelimit` line with the server’s retry-after seconds (mobile/app/(app)/parcel-tool/index.tsx:213) — the only screen in the app that surfaces retry-after to the user."
+    },
+    {
+      "id": "parcelsearch_a11y",
+      "kind": "a11y_label",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "Every interactive element on the screen carries an accessibilityRole and an accessibilityLabel (the field, each suggestion chip, each candidate row, the retry button) and a 44px minimum target. This closes the limitation that recorded zero of either."
+    },
+    {
+      "id": "parcelsearch_entitlement_state",
+      "kind": "error_state",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "A 403 from the subscription gate renders the testID-tagged parcel-search-entitlement block, NOT the miss copy. The check exists because the two were the same string for the whole of this surface’s life, and a silent re-merge would be invisible."
+    },
+    {
+      "id": "parcelsearch_match_type_branch",
+      "kind": "contract_parse",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "operator ruling 2026-09-16 (match TYPE, never count): the screen branches on the declared match type and never on candidates.length. deriveMatchType (mobile/src/lib/parcelSearchMatch.ts:98) is the only place a count is read, and mobile/__tests__/parcelSearchMatch.test.ts exercises all five ruled types — including multi_parcel and unlinked, which are driven through the server-value-wins path because the current contract cannot express them."
+    },
+    {
+      "id": "parcelsearch_toronto_only",
+      "kind": "error_state",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "why": "operator ruling 2026-09-16 (b): lots are only available in Toronto, and an out-of-Toronto address must render the testID-tagged `parcel-search-outside-toronto` refusal — its OWN state, never folded into `no_match`. Blocking because the two are one `===` apart and the difference is invisible once shipped. The query is also not sent, so a refusal costs nothing against the rate bucket (mobile/app/(app)/parcel-tool/index.tsx:77-78). Locked in mobile/__tests__/parcelSearchMatch.test.ts, which pins that a deny-list city refuses, that the six Toronto municipalities do not, and that \"26 Markham St\" — a real Toronto street sharing a municipality name — is NOT refused."
     }
   ],
   "invariants": "none",
@@ -295,25 +318,40 @@
       "golden": "none"
     },
     {
+      "name": "empty",
+      "golden": "none"
+    },
+    {
+      "name": "schema_drift",
+      "golden": "none"
+    },
+    {
       "name": "rate_limited",
       "golden": "none"
     },
     {
       "name": "unauthorized",
       "golden": "none"
+    },
+    {
+      "name": "error",
+      "golden": "none"
     }
   ],
   "errors": {
     "answer": "inline",
-    "why": "The only rendered error is the rate-limit line; every other failure leaves `results` empty, so a 403 or a 500 is shown to the user as \"No parcel found for that address.\"",
+    "why": "Every failure class has its OWN rendered line, and none of them borrows the miss copy. The 403 entitlement refusal is no longer presented as \"No parcel found for that address.\" — presenting a subscription refusal as a data miss was this surface’s own recorded limitation, and it is closed. The Toronto-only refusal is likewise its own state and is decided before the network. NOTE: the Toronto-only refusal is NOT in `errors.classes[]` — that vocabulary is closed to HTTP-ish classes (400/401/403/429/500/404/schema_drift/offline) and this refusal never reaches the network. Nor does the closed `states[]` vocabulary have a value for it. It is carried by the blocking `parcelsearch_toronto_only` check and its testID instead. Both gaps are reported to the operator rather than papered over with an invented enum value.",
     "evidence": [
-      "mobile/app/(app)/parcel-tool/index.tsx:46-48",
-      "mobile/app/(app)/parcel-tool/index.tsx:101-105"
+      "mobile/app/(app)/parcel-tool/index.tsx:127-134 — the four error classifications",
+      "mobile/app/(app)/parcel-tool/index.tsx:201 — testID parcel-search-outside-toronto",
+      "mobile/app/(app)/parcel-tool/index.tsx:214 — testID parcel-search-ratelimit",
+      "mobile/app/(app)/parcel-tool/index.tsx:222 — testID parcel-search-entitlement",
+      "mobile/app/(app)/parcel-tool/index.tsx:234 — testID parcel-search-error"
     ],
     "classes": [
       {
         "class": "403",
-        "ui": "Nothing distinguishes it — the list is empty and the \"No parcel found\" copy renders as if the address did not exist."
+        "ui": "A distinct locked-out line: the parcel tool is not in the current subscription. Explicitly says this is not a missing address."
       },
       {
         "class": "429",
@@ -321,11 +359,11 @@
       },
       {
         "class": "500",
-        "ui": "Same silent empty result as a miss."
+        "ui": "Inline red \"Couldn’t reach the lot service.\" with a Try-again button wired to refetch()."
       },
       {
         "class": "schema_drift",
-        "ui": "ParcelLookupSchemaError — not retried; renders as the empty result."
+        "ui": "Inline red \"We couldn’t read the response for that address\" and NO retry button — a deterministic failure is not worth a second round trip. Sentry already has it."
       }
     ],
     "no_retry": [
@@ -356,25 +394,25 @@
   },
   "metering": {
     "answer": "none",
-    "why": "Nothing here is counted: the Spec 126 §7 usage ledger table does not exist (grep for usage_events in the introspected drizzle schema returns 0 hits), and the only quota-shaped counter, user_profiles.lead_views_count, is incremented solely by POST /api/leads/view, which has no mobile caller.",
+    "why": "Nothing here is counted. The Spec 126 §7 usage ledger table does not exist (grep for usage_events in the introspected drizzle schema returns 0 hits), and the parcel product has no quota, credit or view counter of its own — no metering column, no ledger row, no consumption event. Measured 2026-09-16.",
     "evidence": [
-      "src/lib/db/generated/schema.ts — no usage_events table (grep, 2026-09-15)",
-      "src/app/api/leads/view/route.ts:110",
-      "src/features/leads/api/useLeadView.ts:25 — imported only by src/tests/useLeadView.logic.test.tsx"
+      "src/lib/db/generated/schema.ts — no usage_events table (grep, 2026-09-16)",
+      "src/app/api/parcels/lookup/route.ts:113-119 — the only record of a lookup is a log line; it increments nothing"
     ]
   },
   "config": {
     "answer": "none",
-    "why": "The two tunables this SEARCH surface has — the 400ms debounce and the 3-character minimum — are hard-coded literals in the screen and the query schema, not registered logic variables; the schema also has no config.debounce_ms / config.min_query_len property to declare them in.",
+    "why": "The two tunables this SEARCH surface has are now DECLARED here and externalised in the code as named constants (`mobile/src/constants/parcelSearch.ts`), but they are still not registered logic variables — there is no admin row behind either, so `answer` stays `none` while `debounce_ms` and `min_query_len` carry their measured values. (The previous text here claimed the schema had no `config.debounce_ms` / `config.min_query_len` property to declare them in. That was false: both properties exist and this block already carried them as `UNRESEARCHED`.)",
     "evidence": [
-      "mobile/app/(app)/parcel-tool/index.tsx:26",
-      "src/app/api/parcels/lookup/types.ts:42",
-      "scripts/surfaces/_schema/surface.schema.json — config accepts only answer/why/evidence/logic_variables/retired"
+      "mobile/src/constants/parcelSearch.ts:19 — SEARCH_DEBOUNCE_MS, consumed at mobile/app/(app)/parcel-tool/index.tsx:72",
+      "mobile/src/constants/parcelSearch.ts:26 — SEARCH_MIN_QUERY_LEN; the server floor is src/app/api/parcels/lookup/types.ts:42",
+      "scripts/surfaces/_schema/surface.schema.json:2335,2348 — config.debounce_ms / config.min_query_len DO exist",
+      "docs/reference/logic-variables-registry.md — neither is a registered logic variable"
     ],
     "logic_variables": [],
     "retired": [],
-    "debounce_ms": "UNRESEARCHED",
-    "min_query_len": "UNRESEARCHED"
+    "debounce_ms": 400,
+    "min_query_len": 3
   },
   "sharing": {
     "answer": "shared",
@@ -390,7 +428,7 @@
   },
   "a11y": {
     "touch_target_min_px": 44,
-    "labels": "none",
+    "labels": "complete",
     "dark_mode": "hardcoded",
     "reduced_motion": "none",
     "i18n": "none",
@@ -401,34 +439,40 @@
   "deviations": "none",
   "limitations": [
     {
-      "what": "No interactive element on the screen carries an accessibility label or role — including the search field and every candidate row.",
-      "measured": "grep -c \"accessibilityLabel|accessibilityRole\" mobile/app/(app)/parcel-tool/index.tsx → 0.",
-      "check_id": "parcelsearch_a11y"
+      "what": "Two of the five ruled match types — `multi_parcel` and `unlinked` — cannot be reached from the current contract. The response carries no address-point fan-out signal and cannot distinguish \"address resolved, no lot linked\" from \"address did not resolve\", so both arrive as an ordinary zero-candidate miss. The screen reports `no_match` rather than guessing, which is why the ruling’s ban on a silent nearest-polygon fallback is not violated — but it also means the map surface is unreachable for those two until the API declares a resolution type.",
+      "measured": "src/app/api/admin/parcels/lookup/types.ts:123 — matchType is the closed enum ['exact','typeahead','direct']; src/lib/admin/parcel-lookup.ts:161-217 collapses every ambiguity into candidates[] with no fan-out signal and no intersection parsing.",
+      "check_id": "parcelsearch_match_type_branch"
     },
     {
-      "what": "A 403 from the subscription gate is rendered as \"No parcel found for that address.\" — an entitlement refusal presented as a data miss.",
-      "measured": "index.tsx:46-48 only branches on RateLimitError; every other error leaves results empty and showEmpty true.",
-      "check_id": "parcelsearch_rate_limited_state"
+      "what": "The Toronto-only rule catches a non-Toronto municipality only when it appears in the CITY position, after a comma. \"123 Main St Mississauga\" with no comma is not refused client-side; it reaches the server and misses.",
+      "measured": "mobile/src/lib/parcelSearchMatch.ts:91-110 — the municipality list is applied to `q.slice(comma + 1)` only. Widening it to match anywhere would refuse \"26 Markham St\", a real Toronto address — there is a test pinning exactly that.",
+      "check_id": "parcelsearch_toronto_only"
     }
   ],
   "interpretation": "none",
-  "notes": "guards.entitlement.product is lead_gen, not the parcel_tool value the schema offers: migration 228's chk_entitlements_product CHECK permits only lead_gen and flight_center, and Spec 116 OD5 folds the shipped parcel tool into lead_gen. The closed vocabulary and the live CHECK constraint disagree — recorded here rather than resolved.",
+  "notes": "HOME-BASE LEAKAGE — RESOLVED AND CLOSED (operator ruling 2026-09-16 (b)). This surface used to read the LEAD-FEED filter store (useFilterStore((s) => s.homeBaseLocation)) to decide whether to show a \"Toronto only\" coverage note, while its own header claimed it was \"NOT coupled to leads\". The ruling: MaxBLD has NO home-base concept and the owner’s location does not matter. The store read, the import and the hint are DELETED, so `programme.leakage` is now `none` — not a disposition, an absence. (The closed disposition vocabulary — move-to-owner, duplicate-locally, keep-and-declare, needs-ruling — has no value for \"was here, is gone\", so the history is recorded here.) Its replacement is the Toronto-only rule on the searched ADDRESS. Removing the store read is also what moved this surface from REBUILD to RE-PROJECT.\n\nENTITLEMENT vs OD5. `guards.entitlement.product` is `lead_gen` — not a description choice but a measured constraint: migration 228’s `chk_entitlements_product` permits only `lead_gen` and `flight_center`, and the route gates on the global `subscription_status`. Recording anything else here would make this descriptor lie. Under Spec 116 OD5 — MaxBLD is its own product; nothing in scope `parcel_product` may reference a lead-gen concept, that IS the finding: MaxBLD needs its own entitlement product, which is a migration plus a route change in the Backend domain. Raised as `programme.product_questions[0]`, not silently rewritten.\n\nMATCH-TYPE RULING (operator ruling 2026-09-16). The SEARCH surface branches on one of five types: unique (open the lot directly), text_candidates (capped list, differing part highlighted, ask for a house number past the cap), multi_parcel (map, every linked polygon tappable), unlinked (map, pin + faint surrounding parcels + a visible \"no lot is linked\" state, never a silent nearest-polygon pick), intersection (map, corner lots highlighted, no list). The map cases are their own surface, S-071, because they read parcel GEOMETRY, which this surface does not. The enum is declared on contract C-001. Three types are derivable client-side today; the other two are recorded in limitations as blocked on the API.\n\nTORONTO-ONLY RULE (operator ruling 2026-09-16 (b)). Lots are only available in Toronto. `isInsideToronto` / `TORONTO_BOUNDS` (mobile/src/lib/onboarding/snapCoord.ts) could NOT be reused for two reasons: they take a lat/lng and a SEARCH surface has an ungeocoded string, and they live in the lead-gen onboarding module, so importing them would be fresh scope-A leakage. The replacement is string-shaped and lives in the parcel product: a non-`M` postal FSA anywhere (Toronto is the only Canadian city on M), or a known non-Toronto municipality in the CITY position after the first comma. City-position-only is deliberate — Markham, Milton and Hamilton are also Toronto street names.\n\nBRAND. Spec 117 §6.1 is this surface’s brand application. The shades used are surface-scoped deepenings of the §3.2 roles rather than new brand tokens, expressed as NativeWind arbitrary-value classes in `mobile/src/constants/parcelSearch.ts` so §7's both-files-same-commit brand-token rule is not triggered. The amber primary is #f59e0b, unchanged.",
   "x-draft": {
     "shard": "mobile-product",
     "files": [
-      "mobile/app/(app)/parcel-tool/index.tsx"
+      "mobile/app/(app)/parcel-tool/index.tsx",
+      "mobile/src/lib/parcelSearchMatch.ts",
+      "mobile/src/constants/parcelSearch.ts"
     ],
-    "loc": 115,
+    "loc": 714,
     "call_idiom": "hook",
-    "stores": [
-      "filterStore"
-    ],
+    "stores": [],
     "measured_states": [
       "prompt_type_more",
       "fetching",
+      "outside_toronto",
       "rate_limited",
-      "results",
-      "empty_no_match"
+      "entitlement_refused",
+      "unexpected_error",
+      "schema_drift",
+      "candidates",
+      "empty_no_match",
+      "navigating_unique",
+      "navigating_map"
     ],
     "measured_gate": {
       "session": "required",
@@ -443,39 +487,27 @@
     "why": "The parcel tool's entry screen, `mobile/app/(app)/parcel-tool/index.tsx` — the same Spec 100 feature and the same contract, reached by the `q` path.",
     "feature": "F01",
     "build_order": 1013,
-    "leakage": [
-      {
-        "behaviour": "Reads the LEAD-FEED filter store to decide whether to show a \"Toronto only\" coverage note — `useFilterStore((s) => s.homeBaseLocation)`. \"Home base\" is a lead-generation concept: it is the radius centre the lead feed filters permits around, set during lead-gen onboarding. The file's own header asserts the opposite (`// Toronto hint (isInsideToronto is UX, not security — Spec 100 §2.9). NOT coupled to leads.`) while line 22 reads a lead-gen store.",
-        "evidence": [
-          "mobile/app/(app)/parcel-tool/index.tsx:22",
-          "mobile/app/(app)/parcel-tool/index.tsx:13",
-          "mobile/app/(app)/parcel-tool/index.tsx:34",
-          "mobile/app/(app)/parcel-tool/index.tsx:5"
-        ],
-        "owning_product": "lead_gen",
-        "disposition": "needs-ruling"
-      }
-    ],
+    "leakage": "none",
     "product_questions": [
       {
-        "question": "Should searching a specific street address open that lot directly, rather than returning a list of up to ten candidates to choose from? A person who types their own address expects their own property, not a disambiguation list.",
-        "measured": "The contract returns `candidates` (≤10) with `parcel: null` whenever the address is ambiguous, and the screen renders that list. An exact match does open directly — but address ambiguity in the corpus is common enough that the list is the ordinary path, not the exception.",
+        "question": "MaxBLD runs on the lead-gen entitlement. `guards.entitlement.product` is `lead_gen` because `chk_entitlements_product` (migration 228) admits only `lead_gen` and `flight_center` — so a user pays for lead generation and is thereby granted the parcel tool. Under OD5, does MaxBLD get its own `parcel_tool` entitlement product, and when?",
+        "measured": "src/app/api/parcels/lookup/route.ts:47-60 gates on the GLOBAL subscription_status; src/lib/entitlements/index.ts:68 joins `entitlements` on product = 'lead_gen'. There is no parcel-product entitlement row anywhere, and the CHECK constraint would reject one.",
         "evidence": [
-          "docs/specs/03-mobile/100_mobile_parcel_cost_tool.md:42",
-          "docs/specs/03-mobile/100_mobile_parcel_cost_tool.md:63",
-          "mobile/app/(app)/parcel-tool/index.tsx"
+          "src/app/api/parcels/lookup/route.ts:47-60",
+          "src/lib/entitlements/index.ts:68",
+          "migrations/228 — chk_entitlements_product"
         ],
-        "spec_says": "Spec 100 §2 item 6 DESIGNS this: \"Ambiguity → 200 with `candidates` (≤10) and `parcel: null` … the shape drives the client state machine.\" So the code matches its spec exactly. The question is whether the SPEC matches the product — e.g. auto-open on a single high-confidence candidate, or rank and pre-select."
+        "spec_says": "Spec 116 OD5 folds the shipped parcel tool into lead_gen. The 2026-09-16 ruling (a) that MaxBLD is its own product puts that fold in direct tension with the live constraint. This is a migration plus a route change in the Backend domain — not fixable from the mobile app."
       },
       {
-        "question": "Should a parcel-tool user see a \"home base\" concept at all? The coverage note only appears if they completed lead-gen onboarding and set a radius centre — so a parcel-only user never sees the Toronto-coverage warning that exists to help them.",
-        "measured": "The note is rendered only when `homeBaseLocation` is non-null AND outside Toronto. A user with no home base set sees nothing.",
+        "question": "The open SEARCH question — \"open the matching lot directly rather than a candidate list\" — is RULED and implemented, but two of its five branches are unreachable. Does the API change that makes multi_parcel and unlinked expressible get scheduled now, or does the map surface wait?",
+        "measured": "unique, text_candidates and intersection fire today. multi_parcel and unlinked cannot be derived from the current response and are reached only through the server-value-wins path.",
         "evidence": [
-          "mobile/app/(app)/parcel-tool/index.tsx:22",
-          "mobile/app/(app)/parcel-tool/index.tsx:34",
-          "mobile/app/(app)/parcel-tool/index.tsx:75-77"
+          "mobile/src/lib/parcelSearchMatch.ts:98 — export function deriveMatchType",
+          "src/app/api/admin/parcels/lookup/types.ts:123 — matchType enum",
+          "src/lib/admin/parcel-lookup.ts:161-217 — resolveAddress"
         ],
-        "spec_says": "Spec 100 §2.9 covers the Toronto-only scoping as UX rather than security; it does not say the hint should depend on a lead-gen field."
+        "spec_says": "Spec 100 §2 item 6 designs the candidate list; it does not model an address-point fan-out or an unlinked address as distinct outcomes."
       }
     ],
     "review": {

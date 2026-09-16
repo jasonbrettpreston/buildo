@@ -5858,6 +5858,265 @@
     "kind": "SURFACE",
     "status": "exists",
     "docs": {
+      "purpose": "The Account tab of the MaxBLD product shell. It is where MaxBLD account settings will live. There is nothing to manage yet, and it says so rather than showing an empty form.",
+      "data_story": "It reaches **no API contract** and reads no table — there is nothing behind it yet, and it invents nothing. It holds no client store. It emits **no analytics event**, so nothing it does is currently countable.",
+      "under_126": "**REBUILD** — it is a placeholder for a capability the parcel product does not have yet, so there is nothing to re-project until its contract exists. It renders through the STATIC renderer. It owns no component of its own, so its `owns.components[]` is an empty array."
+    },
+    "evidence": {
+      "files": [
+        "mobile/app/(app)/parcel-tool/account.tsx:1"
+      ],
+      "contracts": [
+        "mobile/app/(app)/parcel-tool/account.tsx:1-53 — reaches no contract"
+      ],
+      "tables": [
+        "mobile/app/(app)/parcel-tool/account.tsx:1-53 — reaches no table"
+      ],
+      "gate": [
+        "mobile/app/(app)/_layout.tsx:236-265",
+        "mobile/app/(app)/parcel-tool/_layout.tsx:122-128"
+      ],
+      "states": [
+        "mobile/app/(app)/parcel-tool/account.tsx:1-53 — one unconditional render"
+      ],
+      "emits": [
+        "mobile/app/(app)/parcel-tool/account.tsx:1-53 — no track() call"
+      ]
+    },
+    "identity": {
+      "id": "mobile_parcel_account",
+      "route": "mobile/app/(app)/parcel-tool/account.tsx",
+      "archetype": "STATIC",
+      "platforms": [
+        "mobile"
+      ],
+      "owns": {
+        "components": []
+      },
+      "owner": "unassigned (no CODEOWNERS file and no owner registry exists in the repo — measured 2026-09-16)",
+      "spec": "docs/specs/03-mobile/100_mobile_parcel_cost_tool.md",
+      "spec_refs": [
+        "docs/specs/03-mobile/100_mobile_parcel_cost_tool.md §4",
+        "docs/specs/00-architecture/116_multi_product_architecture.md (OD5)",
+        "docs/specs/00-architecture/117_maxbld_brand.md §6.1"
+      ],
+      "spec_version": "0-draft",
+      "versioning": {
+        "answer": "none",
+        "why": "It renders no payload.",
+        "evidence": [
+          "mobile/app/(app)/parcel-tool/account.tsx:1-53"
+        ]
+      },
+      "ref": "S-073"
+    },
+    "inputs": {
+      "answer": "none",
+      "why": "It takes nothing — no route param, no hook, no store.",
+      "evidence": [
+        "mobile/app/(app)/parcel-tool/account.tsx:1-53"
+      ],
+      "contract_ref": [],
+      "query_key": [],
+      "field_whitelist": [],
+      "tables": []
+    },
+    "outputs": {
+      "answer": "none",
+      "why": "A placeholder writes nothing.",
+      "evidence": [
+        "mobile/app/(app)/parcel-tool/account.tsx:1-53"
+      ],
+      "contract_ref": [],
+      "tables": []
+    },
+    "state": {
+      "answer": "none",
+      "why": "No store, no local state.",
+      "evidence": [
+        "mobile/app/(app)/parcel-tool/account.tsx:1-53"
+      ],
+      "fields": []
+    },
+    "staleness": {
+      "answer": "none",
+      "why": "It renders no server data.",
+      "evidence": [
+        "mobile/app/(app)/parcel-tool/account.tsx:1-53"
+      ],
+      "offline": "none"
+    },
+    "guards": {
+      "session": {
+        "answer": "entitled",
+        "why": "It inherits the tab gate and the parcel-tool Stack; the tab tree does not mount unless subscription_status is trial/active/past_due/admin_managed.",
+        "evidence": [
+          "mobile/app/(app)/_layout.tsx:236-265"
+        ]
+      },
+      "rls_class": {
+        "answer": "none",
+        "why": "It reaches no table.",
+        "evidence": [
+          "mobile/app/(app)/parcel-tool/account.tsx:1-53"
+        ]
+      },
+      "disclosure": "none",
+      "entitlement": {
+        "product": "lead_gen",
+        "statuses": [
+          "trial",
+          "active",
+          "past_due",
+          "admin_managed"
+        ],
+        "on_missing": "paywall"
+      },
+      "flag": "none",
+      "permission": "none",
+      "rate_bucket": "none"
+    },
+    "render": {
+      "targets": [
+        "screen"
+      ],
+      "projection": "none",
+      "breakpoints": "mobile_first",
+      "export": "none"
+    },
+    "checks": [
+      {
+        "id": "mobile_parcel_account_stub_is_visible",
+        "kind": "empty_state",
+        "severity": "WARN",
+        "blocking": false,
+        "when": "post",
+        "why": "While this tab has nothing behind it, it must SAY so rather than render blank or fake a state. The permanently non-zero condition is the placeholder itself; the retighten condition is machine-observable — the check flips to FAIL the day mobile/app/(app)/parcel-tool/account.tsx reads a contract, because at that point an explanatory placeholder is a defect."
+      }
+    ],
+    "invariants": "none",
+    "plausibility": "none",
+    "states": [
+      {
+        "name": "static",
+        "golden": "none"
+      },
+      {
+        "name": "empty",
+        "golden": "none"
+      }
+    ],
+    "errors": {
+      "answer": "none",
+      "why": "No async work, so no failure path.",
+      "evidence": [
+        "mobile/app/(app)/parcel-tool/account.tsx:1-53"
+      ]
+    },
+    "emits": {
+      "answer": "none",
+      "why": "Nothing to emit yet.",
+      "evidence": [
+        "mobile/app/(app)/parcel-tool/account.tsx:1-53"
+      ],
+      "analytics": [],
+      "ledger_events": [],
+      "breadcrumbs": []
+    },
+    "offers": {
+      "answer": "none",
+      "why": "No sponsored placement is rendered.",
+      "evidence": [
+        "mobile/app/(app)/parcel-tool/account.tsx:1-53"
+      ]
+    },
+    "metering": {
+      "answer": "none",
+      "why": "Nothing here is counted. The Spec 126 §7 usage ledger table does not exist (grep for usage_events in the introspected drizzle schema returns 0 hits), and the parcel product has no quota, credit or view counter of its own — no metering column, no ledger row, no consumption event. Measured 2026-09-16.",
+      "evidence": [
+        "src/lib/db/generated/schema.ts — no usage_events table (grep, 2026-09-16)",
+        "src/app/api/parcels/lookup/route.ts:113-119 — the only record of a lookup is a log line; it increments nothing"
+      ]
+    },
+    "config": {
+      "answer": "none",
+      "why": "No tunable; it reserves the shelf height and nothing else.",
+      "evidence": [
+        "mobile/src/constants/parcelSearch.ts:86 — PARCEL_SHELF_HEIGHT"
+      ],
+      "logic_variables": [],
+      "retired": []
+    },
+    "sharing": {
+      "answer": "none",
+      "why": "It renders no contract.",
+      "evidence": [
+        "mobile/app/(app)/parcel-tool/account.tsx:1-53"
+      ],
+      "surfaces": []
+    },
+    "a11y": {
+      "touch_target_min_px": "n/a",
+      "labels": "complete",
+      "dark_mode": "hardcoded",
+      "reduced_motion": "none",
+      "i18n": "none",
+      "safe_area": [
+        "top"
+      ]
+    },
+    "deviations": [
+      {
+        "from": "Spec 126 §3.1 — a registered SURFACE renders real content",
+        "why": "Registered as `status: exists` while being a placeholder. The route is real and reachable from the shelf; the capability behind it is not built. Recorded as a deviation rather than `status: designed`, because `designed` would claim nothing is built and the route is.",
+        "adjudicated_by": "operator ruling 2026-09-16 (c) — \"create minimal placeholder screens under the stack if none exist\"",
+        "date": "2026-09-16"
+      }
+    ],
+    "limitations": [
+      {
+        "what": "Nothing is built behind the Account tab; the screen states that rather than rendering blank.",
+        "measured": "mobile/app/(app)/parcel-tool/account.tsx reaches no contract and no table (grep: no hook import, no fetch).",
+        "check_id": "mobile_parcel_account_stub_is_visible"
+      }
+    ],
+    "interpretation": "none",
+    "notes": "The census was checked for something to reuse: S-036 `mobile_settings` (mobile/app/(app)/settings.tsx) is the only account-shaped mobile surface, and it is a LEAD-GEN screen — it sits in the five-tab shell and its content is trade selection, lead notification preferences and the lead-gen subscription. Reusing it would import lead-gen concepts straight into scope A, which Spec 116 OD5 — MaxBLD is its own product; nothing in scope `parcel_product` may reference a lead-gen concept forbids, so MaxBLD gets its own Account surface. It deliberately shows NOTHING about the account yet: the entitlement this product actually runs on today is the lead-gen one (see S-002 `programme.product_questions[0]`), and rendering a subscription state here would be showing the user a lead-gen fact about themselves.",
+    "x-draft": {
+      "shard": "mobile-product",
+      "files": [
+        "mobile/app/(app)/parcel-tool/account.tsx"
+      ],
+      "loc": 53,
+      "call_idiom": "none",
+      "stores": [],
+      "measured_states": [
+        "empty_placeholder"
+      ],
+      "measured_gate": {
+        "session": "required",
+        "entitlement": "subscription_status",
+        "flag": "none",
+        "permission": "none"
+      }
+    },
+    "programme": {
+      "scope": "parcel_product",
+      "phase": "B2",
+      "why": "A tab of the MaxBLD product shelf, created by operator ruling 2026-09-16 (c) so all three tabs resolve to a real route.",
+      "feature": "F01",
+      "build_order": 1013,
+      "leakage": "none",
+      "product_questions": "none",
+      "review": {
+        "status": "unreviewed"
+      }
+    }
+  },
+  {
+    "kind": "SURFACE",
+    "status": "exists",
+    "docs": {
       "purpose": "The full story of one building lot, assembled for a homeowner or buyer. It shows the lot size and how much floor area can legally be built, a menu of what different kinds of work would cost, a summary of what neighbours have built, real nearby examples with their density and build type, and any applications currently in front of the committee of adjustment. Nothing on this page can be edited or saved; it only reads.",
       "data_story": "It reads nothing from the database directly. Every value arrives through one contract: `/api/parcels/lookup`. Behind that contract, the data comes from `address_points`, `coa_applications`, `entitlements`, `parcel_address_points`, `parcels` and `user_profiles`. It holds no client-side store, so there is no local copy of server state to keep in sync. It emits **no analytics event**, so nothing it does is currently countable.",
       "under_126": "**RE-PROJECT** — it writes nothing and holds no Layer-3 store, so the move is short — the server already assembles the payload and only the rendering is client-side. It renders through the REPORT renderer (read-only; `outputs` and `state` forced to `\"none\"`, a field whitelist that must equal the contract's), reading by reference: `/api/parcels/lookup`. It owns no component of its own, so its `owns.components[]` is an empty array — a legal answer, written down."
@@ -6237,11 +6496,10 @@
     },
     "metering": {
       "answer": "none",
-      "why": "Nothing here is counted: the Spec 126 §7 usage ledger table does not exist (grep for usage_events in the introspected drizzle schema returns 0 hits), and the only quota-shaped counter, user_profiles.lead_views_count, is incremented solely by POST /api/leads/view, which has no mobile caller.",
+      "why": "Nothing here is counted. The Spec 126 §7 usage ledger table does not exist (grep for usage_events in the introspected drizzle schema returns 0 hits), and the parcel product has no quota, credit or view counter of its own — no metering column, no ledger row, no consumption event. Measured 2026-09-16.",
       "evidence": [
-        "src/lib/db/generated/schema.ts — no usage_events table (grep, 2026-09-15)",
-        "src/app/api/leads/view/route.ts:110",
-        "src/features/leads/api/useLeadView.ts:25 — imported only by src/tests/useLeadView.logic.test.tsx"
+        "src/lib/db/generated/schema.ts — no usage_events table (grep, 2026-09-16)",
+        "src/app/api/parcels/lookup/route.ts:113-119 — the only record of a lookup is a log line; it increments nothing"
       ]
     },
     "config": {
@@ -6357,17 +6615,308 @@
     "kind": "SURFACE",
     "status": "exists",
     "docs": {
-      "purpose": "A search box where someone types a Toronto street address and gets back matching lots to open. Typing pauses briefly before searching so exploratory typing does not hammer the server, and at least three characters are required. If the user's saved home base is outside Toronto they see a gentle note that coverage is Toronto-only, and if they search too fast they are told how many seconds to wait.",
-      "data_story": "It reads nothing from the database directly. Every value arrives through one contract: `/api/parcels/lookup`. Behind that contract, the data comes from `address_points`, `coa_applications`, `entitlements`, `parcel_address_points`, `parcels` and `user_profiles`. It also holds client-side state in `filterStore`, which is the part a server-driven projection has to absorb or justify. It emits **no analytics event**, so nothing it does is currently countable.",
-      "under_126": "**REBUILD** — it holds Layer-3 state (`filterStore`), so a client decision has to be re-homed on the server before the projection can be honest. It renders through the SEARCH renderer (declared debounce, minimum query length, rate bucket and candidate shape), reading by reference: `/api/parcels/lookup`. It owns no component of its own, so its `owns.components[]` is an empty array — a legal answer, written down."
+      "purpose": "The map you land on when an address does not resolve to exactly one lot. Three ways to get here: the address is linked to several lots (a corner, severed or ranged property), the address exists but no lot is linked to it, or what was typed is an intersection rather than an address. In each case it is supposed to draw the lots on a map and let you tap the one you meant, and say plainly when nothing is linked rather than quietly picking the nearest polygon. Today it is a STUB: the route, the navigation and the three explanations are real, and the map is not drawn yet.",
+      "data_story": "It reads nothing from the database directly, and today it reads no contract either — it renders from its two route parameters. The map it is specified to draw needs parcel GEOMETRY, which is exactly what `/api/parcels/lookup` does not return: the consumer parcel payload is a `.strict()` whitelist of cost menu, areas and neighbourhood, with no polygon, no centroid and no address-point id. That gap is the reason this is a stub and not a screen. It emits **no analytics event**, so nothing it does is currently countable.",
+      "under_126": "**REBUILD** — it is specified against a contract that does not exist yet, so there is nothing to re-project until the geometry is served. It renders through the LIST renderer with `render.projection: map`: a map is a projection of a collection, not an archetype, which is the same call already made for `mobile_map`. It owns no component of its own, so its `owns.components[]` is an empty array — a legal answer, written down."
     },
     "evidence": {
       "files": [
-        "mobile/app/(app)/parcel-tool/index.tsx:1"
+        "mobile/app/(app)/parcel-tool/disambiguate.tsx:1"
       ],
       "contracts": [
-        "mobile/src/hooks/useParcelLookup.ts:34",
-        "mobile/app/(app)/parcel-tool/index.tsx:30"
+        "mobile/app/(app)/parcel-tool/disambiguate.tsx:1-82 — reaches no contract; the geometry it needs is not served"
+      ],
+      "tables": [
+        "mobile/app/(app)/parcel-tool/disambiguate.tsx:1-82 — reaches no table"
+      ],
+      "gate": [
+        "mobile/app/(app)/_layout.tsx:236-265",
+        "mobile/app/(app)/parcel-tool/_layout.tsx:15-19"
+      ],
+      "states": [
+        "mobile/app/(app)/parcel-tool/disambiguate.tsx:34 — const COPY: Record<ParcelMatchType, string>",
+        "mobile/app/(app)/parcel-tool/disambiguate.tsx:64 — testID parcel-disambiguate-stub"
+      ],
+      "emits": [
+        "mobile/app/(app)/parcel-tool/disambiguate.tsx:1-82 — no track() call"
+      ]
+    },
+    "identity": {
+      "id": "mobile_parcel_disambiguation_map",
+      "route": "mobile/app/(app)/parcel-tool/disambiguate.tsx",
+      "archetype": "LIST",
+      "platforms": [
+        "mobile"
+      ],
+      "owns": {
+        "components": []
+      },
+      "owner": "unassigned (no CODEOWNERS file and no owner registry exists in the repo — measured 2026-09-16)",
+      "spec": "docs/specs/03-mobile/100_mobile_parcel_cost_tool.md",
+      "spec_refs": [
+        "docs/specs/03-mobile/100_mobile_parcel_cost_tool.md §2.6",
+        "docs/specs/03-mobile/100_mobile_parcel_cost_tool.md §4",
+        "docs/specs/02-web-admin/126_maxbld_surface_standard.md §3.1"
+      ],
+      "spec_version": "0-draft",
+      "versioning": {
+        "answer": "none",
+        "why": "It reads no payload today; its two route params are the whole of its input.",
+        "evidence": [
+          "mobile/app/(app)/parcel-tool/disambiguate.tsx:44 — useLocalSearchParams<{ q, kind }>"
+        ]
+      },
+      "ref": "S-071"
+    },
+    "inputs": {
+      "answer": "none",
+      "why": "Two route params, `q` and `kind`, pushed by the SEARCH surface. No hook, no query, no table. The contract it will need does not exist yet.",
+      "evidence": [
+        "mobile/app/(app)/parcel-tool/disambiguate.tsx:44 — useLocalSearchParams<{ q, kind }>",
+        "mobile/app/(app)/parcel-tool/disambiguate.tsx:47 — const matchType = isParcelMatchType(kind) ? kind : null",
+        "mobile/src/lib/parcelSearchMatch.ts:136-152 — export function parcelSearchRoute"
+      ],
+      "contract_ref": [],
+      "query_key": [],
+      "field_whitelist": [],
+      "tables": []
+    },
+    "outputs": {
+      "answer": "none",
+      "why": "A disambiguation view writes nothing; the only action it will have is choosing a lot to open.",
+      "evidence": [
+        "mobile/app/(app)/parcel-tool/disambiguate.tsx:1-82"
+      ],
+      "contract_ref": [],
+      "tables": []
+    },
+    "state": {
+      "answer": "none",
+      "why": "No store and no local state — everything it renders comes from the two route params.",
+      "evidence": [
+        "mobile/app/(app)/parcel-tool/disambiguate.tsx:44-47 — the two route params are the whole of its state"
+      ],
+      "fields": []
+    },
+    "staleness": {
+      "answer": "none",
+      "why": "It renders no server data yet.",
+      "evidence": [
+        "mobile/app/(app)/parcel-tool/disambiguate.tsx:1-82"
+      ],
+      "offline": "none"
+    },
+    "guards": {
+      "session": {
+        "answer": "entitled",
+        "why": "It inherits the tab gate and the parcel-tool Stack: shell_app_tabs will not mount the tab tree at all unless subscription_status is trial/active/past_due/admin_managed.",
+        "evidence": [
+          "mobile/app/(app)/_layout.tsx:236-265",
+          "src/app/api/parcels/lookup/route.ts:47-60"
+        ]
+      },
+      "rls_class": {
+        "answer": "none",
+        "why": "The stub reaches no table. The geometry it will need is not served by any route today.",
+        "evidence": [
+          "mobile/app/(app)/parcel-tool/disambiguate.tsx:1-82"
+        ]
+      },
+      "disclosure": "none",
+      "entitlement": {
+        "product": "lead_gen",
+        "statuses": [
+          "trial",
+          "active",
+          "past_due",
+          "admin_managed"
+        ],
+        "on_missing": "paywall"
+      },
+      "flag": "none",
+      "permission": "none",
+      "rate_bucket": "none"
+    },
+    "render": {
+      "targets": [
+        "screen"
+      ],
+      "projection": "map",
+      "breakpoints": "mobile_first",
+      "export": "none",
+      "list": {
+        "item_archetype": "parcel polygon + one line of lot facts (frontage, area, zoning class)",
+        "pagination": "none",
+        "recycling": "none — the candidate set is bounded by the address, not by scrolling"
+      }
+    },
+    "checks": [
+      {
+        "id": "parceldisambig_no_silent_fallback",
+        "kind": "empty_state",
+        "severity": "FAIL",
+        "blocking": true,
+        "when": "pre",
+        "why": "operator ruling 2026-09-16 (match TYPE, never count): the unlinked case must render a VISIBLE \"no lot is linked to this address\" state. Picking the nearest polygon and presenting it as the answer is explicitly forbidden, and it is the kind of thing that is invisible once shipped — hence blocking, not advisory. The paired lock upstream is mobile/__tests__/parcelSearchMatch.test.ts, which asserts a zero-candidate response derives `no_match` and never `unlinked`."
+      },
+      {
+        "id": "parceldisambig_stub_is_visible",
+        "kind": "render_target_parity",
+        "severity": "WARN",
+        "blocking": false,
+        "when": "post",
+        "why": "While this surface is a stub it must SAY it is a stub. The permanently non-zero condition is the stub itself; the retighten condition is machine-observable — the check flips to FAIL the day the route renders a MapView, because at that point an explanatory placeholder is a defect rather than an honest state."
+      }
+    ],
+    "invariants": "none",
+    "plausibility": "none",
+    "states": [
+      {
+        "name": "static",
+        "golden": "none"
+      },
+      {
+        "name": "empty",
+        "golden": "none"
+      },
+      {
+        "name": "offline",
+        "golden": "none"
+      }
+    ],
+    "errors": {
+      "answer": "none",
+      "why": "No async work in the stub, so no failure path yet.",
+      "evidence": [
+        "mobile/app/(app)/parcel-tool/disambiguate.tsx:1-82"
+      ]
+    },
+    "emits": {
+      "answer": "none",
+      "why": "Nothing to emit yet.",
+      "evidence": [
+        "mobile/app/(app)/parcel-tool/disambiguate.tsx:1-82"
+      ],
+      "analytics": [],
+      "ledger_events": [],
+      "breadcrumbs": []
+    },
+    "offers": {
+      "answer": "none",
+      "why": "No sponsored placement is rendered.",
+      "evidence": [
+        "mobile/app/(app)/parcel-tool/disambiguate.tsx:1-82"
+      ]
+    },
+    "metering": {
+      "answer": "none",
+      "why": "Nothing here is counted: the Spec 126 §7 usage ledger table does not exist and this surface reaches no route.",
+      "evidence": [
+        "src/lib/db/generated/schema.ts — no usage_events table (grep, 2026-09-15)",
+        "mobile/app/(app)/parcel-tool/disambiguate.tsx:1-82"
+      ]
+    },
+    "config": {
+      "answer": "none",
+      "why": "The stub has no tunable. The map it will become inherits the SEARCH candidate cap from S-002.",
+      "evidence": [
+        "mobile/app/(app)/parcel-tool/disambiguate.tsx:1-82",
+        "mobile/src/constants/parcelSearch.ts:33 — SEARCH_CANDIDATE_LIMIT"
+      ],
+      "logic_variables": [],
+      "retired": []
+    },
+    "sharing": {
+      "answer": "none",
+      "why": "It renders no contract today.",
+      "evidence": [
+        "mobile/app/(app)/parcel-tool/disambiguate.tsx:1-82"
+      ],
+      "surfaces": []
+    },
+    "a11y": {
+      "touch_target_min_px": 44,
+      "labels": "complete",
+      "dark_mode": "hardcoded",
+      "reduced_motion": "none",
+      "i18n": "none",
+      "safe_area": [
+        "top"
+      ]
+    },
+    "deviations": [
+      {
+        "from": "Spec 126 §3.1 — a registered SURFACE renders its declared projection",
+        "why": "Registered as `status: exists` while being a STUB. The route, the navigation contract and the three explanations are real and in the tree; the `map` projection is not drawn. Recorded as a deviation rather than carrying `status: designed`, because `designed` would claim nothing is built and something is — and the alternative, leaving the three map outcomes to dead-end silently on the SEARCH surface, is worse than a stub that says so.",
+        "adjudicated_by": "operator ruling 2026-09-16 §2 — \"otherwise stub the route with the correct navigation + the descriptor\"",
+        "date": "2026-09-16"
+      }
+    ],
+    "limitations": [
+      {
+        "what": "The map is not drawn. Two independent reasons, both measured: there is no parcel-polygon map component in the Expo tree to reuse, and the contract serves no geometry to draw.",
+        "measured": "grep -rn \"Polygon\" mobile/src mobile/app returns nothing — LeadMapPane.tsx renders Marker circles only. ConsumerParcelSchema (src/app/api/parcels/lookup/types.ts:75-91) is .strict() over costMenu + areas + neighbourhood: no polygon, no centroid, no address-point id.",
+        "check_id": "parceldisambig_stub_is_visible"
+      },
+      {
+        "what": "Two of its three entry paths cannot fire yet. `multi_parcel` and `unlinked` are not derivable from the current lookup response, so only the `intersection` path reaches this route today.",
+        "measured": "src/app/api/admin/parcels/lookup/types.ts:123 — matchType is [exact|typeahead|direct]; mobile/src/lib/parcelSearchMatch.ts:98-123 derives only unique / text_candidates / intersection / no_match.",
+        "check_id": "parceldisambig_no_silent_fallback"
+      }
+    ],
+    "interpretation": "none",
+    "notes": "Created by operator ruling 2026-09-16 (match TYPE, never count), which separated the map disambiguation from the SEARCH surface on the grounds that it reads parcel geometry and S-002 does not. Archetype is LIST, not a new \"MAP\" archetype, because Spec 126 §3.1 defines a map as a `render.projection` — the same call already made for `mobile_map`. This is the next surface to build; it is blocked on the API change recorded in S-002’s limitations.",
+    "x-draft": {
+      "shard": "mobile-product",
+      "files": [
+        "mobile/app/(app)/parcel-tool/disambiguate.tsx"
+      ],
+      "loc": 82,
+      "call_idiom": "none",
+      "stores": [],
+      "measured_states": [
+        "multi_parcel_stub",
+        "unlinked_stub",
+        "intersection_stub",
+        "unknown_kind_stub"
+      ],
+      "measured_gate": {
+        "session": "required",
+        "entitlement": "subscription_status",
+        "flag": "none",
+        "permission": "none"
+      }
+    },
+    "programme": {
+      "scope": "parcel_product",
+      "phase": "B2",
+      "why": "The map half of the parcel tool’s entry flow — same Spec 100 feature, same address lookup, reached when the address does not resolve to exactly one lot.",
+      "feature": "F01",
+      "build_order": 1013,
+      "leakage": "none",
+      "product_questions": "none",
+      "review": {
+        "status": "unreviewed"
+      }
+    }
+  },
+  {
+    "kind": "SURFACE",
+    "status": "exists",
+    "docs": {
+      "purpose": "A search box where someone types a Toronto street address and gets back the lot. Typing pauses briefly before searching so exploratory typing does not hammer the server, and at least three characters are required. Lots are only available in Toronto: an address in another municipality is refused on the spot, before any request is sent, and told so plainly. What happens after that is decided by the MATCH TYPE, never by how many rows came back: one lot opens straight away; several text matches show a short list with the differing part of each address highlighted, and past ten it asks for a house number instead; an address linked to several lots, an address with no lot, and an intersection all hand off to the map surface. Being rate-limited, being out of subscription, and finding nothing are three different things on screen, and it says which one happened.",
+      "data_story": "It reads nothing from the database directly. Every value arrives through one contract: `/api/parcels/lookup`. Behind that contract, the data comes from `address_points`, `parcel_address_points` and `parcels` — the lot corpus — plus `entitlements` for the access check. It holds no client store at all: the query text and its debounce live in component state, and the Toronto-only rule is computed from the typed address. It emits **no analytics event**, so nothing it does is currently countable.",
+      "under_126": "**RE-PROJECT** — it no longer holds ANY Layer-3 state: the cross-product filter-store read is deleted (operator ruling 2026-09-16 (b), recorded in notes), so the only client state left is the query text and its debounce, which a server-driven projection absorbs without an argument. That is a downgrade from REBUILD, and it is the direct result of removing that read. It renders through the SEARCH renderer, whose two declared tunables are closed rather than unresearched: `config.debounce_ms` 400 and `config.min_query_len` 3, both externalised in `mobile/src/constants/parcelSearch.ts`. It reads by reference: `/api/parcels/lookup`. It owns no component of its own, so its `owns.components[]` is an empty array — a legal answer, written down. The branch logic and the Toronto-only rule live in `mobile/src/lib/parcelSearchMatch.ts`, a pure module."
+    },
+    "evidence": {
+      "files": [
+        "mobile/app/(app)/parcel-tool/index.tsx:1",
+        "mobile/src/lib/parcelSearchMatch.ts:1 — the match-type branch, extracted so it is testable without a renderer",
+        "mobile/src/constants/parcelSearch.ts:1 — config.debounce_ms / config.min_query_len / the candidate cap"
+      ],
+      "contracts": [
+        "mobile/src/hooks/useParcelLookup.ts:34 — fetchWithAuth(`/api/parcels/lookup?${qs}`)",
+        "mobile/app/(app)/parcel-tool/index.tsx:76 — useParcelSearch(debounced)"
       ],
       "tables": [
         "src/lib/admin/parcel-lookup.ts:196-199",
@@ -6379,11 +6928,12 @@
         "src/lib/auth/route-guard.ts:120-132"
       ],
       "states": [
-        "mobile/app/(app)/parcel-tool/index.tsx:47-48",
-        "mobile/app/(app)/parcel-tool/index.tsx:81-111"
+        "mobile/app/(app)/parcel-tool/index.tsx:84-92 — const outcome = deriveMatchType(...) / const candidates",
+        "mobile/app/(app)/parcel-tool/index.tsx:127-134 — retryAfter / isEntitlementRefusal / isSchemaDrift / isUnexpectedError",
+        "mobile/src/lib/parcelSearchMatch.ts:98 — export function deriveMatchType"
       ],
       "emits": [
-        "mobile/app/(app)/parcel-tool/index.tsx:1-115 — no track() call in the file",
+        "mobile/app/(app)/parcel-tool/index.tsx:1-312 — no track() call in the file",
         "src/app/api/parcels/lookup/route.ts:113-119"
       ]
     },
@@ -6419,10 +6969,12 @@
     },
     "inputs": {
       "answer": "contract",
-      "why": "Typing produces one debounced GET /api/parcels/lookup?q=; the only local input is the stored home-base coordinate, read purely to decide whether to show the Toronto-coverage hint.",
+      "why": "Typing produces one debounced GET /api/parcels/lookup?q=. There is no local input at all: the owner’s location is irrelevant to MaxBLD. The query STRING is read twice by pure helpers — once by `isOutsideToronto` for the Toronto-only rule, once by `isIntersectionQuery`, because the server has no intersection parsing at all.",
       "evidence": [
-        "mobile/src/hooks/useParcelLookup.ts:59-69",
-        "mobile/app/(app)/parcel-tool/index.tsx:22-34"
+        "mobile/src/hooks/useParcelLookup.ts:59-69 — export function useParcelSearch",
+        "mobile/app/(app)/parcel-tool/index.tsx:77-78 — isOutsideToronto gates the hook; a refused query is never sent",
+        "mobile/src/lib/parcelSearchMatch.ts:91 — export function isOutsideToronto",
+        "mobile/src/lib/parcelSearchMatch.ts:85 — export function isIntersectionQuery"
       ],
       "contract_ref": [
         "/api/parcels/lookup"
@@ -6510,40 +7062,26 @@
       "answer": "none",
       "why": "A SEARCH surface here writes nothing: the only action is router.push to the detail route with the chosen parcelId.",
       "evidence": [
-        "mobile/app/(app)/parcel-tool/index.tsx:42-44"
+        "mobile/app/(app)/parcel-tool/index.tsx:94-101 — const goToParcel = useCallback"
       ],
       "contract_ref": [],
       "tables": []
     },
     "state": {
-      "answer": "zustand",
-      "why": "It reads filterStore.homeBaseLocation (MMKV-persisted) for the coverage hint; the query text and its debounce live in component useState, which the state vocabulary has no value for.",
+      "answer": "none",
+      "why": "The lead-gen filter-store read is deleted. The query text and its debounce live in component useState, which the state vocabulary has no value for, and nothing else is held.",
       "evidence": [
-        "mobile/app/(app)/parcel-tool/index.tsx:19-28",
-        "mobile/src/store/filterStore.ts:121-122"
+        "mobile/app/(app)/parcel-tool/index.tsx:64-65 — const [input, setInput] / const [debounced, setDebounced]",
+        "mobile/app/(app)/parcel-tool/index.tsx — no useFilterStore import remains (grep)"
       ],
-      "fields": [
-        {
-          "name": "homeBaseLocation",
-          "owner_layer": "3_zustand",
-          "canonical_writer": "mobile_onboarding_address via PATCH /api/user-profile then filterStore.setHomeBaseLocation",
-          "authorized_readers": [
-            "mobile_parcel_search",
-            "mobile_lead_feed",
-            "mobile_map"
-          ],
-          "bridge": "B2",
-          "persistence": "mmkv",
-          "signout_reset": true
-        }
-      ]
+      "fields": []
     },
     "staleness": {
       "answer": "query_cache",
       "why": "useParcelSearch declares a 60-second staleTime; the 400ms debounce upstream is what actually protects the 60/min bucket, not the cache.",
       "evidence": [
-        "mobile/src/hooks/useParcelLookup.ts:62-67",
-        "mobile/app/(app)/parcel-tool/index.tsx:25-28"
+        "mobile/src/hooks/useParcelLookup.ts:62-67 — staleTime: 60_000",
+        "mobile/app/(app)/parcel-tool/index.tsx:70-74 — the SEARCH_DEBOUNCE_MS useEffect"
       ],
       "offline": "blocked",
       "stale_time_ms": 60000,
@@ -6595,7 +7133,7 @@
         "severity": "FAIL",
         "blocking": false,
         "when": "post",
-        "why": "mobile/__tests__/useParcelLookup.test.ts parses a hit, asserts a miss is a valid 200 result rather than an error, and asserts ParcelLookupSchemaError on a drifted shape."
+        "why": "mobile/__tests__/useParcelLookup.test.ts parses a hit, asserts a miss is a valid 200 result rather than an error, and asserts ParcelLookupSchemaError on a drifted shape. mobile/__tests__/parcelSearchMatch.test.ts then locks what the screen DOES with each parsed shape."
       },
       {
         "id": "parcelsearch_cross_contract",
@@ -6611,7 +7149,7 @@
         "severity": "FAIL",
         "blocking": false,
         "when": "post",
-        "why": "Two distinct empty renders are testID-tagged — parcel-search-empty (>=3 chars, no match) and the \"type at least 3 characters\" prompt (index.tsx:101-111)."
+        "why": "Three distinct non-result renders are testID-tagged and mutually exclusive: `parcel-search-empty` (>= min length, nothing found), `parcel-search-prompt` (\"type at least N characters\"), and `parcel-search-refine` (the candidate cap was reached — ask for a house number). See mobile/app/(app)/parcel-tool/index.tsx:287, :297, :304."
       },
       {
         "id": "parcelsearch_log_hygiene",
@@ -6619,7 +7157,7 @@
         "severity": "FAIL",
         "blocking": true,
         "when": "pre",
-        "why": "Spec 100 §2.8 forbids logging the raw address query; the route logs uid/outcome/parcelId/matchType/duration only (route.ts:113-119). A raw-q log would leak what a user is looking at buying."
+        "why": "Spec 100 §2.8 forbids logging the raw address query; the route logs uid/outcome/parcelId/matchType/duration only (src/app/api/parcels/lookup/route.ts:113-119). A raw-q log would leak what a user is looking at buying. The client side of the same rule: the screen emits no analytics event at all, so the query text cannot leave the device by that path either (mobile/app/(app)/parcel-tool/index.tsx — no track() call)."
       },
       {
         "id": "parcelsearch_rate_limited_state",
@@ -6627,7 +7165,39 @@
         "severity": "FAIL",
         "blocking": false,
         "when": "post",
-        "why": "A RateLimitError renders the testID-tagged parcel-search-ratelimit line with the server's retry-after seconds (index.tsx:81-85) — the only screen in the app that surfaces retry-after to the user."
+        "why": "A RateLimitError renders the testID-tagged `parcel-search-ratelimit` line with the server’s retry-after seconds (mobile/app/(app)/parcel-tool/index.tsx:213) — the only screen in the app that surfaces retry-after to the user."
+      },
+      {
+        "id": "parcelsearch_a11y",
+        "kind": "a11y_label",
+        "severity": "FAIL",
+        "blocking": false,
+        "when": "post",
+        "why": "Every interactive element on the screen carries an accessibilityRole and an accessibilityLabel (the field, each suggestion chip, each candidate row, the retry button) and a 44px minimum target. This closes the limitation that recorded zero of either."
+      },
+      {
+        "id": "parcelsearch_entitlement_state",
+        "kind": "error_state",
+        "severity": "FAIL",
+        "blocking": false,
+        "when": "post",
+        "why": "A 403 from the subscription gate renders the testID-tagged parcel-search-entitlement block, NOT the miss copy. The check exists because the two were the same string for the whole of this surface’s life, and a silent re-merge would be invisible."
+      },
+      {
+        "id": "parcelsearch_match_type_branch",
+        "kind": "contract_parse",
+        "severity": "FAIL",
+        "blocking": false,
+        "when": "post",
+        "why": "operator ruling 2026-09-16 (match TYPE, never count): the screen branches on the declared match type and never on candidates.length. deriveMatchType (mobile/src/lib/parcelSearchMatch.ts:98) is the only place a count is read, and mobile/__tests__/parcelSearchMatch.test.ts exercises all five ruled types — including multi_parcel and unlinked, which are driven through the server-value-wins path because the current contract cannot express them."
+      },
+      {
+        "id": "parcelsearch_toronto_only",
+        "kind": "error_state",
+        "severity": "FAIL",
+        "blocking": true,
+        "when": "pre",
+        "why": "operator ruling 2026-09-16 (b): lots are only available in Toronto, and an out-of-Toronto address must render the testID-tagged `parcel-search-outside-toronto` refusal — its OWN state, never folded into `no_match`. Blocking because the two are one `===` apart and the difference is invisible once shipped. The query is also not sent, so a refusal costs nothing against the rate bucket (mobile/app/(app)/parcel-tool/index.tsx:77-78). Locked in mobile/__tests__/parcelSearchMatch.test.ts, which pins that a deny-list city refuses, that the six Toronto municipalities do not, and that \"26 Markham St\" — a real Toronto street sharing a municipality name — is NOT refused."
       }
     ],
     "invariants": "none",
@@ -6650,25 +7220,40 @@
         "golden": "none"
       },
       {
+        "name": "empty",
+        "golden": "none"
+      },
+      {
+        "name": "schema_drift",
+        "golden": "none"
+      },
+      {
         "name": "rate_limited",
         "golden": "none"
       },
       {
         "name": "unauthorized",
         "golden": "none"
+      },
+      {
+        "name": "error",
+        "golden": "none"
       }
     ],
     "errors": {
       "answer": "inline",
-      "why": "The only rendered error is the rate-limit line; every other failure leaves `results` empty, so a 403 or a 500 is shown to the user as \"No parcel found for that address.\"",
+      "why": "Every failure class has its OWN rendered line, and none of them borrows the miss copy. The 403 entitlement refusal is no longer presented as \"No parcel found for that address.\" — presenting a subscription refusal as a data miss was this surface’s own recorded limitation, and it is closed. The Toronto-only refusal is likewise its own state and is decided before the network. NOTE: the Toronto-only refusal is NOT in `errors.classes[]` — that vocabulary is closed to HTTP-ish classes (400/401/403/429/500/404/schema_drift/offline) and this refusal never reaches the network. Nor does the closed `states[]` vocabulary have a value for it. It is carried by the blocking `parcelsearch_toronto_only` check and its testID instead. Both gaps are reported to the operator rather than papered over with an invented enum value.",
       "evidence": [
-        "mobile/app/(app)/parcel-tool/index.tsx:46-48",
-        "mobile/app/(app)/parcel-tool/index.tsx:101-105"
+        "mobile/app/(app)/parcel-tool/index.tsx:127-134 — the four error classifications",
+        "mobile/app/(app)/parcel-tool/index.tsx:201 — testID parcel-search-outside-toronto",
+        "mobile/app/(app)/parcel-tool/index.tsx:214 — testID parcel-search-ratelimit",
+        "mobile/app/(app)/parcel-tool/index.tsx:222 — testID parcel-search-entitlement",
+        "mobile/app/(app)/parcel-tool/index.tsx:234 — testID parcel-search-error"
       ],
       "classes": [
         {
           "class": "403",
-          "ui": "Nothing distinguishes it — the list is empty and the \"No parcel found\" copy renders as if the address did not exist."
+          "ui": "A distinct locked-out line: the parcel tool is not in the current subscription. Explicitly says this is not a missing address."
         },
         {
           "class": "429",
@@ -6676,11 +7261,11 @@
         },
         {
           "class": "500",
-          "ui": "Same silent empty result as a miss."
+          "ui": "Inline red \"Couldn’t reach the lot service.\" with a Try-again button wired to refetch()."
         },
         {
           "class": "schema_drift",
-          "ui": "ParcelLookupSchemaError — not retried; renders as the empty result."
+          "ui": "Inline red \"We couldn’t read the response for that address\" and NO retry button — a deterministic failure is not worth a second round trip. Sentry already has it."
         }
       ],
       "no_retry": [
@@ -6711,25 +7296,25 @@
     },
     "metering": {
       "answer": "none",
-      "why": "Nothing here is counted: the Spec 126 §7 usage ledger table does not exist (grep for usage_events in the introspected drizzle schema returns 0 hits), and the only quota-shaped counter, user_profiles.lead_views_count, is incremented solely by POST /api/leads/view, which has no mobile caller.",
+      "why": "Nothing here is counted. The Spec 126 §7 usage ledger table does not exist (grep for usage_events in the introspected drizzle schema returns 0 hits), and the parcel product has no quota, credit or view counter of its own — no metering column, no ledger row, no consumption event. Measured 2026-09-16.",
       "evidence": [
-        "src/lib/db/generated/schema.ts — no usage_events table (grep, 2026-09-15)",
-        "src/app/api/leads/view/route.ts:110",
-        "src/features/leads/api/useLeadView.ts:25 — imported only by src/tests/useLeadView.logic.test.tsx"
+        "src/lib/db/generated/schema.ts — no usage_events table (grep, 2026-09-16)",
+        "src/app/api/parcels/lookup/route.ts:113-119 — the only record of a lookup is a log line; it increments nothing"
       ]
     },
     "config": {
       "answer": "none",
-      "why": "The two tunables this SEARCH surface has — the 400ms debounce and the 3-character minimum — are hard-coded literals in the screen and the query schema, not registered logic variables; the schema also has no config.debounce_ms / config.min_query_len property to declare them in.",
+      "why": "The two tunables this SEARCH surface has are now DECLARED here and externalised in the code as named constants (`mobile/src/constants/parcelSearch.ts`), but they are still not registered logic variables — there is no admin row behind either, so `answer` stays `none` while `debounce_ms` and `min_query_len` carry their measured values. (The previous text here claimed the schema had no `config.debounce_ms` / `config.min_query_len` property to declare them in. That was false: both properties exist and this block already carried them as `UNRESEARCHED`.)",
       "evidence": [
-        "mobile/app/(app)/parcel-tool/index.tsx:26",
-        "src/app/api/parcels/lookup/types.ts:42",
-        "scripts/surfaces/_schema/surface.schema.json — config accepts only answer/why/evidence/logic_variables/retired"
+        "mobile/src/constants/parcelSearch.ts:19 — SEARCH_DEBOUNCE_MS, consumed at mobile/app/(app)/parcel-tool/index.tsx:72",
+        "mobile/src/constants/parcelSearch.ts:26 — SEARCH_MIN_QUERY_LEN; the server floor is src/app/api/parcels/lookup/types.ts:42",
+        "scripts/surfaces/_schema/surface.schema.json:2335,2348 — config.debounce_ms / config.min_query_len DO exist",
+        "docs/reference/logic-variables-registry.md — neither is a registered logic variable"
       ],
       "logic_variables": [],
       "retired": [],
-      "debounce_ms": "UNRESEARCHED",
-      "min_query_len": "UNRESEARCHED"
+      "debounce_ms": 400,
+      "min_query_len": 3
     },
     "sharing": {
       "answer": "shared",
@@ -6745,7 +7330,7 @@
     },
     "a11y": {
       "touch_target_min_px": 44,
-      "labels": "none",
+      "labels": "complete",
       "dark_mode": "hardcoded",
       "reduced_motion": "none",
       "i18n": "none",
@@ -6756,34 +7341,40 @@
     "deviations": "none",
     "limitations": [
       {
-        "what": "No interactive element on the screen carries an accessibility label or role — including the search field and every candidate row.",
-        "measured": "grep -c \"accessibilityLabel|accessibilityRole\" mobile/app/(app)/parcel-tool/index.tsx → 0.",
-        "check_id": "parcelsearch_a11y"
+        "what": "Two of the five ruled match types — `multi_parcel` and `unlinked` — cannot be reached from the current contract. The response carries no address-point fan-out signal and cannot distinguish \"address resolved, no lot linked\" from \"address did not resolve\", so both arrive as an ordinary zero-candidate miss. The screen reports `no_match` rather than guessing, which is why the ruling’s ban on a silent nearest-polygon fallback is not violated — but it also means the map surface is unreachable for those two until the API declares a resolution type.",
+        "measured": "src/app/api/admin/parcels/lookup/types.ts:123 — matchType is the closed enum ['exact','typeahead','direct']; src/lib/admin/parcel-lookup.ts:161-217 collapses every ambiguity into candidates[] with no fan-out signal and no intersection parsing.",
+        "check_id": "parcelsearch_match_type_branch"
       },
       {
-        "what": "A 403 from the subscription gate is rendered as \"No parcel found for that address.\" — an entitlement refusal presented as a data miss.",
-        "measured": "index.tsx:46-48 only branches on RateLimitError; every other error leaves results empty and showEmpty true.",
-        "check_id": "parcelsearch_rate_limited_state"
+        "what": "The Toronto-only rule catches a non-Toronto municipality only when it appears in the CITY position, after a comma. \"123 Main St Mississauga\" with no comma is not refused client-side; it reaches the server and misses.",
+        "measured": "mobile/src/lib/parcelSearchMatch.ts:91-110 — the municipality list is applied to `q.slice(comma + 1)` only. Widening it to match anywhere would refuse \"26 Markham St\", a real Toronto address — there is a test pinning exactly that.",
+        "check_id": "parcelsearch_toronto_only"
       }
     ],
     "interpretation": "none",
-    "notes": "guards.entitlement.product is lead_gen, not the parcel_tool value the schema offers: migration 228's chk_entitlements_product CHECK permits only lead_gen and flight_center, and Spec 116 OD5 folds the shipped parcel tool into lead_gen. The closed vocabulary and the live CHECK constraint disagree — recorded here rather than resolved.",
+    "notes": "HOME-BASE LEAKAGE — RESOLVED AND CLOSED (operator ruling 2026-09-16 (b)). This surface used to read the LEAD-FEED filter store (useFilterStore((s) => s.homeBaseLocation)) to decide whether to show a \"Toronto only\" coverage note, while its own header claimed it was \"NOT coupled to leads\". The ruling: MaxBLD has NO home-base concept and the owner’s location does not matter. The store read, the import and the hint are DELETED, so `programme.leakage` is now `none` — not a disposition, an absence. (The closed disposition vocabulary — move-to-owner, duplicate-locally, keep-and-declare, needs-ruling — has no value for \"was here, is gone\", so the history is recorded here.) Its replacement is the Toronto-only rule on the searched ADDRESS. Removing the store read is also what moved this surface from REBUILD to RE-PROJECT.\n\nENTITLEMENT vs OD5. `guards.entitlement.product` is `lead_gen` — not a description choice but a measured constraint: migration 228’s `chk_entitlements_product` permits only `lead_gen` and `flight_center`, and the route gates on the global `subscription_status`. Recording anything else here would make this descriptor lie. Under Spec 116 OD5 — MaxBLD is its own product; nothing in scope `parcel_product` may reference a lead-gen concept, that IS the finding: MaxBLD needs its own entitlement product, which is a migration plus a route change in the Backend domain. Raised as `programme.product_questions[0]`, not silently rewritten.\n\nMATCH-TYPE RULING (operator ruling 2026-09-16). The SEARCH surface branches on one of five types: unique (open the lot directly), text_candidates (capped list, differing part highlighted, ask for a house number past the cap), multi_parcel (map, every linked polygon tappable), unlinked (map, pin + faint surrounding parcels + a visible \"no lot is linked\" state, never a silent nearest-polygon pick), intersection (map, corner lots highlighted, no list). The map cases are their own surface, S-071, because they read parcel GEOMETRY, which this surface does not. The enum is declared on contract C-001. Three types are derivable client-side today; the other two are recorded in limitations as blocked on the API.\n\nTORONTO-ONLY RULE (operator ruling 2026-09-16 (b)). Lots are only available in Toronto. `isInsideToronto` / `TORONTO_BOUNDS` (mobile/src/lib/onboarding/snapCoord.ts) could NOT be reused for two reasons: they take a lat/lng and a SEARCH surface has an ungeocoded string, and they live in the lead-gen onboarding module, so importing them would be fresh scope-A leakage. The replacement is string-shaped and lives in the parcel product: a non-`M` postal FSA anywhere (Toronto is the only Canadian city on M), or a known non-Toronto municipality in the CITY position after the first comma. City-position-only is deliberate — Markham, Milton and Hamilton are also Toronto street names.\n\nBRAND. Spec 117 §6.1 is this surface’s brand application. The shades used are surface-scoped deepenings of the §3.2 roles rather than new brand tokens, expressed as NativeWind arbitrary-value classes in `mobile/src/constants/parcelSearch.ts` so §7's both-files-same-commit brand-token rule is not triggered. The amber primary is #f59e0b, unchanged.",
     "x-draft": {
       "shard": "mobile-product",
       "files": [
-        "mobile/app/(app)/parcel-tool/index.tsx"
+        "mobile/app/(app)/parcel-tool/index.tsx",
+        "mobile/src/lib/parcelSearchMatch.ts",
+        "mobile/src/constants/parcelSearch.ts"
       ],
-      "loc": 115,
+      "loc": 714,
       "call_idiom": "hook",
-      "stores": [
-        "filterStore"
-      ],
+      "stores": [],
       "measured_states": [
         "prompt_type_more",
         "fetching",
+        "outside_toronto",
         "rate_limited",
-        "results",
-        "empty_no_match"
+        "entitlement_refused",
+        "unexpected_error",
+        "schema_drift",
+        "candidates",
+        "empty_no_match",
+        "navigating_unique",
+        "navigating_map"
       ],
       "measured_gate": {
         "session": "required",
@@ -6798,39 +7389,27 @@
       "why": "The parcel tool's entry screen, `mobile/app/(app)/parcel-tool/index.tsx` — the same Spec 100 feature and the same contract, reached by the `q` path.",
       "feature": "F01",
       "build_order": 1013,
-      "leakage": [
-        {
-          "behaviour": "Reads the LEAD-FEED filter store to decide whether to show a \"Toronto only\" coverage note — `useFilterStore((s) => s.homeBaseLocation)`. \"Home base\" is a lead-generation concept: it is the radius centre the lead feed filters permits around, set during lead-gen onboarding. The file's own header asserts the opposite (`// Toronto hint (isInsideToronto is UX, not security — Spec 100 §2.9). NOT coupled to leads.`) while line 22 reads a lead-gen store.",
-          "evidence": [
-            "mobile/app/(app)/parcel-tool/index.tsx:22",
-            "mobile/app/(app)/parcel-tool/index.tsx:13",
-            "mobile/app/(app)/parcel-tool/index.tsx:34",
-            "mobile/app/(app)/parcel-tool/index.tsx:5"
-          ],
-          "owning_product": "lead_gen",
-          "disposition": "needs-ruling"
-        }
-      ],
+      "leakage": "none",
       "product_questions": [
         {
-          "question": "Should searching a specific street address open that lot directly, rather than returning a list of up to ten candidates to choose from? A person who types their own address expects their own property, not a disambiguation list.",
-          "measured": "The contract returns `candidates` (≤10) with `parcel: null` whenever the address is ambiguous, and the screen renders that list. An exact match does open directly — but address ambiguity in the corpus is common enough that the list is the ordinary path, not the exception.",
+          "question": "MaxBLD runs on the lead-gen entitlement. `guards.entitlement.product` is `lead_gen` because `chk_entitlements_product` (migration 228) admits only `lead_gen` and `flight_center` — so a user pays for lead generation and is thereby granted the parcel tool. Under OD5, does MaxBLD get its own `parcel_tool` entitlement product, and when?",
+          "measured": "src/app/api/parcels/lookup/route.ts:47-60 gates on the GLOBAL subscription_status; src/lib/entitlements/index.ts:68 joins `entitlements` on product = 'lead_gen'. There is no parcel-product entitlement row anywhere, and the CHECK constraint would reject one.",
           "evidence": [
-            "docs/specs/03-mobile/100_mobile_parcel_cost_tool.md:42",
-            "docs/specs/03-mobile/100_mobile_parcel_cost_tool.md:63",
-            "mobile/app/(app)/parcel-tool/index.tsx"
+            "src/app/api/parcels/lookup/route.ts:47-60",
+            "src/lib/entitlements/index.ts:68",
+            "migrations/228 — chk_entitlements_product"
           ],
-          "spec_says": "Spec 100 §2 item 6 DESIGNS this: \"Ambiguity → 200 with `candidates` (≤10) and `parcel: null` … the shape drives the client state machine.\" So the code matches its spec exactly. The question is whether the SPEC matches the product — e.g. auto-open on a single high-confidence candidate, or rank and pre-select."
+          "spec_says": "Spec 116 OD5 folds the shipped parcel tool into lead_gen. The 2026-09-16 ruling (a) that MaxBLD is its own product puts that fold in direct tension with the live constraint. This is a migration plus a route change in the Backend domain — not fixable from the mobile app."
         },
         {
-          "question": "Should a parcel-tool user see a \"home base\" concept at all? The coverage note only appears if they completed lead-gen onboarding and set a radius centre — so a parcel-only user never sees the Toronto-coverage warning that exists to help them.",
-          "measured": "The note is rendered only when `homeBaseLocation` is non-null AND outside Toronto. A user with no home base set sees nothing.",
+          "question": "The open SEARCH question — \"open the matching lot directly rather than a candidate list\" — is RULED and implemented, but two of its five branches are unreachable. Does the API change that makes multi_parcel and unlinked expressible get scheduled now, or does the map surface wait?",
+          "measured": "unique, text_candidates and intersection fire today. multi_parcel and unlinked cannot be derived from the current response and are reached only through the server-value-wins path.",
           "evidence": [
-            "mobile/app/(app)/parcel-tool/index.tsx:22",
-            "mobile/app/(app)/parcel-tool/index.tsx:34",
-            "mobile/app/(app)/parcel-tool/index.tsx:75-77"
+            "mobile/src/lib/parcelSearchMatch.ts:98 — export function deriveMatchType",
+            "src/app/api/admin/parcels/lookup/types.ts:123 — matchType enum",
+            "src/lib/admin/parcel-lookup.ts:161-217 — resolveAddress"
           ],
-          "spec_says": "Spec 100 §2.9 covers the Toronto-only scoping as UX rather than security; it does not say the hint should depend on a lead-gen field."
+          "spec_says": "Spec 100 §2 item 6 designs the candidate list; it does not model an address-point fan-out or an unlinked address as distinct outcomes."
         }
       ],
       "review": {
@@ -8053,6 +8632,364 @@
       "why": "Authentication. It talks to the Supabase Auth SDK and gates entry to both products; no product owns it.",
       "feature": "F10",
       "build_order": 3103,
+      "leakage": "none",
+      "product_questions": "none",
+      "review": {
+        "status": "unreviewed"
+      }
+    }
+  },
+  {
+    "kind": "SURFACE",
+    "status": "exists",
+    "docs": {
+      "purpose": "The lots you have chosen to keep an eye on. Each row shows the address, how much can be built there as of right, how much the Committee of Adjustment route could allow, and whether a CoA ruling has landed nearby recently — and taps through to the full lot report. Manage mode turns on a delete on every row; removing one is undoable from a toast, and the count at the top updates the moment it goes. Right now the data behind it is preview data, and the screen says so rather than passing sample rows off as your saved lots.",
+      "data_story": "Every value will arrive through one contract, `/api/parcels/tracked`, which does not exist yet. Behind it: a new `user_tracked_lots` table holding only the fact that you tracked a parcel, joined to `parcels` for the envelope figures, plus a per-request derivation over `coa_applications` for the nearby-ruling flag. It holds no client store — manage mode and the single undoable removal live in component state. It emits **no analytics event**, so nothing it does is currently countable.",
+      "under_126": "**REBUILD** — its contract is unbuilt, so there is nothing to re-project until the route and its table exist. It renders through the LIST renderer (declared item archetype, pagination and recycling), reading by reference: `/api/parcels/tracked`. It owns two components — the row and the sticky header — declared in `owns.components[]`."
+    },
+    "evidence": {
+      "files": [
+        "mobile/app/(app)/parcel-tool/tracked.tsx:1",
+        "mobile/src/lib/trackedLots.ts:1 — the pure logic this screen is a rendering of",
+        "mobile/src/hooks/useTrackedLots.ts:1 — the typed stub"
+      ],
+      "contracts": [
+        "mobile/src/hooks/useTrackedLots.ts:97-116 — useTrackedLots (STUB; /api/parcels/tracked does not exist)"
+      ],
+      "tables": [
+        "`user_tracked_lots` does not exist — see contract C-062"
+      ],
+      "gate": [
+        "mobile/app/(app)/_layout.tsx:236-265",
+        "mobile/app/(app)/parcel-tool/_layout.tsx:55-61"
+      ],
+      "states": [
+        "mobile/app/(app)/parcel-tool/tracked.tsx:121-187 — loading / error / empty / list branches",
+        "mobile/app/(app)/parcel-tool/tracked.tsx:190-234 — the undo toast"
+      ],
+      "emits": [
+        "mobile/app/(app)/parcel-tool/tracked.tsx:1-217 — no track() call"
+      ]
+    },
+    "identity": {
+      "id": "mobile_tracked_lots",
+      "route": "mobile/app/(app)/parcel-tool/tracked.tsx",
+      "archetype": "LIST",
+      "platforms": [
+        "mobile"
+      ],
+      "owns": {
+        "components": [
+          "mobile/src/components/parcel/TrackedLotRow.tsx",
+          "mobile/src/components/parcel/TrackedLotsHeader.tsx"
+        ]
+      },
+      "owner": "unassigned (no CODEOWNERS file and no owner registry exists in the repo — measured 2026-09-16)",
+      "spec": "docs/specs/03-mobile/100_mobile_parcel_cost_tool.md",
+      "spec_refs": [
+        "docs/specs/03-mobile/100_mobile_parcel_cost_tool.md §4",
+        "docs/specs/02-web-admin/126_maxbld_surface_standard.md §3.1 (LIST archetype profile)",
+        "docs/specs/00-architecture/116_multi_product_architecture.md (OD5)",
+        "docs/specs/00-architecture/117_maxbld_brand.md §6.1"
+      ],
+      "spec_version": "0-draft",
+      "versioning": {
+        "answer": "frozen",
+        "why": "The client parses the response with a `.strict()` Zod schema, so an added key is a break, not an extension, until the app ships a schema that knows about it.",
+        "evidence": [
+          "mobile/src/hooks/useTrackedLots.ts:33-47"
+        ]
+      },
+      "ref": "S-072"
+    },
+    "inputs": {
+      "answer": "contract",
+      "why": "One read of /api/parcels/tracked. No route param, no local input.",
+      "evidence": [
+        "mobile/src/hooks/useTrackedLots.ts:97-116"
+      ],
+      "contract_ref": [
+        "/api/parcels/tracked"
+      ],
+      "query_key": [
+        "parcel-tracked"
+      ],
+      "field_whitelist": [
+        "lots[].parcelId",
+        "lots[].address",
+        "lots[].maxBuildGfaSqm",
+        "lots[].maxCoaBuildGfaSqm",
+        "lots[].newNearbyCoaRuling",
+        "lots[].jurisdiction",
+        "lots[].trackedAt"
+      ],
+      "tables": []
+    },
+    "outputs": {
+      "answer": "optimistic_then_contract",
+      "why": "Removing a lot takes it out of the list immediately — so the header count updates at once — and parks it with its original index behind an undo toast. The DELETE fires only when the removal becomes final: the toast is dismissed, a second removal supersedes it, or the user leaves manage mode. Undo puts the row back where it was and no request is made at all.",
+      "evidence": [
+        "mobile/src/lib/trackedLots.ts:118-160 — removeLot / undoRemoval / commitRemoval",
+        "mobile/app/(app)/parcel-tool/tracked.tsx:70-100"
+      ],
+      "contract_ref": [
+        "/api/parcels/tracked"
+      ],
+      "tables": []
+    },
+    "state": {
+      "answer": "none",
+      "why": "No store. Manage mode and the single pending removal are component useState, which the state vocabulary has no value for; the list itself is server data.",
+      "evidence": [
+        "mobile/app/(app)/parcel-tool/tracked.tsx:50-58 — useState(manageMode) + useState(override)"
+      ],
+      "fields": []
+    },
+    "staleness": {
+      "answer": "query_cache",
+      "why": "Declared for the shape it will have once the route exists: a keyed read under `['parcel-tracked']` in the shared query client. While the hook is a stub there is no cache entry at all.",
+      "evidence": [
+        "mobile/src/hooks/useTrackedLots.ts:97-116",
+        "mobile/src/lib/queryClient.ts:37-45"
+      ],
+      "offline": "blocked"
+    },
+    "guards": {
+      "session": {
+        "answer": "entitled",
+        "why": "It inherits the tab gate; the tab tree does not mount unless subscription_status is trial/active/past_due/admin_managed, and the route will re-check server-side.",
+        "evidence": [
+          "mobile/app/(app)/_layout.tsx:236-265",
+          "src/app/api/parcels/lookup/route.ts:47-60"
+        ]
+      },
+      "rls_class": {
+        "answer": "A",
+        "why": "It reads the user’s own rows in `user_tracked_lots`, whose policies are keyed on auth.uid() = user_id. The only class-A table in the parcel product.",
+        "evidence": [
+          "contract C-062 inputs.tables[0] — the table definition and its RLS class"
+        ]
+      },
+      "disclosure": "none",
+      "entitlement": {
+        "product": "lead_gen",
+        "statuses": [
+          "trial",
+          "active",
+          "past_due",
+          "admin_managed"
+        ],
+        "on_missing": "paywall"
+      },
+      "flag": "none",
+      "permission": "none",
+      "rate_bucket": "parcels-tracked:{uid} — declared on C-062; not enforced until the route exists"
+    },
+    "render": {
+      "targets": [
+        "screen"
+      ],
+      "projection": "list",
+      "breakpoints": "mobile_first",
+      "export": "none",
+      "list": {
+        "item_archetype": "mobile/src/components/parcel/TrackedLotRow.tsx — address headline, Max Build, MAX COA BUILD, and the nearby-ruling badge; a trash affordance in manage mode",
+        "pagination": "none",
+        "recycling": "FlatList with a stable parcelId keyExtractor — the tracked set is small and bounded by the user, not by scrolling"
+      }
+    },
+    "checks": [
+      {
+        "id": "trackedlots_null_ruling_is_not_no",
+        "kind": "contract_parse",
+        "severity": "FAIL",
+        "blocking": true,
+        "when": "pre",
+        "why": "`newNearbyCoaRuling` has no backing column and nothing computes it. A `null` MUST render as \"—\". Rendering \"NO\" would tell someone deciding what to build that no ruling has landed near their lot when nobody has looked — a fabricated fact, in the one place it would be acted on. Blocking. Locked by mobile/__tests__/trackedLots.test.ts."
+      },
+      {
+        "id": "trackedlots_undo_restores_position",
+        "kind": "empty_state",
+        "severity": "FAIL",
+        "blocking": false,
+        "when": "post",
+        "why": "A removal is optimistic and undoable: the row leaves the list at once (so the count is honest) and undo returns it to its ORIGINAL INDEX, not to the end. Locked by the \"delete then undo\" describe block."
+      },
+      {
+        "id": "trackedlots_stub_is_disclosed",
+        "kind": "disclosure",
+        "severity": "WARN",
+        "blocking": false,
+        "when": "post",
+        "why": "While the contract is unbuilt the screen renders preview rows, and it says so on its face (testID `tracked-lots-stub-notice`). Showing sample lots without that line would be showing someone a saved-lot list that is not theirs. The retighten condition is machine-observable: the check flips to FAIL the day `useTrackedLots` stops returning `isStub: true`."
+      },
+      {
+        "id": "trackedlots_empty_state",
+        "kind": "empty_state",
+        "severity": "FAIL",
+        "blocking": false,
+        "when": "post",
+        "why": "Zero tracked lots renders the testID-tagged `tracked-lots-empty` invitation, never a blank screen."
+      }
+    ],
+    "invariants": "none",
+    "plausibility": "none",
+    "states": [
+      {
+        "name": "loading",
+        "golden": "none"
+      },
+      {
+        "name": "hit",
+        "golden": "none"
+      },
+      {
+        "name": "empty",
+        "golden": "none"
+      },
+      {
+        "name": "error",
+        "golden": "none"
+      },
+      {
+        "name": "offline",
+        "golden": "none"
+      },
+      {
+        "name": "unauthorized",
+        "golden": "none"
+      }
+    ],
+    "errors": {
+      "answer": "inline",
+      "why": "A failed read renders the testID-tagged `tracked-lots-error` block with a retry instruction, distinct from the empty state.",
+      "evidence": [
+        "mobile/app/(app)/parcel-tool/tracked.tsx:136-146 — testID tracked-lots-error"
+      ],
+      "classes": [
+        {
+          "class": "403",
+          "ui": "Entitlement refusal — currently renders the generic load-failure block; a distinct state is a follow-up."
+        },
+        {
+          "class": "500",
+          "ui": "Inline \"We couldn’t load your tracked lots.\" with a pull-to-refresh instruction."
+        }
+      ],
+      "no_retry": [
+        "ApiError(400)",
+        "ApiError(403)"
+      ]
+    },
+    "emits": {
+      "answer": "none",
+      "why": "Nothing to emit yet.",
+      "evidence": [
+        "mobile/app/(app)/parcel-tool/tracked.tsx:1-52"
+      ],
+      "analytics": [],
+      "ledger_events": [],
+      "breadcrumbs": []
+    },
+    "offers": {
+      "answer": "none",
+      "why": "No sponsored placement is rendered.",
+      "evidence": [
+        "mobile/app/(app)/parcel-tool/tracked.tsx:1-52"
+      ]
+    },
+    "metering": {
+      "answer": "none",
+      "why": "Nothing here is counted. The Spec 126 §7 usage ledger table does not exist (grep for usage_events in the introspected drizzle schema returns 0 hits), and the parcel product has no quota, credit or view counter of its own — no metering column, no ledger row, no consumption event. Measured 2026-09-16.",
+      "evidence": [
+        "src/lib/db/generated/schema.ts — no usage_events table (grep, 2026-09-16)",
+        "src/app/api/parcels/lookup/route.ts:113-119 — the only record of a lookup is a log line; it increments nothing"
+      ]
+    },
+    "config": {
+      "answer": "none",
+      "why": "The surface has no tunable of its own. The one threshold in this feature — the window that makes a nearby CoA ruling \"new\" — belongs to the contract and is declared unregistered there.",
+      "evidence": [
+        "mobile/src/constants/parcelSearch.ts:98 — TRACKED_LOTS_HEX",
+        "contract C-062 config"
+      ],
+      "logic_variables": [],
+      "retired": []
+    },
+    "sharing": {
+      "answer": "sole",
+      "why": "It is the only renderer of /api/parcels/tracked.",
+      "evidence": [
+        "mobile/src/hooks/useTrackedLots.ts:97-116"
+      ],
+      "surfaces": []
+    },
+    "a11y": {
+      "touch_target_min_px": 44,
+      "labels": "complete",
+      "dark_mode": "hardcoded",
+      "reduced_motion": "none",
+      "i18n": "none",
+      "safe_area": [
+        "top"
+      ]
+    },
+    "deviations": [
+      {
+        "from": "Spec 126 §3.1 — a LIST surface reads a built contract",
+        "why": "The screen is built and registered `status: exists`; its contract C-062 is `designed` and unbuilt, so the hook is a fixture-backed stub. Declared rather than hidden: the surface discloses the stub on screen, and the dashed edge to a `designed` contract is exactly what that status is for. The alternative — holding the screen back until the migration lands in another committer’s domain — would leave one of the three shelf tabs dead.",
+        "adjudicated_by": "operator ruling 2026-09-16 — \"the screen reads through a typed client hook with a fixture-backed stub until the route exists\"",
+        "date": "2026-09-16"
+      }
+    ],
+    "limitations": [
+      {
+        "what": "The nearby-CoA-ruling field has no backing column anywhere and nothing derives it, so it can only ever be \"—\" until the route computes it. Two of the three figures are real columns; this one is a specification.",
+        "measured": "src/lib/db/generated/schema.ts — `parcels.max_buildable_gfa_sqm` and `parcels.max_newbuild_coa_gfa_sqm` exist; no column expresses a recent nearby CoA decision (grep, 2026-09-16). `coa_applications.decision_date` + `.neighbourhood_id` are what a derivation would use.",
+        "check_id": "trackedlots_null_ruling_is_not_no"
+      },
+      {
+        "what": "A 403 entitlement refusal renders the generic load-failure block rather than its own locked-out state, unlike S-002.",
+        "measured": "mobile/app/(app)/parcel-tool/tracked.tsx:136-146 branches on `error` without classifying it.",
+        "check_id": "trackedlots_empty_state"
+      }
+    ],
+    "interpretation": "none",
+    "notes": "ARCHETYPE: LIST, NOT REPORT. The brief that specified this surface said REPORT. The schema settles it: the REPORT `x-profile` in scripts/surfaces/_schema/surface.schema.json FORCES `outputs.answer` and `state.answer` to the constant \"none\". This surface REMOVES rows — a write, declared here as `optimistic_then_contract` — so REPORT is not merely a poor fit, it is schema-invalid and the generator would refuse it. LIST is also the right description: a scrollable collection with a declared per-item archetype, which is what `render.list` exists to carry.\n\nDATA. The contract C-062 and the `user_tracked_lots` table are DESIGNED, not built. The hook is a fixture-backed stub whose fixtures are parsed through the same boundary schema the real fetch will use, so a fixture cannot drift from the declared projection. The screen discloses the stub. No part of the lead-gen save machinery (`useSaveLead`, `admin_watchlist`, `/api/leads/save`) is reused — OD5.\n\nTHE THREE FIGURES. Max Build = `parcels.max_buildable_gfa_sqm` (real). MAX COA BUILD = `parcels.max_newbuild_coa_gfa_sqm` (real). New Nearby CoA Ruling = NO COLUMN EXISTS; derivable from decided `coa_applications` in the parcel’s neighbourhood, declared nullable, rendered \"—\" while null. See `limitations` and the blocking check.",
+    "x-draft": {
+      "shard": "mobile-product",
+      "files": [
+        "mobile/app/(app)/parcel-tool/tracked.tsx",
+        "mobile/src/components/parcel/TrackedLotRow.tsx",
+        "mobile/src/components/parcel/TrackedLotsHeader.tsx",
+        "mobile/src/lib/trackedLots.ts",
+        "mobile/src/hooks/useTrackedLots.ts"
+      ],
+      "loc": 723,
+      "call_idiom": "hook",
+      "stores": [],
+      "measured_states": [
+        "stub_notice",
+        "loading",
+        "list",
+        "empty",
+        "error",
+        "manage_mode",
+        "pending_removal"
+      ],
+      "measured_gate": {
+        "session": "required",
+        "entitlement": "subscription_status",
+        "flag": "none",
+        "permission": "none"
+      }
+    },
+    "programme": {
+      "scope": "parcel_product",
+      "phase": "B2",
+      "why": "The Tracked Lots tab of the MaxBLD shelf, and the first surface of the tracked-lots feature module — its own table, its own contract, shared with nothing.",
+      "feature": "F17",
+      "build_order": 1173,
       "leakage": "none",
       "product_questions": "none",
       "review": {
@@ -10945,11 +11882,10 @@
     },
     "metering": {
       "answer": "none",
-      "why": "Nothing here is counted: the Spec 126 §7 usage ledger table does not exist (grep for usage_events in the introspected drizzle schema returns 0 hits), and the only quota-shaped counter, user_profiles.lead_views_count, is incremented solely by POST /api/leads/view, which has no mobile caller.",
+      "why": "Nothing here is counted. The Spec 126 §7 usage ledger table does not exist (grep for usage_events in the introspected drizzle schema returns 0 hits), and the parcel product has no quota, credit or view counter of its own — no metering column, no ledger row, no consumption event. Measured 2026-09-16.",
       "evidence": [
-        "src/lib/db/generated/schema.ts — no usage_events table (grep, 2026-09-15)",
-        "src/app/api/leads/view/route.ts:110",
-        "src/features/leads/api/useLeadView.ts:25 — imported only by src/tests/useLeadView.logic.test.tsx"
+        "src/lib/db/generated/schema.ts — no usage_events table (grep, 2026-09-16)",
+        "src/app/api/parcels/lookup/route.ts:113-119 — the only record of a lookup is a log line; it increments nothing"
       ]
     },
     "config": {
@@ -12195,7 +13131,7 @@
       }
     ],
     "interpretation": "none",
-    "notes": "This shell is the single most load-bearing gate in the mobile estate — five tabs, six subscription statuses, one contract. guards.entitlement.product is lead_gen rather than the schema's parcel_tool because migration 228's CHECK permits only lead_gen and flight_center.",
+    "notes": "This shell is the single most load-bearing gate in the mobile estate — five tabs, six subscription statuses, one contract. guards.entitlement.product is lead_gen rather than the schema's parcel_tool because migration 228's CHECK permits only lead_gen and flight_center.\n\nSELF-HIDING FOR THE MaxBLD PRODUCT (operator ruling 2026-09-16 (c)). This five-tab bar belongs to the LEAD-GEN app. It is NOT rendered while a `parcel-tool` route is focused, because that group is the MaxBLD product and has its own three-tab shelf (S-004 `shell_parcel_tool_stack`: Lookup, Tracked Lots, Account). The decision is a pure function of the focused route — `shouldHideAppTabBar` (mobile/src/lib/appShell.ts:29), consumed in the custom tabBar wrapper at mobile/app/(app)/_layout.tsx:69. The parcel-tool group deliberately STAYS inside `(app)` so it remains behind the subscription gate at mobile/app/(app)/_layout.tsx:236-265; hiding the bar was chosen over moving the group for that reason.",
     "x-draft": {
       "shard": "mobile-product",
       "files": [
@@ -12726,29 +13662,31 @@
     "kind": "SURFACE",
     "status": "exists",
     "docs": {
-      "purpose": "The thin wrapper that lets the parcels tab hold two screens in sequence: the address search, and the lot report you reach by tapping a result. It hides the default navigation header so each screen can draw its own. It makes no decisions about who is allowed in.",
-      "data_story": "This surface reaches **no API contract at all** — every value it shows is local, passed in as a prop, or read from the device. It holds no client-side store, so there is no local copy of server state to keep in sync. It emits **no analytics event**, so nothing it does is currently countable.",
-      "under_126": "**RE-PROJECT** — it writes nothing and holds no Layer-3 store, so the move is short — the server already assembles the payload and only the rendering is client-side. It renders through the SHELL renderer (declared routing branches, guards and child groups — a shell here is not inert), reading no contract. It owns no component of its own, so its `owns.components[]` is an empty array — a legal answer, written down."
+      "purpose": "The MaxBLD product shell. It holds the parcel tool’s screens in sequence — the address lookup, the lot report you reach by tapping a result, the map view for an address that does not resolve to one lot — and it draws the three-tab shelf that is the only navigation a MaxBLD user sees: Lookup, Tracked Lots, Account. It hides the default navigation header so each screen can draw its own, and it makes sure no navigation from any other product appears inside MaxBLD. It makes no decisions about who is allowed in.",
+      "data_story": "This surface reaches **no API contract at all** — every value it shows is local or read from the route. It holds no client-side store: the highlighted tab is derived from the current path, not remembered. It emits **no analytics event**, so nothing it does is currently countable.",
+      "under_126": "**RE-PROJECT** — it writes nothing and holds no Layer-3 store, so the move is short. It renders through the SHELL renderer (declared routing branches, guards and child groups — a shell here is not inert), reading no contract. It now owns exactly one component — `mobile/src/components/parcel/ParcelShelf.tsx`, the three-tab shelf — declared in `owns.components[]` and rendered by nothing else (R-13)."
     },
     "evidence": {
       "files": [
-        "mobile/app/(app)/parcel-tool/_layout.tsx:1"
+        "mobile/app/(app)/parcel-tool/_layout.tsx:1",
+        "mobile/src/components/parcel/ParcelShelf.tsx:1 — the three-tab shelf this surface owns and nothing else renders"
       ],
       "contracts": [
-        "mobile/app/(app)/parcel-tool/_layout.tsx:1-15 — a Stack with two screens; no contract, no hook"
+        "mobile/app/(app)/parcel-tool/_layout.tsx:1-65 — a Stack plus the shelf; no contract, no hook"
       ],
       "tables": [
-        "mobile/app/(app)/parcel-tool/_layout.tsx:1-15 — reaches no table"
+        "mobile/app/(app)/parcel-tool/_layout.tsx:1-65 — reaches no table"
       ],
       "gate": [
-        "mobile/app/(app)/parcel-tool/_layout.tsx:4-5",
-        "mobile/app/(app)/_layout.tsx:236-265"
+        "mobile/app/(app)/_layout.tsx:236-265 — the subscription gate this group deliberately stays behind",
+        "mobile/app/(app)/parcel-tool/_layout.tsx:14-27"
       ],
       "states": [
-        "mobile/app/(app)/parcel-tool/_layout.tsx:10-13"
+        "mobile/app/(app)/parcel-tool/_layout.tsx:55-61 — the five Stack screens",
+        "mobile/src/components/parcel/ParcelShelf.tsx:71 — export function ParcelShelf"
       ],
       "emits": [
-        "mobile/app/(app)/parcel-tool/_layout.tsx:1-15 — no track() call"
+        "mobile/app/(app)/parcel-tool/_layout.tsx:1-65 — no track() call"
       ]
     },
     "identity": {
@@ -12759,7 +13697,9 @@
         "mobile"
       ],
       "owns": {
-        "components": []
+        "components": [
+          "mobile/src/components/parcel/ParcelShelf.tsx"
+        ]
       },
       "owner": "unassigned (no CODEOWNERS file and no owner registry exists in the repo — measured 2026-09-15)",
       "spec": "docs/specs/03-mobile/100_mobile_parcel_cost_tool.md",
@@ -12772,16 +13712,18 @@
         "answer": "none",
         "why": "A two-screen Stack with no payload.",
         "evidence": [
-          "mobile/app/(app)/parcel-tool/_layout.tsx:10-13"
+          "mobile/app/(app)/parcel-tool/_layout.tsx:55-61"
         ]
       },
       "ref": "S-004"
     },
     "inputs": {
       "answer": "none",
-      "why": "It declares the index and [parcelId] screens and takes nothing else.",
+      "why": "It declares the index, [parcelId], disambiguate, tracked and account screens, and reads the current pathname to decide which tab is lit. Nothing else.",
       "evidence": [
-        "mobile/app/(app)/parcel-tool/_layout.tsx:10-13"
+        "mobile/app/(app)/parcel-tool/_layout.tsx:55-61",
+        "mobile/app/(app)/parcel-tool/_layout.tsx:41-43 — usePathname + activeParcelTab",
+        "mobile/src/lib/parcelSearchMatch.ts:258 — export function activeParcelTab"
       ],
       "contract_ref": [],
       "query_key": [],
@@ -12799,9 +13741,10 @@
     },
     "state": {
       "answer": "none",
-      "why": "No state; routing stays inside the Stack with no router.replace effects, per the note in the file.",
+      "why": "No store and no local state for navigation: the active tab is DERIVED from the route (operator ruling 2026-09-16 (c)), so a deep link straight into a lot lights the right tab and the highlight cannot drift out of step with where the user actually is.",
       "evidence": [
-        "mobile/app/(app)/parcel-tool/_layout.tsx:4-5"
+        "mobile/app/(app)/parcel-tool/_layout.tsx:41-43",
+        "mobile/src/lib/parcelSearchMatch.ts:258 — export function activeParcelTab"
       ],
       "fields": []
     },
@@ -12809,7 +13752,7 @@
       "answer": "none",
       "why": "It renders no data.",
       "evidence": [
-        "mobile/app/(app)/parcel-tool/_layout.tsx:1-15"
+        "mobile/app/(app)/parcel-tool/_layout.tsx:1-65"
       ],
       "offline": "none"
     },
@@ -12826,7 +13769,7 @@
         "answer": "none",
         "why": "The shell itself reaches no table; its children read parcels and coa_applications through the API.",
         "evidence": [
-          "mobile/app/(app)/parcel-tool/_layout.tsx:1-15"
+          "mobile/app/(app)/parcel-tool/_layout.tsx:1-65"
         ]
       },
       "disclosure": "none",
@@ -12851,7 +13794,15 @@
       "projection": "none",
       "breakpoints": "mobile_first",
       "export": "none",
-      "routing": "UNRESEARCHED"
+      "routing": {
+        "branches": [
+          "index",
+          "[parcelId]",
+          "disambiguate",
+          "tracked",
+          "account"
+        ]
+      }
     },
     "checks": [
       {
@@ -12869,6 +13820,22 @@
         "blocking": false,
         "when": "post",
         "why": "headerShown false means each child renders its own SafeAreaView header; a child that forgot would render under the status bar."
+      },
+      {
+        "id": "parcelstack_three_tabs_only",
+        "kind": "render_target_parity",
+        "severity": "FAIL",
+        "blocking": true,
+        "when": "pre",
+        "why": "operator ruling 2026-09-16 (c): inside the MaxBLD product exactly three tabs are visible — Lookup, Tracked Lots, Account. The five-tab lead-gen bar (S-046) must be hidden for every parcel-tool route. Blocking because a regression shows lead-gen navigation inside a product that has no lead-gen concepts, which is the OD5 violation itself. Locked by `shouldHideAppTabBar` (mobile/src/lib/appShell.ts:29, consumed at mobile/app/(app)/_layout.tsx:69) and by the \"five-tab lead-gen bar is hidden\" describe block in mobile/__tests__/parcelSearchMatch.test.ts."
+      },
+      {
+        "id": "parcelstack_active_tab_from_route",
+        "kind": "render_target_parity",
+        "severity": "FAIL",
+        "blocking": false,
+        "when": "post",
+        "why": "The lit tab is derived from the pathname, never from local state, so a deep link into a lot lights Lookup rather than nothing (mobile/src/lib/parcelSearchMatch.ts:258). The test table covers index, tracked, account, a parcel id, disambiguate and the group-prefixed forms."
       }
     ],
     "invariants": "none",
@@ -12883,14 +13850,14 @@
       "answer": "none",
       "why": "No async work, no failure path.",
       "evidence": [
-        "mobile/app/(app)/parcel-tool/_layout.tsx:1-15"
+        "mobile/app/(app)/parcel-tool/_layout.tsx:1-65"
       ]
     },
     "emits": {
       "answer": "none",
       "why": "Nothing to emit.",
       "evidence": [
-        "mobile/app/(app)/parcel-tool/_layout.tsx:1-15"
+        "mobile/app/(app)/parcel-tool/_layout.tsx:1-65"
       ],
       "analytics": [],
       "ledger_events": [],
@@ -12900,16 +13867,15 @@
       "answer": "none",
       "why": "A navigation container renders no sponsored content.",
       "evidence": [
-        "mobile/app/(app)/parcel-tool/_layout.tsx:1-15"
+        "mobile/app/(app)/parcel-tool/_layout.tsx:1-65"
       ]
     },
     "metering": {
       "answer": "none",
-      "why": "Nothing here is counted: the Spec 126 §7 usage ledger table does not exist (grep for usage_events in the introspected drizzle schema returns 0 hits), and the only quota-shaped counter, user_profiles.lead_views_count, is incremented solely by POST /api/leads/view, which has no mobile caller.",
+      "why": "Nothing here is counted. The Spec 126 §7 usage ledger table does not exist (grep for usage_events in the introspected drizzle schema returns 0 hits), and the parcel product has no quota, credit or view counter of its own — no metering column, no ledger row, no consumption event. Measured 2026-09-16.",
       "evidence": [
-        "src/lib/db/generated/schema.ts — no usage_events table (grep, 2026-09-15)",
-        "src/app/api/leads/view/route.ts:110",
-        "src/features/leads/api/useLeadView.ts:25 — imported only by src/tests/useLeadView.logic.test.tsx"
+        "src/lib/db/generated/schema.ts — no usage_events table (grep, 2026-09-16)",
+        "src/app/api/parcels/lookup/route.ts:113-119 — the only record of a lookup is a log line; it increments nothing"
       ]
     },
     "config": {
@@ -12927,28 +13893,31 @@
       "answer": "none",
       "why": "It renders no contract.",
       "evidence": [
-        "mobile/app/(app)/parcel-tool/_layout.tsx:1-15"
+        "mobile/app/(app)/parcel-tool/_layout.tsx:1-65"
       ],
       "surfaces": []
     },
     "a11y": {
       "touch_target_min_px": 44,
-      "labels": "none",
-      "dark_mode": "none",
+      "labels": "complete",
+      "dark_mode": "hardcoded",
       "reduced_motion": "none",
       "i18n": "none",
-      "safe_area": "none"
+      "safe_area": [
+        "bottom"
+      ]
     },
     "deviations": "none",
     "limitations": "none",
     "interpretation": "none",
-    "notes": "The only nested Stack inside the tab tree — the Parcel Cost Tool is a standalone two-screen flow that happens to live behind a tab.",
+    "notes": "THE MaxBLD PRODUCT SHELL. This is the shell that owns the three-tab shelf — Lookup, Tracked Lots, Account (operator ruling 2026-09-16 (c)). The five-tab bar (Lead Feed, Flight Board, Map, Parcels, Settings) is S-046 `shell_app_tabs` at mobile/app/(app)/_layout.tsx and belongs to the LEAD-GEN app; it is hidden for every route in this group.\n\nWHY HIDDEN RATHER THAN ESCAPED. Two ways to stop the five-tab bar rendering here: (1) move the `parcel-tool` group out of `(app)`, or (2) hide the bar while a parcel-tool route is focused. (1) was REJECTED on a measured ground: mobile/app/(app)/_layout.tsx:236-265 is where the SUBSCRIPTION GATE lives — it returns SubscriptionLoadingGuard / PaywallScreen / a forced sign-out BEFORE it renders <Tabs>, so leaving the group would take the parcel product out from behind that gate, a security regression, and would additionally rewrite every `/(app)/parcel-tool/...` href, the descriptors and the Maestro flows. (2) was taken: S-046 already renders its bar through a custom `tabBar` wrapper, so the hide is one route-derived decision (`shouldHideAppTabBar`, mobile/src/lib/appShell.ts:29) with the gate untouched.\n\nSHELF COMPONENT. The shelf is extracted to `mobile/src/components/parcel/ParcelShelf.tsx` rather than drawn inline, so `owns.components` names a real file that R-13 totality can account for exactly once, and so the shelf is testable on its own.\n\nICONS. The shelf was specified with @expo/vector-icons Ionicons (compass / bookmark-outline / person-outline). That package is not a declared dependency of mobile/ and has zero usages; `lucide-react-native` is the established icon layer. Compass / Bookmark / User are its equivalents, with the active tab’s icon filled.",
     "x-draft": {
       "shard": "mobile-product",
       "files": [
-        "mobile/app/(app)/parcel-tool/_layout.tsx"
+        "mobile/app/(app)/parcel-tool/_layout.tsx",
+        "mobile/src/components/parcel/ParcelShelf.tsx"
       ],
-      "loc": 15,
+      "loc": 162,
       "call_idiom": "none",
       "stores": [],
       "measured_states": [

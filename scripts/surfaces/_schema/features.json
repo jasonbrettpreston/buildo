@@ -96,6 +96,12 @@
     "why": "Users, security, tunables, health, pipeline ops — the admin of the platform, not of a product."
   },
   {
+    "id": "F17",
+    "name": "tracked-lots",
+    "scope": "parcel_product",
+    "why": "Keep an eye on specific lots: the user’s own saved parcels, their envelope figures, and whether a CoA ruling has landed near them. Its own feature module so it is removable as a unit — one table, one contract, one surface — and so it shares nothing with the lead-gen save machinery (Spec 116 OD5)."
+  },
+  {
     "id": "F90",
     "name": "lead-generation",
     "scope": "estate_other",

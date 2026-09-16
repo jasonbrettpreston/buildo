@@ -348,7 +348,7 @@ export type SurfaceDescriptor = {
   /** One line saying why this scope, measured: the screen path, the product key, the entitlement, or the Spec 100 §1 fence. */
   why: string;
   /** The FEATURE MODULE this belongs to. Spec 125 §2's recommendation, made mechanical: descriptors are grouped by feature so a feature is a unit of REMOVAL — deleting it deletes a known set of surfaces, contracts and tables, and the registry sa */
-  feature: "F01" | "F02" | "F03" | "F04" | "F05" | "F06" | "F07" | "F08" | "F09" | "F10" | "F11" | "F12" | "F13" | "F14" | "F15" | "F16" | "F90" | "F91" | "F92" | "F93";
+  feature: "F01" | "F02" | "F03" | "F04" | "F05" | "F06" | "F07" | "F08" | "F09" | "F10" | "F11" | "F12" | "F13" | "F14" | "F15" | "F16" | "F17" | "F90" | "F91" | "F92" | "F93";
   /** DERIVED, not chosen: scope rank (A<B<C<D) × 1000 + feature rank × 10 + kind rank, where kind rank orders tables-before-contracts-before-surfaces-before-admin. It answers "what must exist before this can be built", and it is the order the re */
   build_order: number;
   /** Behaviour inside this row that belongs to the OTHER product and merely lives here today. Recorded, NEVER deleted: a behaviour nobody wrote down is a behaviour nobody can knowingly retire (Spec 124 §4, the Chesterton's-Fence rule). */

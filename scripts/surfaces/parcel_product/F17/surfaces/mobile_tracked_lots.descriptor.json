@@ -1,0 +1,358 @@
+{
+  "kind": "SURFACE",
+  "status": "exists",
+  "docs": {
+    "purpose": "The lots you have chosen to keep an eye on. Each row shows the address, how much can be built there as of right, how much the Committee of Adjustment route could allow, and whether a CoA ruling has landed nearby recently — and taps through to the full lot report. Manage mode turns on a delete on every row; removing one is undoable from a toast, and the count at the top updates the moment it goes. Right now the data behind it is preview data, and the screen says so rather than passing sample rows off as your saved lots.",
+    "data_story": "Every value will arrive through one contract, `/api/parcels/tracked`, which does not exist yet. Behind it: a new `user_tracked_lots` table holding only the fact that you tracked a parcel, joined to `parcels` for the envelope figures, plus a per-request derivation over `coa_applications` for the nearby-ruling flag. It holds no client store — manage mode and the single undoable removal live in component state. It emits **no analytics event**, so nothing it does is currently countable.",
+    "under_126": "**REBUILD** — its contract is unbuilt, so there is nothing to re-project until the route and its table exist. It renders through the LIST renderer (declared item archetype, pagination and recycling), reading by reference: `/api/parcels/tracked`. It owns two components — the row and the sticky header — declared in `owns.components[]`."
+  },
+  "evidence": {
+    "files": [
+      "mobile/app/(app)/parcel-tool/tracked.tsx:1",
+      "mobile/src/lib/trackedLots.ts:1 — the pure logic this screen is a rendering of",
+      "mobile/src/hooks/useTrackedLots.ts:1 — the typed stub"
+    ],
+    "contracts": [
+      "mobile/src/hooks/useTrackedLots.ts:97-116 — useTrackedLots (STUB; /api/parcels/tracked does not exist)"
+    ],
+    "tables": [
+      "`user_tracked_lots` does not exist — see contract C-062"
+    ],
+    "gate": [
+      "mobile/app/(app)/_layout.tsx:236-265",
+      "mobile/app/(app)/parcel-tool/_layout.tsx:55-61"
+    ],
+    "states": [
+      "mobile/app/(app)/parcel-tool/tracked.tsx:121-187 — loading / error / empty / list branches",
+      "mobile/app/(app)/parcel-tool/tracked.tsx:190-234 — the undo toast"
+    ],
+    "emits": [
+      "mobile/app/(app)/parcel-tool/tracked.tsx:1-217 — no track() call"
+    ]
+  },
+  "identity": {
+    "id": "mobile_tracked_lots",
+    "route": "mobile/app/(app)/parcel-tool/tracked.tsx",
+    "archetype": "LIST",
+    "platforms": [
+      "mobile"
+    ],
+    "owns": {
+      "components": [
+        "mobile/src/components/parcel/TrackedLotRow.tsx",
+        "mobile/src/components/parcel/TrackedLotsHeader.tsx"
+      ]
+    },
+    "owner": "unassigned (no CODEOWNERS file and no owner registry exists in the repo — measured 2026-09-16)",
+    "spec": "docs/specs/03-mobile/100_mobile_parcel_cost_tool.md",
+    "spec_refs": [
+      "docs/specs/03-mobile/100_mobile_parcel_cost_tool.md §4",
+      "docs/specs/02-web-admin/126_maxbld_surface_standard.md §3.1 (LIST archetype profile)",
+      "docs/specs/00-architecture/116_multi_product_architecture.md (OD5)",
+      "docs/specs/00-architecture/117_maxbld_brand.md §6.1"
+    ],
+    "spec_version": "0-draft",
+    "versioning": {
+      "answer": "frozen",
+      "why": "The client parses the response with a `.strict()` Zod schema, so an added key is a break, not an extension, until the app ships a schema that knows about it.",
+      "evidence": [
+        "mobile/src/hooks/useTrackedLots.ts:33-47"
+      ]
+    },
+    "ref": "S-072"
+  },
+  "inputs": {
+    "answer": "contract",
+    "why": "One read of /api/parcels/tracked. No route param, no local input.",
+    "evidence": [
+      "mobile/src/hooks/useTrackedLots.ts:97-116"
+    ],
+    "contract_ref": [
+      "/api/parcels/tracked"
+    ],
+    "query_key": [
+      "parcel-tracked"
+    ],
+    "field_whitelist": [
+      "lots[].parcelId",
+      "lots[].address",
+      "lots[].maxBuildGfaSqm",
+      "lots[].maxCoaBuildGfaSqm",
+      "lots[].newNearbyCoaRuling",
+      "lots[].jurisdiction",
+      "lots[].trackedAt"
+    ],
+    "tables": []
+  },
+  "outputs": {
+    "answer": "optimistic_then_contract",
+    "why": "Removing a lot takes it out of the list immediately — so the header count updates at once — and parks it with its original index behind an undo toast. The DELETE fires only when the removal becomes final: the toast is dismissed, a second removal supersedes it, or the user leaves manage mode. Undo puts the row back where it was and no request is made at all.",
+    "evidence": [
+      "mobile/src/lib/trackedLots.ts:118-160 — removeLot / undoRemoval / commitRemoval",
+      "mobile/app/(app)/parcel-tool/tracked.tsx:70-100"
+    ],
+    "contract_ref": [
+      "/api/parcels/tracked"
+    ],
+    "tables": []
+  },
+  "state": {
+    "answer": "none",
+    "why": "No store. Manage mode and the single pending removal are component useState, which the state vocabulary has no value for; the list itself is server data.",
+    "evidence": [
+      "mobile/app/(app)/parcel-tool/tracked.tsx:50-58 — useState(manageMode) + useState(override)"
+    ],
+    "fields": []
+  },
+  "staleness": {
+    "answer": "query_cache",
+    "why": "Declared for the shape it will have once the route exists: a keyed read under `['parcel-tracked']` in the shared query client. While the hook is a stub there is no cache entry at all.",
+    "evidence": [
+      "mobile/src/hooks/useTrackedLots.ts:97-116",
+      "mobile/src/lib/queryClient.ts:37-45"
+    ],
+    "offline": "blocked"
+  },
+  "guards": {
+    "session": {
+      "answer": "entitled",
+      "why": "It inherits the tab gate; the tab tree does not mount unless subscription_status is trial/active/past_due/admin_managed, and the route will re-check server-side.",
+      "evidence": [
+        "mobile/app/(app)/_layout.tsx:236-265",
+        "src/app/api/parcels/lookup/route.ts:47-60"
+      ]
+    },
+    "rls_class": {
+      "answer": "A",
+      "why": "It reads the user’s own rows in `user_tracked_lots`, whose policies are keyed on auth.uid() = user_id. The only class-A table in the parcel product.",
+      "evidence": [
+        "contract C-062 inputs.tables[0] — the table definition and its RLS class"
+      ]
+    },
+    "disclosure": "none",
+    "entitlement": {
+      "product": "lead_gen",
+      "statuses": [
+        "trial",
+        "active",
+        "past_due",
+        "admin_managed"
+      ],
+      "on_missing": "paywall"
+    },
+    "flag": "none",
+    "permission": "none",
+    "rate_bucket": "parcels-tracked:{uid} — declared on C-062; not enforced until the route exists"
+  },
+  "render": {
+    "targets": [
+      "screen"
+    ],
+    "projection": "list",
+    "breakpoints": "mobile_first",
+    "export": "none",
+    "list": {
+      "item_archetype": "mobile/src/components/parcel/TrackedLotRow.tsx — address headline, Max Build, MAX COA BUILD, and the nearby-ruling badge; a trash affordance in manage mode",
+      "pagination": "none",
+      "recycling": "FlatList with a stable parcelId keyExtractor — the tracked set is small and bounded by the user, not by scrolling"
+    }
+  },
+  "checks": [
+    {
+      "id": "trackedlots_null_ruling_is_not_no",
+      "kind": "contract_parse",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "why": "`newNearbyCoaRuling` has no backing column and nothing computes it. A `null` MUST render as \"—\". Rendering \"NO\" would tell someone deciding what to build that no ruling has landed near their lot when nobody has looked — a fabricated fact, in the one place it would be acted on. Blocking. Locked by mobile/__tests__/trackedLots.test.ts."
+    },
+    {
+      "id": "trackedlots_undo_restores_position",
+      "kind": "empty_state",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "A removal is optimistic and undoable: the row leaves the list at once (so the count is honest) and undo returns it to its ORIGINAL INDEX, not to the end. Locked by the \"delete then undo\" describe block."
+    },
+    {
+      "id": "trackedlots_stub_is_disclosed",
+      "kind": "disclosure",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "why": "While the contract is unbuilt the screen renders preview rows, and it says so on its face (testID `tracked-lots-stub-notice`). Showing sample lots without that line would be showing someone a saved-lot list that is not theirs. The retighten condition is machine-observable: the check flips to FAIL the day `useTrackedLots` stops returning `isStub: true`."
+    },
+    {
+      "id": "trackedlots_empty_state",
+      "kind": "empty_state",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "Zero tracked lots renders the testID-tagged `tracked-lots-empty` invitation, never a blank screen."
+    }
+  ],
+  "invariants": "none",
+  "plausibility": "none",
+  "states": [
+    {
+      "name": "loading",
+      "golden": "none"
+    },
+    {
+      "name": "hit",
+      "golden": "none"
+    },
+    {
+      "name": "empty",
+      "golden": "none"
+    },
+    {
+      "name": "error",
+      "golden": "none"
+    },
+    {
+      "name": "offline",
+      "golden": "none"
+    },
+    {
+      "name": "unauthorized",
+      "golden": "none"
+    }
+  ],
+  "errors": {
+    "answer": "inline",
+    "why": "A failed read renders the testID-tagged `tracked-lots-error` block with a retry instruction, distinct from the empty state.",
+    "evidence": [
+      "mobile/app/(app)/parcel-tool/tracked.tsx:136-146 — testID tracked-lots-error"
+    ],
+    "classes": [
+      {
+        "class": "403",
+        "ui": "Entitlement refusal — currently renders the generic load-failure block; a distinct state is a follow-up."
+      },
+      {
+        "class": "500",
+        "ui": "Inline \"We couldn’t load your tracked lots.\" with a pull-to-refresh instruction."
+      }
+    ],
+    "no_retry": [
+      "ApiError(400)",
+      "ApiError(403)"
+    ]
+  },
+  "emits": {
+    "answer": "none",
+    "why": "Nothing to emit yet.",
+    "evidence": [
+      "mobile/app/(app)/parcel-tool/tracked.tsx:1-52"
+    ],
+    "analytics": [],
+    "ledger_events": [],
+    "breadcrumbs": []
+  },
+  "offers": {
+    "answer": "none",
+    "why": "No sponsored placement is rendered.",
+    "evidence": [
+      "mobile/app/(app)/parcel-tool/tracked.tsx:1-52"
+    ]
+  },
+  "metering": {
+    "answer": "none",
+    "why": "Nothing here is counted. The Spec 126 §7 usage ledger table does not exist (grep for usage_events in the introspected drizzle schema returns 0 hits), and the parcel product has no quota, credit or view counter of its own — no metering column, no ledger row, no consumption event. Measured 2026-09-16.",
+    "evidence": [
+      "src/lib/db/generated/schema.ts — no usage_events table (grep, 2026-09-16)",
+      "src/app/api/parcels/lookup/route.ts:113-119 — the only record of a lookup is a log line; it increments nothing"
+    ]
+  },
+  "config": {
+    "answer": "none",
+    "why": "The surface has no tunable of its own. The one threshold in this feature — the window that makes a nearby CoA ruling \"new\" — belongs to the contract and is declared unregistered there.",
+    "evidence": [
+      "mobile/src/constants/parcelSearch.ts:98 — TRACKED_LOTS_HEX",
+      "contract C-062 config"
+    ],
+    "logic_variables": [],
+    "retired": []
+  },
+  "sharing": {
+    "answer": "sole",
+    "why": "It is the only renderer of /api/parcels/tracked.",
+    "evidence": [
+      "mobile/src/hooks/useTrackedLots.ts:97-116"
+    ],
+    "surfaces": []
+  },
+  "a11y": {
+    "touch_target_min_px": 44,
+    "labels": "complete",
+    "dark_mode": "hardcoded",
+    "reduced_motion": "none",
+    "i18n": "none",
+    "safe_area": [
+      "top"
+    ]
+  },
+  "deviations": [
+    {
+      "from": "Spec 126 §3.1 — a LIST surface reads a built contract",
+      "why": "The screen is built and registered `status: exists`; its contract C-062 is `designed` and unbuilt, so the hook is a fixture-backed stub. Declared rather than hidden: the surface discloses the stub on screen, and the dashed edge to a `designed` contract is exactly what that status is for. The alternative — holding the screen back until the migration lands in another committer’s domain — would leave one of the three shelf tabs dead.",
+      "adjudicated_by": "operator ruling 2026-09-16 — \"the screen reads through a typed client hook with a fixture-backed stub until the route exists\"",
+      "date": "2026-09-16"
+    }
+  ],
+  "limitations": [
+    {
+      "what": "The nearby-CoA-ruling field has no backing column anywhere and nothing derives it, so it can only ever be \"—\" until the route computes it. Two of the three figures are real columns; this one is a specification.",
+      "measured": "src/lib/db/generated/schema.ts — `parcels.max_buildable_gfa_sqm` and `parcels.max_newbuild_coa_gfa_sqm` exist; no column expresses a recent nearby CoA decision (grep, 2026-09-16). `coa_applications.decision_date` + `.neighbourhood_id` are what a derivation would use.",
+      "check_id": "trackedlots_null_ruling_is_not_no"
+    },
+    {
+      "what": "A 403 entitlement refusal renders the generic load-failure block rather than its own locked-out state, unlike S-002.",
+      "measured": "mobile/app/(app)/parcel-tool/tracked.tsx:136-146 branches on `error` without classifying it.",
+      "check_id": "trackedlots_empty_state"
+    }
+  ],
+  "interpretation": "none",
+  "notes": "ARCHETYPE: LIST, NOT REPORT. The brief that specified this surface said REPORT. The schema settles it: the REPORT `x-profile` in scripts/surfaces/_schema/surface.schema.json FORCES `outputs.answer` and `state.answer` to the constant \"none\". This surface REMOVES rows — a write, declared here as `optimistic_then_contract` — so REPORT is not merely a poor fit, it is schema-invalid and the generator would refuse it. LIST is also the right description: a scrollable collection with a declared per-item archetype, which is what `render.list` exists to carry.\n\nDATA. The contract C-062 and the `user_tracked_lots` table are DESIGNED, not built. The hook is a fixture-backed stub whose fixtures are parsed through the same boundary schema the real fetch will use, so a fixture cannot drift from the declared projection. The screen discloses the stub. No part of the lead-gen save machinery (`useSaveLead`, `admin_watchlist`, `/api/leads/save`) is reused — OD5.\n\nTHE THREE FIGURES. Max Build = `parcels.max_buildable_gfa_sqm` (real). MAX COA BUILD = `parcels.max_newbuild_coa_gfa_sqm` (real). New Nearby CoA Ruling = NO COLUMN EXISTS; derivable from decided `coa_applications` in the parcel’s neighbourhood, declared nullable, rendered \"—\" while null. See `limitations` and the blocking check.",
+  "x-draft": {
+    "shard": "mobile-product",
+    "files": [
+      "mobile/app/(app)/parcel-tool/tracked.tsx",
+      "mobile/src/components/parcel/TrackedLotRow.tsx",
+      "mobile/src/components/parcel/TrackedLotsHeader.tsx",
+      "mobile/src/lib/trackedLots.ts",
+      "mobile/src/hooks/useTrackedLots.ts"
+    ],
+    "loc": 723,
+    "call_idiom": "hook",
+    "stores": [],
+    "measured_states": [
+      "stub_notice",
+      "loading",
+      "list",
+      "empty",
+      "error",
+      "manage_mode",
+      "pending_removal"
+    ],
+    "measured_gate": {
+      "session": "required",
+      "entitlement": "subscription_status",
+      "flag": "none",
+      "permission": "none"
+    }
+  },
+  "programme": {
+    "scope": "parcel_product",
+    "phase": "B2",
+    "why": "The Tracked Lots tab of the MaxBLD shelf, and the first surface of the tracked-lots feature module — its own table, its own contract, shared with nothing.",
+    "feature": "F17",
+    "build_order": 1173,
+    "leakage": "none",
+    "product_questions": "none",
+    "review": {
+      "status": "unreviewed"
+    }
+  }
+}

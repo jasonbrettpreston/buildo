@@ -381,11 +381,10 @@
   },
   "metering": {
     "answer": "none",
-    "why": "Nothing here is counted: the Spec 126 §7 usage ledger table does not exist (grep for usage_events in the introspected drizzle schema returns 0 hits), and the only quota-shaped counter, user_profiles.lead_views_count, is incremented solely by POST /api/leads/view, which has no mobile caller.",
+    "why": "Nothing here is counted. The Spec 126 §7 usage ledger table does not exist (grep for usage_events in the introspected drizzle schema returns 0 hits), and the parcel product has no quota, credit or view counter of its own — no metering column, no ledger row, no consumption event. Measured 2026-09-16.",
     "evidence": [
-      "src/lib/db/generated/schema.ts — no usage_events table (grep, 2026-09-15)",
-      "src/app/api/leads/view/route.ts:110",
-      "src/features/leads/api/useLeadView.ts:25 — imported only by src/tests/useLeadView.logic.test.tsx"
+      "src/lib/db/generated/schema.ts — no usage_events table (grep, 2026-09-16)",
+      "src/app/api/parcels/lookup/route.ts:113-119 — the only record of a lookup is a log line; it increments nothing"
     ]
   },
   "config": {

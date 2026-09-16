@@ -22538,6 +22538,14 @@
         "blocking": false,
         "when": "post",
         "why": "Every table and column declared in lineage.reads[]/writes[] must exist in src/lib/db/generated/schema.ts (drizzle-kit introspect of the live database); the registry generator checks this both directions."
+      },
+      {
+        "id": "parcelslookup_match_type_enum",
+        "kind": "contract_parse",
+        "severity": "FAIL",
+        "blocking": false,
+        "when": "post",
+        "why": "operator ruling 2026-09-16 (match TYPE, never count) declares this contract’s resolution vocabulary as exactly five values — unique, text_candidates, multi_parcel, unlinked, intersection — and every consumer branches on that value, never on a result count. The contract does NOT emit them yet: matchType is still the closed enum ['exact','typeahead','direct'] and resolveAddress collapses every ambiguity into candidates[]. The declared enum is therefore the target, and the shim is deriveMatchType (mobile/src/lib/parcelSearchMatch.ts:93), which is written server-value-first so it becomes dead code the day this contract carries the type. multi_parcel and unlinked are NOT derivable from the present payload — that is the gap this check exists to keep visible."
       }
     ],
     "invariants": "none",
@@ -22677,7 +22685,7 @@
       }
     ],
     "interpretation": "none",
-    "notes": "The response is validated against a Zod .strict() schema (reusing the admin schemas in src/app/api/admin/parcels/lookup/types.ts) specifically to guarantee the proprietary Tier-3 diagnostic 'groups' data never reaches the consumer app. A 403 subscription gate runs before any DB work. assembleConsumerPayload (src/lib/parcels/consumer-lookup.ts) is a pure in-memory transform issuing no extra queries. user_profiles/entitlements come from the shared getCurrentUserContext auth helper. | MEASURED 2026-09-15: ACTIVE_SUBSCRIPTION_STATUSES = {'trial','active','past_due','admin_managed'} (route.ts:47-49). PASS: exactly those four. REFUSED: every other value, including NULL/absent (the `?? ''` coalesce at route.ts:58 makes a null status a refusal) — e.g. canceled, expired, incomplete, deleted, and any user with no `entitlements` row for product='lead_gen' (LEFT JOIN yields null, src/lib/entitlements/index.ts:68). HTTP status on refusal: 403, code SUBSCRIPTION_REQUIRED (route.ts:59 -> src/features/leads/api/error-mapping.ts:28-29). WHITELIST PARITY vs Spec 100 §3.2 (docs/specs/03-mobile/100_mobile_parcel_cost_tool.md:79-95): EXACT MATCH, no field in one and not the other. (a) areas: spec line 88 names 16 columns; CONSUMER_HEADLINE_COLS (src/lib/parcels/consumer-lookup.ts:33-41) is the same 16 in the same order. (b) costMenu.scalars: spec line 87 names 12; T1_COST_SCALAR_COLS (src/lib/admin/parcel-lookup.ts:35-39, iterated at consumer-lookup.ts:82) is the same 12. (c) comparableBuilds: spec line 92 names 11; CONSUMER_COMPARABLE_FIELDS (consumer-lookup.ts:44-47) is the same 11, and ConsumerComparableBuildSchema is .strict() (src/app/api/parcels/lookup/types.ts:69). (d) coaProjects: spec line 91 names 10; the fetchCoaProjects aliases (src/lib/admin/parcel-lookup.ts:233-236) are the same 10. (e) compStats: spec line 90 names 6; consumer-lookup.ts:146-151 emits the same 6. (f) No `groups` key: ConsumerParcelSchema has no groups member and is .strict() (types.ts:75-91) — assembleConsumerPayload never builds one (consumer-lookup.ts:140-156), unlike the admin assembleParcelPayload which does (src/lib/admin/parcel-lookup.ts:298-303, 322). CAVEATS a reviewer must know: (1) the SQL reads FAR more than the whitelist — fetchParcelById projects allMappedColumns() = every Tier-1/2/3 column incl. all zoning/heritage/existing-structure/scenario/accessory diagnostics (src/lib/admin/parcel-lookup.ts:222-224, 113-121). The whitelist is enforced only at the JS assembler + the .strict() boundary parse, not at the query. `geometry`/`geom` are excluded from the SELECT (EXCLUDED_COLS, parcel-lookup.ts:32). (2) The whitelist is COLUMN-level but NOT field-level INSIDE the two JSONB blobs: CostMenuSchema is z.record over CostLineSchema which is .passthrough() (src/app/api/admin/parcels/lookup/types.ts:40,43) and NearbyBuildsSummarySchema is .passthrough() (types.ts:62). Any additive key inside parcel_cost_menu or nearby_builds_summary reaches the client verbatim despite the outer .strict(). Spec 100:86 itself names `trades`/`products` per cost line, which CostLineSchema does not declare — they ride the passthrough. (3) get-user-context.ts:83-89 performs an INSERT into user_profiles, but ONLY under isDevMode() && uid==='dev-user'; isDevMode requires NODE_ENV!=='production' AND DEV_MODE==='true' (src/lib/auth/route-guard.ts:33), so it is unreachable in production. (4) routes-index.json CHECKLIST agreement: census_reads listed parcels, address_points, parcel_address_points, coa_applications, user_profiles, entitlements — all six confirmed. census_writes listed none; I found the dev-only user_profiles INSERT above (reachable only in dev), so the checklist is right for production. (5) Spec 100:56 claims the route-guard classifies '/api/parcels' as AUTHENTICATED — verified at src/lib/auth/route-guard.ts:127 + :165. | Caching: none observed — no `export const revalidate`/`dynamic`/`fetchCache` and no Cache-Control header set anywhere in src/app/api/parcels/lookup/route.ts:",
+    "notes": "The response is validated against a Zod .strict() schema (reusing the admin schemas in src/app/api/admin/parcels/lookup/types.ts) specifically to guarantee the proprietary Tier-3 diagnostic 'groups' data never reaches the consumer app. A 403 subscription gate runs before any DB work. assembleConsumerPayload (src/lib/parcels/consumer-lookup.ts) is a pure in-memory transform issuing no extra queries. user_profiles/entitlements come from the shared getCurrentUserContext auth helper. | MEASURED 2026-09-15: ACTIVE_SUBSCRIPTION_STATUSES = {'trial','active','past_due','admin_managed'} (route.ts:47-49). PASS: exactly those four. REFUSED: every other value, including NULL/absent (the `?? ''` coalesce at route.ts:58 makes a null status a refusal) — e.g. canceled, expired, incomplete, deleted, and any user with no `entitlements` row for product='lead_gen' (LEFT JOIN yields null, src/lib/entitlements/index.ts:68). HTTP status on refusal: 403, code SUBSCRIPTION_REQUIRED (route.ts:59 -> src/features/leads/api/error-mapping.ts:28-29). WHITELIST PARITY vs Spec 100 §3.2 (docs/specs/03-mobile/100_mobile_parcel_cost_tool.md:79-95): EXACT MATCH, no field in one and not the other. (a) areas: spec line 88 names 16 columns; CONSUMER_HEADLINE_COLS (src/lib/parcels/consumer-lookup.ts:33-41) is the same 16 in the same order. (b) costMenu.scalars: spec line 87 names 12; T1_COST_SCALAR_COLS (src/lib/admin/parcel-lookup.ts:35-39, iterated at consumer-lookup.ts:82) is the same 12. (c) comparableBuilds: spec line 92 names 11; CONSUMER_COMPARABLE_FIELDS (consumer-lookup.ts:44-47) is the same 11, and ConsumerComparableBuildSchema is .strict() (src/app/api/parcels/lookup/types.ts:69). (d) coaProjects: spec line 91 names 10; the fetchCoaProjects aliases (src/lib/admin/parcel-lookup.ts:233-236) are the same 10. (e) compStats: spec line 90 names 6; consumer-lookup.ts:146-151 emits the same 6. (f) No `groups` key: ConsumerParcelSchema has no groups member and is .strict() (types.ts:75-91) — assembleConsumerPayload never builds one (consumer-lookup.ts:140-156), unlike the admin assembleParcelPayload which does (src/lib/admin/parcel-lookup.ts:298-303, 322). CAVEATS a reviewer must know: (1) the SQL reads FAR more than the whitelist — fetchParcelById projects allMappedColumns() = every Tier-1/2/3 column incl. all zoning/heritage/existing-structure/scenario/accessory diagnostics (src/lib/admin/parcel-lookup.ts:222-224, 113-121). The whitelist is enforced only at the JS assembler + the .strict() boundary parse, not at the query. `geometry`/`geom` are excluded from the SELECT (EXCLUDED_COLS, parcel-lookup.ts:32). (2) The whitelist is COLUMN-level but NOT field-level INSIDE the two JSONB blobs: CostMenuSchema is z.record over CostLineSchema which is .passthrough() (src/app/api/admin/parcels/lookup/types.ts:40,43) and NearbyBuildsSummarySchema is .passthrough() (types.ts:62). Any additive key inside parcel_cost_menu or nearby_builds_summary reaches the client verbatim despite the outer .strict(). Spec 100:86 itself names `trades`/`products` per cost line, which CostLineSchema does not declare — they ride the passthrough. (3) get-user-context.ts:83-89 performs an INSERT into user_profiles, but ONLY under isDevMode() && uid==='dev-user'; isDevMode requires NODE_ENV!=='production' AND DEV_MODE==='true' (src/lib/auth/route-guard.ts:33), so it is unreachable in production. (4) routes-index.json CHECKLIST agreement: census_reads listed parcels, address_points, parcel_address_points, coa_applications, user_profiles, entitlements — all six confirmed. census_writes listed none; I found the dev-only user_profiles INSERT above (reachable only in dev), so the checklist is right for production. (5) Spec 100:56 claims the route-guard classifies '/api/parcels' as AUTHENTICATED — verified at src/lib/auth/route-guard.ts:127 + :165. | Caching: none observed — no `export const revalidate`/`dynamic`/`fetchCache` and no Cache-Control header set anywhere in src/app/api/parcels/lookup/route.ts:\n\nMATCH-TYPE ENUM (declared, not yet emitted). The five resolution types this contract owes its consumers are: `unique` (exactly one lot — open it), `text_candidates` (several text matches — list them, capped at 10), `multi_parcel` (one address point linked to 2+ parcels: corner, severed or ranged lots — map), `unlinked` (address resolved, no parcel linked — map, and never a nearest-polygon guess), `intersection` (e.g. \"Queen & Spadina\" — map). Measured today: matchType is ['exact','typeahead','direct'] (src/app/api/admin/parcels/lookup/types.ts:123) and src/lib/admin/parcel-lookup.ts:161-217 emits no fan-out signal and no intersection parsing, so three of the five are derived client-side and two are unreachable. Serving the type (and, for the map surface S-071, parcel geometry) is the outstanding API change.",
     "x-draft": {
       "shard": "contracts",
       "files": [
@@ -22715,8 +22723,402 @@
           ],
           "owning_product": "lead_gen",
           "disposition": "move-to-owner"
+        },
+        {
+          "behaviour": "The parcel contract is built out of LEAD-GEN-NAMESPACED shared helpers: its response envelope and every error mapping come from `src/features/leads/api/envelope.ts` and `src/features/leads/api/error-mapping.ts`. Nothing is wrong with the behaviour — they are generic helpers — but a scope-A contract importing from `src/features/leads/**` means the parcel product cannot be extracted without dragging the lead-gen feature directory with it. The fix is a move to a shared module, not a rewrite.",
+          "evidence": [
+            "src/app/api/parcels/lookup/route.ts:23 — import { ok } from '@/features/leads/api/envelope'",
+            "src/app/api/parcels/lookup/route.ts:24-30 — the error-mapping imports"
+          ],
+          "owning_product": "lead_gen",
+          "disposition": "move-to-owner"
         }
       ],
+      "product_questions": "none",
+      "review": {
+        "status": "unreviewed"
+      }
+    }
+  },
+  {
+    "kind": "CONTRACT",
+    "status": "new",
+    "docs": {
+      "purpose": "The list of lots a signed-in person has chosen to keep an eye on, and the way to stop keeping an eye on one. Reading gives back each lot’s address, how much can be built on it as of right, how much the Committee of Adjustment route could allow, and whether a CoA ruling has landed nearby recently. NOT BUILT YET — this descriptor is the specification the route and its table will be built against.",
+      "data_story": "It will read one new table, `user_tracked_lots`, which holds nothing but the fact that a person tracked a parcel — user, parcel, when, and the jurisdiction. Everything shown about the lot itself is joined from `parcels`, which the pipeline already produces. The \"new nearby ruling\" flag is not stored anywhere: it is derived per request from `coa_applications`, by asking whether a decided application shares the parcel’s neighbourhood inside a recent window. Writing is a single delete of the user’s own row.",
+      "under_126": "**NEW** — it does not exist. It is declared here so the surface that reads it (S-072) can name its contract instead of pointing at nothing, which is what an unbuilt-but-declared status is for. NOTE: the schema offers `designed` for exactly this case (\"a contract a surface already points at\") but the GENERATOR only accepts exists|new|generated (generate-surface-registry.mjs:168), so this row carries `new`. Schema and generator disagree — reported, not papered over. The table is defined in this descriptor rather than in a migration because migrations are the Backend domain and a different committer; the migration is filed as the follow-up, with the columns and the projection stated here so it can be written without re-deciding anything."
+    },
+    "evidence": {
+      "files": [
+        "mobile/src/hooks/useTrackedLots.ts:1 — the typed client stub that will call this route"
+      ],
+      "contracts": [
+        "mobile/src/hooks/useTrackedLots.ts:33-47 — TrackedLotsResultSchema, the projection this contract owes"
+      ],
+      "tables": [
+        "src/lib/db/generated/schema.ts — `user_tracked_lots` does NOT exist (grep, 2026-09-16)",
+        "src/lib/db/generated/schema.ts — `parcels.max_buildable_gfa_sqm` and `parcels.max_newbuild_coa_gfa_sqm` DO exist",
+        "src/lib/db/generated/schema.ts — `coa_applications.decision`, `.decision_date`, `.neighbourhood_id` exist"
+      ],
+      "gate": [
+        "src/app/api/parcels/lookup/route.ts:47-60 — the entitlement gate this route will mirror",
+        "src/lib/auth/route-guard.ts:120-132"
+      ],
+      "states": [
+        "mobile/src/hooks/useTrackedLots.ts:60-95 — the fixture exercises hit / null-field / empty"
+      ],
+      "emits": [
+        "not built — no log line exists yet"
+      ]
+    },
+    "identity": {
+      "id": "contract_parcels_tracked",
+      "route": "/api/parcels/tracked",
+      "archetype": "MUTATION",
+      "platforms": [
+        "mobile"
+      ],
+      "owns": {
+        "components": []
+      },
+      "owner": "Cross-Domain (CLAUDE.md §Domain Rules: an API route consumed by the Expo app)",
+      "spec": "docs/specs/03-mobile/100_mobile_parcel_cost_tool.md",
+      "spec_refs": [
+        "docs/specs/03-mobile/100_mobile_parcel_cost_tool.md §3 (the consumer contract pattern this mirrors)",
+        "docs/specs/02-web-admin/126_maxbld_surface_standard.md §3.1 (CONTRACT archetypes)",
+        "docs/specs/00-architecture/116_multi_product_architecture.md (OD5)"
+      ],
+      "spec_version": "0-draft",
+      "versioning": {
+        "answer": "additive_only",
+        "why": "Its consumer is an installed Expo binary that does not redeploy with the server, so a removed or retyped field breaks shipped clients. The client parse is `.strict()`, so an added key is a break too until the app ships a schema that knows about it — additive means additive IN STEP with a client release.",
+        "evidence": [
+          "mobile/src/hooks/useTrackedLots.ts:33-47",
+          "mobile/app.json:5"
+        ]
+      },
+      "ref": "C-062"
+    },
+    "inputs": {
+      "answer": "app_outputs",
+      "why": "It reads the new `user_tracked_lots` join table plus `parcels` (pipeline-materialised) and `coa_applications` (pipeline-materialised) for the derived nearby-ruling flag.",
+      "evidence": [
+        "mobile/src/hooks/useTrackedLots.ts:33-47",
+        "src/lib/admin/parcel-lookup.ts:233-240 — the CoA read this mirrors"
+      ],
+      "contract_ref": [],
+      "query_key": [
+        "parcel-tracked"
+      ],
+      "field_whitelist": [
+        "lots[].parcelId",
+        "lots[].address",
+        "lots[].maxBuildGfaSqm",
+        "lots[].maxCoaBuildGfaSqm",
+        "lots[].newNearbyCoaRuling",
+        "lots[].jurisdiction",
+        "lots[].trackedAt"
+      ],
+      "tables": [
+        {
+          "table": "user_tracked_lots",
+          "columns": [
+            "user_id",
+            "parcel_id",
+            "created_at",
+            "jurisdiction"
+          ],
+          "producing_steps": "none",
+          "chain_position": "n/a",
+          "owner_spec": "docs/specs/03-mobile/100_mobile_parcel_cost_tool.md",
+          "evidence": [
+            "DOES NOT EXIST YET — src/lib/db/generated/schema.ts has no user_tracked_lots (grep, 2026-09-16)",
+            "DEFINITION (the migration follow-up): user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE · parcel_id text NOT NULL REFERENCES parcels(parcel_id) ON DELETE CASCADE · created_at timestamptz NOT NULL DEFAULT now() · jurisdiction text NOT NULL DEFAULT 'TORONTO, ON' · UNIQUE (user_id, parcel_id) · INDEX (user_id, created_at DESC) · RLS CLASS A, policies keyed on auth.uid() = user_id"
+          ]
+        },
+        {
+          "table": "parcels",
+          "columns": [
+            "parcel_id",
+            "address_number",
+            "linear_name_full",
+            "max_buildable_gfa_sqm",
+            "max_newbuild_coa_gfa_sqm",
+            "neighbourhood_id"
+          ],
+          "producing_steps": [
+            "parcels",
+            "enrich_parcels",
+            "compute_parcel_cost_estimates"
+          ],
+          "chain_position": "sources[4]",
+          "owner_spec": "docs/specs/01-pipeline/55_source_parcels.md",
+          "evidence": [
+            "src/lib/db/generated/schema.ts — max_buildable_gfa_sqm and max_newbuild_coa_gfa_sqm both exist (grep, 2026-09-16)",
+            "src/lib/admin/parcel-lookup.ts:169 — the display-address expression this reuses"
+          ]
+        },
+        {
+          "table": "coa_applications",
+          "columns": [
+            "neighbourhood_id",
+            "decision",
+            "decision_date"
+          ],
+          "producing_steps": [
+            "coa",
+            "link_coa_to_parcels",
+            "classify_coa_scope"
+          ],
+          "chain_position": "coa[1]",
+          "owner_spec": "docs/specs/01-pipeline/42_chain_coa.md",
+          "evidence": [
+            "src/lib/admin/parcel-lookup.ts:233-240 — fetchCoaProjects filters on neighbourhood_id",
+            "src/lib/db/generated/schema.ts — decision / decisionDate / neighbourhoodId exist"
+          ]
+        }
+      ]
+    },
+    "outputs": {
+      "answer": "contract_only",
+      "why": "The only write is DELETE: one row of the caller’s own `user_tracked_lots`, removed synchronously inside the request. There is no server-side create in this contract — tracking a lot is a separate follow-up on the report surface.",
+      "evidence": [
+        "mobile/src/hooks/useTrackedLots.ts:118-127 — useUntrackLot, the client half"
+      ],
+      "contract_ref": [
+        "/api/parcels/tracked"
+      ],
+      "tables": [
+        {
+          "table": "user_tracked_lots",
+          "columns": [
+            "user_id",
+            "parcel_id"
+          ],
+          "producing_steps": "none",
+          "chain_position": "n/a",
+          "owner_spec": "docs/specs/03-mobile/100_mobile_parcel_cost_tool.md",
+          "evidence": [
+            "DELETE FROM user_tracked_lots WHERE user_id = $1 AND parcel_id = $2 — idempotent by construction: deleting an already-deleted row affects 0 rows and still returns 204."
+          ]
+        }
+      ]
+    },
+    "state": {
+      "answer": "server_only",
+      "why": "A route holds no client state.",
+      "evidence": [
+        "mobile/src/hooks/useTrackedLots.ts:1-20"
+      ],
+      "fields": []
+    },
+    "staleness": {
+      "answer": "live",
+      "why": "Both the tracked set and the joined parcel figures will be read from the base tables on each request; there is no cache layer planned between the handler and the database.",
+      "evidence": [
+        "src/app/api/parcels/lookup/route.ts:79-108 — the sibling read this mirrors"
+      ],
+      "offline": "blocked"
+    },
+    "guards": {
+      "session": {
+        "answer": "entitled",
+        "why": "It will mirror the lookup route: resolve the user context first, then refuse unless subscription_status is trial/active/past_due/admin_managed. A tracked-lot list is per-user data and must never be reachable unauthenticated.",
+        "evidence": [
+          "src/app/api/parcels/lookup/route.ts:47-60",
+          "src/lib/auth/route-guard.ts:120-132"
+        ]
+      },
+      "rls_class": {
+        "answer": "A",
+        "why": "User-owned rows: `user_tracked_lots` is keyed on the signed-in user, so its policies are keyed on `auth.uid() = user_id` for select, insert and delete. This is the one table in the parcel product that is NOT default-deny — the owner reads and deletes their own rows.",
+        "evidence": [
+          "migrations/227_rls_class_b_default_deny.sql:42-110 — the class-B default the corpus tables use, which this deliberately does NOT follow"
+        ]
+      },
+      "disclosure": "none",
+      "entitlement": {
+        "product": "lead_gen",
+        "statuses": [
+          "trial",
+          "active",
+          "past_due",
+          "admin_managed"
+        ],
+        "on_missing": "403"
+      },
+      "flag": "none",
+      "permission": "none",
+      "rate_bucket": "parcels-tracked:{uid} — 60/min, 60s window; a separate bucket from parcels-search and parcels-lookup"
+    },
+    "render": {
+      "targets": [
+        "screen"
+      ],
+      "projection": "none",
+      "breakpoints": "none",
+      "export": "none"
+    },
+    "checks": [
+      {
+        "id": "contract_parcels_tracked__owner_only",
+        "kind": "auth_class_parity",
+        "severity": "FAIL",
+        "blocking": true,
+        "when": "pre",
+        "why": "Every row this route reads or deletes must belong to the caller. Two independent guards are required, not one: the SQL predicates on `user_id = $uid`, AND the table carries RLS class A policies keyed on auth.uid(). Blocking because a missing predicate here leaks or deletes another person’s tracked lots, and nothing on the screen would reveal it."
+      },
+      {
+        "id": "contract_parcels_tracked__derived_ruling_is_nullable",
+        "kind": "contract_parse",
+        "severity": "FAIL",
+        "blocking": false,
+        "when": "post",
+        "why": "`newNearbyCoaRuling` has NO backing column. It is derived per request from decided `coa_applications` in the parcel’s neighbourhood inside a window. Until that derivation exists it must serialise as `null`, and the client must render \"—\" — NEVER `false`. Emitting `false` for \"not computed\" would state, to someone deciding what to build, that no ruling has landed nearby when nobody has looked. Locked client-side by mobile/__tests__/trackedLots.test.ts (\"null is NEVER shown as NO\")."
+      },
+      {
+        "id": "contract_parcels_tracked__delete_is_idempotent",
+        "kind": "contract_parse",
+        "severity": "FAIL",
+        "blocking": false,
+        "when": "post",
+        "why": "DELETE of an already-removed lot must succeed with 0 rows affected, not 404 — the client removes optimistically and offers an undo, so a retry after a dropped connection is ordinary, not exceptional."
+      }
+    ],
+    "invariants": "none",
+    "plausibility": "none",
+    "states": [
+      {
+        "name": "hit",
+        "golden": "none"
+      },
+      {
+        "name": "empty",
+        "golden": "none"
+      },
+      {
+        "name": "unauthorized",
+        "golden": "none"
+      },
+      {
+        "name": "rate_limited",
+        "golden": "none"
+      },
+      {
+        "name": "error",
+        "golden": "none"
+      }
+    ],
+    "errors": {
+      "answer": "inline",
+      "why": "It will reuse the shared envelope and error mapping: 401, 403, 429, 500, and a 200 empty list for \"nothing tracked\".",
+      "evidence": [
+        "src/app/api/parcels/lookup/route.ts:126-128"
+      ],
+      "classes": [
+        {
+          "class": "403",
+          "ui": "Entitlement refusal — the client renders its own locked-out state."
+        },
+        {
+          "class": "429",
+          "ui": "Rate limited; the client shows retry-after."
+        },
+        {
+          "class": "500",
+          "ui": "The client renders its error state with a retry."
+        }
+      ],
+      "no_retry": [
+        "ApiError(400)",
+        "ApiError(403)"
+      ]
+    },
+    "emits": {
+      "answer": "none",
+      "why": "Not built. When it is, it should log uid + outcome + count + duration, and never a parcel list.",
+      "evidence": [
+        "src/app/api/parcels/lookup/route.ts:113-119 — the log shape this will mirror"
+      ],
+      "analytics": [],
+      "ledger_events": [],
+      "breadcrumbs": []
+    },
+    "offers": {
+      "answer": "none",
+      "why": "A data route renders no sponsored content.",
+      "evidence": [
+        "mobile/src/hooks/useTrackedLots.ts:1-20"
+      ]
+    },
+    "metering": {
+      "answer": "none",
+      "why": "Nothing here is counted. The Spec 126 §7 usage ledger table does not exist (grep for usage_events in the introspected drizzle schema returns 0 hits), and the parcel product has no quota, credit or view counter of its own — no metering column, no ledger row, no consumption event. Measured 2026-09-16.",
+      "evidence": [
+        "src/lib/db/generated/schema.ts — no usage_events table (grep, 2026-09-16)",
+        "src/app/api/parcels/lookup/route.ts:113-119 — the only record of a lookup is a log line; it increments nothing"
+      ]
+    },
+    "config": {
+      "answer": "none",
+      "why": "One tunable is implied and NOT yet registered: the window that decides what counts as a \"new\" nearby CoA ruling. It must become a logic variable rather than a literal in the route — it is exactly the kind of threshold Spec 126 P4 says is data, not code.",
+      "evidence": [
+        "docs/reference/logic-variables-registry.md — no tracked-lots entry"
+      ],
+      "logic_variables": [],
+      "retired": []
+    },
+    "sharing": {
+      "answer": "sole",
+      "why": "S-072 is its only consumer.",
+      "evidence": [
+        "mobile/src/hooks/useTrackedLots.ts:1-20"
+      ],
+      "surfaces": [
+        "mobile_tracked_lots"
+      ]
+    },
+    "a11y": {
+      "touch_target_min_px": "n/a",
+      "labels": "none",
+      "dark_mode": "none",
+      "reduced_motion": "none",
+      "i18n": "none",
+      "safe_area": "none"
+    },
+    "deviations": "none",
+    "limitations": [
+      {
+        "what": "The whole contract is unbuilt: no route file, no table, no migration. The client reads a fixture-backed stub, and the screen says so on its face.",
+        "measured": "src/app/api/parcels/ — no tracked/ directory; mobile/src/hooks/useTrackedLots.ts:97-116 returns a parsed fixture with isStub true.",
+        "check_id": "contract_parcels_tracked__derived_ruling_is_nullable"
+      }
+    ],
+    "interpretation": "none",
+    "notes": "Created by operator ruling 2026-09-16 as part of the tracked-lots feature module (F17). The table is DEFINED here rather than written as a migration because migrations are the Backend domain and a different committer; the full column list, the unique constraint, the index and the RLS class are in `inputs.tables[0].evidence` so the migration can be written without re-deciding anything.\n\nTHE DERIVED FIELD. Of the three figures the surface shows, two are real columns (`parcels.max_buildable_gfa_sqm`, `parcels.max_newbuild_coa_gfa_sqm`) and the third — \"new nearby CoA ruling\" — HAS NO COLUMN ANYWHERE. It is derivable (`coa_applications` carries `decision`, `decision_date` and `neighbourhood_id`, and the lookup route already joins CoA by neighbourhood) but nothing computes it. It is therefore declared nullable, and the client renders `null` as \"—\" rather than \"NO\". The window is an unregistered tunable (see `config`).\n\nNO REUSE OF THE LEAD-GEN SAVE PATH. `useSaveLead`, `admin_watchlist` and `/api/leads/save` are the lead-gen product’s machinery; OD5 forbids reaching for them here, which is why this is a new table and a new route rather than a second consumer of an existing one.",
+    "x-draft": {
+      "shard": "contracts",
+      "files": [],
+      "loc": 0,
+      "call_idiom": "hook",
+      "stores": [],
+      "measured_states": [
+        "not_built"
+      ],
+      "measured_gate": {
+        "session": "required",
+        "entitlement": "subscription_status",
+        "flag": "none",
+        "permission": "none"
+      }
+    },
+    "programme": {
+      "scope": "parcel_product",
+      "phase": "B2",
+      "feature": "F17",
+      "build_order": 1172,
+      "why": "The contract behind Tracked Lots: the user’s saved parcels and the way to remove one.",
+      "leakage": "none",
       "product_questions": "none",
       "review": {
         "status": "unreviewed"

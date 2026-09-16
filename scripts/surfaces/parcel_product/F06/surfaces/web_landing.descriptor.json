@@ -233,7 +233,16 @@
     "why": "Business requirement 5, the MaxBLD web front door on Vercel. It markets lead-gen today and is the surface the consumer web projection replaces — it is parcel-product scope by destination, not by current content.",
     "feature": "F06",
     "build_order": 1063,
-    "leakage": "none",
+    "leakage": [
+      {
+        "behaviour": "The MaxBLD web front door currently MARKETS LEAD GENERATION. Under OD5 the parcel product is its own product, so a scope-A surface selling the lead-gen app is a product-boundary leak, not just stale copy. Recorded as measured; the rewrite is a content change outside this pass.",
+        "evidence": [
+          "src/app/page.tsx"
+        ],
+        "owning_product": "lead_gen",
+        "disposition": "needs-ruling"
+      }
+    ],
     "product_questions": "none",
     "review": {
       "status": "unreviewed"

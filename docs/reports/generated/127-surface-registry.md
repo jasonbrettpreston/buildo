@@ -17,7 +17,7 @@ This is the **reviewable projection of the surface census** — the application 
 
 It is **not** a design document and it is **not** a plan. It is an inventory you can argue with. Each entry states what something is, who it is for, what it reads and writes, and what happens to it under the Spec 126 surface standard — so that the argument happens **here**, before anything is built, rather than in a code review six weeks later.
 
-There are **70 surfaces, 61 contracts and 6 jobs** in it today.
+There are **73 surfaces, 62 contracts and 6 jobs** in it today.
 
 ### 0.2 Why it exists
 
@@ -205,10 +205,10 @@ Converting the pilot moves its row here: the category answers stop reading `_una
 
 | Kind | Count |
 |---|---:|
-| SURFACE | 70 |
-| CONTRACT | 61 |
+| SURFACE | 73 |
+| CONTRACT | 62 |
 | JOB | 6 |
-| **Total** | **137** |
+| **Total** | **141** |
 
 ### 2.1 By archetype
 
@@ -219,33 +219,33 @@ Converting the pilot moves its row here: the category answers stop reading `_una
 | `DETAIL` | SURFACE | 6 | 0 | 0 | 6 |
 | `FORM` | SURFACE | 6 | 1 | 0 | 7 |
 | `GATE` | SURFACE | 9 | 0 | 0 | 9 |
-| `LIST` | SURFACE | 8 | 5 | 0 | 13 |
-| `MUTATION` | CONTRACT | 20 | 0 | 0 | 20 |
+| `LIST` | SURFACE | 10 | 5 | 0 | 15 |
+| `MUTATION` | CONTRACT | 20 | 1 | 0 | 21 |
 | `QUERY` | CONTRACT | 32 | 0 | 0 | 32 |
 | `REPORT` | SURFACE | 2 | 3 | 0 | 5 |
 | `SCHEDULED` | JOB | 6 | 0 | 0 | 6 |
 | `SEARCH` | SURFACE | 4 | 0 | 0 | 4 |
 | `SHELL` | SURFACE | 6 | 0 | 0 | 6 |
 | `SLOT` | SURFACE | 1 | 0 | 0 | 1 |
-| `STATIC` | SURFACE | 5 | 0 | 0 | 5 |
+| `STATIC` | SURFACE | 6 | 0 | 0 | 6 |
 | `WEBHOOK` | CONTRACT | 1 | 0 | 0 | 1 |
 | `WIZARD_STEP` | SURFACE | 9 | 0 | 0 | 9 |
 
 ### 2.2 Research progress
 
-**4 of 137 rows fully researched · 133 still open · 436 unresearched fields in total.**
+**10 of 141 rows fully researched · 131 still open · 433 unresearched fields in total.**
 
 Every open field is the literal string `UNRESEARCHED` in the census — never a blank and never a guess — so the number below is a count of real work, not an estimate.
 
 | Shard | Rows | Fully researched | Rows with an open field | Unresearched fields |
 |---|---:|---:|---:|---:|
-| `mobile-product.json` | 34 | 2 | 32 | 66 |
+| `mobile-product.json` | 37 | 7 | 30 | 63 |
 | `web-product.json` | 10 | 0 | 10 | 89 |
 | `admin-existing.json` | 15 | 0 | 15 | 74 |
 | `admin-new.json` | 11 | 2 | 9 | 17 |
-| `contracts.json` | 61 | 0 | 61 | 159 |
+| `contracts.json` | 62 | 1 | 61 | 159 |
 | `jobs.json` | 6 | 0 | 6 | 31 |
-| **total** | **137** | **4** | **133** | **436** |
+| **total** | **141** | **10** | **131** | **433** |
 
 **What is left, grouped by REASON.** Every remaining field is open for one of a small number of reasons, and they are not equally actionable — three are lookups a researcher can finish, and one is an escalation that needed a ruling.
 
@@ -255,17 +255,17 @@ Every open field is the literal string `UNRESEARCHED` in the census — never a 
 | **no lineage producer** | 25 | The table is absent from `docs/reference/data-lineage-map.md`, so no pipeline step declares it as a write. Either it is written by an API route or a migration seed (answer `none`), or a step writes it without declaring it — which is a pipeline defect, not a research gap. |
 | **no declared owner** | 15 | Nobody is recorded as owning it. This is an organisational answer, not a measurable one. |
 | **vocabulary escalation** | 105 | The closed menu lacked a value and the researcher escalated rather than inventing one — exactly the rule. **All are now ruled** and land as Spec 128 §6 `ASK-15` … `ASK-23`; the rows are re-answered on the next research pass. |
-| **archetype profile field, newly required** | 55 | ASK-22 made the archetype profiles REAL, so these fields became required AFTER the research pass ran. The field must now be present; it may hold the sentinel. Each is a short, well-defined lookup — the pagination idiom, the poll interval, the debounce, the resume key. |
+| **archetype profile field, newly required** | 52 | ASK-22 made the archetype profiles REAL, so these fields became required AFTER the research pass ran. The field must now be present; it may hold the sentinel. Each is a short, well-defined lookup — the pagination idiom, the poll interval, the debounce, the resume key. |
 | **measurement not yet made** | 23 | An ordinary lookup nobody has done yet — read the query, name the columns, cite the line. |
 | **other** | 171 | Fields at paths this grouping does not name: see the per-row badges. |
-| | **436** | |
+| | **433** | |
 
 ### 2.3 By status
 
 | Status | Count | Meaning |
 |---|---:|---|
-| exists | 126 | the code is in the tree today |
-| new | 11 | specified, not built |
+| exists | 129 | the code is in the tree today |
+| new | 12 | specified, not built |
 | generated | 0 | will be rendered from descriptors, not hand-written |
 
 ---
@@ -276,11 +276,11 @@ A reader opening this document sees 137 entries and cannot tell the parcel cost 
 
 | § | Scope | Rows | Researched | Tables reached | Governed by Spec 126? |
 |---|---|---:|---:|---:|---|
-| **A** | `parcel_product` | 6 | 2 (33%) | 6 | yes |
+| **A** | `parcel_product` | 10 | 8 (80%) | 7 | yes |
 | **B** | `parcel_admin` | 13 | 2 (15%) | 18 | yes |
 | **C** | `platform_shared` | 72 | 0 (0%) | 43 | yes |
 | **D** | `estate_other` | 46 | 0 (0%) | 40 | **no** — inventory + seam only (R-03) |
-| | **total** | **137** | **4** | | |
+| | **total** | **141** | **10** | | |
 
 **The pilot is [`S-001`](#s-001) `mobile_parcel_detail`** — The full story of one building lot, assembled for a homeowner or buyer. It is the one surface in the estate marked `programme.pilot: true`.
 
@@ -320,16 +320,20 @@ The path from a customer tapping a screen to the pipeline step that built what t
 
 One line per entry in scopes A, B and C, organised **scope → type → build order**. `build_order` is derived, not chosen: scope rank × 1000 + feature rank × 10 + kind rank, where the kind rank puts **tables before contracts before surfaces before admin** — it answers *"what must exist before this can be built"*. Follow an id to its detail in §3.
 
-**§A `parcel_product` (6)**
+**§A `parcel_product` (10)**
 
 | id | type | name | archetype | feature | build | researched | detail |
 |---|---|---|---|---|---:|---:|---|
-| [`S-002`](#s-002) | surface | `mobile_parcel_search` | `SEARCH` | `F01` address-lookup | 1013 | 94% | [detail](#s-002) |
-| [`S-004`](#s-004) | surface | `shell_parcel_tool_stack` | `SHELL` | `F01` address-lookup | 1013 | 97% | [detail](#s-004) |
+| [`S-073`](#s-073) | surface | `mobile_parcel_account` | `STATIC` | `F01` address-lookup | 1013 | 100% | [detail](#s-073) |
+| [`S-071`](#s-071) | surface | `mobile_parcel_disambiguation_map` | `LIST` | `F01` address-lookup | 1013 | 100% | [detail](#s-071) |
+| [`S-002`](#s-002) | surface | `mobile_parcel_search` | `SEARCH` | `F01` address-lookup | 1013 | 100% | [detail](#s-002) |
+| [`S-004`](#s-004) | surface | `shell_parcel_tool_stack` | `SHELL` | `F01` address-lookup | 1013 | 100% | [detail](#s-004) |
 | [`C-001`](#c-001) | contract | `contract_parcels_lookup` | `QUERY` | `F02` parcel-report | 1022 | 97% | [detail](#c-001) |
 | [`S-001`](#s-001) | surface | `mobile_parcel_detail` **(pilot)** | `REPORT` | `F02` parcel-report | 1023 | 100% | [detail](#s-001) |
 | [`S-003`](#s-003) | surface | `overlay_sponsor_slot` | `SLOT` | `F04` sponsor-placements | 1043 | 100% | [detail](#s-003) |
 | [`S-005`](#s-005) | surface | `web_landing` | `STATIC` | `F06` web-front-door | 1063 | 91% | [detail](#s-005) |
+| [`C-062`](#c-062) | contract | `contract_parcels_tracked` | `MUTATION` | `F17` tracked-lots | 1172 | 100% | [detail](#c-062) |
+| [`S-072`](#s-072) | surface | `mobile_tracked_lots` | `LIST` | `F17` tracked-lots | 1173 | 100% | [detail](#s-072) |
 
 **§B `parcel_admin` (13)**
 
@@ -487,7 +491,7 @@ Spec 125 §2 recommends building schemas **by feature, so a feature can be remov
 
 | Feature | Scope | Entries (linked, in build order) | Contracts | Tables reached | Removing it deletes |
 |---|---|---|---:|---:|---|
-| **F01** address-lookup | `parcel_product` | [`S-002`](#s-002) · [`S-004`](#s-004) | 0 | 3 | 2 descriptor(s), and would orphan no table — every table it touches is shared |
+| **F01** address-lookup | `parcel_product` | [`S-073`](#s-073) · [`S-071`](#s-071) · [`S-002`](#s-002) · [`S-004`](#s-004) | 0 | 3 | 4 descriptor(s), and would orphan no table — every table it touches is shared |
 | **F02** parcel-report | `parcel_product` | [`C-001`](#c-001) · [`S-001`](#s-001) | 1 | 6 | 2 descriptor(s), 1 contract(s), and would orphan no table — every table it touches is shared |
 | **F03** pdf-export | `parcel_product` | [`S-009`](#s-009) | 0 | 2 | 1 descriptor(s), and would orphan 1 table(s): `pdf_exports` |
 | **F04** sponsor-placements | `parcel_product` | [`S-003`](#s-003) · [`S-006`](#s-006) · [`S-013`](#s-013) · [`S-017`](#s-017) | 0 | 5 | 4 descriptor(s), and would orphan 3 table(s): `advertisers` · `placements` · `offers` |
@@ -503,6 +507,7 @@ Spec 125 §2 recommends building schemas **by feature, so a feature can be remov
 | **F14** navigation-shells | `platform_shared` | [`S-042`](#s-042) · [`S-045`](#s-045) · [`S-046`](#s-046) · [`S-049`](#s-049) | 0 | 3 | 4 descriptor(s), and would orphan no table — every table it touches is shared |
 | **F15** user-profile-settings | `platform_shared` | [`C-027`](#c-027) · [`C-034`](#c-034) · [`C-035`](#c-035) · [`C-036`](#c-036) · [`C-037`](#c-037) · [`S-036`](#s-036) | 5 | 3 | 6 descriptor(s), 5 contract(s), and would orphan no table — every table it touches is shared |
 | **F16** platform-admin | `platform_shared` | [`C-003`](#c-003) · [`C-004`](#c-004) · [`C-005`](#c-005) · [`C-008`](#c-008) · [`C-009`](#c-009) · [`C-010`](#c-010) · [`C-011`](#c-011) · [`C-012`](#c-012) · [`C-013`](#c-013) · [`C-014`](#c-014) · [`C-015`](#c-015) · [`C-016`](#c-016) · [`C-017`](#c-017) · [`C-018`](#c-018) · [`C-019`](#c-019) · [`C-028`](#c-028) · [`C-029`](#c-029) · [`C-033`](#c-033) · [`S-050`](#s-050) · [`S-018`](#s-018) · [`S-019`](#s-019) · [`S-020`](#s-020) · [`S-021`](#s-021) · [`S-023`](#s-023) · [`S-024`](#s-024) · [`S-025`](#s-025) · [`S-026`](#s-026) | 18 | 41 | 27 descriptor(s), 18 contract(s), and would orphan 11 table(s): `trade_configurations` · `trade_sqft_rates` · `data_quality_snapshots` · `pipeline_schedules` · `pg_stat_user_tables` · `information_schema.columns` · `pg_class` · `(dynamic) manifest.scripts[slug].telemetry_tables[0]` · `<dynamic: manifest telemetry_tables[0] allow-list>` · `pg_namespace` · `permit_type_classifications` |
+| **F17** tracked-lots | `parcel_product` | [`C-062`](#c-062) · [`S-072`](#s-072) | 1 | 3 | 2 descriptor(s), 1 contract(s), and would orphan 1 table(s): `user_tracked_lots` |
 | **F90** lead-generation | `estate_other` | [`C-040`](#c-040) · [`C-041`](#c-041) · [`C-042`](#c-042) · [`C-043`](#c-043) · [`C-046`](#c-046) · [`C-052`](#c-052) · [`C-053`](#c-053) · [`C-056`](#c-056) · [`C-057`](#c-057) · [`C-058`](#c-058) · [`S-061`](#s-061) · [`S-062`](#s-062) · [`S-065`](#s-065) · [`S-055`](#s-055) · [`S-057`](#s-057) | 10 | 31 | 15 descriptor(s), 10 contract(s), and would orphan 3 table(s): `pg_extension` · `supplier_trades` · `suppliers` |
 | **F91** flight-center | `estate_other` | [`C-054`](#c-054) · [`C-055`](#c-055) · [`S-059`](#s-059) · [`S-060`](#s-060) · [`S-054`](#s-054) · [`S-056`](#s-056) | 2 | 24 | 6 descriptor(s), 2 contract(s), and would orphan no table — every table it touches is shared |
 | **F92** permits-builders-entities | `estate_other` | [`C-039`](#c-039) · [`C-044`](#c-044) · [`C-045`](#c-045) · [`C-047`](#c-047) · [`C-048`](#c-048) · [`C-049`](#c-049) · [`C-050`](#c-050) · [`C-051`](#c-051) · [`C-059`](#c-059) · [`C-060`](#c-060) · [`C-061`](#c-061) · [`S-063`](#s-063) · [`S-064`](#s-064) · [`S-066`](#s-066) · [`S-067`](#s-067) · [`S-068`](#s-068) · [`S-069`](#s-069) · [`S-070`](#s-070) · [`S-058`](#s-058) | 11 | 20 | 19 descriptor(s), 11 contract(s), and would orphan 1 table(s): `entity_contacts` |
@@ -517,9 +522,10 @@ The misclassification sweep re-checked every scope A/B/C row against Spec 100 §
 | Entry | Behaviour | Owning product | Proposed | Evidence |
 |---|---|---|---|---|
 | [`S-001`](#s-001) `mobile_parcel_detail` | Gated by the GLOBAL `subscription_status`, which is the lead-gen subscription, rather than by a parcel-tool entitlement. A user paying for lead generation gets the parcel product free; a user who wanted only the parcel product cannot buy it. | `lead_gen` | `move-to-owner` | `src/app/api/parcels/lookup/route.ts:46-59` · `migrations/228_entitlements.sql:32-33` |
-| [`S-002`](#s-002) `mobile_parcel_search` | Reads the LEAD-FEED filter store to decide whether to show a "Toronto only" coverage note — `useFilterStore((s) => s.homeBaseLocation)`. "Home base" is a lead-generation concept: it is the radius centre the lead feed filters permits around, set during lead-gen onboarding. The file's own header asserts the opposite (`// Toronto hint (isInsideToronto is UX, not security — Spec 100 §2.9). NOT coupled to leads.`) while line 22 reads a lead-gen store. | `lead_gen` | `needs-ruling` | `mobile/app/(app)/parcel-tool/index.tsx:22` · `mobile/app/(app)/parcel-tool/index.tsx:13` · `mobile/app/(app)/parcel-tool/index.tsx:34` · `mobile/app/(app)/parcel-tool/index.tsx:5` |
 | [`S-043`](#s-043) `overlay_paywall` | Renders trial copy from `user_profiles.lead_views_count` — a lead-gen counter — on a paywall that also stands in front of the parcel product. The counter is structurally 0 (its only writer has no caller), so every trial user sees the zero-state copy regardless of which product they came from. | `lead_gen` | `needs-ruling` | `mobile/src/components/paywall/PaywallScreen.tsx:153` · `src/app/api/leads/view/route.ts:100-114` · `src/features/leads/api/useLeadView.ts:77` |
+| [`S-005`](#s-005) `web_landing` | The MaxBLD web front door currently MARKETS LEAD GENERATION. Under OD5 the parcel product is its own product, so a scope-A surface selling the lead-gen app is a product-boundary leak, not just stale copy. Recorded as measured; the rewrite is a content change outside this pass. | `lead_gen` | `needs-ruling` | `src/app/page.tsx` |
 | [`C-001`](#c-001) `contract_parcels_lookup` | Its entitlement check reads `entitlements` joined on `product = 'lead_gen'`, because `chk_entitlements_product` admits only `lead_gen` and `flight_center`. The parcel product has no key of its own in the live database — Spec 128 R-01 rules that it should, and the CHECK widening has not landed. | `lead_gen` | `move-to-owner` | `migrations/228_entitlements.sql:32-33` · `src/lib/entitlements/index.ts:39` · `src/lib/entitlements/index.ts:42-43` |
+| [`C-001`](#c-001) `contract_parcels_lookup` | The parcel contract is built out of LEAD-GEN-NAMESPACED shared helpers: its response envelope and every error mapping come from `src/features/leads/api/envelope.ts` and `src/features/leads/api/error-mapping.ts`. Nothing is wrong with the behaviour — they are generic helpers — but a scope-A contract importing from `src/features/leads/**` means the parcel product cannot be extracted without dragging the lead-gen feature directory with it. The fix is a move to a shared module, not a rewrite. | `lead_gen` | `move-to-owner` | `src/app/api/parcels/lookup/route.ts:23 — import { ok } from '@/features/leads/api/envelope'` · `src/app/api/parcels/lookup/route.ts:24-30 — the error-mapping imports` |
 
 ### 2.9 Product questions for the operator
 
@@ -533,17 +539,17 @@ Where the **measured** behaviour contradicts what a MaxBLD user would reasonably
 - **The spec says:** By design, and the design is what makes it the lowest-risk pilot. The question is whether the shipped product should stay that way once the standard is proven.
 - **Evidence:** `docs/specs/03-mobile/100_mobile_parcel_cost_tool.md:14` · `mobile/app/(app)/parcel-tool/[parcelId].tsx:5`
 
-**Q2 — [`S-002`](#s-002) `mobile_parcel_search`.** Should searching a specific street address open that lot directly, rather than returning a list of up to ten candidates to choose from? A person who types their own address expects their own property, not a disambiguation list.
+**Q2 — [`S-002`](#s-002) `mobile_parcel_search`.** MaxBLD runs on the lead-gen entitlement. `guards.entitlement.product` is `lead_gen` because `chk_entitlements_product` (migration 228) admits only `lead_gen` and `flight_center` — so a user pays for lead generation and is thereby granted the parcel tool. Under OD5, does MaxBLD get its own `parcel_tool` entitlement product, and when?
 
-- **Measured:** The contract returns `candidates` (≤10) with `parcel: null` whenever the address is ambiguous, and the screen renders that list. An exact match does open directly — but address ambiguity in the corpus is common enough that the list is the ordinary path, not the exception.
-- **The spec says:** Spec 100 §2 item 6 DESIGNS this: "Ambiguity → 200 with `candidates` (≤10) and `parcel: null` … the shape drives the client state machine." So the code matches its spec exactly. The question is whether the SPEC matches the product — e.g. auto-open on a single high-confidence candidate, or rank and pre-select.
-- **Evidence:** `docs/specs/03-mobile/100_mobile_parcel_cost_tool.md:42` · `docs/specs/03-mobile/100_mobile_parcel_cost_tool.md:63` · `mobile/app/(app)/parcel-tool/index.tsx`
+- **Measured:** src/app/api/parcels/lookup/route.ts:47-60 gates on the GLOBAL subscription_status; src/lib/entitlements/index.ts:68 joins `entitlements` on product = 'lead_gen'. There is no parcel-product entitlement row anywhere, and the CHECK constraint would reject one.
+- **The spec says:** Spec 116 OD5 folds the shipped parcel tool into lead_gen. The 2026-09-16 ruling (a) that MaxBLD is its own product puts that fold in direct tension with the live constraint. This is a migration plus a route change in the Backend domain — not fixable from the mobile app.
+- **Evidence:** `src/app/api/parcels/lookup/route.ts:47-60` · `src/lib/entitlements/index.ts:68` · `migrations/228 — chk_entitlements_product`
 
-**Q3 — [`S-002`](#s-002) `mobile_parcel_search`.** Should a parcel-tool user see a "home base" concept at all? The coverage note only appears if they completed lead-gen onboarding and set a radius centre — so a parcel-only user never sees the Toronto-coverage warning that exists to help them.
+**Q3 — [`S-002`](#s-002) `mobile_parcel_search`.** The open SEARCH question — "open the matching lot directly rather than a candidate list" — is RULED and implemented, but two of its five branches are unreachable. Does the API change that makes multi_parcel and unlinked expressible get scheduled now, or does the map surface wait?
 
-- **Measured:** The note is rendered only when `homeBaseLocation` is non-null AND outside Toronto. A user with no home base set sees nothing.
-- **The spec says:** Spec 100 §2.9 covers the Toronto-only scoping as UX rather than security; it does not say the hint should depend on a lead-gen field.
-- **Evidence:** `mobile/app/(app)/parcel-tool/index.tsx:22` · `mobile/app/(app)/parcel-tool/index.tsx:34` · `mobile/app/(app)/parcel-tool/index.tsx:75-77`
+- **Measured:** unique, text_candidates and intersection fire today. multi_parcel and unlinked cannot be derived from the current response and are reached only through the server-value-wins path.
+- **The spec says:** Spec 100 §2 item 6 designs the candidate list; it does not model an address-point fan-out or an unlinked address as distinct outcomes.
+- **Evidence:** `mobile/src/lib/parcelSearchMatch.ts:98 — export function deriveMatchType` · `src/app/api/admin/parcels/lookup/types.ts:123 — matchType enum` · `src/lib/admin/parcel-lookup.ts:161-217 — resolveAddress`
 
 **Q4 — [`S-043`](#s-043) `overlay_paywall`.** Should the trial paywall tell a parcel-tool user how many LEADS they have viewed? The copy is lead-gen framing on a gate that also stands in front of the parcel product.
 
@@ -561,9 +567,153 @@ Where the **measured** behaviour contradicts what a MaxBLD user would reasonably
 
 The estate shares one repository; it does not share one programme. Sections A–C are what **Spec 126 governs**. Section D is the other product — inventoried so a shared contract or an orphan is visible, and deliberately rendered in one line each rather than in full (Spec 126 §2; the fence is Spec 128 R-03).
 
-### §A `parcel_product` — the MaxBLD parcel cost tool (6)
+### §A `parcel_product` — the MaxBLD parcel cost tool (10)
 
 **This is the programme.** The surfaces, contracts and jobs a customer of the parcel tool touches, plus the five business requirements that hang off them: the metered lookup, the PDF sent to a client, the ad placements, and the Vercel web front door. Governed by Spec 100 and Spec 126; batched first by Spec 127 §4.4.
+
+<a id="s-073"></a>
+
+###### `S-073` `mobile_parcel_account`
+
+**Programme.** `S-073` · scope `parcel_product` · feature `F01` · build order 1013 · batch `B2` · review `unreviewed` — A tab of the MaxBLD product shelf, created by operator ruling 2026-09-16 (c) so all three tabs resolve to a real route.
+
+**What it is.** The Account tab of the MaxBLD product shell. It is where MaxBLD account settings will live. There is nothing to manage yet, and it says so rather than showing an empty form.
+
+**What it reads and writes.** It reaches **no API contract** and reads no table — there is nothing behind it yet, and it invents nothing. It holds no client store. It emits **no analytics event**, so nothing it does is currently countable.
+
+**Under Spec 126.** **REBUILD** — it is a placeholder for a capability the parcel product does not have yet, so there is nothing to re-project until its contract exists. It renders through the STATIC renderer. It owns no component of its own, so its `owns.components[]` is an empty array.
+
+**kind** SURFACE · **archetype** `STATIC` · **platforms** `mobile` · **status** exists · **lines** 53 · **shard** `mobile-product` · **researched** ✅ every field
+
+**Gate.** auth class **entitled** (It inherits the tab gate and the parcel-tool Stack; the tab tree does not mount unless subscription_status is trial/active/past_due/admin_managed.) · session **required** · entitlement subscription_status · flag none · device permission none
+
+**Calls.** — — idiom: none
+
+**Components owned.** —
+
+**Emits.** —
+
+**Render states seen in code.** `empty_placeholder`
+
+**Data lineage.**
+
+_No table is reached by this entry — every value it shows arrives through a contract, or it shows no server data at all._
+
+**Evidence.**
+
+| Claim | Citation (`file:line`, `migration:line`, or a spec §anchor) |
+|---|---|
+| `files` | `mobile/app/(app)/parcel-tool/account.tsx:1` |
+| `contracts` | `mobile/app/(app)/parcel-tool/account.tsx:1-53 — reaches no contract` |
+| `tables` | `mobile/app/(app)/parcel-tool/account.tsx:1-53 — reaches no table` |
+| `gate` | `mobile/app/(app)/_layout.tsx:236-265` · `mobile/app/(app)/parcel-tool/_layout.tsx:122-128` |
+| `states` | `mobile/app/(app)/parcel-tool/account.tsx:1-53 — one unconditional render` |
+| `emits` | `mobile/app/(app)/parcel-tool/account.tsx:1-53 — no track() call` |
+| `spec_refs` | `docs/specs/03-mobile/100_mobile_parcel_cost_tool.md §4` · `docs/specs/00-architecture/116_multi_product_architecture.md (OD5)` · `docs/specs/00-architecture/117_maxbld_brand.md §6.1` |
+
+<details><summary>21 category answers — 21 answered, 0 unresearched</summary>
+
+| # | Category | Answer (closed vocabulary) | Why / evidence |
+|---:|---|---|---|
+| 1 | `identity` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 2 | `inputs` | `none` | It takes nothing — no route param, no hook, no store. — `mobile/app/(app)/parcel-tool/account.tsx:1-53` |
+| 3 | `outputs` | `none` | A placeholder writes nothing. — `mobile/app/(app)/parcel-tool/account.tsx:1-53` |
+| 4 | `state` | `none` | No store, no local state. — `mobile/app/(app)/parcel-tool/account.tsx:1-53` |
+| 5 | `staleness` | `none` | It renders no server data. — `mobile/app/(app)/parcel-tool/account.tsx:1-53` |
+| 6 | `guards` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 7 | `render` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 8 | `checks` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 9 | `invariants` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
+| 10 | `plausibility` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
+| 11 | `states` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 12 | `errors` | `none` | No async work, so no failure path. — `mobile/app/(app)/parcel-tool/account.tsx:1-53` |
+| 13 | `emits` | `none` | Nothing to emit yet. — `mobile/app/(app)/parcel-tool/account.tsx:1-53` |
+| 14 | `offers` | `none` | No sponsored placement is rendered. — `mobile/app/(app)/parcel-tool/account.tsx:1-53` |
+| 15 | `metering` | `none` | Nothing here is counted. The Spec 126 §7 usage ledger table does not exist (grep for usage_events in the introspected drizzle schema returns 0 hits), and the parcel product has no quota, credit or view counter of its own — no metering column, no ledger row, no consumption event. Measured 2026-09-16. — `src/lib/db/generated/schema.ts — no usage_events table (grep, 2026-09-16)`, `src/app/api/parcels/lookup/route.ts:113-119 — the only record of a lookup is a log line; it increments nothing` |
+| 16 | `config` | `none` | No tunable; it reserves the shelf height and nothing else. — `mobile/src/constants/parcelSearch.ts:86 — PARCEL_SHELF_HEIGHT` |
+| 17 | `sharing` | `none` | It renders no contract. — `mobile/app/(app)/parcel-tool/account.tsx:1-53` |
+| 18 | `a11y` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 19 | `deviations` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 20 | `limitations` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 21 | `interpretation` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
+
+</details>
+
+**Links.** schema: [`scripts/surfaces/_schema/surface.schema.json`](../../../scripts/surfaces/_schema/surface.schema.json) · owning spec: [`docs/specs/03-mobile/100_mobile_parcel_cost_tool.md`](../../../docs/specs/03-mobile/100_mobile_parcel_cost_tool.md) · files: `mobile/app/(app)/parcel-tool/account.tsx`
+
+> ⚠️ The census was checked for something to reuse: S-036 `mobile_settings` (mobile/app/(app)/settings.tsx) is the only account-shaped mobile surface, and it is a LEAD-GEN screen — it sits in the five-tab shell and its content is trade selection, lead notification preferences and the lead-gen subscription. Reusing it would import lead-gen concepts straight into scope A, which Spec 116 OD5 — MaxBLD is its own product; nothing in scope `parcel_product` may reference a lead-gen concept forbids, so MaxBLD gets its own Account surface. It deliberately shows NOTHING about the account yet: the entitlement this product actually runs on today is the lead-gen one (see S-002 `programme.product_questions[0]`), and rendering a subscription state here would be showing the user a lead-gen fact about themselves.
+
+<a id="s-071"></a>
+
+###### `S-071` `mobile_parcel_disambiguation_map`
+
+**Programme.** `S-071` · scope `parcel_product` · feature `F01` · build order 1013 · batch `B2` · review `unreviewed` — The map half of the parcel tool’s entry flow — same Spec 100 feature, same address lookup, reached when the address does not resolve to exactly one lot.
+
+**What it is.** The map you land on when an address does not resolve to exactly one lot. Three ways to get here: the address is linked to several lots (a corner, severed or ranged property), the address exists but no lot is linked to it, or what was typed is an intersection rather than an address. In each case it is supposed to draw the lots on a map and let you tap the one you meant, and say plainly when nothing is linked rather than quietly picking the nearest polygon. Today it is a STUB: the route, the navigation and the three explanations are real, and the map is not drawn yet.
+
+**What it reads and writes.** It reads nothing from the database directly, and today it reads no contract either — it renders from its two route parameters. The map it is specified to draw needs parcel GEOMETRY, which is exactly what `/api/parcels/lookup` does not return: the consumer parcel payload is a `.strict()` whitelist of cost menu, areas and neighbourhood, with no polygon, no centroid and no address-point id. That gap is the reason this is a stub and not a screen. It emits **no analytics event**, so nothing it does is currently countable.
+
+**Under Spec 126.** **REBUILD** — it is specified against a contract that does not exist yet, so there is nothing to re-project until the geometry is served. It renders through the LIST renderer with `render.projection: map`: a map is a projection of a collection, not an archetype, which is the same call already made for `mobile_map`. It owns no component of its own, so its `owns.components[]` is an empty array — a legal answer, written down.
+
+**kind** SURFACE · **archetype** `LIST` · **platforms** `mobile` · **status** exists · **lines** 82 · **shard** `mobile-product` · **researched** ✅ every field
+
+**Gate.** auth class **entitled** (It inherits the tab gate and the parcel-tool Stack: shell_app_tabs will not mount the tab tree at all unless subscription_status is trial/active/past_due/admin_managed.) · session **required** · entitlement subscription_status · flag none · device permission none
+
+**Calls.** — — idiom: none
+
+**Components owned.** —
+
+**Emits.** —
+
+**Render states seen in code.** `multi_parcel_stub` · `unlinked_stub` · `intersection_stub` · `unknown_kind_stub`
+
+**Data lineage.**
+
+_No table is reached by this entry — every value it shows arrives through a contract, or it shows no server data at all._
+
+**Evidence.**
+
+| Claim | Citation (`file:line`, `migration:line`, or a spec §anchor) |
+|---|---|
+| `files` | `mobile/app/(app)/parcel-tool/disambiguate.tsx:1` |
+| `contracts` | `mobile/app/(app)/parcel-tool/disambiguate.tsx:1-82 — reaches no contract; the geometry it needs is not served` |
+| `tables` | `mobile/app/(app)/parcel-tool/disambiguate.tsx:1-82 — reaches no table` |
+| `gate` | `mobile/app/(app)/_layout.tsx:236-265` · `mobile/app/(app)/parcel-tool/_layout.tsx:15-19` |
+| `states` | `mobile/app/(app)/parcel-tool/disambiguate.tsx:34 — const COPY: Record<ParcelMatchType, string>` · `mobile/app/(app)/parcel-tool/disambiguate.tsx:64 — testID parcel-disambiguate-stub` |
+| `emits` | `mobile/app/(app)/parcel-tool/disambiguate.tsx:1-82 — no track() call` |
+| `spec_refs` | `docs/specs/03-mobile/100_mobile_parcel_cost_tool.md §2.6` · `docs/specs/03-mobile/100_mobile_parcel_cost_tool.md §4` · `docs/specs/02-web-admin/126_maxbld_surface_standard.md §3.1` |
+
+<details><summary>21 category answers — 21 answered, 0 unresearched</summary>
+
+| # | Category | Answer (closed vocabulary) | Why / evidence |
+|---:|---|---|---|
+| 1 | `identity` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 2 | `inputs` | `none` | Two route params, `q` and `kind`, pushed by the SEARCH surface. No hook, no query, no table. The contract it will need does not exist yet. — `mobile/app/(app)/parcel-tool/disambiguate.tsx:44 — useLocalSearchParams<{ q, kind }>`, `mobile/app/(app)/parcel-tool/disambiguate.tsx:47 — const matchType = isParcelMatchType(kind) ? kind : null`, `mobile/src/lib/parcelSearchMatch.ts:136-152 — export function parcelSearchRoute` |
+| 3 | `outputs` | `none` | A disambiguation view writes nothing; the only action it will have is choosing a lot to open. — `mobile/app/(app)/parcel-tool/disambiguate.tsx:1-82` |
+| 4 | `state` | `none` | No store and no local state — everything it renders comes from the two route params. — `mobile/app/(app)/parcel-tool/disambiguate.tsx:44-47 — the two route params are the whole of its state` |
+| 5 | `staleness` | `none` | It renders no server data yet. — `mobile/app/(app)/parcel-tool/disambiguate.tsx:1-82` |
+| 6 | `guards` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 7 | `render` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 8 | `checks` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 9 | `invariants` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
+| 10 | `plausibility` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
+| 11 | `states` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 12 | `errors` | `none` | No async work in the stub, so no failure path yet. — `mobile/app/(app)/parcel-tool/disambiguate.tsx:1-82` |
+| 13 | `emits` | `none` | Nothing to emit yet. — `mobile/app/(app)/parcel-tool/disambiguate.tsx:1-82` |
+| 14 | `offers` | `none` | No sponsored placement is rendered. — `mobile/app/(app)/parcel-tool/disambiguate.tsx:1-82` |
+| 15 | `metering` | `none` | Nothing here is counted: the Spec 126 §7 usage ledger table does not exist and this surface reaches no route. — `src/lib/db/generated/schema.ts — no usage_events table (grep, 2026-09-15)`, `mobile/app/(app)/parcel-tool/disambiguate.tsx:1-82` |
+| 16 | `config` | `none` | The stub has no tunable. The map it will become inherits the SEARCH candidate cap from S-002. — `mobile/app/(app)/parcel-tool/disambiguate.tsx:1-82`, `mobile/src/constants/parcelSearch.ts:33 — SEARCH_CANDIDATE_LIMIT` |
+| 17 | `sharing` | `none` | It renders no contract today. — `mobile/app/(app)/parcel-tool/disambiguate.tsx:1-82` |
+| 18 | `a11y` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 19 | `deviations` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 20 | `limitations` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 21 | `interpretation` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
+
+</details>
+
+**Links.** schema: [`scripts/surfaces/_schema/surface.schema.json`](../../../scripts/surfaces/_schema/surface.schema.json) · owning spec: [`docs/specs/03-mobile/100_mobile_parcel_cost_tool.md`](../../../docs/specs/03-mobile/100_mobile_parcel_cost_tool.md) · files: `mobile/app/(app)/parcel-tool/disambiguate.tsx`
+
+> ⚠️ Created by operator ruling 2026-09-16 (match TYPE, never count), which separated the map disambiguation from the SEARCH surface on the grounds that it reads parcel geometry and S-002 does not. Archetype is LIST, not a new "MAP" archetype, because Spec 126 §3.1 defines a map as a `render.projection` — the same call already made for `mobile_map`. This is the next surface to build; it is blocked on the API change recorded in S-002’s limitations.
 
 <a id="s-002"></a>
 
@@ -571,17 +721,15 @@ The estate shares one repository; it does not share one programme. Sections A–
 
 **Programme.** `S-002` · scope `parcel_product` · feature `F01` · build order 1013 · batch `B2` · review `unreviewed` — The parcel tool's entry screen, `mobile/app/(app)/parcel-tool/index.tsx` — the same Spec 100 feature and the same contract, reached by the `q` path.
 
-**⚠️ Cross-product leakage (1).** Reads the LEAD-FEED filter store to decide whether to show a "Toronto only" coverage note — `useFilterStore((s) => s.homeBaseLocation)`. "Home base" is a lead-generation concept: it is the radius centre the lead feed filters permits around, set during lead-gen onboarding. The file's own header asserts the opposite (`// Toronto hint (isInsideToronto is UX, not security — Spec 100 §2.9). NOT coupled to leads.`) while line 22 reads a lead-gen store. → `needs-ruling` (`mobile/app/(app)/parcel-tool/index.tsx:22`, `mobile/app/(app)/parcel-tool/index.tsx:13`, `mobile/app/(app)/parcel-tool/index.tsx:34`, `mobile/app/(app)/parcel-tool/index.tsx:5`)
+**❓ Product question(s) (2).** MaxBLD runs on the lead-gen entitlement. `guards.entitlement.product` is `lead_gen` because `chk_entitlements_product` (migration 228) admits only `lead_gen` and `flight_center` — so a user pays for lead generation and is thereby granted the parcel tool. Under OD5, does MaxBLD get its own `parcel_tool` entitlement product, and when? · The open SEARCH question — "open the matching lot directly rather than a candidate list" — is RULED and implemented, but two of its five branches are unreachable. Does the API change that makes multi_parcel and unlinked expressible get scheduled now, or does the map surface wait? — see §2.9.
 
-**❓ Product question(s) (2).** Should searching a specific street address open that lot directly, rather than returning a list of up to ten candidates to choose from? A person who types their own address expects their own property, not a disambiguation list. · Should a parcel-tool user see a "home base" concept at all? The coverage note only appears if they completed lead-gen onboarding and set a radius centre — so a parcel-only user never sees the Toronto-coverage warning that exists to help them. — see §2.9.
+**What it is.** A search box where someone types a Toronto street address and gets back the lot. Typing pauses briefly before searching so exploratory typing does not hammer the server, and at least three characters are required. Lots are only available in Toronto: an address in another municipality is refused on the spot, before any request is sent, and told so plainly. What happens after that is decided by the MATCH TYPE, never by how many rows came back: one lot opens straight away; several text matches show a short list with the differing part of each address highlighted, and past ten it asks for a house number instead; an address linked to several lots, an address with no lot, and an intersection all hand off to the map surface. Being rate-limited, being out of subscription, and finding nothing are three different things on screen, and it says which one happened.
 
-**What it is.** A search box where someone types a Toronto street address and gets back matching lots to open. Typing pauses briefly before searching so exploratory typing does not hammer the server, and at least three characters are required. If the user's saved home base is outside Toronto they see a gentle note that coverage is Toronto-only, and if they search too fast they are told how many seconds to wait.
+**What it reads and writes.** It reads nothing from the database directly. Every value arrives through one contract: `/api/parcels/lookup`. Behind that contract, the data comes from `address_points`, `parcel_address_points` and `parcels` — the lot corpus — plus `entitlements` for the access check. It holds no client store at all: the query text and its debounce live in component state, and the Toronto-only rule is computed from the typed address. It emits **no analytics event**, so nothing it does is currently countable.
 
-**What it reads and writes.** It reads nothing from the database directly. Every value arrives through one contract: `/api/parcels/lookup`. Behind that contract, the data comes from `address_points`, `coa_applications`, `entitlements`, `parcel_address_points`, `parcels` and `user_profiles`. It also holds client-side state in `filterStore`, which is the part a server-driven projection has to absorb or justify. It emits **no analytics event**, so nothing it does is currently countable.
+**Under Spec 126.** **RE-PROJECT** — it no longer holds ANY Layer-3 state: the cross-product filter-store read is deleted (operator ruling 2026-09-16 (b), recorded in notes), so the only client state left is the query text and its debounce, which a server-driven projection absorbs without an argument. That is a downgrade from REBUILD, and it is the direct result of removing that read. It renders through the SEARCH renderer, whose two declared tunables are closed rather than unresearched: `config.debounce_ms` 400 and `config.min_query_len` 3, both externalised in `mobile/src/constants/parcelSearch.ts`. It reads by reference: `/api/parcels/lookup`. It owns no component of its own, so its `owns.components[]` is an empty array — a legal answer, written down. The branch logic and the Toronto-only rule live in `mobile/src/lib/parcelSearchMatch.ts`, a pure module.
 
-**Under Spec 126.** **REBUILD** — it holds Layer-3 state (`filterStore`), so a client decision has to be re-homed on the server before the projection can be honest. It renders through the SEARCH renderer (declared debounce, minimum query length, rate bucket and candidate shape), reading by reference: `/api/parcels/lookup`. It owns no component of its own, so its `owns.components[]` is an empty array — a legal answer, written down.
-
-**kind** SURFACE · **archetype** `SEARCH` · **platforms** `mobile` · **status** exists · **lines** 115 · **shard** `mobile-product` · **unresearched fields: 2**
+**kind** SURFACE · **archetype** `SEARCH` · **platforms** `mobile` · **status** exists · **lines** 714 · **shard** `mobile-product` · **researched** ✅ every field
 
 **Gate.** auth class **entitled** (The route resolves the user context and then hard-403s unless subscription_status is one of trial/active/past_due/admin_managed — a signed-in but lapsed user cannot reach the search at all.) · session **required** · entitlement subscription_status · flag none · device permission none
 
@@ -591,7 +739,7 @@ The estate shares one repository; it does not share one programme. Sections A–
 
 **Emits.** —
 
-**Render states seen in code.** `prompt_type_more` · `fetching` · `rate_limited` · `results` · `empty_no_match`
+**Render states seen in code.** `prompt_type_more` · `fetching` · `outside_toronto` · `rate_limited` · `entitlement_refused` · `unexpected_error` · `schema_drift` · `candidates` · `empty_no_match` · `navigating_unique` · `navigating_map`
 
 **Data lineage.**
 
@@ -605,12 +753,12 @@ The estate shares one repository; it does not share one programme. Sections A–
 
 | Claim | Citation (`file:line`, `migration:line`, or a spec §anchor) |
 |---|---|
-| `files` | `mobile/app/(app)/parcel-tool/index.tsx:1` |
-| `contracts` | `mobile/src/hooks/useParcelLookup.ts:34` · `mobile/app/(app)/parcel-tool/index.tsx:30` |
+| `files` | `mobile/app/(app)/parcel-tool/index.tsx:1` · `mobile/src/lib/parcelSearchMatch.ts:1 — the match-type branch, extracted so it is testable without a renderer` · `mobile/src/constants/parcelSearch.ts:1 — config.debounce_ms / config.min_query_len / the candidate cap` |
+| `contracts` | `mobile/src/hooks/useParcelLookup.ts:34 — fetchWithAuth(`/api/parcels/lookup?${qs}`)` · `mobile/app/(app)/parcel-tool/index.tsx:76 — useParcelSearch(debounced)` |
 | `tables` | `src/lib/admin/parcel-lookup.ts:196-199` · `src/lib/admin/parcel-lookup.ts:169` |
 | `gate` | `src/app/api/parcels/lookup/route.ts:47-60` · `src/app/api/parcels/lookup/route.ts:71-76` · `src/lib/auth/route-guard.ts:120-132` |
-| `states` | `mobile/app/(app)/parcel-tool/index.tsx:47-48` · `mobile/app/(app)/parcel-tool/index.tsx:81-111` |
-| `emits` | `mobile/app/(app)/parcel-tool/index.tsx:1-115 — no track() call in the file` · `src/app/api/parcels/lookup/route.ts:113-119` |
+| `states` | `mobile/app/(app)/parcel-tool/index.tsx:84-92 — const outcome = deriveMatchType(...) / const candidates` · `mobile/app/(app)/parcel-tool/index.tsx:127-134 — retryAfter / isEntitlementRefusal / isSchemaDrift / isUnexpectedError` · `mobile/src/lib/parcelSearchMatch.ts:98 — export function deriveMatchType` |
+| `emits` | `mobile/app/(app)/parcel-tool/index.tsx:1-312 — no track() call in the file` · `src/app/api/parcels/lookup/route.ts:113-119` |
 | `spec_refs` | `docs/specs/03-mobile/100_mobile_parcel_cost_tool.md §4` · `docs/specs/03-mobile/100_mobile_parcel_cost_tool.md §2.6` · `docs/specs/03-mobile/100_mobile_parcel_cost_tool.md §2.8` · `docs/specs/03-mobile/100_mobile_parcel_cost_tool.md §2.9` |
 
 <details><summary>21 category answers — 21 answered, 0 unresearched</summary>
@@ -618,21 +766,21 @@ The estate shares one repository; it does not share one programme. Sections A–
 | # | Category | Answer (closed vocabulary) | Why / evidence |
 |---:|---|---|---|
 | 1 | `identity` | `UNRESEARCHED` | **UNRESEARCHED** |
-| 2 | `inputs` | `contract` | Typing produces one debounced GET /api/parcels/lookup?q=; the only local input is the stored home-base coordinate, read purely to decide whether to show the Toronto-coverage hint. — `mobile/src/hooks/useParcelLookup.ts:59-69`, `mobile/app/(app)/parcel-tool/index.tsx:22-34` |
-| 3 | `outputs` | `none` | A SEARCH surface here writes nothing: the only action is router.push to the detail route with the chosen parcelId. — `mobile/app/(app)/parcel-tool/index.tsx:42-44` |
-| 4 | `state` | `zustand` | It reads filterStore.homeBaseLocation (MMKV-persisted) for the coverage hint; the query text and its debounce live in component useState, which the state vocabulary has no value for. — `mobile/app/(app)/parcel-tool/index.tsx:19-28`, `mobile/src/store/filterStore.ts:121-122` |
-| 5 | `staleness` | `query_cache` | useParcelSearch declares a 60-second staleTime; the 400ms debounce upstream is what actually protects the 60/min bucket, not the cache. — `mobile/src/hooks/useParcelLookup.ts:62-67`, `mobile/app/(app)/parcel-tool/index.tsx:25-28` |
+| 2 | `inputs` | `contract` | Typing produces one debounced GET /api/parcels/lookup?q=. There is no local input at all: the owner’s location is irrelevant to MaxBLD. The query STRING is read twice by pure helpers — once by `isOutsideToronto` for the Toronto-only rule, once by `isIntersectionQuery`, because the server has no intersection parsing at all. — `mobile/src/hooks/useParcelLookup.ts:59-69 — export function useParcelSearch`, `mobile/app/(app)/parcel-tool/index.tsx:77-78 — isOutsideToronto gates the hook; a refused query is never sent`, `mobile/src/lib/parcelSearchMatch.ts:91 — export function isOutsideToronto`, `mobile/src/lib/parcelSearchMatch.ts:85 — export function isIntersectionQuery` |
+| 3 | `outputs` | `none` | A SEARCH surface here writes nothing: the only action is router.push to the detail route with the chosen parcelId. — `mobile/app/(app)/parcel-tool/index.tsx:94-101 — const goToParcel = useCallback` |
+| 4 | `state` | `none` | The lead-gen filter-store read is deleted. The query text and its debounce live in component useState, which the state vocabulary has no value for, and nothing else is held. — `mobile/app/(app)/parcel-tool/index.tsx:64-65 — const [input, setInput] / const [debounced, setDebounced]`, `mobile/app/(app)/parcel-tool/index.tsx — no useFilterStore import remains (grep)` |
+| 5 | `staleness` | `query_cache` | useParcelSearch declares a 60-second staleTime; the 400ms debounce upstream is what actually protects the 60/min bucket, not the cache. — `mobile/src/hooks/useParcelLookup.ts:62-67 — staleTime: 60_000`, `mobile/app/(app)/parcel-tool/index.tsx:70-74 — the SEARCH_DEBOUNCE_MS useEffect` |
 | 6 | `guards` | `UNRESEARCHED` | **UNRESEARCHED** |
 | 7 | `render` | `UNRESEARCHED` | **UNRESEARCHED** |
 | 8 | `checks` | `UNRESEARCHED` | **UNRESEARCHED** |
 | 9 | `invariants` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
 | 10 | `plausibility` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
 | 11 | `states` | `UNRESEARCHED` | **UNRESEARCHED** |
-| 12 | `errors` | `inline` | The only rendered error is the rate-limit line; every other failure leaves `results` empty, so a 403 or a 500 is shown to the user as "No parcel found for that address." — `mobile/app/(app)/parcel-tool/index.tsx:46-48`, `mobile/app/(app)/parcel-tool/index.tsx:101-105` |
+| 12 | `errors` | `inline` | Every failure class has its OWN rendered line, and none of them borrows the miss copy. The 403 entitlement refusal is no longer presented as "No parcel found for that address." — presenting a subscription refusal as a data miss was this surface’s own recorded limitation, and it is closed. The Toronto-only refusal is likewise its own state and is decided before the network. NOTE: the Toronto-only refusal is NOT in `errors.classes[]` — that vocabulary is closed to HTTP-ish classes (400/401/403/429/500/404/schema_drift/offline) and this refusal never reaches the network. Nor does the closed `states[]` vocabulary have a value for it. It is carried by the blocking `parcelsearch_toronto_only` check and its testID instead. Both gaps are reported to the operator rather than papered over with an invented enum value. — `mobile/app/(app)/parcel-tool/index.tsx:127-134 — the four error classifications`, `mobile/app/(app)/parcel-tool/index.tsx:201 — testID parcel-search-outside-toronto`, `mobile/app/(app)/parcel-tool/index.tsx:214 — testID parcel-search-ratelimit`, `mobile/app/(app)/parcel-tool/index.tsx:222 — testID parcel-search-entitlement`, `mobile/app/(app)/parcel-tool/index.tsx:234 — testID parcel-search-error` |
 | 13 | `emits` | `none` | The screen emits no PostHog event; the only record of a search is the server-side logInfo line, which deliberately omits the query text. — `mobile/app/(app)/parcel-tool/index.tsx:1-115`, `src/app/api/parcels/lookup/route.ts:113-119` |
 | 14 | `offers` | `none` | No sponsored placement is rendered: the only slot component in the Expo tree is SponsorSlot, and it returns null unless EXPO_PUBLIC_PARCEL_SPONSORS=1. — `mobile/src/components/parcel/SponsorSlot.tsx:16-20` |
-| 15 | `metering` | `none` | Nothing here is counted: the Spec 126 §7 usage ledger table does not exist (grep for usage_events in the introspected drizzle schema returns 0 hits), and the only quota-shaped counter, user_profiles.lead_views_count, is incremented solely by POST /api/leads/view, which has no mobile caller. — `src/lib/db/generated/schema.ts — no usage_events table (grep, 2026-09-15)`, `src/app/api/leads/view/route.ts:110`, `src/features/leads/api/useLeadView.ts:25 — imported only by src/tests/useLeadView.logic.test.tsx` |
-| 16 | `config` | `none` | The two tunables this SEARCH surface has — the 400ms debounce and the 3-character minimum — are hard-coded literals in the screen and the query schema, not registered logic variables; the schema also has no config.debounce_ms / config.min_query_len property to declare them in. — `mobile/app/(app)/parcel-tool/index.tsx:26`, `src/app/api/parcels/lookup/types.ts:42`, `scripts/surfaces/_schema/surface.schema.json — config accepts only answer/why/evidence/logic_variables/retired` |
+| 15 | `metering` | `none` | Nothing here is counted. The Spec 126 §7 usage ledger table does not exist (grep for usage_events in the introspected drizzle schema returns 0 hits), and the parcel product has no quota, credit or view counter of its own — no metering column, no ledger row, no consumption event. Measured 2026-09-16. — `src/lib/db/generated/schema.ts — no usage_events table (grep, 2026-09-16)`, `src/app/api/parcels/lookup/route.ts:113-119 — the only record of a lookup is a log line; it increments nothing` |
+| 16 | `config` | `none` | The two tunables this SEARCH surface has are now DECLARED here and externalised in the code as named constants (`mobile/src/constants/parcelSearch.ts`), but they are still not registered logic variables — there is no admin row behind either, so `answer` stays `none` while `debounce_ms` and `min_query_len` carry their measured values. (The previous text here claimed the schema had no `config.debounce_ms` / `config.min_query_len` property to declare them in. That was false: both properties exist and this block already carried them as `UNRESEARCHED`.) — `mobile/src/constants/parcelSearch.ts:19 — SEARCH_DEBOUNCE_MS, consumed at mobile/app/(app)/parcel-tool/index.tsx:72`, `mobile/src/constants/parcelSearch.ts:26 — SEARCH_MIN_QUERY_LEN; the server floor is src/app/api/parcels/lookup/types.ts:42`, `scripts/surfaces/_schema/surface.schema.json:2335,2348 — config.debounce_ms / config.min_query_len DO exist`, `docs/reference/logic-variables-registry.md — neither is a registered logic variable` |
 | 17 | `sharing` | `shared` | It is the q-branch of the same GET /api/parcels/lookup route the detail screen calls with ?parcelId=; one contract, two surfaces, two rate buckets. — `mobile/src/hooks/useParcelLookup.ts:59-83`, `src/app/api/parcels/lookup/route.ts:72-74` |
 | 18 | `a11y` | `UNRESEARCHED` | **UNRESEARCHED** |
 | 19 | `deviations` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
@@ -641,9 +789,17 @@ The estate shares one repository; it does not share one programme. Sections A–
 
 </details>
 
-**Links.** schema: [`scripts/surfaces/_schema/surface.schema.json`](../../../scripts/surfaces/_schema/surface.schema.json) · owning spec: [`docs/specs/03-mobile/100_mobile_parcel_cost_tool.md`](../../../docs/specs/03-mobile/100_mobile_parcel_cost_tool.md) · files: `mobile/app/(app)/parcel-tool/index.tsx`
+**Links.** schema: [`scripts/surfaces/_schema/surface.schema.json`](../../../scripts/surfaces/_schema/surface.schema.json) · owning spec: [`docs/specs/03-mobile/100_mobile_parcel_cost_tool.md`](../../../docs/specs/03-mobile/100_mobile_parcel_cost_tool.md) · files: `mobile/app/(app)/parcel-tool/index.tsx` · `mobile/src/lib/parcelSearchMatch.ts` · `mobile/src/constants/parcelSearch.ts`
 
-> ⚠️ guards.entitlement.product is lead_gen, not the parcel_tool value the schema offers: migration 228's chk_entitlements_product CHECK permits only lead_gen and flight_center, and Spec 116 OD5 folds the shipped parcel tool into lead_gen. The closed vocabulary and the live CHECK constraint disagree — recorded here rather than resolved.
+> ⚠️ HOME-BASE LEAKAGE — RESOLVED AND CLOSED (operator ruling 2026-09-16 (b)). This surface used to read the LEAD-FEED filter store (useFilterStore((s) => s.homeBaseLocation)) to decide whether to show a "Toronto only" coverage note, while its own header claimed it was "NOT coupled to leads". The ruling: MaxBLD has NO home-base concept and the owner’s location does not matter. The store read, the import and the hint are DELETED, so `programme.leakage` is now `none` — not a disposition, an absence. (The closed disposition vocabulary — move-to-owner, duplicate-locally, keep-and-declare, needs-ruling — has no value for "was here, is gone", so the history is recorded here.) Its replacement is the Toronto-only rule on the searched ADDRESS. Removing the store read is also what moved this surface from REBUILD to RE-PROJECT.
+
+ENTITLEMENT vs OD5. `guards.entitlement.product` is `lead_gen` — not a description choice but a measured constraint: migration 228’s `chk_entitlements_product` permits only `lead_gen` and `flight_center`, and the route gates on the global `subscription_status`. Recording anything else here would make this descriptor lie. Under Spec 116 OD5 — MaxBLD is its own product; nothing in scope `parcel_product` may reference a lead-gen concept, that IS the finding: MaxBLD needs its own entitlement product, which is a migration plus a route change in the Backend domain. Raised as `programme.product_questions[0]`, not silently rewritten.
+
+MATCH-TYPE RULING (operator ruling 2026-09-16). The SEARCH surface branches on one of five types: unique (open the lot directly), text_candidates (capped list, differing part highlighted, ask for a house number past the cap), multi_parcel (map, every linked polygon tappable), unlinked (map, pin + faint surrounding parcels + a visible "no lot is linked" state, never a silent nearest-polygon pick), intersection (map, corner lots highlighted, no list). The map cases are their own surface, S-071, because they read parcel GEOMETRY, which this surface does not. The enum is declared on contract C-001. Three types are derivable client-side today; the other two are recorded in limitations as blocked on the API.
+
+TORONTO-ONLY RULE (operator ruling 2026-09-16 (b)). Lots are only available in Toronto. `isInsideToronto` / `TORONTO_BOUNDS` (mobile/src/lib/onboarding/snapCoord.ts) could NOT be reused for two reasons: they take a lat/lng and a SEARCH surface has an ungeocoded string, and they live in the lead-gen onboarding module, so importing them would be fresh scope-A leakage. The replacement is string-shaped and lives in the parcel product: a non-`M` postal FSA anywhere (Toronto is the only Canadian city on M), or a known non-Toronto municipality in the CITY position after the first comma. City-position-only is deliberate — Markham, Milton and Hamilton are also Toronto street names.
+
+BRAND. Spec 117 §6.1 is this surface’s brand application. The shades used are surface-scoped deepenings of the §3.2 roles rather than new brand tokens, expressed as NativeWind arbitrary-value classes in `mobile/src/constants/parcelSearch.ts` so §7's both-files-same-commit brand-token rule is not triggered. The amber primary is #f59e0b, unchanged.
 
 <a id="s-004"></a>
 
@@ -651,19 +807,19 @@ The estate shares one repository; it does not share one programme. Sections A–
 
 **Programme.** `S-004` · scope `parcel_product` · feature `F01` · build order 1013 · batch `B2` · review `unreviewed` — The navigation shell for the `parcel-tool` route group; it exists only to contain the parcel product and routes nothing else.
 
-**What it is.** The thin wrapper that lets the parcels tab hold two screens in sequence: the address search, and the lot report you reach by tapping a result. It hides the default navigation header so each screen can draw its own. It makes no decisions about who is allowed in.
+**What it is.** The MaxBLD product shell. It holds the parcel tool’s screens in sequence — the address lookup, the lot report you reach by tapping a result, the map view for an address that does not resolve to one lot — and it draws the three-tab shelf that is the only navigation a MaxBLD user sees: Lookup, Tracked Lots, Account. It hides the default navigation header so each screen can draw its own, and it makes sure no navigation from any other product appears inside MaxBLD. It makes no decisions about who is allowed in.
 
-**What it reads and writes.** This surface reaches **no API contract at all** — every value it shows is local, passed in as a prop, or read from the device. It holds no client-side store, so there is no local copy of server state to keep in sync. It emits **no analytics event**, so nothing it does is currently countable.
+**What it reads and writes.** This surface reaches **no API contract at all** — every value it shows is local or read from the route. It holds no client-side store: the highlighted tab is derived from the current path, not remembered. It emits **no analytics event**, so nothing it does is currently countable.
 
-**Under Spec 126.** **RE-PROJECT** — it writes nothing and holds no Layer-3 store, so the move is short — the server already assembles the payload and only the rendering is client-side. It renders through the SHELL renderer (declared routing branches, guards and child groups — a shell here is not inert), reading no contract. It owns no component of its own, so its `owns.components[]` is an empty array — a legal answer, written down.
+**Under Spec 126.** **RE-PROJECT** — it writes nothing and holds no Layer-3 store, so the move is short. It renders through the SHELL renderer (declared routing branches, guards and child groups — a shell here is not inert), reading no contract. It now owns exactly one component — `mobile/src/components/parcel/ParcelShelf.tsx`, the three-tab shelf — declared in `owns.components[]` and rendered by nothing else (R-13).
 
-**kind** SURFACE · **archetype** `SHELL` · **platforms** `mobile` · **status** exists · **lines** 15 · **shard** `mobile-product` · **unresearched fields: 1**
+**kind** SURFACE · **archetype** `SHELL` · **platforms** `mobile` · **status** exists · **lines** 162 · **shard** `mobile-product` · **researched** ✅ every field
 
 **Gate.** auth class **entitled** (It inherits the tab gate: shell_app_tabs will not mount the tab tree at all unless subscription_status is trial/active/past_due/admin_managed, and the lookup route re-checks server-side.) · session **required** · entitlement subscription_status · flag none · device permission none
 
 **Calls.** — — idiom: none
 
-**Components owned.** —
+**Components owned.** `mobile/src/components/parcel/ParcelShelf.tsx`
 
 **Emits.** —
 
@@ -677,12 +833,12 @@ _No table is reached by this entry — every value it shows arrives through a co
 
 | Claim | Citation (`file:line`, `migration:line`, or a spec §anchor) |
 |---|---|
-| `files` | `mobile/app/(app)/parcel-tool/_layout.tsx:1` |
-| `contracts` | `mobile/app/(app)/parcel-tool/_layout.tsx:1-15 — a Stack with two screens; no contract, no hook` |
-| `tables` | `mobile/app/(app)/parcel-tool/_layout.tsx:1-15 — reaches no table` |
-| `gate` | `mobile/app/(app)/parcel-tool/_layout.tsx:4-5` · `mobile/app/(app)/_layout.tsx:236-265` |
-| `states` | `mobile/app/(app)/parcel-tool/_layout.tsx:10-13` |
-| `emits` | `mobile/app/(app)/parcel-tool/_layout.tsx:1-15 — no track() call` |
+| `files` | `mobile/app/(app)/parcel-tool/_layout.tsx:1` · `mobile/src/components/parcel/ParcelShelf.tsx:1 — the three-tab shelf this surface owns and nothing else renders` |
+| `contracts` | `mobile/app/(app)/parcel-tool/_layout.tsx:1-65 — a Stack plus the shelf; no contract, no hook` |
+| `tables` | `mobile/app/(app)/parcel-tool/_layout.tsx:1-65 — reaches no table` |
+| `gate` | `mobile/app/(app)/_layout.tsx:236-265 — the subscription gate this group deliberately stays behind` · `mobile/app/(app)/parcel-tool/_layout.tsx:14-27` |
+| `states` | `mobile/app/(app)/parcel-tool/_layout.tsx:55-61 — the five Stack screens` · `mobile/src/components/parcel/ParcelShelf.tsx:71 — export function ParcelShelf` |
+| `emits` | `mobile/app/(app)/parcel-tool/_layout.tsx:1-65 — no track() call` |
 | `spec_refs` | `docs/specs/03-mobile/100_mobile_parcel_cost_tool.md §4` · `docs/specs/03-mobile/99_mobile_state_architecture.md §5.1` |
 
 <details><summary>21 category answers — 21 answered, 0 unresearched</summary>
@@ -690,22 +846,22 @@ _No table is reached by this entry — every value it shows arrives through a co
 | # | Category | Answer (closed vocabulary) | Why / evidence |
 |---:|---|---|---|
 | 1 | `identity` | `UNRESEARCHED` | **UNRESEARCHED** |
-| 2 | `inputs` | `none` | It declares the index and [parcelId] screens and takes nothing else. — `mobile/app/(app)/parcel-tool/_layout.tsx:10-13` |
+| 2 | `inputs` | `none` | It declares the index, [parcelId], disambiguate, tracked and account screens, and reads the current pathname to decide which tab is lit. Nothing else. — `mobile/app/(app)/parcel-tool/_layout.tsx:55-61`, `mobile/app/(app)/parcel-tool/_layout.tsx:41-43 — usePathname + activeParcelTab`, `mobile/src/lib/parcelSearchMatch.ts:258 — export function activeParcelTab` |
 | 3 | `outputs` | `none` | A navigation container writes nothing. — `mobile/app/(app)/parcel-tool/_layout.tsx:1-15` |
-| 4 | `state` | `none` | No state; routing stays inside the Stack with no router.replace effects, per the note in the file. — `mobile/app/(app)/parcel-tool/_layout.tsx:4-5` |
-| 5 | `staleness` | `none` | It renders no data. — `mobile/app/(app)/parcel-tool/_layout.tsx:1-15` |
+| 4 | `state` | `none` | No store and no local state for navigation: the active tab is DERIVED from the route (operator ruling 2026-09-16 (c)), so a deep link straight into a lot lights the right tab and the highlight cannot drift out of step with where the user actually is. — `mobile/app/(app)/parcel-tool/_layout.tsx:41-43`, `mobile/src/lib/parcelSearchMatch.ts:258 — export function activeParcelTab` |
+| 5 | `staleness` | `none` | It renders no data. — `mobile/app/(app)/parcel-tool/_layout.tsx:1-65` |
 | 6 | `guards` | `UNRESEARCHED` | **UNRESEARCHED** |
 | 7 | `render` | `UNRESEARCHED` | **UNRESEARCHED** |
 | 8 | `checks` | `UNRESEARCHED` | **UNRESEARCHED** |
 | 9 | `invariants` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
 | 10 | `plausibility` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
 | 11 | `states` | `UNRESEARCHED` | **UNRESEARCHED** |
-| 12 | `errors` | `none` | No async work, no failure path. — `mobile/app/(app)/parcel-tool/_layout.tsx:1-15` |
-| 13 | `emits` | `none` | Nothing to emit. — `mobile/app/(app)/parcel-tool/_layout.tsx:1-15` |
-| 14 | `offers` | `none` | A navigation container renders no sponsored content. — `mobile/app/(app)/parcel-tool/_layout.tsx:1-15` |
-| 15 | `metering` | `none` | Nothing here is counted: the Spec 126 §7 usage ledger table does not exist (grep for usage_events in the introspected drizzle schema returns 0 hits), and the only quota-shaped counter, user_profiles.lead_views_count, is incremented solely by POST /api/leads/view, which has no mobile caller. — `src/lib/db/generated/schema.ts — no usage_events table (grep, 2026-09-15)`, `src/app/api/leads/view/route.ts:110`, `src/features/leads/api/useLeadView.ts:25 — imported only by src/tests/useLeadView.logic.test.tsx` |
+| 12 | `errors` | `none` | No async work, no failure path. — `mobile/app/(app)/parcel-tool/_layout.tsx:1-65` |
+| 13 | `emits` | `none` | Nothing to emit. — `mobile/app/(app)/parcel-tool/_layout.tsx:1-65` |
+| 14 | `offers` | `none` | A navigation container renders no sponsored content. — `mobile/app/(app)/parcel-tool/_layout.tsx:1-65` |
+| 15 | `metering` | `none` | Nothing here is counted. The Spec 126 §7 usage ledger table does not exist (grep for usage_events in the introspected drizzle schema returns 0 hits), and the parcel product has no quota, credit or view counter of its own — no metering column, no ledger row, no consumption event. Measured 2026-09-16. — `src/lib/db/generated/schema.ts — no usage_events table (grep, 2026-09-16)`, `src/app/api/parcels/lookup/route.ts:113-119 — the only record of a lookup is a log line; it increments nothing` |
 | 16 | `config` | `none` | The surface consumes no registered logic variable: the only server-side tunable in this path, user_profiles.radius_cap_km, is a per-user admin column, not a logic_variables row. — `src/lib/userProfile.schema.ts:40`, `src/app/api/user-profile/route.ts:328`, `docs/reference/logic-variables-registry.md — no radius_cap_km entry` |
-| 17 | `sharing` | `none` | It renders no contract. — `mobile/app/(app)/parcel-tool/_layout.tsx:1-15` |
+| 17 | `sharing` | `none` | It renders no contract. — `mobile/app/(app)/parcel-tool/_layout.tsx:1-65` |
 | 18 | `a11y` | `UNRESEARCHED` | **UNRESEARCHED** |
 | 19 | `deviations` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
 | 20 | `limitations` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
@@ -713,9 +869,15 @@ _No table is reached by this entry — every value it shows arrives through a co
 
 </details>
 
-**Links.** schema: [`scripts/surfaces/_schema/surface.schema.json`](../../../scripts/surfaces/_schema/surface.schema.json) · owning spec: [`docs/specs/03-mobile/100_mobile_parcel_cost_tool.md`](../../../docs/specs/03-mobile/100_mobile_parcel_cost_tool.md) · files: `mobile/app/(app)/parcel-tool/_layout.tsx`
+**Links.** schema: [`scripts/surfaces/_schema/surface.schema.json`](../../../scripts/surfaces/_schema/surface.schema.json) · owning spec: [`docs/specs/03-mobile/100_mobile_parcel_cost_tool.md`](../../../docs/specs/03-mobile/100_mobile_parcel_cost_tool.md) · files: `mobile/app/(app)/parcel-tool/_layout.tsx` · `mobile/src/components/parcel/ParcelShelf.tsx`
 
-> ⚠️ The only nested Stack inside the tab tree — the Parcel Cost Tool is a standalone two-screen flow that happens to live behind a tab.
+> ⚠️ THE MaxBLD PRODUCT SHELL. This is the shell that owns the three-tab shelf — Lookup, Tracked Lots, Account (operator ruling 2026-09-16 (c)). The five-tab bar (Lead Feed, Flight Board, Map, Parcels, Settings) is S-046 `shell_app_tabs` at mobile/app/(app)/_layout.tsx and belongs to the LEAD-GEN app; it is hidden for every route in this group.
+
+WHY HIDDEN RATHER THAN ESCAPED. Two ways to stop the five-tab bar rendering here: (1) move the `parcel-tool` group out of `(app)`, or (2) hide the bar while a parcel-tool route is focused. (1) was REJECTED on a measured ground: mobile/app/(app)/_layout.tsx:236-265 is where the SUBSCRIPTION GATE lives — it returns SubscriptionLoadingGuard / PaywallScreen / a forced sign-out BEFORE it renders <Tabs>, so leaving the group would take the parcel product out from behind that gate, a security regression, and would additionally rewrite every `/(app)/parcel-tool/...` href, the descriptors and the Maestro flows. (2) was taken: S-046 already renders its bar through a custom `tabBar` wrapper, so the hide is one route-derived decision (`shouldHideAppTabBar`, mobile/src/lib/appShell.ts:29) with the gate untouched.
+
+SHELF COMPONENT. The shelf is extracted to `mobile/src/components/parcel/ParcelShelf.tsx` rather than drawn inline, so `owns.components` names a real file that R-13 totality can account for exactly once, and so the shelf is testable on its own.
+
+ICONS. The shelf was specified with @expo/vector-icons Ionicons (compass / bookmark-outline / person-outline). That package is not a declared dependency of mobile/ and has zero usages; `lucide-react-native` is the established icon layer. Compass / Bookmark / User are its equivalents, with the active tab’s icon filled.
 
 <a id="c-001"></a>
 
@@ -723,7 +885,7 @@ _No table is reached by this entry — every value it shows arrives through a co
 
 **Programme.** `C-001` · scope `parcel_product` · feature `F02` · build order 1022 · batch `B1` · review `unreviewed` — `/api/parcels/lookup` is the parcel product's only data contract: the consumer whitelist, the tier-stratified degradation and the entitlement gate all live here.
 
-**⚠️ Cross-product leakage (1).** Its entitlement check reads `entitlements` joined on `product = 'lead_gen'`, because `chk_entitlements_product` admits only `lead_gen` and `flight_center`. The parcel product has no key of its own in the live database — Spec 128 R-01 rules that it should, and the CHECK widening has not landed. → `move-to-owner` (`migrations/228_entitlements.sql:32-33`, `src/lib/entitlements/index.ts:39`, `src/lib/entitlements/index.ts:42-43`)
+**⚠️ Cross-product leakage (2).** Its entitlement check reads `entitlements` joined on `product = 'lead_gen'`, because `chk_entitlements_product` admits only `lead_gen` and `flight_center`. The parcel product has no key of its own in the live database — Spec 128 R-01 rules that it should, and the CHECK widening has not landed. → `move-to-owner` (`migrations/228_entitlements.sql:32-33`, `src/lib/entitlements/index.ts:39`, `src/lib/entitlements/index.ts:42-43`) · The parcel contract is built out of LEAD-GEN-NAMESPACED shared helpers: its response envelope and every error mapping come from `src/features/leads/api/envelope.ts` and `src/features/leads/api/error-mapping.ts`. Nothing is wrong with the behaviour — they are generic helpers — but a scope-A contract importing from `src/features/leads/**` means the parcel product cannot be extracted without dragging the lead-gen feature directory with it. The fix is a move to a shared module, not a rewrite. → `move-to-owner` (`src/app/api/parcels/lookup/route.ts:23 — import { ok } from '@/features/leads/api/envelope'`, `src/app/api/parcels/lookup/route.ts:24-30 — the error-mapping imports`)
 
 **What it is.** Lets a paying subscriber search for a property by address, or pick a specific close match, and see the estimated construction costs and nearby neighbourhood build activity for that property.
 
@@ -795,6 +957,8 @@ _No table is reached by this entry — every value it shows arrives through a co
 
 > ⚠️ The response is validated against a Zod .strict() schema (reusing the admin schemas in src/app/api/admin/parcels/lookup/types.ts) specifically to guarantee the proprietary Tier-3 diagnostic 'groups' data never reaches the consumer app. A 403 subscription gate runs before any DB work. assembleConsumerPayload (src/lib/parcels/consumer-lookup.ts) is a pure in-memory transform issuing no extra queries. user_profiles/entitlements come from the shared getCurrentUserContext auth helper. | MEASURED 2026-09-15: ACTIVE_SUBSCRIPTION_STATUSES = {'trial','active','past_due','admin_managed'} (route.ts:47-49). PASS: exactly those four. REFUSED: every other value, including NULL/absent (the `?? ''` coalesce at route.ts:58 makes a null status a refusal) — e.g. canceled, expired, incomplete, deleted, and any user with no `entitlements` row for product='lead_gen' (LEFT JOIN yields null, src/lib/entitlements/index.ts:68). HTTP status on refusal: 403, code SUBSCRIPTION_REQUIRED (route.ts:59 -> src/features/leads/api/error-mapping.ts:28-29). WHITELIST PARITY vs Spec 100 §3.2 (docs/specs/03-mobile/100_mobile_parcel_cost_tool.md:79-95): EXACT MATCH, no field in one and not the other. (a) areas: spec line 88 names 16 columns; CONSUMER_HEADLINE_COLS (src/lib/parcels/consumer-lookup.ts:33-41) is the same 16 in the same order. (b) costMenu.scalars: spec line 87 names 12; T1_COST_SCALAR_COLS (src/lib/admin/parcel-lookup.ts:35-39, iterated at consumer-lookup.ts:82) is the same 12. (c) comparableBuilds: spec line 92 names 11; CONSUMER_COMPARABLE_FIELDS (consumer-lookup.ts:44-47) is the same 11, and ConsumerComparableBuildSchema is .strict() (src/app/api/parcels/lookup/types.ts:69). (d) coaProjects: spec line 91 names 10; the fetchCoaProjects aliases (src/lib/admin/parcel-lookup.ts:233-236) are the same 10. (e) compStats: spec line 90 names 6; consumer-lookup.ts:146-151 emits the same 6. (f) No `groups` key: ConsumerParcelSchema has no groups member and is .strict() (types.ts:75-91) — assembleConsumerPayload never builds one (consumer-lookup.ts:140-156), unlike the admin assembleParcelPayload which does (src/lib/admin/parcel-lookup.ts:298-303, 322). CAVEATS a reviewer must know: (1) the SQL reads FAR more than the whitelist — fetchParcelById projects allMappedColumns() = every Tier-1/2/3 column incl. all zoning/heritage/existing-structure/scenario/accessory diagnostics (src/lib/admin/parcel-lookup.ts:222-224, 113-121). The whitelist is enforced only at the JS assembler + the .strict() boundary parse, not at the query. `geometry`/`geom` are excluded from the SELECT (EXCLUDED_COLS, parcel-lookup.ts:32). (2) The whitelist is COLUMN-level but NOT field-level INSIDE the two JSONB blobs: CostMenuSchema is z.record over CostLineSchema which is .passthrough() (src/app/api/admin/parcels/lookup/types.ts:40,43) and NearbyBuildsSummarySchema is .passthrough() (types.ts:62). Any additive key inside parcel_cost_menu or nearby_builds_summary reaches the client verbatim despite the outer .strict(). Spec 100:86 itself names `trades`/`products` per cost line, which CostLineSchema does not declare — they ride the passthrough. (3) get-user-context.ts:83-89 performs an INSERT into user_profiles, but ONLY under isDevMode() && uid==='dev-user'; isDevMode requires NODE_ENV!=='production' AND DEV_MODE==='true' (src/lib/auth/route-guard.ts:33), so it is unreachable in production. (4) routes-index.json CHECKLIST agreement: census_reads listed parcels, address_points, parcel_address_points, coa_applications, user_profiles, entitlements — all six confirmed. census_writes listed none; I found the dev-only user_profiles INSERT above (reachable only in dev), so the checklist is right for production. (5) Spec 100:56 claims the route-guard classifies '/api/parcels' as AUTHENTICATED — verified at src/lib/auth/route-guard.ts:127 + :165. | Caching: none observed — no `export const revalidate`/`dynamic`/`fetchCache` and no Cache-Control header set anywhere in src/app/api/parcels/lookup/route.ts:
 
+MATCH-TYPE ENUM (declared, not yet emitted). The five resolution types this contract owes its consumers are: `unique` (exactly one lot — open it), `text_candidates` (several text matches — list them, capped at 10), `multi_parcel` (one address point linked to 2+ parcels: corner, severed or ranged lots — map), `unlinked` (address resolved, no parcel linked — map, and never a nearest-polygon guess), `intersection` (e.g. "Queen & Spadina" — map). Measured today: matchType is ['exact','typeahead','direct'] (src/app/api/admin/parcels/lookup/types.ts:123) and src/lib/admin/parcel-lookup.ts:161-217 emits no fan-out signal and no intersection parsing, so three of the five are derived client-side and two are unreachable. Serving the type (and, for the map surface S-071, parcel geometry) is the outstanding API change.
+
 <a id="s-001"></a>
 
 ###### `S-001` `mobile_parcel_detail` — **THE PILOT**
@@ -860,7 +1024,7 @@ _No table is reached by this entry — every value it shows arrives through a co
 | 12 | `errors` | `inline` | One inline block covers both failures, with copy that distinguishes them: "Could not load this parcel" on isError, "No parcel found." when the lookup returned a clean miss. — `mobile/app/(app)/parcel-tool/[parcelId].tsx:99-110` |
 | 13 | `emits` | `none` | Nothing about opening a parcel report is countable: no PostHog event, no ledger row, and no usage_events table exists to receive one — which for the pilot REPORT of Spec 126 §11 is the gap the standard exists to close. — `mobile/app/(app)/parcel-tool/[parcelId].tsx:1-231`, `docs/specs/02-web-admin/126_maxbld_surface_standard.md §7` |
 | 14 | `offers` | `slots` | The layout claims a named sponsor region (Spec 100 §8) even though v1 renders null — the position is reserved so the first sponsor ships into a declared slot rather than a new one. — `mobile/app/(app)/parcel-tool/[parcelId].tsx:227`, `mobile/src/components/parcel/SponsorSlot.tsx:10-20` |
-| 15 | `metering` | `none` | Nothing here is counted: the Spec 126 §7 usage ledger table does not exist (grep for usage_events in the introspected drizzle schema returns 0 hits), and the only quota-shaped counter, user_profiles.lead_views_count, is incremented solely by POST /api/leads/view, which has no mobile caller. — `src/lib/db/generated/schema.ts — no usage_events table (grep, 2026-09-15)`, `src/app/api/leads/view/route.ts:110`, `src/features/leads/api/useLeadView.ts:25 — imported only by src/tests/useLeadView.logic.test.tsx` |
+| 15 | `metering` | `none` | Nothing here is counted. The Spec 126 §7 usage ledger table does not exist (grep for usage_events in the introspected drizzle schema returns 0 hits), and the parcel product has no quota, credit or view counter of its own — no metering column, no ledger row, no consumption event. Measured 2026-09-16. — `src/lib/db/generated/schema.ts — no usage_events table (grep, 2026-09-16)`, `src/app/api/parcels/lookup/route.ts:113-119 — the only record of a lookup is a log line; it increments nothing` |
 | 16 | `config` | `none` | The surface consumes no registered logic variable: the only server-side tunable in this path, user_profiles.radius_cap_km, is a per-user admin column, not a logic_variables row. — `src/lib/userProfile.schema.ts:40`, `src/app/api/user-profile/route.ts:328`, `docs/reference/logic-variables-registry.md — no radius_cap_km entry` |
 | 17 | `sharing` | `shared` | It is the parcelId branch of the same route the search screen calls with q — the two surfaces share one contract, one schema and one server-side subscription gate. — `src/app/api/parcels/lookup/route.ts:80-83` |
 | 18 | `a11y` | `UNRESEARCHED` | **UNRESEARCHED** |
@@ -932,7 +1096,7 @@ _No table is reached by this entry — every value it shows arrives through a co
 | 12 | `errors` | `none` | No async work and no failure path — it returns null. — `mobile/src/components/parcel/SponsorSlot.tsx:16-20` |
 | 13 | `emits` | `none` | Nothing renders, so nothing is countable; when inventory ships this must become at minimum an offer_impression ledger row (R-23). — `mobile/src/components/parcel/SponsorSlot.tsx:16-20`, `docs/specs/02-web-admin/126_maxbld_surface_standard.md §7` |
 | 14 | `offers` | `slots` | A SLOT may not answer "none": the surface exists to claim a named, reserved placement in the parcel report layout, even though v1 ships zero sponsor code. — `mobile/src/components/parcel/SponsorSlot.tsx:1-20`, `docs/specs/03-mobile/100_mobile_parcel_cost_tool.md §8` |
-| 15 | `metering` | `none` | Nothing here is counted: the Spec 126 §7 usage ledger table does not exist (grep for usage_events in the introspected drizzle schema returns 0 hits), and the only quota-shaped counter, user_profiles.lead_views_count, is incremented solely by POST /api/leads/view, which has no mobile caller. — `src/lib/db/generated/schema.ts — no usage_events table (grep, 2026-09-15)`, `src/app/api/leads/view/route.ts:110`, `src/features/leads/api/useLeadView.ts:25 — imported only by src/tests/useLeadView.logic.test.tsx` |
+| 15 | `metering` | `none` | Nothing here is counted. The Spec 126 §7 usage ledger table does not exist (grep for usage_events in the introspected drizzle schema returns 0 hits), and the parcel product has no quota, credit or view counter of its own — no metering column, no ledger row, no consumption event. Measured 2026-09-16. — `src/lib/db/generated/schema.ts — no usage_events table (grep, 2026-09-16)`, `src/app/api/parcels/lookup/route.ts:113-119 — the only record of a lookup is a log line; it increments nothing` |
 | 16 | `config` | `none` | The surface consumes no registered logic variable: the only server-side tunable in this path, user_profiles.radius_cap_km, is a per-user admin column, not a logic_variables row. — `src/lib/userProfile.schema.ts:40`, `src/app/api/user-profile/route.ts:328`, `docs/reference/logic-variables-registry.md — no radius_cap_km entry` |
 | 17 | `sharing` | `sole` | One placement, one renderer — the parcel detail report. — `mobile/app/(app)/parcel-tool/[parcelId].tsx:227` |
 | 18 | `a11y` | `UNRESEARCHED` | **UNRESEARCHED** |
@@ -951,6 +1115,8 @@ _No table is reached by this entry — every value it shows arrives through a co
 ###### `S-005` `web_landing`
 
 **Programme.** `S-005` · scope `parcel_product` · feature `F06` · build order 1063 · batch **UNRESEARCHED** · review `unreviewed` — Business requirement 5, the MaxBLD web front door on Vercel. It markets lead-gen today and is the surface the consumer web projection replaces — it is parcel-product scope by destination, not by current content.
+
+**⚠️ Cross-product leakage (1).** The MaxBLD web front door currently MARKETS LEAD GENERATION. Under OD5 the parcel product is its own product, so a scope-A surface selling the lead-gen app is a product-boundary leak, not just stale copy. Recorded as measured; the rewrite is a content change outside this pass. → `needs-ruling` (`src/app/page.tsx`)
 
 **What it is.** The public front door of the product. A visitor who has never signed in lands here and reads the pitch: the service watches Toronto building permits every day and matches them to a trade so contractors hear about jobs early. It shows three explainer cards, a list of the twenty trade categories covered, and buttons that send the visitor to sign in or straight to the live permit feed. Nothing on the page is personalised and it fetches no data.
 
@@ -1017,6 +1183,161 @@ _No table is reached by this entry — every value it shows arrives through a co
 **Links.** schema: [`scripts/surfaces/_schema/surface.schema.json`](../../../scripts/surfaces/_schema/surface.schema.json) · owning spec: [`UNRESEARCHED`](../../../UNRESEARCHED) · files: `src/app/page.tsx`
 
 > ⚠️ No governing feature spec found: the file appears in no row of docs/specs/00-architecture/00_system_map.md and carries no SPEC LINK header. Spec 126 (02-web-admin/126_maxbld_surface_standard.md) only references 'marketing/landing' generically at line 97 and line 667 as a future conversion target, which is not a governing spec. Copy still says 'Buildo', not the Spec 117 'MaxBLD' rename that src/app/layout.tsx and the login page already use. Single unconditional render - no loading/empty/error branches exist, hence states=['static'] rather than an empty array. MEASURED 2026-09-15: no SPEC LINK header on src/app/page.tsx and no System Map row names it, so identity.spec is UNRESEARCHED rather than a guess at the nearest dashboard spec. a11y.labels is `partial`: the two header anchors and the hero button carry visible text but the page has no landmark labelling and the SVG-free chips are decorative spans. a11y.touch_target_min_px stays UNRESEARCHED — the vocabulary admits only UNRESEARCHED or an integer >= 44, and the measured "Get Started" target is 36px, which the menu cannot express (Spec 128 §4 escalation).
+
+<a id="c-062"></a>
+
+###### `C-062` `contract_parcels_tracked`
+
+**Programme.** `C-062` · scope `parcel_product` · feature `F17` · build order 1172 · batch `B2` · review `unreviewed` — The contract behind Tracked Lots: the user’s saved parcels and the way to remove one.
+
+**What it is.** The list of lots a signed-in person has chosen to keep an eye on, and the way to stop keeping an eye on one. Reading gives back each lot’s address, how much can be built on it as of right, how much the Committee of Adjustment route could allow, and whether a CoA ruling has landed nearby recently. NOT BUILT YET — this descriptor is the specification the route and its table will be built against.
+
+**What it reads and writes.** It will read one new table, `user_tracked_lots`, which holds nothing but the fact that a person tracked a parcel — user, parcel, when, and the jurisdiction. Everything shown about the lot itself is joined from `parcels`, which the pipeline already produces. The "new nearby ruling" flag is not stored anywhere: it is derived per request from `coa_applications`, by asking whether a decided application shares the parcel’s neighbourhood inside a recent window. Writing is a single delete of the user’s own row.
+
+**Under Spec 126.** **NEW** — it does not exist. It is declared here so the surface that reads it (S-072) can name its contract instead of pointing at nothing, which is what an unbuilt-but-declared status is for. NOTE: the schema offers `designed` for exactly this case ("a contract a surface already points at") but the GENERATOR only accepts exists|new|generated (generate-surface-registry.mjs:168), so this row carries `new`. Schema and generator disagree — reported, not papered over. The table is defined in this descriptor rather than in a migration because migrations are the Backend domain and a different committer; the migration is filed as the follow-up, with the columns and the projection stated here so it can be written without re-deciding anything.
+
+**kind** CONTRACT · **archetype** `MUTATION` · **platforms** `mobile` · **status** new · **path** `/api/parcels/tracked` · **lines** 0 · **shard** `contracts` · **researched** ✅ every field
+
+**Gate.** auth class **entitled** (It will mirror the lookup route: resolve the user context first, then refuse unless subscription_status is trial/active/past_due/admin_managed. A tracked-lot list is per-user data and must never be reachable unauthenticated.) · session **required** · entitlement subscription_status · flag none · device permission none
+
+**Called by.** `mobile_tracked_lots`
+
+**Emits.** —
+
+**Render states seen in code.** `not_built`
+
+**Data lineage.**
+
+| | Table | Columns it touches | Full column list (introspected) | Produced by | Chain position | Owner spec |
+|---|---|---|---|---|---|---|
+| reads | `user_tracked_lots` **(net-new)** | `user_id` · `parcel_id` · `created_at` · `jurisdiction` | _does not exist yet_ | `none` | `n/a` | `docs/specs/03-mobile/100_mobile_parcel_cost_tool.md` |
+| reads | `parcels` | `parcel_id` · `address_number` · `linear_name_full` · `max_buildable_gfa_sqm` · `max_newbuild_coa_gfa_sqm` · `neighbourhood_id` | `id` · `parcel_id` · `feature_type` · `address_number` · `linear_name_full` · `addr_num_normalized` · `street_name_normalized` · `street_type_normalized` · `stated_area_raw` · `lot_size_sqm` · `lot_size_sqft` · `frontage_m` · `frontage_ft` · `depth_m` · `depth_ft` · `geometry` · `date_effective` · `date_expiry` · `created_at` · `centroid_lat` · `centroid_lng` · `is_irregular` · `geom` · `zoning_class` · `zoning_zn_string` · `zoning_gen_zone` · `zoning_holding` · `zone_status` · `bylaw_max_fsi` · `bylaw_max_coverage_pct` · `bylaw_max_height_m` · `bylaw_max_stories` · `bylaw_max_units` · `bylaw_max_density` · `bylaw_min_frontage_m` · `bylaw_min_area_sqm` · `bylaw_standard_setback_m` · `bylaw_pct_commercial_max` · `bylaw_pct_residential_max` · `bylaw_pct_employment_max` · `bylaw_pct_office_max` · `exception_number` · `exception_text` · `bylaw_chapter` · `bylaw_section` · `bylaw_exception_ref` · `in_policy_area` · `on_policy_road` · `in_rooming_house_overlay` · `in_parking_zone_overlay` · `in_building_setback_overlay` · `on_priority_retail` · `in_queenstw_eat_overlay` · `zoning_overlays` · `zoning_base_source_id` · `zoning_dominant_area_share` · `zoning_is_ambiguous` · `zoning_base_source_dataset_version` · `zoning_enriched_at` · `is_in_ravine_protection_area` · `ravine_distance_m` · `ravine_dataset_version_when_enriched` · `is_heritage_designated` · `heritage_designation_type` · `heritage_designation_date` · `heritage_dataset_version_when_enriched` · `is_corner_lot` · `is_through_lot` · `primary_frontage_street_name` · `centreline_dataset_version_when_enriched` · `lot_size_confidence` · `lot_size_basis` · `max_build_setback_basis` · `max_buildable_footprint_sqm` · `max_build_width_m` · `max_build_length_m` · `max_build_height_m` · `max_build_stories` · `max_build_basis` · `max_buildable_gfa_sqm` · `max_buildable_gfa_basis` · `max_build_confidence` · `max_garden_suite_gfa_sqm` · `garden_suite_fits` · `envelope_constrained` · `envelope_constraint_reason` · `imagery_roof_footprint_sqm` · `existing_stories` · `existing_height_m` · `imagery_roof_gfa_sqm` · `existing_width_m` · `existing_length_m` · `existing_structure_confidence` · `existing_other_structures_count` · `existing_other_structures_sqm` · `existing_greenspace_sqm` · `max_newbuild_coa_gfa_sqm` · `cur_basement_gfa_sqm` · `cur_storey_gfa_sqm` · `cur_interior_reno_gfa_sqm` · `cur_est_kitchen_gfa_sqm` · `cur_est_bath_gfa_sqm` · `max_build_stories_basis` · `abuts_laneway` · `max_garage_gfa_sqm` · `garage_capacity_cars` · `garage_constraint_reason` · `garage_permission` · `max_laneway_suite_gfa_sqm` · `max_rear_suite_gfa_sqm` · `rear_suite_type` · `rear_suite_permission` · `cur_floor_gfa_sqm` · `cur_pot_2story_gfa_sqm` · `cur_pot_3story_gfa_sqm` · `cur_gfa_range_basis` · `existing_data_quality_flag` · `max_build_stories_aggressive` · `market_exceeds_bylaw` · `neighbourhood_id` · `neighbourhood_cost_premium` · `opt_aor_storeys` · `opt_aor_gfa_sqm` · `opt_aor_units` · `opt_coa_storeys` · `opt_coa_gfa_sqm` · `opt_suite_type` · `opt_suite_fits_full` · `opt_binding_constraint` · `opt_config_confidence` · `optimal_config` · `nearby_builds_summary` · `comparable_builds` · `comp_count` · `comp_dominant_build` · `comp_build_ratio_p50` · `comp_fsi_p50` · `cur_gfa_low_sqm` · `cur_gfa_high_sqm` · `cur_storeys_range` · `cur_gfa_band_basis` · `parcel_cost_menu` · `cost_fb_total` · `cost_coa_total` · `cost_solar_total` · `cost_garden_suite_total` · `cost_laneway_suite_total` · `cost_garage_total` · `cost_gut_total` · `cost_addition_total` · `cost_kitchen_per_sqm` · `cost_bath_per_sqm` · `cost_basement_per_sqm` · `cost_basement_underpin_per_sqm` · `max_build_fsi` · `coa_fsi` · `realized_fsi_p90` · `lot_size_source` | `parcels` · `enrich_parcels` · `compute_parcel_cost_estimates` | `sources[4]` | `docs/specs/01-pipeline/55_source_parcels.md` |
+| reads | `coa_applications` | `neighbourhood_id` · `decision` · `decision_date` | `id` · `application_number` · `address` · `street_num` · `street_name` · `ward` · `status` · `decision` · `decision_date` · `hearing_date` · `description` · `applicant` · `linked_permit_num` · `linked_confidence` · `data_hash` · `first_seen_at` · `last_seen_at` · `sub_type` · `street_name_normalized` · `lifecycle_phase` · `lifecycle_classified_at` · `lifecycle_stalled` · `lead_id` · `coa_type_class` · `project_type` · `scope_tags` · `scope_classified_at` · `scope_source` · `structure_type` · `neighbourhood_id` · `latitude` · `longitude` · `modeled_gfa_sqm` · `estimated_cost` · `cost_source` · `cost_classified_at` · `lifecycle_seq` · `lifecycle_group` · `lifecycle_block` · `lifecycle_stage` · `bid_value` · `parcel_linked_at` · `trade_classified_at` · `matched_status` · `matched_rule` · `unmapped_status` · `unmapped_decision` · `zoning_class` · `bylaw_max_coverage_pct` · `bylaw_max_fsi` · `bylaw_max_height_m` · `exception_number` · `variance_context` · `zoning_parcel_count` · `zoning_dominant_parcel_id` · `zoning_dominant_parcel_method` · `zoning_enriched_at` · `is_in_ravine_protection_area` · `ravine_distance_m` · `is_heritage_designated` · `heritage_designation_type` · `heritage_designation_date` · `is_corner_lot` · `is_through_lot` · `primary_frontage_street_name` · `lot_size_sqm` · `frontage_m` · `depth_m` · `lot_size_confidence` · `lot_size_basis` · `max_build_setback_basis` · `max_buildable_footprint_sqm` · `max_build_width_m` · `max_build_length_m` · `max_build_height_m` · `max_build_stories` · `max_build_basis` · `max_buildable_gfa_sqm` · `max_buildable_gfa_basis` · `max_build_confidence` · `max_garden_suite_gfa_sqm` · `garden_suite_fits` · `envelope_constrained` · `envelope_constraint_reason` · `imagery_roof_footprint_sqm` · `existing_stories` · `existing_height_m` · `imagery_roof_gfa_sqm` · `existing_width_m` · `existing_length_m` · `existing_structure_confidence` · `existing_other_structures_count` · `existing_other_structures_sqm` · `existing_greenspace_sqm` · `max_newbuild_coa_gfa_sqm` · `cur_basement_gfa_sqm` · `cur_storey_gfa_sqm` · `cur_interior_reno_gfa_sqm` · `cur_est_kitchen_gfa_sqm` · `cur_est_bath_gfa_sqm` · `max_build_stories_basis` · `abuts_laneway` · `max_garage_gfa_sqm` · `garage_capacity_cars` · `garage_constraint_reason` · `garage_permission` · `max_laneway_suite_gfa_sqm` · `max_rear_suite_gfa_sqm` · `rear_suite_type` · `rear_suite_permission` · `cur_floor_gfa_sqm` · `cur_pot_2story_gfa_sqm` · `cur_pot_3story_gfa_sqm` · `cur_gfa_range_basis` · `existing_data_quality_flag` · `max_build_stories_aggressive` · `market_exceeds_bylaw` · `neighbourhood_cost_premium` · `opt_aor_storeys` · `opt_aor_gfa_sqm` · `opt_aor_units` · `opt_coa_storeys` · `opt_coa_gfa_sqm` · `opt_suite_type` · `opt_suite_fits_full` · `opt_binding_constraint` · `opt_config_confidence` · `comp_count` · `comp_dominant_build` · `comp_build_ratio_p50` · `comp_fsi_p50` · `cost_fb_total` · `cost_coa_total` · `cost_solar_total` · `cost_garden_suite_total` · `cost_laneway_suite_total` · `cost_garage_total` · `cost_gut_total` · `cost_addition_total` · `cost_kitchen_per_sqm` · `cost_bath_per_sqm` · `cost_basement_per_sqm` · `cost_basement_underpin_per_sqm` · `max_build_fsi` · `coa_fsi` · `realized_fsi_p90` | `coa` · `link_coa_to_parcels` · `classify_coa_scope` | `coa[1]` | `docs/specs/01-pipeline/42_chain_coa.md` |
+| writes | `user_tracked_lots` **(net-new)** | `user_id` · `parcel_id` | _does not exist yet_ | `none` | `n/a` | `docs/specs/03-mobile/100_mobile_parcel_cost_tool.md` |
+
+**Evidence.**
+
+| Claim | Citation (`file:line`, `migration:line`, or a spec §anchor) |
+|---|---|
+| `files` | `mobile/src/hooks/useTrackedLots.ts:1 — the typed client stub that will call this route` |
+| `contracts` | `mobile/src/hooks/useTrackedLots.ts:33-47 — TrackedLotsResultSchema, the projection this contract owes` |
+| `tables` | `src/lib/db/generated/schema.ts — `user_tracked_lots` does NOT exist (grep, 2026-09-16)` · `src/lib/db/generated/schema.ts — `parcels.max_buildable_gfa_sqm` and `parcels.max_newbuild_coa_gfa_sqm` DO exist` · `src/lib/db/generated/schema.ts — `coa_applications.decision`, `.decision_date`, `.neighbourhood_id` exist` |
+| `gate` | `src/app/api/parcels/lookup/route.ts:47-60 — the entitlement gate this route will mirror` · `src/lib/auth/route-guard.ts:120-132` |
+| `states` | `mobile/src/hooks/useTrackedLots.ts:60-95 — the fixture exercises hit / null-field / empty` |
+| `emits` | `not built — no log line exists yet` |
+| `spec_refs` | `docs/specs/03-mobile/100_mobile_parcel_cost_tool.md §3 (the consumer contract pattern this mirrors)` · `docs/specs/02-web-admin/126_maxbld_surface_standard.md §3.1 (CONTRACT archetypes)` · `docs/specs/00-architecture/116_multi_product_architecture.md (OD5)` |
+
+<details><summary>21 category answers — 21 answered, 0 unresearched</summary>
+
+| # | Category | Answer (closed vocabulary) | Why / evidence |
+|---:|---|---|---|
+| 1 | `identity` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 2 | `inputs` | `app_outputs` | It reads the new `user_tracked_lots` join table plus `parcels` (pipeline-materialised) and `coa_applications` (pipeline-materialised) for the derived nearby-ruling flag. — `mobile/src/hooks/useTrackedLots.ts:33-47`, `src/lib/admin/parcel-lookup.ts:233-240 — the CoA read this mirrors` |
+| 3 | `outputs` | `contract_only` | The only write is DELETE: one row of the caller’s own `user_tracked_lots`, removed synchronously inside the request. There is no server-side create in this contract — tracking a lot is a separate follow-up on the report surface. — `mobile/src/hooks/useTrackedLots.ts:118-127 — useUntrackLot, the client half` |
+| 4 | `state` | `server_only` | A route holds no client state. — `mobile/src/hooks/useTrackedLots.ts:1-20` |
+| 5 | `staleness` | `live` | Both the tracked set and the joined parcel figures will be read from the base tables on each request; there is no cache layer planned between the handler and the database. — `src/app/api/parcels/lookup/route.ts:79-108 — the sibling read this mirrors` |
+| 6 | `guards` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 7 | `render` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 8 | `checks` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 9 | `invariants` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
+| 10 | `plausibility` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
+| 11 | `states` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 12 | `errors` | `inline` | It will reuse the shared envelope and error mapping: 401, 403, 429, 500, and a 200 empty list for "nothing tracked". — `src/app/api/parcels/lookup/route.ts:126-128` |
+| 13 | `emits` | `none` | Not built. When it is, it should log uid + outcome + count + duration, and never a parcel list. — `src/app/api/parcels/lookup/route.ts:113-119 — the log shape this will mirror` |
+| 14 | `offers` | `none` | A data route renders no sponsored content. — `mobile/src/hooks/useTrackedLots.ts:1-20` |
+| 15 | `metering` | `none` | Nothing here is counted. The Spec 126 §7 usage ledger table does not exist (grep for usage_events in the introspected drizzle schema returns 0 hits), and the parcel product has no quota, credit or view counter of its own — no metering column, no ledger row, no consumption event. Measured 2026-09-16. — `src/lib/db/generated/schema.ts — no usage_events table (grep, 2026-09-16)`, `src/app/api/parcels/lookup/route.ts:113-119 — the only record of a lookup is a log line; it increments nothing` |
+| 16 | `config` | `none` | One tunable is implied and NOT yet registered: the window that decides what counts as a "new" nearby CoA ruling. It must become a logic variable rather than a literal in the route — it is exactly the kind of threshold Spec 126 P4 says is data, not code. — `docs/reference/logic-variables-registry.md — no tracked-lots entry` |
+| 17 | `sharing` | `sole` | S-072 is its only consumer. — `mobile/src/hooks/useTrackedLots.ts:1-20` |
+| 18 | `a11y` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 19 | `deviations` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
+| 20 | `limitations` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 21 | `interpretation` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
+
+</details>
+
+**Links.** schema: [`scripts/surfaces/_schema/surface.schema.json`](../../../scripts/surfaces/_schema/surface.schema.json) · owning spec: [`docs/specs/03-mobile/100_mobile_parcel_cost_tool.md`](../../../docs/specs/03-mobile/100_mobile_parcel_cost_tool.md)
+
+> ⚠️ Created by operator ruling 2026-09-16 as part of the tracked-lots feature module (F17). The table is DEFINED here rather than written as a migration because migrations are the Backend domain and a different committer; the full column list, the unique constraint, the index and the RLS class are in `inputs.tables[0].evidence` so the migration can be written without re-deciding anything.
+
+THE DERIVED FIELD. Of the three figures the surface shows, two are real columns (`parcels.max_buildable_gfa_sqm`, `parcels.max_newbuild_coa_gfa_sqm`) and the third — "new nearby CoA ruling" — HAS NO COLUMN ANYWHERE. It is derivable (`coa_applications` carries `decision`, `decision_date` and `neighbourhood_id`, and the lookup route already joins CoA by neighbourhood) but nothing computes it. It is therefore declared nullable, and the client renders `null` as "—" rather than "NO". The window is an unregistered tunable (see `config`).
+
+NO REUSE OF THE LEAD-GEN SAVE PATH. `useSaveLead`, `admin_watchlist` and `/api/leads/save` are the lead-gen product’s machinery; OD5 forbids reaching for them here, which is why this is a new table and a new route rather than a second consumer of an existing one.
+
+<a id="s-072"></a>
+
+###### `S-072` `mobile_tracked_lots`
+
+**Programme.** `S-072` · scope `parcel_product` · feature `F17` · build order 1173 · batch `B2` · review `unreviewed` — The Tracked Lots tab of the MaxBLD shelf, and the first surface of the tracked-lots feature module — its own table, its own contract, shared with nothing.
+
+**What it is.** The lots you have chosen to keep an eye on. Each row shows the address, how much can be built there as of right, how much the Committee of Adjustment route could allow, and whether a CoA ruling has landed nearby recently — and taps through to the full lot report. Manage mode turns on a delete on every row; removing one is undoable from a toast, and the count at the top updates the moment it goes. Right now the data behind it is preview data, and the screen says so rather than passing sample rows off as your saved lots.
+
+**What it reads and writes.** Every value will arrive through one contract, `/api/parcels/tracked`, which does not exist yet. Behind it: a new `user_tracked_lots` table holding only the fact that you tracked a parcel, joined to `parcels` for the envelope figures, plus a per-request derivation over `coa_applications` for the nearby-ruling flag. It holds no client store — manage mode and the single undoable removal live in component state. It emits **no analytics event**, so nothing it does is currently countable.
+
+**Under Spec 126.** **REBUILD** — its contract is unbuilt, so there is nothing to re-project until the route and its table exist. It renders through the LIST renderer (declared item archetype, pagination and recycling), reading by reference: `/api/parcels/tracked`. It owns two components — the row and the sticky header — declared in `owns.components[]`.
+
+**kind** SURFACE · **archetype** `LIST` · **platforms** `mobile` · **status** exists · **lines** 723 · **shard** `mobile-product` · **researched** ✅ every field
+
+**Gate.** auth class **entitled** (It inherits the tab gate; the tab tree does not mount unless subscription_status is trial/active/past_due/admin_managed, and the route will re-check server-side.) · session **required** · entitlement subscription_status · flag none · device permission none
+
+**Calls.** `/api/parcels/tracked` — idiom: hook
+
+**Components owned.** `mobile/src/components/parcel/TrackedLotRow.tsx` · `mobile/src/components/parcel/TrackedLotsHeader.tsx`
+
+**Emits.** —
+
+**Render states seen in code.** `stub_notice` · `loading` · `list` · `empty` · `error` · `manage_mode` · `pending_removal`
+
+**Data lineage.**
+
+_No table is reached by this entry — every value it shows arrives through a contract, or it shows no server data at all._
+
+**Evidence.**
+
+| Claim | Citation (`file:line`, `migration:line`, or a spec §anchor) |
+|---|---|
+| `files` | `mobile/app/(app)/parcel-tool/tracked.tsx:1` · `mobile/src/lib/trackedLots.ts:1 — the pure logic this screen is a rendering of` · `mobile/src/hooks/useTrackedLots.ts:1 — the typed stub` |
+| `contracts` | `mobile/src/hooks/useTrackedLots.ts:97-116 — useTrackedLots (STUB; /api/parcels/tracked does not exist)` |
+| `tables` | ``user_tracked_lots` does not exist — see contract C-062` |
+| `gate` | `mobile/app/(app)/_layout.tsx:236-265` · `mobile/app/(app)/parcel-tool/_layout.tsx:55-61` |
+| `states` | `mobile/app/(app)/parcel-tool/tracked.tsx:121-187 — loading / error / empty / list branches` · `mobile/app/(app)/parcel-tool/tracked.tsx:190-234 — the undo toast` |
+| `emits` | `mobile/app/(app)/parcel-tool/tracked.tsx:1-217 — no track() call` |
+| `spec_refs` | `docs/specs/03-mobile/100_mobile_parcel_cost_tool.md §4` · `docs/specs/02-web-admin/126_maxbld_surface_standard.md §3.1 (LIST archetype profile)` · `docs/specs/00-architecture/116_multi_product_architecture.md (OD5)` · `docs/specs/00-architecture/117_maxbld_brand.md §6.1` |
+
+<details><summary>21 category answers — 21 answered, 0 unresearched</summary>
+
+| # | Category | Answer (closed vocabulary) | Why / evidence |
+|---:|---|---|---|
+| 1 | `identity` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 2 | `inputs` | `contract` | One read of /api/parcels/tracked. No route param, no local input. — `mobile/src/hooks/useTrackedLots.ts:97-116` |
+| 3 | `outputs` | `optimistic_then_contract` | Removing a lot takes it out of the list immediately — so the header count updates at once — and parks it with its original index behind an undo toast. The DELETE fires only when the removal becomes final: the toast is dismissed, a second removal supersedes it, or the user leaves manage mode. Undo puts the row back where it was and no request is made at all. — `mobile/src/lib/trackedLots.ts:118-160 — removeLot / undoRemoval / commitRemoval`, `mobile/app/(app)/parcel-tool/tracked.tsx:70-100` |
+| 4 | `state` | `none` | No store. Manage mode and the single pending removal are component useState, which the state vocabulary has no value for; the list itself is server data. — `mobile/app/(app)/parcel-tool/tracked.tsx:50-58 — useState(manageMode) + useState(override)` |
+| 5 | `staleness` | `query_cache` | Declared for the shape it will have once the route exists: a keyed read under `['parcel-tracked']` in the shared query client. While the hook is a stub there is no cache entry at all. — `mobile/src/hooks/useTrackedLots.ts:97-116`, `mobile/src/lib/queryClient.ts:37-45` |
+| 6 | `guards` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 7 | `render` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 8 | `checks` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 9 | `invariants` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
+| 10 | `plausibility` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
+| 11 | `states` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 12 | `errors` | `inline` | A failed read renders the testID-tagged `tracked-lots-error` block with a retry instruction, distinct from the empty state. — `mobile/app/(app)/parcel-tool/tracked.tsx:136-146 — testID tracked-lots-error` |
+| 13 | `emits` | `none` | Nothing to emit yet. — `mobile/app/(app)/parcel-tool/tracked.tsx:1-52` |
+| 14 | `offers` | `none` | No sponsored placement is rendered. — `mobile/app/(app)/parcel-tool/tracked.tsx:1-52` |
+| 15 | `metering` | `none` | Nothing here is counted. The Spec 126 §7 usage ledger table does not exist (grep for usage_events in the introspected drizzle schema returns 0 hits), and the parcel product has no quota, credit or view counter of its own — no metering column, no ledger row, no consumption event. Measured 2026-09-16. — `src/lib/db/generated/schema.ts — no usage_events table (grep, 2026-09-16)`, `src/app/api/parcels/lookup/route.ts:113-119 — the only record of a lookup is a log line; it increments nothing` |
+| 16 | `config` | `none` | The surface has no tunable of its own. The one threshold in this feature — the window that makes a nearby CoA ruling "new" — belongs to the contract and is declared unregistered there. — `mobile/src/constants/parcelSearch.ts:98 — TRACKED_LOTS_HEX`, `contract C-062 config` |
+| 17 | `sharing` | `sole` | It is the only renderer of /api/parcels/tracked. — `mobile/src/hooks/useTrackedLots.ts:97-116` |
+| 18 | `a11y` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 19 | `deviations` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 20 | `limitations` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 21 | `interpretation` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
+
+</details>
+
+**Links.** schema: [`scripts/surfaces/_schema/surface.schema.json`](../../../scripts/surfaces/_schema/surface.schema.json) · owning spec: [`docs/specs/03-mobile/100_mobile_parcel_cost_tool.md`](../../../docs/specs/03-mobile/100_mobile_parcel_cost_tool.md) · files: `mobile/app/(app)/parcel-tool/tracked.tsx` · `mobile/src/components/parcel/TrackedLotRow.tsx` · `mobile/src/components/parcel/TrackedLotsHeader.tsx` · `mobile/src/lib/trackedLots.ts` · `mobile/src/hooks/useTrackedLots.ts`
+
+> ⚠️ ARCHETYPE: LIST, NOT REPORT. The brief that specified this surface said REPORT. The schema settles it: the REPORT `x-profile` in scripts/surfaces/_schema/surface.schema.json FORCES `outputs.answer` and `state.answer` to the constant "none". This surface REMOVES rows — a write, declared here as `optimistic_then_contract` — so REPORT is not merely a poor fit, it is schema-invalid and the generator would refuse it. LIST is also the right description: a scrollable collection with a declared per-item archetype, which is what `render.list` exists to carry.
+
+DATA. The contract C-062 and the `user_tracked_lots` table are DESIGNED, not built. The hook is a fixture-backed stub whose fixtures are parsed through the same boundary schema the real fetch will use, so a fixture cannot drift from the declared projection. The screen discloses the stub. No part of the lead-gen save machinery (`useSaveLead`, `admin_watchlist`, `/api/leads/save`) is reused — OD5.
+
+THE THREE FIGURES. Max Build = `parcels.max_buildable_gfa_sqm` (real). MAX COA BUILD = `parcels.max_newbuild_coa_gfa_sqm` (real). New Nearby CoA Ruling = NO COLUMN EXISTS; derivable from decided `coa_applications` in the parcel’s neighbourhood, declared nullable, rendered "—" while null. See `limitations` and the blocking check.
 
 ### §B `parcel_admin` — admin surfaces that operate the parcel product (13)
 
@@ -4779,6 +5100,8 @@ _No table is reached by this entry — every value it shows arrives through a co
 
 > ⚠️ This shell is the single most load-bearing gate in the mobile estate — five tabs, six subscription statuses, one contract. guards.entitlement.product is lead_gen rather than the schema's parcel_tool because migration 228's CHECK permits only lead_gen and flight_center.
 
+SELF-HIDING FOR THE MaxBLD PRODUCT (operator ruling 2026-09-16 (c)). This five-tab bar belongs to the LEAD-GEN app. It is NOT rendered while a `parcel-tool` route is focused, because that group is the MaxBLD product and has its own three-tab shelf (S-004 `shell_parcel_tool_stack`: Lookup, Tracked Lots, Account). The decision is a pure function of the focused route — `shouldHideAppTabBar` (mobile/src/lib/appShell.ts:29), consumed in the custom tabBar wrapper at mobile/app/(app)/_layout.tsx:69. The parcel-tool group deliberately STAYS inside `(app)` so it remains behind the subscription gate at mobile/app/(app)/_layout.tsx:236-265; hiding the bar was chosen over moving the group for that reason.
+
 <a id="s-049"></a>
 
 ###### `S-049` `shell_web_root`
@@ -7401,7 +7724,7 @@ _Rendered in one line each on purpose. These convert under the same standard in 
 
 Every table any entry reads or writes, its real columns, and who touches it. **exists** = present in the introspected schema; **net-new** = specified but not yet in the database.
 
-**71** distinct tables are touched — **52** exist today, **19** are net-new.
+**72** distinct tables are touched — **52** exist today, **20** are net-new.
 
 ### Existing tables (52)
 
@@ -7412,7 +7735,7 @@ Every table any entry reads or writes, its real columns, and who touches it. **e
 | `admin_backup_codes` | `id` · `user_id` · `code_hash` · `code_salt` · `used_at` · `created_at` | `admin_security` · `contract_admin_security_mfa` · `contract_admin_security_mfa_verify` · `contract_admin_suppliers_leads` · `contract_admin_users` · `contract_admin_users_uid` · `contract_admin_users_uid_subscription_events` · `contract_admin_users_uid_subscription_reconcile` · `contract_admin_users_uid_subscription_retry_cancel` | `admin_security` · `contract_admin_security_mfa` · `contract_admin_security_mfa_verify` · `contract_admin_users` · `contract_admin_users_uid` · `contract_admin_users_uid_subscription_events` · `contract_admin_users_uid_subscription_reconcile` · `contract_admin_users_uid_subscription_retry_cancel` |
 | `admin_watchlist` | `id` · `admin_uid` · `lead_type` · `lead_key` · `permit_num` · `revision_num` · `coa_application_number` · `address_snapshot` · `saved_at` | `admin_flight_center` · `admin_lead_feed` · `contract_admin_leads_watchlist` | `admin_flight_center` · `admin_lead_feed` · `contract_admin_leads_watchlist` |
 | `building_footprints` | `id` · `source_id` · `geometry` · `footprint_area_sqm` · `footprint_area_sqft` · `max_height_m` · `min_height_m` · `elev_z` · `estimated_stories` · `centroid_lat` · `centroid_lng` · `created_at` · `geom` | `web_permit_detail` · `admin_data_quality` · `admin_flight_center` · `admin_lead_feed_inspector` · `contract_admin_leads_inspect_id` · `contract_admin_stats` · `contract_permits_id` · `contract_quality_refresh` | — |
-| `coa_applications` | `id` · `application_number` · `address` · `street_num` · `street_name` · `ward` · `status` · `decision` · `decision_date` · `hearing_date` · `description` · `applicant` · `linked_permit_num` · `linked_confidence` · `data_hash` · `first_seen_at` · `last_seen_at` · `sub_type` · `street_name_normalized` · `lifecycle_phase` · `lifecycle_classified_at` · `lifecycle_stalled` · `lead_id` · `coa_type_class` · `project_type` · `scope_tags` · `scope_classified_at` · `scope_source` · `structure_type` · `neighbourhood_id` · `latitude` · `longitude` · `modeled_gfa_sqm` · `estimated_cost` · `cost_source` · `cost_classified_at` · `lifecycle_seq` · `lifecycle_group` · `lifecycle_block` · `lifecycle_stage` · `bid_value` · `parcel_linked_at` · `trade_classified_at` · `matched_status` · `matched_rule` · `unmapped_status` · `unmapped_decision` · `zoning_class` · `bylaw_max_coverage_pct` · `bylaw_max_fsi` · `bylaw_max_height_m` · `exception_number` · `variance_context` · `zoning_parcel_count` · `zoning_dominant_parcel_id` · `zoning_dominant_parcel_method` · `zoning_enriched_at` · `is_in_ravine_protection_area` · `ravine_distance_m` · `is_heritage_designated` · `heritage_designation_type` · `heritage_designation_date` · `is_corner_lot` · `is_through_lot` · `primary_frontage_street_name` · `lot_size_sqm` · `frontage_m` · `depth_m` · `lot_size_confidence` · `lot_size_basis` · `max_build_setback_basis` · `max_buildable_footprint_sqm` · `max_build_width_m` · `max_build_length_m` · `max_build_height_m` · `max_build_stories` · `max_build_basis` · `max_buildable_gfa_sqm` · `max_buildable_gfa_basis` · `max_build_confidence` · `max_garden_suite_gfa_sqm` · `garden_suite_fits` · `envelope_constrained` · `envelope_constraint_reason` · `imagery_roof_footprint_sqm` · `existing_stories` · `existing_height_m` · `imagery_roof_gfa_sqm` · `existing_width_m` · `existing_length_m` · `existing_structure_confidence` · `existing_other_structures_count` · `existing_other_structures_sqm` · `existing_greenspace_sqm` · `max_newbuild_coa_gfa_sqm` · `cur_basement_gfa_sqm` · `cur_storey_gfa_sqm` · `cur_interior_reno_gfa_sqm` · `cur_est_kitchen_gfa_sqm` · `cur_est_bath_gfa_sqm` · `max_build_stories_basis` · `abuts_laneway` · `max_garage_gfa_sqm` · `garage_capacity_cars` · `garage_constraint_reason` · `garage_permission` · `max_laneway_suite_gfa_sqm` · `max_rear_suite_gfa_sqm` · `rear_suite_type` · `rear_suite_permission` · `cur_floor_gfa_sqm` · `cur_pot_2story_gfa_sqm` · `cur_pot_3story_gfa_sqm` · `cur_gfa_range_basis` · `existing_data_quality_flag` · `max_build_stories_aggressive` · `market_exceeds_bylaw` · `neighbourhood_cost_premium` · `opt_aor_storeys` · `opt_aor_gfa_sqm` · `opt_aor_units` · `opt_coa_storeys` · `opt_coa_gfa_sqm` · `opt_suite_type` · `opt_suite_fits_full` · `opt_binding_constraint` · `opt_config_confidence` · `comp_count` · `comp_dominant_build` · `comp_build_ratio_p50` · `comp_fsi_p50` · `cost_fb_total` · `cost_coa_total` · `cost_solar_total` · `cost_garden_suite_total` · `cost_laneway_suite_total` · `cost_garage_total` · `cost_gut_total` · `cost_addition_total` · `cost_kitchen_per_sqm` · `cost_bath_per_sqm` · `cost_basement_per_sqm` · `cost_basement_underpin_per_sqm` · `max_build_fsi` · `coa_fsi` · `realized_fsi_p90` | `mobile_lead_detail` · `mobile_parcel_detail` · `web_dashboard` · `web_permit_detail` · `admin_data_quality` · `admin_flight_center` · `admin_flight_center` · `admin_lead_feed` · `admin_lead_feed_inspector` · `admin_parcel_cost` · `contract_admin_leads_inspect_id` · `contract_admin_leads_test_feed` · `contract_admin_leads_watchlist` · `contract_admin_leads_watchlist_search` · `contract_admin_parcels_lookup` · `contract_admin_stats` · `contract_coa` · `contract_leads_detail_id` · `contract_leads_feed` · `contract_parcels_lookup` · `contract_permits` · `contract_permits_id` · `contract_quality_refresh` | — |
+| `coa_applications` | `id` · `application_number` · `address` · `street_num` · `street_name` · `ward` · `status` · `decision` · `decision_date` · `hearing_date` · `description` · `applicant` · `linked_permit_num` · `linked_confidence` · `data_hash` · `first_seen_at` · `last_seen_at` · `sub_type` · `street_name_normalized` · `lifecycle_phase` · `lifecycle_classified_at` · `lifecycle_stalled` · `lead_id` · `coa_type_class` · `project_type` · `scope_tags` · `scope_classified_at` · `scope_source` · `structure_type` · `neighbourhood_id` · `latitude` · `longitude` · `modeled_gfa_sqm` · `estimated_cost` · `cost_source` · `cost_classified_at` · `lifecycle_seq` · `lifecycle_group` · `lifecycle_block` · `lifecycle_stage` · `bid_value` · `parcel_linked_at` · `trade_classified_at` · `matched_status` · `matched_rule` · `unmapped_status` · `unmapped_decision` · `zoning_class` · `bylaw_max_coverage_pct` · `bylaw_max_fsi` · `bylaw_max_height_m` · `exception_number` · `variance_context` · `zoning_parcel_count` · `zoning_dominant_parcel_id` · `zoning_dominant_parcel_method` · `zoning_enriched_at` · `is_in_ravine_protection_area` · `ravine_distance_m` · `is_heritage_designated` · `heritage_designation_type` · `heritage_designation_date` · `is_corner_lot` · `is_through_lot` · `primary_frontage_street_name` · `lot_size_sqm` · `frontage_m` · `depth_m` · `lot_size_confidence` · `lot_size_basis` · `max_build_setback_basis` · `max_buildable_footprint_sqm` · `max_build_width_m` · `max_build_length_m` · `max_build_height_m` · `max_build_stories` · `max_build_basis` · `max_buildable_gfa_sqm` · `max_buildable_gfa_basis` · `max_build_confidence` · `max_garden_suite_gfa_sqm` · `garden_suite_fits` · `envelope_constrained` · `envelope_constraint_reason` · `imagery_roof_footprint_sqm` · `existing_stories` · `existing_height_m` · `imagery_roof_gfa_sqm` · `existing_width_m` · `existing_length_m` · `existing_structure_confidence` · `existing_other_structures_count` · `existing_other_structures_sqm` · `existing_greenspace_sqm` · `max_newbuild_coa_gfa_sqm` · `cur_basement_gfa_sqm` · `cur_storey_gfa_sqm` · `cur_interior_reno_gfa_sqm` · `cur_est_kitchen_gfa_sqm` · `cur_est_bath_gfa_sqm` · `max_build_stories_basis` · `abuts_laneway` · `max_garage_gfa_sqm` · `garage_capacity_cars` · `garage_constraint_reason` · `garage_permission` · `max_laneway_suite_gfa_sqm` · `max_rear_suite_gfa_sqm` · `rear_suite_type` · `rear_suite_permission` · `cur_floor_gfa_sqm` · `cur_pot_2story_gfa_sqm` · `cur_pot_3story_gfa_sqm` · `cur_gfa_range_basis` · `existing_data_quality_flag` · `max_build_stories_aggressive` · `market_exceeds_bylaw` · `neighbourhood_cost_premium` · `opt_aor_storeys` · `opt_aor_gfa_sqm` · `opt_aor_units` · `opt_coa_storeys` · `opt_coa_gfa_sqm` · `opt_suite_type` · `opt_suite_fits_full` · `opt_binding_constraint` · `opt_config_confidence` · `comp_count` · `comp_dominant_build` · `comp_build_ratio_p50` · `comp_fsi_p50` · `cost_fb_total` · `cost_coa_total` · `cost_solar_total` · `cost_garden_suite_total` · `cost_laneway_suite_total` · `cost_garage_total` · `cost_gut_total` · `cost_addition_total` · `cost_kitchen_per_sqm` · `cost_bath_per_sqm` · `cost_basement_per_sqm` · `cost_basement_underpin_per_sqm` · `max_build_fsi` · `coa_fsi` · `realized_fsi_p90` | `mobile_lead_detail` · `mobile_parcel_detail` · `web_dashboard` · `web_permit_detail` · `admin_data_quality` · `admin_flight_center` · `admin_flight_center` · `admin_lead_feed` · `admin_lead_feed_inspector` · `admin_parcel_cost` · `contract_admin_leads_inspect_id` · `contract_admin_leads_test_feed` · `contract_admin_leads_watchlist` · `contract_admin_leads_watchlist_search` · `contract_admin_parcels_lookup` · `contract_admin_stats` · `contract_coa` · `contract_leads_detail_id` · `contract_leads_feed` · `contract_parcels_lookup` · `contract_parcels_tracked` · `contract_permits` · `contract_permits_id` · `contract_quality_refresh` | — |
 | `cost_estimates` | `permit_num` · `revision_num` · `estimated_cost` · `cost_source` · `cost_tier` · `cost_range_low` · `cost_range_high` · `premium_factor` · `complexity_score` · `model_version` · `computed_at` · `trade_contract_values` · `is_geometric_override` · `modeled_gfa_sqm` · `effective_area_sqm` · `lead_id` | `mobile_lead_detail` · `mobile_lead_feed` · `mobile_map` · `admin_flight_center` · `admin_lead_feed` · `admin_lead_feed_inspector` · `contract_admin_leads_inspect_id` · `contract_admin_leads_test_feed` · `contract_leads_detail_id` · `contract_leads_feed` | — |
 | `data_quality_snapshots` | `id` · `snapshot_date` · `total_permits` · `active_permits` · `permits_with_trades` · `trade_matches_total` · `trade_avg_confidence` · `trade_tier1_count` · `trade_tier2_count` · `trade_tier3_count` · `permits_with_builder` · `builders_total` · `builders_enriched` · `builders_with_phone` · `builders_with_email` · `builders_with_website` · `builders_with_google` · `builders_with_wsib` · `permits_with_parcel` · `parcel_exact_matches` · `parcel_name_matches` · `parcel_avg_confidence` · `permits_with_neighbourhood` · `permits_geocoded` · `coa_total` · `coa_linked` · `coa_avg_confidence` · `coa_high_confidence` · `coa_low_confidence` · `permits_updated_24h` · `permits_updated_7d` · `permits_updated_30d` · `last_sync_at` · `last_sync_status` · `created_at` · `parcel_spatial_matches` · `permits_with_scope` · `scope_project_type_breakdown` · `building_footprints_total` · `parcels_with_buildings` · `permits_with_scope_tags` · `scope_tags_top` · `permits_with_detailed_tags` · `trade_residential_classified` · `trade_residential_total` · `trade_commercial_classified` · `trade_commercial_total` · `null_description_count` · `null_builder_name_count` · `null_est_const_cost_count` · `null_street_num_count` · `null_street_name_count` · `null_geo_id_count` · `violation_cost_out_of_range` · `violation_future_issued_date` · `violation_missing_status` · `violations_total` · `schema_column_counts` · `sla_permits_ingestion_hours` · `inspections_total` · `inspections_permits_scraped` · `inspections_outstanding_count` · `inspections_passed_count` · `inspections_not_passed_count` · `cost_estimates_total` · `cost_estimates_from_permit` · `cost_estimates_from_model` · `cost_estimates_null_cost` · `timing_calibration_total` · `timing_calibration_avg_sample` · `timing_calibration_freshness_hours` · `cost_estimates_liar_gate_overrides` · `cost_estimates_zero_total_bypass` | `admin_data_quality` · `contract_quality` | `contract_quality_refresh` |
 | `device_tokens` | `id` · `user_id` · `push_token` · `platform` · `created_at` · `updated_at` | `admin_notifications` · `admin_user_detail` · `contract_admin_notifications` · `contract_admin_notifications_test_send` | `overlay_notification_permission_modal` · `shell_app_root` · `contract_notifications_register` |
@@ -7430,7 +7753,7 @@ Every table any entry reads or writes, its real columns, and who touches it. **e
 | `notifications` | `id` · `user_id` · `type` · `title` · `body` · `permit_num` · `trade_slug` · `channel` · `is_read` · `is_sent` · `sent_at` · `created_at` · `lead_id` | `admin_data_quality` · `admin_notifications` · `contract_admin_notifications` · `contract_admin_stats` · `contract_notifications` | `contract_notifications` |
 | `parcel_address_points` | `parcel_id` · `address_point_id` · `computed_at` | `mobile_parcel_search` · `admin_parcel_cost` · `contract_admin_parcels_lookup` · `contract_parcels_lookup` | — |
 | `parcel_buildings` | `id` · `parcel_id` · `building_id` · `is_primary` · `structure_type` · `linked_at` · `match_type` · `confidence` | `web_permit_detail` · `admin_data_quality` · `admin_flight_center` · `admin_lead_feed_inspector` · `contract_admin_leads_inspect_id` · `contract_admin_stats` · `contract_permits_id` · `contract_quality_refresh` | — |
-| `parcels` | `id` · `parcel_id` · `feature_type` · `address_number` · `linear_name_full` · `addr_num_normalized` · `street_name_normalized` · `street_type_normalized` · `stated_area_raw` · `lot_size_sqm` · `lot_size_sqft` · `frontage_m` · `frontage_ft` · `depth_m` · `depth_ft` · `geometry` · `date_effective` · `date_expiry` · `created_at` · `centroid_lat` · `centroid_lng` · `is_irregular` · `geom` · `zoning_class` · `zoning_zn_string` · `zoning_gen_zone` · `zoning_holding` · `zone_status` · `bylaw_max_fsi` · `bylaw_max_coverage_pct` · `bylaw_max_height_m` · `bylaw_max_stories` · `bylaw_max_units` · `bylaw_max_density` · `bylaw_min_frontage_m` · `bylaw_min_area_sqm` · `bylaw_standard_setback_m` · `bylaw_pct_commercial_max` · `bylaw_pct_residential_max` · `bylaw_pct_employment_max` · `bylaw_pct_office_max` · `exception_number` · `exception_text` · `bylaw_chapter` · `bylaw_section` · `bylaw_exception_ref` · `in_policy_area` · `on_policy_road` · `in_rooming_house_overlay` · `in_parking_zone_overlay` · `in_building_setback_overlay` · `on_priority_retail` · `in_queenstw_eat_overlay` · `zoning_overlays` · `zoning_base_source_id` · `zoning_dominant_area_share` · `zoning_is_ambiguous` · `zoning_base_source_dataset_version` · `zoning_enriched_at` · `is_in_ravine_protection_area` · `ravine_distance_m` · `ravine_dataset_version_when_enriched` · `is_heritage_designated` · `heritage_designation_type` · `heritage_designation_date` · `heritage_dataset_version_when_enriched` · `is_corner_lot` · `is_through_lot` · `primary_frontage_street_name` · `centreline_dataset_version_when_enriched` · `lot_size_confidence` · `lot_size_basis` · `max_build_setback_basis` · `max_buildable_footprint_sqm` · `max_build_width_m` · `max_build_length_m` · `max_build_height_m` · `max_build_stories` · `max_build_basis` · `max_buildable_gfa_sqm` · `max_buildable_gfa_basis` · `max_build_confidence` · `max_garden_suite_gfa_sqm` · `garden_suite_fits` · `envelope_constrained` · `envelope_constraint_reason` · `imagery_roof_footprint_sqm` · `existing_stories` · `existing_height_m` · `imagery_roof_gfa_sqm` · `existing_width_m` · `existing_length_m` · `existing_structure_confidence` · `existing_other_structures_count` · `existing_other_structures_sqm` · `existing_greenspace_sqm` · `max_newbuild_coa_gfa_sqm` · `cur_basement_gfa_sqm` · `cur_storey_gfa_sqm` · `cur_interior_reno_gfa_sqm` · `cur_est_kitchen_gfa_sqm` · `cur_est_bath_gfa_sqm` · `max_build_stories_basis` · `abuts_laneway` · `max_garage_gfa_sqm` · `garage_capacity_cars` · `garage_constraint_reason` · `garage_permission` · `max_laneway_suite_gfa_sqm` · `max_rear_suite_gfa_sqm` · `rear_suite_type` · `rear_suite_permission` · `cur_floor_gfa_sqm` · `cur_pot_2story_gfa_sqm` · `cur_pot_3story_gfa_sqm` · `cur_gfa_range_basis` · `existing_data_quality_flag` · `max_build_stories_aggressive` · `market_exceeds_bylaw` · `neighbourhood_id` · `neighbourhood_cost_premium` · `opt_aor_storeys` · `opt_aor_gfa_sqm` · `opt_aor_units` · `opt_coa_storeys` · `opt_coa_gfa_sqm` · `opt_suite_type` · `opt_suite_fits_full` · `opt_binding_constraint` · `opt_config_confidence` · `optimal_config` · `nearby_builds_summary` · `comparable_builds` · `comp_count` · `comp_dominant_build` · `comp_build_ratio_p50` · `comp_fsi_p50` · `cur_gfa_low_sqm` · `cur_gfa_high_sqm` · `cur_storeys_range` · `cur_gfa_band_basis` · `parcel_cost_menu` · `cost_fb_total` · `cost_coa_total` · `cost_solar_total` · `cost_garden_suite_total` · `cost_laneway_suite_total` · `cost_garage_total` · `cost_gut_total` · `cost_addition_total` · `cost_kitchen_per_sqm` · `cost_bath_per_sqm` · `cost_basement_per_sqm` · `cost_basement_underpin_per_sqm` · `max_build_fsi` · `coa_fsi` · `realized_fsi_p90` · `lot_size_source` | `mobile_parcel_detail` · `mobile_parcel_search` · `web_permit_detail` · `admin_data_quality` · `admin_flight_center` · `admin_lead_feed_inspector` · `admin_parcel_cost` · `contract_admin_leads_inspect_id` · `contract_admin_parcels_lookup` · `contract_admin_stats` · `contract_parcels_lookup` · `contract_permits_id` | — |
+| `parcels` | `id` · `parcel_id` · `feature_type` · `address_number` · `linear_name_full` · `addr_num_normalized` · `street_name_normalized` · `street_type_normalized` · `stated_area_raw` · `lot_size_sqm` · `lot_size_sqft` · `frontage_m` · `frontage_ft` · `depth_m` · `depth_ft` · `geometry` · `date_effective` · `date_expiry` · `created_at` · `centroid_lat` · `centroid_lng` · `is_irregular` · `geom` · `zoning_class` · `zoning_zn_string` · `zoning_gen_zone` · `zoning_holding` · `zone_status` · `bylaw_max_fsi` · `bylaw_max_coverage_pct` · `bylaw_max_height_m` · `bylaw_max_stories` · `bylaw_max_units` · `bylaw_max_density` · `bylaw_min_frontage_m` · `bylaw_min_area_sqm` · `bylaw_standard_setback_m` · `bylaw_pct_commercial_max` · `bylaw_pct_residential_max` · `bylaw_pct_employment_max` · `bylaw_pct_office_max` · `exception_number` · `exception_text` · `bylaw_chapter` · `bylaw_section` · `bylaw_exception_ref` · `in_policy_area` · `on_policy_road` · `in_rooming_house_overlay` · `in_parking_zone_overlay` · `in_building_setback_overlay` · `on_priority_retail` · `in_queenstw_eat_overlay` · `zoning_overlays` · `zoning_base_source_id` · `zoning_dominant_area_share` · `zoning_is_ambiguous` · `zoning_base_source_dataset_version` · `zoning_enriched_at` · `is_in_ravine_protection_area` · `ravine_distance_m` · `ravine_dataset_version_when_enriched` · `is_heritage_designated` · `heritage_designation_type` · `heritage_designation_date` · `heritage_dataset_version_when_enriched` · `is_corner_lot` · `is_through_lot` · `primary_frontage_street_name` · `centreline_dataset_version_when_enriched` · `lot_size_confidence` · `lot_size_basis` · `max_build_setback_basis` · `max_buildable_footprint_sqm` · `max_build_width_m` · `max_build_length_m` · `max_build_height_m` · `max_build_stories` · `max_build_basis` · `max_buildable_gfa_sqm` · `max_buildable_gfa_basis` · `max_build_confidence` · `max_garden_suite_gfa_sqm` · `garden_suite_fits` · `envelope_constrained` · `envelope_constraint_reason` · `imagery_roof_footprint_sqm` · `existing_stories` · `existing_height_m` · `imagery_roof_gfa_sqm` · `existing_width_m` · `existing_length_m` · `existing_structure_confidence` · `existing_other_structures_count` · `existing_other_structures_sqm` · `existing_greenspace_sqm` · `max_newbuild_coa_gfa_sqm` · `cur_basement_gfa_sqm` · `cur_storey_gfa_sqm` · `cur_interior_reno_gfa_sqm` · `cur_est_kitchen_gfa_sqm` · `cur_est_bath_gfa_sqm` · `max_build_stories_basis` · `abuts_laneway` · `max_garage_gfa_sqm` · `garage_capacity_cars` · `garage_constraint_reason` · `garage_permission` · `max_laneway_suite_gfa_sqm` · `max_rear_suite_gfa_sqm` · `rear_suite_type` · `rear_suite_permission` · `cur_floor_gfa_sqm` · `cur_pot_2story_gfa_sqm` · `cur_pot_3story_gfa_sqm` · `cur_gfa_range_basis` · `existing_data_quality_flag` · `max_build_stories_aggressive` · `market_exceeds_bylaw` · `neighbourhood_id` · `neighbourhood_cost_premium` · `opt_aor_storeys` · `opt_aor_gfa_sqm` · `opt_aor_units` · `opt_coa_storeys` · `opt_coa_gfa_sqm` · `opt_suite_type` · `opt_suite_fits_full` · `opt_binding_constraint` · `opt_config_confidence` · `optimal_config` · `nearby_builds_summary` · `comparable_builds` · `comp_count` · `comp_dominant_build` · `comp_build_ratio_p50` · `comp_fsi_p50` · `cur_gfa_low_sqm` · `cur_gfa_high_sqm` · `cur_storeys_range` · `cur_gfa_band_basis` · `parcel_cost_menu` · `cost_fb_total` · `cost_coa_total` · `cost_solar_total` · `cost_garden_suite_total` · `cost_laneway_suite_total` · `cost_garage_total` · `cost_gut_total` · `cost_addition_total` · `cost_kitchen_per_sqm` · `cost_bath_per_sqm` · `cost_basement_per_sqm` · `cost_basement_underpin_per_sqm` · `max_build_fsi` · `coa_fsi` · `realized_fsi_p90` · `lot_size_source` | `mobile_parcel_detail` · `mobile_parcel_search` · `web_permit_detail` · `admin_data_quality` · `admin_flight_center` · `admin_lead_feed_inspector` · `admin_parcel_cost` · `contract_admin_leads_inspect_id` · `contract_admin_parcels_lookup` · `contract_admin_stats` · `contract_parcels_lookup` · `contract_parcels_tracked` · `contract_permits_id` | — |
 | `permit_history` | `id` · `permit_num` · `revision_num` · `sync_run_id` · `field_name` · `old_value` · `new_value` · `changed_at` | `web_permit_detail` · `contract_permits_id` | `contract_admin_sync` · `contract_sync` |
 | `permit_inspections` | `id` · `permit_num` · `stage_name` · `status` · `inspection_date` · `scraped_at` · `created_at` | `web_permit_detail` · `contract_permits_id` · `contract_quality_refresh` | — |
 | `permit_parcels` | `id` · `permit_num` · `revision_num` · `parcel_id` · `match_type` · `confidence` · `linked_at` | `web_permit_detail` · `admin_data_quality` · `admin_flight_center` · `admin_lead_feed_inspector` · `contract_admin_leads_inspect_id` · `contract_admin_stats` · `contract_permits_id` · `contract_quality_refresh` | — |
@@ -7460,7 +7783,7 @@ Every table any entry reads or writes, its real columns, and who touches it. **e
 | `user_profiles` | `user_id` · `trade_slug` · `display_name` · `created_at` · `updated_at` · `full_name` · `phone_number` · `company_name` · `email` · `backup_email` · `default_tab` · `location_mode` · `home_base_lat` · `home_base_lng` · `radius_km` · `supplier_selection` · `lead_views_count` · `stripe_customer_id` · `onboarding_complete` · `tos_accepted_at` · `account_deleted_at` · `account_preset` · `trade_slugs_override` · `radius_cap_km` · `new_lead_min_cost_tier` · `phase_changed` · `lifecycle_stalled_pref` · `start_date_urgent` · `notification_schedule` · `stripe_cancel_failed_at` | `mobile_flight_board` · `mobile_lead_feed` · `mobile_onboarding_address` · `mobile_onboarding_complete` · `mobile_onboarding_profession` · `mobile_onboarding_supplier` · `mobile_onboarding_terms` · `mobile_settings` · `overlay_paywall` · `shell_app_root` · `shell_app_tabs` · `web_subscribe` · `web_subscribe_success` · `admin_lead_feed_inspector` · `admin_notifications` · `admin_user_detail` · `admin_users` · `contract_admin_notifications` · `contract_admin_users` · `contract_admin_users_uid` · `contract_admin_users_uid_subscription_events` · `contract_admin_users_uid_subscription_reconcile` · `contract_admin_users_uid_subscription_retry_cancel` · `contract_leads_detail_id` · `contract_leads_feed` · `contract_leads_flight_board` · `contract_leads_flight_board_detail_id` · `contract_leads_save` · `contract_leads_search` · `contract_leads_view` · `contract_notifications_preferences` · `contract_parcels_lookup` · `contract_subscribe_exchange` · `contract_subscribe_portal_session` · `contract_subscribe_session` · `contract_user_profile` · `contract_user_profile_delete` · `contract_user_profile_reactivate` · `contract_webhooks_stripe` · `job_offboarding_sweep_30day` | `mobile_lead_feed` · `mobile_onboarding_address` · `mobile_onboarding_complete` · `mobile_onboarding_profession` · `mobile_onboarding_supplier` · `mobile_onboarding_terms` · `mobile_settings` · `overlay_lead_filter_sheet` · `shell_app_root` · `admin_user_detail` · `admin_users` · `contract_admin_users` · `contract_admin_users_uid` · `contract_admin_users_uid_subscription_retry_cancel` · `contract_leads_detail_id` · `contract_leads_feed` · `contract_leads_flight_board` · `contract_leads_flight_board_detail_id` · `contract_leads_save` · `contract_leads_search` · `contract_leads_view` · `contract_notifications_preferences` · `contract_parcels_lookup` · `contract_subscribe_exchange` · `contract_user_profile` · `contract_user_profile_delete` · `contract_user_profile_reactivate` |
 | `wsib_registry` | `id` · `legal_name` · `trade_name` · `legal_name_normalized` · `trade_name_normalized` · `mailing_address` · `predominant_class` · `naics_code` · `naics_description` · `subclass` · `subclass_description` · `business_size` · `match_confidence` · `matched_at` · `first_seen_at` · `last_seen_at` · `linked_entity_id` · `primary_phone` · `primary_email` · `website` · `last_enriched_at` · `is_gta` | `mobile_lead_feed` · `admin_data_quality` · `admin_lead_feed` · `contract_admin_builders` · `contract_admin_leads_test_feed` · `contract_admin_stats` · `contract_entities_id` · `contract_leads_feed` | — |
 
-### Net-new tables (19)
+### Net-new tables (20)
 
 | Table | Columns | Read by | Written by |
 |---|---|---|---|
@@ -7483,6 +7806,7 @@ Every table any entry reads or writes, its real columns, and who touches it. **e
 | `placements` | _net-new — no introspected columns_ | `admin_placements` | `admin_placements` |
 | `surface_descriptors` | _net-new — no introspected columns_ | `admin_contract_fanout` · `admin_orphan_panel` · `admin_surface_registry` | — |
 | `usage_events` | _net-new — no introspected columns_ | `admin_export_audit` · `admin_ledger_visualiser` · `admin_surface_registry` · `advertiser_self_metrics` | — |
+| `user_tracked_lots` | _net-new — no introspected columns_ | `contract_parcels_tracked` | `contract_parcels_tracked` |
 
 ---
 
@@ -7490,7 +7814,7 @@ Every table any entry reads or writes, its real columns, and who touches it. **e
 
 Spec 128 **R-13**: every component file under `src/components/**` or `mobile/src/components/**` appears in exactly **one** surface's `owns.components[]`. A file claimed by two surfaces makes this generator throw; a file claimed by **none** is listed here. Review question 5 of §0.6.
 
-**This section must be empty.** It is asserted empty by `src/tests/surface-registry.infra.test.ts`. Today it is **not** — 11 of 57 component files have no declared owner, which is the measurement R-13 exists to retire, stated rather than hidden.
+**This section must be empty.** It is asserted empty by `src/tests/surface-registry.infra.test.ts`. Today it is **not** — 11 of 60 component files have no declared owner, which is the measurement R-13 exists to retire, stated rather than hidden.
 
 | Component file | Owner |
 |---|---|
@@ -7527,4 +7851,4 @@ Spec 128 **R-13**: every component file under `src/components/**` or `mobile/src
 
 ---
 
-*Generated from 137 census rows and 84 introspected tables. Nothing in this file is hand-written; correct it by correcting `scripts/surfaces/_schema/surface-census.json` and regenerating.*
+*Generated from 141 census rows and 84 introspected tables. Nothing in this file is hand-written; correct it by correcting `scripts/surfaces/_schema/surface-census.json` and regenerating.*
