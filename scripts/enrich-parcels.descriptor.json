@@ -421,6 +421,12 @@
 
   "execution": {
     "shape": "enrich",
+    "heartbeat_minutes_from_config": "enrich_parcels_heartbeat_minutes",
+    "lock_timeout_ms_from_config": "enrich_parcels_lock_timeout_ms",
+    "enrich_hooks": {
+      "contract_read": "readZoningContract",
+      "defer_scope": { "export": "computeDeferScope", "threshold_from_config": "enrich_parcels_defer_threshold_rows" }
+    },
     "phases": [
       { "name": "zoning", "order": 1, "txn": "shared", "writes_ref": 0, "scope": "incremental", "invalidator_ref": 1, "timeout_minutes_from_config": "enrich_parcels_pass_statement_timeout_minutes" },
       { "name": "max_build", "order": 2, "txn": "shared", "writes_ref": 1, "scope": "incremental", "invalidator_ref": 2, "timeout_minutes_from_config": "enrich_parcels_pass_statement_timeout_minutes" },

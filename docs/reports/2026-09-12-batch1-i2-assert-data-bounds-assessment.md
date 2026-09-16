@@ -753,6 +753,7 @@ The 5 cases are preserved with the SAME claims, re-expressed against the new mec
 | 22 | (registry) | PASS | GOLD-PRE-FRESH: 52 PRE capture(s) across 12 converted step(s) all tracked + clean (git can restore every reference) |
 | 23 | (registry) | PASS | COMPRESSED-FORM-ELIGIBLE: not applicable (0 pending slugs declare the compressed form) |
 | 24 | (registry) | PASS | COMPRESSED-FORM-DEFAULT: not applicable (0 pending slugs whose archetype is eligible) |
+| 25 | (registry) | PASS | ARCHETYPE-PARITY: 12 converted slug(s) — 4 compared against a retained census row (all agree), 8 with no retained row (census arm n/a, pre-R-AO cutovers); every archetype has a declared freeze profile |
 
 ### Captures (item iv)
 - missing invocations (POST): none
@@ -761,7 +762,7 @@ The 5 cases are preserved with the SAME claims, re-expressed against the new mec
 - compare ran: true · diffs found: 644 · unexplained: 0
 
 ### Test suite (item iii)
-- 1025/1025 passed (suite success=true)
+- 1041/1041 passed (suite success=true)
 - harvested: 17 file(s) from 3 FLEET-WIDE targets (src/tests/step-conformance.infra.test.ts, src/tests/golden-fingerprint.infra.test.ts, src/tests/steps/) — one spawn per run, so every step's report carries this same number, by design
 - excluded (R-AG live-DB tier, owned by `npm run test:db`, derived from package.json `scripts.test`): 5 — src/tests/steps/link_massing/metamorphic.test.ts, src/tests/steps/link_massing/nearest-determinism.test.ts, src/tests/steps/link_massing/rung1-inline-wkt.test.ts, src/tests/steps/link_parcel_addresses/metamorphic.test.ts, src/tests/steps/link_parcel_addresses/rung1-inline-wkt.test.ts
 - skipped (declared but not run): 0

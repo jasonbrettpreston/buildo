@@ -2623,6 +2623,13 @@ describe('Rule 12 — truthful crash posture, static half (checkInterruptedPostu
     ['link_massing', 'link', 'runLinkPhase'],
     ['link_wsib', 'cascade', 'runCascadePhase'],
     ['link_parcels', 'link_keyed', 'runLinkKeyedPhase'],
+    // L6 (batch-2 Phase 0.10) — the ENRICHER arm, added when `runEnrichPhase`
+    // became a generic runner. `runnerReachability`'s third branch matches on
+    // `detectInterruptedRetraction(` AND a `full = … interruptedRetraction` fold;
+    // moving the contract read / defer-scope decision behind optional hooks
+    // rewrites the lines immediately around that fold, so the claim is
+    // RE-DERIVED against the live source rather than assumed to have survived.
+    ['enrich_parcels', 'enrich', 'runEnrichPhase'],
   ])('%s: shape=%s declares force_full_on_next_run and its runner (%s) is measured REACHABLE against the live scripts/lib/step/index.js', (slug, shape, fnName) => {
     const run = spawnSync('node', [STEP_VALIDATE, `--step=${slug}`, '--fast'], { cwd: REPO_ROOT, encoding: 'utf8', timeout: 30_000 });
     expect(run.status, `stdout=${run.stdout}\nstderr=${run.stderr}`).toBe(0);
@@ -2651,6 +2658,26 @@ describe('G-1 — new schema fields require x-ruling (schema-baseline ratchet)',
   it('the REAL schema passes --check clean (every new field since the baseline carries x-ruling)', () => {
     const run = spawnSync('node', [GENERATOR, '--check'], { cwd: REPO_ROOT, encoding: 'utf8', timeout: 30_000 });
     expect(run.status, `G-1 violation; stdout=${run.stdout} stderr=${run.stderr}`).toBe(0);
+  });
+
+  // L7 (batch-2 Phase 0.10) — the POSITIVE half of the ratchet for the three
+  // fields this row adds. `--check` above goes quiet once a field is written
+  // into schema-baseline.json (that write is the reviewed path), so it can no
+  // longer testify that these three carry a ruling at all. Asserted directly on
+  // the schema node, the way the ratchet's own predicate reads it.
+  it('the three execution.* fields added for the generic ENRICHER runner each carry a well-formed x-ruling', () => {
+    const schema = JSON.parse(fs.readFileSync(REAL_SCHEMA, 'utf8')) as {
+      properties: { execution: { anyOf?: Array<{ type?: string; properties?: Record<string, { 'x-ruling'?: { rungs_tried?: unknown[]; why?: string } }> }>; type?: string; properties?: Record<string, { 'x-ruling'?: { rungs_tried?: unknown[]; why?: string } }> } };
+    };
+    const exec = schema.properties.execution;
+    const branch = exec.properties ? exec : (exec.anyOf || []).find((b) => b.type === 'object')!;
+    for (const field of ['heartbeat_minutes_from_config', 'lock_timeout_ms_from_config', 'enrich_hooks']) {
+      const node = branch.properties![field];
+      expect(node, `execution.${field} is absent from step.schema.json`).toBeDefined();
+      const ruling = node?.['x-ruling'];
+      expect(Array.isArray(ruling?.rungs_tried) && ruling!.rungs_tried!.length > 0, `execution.${field} carries no rungs_tried`).toBe(true);
+      expect(typeof ruling?.why === 'string' && ruling!.why!.trim().length > 0, `execution.${field} carries no why`).toBe(true);
+    }
   });
 
   it('RED — a new field with NO x-ruling fires (known-bad fixture, real CLI, not just the exported function)', () => {

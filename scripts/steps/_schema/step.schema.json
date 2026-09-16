@@ -1289,6 +1289,50 @@
         "statement_timeout": { "$ref": "#/definitions/duration" },
         "step_timeout": { "$ref": "#/definitions/duration" },
         "batch": { "anyOf": [{ "const": "none" }, { "type": "integer", "minimum": 1 }] },
+        "heartbeat_minutes_from_config": {
+          "type": "string",
+          "minLength": 1,
+          "description": "REQUIRED when `identity.archetype` is \"ENRICHER\" (the profile's own allOf below); meaningless elsewhere. Names the `config.logic_variables[].name` whose resolved value is the period of `runEnrichPhase`'s whole-step heartbeat ticker (EP-D15) AND of its silence-gated stall probe. `*_from_config` suffix on purpose (§1.2a P4): step-conformance.infra.test.ts's `fromConfigRefs` scan matches that suffix, so any other spelling reads as a dead declaration — the LW-D10 blind spot. ⚠️ A NON-FINITE resolution THROWS above the lock (Rule 12), it does not silently disable the ticker; an explicitly declared 0 — or the literal \"none\", the same DECLARED-disable escape `execution.phases[].timeout_minutes_from_config` already carries — still disables it deliberately (ER-D1). The accident and the declaration are different states and must not render identically.",
+          "x-ruling": {
+            "rungs_tried": ["reuse execution.statement_timeout/step_timeout", "a per-phase timeout_minutes_from_config entry", "keep the hardcoded config.enrich_parcels_heartbeat_minutes read"],
+            "why": "Rung (a) is a DURATION bound on work, not a cadence for an observability writer — `definitions.duration` is `x-frozen` and a heartbeat period is not a budget. Rung (b) is per-PASS and this ticker is deliberately WHOLE-STEP (F5: the reaper hazard's own evidence, `phase max_build completed in 3049335ms`, is a shared-txn phase, so a per-phase cadence cannot express the one instance that spans every phase). Rung (c) is the measured defect this field retires: `runEnrichPhase` read `config.enrich_parcels_heartbeat_minutes` by literal name, so a SECOND enrich-shaped step resolved NaN, `!NaN` was true, and startHeartbeatTicker returned a no-op — last_heartbeat_at NULL for the whole run, no warning, no audit row, no throw (ER-D1, Spec 48 §3.6). A step-level, config-named declaration is the last-resort rung."
+          }
+        },
+        "lock_timeout_ms_from_config": {
+          "type": "string",
+          "minLength": 1,
+          "description": "REQUIRED when `identity.archetype` is \"ENRICHER\" (the profile's own allOf below); meaningless elsewhere. Names the `config.logic_variables[].name` whose resolved value `runEnrichPhase` issues as `SET LOCAL lock_timeout` before each shared-txn phase and inside each post_commit batch. Same `*_from_config` contract, same non-finite-THROWS rule, same deliberate-0/\"none\" disable as `heartbeat_minutes_from_config` — split into two fields rather than one because the two bound different things (an observability cadence vs a Postgres lock wait) and a single field would have to pick one unit.",
+          "x-ruling": {
+            "rungs_tried": ["execution.statement_timeout (the existing declared duration)", "one combined interval field shared with the heartbeat", "keep the hardcoded config.enrich_parcels_lock_timeout_ms read"],
+            "why": "Rung (a) is the STATEMENT ceiling, a different Postgres GUC with different semantics — conflating `lock_timeout` with `statement_timeout` is the exact per-statement/per-phase confusion EP-PHASE-DEADLINE had just finished untangling. Rung (b) would carry two units (minutes and milliseconds) in one field. Rung (c) is the identical NaN class as the heartbeat: `if (lockTimeoutMs > 0)` silently issued NO `SET LOCAL lock_timeout` at all for any step but `enrich_parcels` — half a defect left behind if only the heartbeat were fixed (Ask A2, ruled BOTH, same commit)."
+          }
+        },
+        "enrich_hooks": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "OPTIONAL, ENRICHER only (batch-2 Phase 0.10). The two PRE-PHASE concerns `runEnrichPhase` runs once, before phase 1, DECLARED rather than hardcoded to one step's compute exports. ABSENT means the runner does not call them at all; DECLARED-but-not-exported is a named throw citing the field, never a raw TypeError. Step-level, not per-pass (Ask A1): both fire exactly once, before the first phase, so a per-pass home would declare a lifecycle the runner does not have.",
+          "properties": {
+            "contract_read": {
+              "type": "string",
+              "minLength": 1,
+              "description": "The compute export implementing the Spec 58 §9/§11 consumer protocol — read BEFORE the transaction opens, HALTS on a missing/failed producer, and whose returned `layers` map the runner turns into the pass-visible `staleOverlays` set. The literal \"none\", or omission, means this step consumes no producer contract."
+            },
+            "defer_scope": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["export", "threshold_from_config"],
+              "description": "The Spec 122 §3.0b pre-transaction scope-defer decision: a row-count check that, over threshold, makes the run a genuine ZERO-WRITE no-op (never a gated skip — the run still executes to completion). Omission means the `!full` early-return branch is NOT ENTERED AT ALL, rather than entered and dodged by a NaN comparison.",
+              "properties": {
+                "export": { "type": "string", "minLength": 1, "description": "The compute export, called as `(pool, threshold)`." },
+                "threshold_from_config": { "type": "string", "minLength": 1, "description": "The `config.logic_variables[].name` carrying the row threshold. `*_from_config` suffix for the same `fromConfigRefs` reason as every other such field; a non-finite resolution THROWS rather than making `scope_count >= threshold` silently false forever." }
+              }
+            }
+          },
+          "x-ruling": {
+            "rungs_tried": ["execution.phases[].hooks (per-pass)", "infer the hooks from the compute's exported names", "leave both concerns hardcoded to enrich_parcels' compute"],
+            "why": "Rung (a) was the plan's own Ask A1 and was RULED AGAINST on measurement: both hooks fire ONCE, before phase 1, not per pass, so a per-pass home would declare a lifecycle the runner does not have — Rule 1's failure mode inverted. Rung (b) is inference, the exact mechanism `execution.shape` itself retired: a step whose declaration says nothing gets whichever branch a predicate happens to pick. Rung (c) is the measured defect — a non-enrich_parcels ENRICHER died at `TypeError: compute.readZoningContract is not a function` before its first phase, and its defer threshold read NaN, whose `scope_count >= NaN` comparison dodged the early return by ACCIDENT. A closed, optional, step-level object is the last-resort rung."
+          }
+        },
         "batch_size_from_config": {
           "type": "string",
           "minLength": 1,
@@ -1762,12 +1806,12 @@
       }
     },
     {
-      "x-profile": "ENRICHER — claim #54: a staleness.scope on a lineage column IMPLIES a declared invalidator. This is the centroid defect made UNEXPRESSIBLE rather than merely visible. AMENDED AT PILOT 9 (2026-09-04): `execution.phases[]` is REQUIRED too — an enricher declares its passes, in order, each with its own transaction membership, write target, row scope, invalidator and bound. Scoped to this archetype alone: the other seven profiles are byte-untouched, and none of the 8 converted descriptors is an ENRICHER.",
+      "x-profile": "ENRICHER — claim #54: a staleness.scope on a lineage column IMPLIES a declared invalidator. This is the centroid defect made UNEXPRESSIBLE rather than merely visible. AMENDED AT PILOT 9 (2026-09-04): `execution.phases[]` is REQUIRED too — an enricher declares its passes, in order, each with its own transaction membership, write target, row scope, invalidator and bound. Scoped to this archetype alone: the other seven profiles are byte-untouched, and none of the 8 converted descriptors is an ENRICHER. AMENDED AT BATCH-2 PHASE 0.10 (2026-09-15): `execution.heartbeat_minutes_from_config` and `execution.lock_timeout_ms_from_config` are REQUIRED too — `runEnrichPhase` used to read both out of two hardcoded `config.enrich_parcels_*` keys, so a SECOND enrich-shaped step resolved both to NaN and silently ran with NO heartbeat ticker and NO `SET LOCAL lock_timeout` at all (ER-D1, Spec 48 §3.6). Required rather than optional because a non-finite resolution now THROWS: an ENRICHER that declares neither would fail at run time, and a contract that can only be discovered at run time is not a contract. `enrich_parcels` is still the only ENRICHER in the estate, so exactly one descriptor is touched.",
       "if": { "properties": { "identity": { "properties": { "archetype": { "const": "ENRICHER" } }, "required": ["archetype"] } }, "required": ["identity"] },
       "then": {
         "properties": {
           "outputs": { "type": "object" },
-          "execution": { "type": "object", "required": ["phases"] }
+          "execution": { "type": "object", "required": ["phases", "heartbeat_minutes_from_config", "lock_timeout_ms_from_config"] }
         },
         "allOf": [
           {

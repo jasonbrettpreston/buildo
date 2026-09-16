@@ -861,6 +861,18 @@ describe('runEnrichPhase (LG-28) — logic tests against a fake pool', () => {
       },
       execution: {
         shape: 'enrich',
+        // batch-2 Phase 0.10 — the runner resolves BOTH intervals out of the
+        // descriptor now (they were hardcoded `config.enrich_parcels_*` reads),
+        // and a non-finite resolution THROWS rather than silently installing a
+        // no-op ticker (ER-D1). The fixture names the same two variables its own
+        // `baseArgs` config declares, so every test in this block keeps exercising
+        // the identical values it always did.
+        heartbeat_minutes_from_config: 'enrich_parcels_heartbeat_minutes',
+        lock_timeout_ms_from_config: 'enrich_parcels_lock_timeout_ms',
+        enrich_hooks: {
+          contract_read: 'readZoningContract',
+          defer_scope: { export: 'computeDeferScope', threshold_from_config: 'enrich_parcels_defer_threshold_rows' },
+        },
         phases: [
           { name: 'zoning', order: 1, txn: 'shared', writes_ref: 0, timeout_minutes_from_config: 'fixture_pass_timeout_minutes' },
           { name: 'max_build', order: 2, txn: 'shared', writes_ref: 1, timeout_minutes_from_config: 'fixture_pass_timeout_minutes' },
@@ -1893,6 +1905,59 @@ describe('runEnrichPhase (LG-28) — logic tests against a fake pool', () => {
       expect(pool.connectedCount.n, 'heartbeatClient must be acquired via pool.connect() exactly once, not once per heartbeat call').toBe(5);
     });
   });
+
+  // ---------------------------------------------------------------------------
+  // ---------------------------------------------------------------------------
+  // L9-INVERSE (batch-2 Phase 0.10 fold) — `enrich_parcels`' OWN five phases must
+  // produce the IDENTICAL per-target counters after the counter block stopped
+  // being fifteen hardcoded `write.targetKey(0..4)` assignments and became a loop
+  // over `execution.phases[]`. This is the `written` half of the golden
+  // hash-equality gate, proved against fixture numbers rather than inferred from
+  // a 486K-parcel run: each pass reports the field shape the REAL compute reports
+  // (`scoped` for passes 1-3, `candidates` for pass 4, neither for pass 5 — which
+  // is why `optimal_config`'s `scanned` reads its own `updated`, exactly as the
+  // retired block hardcoded), plus pass 3's `scenarioUpdated`, which is ADDED to
+  // `updated` and must not be lost.
+  // ---------------------------------------------------------------------------
+  describe('runEnrichPhase per-target counters — enrich_parcels\' own five phases are unchanged by the declaration-driven loop', () => {
+    it('each pass\'s counters land on the target its own writes_ref declares, with pass 3\'s scenarioUpdated folded into updated', async () => {
+      const passLog: Array<{ name: string; txn: string }> = [];
+      const pool = fakePool();
+      const compute = fakeCompute(passLog, {
+        passImpl: {
+          zoning: async () => ({ scoped: 1000, updated: 900, updatedIds: [] }),
+          max_build: async () => ({ scoped: 800, updated: 700, updatedIds: [] }),
+          existing_structure: async () => ({ scoped: 600, updated: 500, scenarioUpdated: 50, updatedIds: [], scenarioUpdatedIds: [] }),
+          comparable_builds: async () => ({ candidates: 400, updated: 300, zero_comps: 10 }),
+          optimal_config: async () => ({ updated: 200, errors: 0, genuineIds: new Set() }),
+        },
+      });
+      const res = await stepLib.runEnrichPhase(baseArgs(fixtureDescriptor(), pool, compute) as never) as {
+        written: Record<string, { scanned: number; updated: number; rows_changed: number; inserted: number }>;
+      };
+      const w = res.written;
+      // writes_ref 0..4, in the fixture's own declared order (e1..e5 — write.targetKey).
+      expect(w.e1).toMatchObject({ scanned: 1000, updated: 900, rows_changed: 900 });
+      expect(w.e2).toMatchObject({ scanned: 800, updated: 700, rows_changed: 700 });
+      expect(w.e3, 'pass 3 reports TWO updates (the parcels UPDATE and the scenario UPDATE); dropping either would silently under-report')
+        .toMatchObject({ scanned: 600, updated: 550, rows_changed: 550 });
+      expect(w.e4, 'pass 4 scopes by `candidates`, not `scoped` — it has no `scoped` field at all')
+        .toMatchObject({ scanned: 400, updated: 300, rows_changed: 300 });
+      expect(w.e5, 'pass 5 reports neither scoped nor candidates, so `scanned` reads its own `updated` — the retired block hardcoded exactly this')
+        .toMatchObject({ scanned: 200, updated: 200, rows_changed: 200 });
+      // The two targets NO phase declares keep their own structural, class-based
+      // assignments (the run-clock stamps and the scope hand-off ledger) — the loop
+      // must not have reached them.
+      expect(w.e6, 'the set_based_scoped stamp target: zoning.updated + max_build.updated')
+        .toMatchObject({ updated: 1600, rows_changed: 1600 });
+      // e7 is the insert_only_no_retraction scope ledger. Its counters come from the
+      // hand-off INSERT's own rowCount (0 here — this fixture's ledger table is
+      // `fixture_scope`, which the fake pool does not answer a rowCount for), NOT from
+      // any pass: the assertion that matters is that the phase loop did not reach it.
+      expect(w.e7, 'no phase declares writes_ref 6, so the counter loop must not have touched it')
+        .toMatchObject({ scanned: 0, updated: 0 });
+    });
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -2240,5 +2305,98 @@ describe('runPass5 pruning DELETE — genuine BEHAVIOURAL lock (pilot 9 commit 8
     expect(row2?.consumed_at, 'parcel 2 errored in THIS run\'s own stream — its OWN scope row must stay unconsumed, not be stamped by the this-run set-based UPDATE').toBeNull();
     const row1 = after.find((r) => r.parcel_id === 1);
     expect(row1, 'parcel 1 (healthy) must have been pruned — consumed then removed').toBeUndefined();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// L3 (batch-2 Phase 0.10) — HOOK PARITY. `runEnrichPhase` used to call
+// `compute.readZoningContract` and `compute.computeDeferScope` by hardcoded
+// name, and to read its heartbeat/lock-timeout/defer-threshold out of three
+// hardcoded `config.enrich_parcels_*` keys. All five are now DECLARED. This
+// block is the both-ends proof that the declaration names exactly what the
+// compute exports and exactly what the config declares — a hook naming a
+// function nobody exports is a named throw at runtime, and the whole point of
+// making this step's own behaviour byte-identical is that the declaration is
+// the SAME pair of functions, resolved by name instead of by hardcode.
+
+describe('execution.enrich_hooks / heartbeat + lock-timeout from config (batch-2 Phase 0.10) — the declaration matches the compute and the config', () => {
+  it('the descriptor declares BOTH hooks, naming this step\'s own two compute exports', () => {
+    const d = loadDescriptor();
+    const hooks = (d.execution as unknown as { enrich_hooks?: { contract_read?: string; defer_scope?: { export?: string; threshold_from_config?: string } } }).enrich_hooks;
+    expect(hooks, 'execution.enrich_hooks is absent — the Spec 58 §9/§11 contract read and the Spec 122 §3.0b defer decision would be undeclared again').toBeDefined();
+    expect(hooks!.contract_read).toBe('readZoningContract');
+    expect(hooks!.defer_scope!.export).toBe('computeDeferScope');
+    expect(hooks!.defer_scope!.threshold_from_config).toBe('enrich_parcels_defer_threshold_rows');
+  });
+
+  it('the compute module actually EXPORTS both named hooks (a declared-but-missing hook is a named throw, not a TypeError)', () => {
+    // NOT `loadComputeModule()`: this module's `module.exports` IS the compute
+    // function with the named helpers hung off it, and that helper normalises a
+    // function export to `{compute: fn}` — which discards every hook name the
+    // runner resolves. The runner receives the RAW module, so the lock must too.
+    const mod = loadLib(COMPUTE_REL);
+    expect(typeof mod.readZoningContract, `execution.enrich_hooks.contract_read names an export the compute does not have; keys=${Object.keys(mod).join(',')}`).toBe('function');
+    expect(typeof mod.computeDeferScope, 'execution.enrich_hooks.defer_scope.export names an export the compute does not have').toBe('function');
+  });
+
+  it('the heartbeat + lock-timeout intervals are DECLARED (ER-D1), and both names are declared logic variables', () => {
+    const d = loadDescriptor();
+    const exec = d.execution as unknown as { heartbeat_minutes_from_config?: string; lock_timeout_ms_from_config?: string };
+    expect(exec.heartbeat_minutes_from_config).toBe('enrich_parcels_heartbeat_minutes');
+    expect(exec.lock_timeout_ms_from_config).toBe('enrich_parcels_lock_timeout_ms');
+    const cfg = d.config as Exclude<Descriptor['config'], 'none'>;
+    for (const name of [exec.heartbeat_minutes_from_config!, exec.lock_timeout_ms_from_config!, 'enrich_parcels_defer_threshold_rows']) {
+      expect(cfg.logic_variables.some((v) => v.name === name), `${name} is named in a *_from_config field but not declared in config.logic_variables[]`).toBe(true);
+    }
+  });
+
+  it('BEHAVIOUR PARITY — the runner calls the two DECLARED hooks, in the pre-0.10 order, with the pre-0.10 arguments (contract read on the pool; defer scope on the pool + the resolved threshold), both before phase 1', async () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports -- exercising the real CJS library
+    const stepLib = require(path.join(REPO_ROOT, 'scripts/lib/step/index.js')) as {
+      runEnrichPhase: (a: Record<string, unknown>) => Promise<unknown>;
+    };
+    const calls: string[] = [];
+    const d = loadDescriptor() as unknown as Record<string, unknown>;
+    // One shared phase only — this test is about what runs BEFORE phase 1, and a
+    // 5-phase fixture would need the whole fake-pass apparatus to say the same thing.
+    const exec = { ...(d.execution as Record<string, unknown>) };
+    exec.phases = [{ name: 'zoning', order: 1, txn: 'shared', writes_ref: 0, scope: 'full', timeout_minutes_from_config: 'enrich_parcels_pass_statement_timeout_minutes' }];
+    const descriptor = { ...d, execution: exec, guards: { requires: [] }, recovery: 'none', checks: [] };
+    const sql: string[] = [];
+    const answer = (t: string) => {
+      if (/pg_backend_pid/.test(t)) return { rows: [{ pid: 4242 }] };
+      if (/pg_try_advisory(?:_xact)?_lock\(\$1, \$2\)/.test(t)) return { rows: [{ acquired: true }] };
+      if (/COUNT\(\*\)::int AS n FROM parcels/.test(t)) return { rows: [{ n: 0 }] };
+      return { rows: [], rowCount: 0 };
+    };
+    const record = async (t: string) => { sql.push(t); return answer(t); };
+    const pool = { sql, query: record, connect: async () => ({ query: record, release: () => {} }) };
+    const compute = {
+      OVERLAY_LAYERS: [],
+      readZoningContract: async (p: unknown) => { calls.push(`readZoningContract(${p === pool ? 'pool' : 'OTHER'})`); return { layers: {} }; },
+      computeDeferScope: async (p: unknown, threshold: number) => { calls.push(`computeDeferScope(${p === pool ? 'pool' : 'OTHER'},${threshold})`); return { scope_count: 0, threshold, ratio: 0 }; },
+      computeAggregateRecordsUpdated: () => 0,
+      retireStaleScope: async () => ({ backlog_rows: 0, backlog_cohorts: 0, retired_rows: 0, retired_cohorts: 0 }),
+      passes: [{ name: 'zoning', txn: 'shared', run: async () => { calls.push('phase:zoning'); return { scoped: 0, updated: 0, updatedIds: [] }; } }],
+    };
+    await stepLib.runEnrichPhase({
+      descriptor,
+      pool,
+      compute,
+      config: {
+        enrich_parcels_pass_statement_timeout_minutes: 5,
+        enrich_parcels_heartbeat_minutes: 60,
+        enrich_parcels_lock_timeout_ms: 0,
+        enrich_parcels_defer_threshold_rows: 1000,
+        enrich_parcels_scope_retire_after_hours: 24,
+      },
+      chainId: null,
+      log: { info: () => {}, warn: () => {}, error: () => {} },
+      tag: '[enrich_parcels]',
+      clockNow: new Date('2026-09-15T00:00:00.000Z'),
+      preWriteGate: null,
+      ownRunId: 4242,
+    });
+    expect(calls).toEqual(['readZoningContract(pool)', 'computeDeferScope(pool,1000)', 'phase:zoning']);
   });
 });

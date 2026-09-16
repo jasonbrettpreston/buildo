@@ -2149,6 +2149,42 @@
         "blocks": []
       },
       "last_reviewed": "2026-09-15"
+    },
+    {
+      "id": "ENR-1",
+      "spec": "122 §1.10",
+      "title": "runEnrichPhase is a GENERIC ENRICHER runner, not enrich_parcels with a front door",
+      "promised": "the ENRICHER archetype dispatches through one library runner; the step supplies a descriptor and a compute, nothing else (§4.2/§4.3)",
+      "status": "BUILT",
+      "evidence": "BUILT at batch-2 Phase 0.10 (2026-09-15, Spec 124 R-AK / Spec 122 8 RE-FREEZE #8). The Spec 58 9/11 contract read and the Spec 122 3.0b defer decision are declared (execution.enrich_hooks, optional, step-level); the heartbeat + lock-timeout intervals resolve from execution.*_from_config with a Number.isFinite throw and a declared \"none\" escape (ER-D1 closed); the matched duration key derives from identity.name; the enrich write path reaches write.js class-O/class-N executors through two runner-owned passCtx seams (ctx.retract / ctx.joinUpdate); and the post-phase counter block iterates execution.phases[] keyed by each entry's own writes_ref instead of fifteen hardcoded write.targetKey(0..4) assignments. The last of those is what actually unblocks I5: before it, an ENRICHER declaring fewer than five write targets threw TypeError AFTER the shared transaction had already COMMITted. Proven both directions in src/tests/step-library.logic.test.ts (L9: a TWO-target ENRICHER runs and its counters land on the declared targets; L9b: a writes_ref past the array is a named throw; L9c: the pass-result field contract) and in src/tests/steps/enrich_parcels/violations.test.ts (L9-INVERSE: enrich_parcels' own five phases produce the identical per-target numbers, including pass 3's scenarioUpdated fold and the two class-based targets no phase declares). RESIDUE, filed not hidden: matched[] still carries enrich_parcels' five pass-named telemetry keys (parcels_enriched_count, max_build_enriched_count, ...) for every ENRICHER, reading 0 for a step that has no such pass - cosmetic, never a crash, and the honest fix is a declared per-phase counter/telemetry source in the descriptor (its own schema field and its own re-freeze). Filed MED in docs/reports/review_followups.md",
+      "owner": {
+        "kind": "followup",
+        "ref": "docs/reports/review_followups.md - WF2 batch-2 Phase 0.10 section, the matched-telemetry MED row"
+      },
+      "gate": {
+        "kind": "nice_to_have",
+        "blocks": []
+      },
+      "last_reviewed": "2026-09-15"
+    },
+    {
+      "id": "SEAM-CHAIN-1",
+      "spec": "122 §6.5",
+      "title": "seam checks are scoped to the chain they run in",
+      "promised": "a step may not read a table written by a later step in the same chain — the ordering claim is per CHAIN",
+      "status": "NOT_STARTED",
+      "evidence": "Measured 2026-09-15 (batch-2 Phase 0.10 §0 rows 12-13): scripts/lib/step/seam.js deriveSeamPairs applies NO chain filter — pairs derive from inputs.reads.steps[] plus converted-ness alone — while runSeamChecks(pool, {chainId = \"sources\", ...}) receives the LIVE chain id from chain-end-synthesis.mjs. A permits chain-end synthesis therefore evaluates every derived pair on permits, including pairs whose producer never runs there. Filed MED, deliberately not fixed at 0.10 (Ask A3, ruled): a seam.js/schema concern, not a runner concern",
+      "owner": {
+        "kind": "followup",
+        "ref": "docs/reports/review_followups.md — WF2 batch-2 Phase 0.10 section, the seam.js MED row"
+      },
+      "gate": {
+        "kind": "cutover_prereq",
+        "blocks": [
+          "address_points"
+        ]
+      },
+      "last_reviewed": "2026-09-15"
     }
   ]
 }

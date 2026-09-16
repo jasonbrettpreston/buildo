@@ -3563,3 +3563,535 @@ describe('recordHeartbeat / captureStallDiagnostic / startStallTicker (LG-28, fa
     });
   });
 });
+
+// ---------------------------------------------------------------------------
+// 8. runEnrichPhase as a GENERIC ENRICHER runner (batch-2 Phase 0.10,
+//    `.cursor/wf2_enrich_runner_generic_active_task.md`).
+//
+//    Until 0.10 `runEnrichPhase` was `enrich_parcels` with a descriptor-shaped
+//    front door: the Spec 58 §9/§11 contract read and the Spec 122 §3.0b
+//    scope-defer decision were HARDCODED to that step's own compute exports,
+//    and the heartbeat/lock-timeout intervals were read from two hardcoded
+//    `config.enrich_parcels_*` keys. A second enrich-shaped step therefore
+//    (a) threw `TypeError: compute.readZoningContract is not a function`
+//    before its first phase and (b), had it got past that, would have run with
+//    `heartbeatMs === NaN` — which `startHeartbeatTicker`'s `!intervalMs` guard
+//    silently turns into a no-op ticker: `last_heartbeat_at` NULL for the whole
+//    run, no warning, no audit row, no throw (ER-D1, Spec 48 §3.6 silence class).
+//
+//    These locks live HERE, in the LIBRARY's own test file, rather than in
+//    `src/tests/steps/enrich_parcels/violations.test.ts` on purpose: they are
+//    about what the runner does for a step that is NOT `enrich_parcels`.
+//    `violations.test.ts` owns the hook-parity half (L3) — that one IS an
+//    enrich_parcels claim.
+//
+//    FIXTURE NOTE (measured, filed): the fixture descriptors below declare
+//    FIVE write targets even where one would do, because `runEnrichPhase`'s
+//    counter block still assigns `written[write.targetKey(0..4)]` from five
+//    hardcoded pass-result names (`zoning`/`max_build`/`existing_structure`/
+//    `comparable_builds`/`optimal_config`). A 4-target ENRICHER throws
+//    `TypeError` there. That is a SEPARATE genericity gap from the four this
+//    row closes — filed HIGH in docs/reports/review_followups.md rather than
+//    fixed here (a correct fix needs a descriptor-declared counter mapping, not
+//    a silent `if (target) ...` skip, which would be Rule 1's own failure mode).
+// ---------------------------------------------------------------------------
+
+describe('runEnrichPhase — the GENERIC ENRICHER runner (batch-2 Phase 0.10)', () => {
+  interface FakeClient { query: (text: string, values?: unknown[]) => Promise<unknown>; release: () => void }
+
+  /**
+   * The minimum fake pool `runEnrichPhase` needs, trimmed from
+   * `violations.test.ts`'s own (no cancel bus, no per-session statement_timeout
+   * modelling — neither is this block's subject).
+   */
+  function enrichPool() {
+    const sql: string[] = [];
+    const params: unknown[][] = [];
+    const clients: FakeClient[] = [];
+    const answer = (text: string) => {
+      if (/pg_backend_pid/.test(text)) return { rows: [{ pid: 4242 }] };
+      if (/pg_try_advisory(?:_xact)?_lock\(\$1, \$2\)/.test(text)) return { rows: [{ acquired: true }] };
+      if (/COUNT\(\*\)::int AS n FROM parcels/.test(text)) return { rows: [{ n: 0 }] };
+      return { rows: [], rowCount: 0 };
+    };
+    const record = async (text: string, values?: unknown[]) => {
+      sql.push(text);
+      params.push(values ?? []);
+      return answer(text);
+    };
+    return {
+      sql,
+      params,
+      clients,
+      query: record,
+      connect: async () => {
+        const c: FakeClient = { query: record, release: () => {} };
+        clients.push(c);
+        return c;
+      },
+    };
+  }
+
+  /** Five write targets — see the FIXTURE NOTE above for why five and not one. */
+  const fiveTargets = (firstClass = 'set_based_join_update') => [
+    { table: 'fixture_rows', key: 'id', write_discipline: { class: firstClass } },
+    { table: 'fixture_rows', key: 'id', write_discipline: { class: 'temp_materialize' } },
+    { table: 'fixture_rows', key: 'id', write_discipline: { class: 'temp_materialize' } },
+    { table: 'fixture_rows', key: 'id', write_discipline: { class: 'temp_materialize' } },
+    { table: 'fixture_rows', key: 'id', write_discipline: { class: 'temp_materialize' } },
+  ];
+
+  /** An enrich-shaped descriptor for a step that is NOT enrich_parcels. */
+  function genericDescriptor(overrides: Record<string, unknown> = {}): Record<string, unknown> {
+    return {
+      identity: { name: 'fixture_geocode', lock: 987654, archetype: 'ENRICHER', spec: '999' },
+      outputs: { writes: fiveTargets() },
+      execution: {
+        shape: 'enrich',
+        heartbeat_minutes_from_config: 'fixture_heartbeat_minutes',
+        lock_timeout_ms_from_config: 'fixture_lock_timeout_ms',
+        phases: [
+          { name: 'geocode', order: 1, txn: 'shared', writes_ref: 0, scope: 'full', timeout_minutes_from_config: 'fixture_pass_timeout_minutes' },
+        ],
+        invocation: { sources: { argv: [], env: {} } },
+      },
+      guards: { requires: [] },
+      recovery: 'none',
+      override: { force_full: 'none', force_run: 'none', dry_run: 'none' },
+      checks: [],
+      ...overrides,
+    };
+  }
+
+  interface FakeCompute { [k: string]: unknown }
+
+  /** A compute with NO readZoningContract / computeDeferScope — i.e. every ENRICHER but enrich_parcels. */
+  function genericCompute(
+    passLog: string[],
+    run?: (client: unknown, ctx: Record<string, unknown>) => Promise<Record<string, unknown>>,
+  ): FakeCompute {
+    return {
+      computeAggregateRecordsUpdated: () => 0,
+      passes: [{
+        name: 'geocode',
+        txn: 'shared',
+        run: async (client: unknown, ctx: Record<string, unknown>) => {
+          passLog.push('geocode');
+          return run ? run(client, ctx) : { scoped: 0, updated: 0, updatedIds: [] };
+        },
+      }],
+    };
+  }
+
+  const args = (
+    descriptor: Record<string, unknown>,
+    pool: ReturnType<typeof enrichPool>,
+    compute: FakeCompute,
+    configOverrides: Record<string, unknown> = {},
+  ) => ({
+    descriptor,
+    pool,
+    compute,
+    config: {
+      fixture_pass_timeout_minutes: 5,
+      fixture_heartbeat_minutes: 60,
+      fixture_lock_timeout_ms: 0,
+      ...configOverrides,
+    },
+    chainId: null,
+    log: { info: () => {}, warn: () => {}, error: () => {} },
+    tag: '[fixture_geocode]',
+    clockNow: new Date('2026-09-15T00:00:00.000Z'),
+    preWriteGate: null,
+    ownRunId: 4242,
+  });
+
+  // --- L1 -----------------------------------------------------------------
+  it('L1 — an enrich descriptor declaring NO execution.enrich_hooks runs phase 1 without calling any contract-read or defer-scope hook', async () => {
+    const passLog: string[] = [];
+    const pool = enrichPool();
+    const compute = genericCompute(passLog);
+    const res = await stepLib.runEnrichPhase(args(genericDescriptor(), pool, compute) as never) as Record<string, unknown>;
+    expect(passLog, 'the declared phase must actually have run').toEqual(['geocode']);
+    expect(res.deferred, 'an undeclared defer_scope hook must not enter the !full early-return at all — the pre-0.10 NaN-comparison escape was an accident, not a contract').toBe(false);
+    expect(res.skipped).toBe(false);
+  });
+
+  it('L1b — the <slug>_duration_ms telemetry key is derived from identity.name, never the literal enrich_parcels_*', async () => {
+    const passLog: string[] = [];
+    const pool = enrichPool();
+    const res = await stepLib.runEnrichPhase(args(genericDescriptor(), pool, genericCompute(passLog)) as never) as { matched: Record<string, unknown> };
+    expect(Object.keys(res.matched)).toContain('fixture_geocode_duration_ms');
+    expect(Object.keys(res.matched)).not.toContain('enrich_parcels_duration_ms');
+  });
+
+  // --- L2 -----------------------------------------------------------------
+  it('L2 — a DECLARED hook the compute does not export is a NAMED throw citing the descriptor field, never a raw TypeError', async () => {
+    const pool = enrichPool();
+    const d = genericDescriptor();
+    (d.execution as Record<string, unknown>).enrich_hooks = { contract_read: 'readZoningContract' };
+    await expect(stepLib.runEnrichPhase(args(d, pool, genericCompute([])) as never))
+      .rejects.toThrow(/execution\.enrich_hooks\.contract_read[\s\S]*readZoningContract[\s\S]*compute/);
+  });
+
+  it('L2b — a declared defer_scope whose export is missing is likewise a named throw', async () => {
+    const pool = enrichPool();
+    const d = genericDescriptor();
+    (d.execution as Record<string, unknown>).enrich_hooks = {
+      defer_scope: { export: 'computeDeferScope', threshold_from_config: 'fixture_defer_threshold_rows' },
+    };
+    await expect(stepLib.runEnrichPhase(args(d, pool, genericCompute([]), { fixture_defer_threshold_rows: 10 }) as never))
+      .rejects.toThrow(/execution\.enrich_hooks\.defer_scope\.export[\s\S]*computeDeferScope[\s\S]*compute/);
+  });
+
+  it('L2c — DECLARED hooks that DO exist are called, in order, before the first phase', async () => {
+    const order: string[] = [];
+    const passLog: string[] = [];
+    const pool = enrichPool();
+    const d = genericDescriptor();
+    (d.execution as Record<string, unknown>).enrich_hooks = {
+      contract_read: 'readFixtureContract',
+      defer_scope: { export: 'computeFixtureScope', threshold_from_config: 'fixture_defer_threshold_rows' },
+    };
+    const compute = genericCompute(passLog) as Record<string, unknown>;
+    compute.OVERLAY_LAYERS = [{ key: 'fixture_overlay', col: 'fixture_col' }];
+    compute.readFixtureContract = async () => { order.push('contract'); return { layers: { fixture_overlay: false } }; };
+    compute.computeFixtureScope = async (_pool: unknown, threshold: number) => {
+      order.push(`defer:${threshold}`);
+      return { scope_count: 0, threshold, ratio: 0 };
+    };
+    await stepLib.runEnrichPhase(args(d, pool, compute, { fixture_defer_threshold_rows: 1000 }) as never);
+    expect(order, 'contract read then defer-scope, both before phase 1').toEqual(['contract', 'defer:1000']);
+    expect(passLog).toEqual(['geocode']);
+  });
+
+  it('L2d — a declared defer_scope OVER threshold returns the zero-write deferred result, keyed by the step own slug', async () => {
+    const passLog: string[] = [];
+    const pool = enrichPool();
+    const d = genericDescriptor();
+    (d.execution as Record<string, unknown>).enrich_hooks = {
+      defer_scope: { export: 'computeFixtureScope', threshold_from_config: 'fixture_defer_threshold_rows' },
+    };
+    const compute = genericCompute(passLog) as Record<string, unknown>;
+    compute.computeFixtureScope = async () => ({ scope_count: 5000, threshold: 1000, ratio: 5 });
+    const res = await stepLib.runEnrichPhase(args(d, pool, compute, { fixture_defer_threshold_rows: 1000 }) as never) as { deferred: boolean; matched: Record<string, unknown> };
+    expect(res.deferred).toBe(true);
+    expect(passLog, 'a deferred run writes nothing and runs no pass').toEqual([]);
+    expect(Object.keys(res.matched)).toContain('fixture_geocode_duration_ms');
+    expect(Object.keys(res.matched)).not.toContain('enrich_parcels_duration_ms');
+  });
+
+  // --- L4 — ER-D1 ---------------------------------------------------------
+  it('L4 — ER-D1: a heartbeat interval that resolves to a NON-FINITE value THROWS at construction (Rule 12), it does NOT silently install a no-op ticker (Spec 48 §3.6)', async () => {
+    const pool = enrichPool();
+    // The exact pre-0.10 shape: the config carries no entry for the declared
+    // variable, so `Number(undefined)` is NaN, `!NaN` is true, and
+    // startHeartbeatTicker returned `() => {}` with ZERO warnings.
+    await expect(
+      stepLib.runEnrichPhase(args(genericDescriptor(), pool, genericCompute([]), { fixture_heartbeat_minutes: undefined }) as never),
+    ).rejects.toThrow(/heartbeat_minutes_from_config[\s\S]*fixture_heartbeat_minutes/);
+  });
+
+  it('L4b — ER-D1: the lock-timeout interval gets the same treatment (the identical NaN class)', async () => {
+    const pool = enrichPool();
+    await expect(
+      stepLib.runEnrichPhase(args(genericDescriptor(), pool, genericCompute([]), { fixture_lock_timeout_ms: 'not-a-number' }) as never),
+    ).rejects.toThrow(/lock_timeout_ms_from_config[\s\S]*fixture_lock_timeout_ms/);
+  });
+
+  it('L4c — ER-D1: a DELIBERATE 0 still disables the ticker rather than throwing — Number.isFinite, never !x (that distinction IS the fix)', async () => {
+    const passLog: string[] = [];
+    const pool = enrichPool();
+    const res = await stepLib.runEnrichPhase(args(genericDescriptor(), pool, genericCompute(passLog), { fixture_heartbeat_minutes: 0 }) as never);
+    expect(res, 'an explicitly-declared 0 is an operator choice, not a missing declaration').toBeDefined();
+    expect(passLog).toEqual(['geocode']);
+  });
+
+  it('L4e — ER-D1: the literal "none" is a DECLARED disable (the same escape timeout_minutes_from_config carries), while an unresolvable NAME still throws — the accident and the declaration must not render identically', async () => {
+    const passLog: string[] = [];
+    const pool = enrichPool();
+    const d = genericDescriptor();
+    (d.execution as Record<string, unknown>).heartbeat_minutes_from_config = 'none';
+    (d.execution as Record<string, unknown>).lock_timeout_ms_from_config = 'none';
+    await stepLib.runEnrichPhase(args(d, pool, genericCompute(passLog), { fixture_heartbeat_minutes: undefined, fixture_lock_timeout_ms: undefined }) as never);
+    expect(passLog, 'a declared "none" disables the guard and lets the step run').toEqual(['geocode']);
+    expect(pool.sql.some((q) => /^SET LOCAL lock_timeout/.test(q)), 'a declared "none" issues no lock ceiling').toBe(false);
+    // ...and the accident is still loud, on the very same field.
+    const d2 = genericDescriptor();
+    (d2.execution as Record<string, unknown>).heartbeat_minutes_from_config = 'fixture_not_declared_anywhere';
+    await expect(stepLib.runEnrichPhase(args(d2, enrichPool(), genericCompute([])) as never))
+      .rejects.toThrow(/fixture_not_declared_anywhere/);
+  });
+
+  it('L4d — ER-D1: an UNDECLARED execution.heartbeat_minutes_from_config is itself the throw (the field is not optional on an enrich shape)', async () => {
+    const pool = enrichPool();
+    const d = genericDescriptor();
+    delete (d.execution as Record<string, unknown>).heartbeat_minutes_from_config;
+    await expect(stepLib.runEnrichPhase(args(d, pool, genericCompute([])) as never))
+      .rejects.toThrow(/heartbeat_minutes_from_config/);
+  });
+
+  // --- L5 — before-image + class-O / class-N reachability ------------------
+  it('L5 — the enrich write path reaches write.writeBeforeImage STRICTLY BEFORE write.executeSetBasedClear for a class-O retraction', async () => {
+    const pool = enrichPool();
+    const d = genericDescriptor({
+      outputs: { writes: fiveTargets('set_based_null_retract') },
+      recovery: { before_image: 'generated', interrupted: 'none' },
+    });
+    const specs = (d.outputs as { writes: Array<Record<string, unknown>> }).writes;
+    specs[0]!.write_discipline = { class: 'set_based_null_retract', scope: 'fixture_col IS NOT NULL', retract: 'all' };
+    specs[0]!.columns = [{ name: 'fixture_col', source: 'compute', written: 'always' }];
+    let retracted: number | null = null;
+    const compute = genericCompute([], async (_client, ctx) => {
+      retracted = await (ctx.retract as (ref: number, params: unknown[]) => Promise<number>)(0, []);
+      return { scoped: 0, updated: 0, updatedIds: [] };
+    });
+    await stepLib.runEnrichPhase(args(d, pool, compute) as never);
+    const biIdx = pool.sql.findIndex((s) => /^\s*SELECT/.test(s) && /fixture_col/.test(s));
+    const clearIdx = pool.sql.findIndex((s) => /UPDATE fixture_rows/.test(s));
+    expect(biIdx, 'the before-image SELECT must have been issued').toBeGreaterThan(-1);
+    expect(clearIdx, 'the retraction UPDATE must have been issued').toBeGreaterThan(-1);
+    expect(biIdx, 'R-M — the before image is written STRICTLY BEFORE the retraction it protects').toBeLessThan(clearIdx);
+    expect(retracted).not.toBeNull();
+  });
+
+  it('L5b — a class-O retraction on a step whose recovery declares before_image:"none" is REFUSED, never silently un-imaged (R-M)', async () => {
+    const pool = enrichPool();
+    const d = genericDescriptor({ outputs: { writes: fiveTargets('set_based_null_retract') } });
+    const specs = (d.outputs as { writes: Array<Record<string, unknown>> }).writes;
+    specs[0]!.write_discipline = { class: 'set_based_null_retract', scope: 'fixture_col IS NOT NULL', retract: 'all' };
+    specs[0]!.columns = [{ name: 'fixture_col', source: 'compute', written: 'always' }];
+    const compute = genericCompute([], async (_client, ctx) => {
+      await (ctx.retract as (ref: number, params: unknown[]) => Promise<number>)(0, []);
+      return {};
+    });
+    await expect(stepLib.runEnrichPhase(args(d, pool, compute) as never)).rejects.toThrow(/before_image/);
+    expect(pool.sql.some((s) => /UPDATE fixture_rows/.test(s)), 'the retraction must never have run').toBe(false);
+  });
+
+  it('L5c — ctx.joinUpdate routes a class-N (set_based_join_update) write through write.executeSetBasedJoinUpdate, which structurally refuses INSERT/ON CONFLICT text', async () => {
+    const pool = enrichPool();
+    const d = genericDescriptor();
+    let updated: number | null = null;
+    let refused: unknown = null;
+    const compute = genericCompute([], async (_client, ctx) => {
+      const joinUpdate = ctx.joinUpdate as (ref: number, sql: string, p: unknown[]) => Promise<number>;
+      updated = await joinUpdate(0, 'UPDATE fixture_rows SET fixture_col = s.v FROM src s WHERE s.id = fixture_rows.id', []);
+      try {
+        await joinUpdate(0, 'INSERT INTO fixture_rows (id) VALUES (1) ON CONFLICT DO NOTHING', []);
+      } catch (err) {
+        refused = err;
+      }
+      return {};
+    });
+    await stepLib.runEnrichPhase(args(d, pool, compute) as never);
+    expect(updated).not.toBeNull();
+    expect(refused, 'executeSetBasedJoinUpdate must structurally refuse INSERT/ON CONFLICT text').not.toBeNull();
+  });
+
+  it('L5d — the seams REFUSE a target whose declared class does not admit them (no silent widening of the write surface)', async () => {
+    const pool = enrichPool();
+    const d = genericDescriptor();
+    const refusals: string[] = [];
+    const compute = genericCompute([], async (_client, ctx) => {
+      // target 1 is `temp_materialize` — neither a class-O retraction nor a class-N join update.
+      try {
+        await (ctx.retract as (r: number, p: unknown[]) => Promise<number>)(1, []);
+      } catch (err) { refusals.push(String((err as Error).message)); }
+      try {
+        await (ctx.joinUpdate as (r: number, s: string, p: unknown[]) => Promise<number>)(1, 'UPDATE fixture_rows SET x = 1', []);
+      } catch (err) { refusals.push(String((err as Error).message)); }
+      return {};
+    });
+    await stepLib.runEnrichPhase(args(d, pool, compute) as never);
+    expect(refusals).toHaveLength(2);
+    expect(refusals.every((m) => /temp_materialize/.test(m)), refusals.join(' | ')).toBe(true);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// ER-D1 (batch-2 Phase 0.10, Spec 48 §3.6 silence class) — startHeartbeatTicker
+// itself, at the unit level.
+//
+// THE DEFECT, exactly: `if (!intervalMs || intervalMs <= 0) return () => {}`
+// cannot tell a DELIBERATE 0 (an operator disabling the ticker) from a
+// NON-FINITE value (a step whose heartbeat variable resolved to `undefined`,
+// because the interval was read from a hardcoded `config.enrich_parcels_*` key
+// no other step declares). `!NaN` is true, so the second case installed a NO-OP
+// ticker: `last_heartbeat_at` stayed NULL for the whole run, with no warning,
+// no audit row and no throw — the exact silence EP-D12/EP-D15 were built to end.
+// Latent until batch 2, only because ENRICHER had exactly one member.
+//
+// `Number.isFinite`, never `!x`, IS the fix — so both arms are locked.
+// ---------------------------------------------------------------------------
+
+describe('startHeartbeatTicker — ER-D1: a non-finite interval is LOUD, a deliberate 0 is not (Spec 48 §3.6)', () => {
+  it('RED-then-GREEN — NaN THROWS rather than silently returning a no-op ticker', () => {
+    expect(() => stepLib.startHeartbeatTicker({ query: async () => ({ rows: [] }) }, 4242, () => 'zoning', NaN, () => 0))
+      .toThrow(/non-finite|finite/i);
+  });
+
+  it('RED-then-GREEN — undefined (the real shape: Number(config.<undeclared>) * 60000) THROWS too', () => {
+    expect(() => stepLib.startHeartbeatTicker({ query: async () => ({ rows: [] }) }, 4242, () => 'zoning', Math.round(Number(undefined) * 60000), () => 0))
+      .toThrow(/non-finite|finite/i);
+  });
+
+  it('a DELIBERATE 0 still returns a no-op stop() and schedules nothing — the disable case survives the fix', async () => {
+    vi.useFakeTimers();
+    try {
+      const pool = fakePool();
+      const stop = stepLib.startHeartbeatTicker(pool, 4242, () => 'zoning', 0, () => 0);
+      await vi.advanceTimersByTimeAsync(5000);
+      expect(pool.sql.filter((s: string) => /last_heartbeat_at/.test(s))).toHaveLength(0);
+      expect(() => stop()).not.toThrow();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('a finite, positive interval TICKS repeatedly (un-latched) — the vacuity guard on the two arms above', async () => {
+    vi.useFakeTimers();
+    try {
+      const pool = fakePool();
+      const stop = stepLib.startHeartbeatTicker(pool, 4242, () => 'zoning', 100, () => 7);
+      await vi.advanceTimersByTimeAsync(350);
+      stop();
+      expect(pool.sql.filter((s: string) => /last_heartbeat_at/.test(s)).length).toBeGreaterThanOrEqual(3);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// L9 (batch-2 Phase 0.10 FOLD, ruled 2026-09-15) — THE PER-TARGET COUNTERS ARE
+// DRIVEN BY THE DECLARATION, not by five hardcoded indices.
+//
+// THE DEFECT, measured while building the locks above: after the phases run,
+// `runEnrichPhase` assigned `written[write.targetKey(0)] … targetKey(4)` from
+// five pass-result variables looked up by literal pass name (`passRaw.zoning`,
+// `.max_build`, `.existing_structure`, `.comparable_builds`, `.optimal_config`).
+// An ENRICHER declaring FEWER than five write targets therefore died at
+// `TypeError: Cannot set properties of undefined (setting 'scanned')` AFTER
+// every pass had already run and, for a shared-txn step, after the transaction
+// had already COMMITted — the worst possible place to fail. `geocode_permits`
+// (batch-2 Phase 0.9 I5) declares TWO targets, so 0.10 would not have unblocked
+// it. The fix iterates `execution.phases[]`, resolving each pass's counters onto
+// the target its own `writes_ref` declares.
+//
+// Both directions, because the inverse is the whole point of the row:
+// `enrich_parcels`' five phases → five targets must produce the IDENTICAL
+// numbers (the `written` half of the golden hash-equality gate). That arm lives
+// in src/tests/steps/enrich_parcels/violations.test.ts, against its real
+// 5-phase/7-target fixture.
+// ---------------------------------------------------------------------------
+
+describe('runEnrichPhase — per-target counters come from execution.phases[].writes_ref (batch-2 Phase 0.10 fold)', () => {
+  interface FakeClient { query: (text: string, values?: unknown[]) => Promise<unknown>; release: () => void }
+
+  function pool2() {
+    const sql: string[] = [];
+    const clients: FakeClient[] = [];
+    const answer = (text: string) => {
+      if (/pg_backend_pid/.test(text)) return { rows: [{ pid: 4242 }] };
+      if (/pg_try_advisory(?:_xact)?_lock\(\$1, \$2\)/.test(text)) return { rows: [{ acquired: true }] };
+      if (/COUNT\(\*\)::int AS n FROM parcels/.test(text)) return { rows: [{ n: 0 }] };
+      return { rows: [], rowCount: 0 };
+    };
+    const record = async (text: string) => { sql.push(text); return answer(text); };
+    return {
+      sql,
+      query: record,
+      connect: async () => { const c: FakeClient = { query: record, release: () => {} }; clients.push(c); return c; },
+    };
+  }
+
+  /** TWO write targets, TWO phases — the `geocode_permits` shape, not `enrich_parcels`'. */
+  const twoTargetDescriptor = () => ({
+    identity: { name: 'fixture_two_target', lock: 987655, archetype: 'ENRICHER', spec: '999' },
+    outputs: {
+      writes: [
+        { table: 'fixture_a', key: 'id', write_discipline: { class: 'set_based_join_update' } },
+        { table: 'fixture_b', key: 'id', write_discipline: { class: 'temp_materialize' } },
+      ],
+    },
+    execution: {
+      shape: 'enrich',
+      heartbeat_minutes_from_config: 'fixture_heartbeat_minutes',
+      lock_timeout_ms_from_config: 'fixture_lock_timeout_ms',
+      phases: [
+        { name: 'geocode', order: 1, txn: 'shared', writes_ref: 0, scope: 'full', timeout_minutes_from_config: 'fixture_pass_timeout_minutes' },
+        { name: 'backfill_geom', order: 2, txn: 'shared', writes_ref: 1, scope: 'full', timeout_minutes_from_config: 'fixture_pass_timeout_minutes' },
+      ],
+      invocation: { sources: { argv: [], env: {} } },
+    },
+    guards: { requires: [] },
+    recovery: 'none',
+    override: { force_full: 'none', force_run: 'none', dry_run: 'none' },
+    checks: [],
+  });
+
+  const twoTargetCompute = (results: Record<string, Record<string, unknown>>) => ({
+    computeAggregateRecordsUpdated: () => 0,
+    passes: ['geocode', 'backfill_geom'].map((name) => ({
+      name,
+      txn: 'shared',
+      run: async () => results[name] ?? {},
+    })),
+  });
+
+  const args2 = (descriptor: Record<string, unknown>, pool: ReturnType<typeof pool2>, compute: unknown) => ({
+    descriptor,
+    pool,
+    compute,
+    config: { fixture_pass_timeout_minutes: 5, fixture_heartbeat_minutes: 60, fixture_lock_timeout_ms: 0 },
+    chainId: null,
+    log: { info: () => {}, warn: () => {}, error: () => {} },
+    tag: '[fixture_two_target]',
+    clockNow: new Date('2026-09-15T00:00:00.000Z'),
+    preWriteGate: null,
+    ownRunId: 4242,
+  });
+
+  it('L9 — a TWO-target ENRICHER runs to completion and its counters land on the targets its phases DECLARE', async () => {
+    const pool = pool2();
+    const compute = twoTargetCompute({
+      geocode: { scoped: 120, updated: 90, updatedIds: [] },
+      backfill_geom: { scoped: 40, updated: 35, updatedIds: [] },
+    });
+    const res = await stepLib.runEnrichPhase(args2(twoTargetDescriptor(), pool, compute) as never) as {
+      written: Record<string, { scanned: number; updated: number; rows_changed: number }>;
+    };
+    const w = res.written;
+    expect(w.fixture_a_written ?? w[Object.keys(w)[0]!], 'target keys exist').toBeDefined();
+    const keys = Object.keys(w).filter((k) => typeof w[k] === 'object' && w[k] !== null && 'rows_changed' in (w[k] as object));
+    expect(keys, 'exactly two declared write targets, no more').toHaveLength(2);
+    const [k0, k1] = keys as [string, string];
+    expect(w[k0]).toMatchObject({ scanned: 120, updated: 90, rows_changed: 90 });
+    expect(w[k1]).toMatchObject({ scanned: 40, updated: 35, rows_changed: 35 });
+  });
+
+  it('L9b — a phase whose writes_ref points past the declared outputs.writes[] is a NAMED throw, not an undefined-property TypeError', async () => {
+    const pool = pool2();
+    const d = twoTargetDescriptor() as unknown as Record<string, unknown>;
+    (d.execution as { phases: Array<{ writes_ref: number }> }).phases[1]!.writes_ref = 7;
+    await expect(stepLib.runEnrichPhase(args2(d, pool, twoTargetCompute({})) as never))
+      .rejects.toThrow(/writes_ref 7[\s\S]*outputs\.writes/);
+  });
+
+  it('L9c — the pass-result counter contract is honoured per pass: scoped / candidates / a bare updated all resolve, and scenarioUpdated is ADDED to updated', async () => {
+    const pool = pool2();
+    const compute = twoTargetCompute({
+      // `candidates` (pass-4 shape) feeds `scanned`; `scenarioUpdated` (pass-3 shape) is added to `updated`.
+      geocode: { candidates: 500, updated: 7, scenarioUpdated: 3 },
+      // No scanned/scoped/candidates at all (pass-5 shape) — `updated` feeds BOTH.
+      backfill_geom: { updated: 11 },
+    });
+    const res = await stepLib.runEnrichPhase(args2(twoTargetDescriptor(), pool, compute) as never) as {
+      written: Record<string, { scanned: number; updated: number; rows_changed: number }>;
+    };
+    const keys = Object.keys(res.written).filter((k) => typeof res.written[k] === 'object' && res.written[k] !== null && 'rows_changed' in (res.written[k] as object));
+    expect(res.written[keys[0]!]).toMatchObject({ scanned: 500, updated: 10, rows_changed: 10 });
+    expect(res.written[keys[1]!]).toMatchObject({ scanned: 11, updated: 11, rows_changed: 11 });
+  });
+});

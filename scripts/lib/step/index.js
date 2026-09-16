@@ -2356,6 +2356,22 @@ function startPhaseDeadline(cancelClient, pid, timeoutMs, meta) {
  * @returns {() => void}
  */
 function startHeartbeatTicker(writer, runId, getPhaseName, intervalMs, getRowsProcessed) {
+  // ER-D1 (batch-2 Phase 0.10, Spec 48 §3.6 silence class) — `!intervalMs` cannot
+  // tell a DELIBERATE 0 (an operator disabling the ticker; `runMaintenance` passes
+  // a literal 0 for every step that declares no heartbeat variable) from a
+  // NON-FINITE value (`Math.round(Number(undefined) * 60000)` — a step whose
+  // heartbeat variable did not resolve). `!NaN` is true, so the second case used to
+  // install a NO-OP ticker: `last_heartbeat_at` NULL for the whole run, no warning,
+  // no audit row, no throw. Latent only because ENRICHER had exactly one member,
+  // which is precisely the condition batch 2 removes. `Number.isFinite`, never
+  // `!x` — that distinction IS the fix, so the disable case below is untouched.
+  if (!Number.isFinite(intervalMs)) {
+    throw new Error(
+      `[step] startHeartbeatTicker: interval is non-finite (${intervalMs}). A heartbeat interval that does not resolve `
+      + 'must FAIL LOUD, never silently install a no-op ticker that leaves last_heartbeat_at NULL for the whole run '
+      + '(ER-D1, Spec 48 §3.6). A deliberate 0 still disables the ticker.',
+    );
+  }
   if (!intervalMs || intervalMs <= 0) return () => {};
   const timer = setInterval(() => {
     const phaseName = getPhaseName();
@@ -2478,21 +2494,63 @@ async function runEnrichPhase({ descriptor, pool, compute, config, chainId, log,
   written.requirements = requirements;
   if (interruptedRetraction.interrupted) written.interrupted_retraction_forced_full = true;
 
+  // ── batch-2 Phase 0.10 — the two PRE-PHASE concerns are DECLARED, not hardcoded ──
+  //
+  // Until 0.10 both of these were `enrich_parcels`' own compute exports called by
+  // literal name, so a second enrich-shaped step died at `TypeError:
+  // compute.readZoningContract is not a function` before its first phase, and its
+  // defer threshold read `Number(config.enrich_parcels_defer_threshold_rows)` =
+  // NaN, whose `scope_count >= NaN` comparison dodged the early return BY ACCIDENT.
+  // Accidents are not contracts (Rule 1). Both are now OPTIONAL, step-level
+  // declarations (`execution.enrich_hooks`, Ask A1 — both fire ONCE, before phase 1,
+  // never per pass, so a per-pass home would declare a lifecycle the runner does not
+  // have): absent means the runner does not call them AT ALL, declared-but-missing
+  // is a NAMED throw citing the descriptor field.
+  const hooks = (descriptor.execution && descriptor.execution.enrich_hooks) || {};
+  const resolveHook = (exportName, field) => {
+    const fn = compute[exportName];
+    if (typeof fn !== 'function') {
+      throw new Error(
+        `${tag} ${field} names "${exportName}", which this step's compute module does not export. `
+        + 'A declared hook that resolves to nothing is a declaration that lies (Rule 1); '
+        + 'omit the field if the step has no such concern.',
+      );
+    }
+    return fn;
+  };
+
   // ── Spec 58 §9/§11 consumer protocol — HALTS on a missing/failed producer ────
-  const contract = await compute.readZoningContract(pool);
-  const staleOverlays = new Set(
-    (compute.OVERLAY_LAYERS || []).filter((l) => l.col && contract.layers[l.key] === false).map((l) => l.key),
-  );
+  const contractHook = hooks.contract_read && hooks.contract_read !== 'none' ? hooks.contract_read : null;
+  let staleOverlays = new Set();
+  if (contractHook) {
+    const contract = await resolveHook(contractHook, 'execution.enrich_hooks.contract_read')(pool);
+    staleOverlays = new Set(
+      (compute.OVERLAY_LAYERS || []).filter((l) => l.col && contract.layers[l.key] === false).map((l) => l.key),
+    );
+  }
 
   // ── Spec 122 §3.0b — the pre-transaction scope-defer decision (ZERO writes if deferred) ──
-  if (!full) {
-    const deferThreshold = Number(config.enrich_parcels_defer_threshold_rows);
-    const scope = await compute.computeDeferScope(pool, deferThreshold);
+  const deferHook = hooks.defer_scope && hooks.defer_scope !== 'none' ? hooks.defer_scope : null;
+  if (!full && deferHook) {
+    const deferFn = resolveHook(deferHook.export, 'execution.enrich_hooks.defer_scope.export');
+    const deferThreshold = Number(config[deferHook.threshold_from_config]);
+    if (!Number.isFinite(deferThreshold)) {
+      throw new Error(
+        `${tag} execution.enrich_hooks.defer_scope.threshold_from_config names "${deferHook.threshold_from_config}", `
+        + `which resolved to ${JSON.stringify(config[deferHook.threshold_from_config])}. A non-finite threshold makes `
+        + 'every `scope_count >= threshold` comparison false, which reads as "never defer" while declaring a bound '
+        + '— the accidental escape this row retires (Rule 12).',
+      );
+    }
+    const scope = await deferFn(pool, deferThreshold);
     if (scope.scope_count >= deferThreshold) {
       log.warn(tag, `enrich defer: combined scope ${scope.scope_count} >= threshold ${deferThreshold} (ratio ${scope.ratio})`);
       return {
         deferred: true,
-        matched: { defer_scope: scope, enrich_parcels_duration_ms: Date.now() - t0 },
+        // `<slug>_duration_ms`, derived from identity.name — a hardcoded
+        // `enrich_parcels_duration_ms` key would have leaked that slug's name into
+        // every other ENRICHER's telemetry. Identical string for enrich_parcels.
+        matched: { defer_scope: scope, [`${descriptor.identity.name}_duration_ms`]: Date.now() - t0 },
         written,
         prior,
         overrides,
@@ -2547,8 +2605,42 @@ async function runEnrichPhase({ descriptor, pool, compute, config, chainId, log,
     now: () => runAt,
     asOfDate: () => runAt.toISOString().slice(0, 10),
   };
-  const heartbeatMs = Math.round(Number(config.enrich_parcels_heartbeat_minutes) * 60000);
-  const lockTimeoutMs = Math.round(Number(config.enrich_parcels_lock_timeout_ms));
+  // ── batch-2 Phase 0.10 / ER-D1 — both intervals come from the DESCRIPTOR ──────
+  //
+  // These were `Number(config.enrich_parcels_heartbeat_minutes)` and
+  // `Number(config.enrich_parcels_lock_timeout_ms)` — two hardcoded keys no other
+  // step declares, so a second enrich-shaped step resolved BOTH to NaN. NaN is
+  // falsy, so `startHeartbeatTicker`/`startStallTicker` silently returned a no-op
+  // and `if (lockTimeoutMs > 0)` silently issued no `SET LOCAL lock_timeout` —
+  // three declared guards, none of them armed, nothing anywhere saying so
+  // (Spec 48 §3.6). `*_from_config` suffix is MANDATORY, not cosmetic:
+  // step-conformance.infra.test.ts's `fromConfigRefs` scan matches that suffix, so
+  // any other spelling reads as a dead declaration (the LW-D10 blind spot).
+  //
+  // FAIL LOUD, above the lock: a non-finite resolution throws here, before the
+  // heartbeat client is opened and before any transaction. `Number.isFinite`, never
+  // `!x` — an explicitly declared 0 stays a deliberate disable.
+  const resolveInterval = (field, scale) => {
+    const varName = descriptor.execution && descriptor.execution[field];
+    // The literal "none" is the DECLARED disable, the same escape
+    // `execution.phases[].timeout_minutes_from_config` already carries — a step
+    // saying out loud that it wants no ticker / no lock ceiling. It is deliberately
+    // NOT the same thing as a name that fails to resolve: the accident stays a throw,
+    // only the declaration disables.
+    if (varName === 'none') return 0;
+    const raw = varName ? config[varName] : undefined;
+    const value = Math.round(Number(raw) * scale);
+    if (!Number.isFinite(value)) {
+      throw new Error(
+        `${tag} execution.${field} ${varName ? `names "${varName}", which resolved to ${JSON.stringify(raw)}` : 'is not declared'}. `
+        + 'An enrich-shaped step must resolve this interval to a finite number; a non-finite value silently disabled the '
+        + 'guard it declares (ER-D1, Spec 48 §3.6). Declare 0 to disable it deliberately.',
+      );
+    }
+    return value;
+  };
+  const heartbeatMs = resolveInterval('heartbeat_minutes_from_config', 60000);
+  const lockTimeoutMs = resolveInterval('lock_timeout_ms_from_config', 1);
 
   const passRaw = {};
   let scopeInsertCount = 0;
@@ -2635,6 +2727,86 @@ async function runEnrichPhase({ descriptor, pool, compute, config, chainId, log,
   // crash posture applies as it always did).
   const ENRICH_INNER_LOCK_SUBKEY = 1;
 
+  // ── batch-2 Phase 0.10 — THE ENRICHER WRITE SEAMS (class-O retraction, class-N
+  // join update). REACHABILITY GROWTH ONLY: `enrich_parcels` declares neither class
+  // and `recovery.before_image: "none"`, so not one line of its path changes.
+  //
+  // Before 0.10 the enrich path reached NO write executor at all — `write.` appeared
+  // in this runner only as `assertWritePrivileges`/`targetKey`, so
+  // `recovery.before_image: "generated"` was a NO-OP on an enrich-shaped step
+  // (honoured only in runLinkPhase/runCascadePhase/runLinkKeyedPhase) and a declared
+  // class-O target could be retracted with no audit trail at all. `geocode_permits`
+  // (batch-2 Phase 0.9 I5) is the first enrich-shaped step to need it, and the idiom
+  // is established HERE, under a lock, not discovered inside a conversion commit.
+  //
+  // INJECTED VIA passCtx, mirroring `stream`/`flushBatch` (Spec 122 §5.5): compute
+  // stays JUST compute (SQL + scope authorship), while the transaction boundary, the
+  // before-image, the class check and the counters stay the RUNNER's job (Rule 2).
+  // The scope params come from the PASS, because only the pass knows which rows it
+  // is retracting — a runner-driven blanket retraction would be a behaviour no
+  // descriptor could parameterise.
+  const beforeImage = [];
+  const seamTarget = (writesRef, seam) => {
+    const spec = specs[writesRef];
+    if (!spec) {
+      throw new Error(`${tag} ctx.${seam}(${writesRef}) — outputs.writes[${writesRef}] is not declared (this step declares ${specs.length} write target(s))`);
+    }
+    return spec;
+  };
+  const makeWriteSeams = (client) => ({
+    /** class O — `set_based_null_retract` (or any target declaring retract all/departed). */
+    retract: async (writesRef, scopeParams) => {
+      const spec = seamTarget(writesRef, 'retract');
+      const cls = (spec.write_discipline && spec.write_discipline.class) || 'none';
+      if (cls !== 'set_based_null_retract' && spec.retract !== 'all' && spec.retract !== 'departed') {
+        throw new Error(
+          `${tag} ctx.retract(${writesRef}) — outputs.writes[${writesRef}] declares write_discipline.class "${cls}" and `
+          + `retract ${JSON.stringify(spec.retract ?? null)}. Only a class-O target (set_based_null_retract, or retract `
+          + '"all"/"departed") may be retracted; a seam that widened itself to any class would make the declared write '
+          + 'discipline decorative (Rule 1).',
+        );
+      }
+      // R-M — a retraction with no before image is refused, not silently un-imaged.
+      const recovery = descriptor.recovery;
+      const declared = recovery && recovery !== 'none' ? recovery.before_image : undefined;
+      if (declared !== 'generated') {
+        throw new Error(
+          `${tag} ctx.retract(${writesRef}) — recovery.before_image is ${JSON.stringify(declared ?? null)}, not "generated". `
+          + 'R-M: a destructive retraction must carry a before image; declare it, or do not retract.',
+        );
+      }
+      const plan = write.buildWritePlan(spec, descriptor);
+      // DELIBERATELY UNWRAPPED (R-M, and the shape runCascadePhase already proves):
+      // a failed before-image FAILS the run BEFORE anything is retracted. A try/catch
+      // here would be the silent-skip this mechanism exists to make impossible.
+      const bi = await write.writeBeforeImage(client, plan, scopeParams || [], descriptor.identity.name, runAt);
+      if (bi.written) beforeImage.push({ ...bi, table: plan.table });
+      const retracted = await write.executeSetBasedClear(client, plan, scopeParams || []);
+      const key = write.targetKey(writesRef);
+      written[key].retracted += retracted;
+      written[key].rows_changed += retracted;
+      return retracted;
+    },
+    /** class N — `set_based_join_update`; the executor structurally refuses INSERT/ON CONFLICT text. */
+    joinUpdate: async (writesRef, sql, params) => {
+      const spec = seamTarget(writesRef, 'joinUpdate');
+      const cls = (spec.write_discipline && spec.write_discipline.class) || 'none';
+      if (cls !== write.JOIN_UPDATE_CLASS) {
+        throw new Error(
+          `${tag} ctx.joinUpdate(${writesRef}) — outputs.writes[${writesRef}] declares write_discipline.class "${cls}", `
+          + `not "${write.JOIN_UPDATE_CLASS}". The executor's structural refusal of INSERT/ON CONFLICT text is what makes `
+          + 'a declared insert-free contract enforceable rather than merely stated; routing another class through it '
+          + 'would assert a contract that target never declared.',
+        );
+      }
+      const n = await write.executeSetBasedJoinUpdate(client, sql, params || []);
+      const key = write.targetKey(writesRef);
+      written[key].updated += n;
+      written[key].rows_changed += n;
+      return n;
+    },
+  });
+
   // EP-D12 fix (pilot 9 commit 8 P8, 2026-09-08) — a DEDICATED, PRE-ACQUIRED, autocommit
   // client for heartbeat/stall_diagnostic writes only, held for this call's ENTIRE
   // lifetime (both the shared-txn phase loop and the post_commit phase loop) and released
@@ -2701,7 +2873,7 @@ async function runEnrichPhase({ descriptor, pool, compute, config, chainId, log,
       // neither was ever capable of firing. `SET LOCAL statement_timeout` is a correct
       // PER-STATEMENT guard and is KEPT; it is not, and never was, a phase bound. The
       // wall-clock phase deadline armed below is what bounds the phase.
-      const passCtx = { full, scopeWhere: 'TRUE', staleOverlays, clock, log, config, scopeRunId, onProgress: (n) => { rowsProcessed = n; } };
+      const passCtx = { full, scopeWhere: 'TRUE', staleOverlays, clock, log, config, scopeRunId, onProgress: (n) => { rowsProcessed = n; }, ...makeWriteSeams(client) };
       // WF3 enrich_parcels stall incident (2026-09-07, orchestrator observation) — Spec 48 §3.6
       // silence class: with NO per-phase log line, a `--full` run's own stdout goes silent from
       // the single startup INFO line until the whole step finishes (measured live: a real,
@@ -2938,6 +3110,13 @@ async function runEnrichPhase({ descriptor, pool, compute, config, chainId, log,
         stream: (sql, params, opts) => streamOverClient(streamClient, sql, params, { batchSize: streamBatchSize, ...opts }),
         flushBatch,
         onProgress: (n) => { rowsProcessed = n; },
+        // batch-2 Phase 0.10 — the same two seams as the shared-txn passes, bound to
+        // THIS phase's own dedicated connection. A post_commit pass runs autocommit
+        // (each `flushBatch` is its own short transaction), so a retraction issued
+        // here commits on its own — which is exactly why the before-image, written
+        // strictly first and unwrapped, is the only recoverable record of the prior
+        // values on this path.
+        ...makeWriteSeams(postClient),
       };
       // EP-D15 (WF3 C4, 2026-09-09) — mirrors the shared-txn phases' own boundary logging
       // (:2452/:2478) — the post_commit loop previously had NEITHER line, so pass 5's
@@ -3081,7 +3260,9 @@ async function runEnrichPhase({ descriptor, pool, compute, config, chainId, log,
     optimal_config_enriched_count: optCfg.updated || 0,
     opt_aor_envelope_capped_count: optCfg.envelope_capped || 0,
     opt_config_citywide_fallback_count: optCfg.citywide || 0,
-    enrich_parcels_duration_ms: Date.now() - t0,
+    // batch-2 Phase 0.10 — derived from identity.name, never the literal slug (the
+    // defer-return above does the same). Byte-identical for `enrich_parcels`.
+    [`${descriptor.identity.name}_duration_ms`]: Date.now() - t0,
     // EP-PASS3-BACKLOG (WF3 C1, 2026-09-15) — the step-start retirement, made LOUD. A DELETE
     // of 443,023 rows that no row records is invisible (Spec 48 §3.6). The three counters
     // reconcile by construction: `retired + surviving = scope_backlog_at_step_start`, and
@@ -3117,21 +3298,58 @@ async function runEnrichPhase({ descriptor, pool, compute, config, chainId, log,
     },
   };
 
-  written[write.targetKey(0)].scanned = zoning.scoped || 0;
-  written[write.targetKey(0)].updated = zoning.updated || 0;
-  written[write.targetKey(0)].rows_changed = zoning.updated || 0;
-  written[write.targetKey(1)].scanned = maxBuild.scoped || 0;
-  written[write.targetKey(1)].updated = maxBuild.updated || 0;
-  written[write.targetKey(1)].rows_changed = maxBuild.updated || 0;
-  written[write.targetKey(2)].scanned = existing.scoped || 0;
-  written[write.targetKey(2)].updated = (existing.updated || 0) + (existing.scenarioUpdated || 0);
-  written[write.targetKey(2)].rows_changed = written[write.targetKey(2)].updated;
-  written[write.targetKey(3)].scanned = comps.candidates || 0;
-  written[write.targetKey(3)].updated = comps.updated || 0;
-  written[write.targetKey(3)].rows_changed = comps.updated || 0;
-  written[write.targetKey(4)].scanned = optCfg.updated || 0;
-  written[write.targetKey(4)].updated = optCfg.updated || 0;
-  written[write.targetKey(4)].rows_changed = optCfg.updated || 0;
+  // batch-2 Phase 0.10 — the before-image artifacts the class-O seam persisted, if
+  // any. Added ONLY when non-empty, on purpose: a step that retracts nothing (every
+  // ENRICHER today, `enrich_parcels` included) emits the SAME `matched` object it
+  // always did, byte for byte — an always-present `before_image: []` key would move
+  // every committed golden for a mechanism that did not run.
+  if (beforeImage.length > 0) matched.before_image = beforeImage;
+
+  // ── batch-2 Phase 0.10 (fold, ruled 2026-09-15) — THE PER-TARGET COUNTERS,
+  // DRIVEN BY THE DECLARATION.
+  //
+  // This block used to be fifteen hardcoded assignments over `write.targetKey(0)`
+  // … `targetKey(4)`, sourced from five pass-result variables looked up by literal
+  // pass name. An ENRICHER declaring FEWER than five write targets died here at
+  // `TypeError: Cannot set properties of undefined` — AFTER every pass had run and,
+  // for a shared-txn step, after the transaction had already COMMITted, which is the
+  // worst place in the whole runner to fail. `geocode_permits` (batch-2 Phase 0.9)
+  // declares TWO targets, so the row that exists to unblock it had to close this too.
+  //
+  // The loop reads the SAME declaration the phase loops above already sequence on:
+  // each `execution.phases[]` entry names its pass (`name` → `passRaw`) and the write
+  // target it fills (`writes_ref` → `outputs.writes[]`). For `enrich_parcels` the five
+  // phases declare writes_ref 0..4, so this reproduces the retired block's numbers
+  // exactly — verified per pass, not asserted: `zoning`/`max_build`/`existing_structure`
+  // report `scoped`, `comparable_builds` reports `candidates`, `optimal_config` reports
+  // neither and falls to `updated` (which is what the retired code read for it too).
+  //
+  // ⚠️ THE FIELD NAMES ARE A CODE CONTRACT, NOT A DECLARED ONE. `PASS_SCANNED_FIELDS`
+  // is an ORDERED resolution over the four names this estate's passes actually use,
+  // stated here rather than left implicit. The honest end state is a per-phase declared
+  // counter source in the descriptor; that is a schema field and its own re-freeze, and
+  // it is filed rather than smuggled in here.
+  //
+  // `+=`, not `=`, so a pass that already reported rows through `ctx.retract`/
+  // `ctx.joinUpdate` composes instead of being clobbered. Every counter starts at 0, so
+  // for a step that uses neither seam (every ENRICHER today) the result is identical.
+  const PASS_SCANNED_FIELDS = ['scanned', 'scoped', 'candidates', 'updated'];
+  for (const phase of phases) {
+    const key = write.targetKey(phase.writes_ref);
+    if (!written[key]) {
+      throw new Error(
+        `${tag} execution.phases[] entry "${phase.name}" declares writes_ref ${phase.writes_ref}, which this `
+        + `descriptor's outputs.writes[] (${specs.length} target(s)) does not have. A pass whose counters have no `
+        + 'declared home is a write nothing can report (Rule 1) — fix the reference, do not skip the counter.',
+      );
+    }
+    const r = passRaw[phase.name] || {};
+    const scannedField = PASS_SCANNED_FIELDS.find((f) => typeof r[f] === 'number');
+    const passUpdated = (r.updated || 0) + (r.scenarioUpdated || 0);
+    written[key].scanned += scannedField ? r[scannedField] : 0;
+    written[key].updated += passUpdated;
+    written[key].rows_changed += passUpdated;
+  }
   const stampsIdx = specs.findIndex((s) => s.write_discipline.class === 'set_based_scoped');
   if (stampsIdx >= 0) {
     written[write.targetKey(stampsIdx)].updated = (zoning.updated || 0) + (maxBuild.updated || 0);
@@ -4288,6 +4506,9 @@ module.exports = {
   recordHeartbeat,
   captureStallDiagnostic,
   startStallTicker,
+  // batch-2 Phase 0.10 — exported so ER-D1's own both-directions lock can drive
+  // the non-finite/zero/positive arms directly, without standing up a whole runner.
+  startHeartbeatTicker,
   startPhaseDeadline,
   streamOverClient,
   runTierToConvergence,

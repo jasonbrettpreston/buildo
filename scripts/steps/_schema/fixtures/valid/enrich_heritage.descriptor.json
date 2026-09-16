@@ -138,6 +138,8 @@
     "schema_drift": "pause"
   },
   "execution": {
+    "heartbeat_minutes_from_config": "none",
+    "lock_timeout_ms_from_config": "none",
     "phases": [
       {
         "name": "heritage",
