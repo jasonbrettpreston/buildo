@@ -255,7 +255,9 @@
       "file": "scripts/geocode-permits.js",
       "archetype": "ENRICHER",
       "batch": "pending",
-      "reason": "IN FLIGHT — batch 2 Phase 0.9 I5, registered in converted.json.pending at the folded commit 5 with stage descriptor_only. Flipped C4 -> pending in that commit because `buildRoadmap` THROWS when a file sits in converted.json.pending[] while its census row still names a batch (the I4 lesson, a062eb79: 11 failures in conversion-roadmap.infra.test.ts, caused by commit 1 declaring a new step and found only by the FULL npm run test, never by `vitest related`). Original C4 reason, kept verbatim: \"C4 batching-entry §3.2 order 5\"."
+      "reason": "RETAINED at cutover per Spec 124 R-AO. Archetype and batch are the census's OWN pre-cutover values, kept verbatim (`archetype: \"ENRICHER\"` from the original C4 batching entry, `batch: \"pending\"` as flipped at the folded commit 5) and never re-derived from the descriptor — a copy of the descriptor would make fast invariant #25 compare a value to itself. Original C4 reason: \"C4 batching-entry §3.2 order 5\". This row's cutover EMPTIES C4: geocode_permits was the batch's last member.",
+      "status": "converted",
+      "converted_at": "commit-9"
     },
     {
       "slug": "link_coa_to_parcels",

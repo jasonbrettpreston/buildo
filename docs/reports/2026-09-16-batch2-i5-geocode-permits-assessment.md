@@ -1,6 +1,10 @@
 # Batch 2 I5 Assessment — `geocode_permits`
 
-> ## ▶ STATUS: RESUMED at the folded commit 5 — the stop is CLOSED, §7 is superseded by §9
+> ## ✅ STATUS: CUT OVER — `geocode_permits` is the 14th converted step and the ENRICHER archetype's SECOND member
+>
+> **Scorecard: 17/17 · G9 PASS · G4d PASS · G-shape PASS · hard-stop=false.** `converted.json` 13 → 14, `pending: []`. The cutover's own consequence is the point of the whole step: `archetype_profiles[ENRICHER]` now has **two** converted members, so R-AH / R-PACE-1 eligibility is **MET** and batch 2's Phase 2 turns from *1 full + 3 compressed* into *4 compressed*. §9.10 is the cutover record.
+>
+> ## ▶ RESUMED at the folded commit 5 — the stop is CLOSED, §7 is superseded by §9
 >
 > Commits **1–4** ran on 2026-09-16 and stopped at a clean boundary because three plan premises were refuted by measurement (table below). **Batch-2 row 0.10b (`13ee7669`) then landed the ENRICHER post-phase seam**, which closes premise 1, and the orchestrator ruled premises 2 and 3. The conversion **resumed at the folded commit 5** and §9 is the record of the resumed work. §7 is kept verbatim as the stop's own evidence — it is not deleted, because the three refutations are the most reusable thing this step produced.
 >
@@ -679,6 +683,43 @@ Both POST captures log `phase geocode starting (shared txn, timeout NaNmin)`. `e
 
 ---
 
+### 9.10 CUTOVER — what commit 9 moved, and the one number the whole step existed to change
+
+| Artifact | Before | After |
+|---|---|---|
+| `converted.json.converted` | 13 | **14** (`scripts/geocode-permits.js` appended) |
+| `converted.json.pending` | 1 entry, `stage: "shape_clean"` | **`[]`** — deleted in the SAME commit that registers (R-K mutual exclusion) |
+| `step-archetype-census.json` | `batch: "pending"` | **RETAINED** with `status: "converted"`, `converted_at: "commit-9"` (R-AO). The `archetype`/`batch` values are the census's OWN pre-cutover ones, never re-derived from the descriptor — that is what keeps fast invariant #25 a comparison of two independently-authored facts |
+| **Converted ENRICHER members** | **1** (`enrich_parcels`) | **2** — R-AH / R-PACE-1 eligibility **MET** |
+| C4 batch membership | 1 (this step) | **0 — the batch is CLOSED**, and the count going to zero is the batch finishing, not a pin going stale |
+| Live seam pairs | 6 | **7** — `geocode_permits → link_neighbourhoods` |
+| `template-freeze.json` | frozen at `eb8e6687` | RE-FREEZE, 20 categories / 9 runners / 0 open batching prereqs |
+
+**The ENRICHER count is the deliverable.** This conversion was mandated in FULL nine-commit form *because* the archetype had one member and `step-validate.mjs` fast invariant #24 was vacuous for it. Registering the second member is what retires that condition: batch 2's Phase 2 goes from *1 full + 3 compressed* to *4 compressed*, which is roughly 30 minutes of gate time and 6 commits saved across the four remaining ENRICHERs — the arithmetic the plan used to justify paying full form here.
+
+**The seam pair is the interesting one, and it arrived from a direction worth naming.** `geocode_permits` declares `address_points` as its own upstream, and `address_points` is still unconverted, so that edge still resolves to nothing. The new pair comes from the *other* side: `link_neighbourhoods` declared `geocode_permits` in its own `inputs.reads.steps` at ITS cutover the same day, and this registration is what resolves that already-declared read to a live producer. **A cutover can add a seam pair the converting step never declared.** §1.8 predicted the count would move — the prediction came from grepping the fleet's own test comments for this slug's NAME at commit 1 — and `src/tests/step-seam.logic.test.ts` now carries both the 6 → 7 arithmetic and the pre-announcement of the 8th pair, which starts WARNing permanently on every permits chain-end the moment `address_points` converts (Ask A3, filed MED).
+
+**Spec diff (Spec 124 §4.5), all three owner specs, none deferred to "N-A":**
+
+* **Spec 60 §3** — the largest correction. The section described *"Match against `address_points` table by street number + name"*, *"If no match: fall back to Google Maps Geocoding API"*, an *Incremental / Full (`--full`)* mode split and a *"Google API quota exhausted"* edge case. **None of that has been true since `67057269` (2026-02).** Rewritten to the measured behaviour: one `geo_id::INTEGER = address_point_id` equijoin, two phases in one transaction, the `CASE`-cast fence stated as load-bearing with its commit and its live 6-row population, the retraction's `geocoded_at IS NOT NULL` narrowing, and an explicit statement that there is no network fallback and never has been. The real edge cases replace the invented one: `has_geo_id_no_match` (14,492, no audit row — `GP-L2`), `no_geo_id` (7,660, the ~97 % structural ceiling), and the empty-`address_points` silence class.
+* **Spec 41** step 8 — *"Assign lat/lng via address point lookup or Google fallback"* → the equijoin, with *"no address-string match, no network"* said out loud.
+* **Spec 43** step 4 — *"Re-geocode permits missing coordinates"* → the truthful scope: it re-joins **every** permit with a numeric `geo_id`, guarded rather than narrowed, plus the retraction.
+
+No `order_guarantee.anchor` needed re-pointing: this step declares no `pre_write` check, so Rule 11 is vacuous for it (the one case where I4's spec-amendment-and-re-point coupling does not apply).
+
+**Regenerated, all by their own generators, none hand-edited:** `122-conversion-roadmap.md` (49 remaining rows), `122-programme-backlog.md` (123 items, blocks batching 0), `00_system_map.md` (100 specs), `template-freeze.json` (`--refresh`), and the fleet's scorecards via `step-validate.mjs --all --write` — the last of which is mandatory rather than tidy: the R-R staleness lock in `step-conformance.infra.test.ts` compares every committed scorecard against a fresh `--fast` run, and a registry that grows 13 → 14 moves the fleet-count line in **all** of them.
+
+**Four things only the FULL suite saw — the I4 lesson, applied to this step's own cutover.** `step-validate --all --fast` was green and every targeted suite was green while all four of these were red, because `--fast` skips vitest and `vitest related` on a descriptor JSON or a registry JSON resolves nothing:
+
+1. **The compute exported no `checks` dispatch table.** §5.5 (1) requires it so `step-conformance` can assert the dispatch keys are exactly the descriptor's check ids IN DECLARATION ORDER against the real object rather than a copy. Without the export the check reads `undefined` and **Rule 2 goes `enforced-red`**. Fixed here; fixing it changed a fingerprint input, which correctly staled all three POST captures (G8 3/3 → 0/3), so they were re-taken and the differential re-confirmed unchanged.
+2. **`assert_schema`'s R-D probe list went stale**, 143 → 146 names. That step is step 1 of every chain that runs it and probes the static union of every converted step's `config.logic_variables[].name`, so that LM-D15's mid-chain throw becomes a minute-zero FAIL. Three new variables anywhere in the fleet stale it. Regenerated with its own generator — and regenerating it staled `assert_schema`'s **four** goldens in turn, which were re-captured (all PASS). The cascade my own notes predicted, arriving on schedule.
+3. **`programme-items.json` rejected a `notes` key** — the item schema allows exactly nine properties and `notes` is not one. The CLOUD-PRE note was folded into `evidence`, which is where the schema says a measurement belongs.
+4. **`LDG-D1` widened.** `link_parcels` reads `permits.latitude`/`longitude` and `geocode_permits` is the sole writer of both — but until this cutover `geocode_permits` was unconverted, so LDG-4's converted-producer restriction hid the gap. **The dependency is years old; only its derivability is new.** Pinned in `KNOWN_GAPS` with the same disposition and the same ledger id as the identical `compute_centroids` half, and filed — declaring it edits another step's descriptor and moves that step's own seam pairs and staleness gating.
+
+**`CLOUD-PRE` — the open operator obligation, now covering THREE variables and proven necessary rather than assumed.** `geocode_permits` is added to the `CLOUDPARITY` item's `blocks`. The first end-to-end run of the converted step on the local database **failed loudly** on exactly this: `config: "geocode_permits_coverage_warn_pct" is declared by the descriptor but has no logic_variables row (a seed default exists … but a seed is BOOTSTRAP ONLY — never a runtime fallback for a converted step)`. `node -r dotenv/config scripts/seeds/apply-logic-variables.js` inserted 3 of 503 rows and the step then completed. **The cloud database must run the same command for all three before any dispatch that includes this step, on either chain.** That is not a theory about LM-D15; it is the error this conversion actually hit.
+
+---
+
 ## §R. Reflection
 
 ### LOW-CONFIDENCE — what this assessment is least sure of at commit 1
@@ -702,7 +743,90 @@ Both POST captures log `phase geocode starting (shared txn, timeout NaNmin)`. `e
 | S5 | **An admin expectation bound can be broken by history, not by the change under review.** `funnel.ts`'s `records_updated ≤ 100` is breached by 5 of the last 40 pre-conversion runs. A Cross-Domain handoff has to distinguish "the conversion broke this" from "this was already broken" before it files anything | every Cross-Domain step whose consumer declares numeric expectations |
 | S6 | **A draft artifact in the working tree is part of the tree, and the fleet suites read the tree.** `validateDescriptor()` passing on a drafted descriptor says nothing about whether the descriptor may *exist* yet; three fleet suites red on its mere presence. "The draft validates" and "the draft may sit here" are different claims and only the first was measured | every conversion's PH-0 → commit-6 window; and generally, any registry-backed artifact whose existence is itself a registered fact |
 | S7 | **A fence can be a calling convention, and a calling convention has no descriptor field.** `opts.withTransaction` is the load-bearing seam of this step's only regression lock, and every category in the 20-category descriptor is about *data* — reads, writes, guards, counters. Nothing in the standard has a home for "this function's signature is a test seam", so the Intent Ledger walked straight past it | every conversion replacing an exported function with a frozen shell: enumerate the **exported surface** as a fence class of its own, not just the SQL and the counters |
+| S12 | **Four independent ordering constraints, each discovered by running the gate rather than reading it.** A conversion's commit order is not a matter of taste on this programme: `red_suite` grants no hard-stop exclusions (so the descriptor must land with the suite); fast invariant #2 requires the seeds in the SAME tree as the descriptor (so they cannot be deferred one commit); G8 hard-stops from the moment the shell is wired (so the shell and the POST captures are one commit); and a PRE capture taken after the shell captures the CONVERTED behaviour (so it must precede it). Every one was found by executing `--all --fast` at the boundary, not by reading the spec | any programme with a declared commit sequence: run the entry gate at each proposed boundary before writing the sequence down |
+| S13 | **A known-bad fixture built by mutating real data goes vacuous the moment the real data moves past the mutation.** `missing-slug-totality.json` proved "a REMAINING slug with no census row throws" by omitting `geocode_permits` — and this cutover converted it, so the omission stopped describing a remaining slug and the fixture quietly stopped proving its own claim. It had to be re-pointed at a slug that is still remaining | every fixture derived from live data: the mutation's PREMISE is itself data and ages with it. Assert the premise, not only the outcome |
+| S14 | **A cutover can add a seam pair the converting step never declared.** `geocode_permits`' own declared upstream (`address_points`) is still unconverted and still resolves to nothing; the new pair came from `link_neighbourhoods`, which had declared `geocode_permits` as ITS upstream a day earlier. Registering a step resolves every already-declared read that names it | seam/graph accounting at any cutover: count the inbound edges other descriptors already declare, not just the outbound ones the step declares itself |
+| S15 | **The lock that catches its own author is the one that was worth writing.** Three did here: the F3 transaction lock reddened when `recovery.interrupted` moved and forced the reasoning into the descriptor; the Rule 2 banned-token scan reddened on the compute's own docblock and exposed a recurring scanner class; and the capture harness's `--out` guard refused to overwrite an untracked capture, which is the C4 step-H guard doing exactly its job | writing a lock that pins a value you are about to change is not redundant — it is how the change gets explained instead of just made |
 | S9 | **A shared runner generalised for its first second-member is generic in the half the author was looking at.** `d7668b8a` correctly generalised everything upstream of the phases — hooks, config resolution, write seams, per-target counters — and left the post-phase summary region a hand-written literal for the one step that existed. The tell was in its own commit message: *"post-phase counters iterate declared targets — I5 with 2 targets no longer throws"*. "No longer throws" and "emits the right number" are different claims, and only the first was made | every "generalise the runner for archetype member 2" WF: the acceptance test is **the second member actually running**, not the first member's goldens still hashing equal |
 | S10 | **A stage vocabulary's exclusions are not what the stage's NAME implies, and the plan quoted the name.** `red_suite` sounds like "the permissive early stage"; it is the one stage in the table with *no* exclusions, and the table says so in a comment written to prevent exactly this misreading. The plan attributed `descriptor_only`'s exclusion set to it | every plan that leans on a declared vocabulary's behaviour: quote the table, not the name — and run the gate once with the value actually applied before writing the commit that depends on it |
 | S11 | **A hook that scopes by staged files and an invariant that scopes by "all" are different gates, and twelve conversions passed only the first.** Every prior `red_suite` registration went green through `step-validate --staged --fast`, which resolves no step from a staged registry JSON. `--all --fast` on the same tree exits 1. Nobody was wrong; nobody had run the stricter gate | any programme that tightens its own entry gate mid-flight: re-run the new gate against the *existing* green states before assuming they stay green |
 | S8 | **A measured fix that lands on the wrong one of two literals is worse than one that gets reverted.** `4de16d00` measured 90.9 %, changed the row, missed the verdict, and left no trace in the tree that a measurement had ever been taken — so five days later a reconciliation commit correctly "aligned" the row back, and the measurement vanished with it | every Rule-10 parallel-boolean site: a duplicated threshold is not just a disagreement risk, it is a *silent-no-op-fix* risk |
+
+---
+
+## Validation scorecard (generated)
+
+> Generated by `node scripts/analysis/step-validate.mjs --step=geocode_permits --write` — Spec 123 §6, ruling R-R (2026-08-29).
+> Regenerate with the same command; a stale block is a conformance-lock finding (`step-conformance.infra.test.ts`).
+
+**Score: 17/17** · G9 Reflection: PASS · G4d fence-lock coverage: PASS · G-shape: PASS · **Hard stop: no**
+
+| Gate | Score | Max | Detail |
+|---|---:|---:|---|
+| G0 | 1 | 1 | boundary-section=true spec-line=true |
+| G1 | 1 | 1 | PH-3 section found=true sha-count=52 |
+| G2 | 1 | 1 | 122-churn-complexity.md quadrant=bottom-left window=39313d9 |
+| G3 | 2 | 2 | table rows=19 vocab-hit rows=19 |
+| G4 | 2 | 2 | risk-class row with chance+impact found=true |
+| G5 | 1 | 1 | db=true clock=true network=true argv/env=true |
+| G6 | 3 | 3 | 1 ledger row(s), 0 without CLOSED/PIN () |
+| G7 | 3 | 3 | file=true fences=4 it-count=17 RED-evidence=true |
+| G8 | 3 | 3 | missing-invocations=0 missing-pre-invocations=0 stale-fingerprints=0 unexplained-diffs=0 |
+| G9 (binary) | PASS | — | heading=true low-confidence-table=true recurring-table=true |
+| G4d (fence<=lock) | PASS | — | fences=4 lock-it-count=17 |
+| G-shape | PASS | — | file-clean=true compute-clean=true |
+
+### Fast invariants (always run — the fast descriptor gate)
+
+| # | Scope | Pass | Detail |
+|---|---|---|---|
+| 1 | geocode_permits | PASS | min_migration=18 <= migrations count=244 |
+| 2 | geocode_permits | PASS | 3 declared, missing from seeds: none |
+| 3 | geocode_permits | PASS | retired=0 overlap-with-declared=none |
+| 7 | geocode_permits | PASS | SPEC LINK header present=true |
+| 8 | geocode_permits | PASS | G-4: 3 declared, 1 verdict-affecting, 0 violate on_invalid:fail with no deviations[] cover |
+| 20 | geocode_permits | PASS | HB-1: runner=runEnrichPhase: runner-level token presence (MED-6, not a per-phase proof): source contains an onProgress seam token AND a startHeartbeatTicker( call token — the periodic ticker covers every phase uniformly by construction once present, independent of any single phase's own boundary, but ticker start/stop lifecycle is not independently verified here |
+| 21 | geocode_permits | PASS | CEIL-1: runner=runEnrichPhase: runner-level token presence (MED-6, not a per-phase proof): source contains a SET LOCAL statement_timeout/lock_timeout token pair AND a postClient-scoped SET statement_timeout token (EP-D16) — the per-phase claim itself is filed as its own followup |
+| 4 | (registry) | PASS | overlap: none |
+| 5 | (registry) | PASS | clean (0 it.fails( call sites outside a declared pending slug) |
+| 9 | (registry) | PASS | clean (0 converted slugs blocked by an unmet cutover_prereq item; blocks batching: 0) |
+| 22 | (registry) | PASS | GOLD-PRE-FRESH: 58 PRE capture(s) across 14 converted step(s) all tracked + clean (git can restore every reference) |
+| 23 | (registry) | PASS | COMPRESSED-FORM-ELIGIBLE: not applicable (0 pending slugs declare the compressed form) |
+| 24 | (registry) | PASS | COMPRESSED-FORM-DEFAULT: not applicable (0 pending slugs whose archetype is eligible) |
+| 25 | (registry) | PASS | ARCHETYPE-PARITY: 14 converted slug(s) — 6 compared against a retained census row (all agree), 8 with no retained row (census arm n/a, pre-R-AO cutovers); every archetype has a declared freeze profile |
+
+### Captures (item iv)
+- missing invocations (POST): none
+- missing invocations (PRE, GOLD-PRE): none
+- stale fingerprints: none
+- compare ran: true · diffs found: 110 · unexplained: 0
+
+### Test suite (item iii)
+- 1156/1157 passed (suite success=false)
+- harvested: 19 file(s) from 3 FLEET-WIDE targets (src/tests/step-conformance.infra.test.ts, src/tests/golden-fingerprint.infra.test.ts, src/tests/steps/) — one spawn per run, so every step's report carries this same number, by design
+- excluded (R-AG live-DB tier, owned by `npm run test:db`, derived from package.json `scripts.test`): 5 — src/tests/steps/link_massing/metamorphic.test.ts, src/tests/steps/link_massing/nearest-determinism.test.ts, src/tests/steps/link_massing/rung1-inline-wkt.test.ts, src/tests/steps/link_parcel_addresses/metamorphic.test.ts, src/tests/steps/link_parcel_addresses/rung1-inline-wkt.test.ts
+- skipped (declared but not run): 0
+- failing (1):
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/geocode-permits.js (slug "geocode_permits") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+
+### Policy coverage matrix (item vi) — Spec 124 Rules 1-13
+
+| Rule | Name | Status | Note |
+|---|---|---|---|
+| 1 | Nothing hidden | enforced-green | G-1 schema-baseline: schema-baseline clean |
+| 2 | Compute is just compute | enforced-green |  |
+| 3 | Tunables externalized | enforced-green | G-4: 3 declared, 1 verdict-affecting, 0 violate on_invalid:fail with no deviations[] cover |
+| 4 | Compute rule declared | enforced-green | G-2: 5 preserved-in-compute row(s), 0 with no why/notes.json/checks[] grounding |
+| 5 | checks >= 1 | enforced-green |  |
+| 6 | Omission fails (20 categories) | enforced-green |  |
+| 7 | Archetype gates categories | enforced-green |  |
+| 8 | Per-target write discipline | enforced-green |  |
+| 9 | Banned write needs ledger (+ V7 no_retraction) | enforced-green |  |
+| 10 | Verdict row-derived | enforced-green | (a) OK — 11 corpus file(s) scanned, 0 unsanctioned second derivations, 2 sanctioned hit(s) matched SANCTIONED_VERDICT_SITES · (b) OK — SELF_SKIPPED audit table folds to verdict=WARN (!= PASS), row-derived off 1 non-INFO row(s) — VRD-SKIP closed |
+| 11 | Phase-order re-derive (declared half, checkOrderGuaranteesCited) | enforced-green | no when:"pre_write" checks — vacuously nothing to cite — G-3 completeness half stays open |
+| 12 | Truthful crash posture (R-B reachability, static + R-M before-image) | enforced-green | R-B (checkInterruptedPostureTruthful): shape=enrich runner=runEnrichPhase: no staleness.ledgerGatedSkip/selectMode on this path (ENRICHER's own scope-defer archetype, Spec 122 §3.0b); calls staleness.detectInterruptedRetraction directly and folds interruptedRetraction.interrupted into the full/incremental decision before any pass runs · R-M: prose-only (R-M/LG-17 describe not scoped to this step (vitest not run, or no before-image target)) |
+| 13 | A step validates itself | enforced-green | this run of step:validate IS the mechanism |
+| P3 | I/O cost adjudication (measured, not gated) | measured | descriptor=42234B notes=17907B checks=8 rows records_meta=2213B (newest post/ capture) |
+
+**Enforced-green: 13/14**
+

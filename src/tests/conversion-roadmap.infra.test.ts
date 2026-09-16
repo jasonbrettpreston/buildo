@@ -128,9 +128,11 @@ describe('measured counts — independently re-derived, not transcribed from the
     // `manifest.scripts` entry.
     expect(remaining.length).toBe(49);
     expect(remainingSlugCount).toBe(51);
+    // Unchanged across the I5 CUTOVER: the file moved from `pending[]` to `converted[]`, and
+    // both sets are excluded from `remaining`, so 49/51 holds on both sides of commit 9.
   });
 
-  it('the census file-count-by-batch matches the independently re-derived C4/C5/C6 split (C4=0, C5=13 — `reconcile` left C5 for the R-AP RUNNER-owned exemption, 2026-09-15 — C6=36; pending=1 — geocode_permits flipped C4 -> pending at the batch-2 I5 folded commit 5, 2026-09-16, leaving C4 empty; link_neighbourhoods was pending from batch-2 I4 commit 1 and converted at commit 3, both on 2026-09-16; assert_engine_health\'s own row was deleted entirely at batch1 I3 commit 9, 2026-09-14, mirroring the assert_data_bounds/I2 commit 9 cutover precedent)', () => {
+  it('the census file-count-by-batch matches the independently re-derived C4/C5/C6 split (C4=0 — CLOSED, C5=13 — `reconcile` left C5 for the R-AP RUNNER-owned exemption, 2026-09-15 — C6=36; pending=0 — geocode_permits flipped C4 -> pending at the batch-2 I5 folded commit 5 and was RETAINED as status:\"converted\" at its commit 9 the same day, emptying C4 entirely; link_neighbourhoods was pending from batch-2 I4 commit 1 and converted at commit 3, both on 2026-09-16; assert_engine_health\'s own row was deleted entirely at batch1 I3 commit 9, 2026-09-14, mirroring the assert_data_bounds/I2 commit 9 cutover precedent)', () => {
     const census = JSON.parse(fs.readFileSync(CENSUS_PATH, 'utf8')) as { entries: Array<{ slug: string; file: string; batch: string; status?: string }> };
     const fileToSlugs = fileToSlugsMap();
     const convertedSet = new Set(CONVERTED);
@@ -181,7 +183,11 @@ describe('measured counts — independently re-derived, not transcribed from the
     // 0 -> 1 at the batch-2 I5 FOLDED commit 5 (2026-09-16): geocode_permits' row is the
     // one in flight. It falls back to 0 at that step's own cutover, when the row is RETAINED
     // with `status: "converted"` (Spec 124 R-AO) and therefore stops counting as pending work.
-    expect(pendingBatch.size).toBe(1);
+    // 1 -> 0 at the I5 CUTOVER (commit 9): the row is RETAINED with `status: "converted"`
+    // (Spec 124 R-AO) rather than deleted, but `byBatch` counts only rows the roadmap still
+    // treats as pending work, and a converted row is no longer that. C4 is now empty and
+    // pending is empty: batch C4 is CLOSED.
+    expect(pendingBatch.size).toBe(0);
     expect(c6.size).toBe(36);
     expect(c4.size + c5.size + c6.size).toBe(remaining.length);
   });
@@ -299,7 +305,13 @@ describe('generate-conversion-roadmap.mjs — both-directions throws (fixture-pr
       stderr = String((err as { stderr?: string }).stderr ?? '') + String((err as { message?: string }).message ?? '');
     }
     expect(threw, 'a remaining slug with no census row must throw, never silently omit itself from the table').toBe(true);
-    expect(stderr).toMatch(/no census row for remaining slug "geocode_permits"/);
+    // RE-POINTED at the I5 cutover (2026-09-16): the fixture used to omit `geocode_permits`,
+    // which this cutover CONVERTS — and a converted slug's absence no longer makes a
+    // REMAINING slug rowless, so the fixture had quietly stopped proving its own claim. It
+    // now omits `backup_db`, which is still remaining (C6). The class this guards against is
+    // the fixture, not the checker: a known-bad fixture built by mutating real data goes
+    // vacuous the moment the real data moves past the mutation.
+    expect(stderr).toMatch(/no census row for remaining slug "backup_db"/);
   });
 
   it('GREEN — the real, committed census carries neither defect (both fixtures are genuinely mutations of the real data, not independently-authored)', () => {
@@ -359,7 +371,7 @@ describe('buildRoadmap() — totality over the real committed data (HIGH-1: slug
     }
   });
 
-  it('HIGH-1 + R-AP: the 3 declared exemptions (inspections, coa_documents, reconcile) are NOT silently dropped — 68 total manifest slugs = 13 converted + 0 pending + 3 exempted + 52 remaining', async () => {
+  it('HIGH-1 + R-AP: the 3 declared exemptions (inspections, coa_documents, reconcile) are NOT silently dropped — 68 total manifest slugs = 14 converted + 0 pending + 3 exempted + 51 remaining', async () => {
     const mod = (await import(pathToFileURL(GENERATOR).href)) as unknown as RoadmapModule;
     const args = await loadRealArgs(mod);
     expect(args.exemptions.map((e) => e.slug).sort()).toEqual(['coa_documents', 'inspections', 'reconcile']);
@@ -372,7 +384,7 @@ describe('buildRoadmap() — totality over the real committed data (HIGH-1: slug
     const convertedSlugCount = CONVERTED.length;
     expect(totalSlugs).toBe(68);
     expect(convertedSlugCount + pendingSlugs + args.exemptions.length + remainingSlugs).toBe(totalSlugs);
-    expect(pendingSlugs).toBe(1);
+    expect(pendingSlugs).toBe(0);
     expect(remainingSlugs).toBe(51);
   });
 

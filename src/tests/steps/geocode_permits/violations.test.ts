@@ -312,7 +312,7 @@ describe('geocode_permits — the artifacts later commits owe (RED FIRST)', () =
     expect(src).not.toContain('UPDATE permits');
   });
 
-  it.fails('the slug is REGISTERED in converted.json and its pending entry is DELETED in the same commit (R-K mutual exclusion) [flips at commit 9]', () => {
+  it('the slug is REGISTERED in converted.json and its pending entry is DELETED in the same commit (R-K mutual exclusion) [flipped at commit 9]', () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const reg: any = JSON.parse(read('scripts/steps/_schema/converted.json'));
     expect(reg.converted).toContain(STEP_REL);

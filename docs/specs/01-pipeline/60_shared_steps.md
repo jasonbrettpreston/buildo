@@ -28,16 +28,21 @@ These 8 transformation steps run in multiple chains — they can't live inside a
 ## 3. Step Details
 
 ### Geocode Permits (`geocode-permits.js`)
-**Modes:** Incremental (default: only NULL coords) / Full (`--full`: all permits)
+**Modes:** NONE — there is exactly one mode and it is unconditional. The step reads no argv (`process.argv` appears nowhere in its history), no chain passes it `chain_args`, and `manifest.scripts.geocode_permits.supports_full: true` is a DEAD DECLARATION with no reader (`limitations[]` `GP-L1`). `staleness.mode_select` and `override.force_full` are both `"none"`.
 
-1. Query permits where `latitude IS NULL`
-2. Match against `address_points` table by street number + name
-3. If no match: fall back to Google Maps Geocoding API
-4. Update `permits.latitude`, `permits.longitude`
+**Method:** a single equijoin, `permits.geo_id::INTEGER = address_points.address_point_id`. Toronto's permit feed carries the `ADDRESS_POINT_ID` directly, so no address-string matching is performed and none is needed.
 
-**Edge Cases:** Google API quota exhausted → permits left with NULL coords, skipped by downstream spatial linking. No address_points loaded → all falls to Google (expensive).
+1. Phase 1 `geocode` — `UPDATE permits p SET latitude, longitude, geocoded_at FROM address_points ap` over **every** permit carrying a numeric `geo_id`, guarded `(p.latitude IS DISTINCT FROM ap.latitude OR p.longitude IS DISTINCT FROM ap.longitude)`. There is no `latitude IS NULL` narrowing: the guard, not a lineage predicate, is what makes the full re-join cheap. The join expression is `CASE WHEN p.geo_id ~ '^[0-9]+$' THEN p.geo_id::INTEGER END` and the CASE is LOAD-BEARING — PostgreSQL may reorder WHERE conditions and evaluate a bare cast before the sibling regex, crashing on a non-numeric `geo_id` (`d24c964c`; 6 such rows measured live 2026-09-16).
+2. Phase 2 `zombie_cleanup` — a NULL-retraction clearing `latitude`/`longitude`/`geocoded_at` on permits that LOST their `geo_id` upstream, narrowed by `geocoded_at IS NOT NULL` so it can only clear coordinates this step wrote (`d24c964c`, "to avoid wiping other geocoding sources").
+3. **Both statements share ONE transaction** (`3e44218a`, WF3-S2): a dashboard read between them must never see coordinates that disagree with the zombie-cleanup state. Locked by `src/tests/geocode-permits.infra.test.ts`.
 
-**Testing:** `geocoding.logic.test.ts`
+**There is NO Google Maps Geocoding API fallback, and there never has been since `67057269` (2026-02).** Measured at the conversion: zero hits for google / fetch / http / axios; `execution.network` is `"none"` and `inputs.reads.externals` is `[]`. The previous text of this section described a network fallback, a street-number-plus-name match and an incremental/`--full` mode split, none of which this file has ever performed in its current form — corrected at the I5 conversion cutover (2026-09-16), and recorded as `limitations[]` `GP-L4`.
+
+**Edge Cases:** a permit whose `geo_id` matches no address point keeps NULL coordinates and is skipped by downstream spatial linking — reported as `has_geo_id_no_match` in `records_meta` (14,492 live, and it has NO audit row: `GP-L2`, a declared blind spot). A permit the feed gives no `geo_id` for is permanently ungeocodable by this step and is reported as `no_geo_id` (7,660 live) — the tail that puts a structural ceiling of ~97 % on `geocode_coverage`. An `address_points` table truncated to zero rows produces a run indistinguishable from a healthy zero-work one (`guards.empty_source: "none"`, a declared blind spot with a filed peel candidate).
+
+**Converted** to the Spec 122 step standard at batch-2 I5 (2026-09-16), ENRICHER archetype, advisory lock 5. Behaviour: `./geocode-permits.descriptor.json` · compute: `./lib/compute/geocode-permits.js` · assessment: `docs/reports/2026-09-16-batch2-i5-geocode-permits-assessment.md`.
+
+**Testing:** `geocoding.logic.test.ts`, `src/tests/geocode-permits.infra.test.ts` (paired-UPDATE atomicity), `src/tests/steps/geocode_permits/violations.test.ts` (the four fence locks)
 
 ---
 

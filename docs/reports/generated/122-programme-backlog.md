@@ -35,7 +35,7 @@ Total items: **123**
 | `STA-1` | 120 §6 | 4 new state tables | ⬜ NOT_STARTED | wf: wf: programme-STA-1 | — | 2026-09-03 |
 | `STA-2` | 120 §6b | reset generated per archetype | ✅ BUILT | wf: wf: programme-STA-2 | refresh_snapshot | 2026-09-03 |
 | `STA-3` | 120 §6b | 3 destructive-reset guards | ✅ BUILT | wf: wf: programme-STA-2 | refresh_snapshot | 2026-09-03 |
-| `CLOUDPARITY` | 122 R-D | cloud database must run apply-logic-variables.js before any cloud cutover | ✅ BUILT | followup: review_followups.md HIGH ops entry (filed 2026-08-27, peel 8c); EP-D13 (filed 2026-09-08, defect-ledger.md); pilot 9 commit 9 acceptance run (orchestrator, 2026-09-10) | cloud_deploy, enrich_parcels | 2026-09-10 |
+| `CLOUDPARITY` | 122 R-D | cloud database must run apply-logic-variables.js before any cloud cutover | ✅ BUILT | followup: review_followups.md HIGH ops entry (filed 2026-08-27, peel 8c); EP-D13 (filed 2026-09-08, defect-ledger.md); pilot 9 commit 9 acceptance run (orchestrator, 2026-09-10) | cloud_deploy, enrich_parcels, geocode_permits | 2026-09-10 |
 | `EP-PIN-B45` | 78 §P3C.1/§3.0b | B4.5 pin — pass-4 comps UPDATE has no IS DISTINCT FROM; the comp_count IS NULL incremental predicate never refreshes | ✅ BUILT | pilot: pilot9_enrich_parcels | enrich_parcels | 2026-09-08 |
 | `EP-PIN-D8` | 78 §P3C.2 | EP-D8 pin — comp_fsi_p50 has no structure_family/zone compatibility invariant | ✅ BUILT | pilot: pilot9_enrich_parcels | enrich_parcels | 2026-09-08 |
 | `EP-PIN-D9` | 78 §P3C.2 | EP-D9 pin — pass-4 comps candidate selection has no deterministic tiebreak (comparable_builds jsonb instability) | ✅ BUILT | pilot: pilot9_enrich_parcels | enrich_parcels | 2026-09-08 |

@@ -400,6 +400,11 @@ const passes = [
 // assert on the STATEMENT TEXT — the CASE-cast fence and the two-column guard are properties
 // of that text, and class N is descriptive-only, so nothing else would catch their removal.
 module.exports = Object.assign(compute, {
+  // §5.5 (1) — the dispatch table itself, exported so `step-conformance.infra.test.ts` can
+  // assert its keys are EXACTLY the descriptor's `checks[]` ids, IN DECLARATION ORDER,
+  // against the real object rather than a copy. Omitting this export is not cosmetic: the
+  // conformance check reads `undefined` and Rule 2 goes enforced-red.
+  checks: CHECKS,
   BEFORE_COUNTS_SQL,
   AFTER_COUNTS_SQL,
   buildGeocodeSql,

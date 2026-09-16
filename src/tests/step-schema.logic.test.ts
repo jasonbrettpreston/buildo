@@ -712,6 +712,11 @@ describe('execution.shape "enrich" + the ENRICHER execution.phases[] profile (pi
       // sentinel). `checkOrderGuaranteesCited` resolves an anchor by a whole-file substring
       // test, so the spec amendment and the re-point are inseparable.
       'scripts/link-neighbourhoods.descriptor.json',
+      // batch-2 I5 cutover (2026-09-16): geocode_permits is the ENRICHER archetype's SECOND
+      // member. Its descriptor lands at the FOLDED commit 5 and is touched again at 7c (the
+      // Rule 12 crash posture, measured both ways before it moved) — so it is dirty across
+      // this cutover by construction, exactly as link_neighbourhoods was across its own.
+      'scripts/geocode-permits.descriptor.json',
     ]);
     const descriptorPaths = converted.map((f) => f.replace(/\.js$/, '.descriptor.json'));
     const enrichers: string[] = [];
@@ -720,7 +725,13 @@ describe('execution.shape "enrich" + the ENRICHER execution.phases[] profile (pi
       if ((d.identity as { archetype: string }).archetype === 'ENRICHER') enrichers.push(rel);
       expect(validate(d), `${rel}: ${JSON.stringify(validate.errors, null, 1)}`).toBe(true);
     }
-    expect(enrichers, 'exactly one converted ENRICHER — enrich_parcels (pilot 9 commit 9); the profile is exercised by ONE real descriptor, not zero and not a second one this test never planned for').toEqual(['scripts/enrich-parcels.descriptor.json']);
+    // 1 -> 2 at the batch-2 I5 cutover (2026-09-16). This is the count the ENRICHER profile
+    // was waiting for: R-AH/R-PACE-1 eligibility needs `archetype_profiles[ENRICHER].proven`
+    // AND >= 2 converted members sharing the archetype, so geocode_permits' registration is
+    // what makes the archetype COMPRESSED-ELIGIBLE and turns batch 2's Phase 2 from
+    // 1 full + 3 compressed into 4 compressed. The list is pinned rather than counted so a
+    // THIRD member still has to come here and say so.
+    expect(enrichers, 'exactly two converted ENRICHERs — enrich_parcels (pilot 9 commit 9) and geocode_permits (batch-2 I5 commit 9); the profile is exercised by REAL descriptors, and the second is what unlocks the compressed form for the archetype').toEqual(['scripts/enrich-parcels.descriptor.json', 'scripts/geocode-permits.descriptor.json']);
     // Byte-identical, not merely still-valid, for every descriptor EXCEPT the one known,
     // declared exception above — each of the other seven is still an R-C golden fingerprint.
     const unexpectedTargets = descriptorPaths.filter((rel) => !KNOWN_CHANGED_THIS_COMMIT.has(rel));

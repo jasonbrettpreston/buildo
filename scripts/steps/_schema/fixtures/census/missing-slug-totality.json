@@ -15,13 +15,6 @@
       "reason": "Spec 122 §1.10's census covers only the 27 `sources` steps; this file is outside that scope — deferred to ARCH-CENSUS (Ask A3), a dedicated WF before C6 opens"
     },
     {
-      "slug": "backup_db",
-      "file": "scripts/backup-db.js",
-      "archetype": "UNDECLARED",
-      "batch": "C6",
-      "reason": "Spec 122 §1.10's census covers only the 27 `sources` steps; this file is outside that scope — deferred to ARCH-CENSUS (Ask A3), a dedicated WF before C6 opens"
-    },
-    {
       "slug": "classify_coa_scope",
       "file": "scripts/classify-coa-scope.js",
       "archetype": "UNDECLARED",
@@ -209,6 +202,15 @@
       "archetype": "UNDECLARED",
       "batch": "C6",
       "reason": "Spec 122 §1.10's census covers only the 27 `sources` steps; this file is outside that scope — deferred to ARCH-CENSUS (Ask A3), a dedicated WF before C6 opens"
+    },
+    {
+      "slug": "geocode_permits",
+      "file": "scripts/geocode-permits.js",
+      "archetype": "ENRICHER",
+      "batch": "pending",
+      "reason": "RETAINED at cutover per Spec 124 R-AO. Archetype and batch are the census's OWN pre-cutover values, kept verbatim (`archetype: \"ENRICHER\"` from the original C4 batching entry, `batch: \"pending\"` as flipped at the folded commit 5) and never re-derived from the descriptor — a copy of the descriptor would make fast invariant #25 compare a value to itself. Original C4 reason: \"C4 batching-entry §3.2 order 5\". This row's cutover EMPTIES C4: geocode_permits was the batch's last member.",
+      "status": "converted",
+      "converted_at": "commit-9"
     },
     {
       "slug": "link_coa_to_parcels",

@@ -2088,7 +2088,16 @@ describe('LDG-4 — descriptor <-> ledger cross-check (SUPERSET + EQUALITY, conv
    * = `LDG-D1`, `refresh_snapshot` = `LDG-D2`.
    */
   const KNOWN_GAPS: Record<string, { missing: string[]; extra: string[] }> = {
-    link_parcels: { missing: ['compute_centroids'], extra: [] }, // LDG-D1 (narrowed, split disposition, 2026-09-03: link_parcel_addresses now declared)
+    // WIDENED at the batch-2 I5 cutover (2026-09-16), and the widening is a MEASUREMENT,
+    // not a concession: `geocode_permits` became a CONVERTED producer that day, so the
+    // ledger's column-overlap derivation can now SEE an upstream link_parcels has always
+    // had — it reads `permits.latitude`/`longitude`, which this step is the sole writer of
+    // (measured: geocoded_at IS NOT NULL = 231,930 = every coordinate-bearing permit). The
+    // gap is link_parcels' to close, not a conversion's: declaring it moves that step's own
+    // seam pairs and its `ledgerGatedSkip` staleness gating, which is exactly why LDG-D1's
+    // own WF3 pinned the identical `compute_centroids` case rather than fixing it inline.
+    // Same disposition, same ledger id, filed in review_followups.md.
+    link_parcels: { missing: ['compute_centroids', 'geocode_permits'], extra: [] }, // LDG-D1 (narrowed 2026-09-03: link_parcel_addresses now declared; widened 2026-09-16: geocode_permits became derivable at its cutover)
     refresh_snapshot: { missing: [], extra: ['link_massing', 'link_parcels', 'link_wsib'] }, // LDG-D2
   };
 
