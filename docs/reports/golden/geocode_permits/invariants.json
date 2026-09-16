@@ -1,0 +1,42 @@
+[
+  {
+    "name": "permits_total",
+    "sql": "SELECT count(*)::int FROM permits"
+  },
+  {
+    "name": "permits_geocoded",
+    "sql": "SELECT count(*)::int FROM permits WHERE latitude IS NOT NULL AND longitude IS NOT NULL"
+  },
+  {
+    "name": "permits_geocoded_at_set",
+    "sql": "SELECT count(*)::int FROM permits WHERE geocoded_at IS NOT NULL"
+  },
+  {
+    "name": "lat_xor_lng_null_count",
+    "sql": "SELECT count(*)::int FROM permits WHERE (latitude IS NULL) <> (longitude IS NULL)"
+  },
+  {
+    "name": "geocoded_at_set_but_no_geo_id_count",
+    "sql": "SELECT count(*)::int FROM permits WHERE geocoded_at IS NOT NULL AND (geo_id IS NULL OR geo_id = '')"
+  },
+  {
+    "name": "zombie_target_population",
+    "sql": "SELECT count(*)::int FROM permits WHERE (geo_id IS NULL OR geo_id = '') AND latitude IS NOT NULL AND geocoded_at IS NOT NULL"
+  },
+  {
+    "name": "w1_guard_admitted_rows",
+    "sql": "SELECT count(*)::int FROM permits p JOIN address_points ap ON ap.address_point_id = CASE WHEN p.geo_id ~ '^[0-9]+$' THEN p.geo_id::INTEGER END WHERE p.geo_id IS NOT NULL AND p.geo_id != '' AND p.geo_id ~ '^[0-9]+$' AND (p.latitude IS DISTINCT FROM ap.latitude OR p.longitude IS DISTINCT FROM ap.longitude)"
+  },
+  {
+    "name": "coords_outside_toronto_bbox_count",
+    "sql": "SELECT count(*)::int FROM permits WHERE latitude IS NOT NULL AND longitude IS NOT NULL AND (latitude < 43.5 OR latitude > 43.9 OR longitude < -79.7 OR longitude > -79.1)"
+  },
+  {
+    "name": "address_points_loaded",
+    "sql": "SELECT count(*)::int FROM address_points"
+  },
+  {
+    "name": "nonnumeric_geo_id_count",
+    "sql": "SELECT count(*)::int FROM permits WHERE geo_id IS NOT NULL AND geo_id != '' AND geo_id !~ '^[0-9]+$'"
+  }
+]

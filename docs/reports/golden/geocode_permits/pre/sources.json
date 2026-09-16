@@ -1,0 +1,390 @@
+{
+  "harness": "scripts/analysis/capture-step-golden.js",
+  "spec": "docs/specs/01-pipeline/122_pipeline_step_optimization.md §5.3",
+  "step": "scripts/geocode-permits.js",
+  "chain": "sources",
+  "git_head": "8e431cfc5e7708586a3f6bab6a6bc5cbeb16bb29",
+  "exit_code": 0,
+  "signal": null,
+  "summary": {
+    "records_total": 0,
+    "records_new": 0,
+    "records_updated": 0,
+    "records_meta": {
+      "duration_ms": 1951,
+      "permits_total": 254082,
+      "total_geocoded": 231930,
+      "has_geo_id_no_match": 14492,
+      "no_geo_id": 7660,
+      "zombies_cleaned": 0,
+      "audit_table": {
+        "phase": 3,
+        "name": "Permit Geocoding",
+        "verdict": "WARN",
+        "rows": [
+          {
+            "metric": "total_permits",
+            "value": 254082,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "already_geocoded",
+            "value": 231930,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "newly_geocoded",
+            "value": 0,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "total_geocoded",
+            "value": 231930,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "geocode_coverage",
+            "value": "91.3%",
+            "threshold": ">= 95%",
+            "status": "WARN"
+          },
+          {
+            "metric": "no_geo_id",
+            "value": 7660,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "zombies_cleaned",
+            "value": 0,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "backlog_remaining",
+            "value": 14492,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "sys_velocity_rows_sec",
+            "value": 0,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "sys_duration_ms",
+            "value": 1995,
+            "threshold": null,
+            "status": "INFO"
+          }
+        ]
+      }
+    }
+  },
+  "summary_count": 1,
+  "meta": [
+    {
+      "reads": {
+        "permits": [
+          "permit_num",
+          "revision_num",
+          "geo_id",
+          "latitude",
+          "longitude"
+        ],
+        "address_points": [
+          "address_point_id",
+          "latitude",
+          "longitude"
+        ]
+      },
+      "writes": {
+        "permits": [
+          "latitude",
+          "longitude",
+          "geocoded_at"
+        ]
+      }
+    }
+  ],
+  "parse_errors": [],
+  "verdict": "WARN",
+  "ledger_status": [],
+  "stdout": "{\"level\":\"INFO\",\"tag\":\"[geocode-permits]\",\"msg\":\"Starting permit geocoding (Address Points lookup)\"}\n{\"level\":\"INFO\",\"tag\":\"[geocode-permits]\",\"msg\":\"Before\",\"context\":{\"total\":254082,\"already_geocoded\":231930,\"has_geo_id\":246422,\"to_geocode\":14492}}\n{\"level\":\"INFO\",\"tag\":\"[geocode-permits]\",\"msg\":\"Address points loaded: 525,346\"}\n{\"level\":\"INFO\",\"tag\":\"[geocode-permits]\",\"msg\":\"Running bulk UPDATEs (atomic)...\"}\n{\"level\":\"INFO\",\"tag\":\"[geocode-permits]\",\"msg\":\"Geocoding complete\",\"context\":{\"updated\":0,\"total_geocoded\":231930,\"has_geo_id_no_match\":14492,\"no_geo_id\":7660,\"duration\":\"2.0s\"}}\nPIPELINE_SUMMARY:{\"records_total\":0,\"records_new\":0,\"records_updated\":0,\"records_meta\":{\"duration_ms\":1951,\"permits_total\":254082,\"total_geocoded\":231930,\"has_geo_id_no_match\":14492,\"no_geo_id\":7660,\"zombies_cleaned\":0,\"audit_table\":{\"phase\":3,\"name\":\"Permit Geocoding\",\"verdict\":\"WARN\",\"rows\":[{\"metric\":\"total_permits\",\"value\":254082,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"already_geocoded\",\"value\":231930,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"newly_geocoded\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"total_geocoded\",\"value\":231930,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"geocode_coverage\",\"value\":\"91.3%\",\"threshold\":\">= 95%\",\"status\":\"WARN\"},{\"metric\":\"no_geo_id\",\"value\":7660,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"zombies_cleaned\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"backlog_remaining\",\"value\":14492,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":1995,\"threshold\":null,\"status\":\"INFO\"}]}}}\nPIPELINE_META:{\"reads\":{\"permits\":[\"permit_num\",\"revision_num\",\"geo_id\",\"latitude\",\"longitude\"],\"address_points\":[\"address_point_id\",\"latitude\",\"longitude\"]},\"writes\":{\"permits\":[\"latitude\",\"longitude\",\"geocoded_at\"]}}\n\n[geocode-permits] completed in 2.0s\n",
+  "stderr": "",
+  "pipeline_runs": [],
+  "pipeline_runs_max_id_before": 1892,
+  "table_state": [
+    {
+      "table": "permits",
+      "row_count": 254082,
+      "ceiling_bypassed": "projected",
+      "content_hash": "d293118b48e81ada2b9ed158262f2bd7",
+      "order_by": "explicit",
+      "order_columns": [
+        "permit_num",
+        "revision_num"
+      ],
+      "columns": [
+        "permit_num",
+        "revision_num",
+        "latitude",
+        "longitude"
+      ]
+    }
+  ],
+  "tables_source": "descriptor",
+  "table_row_ceiling": 100000,
+  "table_timing": {
+    "permits": 915
+  },
+  "table_specs": {
+    "permits": {
+      "columns": [
+        "permit_num",
+        "revision_num",
+        "latitude",
+        "longitude"
+      ],
+      "columns_source": "arg",
+      "order": [
+        "permit_num",
+        "revision_num"
+      ],
+      "order_source": "arg"
+    }
+  },
+  "invariants": [
+    {
+      "name": "permits_total",
+      "value": "254082"
+    },
+    {
+      "name": "permits_geocoded",
+      "value": "231930"
+    },
+    {
+      "name": "permits_geocoded_at_set",
+      "value": "231930"
+    },
+    {
+      "name": "lat_xor_lng_null_count",
+      "value": "0"
+    },
+    {
+      "name": "geocoded_at_set_but_no_geo_id_count",
+      "value": "0"
+    },
+    {
+      "name": "zombie_target_population",
+      "value": "0"
+    },
+    {
+      "name": "w1_guard_admitted_rows",
+      "value": "0"
+    },
+    {
+      "name": "coords_outside_toronto_bbox_count",
+      "value": "0"
+    },
+    {
+      "name": "address_points_loaded",
+      "value": "525346"
+    },
+    {
+      "name": "nonnumeric_geo_id_count",
+      "value": "6"
+    }
+  ],
+  "invariants_file": "docs/reports/golden/geocode_permits/invariants.json",
+  "db_target": "postgresql://postgres:***@127.0.0.1:54322/postgres",
+  "runtime": "node",
+  "args": [],
+  "nondeterminism": [
+    "key:summary.records_meta.duration_ms",
+    "pattern:duration_literal",
+    "row:sys_duration_ms",
+    "row:sys_velocity_rows_sec"
+  ],
+  "normalised": {
+    "step": "scripts/geocode-permits.js",
+    "chain": "sources",
+    "exit_code": 0,
+    "summary": {
+      "records_meta": {
+        "audit_table": {
+          "name": "Permit Geocoding",
+          "phase": 3,
+          "rows": [
+            {
+              "metric": "total_permits",
+              "status": "INFO",
+              "threshold": null,
+              "value": 254082
+            },
+            {
+              "metric": "already_geocoded",
+              "status": "INFO",
+              "threshold": null,
+              "value": 231930
+            },
+            {
+              "metric": "newly_geocoded",
+              "status": "INFO",
+              "threshold": null,
+              "value": 0
+            },
+            {
+              "metric": "total_geocoded",
+              "status": "INFO",
+              "threshold": null,
+              "value": 231930
+            },
+            {
+              "metric": "geocode_coverage",
+              "status": "WARN",
+              "threshold": ">= 95%",
+              "value": "91.3%"
+            },
+            {
+              "metric": "no_geo_id",
+              "status": "INFO",
+              "threshold": null,
+              "value": 7660
+            },
+            {
+              "metric": "zombies_cleaned",
+              "status": "INFO",
+              "threshold": null,
+              "value": 0
+            },
+            {
+              "metric": "backlog_remaining",
+              "status": "INFO",
+              "threshold": null,
+              "value": 14492
+            }
+          ],
+          "verdict": "WARN"
+        },
+        "has_geo_id_no_match": 14492,
+        "no_geo_id": 7660,
+        "permits_total": 254082,
+        "total_geocoded": 231930,
+        "zombies_cleaned": 0
+      },
+      "records_new": 0,
+      "records_total": 0,
+      "records_updated": 0
+    },
+    "summary_count": 1,
+    "meta": [
+      {
+        "reads": {
+          "address_points": [
+            "address_point_id",
+            "latitude",
+            "longitude"
+          ],
+          "permits": [
+            "permit_num",
+            "revision_num",
+            "geo_id",
+            "latitude",
+            "longitude"
+          ]
+        },
+        "writes": {
+          "permits": [
+            "latitude",
+            "longitude",
+            "geocoded_at"
+          ]
+        }
+      }
+    ],
+    "parse_errors": [],
+    "pipeline_runs": [],
+    "stdout_lines": [
+      "{\"level\":\"INFO\",\"msg\":\"Starting permit geocoding (Address Points lookup)\",\"tag\":\"[geocode-permits]\"}",
+      "{\"context\":{\"already_geocoded\":231930,\"has_geo_id\":246422,\"to_geocode\":14492,\"total\":254082},\"level\":\"INFO\",\"msg\":\"Before\",\"tag\":\"[geocode-permits]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"Address points loaded: 525,346\",\"tag\":\"[geocode-permits]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"Running bulk UPDATEs (atomic)...\",\"tag\":\"[geocode-permits]\"}",
+      "{\"context\":{\"duration\":\"<DUR>\",\"has_geo_id_no_match\":14492,\"no_geo_id\":7660,\"total_geocoded\":231930,\"updated\":0},\"level\":\"INFO\",\"msg\":\"Geocoding complete\",\"tag\":\"[geocode-permits]\"}",
+      "[geocode-permits] completed in <DUR>"
+    ],
+    "table_state": [
+      {
+        "ceiling_bypassed": "projected",
+        "columns": [
+          "permit_num",
+          "revision_num",
+          "latitude",
+          "longitude"
+        ],
+        "content_hash": "d293118b48e81ada2b9ed158262f2bd7",
+        "order_by": "explicit",
+        "order_columns": [
+          "permit_num",
+          "revision_num"
+        ],
+        "row_count": 254082,
+        "table": "permits"
+      }
+    ],
+    "invariants": [
+      {
+        "name": "permits_total",
+        "value": "254082"
+      },
+      {
+        "name": "permits_geocoded",
+        "value": "231930"
+      },
+      {
+        "name": "permits_geocoded_at_set",
+        "value": "231930"
+      },
+      {
+        "name": "lat_xor_lng_null_count",
+        "value": "0"
+      },
+      {
+        "name": "geocoded_at_set_but_no_geo_id_count",
+        "value": "0"
+      },
+      {
+        "name": "zombie_target_population",
+        "value": "0"
+      },
+      {
+        "name": "w1_guard_admitted_rows",
+        "value": "0"
+      },
+      {
+        "name": "coords_outside_toronto_bbox_count",
+        "value": "0"
+      },
+      {
+        "name": "address_points_loaded",
+        "value": "525346"
+      },
+      {
+        "name": "nonnumeric_geo_id_count",
+        "value": "6"
+      }
+    ]
+  },
+  "source_fingerprint": "ddba98d619919cf1ee2ad575d780c11429db8b87c14623222f3b2834b1bfc475",
+  "fingerprint_files": [
+    "scripts/geocode-permits.descriptor.json",
+    "scripts/geocode-permits.js",
+    "scripts/geocode-permits.notes.json",
+    "scripts/lib/compute/geocode-permits.js"
+  ]
+}
