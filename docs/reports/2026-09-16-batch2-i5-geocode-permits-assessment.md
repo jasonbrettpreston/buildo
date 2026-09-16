@@ -364,26 +364,59 @@ The `ins: [0,0]` / `row_delta: [0,0]` half of the same block is the machine-read
 | ND-2 | `records_meta.duration_ms` and the `${identity.name}_duration_ms` telemetry key | Excluded — wall-clock |
 | ND-3 | Physical row order | Projected **ordered by the declared key** `(permit_num, revision_num)` via `--table-order`, never the heap order |
 | ND-4 | **`address_points` content is an UNCONTROLLED INPUT** | A sources run reloading `address_points` between PRE and POST legitimately changes W1's output. Captures are taken with no chain running (`node scripts/check-chain-running.js`) and the `address_points` row count (**525,346** at commit 1) is recorded beside each capture |
-| ND-5 | `permits` is **254,082 rows — over the 100,000-row capture ceiling**, and at commit 5 no descriptor exists to derive a projection from | The PRE captures must carry `--tables` / `--table-columns` / `--table-order` explicitly (a projection bypasses the ceiling), and the POST captures must repeat them **identically** or the pair is incomparable. Not named in the plan's §8; added by the Integration seat (§5.2 INT-9) |
+| ND-5 | `permits` is **254,082 rows — over the 100,000-row capture ceiling**, and at commit 5 no descriptor exists to derive a projection from | The PRE captures must carry `--tables` / `--table-columns` / `--table-order` explicitly (a projection bypasses the ceiling), and the POST captures must repeat them **identically** or the pair is incomparable. Not named in the plan's §8; added by the Integration seat (§6.2 INT-9) |
 | ND-6 | Concurrent permits load between the before-counts SELECT and the transaction | Structural, not excludable — it is the same race fences F6 and F7 exist for. Captures are taken solo, which removes it in practice |
 
 ---
 
-## 5. Panel roster — who ran, at PLAN altitude (accretes through commit 9)
+## 5. §PH-6 — Classification + risk class (G4 / G6, commit 4)
+
+### 5.1 Every behaviour classified — CONTRACT / INCIDENTAL / DEFECT
+
+Spec 123 §6 G6: **every DEFECT carries a ledger id**, and nothing is left unclassified. The 18 constructs of §3 resolve to:
+
+| Class | Count | Members |
+|---|---|---|
+| **CONTRACT** (a behaviour the conversion must preserve) | **12** | F1 CASE cast guard · F2 two-column IS DISTINCT FROM · F3 the shared transaction · F4 `geocoded_at IS NOT NULL` narrowing · F5 `records_total = updated` · F6 `after.total` denominator · F7 `Math.max(0, …)` floor · F13 `geo_id != ''` (preserved on an unknown why) · F14 the DB clock · F15 the `emitMeta` column lists · F16 the chain-aware audit phase · F17 the advisory-lock skip |
+| **INCIDENTAL** (present, not load-bearing, declared rather than dropped silently) | **3** | F10 `supports_full` (→ `limitations[]` GP-L1) · F12 `safeParsePositiveInt` (→ library-owned count parsing, home stated at commit 7c) · F18 the conditional zombie log line (→ the `zombies_cleaned` audit row, strictly more visible) |
+| **DEFECT** (a behaviour that is wrong, with a ledger id) | **2** | **F8 → `GP-D1`** (the coverage threshold, filed PIN at commit 2) · **F9 → structural** (the Rule 10 parallel-boolean verdict recomputation — retired by construction under `verdict.js#deriveVerdict`, so it has no independent ledger row: it is not a value that needs ruling, it is a *duplication* that stops existing. F8's five-day silent-no-op window is the concrete damage it caused, and that damage IS ledgered, under GP-D1) |
+| **UNDEFENDED / UNOWNED** (found by the panel, not by the plan) | **1** | **F11** the `opts.withTransaction` test seam — not a defect in the code, a gap in the *standard*: no descriptor category owns a calling convention. Filed LOW/standard-shaping in `review_followups.md` at commit 2; the re-pointing is a commit-6 deliverable |
+
+`limitations[]` disposition: **GP-L1** (dead `supports_full`) → declared, optional peel P3 · **GP-L2** (`has_geo_id_no_match`, 14,492 live rows, no audit row) → declared, peel P2 · **GP-L3** (`idx_permits_needs_geocode` serves neither statement) → declared, **verified against the live catalog at commit 1** (§2.7), no peel · **GP-L4** (all three specs' prose is stale) → declared, closed by the commit-9 spec diff. A fifth candidate surfaced at the panel and was filed rather than declared: the empty-`address_points` silence class, **peel P4** (§6.3 OBS-5).
+
+### 5.2 Risk class — **B**
+
+> **Risk class B** — *chance* LOW-MEDIUM (of an *undetected* change: MEDIUM), *impact* HIGH on one axis (a destructive NULL-retraction on a foreign table whose pre-image is unrecoverable) and LOW on every other. The two axes are expanded below.
+
+| Axis | Assessment |
+|---|---|
+| **Chance** (how likely is the conversion to change behaviour?) | **LOW-MEDIUM.** The step is 188 lines, bottom-left quadrant, 2 statements, 1 table, 1 transaction, 1 threshold, 0 argv, 0 network, 0 error handling — the smallest surface of any step converted so far. Both write classes are proven (N and O are LG-11/LG-16 mechanics first measured on `link_wsib`), neither is `x-banned-for-new`, and `assertNoRetraction()` returns clean. **But** the differential cannot detect a regression: W1's guard admits 0 rows and W2's scope is empty today (§2.4), so a clean capture diff is guaranteed whether or not the conversion works. The chance of an *undetected* change is therefore materially higher than the chance of a change |
+| **Impact** (what happens if it does?) | **HIGH on one axis, LOW on the rest.** `permits.latitude/longitude` is read by `link_parcels`, `link_neighbourhoods`, the admin funnel, the lead feed and every map surface; W2 is a **destructive NULL-retraction on a table this step does not own**, and the retracted coordinate exists nowhere else afterwards (which is why `recovery.before_image: "generated"` is mandatory under R-M). A guard expansion that included `geocoded_at` would rewrite 246,416 rows per run (the LG-9 trap, fence F2). Against that: the step INSERTs nothing, DELETEs nothing, and `row_delta.permits [0,0]` is structurally enforced by class N's own executor |
+| **Risk class** | **B.** Not A: there is no schema change, no migration, no new column, no cross-table cascade, and the population at risk is a 254,082-row UPDATE scope that is currently converged to zero work. Not C: one of the two write targets is a destructive retraction on a foreign table whose pre-image is unrecoverable, and the step's own output feeds five downstream consumers. **The mitigations are named and not optional:** the before-image (now deliverable — B-9 unblocked by `d7668b8a`), the 4 fence locks at commit 6, and an executed fake-pool lifecycle test for `ctx.retract`, because the goldens structurally cannot reach class O (§6.2 INT-10) |
+
+### 5.3 What class B buys, concretely
+
+1. **The fence locks are the proof, not the differential.** G4d requires `it(` ≥ declared fences (4), landing at commit 6.
+2. **An executed `ctx.retract` → `writeBeforeImage` → `executeSetBasedClear` lifecycle test** is mandatory, not optional — `zombies_cleaned` will read 0 in all three golden pairs and no before-image file will be produced, so the class-O path has zero capture coverage. This is the same gap `a062eb79` had to close for I4 after the fact; it is budgeted here in advance.
+3. **The atomicity lock survives or the conversion does not proceed.** `src/tests/geocode-permits.infra.test.ts` is re-pointed, never weakened (§1.8d).
+
+---
+
+## 6. Panel roster — who ran, at PLAN altitude (accretes through commit 9)
 
 Spec 08 §6.4, both altitudes mandatory. I5 is a FULL-form first member, so the full roster stands (plan §10). PLAN seats dispatched at commit 1; findings and their adjudications are recorded at the commit that closes each.
 
 | Seat | Agent / instrument | Status at commit 1 |
 |---|---|---|
-| Integration | `general-purpose`, main tree | **REPORTED — 1 REFUTED (plan §0.3), 3 NEW runner findings, 3 capture hazards; see §5.2** |
-| Regression Guardian | `regression-guardian`, main tree | **REPORTED, commit 1 — 2 FAIL, 1 REFUTED-correction, 1 STALE, 1 INTENT-UNKNOWN; see §5.1** |
-| Observability | `observability-reviewer` | **REPORTED — 4 PASS, 1 FAIL (§11 counter scoping under the landed runner), 1 unfiled silence class; see §5.3** |
+| Integration | `general-purpose`, main tree | **REPORTED — 1 REFUTED (plan §0.3), 3 NEW runner findings, 3 capture hazards; see §6.2** |
+| Regression Guardian | `regression-guardian`, main tree | **REPORTED, commit 1 — 2 FAIL, 1 REFUTED-correction, 1 STALE, 1 INTENT-UNKNOWN; see §6.1** |
+| Observability | `observability-reviewer` | **REPORTED — 4 PASS, 1 FAIL (§11 counter scoping under the landed runner), 1 unfiled silence class; see §6.3** |
 | Reality-Check | `pipeline-reality-check`, main tree | commit 5 (plan altitude on the plausibility bound; §2.3 is its input) |
 | Idempotency Lens | `general-purpose`, main tree | commit 5 |
 | DeepSeek lens set ×4 | `npm run review:deepseek` | commits 2 / 7 |
 | Gemini | `npm run review:gemini` | OUTPUT altitude |
 
-### 5.1 Regression Guardian — PLAN altitude, findings and adjudications (commit 1)
+### 6.1 Regression Guardian — PLAN altitude, findings and adjudications (commit 1)
 
 The seat walked all 19 commits, recovered a why for every construct, and ruled on the 13 B-guarantees. **Every finding below was re-executed by this pass before being acted on**; none was adopted on the seat's word alone.
 
@@ -400,7 +433,7 @@ The seat walked all 19 commits, recovered a why for every construct, and ruled o
 
 The seat also raised a caveat this pass endorses: `write.js`'s class-N executor is **descriptive, not generative** for the scope string — the SQL text is compute-authored, so the CASE fence's survival depends entirely on `scripts/lib/compute/geocode-permits.js` reproducing it byte-for-byte. *"Descriptor says the right thing" ≠ "compute did the right thing"* — verified at OUTPUT altitude (commit 7c), not at plan altitude.
 
-### 5.2 Integration — PLAN altitude (commit 1). **The plan's §0.3 is REFUTED and Ask A2's closure is incomplete.**
+### 6.2 Integration — PLAN altitude (commit 1). **The plan's §0.3 is REFUTED and Ask A2's closure is incomplete.**
 
 | # | Finding | Grounder re-execution | Disposition |
 |---|---|---|---|
@@ -415,7 +448,7 @@ The seat also raised a caveat this pass endorses: `write.js`'s class-N executor 
 | **INT-9** | **Capture hazard 2 — `permits` (254,082 rows) exceeds the 100,000-row capture ceiling**, and at commit 5 there is no descriptor to derive a projection from, so the PRE captures must carry `--tables` / `--table-columns` / `--table-order` explicitly and the POST captures must repeat them **identically** or the pair is incomparable | same | **ACCEPTED.** Flag parity becomes part of the commit-5 capture log |
 | **INT-10** | **Capture hazard 3 — W2 is a zero-row statement today**, so all three golden pairs will record `zombies_cleaned: 0`, no before-image file will be written, and the class-O path / `recovery.before_image: "generated"` / B-8 / B-9 are **untestable by the differential** | Independently measured by this pass at commit 1 (§2.2: W2's target population = 0) | **ACCEPTED, and already stated** (§2.4). The proof moves to an executed fake-pool lifecycle test of `ctx.retract` → before-image → `executeSetBasedClear` at commit 6 — the same remedy `a062eb79` had to build for I4 |
 
-### 5.3 Observability — PLAN altitude (commit 1)
+### 6.3 Observability — PLAN altitude (commit 1)
 
 | # | Finding | Grounder re-execution | Disposition |
 |---|---|---|---|
@@ -428,7 +461,7 @@ The seat also raised a caveat this pass endorses: `write.js`'s class-N executor 
 
 ---
 
-## 6. ⛔ PREMISE REFUTED — commit 7c/7d is BLOCKED on a 0.10 follow-up, and I5 must not close it itself
+## 7. ⛔ PREMISE REFUTED — commit 7c/7d is BLOCKED on a 0.10 follow-up, and I5 must not close it itself
 
 Two seats reached this independently, from opposite directions (Integration by tracing `d7668b8a`'s diff, Observability by tracing the counter's resolution path), and **this pass re-executed both**. The plan's §0b gate — *"commit 7d may not start until 0.10 has landed"* — is satisfied in letter and **not in substance**: `d7668b8a` generalised the **pre-phase hooks** (`enrich_hooks.contract_read`, `enrich_hooks.defer_scope`, `heartbeat_minutes_from_config`, `lock_timeout_ms_from_config`, the `${identity.name}_duration_ms` telemetry key), the **write seams** (`ctx.retract` → `writeBeforeImage` → `executeSetBasedClear`; `ctx.joinUpdate` → `executeSetBasedJoinUpdate`) and the **per-target `written[]` counters** — all of which I5 genuinely needs and now has, including a deliverable B-9. It did **not** generalise the **post-phase region**:
 
