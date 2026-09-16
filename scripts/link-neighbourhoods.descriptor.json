@@ -153,7 +153,7 @@
   },
 
   "execution": {
-    "shape": "link_keyed",
+    "shape": "link_column",
     "budget": "20m",
     "txn_scope": "statement",
     "txn_budget": "20m",

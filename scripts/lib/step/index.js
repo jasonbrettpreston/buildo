@@ -328,6 +328,48 @@ function isMaterializeStep(descriptor) {
 }
 
 /**
+ * Is this descriptor a COLUMN-STAMPING LINK — ONE scoped, change-guarded set-based JOIN
+ * UPDATE that writes ONE column on an EXISTING row, no junction, no retraction, no batch
+ * loop? (Ask 1 ruling (B) FORK, I4 `link_neighbourhoods`, re-ruled 2026-09-16.)
+ *
+ * ⚠️ FORKED UNCONDITIONALLY, NOT A BRANCH INSIDE ANY EXISTING RUNNER. Three shapes were
+ * tried against this step and all three are refuted STRUCTURALLY, not stylistically:
+ *
+ *   (a) `link_keyed` — UNRUNNABLE, not merely awkward. `runLinkKeyedPhase` destructures
+ *       TWO write plans unconditionally (`const deletePlan = plans[1]`) and dereferences
+ *       `deletePlan.table` before its loop, so a one-target descriptor TypeErrors inside
+ *       the advisory lock; it normalises `street_num`/`street_name`/`street_type` off every
+ *       batch row, columns this step neither reads nor declares; it calls
+ *       `compute.classifyPrimary`/`classifySpatialContainment`/`classifySpatialFallback` by
+ *       name across a fixed four-strategy cascade; and `link_keyed`'s own frozen
+ *       `phase_order` contains no `write.executeSetBasedJoinUpdate` at all.
+ *   (b) `link` — `runLinkPhase` pages an integer `lastId` over a surrogate `id` column
+ *       `permits` does not have (its PK is the composite `(permit_num, revision_num)`), and
+ *       hard-codes a `parcels_*` counter vocabulary.
+ *   (c) `backfill` — the closest phase-order match, and still not shareable. FOUR reasons,
+ *       each measured: `runBackfillPhase` hard-codes `compute_centroids`' matched vocabulary
+ *       (`parcels_processed`/`centroids_computed`/`failed_geometries`/`new_rows`); it
+ *       EARLY-RETURNS on `backlogCount === 0` with a `zeroWork` result, which this step must
+ *       not do (its eligible set is 0 in the measured steady state, so an early return would
+ *       suppress the post checks — including a standing WARN and the whole `failed_link_rate`
+ *       arm — on every single run); it dispatches through `executeBackfillUpdate` (LG-20,
+ *       class E `write_once_backfill`), which is UPDATE-only by construction and is NOT the
+ *       class-N `executeSetBasedJoinUpdate` (LG-11) this target declares; and its
+ *       `force_full` branch requires a declared SECOND write target this step does not have.
+ *       Widening it would make a CONVERTED step's (`compute_centroids`) golden captures
+ *       collateral for an unconverted step's convenience — the inversion LG-21's ratified
+ *       fork-over-share decision exists to prevent, applied here for the fifth time.
+ *
+ * What it TAKES from `runBackfillPhase` is the PHASE ORDER, not the mechanism: guards →
+ * overrides → RLS preflight → prior read → pre-read counts → pre_write gate → ONE
+ * statement → post read → return. `link_neighbourhoods` is the first and, as of this
+ * conversion, only link_column-shaped step.
+ */
+function isLinkColumnStep(descriptor) {
+  return Boolean(descriptor.execution && descriptor.execution.shape === 'link_column');
+}
+
+/**
  * Is this a BACKFILL — ONE conditional set-based UPDATE, no retraction, no
  * batching in the surviving path, no ledger-gated skip? (Ruling A-4, BACKFILL
  * pilot 6, 2026-08-29.)
@@ -1716,6 +1758,145 @@ async function runMaterializePhase({ descriptor, pool, compute, config, chainId,
     overrides,
     writeSkipped: false,
     gatedSkip,
+  };
+}
+
+/**
+ * THE COLUMN-STAMPING LINK PHASE (I4, `link_neighbourhoods`, 2026-09-16 — Ask 1 ruling (B),
+ * re-ruled after the plan panel established the single-statement shape).
+ *
+ * See `isLinkColumnStep` for why all three candidate runners are refuted structurally.
+ * This one is a fork of `runBackfillPhase`'s PHASE ORDER with a class-N executor and this
+ * step's own counter vocabulary.
+ *
+ * PHASE ORDER: `guards.requires` → overrides → RLS preflight → prior read (under its
+ * DECLARED posture) → the corpus count and the eligible count → the pre_write gate → ONE
+ * `set_based_join_update` statement → the post-write round trip → return.
+ *
+ * ⚠️ NO TRANSACTION WRAPPER, and that is the declaration, not an omission.
+ * `execution.txn_scope` and the target's own `write_discipline.txn_scope` are both
+ * `"statement"`: a single server-side statement IS its own transaction, so a kill rolls it
+ * back whole and leaves `permits` completely untouched — which is what makes
+ * `recovery.interrupted: "none"` truthful here rather than merely convenient. The executor
+ * is handed the POOL, exactly as `runBackfillPhase` hands `executeBackfillUpdate` the pool,
+ * and exactly as the pre-conversion script's own bare `pool.query` did.
+ *
+ * ⚠️ NO ZERO-WORK EARLY RETURN, and that is load-bearing. `runBackfillPhase` returns early
+ * on a zero backlog; this step must NOT, because its eligible set is 0 in the measured
+ * steady state (every coordinate-bearing permit is already linked). An early return would
+ * suppress every `when: "post"` check on every ordinary run — including the standing
+ * `link_rate` WARN and the entire `failed_link_rate` arm — exactly while the estate sits
+ * 0.17 points under its own warn bound. The statement is issued regardless (it matches 0
+ * rows, which is the honest answer), the post round trip always runs, and `zeroWork` is
+ * returned as a TERMINAL DISCRIMINATOR only, never as a narrowing signal.
+ *
+ * @returns {Promise<object>} `{mode, gate, matched, cumulative, written, prior, priorError, overrides, writeSkipped, zeroWork}`
+ */
+async function runLinkColumnPhase({ descriptor, pool, compute, config, chainId, log, tag, preWriteGate }) {
+  const requirements = await assertRequirements(pool, descriptor, { log, tag });
+  const overrides = staleness.resolveOverrides(descriptor);
+  const privilege = await write.assertWritePrivileges(pool, descriptor, { log, tag });
+  // LR-D2's posture, honoured rather than merely declared: the raw `readPriorEmit` every
+  // LINK runner calls would make `staleness.on_prior_run_error` a declaration with no
+  // consumer (a descriptor asking for `warn_row` would be silently ignored).
+  const posture = staleness.priorRunErrorPosture(descriptor);
+  const { prior, error: priorError } = await staleness.readPriorEmitWithPosture(
+    pool, ledgerPipelineName(descriptor, chainId), null, posture,
+  );
+  if (priorError) {
+    log.warn(tag, `prior-run read failed under posture "${posture}" — continuing with NO baseline: ${priorError.message}`);
+  }
+
+  const specs = descriptor.outputs.writes;
+  const plan = write.buildWritePlan(specs[0], descriptor);
+  const written = {};
+  written[write.targetKey(0)] = { scanned: 0, inserted: 0, updated: 0, deleted: 0, retracted: 0, rows_changed: 0 };
+  written.privilege = privilege[plan.table] || null;
+  written.requirements = requirements;
+
+  const sql = compute.buildMatchSql(descriptor, config, 'incremental');
+
+  // The corpus count comes FIRST because the pre_write gate's whole job is to refuse an
+  // empty one before the UPDATE is issued (G-1). Pre-conversion this number was taken at
+  // the top of the run and only REPORTED after every write.
+  const corpus = await pool.query(sql.corpus_sql);
+  const neighbourhoodsLoaded = Number((corpus.rows[0] || {}).n) || 0;
+  const eligible = await pool.query(sql.eligible_count_sql);
+  const eligibleCount = Number((eligible.rows[0] || {}).total) || 0;
+
+  // ⚠️ THE RUNNER NAMES NOTHING THE STEP DID NOT DECLARE. These five are this step's own
+  // vocabulary, taken from its descriptor's `emits[]` and `checks[]` — no `parcels_*`, no
+  // match-strategy names, nothing a different step would have to inherit.
+  const matched = {
+    neighbourhoods_loaded: neighbourhoodsLoaded,
+    permits_eligible: eligibleCount,
+    permits_processed: 0,
+    permits_linked: 0,
+    no_match: 0,
+    negative_ids: 0,
+  };
+  const gate = { mode: 'incremental', reason: 'link_column', skipped: false };
+
+  // ── THE PRE-WRITE GATE, BEFORE the one statement ──────────────────────────
+  const decision = preWriteGate
+    ? await preWriteGate({ matched, gate, prior, overrides, written: null })
+    : { abort: false, failed: [] };
+  if (decision.abort) {
+    log.error(tag, 'pre_write check(s) FAILED with no standing override — no write was issued and '
+      + `${plan.table} is untouched: ${decision.failed.join(', ')}`);
+    return {
+      mode: gate.mode,
+      gate,
+      matched,
+      cumulative: null,
+      written: { ...written, write_skipped_pre_write_fail: true },
+      prior,
+      priorError,
+      overrides,
+      writeSkipped: true,
+      failedPreWrite: decision.failed,
+      zeroWork: false,
+    };
+  }
+
+  // ── THE ONE STATEMENT — no transaction wrapper, no batch loop, no retraction ─────
+  // `executeSetBasedJoinUpdate` (LG-11) refuses at execution time any statement text
+  // containing INSERT INTO or ON CONFLICT, checked on the ACTUAL text about to run:
+  // `permits` rows may only ever be CREATED by load_permits, and an accidental INSERT here
+  // would violate that ownership boundary far worse than a missed match.
+  const changed = await write.executeSetBasedJoinUpdate(pool, sql.update_sql, []);
+
+  // `scanned` is the ELIGIBLE count, never the updated count. A class-N target produces no
+  // row list for `executeOrderedWrites` to size, so a naive `scanned = updated` would make
+  // run 2 of the `zero_writes` proof read 0/0/0 — indistinguishable from a skipped run or
+  // one that never found work. The eligible count is what "this run considered N rows and
+  // changed M of them" actually means.
+  written[write.targetKey(0)].scanned = eligibleCount;
+  written[write.targetKey(0)].updated = changed;
+  written[write.targetKey(0)].rows_changed = changed;
+  matched.permits_processed = eligibleCount;
+  matched.permits_linked = changed;
+  log.info(tag, `${plan.table}: considered ${eligibleCount.toLocaleString()} eligible permit(s), stamped ${changed.toLocaleString()}`);
+
+  // ── ONE post-write round trip for the cumulative rate AND every table-wide count ──
+  const cumulative = await pool.query(sql.cumulative_sql);
+  const row = cumulative.rows[0] || {};
+  matched.no_match = Number(row.no_match_remaining) || 0;
+  matched.negative_ids = Number(row.negative_ids) || 0;
+  matched.neighbourhoods_loaded = Number(row.neighbourhoods_loaded) || neighbourhoodsLoaded;
+
+  return {
+    mode: gate.mode,
+    gate,
+    matched,
+    cumulative: { linked: Number(row.linked) || 0, total: Number(row.total) || 0 },
+    written,
+    prior,
+    priorError,
+    overrides,
+    writeSkipped: false,
+    // TERMINAL DISCRIMINATOR ONLY — never a check-narrowing signal (see the header).
+    zeroWork: eligibleCount === 0,
   };
 }
 
@@ -3856,6 +4037,7 @@ async function runWithPool(runnable, pool, ctx) {
       let cascade = null;
       let materialize = null;
       let backfill = null;
+      let linkColumn = null;
       let recorder = null;
       let enrich = null;
       let onlyChecks = null;
@@ -3867,6 +4049,7 @@ async function runWithPool(runnable, pool, ctx) {
       // (score every declared `when`), matching `onlyChecks`'s own null-means-everything.
       let onlyWhen = null;
       const drivesWrites = isIngestStep(descriptor) || isLinkStep(descriptor) || isLinkKeyedStep(descriptor)
+        || isLinkColumnStep(descriptor)
         || isCascadeStep(descriptor) || isMaterializeStep(descriptor) || isBackfillStep(descriptor)
         || isRecorderStep(descriptor) || isEnrichStep(descriptor);
       // Spec 47 §R3.5 / B-11 — the DB clock, captured ONCE, inside the lock, for
@@ -3911,6 +4094,28 @@ async function runWithPool(runnable, pool, ctx) {
         stepCtx.elapsed_ms = Date.now() - startMs;
         if (linkKeyed.writeSkipped) {
           // Same reasoning as isLinkStep's own writeSkipped narrowing, above.
+          onlyChecks = new Set(descriptor.checks.filter((c) => c.when !== 'post').map((c) => c.id));
+          onlyWhen = ['pre', 'pre_write'];
+          stepCtx.checks = stepCtx.checks.filter((id) => onlyChecks.has(id));
+        }
+      } else if (isLinkColumnStep(descriptor)) {
+        linkColumn = await runLinkColumnPhase({
+          descriptor, pool, compute: runnable.compute, config: configValues,
+          chainId, log: pipeline.log, tag: `[${slug}]`,
+          preWriteGate: makePreWriteGate({ descriptor, chainId, stepCtx, compute: runnable.compute, config: configValues }),
+        });
+        stepCtx.matched = linkColumn.matched;
+        stepCtx.cumulative = linkColumn.cumulative;
+        stepCtx.written = linkColumn.written;
+        stepCtx.prior = linkColumn.prior;
+        stepCtx.overrides = linkColumn.overrides;
+        stepCtx.gate = linkColumn.gate;
+        stepCtx.elapsed_ms = Date.now() - startMs;
+        // ONLY the pre_write-fail path narrows. A zero-eligible run does NOT (see
+        // runLinkColumnPhase's header): its post checks are the whole point, because the
+        // measured steady state IS zero eligible and the cumulative rate is what the run
+        // exists to report.
+        if (linkColumn.writeSkipped) {
           onlyChecks = new Set(descriptor.checks.filter((c) => c.when !== 'post').map((c) => c.id));
           onlyWhen = ['pre', 'pre_write'];
           stepCtx.checks = stepCtx.checks.filter((id) => onlyChecks.has(id));
@@ -4177,6 +4382,7 @@ async function runWithPool(runnable, pool, ctx) {
       // whether it reads WARN or INFO.
       const extraRows = [
         ...(ingest && ingest.priorError ? [staleness.priorRunErrorRow(ingest.priorError)] : []),
+        ...(linkColumn && linkColumn.priorError ? [staleness.priorRunErrorRow(linkColumn.priorError)] : []),
         ...configRetiredStatus.map(retiredVarRow),
         // LW-D15 — the declared dry-run posture, on every run that had one, INFO (never a
         // reason to fail — it is the point of the flag, not a defect it found).
@@ -4193,7 +4399,7 @@ async function runWithPool(runnable, pool, ctx) {
         ...maintenanceRows,
         // POST-B1-1 Observability fold — the pre_write gate's abort, said out loud
         // (§preWriteAbortRows). Absent on every run that did not abort.
-        ...preWriteAbortRows([ingest, link, linkKeyed, cascade, materialize, backfill, recorder, enrich]),
+        ...preWriteAbortRows([ingest, link, linkKeyed, linkColumn, cascade, materialize, backfill, recorder, enrich]),
         // EP-PHASE-DEADLINE / EP-PASS3-BACKLOG Observability fold — the deadline abort and
         // the fail-open retirement failure, each said out loud on the audit table rather
         // than only in a log line. Both absent on every healthy run.
@@ -4212,7 +4418,9 @@ async function runWithPool(runnable, pool, ctx) {
       // the upsert's inserts and not the clear's rewrites.
       const counterScope = link
         ? { matched: link.matched, cumulative: link.cumulative, written: link.written, gate: link.gate }
-        : (linkKeyed
+        : (linkColumn
+          ? { matched: linkColumn.matched, cumulative: linkColumn.cumulative, written: linkColumn.written, gate: linkColumn.gate }
+          : (linkKeyed
           ? { matched: linkKeyed.matched, cumulative: linkKeyed.cumulative, written: linkKeyed.written, gate: linkKeyed.gate }
           : (cascade
             ? { matched: cascade.matched, cumulative: cascade.cumulative, written: cascade.written, gate: cascade.gate }
@@ -4224,7 +4432,7 @@ async function runWithPool(runnable, pool, ctx) {
                   ? { matched: recorder.matched, written: recorder.written }
                   : (enrich
                     ? { matched: enrich.matched, written: enrich.written }
-                    : (ingest ? { acquired: ingest.acquired, written: ingest.written } : null)))))));
+                    : (ingest ? { acquired: ingest.acquired, written: ingest.written } : null))))))));
       counters = (ingest && ingest.skipped) || (cascade && cascade.skipped) || (materialize && materialize.skipped)
         ? { records_total: null, records_new: null, records_updated: null }
         : deriveCounters(descriptor, computeResult, counterScope);
@@ -4259,6 +4467,15 @@ async function runWithPool(runnable, pool, ctx) {
         // WARN branch below, since this descriptor declares no defer-specific terminal.
         status = RUN_STATUS.DEFERRED_TO_FULL;
         terminal = selectTerminal(descriptor, { kind: 'success', status });
+      } else if (linkColumn && linkColumn.zeroWork && verdict !== 'FAIL' && verdict !== 'WARN') {
+        // A run whose eligible set was empty AND whose checks are all clean. Distinct from
+        // the backfill branch below only in which phase produced the flag; identical in
+        // posture (a normal `success` completion, never a skip_gated kind). On the measured
+        // estate this does NOT fire — the cumulative link_rate stands WARN (LN-D7), so the
+        // WARN branch claims the run and stamps `linked_with_warnings`. That is correct and
+        // is why the terminal is declared rather than assumed unreachable.
+        status = RUN_STATUS.COMPLETED;
+        terminal = selectTerminal(descriptor, { kind: 'success', status, discriminator: 'no_eligible' });
       } else if (backfill && backfill.zeroWork && verdict !== 'FAIL' && verdict !== 'WARN') {
         // ZERO-WORK COMPLETION (R-P N/A — NOT a skip_gated kind, a normal
         // `success` completion with a distinct discriminated terminal id, so it
@@ -4498,6 +4715,7 @@ module.exports = {
   runIngestPhase,
   runLinkPhase,
   runLinkKeyedPhase,
+  runLinkColumnPhase,
   runCascadePhase,
   runMaterializePhase,
   runBackfillPhase,

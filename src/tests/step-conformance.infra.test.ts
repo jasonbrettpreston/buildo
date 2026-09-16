@@ -2623,6 +2623,15 @@ describe('Rule 12 — truthful crash posture, static half (checkInterruptedPostu
     ['link_massing', 'link', 'runLinkPhase'],
     ['link_wsib', 'cascade', 'runCascadePhase'],
     ['link_parcels', 'link_keyed', 'runLinkKeyedPhase'],
+    // NOTE: `link_neighbourhoods` (shape `link_column`, runner `runLinkColumnPhase`) is
+    // deliberately ABSENT. This it.each is scoped to steps that DECLARE
+    // `recovery.interrupted: "force_full_on_next_run"` — the whole assertion is that the
+    // reachability claim such a declaration makes is true of the live runner. I4 declares
+    // `"none"` (Rule 12's own legitimate case, with an `interrupted_why`: its write is ONE
+    // statement, so a kill rolls it back whole and there is no partial state to recover),
+    // so the matrix correctly reports "no reachability claim to verify" and adding a row
+    // here would assert a claim the step does not make. Its shape<->runner pairing is
+    // locked in src/tests/steps/link_neighbourhoods/violations.test.ts instead.
     // L6 (batch-2 Phase 0.10) — the ENRICHER arm, added when `runEnrichPhase`
     // became a generic runner. `runnerReachability`'s third branch matches on
     // `detectInterruptedRetraction(` AND a `full = … interruptedRetraction` fold;

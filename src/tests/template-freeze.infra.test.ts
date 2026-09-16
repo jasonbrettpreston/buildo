@@ -168,9 +168,9 @@ describe('template-freeze.json — the frozen categories/runners match the live 
     expect(ARTIFACT.categories.length).toBe(20);
   });
 
-  it('phase_runners names exactly the 8 built runners (assert has none — ASSERT writes nothing) — RE-FREEZE #3 (pilot 9 commit 7d/2, LG-28) adds runEnrichPhase', () => {
+  it('phase_runners names exactly the 9 built runners (assert has none — ASSERT writes nothing) — RE-FREEZE #9 (I4, 2026-09-16) adds runLinkColumnPhase, the COLUMN-STAMPING LINK fork', () => {
     const names = ARTIFACT.phase_runners.map((r) => r.runner).sort();
-    expect(names).toEqual(['runBackfillPhase', 'runCascadePhase', 'runEnrichPhase', 'runIngestPhase', 'runLinkKeyedPhase', 'runLinkPhase', 'runMaterializePhase', 'runRecorderPhase'].sort());
+    expect(names).toEqual(['runBackfillPhase', 'runCascadePhase', 'runEnrichPhase', 'runIngestPhase', 'runLinkColumnPhase', 'runLinkKeyedPhase', 'runLinkPhase', 'runMaterializePhase', 'runRecorderPhase']);
   });
 
   it('archetype_profiles names all 8 identity.archetype enum values, ALL 8 proven — RE-FREEZE #5 (pilot 9 commit 9, 2026-09-11) closes ENRICHER, the last unproven archetype', () => {

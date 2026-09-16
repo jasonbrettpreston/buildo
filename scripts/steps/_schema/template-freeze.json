@@ -13,9 +13,9 @@
     "preserved, live tier refreshed) or `--refresh` (frozen tier re-derived, frozen_at := HEAD)."
   ],
   "contract_version": 1,
-  "frozen_at": "3906c979c9473f3b05bb1aa47df15813586f1ef1",
+  "frozen_at": "2ba8e705aed5bc22f01637961564ec62a87cc54a",
   "frozen_after_pilot": 9,
-  "schema_sha256": "0eaf00bed3e4db06c1e8ef4140a08cf6e08d923616087438b9a75d6a7d30ee2c",
+  "schema_sha256": "0ae07c62cf6a1b5470ffe4a0f91aa25e15c7ecff8b309fdd7bbe33e830c14baa",
   "categories": [
     "identity",
     "inputs",
@@ -155,6 +155,20 @@
         "pipeline.withTransaction",
         "write.writeBeforeImage",
         "write.executeRetraction"
+      ]
+    },
+    {
+      "shape": "link_column",
+      "runner": "runLinkColumnPhase",
+      "phase_order": [
+        "staleness.resolveOverrides",
+        "write.assertWritePrivileges",
+        "staleness.priorRunErrorPosture",
+        "staleness.readPriorEmitWithPosture",
+        "write.buildWritePlan",
+        "write.targetKey",
+        "preWriteGate",
+        "write.executeSetBasedJoinUpdate"
       ]
     },
     {

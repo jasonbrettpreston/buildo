@@ -337,7 +337,7 @@ Grandfathered, never legal for a new step: an existing step must be able to decl
 
 | Field | Menu | Markers |
 |---|---|---|
-| `shape` | `assert` · `ingest` · `link` · `link_keyed` · `cascade` · `materialize` · `backfill` · `recorder` · `enrich` | ! |
+| `shape` | `assert` · `ingest` · `link` · `link_column` · `link_keyed` · `cascade` · `materialize` · `backfill` · `recorder` · `enrich` | ! |
 | `phases` | list (min 1) of object {name, order, txn, writes_ref, scope, invalidator_ref, timeout_minutes_from_config} | — |
 | `phases[].name` | string `^[a-z][a-z0-9_]*$` | † |
 | `phases[].order` | integer >= 1, <= 8 | † |

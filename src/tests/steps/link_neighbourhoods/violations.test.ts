@@ -69,6 +69,24 @@ function readText(rel: string): string { return fs.readFileSync(abs(rel), 'utf8'
 function readJson<T>(rel: string): T { return JSON.parse(readText(rel)) as T; }
 
 /**
+ * A file's CODE, with block and line comments stripped.
+ *
+ * The retirement locks below assert that `hasPostGIS` / `pg_extension` / `@turf` do not
+ * appear in the compute — but the compute's own docblock NAMES all three, because
+ * documenting what was retired and why is the point of that docblock. A whole-file text
+ * scan cannot tell the two apart, which is the same false-positive class
+ * `step-validate.mjs`'s own `checkNoSecondDerivation` hit when it flagged a JSDoc phrase
+ * as a hand-rolled verdict assignment. Stripping comments makes the assertion PRECISE
+ * rather than lenient: the real rule (`scripts/ast-grep-rules/compute-shape.yml`'s
+ * `compute-no-postgis-branch`) is an AST rule over code, and this mirrors its scope.
+ */
+function readCode(rel: string): string {
+  return readText(rel)
+    .replace(/\/\*[\s\S]*?\*\//g, ' ')
+    .replace(/(^|[^:])\/\/.*$/gm, '$1');
+}
+
+/**
  * Assert a lookup actually resolved, and NARROW it. Used instead of `!` so a missing
  * key fails with the name of the thing that was missing rather than a bare
  * "cannot read property of undefined" three lines later. `noUncheckedIndexedAccess`
@@ -193,7 +211,7 @@ describe('FENCE bd1f0e61 — row-derived verdict, never a parallel boolean', () 
     expect(notes().fences.some((f) => f.commit === 'bd1f0e61')).toBe(true);
   });
 
-  it.fails('FUTURE, flips at commit ② — scripts/lib/compute/link-neighbourhoods.js contains no local verdict cascade: the library\'s deriveVerdict is the only place a verdict is computed (Rule 10)', () => {
+  it('LANDED at commit ② — scripts/lib/compute/link-neighbourhoods.js contains no local verdict cascade: the library\'s deriveVerdict is the only place a verdict is computed (Rule 10)', () => {
     const src = readText(COMPUTE_REL);
     expect(src).not.toMatch(/function verdictCascade/);
     expect(src).not.toMatch(/\.some\(\s*\(?r\)?\s*=>\s*r\.status === 'FAIL'\s*\)/);
@@ -497,13 +515,13 @@ describe('defect-ledger.md carries the LN-D* rows with a closed-vocabulary statu
 // ---------------------------------------------------------------------------
 // R-K.1 — the pending-stage registration
 // ---------------------------------------------------------------------------
-describe('converted.json — link-neighbourhoods.js is PENDING at descriptor_only', () => {
-  it('the entry exists with exactly the five required keys, stage descriptor_only, and the file is NOT yet in converted[]', () => {
+describe('converted.json — link-neighbourhoods.js is PENDING at shape_clean', () => {
+  it('the entry exists with exactly the five required keys, stage shape_clean (advanced at commit ② when the compute + runner landed), and the file is NOT yet in converted[]', () => {
     const c = readJson<{ converted: string[]; pending: Array<Record<string, string>> }>(CONVERTED_REL);
     const entry = c.pending.find((p) => p.file === STEP_REL);
     expect(entry, `no pending entry for ${STEP_REL}`).toBeTruthy();
     expect(Object.keys(entry ?? {}).sort()).toEqual(['declared', 'file', 'reason', 'registers_at', 'stage']);
-    expect(entry?.stage).toBe('descriptor_only');
+    expect(entry?.stage).toBe('shape_clean');
     expect(c.converted).not.toContain(STEP_REL);
   });
 });
@@ -515,47 +533,72 @@ describe('converted.json — link-neighbourhoods.js is PENDING at descriptor_onl
 // ============================================================================
 
 describe('RED (commit ②) — the compute module', () => {
-  it.fails('FUTURE, flips at commit ② — scripts/lib/compute/link-neighbourhoods.js exists', () => {
+  it('LANDED at commit ② — scripts/lib/compute/link-neighbourhoods.js exists', () => {
     expect(fs.existsSync(abs(COMPUTE_REL))).toBe(true);
   });
 
-  it.fails('FUTURE, flips at commit ② — LN-D2: the compute carries NO PostGIS-availability branch (compute-no-postgis-branch, Rule 2 R-W)', () => {
-    const src = readText(COMPUTE_REL);
+  it('LANDED at commit ② — LN-D2: the compute carries NO PostGIS-availability branch (compute-no-postgis-branch, Rule 2 R-W)', () => {
+    const src = readCode(COMPUTE_REL);
     expect(src).not.toMatch(/hasPostGIS/);
     expect(src).not.toMatch(/pg_extension/);
     expect(src).not.toMatch(/@turf/);
   });
 
-  it.fails('FUTURE, flips at commit ② — LN-D1: no `-1` sentinel write survives anywhere in the compute', () => {
-    const src = readText(COMPUTE_REL);
+  it('LANDED at commit ② — LN-D1: no `-1` sentinel write survives anywhere in the compute', () => {
+    const src = readCode(COMPUTE_REL);
     expect(src).not.toMatch(/neighbourhood_id\s*=\s*-1/);
   });
 });
 
 describe('RED (commit ②) — the frozen shell and the link_column runner', () => {
-  it.fails('FUTURE, flips at commit ② — the shell is frozen onto pipeline.step() and pipeline.run( no longer appears (G-shape)', () => {
+  it('LANDED at commit ② — the shell is frozen onto pipeline.step() and pipeline.run( no longer appears (G-shape)', () => {
     const src = readText(STEP_REL);
     expect(src).toMatch(/pipeline\.step\(descriptor, compute\)/);
     expect(src).not.toMatch(/pipeline\.run\(/);
   });
 
-  it.fails('FUTURE, flips at commit ② — Ask 1 FORK: the descriptor declares execution.shape "link_column" (NOT link_keyed, whose runner destructures two write plans and would TypeError on this one-target descriptor)', () => {
+  it('LANDED at commit ② — Ask 1 FORK: the descriptor declares execution.shape "link_column" (NOT link_keyed, whose runner destructures two write plans and would TypeError on this one-target descriptor)', () => {
     expect(descriptor().execution.shape).toBe('link_column');
   });
 
-  it.fails('FUTURE, flips at commit ② — scripts/lib/step/index.js exports runLinkColumnPhase and gates it on the declared shape', () => {
+  it('LANDED at commit ② — scripts/lib/step/index.js exports runLinkColumnPhase and gates it on the declared shape', () => {
     const src = readText(INDEX_REL);
     expect(src).toMatch(/async function runLinkColumnPhase/);
     expect(src).toMatch(/shape === 'link_column'/);
     expect(src).toMatch(/runLinkColumnPhase,/);
   });
 
-  it.fails('FUTURE, flips at commit ② — the x-frozen execution.shape enum is widened to carry link_column, and the existing x-ruling node records the rungs tried (G-1 schema-baseline ratchet)', () => {
+  it('LANDED at commit ② — the x-frozen execution.shape enum is widened to carry link_column, and the existing x-ruling node records the rungs tried (G-1 schema-baseline ratchet)', () => {
     const schema = readJson<{ properties: { execution: { properties?: { shape?: { enum: string[]; 'x-ruling': { rungs_tried: string[]; why: string } } } } } }>(SCHEMA_REL);
     const shape = schema.properties.execution.properties?.shape;
     expect(shape?.enum).toContain('link_column');
     expect(shape?.['x-ruling'].rungs_tried.length).toBeGreaterThan(0);
     expect(shape?.['x-ruling'].why).toMatch(/link_column/);
+  });
+
+  it('the shape <-> runner pairing is registered in BOTH hand-maintained registries, and the two agree (they are separate lists and updating only one is a silent no-op)', () => {
+    const validator = readText('scripts/analysis/step-validate.mjs');
+    const generator = readText('scripts/steps/_schema/generate-template-freeze.mjs');
+    // step-validate's Rule 12 checker resolves the runner to read from this map.
+    expect(validator).toMatch(/link_column:\s*'runLinkColumnPhase'/);
+    // the freeze generator maps the other direction.
+    expect(generator).toMatch(/runLinkColumnPhase:\s*'link_column'/);
+    // RUNNER_NAMES used to be a SECOND hand-typed list beside RUNNER_TO_SHAPE, and adding
+    // the 9th runner to only one of them froze a phase_runners array that silently omitted
+    // it (measured: "--refresh" reported 8 runners and errored nowhere). It is derived now.
+    expect(generator).toMatch(/const RUNNER_NAMES = Object\.keys\(RUNNER_TO_SHAPE\)/);
+    const freeze = readJson<{ phase_runners: Array<{ shape: string; runner: string; phase_order: string[] }> }>(
+      'scripts/steps/_schema/template-freeze.json',
+    );
+    const row = must(freeze.phase_runners.find((r) => r.runner === 'runLinkColumnPhase'), 'phase_runners row for runLinkColumnPhase');
+    expect(row.shape).toBe('link_column');
+    // The declared single-statement shape, frozen: the class-N executor is in the phase
+    // order and no batch/cursor call is.
+    expect(row.phase_order).toContain('write.executeSetBasedJoinUpdate');
+    expect(row.phase_order).toContain('staleness.readPriorEmitWithPosture');
+    expect(row.phase_order).not.toContain('write.executeUpsertBatch');
+    expect(row.phase_order).not.toContain('write.executeBackfillUpdate');
+    expect(row.phase_order).not.toContain('write.executeRetraction');
   });
 });
 

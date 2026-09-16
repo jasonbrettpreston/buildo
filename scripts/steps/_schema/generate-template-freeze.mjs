@@ -286,10 +286,13 @@ function deriveSchema() {
 // and is immune to a comment rewording).
 // ---------------------------------------------------------------------------
 
-const RUNNER_NAMES = ['runIngestPhase', 'runLinkPhase', 'runLinkKeyedPhase', 'runCascadePhase', 'runMaterializePhase', 'runBackfillPhase', 'runRecorderPhase', 'runEnrichPhase'];
+
 const RUNNER_TO_SHAPE = {
   runIngestPhase: 'ingest',
   runLinkPhase: 'link',
+  // RE-FREEZE #6 (I4, 2026-09-16, Ask 1 ruling (B) FORK) — the 9th runner,
+  // link_neighbourhoods' own `execution.shape: "link_column"`.
+  runLinkColumnPhase: 'link_column',
   runLinkKeyedPhase: 'link_keyed',
   runCascadePhase: 'cascade',
   runMaterializePhase: 'materialize',
@@ -299,6 +302,13 @@ const RUNNER_TO_SHAPE = {
   // `execution.shape:"enrich"`.
   runEnrichPhase: 'enrich',
 };
+// DERIVED from RUNNER_TO_SHAPE, never hand-listed a second time (I4, 2026-09-16).
+// These were TWO parallel hand-maintained lists, and adding the 9th runner to only one of
+// them is a silent no-op: `--refresh` reported "8 runners" and froze a phase_runners array
+// missing the runner that had just been added, with no error — the R-E lock would then have
+// passed against a freeze that did not describe the tree. Object.keys preserves insertion
+// order, so the frozen array's order is unchanged for every pre-existing runner.
+const RUNNER_NAMES = Object.keys(RUNNER_TO_SHAPE);
 const LIBRARY_CALL_RE = /\b(staleness|write|verdict|ledger|acquire|pipeline)\.(\w+)\(|\b(preWriteGate)\(/g;
 
 // pilot 9 commit 7e/1 (2026-09-04) — RE-FREEZE #3's own generator side-effect, closed here.

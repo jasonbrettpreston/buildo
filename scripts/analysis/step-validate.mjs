@@ -2559,6 +2559,7 @@ const SHAPE_RUNNER_FN = {
   assert: null,
   ingest: 'runIngestPhase',
   link: 'runLinkPhase',
+  link_column: 'runLinkColumnPhase',
   link_keyed: 'runLinkKeyedPhase',
   cascade: 'runCascadePhase',
   materialize: 'runMaterializePhase',

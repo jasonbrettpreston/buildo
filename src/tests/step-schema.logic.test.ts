@@ -580,14 +580,14 @@ describe('execution.shape "enrich" + the ENRICHER execution.phases[] profile (pi
     ).toBeDefined();
   }
 
-  it('the x-frozen shape enum carries "enrich" as its 9th value and the node carries an x-ruling (Rule 1 / G-1 ratchet)', () => {
+  it('the x-frozen shape enum carries "link_column" as its 10th value and the node carries an x-ruling (Rule 1 / G-1 ratchet)', () => {
     interface ShapeNode {
       enum?: string[];
       'x-frozen'?: boolean;
       'x-ruling'?: { rungs_tried?: unknown[]; why?: string };
     }
     const shapeNode = (schema.properties as { execution: { properties: { shape: ShapeNode } } }).execution.properties.shape;
-    expect(shapeNode.enum).toEqual(['assert', 'ingest', 'link', 'link_keyed', 'cascade', 'materialize', 'backfill', 'recorder', 'enrich']);
+    expect(shapeNode.enum).toEqual(['assert', 'ingest', 'link', 'link_column', 'link_keyed', 'cascade', 'materialize', 'backfill', 'recorder', 'enrich']);
     expect(shapeNode['x-frozen'], 'the enum stays frozen — widening it is what costs the re-freeze').toBe(true);
     expect(shapeNode['x-ruling']?.rungs_tried?.length).toBeGreaterThan(0);
     expect((shapeNode['x-ruling']?.why ?? '').length).toBeGreaterThan(0);

@@ -112,7 +112,7 @@ WHERE pipeline LIKE '%link%neighbourhood%' AND status = 'completed';
 
 All **25** commits that ever touched `scripts/link-neighbourhoods.js`, each construct disposed. An agent produced this table; the dispositions are the operator's (Spec 123 §7.1 — the discovering pass may not adjudicate its own fence).
 
-| Commit | Date | What it put in the file | Disposition (preserved-in-runner / preserved-in-validator / preserved-in-compute / encoded-as-descriptor-field / encoded-as-deviation / knowingly-retired) |
+| Commit | Date | What it put in the file | Disposition (preserved-in-runner / preserved-in-validator / encoded-as-descriptor-field / encoded-as-deviation / knowingly-retired) |
 |---|---|---|---|
 | `d398d5e7` | 2026-02-20 | the original linker + Data Quality Dashboard coverage tracking | encoded-as-descriptor-field (`identity`, `outputs.writes[0]`) |
 | `8287291e` | 2026-03-06 | status reset on re-run, `PIPELINE_SUMMARY` | preserved-in-runner (the library owns emitSummary) |
@@ -127,7 +127,7 @@ All **25** commits that ever touched `scripts/link-neighbourhoods.js`, each cons
 | `5baaed5a` | 2026-03-26 | audit_table gaps, UX rendering, phase numbering | encoded-as-descriptor-field (`sharing.varies_by_chain.phase` = `{permits: 8, sources: 10}`) |
 | **`e53cdcf5`** | 2026-03-27 | **FENCE 1** — the link rate becomes CUMULATIVE | encoded-as-descriptor-field (`checks[].link_rate`, `why` cites the sha) |
 | **`b1102cdb`** | 2026-04-01 | **FENCE 3** — composite keyset cursor, UNNEST batching, JSON safety, centroid | knowingly-retired as MECHANISM (it lived in the JS branch), preserved as GUARANTEE — see §3.4 |
-| `7c75e92e` | 2026-04-02 | **PostGIS spatial offloading** — the dual path is born | encoded-as-deviation (LN-D2: the branch is retired, the extension becomes a `guards.requires` precondition) |
+| `7c75e92e` | 2026-04-02 | **PostGIS spatial offloading** — the dual path is born, and its `ST_Contains` containment UPDATE becomes the live write | **preserved-in-compute** — `buildMatchSql`'s `update_sql`, ported verbatim (only the literal 4326 moves, to `guards.srid`, per Rule 3). Grounded in THREE places as G-2 requires: the compute function's own `why` docblock states what may not be tidied and why, `notes.json` carries the branch's fences, and `checks[]` `neighbourhoods_loaded_before_write` is the ordering rule the predicate now runs behind. Its RETIRED sibling branch is separately encoded-as-deviation (LN-D2) |
 | `0f0d4107` | 2026-04-02 | crash bugs, variable scoping, sentinel logic; deferred the parcel-geometry gap | knowingly-retired (LN-D6 — this commit's own deferred follow-up is the substitute now being retired) |
 | `0c6128c6` | 2026-04-02 | lazy-load Turf.js in the dual-path scripts | knowingly-retired (LN-D2) |
 | `89df1961` | 2026-04-02 | move `turfPolygons` construction into the JS fallback block | knowingly-retired (LN-D2) |
@@ -231,6 +231,74 @@ The plan's §② target is *"exactly ONE explained diff — LN-D3's `threshold` 
 | 5 | `link_rate` threshold `'>= 95%'` → `pct >= 95`, rendered value form changes | Rule 3 externalization; the VALUE and the verdict are unchanged (94.83 % → WARN both sides) |
 | 6 | `emitMeta` reads change: `neighbourhoods` gains `geom` and loses `geometry`; `parcels` disappears entirely | **LN-D5** (one corpus) + **LN-D2/LN-D6** (the JS branch's parcel join is retired) |
 | 7 | standalone capture's `records_meta` gains every runner default | generic, shared by every converted step |
+
+### 6.1b THE MEASURED DIFFERENTIAL (commit ②b) — every diff named
+
+`--compare` run on all three pairs. **permits: 58 differences. sources: 58 differences.
+standalone: 60 differences.** Exit 1 on each, as expected — this is a DECLARED
+differential, not a no-op one. Every diff key below is accounted for; there are no others.
+
+The 58/58/60 counts are large but the CAUSES are few: inserting one row at the top of the
+audit table shifts every later row's index, so a single logical change (`neighbourhoods_loaded_before_write`
+is now the first row) renders as ~24 positional `rows` differences across `metric`, `source`,
+`status`, `threshold` and `value`. Counting causes rather than keys, there are **nine**.
+
+**The two PURELY STRUCTURAL buckets, counted explicitly.** A bare array-index diff carries no
+field name of its own, so it can only be accounted for by count, never by citation:
+
+* **24 differences** are `rows` array-index entries (8 per capture, indices 6-13). They are not
+  changes to anything: the pre-conversion table had 8 entries and the converted one has 14, so
+  indices 6 through 13 exist only on the POST side and each whole element reads as added. Those
+  eight are the 2 `invariants[]` + 3 `plausibility[]` entries the R-T addendum renders onto the
+  same table, plus three of the four net-new checks from cause 1.
+
+* **18 differences** are `stdout_lines` array-index entries (6 per capture). The pre-conversion
+  script logged five domain lines of its own (`Loading neighbourhood boundaries...`, `Loaded 158
+  neighbourhoods with geometry`, `Permits to link: 1,493`, `Using PostGIS ST_Contains (fast
+  path)`, `Linking complete`); the frozen shell logs none of them — the library logs its own
+  DB-target line and the runner logs one line naming what it considered and what it stamped. The
+  `Permits to link: 1,493` line disappearing is LN-D6 made visible: that number was always the
+  wider count the surviving write could not act on.
+| # | Cause | Diff keys it produces | Explained by |
+|---|---|---|---|
+| 1 | The audit table grows 6 rows — 14 (9 declared `checks[]` + 2 `invariants[]` + 3 `plausibility[]`), and `neighbourhoods_loaded_before_write` is inserted FIRST | `metric`, `status`, `value`, `threshold`, `source` at every shifted index | G-1/G-2/G-6/G-8 (the four net-new checks) + the R-T addendum (invariants/plausibility rows now ride the same table) |
+| 2 | `polygon_tests_skipped` disappears — both the audit row and the `records_meta` key | `polygon_tests_skipped` | **LN-D8** |
+| 3 | `neighbourhoods_loaded`'s threshold `== 158` — `value_min 158`, and it gains a `warn_threshold` of `value_min 1` | `threshold`, `warn_threshold`, `neighbourhoods_loaded` | **LN-D3** |
+| 4 | `link_rate`'s threshold `>= 95%` — `pct >= 95`, and its value renders as the raw ratio `94.83040908053304` instead of the pre-rounded string `"94.8%"` | `threshold`, `value` | Rule 3 externalization. **The VALUE and the VERDICT are unchanged** — WARN on both sides, same number, different rendering (the library's `pct` form reports `observation.value` raw; `renderValue` no longer pre-formats) |
+| 5 | `emitMeta` reads change: `neighbourhoods` loses `geometry` and gains `geom`; `parcels` disappears entirely | `neighbourhoods`, `parcels` | **LN-D5** (one corpus, `geom` only) + **LN-D2/LN-D6** (the JS branch's `permit_parcels`/`parcels` LEFT JOIN is retired with it). `deriveMeta` builds reads from `inputs.reads.tables`, which declares only `permits` and `neighbourhoods` |
+| 6 | Every runner-default `records_meta` key appears | `terminal`, `config`, `ledger_row`, `checks_failed`, `checks_warned`, `warnings`, `pool_errors`, `code_version` | Generic, shared by every converted step. `code_version` is additionally this step's own self-consumed producer field (`emits[0]`) |
+| 7 | The first audit row carries an `order_guarantee` block | `order_guarantee` | Rule 11 — the `pre_write` gate's declared ordering guarantee is rendered onto its own row |
+| 8 | **standalone only:** the run writes a `pipeline_runs` row where the pre-conversion standalone path wrote none | `pipeline_runs` | The library owns the ledger for a standalone (non-chain) invocation; `ledger_row` reads `"owned"` there and `"chain_owned"` in both chains. The pre-conversion script opened no row on that path at all |
+| 9 | **standalone only:** `audit_table.phase` reads 0 where the pre-conversion emitted 8 | `phase` | `verdict.js`'s `resolvePhase` returns 0 for a standalone run when the declared per-chain map disagrees, and this step's map genuinely does (`{permits: 8, sources: 10}`). Pre-conversion the same run took the `chainId === 'sources' ? 10 : 8` default and silently reported the PERMITS phase for a run belonging to no chain. 0 is the honest answer; the old 8 was a coincidence of the ternary |
+
+**Two RED findings the differential caught, both fixed before this commit** — recorded because
+they are the differential earning its keep, not incidental:
+
+1. **`write_privilege` reported FAIL on a BYPASSRLS superuser.** The first cut of the
+   observer read `p.writable`, a field `write.assertWritePrivileges` never returns — it
+   computes `writable` internally to decide whether to throw, and hands back only the raw
+   probe `{rls_enabled, policies, bypassrls}`. So the check read `undefined === true` —
+   `false` on every database and every role, flipping the run's verdict to **FAIL** and its
+   terminal to `failed_write_privilege`. Fixed to mirror `link_massing`'s own observer and
+   `write.js`'s internal expression exactly. `detail` is now a STRING, not the probe object
+   (LM-D16: an object-valued detail renders as the literal `[object Object]` to operators).
+2. **All three counters read `null`.** `counterScope` in `scripts/lib/step/index.js` is a
+   nested ternary over the phase results, and it did not know `linkColumn` — so it fell
+   through to `null` and `resolveCounterSource` could not resolve `written.e1.*`. The
+   pre-conversion capture reads `0/0/0`; the first POST read `null/null/null`. Fixed by
+   adding the branch. **This is a wiring site the plan's Target Files do not name**, and
+   nothing but the differential would have found it: every gate was green with the counters
+   silently null.
+
+After both fixes the verdict is **WARN on all three captures, identical to PRE**, the
+terminal is `linked_with_warnings`, `checks_failed` is 0, and `records_total/new/updated`
+read `0/0/0` on both sides.
+
+**Unchanged and asserted, not assumed:** `table_state` for `permits` is `254082 rows /
+content_hash a1459447` on BOTH sides of all three pairs, and all 8 invariants read
+identically (orphans 0, negative ids 0, outside-polygon 5138, null-coord 9017,
+unreachable 1493, corpus 158, linked 240947, eligible 0). The step wrote nothing, which is
+the correct answer for an empty eligible set — and is also why §6.2 below still stands.
 
 ### 6.2 The differential will prove nothing about the write — say so out loud
 

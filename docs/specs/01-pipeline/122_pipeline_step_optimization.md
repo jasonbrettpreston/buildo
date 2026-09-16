@@ -1085,6 +1085,8 @@ Today this is **vacuously exercised**: 0 descriptors declare `recovery.reset: "g
 
 **RE-FREEZE #6 — EP-D17 (2026-09-11):** `execution.maintenance.txn_scope` enum gains `"step"` (one enum line + its description; `generate-schema-baseline --check` 0 new fields) so a step-scoped runner can declare the maintenance the library now executes (`runMaintenance`, Spec 122 §4.3). Payment record: `122a_step_optimization_appendix.md` Appendix §A9 (body text under the historical #1-#4 heading). This line exists because the R-E lock requires a §8 text change whenever `schema_sha256` moves.
 
+**RE-FREEZE #9 — the COLUMN-STAMPING LINK runner (2026-09-16, batch-2 I4 `link_neighbourhoods`):** `execution.shape`'s `x-frozen` enum gains a TENTH value, `link_column`, and `phase_runners` gains a NINTH runner, `runLinkColumnPhase` (Ask 1 ruling (B) FORK, re-ruled 2026-09-16). All three share-rungs (`link_keyed`, `link`, `backfill`) were refuted by EXECUTION and are recorded in the `shape` node's own `x-ruling.rungs_tried`, extended rather than overwritten. ⚠️ **The re-freeze is SPLIT across two commits** because `deriveArchetypeProfiles` iterates `converted.json.converted` and never reads `pending`: this commit carries `schema_sha256` + the new `phase_runners` row, and `archetype_profiles[LINK]` + the `template-freeze.infra.test.ts` shapes pin flip land at cutover. Payment record: `122a_step_optimization_appendix.md` Appendix §A9 (after #8).
+
 ### 8.1 Per step — nine commits, each independently revertable
 
 | # | Phase | Gate |

@@ -1,0 +1,547 @@
+{
+  "harness": "scripts/analysis/capture-step-golden.js",
+  "spec": "docs/specs/01-pipeline/122_pipeline_step_optimization.md §5.3",
+  "step": "scripts/link-neighbourhoods.js",
+  "chain": "permits",
+  "git_head": "2ba8e705aed5bc22f01637961564ec62a87cc54a",
+  "exit_code": 0,
+  "signal": null,
+  "summary": {
+    "records_total": 0,
+    "records_new": 0,
+    "records_updated": 0,
+    "records_meta": {
+      "duration_ms": 438,
+      "code_version": "v1-postgis-containment",
+      "permits_processed": 0,
+      "permits_linked": 0,
+      "no_match_count": 0,
+      "neighbourhoods_loaded": 158,
+      "config": {
+        "sources_neighbourhoods_floor": 158,
+        "link_neighbourhoods_link_rate_warn_pct": 95,
+        "link_neighbourhoods_link_rate_fail_pct": 50,
+        "link_neighbourhoods_no_match_warn_count": 0
+      },
+      "terminal": "linked_with_warnings",
+      "ledger_row": "chain_owned",
+      "chain_run_id": null,
+      "pool_errors": 0,
+      "checks_failed": 0,
+      "checks_warned": 4,
+      "warnings": [
+        "link_rate: 94.83040908053304",
+        "linked_permit_outside_its_own_neighbourhood: 5138",
+        "stamped_permits_with_null_coordinates: 9017",
+        "neighbourhood_id_unreachable_no_coords: 1493"
+      ],
+      "audit_table": {
+        "phase": 8,
+        "name": "Neighbourhood Linking",
+        "verdict": "WARN",
+        "rows": [
+          {
+            "metric": "neighbourhoods_loaded_before_write",
+            "value": 158,
+            "threshold": "value_min 158",
+            "status": "PASS",
+            "source": "check",
+            "order_guarantee": {
+              "anchor": "3. Update `permits.neighbourhood_id` (sentinel `-1` for unmatched)",
+              "guarantee": "the neighbourhood polygon corpus is loaded and counted BEFORE any permits.neighbourhood_id write is issued — Spec 60's own numbered contract orders the boundary load (step 1) ahead of the stamp (step 3), and with an empty corpus every eligible permit would be walked, matched against nothing, and left NULL while the run still reported a completed terminal."
+            }
+          },
+          {
+            "metric": "permits_processed",
+            "value": 0,
+            "threshold": "viol == 0",
+            "status": "INFO",
+            "source": "check"
+          },
+          {
+            "metric": "neighbourhoods_loaded",
+            "value": 158,
+            "threshold": "value_min 158",
+            "status": "PASS",
+            "source": "check",
+            "warn_threshold": "value_min 1"
+          },
+          {
+            "metric": "run_linked",
+            "value": 0,
+            "threshold": "viol == 0",
+            "status": "INFO",
+            "source": "check"
+          },
+          {
+            "metric": "link_rate",
+            "value": 94.83040908053304,
+            "threshold": "pct >= 95",
+            "status": "WARN",
+            "source": "check"
+          },
+          {
+            "metric": "link_rate_floor",
+            "value": 94.83040908053304,
+            "threshold": "pct >= 50",
+            "status": "PASS",
+            "source": "check"
+          },
+          {
+            "metric": "no_neighbourhood_match",
+            "value": 0,
+            "threshold": "viol <= 0",
+            "status": "PASS",
+            "source": "check"
+          },
+          {
+            "metric": "sentinel_residue",
+            "value": 0,
+            "threshold": "viol == 0",
+            "status": "PASS",
+            "source": "check"
+          },
+          {
+            "metric": "write_privilege",
+            "value": "bypassrls=true policies=0 rls_enabled=true",
+            "threshold": "viol == 0",
+            "status": "PASS",
+            "source": "check"
+          },
+          {
+            "metric": "neighbourhood_id_orphans",
+            "value": 0,
+            "threshold": "viol == 0",
+            "status": "PASS",
+            "source": "invariant"
+          },
+          {
+            "metric": "negative_neighbourhood_ids",
+            "value": 0,
+            "threshold": "viol == 0",
+            "status": "PASS",
+            "source": "invariant"
+          },
+          {
+            "metric": "linked_permit_outside_its_own_neighbourhood",
+            "value": 5138,
+            "threshold": "viol == 0",
+            "status": "WARN",
+            "source": "plausibility"
+          },
+          {
+            "metric": "stamped_permits_with_null_coordinates",
+            "value": 9017,
+            "threshold": "viol == 0",
+            "status": "WARN",
+            "source": "plausibility"
+          },
+          {
+            "metric": "neighbourhood_id_unreachable_no_coords",
+            "value": 1493,
+            "threshold": "viol == 0",
+            "status": "WARN",
+            "source": "plausibility"
+          },
+          {
+            "metric": "sys_neighbourhood_id_orphans_duration_ms",
+            "value": 55,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "sys_negative_neighbourhood_ids_duration_ms",
+            "value": 29,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "sys_linked_permit_outside_its_own_neighbourhood_duration_ms",
+            "value": 857,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "sys_stamped_permits_with_null_coordinates_duration_ms",
+            "value": 612,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "sys_neighbourhood_id_unreachable_no_coords_duration_ms",
+            "value": 96,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "sys_velocity_rows_sec",
+            "value": 0,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "sys_duration_ms",
+            "value": 1356,
+            "threshold": null,
+            "status": "INFO"
+          }
+        ]
+      }
+    }
+  },
+  "summary_count": 1,
+  "meta": [
+    {
+      "reads": {
+        "permits": [
+          "permit_num",
+          "revision_num",
+          "latitude",
+          "longitude",
+          "neighbourhood_id"
+        ],
+        "neighbourhoods": [
+          "id",
+          "neighbourhood_id",
+          "name",
+          "geom"
+        ]
+      },
+      "writes": {
+        "permits": [
+          "neighbourhood_id"
+        ]
+      }
+    }
+  ],
+  "parse_errors": [],
+  "verdict": "WARN",
+  "ledger_status": [],
+  "stdout": "{\"level\":\"INFO\",\"tag\":\"[link_neighbourhoods]\",\"msg\":\"[link_neighbourhoods] target: link_neighbourhoods (descriptor.database) → database=postgres user=postgres migrations=244 (floor 106)\"}\n{\"level\":\"INFO\",\"tag\":\"[link_neighbourhoods]\",\"msg\":\"permits: considered 0 eligible permit(s), stamped 0\"}\nPIPELINE_SUMMARY:{\"records_total\":0,\"records_new\":0,\"records_updated\":0,\"records_meta\":{\"duration_ms\":438,\"code_version\":\"v1-postgis-containment\",\"permits_processed\":0,\"permits_linked\":0,\"no_match_count\":0,\"neighbourhoods_loaded\":158,\"config\":{\"sources_neighbourhoods_floor\":158,\"link_neighbourhoods_link_rate_warn_pct\":95,\"link_neighbourhoods_link_rate_fail_pct\":50,\"link_neighbourhoods_no_match_warn_count\":0},\"terminal\":\"linked_with_warnings\",\"ledger_row\":\"chain_owned\",\"chain_run_id\":null,\"pool_errors\":0,\"checks_failed\":0,\"checks_warned\":4,\"warnings\":[\"link_rate: 94.83040908053304\",\"linked_permit_outside_its_own_neighbourhood: 5138\",\"stamped_permits_with_null_coordinates: 9017\",\"neighbourhood_id_unreachable_no_coords: 1493\"],\"audit_table\":{\"phase\":8,\"name\":\"Neighbourhood Linking\",\"verdict\":\"WARN\",\"rows\":[{\"metric\":\"neighbourhoods_loaded_before_write\",\"value\":158,\"threshold\":\"value_min 158\",\"status\":\"PASS\",\"source\":\"check\",\"order_guarantee\":{\"anchor\":\"3. Update `permits.neighbourhood_id` (sentinel `-1` for unmatched)\",\"guarantee\":\"the neighbourhood polygon corpus is loaded and counted BEFORE any permits.neighbourhood_id write is issued — Spec 60's own numbered contract orders the boundary load (step 1) ahead of the stamp (step 3), and with an empty corpus every eligible permit would be walked, matched against nothing, and left NULL while the run still reported a completed terminal.\"}},{\"metric\":\"permits_processed\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"neighbourhoods_loaded\",\"value\":158,\"threshold\":\"value_min 158\",\"status\":\"PASS\",\"source\":\"check\",\"warn_threshold\":\"value_min 1\"},{\"metric\":\"run_linked\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"link_rate\",\"value\":94.83040908053304,\"threshold\":\"pct >= 95\",\"status\":\"WARN\",\"source\":\"check\"},{\"metric\":\"link_rate_floor\",\"value\":94.83040908053304,\"threshold\":\"pct >= 50\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"no_neighbourhood_match\",\"value\":0,\"threshold\":\"viol <= 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"sentinel_residue\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"write_privilege\",\"value\":\"bypassrls=true policies=0 rls_enabled=true\",\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"neighbourhood_id_orphans\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"invariant\"},{\"metric\":\"negative_neighbourhood_ids\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"invariant\"},{\"metric\":\"linked_permit_outside_its_own_neighbourhood\",\"value\":5138,\"threshold\":\"viol == 0\",\"status\":\"WARN\",\"source\":\"plausibility\"},{\"metric\":\"stamped_permits_with_null_coordinates\",\"value\":9017,\"threshold\":\"viol == 0\",\"status\":\"WARN\",\"source\":\"plausibility\"},{\"metric\":\"neighbourhood_id_unreachable_no_coords\",\"value\":1493,\"threshold\":\"viol == 0\",\"status\":\"WARN\",\"source\":\"plausibility\"},{\"metric\":\"sys_neighbourhood_id_orphans_duration_ms\",\"value\":55,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_negative_neighbourhood_ids_duration_ms\",\"value\":29,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_linked_permit_outside_its_own_neighbourhood_duration_ms\",\"value\":857,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_stamped_permits_with_null_coordinates_duration_ms\",\"value\":612,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_neighbourhood_id_unreachable_no_coords_duration_ms\",\"value\":96,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":1356,\"threshold\":null,\"status\":\"INFO\"}]}}}\nPIPELINE_META:{\"reads\":{\"permits\":[\"permit_num\",\"revision_num\",\"latitude\",\"longitude\",\"neighbourhood_id\"],\"neighbourhoods\":[\"id\",\"neighbourhood_id\",\"name\",\"geom\"]},\"writes\":{\"permits\":[\"neighbourhood_id\"]}}\n\n[link_neighbourhoods] completed in 1.4s\n",
+  "stderr": "",
+  "pipeline_runs": [],
+  "pipeline_runs_max_id_before": 1884,
+  "table_state": [
+    {
+      "table": "permits",
+      "row_count": 254082,
+      "ceiling_bypassed": "projected",
+      "content_hash": "a145944703342bee31f9d320fadb3121",
+      "order_by": "explicit",
+      "order_columns": [
+        "permit_num",
+        "revision_num"
+      ],
+      "columns": [
+        "permit_num",
+        "revision_num",
+        "neighbourhood_id"
+      ]
+    }
+  ],
+  "tables_source": "descriptor",
+  "table_row_ceiling": 100000,
+  "table_timing": {
+    "permits": 1435
+  },
+  "table_specs": {
+    "permits": {
+      "columns": [
+        "permit_num",
+        "revision_num",
+        "neighbourhood_id"
+      ],
+      "columns_source": "descriptor",
+      "order": [
+        "permit_num",
+        "revision_num"
+      ],
+      "order_source": "descriptor"
+    }
+  },
+  "invariants": [
+    {
+      "name": "neighbourhood_id_orphans",
+      "value": "0"
+    },
+    {
+      "name": "negative_neighbourhood_ids",
+      "value": "0"
+    },
+    {
+      "name": "linked_permit_outside_its_own_neighbourhood",
+      "value": "5138"
+    },
+    {
+      "name": "stamped_permits_with_null_coordinates",
+      "value": "9017"
+    },
+    {
+      "name": "neighbourhood_id_unreachable_no_coords",
+      "value": "1493"
+    },
+    {
+      "name": "neighbourhoods_geom_corpus",
+      "value": "158"
+    },
+    {
+      "name": "permits_linked_cumulative",
+      "value": "240947"
+    },
+    {
+      "name": "permits_eligible_scope",
+      "value": "0"
+    }
+  ],
+  "invariants_file": "docs/reports/golden/link_neighbourhoods/invariants.json",
+  "db_target": "postgresql://postgres:***@127.0.0.1:54322/postgres",
+  "runtime": "node",
+  "args": [],
+  "nondeterminism": [
+    "key:summary.records_meta.chain_run_id",
+    "key:summary.records_meta.duration_ms",
+    "pattern:duration_literal",
+    "row:sys_duration_ms",
+    "row:sys_linked_permit_outside_its_own_neighbourhood_duration_ms",
+    "row:sys_negative_neighbourhood_ids_duration_ms",
+    "row:sys_neighbourhood_id_orphans_duration_ms",
+    "row:sys_neighbourhood_id_unreachable_no_coords_duration_ms",
+    "row:sys_stamped_permits_with_null_coordinates_duration_ms",
+    "row:sys_velocity_rows_sec"
+  ],
+  "normalised": {
+    "step": "scripts/link-neighbourhoods.js",
+    "chain": "permits",
+    "exit_code": 0,
+    "summary": {
+      "records_meta": {
+        "audit_table": {
+          "name": "Neighbourhood Linking",
+          "phase": 8,
+          "rows": [
+            {
+              "metric": "neighbourhoods_loaded_before_write",
+              "order_guarantee": {
+                "anchor": "3. Update `permits.neighbourhood_id` (sentinel `-1` for unmatched)",
+                "guarantee": "the neighbourhood polygon corpus is loaded and counted BEFORE any permits.neighbourhood_id write is issued — Spec 60's own numbered contract orders the boundary load (step 1) ahead of the stamp (step 3), and with an empty corpus every eligible permit would be walked, matched against nothing, and left NULL while the run still reported a completed terminal."
+              },
+              "source": "check",
+              "status": "PASS",
+              "threshold": "value_min 158",
+              "value": 158
+            },
+            {
+              "metric": "permits_processed",
+              "source": "check",
+              "status": "INFO",
+              "threshold": "viol == 0",
+              "value": 0
+            },
+            {
+              "metric": "neighbourhoods_loaded",
+              "source": "check",
+              "status": "PASS",
+              "threshold": "value_min 158",
+              "value": 158,
+              "warn_threshold": "value_min 1"
+            },
+            {
+              "metric": "run_linked",
+              "source": "check",
+              "status": "INFO",
+              "threshold": "viol == 0",
+              "value": 0
+            },
+            {
+              "metric": "link_rate",
+              "source": "check",
+              "status": "WARN",
+              "threshold": "pct >= 95",
+              "value": 94.83040908053304
+            },
+            {
+              "metric": "link_rate_floor",
+              "source": "check",
+              "status": "PASS",
+              "threshold": "pct >= 50",
+              "value": 94.83040908053304
+            },
+            {
+              "metric": "no_neighbourhood_match",
+              "source": "check",
+              "status": "PASS",
+              "threshold": "viol <= 0",
+              "value": 0
+            },
+            {
+              "metric": "sentinel_residue",
+              "source": "check",
+              "status": "PASS",
+              "threshold": "viol == 0",
+              "value": 0
+            },
+            {
+              "metric": "write_privilege",
+              "source": "check",
+              "status": "PASS",
+              "threshold": "viol == 0",
+              "value": "bypassrls=true policies=0 rls_enabled=true"
+            },
+            {
+              "metric": "neighbourhood_id_orphans",
+              "source": "invariant",
+              "status": "PASS",
+              "threshold": "viol == 0",
+              "value": 0
+            },
+            {
+              "metric": "negative_neighbourhood_ids",
+              "source": "invariant",
+              "status": "PASS",
+              "threshold": "viol == 0",
+              "value": 0
+            },
+            {
+              "metric": "linked_permit_outside_its_own_neighbourhood",
+              "source": "plausibility",
+              "status": "WARN",
+              "threshold": "viol == 0",
+              "value": 5138
+            },
+            {
+              "metric": "stamped_permits_with_null_coordinates",
+              "source": "plausibility",
+              "status": "WARN",
+              "threshold": "viol == 0",
+              "value": 9017
+            },
+            {
+              "metric": "neighbourhood_id_unreachable_no_coords",
+              "source": "plausibility",
+              "status": "WARN",
+              "threshold": "viol == 0",
+              "value": 1493
+            }
+          ],
+          "verdict": "WARN"
+        },
+        "checks_failed": 0,
+        "checks_warned": 4,
+        "code_version": "v1-postgis-containment",
+        "config": {
+          "link_neighbourhoods_link_rate_fail_pct": 50,
+          "link_neighbourhoods_link_rate_warn_pct": 95,
+          "link_neighbourhoods_no_match_warn_count": 0,
+          "sources_neighbourhoods_floor": 158
+        },
+        "ledger_row": "chain_owned",
+        "neighbourhoods_loaded": 158,
+        "no_match_count": 0,
+        "permits_linked": 0,
+        "permits_processed": 0,
+        "pool_errors": 0,
+        "terminal": "linked_with_warnings",
+        "warnings": [
+          "link_rate: 94.83040908053304",
+          "linked_permit_outside_its_own_neighbourhood: 5138",
+          "stamped_permits_with_null_coordinates: 9017",
+          "neighbourhood_id_unreachable_no_coords: 1493"
+        ]
+      },
+      "records_new": 0,
+      "records_total": 0,
+      "records_updated": 0
+    },
+    "summary_count": 1,
+    "meta": [
+      {
+        "reads": {
+          "neighbourhoods": [
+            "id",
+            "neighbourhood_id",
+            "name",
+            "geom"
+          ],
+          "permits": [
+            "permit_num",
+            "revision_num",
+            "latitude",
+            "longitude",
+            "neighbourhood_id"
+          ]
+        },
+        "writes": {
+          "permits": [
+            "neighbourhood_id"
+          ]
+        }
+      }
+    ],
+    "parse_errors": [],
+    "pipeline_runs": [],
+    "stdout_lines": [
+      "{\"level\":\"INFO\",\"msg\":\"[link_neighbourhoods] target: link_neighbourhoods (descriptor.database) → database=postgres user=postgres migrations=244 (floor 106)\",\"tag\":\"[link_neighbourhoods]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"permits: considered 0 eligible permit(s), stamped 0\",\"tag\":\"[link_neighbourhoods]\"}",
+      "[link_neighbourhoods] completed in <DUR>"
+    ],
+    "table_state": [
+      {
+        "ceiling_bypassed": "projected",
+        "columns": [
+          "permit_num",
+          "revision_num",
+          "neighbourhood_id"
+        ],
+        "content_hash": "a145944703342bee31f9d320fadb3121",
+        "order_by": "explicit",
+        "order_columns": [
+          "permit_num",
+          "revision_num"
+        ],
+        "row_count": 254082,
+        "table": "permits"
+      }
+    ],
+    "invariants": [
+      {
+        "name": "neighbourhood_id_orphans",
+        "value": "0"
+      },
+      {
+        "name": "negative_neighbourhood_ids",
+        "value": "0"
+      },
+      {
+        "name": "linked_permit_outside_its_own_neighbourhood",
+        "value": "5138"
+      },
+      {
+        "name": "stamped_permits_with_null_coordinates",
+        "value": "9017"
+      },
+      {
+        "name": "neighbourhood_id_unreachable_no_coords",
+        "value": "1493"
+      },
+      {
+        "name": "neighbourhoods_geom_corpus",
+        "value": "158"
+      },
+      {
+        "name": "permits_linked_cumulative",
+        "value": "240947"
+      },
+      {
+        "name": "permits_eligible_scope",
+        "value": "0"
+      }
+    ]
+  },
+  "source_fingerprint": "2b17cf8060cf3a937e8fde9eef55d4e57dd27b337e339774ea697a83f395a107",
+  "fingerprint_files": [
+    "scripts/lib/compute/link-neighbourhoods.js",
+    "scripts/link-neighbourhoods.descriptor.json",
+    "scripts/link-neighbourhoods.js",
+    "scripts/link-neighbourhoods.notes.json"
+  ]
+}

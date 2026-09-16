@@ -715,7 +715,8 @@ describe('PIPELINE_SUMMARY convention', () => {
     'classify-permits.js',
     'classify-scope.js',
     'geocode-permits.js',
-    'link-neighbourhoods.js',
+    // link-neighbourhoods.js RE-HOMED (Spec 122 §5.1 conversion, batch-2 I4, 2026-09-16)
+    // alongside the five below.
     // link-massing.js / link-wsib.js / compute-centroids.js / link-parcels.js /
     // refresh-snapshot.js RE-HOMED (Spec 122 §5.1 conversion, pilots 3 + 4 + 6 + 7
     // + 8) — same treatment as assert_schema at pilot 1: a converted step spells
@@ -932,7 +933,8 @@ describe('PIPELINE_META convention', () => {
     'classify-permits.js',
     'classify-scope.js',
     'geocode-permits.js',
-    'link-neighbourhoods.js',
+    // link-neighbourhoods.js RE-HOMED (Spec 122 §5.1 conversion, batch-2 I4, 2026-09-16)
+    // alongside the five below.
     // link-massing.js / link-wsib.js / compute-centroids.js / link-parcels.js /
     // refresh-snapshot.js RE-HOMED (Spec 122 §5.1 conversion, pilots 3 + 4 + 6 + 7
     // + 8) — same treatment as assert_schema at pilot 1: a converted step spells
@@ -1571,12 +1573,41 @@ describe('§11 Counter Semantic Contract — emitSummary uses primary-entity cou
     expect(content).toContain('zombies_cleaned');
   });
 
-  it('link-neighbourhoods: records_updated uses `linked` only, not linked + noMatch', () => {
-    const content = src('link-neighbourhoods.js');
-    // Must NOT sum failures into records_updated
-    expect(content).not.toMatch(/records_updated\s*:\s*linked\s*\+\s*noMatch/);
-    // Must have no_neighbourhood_match in audit_table
-    expect(content).toContain('no_neighbourhood_match');
+  // RE-HOMED at the I4 conversion (2026-09-16), and the re-homing is the point.
+  //
+  // This assertion used to read `scripts/link-neighbourhoods.js` AS TEXT. The conversion
+  // empties that file (375 lines -> a require + `pipeline.step()`), so the original
+  // `not.toMatch(/records_updated\s*:\s*linked\s*\+\s*noMatch/)` would have passed because
+  // the string it hunts STOPPED EXISTING, not because fence e37eaab9's contract still
+  // holds — a lock that outlives the code it polices and reports green forever. Found by
+  // the Regression Guardian at the I4 plan panel; link_neighbourhoods is the FIRST
+  // converted step to appear in this describe block, so this is the re-homing precedent.
+  //
+  // The contract is unchanged: a FAILURE count may never be summed into a generic success
+  // counter. What changes is where it is READ FROM — the descriptor's own declaration
+  // rather than the script's source text. `written.e1.updated` is the single
+  // `set_based_join_update` target's own updated count, which structurally cannot absorb
+  // the no-match tail (there is exactly ONE write target now that the `-1` sentinel UPDATE
+  // is retired, LN-D1), and the tail reports through its OWN declared row.
+  it('link-neighbourhoods: records_updated counts LINKED permits only, never linked + noMatch (fence e37eaab9, re-homed onto the descriptor at conversion)', () => {
+    const descriptor = JSON.parse(
+      fs.readFileSync(path.resolve(__dirname, '../../scripts/link-neighbourhoods.descriptor.json'), 'utf-8'),
+    ) as {
+      counters: { records_updated: { source: string; why?: { text: string } } };
+      outputs: { writes: Array<{ write_discipline: { class: string } }> };
+      checks: Array<{ id: string }>;
+    };
+    // The success counter comes from the ONE write target's own updated count.
+    expect(descriptor.counters.records_updated.source).toBe('written.e1.updated');
+    // ONE target, and it is the class that cannot INSERT — so `updated` can only ever be
+    // rows this step's containment join actually stamped.
+    expect(descriptor.outputs.writes).toHaveLength(1);
+    expect(descriptor.outputs.writes[0]?.write_discipline.class).toBe('set_based_join_update');
+    // The failure population still has its own declared row, as the original assertion's
+    // `toContain('no_neighbourhood_match')` half required.
+    expect(descriptor.checks.map((c) => c.id)).toContain('no_neighbourhood_match');
+    // And the fence is cited where a future editor will actually look.
+    expect(descriptor.counters.records_updated.why?.text ?? '').toContain('e37eaab9');
   });
 
   it('classify-permits: records_updated uses permitsWithTrades (permit count), not dbUpdated (permit_trades rows)', () => {
