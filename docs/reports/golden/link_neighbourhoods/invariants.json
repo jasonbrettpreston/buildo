@@ -1,0 +1,34 @@
+[
+  {
+    "name": "neighbourhood_id_orphans",
+    "sql": "SELECT count(*)::int FROM permits p WHERE p.neighbourhood_id IS NOT NULL AND NOT EXISTS (SELECT 1 FROM neighbourhoods n WHERE n.id = p.neighbourhood_id)"
+  },
+  {
+    "name": "negative_neighbourhood_ids",
+    "sql": "SELECT count(*)::int FROM permits WHERE neighbourhood_id < 0"
+  },
+  {
+    "name": "linked_permit_outside_its_own_neighbourhood",
+    "sql": "SELECT count(*)::int FROM permits p JOIN neighbourhoods n ON n.id = p.neighbourhood_id WHERE p.latitude IS NOT NULL AND p.longitude IS NOT NULL AND n.geom IS NOT NULL AND NOT ST_Contains(n.geom, ST_SetSRID(ST_MakePoint(p.longitude::float, p.latitude::float), 4326))"
+  },
+  {
+    "name": "stamped_permits_with_null_coordinates",
+    "sql": "SELECT count(*)::int FROM permits WHERE neighbourhood_id IS NOT NULL AND (latitude IS NULL OR longitude IS NULL)"
+  },
+  {
+    "name": "neighbourhood_id_unreachable_no_coords",
+    "sql": "SELECT count(*)::int FROM permits p WHERE p.neighbourhood_id IS NULL AND (p.latitude IS NULL OR p.longitude IS NULL) AND EXISTS (SELECT 1 FROM permit_parcels pp JOIN parcels pa ON pa.id = pp.parcel_id WHERE pp.permit_num = p.permit_num AND pp.revision_num = p.revision_num AND pa.geometry IS NOT NULL)"
+  },
+  {
+    "name": "neighbourhoods_geom_corpus",
+    "sql": "SELECT count(*)::int FROM neighbourhoods WHERE geom IS NOT NULL"
+  },
+  {
+    "name": "permits_linked_cumulative",
+    "sql": "SELECT count(*)::int FROM permits WHERE neighbourhood_id IS NOT NULL"
+  },
+  {
+    "name": "permits_eligible_scope",
+    "sql": "SELECT count(*)::int FROM permits WHERE neighbourhood_id IS NULL AND latitude IS NOT NULL AND longitude IS NOT NULL"
+  }
+]

@@ -1,0 +1,350 @@
+{
+  "harness": "scripts/analysis/capture-step-golden.js",
+  "spec": "docs/specs/01-pipeline/122_pipeline_step_optimization.md §5.3",
+  "step": "scripts/link-neighbourhoods.js",
+  "chain": "permits",
+  "git_head": "2f704d8f58ab086c7bc90a9fe0b7b2ef374f1317",
+  "exit_code": 0,
+  "signal": null,
+  "summary": {
+    "records_total": 0,
+    "records_new": 0,
+    "records_updated": 0,
+    "records_meta": {
+      "duration_ms": 341,
+      "permits_processed": 0,
+      "permits_linked": 0,
+      "no_match_count": 0,
+      "polygon_tests_skipped": 0,
+      "audit_table": {
+        "phase": 8,
+        "name": "Neighbourhood Linking",
+        "verdict": "WARN",
+        "rows": [
+          {
+            "metric": "permits_processed",
+            "value": 0,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "neighbourhoods_loaded",
+            "value": 158,
+            "threshold": "== 158",
+            "status": "PASS"
+          },
+          {
+            "metric": "run_linked",
+            "value": 0,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "link_rate",
+            "value": "94.8%",
+            "threshold": ">= 95%",
+            "status": "WARN"
+          },
+          {
+            "metric": "no_neighbourhood_match",
+            "value": 0,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "polygon_tests_skipped",
+            "value": 0,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "sys_velocity_rows_sec",
+            "value": 0,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "sys_duration_ms",
+            "value": 482,
+            "threshold": null,
+            "status": "INFO"
+          }
+        ]
+      }
+    }
+  },
+  "summary_count": 1,
+  "meta": [
+    {
+      "reads": {
+        "permits": [
+          "permit_num",
+          "revision_num",
+          "latitude",
+          "longitude",
+          "neighbourhood_id"
+        ],
+        "neighbourhoods": [
+          "id",
+          "neighbourhood_id",
+          "name",
+          "geometry"
+        ],
+        "parcels": [
+          "id",
+          "geometry"
+        ]
+      },
+      "writes": {
+        "permits": [
+          "neighbourhood_id"
+        ]
+      }
+    }
+  ],
+  "parse_errors": [],
+  "verdict": "WARN",
+  "ledger_status": [],
+  "stdout": "{\"level\":\"INFO\",\"tag\":\"[link-neighbourhoods]\",\"msg\":\"Loading neighbourhood boundaries...\"}\n{\"level\":\"INFO\",\"tag\":\"[link-neighbourhoods]\",\"msg\":\"Loaded 158 neighbourhoods with geometry\"}\n{\"level\":\"INFO\",\"tag\":\"[link-neighbourhoods]\",\"msg\":\"Permits to link: 1,493\"}\n{\"level\":\"INFO\",\"tag\":\"[link-neighbourhoods]\",\"msg\":\"Using PostGIS ST_Contains (fast path)\"}\n{\"level\":\"INFO\",\"tag\":\"[link-neighbourhoods]\",\"msg\":\"Linking complete\",\"context\":{\"permits_processed\":0,\"permits_linked\":0,\"no_match\":0,\"polygon_tests_skipped\":0,\"duration\":\"0.3s\"}}\nPIPELINE_SUMMARY:{\"records_total\":0,\"records_new\":0,\"records_updated\":0,\"records_meta\":{\"duration_ms\":341,\"permits_processed\":0,\"permits_linked\":0,\"no_match_count\":0,\"polygon_tests_skipped\":0,\"audit_table\":{\"phase\":8,\"name\":\"Neighbourhood Linking\",\"verdict\":\"WARN\",\"rows\":[{\"metric\":\"permits_processed\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"neighbourhoods_loaded\",\"value\":158,\"threshold\":\"== 158\",\"status\":\"PASS\"},{\"metric\":\"run_linked\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"link_rate\",\"value\":\"94.8%\",\"threshold\":\">= 95%\",\"status\":\"WARN\"},{\"metric\":\"no_neighbourhood_match\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"polygon_tests_skipped\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":482,\"threshold\":null,\"status\":\"INFO\"}]}}}\nPIPELINE_META:{\"reads\":{\"permits\":[\"permit_num\",\"revision_num\",\"latitude\",\"longitude\",\"neighbourhood_id\"],\"neighbourhoods\":[\"id\",\"neighbourhood_id\",\"name\",\"geometry\"],\"parcels\":[\"id\",\"geometry\"]},\"writes\":{\"permits\":[\"neighbourhood_id\"]}}\n\n[link-neighbourhoods] completed in 0.5s\n",
+  "stderr": "",
+  "pipeline_runs": [],
+  "pipeline_runs_max_id_before": 1884,
+  "table_state": [
+    {
+      "table": "permits",
+      "row_count": 254082,
+      "ceiling_bypassed": "projected",
+      "content_hash": "a145944703342bee31f9d320fadb3121",
+      "order_by": "explicit",
+      "order_columns": [
+        "permit_num",
+        "revision_num"
+      ],
+      "columns": [
+        "permit_num",
+        "revision_num",
+        "neighbourhood_id"
+      ]
+    }
+  ],
+  "tables_source": "descriptor",
+  "table_row_ceiling": 100000,
+  "table_timing": {
+    "permits": 1218
+  },
+  "table_specs": {
+    "permits": {
+      "columns": [
+        "permit_num",
+        "revision_num",
+        "neighbourhood_id"
+      ],
+      "columns_source": "descriptor",
+      "order": [
+        "permit_num",
+        "revision_num"
+      ],
+      "order_source": "descriptor"
+    }
+  },
+  "invariants": [
+    {
+      "name": "neighbourhood_id_orphans",
+      "value": "0"
+    },
+    {
+      "name": "negative_neighbourhood_ids",
+      "value": "0"
+    },
+    {
+      "name": "linked_permit_outside_its_own_neighbourhood",
+      "value": "5138"
+    },
+    {
+      "name": "stamped_permits_with_null_coordinates",
+      "value": "9017"
+    },
+    {
+      "name": "neighbourhood_id_unreachable_no_coords",
+      "value": "1493"
+    },
+    {
+      "name": "neighbourhoods_geom_corpus",
+      "value": "158"
+    },
+    {
+      "name": "permits_linked_cumulative",
+      "value": "240947"
+    },
+    {
+      "name": "permits_eligible_scope",
+      "value": "0"
+    }
+  ],
+  "invariants_file": "docs/reports/golden/link_neighbourhoods/invariants.json",
+  "db_target": "postgresql://postgres:***@127.0.0.1:54322/postgres",
+  "runtime": "node",
+  "args": [],
+  "nondeterminism": [
+    "key:summary.records_meta.duration_ms",
+    "pattern:duration_literal",
+    "row:sys_duration_ms",
+    "row:sys_velocity_rows_sec"
+  ],
+  "normalised": {
+    "step": "scripts/link-neighbourhoods.js",
+    "chain": "permits",
+    "exit_code": 0,
+    "summary": {
+      "records_meta": {
+        "audit_table": {
+          "name": "Neighbourhood Linking",
+          "phase": 8,
+          "rows": [
+            {
+              "metric": "permits_processed",
+              "status": "INFO",
+              "threshold": null,
+              "value": 0
+            },
+            {
+              "metric": "neighbourhoods_loaded",
+              "status": "PASS",
+              "threshold": "== 158",
+              "value": 158
+            },
+            {
+              "metric": "run_linked",
+              "status": "INFO",
+              "threshold": null,
+              "value": 0
+            },
+            {
+              "metric": "link_rate",
+              "status": "WARN",
+              "threshold": ">= 95%",
+              "value": "94.8%"
+            },
+            {
+              "metric": "no_neighbourhood_match",
+              "status": "INFO",
+              "threshold": null,
+              "value": 0
+            },
+            {
+              "metric": "polygon_tests_skipped",
+              "status": "INFO",
+              "threshold": null,
+              "value": 0
+            }
+          ],
+          "verdict": "WARN"
+        },
+        "no_match_count": 0,
+        "permits_linked": 0,
+        "permits_processed": 0,
+        "polygon_tests_skipped": 0
+      },
+      "records_new": 0,
+      "records_total": 0,
+      "records_updated": 0
+    },
+    "summary_count": 1,
+    "meta": [
+      {
+        "reads": {
+          "neighbourhoods": [
+            "id",
+            "neighbourhood_id",
+            "name",
+            "geometry"
+          ],
+          "parcels": [
+            "id",
+            "geometry"
+          ],
+          "permits": [
+            "permit_num",
+            "revision_num",
+            "latitude",
+            "longitude",
+            "neighbourhood_id"
+          ]
+        },
+        "writes": {
+          "permits": [
+            "neighbourhood_id"
+          ]
+        }
+      }
+    ],
+    "parse_errors": [],
+    "pipeline_runs": [],
+    "stdout_lines": [
+      "{\"level\":\"INFO\",\"msg\":\"Loading neighbourhood boundaries...\",\"tag\":\"[link-neighbourhoods]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"Loaded 158 neighbourhoods with geometry\",\"tag\":\"[link-neighbourhoods]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"Permits to link: 1,493\",\"tag\":\"[link-neighbourhoods]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"Using PostGIS ST_Contains (fast path)\",\"tag\":\"[link-neighbourhoods]\"}",
+      "{\"context\":{\"duration\":\"<DUR>\",\"no_match\":0,\"permits_linked\":0,\"permits_processed\":0,\"polygon_tests_skipped\":0},\"level\":\"INFO\",\"msg\":\"Linking complete\",\"tag\":\"[link-neighbourhoods]\"}",
+      "[link-neighbourhoods] completed in <DUR>"
+    ],
+    "table_state": [
+      {
+        "ceiling_bypassed": "projected",
+        "columns": [
+          "permit_num",
+          "revision_num",
+          "neighbourhood_id"
+        ],
+        "content_hash": "a145944703342bee31f9d320fadb3121",
+        "order_by": "explicit",
+        "order_columns": [
+          "permit_num",
+          "revision_num"
+        ],
+        "row_count": 254082,
+        "table": "permits"
+      }
+    ],
+    "invariants": [
+      {
+        "name": "neighbourhood_id_orphans",
+        "value": "0"
+      },
+      {
+        "name": "negative_neighbourhood_ids",
+        "value": "0"
+      },
+      {
+        "name": "linked_permit_outside_its_own_neighbourhood",
+        "value": "5138"
+      },
+      {
+        "name": "stamped_permits_with_null_coordinates",
+        "value": "9017"
+      },
+      {
+        "name": "neighbourhood_id_unreachable_no_coords",
+        "value": "1493"
+      },
+      {
+        "name": "neighbourhoods_geom_corpus",
+        "value": "158"
+      },
+      {
+        "name": "permits_linked_cumulative",
+        "value": "240947"
+      },
+      {
+        "name": "permits_eligible_scope",
+        "value": "0"
+      }
+    ]
+  },
+  "source_fingerprint": "c62462be7ac664f0848cc11ea866aa7a5e6790c4247436632579d08ee25b8aae",
+  "fingerprint_files": [
+    "scripts/link-neighbourhoods.descriptor.json",
+    "scripts/link-neighbourhoods.js",
+    "scripts/link-neighbourhoods.notes.json"
+  ]
+}
