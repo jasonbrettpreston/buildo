@@ -99,7 +99,16 @@ const CORPUS_FILTER = 'geom IS NOT NULL';
  *   a declared FULL mode would be a capability the descriptor does not promise.
  */
 function buildMatchSql(descriptor, config, mode) {
-  const srid = descriptor.guards.srid;
+  // Coerced, though the REAL guard is the schema: `guards.srid` is `{"anyOf": [{"const":
+  // "none"}, {"type": "integer"}]}` in step.schema.json, and `validateDescriptor` runs before
+  // any statement is built, so a string payload cannot reach here. An output-panel lens
+  // proposed `4326)) OR TRUE --` as an injection that would stamp every permit; it is
+  // REFUTED by that schema type, not by this line. The coercion is defence-in-depth and a
+  // place to record the constraint, since this is the one value interpolated as TEXT.
+  const srid = Number(descriptor.guards.srid);
+  if (!Number.isInteger(srid)) {
+    throw new Error(`[link_neighbourhoods] guards.srid must be an integer, got ${JSON.stringify(descriptor.guards.srid)}`);
+  }
   return {
     // The polygon corpus, counted BEFORE the write — the `pre_write` gate's subject.
     // Pre-conversion this number was taken at :80 and only REPORTED at :343, after every
@@ -143,6 +152,30 @@ function buildMatchSql(descriptor, config, mode) {
 // Pure helpers
 // ===========================================================================
 
+/**
+ * Read one scalar out of a result row, refusing to invent a value.
+ *
+ * ⚠️ NOT `Number(row.x) || 0`. Three output-panel lenses independently flagged that idiom
+ * here and they were right: it collapses THREE different situations into the same
+ * plausible number — a renamed or misspelled SQL alias (`undefined`), a genuine zero, and
+ * a NaN. The `neighbourhoods_loaded` FAIL check exists specifically to fire when the corpus
+ * is 0, and `Number(row.neighbourhoods_loaded) || neighbourhoodsLoaded` would have
+ * substituted the PRE-write count for a legitimate post-write 0, so the check could never
+ * have fired — a guard that structurally never excludes anything, the CC-D3 failure shape
+ * relocated. A missing key is a compute/SQL defect and throws; a real 0 is returned as 0.
+ */
+function scalar(row, key) {
+  const v = row ? row[key] : undefined;
+  if (v === undefined || v === null) {
+    throw new Error(`[link_neighbourhoods] cumulative query returned no "${key}" column — the SQL alias and the reader disagree`);
+  }
+  const n = Number(v);
+  if (!Number.isFinite(n)) {
+    throw new Error(`[link_neighbourhoods] "${key}" is not a finite number: ${JSON.stringify(v)}`);
+  }
+  return n;
+}
+
 /** A percentage, or 0 when the denominator is not positive — the pre-conversion form at :338. */
 function linkRatePct(linked, total) {
   return total > 0 ? (linked / total) * 100 : 0;
@@ -170,7 +203,15 @@ function target(ctx) {
  * be a second source of truth.
  */
 function neighbourhoods_loaded_before_write(ctx) {
-  ctx.report('neighbourhoods_loaded_before_write', { value: ctx.matched.neighbourhoods_loaded });
+  // ⚠️ READS ITS OWN PRESERVED FIELD, never `neighbourhoods_loaded`. This check is scored
+  // TWICE on a writing run — once by the pre_write gate (with `ctx.checks` narrowed to the
+  // pre_write ids) and once in the final pass over the full selection. The first cut read
+  // `ctx.matched.neighbourhoods_loaded`, which the runner OVERWRITES with the post-write
+  // count after the statement — so a row whose id asserts a before-write reading published
+  // the after-write one. Invisible on the measured estate (the corpus is 158 on both sides)
+  // and a lie the moment the corpus moves mid-run, which is exactly when this row matters.
+  // Found by the output panel; the runner now keeps the two measurements in two fields.
+  ctx.report('neighbourhoods_loaded_before_write', { value: ctx.matched.neighbourhoods_loaded_before_write });
 }
 
 function permits_processed(ctx) {
@@ -347,3 +388,6 @@ module.exports.buildLinkMeta = buildLinkMeta;
 module.exports.ELIGIBLE_SCOPE = ELIGIBLE_SCOPE;
 module.exports.CORPUS_FILTER = CORPUS_FILTER;
 module.exports.linkRatePct = linkRatePct;
+// The runner reads its own post-write scalars through this, so "a missing column" and
+// "a measured zero" can never render as the same number on either side of the seam.
+module.exports.scalar = scalar;

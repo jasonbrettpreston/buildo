@@ -1775,9 +1775,15 @@ async function runMaterializePhase({ descriptor, pool, compute, config, chainId,
  *
  * ⚠️ NO TRANSACTION WRAPPER, and that is the declaration, not an omission.
  * `execution.txn_scope` and the target's own `write_discipline.txn_scope` are both
- * `"statement"`: a single server-side statement IS its own transaction, so a kill rolls it
- * back whole and leaves `permits` completely untouched — which is what makes
- * `recovery.interrupted: "none"` truthful here rather than merely convenient. The executor
+ * `"statement"`: a single server-side statement IS its own transaction, so it either commits
+ * whole or rolls back whole — there is no partial state for a recovery posture to describe,
+ * which is what makes `recovery.interrupted: "none"` truthful here rather than merely
+ * convenient. NOT, however, "a kill leaves `permits` untouched": killing the NODE CLIENT does
+ * not cancel the server-side statement (tasks/lessons.md, 2026-05-31 — Postgres only notices
+ * a dead client when it next tries to send results), so a SIGKILL mid-UPDATE can still COMMIT.
+ * That is still not PARTIAL — the estate ends up either fully stamped or untouched and the next
+ * run's `IS NULL` predicate is correct either way — but only `pg_terminate_backend` actually
+ * rolls it back. The executor
  * is handed the POOL, exactly as `runBackfillPhase` hands `executeBackfillUpdate` the pool,
  * and exactly as the pre-conversion script's own bare `pool.query` did.
  *
@@ -1820,14 +1826,22 @@ async function runLinkColumnPhase({ descriptor, pool, compute, config, chainId, 
   // empty one before the UPDATE is issued (G-1). Pre-conversion this number was taken at
   // the top of the run and only REPORTED after every write.
   const corpus = await pool.query(sql.corpus_sql);
-  const neighbourhoodsLoaded = Number((corpus.rows[0] || {}).n) || 0;
+  const neighbourhoodsLoaded = compute.scalar(corpus.rows[0], 'n');
   const eligible = await pool.query(sql.eligible_count_sql);
-  const eligibleCount = Number((eligible.rows[0] || {}).total) || 0;
+  const eligibleCount = compute.scalar(eligible.rows[0], 'total');
 
   // ⚠️ THE RUNNER NAMES NOTHING THE STEP DID NOT DECLARE. These five are this step's own
   // vocabulary, taken from its descriptor's `emits[]` and `checks[]` — no `parcels_*`, no
   // match-strategy names, nothing a different step would have to inherit.
   const matched = {
+    // TWO fields, not one, and the duplication is load-bearing. `neighbourhoods_loaded` is
+    // re-read AFTER the write (the post row's subject); `neighbourhoods_loaded_before_write`
+    // is frozen here and never touched again. The `neighbourhoods_loaded_before_write` CHECK
+    // is scored TWICE on a writing run — once by the pre_write gate and once in the final
+    // pass — so a single shared field made the second scoring publish the AFTER-write count
+    // under a row id that asserts the opposite. Found by the output panel; invisible on the
+    // measured estate (the corpus reads 158 on both sides) and a lie the moment it moves.
+    neighbourhoods_loaded_before_write: neighbourhoodsLoaded,
     neighbourhoods_loaded: neighbourhoodsLoaded,
     permits_eligible: eligibleCount,
     permits_processed: 0,
@@ -1866,24 +1880,33 @@ async function runLinkColumnPhase({ descriptor, pool, compute, config, chainId, 
   // would violate that ownership boundary far worse than a missed match.
   const changed = await write.executeSetBasedJoinUpdate(pool, sql.update_sql, []);
 
-  // `scanned` is the ELIGIBLE count, never the updated count. A class-N target produces no
-  // row list for `executeOrderedWrites` to size, so a naive `scanned = updated` would make
-  // run 2 of the `zero_writes` proof read 0/0/0 — indistinguishable from a skipped run or
-  // one that never found work. The eligible count is what "this run considered N rows and
-  // changed M of them" actually means.
-  written[write.targetKey(0)].scanned = eligibleCount;
   written[write.targetKey(0)].updated = changed;
   written[write.targetKey(0)].rows_changed = changed;
-  matched.permits_processed = eligibleCount;
   matched.permits_linked = changed;
-  log.info(tag, `${plan.table}: considered ${eligibleCount.toLocaleString()} eligible permit(s), stamped ${changed.toLocaleString()}`);
 
   // ── ONE post-write round trip for the cumulative rate AND every table-wide count ──
+  // `compute.scalar` refuses a missing/NaN column rather than coercing it to a plausible 0
+  // (a renamed alias would otherwise read as a healthy zero on every gate).
   const cumulative = await pool.query(sql.cumulative_sql);
-  const row = cumulative.rows[0] || {};
-  matched.no_match = Number(row.no_match_remaining) || 0;
-  matched.negative_ids = Number(row.negative_ids) || 0;
-  matched.neighbourhoods_loaded = Number(row.neighbourhoods_loaded) || neighbourhoodsLoaded;
+  const row = cumulative.rows[0];
+  matched.no_match = compute.scalar(row, 'no_match_remaining');
+  matched.negative_ids = compute.scalar(row, 'negative_ids');
+  matched.neighbourhoods_loaded = compute.scalar(row, 'neighbourhoods_loaded');
+
+  // `scanned` is derived from the POST-WRITE snapshot, NOT from the pre-write eligible
+  // count. The count, the gate, the UPDATE and the post read are four separate snapshots, so
+  // a permit geocoded by another chain between the count and the statement would make a
+  // pre-write `scanned` DISAGREE with `updated` — and `scanned < updated` is nonsense on its
+  // face. Everything eligible at write time is now either stamped (`changed`) or still NULL
+  // and unmatchable (`no_match_remaining`), both read from the SAME post-write snapshot, so
+  // this sum is internally consistent by construction and can never read below `updated`.
+  // The pre-write eligible count survives as its own observation (`permits_eligible`).
+  const processed = changed + matched.no_match;
+  written[write.targetKey(0)].scanned = processed;
+  matched.permits_processed = processed;
+  log.info(tag, `${plan.table}: ${processed.toLocaleString()} permit(s) in scope at write time, `
+    + `${changed.toLocaleString()} stamped, ${matched.no_match.toLocaleString()} matched no polygon `
+    + `(pre-write eligible count was ${eligibleCount.toLocaleString()})`);
 
   return {
     mode: gate.mode,

@@ -526,6 +526,63 @@ describe('converted.json — link-neighbourhoods.js is PENDING at shape_clean', 
   });
 });
 
+// ---------------------------------------------------------------------------
+// OUTPUT-PANEL LOCKS (commit ②c) — each pins a defect the panel actually found
+// ---------------------------------------------------------------------------
+describe('output-panel locks — the three defects the golden differential and the panel caught', () => {
+  it('the _before_write row reads its OWN preserved field, never the one the runner overwrites after the write', () => {
+    const compute = readCode(COMPUTE_REL);
+    const i = compute.indexOf('function neighbourhoods_loaded_before_write');
+    expect(i, 'observer not found').toBeGreaterThan(-1);
+    const body = compute.slice(i, compute.indexOf('\n}', i));
+    expect(body).toContain('ctx.matched.neighbourhoods_loaded_before_write');
+    // The bug: reading the shared field. The check is scored TWICE and the second scoring
+    // happens after the runner has overwritten it with the post-write count.
+    expect(body).not.toMatch(/ctx\.matched\.neighbourhoods_loaded(?!_before_write)/);
+    // and the runner must actually populate the preserved field
+    expect(readCode(INDEX_REL)).toContain('neighbourhoods_loaded_before_write: neighbourhoodsLoaded');
+  });
+
+  it('scanned is derived from the POST-write snapshot so records_updated can never exceed records_total (the race the Code Reviewer reproduced live)', () => {
+    const idx = readCode(INDEX_REL);
+    const i = idx.indexOf('async function runLinkColumnPhase');
+    const body = idx.slice(i, idx.indexOf('\nasync function', i + 10));
+    expect(body).toContain('const processed = changed + matched.no_match;');
+    expect(body).toContain("written[write.targetKey(0)].scanned = processed;");
+    // the pre-write eligible count must NOT be the counter source any more
+    expect(body).not.toMatch(/\.scanned = eligibleCount/);
+  });
+
+  it('no post-write scalar is read through `Number(x) || fallback` — a missing column must throw, not render as a plausible zero', () => {
+    const idx = readCode(INDEX_REL);
+    const i = idx.indexOf('async function runLinkColumnPhase');
+    const body = idx.slice(i, idx.indexOf('\nasync function', i + 10));
+    expect(body).toContain("compute.scalar(row, 'no_match_remaining')");
+    expect(body).toContain("compute.scalar(row, 'neighbourhoods_loaded')");
+    // the specific regression: `|| neighbourhoodsLoaded` made the corpus FAIL check unfirable
+    expect(body).not.toMatch(/\|\|\s*neighbourhoodsLoaded/);
+    // and `scalar` must genuinely refuse rather than coerce
+    // eslint-disable-next-line @typescript-eslint/no-require-imports -- matching this suite's source-read idiom
+    const mod = require(abs(COMPUTE_REL)) as { scalar: (row: unknown, k: string) => number };
+    expect(() => mod.scalar({}, 'nope')).toThrow(/returned no "nope" column/);
+    expect(() => mod.scalar({ n: 'abc' }, 'n')).toThrow(/not a finite number/);
+    expect(mod.scalar({ n: 0 }, 'n'), 'a REAL zero must survive').toBe(0);
+  });
+
+  it("the declared scope/corpus constants are exported AND consumed here — so the compute docblock's claim that they are 'exported so their locks read the real value' is true, not aspirational", () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports -- matching this suite's source-read idiom
+    const mod = require(abs(COMPUTE_REL)) as { ELIGIBLE_SCOPE: string; CORPUS_FILTER: string };
+    expect(mod.CORPUS_FILTER).toBe('geom IS NOT NULL');
+    expect(mod.ELIGIBLE_SCOPE).toContain('p.neighbourhood_id IS NULL');
+    expect(mod.ELIGIBLE_SCOPE).toContain('p.latitude IS NOT NULL');
+    // LN-D5: the corpus is geom, never the GeoJSON column the retired branch parsed.
+    expect(mod.CORPUS_FILTER).not.toContain('geometry');
+    // and the descriptor's declared staleness scope must describe the SAME set
+    const d = descriptor();
+    expect(String(d.staleness.scope)).toContain('neighbourhood_id IS NULL');
+  });
+});
+
 // ============================================================================
 // RED AT COMMIT ① — every claim below is about an artifact commit ② or ③ builds.
 // Each is a REAL assertion that REALLY fails today. Flip to a plain it() in the

@@ -425,10 +425,14 @@ describe('the verdict is ROW-DERIVED, and all three values are reachable (§7.1,
     it('OBSERVABILITY FOLD — every runner that can abort feeds the row, and index.js actually consumes it', () => {
       // eslint-disable-next-line @typescript-eslint/no-require-imports -- matching this file's existing source-read idiom
       const src = require('fs').readFileSync(join(process.cwd(), 'scripts/lib/step/index.js'), 'utf8') as string;
-      // 8 runners produce `failedPreWrite` on their abort path…
-      expect((src.match(/failedPreWrite: decision\.failed|failedPreWrite: gateDecision\.failed/g) || []).length).toBe(8);
+      // 9 runners produce `failedPreWrite` on their abort path (was 8 — `runLinkColumnPhase`
+      // joined at I4, 2026-09-16). This count is the R-B/LW-D20 "a fold applied to N runners
+      // needs a test that iterates ALL N" lock, and it fired correctly on that conversion:
+      // adding the 9th runner reddened BOTH halves until the new runner was wired into the
+      // consumer list too, which is exactly the silent-gap this assertion exists to prevent.
+      expect((src.match(/failedPreWrite: decision\.failed|failedPreWrite: gateDecision\.failed/g) || []).length).toBe(9);
       // …and the assembled extraRows is the ONE consumer (before this fold: zero).
-      expect(src, 'failedPreWrite must not be write-only').toContain('...preWriteAbortRows([ingest, link, linkKeyed, cascade, materialize, backfill, recorder, enrich])');
+      expect(src, 'failedPreWrite must not be write-only').toContain('...preWriteAbortRows([ingest, link, linkKeyed, linkColumn, cascade, materialize, backfill, recorder, enrich])');
     });
 
     it('index.js derives the partition in ONE place — no second, divergent acceptance filter', () => {

@@ -306,6 +306,88 @@ MEASURED: the eligible scope is **0 rows**. W1 matches nothing; W2 matches nothi
 
 ---
 
+## 6.3 OUTPUT PANEL (commit ②c) — seven seats, and what they changed
+
+| Seat | Verdict | Folded |
+|---|---|---|
+| Code Reviewer (`code-reviewer-grounded`) | 1 MED, rest PASS | yes — **it REPRODUCED the `updated > scanned` race against the dev DB** inside a `BEGIN`/`ROLLBACK` |
+| Observability (`observability-reviewer`) | no FAIL, 2 LOW | filed |
+| Integration (`general-purpose`) | see §6.4 | pending at the time of writing |
+| Regression Guardian (`regression-guardian`) | see §6.4 | pending |
+| Reality-Check (`pipeline-reality-check`) | see §6.4 | pending |
+| Gemini | 1 CRITICAL, 1 HIGH, 2 MED | adjudicated — see below |
+| DeepSeek × 4 lenses (spec/security/idempotency/error-paths) | 0 CRITICAL, 13 HIGH | 4 folded, 3 refuted |
+
+### What the panel CHANGED (commit ②c)
+
+1. **`neighbourhoods_loaded_before_write` published the AFTER-write value.** Found by the
+   DeepSeek idempotency lens, confirmed by execution. The check is scored **twice** on a
+   writing run — once by the pre_write gate, once in the final pass over the full check
+   selection — and both scorings read `ctx.matched.neighbourhoods_loaded`, which the runner
+   overwrites with the post-write count. A row whose id asserts a before-write reading was
+   publishing the after-write one. The runner now keeps two fields. Invisible on this estate
+   (158 on both sides) and a lie the moment the corpus moves mid-run, which is precisely when
+   the row matters.
+2. **`updated > scanned` was reachable.** The Code Reviewer reproduced it live: the eligible
+   count and the UPDATE are separate snapshots with no transaction and no lock between them,
+   so a concurrent write makes `records_updated` exceed `records_total` — "updated more rows
+   than were considered". `scanned` is now derived from the POST-write snapshot
+   (`changed + no_match_remaining`, both read in the same round trip), which is internally
+   consistent by construction and can never read below `updated`. The pre-write eligible
+   count survives as its own observation.
+3. **`Number(x) || 0` collapsed three different situations into one plausible number.**
+   Flagged by three lenses independently. Worst case, `Number(row.neighbourhoods_loaded) ||
+   neighbourhoodsLoaded` substituted the PRE-write corpus count for a legitimate post-write
+   **0** — so the `neighbourhoods_loaded` FAIL check, whose entire purpose is to fire when the
+   corpus is empty, could never have fired. That is the CC-D3 "a guard that structurally never
+   excludes anything" shape, relocated. Replaced with `compute.scalar()`, which throws on a
+   missing/NaN column and returns a real 0 as 0.
+4. **The `recovery.interrupted` prose overclaimed.** "A kill rolls it back whole and leaves
+   `permits` completely untouched" is false for the failure mode that actually happens:
+   killing the node client does NOT cancel the server-side statement (`tasks/lessons.md`,
+   2026-05-31), so a SIGKILL mid-UPDATE can still COMMIT. Corrected in the runner docblock:
+   the outcome is still never PARTIAL, and only `pg_terminate_backend` actually rolls it back.
+
+### What the panel RAISED and this pass REFUTED, by execution
+
+- **"`guards.srid` is a SQL-injection surface"** (DeepSeek security, HIGH, with the payload
+  `4326)) OR TRUE --` that would stamp every permit). REFUTED: `step.schema.json` types `srid`
+  as `{"anyOf":[{"const":"none"},{"type":"integer"}]}` and `validateDescriptor` runs before any
+  statement is built, so a string payload cannot reach the interpolation. A `Number.isInteger`
+  guard was added anyway as defence-in-depth, with a comment saying the schema is the real guard.
+- **"the zero-denominator estate FAILs"** (DeepSeek spec, HIGH). REFUTED as a REGRESSION: an
+  empty `permits` table yields rate 0 on BOTH sides (`cumulativeTotal > 0 ? ... : 0`
+  pre-conversion, `linkRatePct` post), so the behaviour is ported, not introduced.
+- **"non-deterministic UPDATE on overlapping polygons"** (Gemini, CRITICAL). REAL but
+  PORTED and MEASURED: the pre-conversion statement had no `ORDER BY` either, and the live
+  ambiguous population is **0** (see §6.3b). Already declared in `limitations[]` and
+  `notes.json.blind_spots[0]`; §3.1 PINs it.
+
+### §6.3b THE PROOF THE DIFFERENTIAL COULD NOT GIVE
+
+§6.2 states plainly that the differential validates the observable surface only, because the
+eligible set is 0 and both sides write nothing. The DeepSeek error-paths lens said the same
+and proposed seeding a scratch DB. This pass did better, without writing anything:
+
+* **(a) Predicate identity, by text.** The containment clause is read out of `git show
+  2f704d8f~1:scripts/link-neighbourhoods.js` (never retyped — LW-D18) and matched against the
+  compute's own generated `update_sql`. **Both contain the byte-identical clause.** The only
+  declared change is the SRID moving from a literal to `guards.srid`, which resolves to the
+  same 4326.
+* **(b) Assignment equivalence, live, over the FULL population.** Both corpora — the
+  pre-conversion `geometry`-filtered polygon set and the converted `geom`-filtered one —
+  were joined against all coordinate-bearing permits with the `neighbourhood_id IS NULL`
+  conjunct dropped, so the comparison covers **231,930** rows rather than the empty eligible
+  set. Result: `old_pairs 231930 · new_pairs 231930 · in_old_not_new 0 · in_new_not_old 0`.
+  **Not one permit would be assigned a different neighbourhood.**
+* **(c) The tiebreak blind spot, sized.** Permits contained by more than one polygon: **0**
+  (over the same 231,930). So the undeclared overlap tiebreak is unexercised in fact, which
+  is why it stays an open blind spot rather than being closed as impossible.
+
+⚠️ The first cut of (b) wrote the SAME predicate into both CTEs, which makes the `EXCEPT`
+trivially empty and the whole test vacuous. Caught by reading it back before trusting the
+green. Recorded because a vacuous proof is worse than no proof.
+
 ## 7. Panel roster — who ran, at PLAN altitude
 
 | Seat | Agent | Verdict |
