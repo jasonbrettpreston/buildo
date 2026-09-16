@@ -60,7 +60,13 @@ describe('POST /api/admin/notifications/test-send — route shape', () => {
     const sessionPos = src.indexOf("authMethod !== 'session'");
     expect(authPos).toBeGreaterThan(-1);
     expect(sessionPos).toBeGreaterThan(authPos);
-    expect(src).toContain('status: 403');
+    // SEC-1 (8487d2bf) moved the 403 body into the shared helper: the lock now pins the call site
+    // AND the helper's status, so the route cannot silently drop the session gate.
+    expect(src).toContain("sessionRequired(adminCtx, '/api/admin/notifications/test-send')");
+    const helper = read('../lib/admin/admin-responses.ts');
+    const helperPos = helper.indexOf('export function sessionRequired(');
+    expect(helperPos).toBeGreaterThan(-1);
+    expect(helper.slice(helperPos).indexOf('status: 403')).toBeGreaterThan(-1);
   });
 
   it('uses the REAL shared transport (push-dispatch.js), not a duplicate sender', () => {
