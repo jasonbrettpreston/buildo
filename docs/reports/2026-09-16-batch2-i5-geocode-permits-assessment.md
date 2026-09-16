@@ -1,0 +1,369 @@
+# Batch 2 I5 Assessment — `geocode_permits`
+
+**Full form reason:** the ENRICHER archetype has **one** converted member (`enrich_parcels`), so R-AH / R-PACE-1 eligibility (`template-freeze.json.archetype_profiles[ENRICHER].proven === true` **AND** ≥ 2 `converted.json` members sharing the archetype) is **NOT MET** — measured, §1.2b. The compressed form is therefore unavailable, not declined; `step-validate.mjs` fast invariant #24 (COMPRESSED-FORM-DEFAULT) is **vacuous** for this slug. This conversion is the archetype's SECOND member: it is the commit-9 cutover here that makes ENRICHER compressed-eligible and turns batch 2's Phase 2 from *1 full + 3 compressed* into *4 compressed*.
+
+**Governing plan:** `.cursor/i5_geocode_permits_active_task.md` (Status: Implementation, AUTHORIZED 2026-09-16, all six Asks at their stated defaults — A1 `identity.spec = "60"` · A2 CLOSED by batch-2 row 0.10 (`d7668b8a`) · A3 declare the edge **and** file the accepted WARN · A4 re-measure GP-D1 at commit 1 and floor to the nearest 5 below · A5 add the Toronto-bbox plausibility row · A6 one push per step).
+
+**Target Spec / governing specs:** `docs/specs/01-pipeline/60_shared_steps.md` §"Geocode Permits" (the only spec carrying a behavioural section for this file, and the system map's Spec 60 owner row lists it first) → `identity.spec = "60"`. Cross-cited chain specs `docs/specs/01-pipeline/41_chain_permits.md` (step 8) and `docs/specs/01-pipeline/43_chain_sources.md` (step 4); protocol spec `docs/specs/01-pipeline/47_pipeline_script_protocol.md` (§A.5 lock registry row 5; §11 Counter Semantic Contract, which names **this step twice** as its own worked example); then 122 / 122a / 123 / 124 / 119 / 121; admin consumer contract via Spec 26 (`src/lib/admin/funnel.ts`).
+
+**Domain Mode: Cross-Domain.** `src/lib/admin/funnel.ts:39` binds this step's `geocode_coverage` audit-row **id** as the `auditMetric` of the admin "Address Matching" funnel stage; `:724-731` declares expectation bounds on its summary counters, mutations and row-delta; `:842` maps the slug to the `permits` table; `src/lib/parcels/geometry.ts:244` states in prose that it *"Mirrors the WHERE clause logic in scripts/geocode-permits.js"*. **No admin file is edited by this conversion** — §12 carries the handoff obligation, and §12 already has one live finding (below).
+
+**Measurement environment for every number in this report:** local dev DB `postgres` @ `127.0.0.1:54322` (the `.env` target; `[i5-measure] target: … database=postgres user=postgres migrations=244 (floor 223)`), `SELECT count(*) FROM schema_migrations` = **244**, measured **2026-09-16** at HEAD `1a48520b` on branch `wf2/deep-scrapes-restore-l0`. **No cloud writes were made and no chain was run.** Every number below carries the command that produced it. **Nothing is transcribed** — the plan's §0 was measured in an isolated worktree at base `824ef357` with no DB access, and every figure here was regenerated from the tree and the live database at this commit. Where a regenerated number **differs** from the plan's, the difference is called out explicitly rather than quietly adopted (§1.7).
+
+---
+
+## 1. §0 / PH-0 — BOUNDARY FREEZE (G0)
+
+> Derived by READING `scripts/geocode-permits.js` end to end (188 lines, read in full), not from the manifest, the specs or any prior report. Spec 122 R5: the ported `write_discipline` labels are re-derived here, never trusted.
+
+### 1.1 Target-file grounding (Spec 124 R-AF — run BEFORE commit 1, per the batch-2 preamble)
+
+R-AF: every spec naming a chained step script must classify it in exactly one Operating Boundaries list. Measured this commit, `grep -n "geocode-permits.js"` over each spec plus the system map:
+
+| Spec | In `### Target Files`? | System-map owner row? | Action |
+|---|---|---|---|
+| **60** `01-pipeline/60_shared_steps.md` (owner) | **YES** — `:255`, `- \`scripts/geocode-permits.js\`, \`scripts/link-parcels.js\`, \`scripts/link-neighbourhoods.js\`` | **YES** — row 60, listed **first** | none — already classified |
+| **41** `01-pipeline/41_chain_permits.md` | **YES** — `:253`, `- \`scripts/geocode-permits.js\` — step 8 \`geocode_permits\`` | **YES** — row 41 | none |
+| **43** `01-pipeline/43_chain_sources.md` | **YES** — `:182`, `- \`scripts/geocode-permits.js\` — step 4 \`geocode_permits\`` | **YES** — row 43 | none |
+| **47** `01-pipeline/47_pipeline_script_protocol.md` | n/a — **exempt reader** (cross-cutting architecture spec; R-AF exempts 30/40/47/48/79/118–124) | n/a | none |
+| **26** Admin Dashboard | no — names `funnel.ts`, not the script | n/a | §12 handoff note only |
+
+Spec 60 additionally carries `:264` — `- \`load-address-points.js\` — sources-chain step whose \`address_points\` table \`geocode-permits.js\` reads; referenced as context, not governed here` — i.e. the producer edge of §3 below is already written down in the owner spec's own Out-of-Scope prose. **R-AF is satisfied with no edit required at commit 9**; the commit-9 obligation for these three specs is the *prose* correction (§1.6), not the classification.
+
+### 1.2 The file, the quadrant, the archaeology
+
+| Measure | Value | Command |
+|---|---|---|
+| Lines | **188** | `wc -l < scripts/geocode-permits.js` |
+| Churn (commits) | **19** | `git log --oneline -- scripts/geocode-permits.js \| wc -l` |
+| `fix(` commits | **11** → fix density **57.9 %** | `git log --format="SUBJ:%s" -- … \| grep -cE '^SUBJ:fix\('` |
+| Quadrant | **bottom-left** (commits 19 · lines_changed 472 · LOC@window_end 94 · branches 9) | `grep geocode_permits docs/reports/generated/122-churn-complexity.md` → `:30` |
+| Advisory lock | **5** — Spec 47 §A.5 registry row 5, category "4 — Load/Ingest", *Writes Timestamps = YES (`geocoded_at`)* | `grep -n ADVISORY_LOCK_ID scripts/geocode-permits.js` → `:179`, `:183` |
+| Archetype (census) | **ENRICHER**, batch C4, "C4 batching-entry §3.2 order 5" | `scripts/steps/_schema/step-archetype-census.json` |
+| Chain positions | `permits` **8 of 33** · `sources` **4 of 28** — **2 chains** | `node -e` over `scripts/manifest.json.chains` |
+| Manifest entry | `{file, supports_full: true, supports_dry_run: false, telemetry_tables:["permits"], telemetry_null_cols:{permits:["latitude","longitude"]}}` — **no `chain_args`** | `node -e` over `scripts/manifest.json.scripts.geocode_permits` |
+| Migrations floor | `database.min_migration: 18` = `018_address_points.sql`, the migration creating the joined table (`permits.geocoded_at` predates it — it originates in `001_permits.sql`). Fast invariant #1 is `min_migration <= migrations COUNT` (`step-validate.mjs:1242`), i.e. **18 ≤ 244** ✅ | `ls migrations/ \| grep '^01'` · `grep -ln geocoded_at migrations/*.sql` · `sed -n 1239,1244p scripts/analysis/step-validate.mjs` |
+| Golden dir | **14 dirs, no `geocode_permits`** — captures are net-new | `ls docs/reports/golden/` |
+| Fix density note | 57.9 % on a **bottom-left** file — comparable to `enrich_parcels`' 57 %, the highest of any pilot, on the *least* churned quadrant. The fixes are concentrated in **correctness of the numbers this step reports**, not in the join it performs (§2 at commit 2). | — |
+
+The quadrant is **bottom-left**, so Spec 123 §2's PH-3 Class-C short form is permitted; it is taken, **but not to zero** — fence density is > 0, so every fence still owes a recovered *why* (commit 2).
+
+### 1.2b Archetype eligibility — measured, not asserted
+
+`node -e` over `scripts/steps/_schema/{converted.json,template-freeze.json}` + each converted `*.descriptor.json`:
+
+| Fact | Value |
+|---|---|
+| `converted.json.converted` | **13** entries (I4 `link_neighbourhoods` cut over at `1a48520b`), `pending: []` |
+| ENRICHER members among them | **1** — `scripts/enrich-parcels.js` only |
+| `archetype_profiles[ENRICHER]` | `{shapes:["enrich"], runners:["runEnrichPhase"], first_step:"enrich_parcels", proven:true}` |
+| R-AH / R-PACE-1 eligibility | **NOT MET** — `proven` ✅ **AND** ≥ 2 members ❌ → **full nine-commit form is mandatory** |
+| Fast invariant #24 (COMPRESSED-FORM-DEFAULT) | **vacuous** for this slug — not satisfied by an excuse |
+
+### 1.3 Reads
+
+| Table | Columns | Site |
+|---|---|---|
+| `permits` | `permit_num`, `revision_num` (the key), `geo_id`, `latitude`, `longitude`, `geocoded_at` | `:42-52` before-counts · `:108-121` after-counts · both UPDATEs |
+| `address_points` | `address_point_id`, `latitude`, `longitude` | `:62` COUNT · `:79-86` the join |
+
+`emitMeta` (`:171-174`) already declares exactly this read set plus the write set; the descriptor's `inputs`/`outputs` are a line-by-line port, not a re-derivation.
+
+**5 SQL execution sites** (`grep -c '\.query(' scripts/geocode-permits.js` = 5): `:42` before-counts SELECT · `:62` `address_points` COUNT · `:74` W1 (on the txn `client`) · `:93` W2 (same client) · `:108` after-counts SELECT. The run clock is `pipeline.getDbTimestamp(pool)` at `:36` — SDK-owned, and not one of the five.
+
+### 1.4 Writes — ALL of them
+
+`grep -cE '^\s*(UPDATE|INSERT|DELETE)'` = **2**. Zero INSERT, zero DELETE. The `pipeline_runs` ledger row is SDK-owned (`pipeline.run`), retired under conversion, not declared.
+
+| # | Site | Statement | Target columns | Scope (verbatim) | Guard | Class (re-derived) |
+|---|---|---|---|---|---|---|
+| **W1** | `:74-86` | `UPDATE permits p SET latitude=ap.latitude, longitude=ap.longitude, geocoded_at=$1::timestamptz FROM address_points ap WHERE …` | `permits.latitude`, `.longitude`, `.geocoded_at` | `p.geo_id IS NOT NULL AND p.geo_id != '' AND p.geo_id ~ '^[0-9]+$' AND ap.address_point_id = CASE WHEN p.geo_id ~ '^[0-9]+$' THEN p.geo_id::INTEGER END` | `(p.latitude IS DISTINCT FROM ap.latitude OR p.longitude IS DISTINCT FROM ap.longitude)` — **two columns, NOT three** | **`set_based_join_update`** (class N, LG-11) — an `UPDATE … FROM` whose SET values are per-row join results |
+| **W2** | `:93-99` | `UPDATE permits SET latitude=NULL, longitude=NULL, geocoded_at=NULL WHERE …` | same three columns | `(geo_id IS NULL OR geo_id = '') AND latitude IS NOT NULL AND geocoded_at IS NOT NULL` | the `latitude IS NOT NULL` term **is** the IS-DISTINCT-FROM-NULL guard | **`set_based_null_retract`** (class O, LG-16) |
+
+* **Both are inside ONE `withTransaction`** (`:72-101`). `execution.txn_scope: "step"`; both `execution.phases[]` declare `txn: "shared"`. **No post-commit phase.**
+* `write_inventory.statements = 2` — invariant across chains and modes; **there is no mode** (§1.5).
+* `grep -c "IS DISTINCT FROM"` = **2** — both executable, `:84`/`:85`: one guard, two columns.
+* ⚠ **W1 has NO incremental predicate.** It is a full re-join of every permit with a numeric `geo_id`, every run; the IS DISTINCT FROM guard — not a lineage scope — is what makes it cheap. The pre-run `to_geocode` count (`latitude IS NULL AND geo_id IS NOT NULL AND geo_id != ''`) is a **reporting** scope feeding `backlog_remaining` and nothing else. **Three different "needs geocoding" definitions coexist** in this step's blast radius: W1's scope, the reporting scope, and `idx_permits_needs_geocode`'s `WHERE geocoded_at IS NULL`. The descriptor states which artifact uses which (`notes.json` `decisions[3]`, `limitations[]` GP-L3).
+
+### 1.5 Environment / argv / logic variables / error handling
+
+| Axis | Measured | Command |
+|---|---|---|
+| `process.env` | **1 site** — `process.env.PIPELINE_CHAIN` at `:164`, the audit-phase ternary. **No env override of any kind** | `grep -c process.env` = 1 |
+| argv | **0 hits** for `process.argv` / `isFullMode` / `--full`. `supports_full: true` is a **dead declaration** (GP-L1) | `grep -cE 'process\.argv\|isFullMode\|--full'` = 0 |
+| try / catch | **0 / 0** — no error handling at all; every failure propagates to `pipeline.run`. Nothing to port, nothing to lose | `grep -c 'try {'` = 0, `grep -c catch` = 0 |
+| network | **0 hits** for `google` / `fetch(` / `http` / `axios` / `node-fetch` — the measured refutation of the Google-fallback prose in all three governing specs (§1.6) | `grep -ciE 'google\|fetch\(\|https\?://\|axios\|node-fetch'` = 0 |
+| logic variables | **none exist today**; the conversion adds exactly **one** (`geocode_permits_coverage_warn_pct`). `SELECT variable_key FROM logic_variables WHERE variable_key ILIKE '%geocode%'` returns **0 rows** against 520 live rows total | live DB |
+| literal thresholds | **exactly one value: `95`, twice** — `:142` (the row's `threshold: '>= 95%'` string *and* its `status` comparison) and `:166` (the verdict comparison). Rule 3 externalisation is a **one-variable** job | `grep -n 95 scripts/geocode-permits.js` |
+| batch / retry / timeout / limit | **none exist** | full-file read |
+
+### 1.6 ⚠ Every governing spec's prose for this step is STALE (the largest G0 surprise)
+
+| Spec | What it says | What the code does |
+|---|---|---|
+| **60 §3** (anchor `### Geocode Permits (\`geocode-permits.js\`)`, `:30`) | *"Match against `address_points` table by **street number + name**"*; *"If no match: fall back to **Google Maps Geocoding API**"*; *"Modes: Incremental (default: only NULL coords) / Full (`--full`: all permits)"*; *"Edge Cases: Google API quota exhausted…"* | A single `geo_id::INTEGER = address_point_id` equijoin. **Zero** network egress (measured, §1.5). **No** mode split; W1 is unconditionally full-scan |
+| **41** `:57` | *"Assign lat/lng via address point lookup **or Google fallback**"* | same |
+| **43** `:35` | *"**Re-geocode permits missing coordinates**"* | Re-geocodes **all** permits with a numeric `geo_id` — the scope carries no `latitude IS NULL` narrowing at all |
+
+**No spec in the tree describes what this file actually does.** This is exactly Spec 123 §6 G0's reason for filling the owner row FIRST: reading 122/123/124 first would have produced a plan grounded on a step that does not exist. **Recorded here as a commit-9 spec-diff obligation** (Spec 123 §7 row 9(b), Spec 124 §4.5) and as descriptor `limitations[]` entry **GP-L4**.
+
+### 1.7 The plan's §0 re-measured — two figures MOVED, flagged rather than adopted
+
+Every §0.1 row regenerates identically at HEAD `1a48520b` **except**:
+
+| Row | Plan said (base `824ef357`) | Measured now (`1a48520b`) | Why it moved |
+|---|---|---|---|
+| §0.1 #17 existing tests | **9** files reference the step | **11** — adds `src/tests/step-library.logic.test.ts` and `src/tests/step-seam.logic.test.ts` | `step-library.logic.test.ts` gained a `fixture_geocode` ENRICHER fixture in `a062eb79` (I4's fleet-wide repair); `step-seam.logic.test.ts` gained the 13-descriptor registry lock in `1a48520b` (I4 commit 3). **Neither existed when the plan was drafted.** See §1.8 — one of them is a commit-9 obligation |
+| §0.1 #20 golden dirs | **12** | **14** (`link_neighbourhoods` from I4; `fixture_geocode`, a library-fixture before-image dir, not a step capture) | I4 + 0.10 landed between the draft and now. The conclusion is unchanged: **no `geocode_permits` dir — captures are net-new** |
+| §0.2 `converted.json` | **12** converted | **13** converted, `pending: []` | I4 cut over at `1a48520b` |
+
+Everything else — 188 lines, lock 5, 19 commits, 11 `fix(`, bottom-left, 2 chains at 8/33 and 4/28, 5 `.query(` sites, 2 DML statements, 2 `IS DISTINCT FROM`, 0 try/catch, 1 `process.env`, 0 argv, 1 literal threshold — reproduces exactly. `git log --oneline 824ef357..HEAD -- scripts/geocode-permits.js` is **empty**: the subject file itself has not changed since the plan measured it.
+
+### 1.8 ⚠ A source-string lock that WILL go red at commit 9 — budgeted here, not discovered there
+
+`src/tests/step-seam.logic.test.ts:57-69` hard-codes the **13-slug converted registry** and asserts `deriveSeamPairs` yields exactly **6** live pairs. Its own comment, written by I4 one commit ago, says it in words:
+
+> `// link_neighbourhoods (batch-2 I4, cut over 2026-09-16) declares inputs.reads.steps:`
+> `// [neighbourhoods, geocode_permits] — BOTH still unconverted, so neither resolves to a`
+> `// registered producer … The moment `geocode_permits` converts, this count moves.`
+
+At commit 9 the registry becomes **14** and a new pair `geocode_permits → link_neighbourhoods` appears (the downstream already declares the edge). `npx vitest related` **cannot see this** — it is a source-string/registry lock, not an import graph edge. It is the I4 lesson-1 failure mode exactly, and it is written down **now**, at commit 1, as a commit-9 obligation. The full `npm run test` run that gates commit 9 is what will prove it.
+
+### 1.8b A drafted descriptor cannot sit on disk before commit 7b — three fleet suites say so
+
+The plan's §0.3 measured `validateDescriptor()` against the draft **in the tree** and recorded PASS. That is true and also insufficient: a `*.descriptor.json` file **existing on disk while its slug is unregistered** is a fleet-wide red. Measured — the full `npm run test` run that gates this commit (`VITEST_MIN_FORKS=1 VITEST_MAX_FORKS=2`, 424 files / 10,710 tests, 515 s) came back **3 files failed** with the drafts present, and all three name this slug:
+
+| Suite | Assertion |
+|---|---|
+| `src/tests/step-schema.logic.test.ts` | *"every step descriptor on disk is registered in `converted.json` (and vice versa)"* — `expected [ …(14) ] to deeply equal [ …(13) ]`, the extra entry being `scripts/geocode-permits.descriptor.json` |
+| `src/tests/execution-budget-disposition.infra.test.ts` | *"`geocode_permits` declares `execution.step_timeout` with no manifest wiring and is absent from the registry's `pending[]` list — an undeclared inert declaration is exactly what R-X forbids"* |
+| `src/tests/write-class-disposition.infra.test.ts` | `checkOnContentionBannedDeclared` fleet count `expected 13, received 14` |
+
+Moving `scripts/geocode-permits.{descriptor,notes}.json` out of the repo (they are held in the session scratchpad until commit 7b) turns all three green in 2.1 s. **The baseline at HEAD `1a48520b` is therefore genuinely clean: 3 failed / 420 passed becomes 423 passed, and the repo owed no pre-existing red.**
+
+Two consequences, both now binding:
+
+1. **Commits 1–6 run with no descriptor on disk.** This is not a workaround, it is what R-K.1 already requires — `stage: "red_suite"` is *defined* as "the violations suite has landed, the sibling descriptor does NOT exist yet", and `step-conformance.infra.test.ts` REDs a `pending` entry whose descriptor exists while the stage still reads `red_suite`. The three suites above are the same rule enforced from the fleet side. **Deviation from the plan, flagged:** the plan's §0.3 implied the draft could stay in the working tree throughout; it cannot.
+2. **At commit 7b the descriptor and the `pending` stage advance must land in the SAME commit** (`red_suite → descriptor_only`), because `step-schema.logic.test.ts` exempts a descriptor only when its `.js` sibling is in `pending[]`, and `step-conformance` reds if the stage has not advanced. One commit, both edits, or the tree is red either way.
+
+### 1.8c The library-level lock this step already has — and which the plan never cites
+
+`src/tests/step-library.logic.test.ts:4078-4209` (the L9 / L9b / L9c describe block, landed with `d7668b8a`) is a regression lock built around a synthetic `twoTargetDescriptor()` fixture whose own comment reads *"TWO write targets, TWO phases — the `geocode_permits` shape, not `enrich_parcels`'"*, and whose preamble names the defect it exists to prevent: the generic runner's post-phase counters failing **after every pass had run and, for a shared-txn step, after the transaction had already COMMITted**. The same file also carries the `fixture_geocode` ENRICHER descriptor fixture at `:3759`.
+
+This is the closest existing proof that the generic ENRICHER runner will not mis-route W1's and W2's rowCounts, and it was written *for this slug, in advance, by 0.10*. The plan's §0.1 row 17 inventory does not list the file and §10's panel roster directs no seat to it. **Recorded here as the standing library-level lock for B-4 and B-9's mechanism — complementary to, never a substitute for, commits 5/7e's golden captures.**
+
+### 1.8d ⚠ UNDEFENDED FENCE — the `opts.withTransaction` injection seam
+
+`scripts/geocode-permits.js:34-35`:
+
+```js
+async function geocodePermits(pool, opts) {
+  const withTransaction = (opts && opts.withTransaction) ? opts.withTransaction : pipeline.withTransaction.bind(pipeline);
+```
+
+Introduced by `3e44218a` — *"Extracted `geocodePermits(pool, opts)` with injectable `withTransaction` for testing (so tests can inject a mock transaction without fighting module mock resolution)."* It is the **entire reason** `src/tests/geocode-permits.infra.test.ts` can prove the WF3-S2 atomicity guarantee without a live database: case 1 asserts `pl.withTransaction` ran once, exactly 2 `UPDATE`s went through the injected client, `_committed === true`; case 2 throws on the 2nd `UPDATE` and asserts `_rolledBack === true`, `_committed === false`.
+
+**The plan names this nowhere** — not in §1.5's Intent Ledger seed, not in §2's B-1..B-13 table, not in §4's descriptor categories. Its commit-6 line says only *"`src/tests/geocode-permits.infra.test.ts` kept and re-pointed, never deleted"*, with no target, no mock shape and no mapping from the two assertions to library seams. A frozen thin shell over `pipeline.step()` does not retain an exported `geocodePermits(pool, opts)` with an injectable transaction override — the transaction moves into `execution.phases[].txn: "shared"` inside the library. **This is a calling convention, and calling conventions do not survive "port verbatim into compute" by default.** It is the single highest-risk item in the conversion, above the CASE fence, because unlike the CASE fence it has no descriptor field to carry it.
+
+**Disposition, decided here rather than deferred:** the re-pointing target is named at commit 6 as part of the red-suite design, and the two cases are re-proven against the real two-phase shared-transaction path (the `pool2()` mock idiom `step-library.logic.test.ts` already uses for L9), not against a synthetic fixture only. The test is neither deleted nor weakened. Recorded as a **plan gap closed by the panel, not by the plan**.
+
+### 1.8e `safeParsePositiveInt` — an INTENT-UNKNOWN-BY-OMISSION the plan does not rule on
+
+`67711003` replaced every `parseInt` with `safeParsePositiveInt` because *`parseInt(undefined)` silently produced `NaN`* and the replacement throws instead. Under conversion, Rule 2 bans error handling in compute, so the count-parsing defence has to land *somewhere* — library-owned count parsing, or compute keeps the call. The plan says neither. **Commit 7c states explicitly where this defence lives**; until then it is INTENT-UNKNOWN-BY-OMISSION, which is a weaker state than INTENT-UNKNOWN-BY-HISTORY and is recorded as such.
+
+### 1.9 G0 verdict
+
+The boundary is frozen: **2 write statements, 1 table, 1 transaction, 2 chains, 8 audit rows, 1 literal threshold, 0 argv, 0 network, 0 try/catch.** The one genuine surprise is §1.6 — the specs describe a different step. The one genuine risk is §1.8 plus the atomicity lock (`src/tests/geocode-permits.infra.test.ts`), both named before any code is written.
+
+---
+
+## 2. The measurements the plan blocked commit 1 on — every `PENDING-MEASUREMENT` executed
+
+> Harness: `node -r dotenv/config <scratch>/measure1.js`, a read-only script using `scripts/lib/resolve-db.js#createResolvedPool`. **SELECT only — no UPDATE, no chain, no capture.** Timings are single-session wall-clock and are re-taken across ≥ 2 sessions at commit 5 before any `last_measured` block is written (Fold B-1).
+
+### 2.1 The permits population (one query, 728 ms)
+
+```sql
+SELECT count(*) AS total,
+       count(*) FILTER (WHERE latitude IS NOT NULL AND longitude IS NOT NULL) AS geocoded,
+       count(*) FILTER (WHERE latitude IS NULL AND (geo_id IS NULL OR geo_id = '')) AS no_geo_id,
+       count(*) FILTER (WHERE latitude IS NULL AND geo_id IS NOT NULL AND geo_id != '') AS has_geo_id_no_match,
+       count(*) FILTER (WHERE geo_id IS NOT NULL AND geo_id != '') AS has_geo_id,
+       count(*) FILTER (WHERE geo_id IS NOT NULL AND geo_id != '' AND geo_id ~ '^[0-9]+$') AS has_numeric_geo_id,
+       count(*) FILTER (WHERE geo_id IS NOT NULL AND geo_id != '' AND geo_id !~ '^[0-9]+$') AS has_nonnumeric_geo_id,
+       count(*) FILTER (WHERE geocoded_at IS NOT NULL) AS geocoded_at_set
+FROM permits;
+```
+
+| Measure | Value |
+|---|---|
+| `total` | **254,082** |
+| `geocoded` (both coords non-NULL) | **231,930** |
+| **`geocode_coverage`** | **91.2816 %** (renders as `'91.3%'` under the step's own `toFixed(1)`) |
+| `no_geo_id` (the permanent tail) | **7,660** |
+| `has_geo_id_no_match` = pre-run `to_geocode` | **14,492** |
+| `has_geo_id` | **246,422** |
+| `has_numeric_geo_id` | **246,416** |
+| **`has_nonnumeric_geo_id`** | **6** |
+| `geocoded_at IS NOT NULL` | **231,930** — exactly equal to `geocoded`, i.e. **every** coordinate in the table was written by this step |
+| `address_points` rows | **525,346** (207 ms) |
+
+**The `6` is the single most important number in this section.** The B-5 fence — the `CASE WHEN p.geo_id ~ '^[0-9]+$' THEN p.geo_id::INTEGER END` join expression that exists because PostgreSQL may evaluate the `::INTEGER` cast before the sibling regex predicate — is **live, not theoretical**. Six rows in the live table would crash the statement if the fence were generated away. `notes.json` `fences[0]` is now measured, not merely recovered.
+
+### 2.2 The invariant candidates (all three read ZERO — commit 5's `last_measured` seeds)
+
+| Candidate | Query | Value | Time |
+|---|---|---|---|
+| `lat_xor_lng_null_count` | `(latitude IS NULL) <> (longitude IS NULL)` | **0** | 581 ms |
+| `geocoded_at_set_but_no_geo_id_count` | `geocoded_at IS NOT NULL AND (geo_id IS NULL OR geo_id = '')` | **0** | 541 ms |
+| `zombie_coords_count` (W2's own target population) | `(geo_id IS NULL OR geo_id='') AND latitude IS NOT NULL AND geocoded_at IS NOT NULL` | **0** | 544 ms |
+
+The first is the cross-field invariant that the two coordinate columns are always written together (they are — W1 sets both, W2 nulls both). The second and third are the same guarantee stated from the retraction's side: **W2 has nothing to do right now**, which is what a healthy steady state looks like.
+
+### 2.3 The plausibility bound (Ask A5) — the Reality-Check-shaped row this step has never had
+
+| Candidate | Query | Value | Time |
+|---|---|---|---|
+| `coords_outside_toronto_bbox_count` | `latitude NOT BETWEEN 43.5 AND 43.9 OR longitude NOT BETWEEN -79.7 AND -79.1` over non-NULL coords | **0** | 325 ms |
+| same bound over the **source** table `address_points` | | **0** | 434 ms |
+
+Zero on both sides, and 325 ms is cheap enough for `frequency: every_run`. The bound is worth declaring precisely **because** it reads zero: a `geo_id` typo that resolves to a valid-but-wrong address point produces a *populated, plausible-looking, wrong* coordinate — the class no code reviewer and no coverage metric catches. Measuring the source table too is what distinguishes "this step placed a permit outside Toronto" from "the address-point corpus contains one".
+
+### 2.4 The steady state — W1 would write ZERO rows right now
+
+```sql
+SELECT count(*) FROM permits p JOIN address_points ap
+  ON ap.address_point_id = CASE WHEN p.geo_id ~ '^[0-9]+$' THEN p.geo_id::INTEGER END
+WHERE p.geo_id IS NOT NULL AND p.geo_id != '' AND p.geo_id ~ '^[0-9]+$'
+  AND (p.latitude IS DISTINCT FROM ap.latitude OR p.longitude IS DISTINCT FROM ap.longitude);
+```
+→ **0** rows, 2,588 ms. W1's guard admits nothing today; W2's scope is empty (§2.2). **A run right now is a genuine zero-work run**, which is what makes it a clean golden-capture subject — and is also exactly the state in which a broken conversion would look identical to a working one. The differential at commit 7e therefore proves *shape*, not *work*; the proof that the write still works is the fence-lock suite (commit 6) and the invariants above, not the capture diff. Said out loud here so no later reader over-reads a clean differential.
+
+### 2.5 Run history — `records_updated` distribution, verdict distribution, and the audit-phase map
+
+`SELECT … FROM pipeline_runs WHERE pipeline ILIKE '%geocode%' ORDER BY started_at DESC LIMIT 40` (65 rows exist in total; first `2026-03-03`, last `2026-07-17`).
+
+* Slug forms in the ledger: **`permits:geocode_permits`** and **`sources:geocode_permits`** — both chains, confirmed live.
+* **Audit phase is `6` on every permits-chain row and `3` on every sources-chain row.** The descriptor's `sharing.varies_by_chain.phase = {permits: 6, sources: 3}` is therefore a **measured** map, not a transcription of the ternary.
+* **Verdict distribution over the last 40 runs: `WARN` × 15, `null` × 25** (the nulls are runs with no audit table — skips and pre-audit-table history). **`PASS` × 0.** See §2.6.
+* `records_updated` distribution over the last 40: **`0` × 33**, then `169`, `369`, `530`, `669`, `1193`, `1284`, `8465` — one run each. The zero-work steady state `notes.json` `read_this_way[0]` describes is **33/40 of observed reality**.
+* `zombies_cleaned` is `0` on every run in the window except one (`3`, run id 1107) — consistent with §2.2's live zero.
+* `has_geo_id_no_match` grows monotonically across the window: `14,407 → 14,411 → 14,431 → 14,440 → 14,454 → 14,492`. **The ungeocodable backlog is growing, and nothing in the step's verdict can see it** (GP-L2).
+
+### 2.6 **GP-D1 re-measured (Ask A4) — the threshold and the seeded floor**
+
+**⚠ The plan's mechanics for GP-D1 are WRONG, and the corrected version is worse, not better.** The plan's §1.7 said `4de16d00` (2026-03-27) lowered the coverage threshold 95 → 85 against a measured 90.9 %, and `d24c964c` (2026-04-01) *"restored the false WARN the first commit had measured away."* The Regression Guardian seat refuted that at plan altitude and this pass re-executed the refutation:
+
+```
+$ git show 4de16d00:scripts/geocode-permits.js | grep -n "verdict\|threshold: '>="
+101:  { metric: 'geocode_coverage', …, threshold: '>= 85%', status: geocodeCoverage >= 85 ? 'PASS' : 'WARN' },
+118:      verdict: geocodeCoverage < 95 ? 'WARN' : 'PASS',          ← UNCHANGED
+$ git show fcd6ff68:scripts/geocode-permits.js | grep -n "verdict"
+118:      verdict: geocodeCoverage < 95 ? 'WARN' : 'PASS',          ← the SAME literal, 6 days earlier
+$ git show 4de16d00 -- scripts/geocode-permits.js | grep -E "^[-+].*(95|85)"
+-  { metric: 'geocode_coverage', …, threshold: '>= 95%', status: geocodeCoverage >= 95 ? … },
++  { metric: 'geocode_coverage', …, threshold: '>= 85%', status: geocodeCoverage >= 85 ? … },   ← the ONLY line it touched
+```
+
+`4de16d00` changed **one literal of two**. The `audit_table.verdict` comparison has read `< 95` continuously since `fcd6ff68` introduced it on 2026-03-21 and has **never once been lowered**. So:
+
+* The measured fix of 2026-03-27 **never took effect on the verdict at all.** For the five days it stood, the step emitted a row reading `PASS` beside a table verdict reading `WARN` — an internal contradiction, not a lowered gate.
+* `d24c964c`'s *"Align audit threshold to 95% to match verdict threshold (was 85%)"* is therefore **not** a reckless side effect that destroyed a working fix. It is an accurate description of reconciling a row to a verdict that was never changed.
+* **The defect is still real and is now sharper:** the coverage gate has been evaluated at **95, without a re-measurement, for its entire life** — and the one commit that ever measured it (`4de16d00`, 90.9 %) produced a change that silently did nothing and was undone five days later. A measured fix that lands on the wrong one of two literals is a worse failure mode than a fix that gets reverted, because nothing about the tree afterwards records that a measurement was ever taken.
+
+**The commit-2 `defect-ledger.md` filing uses these corrected mechanics, not the plan's "silent restoration" framing** — otherwise a future reader re-diagnoses the five-day window and reaches the wrong conclusion about which commit was careless.
+
+**And the plan's "plausibly WARNed on every run since" is now measured, so the hedge can be removed:**
+
+> **15 of the last 40 runs carry an audit verdict. All 15 read `WARN`. Zero read `PASS`.**
+
+And the coverage that produces them, today: **91.2816 %** (231,930 / 254,082), against a threshold of **95**. The 2026-03-27 reading of 90.9 % has moved by **+0.38 points in five and a half months** — it has not converged on 95 and, with `no_geo_id` at 7,660 permanently ungeocodable rows (a structural ceiling of `1 − 7,660/254,082` = **96.99 %`), it never can *cleanly*: the achievable range is bounded above by ~97 %, so a 95 bound leaves a ~2-point margin against a metric that is 3.7 points below it and drifting on the other input (`has_geo_id_no_match`, §2.5).
+
+**Ask A4's default, applied:** the seeded default is the measured coverage **floored to the nearest 5 below** = **90**. It is NOT 85 — restoring 85 by transcription would repeat `d24c964c`'s own error with the sign flipped. The measurement above is quoted verbatim in the check's `retighten_when`.
+
+**Disposition, unchanged from the plan:** `geocode_permits_coverage_warn_pct` is **seeded at 95** for commits 1–7 so the conversion differential is a genuine zero-diff, and **commit 8's peel P1** is the one commit whose diff shows exactly one thing — the default moving 95 → 90 — with this section as its rationale. PIN-vs-FIX (Spec 123 §3): observed ✅ (a consumer, `funnel.ts:39`, reads the metric) · a commit body asserts the opposite ✅ → **DEFECT**, ledger id **`GP-D1`**, filed at commit 2.
+
+### 2.7 The index named for this step does not serve it (GP-L3 — verified, not assumed)
+
+`SELECT indexname, indexdef FROM pg_indexes WHERE tablename='permits'` returns 28 indexes. The one named for this step reads, **verbatim**:
+
+```
+idx_permits_needs_geocode :: CREATE INDEX idx_permits_needs_geocode ON public.permits
+  USING btree (permit_num, revision_num) WHERE (geocoded_at IS NULL)
+```
+
+W1's predicate is `geo_id`-shaped; W2's is `geocoded_at IS NOT NULL` — the index's exact complement. **Neither statement can use it.** The draft's GP-L3 claim was carried as a citation of `src/lib/db/generated/schema.ts:2297`; it is now confirmed against the live catalog. `guards.requires` stays `[]` and GP-L3 stands as a declared limitation so no future reader assumes an index named for this step is load-bearing for it.
+
+### 2.8 §12 — a live admin-consumer finding, surfaced at commit 1 (file, do not fix)
+
+`src/lib/admin/funnel.ts:724-731` declares, for this slug:
+
+```ts
+summary: { records_total: [0, 500], records_new: [0, 500], records_updated: [0, 100] },
+mutations: { permits: { ins: [0, 0], upd: [0, 500], del: [0, 0] } },
+row_delta: { permits: [0, 0] },
+```
+
+Measured against the run history in §2.5: **`records_total` / `records_updated` have exceeded these bounds on 5 of the last 40 runs** — `169`, `369`, `530`, `669`, `1193`, `1284` and `8465` all breach `records_updated ≤ 100`, and four of them breach `records_total ≤ 500` as well. The bounds are not a contract this conversion breaks; they are a contract *pre-conversion reality* already breaks. Per the plan's §12 ruling this is **filed, not fixed** — the conversion preserves the emitted values byte-for-byte, and re-tightening or widening an admin expectation bound is an admin-domain change outside this step's Operating Boundaries. Routed to `docs/reports/review_followups.md` at commit 2 alongside the A3 seam WARN.
+
+The `ins: [0,0]` / `row_delta: [0,0]` half of the same block is the machine-readable statement that neither write target may ever INSERT — which class N's own executor enforces structurally. That half is **preserved and strengthened** by the conversion (B-13).
+
+---
+
+## 3. Panel roster — who ran, at PLAN altitude (accretes through commit 9)
+
+Spec 08 §6.4, both altitudes mandatory. I5 is a FULL-form first member, so the full roster stands (plan §10). PLAN seats dispatched at commit 1; findings and their adjudications are recorded at the commit that closes each.
+
+| Seat | Agent / instrument | Status at commit 1 |
+|---|---|---|
+| Integration | `general-purpose`, main tree | dispatched — re-measuring plan §3.1's eight findings against `d7668b8a`'s landed generic ENRICHER runner |
+| Regression Guardian | `regression-guardian`, main tree | **REPORTED, commit 1 — 2 FAIL, 1 REFUTED-correction, 1 STALE, 1 INTENT-UNKNOWN; see §3.1** |
+| Observability | `observability-reviewer` | dispatched — verdict cascade both directions, 8-row id preservation, §11 counter scoping under the generic runner |
+| Reality-Check | `pipeline-reality-check`, main tree | commit 5 (plan altitude on the plausibility bound; §2.3 is its input) |
+| Idempotency Lens | `general-purpose`, main tree | commit 5 |
+| DeepSeek lens set ×4 | `npm run review:deepseek` | commits 2 / 7 |
+| Gemini | `npm run review:gemini` | OUTPUT altitude |
+
+### 3.1 Regression Guardian — PLAN altitude, findings and adjudications (commit 1)
+
+The seat walked all 19 commits, recovered a why for every construct, and ruled on the 13 B-guarantees. **Every finding below was re-executed by this pass before being acted on**; none was adopted on the seat's word alone.
+
+| # | Finding | Grounder re-execution | Disposition |
+|---|---|---|---|
+| **GRD-1** | **FAIL — undefended fence:** the `opts.withTransaction` injection seam (`:34-35`, `3e44218a`) has no stated successor and `geocode-permits.infra.test.ts`'s two cases have no re-pointing target | Re-read the seam and the test: confirmed the test depends on the `opts` override and on nothing else | **ACCEPTED.** §1.8d written; the re-pointing target and mock shape are a commit-6 deliverable, named there rather than deferred |
+| **GRD-2** | **FAIL — test inventory undercounts by 2** (`step-library.logic.test.ts`, `step-seam.logic.test.ts`) | Independently measured by this pass before the seat reported: `grep -rln` returns **11**, not 9 (§1.7) | **ACCEPTED, and already recorded.** §1.8b/§1.8c/§1.8 carry the three consequences |
+| **GRD-3** | **REFUTED-correction on GP-D1's mechanics:** `4de16d00` changed only the ROW literal; the `verdict:` literal has read `< 95` continuously since `fcd6ff68`, so the measured fix never took effect and `d24c964c` did not "restore" anything | Re-executed: `git show 4de16d00:…` line 118 reads `< 95`; `git show fcd6ff68:…` line 118 reads `< 95`; the `4de16d00` diff touches exactly one line. **Confirmed** | **ACCEPTED, and it makes GP-D1 worse, not better.** §2.6 rewritten; commit 2's ledger row uses the corrected mechanics |
+| **GRD-4** | **STALE plan prose:** §2's B-9 row says before-image is undeliverable on an enrich shape. `d7668b8a` landed and made it deliverable; the draft descriptor already declares `recovery.before_image: "generated"` | `git merge-base --is-ancestor d7668b8a HEAD` → true. Confirmed | **ACCEPTED.** B-9 is deliverable; the plan's §2 prose is stale, the artifact is not. Corrected in this report rather than in the frozen plan |
+| **GRD-5** | **INTENT-UNKNOWN:** `p.geo_id != ''` beside `p.geo_id IS NOT NULL` — present since `67057269`, never explained in any of 19 commit bodies | `git log -S` over the term: no body explains it | **ACCEPTED.** Gets its own Intent Ledger row at commit 2, marked `INTENT-UNKNOWN`, rather than being folded into the CASE-fence row. Carried verbatim in `scope` regardless, so preservation is not at risk |
+| **GRD-6** | **NOTE:** `safeParsePositiveInt`'s defence (`67711003`) has no declared home under Rule 2 | Re-read `67711003`: it replaced `parseInt` because `parseInt(undefined)` silently yielded `NaN` | **ACCEPTED.** §1.8e; commit 7c states where the defence lives |
+| **GRD-7** | **NOTE:** `pipeline-sdk.logic.test.ts`'s assertions were not read line-by-line and are the most likely in the 11-file set to be literal-SDK-call-text locks | not yet re-executed | **CARRIED to commit 7d** — read in full before the shell lands |
+| — | **PASS** on every other fence: CASE cast guard, two-column IS DISTINCT FROM, the transaction wrapper (removal `d24c964c` → restoration `3e44218a`, both diffs verified), `geocoded_at IS NOT NULL` narrowing, `records_total`/`after.total`/`Math.max(0,…)` counters, `getDbTimestamp`, `emitMeta` column lists, the advisory-lock skip | | preserved with correct recovered-why and correct commit citations |
+
+The seat also raised a caveat this pass endorses: `write.js`'s class-N executor is **descriptive, not generative** for the scope string — the SQL text is compute-authored, so the CASE fence's survival depends entirely on `scripts/lib/compute/geocode-permits.js` reproducing it byte-for-byte. *"Descriptor says the right thing" ≠ "compute did the right thing"* — verified at OUTPUT altitude (commit 7c), not at plan altitude.
+
+---
+
+## §R. Reflection
+
+### LOW-CONFIDENCE — what this assessment is least sure of at commit 1
+
+| # | Claim | Why it is low-confidence | How it gets closed |
+|---|---|---|---|
+| R1 | That the generic ENRICHER runner (`d7668b8a`) drives a 2-target, 2-phase, one-transaction descriptor **without** summing both targets' rowCounts into `records_updated` | `d7668b8a`'s own commit message says "post-phase counters iterate declared targets — I5 with 2 targets no longer throws". "No longer throws" is not "emits the same number". Spec 47 §11 requires W2's rowCount to be EXCLUDED | Observability seat, commit 1; proven by the commit-7e differential |
+| R2 | That class N's codegen preserves the `CASE …::INTEGER` fence verbatim | Not yet executed. 6 live rows would crash if it does not | Integration seat, commit 1; fence lock, commit 6 |
+| R3 | That `src/tests/geocode-permits.infra.test.ts` survives the shell replacement **without weakening** | It injects `opts.withTransaction` into a function the frozen shell will no longer own | Guardian seat, commit 1; re-proven green at 7d |
+| R4 | That the commit-7e differential proves anything about the WRITE | It cannot — W1 and W2 both have empty target populations today (§2.4). A zero-work run and a broken conversion produce the same capture | Said out loud in §2.4; the fence locks carry the proof instead |
+| R5 | That 90 is the right peel value for GP-D1 | It is A4's stated rule (floor to the nearest 5 below the measured 91.2816 %), not an independent judgement. The structural ceiling is ~97 %, so 90 leaves ~7 points of headroom and ~1.3 points of live margin | Commit 8 P1, with §2.6 as its whole rationale |
+
+### RECURRING / STANDARD-SHAPING — what this step teaches the standard
+
+| # | Lesson | Generalises to |
+|---|---|---|
+| S1 | **A "plausibly" in a plan is a measurement that was not taken.** The plan said the step "has plausibly WARNed on every run since"; one query turned it into 15/15 WARN, 0 PASS — which is what makes GP-D1 a defect rather than a suspicion | every PIN-vs-FIX adjudication: the consumer-observed half of the test is a query, not an inference |
+| S2 | **A fence's live population is a measurable number, and measuring it changes the fence's weight.** `has_nonnumeric_geo_id = 6` converts B-5 from "a commit body says PostgreSQL might reorder" into "six rows crash the statement today" | every `preserved-in-compute` fence: state how many live rows exercise it |
+| S3 | **A zero-work steady state makes a golden differential structurally uninformative — say so before capturing, not after.** W1 admits 0 rows and W2's scope is empty; the capture will be clean whether or not the conversion works | any conversion whose step is in a converged state at capture time |
+| S4 | **The test files a conversion breaks are named in the PRIOR step's comments.** `step-seam.logic.test.ts` says in prose "the moment `geocode_permits` converts, this count moves" — a grep of the fleet's own comments for this slug found the commit-9 obligation at commit 1 | every cutover: grep the test corpus for the incoming slug's NAME, not just its imports |
+| S5 | **An admin expectation bound can be broken by history, not by the change under review.** `funnel.ts`'s `records_updated ≤ 100` is breached by 5 of the last 40 pre-conversion runs. A Cross-Domain handoff has to distinguish "the conversion broke this" from "this was already broken" before it files anything | every Cross-Domain step whose consumer declares numeric expectations |
+| S6 | **A draft artifact in the working tree is part of the tree, and the fleet suites read the tree.** `validateDescriptor()` passing on a drafted descriptor says nothing about whether the descriptor may *exist* yet; three fleet suites red on its mere presence. "The draft validates" and "the draft may sit here" are different claims and only the first was measured | every conversion's PH-0 → commit-6 window; and generally, any registry-backed artifact whose existence is itself a registered fact |
+| S7 | **A fence can be a calling convention, and a calling convention has no descriptor field.** `opts.withTransaction` is the load-bearing seam of this step's only regression lock, and every category in the 20-category descriptor is about *data* — reads, writes, guards, counters. Nothing in the standard has a home for "this function's signature is a test seam", so the Intent Ledger walked straight past it | every conversion replacing an exported function with a frozen shell: enumerate the **exported surface** as a fence class of its own, not just the SQL and the counters |
+| S8 | **A measured fix that lands on the wrong one of two literals is worse than one that gets reverted.** `4de16d00` measured 90.9 %, changed the row, missed the verdict, and left no trace in the tree that a measurement had ever been taken — so five days later a reconciliation commit correctly "aligned" the row back, and the measurement vanished with it | every Rule-10 parallel-boolean site: a duplicated threshold is not just a disagreement risk, it is a *silent-no-op-fix* risk |
