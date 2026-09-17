@@ -2959,6 +2959,69 @@ async function runEnrichPhase({ descriptor, pool, compute, config, chainId, log,
   const heartbeatMs = resolveInterval('heartbeat_minutes_from_config', 60000);
   const lockTimeoutMs = resolveInterval('lock_timeout_ms_from_config', 1);
 
+  // ── WF3 2026-09-17 (review_followups.md:3788) — the PER-PHASE bound joins them ────
+  //
+  // `resolveInterval`'s own comment above says the literal "none" is "the same escape
+  // `execution.phases[].timeout_minutes_from_config` already carries". It did not: the two
+  // call sites below evaluated `Number(config[<declared name>])` bare, so `"none"` — and
+  // equally a TYPO — resolved to NaN, `if (timeoutMs > 0)` was false (no `SET LOCAL
+  // statement_timeout`), `startPhaseDeadline(..., NaN, ...)` took its `!timeoutMs` arm and
+  // returned the no-op stub, and the phase logged `timeout NaNmin`. Three declared guards
+  // unarmed and one nonsense log line, none of it distinguishable from a deliberate disable
+  // — ER-D1 verbatim, one field over (Spec 48 §3.6).
+  //
+  // Resolved for EVERY declared phase HERE, above the advisory lock, for the same reason
+  // resolveInterval is: a throw at the post_commit call site would fire AFTER the shared
+  // transaction had already COMMITTED. `Number.isFinite`, never `!x` — a variable that
+  // resolves to 0 is a deliberate disable, not a missing declaration (and `phaseTimeoutLabel`
+  // below keeps it distinguishable from a descriptor-level `"none"`, which is a different and
+  // permanent thing).
+  // phase name → { ms, minutes: number|null, declaredNone: boolean }
+  const phaseTimeouts = new Map();
+  for (const phase of phases) {
+    const varName = phase.timeout_minutes_from_config;
+    if (varName === 'none' || varName === undefined || varName === null) {
+      phaseTimeouts.set(phase.name, { ms: 0, minutes: null, declaredNone: true });
+      continue;
+    }
+    const raw = config[varName];
+    const minutes = Number(raw);
+    const value = Math.round(minutes * 60000);
+    if (!Number.isFinite(value)) {
+      throw new Error(
+        `${tag} execution.phases[${phase.name}].timeout_minutes_from_config names "${varName}", `
+        + `which resolved to ${JSON.stringify(raw)}. A declared phase bound must resolve to a finite `
+        + 'number; a non-finite value silently disabled BOTH the per-statement SET LOCAL '
+        + 'statement_timeout and the wall-clock phase deadline it declares (Spec 48 §3.6, '
+        + 'review_followups.md:3788). Declare the literal "none" to disable it deliberately.',
+      );
+    }
+    phaseTimeouts.set(phase.name, { ms: value, minutes, declaredNone: false });
+  }
+  /**
+   * Log fragment for a phase's declared bound — never the string "NaN".
+   *
+   * THREE STATES, THREE RENDERINGS (Regression Guardian, 2026-09-17). The first cut branched on
+   * `ms > 0`, which folded a THIRD state into the `"none"` bucket: a variable that resolves to
+   * the number 0. `scripts/seeds/logic_variables.json`'s `enrich_parcels_pass5_timeout_minutes`
+   * documents `0 = disabled` as a legitimate, admin-settable value with `min: 0`, and
+   * `enrich-parcels.descriptor.json`'s `optimal_config` phase consumes exactly that key — so an
+   * operator setting it to 0 in the admin UI would have been told the DESCRIPTOR declared
+   * `"none"`, which is a different and permanent thing. That is the same distinction
+   * `step.schema.json` insists on for the sibling fields: the accident, the declaration and the
+   * tunable must not render identically. So the branch is on WHERE the disable came from
+   * (`declaredNone`), never on the value:
+   *   descriptor literal `"none"` / field absent → `timeout disabled (declared "none")`
+   *   variable resolved to 0                     → `timeout 0min`   (the pre-fix bytes)
+   *   variable resolved to a finite N            → `timeout Nmin`   (the pre-fix bytes)
+   * The last two keep the pre-fix wording BYTE-FOR-BYTE — the raw declared number, not a
+   * round-trip through ms — so `enrich_parcels`' committed goldens cannot move on this fix.
+   */
+  const phaseTimeoutLabel = (phaseName) => {
+    const { minutes, declaredNone } = phaseTimeouts.get(phaseName);
+    return declaredNone ? 'timeout disabled (declared "none")' : `timeout ${minutes}min`;
+  };
+
   const passRaw = {};
   let scopeInsertCount = 0;
   let sharedTxnLockDenied = false;
@@ -3165,8 +3228,10 @@ async function runEnrichPhase({ descriptor, pool, compute, config, chainId, log,
       // COMMIT/ROLLBACK; re-issued per phase so a future descriptor giving
       // different phases different timeout config names is honoured without
       // further runner changes (today all four share one name).
-      const timeoutMinutes = Number(config[phase.timeout_minutes_from_config]);
-      const timeoutMs = Math.round(timeoutMinutes * 60000);
+      // WF3 2026-09-17 — resolved ABOVE the lock (phaseTimeouts), finite-or-throw. Was
+      // `Number(config[phase.timeout_minutes_from_config])` here, which made a typo and the
+      // declared "none" the same silent NaN (review_followups.md:3788).
+      const { ms: timeoutMs, minutes: timeoutMinutes } = phaseTimeouts.get(phase.name);
       if (timeoutMs > 0) await client.query(`SET LOCAL statement_timeout = ${timeoutMs}`);
       if (lockTimeoutMs > 0) await client.query(`SET LOCAL lock_timeout = ${lockTimeoutMs}`);
       const passSpec = passByName(phase.name);
@@ -3198,7 +3263,7 @@ async function runEnrichPhase({ descriptor, pool, compute, config, chainId, log,
       // boundary logging, independent of (and in addition to) recordHeartbeat's DB-only writes —
       // an operator tailing a log, or this pilot's own golden-capture harness (which tees child
       // stdout live, confirmed not itself at fault), needs a visible phase start/end + duration.
-      log.info(tag, `phase ${phase.name} starting (shared txn, timeout ${timeoutMinutes}min)`);
+      log.info(tag, `phase ${phase.name} starting (shared txn, ${phaseTimeoutLabel(phase.name)})`);
       const phaseStartMs = Date.now();
       currentPhaseName = phase.name;
       await recordHeartbeat(heartbeatClient, ownRunId, phase.name, rowsProcessed);
@@ -3330,8 +3395,10 @@ async function runEnrichPhase({ descriptor, pool, compute, config, chainId, log,
   // longer exists. The audit table is still built below, with the abort row on it.
   for (const phase of (phaseDeadlineInfo ? [] : postCommitPhases)) {
     const passSpec = passByName(phase.name);
-    const timeoutMinutes = Number(config[phase.timeout_minutes_from_config]);
-    const timeoutMs = Math.round(timeoutMinutes * 60000);
+    // WF3 2026-09-17 — same map, same finite-or-throw resolution as the shared-txn loop above.
+    // Resolving it HERE would have been worse than at :3216: this loop runs AFTER the shared
+    // transaction has COMMITTED, so a throw on a mis-declared name would fire post-commit.
+    const { ms: timeoutMs, minutes: timeoutMinutes } = phaseTimeouts.get(phase.name);
     const postClient = await pool.connect();
     let streamClient = null;
     let lockAcquired = false;
@@ -3439,7 +3506,7 @@ async function runEnrichPhase({ descriptor, pool, compute, config, chainId, log,
       // (:2452/:2478) — the post_commit loop previously had NEITHER line, so pass 5's
       // duration appeared in no log and no golden capture (post/sources_run1.json carried
       // 4 phase lines, not 5).
-      log.info(tag, `phase ${phase.name} starting (post_commit, timeout ${timeoutMinutes}min)`);
+      log.info(tag, `phase ${phase.name} starting (post_commit, ${phaseTimeoutLabel(phase.name)})`);
       const phaseStartMs = Date.now();
       currentPhaseName = phase.name;
       await recordHeartbeat(heartbeatClient, ownRunId, phase.name, rowsProcessed);

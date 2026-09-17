@@ -259,4 +259,60 @@ describe('execution-budget-disposition (Spec 124 R-X) — every execution.* dura
     expect(ci, 'the CI wall clock must be looser than run-chain\'s own step ceiling').toBeGreaterThan(stepCeiling!);
     expect(stepCeiling, 'the step ceiling must be looser than a single phase\'s deadline').toBeGreaterThan(phase!);
   });
+
+  // -------------------------------------------------------------------------
+  // (6) WF3 2026-09-17 — the PER-PHASE bound is finite-or-declared-disabled.
+  //
+  // `docs/reports/review_followups.md:3788`: the runner evaluated
+  // `Number(config[phase.timeout_minutes_from_config])` bare, so a TYPO and the literal
+  // `"none"` both produced NaN — no `SET LOCAL statement_timeout`, a no-op
+  // `startPhaseDeadline`, and `timeout NaNmin` in the log. Exactly ER-D1's silence class
+  // (Spec 48 §3.6), one field over from the two `resolveInterval` already covered.
+  //
+  // Two arms, because the runtime guard alone would only fire on the cloud:
+  //   (a) STATIC — every declared phase-timeout name is `"none"` or a SEEDED variable, so a
+  //       typo REDs here rather than at 20:16Z in a 300-minute job;
+  //   (b) ANCHOR — the runtime guard itself is still present in the library (a future
+  //       refactor that drops it must red this lock, not just this file's prose).
+  // -------------------------------------------------------------------------
+  it('(6) every execution.phases[].timeout_minutes_from_config is "none" or a SEEDED logic variable (review_followups.md:3788)', () => {
+    const seeds = JSON.parse(fs.readFileSync(LOGIC_VARS_PATH, 'utf8')) as Record<string, unknown>;
+    const declared: Array<{ slug: string; phase: string; varName: unknown }> = [];
+    for (const d of liveDescriptors()) {
+      const phases = (d.execution.phases as Array<Record<string, unknown>> | undefined) || [];
+      for (const p of phases) declared.push({ slug: d.slug, phase: String(p.name), varName: p.timeout_minutes_from_config });
+    }
+    expect(declared.length, 'no live descriptor declares execution.phases[] — this lock would be vacuous').toBeGreaterThan(0);
+    for (const { slug, phase, varName } of declared) {
+      expect(
+        typeof varName,
+        `${slug}.${phase}: execution.phases[].timeout_minutes_from_config must be declared (the literal "none" to disable)`,
+      ).toBe('string');
+      if (varName === 'none') continue;
+      expect(
+        Object.prototype.hasOwnProperty.call(seeds, varName as string),
+        `${slug}.${phase}: timeout_minutes_from_config names "${String(varName)}", which is NOT in scripts/seeds/logic_variables.json. Before WF3 2026-09-17 that resolved to NaN and silently disabled BOTH the SET LOCAL statement_timeout and the phase deadline; it now throws at construction, but a typo must red HERE, not on the cloud.`,
+      ).toBe(true);
+    }
+  });
+
+  it('(6b) the runtime guard that makes a mis-declared phase timeout a THROW is still in scripts/lib/step/index.js', () => {
+    const src = fs.readFileSync(path.join(REPO_ROOT, 'scripts/lib/step/index.js'), 'utf8');
+    expect(
+      src,
+      'the per-phase timeout must still be resolved up front (phaseTimeouts), not re-derived at the call sites',
+    ).toMatch(/const phaseTimeouts = new Map\(\)/);
+    expect(
+      src,
+      'the finite-or-throw arm must still be there — Number.isFinite, never !x, so a declared 0 stays a deliberate disable',
+    ).toMatch(/execution\.phases\[\$\{phase\.name\}\]\.timeout_minutes_from_config/);
+    // Comments stripped FIRST — `tasks/lessons.md`'s recurring class: a text-scanning lock
+    // over a corpus that documents its own rules reports the promise as the breach (the
+    // fix's own docblock quotes the retired expression verbatim).
+    const code = src.split('\n').filter((l) => !l.trim().startsWith('//')).join('\n');
+    expect(
+      code.match(/Number\(config\[phase\.timeout_minutes_from_config\]\)/g),
+      'no call site may re-derive the bound bare — that is the NaN path this lock retired',
+    ).toBeNull();
+  });
 });

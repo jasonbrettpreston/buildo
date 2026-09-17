@@ -3944,6 +3944,84 @@ describe('runEnrichPhase — the GENERIC ENRICHER runner (batch-2 Phase 0.10)', 
       .rejects.toThrow(/fixture_not_declared_anywhere/);
   });
 
+  // --- L4f/L4g/L4h — the PER-PHASE bound joins ER-D1 -----------------------
+  //
+  // WF3 2026-09-17, closing docs/reports/review_followups.md:3788. L4e's own title
+  // asserted `"none"` is "the same escape timeout_minutes_from_config carries" — and it
+  // was not: `runEnrichPhase` evaluated `Number(config[phase.timeout_minutes_from_config])`
+  // bare at both its phase loops, so `"none"` AND a typo both produced NaN, `if (timeoutMs
+  // > 0)` was false (no `SET LOCAL statement_timeout`), `startPhaseDeadline(..., NaN, ...)`
+  // took its `!timeoutMs` no-op arm, and the phase logged `timeout NaNmin`.
+  //
+  // RED BEFORE THE FIX, measured live on `geocode_permits` (which declares `"none"`
+  // truthfully on both phases): `phase geocode starting (shared txn, timeout NaNmin)` —
+  // present verbatim in all three committed POST goldens' `stdout`.
+  //
+  // Both directions, because the disable is load-bearing: L4f pins that a DECLARED "none"
+  // keeps disabling; L4g pins that an ACCIDENT throws, above the lock; L4h pins that a
+  // finite bound is unchanged down to the log bytes (enrich_parcels' five goldens).
+  const infoLog = () => {
+    const lines: string[] = [];
+    return { lines, log: { info: (_t: string, m: string) => { lines.push(m); }, warn: () => {}, error: () => {} } };
+  };
+
+  it('L4f — a phase declaring timeout_minutes_from_config "none" disables the bound deliberately: no SET LOCAL statement_timeout, no throw, and the log says so instead of "NaNmin"', async () => {
+    const passLog: string[] = [];
+    const pool = enrichPool();
+    const d = genericDescriptor();
+    ((d.execution as Record<string, unknown>).phases as Record<string, unknown>[])[0]!.timeout_minutes_from_config = 'none';
+    const cap = infoLog();
+    await stepLib.runEnrichPhase({ ...args(d, pool, genericCompute(passLog), { fixture_pass_timeout_minutes: undefined }), log: cap.log } as never);
+    expect(passLog, 'a declared "none" must still let the phase run').toEqual(['geocode']);
+    expect(pool.sql.some((q) => /^SET LOCAL statement_timeout/.test(q)), 'a declared "none" issues no statement ceiling').toBe(false);
+    const start = cap.lines.find((l) => l.startsWith('phase geocode starting'));
+    expect(start).toBe('phase geocode starting (shared txn, timeout disabled (declared "none"))');
+    expect(cap.lines.join('\n'), 'NaN must never reach an operator-facing line').not.toMatch(/NaN/);
+  });
+
+  it('L4g — a phase naming a variable that resolves to nothing THROWS, naming the field, the phase and the variable — and it throws ABOVE the advisory lock, before any transaction', async () => {
+    const pool = enrichPool();
+    const passLog: string[] = [];
+    await expect(
+      stepLib.runEnrichPhase(args(genericDescriptor(), pool, genericCompute(passLog), { fixture_pass_timeout_minutes: undefined }) as never),
+    ).rejects.toThrow(/execution\.phases\[geocode\]\.timeout_minutes_from_config[\s\S]*fixture_pass_timeout_minutes/);
+    expect(passLog, 'no pass may run').toEqual([]);
+    expect(
+      pool.sql.some((q) => /pg_try_advisory/.test(q)),
+      'the throw must precede the advisory lock — a post_commit-site throw would fire AFTER the shared txn COMMITted',
+    ).toBe(false);
+  });
+
+  it('L4i — a variable that resolves to 0 is an ADMIN-TUNABLE disable, not the descriptor\'s `"none"` — three states, three renderings', async () => {
+    // Regression Guardian 2026-09-17. The first cut branched on `ms > 0`, which rendered a
+    // config value of 0 as `timeout disabled (declared "none")` — telling the reader the
+    // DESCRIPTOR declared no bound when in fact an operator had turned one off in the admin UI.
+    // `scripts/seeds/logic_variables.json`'s `enrich_parcels_pass5_timeout_minutes` documents
+    // `0 = disabled` with `min: 0`, and `enrich-parcels.descriptor.json`'s `optimal_config`
+    // phase consumes exactly that key, so this is reachable, not hypothetical. It also broke
+    // this WF's own "byte-identical for a finite bound" claim: 0 IS finite, and the pre-fix
+    // code logged `timeout 0min`.
+    const passLog: string[] = [];
+    const pool = enrichPool();
+    const cap = infoLog();
+    await stepLib.runEnrichPhase({ ...args(genericDescriptor(), pool, genericCompute(passLog), { fixture_pass_timeout_minutes: 0 }), log: cap.log } as never);
+    expect(passLog, 'a deliberate 0 still runs the phase').toEqual(['geocode']);
+    expect(pool.sql.some((q) => /^SET LOCAL statement_timeout/.test(q)), '0 issues no statement ceiling').toBe(false);
+    expect(cap.lines.find((l) => l.startsWith('phase geocode starting')))
+      .toBe('phase geocode starting (shared txn, timeout 0min)');
+    expect(cap.lines.join('\n'), 'a tunable 0 must NOT claim the descriptor declared "none"').not.toMatch(/declared "none"/);
+  });
+
+  it('L4h — a finite declared bound is UNCHANGED: the same SET LOCAL statement_timeout and the same log bytes as before the fix (enrich_parcels goldens must not move)', async () => {
+    const passLog: string[] = [];
+    const pool = enrichPool();
+    const cap = infoLog();
+    await stepLib.runEnrichPhase({ ...args(genericDescriptor(), pool, genericCompute(passLog), { fixture_pass_timeout_minutes: 5 }), log: cap.log } as never);
+    expect(pool.sql.some((q) => q === 'SET LOCAL statement_timeout = 300000')).toBe(true);
+    expect(cap.lines.find((l) => l.startsWith('phase geocode starting')))
+      .toBe('phase geocode starting (shared txn, timeout 5min)');
+  });
+
   it('L4d — ER-D1: an UNDECLARED execution.heartbeat_minutes_from_config is itself the throw (the field is not optional on an enrich shape)', async () => {
     const pool = enrichPool();
     const d = genericDescriptor();
