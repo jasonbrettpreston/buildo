@@ -856,6 +856,31 @@ zero unexplained once attributed to the conversion itself.** The authoritative b
 preservation evidence remains the SAME-DAY G2' column-level comparator above (99/100 columns
 byte-identical, 0 unexplained).
 
+#### ADDENDUM 2026-09-17 (WF3 counter sources) — TWO NEW declared PRE→POST diffs: `records_total` and `records_new`
+
+`.cursor/wf3_enrich_parcels_counter_sources_active_task.md` closed the HIGH batch-2 Phase 0.10b filed
+against itself: this step's three DECLARED counters were rooted at a bare `compute.*`, which the enrich
+branch's `counterScope` (`{matched, written}` + `records_meta`) cannot resolve, so `records_total`,
+`records_new` and `records_updated` emitted **NULL on every run** from conversion (`07afb862`) until that
+WF3 re-pointed them at `matched.compute.*`. Two of the three now differ from the PRE capture and are
+declared here BY NAME, because the G8 comparator is entitled to demand exactly that:
+
+- **`summary.records_total`** — PRE `null` → POST **`486530`**. The legacy script never populated it; the
+  converted step now resolves it from `matched.compute.total_parcels_scanned`, the same number its own
+  `records_meta.total_parcels_scanned` has carried all along.
+- **`summary.records_new`** — PRE `null` → POST **`0`**. A literal 0 by construction: this step INSERTs no
+  `parcels` row, every pass is an UPDATE (`records_new_aggregate`).
+- `summary.records_updated` is NOT a new diff: PRE reported `0` and POST now reports `0` again. Conversion
+  had silently turned that real `0` into a `null`; this WF3 restores it, so the field returns to PRE parity
+  rather than departing from it.
+
+**Direction of travel: the converted step now reports MORE than the legacy one did, never less**, and the
+ledger row moved in lockstep with the summary (measured on the `--chain=none` capture, where the step owns
+its own `pipeline_runs` row). Full recapture + A/B/C/D classification:
+`docs/reports/golden/enrich_parcels/wf3-counter-sources-recapture.md`. Fleet-locked by `step-validate.mjs`
+fast invariant #26 (COUNTER-ROOT), which REDs any declared counter source whose root the runner's own
+`counterScope` does not build for that shape.
+
 
 ## §R Reflection (owed per R-F, carried into this same report since this WF3 chain's own commits are what's being landed)
 
@@ -912,10 +937,10 @@ byte-identical, 0 unexplained).
 | G4 | 2 | 2 | risk-class row with chance+impact found=true |
 | G5 | 1 | 1 | db=true clock=true network=true argv/env=true |
 | G6 | 3 | 3 | 18 ledger row(s), 0 without CLOSED/PIN () |
-| G7 | 3 | 3 | file=true fences=3 it-count=87 RED-evidence=true |
+| G7 | 3 | 3 | file=true fences=3 it-count=91 RED-evidence=true |
 | G8 | 3 | 3 | missing-invocations=0 missing-pre-invocations=0 stale-fingerprints=0 unexplained-diffs=0 |
 | G9 (binary) | PASS | — | heading=true low-confidence-table=true recurring-table=true |
-| G4d (fence<=lock) | PASS | — | fences=3 lock-it-count=87 |
+| G4d (fence<=lock) | PASS | — | fences=3 lock-it-count=91 |
 | G-shape | PASS | — | file-clean=true compute-clean=true |
 
 ### Fast invariants (always run — the fast descriptor gate)
@@ -936,37 +961,20 @@ byte-identical, 0 unexplained).
 | 23 | (registry) | PASS | COMPRESSED-FORM-ELIGIBLE: not applicable (0 pending slugs declare the compressed form) |
 | 24 | (registry) | PASS | COMPRESSED-FORM-DEFAULT: not applicable (0 pending slugs whose archetype is eligible) |
 | 25 | (registry) | PASS | ARCHETYPE-PARITY: 14 converted slug(s) — 6 compared against a retained census row (all agree), 8 with no retained row (census arm n/a, pre-R-AO cutovers); every archetype has a declared freeze profile |
+| 26 | (registry) | PASS | COUNTER-ROOT: 32 declared counter source(s) across 11 descriptor(s) all root in their own shape's counterScope (+ records_meta) |
 
 ### Captures (item iv)
 - missing invocations (POST): none
 - missing invocations (PRE, GOLD-PRE): none
 - stale fingerprints: none
-- compare ran: true · diffs found: 583 · unexplained: 0
+- compare ran: true · diffs found: 584 · unexplained: 0
 
 ### Test suite (item iii)
-- 1139/1157 passed (suite success=false)
+- 1161/1161 passed (suite success=true)
 - harvested: 19 file(s) from 3 FLEET-WIDE targets (src/tests/step-conformance.infra.test.ts, src/tests/golden-fingerprint.infra.test.ts, src/tests/steps/) — one spawn per run, so every step's report carries this same number, by design
 - excluded (R-AG live-DB tier, owned by `npm run test:db`, derived from package.json `scripts.test`): 5 — src/tests/steps/link_massing/metamorphic.test.ts, src/tests/steps/link_massing/nearest-determinism.test.ts, src/tests/steps/link_massing/rung1-inline-wkt.test.ts, src/tests/steps/link_parcel_addresses/metamorphic.test.ts, src/tests/steps/link_parcel_addresses/rung1-inline-wkt.test.ts
 - skipped (declared but not run): 0
-- failing (18):
-  - src/tests/step-conformance.infra.test.ts > §5.5 compute shape — dispatch table ≡ declared checks > scripts/lib/compute/geocode-permits.js — dispatch keys are exactly the descriptor's check ids, in order
-  - src/tests/step-conformance.infra.test.ts > LDG-4 — descriptor <-> ledger cross-check (SUPERSET + EQUALITY, converted-producer-restricted) > link_parcels — declared inputs.reads.steps[] vs the ledger-derived converted-producer set
-  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/quality/assert-schema.js (slug "assert_schema") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
-  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/load-ravines.js (slug "load_ravines") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
-  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/link-massing.js (slug "link_massing") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
-  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/link-wsib.js (slug "link_wsib") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
-  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/link-parcel-addresses.js (slug "link_parcel_addresses") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
-  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/compute-centroids.js (slug "compute_centroids") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
-  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/link-parcels.js (slug "link_parcels") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
-  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/refresh-snapshot.js (slug "refresh_snapshot") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
-  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/enrich-parcels.js (slug "enrich_parcels") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
-  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/quality/assert-global-coverage.js (slug "assert_global_coverage") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
-  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/quality/assert-data-bounds.js (slug "assert_data_bounds") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
-  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/quality/assert-engine-health.js (slug "assert_engine_health") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
-  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/link-neighbourhoods.js (slug "link_neighbourhoods") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
-  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/geocode-permits.js (slug "geocode_permits") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
-  - src/tests/steps/assert_schema/violations.test.ts > RULING R-D — declared_logic_variables_present (cloud parity, chain-start assertion) > checks[].expect ≡ config.probe_presence ≡ the LIVE fleet derivation — none of the three may drift from the others
-  - src/tests/steps/assert_schema/violations.test.ts > R-D generator — scripts/generate-assert-schema-probe-lists.js (Ask A1) > real file — applyToText(committed text, LIVE names) is a byte-for-byte no-op (the descriptor is clean, not stale)
+- failing: none
 
 ### Policy coverage matrix (item vi) — Spec 124 Rules 1-13
 
@@ -985,7 +993,7 @@ byte-identical, 0 unexplained).
 | 11 | Phase-order re-derive (declared half, checkOrderGuaranteesCited) | enforced-green | 2 when:"pre_write" check(s), 0 order_guarantee violation(s) — G-3 completeness half stays open |
 | 12 | Truthful crash posture (R-B reachability, static + R-M before-image) | enforced-green | R-B (checkInterruptedPostureTruthful): shape=enrich runner=runEnrichPhase: no staleness.ledgerGatedSkip/selectMode on this path (ENRICHER's own scope-defer archetype, Spec 122 §3.0b); calls staleness.detectInterruptedRetraction directly and folds interruptedRetraction.interrupted into the full/incremental decision before any pass runs · R-M: prose-only (R-M/LG-17 describe not scoped to this step (vitest not run, or no before-image target)) |
 | 13 | A step validates itself | enforced-green | this run of step:validate IS the mechanism |
-| P3 | I/O cost adjudication (measured, not gated) | measured | descriptor=82484B notes=11481B checks=31 rows records_meta=8110B (newest post/ capture) |
+| P3 | I/O cost adjudication (measured, not gated) | measured | descriptor=83375B notes=11481B checks=31 rows records_meta=8116B (newest post/ capture) |
 
 **Enforced-green: 13/14**
 

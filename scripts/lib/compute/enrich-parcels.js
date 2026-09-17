@@ -1946,7 +1946,13 @@ async function computePostPhase(pool, { passRaw }) {
     },
     // D#5 — the honest aggregate, computed by this module's own pure helper (never
     // re-derived by the runner) — feeds counters.records_updated via the descriptor's
-    // "compute.records_updated_aggregate" source. `records_new_aggregate` is a literal 0
+    // "matched.compute.records_updated_aggregate" source. THE ROOT IS LOAD-BEARING and the
+    // literal here used to be wrong: the runner assigns this block at `matched.compute`
+    // (resolveEnrichAggregate), and the enrich branch's counterScope is `{matched, written}`,
+    // so the bare "compute.*" this comment named until 2026-09-17 resolved to NOTHING —
+    // all three declared counters emitted NULL from conversion (07afb862) until the WF3 that
+    // re-pointed them (Spec 48 §3.6, Spec 79 C11; fleet-locked by step-validate.mjs fast
+    // invariant #26 COUNTER-ROOT). `records_new_aggregate` is a literal 0
     // because this step INSERTs no `parcels` row: every pass is an UPDATE.
     compute: {
       total_parcels_scanned: totalParcels,

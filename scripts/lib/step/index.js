@@ -2665,10 +2665,24 @@ async function* streamOverClient(client, sql, params = [], options = {}) {
  * ⚠️ AND KNOW WHICH ROOT ACTUALLY RESOLVES. `counters.<slot>.source` resolves against
  * `{matched, written, records_meta}` for this shape, so `matched.compute.records_updated_aggregate`
  * and `written.e<N>.updated` BOTH resolve (measured), while a bare `compute.*` resolves NULL for
- * EVERY ENRICHER — `enrich_parcels` included, whose own three declared counters have read null
- * since conversion for exactly this reason (filed HIGH, deliberately not fixed in 0.10b because
- * fixing it moves the emitted summary). Declare `matched.compute.*` or `written.*`, never a bare
- * `compute.*`, until that filing closes.
+ * EVERY ENRICHER. Declare `matched.compute.*` or `written.*`, never a bare `compute.*`.
+ *
+ * That filing is now CLOSED (WF3, 2026-09-17): `enrich_parcels`' own three declared counters had
+ * read null since conversion (`07afb862`) for exactly this reason, and 0.10b deliberately left it
+ * because fixing it moves the emitted summary; the WF3 re-pointed the descriptor at
+ * `matched.compute.*`, recaptured the goldens, and made the rule FLEET-ENFORCED rather than
+ * advisory — `step-validate.mjs` fast invariant #26 (COUNTER-ROOT) REDs any declared source whose
+ * root is not one this ternary actually builds for that shape (+ `records_meta`), parsing the
+ * roots out of THIS file rather than copying them.
+ *
+ * ⚠️ AND KNOW WHICH ARM YOU ARE ON. The two arms below do NOT agree on key NAMES. The hook arm
+ * returns `postPhase.compute` VERBATIM — whatever the step's own export names (`enrich_parcels`
+ * names `total_parcels_scanned` / `records_new_aggregate` / `records_updated_aggregate`). The
+ * DERIVED arm mints its own three: `records_scanned_aggregate` / `records_new_aggregate` /
+ * `records_updated_aggregate`. So an ENRICHER that declares NO `post_phase` hook and copies
+ * `matched.compute.total_parcels_scanned` from this step's descriptor gets null — it must declare
+ * `matched.compute.records_scanned_aggregate`. Invariant #26 checks the ROOT, not the leaf key;
+ * the leaf is the author's own to get right.
  */
 function resolveEnrichAggregate(postPhase, written, phases, specs, tag) {
   if (postPhase.compute !== undefined) {

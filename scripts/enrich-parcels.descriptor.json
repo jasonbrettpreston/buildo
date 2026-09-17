@@ -723,13 +723,13 @@
   },
 
   "counters": {
-    "records_total": { "source": "compute.total_parcels_scanned", "scoped_by": "step" },
-    "records_new": { "source": "compute.records_new_aggregate", "scoped_by": "step" },
+    "records_total": { "source": "matched.compute.total_parcels_scanned", "scoped_by": "step" },
+    "records_new": { "source": "matched.compute.records_new_aggregate", "scoped_by": "step" },
     "records_updated": {
-      "source": "compute.records_updated_aggregate",
+      "source": "matched.compute.records_updated_aggregate",
       "scoped_by": "step",
       "why": {
-        "text": "computeAggregateRecordsUpdated (scripts/lib/compute/enrich-parcels.js) deliberately EXCLUDES pass 4 (comparable-builds) from the distinct-union of ids it aggregates from passes 1/2/3/5 — a row pass 4 alone touches is not counted as \"genuinely updated\" work. Carried verbatim from the legacy script's own docblock (a §11 counter-scoping decision, not an omission): pass 4's own write target was EP-D1/B4.5-PINNED (no IS DISTINCT FROM guard) for most of this pilot, and its idempotent_rerun only reached \"zero_writes\" once commit 8 P2 (the guard) and P3 (EP-D9's deterministic tiebreak) both landed — before that, every eligible row's pass-4 write was unconditional under --full, making a pass-4-inclusive count meaningless as a \"did work happen\" signal. scoped_by:\"step\" therefore does NOT mean every write target contributes to this counter.",
+        "text": "ROOT (WF3, 2026-09-17): all three sources are rooted at \"matched.compute.\", NOT a bare \"compute.\". The enrich branch builds counterScope = {matched, written} (scripts/lib/step/index.js, `const counterScope =`) and deriveCounters adds only records_meta, so the aggregate block — which the runner assigns at matched.compute (resolveEnrichAggregate) — is one level down from where a bare \"compute.*\" looks. It declared the bare spelling from conversion (07afb862, pilot 9 commit 7b) until this WF3, and all three counters therefore emitted NULL on every run for 13 days while records_meta carried the real numbers (Spec 48 §3.6, Spec 79 C11; filed HIGH by batch-2 Phase 0.10b, closed here). Locked both directions in src/tests/steps/enrich_parcels/violations.test.ts and fleet-wide by step-validate.mjs fast invariant #26 (COUNTER-ROOT). SCOPING (unchanged): computeAggregateRecordsUpdated (scripts/lib/compute/enrich-parcels.js) deliberately EXCLUDES pass 4 (comparable-builds) from the distinct-union of ids it aggregates from passes 1/2/3/5 — a row pass 4 alone touches is not counted as \"genuinely updated\" work. Carried verbatim from the legacy script's own docblock (a §11 counter-scoping decision, not an omission): pass 4's own write target was EP-D1/B4.5-PINNED (no IS DISTINCT FROM guard) for most of this pilot, and its idempotent_rerun only reached \"zero_writes\" once commit 8 P2 (the guard) and P3 (EP-D9's deterministic tiebreak) both landed — before that, every eligible row's pass-4 write was unconditional under --full, making a pass-4-inclusive count meaningless as a \"did work happen\" signal. scoped_by:\"step\" therefore does NOT mean every write target contributes to this counter.",
         "liveness": { "kind": "file", "ref": "scripts/lib/compute/enrich-parcels.js" }
       }
     }

@@ -2497,3 +2497,104 @@ describe('execution.enrich_hooks / heartbeat + lock-timeout from config (batch-2
   });
 
 });
+
+// ---------------------------------------------------------------------------
+// WF3 counter sources (2026-09-17) — the HIGH batch-2 Phase 0.10b filed against
+// ITSELF: `enrich_parcels`' three DECLARED counters resolved `null` on every run
+// since conversion (`07afb862`, pilot 9 commit 7b), because the descriptor rooted
+// them at a bare `compute.*` while the enrich branch's `counterScope`
+// (`scripts/lib/step/index.js`, `const counterScope =`) builds `{matched, written}`
+// and `deriveCounters` adds only `records_meta`. The block the sources name lives at
+// `matched.compute.*` — one level down. Spec 48 §3.6 ("NULL is not zero") and
+// Spec 79 C11 both fire: the ledger read NULL while `records_meta` carried the
+// number (measured live, 2026-09-17: 8 consecutive `pipeline_runs` rows with
+// `records_* = NULL` and `records_meta.total_parcels_scanned = 486530`).
+//
+// BOTH DIRECTIONS, through the REAL resolver — never a re-implementation of it:
+//   (1) the LIVE descriptor's three declared sources resolve to FINITE numbers
+//       against a fixture `matched.compute` (the fixed state), AND
+//   (2) the RETIRED bare `compute.*` spelling resolves `null` for all three
+//       against the SAME scope (the RED direction — this arm is what makes (1) a
+//       measurement of the fix rather than a restatement of the descriptor).
+// ---------------------------------------------------------------------------
+describe('counters — the three declared sources resolve against the enrich counterScope (WF3, 2026-09-17)', () => {
+  interface CounterSlot { source: string; scoped_by: unknown; why?: unknown }
+  type Counters = 'none' | Record<'records_total' | 'records_new' | 'records_updated', CounterSlot | 'none'>;
+
+  /** The runner's OWN resolver + scope builder — required, never re-implemented here. */
+  function stepLib(): {
+    deriveCounters: (d: unknown, computeResult: unknown, scope: unknown) => Record<string, number | null>;
+  } {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports -- exercising the real CJS library
+    return require(path.join(REPO_ROOT, INDEX_REL)) as {
+      deriveCounters: (d: unknown, computeResult: unknown, scope: unknown) => Record<string, number | null>;
+    };
+  }
+
+  /** Exactly what `runEnrichPhase` hands `deriveCounters` on the normal-completion path. */
+  const FIXTURE_AGGREGATE = { total_parcels_scanned: 486_530, records_new_aggregate: 0, records_updated_aggregate: 7 };
+  const enrichScope = () => ({ matched: { compute: { ...FIXTURE_AGGREGATE } }, written: {} });
+
+  it('the descriptor declares all three sources rooted at `matched.compute.` — the root the enrich branch actually builds', () => {
+    const counters = (loadDescriptor() as unknown as { counters: Counters }).counters;
+    expect(counters, 'counters is "none" — this step declares three real counters').not.toBe('none');
+    for (const slot of ['records_total', 'records_new', 'records_updated'] as const) {
+      const c = (counters as Exclude<Counters, 'none'>)[slot];
+      expect(c, `${slot} is "none"`).not.toBe('none');
+      expect(
+        (c as CounterSlot).source,
+        `${slot}.source must be rooted at "matched.compute." — a bare "compute.*" resolves null for EVERY ENRICHER ` +
+          '(counterScope roots at {matched, written} + records_meta)',
+      ).toMatch(/^matched\.compute\.[A-Za-z0-9_]+$/);
+    }
+  });
+
+  it('every declared source resolves to a FINITE number through the real deriveCounters, and each lands on the key it names', () => {
+    const d = loadDescriptor() as unknown as { counters: Exclude<Counters, 'none'> };
+    const counters = stepLib().deriveCounters(d, {}, enrichScope());
+    for (const slot of ['records_total', 'records_new', 'records_updated'] as const) {
+      expect(Number.isFinite(counters[slot] as number), `${slot} resolved ${JSON.stringify(counters[slot])}, not a finite number`).toBe(true);
+    }
+    // Not just "finite" — the value the source's OWN key carries, so a slot pointing at
+    // the wrong aggregate key is visible rather than coincidentally also-a-number. The
+    // three fixture values are deliberately distinct for exactly that reason.
+    const keyOf = (slot: 'records_total' | 'records_new' | 'records_updated') =>
+      (d.counters[slot] as CounterSlot).source.split('.').pop() as keyof typeof FIXTURE_AGGREGATE;
+    expect(counters.records_total).toBe(FIXTURE_AGGREGATE[keyOf('records_total')]);
+    expect(counters.records_new).toBe(FIXTURE_AGGREGATE[keyOf('records_new')]);
+    expect(counters.records_updated).toBe(FIXTURE_AGGREGATE[keyOf('records_updated')]);
+  });
+
+  it('RED DIRECTION — the RETIRED bare `compute.*` spelling resolves null for all three against the SAME scope (the defect, reproduced)', () => {
+    const d = JSON.parse(JSON.stringify(loadDescriptor())) as unknown as { counters: Exclude<Counters, 'none'> };
+    for (const slot of ['records_total', 'records_new', 'records_updated'] as const) {
+      const c = d.counters[slot] as CounterSlot;
+      c.source = c.source.replace(/^matched\./, ''); // back to the pre-fix spelling, byte for byte
+    }
+    const counters = stepLib().deriveCounters(d, {}, enrichScope());
+    expect(
+      counters,
+      'a bare `compute.*` source no longer resolves null — either counterScope gained a `compute` root (remedy (a), ' +
+        'which this WF3 deliberately did NOT take) or the resolver changed; re-rule before relaxing this lock',
+    ).toEqual({ records_total: null, records_new: null, records_updated: null });
+  });
+
+  it('the resolved values are the SAME numbers `computePostPhase` produces — the declaration names the live aggregate, not a parallel one', async () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports -- exercising the real CJS compute module
+    const ep = require(path.join(REPO_ROOT, COMPUTE_REL)) as {
+      computePostPhase: (pool: unknown, ctx: { passRaw: Record<string, unknown> }) => Promise<{ compute: Record<string, number> }>;
+    };
+    const counts = [{ n: 486_530 }, { n: 470_000 }, { n: 0 }];
+    let i = 0;
+    const pool = { query: async () => ({ rows: [counts[i++]!] }) };
+    const res = await ep.computePostPhase(pool, {
+      passRaw: { zoning: { updated: 1, updatedIds: [1, 2] }, optimal_config: { genuineIds: new Set([3]) } },
+    });
+    const d = loadDescriptor() as unknown as { counters: Exclude<Counters, 'none'> };
+    const counters = stepLib().deriveCounters(d, {}, { matched: { compute: res.compute }, written: {} });
+    expect(counters.records_total).toBe(res.compute.total_parcels_scanned);
+    expect(counters.records_new).toBe(res.compute.records_new_aggregate);
+    expect(counters.records_updated).toBe(res.compute.records_updated_aggregate);
+    expect(counters.records_total).toBe(486_530);
+  });
+});

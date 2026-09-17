@@ -26,12 +26,16 @@
  * 2026-09-11; 23 = COMPRESSED-FORM-ELIGIBLE, Spec 124 R-PACE-1, 2026-09-13;
  * 24 = COMPRESSED-FORM-DEFAULT, Spec 124 R-AH, 2026-09-14; 25 = ARCHETYPE-PARITY,
  * Spec 124 R-AO, 2026-09-15 — all hard-stop
- * scoped to their own `blockedSlugs` exactly like id 9). Id 6 is retired (superseded by G8/
+ * scoped to their own `blockedSlugs` exactly like id 9; 26 = COUNTER-ROOT, WF3
+ * 2026-09-17, same scoping). Id 6 is retired (superseded by G8/
  * item iv, never reused). HIGH-2 (output-panel remediation, 2026-09-10): ids
  * 20/21 (not 10/11) — 1-13 is reserved so a fast invariant id can NEVER
  * collide with a Policy Coverage Matrix Rule number in a naive stdout scrape
  * (both tables render one row per "| N | ..." and the Fast Invariants table
- * comes first in the output). Currently 13 invariants, ids 1-5,7-9,20-24:
+ * comes first in the output). Currently 15 invariants, ids 1-5,7-9,20-26 (the
+ * count read "13"/"14" while the id list already said 1-5,7-9,20-24/26 — an
+ * off-by-one that predates this line's last two edits; corrected 2026-09-17
+ * against an actual `--fast` run, which renders 15 rows):
  *   1. database.min_migration <= migrations/*.sql COUNT (LW-D8 — a COUNT floor,
  *      never a filename number)
  *   2. every declared config.logic_variables[].name has a scripts/seeds/logic_variables.json entry
@@ -80,6 +84,16 @@
  *      exemption (R-AP). Provenance: assert_engine_health, censused ASSERT,
  *      measured RECORDER at PH-0 (R-AE) — which forced I3's mid-flight revert
  *      from the compressed form to the full nine-commit form (331f97ad)
+ *   26. COUNTER-ROOT (WF3 2026-09-17; Spec 47 §11, Spec 48 §3.6, Spec 79 C11):
+ *      every declared `counters.<slot>.source` must ROOT in a key the runner's
+ *      own `const counterScope =` ternary actually builds for that descriptor's
+ *      shape, plus `records_meta` (which `deriveCounters` spreads in for every
+ *      shape). The roots are PARSED out of `scripts/lib/step/index.js`, never
+ *      copied here. Provenance: `enrich_parcels` declared a bare `compute.*`
+ *      root from conversion (`07afb862`) while the enrich branch builds
+ *      `{matched, written}` and the block lives at `matched.compute.*` — so all
+ *      three of its counters emitted NULL on every run for 13 days, with the
+ *      real numbers sitting in `records_meta` and nothing testing it either way
  *
  * SPEC LINK: docs/specs/01-pipeline/123_step_opt_assessment_validation.md SS6 (gates),
  *            SS5.2 (per-step checklist), SS4.4 (checker self-test doctrine, SS12b.6)
@@ -1523,6 +1537,64 @@ function fastInvariants(rows, converted, pending) {
     });
   }
 
+  // 26. COUNTER-ROOT (WF3 2026-09-17, Spec 47 §11 / Spec 48 §3.6 / Spec 79 C11)
+  // — every declared `counters.<slot>.source` must ROOT in something the runner's
+  // own `counterScope` actually builds for that descriptor's shape (+ records_meta,
+  // which deriveCounters spreads in unconditionally). Registry-scoped with
+  // `blockedSlugs` (the id-9/22/25 shape), so an unrelated step's `--fast` run is not
+  // hard-stopped by another step's own mis-rooted source — but the offending step's
+  // own run is. The roots are PARSED from `scripts/lib/step/index.js`, never copied:
+  // see parseCounterScopeRoots' header for why a hardcoded allowlist was refused.
+  //
+  // ⚠️ SCOPED OVER THE WHOLE CONVERTED REGISTRY, NEVER OVER THIS RUN'S `rows`
+  // (PLAN-panel Integration finding, 2026-09-17, measured before it could bite).
+  // This invariant's detail string embeds its own counts, and every registry row
+  // is rendered into EVERY step's scorecard block. Had it counted only `rows`, a
+  // `--step=X --fast` run would render "3 … across 1 descriptor(s)" while
+  // `--all --write` stamped "32 … across 11" into all 14 committed blocks — and
+  // `step-conformance.infra.test.ts`'s R-R drift lock re-runs the PER-STEP form
+  // and compares byte-for-byte, so all 14 would have stayed RED with no way to
+  // regenerate them. #22 and #25 are scope-independent for exactly this reason.
+  {
+    const parsed = parseCounterScopeRoots(readFileSync(path.join(REPO_ROOT, 'scripts/lib/step/index.js'), 'utf8'));
+    const manifestForCounters = loadManifest();
+    const counterRows = [];
+    for (const relFile of converted) {
+      let slug;
+      try {
+        slug = slugFor(manifestForCounters, relFile);
+      } catch {
+        continue;
+      }
+      const abs = path.join(REPO_ROOT, harness.descriptorPathFor(relFile));
+      if (!existsSync(abs)) continue;
+      let descriptor;
+      try {
+        descriptor = JSON.parse(readFileSync(abs, 'utf8'));
+      } catch {
+        continue; // unparsable — checkDescriptor owns that failure, never silently passed here
+      }
+      const counters = descriptor.counters;
+      if (!counters || counters === 'none') continue; // declares it counts nothing (§1.10) — nothing to root
+      const { shape, inferred } = counterShapeOf(descriptor);
+      const sources = [];
+      for (const slot of ['records_total', 'records_new', 'records_updated']) {
+        const c = counters[slot];
+        if (!c || c === 'none' || typeof c.source !== 'string') continue; // "none" = deliberately not counted
+        sources.push({ slot, source: c.source });
+      }
+      if (sources.length) counterRows.push({ slug, shape, inferred, sources });
+    }
+    const counterRoot = checkCounterSourceRoots(counterRows, parsed.rootsByShape, parsed.error);
+    results.push({
+      id: 26,
+      slug: '(registry)',
+      pass: counterRoot.pass,
+      blockedSlugs: counterRoot.blockedSlugs,
+      detail: counterRoot.detail,
+    });
+  }
+
   return results;
 }
 
@@ -2797,6 +2869,145 @@ function checkStatementCeilingEveryPhase(descriptor, indexSourceOverride = null)
 }
 
 // ---------------------------------------------------------------------------
+// COUNTER-ROOT (fast invariant #26, WF3 2026-09-17, Spec 47 §11 Counter Semantic
+// Contract; Spec 48 §3.6 "NULL is not zero"; Spec 79 C11).
+//
+// PROVENANCE — a declared counter that resolved null for 13 days with nothing
+// testing it either way. `enrich_parcels` declared `counters.*.source:
+// "compute.<key>"` from conversion (`07afb862`). `resolveCounterSource` walks the
+// source string against `{...counterScope, records_meta}`, and the enrich branch's
+// counterScope is `{matched, written}` — the aggregate block lives one level down,
+// at `matched.compute.*`. So `scope['compute']` was `undefined`, all three slots
+// resolved null, and the LEDGER read NULL on every run while `records_meta` carried
+// the real numbers. Measured live before the fix: 8 consecutive `pipeline_runs` rows,
+// `records_{total,new,updated} = NULL`, `records_meta.total_parcels_scanned = 486530`.
+//
+// THE ROOTS ARE PARSED FROM THE RUNNER, NEVER HARDCODED HERE. A copied allowlist is
+// exactly the artifact that drifts from the code it claims to describe (and a flat
+// `{matched, written, records_meta}` list — the first draft of this invariant — would
+// have false-RED `load_ravines`' perfectly resolvable `acquired.feature_count`). So
+// `parseCounterScopeRoots` reads `const counterScope =`'s own ternary out of
+// `scripts/lib/step/index.js` and derives, per shape, the exact key set that branch
+// assigns. `records_meta` is added unconditionally because `deriveCounters` spreads it
+// in for every shape.
+//
+// Two vacuity guards, because a lock that silently matches nothing is the recurring
+// `tasks/lessons.md` failure ("the lock reports the promise as the breach"):
+//   (a) fewer than 2 parsed branches, or a parsed branch this file has no shape name
+//       for, or a shape name with no parsed branch  ->  FAIL, naming the drift;
+//   (b) a descriptor whose `counters` is an object is ALWAYS evaluated — never
+//       skipped for an unknown shape; an unrecognised shape resolves to the
+//       records_meta-only scope, which is what `deriveCounters` genuinely does when
+//       counterScope is null (the ASSERT path).
+// ---------------------------------------------------------------------------
+
+/** counterScope branch VARIABLE -> the `execution.shape` that makes that variable truthy. */
+const COUNTER_SCOPE_BRANCH_SHAPE = {
+  link: 'link',
+  linkColumn: 'link_column',
+  linkKeyed: 'link_keyed',
+  cascade: 'cascade',
+  materialize: 'materialize',
+  backfill: 'backfill',
+  recorder: 'recorder',
+  enrich: 'enrich',
+  ingest: 'ingest',
+};
+
+/**
+ * Parse `const counterScope = <ternary>;` out of the runner and return
+ * `{ rootsByShape: {shape: [roots]}, error: string|null }`.
+ * CRLF-normalised and line-comment-stripped first (a `//` line carrying a `? { … }`
+ * would otherwise register as a phantom branch).
+ */
+function parseCounterScopeRoots(indexSource) {
+  const src = indexSource.replace(/\r\n/g, '\n');
+  const start = src.indexOf('const counterScope =');
+  if (start === -1) return { rootsByShape: {}, error: 'no `const counterScope =` assignment found in scripts/lib/step/index.js' };
+  const end = src.indexOf(';', start);
+  if (end === -1) return { rootsByShape: {}, error: '`const counterScope =` assignment has no terminating `;`' };
+  const block = src.slice(start, end + 1).replace(/^\s*\/\/.*$/gm, '');
+  const rootsByShape = {};
+  const seenVars = [];
+  for (const m of block.matchAll(/(\w+)\s*\n?\s*\?\s*\{([^}]*)\}/g)) {
+    const branchVar = m[1];
+    seenVars.push(branchVar);
+    const shape = COUNTER_SCOPE_BRANCH_SHAPE[branchVar];
+    if (!shape) {
+      return {
+        rootsByShape: {},
+        error: `counterScope has a branch variable this checker does not know: \`${branchVar}\` — a new runner shape landed without teaching COUNTER-ROOT its counter roots`,
+      };
+    }
+    rootsByShape[shape] = [...new Set([...m[2].matchAll(/(\w+)\s*:/g)].map((k) => k[1]))];
+  }
+  if (seenVars.length < 2) {
+    return { rootsByShape: {}, error: `counterScope parse matched ${seenVars.length} branch(es) — the ternary shape changed and this parser is reading nothing` };
+  }
+  const missing = Object.values(COUNTER_SCOPE_BRANCH_SHAPE).filter((s) => !rootsByShape[s]);
+  if (missing.length) {
+    return { rootsByShape: {}, error: `counterScope no longer builds a scope for shape(s) ${missing.join(', ')} — this checker's branch map is stale` };
+  }
+  return { rootsByShape, error: null };
+}
+
+/**
+ * The shape this descriptor's counters resolve under. Only `ingest` is ever INFERRED —
+ * `isIngestStep` is the one predicate of the nine with a sniff fallback (the other eight
+ * require a declared `execution.shape`), and `load_ravines` is its single live case.
+ * Anything else with no declared shape resolves under the ASSERT path, where the runner's
+ * counterScope is `null` and only `records_meta` exists.
+ *
+ * ⚠️ The runner's OWN `isIngestStep` is REQUIRED here, never re-implemented (PLAN-panel
+ * Integration finding, 2026-09-17). The first draft of this function copied only half of
+ * it — the external-url test — and dropped the `outputs.writes[].length > 0` and
+ * `staleness.triggersAt(descriptor, 'pre_acquisition').length > 0` conjuncts, so a future
+ * descriptor with an external url and no pre-acquisition trigger would have been called
+ * `ingest` HERE (passing an `acquired.*` source) while the runner gave it a null scope and
+ * resolved null. That is the same "a copied predicate drifts from the code it describes"
+ * failure this invariant refuses for the root table one function over.
+ */
+function counterShapeOf(descriptor) {
+  const exec = descriptor.execution;
+  const declared = exec && exec !== 'none' ? exec.shape : undefined;
+  if (declared) return { shape: declared, inferred: false };
+  const { isIngestStep } = require(path.join(REPO_ROOT, 'scripts/lib/step/index.js'));
+  return isIngestStep(descriptor) ? { shape: 'ingest', inferred: true } : { shape: null, inferred: false };
+}
+
+/**
+ * Pure over `rows` = `[{slug, shape, inferred, sources: [{slot, source}]}]`.
+ * `rootsByShape` comes from `parseCounterScopeRoots`. A slot whose source root is not
+ * in that shape's scope resolves `null` at runtime — which the ledger and every golden
+ * capture then report as "not counted" rather than as the number it is.
+ */
+function checkCounterSourceRoots(rows, rootsByShape, parseError = null) {
+  if (parseError) return { pass: false, blockedSlugs: [], detail: `COUNTER-ROOT: ${parseError}` };
+  const violations = [];
+  let slotsChecked = 0;
+  for (const row of rows) {
+    const allowed = new Set([...(rootsByShape[row.shape] || []), 'records_meta']);
+    for (const { slot, source } of row.sources) {
+      slotsChecked += 1;
+      const root = String(source).split('.')[0];
+      if (!allowed.has(root)) {
+        violations.push(
+          `${row.slug}.${slot}.source="${source}" (root "${root}" resolves to nothing for shape `
+          + `${JSON.stringify(row.shape)}${row.inferred ? ' [inferred]' : ''}; resolvable roots: ${[...allowed].sort().join('/')})`,
+        );
+      }
+    }
+  }
+  return {
+    pass: violations.length === 0,
+    blockedSlugs: [...new Set(violations.map((v) => v.split('.')[0]))],
+    detail: violations.length
+      ? `COUNTER-ROOT: ${violations.length} declared counter source(s) that resolve to null: ${violations.join('; ')}`
+      : `COUNTER-ROOT: ${slotsChecked} declared counter source(s) across ${rows.length} descriptor(s) all root in their own shape's counterScope (+ records_meta)`,
+  };
+}
+
+// ---------------------------------------------------------------------------
 // (vi) POLICY COVERAGE MATRIX — Spec 124 Rules 1-13, per the header map above.
 // ---------------------------------------------------------------------------
 /**
@@ -3477,6 +3688,87 @@ function selfTest() {
     const realIndexSource = readFileSync(path.join(REPO_ROOT, 'scripts/lib/step/index.js'), 'utf8');
     const ceil1Green = checkStatementCeilingEveryPhase({ execution: { shape: 'enrich' } }, realIndexSource);
     if (!ceil1Green.pass) throw new Error(`self-test FAILED: checkStatementCeilingEveryPhase did not pass against the REAL scripts/lib/step/index.js runEnrichPhase (${JSON.stringify(ceil1Green)})`);
+  }
+  // COUNTER-ROOT (fast invariant #26, WF3 2026-09-17) — parseCounterScopeRoots
+  // against the REAL runner + checkCounterSourceRoots both directions on in-memory
+  // fixture rows. The RED arm is the live defect it was written for, reproduced
+  // byte-for-byte: `enrich_parcels`' three pre-fix `compute.*` sources.
+  {
+    const realIndexSource = readFileSync(path.join(REPO_ROOT, 'scripts/lib/step/index.js'), 'utf8');
+    const parsed = parseCounterScopeRoots(realIndexSource);
+    if (parsed.error) throw new Error(`self-test FAILED: parseCounterScopeRoots could not read the REAL counterScope (${parsed.error})`);
+    // The parse must be a MEASUREMENT of the runner, not a shrug: the enrich branch
+    // genuinely builds {matched, written}, and the link branch genuinely adds
+    // cumulative/gate. If either stops being true the checker must say so here.
+    if (JSON.stringify([...parsed.rootsByShape.enrich].sort()) !== '["matched","written"]') {
+      throw new Error(`self-test FAILED: counterScope's enrich branch no longer builds {matched, written} (${JSON.stringify(parsed.rootsByShape.enrich)})`);
+    }
+    if (!parsed.rootsByShape.ingest.includes('acquired')) {
+      throw new Error(`self-test FAILED: counterScope's ingest branch no longer builds an "acquired" root (${JSON.stringify(parsed.rootsByShape.ingest)})`);
+    }
+    // RED — the live defect: an enrich step declaring the bare `compute.*` root.
+    const bare = checkCounterSourceRoots(
+      [{ slug: 'enrich_parcels', shape: 'enrich', inferred: false, sources: [
+        { slot: 'records_total', source: 'compute.total_parcels_scanned' },
+        { slot: 'records_new', source: 'compute.records_new_aggregate' },
+        { slot: 'records_updated', source: 'compute.records_updated_aggregate' },
+      ] }],
+      parsed.rootsByShape,
+    );
+    if (bare.pass || JSON.stringify(bare.blockedSlugs) !== '["enrich_parcels"]') {
+      throw new Error(`self-test FAILED: checkCounterSourceRoots did not RED a bare "compute.*" source on an enrich step, scoped to its slug (${JSON.stringify(bare)})`);
+    }
+    if (!bare.detail.includes('3 declared counter source(s)')) {
+      throw new Error(`self-test FAILED: checkCounterSourceRoots must name EVERY mis-rooted slot, not just the first (${bare.detail})`);
+    }
+    // GREEN — the same three slots re-rooted at the block's real home.
+    const fixed = checkCounterSourceRoots(
+      [{ slug: 'enrich_parcels', shape: 'enrich', inferred: false, sources: [
+        { slot: 'records_total', source: 'matched.compute.total_parcels_scanned' },
+        { slot: 'records_new', source: 'matched.compute.records_new_aggregate' },
+        { slot: 'records_updated', source: 'matched.compute.records_updated_aggregate' },
+      ] }],
+      parsed.rootsByShape,
+    );
+    if (!fixed.pass || fixed.blockedSlugs.length !== 0) throw new Error(`self-test FAILED: checkCounterSourceRoots must PASS "matched.compute.*" on an enrich step (${JSON.stringify(fixed)})`);
+    // GREEN — `load_ravines`' INGESTOR root. The flat {matched, written, records_meta}
+    // allowlist this invariant was first drafted as would have false-RED this line.
+    const ingest = checkCounterSourceRoots(
+      [{ slug: 'load_ravines', shape: 'ingest', inferred: true, sources: [
+        { slot: 'records_total', source: 'acquired.feature_count' },
+        { slot: 'records_new', source: 'written.inserted' },
+      ] }],
+      parsed.rootsByShape,
+    );
+    if (!ingest.pass) throw new Error(`self-test FAILED: checkCounterSourceRoots false-RED an ingest step's legitimate "acquired.*" root (${JSON.stringify(ingest)})`);
+    // RED — the same `acquired.*` root on a shape whose branch never builds it.
+    const wrongShape = checkCounterSourceRoots(
+      [{ slug: 'refresh_snapshot', shape: 'recorder', inferred: false, sources: [{ slot: 'records_total', source: 'acquired.feature_count' }] }],
+      parsed.rootsByShape,
+    );
+    if (wrongShape.pass) throw new Error(`self-test FAILED: checkCounterSourceRoots passed an "acquired.*" root on a recorder step, whose counterScope has no such key (${JSON.stringify(wrongShape)})`);
+    // GREEN — records_meta resolves for EVERY shape (deriveCounters spreads it in),
+    // including the ASSERT path where counterScope is null (shape resolves to null).
+    const assertShape = checkCounterSourceRoots(
+      [{ slug: 'assert_engine_health', shape: null, inferred: false, sources: [{ slot: 'records_total', source: 'records_meta.tables_checked' }] }],
+      parsed.rootsByShape,
+    );
+    if (!assertShape.pass) throw new Error(`self-test FAILED: checkCounterSourceRoots must PASS a records_meta.* source on the ASSERT path (${JSON.stringify(assertShape)})`);
+    // RED — the ASSERT path resolves NOTHING but records_meta, so a `matched.*` source there is null.
+    const assertMatched = checkCounterSourceRoots(
+      [{ slug: 'assert_engine_health', shape: null, inferred: false, sources: [{ slot: 'records_total', source: 'matched.anything' }] }],
+      parsed.rootsByShape,
+    );
+    if (assertMatched.pass) throw new Error(`self-test FAILED: checkCounterSourceRoots passed a "matched.*" source on the ASSERT path, where counterScope is null (${JSON.stringify(assertMatched)})`);
+    // The two VACUITY guards — a parser reading nothing must FAIL, never green-by-silence.
+    const noBlock = parseCounterScopeRoots('function runWithPool() { return null; }\n');
+    if (!noBlock.error) throw new Error('self-test FAILED: parseCounterScopeRoots did not error on a source with no counterScope assignment');
+    const unknownBranch = parseCounterScopeRoots('const counterScope = teleport\n  ? { matched: teleport.matched }\n  : null;\n');
+    if (!unknownBranch.error || !unknownBranch.error.includes('teleport')) {
+      throw new Error(`self-test FAILED: parseCounterScopeRoots did not name an unknown counterScope branch variable (${JSON.stringify(unknownBranch)})`);
+    }
+    const errored = checkCounterSourceRoots([], {}, 'synthetic parse failure');
+    if (errored.pass) throw new Error('self-test FAILED: checkCounterSourceRoots must FAIL when the parse errored, never pass on an empty root map');
   }
   // GOLD-PRE-FRESH (fast invariant #22, C4 step H commit 2, Spec 124 R-AC,
   // 2026-09-11) — checkPreCapturesRecoverable, proven both directions on
