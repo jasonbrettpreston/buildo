@@ -72,6 +72,98 @@ The chain runner (`scripts/run-chain.js`) injects extra CLI args ONLY from a scr
 **Runtime (WF2 P11):** on a genuinely-unchanged quarterly re-run the centreline (P11-1) + link_massing (P11-2) gates cut the chain from ~181.9 min (P6.7-D baseline, WITH `enrich_parcels --full`) to a projected **~61 min** — `enrich_parcels --full` (~46-53 min) is then the dominant residual. Measured (2026-07-08 acceptance run, `docs/reports/pipeline-validation/2026-07-08-p11-sources-version-gate-skips.md`): the massing gate fired live (`link_massing` 8.5 s vs 21.9 min); the centreline source happened to republish so its gate correctly ran full (87.1 min) — total 147.0 min for a changed-source run; the unchanged centreline path measured 11.2 s standalone. A real quarterly run with geometry churn recomputes only the churned centreline parcels (minutes, not 92) + a full link_massing only if the footprint corpus changed.
 
 Every other step (including `link_parcels`, `link_neighbourhoods`, `link_wsib`, `geocode_permits`) runs in its script-default mode in the sources chain — it does NOT receive `--full` despite being `supports_full`-capable.
+
+### Runbook — dispatching a PARTIAL run (`from` / `only`, WF2 2026-09-17)
+
+**When.** The chain no longer fits in one GitHub Actions job. Run **35140032614** (`headSha
+df61d453`, created 2026-09-16T19:21:08Z) reached step **14 of 28** — `enrich_centreline`, 59.6 min —
+and was killed by `The action 'Run sources chain' has timed out after 300 minutes` at
+2026-09-17T01:01:55Z, with `enrich_parcels` (step 22, ~87 min) never started; two earlier runs died
+the same way. Raising the ceiling is not available: 300 = the 330-min job ceiling − 30 min of
+measured job overhead, and 330 = the platform's 360 − a 30-min reserve. Gate-skip is disabled after
+a failed predecessor (`run-chain.js` `prevChainFailed`), so every step processes FULL, which is why
+the head consumes the entire budget.
+
+**How.** `chain-sources.yml` takes two mutually-exclusive `workflow_dispatch` inputs, threaded to
+`scripts/run-chain.js` as `--from=` / `--only=`. Still pinned by `expected_sha` (R-AL) — a partial
+run is an acceptance record, so it obeys the same pinning rule as a full one:
+
+```bash
+# Dispatch 1 — the HEAD, steps 1..14. There is deliberately no `--to`/`--until`: the head half
+# is spelled as an explicit `only` set, because a tail is the only shape `from` can express.
+# THIS IS THE COPY-PASTE LINE; a typo is refused, but only after the runner has spun up.
+gh workflow run chain-sources.yml -f expected_sha=$(git rev-parse HEAD) \
+  -f only=reconcile,assert_schema,address_points,geocode_permits,parcels,load_ravines,load_heritage,load_centreline,link_parcel_addresses,compute_centroids,link_parcels,enrich_ravines,enrich_heritage,enrich_centreline
+
+# Dispatch 2 — the contiguous TAIL, steps 15..28, beginning at `massing`:
+gh workflow run chain-sources.yml -f expected_sha=$(git rev-parse HEAD) -f from=massing
+
+# A narrower explicit SET (manifest order is still preserved — `only` filters, it never reorders):
+gh workflow run chain-sources.yml -f expected_sha=$(git rev-parse HEAD) -f only=enrich_parcels,compute_parcel_cost_estimates
+```
+
+**BOTH HALVES MUST BE PARTIAL — this is not a stylistic preference.** If dispatch 1 is a FULL run
+it is killed at the 300-minute cap again, which is what leaves a `running` chain row behind. The
+concurrency guard (`scripts/check-chain-running.js`, 12 h TTL) runs BEFORE the chain, so that
+stranded row then makes dispatch 2 **skip**, and because `from=massing` excludes `reconcile`
+(position 1) nothing in dispatch 2 can reap it. That exact sequence is on record: run
+`34971187164` was guard-skipped on stranded row 4861 (2026-09-15) and the operator cleared it by
+hand. A bounded dispatch 1 terminates cleanly through run-chain's own path and includes
+`reconcile`, so the cycle never starts.
+
+**The rules, all enforced, none inferable:**
+1. **Manifest order always wins.** `--only=refresh_snapshot,massing` runs `massing` first. Step
+   order in this chain is a dependency order; selection filters, it never reorders.
+2. **An unknown slug is refused before any DB write.** `resolveStepSelection` throws, the chain
+   advisory lock is never taken, and no `pipeline_runs` row is opened (a pre-created external row
+   is terminalized `failed`, the invalid-`chain_id` precedent).
+3. **`from` + `only` together are REFUSED, not intersected** — at the workflow AND in the runner.
+   `only` already fully determines the set; an intersection would silently narrow the `from` typed.
+4. **A partial run says so in its own ledger row.** The chain row still opens and closes normally,
+   and carries `records_meta.partial_selection = {from, only, steps_selected,
+   steps_skipped_by_selection, chain_steps_total}`. The key's ABSENCE is the full-run claim — there
+   is no parallel boolean, and it is unambiguous in both directions because no partial dispatch was
+   possible before this landed, so every pre-existing row without the key genuinely was a full run.
+   `step_completeness.expected` is the SELECTED set, so
+   `check-chain-verdict.js#classifyStepCompleteness` adjudicates per-slug exactly what ran (Spec 48
+   §3.9), and the job summary states the selection before anything runs.
+   > ⚠️ **ONE KNOWN CONSUMER DOES NOT YET READ IT** (Observability seat, measured 2026-09-17):
+   > `src/components/DataQualityDashboard.tsx#getChainVerdict` derives its chain chip from
+   > `info.status` ALONE, so a successful partial run renders a green **PASS** on the admin
+   > data-quality banner exactly as a full run would. That component is Admin domain and outside
+   > this chain spec's Operating Boundaries, so it is FILED, not fixed here — see
+   > `docs/reports/review_followups.md`. Until it lands, **the ledger row is truthful and the
+   > dashboard chip is not**; read `records_meta.partial_selection` (or the run's job summary), not
+   > the chip, when judging whether a `sources` run was complete. Every other consumer is clean:
+   > `FreshnessTimeline` renders per-step rows (a deselected step's own row stays honestly stale),
+   > and `check-chain-verdict.js`, `funnel.ts` and the admin pipelines APIs never read the key.
+5. **A deselected step gets NO `pipeline_runs` row at all** — a third precedent, deliberately
+   neither of the existing two. A budget-stop writes a `skipped` row per remaining step with a
+   reason; a B2 defer writes none. Selection follows defer, and more strongly: a deselected step was
+   never in THIS run's committed scope (the scope IS `steps_selected`), so a synthetic `skipped` row
+   would misrepresent the run's own contract. This is not the P3 2026-08-24 null-reason "silent
+   green" class — P3 was a FRESH row with no stated cause; here there is no fresh row, and the
+   slug's prior row remains honestly dated.
+6. **`reconcile` (step 1) is an ordinary selectable step.** A tail run does **not** reap stranded
+   `running` rows. If a prior run was killed by the platform, close its row by hand FIRST —
+   `docs/runbook/README.md` §3b — because `scripts/check-chain-running.js` runs BEFORE `reconcile`,
+   so a stranded `chain_sources` row (12 h TTL, `scripts/lib/chain-concurrency.js`) makes the next
+   dispatch skip before the reaper can reach it.
+
+**Two things the mechanism deliberately does NOT guard — they are the operator's call:**
+* **Dependency order is preserved, but dependency SATISFACTION is not checked.** An `only` set
+  containing `refresh_snapshot` (position 26) but not `enrich_parcels` (position 22) refreshes the
+  snapshot off stale enrichment. Nothing in `run-chain.js` knows which steps feed which; the step
+  table above is the reference.
+* **Gate-skip is inert for this chain either way** — `manifest.chain_gates` has keys `permits` and
+  `coa` only, so no `sources` step is ever gate-skipped and the selection cannot interact with it.
+
+Nothing else changes: step ordering, gate-skip semantics, the soft time budget, the defer mechanism,
+the per-step ceilings and the SIGINT/SIGTERM handler are untouched, and a scheduled run (both inputs
+empty) passes no flag at all.
+
+> **Name collision, for greppers:** `scripts/wf8-worktree.mjs` also takes a `--from=` flag, where it
+> names a queued-task filename. Unrelated to this one.
 </architecture>
 
 ---
@@ -208,6 +300,11 @@ Every other step (including `link_parcels`, `link_neighbourhoods`, `link_wsib`, 
 ### Out-of-Scope Files
 - `src/lib/parcels/`, `src/lib/spatial/` — TypeScript API paths
 - `src/components/permits/NeighbourhoodProfile.tsx` — UI rendering
+- The partial-run MECHANISM the §Runbook above documents. `run-chain.js`'s `resolveStepSelection`
+  is owned by Spec 40 (chain orchestrator) and the `from`/`only` dispatch inputs by Spec 115 §2.2
+  (`chain-sources.yml`), both of which already carry those files in their own Target Files. This
+  spec owns how to DISPATCH this chain partially, not the mechanism that makes it possible —
+  listing either file here would give `npm run system-map` a second owner row for it.
 
 ### Cross-Spec Dependencies
 - **Relies on:** `40_pipeline_system.md` (SDK, orchestrator)

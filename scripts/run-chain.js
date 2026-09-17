@@ -133,6 +133,131 @@ function resolveGateExempt(slug, manifestEntry) {
 }
 
 // ---------------------------------------------------------------------------
+// WF2 partial chain runs (2026-09-17) — `--from=<slug>` / `--only=<a,b,c>`
+// ---------------------------------------------------------------------------
+
+/**
+ * Pure — narrows a chain's manifest step list to the slugs a partial run selected.
+ *
+ * WHY THIS EXISTS: the `sources` chain no longer fits in one GitHub Actions job. Run
+ * 35140032614 (2026-09-16, `df61d453`) reached step 14 of 28 — `enrich_centreline`, 59.6 min —
+ * and was killed by the 300-minute step ceiling with `enrich_parcels` (~87 min) not yet started.
+ * Two earlier runs died the same way. Gate-skip is disabled after a failed predecessor
+ * (`prevChainFailed`, below), so every step processes FULL, which is why the head alone
+ * consumes the whole budget. The answer is to run the TAIL as its own dispatch — a real
+ * chain run, with a real ledger row, for the slugs it actually ran.
+ *
+ * THREE RULES, all declared rather than inferred:
+ *  1. MANIFEST ORDER IS PRESERVED, always. Selection filters; it never reorders.
+ *     `--only=c,a` runs `a` then `c`. Spec 43's step order is a dependency order.
+ *  2. AN UNKNOWN SLUG THROWS. Never a silent empty selection, never a typo that quietly
+ *     runs a shorter chain and reports a clean ledger row for it. The caller invokes this
+ *     BEFORE the chain-row INSERT, so the throw precedes every DB write.
+ *  3. `--from` AND `--only` TOGETHER ARE REFUSED — not intersected. `--only` already fully
+ *     determines the set, so an intersection would be a second spelling of the same thing
+ *     plus a mode where the operator's `--from` is invisibly narrowed. Refusing is the only
+ *     reading that cannot be misread.
+ *
+ * `reconcile` (Step 0) is an ORDINARY selectable step here — deliberately not force-included.
+ * Force-including it would change step ordering, which this WF is forbidden to do. A tail run
+ * therefore does not reap stranded `running` rows; that is recorded in `steps_skipped_by_selection`
+ * and pointed at `docs/runbook/README.md` §3b by Spec 43's runbook note.
+ *
+ * @param {{ steps: string[], from?: string | null, only?: string | null }} args
+ * @returns {{ selected: string[], skipped: string[], from: string | null, only: string[] | null,
+ *             partial: boolean }}
+ */
+function resolveStepSelection({ steps, from = null, only = null }) {
+  if (from && only) {
+    throw new Error(
+      '--from and --only cannot be combined. --only already names the exact step set; '
+      + 'pass one or the other (run-chain.js partial-run contract, Spec 43 §runbook).',
+    );
+  }
+  if (!from && !only) {
+    return { selected: steps.slice(), skipped: [], from: null, only: null, partial: false };
+  }
+
+  if (from) {
+    const idx = steps.indexOf(from);
+    if (idx === -1) {
+      throw new Error(
+        `--from=${from} is not a step of this chain. Chain steps, in manifest order: ${steps.join(', ')}`,
+      );
+    }
+    return {
+      selected: steps.slice(idx),
+      skipped: steps.slice(0, idx),
+      from,
+      only: null,
+      partial: true,
+    };
+  }
+
+  // `--only=` — split, trim, drop empties (a trailing comma is a typo, not a request for a
+  // nameless step), then validate EVERY name before selecting anything.
+  const requested = only.split(',').map((s) => s.trim()).filter((s) => s.length > 0);
+  if (requested.length === 0) {
+    throw new Error('--only was given but names no step (empty or comma-only value).');
+  }
+  const unknown = requested.filter((s) => !steps.includes(s));
+  if (unknown.length > 0) {
+    throw new Error(
+      `--only names step(s) that are not in this chain: ${unknown.join(', ')}. `
+      + `Chain steps, in manifest order: ${steps.join(', ')}`,
+    );
+  }
+  const wanted = new Set(requested);
+  return {
+    selected: steps.filter((s) => wanted.has(s)), // manifest order, NOT the order typed
+    skipped: steps.filter((s) => !wanted.has(s)),
+    from: null,
+    only: [...wanted],
+    partial: true,
+  };
+}
+
+/**
+ * Pure — reads `--from=` / `--only=` out of an argv array. Separated so the flag SPELLING is
+ * unit-testable without a chain, and so the positional-vs-flag split below has one owner.
+ *
+ * @param {string[]} argv
+ * @returns {{ from: string | null, only: string | null }}
+ */
+function parseSelectionArgs(argv) {
+  const read = (prefix) => {
+    const hit = argv.find((a) => a.startsWith(prefix));
+    return hit ? hit.slice(prefix.length) : null;
+  };
+  return { from: read('--from='), only: read('--only=') };
+}
+
+/**
+ * Pure — the caller-supplied `pipeline_runs.id` this invocation should REUSE instead of
+ * INSERTing a second chain row, read as the FIRST NON-FLAG POSITIONAL after the chain id.
+ *
+ * Was `process.argv[3] ? parseInt(process.argv[3], 10) : null` (introduced by `da8620dd`,
+ * "Ghost chain: parse externalRunId before chain validation, mark as failed on invalid
+ * chain_id" — the fence is that a pre-created row must never be left `running` in the admin
+ * UI, which is why it is parsed BEFORE validation and why every early-exit path below
+ * terminalizes it). A flag sitting at argv[3] used to `parseInt` to `NaN`, which `if
+ * (externalRunId)` then read as absent — benign by accident. With `--from=`/`--only=` that
+ * accident becomes load-bearing, so it is made the rule.
+ *
+ * EXPORTED AND PURE deliberately (Regression Guardian, 2026-09-17): the previous locks on this
+ * behaviour were `toMatch()` regexes over this file's own source, which cannot tell a changed
+ * spelling from a changed meaning. `src/tests/run-chain-selection.logic.test.ts` now drives a
+ * real argv case table through this function.
+ *
+ * @param {string[]} argv - a full `process.argv` (element 2 is the chain id)
+ * @returns {number | null}
+ */
+function resolveExternalRunId(argv) {
+  const positionals = argv.slice(3).filter((a) => !a.startsWith('--'));
+  return positionals[0] ? parseInt(positionals[0], 10) : null;
+}
+
+// ---------------------------------------------------------------------------
 // B2 — defer mechanism pure helpers (Spec 40 §3.1.2, Spec 47 §8.7, Spec 115 §2.5)
 // ---------------------------------------------------------------------------
 
@@ -170,6 +295,11 @@ function parseDeferMarker(recordsMeta) {
  * run-chain-defer.logic.test.ts's file header) and is kept in sync BY HAND with the inline
  * `chainStatus` ladder in run() below, which stays a literal ladder (not a call to this
  * function) so the run-chain-budget.logic.test.ts / chain-cascade.integration.test.ts source-scan
+ * (CORRECTED 2026-09-17: "run-chain.js is never `require()`-d directly by a test in a live
+ * process" is no longer true — `src/tests/run-chain-selection.logic.test.ts` requires this
+ * module to exercise `resolveStepSelection` behaviourally. That is safe because of the
+ * `require.main === module` guard at the bottom of this file, which is the same reason
+ * run-chain-defer.logic.test.ts's own header gives for requiring check-chain-verdict.js.)
  * locks pinning the exact `chainStatus = '...'` literals keep matching. Any change to one ladder
  * must be mirrored in the other.
  *
@@ -300,8 +430,10 @@ async function run() {
   }
 
   const chainId = process.argv[2];
-  // Parse externalRunId BEFORE validation so we can mark it as failed on invalid chain
-  const externalRunId = process.argv[3] ? parseInt(process.argv[3], 10) : null;
+  // Parse externalRunId BEFORE validation so we can mark it as failed on invalid chain.
+  // WF2 2026-09-17 — hoisted into the pure, exported `resolveExternalRunId` above so a test can
+  // drive a real argv case table through it instead of regex-matching this line's spelling.
+  const externalRunId = resolveExternalRunId(process.argv);
 
   if (!chainId || !CHAINS[chainId]) {
     pipeline.log.error('[run-chain]', `Invalid chain_id. Available: ${Object.keys(CHAINS).join(', ')}`);
@@ -316,12 +448,46 @@ async function run() {
     process.exit(1);
   }
 
-  const steps = CHAINS[chainId];
+  const allSteps = CHAINS[chainId];
   const chainSlug = `chain_${chainId}`;
   const projectRoot = path.resolve(__dirname, '..');
   const forceMode = process.argv.includes('--force');
 
-  console.log(`\n=== Chain: ${chainId} (${steps.length} steps)${forceMode ? ' [FORCE]' : ''} ===\n`);
+  // WF2 partial chain runs — resolved HERE: after the chain id is known (so the error can
+  // name the real step list) and BEFORE the chain advisory lock, the chain-row INSERT and
+  // every other query below. A bad selection must never leave a half-open ledger row. The
+  // handling mirrors the invalid-`chain_id` branch above exactly, including terminalizing a
+  // pre-created external row so it cannot ghost as 'running' in the UI.
+  let selection;
+  try {
+    selection = resolveStepSelection({ steps: allSteps, ...parseSelectionArgs(process.argv) });
+  } catch (selErr) {
+    pipeline.log.error('[run-chain]', `Invalid step selection: ${selErr.message}`);
+    if (externalRunId) {
+      await pool.query(
+        `UPDATE pipeline_runs SET status = 'failed', completed_at = NOW(), error_message = $1 WHERE id = $2`,
+        [`Invalid step selection: ${selErr.message}`.slice(0, 4000), externalRunId]
+      ).catch(() => {});
+    }
+    await pool.end().catch(() => {});
+    process.exit(1);
+  }
+  const steps = selection.selected;
+
+  const selectionLabel = selection.partial
+    ? ` [PARTIAL: ${selection.from ? `from=${selection.from}` : `only=${selection.only.join(',')}`}`
+      + ` — ${steps.length} of ${allSteps.length} steps; ${selection.skipped.length} not selected]`
+    : '';
+  console.log(`\n=== Chain: ${chainId} (${steps.length} steps)${forceMode ? ' [FORCE]' : ''}${selectionLabel} ===\n`);
+  if (selection.partial) {
+    // Loud in the log as well as durable in records_meta below: a partial run must be
+    // unmistakable to a human tailing the job, not only to a machine reading the row.
+    pipeline.log.info(
+      '[run-chain]',
+      `Partial run — ${steps.length}/${allSteps.length} steps selected. NOT selected: ${selection.skipped.join(', ') || '(none)'}`,
+      { steps_selected: steps, steps_skipped_by_selection: selection.skipped },
+    );
+  }
 
   // ─── Concurrency guard — single-threaded chain orchestration (WF3-03 / RC-W7) ──
   // Two simultaneous run-chain.js invocations of the same chain (manual
@@ -470,6 +636,13 @@ async function run() {
   const BLOAT_ABORT_THRESHOLD = 0.50;
 
   // Phase 0: Pre-Flight Health Gate — collect bloat for all chain tables
+  //
+  // WF2 2026-09-17 (Regression Guardian): the union below iterates `steps`, which on a partial
+  // run is the SELECTION, not the whole manifest chain. That narrowing is DELIBERATE and is the
+  // correct reading of `2a2fa96e`'s own "checks all chain tables BEFORE any steps run" — before
+  // THIS run's steps. Widening it back to `allSteps` would make a partial dispatch report (and,
+  // at >50%, loudly warn about) bloat on tables it is never going to touch, which is exactly the
+  // noise Phase 0 was consolidated to remove. Pinned by run-chain-selection.logic.test.ts.
   const preFlightRows = [];
   let preFlightVerdict = 'PASS';
   try {
@@ -939,6 +1112,34 @@ async function run() {
   // (steps at-or-after deferred_at are missing BY DESIGN, not silently). Written every run (not
   // length-gated) so "absent" unambiguously means "a row written before this deploy" (Spec 48 §4.9
   // annotate window), never "this run chose not to write it".
+  // WF2 partial chain runs (2026-09-17) — the standing, machine-readable statement that this
+  // ledger row is NOT a full chain. Written ONLY on a partial run, so the key's ABSENCE is
+  // itself the full-run claim; there is no parallel boolean. The absence is unambiguous in both
+  // directions because no partial dispatch existed before this landed, so every pre-existing
+  // keyless row genuinely WAS a full run — this is not the Spec 48 §4.9 annotate-window shape,
+  // where an absent `step_completeness` means "written before the deploy", not "complete".
+  //
+  // SCOPED CLAIM, not an absolute one (Observability + Integration OUTPUT seats, 2026-09-17):
+  // this makes the LEDGER ROW truthful. It does NOT make every consumer truthful.
+  // `src/components/DataQualityDashboard.tsx` reads neither key — its chain chip comes from
+  // `info.status` alone and its schedule dot from `last_run_at` alone — so a successful partial
+  // run still renders "PASS / On schedule" there. That component is Admin domain and is filed in
+  // `docs/reports/review_followups.md`, not fixed here. Do not restate this comment as "a partial
+  // run can never be read as a full one" until that row closes.
+  //
+  // `step_completeness.expected` below is deliberately the SELECTED
+  // steps — that is what this run committed to running, and it is what
+  // check-chain-verdict.js#classifyStepCompleteness adjudicates per slug (Spec 48 §3.9), so a
+  // partial run is a valid R-AB acceptance record for exactly the slugs it ran and for no others.
+  if (selection.partial) {
+    metaObj.partial_selection = {
+      from: selection.from,
+      only: selection.only,
+      steps_selected: steps,
+      steps_skipped_by_selection: selection.skipped,
+      chain_steps_total: allSteps.length,
+    };
+  }
   metaObj.step_completeness = {
     expected: steps,
     executed: executedSteps,
@@ -1057,4 +1258,12 @@ if (require.main === module) {
   });
 }
 
-module.exports = { resolveChainStatus, parseDeferMarker, spawnStepChild, resolveGateExempt };
+module.exports = {
+  resolveChainStatus,
+  parseDeferMarker,
+  spawnStepChild,
+  resolveGateExempt,
+  resolveStepSelection,
+  parseSelectionArgs,
+  resolveExternalRunId,
+};

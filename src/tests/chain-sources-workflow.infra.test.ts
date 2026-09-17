@@ -162,6 +162,14 @@ describe('chain-sources.yml — R-AL: the dispatch-pinning guard', () => {
     expect(guardIdx, 'the pin guard must run before the chain, never after it has written rows').toBeLessThan(chainIdx);
   });
 
+  it('the selection announcement runs AFTER the pin guard — a drifted dispatch must die before it advertises anything', () => {
+    const guardIdx = activeLines.indexOf('Guard — dispatch is pinned');
+    const announceIdx = activeLines.indexOf('Announce step selection');
+    const chainIdx = activeLines.indexOf('node scripts/run-chain.js sources');
+    expect(announceIdx).toBeGreaterThan(guardIdx);
+    expect(announceIdx).toBeLessThan(chainIdx);
+  });
+
   it('the unpinned path is never silent — the graded commit is always echoed, and an unpinned run is warned as NOT an R-AB acceptance run', () => {
     expect(activeLines).toMatch(/::notice title=Graded commit::/);
     expect(activeLines).toMatch(/::warning title=Unpinned dispatch::/);
@@ -169,5 +177,93 @@ describe('chain-sources.yml — R-AL: the dispatch-pinning guard', () => {
     // The unpinned arm must not be a failure arm: `exit 1` appears only under
     // the two genuine mismatch branches, never under the empty-input branch.
     expect(activeLines).toMatch(/if \[ -z "\$EXPECTED_SHA" \]; then\s*\n\s*echo "::warning/);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// WF2 partial chain runs (2026-09-17) — THE CHAIN NO LONGER FITS IN ONE JOB.
+//
+// Measured: run 35140032614 (`headSha df61d453`, created 2026-09-16T19:21:08Z) reached step
+// 14 of 28 — `enrich_centreline`, 59.6 min — and was killed by
+// `##[error]The action 'Run sources chain' has timed out after 300 minutes.` at
+// 2026-09-17T01:01:55Z, with `enrich_parcels` (position 22, ~87 min) never started. Cloud
+// `pipeline_runs` rows 4996 (chain) + 4997-5010 (positions 1-14) confirm it, and two earlier
+// runs died the same way. Raising the ceiling is not available: 300 is already
+// 330 job − 30 measured overhead, and 330 is the platform's 360 − 30 reserve.
+//
+// So the tail becomes its own dispatch. These locks pin the SHAPE that makes that honest:
+// the inputs exist, they reach the runner as argv VALUES (never as a GH expression
+// interpolated into a shell), the selection is announced before anything runs, and the
+// scheduled path is byte-identical to today's (both inputs empty ⇒ no flag at all).
+// ---------------------------------------------------------------------------
+describe('chain-sources.yml — WF2 partial chain runs (`from` / `only`)', () => {
+  it('workflow_dispatch declares BOTH selection inputs, neither required (the cron path passes neither)', () => {
+    expect(activeLines).toMatch(/^\s{6}from:$/m);
+    expect(activeLines).toMatch(/^\s{6}only:$/m);
+    // Three inputs now, and all three optional — a required input would break the schedule.
+    const required = activeLines.match(/required:\s*(\w+)/g) || [];
+    expect(required, 'expected_sha + from + only').toHaveLength(3);
+    expect(required.every((r) => /false/.test(r)), 'no selection input may be required').toBe(true);
+  });
+
+  it('the inputs reach the runner through the JOB env, so the chain step keeps its *pipeline-env alias', () => {
+    expect(activeLines).toMatch(/SELECT_FROM:\s*\$\{\{\s*inputs\.from\s*\}\}/);
+    expect(activeLines).toMatch(/SELECT_ONLY:\s*\$\{\{\s*inputs\.only\s*\}\}/);
+    expect(activeLines, 'the chain step must still use the shared env alias').toMatch(/node scripts\/run-chain\.js sources[\s\S]{0,40}env: \*pipeline-env/);
+  });
+
+  it('a dispatch input is only ever an argv VALUE — never a ${{ }} expression interpolated into the run shell', () => {
+    const runShellUsesExpression = /node scripts\/run-chain\.js sources[^\n]*\$\{\{/.test(activeLines);
+    expect(runShellUsesExpression, 'interpolating inputs.* directly into the command line is the script-injection shape').toBe(false);
+    expect(activeLines).toMatch(/SELECT_ARGS=\("--from=\$SELECT_FROM"\)/);
+    expect(activeLines).toMatch(/SELECT_ARGS=\("--only=\$SELECT_ONLY"\)/);
+  });
+
+  // WF2, Integration OUTPUT seat 2026-09-17 — THE QUOTING IS THE CONTRACT.
+  // The first cut used an unquoted scalar (`SELECT_ARGS="--only=$SELECT_ONLY"` …
+  // `node scripts/run-chain.js sources $SELECT_ARGS`). Measured: `-f only="a, b"` — a list
+  // typed with the space a human naturally puts after a comma — word-split into
+  // `['--only=a,', 'b']`, `resolveStepSelection` dropped the empty token, found one valid
+  // slug, threw nothing, and ran HALF the requested set, while the announce banner still
+  // claimed both. `resolveStepSelection`'s own `.trim()` tolerance was unreachable from this
+  // path, so the unit test that green-locks it proved nothing about the real dispatch.
+  // Pinned in BOTH directions: the array form must be present AND the scalar form absent.
+  it('the argv is a QUOTED bash array — an input containing a space must not word-split into a silently shorter selection', () => {
+    expect(activeLines).toMatch(/SELECT_ARGS=\(\)/);
+    expect(activeLines).toMatch(/node scripts\/run-chain\.js sources "\$\{SELECT_ARGS\[@\]\}"/);
+    expect(
+      activeLines,
+      'the unquoted scalar expansion is the defect — it must never come back',
+    ).not.toMatch(/node scripts\/run-chain\.js sources \$SELECT_ARGS\b/);
+    expect(activeLines, 'and neither may the scalar assignment it came from').not.toMatch(/SELECT_ARGS="--/);
+  });
+
+  it('the SCHEDULED path is unchanged — with both inputs empty, SELECT_ARGS is empty and the runner sees no flag', () => {
+    // Both assignments are guarded by `-n` tests; nothing else writes SELECT_ARGS.
+    // An empty array expands to ZERO words under `"${arr[@]}"`, so the runner sees bare
+    // `sources` exactly as it does today on the cron path.
+    expect(activeLines).toMatch(/SELECT_ARGS=\(\)/);
+    expect(activeLines).toMatch(/if \[ -n "\$SELECT_FROM" \]; then SELECT_ARGS=/);
+    expect(activeLines).toMatch(/if \[ -n "\$SELECT_ONLY" \]; then SELECT_ARGS=/);
+  });
+
+  it('the selection is ANNOUNCED — job summary + a notice — so a partial run can never be read as a full one', () => {
+    expect(activeLines).toMatch(/name: Announce step selection \(partial vs full\)/);
+    expect(activeLines).toMatch(/::notice title=Step selection::/);
+    expect(activeLines).toMatch(/GITHUB_STEP_SUMMARY/);
+    expect(activeLines).toMatch(/PARTIAL — from=/);
+    expect(activeLines).toMatch(/FULL — every step of the sources chain/);
+  });
+
+  it('`from` + `only` together are REFUSED at the workflow too, not intersected (defence in depth with run-chain.js)', () => {
+    expect(activeLines).toMatch(/mutually exclusive[\s\S]{0,140}REFUSES the combination/);
+    expect(activeLines).toMatch(/if \[ -n "\$SELECT_FROM" \] && \[ -n "\$SELECT_ONLY" \]; then/);
+  });
+
+  it('the ceilings, the budget wiring and the pin guard are all untouched by the selection change', () => {
+    expect(activeLines).toMatch(/SOURCES_STEP_TIMEOUT_MINUTES:\s*'300'/);
+    expect(activeLines).toMatch(/export CHAIN_TIME_BUDGET_MINUTES/);
+    expect(activeLines).toMatch(/::error::pinned dispatch mismatch/);
+    expect(activeLines).toMatch(/check-chain-verdict\.js sources/);
   });
 });

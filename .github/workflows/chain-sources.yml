@@ -31,6 +31,29 @@ on:
         description: 'Commit SHA this dispatch is pinned to (R-AL). Pass $(git rev-parse HEAD) for an acceptance run; leave empty for an unpinned manual run.'
         required: false
         type: string
+      from:
+        # WF2 partial chain runs (2026-09-17) — THE CHAIN NO LONGER FITS IN ONE JOB.
+        # Run 35140032614 reached step 14 of 28 (`enrich_centreline`, 59.6 min) and was
+        # killed by the 300-minute step ceiling with `enrich_parcels` (~87 min) not yet
+        # started; two earlier runs died the same way. Gate-skip is DISABLED after a failed
+        # predecessor, so every step processes FULL and the head consumes the whole budget.
+        # `from` runs the contiguous TAIL beginning at this slug, in manifest order —
+        # a real chain run with a real ledger row for the slugs it runs, marked
+        # `records_meta.partial_selection` so the LEDGER ROW is never a full-chain claim.
+        # (The admin data-quality dashboard does not yet read that key — it still shows
+        # PASS / On schedule for a partial run. Filed in docs/reports/review_followups.md.)
+        #   gh workflow run chain-sources.yml -f expected_sha=$(git rev-parse HEAD) -f from=massing
+        description: 'Partial run: start at this step slug and run the rest of the chain in manifest order (e.g. massing). Mutually exclusive with `only`.'
+        required: false
+        type: string
+      only:
+        # The explicit-set form. Still manifest order — `only` filters, it never reorders.
+        # Combining it with `from` is REFUSED by run-chain.js (not intersected): `only`
+        # already fully determines the set, and an intersection would silently narrow the
+        # `from` the operator typed.
+        description: 'Partial run: comma-separated step slugs to run (manifest order is still preserved). Mutually exclusive with `from`.'
+        required: false
+        type: string
 
 jobs:
   sources:
@@ -76,6 +99,29 @@ jobs:
       # hardcode): consumed by the step's `timeout-minutes`, by the step's
       # shell-computed soft budget, and by the verdict check's duration tripwire.
       SOURCES_STEP_TIMEOUT_MINUTES: '300'
+      # WF2 partial chain runs — the dispatch inputs reach the runner through the JOB env.
+      #
+      # DECLARED CHOICE, and it departs from this repo's usual spelling (Integration seat,
+      # 2026-09-17). The established pattern for "the step uses *pipeline-env and I need one
+      # more var" is to repeat the three anchor keys inline — done twice in this file
+      # (the pin guard's `EXPECTED_SHA`, the verdict step's block below) and once in
+      # chain-deep-scrapes.yml:355-369, which carries its own keep-in-sync note. That is NOT
+      # the reason used here, and the "an alias cannot be extended" framing would be the wrong
+      # reason: the repo's answer to that constraint is inlining.
+      #
+      # The actual reason is that TWO steps need these values — the announce step below (which
+      # has no env of its own) and the chain step (which has the alias). Job env serves both
+      # with ONE declaration; the inline pattern would need a third verbatim copy of the anchor
+      # keys and a second keep-in-sync obligation. The blast radius is two non-secret selection
+      # strings visible to every step in a single-job workflow, which is the cheaper trade.
+      #
+      # On the SCHEDULED path `inputs` is null, so both evaluate to the empty string and the
+      # runner sees no flag at all — a cron run is byte-identical to today's. (Empirically
+      # grounded in this repo: chain-deep-scrapes.yml:231-233 records the measured behaviour of
+      # `inputs` on a schedule+dispatch workflow.) Deliberately NO `default:` on either input,
+      # so a blank dispatch and a cron run resolve identically.
+      SELECT_FROM: ${{ inputs.from }}
+      SELECT_ONLY: ${{ inputs.only }}
     concurrency:
       group: ${{ github.workflow }}   # F8 fold 2026-07-20: derived from the workflow name so a
       cancel-in-progress: false       # future rename can't drift the concurrency group out of sync
@@ -147,6 +193,47 @@ jobs:
         # scheduled run of this chain ENOENT'd on the first loader step.
         run: mkdir -p data
 
+      # WF2 partial chain runs (2026-09-17) — THE SELECTION IS ANNOUNCED BEFORE ANYTHING RUNS.
+      # A partial run is a legitimate acceptance record for the slugs it ran and for no
+      # others, so the one thing that must never happen is a reader mistaking it for a full
+      # chain. Three carriers, deliberately redundant because they have different audiences:
+      # this job summary (the human opening the run), the `::notice` (the log tail), and
+      # `records_meta.partial_selection` on the chain row (every machine downstream).
+      # Runs AFTER the pin guard — an unpinned/drifted dispatch must die before it advertises
+      # anything — and BEFORE the concurrency guard, so the summary exists even on a skip.
+      - name: Announce step selection (partial vs full)
+        run: |
+          if [ -n "$SELECT_FROM" ] && [ -n "$SELECT_ONLY" ]; then
+            echo '::error::the from and only inputs are mutually exclusive — run-chain.js REFUSES the combination (it does NOT intersect them). Re-dispatch with one of the two.'
+            exit 1
+          fi
+          if [ -n "$SELECT_FROM" ]; then
+            SEL="PARTIAL — from=${SELECT_FROM} (this step and every later step, in manifest order)"
+          elif [ -n "$SELECT_ONLY" ]; then
+            SEL="PARTIAL — only=${SELECT_ONLY} (manifest order preserved)"
+          else
+            SEL="FULL — every step of the sources chain"
+          fi
+          echo "::notice title=Step selection::${SEL}"
+          {
+            echo '### chain-sources step selection'
+            echo ''
+            echo "**${SEL}**"
+            echo ''
+            if [ -n "$SELECT_FROM" ] || [ -n "$SELECT_ONLY" ]; then
+              echo 'This run is NOT a full-chain acceptance record. The chain row carries'
+              echo 'records_meta.partial_selection naming steps_selected and'
+              echo 'steps_skipped_by_selection; step_completeness.expected is the SELECTED set,'
+              echo 'so the per-slug verdict adjudicates exactly what ran.'
+              echo ''
+              echo 'Note: reconcile (Step 0, the stranded-row reaper) runs only if it is selected.'
+              echo ''
+              echo 'KNOWN GAP: the admin data-quality dashboard does not read partial_selection,'
+              echo 'so it will show this chain as PASS / On schedule. Judge completeness from'
+              echo 'this summary or from records_meta.partial_selection, not from that chip.'
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
       - name: Guard — sources concurrency check
         id: sources_guard
         run: node scripts/check-chain-running.js sources >> "$GITHUB_OUTPUT"
@@ -169,7 +256,29 @@ jobs:
           BUDGET=$(( ${{ fromJSON(env.SOURCES_STEP_TIMEOUT_MINUTES) }} - 10 ))
           if [ "$BUDGET" -lt 0 ]; then BUDGET=0; fi
           export CHAIN_TIME_BUDGET_MINUTES=$BUDGET
-          node scripts/run-chain.js sources
+          # WF2 partial chain runs — the selection flags are assembled from the JOB-env
+          # values (never interpolated as a GH expression into the shell), so a dispatch
+          # input can only ever arrive as an argv VALUE. An unknown slug is refused by
+          # run-chain.js before it opens the chain row; both flags together are refused by
+          # the announce step above AND by run-chain.js itself.
+          #
+          # A BASH ARRAY, and the quoting is load-bearing (Integration OUTPUT seat, measured
+          # 2026-09-17). The first cut was an unquoted scalar `$SELECT_ARGS`, which word-splits:
+          # `-f only="enrich_parcels, refresh_snapshot"` — a comma-separated list typed with the
+          # space a human naturally puts after a comma — became argv
+          # `['--only=enrich_parcels,', 'refresh_snapshot']`. `resolveStepSelection` then dropped
+          # the trailing empty token, saw one valid slug, threw nothing, and ran HALF the
+          # requested set; the orphan word was swallowed by the `positionals` filter as a
+          # non-numeric run id. Totally silent, and the announce banner two steps above still
+          # said `only=enrich_parcels, refresh_snapshot` — banner and ledger row disagreeing with
+          # nothing to reconcile them. `resolveStepSelection`'s own `.map(s => s.trim())`
+          # (which exists precisely to tolerate `"a, b"`) was UNREACHABLE on the only path this
+          # workflow can produce. A bare `*` in either input likewise glob-expanded against the
+          # runner's CWD. `"${SELECT_ARGS[@]}"` delivers each element as exactly one argv word.
+          SELECT_ARGS=()
+          if [ -n "$SELECT_FROM" ]; then SELECT_ARGS=("--from=$SELECT_FROM"); fi
+          if [ -n "$SELECT_ONLY" ]; then SELECT_ARGS=("--only=$SELECT_ONLY"); fi
+          node scripts/run-chain.js sources "${SELECT_ARGS[@]}"
         env: *pipeline-env
 
       - name: Verdict check — sources (F8 fold 2026-07-20)

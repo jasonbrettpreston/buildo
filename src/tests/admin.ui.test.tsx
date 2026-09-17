@@ -1833,16 +1833,41 @@ describe('run-chain.js accepts external run ID argument', () => {
     path.join(__dirname, '../../scripts/run-chain.js'), 'utf-8'
   );
 
-  it('accepts run ID from CLI argument to skip duplicate INSERT', () => {
+  // WF2 partial chain runs (2026-09-17) — THE SPELLING MOVED, THE CONTRACT DID NOT.
+  // These two locks pinned the literal `process.argv[3]` / `parseInt(process.argv[3]`, which
+  // said only HOW the id was read and never that it was USED — both would have stayed green if
+  // the value had been parsed and thrown away and a second row INSERTed anyway. `run-chain.js`
+  // now also takes `--from=` / `--only=`, so the id is the FIRST NON-FLAG POSITIONAL, resolved
+  // by the exported pure `resolveExternalRunId`. Re-pinned on the CONTRACT (a caller-supplied
+  // run id is accepted and REUSES the row instead of INSERTing a second one) plus a negative
+  // direction the old pair could not state. The behavioural case table for the resolver itself
+  // lives in `src/tests/run-chain-selection.logic.test.ts` (it `require()`s the module and
+  // drives real argv arrays); this admin-UI suite stays a source scan, deliberately.
+  it('accepts an external run ID from the CLI via the exported resolveExternalRunId, to skip the duplicate INSERT', () => {
     const source = chainSource();
-    // run-chain.js should check for a run ID argument (argv[3])
-    expect(source).toMatch(/process\.argv\[3\]/);
+    expect(source).toMatch(/const externalRunId = resolveExternalRunId\(process\.argv\);/);
+    expect(source, 'and the resolver must actually be exported, or the behavioural table cannot reach it')
+      .toMatch(/module\.exports = \{[\s\S]{0,300}resolveExternalRunId,/);
   });
 
   it('skips chain row INSERT when external run ID is provided', () => {
     const source = chainSource();
     // Should have conditional logic: if run ID provided, use it; else INSERT
-    expect(source).toMatch(/parseInt\(process\.argv\[3\]/);
+    expect(source).toMatch(/if \(externalRunId\) \{[\s\S]{0,200}chainRunId = externalRunId;[\s\S]{0,400}\} else \{[\s\S]{0,200}INSERT INTO pipeline_runs/);
+  });
+
+  it('a selection FLAG is never read as an external run ID — argv position alone no longer decides', () => {
+    // Comments stripped first: the resolver's own docblock quotes the retired
+    // `process.argv[3]` expression verbatim, and a raw scan would report that promise as the
+    // breach (`tasks/lessons.md`, the recurring text-lock class).
+    const code = chainSource()
+      .split(/\r?\n/)
+      .filter((l) => {
+        const t = l.trim();
+        return !t.startsWith('//') && !t.startsWith('*') && !t.startsWith('/*');
+      })
+      .join('\n');
+    expect(code, 'nothing may read argv[3] positionally any more').not.toMatch(/process\.argv\[3\]/);
   });
 });
 
