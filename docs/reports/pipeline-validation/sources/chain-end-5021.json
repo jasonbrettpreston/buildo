@@ -1,0 +1,163 @@
+{
+  "chain": "sources",
+  "run_id": 5021,
+  "chain_status": "completed_with_warnings",
+  "chain_duration_ms": 2663402,
+  "started_at": "2026-09-17T09:18:03.960Z",
+  "completed_at": "2026-09-17T10:02:26.809Z",
+  "join": "chain_run_id",
+  "steps": [
+    {
+      "step": "refresh_snapshot",
+      "status": "completed",
+      "verdict": "PASS",
+      "duration_ms": 471851,
+      "records_total": 1,
+      "chain_run_id": 5021
+    },
+    {
+      "step": "assert_data_bounds",
+      "status": "completed",
+      "verdict": "WARN",
+      "duration_ms": 544492,
+      "records_total": 0,
+      "chain_run_id": 5021
+    },
+    {
+      "step": "assert_engine_health",
+      "status": "completed",
+      "verdict": "WARN",
+      "duration_ms": 19573,
+      "records_total": 91,
+      "chain_run_id": 5021
+    },
+    {
+      "step": "assert_schema",
+      "status": "completed",
+      "verdict": "PASS",
+      "duration_ms": 5401,
+      "records_total": 0,
+      "chain_run_id": 5021
+    },
+    {
+      "step": "assert_global_coverage",
+      "status": "completed",
+      "verdict": "PASS",
+      "duration_ms": 1618598,
+      "records_total": 0,
+      "chain_run_id": 5021
+    }
+  ],
+  "seam": [
+    {
+      "metric": "seam_link_massing_before_enrich_parcels",
+      "value": {
+        "upstream_completed_at": "2026-09-10T18:02:21.945Z",
+        "downstream_started_at": "2026-09-10T18:02:40.243Z",
+        "join": "chain_run_id",
+        "join_value": "4566"
+      },
+      "threshold": "enrich_parcels.started_at >= link_massing.completed_at (chain_run_id join, or legacy temporal fallback)",
+      "status": "PASS",
+      "source": "seam"
+    },
+    {
+      "metric": "seam_compute_centroids_before_link_massing",
+      "value": {
+        "upstream_completed_at": "2026-09-16T15:37:26.954Z",
+        "downstream_started_at": "2026-09-16T16:16:09.587Z",
+        "join": "chain_run_id",
+        "join_value": "4973"
+      },
+      "threshold": "link_massing.started_at >= compute_centroids.completed_at (chain_run_id join, or legacy temporal fallback)",
+      "status": "PASS",
+      "source": "seam"
+    },
+    {
+      "metric": "seam_geocode_permits_before_link_neighbourhoods",
+      "value": {
+        "upstream_completed_at": "2026-09-16T20:41:06.845Z",
+        "downstream_started_at": "2026-09-17T05:11:53.735Z",
+        "join": "temporal_fallback",
+        "join_value": null
+      },
+      "threshold": "link_neighbourhoods.started_at >= geocode_permits.completed_at (chain_run_id join, or legacy temporal fallback)",
+      "status": "PASS",
+      "source": "seam"
+    },
+    {
+      "metric": "seam_link_parcel_addresses_before_link_parcels",
+      "value": {
+        "upstream_completed_at": "2026-09-16T21:18:56.655Z",
+        "downstream_started_at": "2026-09-16T22:08:59.662Z",
+        "join": "chain_run_id",
+        "join_value": "4996"
+      },
+      "threshold": "link_parcels.started_at >= link_parcel_addresses.completed_at (chain_run_id join, or legacy temporal fallback)",
+      "status": "PASS",
+      "source": "seam"
+    },
+    {
+      "metric": "seam_link_massing_before_refresh_snapshot",
+      "value": {
+        "upstream_completed_at": "2026-09-10T18:02:21.945Z",
+        "downstream_started_at": "2026-09-10T20:36:39.901Z",
+        "join": "chain_run_id",
+        "join_value": "4566"
+      },
+      "threshold": "refresh_snapshot.started_at >= link_massing.completed_at (chain_run_id join, or legacy temporal fallback)",
+      "status": "PASS",
+      "source": "seam"
+    },
+    {
+      "metric": "seam_link_parcels_before_refresh_snapshot",
+      "value": {
+        "upstream_completed_at": "2026-09-10T17:44:38.170Z",
+        "downstream_started_at": "2026-09-10T20:36:39.901Z",
+        "join": "chain_run_id",
+        "join_value": "4566"
+      },
+      "threshold": "refresh_snapshot.started_at >= link_parcels.completed_at (chain_run_id join, or legacy temporal fallback)",
+      "status": "PASS",
+      "source": "seam"
+    },
+    {
+      "metric": "seam_link_wsib_before_refresh_snapshot",
+      "value": {
+        "upstream_completed_at": "2026-09-10T18:02:36.366Z",
+        "downstream_started_at": "2026-09-10T20:36:39.901Z",
+        "join": "chain_run_id",
+        "join_value": "4566"
+      },
+      "threshold": "refresh_snapshot.started_at >= link_wsib.completed_at (chain_run_id join, or legacy temporal fallback)",
+      "status": "PASS",
+      "source": "seam"
+    }
+  ],
+  "validate_only": {
+    "cost_cap": {
+      "entries": [
+        {
+          "step": "link_parcel_addresses",
+          "id": "missed_link_count",
+          "source": "invariant",
+          "cost_ms": 32078
+        }
+      ],
+      "summedCostMs": 32078,
+      "chainDurationMs": 2663402,
+      "unmeasuredCount": 0,
+      "ratio": 0.012043994860708222
+    },
+    "results": [
+      {
+        "step": "link_parcel_addresses",
+        "metric": "missed_link_count",
+        "source": "invariant",
+        "status": "FAIL",
+        "value": "canceling statement due to statement timeout"
+      }
+    ]
+  },
+  "generated_at": "2026-09-17T10:06:25.838Z"
+}
