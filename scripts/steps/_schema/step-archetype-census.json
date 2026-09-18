@@ -399,7 +399,9 @@
       "file": "scripts/quality/assert-parcel-sanity.js",
       "archetype": "ASSERT",
       "batch": "pending",
-      "reason": "batch2 P1.1 commit 1 (2026-09-18): conversion IN FLIGHT (descriptor_only stage, scripts/steps/_schema/converted.json pending[]). Flipped from C5 per the same convention I1-I5/pilot 9 used at their own commit 1 — batch stays 'pending' until cutover (commit 3) flips status to 'converted'."
+      "reason": "RETAINED at cutover per Spec 124 R-AO. batch2 P1.1 commits 1/2a/2b/2c (2026-09-18) landed the descriptor, fields sidecar, folded-scan compute, frozen shell, and the kind:\"distribution\"/observation.inert library wiring; commit 3 registers the file in converted.json's converted[] and deletes the pending[] entry in the same commit (R-K).",
+      "status": "converted",
+      "converted_at": "db8fb751"
     },
     {
       "slug": "assert_staleness",

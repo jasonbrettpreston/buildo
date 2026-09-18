@@ -243,7 +243,7 @@ describe('assert_engine_health — measured facts, true today (plain it)', () =>
       const arch = (JSON.parse(fs.readFileSync(p, 'utf8')).identity || {}).archetype;
       if (arch) archCounts.set(arch, (archCounts.get(arch) || 0) + 1);
     }
-    expect(archCounts.get('ASSERT'), '3 ASSERT members already converted — compressed form eligible under ASSERT').toBe(3);
+    expect(archCounts.get('ASSERT'), '4 ASSERT members already converted (batch2 P1.1 assert_parcel_sanity cutover) — compressed form eligible under ASSERT').toBe(4);
     expect(archCounts.get('RECORDER'), '2 RECORDER members after this cutover (refresh_snapshot + assert_engine_health) — compressed form is now ELIGIBLE under RECORDER for the next conversion').toBe(2);
   });
 });

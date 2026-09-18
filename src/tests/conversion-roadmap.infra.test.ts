@@ -112,7 +112,7 @@ describe('measured counts — independently re-derived, not transcribed from the
     return map;
   }
 
-  it('49 remaining files, 51 remaining slugs (excluding the 13 converted, 1 pending, the 1 python-exempt file and the 1 RUNNER-owned exemption — `reconcile`, Spec 124 R-AP, 2026-09-15)', () => {
+  it('48 remaining files, 50 remaining slugs (excluding the 15 converted, 0 pending, the 1 python-exempt file and the 1 RUNNER-owned exemption — `reconcile`, Spec 124 R-AP, 2026-09-15)', () => {
     const fileToSlugs = fileToSlugsMap();
     const convertedSet = new Set(CONVERTED);
     const pendingSet = new Set(PENDING_FILES);
@@ -126,8 +126,12 @@ describe('measured counts — independently re-derived, not transcribed from the
     // FOLDED commit 5 (2026-09-16). Same one-slug-not-two arithmetic, and for the same reason
     // — this step is ALSO a two-chain member (permits 8/33, sources 4/28) with a single
     // `manifest.scripts` entry.
-    expect(remaining.length).toBe(49);
-    expect(remainingSlugCount).toBe(51);
+    // 49 -> 48 files and 51 -> 50 slugs: assert_parcel_sanity's batch2 P1.1 CUTOVER
+    // (converted.json converted[], 2026-09-18) moves its file straight from `remaining`
+    // into `convertedSet` (its own conversion never needed a separate pending[]->converted[]
+    // step visible to THIS test, since PENDING_FILES was already 0 by the time this ran).
+    expect(remaining.length).toBe(48);
+    expect(remainingSlugCount).toBe(50);
     // Unchanged across the I5 CUTOVER: the file moved from `pending[]` to `converted[]`, and
     // both sets are excluded from `remaining`, so 49/51 holds on both sides of commit 9.
   });
@@ -174,9 +178,11 @@ describe('measured counts — independently re-derived, not transcribed from the
     // assert_engine_health at batch1 I3 commit 1. C4 is now EMPTY, which is the batch closing,
     // not a count going stale — every one of its five steps has been converted or is in flight.
     expect(c4.size).toBe(0);
-    // C5 itself is unaffected by this slug's move (it was never a C5 member) — the
-    // census total gains 0 net rows (C4's loss is pending's gain, not C5's).
-    expect(c5.size).toBe(13);
+    // 13 -> 12 at batch2 P1.1 commit 1 (2026-09-18): assert_parcel_sanity's own
+    // census row flipped batch "C5" -> "pending" (mirroring the same C4->pending
+    // move every other in-flight conversion makes at ITS commit 1) — mechanically
+    // re-counted from the live census file, not retyped.
+    expect(c5.size).toBe(12);
     // 1 -> 0 at the I4 CUTOVER (commit 3): the row is RETAINED with `status: "converted"`
     // (Spec 124 R-AO) rather than deleted, but `byBatch` counts only rows the roadmap still
     // treats as pending work, and a converted row is no longer that.
@@ -385,7 +391,11 @@ describe('buildRoadmap() — totality over the real committed data (HIGH-1: slug
     expect(totalSlugs).toBe(68);
     expect(convertedSlugCount + pendingSlugs + args.exemptions.length + remainingSlugs).toBe(totalSlugs);
     expect(pendingSlugs).toBe(0);
-    expect(remainingSlugs).toBe(51);
+    // batch2 P1.1 cutover (2026-09-18): CONVERTED grew 14->15 (assert_parcel_sanity),
+    // derived from converted.json (see convertedSlugCount above, never retyped) — the
+    // remaining count is 68 - 15 converted - 0 pending - 3 exempted = 50, mechanically
+    // computed by buildRoadmap() itself, not guessed.
+    expect(remainingSlugs).toBe(50);
   });
 
   it('the rendered report never silently drops the 3 exemptions — all appear in the Declared exemptions table and the totality sentence states IDENTITY HOLDS', async () => {
@@ -472,7 +482,10 @@ describe('buildRoadmap() — the R-AP RUNNER-owned exemption class, both directi
     const rows = mod.buildRoadmap(args);
     expect(rows.some((r) => r.slugs.includes('reconcile'))).toBe(false);
     const c5 = rows.filter((r) => r.batch === 'C5');
-    expect(c5).toHaveLength(13);
+    // batch2 P1.1 cutover (2026-09-18): assert_parcel_sanity converted out of C5
+    // (13->12), mechanically computed by buildRoadmap() from converted.json, not
+    // retyped.
+    expect(c5).toHaveLength(12);
   });
 });
 

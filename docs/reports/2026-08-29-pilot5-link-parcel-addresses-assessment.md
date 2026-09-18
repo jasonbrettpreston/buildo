@@ -726,10 +726,10 @@ Spec 124 §2 Rule 13's R-T addendum lands 5 net-new `invariants[]` (rows, multi_
 | 4 | (registry) | PASS | overlap: none |
 | 5 | (registry) | PASS | clean (0 it.fails( call sites outside a declared pending slug) |
 | 9 | (registry) | PASS | clean (0 converted slugs blocked by an unmet cutover_prereq item; blocks batching: 0) |
-| 22 | (registry) | PASS | GOLD-PRE-FRESH: 58 PRE capture(s) across 14 converted step(s) all tracked + clean (git can restore every reference) |
+| 22 | (registry) | PASS | GOLD-PRE-FRESH: 60 PRE capture(s) across 15 converted step(s) all tracked + clean (git can restore every reference) |
 | 23 | (registry) | PASS | COMPRESSED-FORM-ELIGIBLE: not applicable (0 pending slugs declare the compressed form) |
 | 24 | (registry) | PASS | COMPRESSED-FORM-DEFAULT: not applicable (0 pending slugs whose archetype is eligible) |
-| 25 | (registry) | PASS | ARCHETYPE-PARITY: 14 converted slug(s) — 6 compared against a retained census row (all agree), 8 with no retained row (census arm n/a, pre-R-AO cutovers); every archetype has a declared freeze profile |
+| 25 | (registry) | PASS | ARCHETYPE-PARITY: 15 converted slug(s) — 7 compared against a retained census row (all agree), 8 with no retained row (census arm n/a, pre-R-AO cutovers); every archetype has a declared freeze profile |
 | 26 | (registry) | PASS | COUNTER-ROOT: 32 declared counter source(s) across 11 descriptor(s) all root in their own shape's counterScope (+ records_meta) |
 
 ### Captures (item iv)
@@ -739,8 +739,8 @@ Spec 124 §2 Rule 13's R-T addendum lands 5 net-new `invariants[]` (rows, multi_
 - compare ran: true · diffs found: 91 · unexplained: 0
 
 ### Test suite (item iii)
-- 1161/1161 passed (suite success=true)
-- harvested: 19 file(s) from 3 FLEET-WIDE targets (src/tests/step-conformance.infra.test.ts, src/tests/golden-fingerprint.infra.test.ts, src/tests/steps/) — one spawn per run, so every step's report carries this same number, by design
+- 1208/1208 passed (suite success=true)
+- harvested: 20 file(s) from 3 FLEET-WIDE targets (src/tests/step-conformance.infra.test.ts, src/tests/golden-fingerprint.infra.test.ts, src/tests/steps/) — one spawn per run, so every step's report carries this same number, by design
 - excluded (R-AG live-DB tier, owned by `npm run test:db`, derived from package.json `scripts.test`): 5 — src/tests/steps/link_massing/metamorphic.test.ts, src/tests/steps/link_massing/nearest-determinism.test.ts, src/tests/steps/link_massing/rung1-inline-wkt.test.ts, src/tests/steps/link_parcel_addresses/metamorphic.test.ts, src/tests/steps/link_parcel_addresses/rung1-inline-wkt.test.ts
 - skipped (declared but not run): 0
 - failing: none

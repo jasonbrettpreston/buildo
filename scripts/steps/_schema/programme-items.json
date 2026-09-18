@@ -1702,7 +1702,7 @@
       "title": "Pre-dispatch cloud-state checklist — table sizes, index presence, stranded running rows measured BEFORE a cutover attempt",
       "promised": "cloud data state (table sizes, index presence, stranded `running` pipeline_runs rows) is measured before a cutover attempt is dispatched, not discovered afterward (the EP-D14 class: a committed fix whose cloud `--full` re-run has not yet landed)",
       "status": "NOT_STARTED",
-      "evidence": "grep -n 'CLOUD-PRE\\|pre-dispatch' scripts/analysis/step-validate.mjs docs/runbook/README.md -> 0 hits. EP-D14's own cloud backlog measurement (439,130 unconsumed enrich_parcels_pass3_scope rows, one backend ACTIVE 23 min, docs/reports/defect-ledger.md EP-D14 row) was a one-off WF3 measurement, never a standing pre-dispatch checklist any future cutover runs automatically | PROMOTED nice_to_have -> cutover_prereq 2026-09-15 (batch-2 Phase 0.7), SCOPED to the 13 C5 slugs and to no already-converted slug (registry invariant #9 would red otherwise). Grounding, measured: scripts/lib/step/config.js THROWS per LM-D15 when a descriptor declares a logic variable with no logic_variables ROW ('a seed default exists ... but a seed is BOOTSTRAP ONLY'), and scripts/seeds/apply-logic-variables.js is the applier. Every C5 step declares new tunables (Rule 3), so batch 2 is the batch that pays for an unseeded cloud. Spec 123 §7.2 A5 already names the seeding step in the pre-dispatch checklist; until this promotion the discipline was UNENFORCED (gate nice_to_have, blocks []).",
+      "evidence": "grep -n 'CLOUD-PRE\\|pre-dispatch' scripts/analysis/step-validate.mjs docs/runbook/README.md -> 0 hits. EP-D14's own cloud backlog measurement (439,130 unconsumed enrich_parcels_pass3_scope rows, one backend ACTIVE 23 min, docs/reports/defect-ledger.md EP-D14 row) was a one-off WF3 measurement, never a standing pre-dispatch checklist any future cutover runs automatically | PROMOTED nice_to_have -> cutover_prereq 2026-09-15 (batch-2 Phase 0.7), SCOPED to the 13 C5 slugs and to no already-converted slug (registry invariant #9 would red otherwise). Grounding, measured: scripts/lib/step/config.js THROWS per LM-D15 when a descriptor declares a logic variable with no logic_variables ROW ('a seed default exists ... but a seed is BOOTSTRAP ONLY'), and scripts/seeds/apply-logic-variables.js is the applier. Every C5 step declares new tunables (Rule 3), so batch 2 is the batch that pays for an unseeded cloud. Spec 123 §7.2 A5 already names the seeding step in the pre-dispatch checklist; until this promotion the discipline was UNENFORCED (gate nice_to_have, blocks []). UPDATED 2026-09-18 (batch2 P1.1 cutover): assert_parcel_sanity REMOVED from blocks[] now that it is an already-converted slug (the exact collision this item's own scoping rule names) — cloud pre-checks for this step remain the operator's own pre-dispatch action (runbook §3c), just no longer expressed as a registry-invariant #9 blocker.",
       "owner": {
         "kind": "wf",
         "ref": "wf: unassigned"
@@ -1710,7 +1710,6 @@
       "gate": {
         "kind": "cutover_prereq",
         "blocks": [
-          "assert_parcel_sanity",
           "enrich_ravines",
           "enrich_heritage",
           "enrich_centreline",

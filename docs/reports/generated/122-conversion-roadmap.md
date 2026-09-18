@@ -7,12 +7,12 @@
 
 ## Counts
 
-Remaining files: **49** (+ **0** pending) · remaining slugs: **51** (+ **0** pending)
+Remaining files: **48** (+ **0** pending) · remaining slugs: **50** (+ **0** pending)
 
 | Batch | Files | Slots |
 |---|---:|---:|
 | C4 | 0 | 0 |
-| C5 | 13 | 13 |
+| C5 | 12 | 12 |
 | C6 | 36 | 40 |
 
 ## C4 — archetype-grouped, risk-ascending
@@ -29,7 +29,6 @@ Remaining files: **49** (+ **0** pending) · remaining slugs: **51** (+ **0** pe
 
 | Archetype | File | Slug(s) | Chains (slots) | Quadrant | Write hints | Open cutover_prereq |
 |---|---|---|---|---|---|---|
-| ASSERT | `scripts/quality/assert-parcel-sanity.js` | assert_parcel_sanity | sources (1) | bottom-left | — | CLOUD-PRE (assert_parcel_sanity) |
 | ENRICHER | `scripts/enrich-centreline.js` | enrich_centreline | sources (1) | bottom-left | — | EP-PIN-D17 (enrich_centreline); CLOUD-PRE (enrich_centreline) |
 | ENRICHER | `scripts/enrich-heritage.js` | enrich_heritage | sources (1) | bottom-left | — | CLOUD-PRE (enrich_heritage) |
 | ENRICHER | `scripts/enrich-ravines.js` | enrich_ravines | sources (1) | bottom-left | — | CLOUD-PRE (enrich_ravines) |
@@ -57,7 +56,6 @@ Remaining files: **49** (+ **0** pending) · remaining slugs: **51** (+ **0** pe
 - `scripts/load-parcels.js` (INGESTOR): Spec 122 §1.10 declared
 - `scripts/load-wsib.js` (INGESTOR): Spec 122 §1.10 declared
 - `scripts/load-zoning.js` (INGESTOR): Spec 122 §1.10 declared
-- `scripts/quality/assert-parcel-sanity.js` (ASSERT): Ask A1-bis: sources-only 1-slot ASSERT, ruled to join the C4 ASSERT group at conversion time; census still declares its true archetype under C5's own batch tag
 
 </details>
 
@@ -114,4 +112,4 @@ Remaining files: **49** (+ **0** pending) · remaining slugs: **51** (+ **0** pe
 
 ---
 
-*Totality (both directions, proven by `src/tests/conversion-roadmap.infra.test.ts`; slug-grain, IDENTITY HOLDS): **68** manifest.scripts slugs = **14** converted + **0** pending + **3** declared exemptions (Ask A2, excluded from the conversion programme entirely — never silently dropped, see the table above) + **51** remaining, each counted exactly once, in exactly one of C4/C5/C6/pending/exempted.*
+*Totality (both directions, proven by `src/tests/conversion-roadmap.infra.test.ts`; slug-grain, IDENTITY HOLDS): **68** manifest.scripts slugs = **15** converted + **0** pending + **3** declared exemptions (Ask A2, excluded from the conversion programme entirely — never silently dropped, see the table above) + **50** remaining, each counted exactly once, in exactly one of C4/C5/C6/pending/exempted.*

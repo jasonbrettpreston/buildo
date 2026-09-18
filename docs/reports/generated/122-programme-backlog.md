@@ -10,9 +10,9 @@ Total items: **123**
 
 | status | count |
 |---|---|
-| ⬜ NOT_STARTED | 29 |
+| ⬜ NOT_STARTED | 28 |
 | ⚠️ PARTIAL | 16 |
-| ✅ BUILT | 74 |
+| ✅ BUILT | 75 |
 | ⏭️ SUPERSEDED | 4 |
 
 **blocks batching: 0**
@@ -46,7 +46,7 @@ Total items: **123**
 | `C4-GATE` | 122 §5.3 / C4 plan §3.4 | C4 "every chain" capture gate is a CHECKER — completeness + freshness, both sides | ✅ BUILT | wf: C4 step H — c4_chain_completeness_gate (2026-09-11) — CLOSED | assert_global_coverage, assert_data_bounds, assert_engine_health, link_neighbourhoods, geocode_permits | 2026-09-11 |
 | `HB-1` | 124 §2 Rule 12 | Heartbeat covers the WHOLE step, not only phase boundaries (EP-D15) | ✅ BUILT | wf: wf: conversion-roadmap commit 3, 2026-09-10 | — | 2026-09-10 |
 | `CEIL-1` | 124 §2 Rule 12 | Statement/lock ceiling bound on EVERY phase incl. post_commit (EP-D16) | ✅ BUILT | wf: wf: conversion-roadmap commit 3, 2026-09-10 | — | 2026-09-10 |
-| `CLOUD-PRE` | 123 §6 | Pre-dispatch cloud-state checklist — table sizes, index presence, stranded running rows measured BEFORE a cutover attempt | ⬜ NOT_STARTED | wf: wf: unassigned | assert_parcel_sanity, enrich_ravines, enrich_heritage, enrich_centreline, compute_parcel_cost_estimates, address_points, load_centreline, load_zoning, load_heritage, load_wsib, massing, parcels, neighbourhoods | 2026-09-15 |
+| `CLOUD-PRE` | 123 §6 | Pre-dispatch cloud-state checklist — table sizes, index presence, stranded running rows measured BEFORE a cutover attempt | ⬜ NOT_STARTED | wf: wf: unassigned | enrich_ravines, enrich_heritage, enrich_centreline, compute_parcel_cost_estimates, address_points, load_centreline, load_zoning, load_heritage, load_wsib, massing, parcels, neighbourhoods | 2026-09-15 |
 | `VEL-1` | 124 R-AG (proposed) | Gate placement: full suite at pre-push, vitest related + fast invariants at pre-commit, live-DB infra tests in test:db | ✅ BUILT | wf: wf: conversion velocity (R-AG) | address_points, assert_parcel_sanity, compute_parcel_cost_estimates, enrich_centreline, enrich_heritage, enrich_ravines, load_centreline, load_heritage, load_wsib, load_zoning, massing, neighbourhoods, parcels, reconcile | 2026-09-14 |
 | `VEL-2` | 124 R-AH (proposed) | Compressed 3-commit form is the default once an archetype has two full-form members | ✅ BUILT | wf: wf: conversion velocity (R-AH) | address_points, assert_parcel_sanity, compute_parcel_cost_estimates, enrich_centreline, enrich_heritage, enrich_ravines, load_centreline, load_heritage, load_wsib, load_zoning, massing, neighbourhoods, parcels, reconcile | 2026-09-14 |
 | `SEAM-CHAIN-1` | 122 §6.5 | seam checks are scoped to the chain they run in | ⬜ NOT_STARTED | followup: docs/reports/review_followups.md — WF2 batch-2 Phase 0.10 section, the seam.js MED row | address_points | 2026-09-15 |
@@ -120,7 +120,7 @@ Total items: **123**
 | `LG-21` | 122 §5.5 | runPhaseScaffold(descriptor, phaseBody) - shared phase-runner scaffold | ⏭️ SUPERSEDED | — | — | 2026-09-04 |
 | `G-DEREGEX` | 124 §2 Rule 13 | Gates G0/G1/G3/G4/G5/G9 still prose-regex-scraped, not structured artifacts | ⬜ NOT_STARTED | followup: review_followups.md (R-T addendum commit 7 filing, 2026-08-30); Ask 3 | — | 2026-08-30 |
 | `ASSERT-HEALTH-SHAPE` | 124 §2 | assert_health[] — a closed-shape category for health/liveness checks, left dormant | ⬜ NOT_STARTED | followup: review_followups.md (R-T addendum commit 7 filing, 2026-08-30); Ask 4 | — | 2026-08-30 |
-| `PSA-CHECK-IDS` | 124 §2 Rule 13 | parcel-sanity-audit.js's 42 CHECKS[] entries have no per-check id — plausibility[] SQL is duplicated, not referenced | ⬜ NOT_STARTED | followup: review_followups.md (R-T addendum commit 7 filing, 2026-08-30); Fold A-4d | — | 2026-08-30 |
+| `PSA-CHECK-IDS` | 124 §2 Rule 13 | parcel-sanity-audit.js's 42 CHECKS[] entries have no per-check id — plausibility[] SQL is duplicated, not referenced | ✅ BUILT | followup: .cursor/batch2_p1_1_assert_parcel_sanity_active_task.md Ask A1 | — | 2026-09-18 |
 | `TRIPWIRE-T4T5` | 124 §8 | run-step.mjs tripwires T4/T5 stay N/A-MANUAL for both converted ingest_linkage steps | ⬜ NOT_STARTED | followup: review_followups.md (R-T addendum commit 7 filing, 2026-08-30); Fold A-4e | — | 2026-08-30 |
 | `R-W` | 124 §2 Rule 2 addendum | Compute must not branch on PostGIS availability — guards.requires is the only legal form | ✅ BUILT | wf: WF6, docs(122_step_optimization) pilot7 ruling + R-W commit, 2026-08-30 | — | 2026-08-30 |
 | `PILOT7-LP` | 122 §8.2 | Pilot 7 = link_parcels (LINK, 2nd member) — ruled 2026-08-30, implementation not started | ⚠️ PARTIAL | pilot: pilot 7 (link_parcels) | — | 2026-08-30 |

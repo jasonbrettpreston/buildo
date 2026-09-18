@@ -325,10 +325,10 @@ Output panel on commit 7: Guardian PASS ×5; Code Reviewer 2 FAIL (R1, R2); Obse
 | 4 | (registry) | PASS | overlap: none |
 | 5 | (registry) | PASS | clean (0 it.fails( call sites outside a declared pending slug) |
 | 9 | (registry) | PASS | clean (0 converted slugs blocked by an unmet cutover_prereq item; blocks batching: 0) |
-| 22 | (registry) | PASS | GOLD-PRE-FRESH: 58 PRE capture(s) across 14 converted step(s) all tracked + clean (git can restore every reference) |
+| 22 | (registry) | PASS | GOLD-PRE-FRESH: 60 PRE capture(s) across 15 converted step(s) all tracked + clean (git can restore every reference) |
 | 23 | (registry) | PASS | COMPRESSED-FORM-ELIGIBLE: not applicable (0 pending slugs declare the compressed form) |
 | 24 | (registry) | PASS | COMPRESSED-FORM-DEFAULT: not applicable (0 pending slugs whose archetype is eligible) |
-| 25 | (registry) | PASS | ARCHETYPE-PARITY: 14 converted slug(s) — 6 compared against a retained census row (all agree), 8 with no retained row (census arm n/a, pre-R-AO cutovers); every archetype has a declared freeze profile |
+| 25 | (registry) | PASS | ARCHETYPE-PARITY: 15 converted slug(s) — 7 compared against a retained census row (all agree), 8 with no retained row (census arm n/a, pre-R-AO cutovers); every archetype has a declared freeze profile |
 | 26 | (registry) | PASS | COUNTER-ROOT: 32 declared counter source(s) across 11 descriptor(s) all root in their own shape's counterScope (+ records_meta) |
 
 ### Captures (item iv)
@@ -338,17 +338,11 @@ Output panel on commit 7: Guardian PASS ×5; Code Reviewer 2 FAIL (R1, R2); Obse
 - compare ran: true · diffs found: 874 · unexplained: 0
 
 ### Test suite (item iii)
-- 1158/1164 passed (suite success=false)
-- harvested: 19 file(s) from 3 FLEET-WIDE targets (src/tests/step-conformance.infra.test.ts, src/tests/golden-fingerprint.infra.test.ts, src/tests/steps/) — one spawn per run, so every step's report carries this same number, by design
+- 1208/1208 passed (suite success=true)
+- harvested: 20 file(s) from 3 FLEET-WIDE targets (src/tests/step-conformance.infra.test.ts, src/tests/golden-fingerprint.infra.test.ts, src/tests/steps/) — one spawn per run, so every step's report carries this same number, by design
 - excluded (R-AG live-DB tier, owned by `npm run test:db`, derived from package.json `scripts.test`): 5 — src/tests/steps/link_massing/metamorphic.test.ts, src/tests/steps/link_massing/nearest-determinism.test.ts, src/tests/steps/link_massing/rung1-inline-wkt.test.ts, src/tests/steps/link_parcel_addresses/metamorphic.test.ts, src/tests/steps/link_parcel_addresses/rung1-inline-wkt.test.ts
 - skipped (declared but not run): 0
-- failing (6):
-  - src/tests/golden-fingerprint.infra.test.ts > golden-fingerprint — the golden capture is a LOCKFILE (ruling R-C, 2026-08-28) > scripts/refresh-snapshot.js (slug "refresh_snapshot") > every post/ capture carries source_fingerprint === the CURRENT fingerprint over (step, descriptor, notes, compute)
-  - src/tests/step-conformance.infra.test.ts > §1.2a P4 — every tunable is externalized (declared ≡ registry ≡ GROUPS ≡ ctx.config) > scripts/refresh-snapshot.js — declared ⊆ registry, declared ⊆ GROUPS, consumed ≡ declared
-  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/link-parcel-addresses.js (slug "link_parcel_addresses") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
-  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/refresh-snapshot.js (slug "refresh_snapshot") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
-  - src/tests/steps/assert_schema/violations.test.ts > RULING R-D — declared_logic_variables_present (cloud parity, chain-start assertion) > checks[].expect ≡ config.probe_presence ≡ the LIVE fleet derivation — none of the three may drift from the others
-  - src/tests/steps/assert_schema/violations.test.ts > R-D generator — scripts/generate-assert-schema-probe-lists.js (Ask A1) > real file — applyToText(committed text, LIVE names) is a byte-for-byte no-op (the descriptor is clean, not stale)
+- failing: none
 
 ### Policy coverage matrix (item vi) — Spec 124 Rules 1-13
 
