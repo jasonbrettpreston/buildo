@@ -275,9 +275,19 @@ async function runValidatorEntries(pool, entries, { frequency, when, defaultTime
   const selected = list.filter((e) => e.frequency === frequency && (!when || when.includes(e.when || 'pre')));
   // batch2 P1.1 (Fold B-7) — `kind:"distribution"` entries route through
   // runDistributionEntries (a direct function call, never a duplicated
-  // implementation), never through executeEntry's generic single-scalar-query path.
-  const distEntries = selected.filter((e) => e.kind === 'distribution');
-  const boundEntries = selected.filter((e) => e.kind !== 'distribution');
+  // implementation) ONLY when the caller supplies resScope/zoneExpr/fieldExprById
+  // (the live run, via a step's compute.DISTRIBUTION_SCOPE). A THIRD legitimate
+  // caller — scripts/analysis/step-validate.mjs's runDataValidatorsForWrite(), a
+  // descriptor-only probe with no compute module in hand — calls runInvariants/
+  // runPlausibility directly with neither. For that caller, a kind:"distribution"
+  // entry falls back to the ORDINARY executeEntry path over its own declared `sql`
+  // (APS-D2's fix made that text a real, valid, single-row/single-column query, so
+  // this degrades to a plain viol count — no worst/samples/detail text — rather
+  // than throwing). Never a silent behaviour change for the live run: scope
+  // presence is the sole discriminator, checked once, consistently.
+  const scopeAvailable = !!(resScope && zoneExpr && fieldExprById);
+  const distEntries = scopeAvailable ? selected.filter((e) => e.kind === 'distribution') : [];
+  const boundEntries = scopeAvailable ? selected.filter((e) => e.kind !== 'distribution') : selected;
   const checks = boundEntries.map((entry) => ({
     id: entry.id,
     limit: entry.bound,
