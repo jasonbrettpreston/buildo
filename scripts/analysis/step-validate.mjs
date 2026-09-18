@@ -689,7 +689,7 @@ function defectPrefixFor(slug) {
 /**
  * The assessment report for a slug, found by dash-form filename match — never hand-mapped.
  *
- * Two naming conventions, both accepted: pilots 1-9 named their reports
+ * THREE naming conventions, all accepted: pilots 1-9 named their reports
  * `YYYY-MM-DD-pilotN-<dash-slug>-assessment.md`; the C4 "batching" programme (batch
  * 1 onward, 2026-09-11) renamed the unit to `YYYY-MM-DD-batchN-i<M>-<dash-slug>-
  * assessment.md` (`.cursor/c4_batching_entry_active_task.md` §3.2) — e.g.
@@ -698,12 +698,18 @@ function defectPrefixFor(slug) {
  * SPURIOUS 0 (report path = null, not "report has no PH-0/PH-3/PH-5 content") the
  * first time one reached this gate (batch 1 I1, commit 7) — found and fixed here
  * rather than worked around per-step, since it is shared, batch-wide infrastructure.
+ *
+ * batch 2's own "row" numbering (2026-09-18, `.cursor/batch2_p1_1_assert_parcel_sanity_active_task.md`)
+ * widens the unit a THIRD time to `YYYY-MM-DD-batchN-p<M>-<row>-<dash-slug>-
+ * assessment.md` — e.g. `2026-09-18-batch2-p1-1-assert-parcel-sanity-assessment.md`
+ * (batch 2, phase 1, row 1). Same spurious-0 failure mode as the batch-1 fix above
+ * would otherwise recur for every batch-2 row; widened here for the same reason.
  */
 function reportPathFor(slug) {
   const dashSlug = slug.replace(/_/g, '-');
   const dir = path.join(REPO_ROOT, 'docs/reports');
   const hit = readdirSync(dir).find(
-    (f) => /^\d{4}-\d{2}-\d{2}-(pilot\d+|batch\d+-i\d+)-.*-assessment\.md$/.test(f) && f.includes(`-${dashSlug}-assessment.md`),
+    (f) => /^\d{4}-\d{2}-\d{2}-(pilot\d+|batch\d+-i\d+|batch\d+-p\d+-\d+)-.*-assessment\.md$/.test(f) && f.includes(`-${dashSlug}-assessment.md`),
   );
   return hit ? path.join(dir, hit) : null;
 }

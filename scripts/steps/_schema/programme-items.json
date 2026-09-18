@@ -1310,17 +1310,17 @@
       "spec": "124 §2 Rule 13",
       "title": "parcel-sanity-audit.js's 42 CHECKS[] entries have no per-check id — plausibility[] SQL is duplicated, not referenced",
       "promised": "Fold A-4d (R-T addendum plan, 2026-08-29): each plausibility[] entry migrated this WF deliberately restates a parcel-sanity-audit.js predicate in isolated standalone-SQL form (no per-check id exists on the 42 CHECKS[] entries to reference instead) — ruled ACCEPTED duplication this WF, with a followup proposing per-check ids so a future pass can de-duplicate",
-      "status": "NOT_STARTED",
-      "evidence": "scripts/lib/step/plausibility.js's runValidatorEntries() executes each invariants[]/plausibility[] entry's OWN standalone sql field; scripts/analysis/parcel-sanity-audit.js's 42-entry CHECKS[] array (29 BOUND / 13 INVARIANT, 10 zone-aware, Fold B-7 recount) has no id field per entry as of R-T addendum commit 7 (2026-08-30) — cross-checked live, 0 hits for an \"id:\" key inside CHECKS[]'s own array literal.",
+      "status": "BUILT",
+      "evidence": "batch2 P1.1 (2026-09-18, Ask A1 y): resolved the OPPOSITE direction from the original proposal — the 42 CHECKS[] entries now EACH have a stable id (scripts/lib/assert-parcel-sanity-fields.js CHECK_DEFS[].id) and land in the descriptor's checks[] array (scripts/quality/assert-parcel-sanity.descriptor.json, 42 entries, one folded scan via scripts/lib/compute/assert-parcel-sanity.js), never as 42 duplicated standalone-SQL plausibility[] entries. Only the 8 genuinely distribution-shaped rows (per-zone percentile/outlier) use plausibility[], via the new kind:\"distribution\" executor (scripts/lib/step/plausibility.js runDistributionEntries) — zero SQL duplication for those either, since they call runDistributionScan directly rather than restating its query text.",
       "owner": {
         "kind": "followup",
-        "ref": "review_followups.md (R-T addendum commit 7 filing, 2026-08-30); Fold A-4d"
+        "ref": ".cursor/batch2_p1_1_assert_parcel_sanity_active_task.md Ask A1"
       },
       "gate": {
         "kind": "nice_to_have",
         "blocks": []
       },
-      "last_reviewed": "2026-08-30"
+      "last_reviewed": "2026-09-18"
     },
     {
       "id": "TRIPWIRE-T4T5",
@@ -1413,7 +1413,7 @@
       "title": "admin GROUPS reverse-coverage — every unclassified seed key gets a real group or a reviewed hidden reason",
       "promised": "unclassified count = 0",
       "status": "BUILT",
-      "evidence": "0 of 505 scripts/seeds/logic_variables.json keys carry admin.hidden === \"unclassified\" as of scripts/generate-logic-variable-groups.mjs (WF2 \"ADMIN-1 ratchet to zero\" batch 5, 2026-09-09) — refreshed by that generator on every regeneration (npm run logic-var-groups); high-water mark pinned at 0 in scripts/steps/_schema/admin-unclassified-high-water-mark.json (monotonic ratchet, src/tests/logic-var-admin-declarations.logic.test.ts). Closed in 5 reviewed batches (CoA chain 17, cost/archetype chain 19, lifecycle chain 10, coverage asserts + residue 14, lifecycle_seq_band_* family 220 — GlobalConfigCard.tsx's bespoke seq-band render path deleted in the same batch, single render path proven by an exactly-once-render fixture) — see .cursor/wf2_admin1_ratchet_to_zero_active_task.md. Batch 6 (this evidence) additionally RETIRED \"unclassified\" from the closed hidden-reason enum (derived|internal|deprecated|migration-only) — a new unclassified key is now a structural error, not merely ratcheted. review_followups.md — \"WF3 cloud-parity FIX 3 remediation — admin GROUPS reverse-coverage gap (2026-09-03)\" is the originating followup this item batches.",
+      "evidence": "0 of 540 scripts/seeds/logic_variables.json keys carry admin.hidden === \"unclassified\" as of scripts/generate-logic-variable-groups.mjs (WF2 \"ADMIN-1 ratchet to zero\" batch 5, 2026-09-09) — refreshed by that generator on every regeneration (npm run logic-var-groups); high-water mark pinned at 0 in scripts/steps/_schema/admin-unclassified-high-water-mark.json (monotonic ratchet, src/tests/logic-var-admin-declarations.logic.test.ts). Closed in 5 reviewed batches (CoA chain 17, cost/archetype chain 19, lifecycle chain 10, coverage asserts + residue 14, lifecycle_seq_band_* family 220 — GlobalConfigCard.tsx's bespoke seq-band render path deleted in the same batch, single render path proven by an exactly-once-render fixture) — see .cursor/wf2_admin1_ratchet_to_zero_active_task.md. Batch 6 (this evidence) additionally RETIRED \"unclassified\" from the closed hidden-reason enum (derived|internal|deprecated|migration-only) — a new unclassified key is now a structural error, not merely ratcheted. review_followups.md — \"WF3 cloud-parity FIX 3 remediation — admin GROUPS reverse-coverage gap (2026-09-03)\" is the originating followup this item batches.",
       "owner": {
         "kind": "wf",
         "ref": "wf: programme-ADMIN-1"

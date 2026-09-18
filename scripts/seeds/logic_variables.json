@@ -4978,7 +4978,7 @@
     }
   },
   "engine_health_dead_tuple_ratio_warn_max": {
-    "default": 0.10,
+    "default": 0.1,
     "type": "number",
     "description": "assert-engine-health: per-table dead-tuple ratio (n_dead_tup / n_live_tup, tables with >= 1000 live rows only) WARN ceiling — ratio above this value warns and is also the auto-VACUUM ANALYZE trigger threshold. Ported verbatim from the pre-conversion DEAD_TUPLE_RATIO constant (0.10). CONSUMED by assert_engine_health.",
     "min": 0,
@@ -4988,7 +4988,7 @@
     }
   },
   "engine_health_seq_scan_ratio_warn_max": {
-    "default": 0.80,
+    "default": 0.8,
     "type": "number",
     "description": "assert-engine-health: per-table sequential-scan ratio (seq_scan / (seq_scan + idx_scan), tables with >= engine_health_seq_scan_min_rows live rows only) WARN ceiling. Ported verbatim from the pre-conversion SEQ_SCAN_RATIO constant (0.80). CONSUMED by assert_engine_health.",
     "min": 0,
@@ -5045,6 +5045,356 @@
     "max": 100000000,
     "admin": {
       "group": "Data Quality Thresholds"
+    }
+  },
+  "parcel_sanity_lot_size_min_sqm": {
+    "default": 40,
+    "type": "number",
+    "description": "assert_parcel_sanity: residential lot_size_sqm lower bound (sqm). Ported verbatim from the pre-conversion literal (40). CONSUMED by assert_parcel_sanity.",
+    "min": 0,
+    "max": 10000,
+    "admin": {
+      "group": "Data Quality Thresholds"
+    }
+  },
+  "parcel_sanity_lot_size_max_sqm": {
+    "default": 100000,
+    "type": "number",
+    "description": "assert_parcel_sanity: residential lot_size_sqm upper bound (sqm). Ported verbatim from the pre-conversion literal (100000). CONSUMED by assert_parcel_sanity.",
+    "min": 1000,
+    "max": 10000000,
+    "admin": {
+      "group": "Data Quality Thresholds"
+    }
+  },
+  "parcel_sanity_max_build_width_max_m": {
+    "default": 30,
+    "type": "number",
+    "description": "assert_parcel_sanity: max_build_width_m upper bound (m), RC-measured p995 27.2 / max obs 42.66. Ported verbatim from the pre-conversion literal (30). CONSUMED by assert_parcel_sanity.",
+    "min": 0,
+    "max": 500,
+    "admin": {
+      "group": "Spatial & Massing"
+    }
+  },
+  "parcel_sanity_max_build_length_max_m": {
+    "default": 100,
+    "type": "number",
+    "description": "assert_parcel_sanity: max_build_length_m upper bound (m), RC-measured p995 58.9 / max obs 316.23. Ported verbatim from the pre-conversion literal (100). CONSUMED by assert_parcel_sanity.",
+    "min": 0,
+    "max": 1000,
+    "admin": {
+      "group": "Spatial & Massing"
+    }
+  },
+  "parcel_sanity_lowrise_opt_aor_gfa_max_sqm": {
+    "default": 2500,
+    "type": "number",
+    "description": "assert_parcel_sanity: lowrise (RD/RS/RT) opt_aor_gfa_sqm upper bound. Ported verbatim from the pre-conversion literal (2500). CONSUMED by assert_parcel_sanity.",
+    "min": 0,
+    "max": 100000,
+    "admin": {
+      "group": "Spatial & Massing"
+    }
+  },
+  "parcel_sanity_nonlowrise_opt_aor_gfa_max_sqm": {
+    "default": 3500,
+    "type": "number",
+    "description": "assert_parcel_sanity: non-lowrise opt_aor_gfa_sqm upper bound. Ported verbatim from the pre-conversion literal (3500). CONSUMED by assert_parcel_sanity.",
+    "min": 0,
+    "max": 100000,
+    "admin": {
+      "group": "Spatial & Massing"
+    }
+  },
+  "parcel_sanity_comp_fsi_p50_max": {
+    "default": 4,
+    "type": "number",
+    "description": "assert_parcel_sanity: comp_fsi_p50 upper bound (INFO-first, 212 standing). Ported verbatim from the pre-conversion literal (4.0). CONSUMED by assert_parcel_sanity.",
+    "min": 0,
+    "max": 50,
+    "admin": {
+      "group": "Data Quality Thresholds"
+    }
+  },
+  "parcel_sanity_comp_fsi_p50_min": {
+    "default": 0.05,
+    "type": "number",
+    "description": "assert_parcel_sanity: comp_fsi_p50 implausibly-low lower bound. Ported verbatim from the pre-conversion literal (0.05). CONSUMED by assert_parcel_sanity.",
+    "min": 0,
+    "max": 5,
+    "admin": {
+      "group": "Data Quality Thresholds"
+    }
+  },
+  "parcel_sanity_priced_newbuild_min_gfa_sqm": {
+    "default": 30,
+    "type": "number",
+    "description": "assert_parcel_sanity: priced new-build opt_aor_gfa_sqm lower bound (micro-envelope INFO watch). Ported verbatim from the pre-conversion literal (30). CONSUMED by assert_parcel_sanity.",
+    "min": 0,
+    "max": 1000,
+    "admin": {
+      "group": "Spatial & Massing"
+    }
+  },
+  "parcel_sanity_lowrise_bylaw_fsi_max": {
+    "default": 1.5,
+    "type": "number",
+    "description": "assert_parcel_sanity: lowrise bylaw_max_fsi upper bound (FSI-borrow bug watch). Ported verbatim from the pre-conversion literal (1.5). CONSUMED by assert_parcel_sanity.",
+    "min": 0,
+    "max": 20,
+    "admin": {
+      "group": "Data Quality Thresholds"
+    }
+  },
+  "parcel_sanity_bylaw_fsi_max": {
+    "default": 8,
+    "type": "number",
+    "description": "assert_parcel_sanity: residential bylaw_max_fsi upper bound (corrupt-source watch). Ported verbatim from the pre-conversion literal (8). CONSUMED by assert_parcel_sanity.",
+    "min": 0,
+    "max": 50,
+    "admin": {
+      "group": "Data Quality Thresholds"
+    }
+  },
+  "parcel_sanity_lowrise_coverage_max_pct": {
+    "default": 50,
+    "type": "number",
+    "description": "assert_parcel_sanity: lowrise bylaw_max_coverage_pct upper bound. Ported verbatim from the pre-conversion literal (50). CONSUMED by assert_parcel_sanity.",
+    "min": 0,
+    "max": 100,
+    "admin": {
+      "group": "Data Quality Thresholds"
+    }
+  },
+  "parcel_sanity_lowrise_bylaw_height_max_m": {
+    "default": 15,
+    "type": "number",
+    "description": "assert_parcel_sanity: lowrise bylaw_max_height_m upper bound (tree-massing watch). Ported verbatim from the pre-conversion literal (15). CONSUMED by assert_parcel_sanity.",
+    "min": 0,
+    "max": 200,
+    "admin": {
+      "group": "Spatial & Massing"
+    }
+  },
+  "parcel_sanity_footprint_coverage_max_ratio": {
+    "default": 0.65,
+    "type": "number",
+    "description": "assert_parcel_sanity: max_buildable_footprint_sqm / lot_size_sqm upper ratio bound. Ported verbatim from the pre-conversion literal (0.65). CONSUMED by assert_parcel_sanity.",
+    "min": 0,
+    "max": 2,
+    "admin": {
+      "group": "Data Quality Thresholds"
+    }
+  },
+  "parcel_sanity_max_build_fsi_max": {
+    "default": 5,
+    "type": "number",
+    "description": "assert_parcel_sanity: max_build_fsi upper bound (garbage-GFA watch). Ported verbatim from the pre-conversion literal (5). CONSUMED by assert_parcel_sanity.",
+    "min": 0,
+    "max": 50,
+    "admin": {
+      "group": "Data Quality Thresholds"
+    }
+  },
+  "parcel_sanity_coa_fsi_max": {
+    "default": 5,
+    "type": "number",
+    "description": "assert_parcel_sanity: coa_fsi upper bound (garbage-GFA watch). Ported verbatim from the pre-conversion literal (5). CONSUMED by assert_parcel_sanity.",
+    "min": 0,
+    "max": 50,
+    "admin": {
+      "group": "Data Quality Thresholds"
+    }
+  },
+  "parcel_sanity_lowrise_maxbuild_height_max_m": {
+    "default": 15,
+    "type": "number",
+    "description": "assert_parcel_sanity: lowrise max_build_height_m upper bound (tree-massing / envelope-height watch). Ported verbatim from the pre-conversion literal (15). CONSUMED by assert_parcel_sanity.",
+    "min": 0,
+    "max": 200,
+    "admin": {
+      "group": "Spatial & Massing"
+    }
+  },
+  "parcel_sanity_lowrise_maxbuild_stories_max": {
+    "default": 4,
+    "type": "number",
+    "description": "assert_parcel_sanity: lowrise max_build_stories upper bound (over-tall envelope watch). Ported verbatim from the pre-conversion literal (4). CONSUMED by assert_parcel_sanity.",
+    "min": 0,
+    "max": 100,
+    "admin": {
+      "group": "Spatial & Massing"
+    }
+  },
+  "parcel_sanity_rd_maxbuild_stories_max": {
+    "default": 3,
+    "type": "number",
+    "description": "assert_parcel_sanity: RD-only max_build_stories upper bound (tighter than the lowrise bound). Ported verbatim from the pre-conversion literal (3). CONSUMED by assert_parcel_sanity.",
+    "min": 0,
+    "max": 100,
+    "admin": {
+      "group": "Spatial & Massing"
+    }
+  },
+  "parcel_sanity_height_per_storey_min_m": {
+    "default": 2.5,
+    "type": "number",
+    "description": "assert_parcel_sanity: GATE — bylaw_max_height_m / bylaw_max_stories physical-impossibility floor (the WELD signature). Ported verbatim from the pre-conversion literal (2.5). CONSUMED by assert_parcel_sanity.",
+    "min": 0,
+    "max": 20,
+    "admin": {
+      "group": "Spatial & Massing"
+    }
+  },
+  "parcel_sanity_height_per_storey_max_m": {
+    "default": 5.5,
+    "type": "number",
+    "description": "assert_parcel_sanity: bylaw_max_height_m / bylaw_max_stories generous-zoning INFO ceiling (never a bug). Ported verbatim from the pre-conversion literal (5.5). CONSUMED by assert_parcel_sanity.",
+    "min": 0,
+    "max": 50,
+    "admin": {
+      "group": "Spatial & Massing"
+    }
+  },
+  "parcel_sanity_opt_storeys_max": {
+    "default": 12,
+    "type": "number",
+    "description": "assert_parcel_sanity: opt_aor_storeys / opt_coa_storeys physical upper bound. Ported verbatim from the pre-conversion literal (12). CONSUMED by assert_parcel_sanity.",
+    "min": 0,
+    "max": 200,
+    "admin": {
+      "group": "Spatial & Massing"
+    }
+  },
+  "parcel_sanity_newbuild_cost_per_sqm_min": {
+    "default": 2000,
+    "type": "number",
+    "description": "assert_parcel_sanity: cost_fb_total / opt_aor_gfa_sqm rate lower bound (CAD/sqm). Ported verbatim from the pre-conversion literal (2000). CONSUMED by assert_parcel_sanity.",
+    "min": 0,
+    "max": 100000,
+    "admin": {
+      "group": "Data Quality Thresholds"
+    }
+  },
+  "parcel_sanity_newbuild_cost_per_sqm_max": {
+    "default": 12000,
+    "type": "number",
+    "description": "assert_parcel_sanity: cost_fb_total / opt_aor_gfa_sqm rate upper bound (CAD/sqm). Ported verbatim from the pre-conversion literal (12000). CONSUMED by assert_parcel_sanity.",
+    "min": 0,
+    "max": 1000000,
+    "admin": {
+      "group": "Data Quality Thresholds"
+    }
+  },
+  "parcel_sanity_lowrise_cost_fb_max_cad": {
+    "default": 15000000,
+    "type": "number",
+    "description": "assert_parcel_sanity: lowrise cost_fb_total magnitude watch (CAD), COST_FB_GT15M_LEGIT accept-list of 24 ids filters the current investigated population. Ported verbatim from the pre-conversion literal (15000000). CONSUMED by assert_parcel_sanity.",
+    "min": 0,
+    "max": 10000000000,
+    "admin": {
+      "group": "Data Quality Thresholds"
+    }
+  },
+  "parcel_sanity_cost_addition_max_cad": {
+    "default": 50000000,
+    "type": "number",
+    "description": "assert_parcel_sanity: cost_addition_total magnitude watch (CAD), COST_ADDITION_GT50M_LEGIT accept-list of 42 ids filters the current investigated population. Ported verbatim from the pre-conversion literal (50000000). CONSUMED by assert_parcel_sanity.",
+    "min": 0,
+    "max": 10000000000,
+    "admin": {
+      "group": "Data Quality Thresholds"
+    }
+  },
+  "parcel_sanity_dim_lot_tolerance_m": {
+    "default": 0.01,
+    "type": "number",
+    "description": "assert_parcel_sanity: GATE — max_build width/length vs frontage/depth mislink tolerance (m). Ported verbatim from the pre-conversion literal (0.01). CONSUMED by assert_parcel_sanity.",
+    "min": 0,
+    "max": 10,
+    "admin": {
+      "group": "Spatial & Massing"
+    }
+  },
+  "parcel_sanity_gfa_coherence_tolerance_sqm": {
+    "default": 0.5,
+    "type": "number",
+    "description": "assert_parcel_sanity: GATE — opt_aor_gfa_sqm vs opt_coa_gfa_sqm / max_buildable_gfa_sqm coherence tolerance (sqm). Ported verbatim from the pre-conversion literal (0.5). CONSUMED by assert_parcel_sanity.",
+    "min": 0,
+    "max": 100,
+    "admin": {
+      "group": "Data Quality Thresholds"
+    }
+  },
+  "parcel_sanity_cost_coherence_tolerance_cad": {
+    "default": 1,
+    "type": "number",
+    "description": "assert_parcel_sanity: GATE — cost_fb_total vs cost_coa_total coherence tolerance (CAD). Ported verbatim from the pre-conversion literal (1). CONSUMED by assert_parcel_sanity.",
+    "min": 0,
+    "max": 10000,
+    "admin": {
+      "group": "Data Quality Thresholds"
+    }
+  },
+  "parcel_sanity_greenspace_tolerance_sqm": {
+    "default": 0.5,
+    "type": "number",
+    "description": "assert_parcel_sanity: existing_greenspace_sqm vs lot_size_sqm coherence tolerance (sqm). Ported verbatim from the pre-conversion literal (0.5). CONSUMED by assert_parcel_sanity.",
+    "min": 0,
+    "max": 100,
+    "admin": {
+      "group": "Data Quality Thresholds"
+    }
+  },
+  "parcel_sanity_realized_fsi_p90_min": {
+    "default": 0.1,
+    "type": "number",
+    "description": "assert_parcel_sanity: realized_fsi_p90 lower bound. Ported verbatim from the pre-conversion literal (0.1). CONSUMED by assert_parcel_sanity.",
+    "min": 0,
+    "max": 10,
+    "admin": {
+      "group": "Data Quality Thresholds"
+    }
+  },
+  "parcel_sanity_realized_fsi_p90_max": {
+    "default": 6,
+    "type": "number",
+    "description": "assert_parcel_sanity: realized_fsi_p90 upper bound. Ported verbatim from the pre-conversion literal (6). CONSUMED by assert_parcel_sanity.",
+    "min": 0,
+    "max": 50,
+    "admin": {
+      "group": "Data Quality Thresholds"
+    }
+  },
+  "parcel_sanity_distribution_percentile": {
+    "default": 0.99,
+    "type": "number",
+    "description": "assert_parcel_sanity: per-zone distribution-scan outlier percentile (percentile_cont). Ported verbatim from the pre-conversion literal (0.99). CONSUMED by assert_parcel_sanity.",
+    "min": 0.5,
+    "max": 0.9999,
+    "admin": {
+      "group": "Spatial & Massing"
+    }
+  },
+  "parcel_sanity_distribution_median_multiplier": {
+    "default": 3,
+    "type": "number",
+    "description": "assert_parcel_sanity: per-zone distribution-scan outlier median multiplier (value > multiplier x zone median). Ported verbatim from the pre-conversion literal (3). CONSUMED by assert_parcel_sanity.",
+    "min": 1,
+    "max": 100,
+    "admin": {
+      "group": "Spatial & Massing"
+    }
+  },
+  "parcel_sanity_distribution_median_floor": {
+    "default": 0.0001,
+    "type": "number",
+    "description": "assert_parcel_sanity: per-zone distribution-scan zero-median floor (GREATEST(median, floor)). Ported verbatim from the pre-conversion literal (0.0001). CONSUMED by assert_parcel_sanity.",
+    "min": 0,
+    "max": 1,
+    "admin": {
+      "group": "Spatial & Massing"
     }
   }
 }

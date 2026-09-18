@@ -1,0 +1,1922 @@
+{
+  "identity": {
+    "name": "assert_parcel_sanity",
+    "display_name": "Parcel Sanity Profile",
+    "owner": "data",
+    "description": "Value-CORRECTNESS gate: zone-aware BOUNDS + cross-field INVARIANTS + per-zone DISTRIBUTION over all residential parcels. Complements assert_global_coverage (existence) — this answers \"are the values correct?\" 42 declared checks (21 HIGH/15 MED/6 INFO pre-conversion severities; 12 carry a FAIL-gate), 8 distribution visibility rows, 37 logic_variables (35 new + 2 reused from enrich-parcels.js).",
+    "lock": 107,
+    "why_lock": {
+      "text": "Spec 47 §A.5 — assert family slot 107 (102-111), category \"6 - Quality\", writes-DB = NO (read-only Observer). Kept via identity.lock + the §5.4 source-text convention.",
+      "liveness": {
+        "kind": "file",
+        "ref": "docs/specs/01-pipeline/47_pipeline_script_protocol.md"
+      }
+    },
+    "spec": "43",
+    "spec_version": "1.0",
+    "archetype": "ASSERT",
+    "contract_version": 1,
+    "gate_exempt": true
+  },
+  "inputs": {
+    "reads": {
+      "steps": [
+        {
+          "step": "compute_parcel_cost_estimates",
+          "version_pin": "none"
+        }
+      ],
+      "tables": [
+        {
+          "table": "parcels",
+          "columns": [
+            "bylaw_max_coverage_pct",
+            "bylaw_max_fsi",
+            "bylaw_max_height_m",
+            "bylaw_max_stories",
+            "coa_fsi",
+            "comp_fsi_p50",
+            "cost_addition_total",
+            "cost_coa_total",
+            "cost_fb_total",
+            "cost_solar_total",
+            "cur_floor_gfa_sqm",
+            "depth_m",
+            "envelope_constraint_reason",
+            "existing_greenspace_sqm",
+            "feature_type",
+            "frontage_m",
+            "id",
+            "lot_size_sqm",
+            "max_build_fsi",
+            "max_build_height_m",
+            "max_build_length_m",
+            "max_build_stories",
+            "max_build_stories_basis",
+            "max_build_width_m",
+            "max_buildable_footprint_sqm",
+            "max_buildable_gfa_basis",
+            "max_buildable_gfa_sqm",
+            "opt_aor_gfa_sqm",
+            "opt_aor_storeys",
+            "opt_coa_gfa_sqm",
+            "opt_coa_storeys",
+            "realized_fsi_p90",
+            "zoning_class"
+          ]
+        }
+      ],
+      "externals": []
+    },
+    "expect_nonempty": false,
+    "on_missing": "halt"
+  },
+  "outputs": "none",
+  "recovery": "none",
+  "counters": "none",
+  "override": "none",
+  "interpretation": "none",
+  "staleness": {
+    "scope": "none",
+    "trigger": [
+      {
+        "signal": "always",
+        "position": "pre_compute"
+      }
+    ],
+    "mode_select": "none",
+    "checkpoint": "none",
+    "interval": "none",
+    "fingerprint": "derived",
+    "fingerprint_inputs": [
+      "scripts/lib/assert-parcel-sanity-fields.js"
+    ],
+    "logic_version": "none",
+    "on_fingerprint_change": "queue"
+  },
+  "guards": {
+    "requires": [],
+    "srid": "none",
+    "empty_source": "none",
+    "schema_drift": "pause"
+  },
+  "database": {
+    "class": "primary",
+    "min_migration": 244,
+    "assert_current_database": "postgres"
+  },
+  "execution": {
+    "budget": "30m",
+    "txn_scope": "none",
+    "txn_budget": "none",
+    "chunked": false,
+    "statement_timeout": "25m",
+    "step_timeout": "45m",
+    "batch": "none",
+    "needs_disk_mb": "none",
+    "partial_fill": "none",
+    "on_row_error": "fail_fast",
+    "on_batch_error": "fail_step",
+    "on_check_error": "fail_step",
+    "on_degrade": "none",
+    "criticality": "required",
+    "network": "none",
+    "maintenance": "none",
+    "invocation": {
+      "sources": {
+        "argv": [],
+        "env": {
+          "PIPELINE_CHAIN": "sources"
+        }
+      }
+    }
+  },
+  "checks": [
+    {
+      "id": "lot_size_out_of_range",
+      "kind": "bound",
+      "expect": {
+        "metric": "lot_size_out_of_range",
+        "loader": "parcel_sanity",
+        "family": "BOUND",
+        "field": "viol",
+        "gate": false
+      },
+      "limit": "viol == 0",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "chains": [
+        "sources"
+      ],
+      "accept_until": "none",
+      "why": {
+        "text": "physical (out-of-range lot, any emit state; Option A retired WF3 Phase 1). Bound: parcel_sanity_lot_size_min_sqm / parcel_sanity_lot_size_max_sqm. Ported verbatim from scripts/analysis/parcel-sanity-audit.js CHECKS[] — .cursor/batch2_p1_1_assert_parcel_sanity_active_task.md §1/§2/§6.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/analysis/parcel-sanity-audit.js"
+        }
+      }
+    },
+    {
+      "id": "lot_size_out_of_range_common_condo",
+      "kind": "bound",
+      "expect": {
+        "metric": "lot_size_out_of_range_common_condo",
+        "loader": "parcel_sanity",
+        "family": "BOUND",
+        "field": "viol",
+        "gate": false
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "chains": [
+        "sources"
+      ],
+      "accept_until": "none",
+      "why": {
+        "text": "visibility: COMMON/CONDO out-of-range lots — excluded from the bound by design. Ported verbatim from scripts/analysis/parcel-sanity-audit.js CHECKS[] — .cursor/batch2_p1_1_assert_parcel_sanity_active_task.md §1/§2/§6.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/analysis/parcel-sanity-audit.js"
+        }
+      }
+    },
+    {
+      "id": "lot_implausible_correctly_excluded",
+      "kind": "bound",
+      "expect": {
+        "metric": "lot_implausible_correctly_excluded",
+        "loader": "parcel_sanity",
+        "family": "BOUND",
+        "field": "viol",
+        "gate": false
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "chains": [
+        "sources"
+      ],
+      "accept_until": "none",
+      "why": {
+        "text": "visibility: implausible lot -> gated, no cost (not a bug). Ported verbatim from scripts/analysis/parcel-sanity-audit.js CHECKS[] — .cursor/batch2_p1_1_assert_parcel_sanity_active_task.md §1/§2/§6.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/analysis/parcel-sanity-audit.js"
+        }
+      }
+    },
+    {
+      "id": "max_build_width_gt_30m",
+      "kind": "bound",
+      "expect": {
+        "metric": "max_build_width_gt_30m",
+        "loader": "parcel_sanity",
+        "family": "BOUND",
+        "field": "viol",
+        "gate": false
+      },
+      "limit": "viol == 0",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "chains": [
+        "sources"
+      ],
+      "accept_until": "none",
+      "why": {
+        "text": "RC bound (p995 27.2, max obs 42.66). Ported verbatim from scripts/analysis/parcel-sanity-audit.js CHECKS[] — .cursor/batch2_p1_1_assert_parcel_sanity_active_task.md §1/§2/§6.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/analysis/parcel-sanity-audit.js"
+        }
+      }
+    },
+    {
+      "id": "max_build_length_gt_100m",
+      "kind": "bound",
+      "expect": {
+        "metric": "max_build_length_gt_100m",
+        "loader": "parcel_sanity",
+        "family": "BOUND",
+        "field": "viol",
+        "gate": false
+      },
+      "limit": "viol == 0",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "chains": [
+        "sources"
+      ],
+      "accept_until": "none",
+      "why": {
+        "text": "RC bound (p995 58.9, max obs 316.23). Ported verbatim from scripts/analysis/parcel-sanity-audit.js CHECKS[] — .cursor/batch2_p1_1_assert_parcel_sanity_active_task.md §1/§2/§6.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/analysis/parcel-sanity-audit.js"
+        }
+      }
+    },
+    {
+      "id": "lowrise_opt_aor_gfa_gt_2500",
+      "kind": "bound",
+      "expect": {
+        "metric": "lowrise_opt_aor_gfa_gt_2500",
+        "loader": "parcel_sanity",
+        "family": "BOUND",
+        "field": "viol",
+        "gate": false
+      },
+      "limit": "viol == 0",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "chains": [
+        "sources"
+      ],
+      "accept_until": "none",
+      "why": {
+        "text": "RC bound (lowrise max obs 1,998.9). Ported verbatim from scripts/analysis/parcel-sanity-audit.js CHECKS[] — .cursor/batch2_p1_1_assert_parcel_sanity_active_task.md §1/§2/§6.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/analysis/parcel-sanity-audit.js"
+        }
+      }
+    },
+    {
+      "id": "nonlowrise_opt_aor_gfa_gt_3500",
+      "kind": "bound",
+      "expect": {
+        "metric": "nonlowrise_opt_aor_gfa_gt_3500",
+        "loader": "parcel_sanity",
+        "family": "BOUND",
+        "field": "viol",
+        "gate": false
+      },
+      "limit": "viol == 0",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "chains": [
+        "sources"
+      ],
+      "accept_until": "none",
+      "why": {
+        "text": "RC bound (catches the 3,843 m2 NON-lowrise outlier a lowrise-only bound misses). Ported verbatim from scripts/analysis/parcel-sanity-audit.js CHECKS[] — .cursor/batch2_p1_1_assert_parcel_sanity_active_task.md §1/§2/§6.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/analysis/parcel-sanity-audit.js"
+        }
+      }
+    },
+    {
+      "id": "comp_fsi_p50_gt_4",
+      "kind": "bound",
+      "expect": {
+        "metric": "comp_fsi_p50_gt_4",
+        "loader": "parcel_sanity",
+        "family": "BOUND",
+        "field": "viol",
+        "gate": false
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "chains": [
+        "sources"
+      ],
+      "accept_until": "none",
+      "why": {
+        "text": "RC bound; INFO-first (212 standing), promote per Spec 48 3.6. Ported verbatim from scripts/analysis/parcel-sanity-audit.js CHECKS[] — .cursor/batch2_p1_1_assert_parcel_sanity_active_task.md §1/§2/§6.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/analysis/parcel-sanity-audit.js"
+        }
+      }
+    },
+    {
+      "id": "priced_newbuild_lt_30sqm",
+      "kind": "bound",
+      "expect": {
+        "metric": "priced_newbuild_lt_30sqm",
+        "loader": "parcel_sanity",
+        "family": "BOUND",
+        "field": "viol",
+        "gate": false
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "chains": [
+        "sources"
+      ],
+      "accept_until": "none",
+      "why": {
+        "text": "RC-A: micro-envelope (<30 sqm opt_aor) carrying a priced new-build menu. Ported verbatim from scripts/analysis/parcel-sanity-audit.js CHECKS[] — .cursor/batch2_p1_1_assert_parcel_sanity_active_task.md §1/§2/§6.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/analysis/parcel-sanity-audit.js"
+        }
+      }
+    },
+    {
+      "id": "max_build_dim_below_floor",
+      "kind": "bound",
+      "expect": {
+        "metric": "max_build_dim_below_floor",
+        "loader": "parcel_sanity",
+        "family": "BOUND",
+        "field": "viol",
+        "gate": true
+      },
+      "limit": "viol == 0",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "chains": [
+        "sources"
+      ],
+      "accept_until": "none",
+      "why": {
+        "text": "D-C clamp: no emitted dim below the viability floor (inert-INFO expected post-fix). Reuses max_build_min_dimension_m (Ask A6(a)) — the same floor enrich-parcels.js's max-build.js clamps to. Ported verbatim from scripts/analysis/parcel-sanity-audit.js CHECKS[] — .cursor/batch2_p1_1_assert_parcel_sanity_active_task.md §1/§2/§6.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/analysis/parcel-sanity-audit.js"
+        }
+      }
+    },
+    {
+      "id": "lowrise_bylaw_fsi_gt_1_5",
+      "kind": "bound",
+      "expect": {
+        "metric": "lowrise_bylaw_fsi_gt_1_5",
+        "loader": "parcel_sanity",
+        "family": "BOUND",
+        "field": "viol",
+        "gate": false
+      },
+      "limit": "viol == 0",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "chains": [
+        "sources"
+      ],
+      "accept_until": "none",
+      "why": {
+        "text": "FSI-borrow bug (RD sliver -> 2.0). Ported verbatim from scripts/analysis/parcel-sanity-audit.js CHECKS[] — .cursor/batch2_p1_1_assert_parcel_sanity_active_task.md §1/§2/§6.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/analysis/parcel-sanity-audit.js"
+        }
+      }
+    },
+    {
+      "id": "residential_bylaw_fsi_gt_8",
+      "kind": "bound",
+      "expect": {
+        "metric": "residential_bylaw_fsi_gt_8",
+        "loader": "parcel_sanity",
+        "family": "BOUND",
+        "field": "viol",
+        "gate": false
+      },
+      "limit": "viol == 0",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "chains": [
+        "sources"
+      ],
+      "accept_until": "none",
+      "why": {
+        "text": "corrupt source (FSI 15). Ported verbatim from scripts/analysis/parcel-sanity-audit.js CHECKS[] — .cursor/batch2_p1_1_assert_parcel_sanity_active_task.md §1/§2/§6.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/analysis/parcel-sanity-audit.js"
+        }
+      }
+    },
+    {
+      "id": "lowrise_coverage_gt_50pct",
+      "kind": "bound",
+      "expect": {
+        "metric": "lowrise_coverage_gt_50pct",
+        "loader": "parcel_sanity",
+        "family": "BOUND",
+        "field": "viol",
+        "gate": false
+      },
+      "limit": "viol == 0",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "chains": [
+        "sources"
+      ],
+      "accept_until": "none",
+      "why": {
+        "text": "coverage-uncapped bug (67%). Ported verbatim from scripts/analysis/parcel-sanity-audit.js CHECKS[] — .cursor/batch2_p1_1_assert_parcel_sanity_active_task.md §1/§2/§6.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/analysis/parcel-sanity-audit.js"
+        }
+      }
+    },
+    {
+      "id": "lowrise_height_gt_15m",
+      "kind": "bound",
+      "expect": {
+        "metric": "lowrise_height_gt_15m",
+        "loader": "parcel_sanity",
+        "family": "BOUND",
+        "field": "viol",
+        "gate": false
+      },
+      "limit": "viol == 0",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "chains": [
+        "sources"
+      ],
+      "accept_until": "none",
+      "why": {
+        "text": "tree-massing (95m bungalow). Ported verbatim from scripts/analysis/parcel-sanity-audit.js CHECKS[] — .cursor/batch2_p1_1_assert_parcel_sanity_active_task.md §1/§2/§6.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/analysis/parcel-sanity-audit.js"
+        }
+      }
+    },
+    {
+      "id": "footprint_coverage_gt_65pct",
+      "kind": "bound",
+      "expect": {
+        "metric": "footprint_coverage_gt_65pct",
+        "loader": "parcel_sanity",
+        "family": "BOUND",
+        "field": "viol",
+        "gate": false
+      },
+      "limit": "viol == 0",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "chains": [
+        "sources"
+      ],
+      "accept_until": "none",
+      "why": {
+        "text": "coverage-uncapped bug. Ported verbatim from scripts/analysis/parcel-sanity-audit.js CHECKS[] — .cursor/batch2_p1_1_assert_parcel_sanity_active_task.md §1/§2/§6.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/analysis/parcel-sanity-audit.js"
+        }
+      }
+    },
+    {
+      "id": "max_build_fsi_gt_5",
+      "kind": "bound",
+      "expect": {
+        "metric": "max_build_fsi_gt_5",
+        "loader": "parcel_sanity",
+        "family": "BOUND",
+        "field": "viol",
+        "gate": false
+      },
+      "limit": "viol == 0",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "chains": [
+        "sources"
+      ],
+      "accept_until": "none",
+      "why": {
+        "text": "garbage GFA (FSI 1042). Ported verbatim from scripts/analysis/parcel-sanity-audit.js CHECKS[] — .cursor/batch2_p1_1_assert_parcel_sanity_active_task.md §1/§2/§6.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/analysis/parcel-sanity-audit.js"
+        }
+      }
+    },
+    {
+      "id": "coa_fsi_gt_5",
+      "kind": "bound",
+      "expect": {
+        "metric": "coa_fsi_gt_5",
+        "loader": "parcel_sanity",
+        "family": "BOUND",
+        "field": "viol",
+        "gate": false
+      },
+      "limit": "viol == 0",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "chains": [
+        "sources"
+      ],
+      "accept_until": "none",
+      "why": {
+        "text": "garbage GFA. Ported verbatim from scripts/analysis/parcel-sanity-audit.js CHECKS[] — .cursor/batch2_p1_1_assert_parcel_sanity_active_task.md §1/§2/§6.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/analysis/parcel-sanity-audit.js"
+        }
+      }
+    },
+    {
+      "id": "lowrise_maxbuild_height_gt_15m",
+      "kind": "bound",
+      "expect": {
+        "metric": "lowrise_maxbuild_height_gt_15m",
+        "loader": "parcel_sanity",
+        "family": "BOUND",
+        "field": "viol",
+        "gate": false
+      },
+      "limit": "viol == 0",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "chains": [
+        "sources"
+      ],
+      "accept_until": "none",
+      "why": {
+        "text": "tree-massing (envelope height). Ported verbatim from scripts/analysis/parcel-sanity-audit.js CHECKS[] — .cursor/batch2_p1_1_assert_parcel_sanity_active_task.md §1/§2/§6.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/analysis/parcel-sanity-audit.js"
+        }
+      }
+    },
+    {
+      "id": "comp_fsi_p50_implausibly_low",
+      "kind": "bound",
+      "expect": {
+        "metric": "comp_fsi_p50_implausibly_low",
+        "loader": "parcel_sanity",
+        "family": "BOUND",
+        "field": "viol",
+        "gate": false
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "chains": [
+        "sources"
+      ],
+      "accept_until": "none",
+      "why": {
+        "text": "comps domain-review (existing vs realized-build?). Ported verbatim from scripts/analysis/parcel-sanity-audit.js CHECKS[] — .cursor/batch2_p1_1_assert_parcel_sanity_active_task.md §1/§2/§6.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/analysis/parcel-sanity-audit.js"
+        }
+      }
+    },
+    {
+      "id": "lowrise_maxbuild_stories_gt_4",
+      "kind": "bound",
+      "expect": {
+        "metric": "lowrise_maxbuild_stories_gt_4",
+        "loader": "parcel_sanity",
+        "family": "BOUND",
+        "field": "viol",
+        "gate": false
+      },
+      "limit": "viol == 0",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "chains": [
+        "sources"
+      ],
+      "accept_until": "none",
+      "why": {
+        "text": "over-tall envelope. Ported verbatim from scripts/analysis/parcel-sanity-audit.js CHECKS[] — .cursor/batch2_p1_1_assert_parcel_sanity_active_task.md §1/§2/§6.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/analysis/parcel-sanity-audit.js"
+        }
+      }
+    },
+    {
+      "id": "rd_maxbuild_stories_gt_3",
+      "kind": "bound",
+      "expect": {
+        "metric": "rd_maxbuild_stories_gt_3",
+        "loader": "parcel_sanity",
+        "family": "BOUND",
+        "field": "viol",
+        "gate": false
+      },
+      "limit": "viol == 0",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "chains": [
+        "sources"
+      ],
+      "accept_until": "none",
+      "why": {
+        "text": "RD detached caps ~3 storeys (tighter than lowrise >4). Ported verbatim from scripts/analysis/parcel-sanity-audit.js CHECKS[] — .cursor/batch2_p1_1_assert_parcel_sanity_active_task.md §1/§2/§6.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/analysis/parcel-sanity-audit.js"
+        }
+      }
+    },
+    {
+      "id": "maxbuild_stories_basis_existing_retired",
+      "kind": "bound",
+      "expect": {
+        "metric": "maxbuild_stories_basis_existing_retired",
+        "loader": "parcel_sanity",
+        "family": "BOUND",
+        "field": "viol",
+        "gate": true
+      },
+      "limit": "viol == 0",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "chains": [
+        "sources"
+      ],
+      "accept_until": "none",
+      "why": {
+        "text": "retired basis value (heritage massing storeys) — regression guard, no magnitude, not a tunable. Ported verbatim from scripts/analysis/parcel-sanity-audit.js CHECKS[] — .cursor/batch2_p1_1_assert_parcel_sanity_active_task.md §1/§2/§6.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/analysis/parcel-sanity-audit.js"
+        }
+      }
+    },
+    {
+      "id": "bylaw_height_per_storey_impossible",
+      "kind": "bound",
+      "expect": {
+        "metric": "bylaw_height_per_storey_impossible",
+        "loader": "parcel_sanity",
+        "family": "BOUND",
+        "field": "viol",
+        "gate": true
+      },
+      "limit": "viol == 0",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "chains": [
+        "sources"
+      ],
+      "accept_until": "none",
+      "why": {
+        "text": "weld: cannot fit the storeys in the height (<2.5 m/storey). Ported verbatim from scripts/analysis/parcel-sanity-audit.js CHECKS[] — .cursor/batch2_p1_1_assert_parcel_sanity_active_task.md §1/§2/§6.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/analysis/parcel-sanity-audit.js"
+        }
+      }
+    },
+    {
+      "id": "bylaw_height_per_storey_generous",
+      "kind": "bound",
+      "expect": {
+        "metric": "bylaw_height_per_storey_generous",
+        "loader": "parcel_sanity",
+        "family": "BOUND",
+        "field": "viol",
+        "gate": false
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "chains": [
+        "sources"
+      ],
+      "accept_until": "none",
+      "why": {
+        "text": "visibility: generous height + low storey cap (genuine low-density zoning, not a bug). Ported verbatim from scripts/analysis/parcel-sanity-audit.js CHECKS[] — .cursor/batch2_p1_1_assert_parcel_sanity_active_task.md §1/§2/§6.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/analysis/parcel-sanity-audit.js"
+        }
+      }
+    },
+    {
+      "id": "opt_storeys_gt_12",
+      "kind": "bound",
+      "expect": {
+        "metric": "opt_storeys_gt_12",
+        "loader": "parcel_sanity",
+        "family": "BOUND",
+        "field": "viol",
+        "gate": false
+      },
+      "limit": "viol == 0",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "chains": [
+        "sources"
+      ],
+      "accept_until": "none",
+      "why": {
+        "text": "physical. Ported verbatim from scripts/analysis/parcel-sanity-audit.js CHECKS[] — .cursor/batch2_p1_1_assert_parcel_sanity_active_task.md §1/§2/§6.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/analysis/parcel-sanity-audit.js"
+        }
+      }
+    },
+    {
+      "id": "newbuild_cost_per_sqm_out_of_band",
+      "kind": "bound",
+      "expect": {
+        "metric": "newbuild_cost_per_sqm_out_of_band",
+        "loader": "parcel_sanity",
+        "family": "BOUND",
+        "field": "viol",
+        "gate": false
+      },
+      "limit": "viol == 0",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "chains": [
+        "sources"
+      ],
+      "accept_until": "none",
+      "why": {
+        "text": "cost-rate sanity ($186-1115/ft2). Ported verbatim from scripts/analysis/parcel-sanity-audit.js CHECKS[] — .cursor/batch2_p1_1_assert_parcel_sanity_active_task.md §1/§2/§6.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/analysis/parcel-sanity-audit.js"
+        }
+      }
+    },
+    {
+      "id": "nulllot_on_gfa_or_cost_bearing",
+      "kind": "bound",
+      "expect": {
+        "metric": "nulllot_on_gfa_or_cost_bearing",
+        "loader": "parcel_sanity",
+        "family": "BOUND",
+        "field": "viol",
+        "gate": false
+      },
+      "limit": "viol == 0",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "chains": [
+        "sources"
+      ],
+      "accept_until": "none",
+      "why": {
+        "text": "A1: lot_size NULL on a GFA/cost-bearing parcel (unvalidatable tail) — structural, no magnitude. Ported verbatim from scripts/analysis/parcel-sanity-audit.js CHECKS[] — .cursor/batch2_p1_1_assert_parcel_sanity_active_task.md §1/§2/§6.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/analysis/parcel-sanity-audit.js"
+        }
+      }
+    },
+    {
+      "id": "lowrise_cost_fb_gt_15m",
+      "kind": "bound",
+      "expect": {
+        "metric": "lowrise_cost_fb_gt_15m",
+        "loader": "parcel_sanity",
+        "family": "BOUND",
+        "field": "viol",
+        "gate": false
+      },
+      "limit": "viol == 0",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "chains": [
+        "sources"
+      ],
+      "accept_until": "none",
+      "why": {
+        "text": "A2: new lowrise >$15M max-build (mislink/poison if not a big lot). Ported verbatim from scripts/analysis/parcel-sanity-audit.js CHECKS[] — .cursor/batch2_p1_1_assert_parcel_sanity_active_task.md §1/§2/§6.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/analysis/parcel-sanity-audit.js"
+        }
+      }
+    },
+    {
+      "id": "cost_addition_gt_50m",
+      "kind": "bound",
+      "expect": {
+        "metric": "cost_addition_gt_50m",
+        "loader": "parcel_sanity",
+        "family": "BOUND",
+        "field": "viol",
+        "gate": false
+      },
+      "limit": "viol == 0",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "chains": [
+        "sources"
+      ],
+      "accept_until": "none",
+      "why": {
+        "text": "A2: new >$50M addition line (huge-lot artifact; watch for new members). Ported verbatim from scripts/analysis/parcel-sanity-audit.js CHECKS[] — .cursor/batch2_p1_1_assert_parcel_sanity_active_task.md §1/§2/§6.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/analysis/parcel-sanity-audit.js"
+        }
+      }
+    },
+    {
+      "id": "max_build_dim_exceeds_lot_dim",
+      "kind": "bound",
+      "expect": {
+        "metric": "max_build_dim_exceeds_lot_dim",
+        "loader": "parcel_sanity",
+        "family": "INVARIANT",
+        "field": "viol",
+        "gate": true
+      },
+      "limit": "viol == 0",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "chains": [
+        "sources"
+      ],
+      "accept_until": "none",
+      "why": {
+        "text": "high-side lot bound: width <= frontage, length <= depth (wrong-axis error class). Ported verbatim from scripts/analysis/parcel-sanity-audit.js CHECKS[] — .cursor/batch2_p1_1_assert_parcel_sanity_active_task.md §1/§2/§6.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/analysis/parcel-sanity-audit.js"
+        }
+      }
+    },
+    {
+      "id": "ravine_constrained_carries_priced_cost",
+      "kind": "bound",
+      "expect": {
+        "metric": "ravine_constrained_carries_priced_cost",
+        "loader": "parcel_sanity",
+        "family": "INVARIANT",
+        "field": "viol",
+        "gate": true
+      },
+      "limit": "viol == 0",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "chains": [
+        "sources"
+      ],
+      "accept_until": "none",
+      "why": {
+        "text": "D-C withheld envelope must not be priced (R3-M1 tripwire) — structural, no magnitude. Ported verbatim from scripts/analysis/parcel-sanity-audit.js CHECKS[] — .cursor/batch2_p1_1_assert_parcel_sanity_active_task.md §1/§2/§6.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/analysis/parcel-sanity-audit.js"
+        }
+      }
+    },
+    {
+      "id": "opt_aor_gfa_gt_opt_coa_gfa",
+      "kind": "bound",
+      "expect": {
+        "metric": "opt_aor_gfa_gt_opt_coa_gfa",
+        "loader": "parcel_sanity",
+        "family": "INVARIANT",
+        "field": "viol",
+        "gate": true
+      },
+      "limit": "viol == 0",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "chains": [
+        "sources"
+      ],
+      "accept_until": "none",
+      "why": {
+        "text": "CoA >= as-of-right (coherence). Ported verbatim from scripts/analysis/parcel-sanity-audit.js CHECKS[] — .cursor/batch2_p1_1_assert_parcel_sanity_active_task.md §1/§2/§6.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/analysis/parcel-sanity-audit.js"
+        }
+      }
+    },
+    {
+      "id": "opt_aor_storeys_gt_opt_coa_storeys",
+      "kind": "bound",
+      "expect": {
+        "metric": "opt_aor_storeys_gt_opt_coa_storeys",
+        "loader": "parcel_sanity",
+        "family": "INVARIANT",
+        "field": "viol",
+        "gate": false
+      },
+      "limit": "viol == 0",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "chains": [
+        "sources"
+      ],
+      "accept_until": "none",
+      "why": {
+        "text": "CoA storeys >= as-of-right — structural, no magnitude. Ported verbatim from scripts/analysis/parcel-sanity-audit.js CHECKS[] — .cursor/batch2_p1_1_assert_parcel_sanity_active_task.md §1/§2/§6.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/analysis/parcel-sanity-audit.js"
+        }
+      }
+    },
+    {
+      "id": "new_build_cost_gt_coa_build_cost",
+      "kind": "bound",
+      "expect": {
+        "metric": "new_build_cost_gt_coa_build_cost",
+        "loader": "parcel_sanity",
+        "family": "INVARIANT",
+        "field": "viol",
+        "gate": true
+      },
+      "limit": "viol == 0",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "chains": [
+        "sources"
+      ],
+      "accept_until": "none",
+      "why": {
+        "text": "THE headline bug (new_build > coa_build). Ported verbatim from scripts/analysis/parcel-sanity-audit.js CHECKS[] — .cursor/batch2_p1_1_assert_parcel_sanity_active_task.md §1/§2/§6.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/analysis/parcel-sanity-audit.js"
+        }
+      }
+    },
+    {
+      "id": "footprint_gt_lot_x105",
+      "kind": "bound",
+      "expect": {
+        "metric": "footprint_gt_lot_x105",
+        "loader": "parcel_sanity",
+        "family": "INVARIANT",
+        "field": "viol",
+        "gate": true
+      },
+      "limit": "viol == 0",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "chains": [
+        "sources"
+      ],
+      "accept_until": "none",
+      "why": {
+        "text": "footprint <= lot x (1+mislink_footprint_lot_tol) (mislink). Reuses mislink_footprint_lot_tol (Ask A6(a)). Ported verbatim from scripts/analysis/parcel-sanity-audit.js CHECKS[] — .cursor/batch2_p1_1_assert_parcel_sanity_active_task.md §1/§2/§6.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/analysis/parcel-sanity-audit.js"
+        }
+      }
+    },
+    {
+      "id": "existing_floor_gt_lot_x105",
+      "kind": "bound",
+      "expect": {
+        "metric": "existing_floor_gt_lot_x105",
+        "loader": "parcel_sanity",
+        "family": "INVARIANT",
+        "field": "viol",
+        "gate": true
+      },
+      "limit": "viol == 0",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "chains": [
+        "sources"
+      ],
+      "accept_until": "none",
+      "why": {
+        "text": "existing footprint <= lot x (1+mislink_footprint_lot_tol). Reuses mislink_footprint_lot_tol. Ported verbatim from scripts/analysis/parcel-sanity-audit.js CHECKS[] — .cursor/batch2_p1_1_assert_parcel_sanity_active_task.md §1/§2/§6.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/analysis/parcel-sanity-audit.js"
+        }
+      }
+    },
+    {
+      "id": "heritage_basis_footprint_gt_lot",
+      "kind": "bound",
+      "expect": {
+        "metric": "heritage_basis_footprint_gt_lot",
+        "loader": "parcel_sanity",
+        "family": "INVARIANT",
+        "field": "viol",
+        "gate": true
+      },
+      "limit": "viol == 0",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "chains": [
+        "sources"
+      ],
+      "accept_until": "none",
+      "why": {
+        "text": "heritage freeze == mislink-guard agreement. Reuses mislink_footprint_lot_tol. Ported verbatim from scripts/analysis/parcel-sanity-audit.js CHECKS[] — .cursor/batch2_p1_1_assert_parcel_sanity_active_task.md §1/§2/§6.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/analysis/parcel-sanity-audit.js"
+        }
+      }
+    },
+    {
+      "id": "stale_cost_fsi_without_gfa",
+      "kind": "bound",
+      "expect": {
+        "metric": "stale_cost_fsi_without_gfa",
+        "loader": "parcel_sanity",
+        "family": "INVARIANT",
+        "field": "viol",
+        "gate": false
+      },
+      "limit": "viol == 0",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "chains": [
+        "sources"
+      ],
+      "accept_until": "none",
+      "why": {
+        "text": "stale cost (needs compute_parcel_cost_estimates re-run) — structural, no magnitude. Ported verbatim from scripts/analysis/parcel-sanity-audit.js CHECKS[] — .cursor/batch2_p1_1_assert_parcel_sanity_active_task.md §1/§2/§6.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/analysis/parcel-sanity-audit.js"
+        }
+      }
+    },
+    {
+      "id": "cost_fb_on_footprint_gt_lot",
+      "kind": "bound",
+      "expect": {
+        "metric": "cost_fb_on_footprint_gt_lot",
+        "loader": "parcel_sanity",
+        "family": "INVARIANT",
+        "field": "viol",
+        "gate": true
+      },
+      "limit": "viol == 0",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "chains": [
+        "sources"
+      ],
+      "accept_until": "none",
+      "why": {
+        "text": "garbage cost on a mislink not yet cleared. Reuses mislink_footprint_lot_tol. Ported verbatim from scripts/analysis/parcel-sanity-audit.js CHECKS[] — .cursor/batch2_p1_1_assert_parcel_sanity_active_task.md §1/§2/§6.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/analysis/parcel-sanity-audit.js"
+        }
+      }
+    },
+    {
+      "id": "greenspace_out_of_range",
+      "kind": "bound",
+      "expect": {
+        "metric": "greenspace_out_of_range",
+        "loader": "parcel_sanity",
+        "family": "INVARIANT",
+        "field": "viol",
+        "gate": false
+      },
+      "limit": "viol == 0",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "chains": [
+        "sources"
+      ],
+      "accept_until": "none",
+      "why": {
+        "text": "0 <= greenspace <= lot. Ported verbatim from scripts/analysis/parcel-sanity-audit.js CHECKS[] — .cursor/batch2_p1_1_assert_parcel_sanity_active_task.md §1/§2/§6.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/analysis/parcel-sanity-audit.js"
+        }
+      }
+    },
+    {
+      "id": "opt_aor_gfa_gt_max_buildable_gfa",
+      "kind": "bound",
+      "expect": {
+        "metric": "opt_aor_gfa_gt_max_buildable_gfa",
+        "loader": "parcel_sanity",
+        "family": "INVARIANT",
+        "field": "viol",
+        "gate": true
+      },
+      "limit": "viol == 0",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "chains": [
+        "sources"
+      ],
+      "accept_until": "none",
+      "why": {
+        "text": "as-of-right <= lot-validated envelope (F2-promoted; dev+cloud measured 0). Shares parcel_sanity_gfa_coherence_tolerance_sqm. Ported verbatim from scripts/analysis/parcel-sanity-audit.js CHECKS[] — .cursor/batch2_p1_1_assert_parcel_sanity_active_task.md §1/§2/§6.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/analysis/parcel-sanity-audit.js"
+        }
+      }
+    },
+    {
+      "id": "realized_fsi_p90_out_of_range",
+      "kind": "bound",
+      "expect": {
+        "metric": "realized_fsi_p90_out_of_range",
+        "loader": "parcel_sanity",
+        "family": "INVARIANT",
+        "field": "viol",
+        "gate": false
+      },
+      "limit": "viol == 0",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "chains": [
+        "sources"
+      ],
+      "accept_until": "none",
+      "why": {
+        "text": "realized FSI in [0.1, 6]. Ported verbatim from scripts/analysis/parcel-sanity-audit.js CHECKS[] — .cursor/batch2_p1_1_assert_parcel_sanity_active_task.md §1/§2/§6.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/analysis/parcel-sanity-audit.js"
+        }
+      }
+    }
+  ],
+  "invariants": "none",
+  "plausibility": [
+    {
+      "id": "dist_bylaw_max_fsi",
+      "sql": "WITH base AS (SELECT id, (CASE WHEN upper(zoning_class) LIKE 'RD%' THEN 'RD' WHEN upper(zoning_class) LIKE 'RS%' THEN 'RS'\n   WHEN upper(zoning_class) LIKE 'RT%' THEN 'RT' WHEN upper(zoning_class) LIKE 'RM%' THEN 'RM'\n   WHEN upper(zoning_class) LIKE 'RA%' THEN 'RA' ELSE 'R' END) AS zc, (bylaw_max_fsi)::float8 AS f FROM parcels WHERE zoning_class IS NOT NULL AND upper(zoning_class) LIKE 'R%' AND (bylaw_max_fsi) IS NOT NULL),\n    stats AS (SELECT zc, percentile_cont(0.5) WITHIN GROUP (ORDER BY f) AS med,\n                     percentile_cont(0.99) WITHIN GROUP (ORDER BY f) AS p99 FROM base GROUP BY zc)\n    SELECT count(*)::int AS viol FROM base b JOIN stats s ON s.zc = b.zc\n    WHERE b.f > s.p99 AND b.f > 3 * GREATEST(s.med, 0.0001)",
+      "bound": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "source": "plausibility",
+      "frequency": "every_run",
+      "statement_timeout": "none",
+      "zone_by": "zoning_class",
+      "kind": "distribution",
+      "last_measured": {
+        "value": {
+          "viol": 2,
+          "worst": "2.00"
+        },
+        "at": "2026-09-18T17:31:32.549Z",
+        "commit": "6aeed5b267ceaf25314b7d0caf6fdd9f7860bfd1",
+        "cost_ms": 1158,
+        "sample_n": 5,
+        "source_run": {
+          "run_id": null,
+          "chain": null,
+          "event": "manual_measurement"
+        }
+      },
+      "why": {
+        "text": "Per-zone outlier visibility; INFO-only and never verdict-driving (F4) — outliers fluctuate on a 437,279-parcel set (legacy docblock, carried verbatim). Percentile/multiplier/floor are parcel_sanity_distribution_* logic variables consumed by the compute's SQL, not by this bound string (a name used by all 8 entries cannot be a 1:1 limit_from_config binding).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/step/plausibility.js"
+        }
+      }
+    },
+    {
+      "id": "dist_max_build_fsi",
+      "sql": "WITH base AS (SELECT id, (CASE WHEN upper(zoning_class) LIKE 'RD%' THEN 'RD' WHEN upper(zoning_class) LIKE 'RS%' THEN 'RS'\n   WHEN upper(zoning_class) LIKE 'RT%' THEN 'RT' WHEN upper(zoning_class) LIKE 'RM%' THEN 'RM'\n   WHEN upper(zoning_class) LIKE 'RA%' THEN 'RA' ELSE 'R' END) AS zc, (max_build_fsi)::float8 AS f FROM parcels WHERE zoning_class IS NOT NULL AND upper(zoning_class) LIKE 'R%' AND (max_build_fsi) IS NOT NULL),\n    stats AS (SELECT zc, percentile_cont(0.5) WITHIN GROUP (ORDER BY f) AS med,\n                     percentile_cont(0.99) WITHIN GROUP (ORDER BY f) AS p99 FROM base GROUP BY zc)\n    SELECT count(*)::int AS viol FROM base b JOIN stats s ON s.zc = b.zc\n    WHERE b.f > s.p99 AND b.f > 3 * GREATEST(s.med, 0.0001)",
+      "bound": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "source": "plausibility",
+      "frequency": "every_run",
+      "statement_timeout": "none",
+      "zone_by": "zoning_class",
+      "kind": "distribution",
+      "last_measured": {
+        "value": {
+          "viol": 799,
+          "worst": "5.93"
+        },
+        "at": "2026-09-18T17:31:32.549Z",
+        "commit": "6aeed5b267ceaf25314b7d0caf6fdd9f7860bfd1",
+        "cost_ms": 2650,
+        "sample_n": 5,
+        "source_run": {
+          "run_id": null,
+          "chain": null,
+          "event": "manual_measurement"
+        }
+      },
+      "why": {
+        "text": "Per-zone outlier visibility; INFO-only and never verdict-driving (F4) — outliers fluctuate on a 437,279-parcel set (legacy docblock, carried verbatim). Percentile/multiplier/floor are parcel_sanity_distribution_* logic variables consumed by the compute's SQL, not by this bound string (a name used by all 8 entries cannot be a 1:1 limit_from_config binding).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/step/plausibility.js"
+        }
+      }
+    },
+    {
+      "id": "dist_footprint_coverage",
+      "sql": "WITH base AS (SELECT id, (CASE WHEN upper(zoning_class) LIKE 'RD%' THEN 'RD' WHEN upper(zoning_class) LIKE 'RS%' THEN 'RS'\n   WHEN upper(zoning_class) LIKE 'RT%' THEN 'RT' WHEN upper(zoning_class) LIKE 'RM%' THEN 'RM'\n   WHEN upper(zoning_class) LIKE 'RA%' THEN 'RA' ELSE 'R' END) AS zc, (max_buildable_footprint_sqm / NULLIF(lot_size_sqm,0))::float8 AS f FROM parcels WHERE zoning_class IS NOT NULL AND upper(zoning_class) LIKE 'R%' AND (max_buildable_footprint_sqm / NULLIF(lot_size_sqm,0)) IS NOT NULL),\n    stats AS (SELECT zc, percentile_cont(0.5) WITHIN GROUP (ORDER BY f) AS med,\n                     percentile_cont(0.99) WITHIN GROUP (ORDER BY f) AS p99 FROM base GROUP BY zc)\n    SELECT count(*)::int AS viol FROM base b JOIN stats s ON s.zc = b.zc\n    WHERE b.f > s.p99 AND b.f > 3 * GREATEST(s.med, 0.0001)",
+      "bound": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "source": "plausibility",
+      "frequency": "every_run",
+      "statement_timeout": "none",
+      "zone_by": "zoning_class",
+      "kind": "distribution",
+      "last_measured": {
+        "value": {
+          "viol": 12,
+          "worst": "1.05"
+        },
+        "at": "2026-09-18T17:31:32.549Z",
+        "commit": "6aeed5b267ceaf25314b7d0caf6fdd9f7860bfd1",
+        "cost_ms": 2737,
+        "sample_n": 5,
+        "source_run": {
+          "run_id": null,
+          "chain": null,
+          "event": "manual_measurement"
+        }
+      },
+      "why": {
+        "text": "Per-zone outlier visibility; INFO-only and never verdict-driving (F4) — outliers fluctuate on a 437,279-parcel set (legacy docblock, carried verbatim). Percentile/multiplier/floor are parcel_sanity_distribution_* logic variables consumed by the compute's SQL, not by this bound string (a name used by all 8 entries cannot be a 1:1 limit_from_config binding).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/step/plausibility.js"
+        }
+      }
+    },
+    {
+      "id": "dist_max_build_height_m",
+      "sql": "WITH base AS (SELECT id, (CASE WHEN upper(zoning_class) LIKE 'RD%' THEN 'RD' WHEN upper(zoning_class) LIKE 'RS%' THEN 'RS'\n   WHEN upper(zoning_class) LIKE 'RT%' THEN 'RT' WHEN upper(zoning_class) LIKE 'RM%' THEN 'RM'\n   WHEN upper(zoning_class) LIKE 'RA%' THEN 'RA' ELSE 'R' END) AS zc, (max_build_height_m)::float8 AS f FROM parcels WHERE zoning_class IS NOT NULL AND upper(zoning_class) LIKE 'R%' AND (max_build_height_m) IS NOT NULL),\n    stats AS (SELECT zc, percentile_cont(0.5) WITHIN GROUP (ORDER BY f) AS med,\n                     percentile_cont(0.99) WITHIN GROUP (ORDER BY f) AS p99 FROM base GROUP BY zc)\n    SELECT count(*)::int AS viol FROM base b JOIN stats s ON s.zc = b.zc\n    WHERE b.f > s.p99 AND b.f > 3 * GREATEST(s.med, 0.0001)",
+      "bound": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "source": "plausibility",
+      "frequency": "every_run",
+      "statement_timeout": "none",
+      "zone_by": "zoning_class",
+      "kind": "distribution",
+      "last_measured": {
+        "value": {
+          "viol": 91,
+          "worst": "54.00"
+        },
+        "at": "2026-09-18T17:31:32.549Z",
+        "commit": "6aeed5b267ceaf25314b7d0caf6fdd9f7860bfd1",
+        "cost_ms": 2929,
+        "sample_n": 5,
+        "source_run": {
+          "run_id": null,
+          "chain": null,
+          "event": "manual_measurement"
+        }
+      },
+      "why": {
+        "text": "Per-zone outlier visibility; INFO-only and never verdict-driving (F4) — outliers fluctuate on a 437,279-parcel set (legacy docblock, carried verbatim). Percentile/multiplier/floor are parcel_sanity_distribution_* logic variables consumed by the compute's SQL, not by this bound string (a name used by all 8 entries cannot be a 1:1 limit_from_config binding).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/step/plausibility.js"
+        }
+      }
+    },
+    {
+      "id": "dist_newbuild_cost_per_sqm",
+      "sql": "WITH base AS (SELECT id, (CASE WHEN upper(zoning_class) LIKE 'RD%' THEN 'RD' WHEN upper(zoning_class) LIKE 'RS%' THEN 'RS'\n   WHEN upper(zoning_class) LIKE 'RT%' THEN 'RT' WHEN upper(zoning_class) LIKE 'RM%' THEN 'RM'\n   WHEN upper(zoning_class) LIKE 'RA%' THEN 'RA' ELSE 'R' END) AS zc, (cost_fb_total / NULLIF(opt_aor_gfa_sqm,0))::float8 AS f FROM parcels WHERE zoning_class IS NOT NULL AND upper(zoning_class) LIKE 'R%' AND (cost_fb_total / NULLIF(opt_aor_gfa_sqm,0)) IS NOT NULL),\n    stats AS (SELECT zc, percentile_cont(0.5) WITHIN GROUP (ORDER BY f) AS med,\n                     percentile_cont(0.99) WITHIN GROUP (ORDER BY f) AS p99 FROM base GROUP BY zc)\n    SELECT count(*)::int AS viol FROM base b JOIN stats s ON s.zc = b.zc\n    WHERE b.f > s.p99 AND b.f > 3 * GREATEST(s.med, 0.0001)",
+      "bound": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "source": "plausibility",
+      "frequency": "every_run",
+      "statement_timeout": "none",
+      "zone_by": "zoning_class",
+      "kind": "distribution",
+      "last_measured": {
+        "value": {
+          "viol": 181,
+          "worst": "109124.33"
+        },
+        "at": "2026-09-18T17:31:32.549Z",
+        "commit": "6aeed5b267ceaf25314b7d0caf6fdd9f7860bfd1",
+        "cost_ms": 2860,
+        "sample_n": 5,
+        "source_run": {
+          "run_id": null,
+          "chain": null,
+          "event": "manual_measurement"
+        }
+      },
+      "why": {
+        "text": "Per-zone outlier visibility; INFO-only and never verdict-driving (F4) — outliers fluctuate on a 437,279-parcel set (legacy docblock, carried verbatim). Percentile/multiplier/floor are parcel_sanity_distribution_* logic variables consumed by the compute's SQL, not by this bound string (a name used by all 8 entries cannot be a 1:1 limit_from_config binding).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/step/plausibility.js"
+        }
+      }
+    },
+    {
+      "id": "dist_opt_aor_gfa_sqm",
+      "sql": "WITH base AS (SELECT id, (CASE WHEN upper(zoning_class) LIKE 'RD%' THEN 'RD' WHEN upper(zoning_class) LIKE 'RS%' THEN 'RS'\n   WHEN upper(zoning_class) LIKE 'RT%' THEN 'RT' WHEN upper(zoning_class) LIKE 'RM%' THEN 'RM'\n   WHEN upper(zoning_class) LIKE 'RA%' THEN 'RA' ELSE 'R' END) AS zc, (opt_aor_gfa_sqm)::float8 AS f FROM parcels WHERE zoning_class IS NOT NULL AND upper(zoning_class) LIKE 'R%' AND (opt_aor_gfa_sqm) IS NOT NULL),\n    stats AS (SELECT zc, percentile_cont(0.5) WITHIN GROUP (ORDER BY f) AS med,\n                     percentile_cont(0.99) WITHIN GROUP (ORDER BY f) AS p99 FROM base GROUP BY zc)\n    SELECT count(*)::int AS viol FROM base b JOIN stats s ON s.zc = b.zc\n    WHERE b.f > s.p99 AND b.f > 3 * GREATEST(s.med, 0.0001)",
+      "bound": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "source": "plausibility",
+      "frequency": "every_run",
+      "statement_timeout": "none",
+      "zone_by": "zoning_class",
+      "kind": "distribution",
+      "last_measured": {
+        "value": {
+          "viol": 3134,
+          "worst": "3843.42"
+        },
+        "at": "2026-09-18T17:31:32.549Z",
+        "commit": "6aeed5b267ceaf25314b7d0caf6fdd9f7860bfd1",
+        "cost_ms": 2574,
+        "sample_n": 5,
+        "source_run": {
+          "run_id": null,
+          "chain": null,
+          "event": "manual_measurement"
+        }
+      },
+      "why": {
+        "text": "Per-zone outlier visibility; INFO-only and never verdict-driving (F4) — outliers fluctuate on a 437,279-parcel set (legacy docblock, carried verbatim). Percentile/multiplier/floor are parcel_sanity_distribution_* logic variables consumed by the compute's SQL, not by this bound string (a name used by all 8 entries cannot be a 1:1 limit_from_config binding).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/step/plausibility.js"
+        }
+      }
+    },
+    {
+      "id": "dist_comp_fsi_p50",
+      "sql": "WITH base AS (SELECT id, (CASE WHEN upper(zoning_class) LIKE 'RD%' THEN 'RD' WHEN upper(zoning_class) LIKE 'RS%' THEN 'RS'\n   WHEN upper(zoning_class) LIKE 'RT%' THEN 'RT' WHEN upper(zoning_class) LIKE 'RM%' THEN 'RM'\n   WHEN upper(zoning_class) LIKE 'RA%' THEN 'RA' ELSE 'R' END) AS zc, (comp_fsi_p50)::float8 AS f FROM parcels WHERE zoning_class IS NOT NULL AND upper(zoning_class) LIKE 'R%' AND (comp_fsi_p50) IS NOT NULL),\n    stats AS (SELECT zc, percentile_cont(0.5) WITHIN GROUP (ORDER BY f) AS med,\n                     percentile_cont(0.99) WITHIN GROUP (ORDER BY f) AS p99 FROM base GROUP BY zc)\n    SELECT count(*)::int AS viol FROM base b JOIN stats s ON s.zc = b.zc\n    WHERE b.f > s.p99 AND b.f > 3 * GREATEST(s.med, 0.0001)",
+      "bound": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "source": "plausibility",
+      "frequency": "every_run",
+      "statement_timeout": "none",
+      "zone_by": "zoning_class",
+      "kind": "distribution",
+      "last_measured": {
+        "value": {
+          "viol": 205,
+          "worst": "6.62"
+        },
+        "at": "2026-09-18T17:31:32.549Z",
+        "commit": "6aeed5b267ceaf25314b7d0caf6fdd9f7860bfd1",
+        "cost_ms": 1822,
+        "sample_n": 5,
+        "source_run": {
+          "run_id": null,
+          "chain": null,
+          "event": "manual_measurement"
+        }
+      },
+      "why": {
+        "text": "Per-zone outlier visibility; INFO-only and never verdict-driving (F4) — outliers fluctuate on a 437,279-parcel set (legacy docblock, carried verbatim). Percentile/multiplier/floor are parcel_sanity_distribution_* logic variables consumed by the compute's SQL, not by this bound string (a name used by all 8 entries cannot be a 1:1 limit_from_config binding).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/step/plausibility.js"
+        }
+      }
+    },
+    {
+      "id": "dist_lot_size_sqm",
+      "sql": "WITH base AS (SELECT id, (CASE WHEN upper(zoning_class) LIKE 'RD%' THEN 'RD' WHEN upper(zoning_class) LIKE 'RS%' THEN 'RS'\n   WHEN upper(zoning_class) LIKE 'RT%' THEN 'RT' WHEN upper(zoning_class) LIKE 'RM%' THEN 'RM'\n   WHEN upper(zoning_class) LIKE 'RA%' THEN 'RA' ELSE 'R' END) AS zc, (lot_size_sqm)::float8 AS f FROM parcels WHERE zoning_class IS NOT NULL AND upper(zoning_class) LIKE 'R%' AND (lot_size_sqm) IS NOT NULL),\n    stats AS (SELECT zc, percentile_cont(0.5) WITHIN GROUP (ORDER BY f) AS med,\n                     percentile_cont(0.99) WITHIN GROUP (ORDER BY f) AS p99 FROM base GROUP BY zc)\n    SELECT count(*)::int AS viol FROM base b JOIN stats s ON s.zc = b.zc\n    WHERE b.f > s.p99 AND b.f > 3 * GREATEST(s.med, 0.0001)",
+      "bound": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "source": "plausibility",
+      "frequency": "every_run",
+      "statement_timeout": "none",
+      "zone_by": "zoning_class",
+      "kind": "distribution",
+      "last_measured": {
+        "value": {
+          "viol": 4311,
+          "worst": "543499.59"
+        },
+        "at": "2026-09-18T17:31:32.549Z",
+        "commit": "6aeed5b267ceaf25314b7d0caf6fdd9f7860bfd1",
+        "cost_ms": 2494,
+        "sample_n": 5,
+        "source_run": {
+          "run_id": null,
+          "chain": null,
+          "event": "manual_measurement"
+        }
+      },
+      "why": {
+        "text": "Per-zone outlier visibility; INFO-only and never verdict-driving (F4) — outliers fluctuate on a 437,279-parcel set (legacy docblock, carried verbatim). Percentile/multiplier/floor are parcel_sanity_distribution_* logic variables consumed by the compute's SQL, not by this bound string (a name used by all 8 entries cannot be a 1:1 limit_from_config binding).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/step/plausibility.js"
+        }
+      }
+    }
+  ],
+  "emits": [
+    {
+      "key": "checks_passed",
+      "type": "string",
+      "consumers": []
+    },
+    {
+      "key": "checks_failed",
+      "type": "int",
+      "consumers": []
+    },
+    {
+      "key": "checks_warned",
+      "type": "int",
+      "consumers": []
+    },
+    {
+      "key": "errors",
+      "type": "array",
+      "consumers": []
+    },
+    {
+      "key": "warnings",
+      "type": "array",
+      "consumers": []
+    },
+    {
+      "key": "config",
+      "type": "object",
+      "consumers": []
+    },
+    {
+      "key": "audit_table",
+      "type": "object",
+      "consumers": [
+        "src/components/FreshnessTimeline.tsx",
+        "src/components/DataQualityDashboard.tsx",
+        "src/lib/admin/funnel.ts",
+        "src/lib/quality/types.ts"
+      ]
+    }
+  ],
+  "deviations": [
+    {
+      "from": "checks[].limit_from_config for the 35 new parcel_sanity_* magnitudes",
+      "why": {
+        "text": "Rule 3's own 1:1 rule (\"a name bound to more than one check is a validator-side finding\") forbids limit_from_config here: several magnitudes are consumed by MULTIPLE checks (mislink_footprint_lot_tol by 4 invariants, parcel_sanity_gfa_coherence_tolerance_sqm by 2). Every checks[].limit is the structural constant \"viol == 0\" (the legacy step has no per-check numeric ceiling of its own — thresholds are magnitudes INSIDE the SQL predicate); the resolved config value is consumed directly by scripts/lib/compute/assert-parcel-sanity.js when it builds the one folded scan, and re-stamped into records_meta.config on every run (Nothing Hidden) exactly like a limit_from_config substitution would be — only the substitution SITE moves from the threshold string to the predicate text.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/assert-parcel-sanity-fields.js"
+        }
+      },
+      "adjudicated_by": ".cursor/batch2_p1_1_assert_parcel_sanity_active_task.md §2 (Scoping decision)",
+      "date": "2026-09-18"
+    },
+    {
+      "from": "plausibility[].kind:\"distribution\" was declared but not executed before this conversion",
+      "why": {
+        "text": "step.schema.json already carried the kind:\"distribution\" enum value and its docblock named parcel-sanity-audit.js's DIST_FIELDS scan as the reuse target — no consumer existed. scripts/lib/step/plausibility.js gains runDistributionEntries() (Fold B-7 wiring) at commit 2b; the actual zone-BUCKET CASE expression (RD/RS/RT/RM/RA/R) is domain knowledge, not derivable from the descriptor's zone_by column name, so it is supplied by the compute module's own DISTRIBUTION_SCOPE export, read generically by scripts/lib/step/index.js for any future kind:\"distribution\" consumer.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/step/plausibility.js"
+        }
+      },
+      "adjudicated_by": ".cursor/batch2_p1_1_assert_parcel_sanity_active_task.md §3 (Schema-trap gap 1)",
+      "date": "2026-09-18"
+    },
+    {
+      "from": "the pop===0 -> INFO \"inert\" rule (D-E 4, F5) was scripts/analysis/parcel-sanity-audit.js statusFor()'s, not verdict.js's",
+      "why": {
+        "text": "scripts/lib/step/verdict.js checkRow() gained an opt-in observation.inert flag: when the compute reports {violations:0, inert:true} for a check whose applicable population is 0, the row renders INFO regardless of declared severity (closing the exact \"green because it never looked\" class Spec 121 12b.6 names). Every existing converted step never sets this flag, so the change is behaviour-neutral for the rest of the fleet — regression-locked by src/tests/steps/assert_parcel_sanity/violations.test.ts and the existing verdict.logic suite.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/step/verdict.js"
+        }
+      },
+      "adjudicated_by": ".cursor/batch2_p1_1_assert_parcel_sanity_active_task.md §3 (Schema-trap gap 2)",
+      "date": "2026-09-18"
+    },
+    {
+      "from": "the \"residential_parcels_scanned\" INFO population-context row was not a declared checks[]/plausibility[] entry",
+      "why": {
+        "text": "scripts/lib/step/index.js gains a generic stepCtx.contextRow(row) seam (a compute-supplied literal audit row, bypassing checkRow's limit evaluation) so a population/context row can be preserved without inflating checks.length past the locked 42. Every existing converted step never calls it, so the addition is behaviour-neutral for the rest of the fleet.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/step/index.js"
+        }
+      },
+      "adjudicated_by": ".cursor/batch2_p1_1_assert_parcel_sanity_active_task.md §1 (audit-row shape)",
+      "date": "2026-09-18"
+    },
+    {
+      "from": "checks[].limit_from_config on-invalid posture — Rule 3 default is 'fail' for a verdict-affecting var with no safe fallback",
+      "why": {
+        "text": "All 37 logic_variables here carry a safe seed default (the exact pre-conversion literal). Recorded here only because the config object forbids a per-variable why field, mirroring assert_data_bounds/assert_schema/assert_global_coverage's own precedent deviation entry.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/seeds/logic_variables.json"
+        }
+      },
+      "adjudicated_by": "Spec 124 §2 Rule 3",
+      "date": "2026-09-18"
+    }
+  ],
+  "limitations": [
+    {
+      "what": "The distribution scan (8 entries) does not (yet) route through the EP-D17 statement_timeout ceiling mechanism executeEntry() gives ordinary invariants[]/plausibility[] bound entries — runDistributionEntries() calls runDistributionScan() directly with no SET LOCAL statement_timeout wrapper, preserving the legacy bare pool.query() behaviour byte-for-byte (Ask A3(a): byte-identical cost). Filed as a named follow-up (F-I3 sibling) rather than silently adding a new ceiling mid-conversion, which would be a behaviour change.",
+      "measured": "scripts/lib/step/plausibility.js runDistributionEntries().",
+      "check_id": "none"
+    },
+    {
+      "what": "A standalone (no PIPELINE_CHAIN) run selects all 42 checks (chains:[\"sources\"] is this step's only chain, so standalone and sources are equivalent — no per-chain divergence risk, unlike assert_data_bounds).",
+      "measured": "scripts/manifest.json — assert_parcel_sanity appears only in chains.sources.",
+      "check_id": "none"
+    }
+  ],
+  "config": {
+    "logic_variables": [
+      {
+        "name": "parcel_sanity_lot_size_min_sqm",
+        "min": 0,
+        "max": 10000,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "parcel_sanity_lot_size_max_sqm",
+        "min": 1000,
+        "max": 10000000,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "parcel_sanity_max_build_width_max_m",
+        "min": 0,
+        "max": 500,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "parcel_sanity_max_build_length_max_m",
+        "min": 0,
+        "max": 1000,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "parcel_sanity_lowrise_opt_aor_gfa_max_sqm",
+        "min": 0,
+        "max": 100000,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "parcel_sanity_nonlowrise_opt_aor_gfa_max_sqm",
+        "min": 0,
+        "max": 100000,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "parcel_sanity_comp_fsi_p50_max",
+        "min": 0,
+        "max": 50,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "parcel_sanity_comp_fsi_p50_min",
+        "min": 0,
+        "max": 5,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "parcel_sanity_priced_newbuild_min_gfa_sqm",
+        "min": 0,
+        "max": 1000,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "parcel_sanity_lowrise_bylaw_fsi_max",
+        "min": 0,
+        "max": 20,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "parcel_sanity_bylaw_fsi_max",
+        "min": 0,
+        "max": 50,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "parcel_sanity_lowrise_coverage_max_pct",
+        "min": 0,
+        "max": 100,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "parcel_sanity_lowrise_bylaw_height_max_m",
+        "min": 0,
+        "max": 200,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "parcel_sanity_footprint_coverage_max_ratio",
+        "min": 0,
+        "max": 2,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "parcel_sanity_max_build_fsi_max",
+        "min": 0,
+        "max": 50,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "parcel_sanity_coa_fsi_max",
+        "min": 0,
+        "max": 50,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "parcel_sanity_lowrise_maxbuild_height_max_m",
+        "min": 0,
+        "max": 200,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "parcel_sanity_lowrise_maxbuild_stories_max",
+        "min": 0,
+        "max": 100,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "parcel_sanity_rd_maxbuild_stories_max",
+        "min": 0,
+        "max": 100,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "parcel_sanity_height_per_storey_min_m",
+        "min": 0,
+        "max": 20,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "parcel_sanity_height_per_storey_max_m",
+        "min": 0,
+        "max": 50,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "parcel_sanity_opt_storeys_max",
+        "min": 0,
+        "max": 200,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "parcel_sanity_newbuild_cost_per_sqm_min",
+        "min": 0,
+        "max": 100000,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "parcel_sanity_newbuild_cost_per_sqm_max",
+        "min": 0,
+        "max": 1000000,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "parcel_sanity_lowrise_cost_fb_max_cad",
+        "min": 0,
+        "max": 10000000000,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "parcel_sanity_cost_addition_max_cad",
+        "min": 0,
+        "max": 10000000000,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "parcel_sanity_dim_lot_tolerance_m",
+        "min": 0,
+        "max": 10,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "parcel_sanity_gfa_coherence_tolerance_sqm",
+        "min": 0,
+        "max": 100,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "parcel_sanity_cost_coherence_tolerance_cad",
+        "min": 0,
+        "max": 10000,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "parcel_sanity_greenspace_tolerance_sqm",
+        "min": 0,
+        "max": 100,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "parcel_sanity_realized_fsi_p90_min",
+        "min": 0,
+        "max": 10,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "parcel_sanity_realized_fsi_p90_max",
+        "min": 0,
+        "max": 50,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "parcel_sanity_distribution_percentile",
+        "min": 0.5,
+        "max": 0.9999,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "parcel_sanity_distribution_median_multiplier",
+        "min": 1,
+        "max": 100,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "parcel_sanity_distribution_median_floor",
+        "min": 0,
+        "max": 1,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "max_build_min_dimension_m",
+        "min": 0,
+        "max": 10,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "mislink_footprint_lot_tol",
+        "min": 0,
+        "max": 1,
+        "on_invalid": "fail"
+      }
+    ],
+    "validation": "strict",
+    "hoisted_above_gate": true,
+    "retired": []
+  },
+  "sharing": {
+    "chains": "derived",
+    "shared": "derived",
+    "slug_forms": "derived",
+    "varies_by_chain": {
+      "checks": "none",
+      "phase": {
+        "sources": 25
+      },
+      "audit_table": "one",
+      "scope": "none"
+    },
+    "on_contention": "self_skip"
+  },
+  "terminals": [
+    {
+      "id": "lock_held_elsewhere",
+      "kind": "skip_lock_contention",
+      "status": "self_skipped",
+      "records_meta": {
+        "skipped": "bool",
+        "reason": "string"
+      },
+      "why": {
+        "text": "The generic runner emits the declared lock_held_elsewhere terminal on advisory-lock contention, replacing the pre-conversion step's own hand-written skip emit (byte-identical records_meta shape: {skipped:true, reason:\"lock_held\", advisory_lock_id:107}).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/step/index.js"
+        }
+      }
+    },
+    {
+      "id": "all_checks_passed",
+      "kind": "success",
+      "status": "completed",
+      "records_meta": {
+        "checks_passed": "string",
+        "checks_failed": "int",
+        "checks_warned": "int",
+        "errors": "array",
+        "warnings": "array",
+        "audit_table": "object",
+        "config": "object"
+      }
+    },
+    {
+      "id": "parcel_sanity_gate_failed",
+      "kind": "fail_check",
+      "status": "completed",
+      "records_meta": {
+        "checks_failed": "int",
+        "checks_warned": "int",
+        "errors": "array",
+        "warnings": "array",
+        "audit_table": "object",
+        "config": "object"
+      },
+      "why": {
+        "text": "Non-halting by design (Spec 30 §5.4.1) — the legacy step never throws on a gate FAIL; a gate FAIL reddens the chain through the row-derived verdict, never an exception. Identical to assert_data_bounds' data_bounds_check_failed terminal.",
+        "liveness": {
+          "kind": "spec",
+          "ref": "docs/specs/01-pipeline/30_pipeline_architecture.md"
+        }
+      }
+    }
+  ]
+}

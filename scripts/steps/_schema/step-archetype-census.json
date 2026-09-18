@@ -398,8 +398,8 @@
       "slug": "assert_parcel_sanity",
       "file": "scripts/quality/assert-parcel-sanity.js",
       "archetype": "ASSERT",
-      "batch": "C5",
-      "reason": "Ask A1-bis: sources-only 1-slot ASSERT, ruled to join the C4 ASSERT group at conversion time; census still declares its true archetype under C5's own batch tag"
+      "batch": "pending",
+      "reason": "batch2 P1.1 commit 1 (2026-09-18): conversion IN FLIGHT (descriptor_only stage, scripts/steps/_schema/converted.json pending[]). Flipped from C5 per the same convention I1-I5/pilot 9 used at their own commit 1 — batch stays 'pending' until cutover (commit 3) flips status to 'converted'."
     },
     {
       "slug": "assert_staleness",

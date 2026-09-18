@@ -67,6 +67,15 @@
     "partial stages."
   ],
   "contract_version": 1,
+  "pending": [
+    {
+      "file": "scripts/quality/assert-parcel-sanity.js",
+      "registers_at": "batch 2 P1.1 commit 3 (cutover)",
+      "reason": "Compressed 3-commit form (R-PACE-1) — ASSERT has 3 proven converted members (assert_schema, assert_global_coverage, assert_data_bounds), so the compressed form is eligible from the start. Commit 1 (this entry) lands the descriptor + fields sidecar + generator + 35 new parcel_sanity_* logic variables (seeded locally) + the red suite (it.fails() wrapping the shell/compute/verdict.js claims that only become true at commit 2b) together — stage enters at descriptor_only rather than red_suite for the same reason I4/I5 record: STAGE_HARDSTOP_EXCLUSIONS gives red_suite no exclusions, so a red_suite entry with a descriptor already on disk REDs G7/G8 under --all --fast. Remaining: commit 2a (golden PRE captures, 2 pairs), commit 2b (the folded-scan compute module, the frozen shell, the kind:\"distribution\" wiring in scripts/lib/step/plausibility.js, the observation.inert opt-in in scripts/lib/step/verdict.js, POST captures + differential -> stage shape_clean), then commit 3 flips every it.fails( to it( and DELETES this entry in the same commit that appends the file to converted[] (R-K mutual exclusion).",
+      "declared": "2026-09-18",
+      "stage": "descriptor_only"
+    }
+  ],
   "converted": [
     "scripts/quality/assert-schema.js",
     "scripts/load-ravines.js",
@@ -82,6 +91,5 @@
     "scripts/quality/assert-engine-health.js",
     "scripts/link-neighbourhoods.js",
     "scripts/geocode-permits.js"
-  ],
-  "pending": []
+  ]
 }

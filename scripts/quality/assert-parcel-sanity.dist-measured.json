@@ -1,0 +1,122 @@
+{
+  "bylaw_max_fsi": {
+    "value": {
+      "viol": 2,
+      "worst": "2.00"
+    },
+    "at": "2026-09-18T17:31:32.549Z",
+    "commit": "6aeed5b267ceaf25314b7d0caf6fdd9f7860bfd1",
+    "cost_ms": 1158,
+    "sample_n": 5,
+    "source_run": {
+      "run_id": null,
+      "chain": null,
+      "event": "manual_measurement"
+    }
+  },
+  "max_build_fsi": {
+    "value": {
+      "viol": 799,
+      "worst": "5.93"
+    },
+    "at": "2026-09-18T17:31:32.549Z",
+    "commit": "6aeed5b267ceaf25314b7d0caf6fdd9f7860bfd1",
+    "cost_ms": 2650,
+    "sample_n": 5,
+    "source_run": {
+      "run_id": null,
+      "chain": null,
+      "event": "manual_measurement"
+    }
+  },
+  "footprint_coverage": {
+    "value": {
+      "viol": 12,
+      "worst": "1.05"
+    },
+    "at": "2026-09-18T17:31:32.549Z",
+    "commit": "6aeed5b267ceaf25314b7d0caf6fdd9f7860bfd1",
+    "cost_ms": 2737,
+    "sample_n": 5,
+    "source_run": {
+      "run_id": null,
+      "chain": null,
+      "event": "manual_measurement"
+    }
+  },
+  "max_build_height_m": {
+    "value": {
+      "viol": 91,
+      "worst": "54.00"
+    },
+    "at": "2026-09-18T17:31:32.549Z",
+    "commit": "6aeed5b267ceaf25314b7d0caf6fdd9f7860bfd1",
+    "cost_ms": 2929,
+    "sample_n": 5,
+    "source_run": {
+      "run_id": null,
+      "chain": null,
+      "event": "manual_measurement"
+    }
+  },
+  "newbuild_cost_per_sqm": {
+    "value": {
+      "viol": 181,
+      "worst": "109124.33"
+    },
+    "at": "2026-09-18T17:31:32.549Z",
+    "commit": "6aeed5b267ceaf25314b7d0caf6fdd9f7860bfd1",
+    "cost_ms": 2860,
+    "sample_n": 5,
+    "source_run": {
+      "run_id": null,
+      "chain": null,
+      "event": "manual_measurement"
+    }
+  },
+  "opt_aor_gfa_sqm": {
+    "value": {
+      "viol": 3134,
+      "worst": "3843.42"
+    },
+    "at": "2026-09-18T17:31:32.549Z",
+    "commit": "6aeed5b267ceaf25314b7d0caf6fdd9f7860bfd1",
+    "cost_ms": 2574,
+    "sample_n": 5,
+    "source_run": {
+      "run_id": null,
+      "chain": null,
+      "event": "manual_measurement"
+    }
+  },
+  "comp_fsi_p50": {
+    "value": {
+      "viol": 205,
+      "worst": "6.62"
+    },
+    "at": "2026-09-18T17:31:32.549Z",
+    "commit": "6aeed5b267ceaf25314b7d0caf6fdd9f7860bfd1",
+    "cost_ms": 1822,
+    "sample_n": 5,
+    "source_run": {
+      "run_id": null,
+      "chain": null,
+      "event": "manual_measurement"
+    }
+  },
+  "lot_size_sqm": {
+    "value": {
+      "viol": 4311,
+      "worst": "543499.59"
+    },
+    "at": "2026-09-18T17:31:32.549Z",
+    "commit": "6aeed5b267ceaf25314b7d0caf6fdd9f7860bfd1",
+    "cost_ms": 2494,
+    "sample_n": 5,
+    "source_run": {
+      "run_id": null,
+      "chain": null,
+      "event": "manual_measurement"
+    }
+  }
+}
