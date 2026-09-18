@@ -3,7 +3,7 @@
   "spec": "docs/specs/01-pipeline/122_pipeline_step_optimization.md §5.3",
   "step": "scripts/refresh-snapshot.js",
   "chain": "coa",
-  "git_head": "62c35b65be688f33db3aa0fe85105f464fb48587",
+  "git_head": "4c14d82d7ddce52bf18ae8bc406500587375658a",
   "exit_code": 0,
   "signal": null,
   "summary": {
@@ -11,12 +11,100 @@
     "records_new": 0,
     "records_updated": 1,
     "records_meta": {
-      "duration_ms": 22208,
+      "duration_ms": 15307,
       "neighbourhood_count": 181505,
       "active_permits": 191500,
+      "read_timings": [
+        {
+          "key": "permitsScalar",
+          "elapsed_ms": 1207,
+          "row_count": 1,
+          "phase": "main"
+        },
+        {
+          "key": "trades",
+          "elapsed_ms": 10553,
+          "row_count": 1,
+          "phase": "main"
+        },
+        {
+          "key": "tradeByType",
+          "elapsed_ms": 1651,
+          "row_count": 1,
+          "phase": "main"
+        },
+        {
+          "key": "builders",
+          "elapsed_ms": 2,
+          "row_count": 1,
+          "phase": "main"
+        },
+        {
+          "key": "parcels",
+          "elapsed_ms": 1001,
+          "row_count": 1,
+          "phase": "main"
+        },
+        {
+          "key": "coa",
+          "elapsed_ms": 26,
+          "row_count": 1,
+          "phase": "main"
+        },
+        {
+          "key": "tagBreakdown",
+          "elapsed_ms": 232,
+          "row_count": 91,
+          "phase": "main"
+        },
+        {
+          "key": "sync",
+          "elapsed_ms": 2,
+          "row_count": 1,
+          "phase": "main"
+        },
+        {
+          "key": "massing",
+          "elapsed_ms": 82,
+          "row_count": 1,
+          "phase": "optional"
+        },
+        {
+          "key": "schemaColumnCounts",
+          "elapsed_ms": 10,
+          "row_count": 5,
+          "phase": "optional"
+        },
+        {
+          "key": "sla",
+          "elapsed_ms": 325,
+          "row_count": 1,
+          "phase": "optional"
+        },
+        {
+          "key": "inspections",
+          "elapsed_ms": 2,
+          "row_count": 1,
+          "phase": "optional"
+        },
+        {
+          "key": "costEst",
+          "elapsed_ms": 40,
+          "row_count": 1,
+          "phase": "optional"
+        },
+        {
+          "key": "coaFunnel",
+          "elapsed_ms": 59,
+          "row_count": 1,
+          "phase": "optional"
+        }
+      ],
       "config": {
         "snapshot_coa_conf_high": 0.8,
-        "coa_match_conf_medium": 0.5
+        "coa_match_conf_medium": 0.5,
+        "refresh_snapshot_read_statement_timeout_minutes": 5,
+        "refresh_snapshot_phase_deadline_minutes": 12
       },
       "terminal": "recorded",
       "ledger_row": "chain_owned",
@@ -115,13 +203,13 @@
           },
           {
             "metric": "sys_velocity_rows_sec",
-            "value": 0.05,
+            "value": 0.07,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "sys_duration_ms",
-            "value": 22217,
+            "value": 15312,
             "threshold": null,
             "status": "INFO"
           }
@@ -232,15 +320,15 @@
   "parse_errors": [],
   "verdict": "PASS",
   "ledger_status": [],
-  "stdout": "{\"level\":\"INFO\",\"tag\":\"[refresh_snapshot]\",\"msg\":\"[refresh_snapshot] target: refresh_snapshot (descriptor.database) → database=postgres user=postgres migrations=244 (floor 15)\"}\nPIPELINE_SUMMARY:{\"records_total\":1,\"records_new\":0,\"records_updated\":1,\"records_meta\":{\"duration_ms\":22208,\"neighbourhood_count\":181505,\"active_permits\":191500,\"config\":{\"snapshot_coa_conf_high\":0.8,\"coa_match_conf_medium\":0.5},\"terminal\":\"recorded\",\"ledger_row\":\"chain_owned\",\"chain_run_id\":null,\"pool_errors\":0,\"checks_passed\":\"all\",\"checks_failed\":0,\"checks_warned\":0,\"audit_table\":{\"phase\":7,\"name\":\"Refresh Data Quality Snapshot\",\"verdict\":\"PASS\",\"rows\":[{\"metric\":\"snapshots_created\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"snapshots_updated\",\"value\":1,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"optional_query_failed\",\"value\":[],\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"coa_cost_coverage_pct\",\"value\":61.2,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"coa_cost_coverage_open_pct\",\"value\":50,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"servable_coa_funnel_total\",\"value\":33400,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"servable_coa_funnel_geo_open\",\"value\":3316,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"servable_coa_funnel_cost\",\"value\":1659,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"servable_coa_funnel_fresh_forecast\",\"value\":1558,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"servable_coa_funnel_score\",\"value\":1558,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"duplicate_snapshot_date_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"invariant\"},{\"metric\":\"sys_duplicate_snapshot_date_count_duration_ms\",\"value\":2,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":0.05,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":22217,\"threshold\":null,\"status\":\"INFO\"}]}}}\nPIPELINE_META:{\"reads\":{\"permits\":[],\"permit_trades\":[],\"entities\":[],\"permit_parcels\":[],\"coa_applications\":[],\"sync_runs\":[],\"building_footprints\":[],\"parcel_buildings\":[],\"permit_inspections\":[],\"cost_estimates\":[\"cost_source\",\"estimated_cost\"],\"lead_parcels\":[\"lead_id\"],\"trade_forecasts\":[\"lead_id\",\"urgency\",\"opportunity_score\"]},\"writes\":{\"data_quality_snapshots\":[\"total_permits\",\"active_permits\",\"permits_with_trades\",\"trade_matches_total\",\"trade_avg_confidence\",\"trade_tier1_count\",\"trade_tier2_count\",\"trade_tier3_count\",\"trade_residential_classified\",\"trade_residential_total\",\"trade_commercial_classified\",\"trade_commercial_total\",\"permits_with_builder\",\"builders_total\",\"builders_enriched\",\"builders_with_phone\",\"builders_with_email\",\"builders_with_website\",\"builders_with_google\",\"builders_with_wsib\",\"permits_with_parcel\",\"parcel_exact_matches\",\"parcel_name_matches\",\"parcel_spatial_matches\",\"parcel_avg_confidence\",\"permits_with_neighbourhood\",\"permits_geocoded\",\"coa_total\",\"coa_linked\",\"coa_avg_confidence\",\"coa_high_confidence\",\"coa_low_confidence\",\"permits_with_scope\",\"scope_project_type_breakdown\",\"permits_with_scope_tags\",\"permits_with_detailed_tags\",\"scope_tags_top\",\"permits_updated_24h\",\"permits_updated_7d\",\"permits_updated_30d\",\"last_sync_at\",\"last_sync_status\",\"building_footprints_total\",\"parcels_with_buildings\",\"null_description_count\",\"null_builder_name_count\",\"null_est_const_cost_count\",\"null_street_num_count\",\"null_street_name_count\",\"null_geo_id_count\",\"violation_cost_out_of_range\",\"violation_future_issued_date\",\"violation_missing_status\",\"violations_total\",\"schema_column_counts\",\"sla_permits_ingestion_hours\",\"inspections_total\",\"inspections_permits_scraped\",\"inspections_outstanding_count\",\"inspections_passed_count\",\"inspections_not_passed_count\",\"cost_estimates_total\",\"cost_estimates_from_permit\",\"cost_estimates_from_model\",\"cost_estimates_null_cost\",\"timing_calibration_total\",\"timing_calibration_avg_sample\",\"timing_calibration_freshness_hours\"]}}\n\n[refresh_snapshot] completed in 22.2s\n",
+  "stdout": "{\"level\":\"INFO\",\"tag\":\"[refresh_snapshot]\",\"msg\":\"[refresh_snapshot] target: refresh_snapshot (descriptor.database) → database=postgres user=postgres migrations=244 (floor 15)\"}\nPIPELINE_SUMMARY:{\"records_total\":1,\"records_new\":0,\"records_updated\":1,\"records_meta\":{\"duration_ms\":15307,\"neighbourhood_count\":181505,\"active_permits\":191500,\"read_timings\":[{\"key\":\"permitsScalar\",\"elapsed_ms\":1207,\"row_count\":1,\"phase\":\"main\"},{\"key\":\"trades\",\"elapsed_ms\":10553,\"row_count\":1,\"phase\":\"main\"},{\"key\":\"tradeByType\",\"elapsed_ms\":1651,\"row_count\":1,\"phase\":\"main\"},{\"key\":\"builders\",\"elapsed_ms\":2,\"row_count\":1,\"phase\":\"main\"},{\"key\":\"parcels\",\"elapsed_ms\":1001,\"row_count\":1,\"phase\":\"main\"},{\"key\":\"coa\",\"elapsed_ms\":26,\"row_count\":1,\"phase\":\"main\"},{\"key\":\"tagBreakdown\",\"elapsed_ms\":232,\"row_count\":91,\"phase\":\"main\"},{\"key\":\"sync\",\"elapsed_ms\":2,\"row_count\":1,\"phase\":\"main\"},{\"key\":\"massing\",\"elapsed_ms\":82,\"row_count\":1,\"phase\":\"optional\"},{\"key\":\"schemaColumnCounts\",\"elapsed_ms\":10,\"row_count\":5,\"phase\":\"optional\"},{\"key\":\"sla\",\"elapsed_ms\":325,\"row_count\":1,\"phase\":\"optional\"},{\"key\":\"inspections\",\"elapsed_ms\":2,\"row_count\":1,\"phase\":\"optional\"},{\"key\":\"costEst\",\"elapsed_ms\":40,\"row_count\":1,\"phase\":\"optional\"},{\"key\":\"coaFunnel\",\"elapsed_ms\":59,\"row_count\":1,\"phase\":\"optional\"}],\"config\":{\"snapshot_coa_conf_high\":0.8,\"coa_match_conf_medium\":0.5,\"refresh_snapshot_read_statement_timeout_minutes\":5,\"refresh_snapshot_phase_deadline_minutes\":12},\"terminal\":\"recorded\",\"ledger_row\":\"chain_owned\",\"chain_run_id\":null,\"pool_errors\":0,\"checks_passed\":\"all\",\"checks_failed\":0,\"checks_warned\":0,\"audit_table\":{\"phase\":7,\"name\":\"Refresh Data Quality Snapshot\",\"verdict\":\"PASS\",\"rows\":[{\"metric\":\"snapshots_created\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"snapshots_updated\",\"value\":1,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"optional_query_failed\",\"value\":[],\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"coa_cost_coverage_pct\",\"value\":61.2,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"coa_cost_coverage_open_pct\",\"value\":50,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"servable_coa_funnel_total\",\"value\":33400,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"servable_coa_funnel_geo_open\",\"value\":3316,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"servable_coa_funnel_cost\",\"value\":1659,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"servable_coa_funnel_fresh_forecast\",\"value\":1558,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"servable_coa_funnel_score\",\"value\":1558,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"duplicate_snapshot_date_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"invariant\"},{\"metric\":\"sys_duplicate_snapshot_date_count_duration_ms\",\"value\":2,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":0.07,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":15312,\"threshold\":null,\"status\":\"INFO\"}]}}}\nPIPELINE_META:{\"reads\":{\"permits\":[],\"permit_trades\":[],\"entities\":[],\"permit_parcels\":[],\"coa_applications\":[],\"sync_runs\":[],\"building_footprints\":[],\"parcel_buildings\":[],\"permit_inspections\":[],\"cost_estimates\":[\"cost_source\",\"estimated_cost\"],\"lead_parcels\":[\"lead_id\"],\"trade_forecasts\":[\"lead_id\",\"urgency\",\"opportunity_score\"]},\"writes\":{\"data_quality_snapshots\":[\"total_permits\",\"active_permits\",\"permits_with_trades\",\"trade_matches_total\",\"trade_avg_confidence\",\"trade_tier1_count\",\"trade_tier2_count\",\"trade_tier3_count\",\"trade_residential_classified\",\"trade_residential_total\",\"trade_commercial_classified\",\"trade_commercial_total\",\"permits_with_builder\",\"builders_total\",\"builders_enriched\",\"builders_with_phone\",\"builders_with_email\",\"builders_with_website\",\"builders_with_google\",\"builders_with_wsib\",\"permits_with_parcel\",\"parcel_exact_matches\",\"parcel_name_matches\",\"parcel_spatial_matches\",\"parcel_avg_confidence\",\"permits_with_neighbourhood\",\"permits_geocoded\",\"coa_total\",\"coa_linked\",\"coa_avg_confidence\",\"coa_high_confidence\",\"coa_low_confidence\",\"permits_with_scope\",\"scope_project_type_breakdown\",\"permits_with_scope_tags\",\"permits_with_detailed_tags\",\"scope_tags_top\",\"permits_updated_24h\",\"permits_updated_7d\",\"permits_updated_30d\",\"last_sync_at\",\"last_sync_status\",\"building_footprints_total\",\"parcels_with_buildings\",\"null_description_count\",\"null_builder_name_count\",\"null_est_const_cost_count\",\"null_street_num_count\",\"null_street_name_count\",\"null_geo_id_count\",\"violation_cost_out_of_range\",\"violation_future_issued_date\",\"violation_missing_status\",\"violations_total\",\"schema_column_counts\",\"sla_permits_ingestion_hours\",\"inspections_total\",\"inspections_permits_scraped\",\"inspections_outstanding_count\",\"inspections_passed_count\",\"inspections_not_passed_count\",\"cost_estimates_total\",\"cost_estimates_from_permit\",\"cost_estimates_from_model\",\"cost_estimates_null_cost\",\"timing_calibration_total\",\"timing_calibration_avg_sample\",\"timing_calibration_freshness_hours\"]}}\n\n[refresh_snapshot] completed in 15.3s\n",
   "stderr": "",
   "pipeline_runs": [],
-  "pipeline_runs_max_id_before": 1873,
+  "pipeline_runs_max_id_before": 1910,
   "table_state": [
     {
       "table": "data_quality_snapshots",
-      "row_count": 31,
-      "content_hash": "5c0cdbfb584f64a513483bbbbac0b279",
+      "row_count": 32,
+      "content_hash": "d73cec4c673c7e9dbcf6b2fbac42760c",
       "order_by": "explicit",
       "order_columns": [
         "snapshot_date"
@@ -410,7 +498,7 @@
     },
     {
       "name": "data_quality_snapshots_row_count",
-      "value": "31"
+      "value": "32"
     }
   ],
   "invariants_file": "docs/reports/golden/refresh_snapshot/invariants.json",
@@ -420,6 +508,20 @@
   "nondeterminism": [
     "key:summary.records_meta.chain_run_id",
     "key:summary.records_meta.duration_ms",
+    "key:summary.records_meta.read_timings[0].elapsed_ms",
+    "key:summary.records_meta.read_timings[10].elapsed_ms",
+    "key:summary.records_meta.read_timings[11].elapsed_ms",
+    "key:summary.records_meta.read_timings[12].elapsed_ms",
+    "key:summary.records_meta.read_timings[13].elapsed_ms",
+    "key:summary.records_meta.read_timings[1].elapsed_ms",
+    "key:summary.records_meta.read_timings[2].elapsed_ms",
+    "key:summary.records_meta.read_timings[3].elapsed_ms",
+    "key:summary.records_meta.read_timings[4].elapsed_ms",
+    "key:summary.records_meta.read_timings[5].elapsed_ms",
+    "key:summary.records_meta.read_timings[6].elapsed_ms",
+    "key:summary.records_meta.read_timings[7].elapsed_ms",
+    "key:summary.records_meta.read_timings[8].elapsed_ms",
+    "key:summary.records_meta.read_timings[9].elapsed_ms",
     "pattern:duration_literal",
     "row:sys_duplicate_snapshot_date_count_duration_ms",
     "row:sys_duration_ms",
@@ -521,11 +623,85 @@
         "checks_warned": 0,
         "config": {
           "coa_match_conf_medium": 0.5,
+          "refresh_snapshot_phase_deadline_minutes": 12,
+          "refresh_snapshot_read_statement_timeout_minutes": 5,
           "snapshot_coa_conf_high": 0.8
         },
         "ledger_row": "chain_owned",
         "neighbourhood_count": 181505,
         "pool_errors": 0,
+        "read_timings": [
+          {
+            "key": "permitsScalar",
+            "phase": "main",
+            "row_count": 1
+          },
+          {
+            "key": "trades",
+            "phase": "main",
+            "row_count": 1
+          },
+          {
+            "key": "tradeByType",
+            "phase": "main",
+            "row_count": 1
+          },
+          {
+            "key": "builders",
+            "phase": "main",
+            "row_count": 1
+          },
+          {
+            "key": "parcels",
+            "phase": "main",
+            "row_count": 1
+          },
+          {
+            "key": "coa",
+            "phase": "main",
+            "row_count": 1
+          },
+          {
+            "key": "tagBreakdown",
+            "phase": "main",
+            "row_count": 91
+          },
+          {
+            "key": "sync",
+            "phase": "main",
+            "row_count": 1
+          },
+          {
+            "key": "massing",
+            "phase": "optional",
+            "row_count": 1
+          },
+          {
+            "key": "schemaColumnCounts",
+            "phase": "optional",
+            "row_count": 5
+          },
+          {
+            "key": "sla",
+            "phase": "optional",
+            "row_count": 1
+          },
+          {
+            "key": "inspections",
+            "phase": "optional",
+            "row_count": 1
+          },
+          {
+            "key": "costEst",
+            "phase": "optional",
+            "row_count": 1
+          },
+          {
+            "key": "coaFunnel",
+            "phase": "optional",
+            "row_count": 1
+          }
+        ],
         "terminal": "recorded"
       },
       "records_new": 0,
@@ -711,12 +887,12 @@
           "timing_calibration_avg_sample",
           "timing_calibration_freshness_hours"
         ],
-        "content_hash": "5c0cdbfb584f64a513483bbbbac0b279",
+        "content_hash": "d73cec4c673c7e9dbcf6b2fbac42760c",
         "order_by": "explicit",
         "order_columns": [
           "snapshot_date"
         ],
-        "row_count": 31,
+        "row_count": 32,
         "table": "data_quality_snapshots"
       }
     ],
@@ -727,11 +903,11 @@
       },
       {
         "name": "data_quality_snapshots_row_count",
-        "value": "31"
+        "value": "32"
       }
     ]
   },
-  "source_fingerprint": "12ed91f301c22851a70e93f8bae5bf347a98d304440fde4a4f89cf57ef309ac6",
+  "source_fingerprint": "d18747901ec58439ef51205d0b16d241ae572d6fbd851e425323b4beb7918d5c",
   "fingerprint_files": [
     "scripts/lib/compute/refresh-snapshot.js",
     "scripts/refresh-snapshot.descriptor.json",

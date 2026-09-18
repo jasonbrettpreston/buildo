@@ -187,6 +187,8 @@
     "txn_budget": "5m",
     "chunked": false,
     "statement_timeout": "none",
+    "statement_timeout_minutes_from_config": "refresh_snapshot_read_statement_timeout_minutes",
+    "phase_deadline_minutes_from_config": "refresh_snapshot_phase_deadline_minutes",
     "step_timeout": "15m",
     "batch": "none",
     "needs_disk_mb": "none",
@@ -340,7 +342,9 @@
   "config": {
     "logic_variables": [
       { "name": "snapshot_coa_conf_high", "min": 0.01, "max": 1, "on_invalid": "fail" },
-      { "name": "coa_match_conf_medium", "min": 0.01, "max": 1, "on_invalid": "fail" }
+      { "name": "coa_match_conf_medium", "min": 0.01, "max": 1, "on_invalid": "fail" },
+      { "name": "refresh_snapshot_read_statement_timeout_minutes", "min": 0, "max": 15, "on_invalid": "fail" },
+      { "name": "refresh_snapshot_phase_deadline_minutes", "min": 0, "max": 15, "on_invalid": "fail" }
     ],
     "validation": "strict",
     "hoisted_above_gate": true,
@@ -385,6 +389,11 @@
       "id": "failed_write", "kind": "fail_error", "status": "failed",
       "records_meta": { "audit_table": "object", "terminal": "string" },
       "why": { "text": "The one write statement itself failed (a genuine DB error, not an optional-read failure — those carry forward instead of failing the run).", "liveness": { "kind": "file", "ref": "scripts/lib/step/write.js" } }
+    },
+    {
+      "id": "failed_read_phase_timeout", "kind": "fail_error", "status": "failed",
+      "records_meta": { "terminal": "string" },
+      "why": { "text": "WF3 2026-09-18 (Spec 118 cause B). One of the 8 main reads exceeded refresh_snapshot_read_statement_timeout_minutes, or the reads collectively exceeded refresh_snapshot_phase_deadline_minutes (a wall-clock bound over the whole read loop, armed via pg_cancel_backend on a dedicated connection — EP-PHASE-DEADLINE's mechanism, generalized to the recorder shape). The thrown error names the offending read key, the elapsed ms and which bound fired (statement_timeout vs phase_deadline vs lock_timeout) — no audit_table is built because the failure happens before compute() ever runs; the named error_message on the failed pipeline_runs ledger row is the loud, diagnosable record (mirrors failed_write's own pre-compute throw shape).", "liveness": { "kind": "file", "ref": "scripts/lib/step/index.js" } }
     }
   ]
 }

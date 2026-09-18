@@ -715,6 +715,10 @@ async function compute(ctx) {
       duration_ms: ctx.elapsed_ms,
       neighbourhood_count: ctx.matched.neighbourhood_count,
       active_permits: ctx.matched.active_permits,
+      // WF3 2026-09-18 (Peel 2.1, review_followups.md:20) — one {key, elapsed_ms, row_count}
+      // entry per main read, so a slow read is diagnosable from the persisted run record
+      // after the fact, not only distinguishable-from-a-hang while the process is live.
+      read_timings: ctx.matched.read_timings,
     },
   };
 }

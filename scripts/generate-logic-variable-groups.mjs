@@ -401,7 +401,9 @@ const GROUP_ORDER = [
       "enrich_parcels_scope_retire_after_hours",
       "step_post_check_statement_timeout_minutes",
       "step_post_check_concurrency",
-      "parcels_maintenance_timeout_minutes"
+      "parcels_maintenance_timeout_minutes",
+      "refresh_snapshot_read_statement_timeout_minutes",
+      "refresh_snapshot_phase_deadline_minutes"
     ]
   },
   {

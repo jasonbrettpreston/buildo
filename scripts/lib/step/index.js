@@ -2205,6 +2205,89 @@ async function runBackfillFullRecompute({ descriptor, pool, compute, config, log
  *
  * @returns {Promise<object>} `{matched, written, prior, overrides, writeSkipped}`
  */
+/**
+ * WF3 2026-09-18 (Peel 2, deep_scrapes cause B, Spec 118 §1/§7.1/§7.2) — finite-or-throw
+ * resolution for `runRecorderPhase`'s two new read-phase bounds (statement timeout, phase
+ * deadline). Deliberately a THIRD, LOCAL, unexported copy of the same pattern
+ * `resolveInterval` and the `phaseTimeouts` for-loop already carry for the ENRICHER shape
+ * (`b69541b3`) — those two are ENRICHER-only and untouched by this WF3; extracting a shared
+ * resolver was weighed and rejected here because it would touch goldens for steps outside
+ * this WF3's scope for zero behavioural gain (Peel plan's own "prefer the simplest close").
+ * Dedupe filed: docs/reports/review_followups.md.
+ *
+ * `Number.isFinite`, never `!x` — an explicitly declared 0 is a deliberate disable, distinct
+ * from a typo/unset name that would otherwise silently resolve to an unbounded NaN (ER-D1,
+ * Spec 48 §3.6).
+ *
+ * @param {object} descriptor
+ * @param {Record<string, unknown>} config
+ * @param {string} field - the `execution.<field>` name (a `*_from_config` field)
+ * @param {string} tag
+ * @returns {{ms: number, minutes: number|null}}
+ */
+function resolveRecorderBoundMinutes(descriptor, config, field, tag) {
+  const varName = descriptor.execution && descriptor.execution[field];
+  if (varName === 'none' || varName === undefined || varName === null) return { ms: 0, minutes: null };
+  const raw = config[varName];
+  const minutes = Number(raw);
+  const ms = Math.round(minutes * 60000);
+  if (!Number.isFinite(ms) || ms < 0) {
+    throw new Error(
+      `${tag} execution.${field} names "${varName}", which resolved to ${JSON.stringify(raw)}. A declared `
+      + 'recorder read-phase bound must resolve to a finite, non-negative number of minutes; a non-finite '
+      + 'value would silently leave the read phase unbounded (ER-D1, Spec 48 §3.6). Declare the literal '
+      + '"none" to disable it deliberately.',
+    );
+  }
+  return { ms, minutes };
+}
+
+/**
+ * WF3 2026-09-18 (fold-validation V1) — pure arithmetic for the ONE shared wall-clock
+ * phase-deadline budget across `runRecorderPhase`'s main AND optional read blocks: how
+ * much of `phaseDeadlineMs` remains after `elapsedMs` has already passed. Exported and
+ * pure so the "budget already exhausted before the optional block starts" branch is
+ * unit-testable directly, without racing real wall-clock sleeps to land on a precise
+ * near-zero remainder (inherently flaky — sleeping 2500ms against a 3000ms deadline
+ * lands on a real remainder that varies with host scheduling jitter every run).
+ *
+ * A disabled deadline (`phaseDeadlineMs <= 0`, the declared-"none"/explicit-0 case)
+ * always returns 0 — "stays disabled for both blocks" falls out of this same
+ * arithmetic rather than needing a second disabled-check at the call site.
+ * `Math.max(0, …)` — never negative; an elapsed time past the deadline reads as
+ * "nothing remains", not as a negative budget `startPhaseDeadline` would have to
+ * special-case.
+ *
+ * @param {number} phaseDeadlineMs
+ * @param {number} elapsedMs
+ * @returns {number}
+ */
+function remainingBudgetMs(phaseDeadlineMs, elapsedMs) {
+  if (!(phaseDeadlineMs > 0)) return 0;
+  return Math.max(0, phaseDeadlineMs - elapsedMs);
+}
+
+/**
+ * WF3 2026-09-18 (output-panel fold-validation V2) — `runRecorderPhase` needs TWO
+ * connections per phase (the phase's own client + a dedicated cancel client, since a
+ * cancel sent down the very session that is blocked could never be delivered). Two bare
+ * `await pool.connect()` calls with no try between them leak the FIRST client if the
+ * SECOND connect throws (pool exhaustion, a network blip) — nothing ever calls
+ * `.release()` on it. This wraps the pair so the first is always released on that path.
+ * @param {import('pg').Pool} pool
+ * @returns {Promise<[import('pg').PoolClient, import('pg').PoolClient]>}
+ */
+async function connectPair(pool) {
+  const a = await pool.connect();
+  try {
+    const b = await pool.connect();
+    return [a, b];
+  } catch (err) {
+    a.release();
+    throw err;
+  }
+}
+
 async function runRecorderPhase({ descriptor, pool, compute, config, chainId, log, tag, preWriteGate, clockNow }) {
   const requirements = await assertRequirements(pool, descriptor, { log, tag });
   const overrides = staleness.resolveOverrides(descriptor);
@@ -2219,40 +2302,194 @@ async function runRecorderPhase({ descriptor, pool, compute, config, chainId, lo
   written.privilege = privilege[plan.table] || null;
   written.requirements = requirements;
 
+  // WF3 2026-09-18 — resolved ABOVE the connections, same reasoning as ENRICHER's
+  // phaseTimeouts: a throw after `pool.connect()` would leak the held client.
+  const { ms: statementTimeoutMs } = resolveRecorderBoundMinutes(descriptor, config, 'statement_timeout_minutes_from_config', tag);
+  const { ms: phaseDeadlineMs, minutes: phaseDeadlineMinutes } = resolveRecorderBoundMinutes(descriptor, config, 'phase_deadline_minutes_from_config', tag);
+
   // ── THE READS — compute authors the SQL text, THIS RUNNER executes it ────
   const reads = compute.buildReads(config);
   const results = {};
+  const readTimings = [];
 
   // The main reads: one pinned REPEATABLE READ READ ONLY client, sequential,
   // an optional session-GUC bracket per step (mirrors the pre-conversion
   // WF3-F1 shape verbatim — Spec 118 §1/§7.1, point-in-time consistency).
-  const snapClient = await pool.connect();
+  //
+  // WF3 2026-09-18 (Peel 2) — TWO new bounds, closing review_followups.md:20 for this
+  // runner: (1) a per-statement `SET LOCAL statement_timeout`, re-armed by Postgres on
+  // EVERY statement issued on this session; (2) a WALL-CLOCK phase deadline over the
+  // WHOLE loop, armed on a SEPARATE `cancelClient` via `startPhaseDeadline` (the same
+  // pg_cancel_backend mechanism EP-PHASE-DEADLINE established for the enrich shape,
+  // generalized here to the recorder shape's single implicit phase). A per-statement
+  // bound alone cannot catch 8 reads that are each individually fast but sum past the
+  // budget (Spec 118 §3's own documented layer-3 gap) — hence both.
+  const [snapClient, cancelClient] = await connectPair(pool);
+  let currentReadKey = null;
+  const phaseStartMs = Date.now();
+  let deadline = { stop: () => {}, fired: () => false };
   try {
-    await snapClient.query('BEGIN TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY');
+    const pidRow = await snapClient.query('SELECT pg_backend_pid() AS pid');
+    const pid = pidRow.rows[0] ? Number(pidRow.rows[0].pid) : null;
+    deadline = startPhaseDeadline(cancelClient, pid, phaseDeadlineMs, { phase: 'reads', tag, log });
     try {
-      for (const step of (reads.main || [])) {
-        if (step.guc) await snapClient.query(step.guc.set);
-        try {
-          const r = await snapClient.query(step.sql, step.params || []);
-          results[step.key] = r.rows;
-        } finally {
-          if (step.guc) await snapClient.query(step.guc.reset);
+      await snapClient.query('BEGIN TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY');
+      if (statementTimeoutMs > 0) await snapClient.query(`SET LOCAL statement_timeout = ${statementTimeoutMs}`);
+      try {
+        for (const step of (reads.main || [])) {
+          currentReadKey = step.key;
+          if (step.guc) await snapClient.query(step.guc.set);
+          const readStartMs = Date.now();
+          try {
+            const r = await snapClient.query(step.sql, step.params || []);
+            results[step.key] = r.rows;
+            // WF3 2026-09-18 — the trace review_followups.md:20 named absent: one line
+            // per read, surviving the process via records_meta.read_timings[] (Peel 2.1).
+            readTimings.push({ key: step.key, elapsed_ms: Date.now() - readStartMs, row_count: r.rows.length, phase: 'main' });
+          } catch (err) {
+            // Same SQLSTATE-disambiguation shape EP-PHASE-DEADLINE established: a cancel
+            // and a genuine per-statement timeout both arrive as 57014, and `deadline.fired()`
+            // is what tells them apart. The read's own error is NEVER swallowed — it is
+            // named and rethrown, never caught-and-continued.
+            if (err && (err.code === '57014' || err.code === '55P03')) {
+              const kind = err.code === '55P03' ? 'lock_timeout' : (deadline.fired() ? 'phase_deadline' : 'statement_timeout');
+              const elapsedMs = Date.now() - phaseStartMs;
+              const wrapped = new Error(
+                `${tag} recorder reads aborted by ${kind} while reading "${currentReadKey}" after ${elapsedMs}ms `
+                + `(declared phase bound ${phaseDeadlineMinutes == null ? 'none' : `${phaseDeadlineMinutes}min`}): ${err.message}`,
+              );
+              wrapped.code = err.code;
+              wrapped.cause = err;
+              throw wrapped;
+            }
+            throw err;
+          } finally {
+            // A RESET issued after a cancel/timeout aborted this session's transaction
+            // would itself throw ("current transaction is aborted") and, from inside a
+            // `finally`, REPLACE the meaningful error above — swallowed the same way the
+            // ROLLBACK below already is, so housekeeping failure never masks the real cause.
+            if (step.guc) await snapClient.query(step.guc.reset).catch(() => {});
+          }
         }
+        await snapClient.query('COMMIT');
+      } catch (err) {
+        await snapClient.query('ROLLBACK').catch(() => {});
+        throw err;
       }
-      await snapClient.query('COMMIT');
-    } catch (err) {
-      await snapClient.query('ROLLBACK').catch(() => {});
-      throw err;
+    } finally {
+      deadline.stop();
     }
   } finally {
     snapClient.release();
+    cancelClient.release();
   }
 
-  // The optional reads: independently caught, each via a plain pool.query — a
-  // failure never aborts the run, it carries forward the WRITE TARGET's own
-  // PRIOR row instead (declared generic, not a step-specific implementation;
-  // Finding 5/RS-D2's own policy, now a library mechanism every future
-  // RECORDER inherits for free).
+  // The optional reads: independently caught, each on its own AUTOCOMMIT
+  // statement — a failure (query error OR a new bound below) never aborts the
+  // run and never touches any sibling read, it carries forward the WRITE
+  // TARGET's own PRIOR row instead (declared generic, not a step-specific
+  // implementation; Finding 5/RS-D2's own policy, now a library mechanism
+  // every future RECORDER inherits for free).
+  //
+  // FENCE (git-blamed, WF3 2026-09-18 output-panel fold R1): this loop has run
+  // OUTSIDE the pinned REPEATABLE READ transaction since BEFORE the RECORDER
+  // conversion (`c19cf224^:scripts/refresh-snapshot.js:308-503`, itself
+  // predating `fd14dc53`) — every one of these 6 reads is independently
+  // try/caught with its own carry-forward fallback, while the main block is
+  // ALL-OR-NOTHING (one shared try/catch around the whole transaction, one
+  // ROLLBACK). Moving an optional read inside the shared transaction would
+  // mean ITS failure aborts the successful main reads too via Postgres'
+  // aborted-transaction-until-ROLLBACK semantics (no per-statement recovery
+  // without a SAVEPOINT per read) — exactly the failure-isolation guarantee
+  // "optional" exists to give up. This fold ADDS bounds and a trace to this
+  // loop without touching that isolation: still autocommit, still one
+  // independent try/catch per read, never inside `snapClient`'s transaction.
+  // WF3 2026-09-18 (fold-validation V1) — ONE wall-clock budget across main + optional
+  // reads, not two. The main block above already spent (Date.now() - phaseStartMs) of
+  // the SAME phaseDeadlineMs; arming a FRESH full-length timer here would let a step
+  // whose descriptor/registry text says "bounds the WHOLE read phase, under the
+  // 15-minute step ceiling" actually run for up to 2x that (worst case ~24min against a
+  // 12min-default/15min-ceiling declaration) — contradicting the very bound it declares.
+  // `statementTimeoutMs`/`phaseDeadlineMs`/`phaseDeadlineMinutes` are the SAME resolved
+  // values the main block used (not re-resolved) — "the same logic variable" means the
+  // same VALUE, not a second call that could in principle diverge.
+  const elapsedBeforeOptional = Date.now() - phaseStartMs;
+  const remainingPhaseDeadlineMs = remainingBudgetMs(phaseDeadlineMs, elapsedBeforeOptional);
+  if (phaseDeadlineMs > 0 && remainingPhaseDeadlineMs <= 0) {
+    // The main reads alone consumed the WHOLE declared budget (Postgres' own cancel
+    // dispatch can race a main read's own successful completion at exactly the deadline
+    // boundary — Spec 118 §3's "the platform axe is the backstop, never the mechanism"
+    // cuts both ways: a mechanism that fires a hair too late must not then silently run
+    // unbounded). Nothing remains for ANY optional read — skip them all via the EXISTING
+    // carry-forward path, loud and named, without opening a connection that would have
+    // nothing left to spend.
+    for (const step of (reads.optional || [])) {
+      log.warn(tag, `${step.key} SKIPPED — the shared ${phaseDeadlineMinutes}min phase deadline was already exhausted by the main reads — carrying forward the previous row`);
+      results[step.key] = null;
+      readTimings.push({ key: step.key, elapsed_ms: 0, row_count: null, phase: 'optional', cancelled: true, cancel_kind: 'phase_deadline' });
+    }
+  } else {
+    const [optionalClient, optionalCancelClient] = await connectPair(pool);
+    let optionalRestoreFailed = false;
+    try {
+      if (statementTimeoutMs > 0) await optionalClient.query(`SET statement_timeout = ${statementTimeoutMs}`);
+      const optionalPidRow = await optionalClient.query('SELECT pg_backend_pid() AS pid');
+      const optionalPid = optionalPidRow.rows[0] ? Number(optionalPidRow.rows[0].pid) : null;
+      // Armed with the REMAINING budget, not the full `phaseDeadlineMs` — a disabled
+      // deadline (phaseDeadlineMs 0/"none") keeps remainingPhaseDeadlineMs at 0, which
+      // `startPhaseDeadline`'s own `!timeoutMs` guard already treats as inert, so
+      // "disabled stays disabled for both blocks" falls out of the same arithmetic.
+      const optionalDeadline = startPhaseDeadline(optionalCancelClient, optionalPid, remainingPhaseDeadlineMs, { phase: 'optional_reads', tag, log });
+      try {
+        for (const step of (reads.optional || [])) {
+          const readStartMs = Date.now();
+          try {
+            const r = await optionalClient.query(step.sql, step.params || []);
+            results[step.key] = r.rows;
+            readTimings.push({ key: step.key, elapsed_ms: Date.now() - readStartMs, row_count: r.rows.length, phase: 'optional' });
+          } catch (err) {
+            // A cancel/timeout on an AUTOCOMMIT statement aborts only THAT
+            // statement — the connection stays usable for the next optional
+            // read, unlike the shared-transaction case above. So this still
+            // takes the pre-existing carry-forward path (never fails the step),
+            // now LOUD about *why* (cancelled vs a genuine query error) and
+            // named in `read_timings[]` — the existing `optional_query_failed`
+            // WARN check already reports this key from `results[key] === null`
+            // regardless of cause, so no compute.js change is needed for the
+            // audit-visible marker.
+            const isBoundHit = err && (err.code === '57014' || err.code === '55P03');
+            const kind = !isBoundHit ? null : (err.code === '55P03' ? 'lock_timeout' : (optionalDeadline.fired() ? 'phase_deadline' : 'statement_timeout'));
+            log.warn(tag, isBoundHit
+              ? `${step.key} CANCELLED by ${kind} after ${Date.now() - readStartMs}ms — carrying forward the previous row`
+              : `${step.key} query failed — carrying forward the previous row: ${err.message}`);
+            results[step.key] = null;
+            readTimings.push({
+              key: step.key, elapsed_ms: Date.now() - readStartMs, row_count: null, phase: 'optional',
+              ...(isBoundHit ? { cancelled: true, cancel_kind: kind } : {}),
+            });
+          }
+        }
+      } finally {
+        optionalDeadline.stop();
+      }
+    } finally {
+      // EP-D16's own precedent (scripts/lib/step/index.js runEnrichPhase pass 5) —
+      // a session-level SET must not survive back into the pool for the NEXT
+      // checkout to inherit; RESET (not a bare '0' literal — RESET reverts to
+      // the server default, which is what a step declaring no bound at all
+      // already runs under) before release, and destroy the client rather than
+      // pool it if the restore itself fails.
+      try {
+        if (statementTimeoutMs > 0) await optionalClient.query('RESET statement_timeout');
+      } catch (err) {
+        optionalRestoreFailed = true;
+        log.warn(tag, `optional-reads statement_timeout restore failed (${err.message}) — destroying the client so the pool never reuses it capped`);
+      }
+      optionalClient.release(optionalRestoreFailed ? new Error('optional-reads statement_timeout restore failed — client destroyed, not pooled') : undefined);
+      optionalCancelClient.release();
+    }
+  }
+
   let prevRow = null;
   const keyCol = Array.isArray(spec.key) ? spec.key[0] : spec.key;
   const getPrevRow = async () => {
@@ -2263,15 +2500,6 @@ async function runRecorderPhase({ descriptor, pool, compute, config, chainId, lo
     } catch { prevRow = {}; }
     return prevRow;
   };
-  for (const step of (reads.optional || [])) {
-    try {
-      const r = await pool.query(step.sql, step.params || []);
-      results[step.key] = r.rows;
-    } catch (err) {
-      log.warn(tag, `${step.key} query failed — carrying forward the previous row: ${err.message}`);
-      results[step.key] = null;
-    }
-  }
   const prevRowResolved = await getPrevRow();
 
   // ── THE PRE-WRITE GATE, before the one statement ─────────────────────────
@@ -2310,7 +2538,11 @@ async function runRecorderPhase({ descriptor, pool, compute, config, chainId, lo
   written[write.targetKey(0)].rows_changed = 1;
 
   return {
-    matched: { ...assembled.matched, is_insert: isInsert, is_update: !isInsert },
+    // WF3 2026-09-18 (Peel 2.1) — `read_timings` survives the process via
+    // records_meta (compute.js's own `compute()` return threads ctx.matched.read_timings
+    // into `records_meta.read_timings`), so a slow read is diagnosable AFTER the fact
+    // instead of only distinguishable-from-a-hang while the process is still running.
+    matched: { ...assembled.matched, is_insert: isInsert, is_update: !isInsert, read_timings: readTimings },
     written,
     prior,
     overrides,
@@ -4987,6 +5219,12 @@ module.exports = {
   runMaterializePhase,
   runBackfillPhase,
   runRecorderPhase,
+  // WF3 2026-09-18 (Peel 2) — exported so the finite-or-throw arm can be driven directly
+  // without standing up a whole runRecorderPhase call, mirroring startPhaseDeadline's own
+  // export-for-testing rationale below.
+  resolveRecorderBoundMinutes,
+  remainingBudgetMs,
+  connectPair,
   runEnrichPhase,
   recordHeartbeat,
   captureStallDiagnostic,

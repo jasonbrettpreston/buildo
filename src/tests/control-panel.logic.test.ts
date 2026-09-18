@@ -79,6 +79,8 @@ const EXPECTED_LOGIC_VAR_KEYS = [
   'parcels_dead_tuple_ratio_warn_max', // WF3 EP-D17 (2026-09-10) — WARN bound + execution.maintenance trigger threshold for parcels' pg_stat_user_tables dead_ratio
   'step_post_check_concurrency', // WF3 EP-D17 output-panel fix F7 (2026-09-10) — batch width cap for concurrent invariants[]/plausibility[] entries
   'parcels_maintenance_timeout_minutes', // WF3 EP-D17 output-panel fix F5 (2026-09-10) — declared ceiling for the execution.maintenance VACUUM statement
+  'refresh_snapshot_read_statement_timeout_minutes', // WF3 wf3_deep_scrapes_failures (2026-09-18, cause B) — per-statement SET statement_timeout for runRecorderPhase's main + optional reads
+  'refresh_snapshot_phase_deadline_minutes', // WF3 wf3_deep_scrapes_failures (2026-09-18, cause B) — wall-clock phase deadline over runRecorderPhase's main and optional read loops
   // Pilot 9 commit 7b (2026-09-04, Ask 5 externalization, Spec 78 §P3C.1/§P3C.2) — the 7 pass-4 comp literals.
   'enrich_parcels_comp_lot_tol',
   'enrich_parcels_comp_knn_overfetch',

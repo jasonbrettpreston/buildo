@@ -909,6 +909,26 @@
       "group": "CoA Matching"
     }
   },
+  "refresh_snapshot_read_statement_timeout_minutes": {
+    "default": 5,
+    "type": "number",
+    "min": 0,
+    "max": 15,
+    "description": "WF3 2026-09-18 (deep_scrapes cause B, Spec 118 §1/§7.1). Per-statement statement_timeout applied to BOTH of runRecorderPhase's read blocks (`scripts/lib/step/index.js`): `SET LOCAL` on the pinned REPEATABLE READ READ ONLY client for the 8 main reads, and a session-level `SET`/`RESET` pair on a separate autocommit client for the 6 optional reads (output-panel fold R1, 2026-09-18) — the SAME resolved value, one logic variable, both blocks. Before this the descriptor declared `execution.statement_timeout: \"none\"` and a single read could block forever with zero trace — the 2026-09-15 incident measured the tradeByType read riding a decorrelated permits heap from a healthy 110-121s run to the 900s (15m) platform axe with no statement-level bound at all. Default 5min carries real margin over the measured healthy runtime (110-121s total across all 8 reads) while staying comfortably under the unchanged 15-minute step ceiling (Spec 118 §3 layer 4, the backstop). 0 = disabled (falls through to the session's own statement_timeout, today unbounded). CONSUMED by scripts/lib/step/index.js (runRecorderPhase); today's sole declaring consumer is refresh_snapshot via execution.statement_timeout_minutes_from_config. Cloud seed required before cutover — docs/runbook/README.md section 1a exact form (Git Bash, not PowerShell — an empty-string PG_HOST= assignment deletes the var in PowerShell, defeating the guard): SUPABASE_CA_CERT_PATH=scripts/certs/supabase-ca.pem PG_HOST= DATABASE_URL=$SUPABASE_DATABASE_URL node -r dotenv/config scripts/seeds/apply-logic-variables.js",
+    "admin": {
+      "group": "Source Ingestion"
+    }
+  },
+  "refresh_snapshot_phase_deadline_minutes": {
+    "default": 12,
+    "type": "number",
+    "min": 0,
+    "max": 15,
+    "description": "WF3 2026-09-18 (deep_scrapes cause B, Spec 118 §1/§7.2 layer 3 — the missing per-step ceiling). Wall-clock deadline for runRecorderPhase's WHOLE read phase — ONE shared budget across BOTH the 8 main reads (one pinned REPEATABLE READ client) AND the 6 optional reads (a separate autocommit client, output-panel fold R1/V1, 2026-09-18): the optional block is armed with the REMAINING milliseconds after the main reads, never a fresh full budget, so the two blocks together can never exceed this ONE declared deadline (worst case ~2x was the V1 defect this fold closed). armed via startPhaseDeadline/pg_cancel_backend on a dedicated cancel client per block — the same re-arm mechanism EP-PHASE-DEADLINE established for the enrich-shaped phases, generalized to the recorder shape for the first time. A per-statement bound alone (refresh_snapshot_read_statement_timeout_minutes) cannot catch 14 reads that are each individually fast but sum past the budget; this is the PHASE bound Spec 118 §3 names as the missing layer-3 hierarchy rung. Default 12min sits under the unchanged 15-minute step ceiling (execution.step_timeout, the backstop — Spec 118 §3's own sizing rule: the platform axe is the backstop, never the mechanism) with margin over the measured healthy total (110-121s). 0 = disabled. CONSUMED by scripts/lib/step/index.js (runRecorderPhase); today's sole declaring consumer is refresh_snapshot via execution.phase_deadline_minutes_from_config. Cloud seed required before cutover — docs/runbook/README.md section 1a exact form (Git Bash, not PowerShell — an empty-string PG_HOST= assignment deletes the var in PowerShell, defeating the guard): SUPABASE_CA_CERT_PATH=scripts/certs/supabase-ca.pem PG_HOST= DATABASE_URL=$SUPABASE_DATABASE_URL node -r dotenv/config scripts/seeds/apply-logic-variables.js",
+    "admin": {
+      "group": "Source Ingestion"
+    }
+  },
   "spatial_match_max_distance_m": {
     "default": 100,
     "type": "number",

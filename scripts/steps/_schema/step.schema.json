@@ -1290,6 +1290,30 @@
         "txn_budget": { "$ref": "#/definitions/duration" },
         "chunked": { "type": "boolean" },
         "statement_timeout": { "$ref": "#/definitions/duration" },
+        "statement_timeout_minutes_from_config": {
+          "type": "string",
+          "minLength": 1,
+          "description": "WF3 2026-09-18 (deep_scrapes cause B, Spec 118 §1/§7.1). OPTIONAL, any archetype. Names the `config.logic_variables[].name` whose resolved value the runner issues as `SET LOCAL statement_timeout` (ms) BEFORE the step's own read/write statements — first consumer is `runRecorderPhase`, which applies the SAME resolved value to BOTH its pinned REPEATABLE READ READ ONLY main-read loop (`SET LOCAL`) and its separate autocommit optional-read loop (session `SET`/`RESET`, output-panel fold R1) — both had zero bound on any read before this field existed. DISTINCT from the sibling literal `statement_timeout` field above (a step-level, OUTER pool-connection default, e.g. enrich_parcels' `\"75m\"`) exactly the way ENRICHER's `heartbeat_minutes_from_config`/`lock_timeout_ms_from_config` sit beside that same literal field: `statement_timeout` states the step's DECLARED-CONSTANT fallback, `*_minutes_from_config` names the OPERATOR-TUNABLE value actually applied at runtime (Rule 3 externalization). Same `*_from_config` contract as every other such field — `fromConfigRefs`-scanned, non-finite resolution THROWS (Number.isFinite, never `!x`), the literal \"none\" or omission is the declared disable, an explicit 0 stays a deliberate disable distinct from the accident.",
+          "x-ruling": {
+            "rungs_tried": [
+              "rung (a) reuse the existing literal `execution.statement_timeout` field",
+              "rung (b) a bare `config.logic_variables[].name` read directly by the runner with no `_from_config` marker"
+            ],
+            "why": "Rung (a) is `$ref: duration` — a literal string or \"none\", structurally incapable of naming a config variable; overloading its meaning per-step (sometimes a literal, sometimes a variable name) would make the SAME field two incompatible types depending on which step declares it, and ENRICHER's `heartbeat_minutes_from_config` precedent already rejected exactly this overload for the same reason (a different Postgres GUC, a different resolution mechanism). Rung (b) is the LW-D10 blind spot the whole `_from_config` suffix convention exists to close — `fromConfigRefs`'s scan (`src/tests/step-conformance.infra.test.ts`) matches only the suffix, so any other spelling reads as a dead declaration the moment the runner reaches it only by indirection. A new, optional, suffix-named field is the last-resort rung."
+          }
+        },
+        "phase_deadline_minutes_from_config": {
+          "type": "string",
+          "minLength": 1,
+          "description": "WF3 2026-09-18 (deep_scrapes cause B, Spec 118 §1/§7.2, layer-3 per-step-ceiling gap). OPTIONAL, any archetype. Names the `config.logic_variables[].name` whose resolved value bounds the WHOLE read/write phase's wall clock — ONE shared budget for the phase, never one budget PER sub-block a step's runner happens to split its work into (`runRecorderPhase` fold-validation V1, 2026-09-18: a sub-block that re-resolves this field and arms a FRESH full-length timer produces N independent budgets, not one — a runner with multiple sub-blocks must track elapsed time and arm each later block with the REMAINING milliseconds, never the full value again). Armed via `startPhaseDeadline`/`pg_cancel_backend` on a dedicated connection distinct from the phase's own — the exact EP-PHASE-DEADLINE mechanism `execution.phases[].timeout_minutes_from_config` already arms for the ENRICHER shape (`scripts/lib/step/index.js`), generalized here to a step-level (not per-pass) declaration for shapes with only one phase (first consumer: RECORDER's `runRecorderPhase`, whose main + optional read blocks both consume this ONE budget). A per-statement bound alone (`statement_timeout_minutes_from_config`) cannot catch N reads that are each individually fast but sum past the budget — Spec 118 §3's own documented gap (\"Layer 3: per-step ceilings in run-chain — the missing hierarchy layer\"). Same `*_from_config` contract: non-finite resolution THROWS, \"none\"/omission is the declared disable, an explicit 0 is a deliberate disable.",
+          "x-ruling": {
+            "rungs_tried": [
+              "rung (a) reuse `execution.phases[].timeout_minutes_from_config` — declare a 1-item phases[] array for a RECORDER",
+              "rung (b) reuse `execution.step_timeout` (the platform-axe backstop) as the mechanism itself"
+            ],
+            "why": "Rung (a) is schema-scoped to `phases[]`, itself gated to `identity.archetype:\"ENRICHER\"` by the ENRICHER x-profile allOf — widening that gate to admit a RECORDER's single implicit phase would force a RECORDER to declare a whole ordered-array structure (order/txn/writes_ref/scope) whose per-pass axes (transaction membership, write target, row scope, invalidator) do not exist for a step with exactly one undifferentiated read loop; Rule 1 forbids a declaration that says something other than what the step does. Rung (b) is Spec 118 §3's own named anti-pattern: \"the platform axe is the BACKSTOP, never the mechanism\" (`d6eb9f31`) — `step_timeout` stays the unchanged 15-minute ceiling exactly because this field exists to fire BEFORE it, with a diagnosable, named cause. A new, optional, step-level, suffix-named field is the last-resort rung."
+          }
+        },
         "step_timeout": { "$ref": "#/definitions/duration" },
         "batch": { "anyOf": [{ "const": "none" }, { "type": "integer", "minimum": 1 }] },
         "heartbeat_minutes_from_config": {
