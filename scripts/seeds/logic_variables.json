@@ -5312,7 +5312,7 @@
     "type": "number",
     "description": "assert_parcel_sanity: GATE — max_build width/length vs frontage/depth mislink tolerance (m). Ported verbatim from the pre-conversion literal (0.01). CONSUMED by assert_parcel_sanity.",
     "min": 0,
-    "max": 10,
+    "max": 0.5,
     "admin": {
       "group": "Spatial & Massing"
     }

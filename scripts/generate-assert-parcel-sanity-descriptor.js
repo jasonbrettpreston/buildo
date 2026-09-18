@@ -348,11 +348,18 @@ if (require.main === module) {
   const rendered = `${JSON.stringify(descriptor, null, 2)}\n`;
 
   if (process.argv.includes('--check')) {
-    const committed = fs.existsSync(OUT) ? fs.readFileSync(OUT, 'utf8') : null;
+    // `--check-against=<path>` (O2, batch2 P1.1 output-panel fold, 2026-09-18 — same-batch
+    // precedent: generate-assert-global-coverage-descriptor.js's own drift-lock RED-arm test
+    // needs to prove --check FIRES on a corrupted copy without ever writing to the real
+    // committed descriptor. Default (absent) behaviour is completely unchanged: still
+    // reads/reports against OUT.
+    const checkAgainstArg = process.argv.find((a) => a.startsWith('--check-against='));
+    const checkPath = checkAgainstArg ? checkAgainstArg.slice('--check-against='.length) : OUT;
+    const committed = fs.existsSync(checkPath) ? fs.readFileSync(checkPath, 'utf8') : null;
     if (committed === rendered) {
       console.log(`[generate-assert-parcel-sanity-descriptor] clean — no drift (${descriptor.checks.length} checks, ${descriptor.plausibility.length} plausibility, ${descriptor.config.logic_variables.length} logic_variables)`);
     } else {
-      console.error(`[generate-assert-parcel-sanity-descriptor] DRIFT — ${OUT} is stale relative to the live tree. Run \`node scripts/generate-assert-parcel-sanity-descriptor.js\` to regenerate.`);
+      console.error(`[generate-assert-parcel-sanity-descriptor] DRIFT — ${checkPath} is stale relative to the live tree. Run \`node scripts/generate-assert-parcel-sanity-descriptor.js\` to regenerate.`);
       process.exitCode = 1;
     }
   } else {

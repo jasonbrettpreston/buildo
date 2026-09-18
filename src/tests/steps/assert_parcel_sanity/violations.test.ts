@@ -8,6 +8,8 @@
 import { describe, it, expect } from 'vitest';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
+import * as os from 'node:os';
+import { execFileSync } from 'node:child_process';
 
 const ROOT = path.resolve(__dirname, '..', '..', '..', '..');
 const SHELL_PATH = path.join(ROOT, 'scripts/quality/assert-parcel-sanity.js');
@@ -86,6 +88,75 @@ describe('1. descriptor shape + Rule 3 (both facts true today at commit 1)', () 
   });
 });
 
+// ---------------------------------------------------------------------------
+// 1b. Descriptor generator drift lock (O2, batch2 P1.1 output-panel fold,
+// 2026-09-18) — same-batch precedent: assert_global_coverage's own commit 8c/8x
+// drift lock (src/tests/steps/assert_global_coverage/violations.test.ts). Both
+// directions locked WITHOUT touching the committed descriptor.json file: "clean"
+// regenerates in memory against the REAL fields module and byte-compares
+// against the committed file; "not vacuous" mutates an in-memory CHECK_DEFS
+// fixture and asserts the comparison actually differs. The CLI --check-against
+// tests corrupt a DISPOSABLE TEMP FILE COPY only — the real committed descriptor
+// is never opened for writing anywhere in this suite.
+// ---------------------------------------------------------------------------
+describe('assert_parcel_sanity — descriptor generator drift lock (both directions)', () => {
+  const GENERATOR_PATH = path.join(ROOT, 'scripts/generate-assert-parcel-sanity-descriptor.js');
+  // eslint-disable-next-line @typescript-eslint/no-require-imports -- exercising the real CJS generator
+  const { buildDescriptor } = require(GENERATOR_PATH) as {
+    buildDescriptor: (checkDefs: unknown[], logicVarDefs: unknown[], distDefs: unknown[], distMeasured: unknown) => unknown;
+  };
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { CHECK_DEFS, LOGIC_VAR_DEFS, DIST_DEFS } = require('../../../../scripts/lib/assert-parcel-sanity-fields.js') as {
+    CHECK_DEFS: Array<{ id: string } & Record<string, unknown>>;
+    LOGIC_VAR_DEFS: unknown[];
+    DIST_DEFS: unknown[];
+  };
+  const DIST_MEASURED_PATH = path.join(ROOT, 'scripts/quality/generated/assert-parcel-sanity.dist-measured.json');
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const distMeasured = require(DIST_MEASURED_PATH);
+
+  it('regenerating in memory against the REAL fields module byte-matches the committed descriptor.json (clean — no drift)', () => {
+    const regenerated = `${JSON.stringify(buildDescriptor(CHECK_DEFS, LOGIC_VAR_DEFS, DIST_DEFS, distMeasured), null, 2)}\n`;
+    const committed = fs.readFileSync(DESCRIPTOR_PATH, 'utf8');
+    expect(regenerated).toBe(committed);
+  });
+
+  it('the drift lock is not vacuous: a mutated in-memory CHECK_DEFS fixture produces a descriptor that differs from the committed file', () => {
+    const mutated = CHECK_DEFS.map((d, i) => (i === 0 ? { ...d, id: `${d.id}_mutated_for_drift_lock_test` } : d));
+    const regenerated = `${JSON.stringify(buildDescriptor(mutated, LOGIC_VAR_DEFS, DIST_DEFS, distMeasured), null, 2)}\n`;
+    const committed = fs.readFileSync(DESCRIPTOR_PATH, 'utf8');
+    expect(regenerated).not.toBe(committed);
+  });
+
+  it('the CLI --check mode itself reports clean against the current committed descriptor (exit 0)', () => {
+    expect(() => execFileSync('node', [GENERATOR_PATH, '--check'], { cwd: ROOT, encoding: 'utf8', stdio: 'pipe' })).not.toThrow();
+  });
+
+  it('the CLI --check mode is itself not vacuous: fires (exit non-zero) against a deliberately corrupted TEMP COPY, never the real committed file', () => {
+    const original = fs.readFileSync(DESCRIPTOR_PATH, 'utf8');
+    const tmpPath = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'aps-drift-lock-')), 'assert-parcel-sanity.descriptor.json');
+    try {
+      fs.writeFileSync(tmpPath, `${original}\n// drift-lock self-test corruption\n`);
+      let threw = false;
+      try {
+        execFileSync('node', [GENERATOR_PATH, '--check', `--check-against=${tmpPath}`], { cwd: ROOT, encoding: 'utf8', stdio: 'pipe' });
+      } catch {
+        threw = true;
+      }
+      expect(threw, '--check --check-against=<corrupted temp copy> must exit non-zero').toBe(true);
+      // Control: the SAME flag against the untouched real file must still report
+      // clean — proves --check-against reads the override path, not silently
+      // falling back to comparing the real file against itself either way.
+      expect(() => execFileSync('node', [GENERATOR_PATH, '--check', `--check-against=${DESCRIPTOR_PATH}`], { cwd: ROOT, encoding: 'utf8', stdio: 'pipe' })).not.toThrow();
+    } finally {
+      fs.rmSync(path.dirname(tmpPath), { recursive: true, force: true });
+    }
+    // The real committed file was never opened for writing above — confirm it
+    // still reads byte-identical to what this test started with.
+    expect(fs.readFileSync(DESCRIPTOR_PATH, 'utf8')).toBe(original);
+  });
+});
+
 describe('2. fields sidecar — 42 CHECK_DEFS / 35 LOGIC_VAR_DEFS / 8 DIST_DEFS (facts true today)', () => {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const fields = require('../../../../scripts/lib/assert-parcel-sanity-fields.js');
@@ -135,7 +206,7 @@ describe('3b. compute module (safe to require — pure library, no eager DB dial
 });
 
 describe('3. G-shape + frozen shell (RED until commit 2b)', () => {
-  it.fails('the shell top level is exactly the frozen 7-statement form (no pipeline.run())', () => { // flips at: commit 3
+  it('the shell top level is exactly the frozen 7-statement form (no pipeline.run())', () => {
     const src = shellSrc();
     expect(src).toMatch(/require\(['"]\.\.\/lib\/pipeline['"]\)/);
     expect(src).toMatch(/require\(['"]\.\/assert-parcel-sanity\.descriptor\.json['"]\)/);
@@ -144,7 +215,7 @@ describe('3. G-shape + frozen shell (RED until commit 2b)', () => {
     expect(src).not.toMatch(/pipeline\.run\(/);
   });
 
-  it.fails('module.exports is a plain {descriptor, compute, run} object (claim #86 — pipeline.step()\'s run is a NAMED METHOD the caller invokes; the pre-conversion pipeline.run() shell exports whatever the legacy SDK call returns, which carries neither name; this suite never requires() the eagerly-executing legacy shell — it dials the DB at require time with no require.main guard, unlike pipeline.step()\'s scheduleAutoRun)', () => { // flips at: commit 3
+  it('module.exports is a plain {descriptor, compute, run} object (claim #86 — pipeline.step()\'s run is a NAMED METHOD the caller invokes; the pre-conversion pipeline.run() shell exported whatever the legacy SDK call returned, which carried neither name)', () => {
     const descriptor = JSON.parse(fs.readFileSync(DESCRIPTOR_PATH, 'utf8'));
     // Static, source-text only — this suite never requires the eagerly-executing
     // legacy pipeline.run() shell directly (it dials the DB at require time with no
@@ -171,7 +242,7 @@ describe('4. verdict-parity regression lock (proven RED both directions)', () =>
     expect(statusFor({ gate: true, sev: 'HIGH' }, 0, 0)).toBe('INFO');
   });
 
-  it.fails('verdict.js checkRow renders INFO for an explicit observation.inert, regardless of declared severity (closes the pop=0 gap for the CONVERTED runner)', () => { // flips at: commit 3
+  it('verdict.js checkRow renders INFO for an explicit observation.inert, regardless of declared severity (closes the pop=0 gap for the CONVERTED runner)', () => {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { checkRow } = require('../../../../scripts/lib/step/verdict.js');
     const check = { id: 'x', limit: 'viol == 0', severity: 'FAIL', blocking: false };

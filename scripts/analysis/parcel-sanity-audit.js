@@ -24,7 +24,7 @@ const { createResolvedPool } = require('../lib/resolve-db');
 const descriptor = require('../quality/assert-parcel-sanity.descriptor.json');
 const { resolveConfig } = require('../lib/step/config');
 const {
-  CHECK_DEFS, DIST_DEFS, RES, ZC, LOWRISE,
+  CHECK_DEFS, DIST_DEFS, RES, ZC,
 } = require('../lib/assert-parcel-sanity-fields');
 const { runSanity: computeRunSanity } = require('../lib/compute/assert-parcel-sanity');
 
@@ -145,7 +145,7 @@ async function runAudit() {
 }
 
 module.exports = {
-  CHECK_DEFS, DIST_FIELDS, RES, ZC, LOWRISE,
+  CHECK_DEFS, DIST_FIELDS, RES, ZC,
   buildChecks, resolveCliConfig, runSanity, statusFor, deriveVerdict, makeCliPool,
 };
 

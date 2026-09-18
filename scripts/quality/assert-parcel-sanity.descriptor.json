@@ -1789,7 +1789,7 @@
       {
         "name": "parcel_sanity_dim_lot_tolerance_m",
         "min": 0,
-        "max": 10,
+        "max": 0.5,
         "on_invalid": "fail"
       },
       {
