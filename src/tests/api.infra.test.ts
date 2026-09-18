@@ -1099,7 +1099,10 @@ describe('Admin mutations are audited (Spec 128 R-12 / Spec 33 §8.1)', () => {
         if (!inline && !delegated) offenders.push(`${rel} ${h.method}`);
       }
     }
-    expect(offenders).toEqual(SESSION_GATE_GAPS_FILED);
+    // Sort both sides — findRouteFiles scan order is filesystem-dependent and
+    // varies between local and CI environments; the semantic contract is
+    // same-elements, same count, not declaration order.
+    expect([...offenders].sort()).toEqual([...SESSION_GATE_GAPS_FILED].sort());
   });
 
   it('every mutating /api/admin/** export is Origin-gated by the shared guard (Spec 33 §13 CSRF)', () => {
