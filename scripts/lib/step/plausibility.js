@@ -175,6 +175,58 @@ async function executeEntry(pool, entry, defaultTimeoutMs) {
 }
 
 /**
+ * batch2 P1.1 (assert_parcel_sanity, Fold B-7 wiring) — the `kind:"distribution"`
+ * executor. Reuses `runDistributionScan` verbatim rather than duplicating the
+ * percentile/outlier SQL. APS-D2 (defect-ledger.md): a distribution entry's `sql`
+ * field is a REAL, standalone, single-row/single-column query (so
+ * capture-step-golden.js's kind-blind `deriveInvariantSpecFromDescriptor` can
+ * execute it for its own golden snapshot) — NOT the bare field expression this
+ * executor needs to splice into `buildDistributionQuery`'s own CTE. The field
+ * expression comes from `fieldExprById` instead (keyed by entry id), read
+ * generically off the step's own compute module — see
+ * `scripts/lib/step/index.js`'s `DISTRIBUTION_SCOPE` convention. The zone-BUCKET
+ * CASE expression (RD/RS/RT/RM/RA/R) is likewise domain knowledge, not derivable
+ * from the descriptor's `zone_by` column name, so it travels the same way
+ * (`resScope`/`zoneExpr`) — the same reasoning this file's header already gives
+ * for hardcoding `FROM parcels`.
+ *
+ * Returns the same `{checks, observations}` shape `runValidatorEntries` returns for
+ * bound-kind entries, so the caller (`buildAuditTable`'s `synthetic` argument) needs
+ * no per-kind branch.
+ */
+async function runDistributionEntries(pool, entries, { resScope, zoneExpr, fieldExprById } = {}) {
+  const checks = entries.map((entry) => ({
+    id: entry.id,
+    limit: entry.bound,
+    limit_from_config: entry.limit_from_config,
+    severity: entry.severity,
+    blocking: entry.blocking,
+    source: entry.source,
+  }));
+  if (!entries.length) return { checks: [], observations: {} };
+  if (!resScope || !zoneExpr || !fieldExprById) {
+    throw new Error('runDistributionEntries: resScope, zoneExpr and fieldExprById are all required for kind:"distribution" plausibility entries (declare compute.DISTRIBUTION_SCOPE = {resScope, zoneExpr, fieldExprById} on the step\'s compute module)');
+  }
+  const fields = entries.map((e) => {
+    const expr = fieldExprById[e.id];
+    if (!expr) throw new Error(`runDistributionEntries: no fieldExprById entry for plausibility id "${e.id}"`);
+    return { id: e.id, expr };
+  });
+  const dist = await runDistributionScan(pool, fields, resScope, zoneExpr);
+  const byId = Object.fromEntries(dist.map((d) => [d.id, d]));
+  const observations = {};
+  for (const entry of entries) {
+    const d = byId[entry.id];
+    // `detail` renders the human-readable count (checkRow prefers detail over the
+    // bare violations number) — matches parcel-sanity-audit.js's pre-conversion
+    // rendered row value byte-for-byte ("N outliers (worst X)").
+    const detail = `${d.viol} outliers${d.worst != null ? ` (worst ${d.worst})` : ''}`;
+    observations[entry.id] = { value: d.viol, violations: d.viol, worst: d.worst, samples: d.samples, detail, duration_ms: 0 };
+  }
+  return { checks, observations };
+}
+
+/**
  * runValidatorEntries(pool, entries, {frequency, when, defaultTimeoutMs}) — the ONE
  * executor for BOTH `invariants[]` and `plausibility[]` (same runtime shape, same
  * rules). Filters to entries whose `frequency` matches AND whose `when` is in the
@@ -216,12 +268,17 @@ async function executeEntry(pool, entry, defaultTimeoutMs) {
  * @param {{frequency:string, when:string[]|null, defaultTimeoutMs?:number|null, concurrency?:number}} opts
  * @returns {Promise<{checks:object[], observations:Record<string,object>}>}
  */
-async function runValidatorEntries(pool, entries, { frequency, when, defaultTimeoutMs, concurrency } = {}) {
+async function runValidatorEntries(pool, entries, { frequency, when, defaultTimeoutMs, concurrency, resScope, zoneExpr, fieldExprById } = {}) {
   const list = Array.isArray(entries) ? entries : [];
   // `when: null` (or absent) means unrestricted — score every declared `when`, the
   // same null-means-everything convention `onlyChecks` itself uses in index.js.
   const selected = list.filter((e) => e.frequency === frequency && (!when || when.includes(e.when || 'pre')));
-  const checks = selected.map((entry) => ({
+  // batch2 P1.1 (Fold B-7) — `kind:"distribution"` entries route through
+  // runDistributionEntries (a direct function call, never a duplicated
+  // implementation), never through executeEntry's generic single-scalar-query path.
+  const distEntries = selected.filter((e) => e.kind === 'distribution');
+  const boundEntries = selected.filter((e) => e.kind !== 'distribution');
+  const checks = boundEntries.map((entry) => ({
     id: entry.id,
     limit: entry.bound,
     limit_from_config: entry.limit_from_config,
@@ -234,8 +291,8 @@ async function runValidatorEntries(pool, entries, { frequency, when, defaultTime
   // degrades to fully serial (batch width 1), never to unbounded.
   const batchSize = Number.isFinite(concurrency) && concurrency > 0 ? Math.floor(concurrency) : 4;
   const results = [];
-  for (let i = 0; i < selected.length; i += batchSize) {
-    const batch = selected.slice(i, i + batchSize);
+  for (let i = 0; i < boundEntries.length; i += batchSize) {
+    const batch = boundEntries.slice(i, i + batchSize);
     // `executeEntry` NEVER rejects (every path returns `{value|error, duration_ms}`),
     // so `Promise.all` cannot short-circuit and swallow a batch-mate's row — one
     // entry's FAIL is a value in its own slot, not a rejection.
@@ -243,8 +300,13 @@ async function runValidatorEntries(pool, entries, { frequency, when, defaultTime
     results.push(...batchResults);
   }
   const observations = {};
-  selected.forEach((entry, i) => { observations[entry.id] = results[i]; });
-  return { checks, observations };
+  boundEntries.forEach((entry, i) => { observations[entry.id] = results[i]; });
+
+  const distResult = await runDistributionEntries(pool, distEntries, { resScope, zoneExpr, fieldExprById });
+  return {
+    checks: [...checks, ...distResult.checks],
+    observations: { ...observations, ...distResult.observations },
+  };
 }
 
 /** Thin, named wrapper (matches the plan's own API naming) — `descriptor.invariants` only. */
@@ -427,6 +489,7 @@ module.exports = {
   parseDurationMs,
   coerceScalar,
   executeEntry,
+  runDistributionEntries,
   runValidatorEntries,
   runInvariants,
   runPlausibility,

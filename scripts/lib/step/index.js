@@ -4474,6 +4474,8 @@ async function runWithPool(runnable, pool, ctx) {
       }
       const observations = Object.create(null);
       const declared = new Set(descriptor.checks.map((c) => c.id));
+      // batch2 P1.1 — see stepCtx.contextRow() below.
+      const contextRows = [];
       const stepCtx = {
         pool,
         chainId,
@@ -4525,6 +4527,14 @@ async function runWithPool(runnable, pool, ctx) {
           }
           observations[checkId] = observation;
         },
+        // batch2 P1.1 (assert_parcel_sanity) — a generic, opt-in seam: a compute may
+        // push a LITERAL audit row (bypassing checkRow's limit evaluation entirely)
+        // for a population/context count that is not itself a checks[]/plausibility[]
+        // entry (e.g. "N residential parcels scanned"). Declaring it as a 43rd check
+        // would inflate the fleet's own checks.length locks for no verdict benefit —
+        // this preserves the row without touching the schema. Collected here,
+        // appended to `extraRows` below; absent for every step that never calls it.
+        contextRow(row) { contextRows.push({ source: 'context', ...row }); },
       };
 
       // ── ACQUIRE → VALIDATE → WRITE (ruling A-1(b), INGESTOR wave) ───────────
@@ -4856,8 +4866,16 @@ async function runWithPool(runnable, pool, ctx) {
         stopMaintenanceHeartbeat();
       }
 
-      const invariantsRun = await runInvariants(pool, descriptor, { frequency: 'every_run', when: onlyWhen, defaultTimeoutMs: postCheckDefaultTimeoutMs, concurrency: postCheckConcurrency });
-      const plausibilityRun = await runPlausibility(pool, descriptor, { frequency: 'every_run', when: onlyWhen, defaultTimeoutMs: postCheckDefaultTimeoutMs, concurrency: postCheckConcurrency });
+      // batch2 P1.1 (Fold B-7) — a `kind:"distribution"` plausibility entry needs a
+      // residential-scope predicate + a zone-bucket expression that is domain
+      // knowledge, not derivable from the descriptor alone. A step's compute module
+      // MAY export `DISTRIBUTION_SCOPE = {resScope, zoneExpr}` as a static property
+      // (the same convention `descriptor`/`compute` are attached with in a frozen
+      // shell) — generic infrastructure any future step can use, absent (undefined)
+      // for every step that declares no kind:"distribution" entries today.
+      const distributionScope = (runnable.compute && runnable.compute.DISTRIBUTION_SCOPE) || null;
+      const invariantsRun = await runInvariants(pool, descriptor, { frequency: 'every_run', when: onlyWhen, defaultTimeoutMs: postCheckDefaultTimeoutMs, concurrency: postCheckConcurrency, resScope: distributionScope && distributionScope.resScope, zoneExpr: distributionScope && distributionScope.zoneExpr, fieldExprById: distributionScope && distributionScope.fieldExprById });
+      const plausibilityRun = await runPlausibility(pool, descriptor, { frequency: 'every_run', when: onlyWhen, defaultTimeoutMs: postCheckDefaultTimeoutMs, concurrency: postCheckConcurrency, resScope: distributionScope && distributionScope.resScope, zoneExpr: distributionScope && distributionScope.zoneExpr, fieldExprById: distributionScope && distributionScope.fieldExprById });
       const synthetic = {
         checks: [...invariantsRun.checks, ...plausibilityRun.checks],
         observations: { ...invariantsRun.observations, ...plausibilityRun.observations },
@@ -4904,6 +4922,10 @@ async function runWithPool(runnable, pool, ctx) {
         // than only in a log line. Both absent on every healthy run.
         ...phaseDeadlineRows([enrich]),
         ...scopeRetireFailureRows([enrich]),
+        // batch2 P1.1 — compute-supplied literal context rows (stepCtx.contextRow()),
+        // e.g. assert_parcel_sanity's "residential_parcels_scanned" population row.
+        // Empty for every step that never calls it.
+        ...contextRows,
       ];
       const built = buildAuditTable(descriptor, chainId, observations, extraRows, configValues, onlyChecks, synthetic);
       // Observability fold — the deadline abort no longer THROWS (that is what cost the run

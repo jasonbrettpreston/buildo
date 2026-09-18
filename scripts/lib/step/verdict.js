@@ -300,6 +300,15 @@ function checkRow(check, observation, onCheckError, config = null) {
   const observed = observation.detail !== undefined
     ? observation.detail
     : (Number.isFinite(observation.violations) ? observation.violations : observation.value);
+  // batch2 P1.1 (assert_parcel_sanity, F5 / D-E 4) — an explicitly-reported INERT
+  // observation (the check's applicable POPULATION was 0, so a clean 0-violation
+  // count proves nothing) always renders INFO, regardless of the check's declared
+  // severity or whether the bound evaluated ok. Opt-in via `observation.inert ===
+  // true`; every existing compute never sets it, so this is behaviour-neutral for
+  // the rest of the fleet. Closes the "green because it never looked" class
+  // (Spec 121 §12b.6) for a GATE check whose population happened to be empty this
+  // run — without this, a pop-0 gate would silently render PASS instead of INFO.
+  if (observation.inert === true) return row(observed, 'INFO');
   if (verdict.ok) return row(observed, check.severity === 'INFO' ? 'INFO' : 'PASS');
 
   // RE-FREEZE #7 (Spec 124 §5 R-AD) — `limit` failed. A declared `warn_limit`

@@ -5,7 +5,13 @@
 // Target DB: DATABASE_URL when set, else the Docker dev DB — via the shared makeCliPool (C6).
 // Usage: node scripts/analysis/parcel-field-dump.js [id,id,...]
 'use strict';
-const { CHECKS, RES, makeCliPool } = require('./parcel-sanity-audit.js');
+// batch2 P1.1 (F-G1) — ONE bounds corpus: CHECKS is now built from a RESOLVED config
+// object (buildChecks(config)) rather than imported as a static array. `config` is
+// obtained the same way every other consumer gets it — resolveCliConfig(pool), which
+// calls scripts/lib/step/config.js's resolveConfig(pool, descriptor) against the
+// live logic_variables registry (F-G2: "the audit cannot read logic_variables" is
+// knowingly retired).
+const { buildChecks, resolveCliConfig, RES, makeCliPool } = require('./parcel-sanity-audit.js');
 
 // The enriched field families to show (real column names verified against the live schema).
 const FIELDS = {
@@ -23,6 +29,8 @@ const ALLCOLS = Object.values(FIELDS).flat();
   // C6: shares makeCliPool with the sanity audit — DATABASE_URL-aware +
   // logs the graded target (see parcel-sanity-audit.js for the rationale).
   const pool = makeCliPool('parcel-field-dump');
+  const config = await resolveCliConfig(pool);
+  const CHECKS = buildChecks(config);
 
   // Build the sample: from args, else auto-pick 1 flagged parcel per (up to 8) tripped BOUND/INVARIANT
   // checks + 4 CLEAN parcels (trip zero checks) so we can eyeball both failure and success.

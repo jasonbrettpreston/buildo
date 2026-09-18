@@ -38,10 +38,30 @@ describe('WF3 D-C max_build_min_dimension_m — four-surface literal parity', ()
     expect(sql).toContain(escaped);
   });
 
-  it('parcel-sanity-audit literal === seed JSON default (the audit cannot read logic_variables)', () => {
-    const audit = read('scripts/analysis/parcel-sanity-audit.js');
-    const m = audit.match(/MAX_BUILD_MIN_DIMENSION_M\s*=\s*([\d.]+)/);
-    expect(m, 'parcel-sanity-audit.js must pin MAX_BUILD_MIN_DIMENSION_M as a literal').not.toBeNull();
-    expect(Number(m![1])).toBe(seed.max_build_min_dimension_m.default);
+  // batch2 P1.1 (assert_parcel_sanity, F-G2, 2026-09-18): "the audit cannot read
+  // logic_variables" is KNOWINGLY RETIRED — the audit is now descriptor-driven
+  // (scripts/analysis/parcel-sanity-audit.js resolveCliConfig() -> resolveConfig
+  // against the live registry), reusing max_build_min_dimension_m (Ask A6(a))
+  // rather than pinning a divorced literal. Re-pointed at buildChecks()'s
+  // RESOLVED output — no DB needed, since buildChecks(config) is pure given an
+  // already-resolved config object (the fields sidecar's LOGIC_VAR_DEFS defaults).
+  it('parcel-sanity-audit buildChecks() consumes max_build_min_dimension_m FROM config (no longer a pinned literal)', () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { buildChecks } = require('../../scripts/analysis/parcel-sanity-audit.js');
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { LOGIC_VAR_DEFS } = require('../../scripts/lib/assert-parcel-sanity-fields.js');
+    const cfg: Record<string, number> = Object.fromEntries(LOGIC_VAR_DEFS.map((v: { name: string; default: number }) => [v.name, v.default]));
+    cfg.max_build_min_dimension_m = seed.max_build_min_dimension_m.default;
+    cfg.mislink_footprint_lot_tol = seed.mislink_footprint_lot_tol.default;
+    const checks = buildChecks(cfg);
+    const c = checks.find((x: { id: string }) => x.id === 'max_build_dim_below_floor');
+    expect(c, 'max_build_dim_below_floor check must exist').toBeTruthy();
+    expect(c.applies).toContain(String(seed.max_build_min_dimension_m.default));
+    // Changing the config value changes the resolved SQL — proof it is read, not pinned.
+    cfg.max_build_min_dimension_m = seed.max_build_min_dimension_m.default + 1;
+    const checks2 = buildChecks(cfg);
+    const c2 = checks2.find((x: { id: string }) => x.id === 'max_build_dim_below_floor');
+    expect(c2.applies).toContain(String(seed.max_build_min_dimension_m.default + 1));
+    expect(c2.applies).not.toBe(c.applies);
   });
 });
