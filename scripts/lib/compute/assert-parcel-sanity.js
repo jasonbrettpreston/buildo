@@ -54,38 +54,69 @@ async function runSanity(pool, config, { samples = false } = {}) {
   return { total, results };
 }
 
+// batch2 P1.1 fix (②c, §5.5 (1)/(4) conformance) — `module.exports.checks` must be a
+// DISPATCH TABLE (one NAMED function per declared check id, in descriptor order),
+// not the raw CHECK_DEFS array (src/tests/step-conformance.infra.test.ts "§5.5
+// compute shape — dispatch table ≡ declared checks"). The folded scan still runs
+// EXACTLY ONCE per step invocation: `getScan(ctx)` memoizes the single `runSanity`
+// promise per `ctx` (mirrors assert-data-bounds.js's own BRANCH_MEMO pattern), so
+// 42 dispatch calls share one query, matching Ask A1's "one compute loader".
+const SCAN_MEMO = new WeakMap();
+function getScan(ctx) {
+  if (!SCAN_MEMO.has(ctx)) {
+    SCAN_MEMO.set(ctx, runSanity(ctx.pool, ctx.config, { samples: false }));
+  }
+  return SCAN_MEMO.get(ctx);
+}
+
+/** One dispatch entry per CHECK_DEFS id — reports its own slice of the shared scan. */
+async function evalCheck(ctx, def) {
+  const { results } = await getScan(ctx);
+  const r = results.find((x) => x.id === def.id);
+  if (!r) throw new Error(`[${ctx.descriptor.identity.name}] no result for check "${def.id}" from the folded scan`);
+  if (r.inert) {
+    // F5 / D-E 4 — the applicable population was 0: this check proves nothing,
+    // never a green PASS even for a gate. verdict.js's checkRow() renders INFO
+    // for observation.inert === true regardless of declared severity.
+    ctx.report(def.id, { violations: 0, inert: true, detail: 'inert (population 0)' });
+  } else {
+    ctx.report(def.id, { violations: r.viol, detail: r.pop ? `${r.viol} / ${r.pop}` : String(r.viol) });
+  }
+}
+
+const CHECKS = {};
+for (const def of CHECK_DEFS) {
+  const dispatchFn = (ctx) => evalCheck(ctx, def);
+  Object.defineProperty(dispatchFn, 'name', { value: def.id, configurable: true });
+  CHECKS[def.id] = dispatchFn;
+}
+
 /**
  * §5.5 (2) — run the SELECTED checks, and nothing else. `ctx.checks` is every
  * declared check id (sharing.varies_by_chain.checks:"none" — this step is not
- * per-chain), so in practice this always runs the full folded scan.
+ * per-chain), so in practice this always runs the full folded scan (once).
  */
 async function compute(ctx) {
   ctx.log.info(`[${ctx.descriptor.identity.name}]`, '=== Parcel Sanity Profile: folded scan ===');
-  const { total, results } = await runSanity(ctx.pool, ctx.config, { samples: false });
-  const byId = new Map(results.map((r) => [r.id, r]));
   for (const checkId of ctx.checks) {
-    const r = byId.get(checkId);
-    if (!r) throw new Error(`[${ctx.descriptor.identity.name}] descriptor declares check "${checkId}" with no result from the folded scan`);
-    if (r.inert) {
-      // F5 / D-E 4 — the applicable population was 0: this check proves nothing,
-      // never a green PASS even for a gate. verdict.js's checkRow() renders INFO
-      // for observation.inert === true regardless of declared severity.
-      ctx.report(checkId, { violations: 0, inert: true, detail: 'inert (population 0)' });
-    } else {
-      ctx.report(checkId, { violations: r.viol, detail: r.pop ? `${r.viol} / ${r.pop}` : String(r.viol) });
+    const fn = CHECKS[checkId];
+    if (typeof fn !== 'function') {
+      throw new Error(`[${ctx.descriptor.identity.name}] descriptor declares check "${checkId}" with no function in the compute dispatch table`);
     }
+    await fn(ctx);
   }
   // Population context row — legacy `rows.unshift({metric:'residential_parcels_scanned', ...})`.
   // stepCtx.contextRow() preserves it without inflating checks.length past 42
   // (buildAuditTable appends extraRows LAST, so this row's array POSITION moves
   // from index 0 to the end — a named, position-only Class A diff).
+  const { total } = await getScan(ctx);
   ctx.contextRow({ metric: 'residential_parcels_scanned', value: total, threshold: null, status: 'INFO' });
 }
 
 module.exports = compute;
 module.exports.compute = compute;
 module.exports.runSanity = runSanity;
-module.exports.checks = CHECK_DEFS;
+module.exports.checks = CHECKS;
 // Fold B-7 — generic DISTRIBUTION_SCOPE convention (scripts/lib/step/index.js reads
 // this off `runnable.compute` for any kind:"distribution" plausibility entry).
 // `fieldExprById` maps each descriptor plausibility id ("dist_<id>") to the BARE
