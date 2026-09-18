@@ -452,6 +452,74 @@ async function countAbsentStepCompleteness(pool) {
   }
 }
 
+/**
+ * WF3 2026-09-18 (Peel 3, cause D, Spec 118 §1.5/§4) — distinguishes a TRANSIENT
+ * connection fault (the Supavisor pooler dropping a session mid-query, e.g. run
+ * `32867150497`'s "Connection terminated unexpectedly") from every other error. Only a
+ * transient fault is ever retried — anything else (a genuine query/schema error, an
+ * auth failure) reds on the FIRST attempt, exactly as it did before this peel. Pure,
+ * no I/O: unit-testable without a live DB.
+ *
+ * @param {unknown} err
+ * @returns {{ transient: boolean, message: string }}
+ */
+function classifyVerdictError(err) {
+  const code = err && typeof err === 'object' ? /** @type {{code?: string}} */ (err).code : undefined;
+  const message = err instanceof Error ? err.message : String(err);
+  const transient = code === 'ECONNRESET' || code === 'ETIMEDOUT'
+    || /Connection terminated unexpectedly|Connection terminated due to connection timeout/i.test(message);
+  return { transient, message };
+}
+
+/** Max total attempts (1 initial + 2 retries) for a transient verdict-read failure. */
+const VERDICT_QUERY_MAX_ATTEMPTS = 3;
+/** Base delay (ms) for exponential backoff between retries: 200ms, 400ms. */
+const VERDICT_QUERY_RETRY_BASE_MS = 200;
+
+/**
+ * Bounded retry around THE READ ONLY (Peel 3, §3.2 — the verdict COMPUTATION is
+ * untouched). This function only ever sees a THROW from `pool.query` — a query that
+ * SUCCEEDS and returns a row carrying a genuine verdict FAIL is returned on attempt 1,
+ * unretried, by construction: there is no result-inspection branch here that could
+ * second-guess a successful read, which is what makes "retry must not mask a genuine
+ * verdict FAIL" true structurally rather than by a second, fallible check.
+ *
+ * A non-transient error (per `classifyVerdictError`) is never retried, even on attempt
+ * 1 — it reds immediately, same as before this peel. A transient error retried past
+ * `maxAttempts` is re-thrown wrapped, its message naming "transient DB connectivity"
+ * so the top-level catch's error text stays clearly distinct from a verdict FAIL
+ * (Spec 118 §4's taxonomy).
+ *
+ * @param {import('pg').Pool} pool
+ * @param {string} sql
+ * @param {unknown[]} params
+ * @param {{ maxAttempts?: number, baseDelayMs?: number, sleep?: (ms: number) => Promise<void>, log?: (msg: string) => void }} [opts]
+ */
+async function queryWithRetry(pool, sql, params, opts = {}) {
+  const maxAttempts = opts.maxAttempts ?? VERDICT_QUERY_MAX_ATTEMPTS;
+  const baseDelayMs = opts.baseDelayMs ?? VERDICT_QUERY_RETRY_BASE_MS;
+  const sleep = opts.sleep ?? ((ms) => new Promise((resolve) => { setTimeout(resolve, ms); }));
+  const log = opts.log ?? ((msg) => console.log(msg));
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      return await pool.query(sql, params);
+    } catch (err) {
+      const { transient, message } = classifyVerdictError(err);
+      if (!transient) throw err;
+      if (attempt === maxAttempts) {
+        throw Object.assign(
+          new Error(`transient DB connectivity (${message}) after ${attempt} attempt(s) — not a verdict FAIL`),
+          { transientExhausted: true, cause: err },
+        );
+      }
+      log(`::warning title=Chain verdict check::transient DB connectivity (${message}) — retrying (attempt ${attempt + 1}/${maxAttempts})`);
+      await sleep(baseDelayMs * 2 ** (attempt - 1));
+    }
+  }
+  // Unreachable (the loop always returns or throws) — satisfies control-flow analysis.
+  throw new Error('[check-chain-verdict] queryWithRetry: exhausted attempts with no result and no throw');
+}
+
 async function run() {
   const chainId = process.argv[2];
   if (!chainId) {
@@ -476,7 +544,10 @@ async function run() {
   try {
     // B2 (RULING 2): the defer-streak breaker needs the last TWO rows (was LIMIT 1) — 2 consecutive
     // deferred_to_full on the same step is not self-healing.
-    const res = await pool.query(
+    // Peel 3 (cause D) — bounded retry around this READ ONLY; classifyVerdict below never
+    // sees a retry, only whatever row (or none) this eventually returns or throws.
+    const res = await queryWithRetry(
+      pool,
       `SELECT id, status, records_meta, started_at, completed_at FROM pipeline_runs
         WHERE pipeline = $1
         ORDER BY started_at DESC
@@ -607,4 +678,6 @@ module.exports = {
   OK_STATUSES,
   COMPLETED_STEP_STATUSES,
   TREND_MEDIAN_FLOOR_MS,
+  classifyVerdictError,
+  queryWithRetry,
 };

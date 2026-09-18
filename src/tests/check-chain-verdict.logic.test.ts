@@ -18,6 +18,13 @@ const checkChainVerdict = require('../../scripts/check-chain-verdict.js') as {
     budgetMinutes: number,
   ) => { durationMinutes: number; budgetMinutes: number; thresholdMinutes: number; message: string } | null;
   OK_STATUSES: Set<string>;
+  classifyVerdictError: (err: unknown) => { transient: boolean; message: string };
+  queryWithRetry: (
+    pool: { query: (sql: string, params?: unknown[]) => Promise<unknown> },
+    sql: string,
+    params?: unknown[],
+    opts?: { maxAttempts?: number; baseDelayMs?: number; sleep?: (ms: number) => Promise<void>; log?: (msg: string) => void },
+  ) => Promise<unknown>;
 };
 
 describe('check-chain-verdict.js — script presence', () => {
@@ -234,5 +241,127 @@ describe('check-chain-verdict.js — source-scan invariants (F8 fold 2026-07-20)
     expect(src).toMatch(/::error title=Chain verdict check::SUPABASE_DATABASE_URL is not set/);
     expect(src).toMatch(/::error title=Chain verdict check::\$\{chainSlug\} verdict is a FAIL/);
     expect(src).toMatch(/::error title=Chain verdict check::DB check failed/);
+  });
+});
+
+// ===========================================================================
+// WF3 2026-09-18 — Peel 3 (cause D, Spec 118 §1.5/§4). `check-chain-verdict.js`
+// treated a transient connection loss identically to a genuine verdict FAIL
+// (run `32867150497`, 2026-08-25: "DB check failed for chain_deep_scrapes:
+// Connection terminated unexpectedly" — the chain itself did NOT fail).
+// `classifyVerdictError`/`queryWithRetry` are pure/injectable — no live DB needed.
+// ===========================================================================
+
+describe('check-chain-verdict.js — classifyVerdictError (Peel 3, cause D)', () => {
+  it('classifies "Connection terminated unexpectedly" (the exact live message from run 32867150497) as transient', () => {
+    const { transient } = checkChainVerdict.classifyVerdictError(new Error('Connection terminated unexpectedly'));
+    expect(transient).toBe(true);
+  });
+
+  it('classifies ECONNRESET / ETIMEDOUT error codes as transient', () => {
+    expect(checkChainVerdict.classifyVerdictError(Object.assign(new Error('socket hang up'), { code: 'ECONNRESET' })).transient).toBe(true);
+    expect(checkChainVerdict.classifyVerdictError(Object.assign(new Error('timed out'), { code: 'ETIMEDOUT' })).transient).toBe(true);
+  });
+
+  it('classifies a genuine query/schema error as NOT transient (e.g. a typo\'d column — must red on attempt 1, never retried)', () => {
+    const { transient } = checkChainVerdict.classifyVerdictError(Object.assign(new Error('column "statuz" does not exist'), { code: '42703' }));
+    expect(transient).toBe(false);
+  });
+
+  it('classifies a non-Error thrown value without crashing', () => {
+    const { transient, message } = checkChainVerdict.classifyVerdictError('a bare string throw');
+    expect(transient).toBe(false);
+    expect(message).toBe('a bare string throw');
+  });
+});
+
+describe('check-chain-verdict.js — queryWithRetry (Peel 3, cause D)', () => {
+  const noSleep = () => Promise.resolve();
+
+  it('RED-FIRST proof (pre-fix behaviour, reproduced directly against the OLD call shape): a bare pool.query with no retry throws on the FIRST transient error — this is exactly what made run 32867150497 red. queryWithRetry must NOT reproduce this.', async () => {
+    let calls = 0;
+    const pool = {
+      query: async (_sql: string) => {
+        calls++;
+        throw new Error('Connection terminated unexpectedly');
+      },
+    };
+    // The OLD shape (bare pool.query, no wrapper) — reds on attempt 1, proving the defect existed.
+    await expect(pool.query('SELECT 1')).rejects.toThrow('Connection terminated unexpectedly');
+    expect(calls).toBe(1);
+  });
+
+  it('(3.4a) two transient throws then success — queryWithRetry succeeds, never surfacing the transient error to the caller', async () => {
+    let calls = 0;
+    const pool = {
+      query: async () => {
+        calls++;
+        if (calls <= 2) throw new Error('Connection terminated unexpectedly');
+        return { rows: [{ id: 1, status: 'completed' }] };
+      },
+    };
+    const res = await checkChainVerdict.queryWithRetry(pool, 'SELECT 1', [], { sleep: noSleep, log: () => {} }) as { rows: Array<{ id: number }> };
+    expect(calls).toBe(3);
+    expect(res.rows[0]!.id).toBe(1);
+  });
+
+  it('(3.4b) three transient throws (exhausting the default 3 attempts) — rethrows wrapped, message names "transient DB connectivity", distinct from a verdict FAIL', async () => {
+    let calls = 0;
+    const pool = {
+      query: async () => {
+        calls++;
+        throw new Error('Connection terminated unexpectedly');
+      },
+    };
+    await expect(
+      checkChainVerdict.queryWithRetry(pool, 'SELECT 1', [], { sleep: noSleep, log: () => {} }),
+    ).rejects.toThrow(/transient DB connectivity/);
+    expect(calls, 'must attempt exactly maxAttempts (3) times, never more').toBe(3);
+  });
+
+  it('(3.4c, the anti-masking lock) a genuine verdict FAIL — a query that SUCCEEDS and returns a "failed" status row — is returned on attempt 1, unretried: queryWithRetry only ever intercepts a THROW, never inspects a successful result', async () => {
+    let calls = 0;
+    const pool = {
+      query: async () => {
+        calls++;
+        return { rows: [{ id: 5021, status: 'completed_with_errors', records_meta: { step_verdicts: { inspections: 'FAIL' } } }] };
+      },
+    };
+    const res = await checkChainVerdict.queryWithRetry(pool, 'SELECT 1', [], { sleep: noSleep, log: () => {} }) as { rows: Array<{ status: string }> };
+    expect(calls, 'a successful query — however bad the row it returns — is never retried').toBe(1);
+    const { ok, reason } = checkChainVerdict.classifyVerdict(res.rows[0] as never);
+    expect(ok, 'the genuine verdict FAIL must still be reported as a FAIL — retry must never mask it').toBe(false);
+    expect(reason).toContain('FAIL');
+  });
+
+  it('a non-transient error is never retried, even once — reds immediately with the ORIGINAL error, not a wrapped "transient" message', async () => {
+    let calls = 0;
+    const pool = {
+      query: async () => {
+        calls++;
+        throw Object.assign(new Error('column "statuz" does not exist'), { code: '42703' });
+      },
+    };
+    await expect(
+      checkChainVerdict.queryWithRetry(pool, 'SELECT 1', [], { sleep: noSleep, log: () => {} }),
+    ).rejects.toThrow('column "statuz" does not exist');
+    expect(calls).toBe(1);
+  });
+
+  it('backoff delays are exponential off the base (200ms, 400ms) and sleep is invoked between attempts, not before the first', async () => {
+    let calls = 0;
+    const delays: number[] = [];
+    const pool = {
+      query: async () => {
+        calls++;
+        if (calls <= 2) throw new Error('Connection terminated unexpectedly');
+        return { rows: [] };
+      },
+    };
+    await checkChainVerdict.queryWithRetry(pool, 'SELECT 1', [], {
+      sleep: (ms: number) => { delays.push(ms); return Promise.resolve(); },
+      log: () => {},
+    });
+    expect(delays).toEqual([200, 400]);
   });
 });
