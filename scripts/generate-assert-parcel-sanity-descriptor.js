@@ -24,7 +24,7 @@ const path = require('path');
 const { RES, ZC } = require('./lib/assert-parcel-sanity-fields');
 
 const OUT = path.join(__dirname, 'quality', 'assert-parcel-sanity.descriptor.json');
-const DIST_MEASURED_PATH = path.join(__dirname, 'quality', 'assert-parcel-sanity.dist-measured.json');
+const DIST_MEASURED_PATH = path.join(__dirname, 'quality', 'generated', 'assert-parcel-sanity.dist-measured.json');
 
 /**
  * The reduced, COUNT-only form of scripts/lib/step/plausibility.js's
@@ -149,7 +149,13 @@ function buildDescriptor(CHECK_DEFS, LOGIC_VAR_DEFS, DIST_DEFS, distMeasured) {
 
     inputs: {
       reads: {
-        steps: [{ step: 'compute_parcel_cost_estimates', version_pin: 'none' }],
+        // LDG-4 (batch2 P1.1, 2026-09-18): the folded scan reads many parcels columns
+        // enrich_parcels writes (opt_aor_gfa_sqm, max_buildable_gfa_sqm, etc.), not
+        // only compute_parcel_cost_estimates' own cost columns — both declared.
+        steps: [
+          { step: 'enrich_parcels', version_pin: 'none' },
+          { step: 'compute_parcel_cost_estimates', version_pin: 'none' },
+        ],
         tables: [{ table: 'parcels', columns: PARCELS_COLUMNS }],
         externals: [],
       },

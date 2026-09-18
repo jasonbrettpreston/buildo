@@ -123,8 +123,17 @@ module.exports.checks = CHECKS;
 // field EXPRESSION runDistributionEntries splices into buildDistributionQuery's
 // own CTE — NOT the same text as the descriptor's `sql` field (which is the full,
 // standalone, reduced query capture-step-golden.js executes verbatim; see APS-D2).
+// `percentileVar`/`medianMultiplierVar`/`medianFloorVar` (Rule 3 conformance,
+// APS-conformance-gap) name the 3 registered `parcel_sanity_distribution_*` logic
+// variables — `scripts/lib/step/index.js` resolves them from the live `ctx.config`
+// and threads the NUMBERS into `runDistributionScan`, so the outlier percentile/
+// median-multiplier/floor are genuinely config-driven, never literals baked at
+// descriptor-generation time.
 module.exports.DISTRIBUTION_SCOPE = {
   resScope: RES,
   zoneExpr: ZC,
   fieldExprById: Object.fromEntries(DIST_DEFS.map((d) => [`dist_${d.id}`, d.expr])),
+  percentileVar: 'parcel_sanity_distribution_percentile',
+  medianMultiplierVar: 'parcel_sanity_distribution_median_multiplier',
+  medianFloorVar: 'parcel_sanity_distribution_median_floor',
 };

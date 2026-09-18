@@ -22,6 +22,10 @@
     "reads": {
       "steps": [
         {
+          "step": "enrich_parcels",
+          "version_pin": "none"
+        },
+        {
           "step": "compute_parcel_cost_estimates",
           "version_pin": "none"
         }

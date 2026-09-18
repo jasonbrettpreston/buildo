@@ -75,6 +75,7 @@
         "assert_data_bounds",
         "assert_engine_health",
         "assert_global_coverage",
+        "assert_parcel_sanity",
         "assert_schema",
         "compute_centroids",
         "geocode_permits",
@@ -85,7 +86,7 @@
         "link_wsib",
         "load_ravines"
       ],
-      "pending_why": "Measured 2026-09-15: 12 converted descriptors declare execution.step_timeout; only refresh_snapshot had the manifest counterpart that executes it. enrich_parcels is wired by this WF3 because it is the step whose declaration was measured inert against a real 300-min kill. The remaining ten are a DECLARED gap, not a silent one — filed in docs/reports/review_followups.md; wiring them is its own WF2 (each ceiling needs its own measured duration, and a ceiling set below a step's real runtime turns a healthy run into a failure). UPDATED 2026-09-16 (batch-2 Phase 0.9 I5): geocode_permits joins the list at the folded commit 5 — its descriptor declares execution.step_timeout \"15m\" and manifest.scripts.geocode_permits carries no step_timeout_minutes (measured), so the declaration is INERT exactly like the other eleven. Not wired here on purpose: a ceiling needs its OWN measured duration, and one set below a step's real runtime converts a healthy run into a failure. This step's honest number is not yet known — its 65 recorded runs predate per-step duration capture on this branch — so it is DECLARED pending rather than guessed."
+      "pending_why": "Measured 2026-09-15: 12 converted descriptors declare execution.step_timeout; only refresh_snapshot had the manifest counterpart that executes it. enrich_parcels is wired by this WF3 because it is the step whose declaration was measured inert against a real 300-min kill. The remaining ten are a DECLARED gap, not a silent one — filed in docs/reports/review_followups.md; wiring them is its own WF2 (each ceiling needs its own measured duration, and a ceiling set below a step's real runtime turns a healthy run into a failure). UPDATED 2026-09-16 (batch-2 Phase 0.9 I5): geocode_permits joins the list at the folded commit 5 — its descriptor declares execution.step_timeout \"15m\" and manifest.scripts.geocode_permits carries no step_timeout_minutes (measured), so the declaration is INERT exactly like the other eleven. Not wired here on purpose: a ceiling needs its OWN measured duration, and one set below a step's real runtime converts a healthy run into a failure. This step's honest number is not yet known — its 65 recorded runs predate per-step duration capture on this branch — so it is DECLARED pending rather than guessed. UPDATED 2026-09-18 (batch2 P1.1): assert_parcel_sanity joins the list — its descriptor declares execution.step_timeout \"45m\" (§8's own honestly-UNMEASURED prediction, per R-AQ: a ceiling measures the step, an instance measures the hardware, and the first real cloud measurement replaces this number rather than the ceiling being raised to absorb it) and manifest.scripts.assert_parcel_sanity carries no step_timeout_minutes — the same declared-not-wired gap as the other twelve, not wired here for the identical reason (no cloud run has measured this step's real duration yet)."
     },
     "budget": {
       "disposition": "descriptive",

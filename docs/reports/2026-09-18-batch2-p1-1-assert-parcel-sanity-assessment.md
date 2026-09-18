@@ -2,9 +2,45 @@
 
 **Commit form: compressed (R-PACE-1)** — ASSERT has 3 proven converted members (`assert_schema`, `assert_global_coverage`, `assert_data_bounds`) — the compressed form is eligible from the start (unlike I3/assert_engine_health, which reverted to the full nine-commit form after its own archetype ruling).
 
-Target Spec (G0): `docs/specs/01-pipeline/43_chain_sources.md` (owner) → `docs/specs/01-pipeline/49_data_completeness_profiling.md` §2 (boundary) → Specs 122/122a/123/124.
+## 1. PH-0 — Boundary freeze (commit 1 → G0)
 
-## PH-0/1 — Legacy assessment (measured, this session, local Supabase 127.0.0.1:54322, migrations 244)
+**Governing/Target spec** (G0): `docs/specs/01-pipeline/43_chain_sources.md` (owner, §3 item 11 + `### Target Files`) → `docs/specs/01-pipeline/49_data_completeness_profiling.md` §2 (boundary — Cross-Spec Dependencies, "only reads its output, does not govern it") → Specs 122/122a/123/124 (conversion mechanics). Grounding line satisfied: the file appears verbatim in Spec 43's `### Target Files` and in its own row of `docs/specs/00-architecture/00_system_map.md` (system map line 43).
+
+**Boundary/seed** (PH-0): the pre-conversion boundary is `scripts/quality/assert-parcel-sanity.js` (89 lines) + `scripts/analysis/parcel-sanity-audit.js` (266 lines, the real compute) + `scripts/lib/step/plausibility.js`/`verdict.js` (shared library, already extracted from a prior WF2 — Rule 10 clean, no local `verdictCascade`). No other file reads or writes `assert_parcel_sanity`'s own data (it is a read-only Observer, `records_total: null` post-conversion — see §R below).
+
+## 2. PH-3 — Intent Ledger (commit 1 → G1/G3)
+
+Per Spec 123 §7.1 role split: a human adjudicates; the agent discovers and cites evidence only. Closed vocabulary: `preserved-in-runner` / `preserved-in-validator` / `preserved-in-compute` / `encoded-as-descriptor-field` / `encoded-as-deviation` / `knowingly-retired`.
+
+| # | Fence | Introducing/blame commit | Disposition |
+|---|---|---|---|
+| F1 | `parcel-sanity-audit.js` is BOTH the step's compute and the Reality-Check CLI (`runAudit`, `samples:true`, `makeCliPool`) | `e2baf7b8` (D-E six-item set) + P4-F0 fold C6 | **preserved-in-compute** — why: one bounds corpus (`scripts/lib/assert-parcel-sanity-fields.js`), the CLI re-imports (`buildChecks`/`resolveCliConfig`, commit 2b `03f6fa65`); grounded in the descriptor's `checks[]` (42 entries, same ids the CLI's `buildChecks` renders) and locked by the CLI output-identity proof (§CLI below). |
+| F2 | `MAX_BUILD_MIN_DIMENSION_M = 3.0` pinned as a literal ("no config path") | the WF3 Phase 1 D-C commit | **knowingly-retired** — the audit is now descriptor-driven (`resolveCliConfig` → `resolveConfig`); reuses the registered `max_build_min_dimension_m` var instead (Ask A6(a)); `logic-var-parity.logic.test.ts` assertion 4 re-pointed. |
+| F3 | `verdictCascade` must not be redefined in this step | Rule 10's WF2 C1 | **preserved-in-runner** — the converted step defines no verdict at all; `checkRow`/`deriveVerdict` own it. |
+| F4 | DISTRIBUTION rows are INFO-only, never verdict-driving | the original audit docblock | **encoded-as-descriptor-field** — all 8 `plausibility[]` rows declare `severity: "INFO"`, locked by `violations.test.ts` §1. |
+| F5 | `pop === 0 → INFO ('inert')`, D-E 4 | the D-E Phase 1 commit | **preserved-in-compute/validator** — why: moved into `scripts/lib/step/verdict.js` `checkRow`'s opt-in `observation.inert === true` branch (commit 2b `03f6fa65`), generic and backward-compatible; grounded in `checks[]` (every gate check's `why` text names F5) + `violations.test.ts` §4. |
+| F6 | `accept:[ids]` exception lists (66 ids total) | P12-A2 | **encoded-as-descriptor-field** (descriptor DATA, Ask A2(a)) — inlined in the compute's SQL as `id <> ALL(ARRAY[...])`, re-verified post-cost-re-run (§F-RC1 below). |
+| F7 | `samples: false` for the pipeline call | the WF2 commit that added `runSanity` | **preserved-in-compute** — why: `scripts/lib/compute/assert-parcel-sanity.js` never defaults `samples` on; grounded in `checks[]`'s own `expect.loader: "parcel_sanity"` (the one folded scan every check's row reads from). |
+| F8 | The 12 `gate:true` assignments, each earned by a measured zero baseline | per-check, `git blame` at PH-0 | **preserved-in-compute** — why: pinned by name in `violations.test.ts` §1 (`the 12 gate ids carry severity FAIL`); grounded in `checks[]`'s own `severity: "FAIL"` field, one per gate id. |
+
+Commit SHAs cited in this ledger and this session's own record: `86b55a0e` (commit 1), `4fc587b1` (commit 2a), `03f6fa65` (commit 2b), `db8fb751` (commit 2c, APS-D5), `309dbc32` (commit 2d, APS-D6).
+
+## 3. PH-4 — Risk class (commit 1)
+
+**Risk class: LOW.** Chance of a downstream regression from this conversion: LOW (read-only Observer, `records_total: null`, no writes; both PRE/POST goldens diff to 0 unexplained). Impact if wrong: MEDIUM (a mis-gated FAIL would redden the `sources` chain on every run) — mitigated by the verdict-parity regression lock (`violations.test.ts` §4, both directions) and the live gate-set pin (12 names).
+
+## 4. PH-5 — Seam map (commit 1 → G5)
+
+- **DB seam**: `ctx.pool` (injected by `scripts/lib/step/index.js`'s `runWithPool`) — the compute never constructs its own `pg.Pool`.
+- **Clock seam**: not consumed (no timestamps written; `ctx.clock` available but unused).
+- **Network seam**: not consumed (no `fetch`/external HTTP).
+- **Argv/env seam**: `execution.invocation.sources.env.PIPELINE_CHAIN` — the only env this step reads, via the generic runner, never a bare `process.env` read in compute.
+
+## 5. PH-6 — Classification (commit 1 → G6)
+
+Every finding this session classified as a Defect Ledger row (`docs/reports/defect-ledger.md`, prefix `APS-D*`, mechanically derived from the slug `assert_parcel_sanity` → `A`+`P`+`S`): APS-D1 (declared-reads gap), APS-D2 (capture-tool SQL incompatibility), APS-D3 (corrected F-RC4 prediction, not a defect), APS-D4 (fieldExprById wiring bug), APS-D5 (compute dispatch-table shape), APS-D6 (plausibility fallback for a third caller), APS-D7 (retracted ungrounded F-RC1 claim, corrected with a live-DB cross-read + a new regression lock) — 7 rows, all `CLOSED`.
+
+## PH-1 — Legacy assessment (measured, this session, local Supabase 127.0.0.1:54322, migrations 244)
 
 - **Reads**: `parcels` only; pre-conversion `emitMeta` declared 24 columns, the SQL actually touches 33 — closed as **APS-D1** (Nothing Hidden addition, no removal).
 - **Checks**: `runSanity(pool)` — one folded `SELECT count(*) FILTER (...)` scan, **42 checks** (21 HIGH / 15 MED / 6 INFO pre-conversion severities; **12 carry `gate:true`**), plus **8 parallel per-zone DISTRIBUTION queries**. Measured wall time this session: 27–33s standalone (below the stale ledger's last-recorded value and below the plan's own 67.2s baseline — likely warmer cache / lighter concurrent load this session).
@@ -19,7 +55,12 @@ F-I7: **MOOT, verified.** Phase 0 rows 0.5/0.1 are ancestors of HEAD (`8a3f20d6`
 
 F-G1/F-G2 (THIRD consumer): **RESOLVED.** `scripts/analysis/parcel-sanity-audit.js` now exports `buildChecks(config)` (materializes `CHECK_DEFS`' `applies`/`bad` FUNCTIONS into legacy-shaped `{applies,bad}` STRINGS) and `resolveCliConfig(pool)` (calls `scripts/lib/step/config.js` `resolveConfig(pool, descriptor)` against the live registry). `scripts/analysis/parcel-field-dump.js` obtains `CHECKS` the same way. ONE bounds corpus (`scripts/lib/assert-parcel-sanity-fields.js`), three consumers (CLI, field-dump, pipeline compute). `src/tests/logic-var-parity.logic.test.ts` assertion 4 re-pointed at `buildChecks()`'s resolved output (proves the value is READ, not pinned, by re-resolving at two different config values and diffing the rendered SQL).
 
-F-RC1 (66 accept-list ids re-verified against POST-run values): **DONE.** After the `compute_parcel_cost_estimates` re-run, `lowrise_cost_fb_gt_15m` reads 0/263,037 and `cost_addition_gt_50m` reads 0/398,317 — both PASS, meaning **none of the 66 accept-listed ids currently trip their check post-run** (the accept-list continues to do nothing today, exactly as it should: it exists for the day a *new* id crosses the line). No STOP condition (no id fell OFF the list, no new id crossed a threshold this session, since both counts read 0 with or without the accept-list filter at the current data state).
+F-RC1 (66 accept-list ids re-verified against POST-run values): **CORRECTED — the original claim below was ungrounded; retracted as APS-D7.** The step's own (WITH-filter) output — `lowrise_cost_fb_gt_15m` 0/263,037, `cost_addition_gt_50m` 0/398,317 — was misreported as "0 with or without the accept-list filter". The "without filter" half was never actually queried until a Reality-Check cross-read caught it. **Re-queried directly this session:**
+- `(LOWRISE) AND cost_fb_total IS NOT NULL AND cost_fb_total > 15000000` (raw predicate, NO exclusion) → **exactly 24 rows**, ids `7402,76620,240610,308831,393793,393848,393866,393872,393885,415256,417357,430889,430890,452644,452653,452655,452677,452682,452703,452936,452944,452950,474449,476327` — **byte-identical to `COST_FB_GT15M_LEGIT`**, range **$15,146,558.28–$17,559,952.91** (id 452936 = $15,353,566.62).
+- `cost_addition_total IS NOT NULL AND cost_addition_total > 50000000` (raw, no exclusion) → **exactly 42 rows**, byte-identical to `COST_ADDITION_GT50M_LEGIT`, range **$51,683,977.14–$117,729,837.89**.
+- **All 66 ids still trip their raw threshold post-re-run.** The lists are **100% load-bearing right now** — they are not inert, and the WITH-filter 0/0 reading is precisely BECAUSE the filter is excluding exactly these 66 rows, not because the population is naturally clean. **No STOP condition under the operator's rule** (no id fell OFF its list — all 66 still exceed the threshold; no NEW id crossed either list's threshold — the no-filter count exactly equals each list's own length) — but the original "continues to do nothing" characterization was false and is withdrawn. **Not editing the lists** (operator rules on membership). A pre-re-run snapshot of these specific 66 parcels' cost values was never captured (no ledger row, no `updated_at` column on `parcels` — see the ledger-gap finding below), so the pre-re-run comparison the operator asked for is **unrecoverable**; only the POST-re-run state is measured. Regression-locked both directions: `src/tests/db/assert-parcel-sanity.db.test.ts` "P12-A2 accept-list is a real, selective filter" (RED with `accept:[]` → viol=2; GREEN with the real list → viol=1, on a clean container, not the live DB's specific ids).
+
+**Order of operations, corrected (no ledger row exists for the cost re-run — see the ledger-gap finding below — so exact clock times are not recoverable; order is reconstructed from artifact evidence):** (1) `PIPELINE_CHAIN=sources node -r dotenv/config scripts/compute-parcel-cost-estimates.js` run manually, this session, BEFORE any descriptor/fields work — real execution, `PIPELINE_SUMMARY` observed directly: `records_updated: 71821`, `records_skipped: 365458`, `engine_error_count: 0`, `duration: "225.4s"`, exit 0. **Zero `pipeline_runs` rows exist for this pipeline** (`SELECT * FROM pipeline_runs WHERE pipeline='compute_parcel_cost_estimates'` → 0 rows, none after id 1486/2026-07-08) — traced to a real gap: `scripts/lib/pipeline.js`'s legacy `run(name, fn)` (line 575) never opens a ledger row itself; only `run-chain.js` parses a script's `PIPELINE_SUMMARY:` stdout into one, and this was a manual (non-chain) invocation. Filed in `review_followups.md` (HIGH). (2) Descriptor/fields/generator/seeds built (no DB mutation). (3) The 66-id re-verification (F-RC1, corrected above) was NOT done between (1) and (4) as it should have been per the operator's original instruction — it was only performed just now, on request. (4) Golden PRE capture — `git_head: 6aeed5b2` embedded in the capture (the commit before this session's own commit ①), confirming it ran on the POST-cost-re-run data before any conversion code existed, satisfying Ask A4(b)'s ordering intent (cost re-run before PRE capture) even though the id re-verification step was skipped at the time. (5) Conversion (commits 2a-2d). (6) Golden POST capture.
 
 F-RC2 (distribution sample-cap): the `array_agg(...)[1:6]` cap is a **display cap**, not a plausibility bound — ruled out of scope per the sibling precedent (`assert_data_bounds`'s own sample caps are likewise undeclared display truncation, not logic variables). Not externalized this commit.
 
@@ -44,7 +85,7 @@ F-I6: checked `src/tests/db/compute-parcel-cost-estimates.db.test.ts` and `src/t
 Predicted **before** capture:
 - **Class A (structural, non-empty, explained):** (i) `threshold` renders the literal `"viol == 0"` for every one of the 42 checks (not `limit_from_config`-substituted — see the deviation above; this CORRECTS the plan's own draft prediction that threshold would show "the resolved variable value"); (ii) `metric` loses its `" (<fam>)"` suffix (family moves to `expect.family`); (iii) each row gains `source: "check"|"plausibility"|"context"`; (iv) `config` appears under `records_meta`, stamping 37 resolved variables; (v) `checks_failed`/`checks_warned`/`errors`/`warnings` appear; (vi) `distribution:<id>` rows re-render as `dist_<id>` under the plausibility row builder; (vii) the `residential_parcels_scanned` context row moves from array position 0 to the END of `rows` (`buildAuditTable` appends `extraRows` last) — position-only, value unchanged.
 - **Class B (data drift, not caused by this change):** predicted EMPTY, conditional on no further `enrich_parcels`/`compute_parcel_cost_estimates` run between PRE and POST captures. **Condition verified**: every check's `viol`/`pop` count is byte-identical between PRE and POST (e.g. `max_build_width_gt_30m` reads `953 / 382569` in both) — the only value-level diffs are structural renders, never a changed count. Class B is EMPTY as predicted.
-- **Class C (re-run noise):** `duration_ms`, `sys_*` rows scrubbed by the tool's own nondeterminism handling before compare; `stdout_lines` (3 lines, sources; the converted step's structured JSON logging + one added DB-target startup line, replacing the legacy step's single completion line — a fleet-wide conversion consequence, identical for every prior converted step) and `pipeline_runs[0]` (standalone only — the legacy standalone run opened NO ledger row at all; the converted step always owns one, `ledger_row:"owned"` — a structural IMPROVEMENT, not a regression: every run is now recorded).
+- **Class C (re-run noise):** `duration_ms`, `sys_*` rows scrubbed by the tool's own nondeterminism handling before compare; **3 differences under `stdout_lines`** (sources: the converted step's structured JSON logging + one added DB-target startup line, replacing the legacy step's single completion line — a fleet-wide conversion consequence, identical for every prior converted step) and `pipeline_runs[0]` (standalone only — the legacy standalone run opened NO ledger row at all; the converted step always owns one, `ledger_row:"owned"` — a structural IMPROVEMENT, not a regression: every run is now recorded, `terminal: "all_checks_passed"` on the healthy path, `pool_errors: 0` in both PRE and POST).
 - **Class D (capture order):** predicted EMPTY, confirmed — neither `CHECK_DEFS` order nor `DIST_DEFS` order changed row ordering relative to declaration order.
 
 **Measured, actual diff count: 260 (sources), 261 (standalone) — 0 unexplained.** Two Class-A diffs were NOT predicted in advance and are recorded here, corrected, rather than silently folded into the predicted list:
@@ -71,3 +112,122 @@ The plan's §2 text ("the list goes 148 → 183") assumed the probe-list generat
 ## CLI output-identity proof (F-G1)
 
 Captured `node -r dotenv/config scripts/analysis/parcel-sanity-audit.js` from the pre-conversion source (`git show HEAD~2:scripts/analysis/parcel-sanity-audit.js`, temporarily swapped into place) and from the converted CLI (`buildChecks`/`resolveCliConfig`), same DB state, back-to-back. **Every count, percentage, status marker and outlier value is byte-identical.** The only diff is in the free-text `why`/description strings: (a) the fields sidecar appended a short "Bound: `<var>`"/"Reuses `<var>`" note to several checks' `why` text (informational, not present in the legacy inline comment), and (b) a handful of legacy Unicode characters (`≤ ≥ ⟺ – ²`) were normalised to ASCII (`<= >= == - 2`) when the strings were re-typed into the fields module. Not byte-for-byte identical, but **data-identical** — no count, threshold, or gate marker differs.
+
+## §R. Reflection
+
+Written this commit — `converted.json.pending[0].stage` reached `shape_clean` at commit 2b/2c/2d; cutover (commit 3) is prepared but uncommitted, per the operator's explicit instruction.
+
+**LOW-CONFIDENCE findings** (measured this session, not fully closed):
+
+| # | Finding | Why LOW-CONFIDENCE |
+|---|---|---|
+| 1 | `parcel_sanity_dim_lot_tolerance_m` max stays 10 (F-RC3, not taken) | A live-gate ceiling ruling belongs to the operator, not a mechanical conversion decision — filed as a follow-up peel, not resolved here. |
+| 2 | Fleet-wide count-pins beyond this step's own file set (step-seam, write-class-disposition, assert_engine_health's own ASSERT-count assertion) were fixed by measurement, not by re-deriving every one of the ~23 originally-failing cases from a full fresh run each time — some pins may still disagree with a truly clean `--all --write` pass until commit 3 lands. |
+
+**RECURRING/STANDARD-SHAPING** patterns this conversion reconfirms:
+
+| # | Pattern | Where else it recurs |
+|---|---|---|
+| 1 | A shared-library change (verdict.js `observation.inert`, plausibility.js `kind:"distribution"`) is scoped opt-in and regression-locked against the WHOLE fleet, not just the one step that needed it | Every prior converted step's own library growth wave (I1-I5, pilot 9) |
+| 2 | Registering a `pending[]`/`converted[]` entry has REGISTRY-WIDE side effects (probe list, fast invariants #23/24, scorecard staleness) that must be re-verified fleet-wide, not just for the one step | I4's `a062eb79` repair; this session's own APS-D5/D6 |
+
+RED evidence: the whole `src/tests/steps/assert_parcel_sanity/violations.test.ts` red suite (3 `it.fails()` at commit 1, proven RED against the actual legacy code via a `git stash` swap, not simulated) — see §Files above.
+
+---
+
+## Validation scorecard (generated)
+
+> Generated by `node scripts/analysis/step-validate.mjs --step=assert_parcel_sanity --write` — Spec 123 §6, ruling R-R (2026-08-29).
+> Regenerate with the same command; a stale block is a conformance-lock finding (`step-conformance.infra.test.ts`).
+
+**Score: 16/17** · G9 Reflection: PASS · G4d fence-lock coverage: PASS · G-shape: PASS · **Hard stop: YES (Rule 3 (unpinned enforced-red))**
+
+| Gate | Score | Max | Detail |
+|---|---:|---:|---|
+| G0 | 1 | 1 | boundary-section=true spec-line=true |
+| G1 | 1 | 1 | PH-3 section found=true sha-count=8 |
+| G2 | 1 | 1 | 122-churn-complexity.md quadrant=bottom-left window=39313d9 |
+| G3 | 1 | 2 | table rows=9 vocab-hit rows=8 |
+| G4 | 2 | 2 | risk-class row with chance+impact found=true |
+| G5 | 1 | 1 | db=true clock=true network=true argv/env=true |
+| G6 | 3 | 3 | 7 ledger row(s), 0 without CLOSED/PIN () |
+| G7 | 3 | 3 | file=true fences=0 it-count=25 RED-evidence=true |
+| G8 | 3 | 3 | missing-invocations=0 missing-pre-invocations=0 stale-fingerprints=0 unexplained-diffs=0 |
+| G9 (binary) | PASS | — | heading=true low-confidence-table=true recurring-table=true |
+| G4d (fence<=lock) | PASS | — | fences=0 lock-it-count=25 |
+| G-shape | PASS | — | file-clean=true compute-clean=true |
+
+### Fast invariants (always run — the fast descriptor gate)
+
+| # | Scope | Pass | Detail |
+|---|---|---|---|
+| 1 | assert_parcel_sanity | PASS | min_migration=244 <= migrations count=244 |
+| 2 | assert_parcel_sanity | PASS | 37 declared, missing from seeds: none |
+| 3 | assert_parcel_sanity | PASS | retired=0 overlap-with-declared=none |
+| 7 | assert_parcel_sanity | PASS | SPEC LINK header present=true |
+| 8 | assert_parcel_sanity | PASS | G-4: 37 declared, 0 verdict-affecting, 0 violate on_invalid:fail with no deviations[] cover |
+| 20 | assert_parcel_sanity | PASS | HB-1: execution.shape=null — HB-1 applies_when execution.shape=="enrich" only (RS-D-STA); not applicable, never a pass-by-omission |
+| 21 | assert_parcel_sanity | PASS | CEIL-1: execution.shape=null — CEIL-1 applies_when execution.shape=="enrich" only (RS-D-STA); not applicable, never a pass-by-omission |
+| 4 | (registry) | PASS | overlap: none |
+| 5 | (registry) | PASS | clean (0 it.fails( call sites outside a declared pending slug) |
+| 9 | (registry) | PASS | clean (0 converted slugs blocked by an unmet cutover_prereq item; blocks batching: 0) |
+| 22 | (registry) | PASS | GOLD-PRE-FRESH: 60 PRE capture(s) across 15 converted step(s) all tracked + clean (git can restore every reference) |
+| 23 | (registry) | PASS | COMPRESSED-FORM-ELIGIBLE: not applicable (0 pending slugs declare the compressed form) |
+| 24 | (registry) | PASS | COMPRESSED-FORM-DEFAULT: not applicable (0 pending slugs whose archetype is eligible) |
+| 25 | (registry) | PASS | ARCHETYPE-PARITY: 15 converted slug(s) — 7 compared against a retained census row (all agree), 8 with no retained row (census arm n/a, pre-R-AO cutovers); every archetype has a declared freeze profile |
+| 26 | (registry) | PASS | COUNTER-ROOT: 32 declared counter source(s) across 11 descriptor(s) all root in their own shape's counterScope (+ records_meta) |
+
+### Captures (item iv)
+- missing invocations (POST): none
+- missing invocations (PRE, GOLD-PRE): none
+- stale fingerprints: none
+- compare ran: true · diffs found: 521 · unexplained: 0
+
+### Test suite (item iii)
+- 1188/1208 passed (suite success=false)
+- harvested: 20 file(s) from 3 FLEET-WIDE targets (src/tests/step-conformance.infra.test.ts, src/tests/golden-fingerprint.infra.test.ts, src/tests/steps/) — one spawn per run, so every step's report carries this same number, by design
+- excluded (R-AG live-DB tier, owned by `npm run test:db`, derived from package.json `scripts.test`): 5 — src/tests/steps/link_massing/metamorphic.test.ts, src/tests/steps/link_massing/nearest-determinism.test.ts, src/tests/steps/link_massing/rung1-inline-wkt.test.ts, src/tests/steps/link_parcel_addresses/metamorphic.test.ts, src/tests/steps/link_parcel_addresses/rung1-inline-wkt.test.ts
+- skipped (declared but not run): 0
+- failing (20):
+  - src/tests/step-conformance.infra.test.ts > §1.2a P4 — every tunable is externalized (declared ≡ registry ≡ GROUPS ≡ ctx.config) > scripts/quality/assert-parcel-sanity.js — declared ⊆ registry, declared ⊆ GROUPS, consumed ≡ declared
+  - src/tests/step-conformance.infra.test.ts > §1.2a P4 — every tunable is externalized (declared ≡ registry ≡ GROUPS ≡ ctx.config) > RED — scripts/quality/assert-parcel-sanity.js: DROPPING a declared var reddens conformance (the seed direction)
+  - src/tests/step-conformance.infra.test.ts > LDG-4 — descriptor <-> ledger cross-check (SUPERSET + EQUALITY, converted-producer-restricted) > assert_parcel_sanity — declared inputs.reads.steps[] vs the ledger-derived converted-producer set
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/quality/assert-schema.js (slug "assert_schema") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/load-ravines.js (slug "load_ravines") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/link-massing.js (slug "link_massing") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/link-wsib.js (slug "link_wsib") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/link-parcel-addresses.js (slug "link_parcel_addresses") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/compute-centroids.js (slug "compute_centroids") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/link-parcels.js (slug "link_parcels") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/refresh-snapshot.js (slug "refresh_snapshot") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/enrich-parcels.js (slug "enrich_parcels") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/quality/assert-global-coverage.js (slug "assert_global_coverage") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/quality/assert-data-bounds.js (slug "assert_data_bounds") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/quality/assert-engine-health.js (slug "assert_engine_health") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/link-neighbourhoods.js (slug "link_neighbourhoods") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/geocode-permits.js (slug "geocode_permits") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/quality/assert-parcel-sanity.js (slug "assert_parcel_sanity") > report carries exactly one generated scorecard block
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/quality/assert-parcel-sanity.js (slug "assert_parcel_sanity") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/quality/assert-parcel-sanity.js (slug "assert_parcel_sanity") > the committed block also carries a Test-suite line and a 14-row Policy coverage matrix (presence only — content is `--all --write`'s job, not this lock's)
+
+### Policy coverage matrix (item vi) — Spec 124 Rules 1-13
+
+| Rule | Name | Status | Note |
+|---|---|---|---|
+| 1 | Nothing hidden | enforced-green | G-1 schema-baseline: schema-baseline clean |
+| 2 | Compute is just compute | enforced-green |  |
+| 3 | Tunables externalized | enforced-red | G-4: 37 declared, 0 verdict-affecting, 0 violate on_invalid:fail with no deviations[] cover |
+| 4 | Compute rule declared | enforced-green | G-2: 4 preserved-in-compute row(s), 0 with no why/notes.json/checks[] grounding |
+| 5 | checks >= 1 | enforced-green |  |
+| 6 | Omission fails (20 categories) | enforced-green |  |
+| 7 | Archetype gates categories | enforced-green |  |
+| 8 | Per-target write discipline | enforced-green |  |
+| 9 | Banned write needs ledger (+ V7 no_retraction) | enforced-green |  |
+| 10 | Verdict row-derived | enforced-green | (a) OK — 11 corpus file(s) scanned, 0 unsanctioned second derivations, 2 sanctioned hit(s) matched SANCTIONED_VERDICT_SITES · (b) OK — SELF_SKIPPED audit table folds to verdict=WARN (!= PASS), row-derived off 1 non-INFO row(s) — VRD-SKIP closed |
+| 11 | Phase-order re-derive (declared half, checkOrderGuaranteesCited) | enforced-green | no when:"pre_write" checks — vacuously nothing to cite — G-3 completeness half stays open |
+| 12 | Truthful crash posture (R-B reachability, static + R-M before-image) | enforced-green | R-B (checkInterruptedPostureTruthful): recovery.interrupted=null — no reachability claim to verify · R-M: prose-only (R-M/LG-17 describe not scoped to this step (vitest not run, or no before-image target)) |
+| 13 | A step validates itself | enforced-green | this run of step:validate IS the mechanism |
+| P3 | I/O cost adjudication (measured, not gated) | measured | descriptor=67358B notes=0B checks=42 rows records_meta=9365B (newest post/ capture) |
+
+**Enforced-green: 12/14**
+

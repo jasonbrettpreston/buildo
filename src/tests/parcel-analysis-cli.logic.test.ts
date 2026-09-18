@@ -80,7 +80,11 @@ describe('parcel-sanity-audit.js — C6 CLI pool (DATABASE_URL-aware, target alw
     expect(plausibilitySource()).toMatch(/array_agg\(b\.id ORDER BY b\.f DESC, b\.id\)/);
     // the audit CLI no longer carries this SQL text itself — it calls runDistributionScan
     expect(auditSource()).not.toMatch(/array_agg\(b\.id ORDER BY b\.f DESC, b\.id\)/);
-    expect(auditSource()).toMatch(/runDistributionScan\(pool, DIST_FIELDS, RES, ZC\)/);
+    // batch2 P1.1 (2026-09-18, Rule 3): the call now threads the 3 registered
+    // parcel_sanity_distribution_* logic variables from the resolved `config`
+    // object as a 5th argument — the call SITE is still exactly one line, still
+    // the direct re-export target, only the trailing literal changed.
+    expect(auditSource()).toMatch(/runDistributionScan\(pool, DIST_FIELDS, RES, ZC, \{/);
   });
 });
 

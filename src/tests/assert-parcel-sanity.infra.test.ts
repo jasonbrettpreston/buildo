@@ -96,7 +96,10 @@ describe('scripts/lib/step/plausibility.js — data-driven gate mapping (Spec 48
   it('runDistributionEntries (Fold B-7 wiring) reuses runDistributionScan — no duplicated percentile SQL', () => {
     const p = plausibility();
     expect(p).toMatch(/function runDistributionEntries/);
-    expect(p).toMatch(/runDistributionScan\(pool, fields, resScope, zoneExpr\)/);
+    // batch2 P1.1 fix (2026-09-18, Rule 3): runDistributionEntries now threads the
+    // resolved percentile/medianMultiplier/medianFloor into runDistributionScan's
+    // 5th (opts) argument — the call site is still a direct pass-through.
+    expect(p).toMatch(/runDistributionScan\(pool, fields, resScope, zoneExpr, \{ percentile, medianMultiplier, medianFloor \}\)/);
   });
 
   it('verdict.js checkRow renders INFO for an explicit observation.inert (F5 / D-E 4), regardless of severity', () => {

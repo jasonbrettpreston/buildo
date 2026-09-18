@@ -4,7 +4,7 @@
  * One-time grounder: captures REAL `last_measured` values for the 8
  * assert_parcel_sanity distribution plausibility entries (Fold A-1/A-4e/B-1 —
  * a >=5-timings median, never a single sample) against the live local DB.
- * Writes scripts/quality/assert-parcel-sanity.dist-measured.json, consumed by
+ * Writes scripts/quality/generated/assert-parcel-sanity.dist-measured.json, consumed by
  * scripts/generate-assert-parcel-sanity-descriptor.js.
  *
  * Usage: node -r dotenv/config scripts/one-time/measure-assert-parcel-sanity-distribution.js
@@ -16,7 +16,7 @@ const { createResolvedPool } = require('../lib/resolve-db');
 const { RES, ZC, DIST_DEFS, LOGIC_VAR_DEFS } = require('../lib/assert-parcel-sanity-fields');
 const { buildDistributionQuery } = require('../lib/step/plausibility');
 
-const OUT = path.join(__dirname, '..', 'quality', 'assert-parcel-sanity.dist-measured.json');
+const OUT = path.join(__dirname, '..', 'quality', 'generated', 'assert-parcel-sanity.dist-measured.json');
 const SAMPLE_N = 5;
 
 async function main() {

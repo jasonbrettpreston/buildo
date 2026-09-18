@@ -48,23 +48,35 @@ function statusFor(check, viol, pop) {
 // buildDistributionQuery — the exact SQL `parcel-sanity-audit.js`'s inline `distQ` closure built,
 // parameterised on the residential-scope predicate and the zone-class bucket expression (both were
 // already parcel-sanity-audit-local constants, RES/ZC, now passed in rather than closed over).
-function buildDistributionQuery(resScope, zoneExpr, field) {
+// batch2 P1.1 (Rule 3 conformance) — `percentile`/`medianMultiplier`/`medianFloor`
+// are OPTIONAL, defaulting to the legacy literals (0.99 / 3 / 0.0001) so every
+// pre-existing caller (parcel-sanity-audit.js's own CLI, any future kind:"distribution"
+// consumer that declares none of the 3) is byte-identical. `assert_parcel_sanity`'s own
+// registered `parcel_sanity_distribution_*` logic variables are threaded in from
+// `ctx.config` by `runDistributionEntries` below — the ONLY way a registered threshold
+// may be consumed (never a literal baked at descriptor-generation time).
+function buildDistributionQuery(resScope, zoneExpr, field, opts = {}) {
+  const percentile = Number.isFinite(opts.percentile) ? opts.percentile : 0.99;
+  const medianMultiplier = Number.isFinite(opts.medianMultiplier) ? opts.medianMultiplier : 3;
+  const medianFloor = Number.isFinite(opts.medianFloor) ? opts.medianFloor : 0.0001;
   return `
     WITH base AS (SELECT id, (${zoneExpr}) AS zc, (${field.expr})::float8 AS f FROM parcels WHERE ${resScope} AND (${field.expr}) IS NOT NULL),
     stats AS (SELECT zc, percentile_cont(0.5) WITHIN GROUP (ORDER BY f) AS med,
-                     percentile_cont(0.99) WITHIN GROUP (ORDER BY f) AS p99 FROM base GROUP BY zc)
+                     percentile_cont(${percentile}) WITHIN GROUP (ORDER BY f) AS p99 FROM base GROUP BY zc)
     SELECT count(*)::int AS viol, (array_agg(b.id ORDER BY b.f DESC, b.id))[1:6] AS samples,
            round(max(b.f)::numeric, 2) AS worst
     FROM base b JOIN stats s ON s.zc = b.zc
-    WHERE b.f > s.p99 AND b.f > 3 * GREATEST(s.med, 0.0001)`;
+    WHERE b.f > s.p99 AND b.f > ${medianMultiplier} * GREATEST(s.med, ${medianFloor})`;
 }
 
-// runDistributionScan(pool, fields, resScope, zoneExpr) — per-zone outlier scan (value beyond p99 AND
-// > 3x the zone median). Extracted verbatim from `parcel-sanity-audit.js`'s `runSanity()` inline
-// `distQ()`/`Promise.all()` — behavior-identical, only the RES/ZC closure became explicit parameters.
-async function runDistributionScan(pool, fields, resScope, zoneExpr) {
+// runDistributionScan(pool, fields, resScope, zoneExpr, opts) — per-zone outlier scan (value
+// beyond the configured percentile AND > the configured multiplier x the zone median).
+// Extracted verbatim from `parcel-sanity-audit.js`'s `runSanity()` inline `distQ()`/
+// `Promise.all()` — behavior-identical at the default opts, only the RES/ZC closure
+// became explicit parameters (+ the optional percentile/multiplier/floor, Rule 3).
+async function runDistributionScan(pool, fields, resScope, zoneExpr, opts = {}) {
   return Promise.all(fields.map(async (f) => {
-    const r = (await pool.query(buildDistributionQuery(resScope, zoneExpr, f))).rows[0];
+    const r = (await pool.query(buildDistributionQuery(resScope, zoneExpr, f, opts))).rows[0];
     return { id: f.id, viol: r.viol, worst: r.worst, samples: r.samples || [] };
   }));
 }
@@ -194,7 +206,7 @@ async function executeEntry(pool, entry, defaultTimeoutMs) {
  * bound-kind entries, so the caller (`buildAuditTable`'s `synthetic` argument) needs
  * no per-kind branch.
  */
-async function runDistributionEntries(pool, entries, { resScope, zoneExpr, fieldExprById } = {}) {
+async function runDistributionEntries(pool, entries, { resScope, zoneExpr, fieldExprById, percentile, medianMultiplier, medianFloor } = {}) {
   const checks = entries.map((entry) => ({
     id: entry.id,
     limit: entry.bound,
@@ -212,7 +224,7 @@ async function runDistributionEntries(pool, entries, { resScope, zoneExpr, field
     if (!expr) throw new Error(`runDistributionEntries: no fieldExprById entry for plausibility id "${e.id}"`);
     return { id: e.id, expr };
   });
-  const dist = await runDistributionScan(pool, fields, resScope, zoneExpr);
+  const dist = await runDistributionScan(pool, fields, resScope, zoneExpr, { percentile, medianMultiplier, medianFloor });
   const byId = Object.fromEntries(dist.map((d) => [d.id, d]));
   const observations = {};
   for (const entry of entries) {
@@ -268,7 +280,7 @@ async function runDistributionEntries(pool, entries, { resScope, zoneExpr, field
  * @param {{frequency:string, when:string[]|null, defaultTimeoutMs?:number|null, concurrency?:number}} opts
  * @returns {Promise<{checks:object[], observations:Record<string,object>}>}
  */
-async function runValidatorEntries(pool, entries, { frequency, when, defaultTimeoutMs, concurrency, resScope, zoneExpr, fieldExprById } = {}) {
+async function runValidatorEntries(pool, entries, { frequency, when, defaultTimeoutMs, concurrency, resScope, zoneExpr, fieldExprById, percentile, medianMultiplier, medianFloor } = {}) {
   const list = Array.isArray(entries) ? entries : [];
   // `when: null` (or absent) means unrestricted — score every declared `when`, the
   // same null-means-everything convention `onlyChecks` itself uses in index.js.
@@ -312,7 +324,7 @@ async function runValidatorEntries(pool, entries, { frequency, when, defaultTime
   const observations = {};
   boundEntries.forEach((entry, i) => { observations[entry.id] = results[i]; });
 
-  const distResult = await runDistributionEntries(pool, distEntries, { resScope, zoneExpr, fieldExprById });
+  const distResult = await runDistributionEntries(pool, distEntries, { resScope, zoneExpr, fieldExprById, percentile, medianMultiplier, medianFloor });
   return {
     checks: [...checks, ...distResult.checks],
     observations: { ...observations, ...distResult.observations },

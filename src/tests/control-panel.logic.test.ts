@@ -414,6 +414,23 @@ const EXPECTED_LOGIC_VAR_KEYS = [
   'engine_health_seq_scan_min_rows', 'engine_health_ping_pong_ratio_warn_max',
   'engine_health_insp_dead_tuple_fail_pct', 'engine_health_insp_update_insert_fail_ratio',
   'engine_health_dead_tuple_min_rows',
+
+  // batch2 P1.1 (2026-09-18, assert_parcel_sanity) — 35 new parcel_sanity_* variables
+  // (34 magnitude bounds/coherence tolerances + 3 distribution-scan constants), all
+  // ported verbatim from the pre-conversion literal named in each var's own
+  // logic_variables.json description (scripts/lib/assert-parcel-sanity-fields.js
+  // LOGIC_VAR_DEFS). The 2 already-registered reused vars (max_build_min_dimension_m,
+  // mislink_footprint_lot_tol) are NOT re-listed here — they are already present
+  // above from enrich_parcels' own conversion, one copy of the policy (Ask A6(a)).
+  'parcel_sanity_lot_size_min_sqm', 'parcel_sanity_lot_size_max_sqm', 'parcel_sanity_max_build_width_max_m', 'parcel_sanity_max_build_length_max_m',
+  'parcel_sanity_lowrise_opt_aor_gfa_max_sqm', 'parcel_sanity_nonlowrise_opt_aor_gfa_max_sqm', 'parcel_sanity_comp_fsi_p50_max', 'parcel_sanity_comp_fsi_p50_min',
+  'parcel_sanity_priced_newbuild_min_gfa_sqm', 'parcel_sanity_lowrise_bylaw_fsi_max', 'parcel_sanity_bylaw_fsi_max', 'parcel_sanity_lowrise_coverage_max_pct',
+  'parcel_sanity_lowrise_bylaw_height_max_m', 'parcel_sanity_footprint_coverage_max_ratio', 'parcel_sanity_max_build_fsi_max', 'parcel_sanity_coa_fsi_max',
+  'parcel_sanity_lowrise_maxbuild_height_max_m', 'parcel_sanity_lowrise_maxbuild_stories_max', 'parcel_sanity_rd_maxbuild_stories_max', 'parcel_sanity_height_per_storey_min_m',
+  'parcel_sanity_height_per_storey_max_m', 'parcel_sanity_opt_storeys_max', 'parcel_sanity_newbuild_cost_per_sqm_min', 'parcel_sanity_newbuild_cost_per_sqm_max',
+  'parcel_sanity_lowrise_cost_fb_max_cad', 'parcel_sanity_cost_addition_max_cad', 'parcel_sanity_dim_lot_tolerance_m', 'parcel_sanity_gfa_coherence_tolerance_sqm',
+  'parcel_sanity_cost_coherence_tolerance_cad', 'parcel_sanity_greenspace_tolerance_sqm', 'parcel_sanity_realized_fsi_p90_min', 'parcel_sanity_realized_fsi_p90_max',
+  'parcel_sanity_distribution_percentile', 'parcel_sanity_distribution_median_multiplier', 'parcel_sanity_distribution_median_floor',
 ];
 
 describe('LOGIC_VAR_DEFAULTS — complete key set', () => {

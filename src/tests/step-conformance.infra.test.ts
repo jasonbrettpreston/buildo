@@ -1133,12 +1133,37 @@ function maintenanceDerivedVars(descriptor: { execution?: { maintenance?: 'none'
 }
 
 /** (a) ∪ (b) for one step — the library-consumed set the dead-declaration check credits. */
+/**
+ * APS-conformance-gap, part 2 (batch2 P1.1, 2026-09-18) — `scripts/lib/step/index.js`
+ * reads a step's compute module's own `DISTRIBUTION_SCOPE.percentileVar` /
+ * `.medianMultiplierVar` / `.medianFloorVar` GENERICALLY (any step, not
+ * `assert_parcel_sanity`-specific) to resolve the 3 distribution-scan numeric
+ * knobs from live `ctx.config` before calling `runDistributionScan` — the SAME
+ * shared-runner-reads-it-directly shape `sharedRunnerConfigValuesReads`/
+ * `maintenanceDerivedVars` already credit for other library-owned reads. Detected
+ * structurally: any `*Var` field on the compute module's OWN exported
+ * `DISTRIBUTION_SCOPE` object is a live-consumed name (index.js is the single,
+ * already-audited consumer of that convention — see its own docblock).
+ */
+function distributionScopeVars(relFile: string): string[] {
+  const computeRel = `${COMPUTE_DIR}/${path.basename(relFile)}`;
+  const computePath = path.join(REPO_ROOT, computeRel);
+  if (!fs.existsSync(computePath)) return [];
+  // eslint-disable-next-line @typescript-eslint/no-require-imports -- exercising the real CJS compute module
+  const mod = require(computePath) as { DISTRIBUTION_SCOPE?: Record<string, unknown> };
+  const scope = mod.DISTRIBUTION_SCOPE;
+  if (!scope || typeof scope !== 'object') return [];
+  return Object.entries(scope)
+    .filter(([k, v]) => k.endsWith('Var') && typeof v === 'string')
+    .map(([, v]) => v as string);
+}
+
 function libraryConsumedVars(relFile: string): string[] {
   const descriptorPath = path.join(REPO_ROOT, `${relFile.slice(0, -3)}.descriptor.json`);
   const descriptor = fs.existsSync(descriptorPath)
     ? (JSON.parse(fs.readFileSync(descriptorPath, 'utf8')) as { execution?: { maintenance?: 'none' | Array<{ table: string }> } })
     : {};
-  return [...new Set([...sharedRunnerConfigValuesReads(), ...maintenanceDerivedVars(descriptor)])];
+  return [...new Set([...sharedRunnerConfigValuesReads(), ...maintenanceDerivedVars(descriptor), ...distributionScopeVars(relFile)])];
 }
 
 /**
@@ -1168,6 +1193,41 @@ function genericDispatchCfgVars(relFile: string, computeSrc: string): string[] {
   const mod = require(fieldsPath) as { CHECK_DEFS?: Array<{ cfgVar?: string | null }> };
   const defs = Array.isArray(mod.CHECK_DEFS) ? mod.CHECK_DEFS : [];
   return [...new Set(defs.map((d) => d.cfgVar).filter((v): v is string => Boolean(v)))];
+}
+
+/**
+ * APS-conformance-gap (batch2 P1.1, 2026-09-18) — a SIXTH indirection pattern:
+ * `assert_parcel_sanity`'s one folded scan builds its SQL predicate by calling each
+ * `CHECK_DEFS[i].applies(cfg)`/`.bad(cfg)` FUNCTION (not a `cfgVar` string + a shared
+ * generic evaluator — the magnitude is baked directly into the per-check predicate
+ * function's own closure, `scripts/lib/assert-parcel-sanity-fields.js`). Neither the
+ * FOURTH path (a fixed `configSimpleConstMap`) nor the FIFTH (`cfgVar` + one generic
+ * evaluator) can resolve this: the same evaluator shape is not reused across checks,
+ * and no `cfgVar` string field exists to read. Detected STRUCTURALLY, never hardcoded
+ * to one slug: if the compute source calls `def.applies(` and `def.bad(` against
+ * entries loaded from the step's own sibling `<basename>-fields.js`, every
+ * `cfg.<name>` property access literally appearing inside any `CHECK_DEFS[]` entry's
+ * `applies`/`bad` function source (`Function.prototype.toString()`) is credited as
+ * consumed — a step with no such fields module, or whose compute never calls
+ * `def.applies(`/`def.bad(`, gets an empty credit set, so this path can never
+ * silently launder an unrelated dead declaration.
+ */
+function fieldsFunctionCfgVars(relFile: string, computeSrc: string): string[] {
+  const src = stripComments(computeSrc);
+  if (!/\bdef\.applies\(/.test(src) || !/\bdef\.bad\(/.test(src)) return [];
+  const fieldsPath = path.join(REPO_ROOT, `scripts/lib/${path.basename(relFile, '.js')}-fields.js`);
+  if (!fs.existsSync(fieldsPath)) return [];
+  // eslint-disable-next-line @typescript-eslint/no-require-imports -- exercising the real CJS fields/census module
+  const mod = require(fieldsPath) as { CHECK_DEFS?: Array<{ applies?: unknown; bad?: unknown }> };
+  const defs = Array.isArray(mod.CHECK_DEFS) ? mod.CHECK_DEFS : [];
+  const out = new Set<string>();
+  for (const def of defs) {
+    for (const fn of [def.applies, def.bad]) {
+      if (typeof fn !== 'function') continue;
+      for (const m of fn.toString().matchAll(/\bcfg\.([a-zA-Z_]\w*)/g)) if (m[1]) out.add(m[1]);
+    }
+  }
+  return [...out];
 }
 
 /** link_parcels' own pair — no shared prefix, named explicitly. */
@@ -1227,7 +1287,10 @@ function configFindings(relFile: string, slug: string, declared: string[]): stri
   const genericDispatchConsumed = hasCompute
     ? genericDispatchCfgVars(relFile, fs.readFileSync(path.join(REPO_ROOT, computeRel), 'utf8'))
     : [];
-  const consumed = [...new Set([...computeConsumed, ...runnerConsumed, ...sharedRunnerConsumedVars(), ...libraryConsumedVars(relFile), ...genericDispatchConsumed])];
+  const fieldsFunctionConsumed = hasCompute
+    ? fieldsFunctionCfgVars(relFile, fs.readFileSync(path.join(REPO_ROOT, computeRel), 'utf8'))
+    : [];
+  const consumed = [...new Set([...computeConsumed, ...runnerConsumed, ...sharedRunnerConsumedVars(), ...libraryConsumedVars(relFile), ...genericDispatchConsumed, ...fieldsFunctionConsumed])];
 
   for (const name of declared) {
     if (!REGISTRY_KEYS.has(name)) {
@@ -1248,6 +1311,20 @@ function configFindings(relFile: string, slug: string, declared: string[]): stri
   for (const name of runnerConsumed) {
     if (!declared.includes(name)) {
       findings.push(`the descriptor names "${name}" in a *_from_config field, which its config does not declare — the runner silently falls back to the literal`);
+    }
+  }
+  // The reverse-direction check for `fieldsFunctionConsumed` (APS-conformance-gap,
+  // batch2 P1.1, 2026-09-18) — mirrors the `runnerConsumed` loop above, not
+  // `computeConsumed`: a name reached ONLY through a fields sidecar's `applies`/`bad`
+  // closure (`cfg.<name>`) never appears as a literal `ctx.config.<name>` read in the
+  // compute file itself, so without this loop dropping such a name from the descriptor
+  // is invisible to every existing reverse-direction check — the exact gap the seed
+  // RED test (`DROPPING a declared var reddens conformance`) caught for
+  // assert_parcel_sanity's declared[0] (`parcel_sanity_lot_size_min_sqm`, consumed only
+  // via its check's own `applies`/`bad` function, not a compute-level ctx.config read).
+  for (const name of fieldsFunctionConsumed) {
+    if (!declared.includes(name)) {
+      findings.push(`the fields sidecar for ${slug} reads cfg."${name}" inside a CHECK_DEFS applies/bad function, which its config does not declare — the check silently evaluates against undefined`);
     }
   }
   // The reverse-direction check for `sharedRunnerConsumedVars` (LP-D-conformance-gap,
@@ -2252,9 +2329,13 @@ describe('R-R / Rule 13 — the generated scorecard block is not stale (vitest-i
   function reportPathFor(slug: string): string | null {
     const dashSlug = slug.replace(/_/g, '-');
     const dir = path.join(REPO_ROOT, 'docs/reports');
+    // batch 2's own "row" numbering (2026-09-18) widens this a third time, mirroring
+    // scripts/analysis/step-validate.mjs's own reportPathFor() widening — kept as a
+    // literal duplicate here (test-file isolation), not an import, so BOTH copies
+    // must be updated together when a new report-naming convention lands.
     const hit = fs
       .readdirSync(dir)
-      .find((f) => /^\d{4}-\d{2}-\d{2}-(pilot\d+|batch\d+-i\d+)-.*-assessment\.md$/i.test(f) && f.includes(`-${dashSlug}-assessment.md`));
+      .find((f) => /^\d{4}-\d{2}-\d{2}-(pilot\d+|batch\d+-i\d+|batch\d+-p\d+-\d+)-.*-assessment\.md$/i.test(f) && f.includes(`-${dashSlug}-assessment.md`));
     return hit ? path.join(dir, hit) : null;
   }
 

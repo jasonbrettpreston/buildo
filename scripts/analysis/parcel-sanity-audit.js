@@ -97,8 +97,14 @@ async function runSanity(pool, opts = {}) {
   const results = rawResults.map((r) => ({ ...r, status: statusFor(r, r.viol, r.pop) }));
   // R-T addendum, commit 2 — the distribution scan (runDistributionScan, extracted
   // to plausibility.js) runs in parallel with — not folded into — the BOUND/
-  // INVARIANT scan above, exactly as the pre-conversion runSanity() did.
-  const dist = await runDistributionScan(pool, DIST_FIELDS, RES, ZC);
+  // INVARIANT scan above, exactly as the pre-conversion runSanity() did. Rule 3:
+  // the 3 parcel_sanity_distribution_* logic variables are read from the SAME
+  // resolved `config` object every other check already reads (never a literal).
+  const dist = await runDistributionScan(pool, DIST_FIELDS, RES, ZC, {
+    percentile: config.parcel_sanity_distribution_percentile,
+    medianMultiplier: config.parcel_sanity_distribution_median_multiplier,
+    medianFloor: config.parcel_sanity_distribution_median_floor,
+  });
   return { total, results, dist };
 }
 
