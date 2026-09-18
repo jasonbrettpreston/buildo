@@ -433,3 +433,59 @@ describe('assert_engine_health — landed at commit 8 (review panel peels R1/R2)
     expect(text).toContain('tables_vacuumed: vacuumTargets.length');
   });
 });
+
+// ===========================================================================
+// 5. WF3 2026-09-18 — Peel 1 (cause A lock, 8 scheduled-run failures, Spec 118 §1.2/§1.3)
+//
+// §1.2's own disposition: "ALREADY FIXED on origin/main — verify + lock, do not re-fix."
+// This section is the LOCK, not a fix: it pins the two halves of the AEH-D3 contradiction
+// observed on all 8 failing runs (headSha 17058af7) so a future descriptor edit cannot
+// silently re-introduce either half.
+// ===========================================================================
+
+describe('assert_engine_health — Peel 1 (WF3 2026-09-18) — cause A cannot recur', () => {
+  it('1.1/1.2 — insp_update_insert_ratio is severity WARN, blocking false, and no check declared for the deep_scrapes chain (or "all") is severity FAIL — the exact shape observed on all 8 failing runs (headSha 17058af7, update_insert_ratio=24.16)', () => {
+    const d = loadDescriptor() as unknown as { checks: Array<{ id: string; severity: string; blocking: boolean; chains: string | string[] }> };
+    const insp = d.checks.find((c) => c.id === 'insp_update_insert_ratio');
+    expect(insp, 'insp_update_insert_ratio check missing').toBeDefined();
+    expect(insp!.severity).toBe('WARN');
+    expect(insp!.blocking).toBe(false);
+    for (const c of d.checks) {
+      const chains = Array.isArray(c.chains) ? c.chains : [c.chains];
+      const appliesToDeepScrapes = chains.includes('deep_scrapes') || chains.includes('all');
+      if (!appliesToDeepScrapes) continue;
+      expect(c.severity, `check "${c.id}" applies to deep_scrapes and must not be FAIL-severity (would re-red the 8-run streak)`).not.toBe('FAIL');
+    }
+  });
+
+  it('1.2 RED-FIRST proof (manually reproduced, 2026-09-18): flipping insp_update_insert_ratio.severity to "FAIL" locally made the test above fail with exactly "expected \'FAIL\' not to be \'FAIL\'" — reverted before commit; this test is what caught it', () => {
+    // This test intentionally re-runs the SAME assertion as 1.1/1.2 above under a
+    // clearer name, so the red-first evidence for THIS specific check id is not
+    // buried inside the loop above. See the WF3 commit body for the captured
+    // failure output from the manual flip-and-revert.
+    const d = loadDescriptor();
+    const insp = d.checks.find((c) => c.id === 'insp_update_insert_ratio');
+    expect(insp!.severity).not.toBe('FAIL');
+  });
+
+  it('1.3 — the contradiction observed live ({"verdict":"FAIL","rows":[...]} alongside "checks_failed":0, run 34888609125) is now STRUCTURALLY UNREPRESENTABLE: feeding this descriptor\'s own checks through the real verdict.js at a BREACHING value (24.16 vs the <5.0 threshold) yields a row-derived verdict of WARN, never FAIL, and checks_failed (the errors[] count) stays 0 — verdict and checks_failed can never again disagree the way the 8 failing runs did', () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports -- exercising the real CJS library
+    const verdictLib = require(path.join(REPO_ROOT, 'scripts/lib/step/verdict.js')) as {
+      buildAuditTable: (
+        descriptor: unknown, chainId: string, observations: Record<string, { value?: unknown; violations?: number }>,
+      ) => { audit_table: { verdict: string }; errors: string[]; warnings: string[] };
+    };
+    const d = loadDescriptor() as unknown as { checks: Array<{ id: string; chains: string | string[] }> };
+    // Every check this descriptor declares for deep_scrapes reports a BREACHING
+    // observation — the worst case the real live run could ever present.
+    const observations: Record<string, { value: number }> = {};
+    for (const c of d.checks) {
+      const chains = Array.isArray(c.chains) ? c.chains : [c.chains];
+      if (chains.includes('deep_scrapes') || chains.includes('all')) observations[c.id] = { value: 999999 };
+    }
+    expect(Object.keys(observations).length, 'this descriptor must declare at least one deep_scrapes-scoped check for this lock to mean anything').toBeGreaterThan(0);
+    const built = verdictLib.buildAuditTable(loadDescriptor(), 'deep_scrapes', observations);
+    expect(built.audit_table.verdict, 'a descriptor whose every declared check is severity WARN can never derive a FAIL verdict, however far the values breach').not.toBe('FAIL');
+    expect(built.errors.length, 'checks_failed (errors[].length) must be 0 when nothing is FAIL-severity — the exact field the 8 failing runs\' own audit rows disagreed with').toBe(0);
+  });
+});

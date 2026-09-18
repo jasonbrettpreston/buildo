@@ -305,10 +305,10 @@ Output panel on commit 7: Guardian PASS ×5; Code Reviewer 2 FAIL (R1, R2); Obse
 | G4 | 2 | 2 | risk-class row with chance+impact found=true |
 | G5 | 1 | 1 | db=true clock=true network=true argv/env=true |
 | G6 | 3 | 3 | 6 ledger row(s), 0 without CLOSED/PIN () |
-| G7 | 3 | 3 | file=true fences=0 it-count=30 RED-evidence=true |
+| G7 | 3 | 3 | file=true fences=0 it-count=33 RED-evidence=true |
 | G8 | 3 | 3 | missing-invocations=0 missing-pre-invocations=0 stale-fingerprints=0 unexplained-diffs=0 |
 | G9 (binary) | PASS | — | heading=true low-confidence-table=true recurring-table=true |
-| G4d (fence<=lock) | PASS | — | fences=0 lock-it-count=30 |
+| G4d (fence<=lock) | PASS | — | fences=0 lock-it-count=33 |
 | G-shape | PASS | — | file-clean=true compute-clean=true |
 
 ### Fast invariants (always run — the fast descriptor gate)
@@ -338,11 +338,17 @@ Output panel on commit 7: Guardian PASS ×5; Code Reviewer 2 FAIL (R1, R2); Obse
 - compare ran: true · diffs found: 874 · unexplained: 0
 
 ### Test suite (item iii)
-- 1161/1161 passed (suite success=true)
+- 1158/1164 passed (suite success=false)
 - harvested: 19 file(s) from 3 FLEET-WIDE targets (src/tests/step-conformance.infra.test.ts, src/tests/golden-fingerprint.infra.test.ts, src/tests/steps/) — one spawn per run, so every step's report carries this same number, by design
 - excluded (R-AG live-DB tier, owned by `npm run test:db`, derived from package.json `scripts.test`): 5 — src/tests/steps/link_massing/metamorphic.test.ts, src/tests/steps/link_massing/nearest-determinism.test.ts, src/tests/steps/link_massing/rung1-inline-wkt.test.ts, src/tests/steps/link_parcel_addresses/metamorphic.test.ts, src/tests/steps/link_parcel_addresses/rung1-inline-wkt.test.ts
 - skipped (declared but not run): 0
-- failing: none
+- failing (6):
+  - src/tests/golden-fingerprint.infra.test.ts > golden-fingerprint — the golden capture is a LOCKFILE (ruling R-C, 2026-08-28) > scripts/refresh-snapshot.js (slug "refresh_snapshot") > every post/ capture carries source_fingerprint === the CURRENT fingerprint over (step, descriptor, notes, compute)
+  - src/tests/step-conformance.infra.test.ts > §1.2a P4 — every tunable is externalized (declared ≡ registry ≡ GROUPS ≡ ctx.config) > scripts/refresh-snapshot.js — declared ⊆ registry, declared ⊆ GROUPS, consumed ≡ declared
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/link-parcel-addresses.js (slug "link_parcel_addresses") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/refresh-snapshot.js (slug "refresh_snapshot") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+  - src/tests/steps/assert_schema/violations.test.ts > RULING R-D — declared_logic_variables_present (cloud parity, chain-start assertion) > checks[].expect ≡ config.probe_presence ≡ the LIVE fleet derivation — none of the three may drift from the others
+  - src/tests/steps/assert_schema/violations.test.ts > R-D generator — scripts/generate-assert-schema-probe-lists.js (Ask A1) > real file — applyToText(committed text, LIVE names) is a byte-for-byte no-op (the descriptor is clean, not stale)
 
 ### Policy coverage matrix (item vi) — Spec 124 Rules 1-13
 
