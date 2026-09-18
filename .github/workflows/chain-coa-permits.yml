@@ -12,8 +12,13 @@ name: chain-coa-permits
 
 on:
   # Phase 4.3 activation (2026-07-25): schedule live. Spec 115 §3.
+  # CADENCE cut Daily(x7) -> Weekly (operator ruling 2026-09-18, R2/Ask 6, Spec 124 R-AQ):
+  # cron string updated for when the workflow is re-enabled (runbook prerequisites
+  # §E(1)(2)(3) — see .cursor/wf2_cloud_acceptance_and_cron_cadence_active_task.md).
+  # This workflow stays `disabled_manually` in GitHub — the committed schedule: block
+  # being present/uncommented is NOT the same as the workflow actually firing.
   schedule:
-    - cron: '0 11 * * *'   # ~6 AM ET nightly, ×7 (Spec 115 §2 table row 1; §2.1 DST note)
+    - cron: '0 8 * * 2'   # WEEKLY, Tue ~4 AM ET (Spec 115 §2 table row 1; §2.1 DST note)
   workflow_dispatch: {}
 
 jobs:

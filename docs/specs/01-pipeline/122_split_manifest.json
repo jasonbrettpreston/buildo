@@ -20,9 +20,9 @@
     "124": {
       "headroom_pct": 10,
       "measured_at": {
-        "lines": 428,
-        "bytes": 117729,
-        "commit": "65c92d7f"
+        "lines": 356,
+        "bytes": 115130,
+        "commit": "4c14d82d"
       }
     }
   },
@@ -242,6 +242,19 @@
       "commit": "0820685d",
       "classification": "HISTORICAL",
       "evidence": "Mis-nested under §11 (Known Failure Modes) at 0 citations; a comparative rationale versus the pre-Spec-122 runner, not live standard text."
+    },
+    {
+      "id": "M06",
+      "from_spec": "124",
+      "anchor": "## §8. The standard step as built (R-T, 2026-08-29 — ~~6/8 archetypes proven, HEAD `d9057a54`~~ **CORRECTED 2026-09-10 (measured): 7/8 proven** — `template-freeze.json`'s `archetype_profiles`: all proven `true` except ENRICHER (`false`, unexercised until pilot 9's cutover); the pinned HEAD is 8 pilots stale)",
+      "to_spec": "122a",
+      "to_anchor": "## Appendix §A12 — The standard step as built (moved from Spec 124 §8) — HISTORICAL, 2026-09-18",
+      "content_sha256": "5488e1c17e03692702b1a3136245785b6006388d73604850dba72e9f831fff02",
+      "line_count": 90,
+      "moved_at": "2026-09-18",
+      "commit": "4c14d82d",
+      "classification": "HISTORICAL",
+      "evidence": "R-AA prerequisite move (WF2 'Cloud acceptance model + cron cadence', operator Ask 1, 2026-09-18): Spec 124 grew to 129,491 bytes against its stale 117,729-byte measured_at (10 bytes of headroom left, ceiling 129,501), so a new §5 register row (R-AQ) could not be added without a move. No §5 register row (R-AA..R-AP) is itself historical/superseded — every one carries a live 'Enforced by' clause. §8 is Spec 124's largest non-Rules, non-register section: a regenerated-per-pilot-cutover illustrative snapshot ('what a converted step actually looks like TODAY'), not one of Rules 1-13's binding policy statements, and its own text says the layer table is 'Mirrored, condensed, at Spec 122 §5.6' — a condensed equivalent survives in-place even after this move. The '## §8.' heading itself is PRESERVED by the stub (per this tool's own heading-anchor convention), so every existing 'Spec 124 §8' citation (docs/specs, .cursor plans) still resolves to a real heading; none needed a known_dangling entry."
     }
   ]
 }

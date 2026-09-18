@@ -39,17 +39,30 @@ freshness contract and its serialization requirement, `local-cron.js` L41-53, ar
 preserved unchanged). All invoke `scripts/run-chain.js` directly on the GitHub Actions
 runner (Spec 113 §8.1 — no Vercel function ever hosts a chain).
 
-| # | File | Chain(s) | Cadence (operator-ruled 2026-07-20) | UTC cron (see §2.1 DST note) |
+| # | File | Chain(s) | Cadence (operator-ruled 2026-07-20; **rows 1/4 AMENDED 2026-09-18**) | UTC cron (see §2.1 DST note) |
 |---|---|---|---|---|
-| 1 | `.github/workflows/chain-coa-permits.yml` | `coa` → `permits`, **serialized in one workflow** | ~6 AM ET, EVERY night (×7) | `0 11 * * *` |
-| 2 | `.github/workflows/chain-sources.yml` | `sources` | WEEKLY, ~8 AM ET Sunday | `0 13 * * 0` |
-| 3 | `.github/workflows/chain-entities.yml` | `entities` | 3 AM ET daily (unchanged) | `0 8 * * *` |
-| 4 | `.github/workflows/chain-deep-scrapes.yml` | `deep_scrapes` (§2.4) | **1×/day, WEEKDAYS ONLY, business hours** (10 AM EST · 11 AM EDT) — LIVE since 2026-08-05 `2fa3b2e7`; was 3×/day on paper while the schedule sat disabled | `0 15 * * 1-5` |
+| 1 | `.github/workflows/chain-coa-permits.yml` | `coa` → `permits`, **serialized in one workflow** | **AMENDED 2026-09-18 (R2/Ask 6, Spec 124 R-AQ): WEEKLY, Tue ~4 AM ET** — was ~6 AM ET every night (×7); superseded because a daily unattended cadence has three unclosed pre-enable prerequisites (`.cursor/wf2_cloud_acceptance_and_cron_cadence_active_task.md` §E) | `0 8 * * 2` |
+| 2 | `.github/workflows/chain-sources.yml` | `sources` | WEEKLY, ~8 AM ET Sunday (unchanged 2026-09-18) | `0 13 * * 0` |
+| 3 | `.github/workflows/chain-entities.yml` | `entities` | 3 AM ET daily (unchanged; chain stays DISABLED per R2, `chain-entities.yml` untouched) | `0 8 * * *` |
+| 4 | `.github/workflows/chain-deep-scrapes.yml` | `deep_scrapes` (§2.4) | **AMENDED 2026-09-18 (R2/Ask 6, Spec 124 R-AQ): WEEKLY, Wed, business hours** (10 AM EST · 11 AM EDT) — was 1×/day weekdays-only since 2026-08-05 `2fa3b2e7` | `0 15 * * 3` |
 
-The deep_scrapes slots deliberately start at 15:00 UTC — clearing the 11:00 UTC nightly
-coa→permits window plus its ~3h worst case, because `deep_scrapes` SHARES
-`refresh_snapshot`/`assert_data_bounds`/`assert_engine_health` with the nightly chains and
-shared-step advisory locks SKIP on contention rather than queue (runbook §3 rule 3).
+**⚠ Collision, recorded not ignored (2026-09-18):** row 1's new `0 8 * * 2` lands on the
+same UTC hour as row 3's `chain-entities.yml` (`0 8 * * *`, Tuesday being one of its seven
+days). Harmless TODAY because `chain-entities.yml` is disabled per R2 — nothing actually
+runs at that hour on Tuesdays — but it MUST stay in this table so a later re-enable of
+`chain-entities.yml` does not silently reintroduce Tuesday-08:00-UTC contention with
+`coa`/`permits`'s advisory locks and shared steps.
+
+The deep_scrapes slot's TIME-of-day (15:00 UTC) is unchanged by the 2026-09-18 cadence cut
+— only the slot COUNT moved from 5×/week to 1×/week. Historically (pre-2026-09-18) that time
+existed to clear the 11:00 UTC nightly coa→permits window plus its ~3h worst case, because
+`deep_scrapes` SHARES `refresh_snapshot`/`assert_data_bounds`/`assert_engine_health` with the
+nightly chains and shared-step advisory locks SKIP on contention rather than queue (runbook
+§3 rule 3). **Post-2026-09-18, the three live chains land on three different UTC days**
+(coa/permits Tue, deep_scrapes Wed, sources Sun) — strictly safer against that same
+contention than the old daily-coa/weekday-deep_scrapes overlap risk — but 15:00 UTC is kept
+anyway because it preserves the attended-business-hours property this row states, not
+because the contention rationale still requires it.
 
 ### 2.1 UTC / DST note
 
@@ -475,6 +488,23 @@ watchdog checks for it.
    platform outage, a `schedule:` block that silently stopped triggering) produces no run
    to notify about — only an independent daily check that looks for the ABSENCE of a
    completed run catches that.
+
+   > **NOT RE-DERIVED (2026-09-18, R2/Ask 6, Spec 124 R-AQ).** §2's coa-permits and
+   > deep_scrapes cadences moved to WEEKLY, which makes the 25h `chain_coa`/`chain_permits`
+   > window and the weekday-shaped `chain_deep_scrapes` window (80h Mon / 30h Tue-Fri) above
+   > **stale relative to the new cadence** — a true "coupled to cadence" edit, per this
+   > spec's own rule two paragraphs up, would resize both. **This WF deliberately does NOT
+   > resize them**, because `pipeline-watchdog.yml` — the ONLY consumer of these constants —
+   > stays disabled per R2, so no live check reads a wrong number today; re-deriving windows
+   > nobody can measure while running would produce untested numbers, per
+   > `tasks/lessons.md`'s "Freshness/watchdog windows are COUPLED to cadence" entry read the
+   > other way (measure before you set a number, not just before you move one). **Re-deriving
+   > these windows for the weekly cadence is a BLOCKING PREREQUISITE of re-enabling
+   > `pipeline-watchdog.yml`** (`.cursor/wf2_cloud_acceptance_and_cron_cadence_active_task.md` §E), not a task this doc-only WF performs. The same
+   > applies to `scripts/check-pipeline-freshness.js`'s `FRESHNESS_WINDOW_HOURS`/
+   > `deepScrapesWindow` constants (out of this WF's Operating Boundaries) and Spec 118 §2's
+   > mirrored geometry.
+
 2. **Backup freshness + safety-net trigger.** A completed backup within the last 25h,
    matching BOTH row shapes `backup_db` can be written under (P3-G6): the scoped-slug
    `permits:backup_db` step row (the scoped-slug INSERT at `run-chain.js:413` + completion
@@ -861,15 +891,16 @@ be copied. New rows use `chain_id = NULL` (global scope) — migration 095's `ch
 constraint excludes `'deep_scrapes'` from its allowed values, which is fine here since none
 of these rows need per-chain scoping; noted for any future per-chain-scoped schedule.
 
-**Values written (per-pipeline, matching §2's amended cadences):**
+**Values written (per-pipeline, matching §2's amended cadences — `coa`/`permits`/
+`deep_scrapes` AMENDED 2026-09-18, R2/Ask 6, Spec 124 R-AQ):**
 
 | `pipeline` | `cadence` | `cron_expression` |
 |---|---|---|
-| `coa` | `Daily` | `0 11 * * *` |
-| `permits` | `Daily` | `0 11 * * *` |
+| `coa` | `Weekly` | `0 8 * * 2` |
+| `permits` | `Weekly` | `0 8 * * 2` |
 | `sources` | `Weekly` | `0 13 * * 0` |
 | `entities` | `Daily` | `0 8 * * *` |
-| `deep_scrapes` | `Weekdays (1x Daily)` | `0 15 * * 1-5` |
+| `deep_scrapes` | `Weekly` | `0 15 * * 3` |
 
 **Cadence enum extension (same change as the seed script — P3-G11):** the admin PUT
 handler's cadence validator (`src/app/api/admin/pipelines/schedules/route.ts:34`,

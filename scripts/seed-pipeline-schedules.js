@@ -34,13 +34,17 @@ const { createResolvedPool } = require('./lib/resolve-db');
 // All rows are global (chain_id = NULL) — none of these five pipelines need
 // per-chain scoping today.
 const SCHEDULES = [
-  { pipeline: 'coa', cadence: 'Daily', cron_expression: '0 11 * * *' },
-  { pipeline: 'permits', cadence: 'Daily', cron_expression: '0 11 * * *' },
+  // coa/permits cadence cut Daily(x7) -> Weekly on 2026-09-18 (operator ruling,
+  // R2/Ask 6, Spec 124 R-AQ) — must stay byte-equal to
+  // .github/workflows/chain-coa-permits.yml's cron (Spec 115 §2 table row 1).
+  { pipeline: 'coa', cadence: 'Weekly', cron_expression: '0 8 * * 2' },
+  { pipeline: 'permits', cadence: 'Weekly', cron_expression: '0 8 * * 2' },
   { pipeline: 'sources', cadence: 'Weekly', cron_expression: '0 13 * * 0' },
   { pipeline: 'entities', cadence: 'Daily', cron_expression: '0 8 * * *' },
-  // Cadence cut 3 slots -> 1 on 2026-08-05 (`2fa3b2e7`) when the schedule was re-enabled;
-  // must stay byte-equal to .github/workflows/chain-deep-scrapes.yml's live cron (Spec 115 §6).
-  { pipeline: 'deep_scrapes', cadence: 'Weekdays (1x Daily)', cron_expression: '0 15 * * 1-5' },
+  // Cadence cut Weekdays(1x Daily) -> Weekly on 2026-09-18 (operator ruling, R2/Ask 6,
+  // Spec 124 R-AQ) — must stay byte-equal to
+  // .github/workflows/chain-deep-scrapes.yml's live cron (Spec 115 §2 table row 4 / §6).
+  { pipeline: 'deep_scrapes', cadence: 'Weekly', cron_expression: '0 15 * * 3' },
 ];
 
 async function main() {

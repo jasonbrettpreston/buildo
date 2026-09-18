@@ -55,16 +55,24 @@ on:
   # MEASURED cloud values. Shipping the module defaults here is what produced a
   # run of 654 requests, 0 rows and 102 WAF traps — do not "simplify" them away.
   #
-  # CADENCE — ONE slot per weekday (operator ruling 2026-08-05), deliberately NOT
-  # the 3 the disabled block carried. Measured drain is ~1,086 queue rows per
-  # 150-min slice, so 5 slices/week ~= 5,400 permits/week and the ~10K target
-  # lands in about two weeks — the cadence the operator chose over draining
-  # faster. One slot/day also removes adjacent-slot contention entirely: a slice
-  # runs 150 min + ~10 min setup against a 24h gap, so the concurrency guard can
-  # never see a live run from the previous slot (Spec 115 §2 row 4, §2.1 — single
-  # fixed-UTC expression, never skips on DST drift).
+  # CADENCE cut Weekdays(1x Daily) -> WEEKLY (operator ruling 2026-09-18, R2/Ask 6,
+  # Spec 124 R-AQ): superseding the 2026-08-05 "one slot per weekday" ruling below,
+  # kept for its still-true reasoning (drain rate, contention-free single slot).
+  # This workflow stays `disabled_manually` in GitHub (verified live) — updating
+  # the cron string does not re-enable it; re-enable is gated on runbook §E(1)(2)(3).
+  #
+  # ORIGINAL 2026-08-05 ruling (historical; slot COUNT changed, TIME-of-day kept):
+  # ONE slot per weekday, deliberately NOT the 3 the disabled block carried.
+  # Measured drain is ~1,086 queue rows per 150-min slice, so 5 slices/week ~=
+  # 5,400 permits/week and the ~10K target lands in about two weeks — the cadence
+  # the operator chose over draining faster. One slot/day also removed
+  # adjacent-slot contention entirely: a slice runs 150 min + ~10 min setup
+  # against a 24h gap, so the concurrency guard could never see a live run from
+  # the previous slot (Spec 115 §2 row 4, §2.1 — single fixed-UTC expression,
+  # never skips on DST drift). The single WEEKLY slot below keeps the SAME
+  # time-of-day (business hours, attended) for the same reason.
   schedule:
-    - cron: '0 15 * * 1-5'   # 11:00 ET (EDT) / 10:00 ET (EST) — mid-morning, attended
+    - cron: '0 15 * * 3'   # WEEKLY, Wed, 11:00 ET (EDT) / 10:00 ET (EST) — business hours, attended
   workflow_dispatch:
     # A validation probe must fail FAST. With a 90s retry base, one blocked permit
     # costs 90+180+360s on retries alone, so an unparameterised dispatch sits near

@@ -58,7 +58,7 @@ describe('chain-deep-scrapes workflow', () => {
     });
   });
 
-  describe('schedule (F3 re-enable, 2026-08-05)', () => {
+  describe('schedule (F3 re-enable, 2026-08-05; cadence cut to Weekly, 2026-09-18)', () => {
     it('runs on the Spec 115 §2 row 4 cadence', () => {
       // RETIRED LOCK, deliberately: this block previously asserted NO active
       // schedule. That lock's condition — "a dispatch probe must have
@@ -69,11 +69,15 @@ describe('chain-deep-scrapes workflow', () => {
       // at 141 min, chain completed_with_warnings with no FAIL verdict.
       // Re-disabling is a one-line comment-out; this assertion is what makes
       // an ACCIDENTAL disable visible.
-      // Cadence is ONE slot/weekday (operator ruling 2026-08-05), NOT the 3 the
-      // disabled comment block carried: measured drain is ~1,086 queue rows per
-      // 150-min slice, so 5 slices/week ~= 5,400/week and ~10K lands in two weeks.
+      // CADENCE AMENDED 2026-09-18 (operator ruling, R2/Ask 6, Spec 124 R-AQ):
+      // Weekdays(1x Daily) -> WEEKLY, one slot/week (Wed), same business-hours
+      // time-of-day. Proven RED-first against the OLD literal ('0 15 * * 1-5')
+      // before this edit landed, per this suite's own "an ACCIDENTAL disable/
+      // drift is visible" intent — the workflow stays `disabled_manually` in
+      // GitHub regardless of this literal (verified live via `gh api`, not
+      // re-enabled by this WF2).
       expect(activeLines).toMatch(/^\s*schedule:/m);
-      expect(activeLines).toMatch(/^\s*-\s*cron:\s*'0 15 \* \* 1-5'/m);
+      expect(activeLines).toMatch(/^\s*-\s*cron:\s*'0 15 \* \* 3'/m);
     });
 
     it('is still reachable on demand', () => {

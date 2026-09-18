@@ -11,6 +11,9 @@ file for the full procedure; this index is the map.
 
 ## 1. Runbooks
 
+**In-document procedures (not separate files):** §3 deploy-ordering rules · §3b closing an
+orphaned `running` row · **§3c temporary compute resize for a cloud proof (Spec 124 R-AQ)**.
+
 ### `docs/runbook/` — first-deploy spikes & recovery procedures
 
 | File | Purpose |
@@ -190,6 +193,74 @@ Re-run to confirm 0 rows. Then append the incident to Spec 115 §9's stranding l
 
 **Precedent:** ids 1756/2045/2097 (2026-08-03, Pipeline Rehab P0), 2156/2157 (2026-08-04),
 2158/2179 (2026-08-05, chain-sources run 30861473506 at its 180-min step timeout).
+
+## 3c. Temporary compute resize for a cloud proof (Spec 124 R-AQ, 2026-09-18)
+
+**When:** a step's cloud acceptance proof (Spec 124 R-AB/R-AQ) cannot complete inside its
+declared ceilings on the standing instance — measured cause: Supabase Small (2 GB RAM,
+512 MB `shared_buffers`, 22 MB/s baseline) reads ~4.7 MB/s sequential against a 4.4 GB
+`parcels` heap, so `enrich_parcels` exceeds its 180-min step ceiling and a full chain run
+exceeds the 300-min job cap. **The sanctioned remedy is a TEMPORARY COMPUTE RESIZE, never a
+raised ceiling** (R-AQ) — `enrich_parcels_pass5_timeout_minutes` and
+`manifest…step_timeout_minutes` stay unchanged.
+
+**This whole procedure is an OPERATOR ACTION that the orchestrator (this runbook, an
+agent, a WF) REQUESTS via the two hard-stop prompts below — it is never performed by the
+orchestrator itself.** There is no API/CLI path in this repo that resizes Supabase compute;
+it is a dashboard-only action (Database → Compute).
+
+1. **Pre-checks** (all cheap, all before the STOP): (a) all four scheduled chain workflows
+   confirmed `disabled_manually` (`gh api repos/:owner/:repo/actions/workflows --jq
+   '.workflows[]|{name,state}'`, or `gh workflow list`). (b) No `chain_sources` run in
+   progress. (c) **No stranded `running` `pipeline_runs` rows** — per §3b above, a stranded
+   row makes every dispatch skip BEFORE `scripts/reconcile-runs.js` can reap it; clear it by
+   hand per §3b, never by re-dispatching. (d) `npm run migrate -- --verify` against cloud —
+   both DRIFT and MISSING are blockers (§3.2 above). (e) Cloud seeds applied:
+   ```bash
+   SUPABASE_CA_CERT_PATH=scripts/certs/supabase-ca.pem PG_HOST= DATABASE_URL=$SUPABASE_DATABASE_URL \
+     node -r dotenv/config scripts/seeds/apply-logic-variables.js
+   ```
+   (§3.1a above — LM-D15 throws on an unseeded var).
+
+2. **STOP — prompt the operator to resize Supabase compute to XL; do not dispatch until
+   the operator confirms the resize is live.** Measured facts for the prompt: `parcels`
+   heap 4.4 GB; Small = 2 GB RAM / 512 MB `shared_buffers` / measured ~4.7 MB/s sequential;
+   **XL = 16 GB RAM / ~149 MB/s** (~32× the measured rate — chosen, per operator ruling, so
+   one paid day can also carry every other outstanding per-slug partial proof, not just
+   `enrich_parcels`); ~$0.29/h ≈ **$6.96 for a full day**; resize downtime < ~2 min; disk
+   size cannot shrink, but **compute CAN be downgraded** — this is reversible, not a one-way
+   door. Do not proceed past this line until the operator has confirmed, in the dashboard,
+   that the instance reads XL.
+
+3. **Dispatch, pinned.**
+   ```bash
+   gh workflow run chain-sources.yml --ref <branch> -f only=enrich_parcels -f expected_sha=<full sha>
+   ```
+   `expected_sha` is mandatory (Spec 124 R-AL — an unpinned run is explicitly "NOT valid as
+   an R-AB acceptance run"). `from` and `only` are mutually exclusive; the workflow refuses
+   the combination.
+
+4. **Record the tier and the sha** in the run's own dispatch note, so the verdict can never
+   be read against an unknown instance size.
+
+5. **Batch the window.** While the instance is up, dispatch every other outstanding
+   per-slug partial proof for slugs landed to that point (one `--only=<slug,slug,…>` run per
+   disjoint set, each pinned) — the whole point of running this proof as late as the plan
+   allows is that a later slot lets more proofs fit in one paid day.
+
+6. **Adjudicate.** `node scripts/analysis/chain-end-synthesis.mjs sources <chainRunId>` →
+   per-slug rows, row-derived, `status='completed'` + `records_meta->>'skipped' IS NULL`
+   (ACC-1). A GitHub green tick is **not** the verdict.
+
+7. **Record measured phase timings** on the larger tier into
+   `docs/reports/pipeline-validation/sources/` — per-phase durations, `records_meta`, and
+   the step's total against the (unchanged) 180-min ceiling. This is the evidence for any
+   later steady-state tier decision, and is the deliverable, not a by-product.
+
+8. **STOP — prompt the operator to resize Supabase compute back down to Small and confirm
+   the billing tier.** Do this only once step 6's adjudication and every batched proof from
+   step 5 have completed. Note in the run record that disk stays at its grown size by
+   design (Supabase compute can downgrade; storage cannot shrink).
 
 ## 4. pgTAP RLS suite (release-gating, Spec 114 §10)
 

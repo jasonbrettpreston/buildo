@@ -277,6 +277,24 @@ psql $DATABASE_URL -c \
   (daily steps ≤ 25h ago; quarterly steps ≤ 95 days ago)
 - **Evidence:** _(paste)_  **Status:** PASS / FAIL
 
+> **WAIVED 2026-09-18 (dated, Spec 124 R-AQ; operator ruling, Ask 4(a)):** `chain-coa-permits`
+> moved from daily to WEEKLY (`0 8 * * 2`, Spec 115 §2 row 1) while it stays disabled
+> pending the pre-enable prerequisites in `.cursor/wf2_cloud_acceptance_and_cron_cadence_active_task.md` §E. The "daily steps ≤ 25h ago" clause above is
+> SUSPENDED for `chain_coa`/`chain_permits` for as long as that weekly cadence and the
+> disabled state hold — a weekly cadence fails this exact wording by construction, ~6 days
+> in 7, and that is expected, not a defect. **Supabase Layer-1 managed daily backups**
+> (Spec 112 §2/§4.1; Spec 113 §9.1 — "Supabase's built-in daily backups, 7-day retention,
+> included at the Pro tier, no PITR add-on") are the backup of record during the
+> suspension, replacing Layer 2's per-chain `backup_db` cadence as the thing this check's
+> spirit ("is there a recent backup") should be read against. **Caveat, NOT independently
+> verified by this WF:** Layer 1 is dashboard-configured infrastructure with no repo-side
+> verification script (Spec 112 §4.1 — "Verification is a dashboard check... there is no
+> repo-side script"); this waiver assumes the Pro-tier daily backup is actually enabled on
+> the live project (Spec 113 §9.1 records it as the decided architecture, not as a live
+> dashboard reading this WF took). An operator should confirm this in the Supabase
+> dashboard before relying on the waiver operationally. Revisit trigger: `chain-coa-permits`
+> returns to a daily/near-daily cadence, or `pipeline-watchdog.yml` is re-enabled (same plan §E).
+
 **V5 Score:** ___ / 3
 
 ---
@@ -515,6 +533,18 @@ psql "$SUPABASE_DATABASE_URL" -c \
   `pipeline-watchdog.yml`'s safety net invokes `scripts/backup-db.js`
   directly, Spec 115 §2.5).
 - **Evidence:** _(paste)_  **Status:** PASS / FAIL
+
+> **WAIVED 2026-09-18 (dated, Spec 124 R-AQ; operator ruling, Ask 4(a)):** identical waiver
+> to O5's above, stated here because OP4 is the check most directly about backup
+> freshness. `permits`'s own `backup_db` step (Layer 2, this check's `permits:backup_db`
+> row) now completes roughly weekly, not within 25h, while `chain-coa-permits` runs
+> `0 8 * * 2` (Spec 115 §2 row 1) and stays disabled pending
+> `.cursor/wf2_cloud_acceptance_and_cron_cadence_active_task.md` §E's pre-enable
+> prerequisites. **Supabase Layer-1 managed daily backups** (Spec 112 §2/§4.1; Spec 113
+> §9.1) are the backup of record during the suspension — **not independently verified by
+> this WF against the live Supabase dashboard/Management API**; an operator should confirm
+> the Pro-tier daily backup is actually enabled before relying on this waiver
+> operationally. Revisit trigger: same as O5's waiver above.
 
 **V10 Score:** ___ / 3
 
