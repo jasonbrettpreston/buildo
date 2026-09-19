@@ -3085,8 +3085,16 @@ async function runEnrichPhase({ descriptor, pool, compute, config, chainId, log,
   // ── Spec 58 §9/§11 consumer protocol — HALTS on a missing/failed producer ────
   const contractHook = hooks.contract_read && hooks.contract_read !== 'none' ? hooks.contract_read : null;
   let staleOverlays = new Set();
+  // batch-2 row 2.1 (Ask A2 (a), enrich_ravines, 2026-09-18) — hoisted out of the `if` block
+  // below and threaded onto BOTH `passCtx` object literals as `contract` (one additive key,
+  // no schema change): until this change the hook's return value was read ONLY for its
+  // `staleOverlays` side effect and otherwise DISCARDED, so a step declaring `contract_read`
+  // for a value beyond `layers` (e.g. enrich_ravines' `sourceDatasetVersion`) had no seam to
+  // reach it from a pass. `null` when no contract_read hook is declared, so a pass that reads
+  // `ctx.contract` on a step with no hook fails loudly rather than reading `undefined` fields.
+  let contract = null;
   if (contractHook) {
-    const contract = await resolveHook(contractHook, 'execution.enrich_hooks.contract_read')(pool);
+    contract = await resolveHook(contractHook, 'execution.enrich_hooks.contract_read')(pool);
     staleOverlays = new Set(
       (compute.OVERLAY_LAYERS || []).filter((l) => l.col && contract.layers[l.key] === false).map((l) => l.key),
     );
@@ -3501,7 +3509,7 @@ async function runEnrichPhase({ descriptor, pool, compute, config, chainId, log,
       // neither was ever capable of firing. `SET LOCAL statement_timeout` is a correct
       // PER-STATEMENT guard and is KEPT; it is not, and never was, a phase bound. The
       // wall-clock phase deadline armed below is what bounds the phase.
-      const passCtx = { full, scopeWhere: 'TRUE', staleOverlays, clock, log, config, scopeRunId, onProgress: (n) => { rowsProcessed = n; }, ...makeWriteSeams(client) };
+      const passCtx = { full, scopeWhere: 'TRUE', staleOverlays, contract, clock, log, config, scopeRunId, onProgress: (n) => { rowsProcessed = n; }, ...makeWriteSeams(client) };
       // WF3 enrich_parcels stall incident (2026-09-07, orchestrator observation) — Spec 48 §3.6
       // silence class: with NO per-phase log line, a `--full` run's own stdout goes silent from
       // the single startup INFO line until the whole step finishes (measured live: a real,
@@ -3736,7 +3744,7 @@ async function runEnrichPhase({ descriptor, pool, compute, config, chainId, log,
       // count is cumulative across every phase and one ticker instance covers this phase
       // too — no per-phase re-declaration here.
       const passCtx = {
-        full, scopeWhere: 'TRUE', staleOverlays, clock, log, config, scopeRunId,
+        full, scopeWhere: 'TRUE', staleOverlays, contract, clock, log, config, scopeRunId,
         stream: (sql, params, opts) => streamOverClient(streamClient, sql, params, { batchSize: streamBatchSize, ...opts }),
         flushBatch,
         onProgress: (n) => { rowsProcessed = n; },

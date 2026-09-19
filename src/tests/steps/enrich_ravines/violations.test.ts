@@ -125,7 +125,7 @@ describe('enrich_ravines — G-shape + descriptor structure (true from commit 1:
 });
 
 describe('enrich_ravines — the artifacts commit 2b owes (RED at commit 1, FLIP at commit 2b)', () => {
-  it.fails('the compute module exists, exports the two declared hooks by name, and passes[] match the declared phase [flips at commit 2b]', () => {
+  it('the compute module exists, exports the two declared hooks by name, and passes[] match the declared phase [flips at commit 2b]', () => {
     expect(exists(COMPUTE_REL)).toBe(true);
     // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-explicit-any
     const compute: any = require(path.join(REPO_ROOT, COMPUTE_REL));
@@ -145,7 +145,7 @@ describe('enrich_ravines — the artifacts commit 2b owes (RED at commit 1, FLIP
     expect(src).not.toMatch(/console\./);
   });
 
-  it.fails('F5 — ENRICH_SQL is the materialized-centroid LATERAL form, PORTED VERBATIM, never the spec\'s slow inline-centroid form [flips at commit 2b]', () => {
+  it('F5 — ENRICH_SQL is the materialized-centroid LATERAL form, PORTED VERBATIM, never the spec\'s slow inline-centroid form [flips at commit 2b]', () => {
     // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-explicit-any
     const compute: any = require(path.join(REPO_ROOT, COMPUTE_REL));
     expect(compute.ENRICH_SQL).toContain('AS MATERIALIZED');
@@ -153,7 +153,7 @@ describe('enrich_ravines — the artifacts commit 2b owes (RED at commit 1, FLIP
     expect(compute.ENRICH_SQL).not.toMatch(/ST_Centroid\(p\.geom\)::geography\s*<->/); // the slow inline form
   });
 
-  it.fails('F6 regression lock, BOTH directions — dropping the lineage stamp from guard_columns must reproduce the second-run rewrite [flips at commit 2b]', () => {
+  it('F6 regression lock, BOTH directions — dropping the lineage stamp from guard_columns must reproduce the second-run rewrite [flips at commit 2b]', () => {
     const w0 = descriptor.outputs.writes[0];
     // Forward: the real declaration guards all three, including the lineage stamp.
     expect(w0.write_discipline.guard_columns).toContain('ravine_dataset_version_when_enriched');
@@ -166,7 +166,7 @@ describe('enrich_ravines — the artifacts commit 2b owes (RED at commit 1, FLIP
     expect(guardClause).not.toBe(withoutLineageGuard); // the removal must actually change the text
   });
 
-  it.fails('the shell is FROZEN onto pipeline.step and declares ADVISORY_LOCK_ID 60 as source text [flips at commit 2b]', () => {
+  it('the shell is FROZEN onto pipeline.step and declares ADVISORY_LOCK_ID 60 as source text [flips at commit 2b]', () => {
     const src = read(STEP_REL);
     expect(src).toContain('module.exports = pipeline.step(descriptor, compute);');
     expect(src).toContain('const ADVISORY_LOCK_ID = 60;');
@@ -177,7 +177,7 @@ describe('enrich_ravines — the artifacts commit 2b owes (RED at commit 1, FLIP
     expect(src.split('\n').filter((l) => l.trim().length > 0).length).toBeLessThan(40);
   });
 
-  it.fails('Ask A2 (a) — passCtx.contract reaches the pass: the runner exposes the contract_read hook\'s return value, not just staleOverlays [flips at commit 2b]', () => {
+  it('Ask A2 (a) — passCtx.contract reaches the pass: the runner exposes the contract_read hook\'s return value, not just staleOverlays [flips at commit 2b]', () => {
     const indexSrc = read('scripts/lib/step/index.js');
     // The additive seam this commit authorizes, and ONLY this seam: one `contract,` key on both
     // ENRICHER passCtx object literals (shared-txn + post-commit), no other runner shape change.
@@ -186,7 +186,7 @@ describe('enrich_ravines — the artifacts commit 2b owes (RED at commit 1, FLIP
 });
 
 describe('enrich_ravines — F9 disposition: the retired mechanism, the preserved observable [flips at commit 2b]', () => {
-  it.fails('parcels_ravine_enrich_skipped is a DERIVED check (updated === 0), never a hand-rolled skip branch [flips at commit 2b]', () => {
+  it('parcels_ravine_enrich_skipped is a DERIVED check (updated === 0), never a hand-rolled skip branch [flips at commit 2b]', () => {
     const src = read(COMPUTE_REL);
     expect(src).not.toMatch(/function countStale/);
     expect(src).not.toMatch(/if \(staleCount === 0\)/);
@@ -200,7 +200,7 @@ describe('enrich_ravines — F9 disposition: the retired mechanism, the preserve
 });
 
 describe('enrich_ravines — RV-L3, the config-threading gap this conversion did NOT paper over', () => {
-  it.fails('the invalid-geometry ratio stays a pinned literal (0.05) in compute, NOT a phantom logic variable no code path can read [flips at commit 2b]', () => {
+  it('the invalid-geometry ratio stays a pinned literal (0.05) in compute, NOT a phantom logic variable no code path can read [flips at commit 2b]', () => {
     const names = descriptor.config.logic_variables.map((v: { name: string }) => v.name);
     expect(names).not.toContain('enrich_ravines_producer_invalid_geom_max_pct');
     const src = read(COMPUTE_REL);

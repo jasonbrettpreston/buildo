@@ -288,3 +288,151 @@ SUPABASE_CA_CERT_PATH=scripts/certs/supabase-ca.pem PG_HOST= DATABASE_URL=$SUPAB
 Verify the 7 VALUES after applying (not the insert count) — `apply-logic-variables.js` is
 `ON CONFLICT DO NOTHING`; `scripts/lib/step/config.js` THROWS (LM-D15) on a declared variable with
 no seed row.
+
+---
+
+## Addendum (commit 2b) — RV-D4: the COUNTER-ROOT doubling defect, found and fixed
+
+While measuring the forced-full local runtime (all 486,530 stamps nulled), the FIRST full run
+reported `records_updated: 973060` — exactly 2x the true row count (verified against the live DB:
+`SELECT COUNT(*) WHERE ravine_dataset_version_when_enriched IS NOT NULL` = 486,530, exactly the
+expected total, and `COUNT(DISTINCT ...)` = 1 — the WRITE was correct; only the COUNTER was wrong).
+
+Root-caused by live instrumentation (not guessed): wrapped `write.executeSetBasedJoinUpdate` to
+prove the SQL executed exactly once per run (confirmed on 20/25/30/50/100-row controlled samples,
+each time the real rowCount matched the nulled count exactly), then dumped `written.e1` state
+before and after `runEnrichPhase`'s post-phase reconciliation loop (`scripts/lib/step/index.js`,
+the "RESIDUE, NARROWED AND NAMED" block, batch-2 Phase 0.10b). That loop treats ANY of
+`PASS_SCANNED_FIELDS = ['scanned','scoped','candidates','updated']` present on a pass's own
+return object as evidence the pass did NOT use the composable `ctx.joinUpdate`/`ctx.retract` seam,
+and unconditionally ADDS `r.updated` into `written[key].updated` — a second increment on top of
+the one `ctx.joinUpdate` itself already applied, because `runRavineJoinPass` originally returned
+`{updated, sourceDatasetVersion}`.
+
+**`geocode_permits` has the identical shape** (`runGeocodePass` also calls `ctx.joinUpdate` and
+also returns `.updated`) but never surfaced this, because its declared counters source from
+`matched.compute.*`, never `written.e1.updated` directly. `enrich_ravines` is the first step to
+use the COUNTER-ROOT `written.e1.updated` pattern for `records_updated`, which is exactly what
+made the pre-existing corruption visible.
+
+**Fixed in compute, not the shared runner** (out of this conversion's Ask A2 scope): the pass now
+returns `rows_updated` instead of `updated`, a name that collides with none of
+`PASS_SCANNED_FIELDS`. Re-verified on a fresh 25-row sample: `records_updated: 25` (correct).
+Filed as `RV-D4` (defect-ledger.md, CLOSED) and a MED item in `review_followups.md` for the shared
+runner's own eventual fix.
+
+**Corrected forced-full measurement:** the DB write itself was correct throughout (486,530 parcels
+genuinely and correctly re-stamped); the reported `records_updated` for that run should read
+486,530, not 973,060. Wall-clock for that run: 3,710,569 ms ≈ **61.8 minutes** — longer than the
+legacy's 35.4-minute baseline, most plausibly because it ran concurrently with this session's own
+vitest/DB activity on the same machine (contention), not evidence of a genuine performance
+regression; `guards.requires` now running unconditionally (Class A(vii)) adds five cheap catalog
+queries, not tens of minutes. Treat 61.8 min as an upper bound, not a clean measurement.
+
+---
+
+## Golden differential (commit 2b) — scored against the PH-0 prediction
+
+Both pairs captured back-to-back against a fully-converged DB (no intervening
+`load_ravines`/`load_parcels`/`enrich_parcels` run — verified: `pipeline_runs` shows no new rows
+for those pipelines between the PRE and POST captures). `sources.json`: **41 differences, 0
+unexplained.** `standalone.json`: **42 differences, 0 unexplained** (one more than `sources` — see
+below). `table_state` is **IDENTICAL in both pairs** (hash `3ff50232`, 486,530 rows) — the
+write-equivalence proof: the converted step produces byte-identical `parcels` data to the legacy
+step over the three enriched columns.
+
+**Class A (structural, predicted) — every predicted item confirmed present, PLUS two additions:**
+(i) `records_total` null → 486530 ✓; (ii) `records_meta.config` appears (7 resolved variables) ✓;
+(iii) `checks_passed`/`checks_failed`/`checks_warned` appear ✓ (no `errors`/`warnings` keys — none
+fired, consistent with a clean PASS run); (iv) `threshold` renders resolved values (`"pct >= 95"`
+instead of the legacy's implicit comparison) ✓; (v) new `stdout_lines` for the phase
+starting/completed boundary logging ✓; (vi) `parcels_ravine_enrich_skipped` present, re-derived ✓;
+(vii) not directly visible in the diff (both PRE and POST already hit the zero-stale path, so
+`guards.requires`' extra catalog queries are invisible in a stdout/summary diff — confirmed
+separately by reading the descriptor); (viii) 3 new `invariants[]` rows + 3 new `plausibility[]`
+rows (F-RC1) appear ✓ — **explained by deepest field name**: `summary.records_meta.audit_table.rows[7..12]`.
+**Two additions beyond the original prediction, both explained:** (ix) `meta.reads.parcels[2..4]`
+—the RV-D1 widened, honest declared read-set; (x) `standalone.json` ONLY: `pipeline_runs[0]`
+appears (undefined → a real completed row) — the converted step opens a ledger row on a
+standalone invocation where the legacy opened none (the review_followups HIGH item
+"`pipeline.run()` standalone invocations open no ledger row" no longer applies to this step
+post-conversion, a genuine, beneficial behaviour improvement, not a regression).
+
+**Class B (data drift, predicted EMPTY) — confirmed EMPTY.** Verified via `pipeline_runs`:
+no `load_ravines`/`load_parcels`/`enrich_parcels` completions between the two capture timestamps.
+
+**Class C (inherent re-run noise, predicted small non-empty) — confirmed, all named:**
+`duration_ms`/`enrich_ravines_duration_ms`/`sys_duration_ms`/6×`sys_*_duration_ms` rows (per-check
+timing), `sys_velocity_rows_sec`, `chain_run_id` (nulled by the harness's own `<DUR>`-style
+normalization in some fields but not `records_meta.chain_run_id`, itself always null for a
+non-chain-dispatched capture), and (`standalone.json` only) `pipeline_runs[0].id`/`.started_at`/
+`.completed_at`/`.duration_ms` (a genuinely new row, its own identity fields non-deterministic by
+construction).
+
+**Class D (capture order) — EMPTY in both pairs**, confirmed by the identical `table_state` hash.
+
+**Minor cosmetic diff, explained:** `audit_table.name` "Parcel ravine enrichment" → "Parcel Ravine
+Enrichment" (this conversion's `identity.display_name`, Title Case, replacing the legacy's
+sentence-case literal) and `audit_table.phase` `60` (the legacy literally reused
+`ADVISORY_LOCK_ID` as the audit phase number) → `12` (the runner's own generic `phase` field,
+sourced from this step's `sources` chain position per the converted shape — confirmed NOT the lock
+id by spot-checking `geocode_permits`' own captured golden, whose `audit_table.phase` is `3`, not
+its lock id `5`).
+
+**G8 verdict: PASS — zero unexplained diffs in either pair.**
+
+---
+
+## Explained-diff citations (step-validate.mjs G8 gate — deepest field name / difference count)
+
+Every remaining diff the automated G8 checker flagged, cited by its own deepest field name (never
+a generic wrapper):
+
+- **`records_new`** — `summary.records_new` moves `null` → `0` in both pairs, the sibling of the
+  already-predicted `records_total` move (A4 ruling): an Enrich archetype's `records_new` counter
+  root (`matched.compute.records_new_aggregate`) is a declared finite literal 0 (class N structurally
+  cannot INSERT), never the legacy's `null`.
+- **`code_version`** — `summary.records_meta.code_version` appears (`"v1-materialized-centroid-knn"`),
+  sourced from `descriptor.staleness.logic_version` via `buildRavineMeta` — new records_meta key,
+  declared in the descriptor's `emits[]`.
+- **`ledger_row`** — `summary.records_meta.ledger_row` appears (`"chain_owned"` / `"owned"`) — a
+  runner-owned field every converted step emits, absent from the legacy's hand-rolled summary.
+- **`pool_errors`** — `summary.records_meta.pool_errors` appears (`0`) — likewise runner-owned,
+  absent pre-conversion.
+- **`warn_threshold`** — `summary.records_meta.audit_table.rows[0].warn_threshold` appears
+  (`"pct >= 90"`) on the `parcels_with_ravine_distance_pct` row only — the R-AD 3-tier rendering
+  of the WARN bound alongside the already-cited `threshold` (PASS bound); the legacy rendered
+  neither as a resolved string.
+- **`stdout_lines`** — exactly **4 differences** under `stdout_lines` in each pair (indices 0-3):
+  the legacy's 2-line stdout (`skip — ...` / `completed in <DUR>`) is replaced by the converted
+  step's 4-line stdout (`target: ... migrations=...`, `phase ravine_join starting ...`,
+  `phase ravine_join completed in <DUR>`, `[enrich_ravines] completed in <DUR>`) — the new
+  phase-boundary logging already predicted in Class A (v).
+
+---
+
+## §R. Reflection
+
+Written this commit — `converted.json.pending[0].stage` reached `shape_clean` at commit 2b;
+cutover (commit 3) is prepared but uncommitted, per the operator's explicit instruction.
+
+**LOW-CONFIDENCE findings** (measured this session, not fully closed):
+
+| # | Finding | Why LOW-CONFIDENCE |
+|---|---|---|
+| 1 | The forced-full local runtime (61.8 min) was measured while this session's own vitest/DB activity ran concurrently on the same machine, so it is an upper bound, not a clean apples-to-apples comparison against the legacy's 35.4-minute baseline. |
+| 2 | RV-D4's fix (renaming the pass's returned key to `rows_updated`) is verified on controlled samples up to 100 rows and re-derived from first principles against the runner's own reconciliation-loop source; it was not re-verified against a fresh full 486,530-row forced-full run (too expensive to repeat this session) — the golden POST capture (steady-state, `records_updated: 0`) cannot exercise this path since `records_updated` is 0 either way at that scale. |
+
+**RECURRING/STANDARD-SHAPING** patterns this conversion reconfirms:
+
+| # | Pattern | Where else it recurs |
+|---|---|---|
+| 1 | A step's own pass-result field names can collide with a shared runner's generic fallback/reconciliation naming convention (`PASS_SCANNED_FIELDS`), silently double-counting a value the composable seam (`ctx.joinUpdate`/`ctx.retract`) already tracked correctly — RV-D4 is a NEW instance of the same class EP-D12/EP-D16/ER-D1 already document (a hardcoded/generic library assumption silently wrong for a shape its author didn't have in front of them when it was written) |
+| 2 | Registering a `pending[]`/`converted[]` entry has REGISTRY-WIDE side effects (probe list, fast invariants #23/24, scorecard staleness) that must be re-verified fleet-wide, not just for the one step | I4's `a062eb79` repair; batch2 P1.1's own APS-D5/D6 |
+| 3 | A `contract_read` hook's return value being silently discarded beyond one narrow side effect (`staleOverlays`) is the SAME shape as the pre-0.10b `computeAggregateRecordsUpdated` hardcoded call this WF's own Ask A2 retires — a declared seam with a real but narrow consumer inside the runner, widened by one additive key rather than redesigned |
+
+RED evidence: the whole `src/tests/steps/enrich_ravines/violations.test.ts` red suite (8
+`it.fails()` at commit 1, proven RED against the actual pre-compute/pre-shell tree via a `git
+stash` swap, not simulated — 7 flipped to plain `it()` at commit 2b as their artifacts landed, 1
+(`converted.json` registration) remains RED through commit 2b and flips only at commit 3) — see
+the commit ledger above.

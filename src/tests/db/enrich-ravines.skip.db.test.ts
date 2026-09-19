@@ -1,6 +1,19 @@
 // 🔗 SPEC LINK: docs/specs/01-pipeline/59_source_ravine_protection.md §8d, §11.1 (#418)
+// 🔗 SPEC LINK: docs/specs/01-pipeline/122_pipeline_step_optimization.md §5.5 (compute shape)
 //
-// Real-DB integration tests for the #418 incremental-skip in enrich-ravines.js.
+// RE-POINTED at commit 2b (batch-2 row 2.1, converted onto the ENRICHER runner) — otherwise
+// UNTOUCHED, per the plan: this is the only LIVE proof the Layer-2 scope predicate is correct.
+// `ENRICH_SQL` moved verbatim (F5) from the legacy shell to `scripts/lib/compute/enrich-ravines.js`
+// and is unchanged byte-for-byte; tests 1-4 below are therefore unchanged except the import.
+// Test 5 (previously `assertVersionColumn`/`countStale`, standalone exports that no longer
+// exist post-conversion) is rewritten to prove the SAME two facts through their new homes:
+// DEC-E is now a `guards.requires` entry (enforced generically by the runner's
+// `assertRequirements`, Class A(vii) — armed on EVERY run, not only the recompute path) and the
+// Layer-2 stale-count predicate is now the WHOLE mechanism (F9 — Layer-1's separate early-return
+// branch is retired), provable directly against `ENRICH_SQL`'s own `$1` parameter rather than a
+// standalone `countStale` helper.
+//
+// Real-DB integration tests for the #418 Layer-2 scope predicate in enrich-ravines' compute.
 // ISOLATION: like enrich-parcels.db.test.ts, every mutating case runs inside a
 // BEGIN/ROLLBACK on a dedicated connection and asserts ONLY on its own parcel_id
 // prefix ('RAV-418-…') — the container DB is shared across the whole suite, and
@@ -21,7 +34,9 @@ import type { Pool, PoolClient } from 'pg';
 import { dbAvailable, getTestPool } from './setup-testcontainer';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const er = require('../../../scripts/enrich-ravines.js');
+const er = require('../../../scripts/lib/compute/enrich-ravines.js');
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const descriptor = require('../../../scripts/enrich-ravines.descriptor.json');
 
 // A ravine box covering lon -79.41..-79.39, lat 43.69..43.71.
 const RAVINE = "ST_Multi(ST_GeomFromText('POLYGON((-79.41 43.69,-79.39 43.69,-79.39 43.71,-79.41 43.71,-79.41 43.69))',4326))";
@@ -129,10 +144,28 @@ describe.skipIf(!dbAvailable())('enrich-ravines.js — #418 incremental skip (re
     } finally { c.release(); }
   });
 
-  it('assertVersionColumn passes (DEC-E) and countStale runs against the live table', async () => {
-    await expect(er.assertVersionColumn(pool)).resolves.toBeUndefined();
-    const n = await er.countStale(pool, 'definitely-not-a-real-version');
-    expect(typeof n).toBe('number');
-    expect(n).toBeGreaterThanOrEqual(0);
+  it('DEC-E (the lineage column) is now a guards.requires entry, enforced generically — no standalone assertVersionColumn export post-conversion', async () => {
+    const req = descriptor.guards.requires.find(
+      (r: { kind: string; name: string }) => r.kind === 'column' && r.name === 'parcels.ravine_dataset_version_when_enriched',
+    );
+    expect(req).toBeTruthy();
+    expect(req.on_missing).toBe('fail');
+    // The column genuinely exists on this live schema (what assertVersionColumn used to prove directly).
+    const { rows } = await pool.query(
+      `SELECT 1 FROM information_schema.columns WHERE table_name = 'parcels' AND column_name = 'ravine_dataset_version_when_enriched'`,
+    );
+    expect(rows.length).toBe(1);
+  });
+
+  it('Layer-2 stale-count is now the WHOLE mechanism (F9) — ENRICH_SQL\'s own $1-scoped predicate against the live table, no standalone countStale export', async () => {
+    // No parcel in the live table carries the sentinel version, so every geom-bearing parcel is
+    // "stale" against it — proving the predicate runs, without depending on a removed helper.
+    const { rows } = await pool.query(
+      `SELECT COUNT(*)::int AS n FROM parcels WHERE geom IS NOT NULL AND ravine_dataset_version_when_enriched IS DISTINCT FROM $1`,
+      ['definitely-not-a-real-version'],
+    );
+    expect(typeof rows[0].n).toBe('number');
+    expect(rows[0].n).toBeGreaterThanOrEqual(0);
+    expect(er.ENRICH_SQL).toMatch(/ravine_dataset_version_when_enriched IS DISTINCT FROM \$1/);
   });
 });

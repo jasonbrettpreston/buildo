@@ -1,12 +1,22 @@
 // SPEC LINK: docs/specs/01-pipeline/59_source_ravine_protection.md §8d, §9, §11.1
+// SPEC LINK: docs/specs/01-pipeline/122_pipeline_step_optimization.md §5.1 (frozen shape), §5.5 (compute shape)
 //
-// Infra tests for enrich-ravines.js, two layers:
-//  (A) Source-contract — the script wires the §8d/§9 behaviors (consumer protocol,
-//      assertPreconditions incl. L14, Enrich-archetype emit, emitMeta read-set
-//      WITHOUT lead_id, §11.1 SQL form).
-//  (B) DB-backed §11.1 — real PostGIS: a parcel inside a ravine → is_in_ravine=true,
-//      distance ≤ 0; an outside parcel → false, distance > 0; idempotent re-run;
-//      L14 empty-ravines precondition HALT.
+// Infra tests for the CONVERTED enrich_ravines step (batch-2 row 2.1, ENRICHER), two layers:
+//  (A) Source-contract — the descriptor + compute wire the §8d/§9 behaviors (consumer protocol,
+//      the F1/F2/SRID pre-transaction HALT, guards.requires preconditions, the Enrich-archetype
+//      emit, the honestly-widened emitMeta read-set WITHOUT lead_id, §11.1 SQL form).
+//  (B) DB-backed §11.1 — real PostGIS: a parcel inside a ravine → is_in_ravine=true, distance
+//      ≤ 0; an outside parcel → false, distance > 0; idempotent re-run; L14 empty-ravines HALT.
+//
+// RE-POINTED at commit 2b (batch-2 row 2.1): the pre-conversion `SCRIPT` (raw shell source)
+// assertions are replaced by descriptor + compute assertions, since the pre-conversion
+// `countStale`/`assertPreconditions`/`assertVersionColumn` standalone exports no longer exist —
+// L14/SRID are folded into `readRavineContract` (RV-L2, the one hook proven to run
+// pre-transaction on every invocation), DEC-E/PostGIS/both GIST indexes moved to
+// `guards.requires` (Class A(vii): now armed on EVERY run, not only the recompute path), and
+// the #418 Layer-1 early-return branch is RETIRED AS A MECHANISM (F9) — its OBSERVABLE
+// (`parcels_ravine_enrich_skipped`) is re-derived in `computePostPhase` from the same scope
+// count the write itself used.
 
 import * as fs from 'node:fs';
 import * as path from 'node:path';
@@ -14,93 +24,109 @@ import { afterAll, describe, expect, it } from 'vitest';
 import { dbAvailable, getTestPool } from './db/setup-testcontainer';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const er = require('../../scripts/enrich-ravines.js');
+const descriptor = require('../../scripts/enrich-ravines.descriptor.json');
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const compute = require('../../scripts/lib/compute/enrich-ravines.js');
 
-const SCRIPT = fs.readFileSync(path.resolve(__dirname, '../../scripts/enrich-ravines.js'), 'utf8');
+const COMPUTE_SRC = fs.readFileSync(path.resolve(__dirname, '../../scripts/lib/compute/enrich-ravines.js'), 'utf8');
+const SHELL_SRC = fs.readFileSync(path.resolve(__dirname, '../../scripts/enrich-ravines.js'), 'utf8');
 
 // ── (A) Source-contract ─────────────────────────────────────────────────────
-describe('enrich-ravines.js — source contract (Spec 59 §8d/§9)', () => {
-  it('lock 60 + reads the chain-scoped producer sources:load_ravines, completed_at DESC', () => {
-    expect(SCRIPT).toMatch(/ADVISORY_LOCK_ID\s*=\s*60/);
-    expect(SCRIPT).toContain("'sources:load_ravines'");
-    expect(SCRIPT).toMatch(/ORDER BY completed_at DESC/);
+describe('enrich_ravines — source contract (Spec 59 §8d/§9, converted)', () => {
+  it('lock 60 (descriptor + shell source-text agreement) + reads the chain-scoped producer sources:load_ravines, completed_at DESC', () => {
+    expect(descriptor.identity.lock).toBe(60);
+    expect(SHELL_SRC).toMatch(/ADVISORY_LOCK_ID\s*=\s*60/);
+    expect(COMPUTE_SRC).toContain("'sources:load_ravines'");
+    expect(COMPUTE_SRC).toMatch(/ORDER BY completed_at DESC/);
   });
 
-  it('§11.1 SQL: ST_Intersects boolean + index-accelerated LATERAL KNN (materialized centroid), geom-scoped', () => {
-    expect(SCRIPT).toContain('ST_Intersects(pc.geom, r.geom)');
-    expect(SCRIPT).toMatch(/pc\.cg <-> r\.geom::geography/); // binds idx_ravines_geog_gist (not the slow inline-centroid form)
-    expect(SCRIPT).toContain('AS MATERIALIZED');
-    expect(SCRIPT).toContain('WHERE p.geom IS NOT NULL');
-    expect(SCRIPT).toContain('IS DISTINCT FROM');
+  it('§11.1 SQL: ST_Intersects boolean + index-accelerated LATERAL KNN (materialized centroid), geom-scoped, PORTED VERBATIM (F5)', () => {
+    expect(compute.ENRICH_SQL).toContain('ST_Intersects(pc.geom, r.geom)');
+    expect(compute.ENRICH_SQL).toMatch(/pc\.cg <-> r\.geom::geography/); // binds idx_ravines_geog_gist (not the slow inline-centroid form)
+    expect(compute.ENRICH_SQL).toContain('AS MATERIALIZED');
+    expect(compute.ENRICH_SQL).toContain('WHERE p.geom IS NOT NULL');
+    expect(compute.ENRICH_SQL).toContain('IS DISTINCT FROM');
   });
 
-  it('assertPreconditions guards BOTH ravines indexes + parcels GIST + SRID + L14 empty-ravines', () => {
-    expect(SCRIPT).toContain('idx_parcels_geom_gist');
-    expect(SCRIPT).toContain('idx_ravines_geom_gist'); // planar (DeepSeek HIGH)
-    expect(SCRIPT).toContain('idx_ravines_geog_gist'); // geography
-    expect(SCRIPT).toMatch(/Find_SRID\([^)]*parcels[^)]*geom/);
-    expect(SCRIPT).toMatch(/COUNT\(\*\)[^;]*FROM ravines/); // L14
+  it('guards.requires declares PostGIS + BOTH ravines indexes + parcels GIST + the DEC-E lineage column, all on_missing:"fail", armed on EVERY run (Class A(vii))', () => {
+    const kinds = descriptor.guards.requires.map((r: { kind: string; name: string; on_missing: string }) => `${r.kind}:${r.name}`);
+    expect(kinds).toContain('extension:postgis');
+    expect(kinds).toContain('index:idx_parcels_geom_gist');
+    expect(kinds).toContain('index:idx_ravines_geom_gist'); // planar (DeepSeek HIGH, pre-conversion review)
+    expect(kinds).toContain('index:idx_ravines_geog_gist'); // geography
+    expect(kinds).toContain('column:parcels.ravine_dataset_version_when_enriched'); // DEC-E
+    for (const r of descriptor.guards.requires) expect(r.on_missing).toBe('fail');
   });
 
-  it('Enrich archetype emit + emitMeta read-set is id/geom only (NO lead_id — Observability BUG-2)', () => {
-    expect(SCRIPT).toMatch(/records_total:\s*null/);
-    expect(SCRIPT).toMatch(/records_updated:\s*updated/); // shared emitResults param (#418)
-    expect(SCRIPT).toMatch(/parcels:\s*\['id', 'geom'\]/);
-    expect(SCRIPT).not.toMatch(/parcels:\s*\[[^\]]*lead_id/);
+  it('the SRID=4326 assertion is folded into readRavineContract (RV-L2 — guards.srid is declarative only, unconsumed by the runner)', () => {
+    expect(COMPUTE_SRC).toMatch(/Find_SRID\([^)]*parcels[^)]*geom/);
+    expect(descriptor.guards.srid).toBe(4326);
   });
 
-  it('consumer-protocol gate strings present (spec_version pin, empty-guard, drift, lineage)', () => {
-    expect(SCRIPT).toContain('spec_version');
-    expect(SCRIPT).toContain('delete_skipped_empty_guard');
-    expect(SCRIPT).toContain('mass_delete_check_passed');
-    expect(SCRIPT).toContain('source_dataset_version is null/empty');
+  it('Enrich archetype: records_total is the scanned population (A4 ruling), records_updated resolves written.e1.updated (COUNTER-ROOT)', () => {
+    expect(descriptor.counters.records_total.source).toBe('matched.compute.geom_bearing_parcels_scanned');
+    expect(descriptor.counters.records_updated.source).toBe('written.e1.updated');
+    expect(descriptor.counters.records_new.source).toBe('matched.compute.records_new_aggregate');
   });
 
-  // ── #418 incremental-skip wiring ──────────────────────────────────────────
-  it('#418 Layer-1 staleCount skip + Layer-2 version-scoped parcel_c are wired', () => {
-    expect(SCRIPT).toContain('countStale');
-    // Layer-2: parcel_c is scoped to stale parcels (NULL/older stamp vs $1).
-    expect(SCRIPT).toMatch(/ravine_dataset_version_when_enriched IS DISTINCT FROM \$1/);
-    expect(SCRIPT).toContain('#418 stale-only scope');
-    // Layer-1: the skip branch returns WITHOUT entering withTransaction (no KNN).
-    expect(SCRIPT).toMatch(/if \(staleCount === 0\)/);
-  });
-
-  it('#418 skip path STILL emits summary + meta via shared emitResults (Gemini — no UNKNOWN step)', () => {
-    // Both branches funnel through emitResults — skip (updated:0, skipped:true) + recompute.
-    expect(SCRIPT).toMatch(/emitResults\(pool, \{ sourceDatasetVersion, updated: 0, skipped: true/);
-    expect(SCRIPT).toMatch(/emitResults\(pool, \{ sourceDatasetVersion, updated: result\.updated, skipped: false/);
-    // ...and emitResults always calls BOTH emit calls + carries the skip audit row.
-    const emitFn = SCRIPT.slice(
-      SCRIPT.indexOf('async function emitResults'),
-      SCRIPT.indexOf('async function main'),
+  it('the WIDENED, honest declared read-set (RV-D1) — still NO lead_id (F10 intent preserved)', () => {
+    const parcelsRead = descriptor.inputs.reads.tables.find((t: { table: string }) => t.table === 'parcels');
+    expect(parcelsRead.columns).toEqual(
+      expect.arrayContaining(['id', 'geom', 'is_in_ravine_protection_area', 'ravine_distance_m', 'ravine_dataset_version_when_enriched']),
     );
-    expect(emitFn).toContain('pipeline.emitSummary');
-    expect(emitFn).toContain('pipeline.emitMeta');
-    expect(emitFn).toContain('parcels_ravine_enrich_skipped');
+    expect(parcelsRead.columns).not.toContain('lead_id');
+    const outputs = descriptor.outputs.writes[0];
+    expect(outputs.table).toBe('parcels');
+    expect(outputs.columns.map((c: { name: string }) => c.name)).toEqual([
+      'is_in_ravine_protection_area', 'ravine_distance_m', 'ravine_dataset_version_when_enriched',
+    ]);
   });
 
-  it('#418 DEC-E column guard + L14 empty-ravines guard BOTH run before the skip decision', () => {
-    expect(SCRIPT).toContain('information_schema.columns');
-    expect(SCRIPT).toContain('migration 168 not applied');
-    // In main(), assertRavinesNonEmpty(pool) must precede countStale(pool, …) so a wiped
-    // ravines table HALTs even when matching version stamps would satisfy the skip (Gemini).
-    const mainBody = SCRIPT.slice(SCRIPT.indexOf('async function main'));
-    const idxNonEmpty = mainBody.indexOf('assertRavinesNonEmpty(pool)');
-    const idxStale = mainBody.indexOf('countStale(pool');
-    expect(idxNonEmpty).toBeGreaterThan(-1);
-    expect(idxStale).toBeGreaterThan(idxNonEmpty);
+  it('consumer-protocol gate strings present (spec_version pin, empty-guard, drift, lineage) — F1, ported verbatim', () => {
+    expect(COMPUTE_SRC).toContain('spec_version');
+    expect(COMPUTE_SRC).toContain('delete_skipped_empty_guard');
+    expect(COMPUTE_SRC).toContain('mass_delete_check_passed');
+    expect(COMPUTE_SRC).toContain('source_dataset_version is null/empty');
+  });
+
+  it('#418 Layer-1 is RETIRED AS A MECHANISM (F9) — no standalone stale-count early return; Layer-2 stays embedded in the ONE statement', () => {
+    // The pre-conversion two-layer shape (a separate `countStale` query + an `if (staleCount === 0) return` before
+    // any transaction) is gone: the ENRICHER runner has no gated-skip branch for this shape.
+    expect(COMPUTE_SRC).not.toMatch(/function countStale/);
+    expect(COMPUTE_SRC).not.toMatch(/if \(staleCount === 0\)/);
+    // Layer-2's own scope predicate is still exactly the #418 stale-only scope, now the WHOLE mechanism.
+    expect(compute.ENRICH_SQL).toMatch(/ravine_dataset_version_when_enriched IS DISTINCT FROM \$1/);
+    expect(compute.ENRICH_SQL).toContain('#418 stale-only scope');
+  });
+
+  it('F9 observable preservation — parcels_ravine_enrich_skipped is RE-DERIVED from the write rowCount, not a retired skip branch', () => {
+    const postPhaseFn = COMPUTE_SRC.slice(
+      COMPUTE_SRC.indexOf('async function computePostPhase'),
+      COMPUTE_SRC.indexOf('async function computePostPhase') + 1500,
+    );
+    expect(postPhaseFn).toMatch(/skipped\s*=\s*updated === 0/);
+    expect(postPhaseFn).toContain('parcels_ravine_enrich_skipped');
+  });
+
+  it('coverage is re-queried LIVE on every call (F7 — Regression Guardian: a pre-existing partial-coverage hole stays visible even on a zero-write run)', () => {
+    expect(compute.COVERAGE_SQL).toMatch(/COUNT\(\*\) FILTER \(WHERE geom IS NOT NULL\)/);
+    expect(compute.COVERAGE_SQL).toMatch(/ST_IsValid\(geom\)/);
+  });
+
+  it('the shell is FROZEN onto pipeline.step and declares ADVISORY_LOCK_ID 60 as source text', () => {
+    expect(SHELL_SRC).toContain('module.exports = pipeline.step(descriptor, compute);');
+    expect(SHELL_SRC).not.toContain('withTransaction');
+    expect(SHELL_SRC).not.toContain('emitSummary');
+    expect(SHELL_SRC).not.toContain('UPDATE parcels');
   });
 });
 
 // ── (B) DB-backed §11.1 spatial-join behavior ───────────────────────────────
-describe.skipIf(!dbAvailable())('enrich-ravines.js — §11.1 spatial join (real PostGIS)', () => {
+describe.skipIf(!dbAvailable())('enrich_ravines — §11.1 spatial join (real PostGIS, ENRICH_SQL exported verbatim)', () => {
   const pool = getTestPool()!;
   // A ravine box covering lon -79.41..-79.39, lat 43.69..43.71.
   const RAVINE = "ST_Multi(ST_GeomFromText('POLYGON((-79.41 43.69,-79.39 43.69,-79.39 43.71,-79.41 43.71,-79.41 43.69))',4326))";
-  // Parcel INSIDE the box (centroid inside).
   const INSIDE = "ST_GeomFromText('POLYGON((-79.401 43.699,-79.399 43.699,-79.399 43.701,-79.401 43.701,-79.401 43.699))',4326)";
-  // Parcel far OUTSIDE the box.
   const OUTSIDE = "ST_GeomFromText('POLYGON((-79.31 43.80,-79.30 43.80,-79.30 43.81,-79.31 43.81,-79.31 43.80))',4326)";
 
   afterAll(async () => {
@@ -115,7 +141,7 @@ describe.skipIf(!dbAvailable())('enrich-ravines.js — §11.1 spatial join (real
     await pool.query(`INSERT INTO ravines (source_id, geom, source_dataset_version) VALUES (990101, ${RAVINE}, 'tv1')`);
     await pool.query(`INSERT INTO parcels (parcel_id, geom) VALUES ('RAV-INFRA-IN', ${INSIDE}), ('RAV-INFRA-OUT', ${OUTSIDE})`);
 
-    const upd1 = await pool.query(er.ENRICH_SQL, ['tv1']);
+    const upd1 = await pool.query(compute.ENRICH_SQL, ['tv1']);
     expect(upd1.rowCount).toBeGreaterThanOrEqual(2);
 
     const { rows } = await pool.query(
@@ -132,15 +158,26 @@ describe.skipIf(!dbAvailable())('enrich-ravines.js — §11.1 spatial join (real
     expect(outside.ver).toBe('tv1');
 
     // Idempotency: same version + unchanged geometry → IS DISTINCT FROM guard → 0 rows.
-    const upd2 = await pool.query(er.ENRICH_SQL, ['tv1']);
+    const upd2 = await pool.query(compute.ENRICH_SQL, ['tv1']);
     expect(upd2.rowCount).toBe(0);
   });
 
-  it('assertPreconditions HALTs (L14) when the ravines table is empty', async () => {
-    // Unconditionally clear ALL ravines so the L14 guard is genuinely exercised
-    // (a `if (count===0)` wrapper could vacuously pass if seed rows lingered — Code Reviewer DEFER-3).
+  it('readRavineContract HALTs (L14) when the ravines table is empty, even with a valid producer run on record', async () => {
+    // A valid producer fixture, so the L14 halt is genuinely isolated from the producer-protocol
+    // halts F1 also folds into this same hook (RV-L2).
+    await pool.query(
+      `INSERT INTO pipeline_runs (pipeline, status, started_at, completed_at, records_meta)
+       VALUES ('sources:load_ravines', 'completed', now(), now(), $1::jsonb)`,
+      [JSON.stringify({
+        ravine_load: {
+          spec_version: '1.2', source_dataset_version: 'infra-fixture-v1',
+          feature_count: 10, invalid_geometry_skipped: 0,
+          delete_skipped_empty_guard: false, drift_check_passed: true, mass_delete_check_passed: true,
+        },
+      })],
+    );
     await pool.query('DELETE FROM ravines');
     expect.assertions(1);
-    await expect(er.assertPreconditions(pool)).rejects.toThrow(/ravines table is empty/);
+    await expect(compute.readRavineContract(pool)).rejects.toThrow(/ravines table is empty/);
   });
 });
