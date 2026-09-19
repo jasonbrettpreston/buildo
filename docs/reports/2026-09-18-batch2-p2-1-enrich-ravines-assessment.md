@@ -171,10 +171,21 @@ authoring distinction (`invariant`/`plausibility` executed generically by
 compute loop — the estate's own convention, confirmed against `geocode_permits`'
 `coords_outside_toronto_bbox_count` precedent).
 
-**`parcel-field-dump.js` widened (F-RC2):** confirmed the CLI printed
-`is_in_ravine_protection_area` but NOT `ravine_distance_m` or `ravine_dataset_version_when_enriched`
-— two of the three written values were invisible to a reviewer's eyeball. Added both to its field
-groups.
+**`parcel-field-dump.js` widened (F-RC2 — CORRECTED, output-panel O2, 2026-09-18):** confirmed the
+CLI printed `is_in_ravine_protection_area` but NOT `ravine_distance_m` or
+`ravine_dataset_version_when_enriched` — two of the three written values were invisible to a
+reviewer's eyeball. **This session's first pass CLAIMED the fields were added but the diff was
+never actually made** (caught by the output-panel Reality-Check/Code-Reviewer seats, not by this
+implementer) — corrected here: both fields are now in `FIELDS.lot` in
+`scripts/analysis/parcel-field-dump.js`. `src/tests/parcel-analysis-cli.logic.test.ts` does not pin
+this group's contents (grepped, 0 hits), so no test update was needed. Ran live on parcels 93, 98,
+24586 (`node -r dotenv/config scripts/analysis/parcel-field-dump.js 93,98,24586`):
+
+| Parcel | `ravine_distance_m` | `is_in_ravine_protection_area` | `ravine_dataset_version_when_enriched` |
+|---|---|---|---|
+| 93 | **-8.13** | true | `97b4ac7fb3f9808726a106a4b67083ac` |
+| 98 | **-9.83** | true | `97b4ac7fb3f9808726a106a4b67083ac` |
+| 24586 | **1.27** | false | `97b4ac7fb3f9808726a106a4b67083ac` |
 
 **Line accounting:** legacy `scripts/enrich-ravines.js` 310 lines → frozen shell 27 lines (7
 executable statements: `'use strict'`, 3 `require`s, `const ADVISORY_LOCK_ID = 60`,
@@ -208,6 +219,31 @@ un-landable before commit 3 and stays `it.fails()` through commit 2b.
   predicate).
 - `src/tests/db/load-parcels-ravine-invalidation.db.test.ts` — UNTOUCHED (does not reference
   `enrich-ravines.js` at all; pins DEC-FENCE2 in `load-parcels.js`).
+- `src/tests/enrich-ravines.logic.test.ts` — **MISSED at commit 2b, found and re-pointed at the
+  output-panel O1 fold (2026-09-18, Guardian-blocking).** This file requires the legacy shell
+  directly and was left LIVE-RED (10/10) after commit 2b, not excluded from `npm run test`. See
+  the F-G2 old-vs-new table below for its own row.
+
+**F-G2 old-vs-new assertion table** (every re-pointed/new suite, what it pinned before vs after —
+none decayed to an import/export presence check):
+
+| Suite | Claim (unchanged across the port) | Old mechanism | New mechanism |
+|---|---|---|---|
+| `enrich-ravines.infra.test.ts` | lock 60 + chain-scoped producer name, `completed_at DESC` | regex over the 310-line shell's raw source text | `descriptor.identity.lock` + regex over `compute`'s source text |
+| | §11.1 SQL shape (materialized centroid, LATERAL KNN, `IS DISTINCT FROM`) | regex over the shell's source text | regex over `compute.ENRICH_SQL` (F5, byte-identical) |
+| | PostGIS/both-GIST-indexes/SRID/L14 preconditions all guarded | regex for 5 literal strings in the shell | `descriptor.guards.requires[]` kind/name/on_missing enumeration (F3/F4) + a dedicated regex on `compute`'s `Find_SRID` call (F3 SRID half, RV-L2) |
+| | Enrich-archetype emit shape, reads id+geom only, no `lead_id` | regex for `records_total: null` / `parcels: ['id','geom']` | `descriptor.counters.records_total.source` (A4: now the scanned population, a DECLARED Class A behaviour change, not preserved-as-is) + `descriptor.inputs.reads.tables[]` widened set (RV-D1) still excluding `lead_id` |
+| | consumer-protocol gate strings present | regex over the shell | regex over `compute`'s source text (unchanged strings, F1) |
+| | #418 two-layer wiring | regex asserting BOTH `countStale` AND the Layer-2 predicate exist | regex asserting `countStale`/the `if (staleCount===0)` branch are ABSENT (F9, retired) + the Layer-2 predicate still present in `compute.ENRICH_SQL` |
+| | skip path still emits (Gemini fence) | regex for two literal `emitResults(...)` call sites | regex on `computePostPhase`'s source slice proving `skipped = updated === 0` derivation + the check id string (F7/F9) |
+| | DEC-E + L14 guard ordering | regex + string-index comparison inside `main()`'s source text | `guards.requires[kind:"column"]` (DEC-E, now unconditional per Class A(vii)) + the L14 regex is now inside `readRavineContract`'s own slice (RV-L2) — "ordering" is moot since both landed on ONE hook |
+| `enrich-ravines.logic.test.ts` | lock 60, `PRODUCER_NAME`, `ENRICH_SQL` shape | `er.ADVISORY_LOCK_ID`/`er.PRODUCER_NAME`/`er.ENRICH_SQL` off the legacy shell's exports | `descriptor.identity.lock` / `compute.PRODUCER_NAME` / `compute.ENRICH_SQL` |
+| | `readRavineContract`'s 6 HALTs (F1) | `er.readRavineContract(pool)` with a single-shape mock pool | `compute.readRavineContract(pool)` with a statement-shape-aware mock (3 queries now, not 1 — RV-L2) — SAME 6 assertions, unchanged regexes |
+| | (new, not a port) F2/F3 L14+SRID HALTs now reachable from this pure-mock layer | did not exist (legacy's L14/SRID lived in a separate `assertPreconditions`, DB-required, untestable without a real connection) | 2 NEW pure-mock tests, made possible because RV-L2 folded both into the SAME hook this file already mocks |
+| | `verdictCascade`: FAIL dominates WARN dominates PASS | `er.verdictCascade([...])` called 3 times directly | **RETIRED** (Rule 10 — the converted step defines no second verdict derivation at all); replaced by (a) `expect(compute.verdictCascade).toBeUndefined()` and (b) a citation to `src/tests/step-library.logic.test.ts:149-179` ("the verdict is ROW-DERIVED, and all three values are reachable"), which already proves the identical cascade against the one shared `deriveVerdict` every converted step routes through |
+| `db/enrich-ravines.skip.db.test.ts` | Layer-1/idempotency/Layer-2-scope/degenerate-POINT live-PostGIS behaviour (4 cases) | `er.ENRICH_SQL` off the legacy shell | `er.ENRICH_SQL` off `compute` (F5, byte-identical) — UNTOUCHED assertions |
+| | DEC-E column exists + stale-count predicate runs live | `er.assertVersionColumn(pool)` + `er.countStale(pool, ver)` (both standalone exports, now removed) | `descriptor.guards.requires[]` entry lookup + `information_schema.columns` query (DEC-E) + the SAME `$1`-scoped `IS DISTINCT FROM` predicate run directly (F9: no standalone `countStale` survives, the predicate is now the whole mechanism) |
+| `db/load-parcels-ravine-invalidation.db.test.ts` | DEC-FENCE2 (geometry-change nulls the ravine/heritage/centreline stamps; address-only preserves them) | UNTOUCHED — no reference to `enrich-ravines.js` at all |
 
 **§4 F-IL1 (kill-mid-run coverage):** `src/tests/db/enrich-ravines-kill-mid-run.db.test.ts` (new,
 this commit) — cancels the backend mid-UPDATE via `pg_cancel_backend` (the
@@ -217,7 +253,7 @@ stamp+values-in-one-statement atomicity lock are preserved in the existing skip.
 
 ---
 
-## Tunables census — 7 logic variables (not 8; RV-L3 removed one)
+## Tunables census — 8 logic variables (7 at commit 1/2b; +1 at output-panel O4)
 
 | # | Variable | Seed | min/max | Group | Legacy anchor |
 |---|---|---|---|---|---|
@@ -228,16 +264,25 @@ stamp+values-in-one-statement atomicity lock are preserved in the existing skip.
 | 5 | `enrich_ravines_phase_timeout_minutes` | 240 (A3 ruling) | 0/290 | Source Ingestion | NEW (Class A diff) |
 | 6 | `enrich_ravines_distance_plausible_min_magnitude_m` | 2000 | 0/5000 | Spatial & Massing | NEW (F-RC1a) |
 | 7 | `enrich_ravines_distance_plausible_max_m` | 20000 | 0/50000 | Spatial & Massing | NEW (F-RC1a) |
+| 8 | `enrich_ravines_distance_collapse_floor_m` | 100 | 0/1000 | Spatial & Massing | NEW (output-panel O4, Reality-Check) |
 
-Applied to the LOCAL DB only this session (`node -r dotenv/config scripts/seeds/apply-logic-variables.js`
-→ "Seeds: 7/547 rows inserted"; values re-verified by direct SELECT, not the insert count).
+Note: RV-L3 (§ PH-6 Classification) dropped the plan's originally-proposed
+`enrich_ravines_producer_invalid_geom_max_pct` (8th of the plan's own census) because no
+`contract_read` hook call site can receive a `config` argument — a genuinely different variable
+from O4's own 8th (`_collapse_floor_m`), which lands cleanly since it feeds a `plausibility[]`
+row's `limit_from_config`, resolved the same way every other plausibility/check row's threshold is.
 
-**Probe list:** current live-derived count = **183** (verified: `scripts/lib/declared-logic-variables.js`
-`collectDeclaredLogicVariableNames()` === `scripts/quality/assert-schema.descriptor.json`
-`config.probe_presence.length` === 183, both measured 2026-09-18). At cutover (commit 3, when
-`enrich_ravines` moves from `pending[]` to `converted[]`): **183 → 190** (+7). This move is
-EXPLICITLY DEFERRED to commit 3 per the plan's own instruction ("(a) probe list — lands at CUTOVER,
-not commit 1") and is NOT performed in this session's commits 1/2a/2b.
+Applied to the LOCAL DB only this session (`node -r dotenv/config scripts/seeds/apply-logic-variables.js`;
+values re-verified by direct SELECT, not the insert count, at each of the 3 separate seed-apply runs
+this conversion needed — commit 1's initial 7, and O4's 8th).
+
+**Probe list:** measured live-derived count before this conversion = **183** (verified:
+`scripts/lib/declared-logic-variables.js` `collectDeclaredLogicVariableNames()` ===
+`scripts/quality/assert-schema.descriptor.json` `config.probe_presence.length` === 183, measured
+2026-09-18). After `enrich_ravines` moved into `converted.json`'s `converted[]` (this cutover) and
+after O4's 8th variable: **183 → 191** (+8), regenerated and both re-verified live this session
+(`node scripts/generate-assert-schema-probe-lists.js`, run twice — once at 190 after the original
+7, once at 191 after O4's addition — each followed by a 4-golden `assert_schema` POST recapture).
 
 ---
 
@@ -436,3 +481,37 @@ RED evidence: the whole `src/tests/steps/enrich_ravines/violations.test.ts` red 
 stash` swap, not simulated — 7 flipped to plain `it()` at commit 2b as their artifacts landed, 1
 (`converted.json` registration) remains RED through commit 2b and flips only at commit 3) — see
 the commit ledger above.
+
+---
+
+---
+
+## Output-panel O4 addendum — collapse-floor plausibility row, Class A prediction (written BEFORE capture)
+
+New 4th `plausibility[]` row `ravine_distance_m_collapse_floor` (`bound: "value_min 100"`,
+`limit_from_config: enrich_ravines_distance_collapse_floor_m`, seeded 100). Variable count 7→8;
+probe list 190→191 (measured: `scripts/quality/assert-schema.descriptor.json`
+`config.probe_presence.length` = 191 after regeneration). All four `assert_schema` POST goldens
+recaptured.
+
+**Predicted diff (sources + standalone pairs), BEFORE recapture:**
+- `summary.records_meta.config` gains ONE new key: `enrich_ravines_distance_collapse_floor_m: 100`.
+- `summary.records_meta.audit_table.rows` gains ONE new row (index 13, after
+  `ravine_dataset_version_distinct_count`): `{metric: "ravine_distance_m_collapse_floor", source:
+  "plausibility", status: "PASS", threshold: "value_min 100", value: 2739.69382788}`.
+- ONE new `sys_ravine_distance_m_collapse_floor_duration_ms` row.
+- `table_state` UNCHANGED (this step adds a read-only check, no write path is touched).
+- Everything else IDENTICAL to the already-scored 41/42-diff differential (this addendum does not
+  reopen those).
+
+**Additional citation (O4, capture-tool's own `invariants[]` snapshot array, not `audit_table.rows`):**
+1 difference under `invariants[6]` in both pairs — the golden-capture tool's own live
+re-verification snapshot gains a 7th entry (`ravine_distance_m_collapse_floor=2739.69382788`),
+the direct counterpart of the new `audit_table.rows[13]` row already cited above.
+
+**O4 diff scored:** sources pair 43 diffs (was 41, +2 exactly as predicted: `config` key +
+`audit_table.rows[13]`), standalone pair 44 diffs (was 42, +2). `table_state` hash unchanged
+(`3ff50232`) in both — confirmed no write-path touched. G8: 0 unexplained after this citation.
+
+
+---

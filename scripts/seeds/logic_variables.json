@@ -4367,6 +4367,16 @@
       "group": "Spatial & Massing"
     }
   },
+  "enrich_ravines_distance_collapse_floor_m": {
+    "default": 100,
+    "type": "number",
+    "min": 0,
+    "max": 1000,
+    "description": "Output-panel O4 (Reality-Check, 2026-09-18) — a floor on the observed MAXIMUM parcels.ravine_distance_m, catching a degrees-not-metres regression that both existing distance checks (value_max ceilings) would silently pass, since every distance shrinking toward a degrees-scale value stays comfortably under either ceiling. Seeded at 100 m, far below the measured live maximum (2739.69 m) and far above a plausible degrees-scale collapse band. CONSUMED by scripts/enrich-ravines.js.",
+    "admin": {
+      "group": "Spatial & Massing"
+    }
+  },
   "enrich_parcels_heartbeat_minutes": {
     "default": 5,
     "type": "number",

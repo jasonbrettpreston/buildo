@@ -3,7 +3,7 @@
   "spec": "docs/specs/01-pipeline/122_pipeline_step_optimization.md §5.3",
   "step": "scripts/enrich-ravines.js",
   "chain": "sources",
-  "git_head": "c024b87b3c9c3071093e6cc83d3f4437bd0af02a",
+  "git_head": "c9b217bdfeb4005f79775de45a274299fc4a9ff4",
   "exit_code": 0,
   "signal": null,
   "summary": {
@@ -11,7 +11,7 @@
     "records_new": 0,
     "records_updated": 0,
     "records_meta": {
-      "duration_ms": 2683,
+      "duration_ms": 2571,
       "code_version": "v1-materialized-centroid-knn",
       "config": {
         "enrich_ravines_distance_coverage_pass_pct": 95,
@@ -20,7 +20,8 @@
         "enrich_ravines_lock_timeout_ms": 1800000,
         "enrich_ravines_phase_timeout_minutes": 240,
         "enrich_ravines_distance_plausible_min_magnitude_m": 2000,
-        "enrich_ravines_distance_plausible_max_m": 20000
+        "enrich_ravines_distance_plausible_max_m": 20000,
+        "enrich_ravines_distance_collapse_floor_m": 100
       },
       "terminal": "enriched",
       "ledger_row": "chain_owned",
@@ -79,7 +80,7 @@
           },
           {
             "metric": "enrich_ravines_duration_ms",
-            "value": 2683,
+            "value": 2571,
             "threshold": "viol == 0",
             "status": "INFO",
             "source": "check"
@@ -127,50 +128,63 @@
             "source": "plausibility"
           },
           {
+            "metric": "ravine_distance_m_collapse_floor",
+            "value": 2739.69382788,
+            "threshold": "value_min 100",
+            "status": "PASS",
+            "source": "plausibility"
+          },
+          {
             "metric": "sys_ravine_sign_flag_agree_flagged_side_duration_ms",
-            "value": 1739,
+            "value": 1934,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "sys_ravine_sign_flag_agree_unflagged_side_duration_ms",
-            "value": 1552,
+            "value": 1473,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "sys_ravine_flag_true_distance_null_count_duration_ms",
-            "value": 1750,
+            "value": 2015,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "sys_ravine_distance_m_min_magnitude_observed_duration_ms",
-            "value": 3268,
+            "value": 3937,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "sys_ravine_distance_m_max_observed_duration_ms",
-            "value": 3295,
+            "value": 4182,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "sys_ravine_dataset_version_distinct_count_duration_ms",
-            "value": 3459,
+            "value": 4338,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "sys_ravine_distance_m_collapse_floor_duration_ms",
+            "value": 4247,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "sys_velocity_rows_sec",
-            "value": 61609.47,
+            "value": 54476.54,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "sys_duration_ms",
-            "value": 7897,
+            "value": 8931,
             "threshold": null,
             "status": "INFO"
           }
@@ -205,10 +219,10 @@
   "parse_errors": [],
   "verdict": "PASS",
   "ledger_status": [],
-  "stdout": "{\"level\":\"INFO\",\"tag\":\"[enrich_ravines]\",\"msg\":\"[enrich_ravines] target: enrich_ravines (descriptor.database) → database=postgres user=postgres migrations=244 (floor 244)\"}\n{\"level\":\"INFO\",\"tag\":\"[enrich_ravines]\",\"msg\":\"phase ravine_join starting (shared txn, timeout 240min)\"}\n{\"level\":\"INFO\",\"tag\":\"[enrich_ravines]\",\"msg\":\"phase ravine_join completed in 1365ms\"}\nPIPELINE_SUMMARY:{\"records_total\":486530,\"records_new\":0,\"records_updated\":0,\"records_meta\":{\"duration_ms\":2683,\"code_version\":\"v1-materialized-centroid-knn\",\"config\":{\"enrich_ravines_distance_coverage_pass_pct\":95,\"enrich_ravines_distance_coverage_warn_pct\":90,\"enrich_ravines_heartbeat_minutes\":5,\"enrich_ravines_lock_timeout_ms\":1800000,\"enrich_ravines_phase_timeout_minutes\":240,\"enrich_ravines_distance_plausible_min_magnitude_m\":2000,\"enrich_ravines_distance_plausible_max_m\":20000},\"terminal\":\"enriched\",\"ledger_row\":\"chain_owned\",\"chain_run_id\":null,\"pool_errors\":0,\"checks_passed\":\"all\",\"checks_failed\":0,\"checks_warned\":0,\"audit_table\":{\"phase\":12,\"name\":\"Parcel Ravine Enrichment\",\"verdict\":\"PASS\",\"rows\":[{\"metric\":\"parcels_with_ravine_distance_pct\",\"value\":100,\"threshold\":\"pct >= 95\",\"status\":\"PASS\",\"source\":\"check\",\"warn_threshold\":\"pct >= 90\"},{\"metric\":\"parcels_in_ravine_count\",\"value\":32339,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"parcels_invalid_geom_count\",\"value\":16,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"parcels_enriched_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"parcels_ravine_enrich_skipped\",\"value\":true,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"ravine_source_dataset_version\",\"value\":\"97b4ac7fb3f9808726a106a4b67083ac\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"enrich_ravines_duration_ms\",\"value\":2683,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"ravine_sign_flag_agree_flagged_side\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"invariant\"},{\"metric\":\"ravine_sign_flag_agree_unflagged_side\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"invariant\"},{\"metric\":\"ravine_flag_true_distance_null_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"invariant\"},{\"metric\":\"ravine_distance_m_min_magnitude_observed\",\"value\":1470.29744323,\"threshold\":\"value_max 2000\",\"status\":\"PASS\",\"source\":\"plausibility\"},{\"metric\":\"ravine_distance_m_max_observed\",\"value\":2739.69382788,\"threshold\":\"value_max 20000\",\"status\":\"PASS\",\"source\":\"plausibility\"},{\"metric\":\"ravine_dataset_version_distinct_count\",\"value\":1,\"threshold\":\"value_max 1\",\"status\":\"INFO\",\"source\":\"plausibility\"},{\"metric\":\"sys_ravine_sign_flag_agree_flagged_side_duration_ms\",\"value\":1739,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_ravine_sign_flag_agree_unflagged_side_duration_ms\",\"value\":1552,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_ravine_flag_true_distance_null_count_duration_ms\",\"value\":1750,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_ravine_distance_m_min_magnitude_observed_duration_ms\",\"value\":3268,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_ravine_distance_m_max_observed_duration_ms\",\"value\":3295,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_ravine_dataset_version_distinct_count_duration_ms\",\"value\":3459,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":61609.47,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":7897,\"threshold\":null,\"status\":\"INFO\"}]}}}\nPIPELINE_META:{\"reads\":{\"ravines\":[\"geom\"],\"parcels\":[\"id\",\"geom\",\"is_in_ravine_protection_area\",\"ravine_distance_m\",\"ravine_dataset_version_when_enriched\"]},\"writes\":{\"parcels\":[\"is_in_ravine_protection_area\",\"ravine_distance_m\",\"ravine_dataset_version_when_enriched\"]}}\n\n[enrich_ravines] completed in 7.9s\n",
+  "stdout": "{\"level\":\"INFO\",\"tag\":\"[enrich_ravines]\",\"msg\":\"[enrich_ravines] target: enrich_ravines (descriptor.database) → database=postgres user=postgres migrations=244 (floor 244)\"}\n{\"level\":\"INFO\",\"tag\":\"[enrich_ravines]\",\"msg\":\"phase ravine_join starting (shared txn, timeout 240min)\"}\n{\"level\":\"INFO\",\"tag\":\"[enrich_ravines]\",\"msg\":\"phase ravine_join completed in 1190ms\"}\nPIPELINE_SUMMARY:{\"records_total\":486530,\"records_new\":0,\"records_updated\":0,\"records_meta\":{\"duration_ms\":2571,\"code_version\":\"v1-materialized-centroid-knn\",\"config\":{\"enrich_ravines_distance_coverage_pass_pct\":95,\"enrich_ravines_distance_coverage_warn_pct\":90,\"enrich_ravines_heartbeat_minutes\":5,\"enrich_ravines_lock_timeout_ms\":1800000,\"enrich_ravines_phase_timeout_minutes\":240,\"enrich_ravines_distance_plausible_min_magnitude_m\":2000,\"enrich_ravines_distance_plausible_max_m\":20000,\"enrich_ravines_distance_collapse_floor_m\":100},\"terminal\":\"enriched\",\"ledger_row\":\"chain_owned\",\"chain_run_id\":null,\"pool_errors\":0,\"checks_passed\":\"all\",\"checks_failed\":0,\"checks_warned\":0,\"audit_table\":{\"phase\":12,\"name\":\"Parcel Ravine Enrichment\",\"verdict\":\"PASS\",\"rows\":[{\"metric\":\"parcels_with_ravine_distance_pct\",\"value\":100,\"threshold\":\"pct >= 95\",\"status\":\"PASS\",\"source\":\"check\",\"warn_threshold\":\"pct >= 90\"},{\"metric\":\"parcels_in_ravine_count\",\"value\":32339,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"parcels_invalid_geom_count\",\"value\":16,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"parcels_enriched_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"parcels_ravine_enrich_skipped\",\"value\":true,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"ravine_source_dataset_version\",\"value\":\"97b4ac7fb3f9808726a106a4b67083ac\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"enrich_ravines_duration_ms\",\"value\":2571,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"ravine_sign_flag_agree_flagged_side\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"invariant\"},{\"metric\":\"ravine_sign_flag_agree_unflagged_side\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"invariant\"},{\"metric\":\"ravine_flag_true_distance_null_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"invariant\"},{\"metric\":\"ravine_distance_m_min_magnitude_observed\",\"value\":1470.29744323,\"threshold\":\"value_max 2000\",\"status\":\"PASS\",\"source\":\"plausibility\"},{\"metric\":\"ravine_distance_m_max_observed\",\"value\":2739.69382788,\"threshold\":\"value_max 20000\",\"status\":\"PASS\",\"source\":\"plausibility\"},{\"metric\":\"ravine_dataset_version_distinct_count\",\"value\":1,\"threshold\":\"value_max 1\",\"status\":\"INFO\",\"source\":\"plausibility\"},{\"metric\":\"ravine_distance_m_collapse_floor\",\"value\":2739.69382788,\"threshold\":\"value_min 100\",\"status\":\"PASS\",\"source\":\"plausibility\"},{\"metric\":\"sys_ravine_sign_flag_agree_flagged_side_duration_ms\",\"value\":1934,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_ravine_sign_flag_agree_unflagged_side_duration_ms\",\"value\":1473,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_ravine_flag_true_distance_null_count_duration_ms\",\"value\":2015,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_ravine_distance_m_min_magnitude_observed_duration_ms\",\"value\":3937,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_ravine_distance_m_max_observed_duration_ms\",\"value\":4182,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_ravine_dataset_version_distinct_count_duration_ms\",\"value\":4338,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_ravine_distance_m_collapse_floor_duration_ms\",\"value\":4247,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":54476.54,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":8931,\"threshold\":null,\"status\":\"INFO\"}]}}}\nPIPELINE_META:{\"reads\":{\"ravines\":[\"geom\"],\"parcels\":[\"id\",\"geom\",\"is_in_ravine_protection_area\",\"ravine_distance_m\",\"ravine_dataset_version_when_enriched\"]},\"writes\":{\"parcels\":[\"is_in_ravine_protection_area\",\"ravine_distance_m\",\"ravine_dataset_version_when_enriched\"]}}\n\n[enrich_ravines] completed in 8.9s\n",
   "stderr": "",
   "pipeline_runs": [],
-  "pipeline_runs_max_id_before": 1919,
+  "pipeline_runs_max_id_before": 1922,
   "table_state": [
     {
       "table": "parcels",
@@ -230,7 +244,7 @@
   "tables_source": "descriptor",
   "table_row_ceiling": 100000,
   "table_timing": {
-    "parcels": 2288
+    "parcels": 2081
   },
   "table_specs": {
     "parcels": {
@@ -271,6 +285,10 @@
     {
       "name": "ravine_dataset_version_distinct_count",
       "value": "1"
+    },
+    {
+      "name": "ravine_distance_m_collapse_floor",
+      "value": "2739.69382788"
     }
   ],
   "invariants_file": null,
@@ -283,6 +301,7 @@
     "pattern:duration_literal",
     "row:sys_duration_ms",
     "row:sys_ravine_dataset_version_distinct_count_duration_ms",
+    "row:sys_ravine_distance_m_collapse_floor_duration_ms",
     "row:sys_ravine_distance_m_max_observed_duration_ms",
     "row:sys_ravine_distance_m_min_magnitude_observed_duration_ms",
     "row:sys_ravine_flag_true_distance_null_count_duration_ms",
@@ -348,7 +367,7 @@
               "source": "check",
               "status": "INFO",
               "threshold": "viol == 0",
-              "value": 2683
+              "value": 2571
             },
             {
               "metric": "ravine_sign_flag_agree_flagged_side",
@@ -391,6 +410,13 @@
               "status": "INFO",
               "threshold": "value_max 1",
               "value": 1
+            },
+            {
+              "metric": "ravine_distance_m_collapse_floor",
+              "source": "plausibility",
+              "status": "PASS",
+              "threshold": "value_min 100",
+              "value": 2739.69382788
             }
           ],
           "verdict": "PASS"
@@ -400,6 +426,7 @@
         "checks_warned": 0,
         "code_version": "v1-materialized-centroid-knn",
         "config": {
+          "enrich_ravines_distance_collapse_floor_m": 100,
           "enrich_ravines_distance_coverage_pass_pct": 95,
           "enrich_ravines_distance_coverage_warn_pct": 90,
           "enrich_ravines_distance_plausible_max_m": 20000,
@@ -490,10 +517,14 @@
       {
         "name": "ravine_dataset_version_distinct_count",
         "value": "1"
+      },
+      {
+        "name": "ravine_distance_m_collapse_floor",
+        "value": "2739.69382788"
       }
     ]
   },
-  "source_fingerprint": "430375d4df6c5f20feb01a5d154ca6c4b8ad69125e9f2ebdd955e475cf6d9466",
+  "source_fingerprint": "cde80cbc4f1e755324a974ea8a925a76bf5cde937e4e6806feb50571291a63d7",
   "fingerprint_files": [
     "scripts/enrich-ravines.descriptor.json",
     "scripts/enrich-ravines.js",

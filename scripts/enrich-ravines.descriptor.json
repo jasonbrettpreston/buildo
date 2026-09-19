@@ -387,6 +387,23 @@
         "text": "F-RC1c — an INFO row counting distinct non-null lineage stamps, so a multi-stamp partial-convergence state (some parcels re-touched against a new ravines version, others still carrying the old one) is VISIBLE in the audit table rather than only inferable by cross-referencing pipeline_runs. Measured 2026-09-18: 1 distinct value, matching the newest completed load_ravines run's own source_dataset_version.",
         "liveness": { "kind": "column", "ref": "parcels.ravine_dataset_version_when_enriched" }
       }
+    },
+    {
+      "id": "ravine_distance_m_collapse_floor",
+      "sql": "SELECT MAX(ravine_distance_m)::float FROM parcels WHERE ravine_distance_m IS NOT NULL",
+      "bound": "value_min 100",
+      "limit_from_config": "enrich_ravines_distance_collapse_floor_m",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "source": "plausibility",
+      "frequency": "every_run",
+      "retighten_when": "never — a PHYSICAL bound, the mirror-image concern of ravine_distance_m_max_observed/_min_magnitude_observed (both value_max ceilings, which a degrees-not-metres collapse would satisfy trivially — every distance shrinking toward ~0.03 stays comfortably under either ceiling and neither would ever fire). This row catches EXACTLY that regression class: the observed MAXIMUM distance must clear a floor (100 m) far below the measured live value (2,739.69 m) but far above what a degrees-scale collapse would produce, so a unit/CRS regression that silently shrinks every distance is caught by the ONE direction the two ceiling checks cannot see.",
+      "last_measured": { "value": 2739.69382788, "at": "2026-09-18T00:00:00.000Z", "commit": "enrich-ravines-output-panel-o4", "cost_ms": 1390, "sample_n": 1, "source_run": { "run_id": null, "chain": null, "event": "manual_timing" } },
+      "why": {
+        "text": "Output-panel O4 (Reality-Check, 2026-09-18): both existing distance checks are value_max ceilings; a degrees-not-metres regression collapses every distance toward ~0.03 and would PASS both silently. Added as a floor check on the observed MAXIMUM (not the minimum magnitude, which a collapse would also shrink toward 0 and satisfy just as trivially as the ceilings) — the schema's bound grammar admits value_min (step.schema.json definitions.bound, verified against src/tests/step-library.logic.test.ts's own verdictLib.evaluateLimit('value_min ...') proof), so no schema change is needed. Externalized as its own logic variable per Rule 3, seeded at 100 (min 0, max 1000) — comfortably below the measured 2,739.69 m and comfortably above a plausible degrees-scale collapse band.",
+        "liveness": { "kind": "column", "ref": "parcels.ravine_distance_m" }
+      }
     }
   ],
   "override": { "force_full": "none", "force_run": "none", "dry_run": "none" },
@@ -486,7 +503,8 @@
       { "name": "enrich_ravines_lock_timeout_ms", "min": 0, "max": 3600000, "on_invalid": "fail" },
       { "name": "enrich_ravines_phase_timeout_minutes", "min": 0, "max": 290, "on_invalid": "fail" },
       { "name": "enrich_ravines_distance_plausible_min_magnitude_m", "min": 0, "max": 5000, "on_invalid": "fail" },
-      { "name": "enrich_ravines_distance_plausible_max_m", "min": 0, "max": 50000, "on_invalid": "fail" }
+      { "name": "enrich_ravines_distance_plausible_max_m", "min": 0, "max": 50000, "on_invalid": "fail" },
+      { "name": "enrich_ravines_distance_collapse_floor_m", "min": 0, "max": 1000, "on_invalid": "fail" }
     ],
     "validation": "strict",
     "hoisted_above_gate": true,

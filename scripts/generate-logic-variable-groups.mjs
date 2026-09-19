@@ -272,7 +272,8 @@ const GROUP_ORDER = [
       "parcel_sanity_distribution_median_multiplier",
       "parcel_sanity_distribution_median_floor",
       "enrich_ravines_distance_plausible_min_magnitude_m",
-      "enrich_ravines_distance_plausible_max_m"
+      "enrich_ravines_distance_plausible_max_m",
+      "enrich_ravines_distance_collapse_floor_m"
     ]
   },
   {

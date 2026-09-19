@@ -64,12 +64,12 @@ describe('enrich_ravines — G-shape + descriptor structure (true from commit 1:
     expect(descriptor.identity.name).toBe('enrich_ravines');
   });
 
-  it('checks.length === 7, execution.phases.length === 1, outputs.writes.length === 1, invariants.length === 3, plausibility.length === 3', () => {
+  it('checks.length === 7, execution.phases.length === 1, outputs.writes.length === 1, invariants.length === 3, plausibility.length === 4 (output-panel O4 added the collapse-floor row)', () => {
     expect(descriptor.checks).toHaveLength(7);
     expect(descriptor.execution.phases).toHaveLength(1);
     expect(descriptor.outputs.writes).toHaveLength(1);
     expect(descriptor.invariants).toHaveLength(3);
-    expect(descriptor.plausibility).toHaveLength(3);
+    expect(descriptor.plausibility).toHaveLength(4);
   });
 
   it('Rule 3, config direction — every config.logic_variables[].name has a seed row (RED with one removed)', () => {
@@ -79,7 +79,7 @@ describe('enrich_ravines — G-shape + descriptor structure (true from commit 1:
       expect(seeds).toHaveProperty(v.name);
       expect(v.on_invalid).toBe('fail'); // Rule 3 / R-G: every one is verdict-affecting
     }
-    expect(descriptor.config.logic_variables).toHaveLength(7);
+    expect(descriptor.config.logic_variables).toHaveLength(8);
   });
 
   it('the 12 gate-critical structural fences are declared as descriptor DATA, not left to compute prose', () => {
@@ -209,7 +209,7 @@ describe('enrich_ravines — RV-L3, the config-threading gap this conversion did
 });
 
 describe('enrich_ravines — cutover-only claim (structurally cannot land before commit 3)', () => {
-  it.fails('the slug is REGISTERED in converted.json and its pending entry is DELETED in the same commit (R-K mutual exclusion) [flips at commit 3]', () => {
+  it('the slug is REGISTERED in converted.json and its pending entry is DELETED in the same commit (R-K mutual exclusion) [flips at commit 3]', () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const reg: any = JSON.parse(read('scripts/steps/_schema/converted.json'));
     expect(reg.converted).toContain(STEP_REL);
