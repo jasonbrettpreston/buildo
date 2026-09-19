@@ -4297,6 +4297,76 @@
       "group": "Source Ingestion"
     }
   },
+  "enrich_ravines_distance_coverage_pass_pct": {
+    "default": 95,
+    "type": "number",
+    "min": 0,
+    "max": 100,
+    "description": "R-AD 3-tier PASS floor for parcels_with_ravine_distance_pct (COUNT(ravine_distance_m IS NOT NULL) / COUNT(*) over geom-bearing parcels). Ported verbatim from the pre-conversion literal DISTANCE_COVERAGE_PASS_PCT (95). CONSUMED by scripts/enrich-ravines.js.",
+    "admin": {
+      "group": "Data Quality Thresholds"
+    }
+  },
+  "enrich_ravines_distance_coverage_warn_pct": {
+    "default": 90,
+    "type": "number",
+    "min": 0,
+    "max": 100,
+    "description": "R-AD 3-tier WARN floor for parcels_with_ravine_distance_pct. Ported verbatim from the pre-conversion literal DISTANCE_COVERAGE_WARN_PCT (90). CONSUMED by scripts/enrich-ravines.js.",
+    "admin": {
+      "group": "Data Quality Thresholds"
+    }
+  },
+  "enrich_ravines_heartbeat_minutes": {
+    "default": 5,
+    "type": "number",
+    "min": 1,
+    "max": 60,
+    "description": "How often (wall-clock minutes) the ENRICHER runner writes a progress heartbeat while enrich_ravines' one phase holds the shared transaction. REQUIRED on the ENRICHER profile (execution.heartbeat_minutes_from_config names this key; a non-finite resolution THROWS rather than silently disabling the ticker — ER-D1). NEW behaviour (Class A diff): the legacy script had no heartbeat at all. Default 5 mirrors enrich_parcels_heartbeat_minutes / geocode_permits_heartbeat_minutes. CONSUMED by scripts/enrich-ravines.js.",
+    "admin": {
+      "group": "Source Ingestion"
+    }
+  },
+  "enrich_ravines_lock_timeout_ms": {
+    "default": 1800000,
+    "type": "number",
+    "min": 0,
+    "max": 3600000,
+    "description": "Bounded, LOUD `SET LOCAL lock_timeout` (ms) for enrich_ravines' shared transaction. REQUIRED on the ENRICHER profile; execution.lock_timeout_ms_from_config names this key and a non-finite resolution THROWS. NEW behaviour (Class A diff): the legacy script had no lock_timeout at all. 0 = disabled (inherit the connection's own setting). Default 1800000 (30 min) mirrors enrich_parcels_lock_timeout_ms / geocode_permits_lock_timeout_ms. CONSUMED by scripts/enrich-ravines.js.",
+    "admin": {
+      "group": "Source Ingestion"
+    }
+  },
+  "enrich_ravines_phase_timeout_minutes": {
+    "default": 240,
+    "type": "number",
+    "min": 0,
+    "max": 290,
+    "description": "Wall-clock phase deadline (EP-PHASE-DEADLINE) for the `ravine_join` phase — armed via startPhaseDeadline/pg_cancel_backend on a dedicated connection, distinct from the SAME resolved value's `SET LOCAL statement_timeout` use on the phase's own statement. Operator ruling A3 (2026-09-18): seeded at 240, below the platform's 300-minute wall so an abort dies LOUD at this named phase boundary (Spec 115 §2.2) rather than as a GitHub SIGKILL; replaced by the measured cloud value after this step's acceptance run rather than raised to absorb it (R-AQ: a ceiling measures the step, an instance measures the hardware). NEW behaviour (Class A diff): the legacy script had no statement/phase timeout at all. CONSUMED by scripts/enrich-ravines.js.",
+    "admin": {
+      "group": "Source Ingestion"
+    }
+  },
+  "enrich_ravines_distance_plausible_min_magnitude_m": {
+    "default": 2000,
+    "type": "number",
+    "min": 0,
+    "max": 5000,
+    "description": "F-RC1a (Reality-Check plan-altitude demand, batch-2 row 2.1) — physical ceiling on the MAGNITUDE of the most-negative parcels.ravine_distance_m (i.e. how far a parcel can sit \"inside\" the deepest ravine; city-invariant, one ravine network). Measured live magnitude 1470.30 m (2026-09-18, most-negative distance -1470.30 m); seeded with generous headroom above it rather than at the measured value, so the bound catches a genuine defect class (a mis-signed distance, or a unit/CRS error) rather than today's own legitimate tail. Declared as a MAGNITUDE (always non-negative) rather than a signed floor: verdict.js's LIMIT_NUMBER_RE is a digits-only pattern with no sign, so a negative-signed `limit_from_config` value mangles the rendered bound string into a double-negative (\"value_min --2000\", reproduced live 2026-09-18) — a pre-existing library gap out of scope for this conversion; the compute negates the SQL instead so both the measured value and this config value stay positive. Never intended to retighten toward the measured value — see the plausibility row's own retighten_when. CONSUMED by scripts/enrich-ravines.js.",
+    "admin": {
+      "group": "Spatial & Massing"
+    }
+  },
+  "enrich_ravines_distance_plausible_max_m": {
+    "default": 20000,
+    "type": "number",
+    "min": 0,
+    "max": 50000,
+    "description": "F-RC1a, ceiling half — physical bound on parcels.ravine_distance_m. Measured live maximum 2739.69 m (2026-09-18); seeded with generous headroom above it. CONSUMED by scripts/enrich-ravines.js.",
+    "admin": {
+      "group": "Spatial & Massing"
+    }
+  },
   "enrich_parcels_heartbeat_minutes": {
     "default": 5,
     "type": "number",

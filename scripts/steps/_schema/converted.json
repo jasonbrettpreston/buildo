@@ -67,7 +67,15 @@
     "partial stages."
   ],
   "contract_version": 1,
-  "pending": [],
+  "pending": [
+    {
+      "file": "scripts/enrich-ravines.js",
+      "registers_at": "commit 3",
+      "reason": "batch-2 row 2.1, COMPRESSED 3-commit form (R-AH — ENRICHER already has 2 proven members). Descriptor + seeds land commit 1 (descriptor_only); compute + frozen shell land commit 2b (shape_clean); converted[] registration + this entry's own removal are the cutover commit 3, prepared but left uncommitted for the OUTPUT panel.",
+      "declared": "2026-09-18",
+      "stage": "descriptor_only"
+    }
+  ],
   "converted": [
     "scripts/quality/assert-schema.js",
     "scripts/load-ravines.js",

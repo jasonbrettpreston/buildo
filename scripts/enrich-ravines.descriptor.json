@@ -1,0 +1,564 @@
+{
+  "identity": {
+    "name": "enrich_ravines",
+    "display_name": "Parcel Ravine Enrichment",
+    "owner": "data",
+    "description": "Single-pass ENRICHER: spatial-joins parcels.geom against ravines (Spec 59 §8c) and writes the Chapter-658 flag + signed nearest-ravine distance + dataset lineage stamp in ONE set-based join UPDATE (#418 Layer-2), scoped to geom-bearing parcels whose lineage stamp is stale against the current ravines version. The pre-conversion #418 Layer-1 early-return (a cheap COUNT-only skip before opening any transaction) is RETIRED as a mechanism — the ENRICHER runner has no gated-skip branch by design — its OBSERVABLES are preserved: the Layer-2 scope predicate already yields a 0-row write in steady state, and parcels_ravine_enrich_skipped is re-derived from the scope count rather than a skip branch.",
+    "lock": 60,
+    "why_lock": {
+      "text": "Spec 59 L4b — 60, 'verified unassigned'; kept textually per Spec 122 §5.4 so the registry loop (src/tests/pipeline-advisory-lock.infra.test.ts) stays green across the conversion.",
+      "liveness": { "kind": "spec", "ref": "docs/specs/01-pipeline/47_pipeline_script_protocol.md" }
+    },
+    "spec": "59",
+    "spec_version": "1.2",
+    "archetype": "ENRICHER",
+    "contract_version": 1,
+    "gate_exempt": false
+  },
+  "inputs": {
+    "reads": {
+      "steps": [
+        { "step": "load_ravines", "version_pin": "exact" }
+      ],
+      "tables": [
+        { "table": "ravines", "columns": ["geom"] },
+        { "table": "parcels", "columns": ["id", "geom", "is_in_ravine_protection_area", "ravine_distance_m", "ravine_dataset_version_when_enriched"] }
+      ],
+      "externals": []
+    },
+    "expect_nonempty": true,
+    "on_missing": "halt"
+  },
+  "outputs": {
+    "writes": [
+      {
+        "table": "parcels",
+        "key": ["id"],
+        "columns": [
+          { "name": "is_in_ravine_protection_area", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "ravine_distance_m", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "ravine_dataset_version_when_enriched", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" }
+        ],
+        "write_discipline": {
+          "class": "set_based_join_update",
+          "guard": "is_distinct_from",
+          "guard_columns": ["is_in_ravine_protection_area", "ravine_distance_m", "ravine_dataset_version_when_enriched"],
+          "guard_columns_why": {
+            "text": "The verbatim §8d triple guard (legacy ENRICH_SQL:179-181). The lineage stamp is INSIDE the guard — unlike geocode_permits' run-clock `geocoded_at` (source:\"run_at\", excluded from ITS guard by the LG-9 escape hatch), `ravine_dataset_version_when_enriched` here is source:\"compute\" — a content hash of the source dataset that stays CONSTANT across runs against the same ravines version, so including it in the guard is exactly what makes the second run write 0 rows rather than re-stamping every row on every run.",
+            "liveness": { "kind": "file", "ref": "scripts/lib/step/write.js" }
+          },
+          "scope": "p.geom IS NOT NULL AND p.ravine_dataset_version_when_enriched IS DISTINCT FROM $1",
+          "expected_change_ratio": "none",
+          "idempotent_rerun": "zero_writes",
+          "txn_scope": "step"
+        },
+        "retract": "none",
+        "replay": "idempotent_upsert",
+        "source_key_policy": { "unique": true, "on_collision": "not_applicable", "key_space_migration": "none" }
+      }
+    ],
+    "cascades": "none",
+    "invalidates": [
+      {
+        "table": "parcels",
+        "column": "ravine_dataset_version_when_enriched",
+        "when": "load-parcels.js's ON CONFLICT nulls the stamp via a CASE gated ONLY on parcels.geometry::jsonb IS DISTINCT FROM EXCLUDED.geometry::jsonb (#418 DEC-FENCE2, locked by src/tests/db/load-parcels-ravine-invalidation.db.test.ts) — app code, NOT migration 242's trigger, which deliberately covers only massing/zoning (mig 242 header). A load_ravines source_dataset_version bump stales every parcel through the SAME scope predicate this step's own write_discipline.scope declares."
+      }
+    ],
+    "publish": "none",
+    "write_inventory": {
+      "statements": 1,
+      "why": {
+        "text": "Exactly one write statement per invocation, in every mode and on every chain — the #418 Layer-2 WITH...UPDATE, executed through ctx.joinUpdate. There is no batching and no full/incremental split beyond the scope predicate itself (staleness.mode_select \"none\").",
+        "liveness": { "kind": "file", "ref": "scripts/lib/compute/enrich-ravines.js" }
+      }
+    }
+  },
+  "staleness": {
+    "scope": "parcels whose geom IS NOT NULL AND ravine_dataset_version_when_enriched IS DISTINCT FROM the producer's (load_ravines) most recent completed source_dataset_version",
+    "trigger": [{ "signal": "always", "position": "pre_compute" }],
+    "mode_select": "none",
+    "checkpoint": "none",
+    "interval": "none",
+    "fingerprint": "derived",
+    "fingerprint_inputs": ["scripts/lib/compute/enrich-ravines.js"],
+    "logic_version": "v1-materialized-centroid-knn",
+    "on_fingerprint_change": "run"
+  },
+  "guards": {
+    "requires": [
+      {
+        "kind": "extension",
+        "name": "postgis",
+        "on_missing": "fail",
+        "why": {
+          "text": "The ST_Intersects boolean join and the geography KNN nearest-ravine distance are non-viable without PostGIS. Ported verbatim from the legacy assertPreconditions (DEC-F, §3.10) — there is no non-PostGIS fallback path to retire.",
+          "liveness": { "kind": "external", "ref": "postgis" }
+        }
+      },
+      {
+        "kind": "index",
+        "name": "idx_parcels_geom_gist",
+        "on_missing": "fail",
+        "why": {
+          "text": "Migration 039. Without it the materialized parcel_c centroid CTE's own join back to parcels (and every other GIST-dependent step sharing this index) degrades to a sequential scan over 486,530 rows.",
+          "liveness": { "kind": "column", "ref": "parcels.geom" }
+        }
+      },
+      {
+        "kind": "index",
+        "name": "idx_ravines_geom_gist",
+        "on_missing": "fail",
+        "why": {
+          "text": "Planar GIST (migration 167) — binds the ST_Intersects boolean-membership join. Without it every parcel seq-scans all ~854 ravines for the boolean half alone (DeepSeek HIGH, pre-conversion review).",
+          "liveness": { "kind": "column", "ref": "ravines.geom" }
+        }
+      },
+      {
+        "kind": "index",
+        "name": "idx_ravines_geog_gist",
+        "on_missing": "fail",
+        "why": {
+          "text": "Geography GIST (migration 167) — binds the `pc.cg <-> r.geom::geography` KNN operator that the LATERAL nearest-ravine distance join depends on. This is the index the Spec 59 §11.1 inline-centroid form (review_followups #413) fails to bind, producing the measured ~2h/0-rows-progress pathology this compute's materialized-centroid rewrite exists to avoid.",
+          "liveness": { "kind": "column", "ref": "ravines.geom" }
+        }
+      },
+      {
+        "kind": "column",
+        "name": "parcels.ravine_dataset_version_when_enriched",
+        "on_missing": "fail",
+        "why": {
+          "text": "DEC-E — migration 168. A missing column would otherwise surface as a cryptic 42703 from the write's own IS DISTINCT FROM scope predicate rather than a named refusal.",
+          "liveness": { "kind": "column", "ref": "parcels.ravine_dataset_version_when_enriched" }
+        }
+      }
+    ],
+    "srid": 4326,
+    "empty_source": "ravines",
+    "schema_drift": "pause"
+  },
+  "execution": {
+    "shape": "enrich",
+    "heartbeat_minutes_from_config": "enrich_ravines_heartbeat_minutes",
+    "lock_timeout_ms_from_config": "enrich_ravines_lock_timeout_ms",
+    "enrich_hooks": {
+      "contract_read": "readRavineContract",
+      "post_phase": "computePostPhase"
+    },
+    "phases": [
+      {
+        "name": "ravine_join",
+        "order": 1,
+        "txn": "shared",
+        "writes_ref": 0,
+        "scope": "incremental",
+        "invalidator_ref": 0,
+        "timeout_minutes_from_config": "enrich_ravines_phase_timeout_minutes"
+      }
+    ],
+    "budget": "60m",
+    "txn_scope": "step",
+    "txn_budget": "55m",
+    "chunked": false,
+    "statement_timeout": "none",
+    "step_timeout": "90m",
+    "batch": "none",
+    "needs_disk_mb": "none",
+    "partial_fill": "atomic",
+    "on_row_error": "fail_fast",
+    "on_batch_error": "fail_step",
+    "on_check_error": "fail_step",
+    "on_check_error_why": {
+      "text": "Every declared check reads a count the library already measured in the same run (the coverage/counts SQL in computePostPhase); a check that throws is a compute defect, not an upstream data condition, and must redden the run rather than silently drop its row (the geocode_permits / compute_centroids precedent).",
+      "liveness": { "kind": "file", "ref": "scripts/lib/step/index.js" }
+    },
+    "on_degrade": "none",
+    "criticality": "required",
+    "network": "none",
+    "maintenance": "none",
+    "invocation": {
+      "sources": { "argv": [], "env": { "PIPELINE_CHAIN": "sources" } }
+    }
+  },
+  "checks": [
+    {
+      "id": "parcels_with_ravine_distance_pct",
+      "kind": "field_coverage",
+      "expect": { "reports": "COUNT(ravine_distance_m IS NOT NULL) / COUNT(*) over geom-bearing parcels, as a percentage" },
+      "limit": "pct >= 95",
+      "limit_from_config": "enrich_ravines_distance_coverage_pass_pct",
+      "warn_limit": "pct >= 90",
+      "warn_limit_from_config": "enrich_ravines_distance_coverage_warn_pct",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "chains": ["sources"],
+      "accept_until": "none",
+      "why": {
+        "text": "Ported verbatim (R-AD 3-tier PASS >=95 / WARN >=90 / else FAIL) from the legacy statusFor-shaped literal comparison (DISTANCE_COVERAGE_PASS_PCT / DISTANCE_COVERAGE_WARN_PCT). Coverage gate: a real spatial join populates ravine_distance_m for every geom-bearing parcel since ravines is non-empty by construction (guards.empty_source), so this should sit near 100%. Measured live 2026-09-18: 100.0%.",
+        "liveness": { "kind": "spec", "ref": "docs/specs/01-pipeline/59_source_ravine_protection.md" }
+      }
+    },
+    {
+      "id": "parcels_in_ravine_count",
+      "kind": "field_coverage",
+      "expect": { "reports": "COUNT(*) WHERE is_in_ravine_protection_area" },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "chains": ["sources"],
+      "accept_until": "none",
+      "why": {
+        "text": "Ported by name. Measured live 2026-09-18: 32,339 / 486,530 (6.65%).",
+        "liveness": { "kind": "table", "ref": "parcels" }
+      }
+    },
+    {
+      "id": "parcels_invalid_geom_count",
+      "kind": "field_coverage",
+      "expect": { "reports": "COUNT(*) WHERE geom IS NOT NULL AND NOT ST_IsValid(geom)" },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "chains": ["sources"],
+      "accept_until": "none",
+      "why": {
+        "text": "Root-cause signal for any distance-coverage drop: a degenerate parcel geom yields a NULL centroid -> NULL distance -> reads as not-enriched (Gemini/DeepSeek MED, pre-conversion review). Measured live 2026-09-18: 16.",
+        "liveness": { "kind": "column", "ref": "parcels.geom" }
+      }
+    },
+    {
+      "id": "parcels_enriched_count",
+      "kind": "field_coverage",
+      "expect": { "reports": "rowCount of the #418 Layer-2 join UPDATE — records_updated's own source" },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "chains": ["sources"],
+      "accept_until": "none",
+      "why": {
+        "text": "Ported by name from the pre-conversion `updated` counter.",
+        "liveness": { "kind": "table", "ref": "parcels" }
+      }
+    },
+    {
+      "id": "parcels_ravine_enrich_skipped",
+      "kind": "field_coverage",
+      "expect": { "reports": "whether this run's scope was empty (Layer-2 predicate matched 0 rows) — RE-DERIVED from the scope count, since the #418 Layer-1 early-return branch is retired as a mechanism" },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "chains": ["sources"],
+      "accept_until": "none",
+      "why": {
+        "text": "F9 disposition: the pre-conversion #418 Layer-1 cheap-COUNT early-return before opening any transaction is RETIRED KNOWINGLY as a mechanism (the ENRICHER runner has no gated-skip branch by design) — its OBSERVABLE is preserved by re-deriving this row from the same scope count the write itself used, so a dashboard reader sees the identical signal whether or not the write touched any row.",
+        "liveness": { "kind": "file", "ref": "scripts/lib/compute/enrich-ravines.js" }
+      }
+    },
+    {
+      "id": "ravine_source_dataset_version",
+      "kind": "field_coverage",
+      "expect": { "reports": "the producer's source_dataset_version this run stamped — a STRING value" },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "chains": ["sources"],
+      "accept_until": "none",
+      "why": {
+        "text": "RV-D3 — this row's `detail`/`value` is a string, not a number, unlike every sibling row on this step. Ported verbatim; the frozen row builder admits it (see docs/reports/2026-09-18-batch2-p2-1-enrich-ravines-assessment.md PH-3).",
+        "liveness": { "kind": "table", "ref": "pipeline_runs" }
+      }
+    },
+    {
+      "id": "enrich_ravines_duration_ms",
+      "kind": "field_coverage",
+      "expect": { "reports": "wall-clock duration of this step's run, in milliseconds" },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "chains": ["sources"],
+      "accept_until": "none",
+      "why": {
+        "text": "Ported by name from the pre-conversion `Date.now() - t0` measurement.",
+        "liveness": { "kind": "file", "ref": "scripts/lib/compute/enrich-ravines.js" }
+      }
+    }
+  ],
+  "invariants": [
+    {
+      "id": "ravine_sign_flag_agree_flagged_side",
+      "sql": "SELECT count(*)::int FROM parcels WHERE is_in_ravine_protection_area AND ravine_distance_m > 0",
+      "bound": "viol == 0",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "source": "invariant",
+      "frequency": "every_run",
+      "last_measured": { "value": 0, "at": "2026-09-18T00:00:00.000Z", "commit": "enrich-ravines-commit-1", "cost_ms": 3072, "sample_n": 1, "source_run": { "run_id": null, "chain": null, "event": "manual_timing" } },
+      "why": {
+        "text": "L2's whole sign semantic, both directions locked separately (F-RC1b): a parcel flagged in-ravine must carry a NON-POSITIVE distance (0 inside/intersecting, negative deeper in). A `CASE WHEN ... THEN -1` port error breaks this silently while leaving every other check green — this is the ONLY row that would notice. MEASURED 0 across all 486,530 parcels, 2026-09-18.",
+        "liveness": { "kind": "column", "ref": "parcels.ravine_distance_m" }
+      }
+    },
+    {
+      "id": "ravine_sign_flag_agree_unflagged_side",
+      "sql": "SELECT count(*)::int FROM parcels WHERE NOT is_in_ravine_protection_area AND ravine_distance_m < 0",
+      "bound": "viol == 0",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "source": "invariant",
+      "frequency": "every_run",
+      "last_measured": { "value": 0, "at": "2026-09-18T00:00:00.000Z", "commit": "enrich-ravines-commit-1", "cost_ms": 1302, "sample_n": 1, "source_run": { "run_id": null, "chain": null, "event": "manual_timing" } },
+      "why": {
+        "text": "The inverse direction of the same sign semantic (F-RC1b): a parcel NOT flagged in-ravine must never carry a negative distance. MEASURED 0 across all 486,530 parcels, 2026-09-18.",
+        "liveness": { "kind": "column", "ref": "parcels.ravine_distance_m" }
+      }
+    },
+    {
+      "id": "ravine_flag_true_distance_null_count",
+      "sql": "SELECT count(*)::int FROM parcels WHERE is_in_ravine_protection_area AND ravine_distance_m IS NULL",
+      "bound": "viol == 0",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "source": "invariant",
+      "frequency": "every_run",
+      "last_measured": { "value": 0, "at": "2026-09-18T00:00:00.000Z", "commit": "enrich-ravines-commit-1", "cost_ms": 1353, "sample_n": 1, "source_run": { "run_id": null, "chain": null, "event": "manual_timing" } },
+      "why": {
+        "text": "F-RC1b, third direction: the boolean and the distance are written by the SAME statement from the SAME LATERAL join, so a flagged parcel with a NULL distance is evidence the two columns were set by different runs/paths, not evidence of a degenerate geometry (a degenerate geometry instead shows up as parcels_invalid_geom_count with in_ravine=false, since a NULL centroid never joins to any ravine). MEASURED 0 across all 486,530 parcels, 2026-09-18.",
+        "liveness": { "kind": "column", "ref": "parcels.is_in_ravine_protection_area" }
+      }
+    }
+  ],
+  "plausibility": [
+    {
+      "id": "ravine_distance_m_min_magnitude_observed",
+      "sql": "SELECT (-1 * MIN(ravine_distance_m))::float FROM parcels WHERE ravine_distance_m IS NOT NULL",
+      "bound": "value_max 2000",
+      "limit_from_config": "enrich_ravines_distance_plausible_min_magnitude_m",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "source": "plausibility",
+      "frequency": "every_run",
+      "retighten_when": "never — this is a PHYSICAL bound (Toronto's ravine network + parcel fabric), not a convergence target, mirroring geocode_permits' Toronto-bbox plausibility row. If the observed magnitude ever exceeds this ceiling the response is to find the parcel/ravine geometry that produced it, not to widen the bound. Measured live: the most-negative distance is -1470.30 m (magnitude 1470.30), against a declared ceiling of 2000 m, so the bound is currently vacuous and declared anyway — its value is in the CLASS of failure it catches (a mis-signed distance, or a unit/CRS error), not in a value expected to move.",
+      "last_measured": { "value": 1470.29744323, "at": "2026-09-18T00:00:00.000Z", "commit": "enrich-ravines-commit-1", "cost_ms": 1546, "sample_n": 1, "source_run": { "run_id": null, "chain": null, "event": "manual_timing" } },
+      "why": {
+        "text": "F-RC1a — Reality-Check plan-altitude demand: a bound on how far a parcel can sit \"inside\" the deepest ravine (the magnitude of the most-negative ravine_distance_m), city-invariant, seeded with generous headroom above the measured live magnitude (1470.30 m, measured 2026-09-18). MEASURED, LIVE DEFECT AVOIDED: verdict.js's LIMIT_NUMBER_RE (a digits-only pattern, no sign) mangles a NEGATIVE `limit_from_config`-resolved value into a double-negative string (\"value_min --2000\", reproduced live 2026-09-18 running this exact check against the local DB before this fix) — a pre-existing library gap, out of this conversion's authorized scope (Ask A2 is the ONE sanctioned runner change). The SQL is negated instead so the compared value and its config-resolved bound are both POSITIVE, sidestepping the defect entirely rather than patching shared verdict.js code. Filed in review_followups.md as a library defect for LIMIT_NUMBER_RE to eventually admit a leading sign.",
+        "liveness": { "kind": "column", "ref": "parcels.ravine_distance_m" }
+      }
+    },
+    {
+      "id": "ravine_distance_m_max_observed",
+      "sql": "SELECT MAX(ravine_distance_m)::float FROM parcels WHERE ravine_distance_m IS NOT NULL",
+      "bound": "value_max 20000",
+      "limit_from_config": "enrich_ravines_distance_plausible_max_m",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "source": "plausibility",
+      "frequency": "every_run",
+      "retighten_when": "never — the mirror-image ceiling bound of ravine_distance_m_min_observed, same physical-bound reasoning. Measured live maximum 2739.69 m against a declared ceiling of 20000 m.",
+      "last_measured": { "value": 2739.69382788, "at": "2026-09-18T00:00:00.000Z", "commit": "enrich-ravines-commit-1", "cost_ms": 1546, "sample_n": 1, "source_run": { "run_id": null, "chain": null, "event": "manual_timing" } },
+      "why": {
+        "text": "F-RC1a, ceiling half. Externalized as its own logic variable (enrich_ravines_distance_plausible_max_m) for the same reason as the floor.",
+        "liveness": { "kind": "column", "ref": "parcels.ravine_distance_m" }
+      }
+    },
+    {
+      "id": "ravine_dataset_version_distinct_count",
+      "sql": "SELECT count(DISTINCT ravine_dataset_version_when_enriched)::int FROM parcels WHERE ravine_dataset_version_when_enriched IS NOT NULL",
+      "bound": "value_max 1",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "source": "plausibility",
+      "frequency": "every_run",
+      "retighten_when": "never — this is an INFO visibility row, not a pass/fail gate. A converged fleet reads exactly 1; a value > 1 is not itself a defect (it is the expected transient state mid-recompute, immediately after a load_ravines version bump and before every stale parcel has been re-touched) but it is otherwise invisible anywhere else in this step's audit table, which is the whole point of F-RC1c.",
+      "last_measured": { "value": 1, "at": "2026-09-18T00:00:00.000Z", "commit": "enrich-ravines-commit-1", "cost_ms": 3209, "sample_n": 1, "source_run": { "run_id": null, "chain": null, "event": "manual_timing" } },
+      "why": {
+        "text": "F-RC1c — an INFO row counting distinct non-null lineage stamps, so a multi-stamp partial-convergence state (some parcels re-touched against a new ravines version, others still carrying the old one) is VISIBLE in the audit table rather than only inferable by cross-referencing pipeline_runs. Measured 2026-09-18: 1 distinct value, matching the newest completed load_ravines run's own source_dataset_version.",
+        "liveness": { "kind": "column", "ref": "parcels.ravine_dataset_version_when_enriched" }
+      }
+    }
+  ],
+  "override": { "force_full": "none", "force_run": "none", "dry_run": "none" },
+  "emits": [
+    { "key": "duration_ms", "type": "int", "consumers": ["src/lib/admin/funnel.ts", "src/components/FreshnessTimeline.tsx"] },
+    { "key": "code_version", "type": "string", "consumers": [] }
+  ],
+  "deviations": [
+    {
+      "from": "the pre-conversion #418 Layer-1 cheap-COUNT early return (a full transaction-avoidance branch, evaluated before opening any transaction)",
+      "why": {
+        "text": "F9 — RETIRED as a MECHANISM, knowingly. The ENRICHER runner has no gated-skip branch by design (runEnrichPhase's own docblock; step-validate.mjs's runnerReachability ENRICHER arm). The Layer-2 scope predicate already makes a zero-stale run a 0-row write, and the parcels_ravine_enrich_skipped check row is RE-DERIVED from the same scope count rather than from the retired branch — the OBSERVABLE is preserved, the MECHANISM is not. Cost is measured, not assumed, at commit 2b (both the legacy skip-path baseline and the converted zero-write runtime are recorded in the assessment).",
+        "liveness": { "kind": "file", "ref": "scripts/lib/compute/enrich-ravines.js" }
+      },
+      "adjudicated_by": "Spec 122 §1.10 ENRICHER runner shape (structural — no operator override exists for this axis)",
+      "date": "2026-09-18"
+    }
+  ],
+  "limitations": [
+    {
+      "what": "RV-D1 — emitMeta declared reads {ravines:['geom'], parcels:['id','geom']} but the legacy SQL reads more: parcels.ravine_dataset_version_when_enriched (scope + guard), parcels.is_in_ravine_protection_area and parcels.ravine_distance_m (the guard), plus pipeline_runs.records_meta (the §9/L18 contract). The descriptor's inputs.reads.tables[] above declares the WIDENED, honest read set.",
+      "measured": "grep of ENRICH_SQL + readRavineContract against the pre-conversion emitMeta call, 2026-09-18.",
+      "check_id": "none"
+    },
+    {
+      "what": "RV-D2 (INFO, not fixed here) — migration 242's trg_parcels_geom_invalidation nulls massing_enriched_at/zoning_enriched_at on ANY write path but deliberately NOT the ravine stamp (mig 242 header states this explicitly); the ravine stamp is instead invalidated by load-parcels.js's own ON CONFLICT CASE (DEC-FENCE2). Two different invalidation mechanisms for sibling lineage stamps on the same table — noted, not unified, in this conversion.",
+      "measured": "migrations/242_*.sql header comment + load-parcels.js DEC-FENCE2 CASE, 2026-09-18.",
+      "check_id": "none"
+    },
+    {
+      "what": "RV-L1 — inputs.reads.steps[0].assert_health is NOT declared. Measured 2026-09-18: the field exists in step.schema.json:927 and has ZERO consumers anywhere in the tree (no runner, no descriptor, no test). A declared guard that cannot arm is a Rule 12 violation; filed INFO in review_followups.md rather than declared here as a no-op.",
+      "measured": "grep -rn assert_health scripts/ src/ — zero runtime consumers, 2026-09-18.",
+      "check_id": "none"
+    },
+    {
+      "what": "RV-L3 — the pre-conversion invalid-geometry ratio guard (throw when producer invalid_geometry_skipped/feature_count > 5%) is NOT externalized as a logic variable, despite the batch-2 plan's own tunables census (§2 var #3) proposing one. Measured 2026-09-18: `execution.enrich_hooks.contract_read` is resolved and CALLED by the runner as `hookFn(pool)` ONLY (scripts/lib/step/index.js:3089, and identically for enrich_parcels' readZoningContract) — no `config` argument reaches a contract_read hook today. Threading it through would be a SECOND runner change beyond Ask A2's authorized one-line `passCtx.contract` addition. The ratio therefore stays the pinned pre-conversion literal (0.05) inside scripts/lib/compute/enrich-ravines.js rather than being declared as a logic variable no code path could ever read (Rule 12: 'a declared guard that cannot arm is a violation'). Filed as a followup for whichever WF next threads config into enrich_hooks.contract_read generally.",
+      "measured": "scripts/lib/step/index.js:3086-3093 (contractHook resolved and called with (pool) only) vs scripts/lib/compute/enrich-parcels.js readZoningContract(pool) (same one-arg signature), 2026-09-18.",
+      "check_id": "none"
+    },
+    {
+      "what": "RV-L2 — guards.srid and guards.empty_source are DECLARATIVE, not runner-enforced preconditions. Measured 2026-09-18: scripts/lib/step/index.js has zero references to either field; both are read by COMPUTE modules directly where a step needs the value (the link-massing.js / link-neighbourhoods.js precedent for guards.srid) or are structurally unused (guards.empty_source has no generic runner consumer at all — link-massing's own empty_source_guard check function is what actually enforces it, and even that is a non-halting WARN/FAIL row, not a HALT). Because the legacy L14 behaviour genuinely HALTS (throws) rather than reports, the real enforcement of L14 (ravines must be non-empty) and the SRID=4326 assertion is folded into the contract_read hook (readRavineContract), which is guaranteed to run pre-transaction on every invocation — NOT into guards.srid/guards.empty_source, which are declared here for documentation/convention parity with the rest of the fleet only.",
+      "measured": "grep -n 'empty_source\\|guards.srid' scripts/lib/step/index.js — zero hits, 2026-09-18.",
+      "check_id": "none"
+    }
+  ],
+  "interpretation": "none",
+  "recovery": {
+    "reset": "No TRUNCATE/rebuild mechanism and none is needed — a plain re-run re-evaluates every geom-bearing parcel whose stamp disagrees with the current ravines version (staleness.scope) and the IS DISTINCT FROM triple guard makes an unnecessary re-stamp cheap. Nulling parcels.ravine_dataset_version_when_enriched by hand for a scoped set of parcels IS a valid targeted reset — it re-admits exactly those rows to the next run's scope predicate.",
+    "resume": "none",
+    "force": "none",
+    "rollback": "none",
+    "verify_clean": "none",
+    "cascades": "derived",
+    "interrupted": "force_full_on_next_run",
+    "interrupted_why": {
+      "text": "The single write target sits inside ONE shared transaction (execution.txn_scope \"step\", the phase's own txn \"shared\"), so a run killed mid-statement leaves parcels exactly as it found them — there is no half-written state, the same guarantee geocode_permits' identical posture rests on. force_full_on_next_run is still the ACCURATE declaration and not a concession: runEnrichPhase folds staleness.detectInterruptedRetraction into the full/incremental decision before any pass runs (reachable), and because this step's scope predicate re-admits every stale parcel unconditionally on every run (staleness.scope is a lineage predicate evaluated fresh each time, not a one-shot flag), \"the next run does a full pass over whatever is still stale\" is a promise this step keeps whether or not the prior run was interrupted (accurate).",
+      "liveness": { "kind": "file", "ref": "scripts/lib/step/index.js" }
+    },
+    "before_image": "none",
+    "before_image_why": {
+      "text": "recovery.before_image applies to a retraction (outputs.writes[].retract != 'none'); this step's sole write target declares retract:\"none\" — it only ever stamps a value, never clears one to NULL.",
+      "liveness": { "kind": "file", "ref": "scripts/lib/compute/enrich-ravines.js" }
+    }
+  },
+  "database": { "class": "primary", "min_migration": 244, "assert_current_database": "postgres" },
+  "counters": {
+    "records_total": {
+      "source": "matched.compute.geom_bearing_parcels_scanned",
+      "scoped_by": "step",
+      "why": {
+        "text": "A4 ruling (operator, 2026-09-18): declares the scanned population, following the enrich_parcels ENRICHER precedent (matched.compute.total_parcels_scanned) rather than preserving the legacy's records_total:null. DECLARE THE ROOT THAT RESOLVES: the runner resolves counters.<slot>.source against {matched, written, records_meta} — matched.compute.<name> resolves while a bare compute.* resolves NULL for every ENRICHER (enrich_parcels' own three counters read null since conversion for exactly this reason, filed HIGH 2026-09-16).",
+        "liveness": { "kind": "file", "ref": "scripts/lib/step/index.js" }
+      }
+    },
+    "records_new": {
+      "source": "matched.compute.records_new_aggregate",
+      "scoped_by": "step",
+      "why": {
+        "text": "This step INSERTs nothing — the sole write target is an UPDATE, and class N's own executor structurally refuses any statement text containing INSERT INTO or ON CONFLICT (JOIN_UPDATE_FORBIDDEN_RE, scripts/lib/step/write.js), so the 0 is enforced rather than merely expected. Declared as a finite literal 0 rather than omitted, because an omitted source resolves null and null reads as \"not counted\" (Spec 48 §3.6).",
+        "liveness": { "kind": "file", "ref": "scripts/lib/step/write.js" }
+      }
+    },
+    "records_updated": {
+      "source": "written.e1.updated",
+      "scoped_by": "step",
+      "why": {
+        "text": "COUNTER-ROOT (fast invariant #26): write.targetKey(0) returns \"e1\" (scripts/lib/step/write.js:158) — the rowCount of the sole declared write target, one-to-one with the legacy's `updated` counter.",
+        "liveness": { "kind": "file", "ref": "scripts/lib/step/write.js" }
+      }
+    }
+  },
+  "config": {
+    "logic_variables": [
+      { "name": "enrich_ravines_distance_coverage_pass_pct", "min": 0, "max": 100, "on_invalid": "fail" },
+      { "name": "enrich_ravines_distance_coverage_warn_pct", "min": 0, "max": 100, "on_invalid": "fail" },
+      { "name": "enrich_ravines_heartbeat_minutes", "min": 1, "max": 60, "on_invalid": "fail" },
+      { "name": "enrich_ravines_lock_timeout_ms", "min": 0, "max": 3600000, "on_invalid": "fail" },
+      { "name": "enrich_ravines_phase_timeout_minutes", "min": 0, "max": 290, "on_invalid": "fail" },
+      { "name": "enrich_ravines_distance_plausible_min_magnitude_m", "min": 0, "max": 5000, "on_invalid": "fail" },
+      { "name": "enrich_ravines_distance_plausible_max_m", "min": 0, "max": 50000, "on_invalid": "fail" }
+    ],
+    "validation": "strict",
+    "hoisted_above_gate": true,
+    "retired": []
+  },
+  "sharing": {
+    "chains": "derived",
+    "shared": "derived",
+    "slug_forms": "derived",
+    "varies_by_chain": { "checks": "none", "phase": { "sources": 12 }, "audit_table": "one", "scope": "none" },
+    "on_contention": "self_skip"
+  },
+  "terminals": [
+    {
+      "id": "lock_held_elsewhere",
+      "kind": "skip_lock_contention",
+      "status": "self_skipped",
+      "records_meta": { "skipped": "bool", "reason": "string" },
+      "why": {
+        "text": "Advisory lock 60 held elsewhere. Row-derived SKIP summary (VRD-SKIP).",
+        "liveness": { "kind": "file", "ref": "scripts/lib/step/index.js" }
+      }
+    },
+    {
+      "id": "enriched",
+      "kind": "success",
+      "status": "completed",
+      "records_meta": { "duration_ms": "int", "audit_table": "object" },
+      "why": {
+        "text": "The ravine_join phase ran (whether or not its scope was empty) and parcels_with_ravine_distance_pct met its PASS bound.",
+        "liveness": { "kind": "check", "ref": "parcels_with_ravine_distance_pct" }
+      }
+    },
+    {
+      "id": "enriched_with_warnings",
+      "kind": "success",
+      "status": "completed_with_warnings",
+      "records_meta": { "duration_ms": "int", "audit_table": "object" },
+      "why": {
+        "text": "The phase ran and at least one non-blocking check (e.g. parcels_with_ravine_distance_pct's WARN tier, or a plausibility row) is below PASS. Row-derived, never a parallel boolean.",
+        "liveness": { "kind": "check", "ref": "parcels_with_ravine_distance_pct" }
+      }
+    },
+    {
+      "id": "failed_contract_violation",
+      "kind": "fail_error",
+      "status": "failed",
+      "records_meta": { "terminal": "string" },
+      "why": {
+        "text": "readRavineContract threw — F1's §9/L18 producer-protocol HALT (missing/failed/stale producer, invalid-geometry ratio over enrich_ravines_producer_invalid_geom_max_pct, empty source_dataset_version) OR F2's L14 empty-ravines HALT OR the SRID=4326 assertion, all folded into this ONE pre-transaction hook per RV-L2. PRESERVED behaviour: the legacy also halts before any transaction opens for every one of these conditions.",
+        "liveness": { "kind": "file", "ref": "scripts/lib/compute/enrich-ravines.js" }
+      }
+    },
+    {
+      "id": "failed_precondition",
+      "kind": "fail_error",
+      "status": "failed",
+      "records_meta": { "terminal": "string" },
+      "why": {
+        "text": "guards.requires found a required extension/index/column ABSENT with on_missing:\"fail\" (PostGIS, either GIST index, or the migration-168 lineage column). PRESERVED and STRENGTHENED (Class A(vii)): assertRequirements now runs on EVERY invocation, where the legacy's assertPreconditions ran only on the recompute path.",
+        "liveness": { "kind": "file", "ref": "scripts/lib/step/index.js" }
+      }
+    },
+    {
+      "id": "failed_config_out_of_bounds",
+      "kind": "fail_error",
+      "status": "failed",
+      "records_meta": { "terminal": "string" },
+      "why": {
+        "text": "A declared logic_variables[] entry resolved absent or outside its [min,max] under on_invalid:\"fail\". hoisted_above_gate:true puts this refusal ABOVE the advisory lock (the link_wsib A1/A2 fence).",
+        "liveness": { "kind": "file", "ref": "scripts/lib/step/config.js" }
+      }
+    }
+  ]
+}

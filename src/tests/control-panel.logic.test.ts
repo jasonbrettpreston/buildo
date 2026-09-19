@@ -75,6 +75,16 @@ const EXPECTED_LOGIC_VAR_KEYS = [
   'enrich_parcels_scope_recovery_batch_size', // WF3 EP-D14 (2026-09-10) — pass-5 D4' recovery batch size (incremental mode; --full stamps set-based)
   'enrich_parcels_pending_scope_warn_max', // WF3 EP-D14 (2026-09-10) — pre_write WARN bound on pending pass-3 scope parcels before pass 5
   'enrich_parcels_scope_retire_after_hours', // WF3 EP-PASS3-BACKLOG (2026-09-15) — retention window for a PRIOR run's unconsumed pass-3 scope rows, retired at step start
+  // Batch-2 row 2.1 `enrich_ravines` (2026-09-18, commit 1) — 7 vars, seeded at commit 1 ahead of
+  // the compute/shell landing at commit 2b (Rule 3 externalization; RV-L3 removed an 8th proposed
+  // var — the invalid-geometry ratio stays a pinned literal, no contract_read hook can read config).
+  'enrich_ravines_distance_coverage_pass_pct',
+  'enrich_ravines_distance_coverage_warn_pct',
+  'enrich_ravines_heartbeat_minutes',
+  'enrich_ravines_lock_timeout_ms',
+  'enrich_ravines_phase_timeout_minutes',
+  'enrich_ravines_distance_plausible_min_magnitude_m',
+  'enrich_ravines_distance_plausible_max_m',
   'step_post_check_statement_timeout_minutes', // WF3 EP-D17 (2026-09-10) — default ceiling for an every_run invariants[]/plausibility[] entry with no declared statement_timeout
   'parcels_dead_tuple_ratio_warn_max', // WF3 EP-D17 (2026-09-10) — WARN bound + execution.maintenance trigger threshold for parcels' pg_stat_user_tables dead_ratio
   'step_post_check_concurrency', // WF3 EP-D17 output-panel fix F7 (2026-09-10) — batch width cap for concurrent invariants[]/plausibility[] entries

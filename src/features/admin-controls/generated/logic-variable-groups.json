@@ -209,7 +209,9 @@
       "parcel_sanity_dim_lot_tolerance_m",
       "parcel_sanity_distribution_percentile",
       "parcel_sanity_distribution_median_multiplier",
-      "parcel_sanity_distribution_median_floor"
+      "parcel_sanity_distribution_median_floor",
+      "enrich_ravines_distance_plausible_min_magnitude_m",
+      "enrich_ravines_distance_plausible_max_m"
     ]
   },
   {
@@ -314,7 +316,9 @@
       "parcel_sanity_cost_coherence_tolerance_cad",
       "parcel_sanity_greenspace_tolerance_sqm",
       "parcel_sanity_realized_fsi_p90_min",
-      "parcel_sanity_realized_fsi_p90_max"
+      "parcel_sanity_realized_fsi_p90_max",
+      "enrich_ravines_distance_coverage_pass_pct",
+      "enrich_ravines_distance_coverage_warn_pct"
     ]
   },
   {
@@ -377,7 +381,10 @@
       "step_post_check_concurrency",
       "parcels_maintenance_timeout_minutes",
       "refresh_snapshot_read_statement_timeout_minutes",
-      "refresh_snapshot_phase_deadline_minutes"
+      "refresh_snapshot_phase_deadline_minutes",
+      "enrich_ravines_heartbeat_minutes",
+      "enrich_ravines_lock_timeout_ms",
+      "enrich_ravines_phase_timeout_minutes"
     ]
   },
   {
