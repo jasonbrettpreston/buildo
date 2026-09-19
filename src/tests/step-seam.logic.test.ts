@@ -54,11 +54,18 @@ describe('deriveSeamPairs — derived from converted.json + manifest.json, never
     expect(seam.deriveSeamPairs(byName)).toEqual([]);
   });
 
-  it('the REAL 15-descriptor registry (batch2 P1.1 cutover, 2026-09-18 — assert_parcel_sanity) yields 8 live pairs: enrich_parcels -> assert_parcel_sanity, link_massing -> enrich_parcels, compute_centroids -> link_massing, link_parcel_addresses -> link_parcels, plus refresh_snapshot\'s 3 declared inputs.reads.steps (assert_parcel_sanity\'s SECOND inputs.reads.steps entry, compute_parcel_cost_estimates, is not itself a converted step, so it contributes zero new pairs — only the enrich_parcels entry resolves to a live producer)', () => {
+  it('the REAL 16-descriptor registry (batch2 row 2.1 cutover, 2026-09-18 — enrich_ravines) yields 9 live pairs: enrich_parcels -> assert_parcel_sanity, link_massing -> enrich_parcels, load_ravines -> enrich_ravines, compute_centroids -> link_massing, link_parcel_addresses -> link_parcels, plus refresh_snapshot\'s 3 declared inputs.reads.steps (assert_parcel_sanity\'s SECOND inputs.reads.steps entry, compute_parcel_cost_estimates, is not itself a converted step, so it contributes zero new pairs — only the enrich_parcels entry resolves to a live producer)', () => {
     const byName = seam.loadConvertedDescriptors();
     expect(Object.keys(byName).sort()).toEqual(
-      ['assert_data_bounds', 'assert_engine_health', 'assert_global_coverage', 'assert_parcel_sanity', 'assert_schema', 'compute_centroids', 'enrich_parcels', 'geocode_permits', 'link_massing', 'link_neighbourhoods', 'link_parcel_addresses', 'link_parcels', 'link_wsib', 'load_ravines', 'refresh_snapshot'].sort(),
+      ['assert_data_bounds', 'assert_engine_health', 'assert_global_coverage', 'assert_parcel_sanity', 'assert_schema', 'compute_centroids', 'enrich_parcels', 'enrich_ravines', 'geocode_permits', 'link_massing', 'link_neighbourhoods', 'link_parcel_addresses', 'link_parcels', 'link_wsib', 'load_ravines', 'refresh_snapshot'].sort(),
     );
+    // enrich_ravines (batch-2 row 2.1, cut over 2026-09-18) declares inputs.reads.steps:
+    // [{step: 'load_ravines', version_pin: 'exact'}] ONLY — measured from
+    // scripts/enrich-ravines.descriptor.json. load_ravines is itself converted, so the
+    // registration contributes exactly ONE new pair, downstream=enrich_ravines, which sorts
+    // by deriveSeamPairs's own deterministic `downstream:upstream` localeCompare BETWEEN
+    // 'enrich_parcels:link_massing' and 'link_massing:compute_centroids'
+    // ('enrich_parcels' < 'enrich_ravines' < 'link_massing').
     // assert_global_coverage (batch1 I1, cut over commit 9, 2026-09-12) declares
     // inputs.reads.steps: [] — measured from scripts/quality/assert-global-coverage.
     // descriptor.json on 2026-09-12: it reads 28 TABLES directly (permits/coa_applications/
@@ -124,6 +131,7 @@ describe('deriveSeamPairs — derived from converted.json + manifest.json, never
     expect(seam.deriveSeamPairs(byName)).toEqual([
       { upstream: 'enrich_parcels', downstream: 'assert_parcel_sanity' },
       { upstream: 'link_massing', downstream: 'enrich_parcels' },
+      { upstream: 'load_ravines', downstream: 'enrich_ravines' },
       { upstream: 'compute_centroids', downstream: 'link_massing' },
       // batch-2 I5 (2026-09-16) — sorts here by deriveSeamPairs's own deterministic
       // `downstream:upstream` localeCompare: 'link_neighbourhoods:geocode_permits' falls
@@ -237,9 +245,14 @@ describe('runSeamChecks — one row per derived pair', () => {
   // [enrich_parcels, compute_parcel_cost_estimates] — only enrich_parcels is itself
   // converted, so the registration contributes exactly ONE new pair,
   // 'assert_parcel_sanity:enrich_parcels', which sorts FIRST alphabetically — 6 -> 7.
+  // enrich_ravines (batch-2 row 2.1, cut over 2026-09-18) declares inputs.reads.steps:
+  // [{step: 'load_ravines'}] — load_ravines is itself converted, so the registration
+  // contributes exactly ONE new pair, 'enrich_ravines:load_ravines', sorting between
+  // 'enrich_parcels:link_massing' and 'link_massing:compute_centroids' — 8 -> 9.
   const EXPECTED_SEAM_METRICS = [
     'seam_enrich_parcels_before_assert_parcel_sanity',
     'seam_link_massing_before_enrich_parcels',
+    'seam_load_ravines_before_enrich_ravines',
     'seam_compute_centroids_before_link_massing',
     // batch-2 I5 cutover (2026-09-16) — the 7th pair, in deriveSeamPairs's own
     // `downstream:upstream` sort position. link_neighbourhoods declared this read at ITS

@@ -220,7 +220,9 @@
       "file": "scripts/enrich-ravines.js",
       "archetype": "ENRICHER",
       "batch": "pending",
-      "reason": "Spec 122 §1.10 declared; batch-2 row 2.1 conversion IN FLIGHT (commit 1, 2026-09-18) — archetype re-derived from the code at PH-0 (R-AO), confirmed ENRICHER"
+      "reason": "RETAINED at cutover per Spec 124 R-AO. batch-2 row 2.1 commits 1/2a/2b (2026-09-18) landed the descriptor, compute, frozen shell, and the runner passCtx.contract seam (Ask A2); commit 3 registers the file in converted.json's converted[] and deletes the pending[] entry in the same commit (R-K) — prepared, left uncommitted for the OUTPUT panel.",
+      "status": "converted",
+      "converted_at": "<cutover commit sha — fill in when commit 3 is actually committed>"
     },
     {
       "slug": "enrich_wsib_builders",

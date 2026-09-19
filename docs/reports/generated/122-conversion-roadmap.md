@@ -7,12 +7,12 @@
 
 ## Counts
 
-Remaining files: **48** (+ **0** pending) · remaining slugs: **50** (+ **0** pending)
+Remaining files: **47** (+ **0** pending) · remaining slugs: **49** (+ **0** pending)
 
 | Batch | Files | Slots |
 |---|---:|---:|
 | C4 | 0 | 0 |
-| C5 | 12 | 12 |
+| C5 | 11 | 11 |
 | C6 | 36 | 40 |
 
 ## C4 — archetype-grouped, risk-ascending
@@ -31,7 +31,6 @@ Remaining files: **48** (+ **0** pending) · remaining slugs: **50** (+ **0** pe
 |---|---|---|---|---|---|---|
 | ENRICHER | `scripts/enrich-centreline.js` | enrich_centreline | sources (1) | bottom-left | — | EP-PIN-D17 (enrich_centreline); CLOUD-PRE (enrich_centreline) |
 | ENRICHER | `scripts/enrich-heritage.js` | enrich_heritage | sources (1) | bottom-left | — | CLOUD-PRE (enrich_heritage) |
-| ENRICHER | `scripts/enrich-ravines.js` | enrich_ravines | sources (1) | bottom-left | — | CLOUD-PRE (enrich_ravines) |
 | ENRICHER | `scripts/compute-parcel-cost-estimates.js` | compute_parcel_cost_estimates | sources (1) | top-left | supports_dry_run | CLOUD-PRE (compute_parcel_cost_estimates) |
 | INGESTOR | `scripts/load-address-points.js` | address_points | sources (1) | top-left | — | CLOUD-PRE (address_points); SEAM-CHAIN-1 (address_points) |
 | INGESTOR | `scripts/load-centreline.js` | load_centreline | sources (1) | top-left | — | CLOUD-PRE (load_centreline) |
@@ -47,7 +46,6 @@ Remaining files: **48** (+ **0** pending) · remaining slugs: **50** (+ **0** pe
 - `scripts/compute-parcel-cost-estimates.js` (ENRICHER): Spec 122 §1.10 declared
 - `scripts/enrich-centreline.js` (ENRICHER): Spec 122 §1.10 declared
 - `scripts/enrich-heritage.js` (ENRICHER): Spec 122 §1.10 declared
-- `scripts/enrich-ravines.js` (ENRICHER): Spec 122 §1.10 declared
 - `scripts/load-address-points.js` (INGESTOR): Spec 122 §1.10 declared
 - `scripts/load-centreline.js` (INGESTOR): Spec 122 §1.10 declared
 - `scripts/load-heritage.js` (INGESTOR): Spec 122 §1.10 declared
@@ -112,4 +110,4 @@ Remaining files: **48** (+ **0** pending) · remaining slugs: **50** (+ **0** pe
 
 ---
 
-*Totality (both directions, proven by `src/tests/conversion-roadmap.infra.test.ts`; slug-grain, IDENTITY HOLDS): **68** manifest.scripts slugs = **15** converted + **0** pending + **3** declared exemptions (Ask A2, excluded from the conversion programme entirely — never silently dropped, see the table above) + **50** remaining, each counted exactly once, in exactly one of C4/C5/C6/pending/exempted.*
+*Totality (both directions, proven by `src/tests/conversion-roadmap.infra.test.ts`; slug-grain, IDENTITY HOLDS): **68** manifest.scripts slugs = **16** converted + **0** pending + **3** declared exemptions (Ask A2, excluded from the conversion programme entirely — never silently dropped, see the table above) + **49** remaining, each counted exactly once, in exactly one of C4/C5/C6/pending/exempted.*

@@ -2176,6 +2176,15 @@ describe('LDG-4 — descriptor <-> ledger cross-check (SUPERSET + EQUALITY, conv
     // Same disposition, same ledger id, filed in review_followups.md.
     link_parcels: { missing: ['compute_centroids', 'geocode_permits'], extra: [] }, // LDG-D1 (narrowed 2026-09-03: link_parcel_addresses now declared; widened 2026-09-16: geocode_permits became derivable at its cutover)
     refresh_snapshot: { missing: [], extra: ['link_massing', 'link_parcels', 'link_wsib'] }, // LDG-D2
+    // WIDENED at the batch-2 row 2.1 cutover (2026-09-18): enrich_ravines became a CONVERTED
+    // producer that day, so the ledger's column-overlap derivation can now SEE a dependency
+    // enrich_parcels' compute has always had — it reads is_in_ravine_protection_area,
+    // ravine_distance_m and ravine_dataset_version_when_enriched (enrich-parcels.js's own
+    // ravine setback/envelope_constraint_reason logic, per batch-2 row 2.1's PH-5 seam map).
+    // Same disposition as LDG-D1/LDG-D2: declaring it moves enrich_parcels' own seam pairs
+    // and staleness gating, out of scope for a conversion that must not change enrich_parcels'
+    // behaviour. Filed RV-D5 in defect-ledger.md.
+    enrich_parcels: { missing: ['enrich_ravines'], extra: [] }, // RV-D5
   };
 
   for (const [name, { descriptor }] of Object.entries(byName)) {
