@@ -1397,10 +1397,19 @@ describe('55-A — the hard per-conversion gate (44, k=PER_STEP)', () => {
     for (const consumer of (e as { consumers: string[] }).consumers) {
       const file = consumerFile(consumer);
       expect(fs.existsSync(abs(file)), `consumer ${consumer} (${file}) of ${EMIT_KEY} does not exist`).toBe(true);
-      const src = fs.readFileSync(abs(file), 'utf8');
-      expect(src.includes(EMIT_KEY), `${file} never reads ${EMIT_KEY}`).toBe(true);
+      let src = fs.readFileSync(abs(file), 'utf8');
+      // RV-D6 (batch-2 row 2.1, 2026-09-18): once a consumer converts onto the generic runner, the
+      // §5.1 frozen shell (`scripts/enrich-ravines.js`) is 7 statements and no longer contains a
+      // single field literal — the real `records_meta.ravine_load` reads moved to
+      // `scripts/lib/compute/enrich-ravines.js#readRavineContract` (A-1(b): compute owns the domain
+      // logic, the shell owns only wiring). Fold in the required compute module's source, resolved
+      // the same way the frozen shape resolves it (`require('./lib/compute/<name>')`), so this check
+      // keeps testing the code that ACTUALLY executes the read rather than asserting on dead text.
+      const computeReq = /require\(['"]\.\/lib\/compute\/([\w-]+)['"]\)/.exec(src);
+      if (computeReq) src += '\n' + fs.readFileSync(abs(`scripts/lib/compute/${computeReq[1]}.js`), 'utf8');
+      expect(src.includes(EMIT_KEY), `${file} (incl. its required compute module) never reads ${EMIT_KEY}`).toBe(true);
       for (const f of CONSUMED_FIELDS) {
-        expect(src.includes(f), `${file} does not read ${f}`).toBe(true);
+        expect(src.includes(f), `${file} (incl. its required compute module) does not read ${f}`).toBe(true);
         expect(descriptorText.includes(f), `the descriptor never declares consumed field ${f} (D-6: the 7-field contract)`).toBe(true);
       }
     }
