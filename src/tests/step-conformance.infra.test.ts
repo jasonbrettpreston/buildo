@@ -2572,6 +2572,43 @@ describe('VAL-9 / R-AG — the validator harvests only the tier `npm run test` o
 });
 
 // ---------------------------------------------------------------------------
+// C1 (WF3 `wf3_test_db_suite_red`, 2026-09-21) — `npm run test:db` must be
+// spawnable by npm on Windows. npm executes package.json `scripts` via
+// `cmd.exe` on Windows, which cannot parse a bare POSIX env-var prefix
+// (`BUILDO_TEST_DB=1 vitest …` → `'BUILDO_TEST_DB' is not recognized as an
+// internal or external command`) — the deepest cause of the DB suite's rot
+// (it had never run locally on Windows). `cross-env` normalises the
+// assignment across shells. This lock catches a regression back to the bare
+// prefix form.
+// ---------------------------------------------------------------------------
+describe('C1 — `scripts["test:db"]` is Windows-runnable (no bare NAME=value env prefix)', () => {
+  const PKG_RAW = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, 'package.json'), 'utf8')) as {
+    scripts?: Record<string, string>;
+    devDependencies?: Record<string, string>;
+  };
+  const TEST_DB_SCRIPT = PKG_RAW.scripts?.['test:db'] ?? '';
+
+  /** A bare POSIX `NAME=value` token as the first word of the script — the form cmd.exe cannot parse. */
+  const BARE_ENV_PREFIX = /^\s*[A-Za-z_][A-Za-z0-9_]*=\S+/;
+
+  it('the real script has no bare env-var prefix as its first token', () => {
+    expect(TEST_DB_SCRIPT, 'scripts["test:db"] is empty — nothing to check').not.toBe('');
+    expect(BARE_ENV_PREFIX.test(TEST_DB_SCRIPT), `scripts["test:db"] starts with a bare NAME=value prefix cmd.exe cannot run: "${TEST_DB_SCRIPT}"`).toBe(false);
+  });
+
+  it('RED — the pre-fix string (bare `BUILDO_TEST_DB=1 vitest …`) IS caught by the same predicate (proves the guard fires, not merely agrees)', () => {
+    const preFix = TEST_DB_SCRIPT.replace(/^cross-env\s+/, '');
+    expect(preFix, 'the tamper did not change the script — a leading "cross-env " prefix was not found where expected').not.toBe(TEST_DB_SCRIPT);
+    expect(BARE_ENV_PREFIX.test(preFix)).toBe(true);
+    expect(BARE_ENV_PREFIX.test(TEST_DB_SCRIPT)).toBe(false);
+  });
+
+  it('cross-env is declared as a devDependency (the mechanism the fix relies on)', () => {
+    expect(PKG_RAW.devDependencies?.['cross-env'], '`test:db` invokes `cross-env` but it is not a declared devDependency').toBeDefined();
+  });
+});
+
+// ---------------------------------------------------------------------------
 // Rule 10 (Spec 124 §2 Rule 10, WF2 "Rules 10/11/12 mechanical checkers", C1)
 // — checkVerdictSingleSource, exercised two ways per the file's own testing
 // convention — which is spawn-based because it predates the entry-point guard,
