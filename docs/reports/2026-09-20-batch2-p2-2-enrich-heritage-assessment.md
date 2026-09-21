@@ -251,3 +251,45 @@ claim remains RED through commit 2 and flips only at commit 3) — see the commi
 - Fleet-wide `step-validate.mjs --all --write` scorecard regeneration — 17 scorecards currently read STALE against a fresh `--fast` run (fast invariant #24's registry-wide detail text changed the moment `converted.json` gained a pending entry); this is the SAME transient state `enrich_ravines`' own commits 1–2c left in place until ITS cutover commit (`83b0cb98`), confirmed by that commit's diff touching 9+ assessment scorecard sections that commits 1–2c did not.
 - Cloud logic-variable seed apply and any cloud dispatch (R-AQ, deferred to batch close by prior operator ruling).
 - The three `review_followups.md` items FOLD-I5/sanity-harness-gap/zone-scoped-gating are FILED (§2, §6) but their OWN remediation is not built here, per the plan's Not-in-scope section.
+
+---
+
+## Output-panel peel (commit 2c) — O1–O4, closed this commit
+
+**O1 (Guardian FAIL, closed).** Line-by-line audit of the legacy `assertPreconditions`/`assertVersionColumn`
+against `guards.requires`: PostGIS ✅, fuzzystrmatch ✅, `normalize_address()` — **MISSING, restored**
+(`{kind:"function", name:"normalize_address", on_missing:"fail"}`; migration 170, introduced `e299d26e`;
+ENRICH_SQL calls it twice — the parcel-address CTE and the Part IV tiebreak — and would otherwise fail
+mid-statement with a raw 42883 instead of a named refusal), 3 GIST indexes ✅, 4 M-2 columns
+(`heritage_dataset_version_when_enriched`/`is_heritage_designated`/`heritage_designation_type`/
+`heritage_designation_date`, which also subsumes `assertVersionColumn`'s own single-column check) ✅.
+**No other precondition is missing** — every other legacy probe was already declared. `violations.test.ts`'s
+bare `.length >= 9` replaced with 10 NAMED-entry assertions; RED proven by physically removing the
+`function:normalize_address` entry and re-running (failure named the exact missing guard, not a vacuous
+length mismatch), then restored and re-verified GREEN (23/23).
+
+**O2 (Code Review FAIL, closed).** The cohort, perturbation SQL, projected-hash query and restore
+procedure are now a committed, re-runnable artifact: `docs/reports/golden/enrich_heritage/differential/cohort.json`
+(the same 494-row cohort, re-derived deterministically — identical counts and, confirmed by an identical
+perturbed hash, identical ids) + `scripts/analysis/enrich-heritage-cohort-differential.js` (indexed in
+`docs/runbook/README.md`). **Re-run from the committed artifacts, both sides:** CONVERTED —
+`records_updated=494`, hash restored to baseline `6b34814d...` exactly, PASS. LEGACY — also re-run
+(cheap: a `scripts/enrich-heritage.js` swap, ~10 s), identical result: `records_updated=494`, hash restored,
+PASS. Both reproduce `94cfe054`'s original numbers exactly.
+
+**O3 (Observability, closed).** `descriptor.limitations[]` gains a one-line note:
+`heritage_designated_by_zone[].parcels` sums to all 486,530 parcels (no eligibility filter in `ZONE_SQL`),
+not the 486,514 `eligible_parcels_scanned` — only the designated-sum identity is claimed. That identity is
+now genuinely ENFORCED, not merely asserted in prose: `computePostPhase` throws if
+`Σ buckets.designated !== parcels_heritage_designated_count` (a real gap found while writing this note —
+the identity was claimed in commit 2's own report text but never actually coded). Re-verified live in both
+recaptured goldens: no throw, hash unchanged (`6b34814d...`), zone sums still 2391/4521/24/3/1811/2/10/507/455/234.
+
+**O4 (Reality-Check, filed not built).** HCD null-date parcels (1,820, from the 4 `heritage_districts` rows
+with `NULL designated_date`, ids 6/9/16/103) have no declared visibility row of their own — the existing
+`heritage_part_iv_null_date_count` invariant is deliberately Part-IV-scoped (correct as written). Filed MED
+in `review_followups.md` with the query and numbers, alongside the two commit-1 sanity-harness followups.
+
+Descriptor changed (guards.requires +1, limitations +1) ⇒ source_fingerprint moved
+(`4f34639d...` → `59b0b093...`); both POST goldens recaptured, `table_state` hash **unchanged** (`6b34814d...`,
+zero writes both times — the guard/limitations-only change touches no SQL path).

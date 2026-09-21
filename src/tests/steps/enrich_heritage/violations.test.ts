@@ -240,10 +240,36 @@ describe('enrich_heritage — F9 disposition: the retired mechanism, the preserv
     expect(src).toMatch(/skipped\s*=\s*updated === 0/);
   });
 
-  it('unlike the legacy, guards.requires now runs on EVERY invocation (Class A(vii)) — 9 rows, every one on_missing:"fail" [flips at commit 2]', () => {
+  it('unlike the legacy, guards.requires now runs on EVERY invocation (Class A(vii)) — every declared row is on_missing:"fail" [flips at commit 2]', () => {
     const descriptor = loadDescriptor();
-    expect(descriptor.guards.requires.length).toBeGreaterThanOrEqual(9);
+    expect(descriptor.guards.requires.length).toBeGreaterThanOrEqual(10);
     for (const r of descriptor.guards.requires) expect(r.on_missing).toBe('fail');
+  });
+
+  // O1 (output-panel Guardian FAIL, 2026-09-20): a bare `.length >= N` assertion is silent
+  // to WHICH guards are present — it would stay green even if `function:normalize_address`
+  // (or any other named requirement) were quietly dropped and replaced by an unrelated one.
+  // NAMED-entry assertions, one per legacy assertPreconditions/assertVersionColumn probe:
+  // PostGIS, fuzzystrmatch, normalize_address(), the 3 GIST indexes, and the 4 migration-171
+  // columns (idx_parcels_geom_gist covers migration 039; the rest are migration 170/171).
+  it('guards.requires declares every legacy precondition BY NAME — PostGIS, fuzzystrmatch, normalize_address(), 3 GISTs, 4 M-2 columns [flips at commit 2]', () => {
+    const descriptor = loadDescriptor();
+    const present = descriptor.guards.requires.map((r: { kind: string; name: string }) => `${r.kind}:${r.name}`);
+    const expected = [
+      'extension:postgis',
+      'extension:fuzzystrmatch',
+      'function:normalize_address',
+      'index:idx_parcels_geom_gist',
+      'index:idx_heritage_districts_geom_gist',
+      'index:idx_heritage_properties_geom_gist',
+      'column:parcels.heritage_dataset_version_when_enriched',
+      'column:parcels.is_heritage_designated',
+      'column:parcels.heritage_designation_type',
+      'column:parcels.heritage_designation_date',
+    ];
+    for (const e of expected) {
+      expect(present, `missing required guard: ${e}`).toContain(e);
+    }
   });
 });
 

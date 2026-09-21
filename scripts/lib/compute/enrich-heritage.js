@@ -274,6 +274,21 @@ async function computePostPhase(pool, { passRaw }) {
   const zoneRows = await pool.query(ZONE_SQL);
   const byZone = buildZoneBuckets(zoneRows.rows);
 
+  // FOLD-RC1 identity — a visibility row that can silently drop population is the same
+  // blindness it exists to close. Σ(buckets.designated) MUST equal the audit table's own
+  // parcels_heritage_designated_count (the same scan, never a parallel count): the 10 buckets
+  // (8 named zones + '(null)' + 'other') are a total partition of every zoning_class value, so
+  // this is a real identity, not an approximation. A mismatch is a compute defect (a join or
+  // bucketing bug), not an upstream data condition, and reddens the run rather than silently
+  // rendering a wrong number.
+  const zoneDesignatedSum = Object.values(byZone).reduce((n, z) => n + z.designated, 0);
+  if (zoneDesignatedSum !== designated) {
+    throw new Error(
+      `[enrich_heritage] heritage_designated_by_zone identity broke: Σ buckets.designated (${zoneDesignatedSum}) !== `
+      + `parcels_heritage_designated_count (${designated}) — a zone-bucketing defect, not a data condition.`,
+    );
+  }
+
   // F9 — re-derived from the write count, since the Layer-1 skip BRANCH is retired.
   const skipped = updated === 0;
 

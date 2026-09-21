@@ -108,6 +108,15 @@
         }
       },
       {
+        "kind": "function",
+        "name": "normalize_address",
+        "on_missing": "fail",
+        "why": {
+          "text": "Output-panel O1 (Guardian, 2026-09-20): the legacy assertPreconditions probed `SELECT 1 FROM pg_proc WHERE proname = 'normalize_address'` (migration 170, introduced e299d26e) BEFORE this conversion — ENRICH_SQL calls normalize_address() twice (the parcel address CTE and the Part IV tiebreak), and the join fails mid-statement with a raw 42883 (function does not exist) instead of a named refusal if it is absent. Dropped undeclared at commit 2; restored here.",
+          "liveness": { "kind": "external", "ref": "normalize_address" }
+        }
+      },
+      {
         "kind": "index",
         "name": "idx_parcels_geom_gist",
         "on_missing": "fail",
@@ -534,6 +543,11 @@
     {
       "what": "EH-D3 — spec-citation drift found while grounding: Spec 61's cited DEC-E/DEC-F/DEC-H ids do not exist in Spec 61 (inherited from the Spec 59 ravines port); the script's '§3.10 SRID guard' comment points at Spec 61 :370 ('Edge cases'), which has no SRID clause (the real clause is Spec 59 :383); L14 is spec'd for the loader (61:67) while the enrich-side non-empty HALT is L23 step 4 (61:645); L24 (61:77) names enrich-permits.js, not this script. Recorded here; the spec-text correction rides commit 3 (cutover) per Spec 123's rule that a spec-only fix does not belong in a behaviour-differential commit.",
       "measured": "cross-read of docs/specs/01-pipeline/61_source_heritage_properties.md against scripts/enrich-heritage.js's own comments, 2026-09-20.",
+      "check_id": "none"
+    },
+    {
+      "what": "Output-panel O3 (Observability, 2026-09-20) — records_meta.heritage_designated_by_zone[].parcels sums to ALL 486,530 parcels (COALESCE(zoning_class,'(null)') has no eligibility filter), NOT eligible_parcels_scanned (486,514) — the 16 invalid-geom parcels ARE counted in some zone bucket's .parcels total even though they can never be designated. Only the designated-sum identity is claimed and asserted (sum of buckets.designated == parcels_heritage_designated_count): the .parcels totals are population context only, not a second eligibility-scoped count.",
+      "measured": "SELECT COUNT(*) FROM parcels = 486530 vs the eligible-only 486514 (16 invalid-geom), 2026-09-20.",
       "check_id": "none"
     },
     {
