@@ -164,31 +164,17 @@ UPDATE parcels p
  * lets `sourceDatasetVersion` reach the write, since the runner otherwise calls the
  * `contract_read` hook only for its `staleOverlays` side effect and discards the rest.
  *
- * ⚠️ RETURNED KEY NAME IS LOAD-BEARING — do not rename to `updated` (MEASURED LIVE DEFECT,
- * 2026-09-18). `runEnrichPhase`'s own post-phase reconciliation loop (`scripts/lib/step/
- * index.js`, the "RESIDUE, NARROWED AND NAMED" block, batch-2 Phase 0.10b) treats ANY of
- * `PASS_SCANNED_FIELDS = ['scanned','scoped','candidates','updated']` present on a pass's
- * OWN return object as evidence the pass did NOT use the composable `ctx.joinUpdate`/
- * `ctx.retract` seam, and unconditionally ADDS `r.updated` into `written[key].updated` a
- * SECOND time — on top of the increment `ctx.joinUpdate` already applied. Reproduced live: a
- * pass returning `{updated: 30, ...}` after a real `ctx.joinUpdate` call left
- * `written.e1.updated` at 60, not 30 (traced with instrumented `write.executeSetBasedJoinUpdate`
- * proving the SQL executed exactly ONCE). `geocode_permits` shares this exact shape
- * (`runGeocodePass` also returns `.updated` after its own `ctx.joinUpdate` call) but never
- * surfaces the bug because ITS declared counters source from `matched.compute.*`, never from
- * `written.e1.updated` directly. This step's counters DO use `written.e1.updated` (the
- * COUNTER-ROOT precedent), which is what makes the corruption visible rather than silently
- * inert. Fixed here, not in the shared runner (out of this conversion's Ask A2 scope — that
- * authorizes exactly one additive line, `passCtx.contract`): the returned key is named
- * `rows_updated`, which collides with none of `PASS_SCANNED_FIELDS`, so the reconciliation
- * loop's fallback contributes 0 and `ctx.joinUpdate`'s own increment is the only one. Filed
- * MED in review_followups.md for the shared runner's own eventual fix.
+ * The returned key name is `updated`, same as any other pass — `ctx.joinUpdate` is this
+ * target's counter of record (RV-D4, WF3, 2026-09-20: the runner's own reconciliation loop
+ * in `scripts/lib/step/index.js` now owns `written[key].updated`/`rows_changed` by SEAM USE,
+ * not by the pass's return-key spelling, so no key-name workaround is needed here any more;
+ * lock tests `src/tests/step-library.logic.test.ts` M1e–M1h).
  */
 async function runRavineJoinPass(client, ctx) {
   const sourceDatasetVersion = ctx.contract.sourceDatasetVersion;
-  const rowsUpdated = await ctx.joinUpdate(0, ENRICH_SQL, [sourceDatasetVersion]);
-  ctx.onProgress(rowsUpdated);
-  return { rows_updated: rowsUpdated, sourceDatasetVersion };
+  const updated = await ctx.joinUpdate(0, ENRICH_SQL, [sourceDatasetVersion]);
+  ctx.onProgress(updated);
+  return { updated, sourceDatasetVersion };
 }
 
 // ===========================================================================
@@ -217,7 +203,7 @@ const COVERAGE_SQL = `
  */
 async function computePostPhase(pool, { passRaw }) {
   const join = passRaw.ravine_join || {};
-  const updated = Number(join.rows_updated || 0);
+  const updated = Number(join.updated || 0);
   const sourceDatasetVersion = join.sourceDatasetVersion;
 
   const cov = await pool.query(COVERAGE_SQL);

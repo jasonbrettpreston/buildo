@@ -1,6 +1,7 @@
 // SPEC LINK: docs/specs/01-pipeline/122_pipeline_step_optimization.md §4.2, §4.3, §7.1 (S2-min)
 // SPEC LINK: docs/specs/01-pipeline/120_pipeline_step_runner.md §3.2b, §4.1
 // SPEC LINK: docs/specs/01-pipeline/48_pipeline_observability.md §3.6, §3.7
+// SPEC LINK: docs/specs/01-pipeline/124_step_standard_policy.md R-AK
 //
 // S2-min — `pipeline.step(descriptor, compute)`, the minimal lifecycle library
 // the `assert_schema` pilot needs. The real proof of this library is the C1
@@ -4323,12 +4324,17 @@ describe('runEnrichPhase — per-target counters come from execution.phases[].wr
 describe('runEnrichPhase — the POST-PHASE seam (batch-2 Phase 0.10b)', () => {
   interface FakeClient { query: (text: string, values?: unknown[]) => Promise<unknown>; release: () => void }
 
-  function poolP() {
+  function poolP(rowCounts: Array<{ re: RegExp; rowCount: number }> = []) {
     const sql: string[] = [];
     const clients: FakeClient[] = [];
     const answer = (text: string) => {
       if (/pg_backend_pid/.test(text)) return { rows: [{ pid: 4242 }] };
       if (/pg_try_advisory(?:_xact)?_lock\(\$1, \$2\)/.test(text)) return { rows: [{ acquired: true }] };
+      // M1e/M1g/M1h (RV-D4) — a caller-supplied rowCount for a specific write's SQL text,
+      // needed to prove the SEAM's own increment (`ctx.joinUpdate`/`ctx.retract`, which
+      // reads `result.rowCount` off THIS mock) reaches `written[key]` un-doubled.
+      const hit = rowCounts.find((r) => r.re.test(text));
+      if (hit) return { rows: [], rowCount: hit.rowCount };
       // Deliberately NOT stubbed: the whole point of M1 is that a step with no
       // post_phase hook must never issue this query, so an answer here would hide
       // the defect rather than expose it. (`{rows: []}` below makes the retired
@@ -4486,6 +4492,117 @@ describe('runEnrichPhase — the POST-PHASE seam (batch-2 Phase 0.10b)', () => {
     expect(res.written[stampKey]!.updated, 'stampsIdx still fills the class-based target').toBe(125);
     // … and it is EXCLUDED from the aggregate, because no phase declares it.
     expect(res.matched.compute).toEqual({ records_scanned_aggregate: 160, records_new_aggregate: 0, records_updated_aggregate: 125 });
+  });
+
+  // ---------------------------------------------------------------------------
+  // M1e-M1h — RV-D4 (WF3, 2026-09-20). `runEnrichPhase` keeps a per-run set of
+  // seam-touched target keys, filled inside `ctx.joinUpdate`/`ctx.retract`
+  // (`makeWriteSeams`); the PASS_SCANNED_FIELDS fallback loop skips `updated`/
+  // `rows_changed` for any key in that set, because the seam already incremented
+  // them. Before the fix the fallback was unconditional, so a pass using a seam
+  // AND returning `updated` in its own result got counted TWICE.
+  // ---------------------------------------------------------------------------
+
+  it('M1e — a seam pass (ctx.joinUpdate) returning `updated` in its pass result counts the write ONCE, not twice', async () => {
+    // RED at 39b246c0: the seam's own `written.e1.updated += 30` (inside ctx.joinUpdate)
+    // composes with the unconditional PASS_SCANNED_FIELDS fallback's `written.e1.updated
+    // += r.updated` (30 again) → 60, not 30 (rows_changed likewise).
+    const pool = poolP([{ re: /UPDATE fixture_a/, rowCount: 30 }]);
+    const d = baseDescriptor() as unknown as Record<string, unknown>;
+    const compute = {
+      passes: [
+        {
+          name: 'geocode',
+          txn: 'shared',
+          run: async (_client: unknown, ctx: Record<string, unknown>) => {
+            await (ctx.joinUpdate as (ref: number, sql: string, p: unknown[]) => Promise<number>)(
+              0, 'UPDATE fixture_a SET x = s.v FROM src s WHERE s.id = fixture_a.id', [],
+            );
+            return { updated: 30 };
+          },
+        },
+        { name: 'backfill_geom', txn: 'shared', run: async () => ({}) },
+      ],
+    };
+    const res = await stepLib.runEnrichPhase(argsP(d, pool, compute) as never) as {
+      matched: Record<string, unknown>; written: Record<string, { updated: number; rows_changed: number }>;
+    };
+    expect(res.written.e1!.updated, 'RED before fix: 60 (seam 30 + fallback 30)').toBe(30);
+    expect(res.written.e1!.rows_changed, 'RED before fix: 60').toBe(30);
+    expect((res.matched.compute as Record<string, number>).records_updated_aggregate).toBe(30);
+  });
+
+  it('M1f — a NON-seam pass on a class-N (set_based_join_update) target is still counted via the fallback (the enrich_parcels comparable_builds fence — the rejected class-gated shape zeroes this)', async () => {
+    // GREEN today and after the fix. The REJECTED filed shape ("skip the fallback when
+    // the declared class is a seam class") is proven wrong by temporarily applying it
+    // here and observing this test go RED (0, not 25) — recorded in the commit body,
+    // then reverted; see the plan's "REJECTED fix shape" section.
+    const pool = poolP();
+    const compute = bareCompute({ geocode: { candidates: 40, updated: 25 }, backfill_geom: {} });
+    const res = await stepLib.runEnrichPhase(argsP(baseDescriptor(), pool, compute) as never) as {
+      written: Record<string, { updated: number; scanned: number }>;
+    };
+    expect(res.written.e1!.updated).toBe(25);
+    expect(res.written.e1!.scanned).toBe(40);
+  });
+
+  it('M1g — ctx.retract on a class-O (set_based_null_retract) target counts `retracted`/`rows_changed` from the seam only; `updated` stays 0', async () => {
+    // RED at 39b246c0: rows_changed 14 (seam's 7 + fallback's 7), updated 7 (from the
+    // pass's own `{ updated: 7 }`, which a retraction target should never report).
+    const pool = poolP([{ re: /UPDATE fixture_a/, rowCount: 7 }]);
+    const d = baseDescriptor() as unknown as Record<string, unknown>;
+    (d as Record<string, unknown>).recovery = { before_image: 'generated' };
+    const specs = (d.outputs as { writes: Array<Record<string, unknown>> }).writes;
+    specs[0] = {
+      table: 'fixture_a',
+      key: 'id',
+      write_discipline: { class: 'set_based_null_retract', scope: 'fixture_col IS NOT NULL', retract: 'all' },
+      columns: [{ name: 'fixture_col', source: 'compute', written: 'always' }],
+    };
+    const compute = {
+      passes: [
+        {
+          name: 'geocode',
+          txn: 'shared',
+          run: async (_client: unknown, ctx: Record<string, unknown>) => {
+            await (ctx.retract as (ref: number, p: unknown[]) => Promise<number>)(0, []);
+            return { retracted: 7, updated: 7 };
+          },
+        },
+        { name: 'backfill_geom', txn: 'shared', run: async () => ({}) },
+      ],
+    };
+    const res = await stepLib.runEnrichPhase(argsP(d, pool, compute) as never) as {
+      written: Record<string, { retracted: number; updated: number; rows_changed: number }>;
+    };
+    expect(res.written.e1!.retracted).toBe(7);
+    expect(res.written.e1!.rows_changed, 'RED before fix: 14').toBe(7);
+    expect(res.written.e1!.updated, 'RED before fix: 7').toBe(0);
+  });
+
+  it('M1h — the `scanned` fallback still applies on a seam-owned key (no seam writes `scanned`)', async () => {
+    const pool = poolP([{ re: /UPDATE fixture_a/, rowCount: 30 }]);
+    const d = baseDescriptor() as unknown as Record<string, unknown>;
+    const compute = {
+      passes: [
+        {
+          name: 'geocode',
+          txn: 'shared',
+          run: async (_client: unknown, ctx: Record<string, unknown>) => {
+            await (ctx.joinUpdate as (ref: number, sql: string, p: unknown[]) => Promise<number>)(
+              0, 'UPDATE fixture_a SET x = s.v FROM src s WHERE s.id = fixture_a.id', [],
+            );
+            return { scanned: 100, updated: 30 };
+          },
+        },
+        { name: 'backfill_geom', txn: 'shared', run: async () => ({}) },
+      ],
+    };
+    const res = await stepLib.runEnrichPhase(argsP(d, pool, compute) as never) as {
+      written: Record<string, { scanned: number; updated: number }>;
+    };
+    expect(res.written.e1!.scanned).toBe(100);
+    expect(res.written.e1!.updated).toBe(30);
   });
 
   it('M2 — a DECLARED-but-not-exported post_phase is a NAMED throw raised BEFORE the first phase, never a TypeError after COMMIT', async () => {

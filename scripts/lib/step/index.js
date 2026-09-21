@@ -3041,6 +3041,12 @@ async function runEnrichPhase({ descriptor, pool, compute, config, chainId, log,
   for (let i = 0; i < specs.length; i++) {
     written[write.targetKey(i)] = { scanned: 0, inserted: 0, updated: 0, deleted: 0, retracted: 0, rows_changed: 0 };
   }
+  // RV-D4 (WF3, 2026-09-20) — per-RUN (function-local, never module scope — see the
+  // WF3 enrich_parcels double-run incident (2026-09-07) for why that distinction
+  // matters) set of target keys a seam (`ctx.joinUpdate`/`ctx.retract`) has ALREADY
+  // incremented `written[key]` for. Filled by `makeWriteSeams` below; read by the
+  // PASS_SCANNED_FIELDS reconciliation loop further down.
+  const seamOwned = new Set();
   written.privilege = privilege[specs[0].table] || null;
   written.requirements = requirements;
   if (interruptedRetraction.interrupted) written.interrupted_retraction_forced_full = true;
@@ -3419,6 +3425,7 @@ async function runEnrichPhase({ descriptor, pool, compute, config, chainId, log,
       const key = write.targetKey(writesRef);
       written[key].retracted += retracted;
       written[key].rows_changed += retracted;
+      seamOwned.add(key);
       return retracted;
     },
     /** class N — `set_based_join_update`; the executor structurally refuses INSERT/ON CONFLICT text. */
@@ -3437,6 +3444,7 @@ async function runEnrichPhase({ descriptor, pool, compute, config, chainId, log,
       const key = write.targetKey(writesRef);
       written[key].updated += n;
       written[key].rows_changed += n;
+      seamOwned.add(key);
       return n;
     },
   });
@@ -3990,9 +3998,17 @@ async function runEnrichPhase({ descriptor, pool, compute, config, chainId, log,
   // counter source in the descriptor; that is a schema field and its own re-freeze, and
   // it is filed rather than smuggled in here.
   //
-  // `+=`, not `=`, so a pass that already reported rows through `ctx.retract`/
-  // `ctx.joinUpdate` composes instead of being clobbered. Every counter starts at 0, so
-  // for a step that uses neither seam (every ENRICHER today) the result is identical.
+  // RV-D4 (WF3, 2026-09-20) — COUNTER OWNERSHIP IS BY USE, NOT BY DECLARED CLASS
+  // (Spec 124 R-AK: "class-checked, counter-owned by the runner"). A target a pass
+  // reached through `ctx.joinUpdate`/`ctx.retract` this run (`seamOwned`) takes its
+  // `updated`/`retracted`/`rows_changed` from the seam ALONE — the seam already
+  // incremented them at the point of the write, so this fallback would double them.
+  // This fallback applies `updated`/`rows_changed` only to a target NO seam touched
+  // this run (every ENRICHER's non-seam targets, e.g. `enrich_parcels`
+  // `comparable_builds`, which declares class `set_based_join_update` but reports
+  // via its own pass result — M1f is that fence). `scanned` is UNCONDITIONAL below:
+  // no seam ever writes `scanned`, so a seam-owned target still needs it from the
+  // pass result (M1h).
   const PASS_SCANNED_FIELDS = ['scanned', 'scoped', 'candidates', 'updated'];
   for (const phase of phases) {
     const key = write.targetKey(phase.writes_ref);
@@ -4005,10 +4021,12 @@ async function runEnrichPhase({ descriptor, pool, compute, config, chainId, log,
     }
     const r = passRaw[phase.name] || {};
     const scannedField = PASS_SCANNED_FIELDS.find((f) => typeof r[f] === 'number');
-    const passUpdated = (r.updated || 0) + (r.scenarioUpdated || 0);
     written[key].scanned += scannedField ? r[scannedField] : 0;
-    written[key].updated += passUpdated;
-    written[key].rows_changed += passUpdated;
+    if (!seamOwned.has(key)) {
+      const passUpdated = (r.updated || 0) + (r.scenarioUpdated || 0);
+      written[key].updated += passUpdated;
+      written[key].rows_changed += passUpdated;
+    }
   }
   // ⚠️ RESIDUE, NARROWED AND NAMED (batch-2 Phase 0.10b). The two CLASS-BASED targets
   // below are declared by NO `execution.phases[]` entry — nothing names a `writes_ref` for
