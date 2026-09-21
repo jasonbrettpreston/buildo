@@ -54,11 +54,23 @@ describe('deriveSeamPairs — derived from converted.json + manifest.json, never
     expect(seam.deriveSeamPairs(byName)).toEqual([]);
   });
 
-  it('the REAL 16-descriptor registry (batch2 row 2.1 cutover, 2026-09-18 — enrich_ravines) yields 9 live pairs: enrich_parcels -> assert_parcel_sanity, link_massing -> enrich_parcels, load_ravines -> enrich_ravines, compute_centroids -> link_massing, link_parcel_addresses -> link_parcels, plus refresh_snapshot\'s 3 declared inputs.reads.steps (assert_parcel_sanity\'s SECOND inputs.reads.steps entry, compute_parcel_cost_estimates, is not itself a converted step, so it contributes zero new pairs — only the enrich_parcels entry resolves to a live producer)', () => {
+  it('the REAL 17-descriptor registry (batch2 row 2.2 cutover, 2026-09-20 — enrich_heritage) yields 9 live pairs (unchanged from the 16-descriptor count): enrich_parcels -> assert_parcel_sanity, link_massing -> enrich_parcels, load_ravines -> enrich_ravines, compute_centroids -> link_massing, link_parcel_addresses -> link_parcels, plus refresh_snapshot\'s 3 declared inputs.reads.steps (assert_parcel_sanity\'s SECOND inputs.reads.steps entry, compute_parcel_cost_estimates, is not itself a converted step, so it contributes zero new pairs — only the enrich_parcels entry resolves to a live producer; enrich_heritage\'s own declared inputs.reads.steps entry, load_heritage, is not itself converted, and no converted descriptor declares enrich_heritage in ITS inputs.reads.steps either — enrich_parcels reads is_heritage_designated but that dependency is undeclared, KNOWN_GAPS.enrich_parcels EH-D4 in src/tests/step-conformance.infra.test.ts — so this registration also contributes zero new pairs)', () => {
     const byName = seam.loadConvertedDescriptors();
     expect(Object.keys(byName).sort()).toEqual(
-      ['assert_data_bounds', 'assert_engine_health', 'assert_global_coverage', 'assert_parcel_sanity', 'assert_schema', 'compute_centroids', 'enrich_parcels', 'enrich_ravines', 'geocode_permits', 'link_massing', 'link_neighbourhoods', 'link_parcel_addresses', 'link_parcels', 'link_wsib', 'load_ravines', 'refresh_snapshot'].sort(),
+      ['assert_data_bounds', 'assert_engine_health', 'assert_global_coverage', 'assert_parcel_sanity', 'assert_schema', 'compute_centroids', 'enrich_heritage', 'enrich_parcels', 'enrich_ravines', 'geocode_permits', 'link_massing', 'link_neighbourhoods', 'link_parcel_addresses', 'link_parcels', 'link_wsib', 'load_ravines', 'refresh_snapshot'].sort(),
     );
+    // enrich_heritage (batch2 row 2.2, cut over 2026-09-20) declares inputs.reads.steps:
+    // [{step: 'load_heritage', version_pin: 'exact'}] ONLY — measured from
+    // scripts/enrich-heritage.descriptor.json. load_heritage is NOT itself converted (not in
+    // the registry above), so this read resolves to nothing. Nor is enrich_heritage named by
+    // any OTHER converted descriptor's own inputs.reads.steps (grepped scripts/ for
+    // `"step": "enrich_heritage"` — zero hits): enrich_parcels' compute reads
+    // is_heritage_designated (enrich-parcels.js:460/587/593/597) but does not declare
+    // enrich_heritage as a read — a MEASURED pre-existing gap (EH-D4), allowlisted in
+    // KNOWN_GAPS.enrich_parcels.missing alongside RV-D5's identical enrich_ravines gap,
+    // src/tests/step-conformance.infra.test.ts. So the registry grows 16 -> 17 descriptors
+    // while live pairs stay exactly 9 — this cutover's registration contributes zero new
+    // seam pairs in EITHER direction.
     // enrich_ravines (batch-2 row 2.1, cut over 2026-09-18) declares inputs.reads.steps:
     // [{step: 'load_ravines', version_pin: 'exact'}] ONLY — measured from
     // scripts/enrich-ravines.descriptor.json. load_ravines is itself converted, so the
@@ -249,6 +261,11 @@ describe('runSeamChecks — one row per derived pair', () => {
   // [{step: 'load_ravines'}] — load_ravines is itself converted, so the registration
   // contributes exactly ONE new pair, 'enrich_ravines:load_ravines', sorting between
   // 'enrich_parcels:link_massing' and 'link_massing:compute_centroids' — 8 -> 9.
+  // enrich_heritage (batch2 row 2.2, cut over 2026-09-20) declares inputs.reads.steps:
+  // [{step: 'load_heritage'}] — load_heritage is NOT itself converted, and no converted
+  // descriptor declares enrich_heritage as a read (enrich_parcels' identical dependency is
+  // undeclared — KNOWN_GAPS EH-D4), so the registration contributes zero new pairs/metrics.
+  // Registry 16 -> 17 descriptors; live pairs/metrics stay at 9.
   const EXPECTED_SEAM_METRICS = [
     'seam_enrich_parcels_before_assert_parcel_sanity',
     'seam_link_massing_before_enrich_parcels',

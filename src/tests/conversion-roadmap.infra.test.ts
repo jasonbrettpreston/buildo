@@ -112,7 +112,7 @@ describe('measured counts — independently re-derived, not transcribed from the
     return map;
   }
 
-  it('46 remaining files, 48 remaining slugs (excluding the 16 converted, 1 pending — enrich_heritage, batch-2 row 2.2 commit 1 — the 1 python-exempt file and the 1 RUNNER-owned exemption — `reconcile`, Spec 124 R-AP, 2026-09-15)', () => {
+  it('46 remaining files, 48 remaining slugs (excluding the 17 converted — enrich_heritage CUTOVER, batch-2 row 2.2 commit 3, 2026-09-20 — 0 pending, the 1 python-exempt file and the 1 RUNNER-owned exemption — `reconcile`, Spec 124 R-AP, 2026-09-15)', () => {
     const fileToSlugs = fileToSlugsMap();
     const convertedSet = new Set(CONVERTED);
     const pendingSet = new Set(PENDING_FILES);
@@ -133,6 +133,12 @@ describe('measured counts — independently re-derived, not transcribed from the
     // 47 -> 46 files and 49 -> 48 slugs: enrich_heritage joined `pending[]` at batch-2 row
     // 2.2 commit 1 (2026-09-20), leaving `remaining` the same way link_neighbourhoods and
     // geocode_permits did before it.
+    // 46 -> 46 files and 48 -> 48 slugs (UNCHANGED): enrich_heritage's batch-2 row 2.2
+    // commit 3 CUTOVER (2026-09-20) moves its file from `pending[]` straight into
+    // `converted[]` in the same commit (R-K mutual exclusion) — `remaining` excludes both
+    // sets, so the file was already outside it and stays outside it. 16 converted/1 pending
+    // -> 17 converted/0 pending; this test's own filter is indifferent to which of the two
+    // sets a file sits in.
     expect(remaining.length).toBe(46);
     expect(remainingSlugCount).toBe(48);
   });
