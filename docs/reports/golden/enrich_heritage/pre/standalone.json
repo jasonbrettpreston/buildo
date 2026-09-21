@@ -1,0 +1,298 @@
+{
+  "harness": "scripts/analysis/capture-step-golden.js",
+  "spec": "docs/specs/01-pipeline/122_pipeline_step_optimization.md §5.3",
+  "step": "scripts/enrich-heritage.js",
+  "chain": "none",
+  "git_head": "513311a3a1a09cdd5bc3695a31cf2591ba0116ee",
+  "exit_code": 0,
+  "signal": null,
+  "summary": {
+    "records_total": null,
+    "records_new": null,
+    "records_updated": 0,
+    "records_meta": {
+      "audit_table": {
+        "phase": 62,
+        "name": "Parcel heritage enrichment",
+        "verdict": "PASS",
+        "rows": [
+          {
+            "metric": "parcels_heritage_designated_count",
+            "value": 9958,
+            "status": "INFO"
+          },
+          {
+            "metric": "parcels_part_iv_count",
+            "value": 1217,
+            "status": "INFO"
+          },
+          {
+            "metric": "parcels_part_v_hcd_count",
+            "value": 8741,
+            "status": "INFO"
+          },
+          {
+            "metric": "heritage_part_iv_source_count",
+            "value": 1557,
+            "status": "INFO"
+          },
+          {
+            "metric": "heritage_points_no_parcel_match",
+            "value": 10.4,
+            "status": "INFO"
+          },
+          {
+            "metric": "parcels_invalid_geom_count",
+            "value": 16,
+            "status": "INFO"
+          },
+          {
+            "metric": "parcels_enriched_count",
+            "value": 0,
+            "status": "INFO"
+          },
+          {
+            "metric": "parcels_heritage_enrich_skipped",
+            "value": true,
+            "status": "INFO"
+          },
+          {
+            "metric": "heritage_source_dataset_version",
+            "value": "bdca9c50f1243057ec70720b2e55dd4b|eb37b1a023ddccff155145a9fdd2e3d1",
+            "status": "INFO"
+          },
+          {
+            "metric": "enrich_heritage_duration_ms",
+            "value": 2038,
+            "status": "INFO"
+          },
+          {
+            "metric": "sys_velocity_rows_sec",
+            "value": 0,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "sys_duration_ms",
+            "value": 2067,
+            "threshold": null,
+            "status": "INFO"
+          }
+        ]
+      }
+    }
+  },
+  "summary_count": 1,
+  "meta": [
+    {
+      "reads": {
+        "heritage_properties": [
+          "geom",
+          "status",
+          "address_text",
+          "designated_date"
+        ],
+        "heritage_districts": [
+          "geom",
+          "designated_date"
+        ],
+        "parcels": [
+          "id",
+          "geom",
+          "addr_num_normalized",
+          "street_name_normalized",
+          "street_type_normalized"
+        ]
+      },
+      "writes": {
+        "parcels": [
+          "is_heritage_designated",
+          "heritage_designation_type",
+          "heritage_designation_date",
+          "heritage_dataset_version_when_enriched"
+        ]
+      }
+    }
+  ],
+  "parse_errors": [],
+  "verdict": "PASS",
+  "ledger_status": [],
+  "stdout": "{\"level\":\"INFO\",\"tag\":\"[enrich-heritage]\",\"msg\":\"Loaded 35 trade configs from control panel\"}\n{\"level\":\"INFO\",\"tag\":\"[enrich-heritage]\",\"msg\":\"Loaded 568 logic variables from control panel\"}\nPIPELINE_SUMMARY:{\"records_total\":null,\"records_new\":null,\"records_updated\":0,\"records_meta\":{\"audit_table\":{\"phase\":62,\"name\":\"Parcel heritage enrichment\",\"verdict\":\"PASS\",\"rows\":[{\"metric\":\"parcels_heritage_designated_count\",\"value\":9958,\"status\":\"INFO\"},{\"metric\":\"parcels_part_iv_count\",\"value\":1217,\"status\":\"INFO\"},{\"metric\":\"parcels_part_v_hcd_count\",\"value\":8741,\"status\":\"INFO\"},{\"metric\":\"heritage_part_iv_source_count\",\"value\":1557,\"status\":\"INFO\"},{\"metric\":\"heritage_points_no_parcel_match\",\"value\":10.4,\"status\":\"INFO\"},{\"metric\":\"parcels_invalid_geom_count\",\"value\":16,\"status\":\"INFO\"},{\"metric\":\"parcels_enriched_count\",\"value\":0,\"status\":\"INFO\"},{\"metric\":\"parcels_heritage_enrich_skipped\",\"value\":true,\"status\":\"INFO\"},{\"metric\":\"heritage_source_dataset_version\",\"value\":\"bdca9c50f1243057ec70720b2e55dd4b|eb37b1a023ddccff155145a9fdd2e3d1\",\"status\":\"INFO\"},{\"metric\":\"enrich_heritage_duration_ms\",\"value\":2038,\"status\":\"INFO\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":2067,\"threshold\":null,\"status\":\"INFO\"}]}}}\nPIPELINE_META:{\"reads\":{\"heritage_properties\":[\"geom\",\"status\",\"address_text\",\"designated_date\"],\"heritage_districts\":[\"geom\",\"designated_date\"],\"parcels\":[\"id\",\"geom\",\"addr_num_normalized\",\"street_name_normalized\",\"street_type_normalized\"]},\"writes\":{\"parcels\":[\"is_heritage_designated\",\"heritage_designation_type\",\"heritage_designation_date\",\"heritage_dataset_version_when_enriched\"]}}\n{\"level\":\"INFO\",\"tag\":\"[enrich-heritage]\",\"msg\":\"skip — all eligible geom-bearing parcels already enriched at heritage version bdca9c50f1243057ec70720b2e55dd4b|eb37b1a023ddccff155145a9fdd2e3d1 (designated 9958: part_iv 1217/1557, part_v 8741)\"}\n\n[enrich-heritage] completed in 2.1s\n",
+  "stderr": "{\"level\":\"WARN\",\"tag\":\"[enrich-heritage]\",\"msg\":\"allocation_pct sum is 1.0744 (expected 1.0) — normalizing\"}\n{\"level\":\"WARN\",\"tag\":\"[enrich-heritage]\",\"msg\":\"logic_variables.lifecycle_seq_band_22_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[enrich-heritage]\",\"msg\":\"logic_variables.lifecycle_seq_band_28_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[enrich-heritage]\",\"msg\":\"logic_variables.lifecycle_seq_band_30_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[enrich-heritage]\",\"msg\":\"logic_variables.lifecycle_seq_band_34_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[enrich-heritage]\",\"msg\":\"logic_variables.lifecycle_seq_band_37_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[enrich-heritage]\",\"msg\":\"logic_variables.lifecycle_seq_band_44_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[enrich-heritage]\",\"msg\":\"logic_variables.lifecycle_seq_band_47_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[enrich-heritage]\",\"msg\":\"logic_variables.lifecycle_seq_band_48_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[enrich-heritage]\",\"msg\":\"logic_variables.lifecycle_seq_band_50_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[enrich-heritage]\",\"msg\":\"logic_variables.lifecycle_seq_band_53_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[enrich-heritage]\",\"msg\":\"logic_variables.lifecycle_seq_band_54_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[enrich-heritage]\",\"msg\":\"logic_variables.lifecycle_seq_band_55_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[enrich-heritage]\",\"msg\":\"logic_variables.lifecycle_seq_band_56_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[enrich-heritage]\",\"msg\":\"logic_variables.lifecycle_seq_band_58_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[enrich-heritage]\",\"msg\":\"logic_variables.lifecycle_seq_band_65_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[enrich-heritage]\",\"msg\":\"logic_variables.lifecycle_seq_band_66_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[enrich-heritage]\",\"msg\":\"logic_variables.lifecycle_seq_band_67_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[enrich-heritage]\",\"msg\":\"logic_variables.lifecycle_seq_band_70_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[enrich-heritage]\",\"msg\":\"logic_variables.lifecycle_seq_band_71_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[enrich-heritage]\",\"msg\":\"logic_variables.lifecycle_seq_band_74_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[enrich-heritage]\",\"msg\":\"logic_variables.lifecycle_seq_band_75_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[enrich-heritage]\",\"msg\":\"logic_variables.lifecycle_seq_band_76_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[enrich-heritage]\",\"msg\":\"logic_variables.lifecycle_seq_band_77_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[enrich-heritage]\",\"msg\":\"logic_variables.lifecycle_seq_band_78_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[enrich-heritage]\",\"msg\":\"logic_variables.lifecycle_seq_band_79_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[enrich-heritage]\",\"msg\":\"logic_variables.lifecycle_seq_band_80_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[enrich-heritage]\",\"msg\":\"logic_variables.lifecycle_seq_band_81_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[enrich-heritage]\",\"msg\":\"logic_variables.lifecycle_seq_band_82_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[enrich-heritage]\",\"msg\":\"logic_variables.lifecycle_seq_band_83_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[enrich-heritage]\",\"msg\":\"logic_variables.lifecycle_seq_band_88_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[enrich-heritage]\",\"msg\":\"logic_variables.lifecycle_seq_band_91_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[enrich-heritage]\",\"msg\":\"logic_variables.lifecycle_seq_band_94_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[enrich-heritage]\",\"msg\":\"logic_variables.lifecycle_seq_band_96_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n",
+  "pipeline_runs": [],
+  "pipeline_runs_max_id_before": 1930,
+  "table_state": [
+    {
+      "table": "parcels",
+      "row_count": 486530,
+      "ceiling_bypassed": "projected",
+      "content_hash": "6b34814df23e5219c8a1741f93b9880f",
+      "order_by": "pk",
+      "columns": [
+        "id",
+        "is_heritage_designated",
+        "heritage_designation_type",
+        "heritage_designation_date",
+        "heritage_dataset_version_when_enriched"
+      ]
+    }
+  ],
+  "tables_source": "arg",
+  "table_row_ceiling": 100000,
+  "table_timing": {
+    "parcels": 1979
+  },
+  "table_specs": {
+    "parcels": {
+      "columns": [
+        "id",
+        "is_heritage_designated",
+        "heritage_designation_type",
+        "heritage_designation_date",
+        "heritage_dataset_version_when_enriched"
+      ],
+      "columns_source": "arg",
+      "order": null,
+      "order_source": "none"
+    }
+  },
+  "invariants": [],
+  "invariants_file": null,
+  "db_target": "postgresql://postgres:***@127.0.0.1:54322/postgres",
+  "runtime": "node",
+  "args": [],
+  "nondeterminism": [
+    "pattern:duration_literal",
+    "row:sys_duration_ms",
+    "row:sys_velocity_rows_sec"
+  ],
+  "normalised": {
+    "step": "scripts/enrich-heritage.js",
+    "chain": "none",
+    "exit_code": 0,
+    "summary": {
+      "records_meta": {
+        "audit_table": {
+          "name": "Parcel heritage enrichment",
+          "phase": 62,
+          "rows": [
+            {
+              "metric": "parcels_heritage_designated_count",
+              "status": "INFO",
+              "value": 9958
+            },
+            {
+              "metric": "parcels_part_iv_count",
+              "status": "INFO",
+              "value": 1217
+            },
+            {
+              "metric": "parcels_part_v_hcd_count",
+              "status": "INFO",
+              "value": 8741
+            },
+            {
+              "metric": "heritage_part_iv_source_count",
+              "status": "INFO",
+              "value": 1557
+            },
+            {
+              "metric": "heritage_points_no_parcel_match",
+              "status": "INFO",
+              "value": 10.4
+            },
+            {
+              "metric": "parcels_invalid_geom_count",
+              "status": "INFO",
+              "value": 16
+            },
+            {
+              "metric": "parcels_enriched_count",
+              "status": "INFO",
+              "value": 0
+            },
+            {
+              "metric": "parcels_heritage_enrich_skipped",
+              "status": "INFO",
+              "value": true
+            },
+            {
+              "metric": "heritage_source_dataset_version",
+              "status": "INFO",
+              "value": "bdca9c50f1243057ec70720b2e55dd4b|eb37b1a023ddccff155145a9fdd2e3d1"
+            },
+            {
+              "metric": "enrich_heritage_duration_ms",
+              "status": "INFO",
+              "value": 2038
+            }
+          ],
+          "verdict": "PASS"
+        }
+      },
+      "records_new": null,
+      "records_total": null,
+      "records_updated": 0
+    },
+    "summary_count": 1,
+    "meta": [
+      {
+        "reads": {
+          "heritage_districts": [
+            "geom",
+            "designated_date"
+          ],
+          "heritage_properties": [
+            "geom",
+            "status",
+            "address_text",
+            "designated_date"
+          ],
+          "parcels": [
+            "id",
+            "geom",
+            "addr_num_normalized",
+            "street_name_normalized",
+            "street_type_normalized"
+          ]
+        },
+        "writes": {
+          "parcels": [
+            "is_heritage_designated",
+            "heritage_designation_type",
+            "heritage_designation_date",
+            "heritage_dataset_version_when_enriched"
+          ]
+        }
+      }
+    ],
+    "parse_errors": [],
+    "pipeline_runs": [],
+    "stdout_lines": [
+      "{\"level\":\"INFO\",\"msg\":\"Loaded 35 trade configs from control panel\",\"tag\":\"[enrich-heritage]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"Loaded 568 logic variables from control panel\",\"tag\":\"[enrich-heritage]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"skip — all eligible geom-bearing parcels already enriched at heritage version bdca9c50f1243057ec70720b2e55dd4b|eb37b1a023ddccff155145a9fdd2e3d1 (designated 9958: part_iv 1217/1557, part_v 8741)\",\"tag\":\"[enrich-heritage]\"}",
+      "[enrich-heritage] completed in <DUR>"
+    ],
+    "table_state": [
+      {
+        "ceiling_bypassed": "projected",
+        "columns": [
+          "id",
+          "is_heritage_designated",
+          "heritage_designation_type",
+          "heritage_designation_date",
+          "heritage_dataset_version_when_enriched"
+        ],
+        "content_hash": "6b34814df23e5219c8a1741f93b9880f",
+        "order_by": "pk",
+        "row_count": 486530,
+        "table": "parcels"
+      }
+    ],
+    "invariants": []
+  },
+  "source_fingerprint": null,
+  "fingerprint_files": [],
+  "fingerprint_skipped_reason": "no_descriptor_yet"
+}

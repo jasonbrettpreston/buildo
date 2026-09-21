@@ -151,8 +151,8 @@
       "slug": "enrich_heritage",
       "file": "scripts/enrich-heritage.js",
       "archetype": "ENRICHER",
-      "batch": "C5",
-      "reason": "Spec 122 §1.10 declared"
+      "batch": "pending",
+      "reason": "Spec 122 §1.10 declared; batch-2 row 2.2 conversion IN FLIGHT (commit 1, 2026-09-20) — archetype re-derived from the code at PH-0 (R-AO), confirmed ENRICHER"
     },
     {
       "slug": "enrich_permits",

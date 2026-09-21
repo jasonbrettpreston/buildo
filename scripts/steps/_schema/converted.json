@@ -67,7 +67,15 @@
     "partial stages."
   ],
   "contract_version": 1,
-  "pending": [],
+  "pending": [
+    {
+      "file": "scripts/enrich-heritage.js",
+      "registers_at": "commit 3",
+      "reason": "Batch-2 row 2.2 (2026-09-20) — ENRICHER, COMPRESSED 3-commit form. Commit 1 lands the assessment + this RED suite; commit 2 lands descriptor+compute+frozen shell+seeds and advances stage to shape_clean.",
+      "declared": "2026-09-20",
+      "stage": "red_suite"
+    }
+  ],
   "converted": [
     "scripts/quality/assert-schema.js",
     "scripts/load-ravines.js",

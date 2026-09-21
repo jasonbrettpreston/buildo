@@ -112,7 +112,7 @@ describe('measured counts — independently re-derived, not transcribed from the
     return map;
   }
 
-  it('47 remaining files, 49 remaining slugs (excluding the 16 converted, 0 pending, the 1 python-exempt file and the 1 RUNNER-owned exemption — `reconcile`, Spec 124 R-AP, 2026-09-15)', () => {
+  it('46 remaining files, 48 remaining slugs (excluding the 16 converted, 1 pending — enrich_heritage, batch-2 row 2.2 commit 1 — the 1 python-exempt file and the 1 RUNNER-owned exemption — `reconcile`, Spec 124 R-AP, 2026-09-15)', () => {
     const fileToSlugs = fileToSlugsMap();
     const convertedSet = new Set(CONVERTED);
     const pendingSet = new Set(PENDING_FILES);
@@ -130,10 +130,11 @@ describe('measured counts — independently re-derived, not transcribed from the
     // (converted.json converted[], 2026-09-18) moves its file straight from `remaining`
     // into `convertedSet` (its own conversion never needed a separate pending[]->converted[]
     // step visible to THIS test, since PENDING_FILES was already 0 by the time this ran).
-    expect(remaining.length).toBe(47);
-    expect(remainingSlugCount).toBe(49);
-    // Unchanged across the I5 CUTOVER: the file moved from `pending[]` to `converted[]`, and
-    // both sets are excluded from `remaining`, so 49/51 holds on both sides of commit 9.
+    // 47 -> 46 files and 49 -> 48 slugs: enrich_heritage joined `pending[]` at batch-2 row
+    // 2.2 commit 1 (2026-09-20), leaving `remaining` the same way link_neighbourhoods and
+    // geocode_permits did before it.
+    expect(remaining.length).toBe(46);
+    expect(remainingSlugCount).toBe(48);
   });
 
   it('the census file-count-by-batch matches the independently re-derived C4/C5/C6 split (C4=0 — CLOSED, C5=13 — `reconcile` left C5 for the R-AP RUNNER-owned exemption, 2026-09-15 — C6=36; pending=0 — geocode_permits flipped C4 -> pending at the batch-2 I5 folded commit 5 and was RETAINED as status:\"converted\" at its commit 9 the same day, emptying C4 entirely; link_neighbourhoods was pending from batch-2 I4 commit 1 and converted at commit 3, both on 2026-09-16; assert_engine_health\'s own row was deleted entirely at batch1 I3 commit 9, 2026-09-14, mirroring the assert_data_bounds/I2 commit 9 cutover precedent)', () => {
@@ -182,7 +183,9 @@ describe('measured counts — independently re-derived, not transcribed from the
     // census row flipped batch "C5" -> "pending" (mirroring the same C4->pending
     // move every other in-flight conversion makes at ITS commit 1) — mechanically
     // re-counted from the live census file, not retyped.
-    expect(c5.size).toBe(11);
+    // 11 -> 10 at batch-2 row 2.2 commit 1 (2026-09-20): enrich_heritage's own census
+    // row flipped batch "C5" -> "pending", the same move.
+    expect(c5.size).toBe(10);
     // 1 -> 0 at the I4 CUTOVER (commit 3): the row is RETAINED with `status: "converted"`
     // (Spec 124 R-AO) rather than deleted, but `byBatch` counts only rows the roadmap still
     // treats as pending work, and a converted row is no longer that.
@@ -193,7 +196,9 @@ describe('measured counts — independently re-derived, not transcribed from the
     // (Spec 124 R-AO) rather than deleted, but `byBatch` counts only rows the roadmap still
     // treats as pending work, and a converted row is no longer that. C4 is now empty and
     // pending is empty: batch C4 is CLOSED.
-    expect(pendingBatch.size).toBe(0);
+    // 0 -> 1 at batch-2 row 2.2 commit 1 (2026-09-20): enrich_heritage's census row flipped
+    // batch "C5" -> "pending", the in-flight conversion this file's own suite tracks.
+    expect(pendingBatch.size).toBe(1);
     expect(c6.size).toBe(36);
     expect(c4.size + c5.size + c6.size).toBe(remaining.length);
   });
@@ -377,7 +382,7 @@ describe('buildRoadmap() — totality over the real committed data (HIGH-1: slug
     }
   });
 
-  it('HIGH-1 + R-AP: the 3 declared exemptions (inspections, coa_documents, reconcile) are NOT silently dropped — 68 total manifest slugs = 14 converted + 0 pending + 3 exempted + 51 remaining', async () => {
+  it('HIGH-1 + R-AP: the 3 declared exemptions (inspections, coa_documents, reconcile) are NOT silently dropped — 68 total manifest slugs = 16 converted + 1 pending + 3 exempted + 48 remaining', async () => {
     const mod = (await import(pathToFileURL(GENERATOR).href)) as unknown as RoadmapModule;
     const args = await loadRealArgs(mod);
     expect(args.exemptions.map((e) => e.slug).sort()).toEqual(['coa_documents', 'inspections', 'reconcile']);
@@ -390,13 +395,15 @@ describe('buildRoadmap() — totality over the real committed data (HIGH-1: slug
     const convertedSlugCount = CONVERTED.length;
     expect(totalSlugs).toBe(68);
     expect(convertedSlugCount + pendingSlugs + args.exemptions.length + remainingSlugs).toBe(totalSlugs);
-    expect(pendingSlugs).toBe(0);
     // batch2 P1.1 cutover (2026-09-18): CONVERTED grew 14->15 (assert_parcel_sanity);
     // batch-2 row 2.1 cutover (2026-09-18): CONVERTED grew 15->16 (enrich_ravines),
     // derived from converted.json (see convertedSlugCount above, never retyped) — the
-    // remaining count is 68 - 16 converted - 0 pending - 3 exempted = 49, mechanically
-    // computed by buildRoadmap() itself, not guessed.
-    expect(remainingSlugs).toBe(49);
+    // remaining count is 68 - 16 converted - 3 exempted = 49, mechanically computed by
+    // buildRoadmap() itself, not guessed.
+    // batch-2 row 2.2 commit 1 (2026-09-20): enrich_heritage joined `pending[]`, so 1 slug
+    // moves from remaining (49) into pending (0 -> 1), leaving 48 remaining.
+    expect(pendingSlugs).toBe(1);
+    expect(remainingSlugs).toBe(48);
   });
 
   it('the rendered report never silently drops the 3 exemptions — all appear in the Declared exemptions table and the totality sentence states IDENTITY HOLDS', async () => {
@@ -485,9 +492,10 @@ describe('buildRoadmap() — the R-AP RUNNER-owned exemption class, both directi
     const c5 = rows.filter((r) => r.batch === 'C5');
     // batch2 P1.1 cutover (2026-09-18): assert_parcel_sanity converted out of C5
     // (13->12); batch-2 row 2.1 cutover (2026-09-18): enrich_ravines converted out
-    // of C5 (12->11), mechanically computed by buildRoadmap() from converted.json,
-    // not retyped.
-    expect(c5).toHaveLength(11);
+    // of C5 (12->11); batch-2 row 2.2 commit 1 (2026-09-20): enrich_heritage's census
+    // row flipped batch "C5" -> "pending" (11->10), mechanically computed by
+    // buildRoadmap() from converted.json + the census, not retyped.
+    expect(c5).toHaveLength(10);
   });
 });
 

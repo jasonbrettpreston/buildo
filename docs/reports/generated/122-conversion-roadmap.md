@@ -7,7 +7,7 @@
 
 ## Counts
 
-Remaining files: **47** (+ **0** pending) · remaining slugs: **49** (+ **0** pending)
+Remaining files: **46** (+ **1** pending) · remaining slugs: **48** (+ **1** pending)
 
 | Batch | Files | Slots |
 |---|---:|---:|
@@ -30,7 +30,7 @@ Remaining files: **47** (+ **0** pending) · remaining slugs: **49** (+ **0** pe
 | Archetype | File | Slug(s) | Chains (slots) | Quadrant | Write hints | Open cutover_prereq |
 |---|---|---|---|---|---|---|
 | ENRICHER | `scripts/enrich-centreline.js` | enrich_centreline | sources (1) | bottom-left | — | EP-PIN-D17 (enrich_centreline); CLOUD-PRE (enrich_centreline) |
-| ENRICHER | `scripts/enrich-heritage.js` | enrich_heritage | sources (1) | bottom-left | — | CLOUD-PRE (enrich_heritage) |
+| ENRICHER | `scripts/enrich-heritage.js` | enrich_heritage [pending: red_suite] | sources (1) | bottom-left | — | CLOUD-PRE (enrich_heritage) |
 | ENRICHER | `scripts/compute-parcel-cost-estimates.js` | compute_parcel_cost_estimates | sources (1) | top-left | supports_dry_run | CLOUD-PRE (compute_parcel_cost_estimates) |
 | INGESTOR | `scripts/load-address-points.js` | address_points | sources (1) | top-left | — | CLOUD-PRE (address_points); SEAM-CHAIN-1 (address_points) |
 | INGESTOR | `scripts/load-centreline.js` | load_centreline | sources (1) | top-left | — | CLOUD-PRE (load_centreline) |
@@ -45,7 +45,7 @@ Remaining files: **47** (+ **0** pending) · remaining slugs: **49** (+ **0** pe
 
 - `scripts/compute-parcel-cost-estimates.js` (ENRICHER): Spec 122 §1.10 declared
 - `scripts/enrich-centreline.js` (ENRICHER): Spec 122 §1.10 declared
-- `scripts/enrich-heritage.js` (ENRICHER): Spec 122 §1.10 declared
+- `scripts/enrich-heritage.js` (ENRICHER): Spec 122 §1.10 declared; batch-2 row 2.2 conversion IN FLIGHT (commit 1, 2026-09-20) — archetype re-derived from the code at PH-0 (R-AO), confirmed ENRICHER
 - `scripts/load-address-points.js` (INGESTOR): Spec 122 §1.10 declared
 - `scripts/load-centreline.js` (INGESTOR): Spec 122 §1.10 declared
 - `scripts/load-heritage.js` (INGESTOR): Spec 122 §1.10 declared
@@ -110,4 +110,4 @@ Remaining files: **47** (+ **0** pending) · remaining slugs: **49** (+ **0** pe
 
 ---
 
-*Totality (both directions, proven by `src/tests/conversion-roadmap.infra.test.ts`; slug-grain, IDENTITY HOLDS): **68** manifest.scripts slugs = **16** converted + **0** pending + **3** declared exemptions (Ask A2, excluded from the conversion programme entirely — never silently dropped, see the table above) + **49** remaining, each counted exactly once, in exactly one of C4/C5/C6/pending/exempted.*
+*Totality (both directions, proven by `src/tests/conversion-roadmap.infra.test.ts`; slug-grain, IDENTITY HOLDS): **68** manifest.scripts slugs = **16** converted + **1** pending + **3** declared exemptions (Ask A2, excluded from the conversion programme entirely — never silently dropped, see the table above) + **48** remaining, each counted exactly once, in exactly one of C4/C5/C6/pending/exempted.*
