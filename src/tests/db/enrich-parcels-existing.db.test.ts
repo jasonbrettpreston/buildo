@@ -8,8 +8,9 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import type { PoolClient, Pool } from 'pg';
 import { dbAvailable, getTestPool } from './setup-testcontainer';
+// RE-POINTED — WF3 C2. `enrichExistingStructure` -> `runPass3` via `./_lib/enrich-parcels-harness.js`.
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const { enrichExistingStructure } = require('../../../scripts/enrich-parcels');
+const { enrichExistingStructure } = require('./_lib/enrich-parcels-harness');
 
 const TEST_PARCEL = 994_000_000;
 const SCOPE = `p.feature_type = 'TEST' AND p.parcel_id LIKE '994%'`;

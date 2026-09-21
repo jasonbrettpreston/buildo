@@ -8,8 +8,10 @@
 import { describe, it, expect, beforeAll, afterEach } from 'vitest';
 import type { Pool } from 'pg';
 import { dbAvailable, getTestPool } from './setup-testcontainer';
+// RE-POINTED — WF3 C2. `ep.enrichOptimalConfig` -> `runPass5` via `./_lib/enrich-parcels-harness.js`
+// (same 2-connection, autocommit-batched shape the legacy `enrichOptimalConfig(pool, ...)` had).
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const ep = require('../../../scripts/enrich-parcels');
+const ep = require('./_lib/enrich-parcels-harness');
 
 const NB = 9301;        // a neighbourhood WITH a build-norm row
 const NB_NONORM = 9399; // a neighbourhood WITHOUT one → citywide fallback

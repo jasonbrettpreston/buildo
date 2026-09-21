@@ -8,8 +8,11 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import type { PoolClient, Pool } from 'pg';
 import { dbAvailable, getTestPool } from './setup-testcontainer';
+// RE-POINTED — WF3 C2. `enrichMaxBuild` -> `runPass2` via `./_lib/enrich-parcels-harness.js`;
+// the legacy `acc: {...}` grouped override has no successor — each named field maps to its
+// declared config key at the call site (see the harness's own doc comment for the full map).
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const { enrichMaxBuild } = require('../../../scripts/enrich-parcels');
+const { enrichMaxBuild } = require('./_lib/enrich-parcels-harness');
 
 const TEST_PARCEL = 996_000_000;
 const SCOPE = `p.feature_type = 'TEST' AND p.parcel_id LIKE '996%'`;
@@ -117,7 +120,8 @@ describe.skipIf(!dbAvailable())('Spec 65 Phase 3 accessory fit — live DB (mig 
       await c.query('BEGIN');
       await ins(c, TEST_PARCEL + 4, { ...BIG, abuts_laneway: false });
       // 0.95 floor: garden+garage push greenspace below 0.95×lot → fits but needs a variance.
-      await enrichMaxBuild(c, { scopeWhere: SCOPE, full: true, acc: { minSoftPct: 0.95 } });
+      // WF3 C2: legacy `acc: { minSoftPct }` -> `min_soft_landscaping_pct` (runPass2's own config read).
+      await enrichMaxBuild(c, { scopeWhere: SCOPE, full: true, min_soft_landscaping_pct: 0.95 });
       const p = await get(c, TEST_PARCEL + 4);
       expect(p.garage_permission).toBe('coa_required');
       expect(p.rear_suite_permission).toBe('coa_required');

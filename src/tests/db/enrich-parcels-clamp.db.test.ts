@@ -13,8 +13,9 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import type { PoolClient, Pool } from 'pg';
 import { dbAvailable, getTestPool } from './setup-testcontainer';
+// RE-POINTED — WF3 C2. `enrichMaxBuild` -> `runPass2` via `./_lib/enrich-parcels-harness.js`.
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const { enrichMaxBuild } = require('../../../scripts/enrich-parcels');
+const { enrichMaxBuild } = require('./_lib/enrich-parcels-harness');
 
 const TEST_PARCEL = 991_200_000;
 const SCOPE = `p.feature_type = 'TEST' AND p.parcel_id LIKE '9912%'`;

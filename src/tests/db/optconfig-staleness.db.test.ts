@@ -14,8 +14,9 @@
 import { describe, it, expect, beforeAll, afterEach } from 'vitest';
 import type { Pool } from 'pg';
 import { dbAvailable, getTestPool } from './setup-testcontainer';
+// RE-POINTED — WF3 C2. `ep.enrichOptimalConfig` -> `runPass5` via `./_lib/enrich-parcels-harness.js`.
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const ep = require('../../../scripts/enrich-parcels');
+const ep = require('./_lib/enrich-parcels-harness');
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const optcfg = require('../../../scripts/lib/optimal-config');
 

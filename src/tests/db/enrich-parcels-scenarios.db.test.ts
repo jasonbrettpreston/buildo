@@ -7,8 +7,10 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import type { PoolClient, Pool } from 'pg';
 import { dbAvailable, getTestPool } from './setup-testcontainer';
+// RE-POINTED — WF3 C2. `enrichExistingStructure` -> `runPass3` via `./_lib/enrich-parcels-harness.js`;
+// legacy `reno: {...}` grouped override -> named config keys at the call site.
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const { enrichExistingStructure } = require('../../../scripts/enrich-parcels');
+const { enrichExistingStructure } = require('./_lib/enrich-parcels-harness');
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const aj = require('../../../scripts/lib/archetypes');
 
@@ -51,7 +53,11 @@ describe.skipIf(!dbAvailable())('Spec 65 Phase 2 scenarios — live DB (mig 189 
     try {
       await c.query('BEGIN');
       await setup(c, TEST_PARCEL + 1, 500, 4, 100, 2); // footprint 100, 2 storeys; max gfa 500, max 4 storeys
-      await enrichExistingStructure(c, { scopeWhere: SCOPE, full: true, reno: { coaUplift: 0.05, kitchenPct: 0.15, bathPct: 0.07, mislinkTol: 0.05 } });
+      // WF3 C2: legacy `reno: {coaUplift, kitchenPct, bathPct, mislinkTol}` -> named config keys.
+      await enrichExistingStructure(c, {
+        scopeWhere: SCOPE, full: true,
+        reno_coa_uplift_pct: 0.05, reno_kitchen_gfa_pct: 0.15, reno_bath_gfa_pct: 0.07, mislink_footprint_lot_tol: 0.05,
+      });
       const p = await get(c, TEST_PARCEL + 1);
       expect(Number(p.max_newbuild_coa_gfa_sqm)).toBe(525);  // 500 × 1.05
       expect(Number(p.cur_est_kitchen_gfa_sqm)).toBe(15);    // 100 × 0.15
@@ -74,7 +80,7 @@ describe.skipIf(!dbAvailable())('Spec 65 Phase 2 scenarios — live DB (mig 189 
     try {
       await c.query('BEGIN');
       await setup(c, TEST_PARCEL + 2, null, null, 100, 2); // no max-build stories
-      await enrichExistingStructure(c, { scopeWhere: SCOPE, full: true, reno: {} });
+      await enrichExistingStructure(c, { scopeWhere: SCOPE, full: true });
       const p = await get(c, TEST_PARCEL + 2);
       expect(p.max_newbuild_coa_gfa_sqm).toBeNull();   // max_buildable_gfa NULL
       expect(p.cur_storey_gfa_sqm).toBeNull();         // deprecated

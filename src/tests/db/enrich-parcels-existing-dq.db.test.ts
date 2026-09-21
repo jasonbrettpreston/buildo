@@ -10,8 +10,10 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import type { PoolClient, Pool } from 'pg';
 import { dbAvailable, getTestPool } from './setup-testcontainer';
+// RE-POINTED — WF3 C2. `enrichExistingStructure` -> `runPass3` via `./_lib/enrich-parcels-harness.js`;
+// legacy `reno: { mislinkTol }` -> `mislink_footprint_lot_tol` (runPass3's own config read).
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const { enrichExistingStructure } = require('../../../scripts/enrich-parcels');
+const { enrichExistingStructure } = require('./_lib/enrich-parcels-harness');
 
 const TEST_PARCEL = 996_000_000;
 const SCOPE = `p.feature_type = 'TEST' AND p.parcel_id LIKE '996%'`;
@@ -50,7 +52,7 @@ describe.skipIf(!dbAvailable())('Spec 65 WF3-A existing-structure honesty — li
     try {
       await c.query('BEGIN');
       await setup(c, TEST_PARCEL + 1, 490, 80, 7, 22.1, 2); // tree-contaminated massing, pocket tops at 2
-      await enrichExistingStructure(c, { scopeWhere: SCOPE, full: true, reno: { mislinkTol: 0.05 } });
+      await enrichExistingStructure(c, { scopeWhere: SCOPE, full: true, mislink_footprint_lot_tol: 0.05 });
       const p = await get(c, TEST_PARCEL + 1);
       expect(p.existing_stories).toBeNull();   // not 7
       expect(p.existing_height_m).toBeNull();  // not 22.1
@@ -65,7 +67,7 @@ describe.skipIf(!dbAvailable())('Spec 65 WF3-A existing-structure honesty — li
     try {
       await c.query('BEGIN');
       await setup(c, TEST_PARCEL + 2, 100, 150, 2, 6.0, 3); // 150 > 100×1.05 = wrong building (block attribution)
-      await enrichExistingStructure(c, { scopeWhere: SCOPE, full: true, reno: { mislinkTol: 0.05 } });
+      await enrichExistingStructure(c, { scopeWhere: SCOPE, full: true, mislink_footprint_lot_tol: 0.05 });
       const p = await get(c, TEST_PARCEL + 2);
       expect(p.existing_data_quality_flag).toBe('footprint_exceeds_lot');
       expect(p.existing_structure_confidence).toBe('low');
@@ -85,7 +87,7 @@ describe.skipIf(!dbAvailable())('Spec 65 WF3-A existing-structure honesty — li
     try {
       await c.query('BEGIN');
       await setup(c, TEST_PARCEL + 3, 490, 100, 2, 6.0, 2);
-      await enrichExistingStructure(c, { scopeWhere: SCOPE, full: true, reno: { mislinkTol: 0.05 } });
+      await enrichExistingStructure(c, { scopeWhere: SCOPE, full: true, mislink_footprint_lot_tol: 0.05 });
       const p = await get(c, TEST_PARCEL + 3);
       expect(Number(p.cur_floor_gfa_sqm)).toBe(100);
       expect(Number(p.cur_pot_2story_gfa_sqm)).toBe(200);
@@ -100,12 +102,12 @@ describe.skipIf(!dbAvailable())('Spec 65 WF3-A existing-structure honesty — li
     try {
       await c.query('BEGIN');
       await setup(c, TEST_PARCEL + 4, 490, 100, 2, 6.0, 3);
-      await enrichExistingStructure(c, { scopeWhere: SCOPE, full: true, reno: { mislinkTol: 0.05 } });
+      await enrichExistingStructure(c, { scopeWhere: SCOPE, full: true, mislink_footprint_lot_tol: 0.05 });
       const p = await get(c, TEST_PARCEL + 4);
       expect(Number(p.cur_pot_3story_gfa_sqm)).toBe(300);
       expect(p.cur_gfa_range_basis).toBe('1-3');
       // idempotent re-run
-      const res2 = await enrichExistingStructure(c, { scopeWhere: SCOPE, full: true, reno: { mislinkTol: 0.05 } });
+      const res2 = await enrichExistingStructure(c, { scopeWhere: SCOPE, full: true, mislink_footprint_lot_tol: 0.05 });
       expect(res2.updated).toBe(0);
       await c.query('ROLLBACK');
     } finally { c.release(); }

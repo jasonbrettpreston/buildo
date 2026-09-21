@@ -17,8 +17,14 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import type { PoolClient, Pool } from 'pg';
 import { dbAvailable, getTestPool } from './setup-testcontainer';
+// RE-POINTED — WF3 C2 (`.cursor/wf3_test_db_suite_red_active_task.md`, 2026-09-21). The
+// ENRICHER conversion retired `scripts/enrich-parcels.js`'s function-export surface (now a
+// 41-line `pipeline.step()` shim exporting only `{descriptor, compute, run}`); `enrichParcels`
+// -> `runPass1` and `assertPreconditions` -> `assertRequirements` both moved. See
+// `./_lib/enrich-parcels-harness.js` for the ctx/config bridge (built from the SAME
+// `resolveConfig()` the real runner uses) and the exact successor mapping.
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const { enrichParcels, assertPreconditions } = require('../../../scripts/enrich-parcels');
+const { enrichParcels, assertPreconditions } = require('./_lib/enrich-parcels-harness');
 
 const TEST_PARCEL = 990_000_000; // test parcel_id range — isolated by ROLLBACK
 const TEST_SRC = 990_000_000;    // test source_id range for zoning fixtures
