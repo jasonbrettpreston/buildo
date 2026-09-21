@@ -730,8 +730,9 @@ describe('execution.shape "enrich" + the ENRICHER execution.phases[] profile (pi
     // AND >= 2 converted members sharing the archetype, so geocode_permits' registration is
     // what makes the archetype COMPRESSED-ELIGIBLE and turns batch 2's Phase 2 from
     // 1 full + 3 compressed into 4 compressed. The list is pinned rather than counted so a
-    // THIRD member still has to come here and say so.
-    expect(enrichers, 'exactly three converted ENRICHERs — enrich_parcels (pilot 9 commit 9), geocode_permits (batch-2 I5 commit 9), and enrich_ravines (batch-2 row 2.1 commit 3) — the profile is exercised by REAL descriptors, and the second is what unlocked the compressed form for the archetype (the third rides it)').toEqual(['scripts/enrich-parcels.descriptor.json', 'scripts/geocode-permits.descriptor.json', 'scripts/enrich-ravines.descriptor.json']);
+    // FOURTH member still has to come here and say so (FOLD-I3, batch-2 row 2.2 cutover,
+    // 2026-09-20).
+    expect(enrichers, 'exactly four converted ENRICHERs — enrich_parcels (pilot 9 commit 9), geocode_permits (batch-2 I5 commit 9), enrich_ravines (batch-2 row 2.1 commit 3), and enrich_heritage (batch-2 row 2.2 commit 3) — the profile is exercised by REAL descriptors, and the second is what unlocked the compressed form for the archetype (the third and fourth ride it)').toEqual(['scripts/enrich-parcels.descriptor.json', 'scripts/geocode-permits.descriptor.json', 'scripts/enrich-ravines.descriptor.json', 'scripts/enrich-heritage.descriptor.json']);
     // Byte-identical, not merely still-valid, for every descriptor EXCEPT the one known,
     // declared exception above — each of the other seven is still an R-C golden fingerprint.
     const unexpectedTargets = descriptorPaths.filter((rel) => !KNOWN_CHANGED_THIS_COMMIT.has(rel));

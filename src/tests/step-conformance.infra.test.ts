@@ -2184,7 +2184,13 @@ describe('LDG-4 — descriptor <-> ledger cross-check (SUPERSET + EQUALITY, conv
     // Same disposition as LDG-D1/LDG-D2: declaring it moves enrich_parcels' own seam pairs
     // and staleness gating, out of scope for a conversion that must not change enrich_parcels'
     // behaviour. Filed RV-D5 in defect-ledger.md.
-    enrich_parcels: { missing: ['enrich_ravines'], extra: [] }, // RV-D5
+    // WIDENED AGAIN at the batch-2 row 2.2 cutover (2026-09-20): enrich_heritage became a
+    // CONVERTED producer, so the ledger can now see the identical class of pre-existing
+    // dependency: enrich-parcels.js:460/587/593/597 reads is_heritage_designated (the
+    // COALESCE(...,false) gate and the ravine∧¬heritage envelope branch). Same disposition,
+    // same reasoning as RV-D5 — allowlisted, not fixed, out of scope for THIS conversion.
+    // Filed EH-D4 in defect-ledger.md.
+    enrich_parcels: { missing: ['enrich_heritage', 'enrich_ravines'], extra: [] }, // RV-D5, EH-D4
   };
 
   for (const [name, { descriptor }] of Object.entries(byName)) {

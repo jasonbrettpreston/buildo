@@ -198,7 +198,10 @@ describe('measured counts — independently re-derived, not transcribed from the
     // pending is empty: batch C4 is CLOSED.
     // 0 -> 1 at batch-2 row 2.2 commit 1 (2026-09-20): enrich_heritage's census row flipped
     // batch "C5" -> "pending", the in-flight conversion this file's own suite tracks.
-    expect(pendingBatch.size).toBe(1);
+    // 1 -> 0 at the row 2.2 CUTOVER (commit 3, 2026-09-20): the row is RETAINED with
+    // `status: "converted"` (Spec 124 R-AO) rather than deleted, but `byBatch` counts only
+    // rows the roadmap still treats as pending work, and a converted row is no longer that.
+    expect(pendingBatch.size).toBe(0);
     expect(c6.size).toBe(36);
     expect(c4.size + c5.size + c6.size).toBe(remaining.length);
   });
@@ -382,7 +385,7 @@ describe('buildRoadmap() — totality over the real committed data (HIGH-1: slug
     }
   });
 
-  it('HIGH-1 + R-AP: the 3 declared exemptions (inspections, coa_documents, reconcile) are NOT silently dropped — 68 total manifest slugs = 16 converted + 1 pending + 3 exempted + 48 remaining', async () => {
+  it('HIGH-1 + R-AP: the 3 declared exemptions (inspections, coa_documents, reconcile) are NOT silently dropped — 68 total manifest slugs = 17 converted + 0 pending + 3 exempted + 48 remaining', async () => {
     const mod = (await import(pathToFileURL(GENERATOR).href)) as unknown as RoadmapModule;
     const args = await loadRealArgs(mod);
     expect(args.exemptions.map((e) => e.slug).sort()).toEqual(['coa_documents', 'inspections', 'reconcile']);
@@ -402,7 +405,10 @@ describe('buildRoadmap() — totality over the real committed data (HIGH-1: slug
     // buildRoadmap() itself, not guessed.
     // batch-2 row 2.2 commit 1 (2026-09-20): enrich_heritage joined `pending[]`, so 1 slug
     // moves from remaining (49) into pending (0 -> 1), leaving 48 remaining.
-    expect(pendingSlugs).toBe(1);
+    // batch-2 row 2.2 CUTOVER (commit 3, 2026-09-20): enrich_heritage moves from `pending[]`
+    // into `converted[]` (16 -> 17), pending falls back to 0; remaining is UNCHANGED (48) —
+    // the slug left `remaining` at commit 1, not at cutover.
+    expect(pendingSlugs).toBe(0);
     expect(remainingSlugs).toBe(48);
   });
 

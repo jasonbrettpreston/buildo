@@ -323,7 +323,7 @@ describe('enrich_heritage — unhappy paths, all nine §9 contract HALTs + L14 +
 });
 
 describe('enrich_heritage — cutover-only claim (structurally cannot land before commit 3)', () => {
-  it.fails('the slug is REGISTERED in converted.json and its pending entry is DELETED in the same commit (R-K mutual exclusion) [flips at commit 3]', () => {
+  it('the slug is REGISTERED in converted.json and its pending entry is DELETED in the same commit (R-K mutual exclusion) [flips at commit 3]', () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const reg: any = JSON.parse(read('scripts/steps/_schema/converted.json'));
     expect(reg.converted).toContain(STEP_REL);
