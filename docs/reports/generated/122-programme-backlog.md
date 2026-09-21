@@ -6,11 +6,11 @@
 
 ## Counts
 
-Total items: **123**
+Total items: **126**
 
 | status | count |
 |---|---|
-| ⬜ NOT_STARTED | 28 |
+| ⬜ NOT_STARTED | 31 |
 | ⚠️ PARTIAL | 16 |
 | ✅ BUILT | 75 |
 | ⏭️ SUPERSEDED | 4 |
@@ -28,7 +28,7 @@ Total items: **123**
 | `WD-1` | 122 §1.4 | class-enum-without-write.js-branch lock | ✅ BUILT | wf: wf: programme-WD1, WD-1 WF5+WF2 commits 1-3 | batching | 2026-09-09 |
 | `ADMIN-1` | 124 §2 Rule 3 | admin GROUPS reverse-coverage — every unclassified seed key gets a real group or a reviewed hidden reason | ✅ BUILT | wf: wf: programme-ADMIN-1 | batching | 2026-09-09 |
 
-## Cutover prerequisite — blocks a specific pilot slug registering in converted.json (18)
+## Cutover prerequisite — blocks a specific pilot slug registering in converted.json (21)
 
 | id | spec | title | status | owner | blocks | last reviewed |
 |---|---|---|---|---|---|---|
@@ -50,6 +50,9 @@ Total items: **123**
 | `VEL-1` | 124 R-AG (proposed) | Gate placement: full suite at pre-push, vitest related + fast invariants at pre-commit, live-DB infra tests in test:db | ✅ BUILT | wf: wf: conversion velocity (R-AG) | address_points, assert_parcel_sanity, compute_parcel_cost_estimates, enrich_centreline, enrich_heritage, enrich_ravines, load_centreline, load_heritage, load_wsib, load_zoning, massing, neighbourhoods, parcels, reconcile | 2026-09-14 |
 | `VEL-2` | 124 R-AH (proposed) | Compressed 3-commit form is the default once an archetype has two full-form members | ✅ BUILT | wf: wf: conversion velocity (R-AH) | address_points, assert_parcel_sanity, compute_parcel_cost_estimates, enrich_centreline, enrich_heritage, enrich_ravines, load_centreline, load_heritage, load_wsib, load_zoning, massing, neighbourhoods, parcels, reconcile | 2026-09-14 |
 | `SEAM-CHAIN-1` | 122 §6.5 | seam checks are scoped to the chain they run in | ⬜ NOT_STARTED | followup: docs/reports/review_followups.md — WF2 batch-2 Phase 0.10 section, the seam.js MED row | address_points | 2026-09-15 |
+| `B2-PRICING-ADMIN` | 124 R-AU | Admin editor for pricing DATA (archetype_cost_rates + PARCEL_COST_LINES/PERMITTED_VALUES) | ⬜ NOT_STARTED | wf: wf: batch-2 row 2.5 (.cursor/batch2_c5_active_task.md Phase 2) - Cross-Domain admin pricing editor | enrich_centreline | 2026-09-21 |
+| `B2-DRYRUN-SEAM` | 124 R-AV | ENRICHER runner dry-run seam | ⬜ NOT_STARTED | library-wf: wf: batch-2 row 2.6 (.cursor/batch2_c5_active_task.md Phase 2) - ENRICHER runner dry-run seam | enrich_centreline | 2026-09-21 |
+| `B2-OWNER-SPEC-DIFF` | 123 §7 row 9; 124 §4.5 | OWNER-SPEC-DIFF: a cutover commit touches its slug’s owner specs, or declares N-A | ⬜ NOT_STARTED | wf: wf: batch-2 closing item (.cursor/batch2_c5_active_task.md §5) - OWNER-SPEC-DIFF fast invariant | enrich_centreline | 2026-09-21 |
 
 ## Nice-to-have — real gap, not currently blocking (99)
 

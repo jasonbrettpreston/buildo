@@ -2214,6 +2214,63 @@
         ]
       },
       "last_reviewed": "2026-09-15"
+    },
+    {
+      "id": "B2-PRICING-ADMIN",
+      "spec": "124 R-AU",
+      "title": "Admin editor for pricing DATA (archetype_cost_rates + PARCEL_COST_LINES/PERMITTED_VALUES)",
+      "promised": "the pricing rate table and the priced-line catalogue become admin-editable, and compute_parcel_cost_estimates’ descriptor non-admin-surface limitation is REMOVED (the values then count as externalized under Rule 3)",
+      "status": "NOT_STARTED",
+      "evidence": "Spec 124 R-AU (operator-adjudicated 2026-09-21) declares the ported pricing surface an INTERIM non-admin state with this row as its named closing row, not a permanent Rule 3 exemption. Measured 2026-09-21: archetype_cost_rates (12x3) has ZERO references under src/app, src/features/admin-controls, src/lib/admin or src/components (locked in src/tests/spec124-register-rulings.logic.test.ts); PARCEL_COST_LINES (~78 literals) + PERMITTED_VALUES live in scripts/lib/parcel-cost.js. BATCH-2 WORK: built after row 2.4 converts and BEFORE batch 2 closes - a Cross-Domain WF (.claude/domain-crossdomain.md), not an open-ended followup",
+      "owner": {
+        "kind": "wf",
+        "ref": "wf: batch-2 row 2.5 (.cursor/batch2_c5_active_task.md Phase 2) - Cross-Domain admin pricing editor"
+      },
+      "gate": {
+        "kind": "cutover_prereq",
+        "blocks": [
+          "enrich_centreline"
+        ]
+      },
+      "last_reviewed": "2026-09-21"
+    },
+    {
+      "id": "B2-DRYRUN-SEAM",
+      "spec": "124 R-AV",
+      "title": "ENRICHER runner dry-run seam",
+      "promised": "runEnrichPhase honours overrides.dry_run (and a declarable row cap), so every converted ENRICHER’s dry_run declaration is revisited and compute_parcel_cost_estimates regains its legacy --dry-run/--limit capability",
+      "status": "NOT_STARTED",
+      "evidence": "Spec 124 R-AV (operator-adjudicated 2026-09-21) declares dry_run \"none\" an INTERIM state with this row as its named closing row. Measured 2026-09-21: runEnrichPhase reads overrides.dry_run at ZERO sites (only runLinkPhase/runLinkKeyedPhase/runCascadePhase do) while the shared audit assembly emits dryRunRow() whenever overrides.dry_run is truthy - so a declared-but-unhonoured dry_run would print dry_run_no_writes:true on a run that WROTE; --limit=N has no declarable home (override is additionalProperties:false). Both directions locked in src/tests/spec124-register-rulings.logic.test.ts. BATCH-2 WORK: a shared runner change with RV-D4-style both-direction locks, built after row 2.4 and BEFORE batch 2 closes",
+      "owner": {
+        "kind": "library-wf",
+        "ref": "wf: batch-2 row 2.6 (.cursor/batch2_c5_active_task.md Phase 2) - ENRICHER runner dry-run seam"
+      },
+      "gate": {
+        "kind": "cutover_prereq",
+        "blocks": [
+          "enrich_centreline"
+        ]
+      },
+      "last_reviewed": "2026-09-21"
+    },
+    {
+      "id": "B2-OWNER-SPEC-DIFF",
+      "spec": "123 §7 row 9; 124 §4.5",
+      "title": "OWNER-SPEC-DIFF: a cutover commit touches its slug’s owner specs, or declares N-A",
+      "promised": "step-validate.mjs gains a fast invariant: a commit that appends a slug to converted.json.converted[] must also touch every spec whose system-map Target Files names that slug’s script, or carry an explicit spec_diff:\"N-A\" reason on the census row - proven both directions on a fixture cutover with and without the spec touch",
+      "status": "NOT_STARTED",
+      "evidence": "Measured 2026-09-21: batch-2 rows 2.1 and 2.2 both owed a Spec 123 §7 row 9 spec diff; \"git diff --stat 39b246c0..HEAD -- docs/specs\" was ONE line (Spec 59) with NO Spec 61 diff and no literal \"N-A\" in any commit body, and the whole enrich_heritage conversion reached HEAD undocumented in its owner spec (repaired by e053102c). The obligation is enforced today only by a commit-message convention, which is exactly the class of promise Spec 124 Rule 1 says must carry a mechanism. END-OF-BATCH-2 item",
+      "owner": {
+        "kind": "wf",
+        "ref": "wf: batch-2 closing item (.cursor/batch2_c5_active_task.md §5) - OWNER-SPEC-DIFF fast invariant"
+      },
+      "gate": {
+        "kind": "cutover_prereq",
+        "blocks": [
+          "enrich_centreline"
+        ]
+      },
+      "last_reviewed": "2026-09-21"
     }
   ]
 }
