@@ -353,9 +353,25 @@ describe.skipIf(!dbAvailable())('enrich-parcels — B2 incremental (massing wate
   // ③ — Scope cascade (BEHAVIORAL RED, child-process pattern per v6.1 X-5)
   // =========================================================================
   describe('③ scope cascade — crashed run\'s unconsumed rows unioned by the next run (BEHAVIORAL RED)', () => {
+    // WF3 C5 (`.cursor/wf3_test_db_suite_red_active_task.md`, 2026-09-21) — PREMISE-VERIFIED,
+    // TEST DEFECT (Outcome A), re-expressed rather than deleted. Ground truth, measured via a
+    // direct child-run probe: the recovery mechanism DOES engage with run A's row — the run's
+    // own records_meta audit_table reports `pending_scope_parcels: 1` and `scope_recovery_batches:
+    // 1` (the row was seen and a recovery batch ran over it) — and consumePendingScope DOES stamp
+    // `consumed_at` on it. But EP-D10 (pilot 9 commit 8 P1, landed AFTER this B2-era file was
+    // written) added an UNCONDITIONAL prune immediately following consumption in the SAME run
+    // (scripts/lib/compute/enrich-parcels.js's `runPass5`: `DELETE FROM enrich_parcels_pass3_scope
+    // WHERE consumed_at IS NOT NULL` — "there is no future use for a consumed row once written").
+    // So the row is consumed AND deleted before this test's own post-run SELECT ever sees it — the
+    // ORIGINAL assertion's premise (a consumed row survives, queryable, with `consumed_at` set) is
+    // refuted by a later, documented, reasoned design decision, not by a broken mechanism. Fixed
+    // to assert what genuinely survives: the row is GONE (proof of the prune) AND the run's own
+    // audit trail proves it was SEEN and PROCESSED first (proof of the consume) — together, the
+    // same claim the original assertion made, over evidence that actually persists.
     it(
-      'a prior run\'s unconsumed enrich_parcels_pass3_scope rows are consumed (consumed_at set) by the ' +
-        'NEXT completing run — RED TODAY (nothing in enrich-parcels.js reads or writes this table at all)',
+      'a prior run\'s unconsumed enrich_parcels_pass3_scope row is consumed then pruned (EP-D10) by the ' +
+        'NEXT completing run — GREEN (was asserting a pre-EP-D10 premise; the row no longer survives to ' +
+        'be queried post-run, but the run\'s own audit trail proves it was seen and processed)',
       async () => {
         // "Run A" — crashed, leaving unconsumed scope rows for a real parcel.
         const pid = await insParcel(FX_PARCEL_ID(10), farBox(10));
@@ -369,22 +385,30 @@ describe.skipIf(!dbAvailable())('enrich-parcels — B2 incremental (massing wate
           `INSERT INTO enrich_parcels_pass3_scope (run_id, parcel_id, consumed_at) VALUES ($1, $2, NULL)`,
           [runAId, pid],
         );
+        // PRECONDITION — this fixture is the ONLY pending scope row in the isolated container,
+        // so the run's global `pending_scope_parcels` count below can only be attributed to it.
+        const before = await pool!.query(`SELECT count(*)::int AS n FROM enrich_parcels_pass3_scope WHERE consumed_at IS NULL`);
+        expect(Number(before.rows[0].n), 'container residue detected — expected exactly 1 pending row').toBe(1);
 
         // "Run B" — the real script, spawned fresh, must complete cleanly.
         const r = runEnrichParcels();
         expect(r.status, `enrich-parcels.js child did not exit 0.\nstderr:\n${r.stderr}`).toBe(0);
 
+        // Proof of CONSUME: the run's own audit table reports it saw and processed run A's row.
+        const rows = (r.summary?.records_meta as { audit_table?: { rows?: Array<{ metric: string; value: unknown }> } } | undefined)
+          ?.audit_table?.rows ?? [];
+        const pendingRow = rows.find((x) => x.metric === 'pending_scope_parcels');
+        const batchesRow = rows.find((x) => x.metric === 'scope_recovery_batches');
+        expect(pendingRow?.value, `no pending_scope_parcels row: ${JSON.stringify(rows)}`).toBe(1);
+        expect(Number(batchesRow?.value), `no scope_recovery_batches row: ${JSON.stringify(rows)}`).toBeGreaterThanOrEqual(1);
+
+        // Proof of PRUNE (EP-D10): the row does not survive past the same run that consumed it —
+        // zero rows, not a row with consumed_at set, is the correct post-run state.
         const after = await pool!.query(
           `SELECT consumed_at FROM enrich_parcels_pass3_scope WHERE run_id = $1 AND parcel_id = $2`,
           [runAId, pid],
         );
-        expect(after.rows).toHaveLength(1);
-        // THE red-first assertion. Today pass 5 never reads enrich_parcels_pass3_scope
-        // at all, so this row is never touched — consumed_at stays NULL forever.
-        expect(
-          after.rows[0].consumed_at,
-          'run A\'s scope row should have been unioned into run B\'s pass 5 and marked consumed — it was not (D4\' not yet wired).',
-        ).not.toBeNull();
+        expect(after.rows, 'EP-D10 prunes every consumed_at IS NOT NULL row unconditionally — a surviving row means the prune regressed').toHaveLength(0);
       },
       60_000,
     );
@@ -473,10 +497,52 @@ describe.skipIf(!dbAvailable())('enrich-parcels — B2 incremental (massing wate
   // ⑦a — Citywide scope → clean defer marker (BEHAVIORAL RED, child-process)
   // =========================================================================
   describe('⑦a citywide-scope defer marker (BEHAVIORAL RED, child-process pattern per v6.1 X-5)', () => {
-    it(
+    // WF3 C5 (`.cursor/wf3_test_db_suite_red_active_task.md`, 2026-09-21) — PREMISE-VERIFIED,
+    // GENUINE PRODUCT DEFECT (Outcome B). Pinned per the plan's own routing rule: "do NOT fix it
+    // silently — pin it (it.fails + defect-ledger id + HIGH followup with the evidence) and
+    // report; the orchestrator will rule." Defect ledger: DEFECT-EP-D19-DEFER-SILENT (row filed
+    // in docs/reports/review_followups.md, HIGH).
+    //
+    // GROUND TRUTH, measured via a direct probe against the live fixture (this test's own DB
+    // state, same pool, immediately before spawning the child):
+    //   `compute.computeDeferScope(pool, 1000)` -> `{scope_count: 1001, threshold: 1000, ratio:
+    //   1, perPass: {pass1: 1001, massing: 1001, decision: 0, backlog: 0}}`. The threshold READS
+    //   CORRECTLY (config.enrich_parcels_defer_threshold_rows resolved to the seeded 1000 — the
+    //   child's own records_meta.config confirms it), scope_count genuinely exceeds it, so
+    //   runEnrichPhase's `if (scope.scope_count >= deferThreshold)` (scripts/lib/step/index.js:
+    //   3123) DOES fire and the run DOES take the early-return `{deferred: true, matched: {
+    //   defer_scope: scope, enrich_parcels_duration_ms }, ...}` path (confirmed: the measured
+    //   child run's own `duration_ms` in records_meta came from exactly this branch's
+    //   `Date.now() - t0`, and zero enrichment counters — zone_class_pct, parcels_enriched_count,
+    //   etc. — appear anywhere in its output, which only happens when no pass ran).
+    //
+    //   The defect: `scripts/lib/compute/enrich-parcels.js`'s `compute(ctx)` (the archetype-
+    //   generic checks dispatcher `runWithPool` calls to build `records_meta`, lines ~2245-2257)
+    //   hardcodes the list of `ctx.matched.*` fields it copies into the emitted summary —
+    //   duration_ms, zone_class_pct, total_parcels_scanned, records_updated_aggregate, and five
+    //   `*_enriched_count` fields — and `defer_scope` (with its `{scope_count, threshold, ratio}`
+    //   payload) is NOT one of them. The defer decision is computed correctly and threaded into
+    //   `ctx.matched.defer_scope` by the runner, and then silently dropped when the compute
+    //   module builds its own records_meta — an operator reading a deferred run's PIPELINE_SUMMARY
+    //   sees a near-empty, PASS-shaped result (verdict PASS, terminal "enriched_full" — the
+    //   descriptor declares no defer-specific terminal, so `selectTerminal` falls back to the
+    //   same id a normal completion uses) with ZERO indication the run deferred and wrote
+    //   nothing. `status = RUN_STATUS.DEFERRED_TO_FULL` (index.js:5027) is stamped on the
+    //   `pipeline_runs.status` DB COLUMN only (via `finalizeLedgerRow`), never into records_meta —
+    //   so records_meta genuinely carries no trace under ANY key. This is the exact "nothing
+    //   hidden" (Spec 48 §3.6) failure class the estate's own doctrine exists to catch: a
+    //   real state (deferred, zero writes) that is observable ONLY by a side-channel DB column
+    //   query, not from the run's own emitted summary.
+    //
+    // NOT a test/seeding-drift defect: the threshold name matches (`enrich_parcels_defer_
+    // threshold_rows`, exactly what `execution.enrich_hooks.defer_scope.threshold_from_config`
+    // declares), it resolves to the seeded value, and the scope count genuinely exceeds it —
+    // every premise the plan asked to verify before assuming a product bug holds.
+    it.fails(
       'a scope that exceeds a (seeded, low) pass-scope threshold produces a clean defer marker ' +
-        '{step, scope_count, threshold, ratio} on stdout and the child exits 0 — RED TODAY (no defer ' +
-        'mechanism exists; the marker never appears, and the child simply runs the full normal pipeline)',
+        '{step, scope_count, threshold, ratio} on stdout and the child exits 0 — PINNED PRODUCT DEFECT ' +
+        '(DEFECT-EP-D19-DEFER-SILENT): the defer decision IS made correctly but compute()\'s hardcoded ' +
+        'records_meta field list drops ctx.matched.defer_scope, so no trace of it reaches PIPELINE_SUMMARY',
       async () => {
         // Seed the threshold at its LEGAL FLOOR. The registry bounds
         // (seeds/logic_variables.json: min 1000, max 500000) are mirrored by
