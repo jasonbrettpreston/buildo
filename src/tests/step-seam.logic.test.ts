@@ -54,10 +54,10 @@ describe('deriveSeamPairs — derived from converted.json + manifest.json, never
     expect(seam.deriveSeamPairs(byName)).toEqual([]);
   });
 
-  it('the REAL 17-descriptor registry (batch2 row 2.2 cutover, 2026-09-20 — enrich_heritage) yields 9 live pairs (unchanged from the 16-descriptor count): enrich_parcels -> assert_parcel_sanity, link_massing -> enrich_parcels, load_ravines -> enrich_ravines, compute_centroids -> link_massing, link_parcel_addresses -> link_parcels, plus refresh_snapshot\'s 3 declared inputs.reads.steps (assert_parcel_sanity\'s SECOND inputs.reads.steps entry, compute_parcel_cost_estimates, is not itself a converted step, so it contributes zero new pairs — only the enrich_parcels entry resolves to a live producer; enrich_heritage\'s own declared inputs.reads.steps entry, load_heritage, is not itself converted, and no converted descriptor declares enrich_heritage in ITS inputs.reads.steps either — enrich_parcels reads is_heritage_designated but that dependency is undeclared, KNOWN_GAPS.enrich_parcels EH-D4 in src/tests/step-conformance.infra.test.ts — so this registration also contributes zero new pairs)', () => {
+  it('the REAL 18-descriptor registry (batch2 row 2.4 cutover, 2026-09-21 — compute_parcel_cost_estimates) yields 11 live pairs (up from 9): this registration ADDS TWO, in both directions — it is not a zero-pair cutover like enrich_heritage/enrich_ravines\'s pure-leaf conversions', () => {
     const byName = seam.loadConvertedDescriptors();
     expect(Object.keys(byName).sort()).toEqual(
-      ['assert_data_bounds', 'assert_engine_health', 'assert_global_coverage', 'assert_parcel_sanity', 'assert_schema', 'compute_centroids', 'enrich_heritage', 'enrich_parcels', 'enrich_ravines', 'geocode_permits', 'link_massing', 'link_neighbourhoods', 'link_parcel_addresses', 'link_parcels', 'link_wsib', 'load_ravines', 'refresh_snapshot'].sort(),
+      ['assert_data_bounds', 'assert_engine_health', 'assert_global_coverage', 'assert_parcel_sanity', 'assert_schema', 'compute_centroids', 'compute_parcel_cost_estimates', 'enrich_heritage', 'enrich_parcels', 'enrich_ravines', 'geocode_permits', 'link_massing', 'link_neighbourhoods', 'link_parcel_addresses', 'link_parcels', 'link_wsib', 'load_ravines', 'refresh_snapshot'].sort(),
     );
     // enrich_heritage (batch2 row 2.2, cut over 2026-09-20) declares inputs.reads.steps:
     // [{step: 'load_heritage', version_pin: 'exact'}] ONLY — measured from
@@ -137,17 +137,40 @@ describe('deriveSeamPairs — derived from converted.json + manifest.json, never
     // assert_parcel_sanity (batch2 P1.1, cut over 2026-09-18, commit 2e/③) declares
     // inputs.reads.steps: [{step: 'enrich_parcels'}, {step: 'compute_parcel_cost_estimates'}]
     // (LDG-4 — the folded scan reads columns BOTH steps write, not only the cost step's).
-    // Only `enrich_parcels` is itself converted; `compute_parcel_cost_estimates` is not, so
-    // the registration contributes exactly ONE new pair, downstream=assert_parcel_sanity,
-    // which sorts FIRST ('assert_parcel_sanity:enrich_parcels' < 'enrich_parcels:link_massing').
+    // Until batch2 row 2.4's cutover, only `enrich_parcels` was itself converted, so the
+    // registration contributed exactly ONE pair, downstream=assert_parcel_sanity.
+    //
+    // batch2 row 2.4 cutover (compute_parcel_cost_estimates, 2026-09-21) — 9 -> 11 PAIRS,
+    // TWO NEW, in BOTH directions (retiring the earlier "contributes zero new pairs" text,
+    // which was correct only while the slug was unconverted):
+    // (a) DOWNSTREAM: compute_parcel_cost_estimates's own inputs.reads.steps (measured from
+    //     scripts/compute-parcel-cost-estimates.descriptor.json) names enrich_parcels and
+    //     parcels — only enrich_parcels is itself converted, so registering
+    //     compute_parcel_cost_estimates contributes ONE new pair,
+    //     downstream=compute_parcel_cost_estimates.
+    // (b) UPSTREAM: assert_parcel_sanity's ALREADY-DECLARED second inputs.reads.steps entry
+    //     (compute_parcel_cost_estimates, present since 2026-09-18 — see the LDG-4 note
+    //     above) now resolves to a live producer for the first time, contributing a SECOND
+    //     pair with downstream=assert_parcel_sanity. Exactly the same class as
+    //     link_neighbourhoods/geocode_permits below: a cutover can add a seam pair without
+    //     the step itself declaring a new read, purely by completing an EXISTING declared
+    //     edge on the other end.
+    // Sort (deriveSeamPairs's own deterministic `downstream:upstream` localeCompare):
+    // 'assert_parcel_sanity:compute_parcel_cost_estimates' < 'assert_parcel_sanity:enrich_parcels'
+    // (both downstream=assert_parcel_sanity; 'c' < 'e' on the upstream half) — the new pair
+    // sorts FIRST, ahead of the pre-existing one. 'compute_parcel_cost_estimates:enrich_parcels'
+    // (downstream=compute_parcel_cost_estimates) sorts between 'assert_parcel_sanity:*' and
+    // 'enrich_parcels:link_massing' ('c' < 'e' on the downstream half).
     expect(seam.deriveSeamPairs(byName)).toEqual([
+      { upstream: 'compute_parcel_cost_estimates', downstream: 'assert_parcel_sanity' },
       { upstream: 'enrich_parcels', downstream: 'assert_parcel_sanity' },
+      { upstream: 'enrich_parcels', downstream: 'compute_parcel_cost_estimates' },
       { upstream: 'link_massing', downstream: 'enrich_parcels' },
       { upstream: 'load_ravines', downstream: 'enrich_ravines' },
       { upstream: 'compute_centroids', downstream: 'link_massing' },
       // batch-2 I5 (2026-09-16) — sorts here by deriveSeamPairs's own deterministic
       // `downstream:upstream` localeCompare: 'link_neighbourhoods:geocode_permits' falls
-      // between 'link_massing:compute_centroids' and 'link_parcels:link_parcel_addresses'.
+      // between 'link_massing:compute_centroids' and 'link_parcel_addresses:link_parcels'.
       { upstream: 'geocode_permits', downstream: 'link_neighbourhoods' },
       { upstream: 'link_parcel_addresses', downstream: 'link_parcels' },
       { upstream: 'link_massing', downstream: 'refresh_snapshot' },
@@ -266,15 +289,25 @@ describe('runSeamChecks — one row per derived pair', () => {
   // descriptor declares enrich_heritage as a read (enrich_parcels' identical dependency is
   // undeclared — KNOWN_GAPS EH-D4), so the registration contributes zero new pairs/metrics.
   // Registry 16 -> 17 descriptors; live pairs/metrics stay at 9.
+  // compute_parcel_cost_estimates (batch2 row 2.4, cut over 2026-09-21) ADDS TWO — see the
+  // deriveSeamPairs test above for the full both-directions derivation. Registry 17 -> 18
+  // descriptors; live pairs/metrics 9 -> 11. Sort: 'seam_compute_parcel_cost_estimates_
+  // before_assert_parcel_sanity' sorts FIRST (downstream=assert_parcel_sanity, upstream
+  // 'compute_parcel_cost_estimates' < 'enrich_parcels'); 'seam_enrich_parcels_before_
+  // compute_parcel_cost_estimates' sorts between the assert_parcel_sanity pair(s) and
+  // 'seam_link_massing_before_enrich_parcels' (downstream 'compute_parcel_cost_estimates'
+  // < 'enrich_parcels').
   const EXPECTED_SEAM_METRICS = [
+    'seam_compute_parcel_cost_estimates_before_assert_parcel_sanity',
     'seam_enrich_parcels_before_assert_parcel_sanity',
+    'seam_enrich_parcels_before_compute_parcel_cost_estimates',
     'seam_link_massing_before_enrich_parcels',
     'seam_load_ravines_before_enrich_ravines',
     'seam_compute_centroids_before_link_massing',
-    // batch-2 I5 cutover (2026-09-16) — the 7th pair, in deriveSeamPairs's own
-    // `downstream:upstream` sort position. link_neighbourhoods declared this read at ITS
-    // cutover the same day; geocode_permits' registration is what resolves it to a live
-    // producer, which is why a cutover can add a seam pair the converting step never declared.
+    // batch-2 I5 cutover (2026-09-16) — in deriveSeamPairs's own `downstream:upstream` sort
+    // position. link_neighbourhoods declared this read at ITS cutover the same day;
+    // geocode_permits' registration is what resolves it to a live producer, which is why a
+    // cutover can add a seam pair the converting step never declared.
     'seam_geocode_permits_before_link_neighbourhoods',
     'seam_link_parcel_addresses_before_link_parcels',
     'seam_link_massing_before_refresh_snapshot',

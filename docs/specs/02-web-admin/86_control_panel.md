@@ -138,7 +138,7 @@ Create a single React page (or tabbed view) in the Admin dashboard with four dis
 - [ ] **Write Store Tests:** Assert draft mutations, discard rollbacks, and dirty-state tracking in Zustand work flawlessly.
 
 ### Phase 3: Global Platform Logic View
-**Objective:** Build the UI for the universal `logic_variables` (15 at Phase 3 authoring time; 451 as of WF2 "ADMIN-1 ratchet to zero", 2026-09-09 — see §1 note).
+**Objective:** Build the UI for the universal `logic_variables` (15 at Phase 3 authoring time; 451 as of WF2 "ADMIN-1 ratchet to zero", 2026-09-09; **CORRECTED 2026-09-21 (batch-2 row 2.4 cutover, R-AN's spirit)** — the live count is carried by the generated `docs/reference/logic-variables-registry.md` and is not retyped here or above; the 19 `compute_parcel_cost_*` keys this cutover adds join the EXISTING **Cost Tuning**, **Source Ingestion** and **Data Quality Thresholds** admin groups — no new group is created (FOLD-I7) — see §1 note).
 
 - [ ] **Create Layout Shell:** Implement the main Tabs component to switch between Global, Trade, and Matrix views.
 - [ ] **Build `GlobalConfigCard.tsx`:** Group variables logically into UI sections using Shadcn Cards: Scoring (divisors, multipliers, penalties), Timing (thresholds, windows), and Geography/Cost (coverage ratios, liar gate).

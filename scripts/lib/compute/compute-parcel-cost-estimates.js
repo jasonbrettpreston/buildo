@@ -412,6 +412,7 @@ async function computePostPhase(pool, { passRaw, config, runAt }) {
       cost_rates_stale: ratesStaleCode,
       cost_rates_stale_detail: ratesFuture ? 'future_dated' : ratesStale,
       cost_rates_age_months: ratesAgeMonths,
+      cost_index_age_months: indexAgeMonths,
       cost_index_stale: indexStaleCode,
       cost_index_stale_detail: indexAgeMonths === null ? 'undatable' : indexStale,
       cost_escalation_index: indexMissing ? null : Number(config.cost_escalation_index),
@@ -446,6 +447,18 @@ async function computePostPhase(pool, { passRaw, config, runAt }) {
 
 function residential_parcels_examined(ctx) {
   ctx.report('residential_parcels_examined', { value: ctx.matched.residential_parcels_examined });
+}
+// CPCE-D4 CLOSED (O3, 2026-09-21) — restored. Both counters were computed into ctx.matched but
+// never reported by any check, so the audit table (and records_meta) silently dropped them —
+// a behaviour change from the legacy, which carried both as INFO-only audit rows (value, no
+// threshold; PRE golden: fsi_implausible_count=0, new_build_fallback_count=0). severity:"INFO"
+// on both descriptor entries means verdict.js's checkRow forces status=INFO regardless of the
+// (always-true) value_min bound — matching the legacy's non-verdict-affecting observability.
+function fsi_implausible_count(ctx) {
+  ctx.report('fsi_implausible_count', { value: ctx.matched.fsi_implausible_count });
+}
+function new_build_fallback_count(ctx) {
+  ctx.report('new_build_fallback_count', { value: ctx.matched.new_build_fallback_count });
 }
 function engine_error_count(ctx) {
   ctx.report('engine_error_count', { value: ctx.matched.engine_error_count });
@@ -507,6 +520,8 @@ function line_coverage_addition(ctx) {
 
 const CHECKS = {
   residential_parcels_examined,
+  fsi_implausible_count,
+  new_build_fallback_count,
   engine_error_count,
   cost_rates_stale,
   cost_index_stale,
@@ -560,7 +575,13 @@ function buildCostMeta(ctx) {
     fit_gated_garage_count: m.fit_gated_garage_count,
     cost_escalation_index: m.cost_escalation_index,
     cost_rates_age_months: m.cost_rates_age_months,
-    cost_index_age_months: undefined,
+    // O2 CLOSED (2026-09-21) — restored. This was silently dropped (`undefined`, so JSON
+    // serialization erased the key) while the assessment falsely claimed it was "renamed to
+    // cost_rates_age_months" — a different value (rates freshness != index freshness; both
+    // happened to read 2 in the 2026-09-21 snapshot, masking the divergence). Legacy semantics:
+    // months since logic_variables.cost_escalation_index's own version stamp, distinct from
+    // cost_rates_age_months (archetype_cost_rates freshness).
+    cost_index_age_months: m.cost_index_age_months,
     rates_max_as_of_date: m.rates_max_as_of_date,
     unmapped_residential_family_fallback_count: m.unmapped_residential_family_fallback_count,
     cost_by_zone: m.cost_by_zone,

@@ -60,10 +60,15 @@ severity-port row repositioning, `ledger_row`/`terminal` appear) or Class C (re-
 `duration_ms`, `stdout_lines` timing text, `sys_*`). Class B (data drift) and Class D
 (capture-order) are both empty, as required.
 
-### §6.5 explained-diff citations (both chains, 133+134=267 total diffs, all Class A/C)
+### §6.5 explained-diff citations (both chains, 137+138=275 total diffs, all Class A/C — RE-DERIVED 2026-09-21 after the O1–O4 output-panel peel, superseding the commit-② version of this section)
 
-Every one of the 267 PRE-vs-POST diffs, by field, explicitly named here so none is silently
-waved through:
+The commit-② version of this section made a FALSE claim (`cost_index_age_months` "renamed" into
+`cost_rates_age_months`) — O2 found and closed it (CPCE, see "Real defect found and fixed" below).
+This section is regenerated from a fresh mechanical PRE-vs-POST comparison run AFTER the O1–O4
+fixes and the POST golden recapture, via `node scripts/analysis/capture-step-golden.js
+--compare=<pre>,<post>` plus the dedicated `scripts/analysis/compute-parcel-cost-keyset-diff.mjs`
+(records_meta + audit_table.rows key-set diff, both arms). Every one of the 275 PRE-vs-POST diffs,
+by field, explicitly named here so none is silently waved through:
 
 - **`invariants`** (2 differences, both chains): PRE captured 0 declared invariants (the legacy
   descriptor-free capture derives none); POST captures the 2 new `invariants[]` entries
@@ -78,34 +83,90 @@ waved through:
   cols) vs the legacy's 6 (it inlined the 3 declared config-var NAMES as extra read-list
   entries); a declared-honest narrowing, not a data loss — `emitMeta`'s reads list is now the
   ACTUAL SQL SELECT columns only.
-- **`rows`** (`summary.records_meta.audit_table.rows[22..32]`, 11 differences per chain): the
-  audit-row SET differs in composition (severity-port renames — `cost_rates_stale`/
-  `cost_index_stale` move from bare boolean rows to `{value,detail}` object-scored rows;
-  `unmapped_residential_family_fallback_count`, `records_updated`, `records_skipped`, `dry_run`
-  retire as their own rows since `dry_run` no longer exists (RULED) and the other two are now
-  top-level `records_meta` keys, not audit rows) — declared, explained above and in the
-  Fold-ID table.
-- **`checks_failed`** / **`checks_warned`** (1 difference each, both chains): NEW top-level
-  `records_meta` keys the converted runner always stamps (`checks_passed:"all"`,
-  `checks_failed:0`, `checks_warned:0` on the clean PASS run) — the legacy never emitted these.
-- **`cost_index_age_months`** (1 difference, both chains): renamed — the converted form emits
-  the same value under `cost_rates_age_months` only (the index-age companion collapsed into the
-  `cost_index_stale` check's own `detail`, per the severity-port fix above); a declared rename,
-  not a data loss.
+- **`step`** (1 difference, both chains): the PRE capture's `step` field reads
+  `../buildo-legacy-2_4/scripts/compute-parcel-cost-estimates.js` (the legacy worktree path used
+  for commit ①'s capture) vs POST's `scripts/compute-parcel-cost-estimates.js` (main tree) — pure
+  Class D capture-provenance noise, not a behaviour diff.
+- **`audit_table.name`** (1 difference, both chains): the legacy's audit-table display name
+  `"Parcel Cost Estimation"` vs the converted descriptor's declared `"Parcel Renovation Cost
+  Model"` — a declared cosmetic rename (`identity.display_name`), not a data change.
+- **`audit_table.phase`** (1 difference, both chains) — **O1 RULED, closed this peel.** PRE
+  reads `88` (the legacy's owning-spec-number convention); POST reads `1`
+  (`sharing.varies_by_chain.phase.sources`), the fleet-standard chain-phase-index renumbering
+  every converted ENRICHER/LINK sibling undergoes at conversion (grounded against `enrich_heritage`
+  62→13 and `enrich_ravines` 60→12's own PRE/POST goldens). See `descriptor.deviations[]` (the O1
+  entry) and Spec 88's new "Implementation reconciliation (as-built)" section.
+- **`audit_table.rows[N].metric`/`.source`/`.status`/`.threshold`/`.value`** (`summary.records_meta.audit_table.rows[22..32]` and their fields, ~40 differences per chain — the bulk of the diff count, arising from BOTH a genuine composition change AND every row after the insertion point shifting array index by +2): the audit-row SET differs in composition —
+  - `fsi_implausible_count`/`new_build_fallback_count` (O3, CPCE-D4 CLOSED this peel): were
+    computed but unreported at the first POST capture (0 rows); now present as INFO rows at
+    array positions 1/2 (right after `residential_parcels_examined`), matching the legacy's own
+    row ordering and semantics exactly (an audit row, never a `records_meta` flat key).
+  - `cost_rates_stale`/`cost_index_stale` move from bare boolean rows to `{value,detail}`
+    object-scored rows (severity-port fix, see "Real defect found and fixed" below) — same
+    observable, richer declared shape.
+  - `unmapped_residential_family_fallback_count`, `records_updated`, `records_skipped`, `dry_run`
+    retire as their own audit rows: `dry_run` no longer exists (RULED retired), and the other
+    three are now top-level `records_meta` keys instead — declared relocation, not a data loss.
+  - Every row's array INDEX shifts by the count of rows inserted/removed before it — this is a
+    structural array-index effect of the composition changes above, not an independent semantic
+    diff; **2 differences?** no — every index-shift row is already accounted for by one of the
+    named composition changes.
+- **`checks_failed`** / **`checks_passed`** / **`checks_warned`** (1 difference each, both
+  chains): NEW top-level `records_meta` keys the converted runner always stamps
+  (`checks_passed:"all"`, `checks_failed:0`, `checks_warned:0` on the clean PASS run) — the
+  legacy never emitted these.
+- **`cost_index_age_months`** (0 residual diffs — CLOSED, not a rename) — **O2 RULED, closed this
+  peel.** The commit-② capture's `buildCostMeta` set this key to `undefined` (JSON-serialized
+  away), and the commit-② version of THIS section falsely claimed it was "renamed to
+  `cost_rates_age_months`" (a different value — rates freshness vs index freshness; both
+  happened to read `2` in the 2026-09-21 snapshot, masking the divergence). Restored to its own
+  legacy semantics (`indexAgeMonths`, distinct from `ratesAgeMonths`); the fresh mechanical
+  key-set diff (`compute-parcel-cost-keyset-diff.mjs`) confirms it is now `in_both` PRE and POST
+  with no value diff, at both arms.
 - **`pool_errors`** (1 difference, both chains): a NEW runner-injected `records_meta.pool_errors`
   key (always `0` on a clean run) — standard converted-shell telemetry the legacy never had.
 - **`rates_max_as_of_date`** (1 difference, both chains): moved from an audit_table row into a
   top-level `records_meta.rates_max_as_of_date` key — same value, declared relocation.
 - **`row_limit`** (1 difference, both chains): the legacy's `--limit=N` CLI flag is RULED
   RETIRED (dry-run/force-full retirement, `override.dry_run:"none"`) — the converted form emits
-  no `row_limit` key at all, since the concept no longer exists.
+  no `row_limit` key at all, since the concept no longer exists. The stale `row_limit` entry
+  previously left in `descriptor.emits[]` (contradicting this same retirement) is removed this
+  peel (O2).
 - **`unmapped_residential_family_fallback_count`** (1 difference, both chains): moved from an
   audit_table row into `records_meta.unmapped_residential_family_fallback_count` (top-level) —
-  same structurally-0 value (§7's vacuous-counter finding), declared relocation, not a data loss.
+  same structurally-0 value (§7's vacuous-counter finding, CPCE-D3), declared relocation, not a
+  data loss.
+- **`config`** (1 difference, both chains): a NEW top-level `records_meta.config` object (all 19
+  declared logic variables' resolved values, stamped every run) — standard converted-shell
+  observability (Rule 1 "nothing hidden"), the legacy never emitted a config snapshot.
+- **`cost_by_zone`** (1 difference, both chains): a NEW top-level `records_meta.cost_by_zone`
+  per-zone reporting block (7 named zones + `other`, each with `parcels`/`menus`/`empty_menus`/
+  `p50_cost_fb`/`max_cost_gut`) — a genuine Class A addition (§7 Reality-Check ask), not present
+  in the legacy at all.
+- **`ledger_row`** / **`terminal`** (1 difference each, both chains): NEW top-level
+  `records_meta` keys the converted runner always stamps (`ledger_row:"chain_owned"` or
+  `"owned"`, `terminal:"priced"`) — standard converted-shell state-machine observability, the
+  legacy had no equivalent concept.
+- **`records_updated`** (1 difference, both chains, `summary.records_meta.records_updated` —
+  distinct from the audit-row relocation of the same name already covered above): a NEW
+  top-level `records_meta.records_updated` key mirroring `summary.records_updated` — standard
+  converted-shell redundancy, always present, same value both places.
 - **`pipeline_runs`** (`standalone.json:pipeline_runs[0]`, 1 difference, standalone only): the
   legacy standalone capture's OWN `pipeline_runs` ledger row differs in shape from the converted
   form's row (new `ledger_row`/`terminal`/`chain_run_id` keys per the generic runner contract,
   Class A) — same run-completion fact, richer declared shape.
+
+**Mechanical key-set diff, independent confirmation (`compute-parcel-cost-keyset-diff.mjs`, both
+arms, run 2026-09-21 post-recapture):** `records_meta` — 2 keys only-in-legacy (`dry_run`,
+`row_limit`, both retired by ruling), 12 keys only-in-converted (all named above: `chain_run_id`,
+`checks_failed`, `checks_passed`, `checks_warned`, `config`, `cost_by_zone`, `ledger_row`,
+`pool_errors`, `rates_max_as_of_date`, `records_updated`, `terminal`,
+`unmapped_residential_family_fallback_count`), 15 keys in both (incl. `cost_index_age_months`,
+confirming O2's fix). `audit_table.rows` — 14 metrics only-in-legacy (all named above or in the
+Fold-ID table), 7 only-in-converted (the 3 `compute_parcel_cost_*` bound checks + the 2 new
+invariant rows + their 2 `sys_*_duration_ms` timing rows), 20 in both (incl.
+`fsi_implausible_count`/`new_build_fallback_count`, confirming O3's fix). No unexplained key on
+either side.
 
 ### Real defect found and fixed during POST capture
 
@@ -121,6 +182,55 @@ was measuring the WRONG thing (98.2%, `parcels_with_menu_pct`'s own metric — "
 line" — not var 17's intended "parcel_cost_menu IS NOT NULL" write-completeness floor, ~100%);
 fixed with a dedicated live query. Both fixes are in `scripts/lib/compute/compute-parcel-cost-estimates.js`
 and `scripts/compute-parcel-cost-estimates.descriptor.json`; POST re-captured clean (PASS).
+
+### Output-panel peel (O1–O4) — 2026-09-21, commit 2c + cutover ③
+
+Coordinator-directed peel on the commit-② output panel (Guardian PASS, Reality-Check PASS — DB
+back at baseline `21ac2f1c…` — Observability 2 FAILs, plus CPCE-D4 found while LW-D16's root-cause
+fix unblocked the `.db.test.ts` suite for the first time). All four items closed:
+
+- **O1 — `audit_table.phase` silently changed 88 → 1, undeclared and misdescribed.** RULED: the
+  fleet standard (grounded against `enrich_heritage` 62→13 and `enrich_ravines` 60→12's own
+  PRE/POST goldens, plus 10 further converted descriptors all carrying a small chain-index
+  integer in the same field, none a spec/lock number) is to renumber `phase` to the CHAIN PHASE
+  INDEX. `1` (`sharing.varies_by_chain.phase.sources`) CONFORMS to that standard — not a new
+  departure. Declared: a new `deviations[]` entry (§6.5 above cites it), `identity.why_lock`'s
+  false trailing sentence corrected, Spec 88's header line + new as-built section corrected.
+- **O2 — `cost_index_age_months` silently dropped; the assessment's own claim it was "renamed"
+  was false.** `buildCostMeta` set it to `undefined` (erased by JSON serialization); the legacy
+  key/semantics (`indexAgeMonths`, distinct from `cost_rates_age_months`) are restored. The
+  stale `row_limit` entry in `descriptor.emits[]` (contradicting the already-declared dry-run
+  retirement) is removed.
+- **O3 — CPCE-D4 (HIGH): `new_build_fallback_count`/`fsi_implausible_count` computed but
+  observable nowhere.** Both restored as INFO `checks[]` entries dispatching into the audit
+  table, matching the legacy's own shape exactly (an audit row, never a `records_meta` flat key
+  — the legacy never put them there either). The `it.fails('CPCE-D4 …')` pin in
+  `compute-parcel-cost-estimates.db.test.ts` flips to a plain passing `it` (folded into the WF3
+  fallback test + a new dedicated `fsi_implausible_count` test); both green live
+  (`BUILDO_TEST_DB=1`, 6/6). Defect-ledger CPCE-D4 CLOSED; `review_followups.md` row CLOSED.
+  Mechanical PRE-vs-POST `records_meta` + `audit_table.rows` key-set diff run both arms (§6.5
+  above) — every difference accounted for, no omissions.
+- **CPCE-D5 (found during O-peel verification, not separately requested — a genuine defect the
+  O1–O3 work surfaced, not manufactured to pad the count):** `counters.records_new.source` was
+  declared as the literal string `"null"` — schema-valid but semantically wrong (COUNTER-ROOT,
+  fast invariant #26, rejects it as an unresolvable root for shape `"enrich"`). Latent since
+  commit ① because COUNTER-ROOT only scans `converted.json`'s `converted[]` array, and this
+  descriptor stayed in `pending[]` until cutover ③ — the FIRST time COUNTER-ROOT ever evaluated
+  it. Every sibling ENRICHER that inserts nothing (`enrich_heritage`, `enrich_ravines`,
+  `geocode_permits`, `enrich_parcels`) declares this counter as
+  `matched.compute.records_new_aggregate` (a finite-literal-0, already returned by
+  `computePostPhase`'s own `compute:` block) — corrected to match. CLOSED same commit;
+  `defect-ledger.md` CPCE-D5 row added.
+- **O4 — recapture + re-verify.** POST goldens recaptured (`--overwrite`, both arms): table_state
+  hash `21ac2f1c…` unchanged from baseline both times; `source_fingerprint` matches the current
+  tree (`golden-fingerprint.infra.test.ts` 63/63 green). `--compare` re-run both arms (137+138=275
+  diffs, all explained, §6.5 above). R-AS differential converted arm re-run from the committed
+  cohort artifacts: baseline `21ac2f1c26727e8b6be58fe8b68c3ac5` → perturbed
+  `cf48e1b8f6019e74a575fdf379728a81` → `records_updated: 1006` (exact) → post-run hash back to
+  `21ac2f1c26727e8b6be58fe8b68c3ac5` (baseline) → negative control 0 touched → PASS (numbers
+  identical to the commit-② run, confirming the O1–O3 fixes are write-behaviour-neutral).
+  `step-validate.mjs --step=compute_parcel_cost_estimates --write` and the full step's test
+  suite (incl. `.db.test.ts`, `BUILDO_TEST_DB=1 --no-file-parallelism`) re-run clean.
 
 ## R-AS committed-perturbation differential — BOTH ARMS PASSED
 
@@ -248,24 +358,31 @@ by numeric prefix — `205` the filename number was the exact guessed-value defe
   correctly written and lint-clean but **not independently verified green in this session** —
   blocked by the pre-existing LW-D16 environment gap, documented above, not a defect in this
   conversion.~~ **RESOLVED 2026-09-21** (WF3 "LW-D16 root cause"): the environment gap is fixed
-  at its root and all 20 cases now execute — 19 green + 1 `it.fails` pinning CPCE-D4, a genuine
-  observability defect in THIS conversion that the blocked cases had been hiding.
+  at its root and all 20 cases now execute. **FURTHER RESOLVED same day (O3 output-panel peel):**
+  the one `it.fails` case pinning CPCE-D4 is now a plain passing `it` — all 21 (14 violations +
+  6 estimates + 1 kill-mid-run) green.
 - `docs/reports/defect-ledger.md` now carries CPCE-D1/D2/D3 (the rates-vs-index asymmetry, the
-  2 orphan menus, the vacuous fallback counter) — `docs/reports/review_followups.md` was **not**
-  additionally updated (the ledger rows above are the primary record).
+  2 orphan menus, the vacuous fallback counter), CPCE-D4 (CLOSED — observability restoration,
+  O3) and CPCE-D5 (CLOSED — `counters.records_new.source` fix, found during the O-peel's own
+  verification) — `docs/reports/review_followups.md` carries the D4 close + the new Spec 88
+  D1–D8 prose-reconciliation followup (filed, not built).
 - The red-suite `it.fails()` → `it()` flip was not staged as two literal separate commits with
   the file toggling mid-sequence (commit ① / ② land the test file in its final state directly,
-  except the one genuinely cutover-only case) — a deviation from the letter of the compressed-form
-  choreography, not its substance.
-- No git commits made as of this report's last edit; see the handback message for final state.
+  except the one genuinely cutover-only case, which itself flipped at cutover ③) — a deviation
+  from the letter of the compressed-form choreography, not its substance.
+- Cutover ③ landed the same day as commits ①/②/2c (compressed programme cadence, coordinator-
+  directed) rather than in a later session — see the handback message for the final commit
+  hashes and the full O1–O4 + cutover accounting.
 
 ---
 
 ## §R. Reflection
 
-Written this commit — `converted.json.pending[0].stage` reached `shape_clean`; cutover (commit
-③) is prepared conceptually (§0.7 spec diffs, the three cutover-only fleet locks) but not built,
-per the plan's own scope boundary for this session (commits ①–② only).
+Updated 2026-09-21 (cutover ③, same-day compressed cadence): `converted.json.converted[]` now
+carries `scripts/compute-parcel-cost-estimates.js` (18th entry, `pending[]` empty); the three
+cutover-only fleet locks (step-seam 9→11 pairs, step-schema ENRICHER list 4→5, step-conformance
+KNOWN_GAPS) are landed and green; Spec 88/43/47/86's owner-spec sync is landed (as-built section
++ D1–D8 recorded, not yet closed in prose).
 
 **LOW-CONFIDENCE findings** (measured this session, not fully closed):
 
@@ -308,12 +425,12 @@ converted step runs, and both independently restore it to the exact same baselin
 | G3 | 0 | 2 | no PH-3/Intent Ledger section found |
 | G4 | 0 | 2 | risk-class row with chance+impact found=false |
 | G5 | 0 | 1 | no PH-5/Seam map section found |
-| G6 | 3 | 3 | 3 ledger row(s), 0 without CLOSED/PIN () |
+| G6 | 3 | 3 | 5 ledger row(s), 0 without CLOSED/PIN () |
 | G7 | 3 | 3 | file=true fences=0 it-count=22 RED-evidence=true |
 | G8 | 3 | 3 | missing-invocations=0 missing-pre-invocations=0 stale-fingerprints=0 unexplained-diffs=0 |
 | G9 (binary) | PASS | — | heading=true low-confidence-table=true recurring-table=true |
 | G4d (fence<=lock) | PASS | — | fences=0 lock-it-count=22 |
-| G-shape | PASS | — | file-clean=null compute-clean=true |
+| G-shape | PASS | — | file-clean=true compute-clean=true |
 
 ### Fast invariants (always run — the fast descriptor gate)
 
@@ -329,24 +446,24 @@ converted step runs, and both independently restore it to the exact same baselin
 | 4 | (registry) | PASS | overlap: none |
 | 5 | (registry) | PASS | clean (0 it.fails( call sites outside a declared pending slug) |
 | 9 | (registry) | PASS | clean (0 converted slugs blocked by an unmet cutover_prereq item; blocks batching: 0) |
-| 22 | (registry) | PASS | GOLD-PRE-FRESH: 64 PRE capture(s) across 17 converted step(s) all tracked + clean (git can restore every reference) |
-| 23 | (registry) | PASS | COMPRESSED-FORM-ELIGIBLE: 1 compressed-form declaration(s), all eligible (proven archetype, >=2 converted members) |
-| 24 | (registry) | PASS | COMPRESSED-FORM-DEFAULT: 1 eligible pending slug(s), all either compressed or carry a stated full-form reason |
-| 25 | (registry) | PASS | ARCHETYPE-PARITY: 17 converted slug(s) — 9 compared against a retained census row (all agree), 8 with no retained row (census arm n/a, pre-R-AO cutovers); every archetype has a declared freeze profile |
-| 26 | (registry) | PASS | COUNTER-ROOT: 38 declared counter source(s) across 13 descriptor(s) all root in their own shape's counterScope (+ records_meta) |
+| 22 | (registry) | PASS | GOLD-PRE-FRESH: 66 PRE capture(s) across 18 converted step(s) all tracked + clean (git can restore every reference) |
+| 23 | (registry) | PASS | COMPRESSED-FORM-ELIGIBLE: not applicable (0 pending slugs declare the compressed form) |
+| 24 | (registry) | PASS | COMPRESSED-FORM-DEFAULT: not applicable (0 pending slugs whose archetype is eligible) |
+| 25 | (registry) | PASS | ARCHETYPE-PARITY: 18 converted slug(s) — 10 compared against a retained census row (all agree), 8 with no retained row (census arm n/a, pre-R-AO cutovers); every archetype has a declared freeze profile |
+| 26 | (registry) | PASS | COUNTER-ROOT: 41 declared counter source(s) across 14 descriptor(s) all root in their own shape's counterScope (+ records_meta) |
 
 ### Captures (item iv)
 - missing invocations (POST): none
 - missing invocations (PRE, GOLD-PRE): none
 - stale fingerprints: none
-- compare ran: true · diffs found: 267 · unexplained: 0
+- compare ran: true · diffs found: 275 · unexplained: 0
 
 ### Test suite (item iii)
-- 1304/1321 passed (suite success=false)
+- 1320/1338 passed (suite success=false)
 - harvested: 23 file(s) from 3 FLEET-WIDE targets (src/tests/step-conformance.infra.test.ts, src/tests/golden-fingerprint.infra.test.ts, src/tests/steps/) — one spawn per run, so every step's report carries this same number, by design
 - excluded (R-AG live-DB tier, owned by `npm run test:db`, derived from package.json `scripts.test`): 5 — src/tests/steps/link_massing/metamorphic.test.ts, src/tests/steps/link_massing/nearest-determinism.test.ts, src/tests/steps/link_massing/rung1-inline-wkt.test.ts, src/tests/steps/link_parcel_addresses/metamorphic.test.ts, src/tests/steps/link_parcel_addresses/rung1-inline-wkt.test.ts
 - skipped (declared but not run): 0
-- failing (17):
+- failing (18):
   - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/quality/assert-schema.js (slug "assert_schema") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
   - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/load-ravines.js (slug "load_ravines") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
   - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/link-massing.js (slug "link_massing") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
@@ -364,6 +481,7 @@ converted step runs, and both independently restore it to the exact same baselin
   - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/quality/assert-parcel-sanity.js (slug "assert_parcel_sanity") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
   - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/enrich-ravines.js (slug "enrich_ravines") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
   - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/enrich-heritage.js (slug "enrich_heritage") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/compute-parcel-cost-estimates.js (slug "compute_parcel_cost_estimates") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
 
 ### Policy coverage matrix (item vi) — Spec 124 Rules 1-13
 
@@ -382,7 +500,7 @@ converted step runs, and both independently restore it to the exact same baselin
 | 11 | Phase-order re-derive (declared half, checkOrderGuaranteesCited) | enforced-green | no when:"pre_write" checks — vacuously nothing to cite — G-3 completeness half stays open |
 | 12 | Truthful crash posture (R-B reachability, static + R-M before-image) | enforced-green | R-B (checkInterruptedPostureTruthful): recovery.interrupted="none" — no reachability claim to verify · R-M: prose-only (R-M/LG-17 describe not scoped to this step (vitest not run, or no before-image target)) |
 | 13 | A step validates itself | enforced-green | this run of step:validate IS the mechanism |
-| P3 | I/O cost adjudication (measured, not gated) | measured | descriptor=35616B notes=0B checks=20 rows records_meta=5552B (newest post/ capture) |
+| P3 | I/O cost adjudication (measured, not gated) | measured | descriptor=39381B notes=0B checks=22 rows records_meta=5789B (newest post/ capture) |
 
 **Enforced-green: 13/14**
 

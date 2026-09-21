@@ -136,7 +136,7 @@ describe.skipIf(!dbAvailable())('Spec 88 compute-parcel-cost-estimates — live 
     expect(menu.kitchen.norm_basis).toBe('n/a');
   }, 60_000);
 
-  it('WF3: new_build (cost_fb_total) prices opt_aor_gfa; NULL opt_aor → envelope fallback', async () => {
+  it('WF3: new_build (cost_fb_total) prices opt_aor_gfa; NULL opt_aor → envelope fallback + counted (CPCE-D4 CLOSED)', async () => {
     // (a) opt_aor 250 ≠ max_buildable 300 → the max_build line prices 250, not the envelope.
     await insParcel(pool, P(5), { opt_aor_gfa_sqm: 250, max_buildable_gfa_sqm: 300 });
     // (b) opt_aor NULL → COALESCE falls back to the max-build envelope (300).
@@ -144,8 +144,16 @@ describe.skipIf(!dbAvailable())('Spec 88 compute-parcel-cost-estimates — live 
 
     const s = await runStep(pool);
     expect(s.records_meta.engine_error_count).toBe(0);
-    // The OBSERVABILITY half of this case — `new_build_fallback_count` — is pinned
-    // separately below (CPCE-D4): the counter is computed and then dropped.
+    // CPCE-D4 CLOSED (O3, 2026-09-21) — the OBSERVABILITY half of this case is now a real
+    // audit-table row (matching legacy's own shape: an INFO row, never a records_meta flat key
+    // — legacy never had one either, per docs/reports/golden/compute_parcel_cost_estimates/pre/
+    // standalone.json's records_meta key list).
+    const fallbackRow = s.records_meta.audit_table.rows.find(
+      (r: { metric: string }) => r.metric === 'new_build_fallback_count',
+    );
+    expect(fallbackRow).toBeTruthy();
+    expect(fallbackRow.value).toBeGreaterThanOrEqual(1); // P(6) used the fallback
+    expect(fallbackRow.status).toBe('INFO');
 
     const rowA = (await pool.query(
       `SELECT parcel_cost_menu, cost_fb_total, max_build_fsi FROM parcels WHERE id = $1`, [P(5)],
@@ -161,27 +169,23 @@ describe.skipIf(!dbAvailable())('Spec 88 compute-parcel-cost-estimates — live 
     expect(Number(rowB.cost_fb_total)).toBeCloseTo(4844 * 300, 0);
   }, 60_000);
 
-  // CPCE-D4 (found 2026-09-21, the FIRST time this file ever executed — LW-D16 had made
-  // every `.run({pool})` case in it refuse on contact). `newBuildFallbackCount` is measured
-  // by the compute and placed on `ctx.matched` (scripts/lib/compute/compute-parcel-cost-estimates.js:401)
-  // — and then goes NOWHERE: `buildCostMeta` (same file, ~:548) omits it from records_meta,
-  // and no `checks[]` entry reports it, so it reaches neither the run's records_meta nor its
-  // audit table. The PRE-conversion step emitted it as an audit row
-  // (`docs/reports/golden/compute_parcel_cost_estimates/pre/standalone.json` — `new_build_fallback_count`
-  // is in `audit_table.rows`; the POST capture has it in neither place), so this is lost
-  // observability across the conversion, not a never-built feature. Spec 88 §7 lists it among
-  // the rows "ALWAYS emitted incl. value:0". `fsi_implausible_count` was dropped the same way.
-  //
-  // `it.fails()` — the repo's pinned-defect convention: it passes while the counter is
-  // unobservable and REDS the moment the step starts emitting it, which is the signal to
-  // delete this case and restore the assertion to the test above. NOT fixed in this WF3:
-  // changing what a converted step emits is a Rule-1 observability change needing its own
-  // plan, panel and golden recapture (reported as a STOP finding, filed HIGH in
-  // docs/reports/review_followups.md + docs/reports/defect-ledger.md).
-  it.fails('CPCE-D4 [pinned defect] new_build_fallback_count is computed but observable NOWHERE', async () => {
+  // CPCE-D4 CLOSED (O3, 2026-09-21). Was: `newBuildFallbackCount`/`fsiImplausibleCount` were
+  // measured into `ctx.matched` but reached neither records_meta nor the audit table (no
+  // checks[] entry reported them) — a real observability regression vs the legacy, which
+  // carried both as INFO audit rows (`docs/reports/golden/compute_parcel_cost_estimates/pre/
+  // standalone.json`). Fixed: two new `checks[]` entries (severity INFO, matching legacy's
+  // non-verdict-affecting status) dispatch `fsi_implausible_count`/`new_build_fallback_count`
+  // into the audit table — see the assertion folded into the test above (same fixture,
+  // same case; a separate it.fails() case is no longer needed once the assertion is live).
+  it('fsi_implausible_count audit row is present and INFO (CPCE-D4 CLOSED)', async () => {
     await insParcel(pool, P(7), { opt_aor_gfa_sqm: null, max_buildable_gfa_sqm: 300 });
     const s = await runStep(pool);
-    expect(s.records_meta.new_build_fallback_count).toBeGreaterThanOrEqual(1);
+    const fsiRow = s.records_meta.audit_table.rows.find(
+      (r: { metric: string }) => r.metric === 'fsi_implausible_count',
+    );
+    expect(fsiRow).toBeTruthy();
+    expect(fsiRow.status).toBe('INFO');
+    expect(typeof fsiRow.value).toBe('number');
   }, 60_000);
 
   it('IS-DISTINCT-FROM idempotency: a clean re-run updates 0 parcels', async () => {

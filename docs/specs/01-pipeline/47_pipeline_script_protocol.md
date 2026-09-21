@@ -1972,7 +1972,7 @@ and registry-vs-code agreement.
 | **78** | `scripts/compute-build-norms.js` | 5 — Compute (Spec 78) | YES — `computed_at` |
 | **93** | `scripts/compute-phase-calibration.js` | 5 — Compute | YES — `computed_at` |
 | **195** | `scripts/compute-storey-norms.js` | 5 — Compute (Spec 195/neighbourhood_storey_norms) | YES — `computed_at` |
-| **117** | `scripts/compute-parcel-cost-estimates.js` | 5 — Compute (Spec 88) — owning-spec lock 88 taken by classify-permits; 117 = next-free per the compute-phase-calibration precedent | YES — `computed_at` |
+| **117** | `scripts/compute-parcel-cost-estimates.js` | 5 — Compute (Spec 88) — owning-spec lock 88 taken by classify-permits; 117 = next-free per the compute-phase-calibration precedent | **CORRECTED 2026-09-21 (batch-2 row 2.4 cutover)** — NO. Re-measured against `scripts/lib/compute/compute-parcel-cost-estimates.js`: `pipeline.getDbTimestamp` reads the DB clock into `RUN_AT` for elapsed-time bookkeeping only; no `computed_at` column exists on `parcels` and none is written. The prior `YES — computed_at` entry was never verified against the code. |
 | **107** | `scripts/quality/assert-parcel-sanity.js` | 6 — Quality (WF2; reuses the freed 107 slot, ex-assert-pre-permit-aging Phase G) | NO — read-only probe |
 | **4201** | `scripts/link-coa-to-parcels.js` | Phase D Wave 4 — CoA (Spec 42 §6.8 allocation 4201–4205) | YES — `parcel_linked_at` |
 | **4202** | `scripts/classify-coa-scope.js` | Phase D Wave 4 — CoA (Spec 42 §6.8) | YES — `scope_classified_at` |

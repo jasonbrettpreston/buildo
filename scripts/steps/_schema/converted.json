@@ -67,15 +67,7 @@
     "partial stages."
   ],
   "contract_version": 1,
-  "pending": [
-    {
-      "file": "scripts/compute-parcel-cost-estimates.js",
-      "registers_at": "commit 3",
-      "reason": "Batch-2 row 2.4 (compute_parcel_cost_estimates, ENRICHER 5/5, COMPRESSED). Descriptor + compute + frozen shell + seeds land in this pass's commit ②; converted.json registration + the three cutover-only fleet locks (step-seam 9→11 pairs, step-schema ENRICHER list 4→5, step-conformance KNOWN_GAPS) are deferred to commit ③ (cutover), per Spec 124 R-K.",
-      "declared": "2026-09-21",
-      "stage": "shape_clean"
-    }
-  ],
+  "pending": [],
   "converted": [
     "scripts/quality/assert-schema.js",
     "scripts/load-ravines.js",
@@ -93,6 +85,7 @@
     "scripts/geocode-permits.js",
     "scripts/quality/assert-parcel-sanity.js",
     "scripts/enrich-ravines.js",
-    "scripts/enrich-heritage.js"
+    "scripts/enrich-heritage.js",
+    "scripts/compute-parcel-cost-estimates.js"
   ]
 }

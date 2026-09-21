@@ -214,7 +214,9 @@ describe('measured counts — independently re-derived, not transcribed from the
     // rows the roadmap still treats as pending work, and a converted row is no longer that.
     // 0 -> 1 at batch-2 row 2.4 commit ② (2026-09-21): compute_parcel_cost_estimates' census
     // row flipped batch "C5" -> "pending", the same move enrich_heritage made at its commit 1.
-    expect(pendingBatch.size).toBe(1);
+    // 1 -> 0 at the row 2.4 CUTOVER (commit 3, 2026-09-21): the row is RETAINED with
+    // `status: "converted"` (Spec 124 R-AO) rather than deleted, same as every prior cutover.
+    expect(pendingBatch.size).toBe(0);
     expect(c6.size).toBe(36);
     expect(c4.size + c5.size + c6.size).toBe(remaining.length);
   });
@@ -398,7 +400,7 @@ describe('buildRoadmap() — totality over the real committed data (HIGH-1: slug
     }
   });
 
-  it('HIGH-1 + R-AP: the 3 declared exemptions (inspections, coa_documents, reconcile) are NOT silently dropped — 68 total manifest slugs = 17 converted + 0 pending + 3 exempted + 48 remaining', async () => {
+  it('HIGH-1 + R-AP: the 3 declared exemptions (inspections, coa_documents, reconcile) are NOT silently dropped — 68 total manifest slugs = 18 converted + 0 pending + 3 exempted + 47 remaining', async () => {
     const mod = (await import(pathToFileURL(GENERATOR).href)) as unknown as RoadmapModule;
     const args = await loadRealArgs(mod);
     expect(args.exemptions.map((e) => e.slug).sort()).toEqual(['coa_documents', 'inspections', 'reconcile']);
@@ -422,8 +424,11 @@ describe('buildRoadmap() — totality over the real committed data (HIGH-1: slug
     // into `converted[]` (16 -> 17), pending falls back to 0; remaining is UNCHANGED (48) —
     // the slug left `remaining` at commit 1, not at cutover.
     // batch-2 row 2.4 commit ② (2026-09-21): compute_parcel_cost_estimates joined
-    // `pending[]`, so 1 slug moves from remaining (48) into pending (0 -> 1), leaving 47.
-    expect(pendingSlugs).toBe(1);
+    // `pending[]`, so 1 slug moved from remaining (48) into pending (0 -> 1), leaving 47.
+    // batch-2 row 2.4 CUTOVER (commit 3, 2026-09-21): compute_parcel_cost_estimates moves
+    // from `pending[]` into `converted[]` (17 -> 18), pending falls back to 0; remaining is
+    // UNCHANGED (47) — the slug left `remaining` at commit ②, not at cutover.
+    expect(pendingSlugs).toBe(0);
     expect(remainingSlugs).toBe(47);
   });
 

@@ -12,8 +12,9 @@
 // table) and belong in src/tests/db/compute-parcel-cost-estimates-violations.db.test.ts — NOT YET
 // BUILT in this pass (see the assessment/handback report). This file carries claims 1-6, 11, 13-16.
 //
-// The 11-pair seam assertion (test 14b) is cutover-only (`deriveSeamPairs` reads converted.json,
-// which this slug has not yet entered) and ships `it.fails()` until commit ③ registers it.
+// The 11-pair seam assertion (test 14b) was cutover-only (`deriveSeamPairs` reads
+// converted.json) and shipped `it.fails()` until commit ③ registered the slug — now a plain
+// passing `it`.
 // ============================================================================
 
 import { describe, it, expect } from 'vitest';
@@ -185,9 +186,10 @@ describe('compute_parcel_cost_estimates — test 14: cross-step ledger', () => {
     expect(descriptor.inputs.reads.steps.map((s: { step: string }) => s.step)).toEqual(['enrich_parcels', 'parcels']);
   });
 
-  // Cutover-only (T9a) — deriveSeamPairs reads converted.json, which this slug has not yet
-  // entered as of this commit. Ships it.fails() until commit ③ registers the slug (9 -> 11).
-  it.fails('[flips at commit 3] once registered in converted.json, the seam-pair registry moves 9 -> 11', () => {
+  // Cutover-only (T9a) — commit ③ registers the slug in converted.json; deriveSeamPairs now
+  // sees it, and the seam-pair registry moves 9 -> 11 (both directions — see
+  // src/tests/step-seam.logic.test.ts for the full derivation). Was it.fails() before ③.
+  it('[flipped at commit 3] registered in converted.json, the seam-pair registry moved 9 -> 11', () => {
     // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-explicit-any
     const seam: any = require(path.join(REPO_ROOT, 'scripts/lib/step/seam.js'));
     const registry = seam.loadConvertedDescriptors();

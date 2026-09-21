@@ -6,7 +6,7 @@
     "description": "Single-phase ENRICHER: streams every residential parcel (zoning_class LIKE 'R%') through the pure pricing engine (scripts/lib/parcel-cost.js) and writes a 13-line renovation-cost menu (JSONB) + 12 headline cost scalars + 3 FSI scalars, one JS-streamed cursor-batched post_commit phase, each batch flushed through its own short transaction. PURE PARCEL MODEL — external industry cost only (archetype_cost_rates); no permit data, no declared cost, no Liar's Gate (Spec 88 §1). CPCE-A1 RULED (Spec 124 R-AR.1): the Phase-B-B3 run-ledger gate is RETIRED as a mechanism — this ENRICHER's runner shape has no gated-skip branch and this step has no lineage-stamp column to hold a Layer-2 predicate; every invocation streams the whole declared population and the 16-column IS DISTINCT FROM write guard keeps a steady-state re-run's write count near zero.",
     "lock": 117,
     "why_lock": {
-      "text": "Spec 47 §A.5 — lock 88 (the owning spec number) is taken by classify-permits.js (predates the spec-number convention); 117 is the assigned free-ID from the post-Wave-7 range, ported verbatim from the pre-conversion `const ADVISORY_LOCK_ID = 117` and agreeing with pipeline-advisory-lock.infra.test.ts:143. The audit_table `phase` key still carries the spec number (88).",
+      "text": "Spec 47 §A.5 — lock 88 (the owning spec number) is taken by classify-permits.js (predates the spec-number convention); 117 is the assigned free-ID from the post-Wave-7 range, ported verbatim from the pre-conversion `const ADVISORY_LOCK_ID = 117` and agreeing with pipeline-advisory-lock.infra.test.ts:143. O1 CORRECTION (2026-09-21): this sentence previously (falsely) claimed the audit_table `phase` key still carries the spec number (88) — it does not; see `sharing.varies_by_chain.phase.sources` and the deviations[] entry below for the actual (fleet-standard) value.",
       "liveness": { "kind": "spec", "ref": "docs/specs/01-pipeline/47_pipeline_script_protocol.md" }
     },
     "spec": "88",
@@ -173,6 +173,8 @@
   },
   "checks": [
     { "id": "residential_parcels_examined", "kind": "field_coverage", "expect": { "reports": "COUNT of residential parcels streamed this run" }, "limit": "value_min 1", "limit_from_config": "compute_parcel_cost_min_population", "severity": "FAIL", "blocking": false, "when": "post", "chains": ["sources"], "accept_until": "none", "why": { "text": "Ported from `residential_parcels_examined` (PASS `> 0`). Measured live 2026-09-21: 437,279.", "liveness": { "kind": "table", "ref": "parcels" } } },
+    { "id": "fsi_implausible_count", "kind": "field_coverage", "expect": { "reports": "COUNT of parcels whose realized FSI failed the plausibleFsi guard (compute_parcel_cost_fsi_max_plausible)" }, "limit": "value_min 0", "severity": "INFO", "blocking": false, "when": "post", "chains": ["sources"], "accept_until": "none", "why": { "text": "CPCE-D4 CLOSED — restored (O3, 2026-09-21). Dropped by the conversion (computed into ctx.matched.fsi_implausible_count but never reported); the PRE golden carried it as an INFO-only audit row (value 0, threshold null) — this is the observable of the $105.24M FSI guard, fence aea1d402. Ported by name and semantics; INFO severity matches legacy's status (never verdict-affecting, always visible).", "liveness": { "kind": "column", "ref": "parcels.max_build_fsi" } } },
+    { "id": "new_build_fallback_count", "kind": "field_coverage", "expect": { "reports": "COUNT of parcels whose new_build (max_build) line fell back to the max-buildable envelope because opt_aor_gfa_sqm was NULL" }, "limit": "value_min 0", "severity": "INFO", "blocking": false, "when": "post", "chains": ["sources"], "accept_until": "none", "why": { "text": "CPCE-D4 CLOSED — restored (O3, 2026-09-21). Dropped by the conversion (computed into ctx.matched.new_build_fallback_count but never reported); the PRE golden carried it as an INFO-only audit row (value 0, threshold null). Ported by name and semantics; INFO severity matches legacy's status.", "liveness": { "kind": "column", "ref": "parcels.opt_aor_gfa_sqm" } } },
     { "id": "engine_error_count", "kind": "field_coverage", "expect": { "reports": "COUNT of parcels whose engine call threw" }, "limit": "value_max 0", "limit_from_config": "compute_parcel_cost_engine_error_max", "severity": "FAIL", "blocking": false, "when": "post", "chains": ["sources"], "accept_until": "none", "why": { "text": "F4 — ported exactly (0 -> PASS, >0 -> FAIL). The ENFORCED half of the on_row_error skip/sentinel pair (§5 test 9).", "liveness": { "kind": "table", "ref": "parcels" } } },
     { "id": "cost_rates_stale", "kind": "bound", "expect": { "reports": "3-tier as a severity CODE (0=fresh,1=stale WARN,2=future-dated FAIL) over age vs cost_rates_stale_months; the rendered `value` is the human label (observation.detail) — the compared measure is the code" }, "limit": { "warn": 1, "fail": 2 }, "severity": "WARN", "blocking": false, "when": "post", "chains": ["sources"], "accept_until": "none", "why": { "text": "R-AD 3-tier port. `future_dated` is a separate declared arm (rates_as_of > run_at), not a magic value in a bound — declared Class-A diff (CPCE-Dn, ledger). The object-form `limit` is the schema's own two-tier escalation mechanism (scripts/lib/step/verdict.js#evaluateLimit); `observation.detail` renders the legacy's own false/true/'future_dated' string so the audit row stays human-readable while the comparison itself is numeric (measured live 2026-09-21: false).", "liveness": { "kind": "table", "ref": "archetype_cost_rates" } } },
     { "id": "cost_index_stale", "kind": "bound", "expect": { "reports": "2-tier as a severity CODE (0=fresh,1=stale-or-undatable WARN — this check never reaches FAIL); the rendered `value` is the human label ('undatable'|true|false)" }, "limit": { "warn": 1, "fail": 999 }, "severity": "WARN", "blocking": false, "when": "post", "chains": ["sources"], "accept_until": "none", "why": { "text": "§5 test 10 — the precondition lock (logic_variables.updated_at NOT NULL) currently makes the 'undatable' arm UNREACHABLE; pinned as such (deviations[]), not fixed. `fail:999` is unreachable by construction (the code is only ever 0 or 1) — this check has no FAIL tier, matching the legacy exactly. Measured live 2026-09-21: false.", "liveness": { "kind": "table", "ref": "logic_variables" } } },
@@ -227,10 +229,19 @@
     { "key": "rates_as_of", "type": "string", "consumers": [] },
     { "key": "index_updated_at", "type": "string", "consumers": [] },
     { "key": "cost_rates_age_months", "type": "int", "consumers": [] },
-    { "key": "row_limit", "type": "int", "consumers": [] },
+    { "key": "cost_index_age_months", "type": "int", "consumers": [] },
     { "key": "cost_by_zone", "type": "object", "consumers": [] }
   ],
   "deviations": [
+    {
+      "from": "the legacy's `audit_table.phase` value (88, the owning spec number)",
+      "why": {
+        "text": "O1 RULED — the fleet standard (McDonald's rule), not a CPCE-specific choice: every converted ENRICHER/LINK sibling renumbers `audit_table.phase` from the legacy's arbitrary spec/lock-derived number to the CHAIN PHASE INDEX declared in `sharing.varies_by_chain.phase` (grounded against 3 siblings' own PRE/POST goldens: enrich_heritage 62->13, enrich_ravines 60->12, both matching their own `varies_by_chain.phase.sources`; 10 further converted descriptors all carry a small chain-index integer in the same field, none carry a spec/lock number). CPCE's PRE golden showed 88 (legacy), POST shows 1 (`varies_by_chain.phase.sources`) — conforming to the fleet standard, not a new departure. Previously UNDECLARED (missing from this deviations[] array and from the assessment's PRE/POST diff list) and misdescribed by identity.why_lock's now-corrected trailing sentence; declared here per O1.",
+        "liveness": { "kind": "file", "ref": "src/components/FreshnessTimeline.tsx" }
+      },
+      "adjudicated_by": "O1 ruling (operator/coordinator, 2026-09-21) — fleet-standard grounding vs enrich_heritage/enrich_ravines/10 further sibling descriptors",
+      "date": "2026-09-21"
+    },
     {
       "from": "the Phase-B-B3 run-ledger gate (F8: runLedgerGateDecision + OWN_SLUGS/UPSTREAM_SLUGS + buildSkipGateRecordsMeta) and its C1/C2 own-version-signal companion (F9)",
       "why": {
@@ -326,10 +337,10 @@
       }
     },
     "records_new": {
-      "source": "null",
+      "source": "matched.compute.records_new_aggregate",
       "scoped_by": "step",
       "why": {
-        "text": "UPDATE-only Mutator — parcels pre-exist; this step inserts nothing. Declared null (not a finite 0) per the sibling ENRICHER form used where the write target is an UPDATE with no insert path at all.",
+        "text": "CPCE-D5 CLOSED (cutover ③, 2026-09-21) — was the literal string \"null\", which COUNTER-ROOT (#26; only scans converted[] descriptors, so this was invisible before cutover) rejects as an unresolvable root for shape \"enrich\". Corrected to the fleet-standard form every sibling ENRICHER uses (enrich_heritage, enrich_ravines, geocode_permits, enrich_parcels — all `matched.compute.records_new_aggregate`): this step INSERTs nothing — the sole write target is an UPDATE, and class N's own executor structurally refuses any statement text containing INSERT INTO or ON CONFLICT (JOIN_UPDATE_FORBIDDEN_RE, scripts/lib/step/write.js) — `records_new_aggregate: 0` is a declared finite literal, already returned by computePostPhase's `compute:` block, because an omitted/null source resolves as \"not counted\" rather than the true zero it is (Spec 48 §3.6).",
         "liveness": { "kind": "file", "ref": "scripts/lib/step/write.js" }
       }
     },

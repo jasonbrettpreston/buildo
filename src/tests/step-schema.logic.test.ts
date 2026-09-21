@@ -717,6 +717,12 @@ describe('execution.shape "enrich" + the ENRICHER execution.phases[] profile (pi
       // Rule 12 crash posture, measured both ways before it moved) — so it is dirty across
       // this cutover by construction, exactly as link_neighbourhoods was across its own.
       'scripts/geocode-permits.descriptor.json',
+      // batch-2 row 2.4 cutover (2026-09-21): compute_parcel_cost_estimates is the ENRICHER
+      // archetype's FIFTH member. Its descriptor lands across commits ①/②/2c (the O1-O3
+      // output-panel peel touched it a third time: why_lock text, the phase deviation entry,
+      // 2 new checks) and again here at ③ — dirty across this cutover by construction, same
+      // class as geocode_permits/link_neighbourhoods above.
+      'scripts/compute-parcel-cost-estimates.descriptor.json',
     ]);
     const descriptorPaths = converted.map((f) => f.replace(/\.js$/, '.descriptor.json'));
     const enrichers: string[] = [];
@@ -731,8 +737,9 @@ describe('execution.shape "enrich" + the ENRICHER execution.phases[] profile (pi
     // what makes the archetype COMPRESSED-ELIGIBLE and turns batch 2's Phase 2 from
     // 1 full + 3 compressed into 4 compressed. The list is pinned rather than counted so a
     // FOURTH member still has to come here and say so (FOLD-I3, batch-2 row 2.2 cutover,
-    // 2026-09-20).
-    expect(enrichers, 'exactly four converted ENRICHERs — enrich_parcels (pilot 9 commit 9), geocode_permits (batch-2 I5 commit 9), enrich_ravines (batch-2 row 2.1 commit 3), and enrich_heritage (batch-2 row 2.2 commit 3) — the profile is exercised by REAL descriptors, and the second is what unlocked the compressed form for the archetype (the third and fourth ride it)').toEqual(['scripts/enrich-parcels.descriptor.json', 'scripts/geocode-permits.descriptor.json', 'scripts/enrich-ravines.descriptor.json', 'scripts/enrich-heritage.descriptor.json']);
+    // 2026-09-20). FIFTH member: compute_parcel_cost_estimates (batch-2 row 2.4 cutover,
+    // 2026-09-21) — ENRICHER 5/5, the archetype's last planned member this programme.
+    expect(enrichers, 'exactly five converted ENRICHERs — enrich_parcels (pilot 9 commit 9), geocode_permits (batch-2 I5 commit 9), enrich_ravines (batch-2 row 2.1 commit 3), enrich_heritage (batch-2 row 2.2 commit 3), and compute_parcel_cost_estimates (batch-2 row 2.4 commit 3) — the profile is exercised by REAL descriptors, and the second is what unlocked the compressed form for the archetype (the third, fourth and fifth ride it)').toEqual(['scripts/enrich-parcels.descriptor.json', 'scripts/geocode-permits.descriptor.json', 'scripts/enrich-ravines.descriptor.json', 'scripts/enrich-heritage.descriptor.json', 'scripts/compute-parcel-cost-estimates.descriptor.json']);
     // Byte-identical, not merely still-valid, for every descriptor EXCEPT the one known,
     // declared exception above — each of the other seven is still an R-C golden fingerprint.
     const unexpectedTargets = descriptorPaths.filter((rel) => !KNOWN_CHANGED_THIS_COMMIT.has(rel));

@@ -103,7 +103,9 @@
       "file": "scripts/compute-parcel-cost-estimates.js",
       "archetype": "ENRICHER",
       "batch": "pending",
-      "reason": "Batch-2 row 2.4 — moved C5 -> pending at commit ② (re-synced fixture)."
+      "reason": "RETAINED at cutover (re-synced fixture; see step-archetype-census.json for the full reason text).",
+      "status": "converted",
+      "converted_at": "PENDING — filled by the commit-3b peel to this commit's own real sha (re-synced fixture)"
     },
     {
       "slug": "compute_phase_calibration",
