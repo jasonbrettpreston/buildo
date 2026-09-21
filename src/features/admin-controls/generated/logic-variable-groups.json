@@ -319,7 +319,14 @@
       "parcel_sanity_realized_fsi_p90_min",
       "parcel_sanity_realized_fsi_p90_max",
       "enrich_ravines_distance_coverage_pass_pct",
-      "enrich_ravines_distance_coverage_warn_pct"
+      "enrich_ravines_distance_coverage_warn_pct",
+      "enrich_heritage_address_levenshtein_threshold",
+      "enrich_heritage_unlinked_point_warn_pct",
+      "enrich_heritage_unlinked_point_fail_pct",
+      "enrich_heritage_designated_min_count",
+      "enrich_heritage_part_iv_min_count",
+      "enrich_heritage_designated_share_plausible_max_pct",
+      "enrich_heritage_designated_count_collapse_floor"
     ]
   },
   {
@@ -385,7 +392,10 @@
       "refresh_snapshot_phase_deadline_minutes",
       "enrich_ravines_heartbeat_minutes",
       "enrich_ravines_lock_timeout_ms",
-      "enrich_ravines_phase_timeout_minutes"
+      "enrich_ravines_phase_timeout_minutes",
+      "enrich_heritage_heartbeat_minutes",
+      "enrich_heritage_lock_timeout_ms",
+      "enrich_heritage_phase_timeout_minutes"
     ]
   },
   {

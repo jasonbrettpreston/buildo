@@ -407,7 +407,7 @@ describe('write-class-disposition — WD-1 both-directions lock (Spec 122 §1.4/
     // converted-scoped: the pin moves the instant a descriptor file lands, not at
     // cutover):
     const contentionFindings = checkOnContentionBannedDeclared(mutated, descriptorPaths);
-    expect(contentionFindings.length).toBe(16);
+    expect(contentionFindings.length).toBe(17); // batch-2 row 2.2 — enrich_heritage descriptor-scoped, +1
     expect(contentionFindings.every((f) => f.includes('self_skip') && f.includes('"retire"'))).toBe(true);
   });
 

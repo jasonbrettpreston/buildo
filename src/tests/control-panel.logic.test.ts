@@ -86,6 +86,17 @@ const EXPECTED_LOGIC_VAR_KEYS = [
   'enrich_ravines_distance_plausible_min_magnitude_m',
   'enrich_ravines_distance_plausible_max_m',
   'enrich_ravines_distance_collapse_floor_m', // output-panel O4 (2026-09-18) — degrees-not-metres collapse floor
+  // Batch-2 row 2.2 `enrich_heritage` (2026-09-20, commit 2) — 10 vars, Rule 3 externalization.
+  'enrich_heritage_address_levenshtein_threshold',
+  'enrich_heritage_unlinked_point_warn_pct',
+  'enrich_heritage_unlinked_point_fail_pct',
+  'enrich_heritage_designated_min_count',
+  'enrich_heritage_part_iv_min_count',
+  'enrich_heritage_heartbeat_minutes',
+  'enrich_heritage_lock_timeout_ms',
+  'enrich_heritage_phase_timeout_minutes',
+  'enrich_heritage_designated_share_plausible_max_pct', // Reality-Check §7 — designated-share ceiling
+  'enrich_heritage_designated_count_collapse_floor', // Reality-Check O4-class §7 — designated-count collapse floor
   'step_post_check_statement_timeout_minutes', // WF3 EP-D17 (2026-09-10) — default ceiling for an every_run invariants[]/plausibility[] entry with no declared statement_timeout
   'parcels_dead_tuple_ratio_warn_max', // WF3 EP-D17 (2026-09-10) — WARN bound + execution.maintenance trigger threshold for parcels' pg_stat_user_tables dead_ratio
   'step_post_check_concurrency', // WF3 EP-D17 output-panel fix F7 (2026-09-10) — batch width cap for concurrent invariants[]/plausibility[] entries

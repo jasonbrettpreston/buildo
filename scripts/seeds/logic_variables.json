@@ -4347,6 +4347,106 @@
       "group": "Source Ingestion"
     }
   },
+  "enrich_heritage_address_levenshtein_threshold": {
+    "default": 2,
+    "type": "number",
+    "min": 0,
+    "max": 10,
+    "description": "Batch-2 row 2.2 — the Part IV tiebreak: when a parcel contains more than one Part IV heritage point, the LATERAL orders candidates by whether levenshtein(parcel's normalized address, point's normalized address) <= this threshold before falling back to point id. Ported verbatim from the pre-conversion literal ConfigSchema default (heritageAddressLevenshteinThreshold, 2). FOLD-I5 (declared limitation): changing this value does NOT re-stale any parcel — the lineage stamp is a source-content hash, so a threshold change only takes effect on the next genuine heritage version bump or an ENRICH_HERITAGE_FORCE_FULL run (measured impact bound: 94 multi-Part-IV-point parcels, 272 points, max 15 in one parcel, out of 1,217 parcels with any Part IV point; the only field a threshold change can move is heritage_designation_date). CONSUMED by scripts/lib/compute/enrich-heritage.js.",
+    "admin": {
+      "group": "Data Quality Thresholds"
+    }
+  },
+  "enrich_heritage_unlinked_point_warn_pct": {
+    "default": 15,
+    "type": "number",
+    "min": 0,
+    "max": 100,
+    "description": "Batch-2 row 2.2 — R-AD 3-tier PASS ceiling for heritage_points_no_parcel_match (% of Part IV source points with no containing valid-geom parcel). Unit change from the legacy: the pre-conversion ConfigSchema compared a FRACTION (0.15) against a fraction while REPORTING a percentage; this check compares the reported percentage directly, so the seed is 15, not 0.15 — comparison semantics unchanged. Spec §12.3a's own defaults (0.05) assumed a radius match (~0% unmatched); under containment ~10% of Part IV points legitimately fall outside any parcel, so this default is calibrated above that baseline. Measured live 2026-09-20: 10.4%. CONSUMED by scripts/lib/compute/enrich-heritage.js.",
+    "admin": {
+      "group": "Data Quality Thresholds"
+    }
+  },
+  "enrich_heritage_unlinked_point_fail_pct": {
+    "default": 30,
+    "type": "number",
+    "min": 0,
+    "max": 100,
+    "description": "Batch-2 row 2.2 — R-AD 3-tier WARN ceiling for heritage_points_no_parcel_match, same unit-change note as enrich_heritage_unlinked_point_warn_pct (30, not 0.30). CONSUMED by scripts/lib/compute/enrich-heritage.js.",
+    "admin": {
+      "group": "Data Quality Thresholds"
+    }
+  },
+  "enrich_heritage_designated_min_count": {
+    "default": 1,
+    "type": "number",
+    "min": 0,
+    "max": 500000,
+    "description": "Batch-2 row 2.2 — the broken-join FAIL gate: parcels_heritage_designated_count must be >= this floor or the run reads FAIL (a hard zero means the spatial join matched nothing — wrong SRID / unbound GIST / a broken join — distinct from a legitimately small heritage subset). Ported exactly from the legacy's `designated === 0 ? 'FAIL' : 'INFO'` literal. Measured live 2026-09-20: 9,958. CONSUMED by scripts/lib/compute/enrich-heritage.js.",
+    "admin": {
+      "group": "Data Quality Thresholds"
+    }
+  },
+  "enrich_heritage_part_iv_min_count": {
+    "default": 1,
+    "type": "number",
+    "min": 0,
+    "max": 500000,
+    "description": "Batch-2 row 2.2 — EH-D2 (declared diff): parcels_part_iv_count must be >= this floor or the run reads WARN. The legacy's WARN was conditional on the source register carrying at least one Part IV point (partIvSource > 0); the ported bound is unconditional, so the two forms differ only when the register loads zero Part IV points, where the ported form is LOUDER (WARN vs INFO), never quieter. Measured live 2026-09-20: 1,217. CONSUMED by scripts/lib/compute/enrich-heritage.js.",
+    "admin": {
+      "group": "Data Quality Thresholds"
+    }
+  },
+  "enrich_heritage_heartbeat_minutes": {
+    "default": 5,
+    "type": "number",
+    "min": 1,
+    "max": 60,
+    "description": "Batch-2 row 2.2 — how often (wall-clock minutes) the ENRICHER runner writes a progress heartbeat while enrich_heritage's one phase holds the shared transaction. REQUIRED on the ENRICHER profile. NEW behaviour (Class A diff): the legacy script had no heartbeat at all. Default 5 mirrors enrich_ravines_heartbeat_minutes / enrich_parcels_heartbeat_minutes / geocode_permits_heartbeat_minutes. CONSUMED by scripts/enrich-heritage.js.",
+    "admin": {
+      "group": "Source Ingestion"
+    }
+  },
+  "enrich_heritage_lock_timeout_ms": {
+    "default": 1800000,
+    "type": "number",
+    "min": 0,
+    "max": 3600000,
+    "description": "Batch-2 row 2.2 — bounded, LOUD `SET LOCAL lock_timeout` (ms) for enrich_heritage's shared transaction. REQUIRED on the ENRICHER profile. NEW behaviour (Class A diff): the legacy script had no lock_timeout at all. 0 = disabled. Default 1800000 (30 min) mirrors enrich_ravines_lock_timeout_ms. CONSUMED by scripts/enrich-heritage.js.",
+    "admin": {
+      "group": "Source Ingestion"
+    }
+  },
+  "enrich_heritage_phase_timeout_minutes": {
+    "default": 240,
+    "type": "number",
+    "min": 0,
+    "max": 290,
+    "description": "Batch-2 row 2.2 — wall-clock phase deadline for the `heritage_join` phase. Operator ruling H-A2 = (a) 240 (2026-09-20): parity with enrich_ravines_phase_timeout_minutes, below the platform's 300-minute wall so an abort dies LOUD at this named phase boundary rather than as a GitHub SIGKILL; to be replaced by the measured cloud value after this step's batch-close acceptance run. Measured local full recompute: 59-75s, so 240 is generous headroom, not a tight fit. NEW behaviour (Class A diff): the legacy script had no statement/phase timeout at all. CONSUMED by scripts/enrich-heritage.js.",
+    "admin": {
+      "group": "Source Ingestion"
+    }
+  },
+  "enrich_heritage_designated_share_plausible_max_pct": {
+    "default": 10,
+    "type": "number",
+    "min": 0,
+    "max": 100,
+    "description": "Batch-2 row 2.2 — Reality-Check plan-altitude demand (§7): a city-wide ceiling on how much of the parcel fabric can plausibly be heritage-designated. A join that started over-matching (SRID drift, unbound GIST returning a Cartesian product) would spike this share; the ceiling sits well above the measured value so it catches the regression class without ever nearing the legitimate value. Measured live 2026-09-20: 2.047%. CONSUMED by scripts/lib/compute/enrich-heritage.js.",
+    "admin": {
+      "group": "Data Quality Thresholds"
+    }
+  },
+  "enrich_heritage_designated_count_collapse_floor": {
+    "default": 1000,
+    "type": "number",
+    "min": 0,
+    "max": 500000,
+    "description": "Batch-2 row 2.2 — Reality-Check O4-class plan-altitude demand (§7): a floor on parcels_heritage_designated_count far below the measured count but far above zero, catching a partial-collapse regression that a ceiling-only ruleset is blind to (the FAIL-at-0 gate only fires at exactly zero, and the share ceiling alone would pass a join silently matching 3% of what it should). Applied at plan altitude, following the enrich_ravines output-panel O4 precedent. Measured live 2026-09-20: 9,958. CONSUMED by scripts/lib/compute/enrich-heritage.js.",
+    "admin": {
+      "group": "Data Quality Thresholds"
+    }
+  },
   "enrich_ravines_distance_plausible_min_magnitude_m": {
     "default": 2000,
     "type": "number",

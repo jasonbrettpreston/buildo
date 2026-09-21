@@ -1,0 +1,687 @@
+{
+  "identity": {
+    "name": "enrich_heritage",
+    "display_name": "Parcel Heritage Designation",
+    "owner": "data",
+    "description": "Single-pass ENRICHER: spatial-joins parcels.geom against heritage_properties (Part IV individual) and heritage_districts (Part V HCD) and writes the designation flag + type + date + dataset lineage stamp in ONE set-based join UPDATE, scoped to eligible parcels (geom non-null, non-empty, valid) whose lineage stamp is stale against the current combined heritage version (H-A1 (a) — Layer-2 subsumes the pre-conversion #418 Layer-1 cheap-COUNT early return). The Layer-1 mechanism is RETIRED as a mechanism (deviations[]) — the ENRICHER runner has no gated-skip branch by design — its OBSERVABLE is preserved: the Layer-2 scope predicate already yields a 0-row write in steady state, and parcels_heritage_enrich_skipped is re-derived from the write count.",
+    "lock": 62,
+    "why_lock": {
+      "text": "DEC-A — sibling of load_heritage=61; 62 verified free. Spec 61 :441/:852/:934 still print 63 and are corrected by this conversion's spec diff (deferred to cutover); Spec 47 §A.5 :1969 already reads 62. Kept textually per Spec 122 §5.4 so the registry loop (src/tests/pipeline-advisory-lock.infra.test.ts) stays green across the conversion.",
+      "liveness": { "kind": "spec", "ref": "docs/specs/01-pipeline/47_pipeline_script_protocol.md" }
+    },
+    "spec": "61",
+    "spec_version": "1.1",
+    "archetype": "ENRICHER",
+    "contract_version": 1,
+    "gate_exempt": false
+  },
+  "inputs": {
+    "reads": {
+      "steps": [
+        { "step": "load_heritage", "version_pin": "exact" }
+      ],
+      "tables": [
+        { "table": "heritage_properties", "columns": ["id", "geom", "status", "address_text", "designated_date"] },
+        { "table": "heritage_districts", "columns": ["id", "geom", "designated_date"] },
+        { "table": "parcels", "columns": ["id", "geom", "addr_num_normalized", "street_name_normalized", "street_type_normalized", "is_heritage_designated", "heritage_designation_type", "heritage_designation_date", "heritage_dataset_version_when_enriched"] }
+      ],
+      "externals": []
+    },
+    "expect_nonempty": true,
+    "on_missing": "halt"
+  },
+  "outputs": {
+    "writes": [
+      {
+        "table": "parcels",
+        "key": ["id"],
+        "columns": [
+          { "name": "is_heritage_designated", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "heritage_designation_type", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "heritage_designation_date", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "heritage_dataset_version_when_enriched", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" }
+        ],
+        "write_discipline": {
+          "class": "set_based_join_update",
+          "guard": "is_distinct_from",
+          "guard_columns": ["is_heritage_designated", "heritage_designation_type", "heritage_designation_date", "heritage_dataset_version_when_enriched"],
+          "guard_columns_why": {
+            "text": "The verbatim 4-column guard, legacy ENRICH_SQL:257-260. The lineage stamp is INSIDE the guard: like enrich_ravines' and unlike geocode_permits' run-clock geocoded_at, it is a content hash of the two source datasets, constant across runs against the same load, so including it is what makes a second run write 0 rows instead of re-stamping 486,514 parcels.",
+            "liveness": { "kind": "file", "ref": "scripts/lib/step/write.js" }
+          },
+          "scope": "p.geom IS NOT NULL AND NOT ST_IsEmpty(p.geom) AND ST_IsValid(p.geom) AND p.heritage_dataset_version_when_enriched IS DISTINCT FROM $2",
+          "expected_change_ratio": "none",
+          "idempotent_rerun": "zero_writes",
+          "txn_scope": "step"
+        },
+        "retract": "none",
+        "replay": "idempotent_upsert",
+        "source_key_policy": { "unique": true, "on_collision": "not_applicable", "key_space_migration": "none" }
+      }
+    ],
+    "cascades": "none",
+    "invalidates": [
+      {
+        "table": "parcels",
+        "column": "heritage_dataset_version_when_enriched",
+        "when": "load-parcels.js's ON CONFLICT nulls the stamp via a CASE gated ONLY on parcels.geometry::jsonb IS DISTINCT FROM EXCLUDED.geometry::jsonb (DEC-FENCE2, anchor `heritage_dataset_version_when_enriched = CASE`) — app code, NOT migration 242's trigger, which deliberately covers only massing/zoning. A load_heritage source_dataset_version bump on EITHER dataset stales every parcel, because the stamp is the two versions concatenated."
+      }
+    ],
+    "publish": "none",
+    "write_inventory": {
+      "statements": 1,
+      "why": {
+        "text": "Exactly one write statement per invocation, in every mode and on every chain — the H-A1(a) Layer-2 WITH...UPDATE, executed through ctx.joinUpdate. There is no batching beyond the scope predicate itself.",
+        "liveness": { "kind": "file", "ref": "scripts/lib/compute/enrich-heritage.js" }
+      }
+    }
+  },
+  "staleness": {
+    "scope": "eligible parcels (geom non-null, non-empty, valid) whose heritage_dataset_version_when_enriched IS DISTINCT FROM `<register>|<districts>` from the producer's most recent completed run",
+    "trigger": [{ "signal": "always", "position": "pre_compute" }],
+    "mode_select": "tri_state",
+    "checkpoint": "none",
+    "interval": "none",
+    "fingerprint": "derived",
+    "fingerprint_inputs": ["scripts/lib/compute/enrich-heritage.js"],
+    "logic_version": "v1-containment-lateral",
+    "on_fingerprint_change": "run"
+  },
+  "guards": {
+    "requires": [
+      {
+        "kind": "extension",
+        "name": "postgis",
+        "on_missing": "fail",
+        "why": {
+          "text": "The ST_Intersects containment joins (Part IV point-in-parcel, Part V polygon-in-parcel) are non-viable without PostGIS. Ported verbatim from the legacy assertPreconditions (DEC-F, §3.10).",
+          "liveness": { "kind": "external", "ref": "postgis" }
+        }
+      },
+      {
+        "kind": "extension",
+        "name": "fuzzystrmatch",
+        "on_missing": "fail",
+        "why": {
+          "text": "Migration 170 — levenshtein() is the Part IV tiebreak when a parcel contains more than one Part IV point. Absent, the join fails mid-statement instead of refusing up front.",
+          "liveness": { "kind": "external", "ref": "fuzzystrmatch" }
+        }
+      },
+      {
+        "kind": "index",
+        "name": "idx_parcels_geom_gist",
+        "on_missing": "fail",
+        "why": {
+          "text": "Migration 039. Without it the parcel_c CTE's own eligibility scan and every other GIST-dependent step sharing this index degrades to a sequential scan over 486,530 rows.",
+          "liveness": { "kind": "column", "ref": "parcels.geom" }
+        }
+      },
+      {
+        "kind": "index",
+        "name": "idx_heritage_districts_geom_gist",
+        "on_missing": "fail",
+        "why": {
+          "text": "Migration 170 — binds the Part V ST_Intersects LATERAL. Without it every parcel seq-scans all 29 districts.",
+          "liveness": { "kind": "column", "ref": "heritage_districts.geom" }
+        }
+      },
+      {
+        "kind": "index",
+        "name": "idx_heritage_properties_geom_gist",
+        "on_missing": "fail",
+        "why": {
+          "text": "Migration 170 — binds the Part IV containment LATERAL (point-in-parcel via ST_Intersects). Without it every parcel seq-scans all 8,824 heritage_properties rows.",
+          "liveness": { "kind": "column", "ref": "heritage_properties.geom" }
+        }
+      },
+      {
+        "kind": "column",
+        "name": "parcels.heritage_dataset_version_when_enriched",
+        "on_missing": "fail",
+        "why": {
+          "text": "Migration 171. The legacy assertVersionColumn existed because the stale-count probe read this column AHEAD of assertPreconditions; without the guard a missing column surfaces as a raw pg 42703, not a named refusal.",
+          "liveness": { "kind": "column", "ref": "parcels.heritage_dataset_version_when_enriched" }
+        }
+      },
+      {
+        "kind": "column",
+        "name": "parcels.is_heritage_designated",
+        "on_missing": "fail",
+        "why": {
+          "text": "M-2 / L24 — one of the four migration-171 columns the legacy asserted as a 4-of-4 count.",
+          "liveness": { "kind": "column", "ref": "parcels.is_heritage_designated" }
+        }
+      },
+      {
+        "kind": "column",
+        "name": "parcels.heritage_designation_type",
+        "on_missing": "fail",
+        "why": {
+          "text": "M-2 / L24 — second of the four migration-171 columns.",
+          "liveness": { "kind": "column", "ref": "parcels.heritage_designation_type" }
+        }
+      },
+      {
+        "kind": "column",
+        "name": "parcels.heritage_designation_date",
+        "on_missing": "fail",
+        "why": {
+          "text": "M-2 / L24 — third of the four migration-171 columns.",
+          "liveness": { "kind": "column", "ref": "parcels.heritage_designation_date" }
+        }
+      }
+    ],
+    "srid": 4326,
+    "empty_source": "heritage_properties",
+    "schema_drift": "pause"
+  },
+  "execution": {
+    "shape": "enrich",
+    "heartbeat_minutes_from_config": "enrich_heritage_heartbeat_minutes",
+    "lock_timeout_ms_from_config": "enrich_heritage_lock_timeout_ms",
+    "enrich_hooks": {
+      "contract_read": "readHeritageContract",
+      "post_phase": "computePostPhase"
+    },
+    "phases": [
+      {
+        "name": "heritage_join",
+        "order": 1,
+        "txn": "shared",
+        "writes_ref": 0,
+        "scope": "incremental",
+        "invalidator_ref": 0,
+        "timeout_minutes_from_config": "enrich_heritage_phase_timeout_minutes"
+      }
+    ],
+    "budget": "60m",
+    "txn_scope": "step",
+    "txn_budget": "55m",
+    "chunked": false,
+    "statement_timeout": "none",
+    "step_timeout": "90m",
+    "batch": "none",
+    "needs_disk_mb": "none",
+    "partial_fill": "atomic",
+    "on_row_error": "fail_fast",
+    "on_batch_error": "fail_step",
+    "on_check_error": "fail_step",
+    "on_check_error_why": {
+      "text": "Every declared check reads a count the library already measured in the same run (the coverage/counts SQL in computePostPhase); a check that throws is a compute defect, not an upstream data condition, and must redden the run rather than silently drop its row (the geocode_permits / compute_centroids / enrich_ravines precedent).",
+      "liveness": { "kind": "file", "ref": "scripts/lib/step/index.js" }
+    },
+    "on_degrade": "none",
+    "criticality": "required",
+    "network": "none",
+    "maintenance": "none",
+    "invocation": {
+      "sources": { "argv": [], "env": { "PIPELINE_CHAIN": "sources" } }
+    }
+  },
+  "checks": [
+    {
+      "id": "parcels_heritage_designated_count",
+      "kind": "field_coverage",
+      "expect": { "reports": "COUNT(*) WHERE is_heritage_designated" },
+      "limit": "value_min 1",
+      "limit_from_config": "enrich_heritage_designated_min_count",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "chains": ["sources"],
+      "accept_until": "none",
+      "why": {
+        "text": "Broken-join FAIL gate: a hard zero means the spatial join matched NOTHING (wrong SRID / unbound GIST / a broken join), distinct from a legitimately-small heritage subset. Ported exactly: 0 -> FAIL, >=1 -> PASS. Measured live 2026-09-20: 9,958.",
+        "liveness": { "kind": "table", "ref": "parcels" }
+      }
+    },
+    {
+      "id": "parcels_part_iv_count",
+      "kind": "field_coverage",
+      "expect": { "reports": "COUNT(*) WHERE heritage_designation_type = 'part_iv_individual'" },
+      "limit": "value_min 1",
+      "limit_from_config": "enrich_heritage_part_iv_min_count",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "chains": ["sources"],
+      "accept_until": "none",
+      "why": {
+        "text": "EH-D2 (declared diff, Spec 124 §7 rung (b)): the legacy's WARN was conditional on partIvSource > 0; this port's bound is unconditional 0 -> WARN, >=1 -> PASS. The two differ only when the register loads zero part_iv points, where the ported form is LOUDER (WARN vs INFO), never quieter. Measured live 2026-09-20: 1,217.",
+        "liveness": { "kind": "table", "ref": "parcels" }
+      }
+    },
+    {
+      "id": "parcels_part_v_hcd_count",
+      "kind": "field_coverage",
+      "expect": { "reports": "COUNT(*) WHERE heritage_designation_type = 'part_v_hcd'" },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "chains": ["sources"],
+      "accept_until": "none",
+      "why": {
+        "text": "Ported by name. Measured live 2026-09-20: 8,741.",
+        "liveness": { "kind": "table", "ref": "parcels" }
+      }
+    },
+    {
+      "id": "heritage_part_iv_source_count",
+      "kind": "field_coverage",
+      "expect": { "reports": "COUNT(*) FROM heritage_properties WHERE status = 'part_iv'" },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "chains": ["sources"],
+      "accept_until": "none",
+      "why": {
+        "text": "Ported by name. Measured live 2026-09-20: 1,557.",
+        "liveness": { "kind": "table", "ref": "heritage_properties" }
+      }
+    },
+    {
+      "id": "heritage_points_no_parcel_match",
+      "kind": "field_coverage",
+      "expect": { "reports": "% of Part IV source points with no containing valid-geom parcel — a REPORTED PERCENTAGE, the legacy compared a fraction internally" },
+      "limit": "pct <= 15",
+      "limit_from_config": "enrich_heritage_unlinked_point_warn_pct",
+      "warn_limit": "pct <= 30",
+      "warn_limit_from_config": "enrich_heritage_unlinked_point_fail_pct",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "chains": ["sources"],
+      "accept_until": "none",
+      "why": {
+        "text": "R-AD 3-tier. Unit note, load-bearing: the legacy compared a FRACTION (0.15/0.30) against a fraction while REPORTING a PERCENTAGE (round(frac*1000)/10); the converted check compares the reported value, so the seeds are 15/30, not 0.15/0.30. Comparison semantics identical; the INFO->PASS tier rename is a declared Class A diff. Measured live 2026-09-20: 10.4%.",
+        "liveness": { "kind": "table", "ref": "heritage_properties" }
+      }
+    },
+    {
+      "id": "parcels_invalid_geom_count",
+      "kind": "field_coverage",
+      "expect": { "reports": "COUNT(*) WHERE geom IS NOT NULL AND NOT ST_IsValid(geom)" },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "chains": ["sources"],
+      "accept_until": "none",
+      "why": {
+        "text": "F8 — INFO, not WARN: invalid-geom parcels are excluded from parcel_c's eligibility clause, so they don't corrupt enrichment; this is a steady-state parcels-loader data-quality fact, not a per-run alert. WARN-on->0 would force a perpetual-WARN verdict (alert fatigue) — the legacy's own explicit reasoning, preserved as the declared exception to Rule 10's R-H addendum. Measured live 2026-09-20: 16.",
+        "liveness": { "kind": "column", "ref": "parcels.geom" }
+      }
+    },
+    {
+      "id": "parcels_enriched_count",
+      "kind": "field_coverage",
+      "expect": { "reports": "rowCount of the H-A1(a) Layer-2 join UPDATE — records_updated's own source" },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "chains": ["sources"],
+      "accept_until": "none",
+      "why": {
+        "text": "Ported by name from the pre-conversion `updated` counter.",
+        "liveness": { "kind": "table", "ref": "parcels" }
+      }
+    },
+    {
+      "id": "parcels_heritage_enrich_skipped",
+      "kind": "field_coverage",
+      "expect": { "reports": "whether this run's write was empty (updated === 0) — RE-DERIVED, since the #418 Layer-1 early-return branch is retired as a mechanism" },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "chains": ["sources"],
+      "accept_until": "none",
+      "why": {
+        "text": "F9 disposition: the pre-conversion #418 Layer-1 cheap-COUNT early-return before opening any transaction is RETIRED KNOWINGLY as a mechanism (the ENRICHER runner has no gated-skip branch by design) — its OBSERVABLE is preserved by re-deriving this row from `updated === 0` (the landed enrich_ravines form), so a dashboard reader sees the identical signal whether or not the write touched any row.",
+        "liveness": { "kind": "file", "ref": "scripts/lib/compute/enrich-heritage.js" }
+      }
+    },
+    {
+      "id": "heritage_source_dataset_version",
+      "kind": "field_coverage",
+      "expect": { "reports": "the producer's combined source_dataset_version this run stamped — a STRING value" },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "chains": ["sources"],
+      "accept_until": "none",
+      "why": {
+        "text": "RV-D3 class — this row's detail/value is a string, not a number, unlike every sibling row on this step. Ported verbatim; the frozen row builder admits it (proven by enrich_ravines' own landed ravine_source_dataset_version row).",
+        "liveness": { "kind": "table", "ref": "pipeline_runs" }
+      }
+    },
+    {
+      "id": "enrich_heritage_duration_ms",
+      "kind": "field_coverage",
+      "expect": { "reports": "wall-clock duration of this step's run, in milliseconds" },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "chains": ["sources"],
+      "accept_until": "none",
+      "why": {
+        "text": "Ported by name from the pre-conversion Date.now() - t0 measurement.",
+        "liveness": { "kind": "file", "ref": "scripts/lib/compute/enrich-heritage.js" }
+      }
+    }
+  ],
+  "invariants": [
+    {
+      "id": "heritage_flag_type_agree_flagged_side",
+      "sql": "SELECT count(*)::int FROM parcels WHERE is_heritage_designated AND heritage_designation_type IS NULL",
+      "bound": "viol == 0",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "source": "invariant",
+      "frequency": "every_run",
+      "last_measured": { "value": 0, "at": "2026-09-20T00:00:00.000Z", "commit": "enrich-heritage-commit-1", "cost_ms": 1200, "sample_n": 1, "source_run": { "run_id": null, "chain": null, "event": "manual_timing" } },
+      "why": {
+        "text": "Half of the whole semantic of new_designated = (hcd_id IS NOT NULL OR hp_id IS NOT NULL): a flagged parcel must carry a non-null type. A port error in the CASE breaks this silently while every count-row stays green. MEASURED 0 across all 486,530 parcels, 2026-09-20.",
+        "liveness": { "kind": "column", "ref": "parcels.heritage_designation_type" }
+      }
+    },
+    {
+      "id": "heritage_flag_type_agree_unflagged_side",
+      "sql": "SELECT count(*)::int FROM parcels WHERE NOT is_heritage_designated AND heritage_designation_type IS NOT NULL",
+      "bound": "viol == 0",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "source": "invariant",
+      "frequency": "every_run",
+      "last_measured": { "value": 0, "at": "2026-09-20T00:00:00.000Z", "commit": "enrich-heritage-commit-1", "cost_ms": 1200, "sample_n": 1, "source_run": { "run_id": null, "chain": null, "event": "manual_timing" } },
+      "why": {
+        "text": "The inverse direction of the same semantic: an unflagged parcel must never carry a type. MEASURED 0 across all 486,530 parcels, 2026-09-20.",
+        "liveness": { "kind": "column", "ref": "parcels.heritage_designation_type" }
+      }
+    },
+    {
+      "id": "heritage_date_without_type_count",
+      "sql": "SELECT count(*)::int FROM parcels WHERE heritage_designation_date IS NOT NULL AND heritage_designation_type IS NULL",
+      "bound": "viol == 0",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "source": "invariant",
+      "frequency": "every_run",
+      "last_measured": { "value": 0, "at": "2026-09-20T00:00:00.000Z", "commit": "enrich-heritage-commit-1", "cost_ms": 1300, "sample_n": 1, "source_run": { "run_id": null, "chain": null, "event": "manual_timing" } },
+      "why": {
+        "text": "A date can only be set alongside a type — both come from the same winning side of the CASE. MEASURED 0, 2026-09-20.",
+        "liveness": { "kind": "column", "ref": "parcels.heritage_designation_date" }
+      }
+    },
+    {
+      "id": "heritage_part_iv_null_date_count",
+      "sql": "SELECT count(*)::int FROM parcels WHERE heritage_designation_type = 'part_iv_individual' AND heritage_designation_date IS NULL",
+      "bound": "viol == 0",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "source": "invariant",
+      "frequency": "every_run",
+      "last_measured": { "value": 0, "at": "2026-09-20T00:00:00.000Z", "commit": "enrich-heritage-commit-1", "cost_ms": 1300, "sample_n": 1, "source_run": { "run_id": null, "chain": null, "event": "manual_timing" } },
+      "why": {
+        "text": "Scoped to Part IV only — the Part V arm legitimately carries 1,820 null dates (4 of 29 heritage_districts rows have a NULL designated_date, §7). Every heritage_properties Part IV row has a non-null designated_date, so a Part IV parcel with a null date is a port error, not a source-data fact. MEASURED 0, 2026-09-20.",
+        "liveness": { "kind": "column", "ref": "parcels.heritage_designation_date" }
+      }
+    }
+  ],
+  "plausibility": [
+    {
+      "id": "heritage_designated_share_max_pct",
+      "sql": "SELECT (100.0 * COUNT(*) FILTER (WHERE is_heritage_designated) / NULLIF(COUNT(*), 0))::float FROM parcels",
+      "bound": "value_max 10",
+      "limit_from_config": "enrich_heritage_designated_share_plausible_max_pct",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "source": "plausibility",
+      "frequency": "every_run",
+      "retighten_when": "never — a city-wide ceiling on how much of the parcel fabric can plausibly be heritage-designated, not a convergence target. Measured live 2.047%.",
+      "last_measured": { "value": 2.047, "at": "2026-09-20T00:00:00.000Z", "commit": "enrich-heritage-commit-1", "cost_ms": 1200, "sample_n": 1, "source_run": { "run_id": null, "chain": null, "event": "manual_timing" } },
+      "why": {
+        "text": "A join that started over-matching (SRID drift, unbound GIST returning a Cartesian product) would spike this share; a ceiling well above the measured value catches the regression class without ever nearing the legitimate value.",
+        "liveness": { "kind": "column", "ref": "parcels.is_heritage_designated" }
+      }
+    },
+    {
+      "id": "heritage_designated_count_collapse_floor",
+      "sql": "SELECT COUNT(*) FILTER (WHERE is_heritage_designated)::float FROM parcels",
+      "bound": "value_min 1000",
+      "limit_from_config": "enrich_heritage_designated_count_collapse_floor",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "source": "plausibility",
+      "frequency": "every_run",
+      "retighten_when": "never — the mirror-image floor of heritage_designated_share_max_pct. A ceiling-only set is blind to a collapse: a join that silently matched 3% of what it should would satisfy every existing row (parcels_heritage_designated_count only FAILs at exactly 0). Measured live 9,958.",
+      "last_measured": { "value": 9958, "at": "2026-09-20T00:00:00.000Z", "commit": "enrich-heritage-commit-1", "cost_ms": 1200, "sample_n": 1, "source_run": { "run_id": null, "chain": null, "event": "manual_timing" } },
+      "why": {
+        "text": "Reality-Check plan-altitude demand (§7, the enrich_ravines output-panel O4 precedent applied at plan altitude here rather than discovered at output): a floor far below the measured count but far above zero, catching a partial-collapse regression neither the FAIL-at-0 gate nor the share ceiling can see.",
+        "liveness": { "kind": "column", "ref": "parcels.is_heritage_designated" }
+      }
+    },
+    {
+      "id": "heritage_part_iv_matched_le_source",
+      "sql": "SELECT GREATEST(0, (SELECT count(*) FROM parcels WHERE heritage_designation_type = 'part_iv_individual') - (SELECT count(*) FROM heritage_properties WHERE status = 'part_iv'))::float",
+      "bound": "value_max 0",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "source": "plausibility",
+      "frequency": "every_run",
+      "retighten_when": "never — a structural containment-arithmetic bound: containment assigns at most one parcel per source point, so parcels-with-Part-IV can never exceed source Part IV points. Measured 1,217 <= 1,557 => 0.",
+      "last_measured": { "value": 0, "at": "2026-09-20T00:00:00.000Z", "commit": "enrich-heritage-commit-1", "cost_ms": 1300, "sample_n": 1, "source_run": { "run_id": null, "chain": null, "event": "manual_timing" } },
+      "why": {
+        "text": "A LATERAL join bug that fanned out (returned more than one match per point) would break this identity while every per-metric count still looks locally plausible.",
+        "liveness": { "kind": "table", "ref": "parcels" }
+      }
+    }
+  ],
+  "override": { "force_full": "ENRICH_HERITAGE_FORCE_FULL", "force_run": "none", "dry_run": "none" },
+  "emits": [
+    { "key": "duration_ms", "type": "int", "consumers": ["src/lib/admin/funnel.ts", "src/components/FreshnessTimeline.tsx"] },
+    { "key": "code_version", "type": "string", "consumers": [] },
+    { "key": "heritage_designated_by_zone", "type": "object", "consumers": [] }
+  ],
+  "deviations": [
+    {
+      "from": "the pre-conversion #418 Layer-1 cheap-COUNT early return (a full transaction-avoidance branch, evaluated before opening any transaction)",
+      "why": {
+        "text": "F9 / H-A1 (a), RULED (operator, 2026-09-20) — RETIRED as a MECHANISM, knowingly. The ENRICHER runner has no gated-skip branch by design. A Layer-2 predicate carrying the IDENTICAL eligibility countStale applied is ported into parcel_c, so Layer-2 SUBSUMES Layer-1: a zero-stale run is already a 0-row write, and parcels_heritage_enrich_skipped is RE-DERIVED from updated === 0 rather than from the retired branch. Value-equivalence for rows in scope is proven by the §4.5 NULL-stamped cohort differential, not the (refuted) forced-FULL instrument. What this knowingly gives up is declared in limitations[] (FOLD-I5).",
+        "liveness": { "kind": "file", "ref": "scripts/lib/compute/enrich-heritage.js" }
+      },
+      "adjudicated_by": "Operator ruling H-A1 = (a), 2026-09-20 (.cursor/batch2_p2_2_enrich_heritage_active_task.md §12)",
+      "date": "2026-09-20"
+    },
+    {
+      "from": "the legacy's Part-IV WARN gate, conditional on partIvSource > 0",
+      "why": {
+        "text": "EH-D2 — the ported bound is unconditional (0 -> WARN, >=1 -> PASS). The two forms differ only when the register loads zero part_iv points, where the ported form is louder (WARN vs INFO), never quieter. Adjudicated as a declared check/audit-row diff (Spec 124 §7 rung (b)), not re-implemented as a two-input rule in compute.",
+        "liveness": { "kind": "file", "ref": "scripts/lib/compute/enrich-heritage.js" }
+      },
+      "adjudicated_by": "Spec 124 §7 rung (b)",
+      "date": "2026-09-20"
+    }
+  ],
+  "limitations": [
+    {
+      "what": "EH-D1 — emitMeta declared reads {parcels:['id','geom','addr_num_normalized','street_name_normalized','street_type_normalized']} but the SQL reads more: parcels.heritage_dataset_version_when_enriched (scope + guard), parcels.is_heritage_designated/heritage_designation_type/heritage_designation_date (the guard), heritage_properties.id, heritage_districts.id, plus pipeline_runs.records_meta (the §9 contract). The descriptor's inputs.reads.tables[] above declares the WIDENED, honest read set.",
+      "measured": "grep of ENRICH_SQL + readHeritageContract against the pre-conversion emitMeta call, 2026-09-20.",
+      "check_id": "none"
+    },
+    {
+      "what": "RV-L2 class — guards.srid and guards.empty_source are DECLARATIVE, not runner-enforced preconditions. scripts/lib/step/index.js has zero references to either field; the real L14/SRID enforcement is folded into the contract_read hook (readHeritageContract), which is guaranteed to run pre-transaction on every invocation.",
+      "measured": "grep -n 'empty_source|guards.srid' scripts/lib/step/index.js — zero hits, 2026-09-20 (same measurement as enrich_ravines' RV-L2).",
+      "check_id": "none"
+    },
+    {
+      "what": "RV-L3 class — this step's contract_read hook does not need config threading (unlike enrich_ravines, readHeritageContract has no numeric threshold at all: every gate is !x, === false, or > 0), so the RV-L3 gap does not apply here. Cross-referenced, not re-opened.",
+      "measured": "read of readHeritageContract, 2026-09-20 — no comparison against a config value anywhere in the hook.",
+      "check_id": "none"
+    },
+    {
+      "what": "EH-D3 — spec-citation drift found while grounding: Spec 61's cited DEC-E/DEC-F/DEC-H ids do not exist in Spec 61 (inherited from the Spec 59 ravines port); the script's '§3.10 SRID guard' comment points at Spec 61 :370 ('Edge cases'), which has no SRID clause (the real clause is Spec 59 :383); L14 is spec'd for the loader (61:67) while the enrich-side non-empty HALT is L23 step 4 (61:645); L24 (61:77) names enrich-permits.js, not this script. Recorded here; the spec-text correction rides commit 3 (cutover) per Spec 123's rule that a spec-only fix does not belong in a behaviour-differential commit.",
+      "measured": "cross-read of docs/specs/01-pipeline/61_source_heritage_properties.md against scripts/enrich-heritage.js's own comments, 2026-09-20.",
+      "check_id": "none"
+    },
+    {
+      "what": "FOLD-I5 — under H-A1 (a), two input-change classes no longer re-stale on their own: (1) an enrich_heritage_address_levenshtein_threshold change only affects which Part IV point wins inside a multi-point parcel (MEASURED: 94 multi-Part-IV-point parcels holding 272 points, max 15 in one parcel, out of 1,217 parcels with any Part IV point — the only field that can move is heritage_designation_date, on at most 94 parcels); (2) an address-only parcel edit (addr_num_normalized/street_name_normalized/street_type_normalized rewritten with an unchanged geometry) has the same 94-parcel bound via the tiebreak's norm_addr side. The legacy healed both BY ACCIDENT (no Layer-2 meant every stale>0 run re-evaluated all 486,514 parcels) — a side effect of the missing predicate, not a designed guarantee. Remedy: ENRICH_HERITAGE_FORCE_FULL (retained, load-bearing). The per-row/threshold-aware invalidation idea is filed to review_followups.md at cutover, not built here.",
+      "measured": "WITH m AS (SELECT p.id, COUNT(*) n FROM parcels p JOIN heritage_properties hp ON hp.status='part_iv' AND ST_Intersects(p.geom,hp.geom) WHERE <eligibility> GROUP BY p.id) SELECT COUNT(*) FILTER (WHERE n>1), SUM(n) FILTER (WHERE n>1), MAX(n), COUNT(*) FROM m — run live 2026-09-20.",
+      "check_id": "none"
+    }
+  ],
+  "interpretation": "none",
+  "recovery": {
+    "reset": "No TRUNCATE/rebuild mechanism and none is needed — a plain re-run re-evaluates every eligible parcel whose stamp disagrees with the current heritage version (staleness.scope) and the IS DISTINCT FROM 4-column guard makes an unnecessary re-stamp cheap. Nulling parcels.heritage_dataset_version_when_enriched by hand for a scoped set of parcels IS a valid targeted reset.",
+    "resume": "none",
+    "force": "none",
+    "rollback": "none",
+    "verify_clean": "none",
+    "cascades": "derived",
+    "interrupted": "force_full_on_next_run",
+    "interrupted_why": {
+      "text": "The single write target sits inside ONE shared transaction (execution.txn_scope 'step', the phase's own txn 'shared'), so a run killed mid-statement leaves parcels exactly as it found them — no half-written state (proven by the new enrich-heritage-kill-mid-run.db.test.ts, pg_cancel_backend, not a process kill). force_full_on_next_run is accurate, not a resumption claim: runEnrichPhase folds staleness.detectInterruptedRetraction into full before any pass runs, and because this step's scope predicate re-admits every stale parcel unconditionally on every run, the next run does a full pass over whatever is still stale whether or not the prior run was interrupted.",
+      "liveness": { "kind": "file", "ref": "scripts/lib/step/index.js" }
+    },
+    "before_image": "none",
+    "before_image_why": {
+      "text": "recovery.before_image applies to a retraction (outputs.writes[].retract != 'none'); this step's sole write target declares retract:'none' — it only ever stamps a value, never clears one to NULL.",
+      "liveness": { "kind": "file", "ref": "scripts/lib/compute/enrich-heritage.js" }
+    }
+  },
+  "database": { "class": "primary", "min_migration": 244, "assert_current_database": "postgres" },
+  "counters": {
+    "records_total": {
+      "source": "matched.compute.eligible_parcels_scanned",
+      "scoped_by": "step",
+      "why": {
+        "text": "A4 ruling (operator, applied per the enrich_parcels/enrich_ravines ENRICHER precedent): declares the scanned population. matched.compute.<name> resolves while a bare compute.* resolves NULL for every ENRICHER.",
+        "liveness": { "kind": "file", "ref": "scripts/lib/step/index.js" }
+      }
+    },
+    "records_new": {
+      "source": "matched.compute.records_new_aggregate",
+      "scoped_by": "step",
+      "why": {
+        "text": "This step INSERTs nothing — the sole write target is an UPDATE, and class N's own executor structurally refuses any statement text containing INSERT INTO or ON CONFLICT. Declared as a finite literal 0 rather than omitted, because an omitted source resolves null and null reads as 'not counted'.",
+        "liveness": { "kind": "file", "ref": "scripts/lib/step/write.js" }
+      }
+    },
+    "records_updated": {
+      "source": "written.e1.updated",
+      "scoped_by": "step",
+      "why": {
+        "text": "COUNTER-ROOT: write.targetKey(0) returns 'e1' — the rowCount of the sole declared write target, one-to-one with the legacy's `updated` counter. RV-D4's seamOwned guard has landed (scripts/lib/step/index.js), so the pass returns { updated, sourceDatasetVersion } with no key-name workaround.",
+        "liveness": { "kind": "file", "ref": "scripts/lib/step/write.js" }
+      }
+    }
+  },
+  "config": {
+    "logic_variables": [
+      { "name": "enrich_heritage_address_levenshtein_threshold", "min": 0, "max": 10, "on_invalid": "fail" },
+      { "name": "enrich_heritage_unlinked_point_warn_pct", "min": 0, "max": 100, "on_invalid": "fail" },
+      { "name": "enrich_heritage_unlinked_point_fail_pct", "min": 0, "max": 100, "on_invalid": "fail" },
+      { "name": "enrich_heritage_designated_min_count", "min": 0, "max": 500000, "on_invalid": "fail" },
+      { "name": "enrich_heritage_part_iv_min_count", "min": 0, "max": 500000, "on_invalid": "fail" },
+      { "name": "enrich_heritage_heartbeat_minutes", "min": 1, "max": 60, "on_invalid": "fail" },
+      { "name": "enrich_heritage_lock_timeout_ms", "min": 0, "max": 3600000, "on_invalid": "fail" },
+      { "name": "enrich_heritage_phase_timeout_minutes", "min": 0, "max": 290, "on_invalid": "fail" },
+      { "name": "enrich_heritage_designated_share_plausible_max_pct", "min": 0, "max": 100, "on_invalid": "fail" },
+      { "name": "enrich_heritage_designated_count_collapse_floor", "min": 0, "max": 500000, "on_invalid": "fail" }
+    ],
+    "validation": "strict",
+    "hoisted_above_gate": true,
+    "retired": [
+      {
+        "name": "heritage_point_match_radius_m",
+        "since": "2026-06-04",
+        "why": {
+          "text": "Spec 61 §12.3a seeds a radius-match parameter (heritage_point_match_radius_m) that live validation superseded: Part IV switched from ST_DWithin(radius) to ST_Intersects containment (the ST_DWithin form over-matched 4x — 6,217 parcels vs 1,549 source points). The legacy ConfigSchema comment states this was 'left out of the schema rather than declared-and-ignored'; declaring it retired here is the honest, checker-visible form of the same fact.",
+          "liveness": { "kind": "spec", "ref": "docs/specs/01-pipeline/61_source_heritage_properties.md" }
+        },
+        "ledger": "EH-D3"
+      }
+    ]
+  },
+  "sharing": {
+    "chains": "derived",
+    "shared": "derived",
+    "slug_forms": "derived",
+    "varies_by_chain": { "checks": "none", "phase": { "sources": 13 }, "audit_table": "one", "scope": "none" },
+    "on_contention": "self_skip"
+  },
+  "terminals": [
+    {
+      "id": "lock_held_elsewhere",
+      "kind": "skip_lock_contention",
+      "status": "self_skipped",
+      "records_meta": { "skipped": "bool", "reason": "string" },
+      "why": {
+        "text": "Advisory lock 62 held elsewhere. Row-derived SKIP summary.",
+        "liveness": { "kind": "file", "ref": "scripts/lib/step/index.js" }
+      }
+    },
+    {
+      "id": "enriched",
+      "kind": "success",
+      "status": "completed",
+      "records_meta": { "duration_ms": "int", "audit_table": "object" },
+      "why": {
+        "text": "The heritage_join phase ran (whether or not its scope was empty) and every blocking check met its PASS bound.",
+        "liveness": { "kind": "check", "ref": "parcels_heritage_designated_count" }
+      }
+    },
+    {
+      "id": "enriched_with_warnings",
+      "kind": "success",
+      "status": "completed_with_warnings",
+      "records_meta": { "duration_ms": "int", "audit_table": "object" },
+      "why": {
+        "text": "The phase ran and at least one non-blocking check (e.g. parcels_part_iv_count, heritage_points_no_parcel_match's WARN tier, or a plausibility row) is below PASS. Row-derived, never a parallel boolean.",
+        "liveness": { "kind": "check", "ref": "parcels_part_iv_count" }
+      }
+    },
+    {
+      "id": "failed_contract_violation",
+      "kind": "fail_error",
+      "status": "failed",
+      "records_meta": { "terminal": "string" },
+      "why": {
+        "text": "readHeritageContract threw — the §9 producer-protocol HALT (missing/failed/stale producer, missing sub-block, zero feature_count, drift_check_passed=false, empty lineage) OR the L14 empty-source HALT OR the SRID=4326 assertion, all folded into this ONE pre-transaction hook. PRESERVED: the legacy also halts before any transaction opens for every one of these conditions.",
+        "liveness": { "kind": "file", "ref": "scripts/lib/compute/enrich-heritage.js" }
+      }
+    },
+    {
+      "id": "failed_precondition",
+      "kind": "fail_error",
+      "status": "failed",
+      "records_meta": { "terminal": "string" },
+      "why": {
+        "text": "guards.requires found a required extension/index/column ABSENT with on_missing:'fail' (PostGIS, fuzzystrmatch, either GIST index, or one of the migration-171 columns). PRESERVED and STRENGTHENED (Class A(vii)): assertRequirements now runs on EVERY invocation, where the legacy's assertPreconditions ran unconditionally too (Commit C hoisted it) but via a hand-rolled call, not a declared mechanism.",
+        "liveness": { "kind": "file", "ref": "scripts/lib/step/index.js" }
+      }
+    },
+    {
+      "id": "failed_config_out_of_bounds",
+      "kind": "fail_error",
+      "status": "failed",
+      "records_meta": { "terminal": "string" },
+      "why": {
+        "text": "A declared logic_variables[] entry resolved absent or outside its [min,max] under on_invalid:'fail'. hoisted_above_gate:true puts this refusal ABOVE the advisory lock.",
+        "liveness": { "kind": "file", "ref": "scripts/lib/step/config.js" }
+      }
+    }
+  ]
+}

@@ -16,7 +16,7 @@ const { buildChecks, resolveCliConfig, RES, makeCliPool } = require('./parcel-sa
 // The enriched field families to show (real column names verified against the live schema).
 const FIELDS = {
   zoning: ['zoning_class', 'zoning_is_ambiguous', 'bylaw_max_fsi', 'bylaw_max_coverage_pct', 'bylaw_max_height_m', 'bylaw_max_stories', 'bylaw_max_units', 'bylaw_standard_setback_m'],
-  lot: ['lot_size_sqm', 'lot_size_confidence', 'is_heritage_designated', 'is_in_ravine_protection_area', 'ravine_distance_m', 'ravine_dataset_version_when_enriched', 'is_corner_lot', 'abuts_laneway'],
+  lot: ['lot_size_sqm', 'lot_size_confidence', 'is_heritage_designated', 'heritage_designation_type', 'heritage_designation_date', 'heritage_dataset_version_when_enriched', 'is_in_ravine_protection_area', 'ravine_distance_m', 'ravine_dataset_version_when_enriched', 'is_corner_lot', 'abuts_laneway'],
   maxbuild: ['max_buildable_footprint_sqm', 'max_buildable_gfa_sqm', 'max_buildable_gfa_basis', 'max_build_stories', 'max_build_stories_basis', 'max_build_height_m', 'max_build_width_m', 'max_build_length_m', 'max_build_confidence', 'max_build_fsi'],
   existing: ['cur_floor_gfa_sqm', 'cur_pot_2story_gfa_sqm', 'existing_stories', 'existing_height_m', 'existing_width_m', 'existing_length_m', 'existing_greenspace_sqm', 'existing_other_structures_sqm', 'existing_structure_confidence', 'existing_data_quality_flag'],
   optconfig: ['opt_aor_gfa_sqm', 'opt_aor_storeys', 'opt_coa_gfa_sqm', 'opt_coa_storeys', 'opt_suite_type', 'opt_binding_constraint', 'opt_config_confidence', 'coa_fsi', 'realized_fsi_p90', 'comp_fsi_p50'],

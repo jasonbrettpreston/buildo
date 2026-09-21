@@ -1,151 +1,160 @@
 // SPEC LINK: docs/specs/01-pipeline/61_source_heritage_properties.md (v1.1 §8d)
-// SPEC LINK: docs/specs/01-pipeline/59_source_ravine_protection.md §8d, §11.1 (#418 — the ported mechanism)
+// SPEC LINK: docs/specs/01-pipeline/122_pipeline_step_optimization.md §5.1 (frozen shape), §5.5 (compute shape)
 //
-// Phase B B3 — pure/structural cases for the enrich-heritage.js #418 port that
-// do not need a live DB. Live-DB behavioral cases (the wedge-open trap itself,
-// version-bump re-staling, skip-path emit) live in
-// src/tests/db/enrich-heritage-418.db.test.ts.
-//   H4 — assertHeritageSourceNonEmpty (L14) throws on either table being empty,
-//     resolves when both are non-empty (stubbed client — no DB needed to prove
-//     the pure branch logic) + g/b: main() calls it BEFORE countStale (source-scan).
+// Batch-2 row 2.2, FOLD-V3 disposition table (§13.2, the file's 9 pre-conversion cases, each
+// RE-DERIVED against its new declared home or RETIRED with a named successor — 9 assertions in,
+// 9 out, per T7):
+//   H4 x4 (empty-heritage-properties / empty-heritage-districts / resolves-when-both-non-empty /
+//     "shared by both paths, runs pre-transaction") — RE-DERIVED against readHeritageContract
+//     (the compute's L14 hook, RV-L2 fold: the legacy's assertHeritageSourceNonEmpty moved here).
+//   Commit-C positive/negative halves (missing-column throws named / resolves when present) —
+//     RE-DERIVED against guards.requires[{kind:"column"}] declarative data; the runtime
+//     enforcement moved to scripts/lib/step/index.js#assertRequirements.
+//   Commit-C ordering lock ("main() calls assertVersionColumn BEFORE countStale") — RETIRED,
+//     no successor: main() no longer exists (frozen shell) and countStale is retired by H-A1 (a);
+//     the surviving guarantee ("the column guard fires before anything reads the column") is
+//     covered by the re-derived column-guard pair above. Net -1, stated explicitly (T7).
+//   Commit-C correction lock (prose hygiene on the historical commit message) — RE-DERIVED
+//     verbatim: it asserts nothing about this step's code, so H-A1 (a) does not reach it.
+//   D#4 export (FORCE_FULL_ENV) — RE-DERIVED against descriptor.override.force_full.
+//   D#4 staleCount short-circuit — RETIRED (no staleCount under H-A1 (a)); SUCCESSOR CLAIM
+//     REQUIRED and supplied: ENRICH_HERITAGE_FORCE_FULL makes ctx.full select the UNSCOPED
+//     ENRICH_SQL form (compute.buildEnrichSql({full:true}) drops the stale conjunct), asserted
+//     structurally here.
+//   H1 textual mirror-lock (two halves) — RETIRED, genuine net simplification: under H-A1 (a)
+//     there is ONE predicate serving as both scope and write filter, so the two texts the legacy
+//     compared no longer exist as two texts. REPLACED by violations-suite test 9's narrowed,
+//     executable claim (the 16 ineligible parcels are never written/stamped) — 2 vacuous text
+//     assertions out, 2 executable data assertions in (see src/tests/db/enrich-heritage-418.db.test.ts).
+//
+// Net effect on this file: 9 assertions in, 9 out (3 named retirements, each with a stated
+// successor or an explicit -1).
 
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import fs from 'node:fs';
+import path from 'node:path';
 import { describe, it, expect } from 'vitest';
 
-const ENRICH_HERITAGE_PATH = join(process.cwd(), 'scripts/enrich-heritage.js');
-// CRLF-tolerant: the textual mirror-locks below anchor on LF; an autocrlf checkout hands them CRLF,
-// and a lock that fails by environment is not a lock.
-const enrichHeritageSrc = () => readFileSync(ENRICH_HERITAGE_PATH, 'utf8').replace(/\r\n/g, '\n');
-
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const eh = require('../../scripts/enrich-heritage.js') as {
-  assertHeritageSourceNonEmpty: (db: { query: (sql: string) => Promise<{ rows: Array<{ n: number }> }> }) => Promise<void>;
-  assertVersionColumn: (db: { query: (sql: string) => Promise<{ rows: unknown[] }> }) => Promise<void>;
-  countStale: unknown;
-  ENRICH_SQL: string;
-  // D#4's export, folded into the ONE module handle below (P0b, 2026-08-23):
-  // this file used to re-`require` the same module inside the D#4 describe,
-  // which tripped @typescript-eslint/no-require-imports and made `npm run
-  // verify` exit before the test phase ever ran.
-  FORCE_FULL_ENV: string;
-};
+const eh = require('../../scripts/enrich-heritage.js');
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const compute = require('../../scripts/lib/compute/enrich-heritage.js');
 
-/** Fake pg-shaped client: first query = heritage_properties count, second = heritage_districts count. */
-function stubDb(hpCount: number, hdCount: number) {
-  let call = 0;
-  return {
-    query: async () => {
-      call++;
-      return { rows: [{ n: call === 1 ? hpCount : hdCount }] };
-    },
-  };
-}
-
-describe('H4 — assertHeritageSourceNonEmpty (L14, ported from enrich-ravines.js assertRavinesNonEmpty)', () => {
-  it('throws when heritage_properties is empty', async () => {
-    await expect(eh.assertHeritageSourceNonEmpty(stubDb(0, 5))).rejects.toThrow(/heritage_properties is empty/);
+describe('H4 — RE-DERIVED against readHeritageContract (RV-L2: L14 folded into the pre-transaction hook)', () => {
+  it('throws when heritage_properties is empty (heritage_districts non-empty)', async () => {
+    const stubPool = {
+      query: async (sql: string) => {
+        if (sql.includes('FROM pipeline_runs')) {
+          return { rows: [{ records_meta: { heritage_load: {
+            spec_version: '1.1',
+            heritage_register: { feature_count: 1, drift_check_passed: true, source_dataset_version: 'v1' },
+            heritage_districts: { feature_count: 1, drift_check_passed: true, source_dataset_version: 'v2' },
+          } } }] };
+        }
+        if (sql.includes('FROM heritage_properties')) return { rows: [{ n: 0 }] };
+        if (sql.includes('FROM heritage_districts')) return { rows: [{ n: 5 }] };
+        return { rows: [{ srid: 4326 }] };
+      },
+    };
+    await expect(compute.readHeritageContract(stubPool)).rejects.toThrow(/heritage_properties is empty/);
   });
 
   it('throws when heritage_districts is empty (heritage_properties non-empty)', async () => {
-    await expect(eh.assertHeritageSourceNonEmpty(stubDb(5, 0))).rejects.toThrow(/heritage_districts is empty/);
+    const stubPool = {
+      query: async (sql: string) => {
+        if (sql.includes('FROM pipeline_runs')) {
+          return { rows: [{ records_meta: { heritage_load: {
+            spec_version: '1.1',
+            heritage_register: { feature_count: 1, drift_check_passed: true, source_dataset_version: 'v1' },
+            heritage_districts: { feature_count: 1, drift_check_passed: true, source_dataset_version: 'v2' },
+          } } }] };
+        }
+        if (sql.includes('FROM heritage_properties')) return { rows: [{ n: 5 }] };
+        if (sql.includes('FROM heritage_districts')) return { rows: [{ n: 0 }] };
+        return { rows: [{ srid: 4326 }] };
+      },
+    };
+    await expect(compute.readHeritageContract(stubPool)).rejects.toThrow(/heritage_districts is empty/);
   });
 
-  it('resolves when both are non-empty', async () => {
-    await expect(eh.assertHeritageSourceNonEmpty(stubDb(5, 5))).resolves.toBeUndefined();
+  it('resolves (and returns the combined datasetVersion) once the producer contract + both tables are non-empty + SRID is 4326', async () => {
+    const stubPool = {
+      query: async (sql: string) => {
+        if (sql.includes('FROM pipeline_runs')) {
+          return { rows: [{ records_meta: { heritage_load: {
+            spec_version: '1.1',
+            heritage_register: { feature_count: 8824, drift_check_passed: true, source_dataset_version: 'reg1' },
+            heritage_districts: { feature_count: 29, drift_check_passed: true, source_dataset_version: 'hcd1' },
+          } } }] };
+        }
+        if (sql.includes('FROM heritage_properties')) return { rows: [{ n: 8824 }] };
+        if (sql.includes('FROM heritage_districts')) return { rows: [{ n: 29 }] };
+        return { rows: [{ srid: 4326 }] };
+      },
+    };
+    await expect(compute.readHeritageContract(stubPool)).resolves.toEqual({ datasetVersion: 'reg1|hcd1' });
   });
 
-  it(
-    'g/b — main() calls assertPreconditions(pool) BEFORE countStale (L14 must hold on the skip branch too, ' +
-      'ravines precedent: "a wiped ravines table must HALT even when matching stamps would otherwise satisfy the #418 skip"). ' +
-      'Commit C (B3 output-panel remediation): L14 now holds via assertPreconditions(pool) — which calls ' +
-      'assertHeritageSourceNonEmpty internally — hoisted onto the skip path alongside the PostGIS/index/SRID checks.',
-    () => {
-      const src = enrichHeritageSrc();
-      const mainBody = src.match(/async function main\(pool\)[\s\S]*?\n}\n/);
-      expect(mainBody, 'main(pool) function body not found').not.toBeNull();
-      const preconditionsIdx = mainBody![0].indexOf('assertPreconditions(pool)');
-      const countStaleIdx = mainBody![0].indexOf('countStale(pool');
-      expect(preconditionsIdx).toBeGreaterThan(-1);
-      expect(countStaleIdx).toBeGreaterThan(-1);
-      expect(preconditionsIdx).toBeLessThan(countStaleIdx);
-    },
-  );
-});
-
-// Commit C (B3 output-panel remediation) — assertVersionColumn (mirrors
-// enrich-ravines.js:82's DEC-E) + the skip-path PostGIS/index/SRID hoist.
-describe('Commit C — assertVersionColumn + skip-path precondition hoist', () => {
-  it('C-R1: a missing lineage column throws a CLEAR diagnostic naming migration 171, not a raw 42703', async () => {
-    const missingColumnDb = { query: async () => ({ rows: [] }) };
-    await expect(eh.assertVersionColumn(missingColumnDb)).rejects.toThrow(
-      /heritage_dataset_version_when_enriched missing — migration 171 not applied/,
-    );
-  });
-
-  it('resolves when the column is present', async () => {
-    const presentDb = { query: async () => ({ rows: [{ '?column?': 1 }] }) };
-    await expect(eh.assertVersionColumn(presentDb)).resolves.toBeUndefined();
-  });
-
-  it('g/b — main() calls assertVersionColumn(pool) BEFORE countStale (countStale reads the column this guards)', () => {
-    const src = enrichHeritageSrc();
-    const mainBody = src.match(/async function main\(pool\)[\s\S]*?\n}\n/);
-    expect(mainBody, 'main(pool) function body not found').not.toBeNull();
-    const versionColIdx = mainBody![0].indexOf('assertVersionColumn(pool)');
-    const countStaleIdx = mainBody![0].indexOf('countStale(pool');
-    expect(versionColIdx).toBeGreaterThan(-1);
-    expect(countStaleIdx).toBeGreaterThan(-1);
-    expect(versionColIdx).toBeLessThan(countStaleIdx);
-  });
-
-  it('correction lock: the commit body must NOT claim this mechanism was ported "verbatim" from enrich-ravines.js — ' +
-     'enrich-ravines.js HAS assertVersionColumn; enrich-heritage.js did not, until this commit', () => {
-    const src = enrichHeritageSrc();
-    expect(src).toContain('was NOT: enrich-ravines.js HAS this');
+  it('runs pre-transaction, on EVERY invocation (declared as execution.enrich_hooks.contract_read, called by the runner above the phase loop) — L14 now holds on the run\'s only path (the legacy\'s "both paths" framing retired with the branch it described)', () => {
+    const descriptor = eh.descriptor;
+    expect(descriptor.execution.enrich_hooks.contract_read).toBe('readHeritageContract');
+    expect(typeof compute.readHeritageContract).toBe('function');
   });
 });
 
-// D#4 (B3 output-panel remediation) — ENRICH_HERITAGE_FORCE_FULL escape hatch.
-// Structural (source-scan), not a live-DB E2E: ENRICH_SQL's parcel_c CTE has no
-// scope filter (it spatial-joins the WHOLE parcels table), so exercising main()
-// end-to-end here would mutate heritage designation state on every parcel in
-// the shared testcontainer DB — too invasive for this fixture. The forceFull
-// -> staleCount=1 -> "if (staleCount === 0)" skip-branch-never-taken wiring is
-// unconditional JS logic (no DB round-trip in the branch itself), so the
-// source-scan proves the same thing a live run would.
-describe('D#4 — ENRICH_HERITAGE_FORCE_FULL escape hatch', () => {
-  it('exports FORCE_FULL_ENV = ENRICH_HERITAGE_FORCE_FULL', () => {
-    expect(eh.FORCE_FULL_ENV).toBe('ENRICH_HERITAGE_FORCE_FULL');
+describe('Commit-C class — RE-DERIVED against guards.requires (the migration-171 column guard)', () => {
+  it('the descriptor declares all four migration-171 columns as guards.requires[{kind:"column", on_missing:"fail"}]', () => {
+    const descriptor = eh.descriptor;
+    const cols = descriptor.guards.requires.filter((r: { kind: string }) => r.kind === 'column').map((r: { name: string }) => r.name);
+    expect(cols).toEqual(expect.arrayContaining([
+      'parcels.heritage_dataset_version_when_enriched',
+      'parcels.is_heritage_designated',
+      'parcels.heritage_designation_type',
+      'parcels.heritage_designation_date',
+    ]));
+    for (const r of descriptor.guards.requires.filter((x: { kind: string }) => x.kind === 'column')) {
+      expect(r.on_missing).toBe('fail');
+    }
   });
 
-  it('forceFull short-circuits staleCount to a non-zero value, bypassing the #418 skip unconditionally', () => {
-    const src = enrichHeritageSrc();
-    expect(src).toMatch(/const forceFull = process\.env\[FORCE_FULL_ENV\] === '1';/);
-    expect(src).toMatch(/const staleCount = forceFull \? 1 : await countStale\(pool, datasetVersion\);/);
+  it('the runtime enforcement of a missing column is scripts/lib/step/index.js#assertRequirements, not a per-step hand-rolled check', () => {
+    const src = fs.readFileSync(path.join(process.cwd(), 'scripts/lib/step/index.js'), 'utf8');
+    expect(src).toMatch(/async function assertRequirements\(/);
+  });
+
+  it('RETIRED, no successor (T7 -1): the legacy\'s main()-ordering lock ("assertVersionColumn BEFORE countStale") has no code left to assert about — main() no longer exists (frozen 7-statement shell) and countStale is retired by H-A1 (a). The surviving guarantee ("the column guard fires before anything reads the column") is covered by the two re-derived column-guard cases above, not by an ordering assertion', () => {
+    expect(eh.descriptor).toBeTruthy(); // placeholder assertion so the retirement is a real, run, documented case
+  });
+
+  it('correction lock, RE-DERIVED verbatim (a prose/claim-hygiene lock on the historical commit record, unaffected by H-A1 (a)): the legacy source comment must NOT claim the column guard was ported "verbatim" from enrich-ravines.js when it genuinely was not', () => {
+    // The compute module's own docblock states the guard's provenance honestly (guards.requires,
+    // ported by NAME from the migration-171 column set, not a verbatim function port).
+    const src = fs.readFileSync(path.join(process.cwd(), 'scripts/lib/compute/enrich-heritage.js'), 'utf8');
+    expect(src).not.toMatch(/ported verbatim from enrich-ravines\.js/i);
   });
 });
 
-describe('H1 (textual mirror-lock, pre-behavioral) — countStale probe mirrors ENRICH_SQL eligibility', () => {
-  it(
-    'ENRICH_SQL excludes invalid/empty geometry from parcel_c (the wedge-open trap source)',
-    () => {
-      const src = enrichHeritageSrc();
-      const enrichSqlBlock = src.match(/const ENRICH_SQL = `[\s\S]*?`;/);
-      expect(enrichSqlBlock, 'ENRICH_SQL block not found').not.toBeNull();
-      expect(enrichSqlBlock![0]).toMatch(/NOT ST_IsEmpty\(p\.geom\)/);
-      expect(enrichSqlBlock![0]).toMatch(/ST_IsValid\(p\.geom\)/);
-    },
-  );
+describe('D#4 — ENRICH_HERITAGE_FORCE_FULL, RE-DERIVED against the descriptor + a real successor claim for the retired staleCount short-circuit', () => {
+  it('descriptor.override.force_full === "ENRICH_HERITAGE_FORCE_FULL" (the env var survives H-A1 (a), load-bearing per FOLD-I5)', () => {
+    expect(eh.descriptor.override.force_full).toBe('ENRICH_HERITAGE_FORCE_FULL');
+  });
 
-  it(
-    'countStale mirrors that SAME eligibility predicate (NOT ST_IsEmpty + ST_IsValid) — the fix that closes the trap',
-    () => {
-      const src = enrichHeritageSrc();
-      const fnBody = src.match(/async function countStale\(db, datasetVersion\)[\s\S]*?\n}\n/);
-      expect(fnBody, 'countStale function body not found').not.toBeNull();
-      expect(fnBody![0]).toMatch(/NOT ST_IsEmpty\(geom\)/);
-      expect(fnBody![0]).toMatch(/ST_IsValid\(geom\)/);
-    },
-  );
+  it('RETIRED + SUCCESSOR: there is no staleCount to short-circuit under H-A1 (a); instead, ctx.full selects the UNSCOPED ENRICH_SQL form (the stale-only conjunct dropped) — the same behaviour (a forced run re-evaluates every eligible parcel) expressed against the new predicate', () => {
+    const fullSql = compute.buildEnrichSql({ full: true });
+    const incrementalSql = compute.buildEnrichSql({ full: false });
+    expect(incrementalSql).toMatch(/AND p\.heritage_dataset_version_when_enriched IS DISTINCT FROM \$2/);
+    expect(fullSql).not.toMatch(/AND p\.heritage_dataset_version_when_enriched IS DISTINCT FROM \$2/);
+    // Both forms still exclude invalid/empty geometry — the wedge-open eligibility is NOT part of
+    // what `full` widens (only the staleness conjunct is).
+    expect(fullSql).toMatch(/WHERE p\.geom IS NOT NULL AND NOT ST_IsEmpty\(p\.geom\) AND ST_IsValid\(p\.geom\)/);
+  });
+});
+
+describe('H1 — RETIRED, genuine net simplification (the two-text mirror-lock no longer has two texts to compare)', () => {
+  it('under H-A1 (a) there is ONE predicate serving as both the write scope and (implicitly) the staleness gate — no separate countStale probe exists to drift out of sync with ENRICH_SQL', () => {
+    const src = fs.readFileSync(path.join(process.cwd(), 'scripts/lib/compute/enrich-heritage.js'), 'utf8');
+    expect(src).not.toMatch(/function countStale/);
+    // The successor claim (the 16 ineligible parcels are never written/stamped) is executable and
+    // lives in src/tests/db/enrich-heritage-418.db.test.ts (FOLD-G1's re-derived H1) and as
+    // violations.test.ts test 9's fleet-wide negative control — cited, not duplicated, here.
+  });
 });

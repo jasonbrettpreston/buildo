@@ -96,7 +96,7 @@ describe('enrich_heritage — G-shape (true from commit 1: legacy source text)',
 });
 
 describe('enrich_heritage — descriptor structure (RED at commit 1, FLIPS at commit 2 — descriptor lands there)', () => {
-  it.fails('descriptor validates against step.schema.json; identity.lock === 62, archetype ENRICHER [flips at commit 2]', () => {
+  it('descriptor validates against step.schema.json; identity.lock === 62, archetype ENRICHER [flips at commit 2]', () => {
     const descriptor = loadDescriptor();
     // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-explicit-any
     const { validateDescriptor }: any = require(path.join(REPO_ROOT, 'scripts/lib/step/validate.js'));
@@ -106,7 +106,7 @@ describe('enrich_heritage — descriptor structure (RED at commit 1, FLIPS at co
     expect(descriptor.identity.name).toBe('enrich_heritage');
   });
 
-  it.fails('checks.length === 10, execution.phases.length === 1, outputs.writes.length === 1, invariants.length === 4, plausibility.length === 3 [flips at commit 2]', () => {
+  it('checks.length === 10, execution.phases.length === 1, outputs.writes.length === 1, invariants.length === 4, plausibility.length === 3 [flips at commit 2]', () => {
     const descriptor = loadDescriptor();
     expect(descriptor.checks).toHaveLength(10);
     expect(descriptor.execution.phases).toHaveLength(1);
@@ -115,7 +115,7 @@ describe('enrich_heritage — descriptor structure (RED at commit 1, FLIPS at co
     expect(descriptor.plausibility).toHaveLength(3);
   });
 
-  it.fails('Rule 3, config direction — every config.logic_variables[].name has a seed row and on_invalid:"fail"; 10 total [flips at commit 2]', () => {
+  it('Rule 3, config direction — every config.logic_variables[].name has a seed row and on_invalid:"fail"; 10 total [flips at commit 2]', () => {
     const descriptor = loadDescriptor();
     // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-explicit-any
     const seeds: any = require(path.join(REPO_ROOT, 'scripts/seeds/logic_variables.json'));
@@ -126,7 +126,7 @@ describe('enrich_heritage — descriptor structure (RED at commit 1, FLIPS at co
     expect(descriptor.config.logic_variables).toHaveLength(10);
   });
 
-  it.fails('Rule 3, compute direction — no threshold-shaped literal (15, 30, 2, 1, 1000) survives unexternalized in compute [flips at commit 2]', () => {
+  it('Rule 3, compute direction — no threshold-shaped literal (15, 30, 2, 1, 1000) survives unexternalized in compute [flips at commit 2]', () => {
     const src = read(COMPUTE_REL);
     // The five ported literals now resolve through ctx.config, never re-inlined as bare numbers
     // in a comparison. This is a structural presence check: the compute reads
@@ -135,7 +135,7 @@ describe('enrich_heritage — descriptor structure (RED at commit 1, FLIPS at co
     expect(src).not.toMatch(/joinUpdate\(0, ENRICH_SQL, \[2,/);
   });
 
-  it.fails('the 4-column guard + F9 deviation + config.retired[] are declared as descriptor DATA [flips at commit 2]', () => {
+  it('the 4-column guard + F9 deviation + config.retired[] are declared as descriptor DATA [flips at commit 2]', () => {
     const descriptor = loadDescriptor();
     const w0 = descriptor.outputs.writes[0];
     expect(w0.write_discipline.guard_columns).toEqual([
@@ -147,7 +147,7 @@ describe('enrich_heritage — descriptor structure (RED at commit 1, FLIPS at co
     expect(descriptor.config.retired.map((r: { name: string }) => r.name)).toContain('heritage_point_match_radius_m');
   });
 
-  it.fails('outputs.invalidates[] declares the lineage-column invalidator, and phases[0].invalidator_ref points at it [flips at commit 2]', () => {
+  it('outputs.invalidates[] declares the lineage-column invalidator, and phases[0].invalidator_ref points at it [flips at commit 2]', () => {
     const descriptor = loadDescriptor();
     expect(descriptor.staleness.scope).toMatch(/heritage_dataset_version_when_enriched/);
     expect(descriptor.outputs.invalidates).toHaveLength(1);
@@ -155,7 +155,7 @@ describe('enrich_heritage — descriptor structure (RED at commit 1, FLIPS at co
     expect(descriptor.execution.phases[0].invalidator_ref).toBe(0);
   });
 
-  it.fails('COUNTER-ROOT — records_updated from written.e1.updated, records_total/records_new from matched.compute.*, never a bare compute.* [flips at commit 2]', () => {
+  it('COUNTER-ROOT — records_updated from written.e1.updated, records_total/records_new from matched.compute.*, never a bare compute.* [flips at commit 2]', () => {
     const descriptor = loadDescriptor();
     const c = descriptor.counters;
     expect(c.records_updated.source).toBe('written.e1.updated');
@@ -166,7 +166,7 @@ describe('enrich_heritage — descriptor structure (RED at commit 1, FLIPS at co
     }
   });
 
-  it.fails('the ENRICHER profile\'s three required from-config fields name REAL logic variables, never "none" [flips at commit 2]', () => {
+  it('the ENRICHER profile\'s three required from-config fields name REAL logic variables, never "none" [flips at commit 2]', () => {
     const descriptor = loadDescriptor();
     const e = descriptor.execution;
     expect(e.heartbeat_minutes_from_config).toBe('enrich_heritage_heartbeat_minutes');
@@ -176,7 +176,7 @@ describe('enrich_heritage — descriptor structure (RED at commit 1, FLIPS at co
     expect(e.enrich_hooks.post_phase).toBe('computePostPhase');
   });
 
-  it.fails('override.force_full names ENRICH_HERITAGE_FORCE_FULL and staleness.mode_select is tri_state (H-A1 (a), RULED) [flips at commit 2]', () => {
+  it('override.force_full names ENRICH_HERITAGE_FORCE_FULL and staleness.mode_select is tri_state (H-A1 (a), RULED) [flips at commit 2]', () => {
     const descriptor = loadDescriptor();
     expect(descriptor.override.force_full).toBe('ENRICH_HERITAGE_FORCE_FULL');
     expect(descriptor.staleness.mode_select).toBe('tri_state');
@@ -185,7 +185,7 @@ describe('enrich_heritage — descriptor structure (RED at commit 1, FLIPS at co
 });
 
 describe('enrich_heritage — the artifacts commit 2 owes (RED at commit 1, FLIP at commit 2)', () => {
-  it.fails('the compute module exists, exports the two declared hooks by name, and passes[] match the declared phase [flips at commit 2]', () => {
+  it('the compute module exists, exports the two declared hooks by name, and passes[] match the declared phase [flips at commit 2]', () => {
     const descriptor = loadDescriptor();
     const compute = loadCompute();
     expect(typeof compute).toBe('function');
@@ -204,7 +204,7 @@ describe('enrich_heritage — the artifacts commit 2 owes (RED at commit 1, FLIP
     expect(src).not.toMatch(/console\./);
   });
 
-  it.fails('F6 — ENRICH_SQL is the CONTAINMENT form (ST_Intersects), never the spec\'s ST_DWithin radius; L12 Part IV wins over Part V [flips at commit 2]', () => {
+  it('F6 — ENRICH_SQL is the CONTAINMENT form (ST_Intersects), never the spec\'s ST_DWithin radius; L12 Part IV wins over Part V [flips at commit 2]', () => {
     const compute = loadCompute();
     expect(compute.ENRICH_SQL).toContain('ST_Intersects(pc.geom, hd.geom)');
     expect(compute.ENRICH_SQL).toContain('ST_Intersects(pc.geom, hp.geom)');
@@ -214,14 +214,14 @@ describe('enrich_heritage — the artifacts commit 2 owes (RED at commit 1, FLIP
     expect(compute.ENRICH_SQL).toMatch(/WHEN hcd_id IS NOT NULL THEN 'part_v_hcd'/);
   });
 
-  it.fails('H-A1 (a) — parcel_c carries the Layer-2 stale-only scope conjunct, byte-identical to the legacy countStale predicate [flips at commit 2]', () => {
+  it('H-A1 (a) — parcel_c carries the Layer-2 stale-only scope conjunct, byte-identical to the legacy countStale predicate [flips at commit 2]', () => {
     const compute = loadCompute();
     const cte = compute.ENRICH_SQL.slice(0, compute.ENRICH_SQL.indexOf('enrichment AS'));
     expect(cte).toMatch(/WHERE p\.geom IS NOT NULL AND NOT ST_IsEmpty\(p\.geom\) AND ST_IsValid\(p\.geom\)/);
     expect(cte).toMatch(/AND p\.heritage_dataset_version_when_enriched IS DISTINCT FROM \$2/);
   });
 
-  it.fails('the shell is FROZEN onto pipeline.step and declares ADVISORY_LOCK_ID 62 as source text [flips at commit 2]', () => {
+  it('the shell is FROZEN onto pipeline.step and declares ADVISORY_LOCK_ID 62 as source text [flips at commit 2]', () => {
     const src = read(STEP_REL);
     expect(src).toContain('module.exports = pipeline.step(descriptor, compute);');
     expect(src).toContain('const ADVISORY_LOCK_ID = 62;');
@@ -233,14 +233,14 @@ describe('enrich_heritage — the artifacts commit 2 owes (RED at commit 1, FLIP
 });
 
 describe('enrich_heritage — F9 disposition: the retired mechanism, the preserved observable [flips at commit 2]', () => {
-  it.fails('parcels_heritage_enrich_skipped is a DERIVED check (updated === 0), never a hand-rolled skip branch; no countStale survives [flips at commit 2]', () => {
+  it('parcels_heritage_enrich_skipped is a DERIVED check (updated === 0), never a hand-rolled skip branch; no countStale survives [flips at commit 2]', () => {
     const src = read(COMPUTE_REL);
     expect(src).not.toMatch(/function countStale/);
     expect(src).not.toMatch(/if \(staleCount === 0\)/);
     expect(src).toMatch(/skipped\s*=\s*updated === 0/);
   });
 
-  it.fails('unlike the legacy, guards.requires now runs on EVERY invocation (Class A(vii)) — 9 rows, every one on_missing:"fail" [flips at commit 2]', () => {
+  it('unlike the legacy, guards.requires now runs on EVERY invocation (Class A(vii)) — 9 rows, every one on_missing:"fail" [flips at commit 2]', () => {
     const descriptor = loadDescriptor();
     expect(descriptor.guards.requires.length).toBeGreaterThanOrEqual(9);
     for (const r of descriptor.guards.requires) expect(r.on_missing).toBe('fail');
@@ -248,7 +248,7 @@ describe('enrich_heritage — F9 disposition: the retired mechanism, the preserv
 });
 
 describe('enrich_heritage — EH-D2, the declared Part IV WARN diff', () => {
-  it.fails('parcels_part_iv_count is unconditional (0 -> WARN, >=1 -> PASS), diff declared in checks[].why, not re-implemented as a two-input rule [flips at commit 2]', () => {
+  it('parcels_part_iv_count is unconditional (0 -> WARN, >=1 -> PASS), diff declared in checks[].why, not re-implemented as a two-input rule [flips at commit 2]', () => {
     const descriptor = loadDescriptor();
     const check = descriptor.checks.find((c: { id: string }) => c.id === 'parcels_part_iv_count');
     expect(check.severity).toBe('WARN');
@@ -257,7 +257,7 @@ describe('enrich_heritage — EH-D2, the declared Part IV WARN diff', () => {
     expect(check.why.text).toMatch(/EH-D2/);
   });
 
-  it.fails('heritage_points_no_parcel_match is the R-AD 3-tier, seeded 15/30 (a reported PERCENTAGE, not the legacy fraction) [flips at commit 2]', () => {
+  it('heritage_points_no_parcel_match is the R-AD 3-tier, seeded 15/30 (a reported PERCENTAGE, not the legacy fraction) [flips at commit 2]', () => {
     const descriptor = loadDescriptor();
     const check = descriptor.checks.find((c: { id: string }) => c.id === 'heritage_points_no_parcel_match');
     expect(check.limit).toBe('pct <= 15');
@@ -266,7 +266,7 @@ describe('enrich_heritage — EH-D2, the declared Part IV WARN diff', () => {
     expect(check.warn_limit_from_config).toBe('enrich_heritage_unlinked_point_fail_pct');
   });
 
-  it.fails('parcels_heritage_designated_count — exact 0->FAIL, >=1->PASS [flips at commit 2]', () => {
+  it('parcels_heritage_designated_count — exact 0->FAIL, >=1->PASS [flips at commit 2]', () => {
     const descriptor = loadDescriptor();
     const check = descriptor.checks.find((c: { id: string }) => c.id === 'parcels_heritage_designated_count');
     expect(check.severity).toBe('FAIL');
@@ -276,7 +276,7 @@ describe('enrich_heritage — EH-D2, the declared Part IV WARN diff', () => {
 });
 
 describe('enrich_heritage — unhappy paths, all nine §9 contract HALTs + L14 + SRID declared in one hook [flips at commit 2]', () => {
-  it.fails('readHeritageContract throws a distinct, named error for each contract violation [flips at commit 2]', () => {
+  it('readHeritageContract throws a distinct, named error for each contract violation [flips at commit 2]', () => {
     const src = read(COMPUTE_REL);
     const expectedFragments = [
       'no successful',

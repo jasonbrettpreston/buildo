@@ -30,7 +30,7 @@ Remaining files: **46** (+ **1** pending) · remaining slugs: **48** (+ **1** pe
 | Archetype | File | Slug(s) | Chains (slots) | Quadrant | Write hints | Open cutover_prereq |
 |---|---|---|---|---|---|---|
 | ENRICHER | `scripts/enrich-centreline.js` | enrich_centreline | sources (1) | bottom-left | — | EP-PIN-D17 (enrich_centreline); CLOUD-PRE (enrich_centreline) |
-| ENRICHER | `scripts/enrich-heritage.js` | enrich_heritage [pending: red_suite] | sources (1) | bottom-left | — | CLOUD-PRE (enrich_heritage) |
+| ENRICHER | `scripts/enrich-heritage.js` | enrich_heritage [pending: shape_clean] | sources (1) | bottom-left | — | CLOUD-PRE (enrich_heritage) |
 | ENRICHER | `scripts/compute-parcel-cost-estimates.js` | compute_parcel_cost_estimates | sources (1) | top-left | supports_dry_run | CLOUD-PRE (compute_parcel_cost_estimates) |
 | INGESTOR | `scripts/load-address-points.js` | address_points | sources (1) | top-left | — | CLOUD-PRE (address_points); SEAM-CHAIN-1 (address_points) |
 | INGESTOR | `scripts/load-centreline.js` | load_centreline | sources (1) | top-left | — | CLOUD-PRE (load_centreline) |

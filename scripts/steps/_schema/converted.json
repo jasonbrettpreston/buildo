@@ -71,9 +71,9 @@
     {
       "file": "scripts/enrich-heritage.js",
       "registers_at": "commit 3",
-      "reason": "Batch-2 row 2.2 (2026-09-20) — ENRICHER, COMPRESSED 3-commit form. Commit 1 lands the assessment + this RED suite; commit 2 lands descriptor+compute+frozen shell+seeds and advances stage to shape_clean.",
+      "reason": "Batch-2 row 2.2 (2026-09-20) — ENRICHER, COMPRESSED 3-commit form. Commit 1 landed the assessment + red suite; commit 2 lands descriptor+compute+frozen shell+seeds — conformanceFindings() returns [] for it. converted[] registration + this entry's own removal are the cutover commit 3, prepared but left uncommitted for the OUTPUT panel.",
       "declared": "2026-09-20",
-      "stage": "red_suite"
+      "stage": "shape_clean"
     }
   ],
   "converted": [

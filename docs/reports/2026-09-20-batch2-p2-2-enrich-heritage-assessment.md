@@ -151,6 +151,85 @@ Cross-field invariants (all 4, declared in `descriptor.invariants[]`, measured 0
 
 ---
 
+## §6.5. Explained-diff citations (step-validate.mjs G8 gate — deepest field name / difference count)
+
+Every diff the automated G8 checker flags, cited by its own deepest field name or, for a
+purely-structural array diff with no field name of its own, by an explicit difference COUNT next
+to the bucket word (the same discipline `enrich_ravines`' own G8 citation section used):
+
+- **`invariants`** — exactly **7 differences** under the capture tool's own `invariants[]`
+  live-reverification snapshot in each pair (indices 0-6): the 4 new `invariants[]` rows
+  (`heritage_flag_type_agree_flagged_side`, `heritage_flag_type_agree_unflagged_side`,
+  `heritage_date_without_type_count`, `heritage_part_iv_null_date_count`) plus the 3 new
+  `plausibility[]` rows (`heritage_designated_share_max_pct`, `heritage_designated_count_collapse_floor`,
+  `heritage_part_iv_matched_le_source`) — all 7 measured live at 0/0/0/0/2.047/9958/0, PASS.
+- **`rows`** — exactly **8 differences** under `summary.records_meta.audit_table.rows` in each
+  pair (indices 10-17): the SAME 7 invariant/plausibility rows rendered a second time inside the
+  audit table (rows[10-16]) plus ONE `retired_var_row_present:heritage_point_match_radius_m` INFO
+  row (rows[17], EH-D3/`config.retired[]`'s own visibility row, stating the retired name has no
+  `logic_variables` row — expected, since it was never seeded).
+- **`stdout_lines`** — exactly **4 differences** under `stdout_lines` in each pair (indices 0-3):
+  the legacy's 2-line stdout (a WARN-heavy config-load block then `skip — ...` /
+  `completed in <DUR>`) is replaced by the converted step's phase-boundary logging (`target: ...
+  migrations=...`, `phase heritage_join starting (shared txn, timeout 240min)`, `phase
+  heritage_join completed in <DUR>`, `[enrich_heritage] completed in <DUR>`) — new logging, Class A.
+- **`checks_failed`** / **`checks_warned`** — `summary.records_meta.checks_failed`/`checks_warned`
+  appear (both `0`) — runner-owned fields every converted step emits, absent pre-conversion.
+- **`code_version`** — `summary.records_meta.code_version` appears (`"v1-containment-lateral"`),
+  sourced from `descriptor.staleness.logic_version` via `buildHeritageMeta`.
+- **`ledger_row`** — `summary.records_meta.ledger_row` appears (`"chain_owned"` / `"owned"`) —
+  runner-owned, absent pre-conversion.
+- **`pool_errors`** — `summary.records_meta.pool_errors` appears (`0`) — likewise runner-owned.
+- **`terminal`** — `summary.records_meta.terminal` appears (`"enriched"`) — the declared
+  `terminals[]` id the runner selected, absent pre-conversion (the legacy had no terminal taxonomy).
+- **`warn_threshold`** — `summary.records_meta.audit_table.rows[4].warn_threshold` appears
+  (`"pct <= 30"`) on the `heritage_points_no_parcel_match` row only — the R-AD 3-tier rendering of
+  the WARN bound alongside the already-cited `threshold` (PASS bound); the legacy rendered neither
+  as a resolved string.
+- **`order_by`** / **`order_columns`** — `table_state[0].order_by` moves `"pk"` → `"explicit"` and
+  gains `order_columns: ["id"]` — cosmetic: the PRE capture (no descriptor yet) fell back to the
+  `--table-order` CLI arg's own label; the POST capture derives the SAME `id` ordering from the
+  descriptor's declared write `key`, which the harness labels `"explicit"` instead of `"pk"`. No
+  data-order change (`table_state` content_hash is byte-identical in both pairs, `6b34814d...`).
+- **`pipeline_runs`** — `standalone.json` only: `pipeline_runs[0]` appears (undefined → a real
+  completed row, `id`/`started_at`/`completed_at`/`duration_ms` all Class C re-run noise) — the
+  legacy also opened a standalone ledger row (unlike `enrich_ravines`' own pre-conversion gap),
+  so this is a parity confirmation, not a new behaviour.
+
+**G8 verdict: 0 unexplained diffs in either pair**, per the citations above.
+
+---
+
+## §R. Reflection
+
+Written this commit — `converted.json.pending[0].stage` reached `shape_clean` at commit 2; cutover
+(commit 3) is prepared conceptually but not built, per the operator's scope instruction for this
+session (commits ①-② only).
+
+**LOW-CONFIDENCE findings** (measured this session, not fully closed):
+
+| # | Finding | Why LOW-CONFIDENCE |
+|---|---|---|
+| 1 | FOLD-I5's 94-parcel/272-point impact bound was measured against the CURRENT live heritage register; a future register refresh could change which parcels carry multiple Part IV points, so the bound is a snapshot, not an invariant, and the descriptor's own `limitations[]` entry states this. |
+| 2 | The `enrich_heritage_phase_timeout_minutes` seed (240, H-A2 ruled) has no cloud ledger row to measure against yet — the local full-recompute figure (59-75 s) gives enormous headroom, but the ruling itself names the cloud acceptance run as the value that eventually REPLACES 240, not confirms it. |
+| 3 | The differential cohort's 94 multi-Part-IV-point parcels and 4 null-designated-date districts are exact counts against TODAY's heritage register; a future WF re-running this exact differential should re-derive the cohort from a fresh query, never reuse these committed ids as a permanent fixture. |
+
+**RECURRING/STANDARD-SHAPING** patterns this conversion reconfirms:
+
+| # | Pattern | Where else it recurs |
+|---|---|---|
+| 1 | `ctx.full` selecting an unscoped SQL variant via a `build*Sql({full})` factory function (never a runtime `if` branch inside a fixed template string) is the SAME shape `enrich_parcels`' `buildPass1ScopeWhere({full})` already established — a second ENRICHER independently converging on the identical mechanism confirms it as the standard pattern for `override.force_full`, not a one-off. |
+| 2 | A per-zone (or per-cohort) INFO-only visibility row closing a Reality-Check ceiling-blind-spot without a new gating check is the SAME disposition `enrich_ravines`' own output-panel O4 collapse-floor row used — FOLD-RC1 is a second, independent application of "declare visibility, defer gating until the metric has history to calibrate against." |
+| 3 | Registering a `pending[]`/census entry has REGISTRY-WIDE side effects (probe list, fast invariants #23/24, `conversion-roadmap` counts, two census fixtures, scorecard staleness) that must be re-verified fleet-wide — this session fixed `conversion-roadmap.infra.test.ts` + both fixtures AT commit ① rather than deferring to cutover (stricter than the `enrich_ravines` precedent, which left them red for 3 commits) — a genuine process improvement worth keeping for the next conversion. |
+
+RED evidence: the whole `src/tests/steps/enrich_heritage/violations.test.ts` red suite (18
+`it.fails()` at commit 1, proven RED against the actual pre-compute/pre-shell tree by physically
+removing the descriptor/compute/shell files and re-running — not simulated — then restored; all
+18 flipped to plain `it()` at commit 2 as their artifacts landed, 1 `converted.json` registration
+claim remains RED through commit 2 and flips only at commit 3) — see the commit ledger above.
+
+---
+
 ## §7. Review roster (trimmed, compressed step — 2026-09-16 ruling)
 
 **PLAN altitude:** Integration + Reality-Check + Regression Guardian — completed prior to authorization (plan §9, nine findings folded in the plan's §13, both Asks ruled). **OUTPUT altitude (owed, this session's execution seat):** every claim in this report is grounded in an executed command — the golden captures, both differentials, the kill-mid-run test, and the live `BUILDO_TEST_DB=1` suite run are all genuine tool executions, not narrated. A separate `code-reviewer-grounded` / `observability-reviewer` / `regression-guardian` / Idempotency-Lens pass over the diff is still owed before this work is presented for Green Light — **not performed in this session**, which was scoped to commits ①–② (implementation + execution), explicitly excluding the OUTPUT-altitude review panel and commit ③ (cutover).
