@@ -202,8 +202,8 @@
       "slug": "compute_parcel_cost_estimates",
       "file": "scripts/compute-parcel-cost-estimates.js",
       "archetype": "ENRICHER",
-      "batch": "C5",
-      "reason": "Spec 122 §1.10 declared"
+      "batch": "pending",
+      "reason": "Batch-2 row 2.4 — moved C5 -> pending at commit ② (re-synced fixture)."
     },
     {
       "slug": "compute_phase_calibration",

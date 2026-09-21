@@ -16,6 +16,23 @@ const IDS = [1455, 1786, 1842, 1886, 1940, 3435, 3679, 3684, 3690, 4437, 10003, 
   for (const r of (await pool.query(`SELECT * FROM archetype_cost_rates`)).rows) rates[r.archetype] = r;
   const idxRow = (await pool.query(`SELECT variable_value FROM logic_variables WHERE variable_key='cost_escalation_index'`)).rows[0];
   const indexNow = idxRow ? Number(idxRow.variable_value) : 100;
+  // Batch-2 row 2.4 (FOLD-V8) — buildParcelCostMenu now requires opts.config (the 6 engine
+  // tunables, Rule 3). Non-step analysis script (no descriptor, no LM-D15) → read-live-else-
+  // seed-default fallback.
+  const cfgRows = (await pool.query(
+    `SELECT variable_key, variable_value FROM logic_variables WHERE variable_key = ANY($1)`,
+    [['compute_parcel_cost_fsi_max_plausible', 'compute_parcel_cost_escalation_min_multiplier',
+      'compute_parcel_cost_escalation_fallback_multiplier', 'compute_parcel_cost_premium_default',
+      'compute_parcel_cost_adjustment_factor_default', 'compute_parcel_cost_min_priceable_area_sqm']],
+  )).rows.reduce((m, r) => ({ ...m, [r.variable_key]: Number(r.variable_value) }), {});
+  const engineConfig = {
+    fsiMaxPlausible: cfgRows.compute_parcel_cost_fsi_max_plausible ?? 99.999,
+    escalationMinMultiplier: cfgRows.compute_parcel_cost_escalation_min_multiplier ?? 1,
+    escalationFallbackMultiplier: cfgRows.compute_parcel_cost_escalation_fallback_multiplier ?? 1,
+    premiumDefault: cfgRows.compute_parcel_cost_premium_default ?? 1,
+    adjustmentFactorDefault: cfgRows.compute_parcel_cost_adjustment_factor_default ?? 1,
+    minPriceableAreaSqm: cfgRows.compute_parcel_cost_min_priceable_area_sqm ?? 0,
+  };
 
   // Every field the cost engine reads + the persisted zoning/FSI context, in full.
   const rows = (await pool.query(`
@@ -39,7 +56,7 @@ const IDS = [1455, 1786, 1842, 1886, 1940, 3435, 3679, 3684, 3690, 4437, 10003, 
   for (const r of rows) {
     const parcel = { ...r, opt_aor_gfa_sqm: r.new_build_area }; // cost engine reads the COALESCE'd new_build area
     const r2Grounded = parcelFamilyFromZoning(r.zoning_class) === 'detached';
-    const built = buildParcelCostMenu(parcel, rates, indexNow, { r2Grounded });
+    const built = buildParcelCostMenu(parcel, rates, indexNow, { r2Grounded, config: engineConfig });
     const n2 = (v) => v == null ? null : Math.round(v * 100) / 100;
     inputsRows.push({
       id: r.id, parcel_id: r.parcel_id, zc: r.zoning_class, amb: r.zoning_is_ambiguous, dom_share: n2(r.zoning_dominant_area_share),

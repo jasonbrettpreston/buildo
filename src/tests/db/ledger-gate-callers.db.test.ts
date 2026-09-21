@@ -1,8 +1,37 @@
 // SPEC LINK: docs/specs/00-architecture/115_scheduling.md §2.2
 // SPEC LINK: docs/specs/01-pipeline/48_pipeline_observability.md §3.9
 //
-// Phase B B3 — the run-ledger gate WIRED INTO its one remaining hand-rolled caller
-// (compute-parcel-cost-estimates.js), live-DB.
+// Phase B B3 — the run-ledger gate's callers, live-DB.
+//
+// FOLD-V6 (batch-2 row 2.4, 2026-09-21) — compute-parcel-cost-estimates.js is RE-HOMED out of
+// this file, the SAME treatment link-wsib.js and link-parcel-addresses.js already got below
+// (LW-D16 / LPA-D-class): the frozen shape carries no `main(pool)`/`OWN_SLUGS`/
+// `readCostVersionSignals`/`hasRateOrIndexChanged` exports at all any more, and CPCE-A1 RULED
+// the gate itself knowingly-retired as a mechanism for this step specifically (`runEnrichPhase`
+// has no `ledgerGatedSkip` call and this step has no lineage-stamp column). SIX cases here
+// named this caller (not two, as an earlier fold pass under-counted): G5, B-R1, C2, C1, D#2/D-R1,
+// D#3. Per-case disposition, verified against the live code, not assumed:
+//   G5 (SKIP emits a COMPLETED-shaped summary)         → RETIRED, successor:
+//     src/tests/db/compute-parcel-cost-estimates-violations.db.test.ts test 8 (an unchanged
+//     re-run's records_updated stays 0 — the observable G5 protected, without a gate to skip).
+//   B-R1 (skip row carries null_geom_basis_count/engine_error_count + line_coverage/
+//     area_confidence)                                  → RETIRED, successor: …violations.db.test.ts
+//     test 18 (post_phase emits the FULL audit table unconditionally, including on 0 writes).
+//   C2 (a stale rates_as_of forces a RUN)                → RETIRED, NO SUCCESSOR. With no gate,
+//     every invocation IS a run — there is nothing left for a "forces a run" claim to compare
+//     against, and none is invented.
+//   C1 (readCostVersionSignals returns canonical ISO strings)  → RE-DERIVED in
+//     …violations.db.test.ts test 19 (the F9 version stamps, `records_meta.rates_as_of`/
+//     `index_updated_at`, still canonical ISO, sourced from `updated_at`).
+//   D#2 / D-R1 (a cost_per_sqm edit with as_of_date unchanged forces a RUN)  → RETIRED as a GATE
+//     claim (nothing to force any more), but its FENCE survives: the MAX(updated_at)-not-
+//     MAX(as_of_date) source is re-derived in test 19 RED-1.
+//   D#3 (the index VALUE read atomically with its VERSION)  → RE-DERIVED in test 19 RED-2, with
+//     the FOLD-V9(2) amendment stated there: the priced value is now the hoisted
+//     `ctx.config.cost_escalation_index`, and the atomic-read fence survives in substance
+//     because `readCostContract` still runs inside `pipeline.withAdvisoryLock`.
+// The other 3 cases below (W2, the two B-R4 anomaly cases) are UNCHANGED — proven by this same
+// file continuing to pass them.
 //
 // LPA-D-class (2026-08-29, C1 pilot 5 commit 7) — link-parcel-addresses.js's portion
 // (the G5 / B-R1 cases below) is RE-HOMED, not deleted: the frozen shape carries no
@@ -64,186 +93,16 @@
 // up by exact slug list in afterEach (never a LIKE-prefix wildcard, to avoid
 // touching any other suite's rows sharing this container).
 
-import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, describe, expect, it } from 'vitest';
 import type { Pool } from 'pg';
 import { dbAvailable, getTestPool } from './setup-testcontainer';
 import { detectDurationAnomalies } from '@/lib/quality/types';
 
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const costEstimates = require('../../../scripts/compute-parcel-cost-estimates.js') as {
-  main: (pool: Pool, opts?: { dryRun?: boolean; rowLimit?: number | null }) => Promise<void>;
-  readCostVersionSignals: (pool: Pool) => Promise<{ ratesAsOf: string | null; indexUpdatedAt: string | null; indexValue: number | null }>;
-  hasRateOrIndexChanged: (meta: Record<string, unknown> | null, signals: { ratesAsOf: string | null; indexUpdatedAt: string | null }) => boolean;
-  OWN_SLUGS: string[];
-};
-
-/** Capture every PIPELINE_SUMMARY / PIPELINE_META line emitted to console.log during fn(). */
-async function captureEmitted(fn: () => Promise<unknown>): Promise<{ summary: Record<string, unknown> | null; sawMeta: boolean }> {
-  const lines: string[] = [];
-  const spy = vi.spyOn(console, 'log').mockImplementation((msg?: unknown) => {
-    if (typeof msg === 'string') lines.push(msg);
-  });
-  try {
-    await fn();
-  } finally {
-    spy.mockRestore();
-  }
-  const summaryLine = lines.filter((l) => l.startsWith('PIPELINE_SUMMARY:')).pop();
-  const summary = summaryLine ? (JSON.parse(summaryLine.slice('PIPELINE_SUMMARY:'.length)) as Record<string, unknown>) : null;
-  const sawMeta = lines.some((l) => l.startsWith('PIPELINE_META:'));
-  return { summary, sawMeta };
-}
-
-describe.skipIf(!dbAvailable())('Phase B B3 — run-ledger gate callers (live DB, main(pool) direct)', () => {
+describe.skipIf(!dbAvailable())('Phase B B3 — run-ledger gate callers (live DB) — W2 + B-R4 only (compute-parcel-cost-estimates re-homed above)', () => {
   let pool: Pool;
-
-  async function cleanup(slugs: string[]) {
-    if (slugs.length === 0) return;
-    await pool.query('DELETE FROM pipeline_runs WHERE pipeline = ANY($1::text[])', [slugs]);
-  }
 
   beforeAll(() => {
     pool = getTestPool() as Pool;
-  });
-
-  afterEach(async () => {
-    await cleanup(costEstimates.OWN_SLUGS);
-  });
-
-  // ---------------------------------------------------------------------
-  // G5 + C1 — compute-parcel-cost-estimates.js (needs matching rate/index
-  // ISO signals so C2's rateChanged check doesn't override the SKIP).
-  // ---------------------------------------------------------------------
-  it('G5 (compute-parcel-cost-estimates): SKIP (own completed, zero upstream, matching rate/index ISO keys) emits a COMPLETED-shaped summary (DS4)', async () => {
-    const live = await costEstimates.readCostVersionSignals(pool);
-    await pool.query(
-      `INSERT INTO pipeline_runs (pipeline, status, started_at, completed_at, records_meta)
-       VALUES ($1, 'completed', NOW() - interval '10 minutes', NOW() - interval '9 minutes', $2::jsonb)`,
-      [costEstimates.OWN_SLUGS[0], JSON.stringify({ rates_as_of: live.ratesAsOf, index_updated_at: live.indexUpdatedAt })],
-    );
-    const { summary, sawMeta } = await captureEmitted(() => costEstimates.main(pool));
-    expect(summary).toMatchObject({ records_total: 0, records_new: 0, records_updated: 0 });
-    expect((summary?.records_meta as Record<string, unknown>)?.rates_as_of).toBe(live.ratesAsOf);
-    expect((summary?.records_meta as Record<string, unknown>)?.index_updated_at).toBe(live.indexUpdatedAt);
-    const rows = (summary?.records_meta as { audit_table?: { rows?: Array<{ metric: string; value: unknown }> } })
-      ?.audit_table?.rows ?? [];
-    expect(rows.some((r) => r.metric === 'status' && r.value === 'SKIPPED')).toBe(true);
-    expect(rows.some((r) => r.metric === 'reason' && r.value === 'no_upstream_changes')).toBe(true);
-    expect(sawMeta).toBe(true);
-  });
-
-  // ---------------------------------------------------------------------
-  // Commit B — compute-parcel-cost-estimates.js skip-path audit rows (B-R1).
-  // ---------------------------------------------------------------------
-  it('B-R1 (compute-parcel-cost-estimates): the skip row carries null_geom_basis_count/engine_error_count + line_coverage/area_confidence top-level keys', async () => {
-    const live = await costEstimates.readCostVersionSignals(pool);
-    const priorMeta = {
-      rates_as_of: live.ratesAsOf,
-      index_updated_at: live.indexUpdatedAt,
-      line_coverage: { new_build: 500 },
-      area_confidence: { high: 300, medium: 150, low: 50 },
-      audit_table: {
-        rows: [
-          { metric: 'null_geom_basis_count', value: 0, threshold: null, status: 'INFO' },
-          { metric: 'engine_error_count', value: 0, threshold: '== 0', status: 'PASS' },
-        ],
-      },
-    };
-    await pool.query(
-      `INSERT INTO pipeline_runs (pipeline, status, started_at, completed_at, records_meta)
-       VALUES ($1, 'completed', NOW() - interval '10 minutes', NOW() - interval '9 minutes', $2::jsonb)`,
-      [costEstimates.OWN_SLUGS[0], JSON.stringify(priorMeta)],
-    );
-    const { summary } = await captureEmitted(() => costEstimates.main(pool));
-    const meta = summary?.records_meta as { line_coverage?: unknown; area_confidence?: unknown; audit_table?: { rows?: Array<{ metric: string }> } };
-    expect(meta.line_coverage).toEqual({ new_build: 500 });
-    expect(meta.area_confidence).toEqual({ high: 300, medium: 150, low: 50 });
-    expect(meta.audit_table?.rows?.some((r) => r.metric === 'null_geom_basis_count')).toBe(true);
-    expect(meta.audit_table?.rows?.some((r) => r.metric === 'engine_error_count')).toBe(true);
-  }, 30000);
-
-  // ---------------------------------------------------------------------
-  // C2 (behavioral half) — a rate bump forces RUN even though the ledger
-  // gate itself would SKIP (zero upstream enrich_parcels activity).
-  // ---------------------------------------------------------------------
-  it('C2: a stale rates_as_of in ownLastRecordsMeta forces a RUN (computeParcelCostEstimates actually invoked, not skipped)', async () => {
-    await pool.query(
-      `INSERT INTO pipeline_runs (pipeline, status, started_at, completed_at, records_meta)
-       VALUES ($1, 'completed', NOW() - interval '10 minutes', NOW() - interval '9 minutes', $2::jsonb)`,
-      [costEstimates.OWN_SLUGS[0], JSON.stringify({ rates_as_of: '1900-01-01', index_updated_at: null })],
-    );
-    // rowLimit is intentionally left UNSET — passing one would itself bypass the
-    // gate (a separate, deliberate bypass channel), which would prove nothing
-    // about the rate signal specifically. This case must prove the RATE signal
-    // alone is what forced the run.
-    const { summary } = await captureEmitted(() => costEstimates.main(pool));
-    // A real (non-skip) run reports the engine's own audit_table (phase 88, name
-    // 'Parcel Cost Estimation') with a residential_parcels_examined row — the
-    // SKIP shape never has that metric.
-    const rows = (summary?.records_meta as { audit_table?: { rows?: Array<{ metric: string }> } })?.audit_table?.rows ?? [];
-    expect(rows.some((r) => r.metric === 'residential_parcels_examined')).toBe(true);
-  }, 60000);
-
-  // ---------------------------------------------------------------------
-  // C1 — canonical ISO version keys (not a Date.toString() blob).
-  // ---------------------------------------------------------------------
-  it('C1: readCostVersionSignals returns canonical ISO strings, never a Date.toString() blob', async () => {
-    await pool.query(
-      `INSERT INTO archetype_cost_rates (archetype, cost_per_sqm, cost_adjustment_factor, escalation_index_base, as_of_date)
-       VALUES ('__fx_b3_c1__', 1000, 1.0, 1.0, '2026-06-15')
-       ON CONFLICT (archetype) DO UPDATE SET as_of_date = EXCLUDED.as_of_date`,
-    );
-    try {
-      const signals = await costEstimates.readCostVersionSignals(pool);
-      expect(signals.ratesAsOf).toMatch(/^\d{4}-\d{2}-\d{2}/);
-      expect(signals.ratesAsOf).not.toMatch(/GMT|[A-Z][a-z]{2} [A-Z][a-z]{2} \d{2}/); // no Date.toString() weekday/GMT blob
-      if (signals.indexUpdatedAt) {
-        expect(signals.indexUpdatedAt).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?Z$/);
-      }
-    } finally {
-      await pool.query(`DELETE FROM archetype_cost_rates WHERE archetype = '__fx_b3_c1__'`);
-    }
-  });
-
-  // ---------------------------------------------------------------------
-  // Commit D — version signals (D#2/D#3/D-R1/D-R2/D#6).
-  // ---------------------------------------------------------------------
-  it('D#2 / D-R1: an archetype cost_per_sqm EDIT (with updated_at bumped, as_of_date UNCHANGED) forces RUN — the business date alone cannot see it', async () => {
-    await pool.query(
-      `INSERT INTO archetype_cost_rates (archetype, cost_per_sqm, cost_adjustment_factor, escalation_index_base, as_of_date)
-       VALUES ('__fx_b3_d2__', 1000, 1.0, 1.0, '2026-06-30')
-       ON CONFLICT (archetype) DO UPDATE SET cost_per_sqm = 1000, as_of_date = '2026-06-30'`,
-    );
-    try {
-      const before = await costEstimates.readCostVersionSignals(pool);
-      // Seed the gate as SKIP-eligible with the OWN-last run stamped to the PRE-edit signal.
-      await pool.query(
-        `INSERT INTO pipeline_runs (pipeline, status, started_at, completed_at, records_meta)
-         VALUES ($1, 'completed', NOW() - interval '10 minutes', NOW() - interval '9 minutes', $2::jsonb)`,
-        [costEstimates.OWN_SLUGS[0], JSON.stringify({ rates_as_of: before.ratesAsOf, index_updated_at: before.indexUpdatedAt })],
-      );
-      // A real correction: cost_per_sqm changes, updated_at bumps, as_of_date STAYS 2026-06-30
-      // (the business date a genuinely business-date-anchored signal would miss).
-      await pool.query(
-        `UPDATE archetype_cost_rates SET cost_per_sqm = 1234.56, updated_at = NOW() WHERE archetype = '__fx_b3_d2__'`,
-      );
-      const after = await costEstimates.readCostVersionSignals(pool);
-      expect(after.ratesAsOf).not.toBe(before.ratesAsOf); // MAX(updated_at) moved
-      const { summary } = await captureEmitted(() => costEstimates.main(pool));
-      const rows = (summary?.records_meta as { audit_table?: { rows?: Array<{ metric: string }> } })?.audit_table?.rows ?? [];
-      // A real (non-skip) run reports residential_parcels_examined — the SKIP shape never has it.
-      expect(rows.some((r) => r.metric === 'residential_parcels_examined')).toBe(true);
-    } finally {
-      await pool.query(`DELETE FROM archetype_cost_rates WHERE archetype = '__fx_b3_d2__'`);
-    }
-  }, 60000);
-
-  it('D#3: readCostVersionSignals reads the escalation index VALUE atomically with its VERSION (one query, both fields present)', async () => {
-    const signals = await costEstimates.readCostVersionSignals(pool);
-    expect('indexValue' in signals).toBe(true);
-    if (signals.indexValue != null) {
-      expect(Number.isFinite(signals.indexValue)).toBe(true);
-    }
   });
 
   // D#4 (link-wsib): LINK_WSIB_FORCE_FULL bypass — LW-D16, corrected claim: NOT

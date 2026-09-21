@@ -7,7 +7,7 @@
 
 ## Counts
 
-Remaining files: **46** (+ **0** pending) · remaining slugs: **48** (+ **0** pending)
+Remaining files: **45** (+ **1** pending) · remaining slugs: **47** (+ **1** pending)
 
 | Batch | Files | Slots |
 |---|---:|---:|
@@ -29,8 +29,8 @@ Remaining files: **46** (+ **0** pending) · remaining slugs: **48** (+ **0** pe
 
 | Archetype | File | Slug(s) | Chains (slots) | Quadrant | Write hints | Open cutover_prereq |
 |---|---|---|---|---|---|---|
-| ENRICHER | `scripts/enrich-centreline.js` | enrich_centreline | sources (1) | bottom-left | — | EP-PIN-D17 (enrich_centreline); CLOUD-PRE (enrich_centreline) |
-| ENRICHER | `scripts/compute-parcel-cost-estimates.js` | compute_parcel_cost_estimates | sources (1) | top-left | supports_dry_run | CLOUD-PRE (compute_parcel_cost_estimates) |
+| ENRICHER | `scripts/enrich-centreline.js` | enrich_centreline | sources (1) | bottom-left | — | EP-PIN-D17 (enrich_centreline); CLOUD-PRE (enrich_centreline); B2-PRICING-ADMIN (enrich_centreline); B2-DRYRUN-SEAM (enrich_centreline); B2-OWNER-SPEC-DIFF (enrich_centreline) |
+| ENRICHER | `scripts/compute-parcel-cost-estimates.js` | compute_parcel_cost_estimates [pending: shape_clean] | sources (1) | top-left | supports_dry_run | CLOUD-PRE (compute_parcel_cost_estimates) |
 | INGESTOR | `scripts/load-address-points.js` | address_points | sources (1) | top-left | — | CLOUD-PRE (address_points); SEAM-CHAIN-1 (address_points) |
 | INGESTOR | `scripts/load-centreline.js` | load_centreline | sources (1) | top-left | — | CLOUD-PRE (load_centreline) |
 | INGESTOR | `scripts/load-heritage.js` | load_heritage | sources (1) | top-left | — | CLOUD-PRE (load_heritage) |
@@ -42,7 +42,7 @@ Remaining files: **46** (+ **0** pending) · remaining slugs: **48** (+ **0** pe
 
 <details><summary>C5 — why each archetype (census <code>reason</code>)</summary>
 
-- `scripts/compute-parcel-cost-estimates.js` (ENRICHER): Spec 122 §1.10 declared
+- `scripts/compute-parcel-cost-estimates.js` (ENRICHER): Batch-2 row 2.4 — moved C5 -> pending at commit ② (descriptor+compute+shell landed, converted.json pending[] stage:"shape_clean"); registration (status:"converted", converted_at = the real sha) deferred to commit ③ (cutover), per Spec 124 R-K.
 - `scripts/enrich-centreline.js` (ENRICHER): Spec 122 §1.10 declared
 - `scripts/load-address-points.js` (INGESTOR): Spec 122 §1.10 declared
 - `scripts/load-centreline.js` (INGESTOR): Spec 122 §1.10 declared
@@ -108,4 +108,4 @@ Remaining files: **46** (+ **0** pending) · remaining slugs: **48** (+ **0** pe
 
 ---
 
-*Totality (both directions, proven by `src/tests/conversion-roadmap.infra.test.ts`; slug-grain, IDENTITY HOLDS): **68** manifest.scripts slugs = **17** converted + **0** pending + **3** declared exemptions (Ask A2, excluded from the conversion programme entirely — never silently dropped, see the table above) + **48** remaining, each counted exactly once, in exactly one of C4/C5/C6/pending/exempted.*
+*Totality (both directions, proven by `src/tests/conversion-roadmap.infra.test.ts`; slug-grain, IDENTITY HOLDS): **68** manifest.scripts slugs = **17** converted + **1** pending + **3** declared exemptions (Ask A2, excluded from the conversion programme entirely — never silently dropped, see the table above) + **47** remaining, each counted exactly once, in exactly one of C4/C5/C6/pending/exempted.*

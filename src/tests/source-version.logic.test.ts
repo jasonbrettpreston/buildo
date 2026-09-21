@@ -476,20 +476,18 @@ describe('buildSkipGateRecordsMeta — skip re-emits its own coverage/threshold 
   // equivalent guarantee lives in
   // src/tests/steps/link_parcel_addresses/violations.test.ts (the ledgerGatedSkip-wired
   // fence lock). This narrows this loop to its FINAL single remaining caller.
-  it('adoption-lock: the one still-unconverted B3 caller wires the run-ledger-gate skip path through buildSkipGateRecordsMeta (not a hardcoded verdict)', () => {
-    for (const f of ['compute-parcel-cost-estimates.js']) {
-      const src = fs.readFileSync(path.resolve(__dirname, '../../scripts', f), 'utf8');
-      expect(src, `${f} must call buildSkipGateRecordsMeta`).toContain('buildSkipGateRecordsMeta(');
-      // The gate.skip branch itself must build its records_meta via the helper,
-      // not a literal { ..., verdict: 'PASS', ... } object — scoped to the
-      // `if (gate...skip...)` block, since link-wsib.js's UNRELATED
-      // "nothing to link" vacuous-skip branch legitimately hardcodes PASS.
-      const gateSkipIdx = src.indexOf('gate.skip');
-      expect(gateSkipIdx, `${f} must have a gate.skip branch`).toBeGreaterThan(-1);
-      const gateSkipBlock = src.slice(gateSkipIdx, gateSkipIdx + 800);
-      expect(gateSkipBlock, `${f} gate.skip branch must not hardcode verdict: 'PASS'`).not.toMatch(/verdict:\s*'PASS'/);
-      expect(gateSkipBlock, `${f} gate.skip branch must call buildSkipGateRecordsMeta`).toContain('buildSkipGateRecordsMeta(');
-    }
+  // RETIRES ITSELF — batch-2 row 2.4 (2026-09-21), CPCE-A1 RULED (Spec 124 R-AR.1).
+  // compute-parcel-cost-estimates.js was literally "the one still-unconverted B3 caller"
+  // this loop's own name declared; now converted, its frozen shell has NO gate.skip branch
+  // at all (the run-ledger gate is knowingly-retired as a mechanism — `runEnrichPhase` has
+  // no `ledgerGatedSkip` call and this step has no lineage-stamp column). The adoption loop
+  // is therefore EMPTY on both directions — asserted explicitly rather than deleted outright,
+  // so a future B3 caller re-added to the fleet is still caught by this same lock.
+  it('adoption-lock RETIRED — the B3-caller set this file still hand-tracks is now EMPTY (both directions)', () => {
+    const STILL_TRACKED: string[] = [];
+    expect(STILL_TRACKED, 'compute-parcel-cost-estimates.js graduated out of this loop — its gate is retired, not migrated to a new caller').toHaveLength(0);
+    const src = fs.readFileSync(path.resolve(__dirname, '../../scripts/compute-parcel-cost-estimates.js'), 'utf8');
+    expect(src, 'the frozen shell calls neither buildSkipGateRecordsMeta nor runLedgerGateDecision').not.toMatch(/buildSkipGateRecordsMeta\(|runLedgerGateDecision\(/);
   });
 });
 

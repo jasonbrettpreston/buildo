@@ -453,6 +453,18 @@ const EXPECTED_LOGIC_VAR_KEYS = [
   'parcel_sanity_lowrise_cost_fb_max_cad', 'parcel_sanity_cost_addition_max_cad', 'parcel_sanity_dim_lot_tolerance_m', 'parcel_sanity_gfa_coherence_tolerance_sqm',
   'parcel_sanity_cost_coherence_tolerance_cad', 'parcel_sanity_greenspace_tolerance_sqm', 'parcel_sanity_realized_fsi_p90_min', 'parcel_sanity_realized_fsi_p90_max',
   'parcel_sanity_distribution_percentile', 'parcel_sanity_distribution_median_multiplier', 'parcel_sanity_distribution_median_floor',
+  // Batch-2 row 2.4 (2026-09-21, compute_parcel_cost_estimates) — 19 new vars: the 3 EXISTING
+  // migration-205-seeded keys added to this seed file for the first time (§0.6 refutation —
+  // they existed live but a fresh cloud seed apply would have left them unset) + 16 new
+  // compute_parcel_cost_* keys (3 runner-profile, 4 shell/execution, 6 engine tunables threaded
+  // through parcel-cost.js's REQUIRED opts.config, 3 plausibility, one dropped per FOLD-V1 —
+  // see scripts/compute-parcel-cost-estimates.descriptor.json config.logic_variables[]).
+  'cost_escalation_index', 'cost_rates_stale_months', 'cost_index_stale_months',
+  'compute_parcel_cost_heartbeat_minutes', 'compute_parcel_cost_lock_timeout_ms', 'compute_parcel_cost_phase_timeout_minutes',
+  'compute_parcel_cost_batch_size', 'compute_parcel_cost_stream_batch_size', 'compute_parcel_cost_min_population', 'compute_parcel_cost_engine_error_max',
+  'compute_parcel_cost_fsi_max_plausible', 'compute_parcel_cost_escalation_min_multiplier', 'compute_parcel_cost_escalation_fallback_multiplier',
+  'compute_parcel_cost_premium_default', 'compute_parcel_cost_adjustment_factor_default', 'compute_parcel_cost_min_priceable_area_sqm',
+  'compute_parcel_cost_menu_coverage_min_pct', 'compute_parcel_cost_empty_menu_max_pct', 'compute_parcel_cost_line_total_max_cad',
 ];
 
 describe('LOGIC_VAR_DEFAULTS — complete key set', () => {

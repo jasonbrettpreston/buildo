@@ -38,18 +38,36 @@ const PARCEL_COST_SCHEMA_VERSION = 1;
 const PERMITTED_VALUES = new Set(['as_of_right', 'coa_required']);
 
 /**
- * Max STORABLE / plausible FSI. The FSI columns are NUMERIC(6,3) (max 999.999), and no residential
- * parcel legitimately reaches FSI 100 — a higher derived FSI means a garbage `max_buildable_gfa_sqm`
- * (the known tree-contaminated massing / setback-box artifacts, ~1.3K parcels). We NULL such FSIs
- * (rather than overflow the column or store nonsense) and COUNT them so the data gap is visible.
+ * Max STORABLE / plausible FSI (the pre-conversion literal default — Spec 88 §2.5). The FSI
+ * columns are NUMERIC(6,3) (max 999.999), and no residential parcel legitimately reaches FSI
+ * 100 — a higher derived FSI means a garbage `max_buildable_gfa_sqm` (the known tree-contaminated
+ * massing / setback-box artifacts, ~1.3K parcels). We NULL such FSIs (rather than overflow the
+ * column or store nonsense) and COUNT them so the data gap is visible.
+ *
+ * Batch-2 row 2.4 (Spec 122 §5.5 conversion) — this constant is now ONLY the seed default
+ * documented in scripts/seeds/logic_variables.json under
+ * `compute_parcel_cost_fsi_max_plausible`; the engine itself takes the live-resolved value
+ * through `opts.config.fsiMaxPlausible` (REQUIRED — Spec 122 §1.2a P4: a defaulted config
+ * argument is a literal wearing a variable's name, which src/tests/steps/compute_parcel_cost_estimates/violations.test.ts
+ * test 5 scans for). Kept exported for the two `scripts/analysis/wf3-*` engine consumers and
+ * the logic test's own documentation anchor — it is NOT read internally by `plausibleFsi`.
  */
 const FSI_MAX_PLAUSIBLE = 99.999;
 
-/** GFA ÷ lot as a stored FSI, or null when not computable OR implausibly high (data artifact). */
-function plausibleFsi(gfa, lot) {
+/**
+ * GFA ÷ lot as a stored FSI, or null when not computable OR implausibly high (data artifact).
+ * @param {number|null} gfa
+ * @param {number|null} lot
+ * @param {number} fsiMaxPlausible  REQUIRED (Rule 3 — no defaulted engine tunable; caller resolves
+ *   from `compute_parcel_cost_fsi_max_plausible`, seed 99.999 === FSI_MAX_PLAUSIBLE above).
+ */
+function plausibleFsi(gfa, lot, fsiMaxPlausible) {
+  if (typeof fsiMaxPlausible !== 'number' || !Number.isFinite(fsiMaxPlausible)) {
+    throw new Error('[parcel-cost] plausibleFsi requires a finite fsiMaxPlausible (Rule 3 — no defaulted engine tunable)');
+  }
   if (!(lot > 0) || gfa === null) return { fsi: null, implausible: false };
   const fsi = round3(gfa / lot);
-  if (fsi > FSI_MAX_PLAUSIBLE) return { fsi: null, implausible: true };
+  if (fsi > fsiMaxPlausible) return { fsi: null, implausible: true };
   return { fsi, implausible: false };
 }
 
@@ -117,20 +135,28 @@ function round3(n) {
 }
 
 /**
- * Escalation multiplier (§2.9): MAX(1, index_now ÷ index_base). Never deflate a
- * fresh rate. Missing/invalid index OR base → 1.0 (the caller WARNs; the engine
- * does not crash). index_base must be > 0 (enforced by the rates-table CHECK + the
- * logic-var Zod validation upstream; defended here too).
+ * Escalation multiplier (§2.9): MAX(escalationMinMultiplier, index_now ÷ index_base). Never
+ * deflate a fresh rate. Missing/invalid index OR base → escalationFallbackMultiplier (the
+ * caller WARNs; the engine does not crash). index_base must be > 0 (enforced by the
+ * rates-table CHECK + the logic-var Zod validation upstream; defended here too).
+ *
+ * Batch-2 row 2.4 — both the floor and the fallback are REQUIRED config values (variables 12/13,
+ * both seeded 1 === the pre-conversion literals `Math.max(1, …)` / `return 1`), not defaults —
+ * Rule 3 / Spec 122 §1.2a P4.
  *
  * @param {number|null|undefined} indexNow   logic_variables.cost_escalation_index
  * @param {number|null|undefined} indexBase  archetype_cost_rates.escalation_index_base
- * @returns {number} multiplier ≥ 1
+ * @param {{escalationMinMultiplier:number, escalationFallbackMultiplier:number}} cfg  REQUIRED
+ * @returns {number} multiplier
  */
-function escalationMultiplier(indexNow, indexBase) {
+function escalationMultiplier(indexNow, indexBase, cfg) {
+  if (!cfg || typeof cfg.escalationMinMultiplier !== 'number' || typeof cfg.escalationFallbackMultiplier !== 'number') {
+    throw new Error('[parcel-cost] escalationMultiplier requires cfg.{escalationMinMultiplier,escalationFallbackMultiplier} (Rule 3 — no defaulted engine tunable)');
+  }
   const now = num(indexNow);
   const base = num(indexBase);
-  if (now === null || base === null || base <= 0) return 1;
-  return Math.max(1, now / base);
+  if (now === null || base === null || base <= 0) return cfg.escalationFallbackMultiplier;
+  return Math.max(cfg.escalationMinMultiplier, now / base);
 }
 
 /**
@@ -181,9 +207,16 @@ function lineCost({ areaSqm, ratePerSqm, escalationMult, adjFactor, premium }) {
  * @param {Record<string, {cost_per_sqm:number, cost_adjustment_factor:number, escalation_index_base:number}>} rates
  *   archetype_cost_rates keyed by archetype
  * @param {number|null} indexNow  logic_variables.cost_escalation_index — the escalation
- *   multiplier is resolved PER-ARCHETYPE as MAX(1, indexNow ÷ rate.escalation_index_base)
- *   (each rate carries its own base, so a rate re-calibrated at a different index escalates
- *   correctly). Missing/invalid → 1.0 (caller WARNs).
+ *   multiplier is resolved PER-ARCHETYPE as MAX(cfg.escalationMinMultiplier, indexNow ÷
+ *   rate.escalation_index_base) (each rate carries its own base, so a rate re-calibrated at a
+ *   different index escalates correctly). Missing/invalid → cfg.escalationFallbackMultiplier
+ *   (caller WARNs).
+ * @param {Object} opts
+ * @param {boolean} [opts.r2Grounded]
+ * @param {{fsiMaxPlausible:number, escalationMinMultiplier:number, escalationFallbackMultiplier:number,
+ *   premiumDefault:number, adjustmentFactorDefault:number, minPriceableAreaSqm:number}} opts.config
+ *   REQUIRED (batch-2 row 2.4 — Rule 3 / Spec 122 §1.2a P4: no defaulted engine tunable). Resolved
+ *   by the caller from the six `compute_parcel_cost_*` logic variables (§2(d) of the conversion plan).
  * @returns {{
  *   menu: Record<string, unknown>,
  *   scalars: Record<string, number|null>,
@@ -194,7 +227,11 @@ function lineCost({ areaSqm, ratePerSqm, escalationMult, adjFactor, premium }) {
  * }}
  */
 function buildParcelCostMenu(parcel, rates, indexNow, opts = {}) {
-  const premium = num(parcel.neighbourhood_cost_premium) ?? 1;
+  const cfg = opts.config;
+  if (!cfg) {
+    throw new Error('[parcel-cost] buildParcelCostMenu requires opts.config (Rule 3 — no defaulted engine tunable; see scripts/lib/compute/compute-parcel-cost-estimates.js)');
+  }
+  const premium = num(parcel.neighbourhood_cost_premium) ?? cfg.premiumDefault;
   const maxBuildConfidence = parcel.max_build_confidence ?? null;
   // §2.4: coa_build norm_basis. Spec 78 P2 R2 grounds opt_coa in realized detached FSI p90 — but only
   // for the DETACHED family (townhouse/multiplex keep by-law). The caller passes r2Grounded=true only
@@ -212,13 +249,13 @@ function buildParcelCostMenu(parcel, rates, indexNow, opts = {}) {
 
   for (const line of PARCEL_COST_LINES) {
     const area = num(parcel[line.areaField]);
-    if (area === null || area <= 0) continue; // not computable → line absent
+    if (area === null || area <= cfg.minPriceableAreaSqm) continue; // not computable → line absent (seed 0 ⇒ area <= 0, byte-identical to legacy)
 
     const rate = rates[line.archetype];
     if (!rate || num(rate.cost_per_sqm) === null) continue; // no rate seeded → absent (rows are NOT NULL/CHECK>0, so defensive)
 
-    const adjFactor = num(rate.cost_adjustment_factor) ?? 1;
-    const escalationMult = escalationMultiplier(indexNow, rate.escalation_index_base);
+    const adjFactor = num(rate.cost_adjustment_factor) ?? cfg.adjustmentFactorDefault;
+    const escalationMult = escalationMultiplier(indexNow, rate.escalation_index_base, cfg);
     const { total, per_sqm } = lineCost({
       areaSqm: area,
       ratePerSqm: num(rate.cost_per_sqm),
@@ -264,8 +301,8 @@ function buildParcelCostMenu(parcel, rates, indexNow, opts = {}) {
   // NB (WF3): max_build_fsi is the *envelope* reference (max_buildable_gfa ÷ lot) — deliberately NOT
   // opt_aor. The max_build cost LINE now prices opt_aor (see PARCEL_COST_LINES); these two diverge by design.
   const lot = num(parcel.lot_size_sqm);
-  const mb = plausibleFsi(num(parcel.max_buildable_gfa_sqm), lot);
-  const coa = plausibleFsi(num(parcel.opt_coa_gfa_sqm), lot);
+  const mb = plausibleFsi(num(parcel.max_buildable_gfa_sqm), lot, cfg.fsiMaxPlausible);
+  const coa = plausibleFsi(num(parcel.opt_coa_gfa_sqm), lot, cfg.fsiMaxPlausible);
   scalars.max_build_fsi = mb.fsi;
   scalars.coa_fsi = coa.fsi;
   scalars.realized_fsi_p90 = num(parcel.realized_fsi_p90); // NULL in P1 — P2 family-aware norm read

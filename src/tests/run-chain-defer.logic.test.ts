@@ -292,16 +292,23 @@ describe('⑤ — force-full env plumbing', () => {
     },
   );
 
-  it(
-    '(c) Phase B B3 (C3) — the cost gate now honors its own force-full var, ' +
-      'COMPUTE_PARCEL_COST_FORCE_FULL — the exact name this suite guessed pre-impl, ' +
-      'confirmed at implementation (readCostVersionSignals docblock + FORCE_FULL_ENV export ' +
-      'in compute-parcel-cost-estimates.js).',
-    () => {
-      const src = readFileSync(COST_ESTIMATES_PATH, 'utf8');
-      expect(src).toMatch(/COMPUTE_PARCEL_COST_FORCE_FULL/);
-    },
-  );
+  // (c) RETIRED — batch-2 row 2.4 (2026-09-21), FOLD-V3. The pre-conversion
+  // COMPUTE_PARCEL_COST_FORCE_FULL env escape hatch's ONLY purpose was bypassing the
+  // Phase-B-B3 run-ledger gate; CPCE-A1 RULED that gate itself knowingly-retired
+  // (`runEnrichPhase` has no `ledgerGatedSkip` call and this step has no lineage-stamp
+  // column), so the escape hatch's own purpose no longer exists and it is retired WITH it
+  // (not carried forward under a new name). Successor:
+  // src/tests/steps/compute_parcel_cost_estimates/violations.test.ts test 15 asserts
+  // `descriptor.override.force_full === "none"` + a `deviations[]` entry naming the
+  // retirement — the frozen shell parses no env var of any name.
+  it('(c) RETIRED with a named successor — the frozen shell reads no force-full env var at all', () => {
+    const src = readFileSync(COST_ESTIMATES_PATH, 'utf8');
+    expect(src).not.toMatch(/COMPUTE_PARCEL_COST_FORCE_FULL/);
+    expect(src).not.toMatch(/process\.env/);
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const descriptor = require('../../scripts/compute-parcel-cost-estimates.descriptor.json');
+    expect(descriptor.override.force_full).toBe('none');
+  });
 });
 
 // ---------------------------------------------------------------------------

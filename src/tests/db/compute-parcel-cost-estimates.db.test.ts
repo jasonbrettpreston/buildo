@@ -4,19 +4,51 @@
 // the cost menu + headline/FSI scalars written to parcels, IS-DISTINCT-FROM idempotency (re-run →
 // 0 updated), absent-line vs fits:false, engine-error sentinel isolation, and the row-derived verdict.
 // Reads the rates seeded by migration 205. Skipped unless DATABASE_URL / BUILDO_TEST_DB=1.
-// Fixtures are COMMITTED then cleaned (the script streams + writes on its own connection — no
-// BEGIN/ROLLBACK isolation).
+//
+// RE-DERIVED — batch-2 row 2.4 (2026-09-21). The pre-conversion `computeParcelCostEstimates(pool,
+// {config})` testable-core export is retired by the frozen shell (Spec 122 §5.1 — the file shape
+// permits no executable statement beyond `pipeline.step()`). Re-pointed at
+// `pipeline.step(descriptor, compute).run({pool, chainId})`, the same in-process seam
+// src/tests/step-library.logic.test.ts uses. The hardcoded seeded-rate values (4844, 377, 3498,
+// 1615, …) are KEPT — they are the value-equivalence anchor this file exists for, unchanged by
+// the conversion (Spec 123 §1.1 behaviour-neutral).
 
-import { describe, it, expect, beforeAll, afterEach } from 'vitest';
+import { describe, it, expect, beforeAll, afterEach, vi } from 'vitest';
 import type { Pool } from 'pg';
+import path from 'path';
 import { dbAvailable, getTestPool } from './setup-testcontainer';
+
+const REPO_ROOT = path.resolve(__dirname, '../../../');
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const { computeParcelCostEstimates } = require('../../../scripts/compute-parcel-cost-estimates');
+const pipelineLib = require(path.join(REPO_ROOT, 'scripts/lib/step/index.js'));
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const descriptor = require(path.join(REPO_ROOT, 'scripts/compute-parcel-cost-estimates.descriptor.json'));
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const compute = require(path.join(REPO_ROOT, 'scripts/lib/compute/compute-parcel-cost-estimates.js'));
 
 const P = (n: number) => 9_960_000 + n;
-// indexNow=100 with the seeded escalation_index_base=100 → multiplier 1.0 (no escalation).
-// Index staleness is read from the cost_escalation_index row's updated_at (seeded by mig 205).
-const CONFIG = { indexNow: 100, indexMissing: false, ratesStaleMonths: 3, indexStaleMonths: 4 };
+
+function captureEmissions() {
+  const lines: string[] = [];
+  const spy = vi.spyOn(console, 'log').mockImplementation((...args: unknown[]) => {
+    lines.push(args.map(String).join(' '));
+  });
+  return {
+    restore: () => spy.mockRestore(),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    summary: (): any => JSON.parse(lines.filter((l) => l.startsWith('PIPELINE_SUMMARY:')).pop()!.slice('PIPELINE_SUMMARY:'.length)),
+  };
+}
+
+async function runStep(pool: Pool) {
+  const cap = captureEmissions();
+  try {
+    await pipelineLib.step(descriptor, compute).run({ pool, chainId: 'sources' });
+    return cap.summary();
+  } finally {
+    cap.restore();
+  }
+}
 
 async function insParcel(pool: Pool, id: number, over: Record<string, unknown> = {}) {
   const cols: Record<string, unknown> = {
@@ -50,7 +82,7 @@ async function insParcel(pool: Pool, id: number, over: Record<string, unknown> =
   );
 }
 
-describe.skipIf(!dbAvailable())('Spec 88 compute-parcel-cost-estimates — live DB (mig 205-207)', () => {
+describe.skipIf(!dbAvailable())('Spec 88 compute-parcel-cost-estimates — live DB (mig 205-207, converted)', () => {
   let pool: Pool;
   beforeAll(() => { pool = getTestPool() as Pool; });
 
@@ -61,11 +93,11 @@ describe.skipIf(!dbAvailable())('Spec 88 compute-parcel-cost-estimates — live 
   it('writes parcel_cost_menu + headline/FSI scalars; verdict not FAIL; engine errors 0', async () => {
     await insParcel(pool, P(1)); // full detached parcel — all 13 lines computable
 
-    const s = await computeParcelCostEstimates(pool, { config: CONFIG });
+    const s = await runStep(pool);
 
-    expect(s.engineErrorCount).toBe(0);
-    expect(s.verdict).not.toBe('FAIL');
-    expect(s.processed).toBeGreaterThanOrEqual(1);
+    expect(s.records_meta.engine_error_count).toBe(0);
+    expect(s.records_meta.audit_table.verdict).not.toBe('FAIL');
+    expect(s.records_total).toBeGreaterThanOrEqual(1);
 
     const row = (await pool.query(
       `SELECT parcel_cost_menu, cost_fb_total, cost_coa_total, cost_solar_total,
@@ -110,9 +142,9 @@ describe.skipIf(!dbAvailable())('Spec 88 compute-parcel-cost-estimates — live 
     // (b) opt_aor NULL → COALESCE falls back to the max-build envelope (300) + increments the counter.
     await insParcel(pool, P(6), { opt_aor_gfa_sqm: null, max_buildable_gfa_sqm: 300 });
 
-    const s = await computeParcelCostEstimates(pool, { config: CONFIG });
-    expect(s.engineErrorCount).toBe(0);
-    expect(s.newBuildFallbackCount).toBeGreaterThanOrEqual(1); // P(6) used the fallback
+    const s = await runStep(pool);
+    expect(s.records_meta.engine_error_count).toBe(0);
+    expect(s.records_meta.new_build_fallback_count).toBeGreaterThanOrEqual(1); // P(6) used the fallback
 
     const rowA = (await pool.query(
       `SELECT parcel_cost_menu, cost_fb_total, max_build_fsi FROM parcels WHERE id = $1`, [P(5)],
@@ -130,14 +162,14 @@ describe.skipIf(!dbAvailable())('Spec 88 compute-parcel-cost-estimates — live 
 
   it('IS-DISTINCT-FROM idempotency: a clean re-run updates 0 parcels', async () => {
     await insParcel(pool, P(2));
-    const first = await computeParcelCostEstimates(pool, { config: CONFIG });
-    expect(first.recordsUpdated).toBeGreaterThanOrEqual(1);
-    const second = await computeParcelCostEstimates(pool, { config: CONFIG });
+    const first = await runStep(pool);
+    expect(first.records_updated).toBeGreaterThanOrEqual(1);
+    const second = await runStep(pool);
     // the only fixture parcel is unchanged → guard short-circuits its UPDATE
     const reRow = (await pool.query(`SELECT parcel_cost_menu FROM parcels WHERE id = $1`, [P(2)])).rows[0];
     expect(reRow.parcel_cost_menu).toBeTruthy();
     // second run must not re-write our unchanged fixture (other test parcels are cleaned per-test)
-    expect(second.recordsUpdated).toBe(0);
+    expect(second.records_updated).toBe(0);
   }, 60_000);
 
   it('absent-line (NULL geom) vs fits:false (permission) are distinct', async () => {
@@ -148,15 +180,15 @@ describe.skipIf(!dbAvailable())('Spec 88 compute-parcel-cost-estimates — live 
       rear_suite_permission: 'not_permitted',
     });
 
-    const s = await computeParcelCostEstimates(pool, { config: CONFIG });
-    expect(s.engineErrorCount).toBe(0);
+    const s = await runStep(pool);
+    expect(s.records_meta.engine_error_count).toBe(0);
 
     const menu = (await pool.query(`SELECT parcel_cost_menu FROM parcels WHERE id = $1`, [P(3)])).rows[0]
       .parcel_cost_menu;
     expect('garage' in menu).toBe(false); // NULL geom → absent
     expect(menu.garden_suite.fits).toBe(false); // present + priced + not-permitted
     expect(menu.garden_suite.total).toBeGreaterThan(0);
-    expect(s.fitGatedSuiteCount).toBeGreaterThanOrEqual(2); // garden + laneway
+    expect(s.records_meta.fit_gated_suite_count).toBeGreaterThanOrEqual(2); // garden + laneway
   }, 60_000);
 
   it('a parcel with NO computable line counts as null_geom_basis (menu has no lines)', async () => {
@@ -174,8 +206,8 @@ describe.skipIf(!dbAvailable())('Spec 88 compute-parcel-cost-estimates — live 
       cur_pot_2story_gfa_sqm: null,
     });
 
-    const s = await computeParcelCostEstimates(pool, { config: CONFIG });
-    expect(s.nullGeomBasisCount).toBeGreaterThanOrEqual(1);
+    const s = await runStep(pool);
+    expect(s.records_meta.null_geom_basis_count).toBeGreaterThanOrEqual(1);
     const menu = (await pool.query(`SELECT parcel_cost_menu FROM parcels WHERE id = $1`, [P(4)])).rows[0]
       .parcel_cost_menu;
     // only the schema version key — no priced lines

@@ -96,7 +96,16 @@
       "coa_cost_coverage_fail_pct",
       "cost_est_legacy_cost_ceiling_cad",
       "cost_est_legacy_gfa_ceiling_sqm",
-      "permit_declared_cost_ceiling"
+      "permit_declared_cost_ceiling",
+      "cost_escalation_index",
+      "cost_rates_stale_months",
+      "cost_index_stale_months",
+      "compute_parcel_cost_fsi_max_plausible",
+      "compute_parcel_cost_escalation_min_multiplier",
+      "compute_parcel_cost_escalation_fallback_multiplier",
+      "compute_parcel_cost_premium_default",
+      "compute_parcel_cost_adjustment_factor_default",
+      "compute_parcel_cost_min_priceable_area_sqm"
     ]
   },
   {
@@ -326,7 +335,12 @@
       "enrich_heritage_designated_min_count",
       "enrich_heritage_part_iv_min_count",
       "enrich_heritage_designated_share_plausible_max_pct",
-      "enrich_heritage_designated_count_collapse_floor"
+      "enrich_heritage_designated_count_collapse_floor",
+      "compute_parcel_cost_min_population",
+      "compute_parcel_cost_engine_error_max",
+      "compute_parcel_cost_menu_coverage_min_pct",
+      "compute_parcel_cost_empty_menu_max_pct",
+      "compute_parcel_cost_line_total_max_cad"
     ]
   },
   {
@@ -395,7 +409,12 @@
       "enrich_ravines_phase_timeout_minutes",
       "enrich_heritage_heartbeat_minutes",
       "enrich_heritage_lock_timeout_ms",
-      "enrich_heritage_phase_timeout_minutes"
+      "enrich_heritage_phase_timeout_minutes",
+      "compute_parcel_cost_heartbeat_minutes",
+      "compute_parcel_cost_lock_timeout_ms",
+      "compute_parcel_cost_phase_timeout_minutes",
+      "compute_parcel_cost_batch_size",
+      "compute_parcel_cost_stream_batch_size"
     ]
   },
   {

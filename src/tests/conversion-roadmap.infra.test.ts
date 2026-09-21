@@ -139,8 +139,11 @@ describe('measured counts — independently re-derived, not transcribed from the
     // sets, so the file was already outside it and stays outside it. 16 converted/1 pending
     // -> 17 converted/0 pending; this test's own filter is indifferent to which of the two
     // sets a file sits in.
-    expect(remaining.length).toBe(46);
-    expect(remainingSlugCount).toBe(48);
+    // 46 -> 45 files and 48 -> 47 slugs: compute_parcel_cost_estimates joined `pending[]` at
+    // batch-2 row 2.4 commit ② (2026-09-21, descriptor+compute+shell landed, stage
+    // "shape_clean"), the same move enrich_heritage made at its own commit 1.
+    expect(remaining.length).toBe(45);
+    expect(remainingSlugCount).toBe(47);
   });
 
   it('the census file-count-by-batch matches the independently re-derived C4/C5/C6 split (C4=0 — CLOSED, C5=13 — `reconcile` left C5 for the R-AP RUNNER-owned exemption, 2026-09-15 — C6=36; pending=0 — geocode_permits flipped C4 -> pending at the batch-2 I5 folded commit 5 and was RETAINED as status:\"converted\" at its commit 9 the same day, emptying C4 entirely; link_neighbourhoods was pending from batch-2 I4 commit 1 and converted at commit 3, both on 2026-09-16; assert_engine_health\'s own row was deleted entirely at batch1 I3 commit 9, 2026-09-14, mirroring the assert_data_bounds/I2 commit 9 cutover precedent)', () => {
@@ -191,7 +194,9 @@ describe('measured counts — independently re-derived, not transcribed from the
     // re-counted from the live census file, not retyped.
     // 11 -> 10 at batch-2 row 2.2 commit 1 (2026-09-20): enrich_heritage's own census
     // row flipped batch "C5" -> "pending", the same move.
-    expect(c5.size).toBe(10);
+    // 10 -> 9 at batch-2 row 2.4 commit ② (2026-09-21): compute_parcel_cost_estimates' own
+    // census row flipped batch "C5" -> "pending", the same move.
+    expect(c5.size).toBe(9);
     // 1 -> 0 at the I4 CUTOVER (commit 3): the row is RETAINED with `status: "converted"`
     // (Spec 124 R-AO) rather than deleted, but `byBatch` counts only rows the roadmap still
     // treats as pending work, and a converted row is no longer that.
@@ -207,7 +212,9 @@ describe('measured counts — independently re-derived, not transcribed from the
     // 1 -> 0 at the row 2.2 CUTOVER (commit 3, 2026-09-20): the row is RETAINED with
     // `status: "converted"` (Spec 124 R-AO) rather than deleted, but `byBatch` counts only
     // rows the roadmap still treats as pending work, and a converted row is no longer that.
-    expect(pendingBatch.size).toBe(0);
+    // 0 -> 1 at batch-2 row 2.4 commit ② (2026-09-21): compute_parcel_cost_estimates' census
+    // row flipped batch "C5" -> "pending", the same move enrich_heritage made at its commit 1.
+    expect(pendingBatch.size).toBe(1);
     expect(c6.size).toBe(36);
     expect(c4.size + c5.size + c6.size).toBe(remaining.length);
   });
@@ -414,8 +421,10 @@ describe('buildRoadmap() — totality over the real committed data (HIGH-1: slug
     // batch-2 row 2.2 CUTOVER (commit 3, 2026-09-20): enrich_heritage moves from `pending[]`
     // into `converted[]` (16 -> 17), pending falls back to 0; remaining is UNCHANGED (48) —
     // the slug left `remaining` at commit 1, not at cutover.
-    expect(pendingSlugs).toBe(0);
-    expect(remainingSlugs).toBe(48);
+    // batch-2 row 2.4 commit ② (2026-09-21): compute_parcel_cost_estimates joined
+    // `pending[]`, so 1 slug moves from remaining (48) into pending (0 -> 1), leaving 47.
+    expect(pendingSlugs).toBe(1);
+    expect(remainingSlugs).toBe(47);
   });
 
   it('the rendered report never silently drops the 3 exemptions — all appear in the Declared exemptions table and the totality sentence states IDENTITY HOLDS', async () => {
@@ -507,7 +516,9 @@ describe('buildRoadmap() — the R-AP RUNNER-owned exemption class, both directi
     // of C5 (12->11); batch-2 row 2.2 commit 1 (2026-09-20): enrich_heritage's census
     // row flipped batch "C5" -> "pending" (11->10), mechanically computed by
     // buildRoadmap() from converted.json + the census, not retyped.
-    expect(c5).toHaveLength(10);
+    // batch-2 row 2.4 commit ② (2026-09-21): compute_parcel_cost_estimates' census
+    // row flipped batch "C5" -> "pending" (10->9), the same move.
+    expect(c5).toHaveLength(9);
   });
 });
 

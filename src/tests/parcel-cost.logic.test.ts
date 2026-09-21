@@ -16,6 +16,20 @@ import { describe, expect, it } from 'vitest';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const pc = require('../../scripts/lib/parcel-cost.js');
 
+// Batch-2 row 2.4 — the 6 engine tunables (Rule 3), REQUIRED, mirroring the seed defaults in
+// scripts/seeds/logic_variables.json (compute_parcel_cost_fsi_max_plausible=99.999,
+// _escalation_min_multiplier=1, _escalation_fallback_multiplier=1, _premium_default=1,
+// _adjustment_factor_default=1, _min_priceable_area_sqm=0) — value-neutral vs. the pre-conversion
+// literals (FSI_MAX_PLAUSIBLE=99.999, Math.max(1,…), ?? 1 ×3, area<=0).
+const CFG = {
+  fsiMaxPlausible: 99.999,
+  escalationMinMultiplier: 1,
+  escalationFallbackMultiplier: 1,
+  premiumDefault: 1,
+  adjustmentFactorDefault: 1,
+  minPriceableAreaSqm: 0,
+};
+
 // A representative rates map (subset of the seeded archetype_cost_rates).
 const RATES = {
   FB: { cost_per_sqm: 4844, cost_adjustment_factor: 1.0, escalation_index_base: 100 },
@@ -58,25 +72,25 @@ function fullParcel(overrides: Record<string, unknown> = {}) {
 
 describe('escalationMultiplier — §2.9 never-deflate + fallback', () => {
   it('index above base → ratio', () => {
-    expect(pc.escalationMultiplier(110, 100)).toBeCloseTo(1.1, 6);
+    expect(pc.escalationMultiplier(110, 100, CFG)).toBeCloseTo(1.1, 6);
   });
   it('index below base → floored at 1 (never deflate fresh rates)', () => {
-    expect(pc.escalationMultiplier(90, 100)).toBe(1);
+    expect(pc.escalationMultiplier(90, 100, CFG)).toBe(1);
   });
   it('index equal base → 1', () => {
-    expect(pc.escalationMultiplier(100, 100)).toBe(1);
+    expect(pc.escalationMultiplier(100, 100, CFG)).toBe(1);
   });
   it('missing/invalid index → 1.0 (no crash)', () => {
-    expect(pc.escalationMultiplier(null, 100)).toBe(1);
-    expect(pc.escalationMultiplier(undefined, 100)).toBe(1);
-    expect(pc.escalationMultiplier(NaN, 100)).toBe(1);
+    expect(pc.escalationMultiplier(null, 100, CFG)).toBe(1);
+    expect(pc.escalationMultiplier(undefined, 100, CFG)).toBe(1);
+    expect(pc.escalationMultiplier(NaN, 100, CFG)).toBe(1);
   });
   it('invalid/zero base → 1.0', () => {
-    expect(pc.escalationMultiplier(110, 0)).toBe(1);
-    expect(pc.escalationMultiplier(110, null)).toBe(1);
+    expect(pc.escalationMultiplier(110, 0, CFG)).toBe(1);
+    expect(pc.escalationMultiplier(110, null, CFG)).toBe(1);
   });
   it('accepts DB numeric strings', () => {
-    expect(pc.escalationMultiplier('120', '100')).toBeCloseTo(1.2, 6);
+    expect(pc.escalationMultiplier('120', '100', CFG)).toBeCloseTo(1.2, 6);
   });
 });
 
@@ -124,7 +138,7 @@ const NO_ESCALATION = 100;
 
 describe('buildParcelCostMenu — full parcel', () => {
   const { menu, scalars, lineCount, confidenceCounts, fitGatedSuiteCount, fitGatedGarageCount } =
-    pc.buildParcelCostMenu(fullParcel(), RATES, NO_ESCALATION);
+    pc.buildParcelCostMenu(fullParcel(), RATES, NO_ESCALATION, { config: CFG });
 
   it('emits _schema_version + all 13 lines', () => {
     expect(menu._schema_version).toBe(pc.PARCEL_COST_SCHEMA_VERSION);
@@ -147,6 +161,7 @@ describe('buildParcelCostMenu — full parcel', () => {
       fullParcel({ opt_aor_gfa_sqm: 250, max_buildable_gfa_sqm: 300 }),
       RATES,
       NO_ESCALATION,
+      { config: CFG },
     );
     expect(built.menu.max_build.area).toBe(250);              // prices opt_aor, not 300
     expect(built.menu.max_build.total).toBeCloseTo(4844 * 250, 1);
@@ -173,11 +188,11 @@ describe('buildParcelCostMenu — full parcel', () => {
   });
 
   it('norm_basis flips to r2_refined on coa_build when r2Grounded (detached, Spec 78 P2 R2)', () => {
-    const built = pc.buildParcelCostMenu(fullParcel(), RATES, NO_ESCALATION, { r2Grounded: true });
+    const built = pc.buildParcelCostMenu(fullParcel(), RATES, NO_ESCALATION, { r2Grounded: true, config: CFG });
     expect(built.menu.coa_build.norm_basis).toBe('r2_refined');
     expect(built.menu.max_build.norm_basis).toBe('n/a'); // non-CoA lines unchanged
     // townhouse/multiplex/generic (r2Grounded falsey) stay pre_r2
-    expect(pc.buildParcelCostMenu(fullParcel(), RATES, NO_ESCALATION, { r2Grounded: false }).menu.coa_build.norm_basis).toBe('pre_r2');
+    expect(pc.buildParcelCostMenu(fullParcel(), RATES, NO_ESCALATION, { r2Grounded: false, config: CFG }).menu.coa_build.norm_basis).toBe('pre_r2');
   });
 
   it('fits key present + true on fit-gated lines, absent on others', () => {
@@ -212,12 +227,13 @@ describe('buildParcelCostMenu — full parcel', () => {
       fullParcel({ lot_size_sqm: 111, max_buildable_gfa_sqm: 115825 }),
       RATES,
       NO_ESCALATION,
+      { config: CFG },
     );
     expect(built.scalars.max_build_fsi).toBeNull();  // NULLed, not 1042 (would overflow NUMERIC(6,3))
     expect(built.fsiImplausible).toBe(true);
     // a plausible FSI is kept
-    expect(pc.plausibleFsi(300, 400)).toEqual({ fsi: 0.75, implausible: false });
-    expect(pc.plausibleFsi(115825, 111).fsi).toBeNull();
+    expect(pc.plausibleFsi(300, 400, CFG.fsiMaxPlausible)).toEqual({ fsi: 0.75, implausible: false });
+    expect(pc.plausibleFsi(115825, 111, CFG.fsiMaxPlausible).fsi).toBeNull();
     expect(pc.FSI_MAX_PLAUSIBLE).toBe(99.999);
   });
 
@@ -237,13 +253,14 @@ describe('buildParcelCostMenu — absent-line vs fits:false (§2.4)', () => {
       fullParcel({ max_garage_gfa_sqm: null, opt_coa_gfa_sqm: null }),
       RATES,
       NO_ESCALATION,
+      { config: CFG },
     );
     expect('garage' in menu).toBe(false);
     expect('coa_build' in menu).toBe(false);
   });
 
   it('zero/negative area → absent (never $0 line)', () => {
-    const { menu } = pc.buildParcelCostMenu(fullParcel({ cur_floor_gfa_sqm: 0 }), RATES, NO_ESCALATION);
+    const { menu } = pc.buildParcelCostMenu(fullParcel({ cur_floor_gfa_sqm: 0 }), RATES, NO_ESCALATION, { config: CFG });
     expect('basement' in menu).toBe(false);
     expect('addition' in menu).toBe(false);
   });
@@ -253,6 +270,7 @@ describe('buildParcelCostMenu — absent-line vs fits:false (§2.4)', () => {
       fullParcel({ garage_permission: 'prohibited', rear_suite_permission: 'not_permitted' }),
       RATES,
       NO_ESCALATION,
+      { config: CFG },
     );
     expect(menu.garage.fits).toBe(false);
     expect(menu.garage.total).toBeGreaterThan(0); // still priced (hypothetical)
@@ -266,6 +284,7 @@ describe('buildParcelCostMenu — absent-line vs fits:false (§2.4)', () => {
       fullParcel({ garage_permission: 'coa_required' }),
       RATES,
       NO_ESCALATION,
+      { config: CFG },
     );
     expect(menu.garage.fits).toBe(true);
   });
@@ -277,6 +296,7 @@ describe('buildParcelCostMenu — premium + confidence edges', () => {
       fullParcel({ neighbourhood_cost_premium: null }),
       RATES,
       NO_ESCALATION,
+      { config: CFG },
     );
     expect(menu.max_build.total).toBeCloseTo(4844 * 300, 1);
   });
@@ -286,6 +306,7 @@ describe('buildParcelCostMenu — premium + confidence edges', () => {
       fullParcel({ neighbourhood_cost_premium: 1.85 }),
       RATES,
       NO_ESCALATION,
+      { config: CFG },
     );
     expect(menu.max_build.total).toBeCloseTo(4844 * 300 * 1.85, 1);
   });
@@ -295,6 +316,7 @@ describe('buildParcelCostMenu — premium + confidence edges', () => {
       fullParcel({ max_build_confidence: 'low' }),
       RATES,
       NO_ESCALATION,
+      { config: CFG },
     );
     expect(menu.max_build.area_confidence).toBe('low');
     expect(menu.garden_suite.area_confidence).toBe('low');
@@ -305,13 +327,28 @@ describe('buildParcelCostMenu — premium + confidence edges', () => {
 
   it('escalation multiplier (index_now ÷ base) flows into totals', () => {
     // indexNow=110, escalation_index_base=100 → MAX(1, 1.1) = 1.1×
-    const { menu } = pc.buildParcelCostMenu(fullParcel(), RATES, 110);
+    const { menu } = pc.buildParcelCostMenu(fullParcel(), RATES, 110, { config: CFG });
     expect(menu.max_build.total).toBeCloseTo(4844 * 1.1 * 300, 1);
   });
 
   it('index_now below base does NOT deflate totals (per-archetype MAX(1,…))', () => {
-    const { menu } = pc.buildParcelCostMenu(fullParcel(), RATES, 80);
+    const { menu } = pc.buildParcelCostMenu(fullParcel(), RATES, 80, { config: CFG });
     expect(menu.max_build.total).toBeCloseTo(4844 * 300, 1);
+  });
+});
+
+describe('buildParcelCostMenu / escalationMultiplier / plausibleFsi — config is REQUIRED (batch-2 row 2.4, Rule 3 / Spec 122 §1.2a P4)', () => {
+  it('buildParcelCostMenu throws a named error when opts.config is absent — no defaulted engine tunable', () => {
+    expect(() => pc.buildParcelCostMenu(fullParcel(), RATES, NO_ESCALATION)).toThrow(/requires opts\.config/);
+    expect(() => pc.buildParcelCostMenu(fullParcel(), RATES, NO_ESCALATION, {})).toThrow(/requires opts\.config/);
+  });
+  it('escalationMultiplier throws a named error when cfg is absent or incomplete', () => {
+    expect(() => pc.escalationMultiplier(110, 100)).toThrow(/requires cfg/);
+    expect(() => pc.escalationMultiplier(110, 100, { escalationMinMultiplier: 1 })).toThrow(/requires cfg/);
+  });
+  it('plausibleFsi throws a named error when fsiMaxPlausible is absent/non-finite', () => {
+    expect(() => pc.plausibleFsi(300, 400)).toThrow(/requires a finite fsiMaxPlausible/);
+    expect(() => pc.plausibleFsi(300, 400, NaN)).toThrow(/requires a finite fsiMaxPlausible/);
   });
 });
 

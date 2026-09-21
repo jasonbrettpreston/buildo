@@ -1,0 +1,422 @@
+{
+  "identity": {
+    "name": "compute_parcel_cost_estimates",
+    "display_name": "Parcel Renovation Cost Model",
+    "owner": "data",
+    "description": "Single-phase ENRICHER: streams every residential parcel (zoning_class LIKE 'R%') through the pure pricing engine (scripts/lib/parcel-cost.js) and writes a 13-line renovation-cost menu (JSONB) + 12 headline cost scalars + 3 FSI scalars, one JS-streamed cursor-batched post_commit phase, each batch flushed through its own short transaction. PURE PARCEL MODEL — external industry cost only (archetype_cost_rates); no permit data, no declared cost, no Liar's Gate (Spec 88 §1). CPCE-A1 RULED (Spec 124 R-AR.1): the Phase-B-B3 run-ledger gate is RETIRED as a mechanism — this ENRICHER's runner shape has no gated-skip branch and this step has no lineage-stamp column to hold a Layer-2 predicate; every invocation streams the whole declared population and the 16-column IS DISTINCT FROM write guard keeps a steady-state re-run's write count near zero.",
+    "lock": 117,
+    "why_lock": {
+      "text": "Spec 47 §A.5 — lock 88 (the owning spec number) is taken by classify-permits.js (predates the spec-number convention); 117 is the assigned free-ID from the post-Wave-7 range, ported verbatim from the pre-conversion `const ADVISORY_LOCK_ID = 117` and agreeing with pipeline-advisory-lock.infra.test.ts:143. The audit_table `phase` key still carries the spec number (88).",
+      "liveness": { "kind": "spec", "ref": "docs/specs/01-pipeline/47_pipeline_script_protocol.md" }
+    },
+    "spec": "88",
+    "spec_version": "1.0",
+    "archetype": "ENRICHER",
+    "contract_version": 1,
+    "gate_exempt": false
+  },
+  "inputs": {
+    "reads": {
+      "steps": [
+        { "step": "enrich_parcels", "version_pin": "none" },
+        { "step": "parcels", "version_pin": "none" }
+      ],
+      "tables": [
+        { "table": "archetype_cost_rates", "columns": ["archetype", "cost_per_sqm", "cost_adjustment_factor", "escalation_index_base", "as_of_date", "updated_at"] },
+        { "table": "logic_variables", "columns": ["variable_key", "variable_value", "updated_at"] },
+        { "table": "parcels", "columns": ["id", "zoning_class", "lot_size_sqm", "max_buildable_gfa_sqm", "opt_aor_gfa_sqm", "max_buildable_footprint_sqm", "opt_coa_gfa_sqm", "max_garden_suite_gfa_sqm", "max_laneway_suite_gfa_sqm", "cur_est_kitchen_gfa_sqm", "cur_est_bath_gfa_sqm", "max_garage_gfa_sqm", "cur_floor_gfa_sqm", "cur_pot_2story_gfa_sqm", "realized_fsi_p90", "neighbourhood_cost_premium", "rear_suite_permission", "garage_permission", "max_build_confidence"] }
+      ],
+      "externals": []
+    },
+    "expect_nonempty": true,
+    "on_missing": "halt"
+  },
+  "outputs": {
+    "writes": [
+      {
+        "table": "parcels",
+        "key": ["id"],
+        "columns": [
+          { "name": "parcel_cost_menu", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "cost_fb_total", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "cost_coa_total", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "cost_solar_total", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "cost_garden_suite_total", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "cost_laneway_suite_total", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "cost_garage_total", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "cost_gut_total", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "cost_addition_total", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "cost_kitchen_per_sqm", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "cost_bath_per_sqm", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "cost_basement_per_sqm", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "cost_basement_underpin_per_sqm", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "max_build_fsi", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "coa_fsi", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "realized_fsi_p90", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" }
+        ],
+        "write_discipline": {
+          "class": "derived_recompute",
+          "guard": "is_distinct_from",
+          "guard_columns": ["parcel_cost_menu", "cost_fb_total", "cost_coa_total", "cost_solar_total", "cost_garden_suite_total", "cost_laneway_suite_total", "cost_garage_total", "cost_gut_total", "cost_addition_total", "cost_kitchen_per_sqm", "cost_bath_per_sqm", "cost_basement_per_sqm", "cost_basement_underpin_per_sqm", "max_build_fsi", "coa_fsi", "realized_fsi_p90"],
+          "guard_columns_why": {
+            "text": "The verbatim 16-column guard, legacy `distinctGuard = ['parcel_cost_menu', ...ALL_SCALAR_COLS]`. All 16 are in the guard — the mechanism that makes a re-run against unchanged inputs write ~0 rows instead of re-pricing 437,279 parcels every invocation (measured live: 77/190 of 437,281 candidates on the two July ledger rows).",
+            "liveness": { "kind": "file", "ref": "scripts/lib/compute/compute-parcel-cost-estimates.js" }
+          },
+          "scope": "p.zoning_class IS NOT NULL AND upper(p.zoning_class) LIKE 'R%' (CPCE-A6 RULED — a population definition, not a threshold)",
+          "expected_change_ratio": "none",
+          "idempotent_rerun": "zero_writes",
+          "txn_scope": "none"
+        },
+        "retract": "none",
+        "replay": "idempotent_upsert",
+        "source_key_policy": { "unique": true, "on_collision": "not_applicable", "key_space_migration": "none" }
+      }
+    ],
+    "cascades": "none",
+    "invalidates": [],
+    "publish": "none",
+    "write_inventory": {
+      "statements": 1,
+      "why": {
+        "text": "One parameterised batched UPDATE per flush (batch size compute_parcel_cost_batch_size), each its own short transaction via ctx.flushBatch — no batching mechanism beyond the streamed cursor + flush cadence.",
+        "liveness": { "kind": "file", "ref": "scripts/lib/compute/compute-parcel-cost-estimates.js" }
+      }
+    }
+  },
+  "staleness": {
+    "scope": "all",
+    "trigger": [{ "signal": "always", "position": "pre_compute" }],
+    "mode_select": "none",
+    "checkpoint": "none",
+    "interval": "none",
+    "fingerprint": "derived",
+    "fingerprint_inputs": ["scripts/lib/compute/compute-parcel-cost-estimates.js", "scripts/lib/parcel-cost.js"],
+    "logic_version": "v1-streamed-engine",
+    "on_fingerprint_change": "run"
+  },
+  "guards": {
+    "requires": [
+      {
+        "kind": "column",
+        "name": "parcels.parcel_cost_menu",
+        "on_missing": "fail",
+        "why": {
+          "text": "Migration 205 (archetype_cost_rates + the 16 parcel_cost_* / cost_* / FSI columns). Without it the write target does not exist.",
+          "liveness": { "kind": "column", "ref": "parcels.parcel_cost_menu" }
+        }
+      },
+      {
+        "kind": "column",
+        "name": "parcels.cost_fb_total",
+        "on_missing": "fail",
+        "why": {
+          "text": "Migration 205 — one of the 12 headline cost scalars.",
+          "liveness": { "kind": "column", "ref": "parcels.cost_fb_total" }
+        }
+      },
+      {
+        "kind": "column",
+        "name": "parcels.max_build_fsi",
+        "on_missing": "fail",
+        "why": {
+          "text": "Migration 205 — one of the 3 FSI scalars.",
+          "liveness": { "kind": "column", "ref": "parcels.max_build_fsi" }
+        }
+      }
+    ],
+    "srid": "none",
+    "empty_source": "archetype_cost_rates",
+    "schema_drift": "pause"
+  },
+  "execution": {
+    "shape": "enrich",
+    "heartbeat_minutes_from_config": "compute_parcel_cost_heartbeat_minutes",
+    "lock_timeout_ms_from_config": "compute_parcel_cost_lock_timeout_ms",
+    "enrich_hooks": {
+      "contract_read": "readCostContract",
+      "post_phase": "computePostPhase"
+    },
+    "phases": [
+      {
+        "name": "cost_menu",
+        "order": 1,
+        "txn": "post_commit",
+        "writes_ref": 0,
+        "scope": "full",
+        "timeout_minutes_from_config": "compute_parcel_cost_phase_timeout_minutes"
+      }
+    ],
+    "budget": "60m",
+    "txn_scope": "none",
+    "txn_budget": "none",
+    "chunked": true,
+    "statement_timeout": "none",
+    "step_timeout": "90m",
+    "batch": 1000,
+    "needs_disk_mb": "none",
+    "partial_fill": "staged",
+    "on_row_error": "skip",
+    "on_row_error_max_pct": 0,
+    "on_batch_error": "fail_step",
+    "on_check_error": "fail_step",
+    "on_check_error_why": {
+      "text": "Every declared check reads a value computePostPhase already measured in the same run; a check that throws is a compute defect (e.g. the cost_by_zone Σ-identity), not an upstream data condition, and must redden the run.",
+      "liveness": { "kind": "file", "ref": "scripts/lib/step/index.js" }
+    },
+    "on_degrade": "none",
+    "criticality": "required",
+    "network": "none",
+    "maintenance": "none",
+    "invocation": {
+      "sources": { "argv": [], "env": { "PIPELINE_CHAIN": "sources" } }
+    }
+  },
+  "checks": [
+    { "id": "residential_parcels_examined", "kind": "field_coverage", "expect": { "reports": "COUNT of residential parcels streamed this run" }, "limit": "value_min 1", "limit_from_config": "compute_parcel_cost_min_population", "severity": "FAIL", "blocking": false, "when": "post", "chains": ["sources"], "accept_until": "none", "why": { "text": "Ported from `residential_parcels_examined` (PASS `> 0`). Measured live 2026-09-21: 437,279.", "liveness": { "kind": "table", "ref": "parcels" } } },
+    { "id": "engine_error_count", "kind": "field_coverage", "expect": { "reports": "COUNT of parcels whose engine call threw" }, "limit": "value_max 0", "limit_from_config": "compute_parcel_cost_engine_error_max", "severity": "FAIL", "blocking": false, "when": "post", "chains": ["sources"], "accept_until": "none", "why": { "text": "F4 — ported exactly (0 -> PASS, >0 -> FAIL). The ENFORCED half of the on_row_error skip/sentinel pair (§5 test 9).", "liveness": { "kind": "table", "ref": "parcels" } } },
+    { "id": "cost_rates_stale", "kind": "bound", "expect": { "reports": "3-tier as a severity CODE (0=fresh,1=stale WARN,2=future-dated FAIL) over age vs cost_rates_stale_months; the rendered `value` is the human label (observation.detail) — the compared measure is the code" }, "limit": { "warn": 1, "fail": 2 }, "severity": "WARN", "blocking": false, "when": "post", "chains": ["sources"], "accept_until": "none", "why": { "text": "R-AD 3-tier port. `future_dated` is a separate declared arm (rates_as_of > run_at), not a magic value in a bound — declared Class-A diff (CPCE-Dn, ledger). The object-form `limit` is the schema's own two-tier escalation mechanism (scripts/lib/step/verdict.js#evaluateLimit); `observation.detail` renders the legacy's own false/true/'future_dated' string so the audit row stays human-readable while the comparison itself is numeric (measured live 2026-09-21: false).", "liveness": { "kind": "table", "ref": "archetype_cost_rates" } } },
+    { "id": "cost_index_stale", "kind": "bound", "expect": { "reports": "2-tier as a severity CODE (0=fresh,1=stale-or-undatable WARN — this check never reaches FAIL); the rendered `value` is the human label ('undatable'|true|false)" }, "limit": { "warn": 1, "fail": 999 }, "severity": "WARN", "blocking": false, "when": "post", "chains": ["sources"], "accept_until": "none", "why": { "text": "§5 test 10 — the precondition lock (logic_variables.updated_at NOT NULL) currently makes the 'undatable' arm UNREACHABLE; pinned as such (deviations[]), not fixed. `fail:999` is unreachable by construction (the code is only ever 0 or 1) — this check has no FAIL tier, matching the legacy exactly. Measured live 2026-09-21: false.", "liveness": { "kind": "table", "ref": "logic_variables" } } },
+    { "id": "compute_parcel_cost_menu_coverage_min_pct", "kind": "bound", "expect": { "reports": "% of residential parcels with a non-empty parcel_cost_menu" }, "limit": "value_min 99", "limit_from_config": "compute_parcel_cost_menu_coverage_min_pct", "severity": "WARN", "blocking": false, "when": "post", "chains": ["sources"], "accept_until": "none", "why": { "text": "§7 Reality-Check plan-altitude (var 17). Measured live 100.0%.", "liveness": { "kind": "column", "ref": "parcels.parcel_cost_menu" } } },
+    { "id": "compute_parcel_cost_empty_menu_max_pct", "kind": "bound", "expect": { "reports": "% of residential parcels with an EMPTY menu ({_schema_version:1} only)" }, "limit": "value_max 5", "limit_from_config": "compute_parcel_cost_empty_menu_max_pct", "severity": "WARN", "blocking": false, "when": "post", "chains": ["sources"], "accept_until": "none", "why": { "text": "§7 (var 18). Measured live 1.755% (7,674/437,279).", "liveness": { "kind": "column", "ref": "parcels.parcel_cost_menu" } } },
+    { "id": "compute_parcel_cost_line_total_max_cad", "kind": "bound", "expect": { "reports": "MAX(cost_gut_total) across the per-zone visibility block — a labelled FUTURE-REGRESSION TRIPWIRE, not a calibrated bound (A8 RULED)" }, "limit": "value_max 250000000", "limit_from_config": "compute_parcel_cost_line_total_max_cad", "severity": "WARN", "blocking": false, "when": "post", "chains": ["sources"], "accept_until": "none", "why": { "text": "A8 RULED — the live max ($176,567,416) is itself a suspect upstream cur_floor_gfa_sqm artifact (rf:198), so this ceiling only catches movement ABOVE today's already-suspect tail. NOT a plausibility bound on today's values.", "liveness": { "kind": "column", "ref": "parcels.cost_gut_total" } } },
+    { "id": "line_coverage_max_build", "kind": "field_coverage", "expect": { "reports": "COUNT of parcels carrying the max_build (new-build) line" }, "limit": "viol == 0", "severity": "INFO", "blocking": false, "when": "post", "chains": ["sources"], "accept_until": "none", "why": { "text": "Ported by name.", "liveness": { "kind": "column", "ref": "parcels.parcel_cost_menu" } } },
+    { "id": "line_coverage_coa_build", "kind": "field_coverage", "expect": { "reports": "COUNT of parcels carrying the coa_build line" }, "limit": "viol == 0", "severity": "INFO", "blocking": false, "when": "post", "chains": ["sources"], "accept_until": "none", "why": { "text": "Ported by name.", "liveness": { "kind": "column", "ref": "parcels.parcel_cost_menu" } } },
+    { "id": "line_coverage_solar_max", "kind": "field_coverage", "expect": { "reports": "COUNT of parcels carrying the solar_max line" }, "limit": "viol == 0", "severity": "INFO", "blocking": false, "when": "post", "chains": ["sources"], "accept_until": "none", "why": { "text": "Ported by name.", "liveness": { "kind": "column", "ref": "parcels.parcel_cost_menu" } } },
+    { "id": "line_coverage_solar_coa", "kind": "field_coverage", "expect": { "reports": "COUNT of parcels carrying the solar_coa line" }, "limit": "viol == 0", "severity": "INFO", "blocking": false, "when": "post", "chains": ["sources"], "accept_until": "none", "why": { "text": "Ported by name.", "liveness": { "kind": "column", "ref": "parcels.parcel_cost_menu" } } },
+    { "id": "line_coverage_garden_suite", "kind": "field_coverage", "expect": { "reports": "COUNT of parcels carrying the garden_suite line" }, "limit": "viol == 0", "severity": "INFO", "blocking": false, "when": "post", "chains": ["sources"], "accept_until": "none", "why": { "text": "Ported by name.", "liveness": { "kind": "column", "ref": "parcels.parcel_cost_menu" } } },
+    { "id": "line_coverage_laneway_suite", "kind": "field_coverage", "expect": { "reports": "COUNT of parcels carrying the laneway_suite line" }, "limit": "viol == 0", "severity": "INFO", "blocking": false, "when": "post", "chains": ["sources"], "accept_until": "none", "why": { "text": "Ported by name.", "liveness": { "kind": "column", "ref": "parcels.parcel_cost_menu" } } },
+    { "id": "line_coverage_kitchen", "kind": "field_coverage", "expect": { "reports": "COUNT of parcels carrying the kitchen line" }, "limit": "viol == 0", "severity": "INFO", "blocking": false, "when": "post", "chains": ["sources"], "accept_until": "none", "why": { "text": "Ported by name.", "liveness": { "kind": "column", "ref": "parcels.parcel_cost_menu" } } },
+    { "id": "line_coverage_bath", "kind": "field_coverage", "expect": { "reports": "COUNT of parcels carrying the bath line" }, "limit": "viol == 0", "severity": "INFO", "blocking": false, "when": "post", "chains": ["sources"], "accept_until": "none", "why": { "text": "Ported by name.", "liveness": { "kind": "column", "ref": "parcels.parcel_cost_menu" } } },
+    { "id": "line_coverage_garage", "kind": "field_coverage", "expect": { "reports": "COUNT of parcels carrying the garage line" }, "limit": "viol == 0", "severity": "INFO", "blocking": false, "when": "post", "chains": ["sources"], "accept_until": "none", "why": { "text": "Ported by name.", "liveness": { "kind": "column", "ref": "parcels.parcel_cost_menu" } } },
+    { "id": "line_coverage_basement_underpin", "kind": "field_coverage", "expect": { "reports": "COUNT of parcels carrying the basement_underpin line" }, "limit": "viol == 0", "severity": "INFO", "blocking": false, "when": "post", "chains": ["sources"], "accept_until": "none", "why": { "text": "Ported by name.", "liveness": { "kind": "column", "ref": "parcels.parcel_cost_menu" } } },
+    { "id": "line_coverage_basement", "kind": "field_coverage", "expect": { "reports": "COUNT of parcels carrying the basement line" }, "limit": "viol == 0", "severity": "INFO", "blocking": false, "when": "post", "chains": ["sources"], "accept_until": "none", "why": { "text": "Ported by name.", "liveness": { "kind": "column", "ref": "parcels.parcel_cost_menu" } } },
+    { "id": "line_coverage_gut", "kind": "field_coverage", "expect": { "reports": "COUNT of parcels carrying the gut line" }, "limit": "viol == 0", "severity": "INFO", "blocking": false, "when": "post", "chains": ["sources"], "accept_until": "none", "why": { "text": "Ported by name.", "liveness": { "kind": "column", "ref": "parcels.parcel_cost_menu" } } },
+    { "id": "line_coverage_addition", "kind": "field_coverage", "expect": { "reports": "COUNT of parcels carrying the addition line" }, "limit": "viol == 0", "severity": "INFO", "blocking": false, "when": "post", "chains": ["sources"], "accept_until": "none", "why": { "text": "Ported by name.", "liveness": { "kind": "column", "ref": "parcels.parcel_cost_menu" } } }
+  ],
+  "invariants": [
+    {
+      "id": "no_priced_null_lot_parcel",
+      "sql": "SELECT count(*)::int FROM parcels WHERE lot_size_sqm IS NULL AND cost_fb_total IS NOT NULL",
+      "bound": "viol == 0",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "source": "invariant",
+      "frequency": "every_run",
+      "last_measured": { "value": 0, "at": "2026-09-21T00:00:00.000Z", "commit": "compute-parcel-cost-estimates-commit-1", "cost_ms": 400, "sample_n": 1, "source_run": { "run_id": null, "chain": null, "event": "manual_timing" } },
+      "why": { "text": "§7 invariant 3 — a cost line can only be priced from a non-null lot-derived area. MEASURED 0, 2026-09-21.", "liveness": { "kind": "column", "ref": "parcels.cost_fb_total" } }
+    },
+    {
+      "id": "new_build_cost_not_gt_coa_cost",
+      "sql": "SELECT count(*)::int FROM parcels WHERE cost_fb_total > cost_coa_total + 1",
+      "bound": "viol == 0",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "source": "invariant",
+      "frequency": "every_run",
+      "last_measured": { "value": 0, "at": "2026-09-21T00:00:00.000Z", "commit": "compute-parcel-cost-estimates-commit-1", "cost_ms": 400, "sample_n": 1, "source_run": { "run_id": null, "chain": null, "event": "manual_timing" } },
+      "why": { "text": "§7 invariant 2 — a new build can never legitimately cost more than the CoA build (CoA can only add). MEASURED 0, 2026-09-21. NOTE: coa_fsi > max_build_fsi is a SEPARATE, documented divergent reference (Spec 88 §2.6/2.6) and is NOT a violation of this invariant.", "liveness": { "kind": "column", "ref": "parcels.cost_coa_total" } }
+    }
+  ],
+  "plausibility": "none",
+  "override": { "force_full": "none", "force_run": "none", "dry_run": "none" },
+  "emits": [
+    { "key": "line_coverage", "type": "object", "consumers": [] },
+    { "key": "area_confidence", "type": "object", "consumers": [] },
+    { "key": "rates_as_of", "type": "string", "consumers": [] },
+    { "key": "index_updated_at", "type": "string", "consumers": [] },
+    { "key": "cost_rates_age_months", "type": "int", "consumers": [] },
+    { "key": "row_limit", "type": "int", "consumers": [] },
+    { "key": "cost_by_zone", "type": "object", "consumers": [] }
+  ],
+  "deviations": [
+    {
+      "from": "the Phase-B-B3 run-ledger gate (F8: runLedgerGateDecision + OWN_SLUGS/UPSTREAM_SLUGS + buildSkipGateRecordsMeta) and its C1/C2 own-version-signal companion (F9)",
+      "why": {
+        "text": "CPCE-A1 RULED (operator, 2026-09-21, Spec 124 R-AR.1) — knowingly-retired. `runEnrichPhase` has no `ledgerGatedSkip` call (measured: only `runCascadePhase`/`runMaterializePhase` call it) and this step has no lineage-stamp column to hold a Layer-2 predicate — the 2.2 (enrich_heritage) remedy is structurally unavailable here. Every scheduled run now streams the whole declared population; the 16-column IS DISTINCT FROM guard keeps the write cost low in steady state. F9's version-signal stamps SURVIVE as emits[]-only observability. The cloud no-op cost of this retirement is UNMEASURED and is a declared, carried risk (limitations[]), resolved at the end-of-batch cloud proof.",
+        "liveness": { "kind": "file", "ref": "scripts/lib/compute/compute-parcel-cost-estimates.js" }
+      },
+      "adjudicated_by": "Operator ruling CPCE-A1=(a), 2026-09-21 (.cursor/batch2_p2_4_compute_parcel_cost_estimates_active_task.md §13)",
+      "date": "2026-09-21"
+    },
+    {
+      "from": "the legacy's D#3 atomic co-read of the escalation-index VALUE and its version stamp, both from ONE query, inside the lock",
+      "why": {
+        "text": "FOLD-V9(2) (binding amendment) — the priced VALUE is now `ctx.config.cost_escalation_index` (declared, LM-D15-validated, hoisted above the lock, per Spec 122 §1.2a P4 — a defaulted/ad hoc re-read would make test 5's literal scan and the engine signature contradict each other). `readCostContract`'s own re-read of the same logic_variables row is retained ONLY for the `index_updated_at` version stamp (emits[]). Because `runEnrichPhase` itself executes inside `pipeline.withAdvisoryLock`, the contract_read hook still runs under the same lock the legacy's D#3 read did — the torn-read window this fence existed to close is not re-opened for the CONCURRENT-EDIT case; the one narrowed difference is that the priced value comes from the step-wide hoisted config rather than a second identical read.",
+        "liveness": { "kind": "file", "ref": "scripts/lib/step/index.js" }
+      },
+      "adjudicated_by": "Fold-validation round 2, FOLD-V9 (binding amendment), 2026-09-21",
+      "date": "2026-09-21"
+    },
+    {
+      "from": "the legacy's --dry-run / --limit=N argv flags and the COMPUTE_PARCEL_COST_FORCE_FULL env escape hatch",
+      "why": {
+        "text": "RULED — both retired as a declared deviation. F15's only purpose (bypassing the F8 gate) no longer exists once A1 retires the gate; `override.dry_run:\"none\"` / `force_full:\"none\"` match all four converted ENRICHER siblings. `manifest.json` still declares `supports_dry_run: true` for this slug — reconciled/declared-mismatched at cutover (③), not this commit.",
+        "liveness": { "kind": "file", "ref": "scripts/compute-parcel-cost-estimates.js" }
+      },
+      "adjudicated_by": "Operator ruling DRY-RUN, 2026-09-21; FOLD-V3 (force_full does not survive)",
+      "date": "2026-09-21"
+    }
+  ],
+  "limitations": [
+    {
+      "what": "CPCE-A1's cloud no-op cost is UNMEASURED. Locally a full stream is 70–95s against a mostly-unchanged table (measured 2026-07); a cold/full rewrite of 437K wide rows with a JSONB column, and the Supabase-Small cloud cost of running this on every scheduled invocation, is not measured anywhere and is carried as a declared risk resolved at the end-of-batch cloud proof.",
+      "measured": "docs/reports/2026-09-__-batch2-p2-4-compute-parcel-cost-estimates-assessment.md §0.4",
+      "check_id": "none"
+    },
+    {
+      "what": "unmapped_residential_family_fallback_count is structurally 0 (a hardcoded const in the legacy) — a vacuous green. The REAL blast radius is 105,595 R/RA/RAC parcels silently taking norm_basis:'pre_r2' via parcelFamilyFromZoning's fall-through (P1; family mapping is P2).",
+      "measured": "grep + live count, 2026-09-21",
+      "check_id": "none"
+    },
+    {
+      "what": "The rates-vs-index undatable-staleness asymmetry is PINNED, not fixed: an undatable index reports 'undatable'+WARN, but an undatable rate table silently PASSes (`ratesAgeMonths != null && ...`). CPCE-A7 RULED — fixed in its own later commit, never this one (Spec 123 §3.1).",
+      "measured": "read of computePostPhase, 2026-09-21",
+      "check_id": "cost_index_stale"
+    },
+    {
+      "what": "PARCEL_COST_LINES (13 lines) and PERMITTED_VALUES are policy tables in source, not admin-visible (CPCE-A3 RULED). archetype_cost_rates (12 rows × 3 pricing fields) is the largest tunable surface this step consumes and is a DB table read via inputs.reads.tables, NOT counted toward the 'all variables externalized' claim (CPCE-A4 RULED) — it is ported byte-for-byte. An admin editor for both is a separate filed WF.",
+      "measured": "§2 of the conversion plan, 2026-09-21",
+      "check_id": "none"
+    },
+    {
+      "what": "Two orphan parcel_cost_menu rows exist OUTSIDE the R% population (ids 373779 CR, 11891 O) — written before a zoning reclassification; a re-run neither refreshes nor nullifies them (CPCE-A9(i) PINNED, filed as a followup).",
+      "measured": "live query, 2026-09-21",
+      "check_id": "none"
+    },
+    {
+      "what": "realized_fsi_p90 is declared both a read and a write; every value written is NULL (a P1 sentinel — P2's family-aware norm read populates it). CPCE-A9(ii) — declared here, not dropped from the write set (dropping it would change the 16-column guard).",
+      "measured": "live query (0 non-null across 437,279 rows), 2026-09-21",
+      "check_id": "none"
+    },
+    {
+      "what": "Two non-step analysis consumers of the ENGINE (not the columns) require the config argument as a REQUIRED positional now: scripts/analysis/wf3-cost-coherence-sanity.js and scripts/analysis/wf3-sample-full-dump.js — updated in this commit to read-live-else-seed-default the 6 engine tunables (FOLD-I5/V8).",
+      "measured": "grep -rn \"require.*parcel-cost\" scripts/ src/, 2026-09-21",
+      "check_id": "none"
+    }
+  ],
+  "interpretation": "none",
+  "recovery": {
+    "reset": "No TRUNCATE/rebuild mechanism and none is needed — a plain re-run re-streams the whole R% population (staleness.scope 'all') and the 16-column IS DISTINCT FROM guard makes an unnecessary re-write cheap.",
+    "resume": "none",
+    "force": "none",
+    "rollback": "none",
+    "verify_clean": "none",
+    "cascades": "derived",
+    "interrupted": "none",
+    "interrupted_why": {
+      "text": "Unlike a shared-txn ENRICHER, this step has NO shared transaction (`execution.txn_scope:\"none\"`) — each ctx.flushBatch call is its OWN short transaction, so a run killed mid-stream leaves already-flushed batches COMMITTED (execution.partial_fill:\"staged\"). 'none' is the honest recovery value (no special action needed), NOT `force_full_on_next_run`: staleness.scope is unconditionally 'all' already, so the very next run re-streams and re-prices every row regardless of whether the prior run was interrupted, converging without any special-cased recovery branch. Proven by the new compute-parcel-cost-kill-mid-run.db.test.ts (pg_cancel_backend, not a process kill).",
+      "liveness": { "kind": "file", "ref": "scripts/lib/compute/compute-parcel-cost-estimates.js" }
+    },
+    "before_image": "none",
+    "before_image_why": {
+      "text": "recovery.before_image applies to a retraction (outputs.writes[].retract != 'none'); this step's sole write target declares retract:'none' — it only ever stamps a value, never clears one to NULL as a distinct operation.",
+      "liveness": { "kind": "file", "ref": "scripts/lib/compute/compute-parcel-cost-estimates.js" }
+    }
+  },
+  "database": { "class": "primary", "min_migration": 201, "assert_current_database": "postgres" },
+  "counters": {
+    "records_total": {
+      "source": "matched.compute.residential_parcels_examined",
+      "scoped_by": "step",
+      "why": {
+        "text": "A4 ruling — declares the scanned residential population (NOT 13× the per-line counts, §2.11 counter scoping). matched.compute.<name> resolves while a bare compute.* resolves NULL for every ENRICHER.",
+        "liveness": { "kind": "file", "ref": "scripts/lib/step/index.js" }
+      }
+    },
+    "records_new": {
+      "source": "null",
+      "scoped_by": "step",
+      "why": {
+        "text": "UPDATE-only Mutator — parcels pre-exist; this step inserts nothing. Declared null (not a finite 0) per the sibling ENRICHER form used where the write target is an UPDATE with no insert path at all.",
+        "liveness": { "kind": "file", "ref": "scripts/lib/step/write.js" }
+      }
+    },
+    "records_updated": {
+      "source": "written.e1.updated",
+      "scoped_by": "step",
+      "why": {
+        "text": "COUNTER-ROOT (FOLD-I8, restated): `ctx.flushBatch` is a bare BEGIN/query/COMMIT wrapper — it is NEVER seam-owned (only `ctx.retract`/`ctx.joinUpdate` populate `seamOwned`). So `index.js`'s `!seamOwned` branch always applies for this target, and `written.e1.updated` is filled from the pass's own returned `{updated, scanned}` (§5 test 6, both directions).",
+        "liveness": { "kind": "file", "ref": "scripts/lib/step/write.js" }
+      }
+    }
+  },
+  "config": {
+    "logic_variables": [
+      { "name": "cost_escalation_index", "min": 0.001, "max": 100000, "on_invalid": "fail" },
+      { "name": "cost_rates_stale_months", "min": 1, "max": 120, "on_invalid": "fail" },
+      { "name": "cost_index_stale_months", "min": 1, "max": 120, "on_invalid": "fail" },
+      { "name": "compute_parcel_cost_heartbeat_minutes", "min": 1, "max": 60, "on_invalid": "fail" },
+      { "name": "compute_parcel_cost_lock_timeout_ms", "min": 0, "max": 600000, "on_invalid": "fail" },
+      { "name": "compute_parcel_cost_phase_timeout_minutes", "min": 0, "max": 290, "on_invalid": "fail" },
+      { "name": "compute_parcel_cost_batch_size", "min": 1, "max": 3854, "on_invalid": "fail" },
+      { "name": "compute_parcel_cost_stream_batch_size", "min": 1, "max": 5000, "on_invalid": "fail" },
+      { "name": "compute_parcel_cost_min_population", "min": 0, "max": 1000000, "on_invalid": "fail" },
+      { "name": "compute_parcel_cost_engine_error_max", "min": 0, "max": 1000, "on_invalid": "fail" },
+      { "name": "compute_parcel_cost_fsi_max_plausible", "min": 0.001, "max": 1000, "on_invalid": "fail" },
+      { "name": "compute_parcel_cost_escalation_min_multiplier", "min": 0, "max": 10, "on_invalid": "fail" },
+      { "name": "compute_parcel_cost_escalation_fallback_multiplier", "min": 0, "max": 10, "on_invalid": "fail" },
+      { "name": "compute_parcel_cost_premium_default", "min": 0, "max": 10, "on_invalid": "fail" },
+      { "name": "compute_parcel_cost_adjustment_factor_default", "min": 0, "max": 10, "on_invalid": "fail" },
+      { "name": "compute_parcel_cost_min_priceable_area_sqm", "min": 0, "max": 10000, "on_invalid": "fail" },
+      { "name": "compute_parcel_cost_menu_coverage_min_pct", "min": 0, "max": 100, "on_invalid": "fail" },
+      { "name": "compute_parcel_cost_empty_menu_max_pct", "min": 0, "max": 100, "on_invalid": "fail" },
+      { "name": "compute_parcel_cost_line_total_max_cad", "min": 0, "max": 1000000000000, "on_invalid": "fail" }
+    ],
+    "validation": "strict",
+    "hoisted_above_gate": true,
+    "retired": []
+  },
+  "sharing": {
+    "chains": "derived",
+    "shared": "derived",
+    "slug_forms": "derived",
+    "varies_by_chain": { "checks": "none", "phase": { "sources": 1 }, "audit_table": "one", "scope": "none" },
+    "on_contention": "self_skip"
+  },
+  "terminals": [
+    {
+      "id": "lock_held_elsewhere",
+      "kind": "skip_lock_contention",
+      "status": "self_skipped",
+      "records_meta": { "skipped": "bool", "reason": "string" },
+      "why": { "text": "Advisory lock 117 held elsewhere. Row-derived SKIP summary, folding to WARN not PASS (LG-29).", "liveness": { "kind": "file", "ref": "scripts/lib/step/index.js" } }
+    },
+    {
+      "id": "priced",
+      "kind": "success",
+      "status": "completed",
+      "records_meta": { "duration_ms": "int", "audit_table": "object" },
+      "why": { "text": "The cost_menu phase ran and every blocking check met its PASS bound.", "liveness": { "kind": "check", "ref": "engine_error_count" } }
+    },
+    {
+      "id": "priced_with_warnings",
+      "kind": "success",
+      "status": "completed_with_warnings",
+      "records_meta": { "duration_ms": "int", "audit_table": "object" },
+      "why": { "text": "The phase ran and at least one non-blocking check (rate/index staleness, a plausibility row) is below PASS. Row-derived, never a parallel boolean.", "liveness": { "kind": "check", "ref": "cost_rates_stale" } }
+    },
+    {
+      "id": "failed_empty_rates",
+      "kind": "fail_error",
+      "status": "failed",
+      "records_meta": { "terminal": "string" },
+      "why": { "text": "readCostContract threw — archetype_cost_rates is empty (F1). PRESERVED: the legacy also halts before any transaction for this condition.", "liveness": { "kind": "file", "ref": "scripts/lib/compute/compute-parcel-cost-estimates.js" } }
+    },
+    {
+      "id": "failed_duplicate_archetype",
+      "kind": "fail_error",
+      "status": "failed",
+      "records_meta": { "terminal": "string" },
+      "why": { "text": "readCostContract threw — a duplicate archetype key in archetype_cost_rates (F2). PRESERVED verbatim.", "liveness": { "kind": "file", "ref": "scripts/lib/compute/compute-parcel-cost-estimates.js" } }
+    },
+    {
+      "id": "failed_config_out_of_bounds",
+      "kind": "fail_error",
+      "status": "failed",
+      "records_meta": { "terminal": "string" },
+      "why": { "text": "A declared logic_variables[] entry (any of the 19) resolved absent or outside its [min,max] under on_invalid:'fail' — the F3 validateLogicVars HALT, PRESERVED AND STRENGTHENED to cover all 19. hoisted_above_gate:true puts this refusal ABOVE the advisory lock, incl. the LM-D15 throw for a declared-but-unseeded cost_escalation_index/cost_rates_stale_months/cost_index_stale_months on a freshly-seeded cloud.", "liveness": { "kind": "file", "ref": "scripts/lib/step/config.js" } }
+    }
+  ]
+}

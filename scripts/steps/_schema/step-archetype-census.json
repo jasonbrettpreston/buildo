@@ -149,8 +149,8 @@
       "slug": "compute_parcel_cost_estimates",
       "file": "scripts/compute-parcel-cost-estimates.js",
       "archetype": "ENRICHER",
-      "batch": "C5",
-      "reason": "Spec 122 §1.10 declared"
+      "batch": "pending",
+      "reason": "Batch-2 row 2.4 — moved C5 -> pending at commit ② (descriptor+compute+shell landed, converted.json pending[] stage:\"shape_clean\"); registration (status:\"converted\", converted_at = the real sha) deferred to commit ③ (cutover), per Spec 124 R-K."
     },
     {
       "slug": "compute_phase_calibration",

@@ -60,6 +60,23 @@ const acc = {
   for (const r of (await pool.query(`SELECT * FROM archetype_cost_rates`)).rows) rates[r.archetype] = r;
   const idxRow = (await pool.query(`SELECT variable_value FROM logic_variables WHERE variable_key='cost_escalation_index'`)).rows[0];
   const indexNow = idxRow ? Number(idxRow.variable_value) : 100;
+  // Batch-2 row 2.4 (FOLD-V8) — buildParcelCostMenu now requires opts.config (the 6 engine
+  // tunables, Rule 3). This is a non-step analysis script (no descriptor, no LM-D15), so a
+  // read-live-else-seed-default fallback is appropriate here (unlike inside the engine itself).
+  const cfgRows = (await pool.query(
+    `SELECT variable_key, variable_value FROM logic_variables WHERE variable_key = ANY($1)`,
+    [['compute_parcel_cost_fsi_max_plausible', 'compute_parcel_cost_escalation_min_multiplier',
+      'compute_parcel_cost_escalation_fallback_multiplier', 'compute_parcel_cost_premium_default',
+      'compute_parcel_cost_adjustment_factor_default', 'compute_parcel_cost_min_priceable_area_sqm']],
+  )).rows.reduce((m, r) => ({ ...m, [r.variable_key]: Number(r.variable_value) }), {});
+  const engineConfig = {
+    fsiMaxPlausible: cfgRows.compute_parcel_cost_fsi_max_plausible ?? 99.999,
+    escalationMinMultiplier: cfgRows.compute_parcel_cost_escalation_min_multiplier ?? 1,
+    escalationFallbackMultiplier: cfgRows.compute_parcel_cost_escalation_fallback_multiplier ?? 1,
+    premiumDefault: cfgRows.compute_parcel_cost_premium_default ?? 1,
+    adjustmentFactorDefault: cfgRows.compute_parcel_cost_adjustment_factor_default ?? 1,
+    minPriceableAreaSqm: cfgRows.compute_parcel_cost_min_priceable_area_sqm ?? 0,
+  };
 
   const rows = (await pool.query(`
     SELECT p.id, p.zoning_class AS zc, p.lot_size_sqm::float8 AS lot, p.bylaw_max_fsi::float8 AS fsi_after,
@@ -77,7 +94,7 @@ const acc = {
   let inverted = 0, borrowFixed = 0;
   const out = rows.map((r) => {
     const parcel = { ...r, opt_aor_gfa_sqm: r.new_build_area, max_buildable_gfa_sqm: r.maxb, opt_coa_gfa_sqm: r.opt_coa };
-    const built = buildParcelCostMenu(parcel, rates, indexNow, { r2Grounded: parcelFamilyFromZoning(r.zc) === 'detached' });
+    const built = buildParcelCostMenu(parcel, rates, indexNow, { r2Grounded: parcelFamilyFromZoning(r.zc) === 'detached', config: engineConfig });
     const nb = built.menu.max_build ? built.menu.max_build.total : null;
     const coa = built.menu.coa_build ? built.menu.coa_build.total : null;
     const coherent = (nb == null || coa == null) ? 'n/a' : (nb <= coa + 1 ? 'OK' : 'INVERTED');
