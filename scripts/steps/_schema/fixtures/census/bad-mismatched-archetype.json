@@ -261,7 +261,7 @@
       "batch": "pending",
       "reason": "RETAINED at cutover per Spec 124 R-AO. batch-2 row 2.2 commits 1/2/2c (2026-09-20) landed the descriptor, compute, frozen shell, seeds, and the output-panel peel (O1..O4); commit 3 registers the file in converted.json's converted[] and deletes the pending[] entry in the same commit (R-K) — archetype re-derived from the code at PH-0, confirmed ENRICHER.",
       "status": "converted",
-      "converted_at": "PENDING — filled by the commit-3b peel to this commit's own real sha (never a self-referential placeholder left uncorrected; see review_followups.md re: enrich_ravines' own still-open residue)"
+      "converted_at": "c3c36315"
     },
     {
       "slug": "enrich_named_builders",
