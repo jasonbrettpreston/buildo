@@ -946,6 +946,54 @@ function packageTestScript() {
   return pkg.scripts?.test ?? '';
 }
 
+const PRE_PUSH_HOOK_PATH = path.join(REPO_ROOT, '.husky/pre-push');
+
+/**
+ * PURE over an already-read hook string. Operator ruling 2026-09-21: the
+ * step-validate default fork cap must EQUAL `.husky/pre-push`'s own
+ * `VITEST_MIN_FORKS`/`VITEST_MAX_FORKS` values, parsed out rather than
+ * re-typed, so the two can never drift apart (single source of truth). Throws
+ * if either var is missing from the hook text — a silent fallback would
+ * defeat that contract by masking the exact drift it exists to prevent.
+ */
+export function parseForkCapFromHookText(hookText) {
+  const minMatch = /\bVITEST_MIN_FORKS=(\d+)\b/.exec(String(hookText ?? ''));
+  const maxMatch = /\bVITEST_MAX_FORKS=(\d+)\b/.exec(String(hookText ?? ''));
+  if (!minMatch || !maxMatch) {
+    throw new Error(`vitestChildEnv: could not parse VITEST_MIN_FORKS/VITEST_MAX_FORKS out of .husky/pre-push — single-source-of-truth contract broken (hook text: ${String(hookText ?? '').slice(0, 300)})`);
+  }
+  return { min: minMatch[1], max: maxMatch[1] };
+}
+
+/**
+ * The fork cap `runVitest()`'s spawned child inherits. Uncapped, vitest's
+ * `forks` pool defaults to one fork per CPU (~12 on this host); `--all --write`
+ * over 18 steps was OS/harness-killed for memory twice (2026-09-21, worked
+ * around by 17 sequential single-step runs). `.husky/pre-push` already solved
+ * this for the full suite the same way — `VITEST_MIN_FORKS`/`VITEST_MAX_FORKS`
+ * are the variables vitest's forks pool actually reads; `VITEST_MAX_WORKERS`
+ * is ignored (CLAUDE.md Prime Directive 5, `hooks-composition.infra.test.ts`).
+ * MIN=1/MAX=1, not MAX=2: `review_followups.md`'s 2026-09-16 HIGH row measured
+ * `VITEST_MAX_FORKS=2` dying on `[vitest-worker]: Timeout calling
+ * "onTaskUpdate"` in `src/tests/step-conformance.infra.test.ts` — one of THIS
+ * file's own `VITEST_TARGETS` — which is why both hooks were dropped to one
+ * fork the same day; CLAUDE.md's "MIN=1/MAX=2" text predates that finding and
+ * is stale (flagged to the operator separately, not edited here).
+ * DEFAULT only — an operator (or CI) who already set either var in the env this
+ * process inherited is never clobbered, so a caller can still widen the cap.
+ * `hookText` is injectable (default: a live read of `.husky/pre-push`) so
+ * `selfTest()`/a vitest suite can exercise both directions — including a
+ * tampered hook fixture — without touching `process.env` or the real file.
+ * Never mutates `baseEnv`.
+ */
+export function vitestChildEnv(baseEnv, hookText = readFileSync(PRE_PUSH_HOOK_PATH, 'utf8')) {
+  const cap = parseForkCapFromHookText(hookText);
+  const env = { ...baseEnv };
+  if (env.VITEST_MIN_FORKS === undefined) env.VITEST_MIN_FORKS = cap.min;
+  if (env.VITEST_MAX_FORKS === undefined) env.VITEST_MAX_FORKS = cap.max;
+  return env;
+}
+
 function runVitest() {
   const outFile = path.join(os.tmpdir(), `step-validate-vitest-${process.pid}.json`);
   const plan = vitestSpawnArgs(packageTestScript(), outFile);
@@ -972,9 +1020,10 @@ function runVitest() {
   // (never step-validate.mjs's own — `runDataValidatorsForWrite` still needs
   // a real pool) so this scoped, DB-test-free target set can never trip
   // globalSetup's CI-path at all.
-  const childEnv = { ...process.env };
-  delete childEnv.DATABASE_URL;
-  delete childEnv.SUPABASE_DATABASE_URL;
+  const strippedEnv = { ...process.env };
+  delete strippedEnv.DATABASE_URL;
+  delete strippedEnv.SUPABASE_DATABASE_URL;
+  const childEnv = vitestChildEnv(strippedEnv);
   const run = spawnSync(
     process.execPath,
     [vitestEntry(), ...plan.argv],
