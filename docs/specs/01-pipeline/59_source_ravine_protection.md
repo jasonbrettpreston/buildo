@@ -22,6 +22,29 @@ Schema as-built: M-1 = migration 167 (`ravines`), M-2 = 168 (`parcels` ravine co
 
 **batch-2 row 2.1 (2026-09-18) — `enrich-ravines.js` converted onto the Spec 122 ENRICHER runner** (descriptor + `scripts/lib/compute/enrich-ravines.js`, replacing the hand-rolled `pipeline.run` shell). #409/#413/#414's corrections above are now expressed as DESCRIPTOR DATA rather than inline code comments: #409 as `inputs.reads.steps[0] = {step:"load_ravines", version_pin:"exact"}`; #413's materialized-centroid LATERAL form is ported verbatim into the compute module (§11.1's own code block below is UNCHANGED and remains the slow, non-load-bearing form it always was — see the `L13`/#413 rows above, which already name the as-built correction); #414's widened read-set lives in `inputs.reads.tables[]`. The #418 Layer-1 early-return mechanism is RETIRED (the ENRICHER runner has no gated-skip branch); its OBSERVABLE (the `parcels_ravine_enrich_skipped` audit row) is preserved, re-derived from the write's own scope count.
 
+The rest of the conversion's declared surface, as built:
+
+- **Staleness scope (Layer-2, in-SQL):** parcels whose `geom IS NOT NULL` and whose `ravine_dataset_version_when_enriched IS DISTINCT FROM` the producer's (`load_ravines`) most recent completed `source_dataset_version`. There is **no `force_full` override** on this step (`override.force_full: "none"`) — unlike `enrich_heritage`, whose FOLD-I5 limitation makes `ENRICH_HERITAGE_FORCE_FULL` load-bearing. `recovery.interrupted: "force_full_on_next_run"`.
+- **Eight NEW admin logic variables**, all seeded in `scripts/seeds/logic_variables.json` with a declared `admin.group` so each renders in the Spec 86 Control Panel (generated `GROUPS`, never hand-maintained), and all indexed in the generated `docs/reference/logic-variables-registry.md`:
+
+| Key | Seed | Bounds | Admin group | Provenance |
+|---|---|---|---|---|
+| `enrich_ravines_distance_coverage_pass_pct` | 95 | 0–100 | Data Quality Thresholds | the literal `DISTANCE_COVERAGE_PASS_PCT` |
+| `enrich_ravines_distance_coverage_warn_pct` | 90 | 0–100 | Data Quality Thresholds | the literal `DISTANCE_COVERAGE_WARN_PCT` |
+| `enrich_ravines_heartbeat_minutes` | 5 | 1–60 | Source Ingestion | NEW — the legacy had no heartbeat at all |
+| `enrich_ravines_lock_timeout_ms` | 1800000 | 0–3600000 | Source Ingestion | NEW — the legacy had no `lock_timeout` at all |
+| `enrich_ravines_phase_timeout_minutes` | 240 | 0–290 | Source Ingestion | NEW — operator ruling A3 (2026-09-18), below the platform's 300-min wall so an abort dies LOUD at this phase boundary; to be re-set from the batch-2 cloud partial run per Spec 124 R-AQ |
+| `enrich_ravines_distance_plausible_min_magnitude_m` | 2000 | 0–5000 | Spatial & Massing | F-RC1a — ceiling on the MAGNITUDE of the most-negative distance (measured 1470.30 m); declared as a magnitude because the bound grammar is digits-only and a signed value renders `value_min --2000` |
+| `enrich_ravines_distance_plausible_max_m` | 20000 | 0–50000 | Spatial & Massing | F-RC1a — physical ceiling (measured max 2739.69 m) |
+| `enrich_ravines_distance_collapse_floor_m` | 100 | 0–1000 | Spatial & Massing | output-panel O4 — a floor on the observed MAXIMUM, catching a degrees-not-metres collapse both ceilings would silently pass |
+
+- **Declared checks (7, `when: "post"`):** `parcels_with_ravine_distance_pct` (FAIL, R-AD 3-tier off the two coverage vars) · `parcels_in_ravine_count` · `parcels_invalid_geom_count` · `parcels_enriched_count` · `parcels_ravine_enrich_skipped` · `ravine_source_dataset_version` · `enrich_ravines_duration_ms`.
+- **Declared invariants (3, FAIL, every run):** `ravine_sign_flag_agree_flagged_side` · `ravine_sign_flag_agree_unflagged_side` · `ravine_flag_true_distance_null_count`. **Declared plausibility bounds (4, WARN):** the three distance bounds above plus `ravine_dataset_version_distinct_count` (`value_max 1`).
+- **`guards.requires` — refused before compute runs, each `on_missing: "fail"`:** extension `postgis` (R-W: compute must not branch on PostGIS availability), indexes `idx_parcels_geom_gist` / `idx_ravines_geom_gist` / `idx_ravines_geog_gist`, and column `parcels.ravine_dataset_version_when_enriched`.
+- **Kill-mid-run guarantee:** the sole write target sits inside ONE shared transaction, so a run killed mid-statement leaves `parcels` exactly as it found them — proven by `src/tests/db/enrich-ravines-kill-mid-run.db.test.ts` (`pg_cancel_backend`).
+- **Declared limitations carried forward, not closed here:** `RV-L1` (`inputs.reads.steps[0].assert_health` not declared) · `RV-L2` (`guards.srid`/`guards.empty_source` are DECLARATIVE — the real SRID/empty-source enforcement is folded into the `contract_read` hook, `readRavineContract`) · **`RV-L3`** (the pre-conversion invalid-geometry ratio guard is still a compute-level literal because threading `config` into the `contract_read` call site is a second runner-signature change; ruled an END-OF-BATCH-2 item on 2026-09-20 and must land **before** the cloud `logic_variables` seed) · `RV-D2` (migration 242's `trg_parcels_geom_invalidation` does not null the ravine stamp — INFO, not fixed here).
+- **RV-D4 (`172adcc9`) — a runner-library fix this step surfaced, not a step change.** `runEnrichPhase` was double-counting any write target a pass reached through the composable `ctx.joinUpdate`/`ctx.retract` seam AND also reported in its own return value (`written.e1.updated` read double the real row count, MEASURED LIVE here). The runner now owns seam-touched counters via a per-run `seamOwned` set, so `runRavineJoinPass` returns a plain `updated` again and the step's earlier compute-level key-name workaround is retired. Counter ownership is by USE in a given run, never by declared `write_discipline.class`.
+
 ---
 
 ## Cumulative design decisions (locked through v1.1)
@@ -453,9 +476,13 @@ Validate that `ST_IsValid` + `ST_MakeValid` + `ST_CollectionExtract` are invoked
 - `scripts/lib/safe-math.js` (existing — required per Spec 47 §16 B5; banned raw parseInt/parseFloat) *(R2 Independent HIGH-4 fold)*
 - `scripts/manifest.json` (edit — add `source-ravines` + `enrich-ravines` slugs with read/write columns)
 - `src/tests/load-ravines.{logic,infra}.test.ts`, `src/tests/enrich-ravines.{logic,infra}.test.ts`, `src/tests/db/migration-N-ravines.db.test.ts`
+- `src/tests/db/enrich-ravines.skip.db.test.ts` (the #418 skip locks, re-pointed at the Layer-2 scope predicate), `src/tests/db/enrich-ravines-kill-mid-run.db.test.ts` (NEW — the shared-transaction atomicity proof), `src/tests/steps/enrich_ravines/violations.test.ts` (NEW — the per-conversion claim suite, Spec 123 §5.2)
 - `docs/runbook/source_ravines_first_deploy_spike.md` (NEW per Spec 48 §3.7)
+- `scripts/seeds/logic_variables.json` — the 8 `enrich_ravines_*` keys this spec's thresholds and bounds are seeded from (batch-2 row 2.1; table in the Implementation reconciliation section above).
 - `scripts/load-ravines.js` — this spec defines the ravines loader's contract (§3 Behavioral Contract, §9 Producer/Consumer Contract).
-- `scripts/enrich-ravines.js` — this spec defines the sibling enrichment script's contract (§8d, §11.1).
+- `scripts/enrich-ravines.js` — this spec defines the sibling enrichment script's contract (§8d, §11.1). **As of batch-2 row 2.1 this is the frozen Spec 122 shell** — see the two files below.
+- `scripts/enrich-ravines.descriptor.json` — this step declared as data: `staleness` (the Layer-2 scope), the write target + `write_discipline`, `guards.requires`, the 7 `checks[]`, 3 `invariants[]`, 4 `plausibility[]`, `config.logic_variables[]`, `deviations[]`, `limitations[]`, `terminals[]`.
+- `scripts/lib/compute/enrich-ravines.js` — the §11.1 join SQL (the materialized-centroid LATERAL form, #413), `readRavineContract` (the §9 / SRID / empty-source HALT), the coverage query and the check observers; nothing else.
 - `scripts/enrich-permits.js` — this spec defines the ravine step's multi-parcel propagation rule and lock requirement (§8e, §11.2).
 - `scripts/quality/assert-schema.js` — this spec defines the new ravines CKAN URL + OBJECTID checks to add (§8c deliverable table).
 - `scripts/quality/assert-data-bounds.js` — this spec defines the new `>= 500` ravines row-count lower bound to add (§8c deliverable table).

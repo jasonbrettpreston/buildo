@@ -5,6 +5,28 @@
 **Authored:** 2026-05-26 after 3-pass adversarial PLAN review cadence (R1 + R2 + R3) + user-direction Gate 1.5 + Phase 0 architecture discovery + v2 fold; **v1.1 fold:** R3 SPEC review (Gemini + DeepSeek + Independent) -- 4 CRIT + 5 HIGH folded; ~14 MED routed to `review_followups.md`
 **Phase 0 discovery:** `docs/reports/wf1-spec61-architecture-discovery.md`
 
+## Implementation reconciliation (as-built — 2026-09-20)
+
+Schema as-built: M-1 = migration `170_create_heritage_tables.sql` (`fuzzystrmatch` + `normalize_address()` + `heritage_properties` + `heritage_districts` + the two GIST indexes), M-2 = `171_parcels_heritage_columns.sql` (4 `parcels` columns, incl. `heritage_dataset_version_when_enriched`), M-3 = `172_permits_coa_heritage_columns.sql`. Advisory locks as built: `load-heritage.js` **61**, `enrich-heritage.js` **62** (both already recorded in L4/L4b), `enrich-permits.js` **66** — the **62/63/64** printed in L4c, L19, L20, §5 Target Files, §12.1, §12.2 and §12.4 was the pre-implementation guess and is CORRECTED in place throughout this spec; Spec 47 §A.5 is the registry of record and already reads 61/62.
+
+**Citation drift found while grounding the conversion (EH-D3, recorded not silently fixed):** this spec has no `DEC-E`/`DEC-F`/`DEC-H` ids — those were inherited from the Spec 59 ravines port and are now cited only inside `enrich-heritage.descriptor.json`'s own `why` text; the enrich script's "§3.10 SRID guard" comment pointed at this spec's §3.10 *Edge cases*, which carries no SRID clause (the real clause is **Spec 59 §3.10**); `L14` is a LOADER decision while the enrich-side non-empty HALT is §9 Consumer read protocol step 4; `L24` names `enrich-permits.js`, not `enrich-heritage.js`.
+
+### batch-2 row 2.2 (2026-09-20) — `enrich-heritage.js` converted onto the Spec 122 ENRICHER runner
+
+Commits `94cfe054` → `08f3dabd` → `2240a962` → `c3c36315` (17th converted step, ENRICHER 4/4; R-PACE-1 compressed 3-commit form). What was a 429-line `pipeline.run` script is now a 38-line frozen shell (Spec 122 §5.1, `ADVISORY_LOCK_ID = 62` retained as a §5.4 source-text constant); the behaviour lives in `scripts/enrich-heritage.descriptor.json` (declared data) + `scripts/lib/compute/enrich-heritage.js` (the §11.1 join SQL, the §9/L14-class/SRID contract-read HALT, the coverage query and the check observers) + `scripts/lib/step/` (pool, lock, ledger, config, the shared transaction, the class-N write executor, verdict and emits).
+
+- **Staleness — H-A1 (a), operator ruling 2026-09-20 (declared in `deviations[]`).** The #418 **Layer-1** cheap-`COUNT` early return is RETIRED **as a mechanism** — the ENRICHER runner has no gated-skip branch by design. The identical eligibility predicate is ported INTO the UPDATE's own scope (`p.geom IS NOT NULL AND NOT ST_IsEmpty(p.geom) AND ST_IsValid(p.geom) AND p.heritage_dataset_version_when_enriched IS DISTINCT FROM $2`), so **Layer-2 subsumes Layer-1**: a zero-stale run is already a 0-row write. The OBSERVABLE is preserved — the `parcels_heritage_enrich_skipped` audit row is re-derived from the write count (`updated === 0`), not from the retired branch.
+- **FOLD-I5 (declared `limitations[]`).** Under Layer-2, two input-change classes no longer re-stale on their own, because the lineage stamp is a content hash of the two source datasets, not a run clock: (1) a change to `enrich_heritage_address_levenshtein_threshold`, and (2) an address-only parcel edit (`addr_num_normalized`/`street_name_normalized`/`street_type_normalized` rewritten with an unchanged geometry). Measured bound 2026-09-20: 94 multi-Part-IV-point parcels holding 272 points (max 15 in one parcel) out of 1,217 parcels with any Part IV point, and the only field either class can move is `heritage_designation_date`. The legacy healed both BY ACCIDENT (with no Layer-2, every `stale > 0` run re-evaluated all 486,514 eligible parcels). **Declared remedy: `ENRICH_HERITAGE_FORCE_FULL` (`override.force_full`) — retained and load-bearing.**
+- **EH-D2 (declared check diff, Spec 124 §7 rung (b)).** The Part IV WARN gate is now UNCONDITIONAL (`0` → WARN, `>= 1` → PASS) where the legacy conditioned it on `partIvSource > 0`. The two forms differ only when the register loads zero Part IV points, where the ported form is LOUDER (WARN vs INFO), never quieter.
+- **`guards.requires` — refused before compute runs, each `on_missing: "fail"`:** extension `postgis`, extension `fuzzystrmatch` (the levenshtein tiebreak), **function `normalize_address`** (L27/M-1 — probed by the legacy `assertPreconditions`, dropped undeclared at commit 2 and RESTORED at the output panel; `ENRICH_SQL` calls it twice, and without the guard an absent function surfaces as a raw `42883` mid-statement instead of a named refusal), indexes `idx_parcels_geom_gist` / `idx_heritage_districts_geom_gist` / `idx_heritage_properties_geom_gist`, and the four migration-171 `parcels` columns.
+- **Declared checks (10, all `when: "post"`, `chains: ["sources"]`):** `parcels_heritage_designated_count` (FAIL, `enrich_heritage_designated_min_count`) · `parcels_part_iv_count` (WARN, `enrich_heritage_part_iv_min_count`) · `heritage_points_no_parcel_match` (R-AD 3-tier, `enrich_heritage_unlinked_point_warn_pct` / `..._fail_pct`) · `parcels_part_v_hcd_count` · `heritage_part_iv_source_count` · `parcels_invalid_geom_count` (INFO by design, not WARN — invalid-geom parcels are excluded from the eligibility clause, so a WARN-on-`>0` would be a perpetual-WARN verdict) · `parcels_enriched_count` · `parcels_heritage_enrich_skipped` · `heritage_source_dataset_version` · `enrich_heritage_duration_ms`.
+- **Declared invariants (4, FAIL, every run):** `heritage_flag_type_agree_flagged_side` · `heritage_flag_type_agree_unflagged_side` · `heritage_date_without_type_count` · `heritage_part_iv_null_date_count` (scoped to Part IV only — the Part V arm legitimately carries null dates, 4 of the 29 `heritage_districts` rows having a NULL `HCD_DESDAT`). All measured 0 across 486,530 parcels, 2026-09-20.
+- **Declared plausibility bounds (3, WARN, every run):** `heritage_designated_share_max_pct` (ceiling, `enrich_heritage_designated_share_plausible_max_pct`) · `heritage_designated_count_collapse_floor` (the mirror-image FLOOR, `enrich_heritage_designated_count_collapse_floor` — a ceiling-only set is blind to a join that silently matched 3% of what it should, since the FAIL gate fires only at exactly 0) · `heritage_part_iv_matched_le_source` (structural containment arithmetic: parcels-with-Part-IV can never exceed source Part IV points).
+- **Per-zone reporting:** `records_meta.heritage_designated_by_zone` (declared in `emits[]`), one bucket per `COALESCE(zoning_class,'(null)')`. **Declared limitation (output-panel O3):** each bucket's `.parcels` total is drawn from ALL 486,530 parcels, not the 486,514 eligible — only the designated-sum identity (`Σ buckets.designated == parcels_heritage_designated_count`) is claimed and asserted; the `.parcels` totals are population context, not a second eligibility-scoped count.
+- **Kill-mid-run guarantee:** the sole write target sits inside ONE shared transaction (`execution.txn_scope: "step"`, the phase's own `txn: "shared"`), so a run killed mid-statement leaves `parcels` exactly as it found them. Proven by `src/tests/db/enrich-heritage-kill-mid-run.db.test.ts` (`pg_cancel_backend`, not a process kill). `recovery.interrupted: "force_full_on_next_run"` is accurate, not a resumption claim.
+- **Golden differential — a COMMITTED PERTURBATION COHORT, not a forced FULL.** The 4-column `IS DISTINCT FROM` guard (with the lineage stamp INSIDE it) makes an unchanged-source re-run write 0 rows, so a forced-FULL instrument proves nothing. `scripts/analysis/enrich-heritage-cohort-differential.js` + `docs/reports/golden/enrich_heritage/differential/cohort.json` (494 rows: 94 multi-Part-IV-point parcels, 100 single-Part-IV, 200 Part-V-HCD incl. one parcel per null-date district, 100 undesignated; the 16 invalid-geom parcels held out as a NEGATIVE CONTROL) perturb, re-run the REAL step, and assert `records_updated === 494`, a whole-table projected hash back at baseline, and the negative control untouched — with an unconditional restore bracket.
+- **Measured live 2026-09-20 (local dev DB):** 9,958 designated parcels (2.047% of 486,530) · 1,217 Part IV · 8,741 Part V HCD · 1,557 source Part IV points · 10.4% Part IV points with no containing valid-geom parcel · 16 invalid-geom parcels · full recompute 59–75 s.
+
 ## v1.0 -> v1.1 fold log (R3 SPEC: 4 CRIT + 5 HIGH + 14 MED)
 
 - **C-v1.1.1 (3-way convergent: Gemini + DeepSeek + Independent CRIT-1, confidence 100):** §11.2 propagation SQL was syntactically invalid -- `bool_or(...) OVER ()` window function nested inside CASE inside GROUP BY CTE. PostgreSQL would reject. v1.1 rewrites §11.2 with a 3-CTE chain (per_permit_state -> per_permit_winner -> per_permit_date) so each level has a single aggregation context.
@@ -54,7 +76,7 @@ D18. §8e Spec 58 F-H7 verbatim reference not independently locked (Independent 
 | **L3** | Point-in-time MVP semantics; `source_dataset_version` UI display mandated. |
 | **L4** | `load-heritage.js` advisory lock = **61** (SHIPPED: lock = spec number, mirroring load-ravines=59 / load-zoning=58. The spec's original **62** was superseded at implementation — DEC-A in `load-heritage.js:33`). |
 | **L4b** | `enrich-heritage.js` advisory lock = **62** (SHIPPED: sibling of load-heritage=61. The spec's original **63** was superseded — DEC-A in `enrich-heritage.js:26`). |
-| **L4c** | `enrich-permits.js` heritage step advisory lock = **64** (the enrich-permits script's own lock; shipped §8e propagation). |
+| **L4c** | `enrich-permits.js` heritage step advisory lock = ~~**64**~~ **66** (the enrich-permits script's own lock; shipped §8e propagation. CORRECTED 2026-09-20 against `scripts/enrich-permits.js:14` — lock = spec number, same DEC-A rule as L4/L4b; Spec 59 already records the ravine step reusing 66). |
 | **L5** | Geometry-derived `is_heritage_designated` is authoritative. Disagreement with future `permit_type='Heritage'` -> WARN audit row; the boolean is ALWAYS derived from geometry. Rationale (user 2026-05-26): "designations rarely change." |
 | **L6** | Sibling script `enrich-heritage.js` (NOT shared `enrich-parcels.js`). 3rd parcels-writer after Spec 58 zoning + Spec 59 ravine. |
 | **L7/L7b/L7c** | Three drift signals -- count-delta / geometry-update / mass-deletion -- 50% threshold + override flag per Spec 59. |
@@ -69,9 +91,9 @@ D18. §8e Spec 58 F-H7 verbatim reference not independently locked (Independent 
 | **L16** | Batched VALUES+UNNEST geometry validation per Spec 59 (Spec 47 §B1 Loop Query Ban compliance). |
 | **L17** | `pipeline.emitMeta` two-argument table-keyed-map signature per Spec 47 §8.3. |
 | **L18** | Cross-run `records_meta` read pattern for enrich consumer per Spec 59 L18. |
-| **L19** | `enrich-permits.js` heritage step is a self-contained function `applyHeritageEnrichment(client, RUN_AT)` -- runs inside enrich-permits.js parent lock 64. |
-| **L20** | Lock ID assignments final: 62/63/64 verified unassigned in §A.5 + `scripts/*.js`. §A.5 registry update is §12.4 deliverable. |
-| **L21** | Unlinked-heritage-point audit row `heritage_points_no_parcel_match` with WARN >5% / FAIL >20% thresholds in `logic_variables.json` (Phase 0 may empirically refine). |
+| **L19** | `enrich-permits.js` heritage step is a self-contained function `applyHeritageEnrichment(client, RUN_AT)` -- runs inside enrich-permits.js parent lock ~~64~~ **66** (L4c). |
+| **L20** | ~~Lock ID assignments final: 62/63/64 verified unassigned in §A.5 + `scripts/*.js`.~~ **SUPERSEDED at implementation (DEC-A, see L4/L4b/L4c):** the as-built assignments are **61** (`load-heritage.js`) / **62** (`enrich-heritage.js`) / **66** (`enrich-permits.js`), all present in Spec 47 §A.5. |
+| **L21** | Unlinked-heritage-point audit row `heritage_points_no_parcel_match` with ~~WARN >5% / FAIL >20%~~ thresholds in `logic_variables.json` (Phase 0 may empirically refine). **AS BUILT: WARN >15% / FAIL >30%** — the 5/20 pair assumed the original `ST_DWithin`+radius match (~0% unmatched); under the shipped CONTAINMENT match ~10% of Part IV points legitimately fall outside any parcel (measured 10.4%, 2026-09-20), so the live seeds are `enrich_heritage_unlinked_point_warn_pct` = 15 and `enrich_heritage_unlinked_point_fail_pct` = 30. **Unit note, load-bearing:** the pre-conversion script compared a FRACTION (0.15/0.30) while REPORTING a percentage; the converted check compares the reported percentage, so the seeds are 15/30, not 0.15/0.30 — comparison semantics unchanged. |
 | **L22** | Chain step ordering per chain (per v1.3 C-v1.3.2 correction): within `chain_sources`: `load_parcels` -> `load_heritage` -> ... -> `enrich_heritage` -> assert steps. Within `chain_permits`/`chain_coa`: `link_*` -> `enrich_*_propagate_heritage`. Cross-chain dependency `chain_sources` -> `chain_permits`/`chain_coa` (orchestrator-level, already enforced). |
 | **L23** | `enrich-heritage.js` empty-source guard: (a) prior successful `source-heritage` run exists per `pipeline_runs`; (b) `records_meta.heritage_load.feature_count > 0` (closes the v1.2 stale-data loophole); (c) `SELECT COUNT(*) FROM heritage_properties` matches prior. |
 | **L24** | `enrich-permits.js` heritage step has information_schema startup check verifying `parcels.is_heritage_designated` + `parcels.heritage_designation_type` columns exist. |
@@ -437,9 +459,12 @@ Write per-resource `last_modified`, `etag`, `content_hash` into `records_meta.he
 
 ### Target Files
 
-- `scripts/load-heritage.js` (NEW; Spec 47 skeleton; advisory lock 62)
-- `scripts/enrich-heritage.js` (NEW; sibling per L6; advisory lock 63)
-- `scripts/enrich-permits.js` (NEW or extended; heritage step inside; advisory lock 64)
+- `scripts/load-heritage.js` (NEW; Spec 47 skeleton; advisory lock ~~62~~ **61** as built, L4)
+- `scripts/enrich-heritage.js` (NEW; sibling per L6; advisory lock ~~63~~ **62** as built, L4b. **As of batch-2 row 2.2 this is the 38-line frozen Spec 122 shell** — see the two files below)
+- `scripts/enrich-heritage.descriptor.json` (batch-2 row 2.2 — this step declared as data: identity/lock, `inputs.reads`, the write target + `write_discipline`, `staleness` (H-A1 (a) Layer-2), `guards.requires`, `execution.enrich_hooks`, the 10 `checks[]`, 4 `invariants[]`, 3 `plausibility[]`, `config.logic_variables[]` + `config.retired[]`, `deviations[]`, `limitations[]`, `terminals[]`)
+- `scripts/lib/compute/enrich-heritage.js` (batch-2 row 2.2 — the §11.1 join SQL, `readHeritageContract` (the §9 / SRID / non-empty HALT), the coverage + per-zone query, and the check observers; nothing else)
+- `scripts/analysis/enrich-heritage-cohort-differential.js` + `docs/reports/golden/enrich_heritage/differential/cohort.json` (batch-2 row 2.2 — the committed-perturbation differential; re-runnable against the LOCAL dev DB only)
+- `scripts/enrich-permits.js` (NEW or extended; heritage step inside; advisory lock ~~64~~ **66** as built, L4c)
 - `migrations/NNN_create_heritage_tables.sql` (M-1: extension + function + 2 tables + indexes)
 - `migrations/NNN_parcels_heritage_columns.sql` (M-2; SEPARATE from Spec 58 + 59 migrations per L11)
 - `migrations/NNN_permits_coa_heritage_columns.sql` (M-3)
@@ -453,8 +478,9 @@ Write per-resource `last_modified`, `etag`, `content_hash` into `records_meta.he
 - `scripts/quality/assert-entity-tracing.js` (heritage_* fields to coverage grid)
 - `scripts/quality/assert-global-coverage.js` (parcels.is_heritage_designated coverage row)
 - `scripts/manifest.json` (3 chain arrays updated)
-- `scripts/seeds/logic_variables.json` (7 heritage_* keys per §12.3a)
+- `scripts/seeds/logic_variables.json` (~~7 heritage_* keys~~ per §12.3a — as built: the loader's own keys plus the **10 `enrich_heritage_*` keys** added at batch-2 row 2.2; `heritage_point_match_radius_m` is declared RETIRED)
 - `src/tests/load-heritage.{logic,infra}.test.ts`, `src/tests/enrich-heritage.{logic,infra}.test.ts`, `src/tests/db/migration-N-heritage.db.test.ts`
+- `src/tests/enrich-heritage-418.logic.test.ts` + `src/tests/db/enrich-heritage-418.db.test.ts` (the #418 skip locks, re-pointed at the H-A1 (a) Layer-2 predicate), `src/tests/db/enrich-heritage-kill-mid-run.db.test.ts` (NEW — the shared-transaction atomicity proof), `src/tests/steps/enrich_heritage/violations.test.ts` (NEW — the per-conversion claim suite, Spec 123 §5.2)
 - `docs/runbook/source_heritage_first_deploy_spike.md` (Spec 48 §3.7)
 
 ### Out of scope
@@ -657,7 +683,7 @@ pipeline.emitMeta(
 | `heritage_mass_delete_pct` | mass_delete_pct | `> 0.50` (L7c) | FAIL (override doesn't suppress) |
 | `heritage_geometry_update_pct` | geometry_update_pct | `> 0.50` (L7b) | WARN |
 | `heritage_dataset_age_years` | derived from last_modified | `> 2` (L9) | WARN |
-| `heritage_points_no_parcel_match` | unlinked Part IV points | `> 0.05` WARN / `> 0.20` FAIL (L21) | WARN/FAIL |
+| `heritage_points_no_parcel_match` | unlinked Part IV points | ~~`> 0.05` WARN / `> 0.20` FAIL~~ — **as built: `> 15%` WARN / `> 30%` FAIL** (L21; R-AD 3-tier, `enrich_heritage_unlinked_point_warn_pct` / `..._fail_pct`; the row REPORTS a percentage) | WARN/FAIL |
 | `permit_type_heritage_disagreement` | L5 disagreement | non-zero | WARN |
 
 ---
@@ -838,7 +864,7 @@ Geometry-derived `is_heritage_designated` is authoritative. Future `permit_type=
 
 ### §12.1 `load-heritage.js` guidance
 
-- Spec 47 §R1-R12 skeleton; `ADVISORY_LOCK_ID = 62`; slug = `source-heritage`
+- Spec 47 §R1-R12 skeleton; `ADVISORY_LOCK_ID = ` ~~62~~ **61** (as built, L4); slug = `source-heritage` (shipped chain-scoped as `sources:load_heritage`, §9)
 - Zod config schema with 7 keys (per §12.3a)
 - Two-phase loading inside single advisory lock:
   - Phase A: Heritage Register (12,320 Points, batched 1000-row direct INSERT per L26, JS filter Listed per L25)
@@ -849,11 +875,13 @@ Geometry-derived `is_heritage_designated` is authoritative. Future `permit_type=
 
 ### §12.2 `enrich-heritage.js` guidance
 
-- Spec 47 §R1-R12 skeleton; `ADVISORY_LOCK_ID = 63`
+- Spec 47 §R1-R12 skeleton; `ADVISORY_LOCK_ID = ` ~~63~~ **62** (as built, L4b)
 - L23 startup guard (3-tier check per §9 Consumer protocol)
 - Single UPDATE per §11.1 LATERAL LIMIT 1 with tie-break
 - IS DISTINCT FROM guard on UPDATE WHERE (per L11)
 - Export `applyHeritageEnrichment(client, RUN_AT)` self-contained function for enrich-permits.js reuse (L19)
+
+> **SUPERSEDED as guidance by the batch-2 row 2.2 conversion (2026-09-20).** `enrich-heritage.js` no longer carries a Spec 47 skeleton of its own: it is the frozen Spec 122 shell, and the four bullets above are now realized as descriptor data + compute — the L23 startup guard as `execution.enrich_hooks.contract_read` (`readHeritageContract`, pre-transaction on every invocation), the §11.1 UPDATE as the compute module's `ENRICH_SQL` routed through the class-N `set_based_join_update` executor, and the `IS DISTINCT FROM` guard as `outputs.writes[0].write_discipline.guard` over its four named `guard_columns` (the lineage stamp INSIDE the guard, which is what makes a second run write 0 rows). See the Implementation reconciliation section at the top of this spec.
 
 ### §12.3 Migration files (UP + DOWN)
 
@@ -917,6 +945,23 @@ DROP FUNCTION IF EXISTS normalize_address(TEXT);
 }
 ```
 
+> **SUPERSEDED by the as-built seeds (batch-2 row 2.2, 2026-09-20).** `scripts/seeds/logic_variables.json` is the single source of truth and `docs/reference/logic-variables-registry.md` (generated, `npm run logic-vars-docs`) is the operator index; both are current. The block above is retained as authoring history. As built, the **enrich side** declares **10** keys in `enrich-heritage.descriptor.json`'s `config.logic_variables[]`, every one seeded with a declared `admin.group` so it renders in the Spec 86 Control Panel:
+
+| Key | Seed | Bounds | Admin group | Replaces |
+|---|---|---|---|---|
+| `enrich_heritage_address_levenshtein_threshold` | 2 | 0–10 | Data Quality Thresholds | the ConfigSchema literal `heritageAddressLevenshteinThreshold` |
+| `enrich_heritage_unlinked_point_warn_pct` | 15 | 0–100 | Data Quality Thresholds | L21's 0.05 (unit + calibration, see L21) |
+| `enrich_heritage_unlinked_point_fail_pct` | 30 | 0–100 | Data Quality Thresholds | L21's 0.20 |
+| `enrich_heritage_designated_min_count` | 1 | 0–500000 | Data Quality Thresholds | the literal `designated === 0 ? 'FAIL' : 'INFO'` broken-join gate |
+| `enrich_heritage_part_iv_min_count` | 1 | 0–500000 | Data Quality Thresholds | the legacy's `partIvSource > 0`-conditional WARN (EH-D2) |
+| `enrich_heritage_designated_share_plausible_max_pct` | 10 | 0–100 | Data Quality Thresholds | NEW — plausibility ceiling (measured 2.047%) |
+| `enrich_heritage_designated_count_collapse_floor` | 1000 | 0–500000 | Data Quality Thresholds | NEW — plausibility floor (measured 9,958) |
+| `enrich_heritage_heartbeat_minutes` | 5 | 1–60 | Source Ingestion | NEW — the legacy had no heartbeat at all |
+| `enrich_heritage_lock_timeout_ms` | 1800000 | 0–3600000 | Source Ingestion | NEW — the legacy had no `lock_timeout` at all |
+| `enrich_heritage_phase_timeout_minutes` | 240 | 0–290 | Source Ingestion | NEW — the legacy had no statement/phase timeout at all (operator ruling H-A2 (a); to be re-set from the batch-2 cloud partial run per Spec 124 R-AQ, not from a local figure) |
+
+> **`heritage_point_match_radius_m` is RETIRED, not deleted** — declared in the descriptor's `config.retired[]` (`since: 2026-06-04`, ledger `EH-D3`) per Spec 124 R-A: retirement of a tunable is a declaration, and a retired name still holding a live registry row is a WARN. The §12.3a block above seeded it for a radius match that live validation superseded (`ST_DWithin` over-matched 4× — 6,217 parcels vs 1,549 source points), so it is not consumed by any code path.
+
 ### §12.4 Spec 43 + 41 + 42 chain edits
 
 - **`chain_sources` (Spec 43):** insert `load_heritage` AFTER `load_parcels` slug.
@@ -931,7 +976,7 @@ DROP FUNCTION IF EXISTS normalize_address(TEXT);
 - **`chain_permits` (Spec 41):** insert heritage propagation step into existing `enrich_permits` slug (or new step AFTER `link_parcels`)
 - **`chain_coa` (Spec 42):** insert heritage propagation step into CoA enrichment slug
 - **`manifest.json`:** 3 chain arrays updated with new slugs + read/write columns
-- **Spec 47 §A.5 registry update:** add 3 rows -- `load-heritage.js` (62), `enrich-heritage.js` (63), `enrich-permits.js` (64)
+- **Spec 47 §A.5 registry update:** add 3 rows -- `load-heritage.js` (~~62~~ **61**), `enrich-heritage.js` (~~63~~ **62**), `enrich-permits.js` (~~64~~ **66**) — DONE; §A.5 already carries 61/62 (L4/L4b/L4c)
 
 ### §12.5 Quality script edits
 

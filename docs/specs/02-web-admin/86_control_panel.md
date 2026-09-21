@@ -94,7 +94,7 @@ Refactor the scripts to load via `scripts/lib/config-loader.js`. They must execu
 ### Step 3: Admin UI (The Control Page)
 
 Create a single React page (or tabbed view) in the Admin dashboard with four distinct sections:
-- **Marketplace Constants Card:** A form to edit all `logic_variables` (including a JSON editor or tiered inputs for `income_premium_tiers`; ~397 keys post-migrations, rendered in domain groups by `GlobalConfigCard`).
+- **Marketplace Constants Card:** A form to edit all `logic_variables` (including a JSON editor or tiered inputs for `income_premium_tiers`; ~~~397 keys post-migrations~~ — the live key count is carried by the generated `docs/reference/logic-variables-registry.md` (`npm run logic-vars-docs`) and is not retyped here; rendered in domain groups by `GlobalConfigCard`).
 - **Trade Configuration Table:** A searchable 32-row data grid to manage the `trade_configurations` table.
 - **The Scope Intensity Matrix:** A grid editor mapping `permit_type` vs. `structure_type` to manage the percentages (The Surgical Triangle).
 - **Global Apply Button:** A button that clears the Node cache and triggers a pipeline re-run (Steps 14-24) to immediately reflect the new "Gravity" across the marketplace.
