@@ -3,13 +3,29 @@
 // re-costs each parcel in-process, and prints:
 //   - fsi_before → fsi_after   (Fix B: borrowed sliver FSI on RD/RS should drop to null)
 //   - new_build vs coa_build    (Fix A: new_build must be ≤ coa_build — coherent)
-// Dev DB (postgres/postgres@localhost:5432/buildo). Read-only except the scoped re-enrich UPDATE.
+// Database target resolved via createResolvedPool (Spec 122 §P0 — DATABASE_URL/env, fail-loud,
+// floor-asserted; never a hardcoded connection string). Read-only except the scoped re-enrich UPDATE.
 // Usage: node scripts/analysis/wf3-cost-coherence-sanity.js
+//
+// RE-POINTED — WF3 C6 (`.cursor/wf3_test_db_suite_red_active_task.md`, 2026-09-21). The ENRICHER
+// conversion (commit d79191cf) retired `scripts/enrich-parcels.js`'s function-export surface
+// (enrichParcels/enrichMaxBuild/enrichExistingStructure/enrichOptimalConfig — now a 41-line
+// pipeline.step() shim exporting only {descriptor, compute, run}) without sweeping this script,
+// which called all four and threw TypeError on first use. Retargeted onto the real
+// runPass1/runPass2/runPass3/runPass5 in scripts/lib/compute/enrich-parcels.js, driven by a
+// hand-built ctx mirroring the real runner's shape (scripts/lib/step/index.js runEnrichPhase
+// shared-txn passCtx / post-commit passCtx) — same bridge shape as the batch-2 row 2.4 fix to
+// buildParcelCostMenu's opts.config just below, and the same one src/tests/db/_lib/
+// enrich-parcels-harness.js uses for the live-DB test suite (WF3 C2). Pass 4 (comparable_builds)
+// stays deliberately UNCALLED, exactly as it was before the conversion — this script's own scope
+// is cost re-coherence (max-build/existing-structure/optconfig), not comps.
 'use strict';
 // Spec 122 §P0 — the single database-target resolver (fail-loud, floor-asserted).
 const { createResolvedPool } = require('../lib/resolve-db');
-const ep = require('../enrich-parcels.js');
-const mb = require('../lib/max-build.js');
+const descriptor = require('../enrich-parcels.descriptor.json');
+const compute = require('../lib/compute/enrich-parcels.js');
+const { resolveConfig } = require('../lib/step/config.js');
+const { streamOverClient } = require('../lib/step/index.js');
 const { buildParcelCostMenu } = require('../lib/parcel-cost.js');
 const { parcelFamilyFromZoning } = require('../lib/build-norms.js');
 const pipeline = require('../lib/pipeline.js');
@@ -19,15 +35,21 @@ const pipeline = require('../lib/pipeline.js');
 const FLAGGED = [1786, 7281, 1842, 1455];
 const SUSPECT_LIMIT = 10;
 
-const roadDist = 5, storeyHeight = mb.RESIDENTIAL_STOREY_HEIGHT_M;
-const reno = { coaUplift: mb.RENO_COA_UPLIFT_PCT_DEFAULT, kitchenPct: mb.RENO_KITCHEN_GFA_PCT_DEFAULT, bathPct: mb.RENO_BATH_GFA_PCT_DEFAULT, mislinkTol: mb.MISLINK_FOOTPRINT_LOT_TOL_DEFAULT };
-const acc = {
-  gardenMinLot: mb.GARDEN_SUITE_MIN_LOT_SQM, gardenMinRearYard: mb.GARDEN_SUITE_MIN_REAR_YARD_M, gardenMaxGfa: mb.GARDEN_SUITE_MAX_GFA_SQM,
-  garageMinLot: mb.GARAGE_MIN_LOT_SQM, garageMaxGfa: mb.GARAGE_MAX_GFA_SQM, garageMinFootprint: mb.GARAGE_MIN_FOOTPRINT_SQM,
-  accessoryMaxCovPct: mb.ACCESSORY_MAX_COVERAGE_PCT, carFootprint: mb.CAR_FOOTPRINT_SQM,
-  lanewayMaxGfa: mb.LANEWAY_SUITE_MAX_GFA_SQM, lanewayMinLot: mb.LANEWAY_SUITE_MIN_LOT_SQM, lanewayMinRearYard: mb.LANEWAY_SUITE_MIN_REAR_YARD_M,
-  minSoftPct: mb.MIN_SOFT_LANDSCAPING_PCT, lanewayStoreys: mb.LANEWAY_SUITE_STOREYS, gardenStoreys: mb.GARDEN_SUITE_STOREYS,
-};
+/** ctx shape mirroring runEnrichPhase's own passCtx (scripts/lib/step/index.js :3520/:3754). */
+function makeCtx({ scopeWhere, config, runAt, extra }) {
+  return {
+    full: true,
+    scopeWhere,
+    staleOverlays: new Set(),
+    contract: null,
+    clock: { now: () => runAt, asOfDate: () => runAt.toISOString().slice(0, 10) },
+    log: pipeline.log,
+    config,
+    scopeRunId: Math.floor(runAt.getTime() / 1000),
+    onProgress: () => {},
+    ...extra,
+  };
+}
 
 (async () => {
   const pool = createResolvedPool({ label: 'wf3-cost-coherence-sanity' });
@@ -47,14 +69,53 @@ const acc = {
   const before = {};
   for (const r of (await pool.query(`SELECT p.id, p.bylaw_max_fsi::float8 AS fsi FROM parcels p WHERE ${SCOPE}`)).rows) before[r.id] = r.fsi;
 
-  // Re-enrich the sample scoped, full=true.
+  // Re-enrich the sample scoped, full=true — real config (resolveConfig), never a hand-typed
+  // literal default: the SAME source of truth the real runner and the live-DB test suite use.
+  const { values: config } = await resolveConfig(pool, descriptor);
+
+  // Passes 1-3 (zoning/max-build/existing-structure) — shared txn, mirrors runEnrichPhase's
+  // sharedPhases loop. Pass 4 (comparable_builds) is deliberately NOT called (see header).
   await pipeline.withTransaction(pool, async (client) => {
     const runAt = await pipeline.getDbTimestamp(client);
-    await ep.enrichParcels(client, { scopeWhere: SCOPE, full: true, roadDist, runAt, staleOverlays: new Set() });
-    await ep.enrichMaxBuild(client, { scopeWhere: SCOPE, full: true, storeyHeight, acc });
-    await ep.enrichExistingStructure(client, { scopeWhere: SCOPE, full: true, reno });
+    const ctx = makeCtx({ scopeWhere: SCOPE, config, runAt });
+    await compute.runPass1(client, ctx, config);
+    await compute.runPass2(client, ctx, config);
+    await compute.runPass3(client, ctx, config);
   });
-  await ep.enrichOptimalConfig(pool, { full: true, scopeWhere: SCOPE });
+
+  // Pass 5 (optimal_config) — post_commit, autocommit-batched, TWO dedicated connections
+  // (a write client for flushBatch's own per-batch BEGIN/COMMIT + a SEPARATE stream client —
+  // reusing one for both is the documented H1 deadlock, scripts/lib/step/index.js :3648).
+  {
+    const writeClient = await pool.connect();
+    const streamClient = await pool.connect();
+    try {
+      const runAt = await pipeline.getDbTimestamp(pool);
+      const streamBatchSize = Number(config.enrich_parcels_pass5_stream_batch_size);
+      const flushBatch = async (sql, params) => {
+        await writeClient.query('BEGIN');
+        try {
+          const result = await writeClient.query(sql, params);
+          await writeClient.query('COMMIT');
+          return result;
+        } catch (err) {
+          await writeClient.query('ROLLBACK').catch(() => {});
+          throw err;
+        }
+      };
+      const ctx = makeCtx({
+        scopeWhere: SCOPE, config, runAt,
+        extra: {
+          stream: (sql, params, opts) => streamOverClient(streamClient, sql, params, { batchSize: streamBatchSize, ...opts }),
+          flushBatch,
+        },
+      });
+      await compute.runPass5(writeClient, ctx, config);
+    } finally {
+      writeClient.release();
+      streamClient.release();
+    }
+  }
 
   const rates = {};
   for (const r of (await pool.query(`SELECT * FROM archetype_cost_rates`)).rows) rates[r.archetype] = r;
