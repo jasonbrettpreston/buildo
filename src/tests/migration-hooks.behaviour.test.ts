@@ -25,6 +25,13 @@ import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 const ROOT = process.cwd();
+
+// Git exports GIT_DIR / GIT_WORK_TREE / GIT_INDEX_FILE into hook environments; a child `git`
+// that inherits them ignores `cwd` and would configure / stage against the REAL repo when this
+// suite runs under husky (the capture-harness-overwrite identity leak, 2026-09-15..21). Scrub
+// them for this worker — `runHook` spreads process.env, so the hooks under test are covered too.
+for (const k of ['GIT_DIR', 'GIT_WORK_TREE', 'GIT_INDEX_FILE', 'GIT_COMMON_DIR', 'GIT_PREFIX']) delete process.env[k];
+
 const UNSAFE = [
   '-- 900_probe.sql',
   '-- UP',

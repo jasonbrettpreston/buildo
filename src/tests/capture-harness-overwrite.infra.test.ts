@@ -23,6 +23,22 @@ import path from 'node:path';
 import { execFileSync, spawnSync } from 'node:child_process';
 
 const REPO_ROOT = path.resolve(__dirname, '../../');
+
+// Git exports GIT_DIR / GIT_WORK_TREE / GIT_INDEX_FILE into hook environments (always from a
+// linked worktree). A child `git` that inherits them IGNORES `cwd`, so this file's throwaway
+// `git config user.name capture-guard-test` was written into the REAL repo's .git/config when
+// the suite ran under husky — 60+ commits landed under that identity (2026-09-15..21). Scrub
+// the variables for this worker (covers the harness's own git calls too), and
+// `assertThrowawayRepo` refuses to configure anything that is not the temp repo.
+for (const k of ['GIT_DIR', 'GIT_WORK_TREE', 'GIT_INDEX_FILE', 'GIT_COMMON_DIR', 'GIT_PREFIX']) delete process.env[k];
+
+function assertThrowawayRepo(repo: string): void {
+  const norm = (p: string) => fs.realpathSync.native(path.resolve(p)).toLowerCase();
+  const gitDir = execFileSync('git', ['rev-parse', '--absolute-git-dir'], { cwd: repo, encoding: 'utf8' }).trim();
+  if (norm(gitDir) !== norm(path.join(repo, '.git'))) {
+    throw new Error(`refusing to configure git: resolved git dir ${gitDir} is not the throwaway repo ${repo}`);
+  }
+}
 // eslint-disable-next-line @typescript-eslint/no-require-imports -- exercising the real CJS harness
 const harness = require(path.join(REPO_ROOT, 'scripts/analysis/capture-step-golden.js')) as {
   overwriteDecision: (s: { exists: boolean; tracked: boolean; worktreeClean: boolean; overwriteFlag: boolean }) => { allow: boolean; reason: string; remedy: string };
@@ -61,6 +77,7 @@ describe('captureGitState — the ONE two-probe definition of "recoverable", pro
   beforeAll(() => {
     repo = fs.mkdtempSync(path.join(os.tmpdir(), 'buildo-capture-guard-'));
     git('init', '-q');
+    assertThrowawayRepo(repo);
     git('config', 'user.email', 'test@example.invalid');
     git('config', 'user.name', 'capture-guard-test');
     git('config', 'core.autocrlf', 'false');
