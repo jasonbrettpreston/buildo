@@ -54,9 +54,19 @@
 // 'buildo_test'`. A live-DB test calling `pipeline.step(LINK_WSIB, compute).run({pool})`
 // against the testcontainer refuses immediately — the re-home was never actually
 // buildable, and the comment was left as an aspirational TODO instead of being
-// corrected when that was discovered. That gap is unresolved and stays a named
-// followup (the MED item above), not fixed here — a test-infrastructure change, not a
+// corrected when that was discovered. That gap was unresolved and stayed a named
+// followup (the MED item above), not fixed there — a test-infrastructure change, not a
 // step conversion.
+//
+// ✅ ROOT CAUSE CLOSED 2026-09-21 (WF3 "LW-D16 root cause"): `setup-testcontainer.ts`
+// now provisions a database named `postgres` (`TEST_DATABASE_NAME`), the name every
+// descriptor declares, so a live-DB `pipeline.step(LINK_WSIB, compute).run({pool})` IS
+// buildable here now. `assertDbTarget` was NOT weakened to achieve it (no test-context
+// bypass; `src/tests/db/step-database-target-guard.db.test.ts` proves the guard still
+// refuses a wrong name and an unreachable floor against this very container). Actually
+// re-homing link_wsib's ledger-gate coverage onto a live `.run()` is a scoped
+// follow-up, filed MED in `docs/reports/review_followups.md` — NOT done here, and this
+// comment states that plainly rather than aspirationally.
 //
 // What IS covered, this commit: `staleness.ledgerGatedSkip` — the LG-15 gate
 // `runCascadePhase` actually calls for `link_wsib` — never had a direct behavioral
@@ -108,8 +118,10 @@ describe.skipIf(!dbAvailable())('Phase B B3 — run-ledger gate callers (live DB
   // D#4 (link-wsib): LINK_WSIB_FORCE_FULL bypass — LW-D16, corrected claim: NOT
   // re-homed (no such file was ever created — see the file header). The bypass
   // half is covered by the fake-pool "bypassed:true never SKIPs" lock in
-  // step-library.logic.test.ts's "LW-D16" describe block; a live-DB equivalent
-  // stays blocked on the assert_current_database-vs-buildo_test MED followup.
+  // step-library.logic.test.ts's "LW-D16" describe block; a live-DB equivalent was
+  // blocked on the assert_current_database-vs-buildo_test MED followup, which is
+  // CLOSED as of 2026-09-21 (see the file header) — building it is now a filed
+  // follow-up, not an impossibility.
   //
   // D#4 (link-parcel-addresses) — SAME treatment, C1 pilot 5 commit 7, 2026-08-29. The
   // frozen shape carries no exported `main(pool)`/OWN_SLUGS/FORCE_FULL_ENV any more

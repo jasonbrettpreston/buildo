@@ -22,28 +22,35 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
 
+    # ⚠️ The database is named `postgres`, in lockstep with
+    # `src/tests/db/setup-testcontainer.ts`'s TEST_DATABASE_NAME (LW-D16, WF3
+    # 2026-09-21). Every converted step declares
+    # `database.assert_current_database: "postgres"` and `assertDbTarget`
+    # refuses any other name — a production fence that is satisfied here, never
+    # weakened. Renaming either side alone reds
+    # `src/tests/db-test-harness-target.infra.test.ts`.
     services:
       postgres:
         image: postgis/postgis:16-3.4-alpine
         env:
           POSTGRES_USER: buildo
           POSTGRES_PASSWORD: buildo
-          POSTGRES_DB: buildo_test
+          POSTGRES_DB: postgres
         ports:
           - 5432:5432
         options: >-
-          --health-cmd "pg_isready -U buildo -d buildo_test"
+          --health-cmd "pg_isready -U buildo -d postgres"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 10
 
     env:
-      DATABASE_URL: postgres://buildo:buildo@localhost:5432/buildo_test
+      DATABASE_URL: postgres://buildo:buildo@localhost:5432/postgres
       PG_HOST: localhost
       PG_PORT: 5432
       PG_USER: buildo
       PG_PASSWORD: buildo
-      PG_DATABASE: buildo_test
+      PG_DATABASE: postgres
 
     steps:
       - uses: actions/checkout@v4

@@ -30,7 +30,25 @@
 // forever, exactly the shape `detectInterruptedRetraction` (scripts/lib/step/
 // staleness.js) exists to detect on the NEXT run.
 //
-// ⚠️ BLOCKED — `describe.skip`, not `describe.skipIf(!dbAvailable())`. Measured
+// ⚠️ BLOCKER CLEARED 2026-09-21, FILE STILL SKIPPED (LW-D16 root cause, WF3).
+// The wall described below is GONE: `setup-testcontainer.ts` now provisions a
+// database literally named `postgres` (its `TEST_DATABASE_NAME` constant), which
+// is exactly what every descriptor's `assert_current_database` demands, so a
+// spawned converted step no longer refuses. The guard itself was NOT weakened —
+// no escape hatch was added; the harness simply stopped using a name production
+// never uses (both directions proven by
+// `src/tests/db/step-database-target-guard.db.test.ts`).
+//
+// This file was deliberately NOT un-skipped in that WF3: it spawns a real
+// `link_wsib` child and SIGTERMs it, it has never once executed, and its own
+// note below records a SECOND obstacle (`pipeline.js#createPool` reads
+// `SUPABASE_DATABASE_URL`/`PG_*`, not bare `DATABASE_URL`, so the child needs
+// the container URL plumbed under those names). Un-skipping it deserves its own
+// verification pass — filed MED in `docs/reports/review_followups.md`
+// ("LW-D16 root cause" section), which is also the trigger to move
+// `programme-items.json`'s `CRASH-BEHAV` off `NOT_STARTED`.
+//
+// ⚠️ HISTORICAL (the reason for the `describe.skip` below). Measured
 // live 2026-09-03 building this file: a REAL step script spawned against the
 // ephemeral BUILDO_TEST_DB testcontainer ALWAYS refuses at `assertDbTarget`
 // (`scripts/lib/resolve-db.js:292`) — `[link_wsib] REFUSING: connected to
@@ -44,9 +62,10 @@
 // §P0) that this WF2 is not authorized to weaken under time pressure — filed
 // HIGH in `docs/reports/review_followups.md` ("WF2 Rule 12 behavioural half — no
 // db.test.ts can spawn a REAL converted step against the ephemeral test
-// container", 2026-09-03) as its own scoped WF2/WF3: a genuine, reviewed
-// test-context escape hatch on `assertDbTarget` (an additional allowed-database-
-// names source, inert by default). Un-skip this file once that lands.
+// container", 2026-09-03) as its own scoped WF2/WF3. That followup is now
+// CLOSED — and closed by the OTHER option it listed, not the escape hatch: the
+// harness renames its database to `postgres` and `assertDbTarget` keeps refusing
+// everything it always refused (see the cleared-blocker note at the top).
 // `programme-items.json`'s `CRASH-BEHAV` item cites this followup as its
 // blocker. The mechanism below is otherwise complete and was proven correct up
 // to that wall (spawn/poll/kill plumbing all measured working) — kept committed

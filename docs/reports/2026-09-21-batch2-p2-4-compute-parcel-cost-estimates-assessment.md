@@ -154,28 +154,30 @@ statement converges (`rowCount=2`), (c) a third identical run writes 0 (idempote
 
 - `src/tests/steps/compute_parcel_cost_estimates/violations.test.ts` (DB-free): **20/20 pass**
   (19 `it()` + 1 `it.fails()`, cutover-only: the 9→11 seam-pair flip).
-- `src/tests/db/compute-parcel-cost-estimates-violations.db.test.ts` (new): **6/14 pass** under
-  this session's `BUILDO_TEST_DB=1` testcontainer. The remaining 8 (every case invoking
-  `pipeline.step(descriptor, compute).run({pool, chainId})`) are blocked by a **pre-existing,
-  documented environment gap** (LW-D16, `src/tests/db/ledger-gate-callers.db.test.ts`'s own file
-  header): every converted step declares `database.assert_current_database:"postgres"`, but
-  `setup-testcontainer.ts` always provisions a DB named `buildo_test` — `assertDbTarget` refuses.
-  Confirmed NOT specific to this step: the SAME 8-vs-6 split reproduces against an unrelated
-  precedent test that also uses `.run({pool})`, and the local dev DB path (bypassing the
-  testcontainer) independently fails on unrelated Supabase-schema permissions
-  (`seedSupabaseAuthBaseline` cannot `CREATE` inside `auth`, owned by `supabase_admin`, not
-  `postgres`, in a real local Supabase stack). Not fixed here — out of Operating Boundaries
-  ("a test-infrastructure change, not a step conversion," per the file's own LW-D16 note). The
-  underlying claims these 8 encode are independently proven true by the golden captures and the
-  differential above (idempotency, the 16-column guard, Σ-identity, F9 stamps, F12 unconditional
-  emit all directly observed in real `records_meta`).
+- `src/tests/db/compute-parcel-cost-estimates-violations.db.test.ts` (new): **14/14 pass.**
+  ⚠️ CORRECTED 2026-09-21 (WF3 "LW-D16 root cause"). AS WRITTEN AT CONVERSION TIME this read
+  "**6/14 pass** … the remaining 8 are blocked by a pre-existing, documented environment gap
+  (LW-D16)": every converted step declares `database.assert_current_database:"postgres"`, but
+  `setup-testcontainer.ts` provisioned a DB named `buildo_test` — `assertDbTarget` refused.
+  That gap was fixed at its root on 2026-09-21 (the harness now provisions a database named
+  `postgres`; the guard itself is unchanged), and **all 14 cases have since been EXECUTED and
+  pass** — measured, not inferred from the golden captures. The claim in the original text that
+  the 8 blocked cases were "independently proven true by the golden captures and the
+  differential" was reasonable but unverified; they are now verified directly.
 - `src/tests/db/compute-parcel-cost-kill-mid-run.db.test.ts` (new): **1/1 pass** (does not use
   `.run()` — unaffected by the LW-D16 gap).
 - `src/tests/db/ledger-gate-callers.db.test.ts` (6 compute-parcel-cost-estimates cases removed,
   W2 + 2× B-R4 kept): **3/3 pass**.
-- `src/tests/db/compute-parcel-cost-estimates.db.test.ts` (RE-DERIVED, `.run()`-based): written,
-  lint-clean, **blocked by the same LW-D16 gap** in this session — not independently verified
-  green here.
+- `src/tests/db/compute-parcel-cost-estimates.db.test.ts` (RE-DERIVED, `.run()`-based):
+  **6/6 pass** (5 behavioural + 1 pinned `it.fails`). ⚠️ CORRECTED 2026-09-21: as written this
+  read "written, lint-clean, blocked by the same LW-D16 gap — not independently verified green
+  here." It has since been executed. Executing it for the first time SURFACED A REAL DEFECT in
+  the converted step — **CPCE-D4**: `new_build_fallback_count` (and `fsi_implausible_count`) are
+  computed and then reach neither `records_meta` nor the audit table, although the
+  PRE-conversion step emitted both as audit rows. That assertion is now pinned as an
+  `it.fails('CPCE-D4 …')` case (see `docs/reports/defect-ledger.md` CPCE-D4 +
+  `docs/reports/review_followups.md`); the conversion is therefore NOT fully behaviour-neutral
+  on the observability axis, which this report claimed.
 - `src/tests/parcel-cost.logic.test.ts`: **37/37 pass**.
 - `src/tests/control-panel.logic.test.ts`: **28/28 pass**.
 - `src/tests/conversion-roadmap.infra.test.ts`: **28/28 pass**.
@@ -242,10 +244,12 @@ by numeric prefix — `205` the filename number was the exact guessed-value defe
 
 ## NOT DONE / deviations from the ideal plan
 
-- The `.db.test.ts` violations/original files' `.run()`-based cases (8 + 5 assertions) are
+- ~~The `.db.test.ts` violations/original files' `.run()`-based cases (8 + 5 assertions) are
   correctly written and lint-clean but **not independently verified green in this session** —
   blocked by the pre-existing LW-D16 environment gap, documented above, not a defect in this
-  conversion.
+  conversion.~~ **RESOLVED 2026-09-21** (WF3 "LW-D16 root cause"): the environment gap is fixed
+  at its root and all 20 cases now execute — 19 green + 1 `it.fails` pinning CPCE-D4, a genuine
+  observability defect in THIS conversion that the blocked cases had been hiding.
 - `docs/reports/defect-ledger.md` now carries CPCE-D1/D2/D3 (the rates-vs-index asymmetry, the
   2 orphan menus, the vacuous fallback counter) — `docs/reports/review_followups.md` was **not**
   additionally updated (the ledger rows above are the primary record).
@@ -269,7 +273,7 @@ per the plan's own scope boundary for this session (commits ①–② only).
 |---|---|---|
 | 1 | The 1,006-parcel differential cohort is an exact snapshot against TODAY's `parcels`/`archetype_cost_rates` state; a future re-run of `compute-parcel-cost-cohort-differential.js` should re-derive the cohort from a fresh query rather than reuse these committed ids as a permanent fixture (same caveat the enrich_heritage precedent named for its own cohort). |
 | 2 | `compute_parcel_cost_phase_timeout_minutes` (seed 60) is CPCE-A5 RULED from the LOCAL measured runtime (~150s) with no cloud ledger row for this slug at all — genuinely unmeasured on Supabase Small, same declared risk the plan's own §11 carried forward. |
-| 3 | The `.db.test.ts` orchestration-level cases (this file's own new tests + the re-derived original) are correctly written but unverified green in THIS session, blocked by the pre-existing LW-D16 `assertDbTarget`-vs-`buildo_test` gap — confirmed reproducible against an unrelated precedent file, but not personally re-verified against a real CI run. |
+| 3 | ~~The `.db.test.ts` orchestration-level cases … are correctly written but unverified green in THIS session, blocked by the pre-existing LW-D16 `assertDbTarget`-vs-`buildo_test` gap.~~ **CLOSED 2026-09-21** — the gap was fixed at its root and every case executed: 14/14 + 6/6. The low confidence was warranted: one of them was RED for a real reason (CPCE-D4). |
 
 **RECURRING/STANDARD-SHAPING** patterns this conversion reconfirms:
 

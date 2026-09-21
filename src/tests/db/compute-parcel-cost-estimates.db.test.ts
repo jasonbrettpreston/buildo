@@ -136,15 +136,16 @@ describe.skipIf(!dbAvailable())('Spec 88 compute-parcel-cost-estimates — live 
     expect(menu.kitchen.norm_basis).toBe('n/a');
   }, 60_000);
 
-  it('WF3: new_build (cost_fb_total) prices opt_aor_gfa; NULL opt_aor → envelope fallback + counted', async () => {
+  it('WF3: new_build (cost_fb_total) prices opt_aor_gfa; NULL opt_aor → envelope fallback', async () => {
     // (a) opt_aor 250 ≠ max_buildable 300 → the max_build line prices 250, not the envelope.
     await insParcel(pool, P(5), { opt_aor_gfa_sqm: 250, max_buildable_gfa_sqm: 300 });
-    // (b) opt_aor NULL → COALESCE falls back to the max-build envelope (300) + increments the counter.
+    // (b) opt_aor NULL → COALESCE falls back to the max-build envelope (300).
     await insParcel(pool, P(6), { opt_aor_gfa_sqm: null, max_buildable_gfa_sqm: 300 });
 
     const s = await runStep(pool);
     expect(s.records_meta.engine_error_count).toBe(0);
-    expect(s.records_meta.new_build_fallback_count).toBeGreaterThanOrEqual(1); // P(6) used the fallback
+    // The OBSERVABILITY half of this case — `new_build_fallback_count` — is pinned
+    // separately below (CPCE-D4): the counter is computed and then dropped.
 
     const rowA = (await pool.query(
       `SELECT parcel_cost_menu, cost_fb_total, max_build_fsi FROM parcels WHERE id = $1`, [P(5)],
@@ -158,6 +159,29 @@ describe.skipIf(!dbAvailable())('Spec 88 compute-parcel-cost-estimates — live 
     )).rows[0];
     expect(rowB.parcel_cost_menu.max_build.area).toBe(300);   // fell back to the envelope
     expect(Number(rowB.cost_fb_total)).toBeCloseTo(4844 * 300, 0);
+  }, 60_000);
+
+  // CPCE-D4 (found 2026-09-21, the FIRST time this file ever executed — LW-D16 had made
+  // every `.run({pool})` case in it refuse on contact). `newBuildFallbackCount` is measured
+  // by the compute and placed on `ctx.matched` (scripts/lib/compute/compute-parcel-cost-estimates.js:401)
+  // — and then goes NOWHERE: `buildCostMeta` (same file, ~:548) omits it from records_meta,
+  // and no `checks[]` entry reports it, so it reaches neither the run's records_meta nor its
+  // audit table. The PRE-conversion step emitted it as an audit row
+  // (`docs/reports/golden/compute_parcel_cost_estimates/pre/standalone.json` — `new_build_fallback_count`
+  // is in `audit_table.rows`; the POST capture has it in neither place), so this is lost
+  // observability across the conversion, not a never-built feature. Spec 88 §7 lists it among
+  // the rows "ALWAYS emitted incl. value:0". `fsi_implausible_count` was dropped the same way.
+  //
+  // `it.fails()` — the repo's pinned-defect convention: it passes while the counter is
+  // unobservable and REDS the moment the step starts emitting it, which is the signal to
+  // delete this case and restore the assertion to the test above. NOT fixed in this WF3:
+  // changing what a converted step emits is a Rule-1 observability change needing its own
+  // plan, panel and golden recapture (reported as a STOP finding, filed HIGH in
+  // docs/reports/review_followups.md + docs/reports/defect-ledger.md).
+  it.fails('CPCE-D4 [pinned defect] new_build_fallback_count is computed but observable NOWHERE', async () => {
+    await insParcel(pool, P(7), { opt_aor_gfa_sqm: null, max_buildable_gfa_sqm: 300 });
+    const s = await runStep(pool);
+    expect(s.records_meta.new_build_fallback_count).toBeGreaterThanOrEqual(1);
   }, 60_000);
 
   it('IS-DISTINCT-FROM idempotency: a clean re-run updates 0 parcels', async () => {

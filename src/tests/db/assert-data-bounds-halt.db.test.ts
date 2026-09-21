@@ -27,8 +27,15 @@
 // `scripts/lib/step/index.js`'s `assertDatabaseTarget` — so a spawned child
 // process now REFUSES outright against any testcontainer not literally named
 // "postgres" ("REFUSING: connected to database X, expected one of postgres").
-// This is a FLEET-WIDE, pre-existing structural gap (not specific to this
-// step): every other converted step's own DB regression test already avoids
+// ⚠️ CORRECTED (LW-D16 root cause, WF3 2026-09-21): that gap is CLOSED — the
+// harness now provisions a database literally named `postgres`
+// (`setup-testcontainer.ts`'s TEST_DATABASE_NAME), which the guard accepts, so
+// a spawned child / a real `.run({pool})` no longer refuses. The direct-
+// `compute()` convention described below remains valid and this file is left on
+// it; it is now a CHOICE (a narrower unit), no longer a forced workaround.
+//
+// This was a FLEET-WIDE, pre-existing structural gap (not specific to this
+// step): every other converted step's own DB regression test already avoided
 // it by invoking `scripts/lib/compute/<slug>.js` DIRECTLY rather than spawning
 // the frozen shell — see `src/tests/db/link-wsib-token-overlap.db.test.ts`
 // (`require(...link-wsib.js)` + real SQL against the pool) and

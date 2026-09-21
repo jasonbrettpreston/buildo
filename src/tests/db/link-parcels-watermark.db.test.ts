@@ -16,12 +16,20 @@
 // link-parcels.js` child) — the frozen shell's own `pipeline.step` wrapper
 // asserts `descriptor.database.assert_current_database === "postgres"`
 // (`resolve-db.js assertDbTarget`), which the ephemeral `BUILDO_TEST_DB=1`
-// container (always named `buildo_test`) can never satisfy; that check lives in
+// container (then always named `buildo_test`) could never satisfy; that check lives in
 // `runWithPool`, one layer OUTSIDE `runLinkKeyedPhase` itself, so calling the
 // phase function directly is a legitimate, narrower unit of test (same DB writes,
 // same transaction, same watermark statement) without fighting a guard that
 // exists for a different, real reason (never run a converted step against the
 // wrong database).
+//
+// ⚠️ UPDATE (LW-D16 root cause, WF3 2026-09-21): that obstacle is GONE — the
+// harness now provisions a database named `postgres` (`setup-testcontainer.ts`'s
+// TEST_DATABASE_NAME), which the guard accepts, so a full `pipeline.step(...)
+// .run({pool})` IS buildable here now. The direct `runLinkKeyedPhase` call is
+// left as-is (it is a legitimate narrower unit and passes); widening it to the
+// full runner is a candidate follow-up, filed MED in review_followups.md, not a
+// drive-by inside the harness fix.
 //
 // Run: BUILDO_TEST_DB=1 npx vitest run src/tests/db/link-parcels-watermark.db.test.ts --no-file-parallelism
 

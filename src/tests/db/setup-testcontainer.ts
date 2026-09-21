@@ -27,6 +27,42 @@ import { execSync } from 'node:child_process';
 import { Pool } from 'pg';
 import type { StartedTestContainer } from 'testcontainers';
 
+/**
+ * The name of the ephemeral test database — `postgres`, deliberately, and it
+ * must stay that way (LW-D16 root cause, WF3 2026-09-21).
+ *
+ * Every converted step declares `database.assert_current_database: "postgres"`,
+ * and `scripts/lib/resolve-db.js`'s `assertDbTarget` REFUSES any other name.
+ * That refusal is a PRODUCTION SAFETY FENCE (Spec 122 §P0, commit `9e2da7b1`):
+ * 24 tools used to fall back to the pre-cutover `localhost:5432/buildo`
+ * database and silently grade the wrong data. It is not weakened here.
+ *
+ * While this harness provisioned a database named `buildo_test`, every live-DB
+ * test that ran a converted step for real — `pipeline.step(d, c).run({pool})`
+ * in-process, or a spawned step script — refused on contact:
+ *   `REFUSING: connected to database "buildo_test", expected one of "postgres"`
+ * 13 committed locks across the two `compute-parcel-cost-estimates` db-test
+ * files had therefore NEVER ONCE EXECUTED, `step-crash-posture.db.test.ts` sits
+ * `describe.skip`-ped citing it, and the spawned-child suites
+ * (`enrich-parcels-*`, `migration-245-centroid-invalidation`) failed the same way.
+ *
+ * The fix is to SATISFY the guard, not to bypass it: the harness provisions the
+ * database name production uses, so `assertDbTarget` runs completely unmodified
+ * and still refuses everything it refused before. `postgres` is also the
+ * authoritative Supabase target's name, so the name check and the migration
+ * floor now grade this container exactly as they grade the real thing (this
+ * container runs the FULL migration set, so the floor is met honestly, never
+ * exempted). Proven in both directions by
+ * `src/tests/db/step-database-target-guard.db.test.ts` (a live mutation: point
+ * a descriptor at a wrong name → the guard still refuses) and statically by
+ * `src/tests/db-test-harness-target.infra.test.ts`.
+ *
+ * ⚠️ Keep in lockstep with `.github/workflows/db-tests.yml` (POSTGRES_DB /
+ * DATABASE_URL / PG_DATABASE / the health check) — the infra test above reds if
+ * either side drifts.
+ */
+export const TEST_DATABASE_NAME = 'postgres';
+
 let startedContainer: StartedTestContainer | null = null;
 
 /**
@@ -59,14 +95,14 @@ export async function setup(): Promise<() => Promise<void>> {
     .withEnvironment({
       POSTGRES_USER: 'buildo',
       POSTGRES_PASSWORD: 'buildo',
-      POSTGRES_DB: 'buildo_test',
+      POSTGRES_DB: TEST_DATABASE_NAME,
     })
     .withExposedPorts(5432)
     .start();
 
   const host = startedContainer.getHost();
   const port = startedContainer.getMappedPort(5432);
-  const url = `postgres://buildo:buildo@${host}:${port}/buildo_test`;
+  const url = `postgres://buildo:buildo@${host}:${port}/${TEST_DATABASE_NAME}`;
   process.env.DATABASE_URL = url;
   await runMigrations(url);
 
