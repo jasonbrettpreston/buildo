@@ -192,6 +192,7 @@ describe.skipIf(!dbAvailable())('assert_data_bounds — per-site halt-classifica
     const ctx = {
       pool,
       chainId,
+      descriptor,
       checks: verdictLib.selectChecks(descriptor, chainId).map((c) => c.id),
       log: { info: () => {}, warn: () => {}, error: () => {} },
       config,

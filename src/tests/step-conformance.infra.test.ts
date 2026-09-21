@@ -851,6 +851,92 @@ describe('LW-D11 — harness-fidelity lock: a runCompute ctx-builder may only se
 });
 
 // ---------------------------------------------------------------------------
+// LW-D11 corpus extension — WF3 C4 (`.cursor/wf3_test_db_suite_red_active_task.md`, 2026-09-21):
+// the SAME class of bug as fanin (LW-D11), pointed the other direction. `src/tests/db/assert-
+// data-bounds-halt.db.test.ts`'s hand-built ctx OMITTED `descriptor`, which
+// `scripts/lib/compute/assert-data-bounds.js:563` reads unconditionally
+// (`ctx.descriptor.identity.name`) — the real runner's `stepCtx` always supplies it
+// (`descriptor` is in `STEP_CTX_KEYS`), so the omission was a test-harness-only gap, not a
+// production one, but the SAME failure mode LW-D11 exists to catch: a hand-built ctx that
+// silently diverges from the real runner's shape. The original LW-D11 lock only checked
+// `src/tests/steps/*/violations.test.ts` and only in the OVER-set direction (a ctx-builder
+// setting a key the library never assigns); this extends it to `src/tests/db/*.db.test.ts`
+// ctx-builders AND to the UNDER-set direction (a ctx-builder omitting a key its own paired
+// compute module reads).
+// ---------------------------------------------------------------------------
+describe('LW-D11 extension (C4) — src/tests/db/ ctx-builders: no bogus keys, no omitted keys the paired compute reads', () => {
+  const DB_TESTS_DIR = path.join(REPO_ROOT, 'src/tests/db');
+  const DB_TEST_FILES = fs.existsSync(DB_TESTS_DIR)
+    ? fs.readdirSync(DB_TESTS_DIR).filter((f) => f.endsWith('.db.test.ts')).map((f) => path.join('src/tests/db', f))
+    : [];
+  /** Every file under `src/tests/db/` with its own `const ctx = { ... }` builder. */
+  const DB_CTX_FILES = DB_TEST_FILES.filter((relFile) => {
+    const source = fs.readFileSync(path.join(REPO_ROOT, relFile), 'utf8');
+    return ctxBuilderKeys(source) !== null;
+  });
+
+  it(`the corpus is not empty (found ${DB_CTX_FILES.length} src/tests/db/ ctx-builder file(s) — a zero-length corpus would make every assertion below vacuous)`, () => {
+    expect(DB_CTX_FILES.length).toBeGreaterThan(0);
+    expect(DB_CTX_FILES).toContain(path.join('src/tests/db', 'assert-data-bounds-halt.db.test.ts'));
+  });
+
+  for (const relFile of DB_CTX_FILES) {
+    it(`${relFile} — ctx-builder sets only STEP_CTX_KEYS (same over-set check as the src/tests/steps/ corpus)`, () => {
+      const source = fs.readFileSync(path.join(REPO_ROOT, relFile), 'utf8');
+      const keys = ctxBuilderKeys(source) as string[];
+      const bogus = keys.filter((k) => !STEP_CTX_KEYS.includes(k));
+      expect(
+        bogus,
+        `${relFile}'s ctx-builder sets key(s) [${bogus.join(', ')}] the library never assigns onto stepCtx (LW-D11)`,
+      ).toEqual([]);
+    });
+  }
+
+  /**
+   * Every `ctx.<identifier>` top-level property READ in `source` (the compute module's own
+   * text) — e.g. `ctx.descriptor.identity.name` yields `descriptor`. Intentionally a plain
+   * source scan (not an AST walk over the compute file, unlike `ctxBuilderKeys` over the
+   * TEST file above) — the compute modules are large and this only needs the shallow
+   * `ctx.<name>` access pattern, which a regex resolves without the double-parse cost.
+   */
+  function ctxReadsInSource(source: string): string[] {
+    const found = new Set<string>();
+    const re = /\bctx\.([a-zA-Z_][a-zA-Z0-9_]*)\b/g;
+    let m: RegExpExecArray | null;
+    while ((m = re.exec(source)) !== null) { if (m[1]) found.add(m[1]); }
+    return [...found];
+  }
+
+  it('RED half — a compute source reading a ctx key the paired ctx-builder omits IS caught (proves the omission checker fires, not merely agrees)', () => {
+    const fakeCompute = `async function compute(ctx) { ctx.log.info(ctx.descriptor.identity.name); }`;
+    const fakeCtxBuilderKeys = ['pool', 'chainId', 'checks', 'log', 'config', 'report']; // omits "descriptor"
+    const reads = ctxReadsInSource(fakeCompute);
+    expect(reads, 'the fixture must actually read ctx.descriptor for this RED half to mean anything').toContain('descriptor');
+    const omitted = reads.filter((k) => STEP_CTX_KEYS.includes(k) && !fakeCtxBuilderKeys.includes(k));
+    expect(omitted, 'the fixture is supposed to trip the omission checker').toEqual(['descriptor']);
+  });
+
+  it('assert-data-bounds-halt.db.test.ts\'s ctx-builder omits no STEP_CTX_KEYS-declared key its paired compute module reads (GREEN — the C4 fix)', () => {
+    const relFile = path.join('src/tests/db', 'assert-data-bounds-halt.db.test.ts');
+    const testSource = fs.readFileSync(path.join(REPO_ROOT, relFile), 'utf8');
+    const builderKeys = ctxBuilderKeys(testSource);
+    expect(builderKeys, `${relFile} must have a ctx-builder for this assertion to mean anything`).not.toBeNull();
+    const computePath = path.join(REPO_ROOT, 'scripts/lib/compute/assert-data-bounds.js');
+    const computeSource = fs.readFileSync(computePath, 'utf8');
+    const reads = ctxReadsInSource(computeSource);
+    // Scoped to keys the REAL runner would ever supply (STEP_CTX_KEYS) — a compute reading
+    // e.g. `ctx.report(...)`'s call-site is fine (report IS a real key); this only flags a
+    // real, library-provided key the compute reads but this hand-built ctx never sets.
+    const omitted = reads.filter((k) => STEP_CTX_KEYS.includes(k) && !(builderKeys as string[]).includes(k));
+    expect(
+      omitted,
+      `${relFile}'s ctx-builder omits [${omitted.join(', ')}], which scripts/lib/compute/assert-data-bounds.js ` +
+        `reads via ctx.<key> and the real runner always supplies (STEP_CTX_KEYS) — the C-C class of bug (LW-D11 extension)`,
+    ).toEqual([]);
+  });
+});
+
+// ---------------------------------------------------------------------------
 // 5b. §1.2a P4 — every tunable is externalized, and BOTH directions are proven
 // ---------------------------------------------------------------------------
 //
