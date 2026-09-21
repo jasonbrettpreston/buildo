@@ -39,8 +39,17 @@ import { dbAvailable, getTestPool } from './setup-testcontainer';
 
 const pool = getTestPool();
 const REPO_ROOT = path.resolve(__dirname, '../../../');
+// The RUNNABLE entry point — spawned as-is by runEnrichParcels() below. Unaffected by the
+// ENRICHER conversion's file-shape move: `pipeline.step()`'s CLI wrapper still lives here.
 const SCRIPT = path.join(REPO_ROOT, 'scripts/enrich-parcels.js');
-const SCRIPT_SRC = () => fs.readFileSync(SCRIPT, 'utf8');
+// RE-POINTED — WF3 C3 (`.cursor/wf3_test_db_suite_red_active_task.md`, 2026-09-21). The ENRICHER
+// conversion moved the 5 pass functions + the checks dispatch table out of `SCRIPT` (now a
+// 41-line `pipeline.step()` shim) into `scripts/lib/compute/enrich-parcels.js` — the source-text
+// scans below (`consumed_at IS NULL`, `opt_aor_without_max_gfa`, `massing_zero_link_ghost`) and
+// the two `require()`s further down (cases ① and ④) all look for behaviour that shipped, just not
+// in `SCRIPT`'s own text/exports any more.
+const COMPUTE_MODULE = path.join(REPO_ROOT, 'scripts/lib/compute/enrich-parcels.js');
+const SCRIPT_SRC = () => fs.readFileSync(COMPUTE_MODULE, 'utf8');
 
 /** Fixture key prefix — every seeded row is deleted by prefix. */
 const FX = 'B2INCR';
@@ -266,16 +275,17 @@ describe.skipIf(!dbAvailable())('enrich-parcels — B2 incremental (massing wate
   // =========================================================================
   // ① — Massing gate NULL-arm / linked_at scope-builder (ⓔ, net-new export)
   // =========================================================================
-  describe('① massing-scope predicate builder (ⓔ — net-new export, D1\')', () => {
+  describe('① massing-scope predicate builder (SHIPPED — WF3 C3, moved to scripts/lib/compute/enrich-parcels.js)', () => {
+    // RE-POINTED — WF3 C3: the ENRICHER conversion shipped this export in the compute module,
+    // not the (now 41-line) shim `require`d here before.
     // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const mod = require('../../../scripts/enrich-parcels.js') as Record<string, unknown>;
+    const mod = require('../../../scripts/lib/compute/enrich-parcels.js') as Record<string, unknown>;
 
     it(
-      'enrich-parcels.js does not yet export a massing-scope predicate builder ' +
-        '(export-absence IS the diagnostic; exact name UNDETERMINED pre-impl — guessed as ' +
-        'buildMassingScopeWhere per the D1\' predicate `massing_enriched_at IS NULL OR ' +
-        'EXISTS(SELECT 1 FROM parcel_buildings pb WHERE pb.parcel_id = p.id AND ' +
-        'pb.linked_at > p.massing_enriched_at)` documented in migration 240\'s header comment)',
+      'the compute module exports buildMassingScopeWhere, matching the D1\' predicate ' +
+        '`massing_enriched_at IS NULL OR EXISTS(SELECT 1 FROM parcel_buildings pb WHERE ' +
+        'pb.parcel_id = p.id AND pb.linked_at > p.massing_enriched_at)` documented in migration ' +
+        '240\'s header comment — GREEN post-conversion (was RED pre-impl; WF3 C3 retarget)',
       () => {
         expect(typeof mod.buildMassingScopeWhere).toBe('function');
       },
@@ -329,11 +339,10 @@ describe.skipIf(!dbAvailable())('enrich-parcels — B2 incremental (massing wate
   // =========================================================================
   // ② — Zero-link ghost WARN row (✓red, row-absence via source-scan)
   // =========================================================================
-  describe('② zero-link ghost WARN row (✓red — row-absence)', () => {
+  describe('② zero-link ghost WARN row (SHIPPED — WF3 C3, moved to scripts/lib/compute/enrich-parcels.js)', () => {
     it(
-      'no audit metric names a zero-link ("ghost") parcel today — the D1\' backfill comment documents ' +
-        'day-one value 0 (measured) as forward-looking, but no code emits the row at all (row-absence, ' +
-        'not a value check — a full-run assertion on auditRows would be a weaker proof of the SAME fact)',
+      'an audit metric names a zero-link ("ghost") parcel — massing_zero_link_ghost, in the compute ' +
+        'module\'s checks dispatch table (GREEN post-conversion; was row-absent pre-impl, WF3 C3 retarget)',
       () => {
         expect(SCRIPT_SRC()).toMatch(/massing_zero_link_ghost|zero_link_ghost/);
       },
@@ -383,7 +392,8 @@ describe.skipIf(!dbAvailable())('enrich-parcels — B2 incremental (massing wate
     it(
       'post-impl lock — the pass-5 recovery read targets "consumed_at IS NULL" (S-2: work-before-stamp, ' +
         'never flip-before-stream — a mid-stream crash must leave the unprocessed remainder NULL). ' +
-        'RED TODAY: the clause does not exist anywhere in the file yet.',
+        'GREEN post-conversion (was RED pre-impl; WF3 C3 retarget onto scripts/lib/compute/enrich-parcels.js, ' +
+        'where consumePendingScope/countUnconsumedBacklog now read this predicate).',
       () => {
         expect(SCRIPT_SRC()).toMatch(/consumed_at IS NULL/);
       },
@@ -405,23 +415,19 @@ describe.skipIf(!dbAvailable())('enrich-parcels — B2 incremental (massing wate
   // =========================================================================
   // ④ — Decision-scope keyed on linked_at (✓red/ⓔ — resolves at impl)
   // =========================================================================
-  describe('④ decision-scope keyed on linked_at (ⓔ — resolves at impl; exact mechanism UNDETERMINED pre-B2)', () => {
-    // D4′ (active_task.md / phase_b doc) names "linked_at-keyed decision scope" without
-    // pinning which pass it governs or the export name. The plan itself marks this case
-    // "resolve at impl" — meaning its own red-first classification (✓red vs ⓔ) is not yet
-    // decidable. Treated here as ⓔ (the conservative reading: no such export exists today
-    // under ANY plausible name), so export-absence is the diagnostic, exactly as it is for
-    // case ①. A late-backfilled decision_date (on a coa_applications/permits row) must
-    // still be caught by a scope keyed on linked_at rather than decision_date directly —
-    // that is the invariant this export must eventually prove; it cannot be proven against
-    // code that does not exist.
+  describe('④ decision-scope keyed on linked_at (SHIPPED as buildDecisionScopeWhere — WF3 C3 retarget)', () => {
+    // D4′ (active_task.md / phase_b doc) named "linked_at-keyed decision scope" without pinning
+    // the export name up front; the ENRICHER conversion shipped it as `buildDecisionScopeWhere`
+    // in the compute module (also exported unchanged under that name per WF3 C2). A late-
+    // backfilled decision_date (on a coa_applications/permits row) must still be caught by a
+    // scope keyed on linked_at rather than decision_date directly — the invariant this export
+    // is asserted to exist for; its own predicate correctness is out of this case's scope.
     // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const mod = require('../../../scripts/enrich-parcels.js') as Record<string, unknown>;
+    const mod = require('../../../scripts/lib/compute/enrich-parcels.js') as Record<string, unknown>;
 
     it(
-      'a decision-scope predicate builder should be exported under one of its plausible names — RED TODAY ' +
-        '(consistent with case ①\'s convention: the desired post-impl truth is asserted directly, so absence ' +
-        'reds rather than passing vacuously on a negative check)',
+      'a decision-scope predicate builder is exported under one of its plausible names — GREEN ' +
+        'post-conversion (buildDecisionScopeWhere; was RED pre-impl, WF3 C3 retarget)',
       () => {
         const plausibleNames = ['buildDecisionScopeWhere', 'buildDecisionScopePredicate', 'decisionScopeWhere'];
         const found = plausibleNames.filter((n) => typeof mod[n] === 'function');
@@ -438,21 +444,28 @@ describe.skipIf(!dbAvailable())('enrich-parcels — B2 incremental (massing wate
   // =========================================================================
   // ⑥ — opt_aor_without_max_gfa zero-baseline row (✓red, row-absence via source-scan)
   // =========================================================================
-  describe('⑥ opt_aor_without_max_gfa zero-baseline row (✓red — row-absence)', () => {
+  describe('⑥ opt_aor_without_max_gfa zero-baseline row (SHIPPED — WF3 C3, moved to scripts/lib/compute/enrich-parcels.js)', () => {
     it(
-      'no audit metric names the opt_aor_without_max_gfa invariant today (B0 item 4\'s measured 0/437,305 ' +
-        'companion check — "opt_aor_gfa_sqm IS NOT NULL AND max_buildable_gfa_sqm IS NULL" — is ruled to ' +
-        'SHIP as a new gated zero-baseline audit row in B2; row-absence proven the same way as case ②)',
+      'an audit metric names the opt_aor_without_max_gfa invariant (B0 item 4\'s measured 0/437,305 ' +
+        'companion check — "opt_aor_gfa_sqm IS NOT NULL AND max_buildable_gfa_sqm IS NULL" — shipped as a ' +
+        'gated zero-baseline audit row; GREEN post-conversion, was row-absent pre-impl, WF3 C3 retarget)',
       () => {
         expect(SCRIPT_SRC()).toMatch(/opt_aor_without_max_gfa/);
       },
     );
 
-    it('g/b — the underlying invariant predicate is not accidentally already covered by a differently-named row', () => {
-      // Guards against a false green: if some OTHER row already encodes the exact
-      // predicate under a different name, the ⓔ finding above would be misleading.
+    // WF3 C3 cascade fix (2026-09-21): pre-conversion this guarded "no OTHER, differently-named
+    // row already computes this predicate" via a bare not-match — correct when the predicate
+    // existed NOWHERE. Post-conversion the predicate DOES exist, exactly once, as the shipped
+    // opt_aor_without_max_gfa row's own SQL (scripts/lib/compute/enrich-parcels.js:1905) — a bare
+    // not-match now reds on the row's own correct implementation, which is not the hazard this
+    // test exists to catch. Re-expressed as an exact-count check: the predicate must appear
+    // EXACTLY ONCE (the shipped row) — a SECOND occurrence would mean a duplicate under a
+    // different name, which is the original, still-live hazard.
+    it('g/b — the invariant predicate is not ALSO duplicated under a different, differently-named row (occurs exactly once — the shipped opt_aor_without_max_gfa row)', () => {
       const src = SCRIPT_SRC();
-      expect(src).not.toMatch(/opt_aor_gfa_sqm IS NOT NULL AND.*max_buildable_gfa_sqm IS NULL/);
+      const matches = src.match(/opt_aor_gfa_sqm IS NOT NULL AND[\s\S]*?max_buildable_gfa_sqm IS NULL/g) || [];
+      expect(matches.length, `expected exactly 1 occurrence (the shipped opt_aor_without_max_gfa row); found ${matches.length} — a count above 1 means a duplicate under a different name`).toBe(1);
     });
   });
 
