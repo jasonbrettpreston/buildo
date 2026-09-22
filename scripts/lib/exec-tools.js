@@ -30,7 +30,11 @@
  * `paths` gated on PATH_NOT_LEDGERED (each must be a successful write_file/
  * edit_file target this run, tracked at `runState.writtenPaths`), a refused-
  * flags list (`--no-verify` etc., never stripped-and-retried), and a
- * single-committer advisory lock held for the commit's duration.
+ * single-committer advisory lock held for the commit's duration. Phase 3
+ * commit 11 (F14) adds `checkClaudeOnly` — `exec-policy.json`'s new
+ * `claude_only_globs` list, gating write_file/edit_file/git_commit.paths
+ * right after the C.6.2 reserved-registries check, blocked code
+ * `PATH_CLAUDE_ONLY`.
  */
 
 const fs = require('fs');
@@ -189,6 +193,21 @@ function checkRegistryReserved(relPosix, ctx) {
   const reserved = (ctx.policy && ctx.policy.registry_reserved) || [];
   if (reserved.includes(relPosix)) {
     return { ok: false, error: { code: 'PATH_RESERVED', message: `${relPosix} is an orchestrator-only registry; the engine ships code and tests, the landing commit performs registry edits` } };
+  }
+  return null;
+}
+
+// F14 (commit 11) — `claude_only_globs`: money/auth/PII/migrations paths are
+// never engine-writable, regardless of provider or the brief's write_scope
+// (the §B money/auth/PII/migrations downgrade, enforced here as
+// PATH_CLAUDE_ONLY rather than left to brief discipline alone). Evaluated
+// right after C.6.2's reserved-registries check and BEFORE C.6.1's write
+// scope (§C.6 evaluation order) — a scope of `migrations/**` does not rescue
+// a write to `migrations/0001_add_col.sql`, mirroring checkRegistryReserved.
+function checkClaudeOnly(relPosix, ctx) {
+  const globs = (ctx.policy && ctx.policy.claude_only_globs) || [];
+  if (matchesAnyGlob(globs, relPosix)) {
+    return { ok: false, error: { code: 'PATH_CLAUDE_ONLY', message: `${relPosix} is money/auth/PII/migrations-classed (§B) — Claude-only, never engine-writable` } };
   }
   return null;
 }
@@ -432,10 +451,15 @@ async function writeFileHandler(args, ctx) {
     return { toolResult: selfProtectBlock, pre, post: captureWorktree(repoRoot) };
   }
 
-  // §C.6 evaluation order: reserved registries (C.6.2), THEN write scope (C.6.1).
+  // §C.6 evaluation order: reserved registries (C.6.2) -> claude_only_globs
+  // (F14) -> write scope (C.6.1).
   const reservedBlock = checkRegistryReserved(relPosix, ctx);
   if (reservedBlock) {
     return { toolResult: reservedBlock, pre, post: captureWorktree(repoRoot) };
+  }
+  const claudeOnlyBlock = checkClaudeOnly(relPosix, ctx);
+  if (claudeOnlyBlock) {
+    return { toolResult: claudeOnlyBlock, pre, post: captureWorktree(repoRoot) };
   }
   const scopeBlock = checkWriteScope(relPosix, ctx);
   if (scopeBlock) {
@@ -505,6 +529,10 @@ async function editFileHandler(args, ctx) {
   const reservedBlock = checkRegistryReserved(relPosix, ctx);
   if (reservedBlock) {
     return { toolResult: reservedBlock, pre, post: captureWorktree(repoRoot) };
+  }
+  const claudeOnlyBlock = checkClaudeOnly(relPosix, ctx);
+  if (claudeOnlyBlock) {
+    return { toolResult: claudeOnlyBlock, pre, post: captureWorktree(repoRoot) };
   }
   const scopeBlock = checkWriteScope(relPosix, ctx);
   if (scopeBlock) {
@@ -984,6 +1012,10 @@ async function gitCommitHandler(args, ctx) {
     const reservedBlock = checkRegistryReserved(relPosix, ctx);
     if (reservedBlock) {
       return { toolResult: reservedBlock, pre, post: captureWorktree(repoRoot) };
+    }
+    const claudeOnlyBlock = checkClaudeOnly(relPosix, ctx);
+    if (claudeOnlyBlock) {
+      return { toolResult: claudeOnlyBlock, pre, post: captureWorktree(repoRoot) };
     }
     const scopeBlock = checkWriteScope(relPosix, ctx);
     if (scopeBlock) {

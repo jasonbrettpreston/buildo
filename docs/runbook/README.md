@@ -23,6 +23,7 @@ orphaned `running` row · **§3c temporary compute resize for a cloud proof (Spe
 | `66_enrich_permits_spike.md` | Spec 66 `enrich-permits.js` data profiling & first-deploy spike |
 | `db_rebuild_2026-06-10.md` | Full DB rebuild — 2026-06-10 drift recovery |
 | `db_rebuild_post_p2.md` | DB `--force` rebuild after Spec 80 v-next Phase 2 |
+| `engine-brief-template.md` | DeepSeek Execution Engine (SUB-ENG-1) brief front matter + multi-worktree launch recipe (Spec 08 §B/§C, F14) |
 | `F1_baseline_quiet_period.md` | Phase F.1 baseline quiet-period operator procedure |
 | `I1_first_deploy_spike.md` | `lifecycle_status_history` first-deploy spike |
 | `scrape_outcomes_first_deploy.md` | `permit_scrape_outcomes` ledger first deploy (Spec 44 §3, migs 236/237) |

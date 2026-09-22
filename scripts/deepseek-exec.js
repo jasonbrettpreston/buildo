@@ -43,6 +43,8 @@ const BLOCKED_CODES = new Set([
   'NOT_IMPLEMENTED', 'ARGV_UNSAFE_TOKEN',
   // §C.6 (F13) multi-worker isolation — commit 10b.
   'PATH_OUT_OF_SCOPE', 'PATH_RESERVED', 'CLAIM_CONFLICT', 'NO_WRITE_SCOPE',
+  // F14 (commit 11) — money/auth/PII/migrations, enforced in the tool layer.
+  'PATH_CLAUDE_ONLY',
 ]);
 
 function sha256Hex(content) {
@@ -52,6 +54,31 @@ function sha256Hex(content) {
 function loadPolicy() {
   const raw = fs.readFileSync(POLICY_PATH, 'utf8');
   return { policy: JSON.parse(raw), sha256: sha256Hex(raw) };
+}
+
+/**
+ * resolveRepoRoot(inputRepoRoot) — F14 (`--repo <path>`, commit 11): the
+ * worktree root the engine operates in, defaulting to `process.cwd()`.
+ * Realpath'd (so confinement/claims/lock keys downstream are consistent
+ * regardless of a symlinked mount or a differently-cased drive letter) and
+ * asserted to contain a `.git` — a FILE in a worktree, a DIRECTORY in the
+ * primary checkout, `fs.existsSync` covers both. Throws (an engine-level
+ * fault, never a silent no-op) when the path does not exist or is not a git
+ * worktree — this runs BEFORE anything else, so a bad `--repo` value never
+ * reaches the brief/ledger/claims machinery at all.
+ */
+function resolveRepoRoot(inputRepoRoot) {
+  const candidate = inputRepoRoot || process.cwd();
+  let real;
+  try {
+    real = fs.realpathSync(candidate);
+  } catch (err) {
+    throw new Error(`--repo path does not exist: ${candidate} (${err.message})`);
+  }
+  if (!fs.existsSync(path.join(real, '.git'))) {
+    throw new Error(`--repo path is not a git worktree (no .git found under ${real})`);
+  }
+  return real;
 }
 
 function gitInfo(repoRoot) {
@@ -158,7 +185,7 @@ const MUTATING_TOOLS = new Set(['write_file', 'edit_file', 'run_bash_command', '
  * usage_total, tool_calls_total, blocked_total, commits }`.
  */
 async function runEngine(opts = {}) {
-  const repoRoot = opts.repoRoot || process.cwd();
+  const repoRoot = resolveRepoRoot(opts.repoRoot);
   const { policy, sha256: policySha256 } = loadPolicy();
   const limits = policy.limits || {};
   const maxIterations = opts.maxIterations || limits.max_iterations || 40;
@@ -181,7 +208,35 @@ async function runEngine(opts = {}) {
   // included) — only the ENGINE reads the parsed `write_scope`.
   const { writeScope } = parseBrief(briefContent);
 
-  const { provider, provider_source: providerSource } = resolveProvider(opts.provider, process.env.EXECUTION_PROVIDER);
+  const resolved = resolveProvider(opts.provider, process.env.EXECUTION_PROVIDER);
+  let provider = resolved.provider;
+  let providerSource = resolved.provider_source;
+
+  // §B / F14 (commit 11) — "an engine-unavailable provider resolves to
+  // claude and logs the downgrade with its reason — never a throw-and-halt."
+  // Two engine-unavailable conditions, checked ONLY when resolveProvider
+  // already granted `deepseek`: (a) no DEEPSEEK_API_KEY AND no injected
+  // modelClient/transcript (the exact condition under which
+  // createDeepSeekClient below would otherwise throw); (b) the brief
+  // declares no write_scope (§C.6.1) — previously a non-zero NO_WRITE_SCOPE
+  // refusal (Phase 2 commit 10b); §B forbids a halt, so this is now folded
+  // into the same downgrade path instead of its own terminal status.
+  if (provider === 'deepseek') {
+    const hasLiveClient = !!opts.modelClient || Array.isArray(opts.transcriptTurns) || !!opts.transcript;
+    if (!hasLiveClient && !process.env.DEEPSEEK_API_KEY) {
+      provider = 'claude';
+      providerSource = 'fallback:engine_unavailable:no_api_key';
+    } else if (writeScope.length === 0) {
+      provider = 'claude';
+      providerSource = 'fallback:no_write_scope';
+    }
+  }
+  if (providerSource.startsWith('fallback:')) {
+    // One stderr line on ANY downgrade (unknown --provider/EXECUTION_PROVIDER
+    // values already resolved this way before commit 11; this line now
+    // covers those too, not only the two new reasons).
+    process.stderr.write(`deepseek-exec: provider downgraded to claude (${providerSource.slice('fallback:'.length)})\n`);
+  }
   const model = opts.model || process.env.DEEPSEEK_EXEC_MODEL || 'deepseek-chat';
   const runId = opts.runId || generateRunId();
   // opts.ledger is a test-only escape hatch (mirrors opts.modelClient below)
@@ -272,20 +327,15 @@ async function runEngine(opts = {}) {
     };
   }
 
-  // §C.6.1 — provider `deepseek` with an empty/missing write_scope refuses
-  // to start (NO_WRITE_SCOPE), AFTER run_start (the plan's exact ordering:
-  // "run_start then run_end{status:'no_write_scope'}").
+  // §B / F14 (commit 11) — the old NO_WRITE_SCOPE non-zero refusal (Phase 2
+  // commit 10b) is GONE: an empty write_scope is now caught above, BEFORE
+  // run_start, as a `fallback:no_write_scope` downgrade to `claude`, which
+  // already returned via the `provider === 'claude'` branch above. Provider
+  // can therefore never reach this point still `deepseek` with an empty
+  // writeScope — asserted defensively rather than assumed, since a silently
+  // reintroduced code path here would otherwise resurrect the halt §B bans.
   if (writeScope.length === 0) {
-    ledger.append({
-      kind: 'run_end', status: 'no_write_scope', iterations: 0, usage_total: emptyUsage(),
-      tool_calls_total: 0, blocked_total: 0, commits: [], duration_ms: 0,
-    });
-    ledger.close();
-    finalizeClaim();
-    return {
-      status: 'no_write_scope', run_id: runId, ledger_path: ledger.path,
-      iterations: 0, usage_total: emptyUsage(), tool_calls_total: 0, blocked_total: 0, commits: [],
-    };
+    throw new Error('unreachable: deepseek run with an empty write_scope should have downgraded to claude before run_start');
   }
 
   const startedAt = Date.now();
@@ -495,6 +545,7 @@ function parseArgs(argv) {
     const takeValue = () => (inlineValue !== undefined ? inlineValue : argv[++i]);
     switch (key) {
       case '--brief': opts.briefPath = takeValue(); break;
+      case '--repo': opts.repoRoot = takeValue(); break;
       case '--provider': opts.provider = takeValue(); break;
       case '--model': opts.model = takeValue(); break;
       case '--max-iterations': opts.maxIterations = safeParsePositiveInt(takeValue(), '--max-iterations'); break;

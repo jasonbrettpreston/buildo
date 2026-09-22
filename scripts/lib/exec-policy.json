@@ -11,7 +11,11 @@
     { "argv": ["git", "log"], "flags": ["--oneline", "-n", "<int>", "-p", "--stat", "--follow", "--", "<path>..."] },
     { "argv": ["git", "show", "<rev>"], "flags": ["--stat", "--", "<path>..."] },
     { "argv": ["git", "blame", "<path>"], "flags": ["-L", "<range>"] },
-    { "argv": ["node", "<validator>"], "flags": ["--check", "--step=<slug>", "--all", "--fast"] }
+    { "argv": ["node", "<validator>"], "flags": ["--check", "--step=<slug>", "--all", "--fast"] },
+    { "argv": ["npm", "run", "build"] },
+    { "argv": ["npx", "tsc", "--noEmit"] },
+    { "argv": ["npx", "eslint", "<path>..."] },
+    { "argv": ["git", "ls-files"], "flags": ["--", "<path>..."] }
   ],
   "validators": ["scripts/analysis/step-validate.mjs", "scripts/analysis/step-churn-complexity.mjs", "scripts/analysis/spec-split-check.mjs", "scripts/steps/_schema/generate-template-freeze.mjs"],
   "secret_read_deny": [".env", ".env.*", "*.key", "*.pem", "*.p12", "*.pfx", "**/secrets/**"],
@@ -24,6 +28,14 @@
     "scripts/steps/_schema/template-freeze.json",
     "scripts/steps/_schema/schema-baseline.json",
     "docs/specs/00-architecture/00_system_map.md"
+  ],
+  "claude_only_globs": [
+    "migrations/**",
+    "src/app/api/**/auth/**",
+    "src/app/api/**/billing/**",
+    "src/lib/auth/**",
+    "src/lib/billing/**",
+    ".github/workflows/**"
   ],
   "limits": { "max_iterations": 40, "max_total_tokens": 400000, "timeout_ms": 600000, "timeout_ceiling_ms": 1200000, "bash_output_bytes": 65536, "read_max_bytes": 262144, "write_max_bytes": 524288, "grep_max_results": 1000 }
 }

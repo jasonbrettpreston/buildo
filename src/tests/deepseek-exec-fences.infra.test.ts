@@ -657,37 +657,225 @@ describe('SUB-ENG-1 Phase 2 — safety fences (Spec 08 §C)', () => {
     });
   });
 
-  describe('commit 10b: NO_WRITE_SCOPE — provider deepseek refuses to start with no declared scope', () => {
-    it('run_start then run_end{status:"no_write_scope"}, write_scope recorded empty', async () => {
+  describe('commit 11 (§B amendment, F14 carry-over): NO_WRITE_SCOPE is now a fallback:no_write_scope DOWNGRADE to claude, never a non-zero refusal', () => {
+    // Phase 2 commit 10b originally made an empty write_scope a terminal
+    // `run_end.status: 'no_write_scope'` refusal (exit != 0) — §B forbids a
+    // halt ("an engine-unavailable provider resolves to claude and logs the
+    // downgrade with its reason — never a throw-and-halt"), so commit 11
+    // folds this into the SAME downgrade path as engine_unavailable:no_api_key.
+    it('run_start.provider==="claude", provider_source==="fallback:no_write_scope", run_end{status:"delegated_to_claude"}, write_scope recorded empty', async () => {
       const briefPath = writeBrief(repo, { writeScope: null });
-      const summary = await runEngine({ repoRoot: repo, briefPath, provider: 'deepseek', ledgerDir });
-      expect(summary.status).toBe('no_write_scope');
-      const records = ledgerRecords(ledgerDir, summary.run_id) as Array<{ kind: string; write_scope?: string[]; status?: string }>;
+      // A transcript is supplied so a LIVE CLIENT exists — isolating this
+      // arm to the write_scope reason alone. Without one, no_api_key would
+      // ALSO be true (no DEEPSEEK_API_KEY in this suite's scrubbed env) and
+      // commit 11's precedence (no_api_key checked first, per the brief's
+      // reason order) would report that reason instead — proven by the
+      // sibling "engine_unavailable:no_api_key" describe block below, which
+      // deliberately omits the transcript.
+      const summary = await runEngine({ repoRoot: repo, briefPath, provider: 'deepseek', ledgerDir, transcriptTurns: [] });
+      expect(summary.status).toBe('delegated_to_claude');
+      const records = ledgerRecords(ledgerDir, summary.run_id) as Array<{ kind: string; write_scope?: string[]; status?: string; provider?: string; provider_source?: string }>;
+      expect(records).toHaveLength(2);
       expect(records[0]!.kind).toBe('run_start');
       expect(records[0]!.write_scope).toEqual([]);
-      expect(records[records.length - 1]).toMatchObject({ kind: 'run_end', status: 'no_write_scope' });
+      expect(records[0]!.provider).toBe('claude');
+      expect(records[0]!.provider_source).toBe('fallback:no_write_scope');
+      expect(records[1]).toMatchObject({ kind: 'run_end', status: 'delegated_to_claude' });
     });
 
-    it('the real CLI process exits non-zero on NO_WRITE_SCOPE', () => {
+    it('the real CLI process exits ZERO on an empty write_scope (§B: never a throw-and-halt)', () => {
       const briefPath = writeBrief(repo, { writeScope: null });
       const transcriptPath = path.join(repo, 'empty-transcript.json');
       fs.writeFileSync(transcriptPath, JSON.stringify([]));
       const cliPath = path.join(REPO_ROOT, 'scripts', 'deepseek-exec.js');
       let exitCode = 0;
+      let stdout = '';
       try {
-        execFileSync(process.execPath, [cliPath, '--brief', briefPath, '--provider=deepseek', '--transcript', transcriptPath, '--ledger-dir', ledgerDir], {
-          cwd: repo, env: scrubbedChildEnv(), stdio: 'pipe',
+        stdout = execFileSync(process.execPath, [cliPath, '--brief', briefPath, '--provider=deepseek', '--transcript', transcriptPath, '--ledger-dir', ledgerDir], {
+          cwd: repo, env: scrubbedChildEnv(), encoding: 'utf8',
         });
       } catch (err) {
         exitCode = (err as { status?: number }).status ?? 1;
+        stdout = (err as { stdout?: string }).stdout ?? '';
       }
-      expect(exitCode).not.toBe(0);
+      expect(exitCode).toBe(0);
+      const summary = JSON.parse(stdout.trim().split('\n').pop()!) as { status: string };
+      expect(summary.status).toBe('delegated_to_claude');
     });
 
     it('provider claude is UNAFFECTED by an empty write_scope (it never dispatches a tool)', async () => {
       const briefPath = writeBrief(repo, { writeScope: null });
       const summary = await runEngine({ repoRoot: repo, briefPath, provider: 'claude', ledgerDir });
       expect(summary.status).toBe('delegated_to_claude');
+    });
+  });
+
+  // =========================================================================
+  // Commit 11 — F14: general-purpose execution substrate (§B/§C.6.2 amendment)
+  // =========================================================================
+  describe('commit 11 (F14): engine_unavailable:no_api_key — provider deepseek downgrades to claude when no live client exists', () => {
+    it('no DEEPSEEK_API_KEY, no modelClient, no transcript ⇒ run_start.provider==="claude", provider_source starts "fallback:engine_unavailable", run_end.status==="delegated_to_claude", exit 0', async () => {
+      const briefPath = writeBrief(repo);
+      const summary = await runEngine({ repoRoot: repo, briefPath, provider: 'deepseek', ledgerDir });
+      expect(summary.status).toBe('delegated_to_claude');
+      const records = ledgerRecords(ledgerDir, summary.run_id) as Array<{ kind: string; provider?: string; provider_source?: string }>;
+      const runStart = records.find((r) => r.kind === 'run_start')!;
+      expect(runStart.provider).toBe('claude');
+      expect(runStart.provider_source).toBe('fallback:engine_unavailable:no_api_key');
+    });
+
+    it('DEEPSEEK_API_KEY set + a transcript provided ⇒ provider stays "deepseek" (a live client exists; no downgrade)', async () => {
+      process.env.DEEPSEEK_API_KEY = 'sk-testtesttesttest1234';
+      const briefPath = writeBrief(repo);
+      const summary = await runEngine({
+        repoRoot: repo, briefPath, provider: 'deepseek', ledgerDir,
+        transcriptTurns: [toolTurn('c1', 'read_file', { path: 'seed.txt', reason: 'r' })],
+      });
+      const records = ledgerRecords(ledgerDir, summary.run_id) as Array<{ kind: string; provider?: string; provider_source?: string }>;
+      const runStart = records.find((r) => r.kind === 'run_start')!;
+      expect(runStart.provider).toBe('deepseek');
+      expect(runStart.provider_source).toBe('flag');
+    });
+
+    it('a transcript alone (no DEEPSEEK_API_KEY) ⇒ provider stays "deepseek" — a transcript IS a live client (§C.5, no lock needs a real API call)', async () => {
+      const briefPath = writeBrief(repo);
+      const summary = await runEngine({
+        repoRoot: repo, briefPath, provider: 'deepseek', ledgerDir,
+        transcriptTurns: [toolTurn('c1', 'read_file', { path: 'seed.txt', reason: 'r' })],
+      });
+      const records = ledgerRecords(ledgerDir, summary.run_id) as Array<{ kind: string; provider?: string }>;
+      expect(records.find((r) => r.kind === 'run_start')!.provider).toBe('deepseek');
+    });
+
+    it('the downgrade fires just as well when deepseek was resolved from EXECUTION_PROVIDER (env), not only --provider (flag) — precedence itself is untouched, resolveProvider still runs first', async () => {
+      process.env.EXECUTION_PROVIDER = 'deepseek';
+      const briefPath = writeBrief(repo);
+      const summary = await runEngine({ repoRoot: repo, briefPath, ledgerDir }); // no opts.provider ⇒ env wins
+      const records = ledgerRecords(ledgerDir, summary.run_id) as Array<{ kind: string; provider?: string; provider_source?: string }>;
+      const runStart = records.find((r) => r.kind === 'run_start')!;
+      expect(runStart.provider).toBe('claude');
+      expect(runStart.provider_source).toBe('fallback:engine_unavailable:no_api_key');
+    });
+  });
+
+  describe('commit 11 (F14): the engine prints ONE stderr line on any downgrade', () => {
+    it('CLI process stderr contains the documented line on an engine-unavailable downgrade (run still exits 0 — spawnSync, not execFileSync, so a SUCCESSFUL run\'s stderr is still observable)', () => {
+      const briefPath = writeBrief(repo);
+      const cliPath = path.join(REPO_ROOT, 'scripts', 'deepseek-exec.js');
+      const result = spawnSync(process.execPath, [cliPath, '--brief', briefPath, '--provider=deepseek', '--ledger-dir', ledgerDir], {
+        cwd: repo, env: scrubbedChildEnv(), encoding: 'utf8',
+      });
+      expect(result.status).toBe(0);
+      expect(result.stderr).toContain('deepseek-exec: provider downgraded to claude (engine_unavailable:no_api_key)');
+    });
+
+    it('a normal deepseek run (transcript client, non-empty scope) never prints the downgrade line — no downgrade occurred', () => {
+      const briefPath = writeBrief(repo);
+      const transcriptPath = path.join(repo, 'ok-transcript.json');
+      fs.writeFileSync(transcriptPath, JSON.stringify([]));
+      const cliPath = path.join(REPO_ROOT, 'scripts', 'deepseek-exec.js');
+      const result = spawnSync(process.execPath, [cliPath, '--brief', briefPath, '--provider=deepseek', '--transcript', transcriptPath, '--ledger-dir', ledgerDir], {
+        cwd: repo, env: scrubbedChildEnv(), encoding: 'utf8',
+      });
+      expect(result.stderr).not.toContain('provider downgraded to claude');
+    });
+  });
+
+  describe('commit 11 (F14): claude_only_globs — money/auth/PII/migrations, PATH_CLAUDE_ONLY, both directions', () => {
+    it('write_file to migrations/** is blocked PATH_CLAUDE_ONLY; a non-matching path (still inside the default ** scope) is allowed', async () => {
+      const briefPath = writeBrief(repo);
+      const summary = await runEngine({
+        repoRoot: repo, briefPath, provider: 'deepseek', ledgerDir,
+        transcriptTurns: [
+          toolTurn('c1', 'write_file', { path: 'migrations/0001_add_col.sql', content: 'ALTER TABLE x;', reason: 'r' }),
+          toolTurn('c2', 'write_file', { path: 'scripts/claude-only-control.js', content: 'x', reason: 'r' }),
+        ],
+      });
+      const records = ledgerRecords(ledgerDir, summary.run_id);
+      const calls = records.filter((r) => r.kind === 'tool_call' && r.tool === 'write_file') as Array<{ status?: string; error?: { code: string } }>;
+      expect(calls[0]).toMatchObject({ status: 'blocked', error: { code: 'PATH_CLAUDE_ONLY' } });
+      expect(calls[1]).toMatchObject({ status: 'ok' });
+    });
+
+    it('PATH_CLAUDE_ONLY wins even when the brief\'s write_scope explicitly names the claude-only path (scope cannot widen past policy)', async () => {
+      const briefPath = writeBrief(repo, { writeScope: ['src/lib/auth/**'] });
+      const summary = await runEngine({
+        repoRoot: repo, briefPath, provider: 'deepseek', ledgerDir,
+        transcriptTurns: [toolTurn('c1', 'write_file', { path: 'src/lib/auth/session.ts', content: 'x', reason: 'r' })],
+      });
+      const records = ledgerRecords(ledgerDir, summary.run_id);
+      expect(toolCallOf(records, 'write_file')).toMatchObject({ status: 'blocked', error: { code: 'PATH_CLAUDE_ONLY' } });
+    });
+
+    it('git_commit.paths matching .github/workflows/** is blocked PATH_CLAUDE_ONLY (direct dispatch, defense-in-depth)', async () => {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports -- exercising the real CJS tool layer directly
+      const { createTools } = require(path.join(REPO_ROOT, 'scripts/lib/exec-tools.js'));
+      const policy = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, 'scripts/lib/exec-policy.json'), 'utf8'));
+      const realRepo = fs.realpathSync(repo);
+      fs.mkdirSync(path.join(realRepo, '.github', 'workflows'), { recursive: true });
+      fs.writeFileSync(path.join(realRepo, '.github', 'workflows', 'ci.yml'), 'x');
+      const fakeLedger = { path: path.join(ledgerDir, 'claude-only-unit.jsonl'), append: () => {}, close: () => {} };
+      const runState = { readState: {}, writtenPaths: new Set([path.join(realRepo, '.github', 'workflows', 'ci.yml')]) };
+      const tools = createTools({ repoRoot: repo, policy, ledger: fakeLedger, runState, writeScope: ['**'] });
+      const outcome = await tools.dispatch('git_commit', { message: 'x', paths: ['.github/workflows/ci.yml'], reason: 'r' });
+      expect(outcome.toolResult.ok).toBe(false);
+      expect(outcome.toolResult.error.code).toBe('PATH_CLAUDE_ONLY');
+    });
+  });
+
+  describe('commit 11 (F14): allowlist review for general repo work — read-only additions', () => {
+    it('npm run build / npx tsc --noEmit / npx eslint <path> / git ls-files -- <path> are all allowed', async () => {
+      fs.writeFileSync(path.join(repo, 'lintable.js'), 'const x = 1;\n');
+      execFileSync('git', ['add', '-A'], { cwd: repo, env: scrubbedChildEnv() });
+      execFileSync('git', ['commit', '-q', '-m', 'lintable'], { cwd: repo, env: scrubbedChildEnv() });
+      const briefPath = writeBrief(repo);
+      const turns = [
+        toolTurn('c1', 'run_bash_command', { argv: ['git', 'ls-files', '--', 'lintable.js'], reason: 'r' }),
+      ];
+      const summary = await runEngine({ repoRoot: repo, briefPath, provider: 'deepseek', ledgerDir, transcriptTurns: turns });
+      const records = ledgerRecords(ledgerDir, summary.run_id) as Array<{ kind: string; tool?: string; status?: string }>;
+      expect(records.filter((r) => r.kind === 'tool_call')[0]).toMatchObject({ status: 'ok' });
+    });
+
+    it('npx eslint --fix is still refused (FLAG_NOT_ALLOWED — the entry has no flags)', async () => {
+      const briefPath = writeBrief(repo);
+      const summary = await runEngine({
+        repoRoot: repo, briefPath, provider: 'deepseek', ledgerDir,
+        transcriptTurns: [toolTurn('c1', 'run_bash_command', { argv: ['npx', 'eslint', 'seed.txt', '--fix'], reason: 'r' })],
+      });
+      const records = ledgerRecords(ledgerDir, summary.run_id) as Array<{ kind: string; tool?: string; status?: string; error?: { code: string } }>;
+      expect(records.find((r) => r.kind === 'tool_call')).toMatchObject({ status: 'blocked', error: { code: 'FLAG_NOT_ALLOWED' } });
+    });
+  });
+
+  describe('commit 11 (F14): --repo <path> — confinement derives from the flag, not from cwd', () => {
+    it('CLI spawned from a DIFFERENT cwd with --repo pointing at the throwaway repo still confines correctly', () => {
+      const cliPath = path.join(REPO_ROOT, 'scripts', 'deepseek-exec.js');
+      const briefPath = writeBrief(repo);
+      const transcriptPath = path.join(repo, 'repo-flag-transcript.json');
+      fs.writeFileSync(transcriptPath, JSON.stringify([toolTurn('c1', 'write_file', { path: 'repo-flag-test.txt', content: 'x', reason: 'r' })]));
+      const stdout = execFileSync(process.execPath, [cliPath, '--repo', repo, '--brief', briefPath, '--provider=deepseek', '--transcript', transcriptPath, '--ledger-dir', ledgerDir], {
+        cwd: os.tmpdir(), env: scrubbedChildEnv(), encoding: 'utf8',
+      });
+      const summary = JSON.parse(stdout.trim().split('\n').pop()!) as { run_id: string };
+      const records = ledgerRecords(ledgerDir, summary.run_id) as Array<{ kind: string; tool?: string; status?: string }>;
+      expect(records.find((r) => r.kind === 'tool_call' && r.tool === 'write_file')).toMatchObject({ status: 'ok' });
+      expect(fs.existsSync(path.join(repo, 'repo-flag-test.txt'))).toBe(true);
+    });
+
+    it('--repo pointing at a directory with no .git throws an engine-level fault (never a silent no-op)', () => {
+      const notARepo = fs.mkdtempSync(path.join(os.tmpdir(), 'not-a-git-repo-'));
+      try {
+        const cliPath = path.join(REPO_ROOT, 'scripts', 'deepseek-exec.js');
+        const briefPath = writeBrief(repo);
+        const result = spawnSync(process.execPath, [cliPath, '--repo', notARepo, '--brief', briefPath, '--provider=claude', '--ledger-dir', ledgerDir], {
+          env: scrubbedChildEnv(), encoding: 'utf8',
+        });
+        expect(result.status).not.toBe(0);
+        expect(result.stderr).toMatch(/not a git worktree/);
+      } finally {
+        fs.rmSync(notARepo, { recursive: true, force: true });
+      }
     });
   });
 
