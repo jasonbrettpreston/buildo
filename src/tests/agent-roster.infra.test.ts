@@ -270,7 +270,7 @@ function checkT7(text: string, engineSource?: string): string[] {
   if (!enumMatch || enumMatch[1] !== 'deepseek|claude') errors.push('enum not exactly deepseek|claude');
   if (!/the default is \*\*`claude`\*\*/.test(bText)) errors.push('default-claude clause missing');
   if (!/resolves to `claude` and logs the downgrade/.test(bText)) errors.push('fallback-resolves-and-logs clause missing');
-  if (!/`deepseek` is \*\*inert until SUB-ENG-1 ships\*\*/.test(bText)) errors.push('deepseek-inert-with-tracked-id clause missing');
+  if (!/`deepseek` is \*\*live as of SUB-ENG-1 v1 \(2026-09-22\)\*\*/.test(bText)) errors.push('deepseek-status clause missing');
   if (engineSource !== undefined) {
     const staleClause = /nothing in the tree reads `EXECUTION_PROVIDER`/.test(bText);
     const engineReadsIt = /resolveProvider/.test(engineSource);
@@ -412,9 +412,9 @@ describe('agent-roster.infra.test.ts — Spec 08 §A/§B/§3 substrate locks', (
       expect(fs.existsSync(PART_B_PLAN_PATH)).toBe(true);
       expect(checkT3(parseStatusTable(specText), partBText)).toEqual([]);
     });
-    it('RED: PLANNED with no tracked id', () => {
+    it('RED: PLANNED with no tracked id (SUB-ENG-1 commit 14 — §A row is now live; the arm is proven on a fixture that re-plants a PLANNED cell)', () => {
       const mutated = specText.replace(
-        '**`PLANNED` — not built; tracked as SUB-ENG-1** (`.cursor/wf1_deepseek_execution_engine_active_task.md`)',
+        '**`live`** — v1 (2026-09-22): proven on the non-golden task class by the pilot record `docs/reports/2026-09-22-sub-eng-1-pilot-record.md` (§6); converted-step compute changes need the orchestrator\'s golden re-capture landing (v1.1 filed). Build: `.cursor/wf1_deepseek_execution_engine_active_task.md`.',
         '**`PLANNED`**',
       );
       const p = mkTmpFile('t3-a.md', mutated);
@@ -423,12 +423,24 @@ describe('agent-roster.infra.test.ts — Spec 08 §A/§B/§3 substrate locks', (
     });
     it('RED: tracked id absent from the Part-B plan', () => {
       const mutated = specText.replace(
-        '**`PLANNED` — not built; tracked as SUB-ENG-1** (`.cursor/wf1_deepseek_execution_engine_active_task.md`)',
+        '**`live`** — v1 (2026-09-22): proven on the non-golden task class by the pilot record `docs/reports/2026-09-22-sub-eng-1-pilot-record.md` (§6); converted-step compute changes need the orchestrator\'s golden re-capture landing (v1.1 filed). Build: `.cursor/wf1_deepseek_execution_engine_active_task.md`.',
         '**`PLANNED` — not built; tracked as SUB-ENG-999** (`.cursor/wf1_deepseek_execution_engine_active_task.md`)',
       );
       const p = mkTmpFile('t3-b.md', mutated);
       const errs = checkT3(parseStatusTable(readTmp(p)), partBText);
       expect(errs.some((e) => e.includes('SUB-ENG-999') && e.includes('not found'))).toBe(true);
+    });
+    it('GREEN (SUB-ENG-1 commit 14): the live DeepSeek Execution Engine row names the pilot record path, and that file exists in the tree — replaces the untracked .cursor dependency for the live case (review_followups 2026-09-22 T3 item)', () => {
+      const rows = parseStatusTable(specText);
+      const engineRow = rows.find((r) => r.name.includes('DeepSeek Execution Engine'));
+      expect(engineRow).toBeDefined();
+      expect(engineRow!.status).toBe('live');
+      const section = extractSection(specText, '## A. Substrate Reality Mapping', (l) => l.trim().startsWith('## B. Substrate Toggle Contract'));
+      const rowLine = section.split('\n').find((l) => l.includes('DeepSeek Execution Engine'));
+      expect(rowLine).toBeDefined();
+      expect(rowLine).toContain('docs/reports/2026-09-22-sub-eng-1-pilot-record.md');
+      const reportPath = path.join(REPO_ROOT, 'docs/reports/2026-09-22-sub-eng-1-pilot-record.md');
+      expect(fs.existsSync(reportPath)).toBe(true);
     });
   });
 
@@ -516,8 +528,8 @@ describe('agent-roster.infra.test.ts — Spec 08 §A/§B/§3 substrate locks', (
 
     it('RED: a fixture carrying the STALE "nothing in the tree reads EXECUTION_PROVIDER" clause, against the REAL (reading) engine source', () => {
       const staleFixture = specText.replace(
-        '`deepseek` is **inert until SUB-ENG-1 ships**; the engine (`scripts/deepseek-exec.js`) reads it and resolves per §C.5; the toggle stays inert because the §A row is `PLANNED` — it flips only via Phase 4\'s exit criteria.',
-        '`deepseek` is **inert until SUB-ENG-1 ships**; nothing in the tree reads `EXECUTION_PROVIDER` today. Flips to `live` only via the engine\'s own exit criteria.',
+        '`deepseek` is **live as of SUB-ENG-1 v1 (2026-09-22)** for execution steps; the engine (`scripts/deepseek-exec.js`) reads `EXECUTION_PROVIDER` and resolves per §C.5; the fallback to `claude` remains the default and the operational floor.',
+        '`deepseek` is **live as of SUB-ENG-1 v1 (2026-09-22)**; nothing in the tree reads `EXECUTION_PROVIDER` today. Flips only via the engine\'s own exit criteria.',
       );
       const p = mkTmpFile('t7-stale-status.md', staleFixture);
       const engineSource = fs.readFileSync(EXEC_ENGINE_CLI_PATH, 'utf8');
@@ -537,10 +549,10 @@ describe('agent-roster.infra.test.ts — Spec 08 §A/§B/§3 substrate locks', (
       const p = mkTmpFile('t7-b.md', mutated);
       expect(checkT7(readTmp(p))).toContain('enum not exactly deepseek|claude');
     });
-    it('RED: deepseek marked live without the tracked id', () => {
-      const mutated = specText.replace('`deepseek` is **inert until SUB-ENG-1 ships**', '`deepseek` is **live**');
+    it('RED: deepseek marked live without the v1/date qualifier', () => {
+      const mutated = specText.replace('`deepseek` is **live as of SUB-ENG-1 v1 (2026-09-22)**', '`deepseek` is **live**');
       const p = mkTmpFile('t7-c.md', mutated);
-      expect(checkT7(readTmp(p))).toContain('deepseek-inert-with-tracked-id clause missing');
+      expect(checkT7(readTmp(p))).toContain('deepseek-status clause missing');
     });
 
     // -------------------------------------------------------------------

@@ -3,6 +3,18 @@ _Generated following the Pipeline Clean-up Mandate. Trimmed 2026-05-05 — full 
 
 ---
 
+## 2026-09-22 — SUB-ENG-1 pilot (Phase 4) — v1 boundary + 2 LOW
+
+Source: `docs/reports/2026-09-22-sub-eng-1-pilot-record.md` §6 (exit-criteria verdicts), landed with Spec 08 §A STATUS PLANNED→live (commit 14, non-golden task class).
+
+| Severity | Item | Disposition |
+|----------|------|--------------|
+| MED (v1.1) | **A converted step's compute change needs a golden re-capture, which is a live-DB, tree-mutating command outside the v1 read-only allowlist (§C.1.7).** Run 3 (pilot record §1/§3): the engine authored a correct fix + red→green test, but its own commit could not clear pre-commit's G8 golden-fingerprint gate; the orchestrator performed `capture-step-golden.js --overwrite` + `step-validate --write` and landed the commit. | **DEFER — own WF.** Allowlist a scoped golden re-capture (`capture-step-golden.js --overwrite` writing only under `docs/reports/golden/<step>/`, plus `step-validate --write` for the scorecard) as the second sanctioned tree-mutating path, with its own pre/post reconciliation rule, so a converted-step WF3 can land unassisted. |
+| LOW | **`cost_weighted_tokens` is missing from `run_end.usage_total`.** `billable_tokens` (cache-miss + completion) omits cache-HIT tokens, which are cheap, not free — the full-token figure in the pilot record's §5 cost table is the honest one today. | Add `cost_weighted_tokens` (cache-hit ×0.26 at list ratio) beside `billable_tokens` in `run_end.usage_total`. |
+| LOW | **The engine's own reasoning in docstrings can be wrong while its code is right.** Run 3's Regression Guardian pass: the engine's fix was correct but its docstring claimed the inspection sibling reads one table when the orphan query actually joins `permits` — the orchestrator corrected the prose, not the code. | The Guardian seat stays mandatory on every engine-authored diff; briefs should ask for factual claims to cite a line. |
+
+---
+
 ## 2026-09-22 — SUB-ENG-1 Step 9 panel
 
 Source: the Step 9 output-panel fold on `ce096013` (A3 Code Reviewer, A5 Integration + Idempotency Lens, DeepSeek lenses), landed as SUB-ENG-1 commits 12b/12c. Everything CONFIRMED was fixed in 12b/12c; the two items below were explicitly DEFERRED by the fold ledger, not adjudicated here.
