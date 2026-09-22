@@ -281,7 +281,7 @@ These run at the start of a session or before generating an active task — not 
 |------|-------------|--------|-----------|
 | **Gemini adversarial review** (`npm run review:gemini`) | Independent spec-vs-code audit. Finds silent error swallowing, off-by-one errors, unhandled states. Generates its own checklist from the spec — no prompt injection from implementor. | All | 30–90s |
 | **DeepSeek adversarial review** (`npm run review:deepseek`) | Second adversarial pass with different failure-mode intuitions. Logic errors, wrong assumptions, broken downstream contracts. | All | 30–90s |
-| **Code Reviewer agent** (`subagent_type: feature-dev:code-reviewer`, `isolation: worktree`) | Quality-focused review in a clean worktree. Error path coverage, type safety, naming consistency, dead code. Reads repo fresh — no context contamination. | All | 60–120s |
+| **Code Reviewer agent** (`subagent_type: code-reviewer-grounded`, `isolation: worktree`) | Quality-focused review in a clean worktree, DeepSeek CLI pass + Claude grounder adjudication (Spec 08 §A/§B). Error path coverage, type safety, naming consistency, dead code. Reads repo fresh — no context contamination. | All | 60–120s |
 | **Context7 MCP** (`resolve-library-id` → `get-library-docs`) | Fetches current library documentation before writing code against any external dependency. Prevents hallucinated API calls against outdated versions. | All | 5–15s |
 
 ### Automation & Hooks

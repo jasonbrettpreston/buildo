@@ -39,17 +39,17 @@ Loaded on demand when a WF is triggered — not auto-loaded every session.
         Focus: spec-vs-code gaps, missing edge cases, failure modes, silent swallowed errors.
       - **Tool call 2 — Bash:** `npm run review:deepseek -- review <file> --context <spec>`
         Focus: logic errors, wrong assumptions, downstream consumers not handling new states.
-      - **Tool call 3 — Agent** (`subagent_type: "feature-dev:code-reviewer"`, `isolation: "worktree"`):
+      - **Tool call 3 — Agent** (`subagent_type: "code-reviewer-grounded"`, `isolation: "worktree"`) — DeepSeek-first: run `npm run review:deepseek -- review <file> --context <spec>` and have this seat grounder-adjudicate it (Spec 08 §A/§B, D2):
         Provide: spec path + modified files list + one-sentence summary.
         Focus: error path coverage, type safety, naming/patterns.
       **Triage:** BUG (blocking) → file WF3 immediately. DEFER → `docs/reports/review_followups.md`.
       **Pipeline-domain WFs (5-reviewer panel — 3 base + 2):** ALSO send:
-      - **Tool call 4 — Agent** (`subagent_type: "feature-dev:code-reviewer"`, `isolation: "worktree"`):
+      - **Tool call 4 — Agent** (`subagent_type: "observability-reviewer"`, `isolation: "worktree"`):
         Focus: audit-row completeness · verdict cascade row-derived (no parallel-boolean) · §11 counter scoping · `records_meta` producer/consumer contracts (Spec 48 §3.6/§3.7, Spec 79 C1–C12).
       - **Tool call 5 — Agent** (`subagent_type: "general-purpose"`, NO worktree):
         Focus: integration vs the REAL codebase — SDK export signatures, manifest/chain wiring, existing helpers to reuse, downstream consumers, migration mechanics.
       (Role definitions: CLAUDE.md → Review Agent Reference.)
-      **When the diff MODIFIES/DELETES existing code (any domain):** ALSO send **Tool call 6 — Agent** (`subagent_type: "feature-dev:code-explorer"`, main tree, NO worktree): the **Regression Guardian** — reconstruct the intent of every deletion/alteration (git blame/log + `tasks/lessons.md` + `*.regression.test.ts` locks + Spec 05 §5 footers); an undefended fence is a finding; route load-bearing behaviors into a regression-lock test. WF1: existing-file edits only (skip net-new files). See CLAUDE.md → Review Agent Reference.
+      **When the diff MODIFIES/DELETES existing code (any domain):** ALSO send **Tool call 6 — Agent** (`subagent_type: "regression-guardian"`, main tree, NO worktree): the **Regression Guardian** — reconstruct the intent of every deletion/alteration (git blame/log + `tasks/lessons.md` + `*.regression.test.ts` locks + Spec 05 §5 footers); an undefended fence is a finding; route load-bearing behaviors into a regression-lock test. WF1: existing-file edits only (skip net-new files). See CLAUDE.md → Review Agent Reference.
 - [ ] **Fold Validation (Spec 08 §11.2):** after folding ANY review round and BEFORE implementing —
       one grounder re-executes every claim + one Cross-read Adversary checks the fold PAIRWISE
       and walks the checklist for staleness. Backend/Pipeline mandatory; frontend lean (§11.5-FE).
@@ -85,15 +85,15 @@ Loaded on demand when a WF is triggered — not auto-loaded every session.
 - [ ] **Multi-Agent Review:** In ONE message send three (pipeline-domain: five) parallel tool calls.
       - **Tool call 1 — Bash:** `npm run review:gemini -- review <file> --context <spec>`
       - **Tool call 2 — Bash:** `npm run review:deepseek -- review <file> --context <spec>`
-      - **Tool call 3 — Agent** (`subagent_type: "feature-dev:code-reviewer"`, `isolation: "worktree"`):
+      - **Tool call 3 — Agent** (`subagent_type: "code-reviewer-grounded"`, `isolation: "worktree"`) — DeepSeek-first: `npm run review:deepseek -- review <file> --context <spec>`, this seat grounder-adjudicates (Spec 08 §A/§B, D2):
       **Triage:** BUG → file WF3 immediately. DEFER → `docs/reports/review_followups.md`.
       **Pipeline-domain WFs (5-reviewer panel — 3 base + 2):** ALSO send:
-      - **Tool call 4 — Agent** (`subagent_type: "feature-dev:code-reviewer"`, `isolation: "worktree"`):
+      - **Tool call 4 — Agent** (`subagent_type: "observability-reviewer"`, `isolation: "worktree"`):
         Focus: audit-row completeness · verdict cascade row-derived (no parallel-boolean) · §11 counter scoping · `records_meta` producer/consumer contracts (Spec 48 §3.6/§3.7, Spec 79 C1–C12).
       - **Tool call 5 — Agent** (`subagent_type: "general-purpose"`, NO worktree):
         Focus: integration vs the REAL codebase — SDK export signatures, manifest/chain wiring, existing helpers, downstream consumers, migration mechanics.
       (Role definitions: CLAUDE.md → Review Agent Reference.)
-      **When the diff MODIFIES/DELETES existing code (any domain):** ALSO send **Tool call 6 — Agent** (`subagent_type: "feature-dev:code-explorer"`, main tree, NO worktree): the **Regression Guardian** — reconstruct the intent of every deletion/alteration (git blame/log + `tasks/lessons.md` + `*.regression.test.ts` locks + Spec 05 §5 footers); an undefended fence is a finding; route load-bearing behaviors into a regression-lock test. (WF2 alters existing code by definition, so this effectively always applies — no net-new carve-out.) See CLAUDE.md → Review Agent Reference.
+      **When the diff MODIFIES/DELETES existing code (any domain):** ALSO send **Tool call 6 — Agent** (`subagent_type: "regression-guardian"`, main tree, NO worktree): the **Regression Guardian** — reconstruct the intent of every deletion/alteration (git blame/log + `tasks/lessons.md` + `*.regression.test.ts` locks + Spec 05 §5 footers); an undefended fence is a finding; route load-bearing behaviors into a regression-lock test. (WF2 alters existing code by definition, so this effectively always applies — no net-new carve-out.) See CLAUDE.md → Review Agent Reference.
 - [ ] **Fold Validation (Spec 08 §11.2 — after folding ANY review round, BEFORE implementing):**
       one grounder re-executes every claim in the fold (no unexecuted executable claim, §11.1)
       + one Cross-read Adversary (Spec 08 §10 roster) checks the folded decisions PAIRWISE and
@@ -125,8 +125,8 @@ Loaded on demand when a WF is triggered — not auto-loaded every session.
       root cause. For each, verify either that the fix covers it OR that it doesn't
       apply. Catches the "fixed the symptom, missed the class" pattern.
 - [ ] **Independent Review + Regression Guardian:** In ONE message spawn two agents:
-      - **Independent code reviewer** (`subagent_type: "feature-dev:code-reviewer"`, `isolation: "worktree"`).
-      - **Regression Guardian** (`subagent_type: "feature-dev:code-explorer"`, main tree, NO worktree) — a fix alters existing code by definition, so this ALWAYS applies: reconstruct the intent of every line the fix changes/removes (git blame/log + `tasks/lessons.md` + `*.regression.test.ts` locks + Spec 05 §5 footers); confirm the fix doesn't silently drop a behavior the old code guarded; an undefended fence is a finding.
+      - **Independent code reviewer** (`subagent_type: "code-reviewer-grounded"`, `isolation: "worktree"`) — DeepSeek-first (Spec 08 §A/§B, D2).
+      - **Regression Guardian** (`subagent_type: "regression-guardian"`, main tree, NO worktree) — a fix alters existing code by definition, so this ALWAYS applies: reconstruct the intent of every line the fix changes/removes (git blame/log + `tasks/lessons.md` + `*.regression.test.ts` locks + Spec 05 §5 footers); confirm the fix doesn't silently drop a behavior the old code guarded; an undefended fence is a finding.
       Provide each: (a) spec path, (b) modified files list, (c) one-sentence summary.
       Agents generate their own checklist — do NOT provide one.
       BUG items → fix before Green Light. DEFER → `docs/reports/review_followups.md`.

@@ -127,7 +127,9 @@ Tool call 1 — Bash:
 Tool call 2 — Bash:
   npm run review:deepseek -- review [modified-file] --context [spec-path]
 
-Tool call 3 — Agent (subagent_type: "feature-dev:code-reviewer", isolation: "worktree"):
+Tool call 3 — Agent (subagent_type: "code-reviewer-grounded", isolation: "worktree"):
+  DeepSeek-first (Spec 08 §A/§B, D2): run `npm run review:deepseek -- review [modified-file] --context [spec-path]`,
+  then have this seat grounder-adjudicate every executable claim in the CLI output.
   Prompt: "Review [modified-file] against [spec-path]. Generate your own checklist
   from the spec's Behavioral Contract and Operating Boundaries. Report PASS/FAIL
   per item with line numbers for failures."
