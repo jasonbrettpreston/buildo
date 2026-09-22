@@ -337,19 +337,46 @@ const ZONE_SQL = `
            MAX(cost_gut_total)::float8 AS max_cost_gut
       FROM parcels
      WHERE zoning_class IS NOT NULL AND upper(zoning_class) LIKE 'R%'
-     GROUP BY 1`;
+     GROUP BY 1
+     ORDER BY 1`;
 
+/**
+ * CPCE peel (DeepSeek/grounded, 2026-09-21, HIGH) — `buckets.other` folds MULTIPLE `ZONE_SQL` rows
+ * (every non-`NAMED_ZONES` zone: CR/E/O/UT/…), and `ZONE_SQL` has no `ORDER BY`, so the PREVIOUS
+ * last-write-wins assignment (`buckets[target].max_cost_gut = r.max_cost_gut ?? prior`) picked
+ * whichever row Postgres happened to return LAST — nondeterministic, and it could silently
+ * under-report `compute_parcel_cost_line_total_max_cad` (the max-cost tripwire), defeating it.
+ * FIX: max_cost_gut is a genuine running MAX across every row folded into a bucket (order-
+ * independent, correct regardless of row order). p50_cost_fb is NOT combinable exactly from
+ * partial `percentile_cont` results — the DECLARED rule (stated here, not silently assumed) is
+ * the parcels-weighted average of each folded row's own p50, which is likewise order-independent
+ * (commutative running sum), an explicit approximation rather than an arbitrary last-row pick.
+ * A NAMED zone folds exactly one row (its own GROUP BY row), so both rules are exact there; only
+ * `other` ever folds >1 row. `ZONE_SQL` also gains `ORDER BY 1` below for read determinism.
+ */
 function buildZoneBuckets(rows) {
   const buckets = {};
+  const p50Weight = {};
   for (const z of NAMED_ZONES) buckets[z] = { parcels: 0, menus: 0, empty_menus: 0, p50_cost_fb: null, max_cost_gut: null };
   buckets.other = { parcels: 0, menus: 0, empty_menus: 0, p50_cost_fb: null, max_cost_gut: null };
   for (const r of rows) {
     const target = NAMED_ZONES.includes(r.zone) ? r.zone : 'other';
-    buckets[target].parcels += Number(r.parcels);
-    buckets[target].menus += Number(r.menus);
-    buckets[target].empty_menus += Number(r.empty_menus);
-    buckets[target].p50_cost_fb = r.p50_cost_fb === null ? buckets[target].p50_cost_fb : Number(r.p50_cost_fb);
-    buckets[target].max_cost_gut = r.max_cost_gut === null ? buckets[target].max_cost_gut : Number(r.max_cost_gut);
+    const b = buckets[target];
+    b.parcels += Number(r.parcels);
+    b.menus += Number(r.menus);
+    b.empty_menus += Number(r.empty_menus);
+    if (r.max_cost_gut !== null) {
+      const v = Number(r.max_cost_gut);
+      b.max_cost_gut = b.max_cost_gut === null ? v : Math.max(b.max_cost_gut, v);
+    }
+    if (r.p50_cost_fb !== null) {
+      const w = Number(r.parcels) || 0;
+      const prevWeight = p50Weight[target] || 0;
+      const prevSum = (b.p50_cost_fb ?? 0) * prevWeight;
+      const newWeight = prevWeight + w;
+      b.p50_cost_fb = newWeight > 0 ? (prevSum + Number(r.p50_cost_fb) * w) / newWeight : null;
+      p50Weight[target] = newWeight;
+    }
   }
   return buckets;
 }

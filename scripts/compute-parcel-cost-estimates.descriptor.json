@@ -270,7 +270,7 @@
     },
     {
       "id": "no_cost_outside_population",
-      "sql": "SELECT count(*)::int FROM parcels WHERE NOT (zoning_class IS NOT NULL AND upper(zoning_class) LIKE 'R%') AND (parcel_cost_menu IS NOT NULL OR cost_fb_total IS NOT NULL OR max_build_fsi IS NOT NULL)",
+      "sql": "SELECT count(*)::int FROM parcels WHERE NOT (zoning_class IS NOT NULL AND upper(zoning_class) LIKE 'R%') AND (parcel_cost_menu IS NOT NULL OR cost_fb_total IS NOT NULL OR cost_coa_total IS NOT NULL OR cost_solar_total IS NOT NULL OR cost_garden_suite_total IS NOT NULL OR cost_laneway_suite_total IS NOT NULL OR cost_garage_total IS NOT NULL OR cost_gut_total IS NOT NULL OR cost_addition_total IS NOT NULL OR cost_kitchen_per_sqm IS NOT NULL OR cost_bath_per_sqm IS NOT NULL OR cost_basement_per_sqm IS NOT NULL OR cost_basement_underpin_per_sqm IS NOT NULL OR max_build_fsi IS NOT NULL OR coa_fsi IS NOT NULL OR realized_fsi_p90 IS NOT NULL)",
       "bound": "viol == 0",
       "severity": "FAIL",
       "blocking": false,
@@ -278,7 +278,7 @@
       "source": "invariant",
       "frequency": "every_run",
       "last_measured": { "value": 0, "at": "2026-09-22T02:41:48.998Z", "commit": "compute-parcel-cost-estimates-commit-3", "cost_ms": 3599, "sample_n": 1, "source_run": { "run_id": null, "chain": "sources", "event": "converging_run" } },
-      "why": { "text": "CPCE-D2 CLOSED — the Spec 48 §3.6 dual-pattern's gate half (paired with the `stranded_cost_rows_retracted` INFO counter). Evaluated `when:\"post\"`, AFTER this run's own `ctx.retract` has already fired in the same run, so it reads 0 including on the very FIRST post-fix run, not merely in steady state. A non-zero value here means the retraction scope/guard has a gap a future zoning-vocabulary change opened — never a data condition to tolerate.", "liveness": { "kind": "column", "ref": "parcels.parcel_cost_menu" } }
+      "why": { "text": "CPCE-D2 CLOSED — the Spec 48 §3.6 dual-pattern's gate half (paired with the `stranded_cost_rows_retracted` INFO counter). Evaluated `when:\"post\"`, AFTER this run's own `ctx.retract` has already fired in the same run, so it reads 0 including on the very FIRST post-fix run, not merely in steady state. A non-zero value here means the retraction scope/guard has a gap a future zoning-vocabulary change opened — never a data condition to tolerate. **CPCE peel (DeepSeek/grounded O4, 2026-09-21):** the predicate originally named only 3 of the 16 written columns (`parcel_cost_menu`/`cost_fb_total`/`max_build_fsi`) — a leak confined to, say, `cost_gut_total` or `realized_fsi_p90` on an out-of-population parcel would have read clean. Widened to ALL 16 `write_discipline.guard_columns` (the same list `buildFlushSql`'s `distinctGuard` already uses), so the invariant covers exactly what the step writes. Note for S0.2 (the sibling product-scope plan): this widening is orthogonal to S0.2's retraction SCOPE predicate (which parcels count as 'outside the population') — this row only widens which COLUMNS are checked once a parcel is outside.", "liveness": { "kind": "column", "ref": "parcels.parcel_cost_menu" } }
     }
   ],
   "plausibility": "none",
@@ -355,6 +355,11 @@
       "what": "Two non-step analysis consumers of the ENGINE (not the columns) require the config argument as a REQUIRED positional now: scripts/analysis/wf3-cost-coherence-sanity.js and scripts/analysis/wf3-sample-full-dump.js — updated in this commit to read-live-else-seed-default the 6 engine tunables (FOLD-I5/V8).",
       "measured": "grep -rn \"require.*parcel-cost\" scripts/ src/, 2026-09-21",
       "check_id": "none"
+    },
+    {
+      "what": "On an engine error (F4's per-row try/catch), `runCostMenuPass`'s catch arm NULLs ALL 16 `ALL_SCALAR_COLS`, including `realized_fsi_p90` — a PURE READ-THROUGH (Spec 88 §2.5/§2.11: 'read from parcels, written back unchanged') that requires no engine computation and did not itself throw. This is PINNED LEGACY BEHAVIOUR, not a conversion-introduced regression: `git show 67d10450:scripts/compute-parcel-cost-estimates.js` NULLs the identical 16-column set on the identical catch arm. CPCE peel (DeepSeek/grounded O2, 2026-09-21) — declared here rather than silently changed; filed as a LOW followup (`docs/reports/review_followups.md`) rather than fixed in this peel, since fixing it is a semantics change the legacy never made and engine_error_count is a FAIL-gated rarity (measured 0 across the whole population).",
+      "measured": "git show 67d10450:scripts/compute-parcel-cost-estimates.js (identical NULL-all-16 catch arm); live query, engine_error_count = 0, 2026-09-21",
+      "check_id": "engine_error_count"
     }
   ],
   "interpretation": "none",

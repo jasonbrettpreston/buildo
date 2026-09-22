@@ -446,3 +446,85 @@ describe('compute_parcel_cost_estimates — CPCE-D2: writes[1] codegen lock (fak
     expect(inv.when).toBe('post');
   });
 });
+
+// CPCE output-panel peel (DeepSeek/grounded, re-verified live, 2026-09-21) — two genuine findings
+// fixed here; see docs/reports/review_followups.md "CPCE output-panel peel" for the other four
+// (two REFUTED on re-verification, one REJECTED per resolve-db.js's documented COUNT convention,
+// one DECLARED-not-fixed as pinned legacy behaviour).
+describe('compute_parcel_cost_estimates — CPCE peel O1: buildZoneBuckets order-independence (HIGH)', () => {
+  it('max_cost_gut is a genuine running MAX across every row folded into a bucket — NOT last-write-wins — regardless of row order', () => {
+    const { buildZoneBuckets } = loadCompute();
+    // Three non-NAMED_ZONES rows (CR/E/O) all fold into 'other'. The true max is 999.
+    const rowsA = [
+      { zone: 'CR', parcels: 10, menus: 5, empty_menus: 5, p50_cost_fb: 100, max_cost_gut: 999 },
+      { zone: 'E', parcels: 20, menus: 10, empty_menus: 10, p50_cost_fb: 200, max_cost_gut: 50 },
+      { zone: 'O', parcels: 5, menus: 2, empty_menus: 3, p50_cost_fb: 300, max_cost_gut: 10 },
+    ];
+    const rowsB = [...rowsA].reverse(); // the true max (999) is now FIRST, not last
+    const bucketsA = buildZoneBuckets(rowsA);
+    const bucketsB = buildZoneBuckets(rowsB);
+    expect(bucketsA.other.max_cost_gut, 'order A must find the true max').toBe(999);
+    expect(bucketsB.other.max_cost_gut, 'order B (reversed) must find the SAME true max — proof it is not last-write-wins').toBe(999);
+    expect(bucketsA.other.max_cost_gut).toBe(bucketsB.other.max_cost_gut);
+  });
+
+  it('a NULL max_cost_gut row does not clobber an already-set bucket max (NULL is "no data this row", not "reset to null")', () => {
+    const { buildZoneBuckets } = loadCompute();
+    const rows = [
+      { zone: 'CR', parcels: 10, menus: 5, empty_menus: 5, p50_cost_fb: 100, max_cost_gut: 500 },
+      { zone: 'E', parcels: 20, menus: 10, empty_menus: 10, p50_cost_fb: null, max_cost_gut: null },
+    ];
+    const buckets = buildZoneBuckets(rows);
+    expect(buckets.other.max_cost_gut).toBe(500);
+    expect(buckets.other.p50_cost_fb).toBe(100);
+  });
+
+  it('p50_cost_fb uses a DECLARED, order-independent rule (parcels-weighted average) — not last-write-wins', () => {
+    const { buildZoneBuckets } = loadCompute();
+    const rowsA = [
+      { zone: 'CR', parcels: 10, menus: 5, empty_menus: 5, p50_cost_fb: 100, max_cost_gut: 10 },
+      { zone: 'E', parcels: 30, menus: 10, empty_menus: 20, p50_cost_fb: 300, max_cost_gut: 10 },
+    ];
+    const rowsB = [...rowsA].reverse();
+    const expected = (100 * 10 + 300 * 30) / (10 + 30); // = 250, order-independent by construction
+    const bucketsA = buildZoneBuckets(rowsA);
+    const bucketsB = buildZoneBuckets(rowsB);
+    expect(bucketsA.other.p50_cost_fb).toBeCloseTo(expected, 6);
+    expect(bucketsB.other.p50_cost_fb).toBeCloseTo(expected, 6);
+  });
+
+  it('a NAMED zone (single GROUP BY row) is exact, unaffected by the aggregation rule', () => {
+    const { buildZoneBuckets } = loadCompute();
+    const buckets = buildZoneBuckets([{ zone: 'RD', parcels: 100, menus: 90, empty_menus: 10, p50_cost_fb: 12345, max_cost_gut: 67890 }]);
+    expect(buckets.RD.max_cost_gut).toBe(67890);
+    expect(buckets.RD.p50_cost_fb).toBe(12345);
+  });
+
+  it('ZONE_SQL declares ORDER BY 1 (read determinism, belt-and-suspenders with the order-independent JS fold)', () => {
+    const { ZONE_SQL } = loadCompute();
+    expect(ZONE_SQL).toMatch(/ORDER BY 1\s*$/);
+  });
+});
+
+describe('compute_parcel_cost_estimates — CPCE peel O4: no_cost_outside_population covers all 16 written columns', () => {
+  it("the invariant's SQL names every one of write_discipline.guard_columns — the SAME 16-column list buildFlushSql's distinctGuard uses, no fewer", () => {
+    const descriptor = loadDescriptor();
+    const inv = descriptor.invariants.find((i: { id: string }) => i.id === 'no_cost_outside_population');
+    const guardColumns: string[] = descriptor.outputs.writes[0].write_discipline.guard_columns;
+    expect(guardColumns.length, 'sanity: the guard itself must be 16 columns').toBe(16);
+    for (const col of guardColumns) {
+      expect(inv.sql, `no_cost_outside_population must check ${col}`).toContain(`${col} IS NOT NULL`);
+    }
+  });
+});
+
+describe('compute_parcel_cost_estimates — CPCE peel O3 (refuted): stream/flush bind-param ceiling stays SAFE, computed from the real column count', () => {
+  it('compute_parcel_cost_batch_size.max * (2 + ALL_SCALAR_COLS.length) <= 65535 (Postgres bind-param ceiling), with real headroom', () => {
+    const { ALL_SCALAR_COLS } = loadCompute();
+    const descriptor = loadDescriptor();
+    const maxBatch = descriptor.config.logic_variables.find((v: { name: string }) => v.name === 'compute_parcel_cost_batch_size').max;
+    const paramsPerRow = 2 + ALL_SCALAR_COLS.length; // id + menu + every scalar column
+    expect(paramsPerRow, 'sanity: the real per-row param count the DeepSeek finding miscounted as 18').toBe(17);
+    expect(maxBatch * paramsPerRow, 'must stay under the Postgres 65,535 bind-parameter ceiling').toBeLessThanOrEqual(65535);
+  });
+});
