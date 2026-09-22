@@ -18,7 +18,7 @@ import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 import {
   makeRepo, scrubbedChildEnv, runEngine, resolveProvider, redact,
-  toolTurn, rawToolTurn, hookedClient, writeBrief, ledgerRecords,
+  toolTurn, rawToolTurn, hookedClient, writeBrief, ledgerRecords, cleanupTempDir, REPO_ROOT,
 } from './helpers/deepseek-exec-harness';
 
 describe('SUB-ENG-1 Phase 1 — deepseek-exec.js (Spec 08 §C)', () => {
@@ -35,8 +35,8 @@ describe('SUB-ENG-1 Phase 1 — deepseek-exec.js (Spec 08 §C)', () => {
     delete process.env.DEEPSEEK_API_KEY;
   });
   afterEach(() => {
-    if (repo) fs.rmSync(repo, { recursive: true, force: true });
-    if (ledgerDir) fs.rmSync(ledgerDir, { recursive: true, force: true });
+    cleanupTempDir(repo);
+    cleanupTempDir(ledgerDir);
     if (savedEnv.EXECUTION_PROVIDER === undefined) delete process.env.EXECUTION_PROVIDER;
     else process.env.EXECUTION_PROVIDER = savedEnv.EXECUTION_PROVIDER;
     if (savedEnv.DEEPSEEK_API_KEY === undefined) delete process.env.DEEPSEEK_API_KEY;
@@ -425,6 +425,66 @@ describe('SUB-ENG-1 Phase 1 — deepseek-exec.js (Spec 08 §C)', () => {
       });
       const raw = fs.readFileSync(path.join(ledgerDir, `${summary.run_id}.jsonl`), 'utf8');
       expect(raw).not.toContain('sk-test');
+    });
+  });
+
+  // ---------------------------------------------------------------------
+  // Lock 13 — billable-token budget accounting (§C.1.9, commit 12e)
+  // ---------------------------------------------------------------------
+  describe('lock 13: max_total_tokens compares CUMULATIVE BILLABLE tokens, not raw prompt totals', () => {
+    it('5 turns at 50,500 raw tokens/turn but 2,500 billable/turn (12,500 total) stay under a 20,000 max_total_tokens ⇒ completed — RED before commit 12e (raw 252,500 > 20,000 would have budget_exhausted)', async () => {
+      const briefPath = writeBrief(repo);
+      const turns = Array.from({ length: 5 }, (_, i) => ({
+        ...toolTurn(`c${i}`, 'read_file', { path: 'seed.txt', reason: 'r' }),
+        usage: { prompt_tokens: 50000, prompt_cache_miss_tokens: 2000, completion_tokens: 500, total_tokens: 50500 },
+      }));
+      const summary = await runEngine({
+        repoRoot: repo, briefPath, provider: 'deepseek', ledgerDir, transcriptTurns: turns, maxTotalTokens: 20000,
+      });
+      expect(summary.status).toBe('completed');
+      expect(summary.usage_total.total_tokens).toBeGreaterThan(20000); // raw total — proves this run WOULD have tripped the old check
+      expect(summary.usage_total.billable_tokens).toBe(12500); // 5 * (2000 cache-miss + 500 completion)
+      const records = ledgerRecords(ledgerDir, summary.run_id);
+      const cachedTurnRecords = records.filter((r) => r.kind === 'model_turn' && ((r.tool_calls as number) || 0) > 0);
+      const lastCachedTurn = cachedTurnRecords[cachedTurnRecords.length - 1] as { usage?: { billable_tokens?: number } };
+      expect(lastCachedTurn.usage?.billable_tokens).toBe(2500); // per-turn billable_tokens, not cumulative
+      expect(records[records.length - 1]).toMatchObject({ kind: 'run_end', status: 'completed', usage_total: { billable_tokens: 12500 } });
+    });
+
+    it('the same turns WITHOUT a cache signal fall back to raw prompt+completion counting ⇒ budget_exhausted', async () => {
+      const briefPath = writeBrief(repo);
+      const turns = Array.from({ length: 5 }, (_, i) => ({
+        ...toolTurn(`c${i}`, 'read_file', { path: 'seed.txt', reason: 'r' }),
+        usage: { prompt_tokens: 50000, completion_tokens: 500, total_tokens: 50500 },
+      }));
+      const summary = await runEngine({
+        repoRoot: repo, briefPath, provider: 'deepseek', ledgerDir, transcriptTurns: turns, maxTotalTokens: 20000,
+      });
+      expect(summary.status).toBe('budget_exhausted');
+      expect(summary.usage_total.billable_tokens).toBe(summary.usage_total.total_tokens); // no cache data ⇒ billable === raw
+      const records = ledgerRecords(ledgerDir, summary.run_id);
+      expect(records[records.length - 1]).toMatchObject({ kind: 'run_end', status: 'budget_exhausted' });
+    });
+
+    it('CLI --max-total-tokens 100 ends the run budget_exhausted after the first turn', () => {
+      const briefPath = writeBrief(repo);
+      const transcriptPath = path.join(repo, 'billable-transcript.json');
+      fs.writeFileSync(transcriptPath, JSON.stringify([
+        { ...toolTurn('c1', 'read_file', { path: 'seed.txt', reason: 'r' }), usage: { prompt_tokens: 80, completion_tokens: 80, total_tokens: 160 } },
+      ]));
+      const cliPath = path.join(REPO_ROOT, 'scripts', 'deepseek-exec.js');
+      let stdout = '';
+      try {
+        stdout = execFileSync(process.execPath, [
+          cliPath, '--brief', briefPath, '--provider=deepseek', '--transcript', transcriptPath,
+          '--ledger-dir', ledgerDir, '--max-total-tokens', '100',
+        ], { cwd: repo, env: scrubbedChildEnv(), encoding: 'utf8' });
+      } catch (err) {
+        stdout = (err as { stdout?: string }).stdout || '';
+      }
+      const summary = JSON.parse(stdout.trim().split('\n').pop()!) as { status: string; iterations: number };
+      expect(summary.status).toBe('budget_exhausted');
+      expect(summary.iterations).toBe(1);
     });
   });
 });

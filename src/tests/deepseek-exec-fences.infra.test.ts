@@ -24,7 +24,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { execFileSync, spawnSync } from 'node:child_process';
 import {
-  makeRepo, REPO_ROOT, runEngine, toolTurn, multiToolTurn, writeBrief, ledgerRecords, scrubbedChildEnv,
+  makeRepo, REPO_ROOT, runEngine, toolTurn, multiToolTurn, writeBrief, ledgerRecords, scrubbedChildEnv, cleanupTempDir,
 } from './helpers/deepseek-exec-harness';
 // eslint-disable-next-line @typescript-eslint/no-require-imports -- exercising the real CJS tool layer directly
 const { committerLockFileName } = require(path.join(REPO_ROOT, 'scripts/lib/exec-tools.js'));
@@ -43,8 +43,8 @@ describe('SUB-ENG-1 Phase 2 — safety fences (Spec 08 §C)', () => {
     delete process.env.DEEPSEEK_API_KEY;
   });
   afterEach(() => {
-    if (repo) fs.rmSync(repo, { recursive: true, force: true });
-    if (ledgerDir) fs.rmSync(ledgerDir, { recursive: true, force: true });
+    cleanupTempDir(repo);
+    cleanupTempDir(ledgerDir);
     if (savedEnv.EXECUTION_PROVIDER === undefined) delete process.env.EXECUTION_PROVIDER;
     else process.env.EXECUTION_PROVIDER = savedEnv.EXECUTION_PROVIDER;
     if (savedEnv.DEEPSEEK_API_KEY === undefined) delete process.env.DEEPSEEK_API_KEY;

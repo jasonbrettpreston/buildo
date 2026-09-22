@@ -82,6 +82,11 @@ node scripts/deepseek-exec.js \
   --repo ../buildo-<task> \
   --brief ../buildo-<task>/brief.md \
   --provider=deepseek \
+  --max-total-tokens 150000 \              # optional; overrides policy's 400k default —
+                                            # compared against CUMULATIVE BILLABLE tokens
+                                            # (cache-miss prompt + completion per turn,
+                                            # §C.1.9 commit 12e), not raw prompt totals
+  --max-iterations 30 \                    # optional; overrides policy's 40 default
   --ledger-dir "$BUILDO_EXEC_LEDGER_DIR"   # or let it default
 
 # 3. Watch the run — the ledger is a plain JSONL file outside the repo
@@ -97,7 +102,17 @@ touch "<ledger_dir>/<run_id>.kill" # halts only that one run
 
 A second engine launched against a DIFFERENT worktree or branch with a non-overlapping `write_scope` starts cleanly; one launched against the SAME worktree/branch with an overlapping scope refuses with `CLAIM_CONFLICT` (§C.6.3) — the active-claims registry, not orchestrator discipline, is what catches this.
 
-## 4. What the engine will never do for you
+## 4. Operator recovery (commit 12e)
+
+A run can end mid-commit in a state that needs a human decision before the next launch, rather than a blind retry:
+
+- **`INDEX_DIRTY`** — `git_commit` refused because the git index already had something staged before the engine's own `git add` (§C.1.8: it will never reset someone else's staged work). Inspect what's there: `git -C <worktree> diff --cached --name-only`. Then either commit it yourself (it may be legitimate prior work) or clear it with `git restore --staged -- <paths>` if it's stray/leftover — and only then re-run the engine.
+- **`COMMITTER_BUSY`** — another engine process already holds the single-committer advisory lock for this worktree (`<ledger_dir>/committer-<hash>.lock`, §C.1.8/§C.6.4). Wait for it to finish, or, if its `pid` is confirmed dead, reclaim the lock (the engine itself does this automatically on next launch — a live holder is the only real blocker).
+- **A stale `KILL` sentinel** — `<ledger_dir>/KILL` halts EVERY run watching that ledger dir until removed (§C.5); delete the file to allow new runs: `rm "<ledger_dir>/KILL"`.
+
+The engine itself is told the first two of these in its own system prompt: on `COMMITTER_BUSY` it waits (doing useful read-only verification work) and retries once; on `INDEX_DIRTY` it stops and reports rather than attempting to clear the index itself.
+
+## 5. What the engine will never do for you
 
 - Land a `registry_reserved` edit (manifest/converted.json/system-map) — that's the orchestrator's own commit, after the engine's PR-shaped diff is reviewed.
 - Touch a `claude_only_globs` path — money/auth/PII/migrations stay a Claude-provider step under every `EXECUTION_PROVIDER` value.

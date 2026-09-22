@@ -716,23 +716,37 @@ function runProcess(argv, { cwd, env, timeoutMs, outputCapBytes }) {
       }
     }, timeoutMs);
 
+    // §C.1.9 (fold-validation LOW, commit 12e) — "the child is gone
+    // afterwards" is only genuinely true once the OS has actually reaped it.
+    // `close` firing on OUR direct child does not guarantee a Windows
+    // `taskkill /T /F` has finished tearing down the whole tree yet (it's
+    // itself an async spawnSync we don't wait on) — a caller that resolves
+    // immediately and then races to e.g. `fs.rmSync` the cwd can hit EPERM on
+    // a lingering handle. When the settlement is the TIMEOUT path, poll for
+    // the pid to actually be gone before resolving; a normal (non-timeout)
+    // close/error resolves immediately as before.
+    async function settle(result) {
+      if (settled) {
+        return;
+      }
+      settled = true;
+      clearTimeout(timer);
+      if (timedOut && child.pid) {
+        for (let i = 0; i < 25 && isPidAlive(child.pid); i++) {
+          // eslint-disable-next-line no-await-in-loop -- bounded poll, not a hot loop
+          await new Promise((r) => setTimeout(r, 100));
+        }
+      }
+      resolve(result);
+    }
+
     child.stdout.on('data', (chunk) => capture(chunk, 'out'));
     child.stderr.on('data', (chunk) => capture(chunk, 'err'));
     child.on('error', (err) => {
-      if (settled) {
-        return;
-      }
-      settled = true;
-      clearTimeout(timer);
-      resolve({ exitCode: null, stdout, stderr: stderr ? `${stderr}\n${err.message}` : err.message, truncated, timedOut, durationMs: Date.now() - startedAt });
+      void settle({ exitCode: null, stdout, stderr: stderr ? `${stderr}\n${err.message}` : err.message, truncated, timedOut, durationMs: Date.now() - startedAt });
     });
     child.on('close', (code) => {
-      if (settled) {
-        return;
-      }
-      settled = true;
-      clearTimeout(timer);
-      resolve({ exitCode: code, stdout, stderr, truncated, timedOut, durationMs: Date.now() - startedAt });
+      void settle({ exitCode: code, stdout, stderr, truncated, timedOut, durationMs: Date.now() - startedAt });
     });
   });
 }

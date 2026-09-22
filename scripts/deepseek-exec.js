@@ -186,7 +186,32 @@ function checkKillSentinel(ledgerDir, runId) {
 }
 
 function emptyUsage() {
-  return { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 };
+  return { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0, billable_tokens: 0 };
+}
+
+// §C.1.9 (commit 12e) — the budget compares CUMULATIVE BILLABLE tokens, not
+// raw prompt totals: a multi-turn run re-sends the whole conversation every
+// turn, so DeepSeek's own cache-hit prefix is billed once but was previously
+// COUNTED every turn — a budget that never reflects real spend. When the
+// provider's usage carries a cache-miss/cache-hit signal, billable = the
+// tokens actually billed for THIS turn (cache-miss prompt + completion);
+// otherwise (no cache data at all) billable falls back to the full raw sum,
+// so the budget still binds exactly as before commit 12e for any provider
+// that doesn't report caching.
+function computeBillableTokens(usage) {
+  if (!usage) {
+    return 0;
+  }
+  if (typeof usage.prompt_cache_miss_tokens === 'number') {
+    return usage.prompt_cache_miss_tokens + (usage.completion_tokens || 0);
+  }
+  const cached = usage.prompt_tokens_details && typeof usage.prompt_tokens_details.cached_tokens === 'number'
+    ? usage.prompt_tokens_details.cached_tokens
+    : undefined;
+  if (typeof cached === 'number') {
+    return (usage.prompt_tokens || 0) - cached + (usage.completion_tokens || 0);
+  }
+  return (usage.prompt_tokens || 0) + (usage.completion_tokens || 0);
 }
 
 function addUsage(a, b) {
@@ -194,6 +219,7 @@ function addUsage(a, b) {
     prompt_tokens: (a.prompt_tokens || 0) + (b.prompt_tokens || 0),
     completion_tokens: (a.completion_tokens || 0) + (b.completion_tokens || 0),
     total_tokens: (a.total_tokens || 0) + (b.total_tokens || 0),
+    billable_tokens: (a.billable_tokens || 0) + computeBillableTokens(b),
   };
 }
 
@@ -481,6 +507,7 @@ async function runEngine(opts = {}) {
       'You are the DeepSeek Execution Engine (SUB-ENG-1) operating on a real git worktree.',
       'You have exactly the tools listed in this turn\'s tool schemas. Every call must include a "reason".',
       `git_commit.message's first line MUST match this pattern: ${policy.commit_message_pattern}`,
+      'If git_commit returns COMMITTER_BUSY, wait by doing useful verification work (another read-only check) and retry once; if it returns INDEX_DIRTY, stop and report — never try to clear the index.',
       '',
       briefContent,
     ].join('\n');
@@ -537,12 +564,17 @@ async function runEngine(opts = {}) {
         return finish('aborted');
       }
 
-      usageTotal = addUsage(usageTotal, turn.usage || emptyUsage());
+      const turnUsage = turn.usage || emptyUsage();
+      usageTotal = addUsage(usageTotal, turnUsage);
       const toolCalls = (turn.message && turn.message.tool_calls) || [];
       ledger.append({
         kind: 'model_turn',
         iteration,
-        usage: turn.usage || emptyUsage(),
+        // §C.3 — keeps every raw field the provider returned (including a
+        // provider-specific cache signal like prompt_cache_miss_tokens) and
+        // adds this turn's own billable_tokens (§C.1.9), computed the same
+        // way the cumulative usageTotal above is.
+        usage: { ...turnUsage, billable_tokens: computeBillableTokens(turnUsage) },
         tool_calls: toolCalls.length,
         finish_reason: turn.finish_reason,
         assistant_text: redact((turn.message && turn.message.content) || '').slice(0, 4096),
@@ -572,7 +604,7 @@ async function runEngine(opts = {}) {
         return finish('completed');
       }
 
-      if (usageTotal.total_tokens > maxTotalTokens) {
+      if (usageTotal.billable_tokens > maxTotalTokens) {
         return finish('budget_exhausted');
       }
 
@@ -666,6 +698,17 @@ async function runEngine(opts = {}) {
   }
 }
 
+// CLI flags (mirrors §C.5's usage line in docs/specs/00-architecture/08_agents.md):
+//   --brief <file>            required; repo-confined (BRIEF_OUTSIDE_REPO otherwise)
+//   --repo <path>              worktree root, default process.cwd()
+//   --provider deepseek|claude
+//   --model <id>
+//   --max-iterations <n>       positive int; overrides policy.limits.max_iterations
+//   --max-total-tokens <n>     positive int; overrides policy.limits.max_total_tokens —
+//                              compared against CUMULATIVE BILLABLE tokens (§C.1.9,
+//                              commit 12e), not raw prompt totals
+//   --transcript <file>        replay a recorded turn array instead of a live call
+//   --ledger-dir <dir>
 function parseArgs(argv) {
   const opts = {};
   for (let i = 0; i < argv.length; i++) {
@@ -684,6 +727,7 @@ function parseArgs(argv) {
       case '--provider': opts.provider = takeValue(); break;
       case '--model': opts.model = takeValue(); break;
       case '--max-iterations': opts.maxIterations = safeParsePositiveInt(takeValue(), '--max-iterations'); break;
+      case '--max-total-tokens': opts.maxTotalTokens = safeParsePositiveInt(takeValue(), '--max-total-tokens'); break;
       case '--transcript': opts.transcript = takeValue(); break;
       case '--ledger-dir': opts.ledgerDir = takeValue(); break;
       default: break;

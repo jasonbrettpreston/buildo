@@ -79,7 +79,7 @@ export const ledgerMod = require(path.join(REPO_ROOT, 'scripts/lib/exec-ledger.j
 
 export const runEngine: (opts: Record<string, unknown>) => Promise<{
   status: string; run_id: string; ledger_path: string; iterations: number;
-  usage_total: { prompt_tokens: number; completion_tokens: number; total_tokens: number };
+  usage_total: { prompt_tokens: number; completion_tokens: number; total_tokens: number; billable_tokens: number };
   tool_calls_total: number; blocked_total: number; commits: string[];
 }> = engineMod.runEngine;
 export const resolveProvider: (flag: string | undefined, env: string | undefined) => { provider: string; provider_source: string } = engineMod.resolveProvider;
@@ -149,6 +149,25 @@ export function writeBrief(repo: string, opts?: { writeScope?: string[] | null }
     : `---\nwrite_scope:\n${scope.map((g) => `- ${g}`).join('\n')}\n---\n`;
   fs.writeFileSync(briefPath, `${frontMatter}test brief\n`);
   return briefPath;
+}
+
+/**
+ * cleanupTempDir(dir) — fold-validation LOW (commit 12e): under full-suite
+ * load, `fs.rmSync` of a throwaway temp repo can hit `EPERM` on Windows when
+ * a just-killed child process (the timeout-budget locks spawn real
+ * processes) still holds a lingering handle into it — a transient race, not
+ * a real failure of the test itself. `maxRetries`/`retryDelay` give the OS a
+ * little time to release the handle; a FINAL failure is logged, not thrown —
+ * the OS temp dir is disposable, and failing the test suite over an orphaned
+ * temp directory is strictly worse than leaving one behind.
+ */
+export function cleanupTempDir(dir: string): void {
+  if (!dir) return;
+  try {
+    fs.rmSync(dir, { recursive: true, force: true, maxRetries: 10, retryDelay: 200 });
+  } catch (err) {
+    console.warn(`cleanupTempDir: could not remove ${dir}: ${(err as Error).message}`);
+  }
 }
 
 export function ledgerRecords(ledgerDir: string, runId: string): Array<Record<string, unknown>> {
