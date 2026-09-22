@@ -394,6 +394,17 @@ async function writeFileHandler(args, ctx) {
     return { toolResult: selfProtectBlock, pre, post: captureWorktree(repoRoot) };
   }
 
+  // §C.1.5 (G5, commit 8) — a secret-denied path is never WRITTEN either,
+  // not only read: evaluated at invariant position 5, after self-protection
+  // (4) and before read-before-write (6).
+  if (isSecretDenied(relPosix, (policy && policy.secret_read_deny) || [])) {
+    return {
+      toolResult: { ok: false, error: { code: 'SECRET_DENIED', message: `write denied: ${relPosix}` } },
+      pre,
+      post: captureWorktree(repoRoot),
+    };
+  }
+
   const blocked = checkReadBeforeWrite(absPath, relPosix, runState, false);
   if (blocked) {
     return { toolResult: blocked, pre, post: captureWorktree(repoRoot) };
@@ -421,7 +432,7 @@ async function writeFileHandler(args, ctx) {
 
 // §C.2 edit_file — exact-string replace inside a file read earlier this run.
 async function editFileHandler(args, ctx) {
-  const { repoRoot, runState } = ctx;
+  const { repoRoot, policy, runState } = ctx;
   // §C.3 — pre/post is present on EVERY edit_file tool_call record.
   const pre = captureWorktree(repoRoot);
 
@@ -436,6 +447,15 @@ async function editFileHandler(args, ctx) {
   const selfProtectBlock = checkSelfProtection(absPath, relPosix, ctx);
   if (selfProtectBlock) {
     return { toolResult: selfProtectBlock, pre, post: captureWorktree(repoRoot) };
+  }
+
+  // §C.1.5 (G5, commit 8) — a secret-denied path is never edited either.
+  if (isSecretDenied(relPosix, (policy && policy.secret_read_deny) || [])) {
+    return {
+      toolResult: { ok: false, error: { code: 'SECRET_DENIED', message: `edit denied: ${relPosix}` } },
+      pre,
+      post: captureWorktree(repoRoot),
+    };
   }
 
   const blocked = checkReadBeforeWrite(absPath, relPosix, runState, true);

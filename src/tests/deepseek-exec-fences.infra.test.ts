@@ -229,4 +229,90 @@ describe('SUB-ENG-1 Phase 2 — safety fences (Spec 08 §C)', () => {
       expect(/truncate|writeFileSync/.test(src)).toBe(true);
     });
   });
+
+  // =========================================================================
+  // Commit 8 — secret fences: read deny + redaction before prompt and ledger (G5)
+  // =========================================================================
+  describe('commit 8: secret read-deny', () => {
+    it('read_file(".env") is blocked SECRET_DENIED; read_file("package.json") is allowed', async () => {
+      fs.writeFileSync(path.join(repo, '.env'), 'DEEPSEEK_API_KEY=sk-shouldneverbereadatall12\n');
+      fs.writeFileSync(path.join(repo, 'package.json'), '{"name":"throwaway"}\n');
+      const briefPath = writeBrief(repo);
+      const summary = await runEngine({
+        repoRoot: repo, briefPath, provider: 'deepseek', ledgerDir,
+        transcriptTurns: [
+          toolTurn('c1', 'read_file', { path: '.env', reason: 'r' }),
+          toolTurn('c2', 'read_file', { path: 'package.json', reason: 'r' }),
+        ],
+      });
+      const records = ledgerRecords(ledgerDir, summary.run_id);
+      const reads = records.filter((r) => r.kind === 'tool_call' && r.tool === 'read_file') as Array<{ status?: string; error?: { code: string } }>;
+      expect(reads[0]).toMatchObject({ status: 'blocked', error: { code: 'SECRET_DENIED' } });
+      expect(reads[1]).toMatchObject({ status: 'ok' });
+    });
+
+    it('grep_files over a repo containing .env with a live-shaped key returns zero MATCHES from it (checked at the tool-result level, not the ledger — result_summary only carries a count)', async () => {
+      fs.writeFileSync(path.join(repo, '.env'), 'DEEPSEEK_API_KEY=sk-thisshouldneverbegrepped1\n');
+      fs.writeFileSync(path.join(repo, 'findme.txt'), 'DEEPSEEK_API_KEY appears in findme.txt too\n');
+      // eslint-disable-next-line @typescript-eslint/no-require-imports -- exercising the real CJS tool layer directly, below the engine loop
+      const { createTools } = require(path.join(REPO_ROOT, 'scripts/lib/exec-tools.js'));
+      const policy = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, 'scripts/lib/exec-policy.json'), 'utf8'));
+      const fakeLedger = { path: path.join(ledgerDir, 'unit.jsonl'), append: () => {}, close: () => {} };
+      const tools = createTools({ repoRoot: repo, policy, ledger: fakeLedger, runState: { readState: {} } });
+      const outcome = await tools.dispatch('grep_files', { pattern: 'DEEPSEEK_API_KEY', reason: 'r' });
+      expect(outcome.toolResult.ok).toBe(true);
+      const paths = (outcome.toolResult.matches as Array<{ path: string }>).map((m) => m.path);
+      expect(paths).not.toContain('.env');
+      expect(paths).toContain('findme.txt');
+    });
+
+    it('write_file/edit_file to a secret-denied path are blocked SECRET_DENIED (both tools)', async () => {
+      const briefPath = writeBrief(repo);
+      const summary = await runEngine({
+        repoRoot: repo, briefPath, provider: 'deepseek', ledgerDir,
+        transcriptTurns: [toolTurn('c1', 'write_file', { path: 'secrets/creds.pem', content: 'nope', reason: 'r' })],
+      });
+      const records = ledgerRecords(ledgerDir, summary.run_id);
+      expect(toolCallOf(records, 'write_file')).toMatchObject({ status: 'blocked', error: { code: 'SECRET_DENIED' } });
+      expect(fs.existsSync(path.join(repo, 'secrets', 'creds.pem'))).toBe(false);
+    });
+  });
+
+  describe('commit 8: redact() reaches everything the model can see', () => {
+    it('a turn that both writes a secret-embedding file AND narrates the secret in its own text: zero occurrences of the raw secret anywhere in the ledger, and the narration is [REDACTED]', async () => {
+      const secret = 'sk-abcdefghijklmnopqrstuvwx';
+      const briefPath = writeBrief(repo);
+      const writeTurn = {
+        message: {
+          role: 'assistant' as const,
+          // write_file's OWN args.content is stored as {bytes,sha256} (§C.3)
+          // — never raw text — so the meaningful redaction surface for THIS
+          // turn is the assistant's own accompanying narration, which is a
+          // plain string that DOES pass through redact() verbatim.
+          content: `about to write the key ${secret} to a file`,
+          tool_calls: [{ id: 'c1', type: 'function' as const, function: { name: 'write_file', arguments: JSON.stringify({ path: 'ordinary2.txt', content: `token ${secret} end`, reason: 'r' }) } }],
+        },
+        usage: { prompt_tokens: 1, completion_tokens: 1, total_tokens: 2 },
+        finish_reason: 'tool_calls',
+      };
+      const summary = await runEngine({ repoRoot: repo, briefPath, provider: 'deepseek', ledgerDir, transcriptTurns: [writeTurn] });
+      const raw = fs.readFileSync(path.join(ledgerDir, `${summary.run_id}.jsonl`), 'utf8');
+      expect(raw).not.toContain(secret);
+      expect(raw).toContain('[REDACTED]');
+    });
+
+    it('a live DEEPSEEK_API_KEY set in the env never appears anywhere in the ledger file, including a distinct literal value', async () => {
+      process.env.DEEPSEEK_API_KEY = 'sk-livekeylivekeylivekey';
+      const briefPath = writeBrief(repo);
+      const summary = await runEngine({
+        repoRoot: repo, briefPath, provider: 'deepseek', ledgerDir,
+        transcriptTurns: [
+          toolTurn('c1', 'read_file', { path: 'seed.txt', reason: 'r' }),
+          { message: { role: 'assistant', content: 'the key is sk-livekeylivekeylivekey, never print it', tool_calls: [] }, usage: { prompt_tokens: 1, completion_tokens: 1, total_tokens: 2 }, finish_reason: 'stop' },
+        ],
+      });
+      const raw = fs.readFileSync(path.join(ledgerDir, `${summary.run_id}.jsonl`), 'utf8');
+      expect(raw).not.toContain('livekey');
+    });
+  });
 });

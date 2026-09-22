@@ -309,7 +309,13 @@ async function runEngine(opts = {}) {
 
     messages.push({
       role: 'assistant',
-      content: turn.message.content ?? null,
+      // §C.1.5 (commit 8) — "every string that enters a model message OR a
+      // ledger record passes redaction"; the model_turn ledger record above
+      // already redacts its own copy, but the assistant's own content is
+      // ALSO re-fed into the next turn's `messages` array, so it must be
+      // redacted here too or a secret the model echoes back would survive
+      // unredacted for every subsequent turn's prompt.
+      content: redact(turn.message.content ?? null),
       tool_calls: toolCalls,
     });
 
@@ -430,7 +436,11 @@ if (require.main === module) {
     })
     .catch((err) => {
       process.exitCode = 1;
-      console.error(err && err.stack ? err.stack : String(err));
+      // §C.1.5 (G5, commit 8) — "every stderr line the engine prints" is
+      // redacted, including an engine-level fault's own stack trace (which
+      // may echo a brief path, an argv value, or another string that could
+      // itself carry a secret pattern).
+      console.error(redact(err && err.stack ? err.stack : String(err)));
     });
 }
 
