@@ -71,11 +71,14 @@ describe('compute_parcel_cost_estimates — test 2: descriptor validates', () =>
     expect(descriptor.identity.name).toBe('compute_parcel_cost_estimates');
   });
 
-  it('execution.phases.length === 1, outputs.writes.length === 1, guard_columns.length === 16', () => {
+  it('execution.phases.length === 1, outputs.writes.length === 2 (CPCE-D2 added a class-O retraction target, writes_ref 0 unchanged), guard_columns.length === 16 on both', () => {
     const descriptor = loadDescriptor();
     expect(descriptor.execution.phases).toHaveLength(1);
-    expect(descriptor.outputs.writes).toHaveLength(1);
+    expect(descriptor.execution.phases[0].writes_ref).toBe(0);
+    expect(descriptor.outputs.writes).toHaveLength(2);
     expect(descriptor.outputs.writes[0].write_discipline.guard_columns).toHaveLength(16);
+    expect(descriptor.outputs.writes[1].write_discipline.guard_columns).toHaveLength(16);
+    expect(descriptor.outputs.writes[1].write_discipline.class).toBe('set_based_null_retract');
   });
 
   it('RED — dropping a guard column would narrow the guard (regression lock on the declared shape)', () => {
@@ -325,6 +328,9 @@ describe('compute_parcel_cost_estimates — CPCE-D3: the unmapped-family counter
       },
       flushBatch: async () => ({ rowCount: 0 }),
       onProgress: () => {},
+      // CPCE-D2 — runCostMenuPass calls ctx.retract(1, []) first; this fixture only exercises
+      // the D3 family-count logic, so the seam is a no-op stub (0 rows retracted).
+      retract: async () => 0,
     };
   }
 
@@ -373,5 +379,70 @@ describe('compute_parcel_cost_estimates — CPCE-D3: the unmapped-family counter
       delete require.cache[require.resolve(BUILD_NORMS_PATH)];
       delete require.cache[require.resolve(COMPUTE_PATH)];
     }
+  });
+});
+
+describe('compute_parcel_cost_estimates — CPCE-D2: writes[1] codegen lock (fake pool, no DB)', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const write = require(path.join(REPO_ROOT, 'scripts/lib/step/write.js'));
+
+  it('buildWritePlan(writes[1]) renders a clear_sql whose WHERE is (<non-R scope>) AND (<16 guards OR-joined>) — the parenthesised scope is load-bearing (SQL AND/OR precedence)', () => {
+    const descriptor = loadDescriptor();
+    const plan = write.buildWritePlan(descriptor.outputs.writes[1], descriptor);
+    expect(plan.mechanic).toBe('set_based_null_retract');
+    expect(plan.clear_sql).toMatch(
+      /WHERE \(zoning_class IS NULL OR upper\(zoning_class\) NOT LIKE 'R%'\) AND \(parcel_cost_menu IS DISTINCT FROM null OR/,
+    );
+    // all 16 columns SET to the literal NULL, none bound as a row value
+    for (const col of ['parcel_cost_menu', 'cost_fb_total', 'cost_coa_total', 'cost_solar_total',
+      'cost_garden_suite_total', 'cost_laneway_suite_total', 'cost_garage_total', 'cost_gut_total',
+      'cost_addition_total', 'cost_kitchen_per_sqm', 'cost_bath_per_sqm', 'cost_basement_per_sqm',
+      'cost_basement_underpin_per_sqm', 'max_build_fsi', 'coa_fsi', 'realized_fsi_p90']) {
+      expect(plan.clear_sql, col).toMatch(new RegExp(`${col} = null`));
+      expect(plan.clear_sql, col).toMatch(new RegExp(`${col} IS DISTINCT FROM null`));
+    }
+  });
+
+  it('RED — dropping a guard column would narrow the guard (mirrors the writes[0] regression lock at test 2)', () => {
+    const descriptor = loadDescriptor();
+    const withoutOne = descriptor.outputs.writes[1].write_discipline.guard_columns.slice(1);
+    expect(withoutOne).toHaveLength(15);
+  });
+
+  it('RED — an unparenthesised scope OR would let the AND bind to only the last OR-arm (the precedence bug this lock exists to catch)', () => {
+    const descriptor = loadDescriptor();
+    const mutated = JSON.parse(JSON.stringify(descriptor));
+    mutated.outputs.writes[1].write_discipline.scope = "zoning_class IS NULL OR upper(zoning_class) NOT LIKE 'R%'"; // no parens
+    const plan = write.buildWritePlan(mutated.outputs.writes[1], mutated);
+    // Without parens, "zoning_class IS NULL OR ... NOT LIKE 'R%' AND (guard)" parses as
+    // "zoning_class IS NULL OR (... NOT LIKE 'R%' AND (guard))" — the NULL-zoning arm becomes
+    // unconditional (unguarded). This assertion documents the WRONG shape is reachable if the
+    // parens are ever dropped from the descriptor, which is exactly why they are declared.
+    expect(plan.clear_sql).toMatch(/WHERE zoning_class IS NULL OR upper\(zoning_class\) NOT LIKE 'R%' AND \(/);
+    expect(plan.clear_sql).not.toMatch(/WHERE \(zoning_class IS NULL OR/);
+  });
+
+  it('recovery.before_image === "generated" (R-M) — required for a set_based_null_retract target', () => {
+    const descriptor = loadDescriptor();
+    expect(descriptor.recovery.before_image).toBe('generated');
+  });
+
+  it('outputs.writes[1].retract === "none" — class O alone licenses ctx.retract; "all" would wrongly force recovery.interrupted="force_full_on_next_run" (R-B), untrue here since staleness.scope is already unconditionally "all"', () => {
+    const descriptor = loadDescriptor();
+    expect(descriptor.outputs.writes[1].retract).toBe('none');
+    expect(descriptor.recovery.interrupted).toBe('none');
+  });
+
+  it('the new declared observables: stranded_cost_rows_retracted (INFO, value_min 0) + no_cost_outside_population (FAIL invariant, viol==0, post)', () => {
+    const descriptor = loadDescriptor();
+    const check = descriptor.checks.find((c: { id: string }) => c.id === 'stranded_cost_rows_retracted');
+    expect(check).toBeDefined();
+    expect(check.severity).toBe('INFO');
+    expect(check.limit).toBe('value_min 0');
+    const inv = descriptor.invariants.find((i: { id: string }) => i.id === 'no_cost_outside_population');
+    expect(inv).toBeDefined();
+    expect(inv.severity).toBe('FAIL');
+    expect(inv.bound).toBe('viol == 0');
+    expect(inv.when).toBe('post');
   });
 });

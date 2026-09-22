@@ -70,6 +70,52 @@
         "retract": "none",
         "replay": "idempotent_upsert",
         "source_key_policy": { "unique": true, "on_collision": "not_applicable", "key_space_migration": "none" }
+      },
+      {
+        "table": "parcels",
+        "key": ["id"],
+        "columns": [
+          { "name": "parcel_cost_menu", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute", "set_value": null },
+          { "name": "cost_fb_total", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute", "set_value": null },
+          { "name": "cost_coa_total", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute", "set_value": null },
+          { "name": "cost_solar_total", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute", "set_value": null },
+          { "name": "cost_garden_suite_total", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute", "set_value": null },
+          { "name": "cost_laneway_suite_total", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute", "set_value": null },
+          { "name": "cost_garage_total", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute", "set_value": null },
+          { "name": "cost_gut_total", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute", "set_value": null },
+          { "name": "cost_addition_total", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute", "set_value": null },
+          { "name": "cost_kitchen_per_sqm", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute", "set_value": null },
+          { "name": "cost_bath_per_sqm", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute", "set_value": null },
+          { "name": "cost_basement_per_sqm", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute", "set_value": null },
+          { "name": "cost_basement_underpin_per_sqm", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute", "set_value": null },
+          { "name": "max_build_fsi", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute", "set_value": null },
+          { "name": "coa_fsi", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute", "set_value": null },
+          { "name": "realized_fsi_p90", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute", "set_value": null }
+        ],
+        "write_discipline": {
+          "class": "set_based_null_retract",
+          "guard": "is_distinct_from",
+          "guard_columns": ["parcel_cost_menu", "cost_fb_total", "cost_coa_total", "cost_solar_total", "cost_garden_suite_total", "cost_laneway_suite_total", "cost_garage_total", "cost_gut_total", "cost_addition_total", "cost_kitchen_per_sqm", "cost_bath_per_sqm", "cost_basement_per_sqm", "cost_basement_underpin_per_sqm", "max_build_fsi", "coa_fsi", "realized_fsi_p90"],
+          "guard_columns_why": {
+            "text": "CPCE-D2 CLOSED. The SAME 16-column set as writes[0]'s guard, OR-joined by write.js's set-based codegen — \"carries at least one of the 16 cost/FSI values\" is the predicate that confines the retraction to a parcel that genuinely has something to null, so a parcel already all-NULL (never priced, or already retracted by a prior run) is never rewritten. `set_value: null` on all 16 columns is what makes this a class-O (set_based_null_retract) target rather than a per-row value write — the UPDATE ... SET <col> = NULL ... WHERE <scope> AND (<16 guards OR-joined>) shape write.js#buildWritePlan already generates for `set_based_null_retract`.",
+            "liveness": { "kind": "file", "ref": "scripts/lib/step/write.js" }
+          },
+          "scope": "(zoning_class IS NULL OR upper(zoning_class) NOT LIKE 'R%')",
+          "expected_change_ratio": "none",
+          "idempotent_rerun": "zero_writes",
+          "idempotent_rerun_why": {
+            "text": "CPCE-D2 CLOSED — self-extinguishing (the geocode_permits zombie-cleanup precedent's own idempotent_rerun_why shape). After the retraction fires, the row's 16 cost/FSI columns are NULL, so the guard (\"at least one IS DISTINCT FROM NULL\") excludes it on every subsequent run — the SAME row can never be retracted twice. The scope itself is a pure population predicate (independent of whether cost columns are set), so a full re-run's before-image SELECT still reads every non-R% parcel (49,251 measured live 2026-09-21) even though the guarded UPDATE changes 0 rows after convergence — declared here rather than left as a silent cost: the retraction is cheap (0 rows changed), the before-image SELECT is not scope-narrowed by the guard (write.js#buildBeforeImageSelectSql reads plan.scope only, the SAME declared divergence geocode_permits' writes[1] documents), so it re-reads the ~49,251-row non-R% population every run. Filed MED in review_followups.md; not a correctness defect.",
+            "liveness": { "kind": "check", "ref": "stranded_cost_rows_retracted" }
+          },
+          "txn_scope": "none",
+          "why": {
+            "text": "CPCE-D2 CLOSED (Spec 88 §2.1/§2.10). A parcel re-zoned OUT of the R% population after `writes[0]` priced it keeps its stale menu + 15 scalars forever — `writes[0]`'s own WHERE simply stops selecting it, and this step's own observability (ZONE_SQL, the menu-coverage query) is likewise R%-scoped, so nothing else in this step can see the orphan. Measured live 2026-09-21: 2 parcels (373779 CR, 11891 O), both non-residential zonings carrying a FULL residential-archetype-priced menu — a category error, not merely a staleness one, and live-served today by src/lib/parcels/consumer-lookup.ts + src/lib/admin/parcel-lookup.ts (parcel-id lookups, no zoning predicate). Spec 124 R-AK built ctx.retract for exactly this shape; the geocode_permits zombie-coordinate cleanup (scripts/geocode-permits.descriptor.json writes[1]) is the same defect class, already converted and landed. Widening the population (pricing non-R parcels) was refused (Spec 88 §1 scopes the model to residential parcels); leave-and-flag was refused (Spec 124 §7's NEVER clause — the values are live-served today, so a flag alone leaves them wrong).",
+            "liveness": { "kind": "file", "ref": "scripts/lib/compute/compute-parcel-cost-estimates.js" }
+          }
+        },
+        "retract": "none",
+        "replay": "idempotent_upsert",
+        "source_key_policy": { "unique": true, "on_collision": "not_applicable", "key_space_migration": "none" }
       }
     ],
     "cascades": "none",
@@ -182,6 +228,7 @@
     { "id": "compute_parcel_cost_empty_menu_max_pct", "kind": "bound", "expect": { "reports": "% of residential parcels with an EMPTY menu ({_schema_version:1} only)" }, "limit": "value_max 5", "limit_from_config": "compute_parcel_cost_empty_menu_max_pct", "severity": "WARN", "blocking": false, "when": "post", "chains": ["sources"], "accept_until": "none", "why": { "text": "§7 (var 18). Measured live 1.755% (7,674/437,279).", "liveness": { "kind": "column", "ref": "parcels.parcel_cost_menu" } } },
     { "id": "compute_parcel_cost_line_total_max_cad", "kind": "bound", "expect": { "reports": "MAX(cost_gut_total) across the per-zone visibility block — a labelled FUTURE-REGRESSION TRIPWIRE, not a calibrated bound (A8 RULED)" }, "limit": "value_max 250000000", "limit_from_config": "compute_parcel_cost_line_total_max_cad", "severity": "WARN", "blocking": false, "when": "post", "chains": ["sources"], "accept_until": "none", "why": { "text": "A8 RULED — the live max ($176,567,416) is itself a suspect upstream cur_floor_gfa_sqm artifact (rf:198), so this ceiling only catches movement ABOVE today's already-suspect tail. NOT a plausibility bound on today's values.", "liveness": { "kind": "column", "ref": "parcels.cost_gut_total" } } },
     { "id": "unmapped_residential_family_fallback_count", "kind": "field_coverage", "expect": { "reports": "COUNT of residential parcels whose zoning falls through parcelFamilyFromZoning to the 'all' bucket (R/RA/RAC — no family-specific norm mapping exists yet), silently carrying norm_basis:'pre_r2' on their coa_build line until Spec 88 P2's family-aware norm read grounds them" }, "limit": "viol == 0", "severity": "WARN", "blocking": false, "when": "post", "chains": ["sources"], "accept_until": "none", "retighten_when": "Spec 88 P2 lands — parcelFamilyFromZoning's 'all' fall-through is replaced by a real family-aware norm read for every R/RA/RAC zone", "why": { "text": "CPCE-D3 CLOSED (commit 2, 2026-09-21). Spec 124 operator adjudication (2026-09-21), R-H's own precedent form (link_massing LM-D6/LM-D11, scripts/link-massing.descriptor.json ~:507/:523): a WARN check with a strict `viol == 0` bound, `blocking:false`, a declared `retighten_when`, and NO new logic variable — NOT a ceiling seeded at today's 105,595 high-water mark (that alternative was considered and rejected; a high-water ceiling would read PASS on the exact population the defect describes). The counter was structurally `0` (a legacy literal); it now measures the real family fall-through, computed by a Σ-identity CODED in runCostMenuPass (detached+townhouse+multiplex+unmapped === scanned, mirroring computePostPhase's own cost_by_zone identity) so a bucketing defect reddens the run instead of silently under-reporting. Measured live 2026-09-21: 105,595 of 437,279 residential parcels (R 102,551 / RA 2,354 / RAC 690) — a standing, structurally non-zero population until Spec 88 P2's family-aware norm read lands, never a defect THIS run introduced, so WARN with a machine-observable retighten condition rather than FAIL; never INFO (a threshold IS possible here, unlike a purely descriptive count).", "liveness": { "kind": "column", "ref": "parcels.zoning_class" } } },
+    { "id": "stranded_cost_rows_retracted", "kind": "field_coverage", "expect": { "reports": "COUNT of parcels this run's ctx.retract(1, []) call NULLed (a menu + 15 scalars written by a prior run before a re-zoning moved the parcel outside the R% population)" }, "limit": "value_min 0", "severity": "INFO", "blocking": false, "when": "post", "chains": ["sources"], "accept_until": "none", "why": { "text": "CPCE-D2 CLOSED — the Spec 48 §3.6 dual-pattern's INFO-counter half (paired with the `no_cost_outside_population` FAIL invariant, its gate half): a purely descriptive count of what this run repaired, which no threshold can bound (it is 2 on the converging run 2026-09-21, 0 on every steady-state run thereafter — the guard is self-extinguishing, `idempotent_rerun:\"zero_writes\"` — and a future re-zoning legitimately makes it non-zero again). Always emitted, even at 0 (§3.6's zero-row emission preservation rule).", "liveness": { "kind": "column", "ref": "parcels.parcel_cost_menu" } } },
     { "id": "line_coverage_max_build", "kind": "field_coverage", "expect": { "reports": "COUNT of parcels carrying the max_build (new-build) line" }, "limit": "viol == 0", "severity": "INFO", "blocking": false, "when": "post", "chains": ["sources"], "accept_until": "none", "why": { "text": "Ported by name.", "liveness": { "kind": "column", "ref": "parcels.parcel_cost_menu" } } },
     { "id": "line_coverage_coa_build", "kind": "field_coverage", "expect": { "reports": "COUNT of parcels carrying the coa_build line" }, "limit": "viol == 0", "severity": "INFO", "blocking": false, "when": "post", "chains": ["sources"], "accept_until": "none", "why": { "text": "Ported by name.", "liveness": { "kind": "column", "ref": "parcels.parcel_cost_menu" } } },
     { "id": "line_coverage_solar_max", "kind": "field_coverage", "expect": { "reports": "COUNT of parcels carrying the solar_max line" }, "limit": "viol == 0", "severity": "INFO", "blocking": false, "when": "post", "chains": ["sources"], "accept_until": "none", "why": { "text": "Ported by name.", "liveness": { "kind": "column", "ref": "parcels.parcel_cost_menu" } } },
@@ -220,6 +267,18 @@
       "frequency": "every_run",
       "last_measured": { "value": 0, "at": "2026-09-21T00:00:00.000Z", "commit": "compute-parcel-cost-estimates-commit-1", "cost_ms": 400, "sample_n": 1, "source_run": { "run_id": null, "chain": null, "event": "manual_timing" } },
       "why": { "text": "§7 invariant 2 — a new build can never legitimately cost more than the CoA build (CoA can only add). MEASURED 0, 2026-09-21. NOTE: coa_fsi > max_build_fsi is a SEPARATE, documented divergent reference (Spec 88 §2.6/2.6) and is NOT a violation of this invariant.", "liveness": { "kind": "column", "ref": "parcels.cost_coa_total" } }
+    },
+    {
+      "id": "no_cost_outside_population",
+      "sql": "SELECT count(*)::int FROM parcels WHERE NOT (zoning_class IS NOT NULL AND upper(zoning_class) LIKE 'R%') AND (parcel_cost_menu IS NOT NULL OR cost_fb_total IS NOT NULL OR max_build_fsi IS NOT NULL)",
+      "bound": "viol == 0",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "source": "invariant",
+      "frequency": "every_run",
+      "last_measured": { "value": 0, "at": "2026-09-22T02:41:48.998Z", "commit": "compute-parcel-cost-estimates-commit-3", "cost_ms": 3599, "sample_n": 1, "source_run": { "run_id": null, "chain": "sources", "event": "converging_run" } },
+      "why": { "text": "CPCE-D2 CLOSED — the Spec 48 §3.6 dual-pattern's gate half (paired with the `stranded_cost_rows_retracted` INFO counter). Evaluated `when:\"post\"`, AFTER this run's own `ctx.retract` has already fired in the same run, so it reads 0 including on the very FIRST post-fix run, not merely in steady state. A non-zero value here means the retraction scope/guard has a gap a future zoning-vocabulary change opened — never a data condition to tolerate.", "liveness": { "kind": "column", "ref": "parcels.parcel_cost_menu" } }
     }
   ],
   "plausibility": "none",
@@ -311,11 +370,7 @@
       "text": "Unlike a shared-txn ENRICHER, this step has NO shared transaction (`execution.txn_scope:\"none\"`) — each ctx.flushBatch call is its OWN short transaction, so a run killed mid-stream leaves already-flushed batches COMMITTED (execution.partial_fill:\"staged\"). 'none' is the honest recovery value (no special action needed), NOT `force_full_on_next_run`: staleness.scope is unconditionally 'all' already, so the very next run re-streams and re-prices every row regardless of whether the prior run was interrupted, converging without any special-cased recovery branch. Proven by the new compute-parcel-cost-kill-mid-run.db.test.ts (pg_cancel_backend, not a process kill).",
       "liveness": { "kind": "file", "ref": "scripts/lib/compute/compute-parcel-cost-estimates.js" }
     },
-    "before_image": "none",
-    "before_image_why": {
-      "text": "recovery.before_image applies to a retraction (outputs.writes[].retract != 'none'); this step's sole write target declares retract:'none' — it only ever stamps a value, never clears one to NULL as a distinct operation.",
-      "liveness": { "kind": "file", "ref": "scripts/lib/compute/compute-parcel-cost-estimates.js" }
-    }
+    "before_image": "generated"
   },
   "database": { "class": "primary", "min_migration": 201, "assert_current_database": "postgres" },
   "counters": {

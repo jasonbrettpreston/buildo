@@ -173,6 +173,12 @@ function buildFlushSql(batch) {
  * spreads AFTER `batchSize` (FOLD-I4, §5 test 16 — the both-directions lock).
  */
 async function runCostMenuPass(client, ctx) {
+  // CPCE-D2 CLOSED — R-AK seam, called FIRST (before the stream): a parcel re-zoned out of the
+  // R% population keeps a stale, category-wrong menu forever unless something NULLs it. The
+  // before-image is written first and unwrapped (R-M — a before-image failure must abort the
+  // run before anything is retracted; index.js:3409-3424 already owns that contract).
+  const stranded = await ctx.retract(1, []);
+
   const config = ctx.config;
   const rates = ctx.contract.rates;
   const indexNow = num(config.cost_escalation_index); // FOLD-V9(2) — hoisted, LM-D15-validated
@@ -308,6 +314,9 @@ async function runCostMenuPass(client, ctx) {
     // precedent).
     ratesAsOf: ctx.contract.ratesAsOf,
     indexUpdatedAt: ctx.contract.indexUpdatedAt,
+    // CPCE-D2 CLOSED — the ctx.retract(1, []) rowcount from the top of this pass, threaded to
+    // computePostPhase the SAME way (the pass return value, not a second seam call).
+    stranded,
   };
 }
 
@@ -356,6 +365,8 @@ async function computePostPhase(pool, { passRaw, config, runAt }) {
   const newBuildFallbackCount = Number(pass.newBuildFallbackCount || 0);
   // CPCE-D3 CLOSED (commit 2) — was the literal 0; now the real family fall-through count.
   const unmappedFamilyCount = Number(pass.unmappedFamilyCount || 0);
+  // CPCE-D2 CLOSED — the retraction rowcount, echoed from the pass's own ctx.retract(1, []) call.
+  const strandedCostRowsRetracted = Number(pass.stranded || 0);
   const fitGatedSuiteCount = Number(pass.fitGatedSuiteCount || 0);
   const fitGatedGarageCount = Number(pass.fitGatedGarageCount || 0);
   const lineCoverage = pass.lineCoverage || {};
@@ -462,6 +473,7 @@ async function computePostPhase(pool, { passRaw, config, runAt }) {
       cost_escalation_index: indexMissing ? null : Number(config.cost_escalation_index),
       rates_max_as_of_date: maxRateAsOf ? String(maxRateAsOf) : null,
       unmapped_residential_family_fallback_count: unmappedFamilyCount, // CPCE-D3 CLOSED
+      stranded_cost_rows_retracted: strandedCostRowsRetracted, // CPCE-D2 CLOSED
       records_updated: updated,
       records_skipped: recordsSkipped,
       compute_parcel_cost_menu_coverage_min_pct: Number(menuCoveragePct.toFixed(1)),
@@ -529,6 +541,12 @@ function compute_parcel_cost_line_total_max_cad(ctx) {
 function unmapped_residential_family_fallback_count(ctx) {
   ctx.report('unmapped_residential_family_fallback_count', { violations: ctx.matched.unmapped_residential_family_fallback_count });
 }
+// CPCE-D2 CLOSED (commit 3, 2026-09-21) — the Spec 48 §3.6 dual-pattern's INFO-counter half.
+// `value` (not `violations`) is reported: this is a purely descriptive count no threshold
+// bounds (limit "value_min 0"), not a violation count compared against a bound.
+function stranded_cost_rows_retracted(ctx) {
+  ctx.report('stranded_cost_rows_retracted', { value: ctx.matched.stranded_cost_rows_retracted });
+}
 function line_coverage_max_build(ctx) {
   ctx.report('line_coverage_max_build', { violations: 0, detail: ctx.matched.line_coverage.max_build });
 }
@@ -580,6 +598,7 @@ const CHECKS = {
   compute_parcel_cost_empty_menu_max_pct,
   compute_parcel_cost_line_total_max_cad,
   unmapped_residential_family_fallback_count,
+  stranded_cost_rows_retracted,
   line_coverage_max_build,
   line_coverage_coa_build,
   line_coverage_solar_max,
@@ -636,6 +655,7 @@ function buildCostMeta(ctx) {
     cost_index_age_months: m.cost_index_age_months,
     rates_max_as_of_date: m.rates_max_as_of_date,
     unmapped_residential_family_fallback_count: m.unmapped_residential_family_fallback_count,
+    stranded_cost_rows_retracted: m.stranded_cost_rows_retracted,
     cost_by_zone: m.cost_by_zone,
     rates_as_of: m.rates_as_of,
     index_updated_at: m.index_updated_at,
