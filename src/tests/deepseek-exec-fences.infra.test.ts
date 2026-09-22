@@ -637,6 +637,16 @@ describe('SUB-ENG-1 Phase 2 — safety fences (Spec 08 §C)', () => {
       expect(writeScope).toEqual(['scripts/**', 'src/tests/**']);
       expect(body).toBe('Body text here\n');
     });
+    it('pilot 2026-09-22 (commit 12d): a YAML-indented list (`  - glob`) with CRLF endings parses; the un-indented form stays accepted', () => {
+      // RED before 12d: LIST_ITEM_RE anchored `-` at column 0, so the indented form returned []
+      // and the live pilot run (20260922T183557Z-e50c6774) downgraded to claude on `no_write_scope`.
+      const indented = '---\r\nwrite_scope:\r\n  - scripts/lib/compute/assert-data-bounds.js\r\n  - src/tests/steps/assert_data_bounds/**\r\n---\r\nBody\r\n';
+      expect(parseBrief(indented).writeScope).toEqual([
+        'scripts/lib/compute/assert-data-bounds.js',
+        'src/tests/steps/assert_data_bounds/**',
+      ]);
+      expect(parseBrief('---\nwrite_scope:\n- a/**\n---\n').writeScope).toEqual(['a/**']);
+    });
     it('no front matter ⇒ empty scope, body === the whole content', () => {
       const content = 'plain brief, no front matter\n';
       const { writeScope, body } = parseBrief(content);

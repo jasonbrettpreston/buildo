@@ -20,7 +20,10 @@
 
 const FRONT_MATTER_DELIMITER = '---';
 const WRITE_SCOPE_KEY_RE = /^write_scope:\s*$/;
-const LIST_ITEM_RE = /^-\s+(\S.*)$/;
+// Pilot 2026-09-22 (run 20260922T183557Z-e50c6774): a YAML-indented list (`  - glob`)
+// parsed as EMPTY and silently downgraded the run to claude. Leading whitespace is
+// accepted; the CRLF-tolerant split below already covers Windows briefs.
+const LIST_ITEM_RE = /^\s*-\s+(\S.*)$/;
 
 /**
  * parseBrief(content) → `{ writeScope: string[], body: string }`.
