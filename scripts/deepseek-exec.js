@@ -379,7 +379,11 @@ async function runEngine(opts = {}) {
       messages.push({
         role: 'tool',
         tool_call_id: call.id,
-        content: JSON.stringify(toolResult),
+        // §C.1.5 — every string entering a model message passes redaction,
+        // not only the ledger's copy (a tool result, e.g. read_file's
+        // `content`, is otherwise unredacted text headed straight for the
+        // model turn).
+        content: redact(JSON.stringify(toolResult)),
       });
     }
   }

@@ -14,18 +14,39 @@
  *     — the loop in scripts/deepseek-exec.js turns that into an `error`
  *     ledger record and aborts the run WITHOUT the handler ever executing).
  *
- * Commit 2 ships every tool as a schema-validated stub returning
- * `{ ok:false, error:{ code:'NOT_IMPLEMENTED' } }` — real handlers for
- * read_file/grep_files land in commit 3, write_file/edit_file/
- * run_bash_command in commit 4. `git_commit` stays a stub through the whole
- * of Phase 1 (it ships in Phase 2 commit 10, once the commit fences exist).
+ * Commit 2 shipped every tool as a schema-validated stub returning
+ * `{ ok:false, error:{ code:'NOT_IMPLEMENTED' } }`. Commit 3 (this file's
+ * current state) adds real `read_file`/`grep_files` handlers, both path-
+ * confined (§C.1.3) and secret-fenced (§C.1.5's `secret_read_deny`), and
+ * populates `runState.readState` for §C.1.6's read-before-write tracking.
+ * `write_file`/`edit_file`/`run_bash_command` land in commit 4. `git_commit`
+ * stays a stub through the whole of Phase 1 (it ships in Phase 2 commit 10,
+ * once the commit fences exist).
  */
+
+const fs = require('fs');
+const crypto = require('crypto');
+const { spawnSync } = require('child_process');
+const { resolveConfinedPath, toRepoRelativePosix, isSecretDenied, PathDeniedError } = require('./exec-path');
+const { scrubbedEnv } = require('./exec-env');
+const { redact } = require('./exec-ledger');
 
 class MalformedToolCallError extends Error {
   constructor(message) {
     super(message);
     this.name = 'MalformedToolCallError';
   }
+}
+
+function sha256Hex(buf) {
+  return crypto.createHash('sha256').update(buf).digest('hex');
+}
+
+function pathFault(err) {
+  if (err instanceof PathDeniedError) {
+    return { ok: false, error: { code: err.code, message: err.message } };
+  }
+  throw err;
 }
 
 // §C.2 — the closed v1 tool-call contract. `parameters` is a JSON Schema
@@ -201,6 +222,125 @@ async function notImplementedHandler(name) {
   };
 }
 
+// §C.2 read_file. Content is windowed by (offset, limit) — 1-based line
+// numbers — but sha256/mtime_ms are ALWAYS of the whole file, because §C.1.6
+// re-checks those exact values against a later write/edit of the same path.
+async function readFileHandler(args, ctx) {
+  const { repoRoot, policy, runState } = ctx;
+  const limits = (policy && policy.limits) || {};
+  let absPath;
+  try {
+    absPath = resolveConfinedPath(repoRoot, args.path);
+  } catch (err) {
+    return { toolResult: pathFault(err) };
+  }
+  const relPosix = toRepoRelativePosix(repoRoot, absPath);
+  if (isSecretDenied(relPosix, (policy && policy.secret_read_deny) || [])) {
+    return { toolResult: { ok: false, error: { code: 'SECRET_DENIED', message: `read denied: ${relPosix}` } } };
+  }
+  let stat;
+  try {
+    stat = fs.statSync(absPath);
+  } catch {
+    return { toolResult: { ok: false, error: { code: 'NOT_FOUND', message: `no such file: ${relPosix}` } } };
+  }
+  if (stat.isDirectory()) {
+    return { toolResult: { ok: false, error: { code: 'IS_DIRECTORY', message: `is a directory: ${relPosix}` } } };
+  }
+  if (limits.read_max_bytes && stat.size > limits.read_max_bytes) {
+    return { toolResult: { ok: false, error: { code: 'TOO_LARGE', message: `${relPosix} is ${stat.size} bytes, over the ${limits.read_max_bytes}-byte read cap` } } };
+  }
+
+  const buf = fs.readFileSync(absPath);
+  const wholeFileSha256 = sha256Hex(buf);
+  const content = buf.toString('utf8');
+  const lines = content.split('\n');
+  const offset = args.offset && args.offset > 0 ? args.offset : 1;
+  const limit = args.limit && args.limit > 0 ? args.limit : lines.length;
+  const windowLines = lines.slice(offset - 1, offset - 1 + limit);
+  const truncated = offset > 1 || offset - 1 + limit < lines.length;
+
+  runState.readState[absPath] = { sha256: wholeFileSha256, mtime_ms: stat.mtimeMs };
+
+  return {
+    toolResult: {
+      ok: true,
+      path: relPosix,
+      content: windowLines.join('\n'),
+      sha256: wholeFileSha256,
+      mtime_ms: stat.mtimeMs,
+      lines_total: lines.length,
+      truncated,
+    },
+  };
+}
+
+function parseGitGrepLine(line) {
+  const match = /^(.*?):(\d+):(.*)$/.exec(line);
+  if (!match) {
+    return null;
+  }
+  return { path: match[1], line: Number(match[2]), text: match[3] };
+}
+
+// §C.2 grep_files. Implemented over `git grep -n -I -E --untracked`;
+// matches under a §C.1.5 secret glob are dropped, every `text` is redacted
+// (the ledger/prompt redact() is shared, not re-implemented here).
+async function grepFilesHandler(args, ctx) {
+  const { repoRoot, policy } = ctx;
+  const limits = (policy && policy.limits) || {};
+  try {
+    void new RegExp(args.pattern);
+  } catch (err) {
+    return { toolResult: { ok: false, error: { code: 'BAD_PATTERN', message: `invalid pattern: ${err.message}` } } };
+  }
+
+  const argv = ['grep', '-n', '-I', '-E', '--untracked', '-e', args.pattern];
+  const pathspecs = [];
+  if (args.path) {
+    let absPath;
+    try {
+      absPath = resolveConfinedPath(repoRoot, args.path);
+    } catch (err) {
+      return { toolResult: pathFault(err) };
+    }
+    pathspecs.push(toRepoRelativePosix(repoRoot, absPath) || '.');
+  }
+  if (args.glob) {
+    pathspecs.push(args.glob);
+  }
+  if (pathspecs.length > 0) {
+    argv.push('--', ...pathspecs);
+  }
+
+  const result = spawnSync('git', argv, { cwd: repoRoot, env: scrubbedEnv(), encoding: 'utf8', shell: false });
+  if (result.error) {
+    return { toolResult: { ok: false, error: { code: 'BAD_PATTERN', message: `git grep failed to start: ${result.error.message}` } } };
+  }
+  // git grep exits 1 when there are zero matches — not a fault.
+  if (result.status !== 0 && result.status !== 1) {
+    return { toolResult: { ok: false, error: { code: 'BAD_PATTERN', message: `git grep exited ${result.status}: ${redact(result.stderr || '')}` } } };
+  }
+
+  const secretGlobs = (policy && policy.secret_read_deny) || [];
+  const rawLines = (result.stdout || '').split('\n').filter(Boolean);
+  const allMatches = [];
+  for (const line of rawLines) {
+    const parsed = parseGitGrepLine(line);
+    if (!parsed) {
+      continue;
+    }
+    if (isSecretDenied(parsed.path.split('\\').join('/'), secretGlobs)) {
+      continue;
+    }
+    allMatches.push({ path: parsed.path, line: parsed.line, text: redact(parsed.text) });
+  }
+  const cap = Math.min(args.max_results || 200, limits.grep_max_results || 1000);
+  const truncated = allMatches.length > cap;
+
+  return { toolResult: { ok: true, matches: allMatches.slice(0, cap), truncated } };
+}
+
 /**
  * createTools({ repoRoot, policy, ledger, runState }) — `runState` is the
  * per-run mutable state bag (§C.1.6 read-before-write tracking lives at
@@ -223,7 +363,10 @@ function createTools({ repoRoot, policy, ledger, runState } = {}) {
   // grep_files) and 4 (write_file, edit_file, run_bash_command). git_commit
   // has no entry until Phase 2 commit 10, so it always falls through to the
   // NOT_IMPLEMENTED stub below.
-  const handlers = {};
+  const handlers = {
+    read_file: readFileHandler,
+    grep_files: grepFilesHandler,
+  };
 
   async function dispatch(name, args) {
     // §C.1.10 — validation happens before ANY handler executes.
