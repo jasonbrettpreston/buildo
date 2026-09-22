@@ -22,8 +22,9 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import { execFileSync } from 'node:child_process';
 import {
-  makeRepo, REPO_ROOT, runEngine, toolTurn, writeBrief, ledgerRecords,
+  makeRepo, REPO_ROOT, runEngine, toolTurn, multiToolTurn, writeBrief, ledgerRecords, scrubbedChildEnv,
 } from './helpers/deepseek-exec-harness';
 
 describe('SUB-ENG-1 Phase 2 — safety fences (Spec 08 §C)', () => {
@@ -51,6 +52,20 @@ describe('SUB-ENG-1 Phase 2 — safety fences (Spec 08 §C)', () => {
   function toolCallOf(records: Array<Record<string, unknown>>, tool: string, index = 0) {
     return records.filter((r) => r.kind === 'tool_call' && r.tool === tool)[index] as
       { status?: string; error?: { code: string } } | undefined;
+  }
+
+  // A minimal npm-runnable fixture: `npm run test` (allowlisted) runs
+  // `node sleep.js`, which writes its own pid immediately, sleeps `ms`, then
+  // (only if never killed) writes a "done" marker and exits. Shared by the
+  // commit 9 timeout/budget arms below.
+  function writeSleepFixture(dir: string, ms: number): void {
+    fs.writeFileSync(path.join(dir, 'package.json'), JSON.stringify({ name: 'sleep-fixture', version: '1.0.0', scripts: { test: 'node sleep.js' } }));
+    fs.writeFileSync(
+      path.join(dir, 'sleep.js'),
+      `const fs=require('fs');const path=require('path');const dir=__dirname;` +
+      `fs.writeFileSync(path.join(dir,'sleep.pid'),String(process.pid));` +
+      `setTimeout(()=>{fs.writeFileSync(path.join(dir,'sleep.done'),'done');process.exit(0);},${ms});`,
+    );
   }
 
   // =========================================================================
@@ -314,5 +329,136 @@ describe('SUB-ENG-1 Phase 2 — safety fences (Spec 08 §C)', () => {
       const raw = fs.readFileSync(path.join(ledgerDir, `${summary.run_id}.jsonl`), 'utf8');
       expect(raw).not.toContain('livekey');
     });
+  });
+
+  // =========================================================================
+  // Commit 9 — kill switch + budgets in a LIVE loop (G6/G8)
+  // =========================================================================
+  describe('commit 9: kill switch mid-turn (multiple tool calls in ONE model turn)', () => {
+    it('a transcript turn with 3 tool calls, sentinel created right after the 1st ledger record lands: exactly 1 tool_call record, one kill record, run_end.status === "killed"', async () => {
+      const briefPath = writeBrief(repo);
+      // eslint-disable-next-line @typescript-eslint/no-require-imports -- exercising the real CJS ledger writer directly
+      const { openLedger } = require(path.join(REPO_ROOT, 'scripts/lib/exec-ledger.js'));
+      const runId = `kill-mid-turn-${Date.now()}`;
+      const realLedger = openLedger({ ledgerDir, runId });
+      let toolCallCount = 0;
+      // opts.ledger is the same test-only injection point Phase 1's lock 9
+      // uses to prove "a ledger write failure aborts the run" — here it lets
+      // this test drop the KILL sentinel deterministically, right after the
+      // FIRST tool_call record lands and BEFORE the loop's next kill check,
+      // rather than racing a real background process against the engine.
+      const wrappedLedger = {
+        path: realLedger.path,
+        append(record: { kind: string }) {
+          const written = realLedger.append(record);
+          if (written.kind === 'tool_call') {
+            toolCallCount += 1;
+            if (toolCallCount === 1) {
+              fs.writeFileSync(path.join(ledgerDir, `${runId}.kill`), '');
+            }
+          }
+          return written;
+        },
+        close() { realLedger.close(); },
+      };
+      const turn = multiToolTurn([
+        { id: 'c1', name: 'read_file', args: { path: 'seed.txt', reason: 'r' } },
+        { id: 'c2', name: 'read_file', args: { path: 'seed.txt', reason: 'r' } },
+        { id: 'c3', name: 'read_file', args: { path: 'seed.txt', reason: 'r' } },
+      ]);
+      const summary = await runEngine({ repoRoot: repo, briefPath, provider: 'deepseek', runId, ledger: wrappedLedger, transcriptTurns: [turn] });
+      expect(summary.status).toBe('killed');
+      const records = ledgerRecords(ledgerDir, runId);
+      expect(records.filter((r) => r.kind === 'tool_call')).toHaveLength(1);
+      expect(records.some((r) => r.kind === 'kill')).toBe(true);
+      fs.rmSync(path.join(ledgerDir, `${runId}.jsonl`), { force: true });
+      fs.rmSync(path.join(ledgerDir, `${runId}.kill`), { force: true });
+    });
+  });
+
+  describe('commit 9: kill switch — CLI process-level exit code', () => {
+    it('a KILL sentinel present before the run starts makes the real CLI process exit non-zero', () => {
+      const briefPath = writeBrief(repo);
+      const transcriptPath = path.join(repo, 'transcript.json');
+      fs.writeFileSync(transcriptPath, JSON.stringify([]));
+      fs.writeFileSync(path.join(ledgerDir, 'KILL'), '');
+      const cliPath = path.join(REPO_ROOT, 'scripts', 'deepseek-exec.js');
+      let exitCode = 0;
+      try {
+        execFileSync(process.execPath, [cliPath, '--brief', briefPath, '--provider=deepseek', '--transcript', transcriptPath, '--ledger-dir', ledgerDir], {
+          cwd: repo, env: scrubbedChildEnv(), stdio: 'pipe',
+        });
+      } catch (err) {
+        exitCode = (err as { status?: number }).status ?? 1;
+      }
+      expect(exitCode).not.toBe(0);
+      fs.rmSync(path.join(ledgerDir, 'KILL'), { force: true });
+    });
+  });
+
+  describe('commit 9: budgets — max_total_tokens', () => {
+    it('usage_total.total_tokens exceeding max_total_tokens ends the run budget_exhausted', async () => {
+      const briefPath = writeBrief(repo);
+      const turns = [
+        toolTurn('c1', 'read_file', { path: 'seed.txt', reason: 'r' }),
+        toolTurn('c2', 'read_file', { path: 'seed.txt', reason: 'r' }),
+      ].map((t) => ({ ...t, usage: { prompt_tokens: 60, completion_tokens: 40, total_tokens: 100 } }));
+      const summary = await runEngine({
+        repoRoot: repo, briefPath, provider: 'deepseek', ledgerDir, transcriptTurns: turns, maxTotalTokens: 150,
+      });
+      expect(summary.status).toBe('budget_exhausted');
+      expect(summary.usage_total.total_tokens).toBeGreaterThan(150);
+      const records = ledgerRecords(ledgerDir, summary.run_id);
+      expect(records[records.length - 1]).toMatchObject({ kind: 'run_end', status: 'budget_exhausted' });
+    });
+  });
+
+  describe('commit 9: budgets — timeout_ms clamped to timeout_ceiling_ms, never rejected', () => {
+    it('a requested timeout_ms far beyond the ceiling is CLAMPED to the ceiling (not rejected) — proven via a custom policy + a direct tool dispatch', async () => {
+      writeSleepFixture(repo, 30000); // sleeps far longer than the clamped ceiling below
+      // eslint-disable-next-line @typescript-eslint/no-require-imports -- exercising the real CJS tool layer directly, below the engine loop
+      const { createTools } = require(path.join(REPO_ROOT, 'scripts/lib/exec-tools.js'));
+      const realPolicy = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, 'scripts/lib/exec-policy.json'), 'utf8'));
+      const policy = { ...realPolicy, limits: { ...realPolicy.limits, timeout_ceiling_ms: 700 } };
+      const fakeLedger = { path: path.join(ledgerDir, 'clamp-unit.jsonl'), append: () => {}, close: () => {} };
+      const tools = createTools({ repoRoot: repo, policy, ledger: fakeLedger, runState: { readState: {} } });
+      const startedAt = Date.now();
+      const outcome = await tools.dispatch('run_bash_command', { argv: ['npm', 'run', 'test'], timeout_ms: 999999999, reason: 'r' });
+      const elapsedMs = Date.now() - startedAt;
+      // Requested a timeout ~1.4M times the ceiling; the call is neither
+      // rejected outright (it DID spawn) nor does it wait the full 30s the
+      // fixture sleeps — it is killed around the 700ms ceiling.
+      expect(outcome.toolResult.error?.code).toBe('TIMEOUT');
+      expect(elapsedMs).toBeLessThan(15000);
+      expect(fs.existsSync(path.join(repo, 'sleep.done'))).toBe(false);
+    }, 20000);
+  });
+
+  describe('commit 9: budgets — a bash command exceeding its timeout is killed, and the child is gone afterwards', () => {
+    it('run_bash_command with timeout_ms:500 against a 30s sleep fixture: TIMEOUT, and the sleep process is no longer running', async () => {
+      writeSleepFixture(repo, 30000);
+      const briefPath = writeBrief(repo);
+      const summary = await runEngine({
+        repoRoot: repo, briefPath, provider: 'deepseek', ledgerDir,
+        transcriptTurns: [toolTurn('c1', 'run_bash_command', { argv: ['npm', 'run', 'test'], timeout_ms: 500, reason: 'r' })],
+      });
+      const records = ledgerRecords(ledgerDir, summary.run_id);
+      const call = toolCallOf(records, 'run_bash_command');
+      expect(call?.error?.code).toBe('TIMEOUT');
+      const pidPath = path.join(repo, 'sleep.pid');
+      expect(fs.existsSync(pidPath)).toBe(true); // the fixture DID start, proving this isn't a vacuous pass
+      const pid = Number(fs.readFileSync(pidPath, 'utf8').trim());
+      let stillAlive = true;
+      for (let i = 0; i < 20 && stillAlive; i++) {
+        try {
+          process.kill(pid, 0);
+          await new Promise((r) => setTimeout(r, 200));
+        } catch {
+          stillAlive = false;
+        }
+      }
+      expect(stillAlive).toBe(false);
+      expect(fs.existsSync(path.join(repo, 'sleep.done'))).toBe(false);
+    }, 20000);
   });
 });

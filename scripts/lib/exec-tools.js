@@ -580,8 +580,21 @@ function runProcess(argv, { cwd, env, timeoutMs, outputCapBytes }) {
 
     const timer = setTimeout(() => {
       timedOut = true;
+      // §C.1.9 (G6, commit 9) — "a bash command exceeding its timeout is
+      // killed, and the child is gone afterwards." The npm/npx route (commit
+      // 6) spawns `node <npm-cli.js> run <script>`, which npm then re-spawns
+      // as a NESTED child of its own — a plain SIGTERM/kill on OUR direct
+      // child leaves that grandchild running on Windows, where terminating a
+      // parent process does not tear down its process tree. `taskkill /T /F`
+      // kills the whole tree; POSIX gets a direct SIGKILL (SIGTERM is not
+      // guaranteed to stop a process ignoring it, and this budget fence needs
+      // a deterministic kill, not a polite request).
       try {
-        child.kill('SIGTERM');
+        if (process.platform === 'win32' && child.pid) {
+          spawnSync('taskkill', ['/pid', String(child.pid), '/T', '/F'], { stdio: 'ignore' });
+        } else {
+          child.kill('SIGKILL');
+        }
       } catch {
         // process may already be gone
       }
